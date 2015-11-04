@@ -15,25 +15,26 @@ class TADCTrigger : public TObject
 
  public:
 
-  void     SetGroupNumber(UChar_t v)     { fGroupNumber = v; }
-  UChar_t  GetGroupNumber()              { return fGroupNumber; }
+  void      SetGroupNumber(UChar_t v)     { fGroupNumber = v; }
+  UChar_t   GetGroupNumber()              { return fGroupNumber; }
 
-  void     SetStartIndexCell(UShort_t v) { fStartIndexCell = v; }
-  UShort_t GetStartIndexCell()           { return fStartIndexCell; }
+  void      SetStartIndexCell(UShort_t v) { fStartIndexCell = v; }
+  UShort_t  GetStartIndexCell()           { return fStartIndexCell; }
 
-  void     SetFrequency(UChar_t v)       { fFrequency = v; }
-  UChar_t  GetFrequency()                { return fFrequency; }
+  void      SetFrequency(UChar_t v)       { fFrequency = v; }
+  UChar_t   GetFrequency()                { return fFrequency; }
 
-  void     SetTriggerSignal(Bool_t v)    { fTriggerSignal = v; }
-  Bool_t   GetTriggerSignal()            { return fTriggerSignal; }
+  void      SetTriggerSignal(Bool_t v)    { fTriggerSignal = v; }
+  Bool_t    GetTriggerSignal()            { return fTriggerSignal; }
 
-  void     SetTriggerTimeTag(UInt_t v)   { fTriggerTimeTag = v; }
-  UInt_t   GetTriggerTimeTag()           { return fTriggerTimeTag; }
+  void      SetTriggerTimeTag(UInt_t v)   { fTriggerTimeTag = v; }
+  UInt_t    GetTriggerTimeTag()           { return fTriggerTimeTag; }
 
-  void     SetSample(int i,UShort_t v)   { fSamples[i] = v; }
-  UShort_t GetSample(int i)              { return fSamples[i]; }
+  void      SetSample(int i,UShort_t v)   { fSamples[i] = v; }
+  UShort_t  GetSample(int i)              { return fSamples[i]; }
+  UShort_t* GetSamplesArray()             { return fSamples; }
 
-  UShort_t GetNSamples()                 { return TADCTRIGGER_NSAMPLES; }
+  UShort_t  GetNSamples()                 { return TADCTRIGGER_NSAMPLES; }
 
  private:
 

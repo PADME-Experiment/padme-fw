@@ -1,0 +1,8 @@
+# Board types
+#		id	type	Manufacturer	Model	Channels
+board_type	0       ADC     CAEN		V1742	32
+
+# Boards
+#	id	type_id	S/N
+board	0	0	39
+board	1	0	30

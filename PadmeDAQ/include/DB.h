@@ -1,0 +1,21 @@
+#ifndef _DB_H_
+#define _DB_H_
+
+#define DB_OK           0
+#define DB_CONNECTERROR 1
+#define DB_SQLERROR     2
+
+int db_init(char*); // db_file
+int db_end();
+int db_run_check(int); // run_nr
+int db_process_create(int,int); // run_nr,board_id
+int db_get_process_id(int,int); // run_nr,board_id (returns id or -1 for error)
+int db_process_open(int,int); // process_id,time
+int db_process_close(int,int); // process_id,time
+int db_file_check(char*); // file_name
+int db_file_open(char*,int,int,int); // file_name,time,process_id,part
+int db_file_close(char*,int,int,int,int); // file_name,time,size,nevents,process_id
+int db_add_cfg_para(int,char*,char*); // process_id,parameter_name,parameter_value
+int db_get_para_id(char*); // parameter_name (returns id or -1 for error)
+
+#endif

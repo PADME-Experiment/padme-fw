@@ -697,7 +697,7 @@ int DAQ_readdata ()
 
   if (Config->startdaq_mode == 0) {
 
-    // IF SW controlled DAQ is selected, we need to wait for the appearance of
+    // If SW controlled DAQ is selected, we need to wait for the appearance of
     // the start file and then give the SWStartAcquisition command
 
     // Wait either for Start DAQ file or for Quit file
@@ -724,7 +724,7 @@ int DAQ_readdata ()
   } else if (Config->startdaq_mode == 1) {
 
     // If S_IN controlled DAQ is selected, everything is automatic
-    printf("- DAQ starting on S_IN signal\n");
+    printf("- Actual DAQ will start on S_IN signal\n");
 
   }
 
@@ -893,19 +893,19 @@ int DAQ_readdata ()
 	if ( (eventInfo.EventCounter % 100) == 0 ) {
 
 	  // Print event header
-	  printf("Evt# %u time %u size %u board %u pattern %u mask %u\n",
-	  eventInfo.EventCounter,
-	  eventInfo.TriggerTimeTag & 0x7FFFFFFF,
-	  eventInfo.EventSize,
-	  eventInfo.BoardId,
-	  eventInfo.Pattern,
-	  eventInfo.ChannelMask
-	  );
-	  /*
+	  printf("- Evt# %u time %u size %u board 0x%02x pattern 0x%08x chmsk 0x%08x\n",
+		 eventInfo.EventCounter   & 0x003FFFFF,
+		 eventInfo.TriggerTimeTag & 0x7FFFFFFF,
+		 eventInfo.EventSize      & 0x0FFFFFFF,
+		 eventInfo.BoardId        & 0x0000001F,
+		 eventInfo.Pattern        & 0x00003FFF,
+		 eventInfo.ChannelMask
+		);
+
 	  // Print some group info
 	  for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	    if (event->GrPresent[iGr]) {
-	      printf("Group %d TTT %d SIC %d\n",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
+	      printf("  Group %d TTT %d SIC %d\n",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
 	      //for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
 	      //printf("Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
 	        //for(iSm=0;iSm<event->DataGroup[iGr].ChSize[iCh];iSm++){
@@ -915,7 +915,7 @@ int DAQ_readdata ()
 	      //}
 	    }
 	  }
-	  */
+
 	}
 
 	// Copy decoded event to output event buffer applying zero-suppression

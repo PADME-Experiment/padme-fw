@@ -1,8 +1,12 @@
-*.o
+*~
 *.d
+*.o
 *.db
+*.gz
 *.so
+*.ccd
 *.exe
 *.pyc
-*.ccd
-*~
+*.dump
+PersistencyDict.cc
+PersistencyDict.h

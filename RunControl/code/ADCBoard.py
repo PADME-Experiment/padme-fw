@@ -15,7 +15,7 @@ class ADCBoard:
 
     def set_default_config(self):
 
-        self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ"
+        self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ.exe"
 
         self.run_number = 0
 

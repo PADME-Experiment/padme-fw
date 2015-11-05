@@ -1,0 +1,11 @@
+This directory contains scripts and files used to configure the PADME software
+environment.
+
+If you installed PADME software under <path>, use one of the following commands
+to configure the environment:
+
+. <path>/Padme/Configure/padme_init.sh
+
+source <path>/Padme/Configure/padme_init.csh
+
+In case of problems contact Emanuele Leonardi <emanuele.leonardi@roma1.infn.it>

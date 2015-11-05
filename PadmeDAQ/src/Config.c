@@ -43,7 +43,7 @@ int reset_config()
   strcpy(Config->db_file,"db/PadmeDAQ.db");
 
   // All data files written to subdirectory "data" of current directory
-  strcpy(Config->data_file,"rawdata_b00"); // Data filename template for default board 0
+  strcpy(Config->data_file,"data/daq_b00"); // Data filename template for default board 0
 
   // Dummy test run
   Config->run_number = 0;

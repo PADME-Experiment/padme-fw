@@ -197,7 +197,7 @@ class Run:
         adcboard.set_default_config()
 
         # Configure board for current run
-        s_bid = "%02d"%adcboard.board_id
+        s_bid = "b%02d"%adcboard.board_id
         adcboard.run_number     = self.run_number
         adcboard.config_file    = self.config_dir+"/"+self.config_file_head+"_"+s_bid+".cfg"
         adcboard.log_file       = self.log_dir+"/"+self.log_file_head+"_"+s_bid+".log"

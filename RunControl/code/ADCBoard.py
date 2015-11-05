@@ -15,7 +15,7 @@ class ADCBoard:
 
     def set_default_config(self):
 
-        self.executable = "./PadmeDAQ"
+        self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ"
 
         self.run_number = 0
 
@@ -205,9 +205,6 @@ class ADCBoard:
 
         # Return process id
         return self.process.pid
-
-        #return os.spawnl(os.P_NOWAIT,self.executable,os.path.basename(self.executable),"-c",self.config_file)
-        #return os.spawnl(os.P_NOWAIT,"/bin/sleep","sleep","600")
 
     def stop_daq(self):
 

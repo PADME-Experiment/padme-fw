@@ -53,6 +53,11 @@ private:
   TH1D ** hPedRMSCalo;
   TH1D ** hPedRMSTarg;
 
+  TH1D ** hQCh;
+
+  TH1D * hCaloQTot;
+  TH1D * hTargQTot;
+
   static Histo* fInstance;
   
 public:

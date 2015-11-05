@@ -7,19 +7,22 @@ import os
 import re
 import time
 
-# This will use the $PADME environment variable
-PADME = "/home/daq/Padme"
+# This will use the $PADME environment variable if set
+PADME = os.getenv('PADME',"..")
 
 log_dir = PADME+"/RunControl/log"
 
+# Path where one can find the "data" directory containing DAQ files
 daq_data_dir = PADME+"/RunControl"
 
+# Temporary files used during monitoring
 merged_dir = PADME+"/TestBeam/tmp"
 merged_list = merged_dir+"/monitor.list"
 merged_file_template = merged_dir+"/monitor"
 
+# Executable used to merge events and write RAW files
 padme_merge = PADME+"/Level1/PadmeLevel1.exe"
-padme_monitor = PADME+"/TestBeam/ReadTest.exe"
+#padme_monitor = PADME+"/TestBeam/Monitor.exe"
 
 def signal_handler(signal, frame):
     print('Ctrl+C received: exiting')

@@ -21,7 +21,7 @@ ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
 ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
 
 # Directory where the PadmeRoot package is installed
-PADMEROOTDIR := ../PadmeRoot
+PADMEROOTDIR := $(PADME)/PadmeRoot
 
 # Define c++ compiler and flags
 CXX = g++

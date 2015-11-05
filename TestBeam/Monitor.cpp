@@ -36,6 +36,7 @@ void FillHisto(std::string name, int nevents){
     // Show event header
     UChar_t nBoards = rawEv->GetNADCBoards();
     // Loop over boards
+    Float_t Qtot[2]={0};
     for(UChar_t b=0;b<nBoards;b++){
 
       // Show board info
@@ -54,8 +55,6 @@ void FillHisto(std::string name, int nevents){
       }
 
       // Loop over channels
-      Float_t Qtot[2]={0};
-
       for(UChar_t c=0;c<nChn;c++){
 	TADCChannel* chn = adcB->ADCChannel(c);
 	//	printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
@@ -63,7 +62,7 @@ void FillHisto(std::string name, int nevents){
 	Float_t SamRec[1024];
 	Int_t NAvg=80;
 	Float_t SumSam=0.;
-	Float_t QCh=0.;
+	Float_t QCh[2][32];
 	Float_t Avg=0.;
        	for(UShort_t s=0;s<chn->GetNSamples();s++){
 	  Sam[s]    = (Float_t) chn->GetSample(s);
@@ -72,16 +71,18 @@ void FillHisto(std::string name, int nevents){
 	Avg=SumSam/NAvg;
 	
        	for(UShort_t s=0;s<chn->GetNSamples();s++){
-	  SamRec[s] = (Float_t) (chn->GetSample(s)-Avg)/4096*1.;
-	  QCh+=-SamRec[s]; //to be converted in coulomb
+	  SamRec[s] = (Float_t) (chn->GetSample(s)-Avg)/4096*1.;  //trasforma in V
+	  QCh[b][c]+=-SamRec[s]/50*1E-9/1E-12; // 1ns tempo di digitizzazione. Qin pC
 	}
-	printf("ch %d AVG %f Q0 %f\n",c,Avg,QCh);
+	printf("ch %d AVG %f Q0 %f\n",c,Avg,QCh[0][0]);
+
 	if(b==0) his->Fill1D(Form("hPedCalo%d",c),Avg);
+	if(b==0) his->Fill1D(Form("hQCh%d",c),QCh[b][c]);
 	if(b==0) his->FillGraph("Calo",c,chn->GetNSamples(),SampInd,Sam);
 	if(b==0) his->FillGraph("CaloReco",c,chn->GetNSamples(),SampInd,SamRec);
-	Qtot[b]+=QCh;
+	Qtot[b]+=QCh[b][c];
       } //end of loop on channels
-
+      if(b==0) his->Fill1D("hQTotCalo",Qtot[b]);
       printf("Bd %d Qtot %f\n",b,Qtot[b]);
     }
     // Clear event

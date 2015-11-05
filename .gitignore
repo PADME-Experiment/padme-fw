@@ -8,5 +8,6 @@
 *.exe
 *.pyc
 *.dump
+*.root
 PersistencyDict.cc
 PersistencyDict.h

@@ -148,8 +148,8 @@ int ADCBoard::ReadNextEvent()
     fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_FTAIL_LEN-1));
 
     // Unpack tail of file
-    if (UnpackFileHead()) {
-      printf("ERROR while unpacking file head (?)\n");
+    if (UnpackFileTail()) {
+      printf("ERROR while unpacking file tail (?)\n");
       return 1;
     }
 
@@ -175,6 +175,12 @@ int ADCBoard::UnpackFileHead()
   fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_FILEINDEX_LIN] & ADCEVENT_FILEINDEX_BIT) >> ADCEVENT_FILEINDEX_POS) );
   fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_RUNNUMBER_LIN] & ADCEVENT_RUNNUMBER_BIT) >> ADCEVENT_RUNNUMBER_POS) );
   fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_TTAGSOF_LIN] & ADCEVENT_TTAGSOF_BIT) >> ADCEVENT_TTAGSOF_POS) );
+
+  // Verify if file has correct version
+  if (fFiles[fCurrentFile].GetVersion() != ADCEVENT_FORMAT_VERSION) {
+    printf("ERROR - File incompatible file version: expected %d found %d\n",ADCEVENT_FORMAT_VERSION,fFiles[fCurrentFile].GetVersion());
+    return 1;
+  }
 
   return 0;
 

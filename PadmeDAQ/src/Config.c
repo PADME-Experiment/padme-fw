@@ -250,8 +250,12 @@ int read_config(char *cfgfile)
 	}
       } else if ( strcmp(param,"board_id")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
-	  Config->board_id = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	  if (v<MAX_N_BOARDS) {
+	    Config->board_id = v;
+	    printf("Parameter %s set to %d\n",param,v);
+	  } else {
+	    printf("WARNING - board_id set to %d, must be < %d\n",v,MAX_N_BOARDS);
+	  }
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}

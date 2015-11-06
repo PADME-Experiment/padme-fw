@@ -8,6 +8,9 @@
 #define MAX_DATA_FILE_LEN   1024
 #define MAX_FILE_LEN        1024
 
+// We store the board_id in 8 bits
+#define MAX_N_BOARDS         256
+
 typedef struct config_s {
 
   // File used to read configuration

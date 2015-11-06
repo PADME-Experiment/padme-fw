@@ -215,9 +215,10 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   line = (PEVT_EVENT_TAG << 28) + (pEvtSize & 0x0FFFFFFF);
   memcpy(pEvt,&line,4);
 
-  // Copy line 1 of V1742 event header to line 1 of pEvent header (board id,LVDS pattern) adding event status
+  // Copy line 1 of V1742 event header to line 1 of pEvent header (board id,LVDS pattern)
+  // adding event status and replacing original board id (5b) with our board id (8b)
   memcpy(&line,evtPtr+4,4);
-  line = (line & 0xFFFFFF0F) + ((pEvtStatus & 0xF) << 4);
+  line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((pEvtStatus & 0xF) << 4);
   memcpy(pEvt+4,&line,4);
 
   // Copy line 2 of V1742 event header to line 2 of pEvent header (event counter)

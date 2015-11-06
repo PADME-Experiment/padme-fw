@@ -4,7 +4,8 @@
 // Version 0: native CAEN V1742 raw event structure: data are unscrabled and uncorrected
 //     Use NewDecode software to read, unscrable, correct, and write to root ntuple
 // Version 1: used for all data taken after June 21, 2015. Use PadmeDigi to read them.
-#define PEVT_CURRENT_VERSION 1
+// Version 2: expanded board_id from 5 to 8 bits, in use after November 6, 2015.
+#define PEVT_CURRENT_VERSION 2
 
 #define PEVT_EVENT_TAG 0xE
 #define PEVT_FHEAD_TAG 0x9

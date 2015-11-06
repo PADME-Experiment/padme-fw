@@ -19,6 +19,7 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
 ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
+ROOTEVELIBS    := $(shell $(ROOTCONFIG) --evelibs)
 
 # Directory where the PadmeRoot package is installed
 PADMEROOTDIR := $(PADME)/PadmeRoot
@@ -33,7 +34,7 @@ DEPEND = $(CXX) -MM
 
 # Define parameters for link command
 LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -lsqlite3
-LDFLAGS = -O4 $(ROOTLDFLAGS) $(ROOTLIBS) $(LIBS)
+LDFLAGS = -O4 $(ROOTLDFLAGS) $(ROOTEVELIBS) $(LIBS)
 
 # Get list of files to process
 SOURCES  := $(wildcard $(SDIR)/*.cc)
@@ -91,6 +92,7 @@ try:
 	@echo ROOTLDFLAGS = $(ROOTLDFLAGS)
 	@echo ROOTLIBS = $(ROOTLIBS)
 	@echo ROOTGLIBS = $(ROOTGLIBS)
+	@echo ROOTEVELIBS = $(ROOTEVELIBS)
 
 include $(DEPS)
 include $(DEPEXE)

@@ -1,6 +1,7 @@
 #include "HistoManager.hh"
 
 #include "ECALHisto.hh"
+#include "TargetHisto.hh"
 
 HistoManager* HistoManager::fInstance = 0;
 
@@ -9,6 +10,9 @@ HistoManager::HistoManager()
 
   // Create ECAL histos
   fHistoList.push_back(new ECALHisto());
+
+  // Create Target histos
+  fHistoList.push_back(new TargetHisto());
 
 }
 

@@ -4,6 +4,7 @@
 #include "TEveBrowser.h"
 
 #include "ECALOnlineMonitor.hh"
+#include "TargetOnlineMonitor.hh"
 
 Grapher* Grapher::fInstance = 0;
 
@@ -16,6 +17,9 @@ Grapher::Grapher()
 
   // Create tab for ECAL
   fOnlineMonitorList.push_back(new ECALOnlineMonitor());
+
+  // Create tab for Target
+  fOnlineMonitorList.push_back(new TargetOnlineMonitor());
 
 }
 

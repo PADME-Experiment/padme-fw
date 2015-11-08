@@ -1,36 +1,36 @@
-#include "ECALAnal.hh"
+#include "TargetAnal.hh"
 
 #include "HistoManager.hh"
 
-ECALAnal::ECALAnal() {
+TargetAnal::TargetAnal() {
 
   fRawEvent = 0;
 
   //HistoManager* hMan = HistoManager::GetInstance();
-  //ECALHisto* ecalH = (ECALHisto*)hMan->Histo("ECAL");
-  fECALHisto = (ECALHisto*)HistoManager::GetInstance()->Histo("ECAL");
+  //TargetHisto* ecalH = (TargetHisto*)hMan->Histo("Target");
+  fTargetHisto = (TargetHisto*)HistoManager::GetInstance()->Histo("Target");
 
   // Initialize vector with sample indexes (used for TGraph).
   for(int ll=0;ll<TADCCHANNEL_NSAMPLES;ll++) fSampleIndex[ll]=(Float_t)ll;
 
 }
 
-ECALAnal::~ECALAnal()
+TargetAnal::~TargetAnal()
 {}
 
-void ECALAnal::AnalyzeCharge()
+void TargetAnal::AnalyzeCharge()
 {
 
-  //printf("Called ECALAnal::AnalyzeCharge() for event %d\n",fRawEvent->GetEventNumber());
+  //printf("Called TargetAnal::AnalyzeCharge() for event %d\n",fRawEvent->GetEventNumber());
 
   // Loop over boards
   UChar_t nBoards = fRawEvent->GetNADCBoards();
   for(UChar_t b=0;b<nBoards;b++){
 
-    // Check if we are looking at the ECAL ADC board (board id 0)
+    // Check if we are looking at the Target ADC board (board id 0)
     TADCBoard* adcB = fRawEvent->ADCBoard(b);
     UChar_t bid = adcB->GetBoardId();
-    if (bid!=0) continue;
+    if (bid!=1) continue;
 
     // Show board info
     UChar_t nTrg = adcB->GetNADCTriggers();
@@ -44,10 +44,10 @@ void ECALAnal::AnalyzeCharge()
     //  for(Int_t tt=0;tt<trg->GetNSamples();tt++){
     //    Sam[tt] = (Float_t) trg->GetSample(tt);
     //  }
-    //  if(b==0) his->FillGraph("CaloTrig",t,trg->GetNSamples(),SampInd,Sam);
+    //  if(b==0) his->FillGraph("TargetTrig",t,trg->GetNSamples(),SampInd,Sam);
     //}
 
-    // Loop over in this event channels
+    // Loop over channels in this event
     fQTotal[bid]=0.;
     for(UChar_t c=0;c<nChn;c++){
 
@@ -70,25 +70,25 @@ void ECALAnal::AnalyzeCharge()
 	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
 
-      fECALHisto->Fill1DHisto(Form("ECALPed%d",cnr),Avg);
-      fECALHisto->Fill1DHisto(Form("ECALQCh%d",cnr),fQChannel[bid][cnr]);
+      fTargetHisto->Fill1DHisto(Form("TargPed%d",cnr),Avg);
+      fTargetHisto->Fill1DHisto(Form("TargQCh%d",cnr),fQChannel[bid][cnr]);
 
       fQTotal[bid] += fQChannel[bid][cnr];
       printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal[bid]);
 
     } //end of loop over channels
 
-    fECALHisto->Fill1DHisto("ECALQTot",fQTotal[bid]);
+    fTargetHisto->Fill1DHisto("TargQTot",fQTotal[bid]);
     printf("%d Bd %d Qtot %f\n",b,bid,fQTotal[bid]);
 
   } // end of loop over boards
 
 }
 
-void ECALAnal::AnalyzePosition()
+void TargetAnal::AnalyzePosition()
 {
 
-  // Map of crystal positions
+  // Map of crystal positions (fix it for target)
   Float_t Xcry[TADCBOARD_NCHANNELS];
   Float_t Ycry[TADCBOARD_NCHANNELS];
   Xcry[0]= 1.; Xcry[1]= 0.; Xcry[2]=-1.;
@@ -102,10 +102,10 @@ void ECALAnal::AnalyzePosition()
   UChar_t nBoards = fRawEvent->GetNADCBoards();
   for(UChar_t b=0;b<nBoards;b++){
 
-    // Check if we are looking at the ECAL ADC board (board id 0) and we have some signal
+    // Check if we are looking at the Target ADC board (board id 0) and we have some signal
     TADCBoard* adcB = fRawEvent->ADCBoard(b);
     UChar_t bid = adcB->GetBoardId();
-    if (bid != 0 || fQTotal[bid] == 0.) continue;
+    if (bid != 1 || fQTotal[bid] == 0.) continue;
 
     // Get number of active channels in this board
     UChar_t nChn = adcB->GetNADCChannels();
@@ -117,7 +117,7 @@ void ECALAnal::AnalyzePosition()
       XcryTot += Xcry[cnr]*fQChannel[bid][cnr];
       YcryTot += Ycry[cnr]*fQChannel[bid][cnr];
     }
-    fECALHisto->Fill2DHisto("ECALPos",XcryTot/fQTotal[bid],YcryTot/fQTotal[bid]);
+    fTargetHisto->Fill2DHisto("TargPos",XcryTot/fQTotal[bid],YcryTot/fQTotal[bid]);
 
   }
 

@@ -39,6 +39,7 @@ int reset_config()
   strcpy(Config->quit_file,"run/quit");
   strcpy(Config->start_file,"run/start");
   strcpy(Config->initok_file,"run/initok.b00"); // InitOK file for default board 0
+  strcpy(Config->initfail_file,"run/initfail.b00"); // InitFail file for default board 0
   strcpy(Config->lock_file,"run/lock.b00"); // Lock file for default board 0
   strcpy(Config->db_file,"db/PadmeDAQ.db");
 

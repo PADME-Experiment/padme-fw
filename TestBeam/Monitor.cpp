@@ -11,13 +11,14 @@
 
 #include "HistoManager.hh"
 #include "Grapher.hh"
-#include "ECALHisto.hh"
 #include "ECALAnal.hh"
+#include "TargetAnal.hh"
 
 void AnalyzeEvents(std::string name, int nevents){
 
   // Prepare the analyses
   ECALAnal* ecalA = new ECALAnal();
+  TargetAnal* targetA = new TargetAnal();
 
   // Connect to raw events file
   TFile* fRawEv = new TFile(name.c_str());
@@ -40,10 +41,15 @@ void AnalyzeEvents(std::string name, int nevents){
     printf("Reading event %d\n",iev);
     bRawEv->GetEntry(iev);
 
-    // Do all analyses
+    // Do ECAL analysis
     ecalA->SetEvent(rawEv);
     ecalA->AnalyzeCharge();
     ecalA->AnalyzePosition();
+
+    // Do Target analysis
+    targetA->SetEvent(rawEv);
+    targetA->AnalyzeCharge();
+    targetA->AnalyzePosition();
 
     // Clear event
     rawEv->Clear("C");
@@ -51,11 +57,15 @@ void AnalyzeEvents(std::string name, int nevents){
   }
 
   // Final cleanup
+
   delete rawEv;
   delete bRawEv;
   delete tRawEv;
   fRawEv->Close();
   delete fRawEv;
+
+  delete ecalA;
+  delete targetA;
 
 }
 

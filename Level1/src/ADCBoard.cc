@@ -74,7 +74,7 @@ ADCEvent* ADCBoard::NextEvent()
 	fADCEvent = 0;
 	return fADCEvent;
       }
-      //fFile.open(fFiles[fCurrentFile].GetPath(), std::ios::in | std::ios::binary);
+      printf("Opening file %s\n",fFiles[fCurrentFile].GetPath().c_str());
       fFileHandle.open(fFiles[fCurrentFile].GetPath().c_str(), std::ios::in | std::ios::binary);
 
       // Read file head. Returns 0:OK 1:Error
@@ -192,9 +192,9 @@ int ADCBoard::UnpackFileTail()
   // Unpack file tail
   fFiles[fCurrentFile].SetNEvents( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_NEVENTS_LIN] & ADCEVENT_NEVENTS_BIT) >> ADCEVENT_NEVENTS_POS) );
   fFiles[fCurrentFile].SetEndTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_TTAGEOF_LIN] & ADCEVENT_TTAGEOF_BIT) >> ADCEVENT_TTAGEOF_POS) );
-  ULong_t filesize;
-  memcpy(&filesize,(void*)((UInt_t*)fBuffer)[ADCEVENT_FILESIZELO_LIN],8);
-  fFiles[fCurrentFile].SetSize(filesize);
+  //ULong_t filesize = (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZEHI_LIN] << 32 );
+  //fFiles[fCurrentFile].SetSize(filesize);
+  fFiles[fCurrentFile].SetSize( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZEHI_LIN] << 32 ) );
 
   return 0;
 

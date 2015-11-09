@@ -215,6 +215,23 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   line = (PEVT_EVENT_TAG << 28) + (pEvtSize & 0x0FFFFFFF);
   memcpy(pEvt,&line,4);
 
+  // Prepare events status mask for this event
+  if (pEvtChMaskAccepted) { // Check if at least one channel was accepted
+    pEvtStatus |=  (0x1 << PEVT_STATUS_HASDATA_BIT);
+  } else {
+    pEvtStatus &= !(0x1 << PEVT_STATUS_HASDATA_BIT);
+  }
+  if (Config->drs4corr_enable == 0) { // Check if DRS4 corrections were applied
+    pEvtStatus &= !(0x1 << PEVT_STATUS_DRS4COR_BIT);
+  } else {
+    pEvtStatus |=  (0x1 << PEVT_STATUS_DRS4COR_BIT);
+  }
+  if (Config->zero_suppression == 0) { // Check if zero suppression algorithm was applied
+    pEvtStatus &= !(0x1 << PEVT_STATUS_ZEROSUP_BIT);
+  } else {
+    pEvtStatus |=  (0x1 << PEVT_STATUS_ZEROSUP_BIT);
+  }
+
   // Copy line 1 of V1742 event header to line 1 of pEvent header (board id,LVDS pattern)
   // adding event status and replacing original board id (5b) with our board id (8b)
   memcpy(&line,evtPtr+4,4);

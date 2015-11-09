@@ -14,11 +14,12 @@ int main(int argc, char* argv[])
   std::string dbfile = "db/PadmeDAQ.db";
   std::string outfile = "rawdata.root";
   std::string datadir = "data";
+  int neventsperfile = 10000;
   int runnr = 0;
   int verbose = 0;
 
   // Parse options
-  while ((c = getopt (argc, argv, "d:r:l:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:d:r:l:o:v:h")) != -1) {
     switch (c)
       {
       case 'r':
@@ -35,6 +36,17 @@ int main(int argc, char* argv[])
           exit(1);
         }
         fprintf(stdout,"Merging files from run %d\n",runnr);
+        break;
+      case 'n':
+        if ( sscanf(optarg,"%d",&neventsperfile) != 1 ) {
+          fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
+          exit(1);
+        }
+        if (neventsperfile<0) {
+          fprintf (stderr, "Error while processing option '-n'. Number of events must be >=0, found %d.\n", neventsperfile);
+          exit(1);
+        }
+        fprintf(stdout,"Writing up to %d events per output file\n",neventsperfile);
         break;
       case 'd':
         datadir = optarg;
@@ -65,6 +77,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -l: define file with list of data files to process\n");
         fprintf(stdout,"  -d: define directory where input files are located\n");
         fprintf(stdout,"  -o: define an output file in root format\n");
+        fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default:10000)\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
@@ -73,7 +86,7 @@ int main(int argc, char* argv[])
           // verbose with no argument: just enable at minimal level
           verbose = 1;
           break;
-        } else if (optopt == 'i' || optopt == 'l' || optopt == 'o')
+        } else if (optopt == 'r' || optopt == 'l' || optopt == 'd' || optopt == 'o' || optopt == 'n')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -197,7 +210,7 @@ int main(int argc, char* argv[])
   RootIO* root = new RootIO();
 
   // Initialize root output file
-  if ( root->Init(outfile) != 0 ) {
+  if ( root->Init(outfile,neventsperfile) != 0 ) {
     printf("ERROR while initializing root output to file '%s'. Aborting\n",outfile.c_str());
     exit(1);
   }

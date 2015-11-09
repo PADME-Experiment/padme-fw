@@ -18,44 +18,87 @@ RootIO::~RootIO()
   delete fTRawEvent;
 }
 
-int RootIO::Init(std::string outfile)
+int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
 {
-  printf("RootIO::Init - Creating %s output file.\n",outfile.c_str());
+
+  fNMaxEvtsPerOutFile = nevtsperfile;
+  fOutFileTemplate = outfiletemplate;
+
+  fOutFileIndex = 0;
+  fOutEventsCounter = 0;
+  fOutEventsTotal = 0;
+
+  // Set initial output filename
+  if (fNMaxEvtsPerOutFile == 0) {
+    fOutFile = fOutFileTemplate;
+  } else {
+    SetOutFile();
+  }
 
   // Open output file
-  fTFileHandle->Open(outfile.c_str(),"NEW","PADME Merged Raw Events");
+  //printf("RootIO::Init - Creating %s output file.\n",fOutFile.Data());
+  OpenOutFile();
 
-  // Create TTree to hold raw events
-  fTTreeMain = new TTree("RawEvents","PADME Raw Events Tree");
-
-  // Attach branch to TRawEvent
-  fTTreeMain->Branch("RawEvent",&fTRawEvent);
   return 0;
 }
 
 int RootIO::Exit()
 {
   printf("RootIO::Exit - Finalizing output.\n");
+  CloseOutFile();
 
-  // Show TTree content
-  //printf("fTTreeMain->Print();\n");
-  //fTTreeMain->Print();
-  
+  printf("Level1 process ended\n");
+  printf("Total events written: %ld on %d files\n",fOutEventsTotal,fOutFileIndex+1);
+
+  return 0;
+}
+
+Int_t RootIO::ChangeOutFile()
+{
+  CloseOutFile();
+
+  // Update file index and create new filename
+  fOutFileIndex++;
+  SetOutFile();
+
+  OpenOutFile();
+
+  return 0;
+}
+
+Int_t RootIO::OpenOutFile()
+{
+  printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
+  fTFileHandle->Open(fOutFile,"NEW","PADME Merged Raw Events");
+
+  // Create TTree to hold raw events
+  fTTreeMain = new TTree("RawEvents","PADME Raw Events Tree");
+
+  // Attach branch to TRawEvent
+  fTTreeMain->Branch("RawEvent",&fTRawEvent);
+
+  return 0;
+}
+
+Int_t RootIO::CloseOutFile()
+{
+  printf("RootIO::CloseOutFile - Closing output file %s\n",fOutFile.Data());
+
   // Save TTree content
-  //printf("fTTreeMain->Write();\n");
   fTTreeMain->Write();
 
-  // Save all objects to file
-  //printf("fTFileHandle->Write();\n");
-  //fTFileHandle->Write();
-
   // Close output file
-  //printf("fTFileHandle->Close();\n");
   fTFileHandle->Close();
 
   // Delete TTree used for this file
   delete fTTreeMain;
 
+  return 0;
+}
+
+Int_t RootIO::SetOutFile()
+{
+  fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
   return 0;
 }
 
@@ -121,6 +164,15 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
 
   // Write current event to file
   fTTreeMain->Fill();
+
+  // Count event and see if we have to change file
+  fOutEventsTotal++;
+  fOutEventsCounter++;
+  if (fNMaxEvtsPerOutFile && (fOutEventsCounter>=fNMaxEvtsPerOutFile)) {
+    ChangeOutFile();
+    fOutEventsCounter = 0;
+  }
+
   return 0;
 
 }

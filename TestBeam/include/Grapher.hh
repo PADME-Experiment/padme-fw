@@ -22,5 +22,6 @@ protected:
 
   std::vector<VOnlineMonitor*> fOnlineMonitorList;
 
+  ClassDef(Grapher,0)
 };
 #endif

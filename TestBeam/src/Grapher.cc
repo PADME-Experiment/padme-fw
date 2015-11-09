@@ -6,6 +6,8 @@
 #include "ECALOnlineMonitor.hh"
 #include "TargetOnlineMonitor.hh"
 
+ClassImp(Grapher)
+
 Grapher* Grapher::fInstance = 0;
 
 Grapher::Grapher()

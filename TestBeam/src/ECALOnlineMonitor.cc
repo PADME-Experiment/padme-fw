@@ -18,11 +18,13 @@ ECALOnlineMonitor::ECALOnlineMonitor() : VOnlineMonitor("ECAL") {
   */
 
   TCanvas* totalCharge = AddCanvasTab("Total Charge");
-  totalCharge->cd(0);
+  totalCharge->Divide(1,1);
+  totalCharge->cd(1);
   ecalH->Get1DHisto("ECALQTot")->Draw();
 
   TCanvas* position = AddCanvasTab("Position");
-  position->cd(0);
+  position->Divide(1,1);
+  position->cd(1);
   ecalH->Get1DHisto("ECALPos")->Draw();
 
   TCanvas* chTotCharge = AddCanvasTab("Channel Charge");
@@ -32,27 +34,13 @@ ECALOnlineMonitor::ECALOnlineMonitor() : VOnlineMonitor("ECAL") {
     ecalH->Get1DHisto(Form("ECALQCh%d",iCh))->Draw();
   }
 
-  TCanvas* chRawCounts = AddCanvasTab("Channel Raw Counts");
-  chRawCounts->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chRawCounts->cd(iCh+1);
-    ecalH->Get1DHisto(Form("ECALRawCountsCh%d",iCh))->Draw();
-  }
-
-  TCanvas* chSignal = AddCanvasTab("Channel Signal");
-  chSignal->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chSignal->cd(iCh+1);
-    ecalH->Get1DHisto(Form("ECALSignalCh%d",iCh))->Draw();
-  }
-
   TCanvas* chPed = AddCanvasTab("Channel Pedestals");
   chPed->Divide(3,3);
   for (Int_t iCh=0; iCh<9; iCh++){
     chPed->cd(iCh+1);
     ecalH->Get1DHisto(Form("ECALPed%d",iCh))->Draw();
   }
-  
+
   VOnlineMonitor::CompleteTab();
 
 }

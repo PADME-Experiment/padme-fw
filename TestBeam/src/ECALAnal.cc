@@ -59,7 +59,6 @@ void ECALAnal::AnalyzeCharge()
       Float_t SumSam=0.;
       for(UShort_t s=0;s<chn->GetNSamples();s++){
 	fSample[s] = (Float_t)chn->GetSample(s);
-	fECALHisto->Fill2DHisto(Form("ECALRawCountsCh%d",c),s,fSample[s]);
 	if(s<NAvg) SumSam+=fSample[s];
       }
       Float_t Avg=SumSam/NAvg;
@@ -68,7 +67,6 @@ void ECALAnal::AnalyzeCharge()
       fQChannel[bid][cnr] = 0.;
       for(UShort_t s=0;s<chn->GetNSamples();s++){
 	fSampleReco[s] = (fSample[s]-Avg)/4096.; // Counts to Volt
-	fECALHisto->Fill2DHisto(Form("ECALSignalCh%d",c),s,fSampleReco[s]);
 	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
 
@@ -120,5 +118,7 @@ void ECALAnal::AnalyzePosition()
       YcryTot += Ycry[cnr]*fQChannel[bid][cnr];
     }
     fECALHisto->Fill2DHisto("ECALPos",XcryTot/fQTotal[bid],YcryTot/fQTotal[bid]);
+
   }
+
 }

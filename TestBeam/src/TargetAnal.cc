@@ -6,8 +6,6 @@ TargetAnal::TargetAnal() {
 
   fRawEvent = 0;
 
-  //HistoManager* hMan = HistoManager::GetInstance();
-  //TargetHisto* ecalH = (TargetHisto*)hMan->Histo("Target");
   fTargetHisto = (TargetHisto*)HistoManager::GetInstance()->Histo("Target");
 
   // Initialize vector with sample indexes (used for TGraph).

@@ -18,11 +18,13 @@ TargetOnlineMonitor::TargetOnlineMonitor() : VOnlineMonitor("Target") {
   */
 
   TCanvas* totalCharge = AddCanvasTab("Total Charge");
-  totalCharge->cd(0);
+  totalCharge->Divide(1,1);
+  totalCharge->cd(1);
   ecalH->Get1DHisto("TargQTot")->Draw();
 
   TCanvas* position = AddCanvasTab("Position");
-  position->cd(0);
+  position->Divide(1,1);
+  position->cd(1);
   ecalH->Get1DHisto("TargPos")->Draw();
 
   TCanvas* chTotCharge = AddCanvasTab("Channel Charge");

@@ -12,6 +12,8 @@ public:
   VOnlineMonitor(TString);
   ~VOnlineMonitor();
 
+  void UpdateAllCanvas();
+
   TString GetName() { return fName; };
 
   TCanvas* AddCanvas(TString);

@@ -54,3 +54,19 @@ TCanvas* VOnlineMonitor::AddCanvas(TString name){
   fCanvasList.push_back(new TCanvas(name, name, 300, 300));
   return fCanvasList.back();
 }
+
+void VOnlineMonitor::UpdateAllCanvas()
+{
+
+  printf("%s - Updating all canvas\n",fName.Data());
+  for ( std::vector<TCanvas*>::iterator it = fCanvasList.begin() ; it != fCanvasList.end(); ++it ) {
+    Int_t nFrames = (*it)->GetListOfPrimitives()->GetEntries();
+    for(Int_t iFrame = 0; iFrame < nFrames; iFrame++){
+      TPad* pad = (TPad*)(*it)->GetListOfPrimitives()->At(iFrame);
+      if(pad){
+        pad->Modified();
+        pad->Update();
+      }   
+    }
+  }
+}

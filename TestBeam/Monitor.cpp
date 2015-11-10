@@ -2,97 +2,37 @@
 #include <stdio.h>
 #include <vector>
 
-#include "TFile.h"
-#include "TTree.h"
-#include "TBranch.h"
 #include "TApplication.h"
-
-#include "TRawEvent.hh"
 
 #include "HistoManager.hh"
 #include "Grapher.hh"
-#include "ECALAnal.hh"
-#include "TargetAnal.hh"
-
-void AnalyzeEvents(std::string name, int nevents){
-
-  // Prepare the analyses
-  ECALAnal* ecalA = new ECALAnal();
-  TargetAnal* targetA = new TargetAnal();
-
-  // Connect to raw events file
-  TFile* fRawEv = new TFile(name.c_str());
-  TTree* tRawEv = (TTree*)fRawEv->Get("RawEvents");
-  TBranch* bRawEv = tRawEv->GetBranch("RawEvent");
-  TRawEvent* rawEv = new TRawEvent();
-  bRawEv->SetAddress(&rawEv);
-
-  Int_t nevt = tRawEv->GetEntries();
-  printf("TTree RawEvents contains %d events\n",nevt);
-
-  // Set number of events to read
-  Int_t ntoread = nevt;
-  if (nevents && nevents<nevt) ntoread = nevents;
-  printf("Reading the first %d events\n",ntoread);
-
-  for(Int_t iev=0;iev<ntoread;iev++){
-
-    // Read event
-    printf("Reading event %d\n",iev);
-    bRawEv->GetEntry(iev);
-
-    // Do ECAL analysis
-    ecalA->SetEvent(rawEv);
-    ecalA->AnalyzeCharge();
-    ecalA->AnalyzePosition();
-
-    // Do Target analysis
-    targetA->SetEvent(rawEv);
-    targetA->AnalyzeCharge();
-    targetA->AnalyzePosition();
-
-    // Clear event
-    rawEv->Clear("C");
-
-  }
-
-  // Final cleanup
-
-  delete rawEv;
-  delete bRawEv;
-  delete tRawEv;
-  fRawEv->Close();
-  delete fRawEv;
-
-  delete ecalA;
-  delete targetA;
-
-}
 
 int main(int argc, char* argv[])
 {
-  int nevents=0;
+
   int c;
-  std::string infile = "rawdata.root";
   int verbose = 0;
-  //Histo* his = Histo::GetInstance();
+
+  UInt_t nevents=0;
+  TString infile = "rawdata.root";
+
   // Parse options
   while ((c = getopt (argc, argv, "i:n:v:h")) != -1) {
     switch (c)
       {
       case 'i':
         infile = optarg;
-        fprintf(stdout,"Set input data file to '%s'\n",infile.c_str());
+        fprintf(stdout,"Set input data file to '%s'\n",infile.Data());
         break;
       case 'n':
         if ( sscanf(optarg,"%d",&nevents) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
-        if (nevents<0) {
-          fprintf (stderr, "Error while processing option '-n'. Required %d events (must be >=0).\n", nevents);
-          exit(1);
-        }
+        //if (nevents<0) {
+        //  fprintf (stderr, "Error while processing option '-n'. Required %d events (must be >=0).\n", nevents);
+        //  exit(1);
+        //}
 	if (nevents) {
 	  fprintf(stdout,"Will read first %d events in file\n",nevents);
 	} else {
@@ -134,24 +74,29 @@ int main(int argc, char* argv[])
       }
   }
 
-  // Use TApplication if you don't need prompt.
+  // Define the ROOT application to use
   TApplication* app = new TApplication("App", &argc, argv);
 
   // Initilize histograms
   HistoManager::GetInstance();
 
   // Initialize graphics
-  Grapher::GetInstance();
+  Grapher* grapher = Grapher::GetInstance();
+  grapher->SetApplication(app);
 
   // Fill histograms for this slice
-  AnalyzeEvents(infile.c_str(),nevents);
+  grapher->SetFileName(infile);
+  grapher->SetNEvents(nevents);
+  //grapher->AnalyzeEvents();
+  //grapher->Initialize();
 
   // Run application
-  app->Run(kTRUE);
+  //app->Run(kTRUE);
+  //app->Terminate(0);
+  app->Run(kFALSE);
   // Pass kFALSE if you want application to terminate by itself.
   // Then you just need "return 0;" below (to avoid compiler warnings).
 
-  app->Terminate(0);
   return 0;
 
 }

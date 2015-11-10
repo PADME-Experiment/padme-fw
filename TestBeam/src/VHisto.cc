@@ -13,7 +13,6 @@ void VHisto::Reset()
 {
   TIter next(fHistoList);
   while ( TObject* obj = next() ) ((TH1*)obj)->Reset();
-
 }
 
 Int_t VHisto::Fill1DHisto(TString name,Float_t var)
@@ -36,5 +35,6 @@ Int_t VHisto::Fill2DHisto(TString name,Float_t var1,Float_t var2)
     return 1;
   }
   histo->Fill(var1,var2);
+  //printf("VHisto::Fill2DHisto filling %s with %f %f\n",name.Data(),var1,var2);
   return 0;
 }

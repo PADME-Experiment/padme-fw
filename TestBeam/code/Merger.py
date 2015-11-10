@@ -10,6 +10,7 @@ import time
 # This will use the $PADME environment variable if set
 PADME = os.getenv('PADME',"..")
 
+# Dir where all log files are kept
 log_dir = PADME+"/RunControl/log"
 
 # Path where one can find the "data" directory containing DAQ files
@@ -19,6 +20,7 @@ daq_data_dir = PADME+"/RunControl"
 merged_dir = PADME+"/TestBeam/tmp"
 merged_list = merged_dir+"/monitor.list"
 merged_file_template = merged_dir+"/monitor"
+merged_last_file = merged_dir+"/merged_last_file"
 
 # Executable used to merge events and write RAW files
 padme_merge = PADME+"/Level1/PadmeLevel1.exe"
@@ -51,7 +53,8 @@ if (not os.path.isdir(log_path)):
     sys.exit(1)
 
 # Get list of log files and boards for this run
-re_board = re.compile("^"+run_name+"_(\d\d).log")
+print 'Looking for log files in',log_path
+re_board = re.compile("^"+run_name+"_b(\d\d).log")
 log_list = []
 boardid_list = []
 for top,dirs,files in os.walk(log_path):
@@ -114,8 +117,13 @@ while(1):
         # Merge list of files
         merged_file = merged_file_template+"_"+str(n_data_files)+".root"
         if os.path.exists(merged_file): os.remove(merged_file)
-        cmd = padme_merge+" -d "+daq_data_dir+" -l "+merged_list+" -o "+merged_file
+        cmd = padme_merge+" -d "+daq_data_dir+" -l "+merged_list+" -o "+merged_file+" -n 0"
         os.system(cmd)
+
+        # Tell Monitor name of last merged file
+        f = open(merged_last_file,"w")
+        f.write(merged_file)
+        f.close()
 
         # Run graphical monitor program
         #cmd = padme_monitor+" -i "+merged_file

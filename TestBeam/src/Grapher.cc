@@ -2,6 +2,7 @@
 
 //#include <stdlib.h>
 //#include <stdio.h>
+#include <iostream>
 #include <fstream>
 
 #include "TFile.h"
@@ -186,10 +187,11 @@ void Grapher::AnalyzeEvents()
   fTimer->Reset();
 
   // Get name of file with data to analyze from fFileName
-  std::ifstream list;
+  //std::ifstream list;
   std::string line;
   TString newFile;
-  list.open(fFileName.Data());
+  //list.open(fFileName.Data());
+  std::ifstream list(fFileName.Data(),std::ifstream::in);
   while(!list.eof()){
     getline(list,line);
     if (line.compare("")!=0) { newFile = line; }

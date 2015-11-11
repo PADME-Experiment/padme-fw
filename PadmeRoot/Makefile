@@ -26,8 +26,9 @@ ROOTGLIBS    := $(shell $(ROOTCONFIG) --glibs)
 
 # Define c++ compiler and flags
 CXX = g++
-CXXFLAGS = -O2 -g -fPIC -Wall -I$(IDIR) $(ROOTCFLAGS)
-CPPFLAGS = -I$(IDIR) -I$(ROOTINCDIR) -I/usr/include
+CXXFLAGS = -O2 -g -fPIC -Wall $(ROOTCFLAGS) -I$(IDIR)
+CPPFLAGS = $(ROOTCFLAGS) -I$(IDIR) -I/usr/include
+CINTFLAGS = -I$(IDIR)
 
 # Define command to create dependencies files
 DEPEND = $(CXX) -MM
@@ -46,17 +47,17 @@ LIBRARY := $(LDIR)/lib$(LIBNAME).so
 all: $(LIBNAME)
 
 $(LIBNAME) : $(DEPS) $(OBJECTS)
-	$(CXX) -shared -o $(LIBRARY) $(OBJECTS)
+	$(CXX) -shared -o $(LIBRARY) $(ROOTLDFLAGS) $(CXXFLAGS) $(OBJECTS)
 
 $(ODIR)/%.o : $(SDIR)/%.cc $(DDIR)/%.ccd
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(DDIR)/%.ccd : $(SDIR)/%.cc
-	$(DEPEND) $(CXXFLAGS) -MT $(addprefix $(ODIR)/,$(notdir $(<:.cc=.o))) $< > $@
+	$(DEPEND) $(CPPFLAGS) -MT $(addprefix $(ODIR)/,$(notdir $(<:.cc=.o))) $< > $@
 
 PersistencyDict.cc: $(INCLUDES) PersistencyLinkDef.hh
 	@echo "Generating dictionary $@..."
-	rootcint -f $@ -c $(filter-out -I/usr/include,$(CPPFLAGS)) $^
+	rootcint -f $@ -c $(CINTFLAGS) -p $^
 
 $(ODIR)/PersistencyDict.o: PersistencyDict.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@

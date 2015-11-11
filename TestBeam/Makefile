@@ -28,6 +28,7 @@ PADMEROOTDIR := $(PADME)/PadmeRoot
 CXX = g++
 CXXFLAGS = -O2 -g -Wall $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include
 CPPFLAGS = $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include -I/usr/include
+CINTFLAGS = -I$(IDIR) -I$(PADMEROOTDIR)/include 
 
 # Define command to create dependencies files
 DEPEND = $(CXX) -MM
@@ -68,7 +69,7 @@ $(DDIR)/%.ccd : $(SDIR)/%.cc
 
 %Dict.cc : $(INCLUDES) %LinkDef.hh
 	@echo "Generating dictionary $@..."
-	rootcint -f $@ -c $(filter-out -I/usr/include,$(CPPFLAGS)) $^
+	rootcint -f $@ -c $(CINTFLAGS) $^
 
 %Dict.o : %Dict.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@

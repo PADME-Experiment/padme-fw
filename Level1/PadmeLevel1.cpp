@@ -217,18 +217,23 @@ int main(int argc, char* argv[])
 
   // Loop over all events in files
 
-  UInt_t TT0[boards.size()]; // Initial time tag
-  UInt_t TT[boards.size()]; // Current time tag
+  UInt_t TT0[boards.size()];  // Time tag of first event in run
+  UInt_t TTg[boards.size()];  // Time tag of last good event
+  UInt_t TT[boards.size()];   // Time tag of current event
+  Int_t  dT[boards.size()];   // dT wrt last good event
+  Int_t  dTB0[boards.size()]; // dT wrt board 0 in current event
 
   int eventnr = 0;
   while(1){
 
+    printf("=== Processing event %8d ===\n",eventnr);
+
     // Load next event for all boards
-    unsigned int nEOR = 0;
+    UInt_t nEOR = 0;
     for(unsigned int b=0; b<boards.size(); b++) {
       if ( boards[b]->NextEvent() == 0 ) {
 	nEOR++;
-	printf("Board %d has reached end of run.\n",boards[b]->GetBoardId());
+	printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
       }
     }
     if (nEOR != 0) {
@@ -237,33 +242,67 @@ int main(int argc, char* argv[])
       } else {
 	printf("WARNING: only %d board(s) reached end of run.\n",nEOR);
       }
-      break;
+      break; // Exit from main loop
     }
 
-    for(unsigned int b=0; b<boards.size(); b++) {
-      if(eventnr==0){
-	TT0[b] =  boards[b]->Event()->GetTriggerTimeTag(0);
-	TT[b] =  TT0[b];
-	printf("Board %1d NEv %8u Tabs %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT0[b]*8.5E-9,TT0[b]);
-      }else{
-	UInt_t tt = boards[b]->Event()->GetTriggerTimeTag(0);
-	Int_t dt = tt-TT[b];
-	if (dt<0) { dt += (1<<30); }
-	if (b==0) {
-	  printf("Board %1d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),tt*8.5E-9,tt,dt*8.5E-9,dt);
-	} else {
-	  Int_t dt0 = tt-TT[0];
-	  printf("Board %1d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x) DtB0 %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),tt*8.5E-9,tt,dt*8.5E-9,dt,dt0*8.5E-9,dt0);
+    nEOR = 0;
+    UInt_t in_time = 0;
+    while ( (! in_time) && (nEOR==0) ) {
+
+      // Get timing information
+      UInt_t bmax = 0;
+      for(unsigned int b=0; b<boards.size(); b++) {
+	TT[b]  = boards[b]->Event()->GetTriggerTimeTag(0);
+	if(eventnr==0) {
+	  TT0[b] = TT[b];
+	  TTg[b] = TT[b]; // Event 0 is good by definition
 	}
-	TT[b] = tt;
+	dT[b] = TT[b]-TTg[b];
+	if (dT[b]<0) dT[b] += (1<<30);
+	if (dT[b]>dT[bmax]) bmax = b;
+	dTB0[b] = TT[b]-TT[0];
+	if (b==0) {
+	  printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b]);
+	} else {
+	  printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x) DtB0 %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b],dTB0[b]*8.5E-9,dTB0[b]);
+	}
       }
+
+      // Verify if all events are in time (0x1000 clock cycles tolerance)
+      in_time = 1;
+      for(unsigned int b=0; b<boards.size(); b++) {
+	if ( (dT[bmax]-dT[b]) >= 0x1000 ) {
+	  in_time = 0;
+	  printf("*** Board %2d - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+	  if ( boards[b]->NextEvent() == 0 ) {
+	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+	    nEOR++;
+	  }
+	}
+      }
+
     }
+
+    // If one or more files reached EOR, stop processing events
+    if (nEOR != 0) {
+      if (nEOR == boards.size()) {
+	printf("All boards reached end of run.\n");
+      } else {
+	printf("WARNING: only %d board(s) reached end of run.\n",nEOR);
+      }
+      break; // Exit from main loop
+    }
+
+    // Tag current set of times ad "good"
+    for (unsigned int b=0; b<boards.size(); b++) {
+      TTg[b] = TT[b];
+    }
+
     // The event is complete: copy structure to TRawEvent and send to output file
     root->FillRawEvent(runnr,eventnr,boards);
 
     // Count event
     eventnr++;
-    //if (eventnr>5000) break;
   }
 
   // Finalize root file

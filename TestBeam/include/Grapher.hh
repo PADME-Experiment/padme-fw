@@ -11,7 +11,7 @@ class Grapher {
 
 public:
 
-  ~Grapher();
+  virtual ~Grapher();
   static Grapher* GetInstance();
 
   void Initialize();

@@ -186,7 +186,7 @@ void Grapher::AnalyzeEvents()
   fTimer->Reset();
 
   // Get name of file with data to analyze from fFileName
-  ifstream list;
+  std::ifstream list;
   std::string line;
   TString newFile;
   list.open(fFileName.Data());

@@ -26,8 +26,8 @@ PADMEROOTDIR := $(PADME)/PadmeRoot
 
 # Define c++ compiler and flags
 CXX = g++
-CXXFLAGS = -O2 -g -Wall -I$(IDIR) -I$(PADMEROOTDIR)/include $(ROOTCFLAGS)
-CPPFLAGS = -I$(IDIR) -I$(PADMEROOTDIR)/include -I$(ROOTINCDIR) -I/usr/include
+CXXFLAGS = -O2 -g -Wall $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include
+CPPFLAGS = $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include -I/usr/include
 
 # Define command to create dependencies files
 DEPEND = $(CXX) -MM

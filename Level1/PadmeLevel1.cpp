@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
   } else {
 
     // Get list of boards and files from file
-    ifstream list;
+    std::ifstream list;
     std::string line;
     int bid;
     char bfile[1024];
@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
 
   // Loop over all events in files
 
-  UInt_t TT0[boards.size()];  // Time tag of first event in run
+  //UInt_t TT0[boards.size()];  // Time tag of first event in run
   UInt_t TTg[boards.size()];  // Time tag of last good event
   UInt_t TT[boards.size()];   // Time tag of current event
   Int_t  dT[boards.size()];   // dT wrt last good event
@@ -254,7 +254,7 @@ int main(int argc, char* argv[])
       for(unsigned int b=0; b<boards.size(); b++) {
 	TT[b]  = boards[b]->Event()->GetTriggerTimeTag(0);
 	if(eventnr==0) {
-	  TT0[b] = TT[b];
+	  //TT0[b] = TT[b];
 	  TTg[b] = TT[b]; // Event 0 is good by definition
 	}
 	dT[b] = TT[b]-TTg[b];

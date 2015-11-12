@@ -70,7 +70,6 @@ $(DDIR)/%.ccd : $(SDIR)/%.cc
 %Dict.cc : $(INCLUDES) %LinkDef.hh
 	@echo "Generating dictionary $@..."
 	rootcint -f $@ -c $(CINTFLAGS) $^
-#	rootcint -f $@ -c $(filter-out -I/usr/include,$(CPPFLAGS)) $^
 
 %Dict.o : %Dict.cc
 	$(CXX) $(CXXFLAGS) -c $< -o $@

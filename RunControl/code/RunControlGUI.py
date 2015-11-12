@@ -98,9 +98,15 @@ class RunControlGUI:
         self.b_setup.grid(row=0,column=0,columnspan=n_buttons_per_row,sticky=W+E)
         # Create buttons for each board
         self.b_board = []
+        self.boardgui = []
         for brd_id in range(0,self.n_board_buttons):
-            self.b_board.insert(brd_id,Button(self.f_boards,text="ADC%02d"%brd_id,bg="white"))
+            # Create board GUI handler
+            self.boardgui.append(ADCBoardGUI())
+            self.boardgui[brd_id].mode = "cfg"
+            # Create button
+            self.b_board.append(Button(self.f_boards,text="ADC%02d"%brd_id,bg="white"))
             self.b_board[brd_id].grid(row=1+brd_id/n_buttons_per_row,column=brd_id%n_buttons_per_row,sticky=W+E)
+            self.b_board[brd_id].config(command=self.boardgui[brd_id].change_status)
         # Configure buttons according to current setup
         self.configure_board_buttons()
 
@@ -118,10 +124,6 @@ class RunControlGUI:
 
         # Start user interface
         self.root.mainloop()
-
-    def show_board(self,board,mode):
-
-        self.boardgui = ADCBoardGUI(board,mode)
 
     def show_log(self,text):
 
@@ -183,6 +185,7 @@ class RunControlGUI:
         self.show_log("Creating log directory "+self.run.log_dir)
         self.run.create_log_dir()
 
+        # Write run and boards configuration files
         self.show_log("Writing configuration file "+self.run.config_file)
         self.run.write_config()
         for adc in (self.run.adcboard_list):
@@ -194,13 +197,17 @@ class RunControlGUI:
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
+
+            # Close any existing board GUI window
+            self.boardgui[adc.board_id].close_gui()
+            # Change board GUI mode from cfg to log
+            self.boardgui[adc.board_id].mode = "log"
+
             p_id = adc.start_daq()
             if p_id:
                 self.show_log("ADC board "+"%02d"%adc.board_id+" - Started DAQ with process id "+str(p_id))
                 self.b_board[adc.board_id].config(background="yellow")
                 adc.status = "init"
-                # Show log file instead of configuration
-                self.b_board[adc.board_id].config(command=lambda brd=adc,mode="log": self.show_board(brd,mode))
             else:
                 self.show_log("ADC board "+"%02d"%adc.board_id+" - ERROR: could not start DAQ")
                 self.b_board[adc.board_id].config(background="red")
@@ -247,7 +254,7 @@ class RunControlGUI:
         # Reset ADC buttons color and functionality
         for adc in (self.run.adcboard_list):
             self.b_board[adc.board_id].config(bg="white")
-            self.b_board[adc.board_id].config(command=lambda brd=adc,mode="cfg": self.show_board(brd,mode))
+            self.boardgui[adc.board_id].mode="cfg"
 
         # Enable init_run button and disable all the others
         self.b_init_run.config(state=NORMAL)
@@ -360,6 +367,7 @@ class RunControlGUI:
         b_close.grid(row=1,column=1)
 
     def change_setup(self):
+
         items = self.lb_setup.curselection()
         for item in items:
             setup = self.lb_setup.get(int(item))
@@ -375,12 +383,14 @@ class RunControlGUI:
     def change_setup_bind(self,event): self.change_setup()
 
     def configure_board_buttons(self):
+
         # Configure board buttons according to current setup
         for brd_id in range(0,self.n_board_buttons):
+            # Make sure GUI window is closed
+            self.boardgui[brd_id].close_gui()
             # Enable button only if corresponding board is active in this run
             self.b_board[brd_id].config(state=DISABLED)
             for adcboard in self.run.adcboard_list:
                 if (adcboard.board_id == brd_id):
-                    # Weird way to assign the same function to different buttons
-                    self.b_board[brd_id].config(command=lambda brd=adcboard,mode="cfg": self.show_board(brd,mode))
+                    self.boardgui[brd_id].set_board(adcboard)
                     self.b_board[brd_id].config(state=NORMAL)

@@ -79,10 +79,10 @@ class Run:
                 (p_name,p_value) = m.group(1,2)
                 if (p_name == "boardid_list"):
                     # Get sorted list of board ids while removing duplicates
-                    s_boards = sorted(list(set(re_boardid.findall(p_value))))
+                    self.s_boards = sorted(list(set(re_boardid.findall(p_value))))
                     # Convert to int as findall returns strings
                     self.boardid_list = []
-                    for s_bid in s_boards: self.boardid_list.append(int(s_bid))
+                    for s_bid in self.s_boards: self.boardid_list.append(int(s_bid))
                 else:
                     print "Run ERROR - unknown parameter found while reading setup file:",p_name
             else:
@@ -156,7 +156,7 @@ class Run:
             # Write run configuration parameters to DB
             db.add_cfg_para(self.run_number,"setup",              self.setup)
             s_board_list = ""
-            for s_bid in s_boards: s_board_list += " "+s_bid
+            for s_bid in self.s_boards: s_board_list += " "+s_bid
             db.add_cfg_para(self.run_number,"board_list",         s_board_list)
             db.add_cfg_para(self.run_number,"config_dir",         self.config_dir)
             db.add_cfg_para(self.run_number,"config_file",        self.config_file)

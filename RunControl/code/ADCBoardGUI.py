@@ -5,22 +5,33 @@ from PadmeDB import PadmeDB
 
 class ADCBoardGUI:
 
-    def __init__(self,board,mode):
+    def __init__(self):
+
+        self.board = None
+        self.mode = ""
+        self.status = "off"
+
+    def set_board(self,board):
 
         self.board = board
         self.b_name = "ADC%02d" % (board.board_id,)
-        self.mode = mode
 
-        self.main_window()
+    def change_status(self):
 
-        if (self.mode=="cfg"): self.show_cfg()
-        if (self.mode=="log"): self.show_log()
+        if self.board is None  : return
 
-    def main_window(self):
+        if   self.status == "on" : self.close_gui()
+        elif self.status == "off": self.open_gui()
+
+    def open_gui(self):
+
+        if self.board is None : return
+        if self.status == "on": return
 
         # Initialize main graphic window
         self.root = Tk()
-        self.root.geometry("579x485+500+500")
+        #self.root.geometry("579x485+500+500")
+        self.root.geometry("579x485")
         self.root.configure(background='black')
         self.root.title(self.b_name)
         self.root.grid_columnconfigure(0,weight=1)
@@ -28,8 +39,25 @@ class ADCBoardGUI:
         self.root.grid_rowconfigure(1,weight=0)
 
         # Button to quit board configuration window
-        self.b_done = Button(self.root,text="Done",fg="red",command=self.done)
+        self.b_done = Button(self.root,text="Done",fg="red",command=self.close_gui)
         self.b_done.grid(row=1,column=0,sticky=W+E)
+
+        if (self.mode=="cfg"): self.show_cfg()
+        if (self.mode=="log"): self.show_log()
+
+        self.status = "on"
+
+    def close_gui(self):
+
+        if self.board is None  : return
+        if self.status == "off": return
+
+        if (self.mode=="log"):
+            self.root.after_cancel(self.my_after)
+            self.file.close()
+        self.root.destroy()
+
+        self.status = "off"
 
     def show_cfg(self):
 
@@ -67,17 +95,11 @@ class ADCBoardGUI:
         self.my_after = self.root.after(1000, self.update_log)
 
     def update_log(self):
-        # If log fiel has grown, show the new content
+
+        # If log file has grown, show the new content
         if (os.path.getsize(self.board.log_file) > self.size):
             data = self.file.read()
             self.size = self.size + len(data)
             self.w_log.insert(END, data)
             self.w_log.see(END)
         self.my_after = self.root.after(1000,self.update_log)
-
-    def done(self):
-
-        if (self.mode=="log"):
-            self.root.after_cancel(self.my_after)
-            self.file.close()
-        self.root.destroy()

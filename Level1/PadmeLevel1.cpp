@@ -126,6 +126,10 @@ int main(int argc, char* argv[])
       printf("ERROR retrieving from DB list of files for run %d. Aborting\n",runnr);
       exit(1);
     }
+    if (boardList.size() == 0) {
+      printf("ERROR no boards associated to run %d found in DB. Aborting\n",runnr);
+      exit(1);
+    }
 
     // Create vector of boards
     for(unsigned int b=0; b<boardList.size(); b++) {

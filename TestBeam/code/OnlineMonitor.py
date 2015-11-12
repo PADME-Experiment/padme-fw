@@ -44,11 +44,11 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:],"hr:")
     except getopt.GetoptError:
-        print 'Merger -r <run name>'
+        print 'OnlineMonitor -r <run name>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'Merger -r <run name>'
+            print 'OnlineMonitor -r <run name>'
             sys.exit()
         elif opt == '-r':
             run_name = arg

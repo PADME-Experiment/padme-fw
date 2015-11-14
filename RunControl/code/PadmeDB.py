@@ -26,11 +26,11 @@ class PadmeDB:
         DB_USER   = os.getenv('PADME_DB_USER'  ,'padme')
         DB_PASSWD = os.getenv('PADME_DB_PASSWD','unknown')
         DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDB')
+
         return MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
 
     def is_run_in_db(self,run_nr):
 
-        print "run_nr",run_nr
         if (run_nr!=0):
 
             c = self.conn.cursor()

@@ -7,21 +7,17 @@ import MySQLdb
 # Define regular expressions used in file parsing
 re_empty = re.compile("^\s*$")
 re_comment = re.compile("^\s*#")
-#re_board_type = re.compile("^\s*board_type\s+(\d+)\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s*$")
-#re_board_phys = re.compile("^\s*board_phys\s+(\d+)\s+(\d+)\s+(\w+)\s*$")
-#re_board_link = re.compile("^\s*board_link\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\w+)\s+(\w+)\s*$")
 re_board = re.compile("^\s*board\s+(\d+)\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\w+)\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)\s*$")
 
 def main():
 
-    # Connect to new version of the DB
-    # Change to some secure external file
-    DB_HOST = 'localhost'
-    DB_PORT = 5501
-    DB_USER = 'padme'
-    DB_PASSWD = 'padmeXXroot'
-    DB_NAME = 'PadmeDB'
-    conn = MySQLdb.connect(host=DB_HOST,port=DB_PORT,user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
+    # Get DB connection parameters from environment variables
+    DB_HOST   = os.getenv('PADME_DB_HOST'  ,'localhost')
+    DB_PORT   = os.getenv('PADME_DB_PORT'  ,'5501')
+    DB_USER   = os.getenv('PADME_DB_USER'  ,'padme')
+    DB_PASSWD = os.getenv('PADME_DB_PASSWD','unknown')
+    DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDB')
+    conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
     c = conn.cursor()
 
     # Read DB setup file

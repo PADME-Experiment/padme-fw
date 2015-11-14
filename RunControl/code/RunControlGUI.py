@@ -1,4 +1,5 @@
 import os
+import time
 from Tkinter import *
 from PIL import Image, ImageTk
 
@@ -11,7 +12,6 @@ class RunControlGUI:
 
         self.run = run
 
-        # Connect to DB
         self.db = PadmeDB(self.run.db_file)
 
         # Initialize main graphic window
@@ -127,8 +127,9 @@ class RunControlGUI:
 
     def show_log(self,text):
 
-        print text
-        self.w_log.insert(END,text+"\n")
+        txt = now_str()+" "+text
+        print txt
+        self.w_log.insert(END,txt+"\n")
         self.w_log.see(END)
 
     def wait_for_init(self):
@@ -161,8 +162,10 @@ class RunControlGUI:
             # All boards correctly completed initialization
             self.show_log("All boards completed initialization: DAQ run can be started")
             self.b_start_run.config(state=NORMAL)
+            self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
         else:
             self.show_log("*** ERROR *** One or more boards could not complete initialization. Cannot start run")
+            self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
 
     def init_run(self):
 
@@ -219,6 +222,8 @@ class RunControlGUI:
     def start_run(self):
 
         self.show_log("Starting run")
+        self.db.set_run_time_start(self.run.run_number,now_str())
+        self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         # Create "start the run" tag file
         open(self.run.start_file,'w').close()
@@ -231,8 +236,13 @@ class RunControlGUI:
 
     def terminate_run(self,mode):
 
-        if (mode=="abort"): self.show_log("Aborting Run")
-        if (mode=="stop"):  self.show_log("Stopping Run")
+        if (mode=="abort"):
+            self.show_log("Aborting run")
+            self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
+        if (mode=="stop"):
+            self.show_log("Stopping run")
+            self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
+        self.db.set_run_time_stop(self.run.run_number,now_str())
 
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()
@@ -243,6 +253,7 @@ class RunControlGUI:
                 self.show_log("ADC board "+"%02d"%adc.board_id+" - Terminated correctly")
             else:
                 self.show_log("ADC board "+"%02d"%adc.board_id+" - WARNING: problems while terminating DAQ")
+                self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Clean up run directory
         for adc in (self.run.adcboard_list):
@@ -394,3 +405,6 @@ class RunControlGUI:
                 if (adcboard.board_id == brd_id):
                     self.boardgui[brd_id].set_board(adcboard)
                     self.b_board[brd_id].config(state=NORMAL)
+
+def now_str(): return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+

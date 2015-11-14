@@ -12,6 +12,7 @@ class Run:
 
         self.run_number = 0
         self.run_type = "TEST"
+        self.run_user = "BTF crew"
         self.run_comment = "Dummy run"
 
         self.set_default_config()
@@ -29,10 +30,9 @@ class Run:
 
         for adcboard in self.adcboard_list:
             adcboard.run_number  = self.run_number
-            s_bid = "%02d"%adcboard.board_id
+            s_bid = "b%02d"%adcboard.board_id
             adcboard.config_file = self.config_dir+"/"+self.config_file_head+"_"+s_bid+".cfg"
             adcboard.log_file    = self.log_dir+"/"+self.log_file_head+"_"+s_bid+".log"
-
 
     def set_default_config(self):
 
@@ -149,9 +149,10 @@ class Run:
 
         if (self.run_number):
 
+            # Connect to DB
             db = PadmeDB(self.db_file)
 
-            db.create_run(self.run_number,self.run_type,self.run_comment)
+            db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment)
 
             # Write run configuration parameters to DB
             db.add_cfg_para(self.run_number,"setup",              self.setup)

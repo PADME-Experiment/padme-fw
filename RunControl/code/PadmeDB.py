@@ -52,10 +52,28 @@ class PadmeDB:
         else:
             return maxrun
 
-    def create_run(self,run_nr,run_type,run_comment):
+    def create_run(self,run_nr,run_type,run_user,run_comment):
 
         c = self.conn.cursor()
-        c.execute("""INSERT INTO run (number,type,status,time_start,time_stop,total_events,comment) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,run_comment))
+        c.execute("""INSERT INTO run (number,type,status,time_start,time_stop,total_events,user,comment) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,run_user,run_comment))
+        self.conn.commit()
+
+    def set_run_status(self,run_nr,status):
+
+        c = self.conn.cursor()
+        c.execute("""UPDATE run SET status = %s WHERE number = %s""",(status,run_nr))
+        self.conn.commit()
+
+    def set_run_time_start(self,run_nr,time_start):
+
+        c = self.conn.cursor()
+        c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(time_start,run_nr))
+        self.conn.commit()
+
+    def set_run_time_stop(self,run_nr,time_stop):
+
+        c = self.conn.cursor()
+        c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
         self.conn.commit()
 
     def add_cfg_para(self,run_nr,para_name,para_val):

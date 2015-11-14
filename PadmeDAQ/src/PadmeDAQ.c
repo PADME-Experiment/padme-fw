@@ -72,7 +72,7 @@ int main(int argc, char*argv[])
 
   pid_t pid;
   int c;
-  int runnr;
+  //int runnr;
   int rc;
 
   // Make sure local data types are correct for us
@@ -103,7 +103,8 @@ int main(int argc, char*argv[])
   }
 
   // Parse options
-  while ((c = getopt (argc, argv, "c:r:h")) != -1)
+  //while ((c = getopt (argc, argv, "c:r:h")) != -1)
+  while ((c = getopt (argc, argv, "c:h")) != -1)
     switch (c)
       {
       case 'c':
@@ -118,6 +119,7 @@ int main(int argc, char*argv[])
 	  exit(1);
 	}
         break;
+      /*
       case 'r':
 	if ( Config->run_number != 0 ) {
           fprintf (stderr, "Error: multiple definitions of run number.\n");
@@ -133,12 +135,13 @@ int main(int argc, char*argv[])
 	}
 	Config->run_number = runnr;
         break;
+      */
       case 'h':
 	fprintf(stdout,"\nPadmeDAQ [-c cfg_file] [-r run_nr] [-R] [-m comment] [-h]\n\n");
 	fprintf(stdout,"  -c: use file 'cfg_file' to set configuration parameters for this process\n");
 	fprintf(stdout,"     If no file is specified, use default settings\n");
-	fprintf(stdout,"  -r: set run number to 'run_nr'\n");
-	fprintf(stdout,"     If no run number is specified, the run is dummy: no data are saved to DB\n");
+	//fprintf(stdout,"  -r: set run number to 'run_nr'\n");
+	//fprintf(stdout,"     If no run number is specified, the run is dummy: no data are saved to DB\n");
 	fprintf(stdout,"  -h: show this help message and exit\n\n");
 	exit(0);
       case '?':

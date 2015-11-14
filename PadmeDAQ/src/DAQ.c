@@ -771,7 +771,7 @@ int DAQ_readdata ()
 
   // Register file in the DB
   if ( Config->run_number ) {
-    if ( db_file_open(fileName[fileIndex],fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
   }
 
   // Write header to file
@@ -1017,7 +1017,7 @@ int DAQ_readdata ()
 
 	// Register file in the DB
 	if ( Config->run_number ) {
-	  if ( db_file_open(fileName[fileIndex],fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+	  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
 	}
 
 	// Write header to file

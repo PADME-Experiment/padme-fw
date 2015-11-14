@@ -235,6 +235,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - data_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
+      } else if ( strcmp(param,"run_number")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->run_number = v;
+	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"run_type")==0 ) {
 	if ( strcmp(value,"DAQ")==0 || strcmp(value,"COSMIC")==0 || strcmp(value,"TEST")==0 ) {
 	  strcpy(Config->run_type,value);

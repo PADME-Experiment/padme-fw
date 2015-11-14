@@ -116,8 +116,6 @@ int main(int argc, char* argv[])
 
     // Initialize DB connection
     DBService* db = DBService::GetInstance();
-    db->SetDBFilePath(dbfile);
-    db->Connect();
 
     // Get from DB list of board ids used in current run
     std::vector<int> boardList;
@@ -155,9 +153,6 @@ int main(int argc, char* argv[])
       boards.push_back(board);
       
     }
-
-    // Disconnect from DB
-    db->Disconnect();
 
   } else {
 

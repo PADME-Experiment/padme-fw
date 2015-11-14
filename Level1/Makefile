@@ -32,7 +32,7 @@ CPPFLAGS =  $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include -I/usr/include
 DEPEND = $(CXX) -MM
 
 # Define parameters for link command
-LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -lsqlite3
+LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -L/usr/lib64/mysql -lmysqlclient
 LDFLAGS = -O4 $(ROOTLDFLAGS) $(ROOTLIBS) $(LIBS)
 
 # Get list of files to process

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <cstdlib>
 
 #include "DBService.hh"
 
@@ -7,21 +8,9 @@ DBService* DBService::fInstance = 0;
 
 DBService::DBService()
 {
-  SetDBFilePath((std::string)"");
   fDBHandle = NULL;
+  Connect();
 }
-
-//DBService::DBService(std::string path)
-//{
-//  SetDBFilePath(path);
-//  Connect();
-//}
-
-//DBService::DBService(char* path)
-//{
-//  SetDBFilePath(path);
-//  Connect();
-//}
 
 DBService::~DBService()
 {
@@ -36,27 +25,48 @@ DBService* DBService::GetInstance()
 
 int DBService::Connect()
 {
-  int rc;
-  if (fDBFilePath.compare("")==0) {
-    printf("DBService::Connect ERROR - DB file path is not defined\n");
-    return DBSERVICE_ERROR;
-  }
-  rc = sqlite3_open(fDBFilePath.c_str(),&fDBHandle);
-  if (rc != SQLITE_OK) {
-    printf("DBService::Connect ERROR - Unable to connect to '%s' database file. Error code: %d\n",fDBFilePath.c_str(),rc);
+
+  // Check if this is the first time we are called
+  if (fDBHandle != NULL) return DBSERVICE_OK;
+
+  // Create handle to MySQL
+  fDBHandle = mysql_init(NULL);
+  if (fDBHandle == NULL) {
+    printf("Unable to connect to MySQL database server.\n");
     return DBSERVICE_CONNECTERROR;
   }
+
+  // Get MySQL server connection parameters from environment variables
+  printf("Reading env variables\n");
+  char* db_host = getenv("PADME_DB_HOST");
+  if (db_host == NULL) db_host = (char*)"localhost";
+  char* db_user = getenv("PADME_DB_USER");
+  if (db_user == NULL) db_user = (char*)"padme";
+  char* db_passwd = getenv("PADME_DB_PASSWD");
+  if (db_passwd == NULL) db_passwd = (char*)"unknown";
+  char* db_name = getenv("PADME_DB_NAME");
+  if (db_name == NULL) db_name = (char*)"PadmeDB";
+  int db_port = 5501;
+  char* db_port_s = getenv("PADME_DB_PORT");
+  if (db_port_s != NULL) db_port = atoi(db_port_s);
+  printf("host %s user %s passwd %s name %s port %d\n",db_host,db_user,db_passwd,db_name,db_port);
+
+  // Connect to MySQL server
+  if (mysql_real_connect(fDBHandle,db_host,db_user,db_passwd,db_name,db_port,NULL,0) == NULL) {
+    fprintf(stderr, "%s\n", mysql_error(fDBHandle));
+    mysql_close(fDBHandle);
+    return DBSERVICE_CONNECTERROR;
+  }  
+
+  printf("- Connected to MySQL database server\n");
   return DBSERVICE_OK;
+
 }
 
 int DBService::Disconnect()
 {
-  int rc;
-  rc = sqlite3_close(fDBHandle);
-  if ( rc != SQLITE_OK ) {
-    printf("DBService::Disconnect ERROR - Unable to disconnect database. Error code: %d\n",rc);
-    return DBSERVICE_CONNECTERROR;
-  }
+  mysql_close(fDBHandle);
+  printf("- Disconnected from database server\n");
   return DBSERVICE_OK;
 }
 
@@ -65,44 +75,36 @@ int DBService::GetFileList(std::vector<std::string>& fileList,int run_nr,int boa
 {
 
   char sqlCode[10240];
-  sqlite3_stmt* res;
+  MYSQL_RES* res;
+  MYSQL_ROW row;
 
   // Make sure the vector of file names is empty
   fileList.clear();
 
-  int result = DBSERVICE_OK;
-  strcpy(sqlCode,"SELECT raw_file.name FROM raw_file INNER JOIN process ON process.id = raw_file.process_id WHERE process.run_number = ? AND process.board_id = ?");
-  if ( sqlite3_prepare_v2(fDBHandle, sqlCode, -1, &res, NULL) == SQLITE_OK ) {
-    if (
-        ( sqlite3_bind_int(res, 1, run_nr)   == SQLITE_OK ) &&
-        ( sqlite3_bind_int(res, 2, board_id) == SQLITE_OK )
-       ) {
-      int rc;
-      while ((rc = sqlite3_step(res)) != SQLITE_DONE) {
-	if (rc == SQLITE_ROW) { // A row was returned: get name, convert to string, and save in vector
-	  const char* name = reinterpret_cast<const char*>(sqlite3_column_text(res,0));
-	  if (name == NULL) name = "";
-	  fileList.push_back(std::string(name));
-	} else { // Anything else is an error
-	  printf("DBService::GetFileList ERROR - sqlite3_step error: %s\n", sqlite3_errmsg(fDBHandle));
-	  result = DBSERVICE_SQLERROR;
-	  break; // Exit the while loop
-	}
-      }
-    } else {
-      printf("DBService::GetFileList ERROR - sqlite3_bind error: %s\n", sqlite3_errmsg(fDBHandle));
-      result = DBSERVICE_SQLERROR;
-    }
-  } else {
-    printf("DBService::GetFileList ERROR - sqlite3_prepare_v2 error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
-  }
-  if ( sqlite3_finalize(res) != SQLITE_OK ) {
-    printf("DBService::GetFileList ERROR - sqlite3_finalize error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
+  sprintf(sqlCode,"SELECT daq_file.name FROM daq_file INNER JOIN process ON process.id = daq_file.process_id WHERE process.run_number = %d AND process.board_id = %d",run_nr,board_id);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::GetFileList - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
   }
 
-  return result;
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::GetFileList - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  while ( (row = mysql_fetch_row(res)) != NULL ) {
+    if (row[0] != NULL) {
+      fileList.push_back(std::string(row[0]));
+    } else {
+      printf("DBService::GetFileList - WARNING found daq_file with NULL name\n");
+    }
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return DBSERVICE_OK;
 
 }
 
@@ -111,90 +113,77 @@ int DBService::GetBoardList(std::vector<int>& boardList,int run_nr)
 {
 
   char sqlCode[10240];
-  sqlite3_stmt* res;
+  MYSQL_RES* res;
+  MYSQL_ROW row;
 
   // Make sure the vector of board ids is empty
   boardList.clear();
 
-  int result = DBSERVICE_OK;
-  strcpy(sqlCode,"SELECT board_id FROM process WHERE run_number = ?");
-  if ( sqlite3_prepare_v2(fDBHandle, sqlCode, -1, &res, NULL) == SQLITE_OK ) {
-    if ( sqlite3_bind_int(res, 1, run_nr) == SQLITE_OK ) {
-      int rc;
-      while ((rc = sqlite3_step(res)) != SQLITE_DONE) {
-	if (rc == SQLITE_ROW) { // A row was returned: get board id and save in vector
-	  boardList.push_back(sqlite3_column_int(res,0));
-	} else { // Anything else is an error
-	  printf("DBService::GetBoardList ERROR - sqlite3_step error: %s\n", sqlite3_errmsg(fDBHandle));
-	  result = DBSERVICE_SQLERROR;
-	  break; // Exit the while loop
-	}
-      }
-    } else {
-      printf("DBService::GetBoardList ERROR - sqlite3_bind error: %s\n", sqlite3_errmsg(fDBHandle));
-      result = DBSERVICE_SQLERROR;
-    }
-  } else {
-    printf("DBService::GetBoardList ERROR - sqlite3_prepare_v2 error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
-  }
-  if ( sqlite3_finalize(res) != SQLITE_OK ) {
-    printf("DBService::GetBoardList ERROR - sqlite3_finalize error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
+  sprintf(sqlCode,"SELECT board_id FROM process WHERE run_number = %d",run_nr);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::GetBoardList - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
   }
 
-  return result;
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::GetBoardList - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  while ( (row = mysql_fetch_row(res)) != NULL ) {
+    if (row[0] != NULL) {
+      boardList.push_back(atoi(row[0]));
+    } else {
+      printf("DBService::GetBoardList - WARNING: found process with NULL board_id\n");
+    }
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return DBSERVICE_OK;
 
 }
 
-int DBService::GetFileInfo(int& version,int& part,unsigned int& time_open, unsigned int& time_close, int& n_events, long int& size, std::string filename)
+int DBService::GetFileInfo(int& version,int& part,std::string& time_open, std::string& time_close, int& n_events, long int& size, std::string filename)
 {
 
   char sqlCode[10240];
-  sqlite3_stmt* res;
+  MYSQL_RES* res;
+  MYSQL_ROW row;
 
-  int n_found = 0;
+  sprintf(sqlCode,"SELECT version,part,time_open,time_close,n_events,size FROM raw_file WHERE name = '%s'",filename.c_str());
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::GetBoardList - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::GetBoardList - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
   int result = DBSERVICE_OK;
-  strcpy(sqlCode,"SELECT version,part,time_open,time_close,n_events,size FROM raw_file WHERE name = ?");
-  if ( sqlite3_prepare_v2(fDBHandle, sqlCode, -1, &res, NULL) == SQLITE_OK ) {
-    if ( sqlite3_bind_text(res, 1, filename.c_str(), -1, SQLITE_TRANSIENT) == SQLITE_OK ) {
-      int rc;
-      while ((rc = sqlite3_step(res)) != SQLITE_DONE) {
-	if (rc == SQLITE_ROW) { // A row was returned: get board id and save in vector
-	  n_found++;
-	  version    = sqlite3_column_int(res,0);
-	  part       = sqlite3_column_int(res,1);
-	  time_open  = sqlite3_column_int(res,2);
-	  time_close = sqlite3_column_int(res,3);
-	  n_events   = sqlite3_column_int(res,4);
-	  size       = sqlite3_column_int(res,5);
-	} else { // Anything else is an error
-	  printf("DBService::GetBoardList ERROR - sqlite3_step error: %s\n", sqlite3_errmsg(fDBHandle));
-	  result = DBSERVICE_SQLERROR;
-	  break; // Exit the while loop
-	}
-      }
-    } else {
-      printf("DBService::GetBoardList ERROR - sqlite3_bind error: %s\n", sqlite3_errmsg(fDBHandle));
-      result = DBSERVICE_SQLERROR;
-    }
+  if (mysql_num_rows(res) == 0) {
+    printf("DBService::GetFileInfo ERROR - file %s not found in DB\n", filename.c_str());
+    result = DBSERVICE_ERROR;
+  } else if (mysql_num_rows(res) == 1) {
+    row = mysql_fetch_row(res);
+    version    = atoi(row[0]);
+    part       = atoi(row[1]);
+    time_open  = row[2];
+    time_close = row[3];
+    n_events   = atoi(row[4]);
+    size       = atoi(row[5]);
   } else {
-    printf("DBService::GetBoardList ERROR - sqlite3_prepare_v2 error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
+    printf("DBService::GetFileInfo ERROR - file %s defined %d times in DB (?)\n", filename.c_str(),(int)mysql_num_rows(res));
+    result = DBSERVICE_ERROR;
   }
-  if ( sqlite3_finalize(res) != SQLITE_OK ) {
-    printf("DBService::GetBoardList ERROR - sqlite3_finalize error: %s\n", sqlite3_errmsg(fDBHandle));
-    result = DBSERVICE_SQLERROR;
-  }
-  if ( result == DBSERVICE_OK ) {
-    if ( n_found == 0 ) {
-      printf("DBService::GetFileInfo ERROR - file %s not found in DB\n", filename.c_str());
-      result = DBSERVICE_ERROR;
-    } else if ( n_found > 1 ) {
-      printf("DBService::GetFileInfo ERROR - file %s defined %d times in DB (?)\n", filename.c_str(),n_found);
-      result = DBSERVICE_ERROR;
-    }
-  }
+
+  mysql_free_result(res);
+  res = NULL;
 
   return result;
 

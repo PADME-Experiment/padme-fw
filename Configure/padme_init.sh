@@ -7,3 +7,6 @@ export PADME=$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) )
 
 # Add path to PadmeRoot libraries to LD_LIBRARY_PATH
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADME}/PadmeRoot/lib"
+
+# Configure PadmeDB access parameters fom convenitonal file
+source ${HOME}/.padme-dbaccess.sh

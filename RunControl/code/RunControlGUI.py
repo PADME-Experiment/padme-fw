@@ -50,39 +50,43 @@ class RunControlGUI:
         self.b_set_runnr = Button(self.f_main)
         self.b_set_runnr.config(font=("Helvetica",16,"bold"))
         self.b_set_runnr.config(text="Run Number: %6d"%self.run.run_number)
-        self.b_set_runnr.config(command=self.set_runnr)
+        #self.b_set_runnr.config(command=self.set_runnr)
         self.b_set_runnr.grid(row=0,column=0,columnspan=2,sticky=W+E)
 
         # Button to show/change run type
         self.b_set_runtype = Button(self.f_main)
         self.b_set_runtype.config(font=("Helvetica",16,"bold"))
         self.b_set_runtype.config(text="Run Type: "+self.run.run_type)
-        self.b_set_runtype.config(command=self.cycle_runtype)
+        #self.b_set_runtype.config(command=self.cycle_runtype)
         self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
 
         # Button to show/change run comment
         self.b_set_runcmt = Button(self.f_main)
         self.b_set_runcmt.config(font=("Helvetica",14,"bold"))
         self.b_set_runcmt.config(text=self.run.run_comment)
-        self.b_set_runcmt.config(command=self.set_runcomment)
+        #self.b_set_runcmt.config(command=self.set_runcomment)
         self.b_set_runcmt.grid(row=2,column=0,columnspan=2,sticky=W+E)
 
         # Buttons to handle run init,start,abort,stop
-        self.b_init_run = Button(self.f_main,text="Init Run",command=self.init_run)
+        #self.b_init_run = Button(self.f_main,text="Init Run",command=self.init_run)
+        self.b_init_run = Button(self.f_main,text="Init Run",command=self.set_run_config)
         self.b_init_run.grid(row=3,column=0,sticky=W+E)
+        self.b_init_run.config(state=NORMAL)
         self.b_abort_run = Button(self.f_main,text="Abort Run",command=lambda mode="abort": self.terminate_run(mode))
         self.b_abort_run.grid(row=3,column=1,sticky=W+E)
         self.b_abort_run.config(state=DISABLED)
         self.b_start_run = Button(self.f_main,text="Start Run",command=self.start_run)
         self.b_start_run.grid(row=4,column=0,sticky=W+E)
         self.b_start_run.config(state=DISABLED)
-        self.b_stop_run = Button(self.f_main,text="Stop Run",command=lambda mode="stop": self.terminate_run(mode))
+        #self.b_stop_run = Button(self.f_main,text="Stop Run",command=lambda mode="stop": self.terminate_run(mode))
+        self.b_stop_run = Button(self.f_main,text="Stop Run",command=self.set_end_of_run)
         self.b_stop_run.grid(row=4,column=1,sticky=W+E)
         self.b_stop_run.config(state=DISABLED)
 
         # Button to quit Run Control
         self.b_quit_daq = Button(self.f_main,text="QUIT",fg="red",command=self.quit_daq)
         self.b_quit_daq.grid(row=5,columnspan=2,sticky=W+E)
+        self.b_quit_daq.config(state=NORMAL)
 
         # Frame to hold buttons to access boards (6 buttons per row)
         self.n_board_buttons = 36
@@ -127,7 +131,7 @@ class RunControlGUI:
 
     def show_log(self,text):
 
-        txt = now_str()+" "+text
+        txt = self.now_str()+" "+text
         print txt
         self.w_log.insert(END,txt+"\n")
         self.w_log.see(END)
@@ -167,20 +171,156 @@ class RunControlGUI:
             self.show_log("*** ERROR *** One or more boards could not complete initialization. Cannot start run")
             self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
 
-    def init_run(self):
+    def set_run_config(self):
 
-        self.show_log("Initializing Run")
+        # Disable Init Run button on main interface
+        self.b_init_run.config(state=DISABLED)
+        self.b_quit_daq.config(state=DISABLED)
+
+        self.runcfg_root = Tk()
+        self.runcfg_root.geometry("600x350")
+        self.runcfg_root.title("Set Run Configuration")
+
+        # Get next run number from DB
+        self.runcfg_nextrun = self.db.get_last_run_in_db()+1
+
+        self.l_runcfg_head = Label(self.runcfg_root)
+        self.l_runcfg_head.config(text="Run "+str(self.runcfg_nextrun))
+        self.l_runcfg_head.config(font=("Helvetica",24,"bold"))
+        self.l_runcfg_head.config(justify=CENTER)
+        self.l_runcfg_head.grid(row=0,column=0,columnspan=6)
+
+        # Button to show/change run type
+        self.b_set_runtype = Button(self.runcfg_root)
+        self.b_set_runtype.config(font=("Helvetica",16,"bold"))
+        self.b_set_runtype.config(text="Type: "+self.run.run_type)
+        self.b_set_runtype.config(command=self.cycle_runtype)
+        self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
+
+        b_db_run = Button(self.runcfg_root,text="Run from DB",font=("Helvetica",16,"bold"),command=self.runcfg_db_run)
+        b_db_run.grid(row=1,column=2,columnspan=2,sticky=W+E)
+
+        b_dummy_run = Button(self.runcfg_root,text="Dummy Run",font=("Helvetica",16,"bold"),command=self.runcfg_dummy_run)
+        b_dummy_run.grid(row=1,column=4,columnspan=2,sticky=W+E)
+
+        l_runcrew = Label(self.runcfg_root,text="Shift crew:",font=("Helvetica",14,"bold"))
+        l_runcrew.grid(row=2,column=0,sticky=E)
+        self.e_runcfg_runcrew = Entry(self.runcfg_root,width=20)
+        #self.e_runcfg_runcrew.bind('<Return>',self.runcfg_set_crew)
+        self.e_runcfg_runcrew.grid(row=2,column=1,columnspan=5,sticky=W+E)
+
+        l_runcomment = Label(self.runcfg_root,text="Start of Run Comment",font=("Helvetica",16,"bold"))
+        l_runcomment.grid(row=3,column=0,columnspan=6,sticky=W+E)
+        self.e_runcfg_runcomment = Text(self.runcfg_root,height=8,width=80)
+        self.e_runcfg_runcomment.grid(row=4,column=0,columnspan=6,sticky=W+E)
+        #self.e_runcfg_runcomment = Entry(self.runcfg_root,width=20)
+        #self.e_runcfg_runcrew.bind('<Return>',self.runcfg_set_crew)
+        #self.e_runcfg_runcomment.grid(row=3,column=1,sticky=W+E)
+
+        b_init = Button(self.runcfg_root,text="Start Run",font=("Helvetica",16,"bold"),command=self.runcfg_initrun)
+        b_init.grid(row=5,column=0,columnspan=3)
+
+        b_cancel = Button(self.runcfg_root,text="Cancel",font=("Helvetica",16,"bold"),command=self.runcfg_cancel)
+        b_cancel.grid(row=5,column=3,columnspan=3)
+
+    def runcfg_initrun(self):
+
+        self.run.change_run(self.runcfg_nextrun)
+        self.b_set_runnr.config(text="Run Number:"+"%6d"%self.run.run_number)
+        self.show_log("Run Number set to "+str(self.run.run_number))
+
+        self.show_log("Run Type set to "+str(self.run.run_type))
+
+        if ( self.e_runcfg_runcrew.get() != "" ):
+            self.run.run_user = self.e_runcfg_runcrew.get()
+        self.show_log("Run Crew set to "+str(self.run.run_user))
+
+        if ( self.e_runcfg_runcomment.get("1.0","end-1c") != "" ):
+            self.run.run_comment = self.e_runcfg_runcomment.get("1.0","end-1c")
+        self.show_log("Run Comment set to "+str(self.run.run_comment))
+
+        self.runcfg_root.destroy()
+
+        self.init_run()
+
+    def runcfg_cancel(self):
+
+        # Re-enable Init Run button on main interface
+        self.b_init_run.config(state=NORMAL)
+        self.b_quit_daq.config(state=NORMAL)
+
+        self.runcfg_root.destroy()
+
+    def runcfg_dummy_run(self):
+
+        self.runcfg_nextrun = 0
+        self.l_runcfg_head.config(text="Run "+str(self.runcfg_nextrun))
+
+    def runcfg_db_run(self):
+
+        self.runcfg_nextrun = self.db.get_last_run_in_db()+1
+        self.l_runcfg_head.config(text="Run "+str(self.runcfg_nextrun))
+
+    def set_end_of_run(self):
+
+        # Disable Stop Run button on main interface
+        self.b_stop_run.config(state=DISABLED)
+
+        self.endrun_root = Tk()
+        self.endrun_root.geometry("600x350")
+        self.endrun_root.title("Set End of Run Comment")
+
+        self.l_endrun_head = Label(self.endrun_root)
+        self.l_endrun_head.config(text="Run "+str(self.run.run_number))
+        self.l_endrun_head.config(font=("Helvetica",24,"bold"))
+        self.l_endrun_head.config(justify=CENTER)
+        self.l_endrun_head.grid(row=0,column=0,columnspan=2)
+
+        l_endcomment = Label(self.endrun_root,text="End of Run Comment",font=("Helvetica",16,"bold"))
+        l_endcomment.grid(row=1,column=0,columnspan=2,sticky=W+E)
+        self.e_endrun_comment = Text(self.endrun_root,height=8,width=80)
+        self.e_endrun_comment.grid(row=2,column=0,columnspan=2,sticky=W+E)
+
+        b_stop = Button(self.endrun_root,text="Stop Run",font=("Helvetica",16,"bold"),command=self.endrun_stoprun)
+        b_stop.grid(row=3,column=0)
+
+        b_cancel = Button(self.endrun_root,text="Cancel",font=("Helvetica",16,"bold"),command=self.endrun_cancel)
+        b_cancel.grid(row=3,column=1)
+
+    def endrun_stoprun(self):
+
+        if ( self.e_endrun_comment.get("1.0","end-1c") != "" ):
+            self.run.run_end_comment = self.e_endrun_comment.get("1.0","end-1c")
+        self.show_log("End of Run Comment set to "+str(self.run.run_end_comment))
+
+        self.endrun_root.destroy()
+
+        self.terminate_run("stop")
+
+    def endrun_cancel(self):
+
+        # Re-enable Stop Run button on main interface
+        self.b_stop_run.config(state=NORMAL)
+
+        self.endrun_root.destroy()
+
+    def init_run(self):
 
         # Check if requested run number was not used before
         if (self.db.is_run_in_db(self.run.run_number)):
             self.show_log("WARNING - Run "+str(self.run.run_number)+" is already in the DB: cannot use it again")
             return
 
+        # Create run structure in the DB
+        self.run.create_run()
+
+        self.show_log("Initializing Run")
+        self.db.set_run_time_init(self.run.run_number,self.now_str())
+
         # Disable init_run button and enable abort_run buttons
         self.b_init_run.config(state=DISABLED)
         self.b_abort_run.config(state=NORMAL)
 
-        self.show_log("Initializing Run")
         self.show_log("Run number\t"+str(self.run.run_number))
         self.show_log("Run type\t"+str(self.run.run_type))
         self.show_log("Run comment\t'"+self.run.run_comment+"'")
@@ -194,9 +334,6 @@ class RunControlGUI:
         for adc in (self.run.adcboard_list):
             self.show_log("Writing configuration file "+adc.config_file)
             adc.write_config()
-
-        # Create run structure in the DB
-        self.run.create_run()
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
@@ -222,7 +359,7 @@ class RunControlGUI:
     def start_run(self):
 
         self.show_log("Starting run")
-        self.db.set_run_time_start(self.run.run_number,now_str())
+        self.db.set_run_time_start(self.run.run_number,self.now_str())
         self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         # Create "start the run" tag file
@@ -242,7 +379,8 @@ class RunControlGUI:
         if (mode=="stop"):
             self.show_log("Stopping run")
             self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
-        self.db.set_run_time_stop(self.run.run_number,now_str())
+        self.db.set_run_time_stop(self.run.run_number,self.now_str())
+        self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
 
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()
@@ -269,6 +407,7 @@ class RunControlGUI:
 
         # Enable init_run button and disable all the others
         self.b_init_run.config(state=NORMAL)
+        self.b_quit_daq.config(state=NORMAL)
         self.b_abort_run.config(state=DISABLED)
         self.b_start_run.config(state=DISABLED)
         self.b_stop_run.config(state=DISABLED)
@@ -328,7 +467,7 @@ class RunControlGUI:
             if (self.run.run_type == choices[c]):
                 self.run.run_type = choices[(c+1)%n_choices]
                 break
-        self.b_set_runtype.config(text="Run Type: "+self.run.run_type)
+        self.b_set_runtype.config(text="Type: "+self.run.run_type)
         self.show_log("Run Type set to "+self.run.run_type)
 
     def set_runcomment(self):
@@ -406,5 +545,5 @@ class RunControlGUI:
                     self.boardgui[brd_id].set_board(adcboard)
                     self.b_board[brd_id].config(state=NORMAL)
 
-def now_str(): return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+    def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 

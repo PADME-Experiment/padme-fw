@@ -31,13 +31,11 @@ class PadmeDB:
 
     def is_run_in_db(self,run_nr):
 
-        if (run_nr!=0):
-
-            c = self.conn.cursor()
-            c.execute("""SELECT COUNT(number) FROM run WHERE number=%s""",(run_nr,))
-            (n,) = c.fetchone()
-            self.conn.commit()
-            if (n): return 1
+        c = self.conn.cursor()
+        c.execute("""SELECT COUNT(number) FROM run WHERE number=%s""",(run_nr,))
+        (n,) = c.fetchone()
+        self.conn.commit()
+        if (n): return 1
 
         return 0
 
@@ -54,35 +52,53 @@ class PadmeDB:
 
     def create_run(self,run_nr,run_type,run_user,run_comment):
 
-        c = self.conn.cursor()
-        c.execute("""INSERT INTO run (number,type,status,time_start,time_stop,total_events,user,comment) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,run_user,run_comment))
-        self.conn.commit()
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""INSERT INTO run (number,type,status,time_init,time_start,time_stop,total_events,user,comment_start,comment_end) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,0,run_user,run_comment,""))
+            self.conn.commit()
 
     def set_run_status(self,run_nr,status):
 
-        c = self.conn.cursor()
-        c.execute("""UPDATE run SET status = %s WHERE number = %s""",(status,run_nr))
-        self.conn.commit()
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""UPDATE run SET status = %s WHERE number = %s""",(status,run_nr))
+            self.conn.commit()
+
+    def set_run_time_init(self,run_nr,time_init):
+
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""UPDATE run SET time_init = %s WHERE number = %s""",(time_init,run_nr))
+            self.conn.commit()
 
     def set_run_time_start(self,run_nr,time_start):
 
-        c = self.conn.cursor()
-        c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(time_start,run_nr))
-        self.conn.commit()
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(time_start,run_nr))
+            self.conn.commit()
 
     def set_run_time_stop(self,run_nr,time_stop):
 
-        c = self.conn.cursor()
-        c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
-        self.conn.commit()
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
+            self.conn.commit()
+
+    def set_run_comment_end(self,run_nr,comment_end):
+
+        if (run_nr!=0):
+            c = self.conn.cursor()
+            c.execute("""UPDATE run SET comment_end = %s WHERE number = %s""",(comment_end,run_nr))
+            self.conn.commit()
 
     def add_cfg_para(self,run_nr,para_name,para_val):
 
-        para_id = self.get_para_id(para_name)
-
-        c = self.conn.cursor()
-        c.execute("""INSERT INTO run_config_para (run_number,config_para_name_id,value) VALUES (%s,%s,%s)""",(run_nr,para_id,para_val))
-        self.conn.commit()
+        if (run_nr!=0):
+            para_id = self.get_para_id(para_name)
+            c = self.conn.cursor()
+            c.execute("""INSERT INTO run_config_para (run_number,config_para_name_id,value) VALUES (%s,%s,%s)""",(run_nr,para_id,para_val))
+            self.conn.commit()
 
     def get_para_id(self,para_name):
 

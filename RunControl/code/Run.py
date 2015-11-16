@@ -12,8 +12,9 @@ class Run:
 
         self.run_number = 0
         self.run_type = "TEST"
-        self.run_user = "BTF crew"
-        self.run_comment = "Dummy run"
+        self.run_user = "PADME crew"
+        self.run_comment = "Generic run"
+        self.run_end_comment = "Generic end of run"
 
         self.set_default_config()
 

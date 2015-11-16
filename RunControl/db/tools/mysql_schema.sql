@@ -25,11 +25,13 @@ CREATE TABLE IF NOT EXISTS `PadmeDB`.`run` (
   `number` INT UNSIGNED NOT NULL,
   `type` VARCHAR(45) NOT NULL,
   `status` INT NOT NULL,
+  `time_init` DATETIME NULL,
   `time_start` DATETIME NULL,
   `time_stop` DATETIME NULL,
   `total_events` INT UNSIGNED NULL,
   `user` VARCHAR(1024) NULL,
-  `comment` VARCHAR(1024) NULL,
+  `comment_start` VARCHAR(10240) NULL,
+  `comment_end`   VARCHAR(10240) NULL,
   PRIMARY KEY (`number`) ,
   UNIQUE INDEX `number_UNIQUE` (`number` ASC) )
 ENGINE = InnoDB;

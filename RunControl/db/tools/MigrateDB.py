@@ -31,20 +31,23 @@ def main():
     run_status = 3
     proc_status = 2
 
+    # End comment default
+    comment_end = "Normal end of run"
+
     # Get list of runs from the old DB and populate new DB
     cO.execute("SELECT * FROM run");
     resO = cO.fetchall()
     for rO in resO:
 
         # Get all run data
-        (number,run_type,status,time_start,time_stop,n_daq_files,total_events,total_size,comment,configuration) = rO
+        (number,run_type,status,time_start,time_stop,n_daq_files,total_events,total_size,comment_start,configuration) = rO
 
         time_start = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_start))
         time_stop = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time_stop))
 
         # Some go to the new run table
-        cN.execute("""INSERT INTO run VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",
-                   (number,run_type,run_status,time_start,time_stop,total_events,run_user,comment))
+        cN.execute("""INSERT INTO run VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                   (number,run_type,run_status,time_start,time_start,time_stop,total_events,run_user,comment_start,comment_end))
 
         # Some go to the new process table
         cN.execute("""INSERT INTO process(run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES(%s,%s,%s,%s,%s,%s,%s,%s)""",(number,board_id,proc_status,time_start,time_stop,n_daq_files,total_events,total_size))

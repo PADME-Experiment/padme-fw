@@ -31,7 +31,7 @@ def main():
     if (os.path.exists(lus_file)):
         if (os.path.isfile(lus_file)):
             lusf = open(lus_file,"r")
-            lus = lusf.read()
+            lus = lusf.read().strip("\n")
             lusf.close()
             if (lus == ""):
                 print "File with last used setup",lus_file,"exists but it is empty. Using default setup:",setup

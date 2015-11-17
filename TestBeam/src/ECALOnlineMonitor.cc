@@ -38,7 +38,21 @@ ECALOnlineMonitor::ECALOnlineMonitor() : VOnlineMonitor("ECAL") {
   chPed->Divide(3,3);
   for (Int_t iCh=0; iCh<9; iCh++){
     chPed->cd(iCh+1);
-    ecalH->Get1DHisto(Form("ECALPed%d",iCh))->Draw();
+    ecalH->Get1DHisto(Form("ECALPedCh%d",iCh))->Draw();
+  }
+
+  TCanvas* chSig = AddCanvasTab("Channel Signal");
+  chSig->Divide(3,3);
+  for (Int_t iCh=0; iCh<9; iCh++){
+    chSig->cd(iCh+1);
+    ecalH->Get1DHisto(Form("ECALSigCh%d",iCh))->Draw();
+  }
+
+  TCanvas* chRaw = AddCanvasTab("Channel Raw Counts");
+  chRaw->Divide(3,3);
+  for (Int_t iCh=0; iCh<9; iCh++){
+    chRaw->cd(iCh+1);
+    ecalH->Get1DHisto(Form("ECALRawCh%d",iCh))->Draw();
   }
 
   VOnlineMonitor::CompleteTab();

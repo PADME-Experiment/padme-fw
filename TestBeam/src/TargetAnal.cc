@@ -5,11 +5,12 @@
 TargetAnal::TargetAnal() {
 
   fRawEvent = 0;
+  fPlotEvent = 1;
 
   fTargetHisto = (TargetHisto*)HistoManager::GetInstance()->Histo("Target");
 
   // Initialize vector with sample indexes (used for TGraph).
-  for(int ll=0;ll<TADCCHANNEL_NSAMPLES;ll++) fSampleIndex[ll]=(Float_t)ll;
+  //for(int ll=0;ll<TADCCHANNEL_NSAMPLES;ll++) fSampleIndex[ll]=(Float_t)ll;
 
 }
 
@@ -25,7 +26,7 @@ void TargetAnal::AnalyzeCharge()
   UChar_t nBoards = fRawEvent->GetNADCBoards();
   for(UChar_t b=0;b<nBoards;b++){
 
-    // Check if we are looking at the Target ADC board (board id 0)
+    // Check if we are looking at the Target ADC board (board id 1)
     TADCBoard* adcB = fRawEvent->ADCBoard(b);
     UChar_t bid = adcB->GetBoardId();
     if (bid!=1) continue;
@@ -35,15 +36,12 @@ void TargetAnal::AnalyzeCharge()
     UChar_t nChn = adcB->GetNADCChannels();
     printf("Ntrg Nchn %d %d\n",nTrg,nChn);
 
-    // Loop over triggers
-    //for(UChar_t t=0;t<nTrg;t++){
-    //  TADCTrigger* trg = adcB->ADCTrigger(t);
-    //  Float_t Sam[1024];
-    //  for(Int_t tt=0;tt<trg->GetNSamples();tt++){
-    //    Sam[tt] = (Float_t) trg->GetSample(tt);
-    //  }
-    //  if(b==0) his->FillGraph("TargetTrig",t,trg->GetNSamples(),SampInd,Sam);
-    //}
+    // See if this event should be shown
+    int showEvent = 0;
+    if ( fPlotEvent && (nChn>3) ) {
+      showEvent = 1;
+      fPlotEvent = 0;
+    }
 
     // Loop over channels in this event
     fQTotal[bid]=0.;
@@ -68,11 +66,20 @@ void TargetAnal::AnalyzeCharge()
 	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
 
-      fTargetHisto->Fill1DHisto(Form("TargPed%d",cnr),Avg);
+      fTargetHisto->Fill1DHisto(Form("TargPedCh%d",cnr),Avg);
       fTargetHisto->Fill1DHisto(Form("TargQCh%d",cnr),fQChannel[bid][cnr]);
 
       fQTotal[bid] += fQChannel[bid][cnr];
       printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal[bid]);
+
+      if ( showEvent ) {
+	TH1D* sigH = fTargetHisto->Get1DHisto(Form("TargetSigCh%d",cnr));
+	TH1D* rawH = fTargetHisto->Get1DHisto(Form("TargetRawCh%d",cnr));
+	for(UShort_t s=0;s<chn->GetNSamples();s++){
+	  sigH->SetBinContent(s+1,fSampleReco[s]);
+	  rawH->SetBinContent(s+1,fSample[s]);
+	}
+      }
 
     } //end of loop over channels
 
@@ -85,7 +92,7 @@ void TargetAnal::AnalyzeCharge()
 
 void TargetAnal::AnalyzePosition()
 {
-
+  /*
   // Map of crystal positions (fix it for target)
   Float_t Xcry[TADCBOARD_NCHANNELS];
   Float_t Ycry[TADCBOARD_NCHANNELS];
@@ -100,7 +107,7 @@ void TargetAnal::AnalyzePosition()
   UChar_t nBoards = fRawEvent->GetNADCBoards();
   for(UChar_t b=0;b<nBoards;b++){
 
-    // Check if we are looking at the Target ADC board (board id 0) and we have some signal
+    // Check if we are looking at the Target ADC board (board id 1) and we have some signal
     TADCBoard* adcB = fRawEvent->ADCBoard(b);
     UChar_t bid = adcB->GetBoardId();
     if (bid != 1 || fQTotal[bid] == 0.) continue;
@@ -118,5 +125,5 @@ void TargetAnal::AnalyzePosition()
     fTargetHisto->Fill2DHisto("TargPos",XcryTot/fQTotal[bid],YcryTot/fQTotal[bid]);
 
   }
-
+  */
 }

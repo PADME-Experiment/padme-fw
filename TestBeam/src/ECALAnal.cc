@@ -5,13 +5,14 @@
 ECALAnal::ECALAnal() {
 
   fRawEvent = 0;
+  fPlotEvent = 1;
 
   //HistoManager* hMan = HistoManager::GetInstance();
   //ECALHisto* ecalH = (ECALHisto*)hMan->Histo("ECAL");
   fECALHisto = (ECALHisto*)HistoManager::GetInstance()->Histo("ECAL");
 
   // Initialize vector with sample indexes (used for TGraph).
-  for(int ll=0;ll<TADCCHANNEL_NSAMPLES;ll++) fSampleIndex[ll]=(Float_t)ll;
+  //for(int ll=0;ll<TADCCHANNEL_NSAMPLES;ll++) fSampleIndex[ll]=(Float_t)ll;
 
 }
 
@@ -37,17 +38,14 @@ void ECALAnal::AnalyzeCharge()
     UChar_t nChn = adcB->GetNADCChannels();
     printf("Ntrg Nchn %d %d\n",nTrg,nChn);
 
-    // Loop over triggers
-    //for(UChar_t t=0;t<nTrg;t++){
-    //  TADCTrigger* trg = adcB->ADCTrigger(t);
-    //  Float_t Sam[1024];
-    //  for(Int_t tt=0;tt<trg->GetNSamples();tt++){
-    //    Sam[tt] = (Float_t) trg->GetSample(tt);
-    //  }
-    //  if(b==0) his->FillGraph("CaloTrig",t,trg->GetNSamples(),SampInd,Sam);
-    //}
+    // See if this event should be shown
+    int showEvent = 0;
+    if ( fPlotEvent && (nChn>3) ) {
+      showEvent = 1;
+      fPlotEvent = 0;
+    }
 
-    // Loop over in this event channels
+    // Loop over channels in this event
     fQTotal[bid]=0.;
     for(UChar_t c=0;c<nChn;c++){
 
@@ -70,11 +68,20 @@ void ECALAnal::AnalyzeCharge()
 	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
 
-      fECALHisto->Fill1DHisto(Form("ECALPed%d",cnr),Avg);
+      fECALHisto->Fill1DHisto(Form("ECALPedCh%d",cnr),Avg);
       fECALHisto->Fill1DHisto(Form("ECALQCh%d",cnr),fQChannel[bid][cnr]);
 
       fQTotal[bid] += fQChannel[bid][cnr];
       printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal[bid]);
+
+      if ( showEvent ) {
+	TH1D* sigH = fECALHisto->Get1DHisto(Form("ECALSigCh%d",cnr));
+	TH1D* rawH = fECALHisto->Get1DHisto(Form("ECALRawCh%d",cnr));
+	for(UShort_t s=0;s<chn->GetNSamples();s++){
+	  sigH->SetBinContent(s+1,fSampleReco[s]);
+	  rawH->SetBinContent(s+1,fSample[s]);
+	}
+      }
 
     } //end of loop over channels
 

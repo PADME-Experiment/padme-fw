@@ -54,16 +54,11 @@ Grapher::Grapher()
   fOnlineMonitorList.push_back(new ECALOnlineMonitor());
 
   // Create tab for Target
-  //fOnlineMonitorList.push_back(new TargetOnlineMonitor());
+  fOnlineMonitorList.push_back(new TargetOnlineMonitor());
 
-  // Create tab with commands
-  //gEve->GetBrowser()->StartEmbedding(1,-1);
-
+  // Create external window with OnlineMonitor command buttons
   TGMainFrame* frame = new TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFrame);
   frame->SetWindowName("PADME Online Monitor");
-
-  //TRootEmbeddedCanvas* canvas = new TRootEmbeddedCanvas("Ecanvas",frame,400,80);
-  //frame->AddFrame(canvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 10,10,10,1));
 
   // Setup text labels
   TGGC* textGC;
@@ -143,12 +138,6 @@ Grapher* Grapher::GetInstance()
 {
   if ( fInstance == 0 ) { fInstance = new Grapher(); }
   return fInstance;
-}
-
-void Grapher::Initialize()
-{
-  // Do initial analysis
-  AnalyzeEvents();
 }
 
 void Grapher::HoldMonitor()

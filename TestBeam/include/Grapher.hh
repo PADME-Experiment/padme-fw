@@ -14,8 +14,6 @@ public:
   virtual ~Grapher();
   static Grapher* GetInstance();
 
-  void Initialize();
-
   void    SetFileName(TString name) { fFileName = name; }
   TString GetFileName()             { return fFileName; }
 

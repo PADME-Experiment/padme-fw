@@ -22,7 +22,9 @@ private:
 
   TRawEvent* fRawEvent;
 
-  Float_t fSampleIndex[TADCCHANNEL_NSAMPLES];
+  Int_t fPlotEvent;
+
+  //Float_t fSampleIndex[TADCCHANNEL_NSAMPLES];
   Float_t fSample[TADCCHANNEL_NSAMPLES];
   Float_t fSampleReco[TADCCHANNEL_NSAMPLES];
 

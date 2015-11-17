@@ -16,8 +16,8 @@ public :
 
   TString GetName() { return fName; };
   
-  TH1D*   Get1DHisto(TString name) {return (TH1D*)fHistoList->FindObject(name);}; 
-  TH2D*   Get2DHisto(TString name) {return (TH2D*)fHistoList->FindObject(name);};
+  TH1D* Get1DHisto(TString name) {return (TH1D*)fHistoList->FindObject(name);}; 
+  TH2D* Get2DHisto(TString name) {return (TH2D*)fHistoList->FindObject(name);};
 
   Int_t Fill1DHisto(TString,Float_t);
   Int_t Fill2DHisto(TString,Float_t,Float_t);

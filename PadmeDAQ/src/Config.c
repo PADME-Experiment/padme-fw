@@ -493,7 +493,7 @@ int print_config(){
   printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
   printf("run_type\t\t'%s'\t\trun type (DAQ, COSMIC, TEST)\n",Config->run_type);
-  printf("board_id\t\t'%d'\t\tboard ID\n",Config->board_id);
+  printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
   printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
   printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
   printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);

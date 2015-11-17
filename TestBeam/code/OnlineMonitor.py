@@ -33,7 +33,7 @@ def main():
     # Executable used to merge events and write RAW files
     padme_merge = PADME+"/Level1/PadmeLevel1.exe"
 
-    # Ececutable which handles the OnlineMonitor GUI
+    # Executable which handles the OnlineMonitor GUI
     padme_monitor = PADME+"/TestBeam/Monitor.exe"
 
     # Log file for the OnlineMonitor GUI
@@ -54,7 +54,7 @@ def main():
             run_name = arg
     print 'Monitoring run',run_name
 
-    # Verify thatt required run is running (or was runned)
+    # Verify that required run is running (or was runned)
     log_path = log_dir+"/"+run_name
     if (not os.path.exists(log_path)):
         print "Path",log_path,"does not exist"

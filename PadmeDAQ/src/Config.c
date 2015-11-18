@@ -58,6 +58,8 @@ int reset_config()
 
   Config->startdaq_mode = 0; // Default to SW controlled start/stop
 
+  Config->drs4_sampfreq = 2; // Default to 1GHz sampling frequency
+
   Config->trigger_mode = 1; // Use fast trigger mode (0:ext trigger, 1: fast trigger, 2:sw trigger)
 
   strcpy(Config->trigger_iolevel,"NIM"); // Triggers expect NIM levels (NIM or TTL)
@@ -273,6 +275,17 @@ int read_config(char *cfgfile)
 	    printf("WARNING - Invalid value for startdaq_mode: %d. Accepted: 0,1,2\n",v);
 	  } else {
 	    Config->startdaq_mode = v;
+	    printf("Parameter %s set to %d\n",param,v);
+	  }
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"drs4_sampfreq")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  if ( v>2 ) {
+	    printf("WARNING - Invalid value for drs4_sampfreq: %d. Accepted: 0,1,2\n",v);
+	  } else {
+	    Config->drs4_sampfreq = v;
 	    printf("Parameter %s set to %d\n",param,v);
 	  }
 	} else {
@@ -495,6 +508,7 @@ int print_config(){
   printf("run_type\t\t'%s'\t\trun type (DAQ, COSMIC, TEST)\n",Config->run_type);
   printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
   printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
+  printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
   printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
   printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);
   printf("group_enable_mask\t0x%1x\t\tmask to enable groups of channels\n",Config->group_enable_mask);
@@ -565,6 +579,9 @@ int save_config()
 
   sprintf(line,"%d",Config->startdaq_mode);
   db_add_cfg_para(Config->process_id,"startdaq_mode",line);
+
+  sprintf(line,"%d",Config->drs4_sampfreq);
+  db_add_cfg_para(Config->process_id,"drs4_sampfreq",line);
 
   sprintf(line,"%d",Config->trigger_mode);
   db_add_cfg_para(Config->process_id,"trigger_mode",line);

@@ -219,8 +219,19 @@ int DAQ_init ()
   }
   printf("\n");
   */
-  printf("- Setting DRS4 sampling frequency to 1GHz. Write %d",CAEN_DGTZ_DRS4_1GHz);
-  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,CAEN_DGTZ_DRS4_1GHz);
+  data = CAEN_DGTZ_DRS4_1GHz;
+  if (Config->drs4_sampfreq == 2) {
+    printf("- Setting DRS4 sampling frequency to 1GHz. Write %d",CAEN_DGTZ_DRS4_1GHz);
+    data = CAEN_DGTZ_DRS4_1GHz;
+  } else if (Config->drs4_sampfreq == 1) {
+    printf("- Setting DRS4 sampling frequency to 2.5GHz. Write %d",CAEN_DGTZ_DRS4_2_5GHz);
+    data = CAEN_DGTZ_DRS4_2_5GHz;
+  } else if  (Config->drs4_sampfreq == 0) {
+    printf("- Setting DRS4 sampling frequency to 5GHz. Write %d",CAEN_DGTZ_DRS4_5GHz);
+    data = CAEN_DGTZ_DRS4_5GHz;
+  }
+  //ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,CAEN_DGTZ_DRS4_1GHz);
+  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,data);
   if (ret != CAEN_DGTZ_Success) {
     printf("\nERROR - Unable to set sampling frequency. Error code: %d\n",ret);
     return 1;
@@ -533,7 +544,13 @@ int DAQ_init ()
   if ( Config->drs4corr_enable ) {
 
     // Load DRS4 correction tables used to decode the X742 event
-    ret = CAEN_DGTZ_LoadDRS4CorrectionData(Handle,CAEN_DGTZ_DRS4_1GHz);
+    if (Config->drs4_sampfreq == 0) {
+      ret = CAEN_DGTZ_LoadDRS4CorrectionData(Handle,CAEN_DGTZ_DRS4_5GHz);
+    } else if (Config->drs4_sampfreq == 1) {
+      ret = CAEN_DGTZ_LoadDRS4CorrectionData(Handle,CAEN_DGTZ_DRS4_2_5GHz);
+    } else if (Config->drs4_sampfreq == 2) {
+      ret = CAEN_DGTZ_LoadDRS4CorrectionData(Handle,CAEN_DGTZ_DRS4_1GHz);
+    }
     if (ret != CAEN_DGTZ_Success) {
       printf("Unable to load correction tables for DRS4 chip. Error code: %d\n",ret);
       return 1;
@@ -604,7 +621,7 @@ int DAQ_readdata ()
 
   // Decoded event information
   CAEN_DGTZ_X742_EVENT_t *event = NULL;
-  uint32_t iEv, iGr;
+  uint32_t iEv, iGr, iCh;
   //uint32_t iCh, iSm;
   //uint32_t TT,old_TT,TTT,old_TTT;
   //float dtr,ftr;
@@ -906,13 +923,15 @@ int DAQ_readdata ()
 	  for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	    if (event->GrPresent[iGr]) {
 	      printf("  Group %d TTT %d SIC %d\n",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
-	      //for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
-	      //printf("Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
+	      for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
+		printf("    Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
 	        //for(iSm=0;iSm<event->DataGroup[iGr].ChSize[iCh];iSm++){
 	        //  printf(" %6.1f",event->DataGroup[iGr].DataChannel[iCh][iSm]);
 	        //}
-	      //printf("\n");
-	      //}
+		//printf("\n");
+	      }
+	    } else {
+	      printf("  Group %d not present\n",iGr);
 	    }
 	  }
 

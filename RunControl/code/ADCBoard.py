@@ -45,6 +45,7 @@ class ADCBoard:
             self.offset_ch.append(self.offset_global)
         self.post_trigger_size = 65
         self.max_num_events_blt = 128
+        self.drs4_sampfreq = 2
         self.drs4corr_enable = 1
 
         # Default DAQ control parameters
@@ -102,6 +103,7 @@ class ADCBoard:
                 elif (p_name == "post_trigger_size"): self.post_trigger_size = int(p_value,0)
                 elif (p_name == "max_num_events_blt"): self.max_num_events_blt = int(p_value,0)
                 elif (p_name == "drs4corr_enable"): self.drs4corr_enable = int(p_value,0)
+                elif (p_name == "drs4_sampfreq"): self.drs4_sampfreq = int(p_value,0)
                 elif (p_name == "daq_loop_delay"): self.daq_loop_delay = int(p_value,0)
                 elif (p_name == "file_max_duration"): self.file_max_duration = int(p_value,0)
                 elif (p_name == "file_max_size"): self.file_max_size = int(p_value,0)
@@ -154,12 +156,13 @@ class ADCBoard:
         cfgstring += "offset_global\t\t0x%04x\n"%self.offset_global
         for ch in range(32):
             if (self.offset_ch[ch] != self.offset_global):
-                cfgstring += "offset_ch\t%d\t0x%04x\n"%(repr(ch),self.offset_ch[ch])
+                cfgstring += "offset_ch\t%d\t0x%04x\n"%(ch,self.offset_ch[ch])
 
         cfgstring += "post_trigger_size\t"+repr(self.post_trigger_size)+"\n"
         cfgstring += "max_num_events_blt\t"+repr(self.max_num_events_blt)+"\n"
 
         cfgstring += "drs4corr_enable\t\t"+repr(self.drs4corr_enable)+"\n"
+        cfgstring += "drs4_sampfreq\t\t"+repr(self.drs4_sampfreq)+"\n"
 
         cfgstring += "daq_loop_delay\t\t"+repr(self.daq_loop_delay)+"\n"
 

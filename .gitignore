@@ -9,5 +9,6 @@
 *.pyc
 *.dump
 *.root
+run_*
 PersistencyDict.cc
 PersistencyDict.h

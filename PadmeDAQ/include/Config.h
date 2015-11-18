@@ -57,6 +57,9 @@ typedef struct config_s {
   // Choose start DAQ mode (0 = SW control, 1 = S_IN control, 2 = Frist trg)
   int startdaq_mode;
 
+  // Choose DRS4 sampling frequency (0 = 5GHz, 1 = 2.5GHz, 2 = 1GHz)
+  int drs4_sampfreq;
+
   // Choose trigger mode (0 = common trigger, 1 = fast trigger, 2 = software trigger)
   int trigger_mode;
 

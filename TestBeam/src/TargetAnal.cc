@@ -63,18 +63,22 @@ void TargetAnal::AnalyzeCharge()
       fQChannel[bid][cnr] = 0.;
       for(UShort_t s=0;s<chn->GetNSamples();s++){
 	fSampleReco[s] = (fSample[s]-Avg)/4096.; // Counts to Volt
-	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
+	if (s>100 && s<200) { // Ad hoc interval to compute peak charge
+	  fQChannel[bid][cnr] += fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
+	}
       }
 
       fTargetHisto->Fill1DHisto(Form("TargPedCh%d",cnr),Avg);
       fTargetHisto->Fill1DHisto(Form("TargQCh%d",cnr),fQChannel[bid][cnr]);
 
-      fQTotal[bid] += fQChannel[bid][cnr];
+      if (cnr>=16 && cnr<21) {
+	fQTotal[bid] += fQChannel[bid][cnr];
+      }
       printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal[bid]);
 
       if ( showEvent ) {
-	TH1D* sigH = fTargetHisto->Get1DHisto(Form("TargetSigCh%d",cnr));
-	TH1D* rawH = fTargetHisto->Get1DHisto(Form("TargetRawCh%d",cnr));
+	TH1D* sigH = fTargetHisto->Get1DHisto(Form("TargSigCh%d",cnr));
+	TH1D* rawH = fTargetHisto->Get1DHisto(Form("TargRawCh%d",cnr));
 	for(UShort_t s=0;s<chn->GetNSamples();s++){
 	  sigH->SetBinContent(s+1,fSampleReco[s]);
 	  rawH->SetBinContent(s+1,fSample[s]);

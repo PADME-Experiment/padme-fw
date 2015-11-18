@@ -28,30 +28,30 @@ TargetOnlineMonitor::TargetOnlineMonitor() : VOnlineMonitor("Target") {
   targH->Get1DHisto("TargPos")->Draw();
 
   TCanvas* chTotCharge = AddCanvasTab("Channel Charge");
-  chTotCharge->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chTotCharge->cd(iCh+1);
+  chTotCharge->Divide(4,3);
+  for (Int_t iCh=16; iCh<27; iCh++){
+    chTotCharge->cd(iCh+1-16);
     targH->Get1DHisto(Form("TargQCh%d",iCh))->Draw();
   }
 
   TCanvas* chPed = AddCanvasTab("Channel Pedestals");
-  chPed->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chPed->cd(iCh+1);
+  chPed->Divide(4,3);
+  for (Int_t iCh=16; iCh<27; iCh++){
+    chPed->cd(iCh+1-16);
     targH->Get1DHisto(Form("TargPedCh%d",iCh))->Draw();
   }
   
   TCanvas* chSig = AddCanvasTab("Channel Signal");
-  chSig->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chSig->cd(iCh+1);
+  chSig->Divide(4,3);
+  for (Int_t iCh=16; iCh<27; iCh++){
+    chSig->cd(iCh+1-16);
     targH->Get1DHisto(Form("TargSigCh%d",iCh))->Draw();
   }
 
   TCanvas* chRaw = AddCanvasTab("Channel Raw Counts");
-  chRaw->Divide(3,3);
-  for (Int_t iCh=0; iCh<9; iCh++){
-    chRaw->cd(iCh+1);
+  chRaw->Divide(2,5);
+  for (Int_t iCh=16; iCh<27; iCh++){
+    chRaw->cd(iCh+1-16);
     targH->Get1DHisto(Form("TargRawCh%d",iCh))->Draw();
   }
 

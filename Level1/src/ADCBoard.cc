@@ -7,7 +7,9 @@
 
 ADCBoard::ADCBoard(int board)
 {
-  fBuffer = malloc(4*ADCEVENT_MAXEVENT_LEN);
+  UInt_t max_event_len = 4*(ADCEVENT_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
+  //printf("max_event_len %d\n",max_event_len);
+  fBuffer = malloc(max_event_len);
   fBoardId = board;
   fADCEvent = new ADCEvent();
   Reset();

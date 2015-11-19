@@ -22,6 +22,7 @@ public:
   int Exit();
   int FillRawEvent(int,int,std::vector<ADCBoard*>&);
   TRawEvent* GetRawEvent() { return fTRawEvent; }
+  void SetVerbose(Int_t v) { fVerbose = v; }
 
 private:
 
@@ -29,6 +30,8 @@ private:
   Int_t ChangeOutFile();
   Int_t CloseOutFile();
   Int_t SetOutFile();
+
+  Int_t   fVerbose;
 
   ULong_t fOutEventsTotal;
   ULong_t fOutEventsCounter;

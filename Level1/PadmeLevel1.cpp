@@ -11,7 +11,6 @@ int main(int argc, char* argv[])
   
   int c;
   std::string listfile = "";
-  std::string dbfile = "db/PadmeDAQ.db";
   std::string outfile = "rawdata.root";
   std::string datadir = "data";
   int neventsperfile = 10000;
@@ -72,13 +71,14 @@ int main(int argc, char* argv[])
         fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
       case 'h':
-        fprintf(stdout,"\nPadmeDigi ([-r run_number]|[-l list_file]) [-o output root file] [-v verbosity] [-h]\n\n");
+        fprintf(stdout,"\nPadmeDigi ([-r run_number]|[-l list_file]) [-d input files directory] [-o output root file] [-n events per file] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -r: define run to process\n");
         fprintf(stdout,"  -l: define file with list of data files to process\n");
-        fprintf(stdout,"  -d: define directory where input files are located\n");
-        fprintf(stdout,"  -o: define an output file in root format\n");
-        fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default:10000)\n");
-        fprintf(stdout,"  -v: define verbose level\n");
+        fprintf(stdout,"      n.b. either -r or -l must be specified\n");
+        fprintf(stdout,"  -d: define directory where input files are located (default: \"%s\")\n",datadir.c_str());
+        fprintf(stdout,"  -o: define an output file in root format (default: \"%s\")\n",outfile.c_str());
+        fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %d)\n",neventsperfile);
+        fprintf(stdout,"  -v: define verbose level (default: %d)\n",verbose);
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
       case '?':
@@ -134,6 +134,7 @@ int main(int argc, char* argv[])
 
       printf("Board %d\tReading data from board id %d\n",b,boardList[b]);
       board = new ADCBoard(boardList[b]);
+      board->SetVerbose(verbose);
 
       // Get list of files created for each board during run
       std::vector<std::string> fileList;
@@ -181,6 +182,7 @@ int main(int argc, char* argv[])
 	if (it == boards.end()) {
 	  printf("Board id %d\n",bid);
 	  board = new ADCBoard(bid);
+	  board->SetVerbose(verbose);
 	  boards.push_back(board);
 	}
 
@@ -207,6 +209,7 @@ int main(int argc, char* argv[])
   
   // Connect to root services
   RootIO* root = new RootIO();
+  root->SetVerbose(verbose);
 
   // Initialize root output file
   if ( root->Init(outfile,neventsperfile) != 0 ) {
@@ -260,11 +263,15 @@ int main(int argc, char* argv[])
 	if (dT[b]<0) dT[b] += (1<<30);
 	if (dT[b]>dT[bmax]) bmax = b;
 	dTB0[b] = TT[b]-TT[0];
-	if (b==0) {
-	  printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b]);
-	} else {
-	  printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x) DtB0 %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b],dTB0[b]*8.5E-9,dTB0[b]);
+
+	if (verbose>=2) {
+	  if (b==0) {
+	    printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b]);
+	  } else {
+	    printf("- Board %2d NEv %8u Tabs %f (0x%08x) Dt %f (0x%08x) DtB0 %f (0x%08x)\n",b,boards[b]->Event()->GetEventCounter(),TT[b]*8.5E-9,TT[b],dT[b]*8.5E-9,dT[b],dTB0[b]*8.5E-9,dTB0[b]);
+	  }
 	}
+
       }
 
       // Verify if all events are in time (0x1000 clock cycles tolerance)
@@ -308,7 +315,7 @@ int main(int argc, char* argv[])
   root->Exit();
 
   // End of run procedure
-  printf("File %s for run %d closed after writing %d events\n",outfile.c_str(),runnr,eventnr);
+  printf("Run %d closed after writing %d events\n",runnr,eventnr);
 
   exit(0);
 }

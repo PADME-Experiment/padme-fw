@@ -33,6 +33,8 @@ class ADCBoard
   ADCEvent* Event() { return fADCEvent; }
   ADCEvent* NextEvent();
 
+  void SetVerbose(Int_t v) { fVerbose = v; }
+
  private:
 
   int ReadFileHead();
@@ -44,6 +46,8 @@ class ADCBoard
  private:
 
   int fBoardId;
+
+  Int_t fVerbose;
 
   DBService* fDB;
 

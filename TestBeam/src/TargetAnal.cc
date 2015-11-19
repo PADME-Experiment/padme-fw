@@ -50,7 +50,7 @@ void TargetAnal::AnalyzeCharge()
       TADCChannel* chn = adcB->ADCChannel(c);
       UChar_t cnr = chn->GetChannelNumber();
 
-      if ( (cnr>=5 && cnr<16) || (cnr>21) ){
+      if ( (cnr>=5 && cnr<16) || (cnr>28) ){
 	printf("WARNING Found channel %d in RAW file!\n",cnr);
 	continue;
       }

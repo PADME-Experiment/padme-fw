@@ -51,7 +51,7 @@ Grapher::Grapher()
   gEve->GetBrowser()->HideBottomTab();
 
   // Create tab for ECAL
-  fOnlineMonitorList.push_back(new ECALOnlineMonitor());
+  //fOnlineMonitorList.push_back(new ECALOnlineMonitor());
 
   // Create tab for Target
   fOnlineMonitorList.push_back(new TargetOnlineMonitor());

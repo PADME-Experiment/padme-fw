@@ -50,6 +50,11 @@ void TargetAnal::AnalyzeCharge()
       TADCChannel* chn = adcB->ADCChannel(c);
       UChar_t cnr = chn->GetChannelNumber();
 
+      if ( (cnr>=5 && cnr<16) || (cnr>21) ){
+	printf("WARNING Found channel %d in RAW file!\n",cnr);
+	continue;
+      }
+
       // Compute channel average over first 80 samples
       Int_t NAvg=80;
       Float_t SumSam=0.;
@@ -77,12 +82,24 @@ void TargetAnal::AnalyzeCharge()
       printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal[bid]);
 
       if ( showEvent ) {
+
 	TH1D* sigH = fTargetHisto->Get1DHisto(Form("TargSigCh%d",cnr));
 	TH1D* rawH = fTargetHisto->Get1DHisto(Form("TargRawCh%d",cnr));
 	for(UShort_t s=0;s<chn->GetNSamples();s++){
 	  sigH->SetBinContent(s+1,fSampleReco[s]);
 	  rawH->SetBinContent(s+1,fSample[s]);
 	}
+
+	TH1D* trgH = fTargetHisto->Get1DHisto("TargTR2");
+	for (int it=0;it<adcB->GetNADCTriggers();it++){
+	  TADCTrigger* trg = adcB->ADCTrigger(it);
+	  if (trg->GetGroupNumber()==2) {
+	    for(UShort_t s=0;s<trg->GetNSamples();s++){
+	      trgH->SetBinContent(s+1,(trg->GetSample(s))/4096.);
+	    }
+	  }
+	}
+
       }
 
     } //end of loop over channels

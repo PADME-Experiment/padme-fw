@@ -12,6 +12,7 @@ class RunControlGUI:
 
         self.run = run
 
+        # Connect to PadmeDB
         self.db = PadmeDB(self.run.db_file)
 
         # Initialize main graphic window
@@ -25,6 +26,10 @@ class RunControlGUI:
         self.root.grid_rowconfigure(0,weight=0)
         self.root.grid_rowconfigure(1,weight=0)
         self.root.grid_rowconfigure(2,weight=1)
+
+        # Initialize variable to hold current run number
+        self.v_current_run = IntVar()
+        self.v_current_run.set(self.db.get_last_run_in_db())
 
         # Show PADME logo and deathstar
         #logo = PhotoImage(file="pic/Deathstar.gif")
@@ -49,37 +54,42 @@ class RunControlGUI:
         # Button to show/change run number
         self.b_set_runnr = Button(self.f_main)
         self.b_set_runnr.config(font=("Helvetica",16,"bold"))
-        self.b_set_runnr.config(text="Run Number: %6d"%self.run.run_number)
+        #self.b_set_runnr.config(text="Run Number: %6d"%self.run.run_number)
+        self.b_set_runnr.config(text="Run Number: %6d"%self.v_current_run.get())
         #self.b_set_runnr.config(command=self.set_runnr)
         self.b_set_runnr.grid(row=0,column=0,columnspan=2,sticky=W+E)
 
         # Button to show/change run type
-        self.b_set_runtype = Button(self.f_main)
-        self.b_set_runtype.config(font=("Helvetica",16,"bold"))
-        self.b_set_runtype.config(text="Run Type: "+self.run.run_type)
+        #self.b_set_runtype = Button(self.f_main)
+        #self.b_set_runtype.config(font=("Helvetica",16,"bold"))
+        #self.b_set_runtype.config(text="Run Type: "+self.run.run_type)
         #self.b_set_runtype.config(command=self.cycle_runtype)
-        self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
+        #self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
 
         # Button to show/change run comment
-        self.b_set_runcmt = Button(self.f_main)
-        self.b_set_runcmt.config(font=("Helvetica",14,"bold"))
-        self.b_set_runcmt.config(text=self.run.run_comment)
+        #self.b_set_runcmt = Button(self.f_main)
+        #self.b_set_runcmt.config(font=("Helvetica",14,"bold"))
+        #self.b_set_runcmt.config(text=self.run.run_comment)
         #self.b_set_runcmt.config(command=self.set_runcomment)
-        self.b_set_runcmt.grid(row=2,column=0,columnspan=2,sticky=W+E)
+        #self.b_set_runcmt.grid(row=2,column=0,columnspan=2,sticky=W+E)
 
         # Buttons to handle run init,start,abort,stop
         #self.b_init_run = Button(self.f_main,text="Init Run",command=self.init_run)
         self.b_init_run = Button(self.f_main,text="Init Run",command=self.set_run_config)
+        self.b_init_run.config(font=("Helvetica",14,"bold"))
         self.b_init_run.grid(row=3,column=0,sticky=W+E)
         self.b_init_run.config(state=NORMAL)
         self.b_abort_run = Button(self.f_main,text="Abort Run",command=lambda mode="abort": self.terminate_run(mode))
+        self.b_abort_run.config(font=("Helvetica",14,"bold"))
         self.b_abort_run.grid(row=3,column=1,sticky=W+E)
         self.b_abort_run.config(state=DISABLED)
         self.b_start_run = Button(self.f_main,text="Start Run",command=self.start_run)
+        self.b_start_run.config(font=("Helvetica",14,"bold"))
         self.b_start_run.grid(row=4,column=0,sticky=W+E)
         self.b_start_run.config(state=DISABLED)
         #self.b_stop_run = Button(self.f_main,text="Stop Run",command=lambda mode="stop": self.terminate_run(mode))
         self.b_stop_run = Button(self.f_main,text="Stop Run",command=self.set_end_of_run)
+        self.b_stop_run.config(font=("Helvetica",14,"bold"))
         self.b_stop_run.grid(row=4,column=1,sticky=W+E)
         self.b_stop_run.config(state=DISABLED)
 

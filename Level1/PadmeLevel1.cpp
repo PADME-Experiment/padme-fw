@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
   int eventnr = 0;
   while(1){
 
-    printf("=== Processing event %8d ===\n",eventnr);
+    if (verbose>=1) printf("=== Processing event %8d ===\n",eventnr);
 
     // Load next event for all boards
     UInt_t nEOR = 0;

@@ -49,7 +49,7 @@ int DBService::Connect()
   int db_port = 5501;
   char* db_port_s = getenv("PADME_DB_PORT");
   if (db_port_s != NULL) db_port = atoi(db_port_s);
-  printf("host %s user %s passwd %s name %s port %d\n",db_host,db_user,db_passwd,db_name,db_port);
+  //printf("host %s user %s passwd %s name %s port %d\n",db_host,db_user,db_passwd,db_name,db_port);
 
   // Connect to MySQL server
   if (mysql_real_connect(fDBHandle,db_host,db_user,db_passwd,db_name,db_port,NULL,0) == NULL) {

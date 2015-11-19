@@ -75,7 +75,7 @@ class RunControlGUI:
 
         # Buttons to handle run init,start,abort,stop
         #self.b_init_run = Button(self.f_main,text="Init Run",command=self.init_run)
-        self.b_init_run = Button(self.f_main,text="Init Run",command=self.set_run_config)
+        self.b_init_run = Button(self.f_main,text="New Run",command=self.set_run_config)
         self.b_init_run.config(font=("Helvetica",14,"bold"))
         self.b_init_run.grid(row=3,column=0,sticky=W+E)
         self.b_init_run.config(state=NORMAL)
@@ -227,7 +227,7 @@ class RunControlGUI:
         #self.e_runcfg_runcrew.bind('<Return>',self.runcfg_set_crew)
         #self.e_runcfg_runcomment.grid(row=3,column=1,sticky=W+E)
 
-        b_init = Button(self.runcfg_root,text="Start Run",font=("Helvetica",16,"bold"),command=self.runcfg_initrun)
+        b_init = Button(self.runcfg_root,text="Init Run",font=("Helvetica",16,"bold"),command=self.runcfg_initrun)
         b_init.grid(row=5,column=0,columnspan=3)
 
         b_cancel = Button(self.runcfg_root,text="Cancel",font=("Helvetica",16,"bold"),command=self.runcfg_cancel)

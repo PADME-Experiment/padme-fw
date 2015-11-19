@@ -621,7 +621,7 @@ int DAQ_readdata ()
 
   // Decoded event information
   CAEN_DGTZ_X742_EVENT_t *event = NULL;
-  uint32_t iEv, iGr, iCh;
+  uint32_t iEv, iGr;
   //uint32_t iCh, iSm;
   //uint32_t TT,old_TT,TTT,old_TTT;
   //float dtr,ftr;
@@ -923,15 +923,15 @@ int DAQ_readdata ()
 	  for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	    if (event->GrPresent[iGr]) {
 	      printf("  Group %d TTT %d SIC %d\n",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
-	      for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
-		printf("    Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
+	      //for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
+	        //printf("    Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
 	        //for(iSm=0;iSm<event->DataGroup[iGr].ChSize[iCh];iSm++){
 	        //  printf(" %6.1f",event->DataGroup[iGr].DataChannel[iCh][iSm]);
 	        //}
 		//printf("\n");
-	      }
+	      //}
 	    } else {
-	      printf("  Group %d not present\n",iGr);
+	      //printf("  Group %d not present\n",iGr);
 	    }
 	  }
 

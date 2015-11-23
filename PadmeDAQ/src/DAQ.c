@@ -20,7 +20,7 @@
 #define TIME_TAG_LEN     20
 #define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
-#define MAX_N_OUTPUT_FILES 1024
+#define MAX_N_OUTPUT_FILES 10240
 
 // Global variables
 
@@ -1051,7 +1051,7 @@ int DAQ_readdata ()
 
       } else {
 
-	tooManyOutputFiles = 2;
+	tooManyOutputFiles = 1;
 
       }
 
@@ -1080,32 +1080,38 @@ int DAQ_readdata ()
   // Register file closing time
   fileTClose[fileIndex] = t_now;
 
-  // Write tail to file
-  fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
-  writeSize = write(fileHandle,outEvtBuffer,fTailSize);
-  if (writeSize != fTailSize) {
-    printf("ERROR - Unable to write file tail to file. Tail size: %d, Write result: %d\n",
-	   fTailSize,writeSize);
-    return 2;
+  // If DAQ was stopped for writing too many output files, we do not have
+  // to close the last file
+  if ( ! tooManyOutputFiles ) {
+
+    // Write tail to file
+    fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
+    writeSize = write(fileHandle,outEvtBuffer,fTailSize);
+    if (writeSize != fTailSize) {
+      printf("ERROR - Unable to write file tail to file. Tail size: %d, Write result: %d\n",
+	     fTailSize,writeSize);
+      return 2;
+    }
+    fileSize[fileIndex] += fTailSize;
+
+    // Close output file and show some info about counters
+    if (close(fileHandle) == -1) {
+      printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
+      return 2;
+    };
+    printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
+	   format_time(t_now),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	   fileEvents[fileIndex],fileSize[fileIndex]);
+
+    // Close file in DB
+    if ( Config->run_number ) {
+      if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+    }
+
+    // Update file counter
+    fileIndex++;
+
   }
-  fileSize[fileIndex] += fTailSize;
-
-  // Close output file and show some info about counters
-  if (close(fileHandle) == -1) {
-    printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-    return 2;
-  };
-  printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-	 format_time(t_now),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
-	 fileEvents[fileIndex],fileSize[fileIndex]);
-
-  // Close file in DB
-  if ( Config->run_number ) {
-    if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-  }
-
-  // Update file counter
-  fileIndex++;
 
   // Stop digitizer acquisition
   ret = CAEN_DGTZ_SWStopAcquisition(Handle);

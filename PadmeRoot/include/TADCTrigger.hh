@@ -30,9 +30,9 @@ class TADCTrigger : public TObject
   void      SetTriggerTimeTag(UInt_t v)   { fTriggerTimeTag = v; }
   UInt_t    GetTriggerTimeTag()           { return fTriggerTimeTag; }
 
-  void      SetSample(int i,UShort_t v)   { fSamples[i] = v; }
-  UShort_t  GetSample(int i)              { return fSamples[i]; }
-  UShort_t* GetSamplesArray()             { return fSamples; }
+  void      SetSample(int i,Short_t v)   { fSamples[i] = v; }
+  Short_t   GetSample(int i)              { return fSamples[i]; }
+  Short_t*  GetSamplesArray()             { return fSamples; }
 
   UShort_t  GetNSamples()                 { return TADCTRIGGER_NSAMPLES; }
 
@@ -43,7 +43,7 @@ class TADCTrigger : public TObject
   UChar_t  fFrequency;
   Bool_t   fTriggerSignal;
   UInt_t   fTriggerTimeTag;
-  UShort_t fSamples[TADCTRIGGER_NSAMPLES];
+  Short_t  fSamples[TADCTRIGGER_NSAMPLES];
 
   ClassDef(TADCTrigger,1);
 };

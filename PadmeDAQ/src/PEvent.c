@@ -28,7 +28,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
   int nSm;
   int freq,tr;
-  int myshort; // Used to store rounded samples (can be negative)
+  int16_t myshort; // Used to store rounded samples (can be negative)
   uint32_t line;
 
   int Ch,iGr,iCh,iSm;

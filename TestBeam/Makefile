@@ -34,7 +34,7 @@ CINTFLAGS = -I$(IDIR) -I$(PADMEROOTDIR)/include
 DEPEND = $(CXX) -MM
 
 # Define parameters for link command
-LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -lsqlite3
+LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot
 LDFLAGS = -O4 $(ROOTLDFLAGS) $(ROOTEVELIBS) $(LIBS)
 
 # Get list of files to process

@@ -40,7 +40,7 @@ void ECALAnal::AnalyzeCharge()
 
     // See if this event should be shown
     int showEvent = 0;
-    if ( fPlotEvent && (nChn>3) ) {
+    if ( fPlotEvent && (nChn>0) ) {
       showEvent = 1;
       fPlotEvent = 0;
     }
@@ -51,6 +51,13 @@ void ECALAnal::AnalyzeCharge()
 
       TADCChannel* chn = adcB->ADCChannel(c);
       UChar_t cnr = chn->GetChannelNumber();
+
+      // Verify that we are monitoring the correct set of channels
+      //if (cnr>=11) {
+      if (cnr>=9) {
+        printf("WARNING Found channel %d in RAW file!\n",cnr);
+        continue;
+      }
 
       // Compute channel average over first 80 samples
       Int_t NAvg=80;
@@ -65,7 +72,7 @@ void ECALAnal::AnalyzeCharge()
       fQChannel[bid][cnr] = 0.;
       for(UShort_t s=0;s<chn->GetNSamples();s++){
 	fSampleReco[s] = (fSample[s]-Avg)/4096.; // Counts to Volt
-	fQChannel[bid][cnr] += -fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
+	fQChannel[bid][cnr] += fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
 
       fECALHisto->Fill1DHisto(Form("ECALPedCh%d",cnr),Avg);
@@ -121,8 +128,10 @@ void ECALAnal::AnalyzePosition()
     Float_t YcryTot = 0.;
     for(Int_t c=0;c<nChn;c++){
       UChar_t cnr = adcB->ADCChannel(c)->GetChannelNumber();
-      XcryTot += Xcry[cnr]*fQChannel[bid][cnr];
-      YcryTot += Ycry[cnr]*fQChannel[bid][cnr];
+      if (cnr<9) {
+	XcryTot += Xcry[cnr]*fQChannel[bid][cnr];
+	YcryTot += Ycry[cnr]*fQChannel[bid][cnr];
+      }
     }
     fECALHisto->Fill2DHisto("ECALPos",XcryTot/fQTotal[bid],YcryTot/fQTotal[bid]);
 

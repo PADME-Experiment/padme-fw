@@ -24,11 +24,11 @@ private:
 
   Int_t fPlotEvent;
 
-  //Float_t fSampleIndex[TADCCHANNEL_NSAMPLES];
   Float_t fSample[TADCCHANNEL_NSAMPLES];
   Float_t fSampleReco[TADCCHANNEL_NSAMPLES];
 
-  Float_t fQTotal[TADCBOARD_NCHANNELS];
+  Float_t fQTotal1[TRAWEVENT_MAXADCBOARDS];
+  Float_t fQTotal2[TRAWEVENT_MAXADCBOARDS];
   Float_t fQChannel[TRAWEVENT_MAXADCBOARDS][TADCBOARD_NCHANNELS];
 
 };

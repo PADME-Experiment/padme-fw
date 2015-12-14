@@ -140,7 +140,7 @@ void ECalSD::EndOfEvent(G4HCofThisEvent*)
 {
   if (verboseLevel>0) { 
      G4int NbHits = ECalCollection->entries();
-     G4cout << "\n-------->Hits Collection: in this event they are " << NbHits 
+     G4cout << "\n-------->Hits Collection: in this event there are " << NbHits 
             << " hits in the ECal : " << G4endl;
      for (G4int i=0;i<NbHits;i++) (*ECalCollection)[i]->Print();
     } 

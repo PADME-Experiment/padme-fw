@@ -7,8 +7,6 @@
 
 #include "ECalGeometryParameters.hh"
 
-//#include "ECalDetectorMessenger.hh"
-
 ECalGeometryParameters* ECalGeometryParameters::fInstance = 0;
 
 ECalGeometryParameters* ECalGeometryParameters::GetInstance()
@@ -27,7 +25,7 @@ ECalGeometryParameters::ECalGeometryParameters()
   fCrystalNominalSizeZ = 22.*cm;
 
   fECalNRows = 30;
-  fECalNColumns = 30;
+  fECalNCols = 30;
 
   fCrystalGap = 0.1*mm;
 
@@ -36,15 +34,12 @@ ECalGeometryParameters::ECalGeometryParameters()
   fECalInnerRadius = 4.*cm;
   fECalOuterRadius = 15.*cm;
 
-  // Connect to ECalDetectorMessenger to enable datacard configuration
-  //fECalMessenger = new LAVDetectorMessenger(this);
+  fECalSensitiveDetectorName = "ECalSD";
 
 }
 
 ECalGeometryParameters::~ECalGeometryParameters()
-{
-  //delete fECalMessenger;
-}
+{}
 
 G4double ECalGeometryParameters::GetECalPosX()
 {
@@ -68,22 +63,12 @@ G4double ECalGeometryParameters::GetECalSizeX()
 
 G4double ECalGeometryParameters::GetECalSizeY()
 {
-  return fCrystalNominalSizeY*fECalNColumns;
+  return fCrystalNominalSizeY*fECalNCols;
 }
 
 G4double ECalGeometryParameters::GetECalSizeZ()
 {
   return fCrystalNominalSizeZ;
-}
-
-G4int ECalGeometryParameters::GetECalNRows()
-{
-  return fECalNRows;
-}
-
-G4int ECalGeometryParameters::GetECalNColumns()
-{
-  return fECalNColumns;
 }
 
 G4double ECalGeometryParameters::GetCrystalSizeX()
@@ -105,11 +90,11 @@ G4int ECalGeometryParameters::ExistsCrystalAt(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
-  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNColumns ) return 0;
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) return 0;
 
   // Compute X/Y position of center of crystal
   G4double posX = fCrystalNominalSizeX*(-fECalNRows*0.5+row+0.5);
-  G4double posY = fCrystalNominalSizeY*(-fECalNColumns*0.5+col+0.5);
+  G4double posY = fCrystalNominalSizeY*(-fECalNCols*0.5+col+0.5);
 
   // See if center of crystal falls inside inner-outer radius range
   G4double r2 = posX*posX+posY*posY;
@@ -123,7 +108,7 @@ G4double ECalGeometryParameters::GetCrystalPosX(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
-  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNColumns ) {
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
     printf("ECalGeometryParameters::GetCrystalPosX - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }
@@ -137,13 +122,13 @@ G4double ECalGeometryParameters::GetCrystalPosY(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
-  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNColumns ) {
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
     printf("ECalGeometryParameters::GetCrystalPosY - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }
 
   // Return Y position of center of crystal
-  return fCrystalNominalSizeY*(-fECalNColumns*0.5+col+0.5);
+  return fCrystalNominalSizeY*(-fECalNCols*0.5+col+0.5);
 
 }
 
@@ -151,7 +136,7 @@ G4double ECalGeometryParameters::GetCrystalPosZ(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
-  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNColumns ) {
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
     printf("ECalGeometryParameters::GetCrystalPosZ - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }

@@ -48,33 +48,38 @@ class G4Material;
 class G4VPVParameterisation;
 class G4UserLimits;
 class G4SubtractionSolid;
+
 class DetectorMessenger;
+class ECalDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
-  public:
+public:
   
-     DetectorConstruction();
-    ~DetectorConstruction();
+  DetectorConstruction();
+  ~DetectorConstruction();
 
-  public:
+public:
   
-     G4VPhysicalVolume* Construct();
+  G4VPhysicalVolume* Construct();
      
-     G4double GetWorldFullLength()   {return fWorldLength;}; 
-     G4double GetCryPosX(G4int CryInd){return CryX[CryInd];}; 
-     G4double GetCryPosY(G4int CryInd){return CryY[CryInd];}; 
-     G4double GetCryPosZ(G4int CryInd){return CryZ[CryInd];}; 
+  G4double GetWorldFullLength()   {return fWorldLength;}; 
+  G4double GetCryPosX(G4int CryInd){return CryX[CryInd];}; 
+  G4double GetCryPosY(G4int CryInd){return CryY[CryInd];}; 
+  G4double GetCryPosZ(G4int CryInd){return CryZ[CryInd];}; 
      
-     void setTargetMaterial(G4String);
-     void SetupDetectors();
+  void setTargetMaterial(G4String);
+  void SetupDetectors();
   //     void SetMagField(G4double);
-     void SetMaxStep (G4double);     
+  void SetMaxStep (G4double);     
   
-  private:
-     void DefineMaterials();
+private:
+
+  void DefineMaterials();
+
+  ECalDetector* fECalDetector;
 
      G4Box*             solidWorld;    
      G4LogicalVolume*   logicWorld;    
@@ -125,13 +130,13 @@ class DetectorConstruction : public G4VUserDetectorConstruction
      G4LogicalVolume*   logicMYRod;   
      G4VPhysicalVolume* physiMYRod;   
 
-     G4Box*             solidEcal;   // pointer to the solid Target
-     G4LogicalVolume*   logicEcal;   // pointer to the logical Target
-     G4VPhysicalVolume* physiEcal;   // pointer to the physical Target
+  //G4Box*             solidEcal;   // pointer to the solid Target
+  //G4LogicalVolume*   logicEcal;   // pointer to the logical Target
+  //G4VPhysicalVolume* physiEcal;   // pointer to the physical Target
  
-     G4Box*             solidCry;   // pointer to the solid Target
-     G4LogicalVolume*   logicCry;   // pointer to the logical Target
-     G4VPhysicalVolume* physiCry;   // pointer to the physical Target
+  //G4Box*             solidCry;   // pointer to the solid Target
+  //G4LogicalVolume*   logicCry;   // pointer to the logical Target
+  //G4VPhysicalVolume* physiCry;   // pointer to the physical Target
 
 //CERN MAGNET MODEL
 

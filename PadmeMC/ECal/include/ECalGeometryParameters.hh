@@ -43,8 +43,10 @@ public:
   G4double GetECalSizeZ();
 
   // Number of rows and columns of crystals in ECAL
-  G4int GetECalNRows();
-  G4int GetECalNColumns();
+  G4int GetECalNRows() { return fECalNRows; }
+  G4int GetECalNCols() { return fECalNCols; }
+  void  SetECalNRows(G4int r) { fECalNRows = r; }
+  void  SetECalNCols(G4int c) { fECalNCols = c; }
 
   // Check if crystal exists at given row/column
   G4int ExistsCrystalAt(G4int,G4int);
@@ -59,6 +61,17 @@ public:
   G4double GetCrystalSizeY();
   G4double GetCrystalSizeZ();
 
+  // Set nominal size of crystal
+  void SetCrystalNominalSizeX(G4double s) { fCrystalNominalSizeX = s; }
+  void SetCrystalNominalSizeY(G4double s) { fCrystalNominalSizeY = s; }
+  void SetCrystalNominalSizeZ(G4double s) { fCrystalNominalSizeZ = s; }
+
+  // Set position along Z of ECal front face
+  void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
+
+  // Get name of ECal sensitive detector
+  G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
+
 private:
 
   G4double fCrystalNominalSizeX;
@@ -66,16 +79,16 @@ private:
   G4double fCrystalNominalSizeZ;
 
   G4int fECalNRows;
-  G4int fECalNColumns;
+  G4int fECalNCols;
 
   G4double fCrystalGap; // Gap size between adjacent crystals
 
-  G4double fECalFrontFacePosZ;
+  G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
   G4double fECalInnerRadius; // Radius of hole at ECal center
   G4double fECalOuterRadius; // External radius of ECal
 
-  //ECalMessenger* fECalMessenger;
+  G4String fECalSensitiveDetectorName;
 
 };
 

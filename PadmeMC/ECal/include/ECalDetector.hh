@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
-//class ECalDetectorMessenger;
+#include "ECalMessenger.hh"
 
 class ECalDetector
 {
@@ -21,7 +21,9 @@ public:
   ~ECalDetector();
   ECalDetector(G4LogicalVolume*);
 
+  void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
+
   G4LogicalVolume* GetECalLogicalVolume() { return fECalVolume; }
   G4LogicalVolume* GetCrystalLogicalVolume() { return fCrystalVolume; }
 
@@ -30,7 +32,7 @@ private:
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fECalVolume;
   G4LogicalVolume* fCrystalVolume;
-  //ECalDetectorMessenger* fECalMessenger;
+  ECalMessenger* fECalMessenger;
 
 };
 

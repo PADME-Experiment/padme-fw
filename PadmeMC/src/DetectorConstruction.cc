@@ -31,7 +31,7 @@
 #include "DetectorMessenger.hh"
 #include "MagneticField.hh"
 #include "ECalDetector.hh"
-#include "ECalSD.hh"
+//#include "ECalSD.hh"
 #include "TRodSD.hh"
 #include "MRodSD.hh"
 #include "TrackerSD.hh"
@@ -82,8 +82,12 @@ DetectorConstruction::DetectorConstruction()
  stepLimit(0), fMagField(0), fEmFieldSetup(0), //added M. Raggi
  fWorldLength(0.)
 {
+
   fEmFieldSetup = new F03FieldSetup();
   detectorMessenger = new DetectorMessenger(this);
+
+  fECalDetector = new ECalDetector(0);
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -98,9 +102,6 @@ DetectorConstruction::~DetectorConstruction()
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
-
-  // Detectors
-  ECalDetector* ecal;
 
 //--------- Material definition ---------
   G4double a, z, density;
@@ -676,8 +677,8 @@ if(IsTDumpON==1){
  
  if(IsEcalON==1){
 
-   ecal = new ECalDetector(logicWorld);
-   ecal->CreateGeometry();
+   fECalDetector->SetMotherVolume(logicWorld);
+   fECalDetector->CreateGeometry();
    /*
    //------------------------------ 
    // ECal Defintion
@@ -911,7 +912,7 @@ if(IsTDumpON==1){
  // Sensitive detectors
  //------------------------------------------------ 
  G4SDManager* SDman     = G4SDManager::GetSDMpointer();
- G4String ECrySDname    = "ECrySD";      //Ecal sensitive detector
+ //G4String ECrySDname    = "ECrySD";      //Ecal sensitive detector
  G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
  G4String TRodSDname    = "TRodSD";      //target rods
  G4String MRodSDname    = "MRodSD";      //monitor rods
@@ -922,12 +923,14 @@ if(IsTDumpON==1){
  G4String LAVSDname     = "LAVSD";       //LAV detector
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
-  if(IsEcalON==1){
-    ECalSD* ECrySD = new ECalSD( ECrySDname );
-    ecal->GetCrystalLogicalVolume()->SetSensitiveDetector( ECrySD );
-    //logicCry->SetSensitiveDetector( ECrySD );
-    SDman->AddNewDetector( ECrySD );
-  }
+ /*
+ if(IsEcalON==1){
+   ECalSD* ECrySD = new ECalSD( ECrySDname );
+   fECalDetector->GetCrystalLogicalVolume()->SetSensitiveDetector( ECrySD );
+   //logicCry->SetSensitiveDetector( ECrySD );
+   SDman->AddNewDetector( ECrySD );
+ }
+ */
 
   if(IsTrackerON==1){
     TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
@@ -1004,7 +1007,7 @@ if(IsTDumpON==1){
   // if(IsTargetON)  logicTarget ->SetVisAttributes(G4VisAttributes::Invisible);
   //  if(IsMonitorON) logicMonitor->SetVisAttributes(G4VisAttributes::Invisible);
   //if(IsEcalON)    logicEcal   ->SetVisAttributes(G4VisAttributes::Invisible);
-  if(IsEcalON)    ecal->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
+  if(IsEcalON) fECalDetector->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicSwepMag   ->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicVetoFinger->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicEVeto->SetVisAttributes(G4VisAttributes::Invisible);

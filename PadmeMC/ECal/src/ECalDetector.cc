@@ -12,27 +12,26 @@
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
 
+#include "G4SDManager.hh"
+
 #include "G4Material.hh"
 
-//#include "ECalDetectorMessenger.hh"
 #include "ECalGeometryParameters.hh"
-//#include "ECalMaterialParameters.hh"
+#include "ECalSD.hh"
 
-ECalDetector::ECalDetector(G4LogicalVolume* MotherVolume)
+ECalDetector::ECalDetector(G4LogicalVolume* motherVolume)
 {
-  fMotherVolume = MotherVolume;
+
+  fMotherVolume = motherVolume;
 
   // Connect to ECalDetectorMessenger to enable datacard configuration
-  //fECalMessenger = new LAVDetectorMessenger(this);
-
-  // Initialize materials used by ECal
-  //ECalMaterialParameters::GetInstance();
+  fECalMessenger = new ECalMessenger(this);
 
 }
 
 ECalDetector::~ECalDetector()
 {
-  //delete fECalMessenger;
+  delete fECalMessenger;
 }
 
 void ECalDetector::CreateGeometry()
@@ -57,9 +56,19 @@ void ECalDetector::CreateGeometry()
   G4Box* solidCry  = new G4Box("Ecry",ECryX*0.5,ECryY*0.5,ECryLength*0.5);
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BGO"),"ECry",0, 0, 0);
 
+  // Make crystal a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String ecalSDName = geo->GetECalSensitiveDetectorName();
+  ECalSD* ecalSD = (ECalSD*)sdMan->FindSensitiveDetector(ecalSDName);
+  if (!ecalSD) {
+     ecalSD = new ECalSD(ecalSDName);
+     sdMan->AddNewDetector(ecalSD);
+  }
+  fCrystalVolume->SetSensitiveDetector(ecalSD);
+
   // Get number of rows and columns of crystals and position all crystals
   G4int nRow = geo->GetECalNRows();
-  G4int nCol = geo->GetECalNColumns();
+  G4int nCol = geo->GetECalNCols();
   for (G4int row=0;row<nRow;row++){
      for (G4int col=0;col<nCol;col++){
        if (geo->ExistsCrystalAt(row,col)) {

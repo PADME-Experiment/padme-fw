@@ -30,6 +30,7 @@
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
 #include "MagneticField.hh"
+#include "ECalDetector.hh"
 #include "ECalSD.hh"
 #include "TRodSD.hh"
 #include "MRodSD.hh"
@@ -97,6 +98,10 @@ DetectorConstruction::~DetectorConstruction()
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
+
+  // Detectors
+  ECalDetector* ecal;
+
 //--------- Material definition ---------
   G4double a, z, density;
   G4int ncomponents, natoms;
@@ -669,7 +674,11 @@ if(IsTDumpON==1){
    }
  }
  
- if(IsEcalON==1){  
+ if(IsEcalON==1){
+
+   ecal = new ECalDetector(logicWorld);
+   ecal->CreateGeometry();
+   /*
    //------------------------------ 
    // ECal Defintion
    //------------------------------  
@@ -731,6 +740,7 @@ if(IsTDumpON==1){
    }//end of crystal placements 
    G4cout << "Total number of LYSO crystals:  " << ncry << G4endl;
    G4cout<<"placed "<<NCry<<" cristals "<<" at Z "<< positionEcal.getZ()<<G4endl;
+   */
  }
 
  if(IsPosVetoON==1){
@@ -914,7 +924,8 @@ if(IsTDumpON==1){
 
   if(IsEcalON==1){
     ECalSD* ECrySD = new ECalSD( ECrySDname );
-    logicCry->SetSensitiveDetector( ECrySD );
+    ecal->GetCrystalLogicalVolume()->SetSensitiveDetector( ECrySD );
+    //logicCry->SetSensitiveDetector( ECrySD );
     SDman->AddNewDetector( ECrySD );
   }
 
@@ -992,7 +1003,8 @@ if(IsTDumpON==1){
   logicWorld  ->SetVisAttributes(G4VisAttributes::Invisible);
   // if(IsTargetON)  logicTarget ->SetVisAttributes(G4VisAttributes::Invisible);
   //  if(IsMonitorON) logicMonitor->SetVisAttributes(G4VisAttributes::Invisible);
-  if(IsEcalON)    logicEcal   ->SetVisAttributes(G4VisAttributes::Invisible);
+  //if(IsEcalON)    logicEcal   ->SetVisAttributes(G4VisAttributes::Invisible);
+  if(IsEcalON)    ecal->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicSwepMag   ->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicVetoFinger->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicEVeto->SetVisAttributes(G4VisAttributes::Invisible);

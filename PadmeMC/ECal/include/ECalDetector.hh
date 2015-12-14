@@ -22,11 +22,14 @@ public:
   ECalDetector(G4LogicalVolume*);
 
   void CreateGeometry();
+  G4LogicalVolume* GetECalLogicalVolume() { return fECalVolume; }
+  G4LogicalVolume* GetCrystalLogicalVolume() { return fCrystalVolume; }
 
 private:
 
   G4LogicalVolume* fMotherVolume;
-
+  G4LogicalVolume* fECalVolume;
+  G4LogicalVolume* fCrystalVolume;
   //ECalDetectorMessenger* fECalMessenger;
 
 };

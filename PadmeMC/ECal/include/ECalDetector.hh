@@ -9,8 +9,7 @@
 #define ECalDetector_H 1
 
 #include "globals.hh"
-
-class G4LogicalVolume;
+#include "G4LogicalVolume.hh"
 
 //class ECalDetectorMessenger;
 

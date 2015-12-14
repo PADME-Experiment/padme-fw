@@ -12,7 +12,7 @@ name := PADMEMC
 G4TARGET := $(name)
 G4EXLIB  := true
 #SUBDIRS  := ECAL Target SAC MCBase
-SUBDIRS  := 
+SUBDIRS  := ECal
 ALLTARGETDIRS := $(SUBDIRS)
 
 # Directory where the PadmeRoot package is installed

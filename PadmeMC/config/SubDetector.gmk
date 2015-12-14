@@ -1,0 +1,36 @@
+# --------------------------------------------------------------
+# GNUmakefile for SubDetector library
+# --------------------------------------------------------------
+# --------------------------------------------------------------
+# History:
+#
+# Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2015-12-14
+#
+# --------------------------------------------------------------
+
+ROOTCONFIG   := root-config
+ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
+
+include $(G4INSTALL)/config/architecture.gmk
+
+CPPFLAGS += -I$(G4INCLUDE) \
+            -I$(PADMEMC)/include \
+            -I$(PADMEROOTLIB)/include \
+            -fPIC \
+            $(ROOTCFLAGS) \
+            $(DEFINES)
+
+.PHONY: all clean
+all: lib
+
+cleanall: clean
+
+include $(G4INSTALL)/config/binmake.gmk
+
+#Standard flags from G4
+#CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wshadow -O2 -fPIC
+#replace -Wshadow with -Wno-shadow
+CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wno-shadow -O2 -fPIC 
+
+CXXFLAGS += -g
+#CXXFLAGS += -pg -fprofile-generate

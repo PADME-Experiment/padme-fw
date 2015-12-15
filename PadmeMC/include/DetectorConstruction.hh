@@ -51,6 +51,8 @@ class G4SubtractionSolid;
 
 class DetectorMessenger;
 class ECalDetector;
+class TargetDetector;
+class SACDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -65,7 +67,7 @@ public:
   
   G4VPhysicalVolume* Construct();
      
-  G4double GetWorldFullLength()   {return fWorldLength;}; 
+  G4double GetWorldFullLength()    {return fWorldLength;}; 
   G4double GetCryPosX(G4int CryInd){return CryX[CryInd];}; 
   G4double GetCryPosY(G4int CryInd){return CryY[CryInd];}; 
   G4double GetCryPosZ(G4int CryInd){return CryZ[CryInd];}; 
@@ -73,62 +75,71 @@ public:
   void setTargetMaterial(G4String);
   void SetupDetectors();
   //     void SetMagField(G4double);
-  void SetMaxStep (G4double);     
-  
+  void SetMaxStep (G4double);
+
+  void EnableSubDetector(G4String);
+  void DisableSubDetector(G4String);
+
 private:
 
   void DefineMaterials();
 
-  ECalDetector* fECalDetector;
+  ECalDetector*   fECalDetector;
+  TargetDetector* fTargetDetector;
+  SACDetector*    fSACDetector;
 
-     G4Box*             solidWorld;    
-     G4LogicalVolume*   logicWorld;    
-     G4VPhysicalVolume* physiWorld;    
+  G4int fEnableECal;
+  G4int fEnableTarget;
+  G4int fEnableSAC;
 
-     G4Box*             solidWall;    
-     G4LogicalVolume*   logicWall;    
-     G4VPhysicalVolume* physiWall;    
+  G4Box*             solidWorld;    
+  G4LogicalVolume*   logicWorld;    
+  G4VPhysicalVolume* physiWorld;    
 
-     G4Box*             solidLeadBrick;
-     G4LogicalVolume*   logicLeadBrick;
-     G4VPhysicalVolume* physiLeadBrickL;
-     G4VPhysicalVolume* physiLeadBrickR;
-     G4VPhysicalVolume* physiLeadBrickT;
-     G4VPhysicalVolume* physiLeadBrickB;
+  G4Box*             solidWall;    
+  G4LogicalVolume*   logicWall;    
+  G4VPhysicalVolume* physiWall;    
 
-     G4Box*             solidTarget;   
-     G4LogicalVolume*   logicTarget;   
-     G4VPhysicalVolume* physiTarget;   
+  G4Box*             solidLeadBrick;
+  G4LogicalVolume*   logicLeadBrick;
+  G4VPhysicalVolume* physiLeadBrickL;
+  G4VPhysicalVolume* physiLeadBrickR;
+  G4VPhysicalVolume* physiLeadBrickT;
+  G4VPhysicalVolume* physiLeadBrickB;
 
-     G4Tubs*            solidTDump;  //Target DUMP
-     G4LogicalVolume*   logicTDump;
-     G4VPhysicalVolume* physiTDump;
+  //G4Box*             solidTarget;   
+  //G4LogicalVolume*   logicTarget;   
+  //G4VPhysicalVolume* physiTarget;   
 
-     G4Cons*            solidDumpGFilt;  //Target DUMP gamma filter
-     G4LogicalVolume*   logicDumpGFilt;
-     G4VPhysicalVolume* physiDumpGFilt;
+  G4Tubs*            solidTDump;  //Target DUMP
+  G4LogicalVolume*   logicTDump;
+  G4VPhysicalVolume* physiTDump;
+
+  G4Cons*            solidDumpGFilt;  //Target DUMP gamma filter
+  G4LogicalVolume*   logicDumpGFilt;
+  G4VPhysicalVolume* physiDumpGFilt;
 
   // G4SubtractionSolid* solidGSubFilt;   
  
-     G4Box*             solidTXRod;   
-     G4LogicalVolume*   logicTXRod;   
-     G4VPhysicalVolume* physiTXRod;   
+  //G4Box*             solidTXRod;   
+  //G4LogicalVolume*   logicTXRod;   
+  //G4VPhysicalVolume* physiTXRod;   
 
-     G4Box*             solidTYRod;   
-     G4LogicalVolume*   logicTYRod;   
-     G4VPhysicalVolume* physiTYRod;   
+  //G4Box*             solidTYRod;   
+  //G4LogicalVolume*   logicTYRod;   
+  //G4VPhysicalVolume* physiTYRod;   
 
-     G4Box*             solidMonitor;  
-     G4LogicalVolume*   logicMonitor;  
-     G4VPhysicalVolume* physiMonitor;  
+  G4Box*             solidMonitor;  
+  G4LogicalVolume*   logicMonitor;  
+  G4VPhysicalVolume* physiMonitor;  
 
-     G4Box*             solidMXRod;   
-     G4LogicalVolume*   logicMXRod;   
-     G4VPhysicalVolume* physiMXRod;   
+  G4Box*             solidMXRod;   
+  G4LogicalVolume*   logicMXRod;   
+  G4VPhysicalVolume* physiMXRod;   
 
-     G4Box*             solidMYRod;   
-     G4LogicalVolume*   logicMYRod;   
-     G4VPhysicalVolume* physiMYRod;   
+  G4Box*             solidMYRod;   
+  G4LogicalVolume*   logicMYRod;   
+  G4VPhysicalVolume* physiMYRod;   
 
   //G4Box*             solidEcal;   // pointer to the solid Target
   //G4LogicalVolume*   logicEcal;   // pointer to the logical Target
@@ -138,107 +149,109 @@ private:
   //G4LogicalVolume*   logicCry;   // pointer to the logical Target
   //G4VPhysicalVolume* physiCry;   // pointer to the physical Target
 
-//CERN MAGNET MODEL
+  //CERN MAGNET MODEL
 
-     G4Box*             solidMagUpJoke;  
-     G4LogicalVolume*   logicMagUpJoke;  
-     G4VPhysicalVolume* physiMagUpJoke;  
+  G4Box*             solidMagUpJoke;  
+  G4LogicalVolume*   logicMagUpJoke;  
+  G4VPhysicalVolume* physiMagUpJoke;  
 			     
-     G4Box*             solidMagDwJoke;  
-     G4LogicalVolume*   logicMagDwJoke;  
-     G4VPhysicalVolume* physiMagDwJoke;  
+  G4Box*             solidMagDwJoke;  
+  G4LogicalVolume*   logicMagDwJoke;  
+  G4VPhysicalVolume* physiMagDwJoke;  
 
-     G4Box*             solidMagLfJoke;  
-     G4LogicalVolume*   logicMagLfJoke;  
-     G4VPhysicalVolume* physiMagLfJoke;  
+  G4Box*             solidMagLfJoke;  
+  G4LogicalVolume*   logicMagLfJoke;  
+  G4VPhysicalVolume* physiMagLfJoke;  
 
-     G4Box*             solidMagRgJoke;  
-     G4LogicalVolume*   logicMagRgJoke;  
-     G4VPhysicalVolume* physiMagRgJoke;  
+  G4Box*             solidMagRgJoke;  
+  G4LogicalVolume*   logicMagRgJoke;  
+  G4VPhysicalVolume* physiMagRgJoke;  
 
-     G4Tubs*            solidMagCoil;
-     G4LogicalVolume*   logicMagCoil;
-     G4VPhysicalVolume* physiMagUpCoil;
-     G4VPhysicalVolume* physiMagDwCoil;
-     G4VPhysicalVolume* physiMagUpBkCoil;
-     G4VPhysicalVolume* physiMagDwBkCoil;
+  G4Tubs*            solidMagCoil;
+  G4LogicalVolume*   logicMagCoil;
+  G4VPhysicalVolume* physiMagUpCoil;
+  G4VPhysicalVolume* physiMagDwCoil;
+  G4VPhysicalVolume* physiMagUpBkCoil;
+  G4VPhysicalVolume* physiMagDwBkCoil;
 
-//was BTF MAGNET model
-//     G4Tubs*            solidMagIron;
-//     G4LogicalVolume*   logicMagIron;
-//     G4VPhysicalVolume* physiMagIron;
-//
-//     G4Tubs*            solidMagInnJoke;
-//     G4LogicalVolume*   logicMagInnJoke;
-//     G4VPhysicalVolume* physiMagInnJoke;
-//
-//     G4Tubs*            solidMagOutJoke;
-//     G4LogicalVolume*   logicMagOutJoke;
-//     G4VPhysicalVolume* physiMagOutJoke;
-//
-//     G4Tubs*            solidMagBArea;
-//     G4LogicalVolume*   logicMagBArea;
-//     G4VPhysicalVolume* physiMagBArea;
+  //was BTF MAGNET model
+  //     G4Tubs*            solidMagIron;
+  //     G4LogicalVolume*   logicMagIron;
+  //     G4VPhysicalVolume* physiMagIron;
+  //
+  //     G4Tubs*            solidMagInnJoke;
+  //     G4LogicalVolume*   logicMagInnJoke;
+  //     G4VPhysicalVolume* physiMagInnJoke;
+  //
+  //     G4Tubs*            solidMagOutJoke;
+  //     G4LogicalVolume*   logicMagOutJoke;
+  //     G4VPhysicalVolume* physiMagOutJoke;
+  //
+  //     G4Tubs*            solidMagBArea;
+  //     G4LogicalVolume*   logicMagBArea;
+  //     G4VPhysicalVolume* physiMagBArea;
 
-     G4Box*             solidSwepMag;  // pointer to the solid Tracker
-     G4LogicalVolume*   logicSwepMag;  // pointer to the logical Tracker
-     G4VPhysicalVolume* physiSwepMag;  // pointer to the physical Tracker
+  G4Box*             solidSwepMag;  // pointer to the solid Tracker
+  G4LogicalVolume*   logicSwepMag;  // pointer to the logical Tracker
+  G4VPhysicalVolume* physiSwepMag;  // pointer to the physical Tracker
 
-     G4Tubs*            solidTracker[10];  // pointer to the solid Chamber
-     G4LogicalVolume*   logicTracker[10];  // pointer to the logical Chamber
-     G4VPhysicalVolume* physiTracker[10];  // pointer to the physical Chamber
+  G4Tubs*            solidTracker[10];  // pointer to the solid Chamber
+  G4LogicalVolume*   logicTracker[10];  // pointer to the logical Chamber
+  G4VPhysicalVolume* physiTracker[10];  // pointer to the physical Chamber
 
-     G4VSolid*           solidEVeto;   
-     G4LogicalVolume*    logicEVeto;   
-     G4VPhysicalVolume*  physiEVeto;   
+  G4VSolid*           solidEVeto;   
+  G4LogicalVolume*    logicEVeto;   
+  G4VPhysicalVolume*  physiEVeto;   
 
-     G4VSolid*           solidVetoFinger;
-     G4LogicalVolume*    logicVetoFinger;
-     G4VPhysicalVolume*  physiVetoFinger;
+  G4VSolid*           solidVetoFinger;
+  G4LogicalVolume*    logicVetoFinger;
+  G4VPhysicalVolume*  physiVetoFinger;
 
-     G4VSolid*           solidPosVeto;   
-     G4LogicalVolume*    logicPosVeto;   
-     G4VPhysicalVolume*  physiPosVeto;   
+  G4VSolid*           solidPosVeto;   
+  G4LogicalVolume*    logicPosVeto;   
+  G4VPhysicalVolume*  physiPosVeto;   
 
-     G4VSolid*           solidPosVetoFinger;
-     G4LogicalVolume*    logicPosVetoFinger;
-     G4VPhysicalVolume*  physiPosVetoFinger;
+  G4VSolid*           solidPosVetoFinger;
+  G4LogicalVolume*    logicPosVetoFinger;
+  G4VPhysicalVolume*  physiPosVetoFinger;
 
-     G4VSolid*           solidEleVeto;   
-     G4LogicalVolume*    logicEleVeto;   
-     G4VPhysicalVolume*  physiEleVeto;   
+  G4VSolid*           solidEleVeto;   
+  G4LogicalVolume*    logicEleVeto;   
+  G4VPhysicalVolume*  physiEleVeto;   
 
-     G4VSolid*           solidEleVetoFinger;
-     G4LogicalVolume*    logicEleVetoFinger;
-     G4VPhysicalVolume*  physiEleVetoFinger;
+  G4VSolid*           solidEleVetoFinger;
+  G4LogicalVolume*    logicEleVetoFinger;
+  G4VPhysicalVolume*  physiEleVetoFinger;
 
-     G4VSolid*           solidSAC;   
-     G4LogicalVolume*    logicSAC;   
-     G4VPhysicalVolume*  physiSAC;
+  G4VSolid*           solidSAC;   
+  G4LogicalVolume*    logicSAC;   
+  G4VPhysicalVolume*  physiSAC;
 
-     G4Tubs*            solidLAV;   
-     G4LogicalVolume*    logicLAV;   
-     G4VPhysicalVolume*  physiLAV;
+  G4Tubs*            solidLAV;   
+  G4LogicalVolume*    logicLAV;   
+  G4VPhysicalVolume*  physiLAV;
 
-     G4Box*              solidPGEM;
-     G4LogicalVolume*    logicPGEM;
-     G4VPhysicalVolume*  physiPGEM;
+  G4Box*              solidPGEM;
+  G4LogicalVolume*    logicPGEM;
+  G4VPhysicalVolume*  physiPGEM;
  
-     G4Material*         TargetMater;  // pointer to the target  material
-     G4Material*         WorldMater; // pointer to the chamber material
+  //G4Material*         TargetMater;  // pointer to the target  material
+  G4Material*         WorldMater; // pointer to the chamber material
 
-     G4UserLimits* stepLimit;             // pointer to user step limits
+  G4UserLimits* stepLimit;             // pointer to user step limits
 
-     G4UniformMagField*              fMagField;   // pointer to the magnetic field 
-     F03FieldSetup*              fEmFieldSetup;     
-     DetectorMessenger*      detectorMessenger;  // pointer to the Messenger
+  G4UniformMagField*              fMagField;   // pointer to the magnetic field 
+  F03FieldSetup*              fEmFieldSetup;     
+  DetectorMessenger*      fDetectorMessenger;  // pointer to the Messenger
        
-     G4double fWorldLength;            // Full length of the world volume
+  G4double fWorldLength;            // Full length of the world volume
 
-     private:
-     G4double CryX[1000];
-     G4double CryY[1000];
-     G4double CryZ[1000];
+private:
+
+  G4double CryX[1000];
+  G4double CryY[1000];
+  G4double CryZ[1000];
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

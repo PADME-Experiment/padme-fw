@@ -1,34 +1,32 @@
-// ECalGeometryParameters.hh
+// ECalGeometry.hh
 // --------------------------------------------------------------
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
 // --------------------------------------------------------------
 
-#ifndef ECalGeometryParameters_H
-#define ECalGeometryParameters_H 1
+#ifndef ECalGeometry_H
+#define ECalGeometry_H 1
 
 #include "globals.hh"
 
 class G4LogicalVolume;
 
-//class ECalMessenger;
-
-class ECalGeometryParameters
+class ECalGeometry
 {
 
 public:
 
-  ~ECalGeometryParameters();
-  static ECalGeometryParameters* GetInstance();
+  ~ECalGeometry();
+  static ECalGeometry* GetInstance();
 
 private:
 
-  static ECalGeometryParameters* fInstance;
+  static ECalGeometry* fInstance;
 
 protected:
 
-  ECalGeometryParameters();
+  ECalGeometry();
 
 public:
 
@@ -68,6 +66,10 @@ public:
 
   // Set position along Z of ECal front face
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
+
+  // Set inner and outer radii of ECal
+  void SetECalInnerRadius(G4double r) { fECalInnerRadius = r; }
+  void SetECalOuterRadius(G4double r) { fECalOuterRadius = r; }
 
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }

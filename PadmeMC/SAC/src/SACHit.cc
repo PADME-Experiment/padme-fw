@@ -24,88 +24,83 @@
 // ********************************************************************
 //
 //
-// $Id: SACHit.hh,v 1.2 2014/06/23 13:44:14 veni Exp $
+// $Id: SACHit.cc,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef SACHit_h
-#define SACHit_h 1
+#include "SACHit.hh"
+#include "G4UnitsTable.hh"
+#include "G4VVisManager.hh"
+#include "G4Circle.hh"
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
 
-#include "G4VHit.hh"
-#include "G4THitsCollection.hh"
-#include "G4Allocator.hh"
-#include "G4ThreeVector.hh"
+G4Allocator<SACHit> SACHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class SACHit : public G4VHit
+SACHit::SACHit() {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+SACHit::~SACHit() {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+SACHit::SACHit(const SACHit& right)
+  : G4VHit()
 {
-  public:
-
-      SACHit();
-     ~SACHit();
-      SACHit(const SACHit&);
-      const SACHit& operator=(const SACHit&);
-      G4int operator==(const SACHit&) const;
-
-      inline void* operator new(size_t);
-      inline void  operator delete(void*);
-
-      void Draw();
-      void Print();
-
-  public:
-  
-      void SetTrackID  (G4int track) { VtrackID = track; };
-      void SetSACNb(G4int cry)  { SACNb = cry; };
-      void SetPType(G4int typ)       { PType = typ; };
-      void SetEdep(G4double de)      { edep = de; };
-      void SetPos(G4ThreeVector xyz) { pos = xyz; };
-      void SetTime(G4double time)    { VetoT = time; };
-      
-      G4int GetTrackID()    { return VtrackID; };
-      G4int GetSACNb() { return SACNb; };
-      G4double GetEdep()    { return edep; };      
-      G4double GetTime()    { return VetoT; };
-      G4int GetPType()      { return PType; };
-      G4ThreeVector GetPos(){ return pos; };
-      G4double GetX(){ return pos.x(); };
-      G4double GetY(){ return pos.y(); };
-      G4double GetZ(){ return pos.z(); };
-
-  private:
-  
-      G4int         VtrackID;
-      G4int         PType;
-      G4int         SACNb;
-      G4double      VetoT;
-      G4double      edep;
-      G4ThreeVector pos;
-};
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-typedef G4THitsCollection<SACHit> SACHitsCollection;
-
-extern G4Allocator<SACHit> SACHitAllocator;
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-inline void* SACHit::operator new(size_t)
-{
-  void *aHit;
-  aHit = (void *) SACHitAllocator.MallocSingle();
-  return aHit;
+  printf("Hey new hit\n");
+  trackID   = right.trackID;  //pointer to current hit 
+  // CryNb     = right.chamberNb;
+  edep      = right.edep;
+  pos       = right.pos;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void SACHit::operator delete(void *aHit)
+const SACHit& SACHit::operator=(const SACHit& right)
 {
-  SACHitAllocator.FreeSingle((SACHit*) aHit);
+  trackID   = right.trackID;
+  CryNb     = right.CryNb;
+  edep      = right.edep;
+  pos       = right.pos;
+  return *this;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#endif
+G4int SACHit::operator==(const SACHit& right) const
+{
+  return (this==&right) ? 1 : 0;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void SACHit::Draw()
+{
+  G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
+  if(pVVisManager)
+  {
+    G4Circle circle(pos);
+    circle.SetScreenSize(2.);
+    circle.SetFillStyle(G4Circle::filled);
+    G4Colour colour(1.,0.,0.);
+    G4VisAttributes attribs(colour);
+    circle.SetVisAttributes(attribs);
+    pVVisManager->Draw(circle);
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void SACHit::Print()
+{
+  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
+         << "  energy deposit: " << G4BestUnit(edep,"Energy")
+         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+

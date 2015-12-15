@@ -24,49 +24,81 @@
 // ********************************************************************
 //
 //
-// $Id: DetectorMessenger.hh 69899 2013-05-17 10:05:33Z gcosmo $
+// $Id: TargetHit.cc,v 1.1 2014/01/22 15:50:29 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef DetectorMessenger_h
-#define DetectorMessenger_h 1
+#include "TargetHit.hh"
+#include "G4UnitsTable.hh"
+#include "G4VVisManager.hh"
+#include "G4Circle.hh"
+#include "G4Colour.hh"
+#include "G4VisAttributes.hh"
 
-#include "globals.hh"
-#include "G4UImessenger.hh"
-
-class DetectorConstruction;
-class G4UIdirectory;
-class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
+G4Allocator<TargetHit> TargetHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class DetectorMessenger: public G4UImessenger
+TargetHit::TargetHit() {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+TargetHit::~TargetHit() {}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+TargetHit::TargetHit(const TargetHit& right)
+  : G4VHit()
 {
-public:
-
-  DetectorMessenger(DetectorConstruction*);
-  ~DetectorMessenger();
-    
-  void SetNewValue(G4UIcommand*,G4String);
-    
-private:
-
-  DetectorConstruction* fDetector;
-    
-  G4UIdirectory* fDetectorDir;
-
-  G4UIcmdWithAString* fEnableSubDetCmd;
-  G4UIcmdWithAString* fDisableSubDetCmd;
-
-  //G4UIcmdWithAString*        TargMatCmd;
-  //G4UIcmdWithAString*        ChamMatCmd;    
-  //G4UIcmdWithADoubleAndUnit* FieldCmd;
-  //G4UIcmdWithADoubleAndUnit* StepMaxCmd;    
-
-};
+  printf("Hey new hit\n");
+  trackID   = right.trackID;  //pointer to current hit 
+  edep      = right.edep;
+  pos       = right.pos;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#endif
+const TargetHit& TargetHit::operator=(const TargetHit& right)
+{
+  trackID   = right.trackID;
+  edep      = right.edep;
+  pos       = right.pos;
+  return *this;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+G4int TargetHit::operator==(const TargetHit& right) const
+{
+  return (this==&right) ? 1 : 0;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void TargetHit::Draw()
+{
+  G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
+  if(pVVisManager)
+  {
+    G4Circle circle(pos);
+    circle.SetScreenSize(2.);
+    circle.SetFillStyle(G4Circle::filled);
+    G4Colour colour(1.,0.,0.);
+    G4VisAttributes attribs(colour);
+    circle.SetVisAttributes(attribs);
+    pVVisManager->Draw(circle);
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void TargetHit::Print()
+{
+//  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
+//         << "  energy deposit: " << G4BestUnit(edep,"Energy")
+//         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+

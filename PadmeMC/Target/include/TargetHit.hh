@@ -24,48 +24,82 @@
 // ********************************************************************
 //
 //
-// $Id: DetectorMessenger.hh 69899 2013-05-17 10:05:33Z gcosmo $
+// $Id: TargetHit.hh,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef DetectorMessenger_h
-#define DetectorMessenger_h 1
+#ifndef TargetHit_h
+#define TargetHit_h 1
 
-#include "globals.hh"
-#include "G4UImessenger.hh"
-
-class DetectorConstruction;
-class G4UIdirectory;
-class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
+#include "G4VHit.hh"
+#include "G4THitsCollection.hh"
+#include "G4Allocator.hh"
+#include "G4ThreeVector.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class DetectorMessenger: public G4UImessenger
+class TargetHit : public G4VHit
 {
 public:
 
-  DetectorMessenger(DetectorConstruction*);
-  ~DetectorMessenger();
-    
-  void SetNewValue(G4UIcommand*,G4String);
-    
+  TargetHit();
+  ~TargetHit();
+  TargetHit(const TargetHit&);
+  const TargetHit& operator=(const TargetHit&);
+  G4int operator==(const TargetHit&) const;
+
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
+
+  void Draw();
+  void Print();
+
+public:
+  
+  void SetTrackID  (G4int track)      { trackID = track; };
+  void SetEdep     (G4double de)      { edep = de; };
+  void SetTime     (G4double time)    { TTime = time; };
+  void SetPos      (G4ThreeVector xyz){ pos = xyz; };
+
+  G4int GetTrackID()    { return trackID; };
+  G4double GetEdep()    { return edep; };      
+  G4double GetTime()    { return TTime; };
+  G4double GetX()       { return pos.x(); };
+  G4double GetY()       { return pos.y(); };
+  G4double GetZ()       { return pos.z(); };
+  G4ThreeVector GetPos(){ return pos; };
+
 private:
-
-  DetectorConstruction* fDetector;
-    
-  G4UIdirectory* fDetectorDir;
-
-  G4UIcmdWithAString* fEnableSubDetCmd;
-  G4UIcmdWithAString* fDisableSubDetCmd;
-
-  //G4UIcmdWithAString*        TargMatCmd;
-  //G4UIcmdWithAString*        ChamMatCmd;    
-  //G4UIcmdWithADoubleAndUnit* FieldCmd;
-  //G4UIcmdWithADoubleAndUnit* StepMaxCmd;    
+  
+  G4int         trackID;
+  G4double      TTime;
+  G4double      edep;
+  G4ThreeVector pos;
 
 };
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+typedef G4THitsCollection<TargetHit> TargetHitsCollection;
+
+extern G4Allocator<TargetHit> TargetHitAllocator;
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void* TargetHit::operator new(size_t)
+{
+  void *aHit;
+  aHit = (void *) TargetHitAllocator.MallocSingle();
+  return aHit;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void TargetHit::operator delete(void *aHit)
+{
+  TargetHitAllocator.FreeSingle((TargetHit*) aHit);
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

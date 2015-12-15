@@ -11,12 +11,11 @@
 #include "G4ThreeVector.hh"
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
-
 #include "G4SDManager.hh"
-
 #include "G4Material.hh"
+#include "G4VisAttributes.hh"
 
-#include "ECalGeometryParameters.hh"
+#include "ECalGeometry.hh"
 #include "ECalSD.hh"
 
 ECalDetector::ECalDetector(G4LogicalVolume* motherVolume)
@@ -37,33 +36,41 @@ ECalDetector::~ECalDetector()
 void ECalDetector::CreateGeometry()
 {
 
-  ECalGeometryParameters* geo = ECalGeometryParameters::GetInstance();
+  ECalGeometry* geo = ECalGeometry::GetInstance();
 
   // Create main ECal box
+  printf("ECal will be placed at %f %f %f\n",geo->GetECalPosX(),geo->GetECalPosY(),geo->GetECalPosZ());
   G4ThreeVector positionEcal = G4ThreeVector(geo->GetECalPosX(),geo->GetECalPosY(),geo->GetECalPosZ()); 
   G4double ECalX      = geo->GetECalSizeX();
   G4double ECalY      = geo->GetECalSizeY();
   G4double ECalLength = geo->GetECalSizeZ();
-
+  printf("ECal size is %f %f %f\n",ECalX,ECalY,ECalLength);
   G4Box* solidEcal = new G4Box("ECalSolid",ECalX*0.5,ECalY*0.5,ECalLength*0.5);
   fECalVolume = new G4LogicalVolume(solidEcal,G4Material::GetMaterial("G4_Galactic"),"ECalLogic",0, 0, 0);
+  fECalVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,positionEcal,fECalVolume,"ECal",fMotherVolume,false,0,false);
 
   // Create standard BGO crystal
   G4double ECryX      = geo->GetCrystalSizeX();
   G4double ECryY      = geo->GetCrystalSizeY();
   G4double ECryLength = geo->GetCrystalSizeZ();
+  printf("Crystal size is %f %f %f\n",ECryX,ECryY,ECryLength);
   G4Box* solidCry  = new G4Box("Ecry",ECryX*0.5,ECryY*0.5,ECryLength*0.5);
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BGO"),"ECry",0, 0, 0);
 
   // Make crystal a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
   G4String ecalSDName = geo->GetECalSensitiveDetectorName();
-  ECalSD* ecalSD = (ECalSD*)sdMan->FindSensitiveDetector(ecalSDName);
-  if (!ecalSD) {
-     ecalSD = new ECalSD(ecalSDName);
-     sdMan->AddNewDetector(ecalSD);
-  }
+  //printf("Getting ECal SD %s\n",ecalSDName.data());
+  //ECalSD* ecalSD = (ECalSD*)sdMan->FindSensitiveDetector(ecalSDName);
+  //if (!ecalSD) {
+  //  printf("Registering ECal SD %s\n",ecalSDName.data());
+  //  ecalSD = new ECalSD(ecalSDName);
+  //  sdMan->AddNewDetector(ecalSD);
+  //}
+  printf("Registering ECal SD %s\n",ecalSDName.data());
+  ECalSD* ecalSD = new ECalSD(ecalSDName);
+  sdMan->AddNewDetector(ecalSD);
   fCrystalVolume->SetSensitiveDetector(ecalSD);
 
   // Get number of rows and columns of crystals and position all crystals

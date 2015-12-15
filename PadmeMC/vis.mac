@@ -5,6 +5,36 @@
 #
 /control/verbose 1
 /run/verbose 1
+
+# Output root file
+/output/fileName pippo.root
+
+# Detector settings
+
+/Detector/EnableSubDetector ECal
+/Detector/EnableSubDetector Target
+/Detector/EnableSubDetector SAC
+
+#/Detector/DisableSubDetector ECal
+#/Detector/DisableSubDetector Target
+#/Detector/DisableSubDetector SAC
+
+/Detector/Target/FrontFaceZ -20.
+/Detector/Target/Size 1.
+/Detector/Target/Thickness 50.
+
+/Detector/ECal/Geometry 30 30
+/Detector/ECal/FrontFaceZ 400.
+/Detector/ECal/CrystalSize 2.
+/Detector/ECal/InnerRadius 4.
+/Detector/ECal/OuterRadius 30.
+
+/Detector/SAC/FrontFaceZ 450.
+/Detector/SAC/CrystalSize 2.
+
+# Create detectors and initialize run
+/run/initialize
+
 #
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
@@ -93,7 +123,6 @@
 /vis/viewer/zoom 0.5
 #/vis/scene/add/axes 0 -50. -50. 30. cm
 /vis/viewer/flush
-/run/beamOn 1	
 
 # Calo picture
 # /vis/viewer/set/viewpointThetaPhi 45. 45.
@@ -104,3 +133,5 @@
 #/vis/viewer/panTo -0.5 0.
 #/vis/viewer/set/viewpointThetaPhi 0. 0.
 #/vis/viewer/zoom 50
+
+/run/beamOn 1	

@@ -1,21 +1,21 @@
-// ECalGeometryParameters.cc
+// ECalGeometry.cc
 // --------------------------------------------------------------
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-11
 // --------------------------------------------------------------
 
-#include "ECalGeometryParameters.hh"
+#include "ECalGeometry.hh"
 
-ECalGeometryParameters* ECalGeometryParameters::fInstance = 0;
+ECalGeometry* ECalGeometry::fInstance = 0;
 
-ECalGeometryParameters* ECalGeometryParameters::GetInstance()
+ECalGeometry* ECalGeometry::GetInstance()
 {
-  if ( fInstance == 0 ) { fInstance = new ECalGeometryParameters(); }
+  if ( fInstance == 0 ) { fInstance = new ECalGeometry(); }
   return fInstance;
 }
 
-ECalGeometryParameters::ECalGeometryParameters()
+ECalGeometry::ECalGeometry()
 {
 
   // Inizialize default parameters
@@ -38,55 +38,55 @@ ECalGeometryParameters::ECalGeometryParameters()
 
 }
 
-ECalGeometryParameters::~ECalGeometryParameters()
+ECalGeometry::~ECalGeometry()
 {}
 
-G4double ECalGeometryParameters::GetECalPosX()
+G4double ECalGeometry::GetECalPosX()
 {
   return 0.;
 }
 
-G4double ECalGeometryParameters::GetECalPosY()
+G4double ECalGeometry::GetECalPosY()
 {
   return 0.;
 }
 
-G4double ECalGeometryParameters::GetECalPosZ()
+G4double ECalGeometry::GetECalPosZ()
 {
   return fECalFrontFacePosZ+fCrystalNominalSizeZ*0.5;
 }
 
-G4double ECalGeometryParameters::GetECalSizeX()
+G4double ECalGeometry::GetECalSizeX()
 {
   return fCrystalNominalSizeX*fECalNRows;
 }
 
-G4double ECalGeometryParameters::GetECalSizeY()
+G4double ECalGeometry::GetECalSizeY()
 {
   return fCrystalNominalSizeY*fECalNCols;
 }
 
-G4double ECalGeometryParameters::GetECalSizeZ()
+G4double ECalGeometry::GetECalSizeZ()
 {
   return fCrystalNominalSizeZ;
 }
 
-G4double ECalGeometryParameters::GetCrystalSizeX()
+G4double ECalGeometry::GetCrystalSizeX()
 {
   return fCrystalNominalSizeX-fCrystalGap;
 }
 
-G4double ECalGeometryParameters::GetCrystalSizeY()
+G4double ECalGeometry::GetCrystalSizeY()
 {
   return fCrystalNominalSizeY-fCrystalGap;
 }
 
-G4double ECalGeometryParameters::GetCrystalSizeZ()
+G4double ECalGeometry::GetCrystalSizeZ()
 {
   return fCrystalNominalSizeZ-fCrystalGap;
 }
 
-G4int ECalGeometryParameters::ExistsCrystalAt(G4int row, G4int col)
+G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
@@ -104,12 +104,12 @@ G4int ECalGeometryParameters::ExistsCrystalAt(G4int row, G4int col)
 
 }
 
-G4double ECalGeometryParameters::GetCrystalPosX(G4int row, G4int col)
+G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
-    printf("ECalGeometryParameters::GetCrystalPosX - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    printf("ECalGeometry::GetCrystalPosX - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }
 
@@ -118,12 +118,12 @@ G4double ECalGeometryParameters::GetCrystalPosX(G4int row, G4int col)
 
 }
 
-G4double ECalGeometryParameters::GetCrystalPosY(G4int row, G4int col)
+G4double ECalGeometry::GetCrystalPosY(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
-    printf("ECalGeometryParameters::GetCrystalPosY - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    printf("ECalGeometry::GetCrystalPosY - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }
 
@@ -132,16 +132,16 @@ G4double ECalGeometryParameters::GetCrystalPosY(G4int row, G4int col)
 
 }
 
-G4double ECalGeometryParameters::GetCrystalPosZ(G4int row, G4int col)
+G4double ECalGeometry::GetCrystalPosZ(G4int row, G4int col)
 {
 
   // Verify we are within ECal box
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
-    printf("ECalGeometryParameters::GetCrystalPosZ - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    printf("ECalGeometry::GetCrystalPosZ - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
     return 0.;
   }
 
   // Return Z position of center of crystal
-  return fCrystalNominalSizeZ*0.5;
+  return 0.;
 
 }

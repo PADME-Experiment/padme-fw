@@ -30,7 +30,9 @@
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
 #include "MagneticField.hh"
+#include "TargetDetector.hh"
 #include "ECalDetector.hh"
+#include "SACDetector.hh"
 //#include "ECalSD.hh"
 #include "TRodSD.hh"
 #include "MRodSD.hh"
@@ -38,7 +40,7 @@
 #include "EVetoSD.hh"
 #include "PosVetoSD.hh"
 #include "EleVetoSD.hh"
-#include "SACSD.hh"
+//#include "SACSD.hh"
 #include "LAVSD.hh"
 #include "GFiltSD.hh"
 
@@ -77,16 +79,20 @@
  
 DetectorConstruction::DetectorConstruction()
 :solidWorld(0),  logicWorld(0),  physiWorld(0),
- solidTarget(0), logicTarget(0), physiTarget(0), 
- TargetMater(0),
  stepLimit(0), fMagField(0), fEmFieldSetup(0), //added M. Raggi
  fWorldLength(0.)
 {
 
   fEmFieldSetup = new F03FieldSetup();
-  detectorMessenger = new DetectorMessenger(this);
+  fDetectorMessenger = new DetectorMessenger(this);
 
-  fECalDetector = new ECalDetector(0);
+  fECalDetector   = new ECalDetector(0);
+  fTargetDetector = new TargetDetector(0);
+  fSACDetector    = new SACDetector(0);
+
+  fEnableECal   = 1;
+  fEnableTarget = 1;
+  fEnableSAC    = 1;
 
 }
 
@@ -97,7 +103,25 @@ DetectorConstruction::~DetectorConstruction()
   delete fMagField;
   if (fEmFieldSetup) delete fEmFieldSetup ;
   delete stepLimit;
-  delete detectorMessenger;             
+  delete fDetectorMessenger;             
+}
+
+void DetectorConstruction::EnableSubDetector(G4String det)
+{
+  printf("Enabling subdetector %s\n",det.data());
+  if      (det=="ECal")   { fEnableECal   = 1; }
+  else if (det=="Target") { fEnableTarget = 1; }
+  else if (det=="SAC")    { fEnableSAC    = 1; }
+  else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
+}
+
+void DetectorConstruction::DisableSubDetector(G4String det)
+{
+  printf("Disabling subdetector %s\n",det.data());
+  if      (det=="ECal")   { fEnableECal   = 0; }
+  else if (det=="Target") { fEnableTarget = 0; }
+  else if (det=="SAC")    { fEnableSAC    = 0; }
+  else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
@@ -444,27 +468,32 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				     true);           // Overlap check    
   }
   
- if(IsTargetON==1){
-  //------------------------------------------------- 
-  // Target Defintion two layers of fused silica rods 
-  //-------------------------------------------------
+  if (fEnableTarget) {
+    fTargetDetector->SetMotherVolume(logicWorld);
+    fTargetDetector->CreateGeometry();
+  }
+  /*
+  if(IsTargetON==1){
+   //------------------------------------------------- 
+   // Target Defintion two layers of fused silica rods 
+   //-------------------------------------------------
    //  G4ThreeVector positionTarget = G4ThreeVector(0,0,0); 
-  G4ThreeVector positionTarget = G4ThreeVector(TargetPosiX*cm,TargetPosiY*cm,TargetPosiZ*cm); 
+   G4ThreeVector positionTarget = G4ThreeVector(TargetPosiX*cm,TargetPosiY*cm,TargetPosiZ*cm); 
+   
+   G4double TargetX      = TargetSizeX*cm;
+   G4double TargetY      = TargetSizeY*cm;
+   G4double TargetLength = TargetSizeZ*cm;
 
-  G4double TargetX      = TargetSizeX*cm;
-  G4double TargetY      = TargetSizeY*cm;
-  G4double TargetLength = TargetSizeZ*cm;
-
-  solidTarget = new G4Box("target",TargetX*0.5,TargetY*0.5,TargetLength*0.5);
-  logicTarget = new G4LogicalVolume(solidTarget,elC,"Target",0,0,0);
-  physiTarget = new G4PVPlacement(0,               // no rotation
-				  positionTarget,  // at (x,y,z)
-				  logicTarget,     // its logical volume                     
-				  "Target",        // its name
-				  logicWorld,      // its mother  volume
-				  false,           // no boolean operations
-				  0,               // copy number 
-				  false);          //Check for overlaps
+   solidTarget = new G4Box("target",TargetX*0.5,TargetY*0.5,TargetLength*0.5);
+   logicTarget = new G4LogicalVolume(solidTarget,elC,"Target",0,0,0);
+   physiTarget = new G4PVPlacement(0,               // no rotation
+                                   positionTarget,  // at (x,y,z)
+				   logicTarget,     // its logical volume                     
+				   "Target",        // its name
+				   logicWorld,      // its mother  volume
+				   false,           // no boolean operations
+				   0,               // copy number 
+				   false);          //Check for overlaps
 //  //Start Rods Description for Monitor station
 //  //Start target Rods Description
 //  G4int    NRodRows=5;
@@ -501,25 +530,31 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 //				    logicTarget,     // its mother  volume
 //				    false,           // no boolean operations
 //				    i+NRodRows);     // copy number 
-}
+  }
+  */
 
-
- if(IsSACON==1){
-  //------------------------------------------------- 
-  // ZERO ANGLE PHOTON VETO made of BaF2 
-  //-------------------------------------------------
+  if (fEnableSAC) {
+    fSACDetector->SetMotherVolume(logicWorld);
+    fSACDetector->CreateGeometry();
+  }
+  /*
+  if(IsSACON==1){
+   //------------------------------------------------- 
+   // ZERO ANGLE PHOTON VETO made of BaF2 
+   //-------------------------------------------------
    G4ThreeVector positionSAC = G4ThreeVector(0,0,ECalPosiZ*cm+50.*cm); 
-  solidSAC = new G4Box("SolSAC",SACX*0.5*cm,SACY*0.5*cm,SACLength*0.5*cm);
-  logicSAC = new G4LogicalVolume(solidSAC,BaF2,"SolSAC",0,0,0);
-  physiSAC = new G4PVPlacement(0,               // no rotation
-				  positionSAC,  // at (x,y,z)
-				  logicSAC,     // its logical volume                          
-				  "SAC", // its name
-				  logicWorld,       // its mother  volume
-				  false,            // no boolean operations
-				  0,                // copy number 
-				  false);           //Check for overlaps
- }
+   solidSAC = new G4Box("SolSAC",SACX*0.5*cm,SACY*0.5*cm,SACLength*0.5*cm);
+   logicSAC = new G4LogicalVolume(solidSAC,BaF2,"SolSAC",0,0,0);
+   physiSAC = new G4PVPlacement(0,               // no rotation
+				positionSAC,  // at (x,y,z)
+				logicSAC,     // its logical volume                          
+				"SAC", // its name
+				logicWorld,       // its mother  volume
+				false,            // no boolean operations
+				0,                // copy number 
+				false);           //Check for overlaps
+  }
+  */
 
  if(IsLAVON==1){
   //------------------------------------------------- 
@@ -675,11 +710,12 @@ if(IsTDumpON==1){
    }
  }
  
- if(IsEcalON==1){
-
+ if (fEnableECal) {
    fECalDetector->SetMotherVolume(logicWorld);
    fECalDetector->CreateGeometry();
-   /*
+ }
+ /*
+ if(IsEcalON==1){
    //------------------------------ 
    // ECal Defintion
    //------------------------------  
@@ -741,8 +777,8 @@ if(IsTDumpON==1){
    }//end of crystal placements 
    G4cout << "Total number of LYSO crystals:  " << ncry << G4endl;
    G4cout<<"placed "<<NCry<<" cristals "<<" at Z "<< positionEcal.getZ()<<G4endl;
-   */
  }
+ */
 
  if(IsPosVetoON==1){
    //   solidPosVeto = new G4Box("posveto",PosVetoSizeX*cm*0.5,PosVetoSizeY*cm*0.5,PosVetoSizeZ*cm*0.5);
@@ -919,7 +955,7 @@ if(IsTDumpON==1){
  G4String EVetoSDname   = "EVetoSD";     //High Energy Positron Veto
  G4String PosVetoSDname = "PosVetoSD";   //Positron Veto
  G4String EleVetoSDname = "EleVetoSD";   //Electron Veto
- G4String SACSDname     = "SACSD";       //SAC detector
+ //G4String SACSDname     = "SACSD";       //SAC detector
  G4String LAVSDname     = "LAVSD";       //LAV detector
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
@@ -946,12 +982,14 @@ if(IsTDumpON==1){
     logicPGEM->SetSensitiveDetector( TrackSD );
   }
 
+  /*
   if(IsTargetON){
     //Target SD
     TRodSD* TRodSDet = new TRodSD( TRodSDname );
     SDman->AddNewDetector( TRodSDet );
     logicTarget->SetSensitiveDetector( TRodSDet );
   }
+  */
   
   if(IsTDumpON){
     //Dump as Sensitive detector
@@ -985,11 +1023,13 @@ if(IsTDumpON==1){
     logicEleVetoFinger->SetSensitiveDetector( EleVetoSDet );
   }
 
+  /*
   if(IsSACON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
     SACSD* SACSDet = new SACSD( SACSDname );
     SDman->AddNewDetector( SACSDet );
     logicSAC->SetSensitiveDetector( SACSDet );
   }
+  */
 
   if(IsLAVON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
     LAVSD* LAVSDet = new LAVSD( LAVSDname );
@@ -1007,7 +1047,7 @@ if(IsTDumpON==1){
   // if(IsTargetON)  logicTarget ->SetVisAttributes(G4VisAttributes::Invisible);
   //  if(IsMonitorON) logicMonitor->SetVisAttributes(G4VisAttributes::Invisible);
   //if(IsEcalON)    logicEcal   ->SetVisAttributes(G4VisAttributes::Invisible);
-  if(IsEcalON) fECalDetector->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
+  //if(IsEcalON) fECalDetector->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicSwepMag   ->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicVetoFinger->SetVisAttributes(G4VisAttributes::Invisible);
   //  logicEVeto->SetVisAttributes(G4VisAttributes::Invisible);
@@ -1052,21 +1092,19 @@ void DetectorConstruction::SetupDetectors()
 }
  
 void DetectorConstruction::DefineMaterials()
-{
-
-
-}
+{}
 
 void DetectorConstruction::setTargetMaterial(G4String materialName)
 {
   // search the material by its name 
   G4Material* pttoMaterial = G4Material::GetMaterial(materialName);  
-  if (pttoMaterial)
-     {TargetMater = pttoMaterial;
-      logicTarget->SetMaterial(pttoMaterial); 
-      //      G4cout << "\n----> The target is " << fTargetLength/cm << " cm of "
-      //             << materialName << G4endl;
-     }             
+  if (pttoMaterial) {
+    //TargetMater = pttoMaterial;
+    //logicTarget->SetMaterial(pttoMaterial); 
+    fTargetDetector->GetTargetLogicalVolume()->SetMaterial(pttoMaterial); 
+    //      G4cout << "\n----> The target is " << fTargetLength/cm << " cm of "
+    //             << materialName << G4endl;
+  }             
 }
  
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -24,49 +24,38 @@
 // ********************************************************************
 //
 //
-// $Id: DetectorMessenger.hh 69899 2013-05-17 10:05:33Z gcosmo $
+// $Id: SACSD.hh,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef DetectorMessenger_h
-#define DetectorMessenger_h 1
+#ifndef SACSD_h
+#define SACSD_h 1
 
-#include "globals.hh"
-#include "G4UImessenger.hh"
+#include "G4VSensitiveDetector.hh"
+#include "SACHit.hh"
 
-class DetectorConstruction;
-class G4UIdirectory;
-class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
+class G4Step;
+class G4HCofThisEvent;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class DetectorMessenger: public G4UImessenger
+class SACSD : public G4VSensitiveDetector
 {
-public:
+  public:
+      SACSD(G4String);
+     ~SACSD();
 
-  DetectorMessenger(DetectorConstruction*);
-  ~DetectorMessenger();
-    
-  void SetNewValue(G4UIcommand*,G4String);
-    
-private:
+      void Initialize(G4HCofThisEvent*);
+      G4bool ProcessHits(G4Step*, G4TouchableHistory*);
+      G4int ClassifyTrack(G4Track* track);
+      void EndOfEvent(G4HCofThisEvent*);
 
-  DetectorConstruction* fDetector;
-    
-  G4UIdirectory* fDetectorDir;
-
-  G4UIcmdWithAString* fEnableSubDetCmd;
-  G4UIcmdWithAString* fDisableSubDetCmd;
-
-  //G4UIcmdWithAString*        TargMatCmd;
-  //G4UIcmdWithAString*        ChamMatCmd;    
-  //G4UIcmdWithADoubleAndUnit* FieldCmd;
-  //G4UIcmdWithADoubleAndUnit* StepMaxCmd;    
-
+  private:
+      SACHitsCollection* SACCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
+

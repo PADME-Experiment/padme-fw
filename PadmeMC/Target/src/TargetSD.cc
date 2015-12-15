@@ -24,83 +24,71 @@
 // ********************************************************************
 //
 //
-// $Id: SACHit.cc,v 1.2 2014/06/23 13:44:16 veni Exp $
+// $Id: TargetSD.cc,v 1.2 2014/06/23 13:44:16 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#include "SACHit.hh"
-#include "G4UnitsTable.hh"
-#include "G4VVisManager.hh"
-#include "G4Circle.hh"
-#include "G4Colour.hh"
-#include "G4VisAttributes.hh"
-
-G4Allocator<SACHit> SACHitAllocator;
+#include "TargetSD.hh"
+#include "G4HCofThisEvent.hh"
+#include "G4Step.hh"
+#include "G4ThreeVector.hh"
+#include "G4SDManager.hh"
+#include "G4ios.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-SACHit::SACHit() {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-SACHit::~SACHit() {}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-SACHit::SACHit(const SACHit& right)
-  : G4VHit()
+TargetSD::TargetSD(G4String name)
+:G4VSensitiveDetector(name)
 {
-  printf("Hey new hit\n");
-  VtrackID   = right.VtrackID;  //pointer to current hit
-  SACNb = right.SACNb;
-  edep       = right.edep;
-  pos        = right.pos;
+  G4String HCname;
+  collectionName.insert(HCname="TargetCollection"); //crea il collection name
+}
+
+//....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+TargetSD::~TargetSD(){ }
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void TargetSD::Initialize(G4HCofThisEvent* HCE)
+{
+  fTargetCollection = new TargetHitsCollection
+                          (SensitiveDetectorName,collectionName[0]); 
+  static G4int HCID = -1;
+  if(HCID<0)
+  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
+  HCE->AddHitsCollection(HCID,fTargetCollection); 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-const SACHit& SACHit::operator=(const SACHit& right)
+G4bool TargetSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
-  VtrackID   = right.VtrackID;
-  SACNb = right.SACNb;
-  edep      = right.edep;
-  pos       = right.pos;
-  return *this;
+
+  G4double edep  = aStep->GetTotalEnergyDeposit();
+  if(edep==0.) return false;
+
+  TargetHit* newHit = new TargetHit();
+  newHit->SetEdep(edep);
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+  newHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
+  fTargetCollection->insert(newHit);
+
+  return true;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4int SACHit::operator==(const SACHit& right) const
+void TargetSD::EndOfEvent(G4HCofThisEvent*)
 {
-  return (this==&right) ? 1 : 0;
+  if (verboseLevel>0) { 
+     G4int NbHits = fTargetCollection->entries();
+     G4cout << "\n-------->Hits Collection: in this event they are " << NbHits 
+            << " hits in the ECal : " << G4endl;
+     for (G4int i=0;i<NbHits;i++) (*fTargetCollection)[i]->Print();
+    } 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void SACHit::Draw()
-{
-  G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
-  if(pVVisManager)
-  {
-    G4Circle circle(pos);
-    circle.SetScreenSize(2.);
-    circle.SetFillStyle(G4Circle::filled);
-    G4Colour colour(1.,0.,0.);
-    G4VisAttributes attribs(colour);
-    circle.SetVisAttributes(attribs);
-    pVVisManager->Draw(circle);
-  }
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void SACHit::Print()
-{
-//  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
-//         << "  energy deposit: " << G4BestUnit(edep,"Energy")
-//         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-

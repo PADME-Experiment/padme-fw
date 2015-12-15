@@ -40,7 +40,7 @@
 #include "StackingAction.hh"
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
-//#include "global.hh"
+#include "DatacardManager.hh"
 
 #include "MyEvent.hh"
 
@@ -91,9 +91,6 @@ int main(int argc,char** argv)
 {
   //  int SeedNum = -1;
   //  if (argc == 3) SeedNum = atoi(argv[2]);
-  // User Verbose output class
-  G4VSteppingVerbose* verbosity = new SteppingVerbose;
-  G4VSteppingVerbose::SetInstance(verbosity);
   
   //choose the Random engine
   //  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
@@ -104,16 +101,30 @@ int main(int argc,char** argv)
   CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
 #endif
 
-//  G4String fileNameOut= argv[2];
-//  G4cout<<"Output File Name "<<fileNameOut<<G4endl;
+  // User Verbose output class
+  G4VSteppingVerbose* verbosity = new SteppingVerbose;
+  G4VSteppingVerbose::SetInstance(verbosity);
+
+  //  G4String fileNameOut= argv[2];
+  //  G4cout<<"Output File Name "<<fileNameOut<<G4endl;
+
   //Get the event storage. Should be instantiated before the HISTO!
   MyEvent *TheEvent = MyEvent::GetInstance(); //
 
   // set an HistoManager for Root IO
   HistoManager*  histo = new HistoManager();
+
   // Run manager
   G4RunManager * runManager = new G4RunManager;
   
+#ifdef G4VIS_USE
+  G4VisManager* visManager = new G4VisExecutive;
+  visManager->Initialize();
+#endif    
+
+  // Set inputs from datacard (macro file)
+  DatacardManager::GetInstance()->SetMessenger();
+
   // User Initialization classes (mandatory)
   //
   DetectorConstruction* detector = new DetectorConstruction;
@@ -146,7 +157,8 @@ int main(int argc,char** argv)
 
   // Initialize G4 kernel
   //
-  runManager->Initialize();
+  // POstponed to macro level with command /run/initialize
+  //runManager->Initialize();
   //  physics->DumpList();
 
   // trap signals to close datafiles in case of abnormal termination
@@ -159,11 +171,6 @@ int main(int argc,char** argv)
 
 //  if (prev_fn==SIGTERM) run_action::EndOfRunAction();
       
-#ifdef G4VIS_USE
-  G4VisManager* visManager = new G4VisExecutive;
-  visManager->Initialize();
-#endif    
-     
   // Get the pointer to the User Interface manager
   //
   G4UImanager * UImanager = G4UImanager::GetUIpointer();  

@@ -13,7 +13,7 @@
 #include "G4UImessenger.hh"
 
 class ECalDetector;
-class ECalGeometryParameters;
+class ECalGeometry;
 class G4UIdirectory;
 class G4UIcommand;
 class G4UIcmdWithAString;
@@ -30,20 +30,15 @@ public:
 private:
 
   ECalDetector* fECalDetector;
-  ECalGeometryParameters* fECalGeometry;
+  ECalGeometry* fECalGeometry;
 
   G4UIdirectory* fECalDetectorDir;
 
   G4UIcommand* fSetECalGeometryCmd;
   G4UIcommand* fSetECalFrontFaceZCmd;
+  G4UIcommand* fSetECalInnerRadiusCmd;
+  G4UIcommand* fSetECalOuterRadiusCmd;
   G4UIcommand* fSetCrystalSizeCmd;
-
-
-  //G4UIcmdWithoutParameter* fEnableAllStationsCmd;
-
-  //G4UIcommand* fEnableLayerCmd;
-
-  //G4UIcmdWithAString* fSelectBlockSimulationCmd;
 
 };
 #endif

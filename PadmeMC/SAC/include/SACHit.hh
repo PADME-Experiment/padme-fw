@@ -24,48 +24,88 @@
 // ********************************************************************
 //
 //
-// $Id: DetectorMessenger.hh 69899 2013-05-17 10:05:33Z gcosmo $
+// $Id: SACHit.hh,v 1.2 2014/06/23 13:44:14 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef DetectorMessenger_h
-#define DetectorMessenger_h 1
+#ifndef SACHit_h
+#define SACHit_h 1
 
-#include "globals.hh"
-#include "G4UImessenger.hh"
-
-class DetectorConstruction;
-class G4UIdirectory;
-class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
+#include "G4VHit.hh"
+#include "G4THitsCollection.hh"
+#include "G4Allocator.hh"
+#include "G4ThreeVector.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class DetectorMessenger: public G4UImessenger
+class SACHit : public G4VHit
 {
 public:
 
-  DetectorMessenger(DetectorConstruction*);
-  ~DetectorMessenger();
-    
-  void SetNewValue(G4UIcommand*,G4String);
-    
+  SACHit();
+  ~SACHit();
+  SACHit(const SACHit&);
+  const SACHit& operator=(const SACHit&);
+  G4int operator==(const SACHit&) const;
+
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
+
+  void Draw();
+  void Print();
+
+public:
+  
+  void SetTrackID(G4int track)   { trackID = track; };
+  void SetCryNb(G4int cry)       { CryNb = cry; }; 
+  void SetPType(G4int typ)       { PType = typ; }; 
+  void SetEdep(G4double de)      { edep = de; };
+  void SetTime(G4double HitT)    { SACHitT = HitT; };
+  void SetPos(G4ThreeVector xyz) { pos = xyz; };
+      
+  G4int GetTrackID()    { return trackID; };
+  G4int GetCryNb()      { return CryNb; };
+  G4double GetEdep()    { return edep; };
+  G4double GetTime()    { return SACHitT; };
+  G4int GetPType()      { return PType; };
+  G4ThreeVector GetPos(){ return pos; };
+  G4double GetX()       { return pos.x(); }
+  G4double GetY()       { return pos.y(); }
+  G4double GetZ()       { return pos.z(); }
+      
 private:
-
-  DetectorConstruction* fDetector;
-    
-  G4UIdirectory* fDetectorDir;
-
-  G4UIcmdWithAString* fEnableSubDetCmd;
-  G4UIcmdWithAString* fDisableSubDetCmd;
-
-  //G4UIcmdWithAString*        TargMatCmd;
-  //G4UIcmdWithAString*        ChamMatCmd;    
-  //G4UIcmdWithADoubleAndUnit* FieldCmd;
-  //G4UIcmdWithADoubleAndUnit* StepMaxCmd;    
-
+  
+  G4int         trackID;
+  G4int         PType;
+  G4int         CryNb;
+  G4double      edep;
+  G4double      SACHitT;
+  G4ThreeVector pos;
+  
 };
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+typedef G4THitsCollection<SACHit> SACHitsCollection;
+
+extern G4Allocator<SACHit> SACHitAllocator;
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void* SACHit::operator new(size_t)
+{
+  void *aHit;
+  aHit = (void *) SACHitAllocator.MallocSingle();
+  return aHit;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+inline void SACHit::operator delete(void *aHit)
+{
+  SACHitAllocator.FreeSingle((SACHit*) aHit);
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

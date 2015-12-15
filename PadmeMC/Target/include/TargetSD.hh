@@ -24,37 +24,36 @@
 // ********************************************************************
 //
 //
-// $Id: SACSD.hh,v 1.1 2014/01/22 15:55:26 veni Exp $
+// $Id: TargetSD.hh,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
 //
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#ifndef SACSD_h
-#define SACSD_h 1
+#ifndef TargetSD_h
+#define TargetSD_h 1
 
 #include "G4VSensitiveDetector.hh"
-#include "SACHit.hh" 
+#include "TargetHit.hh"   //crea i TROD HIT!!!!
 
 class G4Step;
 class G4HCofThisEvent;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class SACSD : public G4VSensitiveDetector
+class TargetSD : public G4VSensitiveDetector
 {
   public:
-      SACSD(G4String);
-     ~SACSD();
+      TargetSD(G4String);
+     ~TargetSD();
 
       void Initialize(G4HCofThisEvent*);
       G4bool ProcessHits(G4Step*, G4TouchableHistory*);
-      G4int ClassifyTrack(G4Track* track);
       void EndOfEvent(G4HCofThisEvent*);
-  private: 
-      SACHitsCollection* SACCollection;
+
+  private:
+      TargetHitsCollection* fTargetCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif
-

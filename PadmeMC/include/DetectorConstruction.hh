@@ -53,6 +53,7 @@ class DetectorMessenger;
 class ECalDetector;
 class TargetDetector;
 class SACDetector;
+class LAVDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -87,10 +88,12 @@ private:
   ECalDetector*   fECalDetector;
   TargetDetector* fTargetDetector;
   SACDetector*    fSACDetector;
+  LAVDetector*    fLAVDetector;
 
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
+  G4int fEnableLAV;
 
   G4Box*             solidWorld;    
   G4LogicalVolume*   logicWorld;    
@@ -223,13 +226,13 @@ private:
   G4LogicalVolume*    logicEleVetoFinger;
   G4VPhysicalVolume*  physiEleVetoFinger;
 
-  G4VSolid*           solidSAC;   
-  G4LogicalVolume*    logicSAC;   
-  G4VPhysicalVolume*  physiSAC;
+  //G4VSolid*           solidSAC;   
+  //G4LogicalVolume*    logicSAC;   
+  //G4VPhysicalVolume*  physiSAC;
 
-  G4Tubs*            solidLAV;   
-  G4LogicalVolume*    logicLAV;   
-  G4VPhysicalVolume*  physiLAV;
+  //G4Tubs*            solidLAV;   
+  //G4LogicalVolume*    logicLAV;   
+  //G4VPhysicalVolume*  physiLAV;
 
   G4Box*              solidPGEM;
   G4LogicalVolume*    logicPGEM;

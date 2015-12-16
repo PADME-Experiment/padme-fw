@@ -33,6 +33,7 @@
 #include "TargetDetector.hh"
 #include "ECalDetector.hh"
 #include "SACDetector.hh"
+#include "LAVDetector.hh"
 //#include "ECalSD.hh"
 #include "TRodSD.hh"
 #include "MRodSD.hh"
@@ -41,7 +42,7 @@
 #include "PosVetoSD.hh"
 #include "EleVetoSD.hh"
 //#include "SACSD.hh"
-#include "LAVSD.hh"
+//#include "LAVSD.hh"
 #include "GFiltSD.hh"
 
 #include "G4Material.hh"
@@ -89,10 +90,12 @@ DetectorConstruction::DetectorConstruction()
   fECalDetector   = new ECalDetector(0);
   fTargetDetector = new TargetDetector(0);
   fSACDetector    = new SACDetector(0);
+  fLAVDetector    = new LAVDetector(0);
 
   fEnableECal   = 1;
   fEnableTarget = 1;
   fEnableSAC    = 1;
+  fEnableLAV    = 1;
 
 }
 
@@ -112,6 +115,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   if      (det=="ECal")   { fEnableECal   = 1; }
   else if (det=="Target") { fEnableTarget = 1; }
   else if (det=="SAC")    { fEnableSAC    = 1; }
+  else if (det=="LAV")    { fEnableLAV    = 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
 
@@ -121,6 +125,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   if      (det=="ECal")   { fEnableECal   = 0; }
   else if (det=="Target") { fEnableTarget = 0; }
   else if (det=="SAC")    { fEnableSAC    = 0; }
+  else if (det=="LAV")    { fEnableLAV    = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
@@ -556,6 +561,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
   */
 
+  if (fEnableLAV) {
+    fLAVDetector->SetMotherVolume(logicWorld);
+    fLAVDetector->CreateGeometry();
+  }
+  /*
  if(IsLAVON==1){
   //------------------------------------------------- 
   // ZERO ANGLE PHOTON VETO made of BaF2 
@@ -573,6 +583,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				  0,                // copy number 
 				  true);           //Check for overlaps
  }
+  */
 
 if(IsTDumpON==1){
 	//BTF DUMP
@@ -956,7 +967,7 @@ if(IsTDumpON==1){
  G4String PosVetoSDname = "PosVetoSD";   //Positron Veto
  G4String EleVetoSDname = "EleVetoSD";   //Electron Veto
  //G4String SACSDname     = "SACSD";       //SAC detector
- G4String LAVSDname     = "LAVSD";       //LAV detector
+ //G4String LAVSDname     = "LAVSD";       //LAV detector
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
  /*
@@ -1031,11 +1042,13 @@ if(IsTDumpON==1){
   }
   */
 
+  /*
   if(IsLAVON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
     LAVSD* LAVSDet = new LAVSD( LAVSDname );
     SDman->AddNewDetector( LAVSDet );
     logicLAV->SetSensitiveDetector( LAVSDet );
   }
+  */
 
   //  TRodSD* TRodSDet = new TRodSD( TRodSDname );
   //  SDman->AddNewDetector( TRodSDet );

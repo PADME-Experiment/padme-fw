@@ -15,11 +15,13 @@
 /Detector/EnableSubDetector Target
 /Detector/EnableSubDetector SAC
 /Detector/EnableSubDetector LAV
+/Detector/EnableSubDetector PVeto
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector SAC
-/Detector/DisableSubDetector LAV
+#/Detector/DisableSubDetector LAV
+#/Detector/DisableSubDetector PVeto
 
 /Detector/Target/FrontFaceZ -20.
 /Detector/Target/Size 1.
@@ -38,6 +40,11 @@
 /Detector/LAV/InnerRadius 4.
 /Detector/LAV/OuterRadius 10.
 /Detector/LAV/ZLength 20.
+
+#/Detector/PVeto/FrontFaceZ -50.
+/Detector/PVeto/InnerFaceY -20.
+/Detector/PVeto/NFingers 100
+/Detector/PVeto/FingerSize 1.
 
 # Create detectors and initialize run
 /run/initialize

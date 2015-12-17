@@ -1,34 +1,3 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-// $Id: EventAction.hh,v 1.4 2014/06/23 13:44:14 veni Exp $
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
- 
 #ifndef EventAction_h
 #define EventAction_h 1
 
@@ -37,8 +6,8 @@
 #include "MRodHit.hh"
 #include "TrackerHit.hh"
 #include "TRodHit.hh"
-#include "EVetoHit.hh"
-#include "PosVetoHit.hh"
+#include "HEPVetoHit.hh"
+#include "PVetoHit.hh"
 #include "EleVetoHit.hh"
 #include "SACHit.hh"
 #include "LAVHit.hh"
@@ -66,8 +35,8 @@ class EventAction : public G4UserEventAction
   void  AddECryHits(ECalHitsCollection*);
   void  AddMRodHits(MRodHitsCollection*);
   void  AddTRodHits(TRodHitsCollection*);
-  void  AddEVetoHits(EVetoHitsCollection*); 
-  void  AddPosVetoHits(PosVetoHitsCollection*);
+  void  AddHEPVetoHits(HEPVetoHitsCollection*); 
+  void  AddPVetoHits(PVetoHitsCollection*);
   void  AddEleVetoHits(EleVetoHitsCollection*);
   void  AddSACHits(SACHitsCollection*);
   void  AddLAVHits(LAVHitsCollection*);
@@ -97,7 +66,7 @@ class EventAction : public G4UserEventAction
    G4double ECalHitT,CalEvtT,EtotFiltEvt; 
    G4double ClPosX,ClPosY;
    G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
-  G4int NcellsCl,NClusters,NTracks,NVetoTracks,NPosVetoTracks,NEleVetoTracks,SACTracks,LAVTracks,NTarget;
+  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEleVetoTracks,SACTracks,LAVTracks,NTarget;
 
    G4double Etrack[100];    //For spectrometer reco
    G4int    TrackCh[100];      //For spectrometer reco
@@ -112,19 +81,19 @@ class EventAction : public G4UserEventAction
    G4double YTarget;
    G4double XTarget;
 
-   G4double ETotVeto[100];
-   G4int    VetoTrackCh[100];
-   G4double VetoEtrack [100];
-   G4double VetoTrackTime[100];
-   G4double VetoX[100];
-   G4double VetoY[100];
+   G4double ETotHEPVeto[100];
+   G4int    HEPVetoTrackCh[100];
+   G4double HEPVetoEtrack [100];
+   G4double HEPVetoTrackTime[100];
+   G4double HEPVetoX[100];
+   G4double HEPVetoY[100];
 
-   G4double PosETotVeto[100];
-   G4int    PosVetoTrackCh[100];
-   G4double PosVetoEtrack [100];
-   G4double PosVetoTrackTime[100];
-   G4double PosVetoX[100];
-   G4double PosVetoY[100];
+   G4double ETotPVeto[100];
+   G4int    PVetoTrackCh[100];
+   G4double PVetoEtrack [100];
+   G4double PVetoTrackTime[100];
+   G4double PVetoX[100];
+   G4double PVetoY[100];
 
    G4double EleETotVeto[100];
    G4int    EleVetoTrackCh[100];

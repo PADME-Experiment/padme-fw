@@ -1,37 +1,3 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                            *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-/// \file analysis/AnaEx02/include/HistoManager.hh
-/// \brief Definition of the HistoManager class
-//
-// $Id: HistoManager.hh,v 1.6 2014/06/23 13:44:14 veni Exp $
-// GEANT4 tag $Name:  $
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #ifndef HistoManager_h
 #define HistoManager_h 1
 
@@ -51,9 +17,8 @@ struct NTEvent{
   double NTIDProc;
   int NTNCluster;
   int NTNTracks;	
-  int NTNVetoTracks;
-
-  int NTNPosVetoTracks;
+  int NTNHEPVetoTracks;
+  int NTNPVetoTracks;
   int NTNEleVetoTracks;
 
   //The generated event variables:
@@ -95,20 +60,20 @@ struct NTEvent{
   int     NTTrClusLayer[1000];
 
   //EVeto variables
-  double  NTVetoTrkEne[100];
-  int  NTVetoTrkFinger[100];
-  double NTVetoTrkTime[100];
-  double NTVetoFingerE[100];
-  double NTVetoX[100];
-  double NTVetoY[100];
+  double  NTHEPVetoTrkEne[100];
+  int  NTHEPVetoTrkFinger[100];
+  double NTHEPVetoTrkTime[100];
+  double NTHEPVetoFingerE[100];
+  double NTHEPVetoX[100];
+  double NTHEPVetoY[100];
 
   //Pos Veto variables
-  double NTPosVetoTrkEne[100];
-  int    NTPosVetoTrkFinger[100];
-  double NTPosVetoTrkTime[100];
-  double NTPosVetoFingerE[100];
-  double NTPosVetoX[100];
-  double NTPosVetoY[100];
+  double NTPVetoTrkEne[100];
+  int    NTPVetoTrkFinger[100];
+  double NTPVetoTrkTime[100];
+  double NTPVetoFingerE[100];
+  double NTPVetoX[100];
+  double NTPVetoY[100];
 
   //Ele Veto variables
   double NTEleVetoTrkEne[100];

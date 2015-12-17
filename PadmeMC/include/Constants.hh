@@ -14,7 +14,7 @@ const int   IsEcalRoundON = 1;
 
 const int   IsTrackerON   = 0;   // cilindrical tracker obsolete set to 0
 const int   IsPlanarGEMON = 0;   // 1 planar GEM spectrometer 
-const int   IsPosVetoON   = 1;   // 1  Veto inside the magnet Positron side
+const int   IsPVetoON   = 1;   // 1  Veto inside the magnet Positron side
 const int   IsEleVetoON   = 1;   // Veto inside the magnet Electron side
 const int   IsEVetoON     = 1;   // Veto for High Momentum positron
 const int   IsSACON       = 1;  //Small angle gamma veto.
@@ -161,15 +161,15 @@ const double EVetoSizeZ =1.;    //in cm
 const double EVetoFingerSize =1.;    //in cm
 
 //  Positron Veto inside the magnet dimension
-const double PosVetoPosiX =  0.;	//in cm
-const double PosVetoPosiY =-20.;	//in cm was 85 cm
-const double PosVetoPosiZ =  0.;	//in cm
+const double PVetoPosiX =  0.;	//in cm
+const double PVetoPosiY =-20.;	//in cm was 85 cm
+const double PVetoPosiZ =  0.;	//in cm
 	     
-const double PosVetoSizeX = 19.8;    //in cm
-const double PosVetoSizeY =1.;    //in cm full detector size will decide finger number 
-const double PosVetoSizeZ =100.;     //in cm
+const double PVetoSizeX = 19.8;    //in cm
+const double PVetoSizeY =1.;    //in cm full detector size will decide finger number 
+const double PVetoSizeZ =100.;     //in cm
 
-const double PosVetoFingerSize =1.;    //in cm
+const double PVetoFingerSize =1.;    //in cm
 
 //  Electron Veto inside the magnet dimension
 const double EleVetoPosiX = 0.;	//in cm

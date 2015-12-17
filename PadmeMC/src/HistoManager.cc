@@ -1,36 +1,3 @@
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-/// \file analysis/AnaEx02/src/HistoManager.cc
-/// \brief Implementation of the HistoManager class
-//
-// $Id: HistoManager.cc,v 1.7 2014/06/23 13:44:16 veni Exp $
-// GEANT4 tag $Name:  $
-// 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TFile.h>
@@ -156,9 +123,9 @@ void HistoManager::book()
 
   ntupl->Branch("NClusters", &(myEvt.NTNCluster), "NClusters/I");
   ntupl->Branch("NTracks",   &(myEvt.NTNTracks), "NTracks/I");
-  ntupl->Branch("NVetoTracks", &(myEvt.NTNVetoTracks), "NVetoTracks/I");
+  ntupl->Branch("NHEPVetoTracks", &(myEvt.NTNHEPVetoTracks), "NHEPVetoTracks/I");
 
-  ntupl->Branch("NPosVetoTracks", &(myEvt.NTNPosVetoTracks), "NPosVetoTracks/I");
+  ntupl->Branch("NPVetoTracks", &(myEvt.NTNPVetoTracks), "NPVetoTracks/I");
   ntupl->Branch("NEleVetoTracks", &(myEvt.NTNEleVetoTracks), "NEleVetoTracks/I");
 
   ntupl->Branch("NSAC", &(myEvt.NTSACNHit), "NSAC/I");
@@ -202,19 +169,19 @@ void HistoManager::book()
   ntupl->Branch("XTarget", &(myEvt.NTXTarget), "XTarget/D");
   ntupl->Branch("YTarget", &(myEvt.NTYTarget), "YTarget/D");
 
-  ntupl->Branch("VetoTrEne" ,(myEvt.NTVetoTrkEne),   "NTVetoTrkEne[100]/D");
-  ntupl->Branch("VetoNFing" ,(myEvt.NTVetoTrkFinger),"NTVetoTrkFinger[100]/I");
-  ntupl->Branch("VetoTrTime",(myEvt.NTVetoTrkTime),  "NTVetoTrkTime[100]/D");
-  ntupl->Branch("VetoFingE", (myEvt.NTVetoFingerE),  "NTVetoFingE[100]/D");
-  ntupl->Branch("VetoX", (myEvt.NTVetoX),  "NTVetoX[100]/D");
-  ntupl->Branch("VetoY", (myEvt.NTVetoY),  "NTVetoY[100]/D");
+  ntupl->Branch("HEPVetoTrEne" ,(myEvt.NTHEPVetoTrkEne),   "NTHEPVetoTrkEne[100]/D");
+  ntupl->Branch("HEPVetoNFing" ,(myEvt.NTHEPVetoTrkFinger),"NTHEPVetoTrkFinger[100]/I");
+  ntupl->Branch("HEPVetoTrTime",(myEvt.NTHEPVetoTrkTime),  "NTHEPVetoTrkTime[100]/D");
+  ntupl->Branch("HEPVetoFingE", (myEvt.NTHEPVetoFingerE),  "NTHEPVetoFingE[100]/D");
+  ntupl->Branch("HEPVetoX", (myEvt.NTHEPVetoX),  "NTHEPVetoX[100]/D");
+  ntupl->Branch("HEPVetoY", (myEvt.NTHEPVetoY),  "NTHEPVetoY[100]/D");
  
-  ntupl->Branch("PosVetoTrEne" ,(myEvt.NTPosVetoTrkEne),   "NTPosVetoTrkEne[100]/D");
-  ntupl->Branch("PosVetoNFing" ,(myEvt.NTPosVetoTrkFinger),"NTPosVetoTrkFinger[100]/I");
-  ntupl->Branch("PosVetoTrTime",(myEvt.NTPosVetoTrkTime),  "NTPosVetoTrkTime[100]/D");
-  ntupl->Branch("PosVetoFingE", (myEvt.NTPosVetoFingerE),  "NTPosVetoFingE[100]/D");
-  ntupl->Branch("PosVetoX",     (myEvt.NTPosVetoX),        "NTPosVetoX[100]/D");
-  ntupl->Branch("PosVetoY",     (myEvt.NTPosVetoY),        "NTPosVetoY[100]/D");
+  ntupl->Branch("PVetoTrEne" ,(myEvt.NTPVetoTrkEne),   "NTPVetoTrkEne[100]/D");
+  ntupl->Branch("PVetoNFing" ,(myEvt.NTPVetoTrkFinger),"NTPVetoTrkFinger[100]/I");
+  ntupl->Branch("PVetoTrTime",(myEvt.NTPVetoTrkTime),  "NTPVetoTrkTime[100]/D");
+  ntupl->Branch("PVetoFingE", (myEvt.NTPVetoFingerE),  "NTPVetoFingE[100]/D");
+  ntupl->Branch("PVetoX",     (myEvt.NTPVetoX),        "NTPVetoX[100]/D");
+  ntupl->Branch("PVetoY",     (myEvt.NTPVetoY),        "NTPVetoY[100]/D");
 
   ntupl->Branch("EleVetoTrEne" ,(myEvt.NTEleVetoTrkEne),   "NTEleVetoTrkEne[100]/D");
   ntupl->Branch("EleVetoNFing" ,(myEvt.NTEleVetoTrkFinger),"NTEleVetoTrkFinger[100]/I");

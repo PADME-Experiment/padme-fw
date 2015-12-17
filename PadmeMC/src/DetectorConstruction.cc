@@ -1,48 +1,20 @@
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo...... 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //#include "InputParam.input"
 #include "Constants.hh" 
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
 #include "MagneticField.hh"
+
 #include "TargetDetector.hh"
 #include "ECalDetector.hh"
 #include "SACDetector.hh"
 #include "LAVDetector.hh"
-//#include "ECalSD.hh"
+#include "PVetoDetector.hh"
+#include "HEPVetoDetector.hh"
+
 #include "TRodSD.hh"
 #include "MRodSD.hh"
 #include "TrackerSD.hh"
-#include "EVetoSD.hh"
-#include "PosVetoSD.hh"
 #include "EleVetoSD.hh"
-//#include "SACSD.hh"
-//#include "LAVSD.hh"
 #include "GFiltSD.hh"
 
 #include "G4Material.hh"
@@ -87,15 +59,19 @@ DetectorConstruction::DetectorConstruction()
   fEmFieldSetup = new F03FieldSetup();
   fDetectorMessenger = new DetectorMessenger(this);
 
-  fECalDetector   = new ECalDetector(0);
-  fTargetDetector = new TargetDetector(0);
-  fSACDetector    = new SACDetector(0);
-  fLAVDetector    = new LAVDetector(0);
+  fECalDetector    = new ECalDetector(0);
+  fTargetDetector  = new TargetDetector(0);
+  fSACDetector     = new SACDetector(0);
+  fLAVDetector     = new LAVDetector(0);
+  fPVetoDetector   = new PVetoDetector(0);
+  fHEPVetoDetector = new HEPVetoDetector(0);
 
-  fEnableECal   = 1;
-  fEnableTarget = 1;
-  fEnableSAC    = 1;
-  fEnableLAV    = 1;
+  fEnableECal    = 1;
+  fEnableTarget  = 1;
+  fEnableSAC     = 1;
+  fEnableLAV     = 1;
+  fEnablePVeto   = 1;
+  fEnableHEPVeto = 1;
 
 }
 
@@ -107,25 +83,37 @@ DetectorConstruction::~DetectorConstruction()
   if (fEmFieldSetup) delete fEmFieldSetup ;
   delete stepLimit;
   delete fDetectorMessenger;             
+
+  delete fECalDetector;
+  delete fTargetDetector;
+  delete fSACDetector;
+  delete fLAVDetector;
+  delete fPVetoDetector;
+  delete fHEPVetoDetector;
+
 }
 
 void DetectorConstruction::EnableSubDetector(G4String det)
 {
   printf("Enabling subdetector %s\n",det.data());
-  if      (det=="ECal")   { fEnableECal   = 1; }
-  else if (det=="Target") { fEnableTarget = 1; }
-  else if (det=="SAC")    { fEnableSAC    = 1; }
-  else if (det=="LAV")    { fEnableLAV    = 1; }
+  if      (det=="ECal")    { fEnableECal    = 1; }
+  else if (det=="Target")  { fEnableTarget  = 1; }
+  else if (det=="SAC")     { fEnableSAC     = 1; }
+  else if (det=="LAV")     { fEnableLAV     = 1; }
+  else if (det=="PVeto")   { fEnablePVeto   = 1; }
+  else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
 
 void DetectorConstruction::DisableSubDetector(G4String det)
 {
   printf("Disabling subdetector %s\n",det.data());
-  if      (det=="ECal")   { fEnableECal   = 0; }
-  else if (det=="Target") { fEnableTarget = 0; }
-  else if (det=="SAC")    { fEnableSAC    = 0; }
-  else if (det=="LAV")    { fEnableLAV    = 0; }
+  if      (det=="ECal")    { fEnableECal    = 0; }
+  else if (det=="Target")  { fEnableTarget  = 0; }
+  else if (det=="SAC")     { fEnableSAC     = 0; }
+  else if (det=="LAV")     { fEnableLAV     = 0; }
+  else if (det=="PVeto")   { fEnablePVeto   = 0; }
+  else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
@@ -265,7 +253,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4LogicalVolume* logicVacChamb = new G4LogicalVolume(hollowChamb,Al, "logicVacCham", 0, 0, 0);
     G4VPhysicalVolume * vacChamb   = new G4PVPlacement(0,posVacChamb,logicVacChamb,"VacChamb",logicWorld,false,0);
   }else{
-    G4cout<<"No vaccuum equipment inside the magnet " <<G4endl;
+    G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
   }
   
   if(IsWallON==1){  
@@ -473,117 +461,23 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				     true);           // Overlap check    
   }
   
+  // Target
   if (fEnableTarget) {
     fTargetDetector->SetMotherVolume(logicWorld);
     fTargetDetector->CreateGeometry();
   }
-  /*
-  if(IsTargetON==1){
-   //------------------------------------------------- 
-   // Target Defintion two layers of fused silica rods 
-   //-------------------------------------------------
-   //  G4ThreeVector positionTarget = G4ThreeVector(0,0,0); 
-   G4ThreeVector positionTarget = G4ThreeVector(TargetPosiX*cm,TargetPosiY*cm,TargetPosiZ*cm); 
-   
-   G4double TargetX      = TargetSizeX*cm;
-   G4double TargetY      = TargetSizeY*cm;
-   G4double TargetLength = TargetSizeZ*cm;
 
-   solidTarget = new G4Box("target",TargetX*0.5,TargetY*0.5,TargetLength*0.5);
-   logicTarget = new G4LogicalVolume(solidTarget,elC,"Target",0,0,0);
-   physiTarget = new G4PVPlacement(0,               // no rotation
-                                   positionTarget,  // at (x,y,z)
-				   logicTarget,     // its logical volume                     
-				   "Target",        // its name
-				   logicWorld,      // its mother  volume
-				   false,           // no boolean operations
-				   0,               // copy number 
-				   false);          //Check for overlaps
-//  //Start Rods Description for Monitor station
-//  //Start target Rods Description
-//  G4int    NRodRows=5;
-//  G4double TXRodLength = 2*mm;
-//  G4double TXRodX      = TargetX;
-//  G4double TXRodY      = 2*mm;
-//
-//  G4double TYRodLength = 2*mm;
-//  G4double TYRodX      = 2*mm;
-//  G4double TYRodY      = TargetY;
-//
-//  solidTXRod  = new G4Box("TXRod",TXRodX*0.5,TXRodY*0.5,TXRodLength*0.5);
-//  logicTXRod  = new G4LogicalVolume(solidTXRod,SiO2,"TXRod");
-//
-//  solidTYRod  = new G4Box("TYRod",TYRodX*0.5,TYRodY*0.5,TYRodLength*0.5);
-//  logicTYRod  = new G4LogicalVolume(solidTYRod,SiO2,"TYRod");
-//
-//  for (G4int i=0;i<NRodRows;i++){
-//    G4ThreeVector positionTXRod = G4ThreeVector(0.   ,-TargetY*0.5+0.5*TXRodY+1*cm+i*TXRodY,+0.*cm);
-//    G4ThreeVector positionTYRod = G4ThreeVector(-TargetX*0.5+0.5*TYRodX+i*TYRodX+1*cm,0.,1.*cm);
-//    
-//    physiTXRod  = new G4PVPlacement(0,             // no rotation
-//				    positionTXRod,  // at (x,y,z)
-//				    logicTXRod,      // its logical volume                                  
-//				    "TXRod",        // its name
-//				    logicTarget,     // its mother  volume
-//				    false,         // no boolean operations
-//				    i);            // copy number 
-//    
-//    physiTYRod  = new G4PVPlacement(0,               // no rotation
-//				    positionTYRod,   // at (x,y,z)
-//				    logicTYRod,      // its logical volume                                  
-//				    "TYRod",         // its name
-//				    logicTarget,     // its mother  volume
-//				    false,           // no boolean operations
-//				    i+NRodRows);     // copy number 
-  }
-  */
-
+  // SAC
   if (fEnableSAC) {
     fSACDetector->SetMotherVolume(logicWorld);
     fSACDetector->CreateGeometry();
   }
-  /*
-  if(IsSACON==1){
-   //------------------------------------------------- 
-   // ZERO ANGLE PHOTON VETO made of BaF2 
-   //-------------------------------------------------
-   G4ThreeVector positionSAC = G4ThreeVector(0,0,ECalPosiZ*cm+50.*cm); 
-   solidSAC = new G4Box("SolSAC",SACX*0.5*cm,SACY*0.5*cm,SACLength*0.5*cm);
-   logicSAC = new G4LogicalVolume(solidSAC,BaF2,"SolSAC",0,0,0);
-   physiSAC = new G4PVPlacement(0,               // no rotation
-				positionSAC,  // at (x,y,z)
-				logicSAC,     // its logical volume                          
-				"SAC", // its name
-				logicWorld,       // its mother  volume
-				false,            // no boolean operations
-				0,                // copy number 
-				false);           //Check for overlaps
-  }
-  */
 
+  // LAV
   if (fEnableLAV) {
     fLAVDetector->SetMotherVolume(logicWorld);
     fLAVDetector->CreateGeometry();
   }
-  /*
- if(IsLAVON==1){
-  //------------------------------------------------- 
-  // ZERO ANGLE PHOTON VETO made of BaF2 
-  //-------------------------------------------------
-   //  G4ThreeVector positionLAV = G4ThreeVector(0,0,TargetPosiZ*cm+5.*cm+LAVLength*0.5*cm); 
-   G4ThreeVector positionLAV = G4ThreeVector(0,0,0.); 
-  solidLAV = new G4Tubs("SolLAV",LAVInnRad*cm,LAVOutRad*cm,LAVLength*0.5*cm,0.*rad,2.*M_PI*rad);
-  logicLAV = new G4LogicalVolume(solidLAV,PbWO4,"SolLAV",0,0,0);
-  physiLAV = new G4PVPlacement(0,               // no rotation
-				  positionLAV,  // at (x,y,z)
-				  logicLAV,     // its logical volume                          
-				  "LAV", // its name
-				  logicWorld,       // its mother  volume
-				  false,            // no boolean operations
-				  0,                // copy number 
-				  true);           //Check for overlaps
- }
-  */
 
 if(IsTDumpON==1){
 	//BTF DUMP
@@ -720,107 +614,17 @@ if(IsTDumpON==1){
 				     i+NMRodRows);   // copy number 
    }
  }
- 
+
+ // ECal
  if (fEnableECal) {
    fECalDetector->SetMotherVolume(logicWorld);
    fECalDetector->CreateGeometry();
  }
- /*
- if(IsEcalON==1){
-   //------------------------------ 
-   // ECal Defintion
-   //------------------------------  
-   G4ThreeVector positionEcal = G4ThreeVector(ECalPosiX*cm,ECalPosiY*cm,ECalPosiZ*cm); 
-   G4double ECalX      = ECalSizeX*cm;
-   G4double ECalY      = ECalSizeY*cm;
-   G4double ECalLength = ECalSizeZ*cm;
 
-   solidEcal = new G4Box("ECalSolid",ECalX*0.5+0.1*cm,ECalY*0.5+0.1*cm,ECalLength*0.5+0.1*cm);
-   logicEcal = new G4LogicalVolume(solidEcal,Vacuum,"ECalLogic",0, 0, 0);
-   physiEcal  = new G4PVPlacement(0,             // no rotation
-				  positionEcal,  // at (x,y,z)
-				  logicEcal,      // its logical volume
-				  "ECal",        // its name
-				  logicWorld,     // its mother  volume
-				  false,         // no boolean operations
-				  0,     // copy number 
-				  false);          //Check for overlaps 
-   
-   G4double ECryLength = ECalLength-0.001*cm;
-   G4double ECryX      = ECalX/ECalNRow-0.001*cm;;
-   G4double ECryY      = ECalY/ECalNCol-0.001*cm;;
-   G4int NCry=0;
-   //   G4cout <<"Mother " <<  ECalX <<" " <<  ECalY<<" " <<  ECalLength<<G4endl;
-   //   G4cout <<"Crys   " <<  ECryX <<" " <<  ECryY<<" " <<  ECryLength<<G4endl;
-   solidCry  = new G4Box("Ecry",ECryX*0.5,ECryY*0.5,ECryLength*0.5);
-   logicCry  = new G4LogicalVolume(solidCry,LSO,"ECry",0, 0, 0);
-   
-   G4int ncry=0;
-   for (G4int i=0;i<ECalNRow;i++){
-     for (G4int j=0;j<ECalNCol;j++){
-       G4double PosXCry=-ECalX*0.5+0.5*ECryX+i*ECryX;
-       G4double PosYCry=-ECalY*0.5+0.5*ECryY+j*ECryY;
-       G4ThreeVector positionCry = G4ThreeVector(PosXCry,PosYCry,0.);
-       G4int HoleFlag=0; //should be parametric in NRow NCol
-       
-       //       if( fabs(PosXCry)<ECalInnHole*cm && fabs(PosYCry)<ECalInnHole*cm ){
-       //Inner radius ECalInnHole outer radius ECalSizeX
-       if( (sqrt( PosXCry*PosXCry + PosYCry*PosYCry ) <ECalInnHole*cm ) || (sqrt( PosXCry*PosXCry + PosYCry*PosYCry ) > ECalSizeX*cm/2.) ){ 
-	 HoleFlag=1;
-       }else{
-	 HoleFlag=0;
-       }
-       //       G4cout<<" i "<<i<<" "<<j<<" "<<PosXCry<<" "<<" InnHole "<<ECalInnHole<<" "<<HoleFlag<<G4endl;
-       //     G4cout<<" i "<<i<<" "<<j<<" "<<PosXCry<<" "<<"Y"<<PosYCry<<" "<<HoleFlag<<G4endl;
-       if(HoleFlag!=1){
-	 physiCry  = new G4PVPlacement(0,             // no rotation
-				       positionCry,   // at (x,y,z)
-				       logicCry,      // its logical volume                                  
-				       "ECry",        // its name
-				       logicEcal,     // its mother  volume
-				       false,         // no boolean operations
-				       i+j*ECalNCol,  // copy number 
-				       false);        //Check for overlaps
-	 ncry ++;
-	 NCry++;
-       }
-     }
-   }//end of crystal placements 
-   G4cout << "Total number of LYSO crystals:  " << ncry << G4endl;
-   G4cout<<"placed "<<NCry<<" cristals "<<" at Z "<< positionEcal.getZ()<<G4endl;
- }
- */
-
- if(IsPosVetoON==1){
-   //   solidPosVeto = new G4Box("posveto",PosVetoSizeX*cm*0.5,PosVetoSizeY*cm*0.5,PosVetoSizeZ*cm*0.5);
-//   solidPosVeto = new G4Box("posveto",PosVetoSizeX*cm*0.5,PosVetoSizeY*cm*0.5,PosVetoSizeZ*cm*0.50);
-//   logicPosVeto = new G4LogicalVolume(solidPosVeto,Scint,"PosVeto",0,0,0);
-//   G4ThreeVector positionPosVeto = G4ThreeVector(PosVetoPosiX*cm,PosVetoPosiY*cm,PosVetoPosiZ*cm);  
-//   physiPosVeto = new G4PVPlacement(0,              // no rotation
-//				  positionPosVeto,  // at (x,y,z)
-//				  logicPosVeto,     // its logical volume    
-//				  "PositronVeto",   // its name
-//				  logicSwepMag,       // its mother volume
-//				  false,            // no boolean operations
-//				  0,                // Copy number 
-//				  true);
-   G4int PosNFingers=PosVetoSizeZ/PosVetoFingerSize-1;
-   solidPosVetoFinger = new G4Box("PosVetoF",PosVetoSizeX*cm*0.5-0.01*mm,PosVetoSizeY*cm*0.5-0.01*mm,PosVetoFingerSize*cm*0.5-0.01*mm);
-   logicPosVetoFinger = new G4LogicalVolume(solidPosVetoFinger,Scint,"PosVetoF",0,0,0);
-   //   G4cout<<"Number of positron veto fingers "<<PosNFingers<<G4endl;
-   for(G4int ii=0;ii<PosNFingers;ii++){
-     //     G4ThreeVector positionPosVetoFinger = G4ThreeVector(0*cm,0*cm,-PosVetoSizeZ/2.*cm+PosVetoFingerSize/2*cm+PosVetoFingerSize*ii*cm);
-     G4ThreeVector positionPosVetoFinger = G4ThreeVector(PosVetoPosiX*cm,PosVetoPosiY*cm,PosVetoPosiZ*cm-PosVetoSizeZ/2.*cm+PosVetoFingerSize/2*cm+PosVetoFingerSize*ii*cm);
-     //     G4cout<<"Number of positron veto fingers "<<ii<<" "<<positionPosVetoFinger<<G4endl;
-     physiPosVetoFinger = new G4PVPlacement(0,
-					 positionPosVetoFinger,  // at (x,y,z)
-					 logicPosVetoFinger,     // its logical
-					 "PosVetoFinger",       // its name
-					 logicSwepMag,          // its mother
-					 false,               // no boolean
-					 ii,                  // Copy number
-					 false);
-   }
+ // PVeto
+ if (fEnablePVeto) {
+   fPVetoDetector->SetMotherVolume(logicSwepMag);
+   fPVetoDetector->CreateGeometry();
  }
 
  if(IsEleVetoON==1){
@@ -857,36 +661,10 @@ if(IsTDumpON==1){
  //---------------------------------------------------------------
  // High Energy positron veto scintillating part ouside the magnet
  //--------------------------------------------------------------- 
- if(IsEVetoON==1){
-   solidEVeto = new G4Box("eveto",EVetoSizeX*cm*0.5,EVetoSizeY*cm*0.5,EVetoSizeZ*cm*0.5);
-   logicEVeto = new G4LogicalVolume(solidEVeto,Scint,"EVeto",0,0,0);
-   
-   solidVetoFinger = new G4Box("evetoF",EVetoSizeX*cm*0.5,EVetoFingerSize*cm*0.5,EVetoSizeZ*cm*0.5);
-   logicVetoFinger = new G4LogicalVolume(solidVetoFinger,Scint,"EVetoF",0,0,0);
-   
-   G4ThreeVector positionEVeto = G4ThreeVector(EVetoPosiX*cm,EVetoPosiY*cm,EVetoPosiZ*cm);  
-   G4RotationMatrix* xRotL =new G4RotationMatrix; // Rotates X and Z axes only
-   xRotL->rotateX(-0.593*rad);  // Rotates 90 degrees
-   physiEVeto = new G4PVPlacement(xRotL,          // no rotation
-				  positionEVeto,  // at (x,y,z)
-				  logicEVeto,     // its logical volume    
-				  "EVeto",        // its name
-				  logicWorld,     // its mother volume
-				  false,          // no boolean operations
-				  0,              //Copy number 
-				  false);
-   G4int NFingers=EVetoSizeY/EVetoFingerSize;
-   for(G4int ii=0;ii<NFingers;ii++){
-     G4ThreeVector positionVetoFinger = G4ThreeVector(0*cm,-EVetoSizeY/2.*cm+EVetoFingerSize/2*cm+1*ii*cm,0*cm);
-     physiVetoFinger = new G4PVPlacement(0,
-					 positionVetoFinger,  // at (x,y,z)
-					 logicVetoFinger,     // its logical
-					 "EVetoFinger",       // its name
-					 logicEVeto,          // its mother
-					 false,               // no boolean
-					 ii,                  // Copy number
-					 false);
-   }
+ // HEPVeto
+ if (fEnableHEPVeto) {
+   fHEPVetoDetector->SetMotherVolume(logicWorld);
+   fHEPVetoDetector->CreateGeometry();
  }
 
  //PLANAR GEM BASED SPECTROMETER
@@ -959,25 +737,11 @@ if(IsTDumpON==1){
  // Sensitive detectors
  //------------------------------------------------ 
  G4SDManager* SDman     = G4SDManager::GetSDMpointer();
- //G4String ECrySDname    = "ECrySD";      //Ecal sensitive detector
  G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
  G4String TRodSDname    = "TRodSD";      //target rods
  G4String MRodSDname    = "MRodSD";      //monitor rods
- G4String EVetoSDname   = "EVetoSD";     //High Energy Positron Veto
- G4String PosVetoSDname = "PosVetoSD";   //Positron Veto
  G4String EleVetoSDname = "EleVetoSD";   //Electron Veto
- //G4String SACSDname     = "SACSD";       //SAC detector
- //G4String LAVSDname     = "LAVSD";       //LAV detector
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
-
- /*
- if(IsEcalON==1){
-   ECalSD* ECrySD = new ECalSD( ECrySDname );
-   fECalDetector->GetCrystalLogicalVolume()->SetSensitiveDetector( ECrySD );
-   //logicCry->SetSensitiveDetector( ECrySD );
-   SDman->AddNewDetector( ECrySD );
- }
- */
 
   if(IsTrackerON==1){
     TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
@@ -993,15 +757,6 @@ if(IsTDumpON==1){
     logicPGEM->SetSensitiveDetector( TrackSD );
   }
 
-  /*
-  if(IsTargetON){
-    //Target SD
-    TRodSD* TRodSDet = new TRodSD( TRodSDname );
-    SDman->AddNewDetector( TRodSDet );
-    logicTarget->SetSensitiveDetector( TRodSDet );
-  }
-  */
-  
   if(IsTDumpON){
     //Dump as Sensitive detector
     TRodSD* TRodSDet = new TRodSD( TRodSDname );
@@ -1016,39 +771,11 @@ if(IsTDumpON==1){
     logicMYRod->SetSensitiveDetector( MRodSDet );
   }
 
-  if(IsEVetoON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
-    EVetoSD* EVetoSDet = new EVetoSD( EVetoSDname );
-    SDman->AddNewDetector( EVetoSDet );
-    logicVetoFinger->SetSensitiveDetector( EVetoSDet );
-  }
-  
-  if(IsPosVetoON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
-    PosVetoSD* PosVetoSDet = new PosVetoSD( PosVetoSDname );
-    SDman->AddNewDetector( PosVetoSDet );
-    logicPosVetoFinger->SetSensitiveDetector( PosVetoSDet );
-  }
-  
   if(IsEleVetoON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
     EleVetoSD* EleVetoSDet = new EleVetoSD( EleVetoSDname );
     SDman->AddNewDetector( EleVetoSDet );
     logicEleVetoFinger->SetSensitiveDetector( EleVetoSDet );
   }
-
-  /*
-  if(IsSACON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
-    SACSD* SACSDet = new SACSD( SACSDname );
-    SDman->AddNewDetector( SACSDet );
-    logicSAC->SetSensitiveDetector( SACSDet );
-  }
-  */
-
-  /*
-  if(IsLAVON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
-    LAVSD* LAVSDet = new LAVSD( LAVSDname );
-    SDman->AddNewDetector( LAVSDet );
-    logicLAV->SetSensitiveDetector( LAVSDet );
-  }
-  */
 
   //  TRodSD* TRodSDet = new TRodSD( TRodSDname );
   //  SDman->AddNewDetector( TRodSDet );
@@ -1057,20 +784,6 @@ if(IsTDumpON==1){
 //--------- Visualization attributes -------------------------------
 
   logicWorld  ->SetVisAttributes(G4VisAttributes::Invisible);
-  // if(IsTargetON)  logicTarget ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  if(IsMonitorON) logicMonitor->SetVisAttributes(G4VisAttributes::Invisible);
-  //if(IsEcalON)    logicEcal   ->SetVisAttributes(G4VisAttributes::Invisible);
-  //if(IsEcalON) fECalDetector->GetECalLogicalVolume()->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicSwepMag   ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicVetoFinger->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicEVeto->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicTracker   ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  if(IsEcalON)    logicCry    ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicCry    ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicGFilt   ->SetVisAttributes(G4VisAttributes::Invisible);
-
-  //  logicTXRod  ->SetVisAttributes(G4VisAttributes::Invisible);
-  //  logicTYRod  ->SetVisAttributes(G4VisAttributes::Invisible);
 
   G4VisAttributes* BoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
   //  logicWorld  ->SetVisAttributes(BoxVisAtt);  

@@ -1,34 +1,3 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-// $Id: DetectorConstruction.hh,v 1.4 2014/06/23 13:44:14 veni Exp $
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #ifndef DetectorConstruction_h
 #define DetectorConstruction_h 1
 
@@ -54,6 +23,8 @@ class ECalDetector;
 class TargetDetector;
 class SACDetector;
 class LAVDetector;
+class PVetoDetector;
+class HEPVetoDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -89,11 +60,15 @@ private:
   TargetDetector* fTargetDetector;
   SACDetector*    fSACDetector;
   LAVDetector*    fLAVDetector;
+  PVetoDetector*  fPVetoDetector;
+  HEPVetoDetector*  fHEPVetoDetector;
 
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
   G4int fEnableLAV;
+  G4int fEnablePVeto;
+  G4int fEnableHEPVeto;
 
   G4Box*             solidWorld;    
   G4LogicalVolume*   logicWorld;    
@@ -109,10 +84,6 @@ private:
   G4VPhysicalVolume* physiLeadBrickR;
   G4VPhysicalVolume* physiLeadBrickT;
   G4VPhysicalVolume* physiLeadBrickB;
-
-  //G4Box*             solidTarget;   
-  //G4LogicalVolume*   logicTarget;   
-  //G4VPhysicalVolume* physiTarget;   
 
   G4Tubs*            solidTDump;  //Target DUMP
   G4LogicalVolume*   logicTDump;
@@ -143,14 +114,6 @@ private:
   G4Box*             solidMYRod;   
   G4LogicalVolume*   logicMYRod;   
   G4VPhysicalVolume* physiMYRod;   
-
-  //G4Box*             solidEcal;   // pointer to the solid Target
-  //G4LogicalVolume*   logicEcal;   // pointer to the logical Target
-  //G4VPhysicalVolume* physiEcal;   // pointer to the physical Target
- 
-  //G4Box*             solidCry;   // pointer to the solid Target
-  //G4LogicalVolume*   logicCry;   // pointer to the logical Target
-  //G4VPhysicalVolume* physiCry;   // pointer to the physical Target
 
   //CERN MAGNET MODEL
 
@@ -202,22 +165,6 @@ private:
   G4LogicalVolume*   logicTracker[10];  // pointer to the logical Chamber
   G4VPhysicalVolume* physiTracker[10];  // pointer to the physical Chamber
 
-  G4VSolid*           solidEVeto;   
-  G4LogicalVolume*    logicEVeto;   
-  G4VPhysicalVolume*  physiEVeto;   
-
-  G4VSolid*           solidVetoFinger;
-  G4LogicalVolume*    logicVetoFinger;
-  G4VPhysicalVolume*  physiVetoFinger;
-
-  G4VSolid*           solidPosVeto;   
-  G4LogicalVolume*    logicPosVeto;   
-  G4VPhysicalVolume*  physiPosVeto;   
-
-  G4VSolid*           solidPosVetoFinger;
-  G4LogicalVolume*    logicPosVetoFinger;
-  G4VPhysicalVolume*  physiPosVetoFinger;
-
   G4VSolid*           solidEleVeto;   
   G4LogicalVolume*    logicEleVeto;   
   G4VPhysicalVolume*  physiEleVeto;   
@@ -225,14 +172,6 @@ private:
   G4VSolid*           solidEleVetoFinger;
   G4LogicalVolume*    logicEleVetoFinger;
   G4VPhysicalVolume*  physiEleVetoFinger;
-
-  //G4VSolid*           solidSAC;   
-  //G4LogicalVolume*    logicSAC;   
-  //G4VPhysicalVolume*  physiSAC;
-
-  //G4Tubs*            solidLAV;   
-  //G4LogicalVolume*    logicLAV;   
-  //G4VPhysicalVolume*  physiLAV;
 
   G4Box*              solidPGEM;
   G4LogicalVolume*    logicPGEM;

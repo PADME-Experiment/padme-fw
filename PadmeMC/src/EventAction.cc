@@ -55,7 +55,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   LAVTracks  = 0;
   NHEPVetoTracks = 0;
   NPVetoTracks = 0;
-  NEleVetoTracks = 0;
+  NEVetoTracks = 0;
   ETarget  = 0;
   TTarget   =0;
 
@@ -121,8 +121,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddHEPVetoHits((HEPVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "PVetoCollection") {
       AddPVetoHits((PVetoHitsCollection*)(LHC->GetHC(iHC)));
-    } else if (HCname == "EleVetoCollection") {
-      AddEleVetoHits((EleVetoHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "EVetoCollection") {
+      AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "LAVCollection") {
@@ -172,7 +172,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.NTNTracks        = NTracks;
   fHistoManager->myEvt.NTNHEPVetoTracks = NHEPVetoTracks;
   fHistoManager->myEvt.NTNPVetoTracks   = NPVetoTracks;
-  fHistoManager->myEvt.NTNEleVetoTracks = NEleVetoTracks;
+  fHistoManager->myEvt.NTNEVetoTracks = NEVetoTracks;
   fHistoManager->myEvt.NTSACNHit        = SACTracks;
   fHistoManager->myEvt.NTLAVNHit        = LAVTracks;
   fHistoManager->myEvt.NTNTarget        = NTarget;
@@ -249,16 +249,16 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
   }
 
-  for(int i=0;i<NEleVetoTracks;i++){  //BUG on number of channel!
+  for(int i=0;i<NEVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
-	  fHistoManager->myEvt.NTEleVetoTrkEne[i]  = EleVetoEtrack[i];
-	  //	  if(EleVetoTrackCh[i]<100 && EleVetoTrackCh[i]>-100) fHistoManager->myEvt.NTVetoTrkFinger[i] = EleVetoTrackCh[i];
-	  fHistoManager->myEvt.NTEleVetoTrkFinger[i]  = EleVetoTrackCh[i];
-	  fHistoManager->myEvt.NTEleVetoTrkTime[i] = EleVetoTrackTime[i];
-	  fHistoManager->myEvt.NTEleVetoFingerE[i] = EleETotVeto[EleVetoTrackCh[i]]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTEleVetoX[i]       = EleVetoX[i]; //Just one finger per track to be improve!
-	  fHistoManager->myEvt.NTEleVetoY[i]       = EleVetoY[i]; //Just one finger per track to be improved!xs
-	  //	  G4cout<<i<<" Tracker Lay "<<EleVetoTrackCh[i]<<" "<<EleVetoEtrack[i]<<" "<<EleVetoTrackTime[i]<<G4endl;
+	  fHistoManager->myEvt.NTEVetoTrkEne[i]  = EVetoEtrack[i];
+	  //	  if(EVetoTrackCh[i]<100 && EVetoTrackCh[i]>-100) fHistoManager->myEvt.NTVetoTrkFinger[i] = EVetoTrackCh[i];
+	  fHistoManager->myEvt.NTEVetoTrkFinger[i]  = EVetoTrackCh[i];
+	  fHistoManager->myEvt.NTEVetoTrkTime[i] = EVetoTrackTime[i];
+	  fHistoManager->myEvt.NTEVetoFingerE[i] = ETotEVeto[EVetoTrackCh[i]]; //Just one finger per track to be improved!
+	  fHistoManager->myEvt.NTEVetoX[i]       = EVetoX[i]; //Just one finger per track to be improve!
+	  fHistoManager->myEvt.NTEVetoY[i]       = EVetoY[i]; //Just one finger per track to be improved!xs
+	  //	  G4cout<<i<<" Tracker Lay "<<EVetoTrackCh[i]<<" "<<EVetoEtrack[i]<<" "<<EVetoTrackTime[i]<<G4endl;
 	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
   }
 
@@ -527,35 +527,35 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
   }
 }
 
-void EventAction::AddEleVetoHits(EleVetoHitsCollection* hcont){
+void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
   //  G4cout<<"vaffanculo "<<G4endl;
-  G4double EleETotVetoEvt=0;
+  G4double TotEVetoEvt=0;
   G4int LastID=-1;
   for(G4int jj=0;jj<MaxTracks;jj++){
-    EleETotVeto[jj]=0.0;						  
-    EleVetoTrackCh[jj]=0;
-    EleVetoTrackTime[jj]=0;
-    EleVetoX[jj]=0;
-    EleVetoY[jj]=0;
+    ETotEVeto[jj]=0.0;						  
+    EVetoTrackCh[jj]=0;
+    EVetoTrackTime[jj]=0;
+    EVetoX[jj]=0;
+    EVetoY[jj]=0;
   }
   
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {									
-    EleVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
+    EVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
     if ( hit != 0 ) {
-      EleETotVeto[hit->GetEleVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NEleVetoTracks < MaxTracks && hit->GetEdep()>2.*MeV) {
+      ETotEVeto[hit->GetEVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NEVetoTracks < MaxTracks && hit->GetEdep()>2.*MeV) {
       //      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID) {
-	EleVetoTrackCh[NEleVetoTracks]    = hit->GetEleVetoNb();   //bugs gives crazy numbers
-	EleVetoEtrack[NEleVetoTracks]     = hit->GetEdep();
-	EleVetoTrackTime[NEleVetoTracks]  = hit->GetTime();
-	EleVetoX[NEleVetoTracks]          = hit->GetX();
-	EleVetoY[NEleVetoTracks]          = hit->GetY();
-	NEleVetoTracks++;
-	//	G4cout<<"cazzo "<<NEleVetoTracks<<G4endl;
+	EVetoTrackCh[NEVetoTracks]    = hit->GetEVetoNb();   //bugs gives crazy numbers
+	EVetoEtrack[NEVetoTracks]     = hit->GetEdep();
+	EVetoTrackTime[NEVetoTracks]  = hit->GetTime();
+	EVetoX[NEVetoTracks]          = hit->GetX();
+	EVetoY[NEVetoTracks]          = hit->GetY();
+	NEVetoTracks++;
+	//	G4cout<<"cazzo "<<NEVetoTracks<<G4endl;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
       }
-      if(NEleVetoTracks>MaxTracks) break; 
+      if(NEVetoTracks>MaxTracks) break; 
       LastID = hit->GetTrackID();
     }
   }

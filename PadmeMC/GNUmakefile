@@ -11,7 +11,7 @@
 name := PADMEMC
 G4TARGET := $(name)
 G4EXLIB  := true
-SUBDIRS  := ECal Target SAC LAV PVeto HEPVeto
+SUBDIRS  := ECal Target SAC LAV PVeto EVeto HEPVeto
 ALLTARGETDIRS := $(SUBDIRS)
 
 # Directory where the PadmeRoot package is installed

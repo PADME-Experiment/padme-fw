@@ -19,7 +19,7 @@ struct NTEvent{
   int NTNTracks;	
   int NTNHEPVetoTracks;
   int NTNPVetoTracks;
-  int NTNEleVetoTracks;
+  int NTNEVetoTracks;
 
   //The generated event variables:
   double  PrimE;
@@ -59,7 +59,7 @@ struct NTEvent{
   double  NTTrClusZ[1000];
   int     NTTrClusLayer[1000];
 
-  //EVeto variables
+  //HEPVeto variables
   double  NTHEPVetoTrkEne[100];
   int  NTHEPVetoTrkFinger[100];
   double NTHEPVetoTrkTime[100];
@@ -67,7 +67,7 @@ struct NTEvent{
   double NTHEPVetoX[100];
   double NTHEPVetoY[100];
 
-  //Pos Veto variables
+  //PVeto variables
   double NTPVetoTrkEne[100];
   int    NTPVetoTrkFinger[100];
   double NTPVetoTrkTime[100];
@@ -75,13 +75,13 @@ struct NTEvent{
   double NTPVetoX[100];
   double NTPVetoY[100];
 
-  //Ele Veto variables
-  double NTEleVetoTrkEne[100];
-  int    NTEleVetoTrkFinger[100];
-  double NTEleVetoTrkTime[100];
-  double NTEleVetoFingerE[100];
-  double NTEleVetoX[100];
-  double NTEleVetoY[100];
+  //EVeto variables
+  double NTEVetoTrkEne[100];
+  int    NTEVetoTrkFinger[100];
+  double NTEVetoTrkTime[100];
+  double NTEVetoFingerE[100];
+  double NTEVetoX[100];
+  double NTEVetoY[100];
 
   //NTSAC variables
   double  NTSACE[100];

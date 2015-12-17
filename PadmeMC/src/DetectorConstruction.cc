@@ -9,12 +9,12 @@
 #include "SACDetector.hh"
 #include "LAVDetector.hh"
 #include "PVetoDetector.hh"
+#include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
 
 #include "TRodSD.hh"
 #include "MRodSD.hh"
 #include "TrackerSD.hh"
-#include "EleVetoSD.hh"
 #include "GFiltSD.hh"
 
 #include "G4Material.hh"
@@ -64,6 +64,7 @@ DetectorConstruction::DetectorConstruction()
   fSACDetector     = new SACDetector(0);
   fLAVDetector     = new LAVDetector(0);
   fPVetoDetector   = new PVetoDetector(0);
+  fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
 
   fEnableECal    = 1;
@@ -71,6 +72,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableSAC     = 1;
   fEnableLAV     = 1;
   fEnablePVeto   = 1;
+  fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
 
 }
@@ -89,6 +91,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fSACDetector;
   delete fLAVDetector;
   delete fPVetoDetector;
+  delete fEVetoDetector;
   delete fHEPVetoDetector;
 
 }
@@ -101,6 +104,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="SAC")     { fEnableSAC     = 1; }
   else if (det=="LAV")     { fEnableLAV     = 1; }
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
+  else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
@@ -113,6 +117,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="SAC")     { fEnableSAC     = 0; }
   else if (det=="LAV")     { fEnableLAV     = 0; }
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
+  else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
@@ -622,40 +627,9 @@ if(IsTDumpON==1){
  }
 
  // PVeto
- if (fEnablePVeto) {
-   fPVetoDetector->SetMotherVolume(logicSwepMag);
-   fPVetoDetector->CreateGeometry();
- }
-
- if(IsEleVetoON==1){
-   //   solidEleVeto = new G4Box("eleveto",EleVetoSizeX*cm*0.5,EleVetoSizeY*cm*0.5,EleVetoSizeZ*cm*0.5);
-//   solidEleVeto = new G4Box("eleveto",EleVetoSizeX*cm*0.5,EleVetoSizeY*cm*0.5,EleVetoSizeZ*cm*0.5);
-//   logicEleVeto = new G4LogicalVolume(solidEleVeto,Scint,"EleVeto",0,0,0);  
-//   G4ThreeVector positionEleVeto = G4ThreeVector(EleVetoPosiX*cm,EleVetoPosiY*cm,EleVetoPosiZ*cm);  
-//   physiPosVeto = new G4PVPlacement(0,              // no rotation
-//				  positionEleVeto,  // at (x,y,z)
-//				  logicEleVeto,     // its logical volume    
-//				  "ElectronVeto",   // its name
-//				  logicSwepMag,     // its mother volume
-//				  false,            // no boolean operations
-//				  0,                // Copy number 
-//				  true);
-   G4int EleNFingers=EleVetoSizeZ/EleVetoFingerSize-1;
-   solidEleVetoFinger = new G4Box("EleVetoF",EleVetoSizeX*cm*0.5-0.01*mm,EleVetoSizeY*cm*0.5-0.01*mm,EleVetoFingerSize*cm*0.5-0.01*mm);
-   logicEleVetoFinger = new G4LogicalVolume(solidEleVetoFinger,Scint,"EleVetoF",0,0,0);
-   for(G4int ii=0;ii<EleNFingers;ii++){
-     G4ThreeVector positionEleVetoFinger = G4ThreeVector(EleVetoPosiX*cm,EleVetoPosiY*cm,EleVetoPosiZ*cm-EleVetoSizeZ/2.*cm+EleVetoFingerSize/2*cm+EleVetoFingerSize*ii*cm);
-     //     G4cout<<"Number of positron veto fingers "<<ii<<" "<<positionEleVetoFinger<<G4endl;
-
-     physiEleVetoFinger = new G4PVPlacement(0,
-					    positionEleVetoFinger,  // at (x,y,z)
-					    logicEleVetoFinger,     // its logical
-					    "EleVetoFinger",       // its name
-					    logicSwepMag,          // its mother
-					    false,               // no boolean
-					    ii,                  // Copy number
-					    false);
-   }
+ if (fEnableEVeto) {
+   fEVetoDetector->SetMotherVolume(logicSwepMag);
+   fEVetoDetector->CreateGeometry();
  }
 
  //---------------------------------------------------------------
@@ -740,7 +714,6 @@ if(IsTDumpON==1){
  G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
  G4String TRodSDname    = "TRodSD";      //target rods
  G4String MRodSDname    = "MRodSD";      //monitor rods
- G4String EleVetoSDname = "EleVetoSD";   //Electron Veto
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
   if(IsTrackerON==1){
@@ -769,12 +742,6 @@ if(IsTDumpON==1){
     SDman->AddNewDetector( MRodSDet );
     logicMXRod->SetSensitiveDetector( MRodSDet );
     logicMYRod->SetSensitiveDetector( MRodSDet );
-  }
-
-  if(IsEleVetoON==1){ //CE DEVI METTERE LE STRIP MO SENNO' NON BECCHI IL replica NUMBB
-    EleVetoSD* EleVetoSDet = new EleVetoSD( EleVetoSDname );
-    SDman->AddNewDetector( EleVetoSDet );
-    logicEleVetoFinger->SetSensitiveDetector( EleVetoSDet );
   }
 
   //  TRodSD* TRodSDet = new TRodSD( TRodSDname );

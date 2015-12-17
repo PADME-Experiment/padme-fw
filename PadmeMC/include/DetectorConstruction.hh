@@ -24,6 +24,7 @@ class TargetDetector;
 class SACDetector;
 class LAVDetector;
 class PVetoDetector;
+class EVetoDetector;
 class HEPVetoDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -56,18 +57,20 @@ private:
 
   void DefineMaterials();
 
-  ECalDetector*   fECalDetector;
-  TargetDetector* fTargetDetector;
-  SACDetector*    fSACDetector;
-  LAVDetector*    fLAVDetector;
-  PVetoDetector*  fPVetoDetector;
-  HEPVetoDetector*  fHEPVetoDetector;
+  ECalDetector*    fECalDetector;
+  TargetDetector*  fTargetDetector;
+  SACDetector*     fSACDetector;
+  LAVDetector*     fLAVDetector;
+  PVetoDetector*   fPVetoDetector;
+  EVetoDetector*   fEVetoDetector;
+  HEPVetoDetector* fHEPVetoDetector;
 
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
   G4int fEnableLAV;
   G4int fEnablePVeto;
+  G4int fEnableEVeto;
   G4int fEnableHEPVeto;
 
   G4Box*             solidWorld;    
@@ -164,14 +167,6 @@ private:
   G4Tubs*            solidTracker[10];  // pointer to the solid Chamber
   G4LogicalVolume*   logicTracker[10];  // pointer to the logical Chamber
   G4VPhysicalVolume* physiTracker[10];  // pointer to the physical Chamber
-
-  G4VSolid*           solidEleVeto;   
-  G4LogicalVolume*    logicEleVeto;   
-  G4VPhysicalVolume*  physiEleVeto;   
-
-  G4VSolid*           solidEleVetoFinger;
-  G4LogicalVolume*    logicEleVetoFinger;
-  G4VPhysicalVolume*  physiEleVetoFinger;
 
   G4Box*              solidPGEM;
   G4LogicalVolume*    logicPGEM;

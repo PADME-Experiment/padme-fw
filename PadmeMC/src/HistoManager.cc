@@ -126,7 +126,7 @@ void HistoManager::book()
   ntupl->Branch("NHEPVetoTracks", &(myEvt.NTNHEPVetoTracks), "NHEPVetoTracks/I");
 
   ntupl->Branch("NPVetoTracks", &(myEvt.NTNPVetoTracks), "NPVetoTracks/I");
-  ntupl->Branch("NEleVetoTracks", &(myEvt.NTNEleVetoTracks), "NEleVetoTracks/I");
+  ntupl->Branch("NEVetoTracks", &(myEvt.NTNEVetoTracks), "NEVetoTracks/I");
 
   ntupl->Branch("NSAC", &(myEvt.NTSACNHit), "NSAC/I");
   ntupl->Branch("NLAV", &(myEvt.NTLAVNHit), "NLAV/I");
@@ -183,12 +183,12 @@ void HistoManager::book()
   ntupl->Branch("PVetoX",     (myEvt.NTPVetoX),        "NTPVetoX[100]/D");
   ntupl->Branch("PVetoY",     (myEvt.NTPVetoY),        "NTPVetoY[100]/D");
 
-  ntupl->Branch("EleVetoTrEne" ,(myEvt.NTEleVetoTrkEne),   "NTEleVetoTrkEne[100]/D");
-  ntupl->Branch("EleVetoNFing" ,(myEvt.NTEleVetoTrkFinger),"NTEleVetoTrkFinger[100]/I");
-  ntupl->Branch("EleVetoTrTime",(myEvt.NTEleVetoTrkTime),  "NTEleVetoTrkTime[100]/D");
-  ntupl->Branch("EleVetoFingE", (myEvt.NTEleVetoFingerE),  "NTEleVetoFingE[100]/D");
-  ntupl->Branch("EleVetoX",     (myEvt.NTEleVetoX),        "NTEleVetoX[100]/D");
-  ntupl->Branch("EleVetoY",     (myEvt.NTEleVetoY),        "NTEleVetoY[100]/D");
+  ntupl->Branch("EVetoTrEne" ,(myEvt.NTEVetoTrkEne),   "NTEVetoTrkEne[100]/D");
+  ntupl->Branch("EVetoNFing" ,(myEvt.NTEVetoTrkFinger),"NTEVetoTrkFinger[100]/I");
+  ntupl->Branch("EVetoTrTime",(myEvt.NTEVetoTrkTime),  "NTEVetoTrkTime[100]/D");
+  ntupl->Branch("EVetoFingE", (myEvt.NTEVetoFingerE),  "NTEVetoFingE[100]/D");
+  ntupl->Branch("EVetoX",     (myEvt.NTEVetoX),        "NTEVetoX[100]/D");
+  ntupl->Branch("EVetoY",     (myEvt.NTEVetoY),        "NTEVetoY[100]/D");
 
   MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
   MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();

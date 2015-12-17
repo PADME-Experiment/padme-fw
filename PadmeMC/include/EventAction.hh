@@ -8,7 +8,7 @@
 #include "TRodHit.hh"
 #include "HEPVetoHit.hh"
 #include "PVetoHit.hh"
-#include "EleVetoHit.hh"
+#include "EVetoHit.hh"
 #include "SACHit.hh"
 #include "LAVHit.hh"
 #include "GFiltHit.hh"
@@ -37,7 +37,7 @@ class EventAction : public G4UserEventAction
   void  AddTRodHits(TRodHitsCollection*);
   void  AddHEPVetoHits(HEPVetoHitsCollection*); 
   void  AddPVetoHits(PVetoHitsCollection*);
-  void  AddEleVetoHits(EleVetoHitsCollection*);
+  void  AddEVetoHits(EVetoHitsCollection*);
   void  AddSACHits(SACHitsCollection*);
   void  AddLAVHits(LAVHitsCollection*);
   void  AddTrackerHits(TrackerHitsCollection*);
@@ -66,7 +66,7 @@ class EventAction : public G4UserEventAction
    G4double ECalHitT,CalEvtT,EtotFiltEvt; 
    G4double ClPosX,ClPosY;
    G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
-  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEleVetoTracks,SACTracks,LAVTracks,NTarget;
+  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget;
 
    G4double Etrack[100];    //For spectrometer reco
    G4int    TrackCh[100];      //For spectrometer reco
@@ -95,12 +95,12 @@ class EventAction : public G4UserEventAction
    G4double PVetoX[100];
    G4double PVetoY[100];
 
-   G4double EleETotVeto[100];
-   G4int    EleVetoTrackCh[100];
-   G4double EleVetoEtrack [100];
-   G4double EleVetoTrackTime[100];
-   G4double EleVetoX[100];
-   G4double EleVetoY[100];
+   G4double ETotEVeto[100];
+   G4int    EVetoTrackCh[100];
+   G4double EVetoEtrack [100];
+   G4double EVetoTrackTime[100];
+   G4double EVetoX[100];
+   G4double EVetoY[100];
 
    G4double ETotSAC[100];
    G4double SACTrackCh[100];

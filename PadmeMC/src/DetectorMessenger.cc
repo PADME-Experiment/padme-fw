@@ -1,34 +1,3 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
-//
-// $Id: DetectorMessenger.cc,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
-// 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #include "DetectorMessenger.hh"
 
 #include "DetectorConstruction.hh"
@@ -57,6 +26,16 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fDisableSubDetCmd->SetGuidance("Disable sub detector in simulation.");
   fDisableSubDetCmd->SetParameterName("Det",false);
   fDisableSubDetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fEnableStructCmd = new G4UIcmdWithAString("/Detector/EnableStructure",this);
+  fEnableStructCmd->SetGuidance("Enable structure in simulation.");
+  fEnableStructCmd->SetParameterName("Struct",false);
+  fEnableStructCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fDisableStructCmd = new G4UIcmdWithAString("/Detector/DisableStructure",this);
+  fDisableStructCmd->SetGuidance("Disable structure in simulation.");
+  fDisableStructCmd->SetParameterName("Struct",false);
+  fDisableStructCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   /*
   TargMatCmd = new G4UIcmdWithAString("/N02/det/setTargetMate",this);
@@ -95,6 +74,8 @@ DetectorMessenger::~DetectorMessenger()
   delete fDetectorDir;
   delete fEnableSubDetCmd;
   delete fDisableSubDetCmd;
+  delete fEnableStructCmd;
+  delete fDisableStructCmd;
   //delete N02Dir;
 }
 
@@ -105,6 +86,9 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if( command == fEnableSubDetCmd )  fDetector->EnableSubDetector(newValue);
   if( command == fDisableSubDetCmd ) fDetector->DisableSubDetector(newValue);
+
+  if( command == fEnableStructCmd )  fDetector->EnableStructure(newValue);
+  if( command == fDisableStructCmd ) fDetector->DisableStructure(newValue);
 
   //if( command == TargMatCmd )
   // { myDetector->setTargetMaterial(newValue);}

@@ -59,7 +59,7 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
   fSetHEPVetoPosYCmd = new G4UIcommand("/Detector/HEPVeto/PositionY",this);
   fSetHEPVetoPosYCmd->SetGuidance("Set position along Y of HEPVeto center in cm.");
   G4UIparameter* pyPosYParameter = new G4UIparameter("PosY",'d',false);
-  pyPosYParameter->SetParameterRange("PosY >= 50. && PosY <= 1000.");
+  pyPosYParameter->SetParameterRange("PosY >= -1000. && PosY <= -50.");
   fSetHEPVetoPosYCmd->SetParameter(pyPosYParameter);
   fSetHEPVetoPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

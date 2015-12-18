@@ -9,6 +9,7 @@
 #define PVetoGeometry_H 1
 
 #include "globals.hh"
+#include "G4SystemOfUnits.hh"
 
 class G4LogicalVolume;
 

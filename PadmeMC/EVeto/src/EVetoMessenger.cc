@@ -52,7 +52,7 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
   fSetEVetoInnerFaceYCmd = new G4UIcommand("/Detector/EVeto/InnerFaceY",this);
   fSetEVetoInnerFaceYCmd->SetGuidance("Set position along Y of EVeto inner face in cm.");
   G4UIparameter* pifPosYParameter = new G4UIparameter("PosY",'d',false);
-  pifPosYParameter->SetParameterRange("PosY >= -100. && PosY <= -10.");
+  pifPosYParameter->SetParameterRange("PosY >= 10. && PosY <= 100.");
   fSetEVetoInnerFaceYCmd->SetParameter(pifPosYParameter);
   fSetEVetoInnerFaceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

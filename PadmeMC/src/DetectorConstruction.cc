@@ -75,6 +75,9 @@ DetectorConstruction::DetectorConstruction()
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
 
+  fEnableWall   = 0;
+  fEnableMagnet = 1;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -120,6 +123,22 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
+}
+
+void DetectorConstruction::EnableStructure(G4String str)
+{
+  printf("Enabling structure %s\n",str.data());
+  if      (str=="Wall")   { fEnableWall   = 1; }
+  else if (str=="Magnet") { fEnableMagnet = 1; }
+  else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
+}
+
+void DetectorConstruction::DisableStructure(G4String str)
+{
+  printf("Disabling structure %s\n",str.data());
+  if      (str=="Wall")   { fEnableWall   = 0; }
+  else if (str=="Magnet") { fEnableMagnet = 0; }
+  else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
@@ -261,7 +280,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
   }
   
-  if(IsWallON==1){  
+  //if(IsWallON==1){  
+  if (fEnableWall) {  
     G4ThreeVector positionWall = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
     solidWall = new G4Box("wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
     logicWall = new G4LogicalVolume(solidWall,Concrete, "Wall", 0, 0, 0);
@@ -275,7 +295,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				  false);         // is overlap    
   }
 
-  if(IsMagIronON==1){ 
+  //if(IsMagIronON==1){ 
+  if (fEnableMagnet) { 
     double poco=0.001*cm;
     G4ThreeVector positionMagUp = G4ThreeVector(MagUpX*cm,MagUpY*cm,MagUpZ*cm); 
     solidMagUpJoke= new G4Box("JokeUp",MagUpSizeX*0.5*cm-poco,MagUpSizeY*0.5*cm-poco,MagUpSizeZ*0.5*cm-poco);
@@ -627,6 +648,12 @@ if(IsTDumpON==1){
  }
 
  // PVeto
+ if (fEnablePVeto) {
+   fPVetoDetector->SetMotherVolume(logicSwepMag);
+   fPVetoDetector->CreateGeometry();
+ }
+
+ // EVeto
  if (fEnableEVeto) {
    fEVetoDetector->SetMotherVolume(logicSwepMag);
    fEVetoDetector->CreateGeometry();

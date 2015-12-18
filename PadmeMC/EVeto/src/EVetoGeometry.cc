@@ -45,7 +45,7 @@ G4double EVetoGeometry::GetEVetoPosX()
 
 G4double EVetoGeometry::GetEVetoPosY()
 {
-  return fEVetoInnerFacePosY-GetEVetoSizeY()*0.5;
+  return fEVetoInnerFacePosY+GetEVetoSizeY()*0.5;
 }
 
 G4double EVetoGeometry::GetEVetoPosZ()

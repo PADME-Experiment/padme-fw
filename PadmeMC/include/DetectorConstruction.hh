@@ -53,6 +53,9 @@ public:
   void EnableSubDetector(G4String);
   void DisableSubDetector(G4String);
 
+  void EnableStructure(G4String);
+  void DisableStructure(G4String);
+
 private:
 
   void DefineMaterials();
@@ -72,6 +75,9 @@ private:
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;
+
+  G4int fEnableWall;
+  G4int fEnableMagnet;
 
   G4Box*             solidWorld;    
   G4LogicalVolume*   logicWorld;    

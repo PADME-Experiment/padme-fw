@@ -3,6 +3,7 @@
 
 
 #include "globals.hh"
+#include "G4SystemOfUnits.hh"
 #include "G4Decay.hh"
 #include "G4ThreeVector.hh"
 #include "G4RandomDirection.hh"

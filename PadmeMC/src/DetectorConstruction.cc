@@ -12,6 +12,8 @@
 #include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
 
+#include "MagnetStructure.hh"
+
 #include "TRodSD.hh"
 #include "MRodSD.hh"
 #include "TrackerSD.hh"
@@ -66,6 +68,7 @@ DetectorConstruction::DetectorConstruction()
   fPVetoDetector   = new PVetoDetector(0);
   fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
+  fMagnetStructure = new MagnetStructure(0);
 
   fEnableECal    = 1;
   fEnableTarget  = 1;
@@ -96,6 +99,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fPVetoDetector;
   delete fEVetoDetector;
   delete fHEPVetoDetector;
+  delete fMagnetStructure;
 
 }
 
@@ -280,7 +284,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
   }
   
-  //if(IsWallON==1){  
   if (fEnableWall) {  
     G4ThreeVector positionWall = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
     solidWall = new G4Box("wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
@@ -295,176 +298,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 				  false);         // is overlap    
   }
 
-  //if(IsMagIronON==1){ 
+  // Magnet physical structure
   if (fEnableMagnet) { 
-    double poco=0.001*cm;
-    G4ThreeVector positionMagUp = G4ThreeVector(MagUpX*cm,MagUpY*cm,MagUpZ*cm); 
-    solidMagUpJoke= new G4Box("JokeUp",MagUpSizeX*0.5*cm-poco,MagUpSizeY*0.5*cm-poco,MagUpSizeZ*0.5*cm-poco);
-    logicMagUpJoke = new G4LogicalVolume(solidMagUpJoke,Iron, "JokeUp", 0, 0, 0);
-    physiMagUpJoke = new G4PVPlacement(0,               // no rotation
-				  positionMagUp,   // at (0,0,0)
-				  logicMagUpJoke, // its logical volume
-				  "JokeUp",       // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
-
-    G4ThreeVector positionMagDw = G4ThreeVector(-1.*MagUpX*cm,MagUpY*cm,MagUpZ*cm); 
-    physiMagDwJoke = new G4PVPlacement(0,               // no rotation
-				  positionMagDw,   // at (0,0,0)
-				  logicMagUpJoke, // its logical volume
-				  "JokeDw",       // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
-
-    G4ThreeVector positionMagRg = G4ThreeVector(MagRgX*cm,MagRgY*cm,MagRgZ*cm); 
-    solidMagRgJoke= new G4Box("JokeRg",MagRgSizeX*0.5*cm-poco,MagRgSizeY*0.5*cm-poco,MagRgSizeZ*0.5*cm-poco);
-    logicMagRgJoke = new G4LogicalVolume(solidMagRgJoke,Iron, "JokeRg", 0, 0, 0);
-    physiMagRgJoke = new G4PVPlacement(0,               // no rotation
-				  positionMagRg,   // at (0,0,0)
-				  logicMagRgJoke, // its logical volume
-				  "JokeRg",       // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
-
-    G4ThreeVector positionMagLf = G4ThreeVector(MagRgX*cm,-1*MagRgY*cm,MagRgZ*cm); 
-    physiMagLfJoke = new G4PVPlacement(0,               // no rotation
-				  positionMagLf,   // at (0,0,0)
-				  logicMagRgJoke, // its logical volume
-				  "JokeLf",       // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
-
-    //Start rotating the iron plates
-    G4RotationMatrix* xyzRot=new G4RotationMatrix; // Rotates X and Z axes only
-    xyzRot->rotateX(M_PI*rad);  // Rotates 90 degrees
-    xyzRot->rotateY(M_PI/2*rad);  // Rotates 90 degrees
-    xyzRot->rotateZ(M_PI/2*rad);  // Rotates 90 degrees
-
-    G4ThreeVector positionMagUpCoil = G4ThreeVector(MagCoilPosX*cm,MagCoilPosY*cm,MagCoilPosZ*cm); 
-    solidMagCoil = new G4Tubs("solCoil",MagCoilRMin*cm,MagCoilRMax*cm,MagCoilDz*cm,startAngle*deg,spanningAngle*deg);
-    logicMagCoil = new G4LogicalVolume(solidMagCoil,Cu,"CoilLog", 0, 0, 0);
-    physiMagUpCoil = new G4PVPlacement(xyzRot,               // no rotation
-				  positionMagUpCoil, // at (0,0,0)
-				  logicMagCoil,    // its logical volume
-				  "MagUpCoil",       // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
-    G4ThreeVector positionMagDwCoil = G4ThreeVector(-1.*MagCoilPosX*cm,MagCoilPosY*cm,MagCoilPosZ*cm); 
-    physiMagDwCoil = new G4PVPlacement(xyzRot,       // no rotation
-				  positionMagDwCoil, // at (0,0,0)
-				  logicMagCoil,      // its logical volume
-				  "MagDwCoil",       // its name
-				  logicWorld,        // its mother  volume
-				  false,             // no boolean operations
-				  0,                 // copy number
-				  false);         // is overlap    
-
-    G4RotationMatrix* yzRot=new G4RotationMatrix; // Rotates X and Z axes only
-    //    yzRot->rotateX(M_PI*rad);  // Rotates 90 degrees
-    yzRot->rotateY(M_PI/2*rad);  // Rotates 90 degrees
-    yzRot->rotateZ(M_PI/2*rad);  // Rotates 90 degrees
-
-    G4ThreeVector positionMagUpBkCoil = G4ThreeVector(MagCoilPosX*cm,MagCoilPosY*cm,MagCoilPosZ*cm+100*cm); 
-    physiMagUpBkCoil = new G4PVPlacement(yzRot,       // no rotation
-				  positionMagUpBkCoil, // at (0,0,0)
-				  logicMagCoil,      // its logical volume
-				  "MagUpBkCoil",       // its name
-				  logicWorld,        // its mother  volume
-				  false,             // no boolean operations
-				  0,                 // copy number
-				  false);         // is overlap    
-
-    G4ThreeVector positionMagDwBkCoil = G4ThreeVector(-1.*MagCoilPosX*cm,MagCoilPosY*cm,MagCoilPosZ*cm+100*cm); 
-    physiMagDwBkCoil = new G4PVPlacement(yzRot,       // no rotation
-				  positionMagDwBkCoil, // at (0,0,0)
-				  logicMagCoil,      // its logical volume
-				  "MagDwBkCoil",       // its name
-				  logicWorld,        // its mother  volume
-				  false,             // no boolean operations
-				  0,                 // copy number
-				  false);         // is overlap    
+    fMagnetStructure->SetMotherVolume(logicWorld);
+    fMagnetStructure->CreateGeometry();
   }
 
-//    G4double innerRad = 131.8*cm;
-//    G4double outerRad = 204.6*cm;
-//    G4double hz       = 20.*cm;
-//    G4double startAngle = 46.*deg;
-//    G4double spanningAngle = 44.*deg;
-    
-//    //Start rotating the iron plates
-//    G4RotationMatrix* yRot=new G4RotationMatrix; // Rotates X and Z axes only
-//    yRot->rotateY(M_PI/2.*rad);  // Rotates 90 degrees
-//    G4ThreeVector zTrans(0.,0.,0.);    
-//
-//    solidMagIron = new G4Tubs("magIron",innerRad,outerRad,hz,startAngle,spanningAngle);
-//    logicMagIron = new G4LogicalVolume(solidMagIron,Iron, "MagIron", 0, 0, 0);
-//
-//    for(int kk=0;kk<2;kk++){
-//      float sign;
-//      if(kk==0) sign=1.;
-//      if(kk==1) sign=-1.;
-//      G4ThreeVector positionMagIron = G4ThreeVector(MagIronX*cm+sign*40*cm,MagIronY*cm-(innerRad+(outerRad-innerRad)/2.),MagIronZ*cm); 
-//      physiMagIron = new G4PVPlacement(yRot,              // no rotation
-//				       positionMagIron,   // at (0,0,0)
-//				       logicMagIron,      // its logical volume
-//				       "MagIron",         // its name
-//				       logicWorld,        // its mother  volume
-//				       false,             // no boolean operations
-//				       0,                 // copy number
-//				       true);            //Check for overlaps
-//    }
-//
-//    solidMagInnJoke = new G4Tubs("magInnJoke",innerRad,innerRad+19.5*cm,hz,startAngle,spanningAngle);
-//    logicMagInnJoke = new G4LogicalVolume(solidMagInnJoke,Iron, "MagIronJoke", 0, 0, 0);
-//
-//    solidMagOutJoke = new G4Tubs("magOutJoke",outerRad-19.5*cm,outerRad,hz,startAngle+24*deg,spanningAngle-24*deg);
-//    logicMagOutJoke = new G4LogicalVolume(solidMagOutJoke,Iron, "MagIronJoke", 0, 0, 0);
-//
-//    solidMagBArea = new G4Tubs("magBArea",innerRad+23.5*cm,outerRad-23.5*cm,hz,startAngle,spanningAngle);
-//    logicMagBArea = new G4LogicalVolume(solidMagBArea,Vacuum,"MagBArea", 0, 0, 0);
-//    logicMagBArea ->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-//
-//    G4ThreeVector positionMagInnJoke = G4ThreeVector(MagIronX*cm,MagIronY*cm-(innerRad+(outerRad-innerRad)/2.),MagIronZ*cm); 
-//    G4ThreeVector positionMagOutJoke = G4ThreeVector(MagIronX*cm,MagIronY*cm-(innerRad+(outerRad-innerRad)/2.),MagIronZ*cm); 
-//    G4ThreeVector positionMagBArea   = G4ThreeVector(MagIronX*cm,MagIronY*cm-(innerRad+(outerRad-innerRad)/2.),MagIronZ*cm); 
-//    
-//    physiMagInnJoke = new G4PVPlacement(yRot,                 // no rotation
-//					positionMagInnJoke,   // at (0,0,0)
-//					logicMagInnJoke,      // its logical volume
-//					"InnJoke",            // its name
-//					logicWorld,          // its mother  volume
-//					false,               // no boolean operations
-//					0,                   // copy number
-//					true);               //Check for overlaps
-//    physiMagOutJoke = new G4PVPlacement(yRot,                 // no rotation
-//					positionMagOutJoke,   // at (0,0,0)
-//					logicMagOutJoke,      // its logical volume
-//					"OutJoke",            // its name
-//					logicWorld,          // its mother  volume
-//					false,               // no boolean operations
-//					0,                   // copy number
-//					true);               //Check for overlaps
-//
-//    physiMagBArea  = new G4PVPlacement(yRot,                 // no rotation
-//				       positionMagBArea,   // at (0,0,0)
-//				       logicMagBArea,      // its logical volume
-//				       "BArea",            // its name
-//				       logicWorld,          // its mother  volume
-//				       false,               // no boolean operations
-//				       0,                   // copy number
-//				       true);               //Check for overlaps
-//} 
-
+  // Magnetic field inside magnet
   if(IsBFieldON==1){
     //------------------------------ 
     // Magnet
@@ -695,7 +535,7 @@ if(IsTDumpON==1){
   //------------------------------------------------- 
   // Spectrometer chambers cilindrical
   //-------------------------------------------------
-
+ /*
  if(IsTrackerON==1 && TrackerNLayers==1.){
    solidTracker[0]= new G4Tubs("TrackerBox",TrackerInnerRad*cm,TrackerOuterRad*cm,TrackerHz*cm,0.*deg,360.*deg);
    logicTracker[0]= new G4LogicalVolume(solidTracker[0],Air,"LogTracker",0,0,0);
@@ -733,7 +573,7 @@ if(IsTDumpON==1){
 				     false);              // copy number 
    }
  }
-
+ */
  //------------------------------------------------ 
  // Sensitive detectors
  //------------------------------------------------ 
@@ -743,6 +583,7 @@ if(IsTDumpON==1){
  G4String MRodSDname    = "MRodSD";      //monitor rods
  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
+ /*
   if(IsTrackerON==1){
     TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
     SDman->AddNewDetector( TrackSD );
@@ -750,6 +591,7 @@ if(IsTDumpON==1){
       logicTracker[kk]->SetSensitiveDetector( TrackSD );
     }
   }
+ */
 
   if(IsPlanarGEMON==1){
     TrackerSD* TrackSD = new TrackerSD( TrackerSDname );

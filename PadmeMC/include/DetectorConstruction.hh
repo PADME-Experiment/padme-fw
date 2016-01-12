@@ -26,6 +26,7 @@ class LAVDetector;
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
+class MagnetStructure;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -67,6 +68,8 @@ private:
   PVetoDetector*   fPVetoDetector;
   EVetoDetector*   fEVetoDetector;
   HEPVetoDetector* fHEPVetoDetector;
+
+  MagnetStructure* fMagnetStructure;
 
   G4int fEnableECal;
   G4int fEnableTarget;

@@ -317,6 +317,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     solidSwepMag = new G4Box("swepMag",SwepMagDx*0.5-poco,SwepMagDy*0.5-poco,SwepMagDz*0.5+poco);
     logicSwepMag = new G4LogicalVolume(solidSwepMag,WorldMater,"SwepMag",0,0,0);
     logicSwepMag ->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
+    logicSwepMag->SetVisAttributes(G4VisAttributes::Invisible);
     physiSwepMag = new G4PVPlacement(0,             // no rotation
 				     positionSwepMag,  // at (x,y,z)
 				     logicSwepMag,     // its logical volume                                 
@@ -619,7 +620,7 @@ if(IsTDumpON==1){
   //  logicTYRod->SetSensitiveDetector( TRodSDet );
 //--------- Visualization attributes -------------------------------
 
-  logicWorld  ->SetVisAttributes(G4VisAttributes::Invisible);
+  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
 
   G4VisAttributes* BoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
   //  logicWorld  ->SetVisAttributes(BoxVisAtt);  

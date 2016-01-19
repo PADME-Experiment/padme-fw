@@ -22,17 +22,31 @@ MagnetGeometry::MagnetGeometry()
 
   fMagnetGap = 0.1*mm;
 
-  fMagnetSizeInnerX =  20.*cm;
-  fMagnetSizeInnerY = 116.*cm;
-  fMagnetSizeOuterX = 174.*cm;
-  fMagnetSizeOuterY = 200.*cm;
-  fMagnetSizeZ      = 100.*cm;
+  fMagnetSizeZ      = 100.0*cm;
+  fMagnetSizeOuterX = 125.0*cm;
+  fMagnetSizeOuterY = 174.0*cm;
+  fMagnetSizeInnerX =  63.0*cm;
+  fMagnetSizeInnerY = 112.0*cm;
+  fMagnetSizeInBarX =  20.0*cm;
+  fMagnetSizeInBarY =  52.0*cm;
 
-  fCoilInnerRadius =  15.*cm;
-  fCoilOuterRadius =  35.*cm;
-  fCoilLength      =  10.*cm;
-  fCoilSpanStart   =   0.*deg;
-  fCoilSpan        = 180.*deg;
+  fCoilInnerRadius =   5.5*cm;
+  fCoilOuterRadius =  29.0*cm;
+  fCoilLengthX     =  17.0*cm;
+  fCoilLengthY     =  46.0*cm;
+  fCoilLengthZ     =  fMagnetSizeZ;
+
+  fSlabThick   =  2.0*cm;
+  fSlabWidth   = 30.0*cm;
+  fSlabLengthZ = fMagnetSizeZ;
+
+  fRailThick   = 0.6*cm;
+  fRailWidth   = 3.0*cm;
+  fRailLengthZ = fMagnetSizeZ;
+
+  fNeopreneThick   =  0.4*cm;
+  fNeopreneWidth   = 23.5*cm;
+  fNeopreneLengthZ = fMagnetSizeZ;
 
   fMagnetFrontFacePosZ = 20.*cm;
 

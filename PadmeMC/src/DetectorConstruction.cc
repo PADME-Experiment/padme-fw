@@ -191,6 +191,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* BaF2     = man->FindOrBuildMaterial("G4_BARIUM_FLUORIDE");
   G4Material* Cu       = man->FindOrBuildMaterial("G4_Cu");
   G4Material* Al       = man->FindOrBuildMaterial("G4_Al");
+  G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
 
   //Print all the materials defined.
 //  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
@@ -316,18 +317,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4double SwepMagDz=  MagnetSizeZ*cm;//+0.5*mm;//+5*cm; // margin to avoit grazing tracks
     solidSwepMag = new G4Box("swepMag",SwepMagDx*0.5-poco,SwepMagDy*0.5-poco,SwepMagDz*0.5+poco);
     logicSwepMag = new G4LogicalVolume(solidSwepMag,WorldMater,"SwepMag",0,0,0);
-    logicSwepMag ->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-    logicSwepMag->SetVisAttributes(G4VisAttributes::Invisible);
-    physiSwepMag = new G4PVPlacement(0,             // no rotation
-				     positionSwepMag,  // at (x,y,z)
-				     logicSwepMag,     // its logical volume                                 
-				     "SwepMag",           // its name
-				     logicWorld,       // its mother  volume
-				     false,            // no boolean operations
-				     0,                // copy number 
-				     true);           // Overlap check    
+    logicSwepMag->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
+    //logicSwepMag->SetVisAttributes(G4VisAttributes::Invisible);
+    logicSwepMag->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+    physiSwepMag = new G4PVPlacement(0,positionSwepMag,logicSwepMag,"SwepMag",logicWorld,false,0,true);
   }
-  
+
   // Target
   if (fEnableTarget) {
     fTargetDetector->SetMotherVolume(logicWorld);

@@ -1,4 +1,6 @@
 #include "MagnetSD.hh"
+
+#include "G4UnitsTable.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
 #include "G4ThreeVector.hh"
@@ -52,12 +54,15 @@ G4bool MagnetSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
 void MagnetSD::EndOfEvent(G4HCofThisEvent*)
 {
+  G4int NbHits = MagnetCollection->entries();
+  //G4double totEnergy = 0.;
+  //for (G4int i=0;i<NbHits;i++) totEnergy += (*MagnetCollection)[i]->GetEnergy();
+  //G4cout << "\nTotal energy in the Magnet SD is " << G4BestUnit(totEnergy,"Energy") << G4endl;
   if (verboseLevel>0) { 
-     G4int NbHits = MagnetCollection->entries();
-     G4cout << "\n-------->Hits Collection: in this event they are " << NbHits 
-            << " hits in the Magnet : " << G4endl;
-     for (G4int i=0;i<NbHits;i++) (*MagnetCollection)[i]->Print();
-    } 
+    G4cout << "\n-------->Hits Collection: in this event there are " << NbHits 
+	   << " hits in the Magnet : " << G4endl;
+    for (G4int i=0;i<NbHits;i++) (*MagnetCollection)[i]->Print();
+  }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

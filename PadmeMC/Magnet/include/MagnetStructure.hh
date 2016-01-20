@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
-//#include "MagnetMessenger.hh" 
+#include "MagnetMessenger.hh" 
 
 class MagnetStructure
 {
@@ -27,7 +27,7 @@ public:
 private:
 
   G4LogicalVolume* fMotherVolume;
-  //MagnetMessenger* fMagnetMessenger;
+  MagnetMessenger* fMagnetMessenger;
 
 };
 

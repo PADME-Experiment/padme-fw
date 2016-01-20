@@ -24,13 +24,13 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
 {
 
   // Connect to MagnetMessenger to enable datacard configuration
-  //fMagnetMessenger = new MagnetMessenger(this);
+  fMagnetMessenger = new MagnetMessenger(this);
 
 }
 
 MagnetStructure::~MagnetStructure()
 {
-  //delete fMagnetMessenger;
+  delete fMagnetMessenger;
 }
 
 void MagnetStructure::CreateGeometry()
@@ -261,7 +261,26 @@ void MagnetStructure::CreateGeometry()
   G4ThreeVector neopreneULTPos = G4ThreeVector(geo->GetNeopreneULTPosX(),geo->GetNeopreneULTPosY(),geo->GetNeopreneULTPosZ());
   new G4PVPlacement(0,neopreneULTPos,neopreneVolume,"NeopreneULT",fMotherVolume,false,0,false);
 
-  
+  G4ThreeVector neopreneULBPos = G4ThreeVector(geo->GetNeopreneULBPosX(),geo->GetNeopreneULBPosY(),geo->GetNeopreneULBPosZ());
+  new G4PVPlacement(0,neopreneULBPos,neopreneVolume,"NeopreneULB",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneURTPos = G4ThreeVector(geo->GetNeopreneURTPosX(),geo->GetNeopreneURTPosY(),geo->GetNeopreneURTPosZ());
+  new G4PVPlacement(0,neopreneURTPos,neopreneVolume,"NeopreneURT",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneURBPos = G4ThreeVector(geo->GetNeopreneURBPosX(),geo->GetNeopreneURBPosY(),geo->GetNeopreneURBPosZ());
+  new G4PVPlacement(0,neopreneURBPos,neopreneVolume,"NeopreneURB",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneDLTPos = G4ThreeVector(geo->GetNeopreneDLTPosX(),geo->GetNeopreneDLTPosY(),geo->GetNeopreneDLTPosZ());
+  new G4PVPlacement(0,neopreneDLTPos,neopreneVolume,"NeopreneDLT",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneDLBPos = G4ThreeVector(geo->GetNeopreneDLBPosX(),geo->GetNeopreneDLBPosY(),geo->GetNeopreneDLBPosZ());
+  new G4PVPlacement(0,neopreneDLBPos,neopreneVolume,"NeopreneDLB",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneDRTPos = G4ThreeVector(geo->GetNeopreneDRTPosX(),geo->GetNeopreneDRTPosY(),geo->GetNeopreneDRTPosZ());
+  new G4PVPlacement(0,neopreneDRTPos,neopreneVolume,"NeopreneDRT",fMotherVolume,false,0,false);
+
+  G4ThreeVector neopreneDRBPos = G4ThreeVector(geo->GetNeopreneDRBPosX(),geo->GetNeopreneDRBPosY(),geo->GetNeopreneDRBPosZ());
+  new G4PVPlacement(0,neopreneDRBPos,neopreneVolume,"NeopreneDRB",fMotherVolume,false,0,false);
 
   // Make upper and lower sections of magnet yoke a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
@@ -269,7 +288,8 @@ void MagnetStructure::CreateGeometry()
   printf("Registering Magnet SD %s\n",magnetSDName.data());
   MagnetSD* magnetSD = new MagnetSD(magnetSDName);
   sdMan->AddNewDetector(magnetSD);
-  magUpVolume->SetSensitiveDetector(magnetSD);
-  magDownVolume->SetSensitiveDetector(magnetSD);
+  magUpBarVolume->SetSensitiveDetector(magnetSD);
+  magDownBarVolume->SetSensitiveDetector(magnetSD);
+  railVolume->SetSensitiveDetector(magnetSD);
 
 }

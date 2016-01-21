@@ -48,6 +48,10 @@ MagnetGeometry::MagnetGeometry()
   fNeopreneWidth   = 23.5*cm;
   fNeopreneLengthZ = fMagnetSizeZ;
 
+  fMagneticVolumeLengthX = 20.*cm;
+  fMagneticVolumeLengthY = 52.*cm;
+  fMagneticVolumeLengthZ = fMagnetSizeZ;
+
   fMagnetFrontFacePosZ = 20.*cm;
 
   fMagnetSensitiveDetectorName = "MagnetSD";
@@ -56,4 +60,3 @@ MagnetGeometry::MagnetGeometry()
 
 MagnetGeometry::~MagnetGeometry()
 {}
-

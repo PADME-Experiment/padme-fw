@@ -45,7 +45,7 @@ void EVetoDetector::CreateGeometry()
   G4double eVetoLength = geo->GetEVetoSizeZ();
   printf("EVeto size is %f %f %f\n",eVetoX,eVetoY,eVetoLength);
   G4Box* solidEVeto = new G4Box("EVetoSolid",eVetoX*0.5,eVetoY*0.5,eVetoLength*0.5);
-  fEVetoVolume = new G4LogicalVolume(solidEVeto,G4Material::GetMaterial("G4_Galactic"),"EVetoLogic",0,0,0);
+  fEVetoVolume = new G4LogicalVolume(solidEVeto,G4Material::GetMaterial("Vacuum"),"EVetoLogic",0,0,0);
   fEVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,posEVeto,fEVetoVolume,"EVeto",fMotherVolume,false,0,false);
 
@@ -56,7 +56,8 @@ void EVetoDetector::CreateGeometry()
   printf("EVeto Finger size is %f %f %f\n",eVetoFingerX,eVetoFingerY,eVetoFingerLength);
   G4Box* solidFinger  = new G4Box("EVetoCrySolid",eVetoFingerX*0.5,eVetoFingerY*0.5,eVetoFingerLength*0.5);
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"EVetoFingerLogic",0,0,0);
-
+  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+ 
   // Make crystal a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
   G4String eVetoSDName = geo->GetEVetoSensitiveDetectorName();

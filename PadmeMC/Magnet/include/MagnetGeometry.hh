@@ -303,6 +303,13 @@ public:
   G4double GetNeopreneDRBPosY()  { return  0.5*fCoilLengthY+fCoilInnerRadius+0.5*fNeopreneWidth; }
   G4double GetNeopreneDRBPosZ()  { return fMagnetFrontFacePosZ+0.5*fNeopreneLengthZ; }
 
+  G4double GetMagneticVolumeSizeX() { return fMagneticVolumeLengthX; }
+  G4double GetMagneticVolumeSizeY() { return fMagneticVolumeLengthY; }
+  G4double GetMagneticVolumeSizeZ() { return fMagneticVolumeLengthZ; }
+  G4double GetMagneticVolumePosX()  { return 0.; }
+  G4double GetMagneticVolumePosY()  { return 0.; }
+  G4double GetMagneticVolumePosZ()  { return fMagnetFrontFacePosZ+0.5*fMagneticVolumeLengthZ; }
+
   void SetMagnetFrontFacePosZ(G4double z) { fMagnetFrontFacePosZ = z; }
 
 private:
@@ -334,6 +341,10 @@ private:
   G4double fNeopreneThick;
   G4double fNeopreneWidth;
   G4double fNeopreneLengthZ;
+
+  G4double fMagneticVolumeLengthX;
+  G4double fMagneticVolumeLengthY;
+  G4double fMagneticVolumeLengthZ;
 
   G4double fMagnetFrontFacePosZ; // Front face of Magnet yoke
 

@@ -2,7 +2,8 @@
 #include "Constants.hh" 
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
-#include "MagneticField.hh"
+//#include "MagneticField.hh"
+#include "MagneticFieldSetup.hh"
 
 #include "TargetDetector.hh"
 #include "ECalDetector.hh"
@@ -58,7 +59,8 @@ DetectorConstruction::DetectorConstruction()
  fWorldLength(0.)
 {
 
-  fEmFieldSetup = new F03FieldSetup();
+  //fEmFieldSetup = new F03FieldSetup();
+  //fEmFieldSetup = new MagneticFieldSetup();
   fDetectorMessenger = new DetectorMessenger(this);
 
   fECalDetector    = new ECalDetector(0);
@@ -87,8 +89,8 @@ DetectorConstruction::DetectorConstruction()
  
 DetectorConstruction::~DetectorConstruction()
 {
-  delete fMagField;
-  if (fEmFieldSetup) delete fEmFieldSetup ;
+  //delete fMagField;
+  //if (fEmFieldSetup) delete fEmFieldSetup ;
   delete stepLimit;
   delete fDetectorMessenger;             
 
@@ -194,9 +196,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
 
   //Print all the materials defined.
-//  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
-//  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
-  G4bool allLocal=true;
+  //  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
+  //  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  //G4bool allLocal=true;
   
   //------------------------------ 
   // World Volume
@@ -305,6 +307,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fMagnetStructure->CreateGeometry();
   }
 
+  /*
   // Magnetic field inside magnet
   if(IsBFieldON==1){
     //------------------------------ 
@@ -322,6 +325,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicSwepMag->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
     physiSwepMag = new G4PVPlacement(0,positionSwepMag,logicSwepMag,"SwepMag",logicWorld,false,0,true);
   }
+  */
 
   // Target
   if (fEnableTarget) {
@@ -485,13 +489,21 @@ if(IsTDumpON==1){
 
  // PVeto
  if (fEnablePVeto) {
-   fPVetoDetector->SetMotherVolume(logicSwepMag);
+   if (fEnableMagnet) {
+     fPVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+   } else {
+     fPVetoDetector->SetMotherVolume(logicWorld);
+   }
    fPVetoDetector->CreateGeometry();
  }
 
  // EVeto
  if (fEnableEVeto) {
-   fEVetoDetector->SetMotherVolume(logicSwepMag);
+   if (fEnableMagnet) {
+     fEVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+   } else {
+     fEVetoDetector->SetMotherVolume(logicWorld);
+   }
    fEVetoDetector->CreateGeometry();
  }
 

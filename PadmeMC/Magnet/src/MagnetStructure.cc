@@ -16,6 +16,7 @@
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
+#include "MagneticFieldSetup.hh"
 #include "MagnetGeometry.hh"
 #include "MagnetSD.hh"
 
@@ -291,5 +292,23 @@ void MagnetStructure::CreateGeometry()
   magUpBarVolume->SetSensitiveDetector(magnetSD);
   magDownBarVolume->SetSensitiveDetector(magnetSD);
   railVolume->SetSensitiveDetector(magnetSD);
+
+  // Create magnetic volume inside the magnet
+  G4double magVolSizeX = geo->GetMagneticVolumeSizeX();
+  G4double magVolSizeY = geo->GetMagneticVolumeSizeY();
+  G4double magVolSizeZ = geo->GetMagneticVolumeSizeZ();
+  G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*(magVolSizeX-magGap),0.5*(magVolSizeY-magGap),0.5*(magVolSizeZ-magGap));
+  fMagneticVolume = new G4LogicalVolume(magVolSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
+  fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  //fMagneticVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+
+  // Define magnetic field for this volume (and all daughter volumes)
+  MagneticFieldSetup* magField = new MagneticFieldSetup();
+  magField->GetLocalMagneticField()->SetMagneticVolumePosZ(geo->GetMagneticVolumePosZ());
+  magField->GetLocalMagneticField()->SetMagneticVolumeLengthZ(geo->GetMagneticVolumeSizeZ());
+  fMagneticVolume->SetFieldManager(magField->GetLocalFieldManager(),true);
+
+  G4ThreeVector magVolPos = G4ThreeVector(geo->GetMagneticVolumePosX(),geo->GetMagneticVolumePosY(),geo->GetMagneticVolumePosZ());
+  new G4PVPlacement(0,magVolPos,fMagneticVolume,"MagneticVolume",fMotherVolume,false,0,false);
 
 }

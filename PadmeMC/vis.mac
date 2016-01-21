@@ -5,6 +5,7 @@
 #
 /control/verbose 1
 /run/verbose 1
+/tracking/verbose 1
 
 # Output root file
 /output/fileName pippo.root
@@ -22,7 +23,7 @@
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector SAC
-#/Detector/DisableSubDetector LAV
+/Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
@@ -30,12 +31,14 @@
 /Detector/EnableStructure Wall
 /Detector/EnableStructure Magnet
 
-#/Detector/DisableStructure Wall
+/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
 /Detector/Target/FrontFaceZ -20.
 /Detector/Target/Size 1.
 /Detector/Target/Thickness 50.
+
+/Detector/Magnet/FrontFaceZ 20.
 
 /Detector/ECal/Geometry 30 30
 /Detector/ECal/FrontFaceZ 400.
@@ -119,7 +122,7 @@
 #/vis/viewer/set/style surface
 #
 # Draw coordinate axes:
-#/vis/scene/add/axes 0 0 0 1 m
+/vis/scene/add/axes 0 0 0 1 m
 #
 # Draw smooth trajectories at end of event, showing trajectory points
 # as markers 2 pixels wide:

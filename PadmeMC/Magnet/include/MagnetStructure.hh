@@ -24,9 +24,13 @@ public:
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
+  G4LogicalVolume* GetMagneticVolume() { return fMagneticVolume; }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
+  G4LogicalVolume* fMagneticVolume;
+
   MagnetMessenger* fMagnetMessenger;
 
 };

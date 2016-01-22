@@ -54,9 +54,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 DetectorConstruction::DetectorConstruction()
-:solidWorld(0),  logicWorld(0),  physiWorld(0),
- stepLimit(0), fMagField(0), fEmFieldSetup(0), //added M. Raggi
- fWorldLength(0.)
+:solidWorld(0),  logicWorld(0),  physiWorld(0), stepLimit(0), fWorldLength(0.)
 {
 
   //fEmFieldSetup = new F03FieldSetup();
@@ -328,10 +326,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   */
 
   // Target
-  if (fEnableTarget) {
-    fTargetDetector->SetMotherVolume(logicWorld);
-    fTargetDetector->CreateGeometry();
-  }
+  //if (fEnableTarget) {
+  //  fTargetDetector->SetMotherVolume(logicWorld);
+  //  fTargetDetector->CreateGeometry();
+  //}
+ if (fEnableTarget) {
+   if (fEnableMagnet) {
+     fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+   } else {
+     fTargetDetector->SetMotherVolume(logicWorld);
+   }
+   fTargetDetector->CreateGeometry();
+ }
 
   // SAC
   if (fEnableSAC) {

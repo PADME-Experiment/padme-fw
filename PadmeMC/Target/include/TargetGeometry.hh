@@ -32,9 +32,9 @@ protected:
 public:
 
   // Position of center of Target box
-  G4double GetTargetPosX();
-  G4double GetTargetPosY();
-  G4double GetTargetPosZ();
+  G4double GetTargetPosX() { return 0.; }
+  G4double GetTargetPosY() { return 0.; }
+  G4double GetTargetPosZ() { return fTargetFrontFacePosZ+fTargetSizeZ*0.5; }
 
   // Size of Target box
   G4double GetTargetSizeX() { return fTargetSizeX; }

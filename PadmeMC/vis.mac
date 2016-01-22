@@ -34,43 +34,43 @@
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
-/Detector/Target/FrontFaceZ -20.
-/Detector/Target/Size 1.
-/Detector/Target/Thickness 50.
+#/Detector/Target/FrontFaceZ -20.
+#/Detector/Target/Size 1.
+#/Detector/Target/Thickness 50.
 
-/Detector/Magnet/FrontFaceZ 20.
+#/Detector/Magnet/FrontFaceZ 20.
 
-/Detector/ECal/Geometry 30 30
-/Detector/ECal/FrontFaceZ 400.
-/Detector/ECal/CrystalSize 2.
-/Detector/ECal/InnerRadius 4.
-/Detector/ECal/OuterRadius 30.
+#/Detector/ECal/Geometry 30 30
+#/Detector/ECal/FrontFaceZ 400.
+#/Detector/ECal/CrystalSize 2.
+#/Detector/ECal/InnerRadius 4.
+#/Detector/ECal/OuterRadius 30.
 
-/Detector/SAC/FrontFaceZ 450.
-/Detector/SAC/CrystalSize 2.
+#/Detector/SAC/FrontFaceZ 450.
+#/Detector/SAC/CrystalSize 2.
 
-/Detector/LAV/FrontFaceZ -10.
-/Detector/LAV/InnerRadius 4.
-/Detector/LAV/OuterRadius 10.
-/Detector/LAV/ZLength 20.
+#/Detector/LAV/FrontFaceZ -10.
+#/Detector/LAV/InnerRadius 4.
+#/Detector/LAV/OuterRadius 10.
+#/Detector/LAV/ZLength 20.
 
 #/Detector/PVeto/FrontFaceZ -50.
-/Detector/PVeto/InnerFaceY -20.
-/Detector/PVeto/NFingers 100
-/Detector/PVeto/FingerSize 1.
+#/Detector/PVeto/InnerFaceY -20.
+#/Detector/PVeto/NFingers 100
+#/Detector/PVeto/FingerSize 1.
 
 #/Detector/EVeto/FrontFaceZ -50.
-/Detector/EVeto/InnerFaceY 20.
-/Detector/EVeto/NFingers 100
-/Detector/EVeto/FingerSize 1.
+#/Detector/EVeto/InnerFaceY 20.
+#/Detector/EVeto/NFingers 100
+#/Detector/EVeto/FingerSize 1.
 
-/Detector/HEPVeto/NFingers 50
-/Detector/HEPVeto/FingerSize 1.
-/Detector/HEPVeto/FingerLength 20.
+#/Detector/HEPVeto/NFingers 50
+#/Detector/HEPVeto/FingerSize 1.
+#/Detector/HEPVeto/FingerLength 20.
 #/Detector/HEPVeto/PositionX 0.
-/Detector/HEPVeto/PositionY -75.
-/Detector/HEPVeto/PositionZ 223.
-/Detector/HEPVeto/RotationX -0.593
+#/Detector/HEPVeto/PositionY -75.
+#/Detector/HEPVeto/PositionZ 223.
+#/Detector/HEPVeto/RotationX -0.593
 #/Detector/HEPVeto/RotationY 0.
 #/Detector/HEPVeto/RotationZ 0.
 

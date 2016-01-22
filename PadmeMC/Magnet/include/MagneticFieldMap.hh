@@ -24,6 +24,14 @@ private:
   // Value of magnetic field in the constant field zone
   G4double fConstantMagneticField;
 
+  // Constant magnetic field limits in Z
+  G4double fConstantMagneticFieldZmin;
+  G4double fConstantMagneticFieldZmax;
+
+  // Sigma of gaussian in the front and back sections of the magnetic field
+  G4double fSigmaFront;
+  G4double fSigmaBack;
+
   // Global position along Z of center of magnetic volume (assumes that center is at X=0,Y=0)
   G4double fMagneticVolumePosZ;
 

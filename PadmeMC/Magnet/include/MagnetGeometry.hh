@@ -308,7 +308,7 @@ public:
   G4double GetMagneticVolumeSizeZ() { return fMagneticVolumeLengthZ; }
   G4double GetMagneticVolumePosX()  { return 0.; }
   G4double GetMagneticVolumePosY()  { return 0.; }
-  G4double GetMagneticVolumePosZ()  { return fMagnetFrontFacePosZ+0.5*fMagneticVolumeLengthZ; }
+  G4double GetMagneticVolumePosZ()  { return fMagnetFrontFacePosZ+0.5*fMagnetSizeZ; }
 
   void SetMagnetFrontFacePosZ(G4double z) { fMagnetFrontFacePosZ = z; }
 

@@ -50,7 +50,7 @@ MagnetGeometry::MagnetGeometry()
 
   fMagneticVolumeLengthX = 20.*cm;
   fMagneticVolumeLengthY = 52.*cm;
-  fMagneticVolumeLengthZ = fMagnetSizeZ;
+  fMagneticVolumeLengthZ = fMagnetSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
   fMagnetFrontFacePosZ = 20.*cm;
 

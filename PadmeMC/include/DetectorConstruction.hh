@@ -4,7 +4,7 @@
 #include "globals.hh"
 #include "G4VUserDetectorConstruction.hh"
 #include "G4SubtractionSolid.hh"
-#include "MagneticField.hh"
+//#include "MagneticField.hh"
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "G4PhysicalConstants.hh"
 
@@ -186,8 +186,8 @@ private:
 
   G4UserLimits* stepLimit;             // pointer to user step limits
 
-  G4UniformMagField*              fMagField;   // pointer to the magnetic field 
-  F03FieldSetup*              fEmFieldSetup;     
+  //G4UniformMagField*              fMagField;   // pointer to the magnetic field 
+  //F03FieldSetup*              fEmFieldSetup;     
   DetectorMessenger*      fDetectorMessenger;  // pointer to the Messenger
        
   G4double fWorldLength;            // Full length of the world volume

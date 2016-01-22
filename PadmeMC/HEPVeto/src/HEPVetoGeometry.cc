@@ -32,7 +32,7 @@ HEPVetoGeometry::HEPVetoGeometry()
   fHEPVetoCenterPosY = -75.*cm;
   fHEPVetoCenterPosZ = 223.*cm;
 
-  fHEPVetoRotX = -0.593*rad;
+  fHEPVetoRotX = 0.593*rad;
   fHEPVetoRotY =  0.   *rad;
   fHEPVetoRotZ =  0.   *rad;
 

@@ -17,7 +17,6 @@ class MagnetGeometry;
 
 class G4UIdirectory;
 class G4UIcommand;
-class G4UIcmdWithAString;
 class G4UIcmdWithoutParameter;
 
 class MagnetMessenger: public G4UImessenger
@@ -37,6 +36,11 @@ private:
   G4UIdirectory* fMagnetDetectorDir;
 
   G4UIcommand* fSetMagnetFrontFaceZCmd;
+
+  G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
+  G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
+
+  G4UIcommand* fSetMagneticFieldConstantValueCmd;
 
 };
 #endif

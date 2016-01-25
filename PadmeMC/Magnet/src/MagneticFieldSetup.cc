@@ -75,7 +75,7 @@ void MagneticFieldSetup::UpdateField()
 {
 
   SetStepper();
-  G4cout<<"The minimal step is equal to "<<fMinStep/mm<<" mm"<<G4endl ;
+  G4cout << "The minimal step is equal to " << fMinStep/mm << " mm" <<G4endl ;
 
   fFieldManager->SetDetectorField(fMagneticField);
   fLocalFieldManager->SetDetectorField(fLocalMagneticField);
@@ -88,6 +88,8 @@ void MagneticFieldSetup::UpdateField()
 
   fFieldManager->SetChordFinder(fChordFinder);
   fLocalFieldManager->SetChordFinder(fLocalChordFinder);
+
+  G4cout << "Delta chord is " << fLocalChordFinder->GetDeltaChord()/cm << " cm" << G4endl;
 
 }
 

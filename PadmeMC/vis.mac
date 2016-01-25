@@ -15,20 +15,20 @@
 /Detector/EnableSubDetector ECal
 /Detector/EnableSubDetector Target
 /Detector/EnableSubDetector SAC
-/Detector/EnableSubDetector LAV
+#/Detector/EnableSubDetector LAV
 /Detector/EnableSubDetector PVeto
 /Detector/EnableSubDetector EVeto
 /Detector/EnableSubDetector HEPVeto
 
-#/Detector/DisableSubDetector ECal
+/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
-#/Detector/DisableSubDetector SAC
+/Detector/DisableSubDetector SAC
 /Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 
-/Detector/EnableStructure Wall
+#/Detector/EnableStructure Wall
 /Detector/EnableStructure Magnet
 
 /Detector/DisableStructure Wall
@@ -39,6 +39,9 @@
 #/Detector/Target/Thickness 50.
 
 #/Detector/Magnet/FrontFaceZ 20.
+/Detector/Magnet/EnableMagneticField
+#/Detector/Magnet/DisableMagneticField
+/Detector/Magnet/MagneticFieldConstantValue 0.5
 
 #/Detector/ECal/Geometry 30 30
 #/Detector/ECal/FrontFaceZ 400.

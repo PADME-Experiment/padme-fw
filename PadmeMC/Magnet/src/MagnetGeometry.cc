@@ -54,6 +54,8 @@ MagnetGeometry::MagnetGeometry()
 
   fMagnetFrontFacePosZ = 20.*cm;
 
+  fMagneticFieldConstantValue = 0.45*tesla;
+
   fMagnetSensitiveDetectorName = "MagnetSD";
 
 }

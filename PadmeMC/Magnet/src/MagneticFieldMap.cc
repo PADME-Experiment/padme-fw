@@ -2,6 +2,7 @@
 
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4UnitsTable.hh"
 
 MagneticFieldMap::MagneticFieldMap()
 {
@@ -22,19 +23,25 @@ MagneticFieldMap::~MagneticFieldMap()
 void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
 {
 
-  // Get local X and Z coordinates
-  //G4double x = p[0]; Not needed yet
-  G4double z = (p[2]-fMagneticVolumePosZ);
+  // Get local coordinates (x,y are centered at 0,0 by definition)
+  G4double x = p[0];
+  G4double y = p[1];
+  G4double z = p[2]-fMagneticVolumePosZ;
 
   G4double B0 = 1.;
-  if (z<-0.5*fMagneticVolumeLengthZ || z>0.5*fMagneticVolumeLengthZ) {
+  if ( (x<-0.5*fMagneticVolumeLengthX) || (x>0.5*fMagneticVolumeLengthX) ||
+       (y<-0.5*fMagneticVolumeLengthY) || (y>0.5*fMagneticVolumeLengthY) ||
+       (z<-0.5*fMagneticVolumeLengthZ) || (z>0.5*fMagneticVolumeLengthZ) ) {
+    // Field outside magnetic volume is always null
     B0 = 0.;
   } else if (z<fConstantMagneticFieldZmin) {
-    G4double dZ = (z-fConstantMagneticFieldZmin)/cm;
-    B0 = exp(-dZ*dZ/(fSigmaFront*fSigmaFront));
+    // Use gaussian to model upstream magnetic field rise
+    G4double dZS = (z-fConstantMagneticFieldZmin)/fSigmaFront;
+    B0 = exp(-dZS*dZS);
   } else if (z>fConstantMagneticFieldZmax) {
-    G4double dZ = (z-fConstantMagneticFieldZmax)/cm;
-    B0 = exp(-dZ*dZ/(fSigmaFront*fSigmaFront));
+    // Use gaussian to model downstream magnetic field fall
+    G4double dZS = (z-fConstantMagneticFieldZmax)/fSigmaBack;
+    B0 = exp(-dZS*dZS);
   }
 
   /*
@@ -50,6 +57,8 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
   B[1] = 0.;
   B[2] = 0.;
 
-  G4cout << "Magnetic field at " << p[0] << " " << p[1] << " " << p[2] << " " << p[3] << " (z=" << z/cm << " cm) is " << B[0]/tesla << " tesla" << G4endl;
+  printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is %7.4f tesla\n",x/cm,y/cm,z/cm,B[0]/tesla);
+  //G4cout << "Magnetic field at ( " << G4BestUnit(x,"Length") << " , " << G4BestUnit(y,"Length") << " , " << G4BestUnit(z,"Length") << " ) is " << B[0]/tesla << " tesla" << G4endl;
+  //G4cout << "Magnetic field at ( " << x/cm << " , " << y/cm << " , " << z/cm << " ) is " << B[0]/tesla << " tesla" << G4endl;
 
 }

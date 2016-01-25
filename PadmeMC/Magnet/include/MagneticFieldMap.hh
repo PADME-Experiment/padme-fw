@@ -17,6 +17,9 @@ public:
   G4double GetConstantMagneticFieldValue()           { return fConstantMagneticField; }
 
   void SetMagneticVolumePosZ(G4double z)    { fMagneticVolumePosZ    = z; }
+
+  void SetMagneticVolumeLengthX(G4double x) { fMagneticVolumeLengthX = x; }
+  void SetMagneticVolumeLengthY(G4double y) { fMagneticVolumeLengthY = y; }
   void SetMagneticVolumeLengthZ(G4double z) { fMagneticVolumeLengthZ = z; }
 
 private:
@@ -35,7 +38,9 @@ private:
   // Global position along Z of center of magnetic volume (assumes that center is at X=0,Y=0)
   G4double fMagneticVolumePosZ;
 
-  // Length of magnetic volume along Z
+  // Dimensions of magnetic volume
+  G4double fMagneticVolumeLengthX;
+  G4double fMagneticVolumeLengthY;
   G4double fMagneticVolumeLengthZ;
 
 };

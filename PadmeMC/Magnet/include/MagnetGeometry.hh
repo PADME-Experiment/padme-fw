@@ -312,6 +312,9 @@ public:
 
   void SetMagnetFrontFacePosZ(G4double z) { fMagnetFrontFacePosZ = z; }
 
+  void     SetMagneticFieldConstantValue(G4double v) { fMagneticFieldConstantValue = v; }
+  G4double GetMagneticFieldConstantValue()           { return fMagneticFieldConstantValue; }
+
 private:
 
   G4double fMagnetGap;
@@ -347,6 +350,8 @@ private:
   G4double fMagneticVolumeLengthZ;
 
   G4double fMagnetFrontFacePosZ; // Front face of Magnet yoke
+
+  G4double fMagneticFieldConstantValue; // Value of magnetic field in the constant zone
 
   G4String fMagnetSensitiveDetectorName;
 

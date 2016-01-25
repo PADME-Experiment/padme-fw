@@ -15,6 +15,7 @@
 #include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
+//#include "G4BlineTracer.hh"
 
 #include "MagneticFieldSetup.hh"
 #include "MagnetGeometry.hh"
@@ -26,6 +27,9 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
 
   // Connect to MagnetMessenger to enable datacard configuration
   fMagnetMessenger = new MagnetMessenger(this);
+
+  // Magnetic field is ON by default
+  fMagneticField = 1;
 
 }
 
@@ -302,11 +306,21 @@ void MagnetStructure::CreateGeometry()
   //fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
   fMagneticVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
 
-  // Define magnetic field for this volume (and all daughter volumes)
-  MagneticFieldSetup* magField = new MagneticFieldSetup();
-  magField->GetLocalMagneticField()->SetMagneticVolumePosZ(geo->GetMagneticVolumePosZ());
-  magField->GetLocalMagneticField()->SetMagneticVolumeLengthZ(geo->GetMagneticVolumeSizeZ());
-  fMagneticVolume->SetFieldManager(magField->GetLocalFieldManager(),true);
+  if ( fMagneticField == 1 ) {
+
+    // Define magnetic field for this volume (and all daughter volumes)
+    MagneticFieldSetup* magField = new MagneticFieldSetup();
+    magField->GetLocalMagneticField()->SetMagneticVolumePosZ(geo->GetMagneticVolumePosZ());
+    magField->GetLocalMagneticField()->SetMagneticVolumeLengthX(geo->GetMagneticVolumeSizeX());
+    magField->GetLocalMagneticField()->SetMagneticVolumeLengthY(geo->GetMagneticVolumeSizeY());
+    magField->GetLocalMagneticField()->SetMagneticVolumeLengthZ(geo->GetMagneticVolumeSizeZ());
+    magField->GetLocalMagneticField()->SetConstantMagneticFieldValue(geo->GetMagneticFieldConstantValue());
+    fMagneticVolume->SetFieldManager(magField->GetLocalFieldManager(),true);
+
+    // Enable visualziation of filed lines
+    //G4BlineTracer* theBlineTool = new G4BlineTracer();
+
+  }
 
   G4ThreeVector magVolPos = G4ThreeVector(geo->GetMagneticVolumePosX(),geo->GetMagneticVolumePosY(),geo->GetMagneticVolumePosZ());
   new G4PVPlacement(0,magVolPos,fMagneticVolume,"MagneticVolume",fMotherVolume,false,0,false);

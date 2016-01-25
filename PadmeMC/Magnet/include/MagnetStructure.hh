@@ -26,12 +26,17 @@ public:
 
   G4LogicalVolume* GetMagneticVolume() { return fMagneticVolume; }
 
+  void EnableMagneticField()  { fMagneticField = 1; }
+  void DisableMagneticField() { fMagneticField = 0; }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fMagneticVolume;
 
   MagnetMessenger* fMagnetMessenger;
+
+  G4int fMagneticField; // =1 Field ON, =0 Field OFF
 
 };
 

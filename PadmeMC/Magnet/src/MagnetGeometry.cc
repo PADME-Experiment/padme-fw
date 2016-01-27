@@ -22,37 +22,40 @@ MagnetGeometry::MagnetGeometry()
 
   fMagnetGap = 0.1*mm;
 
-  fMagnetSizeZ      = 100.0*cm;
-  fMagnetSizeOuterX = 125.0*cm;
-  fMagnetSizeOuterY = 174.0*cm;
-  fMagnetSizeInnerX =  63.0*cm;
-  fMagnetSizeInnerY = 112.0*cm;
-  fMagnetSizeInBarX =  20.0*cm;
-  fMagnetSizeInBarY =  52.0*cm;
+  fYokeSizeZ      = 100.0*cm;
+  fYokeSizeOuterX = 174.0*cm;
+  fYokeSizeOuterY = 125.0*cm;
+  fYokeSizeInnerX = 112.0*cm;
+  fYokeSizeInnerY =  63.0*cm;
+  fYokeSizeInBarX =  52.0*cm;
+  fYokeSizeInBarY =  20.0*cm;
 
-  fCoilInnerRadius =   5.5*cm;
-  fCoilOuterRadius =  29.0*cm;
-  fCoilLengthX     =  17.0*cm;
-  fCoilLengthY     =  46.0*cm;
-  fCoilLengthZ     =  fMagnetSizeZ;
+  fCoilInnerRadius =   5.5*cm;    // Inner radius of curved sections of coil
+  fCoilOuterRadius =  29.0*cm;    // Outer radius of curved sections of coil
+  fCoilLengthX     =  46.0*cm;    // Length along X of straight sections of coil outside the yoke
+  fCoilLengthY     =  17.0*cm;    // Thickness of coil along Y
+  fCoilLengthZ     =  fYokeSizeZ; // Length along Z of straight sections of coil inside the yoke
 
   fSlabThick   =  2.0*cm;
   fSlabWidth   = 30.0*cm;
-  fSlabLengthZ = fMagnetSizeZ;
+  fSlabLengthZ = fYokeSizeZ;
 
   fRailThick   = 0.6*cm;
   fRailWidth   = 3.0*cm;
-  fRailLengthZ = fMagnetSizeZ;
+  fRailLengthZ = fYokeSizeZ;
 
   fNeopreneThick   =  0.4*cm;
   fNeopreneWidth   = 23.5*cm;
-  fNeopreneLengthZ = fMagnetSizeZ;
+  fNeopreneLengthZ = fYokeSizeZ;
 
-  fMagneticVolumeLengthX = 20.*cm;
-  fMagneticVolumeLengthY = 52.*cm;
-  fMagneticVolumeLengthZ = fMagnetSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
+  //fMagneticVolumeLengthX = 20.*cm;
+  //fMagneticVolumeLengthY = 52.*cm;
+  fMagneticVolumeLengthX = fYokeSizeInnerX;
+  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
+  fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
-  fMagnetFrontFacePosZ = 20.*cm;
+  //fYokeFrontFacePosZ = 20.*cm;
+  fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point
 
   fMagneticFieldConstantValue = 0.45*tesla;
 

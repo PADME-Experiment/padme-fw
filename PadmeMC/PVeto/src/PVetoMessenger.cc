@@ -40,21 +40,19 @@ PVetoMessenger::PVetoMessenger(PVetoDetector* det)
   fSetFingerSizeCmd->SetParameter(fsSizeParameter);
   fSetFingerSizeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  /*
-  fSetPVetoFrontFaceZCmd = new G4UIcommand("/Detector/PVeto/FrontFaceZ",this);
-  fSetPVetoFrontFaceZCmd->SetGuidance("Set position along Z of PVeto front face in cm.");
-  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
-  effPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= 100.");
-  fSetPVetoFrontFaceZCmd->SetParameter(effPosZParameter);
-  fSetPVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
+  fSetFingerLengthCmd = new G4UIcommand("/Detector/PVeto/FingerLength",this);
+  fSetFingerLengthCmd->SetGuidance("Set vertical length of finger in cm.");
+  G4UIparameter* fsLengthParameter = new G4UIparameter("Length",'d',false);
+  fsLengthParameter->SetParameterRange("Length > 0. && Length <= 23.");
+  fSetFingerLengthCmd->SetParameter(fsLengthParameter);
+  fSetFingerLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetPVetoInnerFaceYCmd = new G4UIcommand("/Detector/PVeto/InnerFaceY",this);
-  fSetPVetoInnerFaceYCmd->SetGuidance("Set position along Y of PVeto inner face in cm.");
-  G4UIparameter* pifPosYParameter = new G4UIparameter("PosY",'d',false);
-  pifPosYParameter->SetParameterRange("PosY >= -100. && PosY <= -10.");
-  fSetPVetoInnerFaceYCmd->SetParameter(pifPosYParameter);
-  fSetPVetoInnerFaceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetPVetoInnerFaceXCmd = new G4UIcommand("/Detector/PVeto/InnerFaceX",this);
+  fSetPVetoInnerFaceXCmd->SetGuidance("Set position along X of PVeto inner face in cm.");
+  G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
+  pifPosXParameter->SetParameterRange("PosX > 0. && PosY <= 56.");
+  fSetPVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
+  fSetPVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -65,8 +63,8 @@ PVetoMessenger::~PVetoMessenger()
 
   delete fSetPVetoNFingersCmd;
   delete fSetFingerSizeCmd;
-  //delete fSetPVetoFrontFaceZCmd;
-  delete fSetPVetoInnerFaceYCmd;
+  delete fSetFingerLengthCmd;
+  delete fSetPVetoInnerFaceXCmd;
 
 }
 
@@ -80,20 +78,18 @@ void PVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetFingerSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fPVetoGeometry->SetFingerNominalSizeY(s*cm);
+    fPVetoGeometry->SetFingerNominalSizeX(s*cm);
     fPVetoGeometry->SetFingerNominalSizeZ(s*cm);
   }
 
-  /*
-  if ( cmd == fSetPVetoFrontFaceZCmd ) {
-    G4double z; std::istringstream is(par); is >> z;
-    fPVetoGeometry->SetPVetoFrontFacePosZ(z*cm);
+  if ( cmd == fSetFingerLengthCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fPVetoGeometry->SetFingerNominalSizeY(s*cm);
   }
-  */
 
-  if ( cmd == fSetPVetoInnerFaceYCmd ) {
+  if ( cmd == fSetPVetoInnerFaceXCmd ) {
     G4double y; std::istringstream is(par); is >> y;
-    fPVetoGeometry->SetPVetoInnerFacePosY(y*cm);
+    fPVetoGeometry->SetPVetoInnerFacePosX(y*cm);
   }
 
 }

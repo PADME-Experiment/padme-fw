@@ -7,13 +7,26 @@
 MagneticFieldMap::MagneticFieldMap()
 {
 
+  // Default value: can be changed with set method
   fConstantMagneticField = 0.32*tesla;
+
+  fConstantMagneticFieldXmin = -26.0*cm;
+  fConstantMagneticFieldXmax =  26.0*cm;
+
+  //fConstantMagneticFieldYmin = -26.0*cm;
+  //fConstantMagneticFieldYmax =  26.0*cm;
 
   fConstantMagneticFieldZmin = -37.5*cm;
   fConstantMagneticFieldZmax =  37.5*cm;
 
   fSigmaFront = 22.5*cm;
   fSigmaBack  = 22.5*cm;
+
+  // These must be set by the creator of the volume before using it
+  fMagneticVolumePosZ = 0.;
+  fMagneticVolumeLengthX = 0.;
+  fMagneticVolumeLengthY = 0.;
+  fMagneticVolumeLengthZ = 0.;
 
 }
 
@@ -34,6 +47,9 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
        (z<-0.5*fMagneticVolumeLengthZ) || (z>0.5*fMagneticVolumeLengthZ) ) {
     // Field outside magnetic volume is always null
     B0 = 0.;
+  } else if (x<fConstantMagneticFieldXmin || x>fConstantMagneticFieldXmax) {
+    // Will need a function/map to smoothly send B0 to 0 along X
+    B0 = 0.;
   } else if (z<fConstantMagneticFieldZmin) {
     // Use gaussian to model upstream magnetic field rise
     G4double dZS = (z-fConstantMagneticFieldZmin)/fSigmaFront;
@@ -44,21 +60,13 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
     B0 = exp(-dZS*dZS);
   }
 
-  /*
-  // Trapezoid approximation. Will be replaced with a real map
-  if (z<0) z = -z;
-  if ( z > 40. ) {
-    B0 -= 0.03*(z-40.);
-    if ( B0 < 0. ) B0 = 0.;
-  }
-  */
-
-  B[0] = -fConstantMagneticField*B0;
-  B[1] = 0.;
+  // Field lines are directed along Y
+  B[0] = 0.;
+  B[1] = -fConstantMagneticField*B0;
   B[2] = 0.;
 
-  printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is %7.4f tesla\n",x/cm,y/cm,z/cm,B[0]/tesla);
-  //G4cout << "Magnetic field at ( " << G4BestUnit(x,"Length") << " , " << G4BestUnit(y,"Length") << " , " << G4BestUnit(z,"Length") << " ) is " << B[0]/tesla << " tesla" << G4endl;
-  //G4cout << "Magnetic field at ( " << x/cm << " , " << y/cm << " , " << z/cm << " ) is " << B[0]/tesla << " tesla" << G4endl;
+  // Used for debug: comment out to reduce output
+  printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is (%7.4f,%7.4f,%7.4f) tesla\n",
+	 x/cm,y/cm,z/cm,B[0]/tesla,B[1]/tesla,B[2]/tesla);
 
 }

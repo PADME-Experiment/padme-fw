@@ -20,16 +20,15 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerNominalSizeX = 19.8*cm;
-  fFingerNominalSizeY =  1.0*cm;
+  fFingerNominalSizeX =  1.0*cm;
+  fFingerNominalSizeY = 18.0*cm;
   fFingerNominalSizeZ =  1.0*cm;
 
   fEVetoNFingers = 100;
 
   fFingerGap = 0.1*mm;
 
-  //fEVetoFrontFacePosZ = -50.*cm;
-  fEVetoInnerFacePosY = 20.*cm;
+  fEVetoInnerFacePosX = -22.*cm;
 
   fEVetoSensitiveDetectorName = "EVetoSD";
 
@@ -40,18 +39,17 @@ EVetoGeometry::~EVetoGeometry()
 
 G4double EVetoGeometry::GetEVetoPosX()
 {
-  return 0.;
+  return fEVetoInnerFacePosX-GetEVetoSizeX()*0.5;
 }
 
 G4double EVetoGeometry::GetEVetoPosY()
 {
-  return fEVetoInnerFacePosY+GetEVetoSizeY()*0.5;
+  return 0.;
 }
 
 G4double EVetoGeometry::GetEVetoPosZ()
 {
   return 0.;
-  //return fEVetoFrontFacePosZ+GetEVetoSizeZ()*0.5;
 }
 
 G4double EVetoGeometry::GetEVetoSizeX()

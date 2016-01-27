@@ -20,8 +20,8 @@ PVetoGeometry::PVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerNominalSizeX = 19.8*cm;
-  fFingerNominalSizeY =  1.0*cm;
+  fFingerNominalSizeX =  1.0*cm;
+  fFingerNominalSizeY = 18.0*cm;
   fFingerNominalSizeZ =  1.0*cm;
 
   fPVetoNFingers = 100;
@@ -29,7 +29,7 @@ PVetoGeometry::PVetoGeometry()
   fFingerGap = 0.1*mm;
 
   //fPVetoFrontFacePosZ = -50.*cm;
-  fPVetoInnerFacePosY = -20.*cm;
+  fPVetoInnerFacePosX = 22.*cm; // Along X fingers are positioned just inside magnet rail
 
   fPVetoSensitiveDetectorName = "PVetoSD";
 
@@ -40,18 +40,17 @@ PVetoGeometry::~PVetoGeometry()
 
 G4double PVetoGeometry::GetPVetoPosX()
 {
-  return 0.;
+  return fPVetoInnerFacePosX+GetPVetoSizeX()*0.5;
 }
 
 G4double PVetoGeometry::GetPVetoPosY()
 {
-  return fPVetoInnerFacePosY-GetPVetoSizeY()*0.5;
+  return 0.;
 }
 
 G4double PVetoGeometry::GetPVetoPosZ()
 {
-  return 0.;
-  //return fPVetoFrontFacePosZ+GetPVetoSizeZ()*0.5;
+  return 0.; // Centered within MagneticVolume
 }
 
 G4double PVetoGeometry::GetPVetoSizeX()
@@ -91,7 +90,7 @@ G4double PVetoGeometry::GetFingerPosX(G4int idx)
     printf("PVetoGeometry::GetFingerPosX - ERROR - Requested finger at index %d\n",idx);
     return 0.;
   }
-  return 0;
+  return 0.;
 }
 
 G4double PVetoGeometry::GetFingerPosY(G4int idx)
@@ -101,7 +100,7 @@ G4double PVetoGeometry::GetFingerPosY(G4int idx)
     printf("PVetoGeometry::GetFingerPosY - ERROR - Requested finger at index %d\n",idx);
     return 0.;
   }
-  return 0;
+  return 0.;
 }
 
 G4double PVetoGeometry::GetFingerPosZ(G4int idx)

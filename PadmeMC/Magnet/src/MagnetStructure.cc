@@ -47,66 +47,64 @@ void MagnetStructure::CreateGeometry()
   G4double magGap = geo->GetMagnetGap();
 
   // Create and position upper part of magnet yoke
-  G4double magUpSizeX = geo->GetMagnetUpSizeX();
-  G4double magUpSizeY = geo->GetMagnetUpSizeY();
-  G4double magUpSizeZ = geo->GetMagnetUpSizeZ();
-  G4Box* magUpSolid = new G4Box("MagnetUp",0.5*(magUpSizeX-magGap),0.5*(magUpSizeY-magGap),0.5*(magUpSizeZ-magGap));
-  G4LogicalVolume* magUpVolume = new G4LogicalVolume(magUpSolid,G4Material::GetMaterial("G4_Fe"),"MagnetUp",0,0,0);
-  magUpVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
-  G4ThreeVector magUpPos = G4ThreeVector(geo->GetMagnetUpPosX(),geo->GetMagnetUpPosY(),geo->GetMagnetUpPosZ());
-  new G4PVPlacement(0,magUpPos,magUpVolume,"MagnetUp",fMotherVolume,false,0,false);
+  G4double yokeUpSizeX = geo->GetYokeUpSizeX();
+  G4double yokeUpSizeY = geo->GetYokeUpSizeY();
+  G4double yokeUpSizeZ = geo->GetYokeUpSizeZ();
+  G4Box* yokeUpSolid = new G4Box("YokeUp",0.5*(yokeUpSizeX-magGap),0.5*(yokeUpSizeY-magGap),0.5*(yokeUpSizeZ-magGap));
+  G4LogicalVolume* yokeUpVolume = new G4LogicalVolume(yokeUpSolid,G4Material::GetMaterial("G4_Fe"),"YokeUp",0,0,0);
+  yokeUpVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
+  G4ThreeVector yokeUpPos = G4ThreeVector(geo->GetYokeUpPosX(),geo->GetYokeUpPosY(),geo->GetYokeUpPosZ());
+  new G4PVPlacement(0,yokeUpPos,yokeUpVolume,"YokeUp",fMotherVolume,false,0,false);
 
   // Create and position lower part of magnet yoke
-  G4double magDownSizeX = geo->GetMagnetDownSizeX();
-  G4double magDownSizeY = geo->GetMagnetDownSizeY();
-  G4double magDownSizeZ = geo->GetMagnetDownSizeZ();
-  G4Box* magDownSolid = new G4Box("MagnetDown",0.5*(magDownSizeX-magGap),0.5*(magDownSizeY-magGap),0.5*(magDownSizeZ-magGap));
-  G4LogicalVolume* magDownVolume = new G4LogicalVolume(magDownSolid,G4Material::GetMaterial("G4_Fe"),"MagnetDown",0,0,0);
-  magDownVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
-  G4ThreeVector magDownPos = G4ThreeVector(geo->GetMagnetDownPosX(),geo->GetMagnetDownPosY(),geo->GetMagnetDownPosZ());
-  new G4PVPlacement(0,magDownPos,magDownVolume,"MagnetDown",fMotherVolume,false,0,false);
+  G4double yokeDownSizeX = geo->GetYokeDownSizeX();
+  G4double yokeDownSizeY = geo->GetYokeDownSizeY();
+  G4double yokeDownSizeZ = geo->GetYokeDownSizeZ();
+  G4Box* yokeDownSolid = new G4Box("YokeDown",0.5*(yokeDownSizeX-magGap),0.5*(yokeDownSizeY-magGap),0.5*(yokeDownSizeZ-magGap));
+  G4LogicalVolume* yokeDownVolume = new G4LogicalVolume(yokeDownSolid,G4Material::GetMaterial("G4_Fe"),"YokeDown",0,0,0);
+  yokeDownVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
+  G4ThreeVector yokeDownPos = G4ThreeVector(geo->GetYokeDownPosX(),geo->GetYokeDownPosY(),geo->GetYokeDownPosZ());
+  new G4PVPlacement(0,yokeDownPos,yokeDownVolume,"YokeDown",fMotherVolume,false,0,false);
 
   // Create and position right part of magnet yoke
-  G4double magRightSizeX = geo->GetMagnetRightSizeX();
-  G4double magRightSizeY = geo->GetMagnetRightSizeY();
-  G4double magRightSizeZ = geo->GetMagnetRightSizeZ();
-  G4Box* magRightSolid = new G4Box("MagnetRight",0.5*(magRightSizeX-magGap),0.5*(magRightSizeY-magGap),0.5*(magRightSizeZ-magGap));
-  G4LogicalVolume* magRightVolume = new G4LogicalVolume(magRightSolid,G4Material::GetMaterial("G4_Fe"),"MagnetRight",0,0,0);
-  magRightVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
-  G4ThreeVector magRightPos = G4ThreeVector(geo->GetMagnetRightPosX(),geo->GetMagnetRightPosY(),geo->GetMagnetRightPosZ());
-  new G4PVPlacement(0,magRightPos,magRightVolume,"MagnetRight",fMotherVolume,false,0,false);
+  G4double yokeRightSizeX = geo->GetYokeRightSizeX();
+  G4double yokeRightSizeY = geo->GetYokeRightSizeY();
+  G4double yokeRightSizeZ = geo->GetYokeRightSizeZ();
+  G4Box* yokeRightSolid = new G4Box("YokeRight",0.5*(yokeRightSizeX-magGap),0.5*(yokeRightSizeY-magGap),0.5*(yokeRightSizeZ-magGap));
+  G4LogicalVolume* yokeRightVolume = new G4LogicalVolume(yokeRightSolid,G4Material::GetMaterial("G4_Fe"),"YokeRight",0,0,0);
+  yokeRightVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
+  G4ThreeVector yokeRightPos = G4ThreeVector(geo->GetYokeRightPosX(),geo->GetYokeRightPosY(),geo->GetYokeRightPosZ());
+  new G4PVPlacement(0,yokeRightPos,yokeRightVolume,"YokeRight",fMotherVolume,false,0,false);
 
   // Create and position left part of magnet yoke
-  G4double magLeftSizeX = geo->GetMagnetLeftSizeX();
-  G4double magLeftSizeY = geo->GetMagnetLeftSizeY();
-  G4double magLeftSizeZ = geo->GetMagnetLeftSizeZ();
-  G4Box* magLeftSolid = new G4Box("MagnetLeft",0.5*(magLeftSizeX-magGap),0.5*(magLeftSizeY-magGap),0.5*(magLeftSizeZ-magGap));
-  G4LogicalVolume* magLeftVolume = new G4LogicalVolume(magLeftSolid,G4Material::GetMaterial("G4_Fe"),"MagnetLeft",0,0,0);
-  magLeftVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
-  G4ThreeVector magLeftPos = G4ThreeVector(geo->GetMagnetLeftPosX(),geo->GetMagnetLeftPosY(),geo->GetMagnetLeftPosZ());
-  new G4PVPlacement(0,magLeftPos,magLeftVolume,"MagnetLeft",fMotherVolume,false,0,false);
+  G4double yokeLeftSizeX = geo->GetYokeLeftSizeX();
+  G4double yokeLeftSizeY = geo->GetYokeLeftSizeY();
+  G4double yokeLeftSizeZ = geo->GetYokeLeftSizeZ();
+  G4Box* yokeLeftSolid = new G4Box("YokeLeft",0.5*(yokeLeftSizeX-magGap),0.5*(yokeLeftSizeY-magGap),0.5*(yokeLeftSizeZ-magGap));
+  G4LogicalVolume* yokeLeftVolume = new G4LogicalVolume(yokeLeftSolid,G4Material::GetMaterial("G4_Fe"),"YokeLeft",0,0,0);
+  yokeLeftVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Green()));
+  G4ThreeVector yokeLeftPos = G4ThreeVector(geo->GetYokeLeftPosX(),geo->GetYokeLeftPosY(),geo->GetYokeLeftPosZ());
+  new G4PVPlacement(0,yokeLeftPos,yokeLeftVolume,"YokeLeft",fMotherVolume,false,0,false);
 
   // Create and position upper bar part of magnet yoke
-  //G4cout << "Bar size " << geo->GetMagnetUpBarSizeX() << " " << geo->GetMagnetUpBarSizeY() << " " << geo->GetMagnetUpBarSizeZ() << G4endl;
-  //G4cout << "Bar position " << geo->GetMagnetUpBarPosX() << " " << geo->GetMagnetUpBarPosY() << " " << geo->GetMagnetUpBarPosZ() << G4endl;
-  G4double magUpBarSizeX = geo->GetMagnetUpBarSizeX();
-  G4double magUpBarSizeY = geo->GetMagnetUpBarSizeY();
-  G4double magUpBarSizeZ = geo->GetMagnetUpBarSizeZ();
-  G4Box* magUpBarSolid = new G4Box("MagnetUpBar",0.5*(magUpBarSizeX-magGap),0.5*(magUpBarSizeY-magGap),0.5*(magUpBarSizeZ-magGap));
-  G4LogicalVolume* magUpBarVolume = new G4LogicalVolume(magUpBarSolid,G4Material::GetMaterial("G4_Fe"),"MagnetUpBar",0,0,0);
-  magUpBarVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Grey()));
-  G4ThreeVector magUpBarPos = G4ThreeVector(geo->GetMagnetUpBarPosX(),geo->GetMagnetUpBarPosY(),geo->GetMagnetUpBarPosZ());
-  new G4PVPlacement(0,magUpBarPos,magUpBarVolume,"MagnetUpBar",fMotherVolume,false,0,false);
+  G4double yokeUpBarSizeX = geo->GetYokeUpBarSizeX();
+  G4double yokeUpBarSizeY = geo->GetYokeUpBarSizeY();
+  G4double yokeUpBarSizeZ = geo->GetYokeUpBarSizeZ();
+  G4Box* yokeUpBarSolid = new G4Box("YokeUpBar",0.5*(yokeUpBarSizeX-magGap),0.5*(yokeUpBarSizeY-magGap),0.5*(yokeUpBarSizeZ-magGap));
+  G4LogicalVolume* yokeUpBarVolume = new G4LogicalVolume(yokeUpBarSolid,G4Material::GetMaterial("G4_Fe"),"YokeUpBar",0,0,0);
+  yokeUpBarVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Grey()));
+  G4ThreeVector yokeUpBarPos = G4ThreeVector(geo->GetYokeUpBarPosX(),geo->GetYokeUpBarPosY(),geo->GetYokeUpBarPosZ());
+  new G4PVPlacement(0,yokeUpBarPos,yokeUpBarVolume,"YokeUpBar",fMotherVolume,false,0,false);
 
   // Create and position lower bar part of magnet yoke
-  G4double magDownBarSizeX = geo->GetMagnetDownBarSizeX();
-  G4double magDownBarSizeY = geo->GetMagnetDownBarSizeY();
-  G4double magDownBarSizeZ = geo->GetMagnetDownBarSizeZ();
-  G4Box* magDownBarSolid = new G4Box("MagnetDownBar",0.5*(magDownBarSizeX-magGap),0.5*(magDownBarSizeY-magGap),0.5*(magDownBarSizeZ-magGap));
-  G4LogicalVolume* magDownBarVolume = new G4LogicalVolume(magDownBarSolid,G4Material::GetMaterial("G4_Fe"),"MagnetDownBar",0,0,0);
-  magDownBarVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Grey()));
-  G4ThreeVector magDownBarPos = G4ThreeVector(geo->GetMagnetDownBarPosX(),geo->GetMagnetDownBarPosY(),geo->GetMagnetDownBarPosZ());
-  new G4PVPlacement(0,magDownBarPos,magDownBarVolume,"MagnetDownBar",fMotherVolume,false,0,false);
+  G4double yokeDownBarSizeX = geo->GetYokeDownBarSizeX();
+  G4double yokeDownBarSizeY = geo->GetYokeDownBarSizeY();
+  G4double yokeDownBarSizeZ = geo->GetYokeDownBarSizeZ();
+  G4Box* yokeDownBarSolid = new G4Box("YokeDownBar",0.5*(yokeDownBarSizeX-magGap),0.5*(yokeDownBarSizeY-magGap),0.5*(yokeDownBarSizeZ-magGap));
+  G4LogicalVolume* yokeDownBarVolume = new G4LogicalVolume(yokeDownBarSolid,G4Material::GetMaterial("G4_Fe"),"YokeDownBar",0,0,0);
+  yokeDownBarVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Grey()));
+  G4ThreeVector yokeDownBarPos = G4ThreeVector(geo->GetYokeDownBarPosX(),geo->GetYokeDownBarPosY(),geo->GetYokeDownBarPosZ());
+  new G4PVPlacement(0,yokeDownBarPos,yokeDownBarVolume,"YokeDownBar",fMotherVolume,false,0,false);
 
   // Create coils
 
@@ -160,53 +158,53 @@ void MagnetStructure::CreateGeometry()
 
   G4double coilInnR = geo->GetCoilInnerRadius();
   G4double coilOutR = geo->GetCoilOuterRadius();
-  G4double coilSizeX = geo->GetCoilSizeX();
+  G4double coilSizeY = geo->GetCoilSizeY();
   G4RotationMatrix* coilRot = new G4RotationMatrix();
-  coilRot->rotateY(90.*deg);
+  coilRot->rotateX(90.*deg);
 
-  G4Tubs* coilUFLSolid = new G4Tubs("CoilUFL",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilUFLAngle(),90.*deg);
+  G4Tubs* coilUFLSolid = new G4Tubs("CoilUFL",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilUFLAngle(),90.*deg);
   G4LogicalVolume* coilUFLVolume = new G4LogicalVolume(coilUFLSolid,G4Material::GetMaterial("G4_Cu"),"CoilUFL",0,0,0);
   coilUFLVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilUFLPos = G4ThreeVector(geo->GetCoilUFLPosX(),geo->GetCoilUFLPosY(),geo->GetCoilUFLPosZ());
   new G4PVPlacement(coilRot,coilUFLPos,coilUFLVolume,"CoilUFL",fMotherVolume,false,0,false);
 
-  G4Tubs* coilUFRSolid = new G4Tubs("CoilUFR",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilUFRAngle(),90.*deg);
+  G4Tubs* coilUFRSolid = new G4Tubs("CoilUFR",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilUFRAngle(),90.*deg);
   G4LogicalVolume* coilUFRVolume = new G4LogicalVolume(coilUFRSolid,G4Material::GetMaterial("G4_Cu"),"CoilUFR",0,0,0);
   coilUFRVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilUFRPos = G4ThreeVector(geo->GetCoilUFRPosX(),geo->GetCoilUFRPosY(),geo->GetCoilUFRPosZ());
   new G4PVPlacement(coilRot,coilUFRPos,coilUFRVolume,"CoilUFR",fMotherVolume,false,0,false);
 
-  G4Tubs* coilUBLSolid = new G4Tubs("CoilUBL",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilUBLAngle(),90.*deg);
+  G4Tubs* coilUBLSolid = new G4Tubs("CoilUBL",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilUBLAngle(),90.*deg);
   G4LogicalVolume* coilUBLVolume = new G4LogicalVolume(coilUBLSolid,G4Material::GetMaterial("G4_Cu"),"CoilUBL",0,0,0);
   coilUBLVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilUBLPos = G4ThreeVector(geo->GetCoilUBLPosX(),geo->GetCoilUBLPosY(),geo->GetCoilUBLPosZ());
   new G4PVPlacement(coilRot,coilUBLPos,coilUBLVolume,"CoilUBL",fMotherVolume,false,0,false);
 
-  G4Tubs* coilUBRSolid = new G4Tubs("CoilUBR",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilUBRAngle(),90.*deg);
+  G4Tubs* coilUBRSolid = new G4Tubs("CoilUBR",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilUBRAngle(),90.*deg);
   G4LogicalVolume* coilUBRVolume = new G4LogicalVolume(coilUBRSolid,G4Material::GetMaterial("G4_Cu"),"CoilUBR",0,0,0);
   coilUBRVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilUBRPos = G4ThreeVector(geo->GetCoilUBRPosX(),geo->GetCoilUBRPosY(),geo->GetCoilUBRPosZ());
   new G4PVPlacement(coilRot,coilUBRPos,coilUBRVolume,"CoilUBR",fMotherVolume,false,0,false);
 
-  G4Tubs* coilDFLSolid = new G4Tubs("CoilDFL",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilDFLAngle(),90.*deg);
+  G4Tubs* coilDFLSolid = new G4Tubs("CoilDFL",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilDFLAngle(),90.*deg);
   G4LogicalVolume* coilDFLVolume = new G4LogicalVolume(coilDFLSolid,G4Material::GetMaterial("G4_Cu"),"CoilDFL",0,0,0);
   coilDFLVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilDFLPos = G4ThreeVector(geo->GetCoilDFLPosX(),geo->GetCoilDFLPosY(),geo->GetCoilDFLPosZ());
   new G4PVPlacement(coilRot,coilDFLPos,coilDFLVolume,"CoilDFL",fMotherVolume,false,0,false);
 
-  G4Tubs* coilDFRSolid = new G4Tubs("CoilDFR",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilDFRAngle(),90.*deg);
+  G4Tubs* coilDFRSolid = new G4Tubs("CoilDFR",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilDFRAngle(),90.*deg);
   G4LogicalVolume* coilDFRVolume = new G4LogicalVolume(coilDFRSolid,G4Material::GetMaterial("G4_Cu"),"CoilDFR",0,0,0);
   coilDFRVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilDFRPos = G4ThreeVector(geo->GetCoilDFRPosX(),geo->GetCoilDFRPosY(),geo->GetCoilDFRPosZ());
   new G4PVPlacement(coilRot,coilDFRPos,coilDFRVolume,"CoilDFR",fMotherVolume,false,0,false);
 
-  G4Tubs* coilDBLSolid = new G4Tubs("CoilDBL",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilDBLAngle(),90.*deg);
+  G4Tubs* coilDBLSolid = new G4Tubs("CoilDBL",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilDBLAngle(),90.*deg);
   G4LogicalVolume* coilDBLVolume = new G4LogicalVolume(coilDBLSolid,G4Material::GetMaterial("G4_Cu"),"CoilDBL",0,0,0);
   coilDBLVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilDBLPos = G4ThreeVector(geo->GetCoilDBLPosX(),geo->GetCoilDBLPosY(),geo->GetCoilDBLPosZ());
   new G4PVPlacement(coilRot,coilDBLPos,coilDBLVolume,"CoilDBL",fMotherVolume,false,0,false);
 
-  G4Tubs* coilDBRSolid = new G4Tubs("CoilDBR",coilInnR,coilOutR,0.5*coilSizeX,geo->GetCoilDBRAngle(),90.*deg);
+  G4Tubs* coilDBRSolid = new G4Tubs("CoilDBR",coilInnR,coilOutR,0.5*coilSizeY,geo->GetCoilDBRAngle(),90.*deg);
   G4LogicalVolume* coilDBRVolume = new G4LogicalVolume(coilDBRSolid,G4Material::GetMaterial("G4_Cu"),"CoilDBR",0,0,0);
   coilDBRVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
   G4ThreeVector coilDBRPos = G4ThreeVector(geo->GetCoilDBRPosX(),geo->GetCoilDBRPosY(),geo->GetCoilDBRPosZ());
@@ -293,8 +291,8 @@ void MagnetStructure::CreateGeometry()
   printf("Registering Magnet SD %s\n",magnetSDName.data());
   MagnetSD* magnetSD = new MagnetSD(magnetSDName);
   sdMan->AddNewDetector(magnetSD);
-  magUpBarVolume->SetSensitiveDetector(magnetSD);
-  magDownBarVolume->SetSensitiveDetector(magnetSD);
+  yokeUpBarVolume->SetSensitiveDetector(magnetSD);
+  yokeDownBarVolume->SetSensitiveDetector(magnetSD);
   railVolume->SetSensitiveDetector(magnetSD);
 
   // Create magnetic volume inside the magnet

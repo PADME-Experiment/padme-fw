@@ -63,8 +63,8 @@ public:
   // Set position along Z of PVeto front face
   //void SetPVetoFrontFacePosZ(G4double z) { fPVetoFrontFacePosZ = z; }
 
-  // Set position along Y of PVeto internal face
-  void SetPVetoInnerFacePosY(G4double y) { fPVetoInnerFacePosY = y; }
+  // Set position along X of PVeto internal face
+  void SetPVetoInnerFacePosX(G4double x) { fPVetoInnerFacePosX = x; }
 
   // Get name of PVeto sensitive detector
   G4String GetPVetoSensitiveDetectorName() { return fPVetoSensitiveDetectorName; }
@@ -80,7 +80,7 @@ private:
   G4double fFingerGap; // Gap size between adjacent fingers
 
   //G4double fPVetoFrontFacePosZ; // Position along Z axis of PVeto front face
-  G4double fPVetoInnerFacePosY; // Position along Y axis of PVeto inner face
+  G4double fPVetoInnerFacePosX; // Position along Y axis of PVeto inner face
 
   G4String fPVetoSensitiveDetectorName;
 

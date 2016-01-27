@@ -60,11 +60,8 @@ public:
   void SetFingerNominalSizeY(G4double s) { fFingerNominalSizeY = s; }
   void SetFingerNominalSizeZ(G4double s) { fFingerNominalSizeZ = s; }
 
-  // Set position along Z of EVeto front face
-  //void SetEVetoFrontFacePosZ(G4double z) { fEVetoFrontFacePosZ = z; }
-
-  // Set position along Y of EVeto internal face
-  void SetEVetoInnerFacePosY(G4double y) { fEVetoInnerFacePosY = y; }
+  // Set position along X of EVeto internal face
+  void SetEVetoInnerFacePosX(G4double x) { fEVetoInnerFacePosX = x; }
 
   // Get name of EVeto sensitive detector
   G4String GetEVetoSensitiveDetectorName() { return fEVetoSensitiveDetectorName; }
@@ -79,8 +76,7 @@ private:
 
   G4double fFingerGap; // Gap size between adjacent fingers
 
-  //G4double fEVetoFrontFacePosZ; // Position along Z axis of EVeto front face
-  G4double fEVetoInnerFacePosY; // Position along Y axis of EVeto inner face
+  G4double fEVetoInnerFacePosX; // Position along X axis of EVeto inner face
 
   G4String fEVetoSensitiveDetectorName;
 

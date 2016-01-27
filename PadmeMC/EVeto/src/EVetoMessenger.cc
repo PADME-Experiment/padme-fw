@@ -40,21 +40,19 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
   fSetFingerSizeCmd->SetParameter(fsSizeParameter);
   fSetFingerSizeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  /*
-  fSetEVetoFrontFaceZCmd = new G4UIcommand("/Detector/EVeto/FrontFaceZ",this);
-  fSetEVetoFrontFaceZCmd->SetGuidance("Set position along Z of EVeto front face in cm.");
-  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
-  effPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= 100.");
-  fSetEVetoFrontFaceZCmd->SetParameter(effPosZParameter);
-  fSetEVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
+  fSetFingerLengthCmd = new G4UIcommand("/Detector/EVeto/FingerLength",this);
+  fSetFingerLengthCmd->SetGuidance("Set vertical length of finger in cm.");
+  G4UIparameter* fsLengthParameter = new G4UIparameter("Length",'d',false);
+  fsLengthParameter->SetParameterRange("Length > 0. && Length <= 23.");
+  fSetFingerLengthCmd->SetParameter(fsLengthParameter);
+  fSetFingerLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetEVetoInnerFaceYCmd = new G4UIcommand("/Detector/EVeto/InnerFaceY",this);
-  fSetEVetoInnerFaceYCmd->SetGuidance("Set position along Y of EVeto inner face in cm.");
-  G4UIparameter* pifPosYParameter = new G4UIparameter("PosY",'d',false);
-  pifPosYParameter->SetParameterRange("PosY >= 10. && PosY <= 100.");
-  fSetEVetoInnerFaceYCmd->SetParameter(pifPosYParameter);
-  fSetEVetoInnerFaceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetEVetoInnerFaceXCmd = new G4UIcommand("/Detector/EVeto/InnerFaceX",this);
+  fSetEVetoInnerFaceXCmd->SetGuidance("Set position along X of EVeto inner face in cm.");
+  G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
+  pifPosXParameter->SetParameterRange("PosX < 0. && PosX >= 55.");
+  fSetEVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
+  fSetEVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -65,8 +63,9 @@ EVetoMessenger::~EVetoMessenger()
 
   delete fSetEVetoNFingersCmd;
   delete fSetFingerSizeCmd;
-  //delete fSetEVetoFrontFaceZCmd;
-  delete fSetEVetoInnerFaceYCmd;
+  delete fSetFingerLengthCmd;
+
+  delete fSetEVetoInnerFaceXCmd;
 
 }
 
@@ -84,16 +83,9 @@ void EVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fEVetoGeometry->SetFingerNominalSizeZ(s*cm);
   }
 
-  /*
-  if ( cmd == fSetEVetoFrontFaceZCmd ) {
-    G4double z; std::istringstream is(par); is >> z;
-    fEVetoGeometry->SetEVetoFrontFacePosZ(z*cm);
-  }
-  */
-
-  if ( cmd == fSetEVetoInnerFaceYCmd ) {
-    G4double y; std::istringstream is(par); is >> y;
-    fEVetoGeometry->SetEVetoInnerFacePosY(y*cm);
+  if ( cmd == fSetEVetoInnerFaceXCmd ) {
+    G4double x; std::istringstream is(par); is >> x;
+    fEVetoGeometry->SetEVetoInnerFacePosX(x*cm);
   }
 
 }

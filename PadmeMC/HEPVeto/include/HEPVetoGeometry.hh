@@ -42,12 +42,12 @@ public:
   G4double GetHEPVetoRotZ() { return fHEPVetoRotZ; }
 
   // Size of HEPVeto box
-  G4double GetHEPVetoSizeX();
-  G4double GetHEPVetoSizeY();
-  G4double GetHEPVetoSizeZ();
+  G4double GetHEPVetoSizeX() { return fFingerNominalSizeX; }
+  G4double GetHEPVetoSizeY() { return fFingerNominalSizeY; }
+  G4double GetHEPVetoSizeZ() { return fFingerNominalSizeZ*fHEPVetoNFingers; }
 
   // Number of fingers in HEPVeto
-  G4int GetHEPVetoNFingers() { return fHEPVetoNFingers; }
+  G4int GetHEPVetoNFingers()        { return fHEPVetoNFingers; }
   void  SetHEPVetoNFingers(G4int f) { fHEPVetoNFingers = f; }
 
   // Position of center of finger at given index
@@ -56,9 +56,9 @@ public:
   G4double GetFingerPosZ(G4int);
 
   // Size of HEPVeto scintillator fingers
-  G4double GetFingerSizeX();
-  G4double GetFingerSizeY();
-  G4double GetFingerSizeZ();
+  G4double GetFingerSizeX() { return fFingerNominalSizeX-fFingerGap; }
+  G4double GetFingerSizeY() { return fFingerNominalSizeY-fFingerGap; }
+  G4double GetFingerSizeZ() { return fFingerNominalSizeZ-fFingerGap; }
 
   // Set nominal size of finger
   void SetFingerNominalSizeX(G4double s) { fFingerNominalSizeX = s; }
@@ -66,13 +66,13 @@ public:
   void SetFingerNominalSizeZ(G4double s) { fFingerNominalSizeZ = s; }
 
   // Set position of HEPVeto center
-  //void SetHEPVetoPosX(G4double x) { fHEPVetoCenterPosX = x; }
-  void SetHEPVetoPosY(G4double y) { fHEPVetoCenterPosY = y; }
+  void SetHEPVetoPosX(G4double x) { fHEPVetoCenterPosX = x; }
+  //void SetHEPVetoPosY(G4double y) { fHEPVetoCenterPosY = y; } // Always centered at 0
   void SetHEPVetoPosZ(G4double z) { fHEPVetoCenterPosZ = z; }
 
   // Set rotation angles of HEPVeto
-  void SetHEPVetoRotX(G4double a) { fHEPVetoRotX = a; }
-  //void SetHEPVetoRotY(G4double a) { fHEPVetoRotY = a; }
+  //void SetHEPVetoRotX(G4double a) { fHEPVetoRotX = a; }
+  void SetHEPVetoRotY(G4double a) { fHEPVetoRotY = a; } // Can rotate only around Y axis
   //void SetHEPVetoRotZ(G4double a) { fHEPVetoRotZ = a; }
 
   // Get name of HEPVeto sensitive detector

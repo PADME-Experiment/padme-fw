@@ -47,42 +47,42 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
   fSetFingerLengthCmd->SetParameter(flLenParameter);
   fSetFingerLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  /*
   fSetHEPVetoPosXCmd = new G4UIcommand("/Detector/HEPVeto/PositionX",this);
   fSetHEPVetoPosXCmd->SetGuidance("Set position along X of HEPVeto center in cm.");
   G4UIparameter* pxPosXParameter = new G4UIparameter("PosX",'d',false);
-  pxPosXParameter->SetParameterRange("PosX >= -10. && PosX <= 10.");
+  pxPosXParameter->SetParameterRange("PosX > 0. && PosX <= 100.");
   fSetHEPVetoPosXCmd->SetParameter(pxPosXParameter);
   fSetHEPVetoPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
 
+  /*
   fSetHEPVetoPosYCmd = new G4UIcommand("/Detector/HEPVeto/PositionY",this);
   fSetHEPVetoPosYCmd->SetGuidance("Set position along Y of HEPVeto center in cm.");
   G4UIparameter* pyPosYParameter = new G4UIparameter("PosY",'d',false);
   pyPosYParameter->SetParameterRange("PosY >= -1000. && PosY <= -50.");
   fSetHEPVetoPosYCmd->SetParameter(pyPosYParameter);
   fSetHEPVetoPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  */
 
   fSetHEPVetoPosZCmd = new G4UIcommand("/Detector/HEPVeto/PositionZ",this);
   fSetHEPVetoPosZCmd->SetGuidance("Set position along Z of HEPVeto center in cm.");
   G4UIparameter* pzPosZParameter = new G4UIparameter("PosZ",'d',false);
-  pzPosZParameter->SetParameterRange("PosZ >= 100. && PosZ <= 1000.");
+  pzPosZParameter->SetParameterRange("PosZ > 100. && PosZ <= 1000.");
   fSetHEPVetoPosZCmd->SetParameter(pzPosZParameter);
   fSetHEPVetoPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  /*
   fSetHEPVetoRotXCmd = new G4UIcommand("/Detector/HEPVeto/RotationX",this);
   fSetHEPVetoRotXCmd->SetGuidance("Set HEPVeto rotation around X axis in rad.");
   G4UIparameter* rxRotXParameter = new G4UIparameter("RotX",'d',false);
   fSetHEPVetoRotXCmd->SetParameter(rxRotXParameter);
   fSetHEPVetoRotXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  */
 
-  /*
   fSetHEPVetoRotYCmd = new G4UIcommand("/Detector/HEPVeto/RotationY",this);
   fSetHEPVetoRotYCmd->SetGuidance("Set HEPVeto rotation around Y axis in rad.");
   G4UIparameter* ryRotYParameter = new G4UIparameter("RotY",'d',false);
   fSetHEPVetoRotYCmd->SetParameter(ryRotYParameter);
   fSetHEPVetoRotYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
 
   /*
   fSetHEPVetoRotZCmd = new G4UIcommand("/Detector/HEPVeto/RotationZ",this);
@@ -103,12 +103,12 @@ HEPVetoMessenger::~HEPVetoMessenger()
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
 
-  //delete fSetHEPVetoPosXCmd;
-  delete fSetHEPVetoPosYCmd;
+  delete fSetHEPVetoPosXCmd;
+  //delete fSetHEPVetoPosYCmd;
   delete fSetHEPVetoPosZCmd;
 
-  delete fSetHEPVetoRotXCmd;
-  //delete fSetHEPVetoRotYCmd;
+  //delete fSetHEPVetoRotXCmd;
+  delete fSetHEPVetoRotYCmd;
   //delete fSetHEPVetoRotZCmd;
 
 }
@@ -132,39 +132,39 @@ void HEPVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fHEPVetoGeometry->SetFingerNominalSizeX(l*cm);
   }
 
-  /*
   if ( cmd == fSetHEPVetoPosXCmd ) {
     G4double x; std::istringstream is(par); is >> x;
     fHEPVetoGeometry->SetHEPVetoPosX(x*cm);
   }
-  */
 
+  /*
   if ( cmd == fSetHEPVetoPosYCmd ) {
     G4double y; std::istringstream is(par); is >> y;
     fHEPVetoGeometry->SetHEPVetoPosY(y*cm);
   }
+  */
 
   if ( cmd == fSetHEPVetoPosZCmd ) {
     G4double z; std::istringstream is(par); is >> z;
     fHEPVetoGeometry->SetHEPVetoPosZ(z*cm);
   }
 
+  /*
   if ( cmd == fSetHEPVetoRotXCmd ) {
     G4double x; std::istringstream is(par); is >> x;
-    fHEPVetoGeometry->SetHEPVetoRotX(x*cm);
-  }
-
-  /*
-  if ( cmd == fSetHEPVetoRotYCmd ) {
-    G4double y; std::istringstream is(par); is >> y;
-    fHEPVetoGeometry->SetHEPVetoRotY(y*cm);
+    fHEPVetoGeometry->SetHEPVetoRotX(x*rad);
   }
   */
+
+  if ( cmd == fSetHEPVetoRotYCmd ) {
+    G4double y; std::istringstream is(par); is >> y;
+    fHEPVetoGeometry->SetHEPVetoRotY(y*rad);
+  }
 
   /*
   if ( cmd == fSetHEPVetoRotZCmd ) {
     G4double z; std::istringstream is(par); is >> z;
-    fHEPVetoGeometry->SetHEPVetoRotZ(z*cm);
+    fHEPVetoGeometry->SetHEPVetoRotZ(z*rad);
   }
   */
 

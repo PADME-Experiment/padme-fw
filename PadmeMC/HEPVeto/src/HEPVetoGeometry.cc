@@ -20,21 +20,21 @@ HEPVetoGeometry::HEPVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerNominalSizeX = 20.*cm;
-  fFingerNominalSizeY =  1.*cm;
+  fFingerNominalSizeX =  1.*cm;
+  fFingerNominalSizeY = 18.*cm;
   fFingerNominalSizeZ =  1.*cm;
 
   fHEPVetoNFingers = 50;
 
   fFingerGap = 0.1*mm;
 
-  fHEPVetoCenterPosX =   0.*cm;
-  fHEPVetoCenterPosY = -75.*cm;
-  fHEPVetoCenterPosZ = 223.*cm;
+  fHEPVetoCenterPosX =  75.*cm;
+  fHEPVetoCenterPosY =   0.*cm;
+  fHEPVetoCenterPosZ = 153.*cm; // Relative to center of magnet yoke
 
-  fHEPVetoRotX = 0.593*rad;
-  fHEPVetoRotY =  0.   *rad;
-  fHEPVetoRotZ =  0.   *rad;
+  fHEPVetoRotX = 0.   *rad;
+  fHEPVetoRotY = 0.593*rad;
+  fHEPVetoRotZ = 0.   *rad;
 
   fHEPVetoSensitiveDetectorName = "HEPVetoSD";
 
@@ -42,36 +42,6 @@ HEPVetoGeometry::HEPVetoGeometry()
 
 HEPVetoGeometry::~HEPVetoGeometry()
 {}
-
-G4double HEPVetoGeometry::GetHEPVetoSizeX()
-{
-  return fFingerNominalSizeX;
-}
-
-G4double HEPVetoGeometry::GetHEPVetoSizeY()
-{
-  return fFingerNominalSizeY;
-}
-
-G4double HEPVetoGeometry::GetHEPVetoSizeZ()
-{
-  return fFingerNominalSizeZ*fHEPVetoNFingers;
-}
-
-G4double HEPVetoGeometry::GetFingerSizeX()
-{
-  return fFingerNominalSizeX-fFingerGap;
-}
-
-G4double HEPVetoGeometry::GetFingerSizeY()
-{
-  return fFingerNominalSizeY-fFingerGap;
-}
-
-G4double HEPVetoGeometry::GetFingerSizeZ()
-{
-  return fFingerNominalSizeZ-fFingerGap;
-}
 
 G4double HEPVetoGeometry::GetFingerPosX(G4int idx)
 {

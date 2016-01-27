@@ -36,12 +36,12 @@ private:
   G4UIcommand* fSetFingerSizeCmd;
   G4UIcommand* fSetFingerLengthCmd;
 
-  //G4UIcommand* fSetHEPVetoPosXCmd;
-  G4UIcommand* fSetHEPVetoPosYCmd;
+  G4UIcommand* fSetHEPVetoPosXCmd;
+  //G4UIcommand* fSetHEPVetoPosYCmd;
   G4UIcommand* fSetHEPVetoPosZCmd;
 
-  G4UIcommand* fSetHEPVetoRotXCmd;
-  //G4UIcommand* fSetHEPVetoRotYCmd;
+  //G4UIcommand* fSetHEPVetoRotXCmd;
+  G4UIcommand* fSetHEPVetoRotYCmd;
   //G4UIcommand* fSetHEPVetoRotZCmd;
 
 };

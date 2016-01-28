@@ -20,8 +20,8 @@ ECalGeometry::ECalGeometry()
 
   // Inizialize default parameters
 
-  fCrystalNominalSizeX = 1.*cm;
-  fCrystalNominalSizeY = 1.*cm;
+  fCrystalNominalSizeX = 2.*cm;
+  fCrystalNominalSizeY = 2.*cm;
   fCrystalNominalSizeZ = 22.*cm;
 
   fECalNRows = 30;
@@ -29,10 +29,10 @@ ECalGeometry::ECalGeometry()
 
   fCrystalGap = 0.1*mm;
 
-  fECalFrontFacePosZ = 180.*cm;
+  fECalFrontFacePosZ = 250.*cm; // From center of magnet yoke
 
-  fECalInnerRadius = 4.*cm;
-  fECalOuterRadius = 15.*cm;
+  fECalInnerRadius = 8.*cm;
+  fECalOuterRadius = 30.*cm;
 
   fECalSensitiveDetectorName = "ECalSD";
 
@@ -41,51 +41,6 @@ ECalGeometry::ECalGeometry()
 ECalGeometry::~ECalGeometry()
 {}
 
-G4double ECalGeometry::GetECalPosX()
-{
-  return 0.;
-}
-
-G4double ECalGeometry::GetECalPosY()
-{
-  return 0.;
-}
-
-G4double ECalGeometry::GetECalPosZ()
-{
-  return fECalFrontFacePosZ+fCrystalNominalSizeZ*0.5;
-}
-
-G4double ECalGeometry::GetECalSizeX()
-{
-  return fCrystalNominalSizeX*fECalNRows;
-}
-
-G4double ECalGeometry::GetECalSizeY()
-{
-  return fCrystalNominalSizeY*fECalNCols;
-}
-
-G4double ECalGeometry::GetECalSizeZ()
-{
-  return fCrystalNominalSizeZ;
-}
-
-G4double ECalGeometry::GetCrystalSizeX()
-{
-  return fCrystalNominalSizeX-fCrystalGap;
-}
-
-G4double ECalGeometry::GetCrystalSizeY()
-{
-  return fCrystalNominalSizeY-fCrystalGap;
-}
-
-G4double ECalGeometry::GetCrystalSizeZ()
-{
-  return fCrystalNominalSizeZ-fCrystalGap;
-}
-
 G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
 {
 
@@ -93,8 +48,8 @@ G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) return 0;
 
   // Compute X/Y position of center of crystal
-  G4double posX = fCrystalNominalSizeX*(-fECalNRows*0.5+row+0.5);
-  G4double posY = fCrystalNominalSizeY*(-fECalNCols*0.5+col+0.5);
+  G4double posX = fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
+  G4double posY = fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
 
   // See if center of crystal falls inside inner-outer radius range
   G4double r2 = posX*posX+posY*posY;
@@ -113,8 +68,8 @@ G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
     return 0.;
   }
 
-  // Return X position of center of crystal
-  return fCrystalNominalSizeX*(-fECalNRows*0.5+row+0.5);
+  // Return X position of center of crystal in local coordinate system
+  return fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
 
 }
 
@@ -127,8 +82,8 @@ G4double ECalGeometry::GetCrystalPosY(G4int row, G4int col)
     return 0.;
   }
 
-  // Return Y position of center of crystal
-  return fCrystalNominalSizeY*(-fECalNCols*0.5+col+0.5);
+  // Return Y position of center of crystal in local coordinate system
+  return fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
 
 }
 
@@ -141,7 +96,7 @@ G4double ECalGeometry::GetCrystalPosZ(G4int row, G4int col)
     return 0.;
   }
 
-  // Return Z position of center of crystal
+  // Return Z position of center of crystal in local coordinate system
   return 0.;
 
 }

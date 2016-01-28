@@ -13,6 +13,9 @@
 
 class G4LogicalVolume;
 
+#define ECALGEOMETRY_N_ROWS_MAX 100
+#define ECALGEOMETRY_N_COLS_MAX 100
+
 class ECalGeometry
 {
 
@@ -32,18 +35,18 @@ protected:
 public:
 
   // Position of center of ECal box
-  G4double GetECalPosX();
-  G4double GetECalPosY();
-  G4double GetECalPosZ();
+  G4double GetECalPosX() { return 0.*cm; }
+  G4double GetECalPosY() { return 0.*cm; }
+  G4double GetECalPosZ() { return fECalFrontFacePosZ+fCrystalNominalSizeZ*0.5; }
 
   // Size of ECal box
-  G4double GetECalSizeX();
-  G4double GetECalSizeY();
-  G4double GetECalSizeZ();
+  G4double GetECalSizeX() { return fCrystalNominalSizeX*fECalNCols; }
+  G4double GetECalSizeY() { return fCrystalNominalSizeY*fECalNRows; }
+  G4double GetECalSizeZ() { return fCrystalNominalSizeZ; }
 
   // Number of rows and columns of crystals in ECAL
-  G4int GetECalNRows() { return fECalNRows; }
-  G4int GetECalNCols() { return fECalNCols; }
+  G4int GetECalNRows()        { return fECalNRows; }
+  G4int GetECalNCols()        { return fECalNCols; }
   void  SetECalNRows(G4int r) { fECalNRows = r; }
   void  SetECalNCols(G4int c) { fECalNCols = c; }
 
@@ -56,9 +59,9 @@ public:
   G4double GetCrystalPosZ(G4int,G4int);
 
   // Size of BGO crystal
-  G4double GetCrystalSizeX();
-  G4double GetCrystalSizeY();
-  G4double GetCrystalSizeZ();
+  G4double GetCrystalSizeX() { return fCrystalNominalSizeX-fCrystalGap; }
+  G4double GetCrystalSizeY() { return fCrystalNominalSizeY-fCrystalGap; }
+  G4double GetCrystalSizeZ() { return fCrystalNominalSizeZ-fCrystalGap; }
 
   // Set nominal size of crystal
   void SetCrystalNominalSizeX(G4double s) { fCrystalNominalSizeX = s; }

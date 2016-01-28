@@ -34,11 +34,16 @@ private:
 
   G4UIdirectory* fECalDetectorDir;
 
-  G4UIcommand* fSetECalGeometryCmd;
-  G4UIcommand* fSetECalFrontFaceZCmd;
+  G4UIcommand* fSetECalNRowsCmd;
+  G4UIcommand* fSetECalNColsCmd;
+
+  G4UIcommand* fSetCrystalSizeCmd;
+  G4UIcommand* fSetCrystalLengthCmd;
+
   G4UIcommand* fSetECalInnerRadiusCmd;
   G4UIcommand* fSetECalOuterRadiusCmd;
-  G4UIcommand* fSetCrystalSizeCmd;
+
+  G4UIcommand* fSetECalFrontFaceZCmd;
 
 };
 #endif

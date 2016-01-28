@@ -12,16 +12,16 @@
 
 # Detector settings
 
-#/Detector/EnableSubDetector ECal
-#/Detector/EnableSubDetector Target
+/Detector/EnableSubDetector ECal
+/Detector/EnableSubDetector Target
 #/Detector/EnableSubDetector SAC
 #/Detector/EnableSubDetector LAV
 /Detector/EnableSubDetector PVeto
 /Detector/EnableSubDetector EVeto
 /Detector/EnableSubDetector HEPVeto
 
-/Detector/DisableSubDetector ECal
-/Detector/DisableSubDetector Target
+#/Detector/DisableSubDetector ECal
+#/Detector/DisableSubDetector Target
 /Detector/DisableSubDetector SAC
 /Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
@@ -42,9 +42,11 @@
 #/Detector/Magnet/DisableMagneticField
 #/Detector/Magnet/MagneticFieldConstantValue 0.3
 
-#/Detector/ECal/Geometry 30 30
+#/Detector/ECal/NRows 30
+#/Detector/ECal/NCols 30
 #/Detector/ECal/FrontFaceZ 400.
 #/Detector/ECal/CrystalSize 2.
+#/Detector/ECal/CrystalLength 22.
 #/Detector/ECal/InnerRadius 4.
 #/Detector/ECal/OuterRadius 30.
 

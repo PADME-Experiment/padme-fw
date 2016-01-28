@@ -26,15 +26,19 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fECalDetectorDir = new G4UIdirectory("/Detector/ECal/");
   fECalDetectorDir->SetGuidance("UI commands to control ECal detector geometry");
 
-  fSetECalGeometryCmd = new G4UIcommand("/Detector/ECal/Geometry",this);
-  fSetECalGeometryCmd->SetGuidance("Set number of ECal rows and columns.");
+  fSetECalNRowsCmd = new G4UIcommand("/Detector/ECal/NRows",this);
+  fSetECalNRowsCmd->SetGuidance("Set number of crystal rows in ECal.");
   G4UIparameter* egNRowsParameter = new G4UIparameter("NRows",'i',false);
   egNRowsParameter->SetParameterRange("NRows >= 1 && NRows <= 100");
-  fSetECalGeometryCmd->SetParameter(egNRowsParameter);
+  fSetECalNRowsCmd->SetParameter(egNRowsParameter);
+  fSetECalNRowsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetECalNColsCmd = new G4UIcommand("/Detector/ECal/NCols",this);
+  fSetECalNColsCmd->SetGuidance("Set number of crystal columns in ECal.");
   G4UIparameter* egNColsParameter = new G4UIparameter("NCols",'i',false);
   egNColsParameter->SetParameterRange("NCols >= 1 && NCols <= 100");
-  fSetECalGeometryCmd->SetParameter(egNColsParameter);
-  fSetECalGeometryCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetECalNColsCmd->SetParameter(egNColsParameter);
+  fSetECalNColsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetCrystalSizeCmd = new G4UIcommand("/Detector/ECal/CrystalSize",this);
   fSetCrystalSizeCmd->SetGuidance("Set size (side of square) of crystal front face in cm.");
@@ -43,12 +47,12 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalSizeCmd->SetParameter(csSizeParameter);
   fSetCrystalSizeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetECalFrontFaceZCmd = new G4UIcommand("/Detector/ECal/FrontFaceZ",this);
-  fSetECalFrontFaceZCmd->SetGuidance("Set position along Z of ECal front face in cm.");
-  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
-  effPosZParameter->SetParameterRange("PosZ >= 100. && PosZ <= 1000.");
-  fSetECalFrontFaceZCmd->SetParameter(effPosZParameter);
-  fSetECalFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetCrystalLengthCmd = new G4UIcommand("/Detector/ECal/CrystalLength",this);
+  fSetCrystalLengthCmd->SetGuidance("Set length of crystal in cm.");
+  G4UIparameter* csLengthParameter = new G4UIparameter("Length",'d',false);
+  csLengthParameter->SetParameterRange("Length > 0. && Length <= 23.");
+  fSetCrystalLengthCmd->SetParameter(csLengthParameter);
+  fSetCrystalLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
   fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
@@ -64,6 +68,13 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetECalOuterRadiusCmd->SetParameter(eorRadParameter);
   fSetECalOuterRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetECalFrontFaceZCmd = new G4UIcommand("/Detector/ECal/FrontFaceZ",this);
+  fSetECalFrontFaceZCmd->SetGuidance("Set position along Z of ECal front face in cm.");
+  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
+  effPosZParameter->SetParameterRange("PosZ > 100. && PosZ <= 1000.");
+  fSetECalFrontFaceZCmd->SetParameter(effPosZParameter);
+  fSetECalFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 ECalMessenger::~ECalMessenger()
@@ -71,20 +82,29 @@ ECalMessenger::~ECalMessenger()
 
   delete fECalDetectorDir;
 
-  delete fSetECalGeometryCmd;
+  delete fSetECalNRowsCmd;
+  delete fSetECalNColsCmd;
+
   delete fSetCrystalSizeCmd;
-  delete fSetECalFrontFaceZCmd;
+  delete fSetCrystalLengthCmd;
+
   delete fSetECalInnerRadiusCmd;
   delete fSetECalOuterRadiusCmd;
+
+  delete fSetECalFrontFaceZCmd;
 
 }
 
 void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
 
-  if ( cmd == fSetECalGeometryCmd ) {
-    G4int r,c; std::istringstream is(par); is >> r >> c;
+  if ( cmd == fSetECalNRowsCmd ) {
+    G4int r; std::istringstream is(par); is >> r;
     fECalGeometry->SetECalNRows(r);
+  }
+
+  if ( cmd == fSetECalNColsCmd ) {
+    G4int c; std::istringstream is(par); is >> c;
     fECalGeometry->SetECalNCols(c);
   }
 
@@ -94,9 +114,9 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fECalGeometry->SetCrystalNominalSizeY(s*cm);
   }
 
-  if ( cmd == fSetECalFrontFaceZCmd ) {
-    G4double z; std::istringstream is(par); is >> z;
-    fECalGeometry->SetECalFrontFacePosZ(z*cm);
+  if ( cmd == fSetCrystalLengthCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fECalGeometry->SetCrystalNominalSizeZ(s*cm);
   }
 
   if ( cmd == fSetECalInnerRadiusCmd ) {
@@ -107,6 +127,11 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetECalOuterRadiusCmd ) {
     G4double r; std::istringstream is(par); is >> r;
     fECalGeometry->SetECalOuterRadius(r*cm);
+  }
+
+  if ( cmd == fSetECalFrontFaceZCmd ) {
+    G4double z; std::istringstream is(par); is >> z;
+    fECalGeometry->SetECalFrontFacePosZ(z*cm);
   }
 
 }

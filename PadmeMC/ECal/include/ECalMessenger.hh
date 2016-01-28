@@ -16,8 +16,6 @@ class ECalDetector;
 class ECalGeometry;
 class G4UIdirectory;
 class G4UIcommand;
-class G4UIcmdWithAString;
-class G4UIcmdWithoutParameter;
 
 class ECalMessenger: public G4UImessenger
 {

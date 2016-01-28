@@ -32,9 +32,10 @@ private:
 
   G4UIdirectory* fSACDetectorDir;
 
-  //G4UIcommand* fSetSACGeometryCmd;
-  G4UIcommand* fSetSACFrontFaceZCmd;
   G4UIcommand* fSetCrystalSizeCmd;
+  G4UIcommand* fSetCrystalLengthCmd;
+
+  G4UIcommand* fSetSACFrontFaceZCmd;
 
 };
 #endif

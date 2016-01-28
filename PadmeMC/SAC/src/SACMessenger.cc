@@ -26,29 +26,24 @@ SACMessenger::SACMessenger(SACDetector* det)
   fSACDetectorDir = new G4UIdirectory("/Detector/SAC/");
   fSACDetectorDir->SetGuidance("UI commands to control SAC detector geometry");
 
-  /*
-  fSetSACGeometryCmd = new G4UIcommand("/Detector/SAC/Geometry",this);
-  fSetSACGeometryCmd->SetGuidance("Set number of SAC rows and columns.");
-  G4UIparameter* egNRowsParameter = new G4UIparameter("NRows",'i',false);
-  egNRowsParameter->SetParameterRange("NRows >= 1 && NRows <= 10");
-  fSetSACGeometryCmd->SetParameter(egNRowsParameter);
-  G4UIparameter* egNColsParameter = new G4UIparameter("NCols",'i',false);
-  egNColsParameter->SetParameterRange("NCols >= 1 && NCols <= 10");
-  fSetSACGeometryCmd->SetParameter(egNColsParameter);
-  fSetSACGeometryCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
-
   fSetCrystalSizeCmd = new G4UIcommand("/Detector/SAC/CrystalSize",this);
-  fSetCrystalSizeCmd->SetGuidance("Set size (side of square) of crystal front face in cm.");
+  fSetCrystalSizeCmd->SetGuidance("Set size (side of square) of SAC crystal front face in cm.");
   G4UIparameter* csSizeParameter = new G4UIparameter("Size",'d',false);
   csSizeParameter->SetParameterRange("Size > 0. && Size <= 10.");
   fSetCrystalSizeCmd->SetParameter(csSizeParameter);
   fSetCrystalSizeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetCrystalLengthCmd = new G4UIcommand("/Detector/SAC/CrystalLength",this);
+  fSetCrystalLengthCmd->SetGuidance("Set length of SAC crystal in cm.");
+  G4UIparameter* csLengthParameter = new G4UIparameter("Length",'d',false);
+  csLengthParameter->SetParameterRange("Length > 0. && Length <= 20.");
+  fSetCrystalLengthCmd->SetParameter(csLengthParameter);
+  fSetCrystalLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fSetSACFrontFaceZCmd = new G4UIcommand("/Detector/SAC/FrontFaceZ",this);
   fSetSACFrontFaceZCmd->SetGuidance("Set position along Z of SAC front face in cm.");
   G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
-  effPosZParameter->SetParameterRange("PosZ >= 100. && PosZ <= 1000.");
+  effPosZParameter->SetParameterRange("PosZ > 100. && PosZ <= 1000.");
   fSetSACFrontFaceZCmd->SetParameter(effPosZParameter);
   fSetSACFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
@@ -59,8 +54,9 @@ SACMessenger::~SACMessenger()
 
   delete fSACDetectorDir;
 
-  //delete fSetSACGeometryCmd;
   delete fSetCrystalSizeCmd;
+  delete fSetCrystalLengthCmd;
+
   delete fSetSACFrontFaceZCmd;
 
 }
@@ -68,18 +64,15 @@ SACMessenger::~SACMessenger()
 void SACMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
 
-  /*
-  if ( cmd == fSetSACGeometryCmd ) {
-    G4int r,c; std::istringstream is(par); is >> r >> c;
-    fSACGeometry->SetSACNRows(r);
-    fSACGeometry->SetSACNCols(c);
-  }
-  */
-
   if ( cmd == fSetCrystalSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
     fSACGeometry->SetCrystalNominalSizeX(s*cm);
     fSACGeometry->SetCrystalNominalSizeY(s*cm);
+  }
+
+  if ( cmd == fSetCrystalLengthCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fSACGeometry->SetCrystalNominalSizeZ(s*cm);
   }
 
   if ( cmd == fSetSACFrontFaceZCmd ) {

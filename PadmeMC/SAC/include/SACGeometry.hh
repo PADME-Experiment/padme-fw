@@ -13,6 +13,9 @@
 
 class G4LogicalVolume;
 
+#define SACGEOMETRY_N_ROWS_MAX 10
+#define SACGEOMETRY_N_COLS_MAX 10
+
 class SACGeometry
 {
 
@@ -32,14 +35,14 @@ protected:
 public:
 
   // Position of center of SAC box
-  G4double GetSACPosX();
-  G4double GetSACPosY();
-  G4double GetSACPosZ();
+  G4double GetSACPosX() { return 0.*cm; }
+  G4double GetSACPosY() { return 0.*cm; }
+  G4double GetSACPosZ() { return fSACFrontFacePosZ+fCrystalNominalSizeZ*0.5; }
 
   // Size of SAC box
-  G4double GetSACSizeX();
-  G4double GetSACSizeY();
-  G4double GetSACSizeZ();
+  G4double GetSACSizeX() { return fCrystalNominalSizeX*fSACNCols; }
+  G4double GetSACSizeY() { return fCrystalNominalSizeY*fSACNRows; }
+  G4double GetSACSizeZ() { return fCrystalNominalSizeZ; }
 
   // Number of rows and columns of crystals in SAC
   G4int GetSACNRows() { return fSACNRows; }
@@ -56,9 +59,9 @@ public:
   G4double GetCrystalPosZ(G4int,G4int);
 
   // Size of SAC BaF2 crystal
-  G4double GetCrystalSizeX();
-  G4double GetCrystalSizeY();
-  G4double GetCrystalSizeZ();
+  G4double GetCrystalSizeX() { return fCrystalNominalSizeX-fCrystalGap; }
+  G4double GetCrystalSizeY() { return fCrystalNominalSizeY-fCrystalGap; }
+  G4double GetCrystalSizeZ() { return fCrystalNominalSizeZ-fCrystalGap; }
 
   // Set nominal size of crystal
   void SetCrystalNominalSizeX(G4double s) { fCrystalNominalSizeX = s; }

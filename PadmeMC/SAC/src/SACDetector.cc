@@ -39,23 +39,23 @@ void SACDetector::CreateGeometry()
 
   // Create main SAC box
   printf("SAC will be placed at %f %f %f\n",geo->GetSACPosX(),geo->GetSACPosY(),geo->GetSACPosZ());
-  G4ThreeVector posSAC = G4ThreeVector(geo->GetSACPosX(),geo->GetSACPosY(),geo->GetSACPosZ()); 
-  G4double sacX      = geo->GetSACSizeX();
-  G4double sacY      = geo->GetSACSizeY();
-  G4double sacLength = geo->GetSACSizeZ();
-  printf("SAC size is %f %f %f\n",sacX,sacY,sacLength);
-  G4Box* solidSAC = new G4Box("SACSolid",sacX*0.5,sacY*0.5,sacLength*0.5);
-  fSACVolume = new G4LogicalVolume(solidSAC,G4Material::GetMaterial("G4_Galactic"),"SACLogic",0,0,0);
+  G4ThreeVector sacPos = G4ThreeVector(geo->GetSACPosX(),geo->GetSACPosY(),geo->GetSACPosZ()); 
+  G4double sacSizeX = geo->GetSACSizeX();
+  G4double sacSizeY = geo->GetSACSizeY();
+  G4double sacSizeZ = geo->GetSACSizeZ();
+  printf("SAC size is %f %f %f\n",sacSizeX,sacSizeY,sacSizeZ);
+  G4Box* solidSAC = new G4Box("SAC",0.5*sacSizeX,0.5*sacSizeY,0.5*sacSizeZ);
+  fSACVolume = new G4LogicalVolume(solidSAC,G4Material::GetMaterial("G4_Galactic"),"SAC",0,0,0);
   fSACVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,posSAC,fSACVolume,"SAC",fMotherVolume,false,0,false);
+  new G4PVPlacement(0,sacPos,fSACVolume,"SAC",fMotherVolume,false,0,false);
 
   // Create standard BaF2 crystal
-  G4double sacCryX      = geo->GetCrystalSizeX();
-  G4double sacCryY      = geo->GetCrystalSizeY();
-  G4double sacCryLength = geo->GetCrystalSizeZ();
-  printf("SAC Crystal size is %f %f %f\n",sacCryX,sacCryY,sacCryLength);
-  G4Box* solidCry  = new G4Box("SACCrySolid",sacCryX*0.5,sacCryY*0.5,sacCryLength*0.5);
-  fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BARIUM_FLUORIDE"),"SACCryLogic",0,0,0);
+  G4double crySizeX = geo->GetCrystalSizeX();
+  G4double crySizeY = geo->GetCrystalSizeY();
+  G4double crySizeZ = geo->GetCrystalSizeZ();
+  printf("SAC Crystal size is %f %f %f\n",crySizeX,crySizeY,crySizeZ);
+  G4Box* solidCry  = new G4Box("SACCry",0.5*crySizeX,0.5*crySizeY,0.5*crySizeZ);
+  fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BARIUM_FLUORIDE"),"SACCry",0,0,0);
 
   // Make crystal a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
@@ -71,7 +71,7 @@ void SACDetector::CreateGeometry()
   for (G4int row=0;row<nRow;row++){
     for (G4int col=0;col<nCol;col++){
       if (geo->ExistsCrystalAt(row,col)) {
-	G4int idxCry = col*10+row;
+	G4int idxCry = row*SACGEOMETRY_N_COLS_MAX+col;
 	G4ThreeVector positionCry = G4ThreeVector(geo->GetCrystalPosX(row,col),geo->GetCrystalPosY(row,col),geo->GetCrystalPosZ(row,col));
 	new G4PVPlacement(0,positionCry,fCrystalVolume,"SACCry",fSACVolume,false,idxCry,false);
       }

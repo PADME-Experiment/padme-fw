@@ -29,7 +29,7 @@ SACGeometry::SACGeometry()
 
   fCrystalGap = 0.1*mm;
 
-  fSACFrontFacePosZ = 230.*cm;
+  fSACFrontFacePosZ = 300.*cm;
 
   fSACSensitiveDetectorName = "SACSD";
 
@@ -37,51 +37,6 @@ SACGeometry::SACGeometry()
 
 SACGeometry::~SACGeometry()
 {}
-
-G4double SACGeometry::GetSACPosX()
-{
-  return 0.;
-}
-
-G4double SACGeometry::GetSACPosY()
-{
-  return 0.;
-}
-
-G4double SACGeometry::GetSACPosZ()
-{
-  return fSACFrontFacePosZ+fCrystalNominalSizeZ*0.5;
-}
-
-G4double SACGeometry::GetSACSizeX()
-{
-  return fCrystalNominalSizeX*fSACNRows;
-}
-
-G4double SACGeometry::GetSACSizeY()
-{
-  return fCrystalNominalSizeY*fSACNCols;
-}
-
-G4double SACGeometry::GetSACSizeZ()
-{
-  return fCrystalNominalSizeZ;
-}
-
-G4double SACGeometry::GetCrystalSizeX()
-{
-  return fCrystalNominalSizeX-fCrystalGap;
-}
-
-G4double SACGeometry::GetCrystalSizeY()
-{
-  return fCrystalNominalSizeY-fCrystalGap;
-}
-
-G4double SACGeometry::GetCrystalSizeZ()
-{
-  return fCrystalNominalSizeZ-fCrystalGap;
-}
 
 G4int SACGeometry::ExistsCrystalAt(G4int row, G4int col)
 {
@@ -116,11 +71,11 @@ G4double SACGeometry::GetCrystalPosX(G4int row, G4int col)
     return 0.;
   }
 
-  // Return X position of center of crystal, correcting for crystals in external columns
-  G4double posX = fCrystalNominalSizeX*(-fSACNRows*0.5+row+0.5);
-  if (col==0 || col==fSACNCols-1) {
-    if (row==2) posX += 0.5*fCrystalNominalSizeX;
-    if (row==4) posX -= 0.5*fCrystalNominalSizeX;
+  // Return X position of center of crystal, correcting for crystals in first and last row
+  G4double posX = fCrystalNominalSizeX*(-fSACNCols*0.5+col+0.5);
+  if (row==0 || row==fSACNRows-1) {
+    if (col==2) posX += 0.5*fCrystalNominalSizeX;
+    if (col==4) posX -= 0.5*fCrystalNominalSizeX;
   }
   return posX;
 
@@ -135,11 +90,11 @@ G4double SACGeometry::GetCrystalPosY(G4int row, G4int col)
     return 0.;
   }
 
-  // Return Y position of center of crystal, correcting for crystals in external rows
-  G4double posY = fCrystalNominalSizeY*(-fSACNCols*0.5+col+0.5);
-  if (row==0 || row==fSACNRows-1) {
-    if (col==2) posY += 0.5*fCrystalNominalSizeY;
-    if (col==4) posY -= 0.5*fCrystalNominalSizeY;
+  // Return Y position of center of crystal, correcting for crystals in first and last column
+  G4double posY = fCrystalNominalSizeY*(-fSACNRows*0.5+row+0.5);
+  if (col==0 || col==fSACNCols-1) {
+    if (row==2) posY += 0.5*fCrystalNominalSizeY;
+    if (row==4) posY -= 0.5*fCrystalNominalSizeY;
   }
   return posY;
 
@@ -154,7 +109,7 @@ G4double SACGeometry::GetCrystalPosZ(G4int row, G4int col)
     return 0.;
   }
 
-  // Return Z position of center of crystal
-  return 0.;
+  // Return Z position of center of crystal in local coordinate system
+  return 0.*cm;
 
 }

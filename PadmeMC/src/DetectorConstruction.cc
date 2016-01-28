@@ -12,6 +12,7 @@
 #include "PVetoDetector.hh"
 #include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
+#include "TDumpDetector.hh"
 
 #include "MagnetStructure.hh"
 
@@ -68,15 +69,17 @@ DetectorConstruction::DetectorConstruction()
   fPVetoDetector   = new PVetoDetector(0);
   fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
+  fTDumpDetector   = new TDumpDetector(0);
   fMagnetStructure = new MagnetStructure(0);
 
   fEnableECal    = 1;
   fEnableTarget  = 1;
   fEnableSAC     = 1;
-  fEnableLAV     = 1;
+  fEnableLAV     = 0;
   fEnablePVeto   = 1;
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
+  fEnableTDump   = 0;
 
   fEnableWall   = 0;
   fEnableMagnet = 1;
@@ -99,6 +102,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fPVetoDetector;
   delete fEVetoDetector;
   delete fHEPVetoDetector;
+  delete fTDumpDetector;
   delete fMagnetStructure;
 
 }
@@ -113,6 +117,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
+  else if (det=="TDump")   { fEnableTDump   = 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
 
@@ -126,6 +131,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
+  else if (det=="TDump")   { fEnableTDump   = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
@@ -177,12 +183,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   G4NistManager* man = G4NistManager::Instance();
   man->SetVerbose(1);
-  G4Material* SiO2   = man->FindOrBuildMaterial("G4_SILICON_DIOXIDE");
-  G4Material* Air    = man->FindOrBuildMaterial("G4_AIR");
-  G4Material* Pb     = man->FindOrBuildMaterial("G4_Pb");
-  G4Material* PbWO4  = man->FindOrBuildMaterial("G4_PbWO4");
-  G4Material* elC    = man->FindOrBuildMaterial("G4_C");
-  G4Material* W      = man->FindOrBuildMaterial("G4_W");
+  G4Material* SiO2     = man->FindOrBuildMaterial("G4_SILICON_DIOXIDE");
+  G4Material* Air      = man->FindOrBuildMaterial("G4_AIR");
+  G4Material* Pb       = man->FindOrBuildMaterial("G4_Pb");
+  G4Material* PbWO4    = man->FindOrBuildMaterial("G4_PbWO4");
+  G4Material* elC      = man->FindOrBuildMaterial("G4_C");
+  G4Material* W        = man->FindOrBuildMaterial("G4_W");
   G4Material* Concrete = man->FindOrBuildMaterial("G4_CONCRETE");
   G4Material* Iron     = man->FindOrBuildMaterial("G4_Fe");
   G4Material* Scint    = man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
@@ -205,18 +211,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //  G4cout<<"Computed tolerance = "<<G4GeometryTolerance::GetInstance()->GetSurfaceTolerance()/mm<<" mm" << G4endl;
   WorldMater=Vacuum;
   G4double HalfWorldLength = 0.5*WorldLength*m;
-
-  solidWorld= new G4Box("world",HalfWorldLength,HalfWorldLength,HalfWorldLength);
-  logicWorld= new G4LogicalVolume( solidWorld, WorldMater, "World", 0, 0, 0);
-  physiWorld = new G4PVPlacement(0,               // no rotation
-                                 G4ThreeVector(), // at (0,0,0)
-                                 logicWorld,      // its logical volume
-                                 "World",         // its name
-                                 0,               // its mother  volume
-                                 false,           // no boolean operations
-                                 0);              // copy number
+  
+  solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
+  logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
+  physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
   if(IsPipeON==1){
+
     // Create btf beam pipe
     G4double Pipe_ZLength      = 1.*m;
     G4double Pipe_ZLength1     = 12.*cm;
@@ -237,6 +238,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   if(IsSpecInside==1){
+
     G4double Tolerance=1.*um; //avoid overlap with Yoke and Gem
     G4double solidVacChambXSize=3*mm; 
     G4double solidVacChambYSize=40*cm;
@@ -284,19 +286,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }else{
     G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
   }
-  
-  if (fEnableWall) {  
-    G4ThreeVector positionWall = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
-    solidWall = new G4Box("wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
-    logicWall = new G4LogicalVolume(solidWall,Concrete, "Wall", 0, 0, 0);
-    physiWall = new G4PVPlacement(0,               // no rotation
-				  positionWall,   // at (0,0,0)
-				  logicWall,      // its logical volume
-				  "Wall",         // its name
-				  logicWorld,     // its mother  volume
-				  false,          // no boolean operations
-				  0,              // copy number
-				  false);         // is overlap    
+
+  // Concrete wall at large Z
+  if (fEnableWall) {
+    G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
+    solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
+    logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
+    new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
   }
 
   // Magnet physical structure
@@ -305,31 +301,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fMagnetStructure->CreateGeometry();
   }
 
-  /*
-  // Magnetic field inside magnet
-  if(IsBFieldON==1){
-    //------------------------------ 
-    // Magnet
-    //------------------------------
-    double poco=0.01*cm;
-    G4ThreeVector positionSwepMag = G4ThreeVector(MagnetPosiX*cm,MagnetPosiY*cm,MagnetPosiZ*cm); 
-    G4double SwepMagDx=  MagnetSizeX*cm;//+0.5*mm;
-    G4double SwepMagDy=  MagnetSizeY*cm;//+0.5*mm;
-    G4double SwepMagDz=  MagnetSizeZ*cm;//+0.5*mm;//+5*cm; // margin to avoit grazing tracks
-    solidSwepMag = new G4Box("swepMag",SwepMagDx*0.5-poco,SwepMagDy*0.5-poco,SwepMagDz*0.5+poco);
-    logicSwepMag = new G4LogicalVolume(solidSwepMag,WorldMater,"SwepMag",0,0,0);
-    logicSwepMag->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-    //logicSwepMag->SetVisAttributes(G4VisAttributes::Invisible);
-    logicSwepMag->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
-    physiSwepMag = new G4PVPlacement(0,positionSwepMag,logicSwepMag,"SwepMag",logicWorld,false,0,true);
-  }
-  */
-
   // Target
-  //if (fEnableTarget) {
-  //  fTargetDetector->SetMotherVolume(logicWorld);
-  //  fTargetDetector->CreateGeometry();
-  //}
   if (fEnableTarget) {
     if (fEnableMagnet) {
       fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
@@ -355,85 +327,99 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fLAVDetector->CreateGeometry();
   }
 
-if(IsTDumpON==1){
-	//BTF DUMP
-	 G4ThreeVector positionTDump = G4ThreeVector(TDumpPosiX*cm,TDumpPosiY*cm,TDumpPosiZ*cm);
-	 solidTDump = new G4Tubs("Tdump",TDumpInnerRad*cm,TDumpOuterRad*cm,TDumpHz*cm,0*deg,360*deg);
-	 logicTDump = new G4LogicalVolume(solidTDump,W, "DumpTarg", 0, 0, 0);
-	 physiTDump  = new G4PVPlacement(0,               // no rotati
-			 	 positionTDump,   // at (x,y,z)
-			 	 logicTDump,      // its logical volume
-			 	 "Dump",           // its name
-			 	 logicWorld,      // its mother  volume
-			 	 false,           // no boolean operations
-			 	 0);              // copy number
+  // TDump
+  if (fEnableTDump) {
+    if (fEnableMagnet) {
+      fTDumpDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+    } else {
+      fTDumpDetector->SetMotherVolume(logicWorld);
+    }
+    fTDumpDetector->CreateGeometry();
+  }
 
 
-	 solidLeadBrick = new G4Box("wall",LeadBrickSizeX*0.5*cm,LeadBrickSizeY*0.5*cm,LeadBrickSizeZ*0.5*cm);
-	 logicLeadBrick = new G4LogicalVolume(solidLeadBrick,Pb, "Brick", 0, 0, 0);
-	 for(int i=0;i<4;i++){ // Replica lungo l'asse Z
-		 //	int ii=0;
-		 for(int ii=0;ii<2;ii++){  // Replica lungo l'asse X
-   //         G4ThreeVector positionBrickL = G4ThreeVector((+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm+LeadBrickSizeX*ii*cm,0*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-		 	G4ThreeVector positionBrickR = G4ThreeVector(0.*cm,(+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm+LeadBrickSizeX*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-		 	G4RotationMatrix* zRotR=new G4RotationMatrix; // Rotates X and Z axes only
-		 	zRotR->rotateZ(-M_PI/2.*rad);  // Rotates 90 degrees
-            physiLeadBrickR = new G4PVPlacement(zRotR,               // no rotation
-            		 positionBrickR,   // at (0,0,0)
-            		 logicLeadBrick,      // its logical volume
-            		 "BrickWall",         // its name
-            		 logicWorld,     // its mother  volume
-            		 false,          // no boolean operations
-            		 0,              // copy number
-            		 false);         // is overlap
+  if(IsTDumpON==1){
 
-            G4ThreeVector positionBrickL = G4ThreeVector(0.*cm,-(+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm-LeadBrickSizeX*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-		 	G4RotationMatrix* zRotL=new G4RotationMatrix; // Rotates X and Z axes only
-		 	zRotL->rotateZ(-M_PI/2.*rad);  // Rotates 90 degrees
+    printf("============= Creating TDUMP ================\n");
+      //BTF DUMP
+    G4ThreeVector positionTDump = G4ThreeVector(TDumpPosiX*cm,TDumpPosiY*cm,TDumpPosiZ*cm);
+    solidTDump = new G4Tubs("Tdump",TDumpInnerRad*cm,TDumpOuterRad*cm,TDumpHz*cm,0*deg,360*deg);
+    logicTDump = new G4LogicalVolume(solidTDump,W, "DumpTarg", 0, 0, 0);
+    physiTDump  = new G4PVPlacement(0,               // no rotati
+				    positionTDump,   // at (x,y,z)
+				    logicTDump,      // its logical volume
+				    "Dump",           // its name
+				    logicWorld,      // its mother  volume
+				    false,           // no boolean operations
+				    0);              // copy number
+
+    
+    solidLeadBrick = new G4Box("wall",LeadBrickSizeX*0.5*cm,LeadBrickSizeY*0.5*cm,LeadBrickSizeZ*0.5*cm);
+    logicLeadBrick = new G4LogicalVolume(solidLeadBrick,Pb, "Brick", 0, 0, 0);
+    for(int i=0;i<4;i++){ // Replica lungo l'asse Z
+      //	int ii=0;
+      for(int ii=0;ii<2;ii++){  // Replica lungo l'asse X
+	//         G4ThreeVector positionBrickL = G4ThreeVector((+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm+LeadBrickSizeX*ii*cm,0*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	G4ThreeVector positionBrickR = G4ThreeVector(0.*cm,(+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm+LeadBrickSizeX*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	G4RotationMatrix* zRotR=new G4RotationMatrix; // Rotates X and Z axes only
+	zRotR->rotateZ(-M_PI/2.*rad);  // Rotates 90 degrees
+	physiLeadBrickR = new G4PVPlacement(zRotR,               // no rotation
+					    positionBrickR,   // at (0,0,0)
+					    logicLeadBrick,      // its logical volume
+					    "BrickWall",         // its name
+					    logicWorld,     // its mother  volume
+					    false,          // no boolean operations
+					    0,              // copy number
+					    false);         // is overlap
+	
+	G4ThreeVector positionBrickL = G4ThreeVector(0.*cm,-(+LeadBrickSizeX+LeadBrickSizeX*0.5)*cm-LeadBrickSizeX*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	G4RotationMatrix* zRotL=new G4RotationMatrix; // Rotates X and Z axes only
+	zRotL->rotateZ(-M_PI/2.*rad);  // Rotates 90 degrees
             physiLeadBrickL = new G4PVPlacement(zRotL,               // no rotation
-            		 positionBrickL,   // at (0,0,0)
-            		 logicLeadBrick,      // its logical volume
-            		 "BrickWall",         // its name
-            		 logicWorld,     // its mother  volume
-            		 false,          // no boolean operations
-            		 0,              // copy number
+						positionBrickL,   // at (0,0,0)
+						logicLeadBrick,      // its logical volume
+						"BrickWall",         // its name
+						logicWorld,     // its mother  volume
+						false,          // no boolean operations
+						0,              // copy number
             		 false);         // is overlap
-		 }
-		 for(int ii=-1;ii<2;ii++){
-             //G4ThreeVector positionBrickT = G4ThreeVector(+LeadBrickSizeY*ii*cm,+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-             G4ThreeVector positionBrickT = G4ThreeVector(+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,+LeadBrickSizeY*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-             physiLeadBrickT = new G4PVPlacement(0,               // no rotation
-           		 positionBrickT,   // at (0,0,0)
-           		 logicLeadBrick,      // its logical volume
-           		 "BrickWall",         // its name
-           		 logicWorld,     // its mother  volume
-           		 false,          // no boolean operations
-           		 0,              // copy number
-           		 false);         // is overlap
+      }
+      for(int ii=-1;ii<2;ii++){
+	//G4ThreeVector positionBrickT = G4ThreeVector(+LeadBrickSizeY*ii*cm,+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	G4ThreeVector positionBrickT = G4ThreeVector(+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,+LeadBrickSizeY*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	physiLeadBrickT = new G4PVPlacement(0,               // no rotation
+					    positionBrickT,   // at (0,0,0)
+					    logicLeadBrick,      // its logical volume
+					    "BrickWall",         // its name
+					    logicWorld,     // its mother  volume
+					    false,          // no boolean operations
+					    0,              // copy number
+					    false);         // is overlap
+	
+	//G4ThreeVector positionBrickT = G4ThreeVector(+LeadBrickSizeY*ii*cm,+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	G4ThreeVector positionBrickB = G4ThreeVector(-(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,+LeadBrickSizeY*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
+	physiLeadBrickB = new G4PVPlacement(0,               // no rotation
+					    positionBrickB,   // at (0,0,0)
+					    logicLeadBrick,      // its logical volume
+					    "BrickWall",         // its name
+					    logicWorld,     // its mother  volume
+					    false,          // no boolean operations
+					    0,              // copy number
+					    false);         // is overlap
+      }
+    }
+    //     G4ThreeVector positionDumpGFilt = G4ThreeVector(TDumpFiltPosiX*cm,TDumpFiltPosiY*cm,TDumpFiltPosiZ*cm);
+    //	 solidDumpGFilt = new G4Cons("DumpGFilt",TDumpFiltInnerRad1*cm,TDumpFiltOuterRad1*cm,TDumpFiltInnerRad2*cm,TDumpFiltOuterRad2*cm,TDumpFiltHz*cm,0*deg,360*deg);
+    //	 logicDumpGFilt = new G4LogicalVolume(solidDumpGFilt,W,"DumpTargFilt", 0, 0, 0);
+    //	 physiDumpGFilt = new G4PVPlacement(0,               // no rotati
+    //			 	 positionDumpGFilt,   // at (x,y,z)
+    //			 	 logicDumpGFilt,      // its logical volume
+    //			 	 "DumpFilt",          // its name
+    //			 	 logicWorld,          // its mother  volume
+    //			 	 false,               // no boolean operations
+    //			 	 0);                  // copy number
+  }
 
-                          //G4ThreeVector positionBrickT = G4ThreeVector(+LeadBrickSizeY*ii*cm,+(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-             G4ThreeVector positionBrickB = G4ThreeVector(-(LeadBrickSizeY*0.5+LeadBrickSizeX*0.5)*cm,+LeadBrickSizeY*ii*cm,(TDumpFiltPosiZ+TDumpHz)*cm-LeadBrickSizeZ*i*cm);
-             physiLeadBrickB = new G4PVPlacement(0,               // no rotation
-           		 positionBrickB,   // at (0,0,0)
-           		 logicLeadBrick,      // its logical volume
-           		 "BrickWall",         // its name
-           		 logicWorld,     // its mother  volume
-           		 false,          // no boolean operations
-           		 0,              // copy number
-           		 false);         // is overlap
-		 }
-	 }
-//     G4ThreeVector positionDumpGFilt = G4ThreeVector(TDumpFiltPosiX*cm,TDumpFiltPosiY*cm,TDumpFiltPosiZ*cm);
-//	 solidDumpGFilt = new G4Cons("DumpGFilt",TDumpFiltInnerRad1*cm,TDumpFiltOuterRad1*cm,TDumpFiltInnerRad2*cm,TDumpFiltOuterRad2*cm,TDumpFiltHz*cm,0*deg,360*deg);
-//	 logicDumpGFilt = new G4LogicalVolume(solidDumpGFilt,W,"DumpTargFilt", 0, 0, 0);
-//	 physiDumpGFilt = new G4PVPlacement(0,               // no rotati
-//			 	 positionDumpGFilt,   // at (x,y,z)
-//			 	 logicDumpGFilt,      // its logical volume
-//			 	 "DumpFilt",          // its name
-//			 	 logicWorld,          // its mother  volume
-//			 	 false,               // no boolean operations
-//			 	 0);                  // copy number
- }
  //------------------------------------------------- 
  // Direction monitor fused silica rods 
  //-------------------------------------------------
@@ -617,12 +603,14 @@ if(IsTDumpON==1){
     logicPGEM->SetSensitiveDetector( TrackSD );
   }
 
+  /*
   if(IsTDumpON){
     //Dump as Sensitive detector
     TRodSD* TRodSDet = new TRodSD( TRodSDname );
     SDman->AddNewDetector( TRodSDet );
     logicTDump->SetSensitiveDetector( TRodSDet );
   }
+  */
 
   if(IsMonitorON==1){
     MRodSD* MRodSDet = new MRodSD( MRodSDname );

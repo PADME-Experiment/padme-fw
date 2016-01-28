@@ -21,7 +21,7 @@ const int   IsSACON       = 1;  //Small angle gamma veto.
 const int   IsLAVON       = 0;  //LARGE angle gamma veto.
 
 const int   IsMonitorON   = 0;  //first station for P measurement
-const int   IsTargetON    = 1;  // is off if dump is On
+const int   IsTargetON    = 0;  // is off if dump is On
 const int   IsTDumpON     = 0;
 
 const int   IsWallON        = 0;
@@ -248,10 +248,10 @@ const int MaxTracks = 100; //to be less than 50 check in EVENT ACTION histoManag
 const int MaxTrHits = 500;
 
 //  Beam Dump wall Dimension	     
-const double WallSizeX =200.;   //in cm
-const double WallSizeY =450.;   //in cm
-const double WallSizeZ =50.;   //in cm
+const double WallSizeX = 450.; // in cm
+const double WallSizeY = 200.; // in cm
+const double WallSizeZ =  50.; // in cm
 
-const double WallPosiX =0.;	//in cm
-const double WallPosiY =0.;	//in cm
-const double WallPosiZ =500+WallSizeZ/2;	//in cm
+const double WallPosiX = 0.; // in cm
+const double WallPosiY = 0.; // in cm
+const double WallPosiZ = 500.+WallSizeZ/2; // in cm, reference point: center of magnet

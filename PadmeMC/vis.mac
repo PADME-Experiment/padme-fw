@@ -19,6 +19,7 @@
 /Detector/EnableSubDetector PVeto
 /Detector/EnableSubDetector EVeto
 /Detector/EnableSubDetector HEPVeto
+#/Detector/EnableSubDetector TDump
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
@@ -27,6 +28,7 @@
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
+/Detector/DisableSubDetector TDump
 
 #/Detector/EnableStructure Wall
 /Detector/EnableStructure Magnet

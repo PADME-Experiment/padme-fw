@@ -26,6 +26,7 @@ class LAVDetector;
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
+class TDumpDetector;
 class MagnetStructure;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -68,6 +69,7 @@ private:
   PVetoDetector*   fPVetoDetector;
   EVetoDetector*   fEVetoDetector;
   HEPVetoDetector* fHEPVetoDetector;
+  TDumpDetector*   fTDumpDetector;
 
   MagnetStructure* fMagnetStructure;
 
@@ -78,6 +80,7 @@ private:
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;
+  G4int fEnableTDump;
 
   G4int fEnableWall;
   G4int fEnableMagnet;

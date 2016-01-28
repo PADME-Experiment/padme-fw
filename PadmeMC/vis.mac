@@ -54,10 +54,10 @@
 #/Detector/SAC/CrystalLength 10.
 #/Detector/SAC/FrontFaceZ 450.
 
-#/Detector/LAV/FrontFaceZ -10.
 #/Detector/LAV/InnerRadius 4.
 #/Detector/LAV/OuterRadius 10.
 #/Detector/LAV/ZLength 20.
+#/Detector/LAV/FrontFaceZ -75.
 
 #/Detector/PVeto/FrontFaceZ -50.
 #/Detector/PVeto/InnerFaceY -20.

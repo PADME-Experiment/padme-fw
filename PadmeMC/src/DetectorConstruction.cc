@@ -330,14 +330,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //  fTargetDetector->SetMotherVolume(logicWorld);
   //  fTargetDetector->CreateGeometry();
   //}
- if (fEnableTarget) {
-   if (fEnableMagnet) {
-     fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-   } else {
-     fTargetDetector->SetMotherVolume(logicWorld);
-   }
-   fTargetDetector->CreateGeometry();
- }
+  if (fEnableTarget) {
+    if (fEnableMagnet) {
+      fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+    } else {
+      fTargetDetector->SetMotherVolume(logicWorld);
+    }
+    fTargetDetector->CreateGeometry();
+  }
 
   // SAC
   if (fEnableSAC) {
@@ -347,7 +347,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // LAV
   if (fEnableLAV) {
-    fLAVDetector->SetMotherVolume(logicWorld);
+    if (fEnableMagnet) {
+      fLAVDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+    } else {
+      fLAVDetector->SetMotherVolume(logicWorld);
+    }
     fLAVDetector->CreateGeometry();
   }
 

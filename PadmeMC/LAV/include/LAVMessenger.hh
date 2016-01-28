@@ -32,11 +32,11 @@ private:
 
   G4UIdirectory* fLAVDetectorDir;
 
-  G4UIcommand* fSetLAVFrontFaceZCmd;
-
   G4UIcommand* fSetLAVInnerRadiusCmd;
   G4UIcommand* fSetLAVOuterRadiusCmd;
   G4UIcommand* fSetLAVZLengthCmd;
+
+  G4UIcommand* fSetLAVFrontFaceZCmd;
 
 };
 #endif

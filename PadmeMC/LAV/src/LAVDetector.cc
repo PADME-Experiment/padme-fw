@@ -39,14 +39,15 @@ void LAVDetector::CreateGeometry()
 
   // Create main LAV box
   printf("LAV will be placed at %f %f %f\n",geo->GetLAVPosX(),geo->GetLAVPosY(),geo->GetLAVPosZ());
-  G4ThreeVector posLAV = G4ThreeVector(geo->GetLAVPosX(),geo->GetLAVPosY(),geo->GetLAVPosZ()); 
+  G4ThreeVector lavPos = G4ThreeVector(geo->GetLAVPosX(),geo->GetLAVPosY(),geo->GetLAVPosZ()); 
   G4double lavInnerR = geo->GetLAVInnerRadius();
   G4double lavOuterR = geo->GetLAVOuterRadius();
   G4double lavZLength = geo->GetLAVZLength();
   printf("LAV size is %f %f %f\n",lavInnerR,lavOuterR,lavZLength);
-  G4Tubs* solidLAV = new G4Tubs("LAVSolid",lavInnerR,lavOuterR,lavZLength*0.5,0.*rad,2.*M_PI*rad);
-  fLAVVolume = new G4LogicalVolume(solidLAV,G4Material::GetMaterial("G4_PbWO4"),"LAVLogic",0,0,0);
-  new G4PVPlacement(0,posLAV,fLAVVolume,"LAV",fMotherVolume,false,0,false);
+  G4Tubs* solidLAV = new G4Tubs("LAV",lavInnerR,lavOuterR,lavZLength*0.5,0.*rad,2.*M_PI*rad);
+  fLAVVolume = new G4LogicalVolume(solidLAV,G4Material::GetMaterial("G4_PbWO4"),"LAV",0,0,0);
+  fLAVVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Magenta()));
+  new G4PVPlacement(0,lavPos,fLAVVolume,"LAV",fMotherVolume,false,0,false);
 
   // Make whole LAV a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

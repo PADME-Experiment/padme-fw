@@ -24,13 +24,6 @@ LAVMessenger::LAVMessenger(LAVDetector* det)
   fLAVDetectorDir = new G4UIdirectory("/Detector/LAV/");
   fLAVDetectorDir->SetGuidance("UI commands to control LAV detector geometry");
 
-  fSetLAVFrontFaceZCmd = new G4UIcommand("/Detector/LAV/FrontFaceZ",this);
-  fSetLAVFrontFaceZCmd->SetGuidance("Set position along Z of LAV front face in cm.");
-  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
-  effPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= 100.");
-  fSetLAVFrontFaceZCmd->SetParameter(effPosZParameter);
-  fSetLAVFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-
   fSetLAVInnerRadiusCmd = new G4UIcommand("/Detector/LAV/InnerRadius",this);
   fSetLAVInnerRadiusCmd->SetGuidance("Set LAV inner radius in cm.");
   G4UIparameter* lirParameter = new G4UIparameter("InnR",'d',false);
@@ -51,6 +44,13 @@ LAVMessenger::LAVMessenger(LAVDetector* det)
   llParameter->SetParameterRange("ZLen > 0. && ZLen <= 50.");
   fSetLAVZLengthCmd->SetParameter(llParameter);
   fSetLAVZLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetLAVFrontFaceZCmd = new G4UIcommand("/Detector/LAV/FrontFaceZ",this);
+  fSetLAVFrontFaceZCmd->SetGuidance("Set position along Z of LAV front face in cm.");
+  G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
+  effPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= -50.");
+  fSetLAVFrontFaceZCmd->SetParameter(effPosZParameter);
+  fSetLAVFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 

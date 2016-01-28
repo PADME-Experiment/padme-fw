@@ -56,6 +56,7 @@ void SACDetector::CreateGeometry()
   printf("SAC Crystal size is %f %f %f\n",crySizeX,crySizeY,crySizeZ);
   G4Box* solidCry  = new G4Box("SACCry",0.5*crySizeX,0.5*crySizeY,0.5*crySizeZ);
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BARIUM_FLUORIDE"),"SACCry",0,0,0);
+  fCrystalVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Magenta()));
 
   // Make crystal a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

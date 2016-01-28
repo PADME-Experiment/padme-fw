@@ -24,7 +24,7 @@ LAVGeometry::LAVGeometry()
   fLAVOuterRadius = 10.*cm;
   fLAVZLength = 20.*cm;
 
-  fLAVFrontFacePosZ = -10.*cm;
+  fLAVFrontFacePosZ = -75.*cm; // Relative to center of magnet
 
   fLAVSensitiveDetectorName = "LAVSD";
 

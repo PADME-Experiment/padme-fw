@@ -329,11 +329,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // TDump
   if (fEnableTDump) {
-    if (fEnableMagnet) {
-      fTDumpDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-    } else {
-      fTDumpDetector->SetMotherVolume(logicWorld);
-    }
+    fTDumpDetector->SetMotherVolume(logicWorld);
     fTDumpDetector->CreateGeometry();
   }
 

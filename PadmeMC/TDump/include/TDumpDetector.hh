@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
-//#include "TDumpMessenger.hh"
+#include "TDumpMessenger.hh"
 
 class TDumpDetector
 {
@@ -24,14 +24,16 @@ public:
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
-  G4LogicalVolume* GetTDumpLogicalVolume() { return fTDumpVolume; }
+  G4LogicalVolume* GetTDumpLogicalVolume()  { return fTDumpVolume; }
+  G4LogicalVolume* GetTargetLogicalVolume() { return fTargetVolume; }
 
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fTDumpVolume;
+  G4LogicalVolume* fTargetVolume;
 
-  //TDumpMessenger* fTDumpMessenger;
+  TDumpMessenger* fTDumpMessenger;
 
 };
 

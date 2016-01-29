@@ -31,20 +31,30 @@ protected:
 
 public:
 
-  // Position of center of TDump tube
+  // Position of center of TDump
   G4double GetTDumpPosX() { return 0.*cm; }
   G4double GetTDumpPosY() { return 0.*cm; }
-  G4double GetTDumpPosZ() { return fTDumpFrontFacePosZ+0.5*fTDumpLength; }
+  G4double GetTDumpPosZ() { return fTDumpFrontFacePosZ+0.5*fTDumpSizeZ; }
 
-  // Size of TDump cylinder
-  G4double GetTDumpInnerRadius() { return 0.*cm; }
-  G4double GetTDumpOuterRadius() { return fTDumpRadius; }
-  G4double GetTDumpSizeZ()       { return fTDumpLength; }
+  // Size of TDump
+  G4double GetTDumpSizeX() { return fTDumpSizeX; }
+  G4double GetTDumpSizeY() { return fTDumpSizeY; }
+  G4double GetTDumpSizeZ() { return fTDumpSizeZ; }
+
+  // Position of center of TDump target in local coordinates
+  G4double GetTargetPosX() { return 0.*cm; }
+  G4double GetTargetPosY() { return 0.*cm; }
+  G4double GetTargetPosZ() { return -0.5*fTDumpSizeZ+fTargetFrontFacePosZ+0.5*fTargetLength; }
+
+  // Size of TDump target
+  G4double GetTargetInnerRadius() { return 0.*cm; }
+  G4double GetTargetOuterRadius() { return fTargetRadius; }
+  G4double GetTargetSizeZ()       { return fTargetLength; }
 
   // Size of lead bricks
-  G4double GetBrickSizeX() { return fBrickSizeX; }
-  G4double GetBrickSizeY() { return fBrickSizeY; }
-  G4double GetBrickSizeZ() { return fBrickSizeZ; }
+  G4double GetBrickSizeX() { return fBrickNominalSizeX-fTDumpGap; }
+  G4double GetBrickSizeY() { return fBrickNominalSizeY-fTDumpGap; }
+  G4double GetBrickSizeZ() { return fBrickNominalSizeZ-fTDumpGap; }
 
   // Number, position, and rotation around Z axis of lead bricks
   G4int GetNBricks() { return fNBricks; }
@@ -53,8 +63,12 @@ public:
   G4double GetBrickPosZ(G4int);
   G4double GetBrickRotZ(G4int);
 
-  void SetTDumpRadius(G4double r) { fTDumpRadius = r; }
-  void SetTDumpLength(G4double l) { fTDumpLength = l; }
+  // Set dimensions of the Tdump cylinder
+  void SetTargetRadius(G4double r) { fTargetRadius = r; }
+  void SetTargetLength(G4double l) { fTargetLength = l; }
+
+  // Set position along Z of TDump cylinder front face wrt TDump front face
+  void SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
 
   // Set position along Z of TDump front face
   void SetTDumpFrontFacePosZ(G4double z) { fTDumpFrontFacePosZ = z; }
@@ -64,16 +78,24 @@ public:
 
 private:
 
-  G4double fTDumpRadius;
-  G4double fTDumpLength;
+  G4double fTDumpGap;
 
-  G4double fBrickSizeX;
-  G4double fBrickSizeY;
-  G4double fBrickSizeZ;
+  G4double fTargetRadius;
+  G4double fTargetLength;
+
+  G4double fTargetFrontFacePosZ; // Position along Z axis of TDump target front face in local coordinates
 
   G4int fNBricks;
 
-  G4double fTDumpFrontFacePosZ; // Position along Z axis of TDump front face
+  G4double fBrickNominalSizeX;
+  G4double fBrickNominalSizeY;
+  G4double fBrickNominalSizeZ;
+
+  G4double fTDumpSizeX;
+  G4double fTDumpSizeY;
+  G4double fTDumpSizeZ;
+
+  G4double fTDumpFrontFacePosZ; // Position along Z axis of TDump front face wrt TDump front face
 
   G4String fTDumpSensitiveDetectorName;
 

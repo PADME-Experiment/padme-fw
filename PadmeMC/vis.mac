@@ -20,6 +20,8 @@
 /Detector/EnableSubDetector EVeto
 /Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
+#/Detector/EnableStructure Wall
+/Detector/EnableStructure Magnet
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
@@ -29,10 +31,6 @@
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 /Detector/DisableSubDetector TDump
-
-#/Detector/EnableStructure Wall
-/Detector/EnableStructure Magnet
-
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
@@ -81,6 +79,11 @@
 #/Detector/HEPVeto/RotationX -0.593
 #/Detector/HEPVeto/RotationY 0.
 #/Detector/HEPVeto/RotationZ 0.
+
+#/Detector/TDump/TargetRadius 2.
+#/Detector/TDump/TargetLength 3.
+#/Detector/TDump/TargetFrontFaceZ 40.
+#/Detector/TDump/FrontFaceZ -200.
 
 # Create detectors and initialize run
 /run/initialize

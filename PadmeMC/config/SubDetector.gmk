@@ -11,11 +11,13 @@
 ROOTCONFIG   := root-config
 ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
 
+PADMEROOTDIR := $(PADME)/PadmeRoot
+
 include $(G4INSTALL)/config/architecture.gmk
 
 CPPFLAGS += -I$(G4INCLUDE) \
             -I$(PADMEMC)/include \
-            -I$(PADMEROOTLIB)/include \
+            -I$(PADMEROOT)/include \
             -fPIC \
             $(ROOTCFLAGS) \
             $(DEFINES)

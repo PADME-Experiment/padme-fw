@@ -52,7 +52,7 @@ ECalSD::ECalSD(G4String name)
 :G4VSensitiveDetector(name)
 {
   G4String HCname;
-  collectionName.insert(HCname="ECryCollection"); //crea il collection name
+  collectionName.insert(HCname="ECalCollection"); //crea il collection name
 }
 
 //....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

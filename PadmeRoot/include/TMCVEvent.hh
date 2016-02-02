@@ -45,10 +45,10 @@ public:
   void  SetEventID(Int_t value)               { fRunID = value; };
 
   Int_t GetNHits()                            { return fNHits;  };
-  void  SetNHits(Int_t value)                 { fNHits = value; };
+  //void  SetNHits(Int_t value)                 { fNHits = value; };
 
-  TClonesArray* GetHits()                     { return fHits;   };
-  void          SetHits(TClonesArray * value) { fHits = value;  };
+  //TClonesArray* GetHits()                     { return fHits;   };
+  //void          SetHits(TClonesArray * value) { fHits = value;  };
 
 private:
 

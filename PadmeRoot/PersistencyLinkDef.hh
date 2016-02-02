@@ -10,5 +10,6 @@
 #pragma link C++ class TADCTrigger+;
 
 #pragma link C++ class TMCVHit+;
+#pragma link C++ class TMCVEvent+;
 
 #endif

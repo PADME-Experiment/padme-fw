@@ -12,4 +12,7 @@
 #pragma link C++ class TMCVHit+;
 #pragma link C++ class TMCVEvent+;
 
+#pragma link C++ class TECalMCHit+;
+#pragma link C++ class TECalMCEvent+;
+
 #endif

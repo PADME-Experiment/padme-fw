@@ -90,9 +90,9 @@ private:
   G4double fHEPVetoCenterPosY; // Position along Y axis of HEPVeto center
   G4double fHEPVetoCenterPosZ; // Position along Z axis of HEPVeto center
 
-  G4double fHEPVetoRotX; // Rotation of HEPVeto arount X axis
-  G4double fHEPVetoRotY; // Rotation of HEPVeto arount Y axis
-  G4double fHEPVetoRotZ; // Rotation of HEPVeto arount Z axis
+  G4double fHEPVetoRotX; // Rotation of HEPVeto around X axis
+  G4double fHEPVetoRotY; // Rotation of HEPVeto around Y axis
+  G4double fHEPVetoRotZ; // Rotation of HEPVeto around Z axis
 
   G4String fHEPVetoSensitiveDetectorName;
 

@@ -8,13 +8,13 @@
 
 #include "EVetoMessenger.hh"
 
-#include "EVetoDetector.hh"
 #include "G4UIdirectory.hh"
 #include "G4UIcommand.hh"
 #include "G4UIparameter.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithoutParameter.hh"
 
+#include "EVetoDetector.hh"
 #include "EVetoGeometry.hh"
 
 EVetoMessenger::EVetoMessenger(EVetoDetector* det)
@@ -50,9 +50,16 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
   fSetEVetoInnerFaceXCmd = new G4UIcommand("/Detector/EVeto/InnerFaceX",this);
   fSetEVetoInnerFaceXCmd->SetGuidance("Set position along X of EVeto inner face in cm.");
   G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
-  pifPosXParameter->SetParameterRange("PosX < 0. && PosX >= 55.");
+  pifPosXParameter->SetParameterRange("PosX < 0. && PosX >= -55.");
   fSetEVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
   fSetEVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetEVetoFrontFaceZCmd = new G4UIcommand("/Detector/EVeto/FrontFaceZ",this);
+  fSetEVetoFrontFaceZCmd->SetGuidance("Set position along Z of EVeto front face in cm.");
+  G4UIparameter* pifPosZParameter = new G4UIparameter("PosZ",'d',false);
+  pifPosZParameter->SetParameterRange("PosZ >= -50. && PosZ <= 50.");
+  fSetEVetoFrontFaceZCmd->SetParameter(pifPosZParameter);
+  fSetEVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -66,6 +73,7 @@ EVetoMessenger::~EVetoMessenger()
   delete fSetFingerLengthCmd;
 
   delete fSetEVetoInnerFaceXCmd;
+  delete fSetEVetoFrontFaceZCmd;
 
 }
 
@@ -86,6 +94,11 @@ void EVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetEVetoInnerFaceXCmd ) {
     G4double x; std::istringstream is(par); is >> x;
     fEVetoGeometry->SetEVetoInnerFacePosX(x*cm);
+  }
+
+  if ( cmd == fSetEVetoFrontFaceZCmd ) {
+    G4double z; std::istringstream is(par); is >> z;
+    fEVetoGeometry->SetEVetoFrontFacePosZ(z*cm);
   }
 
 }

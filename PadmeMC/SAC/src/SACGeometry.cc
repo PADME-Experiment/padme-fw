@@ -29,7 +29,7 @@ SACGeometry::SACGeometry()
 
   fCrystalGap = 0.1*mm;
 
-  fSACFrontFacePosZ = 300.*cm;
+  fSACFrontFacePosZ = 300.*cm; // from center of yoke, i.e. 350cm from target, 50cm from front of ECal
 
   fSACSensitiveDetectorName = "SACSD";
 
@@ -54,8 +54,8 @@ G4int SACGeometry::ExistsCrystalAt(G4int row, G4int col)
     return 0;
   }
 
-  // Central crystal is missing (assumes an odd number of crystals per row/column)
-  if (row==fSACNRows/2 && col==fSACNCols/2) return 0;
+  // Remove central crystal (assumes an odd number of crystals per row/column)
+  //if (row==fSACNRows/2 && col==fSACNCols/2) return 0;
 
   // All other crystals are there
   return 1;

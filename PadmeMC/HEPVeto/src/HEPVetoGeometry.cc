@@ -28,12 +28,13 @@ HEPVetoGeometry::HEPVetoGeometry()
 
   fFingerGap = 0.1*mm;
 
-  fHEPVetoCenterPosX =  75.*cm;
+  // Position of center of HEPVeto relative to center of magnet yoke
+  fHEPVetoCenterPosX = 120.*cm;
   fHEPVetoCenterPosY =   0.*cm;
-  fHEPVetoCenterPosZ = 153.*cm; // Relative to center of magnet yoke
+  fHEPVetoCenterPosZ = 250.*cm;
 
   fHEPVetoRotX = 0.   *rad;
-  fHEPVetoRotY = 0.593*rad;
+  fHEPVetoRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)
   fHEPVetoRotZ = 0.   *rad;
 
   fHEPVetoSensitiveDetectorName = "HEPVetoSD";

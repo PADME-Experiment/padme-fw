@@ -48,16 +48,13 @@ MagnetGeometry::MagnetGeometry()
   fNeopreneWidth   = 23.5*cm;
   fNeopreneLengthZ = fYokeSizeZ;
 
-  //fMagneticVolumeLengthX = 20.*cm;
-  //fMagneticVolumeLengthY = 52.*cm;
   fMagneticVolumeLengthX = fYokeSizeInnerX;
   fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
   fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
-  //fYokeFrontFacePosZ = 20.*cm;
   fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point
 
-  fMagneticFieldConstantValue = 0.45*tesla;
+  fMagneticFieldConstantValue = 0.55*tesla;
 
   fMagnetSensitiveDetectorName = "MagnetSD";
 

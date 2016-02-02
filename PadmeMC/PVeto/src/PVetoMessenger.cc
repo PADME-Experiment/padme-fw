@@ -50,9 +50,16 @@ PVetoMessenger::PVetoMessenger(PVetoDetector* det)
   fSetPVetoInnerFaceXCmd = new G4UIcommand("/Detector/PVeto/InnerFaceX",this);
   fSetPVetoInnerFaceXCmd->SetGuidance("Set position along X of PVeto inner face in cm.");
   G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
-  pifPosXParameter->SetParameterRange("PosX > 0. && PosY <= 56.");
+  pifPosXParameter->SetParameterRange("PosX > 0. && PosX <= 55.");
   fSetPVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
   fSetPVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetPVetoFrontFaceZCmd = new G4UIcommand("/Detector/PVeto/FrontFaceZ",this);
+  fSetPVetoFrontFaceZCmd->SetGuidance("Set position along Z of PVeto front face in cm.");
+  G4UIparameter* pifPosZParameter = new G4UIparameter("PosZ",'d',false);
+  pifPosZParameter->SetParameterRange("PosZ >=-50. && PosZ <= 50.");
+  fSetPVetoFrontFaceZCmd->SetParameter(pifPosZParameter);
+  fSetPVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -65,6 +72,7 @@ PVetoMessenger::~PVetoMessenger()
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
   delete fSetPVetoInnerFaceXCmd;
+  delete fSetPVetoFrontFaceZCmd;
 
 }
 
@@ -88,8 +96,13 @@ void PVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   }
 
   if ( cmd == fSetPVetoInnerFaceXCmd ) {
-    G4double y; std::istringstream is(par); is >> y;
-    fPVetoGeometry->SetPVetoInnerFacePosX(y*cm);
+    G4double x; std::istringstream is(par); is >> x;
+    fPVetoGeometry->SetPVetoInnerFacePosX(x*cm);
+  }
+
+  if ( cmd == fSetPVetoFrontFaceZCmd ) {
+    G4double z; std::istringstream is(par); is >> z;
+    fPVetoGeometry->SetPVetoFrontFacePosZ(z*cm);
   }
 
 }

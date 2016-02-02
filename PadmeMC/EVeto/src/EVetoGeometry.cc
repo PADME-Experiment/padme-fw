@@ -28,7 +28,9 @@ EVetoGeometry::EVetoGeometry()
 
   fFingerGap = 0.1*mm;
 
-  fEVetoInnerFacePosX = -22.*cm;
+  fEVetoInnerFacePosX = -20.*cm;
+
+  fEVetoFrontFacePosZ = -50.*cm; // Start at front face of yoke
 
   fEVetoSensitiveDetectorName = "EVetoSD";
 
@@ -39,7 +41,7 @@ EVetoGeometry::~EVetoGeometry()
 
 G4double EVetoGeometry::GetEVetoPosX()
 {
-  return fEVetoInnerFacePosX-GetEVetoSizeX()*0.5;
+  return fEVetoInnerFacePosX-0.5*GetEVetoSizeX();
 }
 
 G4double EVetoGeometry::GetEVetoPosY()
@@ -49,7 +51,7 @@ G4double EVetoGeometry::GetEVetoPosY()
 
 G4double EVetoGeometry::GetEVetoPosZ()
 {
-  return 0.;
+  return fEVetoFrontFacePosZ+0.5*GetEVetoSizeZ();
 }
 
 G4double EVetoGeometry::GetEVetoSizeX()

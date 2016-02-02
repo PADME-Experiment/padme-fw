@@ -26,15 +26,6 @@ MagnetMessenger::MagnetMessenger(MagnetStructure* mag)
   fMagnetDetectorDir = new G4UIdirectory("/Detector/Magnet/");
   fMagnetDetectorDir->SetGuidance("UI commands to control Magnet geometry");
 
-  /* // Center of magnet is now the global reference point
-  fSetMagnetFrontFaceZCmd = new G4UIcommand("/Detector/Magnet/FrontFaceZ",this);
-  fSetMagnetFrontFaceZCmd->SetGuidance("Set position along Z of Magnet (iron yoke) front face in cm.");
-  G4UIparameter* tffPosZParameter = new G4UIparameter("PosZ",'d',false);
-  tffPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= 100.");
-  fSetMagnetFrontFaceZCmd->SetParameter(tffPosZParameter);
-  fSetMagnetFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-  */
-
   fEnableMagneticFieldCmd = new G4UIcmdWithoutParameter("/Detector/Magnet/EnableMagneticField",this);
   fEnableMagneticFieldCmd->SetGuidance("Enable magnetic field.");
   fEnableMagneticFieldCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -57,8 +48,6 @@ MagnetMessenger::~MagnetMessenger()
 
   delete fMagnetDetectorDir;
 
-  //delete fSetMagnetFrontFaceZCmd;
-
   delete fEnableMagneticFieldCmd;
   delete fDisableMagneticFieldCmd;
 
@@ -68,14 +57,6 @@ MagnetMessenger::~MagnetMessenger()
 
 void MagnetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
-
-  /*
-  if ( cmd == fSetMagnetFrontFaceZCmd ) {
-    G4double z; std::istringstream is(par); is >> z;
-    printf("Setting MagnetFrontFacePosZ to %f cm\n",z);
-    fMagnetGeometry->SetMagnetFrontFacePosZ(z*cm);
-  }
-  */
 
   if ( cmd == fEnableMagneticFieldCmd ) {
     printf("Enabling Magnetic Field\n");

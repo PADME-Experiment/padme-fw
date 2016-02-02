@@ -29,9 +29,9 @@ ECalGeometry::ECalGeometry()
 
   fCrystalGap = 0.1*mm;
 
-  fECalFrontFacePosZ = 250.*cm; // From center of magnet yoke
+  fECalFrontFacePosZ = 250.*cm; // From center of magnet yoke, i.e. 3m to target
 
-  fECalInnerRadius = 8.*cm;
+  fECalInnerRadius = 6.*cm;
   fECalOuterRadius = 30.*cm;
 
   fECalSensitiveDetectorName = "ECalSD";

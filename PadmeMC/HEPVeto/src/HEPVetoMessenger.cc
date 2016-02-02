@@ -50,7 +50,7 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
   fSetHEPVetoPosXCmd = new G4UIcommand("/Detector/HEPVeto/PositionX",this);
   fSetHEPVetoPosXCmd->SetGuidance("Set position along X of HEPVeto center in cm.");
   G4UIparameter* pxPosXParameter = new G4UIparameter("PosX",'d',false);
-  pxPosXParameter->SetParameterRange("PosX > 0. && PosX <= 100.");
+  pxPosXParameter->SetParameterRange("PosX > 0. && PosX <= 200.");
   fSetHEPVetoPosXCmd->SetParameter(pxPosXParameter);
   fSetHEPVetoPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
@@ -123,13 +123,13 @@ void HEPVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetFingerSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fHEPVetoGeometry->SetFingerNominalSizeY(s*cm);
+    fHEPVetoGeometry->SetFingerNominalSizeX(s*cm);
     fHEPVetoGeometry->SetFingerNominalSizeZ(s*cm);
   }
 
   if ( cmd == fSetFingerLengthCmd ) {
     G4double l; std::istringstream is(par); is >> l;
-    fHEPVetoGeometry->SetFingerNominalSizeX(l*cm);
+    fHEPVetoGeometry->SetFingerNominalSizeY(l*cm);
   }
 
   if ( cmd == fSetHEPVetoPosXCmd ) {

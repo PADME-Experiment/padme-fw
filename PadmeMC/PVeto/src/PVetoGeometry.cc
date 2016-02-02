@@ -28,8 +28,9 @@ PVetoGeometry::PVetoGeometry()
 
   fFingerGap = 0.1*mm;
 
-  //fPVetoFrontFacePosZ = -50.*cm;
-  fPVetoInnerFacePosX = 22.*cm; // Along X fingers are positioned just inside magnet rail
+  fPVetoInnerFacePosX =  20.*cm;
+
+  fPVetoFrontFacePosZ = -50.*cm; // Start at front face of yoke
 
   fPVetoSensitiveDetectorName = "PVetoSD";
 
@@ -40,7 +41,7 @@ PVetoGeometry::~PVetoGeometry()
 
 G4double PVetoGeometry::GetPVetoPosX()
 {
-  return fPVetoInnerFacePosX+GetPVetoSizeX()*0.5;
+  return fPVetoInnerFacePosX+0.5*GetPVetoSizeX();
 }
 
 G4double PVetoGeometry::GetPVetoPosY()
@@ -50,7 +51,7 @@ G4double PVetoGeometry::GetPVetoPosY()
 
 G4double PVetoGeometry::GetPVetoPosZ()
 {
-  return 0.; // Centered within MagneticVolume
+  return fPVetoFrontFacePosZ+0.5*GetPVetoSizeZ();
 }
 
 G4double PVetoGeometry::GetPVetoSizeX()

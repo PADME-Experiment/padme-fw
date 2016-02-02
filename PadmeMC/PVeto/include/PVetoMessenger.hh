@@ -37,6 +37,7 @@ private:
   G4UIcommand* fSetFingerLengthCmd;
 
   G4UIcommand* fSetPVetoInnerFaceXCmd;
+  G4UIcommand* fSetPVetoFrontFaceZCmd;
 
 };
 #endif

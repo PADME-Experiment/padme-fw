@@ -5,7 +5,7 @@
 #
 /control/verbose 1
 /run/verbose 1
-/tracking/verbose 1
+#/tracking/verbose 1
 
 # Output root file
 /output/fileName pippo.root
@@ -34,25 +34,25 @@
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
-#/Detector/Target/FrontFaceZ -20.
-#/Detector/Target/Size 1.
-#/Detector/Target/Thickness 50.
+#/Detector/Target/FrontFaceZ -50.
+#/Detector/Target/Size 2.
+#/Detector/Target/Thickness 100.
 
 /Detector/Magnet/EnableMagneticField
 #/Detector/Magnet/DisableMagneticField
-#/Detector/Magnet/MagneticFieldConstantValue 0.3
+#/Detector/Magnet/MagneticFieldConstantValue 0.55
 
 #/Detector/ECal/NRows 30
 #/Detector/ECal/NCols 30
 #/Detector/ECal/CrystalSize 2.
 #/Detector/ECal/CrystalLength 22.
-#/Detector/ECal/InnerRadius 4.
+#/Detector/ECal/InnerRadius 6.
 #/Detector/ECal/OuterRadius 30.
-#/Detector/ECal/FrontFaceZ 400.
+#/Detector/ECal/FrontFaceZ 250.
 
 #/Detector/SAC/CrystalSize 2.
 #/Detector/SAC/CrystalLength 10.
-#/Detector/SAC/FrontFaceZ 450.
+#/Detector/SAC/FrontFaceZ 300.
 
 #/Detector/LAV/InnerRadius 4.
 #/Detector/LAV/OuterRadius 10.
@@ -60,30 +60,31 @@
 #/Detector/LAV/FrontFaceZ -75.
 
 #/Detector/PVeto/FrontFaceZ -50.
-#/Detector/PVeto/InnerFaceY -20.
+#/Detector/PVeto/InnerFaceX 20.
 #/Detector/PVeto/NFingers 100
 #/Detector/PVeto/FingerSize 1.
 #/Detector/PVeto/FingerLength 18.
 
 #/Detector/EVeto/FrontFaceZ -50.
-#/Detector/EVeto/InnerFaceY 20.
+#/Detector/EVeto/InnerFaceX -20.
 #/Detector/EVeto/NFingers 100
 #/Detector/EVeto/FingerSize 1.
+#/Detector/EVeto/FingerLength 18.
 
 #/Detector/HEPVeto/NFingers 50
 #/Detector/HEPVeto/FingerSize 1.
-#/Detector/HEPVeto/FingerLength 20.
-#/Detector/HEPVeto/PositionX 0.
-#/Detector/HEPVeto/PositionY -75.
-#/Detector/HEPVeto/PositionZ 223.
-#/Detector/HEPVeto/RotationX -0.593
-#/Detector/HEPVeto/RotationY 0.
-#/Detector/HEPVeto/RotationZ 0.
+#/Detector/HEPVeto/FingerLength 18.
+#/Detector/HEPVeto/PositionX 120.
+#/Detector/HEPVeto/PositionY 0.      # Disabled
+#/Detector/HEPVeto/PositionZ 250.
+#/Detector/HEPVeto/RotationX 0.      # Disabled
+#/Detector/HEPVeto/RotationY 0.977
+#/Detector/HEPVeto/RotationZ 0.      # Disabled
 
-#/Detector/TDump/TargetRadius 2.
-#/Detector/TDump/TargetLength 3.
-#/Detector/TDump/TargetFrontFaceZ 40.
-#/Detector/TDump/FrontFaceZ -200.
+#/Detector/TDump/TargetRadius 3.5
+#/Detector/TDump/TargetLength 6.0
+#/Detector/TDump/TargetFrontFaceZ 10.
+#/Detector/TDump/FrontFaceZ -180.
 
 # Create detectors and initialize run
 /run/initialize
@@ -171,8 +172,8 @@
 #/vis/viewer/panTo 0.5 0.
 /vis/scene/endOfEventAction accumulate 10000
 #/vis/viewer/set/viewpointThetaPhi 90. 180.
-/vis/viewer/set/viewpointThetaPhi 180. 0.
-#/vis/viewer/set/viewpointThetaPhi 90. 90.
+#/vis/viewer/set/viewpointThetaPhi 180. 0.
+/vis/viewer/set/viewpointThetaPhi 90. 90.
 #/vis/viewer/zoom 1.5
 /vis/viewer/zoom 0.5
 #/vis/scene/add/axes 0 -50. -50. 30. cm

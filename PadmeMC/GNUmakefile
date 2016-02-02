@@ -14,9 +14,6 @@ G4EXLIB  := true
 SUBDIRS  := Beam ECal Target SAC LAV PVeto EVeto HEPVeto Magnet TDump TPix
 ALLTARGETDIRS := $(SUBDIRS)
 
-# Directory where the PadmeRoot package is installed
-PADMEROOTDIR := $(PADME)/PadmeRoot
-
 LOCALDIR := ${PWD}
 
 ifndef G4INSTALL
@@ -33,15 +30,13 @@ G4VERSION = $(shell dirname $(G4INSTALL) | sed s:\/.\*\/:"": )
 G4MAJORVERSION = $(shell dirname $(G4INSTALL) | sed -e 's:/.*/::' -e 's:\-: :' -e 's:\.: :g' | cut -d" " -f2 )
 G4MINORVERSION = $(shell dirname $(G4INSTALL) | sed -e 's:/.*/::' -e 's:\-: :' -e 's:\.: :g' | cut -d" " -f3 )
 
-
 DEFINES += -D G4VERSION=$(G4VERSION) -D G4MAJORVERSION=$(G4MAJORVERSION) -D G4MINORVERSION=$(G4MINORVERSION) 
 
-
-CPPFLAGS += -I$(PADMEROOTDIR)/include $(ROOTCFLAGS) -fPIC $(DEFINES) 
+CPPFLAGS += -I$(PADMEROOT)/include $(ROOTCFLAGS) -fPIC $(DEFINES)
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 
 EXTRALIBS := $(addprefix -l,$(SUBDIRS))
-EXTRALIBS += -L$(PADMEROOTDIR)/lib -lPadmeRoot
+EXTRALIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 EXTRALIBS += $(ROOTLIBS)
 
 .PHONY: all bin makesub clean cleansub cleanall cleanallsub $(SUBDIRS)

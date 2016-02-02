@@ -4,8 +4,8 @@
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-02-02
 //
 // --------------------------------------------------------------
-#ifndef MCVRootIO_H
-#define MCVRootIO_H 1
+#ifndef MCVRootIO_h
+#define MCVRootIO_h 1
 
 #include "globals.hh"
 #include "G4Event.hh"

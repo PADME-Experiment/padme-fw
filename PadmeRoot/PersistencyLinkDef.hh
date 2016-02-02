@@ -9,4 +9,6 @@
 #pragma link C++ class TADCChannel+;
 #pragma link C++ class TADCTrigger+;
 
+#pragma link C++ class TMCVHit+;
+
 #endif

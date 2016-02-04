@@ -13,6 +13,7 @@
 #include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
 #include "TDumpDetector.hh"
+#include "TPixDetector.hh"
 
 #include "MagnetStructure.hh"
 
@@ -70,6 +71,7 @@ DetectorConstruction::DetectorConstruction()
   fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
   fTDumpDetector   = new TDumpDetector(0);
+  fTPixDetector    = new TPixDetector(0);
   fMagnetStructure = new MagnetStructure(0);
 
   fEnableECal    = 1;
@@ -80,6 +82,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
   fEnableTDump   = 0;
+  fEnableTPix    = 1;
 
   fEnableWall   = 0;
   fEnableMagnet = 1;
@@ -103,6 +106,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fEVetoDetector;
   delete fHEPVetoDetector;
   delete fTDumpDetector;
+  delete fTPixDetector;
   delete fMagnetStructure;
 
 }
@@ -118,6 +122,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
   else if (det=="TDump")   { fEnableTDump   = 1; }
+  else if (det=="TPix")    { fEnableTPix    = 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
 
@@ -132,6 +137,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
   else if (det=="TDump")   { fEnableTDump   = 0; }
+  else if (det=="TPix")    { fEnableTPix    = 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
@@ -197,6 +203,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* BaF2     = man->FindOrBuildMaterial("G4_BARIUM_FLUORIDE");
   G4Material* Cu       = man->FindOrBuildMaterial("G4_Cu");
   G4Material* Al       = man->FindOrBuildMaterial("G4_Al");
+  G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
 
   //Print all the materials defined.
@@ -331,6 +338,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (fEnableTDump) {
     fTDumpDetector->SetMotherVolume(logicWorld);
     fTDumpDetector->CreateGeometry();
+  }
+
+  // TPix
+  if (fEnableTPix) {
+    fTPixDetector->SetMotherVolume(logicWorld);
+    fTPixDetector->CreateGeometry();
   }
 
  //------------------------------------------------- 

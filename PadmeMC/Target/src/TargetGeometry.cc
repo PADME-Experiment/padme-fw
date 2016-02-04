@@ -24,7 +24,7 @@ TargetGeometry::TargetGeometry()
   fTargetSizeY =   2.*cm;
   fTargetSizeZ = 100.*um;
 
-  fTargetFrontFacePosZ = -50.*cm; // Relative to center of magnet
+  fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
 
   fTargetSensitiveDetectorName = "TargetSD";
 

@@ -20,13 +20,24 @@ PVetoGeometry::PVetoGeometry()
 
   // Inizialize default parameters
 
+  fFingerGap = 0.3*mm;
+
+  //fPVetoNFingers = 100;
+  fPVetoNFingers = 96;
+
   fFingerNominalSizeX =  1.0*cm;
   fFingerNominalSizeY = 18.0*cm;
   fFingerNominalSizeZ =  1.0*cm;
 
-  fPVetoNFingers = 100;
+  //fFingerRotX = 0.*deg;
+  fFingerRotY = -10.*deg;
+  //fFingerRotZ = 0.*deg;
 
-  fFingerGap = 0.1*mm;
+  fSupportGap = 0.1*mm;
+
+  fSupportNominalSizeX =   2.0*cm;
+  fSupportNominalSizeY =   0.5*cm;
+  fSupportNominalSizeZ = 100.0*cm;
 
   fPVetoInnerFacePosX =  20.*cm;
 
@@ -39,59 +50,14 @@ PVetoGeometry::PVetoGeometry()
 PVetoGeometry::~PVetoGeometry()
 {}
 
-G4double PVetoGeometry::GetPVetoPosX()
-{
-  return fPVetoInnerFacePosX+0.5*GetPVetoSizeX();
-}
-
-G4double PVetoGeometry::GetPVetoPosY()
-{
-  return 0.;
-}
-
-G4double PVetoGeometry::GetPVetoPosZ()
-{
-  return fPVetoFrontFacePosZ+0.5*GetPVetoSizeZ();
-}
-
-G4double PVetoGeometry::GetPVetoSizeX()
-{
-  return fFingerNominalSizeX;
-}
-
-G4double PVetoGeometry::GetPVetoSizeY()
-{
-  return fFingerNominalSizeY;
-}
-
-G4double PVetoGeometry::GetPVetoSizeZ()
-{
-  return fFingerNominalSizeZ*fPVetoNFingers;
-}
-
-G4double PVetoGeometry::GetFingerSizeX()
-{
-  return fFingerNominalSizeX-fFingerGap;
-}
-
-G4double PVetoGeometry::GetFingerSizeY()
-{
-  return fFingerNominalSizeY-fFingerGap;
-}
-
-G4double PVetoGeometry::GetFingerSizeZ()
-{
-  return fFingerNominalSizeZ-fFingerGap;
-}
-
 G4double PVetoGeometry::GetFingerPosX(G4int idx)
 {
   // Verify we are within PVeto box
   if (idx<0 || idx>=fPVetoNFingers) {
     printf("PVetoGeometry::GetFingerPosX - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return 0.;
+  return 0.*cm;
 }
 
 G4double PVetoGeometry::GetFingerPosY(G4int idx)
@@ -99,9 +65,9 @@ G4double PVetoGeometry::GetFingerPosY(G4int idx)
   // Verify we are within PVeto box
   if (idx<0 || idx>=fPVetoNFingers) {
     printf("PVetoGeometry::GetFingerPosY - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return 0.;
+  return 0.*cm;
 }
 
 G4double PVetoGeometry::GetFingerPosZ(G4int idx)
@@ -109,7 +75,7 @@ G4double PVetoGeometry::GetFingerPosZ(G4int idx)
   // Verify we are within PVeto box
   if (idx<0 || idx>=fPVetoNFingers) {
     printf("PVetoGeometry::GetFingerPosZ - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return -GetPVetoSizeZ()*0.5+fFingerNominalSizeZ*idx+fFingerNominalSizeZ*0.5;
+  return (fFingerNominalSizeZ+fFingerGap)*(-0.5*fPVetoNFingers+1.*idx+0.5);
 }

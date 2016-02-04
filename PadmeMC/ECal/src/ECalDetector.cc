@@ -46,7 +46,7 @@ void ECalDetector::CreateGeometry()
   G4double ecalSizeZ = geo->GetECalSizeZ();
   printf("ECal size is %f %f %f\n",ecalSizeX,ecalSizeY,ecalSizeZ);
   G4Box* solidEcal = new G4Box("ECal",0.5*ecalSizeX,0.5*ecalSizeY,0.5*ecalSizeZ);
-  fECalVolume = new G4LogicalVolume(solidEcal,G4Material::GetMaterial("G4_Galactic"),"ECal",0,0,0);
+  fECalVolume = new G4LogicalVolume(solidEcal,G4Material::GetMaterial("Vacuum"),"ECal",0,0,0);
   fECalVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,ecalPos,fECalVolume,"ECal",fMotherVolume,false,0,false);
 

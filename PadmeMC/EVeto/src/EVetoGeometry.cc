@@ -20,13 +20,24 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
+  fFingerGap = 0.3*mm;
+
+  //fEVetoNFingers = 100;
+  fEVetoNFingers = 96;
+
   fFingerNominalSizeX =  1.0*cm;
   fFingerNominalSizeY = 18.0*cm;
   fFingerNominalSizeZ =  1.0*cm;
 
-  fEVetoNFingers = 100;
+  //fFingerRotX = 0.*deg;
+  fFingerRotY = 10.*deg;
+  //fFingerRotZ = 0.*deg;
 
-  fFingerGap = 0.1*mm;
+  fSupportGap = 0.1*mm;
+
+  fSupportNominalSizeX =   2.0*cm;
+  fSupportNominalSizeY =   0.5*cm;
+  fSupportNominalSizeZ = 100.0*cm;
 
   fEVetoInnerFacePosX = -20.*cm;
 
@@ -39,59 +50,14 @@ EVetoGeometry::EVetoGeometry()
 EVetoGeometry::~EVetoGeometry()
 {}
 
-G4double EVetoGeometry::GetEVetoPosX()
-{
-  return fEVetoInnerFacePosX-0.5*GetEVetoSizeX();
-}
-
-G4double EVetoGeometry::GetEVetoPosY()
-{
-  return 0.;
-}
-
-G4double EVetoGeometry::GetEVetoPosZ()
-{
-  return fEVetoFrontFacePosZ+0.5*GetEVetoSizeZ();
-}
-
-G4double EVetoGeometry::GetEVetoSizeX()
-{
-  return fFingerNominalSizeX;
-}
-
-G4double EVetoGeometry::GetEVetoSizeY()
-{
-  return fFingerNominalSizeY;
-}
-
-G4double EVetoGeometry::GetEVetoSizeZ()
-{
-  return fFingerNominalSizeZ*fEVetoNFingers;
-}
-
-G4double EVetoGeometry::GetFingerSizeX()
-{
-  return fFingerNominalSizeX-fFingerGap;
-}
-
-G4double EVetoGeometry::GetFingerSizeY()
-{
-  return fFingerNominalSizeY-fFingerGap;
-}
-
-G4double EVetoGeometry::GetFingerSizeZ()
-{
-  return fFingerNominalSizeZ-fFingerGap;
-}
-
 G4double EVetoGeometry::GetFingerPosX(G4int idx)
 {
   // Verify we are within EVeto box
   if (idx<0 || idx>=fEVetoNFingers) {
     printf("EVetoGeometry::GetFingerPosX - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return 0;
+  return 0.*cm;
 }
 
 G4double EVetoGeometry::GetFingerPosY(G4int idx)
@@ -99,9 +65,9 @@ G4double EVetoGeometry::GetFingerPosY(G4int idx)
   // Verify we are within EVeto box
   if (idx<0 || idx>=fEVetoNFingers) {
     printf("EVetoGeometry::GetFingerPosY - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return 0;
+  return 0.*cm;
 }
 
 G4double EVetoGeometry::GetFingerPosZ(G4int idx)
@@ -109,7 +75,7 @@ G4double EVetoGeometry::GetFingerPosZ(G4int idx)
   // Verify we are within EVeto box
   if (idx<0 || idx>=fEVetoNFingers) {
     printf("EVetoGeometry::GetFingerPosZ - ERROR - Requested finger at index %d\n",idx);
-    return 0.;
+    return 0.*cm;
   }
-  return -GetEVetoSizeZ()*0.5+fFingerNominalSizeZ*idx+fFingerNominalSizeZ*0.5;
+  return (fFingerNominalSizeZ+fFingerGap)*(-0.5*fEVetoNFingers+1.*idx+0.5);
 }

@@ -38,7 +38,7 @@
 #/Detector/Target/Size 2.
 #/Detector/Target/Thickness 100.
 
-/Detector/Magnet/EnableMagneticField
+#/Detector/Magnet/EnableMagneticField
 #/Detector/Magnet/DisableMagneticField
 #/Detector/Magnet/MagneticFieldConstantValue 0.55
 
@@ -61,13 +61,13 @@
 
 #/Detector/PVeto/FrontFaceZ -50.
 #/Detector/PVeto/InnerFaceX 20.
-#/Detector/PVeto/NFingers 100
+#/Detector/PVeto/NFingers 96
 #/Detector/PVeto/FingerSize 1.
 #/Detector/PVeto/FingerLength 18.
 
 #/Detector/EVeto/FrontFaceZ -50.
 #/Detector/EVeto/InnerFaceX -20.
-#/Detector/EVeto/NFingers 100
+#/Detector/EVeto/NFingers 96
 #/Detector/EVeto/FingerSize 1.
 #/Detector/EVeto/FingerLength 18.
 

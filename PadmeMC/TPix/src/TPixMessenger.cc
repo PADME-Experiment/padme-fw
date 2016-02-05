@@ -29,7 +29,7 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
   fSetTPixNColumnsCmd = new G4UIcommand("/Detector/TPix/NColumns",this);
   fSetTPixNColumnsCmd->SetGuidance("Set number of TPix columns of chips.");
   G4UIparameter* nfNColParameter = new G4UIparameter("NCol",'i',false);
-  nfNColParameter->SetParameterRange("NCol >= 1 && NFin <= 5");
+  nfNColParameter->SetParameterRange("NCol >= 1 && NCol <= 5");
   fSetTPixNColumnsCmd->SetParameter(nfNColParameter);
   fSetTPixNColumnsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

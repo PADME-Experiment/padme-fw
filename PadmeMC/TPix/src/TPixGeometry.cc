@@ -30,9 +30,9 @@ TPixGeometry::TPixGeometry()
   fChipGap = 0.1*mm;
 
   // Position of center of TPix relative to center of magnet yoke
-  fTPixCenterPosX =  90.*cm;
+  fTPixCenterPosX =  97.*cm;
   fTPixCenterPosY =   0.*cm;
-  fTPixCenterPosZ = 250.*cm;
+  fTPixCenterPosZ = 263.*cm;
 
   fTPixRotX = 0.   *rad;
   fTPixRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)

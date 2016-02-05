@@ -23,13 +23,13 @@ TPixDetector::TPixDetector(G4LogicalVolume* motherVolume)
 {
 
   // Connect to TPixMessenger to enable datacard configuration
-  //fTPixMessenger = new TPixMessenger(this);
+  fTPixMessenger = new TPixMessenger(this);
 
 }
 
 TPixDetector::~TPixDetector()
 {
-  //delete fTPixMessenger;
+  delete fTPixMessenger;
 }
 
 void TPixDetector::CreateGeometry()

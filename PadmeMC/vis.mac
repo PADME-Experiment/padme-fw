@@ -20,6 +20,7 @@
 /Detector/EnableSubDetector EVeto
 /Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
+/Detector/EnableSubDetector TPix
 #/Detector/EnableStructure Wall
 /Detector/EnableStructure Magnet
 
@@ -31,6 +32,7 @@
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 /Detector/DisableSubDetector TDump
+#/Detector/DisableSubDetector TPix
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
@@ -85,6 +87,14 @@
 #/Detector/TDump/TargetLength 6.0
 #/Detector/TDump/TargetFrontFaceZ 10.
 #/Detector/TDump/FrontFaceZ -180.
+
+#/Detector/TPix/NColumns 3
+#/Detector/TPix/PositionX 97.
+#/Detector/TPix/PositionY 0.      # Disabled
+#/Detector/TPix/PositionZ 263.
+#/Detector/TPix/RotationX 0.      # Disabled
+#/Detector/TPix/RotationY 0.977
+#/Detector/TPix/RotationZ 0.      # Disabled
 
 # Create detectors and initialize run
 /run/initialize

@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
-//#include "TPixMessenger.hh"
+#include "TPixMessenger.hh"
 
 class TPixDetector
 {
@@ -32,7 +32,7 @@ private:
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fTPixVolume;
   G4LogicalVolume* fChipVolume;
-  //TPixMessenger* fTPixMessenger;
+  TPixMessenger* fTPixMessenger;
 
 };
 

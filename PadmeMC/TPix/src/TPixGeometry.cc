@@ -21,18 +21,18 @@ TPixGeometry::TPixGeometry()
   // Inizialize default parameters
 
   fTPixNRows = 2;
-  fTPixNCols = 3;
+  fTPixNCols = 5;
 
   fChipNominalSizeX =  0.1*mm; // Thickness
   fChipNominalSizeY =  14.08*mm; // 256 pixels of 55um each
   fChipNominalSizeZ =  14.08*mm; // 256 pixels of 55um each
 
-  fChipGap = 0.1*mm;
+  fChipGap = 0.01*mm;
 
   // Position of center of TPix relative to center of magnet yoke
-  fTPixCenterPosX =  97.*cm;
+  fTPixCenterPosX =  96.*cm;
   fTPixCenterPosY =   0.*cm;
-  fTPixCenterPosZ = 263.*cm;
+  fTPixCenterPosZ = 264.*cm;
 
   fTPixRotX = 0.   *rad;
   fTPixRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)

@@ -245,6 +245,24 @@ public:
   G4double GetSlabDRPosY()  { return -0.5*fYokeSizeInnerY+fNeopreneThick+fCoilLengthY+fNeopreneThick+0.5*fSlabThick; }
   G4double GetSlabDRPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
 
+  // === Vacuum chamber plates ===
+
+  // Up (Y>0)
+  G4double GetVacuumUSizeX() { return fVacuumWidth; }
+  G4double GetVacuumUSizeY() { return fVacuumThick; }
+  G4double GetVacuumUSizeZ() { return fVacuumLengthZ; }
+  G4double GetVacuumUPosX()  { return 0.*cm; }
+  G4double GetVacuumUPosY()  { return 0.5*fYokeSizeInnerY-fYokeSizeInBarY-0.5*fVacuumThick; }
+  G4double GetVacuumUPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
+
+  // Down (Y<0)
+  G4double GetVacuumDSizeX() { return fVacuumWidth; }
+  G4double GetVacuumDSizeY() { return fVacuumThick; }
+  G4double GetVacuumDSizeZ() { return fVacuumLengthZ; }
+  G4double GetVacuumDPosX()  { return 0.*cm; }
+  G4double GetVacuumDPosY()  { return -0.5*fYokeSizeInnerY+fYokeSizeInBarY+0.5*fVacuumThick; }
+  G4double GetVacuumDPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
+
   // === Rails inside magnet ===
 
   // Up (Y>0) Left (X>0) rail
@@ -357,6 +375,8 @@ public:
 
   //void SetMagnetFrontFacePosZ(G4double z) { fMagnetFrontFacePosZ = z; }
 
+  void SetVacuumChamberWallThickness(G4double t) { fVacuumThick = t; }
+
   void     SetMagneticFieldConstantValue(G4double v) { fMagneticFieldConstantValue = v; }
   G4double GetMagneticFieldConstantValue()           { return fMagneticFieldConstantValue; }
 
@@ -381,6 +401,10 @@ private:
   G4double fSlabThick;
   G4double fSlabWidth;
   G4double fSlabLengthZ;
+
+  G4double fVacuumThick;
+  G4double fVacuumWidth;
+  G4double fVacuumLengthZ;
 
   G4double fRailThick;
   G4double fRailWidth;

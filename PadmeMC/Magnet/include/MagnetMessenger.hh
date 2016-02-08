@@ -38,6 +38,11 @@ private:
   G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
   G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
 
+  G4UIcmdWithoutParameter* fSetMagneticVolumeVisibleCmd;
+  G4UIcmdWithoutParameter* fSetMagneticVolumeInvisibleCmd;
+
+  G4UIcommand* fSetVacuumChamberWallThicknessCmd;
+
   G4UIcommand* fSetMagneticFieldConstantValueCmd;
 
 };

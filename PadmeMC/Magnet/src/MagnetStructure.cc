@@ -31,6 +31,9 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
   // Magnetic field is ON by default
   fMagneticField = 1;
 
+  // Magnetic volume is invisible by default
+  fMagneticVolumeIsVisible = 0;
+
 }
 
 MagnetStructure::~MagnetStructure()
@@ -231,6 +234,21 @@ void MagnetStructure::CreateGeometry()
   G4ThreeVector slabDRPos = G4ThreeVector(geo->GetSlabDRPosX(),geo->GetSlabDRPosY(),geo->GetSlabDRPosZ());
   new G4PVPlacement(0,slabDRPos,slabVolume,"SlabDR",fMotherVolume,false,0,false);
 
+  // Vacuum plates (will become the full vacuum chamber once the geometry is defined)
+
+  G4double vacSizeX = geo->GetVacuumUSizeX();
+  G4double vacSizeY = geo->GetVacuumUSizeY();
+  G4double vacSizeZ = geo->GetVacuumUSizeZ();
+  G4Box* vacSolid = new G4Box("VacChWall",0.5*(vacSizeX-magGap),0.5*(vacSizeY-magGap),0.5*(vacSizeZ-magGap));
+  G4LogicalVolume* vacVolume = new G4LogicalVolume(vacSolid,G4Material::GetMaterial("G4_Al"),"VacChWall",0,0,0);
+  vacVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+
+  G4ThreeVector vacUPos = G4ThreeVector(geo->GetVacuumUPosX(),geo->GetVacuumUPosY(),geo->GetVacuumUPosZ());
+  new G4PVPlacement(0,vacUPos,vacVolume,"VacChWallU",fMotherVolume,false,0,false);
+
+  G4ThreeVector vacDPos = G4ThreeVector(geo->GetVacuumDPosX(),geo->GetVacuumDPosY(),geo->GetVacuumDPosZ());
+  new G4PVPlacement(0,vacDPos,vacVolume,"VacChWallD",fMotherVolume,false,0,false);
+
   // Create rails
 
   G4double railSizeX = geo->GetRailULSizeX();
@@ -301,8 +319,12 @@ void MagnetStructure::CreateGeometry()
   G4double magVolSizeZ = geo->GetMagneticVolumeSizeZ();
   G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*(magVolSizeX-magGap),0.5*(magVolSizeY-magGap),0.5*(magVolSizeZ-magGap));
   fMagneticVolume = new G4LogicalVolume(magVolSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
-  fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fMagneticVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+
+  if (fMagneticVolumeIsVisible) {
+    fMagneticVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::White()));
+  } else {
+    fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  }
 
   if ( fMagneticField == 1 ) {
 

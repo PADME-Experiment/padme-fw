@@ -214,7 +214,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //------------------------------ 
   // World Volume
   //------------------------------  
-  G4GeometryManager::GetInstance()->SetWorldMaximumExtent(fWorldLength);
+  //G4GeometryManager::GetInstance()->SetWorldMaximumExtent(fWorldLength);
   //  G4cout<<"Computed tolerance = "<<G4GeometryTolerance::GetInstance()->GetSurfaceTolerance()/mm<<" mm" << G4endl;
   WorldMater=Vacuum;
   G4double HalfWorldLength = 0.5*WorldLength*m;

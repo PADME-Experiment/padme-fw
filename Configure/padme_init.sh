@@ -13,4 +13,9 @@ export G4WORKDIR=${PADMEMC}
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADME}/PadmeRoot/lib"
 
 # Configure PadmeDB access parameters fom convenitonal file
-source ${HOME}/.padme-dbaccess.sh
+if [ -f ${HOME}/.padme-dbaccess.sh ]
+then
+    source ${HOME}/.padme-dbaccess.sh
+else
+    echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
+fi

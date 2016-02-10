@@ -36,7 +36,7 @@
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
-/Detector/Target/FrontFaceZ -50.
+#/Detector/Target/FrontFaceZ -50.
 #/Detector/Target/Size 2.
 #/Detector/Target/Thickness 100.
 

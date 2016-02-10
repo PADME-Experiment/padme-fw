@@ -2,7 +2,7 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-11
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2015-12-11
 // --------------------------------------------------------------
 
 #include "ECalGeometry.hh"

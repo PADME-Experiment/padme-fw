@@ -11,7 +11,7 @@
 #include "G4UImanager.hh"
 #include "DatacardManager.hh"
 
-#include "MyEvent.hh"
+//#include "MyEvent.hh"
 
 #ifdef  G4MULTITHREADED
 #include "G4MTHepRandom.hh"
@@ -78,7 +78,7 @@ int main(int argc,char** argv)
   //  G4cout<<"Output File Name "<<fileNameOut<<G4endl;
 
   //Get the event storage. Should be instantiated before the HISTO!
-  MyEvent *TheEvent = MyEvent::GetInstance(); //
+  //MyEvent *TheEvent = MyEvent::GetInstance(); //
 
   // set an HistoManager for Root IO
   HistoManager*  histo = new HistoManager();

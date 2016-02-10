@@ -14,7 +14,7 @@
 #include "StackingAction.hh"
 #include "HistoManager.hh"
 #include "Constants.hh"
-#include "MyEvent.hh"
+//#include "MyEvent.hh"
 #include <numeric>
 #include "G4SystemOfUnits.hh"
 
@@ -67,10 +67,10 @@ void EventAction::BeginOfEventAction(const G4Event*)
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
   
   //Clear completely the event:
-  //  G4cout << "BeginOfEventAction:   " << G4endl; 
+  //G4cout << "BeginOfEventAction:   " << G4endl; 
   
-  MyEvent *TheEvent = MyEvent::GetInstance();
-  TheEvent->GetSimEvent()->ClearEvent();
+  //MyEvent *TheEvent = MyEvent::GetInstance();
+  //TheEvent->GetSimEvent()->ClearEvent();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -79,32 +79,29 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 {
   G4int event_id = evt->GetEventID();
   // Periodic printing
-  if (event_id < 1 || event_id%NPrint == 0)
-    G4cout << ">>> Event " << evt->GetEventID() << G4endl;
-  MyEvent *TheEvent = MyEvent::GetInstance();
-  MySimEvent *simEvt = TheEvent->GetSimEvent();
-  MyEventGenerator *genEvt = TheEvent->GetGenEvent();
-  //  std::cout << "Before: Number of tracker clusters: " <<  simEvt->GetTrackerClusters()->size() << std::endl;
+  if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
+  //MyEvent *TheEvent = MyEvent::GetInstance();
+  //MySimEvent *simEvt = TheEvent->GetSimEvent();
+  //MyEventGenerator *genEvt = TheEvent->GetGenEvent();
+  //std::cout << "Before: Number of tracker clusters: " <<  simEvt->GetTrackerClusters()->size() << std::endl;
 
-  std::vector<MyParticle>::iterator it;
-
- // G4cout << "================================================" << G4endl  ;
- // G4cout << "               Event                            " << G4endl  ;
- // G4cout << "Number of primaries in that event: "<< TheEvent->GetGenEvent()->getParticles()->size() << G4endl;
-  it = genEvt->getParticles()->begin();
-  while (it != genEvt->getParticles()->end()) {
-    //    G4cout << "Particle:  " << it->getType() << G4endl;
-    it++;
-  }
-
+  //G4cout << "================================================" << G4endl  ;
+  //G4cout << "               Event                            " << G4endl  ;
+  //G4cout << "Number of primaries in that event: "<< TheEvent->GetGenEvent()->getParticles()->size() << G4endl;
+  //std::vector<MyParticle>::iterator it;
+  //it = genEvt->getParticles()->begin();
+  //while (it != genEvt->getParticles()->end()) {
+  //  G4cout << "Particle:  " << it->getType() << G4endl;
+  //  it++;
+  //}
   //G4cout << "Number of secondaries in that event: "<< simEvt->GetParticles()->size() << G4endl;
-  it = simEvt->GetParticles()->begin();
-  while (it != simEvt->GetParticles()->end()) {
-    //   G4cout << "Particle:  " << it->getType() << G4endl;
-    it++;
-  }
-  //  G4cout << "================================================" << G4endl  ;
-
+  //it = simEvt->GetParticles()->begin();
+  //while (it != simEvt->GetParticles()->end()) {
+  //  G4cout << "Particle:  " << it->getType() << G4endl;
+  //  it++;
+  //}
+  //G4cout << "================================================" << G4endl  ;
+  
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
   G4int nHC = LHC->GetNumberOfCollections();
   //  G4cout<<"N collections "<<nHC<<G4endl;
@@ -281,12 +278,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   //Tracker information:
 
-  //  std::cout << "Number of tracker clusters: " <<  simEvt->GetTrackerClusters()->size() << std::endl;
-  //Remapping of the variables .... :(
+  //std::cout << "Number of tracker clusters: " <<  simEvt->GetTrackerClusters()->size() << std::endl;
 
+  /*
+  //Remapping of the variables .... :(
   if(IsTrackerRecoON==1){
-    fHistoManager->myEvt.NTNTrClus  = simEvt->GetTrackerClusters()->size();
-    //    fHistoManager->myEvt.NTNTrClus=0;
+    fHistoManager->myEvt.NTNTrClus = simEvt->GetTrackerClusters()->size();
+    //fHistoManager->myEvt.NTNTrClus=0;
     for(int i=0; i< fHistoManager->myEvt.NTNTrClus && i < MaxTrHits ; i++) {
       fHistoManager->myEvt.NTTrClusX[i] = simEvt->GetTrackerClusters()->at(i).pos[0];
       fHistoManager->myEvt.NTTrClusY[i] = simEvt->GetTrackerClusters()->at(i).pos[1];
@@ -294,7 +292,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       fHistoManager->myEvt.NTTrClusLayer[i] = simEvt->GetTrackerClusters()->at(i).layer;        
     }
   }
-  
+  */
+
   if(IsTrackerRecoON==1){
     if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   }else{
@@ -439,10 +438,9 @@ void EventAction::AddTrackerHits(TrackerHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {									
     TrackerHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
     if ( hit != 0 ) {
-      (MyEvent::GetInstance())->GetSimEvent()->AddTrHit(hit->GetTrackerNb(), hit->GetX(), hit->GetY(),hit->GetZ(), hit->GetE(),0.3*mm );
+      //(MyEvent::GetInstance())->GetSimEvent()->AddTrHit(hit->GetTrackerNb(), hit->GetX(), hit->GetY(),hit->GetZ(), hit->GetE(),0.3*mm );
       ETotRing[hit->GetTrackerNb()] += hit->GetEdep();
-      //      G4cout<<"Hit X "<<hit->GetX()<<" HIT Y "<<hit->GetY()<<" HIT Z "<<hit->GetZ()<<" "<<hit->GetEdep()<<G4endl;
-      
+      //G4cout<<"Hit X "<<hit->GetX()<<" HIT Y "<<hit->GetY()<<" HIT Z "<<hit->GetZ()<<" "<<hit->GetEdep()<<G4endl;
       ETotTrackerEvt += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli	
       if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>2.*MeV && NTracks < MaxTracks) {
 	TrackCh[NTracks]    = hit->GetTrackCh();

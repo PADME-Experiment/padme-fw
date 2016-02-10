@@ -45,7 +45,8 @@ public:
   void     SetTargetSizeZ(G4double s) { fTargetSizeZ = s; }
 
   // Set position along Z of Target front face
-  void SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
+  G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
+  void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
 
   // Get name of Target sensitive detector
   G4String GetTargetSensitiveDetectorName() { return fTargetSensitiveDetectorName; }

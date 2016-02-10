@@ -35,15 +35,10 @@ public:
   MyEventGenerator *GetGenEvent(){return genEvt;};
   MySimEvent *GetSimEvent(){return simEvt;};
 
-
-
 private:
   MyEventGenerator *genEvt;
   MySimEvent *simEvt;
   // MyRecoEvent *recoEvt;
-  
-  
-  
 
 };
 

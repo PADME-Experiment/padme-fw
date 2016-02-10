@@ -14,7 +14,6 @@ void MyEventGenerator::GenerateEvent(int type,double px,double py,double pz ){
   ClearEvent();
   double dir[3] = {px,py,pz};
   CreateInitialState(dir);
-
   CreateIntermediateState();
   CreateFinalState(type);
 }
@@ -91,7 +90,6 @@ void MyEventGenerator::CreateFinalState3Photon(){
     
     std::istringstream iss(Line);
     
-
     iss >> itmp >> dtmp >> dtmp2 ;
     for(int j = 0;j<3;j++) { 
       iss >> p[0] >> p[1] >> p[2] ;

@@ -7,7 +7,7 @@
 #include "HistoManager.hh"
 #include "G4UnitsTable.hh"
 #include "Constants.hh"
-#include "MyEvent.hh"
+//#include "MyEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -190,8 +190,8 @@ void HistoManager::book()
   ntupl->Branch("EVetoX",     (myEvt.NTEVetoX),        "NTEVetoX[100]/D");
   ntupl->Branch("EVetoY",     (myEvt.NTEVetoY),        "NTEVetoY[100]/D");
 
-  MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
-  MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();
+  //MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
+  //MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();
   
   if(IsTrackerRecoON==1){
     ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
@@ -200,6 +200,7 @@ void HistoManager::book()
     ntupl->Branch("NTTrClusZ", myEvt.NTTrClusZ,"NTTrClusZ[1000]/D");
     ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
   } 
+
   ntGen = new TTree("genEvt", "genEvent");
   //  ntGen->Branch("NPrimaries","");   
   ntSim = new TTree("simEvt", "simEvent");

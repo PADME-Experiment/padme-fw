@@ -630,3 +630,19 @@ void DetectorConstruction::SetMaxStep(G4double maxStep)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+G4double DetectorConstruction::GetTargetFrontFaceZ()
+{
+  if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();
+
+  // Target is disabled (?): return a position 20cm before the front face of the magnet yoke
+  return -70.*cm;
+}
+
+G4double DetectorConstruction::GetTargetThickness()
+{
+  if (fEnableTarget) return fTargetDetector->GetTargetThickness();
+
+  // Target is disabled (?): return 100um
+  return 0.1*mm;
+}

@@ -11,6 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
+#include "TargetGeometry.hh"
 #include "TargetMessenger.hh"
 
 class TargetDetector
@@ -26,10 +27,14 @@ public:
 
   G4LogicalVolume* GetTargetLogicalVolume() { return fTargetVolume; }
 
+  G4double GetTargetFrontFaceZ() { return TargetGeometry::GetInstance()->GetTargetFrontFacePosZ(); }
+  G4double GetTargetThickness()  { return TargetGeometry::GetInstance()->GetTargetSizeZ(); }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fTargetVolume;
+
   TargetMessenger* fTargetMessenger;
 
 };

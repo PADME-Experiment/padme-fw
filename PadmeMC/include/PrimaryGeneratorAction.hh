@@ -4,12 +4,11 @@
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
 
-class G4ParticleGun;
+#include "BeamGenerator.hh"
+
 class G4Event;
 
 class DetectorConstruction;
-class TargetGeometry;
-//class MyEventGenerator;
 
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
@@ -22,29 +21,11 @@ public:
 
   void GeneratePrimaries(G4Event*);
 
-  void     SetUbosonMass(G4double m) { fUbosonMass = m;    }
-  G4double GetUbosonMass()           { return fUbosonMass; }
+  G4double GetUbosonMass() { return fBeamGenerator->GetUbosonMass(); }
 
 private:
 
-  int SetPositronBeamParameters();
-
-  void CreateFinalStateUboson();
-  void CreateFinalStateThreeGamma();
-
-  //MyEventGenerator *evt;
-
-  G4Event* fEvent;
-
-  DetectorConstruction* fDetector;
-
-  G4ParticleGun* fParticleGun;
-
-  // Need access to target position
-  TargetGeometry* fTargetGeometry;
-
-  // Mass of the UBoson
-  G4double fUbosonMass;
+  BeamGenerator* fBeamGenerator;
 
 };
 #endif

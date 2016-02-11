@@ -66,15 +66,15 @@ public:
   G4double GetBeamCenterPosYSpread() { return fBeamCenterPosYSpread; }
   void SetBeamCenterPosYSpread(G4double y) { fBeamCenterPosYSpread = y; }
 
-  G4double GetBeamEnergy() { return fBeamEnergy; }
-  void SetBeamEnergy(G4double e) { fBeamEnergy = e; }
+  G4double GetBeamMomentum() { return fBeamMomentum; }
+  void SetBeamMomentum(G4double p) { fBeamMomentum = p; }
 
-  void BeamEnergyEnableSpread()  { fBeamEnergyApplySpread = true;  }
-  void BeamEnergyDisableSpread() { fBeamEnergyApplySpread = false;  }
-  G4bool BeamEnergyApplySpread() { return fBeamEnergyApplySpread;  }
+  void BeamMomentumEnableSpread()  { fBeamMomentumApplySpread = true;  }
+  void BeamMomentumDisableSpread() { fBeamMomentumApplySpread = false;  }
+  G4bool BeamMomentumApplySpread() { return fBeamMomentumApplySpread;  }
 
-  G4double GetBeamEnergySpread() { return fBeamEnergySpread; }
-  void SetBeamEnergySpread(G4double e) { fBeamEnergySpread = e; }
+  G4double GetBeamMomentumSpread() { return fBeamMomentumSpread; }
+  void SetBeamMomentumSpread(G4double s) { fBeamMomentumSpread = s; }
 
   G4ThreeVector GetBeamDirection() { return fBeamDirection; }
   void SetBeamDirection(G4ThreeVector d) { fBeamDirection = d; }
@@ -121,9 +121,9 @@ private:
   G4double fBeamCenterPosYSpread;
 
   // Beam energy
-  G4double fBeamEnergy;
-  G4bool   fBeamEnergyApplySpread;
-  G4double fBeamEnergySpread;
+  G4double fBeamMomentum;
+  G4bool   fBeamMomentumApplySpread;
+  G4double fBeamMomentumSpread;
 
   // Beam direction
   G4ThreeVector fBeamDirection;

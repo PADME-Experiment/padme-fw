@@ -39,10 +39,10 @@ BeamParameters::BeamParameters()
   fBeamCenterPosXSpread = 0.7*mm;
   fBeamCenterPosYSpread = 0.7*mm;
 
-  // Beam energy
-  fBeamEnergy = 550.*MeV;
-  fBeamEnergyApplySpread = false;
-  fBeamEnergySpread = 0.01*fBeamEnergy; // 1% of beam energy
+  // Beam momentum
+  fBeamMomentum = 550.*MeV;
+  fBeamMomentumApplySpread = false;
+  fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
 
   // Beam direction
   fBeamDirection = G4ThreeVector(0.,0.,1.);

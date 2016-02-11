@@ -7,7 +7,6 @@
 class DetectorConstruction;
 class G4UIdirectory;
 class G4UIcmdWithAString;
-class G4UIcmdWithADoubleAndUnit;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -31,11 +30,6 @@ private:
 
   G4UIcmdWithAString* fEnableStructCmd;
   G4UIcmdWithAString* fDisableStructCmd;
-
-  //G4UIcmdWithAString*        TargMatCmd;
-  //G4UIcmdWithAString*        ChamMatCmd;    
-  //G4UIcmdWithADoubleAndUnit* FieldCmd;
-  //G4UIcmdWithADoubleAndUnit* StepMaxCmd;    
 
 };
 

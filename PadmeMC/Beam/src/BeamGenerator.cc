@@ -19,6 +19,7 @@
 #include "G4Poisson.hh"
 #include "Randomize.hh"
 
+#include "BeamMessenger.hh"
 #include "DetectorConstruction.hh"
 
 BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
@@ -27,17 +28,15 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 
   fEvent = 0;
 
-  // Create default particle gun
-  fParticleGun = new G4ParticleGun();
+  // Connect to BeamMessenger
+  fBeamMessenger = new BeamMessenger(this);
   
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 BeamGenerator::~BeamGenerator()
-{
-  delete fParticleGun;
-}
+{}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -69,11 +68,12 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   for(int ib = 0; ib < nUbosonDecays; ib++) {
 
-    // Generate primary e+ which will decay to Uboson+gamma and store it in particleGun
-    SetPositronBeamParameters();
+    // Generate primary e+ which will decay to Uboson+gamma
+    G4ParticleGun* positronGun = new G4ParticleGun();
+    GeneratePrimaryPositron(positronGun);
 
     // Generate Uboson+gamma final state
-    CreateFinalStateUboson();
+    CreateFinalStateUboson(positronGun);
 	
   }
   
@@ -82,11 +82,12 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //*********************
   for(int iggg = 0; iggg < nThreePhotonDecays; iggg++) {
 
-    // Generate primary e+ which will decay to three gammas and store it in particleGun
-    SetPositronBeamParameters();
+    // Generate primary e+ which will decay to three gammas
+    G4ParticleGun* positronGun = new G4ParticleGun();
+    GeneratePrimaryPositron(positronGun);
 
     // Generate gamma+gamma+gamma final state
-    CreateFinalStateThreeGamma();
+    CreateFinalStateThreeGamma(positronGun);
 
   }
   
@@ -96,24 +97,28 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   for(int ip = 0; ip < nPositrons; ip++) { 
 
     // Generate primary e+
-    SetPositronBeamParameters();
+    G4ParticleGun* positronGun = new G4ParticleGun();
+    G4cout << "Test before " << positronGun->GetParticleEnergy() << " " << positronGun->GetParticleMomentum() << G4endl;
+    positronGun->SetParticleMomentum(550.*MeV);
+    //GeneratePrimaryPositron(positronGun);
+    G4cout << "Test after " << positronGun->GetParticleEnergy() << " " << positronGun->GetParticleMomentum() << G4endl;
 
     // Add primary e+ to event kinematics
-    fParticleGun->GeneratePrimaryVertex(fEvent);
+    positronGun->GeneratePrimaryVertex(fEvent);
 
   }
 
 }
 
-int BeamGenerator::SetPositronBeamParameters()
+void BeamGenerator::GeneratePrimaryPositron(G4ParticleGun* pGun)
 {
 
   BeamParameters* bpar = BeamParameters::GetInstance();
 
   // Generate a primary e+ with right time/energy/position/direction and save it in particleGun
 
-  fParticleGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("e+"));
-  fParticleGun->SetNumberOfParticles(1);
+  pGun->SetParticleDefinition(G4ParticleTable::GetParticleTable()->FindParticle("e+"));
+  pGun->SetNumberOfParticles(1);
   
   G4double parTime = 0.;
   if ( bpar->BeamApplyBunchStructure() ) {
@@ -124,13 +129,13 @@ int BeamGenerator::SetPositronBeamParameters()
     G4int ubunchNow = int(G4UniformRand()*nubunch);
     parTime = ubunchNow*(ubunchDly+ubunchLen)+G4UniformRand()*ubunchLen;
   }
-  fParticleGun->SetParticleTime(parTime);
+  pGun->SetParticleTime(parTime);
   G4cout << "PGA - Positron time " << parTime << G4endl;
   
   // Set beam momentum
   G4double beamP = bpar->GetBeamMomentum();
   if ( bpar->BeamMomentumApplySpread() ) beamP = G4RandGauss::shoot(beamP,bpar->GetBeamMomentumSpread());
-  fParticleGun->SetParticleMomentum(beamP);
+  pGun->SetParticleMomentum(beamP);
   G4cout << "PGA - Positron momentum " << beamP << G4endl;
 
   // All positrons are generated 1um before the front face of the target
@@ -142,7 +147,7 @@ int BeamGenerator::SetPositronBeamParameters()
     yPos = G4RandGauss::shoot(yPos,bpar->GetBeamCenterPosYSpread());
     // Here we need something to limit xPos/yPos to physical values
   }
-  fParticleGun->SetParticlePosition(G4ThreeVector(xPos,yPos,zPos));
+  pGun->SetParticlePosition(G4ThreeVector(xPos,yPos,zPos));
   G4cout << "PGA - Positron position " << xPos << " " << yPos << " "<< zPos << G4endl;
 
   // Positron direction
@@ -153,13 +158,12 @@ int BeamGenerator::SetPositronBeamParameters()
     pX = G4RandGauss::shoot(pX,bpar->GetBeamEmittanceX());	
     pY = G4RandGauss::shoot(pY,bpar->GetBeamEmittanceY());
   }
-  fParticleGun->SetParticleMomentumDirection(G4ThreeVector(pX,pY,pZ).unit());
+  pGun->SetParticleMomentumDirection(G4ThreeVector(pX,pY,pZ).unit());
   G4cout << "PGA - Positron direction " << pX << " " << pY << " "<< pZ << G4endl;
-  
-  return 1;
+
 }
 
-void BeamGenerator::CreateFinalStateUboson()
+void BeamGenerator::CreateFinalStateUboson(G4ParticleGun* pGun)
 {
 
   // Get mass of the Uboson
@@ -169,20 +173,20 @@ void BeamGenerator::CreateFinalStateUboson()
 
   // Choose random decay point along e+ path within Target
   // N.B. as the target is very thin, we assume that the decay point x,y coordinates do not vary along the e+ path
-  G4double Dx = fParticleGun->GetParticlePosition().x();
-  G4double Dy = fParticleGun->GetParticlePosition().y();
+  G4double Dx = pGun->GetParticlePosition().x();
+  G4double Dy = pGun->GetParticlePosition().y();
   G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness();
-  G4double Dt = fParticleGun->GetParticleTime()+Dz/c_light;
+  G4double Dt = pGun->GetParticleTime()+Dz/c_light;
   G4cout << "PGA - Vtx " << Dx << " " << Dy << " " << Dz << " T " << Dt << G4endl;
 
   // e+ is stored in particleGun
-  G4double pM = fParticleGun->GetParticleDefinition()->GetPDGMass(); // Mass
-  G4double pP = fParticleGun->GetParticleMomentum(); // Momentum
+  G4double pM = pGun->GetParticleDefinition()->GetPDGMass(); // Mass
+  G4double pP = pGun->GetParticleMomentum(); // Momentum
   G4double pp[4];
-  pp[0] = fParticleGun->GetParticleEnergy()+pM; // Total energy (kinetic+mass)
-  pp[1] = pP*fParticleGun->GetParticleMomentumDirection().x(); // Momentum x
-  pp[2] = pP*fParticleGun->GetParticleMomentumDirection().y(); // Momentum y
-  pp[3] = pP*fParticleGun->GetParticleMomentumDirection().z(); // Momentum z
+  pp[0] = pGun->GetParticleEnergy()+pM; // Total energy (kinetic+mass)
+  pp[1] = pP*pGun->GetParticleMomentumDirection().x(); // Momentum x
+  pp[2] = pP*pGun->GetParticleMomentumDirection().y(); // Momentum y
+  pp[3] = pP*pGun->GetParticleMomentumDirection().z(); // Momentum z
   G4cout << "PGA - P(e+) " << pp[0] << " " << pp[1] << " " << pp[2] << " " << pp[3] << G4endl;
 
   // e- is at rest
@@ -251,6 +255,5 @@ void BeamGenerator::CreateFinalStateUboson()
   
 }
 
-void BeamGenerator::CreateFinalStateThreeGamma()
-{
-}
+void BeamGenerator::CreateFinalStateThreeGamma(G4ParticleGun* pGun)
+{}

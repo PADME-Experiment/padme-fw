@@ -67,34 +67,34 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetMicroBunchTimeDelayCmd->SetRange("MTD > 0. && MTD <= 1.");
   fSetMicroBunchTimeDelayCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamCenterPosXCmd = new G4UIcmdWithADoubleAndUnit("/beam/pos_x",this);
+  fSetBeamCenterPosXCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_x",this);
   fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at Target entrance.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosXCmd->SetRange("X >= -20. && X <= 20.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/pos_y",this);
+  fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);
   fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at Target entrance.");
   fSetBeamCenterPosYCmd->SetParameterName("Y",false);
   fSetBeamCenterPosYCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosYCmd->SetRange("Y >= -20. && Y <= 20.");
   fSetBeamCenterPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/pos_spread_on",this);
+  fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/position_spread_on",this);
   fEnableBeamCenterPosSpreadCmd->SetGuidance("Enable (true) or disable (false) gaussian spread of beam center X/Y coordinates.");
   fEnableBeamCenterPosSpreadCmd->SetParameterName("ECS",true);
   fEnableBeamCenterPosSpreadCmd->SetDefaultValue(true);
   fEnableBeamCenterPosSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamCenterPosXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/pos_x_spread",this);
+  fSetBeamCenterPosXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_x_spread",this);
   fSetBeamCenterPosXSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam X coordinate at Target entrance.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 5.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/pos_y_spread",this);
+  fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
   fSetBeamCenterPosYSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam Y coordinate at Target entrance.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");

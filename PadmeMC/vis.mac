@@ -99,6 +99,31 @@
 #/Detector/TPix/RotationY 0.977
 #/Detector/TPix/RotationZ 0.      # Disabled
 
+# Beam setup
+
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/bunch_structure_on flase
+#/beam/bunch_time_length 40. ns
+#/beam/ubunch_time_length 150 ps
+#/beam/ubunch_time_delay 350 ps
+#/beam/position_x 0. cm
+#/beam/position_y 0. cm
+#/beam/position_spread_on false
+#/beam/position_x_spread 0.7 mm
+#/beam/position_y_spread 0.7 mm
+#/beam/momentum 550. MeV
+#/beam/momentum_spread_on false
+#/beam/momentum_spread 55. MeV
+#/beam/direction 0. 0. 1.
+#/beam/emittance_on false
+#/beam/emittance_x 0.001
+#/beam/emittance_y 0.001
+#/beam/n_uboson_per_bunch 0
+#/beam/uboson_mass 22. MeV
+#/beam/n_3g_per_bunch 0.
+#/beam/3g_file ThreeGamma_550MeV.txt
+
 # Create detectors and initialize run
 /run/initialize
 

@@ -49,8 +49,8 @@ BeamParameters::BeamParameters()
 
   // Beam emittance (spread of X,Y beam direction components)
   fBeamApplyEmittance = false;
-  fBeamEmittanceX = 0.001*rad;
-  fBeamEmittanceY = 0.001*rad;
+  fBeamEmittanceX = 0.001;
+  fBeamEmittanceY = 0.001;
 
   // Insert Uboson decays
   fNUbosonDecaysPerBunch = 0;

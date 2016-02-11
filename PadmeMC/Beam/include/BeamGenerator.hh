@@ -17,6 +17,7 @@
 class G4ParticleGun;
 class G4Event;
 
+class BeamMessenger;
 class DetectorConstruction;
 
 class BeamGenerator
@@ -34,16 +35,15 @@ public:
 
 private:
 
-  int SetPositronBeamParameters();
-
-  void CreateFinalStateUboson();
-  void CreateFinalStateThreeGamma();
+  void GeneratePrimaryPositron(G4ParticleGun*);
+  void CreateFinalStateUboson(G4ParticleGun*);
+  void CreateFinalStateThreeGamma(G4ParticleGun*);
 
   G4Event* fEvent;
 
   DetectorConstruction* fDetector;
 
-  G4ParticleGun* fParticleGun;
+  BeamMessenger* fBeamMessenger;
 
 };
 #endif

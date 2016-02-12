@@ -21,13 +21,13 @@ class DetectorConstruction;
 
 struct BeamPrimaryPositron
 {
-  G4double t;
-  G4ThreeVector pos;
-  G4double E;
-  G4double m;
-  G4double P;
-  G4ThreeVector p;
-  G4ThreeVector dir;
+  G4double      t;   // Vertex time
+  G4ThreeVector pos; // Vertex position
+  G4double      E;   // Positron total energy
+  G4double      m;   // Positron mass (from PDG)
+  G4double      P;   // Positron momentum magnitude
+  G4ThreeVector p;   // Positron momentum vector
+  G4ThreeVector dir; // Positron direction (unit of momentum vector)
 };
 
 class BeamGenerator

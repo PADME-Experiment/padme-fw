@@ -14,11 +14,21 @@
 
 #include "BeamParameters.hh"
 
-class G4ParticleGun;
 class G4Event;
 
 class BeamMessenger;
 class DetectorConstruction;
+
+struct BeamPrimaryPositron
+{
+  G4double t;
+  G4ThreeVector pos;
+  G4double E;
+  G4double m;
+  G4double P;
+  G4ThreeVector p;
+  G4ThreeVector dir;
+};
 
 class BeamGenerator
 {
@@ -35,15 +45,17 @@ public:
 
 private:
 
-  void GeneratePrimaryPositron(G4ParticleGun*);
-  void CreateFinalStateUboson(G4ParticleGun*);
-  void CreateFinalStateThreeGamma(G4ParticleGun*);
+  void GeneratePrimaryPositron();
+  void CreateFinalStateUboson();
+  void CreateFinalStateThreeGamma();
 
   G4Event* fEvent;
 
   DetectorConstruction* fDetector;
 
   BeamMessenger* fBeamMessenger;
+
+  BeamPrimaryPositron fPositron;
 
 };
 #endif

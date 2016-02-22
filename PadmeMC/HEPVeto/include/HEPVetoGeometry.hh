@@ -32,9 +32,12 @@ protected:
 public:
 
   // Position of center of HEPVeto box
-  G4double GetHEPVetoPosX() { return fHEPVetoCenterPosX; }
-  G4double GetHEPVetoPosY() { return fHEPVetoCenterPosY; }
-  G4double GetHEPVetoPosZ() { return fHEPVetoCenterPosZ; }
+  //G4double GetHEPVetoPosX() { return fHEPVetoCenterPosX; }
+  //G4double GetHEPVetoPosY() { return fHEPVetoCenterPosY; }
+  //G4double GetHEPVetoPosZ() { return fHEPVetoCenterPosZ; }
+  G4double GetHEPVetoPosX() { return fHEPVetoInnerFacePosX+0.5*fHEPVetoSizeZ*sin(fHEPVetoRotY/rad); }
+  G4double GetHEPVetoPosY() { return fHEPVetoInnerFacePosY; }
+  G4double GetHEPVetoPosZ() { return fHEPVetoInnerFacePosZ-0.5*fHEPVetoSizeZ*cos(fHEPVetoRotY/rad); }
 
   // Rotation of HEPVeto box
   G4double GetHEPVetoRotX() { return fHEPVetoRotX; }
@@ -42,9 +45,12 @@ public:
   G4double GetHEPVetoRotZ() { return fHEPVetoRotZ; }
 
   // Size of HEPVeto box
-  G4double GetHEPVetoSizeX() { return fFingerNominalSizeX; }
-  G4double GetHEPVetoSizeY() { return fFingerNominalSizeY; }
-  G4double GetHEPVetoSizeZ() { return fFingerNominalSizeZ*fHEPVetoNFingers; }
+  G4double GetHEPVetoSizeX() { return fHEPVetoSizeX; }
+  G4double GetHEPVetoSizeY() { return fHEPVetoSizeY; }
+  G4double GetHEPVetoSizeZ() { return fHEPVetoSizeZ; }
+  //G4double GetHEPVetoSizeX() { return fFingerNominalSizeX; }
+  //G4double GetHEPVetoSizeY() { return fFingerNominalSizeY; }
+  //G4double GetHEPVetoSizeZ() { return fFingerNominalSizeZ*fHEPVetoNFingers; }
 
   // Number of fingers in HEPVeto
   G4int GetHEPVetoNFingers()        { return fHEPVetoNFingers; }
@@ -66,9 +72,14 @@ public:
   void SetFingerNominalSizeZ(G4double s) { fFingerNominalSizeZ = s; }
 
   // Set position of HEPVeto center
-  void SetHEPVetoPosX(G4double x) { fHEPVetoCenterPosX = x; }
+  //void SetHEPVetoPosX(G4double x) { fHEPVetoCenterPosX = x; }
   //void SetHEPVetoPosY(G4double y) { fHEPVetoCenterPosY = y; } // Always centered at 0
-  void SetHEPVetoPosZ(G4double z) { fHEPVetoCenterPosZ = z; }
+  //void SetHEPVetoPosZ(G4double z) { fHEPVetoCenterPosZ = z; }
+
+  // Set position of HEPVeto inner face
+  void SetHEPVetoPosX(G4double x) { fHEPVetoInnerFacePosX = x; }
+  //void SetHEPVetoPosY(G4double y) { fHEPVetoInnerFacePosY = y; } // Always centered at 0
+  void SetHEPVetoPosZ(G4double z) { fHEPVetoInnerFacePosZ = z; }
 
   // Set rotation angles of HEPVeto
   //void SetHEPVetoRotX(G4double a) { fHEPVetoRotX = a; }
@@ -86,9 +97,17 @@ private:
   G4double fFingerNominalSizeZ;
   G4double fFingerGap; // Gap size between adjacent fingers
 
-  G4double fHEPVetoCenterPosX; // Position along X axis of HEPVeto center
-  G4double fHEPVetoCenterPosY; // Position along Y axis of HEPVeto center
-  G4double fHEPVetoCenterPosZ; // Position along Z axis of HEPVeto center
+  //G4double fHEPVetoCenterPosX; // Position along X axis of HEPVeto center
+  //G4double fHEPVetoCenterPosY; // Position along Y axis of HEPVeto center
+  //G4double fHEPVetoCenterPosZ; // Position along Z axis of HEPVeto center
+
+  G4double fHEPVetoSizeX; // Size of HEPVeto box
+  G4double fHEPVetoSizeY; // Size of HEPVeto box
+  G4double fHEPVetoSizeZ; // Size of HEPVeto box
+
+  G4double fHEPVetoInnerFacePosX; // Position along X axis of HEPVeto inner face
+  G4double fHEPVetoInnerFacePosY; // Position along Y axis of HEPVeto inner face
+  G4double fHEPVetoInnerFacePosZ; // Position along Z axis of HEPVeto inner face
 
   G4double fHEPVetoRotX; // Rotation of HEPVeto around X axis
   G4double fHEPVetoRotY; // Rotation of HEPVeto around Y axis

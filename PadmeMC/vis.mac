@@ -5,10 +5,10 @@
 #
 /control/verbose 1
 /run/verbose 1
-#/tracking/verbose 1
+/tracking/verbose 1
 
 # Output root file
-/output/fileName pippo.root
+# /output/fileName pippo.root
 
 # Detector settings
 
@@ -32,7 +32,7 @@
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 /Detector/DisableSubDetector TDump
-#/Detector/DisableSubDetector TPix
+#/Detector/DisableSubDetector TPix 
 /Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
@@ -45,7 +45,7 @@
 #/Detector/Magnet/SetMagneticVolumeInvisible
 #/Detector/Magnet/EnableMagneticField
 #/Detector/Magnet/DisableMagneticField
-#/Detector/Magnet/MagneticFieldConstantValue 0.55
+#/Detector/Magnet/MagneticFieldConstantValue 0.8
 
 #/Detector/ECal/NRows 30
 #/Detector/ECal/NCols 30
@@ -79,7 +79,7 @@
 #/Detector/HEPVeto/NFingers 50
 #/Detector/HEPVeto/FingerSize 1.
 #/Detector/HEPVeto/FingerLength 18.
-#/Detector/HEPVeto/PositionX 120.
+#/Detector/HEPVeto/PositionX 93.
 #/Detector/HEPVeto/PositionY 0.      # Disabled
 #/Detector/HEPVeto/PositionZ 250.
 #/Detector/HEPVeto/RotationX 0.      # Disabled
@@ -92,16 +92,20 @@
 #/Detector/TDump/FrontFaceZ -180.
 
 #/Detector/TPix/NColumns 5
-#/Detector/TPix/PositionX 96.
+#/Detector/TPix/PositionX 92.
 #/Detector/TPix/PositionY 0.      # Disabled
-#/Detector/TPix/PositionZ 264.
+#/Detector/TPix/PositionZ 256.
 #/Detector/TPix/RotationX 0.      # Disabled
 #/Detector/TPix/RotationY 0.977
 #/Detector/TPix/RotationZ 0.      # Disabled
 
 # Beam setup
 
-#/beam/n_e+_per_bunch 1
+#/beam/n_uboson_per_bunch 1
+#/beam/n_3g_per_bunch 1
+#/beam/3g_file /home/padmemc/Dropbox/btf-ubozon/btfmc/events_2_weight.txt
+
+/beam/n_e+_per_bunch 1
 #/beam/n_e+_poisson_on false
 #/beam/bunch_structure_on flase
 #/beam/bunch_time_length 40. ns
@@ -121,7 +125,7 @@
 #/beam/emittance_y 0.001
 #/beam/n_uboson_per_bunch 0
 #/beam/uboson_mass 22. MeV
-#/beam/n_3g_per_bunch 0.
+#/beam/n_3g_per_bunch 0
 #/beam/3g_file ThreeGamma_550MeV.txt
 
 # Create detectors and initialize run

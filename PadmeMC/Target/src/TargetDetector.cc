@@ -14,6 +14,7 @@
 
 #include "G4SDManager.hh"
 
+#include "G4Element.hh"
 #include "G4Material.hh"
 
 #include "TargetGeometry.hh"
@@ -42,8 +43,9 @@ void TargetDetector::CreateGeometry()
   G4double targetY = geo->GetTargetSizeY();
   G4double targetZ = geo->GetTargetSizeZ();
 
-  G4Box* solidTarget = new G4Box("TargetSolid",targetX*0.5,targetY*0.5,targetZ*0.5);
-  fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("G4_C"),"TargetLogic",0,0,0);
+  G4Box* solidTarget = new G4Box("Target",targetX*0.5,targetY*0.5,targetZ*0.5);
+  //fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("G4_C"),"Target",0,0,0);
+  fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
   new G4PVPlacement(0,positionTarget,fTargetVolume,"Target",fMotherVolume,false,0,false);
 
   // The whole target is a sensitive detector

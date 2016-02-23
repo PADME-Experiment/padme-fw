@@ -23,6 +23,7 @@
 #include "GFiltSD.hh"
 
 #include "G4Material.hh"
+
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4Cons.hh"
@@ -206,10 +207,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
 
+  // Diamond material to be used by target
+  G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
+  Diamond->AddElement(G4Element::GetElement("C"),100.*perCent);
+
   //Print all the materials defined.
-  //  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
-  //  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
-  //G4bool allLocal=true;
+  G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
+  G4cout << *(G4Element::GetElementTable()) << G4endl;
+  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
+  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
   
   //------------------------------ 
   // World Volume

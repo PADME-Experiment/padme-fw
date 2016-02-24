@@ -11,6 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
+#include "ECalGeometry.hh"
 #include "ECalMessenger.hh"
 
 class ECalDetector
@@ -26,6 +27,8 @@ public:
 
   G4LogicalVolume* GetECalLogicalVolume() { return fECalVolume; }
   G4LogicalVolume* GetCrystalLogicalVolume() { return fCrystalVolume; }
+
+  G4double GetECalFrontFaceZ() { return ECalGeometry::GetInstance()->GetECalFrontFacePosZ(); }
 
 private:
 

@@ -637,6 +637,15 @@ void DetectorConstruction::SetMaxStep(G4double maxStep)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+G4double DetectorConstruction::GetECalFrontFaceZ()
+{
+  if (fEnableECal) return fECalDetector->GetECalFrontFaceZ();
+
+  // ECal is disabled (?): return a position 300cm after the front face of the magnet yoke
+  return 250.*cm;
+}
+
+
 G4double DetectorConstruction::GetTargetFrontFaceZ()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();

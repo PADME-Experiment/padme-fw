@@ -5,35 +5,35 @@
 #
 /control/verbose 1
 /run/verbose 1
-/tracking/verbose 1
+#/tracking/verbose 1
 
 # Output root file
-# /output/fileName pippo.root
+/output/fileName pippo.root
 
 # Detector settings
 
-/Detector/EnableSubDetector ECal
-/Detector/EnableSubDetector Target
-/Detector/EnableSubDetector SAC
+#/Detector/EnableSubDetector ECal
+#/Detector/EnableSubDetector Target
+#/Detector/EnableSubDetector SAC
 #/Detector/EnableSubDetector LAV
-/Detector/EnableSubDetector PVeto
-/Detector/EnableSubDetector EVeto
-/Detector/EnableSubDetector HEPVeto
+#/Detector/EnableSubDetector PVeto
+#/Detector/EnableSubDetector EVeto
+#/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
 #/Detector/EnableSubDetector TPix
 #/Detector/EnableStructure Wall
-/Detector/EnableStructure Magnet
+#/Detector/EnableStructure Magnet
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector SAC
-/Detector/DisableSubDetector LAV
+#/Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
-/Detector/DisableSubDetector TDump
+#/Detector/DisableSubDetector TDump
 #/Detector/DisableSubDetector TPix 
-/Detector/DisableStructure Wall
+#/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 
 #/Detector/Target/FrontFaceZ -50.
@@ -45,14 +45,14 @@
 #/Detector/Magnet/SetMagneticVolumeInvisible
 #/Detector/Magnet/EnableMagneticField
 #/Detector/Magnet/DisableMagneticField
-#/Detector/Magnet/MagneticFieldConstantValue 0.8
+#/Detector/Magnet/MagneticFieldConstantValue 0.55
 
-#/Detector/ECal/NRows 30
-#/Detector/ECal/NCols 30
+#/Detector/ECal/NRows 29
+#/Detector/ECal/NCols 29
 #/Detector/ECal/CrystalSize 2.
 #/Detector/ECal/CrystalLength 22.
 #/Detector/ECal/InnerRadius 6.
-#/Detector/ECal/OuterRadius 30.
+#/Detector/ECal/OuterRadius 28.5
 #/Detector/ECal/FrontFaceZ 250.
 
 #/Detector/SAC/CrystalSize 2.
@@ -101,13 +101,14 @@
 
 # Beam setup
 
-#/beam/n_uboson_per_bunch 1
+# Example for single three photon events
+#/beam/n_e+_per_bunch 1
 #/beam/n_3g_per_bunch 1
-#/beam/3g_file /home/padmemc/Dropbox/btf-ubozon/btfmc/events_2_weight.txt
+#/beam/3g_file events_ee-3g-550MeV-1M.txt
 
-/beam/n_e+_per_bunch 1
+# Primary positrons setup
 #/beam/n_e+_poisson_on false
-#/beam/bunch_structure_on flase
+#/beam/bunch_structure_on false
 #/beam/bunch_time_length 40. ns
 #/beam/ubunch_time_length 150 ps
 #/beam/ubunch_time_delay 350 ps
@@ -123,10 +124,21 @@
 #/beam/emittance_on false
 #/beam/emittance_x 0.001
 #/beam/emittance_y 0.001
+
+# Uboson generator
 #/beam/n_uboson_per_bunch 0
 #/beam/uboson_mass 22. MeV
+
+# Three photons events read from file
 #/beam/n_3g_per_bunch 0
 #/beam/3g_file ThreeGamma_550MeV.txt
+
+# Calibration run setup: single photon pointing to ECal front face
+#/beam/calibration false
+#/beam/calib_energy 50. MeV
+#/beam/calib_x 14. cm
+#/beam/calib_y 14. cm
+#/beam/calib_radius 1. cm
 
 # Create detectors and initialize run
 /run/initialize
@@ -142,6 +154,8 @@
 # Use this open statement to create a .heprep file suitable for
 # viewing in HepRApp:
 #/vis/open HepRepFile
+#/vis/open HepRepXML
+#/vis/heprep/setEventNumberSuffix -0001
 #/vis/scene/add/trajectories rich
 #
 # Use this open statement to create a .wrl file suitable for
@@ -230,5 +244,4 @@
 #/vis/viewer/panTo -0.5 0.
 #/vis/viewer/set/viewpointThetaPhi 0. 0.
 #/vis/viewer/zoom 50
-
 /run/beamOn 1	

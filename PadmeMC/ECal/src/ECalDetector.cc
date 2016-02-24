@@ -69,16 +69,19 @@ void ECalDetector::CreateGeometry()
   fCrystalVolume->SetSensitiveDetector(ecalSD);
 
   // Get number of rows and columns of crystals and position all crystals
+  G4int nTotCry = 0;
   G4int nRow = geo->GetECalNRows();
   G4int nCol = geo->GetECalNCols();
   for (G4int row=0;row<nRow;row++){
      for (G4int col=0;col<nCol;col++){
        if (geo->ExistsCrystalAt(row,col)) {
+	 nTotCry++;
 	 G4int idxCry = row*ECALGEOMETRY_N_COLS_MAX+col;
 	 G4ThreeVector positionCry = G4ThreeVector(geo->GetCrystalPosX(row,col),geo->GetCrystalPosY(row,col),geo->GetCrystalPosZ(row,col));
 	 new G4PVPlacement(0,positionCry,fCrystalVolume,"ECalCry",fECalVolume,false,idxCry,false);
        }
      }
   }
+  G4cout << "ECalDetector - Positioned " << nTotCry << " crystals." << G4endl;
 
 }

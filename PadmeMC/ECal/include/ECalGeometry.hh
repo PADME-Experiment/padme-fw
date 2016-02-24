@@ -69,6 +69,7 @@ public:
   void SetCrystalNominalSizeZ(G4double s) { fCrystalNominalSizeZ = s; }
 
   // Set position along Z of ECal front face
+  G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
 
   // Set inner and outer radii of ECal

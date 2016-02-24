@@ -60,6 +60,7 @@ public:
   void DisableStructure(G4String);
 
   // Return some global information used by beam generator
+  G4double GetECalFrontFaceZ();
   G4double GetTargetFrontFaceZ();
   G4double GetTargetThickness();
 

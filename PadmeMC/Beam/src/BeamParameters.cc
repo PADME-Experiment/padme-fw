@@ -23,11 +23,11 @@ BeamParameters::BeamParameters()
   // No Uboson or ThreePhoton decays are inserted
 
   // Average number of positrons in each bunch
-  fNPositronsPerBunch = 1;
+  fNPositronsPerBunch = 5000.;
   fNPositronsPerBunchApplySpread = false;
 
   // Bunch time structure
-  fBeamApplyBunchStructure = false;
+  fBeamApplyBunchStructure = true;
   fBunchTimeLength = 40.*ns;
   fMicroBunchTimeLength = 0.150*ns;
   fMicroBunchTimeDelay = 0.350*ns;
@@ -35,20 +35,20 @@ BeamParameters::BeamParameters()
   // Position and spread of beam at Target front face
   fBeamCenterPosX = 0.*cm;
   fBeamCenterPosY = 0.*cm;
-  fBeamCenterPosApplySpread = false;
+  fBeamCenterPosApplySpread = true;
   fBeamCenterPosXSpread = 0.7*mm;
   fBeamCenterPosYSpread = 0.7*mm;
 
   // Beam momentum
   fBeamMomentum = 550.*MeV;
-  fBeamMomentumApplySpread = false;
+  fBeamMomentumApplySpread = true;
   fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
 
   // Beam direction
   fBeamDirection = G4ThreeVector(0.,0.,1.);
 
   // Beam emittance (spread of X,Y beam direction components)
-  fBeamApplyEmittance = false;
+  fBeamApplyEmittance = true;
   fBeamEmittanceX = 0.001;
   fBeamEmittanceY = 0.001;
 

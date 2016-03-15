@@ -189,12 +189,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   for(int i=0;i<SACTracks;i++){	  
     if(i>MaxTracks-1) break;
-    //    G4cout<<"NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
+    //    G4cout<<evt->GetEventID()<<" Event action NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
     fHistoManager->myEvt.NTSACE[i]  = SACEtrack[i];
     fHistoManager->myEvt.NTSACT[i]  = SACTrackTime[i];
     fHistoManager->myEvt.NTSACPType[i] = SACPType[i];
     fHistoManager->myEvt.NTSACX[i] = SACX[i];
     fHistoManager->myEvt.NTSACY[i] = SACY[i];
+
   }
 
   for(int i=0;i<LAVTracks;i++){	  
@@ -206,8 +207,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTLAVX[i] = LAVX[i];
     fHistoManager->myEvt.NTLAVY[i] = LAVY[i];
   }
-
-
 
   for(int i=0;i<NTracks;i++){	  
     if(i>(MaxTracks-1)) break;
@@ -319,11 +318,14 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-     ETotCry[hit->GetCryNb()] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo
-     QTotCry[hit->GetCryNb()] += GetCharge(hit->GetEdep()); //somma le cariche su tutti gli hit di ogni cristallo
-     if(TimeCry[hit->GetCryNb()]==0.) TimeCry[hit->GetCryNb()] =  hit->GetTime();//assing to each crystal the time of the first hit!
+      G4int Lindex = hit->GetCryNb();
+      G4int Rindex = Lindex/100*30+Lindex%100;
+      //      G4cout <<"Lindex "<< Lindex <<" Rindex "<< Rindex <<G4endl;
+     ETotCry[Rindex] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo
+     QTotCry[Rindex] += GetCharge(hit->GetEdep()); //somma le cariche su tutti gli hit di ogni cristallo
+     if(TimeCry[Rindex]==0.) TimeCry[Rindex] =  hit->GetTime();//assing to each crystal the time of the first hit!
      ETotEvt += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
-     //     if(TimeCry[hit->GetCryNb()]==0.) G4cout<<"Hit TIme "<< hit->GetTime()<<" Nhits "<<hit->GetCryNb()<<" Cl "<<TimeCry[hit->GetCryNb()]<<" "<<QTotCry[hit->GetCryNb()]<< G4endl;
+     //     if(TimeCry[Rindex]==0.) G4cout<<"Hit TIme "<< hit->GetTime()<<" Nhits "<<Rindex<<" Cl "<<TimeCry[Rindex]<<" "<<QTotCry[Rindex]<< G4endl;
     }
   }//end of loop
 
@@ -588,6 +590,21 @@ void EventAction::AddSACHits(SACHitsCollection* hcont)
       LastID = hit->GetTrackID();
     }
   }//end of loop
+}
+
+void EventAction::AddSACHitsStep(G4double E,G4double T, G4double Ptype, G4double X, G4double Y)
+{
+  //  static G4int SACTracks  = 0;
+  //  if(SACTracks < MaxTracks && E>2.*MeV){
+  if(SACTracks < MaxTracks){
+    SACEtrack[SACTracks]    = E;
+    SACTrackTime[SACTracks] = T;
+    SACPType[SACTracks]     = Ptype;
+    SACX[SACTracks]         = X;
+    SACY[SACTracks]         = Y;
+    SACTracks++;
+    //    G4cout<<SACTracks<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<G4endl;
+  }
 }
 
 void EventAction::AddLAVHits(LAVHitsCollection* hcont)

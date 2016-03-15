@@ -207,6 +207,61 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
 
+  //Materials for SF57
+
+  //  G4Material* Na2O     = man->FindOrBuildMaterial("G4_CALCIUM_OXIDE");
+
+  std::vector<G4String> SiO2El(2);
+  std::vector<G4int> SiO2NA(2);
+  SiO2El[0] = "Si"; SiO2NA[0] = 1;
+  SiO2El[1] = "O";  SiO2NA[1] = 2;
+  man->ConstructNewMaterial("SAC_SiO2",SiO2El,SiO2NA,2.32,true);
+
+  // PbO
+  std::vector<G4String> PbOEl(2);
+  std::vector<G4int> PbONA(2);
+  PbOEl[0] = "Pb"; PbONA[0] = 1;
+  PbOEl[1] = "O";  PbONA[1] = 1;
+  man->ConstructNewMaterial("PbO",PbOEl,PbONA,9.53,true);
+
+  // Na2O
+  std::vector<G4String> Na2OEl(2);
+  std::vector<G4int> Na2ONA(2);
+  Na2OEl[0] = "Na"; Na2ONA[0] = 2;
+  Na2OEl[1] = "O";  Na2ONA[1] = 1;
+  man->ConstructNewMaterial("Na2O",Na2OEl,Na2ONA,2.27,true);
+
+  // K2O
+  std::vector<G4String> K2OEl(2);
+  std::vector<G4int> K2ONA(2);
+  K2OEl[0] = "K"; K2ONA[0] = 2;
+  K2OEl[1] = "O"; K2ONA[1] = 1;
+  man->ConstructNewMaterial("K2O",K2OEl,K2ONA,2.32,true);
+
+  // Lead Glass (PbGl)
+  G4Material* PbGl = new G4Material("PbGl_SF57",5.57*g/cm3,4);
+  PbGl->AddMaterial(G4Material::GetMaterial("SAC_SiO2"), 24.0*perCent); // 22-26%
+  PbGl->AddMaterial(G4Material::GetMaterial("PbO"),  74.0*perCent);     // 72-76%
+  PbGl->AddMaterial(G4Material::GetMaterial("Na2O"),  1.0*perCent);     // 0.5-1.5%
+  PbGl->AddMaterial(G4Material::GetMaterial("K2O"),   1.0*perCent);     // 0.5-1.5%
+
+  //Lead Glass SF57 optical properties
+  const G4int nEntries = 10;
+  G4double PhotonEnergy[nEntries] =
+    { 1.88914*eV, 1.92582*eV, 1.95929*eV, 2.10392*eV, 2.11001*eV,
+      2.27035*eV, 2.55059*eV, 2.58300*eV, 2.84497*eV, 3.06360*eV};
+  G4double RefractiveIndexPbGl[nEntries] =
+    { 1.83650,    1.83808,    1.83957,    1.84636,    1.84666,
+      1.85504,    1.87204,    1.87425,    1.89393,    1.91366 };
+  G4double AbsorptionPbGl[nEntries] =
+    {   420.*cm,    420.*cm,    420.*cm,    420.*cm,    420.*cm,
+        420.*cm,    144.*cm,    130.*cm,     34.*cm,      8.*cm };
+  // Define property table for Lead Glass
+  G4MaterialPropertiesTable* myMPTPbGl = new G4MaterialPropertiesTable();
+  myMPTPbGl->AddProperty("RINDEX",PhotonEnergy, RefractiveIndexPbGl, nEntries);
+  myMPTPbGl->AddProperty("ABSLENGTH",PhotonEnergy, AbsorptionPbGl, nEntries);
+  PbGl->SetMaterialPropertiesTable(myMPTPbGl);
+
   // Diamond material to be used by target
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
   Diamond->AddElement(G4Element::GetElement("C"),100.*perCent);

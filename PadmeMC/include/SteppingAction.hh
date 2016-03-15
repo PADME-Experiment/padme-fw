@@ -35,7 +35,8 @@
 #include "G4UserSteppingAction.hh"
 #include "G4ThreeVector.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
+class EventAction;
+class G4Track;
 class SteppingAction : public G4UserSteppingAction
 {
 public:
@@ -67,7 +68,13 @@ private:
   G4ThreeVector GammaDir;
   G4ThreeVector VertexPos;
   G4int NChild;
+  EventAction * fEventAction;
+
+  G4int ClassifyTrack(G4Track* );
   //   HistoManager* fHistoManager;
+private:
+  double fSACEnergyThr;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

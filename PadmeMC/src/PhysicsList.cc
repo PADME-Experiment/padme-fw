@@ -43,11 +43,13 @@
 #include "Constants.hh"
 
 #include "G4FastSimulationManagerProcess.hh"
+#include "G4ParticlePropertyTable.hh"
 
 PhysicsList::PhysicsList():  G4VUserPhysicsList()
 {
   defaultCutValue = CutG4*cm;
   SetVerboseLevel(0);
+  IsOpticsON=1;
 }
 
 PhysicsList::~ PhysicsList()
@@ -117,8 +119,8 @@ void PhysicsList::ConstructProcess()
 {
   AddTransportation();
   AddParameterisation();
-
   ConstructEM();
+  if(IsOpticsON==1) ConstructOpticalPhysics();
   ConstructGeneral();
   //Here you put the transportation for neutrons!
  // this->RegisterPhysics( new G4EmExtraPhysics(ver) );
@@ -146,6 +148,7 @@ void PhysicsList::AddTransportation()
 #include "G4SynchrotronRadiation.hh"
 
 #include "G4hIonisation.hh"
+#include "G4Cerenkov.hh"          //M. Raggi 11/03/2016
 
 //#include "G4EmExtraPhysics.hh"        //M. Raggi 17/07/2014
 //#include "G4VModularPhysicsList.hh" //M. Raggi 17/07/2014
@@ -174,13 +177,79 @@ void PhysicsList::AddTransportation()
 
 #include "G4NeutronInelasticProcess.hh"
 
+////////////////////
+// Optical Processes
+#include "G4Cerenkov.hh"
+#include "G4Scintillation.hh"
+#include "G4OpAbsorption.hh"
+#include "G4OpRayleigh.hh"
+#include "G4OpBoundaryProcess.hh"
+#include "G4OpWLS.hh"
+
+
+void PhysicsList::ConstructOpticalPhysics() {
+  G4cout<<"Registering optical physics "<<G4endl;
+  fCerenkovProcess           = new G4Cerenkov("Cerenkov");
+  fScintillationProcess      = new G4Scintillation("Scintillation");
+  fAbsorptionProcess         = new G4OpAbsorption();
+  fRayleighScatteringProcess = new G4OpRayleigh();
+  fBoundaryProcess           = new G4OpBoundaryProcess();
+  //  fWLSProcess 	             = new G4OpWLS();
+  G4cout<<"dumping cherenkov "<<G4endl;
+  fCerenkovProcess     -> DumpPhysicsTable();
+  G4cout<<"dumping scintillaition "<<G4endl;
+  fScintillationProcess-> DumpPhysicsTable();
+  //  fAbsorptionProcess->DumpPhysicsTable();
+  //  fRayleighScatteringProcess->DumpPhysicsTable();
+  
+  //SetVerbose(1);
+  //fBoundaryProcess->SetVerboseLevel(1);
+  
+  fCerenkovProcess->SetMaxNumPhotonsPerStep(30);
+  fCerenkovProcess->SetTrackSecondariesFirst(true);
+  
+  fScintillationProcess->SetScintillationYieldFactor(1.);
+  fScintillationProcess->SetTrackSecondariesFirst(true);
+  // Use Birks Correction in the Scintillation process
+  
+  //  G4EmSaturation* emSaturation = G4LossTableManager::Instance()->EmSaturation();
+  //  fScintillationProcess->AddSaturation(emSaturation);
+  
+  // Removed because obsolete (Geant 9.6) RP
+  // fBoundaryProcess->SetModel(themodel);
+  
+  theParticleIterator->reset();
+  while( (*theParticleIterator)() ){
+    G4ParticleDefinition* particle = theParticleIterator->value();
+    G4ProcessManager* pmanager = particle->GetProcessManager();
+    G4String particleName = particle->GetParticleName();
+    if (particleName == "opticalphoton") {
+      G4cout << " AddDiscreteProcess to OpticalPhoton " << G4endl;
+      pmanager->AddDiscreteProcess(fAbsorptionProcess);
+      pmanager->AddDiscreteProcess(fRayleighScatteringProcess);
+      pmanager->AddDiscreteProcess(fBoundaryProcess);
+      //      pmanager->AddDiscreteProcess(fWLSProcess);
+    }
+    
+    if (fScintillationProcess->IsApplicable(*particle)) {
+      pmanager->AddProcess(fScintillationProcess);
+      pmanager->SetProcessOrderingToLast(fScintillationProcess, idxAtRest);
+      pmanager->SetProcessOrderingToLast(fScintillationProcess, idxPostStep);
+    }
+    if (fCerenkovProcess->IsApplicable(*particle)) {
+      pmanager->AddProcess(fCerenkovProcess);
+      pmanager->SetProcessOrdering(fCerenkovProcess,idxPostStep);
+    }
+  }
+}
+
 void PhysicsList::ConstructEM()
 {
-	 G4TheoFSGenerator * theModel;
-     G4GeneratorPrecompoundInterface * theCascade;
-     G4QGSModel< G4GammaParticipants > * theStringModel;
-     G4QGSMFragmentation * theFragmentation;
-     G4ExcitedStringDecay * theStringDecay;
+  G4TheoFSGenerator * theModel;
+  G4GeneratorPrecompoundInterface * theCascade;
+  G4QGSModel< G4GammaParticipants > * theStringModel;
+  G4QGSMFragmentation * theFragmentation;
+  G4ExcitedStringDecay * theStringDecay;
 
   theParticleIterator->reset();
   while( (*theParticleIterator)() ){

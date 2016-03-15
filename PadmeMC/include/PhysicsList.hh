@@ -36,6 +36,12 @@
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "G4SystemOfUnits.hh"
 
+//Optical Processes
+#include "G4Cerenkov.hh"
+#include "G4Scintillation.hh"
+#include "G4OpAbsorption.hh"
+#include "G4OpRayleigh.hh"
+#include "G4OpBoundaryProcess.hh"
 
 class PhysicsList: public G4VUserPhysicsList
 {
@@ -65,8 +71,18 @@ protected:
 
   virtual void ConstructGeneral();
   virtual void ConstructEM();
-
+  virtual void ConstructOpticalPhysics();
   virtual void AddTransportation();
+
+private:
+  int IsOpticsON;
+  // Optical Processes
+  G4Cerenkov*          fCerenkovProcess;
+  G4Scintillation*     fScintillationProcess;
+  G4OpAbsorption*      fAbsorptionProcess;
+  G4OpRayleigh*        fRayleighScatteringProcess;
+  G4OpBoundaryProcess* fBoundaryProcess;
+  //  G4OpWLS*             fWLSProcess;
 };
 
 #endif

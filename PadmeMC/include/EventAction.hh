@@ -28,8 +28,10 @@ class EventAction : public G4UserEventAction
    ~EventAction();
 
   public:
-    void BeginOfEventAction(const G4Event*);
-    void EndOfEventAction(const G4Event*);
+  void BeginOfEventAction(const G4Event*);
+  void EndOfEventAction(const G4Event*);
+  
+  void  AddSACHitsStep(G4double ,G4double , G4double , G4double , G4double );
   SteppingAction * myStepping;
   private:
   void  AddECryHits(ECalHitsCollection*);
@@ -39,6 +41,7 @@ class EventAction : public G4UserEventAction
   void  AddPVetoHits(PVetoHitsCollection*);
   void  AddEVetoHits(EVetoHitsCollection*);
   void  AddSACHits(SACHitsCollection*);
+
   void  AddLAVHits(LAVHitsCollection*);
   void  AddTrackerHits(TrackerHitsCollection*);
 

@@ -10,11 +10,16 @@
 #include "HistoManager.hh"
 //#include "MyEvent.hh"
 #include "Constants.hh"
+#include "EventAction.hh"
+#include "G4RunManager.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 SteppingAction::SteppingAction()
-{ }
+{ 
+  fEventAction = (EventAction*) G4RunManager::GetRunManager()->GetUserEventAction(); 
+  fSACEnergyThr=5*MeV;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -58,6 +63,17 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   }
   */
 
+    
+//Analyze SAC tracks
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="SACCry") {
+      //      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << " "<<track->GetKineticEnergy()<< G4endl;
+      // processing hit when entering the volume SAC Cry
+      if (track->GetKineticEnergy()>fSACEnergyThr)  fEventAction->AddSACHitsStep(track->GetKineticEnergy(),track->GetGlobalTime(),ClassifyTrack(step->GetTrack()),step->GetPostStepPoint()->GetPosition().x(),step->GetPostStepPoint()->GetPosition().y());
+      track->SetTrackStatus(fStopAndKill);      
+    }
+  }
+  
   //Cerca il primario
   if(NPrimaries==1){
     if(track->GetTrackID()==1){ //primary particle
@@ -150,6 +166,25 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 //    }
 //  }
 
+}
+
+G4int SteppingAction::ClassifyTrack(G4Track* track){
+  G4ParticleDefinition* particleType = track->GetDefinition();
+  if ( particleType == G4Gamma::GammaDefinition() ) {
+    return 1;
+  } else if ( particleType == G4Positron::PositronDefinition() ) {
+    return 2;
+  } else if ( particleType == G4Electron::ElectronDefinition() ) {
+    return 3;
+  } else if ( particleType == G4Neutron::NeutronDefinition() ) {
+    return 4;
+  } else if ( particleType == G4PionPlus::PionPlusDefinition() || particleType == G4PionMinus::PionMinusDefinition() ) {
+    return 5;
+  } else if ( particleType == G4PionZero::PionZeroDefinition() ) {
+    return 6;
+  } else if ( particleType == G4MuonPlus::MuonPlusDefinition() || particleType == G4MuonMinus::MuonMinusDefinition() ) {
+    return 7;
+  } else return -1;
 }
 
 void SteppingAction::SetPhysProc(float value){

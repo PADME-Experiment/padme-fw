@@ -6,6 +6,8 @@
 // --------------------------------------------------------------
 
 #include <sstream>
+//#include <ctime>
+#include <sys/time.h>
 
 #include "RootIOManager.hh"
 
@@ -23,6 +25,9 @@
 #include "G4Event.hh"
 #include "G4Run.hh"
 
+#include "TPadmeRun.hh"
+#include "TPadmeEvent.hh"
+
 #include "DetectorConstruction.hh"
 
 //#include "Stream.hh"
@@ -39,8 +44,8 @@ RootIOManager::RootIOManager()
 {
 
   // Create run and event objects
-  //fStream = new Stream();
-  //fEvent = new Event();
+  fRun   = new TPadmeRun();
+  fEvent = new TPadmeEvent();
 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
@@ -88,28 +93,30 @@ RootIOManager* RootIOManager::GetInstance()
 
 void RootIOManager::Close()
 {
+
   // Save latest data, clean run tree, and close file
   if ( fFile != 0 ) {
-    //fFile->cd();
-    fStreamTree->Write();
-    if (fVerbose) fStreamTree->Print();
-    delete fStreamTree;
+    fFile->cd();
+    fRunTree->Write();
+    if (fVerbose) fRunTree->Print();
+    delete fRunTree;
     //fGVirtMem->GetYaxis()->SetTitle("Virtual Memory (MB)");
     //fGVirtMem->GetXaxis()->SetTitle("Processed Events");
     //fGVirtMem->Write();
     //delete fGVirtMem;
     fFile->Purge();
     fFile->Close();
-    if (fVerbose) G4cout << "RootIOManager: I/O file closed" << G4endl;
-
+    if (fVerbose)
+      G4cout << "RootIOManager: I/O file closed" << G4endl;
   }
+
 }
 
 
 void RootIOManager::SetFileName(G4String newName)
 {
-  if (fVerbose) G4cout << "RootIOManager: Setting file name to "
-    << newName << G4endl;
+  if (fVerbose)
+    G4cout << "RootIOManager: Setting file name to " << newName << G4endl;
   fFileName = newName;
   fFileNameHasChanged = true;
 }
@@ -117,36 +124,39 @@ void RootIOManager::SetFileName(G4String newName)
 void RootIOManager::NewRun(G4int nRun)
 {
 
-
-  if (fVerbose) G4cout << "RootIOManager: Initializing I/O for run " << nRun << G4endl;
+  if (fVerbose)
+    G4cout << "RootIOManager: Initializing I/O for run " << nRun << G4endl;
 
   if ( fFileNameHasChanged ) {
-
     // Close old file (if any)
     if ( fFile != 0 ) {
-      if (fVerbose) G4cout << "RootIOManager: Closing old file" << G4endl;
+      if (fVerbose)
+	G4cout << "RootIOManager: Closing old file" << G4endl;
       Close();
     }
 
     // Create new file to hold data
-    if (fVerbose) G4cout << "RootIOManager: Creating new file " << fFileName << G4endl;
+    if (fVerbose)
+      G4cout << "RootIOManager: Creating new file " << fFileName << G4endl;
     fFile = TFile::Open(fFileName.c_str(),"RECREATE","NA62MC");
     fFileNameHasChanged = false;
 
     // Define basic file properties
-    if (fVerbose>=2) G4cout << "RootIOManager: Setting file compression level to "
-      << fCompLevel << G4endl;
+    if (fVerbose>=2)
+      G4cout << "RootIOManager: Setting file compression level to "
+	     << fCompLevel << G4endl;
     fFile->SetCompressionLevel(fCompLevel);
 
     // Create tree to hold runs
-    if (fVerbose>=2) G4cout << "RootIOManager: Creating new Streams tree" << G4endl;
-    fStreamTree = new TTree("Streams","List of streams");
-    //fStreamTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
-    fStreamTree->SetDirectory(fFile->GetDirectory("/"));
+    if (fVerbose>=2)
+      G4cout << "RootIOManager: Creating new Run tree" << G4endl;
+    fRunTree = new TTree("Runs","List of runs");
+    //fRunTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
+    fRunTree->SetDirectory(fFile->GetDirectory("/"));
 
     // Create branch to hold the run content info
-    //fStreamBranch = fStreamTree->Branch("Stream", &fStream, fBufSize);
-    //fStreamBranch->SetAutoDelete(kFALSE);
+    fRunBranch = fRunTree->Branch("Run", &fRun, fBufSize);
+    fRunBranch->SetAutoDelete(kFALSE);
 
   }
 
@@ -157,11 +167,15 @@ void RootIOManager::NewRun(G4int nRun)
   fEventTree->SetDirectory(fFile->GetDirectory("/"));
 
   // Create Stream object to hold run general information...
-  //fStream->Clear();
-  //fStream->SetType(DatacardManager::GetInstance()->GetDecayType());
+  fRun->Clear();
+  fRun->SetRunNumber(G4RunManager::GetRunManager()->GetCurrentRun()->GetRunID());
+  //fRun->SetType(DatacardManager::GetInstance()->GetDecayType());
+  fRun->SetRunType(-1); // TYpe<0 is MC, >0 is real data
+  fRun->SetTimeStart(time(0)); // Get start of run time
+  fRun->SetNEvents(0); // Reset number of events
 
   // Fill detector info section of run structure
-  //DetectorInfo* detInfo = fStream->GetDetectorInfo();
+  //DetectorInfo* detInfo = fRun->GetDetectorInfo();
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
@@ -173,56 +187,72 @@ void RootIOManager::NewRun(G4int nRun)
     iRootIO++;
   }
 
-  //if (fVerbose>=2) fStream->Print();
-
   // Fill run tree
-  fStreamTree->Fill();
+  //if (fVerbose>=2) fRun->Print();
+  //fRunTree->Fill();
 
   // Create branch to hold the whole event structure
-  //fEventBranch = fEventTree->Branch("event", &fEvent, fBufSize);
-  //fEventBranch->SetAutoDelete(kFALSE);
+  fEventBranch = fEventTree->Branch("Event", &fEvent, fBufSize);
+  fEventBranch->SetAutoDelete(kFALSE);
 
 }
 
 void RootIOManager::EndRun()
 {
-  if (fVerbose) G4cout << "RootIOManager: Executing End-of-Run procedure" << G4endl;
-  // Dump tree for this run to file and erase it
-  if(fEventTree){
+
+  if (fVerbose)
+    G4cout << "RootIOManager: Executing End-of-Run procedure" << G4endl;
+
+  fRun->SetTimeStop(time(0)); // Get end of run time
+  if (fVerbose>=2) fRun->Print();
+  fRunTree->Fill(); // Fill run tree
+
+  // Dump tree for this event to file and erase it
+  if(fEventTree) {
+    fFile->cd();
     fEventTree->Write();
-    if (fVerbose) fEventTree->Print();
+    if (fVerbose>=2) fEventTree->Print();
     delete fEventTree;
   }
+
+  // Same for each subdetetctor
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
-
   while (iRootIO!=endRootIO){
     if((*iRootIO)->GetEnabled())
       (*iRootIO)->EndRun();
     iRootIO++;
   }
+
 }
 
 void RootIOManager::SaveEvent(const G4Event* eventG4)
 {
-  if (fVerbose>=2) G4cout << "RootIOManager: Preparing event structure" << G4endl;
+  if (fVerbose>=2)
+    G4cout << "RootIOManager: Preparing event structure" << G4endl;
 
   // Save current Object count
   Int_t savedObjNumber = TProcessID::GetObjectCount();
 
+  // Increase event counter for this run
+  fRun->IncNEvents();
+
   // Get event id (run,event,date)
   G4int nRun = G4RunManager::GetRunManager()->GetCurrentRun()->GetRunID();
   G4int nEvent = eventG4->GetEventID();
-  G4int date = 0; // To be replaced with current time
+  //G4int date = time(0);
+  struct timeval tp;
+  gettimeofday(&tp,NULL);
+  G4double now = tp.tv_sec*1.+tp.tv_usec/1000000.;
 
-  if (fVerbose>=2) G4cout << "RootIOManager: Event " << nEvent << " Run " << nRun
-    << " at " << date << G4endl;
+  if (fVerbose>=2)
+    G4cout << "RootIOManager: Event " << nEvent
+	   << " Run " << nRun << " at " << now << G4endl;
 
-  // Fill Event Header
-  //EventHeader* evtHead = fEvent->GetHeader();
-  //evtHead->SetEvtNum(nEvent);
-  //evtHead->SetRunNum(nRun);
-  //evtHead->SetDate(date);
+  // Fill Event info
+  fEvent->SetRunNumber(nRun);
+  fEvent->SetEventNumber(nEvent);
+  fEvent->SetTime(now);
 
   //Restore Object count
   //To save space in the table keeping track of all referenced objects
@@ -230,8 +260,10 @@ void RootIOManager::SaveEvent(const G4Event* eventG4)
   //object count to what it was at the beginning of the event.
   TProcessID::SetObjectCount(savedObjNumber);
 
-  //if (fVerbose>=2) G4cout << "RootIOManager: Saving event structure to file" << G4endl;
-  //if (fVerbose>=8) fEvent->Print();
+  if (fVerbose>=2)
+    G4cout << "RootIOManager: Saving event structure to file" << G4endl;
+  if (fVerbose>=8)
+    fEvent->Print();
   //if (fVerbose>=9) fEvent->PrintAll();
 
   fEventTree->Fill();
@@ -268,13 +300,13 @@ void RootIOManager::SaveEvent(const G4Event* eventG4)
 //}
 
 MCVRootIO* RootIOManager::FindRootIO(G4String name){
+
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
-
   while (iRootIO!=endRootIO){
-    if((*iRootIO)->GetName() == name)
-      return (*iRootIO);
+    if((*iRootIO)->GetName() == name) return (*iRootIO);
     iRootIO++;
   }
   return 0;
+
 }

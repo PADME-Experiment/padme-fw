@@ -20,8 +20,8 @@
 #include "MCVRootIO.hh"
 #include <list>
 
-//class Stream;
-//class Event;
+class TPadmeRun;
+class TPadmeEvent;
 
 class G4Event;
 
@@ -66,30 +66,32 @@ public:
   G4int GetVerbose()                { return fVerbose;      };
   void  SetVerbose(G4int value)     { fVerbose = value;     };
 
-  G4String GetFileName()                       { return fFileName;            };
+  G4String GetFileName()            { return fFileName;     };
   void     SetFileName(G4String value);
-  G4bool   GetFileNameHasChanged()             { return fFileNameHasChanged;  };
-  void     SetFileNameHasChanged(G4bool value) { fFileNameHasChanged = value; };
 
-  TFile*   GetFile()                        { return fFile;          };
-  void     SetFile(TFile * value)           { fFile = value;         };
+  G4bool   GetFileNameHasChanged()             { return fFileNameHasChanged;  }
+  void     SetFileNameHasChanged(G4bool value) { fFileNameHasChanged = value; }
 
-  TTree*   GetStreamTree()                  { return fStreamTree;    };
-  void     SetStreamTree(TTree * value)     { fStreamTree = value;   };
+  TFile*   GetFile()              { return fFile;          }
+  void     SetFile(TFile * value) { fFile = value;         }
 
-  TTree*   GetEventTree()                   { return fEventTree;     };
-  void     SetEventTree(TTree * value)      { fEventTree = value;    };
+  TTree*   GetRunTree()              { return fRunTree;    }
+  void     SetRunTree(TTree * value) { fRunTree = value;   }
 
-  //TBranch* GetStreamBranch()                { return fStreamBranch;  };
-  //void     SetStreamBranch(TBranch * value) { fStreamBranch = value; };
+  TTree*   GetEventTree()               { return fEventTree;     }
+  void     SetEventTree(TTree * value)  { fEventTree = value;    }
 
-  //TBranch* GetEventBranch()                 { return fEventBranch;   };
-  //void     SetEventBranch(TBranch * value)  { fEventBranch = value;  };
+  TBranch* GetRunBranch()                { return fRunBranch;  }
+  void     SetRunBranch(TBranch * value) { fRunBranch = value; }
 
-  //Stream* GetStream()               { return fStream;  };
-  //void    SetStream(Stream * value) { fStream = value; };
-  //Event*  GetEvent()                { return fEvent;   };
-  //void    SetEvent(Event * value)   { fEvent = value;  };
+  TBranch* GetEventBranch()                { return fEventBranch;   }
+  void     SetEventBranch(TBranch * value) { fEventBranch = value;  }
+
+  TPadmeRun*    GetRun()                 { return fRun;    }
+  void          SetRun(TPadmeRun* value) { fRun = value;   }
+
+  TPadmeEvent*  GetEvent()                    { return fEvent;  }
+  void          SetEvent(TPadmeEvent * value) { fEvent = value; }
 
   //RootIOList GetRootIOList()                 { return fRootIOList;  };
   //void       SetRootIOList(RootIOList value) { fRootIOList = value; };
@@ -102,15 +104,15 @@ private:
   G4int fVerbose;
 
   G4String fFileName;
-  G4bool fFileNameHasChanged;
+  G4bool   fFileNameHasChanged;
 
   TFile*   fFile;
-  TTree*   fStreamTree;   //Tree to hold all runs in one file
-  TTree*   fEventTree;    //Tree to hold all events in one run
-  //TBranch* fStreamBranch;
-  //TBranch* fEventBranch;
-  //Stream*  fStream;
-  //Event*   fEvent;
+  TTree*   fRunTree;   //Tree to hold all runs in one file
+  TTree*   fEventTree; //Tree to hold all events in one run
+  TBranch* fRunBranch;
+  TBranch* fEventBranch;
+  TPadmeRun*   fRun;
+  TPadmeEvent* fEvent;
   //TGraph * fGVirtMem;
 
   typedef std::list<MCVRootIO*> RootIOList;

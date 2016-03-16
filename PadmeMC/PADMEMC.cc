@@ -1,3 +1,6 @@
+#include "G4RunManager.hh"
+#include "G4UImanager.hh"
+
 #include "DetectorConstruction.hh"
 #include "PhysicsList.hh"
 #include "PrimaryGeneratorAction.hh"
@@ -7,13 +10,12 @@
 #include "SteppingVerbose.hh"
 #include "HistoManager.hh"
 #include "StackingAction.hh"
-#include "G4RunManager.hh"
-#include "G4UImanager.hh"
 #include "DatacardManager.hh"
 #include "Constants.hh"
 
 #include "PADME_PHYS.hh"
 
+#include "RootIOManager.hh"
 
 //#include "MyEvent.hh"
 
@@ -45,11 +47,11 @@ void sighandler(int sig){
     G4cerr << G4endl << "********************************************************************************" << G4endl;
     G4cerr << "Killed with Signal " << sig << G4endl << "Closing ROOT files ..." << G4endl; 
     G4RunManager::GetRunManager()->AbortRun();
-    //    histo->save();
-    //    RootIOManager::GetInstance()->Close();
+    RootIOManager::GetInstance()->EndRun();
+    RootIOManager::GetInstance()->Close();
     G4cerr << "... Done" << G4endl;
     G4cerr << G4endl << "********************************************************************************" << G4endl;
-    //  G4GeometryManager::GetInstance()->OpenGeometry();
+    //G4GeometryManager::GetInstance()->OpenGeometry();
 
 #ifdef G4VIS_USE
     delete G4VVisManager::GetConcreteInstance();
@@ -174,6 +176,9 @@ int main(int argc,char** argv)
       delete visManager;
 #endif     
     }
+
+  // Close latest root file
+  RootIOManager::GetInstance()->Close();
 
   // Free the store: user actions, physics_list and detector_description are
   //                 owned and deleted by the run manager, so they should not

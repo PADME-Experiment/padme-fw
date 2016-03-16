@@ -39,6 +39,7 @@ public:
 
   Int_t GetNEvents()            { return fNEvents;  }
   void  SetNEvents(Int_t value) { fNEvents = value; }
+  void  IncNEvents()            { fNEvents++; }
 
 private:
 

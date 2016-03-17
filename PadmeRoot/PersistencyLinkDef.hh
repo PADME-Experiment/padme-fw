@@ -21,4 +21,7 @@
 #pragma link C++ class TECalMCHit+;
 #pragma link C++ class TECalMCEvent+;
 
+#pragma link C++ class TSACMCHit+;
+#pragma link C++ class TSACMCEvent+;
+
 #endif

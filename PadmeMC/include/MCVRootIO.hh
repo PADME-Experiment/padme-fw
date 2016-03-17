@@ -11,7 +11,7 @@
 #include "G4Event.hh"
 
 #include "TFile.h"
-//#include "DetectorInfo.hh"
+#include "TDetectorInfo.hh"
 
 class MCVRootIO
 {
@@ -22,8 +22,8 @@ public:
   // In the concrete fInstance you need to implement
   // the mandatory virtual methods
   virtual ~MCVRootIO();
-  //virtual void NewRun(G4int, TFile*, DetectorInfo*) = 0;
-  virtual void NewRun(G4int, TFile*) = 0;
+  virtual void NewRun(G4int, TFile*, TDetectorInfo*) = 0;
+  //virtual void NewRun(G4int, TFile*) = 0;
   virtual void EndRun() = 0;
   virtual void SaveEvent(const G4Event*) = 0;
   virtual void Close() = 0;
@@ -49,6 +49,8 @@ protected:
 
   Int_t fBufSize;
   Int_t fBranchStyle;
+
+  G4int fRunNumber;
   G4int fVerbose;
 
   G4String fName;

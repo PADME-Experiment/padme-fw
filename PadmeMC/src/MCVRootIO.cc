@@ -12,6 +12,9 @@ MCVRootIO::MCVRootIO(G4String name)
   fBufSize = 64000; //size of output buffer
   fBranchStyle = 1; //new branch style by default
 
+  // Default run number
+  fRunNumber = 0;
+
   // Default verbose level
   fVerbose = 0;
 

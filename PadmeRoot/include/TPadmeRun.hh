@@ -10,7 +10,7 @@
 #include "TObject.h"
 #include "TString.h"
 
-//#include "TMCDetectorInfo.hh"
+#include "TDetectorInfo.hh"
 
 class TPadmeRun: public TObject
 {
@@ -22,8 +22,8 @@ public:
   void Clear(Option_t* option ="");
   void Print(Option_t* option="") const;
 
-  //TMCDetectorInfo* GetDetectorInfo()                      { return &fDetInfo; }
-  //void             SetDetectorInfo(TMCDetectorInfo value) { fDetInfo = value; }
+  TDetectorInfo* GetDetectorInfo()                    { return &fDetInfo; }
+  void           SetDetectorInfo(TDetectorInfo value) { fDetInfo = value; }
 
   Int_t GetRunNumber()            { return fRunNumber;  }
   void  SetRunNumber(Int_t value) { fRunNumber = value; }
@@ -43,7 +43,7 @@ public:
 
 private:
 
-  //TMCDetectorInfo fDetInfo;
+  TDetectorInfo fDetInfo;
 
   Int_t fRunNumber;
   Int_t fRunType;

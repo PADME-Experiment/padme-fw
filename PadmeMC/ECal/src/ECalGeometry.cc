@@ -100,3 +100,48 @@ G4double ECalGeometry::GetCrystalPosZ(G4int row, G4int col)
   return 0.;
 
 }
+
+std::vector<G4String> ECalGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fECalNRows " << fECalNRows;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalNCols " << fECalNCols;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalFrontFacePosZ " << fECalFrontFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalInnerRadius " << fECalInnerRadius;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalOuterRadius " << fECalOuterRadius;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeX " << fCrystalNominalSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeY " << fCrystalNominalSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeZ " << fCrystalNominalSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalGap " << fCrystalGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
+}

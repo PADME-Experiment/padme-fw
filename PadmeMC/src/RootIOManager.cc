@@ -11,7 +11,7 @@
 
 #include "RootIOManager.hh"
 
-//#include "ECalRootIO.hh"
+#include "ECalRootIO.hh"
 //#include "TargetRootIO.hh"
 //#include "PVetoRootIO.hh"
 //#include "EVetoRootIO.hh"
@@ -27,11 +27,9 @@
 
 #include "TPadmeRun.hh"
 #include "TPadmeEvent.hh"
+#include "TDetectorInfo.hh"
 
 #include "DetectorConstruction.hh"
-
-//#include "Stream.hh"
-//#include "Event.hh"
 
 #include "TString.h"
 #include "TProcessID.h"
@@ -67,7 +65,7 @@ RootIOManager::RootIOManager()
   G4cout << "RootIOManager: Initialized" << G4endl;
 
   // Add subdetectors persistency managers
-  //fRootIOList.push_back(new ECalRootIO);
+  fRootIOList.push_back(new ECalRootIO);
   //fRootIOList.push_back(new TargetRootIO);
   //fRootIOList.push_back(new PVetoRootIO);
   //fRootIOList.push_back(new EVetoRootIO);
@@ -106,8 +104,7 @@ void RootIOManager::Close()
     //delete fGVirtMem;
     fFile->Purge();
     fFile->Close();
-    if (fVerbose)
-      G4cout << "RootIOManager: I/O file closed" << G4endl;
+    if (fVerbose) G4cout << "RootIOManager: I/O file closed" << G4endl;
   }
 
 }
@@ -175,15 +172,14 @@ void RootIOManager::NewRun(G4int nRun)
   fRun->SetNEvents(0); // Reset number of events
 
   // Fill detector info section of run structure
-  //DetectorInfo* detInfo = fRun->GetDetectorInfo();
+  TDetectorInfo* detInfo = fRun->GetDetectorInfo();
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
-
   while (iRootIO!=endRootIO){
     if((*iRootIO)->GetEnabled())
-      //(*iRootIO)->NewRun(nRun,fFile,detInfo);
-      (*iRootIO)->NewRun(nRun,fFile);
+      (*iRootIO)->NewRun(nRun,fFile,detInfo);
+      //(*iRootIO)->NewRun(nRun,fFile);
     iRootIO++;
   }
 
@@ -219,8 +215,7 @@ void RootIOManager::EndRun()
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
   while (iRootIO!=endRootIO){
-    if((*iRootIO)->GetEnabled())
-      (*iRootIO)->EndRun();
+    if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
 

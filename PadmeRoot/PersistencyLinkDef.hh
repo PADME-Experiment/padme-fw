@@ -12,6 +12,9 @@
 #pragma link C++ class TPadmeRun+;
 #pragma link C++ class TPadmeEvent+;
 
+#pragma link C++ class TDetectorInfo+;
+#pragma link C++ class TSubDetectorInfo+;
+
 #pragma link C++ class TMCVHit+;
 #pragma link C++ class TMCVEvent+;
 

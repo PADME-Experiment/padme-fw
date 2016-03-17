@@ -16,7 +16,7 @@
 
 class TECalMCEvent;
 class ECalGeometry;
-//class ECalMaterialParameters;
+class TDetectorInfo;
 
 class ECalRootIO : public MCVRootIO
 {
@@ -27,12 +27,11 @@ public:
 
   static ECalRootIO* GetInstance();
 
-  //void NewRun(G4int,TFile*,DetectorInfo*);
-  void NewRun(G4int,TFile*);
+  void NewRun(G4int,TFile*,TDetectorInfo*);
+  //void NewRun(G4int,TFile*);
   void EndRun();
   void SaveEvent(const G4Event*);
   void Close();
-
 
 private:
 
@@ -41,7 +40,6 @@ private:
   TECalMCEvent* fEvent;
 
   ECalGeometry* fGeoPars;
-  //ECalMaterialParameters * fMatPars;
 
 };
 #endif // ECalRootIO_h

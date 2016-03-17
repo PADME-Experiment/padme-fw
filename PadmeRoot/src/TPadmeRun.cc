@@ -10,7 +10,6 @@
 #include "TPadmeRun.hh"
 
 ClassImp(TPadmeRun)
-//ClassImp(DetectorInfo)
 
 TPadmeRun::TPadmeRun()
 {
@@ -28,7 +27,7 @@ void TPadmeRun::Clear(Option_t * /*option*/)
   fTimeStart =  0;
   fTimeStop  =  0;
   fNEvents   =  0;
-  //fDetInfo.Clear("C");
+  fDetInfo.Clear("C");
 }
 
 void TPadmeRun::Print(Option_t * /*option*/) const
@@ -38,5 +37,5 @@ void TPadmeRun::Print(Option_t * /*option*/) const
        << " Tstart "  << fTimeStart
        << " Tstop "   << fTimeStop
        << " #events " << fNEvents << endl;
-  //fDetInfo.Print();
+  fDetInfo.Print();
 }

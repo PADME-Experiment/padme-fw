@@ -25,12 +25,12 @@ public:
 
 public:
 
-  TMCVHit* AddHit();          // Append a new (empty) hit to hits array
-  TMCVHit* AddHit(TMCVHit *); // Append given hit to hits array
+  TMCVHit* AddHit();         // Append a new (empty) hit to hits array
+  TMCVHit* AddHit(TMCVHit*); // Append given hit to hits array
 
-  TMCVHit* Hit(Int_t iHit);   // Return pointer to hit at given index in hits array
+  TMCVHit* Hit(Int_t iHit); // Return pointer to hit at given index in hits array
 
-  TMCVHit* LastHit();         // Return pointer to last hit in hits array
+  TMCVHit* LastHit(); // Return pointer to last hit in hits array
 
   void RemoveHit(Int_t iHit); // Remove hit at given index and compress hits array
 
@@ -38,22 +38,22 @@ public:
 
 public:
 
-  Int_t GetRunID()                            { return fRunID;  };
-  void  SetRunID(Int_t value)                 { fRunID = value; };
+  Int_t GetRunNumber()            { return fRunNumber;  };
+  void  SetRunNumber(Int_t value) { fRunNumber = value; };
 
-  Int_t GetEventID()                          { return fRunID;  };
-  void  SetEventID(Int_t value)               { fRunID = value; };
+  Int_t GetEventNumber()            { return fEventNumber;  };
+  void  SetEventNumber(Int_t value) { fEventNumber = value; };
 
-  Int_t GetNHits()                            { return fNHits;  };
-  //void  SetNHits(Int_t value)                 { fNHits = value; };
+  Int_t GetNHits()              { return fNHits;  };
+  //void  SetNHits(Int_t value)   { fNHits = value; };
 
   //TClonesArray* GetHits()                     { return fHits;   };
   //void          SetHits(TClonesArray * value) { fHits = value;  };
 
 private:
 
-  Int_t fRunID;
-  Int_t fEventID;
+  Int_t fRunNumber;
+  Int_t fEventNumber;
 
   Int_t fNHits;
   TClonesArray* fHits;

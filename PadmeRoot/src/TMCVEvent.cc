@@ -12,8 +12,8 @@ ClassImp(TMCVEvent)
 TMCVEvent::TMCVEvent()
 {
 
-    fRunID   = -1;
-    fEventID = -1;
+    fRunNumber   = -1;
+    fEventNumber = -1;
 
     fNHits = 0;
     fHits  = 0;
@@ -23,8 +23,8 @@ TMCVEvent::TMCVEvent()
 TMCVEvent::TMCVEvent(TClass* cls)
 {
 
-    fRunID   = -1;
-    fEventID = -1;
+    fRunNumber   = -1;
+    fEventNumber = -1;
 
     fNHits = 0;
     fHits  = new TClonesArray(cls,1000);

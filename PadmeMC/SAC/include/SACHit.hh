@@ -1,33 +1,9 @@
+// --------------------------------------------------------------
+// History:
 //
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-17
 //
-//
-// $Id: SACHit.hh,v 1.2 2014/06/23 13:44:14 veni Exp $
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+// --------------------------------------------------------------
 
 #ifndef SACHit_h
 #define SACHit_h 1
@@ -57,32 +33,39 @@ public:
 
 public:
   
-  void SetTrackID(G4int track)   { trackID = track; };
-  void SetCryNb(G4int cry)       { CryNb = cry; }; 
-  void SetPType(G4int typ)       { PType = typ; }; 
-  void SetEdep(G4double de)      { edep = de; };
-  void SetTime(G4double HitT)    { SACHitT = HitT; };
-  void SetPos(G4ThreeVector xyz) { pos = xyz; };
+  void SetTrackID(G4int track)   { fTrackId = track; };
+  void SetCryNb(G4int cry)       { fChannelId = cry; }; 
+  void SetChannelId(G4int cry)       { fChannelId = cry; }; 
+  void SetPType(G4int typ)       { fParticleType = typ; }; 
+  void SetEdep(G4double de)      { fEnergy = de; };
+  void SetEnergy(G4double de)      { fEnergy = de; };
+  void SetTime(G4double HitT)    { fTime = HitT; };
+  void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
+  void SetPosition(G4ThreeVector xyz) { fPosition = xyz; };
       
-  G4int GetTrackID()    { return trackID; };
-  G4int GetCryNb()      { return CryNb; };
-  G4double GetEdep()    { return edep; };
-  G4double GetTime()    { return SACHitT; };
-  G4int GetPType()      { return PType; };
-  G4ThreeVector GetPos(){ return pos; };
-  G4double GetX()       { return pos.x(); }
-  G4double GetY()       { return pos.y(); }
-  G4double GetZ()       { return pos.z(); }
+  G4int GetTrackID()    { return fTrackId; };
+  G4int GetCryNb()      { return fChannelId; };
+  G4int GetChannelId()      { return fChannelId; };
+  G4double GetEdep()    { return fEnergy; };
+  G4double GetEnergy()    { return fEnergy; };
+  G4double GetTime()    { return fTime; };
+  G4int GetPType()      { return fParticleType; };
+
+  G4ThreeVector GetPos() { return fPosition; };
+  G4ThreeVector GetPosition() { return fPosition; };
+  G4double GetX() { return fPosition.x(); }
+  G4double GetY() { return fPosition.y(); }
+  G4double GetZ() { return fPosition.z(); }
       
 private:
-  
-  G4int         trackID;
-  G4int         PType;
-  G4int         CryNb;
-  G4double      edep;
-  G4double      SACHitT;
-  G4ThreeVector pos;
-  
+
+  G4int         fTrackId;
+  G4int         fParticleType;
+  G4int         fChannelId;
+  G4double      fEnergy;
+  G4double      fTime;
+  G4ThreeVector fPosition;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

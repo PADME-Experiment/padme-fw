@@ -16,7 +16,7 @@
 //#include "PVetoRootIO.hh"
 //#include "EVetoRootIO.hh"
 //#include "HEPVetoRootIO.hh"
-//#include "SACRootIO.hh"
+#include "SACRootIO.hh"
 //#include "LAVRootIO.hh"
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
@@ -70,7 +70,7 @@ RootIOManager::RootIOManager()
   //fRootIOList.push_back(new PVetoRootIO);
   //fRootIOList.push_back(new EVetoRootIO);
   //fRootIOList.push_back(new HEPVetoRootIO);
-  //fRootIOList.push_back(new SACRootIO);
+  fRootIOList.push_back(new SACRootIO);
   //fRootIOList.push_back(new LAVRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
@@ -109,6 +109,27 @@ void RootIOManager::Close()
 
 }
 
+void RootIOManager::EnableSubDetectorIO(G4String det)
+{
+  MCVRootIO* drio = FindRootIO(det);
+  if (drio) {
+    printf("Enabling IO for subdetector %s\n",det.data());
+    drio->SetEnabled(true);
+  } else {
+    printf("WARNING: request to enable IO for unknown subdetector %s\n",det.data());
+  }
+}
+
+void RootIOManager::DisableSubDetectorIO(G4String det)
+{
+  MCVRootIO* drio = FindRootIO(det);
+  if (drio) {
+    printf("Disabling IO for subdetector %s\n",det.data());
+    drio->SetEnabled(false);
+  } else {
+    printf("WARNING: request to disable IO for unknown subdetector %s\n",det.data());
+  }
+}
 
 void RootIOManager::SetFileName(G4String newName)
 {

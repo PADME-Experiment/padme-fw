@@ -54,6 +54,9 @@ protected:
 
 public:
 
+  void EnableSubDetectorIO(G4String);
+  void DisableSubDetectorIO(G4String);
+
   Int_t GetBufSize()                { return fBufSize;      };
   void  SetBufSize(Int_t value)     { fBufSize = value;     };
 

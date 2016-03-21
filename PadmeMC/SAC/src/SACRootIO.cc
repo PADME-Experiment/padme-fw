@@ -73,7 +73,7 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   fSACTree->SetDirectory(hfile->GetDirectory("/"));
 
   // Create branch to hold SAC Hits
-  fSACBranch = fSACTree->Branch("Hits", &fEvent, fBufSize,5);
+  fSACBranch = fSACTree->Branch("MCHits", &fEvent, fBufSize,5);
   fSACBranch->SetAutoDelete(kFALSE);
 
 }

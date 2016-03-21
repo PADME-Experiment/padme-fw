@@ -73,7 +73,7 @@ void ECalRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   fECalTree->SetDirectory(hfile->GetDirectory("/"));
 
   // Create branch to hold ECal Hits
-  fECalBranch = fECalTree->Branch("Hits", &fEvent, fBufSize,5);
+  fECalBranch = fECalTree->Branch("MCHits",&fEvent,fBufSize,5);
   fECalBranch->SetAutoDelete(kFALSE);
 
 }

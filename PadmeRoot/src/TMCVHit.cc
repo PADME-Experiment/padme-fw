@@ -16,12 +16,12 @@ TMCVHit::TMCVHit()
   // Initialize to invalid channel
   fChannelId = -1;
   fEnergy    = 0.;
-  fTime      = 0.;
+  fTime      = 1.E9;
 }
 
 void TMCVHit::Print(Option_t *) const {
-  cout << "ChannelId = " << fChannelId << endl
-       << "HitPosition = (" << fPosition.X() << "," << fPosition.Y() << "," << fPosition.Z() << ")" << endl
-       << "Energy = " << fEnergy << endl
-       << "Time = " << fTime << endl << endl;
+  cout << "ChannelId = " << fChannelId << endl;
+  cout << "HitPosition = (" << fPosition.X() << "," << fPosition.Y() << "," << fPosition.Z() << ")" << endl;
+  cout << "Energy = " << fEnergy << endl;
+  cout << "Time = " << fTime << endl << endl;
 }

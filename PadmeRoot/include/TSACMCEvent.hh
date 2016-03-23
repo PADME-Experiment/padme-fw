@@ -9,12 +9,16 @@
 
 #include "TMCVEvent.hh"
 
+class TSACMCHit;
+
 class TSACMCEvent : public TMCVEvent {
 
 public:
 
   TSACMCEvent();
   ~TSACMCEvent();
+
+  TSACMCHit* GetOrCreateHit(Int_t);
 
 private:
 

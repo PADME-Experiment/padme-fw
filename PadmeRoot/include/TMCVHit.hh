@@ -33,7 +33,7 @@ public:
   void  AddEnergy   (Double_t value) { fEnergy += value;   };
   void  SetTime     (Double_t value) { fTime = value;      };
  
-private:
+protected:
 
   Int_t    fChannelId;
   TVector3 fPosition;

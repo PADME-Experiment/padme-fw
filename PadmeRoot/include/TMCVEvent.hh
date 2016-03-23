@@ -50,7 +50,7 @@ public:
   //TClonesArray* GetHits()                     { return fHits;   };
   //void          SetHits(TClonesArray * value) { fHits = value;  };
 
-private:
+protected:
 
   Int_t fRunNumber;
   Int_t fEventNumber;

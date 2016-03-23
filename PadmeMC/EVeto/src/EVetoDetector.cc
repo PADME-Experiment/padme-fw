@@ -57,7 +57,7 @@ void EVetoDetector::CreateGeometry()
   printf("EVeto Finger size is %f %f %f\n",eVetoFingerX,eVetoFingerY,eVetoFingerLength);
   G4Box* solidFinger  = new G4Box("EVetoCrySolid",eVetoFingerX*0.5,eVetoFingerY*0.5,eVetoFingerLength*0.5);
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"EVetoFingerLogic",0,0,0);
-  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
  
   // Make finger a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
@@ -82,7 +82,7 @@ void EVetoDetector::CreateGeometry()
   G4double suppSizeZ = geo->GetSupportUSizeZ();
   G4Box* solidSupport  = new G4Box("EVetoSupport",0.5*suppSizeX,0.5*suppSizeY,0.5*suppSizeZ);
   G4LogicalVolume* logicSupport  = new G4LogicalVolume(solidSupport,G4Material::GetMaterial("G4_Al"),"EVetoSupport",0,0,0);
-  logicSupport->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  logicSupport->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
   G4ThreeVector suppUPos = G4ThreeVector(geo->GetSupportUPosX(),geo->GetSupportUPosY(),geo->GetSupportUPosZ());
   new G4PVPlacement(0,suppUPos,logicSupport,"EVetoSupportU",fEVetoVolume,false,0,false);

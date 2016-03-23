@@ -46,7 +46,7 @@ void TDumpDetector::CreateGeometry()
   G4Box* solidTDump = new G4Box("TDump",0.5*tdumpSizeX,0.5*tdumpSizeY,0.5*tdumpSizeZ);
   fTDumpVolume = new G4LogicalVolume(solidTDump,G4Material::GetMaterial("Vacuum"),"TDump",0,0,0);
   fTDumpVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fTDumpVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+  //fTDumpVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   printf("TDump will be placed at x=%f y=%f z=%f cm\n",geo->GetTDumpPosX()/cm,geo->GetTDumpPosY()/cm,geo->GetTDumpPosZ()/cm);
   G4ThreeVector tdumpPos = G4ThreeVector(geo->GetTDumpPosX(),geo->GetTDumpPosY(),geo->GetTDumpPosZ()); 
   new G4PVPlacement(0,tdumpPos,fTDumpVolume,"TDump",fMotherVolume,false,0,false);
@@ -58,7 +58,7 @@ void TDumpDetector::CreateGeometry()
   printf("TDump target size is ri=%f ro=%f z=%f cm\n",targInnR/cm,targOutR/cm,targSizeZ/cm);
   G4Tubs* solidTarg = new G4Tubs("TDumpTarget",targInnR,targOutR,0.5*targSizeZ,0.*deg,360.*deg);
   fTargetVolume = new G4LogicalVolume(solidTarg,G4Material::GetMaterial("G4_W"),"TDumpTarget",0,0,0);
-  fTargetVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+  fTargetVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   printf("TDump target will be placed at x=%f y=%f z=%f cm\n",geo->GetTargetPosX()/cm,geo->GetTargetPosY()/cm,geo->GetTargetPosZ()/cm);
   G4ThreeVector targPos = G4ThreeVector(geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ()); 
   new G4PVPlacement(0,targPos,fTargetVolume,"TDumpTarget",fTDumpVolume,false,0,false);
@@ -70,7 +70,7 @@ void TDumpDetector::CreateGeometry()
   printf("TDump brick size is x=%f y=%f z=%f cm\n",brickSizeX/cm,brickSizeY/cm,brickSizeZ/cm);
   G4Box* solidBrick = new G4Box("Brick",0.5*brickSizeX,0.5*brickSizeY,0.5*brickSizeZ);
   G4LogicalVolume* logicBrick = new G4LogicalVolume(solidBrick,G4Material::GetMaterial("G4_Pb"),"Brick",0,0,0);
-  logicBrick->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Grey()));
+  logicBrick->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
 
   // Position all lead bricks
   G4int nBricks = geo->GetNBricks();

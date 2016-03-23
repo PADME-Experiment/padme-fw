@@ -58,7 +58,7 @@ void ECalDetector::CreateGeometry()
   G4Box* solidCry  = new G4Box("ECalCry",0.5*crySizeX,0.5*crySizeY,0.5*crySizeZ);
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BGO"),"ECalCry",0, 0, 0);
   //fCrystalVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Magenta()));
-  fCrystalVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Cyan()));
+  fCrystalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Cyan()));
 
   // Make crystal a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

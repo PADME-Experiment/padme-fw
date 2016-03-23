@@ -245,7 +245,7 @@ void PhysicsList::ConstructOpticalPhysics() {
 }
 
 
-void PhysicsList::ConstrucNuclearProcesses(){
+void PhysicsList::ConstructNuclearProcesses(){
     theParticleIterator->reset();
     while( (*theParticleIterator)() ){
       G4ParticleDefinition* particle = theParticleIterator->value();

@@ -34,6 +34,8 @@
 #include "TString.h"
 #include "TProcessID.h"
 
+//#include "TargetGeometry.hh"
+#include "BeamParameters.hh"
 #include "DatacardManager.hh"
 
 RootIOManager* RootIOManager::fInstance = 0;
@@ -74,6 +76,9 @@ RootIOManager::RootIOManager()
   //fRootIOList.push_back(new LAVRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
+
+  // Pass some useful information to subdetectors
+  //((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(TargetGeometry::GetInstance()->GetTargetFrontFacePosZ());
 
   //fGVirtMem = new TGraph();
   //fGVirtMem->SetName("VirtualMemory");
@@ -146,6 +151,7 @@ void RootIOManager::NewRun(G4int nRun)
     G4cout << "RootIOManager: Initializing I/O for run " << nRun << G4endl;
 
   if ( fFileNameHasChanged ) {
+
     // Close old file (if any)
     if ( fFile != 0 ) {
       if (fVerbose)
@@ -156,7 +162,7 @@ void RootIOManager::NewRun(G4int nRun)
     // Create new file to hold data
     if (fVerbose)
       G4cout << "RootIOManager: Creating new file " << fFileName << G4endl;
-    fFile = TFile::Open(fFileName.c_str(),"RECREATE","NA62MC");
+    fFile = TFile::Open(fFileName.c_str(),"RECREATE","PadmeMC");
     fFileNameHasChanged = false;
 
     // Define basic file properties
@@ -195,6 +201,12 @@ void RootIOManager::NewRun(G4int nRun)
   // Fill detector info section of run structure
   TDetectorInfo* detInfo = fRun->GetDetectorInfo();
 
+  // Set some geometry dependent parameters in detectors' RootIO handlers
+  G4cout << "Beam parameters " << BeamParameters::GetInstance()->GetBeamOriginPosZ() << " " << BeamParameters::GetInstance()->GetBunchTimeLength() << G4endl;
+  ((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(BeamParameters::GetInstance()->GetBeamOriginPosZ());
+  ((SACRootIO*)FindRootIO("SAC"))->SetBeamBunchLengthT(BeamParameters::GetInstance()->GetBunchTimeLength());
+
+  // Tell all RootIO handlers about new run
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
   while (iRootIO!=endRootIO){
@@ -211,6 +223,7 @@ void RootIOManager::NewRun(G4int nRun)
   // Create branch to hold the whole event structure
   fEventBranch = fEventTree->Branch("Event", &fEvent, fBufSize);
   fEventBranch->SetAutoDelete(kFALSE);
+
 
 }
 

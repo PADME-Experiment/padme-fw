@@ -21,7 +21,7 @@ SACSD::SACSD(G4String name)
 :G4VSensitiveDetector(name)
 {
   G4String HCname;
-  collectionName.insert(HCname="SACCryCollection"); //crea il collection name
+  collectionName.insert(HCname="SACCollection"); //crea il collection name
 }
 
 //....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

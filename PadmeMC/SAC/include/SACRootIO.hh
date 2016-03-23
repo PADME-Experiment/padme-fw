@@ -33,11 +33,27 @@ public:
   void SaveEvent(const G4Event*);
   void Close();
 
+  // Z position where beam has t=0
+  void SetBeamStartZ(Double_t z) { fEHistoBeamStartZ = z; }
+
+  // Time length of e+ bunch (40. ns for the time being)
+  void SetBeamBunchLengthT(Double_t t) { if (t > 0.) fEHistoBeamBunchLengthT = t; }
+
 private:
 
   TTree*       fSACTree; //Tree to hold SAC Hits in one run
   TBranch*     fSACBranch;
   TSACMCEvent* fEvent;
+
+  // Parameters used for energy distribution histogram
+
+  Double_t fEHistoBeamStartZ;
+  Double_t fEHistoBeamBunchLengthT;
+
+  Int_t    fEHistoNBins;
+  Double_t fEHistoTStart;
+  Double_t fEHistoTStep;
+  Double_t fEHistoTEnd;
 
   SACGeometry* fGeoPars;
 

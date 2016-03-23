@@ -72,7 +72,8 @@ public:
   void SetCrystalNominalSizeZ(G4double s) { fCrystalNominalSizeZ = s; }
 
   // Set position along Z of SAC front face
-  void SetSACFrontFacePosZ(G4double z) { fSACFrontFacePosZ = z; }
+  G4double GetSACFrontFacePosZ()           { return fSACFrontFacePosZ; }
+  void     SetSACFrontFacePosZ(G4double z) { fSACFrontFacePosZ = z; }
 
   // Get name of SAC sensitive detector
   G4String GetSACSensitiveDetectorName() { return fSACSensitiveDetectorName; }

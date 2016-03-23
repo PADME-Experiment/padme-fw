@@ -22,11 +22,6 @@
 // * use  in  resulting  scientific  publications,  and indicate your *
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
-//
-// $Id$
-// 
-/// \file B3StackingAction.cc
-/// \brief Implementation of the B3StackingAction class
 
 #include "StackingAction.hh"
 
@@ -42,7 +37,6 @@
 #include "G4MuonMinus.hh"
 #include "G4PionZero.hh"
 #include "Constants.hh"
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

@@ -25,8 +25,6 @@
 //
 //
 // $Id: PhysicsList.cc,v 1.3 2014/04/30 08:57:41 veni Exp $
-//
-// 
 
 #include "PhysicsList.hh"
 

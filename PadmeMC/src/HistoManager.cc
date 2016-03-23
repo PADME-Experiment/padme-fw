@@ -114,8 +114,8 @@ void HistoManager::book()
   ntupl = new TTree("U101", "Envent");
   ntupl->Branch("Nevent", &(myEvt.NTNevent), "Nevent/I");
   ntupl->Branch("ETot", &(myEvt.NTEtot), "ETot/D");
-  ntupl->Branch("IDProc", &(myEvt.NTIDProc), "IDProc/D");
 
+  ntupl->Branch("IDProc", &(myEvt.NTIDProc), "IDProc/D");
   ntupl->Branch("PBeam", &(myEvt.NTPBeam), "PBeam/D");
   ntupl->Branch("PPrim", &(myEvt.NTPriBeam), "PPrim/D");
   ntupl->Branch("XBeam", &(myEvt.NTXBeam), "XBeam/D");
@@ -129,6 +129,7 @@ void HistoManager::book()
   ntupl->Branch("NEVetoTracks", &(myEvt.NTNEVetoTracks), "NEVetoTracks/I");
 
   ntupl->Branch("NSAC", &(myEvt.NTSACNHit), "NSAC/I");
+  ntupl->Branch("NCal", &(myEvt.NTNCal), "NCal/I");
   ntupl->Branch("NLAV", &(myEvt.NTLAVNHit), "NLAV/I");
   ntupl->Branch("NTarget", &(myEvt.NTNTarget), "NTarget/I");
 
@@ -137,13 +138,20 @@ void HistoManager::book()
   ntupl->Branch("PTypeSAC", (myEvt.NTSACPType), "PTypeSAC[100]/D");
   ntupl->Branch("XSAC", (myEvt.NTSACX), "XSAC[100]/D");
   ntupl->Branch("YSAC", (myEvt.NTSACY), "YSAC[100]/D");
+  ntupl->Branch("SACCh", (myEvt.NTSACCh), "SACCh[100]/I");
 
 
-  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
-  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
-  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
-  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
-  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+//  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
+//  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
+//  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
+//  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
+//  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+
+  ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
+  ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");
+  ntupl->Branch("PTypePartCal", (myEvt.NTCalPartPType), "CalPType[20]/I");
+  ntupl->Branch("XPartCal",     (myEvt.NTCalPartX),     "CalX[20]/D");
+  ntupl->Branch("YPartCal",     (myEvt.NTCalPartY),     "CalY[20]/D");
 
   ntupl->Branch("ECluster", (myEvt.NTECluster), "ECluster[20]/D"); 
   ntupl->Branch("QCluster", (myEvt.NTQCluster), "QCluster[20]/D");
@@ -152,17 +160,18 @@ void HistoManager::book()
   ntupl->Branch("ThCluster",(myEvt.NTThCluster),"ThCluster[20]/D");
   ntupl->Branch("M2Cluster",(myEvt.NTM2Cluster),"M2Cluster[20]/D");
   ntupl->Branch("TCluster", (myEvt.NTTCluster), "TCluster[20]/D");  //last modified
+  ntupl->Branch("NClusCells",(myEvt.NTNClusCells), "NClusCells[20]/D");  //last modified
 
-  ntupl->Branch("ECell",    (myEvt.NTECell), "ECell[1000]/D");
-  ntupl->Branch("QCell",    (myEvt.NTQCell), "QCell[1000]/D");
-  ntupl->Branch("TCell",    (myEvt.NTTCell), "TCell[1000]/D");
+//  ntupl->Branch("ECell",    (myEvt.NTECell), "ECell[1000]/D");
+//  ntupl->Branch("QCell",    (myEvt.NTQCell), "QCell[1000]/D");
+//  ntupl->Branch("TCell",    (myEvt.NTTCell), "TCell[1000]/D");
 
-  ntupl->Branch("ETracker", (myEvt.NTETracker), "ETracker[100]/D");
-  ntupl->Branch("TrackerLay",(myEvt.NTTrackerLay), "TrackerLay[100]/D");
-  ntupl->Branch("TTracker", (myEvt.NTTrackerTime), "TTracker[100]/D");
-  ntupl->Branch("ZTracker", (myEvt.NTTrackerZ), "ZTracker[100]/D");
-  ntupl->Branch("XTracker", (myEvt.NTTrackerX), "XTracker[100]/D");
-  ntupl->Branch("YTracker", (myEvt.NTTrackerY), "YTracker[100]/D");
+//  ntupl->Branch("ETracker", (myEvt.NTETracker), "ETracker[100]/D");
+//  ntupl->Branch("TrackerLay",(myEvt.NTTrackerLay), "TrackerLay[100]/D");
+//  ntupl->Branch("TTracker", (myEvt.NTTrackerTime), "TTracker[100]/D");
+//  ntupl->Branch("ZTracker", (myEvt.NTTrackerZ), "ZTracker[100]/D");
+//  ntupl->Branch("XTracker", (myEvt.NTTrackerX), "XTracker[100]/D");
+//  ntupl->Branch("YTracker", (myEvt.NTTrackerY), "YTracker[100]/D");
 
   ntupl->Branch("ETarget", &(myEvt.NTETarget), "ETarget/D");
   ntupl->Branch("TTarget", &(myEvt.NTTTarget), "TTarget/D");
@@ -201,9 +210,9 @@ void HistoManager::book()
     ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
   } 
 
-  ntGen = new TTree("genEvt", "genEvent");
+  //  ntGen = new TTree("genEvt", "genEvent");
   //  ntGen->Branch("NPrimaries","");   
-  ntSim = new TTree("simEvt", "simEvent");
+  //  ntSim = new TTree("simEvt", "simEvent");
   //ntSim->Branch("simEvt","MySimEvent",&mySim);
   G4cout << "\n----> Histogram file is opened in " << fileName << G4endl;
 }

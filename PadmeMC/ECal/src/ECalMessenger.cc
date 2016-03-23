@@ -50,7 +50,7 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalLengthCmd = new G4UIcommand("/Detector/ECal/CrystalLength",this);
   fSetCrystalLengthCmd->SetGuidance("Set length of crystal in cm.");
   G4UIparameter* csLengthParameter = new G4UIparameter("Length",'d',false);
-  csLengthParameter->SetParameterRange("Length > 0. && Length <= 23.");
+  csLengthParameter->SetParameterRange("Length > 0. && Length <= 35.");
   fSetCrystalLengthCmd->SetParameter(csLengthParameter);
   fSetCrystalLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

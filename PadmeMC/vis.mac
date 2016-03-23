@@ -8,7 +8,7 @@
 #/tracking/verbose 1
 
 # Output root file
-/output/fileName pippo.root
+#/output/fileName pippo.root
 
 # Detector settings
 
@@ -53,7 +53,7 @@
 #/Detector/ECal/CrystalLength 22.
 #/Detector/ECal/InnerRadius 6.
 #/Detector/ECal/OuterRadius 28.5
-#/Detector/ECal/FrontFaceZ 250.
+#/Detector/ECal/FrontFaceZ 230.
 
 #/Detector/SAC/CrystalSize 2.
 #/Detector/SAC/CrystalLength 10.

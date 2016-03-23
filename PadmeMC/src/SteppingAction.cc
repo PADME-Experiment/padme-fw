@@ -68,9 +68,41 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
     if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="SACCry") {
       //      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << " "<<track->GetKineticEnergy()<< G4endl;
+      // G4cout << "E Thr " <<fSACEnergyThr<<G4endl;
       // processing hit when entering the volume SAC Cry
-      if (track->GetKineticEnergy()>fSACEnergyThr)  fEventAction->AddSACHitsStep(track->GetKineticEnergy(),track->GetGlobalTime(),ClassifyTrack(step->GetTrack()),step->GetPostStepPoint()->GetPosition().x(),step->GetPostStepPoint()->GetPosition().y());
+      if (track->GetKineticEnergy()>fSACEnergyThr)  
+	fEventAction->AddSACHitsStep(track->GetKineticEnergy(),
+				     track->GetGlobalTime(),ClassifyTrack(step->GetTrack()),
+				     step->GetPostStepPoint()->GetPosition().x(),
+				     step->GetPostStepPoint()->GetPosition().y(),
+				     step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo()
+				     );
+      
+      //      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<" X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
       track->SetTrackStatus(fStopAndKill);      
+    }
+  }
+  
+
+  //Analyze ECal tracks
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
+       step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="World") {
+      
+      ////PRENDI LE VARIABILI DALLA GEOMETRIA PLZ!!!!!!!!!!!!!!!!!!!!!
+      if(abs(step->GetPostStepPoint()->GetPosition().x())>5.*cm ||    
+	 abs(step->GetPostStepPoint()->GetPosition().y())>5.*cm){
+	fEventAction->AddCalHitsStep(track->GetKineticEnergy(),
+				     track->GetGlobalTime(),
+				     ClassifyTrack(step->GetTrack()),
+				     step->GetPostStepPoint()->GetPosition().x(),
+				     step->GetPostStepPoint()->GetPosition().y()
+		                     );
+	
+	//	    G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<
+	//	      " X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
+	//	track->SetTrackStatus(fStopAndKill);      
+      }
     }
   }
   

@@ -203,7 +203,7 @@ void BeamGenerator::CreateFinalStateUboson()
   G4double Dy = fPositron.pos.y();
   G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness();
   G4double Dt = fPositron.t; // Should take into account time travelled inside Target
-  G4cout << "BeamGenerator - Vtx " << Dx << " " << Dy << " " << Dz << " T " << Dt << G4endl;
+  //  G4cout << "BeamGenerator - Vtx " << Dx << " " << Dy << " " << Dz << " T " << Dt << G4endl;
 
   // Get e+ four-momentum
   G4double pp[4];
@@ -334,8 +334,8 @@ void BeamGenerator::CreateFinalStateThreeGamma()
       for(G4int k=1; k<=3; k++) { p[k] *= GeV; } // Values are given in GeV
       p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]); // Compute total energy of the gamma
       if(iline ==0 || iline==21215 || iline == 61390){
-	G4cout << "BeamGenerator - P(gamma) " << j << " " << p[0] << " " << p[1] << " " << p[2] << " " << p[3] << G4endl;
-        G4cout <<"Angle "<< GetGammaAngle(G4ThreeVector(p[1],p[2],p[3]).unit(),G4ThreeVector(0.,0.,1.))<<G4endl;
+	//	G4cout << "BeamGenerator - P(gamma) " << j << " " << p[0] << " " << p[1] << " " << p[2] << " " << p[3] << G4endl;
+	//        G4cout <<"Angle "<< GetGammaAngle(G4ThreeVector(p[1],p[2],p[3]).unit(),G4ThreeVector(0.,0.,1.))<<G4endl;
       }
       
       // Need to add the rotation of the 3 gammas system along the direction of the primary positron (!!!)
@@ -368,7 +368,7 @@ void BeamGenerator::GenerateCalibrationGamma()
   G4double vY = 0.*cm;
   G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(vX,vY,vZ),vT);
-  printf("BeamGenerator::GenerateCalibrationGamma - Vertex at %f %f %f t=%f\n",vX,vY,vZ,vT);
+  //  printf("BeamGenerator::GenerateCalibrationGamma - Vertex at %f %f %f t=%f\n",vX,vY,vZ,vT);
 
   // Choose a point within circle on the surface of ECal
   G4double pX = fCalibRunCenterX;
@@ -381,11 +381,11 @@ void BeamGenerator::GenerateCalibrationGamma()
     pX += rd*cos(th);
     pY += rd*sin(th);
   }
-  printf("BeamGenerator::GenerateCalibrationGamma - Point to %f %f %f\n",pX,pY,pZ);
+  //  printf("BeamGenerator::GenerateCalibrationGamma - Point to %f %f %f\n",pX,pY,pZ);
 
   // Compute unit vector from vertex to generated point
   G4ThreeVector vp = G4ThreeVector(pX-vX,pY-vY,pZ-vZ).unit();
-  printf("BeamGenerator::GenerateCalibrationGamma - Vector %f %f %f\n",vp.x(),vp.y(),vp.z());
+  //  printf("BeamGenerator::GenerateCalibrationGamma - Vector %f %f %f\n",vp.x(),vp.y(),vp.z());
 
   // Create gamma pointing from vertex to generated point
   G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),fCalibRunEnergy*vp.x(),fCalibRunEnergy*vp.y(),fCalibRunEnergy*vp.z(),fCalibRunEnergy);

@@ -22,14 +22,14 @@ SACGeometry::SACGeometry()
 
   fCrystalNominalSizeX =  2.*cm;
   fCrystalNominalSizeY =  2.*cm;
-  fCrystalNominalSizeZ = 10.*cm;
+  fCrystalNominalSizeZ = 20.*cm;
 
   fSACNRows = 7;
   fSACNCols = 7;
 
   fCrystalGap = 0.1*mm;
 
-  fSACFrontFacePosZ = 300.*cm; // from center of yoke, i.e. 350cm from target, 50cm from front of ECal
+  fSACFrontFacePosZ = 300.*cm; // from center of yoke, i.e. 370cm from target, 70cm from front of ECal
 
   fSACSensitiveDetectorName = "SACSD";
 

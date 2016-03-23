@@ -21,7 +21,7 @@ HEPVetoGeometry::HEPVetoGeometry()
   // Inizialize default parameters
 
   fFingerNominalSizeX =  1.*cm;
-  fFingerNominalSizeY = 18.*cm;
+  fFingerNominalSizeY = 20.*cm;
   fFingerNominalSizeZ =  1.*cm;
 
   fHEPVetoNFingers = 50;

@@ -83,7 +83,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
   fEnableTDump   = 0;
-  fEnableTPix    = 1;
+  fEnableTPix    = 0;
 
   fEnableWall   = 0;
   fEnableMagnet = 1;

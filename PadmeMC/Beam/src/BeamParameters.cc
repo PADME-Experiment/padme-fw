@@ -23,7 +23,7 @@ BeamParameters::BeamParameters()
   // No Uboson or ThreePhoton decays are inserted
 
   // Average number of positrons in each bunch
-  fNPositronsPerBunch = 5000.;
+  fNPositronsPerBunch = 5000;
   fNPositronsPerBunchApplySpread = false;
 
   // Bunch time structure
@@ -59,7 +59,6 @@ BeamParameters::BeamParameters()
   // Insert three gamma decays
   fNThreePhotonDecaysPerBunch = 0;
   fThreePhotonDecaysFilename = "ThreePhotonDecays.list";
-
 }
 
 BeamParameters::~BeamParameters()

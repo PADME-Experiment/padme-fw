@@ -33,10 +33,19 @@ struct NTEvent{
   double NTThCluster[20];
   double NTM2Cluster[20];
   double NTTCluster[20];
+  double NTNClusCells[20];
 
   double NTECell[1000];
   double NTQCell[1000];
   double NTTCell[1000];
+
+  //NTLAV variables
+  double  NTCalPartE[20];
+  double  NTCalPartT[20];
+  int     NTCalPartPType[20];
+  double  NTCalPartX[20];
+  double  NTCalPartY[20];
+  int     NTNCal;
 
   //Tracker variables
   double NTETracker[100];
@@ -89,15 +98,20 @@ struct NTEvent{
   double  NTSACPType[100];
   double  NTSACX[100];
   double  NTSACY[100];
+  int     NTSACCh[100];
   int     NTSACNHit;
 
-  //NTSAC variables
+  //NTLAV variables
   double  NTLAVE[100];
   double  NTLAVT[100];
   double  NTLAVPType[100];
   double  NTLAVX[100];
   double  NTLAVY[100];
   int     NTLAVNHit;
+
+
+
+
 }; 
 
  class TFile;

@@ -1,6 +1,7 @@
 // GENERAL FLAGS
-const int   NPrint      = 10000;
+const int   NPrint      = 1;
 const bool  fAutoSeed   = true; //random seed with clock
+//const bool  fAutoSeed   = false; //fixed random seed
 // DETECTORS FLAGS
 const int    IsCalibRun  = 0;  //1 global Calo calibration 2 Calo Energy resolution
 const double EMinSaveNT  = 5.;
@@ -14,7 +15,7 @@ const int   IsEcalRoundON = 1;
 
 const int   IsTrackerON   = 0;   // cilindrical tracker obsolete set to 0
 const int   IsPlanarGEMON = 0;   // 1 planar GEM spectrometer 
-const int   IsPVetoON   = 1;   // 1  Veto inside the magnet Positron side
+const int   IsPVetoON     = 1;   // 1  Veto inside the magnet Positron side
 const int   IsEleVetoON   = 1;   // Veto inside the magnet Electron side
 const int   IsEVetoON     = 1;   // Veto for High Momentum positron
 const int   IsSACON       = 1;  //Small angle gamma veto.
@@ -31,12 +32,13 @@ const int   IsPipeON        = 0;
 const int   IsSpecInside    = -1;  //if 0 spectrometer is outside vacuum 1 is inside any other no vac chamb
 
 // Beam parameter flags
-const int  NPrimaries     = 1;   //Maximum 10^5 on the macbook was 1000
+const int  NPrimaries     = 5000;   //Maximum 10^5 on the macbook was 1000
 const int  BeamSpot       = 1;   //Std 1
 const int  BeamESpread    = 1;   //Std 1
 const int  IsBeamTimeON   = 1;   //Std 1
 const int  BeamEmittance  = 1;   //Std 1
-const int  IsResGasON     = 1;   //Std 1
+const int  IsResGasON     = 1;   //Std 1, realistic vacuum
+//const int  IsResGasON     = 0;   //Std 1, galactic vacuum
 
 //Beam Parameters
 const double BeamEnergy    = 550.; //in MeV 550 standard
@@ -117,12 +119,12 @@ const double LeadBrickSizeY = 10.;	//in cm
 const double LeadBrickSizeZ = 20.;	//in cm
 
 //  ECAL Dimension
-const double ECalSizeX =30.;   //in cm diamter
-const double ECalSizeY =30.;   //in cm
+const double ECalSizeX =58.;   //in cm diamter
+const double ECalSizeY =58.;   //in cm
 const double ECalSizeZ =22.;   //in cm full scale length
 
 const double ECalInnHole = 4.; // this is radius
-const double ECalCellSize= 1.;
+const double ECalCellSize= 2.;
 
 const double ECalPosiX =0.;	//in cm
 const double ECalPosiY =0.;	//in cm

@@ -3,9 +3,8 @@
 
 #include "G4UserEventAction.hh"
 #include "ECalHit.hh"
-#include "MRodHit.hh"
+#include "TargetHit.hh"
 #include "TrackerHit.hh"
-#include "TRodHit.hh"
 #include "HEPVetoHit.hh"
 #include "PVetoHit.hh"
 #include "EVetoHit.hh"
@@ -13,6 +12,9 @@
 #include "LAVHit.hh"
 #include "GFiltHit.hh"
 #include "DetectorConstruction.hh"
+#include "ECalGeometry.hh"
+#include "TargetGeometry.hh"
+#include "BeamParameters.hh"
 
 class G4Event;
 class RunAction;
@@ -31,15 +33,19 @@ class EventAction : public G4UserEventAction
   void BeginOfEventAction(const G4Event*);
   void EndOfEventAction(const G4Event*);
   
-  void  AddSACHitsStep(G4double ,G4double , G4double , G4double , G4double );
+  void  AddSACHitsStep(G4double ,G4double , G4int , G4double , G4double, G4int);
+  void  AddCalHitsStep(G4double ,G4double , G4int , G4double , G4double);
+
   SteppingAction * myStepping;
+
   private:
   void  AddECryHits(ECalHitsCollection*);
-  void  AddMRodHits(MRodHitsCollection*);
-  void  AddTRodHits(TRodHitsCollection*);
+  void  AddTargetHits(TargetHitsCollection*);
+  //  void  AddTRodHits(TRodHitsCollection*);
   void  AddHEPVetoHits(HEPVetoHitsCollection*); 
   void  AddPVetoHits(PVetoHitsCollection*);
   void  AddEVetoHits(EVetoHitsCollection*);
+
   void  AddSACHits(SACHitsCollection*);
 
   void  AddLAVHits(LAVHitsCollection*);
@@ -47,7 +53,7 @@ class EventAction : public G4UserEventAction
 
   G4double GetCryPosX(G4int CryNb);
   G4double GetCryPosY(G4int CryNb);
-  G4int    GetSeedCell();
+  void     FindClusters();
   G4int    GetSeedRing();
   G4double GetEClus(G4int SeedCell);
   G4double GetETrack(){return 0.;};
@@ -58,18 +64,24 @@ class EventAction : public G4UserEventAction
 
   //  G4double Dot(G4double* v1,G4double* v1,G4int N)
   private:
-   RunAction*    fRunAct;
-   HistoManager* fHistoManager;
+  RunAction*    fRunAct;
+  HistoManager* fHistoManager;
+  ECalGeometry   * Egeom; 
+  TargetGeometry * Tgeom;
+  BeamParameters * Bpar;
+
+
   //che devo fare ce debbo mettere il detector?
-   G4double ETotCal;
-   G4double EtotTRod; 
-   G4double EtotMRod;
-   G4double EtotEVeto;
-   G4double ProcID;
-   G4double ECalHitT,CalEvtT,EtotFiltEvt; 
-   G4double ClPosX,ClPosY;
-   G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
+  G4double ETotCal;
+  G4double EtotTRod; 
+  G4double EtotMRod;
+  G4double EtotEVeto;
+  G4double ProcID;
+  G4double ECalHitT,CalEvtT,EtotFiltEvt; 
+  G4double ClPosX,ClPosY;
+  G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
   G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget;
+  G4int CalNPart;
 
    G4double Etrack[100];    //For spectrometer reco
    G4int    TrackCh[100];      //For spectrometer reco
@@ -106,12 +118,21 @@ class EventAction : public G4UserEventAction
    G4double EVetoY[100];
 
    G4double ETotSAC[100];
-   G4double SACTrackCh[100];
-   G4double SACPType[100];
+
    G4double SACEtrack [100];
    G4double SACTrackTime[100];
+   G4double SACPType[100];
    G4double SACX[100];   
    G4double SACY[100];
+   G4double SACCh[100];
+
+  //Particles properties entering ECAL form stepping action
+   G4double CalE[20];
+   G4double CalTime[20];
+   G4int    CalPType[20];
+   G4double CalX[20];   
+   G4double CalY[20];
+   G4double NCalPart;
 
    G4double ETotLAV[100];
    G4double LAVTrackCh[100];
@@ -128,10 +149,17 @@ class EventAction : public G4UserEventAction
    G4double YCl[20]; //For the Ntuple
    G4double ThCl[20];//For the Ntuple
    G4double MM2[20]; //For the Ntuple
+   G4double NCellsCl[20]; //For the Ntuple
+
    G4double ETotCry[1000];
    G4double QTotCry[1000];
    G4double TimeCry[1000];
    G4double ETotRing[1000];
+
+   G4double MatEtot[30][30];   
+   G4double MatTstart[30][30]; 
+   G4int    MatUsed[30][30];   
+
    G4int Used[1000];
    G4int UsedRing[1000];
    G4int Empty[1000];

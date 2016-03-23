@@ -9,12 +9,12 @@
 #include "TTree.h"
 #include "TObjArray.h"
 #include "TGraph.h"
-//#include "PadmeReconstruction.hh"
+#include "PadmeReconstruction.hh"
 
 #include <signal.h>
 #include <fcntl.h>
 
-//PadmeReconstruction* PadmeReco; 
+PadmeReconstruction* PadmeReco; 
                               
 void usage(char* name){
   cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
@@ -128,9 +128,9 @@ int main(Int_t argc, char **argv)
     }
     TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
 
-    //PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
+    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
 
     //while(PadmeReco->NextEvent()) {}
-    //PadmeReco->EndProcessing();
+    PadmeReco->EndProcessing();
 
 }

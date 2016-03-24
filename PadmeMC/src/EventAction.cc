@@ -384,7 +384,7 @@ void EventAction::FindClusters()
       P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
     }
     MM2[NClusters] = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-    //    ClRadius=sqrt(ClPosX*ClPosX+ClPosY*ClPosY);
+
     G4double product=0.;
     G4double BDire[3];
 

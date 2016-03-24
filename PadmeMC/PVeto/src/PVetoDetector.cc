@@ -47,7 +47,7 @@ void PVetoDetector::CreateGeometry()
   G4Box* solidPVeto = new G4Box("PVetoSolid",pVetoX*0.5,pVetoY*0.5,pVetoLength*0.5);
   fPVetoVolume = new G4LogicalVolume(solidPVeto,G4Material::GetMaterial("Vacuum"),"PVetoLogic",0,0,0);
   fPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fPVetoVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  //  fPVetoVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
   new G4PVPlacement(0,posPVeto,fPVetoVolume,"PVeto",fMotherVolume,false,0,false);
 
   // Create standard scintillator finger
@@ -57,7 +57,7 @@ void PVetoDetector::CreateGeometry()
   printf("PVeto Finger size is %f %f %f\n",pVetoFingerX,pVetoFingerY,pVetoFingerLength);
   G4Box* solidFinger  = new G4Box("PVetoCrySolid",pVetoFingerX*0.5,pVetoFingerY*0.5,pVetoFingerLength*0.5);
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"PVetoFingerLogic",0,0,0);
-  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
   // Make finger a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
@@ -82,7 +82,7 @@ void PVetoDetector::CreateGeometry()
   G4double suppSizeZ = geo->GetSupportUSizeZ();
   G4Box* solidSupport  = new G4Box("PVetoSupport",0.5*suppSizeX,0.5*suppSizeY,0.5*suppSizeZ);
   G4LogicalVolume* logicSupport  = new G4LogicalVolume(solidSupport,G4Material::GetMaterial("G4_Al"),"PVetoSupport",0,0,0);
-  logicSupport->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  logicSupport->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
   G4ThreeVector suppUPos = G4ThreeVector(geo->GetSupportUPosX(),geo->GetSupportUPosY(),geo->GetSupportUPosZ());
   new G4PVPlacement(0,suppUPos,logicSupport,"PVetoSupportU",fPVetoVolume,false,0,false);

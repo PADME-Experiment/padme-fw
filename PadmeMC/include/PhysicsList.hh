@@ -71,6 +71,7 @@ protected:
 
   virtual void ConstructGeneral();
   virtual void ConstructEM();
+  virtual void ConstructNuclearProcesses();
   virtual void ConstructOpticalPhysics();
   virtual void AddTransportation();
 

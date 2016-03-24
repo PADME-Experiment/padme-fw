@@ -49,7 +49,7 @@ void TPixDetector::CreateGeometry()
   G4Box* solidTPix = new G4Box("TPixSolid",0.5*tpixSizeX,0.5*tpixSizeY,0.5*tpixSizeZ);
   fTPixVolume = new G4LogicalVolume(solidTPix,G4Material::GetMaterial("Vacuum"),"TPixLogic",0,0,0);
   fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fTPixVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Red()));
+  //fTPixVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
   new G4PVPlacement(rotTPix,posTPix,fTPixVolume,"TPix",fMotherVolume,false,0,false);
 
   // Create standard TimePix chip
@@ -59,7 +59,7 @@ void TPixDetector::CreateGeometry()
   printf("TPix Chip size is %f %f %f\n",tpixChipX,tpixChipY,tpixChipZ);
   G4Box* solidChip  = new G4Box("TPixChipSolid",0.5*tpixChipX,0.5*tpixChipY,0.5*tpixChipZ);
   fChipVolume  = new G4LogicalVolume(solidChip,G4Material::GetMaterial("G4_Si"),"TPixChipLogic",0,0,0);
-  fChipVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Blue()));
+  fChipVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 
   // Make chip a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

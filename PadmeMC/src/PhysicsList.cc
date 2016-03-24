@@ -119,6 +119,9 @@ void PhysicsList::ConstructProcess()
   AddParameterisation();
   ConstructEM();
   if(IsOpticsON==1) ConstructOpticalPhysics();
+
+  
+
   ConstructGeneral();
   //Here you put the transportation for neutrons!
  // this->RegisterPhysics( new G4EmExtraPhysics(ver) );
@@ -239,6 +242,28 @@ void PhysicsList::ConstructOpticalPhysics() {
       pmanager->SetProcessOrdering(fCerenkovProcess,idxPostStep);
     }
   }
+}
+
+
+void PhysicsList::ConstructNuclearProcesses(){
+    theParticleIterator->reset();
+    while( (*theParticleIterator)() ){
+      G4ParticleDefinition* particle = theParticleIterator->value();
+      G4ProcessManager* pmanager = particle->GetProcessManager();
+      G4String particleName = particle->GetParticleName();
+      
+      if (particleName == "gamma") {
+	G4GammaNuclearReaction* lowEGammaModel = new G4GammaNuclearReaction();
+	lowEGammaModel->SetMaxEnergy(3.5*GeV);
+	G4PhotoNuclearProcess* thePhotoNuclearProcess = new G4PhotoNuclearProcess();
+	thePhotoNuclearProcess->RegisterMe(lowEGammaModel);
+	pmanager->AddDiscreteProcess(thePhotoNuclearProcess);
+
+      }
+    }
+    
+
+
 }
 
 void PhysicsList::ConstructEM()

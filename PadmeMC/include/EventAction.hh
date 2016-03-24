@@ -40,29 +40,18 @@ class EventAction : public G4UserEventAction
 
   private:
   void  AddECryHits(ECalHitsCollection*);
+  void  FindClusters();
+
   void  AddTargetHits(TargetHitsCollection*);
-  //  void  AddTRodHits(TRodHitsCollection*);
   void  AddHEPVetoHits(HEPVetoHitsCollection*); 
   void  AddPVetoHits(PVetoHitsCollection*);
   void  AddEVetoHits(EVetoHitsCollection*);
 
   void  AddSACHits(SACHitsCollection*);
-
   void  AddLAVHits(LAVHitsCollection*);
-  void  AddTrackerHits(TrackerHitsCollection*);
 
-  G4double GetCryPosX(G4int CryNb);
-  G4double GetCryPosY(G4int CryNb);
-  void     FindClusters();
-  G4int    GetSeedRing();
-  G4double GetEClus(G4int SeedCell);
-  G4double GetETrack(){return 0.;};
-  G4double GetETrack(G4int SeedTrack);
   G4double GetCharge(G4double Energia);
-  G4int GetNeig(G4int SeedCell);
-  G4int GetNeigPos(G4int SeedCell);
 
-  //  G4double Dot(G4double* v1,G4double* v1,G4int N)
   private:
   RunAction*    fRunAct;
   HistoManager* fHistoManager;
@@ -73,8 +62,6 @@ class EventAction : public G4UserEventAction
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;
-  G4double EtotTRod; 
-  G4double EtotMRod;
   G4double EtotEVeto;
   G4double ProcID;
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 

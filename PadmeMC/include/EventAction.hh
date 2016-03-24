@@ -146,6 +146,7 @@ class EventAction : public G4UserEventAction
    G4double MatEtot[30][30];   
    G4double MatTstart[30][30]; 
    G4int    MatUsed[30][30];   
+  
 
    G4int Used[1000];
    G4int UsedRing[1000];

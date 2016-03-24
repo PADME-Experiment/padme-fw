@@ -374,7 +374,7 @@ void EventAction::FindClusters()
     TargetEleMom[3]=0.511;
     
     G4ThreeVector BDir=Bpar->GetBeamDirection().unit();
-    //Beam Momentum from Beam Paramets class
+    //Beam Momentum from Beam Paramets class 
     BeamMom[0]=BDir.x()*Bpar->GetBeamMomentum();
     BeamMom[1]=BDir.y()*Bpar->GetBeamMomentum();
     BeamMom[2]=BDir.z()*Bpar->GetBeamMomentum();
@@ -384,7 +384,7 @@ void EventAction::FindClusters()
       P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
     }
     MM2[NClusters] = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-
+  
     G4double product=0.;
     G4double BDire[3];
 

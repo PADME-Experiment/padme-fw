@@ -244,26 +244,57 @@ void PhysicsList::ConstructOpticalPhysics() {
   }
 }
 
+#include "G4CascadeInterface.hh"
+
+#include "G4MuonVDNuclearModel.hh"
+#include "G4ElectroVDNuclearModel.hh"
+
+//CHIPS model
+#include "G4ElectroNuclearReaction.hh"
+
 
 void PhysicsList::ConstructNuclearProcesses(){
-    theParticleIterator->reset();
-    while( (*theParticleIterator)() ){
-      G4ParticleDefinition* particle = theParticleIterator->value();
-      G4ProcessManager* pmanager = particle->GetProcessManager();
-      G4String particleName = particle->GetParticleName();
-      
-      if (particleName == "gamma") {
+  theParticleIterator->reset();
+  if (NuclearBertini == 1){
+    G4CascadeInterface* bertiniModel = new G4CascadeInterface();
+  }
+  
+  while( (*theParticleIterator)() ){
+    G4ParticleDefinition* particle = theParticleIterator->value();
+    G4ProcessManager* pmanager = particle->GetProcessManager();
+    G4String particleName = particle->GetParticleName();
+    
+    if (particleName == "gamma") {
+      //   Chiral Invariant Phase Space Model (CHIPS)
+      if(NuclearCHIPS == 1 ) {
 	G4GammaNuclearReaction* lowEGammaModel = new G4GammaNuclearReaction();
-	lowEGammaModel->SetMaxEnergy(3.5*GeV);
+	lowEGammaModel->SetMaxEnergy(3.*GeV);
+	lowEGammaModel->SetMinEnergy(1.*MeV);
 	G4PhotoNuclearProcess* thePhotoNuclearProcess = new G4PhotoNuclearProcess();
 	thePhotoNuclearProcess->RegisterMe(lowEGammaModel);
 	pmanager->AddDiscreteProcess(thePhotoNuclearProcess);
-
+      } else if (NuclearBertini == 1) {
+	// G4ProtonInelasticProcess* inelProcess = new G4ProtonInelasticProcess();
+	// inelProcess->RegisterMe(bertiniModel);
+	// processManager->AddDiscreteProcess(inelProcess);	
       }
+    } else if (particleName == "e-" || particleName == "e+") {
+      if(NuclearCHIPS == 1 ) {
+	G4ElectroNuclearReaction *eNuclearReaction = new G4ElectroNuclearReaction();
+	eNuclearReaction->SetMinEnergy(1.*MeV);
+	eNuclearReaction->SetMaxEnergy(10.*GeV);
+	G4ElectronNuclearProcess* eNuclearProcess = new G4ElectronNuclearProcess();
+	eNuclearProcess->RegisterMe(eNuclearReaction);
+	pmanager->AddDiscreteProcess(eNuclearProcess);
+      }
+      
     }
+
     
 
-
+  }
+    
+  
 }
 
 void PhysicsList::ConstructEM()

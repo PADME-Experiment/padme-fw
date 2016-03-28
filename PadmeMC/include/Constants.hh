@@ -57,7 +57,9 @@ const double MagneticField = 0.55; //0.6
 
 //Physics list flags
 const int    IsSincrotronON = 0;    //Std=1
-const int    IsNuclearON    = 0;    //Std=1
+const int    IsNuclearON    = 1;    //Std=1
+const int    NuclearCHIPS   = 1;  //Chiral Invariant Phase Space Model
+const int    NuclearBertini = 0;  //Bertini cascade, to be used after Geant4 version 10.0 patch 2
 
 // Turbo mode flags (kill e- e+ g with energy below Thr in MeV)
 const int IsTurboOn       = 0;

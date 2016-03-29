@@ -266,27 +266,27 @@ void PhysicsList::ConstructNuclearProcesses(){
     
     if (particleName == "gamma") {
       //   Chiral Invariant Phase Space Model (CHIPS)
-      if(NuclearCHIPS == 1 ) {
+      //      if(NuclearCHIPS == 1 ) {
 	G4GammaNuclearReaction* lowEGammaModel = new G4GammaNuclearReaction();
 	lowEGammaModel->SetMaxEnergy(3.*GeV);
 	lowEGammaModel->SetMinEnergy(1.*MeV);
 	G4PhotoNuclearProcess* thePhotoNuclearProcess = new G4PhotoNuclearProcess();
 	thePhotoNuclearProcess->RegisterMe(lowEGammaModel);
 	pmanager->AddDiscreteProcess(thePhotoNuclearProcess);
-      } else if (NuclearBertini == 1) {
+	// } else if (NuclearBertini == 1) {
 	// G4ProtonInelasticProcess* inelProcess = new G4ProtonInelasticProcess();
 	// inelProcess->RegisterMe(bertiniModel);
 	// processManager->AddDiscreteProcess(inelProcess);	
-      }
+	//      }
     } else if (particleName == "e-" || particleName == "e+") {
-      if(NuclearCHIPS == 1 ) {
-	G4ElectroNuclearReaction *eNuclearReaction = new G4ElectroNuclearReaction();
-	eNuclearReaction->SetMinEnergy(1.*MeV);
-	eNuclearReaction->SetMaxEnergy(10.*GeV);
-	G4ElectronNuclearProcess* eNuclearProcess = new G4ElectronNuclearProcess();
-	eNuclearProcess->RegisterMe(eNuclearReaction);
-	pmanager->AddDiscreteProcess(eNuclearProcess);
-      }
+      // if(NuclearCHIPS == 1 ) {
+      // 	G4ElectroNuclearReaction *eNuclearReaction = new G4ElectroNuclearReaction();
+      // 	eNuclearReaction->SetMinEnergy(1.*MeV);
+      // 	eNuclearReaction->SetMaxEnergy(10.*GeV);
+      // 	G4ElectronNuclearProcess* eNuclearProcess = new G4ElectronNuclearProcess();
+      // 	eNuclearProcess->RegisterMe(eNuclearReaction);
+      // 	pmanager->AddDiscreteProcess(eNuclearProcess);
+      // }
       
     }
 

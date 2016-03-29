@@ -10,6 +10,10 @@
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
 #include "DatacardManager.hh"
+#include "Constants.hh"
+
+#include "PADME_PHYS.hh"
+
 
 //#include "MyEvent.hh"
 
@@ -98,10 +102,20 @@ int main(int argc,char** argv)
   //
   DetectorConstruction* detector = new DetectorConstruction;
   runManager->SetUserInitialization(detector);
-  //
-  G4VUserPhysicsList* physics = new PhysicsList;
-  runManager->SetUserInitialization(physics);
- 
+
+  if ( UseNewPhysList == 1) {
+    // Physics list based on "official" physics models
+    // Mainly QGSP_BERT or QGSP_BIC + Optical
+    G4VModularPhysicsList* physicsList = new PADME_PHYS;
+    runManager->SetUserInitialization(physicsList);
+  } else {
+    //Custom made user physics list, old style
+    G4VUserPhysicsList* physics = new PhysicsList;
+    runManager->SetUserInitialization(physics);
+  }
+  
+
+
   // User Action classes
   G4cout << "MAIN: Constructing the generator action" << G4endl;
   G4VUserPrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector);

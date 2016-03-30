@@ -330,9 +330,10 @@ void EventAction::FindClusters()
     TimeCl[NClusters]  =0;
     NCellsCl[NClusters]=0;
     
-    for(G4int jj=SeedIndY-2; jj<=SeedIndY+2; jj++){
+    G4int NAddCl=2;
+    for(G4int jj=SeedIndY-NAddCl; jj<=SeedIndY+NAddCl; jj++){
       if(jj>=0 && jj<NRows){
-	for(G4int kk=SeedIndX-2; kk<=SeedIndX+2; kk++){
+	for(G4int kk=SeedIndX-NAddCl; kk<=SeedIndX+NAddCl; kk++){
 	  if( kk>=0 && kk<NCols){
 	    if(MatEtot[jj][kk]>CellsE && !MatUsed[jj][kk]) {//some fraction of E(SeedCell) // Attenzione ECells in Constants.hh
 	      EneCl[NClusters] += MatEtot[jj][kk];

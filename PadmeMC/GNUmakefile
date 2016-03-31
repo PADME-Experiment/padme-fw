@@ -29,7 +29,11 @@ ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
 
 include $(G4INSTALL)/config/architecture.gmk
 
-CPPFLAGS += -I$(PADMEROOTDIR)/include $(ROOTCFLAGS) -fPIC $(DEFINES)
+G4VERSION = $(shell dirname $(G4INSTALL) | sed s:\/.\*\/:"": )
+DEFINES += -D G4VERSION=$(G4VERSION)
+
+
+CPPFLAGS += -I$(PADMEROOTDIR)/include $(ROOTCFLAGS) -fPIC $(DEFINES) 
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 
 EXTRALIBS := $(addprefix -l,$(SUBDIRS))
@@ -51,6 +55,8 @@ try:
 	@echo $(MDEFINES)
 	@echo DEFINES
 	@echo $(DEFINES)
+	@echo G4VERSION
+	@echo $(G4VERSION)
 
 $(ALLTARGETDIRS):
 	@echo Entering $@ ...

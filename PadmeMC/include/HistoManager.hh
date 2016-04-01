@@ -125,12 +125,16 @@ struct NTEvent{
 
 class HistoManager
 {
-  public:
-  
-    HistoManager();
-   ~HistoManager();
-   
-    void book();
+
+protected:
+  HistoManager();
+public:
+  ~HistoManager();
+  static HistoManager* GetInstance();
+private:
+  static HistoManager* fInstance;
+public:
+  void book();
     void save();
 
     void FillHisto(G4int id, G4double bin, G4double weight = 1.0);
@@ -143,8 +147,6 @@ class HistoManager
 
   void FillGenEvent(){};
   void FillSimEvent(){};
-
-
 
   public:
     NTEvent  myEvt;    

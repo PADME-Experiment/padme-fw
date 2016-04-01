@@ -84,9 +84,6 @@ int main(int argc,char** argv)
   //Get the event storage. Should be instantiated before the HISTO!
   //MyEvent *TheEvent = MyEvent::GetInstance(); //
 
-  // set an HistoManager for Root IO
-  HistoManager*  histo = new HistoManager();
-
   // Run manager
   G4RunManager * runManager = new G4RunManager;
   
@@ -99,7 +96,6 @@ int main(int argc,char** argv)
   DatacardManager::GetInstance()->SetMessenger();
 
   // User Initialization classes (mandatory)
-  //
   DetectorConstruction* detector = new DetectorConstruction;
   runManager->SetUserInitialization(detector);
 
@@ -121,13 +117,11 @@ int main(int argc,char** argv)
   G4VUserPrimaryGeneratorAction* gen_action = new PrimaryGeneratorAction(detector);
   runManager->SetUserAction(gen_action);
   //
-  //  G4UserRunAction* run_action = new ExN02RunAction(histo);
-  RunAction* run_action = new RunAction(histo);
+  RunAction* run_action = new RunAction();
   runManager->SetUserAction(run_action); 
   //
-  EventAction* myevent_action = new EventAction(run_action,histo);
+  EventAction* myevent_action = new EventAction(run_action);
   G4UserEventAction* event_action  = myevent_action;
-  //  ExN02EventAction* event_action = new ExN02EventAction(run_action,histo);
   runManager->SetUserAction(event_action);
   //
   SteppingAction* mystepping_action = new SteppingAction;
@@ -186,7 +180,6 @@ int main(int argc,char** argv)
   //                 be deleted in the main() program !
   delete runManager;
   delete verbosity;
-  delete histo;
   //  G4cout<<"n= "<<NNeutrons<<" pic "<<Npionc<<" pi0 "<<Npi0<<" mu "<<Nmuons<<G4endl;
   //  G4cout<<"n_aft= "<<NNeutrons_aft<<" pic "<<Npionc_aft<<" pi0 "<<Npi0_aft<<" mu "<<Nmuons_aft<<G4endl;
   //delete TheEvent;

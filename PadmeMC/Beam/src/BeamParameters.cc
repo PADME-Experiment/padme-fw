@@ -36,8 +36,8 @@ BeamParameters::BeamParameters()
   fBeamCenterPosX = 0.*cm;
   fBeamCenterPosY = 0.*cm;
   fBeamCenterPosApplySpread = true;
-  fBeamCenterPosXSpread = 0.7*mm;
-  fBeamCenterPosYSpread = 0.7*mm;
+  fBeamCenterPosXSpread = 1.*mm;
+  fBeamCenterPosYSpread = 1.*mm;
 
   // Beam momentum
   fBeamMomentum = 550.*MeV;

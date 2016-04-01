@@ -26,7 +26,8 @@ class SteppingAction;
 class EventAction : public G4UserEventAction
 {
   public:
-  EventAction(RunAction*, HistoManager*);
+  //  EventAction(RunAction*, HistoManager*);
+  EventAction(RunAction*);
    ~EventAction();
 
   public:
@@ -58,7 +59,6 @@ class EventAction : public G4UserEventAction
   ECalGeometry   * Egeom; 
   TargetGeometry * Tgeom;
   BeamParameters * Bpar;
-
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

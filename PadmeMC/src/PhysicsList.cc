@@ -290,11 +290,8 @@ void PhysicsList::ConstructNuclearProcesses(){
       
     }
 
-    
-
   }
-    
-  
+
 }
 
 void PhysicsList::ConstructEM()

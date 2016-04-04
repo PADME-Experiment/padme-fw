@@ -112,7 +112,10 @@ int get_LinkNum()
 {
   // This algorithm will evolve when more A3818 boards will be used
   if (Config->board_id == 0) return 0;
+  // Board 1 and board 2 currently share the same optical channel
+  // Only one of the two can be used at the same time
   if (Config->board_id == 1) return 1;
+  if (Config->board_id == 2) return 1;
   return -1;
 }
 
@@ -124,6 +127,7 @@ int get_ConetNode()
   //return Config->board_id;
   if (Config->board_id == 0) return 0;
   if (Config->board_id == 1) return 0;
+  if (Config->board_id == 2) return 0;
   return -1;
 }
 

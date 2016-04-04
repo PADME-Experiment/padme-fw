@@ -49,7 +49,7 @@ class ADCBoard
 
   Int_t fVerbose;
 
-  DBService* fDB;
+  //DBService* fDB;
 
   std::vector<ADCFile> fFiles;
 

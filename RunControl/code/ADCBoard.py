@@ -201,6 +201,8 @@ class ADCBoard:
         # Start DAQ process
         try:
             self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdin=subprocess.DEVNULL,stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1,creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
             #self.process = subprocess.Popen(["/bin/sleep","60"],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Execution failed:",e
@@ -223,4 +225,10 @@ class ADCBoard:
 
             time.sleep(1)
 
+        # Process did not stop smoothly: stop it
+        self.process.terminate()
+        time.sleep(1)
+        if self.process.poll() != None:
+            self.process.wait()
+            self.log_handle.close()
         return 0

@@ -96,7 +96,8 @@ ECALOnlineMonitor::ECALOnlineMonitor() : VOnlineMonitor("ECAL") {
   TCanvas* caltrg = AddCanvasTab("Triggers");
   caltrg->Divide(2,2);
   caltrg->cd(1);
-  ecalH->Get1DHisto("ECALTR00")->Draw();
+  //ecalH->Get1DHisto("ECALTR00")->Draw();
+  ecalH->Get1DHisto("ECALRawCh25")->Draw();
   caltrg->cd(2);
   ecalH->Get1DHisto("ECALTR01")->Draw();
   caltrg->cd(3);

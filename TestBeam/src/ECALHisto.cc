@@ -29,7 +29,7 @@ ECALHisto::ECALHisto() : VHisto("ECAL") {
   name[22] = "APD Block 7 ( 1,-1)";
   name[23] = "APD Block 8 ( 1, 0)";
   name[24] = "APD Block 9 ( 1, 1)";
-  name[25] = "";
+  name[25] = "Trigger";
   name[26] = "";
   name[27] = "";
   name[28] = "";

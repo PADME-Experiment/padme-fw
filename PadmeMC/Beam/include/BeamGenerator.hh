@@ -14,6 +14,7 @@
 #include "G4ThreeVector.hh"
 
 #include "BeamParameters.hh"
+#include "HistoManager.hh"
 
 class G4Event;
 
@@ -74,6 +75,7 @@ private:
   DetectorConstruction* fDetector;
 
   BeamMessenger* fBeamMessenger;
+  HistoManager* fHistoManager;
 
   BeamPrimaryPositron fPositron;
 

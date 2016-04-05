@@ -56,10 +56,14 @@
 G4Run* RunAction::GenerateRun()
 { return new Run; }
 
-RunAction::RunAction(HistoManager* histo)
-:fHistoManager(histo)
-{}
+//RunAction::RunAction(HistoManager* histo)
+//:fHistoManager(histo)
+//{}
 
+RunAction::RunAction()
+{
+  fHistoManager = HistoManager::GetInstance();
+}
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 RunAction::~RunAction()

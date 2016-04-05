@@ -36,7 +36,7 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
-  
+  fHistoManager = HistoManager::GetInstance();  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -111,11 +111,17 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     // Create e+ primary particle with generated four-momentum
     G4PrimaryParticle* positron = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),
 							fPositron.p.x(),fPositron.p.y(),fPositron.p.z(),fPositron.E);
-
     // Create primary vertex at generated position/time
     G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(fPositron.pos.x(),fPositron.pos.y(),fPositron.pos.z()),fPositron.t);
     vtx->SetPrimary(positron);
 
+    fHistoManager->FillHisto2(36,fPositron.pos.x(),fPositron.pos.y(),1.);
+    fHistoManager->FillHisto(2,fPositron.E);
+    fHistoManager->FillHisto(3,fPositron.t);
+    fHistoManager->FillHisto(4,fPositron.t);
+    fHistoManager->FillHisto(5,GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.)));
+    //    G4cout<<"ddd "<<GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.))<<G4endl;
+    fHistoManager->FillHisto(6,nPositrons);
     // Add primary vertex to event
     fEvent->AddPrimaryVertex(vtx);
 
@@ -403,6 +409,6 @@ G4double BeamGenerator::GetGammaAngle(G4ThreeVector gammaDir,G4ThreeVector beamD
   G4double theta = acos (product);// * 180.0 / 3.14159265;  //in degreees
   //  G4cout<<"product"<< product <<"Theta " <<theta<<G4endl;
   G4double angle = gammaDir.angle(beamDir)/rad;
-  G4cout << "Mauro dice " << theta << " io dico " << angle << G4endl;
-  return theta;
+  //  G4cout << "Mauro dice " << theta << " io dico " << angle << G4endl;
+  return angle;
 }

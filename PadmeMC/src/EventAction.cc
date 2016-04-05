@@ -22,9 +22,13 @@ extern double Npionc;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
-EventAction::EventAction(RunAction* run, HistoManager* histo)
-:fRunAct(run),fHistoManager(histo)
+//EventAction::EventAction(RunAction* run, HistoManager* histo)
+//:fRunAct(run),fHistoManager(histo)
+EventAction::EventAction(RunAction* run)
+:fRunAct(run)
+
 {
+  fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
@@ -138,15 +142,10 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4double PrimE  = myStepping->GetPrimE();
 
   ProcID = myStepping->GetPhysProc();   
-
   fHistoManager->FillHisto(1,ETotCal);
-  fHistoManager->FillHisto(2,BeamE);
-  fHistoManager->FillHisto(3,Etrack[0]);
-  fHistoManager->FillHisto(4,Ncells);
   fHistoManager->FillHisto(14,ProcID);
   fHistoManager->FillHisto(15,BeamZ);
 
-  fHistoManager->FillHisto2(36,BeamX,BeamY,1.);
   fHistoManager->FillHisto2(30,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
 
   if(ProcID==1) fHistoManager->FillHisto2(31,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
@@ -330,9 +329,10 @@ void EventAction::FindClusters()
     TimeCl[NClusters]  =0;
     NCellsCl[NClusters]=0;
     
-    for(G4int jj=SeedIndY-2; jj<=SeedIndY+2; jj++){
+    G4int NAddCl=2;
+    for(G4int jj=SeedIndY-NAddCl; jj<=SeedIndY+NAddCl; jj++){
       if(jj>=0 && jj<NRows){
-	for(G4int kk=SeedIndX-2; kk<=SeedIndX+2; kk++){
+	for(G4int kk=SeedIndX-NAddCl; kk<=SeedIndX+NAddCl; kk++){
 	  if( kk>=0 && kk<NCols){
 	    if(MatEtot[jj][kk]>CellsE && !MatUsed[jj][kk]) {//some fraction of E(SeedCell) // Attenzione ECells in Constants.hh
 	      EneCl[NClusters] += MatEtot[jj][kk];
@@ -400,7 +400,7 @@ void EventAction::FindClusters()
     if(ProcID==1) fHistoManager->FillHisto2(8,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==1
     if(ProcID==2) fHistoManager->FillHisto2(9,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==2
     if (NClusters==0) {
-      fHistoManager->FillHisto(6, EneCl[NClusters]);
+      fHistoManager->FillHisto(7, EneCl[NClusters]);
       fHistoManager->FillHisto(8, ThCl[NClusters]);
       fHistoManager->FillHisto(9, MM2[NClusters]);
     }
@@ -618,11 +618,10 @@ void EventAction::AddLAVHits(LAVHitsCollection* hcont)
   }//end of loop
 }
 
-
 G4double EventAction::GetCharge(G4double Energia)
 {
-  G4double LY      =   1800.; //photons per MeV
-  G4double Gain    =     1E6;
+  G4double LY      =   6000.; //photons per MeV
+  G4double Gain    =     2E5;
   G4double Echarge = 1.6E-19;
   G4double CollEff =     0.1; //geometrical factor due to photodetector area
   G4double QE      =    0.25; //photodetector quantum efficiency

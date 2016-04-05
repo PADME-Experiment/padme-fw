@@ -11,6 +11,13 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+HistoManager* HistoManager::fInstance = 0;
+HistoManager* HistoManager::GetInstance()
+{
+  if ( fInstance == 0 ) { fInstance = new HistoManager(); }
+  return fInstance;
+}
+
 HistoManager::HistoManager()
  :rootFile(0),ntupl(0)
 {
@@ -43,19 +50,19 @@ void HistoManager::book()
     return;
   }
   
-  histo[1] = new TH1D("h1", "EtotCrys ", 900, 0., 900*CLHEP::MeV);
+  histo[1] = new TH1D("h1", "EtotCrys", 900, 0., 900*CLHEP::MeV);
   if (!histo[1]) G4cout << "\n can't create histo 1" << G4endl;
-  histo[2] = new TH1D("h2", "EBeam ", 900, 0., 900*CLHEP::MeV);
+  histo[2] = new TH1D("h2", "EBeam", 900, 0., 900*CLHEP::MeV);
   if (!histo[2]) G4cout << "\n can't create histo 2" << G4endl;
-  histo[3] = new TH1D("h3", "EtotTracker", 900, 0., 900.*CLHEP::MeV);
+  histo[3] = new TH1D("h3", "TBeam", 100, 0., 100.);
   if (!histo[3]) G4cout << "\n can't create histo 3" << G4endl;
-  histo[4] = new TH1D("h4", "Ncells per e- on target E>0.1MeV", 151,-0.5,150.5);
+  histo[4] = new TH1D("h4", "Microbunch", 500,0.,5.);
   if (!histo[4]) G4cout << "\n can't create histo 4" << G4endl;  
-  histo[5] = new TH1D("h5", "Ncells per cluster E>0.1MeV", 151,-0.5,150.5);
+  histo[5] = new TH1D("h5", "beam angle",200,0.0,0.01);
   if (!histo[5]) G4cout << "\n can't create histo 5" << G4endl;  
-  histo[6] = new TH1D("h6", "EClus", 900,0.,900.);
+  histo[6] = new TH1D("h6", "NPrimary", 100,0.,10000.);
   if (!histo[6]) G4cout << "\n can't create histo 6" << G4endl;  
-  histo[7] = new TH1D("h7", "Seed cell",ECalNCells,0.,ECalNCells);
+  histo[7] = new TH1D("h7", "ECluster",200,0.,600.);
   if (!histo[7]) G4cout << "\n can't create histo 7" << G4endl;  
   histo[8] = new TH1D("h8", "Theta", 200,0.,10.);
   if (!histo[8]) G4cout << "\n can't create histo 8" << G4endl;  

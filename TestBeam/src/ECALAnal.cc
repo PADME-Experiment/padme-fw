@@ -54,7 +54,8 @@ void ECALAnal::AnalyzeCharge()
       UChar_t cnr = chn->GetChannelNumber();
 
       // Verify that we are monitoring the correct set of channels
-      if ( (cnr>=9 && cnr<16) || cnr>=25 ) {
+      //if ( (cnr>=9 && cnr<16) || cnr>=25 ) {
+      if ( cnr<16 || cnr>25 ) {
         printf("WARNING Found channel %d in RAW file!\n",cnr);
         continue;
       }

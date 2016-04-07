@@ -26,17 +26,34 @@
 #include "G4HadronElasticPhysics.hh"
 #include "G4HadronElasticPhysicsHP.hh"
 
-#include "G4StepLimiterBuilder.hh"
+
+
+
 #include "G4NeutronTrackingCut.hh"
 
 #include "G4OpticalPhysics.hh"
 
 #include "G4DataQuestionaire.hh"
+
+#if G4MAJORVERSION >= 10 
+
+#include "G4HadronPhysicsQGSP_BERT.hh"
+#include "G4HadronPhysicsQGSP_BERT_HP.hh"
+
+#include "G4HadronPhysicsQGSP_BIC.hh"
+#include "G4HadronPhysicsQGSP_BIC_HP.hh"
+
+#else
 #include "HadronPhysicsQGSP_BERT.hh"
 #include "HadronPhysicsQGSP_BERT_HP.hh"
 
 #include "HadronPhysicsQGSP_BIC.hh"
 #include "HadronPhysicsQGSP_BIC_HP.hh"
+#include "G4StepLimiterBuilder.hh"
+
+#endif
+
+
 
 #include "PADME_PHYS.hh"
 
@@ -91,21 +108,44 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
     // Hadron Physics
     if (NuclearBertini == 1) {
       if(NuclearHP == 1) {
+
+#if G4MAJORVERSION >= 10 
+	this->RegisterPhysics( new G4HadronPhysicsQGSP_BERT_HP(ver));
+#else
 	this->RegisterPhysics( new HadronPhysicsQGSP_BERT_HP(ver));
+#endif
       } else {
+#if G4MAJORVERSION >= 10 
+      this->RegisterPhysics( new G4HadronPhysicsQGSP_BERT(ver));
+#else
       this->RegisterPhysics( new HadronPhysicsQGSP_BERT(ver));
+#endif
       }
     } else if (NuclearBinary == 1 ) {
       if(NuclearHP == 1) {
+#if G4MAJORVERSION >= 10 
+	this->RegisterPhysics(  new G4HadronPhysicsQGSP_BIC_HP(ver));
+#else
 	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC_HP(ver));
+#endif
       } else {
+#if G4MAJORVERSION >= 10 
+	this->RegisterPhysics(  new G4HadronPhysicsQGSP_BIC(ver));
+#else
 	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC(ver));
+#endif
       }
     }
 
     // // Stopping Physics
-    // this->RegisterPhysics( new G4StoppingPhysics(ver) );
-    
+
+#if G4MAJORVERSION == 9
+#if  G4MINORVERSION == 6
+    this->RegisterPhysics( new G4StoppingPhysics(ver) );
+#endif
+#else
+#endif
+ 
     // Ion Physics
     this->RegisterPhysics( new G4IonPhysics(ver));
   }
@@ -114,7 +154,12 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
   this->RegisterPhysics( new G4NeutronTrackingCut(ver));
   
   //Step limiter
+#if G4MAJORVERSION == 9
+#if  G4MINORVERSION == 6
   this->RegisterPhysics(new G4StepLimiterBuilder());
+#endif
+#else
+#endif
 
 }
 

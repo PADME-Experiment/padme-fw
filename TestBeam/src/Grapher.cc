@@ -231,10 +231,12 @@ void Grapher::AnalyzeEvents()
       ecalA->AnalyzeCharge();
       ecalA->AnalyzePosition();
 
+      /*
       // Do Target analysis
       targetA->SetEvent(rawEv);
       targetA->AnalyzeCharge();
       targetA->AnalyzePosition();
+      */
 
       // Clear event
       rawEv->Clear("C");

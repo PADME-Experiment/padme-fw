@@ -52,6 +52,7 @@ class EventAction : public G4UserEventAction
   void  AddLAVHits(LAVHitsCollection*);
 
   G4double GetCharge(G4double Energia);
+  G4double GGMass();
 
   private:
   RunAction*    fRunAct;
@@ -144,6 +145,7 @@ class EventAction : public G4UserEventAction
    G4double ETotRing[1000];
 
    G4double MatEtot[30][30];   
+   G4double MatQtot[30][30];   
    G4double MatTstart[30][30]; 
    G4int    MatUsed[30][30];   
   

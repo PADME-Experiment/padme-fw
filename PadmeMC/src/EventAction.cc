@@ -16,6 +16,7 @@
 #include "Constants.hh"
 #include <numeric>
 #include "G4SystemOfUnits.hh"
+#include "G4Poisson.hh"
 
 extern double NNeutrons;
 extern double Npionc;
@@ -144,7 +145,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   ProcID = myStepping->GetPhysProc();   
   fHistoManager->FillHisto(1,ETotCal);
   fHistoManager->FillHisto(14,ProcID);
-  fHistoManager->FillHisto(15,BeamZ);
+  //  fHistoManager->FillHisto(15,BeamZ);
 
   fHistoManager->FillHisto2(30,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
 
@@ -279,6 +280,7 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   for(G4int jj=0;jj<NRows;jj++){
     for(G4int kk=0;kk<NCols;kk++){
       MatEtot  [jj][kk]=0.;   
+      MatQtot  [jj][kk]=0.;   
       MatTstart[jj][kk]=1.e6; 
       MatUsed  [jj][kk]=0;   
     }
@@ -296,6 +298,13 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
     }
   }//end of loop on hits
+  
+  for(int xx=0;xx<NCols;xx++){
+    for(int yy=0;yy<NRows;yy++){
+      MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
+    }
+  }
+  
 }
 void EventAction::FindClusters()
 {
@@ -336,6 +345,7 @@ void EventAction::FindClusters()
 	  if( kk>=0 && kk<NCols){
 	    if(MatEtot[jj][kk]>CellsE && !MatUsed[jj][kk]) {//some fraction of E(SeedCell) // Attenzione ECells in Constants.hh
 	      EneCl[NClusters] += MatEtot[jj][kk];
+	      QCl[NClusters]   += MatQtot[jj][kk];
 	      TimeCl[NClusters]+= MatTstart[jj][kk]  * MatEtot[jj][kk];
 	      XCl[NClusters]   += Egeom->GetCrystalPosX(jj,kk)* MatEtot[jj][kk];
 	      YCl[NClusters]   += Egeom->GetCrystalPosY(jj,kk)* MatEtot[jj][kk];
@@ -399,12 +409,17 @@ void EventAction::FindClusters()
     G4double ProcID = myStepping->GetPhysProc();    
     if(ProcID==1) fHistoManager->FillHisto2(8,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==1
     if(ProcID==2) fHistoManager->FillHisto2(9,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==2
-    if (NClusters==0) {
-      fHistoManager->FillHisto(7, EneCl[NClusters]);
-      fHistoManager->FillHisto(8, ThCl[NClusters]);
-      fHistoManager->FillHisto(9, MM2[NClusters]);
+    if (NClusters==0 && EneCl[NClusters]>5.) {
+      fHistoManager->FillHisto(7,EneCl[NClusters]);
+      fHistoManager->FillHisto(8,ThCl[NClusters]);
+      fHistoManager->FillHisto(9,MM2[NClusters]);
+      fHistoManager->FillHisto(15,QCl[NClusters]);
     }
     NClusters++;
+    if(NClusters==2 && fabs(TimeCl[0]-TimeCl[1]<2.) ){ 
+     G4double mgg= GGMass();
+     fHistoManager->FillHisto(16,mgg);
+    }
     if(NClusters>19){ 
       G4cout<<"too many clusters \n!!"<<G4endl;
       break;
@@ -620,14 +635,27 @@ void EventAction::AddLAVHits(LAVHitsCollection* hcont)
 
 G4double EventAction::GetCharge(G4double Energia)
 {
-  G4double LY      =   6000.; //photons per MeV
+  G4double LY      =   25000.; //photons per MeV
   G4double Gain    =     2E5;
   G4double Echarge = 1.6E-19;
   G4double CollEff =     0.1; //geometrical factor due to photodetector area
   G4double QE      =    0.25; //photodetector quantum efficiency
-  G4double NPh = Energia*LY;
-  G4double rnd = G4RandGauss::shoot(NPh,sqrt(NPh)); //should be poisson
-  G4double Charge = rnd*QE*CollEff*Gain*Echarge/1E-12;  //in pC
+  G4double NPh = Energia*LY*QE*CollEff;
+  //  G4double rnd = G4RandGauss::shoot(NPh,sqrt(NPh)); //should be poisson
+  G4double rnd = G4Poisson(NPh);
+  G4double Charge = rnd*Gain*Echarge/1E-12;  //in pC
   //  G4cout<<"Energia "<<Energia<<" rnd " << rnd <<" nph "<<NPh<<" Charge "<<Charge<<" pC"<<G4endl;
   return Charge;
+}
+
+
+G4double EventAction::GGMass()
+{
+  double ECalPosiZ=3000.; //
+  if(NClusters!=2)                        return -1;  // Need 2 clusters
+  double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
+  double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);
+  double Massa  = sqrt(EneCl[0]*EneCl[1]*(XDiff2+YDiff2))/(ECalPosiZ);
+  G4cout<<"Massa "<<Massa<<G4endl;
+  return Massa;
 }

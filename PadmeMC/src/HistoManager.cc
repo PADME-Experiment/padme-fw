@@ -50,7 +50,7 @@ void HistoManager::book()
     return;
   }
   
-  histo[1] = new TH1D("h1", "EtotCrys", 900, 0., 900*CLHEP::MeV);
+  histo[1] = new TH1D("h1", "EtotCrys", 1100, 0., 1100*CLHEP::MeV);
   if (!histo[1]) G4cout << "\n can't create histo 1" << G4endl;
   histo[2] = new TH1D("h2", "EBeam", 900, 0., 900*CLHEP::MeV);
   if (!histo[2]) G4cout << "\n can't create histo 2" << G4endl;
@@ -58,11 +58,11 @@ void HistoManager::book()
   if (!histo[3]) G4cout << "\n can't create histo 3" << G4endl;
   histo[4] = new TH1D("h4", "Microbunch", 500,0.,5.);
   if (!histo[4]) G4cout << "\n can't create histo 4" << G4endl;  
-  histo[5] = new TH1D("h5", "beam angle",200,0.0,0.01);
+  histo[5] = new TH1D("h5", "beam angle",200,-0.01,0.01);
   if (!histo[5]) G4cout << "\n can't create histo 5" << G4endl;  
   histo[6] = new TH1D("h6", "NPrimary", 100,0.,10000.);
   if (!histo[6]) G4cout << "\n can't create histo 6" << G4endl;  
-  histo[7] = new TH1D("h7", "ECluster",200,0.,600.);
+  histo[7] = new TH1D("h7", "ECluster",1100,0.,1100.);
   if (!histo[7]) G4cout << "\n can't create histo 7" << G4endl;  
   histo[8] = new TH1D("h8", "Theta", 200,0.,10.);
   if (!histo[8]) G4cout << "\n can't create histo 8" << G4endl;  
@@ -78,7 +78,10 @@ void HistoManager::book()
   if (!histo[13]) G4cout << "\n can't create histo 13" << G4endl; 
   histo[14] = new TH1D("h14", "Primary interaction", 5,-0.5,4.5);
   if (!histo[14]) G4cout << "\n can't create histo 14" << G4endl; 
-  histo[15] = new TH1D("h15", "Uboson Z decay",1000.,0.,1.);
+  histo[15] = new TH1D("h15", "Cluster Charge",1000.,0.,20000.);
+  if (!histo[15]) G4cout << "\n can't create histo 15" << G4endl; 
+
+  histo[16] = new TH1D("h16", "Massa 2g",1200.,0.,300.);
   if (!histo[15]) G4cout << "\n can't create histo 15" << G4endl; 
 
   histo2[1] = new TH2D("h21", "XY cell weigh energy ",ECalNRow,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNCol,-ECalSizeY*0.5,ECalSizeY*0.5);

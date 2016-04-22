@@ -175,8 +175,13 @@ void BeamGenerator::GeneratePrimaryPositron()
   G4double pY = bpar->GetBeamDirection().y();
   G4double pZ = bpar->GetBeamDirection().z();
   if ( bpar->BeamApplyEmittance() ) { //Still to be tested
-    pX = G4RandGauss::shoot(pX,bpar->GetBeamEmittanceX());	
-    pY = G4RandGauss::shoot(pY,bpar->GetBeamEmittanceY());
+//    pX = G4RandGauss::shoot(pX,bpar->GetBeamEmittanceX());	
+//    pY = G4RandGauss::shoot(pY,bpar->GetBeamEmittanceY());
+    G4double theta = G4RandGauss::shoot(0,bpar->GetBeamEmittanceX());
+    G4double phi   = twopi*G4UniformRand();
+    pX = sin(theta)*cos(phi);
+    pY = sin(theta)*sin(phi);
+    pZ = cos(theta);
   }
   fPositron.dir = G4ThreeVector(pX,pY,pZ).unit();
   //  G4cout << "BeamGenerator - Positron direction " << fPositron.dir << G4endl;

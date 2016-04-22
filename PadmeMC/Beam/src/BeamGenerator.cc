@@ -102,6 +102,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //******************************************************
   //General BG generator particles on the target per event 
   //******************************************************
+  fHistoManager->FillHisto(6,nPositrons);
   for(int ip = 0; ip < nPositrons; ip++) { 
 
     // Generate primary e+
@@ -121,10 +122,8 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     fHistoManager->FillHisto(4,fPositron.t);
     fHistoManager->FillHisto(5,GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.)));
     //    G4cout<<"ddd "<<GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.))<<G4endl;
-    fHistoManager->FillHisto(6,nPositrons);
     // Add primary vertex to event
     fEvent->AddPrimaryVertex(vtx);
-
   }
 
 }

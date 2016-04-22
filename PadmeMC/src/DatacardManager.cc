@@ -2,7 +2,7 @@
 
 DatacardManager* DatacardManager::fInstance = 0;
 
-DatacardManager::DatacardManager():fFileName("default.root")
+DatacardManager::DatacardManager():fFileName("UBTF.root")
 {}
 
 DatacardManager::~DatacardManager()

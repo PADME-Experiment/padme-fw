@@ -7,6 +7,7 @@
 #include "HistoManager.hh"
 #include "G4UnitsTable.hh"
 #include "Constants.hh"
+#include "DatacardManager.hh"
 //#include "MyEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -41,9 +42,11 @@ HistoManager::~HistoManager()
 
 void HistoManager::book()
 { 
+ 
   // Creating a tree container to handle histograms and ntuples.
   // This tree is associated to an output file.
-  G4String fileName = "UBTF.root";
+  //
+  G4String fileName = DatacardManager::GetInstance()->GetOutputFileName();
   rootFile = new TFile(fileName,"RECREATE");
   if(!rootFile) {
     G4cout << " HistoManager::book :"<<" problem creating the ROOT TFile "<< G4endl;

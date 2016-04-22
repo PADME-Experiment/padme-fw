@@ -1,11 +1,28 @@
 #!/usr/bin/python
 
 import os
+import sys
+import getopt
 from Run import Run
 from RunControlGUI import RunControlGUI
+from RunControlText import RunControlText
 from PadmeDB import PadmeDB
 
-def main():
+def main(argv):
+
+    try:
+        opts,args = getopt.getopt(argv,"h",["no-gui"])
+    except getopt.GetoptError:
+      print 'RunControl [--no-gui] [-h]'
+      sys.exit(2)
+
+    useGUI = 1
+    for opt,arg in opts:
+        if opt == '-h':
+            print 'RunControl [--no-gui] [-h]'
+            sys.exit()
+        elif opt == '--no-gui':
+            useGUI = 0
 
     # Check lock file and create our own
     lock_file = "run/lock"
@@ -48,8 +65,11 @@ def main():
     run = Run()
     run.change_setup(setup)
 
-    # Start user interface
-    app = RunControlGUI(run)
+    # Start RunControl application (with or w/out GUI)
+    if useGUI:
+        app = RunControlGUI(run)
+    else:
+        app = RunControlText(run)
 
     print "=== Exit PADME Run Control ==="
 
@@ -58,4 +78,4 @@ def main():
 
 # Execution starts here
 if __name__ == "__main__":
-   main()
+   main(sys.argv[1:])

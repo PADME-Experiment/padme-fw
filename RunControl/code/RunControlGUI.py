@@ -12,6 +12,9 @@ class RunControlGUI:
 
         self.run = run
 
+        # Save time of startup
+        #self.runcontrol_start_time = 
+
         # Connect to PadmeDB
         self.db = PadmeDB(self.run.db_file)
 
@@ -434,41 +437,41 @@ class RunControlGUI:
         self.show_log("Run Number set to "+str(self.run.run_number))
         self.setrunnr.destroy()
 
-    def dummy_run(self):
-        self.change_run(0)
+    #def dummy_run(self):
+        #self.change_run(0)
 
-    def db_run(self):
-        newrun = self.db.get_last_run_in_db()+1
-        self.change_run(newrun)
+    #def db_run(self):
+        #newrun = self.db.get_last_run_in_db()+1
+        #self.change_run(newrun)
 
-    def manual_run(self,runnr):
-        self.change_run(int(runnr.widget.get()))
+    #def manual_run(self,runnr):
+        #self.change_run(int(runnr.widget.get()))
     
-    def set_runnr(self):
-        self.setrunnr = Tk()
-        self.setrunnr.geometry("223x105+400+400")
-        self.setrunnr.title("Set Run Number")
+    #def set_runnr(self):
+        #self.setrunnr = Tk()
+        #self.setrunnr.geometry("223x105+400+400")
+        #self.setrunnr.title("Set Run Number")
 
-        l_head = Label(self.setrunnr)
-        l_head.config(text="Please choose a run number")
-        l_head.config(font=("Helvetica",12,"bold"))
-        l_head.config(justify=CENTER)
-        l_head.grid(row=0,column=0,columnspan=2)
+        #l_head = Label(self.setrunnr)
+        #l_head.config(text="Please choose a run number")
+        #l_head.config(font=("Helvetica",12,"bold"))
+        #l_head.config(justify=CENTER)
+        #l_head.grid(row=0,column=0,columnspan=2)
 
-        b_dummy_run = Button(self.setrunnr,text="Dummy Run",command=self.dummy_run)
-        b_dummy_run.grid(row=1,column=0,sticky=W+E)
+        #b_dummy_run = Button(self.setrunnr,text="Dummy Run",command=self.dummy_run)
+        #b_dummy_run.grid(row=1,column=0,sticky=W+E)
 
-        b_db_run = Button(self.setrunnr,text="Run from DB",command=self.db_run)
-        b_db_run.grid(row=1,column=1,sticky=W+E)
+        #b_db_run = Button(self.setrunnr,text="Run from DB",command=self.db_run)
+        #b_db_run.grid(row=1,column=1,sticky=W+E)
 
-        l_runnr = Label(self.setrunnr,text="Run number:")
-        l_runnr.grid(row=2,column=0,sticky=E)
-        e_runnr = Entry(self.setrunnr,width=10)
-        e_runnr.bind('<Return>',self.manual_run)
-        e_runnr.grid(row=2,column=1,sticky=W+E)
+        #l_runnr = Label(self.setrunnr,text="Run number:")
+        #l_runnr.grid(row=2,column=0,sticky=E)
+        #e_runnr = Entry(self.setrunnr,width=10)
+        #e_runnr.bind('<Return>',self.manual_run)
+        #e_runnr.grid(row=2,column=1,sticky=W+E)
 
-        b_close = Button(self.setrunnr,text="Close",command=self.setrunnr.destroy)
-        b_close.grid(row=3,column=0,columnspan=2)
+        #b_close = Button(self.setrunnr,text="Close",command=self.setrunnr.destroy)
+        #b_close.grid(row=3,column=0,columnspan=2)
 
     def cycle_runtype(self):
         choices = ['TEST','DAQ','COSMIC']
@@ -480,8 +483,8 @@ class RunControlGUI:
         self.b_set_runtype.config(text="Type: "+self.run.run_type)
         self.show_log("Run Type set to "+self.run.run_type)
 
-    def set_runcomment(self):
-        return
+    #def set_runcomment(self):
+        #return
 
     def quit_daq(self):
         print "Quitting. Good bye"

@@ -51,10 +51,10 @@ Grapher::Grapher()
   gEve->GetBrowser()->HideBottomTab();
 
   // Create tab for ECAL
-  //fOnlineMonitorList.push_back(new ECALOnlineMonitor());
+  fOnlineMonitorList.push_back(new ECALOnlineMonitor());
 
   // Create tab for Target
-  fOnlineMonitorList.push_back(new TargetOnlineMonitor());
+  //fOnlineMonitorList.push_back(new TargetOnlineMonitor());
 
   // Create external window with OnlineMonitor command buttons
   TGMainFrame* frame = new TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFrame);
@@ -231,10 +231,12 @@ void Grapher::AnalyzeEvents()
       ecalA->AnalyzeCharge();
       ecalA->AnalyzePosition();
 
+      /*
       // Do Target analysis
       targetA->SetEvent(rawEv);
       targetA->AnalyzeCharge();
       targetA->AnalyzePosition();
+      */
 
       // Clear event
       rawEv->Clear("C");

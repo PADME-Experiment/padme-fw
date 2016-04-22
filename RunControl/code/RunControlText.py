@@ -15,7 +15,7 @@ class RunControlText:
         # Show main interface
         self.main_loop()
 
-    def main_loop():
+    def main_loop(self):
 
         while(1):
 
@@ -27,7 +27,7 @@ class RunControlText:
             cmd = raw_input('Command:')
 
             if (cmd=='help'): self.show_help()
-            elif (cmd=='quit' || cmd=='exit'): return
+            elif (cmd=='quit' or cmd=='exit'): return
             elif (cmd=='change_setup'): self.change_setup()
             elif (cmd=='show_board'): self.show_board()
             elif (cmd=='new_run'): self.new_run()
@@ -60,7 +60,7 @@ help            show this help
 
         while(1):
             newrun_number = self.db.get_last_run_in_db()+1
-            ans = raw_input("Next run is "+str(self.newrun_number)". OK to confim, D for dummy run:")
+            ans = raw_input("Next run is "+str(self.newrun_number)+". OK to confim, D for dummy run:")
             if (ans=="D"):
                 print "Run will be dummy, i.e. not logged into DB"
                 self.newrun_number = 0
@@ -183,7 +183,8 @@ help            show this help
             ans = raw_input("GO to start run, ABORT to abort:")
             if (ans=="ABORT"):
                 self.terminate_run("abort")
-            elif (ans!="GO"): print "Invalid option",ans,"- Try again"
+            elif (ans!="GO"):
+                print "Invalid option",ans,"- Try again"
 
         print "Starting run"
         self.db.set_run_time_start(self.run.run_number,self.now_str())

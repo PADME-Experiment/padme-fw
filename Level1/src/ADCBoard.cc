@@ -13,7 +13,7 @@ ADCBoard::ADCBoard(int board)
   fBoardId = board;
   fADCEvent = new ADCEvent();
   Reset();
-  fDB = DBService::GetInstance();
+  //fDB = DBService::GetInstance();
 }
 
 ADCBoard::~ADCBoard()

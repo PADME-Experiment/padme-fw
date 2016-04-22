@@ -47,14 +47,14 @@ void ECALAnal::AnalyzeCharge()
 
     // Loop over channels in this event
     fQTotal1[bid]=0.;
-    fQTotal2[bid]=0.;
+    //fQTotal2[bid]=0.;
     for(UChar_t c=0;c<nChn;c++){
 
       TADCChannel* chn = adcB->ADCChannel(c);
       UChar_t cnr = chn->GetChannelNumber();
 
       // Verify that we are monitoring the correct set of channels
-      if ( (cnr>=9 && cnr<16) || cnr>=25 ) {
+      if ( cnr>15 ) {
         printf("WARNING Found channel %d in RAW file!\n",cnr);
         continue;
       }
@@ -76,13 +76,14 @@ void ECALAnal::AnalyzeCharge()
       }
 
       // PMT have signal V<0
-      if (cnr<9) {
-	fQChannel[bid][cnr] = -fQChannel[bid][cnr];
-      }
+      //if (cnr<9) {
+      //	fQChannel[bid][cnr] = -fQChannel[bid][cnr];
+      //}
 
       fECALHisto->Fill1DHisto(Form("ECALPedCh%d",cnr),Avg);
       fECALHisto->Fill1DHisto(Form("ECALQCh%d",cnr),fQChannel[bid][cnr]);
 
+      /*
       if (cnr<9) {
 	fQTotal1[bid] += fQChannel[bid][cnr];
 	printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal1[bid]);
@@ -90,6 +91,9 @@ void ECALAnal::AnalyzeCharge()
 	fQTotal2[bid] += fQChannel[bid][cnr];
 	printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal2[bid]);
       }
+      */
+      fQTotal1[bid] += fQChannel[bid][cnr];
+      printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal1[bid]);
 
       if ( showEvent ) {
 	TH1D* sigH = fECALHisto->Get1DHisto(Form("ECALSigCh%d",cnr));
@@ -112,10 +116,10 @@ void ECALAnal::AnalyzeCharge()
 	  tH = fECALHisto->Get1DHisto("ECALTR00");
 	} else if (tnr == 1) {
 	  tH = fECALHisto->Get1DHisto("ECALTR01");
-	} else if (tnr == 2) {
-	  tH = fECALHisto->Get1DHisto("ECALTR10");
-	} else if (tnr == 3) {
-	  tH = fECALHisto->Get1DHisto("ECALTR11");
+	//} else if (tnr == 2) {
+	//  tH = fECALHisto->Get1DHisto("ECALTR10");
+	//} else if (tnr == 3) {
+	//  tH = fECALHisto->Get1DHisto("ECALTR11");
 	} else {
 	  printf("ERROR: found trigger id %d in file (?)\n",tnr);
 	}
@@ -127,10 +131,10 @@ void ECALAnal::AnalyzeCharge()
       }
     }
 
-    fECALHisto->Fill1DHisto("ECALQTot1",fQTotal1[bid]);
+    fECALHisto->Fill1DHisto("ECALQTot",fQTotal1[bid]);
     printf("%d Bd %d Qtot %f\n",b,bid,fQTotal1[bid]);
-    fECALHisto->Fill1DHisto("ECALQTot2",fQTotal2[bid]);
-    printf("%d Bd %d Qtot %f\n",b,bid,fQTotal2[bid]);
+    //fECALHisto->Fill1DHisto("ECALQTot2",fQTotal2[bid]);
+    //printf("%d Bd %d Qtot %f\n",b,bid,fQTotal2[bid]);
 
   } // end of loop over boards
 
@@ -142,12 +146,14 @@ void ECALAnal::AnalyzePosition()
   // Map of crystal positions
   Float_t Xcry[TADCBOARD_NCHANNELS];
   Float_t Ycry[TADCBOARD_NCHANNELS];
-  Xcry[0]= 1.; Xcry[1]= 0.; Xcry[2]=-1.;
-  Ycry[0]= 1.; Ycry[1]= 1.; Ycry[2]= 1.;
-  Xcry[3]= 1.; Xcry[4]= 0.; Xcry[5]=-1.;
-  Ycry[3]= 0.; Ycry[4]= 0.; Ycry[5]= 0.;
-  Xcry[6]= 1.; Xcry[7]= 0.; Xcry[8]=-1.;
-  Ycry[6]=-1.; Ycry[7]=-1.; Ycry[8]=-1.;
+  Xcry[ 0]= 1.; Xcry[ 1]= 3.; Xcry[ 2]= 5.; Xcry[ 3]= 7.;
+  Ycry[ 0]= 1.; Ycry[ 1]= 1.; Ycry[ 2]= 1.; Ycry[ 3]= 1.;
+  Xcry[ 4]= 1.; Xcry[ 5]= 3.; Xcry[ 6]= 5.; Xcry[ 7]= 7.;
+  Ycry[ 4]= 3.; Ycry[ 5]= 3.; Ycry[ 6]= 3.; Ycry[ 7]= 3.;
+  Xcry[ 8]= 1.; Xcry[ 9]= 3.; Xcry[10]= 5.; Xcry[11]= 7.;
+  Ycry[ 8]= 5.; Ycry[ 9]= 5.; Ycry[10]= 5.; Ycry[11]= 5.;
+  Xcry[12]= 1.; Xcry[13]= 3.; Xcry[14]= 5.; Xcry[15]= 7.;
+  Ycry[12]= 7.; Ycry[13]= 7.; Ycry[14]= 7.; Ycry[15]= 7.;
 
   // Loop over boards
   UChar_t nBoards = fRawEvent->GetNADCBoards();
@@ -158,6 +164,8 @@ void ECALAnal::AnalyzePosition()
     UChar_t bid = adcB->GetBoardId();
     if (bid != 0 || fQTotal1[bid] == 0.) continue;
 
+    printf("AnalPos - Board %d Charge %f\n",bid,fQTotal1[bid]);
+
     // Get number of active channels in this board
     UChar_t nChn = adcB->GetNADCChannels();
 
@@ -165,7 +173,7 @@ void ECALAnal::AnalyzePosition()
     Float_t YcryTot = 0.;
     for(Int_t c=0;c<nChn;c++){
       UChar_t cnr = adcB->ADCChannel(c)->GetChannelNumber();
-      if (cnr<9) {
+      if (cnr<16) {
 	XcryTot += Xcry[cnr]*fQChannel[bid][cnr];
 	YcryTot += Ycry[cnr]*fQChannel[bid][cnr];
       }

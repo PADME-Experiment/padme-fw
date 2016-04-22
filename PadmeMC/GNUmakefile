@@ -30,7 +30,11 @@ ROOTLIBS     := $(shell $(ROOTCONFIG) --libs)
 include $(G4INSTALL)/config/architecture.gmk
 
 G4VERSION = $(shell dirname $(G4INSTALL) | sed s:\/.\*\/:"": )
-DEFINES += -D G4VERSION=$(G4VERSION)
+G4MAJORVERSION = $(shell dirname $(G4INSTALL) | sed -e 's:/.*/::' -e 's:\-: :' -e 's:\.: :g' | cut -d" " -f2 )
+G4MINORVERSION = $(shell dirname $(G4INSTALL) | sed -e 's:/.*/::' -e 's:\-: :' -e 's:\.: :g' | cut -d" " -f3 )
+
+
+DEFINES += -D G4VERSION=$(G4VERSION) -D G4MAJORVERSION=$(G4MAJORVERSION) -D G4MINORVERSION=$(G4MINORVERSION) 
 
 
 CPPFLAGS += -I$(PADMEROOTDIR)/include $(ROOTCFLAGS) -fPIC $(DEFINES) 

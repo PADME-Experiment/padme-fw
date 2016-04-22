@@ -47,7 +47,7 @@ PhysicsList::PhysicsList():  G4VUserPhysicsList()
 {
   defaultCutValue = CutG4*cm;
   SetVerboseLevel(0);
-  IsOpticsON=1;
+  IsOpticsON=0;
 }
 
 PhysicsList::~ PhysicsList()
@@ -119,9 +119,6 @@ void PhysicsList::ConstructProcess()
   AddParameterisation();
   ConstructEM();
   if(IsOpticsON==1) ConstructOpticalPhysics();
-
-  
-
   ConstructGeneral();
   //Here you put the transportation for neutrons!
  // this->RegisterPhysics( new G4EmExtraPhysics(ver) );

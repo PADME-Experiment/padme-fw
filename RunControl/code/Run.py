@@ -151,7 +151,7 @@ class Run:
         if (self.run_number):
 
             # Connect to DB
-            db = PadmeDB(self.db_file)
+            db = PadmeDB()
 
             db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment)
 

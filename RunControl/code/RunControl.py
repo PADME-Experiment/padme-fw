@@ -2,27 +2,32 @@
 
 import os
 import sys
+import daemon
 import getopt
 from Run import Run
 from RunControlGUI import RunControlGUI
 from RunControlText import RunControlText
+from RunControlServer import RunControlServer
 from PadmeDB import PadmeDB
 
 def main(argv):
 
     try:
-        opts,args = getopt.getopt(argv,"h",["no-gui"])
+        opts,args = getopt.getopt(argv,"h",["no-gui","server"])
     except getopt.GetoptError:
-      print 'RunControl [--no-gui] [-h]'
+      print 'RunControl [--no-gui] [--server] [-h]'
       sys.exit(2)
 
     useGUI = 1
+    startServer = 0
     for opt,arg in opts:
         if opt == '-h':
-            print 'RunControl [--no-gui] [-h]'
+            print 'RunControl [--no-gui] [--server] [-h]'
             sys.exit()
         elif opt == '--no-gui':
             useGUI = 0
+        elif opt == '--server':
+            startServer = 1
 
     # Check lock file and create our own
     lock_file = "run/lock"
@@ -66,7 +71,10 @@ def main(argv):
     run.change_setup(setup)
 
     # Start RunControl application (with or w/out GUI)
-    if useGUI:
+    if startServer:
+        #with daemon.DaemonContext(): app = RunControlServer(run)
+        app = RunControlServer(run)
+    elif useGUI:
         app = RunControlGUI(run)
     else:
         app = RunControlText(run)

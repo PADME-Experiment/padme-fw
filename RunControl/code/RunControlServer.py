@@ -12,7 +12,7 @@ class RunControlServer:
 
         self.run = run
 
-        # Start in idle state (this will change)
+        # Start in idle state
         self.current_state = "idle"
 
         # Create handler for PadmeDB
@@ -48,7 +48,7 @@ class RunControlServer:
 
             # Wait for a connection
             self.write_log('waiting for a connection')
-            self.connection, client_address = self.sock.accept()
+            (self.connection,client_address) = self.sock.accept()
             self.write_log('connection from '+str(client_address))
 
             while True:
@@ -60,12 +60,14 @@ class RunControlServer:
                     new_state = self.state_initialized()
                 elif self.current_state == "running":
                     new_state = self.state_running()
+                elif self.current_state == "initfail":
+                    new_state = self.state_initfail()
                 else:
                     self.write_log("ERROR: unknown state %s - ABORTING"%self.current_state)
                     new_state = "exit"
 
             # See if status changed
-                if new_state == "idle" or new_state == "initialized" or new_state == "running":
+                if new_state == "idle" or new_state == "initialized" or new_state == "running" or new_state == "initfail":
                     self.current_state = new_state
                 elif new_state == "client_close":
                     self.connection.close()
@@ -89,31 +91,34 @@ class RunControlServer:
         # Receive and process commands for "idle" state
         while True:
 
-            cmd = self.get_command(self.connection)
+            cmd = self.get_command()
             self.write_log('received command '+cmd)
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
-                self.send_answer(self.connection,self.current_state)
+                self.send_answer(self.current_state)
             elif (cmd == "get_setup"):
-                self.send_answer(self.connection,self.run.setup)
+                self.send_answer(self.run.setup)
             elif (cmd == "get_setup_list"):
-                self.send_answer(self.connection,self.get_setup_list())
+                self.send_answer(self.get_setup_list())
             elif (cmd == "get_board_list"):
-                self.send_answer(self.connection,str(self.run.boardid_list))
+                self.send_answer(str(self.run.boardid_list))
             elif (cmd == "get_last_run_number"):
-                self.send_answer(self.connection,str(self.db.get_last_run_in_db()))
+                self.send_answer(str(self.db.get_last_run_in_db()))
             elif (cmd == "new_run"):
                 res = self.new_run()
-                if (res == "client_close"): return "client_close"
+                if (res == "client_close"):
+                    return "client_close"
                 elif (res == "error"):
                     self.write_log('ERROR while initializing new run')
                 elif (res == "initialized"):
                     return "initialized"
+                elif (res == "initfail"):
+                    return "initfail"
                 else:
                     self.write_log("ERROR: new_run returned unknown answer "+res+" (?)")
             elif (cmd == "exit"):
-                self.send_answer(self.connection,"exiting")
+                self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
@@ -126,8 +131,8 @@ get_board_config <b>\tShow current configuration of board <b>
 get_last_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
-exit\t\tTell RunControl to exit (use with extreme care!)"""
-                self.send_answer(self.connection,msg)
+exit\t\tTell RunControl server to exit (use with extreme care!)"""
+                self.send_answer(msg)
             else:
 
                 # See if command can be handled by a regular expression
@@ -135,18 +140,17 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
 
                 m = self.re_get_board_config.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config(int(m.group(1))))
                     found_re = True
 
-                print "<"+cmd+">"
                 m = self.re_change_setup.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.change_setup(m.group(1)))
+                    self.send_answer(self.change_setup(m.group(1)))
                     found_re = True
 
                 # No regular expression matched: command is unknown
                 if not found_re:
-                    self.send_answer(self.connection,"unknown command")
+                    self.send_answer("unknown command")
                     self.write_log('command '+cmd+' is unknown')
 
     def state_initialized(self):
@@ -154,24 +158,24 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         # Receive and process commands for "initialized" state
         while True:
 
-            cmd = self.get_command(self.connection)
+            cmd = self.get_command()
             self.write_log('received command '+cmd)
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
-                self.send_answer(self.connection,self.current_state)
+                self.send_answer(self.current_state)
             elif (cmd == "get_setup"):
-                self.send_answer(self.connection,self.run.setup)
+                self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
-                self.send_answer(self.connection,str(self.run.boardid_list))
+                self.send_answer(str(self.run.boardid_list))
             elif (cmd == "get_run_number"):
-                self.send_answer(self.connection,str(self.run.run_number))
+                self.send_answer(str(self.run.run_number))
             elif (cmd == "abort_run"):
-                return self.terminate_run("abort")
+                return self.abort_run()
             elif (cmd == "start_run"):
                 return self.start_run()
             elif (cmd == "exit"):
-                self.send_answer(self.connection,"exiting")
+                self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
@@ -184,8 +188,8 @@ get_board_log_file <b>\tGet name of log file for board <b>
 get_run_number\tReturn current run number
 start_run\t\tStart run
 abort_run\t\tAbort run
-exit\t\tTell RunControl to exit (use with extreme care!)"""
-                self.send_answer(self.connection,msg)
+exit\t\tTell RunControl server to exit (use with extreme care!)"""
+                self.send_answer(msg)
 
             else:
 
@@ -194,17 +198,17 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
 
                 m = self.re_get_board_config.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config(int(m.group(1))))
                     found_re = True
 
                 m = self.re_get_board_log_file.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.get_board_log_file(int(m.group(1))))
+                    self.send_answer(self.get_board_log_file(int(m.group(1))))
                     found_re = True
 
                 # No regular expression matched: command is unknown
                 if not found_re:
-                    self.send_answer(self.connection,"unknown command")
+                    self.send_answer("unknown command")
                     self.write_log('command '+cmd+' is unknown')
 
     def state_running(self):
@@ -212,22 +216,22 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         # Receive and process commands for "running" state
         while True:
 
-            cmd = self.get_command(self.connection)
+            cmd = self.get_command()
             self.write_log('received command '+cmd)
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
-                self.send_answer(self.connection,self.current_state)
+                self.send_answer(self.current_state)
             elif (cmd == "get_setup"):
-                self.send_answer(self.connection,self.run.setup)
+                self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
-                self.send_answer(self.connection,str(self.run.boardid_list))
+                self.send_answer(str(self.run.boardid_list))
             elif (cmd == "get_run_number"):
-                self.send_answer(self.connection,str(self.run.run_number))
+                self.send_answer(str(self.run.run_number))
             elif (cmd == "stop_run"):
                 return self.stop_run()
             elif (cmd == "exit"):
-                self.send_answer(self.connection,"exiting")
+                self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
@@ -238,10 +242,9 @@ get_board_list\tShow list of boards in use with current setup
 get_board_config <b>\tShow current configuration of board <b>
 get_board_log_file <b>\tGet name of log file for board <b>
 get_run_number\tReturn current run number
-start_run\t\tStart run
-abort_run\t\tAbort run
-exit\t\tTell RunControl to exit (use with extreme care!)"""
-                self.send_answer(self.connection,msg)
+stop_run\t\tStop the run
+exit\t\tTell RunControl server to exit (use with extreme care!)"""
+                self.send_answer(msg)
 
             else:
 
@@ -250,26 +253,30 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
 
                 m = self.re_get_board_config.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config(int(m.group(1))))
                     found_re = True
 
                 m = self.re_get_board_log_file.match(cmd)
                 if (m):
-                    self.send_answer(self.connection,self.get_board_log_file(int(m.group(1))))
+                    self.send_answer(self.get_board_log_file(int(m.group(1))))
                     found_re = True
 
                 # No regular expression matched: command is unknown
                 if not found_re:
-                    self.send_answer(self.connection,"unknown command")
+                    self.send_answer("unknown command")
                     self.write_log('command '+cmd+' is unknown')
         return "idle"
 
-    def get_command(self,conn):
+    def state_initfail(self):
+
+        return "idle"
+
+    def get_command(self):
 
         # First get length of string
         l = ""
         for i in range(5): # Max 99999 characters
-            ch = conn.recv(1)
+            ch = self.connection.recv(1)
             if ch:
                 l += ch
             else:
@@ -280,7 +287,7 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         # Then read the right amount of characters from the socket
         cmd = ""
         for i in range(ll):
-            ch = conn.recv(1)
+            ch = self.connection.recv(1)
             if ch:
                 cmd += ch
             else:
@@ -289,10 +296,11 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
 
         return cmd
 
-    def send_answer(self,conn,answer):
+    def send_answer(self,answer):
 
         if len(answer)<100000:
-            conn.sendall("%5.5d"%len(answer)+answer)
+            self.write_log("Sending answer "+answer)
+            self.connection.sendall("%5.5d"%len(answer)+answer)
         else:
             self.write_log('answer too long: cannot send')
 
@@ -344,8 +352,8 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         # Retrieve run number - next=next run from DB, dummy=dummy run (i.e. run nr=0)
         # Return run number used (0 for dummy run) or "error" for invalid answer
         newrun_number = 0
-        self.send_answer(self.connection,"run_number")
-        ans = self.get_command(self.connection)
+        self.send_answer("run_number")
+        ans = self.get_command()
         if (ans=="next"):
             newrun_number = self.db.get_last_run_in_db()+1
         elif (ans=="dummy"):
@@ -354,38 +362,38 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
             return "client_close"
         else:
             self.write_log("run_number - invalid option "+ans+" received")
-            self.send_answer(self.connection,"error")
+            self.send_answer("error")
             return "error"
-        self.send_answer(self.connection,str(newrun_number))
+        #self.send_answer(str(newrun_number))
 
         # Retrieve run type (TEST,DAQ,COSMIC)
         # Return run type used or "error" for invalid answer
         newrun_type = ""
-        self.send_answer(self.connection,"run_type")
-        ans = self.get_command(self.connection)
+        self.send_answer("run_type")
+        ans = self.get_command()
         if (ans=="TEST" or ans=="DAQ" or ans=="COSMIC"):
             newrun_type = ans
         elif (ans=="client_close"):
             return "client_close"
         else:
             self.write_log("run_type - invalid option "+ans+" received")
-            self.send_answer(self.connection,"error")
+            self.send_answer("error")
             return "error"
-        self.send_answer(self.connection,newrun_type)
+        #self.send_answer(newrun_type)
 
         newrun_user = ""
-        self.send_answer(self.connection,"shift_crew")
-        ans = self.get_command(self.connection)
+        self.send_answer("shift_crew")
+        ans = self.get_command()
         if (ans=="client_close"): return "client_close"
         newrun_user = ans
 
         newrun_comment = ""
-        self.send_answer(self.connection,"run_comment")
-        ans = self.get_command(self.connection)
+        self.send_answer("run_comment")
+        ans = self.get_command()
         if (ans=="client_close"): return "client_close"
         newrun_comment = ans
 
-        self.write_log("Run number: "+newrun_number)
+        self.write_log("Run number: "+str(newrun_number))
         self.write_log("Run type: "+newrun_type)
         self.write_log("Run crew: "+newrun_user)
         self.write_log("Run comment: "+newrun_comment)
@@ -403,6 +411,7 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
             if (run_is_in_db):
                 self.write_log("ERROR - Run "+str(self.run.run_number)+" is already in the DB: cannot use it again")
                 self.write_log("Please check if someone else is using this RunControl before retrying")
+                self.send_answer("error_init")
                 return "error"
 
         # Create run structure in the DB
@@ -427,7 +436,7 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
 
             p_id = adc.start_daq()
             if p_id:
-                self.write_log("ADC board %02d - Started DAQ with process id"%adc.board_id,p_id)
+                self.write_log("ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id))
                 self.send_answer("adc "+str(adc.board_id)+" init")
                 adc.status = "init"
             else:
@@ -467,7 +476,7 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                     self.send_answer("init_timeout")
                     return "error"
-                sleep(1)
+                time.sleep(1)
             elif (all_boards_ready):
                 self.write_log("All boards completed initialization: DAQ run can be started")
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
@@ -477,27 +486,30 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
                 self.write_log("*** ERROR *** One or more boards failed the initialization. Cannot start run")
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                 self.send_answer("init_fail")
-                return "error"
+                return "initfail"
 
     def start_run(self):
 
         self.write_log("Starting run")
-        if (self.run.run_number): self.db.set_run_time_start(self.run.run_number,self.now_str())
-        if (self.run.run_number): self.db.set_run_status(self.run.run_number,2) # Status 2: run started
+        if (self.run.run_number):
+            self.db.set_run_time_start(self.run.run_number,self.now_str())
+            self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         # Create "start the run" tag file
         open(self.run.start_file,'w').close()
+
+        self.send_answer("run_started")
 
         # RunControl is now in "running" mode
         return "running"
 
     def stop_run(self):
 
-        self.send_answer(self.connection,"end_run_comment")
-        ans = self.get_command(self.connection)
+        self.send_answer("run_comment_end")
+        ans = self.get_command()
         if (ans=="client_close"): return "client_close"
-        self.write_log("End Run comment: "+ans)
-        self.run.run_end_comment = ans
+        self.write_log("End of Run comment: "+ans)
+        self.run.run_comment_end = ans
 
         self.write_log("Stopping run")
         if (self.run.run_number): self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
@@ -505,6 +517,8 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         return self.terminate_run()
 
     def abort_run(self):
+
+        self.run.run_comment_end = "Run aborted"
 
         self.write_log("Aborting run")
         if (self.run.run_number): self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
@@ -521,10 +535,14 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
         open(self.run.quit_file,'w').close()
 
         # Run stop_daq procedure for each ADC board
+        terminate_ok = True
         for adc in (self.run.adcboard_list):
             if adc.stop_daq():
+                self.send_answer("adc %d terminate_ok"%adc.board_id)
                 self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
             else:
+                terminate_ok = False
+                self.send_answer("adc %d terminate_error"%adc.board_id)
                 self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
@@ -534,6 +552,11 @@ exit\t\tTell RunControl to exit (use with extreme care!)"""
             if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
         if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
         if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
+
+        if terminate_ok:
+            self.send_answer("terminate_ok")
+        else:
+            self.send_answer("terminate_error")
 
         # At the end of this procedure RunControl is back to "idle" mode
         return "idle"

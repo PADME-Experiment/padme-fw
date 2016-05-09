@@ -3,20 +3,25 @@ import time
 from Tkinter import *
 from PIL import Image, ImageTk
 
-from PadmeDB import PadmeDB
-from ADCBoardGUI import ADCBoardGUI
-
 class RunControlGUI:
 
-    def __init__(self, run):
+    def __init__(self):
 
-        self.run = run
+        # Create a TCP/IP socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        # Save time of startup
-        #self.runcontrol_start_time = 
+        # Connect the socket to the port where the server is listening
+        server_address = ('localhost', 10000)
+        print 'Connecting to RunControl server on host %s port %s' % server_address
+        try:
+            self.sock.connect(server_address)
+        except:
+            print "Error connecting to server: "+str(sys.exc_info()[0])
+            return
 
-        # Connect to PadmeDB
-        self.db = PadmeDB(self.run.db_file)
+        # Ask server about current state
+        self.current_state = self.ask_server("get_state")
+        self.current_run_nr = self.ask_server("get_run_number")
 
         # Initialize main graphic window
         self.root = Tk()
@@ -29,10 +34,6 @@ class RunControlGUI:
         self.root.grid_rowconfigure(0,weight=0)
         self.root.grid_rowconfigure(1,weight=0)
         self.root.grid_rowconfigure(2,weight=1)
-
-        # Initialize variable to hold current run number
-        self.v_current_run = IntVar()
-        self.v_current_run.set(self.db.get_last_run_in_db())
 
         # Show PADME logo and deathstar
         #logo = PhotoImage(file="pic/Deathstar.gif")
@@ -57,44 +58,49 @@ class RunControlGUI:
         # Button to show/change run number
         self.b_set_runnr = Button(self.f_main)
         self.b_set_runnr.config(font=("Helvetica",16,"bold"))
-        #self.b_set_runnr.config(text="Run Number: %6d"%self.run.run_number)
-        self.b_set_runnr.config(text="Run Number: %6d"%self.v_current_run.get())
-        #self.b_set_runnr.config(command=self.set_runnr)
+        self.b_set_runnr.config(text="Run Number: %6d"%self.current_run_nr)
         self.b_set_runnr.grid(row=0,column=0,columnspan=2,sticky=W+E)
 
-        # Button to show/change run type
-        #self.b_set_runtype = Button(self.f_main)
-        #self.b_set_runtype.config(font=("Helvetica",16,"bold"))
-        #self.b_set_runtype.config(text="Run Type: "+self.run.run_type)
-        #self.b_set_runtype.config(command=self.cycle_runtype)
-        #self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
-
-        # Button to show/change run comment
-        #self.b_set_runcmt = Button(self.f_main)
-        #self.b_set_runcmt.config(font=("Helvetica",14,"bold"))
-        #self.b_set_runcmt.config(text=self.run.run_comment)
-        #self.b_set_runcmt.config(command=self.set_runcomment)
-        #self.b_set_runcmt.grid(row=2,column=0,columnspan=2,sticky=W+E)
-
         # Buttons to handle run init,start,abort,stop
-        #self.b_init_run = Button(self.f_main,text="Init Run",command=self.init_run)
+
         self.b_init_run = Button(self.f_main,text="New Run",command=self.set_run_config)
         self.b_init_run.config(font=("Helvetica",14,"bold"))
         self.b_init_run.grid(row=3,column=0,sticky=W+E)
-        self.b_init_run.config(state=NORMAL)
+
         self.b_abort_run = Button(self.f_main,text="Abort Run",command=lambda mode="abort": self.terminate_run(mode))
         self.b_abort_run.config(font=("Helvetica",14,"bold"))
         self.b_abort_run.grid(row=3,column=1,sticky=W+E)
-        self.b_abort_run.config(state=DISABLED)
+
         self.b_start_run = Button(self.f_main,text="Start Run",command=self.start_run)
         self.b_start_run.config(font=("Helvetica",14,"bold"))
         self.b_start_run.grid(row=4,column=0,sticky=W+E)
-        self.b_start_run.config(state=DISABLED)
-        #self.b_stop_run = Button(self.f_main,text="Stop Run",command=lambda mode="stop": self.terminate_run(mode))
+
         self.b_stop_run = Button(self.f_main,text="Stop Run",command=self.set_end_of_run)
         self.b_stop_run.config(font=("Helvetica",14,"bold"))
         self.b_stop_run.grid(row=4,column=1,sticky=W+E)
-        self.b_stop_run.config(state=DISABLED)
+
+        # Enable/disable buttons according to current state
+        if (self.current_state == "idle"):
+            self.b_init_run.config(state=NORMAL)
+            self.b_abort_run.config(state=DISABLED)
+            self.b_start_run.config(state=DISABLED)
+            self.b_stop_run.config(state=DISABLED)
+        elif (self.current_state == "initialized"):
+            self.b_init_run.config(state=DISABLED)
+            self.b_abort_run.config(state=NORMAL)
+            self.b_start_run.config(state=NORMAL)
+            self.b_stop_run.config(state=DISABLED)
+        elif (self.current_state == "running"):
+            self.b_init_run.config(state=DISABLED)
+            self.b_abort_run.config(state=DISABLED)
+            self.b_start_run.config(state=DISABLED)
+            self.b_stop_run.config(state=NORMAL)
+        else:
+            self.show_log("Server is in UNKNWON state %s"%self.current_state)
+            self.b_init_run.config(state=DISABLED)
+            self.b_abort_run.config(state=DISABLED)
+            self.b_start_run.config(state=DISABLED)
+            self.b_stop_run.config(state=DISABLED)
 
         # Button to quit Run Control
         self.b_quit_daq = Button(self.f_main,text="QUIT",fg="red",command=self.quit_daq)
@@ -110,7 +116,7 @@ class RunControlGUI:
         # Create button to change RunControl setup
         self.b_setup = Button(self.f_boards)
         self.b_setup.config(font=("Helvetica",14,"bold"))
-        self.b_setup.config(text="Setup: "+self.run.setup)
+        self.b_setup.config(text="Setup: "+self.ask_server("get_setup"))
         self.b_setup.config(command=self.handle_setup)
         self.b_setup.grid(row=0,column=0,columnspan=n_buttons_per_row,sticky=W+E)
         # Create buttons for each board
@@ -142,6 +148,47 @@ class RunControlGUI:
         # Start user interface
         self.root.mainloop()
 
+    def get_answer(self):
+
+        # First get length of string
+        l = ""
+        for i in range(5): # Max 99999 characters
+            ch = self.sock.recv(1)
+            if ch:
+                l += ch
+            else:
+                self.close_conn()
+        ll = int(l)
+
+        # Then read the right amount of characters from the socket
+        ans = ""
+        for i in range(ll):
+            ch = self.sock.recv(1)
+            if ch:
+                ans += ch
+            else:
+                self.close_conn()
+
+        return ans
+
+    def close_conn(self):
+
+        print >>sys.stderr, 'closing socket'
+        self.sock.close()
+        exit(1)
+
+    def send_command(self,cmd):
+
+        if len(cmd)<100000:
+            self.sock.sendall("%5.5d"%len(cmd)+cmd)
+        else:
+            print >>sys.stderr,'command too long: cannot send'
+
+    def ask_server(self,cmd):
+
+        self.send_command(cmd)
+        return self.get_answer()
+
     def show_log(self,text):
 
         txt = self.now_str()+" "+text
@@ -158,7 +205,7 @@ class RunControlGUI:
             if (adc.status == "init"):
                 if (os.path.exists(adc.initok_file)):
                     # Initialization ended OK
-                    self.show_log("ADC board "+"%02d"%adc.board_id+" - Initialized and ready for DAQ")
+                    self.show_log("ADC board %02d - Initialized and ready for DAQ"%adc.board_id)
                     self.b_board[adc.board_id].config(background="green")
                     adc.status = "ready"
                 elif (os.path.exists(adc.initfail_file)):
@@ -195,7 +242,7 @@ class RunControlGUI:
         self.runcfg_root.title("Set Run Configuration")
 
         # Get next run number from DB
-        self.runcfg_nextrun = self.db.get_last_run_in_db()+1
+        self.runcfg_nextrun = self.current_run_nr+1
 
         self.l_runcfg_head = Label(self.runcfg_root)
         self.l_runcfg_head.config(text="Run "+str(self.runcfg_nextrun))
@@ -206,7 +253,7 @@ class RunControlGUI:
         # Button to show/change run type
         self.b_set_runtype = Button(self.runcfg_root)
         self.b_set_runtype.config(font=("Helvetica",16,"bold"))
-        self.b_set_runtype.config(text="Type: "+self.run.run_type)
+        self.b_set_runtype.config(text="Type: DAQ")
         self.b_set_runtype.config(command=self.cycle_runtype)
         self.b_set_runtype.grid(row=1,column=0,columnspan=2,sticky=W+E)
 
@@ -219,16 +266,12 @@ class RunControlGUI:
         l_runcrew = Label(self.runcfg_root,text="Shift crew:",font=("Helvetica",14,"bold"))
         l_runcrew.grid(row=2,column=0,sticky=E)
         self.e_runcfg_runcrew = Entry(self.runcfg_root,width=20)
-        #self.e_runcfg_runcrew.bind('<Return>',self.runcfg_set_crew)
         self.e_runcfg_runcrew.grid(row=2,column=1,columnspan=5,sticky=W+E)
 
         l_runcomment = Label(self.runcfg_root,text="Start of Run Comment",font=("Helvetica",16,"bold"))
         l_runcomment.grid(row=3,column=0,columnspan=6,sticky=W+E)
         self.e_runcfg_runcomment = Text(self.runcfg_root,height=8,width=80)
         self.e_runcfg_runcomment.grid(row=4,column=0,columnspan=6,sticky=W+E)
-        #self.e_runcfg_runcomment = Entry(self.runcfg_root,width=20)
-        #self.e_runcfg_runcrew.bind('<Return>',self.runcfg_set_crew)
-        #self.e_runcfg_runcomment.grid(row=3,column=1,sticky=W+E)
 
         b_init = Button(self.runcfg_root,text="Init Run",font=("Helvetica",16,"bold"),command=self.runcfg_initrun)
         b_init.grid(row=5,column=0,columnspan=3)

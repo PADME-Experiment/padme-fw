@@ -103,7 +103,7 @@ class RunControlServer:
                 self.send_answer(self.get_setup_list())
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
-            elif (cmd == "get_last_run_number"):
+            elif (cmd == "get_run_number"):
                 self.send_answer(str(self.db.get_last_run_in_db()))
             elif (cmd == "new_run"):
                 res = self.new_run()
@@ -128,7 +128,7 @@ get_setup\tShow current setup name
 get_setup_list\tShow list of available setups
 get_board_list\tShow list of boards in use with current setup
 get_board_config <b>\tShow current configuration of board <b>
-get_last_run_number\tReturn last run number in DB
+get_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
 exit\t\tTell RunControl server to exit (use with extreme care!)"""

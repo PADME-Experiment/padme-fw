@@ -32,8 +32,15 @@ class PadmeDB:
 
     def check_db(self):
 
-        if (self.conn and self.conn.is_connected()): return
-        self.connect_db()
+        # This does not work
+        #if (self.conn and self.conn.is_connected()): return
+        if self.conn:
+            try:
+                self.conn.ping()
+            except:
+                self.connect_db()
+        else:
+            self.connect_db()
 
     def is_run_in_db(self,run_nr):
 

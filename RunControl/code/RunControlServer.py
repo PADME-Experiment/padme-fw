@@ -364,7 +364,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             self.write_log("run_number - invalid option "+ans+" received")
             self.send_answer("error")
             return "error"
-        #self.send_answer(str(newrun_number))
+        self.send_answer(str(newrun_number))
 
         # Retrieve run type (TEST,DAQ,COSMIC)
         # Return run type used or "error" for invalid answer
@@ -379,7 +379,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             self.write_log("run_type - invalid option "+ans+" received")
             self.send_answer("error")
             return "error"
-        #self.send_answer(newrun_type)
+        self.send_answer(newrun_type)
 
         newrun_user = ""
         self.send_answer("shift_crew")

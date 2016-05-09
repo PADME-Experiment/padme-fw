@@ -42,7 +42,7 @@ def main(argv):
                 print "Lock file",lock_file,"found for pid",pid
             else:
                 print "Lock file",lock_file,"found but it is not a file"
-                exit(1)
+            exit(1)
         pid = os.getpid()
         lf = open(lock_file,"w")
         lf.write("%d"%pid)

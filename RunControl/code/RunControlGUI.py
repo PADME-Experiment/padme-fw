@@ -37,6 +37,7 @@ class RunControlGUI:
         self.current_state = self.ask_server("get_state")
         self.current_run_nr = int(self.ask_server("get_run_number"))
         self.current_board_list = self.decode_board_list(self.ask_server("get_board_list"))
+        self.current_setup = self.ask_server("get_setup")
 
         # Enable/disable buttons according to current state
         self.set_gui_state()
@@ -80,31 +81,41 @@ class RunControlGUI:
         self.f_main.grid(row=1,column=0)
 
         # Button to show/change run number
-        self.b_set_runnr = Button(self.f_main)
-        self.b_set_runnr.config(font=("Helvetica",16,"bold"))
-        self.b_set_runnr.grid(row=0,column=0,columnspan=2,sticky=W+E)
+        #self.b_set_runnr = Button(self.f_main)
+        #self.b_set_runnr.config(font=("Helvetica",16,"bold"))
+        #self.b_set_runnr.grid(row=0,column=0,columnspan=2,sticky=W+E)
+
+        # Label to show run number
+        self.l_run_number = Label(self.f_main)
+        self.l_run_number.config(font=("Helvetica",16,"bold"))
+        self.l_run_number.grid(row=0,column=0,columnspan=2,sticky=W+E)
+
+        # Label to show run state
+        self.l_run_state = Label(self.f_main)
+        self.l_run_state.config(font=("Helvetica",16,"bold"))
+        self.l_run_state.grid(row=1,column=0,columnspan=2,sticky=W+E)
 
         # Buttons to handle run init,start,abort,stop
 
         self.b_init_run = Button(self.f_main,text="New Run",command=self.set_run_config)
         self.b_init_run.config(font=("Helvetica",14,"bold"))
-        self.b_init_run.grid(row=3,column=0,sticky=W+E)
+        self.b_init_run.grid(row=2,column=0,sticky=W+E)
 
         self.b_abort_run = Button(self.f_main,text="Abort Run",command=self.abort_run)
         self.b_abort_run.config(font=("Helvetica",14,"bold"))
-        self.b_abort_run.grid(row=3,column=1,sticky=W+E)
+        self.b_abort_run.grid(row=2,column=1,sticky=W+E)
 
         self.b_start_run = Button(self.f_main,text="Start Run",command=self.start_run)
         self.b_start_run.config(font=("Helvetica",14,"bold"))
-        self.b_start_run.grid(row=4,column=0,sticky=W+E)
+        self.b_start_run.grid(row=3,column=0,sticky=W+E)
 
         self.b_stop_run = Button(self.f_main,text="Stop Run",command=self.set_end_of_run)
         self.b_stop_run.config(font=("Helvetica",14,"bold"))
-        self.b_stop_run.grid(row=4,column=1,sticky=W+E)
+        self.b_stop_run.grid(row=3,column=1,sticky=W+E)
 
         # Button to quit Run Control
         self.b_quit_daq = Button(self.f_main,text="QUIT",fg="red",command=self.quit_daq)
-        self.b_quit_daq.grid(row=5,columnspan=2,sticky=W+E)
+        self.b_quit_daq.grid(row=4,columnspan=2,sticky=W+E)
         self.b_quit_daq.config(state=NORMAL)
 
         # Frame to hold buttons to access boards (6 buttons per row)
@@ -116,7 +127,6 @@ class RunControlGUI:
         # Create button to change RunControl setup
         self.b_setup = Button(self.f_boards)
         self.b_setup.config(font=("Helvetica",14,"bold"))
-        self.b_setup.config(text="Setup: %s"%self.ask_server("get_setup"))
         self.b_setup.config(command=self.handle_setup)
         self.b_setup.grid(row=0,column=0,columnspan=n_buttons_per_row,sticky=W+E)
 
@@ -204,76 +214,73 @@ class RunControlGUI:
 
     def set_gui_state(self):
 
+        self.l_run_number.config(text="Run Number: %s"%self.ask_server("get_run_number"))
+        self.l_run_state.config(text="Run State: %s"%self.current_state)
+        self.b_setup.config(text="Setup: %s"%self.current_setup)
+
         if (self.current_state == "idle"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=NORMAL)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=NORMAL)
+            self.b_setup.config(state=NORMAL)
 
         elif (self.current_state == "initializing"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=DISABLED)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=DISABLED)
+            self.b_setup.config(state=DISABLED)
 
         elif (self.current_state == "terminating"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=DISABLED)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=DISABLED)
+            self.b_setup.config(state=DISABLED)
 
         elif (self.current_state == "initialized"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=DISABLED)
             self.b_abort_run.config(state=NORMAL)
             self.b_start_run.config(state=NORMAL)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=NORMAL)
+            self.b_setup.config(state=DISABLED)
 
         elif (self.current_state == "running"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=DISABLED)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=NORMAL)
             self.b_quit_daq.config(state=NORMAL)
+            self.b_setup.config(state=DISABLED)
 
         elif (self.current_state == "initfail"):
 
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=NORMAL)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=NORMAL)
+            self.b_setup.config(state=DISABLED)
 
         else:
 
             self.show_log("Server is in UNKNOWN state %s"%self.current_state)
-            #self.b_set_runnr.config(text="Run Number: %d"%self.current_run_nr)
-            self.b_set_runnr.config(text="Run Number: %s"%self.ask_server("get_run_number"))
             self.b_init_run.config(state=DISABLED)
             self.b_abort_run.config(state=DISABLED)
             self.b_start_run.config(state=DISABLED)
             self.b_stop_run.config(state=DISABLED)
             self.b_quit_daq.config(state=NORMAL)
+            self.b_setup.config(state=DISABLED)
 
     def set_run_config(self):
 
@@ -532,18 +539,8 @@ class RunControlGUI:
 
             # Reset idle state
             self.current_state = "idle"
-
-            # Reset ADC buttons functionality
-            #for brd_id in range(0,self.n_board_buttons):
-            #    self.b_board[brd_id].config(bg="white")
+            self.set_gui_state()
             self.configure_board_buttons()
-
-            # Enable init_run button and disable all the others
-            self.b_init_run.config(state=NORMAL)
-            self.b_quit_daq.config(state=NORMAL)
-            self.b_abort_run.config(state=DISABLED)
-            self.b_start_run.config(state=DISABLED)
-            self.b_stop_run.config(state=DISABLED)
 
         else:
 
@@ -626,7 +623,7 @@ Received message \"%s\" """%ans)
 
         # Set current setup as ACTIVE
         for idx in range(0,self.lb_setup.size()):
-            if (self.lb_setup.get(idx)==self.run.setup): self.lb_setup.activate(idx)
+            if (self.lb_setup.get(idx)==self.current_setup): self.lb_setup.activate(idx)
 
         # Create button to confirm selection
         b_select = Button(self.chgsetup,text="Select",command=self.change_setup)
@@ -641,14 +638,22 @@ Received message \"%s\" """%ans)
         items = self.lb_setup.curselection()
         for item in items:
             setup = self.lb_setup.get(int(item))
-            if (setup==self.run.setup):
+            if (setup==self.current_setup):
                 self.show_log("Reloading setup "+setup)
             else:
                 self.show_log("Changing setup to "+setup)
-            self.run.change_setup(setup)
-            self.b_setup.config(text="Setup: "+self.run.setup)
-            self.current_board_list = self.decode_board_list(self.ask_server("get_board_list"))
-            self.configure_board_buttons()
+            ans = self.ask_server("change_setup %s"%setup)
+            if ( ans == setup ):
+                self.current_setup = setup
+                self.b_setup.config(text="Setup: %s"%self.current_setup)
+                self.current_board_list = self.decode_board_list(self.ask_server("get_board_list"))
+                self.configure_board_buttons()
+                self.show_log("Setup is now %s"%self.current_setup)
+            elif ( ans == "error" ):
+                self.show_log("Error changing setup to %s - Still using setup %s"%(setup,self.current_setup))
+            else:
+                self.show_log("Server returned unexpected message %s - Still using setup %s"%(ans,self.current_setup))
+                
         self.chgsetup.destroy()
 
     def change_setup_bind(self,event): self.change_setup()
@@ -670,6 +675,7 @@ Received message \"%s\" """%ans)
                     else:
                         self.boardgui[brd_id].mode = "log"
                         self.boardgui[brd_id].log_file = self.ask_server("get_board_log_file %d"%brd_id)
+                        self.b_board[brd_id].config(background="green")
 
     def decode_board_list(self,list_str):
 

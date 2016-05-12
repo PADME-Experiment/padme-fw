@@ -30,7 +30,7 @@ PVetoGeometry::PVetoGeometry()
   fFingerNominalSizeZ =  1.0*cm;
 
   //fFingerRotX = 0.*deg;
-  fFingerRotY = -10.*deg;
+  fFingerRotY = 10.*deg;
   //fFingerRotZ = 0.*deg;
 
   fSupportGap = 0.1*mm;
@@ -39,7 +39,7 @@ PVetoGeometry::PVetoGeometry()
   fSupportNominalSizeY =   0.5*cm;
   fSupportNominalSizeZ = 100.0*cm;
 
-  fPVetoInnerFacePosX =  20.*cm;
+  fPVetoInnerFacePosX =  -20.*cm;
 
   fPVetoFrontFacePosZ = -50.*cm; // Start at front face of yoke
 

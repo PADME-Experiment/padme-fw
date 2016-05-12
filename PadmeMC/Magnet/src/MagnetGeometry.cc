@@ -59,7 +59,7 @@ MagnetGeometry::MagnetGeometry()
 
   fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point
 
-  fMagneticFieldConstantValue = 0.55*tesla;
+  fMagneticFieldConstantValue = -0.55*tesla;
 
   fMagnetSensitiveDetectorName = "MagnetSD";
 

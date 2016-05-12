@@ -23,20 +23,20 @@ TPixGeometry::TPixGeometry()
   fTPixNRows = 2;
   fTPixNCols = 5;
 
-  fChipNominalSizeX =  0.1*mm; // Thickness
+  fChipNominalSizeX =   0.10*mm; // Thickness
   fChipNominalSizeY =  14.08*mm; // 256 pixels of 55um each
   fChipNominalSizeZ =  14.08*mm; // 256 pixels of 55um each
 
   fChipGap = 0.01*mm;
 
   // Position of center of TPix relative to center of magnet yoke
-  fTPixCenterPosX =  92.*cm;
+  fTPixCenterPosX =  -92.*cm;
   fTPixCenterPosY =   0.*cm;
   fTPixCenterPosZ = 256.*cm;
 
-  fTPixRotX = 0.   *rad;
-  fTPixRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)
-  fTPixRotZ = 0.   *rad;
+  fTPixRotX =  0.   *rad;
+  fTPixRotY = -0.977*rad; // ~-56deg (i.e. -90deg+34deg, see PADME drawings)
+  fTPixRotZ =  0.   *rad;
 
   fTPixSensitiveDetectorName = "TPixSD";
 

@@ -32,7 +32,7 @@ protected:
 public:
 
   // Position of center of PVeto box
-  G4double GetPVetoPosX() { return fPVetoInnerFacePosX+0.5*GetPVetoSizeX(); }
+  G4double GetPVetoPosX() { return fPVetoInnerFacePosX-0.5*GetPVetoSizeX(); }
   G4double GetPVetoPosY() { return 0.*cm; }
   G4double GetPVetoPosZ() { return fPVetoFrontFacePosZ+0.5*GetPVetoSizeZ(); }
 

@@ -32,7 +32,7 @@ protected:
 public:
 
   // Position of center of EVeto box
-  G4double GetEVetoPosX() { return fEVetoInnerFacePosX-0.5*GetEVetoSizeX(); }
+  G4double GetEVetoPosX() { return fEVetoInnerFacePosX+0.5*GetEVetoSizeX(); }
   G4double GetEVetoPosY() { return 0.*cm; }
   G4double GetEVetoPosZ() { return fEVetoFrontFacePosZ+0.5*GetEVetoSizeZ(); }
 

@@ -181,7 +181,7 @@ class RunControlGUI:
         if len(cmd)<100000:
             self.sock.sendall("%5.5d"%len(cmd)+cmd)
         else:
-            print >>sys.stderr,'command too long: cannot send'
+            self.error_exit("Command too long: cannot send")
 
     def ask_server(self,cmd):
 

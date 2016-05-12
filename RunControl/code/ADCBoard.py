@@ -64,7 +64,7 @@ class ADCBoard:
     def read_setup(self,setup):
 
         if (self.board_id == -1):
-            print "ADCBoard ERROR - board id not set while reading setup"
+            print "ADCBoard - ERROR: board id not set while reading setup"
             return
 
         # Define regular expressions used in file parsing
@@ -76,7 +76,7 @@ class ADCBoard:
         # Read default board configuration from file
         setup_file = "setup/"+setup+"/board_%02d.cfg"%self.board_id
         if (not os.path.isfile(setup_file)):
-            print "ADCBoard WARNING: setup file",setup_file,"not found for board",self.board_id
+            print "ADCBoard - WARNING: setup file %s not found for board %d"%(setup_file,self.board_id)
             return
         f = open(setup_file)
         for l in f:
@@ -98,7 +98,7 @@ class ADCBoard:
                         (ch,offset) = mm.group(1,2)
                         self.offset_ch[int(ch,0)] = int(offset,0)
                     else:
-                        print "ADCBoard ERROR decoding channel offset parameter in line:"
+                        print "ADCBoard - ERROR decoding channel offset parameter in line:"
                         print l
                 elif (p_name == "post_trigger_size"): self.post_trigger_size = int(p_value,0)
                 elif (p_name == "max_num_events_blt"): self.max_num_events_blt = int(p_value,0)
@@ -114,9 +114,9 @@ class ADCBoard:
                 elif (p_name == "zs1_nsigma"): self.zs1_nsigma = float(p_value)
                 elif (p_name == "zs1_nabovethr"): self.zs1_nabovethr = int(p_value,0)
                 else:
-                    print "Run ERROR - unknown parameter found while reading default config file:",p_name
+                    print "ADCBoard - WARNNING: unknown parameter found while reading default config file: %s"%p_name
             else:
-                print "Run ERROR - unknown line format found while reading default config file"
+                print "ADCBoard WARNING: unknown line format found while reading default config file"
                 print l
         f.close()
 
@@ -182,7 +182,7 @@ class ADCBoard:
     def write_config(self):
 
         if self.config_file == "unset":
-            print "ADCConfig - ERROR: write_config() called but config_file not set!"
+            print "ADCBoard - ERROR: write_config() called but config_file not set!"
             return
 
         f = open(self.config_file,"w")
@@ -205,7 +205,7 @@ class ADCBoard:
             #self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1,creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
             #self.process = subprocess.Popen(["/bin/sleep","60"],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
-            print "Execution failed:",e
+            print "ADCBoard - ERROR: Execution failed: %s",e
             return 0
 
         # Return process id

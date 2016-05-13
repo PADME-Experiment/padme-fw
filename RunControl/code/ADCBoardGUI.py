@@ -5,27 +5,22 @@ from PadmeDB import PadmeDB
 
 class ADCBoardGUI:
 
-    def __init__(self):
+    def __init__(self,b_id):
 
-        self.board = None
+        self.board_id = b_id
+        self.b_name = "ADC%02d"%b_id
+        self.config = ""
+        self.log_file = ""
         self.mode = ""
         self.status = "off"
 
-    def set_board(self,board):
-
-        self.board = board
-        self.b_name = "ADC%02d" % (board.board_id,)
-
     def change_status(self):
-
-        if self.board is None  : return
 
         if   self.status == "on" : self.close_gui()
         elif self.status == "off": self.open_gui()
 
     def open_gui(self):
 
-        if self.board is None : return
         if self.status == "on": return
 
         # Initialize main graphic window
@@ -49,7 +44,6 @@ class ADCBoardGUI:
 
     def close_gui(self):
 
-        if self.board is None  : return
         if self.status == "off": return
 
         if (self.mode=="log"):
@@ -71,7 +65,7 @@ class ADCBoardGUI:
         self.s_cfg.config(command=self.w_cfg.yview)
         self.w_cfg.config(yscrollcommand=self.s_cfg.set)
         self.w_cfg.insert(END,"=== Board configuration ===\n")
-        self.w_cfg.insert(END,self.board.format_config())
+        self.w_cfg.insert(END,self.config)
 
     def show_log(self):
 
@@ -84,20 +78,21 @@ class ADCBoardGUI:
         self.w_log.pack(side=LEFT,fill=Y)
         self.s_log.config(command=self.w_log.yview)
         self.w_log.config(yscrollcommand=self.s_log.set)
-        self.w_log.insert(END,"=== Board log file "+self.board.log_file+" ===\n")
+        self.w_log.insert(END,"=== Board log file "+self.log_file+" ===\n")
 
         # Open log file and read current content and size
-        self.file = open(self.board.log_file, 'r')
-        data = self.file.read()
-        self.size = len(data)
-        self.w_log.insert(END, data)
-        self.w_log.see(END)
-        self.my_after = self.root.after(1000, self.update_log)
+        if self.log_file:
+            self.file = open(self.log_file, 'r')
+            data = self.file.read()
+            self.size = len(data)
+            self.w_log.insert(END, data)
+            self.w_log.see(END)
+            self.my_after = self.root.after(1000, self.update_log)
 
     def update_log(self):
 
         # If log file has grown, show the new content
-        if (os.path.getsize(self.board.log_file) > self.size):
+        if (os.path.getsize(self.log_file) > self.size):
             data = self.file.read()
             self.size = self.size + len(data)
             self.w_log.insert(END, data)

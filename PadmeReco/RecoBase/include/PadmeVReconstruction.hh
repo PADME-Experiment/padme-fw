@@ -1,9 +1,13 @@
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-21
+//
+// --------------------------------------------------------------
 #ifndef PadmeVReconstruction_H
 #define PadmeVReconstruction_H
 
 #include "TFile.h"
-#include "TH1D.h"
-#include "TH2D.h"
 
 #include "TPadmeEvent.hh"
 

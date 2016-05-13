@@ -42,6 +42,7 @@ private:
   RecoVector fRecoLibrary;
  
   Int_t fNEvt;
+  Int_t fNProcessedEventsInTotal;
 
 };
 #endif

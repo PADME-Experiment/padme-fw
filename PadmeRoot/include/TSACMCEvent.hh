@@ -5,7 +5,7 @@
 //
 // --------------------------------------------------------------
 #ifndef TSACMCEvent_H
-#define TSACMCEvent_H
+#define TSACMCEvent_H 1
 
 #include "TMCVEvent.hh"
 

@@ -42,34 +42,16 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     }
   }
 
+  fNProcessedEventsInTotal = 0;
+
 }
+
 Bool_t PadmeReconstruction::NextEvent()
 {
-  /*
-  fTimer.StartTimer(fGlobalTimers[0]);
-
-  if(!fContinuousReading && (fNProcessedEventsInTotal >= fNEvt || fNReconstructions == 0 || (fIsRawData && fCurrentWord[0] >= fNWordsInFile && fiFile >= fNFiles))){
-    fTimer.StopTimer(fGlobalTimers[0],false);
-    return kFALSE;
-  }
-
-  if (fMCChain) {
-    //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
-    //  fMCChain->SetBranchAddress(fRecoSequence[iReco].Data(),&(fInputEvents[iReco]));
-    //}
-    fMCChain->GetEntry(fNProcessedEventsInTotal);
-    if(fNProcessedEventsInTotal + 1 >= fNEvt){
-      if(fContinuousReading){
-        ReadInputList(fInputListFileName,-1);
-        for(Int_t iFile = 0; iFile < fInputFileNameList->GetEntries(); iFile++)
-          fMCChain->AddFile(((TObjString*)fInputFileNameList->At(iFile))->GetString().Data());
-        fNEvt = fMCChain->GetEntries();
-      }
-    }
-  }
-
+  if (fMCChain) fMCChain->GetEntry(fNProcessedEventsInTotal);
   ProcessEvent();
-  */
+  fNProcessedEventsInTotal++;
+
   return true;
 }
 

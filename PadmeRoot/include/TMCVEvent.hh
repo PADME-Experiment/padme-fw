@@ -5,7 +5,7 @@
 //
 // --------------------------------------------------------------
 #ifndef TMCVEvent_H
-#define TMCVEvent_H
+#define TMCVEvent_H 1
 
 #include "TClass.h"
 #include "TObject.h"

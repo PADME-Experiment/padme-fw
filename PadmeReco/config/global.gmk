@@ -13,7 +13,8 @@ ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
 
 CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -g
-#CPPFLAGS     +=	-I$(PADMERECO)/Service/include -I$(PADMERECO)/RecoBase/include
+#CPPFLAGS     += -I$(PADMERECO)/Service/include
+CPPFLAGS     += -I$(PADMERECO)/RecoBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)

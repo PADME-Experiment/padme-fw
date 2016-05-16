@@ -10,7 +10,7 @@
 #pragma link C++ class TADCTrigger+;
 
 #pragma link C++ class TPadmeRun+;
-#pragma link C++ class TPadmeEvent+;
+#pragma link C++ class TMCEvent+;
 
 #pragma link C++ class TDetectorInfo+;
 #pragma link C++ class TSubDetectorInfo+;

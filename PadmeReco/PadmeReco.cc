@@ -129,7 +129,6 @@ int main(Int_t argc, char **argv)
     TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
 
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
-
     while(PadmeReco->NextEvent()) {}
     PadmeReco->EndProcessing();
 

@@ -1,5 +1,5 @@
 #ifndef PadmeVNamedModule_H
-#define PadmeVNamedModule_H 1
+#define PadmeVNamedModule_H
 
 #include "TString.h"
 
@@ -25,5 +25,4 @@ protected:
   Library fLibrary;
 
 };
-
 #endif

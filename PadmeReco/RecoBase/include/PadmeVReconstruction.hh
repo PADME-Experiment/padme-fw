@@ -9,8 +9,6 @@
 
 #include "TFile.h"
 
-#include "TPadmeEvent.hh"
-
 #include "PadmeVNamedModule.hh"
 
 class PadmeVReconstruction : public PadmeVNamedModule
@@ -49,7 +47,7 @@ protected:
 
   //TRecoVEvent * fRecoEvent;
 
-  TString   fConfigFileName;
+  TString fConfigFileName;
 
 };
 #endif

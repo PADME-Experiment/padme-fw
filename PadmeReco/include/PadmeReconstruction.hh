@@ -6,7 +6,7 @@
 #include "TTree.h"
 #include "TObjArray.h"
 
-#include "TPadmeEvent.hh"
+class TMCEvent;
 
 #include "PadmeVReconstruction.hh"
 
@@ -35,8 +35,8 @@ private:
   TObjArray* fInputFileNameList;
   //TString fConfigFileName;
   //TFile* fHistoFile;
-  TChain* fMCChain;   ///< Dedicated TChain for MC information reading
-  TPadmeEvent* fMCTruthEvent;
+  TChain* fMCChain;
+  TMCEvent* fMCTruthEvent;
 
   typedef std::vector<PadmeReconstruction*> RecoVector;
   RecoVector fRecoLibrary;

@@ -1,5 +1,6 @@
 #include "PadmeReconstruction.hh"
 
+#include "TMCEvent.hh"
 //#include "SACReconstruction.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
@@ -25,13 +26,13 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   TTree::SetMaxTreeSize(190000000000);
 
   Int_t nEntries = 0;
-  TString treeName = "Generated";
+  TString treeName = "MC";
   fMCChain = BuildChain(treeName);
   if(fMCChain) {
-    fMCTruthEvent = new TPadmeEvent();
-    TObjArray* branches = fMCChain->GetListOfBranches();
     nEntries = fMCChain->GetEntries();
+    TObjArray* branches = fMCChain->GetListOfBranches();
     cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << endl;
+    fMCTruthEvent = new TMCEvent();
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
@@ -49,7 +50,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 Bool_t PadmeReconstruction::NextEvent()
 {
   if (fMCChain) fMCChain->GetEntry(fNProcessedEventsInTotal);
-  ProcessEvent();
+  //ProcessEvent();
   fNProcessedEventsInTotal++;
 
   return true;

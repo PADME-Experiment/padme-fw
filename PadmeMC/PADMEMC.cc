@@ -125,6 +125,7 @@ int main(int argc,char** argv)
   runManager->SetUserAction(event_action);
   //
   SteppingAction* mystepping_action = new SteppingAction;
+
   G4UserSteppingAction* stepping_action = mystepping_action ;
   runManager->SetUserAction(stepping_action);
   myevent_action->myStepping = mystepping_action; //setting the pointer to stepping action into Event action
@@ -138,18 +139,17 @@ int main(int argc,char** argv)
   //runManager->Initialize();
   //  physics->DumpList();
 
- // trap signals to close datafiles in case of abnormal termination
-//  void (*prev_fn)(int);
-//  signal(SIGUSR1,sighandler);
-//  signal(SIGXCPU,sighandler);
-//  signal(SIGINT,sighandler);
-//  signal(SIGTERM,sighandler);
-//  signal(127,sighandler);
-
-//  if (prev_fn==SIGTERM) run_action::EndOfRunAction();
-      
+  // trap signals to close datafiles in case of abnormal termination
+  //  void (*prev_fn)(int);
+  //  signal(SIGUSR1,sighandler);
+  //  signal(SIGXCPU,sighandler);
+  //  signal(SIGINT,sighandler);
+  //  signal(SIGTERM,sighandler);
+  //  signal(127,sighandler);
+  
+  //  if (prev_fn==SIGTERM) run_action::EndOfRunAction();
+  
   // Get the pointer to the User Interface manager
-  //
   G4UImanager * UImanager = G4UImanager::GetUIpointer();  
   
   if (argc!=1)   // batch mode  

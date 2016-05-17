@@ -34,6 +34,8 @@
 
 #include "G4UserSteppingAction.hh"
 #include "G4ThreeVector.hh"
+#include "BeamParameters.hh"
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 class EventAction;
 class G4Track;
@@ -58,6 +60,7 @@ public:
   double GetGammaAngle(){return ThetaGamma;};
 
 private:
+  BeamParameters* bpar;
   double ProcID;
   double PositronE;
   double ElectronE;	

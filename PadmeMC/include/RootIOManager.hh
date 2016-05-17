@@ -21,7 +21,7 @@
 #include <list>
 
 class TPadmeRun;
-class TPadmeEvent;
+class TMCEvent;
 
 class G4Event;
 
@@ -90,11 +90,11 @@ public:
   TBranch* GetEventBranch()                { return fEventBranch;   }
   void     SetEventBranch(TBranch * value) { fEventBranch = value;  }
 
-  TPadmeRun*    GetRun()                 { return fRun;    }
-  void          SetRun(TPadmeRun* value) { fRun = value;   }
+  TPadmeRun* GetRun()                 { return fRun;    }
+  void       SetRun(TPadmeRun* value) { fRun = value;   }
 
-  TPadmeEvent*  GetEvent()                    { return fEvent;  }
-  void          SetEvent(TPadmeEvent * value) { fEvent = value; }
+  TMCEvent* GetEvent()                 { return fEvent;  }
+  void      SetEvent(TMCEvent * value) { fEvent = value; }
 
   //RootIOList GetRootIOList()                 { return fRootIOList;  };
   //void       SetRootIOList(RootIOList value) { fRootIOList = value; };
@@ -114,8 +114,8 @@ private:
   TTree*   fEventTree; //Tree to hold all events in one run
   TBranch* fRunBranch;
   TBranch* fEventBranch;
-  TPadmeRun*   fRun;
-  TPadmeEvent* fEvent;
+  TPadmeRun* fRun;
+  TMCEvent*  fEvent;
   //TGraph * fGVirtMem;
 
   typedef std::list<MCVRootIO*> RootIOList;

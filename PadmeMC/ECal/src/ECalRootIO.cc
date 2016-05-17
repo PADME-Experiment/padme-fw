@@ -11,14 +11,14 @@
 
 #include "G4Event.hh"
 
+#include "RootIOManager.hh"
 #include "ECalGeometry.hh"
+#include "ECalSD.hh"
 
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 #include "TDetectorInfo.hh"
 #include "TSubDetectorInfo.hh"
-
-#include "ECalSD.hh"
 
 #include "TString.h"
 #include "TVector3.h"
@@ -62,18 +62,14 @@ void ECalRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
     TString par = geoParG[i].data();
     geoParR.push_back(par);
   }
-  TSubDetectorInfo* lavInfo = detInfo->AddSubDetectorInfo("ECal");
-  lavInfo->SetGeometryParameters(geoParR);
+  TSubDetectorInfo* ecalInfo = detInfo->AddSubDetectorInfo("ECal");
+  ecalInfo->SetGeometryParameters(geoParR);
   //if (fVerbose>=2)
-    lavInfo->Print();
+    ecalInfo->Print();
 
   // Create tree to hold ECal Hits this run
-  fECalTree = new TTree("ECal","ECal Hits tree");
-  fECalTree->SetAutoSave(10000);  // autosave when ~10 Kbyte written
-  fECalTree->SetDirectory(hfile->GetDirectory("/"));
-
-  // Create branch to hold ECal Hits
-  fECalBranch = fECalTree->Branch("MCHits",&fEvent,fBufSize,5);
+  fEventTree = RootIOManager::GetInstance()->GetEventTree();
+  fECalBranch = fEventTree->Branch("ECal", fEvent->IsA()->GetName(), &fEvent);
   fECalBranch->SetAutoDelete(kFALSE);
 
 }
@@ -82,13 +78,6 @@ void ECalRootIO::EndRun()
 {
   if (fVerbose)
     G4cout << "ECalRootIO: Executing End-of-Run procedure" << G4endl;
-  // Dump tree for this run to file and erase it
-  if(fECalTree){
-    fECalTree->Write();
-    if (fVerbose)
-      fECalTree->Print();
-    delete fECalTree;
-  }
 }
 
 void ECalRootIO::SaveEvent(const G4Event* eventG4)
@@ -121,6 +110,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
       if(ECalC) {
 	n_hit = ECalC->entries();
 	if(n_hit>0){
+	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    TECalMCHit* Hit = (TECalMCHit*)fEvent->AddHit();
 	    Hit->SetChannelId((*ECalC)[i]->GetCryNb()); 
@@ -129,14 +119,14 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 				      (*ECalC)[i]->GetPos()[2])
 			     );
 	    Hit->SetEnergy((*ECalC)[i]->GetEdep());
+	    e_tot += (*ECalC)[i]->GetEdep()/MeV;
 	    Hit->SetTime((*ECalC)[i]->GetTime());
 	  }
+	  G4cout << "ECalRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
 	}
       }
     }
   }
-
-  fECalTree->Fill();
   TProcessID::SetObjectCount(savedObjNumber);
 
 }

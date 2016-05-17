@@ -267,10 +267,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   Diamond->AddElement(G4Element::GetElement("C"),100.*perCent);
 
   //Print all the materials defined.
-  G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
-  G4cout << *(G4Element::GetElementTable()) << G4endl;
-  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
-  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  //G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
+  //G4cout << *(G4Element::GetElementTable()) << G4endl;
+  //G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
+  //G4cout << *(G4Material::GetMaterialTable()) << G4endl;
   
   //------------------------------ 
   // World Volume

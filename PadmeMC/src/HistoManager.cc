@@ -46,7 +46,8 @@ void HistoManager::book()
   // Creating a tree container to handle histograms and ntuples.
   // This tree is associated to an output file.
   //
-  G4String fileName = DatacardManager::GetInstance()->GetOutputFileName();
+  //G4String fileName = DatacardManager::GetInstance()->GetOutputFileName();
+  G4String fileName = "histo.root";
   rootFile = new TFile(fileName,"RECREATE");
   if(!rootFile) {
     G4cout << " HistoManager::book :"<<" problem creating the ROOT TFile "<< G4endl;

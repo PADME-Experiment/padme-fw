@@ -26,7 +26,7 @@
 #include "G4Run.hh"
 
 #include "TPadmeRun.hh"
-#include "TPadmeEvent.hh"
+#include "TMCEvent.hh"
 #include "TDetectorInfo.hh"
 
 #include "DetectorConstruction.hh"
@@ -45,7 +45,7 @@ RootIOManager::RootIOManager()
 
   // Create run and event objects
   fRun   = new TPadmeRun();
-  fEvent = new TPadmeEvent();
+  fEvent = new TMCEvent();
 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
@@ -76,6 +76,7 @@ RootIOManager::RootIOManager()
   //fRootIOList.push_back(new LAVRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
+  // Tell all RootIO handlers about new run
 
   // Pass some useful information to subdetectors
   //((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(TargetGeometry::GetInstance()->GetTargetFrontFacePosZ());
@@ -109,7 +110,8 @@ void RootIOManager::Close()
     //delete fGVirtMem;
     fFile->Purge();
     fFile->Close();
-    if (fVerbose) G4cout << "RootIOManager: I/O file closed" << G4endl;
+    //if (fVerbose)
+      G4cout << "RootIOManager: I/O file closed" << G4endl;
   }
 
 }
@@ -138,7 +140,7 @@ void RootIOManager::DisableSubDetectorIO(G4String det)
 
 void RootIOManager::SetFileName(G4String newName)
 {
-  if (fVerbose)
+  //if (fVerbose)
     G4cout << "RootIOManager: Setting file name to " << newName << G4endl;
   fFileName = newName;
   fFileNameHasChanged = true;
@@ -147,7 +149,7 @@ void RootIOManager::SetFileName(G4String newName)
 void RootIOManager::NewRun(G4int nRun)
 {
 
-  if (fVerbose)
+  //if (fVerbose)
     G4cout << "RootIOManager: Initializing I/O for run " << nRun << G4endl;
 
   if ( fFileNameHasChanged ) {
@@ -160,7 +162,7 @@ void RootIOManager::NewRun(G4int nRun)
     }
 
     // Create new file to hold data
-    if (fVerbose)
+    //if (fVerbose)
       G4cout << "RootIOManager: Creating new file " << fFileName << G4endl;
     fFile = TFile::Open(fFileName.c_str(),"RECREATE","PadmeMC");
     fFileNameHasChanged = false;
@@ -172,7 +174,7 @@ void RootIOManager::NewRun(G4int nRun)
     fFile->SetCompressionLevel(fCompLevel);
 
     // Create tree to hold runs
-    if (fVerbose>=2)
+    //if (fVerbose>=2)
       G4cout << "RootIOManager: Creating new Run tree" << G4endl;
     fRunTree = new TTree("Runs","List of runs");
     //fRunTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
@@ -185,8 +187,11 @@ void RootIOManager::NewRun(G4int nRun)
   }
 
   // Create tree to hold all events in this run
-  fEventTree = new TTree("Generated","Generated events tree");
+  //if (fVerbose>=2)
+    G4cout << "RootIOManager: Creating new MC Event tree" << G4endl;
+  fEventTree = new TTree("MC","MC events tree");
   //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
+  fEventTree->SetAutoSave(1000000);  // autosave when ~1 Mbyte written
   TTree::SetMaxTreeSize(19000000000);
   fEventTree->SetDirectory(fFile->GetDirectory("/"));
 
@@ -210,7 +215,9 @@ void RootIOManager::NewRun(G4int nRun)
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
   while (iRootIO!=endRootIO){
+    G4cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << G4endl;
     if((*iRootIO)->GetEnabled())
+      G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
       (*iRootIO)->NewRun(nRun,fFile,detInfo);
       //(*iRootIO)->NewRun(nRun,fFile);
     iRootIO++;
@@ -220,10 +227,9 @@ void RootIOManager::NewRun(G4int nRun)
   //if (fVerbose>=2) fRun->Print();
   //fRunTree->Fill();
 
-  // Create branch to hold the whole event structure
+  // Create branch to hold the generated event structure
   fEventBranch = fEventTree->Branch("Event", &fEvent, fBufSize);
   fEventBranch->SetAutoDelete(kFALSE);
-
 
 }
 

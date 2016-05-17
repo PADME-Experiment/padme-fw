@@ -41,7 +41,7 @@ public:
 
 private:
 
-  TTree*       fSACTree; //Tree to hold SAC Hits in one run
+  TTree*       fEventTree;
   TBranch*     fSACBranch;
   TSACMCEvent* fEvent;
 

@@ -35,7 +35,7 @@ public:
 
 private:
 
-  TTree*        fECalTree; //Tree to hold ECal Hits in one run
+  TTree*        fEventTree;
   TBranch*      fECalBranch;
   TECalMCEvent* fEvent;
 

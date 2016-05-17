@@ -11,14 +11,14 @@
 
 #include "G4Event.hh"
 
+#include "RootIOManager.hh"
 #include "SACGeometry.hh"
+#include "SACSD.hh"
 
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
 #include "TDetectorInfo.hh"
 #include "TSubDetectorInfo.hh"
-
-#include "SACSD.hh"
 
 #include "TString.h"
 #include "TVector3.h"
@@ -75,13 +75,9 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   //if (fVerbose>=2)
     sacInfo->Print();
 
-  // Create tree to hold SAC Hits this run
-  fSACTree = new TTree("SAC","SAC Hits tree");
-  fSACTree->SetAutoSave(10000);  // autosave when ~10 Kbyte written
-  fSACTree->SetDirectory(hfile->GetDirectory("/"));
-
-  // Create branch to hold SAC Hits
-  fSACBranch = fSACTree->Branch("MCHits", &fEvent, fBufSize,5);
+  // Create a branch to hold SAC Hits
+  fEventTree = RootIOManager::GetInstance()->GetEventTree();
+  fSACBranch = fEventTree->Branch("SAC", fEvent->IsA()->GetName(), &fEvent);
   fSACBranch->SetAutoDelete(kFALSE);
 
   // Define parameters for the energy distribution histogram
@@ -101,21 +97,13 @@ void SACRootIO::EndRun()
     G4cout << "SACRootIO: Executing End-of-Run procedure" << G4endl;
 
   // Dump last event to stdout (debug: remove for production)
-  for (Int_t iHit=0; iHit<fEvent->GetNHits(); iHit++) {
-    TSACMCHit* Hit = (TSACMCHit*)fEvent->Hit(iHit);
-    G4cout << " --- Hit " << iHit << G4endl;
-    Hit->Print();
-    //if (Hit->GetChannelId() == 33) Hit->GetEnergyHisto()->Print("all");
-    if (Hit->GetChannelId() == 33) Hit->PrintTHisto();
-  }
-
-  // Dump tree for this run to file and erase it
-  if(fSACTree){
-    fSACTree->Write();
-    if (fVerbose)
-      fSACTree->Print();
-    delete fSACTree;
-  }
+  //for (Int_t iHit=0; iHit<fEvent->GetNHits(); iHit++) {
+  //  TSACMCHit* Hit = (TSACMCHit*)fEvent->Hit(iHit);
+  //  G4cout << " --- Hit " << iHit << G4endl;
+  //  Hit->Print();
+  //  //if (Hit->GetChannelId() == 33) Hit->GetEnergyHisto()->Print("all");
+  //  if (Hit->GetChannelId() == 33) Hit->PrintTHisto();
+  //}
 }
 
 void SACRootIO::SaveEvent(const G4Event* eventG4)
@@ -141,13 +129,14 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
     // Handle each collection type with the right method
     G4String HCname = LHC->GetHC(iHC)->GetName();
     if (HCname == "SACCollection"){
-      //if (fVerbose>=2)
+      if (fVerbose>=2)
 	G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
       SACHitsCollection* SACC = (SACHitsCollection*)(LHC->GetHC(iHC));
       int n_hit=0;
       if(SACC) {
 	n_hit = SACC->entries();
 	if(n_hit>0){
+	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    // Check if an hit for this channel already exists
 	    Int_t chid = (*SACC)[i]->GetChannelId();
@@ -165,6 +154,7 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	    Hit->SetTHistoStep(fEHistoTStep);
 
 	    Hit->AddEnergy((*SACC)[i]->GetEnergy());
+	    e_tot += (*SACC)[i]->GetEnergy()/MeV;
 	    Hit->AddEnergyAtTime((*SACC)[i]->GetEnergy(),(*SACC)[i]->GetTime());
 	    // Hit time = earliest time
 	    if ( (*SACC)[i]->GetTime() < Hit->GetTime() )
@@ -180,12 +170,11 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	    Hit->SetTime((*SACC)[i]->GetTime());
 	    */
 	  }
+	  G4cout << "SACRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
 	}
       }
     }
   }
-
-  fSACTree->Fill();
   TProcessID::SetObjectCount(savedObjNumber);
 
 }

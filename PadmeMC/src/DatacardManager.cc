@@ -2,7 +2,7 @@
 
 DatacardManager* DatacardManager::fInstance = 0;
 
-DatacardManager::DatacardManager():fFileName("UBTF.root")
+DatacardManager::DatacardManager():fOutputFileName("MCData.root"),fHistoFileName("UBTF.root")
 {}
 
 DatacardManager::~DatacardManager()

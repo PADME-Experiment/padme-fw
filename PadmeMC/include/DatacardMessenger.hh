@@ -7,9 +7,6 @@
 class DatacardManager;
 class G4UIdirectory;
 class G4UIcmdWithAString;
-//class G4UIcmdWithADouble;
-//class G4UIcmdWithAnInteger;
-//class G4UIcmdWith3Vector;
 
 class DatacardMessenger: public G4UImessenger
 {
@@ -21,5 +18,6 @@ class DatacardMessenger: public G4UImessenger
   private:
     DatacardManager*      fDatacardManager;
     G4UIcmdWithAString*   fOutNameCmd;
+    G4UIcmdWithAString*   fHistoNameCmd;
 };
 #endif // DatacardMessenger_h

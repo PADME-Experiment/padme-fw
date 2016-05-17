@@ -11,7 +11,7 @@ STATIC := -static
 
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
-#CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
+CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
 CPPFLAGS += -IRecoBase/include -g
 
@@ -19,8 +19,7 @@ include ./config/global.gmk
 
 # Define libraries used for the creation of the final executable
 LIBS += -Llib -lPadmeReco$(STATIC) 
-#LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) \
-#   $(addprefix -l,$(addsuffix Reco$(STATIC),$(SUBDIRS)))
+LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Reco$(STATIC),$(SUBDIRS)))
 #LIBS += -LService/lib -lService$(STATIC)
 LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot

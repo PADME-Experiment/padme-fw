@@ -34,6 +34,7 @@ dependencies := $(patsubst src/%.cc,$(TMP)/%.d,$(sources))
 
 #------------------------------------------------------------------------------
 
+LIBNAME := ""
 ifeq ($(NAME),PadmeReco)
 	LIBNAME := $(NAME)
 endif

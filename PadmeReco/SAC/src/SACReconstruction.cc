@@ -10,10 +10,11 @@
 
 #include "TSACMCEvent.hh"
 
-SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName) : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
+SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
+  : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
 {
   //fRecoEvent = new TRecoSACEvent();
-  ParseConfFile(ConfigFileName);
+  //ParseConfFile(ConfigFileName);
 }
 
 SACReconstruction::~SACReconstruction()
@@ -54,3 +55,12 @@ TRecoVEvent * SACReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tG
   return fRecoEvent;
 }
 */
+void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
+{
+  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+  TSACMCEvent* tSACEvent = (TSACMCEvent*)tEvent;
+  cout << "SACReconstruction: run/event/#hits " << tSACEvent->GetRunNumber() << " " << tSACEvent->GetEventNumber() << " " << tSACEvent->GetNHits() << endl;
+}
+
+void SACReconstruction::EndProcessing()
+{;}

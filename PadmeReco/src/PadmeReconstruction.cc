@@ -1,20 +1,32 @@
 #include "PadmeReconstruction.hh"
 
+#include "TPadmeRun.hh"
 #include "TMCEvent.hh"
-//#include "SACReconstruction.hh"
+#include "TSACMCEvent.hh"
+
+#include "SACReconstruction.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
 {
   Init(NEvt,Seed);
+  InitLibraries();
 }
 
 PadmeReconstruction::~PadmeReconstruction()
 {;}
 
-void PadmeReconstruction::InitDetectorsInfo() {
+void PadmeReconstruction::InitLibraries()
+{
+  TString dummyConfFile = "pippo.conf";
+  fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
+}
+
+void PadmeReconstruction::InitDetectorsInfo()
+{
   fMainReco = this; //init PadmeReconstruction main reco as itself
-  //if(FindReco("SAC"))((SACReconstruction*) FindReco("SAC"))->Init(this);
+  //if (FindReco("ECal")) ((ECalReconstruction*) FindReco("ECal"))->Init(this);
+  if (FindReco("SAC")) ((SACReconstruction*)FindReco("SAC"))->Init(this);
 }
 
 void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
@@ -25,6 +37,47 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
   TTree::SetMaxTreeSize(190000000000);
 
+  // Show run information
+  TString runTree = "Runs";
+  TChain* runChain = BuildChain(runTree);
+  if (runChain) {
+    Int_t runNEntries = runChain->GetEntries();
+    TObjArray* runBranches = runChain->GetListOfBranches();
+    cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << endl;
+    TPadmeRun* run = new TPadmeRun();
+    for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
+      TString branchName = ((TBranch*)(*runBranches)[iBranch])->GetName();
+      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
+      cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << endl;
+      if(branchName=="Run") {
+	runChain->SetBranchAddress(branchName.Data(),&run);
+	runChain->GetEntry(0); // Currently only one run per file
+	cout << "=== MC Run information - Start ===" << endl;
+	cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << endl;
+	cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << endl;
+	cout << "Run number of events " << run->GetNEvents() << endl;
+	TDetectorInfo* detInfo = run->GetDetectorInfo();
+	TSubDetectorInfo* sacDetInfo = detInfo->FindSubDetectorInfo("SAC");
+	if (sacDetInfo) {
+	  cout << "--- SAC geometry parameters ---" << endl;
+	  std::vector<TString> sacPar = sacDetInfo->GetGeometryParameters();
+	  for(UInt_t iPar = 0; iPar < sacPar.size(); iPar++) {
+	    cout << sacPar[iPar].Data() << endl;
+	  }
+	}
+	TSubDetectorInfo* ecalDetInfo = detInfo->FindSubDetectorInfo("ECal");
+	if (ecalDetInfo) {
+	  cout << "--- ECal geometry parameters ---" << endl;
+	  std::vector<TString> ecalPar = ecalDetInfo->GetGeometryParameters();
+	  for(UInt_t iPar = 0; iPar < ecalPar.size(); iPar++) {
+	    cout << ecalPar[iPar].Data() << endl;
+	  }
+	}
+	cout << "=== MC Run information - End ===" << endl << endl;
+      }
+    }
+  }
+
   Int_t nEntries = 0;
   TString treeName = "MC";
   fMCChain = BuildChain(treeName);
@@ -32,33 +85,47 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     nEntries = fMCChain->GetEntries();
     TObjArray* branches = fMCChain->GetListOfBranches();
     cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << endl;
-    fMCTruthEvent = new TMCEvent();
+    fMCEvent = new TMCEvent();
+    fSACMCEvent = new TSACMCEvent();
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
       cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << endl;
-      if(branchName=="Event") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
+      if (branchName=="Event") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
+      } else if (branchName=="SAC") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
       }
     }
   }
 
   fNProcessedEventsInTotal = 0;
 
+  // Initialize reconstruction for each subdetector
+  InitDetectorsInfo();
+
 }
 
 Bool_t PadmeReconstruction::NextEvent()
 {
-  if (fMCChain) fMCChain->GetEntry(fNProcessedEventsInTotal);
-  //ProcessEvent();
-  fNProcessedEventsInTotal++;
-
-  return true;
+  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
+    cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << endl;
+    cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
+	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << endl;
+    for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+      if (fRecoLibrary[iLib]->GetName() == "SAC") {
+	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
+      }
+    }
+    fNProcessedEventsInTotal++;
+    return true;
+  }
+  return false;
 }
 
 void PadmeReconstruction::EndProcessing(){
 
-  fHistoFile->cd("/");
+  //fHistoFile->cd("/");
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EndProcessing();
   //  fHistoFile->cd("/");
@@ -71,8 +138,8 @@ void PadmeReconstruction::EndProcessing(){
   //}
   //if(fMCOutputTree) fMCOutputTree->Write();
 
-  fHistoFile->Purge();
-  fHistoFile->Close();
+  //fHistoFile->Purge();
+  //fHistoFile->Close();
   //PrintRecoSummary(cout);
 }
 

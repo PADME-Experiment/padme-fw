@@ -11,6 +11,7 @@
 
 class SACReconstruction : public PadmeVReconstruction
 {
+
 public:
   
   SACReconstruction(TFile*, TString);
@@ -18,5 +19,8 @@ public:
 
   void ParseConfFile(TString);
   virtual void Init(PadmeVReconstruction*);
+  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  virtual void EndProcessing();
+
 };
 #endif

@@ -301,8 +301,6 @@ void RootIOManager::SaveEvent(const G4Event* eventG4)
     fEvent->Print();
   //if (fVerbose>=9) fEvent->PrintAll();
 
-  fEventTree->Fill();
-
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
 
@@ -311,6 +309,9 @@ void RootIOManager::SaveEvent(const G4Event* eventG4)
       (*iRootIO)->SaveEvent(eventG4);
     iRootIO++;
   }
+
+  // All data have been copied: write it to file
+  fEventTree->Fill();
 
   //virtual memory usage monitoring
   //G4int DownscalingFactor = 1; //check virtual memory every N processed events

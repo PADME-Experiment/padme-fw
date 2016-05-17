@@ -119,6 +119,7 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->Clear();
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
+  //G4cout << "SACRootIO: saving run/event " << fRunNumber << " " << eventG4->GetEventID() << G4endl;
 
   // Get list of hit collections in this event
   G4HCofThisEvent* LHC = eventG4->GetHCofThisEvent();

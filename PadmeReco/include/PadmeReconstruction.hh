@@ -7,6 +7,7 @@
 #include "TObjArray.h"
 
 class TMCEvent;
+class TSACMCEvent;
 
 #include "PadmeVReconstruction.hh"
 
@@ -31,14 +32,16 @@ private:
   TString CheckProtocols(TString);
 
   void InitDetectorsInfo();
+  void InitLibraries();
 
   TObjArray* fInputFileNameList;
   //TString fConfigFileName;
-  //TFile* fHistoFile;
+  TFile* fHistoFile;
   TChain* fMCChain;
-  TMCEvent* fMCTruthEvent;
+  TMCEvent* fMCEvent;
+  TSACMCEvent* fSACMCEvent;
 
-  typedef std::vector<PadmeReconstruction*> RecoVector;
+  typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  
   Int_t fNEvt;

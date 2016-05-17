@@ -130,7 +130,7 @@ int main(Int_t argc, char **argv)
 
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
 
-    //while(PadmeReco->NextEvent()) {}
+    while(PadmeReco->NextEvent()) {}
     PadmeReco->EndProcessing();
 
 }

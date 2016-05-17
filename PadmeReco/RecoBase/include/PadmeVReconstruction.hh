@@ -9,6 +9,9 @@
 
 #include "TFile.h"
 
+#include "TMCEvent.hh"
+#include "TMCVEvent.hh"
+
 #include "PadmeVNamedModule.hh"
 
 class PadmeVReconstruction : public PadmeVNamedModule
@@ -18,6 +21,7 @@ public:
   PadmeVReconstruction(TFile*, TString, TString);
   virtual ~PadmeVReconstruction();
   //virtual TRecoVEvent* ProcessEvent(TDetectorVEvent* = 0, Event* = 0) = 0;
+  virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void Init(PadmeVReconstruction*) = 0;
   virtual void EndProcessing() = 0; ///< Call from derived classes
   virtual void ParseConfFile(TString);

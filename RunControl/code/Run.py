@@ -68,10 +68,10 @@ class Run:
         re_boardid = re.compile("\d+")
 
         # Read default run configuration from file
-        setup_file = "setup/"+self.setup+"/run.cfg"
+        setup_file = "setup/%s/run.cfg"%self.setup
         if (not os.path.isfile(setup_file)):
-            print "Run WARNING: setup file",setup_file,"not found"
-            return
+            print "Run - ERROR: setup file %s not found"%setup_file
+            return "error"
         f = open(setup_file)
         for l in f:
             if (re_empty.search(l) or re_comment.search(l)): continue
@@ -85,11 +85,12 @@ class Run:
                     self.boardid_list = []
                     for s_bid in self.s_boards: self.boardid_list.append(int(s_bid))
                 else:
-                    print "Run ERROR - unknown parameter found while reading setup file:",p_name
+                    print "Run - WARNING: unknown parameter %s found while reading setup file %s"%(p_name,setup_file)
             else:
-                print "Run ERROR - unknown line format found while reading setup file"
+                print "Run - WARNING: unknown line format found while reading setup file %s"%(p_name,setup_file)
                 print l
         f.close()
+        return "ok"
 
     def format_config(self):
 
@@ -151,7 +152,7 @@ class Run:
         if (self.run_number):
 
             # Connect to DB
-            db = PadmeDB(self.db_file)
+            db = PadmeDB()
 
             db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment)
 
@@ -184,14 +185,16 @@ class Run:
 
         # Read new setup
         self.setup = setup
-        self.read_setup()
+        if (self.read_setup() == "error"): return "error"
 
         # Create new set of ADC boards
         for b_id in self.boardid_list:
-            print "=== Configuring ADC board",b_id
+            print "Run - Configuring ADC board %d"%b_id
             adcboard = ADCBoard(b_id)
             self.configure_adcboard(adcboard)
             self.adcboard_list.append(adcboard)
+
+        return setup
 
     def configure_adcboard(self,adcboard):
 

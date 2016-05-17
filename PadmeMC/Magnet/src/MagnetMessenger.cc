@@ -52,7 +52,7 @@ MagnetMessenger::MagnetMessenger(MagnetStructure* mag)
   fSetMagneticFieldConstantValueCmd = new G4UIcommand("/Detector/Magnet/MagneticFieldConstantValue",this);
   fSetMagneticFieldConstantValueCmd->SetGuidance("Set constant (max) value of magnetic field in tesla.");
   G4UIparameter* mfCVParameter = new G4UIparameter("CV",'d',false);
-  mfCVParameter->SetParameterRange("CV >= 0. && CV <= 1.");
+  mfCVParameter->SetParameterRange("CV >= -1.5 && CV <= 1.5");
   fSetMagneticFieldConstantValueCmd->SetParameter(mfCVParameter);
   fSetMagneticFieldConstantValueCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

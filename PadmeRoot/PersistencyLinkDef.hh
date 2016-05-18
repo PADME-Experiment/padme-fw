@@ -18,6 +18,15 @@
 #pragma link C++ class TMCVHit+;
 #pragma link C++ class TMCVEvent+;
 
+#pragma link C++ class TEVetoMCHit+;
+#pragma link C++ class TEVetoMCEvent+;
+
+#pragma link C++ class TPVetoMCHit+;
+#pragma link C++ class TPVetoMCEvent+;
+
+#pragma link C++ class THEPVetoMCHit+;
+#pragma link C++ class THEPVetoMCEvent+;
+
 #pragma link C++ class TECalMCHit+;
 #pragma link C++ class TECalMCEvent+;
 

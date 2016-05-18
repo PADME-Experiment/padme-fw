@@ -18,6 +18,9 @@
 #pragma link C++ class TMCVHit+;
 #pragma link C++ class TMCVEvent+;
 
+#pragma link C++ class TTargetMCHit+;
+#pragma link C++ class TTargetMCEvent+;
+
 #pragma link C++ class TEVetoMCHit+;
 #pragma link C++ class TEVetoMCEvent+;
 

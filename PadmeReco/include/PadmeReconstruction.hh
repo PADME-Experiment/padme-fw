@@ -7,6 +7,7 @@
 #include "TObjArray.h"
 
 class TMCEvent;
+class TECalMCEvent;
 class TSACMCEvent;
 
 #include "PadmeVReconstruction.hh"
@@ -39,6 +40,7 @@ private:
   TFile* fHistoFile;
   TChain* fMCChain;
   TMCEvent* fMCEvent;
+  TECalMCEvent* fECalMCEvent;
   TSACMCEvent* fSACMCEvent;
 
   typedef std::vector<PadmeVReconstruction*> RecoVector;

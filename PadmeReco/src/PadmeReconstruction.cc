@@ -2,8 +2,10 @@
 
 #include "TPadmeRun.hh"
 #include "TMCEvent.hh"
+#include "TECalMCEvent.hh"
 #include "TSACMCEvent.hh"
 
+#include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
@@ -19,13 +21,14 @@ PadmeReconstruction::~PadmeReconstruction()
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
+  fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
 {
   fMainReco = this; //init PadmeReconstruction main reco as itself
-  //if (FindReco("ECal")) ((ECalReconstruction*) FindReco("ECal"))->Init(this);
+  if (FindReco("ECal")) ((ECalReconstruction*) FindReco("ECal"))->Init(this);
   if (FindReco("SAC")) ((SACReconstruction*)FindReco("SAC"))->Init(this);
 }
 
@@ -95,6 +98,8 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
       } else if (branchName=="SAC") {
 	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
+      } else if (branchName=="ECal") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
       }
     }
   }
@@ -115,7 +120,10 @@ Bool_t PadmeReconstruction::NextEvent()
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       if (fRecoLibrary[iLib]->GetName() == "SAC") {
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ECal") {
+	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
       }
+
     }
     fNProcessedEventsInTotal++;
     return true;

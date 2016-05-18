@@ -9,6 +9,7 @@
 #include "SACReconstruction.hh"
 
 #include "TSACMCEvent.hh"
+#include "TSACMCHit.hh"
 
 SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
@@ -60,6 +61,13 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TSACMCEvent* tSACEvent = (TSACMCEvent*)tEvent;
   cout << "SACReconstruction: run/event/#hits " << tSACEvent->GetRunNumber() << " " << tSACEvent->GetEventNumber() << " " << tSACEvent->GetNHits() << endl;
+  for (Int_t iH=0; iH<tSACEvent->GetNHits(); iH++) {
+    TSACMCHit* hit = (TSACMCHit*)tSACEvent->Hit(iH);
+    hit->Print();
+    if ( hit->GetChannelId() == 33 ) {
+      hit->PrintTHisto();
+    }
+  }
 }
 
 void SACReconstruction::EndProcessing()

@@ -12,7 +12,7 @@
 #include "RootIOManager.hh"
 
 #include "ECalRootIO.hh"
-//#include "TargetRootIO.hh"
+#include "TargetRootIO.hh"
 //#include "PVetoRootIO.hh"
 //#include "EVetoRootIO.hh"
 //#include "HEPVetoRootIO.hh"
@@ -68,7 +68,7 @@ RootIOManager::RootIOManager()
 
   // Add subdetectors persistency managers
   fRootIOList.push_back(new ECalRootIO);
-  //fRootIOList.push_back(new TargetRootIO);
+  fRootIOList.push_back(new TargetRootIO);
   //fRootIOList.push_back(new PVetoRootIO);
   //fRootIOList.push_back(new EVetoRootIO);
   //fRootIOList.push_back(new HEPVetoRootIO);

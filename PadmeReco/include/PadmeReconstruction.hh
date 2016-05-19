@@ -7,8 +7,13 @@
 #include "TObjArray.h"
 
 class TMCEvent;
+class TTargetMCEvent;
+class TEVetoMCEvent;
+class TPVetoMCEvent;
+class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
+class TDetectorInfo;
 
 #include "PadmeVReconstruction.hh"
 
@@ -35,11 +40,17 @@ private:
   void InitDetectorsInfo();
   void InitLibraries();
 
+  void ShowSubDetectorInfo(TDetectorInfo*,TString);
+
   TObjArray* fInputFileNameList;
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
   TMCEvent* fMCEvent;
+  TTargetMCEvent* fTargetMCEvent;
+  TEVetoMCEvent* fEVetoMCEvent;
+  TPVetoMCEvent* fPVetoMCEvent;
+  THEPVetoMCEvent* fHEPVetoMCEvent;
   TECalMCEvent* fECalMCEvent;
   TSACMCEvent* fSACMCEvent;
 

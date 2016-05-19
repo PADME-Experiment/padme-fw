@@ -2,9 +2,17 @@
 
 #include "TPadmeRun.hh"
 #include "TMCEvent.hh"
+#include "TTargetMCEvent.hh"
+#include "TEVetoMCEvent.hh"
+#include "TPVetoMCEvent.hh"
+#include "THEPVetoMCEvent.hh"
 #include "TECalMCEvent.hh"
 #include "TSACMCEvent.hh"
 
+#include "TargetReconstruction.hh"
+#include "EVetoReconstruction.hh"
+#include "PVetoReconstruction.hh"
+#include "HEPVetoReconstruction.hh"
 #include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
 
@@ -21,6 +29,10 @@ PadmeReconstruction::~PadmeReconstruction()
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
+  fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
 }
@@ -28,6 +40,10 @@ void PadmeReconstruction::InitLibraries()
 void PadmeReconstruction::InitDetectorsInfo()
 {
   fMainReco = this; //init PadmeReconstruction main reco as itself
+  if (FindReco("Target")) ((TargetReconstruction*) FindReco("Target"))->Init(this);
+  if (FindReco("EVeto")) ((EVetoReconstruction*) FindReco("EVeto"))->Init(this);
+  if (FindReco("PVeto")) ((PVetoReconstruction*) FindReco("PVeto"))->Init(this);
+  if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
   if (FindReco("ECal")) ((ECalReconstruction*) FindReco("ECal"))->Init(this);
   if (FindReco("SAC")) ((SACReconstruction*)FindReco("SAC"))->Init(this);
 }
@@ -60,22 +76,12 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << endl;
 	cout << "Run number of events " << run->GetNEvents() << endl;
 	TDetectorInfo* detInfo = run->GetDetectorInfo();
-	TSubDetectorInfo* sacDetInfo = detInfo->FindSubDetectorInfo("SAC");
-	if (sacDetInfo) {
-	  cout << "--- SAC geometry parameters ---" << endl;
-	  std::vector<TString> sacPar = sacDetInfo->GetGeometryParameters();
-	  for(UInt_t iPar = 0; iPar < sacPar.size(); iPar++) {
-	    cout << sacPar[iPar].Data() << endl;
-	  }
-	}
-	TSubDetectorInfo* ecalDetInfo = detInfo->FindSubDetectorInfo("ECal");
-	if (ecalDetInfo) {
-	  cout << "--- ECal geometry parameters ---" << endl;
-	  std::vector<TString> ecalPar = ecalDetInfo->GetGeometryParameters();
-	  for(UInt_t iPar = 0; iPar < ecalPar.size(); iPar++) {
-	    cout << ecalPar[iPar].Data() << endl;
-	  }
-	}
+	ShowSubDetectorInfo(detInfo,"Target");
+	ShowSubDetectorInfo(detInfo,"EVeto");
+	ShowSubDetectorInfo(detInfo,"PVeto");
+	ShowSubDetectorInfo(detInfo,"HEPVeto");
+	ShowSubDetectorInfo(detInfo,"ECal");
+	ShowSubDetectorInfo(detInfo,"SAC");
 	cout << "=== MC Run information - End ===" << endl << endl;
       }
     }
@@ -96,10 +102,18 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << endl;
       if (branchName=="Event") {
 	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
-      } else if (branchName=="SAC") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
+      } else if (branchName=="Target") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
+      } else if (branchName=="EVeto") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
+      } else if (branchName=="PVeto") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
+      } else if (branchName=="HEPVeto") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
       } else if (branchName=="ECal") {
 	fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
+      } else if (branchName=="SAC") {
+	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
       }
     }
   }
@@ -118,10 +132,18 @@ Bool_t PadmeReconstruction::NextEvent()
     cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
 	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << endl;
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-      if (fRecoLibrary[iLib]->GetName() == "SAC") {
-	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
+      if (fRecoLibrary[iLib]->GetName() == "Target") {
+	fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "EVeto") {
+	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "PVeto") {
+	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto") {
+	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal") {
 	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "SAC") {
+	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       }
 
     }
@@ -185,4 +207,16 @@ PadmeVReconstruction * PadmeReconstruction::FindReco(TString Name){
     if(fRecoLibrary[iLib]->GetName().CompareTo(Name) == 0)
       return fRecoLibrary[iLib];
   return 0;
+}
+
+void PadmeReconstruction::ShowSubDetectorInfo(TDetectorInfo* detInfo, TString name)
+{
+  TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo(name);
+  if (subDetInfo) {
+    cout << "--- " << name.Data() << " geometry parameters ---" << endl;
+    std::vector<TString> subPar = subDetInfo->GetGeometryParameters();
+    for(UInt_t iPar = 0; iPar < subPar.size(); iPar++) {
+      cout << subPar[iPar].Data() << endl;
+    }
+  }
 }

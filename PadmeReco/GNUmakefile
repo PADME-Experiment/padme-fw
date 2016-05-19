@@ -3,7 +3,7 @@
 NAME := PadmeReco
 
 #SUBDIRS := Target EVeto PVeto HEPVeto TPix ECal SAC
-SUBDIRS := ECal SAC
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := $(SUBDIRS) RecoBase
 

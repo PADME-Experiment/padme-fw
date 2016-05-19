@@ -23,7 +23,6 @@ public:
   // the mandatory virtual methods
   virtual ~MCVRootIO();
   virtual void NewRun(G4int, TFile*, TDetectorInfo*) = 0;
-  //virtual void NewRun(G4int, TFile*) = 0;
   virtual void EndRun() = 0;
   virtual void SaveEvent(const G4Event*) = 0;
   virtual void Close() = 0;

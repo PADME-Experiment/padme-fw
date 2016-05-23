@@ -36,7 +36,7 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
   fSetTPixPosXCmd = new G4UIcommand("/Detector/TPix/PositionX",this);
   fSetTPixPosXCmd->SetGuidance("Set position along X of TPix center in cm.");
   G4UIparameter* pxPosXParameter = new G4UIparameter("PosX",'d',false);
-  pxPosXParameter->SetParameterRange("PosX > 0. && PosX <= 200.");
+  pxPosXParameter->SetParameterRange("PosX < 0. && PosX >= -200.");
   fSetTPixPosXCmd->SetParameter(pxPosXParameter);
   fSetTPixPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

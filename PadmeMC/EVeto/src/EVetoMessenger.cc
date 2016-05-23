@@ -50,7 +50,7 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
   fSetEVetoInnerFaceXCmd = new G4UIcommand("/Detector/EVeto/InnerFaceX",this);
   fSetEVetoInnerFaceXCmd->SetGuidance("Set position along X of EVeto inner face in cm.");
   G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
-  pifPosXParameter->SetParameterRange("PosX < 0. && PosX >= -55.");
+  pifPosXParameter->SetParameterRange("PosX > 0. && PosX <= 55.");
   fSetEVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
   fSetEVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

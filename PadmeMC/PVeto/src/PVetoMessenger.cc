@@ -50,7 +50,7 @@ PVetoMessenger::PVetoMessenger(PVetoDetector* det)
   fSetPVetoInnerFaceXCmd = new G4UIcommand("/Detector/PVeto/InnerFaceX",this);
   fSetPVetoInnerFaceXCmd->SetGuidance("Set position along X of PVeto inner face in cm.");
   G4UIparameter* pifPosXParameter = new G4UIparameter("PosX",'d',false);
-  pifPosXParameter->SetParameterRange("PosX > 0. && PosX <= 55.");
+  pifPosXParameter->SetParameterRange("PosX < 0. && PosX >= -55.");
   fSetPVetoInnerFaceXCmd->SetParameter(pifPosXParameter);
   fSetPVetoInnerFaceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

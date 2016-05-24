@@ -17,6 +17,9 @@
 
 #include "MagnetStructure.hh"
 
+#include "TPixGeometry.hh"
+#include "MagnetGeometry.hh"
+
 #include "TRodSD.hh"
 #include "MRodSD.hh"
 #include "TrackerSD.hh"
@@ -403,7 +406,28 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // TPix
   if (fEnableTPix) {
-    fTPixDetector->SetMotherVolume(logicWorld);
+    if (fEnableMagnet) {
+      // TPix can be used as beam tracking monitor and move around
+      // Check if it is placed inside the magnetic volume (warning: only X,Z are checked)
+      G4double xpostpix = TPixGeometry::GetInstance()->GetTPixPosX();
+      G4double zpostpix = TPixGeometry::GetInstance()->GetTPixPosZ();
+      G4double xposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosX();
+      G4double xsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeX();
+      G4double zposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosZ();
+      G4double zsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeZ();
+      if (
+	  (zpostpix>=zposmagvol-0.5*zsizemagvol) && (zpostpix<=zposmagvol+0.5*zsizemagvol)
+	  &&
+	  (xpostpix>=xposmagvol-0.5*xsizemagvol) && (xpostpix<=xposmagvol+0.5*xsizemagvol)
+	 ) {
+	G4cout << "WARNING: TPix at " << zpostpix << " is inside magnetic volume" << G4endl;
+	fTPixDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+      } else {
+	fTPixDetector->SetMotherVolume(logicWorld);
+      }
+    } else {
+      fTPixDetector->SetMotherVolume(logicWorld);
+    }
     fTPixDetector->CreateGeometry();
   }
 

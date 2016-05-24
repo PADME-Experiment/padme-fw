@@ -52,7 +52,7 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
   fSetTPixPosZCmd = new G4UIcommand("/Detector/TPix/PositionZ",this);
   fSetTPixPosZCmd->SetGuidance("Set position along Z of TPix center in cm.");
   G4UIparameter* pzPosZParameter = new G4UIparameter("PosZ",'d',false);
-  pzPosZParameter->SetParameterRange("PosZ > 100. && PosZ <= 1000.");
+  pzPosZParameter->SetParameterRange("PosZ > -70. && PosZ <= 1000.");
   fSetTPixPosZCmd->SetParameter(pzPosZParameter);
   fSetTPixPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

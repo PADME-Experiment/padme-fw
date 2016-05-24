@@ -117,7 +117,7 @@ class RunControlServer:
             print "WARNING - Could not find file with last used setup %s - Using default setup %s"%(self.lus_file,setup)
             #self.write_log("WARNING - Could not find file with last used setup %s - Using default setup %s"%(self.lus_file,setup))
 
-            return setup
+        return setup
 
     def sigint_handler(self,signal,frame):
 

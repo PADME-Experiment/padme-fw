@@ -29,6 +29,7 @@ class HEPVetoDetector;
 class TDumpDetector;
 class TPixDetector;
 class MagnetStructure;
+class HallStructure;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -79,6 +80,7 @@ private:
   TPixDetector*    fTPixDetector;
 
   MagnetStructure* fMagnetStructure;
+  HallStructure*   fHallStructure;
 
   G4int fEnableECal;
   G4int fEnableTarget;

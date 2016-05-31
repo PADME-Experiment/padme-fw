@@ -16,6 +16,7 @@
 #include "TPixDetector.hh"
 
 #include "MagnetStructure.hh"
+#include "HallStructure.hh"
 
 #include "TPixGeometry.hh"
 #include "MagnetGeometry.hh"
@@ -77,6 +78,7 @@ DetectorConstruction::DetectorConstruction()
   fTDumpDetector   = new TDumpDetector(0);
   fTPixDetector    = new TPixDetector(0);
   fMagnetStructure = new MagnetStructure(0);
+  fHallStructure   = new HallStructure(0);
 
   fEnableECal    = 1;
   fEnableTarget  = 1;
@@ -112,6 +114,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fTDumpDetector;
   delete fTPixDetector;
   delete fMagnetStructure;
+  delete fHallStructure;
 
 }
 
@@ -360,10 +363,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Concrete wall at large Z
   if (fEnableWall) {
-    G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
-    solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
-    logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
-    new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
+    //G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
+    //solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
+    //logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
+    //new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
+    fHallStructure->SetMotherVolume(logicWorld);
+    fHallStructure->CreateGeometry();
   }
 
   // Magnet physical structure

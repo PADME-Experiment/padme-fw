@@ -1,4 +1,5 @@
 #include "SACSD.hh"
+
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
 #include "G4ThreeVector.hh"
@@ -15,8 +16,6 @@
 #include "G4PionZero.hh"
 #include "G4VProcess.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 SACSD::SACSD(G4String name)
 :G4VSensitiveDetector(name)
 {
@@ -24,69 +23,83 @@ SACSD::SACSD(G4String name)
   collectionName.insert(HCname="SACCollection"); //crea il collection name
 }
 
-//....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-SACSD::~SACSD(){ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+SACSD::~SACSD(){}
 
 void SACSD::Initialize(G4HCofThisEvent* HCE)
 {
-  SACCollection = new SACHitsCollection(SensitiveDetectorName,collectionName[0]); 
+  fSACCollection = new SACHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
   if(HCID<0)
   { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
-  HCE->AddHitsCollection(HCID,SACCollection); 
+  HCE->AddHitsCollection(HCID,fSACCollection); 
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
 
   G4double edep = aStep->GetTotalEnergyDeposit();
-  if(edep==0.) return false;
+  if (edep == 0.) return false;
+
+  G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
   SACHit* newHit = new SACHit();
-  newHit->SetCryNb(aStep->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber());
-  newHit->SetEdep(edep);
-  newHit->SetPos(aStep->GetPostStepPoint()->GetPosition());
-  newHit->SetTime(aStep->GetTrack()->GetGlobalTime());
+
+  newHit->SetChannelId(touchHPre->GetCopyNumber());
+  newHit->SetEnergy(edep);
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+
+  G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
+  G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPre,"Length")
+  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPost,"Length")
+  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+
+  newHit->SetPosition(worldPosPre);
+  newHit->SetLocalPosition(localPosPre);
+
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-  SACCollection->insert(newHit);
+
+  fSACCollection->insert(newHit);
 
   return true;
 
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 G4int SACSD::ClassifyTrack(G4Track* track){
+
   G4ParticleDefinition* particleType = track->GetDefinition();
-  if ( particleType == G4Gamma::GammaDefinition() ) {
+  if (particleType == G4Gamma::GammaDefinition()) {
     return 1;
-  } else if ( particleType == G4Positron::PositronDefinition() ) {
+  } else if (particleType == G4Positron::PositronDefinition()) {
     return 2;
-  } else if ( particleType == G4Electron::ElectronDefinition() ) {
+  } else if (particleType == G4Electron::ElectronDefinition()) {
     return 3;
-  } else if ( particleType == G4Neutron::NeutronDefinition() ) {
+  } else if (particleType == G4Neutron::NeutronDefinition()) {
     return 4;
-  } else if ( particleType == G4PionPlus::PionPlusDefinition() || particleType == G4PionMinus::PionMinusDefinition() ) {
+  } else if (particleType == G4PionPlus::PionPlusDefinition() ||
+	     particleType == G4PionMinus::PionMinusDefinition()) {
     return 5;
-  } else if ( particleType == G4PionZero::PionZeroDefinition() ) {
+  } else if (particleType == G4PionZero::PionZeroDefinition()) {
     return 6;
-  } else if ( particleType == G4MuonPlus::MuonPlusDefinition() || particleType == G4MuonMinus::MuonMinusDefinition() ) {
+  } else if (particleType == G4MuonPlus::MuonPlusDefinition() ||
+	     particleType == G4MuonMinus::MuonMinusDefinition()) {
     return 7;
   } else return -1;
+
 }
 
 void SACSD::EndOfEvent(G4HCofThisEvent*)
 {
   if (verboseLevel>0) { 
-    G4int NbHits = SACCollection->entries();
-    G4cout << "\n-------->Hits Collection: in this event there are " << NbHits 
-	   << " hits in the SAC : " << G4endl;
-    for (G4int i=0;i<NbHits;i++) (*SACCollection)[i]->Print();
+    G4int NbHits = fSACCollection->entries();
+    G4cout << "\n-- SAC Hits Collection: " << NbHits << " hits --" << G4endl;
+    for (G4int i=0;i<NbHits;i++) (*fSACCollection)[i]->Print();
   }
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

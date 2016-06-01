@@ -11,16 +11,16 @@ class G4HCofThisEvent;
 
 class EVetoSD : public G4VSensitiveDetector
 {
-  public:
-      EVetoSD(G4String);
-     ~EVetoSD();
+public:
+  EVetoSD(G4String);
+  ~EVetoSD();
 
-      void Initialize(G4HCofThisEvent*);
-      G4bool ProcessHits(G4Step*, G4TouchableHistory*);
-      void EndOfEvent(G4HCofThisEvent*);
+  void Initialize(G4HCofThisEvent*);
+  G4bool ProcessHits(G4Step*, G4TouchableHistory*);
+  void EndOfEvent(G4HCofThisEvent*);
 
-  private: 
-      EVetoHitsCollection* EVetoCollection;
+private: 
+  EVetoHitsCollection* fEVetoCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -28,24 +28,31 @@ SACHit::~SACHit() {}
 SACHit::SACHit(const SACHit& right)
   : G4VHit()
 {
-  fTrackId      = right.fTrackId;
-  fParticleType = right.fParticleType;
-  fChannelId    = right.fChannelId;
-  fEnergy       = right.fEnergy;
-  fTime         = right.fTime;
-  fPosition     = right.fPosition;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  
+  // Obsolete and probably not used
+  fTrackId = right.fTrackId;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const SACHit& SACHit::operator=(const SACHit& right)
 {
-  fTrackId      = right.fTrackId;
-  fParticleType = right.fParticleType;
-  fChannelId    = right.fChannelId;
-  fEnergy       = right.fEnergy;
-  fTime         = right.fTime;
-  fPosition     = right.fPosition;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  
+  // Obsolete and probably not used
+  fTrackId = right.fTrackId;
+
   return *this;
 }
 
@@ -77,9 +84,13 @@ void SACHit::Draw()
 
 void SACHit::Print()
 {
-  G4cout << "  trackID: " << fTrackId << "  channel: " << fChannelId
-         << "  energy deposit: " << G4BestUnit(fEnergy,"Energy")
-         << "  position: " << G4BestUnit(fPosition,"Length") << G4endl;
+  G4cout << "- channel: " << fChannelId
+	 << " time: " << G4BestUnit(fTime,"Time")
+         << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " track type: " << fTrackType
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

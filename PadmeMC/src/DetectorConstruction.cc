@@ -16,6 +16,10 @@
 #include "TPixDetector.hh"
 
 #include "MagnetStructure.hh"
+#include "HallStructure.hh"
+
+#include "TPixGeometry.hh"
+#include "MagnetGeometry.hh"
 
 #include "TRodSD.hh"
 #include "MRodSD.hh"
@@ -74,6 +78,7 @@ DetectorConstruction::DetectorConstruction()
   fTDumpDetector   = new TDumpDetector(0);
   fTPixDetector    = new TPixDetector(0);
   fMagnetStructure = new MagnetStructure(0);
+  fHallStructure   = new HallStructure(0);
 
   fEnableECal    = 1;
   fEnableTarget  = 1;
@@ -109,6 +114,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fTDumpDetector;
   delete fTPixDetector;
   delete fMagnetStructure;
+  delete fHallStructure;
 
 }
 
@@ -357,10 +363,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Concrete wall at large Z
   if (fEnableWall) {
-    G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
-    solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
-    logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
-    new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
+    //G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
+    //solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
+    //logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
+    //new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
+    fHallStructure->SetMotherVolume(logicWorld);
+    fHallStructure->CreateGeometry();
   }
 
   // Magnet physical structure
@@ -403,7 +411,28 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // TPix
   if (fEnableTPix) {
-    fTPixDetector->SetMotherVolume(logicWorld);
+    if (fEnableMagnet) {
+      // TPix can be used as beam tracking monitor and move around
+      // Check if it is placed inside the magnetic volume (warning: only X,Z are checked)
+      G4double xpostpix = TPixGeometry::GetInstance()->GetTPixPosX();
+      G4double zpostpix = TPixGeometry::GetInstance()->GetTPixPosZ();
+      G4double xposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosX();
+      G4double xsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeX();
+      G4double zposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosZ();
+      G4double zsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeZ();
+      if (
+	  (zpostpix>=zposmagvol-0.5*zsizemagvol) && (zpostpix<=zposmagvol+0.5*zsizemagvol)
+	  &&
+	  (xpostpix>=xposmagvol-0.5*xsizemagvol) && (xpostpix<=xposmagvol+0.5*xsizemagvol)
+	 ) {
+	G4cout << "WARNING: TPix at " << zpostpix << " is inside magnetic volume" << G4endl;
+	fTPixDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
+      } else {
+	fTPixDetector->SetMotherVolume(logicWorld);
+      }
+    } else {
+      fTPixDetector->SetMotherVolume(logicWorld);
+    }
     fTPixDetector->CreateGeometry();
   }
 

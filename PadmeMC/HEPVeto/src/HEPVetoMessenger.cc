@@ -50,7 +50,7 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
   fSetHEPVetoPosXCmd = new G4UIcommand("/Detector/HEPVeto/PositionX",this);
   fSetHEPVetoPosXCmd->SetGuidance("Set position along X of HEPVeto center in cm.");
   G4UIparameter* pxPosXParameter = new G4UIparameter("PosX",'d',false);
-  pxPosXParameter->SetParameterRange("PosX > 0. && PosX <= 200.");
+  pxPosXParameter->SetParameterRange("PosX < 0. && PosX >= -200.");
   fSetHEPVetoPosXCmd->SetParameter(pxPosXParameter);
   fSetHEPVetoPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 

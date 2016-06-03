@@ -61,15 +61,16 @@ class RunControlGUI:
         self.root.grid_rowconfigure(2,weight=1)
 
         # Show PADME logo and deathstar
+        pic_dir = os.getenv('PADME',".")+"/RunControl/pic/"
         #logo = PhotoImage(file="pic/Deathstar.gif")
-        pic = Image.open("pic/padme-big.png")
+        pic = Image.open(pic_dir+"padme-big.png")
         #self.logo = ImageTk.PhotoImage(pic.resize((400,124),Image.ANTIALIAS))
         self.logo = ImageTk.PhotoImage(pic.resize((645,200),Image.ANTIALIAS))
         l_logo = Label(self.root,image=self.logo)
         l_logo.configure(borderwidth=0)
         #l_logo.grid(row=0,column=0,columnspan=2)
         l_logo.grid(row=0,column=1,sticky=W)
-        pic2 = Image.open("pic/Deathstar.gif")
+        pic2 = Image.open(pic_dir+"Deathstar.gif")
         self.logo2 = ImageTk.PhotoImage(pic2.resize((200,200),Image.ANTIALIAS))
         l_logo2 = Label(self.root,image=self.logo2)
         l_logo2.configure(borderwidth=0)

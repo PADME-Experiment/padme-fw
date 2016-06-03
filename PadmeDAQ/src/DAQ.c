@@ -186,6 +186,7 @@ int DAQ_init ()
   CAEN_DGTZ_AcqMode_t mode;
   uint32_t reg,data;
   uint32_t tr_offset,tr_threshold;
+  CAEN_DGTZ_TriggerPolarity_t tr_polarity;
 
   uint32_t kk;
 
@@ -448,6 +449,30 @@ int DAQ_init ()
       printf("ERROR - Unable to enable fast trigger readout. Error code: %d\n",ret);
       return 1;
     }
+
+    // Set fast trigger polarization (TTL -> rising edge, NIM -> falling edge)
+
+    if ( strcmp(Config->trigger_iolevel,"NIM") == 0 ) {
+      tr_polarity = CAEN_DGTZ_TriggerOnFallingEdge;
+    } else if ( strcmp(Config->trigger_iolevel,"TTL") == 0 ) {
+      tr_polarity = CAEN_DGTZ_TriggerOnRisingEdge;
+    } else {
+      printf("ERROR - trigger_iolevel is set to %s (this should not happen!)",Config->trigger_iolevel);
+      return 1;
+    }
+
+    printf("- Setting fast trigger polarization for TR0 & TR1, write 0x%04x", tr_polarity);
+    ret = CAEN_DGTZ_SetTriggerPolarity(Handle,0,tr_polarity);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("\nERROR - Unable to set fast trigger polarity for TR0 & TR1. Error code: %d\n",ret);
+      return 1;
+    }
+    ret = CAEN_DGTZ_GetTriggerPolarity(Handle,0,&data);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("\nERROR - Unable to read fast trigger polarity for TR0 & TR1. Error code: %d\n",ret);
+      return 1;
+    }
+    printf(" read 0x%04x\n",data);
 
     // Set fast trigger offset for TR0 and TR1 (see V1742 manual for details)
 

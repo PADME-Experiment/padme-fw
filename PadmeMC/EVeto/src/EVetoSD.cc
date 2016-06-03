@@ -19,8 +19,7 @@ void EVetoSD::Initialize(G4HCofThisEvent* HCE)
 {
   fEVetoCollection = new EVetoHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
+  if (HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   HCE->AddHitsCollection(HCID,fEVetoCollection); 
 }
 
@@ -54,23 +53,11 @@ G4bool EVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
 
-  //edep  = aStep->GetTrack()->GetTotalEnergy();
-  //EVetoHit* newHit = new EVetoHit();
-  //newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
-  ////newHit -> SetTrackCh(aStep->GetTrack()->GetParticleDefinition()->GetPDGCharge());
-  //newHit -> SetEVetoNb(aStep->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber());
-  //newHit -> SetEdep(edep);
-  //newHit -> SetTime(aStep->GetTrack()->GetGlobalTime())	;
-  //newHit -> SetPos(aStep->GetPostStepPoint()->GetPosition());
-  //newHit -> SetHitE(aStep->GetTotalEnergyDeposit());
-
-  fEVetoCollection ->insert( newHit );
+  fEVetoCollection->insert(newHit);
 
   return true;
 
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void EVetoSD::EndOfEvent(G4HCofThisEvent*)
 {
@@ -80,5 +67,3 @@ void EVetoSD::EndOfEvent(G4HCofThisEvent*)
     for (G4int i=0;i<NbHits;i++) (*fEVetoCollection)[i]->Print();
   } 
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

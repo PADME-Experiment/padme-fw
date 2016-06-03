@@ -6,6 +6,7 @@
 // --------------------------------------------------------------
 
 #include "LAVSD.hh"
+
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
 #include "G4ThreeVector.hh"
@@ -27,8 +28,6 @@ extern double Npionc_aft;
 extern double Npi0_aft;
 extern double Nmuons_aft;
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 LAVSD::LAVSD(G4String name)
 :G4VSensitiveDetector(name)
 {
@@ -36,59 +35,55 @@ LAVSD::LAVSD(G4String name)
   collectionName.insert(HCname="LAVCollection"); //crea il collection name
 }
 
-//....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-LAVSD::~LAVSD(){ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+LAVSD::~LAVSD(){}
 
 void LAVSD::Initialize(G4HCofThisEvent* HCE)
 {
-  LAVCollection = new LAVHitsCollection
-                          (SensitiveDetectorName,collectionName[0]); 
+  LAVCollection = new LAVHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
+  if (HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   HCE->AddHitsCollection(HCID,LAVCollection); 
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
-  //  G4double edep       = aStep->GetTotalEnergyDeposit();
-  //  printf("Hey I'm processing a track %d\n",TrackType);
-  //  printf("Hey I'm processing a Hit %f\n",edep);
-  //  if(edep==0.) return false;
 
   G4Track* track = aStep->GetTrack();
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
-  const G4VProcess* CurrentProcess=preStepPoint->GetProcessDefinedStep();
-  if(CurrentProcess != 0) {
-    if(CurrentProcess->GetProcessName()== "Transportation" && track->GetVolume()->GetName()=="LAV") {
-      // processing hit when entering the volume
-      //      G4double kineticEnergy = aStep->GetTrack()->GetKineticEnergy();
-      //      G4cout<<"ciao "<<G4endl;
-      G4ThreeVector posix = aStep->GetPreStepPoint()->GetPosition();
-      G4int TrackType = ClassifyTrack(track);
-      G4double edep   = track->GetTotalEnergy();
-      LAVHit* newHit = new LAVHit();
-      //newHit -> SetPartType(const G4track* track);
-      newHit -> SetTrackID(track->GetTrackID());
-      //newHit -> SetTrackCh(aStep->GetTrack()->GetParticleDefinition()->GetPDGCharge());
-      newHit -> SetLAVNb(aStep->GetPreStepPoint()->GetTouchableHandle()->GetCopyNumber());
-      newHit -> SetPType(TrackType);
-      newHit -> SetEdep(edep);
-      newHit -> SetTime(aStep->GetTrack()->GetGlobalTime())	;
-      newHit -> SetPos(aStep->GetPostStepPoint()->GetPosition());
-      LAVCollection ->insert(newHit);     
-      track->SetTrackStatus(fStopAndKill);
-    }
-  }
-  // Totedep=ToTEDep+edep;
-  //  printf("EDep %f %f\n",aStep->GetTotalEnergyDeposit(),TrackType);
-  //  newHit->Print();
-  //  newHit->Draw();
+  const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
+  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "LAV") ) return false;
+
+  G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
+
+  LAVHit* newHit = new LAVHit();
+
+  newHit->SetChannelId(touchHPre->GetCopyNumber());
+  newHit->SetEnergy(track->GetTotalEnergy());
+  newHit->SetTime(track->GetGlobalTime());
+
+  G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
+  G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPre,"Length")
+  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPost,"Length")
+  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+
+  newHit->SetPosition(worldPosPre);
+  newHit->SetLocalPosition(localPosPre);
+
+  newHit->SetTrackID(track->GetTrackID());
+  newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
+  
+  LAVCollection ->insert(newHit);     
+
+  track->SetTrackStatus(fStopAndKill);
+
   return true;
 }
 

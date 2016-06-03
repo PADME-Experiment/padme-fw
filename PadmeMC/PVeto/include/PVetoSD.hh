@@ -1,3 +1,10 @@
+// PVetoSD.hh
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #ifndef PVetoSD_h
 #define PVetoSD_h 1
 
@@ -20,7 +27,7 @@ class PVetoSD : public G4VSensitiveDetector
       void EndOfEvent(G4HCofThisEvent*);
 
   private: 
-      PVetoHitsCollection* PVetoCollection;
+      PVetoHitsCollection* fPVetoCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

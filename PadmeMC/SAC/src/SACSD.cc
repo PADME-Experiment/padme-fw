@@ -5,6 +5,7 @@
 #include "G4ThreeVector.hh"
 #include "G4SDManager.hh"
 #include "G4ios.hh"
+
 #include "G4Gamma.hh"
 #include "G4Electron.hh"
 #include "G4Positron.hh"
@@ -14,7 +15,6 @@
 #include "G4MuonPlus.hh"
 #include "G4MuonMinus.hh"
 #include "G4PionZero.hh"
-#include "G4VProcess.hh"
 
 SACSD::SACSD(G4String name)
 :G4VSensitiveDetector(name)

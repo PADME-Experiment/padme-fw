@@ -21,7 +21,7 @@ class TPixSD : public G4VSensitiveDetector
       void EndOfEvent(G4HCofThisEvent*);
 
   private: 
-      TPixHitsCollection* TPixCollection;
+      TPixHitsCollection* fTPixCollection;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -1,3 +1,10 @@
+// EVetoSD.hh
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #ifndef EVetoSD_h
 #define EVetoSD_h 1
 

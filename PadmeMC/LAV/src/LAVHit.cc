@@ -27,21 +27,24 @@ LAVHit::~LAVHit() {}
 LAVHit::LAVHit(const LAVHit& right)
   : G4VHit()
 {
-  printf("Hey new hit\n");
-  VtrackID   = right.VtrackID;  //pointer to current hit
-  LAVNb = right.LAVNb;
-  edep       = right.edep;
-  pos        = right.pos;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const LAVHit& LAVHit::operator=(const LAVHit& right)
 {
-  VtrackID   = right.VtrackID;
-  LAVNb = right.LAVNb;
-  edep      = right.edep;
-  pos       = right.pos;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
   return *this;
 }
 
@@ -59,7 +62,7 @@ void LAVHit::Draw()
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
   if(pVVisManager)
   {
-    G4Circle circle(pos);
+    G4Circle circle(fPosition);
     circle.SetScreenSize(2.);
     circle.SetFillStyle(G4Circle::filled);
     G4Colour colour(1.,0.,0.);
@@ -73,9 +76,13 @@ void LAVHit::Draw()
 
 void LAVHit::Print()
 {
-//  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
-//         << "  energy deposit: " << G4BestUnit(edep,"Energy")
-//         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
+  G4cout << "- channel: " << fChannelId
+	 << " time: " << G4BestUnit(fTime,"Time")
+         << " track energy: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " track type: " << fTrackType
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

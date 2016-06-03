@@ -1,3 +1,10 @@
+// ECalSD.cc
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #include "ECalSD.hh"
 
 #include "G4HCofThisEvent.hh"

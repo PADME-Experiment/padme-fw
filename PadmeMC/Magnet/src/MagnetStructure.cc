@@ -234,6 +234,7 @@ void MagnetStructure::CreateGeometry()
   G4ThreeVector slabDRPos = G4ThreeVector(geo->GetSlabDRPosX(),geo->GetSlabDRPosY(),geo->GetSlabDRPosZ());
   new G4PVPlacement(0,slabDRPos,slabVolume,"SlabDR",fMotherVolume,false,0,false);
 
+  /*
   // Vacuum plates (will become the full vacuum chamber once the geometry is defined)
 
   G4double vacSizeX = geo->GetVacuumUSizeX();
@@ -248,6 +249,8 @@ void MagnetStructure::CreateGeometry()
 
   G4ThreeVector vacDPos = G4ThreeVector(geo->GetVacuumDPosX(),geo->GetVacuumDPosY(),geo->GetVacuumDPosZ());
   new G4PVPlacement(0,vacDPos,vacVolume,"VacChWallD",fMotherVolume,false,0,false);
+  */
+
   /*
   // Create rails
 

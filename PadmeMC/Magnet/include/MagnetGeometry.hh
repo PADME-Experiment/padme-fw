@@ -245,6 +245,7 @@ public:
   G4double GetSlabDRPosY()  { return -0.5*fYokeSizeInnerY+fNeopreneThick+fCoilLengthY+fNeopreneThick+0.5*fSlabThick; }
   G4double GetSlabDRPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
 
+  /*
   // === Vacuum chamber plates ===
 
   // Up (Y>0)
@@ -262,6 +263,8 @@ public:
   G4double GetVacuumDPosX()  { return 0.*cm; }
   G4double GetVacuumDPosY()  { return -0.5*fYokeSizeInnerY+fYokeSizeInBarY+0.5*fVacuumThick; }
   G4double GetVacuumDPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
+  */
+
   /*
   // === Rails inside magnet ===
 

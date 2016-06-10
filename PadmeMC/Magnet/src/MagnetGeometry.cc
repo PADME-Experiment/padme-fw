@@ -40,16 +40,17 @@ MagnetGeometry::MagnetGeometry()
   fSlabWidth   = 30.0*cm;
   fSlabLengthZ = fYokeSizeZ;
 
-  fRailThick   = 0.6*cm;
-  fRailWidth   = 3.0*cm;
-  fRailLengthZ = fYokeSizeZ;
+  //fRailThick   = 0.6*cm;
+  //fRailWidth   = 3.0*cm;
+  //fRailLengthZ = fYokeSizeZ;
 
   fNeopreneThick   =  0.4*cm;
   fNeopreneWidth   = 23.5*cm;
   fNeopreneLengthZ = fYokeSizeZ;
 
   fVacuumThick = 1.5*cm;
-  fVacuumWidth = fYokeSizeInBarX-2.*fRailWidth;
+  //fVacuumWidth = fYokeSizeInBarX-2.*fRailWidth;
+  fVacuumWidth = fYokeSizeInBarX;
   fVacuumLengthZ = fYokeSizeZ;
 
   fMagneticVolumeLengthX = fYokeSizeInnerX;

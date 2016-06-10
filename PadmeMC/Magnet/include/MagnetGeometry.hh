@@ -262,7 +262,7 @@ public:
   G4double GetVacuumDPosX()  { return 0.*cm; }
   G4double GetVacuumDPosY()  { return -0.5*fYokeSizeInnerY+fYokeSizeInBarY+0.5*fVacuumThick; }
   G4double GetVacuumDPosZ()  { return fYokeFrontFacePosZ+0.5*fSlabLengthZ; }
-
+  /*
   // === Rails inside magnet ===
 
   // Up (Y>0) Left (X>0) rail
@@ -296,7 +296,7 @@ public:
   G4double GetRailDRPosX()  { return -0.5*fYokeSizeInBarX+0.5*fRailWidth; }
   G4double GetRailDRPosY()  { return -0.5*fYokeSizeInnerY+fYokeSizeInBarY+0.5*fRailThick; }
   G4double GetRailDRPosZ()  { return fYokeFrontFacePosZ+0.5*fRailLengthZ; }
-
+  */
   // === Neoprene sheets over and under internal sections of coils ===
 
   // Up (Y>0) Left (X>0) Top (above coil) sheet
@@ -406,9 +406,9 @@ private:
   G4double fVacuumWidth;
   G4double fVacuumLengthZ;
 
-  G4double fRailThick;
-  G4double fRailWidth;
-  G4double fRailLengthZ;
+  //G4double fRailThick;
+  //G4double fRailWidth;
+  //G4double fRailLengthZ;
 
   G4double fNeopreneThick;
   G4double fNeopreneWidth;

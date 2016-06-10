@@ -55,8 +55,8 @@ public:
   G4double GetLocalPosZ() { return fLocalPosition.z(); };
  
   // Kept for backward compatibility: will be removed
-  void SetCryNb(G4int cry) { fChannelId = cry; }; 
-  G4int GetCryNb() { return fChannelId; };
+  //void SetCryNb(G4int cry) { fChannelId = cry; }; 
+  //G4int GetCryNb() { return fChannelId; };
 
   void SetPType(G4int typ) { fTrackType = typ; }; 
   G4int GetPType() { return fTrackType; };

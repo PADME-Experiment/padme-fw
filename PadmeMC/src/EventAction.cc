@@ -295,7 +295,8 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      G4int index = hit->GetCryNb();
+      //G4int index = hit->GetCryNb();
+      G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
       MatEtot[Yind][Xind] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo

@@ -114,7 +114,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    TECalMCHit* Hit = (TECalMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId((*ECalC)[i]->GetCryNb()); 
+	    Hit->SetChannelId((*ECalC)[i]->GetChannelId()); 
 	    Hit->SetPosition(TVector3((*ECalC)[i]->GetPos()[0],
 				      (*ECalC)[i]->GetPos()[1],
 				      (*ECalC)[i]->GetPos()[2])

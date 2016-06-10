@@ -29,6 +29,7 @@ class HEPVetoDetector;
 class TDumpDetector;
 class TPixDetector;
 class MagnetStructure;
+class ChamberStructure;
 class HallStructure;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -79,8 +80,9 @@ private:
   TDumpDetector*   fTDumpDetector;
   TPixDetector*    fTPixDetector;
 
-  MagnetStructure* fMagnetStructure;
-  HallStructure*   fHallStructure;
+  MagnetStructure*  fMagnetStructure;
+  ChamberStructure* fChamberStructure;
+  HallStructure*    fHallStructure;
 
   G4int fEnableECal;
   G4int fEnableTarget;
@@ -93,6 +95,7 @@ private:
   G4int fEnableTPix;
 
   G4int fEnableWall;
+  G4int fEnableChamber;
   G4int fEnableMagnet;
 
   G4Box*             solidWorld;    

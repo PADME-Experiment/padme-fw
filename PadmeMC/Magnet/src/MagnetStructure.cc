@@ -234,6 +234,7 @@ void MagnetStructure::CreateGeometry()
   G4ThreeVector slabDRPos = G4ThreeVector(geo->GetSlabDRPosX(),geo->GetSlabDRPosY(),geo->GetSlabDRPosZ());
   new G4PVPlacement(0,slabDRPos,slabVolume,"SlabDR",fMotherVolume,false,0,false);
 
+  /*
   // Vacuum plates (will become the full vacuum chamber once the geometry is defined)
 
   G4double vacSizeX = geo->GetVacuumUSizeX();
@@ -248,7 +249,9 @@ void MagnetStructure::CreateGeometry()
 
   G4ThreeVector vacDPos = G4ThreeVector(geo->GetVacuumDPosX(),geo->GetVacuumDPosY(),geo->GetVacuumDPosZ());
   new G4PVPlacement(0,vacDPos,vacVolume,"VacChWallD",fMotherVolume,false,0,false);
+  */
 
+  /*
   // Create rails
 
   G4double railSizeX = geo->GetRailULSizeX();
@@ -269,7 +272,7 @@ void MagnetStructure::CreateGeometry()
 
   G4ThreeVector railDRPos = G4ThreeVector(geo->GetRailDRPosX(),geo->GetRailDRPosY(),geo->GetRailDRPosZ());
   new G4PVPlacement(0,railDRPos,railVolume,"RailDR",fMotherVolume,false,0,false);
-
+  */
   // Neoprene sheets
 
   G4double neopreneSizeX = geo->GetNeopreneULTSizeX();
@@ -311,7 +314,7 @@ void MagnetStructure::CreateGeometry()
   sdMan->AddNewDetector(magnetSD);
   yokeUpBarVolume->SetSensitiveDetector(magnetSD);
   yokeDownBarVolume->SetSensitiveDetector(magnetSD);
-  railVolume->SetSensitiveDetector(magnetSD);
+  //railVolume->SetSensitiveDetector(magnetSD);
 
   // Create magnetic volume inside the magnet
   G4double magVolSizeX = geo->GetMagneticVolumeSizeX();

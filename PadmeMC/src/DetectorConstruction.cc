@@ -16,6 +16,7 @@
 #include "TPixDetector.hh"
 
 #include "MagnetStructure.hh"
+#include "ChamberStructure.hh"
 #include "HallStructure.hh"
 
 #include "TPixGeometry.hh"
@@ -77,8 +78,10 @@ DetectorConstruction::DetectorConstruction()
   fHEPVetoDetector = new HEPVetoDetector(0);
   fTDumpDetector   = new TDumpDetector(0);
   fTPixDetector    = new TPixDetector(0);
-  fMagnetStructure = new MagnetStructure(0);
-  fHallStructure   = new HallStructure(0);
+
+  fMagnetStructure  = new MagnetStructure(0);
+  fChamberStructure = new ChamberStructure(0);
+  fHallStructure    = new HallStructure(0);
 
   fEnableECal    = 1;
   fEnableTarget  = 1;
@@ -90,8 +93,9 @@ DetectorConstruction::DetectorConstruction()
   fEnableTDump   = 0;
   fEnableTPix    = 0;
 
-  fEnableWall   = 0;
-  fEnableMagnet = 1;
+  fEnableWall    = 0;
+  fEnableChamber = 1;
+  fEnableMagnet  = 1;
 
 }
 
@@ -114,6 +118,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fTDumpDetector;
   delete fTPixDetector;
   delete fMagnetStructure;
+  delete fChamberStructure;
   delete fHallStructure;
 
 }
@@ -151,16 +156,18 @@ void DetectorConstruction::DisableSubDetector(G4String det)
 void DetectorConstruction::EnableStructure(G4String str)
 {
   printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")   { fEnableWall   = 1; }
-  else if (str=="Magnet") { fEnableMagnet = 1; }
+  if      (str=="Wall")    { fEnableWall   = 1;  }
+  else if (str=="Chamber") { fEnableChamber = 1; }
+  else if (str=="Magnet")  { fEnableMagnet = 1;  }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
   printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")   { fEnableWall   = 0; }
-  else if (str=="Magnet") { fEnableMagnet = 0; }
+  if      (str=="Wall")    { fEnableWall   = 0;  }
+  else if (str=="Chamber") { fEnableChamber = 0; }
+  else if (str=="Magnet")  { fEnableMagnet = 0;  }
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
@@ -375,6 +382,17 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (fEnableMagnet) { 
     fMagnetStructure->SetMotherVolume(logicWorld);
     fMagnetStructure->CreateGeometry();
+  }
+
+  // Vacuum chamber structure
+  if (fEnableChamber) {
+    fChamberStructure->SetMotherVolume(logicWorld);
+    if (fEnableMagnet) {
+      fChamberStructure->SetMagneticVolume(fMagnetStructure->GetMagneticVolume());
+    } else {
+      fChamberStructure->SetMagneticVolume(logicWorld);
+    }
+    fChamberStructure->CreateGeometry();
   }
 
   // Target

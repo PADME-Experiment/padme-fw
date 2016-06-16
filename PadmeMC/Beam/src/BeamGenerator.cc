@@ -59,10 +59,15 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Special calibration run
   if ( fCalibrationRun ) {
+    // Origin of calibration beam is on back face of Target
+    bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     GenerateCalibrationGamma();
     return;
   }
-  
+
+  // Main positron beam origin is set to 1 um before the front face of the Target
+  bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
+
   G4int nTotPositrons = bpar->GetNPositronsPerBunch();
   if (bpar->NPositronsPerBunchApplySpread()) {
     nTotPositrons = G4Poisson(nTotPositrons);
@@ -155,7 +160,8 @@ void BeamGenerator::GeneratePrimaryPositron()
   // All positrons are generated 1um before the front face of the target
   G4double xPos = bpar->GetBeamCenterPosX();
   G4double yPos = bpar->GetBeamCenterPosY();
-  G4double zPos = fDetector->GetTargetFrontFaceZ()-1.*um;
+  //G4double zPos = fDetector->GetTargetFrontFaceZ()-1.*um;
+  G4double zPos = bpar->GetBeamOriginPosZ();
   if ( bpar->BeamCenterPosApplySpread() ) {
     xPos = G4RandGauss::shoot(xPos,bpar->GetBeamCenterPosXSpread());
     yPos = G4RandGauss::shoot(yPos,bpar->GetBeamCenterPosYSpread());
@@ -372,11 +378,14 @@ void BeamGenerator::CreateFinalStateThreeGamma()
 void BeamGenerator::GenerateCalibrationGamma()
 {
 
+  BeamParameters* bpar = BeamParameters::GetInstance();
+
   // Create primary vertex at center of back face of target with t=0.
   G4double vT = 0.*ns;
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
-  G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
+  //G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
+  G4double vZ = bpar->GetBeamOriginPosZ();
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(vX,vY,vZ),vT);
   //  printf("BeamGenerator::GenerateCalibrationGamma - Vertex at %f %f %f t=%f\n",vX,vY,vZ,vT);
 

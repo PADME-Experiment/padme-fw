@@ -79,3 +79,60 @@ G4double PVetoGeometry::GetFingerPosZ(G4int idx)
   }
   return (fFingerNominalSizeZ+fFingerGap)*(-0.5*fPVetoNFingers+1.*idx+0.5);
 }
+
+std::vector<G4String> PVetoGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fFingerGap " << fFingerGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fPVetoNFingers " << fPVetoNFingers;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeX " << fFingerNominalSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeY " << fFingerNominalSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeZ " << fFingerNominalSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerRotY " << fFingerRotY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSupportGap " << fSupportGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSupportNominalSizeX " << fSupportNominalSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSupportNominalSizeY " << fSupportNominalSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSupportNominalSizeZ " << fSupportNominalSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fPVetoInnerFacePosX " << fPVetoInnerFacePosX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fPVetoFrontFacePosZ " << fPVetoFrontFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
+}

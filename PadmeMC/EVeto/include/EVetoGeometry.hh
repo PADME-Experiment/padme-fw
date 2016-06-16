@@ -8,6 +8,8 @@
 #ifndef EVetoGeometry_H
 #define EVetoGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 
@@ -20,6 +22,7 @@ public:
 
   ~EVetoGeometry();
   static EVetoGeometry* GetInstance();
+  std::vector<G4String> GetHashTable();
 
 private:
 

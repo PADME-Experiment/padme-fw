@@ -12,6 +12,7 @@
 #include "SteppingAction.hh"
 #include "DetectorConstruction.hh"
 #include "StackingAction.hh"
+#include "RootIOManager.hh"
 #include "HistoManager.hh"
 #include "Constants.hh"
 #include <numeric>
@@ -90,6 +91,11 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4int event_id = evt->GetEventID();
   // Periodic printing
   if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
+
+
+  // Save event to root file
+  RootIOManager::GetInstance()->SaveEvent(evt);
+
   //MyEvent *TheEvent = MyEvent::GetInstance();
   //MySimEvent *simEvt = TheEvent->GetSimEvent();
   //MyEventGenerator *genEvt = TheEvent->GetGenEvent();
@@ -289,7 +295,8 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      G4int index = hit->GetCryNb();
+      //G4int index = hit->GetCryNb();
+      G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
       MatEtot[Yind][Xind] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo

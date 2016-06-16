@@ -24,12 +24,17 @@ protected:
 public:
 
   void     SetMessenger();
-  G4String GetOutputFileName()             { return fFileName; }
-  void     SetOutputFileName(G4String val) { fFileName = val;  }
+
+  G4String GetOutputFileName()             { return fOutputFileName; }
+  void     SetOutputFileName(G4String val) { fOutputFileName = val;  }
+
+  G4String GetHistoFileName()             { return fHistoFileName; }
+  void     SetHistoFileName(G4String val) { fHistoFileName = val;  }
 
 private:
 
-  G4String      fFileName;
+  G4String fOutputFileName;
+  G4String fHistoFileName;
 
 };
 #endif // DatacardManager_H

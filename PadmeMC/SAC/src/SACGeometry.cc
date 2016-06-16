@@ -113,3 +113,40 @@ G4double SACGeometry::GetCrystalPosZ(G4int row, G4int col)
   return 0.*cm;
 
 }
+
+std::vector<G4String> SACGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fSACNRows " << fSACNRows;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSACNCols " << fSACNCols;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fSACFrontFacePosZ " << fSACFrontFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeX " << fCrystalNominalSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeY " << fCrystalNominalSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalNominalSizeZ " << fCrystalNominalSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalGap " << fCrystalGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
+}

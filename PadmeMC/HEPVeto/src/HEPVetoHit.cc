@@ -1,4 +1,12 @@
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-17
+//
+// --------------------------------------------------------------
+
 #include "HEPVetoHit.hh"
+
 #include "G4UnitsTable.hh"
 #include "G4VVisManager.hh"
 #include "G4Circle.hh"
@@ -20,21 +28,26 @@ HEPVetoHit::~HEPVetoHit() {}
 HEPVetoHit::HEPVetoHit(const HEPVetoHit& right)
   : G4VHit()
 {
-  printf("Hey new hit\n");
-  VtrackID   = right.VtrackID;  //pointer to current hit
-  HEPVetoNb    = right.HEPVetoNb;
-  edep      = right.edep;
-  pos       = right.pos;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  fTrackId = right.fTrackId;
+  fTrackEnergy = right.fTrackEnergy;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const HEPVetoHit& HEPVetoHit::operator=(const HEPVetoHit& right)
 {
-  VtrackID   = right.VtrackID;
-  HEPVetoNb    = right.HEPVetoNb;
-  edep      = right.edep;
-  pos       = right.pos;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  fTrackId = right.fTrackId;
+  fTrackEnergy = right.fTrackEnergy;
   return *this;
 }
 
@@ -52,7 +65,7 @@ void HEPVetoHit::Draw()
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
   if(pVVisManager)
   {
-    G4Circle circle(pos);
+    G4Circle circle(fPosition);
     circle.SetScreenSize(2.);
     circle.SetFillStyle(G4Circle::filled);
     G4Colour colour(1.,0.,0.);
@@ -66,9 +79,14 @@ void HEPVetoHit::Draw()
 
 void HEPVetoHit::Print()
 {
-//  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
-//         << "  energy deposit: " << G4BestUnit(edep,"Energy")
-//         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
+  G4cout << "- channel: " << fChannelId
+	 << " time: " << G4BestUnit(fTime,"Time")
+         << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " track id: " << fTrackId
+         << " track energy: " << G4BestUnit(fTrackEnergy,"Energy")
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

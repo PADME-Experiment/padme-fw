@@ -22,9 +22,10 @@ TPixHit::TPixHit(const TPixHit& right)
   : G4VHit()
 {
   fChannelId = right.fChannelId;
-  fEnergy    = right.fEnergy;
-  fTime      = right.fTime;
-  fPosition  = right.fPosition;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -32,9 +33,10 @@ TPixHit::TPixHit(const TPixHit& right)
 const TPixHit& TPixHit::operator=(const TPixHit& right)
 {
   fChannelId = right.fChannelId;
-  fEnergy    = right.fEnergy;
-  fTime      = right.fTime;
-  fPosition  = right.fPosition;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
   return *this;
 }
 
@@ -66,10 +68,12 @@ void TPixHit::Draw()
 
 void TPixHit::Print()
 {
-  G4cout << "- TPixHit: ChId " << fChannelId
-	 << " E "   << G4BestUnit(fEnergy,"Energy")
-         << " T "   << G4BestUnit(fTime,"Time")
-	 << " XYZ " << G4BestUnit(fPosition,"Length") << G4endl;
+  G4cout << "- channel: " << fChannelId
+	 << " time: " << G4BestUnit(fTime,"Time")
+         << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

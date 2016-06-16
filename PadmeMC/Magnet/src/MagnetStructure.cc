@@ -320,11 +320,12 @@ void MagnetStructure::CreateGeometry()
   G4double magVolSizeX = geo->GetMagneticVolumeSizeX();
   G4double magVolSizeY = geo->GetMagneticVolumeSizeY();
   G4double magVolSizeZ = geo->GetMagneticVolumeSizeZ();
-  G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*(magVolSizeX-magGap),0.5*(magVolSizeY-magGap),0.5*(magVolSizeZ-magGap));
+  //G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*(magVolSizeX-magGap),0.5*(magVolSizeY-magGap),0.5*(magVolSizeZ-magGap));
+  G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*magVolSizeX,0.5*magVolSizeY,0.5*magVolSizeZ);
   fMagneticVolume = new G4LogicalVolume(magVolSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
 
   if (fMagneticVolumeIsVisible) {
-    fMagneticVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    fMagneticVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
   } else {
     fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
   }

@@ -23,6 +23,7 @@
 #/Detector/EnableSubDetector TPix
 #/Detector/EnableStructure Wall
 #/Detector/EnableStructure Magnet
+#/Detector/EnableStructure Chamber
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
@@ -35,6 +36,7 @@
 #/Detector/DisableSubDetector TPix 
 #/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
+#/Detector/DisableStructure Chamber
 
 #/Detector/Target/FrontFaceZ -50.
 #/Detector/Target/Size 2.

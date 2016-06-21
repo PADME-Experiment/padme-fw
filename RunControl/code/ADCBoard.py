@@ -27,7 +27,7 @@ class ADCBoard:
         self.initok_file = "unset"
         self.initfail_file = "unset"
         self.lock_file = "unset"
-        self.db_file = "unset"
+        #self.db_file = "unset"
 
         self.data_file = "unset"
 
@@ -140,7 +140,7 @@ class ADCBoard:
         cfgstring += "initok_file\t\t"+self.initok_file+"\n"
         cfgstring += "initfail_file\t\t"+self.initfail_file+"\n"
         cfgstring += "lock_file\t\t"+self.lock_file+"\n"
-        cfgstring += "db_file\t\t\t"+self.db_file+"\n"
+        #cfgstring += "db_file\t\t\t"+self.db_file+"\n"
 
         cfgstring += "data_file\t\t"+self.data_file+"\n"
 

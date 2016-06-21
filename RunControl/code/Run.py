@@ -52,7 +52,7 @@ class Run:
         self.initok_file_head = "run/initok"
         self.initfail_file_head = "run/initfail"
         self.lock_file_head = "run/lock"
-        self.db_file = "db/PadmeDAQ.db"
+        #self.db_file = "db/PadmeDAQ.db"
 
         self.data_dir = "data"
         self.data_file_head = "daq"
@@ -118,7 +118,7 @@ class Run:
         cfgstring += "initok_file_head\t\t"+self.initok_file_head+"\n"
         cfgstring += "initfail_file_head\t\t"+self.initfail_file_head+"\n"
         cfgstring += "lock_file_head\t\t"+self.lock_file_head+"\n"
-        cfgstring += "db_file\t\t\t"+self.db_file+"\n"
+        #cfgstring += "db_file\t\t\t"+self.db_file+"\n"
 
         cfgstring += "data_dir\t\t"+self.data_dir+"\n"
         cfgstring += "data_file_head\t\t"+self.data_file_head+"\n"
@@ -171,7 +171,7 @@ class Run:
             db.add_cfg_para(self.run_number,"initok_file_head",   self.lock_file_head)
             db.add_cfg_para(self.run_number,"initfail_file_head", self.lock_file_head)
             db.add_cfg_para(self.run_number,"lock_file_head",     self.lock_file_head)
-            db.add_cfg_para(self.run_number,"db_file",            self.db_file)
+            #db.add_cfg_para(self.run_number,"db_file",            self.db_file)
             db.add_cfg_para(self.run_number,"data_dir",           self.data_dir)
             db.add_cfg_para(self.run_number,"data_file_head",     self.data_file_head)
             db.add_cfg_para(self.run_number,"total_daq_time",     self.total_daq_time)
@@ -211,7 +211,7 @@ class Run:
         adcboard.initok_file    = self.initok_file_head+"_"+s_bid
         adcboard.initfail_file  = self.initfail_file_head+"_"+s_bid
         adcboard.lock_file      = self.lock_file_head+"_"+s_bid
-        adcboard.db_file        = self.db_file
+        #adcboard.db_file        = self.db_file
         adcboard.data_file      = self.data_dir+"/"+self.data_file_head+"_"+s_bid
         adcboard.total_daq_time = self.total_daq_time
 

@@ -40,21 +40,22 @@ MagnetGeometry::MagnetGeometry()
   fSlabWidth   = 30.0*cm;
   fSlabLengthZ = fYokeSizeZ;
 
-  fRailThick   = 0.6*cm;
-  fRailWidth   = 3.0*cm;
-  fRailLengthZ = fYokeSizeZ;
+  //fRailThick   = 0.6*cm;
+  //fRailWidth   = 3.0*cm;
+  //fRailLengthZ = fYokeSizeZ;
 
   fNeopreneThick   =  0.4*cm;
   fNeopreneWidth   = 23.5*cm;
   fNeopreneLengthZ = fYokeSizeZ;
 
-  fVacuumThick = 1.5*cm;
-  fVacuumWidth = fYokeSizeInBarX-2.*fRailWidth;
-  fVacuumLengthZ = fYokeSizeZ;
+  fVacuumThick = 0.8*cm; // Should be asked to the ChamberGeometry class
+  //fVacuumWidth = fYokeSizeInBarX-2.*fRailWidth;
+  //fVacuumWidth = fYokeSizeInBarX;
+  //fVacuumLengthZ = fYokeSizeZ;
 
   fMagneticVolumeLengthX = fYokeSizeInnerX;
   //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
-  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick; // Vacuum chamber is thicker than rails
+  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick;
   fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
   fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point

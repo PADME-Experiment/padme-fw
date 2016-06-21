@@ -30,7 +30,7 @@ int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
 
   // Set initial output filename
   if (fNMaxEvtsPerOutFile == 0) {
-    fOutFile = fOutFileTemplate;
+    fOutFile.Form("%s.root",fOutFileTemplate.Data());
   } else {
     SetOutFile();
   }

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 # Find path to PADME software from position of this script
 # assuming that this script is located in the Configure subdirectory

@@ -32,10 +32,10 @@ void TPadmeRun::Clear(Option_t * /*option*/)
 
 void TPadmeRun::Print(Option_t * /*option*/) const
 {
-  cout << "Run nr "   << fRunNumber
+  std::cout << "Run nr "   << fRunNumber
        << " type "    << fRunType
        << " Tstart "  << fTimeStart
        << " Tstop "   << fTimeStop
-       << " #events " << fNEvents << endl;
+       << " #events " << fNEvents << std::endl;
   fDetInfo.Print();
 }

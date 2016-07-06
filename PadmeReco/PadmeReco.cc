@@ -17,18 +17,18 @@
 PadmeReconstruction* PadmeReco; 
                               
 void usage(char* name){
-  cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
-	    << endl;
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
+	    << std::endl;
 }
 
 void sighandler(int sig){
-    cerr << endl << "********************************************************************************" << endl;
-    cerr << "Killed with Signal " << sig << endl << "Closing ROOT files ..." << endl;
+    std::cerr << std::endl << "********************************************************************************" << std::endl;
+    std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
     //PadmeReco->EndProcessing();
 
-    cerr << "... Done" << endl;
-    cerr << endl << "********************************************************************************" << endl;
+    std::cerr << "... Done" << std::endl;
+    std::cerr << std::endl << "********************************************************************************" << std::endl;
 
     exit(0);
 }
@@ -99,20 +99,20 @@ int main(Int_t argc, char **argv)
       return 0;
     }
     if (nb>1 || nc>1 || ni>1 || nl>1 || nn>1 || no>1 || ns>0) {
-      cerr << "[PadmeReco] Multiple arguments of the same type are not allowed" << endl;
+      std::cerr << "[PadmeReco] Multiple arguments of the same type are not allowed" << std::endl;
       return 0;
     }
 
     // Protection against potentially incorrect output filenames
     struct stat buffer;
     if (!OutputFileName.EndsWith(".root") && !stat(OutputFileName.Data(), &buffer)) {
-      cout << " [PadmeReco] Output file exists and is not *.root: potentially a destructive call" << endl;
+      std::cout << " [PadmeReco] Output file exists and is not *.root: potentially a destructive call" << std::endl;
       return 0;
     }
 
     TObjArray InputFileNameList;
     if(stat(Form(InputListFileName.Data()), &filestat) == 0) { //-l option used
-        ifstream InputList(InputListFileName.Data());
+        std::ifstream InputList(InputListFileName.Data());
         while(InputFileName.ReadLine(InputList) && iFile < NFiles){
 //            if(stat(Form(InputFileName.Data()), &filestat) == 0)
           InputFileNameList.Add(new TObjString(InputFileName.Data()));

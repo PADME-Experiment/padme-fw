@@ -33,9 +33,9 @@ void TMCEvent::Reset(Option_t * /*option*/)
 
 void TMCEvent::Print(Option_t * /*option*/) const
 {
-  cout << "Run "   << fRunNumber
+  std::cout << "Run "   << fRunNumber
        << " Event " << fEventNumber
-       << " Time "  << fTime << endl;
+       << " Time "  << fTime << std::endl;
 }
 
 //void TMCEvent::StoreRandomState(TRandom3* RandomDecayState, long *RanecuState)

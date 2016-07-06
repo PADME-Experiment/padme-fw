@@ -32,7 +32,7 @@ void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
 // Read ECal reconstruction parameters from a configuration file
 void ECalReconstruction::ParseConfFile(TString ConfFileName) {
 
-  ifstream confFile(ConfFileName.Data());
+  std::ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);
@@ -60,7 +60,7 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TECalMCEvent* tECalEvent = (TECalMCEvent*)tEvent;
-  cout << "ECalReconstruction: run/event/#hits " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << endl;
+  std::cout << "ECalReconstruction: run/event/#hits " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << std::endl;
   for (Int_t iH=0; iH<tECalEvent->GetNHits(); iH++) {
     TECalMCHit* hit = (TECalMCHit*)tECalEvent->Hit(iH);
     hit->Print();

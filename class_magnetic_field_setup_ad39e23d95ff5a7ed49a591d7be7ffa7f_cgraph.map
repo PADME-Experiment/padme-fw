@@ -1,0 +1,5 @@
+<map id="MagneticFieldSetup::MagneticFieldSetup" name="MagneticFieldSetup::MagneticFieldSetup">
+<area shape="rect" id="node2" href="$class_magnetic_field_setup.html#a45263d2154de776e2bb069619b9ab81c" title="MagneticFieldSetup\l::GetGlobalFieldManager" alt="" coords="201,5,367,46"/>
+<area shape="rect" id="node3" href="$class_magnetic_field_setup.html#adaad5c06186d1a4c8d684158217b00e5" title="MagneticFieldSetup\l::UpdateField" alt="" coords="215,70,353,111"/>
+<area shape="rect" id="node4" href="$class_magnetic_field_setup.html#a2dc45c78d71a7b70558b1bda6cdfcc48" title="MagneticFieldSetup\l::SetStepper" alt="" coords="417,70,554,111"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="BeamParameters::GetNUbosonDecaysPerBunch" name="BeamParameters::GetNUbosonDecaysPerBunch">
+<area shape="rect" id="node2" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="261,12,469,39"/>
+<area shape="rect" id="node4" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="269,63,461,105"/>
+<area shape="rect" id="node3" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="518,5,679,46"/>
+</map>

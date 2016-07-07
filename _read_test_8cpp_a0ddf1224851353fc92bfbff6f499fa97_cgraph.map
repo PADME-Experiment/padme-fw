@@ -1,0 +1,29 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$class_t_raw_event.html#aab8008ee592ac3522f6ae53ed876ef96" title="TRawEvent::GetNADCBoards" alt="" coords="133,5,333,32"/>
+<area shape="rect" id="node3" href="$class_t_raw_event.html#a5a5fdacf7f458da71d45f528ed35d6f2" title="TRawEvent::GetRunNumber" alt="" coords="138,56,329,83"/>
+<area shape="rect" id="node4" href="$class_t_raw_event.html#a453a95910f2a0764bcd7c07ead9c1f1d" title="TRawEvent::GetEventNumber" alt="" coords="133,107,333,133"/>
+<area shape="rect" id="node5" href="$class_t_raw_event.html#a8baba8508ffd9318cb921a7e9a190277" title="TRawEvent::ADCBoard" alt="" coords="152,157,315,184"/>
+<area shape="rect" id="node6" href="$class_t_a_d_c_board.html#acf469bfa113be462d1b718a05a58fdb7" title="TADCBoard::GetNADCTriggers" alt="" coords="129,208,337,235"/>
+<area shape="rect" id="node7" href="$class_t_a_d_c_board.html#aaf0870a595de21c8477b8ad7eccdfe33" title="TADCBoard::GetNADCChannels" alt="" coords="125,259,341,285"/>
+<area shape="rect" id="node8" href="$class_t_a_d_c_board.html#a8c21c55ca15870297e41029acbbf00fc" title="TADCBoard::GetBoardId" alt="" coords="150,309,317,336"/>
+<area shape="rect" id="node9" href="$class_t_a_d_c_board.html#a74bc222f026c464399195c271b6e89e0" title="TADCBoard::GetLVDSPattern" alt="" coords="134,360,333,387"/>
+<area shape="rect" id="node10" href="$class_t_a_d_c_board.html#a735c70191464e80cfab10ab170617ed0" title="TADCBoard::GetStatus" alt="" coords="153,411,313,437"/>
+<area shape="rect" id="node11" href="$class_t_a_d_c_board.html#a3e8af5cb73d13ba023dcaadc3d8249a6" title="TADCBoard::GetGroupMask" alt="" coords="139,461,328,488"/>
+<area shape="rect" id="node12" href="$class_t_a_d_c_board.html#ac534976bfcdb2375ae6ae935b4a1a92e" title="TADCBoard::GetEventCounter" alt="" coords="132,512,335,539"/>
+<area shape="rect" id="node13" href="$class_t_a_d_c_board.html#ad70ec84ebb0ed463f008b90cfe702e66" title="TADCBoard::GetEventTimeTag" alt="" coords="130,563,337,589"/>
+<area shape="rect" id="node14" href="$class_t_a_d_c_board.html#a329fe29f98e7ad92ac938c55e1ea426d" title="TADCBoard::GetActiveChannelMask" alt="" coords="114,613,353,640"/>
+<area shape="rect" id="node15" href="$class_t_a_d_c_board.html#a99ff9aaf00d6622c816f4afa217f6fc7" title="TADCBoard::GetAcceptedChannelMask" alt="" coords="105,664,362,691"/>
+<area shape="rect" id="node16" href="$class_t_a_d_c_board.html#a5fc789910b608123b1784fab45ba8396" title="TADCBoard::ADCTrigger" alt="" coords="148,715,319,741"/>
+<area shape="rect" id="node17" href="$class_t_a_d_c_trigger.html#aea9f0ebdb8fab53073862bffcc23f6f6" title="TADCTrigger::GetGroupNumber" alt="" coords="129,765,338,792"/>
+<area shape="rect" id="node18" href="$class_t_a_d_c_trigger.html#a4fe15b87d3c2312a3881e0a0fbfacc23" title="TADCTrigger::GetStartIndexCell" alt="" coords="128,816,339,843"/>
+<area shape="rect" id="node19" href="$class_t_a_d_c_trigger.html#aa1842e9089f06c68e46682ac6be2740d" title="TADCTrigger::GetFrequency" alt="" coords="139,867,328,893"/>
+<area shape="rect" id="node20" href="$class_t_a_d_c_trigger.html#a864312353668f22a0b1c9bddbc08fe1a" title="TADCTrigger::GetTriggerSignal" alt="" coords="131,917,335,944"/>
+<area shape="rect" id="node21" href="$class_t_a_d_c_trigger.html#af9041cc3d1a2ee2fc245f06a4d52800e" title="TADCTrigger::GetTriggerTimeTag" alt="" coords="124,968,343,995"/>
+<area shape="rect" id="node22" href="$class_t_a_d_c_trigger.html#aeac00e0035a96910e403e6dd2fda4a7a" title="TADCTrigger::GetNSamples" alt="" coords="139,1019,328,1045"/>
+<area shape="rect" id="node23" href="$class_t_a_d_c_trigger.html#af3961ff955fc4ffa881e5caf50b13c36" title="TADCTrigger::GetSample" alt="" coords="147,1069,319,1096"/>
+<area shape="rect" id="node24" href="$class_t_a_d_c_board.html#a4a4c3f0f938294ecc0e9788be1430807" title="TADCBoard::ADCChannel" alt="" coords="144,1120,323,1147"/>
+<area shape="rect" id="node25" href="$class_t_a_d_c_channel.html#a8676dc5d37192284e2ad871f4ab68df7" title="TADCChannel::GetChannelNumber" alt="" coords="118,1171,349,1197"/>
+<area shape="rect" id="node26" href="$class_t_a_d_c_channel.html#a819bf3c2a488a38427ec67b5d874133c" title="TADCChannel::GetNSamples" alt="" coords="135,1221,332,1248"/>
+<area shape="rect" id="node27" href="$class_t_a_d_c_channel.html#a6a4ea6ee78a346d12a22ce20caf19343" title="TADCChannel::GetSample" alt="" coords="143,1272,323,1299"/>
+<area shape="rect" id="node28" href="$class_t_raw_event.html#ac5968ef2302eff66b64edeb5422f9b3e" title="TRawEvent::Clear" alt="" coords="168,1323,299,1349"/>
+</map>

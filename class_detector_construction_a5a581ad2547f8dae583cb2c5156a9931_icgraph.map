@@ -1,0 +1,6 @@
+<map id="DetectorConstruction::GetTargetThickness" name="DetectorConstruction::GetTargetThickness">
+<area shape="rect" id="node2" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="440,32,648,58"/>
+<area shape="rect" id="node4" href="$class_beam_generator.html#a9a61b6e4e538dd10536569013e22dffa" title="BeamGenerator::CreateFinal\lStateUboson" alt="" coords="203,24,391,66"/>
+<area shape="rect" id="node5" href="$class_beam_generator.html#a3ec2173cdbf0ccc95e0bee2a5c80bf5e" title="BeamGenerator::CreateFinal\lStateThreeGamma" alt="" coords="203,90,391,131"/>
+<area shape="rect" id="node3" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="697,24,858,66"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="TDetectorInfo::FindSubDetectorInfo" name="TDetectorInfo::FindSubDetectorInfo">
+<area shape="rect" id="node2" href="$class_padme_reconstruction.html#a265614c5eabdf1943d38affe8946d09e" title="PadmeReconstruction\l::ShowSubDetectorInfo" alt="" coords="321,55,479,97"/>
+<area shape="rect" id="node4" href="$class_t_detector_info.html#a902d0bc65881826e136c00d41fce53f5" title="TDetectorInfo::AddSubDetectorInfo" alt="" coords="286,172,514,199"/>
+<area shape="rect" id="node3" href="$class_padme_reconstruction.html#a891d10689978faf17242459c097d4853" title="PadmeReconstruction\l::Init" alt="" coords="577,5,727,46"/>
+<area shape="rect" id="node5" href="$class_e_cal_root_i_o.html#a6b0f0a69e68ad7e56ef1705949422e7a" title="ECalRootIO::NewRun" alt="" coords="576,71,728,97"/>
+<area shape="rect" id="node6" href="$class_e_veto_root_i_o.html#a92e323b9dcab29b514bf0fe0d0b1dbb8" title="EVetoRootIO::NewRun" alt="" coords="573,121,731,148"/>
+<area shape="rect" id="node7" href="$class_h_e_p_veto_root_i_o.html#a9f056b3ade3dacd5020df36ff07f2913" title="HEPVetoRootIO::NewRun" alt="" coords="563,172,741,199"/>
+<area shape="rect" id="node8" href="$class_p_veto_root_i_o.html#a122613390e78ec6a9b351bb887666bb0" title="PVetoRootIO::NewRun" alt="" coords="573,223,731,249"/>
+<area shape="rect" id="node9" href="$class_s_a_c_root_i_o.html#aa9a1f8421d7a45aa51eaa04a1fee447a" title="SACRootIO::NewRun" alt="" coords="577,273,727,300"/>
+<area shape="rect" id="node10" href="$class_target_root_i_o.html#ad86322b58c6d13652a7c7b39b90fe452" title="TargetRootIO::NewRun" alt="" coords="572,324,732,351"/>
+</map>

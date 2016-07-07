@@ -1,0 +1,7 @@
+<map id="Run.Run.change_setup" name="Run.Run.change_setup">
+<area shape="rect" id="node2" href="$class_a_d_c_board_1_1_a_d_c_board.html#a41ec5f241262f17ee1a8b3c230e17b95" title="ADCBoard.ADCBoard.set\l_default_config" alt="" coords="222,5,397,46"/>
+<area shape="rect" id="node3" href="$class_run_1_1_run.html#a59805d79daafa4d9d19a005ef18cfb0b" title="Run.Run.set_default\l_config" alt="" coords="238,70,381,111"/>
+<area shape="rect" id="node4" href="$class_a_d_c_board_1_1_a_d_c_board.html#abf6c6cca8b0f54e3b936812166ce8589" title="ADCBoard.ADCBoard.read\l_setup" alt="" coords="219,135,400,177"/>
+<area shape="rect" id="node5" href="$class_run_1_1_run.html#ae3fcab656cb1651b5145434b635bf654" title="Run.Run.read_setup" alt="" coords="238,201,381,228"/>
+<area shape="rect" id="node6" href="$class_run_1_1_run.html#ad0a109b1ace740558b301737d42b41e1" title="Run.Run.configure_adcboard" alt="" coords="214,252,405,279"/>
+</map>

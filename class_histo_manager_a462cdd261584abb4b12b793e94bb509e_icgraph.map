@@ -1,0 +1,6 @@
+<map id="HistoManager::FillHisto" name="HistoManager::FillHisto">
+<area shape="rect" id="node2" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="213,12,421,39"/>
+<area shape="rect" id="node4" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="470,92,679,119"/>
+<area shape="rect" id="node5" href="$class_event_action.html#a4e2a0961b746a526dad3b922af9c78a0" title="EventAction::FindClusters" alt="" coords="230,113,405,140"/>
+<area shape="rect" id="node3" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="494,5,655,46"/>
+</map>

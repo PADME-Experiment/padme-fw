@@ -1,0 +1,6 @@
+<map id="DAQ_close" name="DAQ_close">
+<area shape="rect" id="node2" href="$_d_a_q_8c.html#a57dae6bcf94a70cbe68aedc2a25f2286" title="termination_handler" alt="" coords="145,5,279,32"/>
+<area shape="rect" id="node5" href="$_padme_d_a_q_8c.html#a0ddf1224851353fc92bfbff6f499fa97" title="main" alt="" coords="667,31,717,57"/>
+<area shape="rect" id="node3" href="$_d_a_q_8c.html#a80a58493d16c516eddb4f5b1280bfb76" title="set_signal_handlers" alt="" coords="329,5,466,32"/>
+<area shape="rect" id="node4" href="$_d_a_q_8c.html#add59416500e09e3fc31ff967cab1c4bb" title="DAQ_connect" alt="" coords="515,5,619,32"/>
+</map>

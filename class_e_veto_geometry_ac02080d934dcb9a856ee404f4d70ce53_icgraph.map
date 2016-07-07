@@ -1,0 +1,5 @@
+<map id="EVetoGeometry::GetEVetoSizeX" name="EVetoGeometry::GetEVetoSizeX">
+<area shape="rect" id="node2" href="$class_e_veto_detector.html#a7f9932bedd4d5f5ff65f31e20ffcc7d9" title="EVetoDetector::CreateGeometry" alt="" coords="531,12,743,39"/>
+<area shape="rect" id="node4" href="$class_e_veto_geometry.html#ace27b18a03b66045d8e7ad11d24fa79b" title="EVetoGeometry::GetEVetoPosX" alt="" coords="270,37,482,64"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="792,5,939,46"/>
+</map>

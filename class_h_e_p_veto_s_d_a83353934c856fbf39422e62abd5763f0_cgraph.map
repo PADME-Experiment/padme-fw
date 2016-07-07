@@ -1,0 +1,7 @@
+<map id="HEPVetoSD::ProcessHits" name="HEPVetoSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_h_e_p_veto_hit.html#a228f015465515c220c9af773a746254f" title="HEPVetoHit::SetChannelId" alt="" coords="239,5,420,32"/>
+<area shape="rect" id="node3" href="$class_h_e_p_veto_hit.html#a40c77ca7667eb90f39da337a8408c83a" title="HEPVetoHit::SetEnergy" alt="" coords="248,56,411,83"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_hit.html#a5a8047172f30a0042d8627e65459b203" title="HEPVetoHit::SetTime" alt="" coords="254,107,405,133"/>
+<area shape="rect" id="node5" href="$class_h_e_p_veto_hit.html#a448ba05553034da94fe6fd91e693043e" title="HEPVetoHit::SetPosition" alt="" coords="245,157,414,184"/>
+<area shape="rect" id="node6" href="$class_h_e_p_veto_hit.html#a83d9961e84c495ab7d3af9da246946dc" title="HEPVetoHit::SetLocalPosition" alt="" coords="229,208,429,235"/>
+</map>

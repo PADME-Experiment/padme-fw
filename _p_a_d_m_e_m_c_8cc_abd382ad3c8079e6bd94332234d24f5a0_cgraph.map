@@ -1,0 +1,12 @@
+<map id="sighandler" name="sighandler">
+<area shape="rect" id="node2" href="$class_root_i_o_manager.html#a18f7cfd03d3bf64bead960d14746a989" title="RootIOManager::GetInstance" alt="" coords="137,49,330,76"/>
+<area shape="rect" id="node7" href="$class_root_i_o_manager.html#a907eaf5c71794b35ff20d919499bbf9a" title="RootIOManager::EndRun" alt="" coords="149,100,318,127"/>
+<area shape="rect" id="node11" href="$class_root_i_o_manager.html#a795ef0b609db708300d07ad427565fcd" title="RootIOManager::Close" alt="" coords="155,151,311,177"/>
+<area shape="rect" id="node3" href="$class_root_i_o_manager.html#af9dd8488a53578a1c28ee8f27e28cb98" title="RootIOManager::RootIOManager" alt="" coords="379,49,594,76"/>
+<area shape="rect" id="node4" href="$class_datacard_manager.html#aa3e56b25776b3c2bcaafa5e8d992fc57" title="DatacardManager::GetInstance" alt="" coords="643,12,847,39"/>
+<area shape="rect" id="node6" href="$class_datacard_manager.html#a0442836b4ec12e82f2af81d526a33e89" title="DatacardManager::GetOutput\lFileName" alt="" coords="649,63,842,105"/>
+<area shape="rect" id="node5" href="$class_datacard_manager.html#a630c1faa0f8d9a8c2b9b1706c27e6640" title="DatacardManager::Datacard\lManager" alt="" coords="896,5,1083,46"/>
+<area shape="rect" id="node8" href="$class_t_padme_run.html#afc44406122b2fa84f48050adc8701131" title="TPadmeRun::SetTimeStop" alt="" coords="397,100,576,127"/>
+<area shape="rect" id="node9" href="$class_t_padme_run.html#a17e1fb9f33a4be8202451f4ca98d9cdd" title="TPadmeRun::Print" alt="" coords="421,151,552,177"/>
+<area shape="rect" id="node10" href="$class_t_detector_info.html#afece37754f1aef3d6950926f8c9ea28a" title="TDetectorInfo::Print" alt="" coords="677,151,814,177"/>
+</map>

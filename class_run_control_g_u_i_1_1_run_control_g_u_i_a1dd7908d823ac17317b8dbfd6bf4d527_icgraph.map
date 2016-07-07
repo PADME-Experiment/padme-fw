@@ -1,0 +1,8 @@
+<map id="RunControlGUI.RunControlGUI.wait_for_terminate" name="RunControlGUI.RunControlGUI.wait_for_terminate">
+<area shape="rect" id="node2" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a033bb914c81c248ba6725f9b0a79a776" title="RunControlGUI.RunControl\lGUI.abort_run" alt="" coords="238,38,421,79"/>
+<area shape="rect" id="node6" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aa165c35ecb2c05901642e1b19ae02b7e" title="RunControlGUI.RunControl\lGUI.stop_run" alt="" coords="238,103,421,145"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#a31fc2b89bbaec6c971bae9b2f03624e9" title="RunControlServer.RunControl\lServer.state_initialized" alt="" coords="470,5,666,46"/>
+<area shape="rect" id="node5" href="$class_run_control_text_1_1_run_control_text.html#a960509aac5d8789ac57ea5c8013b5ba2" title="RunControlText.RunControl\lText.main_loop" alt="" coords="476,70,660,111"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="715,70,911,111"/>
+<area shape="rect" id="node7" href="$class_run_control_server_1_1_run_control_server.html#aad5e0096b6135a6380cbb63e57c05604" title="RunControlServer.RunControl\lServer.state_running" alt="" coords="470,135,666,177"/>
+</map>

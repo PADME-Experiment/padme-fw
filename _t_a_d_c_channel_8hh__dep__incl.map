@@ -1,0 +1,17 @@
+<map id="TADCChannel.hh" name="TADCChannel.hh">
+<area shape="rect" id="node2" href="$_t_a_d_c_board_8hh.html" title="TADCBoard.hh" alt="" coords="570,80,680,107"/>
+<area shape="rect" id="node8" href="$_persistency_dict_8cc.html" title="PersistencyDict.cc" alt="" coords="677,229,811,256"/>
+<area shape="rect" id="node16" href="$_t_a_d_c_channel_8cc.html" title="TADCChannel.cc" alt="" coords="781,80,907,107"/>
+<area shape="rect" id="node3" href="$_t_raw_event_8hh.html" title="TRawEvent.hh" alt="" coords="389,155,499,181"/>
+<area shape="rect" id="node15" href="$_t_a_d_c_board_8cc.html" title="TADCBoard.cc" alt="" coords="545,155,655,181"/>
+<area shape="rect" id="node4" href="$_root_i_o_8hh.html" title="RootIO.hh" alt="" coords="133,229,216,256"/>
+<area shape="rect" id="node7" href="$_read_test_8cpp.html" title="ReadTest.cpp" alt="" coords="5,229,109,256"/>
+<area shape="rect" id="node9" href="$_t_raw_event_8cc.html" title="TRawEvent.cc" alt="" coords="240,229,349,256"/>
+<area shape="rect" id="node10" href="$_e_c_a_l_anal_8hh.html" title="ECALAnal.hh" alt="" coords="373,229,475,256"/>
+<area shape="rect" id="node13" href="$_target_anal_8hh.html" title="TargetAnal.hh" alt="" coords="550,229,652,256"/>
+<area shape="rect" id="node12" href="$_grapher_8cc.html" title="Grapher.cc" alt="" coords="469,304,555,331"/>
+<area shape="rect" id="node5" href="$_padme_level1_8cpp.html" title="PadmeLevel1.cpp" alt="" coords="151,304,277,331"/>
+<area shape="rect" id="node6" href="$_root_i_o_8cc.html" title="RootIO.cc" alt="" coords="44,304,127,331"/>
+<area shape="rect" id="node11" href="$_e_c_a_l_anal_8cc.html" title="ECALAnal.cc" alt="" coords="343,304,444,331"/>
+<area shape="rect" id="node14" href="$_target_anal_8cc.html" title="TargetAnal.cc" alt="" coords="579,304,681,331"/>
+</map>

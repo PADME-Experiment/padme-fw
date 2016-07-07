@@ -1,0 +1,7 @@
+<map id="TPixSD::ProcessHits" name="TPixSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_t_pix_hit.html#ae332a4985f3ef0390eeefca42234170a" title="TPixHit::SetChannelId" alt="" coords="213,5,366,32"/>
+<area shape="rect" id="node3" href="$class_t_pix_hit.html#a81d2bdc31e56f67c0487e72d357dbd9f" title="TPixHit::SetEnergy" alt="" coords="222,56,357,83"/>
+<area shape="rect" id="node4" href="$class_t_pix_hit.html#a90e61e71023177ebfd1dd3ec86acf590" title="TPixHit::SetTime" alt="" coords="228,107,351,133"/>
+<area shape="rect" id="node5" href="$class_t_pix_hit.html#aa235c49ae47feffdad89c355e0d01d45" title="TPixHit::SetPosition" alt="" coords="219,157,360,184"/>
+<area shape="rect" id="node6" href="$class_t_pix_hit.html#a60b5b5ac1175c574927bd70c92262087" title="TPixHit::SetLocalPosition" alt="" coords="203,208,375,235"/>
+</map>

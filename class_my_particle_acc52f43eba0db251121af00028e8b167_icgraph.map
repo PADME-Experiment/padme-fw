@@ -1,0 +1,7 @@
+<map id="MyParticle::clear" name="MyParticle::clear">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a9c8fbcafee00a43bd1c66c7d4607f497" title="MyEventGenerator::ClearEvent" alt="" coords="174,35,378,61"/>
+<area shape="rect" id="node6" href="$class_my_particle.html#ac32e7d669a704759159c07b35d172506" title="MyParticle::MyParticle" alt="" coords="199,85,353,112"/>
+<area shape="rect" id="node3" href="$class_my_event.html#a157c585223b4b7ae4b436f8eddcd257e" title="MyEvent::ClearEvent" alt="" coords="449,5,596,32"/>
+<area shape="rect" id="node5" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="427,57,619,98"/>
+<area shape="rect" id="node4" href="$class_my_event.html#a7ea5f6e3b938a2c04b12a35c0bafdce1" title="MyEvent::GetInstance" alt="" coords="667,5,821,32"/>
+</map>

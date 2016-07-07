@@ -1,0 +1,13 @@
+<map id="BeamGenerator::CreateFinalStateUboson" name="BeamGenerator::CreateFinalStateUboson">
+<area shape="rect" id="node2" href="$class_beam_parameters.html#a2cbcc7cce0f25bc006afb5a40dcf360a" title="BeamParameters::GetInstance" alt="" coords="256,5,459,32"/>
+<area shape="rect" id="node4" href="$class_beam_parameters.html#a8e703702a6c497654134f6c39e1f7103" title="BeamParameters::GetUbosonMass" alt="" coords="243,56,472,83"/>
+<area shape="rect" id="node5" href="$class_detector_construction.html#a54f5ac28b3d618599774816de70a818b" title="DetectorConstruction\l::GetTargetFrontFaceZ" alt="" coords="280,107,435,149"/>
+<area shape="rect" id="node10" href="$class_detector_construction.html#a5a581ad2547f8dae583cb2c5156a9931" title="DetectorConstruction\l::GetTargetThickness" alt="" coords="283,173,431,214"/>
+<area shape="rect" id="node3" href="$class_beam_parameters.html#a51b6ecad14ecd4e3567ae3ecb67341c3" title="BeamParameters::BeamParameters" alt="" coords="520,5,752,32"/>
+<area shape="rect" id="node6" href="$class_target_detector.html#a65af261e0fd87e6e13f42711f25c0a63" title="TargetDetector::GetTarget\lFrontFaceZ" alt="" coords="549,107,723,149"/>
+<area shape="rect" id="node7" href="$class_target_geometry.html#af0068d4199d6642002f74d410303823f" title="TargetGeometry::GetInstance" alt="" coords="800,147,995,173"/>
+<area shape="rect" id="node9" href="$class_target_geometry.html#addedf7c3e121dbd8b32ecbf523903287" title="TargetGeometry::GetTarget\lFrontFacePosZ" alt="" coords="806,81,989,122"/>
+<area shape="rect" id="node8" href="$class_target_geometry.html#ac77e8fce88dd3829ffa280137ab90964" title="TargetGeometry::TargetGeometry" alt="" coords="1043,147,1261,173"/>
+<area shape="rect" id="node11" href="$class_target_detector.html#a321216a0b9ef2e135b326f8f30ff7a97" title="TargetDetector::GetTarget\lThickness" alt="" coords="549,173,723,214"/>
+<area shape="rect" id="node12" href="$class_target_geometry.html#a6197a1a5ad0a6f8bd27570778d61a39b" title="TargetGeometry::GetTarget\lSizeZ" alt="" coords="806,198,989,239"/>
+</map>

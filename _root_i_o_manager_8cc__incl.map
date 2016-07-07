@@ -1,0 +1,18 @@
+<map id="RootIOManager.cc" name="RootIOManager.cc">
+<area shape="rect" id="node4" href="$_root_i_o_manager_8hh.html" title="RootIOManager.hh" alt="" coords="206,80,337,107"/>
+<area shape="rect" id="node19" href="$_e_cal_root_i_o_8hh.html" title="ECalRootIO.hh" alt="" coords="362,80,472,107"/>
+<area shape="rect" id="node20" href="$_target_root_i_o_8hh.html" title="TargetRootIO.hh" alt="" coords="658,80,776,107"/>
+<area shape="rect" id="node21" href="$_p_veto_root_i_o_8hh.html" title="PVetoRootIO.hh" alt="" coords="801,80,919,107"/>
+<area shape="rect" id="node22" href="$_e_veto_root_i_o_8hh.html" title="EVetoRootIO.hh" alt="" coords="943,80,1061,107"/>
+<area shape="rect" id="node23" href="$_h_e_p_veto_root_i_o_8hh.html" title="HEPVetoRootIO.hh" alt="" coords="497,80,633,107"/>
+<area shape="rect" id="node24" href="$_s_a_c_root_i_o_8hh.html" title="SACRootIO.hh" alt="" coords="1086,80,1196,107"/>
+<area shape="rect" id="node27" href="$_t_padme_run_8hh.html" title="TPadmeRun.hh" alt="" coords="2550,80,2663,107"/>
+<area shape="rect" id="node29" href="$_t_m_c_event_8hh.html" title="TMCEvent.hh" alt="" coords="1377,80,1479,107"/>
+<area shape="rect" id="node13" href="$_t_detector_info_8hh.html" title="TDetectorInfo.hh" alt="" coords="2591,229,2711,256"/>
+<area shape="rect" id="node31" href="$_detector_construction_8hh.html" title="DetectorConstruction.hh" alt="" coords="1791,80,1955,107"/>
+<area shape="rect" id="node37" href="$_beam_parameters_8hh.html" title="BeamParameters.hh" alt="" coords="2867,80,3008,107"/>
+<area shape="rect" id="node40" href="$_datacard_manager_8hh.html" title="DatacardManager.hh" alt="" coords="1609,80,1751,107"/>
+<area shape="rect" id="node11" href="$_m_c_v_root_i_o_8hh.html" title="MCVRootIO.hh" alt="" coords="637,155,749,181"/>
+<area shape="rect" id="node14" href="$_t_sub_detector_info_8hh.html" title="TSubDetectorInfo.hh" alt="" coords="2489,304,2631,331"/>
+<area shape="rect" id="node41" href="$_datacard_messenger_8hh.html" title="DatacardMessenger.hh" alt="" coords="1389,155,1547,181"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="MyEvent" name="MyEvent">
+<area shape="rect" id="node2" href="$class_my_event_generator.html" title="MyEventGenerator" alt="" coords="5,96,136,123"/>
+<area shape="rect" id="node3" href="$class_my_particle.html" title="MyParticle" alt="" coords="29,5,112,32"/>
+<area shape="rect" id="node4" href="$class_my_sim_event.html" title="MySimEvent" alt="" coords="161,96,257,123"/>
+</map>

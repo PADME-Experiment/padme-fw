@@ -1,0 +1,4 @@
+<map id="PVetoHit::GetTime" name="PVetoHit::GetTime">
+<area shape="rect" id="node2" href="$class_event_action.html#a6ac03c109663fdcbd07fa0a64ddf0c43" title="EventAction::AddPVetoHits" alt="" coords="187,5,371,32"/>
+<area shape="rect" id="node3" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="419,5,629,32"/>
+</map>

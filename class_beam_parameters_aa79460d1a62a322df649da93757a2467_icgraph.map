@@ -1,0 +1,8 @@
+<map id="BeamParameters::GetBunchTimeLength" name="BeamParameters::GetBunchTimeLength">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a04d97ec9c48f30348ab4516244a4b2b9" title="BeamGenerator::GeneratePrimary\lPositron" alt="" coords="243,5,461,46"/>
+<area shape="rect" id="node5" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="256,70,448,111"/>
+<area shape="rect" id="node6" href="$class_root_i_o_manager.html#a7623dc41ca767d8c1ced6889f2fd8e28" title="RootIOManager::NewRun" alt="" coords="265,136,439,163"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="509,12,717,39"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="766,5,927,46"/>
+<area shape="rect" id="node7" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="514,136,713,163"/>
+</map>

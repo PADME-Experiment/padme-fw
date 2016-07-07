@@ -1,0 +1,5 @@
+<map id="MyParticle::calcGamma" name="MyParticle::calcGamma">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="216,5,395,46"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="443,5,621,46"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="669,5,861,46"/>
+</map>

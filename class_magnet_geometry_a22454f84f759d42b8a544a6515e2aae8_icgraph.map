@@ -1,0 +1,6 @@
+<map id="MagnetGeometry::MagnetGeometry" name="MagnetGeometry::MagnetGeometry">
+<area shape="rect" id="node2" href="$class_magnet_geometry.html#a1f38a2495230630db8cdb3ebe341859f" title="MagnetGeometry::GetInstance" alt="" coords="286,25,487,52"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="829,18,976,59"/>
+<area shape="rect" id="node4" href="$class_magnet_messenger.html#a46c35dae02b53bfdba88b4dca7e02e14" title="MagnetMessenger::MagnetMessenger" alt="" coords="537,25,781,52"/>
+<area shape="rect" id="node5" href="$class_magnet_structure.html#ade0cc5fd432a1baa1a9b53b4945dcdcf" title="MagnetStructure::CreateGeometry" alt="" coords="547,76,770,103"/>
+</map>

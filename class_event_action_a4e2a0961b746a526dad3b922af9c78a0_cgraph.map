@@ -1,0 +1,14 @@
+<map id="EventAction::FindClusters" name="EventAction::FindClusters">
+<area shape="rect" id="node2" href="$class_e_cal_geometry.html#a61abd708c8d69d67d549ea8315aa3f3b" title="ECalGeometry::GetECalNRows" alt="" coords="249,5,460,32"/>
+<area shape="rect" id="node3" href="$class_e_cal_geometry.html#acf980233c32dc264375c0d961aaf9708" title="ECalGeometry::GetECalNCols" alt="" coords="253,56,456,83"/>
+<area shape="rect" id="node4" href="$class_e_cal_geometry.html#ae281e30f092e47c396e458ad045a4ad5" title="ECalGeometry::GetCrystalPosX" alt="" coords="249,107,460,133"/>
+<area shape="rect" id="node5" href="$class_e_cal_geometry.html#ac0161abb30158152cd5196829ec7196b" title="ECalGeometry::GetCrystalPosY" alt="" coords="249,157,460,184"/>
+<area shape="rect" id="node6" href="$class_e_cal_geometry.html#ac7ca9b77a017d236512651bd6d7dedb7" title="ECalGeometry::GetECalFront\lFacePosZ" alt="" coords="257,209,453,250"/>
+<area shape="rect" id="node7" href="$class_target_geometry.html#addedf7c3e121dbd8b32ecbf523903287" title="TargetGeometry::GetTarget\lFrontFacePosZ" alt="" coords="263,274,446,315"/>
+<area shape="rect" id="node8" href="$class_beam_parameters.html#a541841f5b7544a649e4384d292d74562" title="BeamParameters::GetBeamDirection" alt="" coords="235,340,474,367"/>
+<area shape="rect" id="node9" href="$class_beam_parameters.html#a4c611953ff7a8be6f0d95f4e8bbfb4de" title="BeamParameters::GetBeamMomentum" alt="" coords="229,391,480,417"/>
+<area shape="rect" id="node10" href="$class_stepping_action.html#aeb39c8f48338ff3bec6a3a064e7bf2d8" title="SteppingAction::GetPhysProc" alt="" coords="257,441,453,468"/>
+<area shape="rect" id="node11" href="$class_histo_manager.html#a36f69aaa87aafc323b6d58f0f8e0ed1c" title="HistoManager::FillHisto2" alt="" coords="271,492,438,519"/>
+<area shape="rect" id="node12" href="$class_histo_manager.html#a462cdd261584abb4b12b793e94bb509e" title="HistoManager::FillHisto" alt="" coords="275,543,434,569"/>
+<area shape="rect" id="node13" href="$class_event_action.html#a87c1fc052774708d7189672e2383d28b" title="EventAction::GGMass" alt="" coords="278,593,431,620"/>
+</map>

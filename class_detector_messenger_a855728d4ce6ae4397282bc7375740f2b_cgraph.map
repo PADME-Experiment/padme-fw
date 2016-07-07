@@ -1,0 +1,6 @@
+<map id="DetectorMessenger::SetNewValue" name="DetectorMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_detector_construction.html#a1188e28a6988641d16750940f9ede9c5" title="DetectorConstruction\l::EnableSubDetector" alt="" coords="197,5,344,46"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a19743cd1d4d7ab288fc426d1ac35f371" title="DetectorConstruction\l::DisableSubDetector" alt="" coords="197,70,344,111"/>
+<area shape="rect" id="node4" href="$class_detector_construction.html#ab758cd02f3a89328e9ecd0360663f389" title="DetectorConstruction\l::EnableStructure" alt="" coords="197,135,344,177"/>
+<area shape="rect" id="node5" href="$class_detector_construction.html#ac83473f0142df4f92399048935a182d7" title="DetectorConstruction\l::DisableStructure" alt="" coords="197,201,344,242"/>
+</map>

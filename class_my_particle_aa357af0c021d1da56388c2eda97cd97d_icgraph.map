@@ -1,0 +1,7 @@
+<map id="MyParticle::calcMomentum" name="MyParticle::calcMomentum">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a54a469d08d39f6fbd9d09febff7c3204" title="MyEventGenerator::Create\lInitialState" alt="" coords="464,5,643,46"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="236,67,415,109"/>
+<area shape="rect" id="node6" href="$class_my_particle.html#a2aa2c5a11f79314237b921f905b40fbc" title="MyParticle::calcMomentum" alt="" coords="235,133,416,160"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="691,38,883,79"/>
+<area shape="rect" id="node5" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="464,70,643,111"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="TDumpGeometry::GetInstance" name="TDumpGeometry::GetInstance">
+<area shape="rect" id="node2" href="$class_t_dump_detector.html#a1eec2a20f12a295b47d36fdde8fff810" title="TDumpDetector::CreateGeometry" alt="" coords="269,12,488,39"/>
+<area shape="rect" id="node4" href="$class_t_dump_messenger.html#a3581781347cd613534271badf6d63e51" title="TDumpMessenger::TDumpMessenger" alt="" coords="257,63,501,89"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="549,5,696,46"/>
+</map>

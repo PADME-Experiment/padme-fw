@@ -1,0 +1,6 @@
+<map id="MyParticle::setMass" name="MyParticle::setMass">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a62ad7c2b6e9244ac3fe8d793be17d0c1" title="MyEventGenerator::Create\lFinalState3Photon" alt="" coords="197,5,376,46"/>
+<area shape="rect" id="node5" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="197,70,376,111"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="424,38,603,79"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="651,38,843,79"/>
+</map>

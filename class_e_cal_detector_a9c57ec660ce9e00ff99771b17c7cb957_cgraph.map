@@ -1,0 +1,5 @@
+<map id="ECalDetector::GetECalFrontFaceZ" name="ECalDetector::GetECalFrontFaceZ">
+<area shape="rect" id="node2" href="$class_e_cal_geometry.html#adcf745bbfad13680132c2f512bc8460a" title="ECalGeometry::GetInstance" alt="" coords="248,5,435,32"/>
+<area shape="rect" id="node4" href="$class_e_cal_geometry.html#ac7ca9b77a017d236512651bd6d7dedb7" title="ECalGeometry::GetECalFront\lFacePosZ" alt="" coords="243,57,439,98"/>
+<area shape="rect" id="node3" href="$class_e_cal_geometry.html#a1de27ae8ca5b015304b61605924a5ee9" title="ECalGeometry::ECalGeometry" alt="" coords="488,5,691,32"/>
+</map>

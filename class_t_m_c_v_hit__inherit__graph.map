@@ -1,0 +1,8 @@
+<map id="TMCVHit" name="TMCVHit">
+<area shape="rect" id="node3" href="$class_t_e_cal_m_c_hit.html" title="TECalMCHit" alt="" coords="5,155,101,181"/>
+<area shape="rect" id="node4" href="$class_t_e_veto_m_c_hit.html" title="TEVetoMCHit" alt="" coords="127,155,231,181"/>
+<area shape="rect" id="node5" href="$class_t_h_e_p_veto_m_c_hit.html" title="THEPVetoMCHit" alt="" coords="255,155,377,181"/>
+<area shape="rect" id="node6" href="$class_t_p_veto_m_c_hit.html" title="TPVetoMCHit" alt="" coords="401,155,505,181"/>
+<area shape="rect" id="node7" href="$class_t_s_a_c_m_c_hit.html" title="TSACMCHit" alt="" coords="529,155,625,181"/>
+<area shape="rect" id="node8" href="$class_t_target_m_c_hit.html" title="TTargetMCHit" alt="" coords="650,155,755,181"/>
+</map>

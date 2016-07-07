@@ -1,0 +1,15 @@
+<map id="RootIOManager::RootIOManager" name="RootIOManager::RootIOManager">
+<area shape="rect" id="node2" href="$class_root_i_o_manager.html#a18f7cfd03d3bf64bead960d14746a989" title="RootIOManager::GetInstance" alt="" coords="270,259,463,285"/>
+<area shape="rect" id="node3" href="$class_e_cal_root_i_o.html#a6b0f0a69e68ad7e56ef1705949422e7a" title="ECalRootIO::NewRun" alt="" coords="541,5,693,32"/>
+<area shape="rect" id="node4" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="513,56,722,83"/>
+<area shape="rect" id="node5" href="$class_e_veto_root_i_o.html#a92e323b9dcab29b514bf0fe0d0b1dbb8" title="EVetoRootIO::NewRun" alt="" coords="538,107,697,133"/>
+<area shape="rect" id="node6" href="$class_h_e_p_veto_root_i_o.html#a9f056b3ade3dacd5020df36ff07f2913" title="HEPVetoRootIO::NewRun" alt="" coords="528,157,707,184"/>
+<area shape="rect" id="node7" href="$_p_a_d_m_e_m_c_8cc.html#abd382ad3c8079e6bd94332234d24f5a0" title="sighandler" alt="" coords="577,208,658,235"/>
+<area shape="rect" id="node9" href="$_p_a_d_m_e_m_c_8cc.html#a3c04138a5bfe5d72780bb7e82a18e627" title="main" alt="" coords="592,259,643,285"/>
+<area shape="rect" id="node10" href="$class_p_veto_root_i_o.html#a122613390e78ec6a9b351bb887666bb0" title="PVetoRootIO::NewRun" alt="" coords="538,309,697,336"/>
+<area shape="rect" id="node11" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="518,360,717,387"/>
+<area shape="rect" id="node12" href="$class_run_action.html#a49e3c5db63358317c3babca100163bd9" title="RunAction::EndOfRunAction" alt="" coords="523,411,712,437"/>
+<area shape="rect" id="node13" href="$class_s_a_c_root_i_o.html#aa9a1f8421d7a45aa51eaa04a1fee447a" title="SACRootIO::NewRun" alt="" coords="542,461,693,488"/>
+<area shape="rect" id="node14" href="$class_target_root_i_o.html#ad86322b58c6d13652a7c7b39b90fe452" title="TargetRootIO::NewRun" alt="" coords="537,512,697,539"/>
+<area shape="rect" id="node8" href="$_padme_reco_8cc.html#a43223cdecfe3d1b917b338e45139ef5f" title="main" alt="" coords="771,208,821,235"/>
+</map>

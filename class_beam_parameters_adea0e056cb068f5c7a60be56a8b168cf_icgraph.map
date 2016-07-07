@@ -1,0 +1,8 @@
+<map id="BeamParameters::GetBeamOriginPosZ" name="BeamParameters::GetBeamOriginPosZ">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a04d97ec9c48f30348ab4516244a4b2b9" title="BeamGenerator::GeneratePrimary\lPositron" alt="" coords="313,5,532,46"/>
+<area shape="rect" id="node5" href="$class_beam_generator.html#a3aa5d8198f5ba5c872e9da03894e2544" title="BeamGenerator::GenerateCalibration\lGamma" alt="" coords="305,70,541,111"/>
+<area shape="rect" id="node6" href="$class_root_i_o_manager.html#a7623dc41ca767d8c1ced6889f2fd8e28" title="RootIOManager::NewRun" alt="" coords="336,136,509,163"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="589,45,797,72"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="846,38,1007,79"/>
+<area shape="rect" id="node7" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="594,136,793,163"/>
+</map>

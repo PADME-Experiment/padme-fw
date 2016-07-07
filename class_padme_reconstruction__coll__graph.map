@@ -1,0 +1,12 @@
+<map id="PadmeReconstruction" name="PadmeReconstruction">
+<area shape="rect" id="node2" href="$class_padme_v_reconstruction.html" title="PadmeVReconstruction" alt="" coords="416,44,576,71"/>
+<area shape="rect" id="node3" href="$class_padme_v_named_module.html" title="PadmeVNamedModule" alt="" coords="126,44,282,71"/>
+<area shape="rect" id="node4" href="$class_t_m_c_event.html" title="TMCEvent" alt="" coords="307,116,392,143"/>
+<area shape="rect" id="node7" href="$class_t_m_c_v_event.html" title="TMCVEvent" alt="" coords="157,259,251,285"/>
+<area shape="rect" id="node6" href="$class_t_h_e_p_veto_m_c_event.html" title="THEPVetoMCEvent" alt="" coords="426,157,566,184"/>
+<area shape="rect" id="node8" href="$class_t_p_veto_m_c_event.html" title="TPVetoMCEvent" alt="" coords="435,208,557,235"/>
+<area shape="rect" id="node9" href="$class_t_e_cal_m_c_event.html" title="TECalMCEvent" alt="" coords="439,259,553,285"/>
+<area shape="rect" id="node10" href="$class_t_s_a_c_m_c_event.html" title="TSACMCEvent" alt="" coords="439,309,553,336"/>
+<area shape="rect" id="node11" href="$class_t_e_veto_m_c_event.html" title="TEVetoMCEvent" alt="" coords="435,360,557,387"/>
+<area shape="rect" id="node12" href="$class_t_target_m_c_event.html" title="TTargetMCEvent" alt="" coords="435,411,557,437"/>
+</map>

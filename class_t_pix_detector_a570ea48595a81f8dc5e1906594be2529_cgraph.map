@@ -1,0 +1,20 @@
+<map id="TPixDetector::CreateGeometry" name="TPixDetector::CreateGeometry">
+<area shape="rect" id="node2" href="$class_t_pix_geometry.html#ac5066dd2cadb6f5a9d40cd874046d35d" title="TPixGeometry::GetInstance" alt="" coords="271,5,457,32"/>
+<area shape="rect" id="node4" href="$class_t_pix_geometry.html#a0b9d4601dd5db0292a1fb529cc53a90b" title="TPixGeometry::GetTPixPosX" alt="" coords="267,56,461,83"/>
+<area shape="rect" id="node5" href="$class_t_pix_geometry.html#ad691dc7e7a36edd1bcdbd98f58e49235" title="TPixGeometry::GetTPixPosY" alt="" coords="267,107,461,133"/>
+<area shape="rect" id="node6" href="$class_t_pix_geometry.html#aa5e4cafa30101f4f7cdcc38a192b0be4" title="TPixGeometry::GetTPixPosZ" alt="" coords="267,157,461,184"/>
+<area shape="rect" id="node7" href="$class_t_pix_geometry.html#a9cfd358108f3e60b46f2394bc35bb51e" title="TPixGeometry::GetTPixRotY" alt="" coords="268,208,460,235"/>
+<area shape="rect" id="node8" href="$class_t_pix_geometry.html#aef7f4133c2f05ce06a89ca1866bb887d" title="TPixGeometry::GetTPixSizeX" alt="" coords="265,259,463,285"/>
+<area shape="rect" id="node9" href="$class_t_pix_geometry.html#a52d1621e8472c29ea373e4514d7cbf6c" title="TPixGeometry::GetTPixSizeY" alt="" coords="521,335,719,361"/>
+<area shape="rect" id="node10" href="$class_t_pix_geometry.html#ac6552a07c97fe633c85ae2851fc9586b" title="TPixGeometry::GetTPixSizeZ" alt="" coords="522,807,718,833"/>
+<area shape="rect" id="node11" href="$class_t_pix_geometry.html#a79fbac75a0bf65e07ee825f3cb7aa04b" title="TPixGeometry::GetChipSizeX" alt="" coords="265,411,463,437"/>
+<area shape="rect" id="node12" href="$class_t_pix_geometry.html#a50b5cff4be846b438b2d1f4688d1cb5b" title="TPixGeometry::GetChipSizeY" alt="" coords="265,461,463,488"/>
+<area shape="rect" id="node13" href="$class_t_pix_geometry.html#a1d5a76e76fd93d1f0665239f9f829eb2" title="TPixGeometry::GetChipSizeZ" alt="" coords="266,512,462,539"/>
+<area shape="rect" id="node14" href="$class_t_pix_geometry.html#a44359dc3db642c6e200c51ef0e164d63" title="TPixGeometry::GetTPixSensitive\lDetectorName" alt="" coords="256,563,472,605"/>
+<area shape="rect" id="node15" href="$class_t_pix_geometry.html#a15597a0c215071d3a8e2a9af0571d9c3" title="TPixGeometry::GetTPixNRows" alt="" coords="261,629,467,656"/>
+<area shape="rect" id="node16" href="$class_t_pix_geometry.html#a0abb64b221464c1830bb701504a941b4" title="TPixGeometry::GetTPixNCols" alt="" coords="265,680,463,707"/>
+<area shape="rect" id="node17" href="$class_t_pix_geometry.html#ac116936334b832629b49eb83edf9e2c0" title="TPixGeometry::GetChipPosX" alt="" coords="267,731,461,757"/>
+<area shape="rect" id="node18" href="$class_t_pix_geometry.html#ae83c0c2e8fefc4a5e2bc7905c5b5df80" title="TPixGeometry::GetChipPosY" alt="" coords="267,309,461,336"/>
+<area shape="rect" id="node19" href="$class_t_pix_geometry.html#a4df4a323c6e727327f144e77a4bfbbe0" title="TPixGeometry::GetChipPosZ" alt="" coords="267,832,461,859"/>
+<area shape="rect" id="node3" href="$class_t_pix_geometry.html#a5ea5adbb4eaccda38c77f26ea9b5ab9f" title="TPixGeometry::TPixGeometry" alt="" coords="521,5,719,32"/>
+</map>

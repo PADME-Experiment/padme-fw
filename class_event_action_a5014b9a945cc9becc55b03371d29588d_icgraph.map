@@ -1,0 +1,4 @@
+<map id="EventAction::GetCharge" name="EventAction::GetCharge">
+<area shape="rect" id="node2" href="$class_event_action.html#a244a1ad45d8e896d049fe6ec5c97f016" title="EventAction::AddECryHits" alt="" coords="219,5,397,32"/>
+<area shape="rect" id="node3" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="446,5,655,32"/>
+</map>

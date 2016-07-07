@@ -1,0 +1,26 @@
+var class_t_a_d_c_trigger =
+[
+    [ "TADCTrigger", "class_t_a_d_c_trigger.html#ae8aebfb22fb94877e29f72e0c1b9fc33", null ],
+    [ "~TADCTrigger", "class_t_a_d_c_trigger.html#a812cf528bc9d4e921c2480f228359b23", null ],
+    [ "ClassDef", "class_t_a_d_c_trigger.html#a335e62f2d726c8aa0836b6cb162ad33a", null ],
+    [ "GetFrequency", "class_t_a_d_c_trigger.html#aa1842e9089f06c68e46682ac6be2740d", null ],
+    [ "GetGroupNumber", "class_t_a_d_c_trigger.html#aea9f0ebdb8fab53073862bffcc23f6f6", null ],
+    [ "GetNSamples", "class_t_a_d_c_trigger.html#aeac00e0035a96910e403e6dd2fda4a7a", null ],
+    [ "GetSample", "class_t_a_d_c_trigger.html#af3961ff955fc4ffa881e5caf50b13c36", null ],
+    [ "GetSamplesArray", "class_t_a_d_c_trigger.html#a035efa2d74d94e323c741d3674d65cbf", null ],
+    [ "GetStartIndexCell", "class_t_a_d_c_trigger.html#a4fe15b87d3c2312a3881e0a0fbfacc23", null ],
+    [ "GetTriggerSignal", "class_t_a_d_c_trigger.html#a864312353668f22a0b1c9bddbc08fe1a", null ],
+    [ "GetTriggerTimeTag", "class_t_a_d_c_trigger.html#af9041cc3d1a2ee2fc245f06a4d52800e", null ],
+    [ "SetFrequency", "class_t_a_d_c_trigger.html#aec12c4061b7212554e0ad7f1da021ba6", null ],
+    [ "SetGroupNumber", "class_t_a_d_c_trigger.html#ae4ba4322f846137acb7dadc5c25d92ac", null ],
+    [ "SetSample", "class_t_a_d_c_trigger.html#a38d77678dc92a9fd563adf8ceb2b6704", null ],
+    [ "SetStartIndexCell", "class_t_a_d_c_trigger.html#a40e491a1668f2dce879fe45eca37f87d", null ],
+    [ "SetTriggerSignal", "class_t_a_d_c_trigger.html#a38067866bbadc4f068c3616126b5b632", null ],
+    [ "SetTriggerTimeTag", "class_t_a_d_c_trigger.html#a3c9de8537899ad72a5775b3941fae2cd", null ],
+    [ "fFrequency", "class_t_a_d_c_trigger.html#a70426d5589072a53db4db52a38a42c3b", null ],
+    [ "fGroupNumber", "class_t_a_d_c_trigger.html#ac8dd62487b198c00fc8c8e795b0b1cba", null ],
+    [ "fSamples", "class_t_a_d_c_trigger.html#a772052d7a2e4c71dbddca667695125e5", null ],
+    [ "fStartIndexCell", "class_t_a_d_c_trigger.html#abf4d487a72700217be93e9d9cb4300b0", null ],
+    [ "fTriggerSignal", "class_t_a_d_c_trigger.html#a07102ecc10c476f5198427b42736e72e", null ],
+    [ "fTriggerTimeTag", "class_t_a_d_c_trigger.html#a7f2fba08c1dbc82f6315d171d33f542e", null ]
+];

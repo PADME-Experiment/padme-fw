@@ -1,0 +1,25 @@
+<map id="Grapher::AnalyzeEvents" name="Grapher::AnalyzeEvents">
+<area shape="rect" id="node2" href="$class_histo_manager.html#ab13b847a01eb2da01d1ce147ac891cd5" title="HistoManager::GetInstance" alt="" coords="221,31,403,57"/>
+<area shape="rect" id="node4" href="$class_histo_manager.html#aa4c92f656cb0461146d4c00b4704fd36" title="HistoManager::Reset" alt="" coords="239,132,385,159"/>
+<area shape="rect" id="node5" href="$class_e_c_a_l_anal.html#a3edc4073c8f46e74fbd744c37c546869" title="ECALAnal::SetEvent" alt="" coords="239,183,385,209"/>
+<area shape="rect" id="node6" href="$class_e_c_a_l_anal.html#a5fae3f7d0321ed97233a41c6fd0cf42f" title="ECALAnal::AnalyzeCharge" alt="" coords="222,411,402,437"/>
+<area shape="rect" id="node22" href="$class_e_c_a_l_anal.html#a6930183a50dd459df217203774698a4c" title="ECALAnal::AnalyzePosition" alt="" coords="219,233,405,260"/>
+<area shape="rect" id="node24" href="$class_t_raw_event.html#ac5968ef2302eff66b64edeb5422f9b3e" title="TRawEvent::Clear" alt="" coords="247,461,377,488"/>
+<area shape="rect" id="node3" href="$class_histo_manager.html#a88b135ed507e1ad1e7614da155e9f0b6" title="HistoManager::HistoManager" alt="" coords="473,5,665,32"/>
+<area shape="rect" id="node7" href="$class_t_raw_event.html#aab8008ee592ac3522f6ae53ed876ef96" title="TRawEvent::GetNADCBoards" alt="" coords="469,259,669,285"/>
+<area shape="rect" id="node8" href="$class_t_raw_event.html#a8baba8508ffd9318cb921a7e9a190277" title="TRawEvent::ADCBoard" alt="" coords="488,309,651,336"/>
+<area shape="rect" id="node9" href="$class_t_a_d_c_board.html#a8c21c55ca15870297e41029acbbf00fc" title="TADCBoard::GetBoardId" alt="" coords="486,360,653,387"/>
+<area shape="rect" id="node10" href="$class_t_a_d_c_board.html#acf469bfa113be462d1b718a05a58fdb7" title="TADCBoard::GetNADCTriggers" alt="" coords="465,715,673,741"/>
+<area shape="rect" id="node11" href="$class_t_a_d_c_board.html#aaf0870a595de21c8477b8ad7eccdfe33" title="TADCBoard::GetNADCChannels" alt="" coords="461,107,677,133"/>
+<area shape="rect" id="node12" href="$class_t_a_d_c_board.html#a4a4c3f0f938294ecc0e9788be1430807" title="TADCBoard::ADCChannel" alt="" coords="480,157,659,184"/>
+<area shape="rect" id="node13" href="$class_t_a_d_c_channel.html#a8676dc5d37192284e2ad871f4ab68df7" title="TADCChannel::GetChannelNumber" alt="" coords="454,208,685,235"/>
+<area shape="rect" id="node14" href="$class_t_a_d_c_channel.html#a819bf3c2a488a38427ec67b5d874133c" title="TADCChannel::GetNSamples" alt="" coords="471,765,668,792"/>
+<area shape="rect" id="node15" href="$class_t_a_d_c_channel.html#a6a4ea6ee78a346d12a22ce20caf19343" title="TADCChannel::GetSample" alt="" coords="479,816,659,843"/>
+<area shape="rect" id="node16" href="$class_v_histo.html#a1068fd843fc1c93108162809a67f86fd" title="VHisto::Fill1DHisto" alt="" coords="502,411,637,437"/>
+<area shape="rect" id="node17" href="$class_v_histo.html#a857e8b88eb7e3e199e40b156c30097fa" title="VHisto::Get1DHisto" alt="" coords="500,461,639,488"/>
+<area shape="rect" id="node18" href="$class_t_a_d_c_board.html#a5fc789910b608123b1784fab45ba8396" title="TADCBoard::ADCTrigger" alt="" coords="484,512,655,539"/>
+<area shape="rect" id="node19" href="$class_t_a_d_c_trigger.html#aea9f0ebdb8fab53073862bffcc23f6f6" title="TADCTrigger::GetGroupNumber" alt="" coords="465,563,674,589"/>
+<area shape="rect" id="node20" href="$class_t_a_d_c_trigger.html#aeac00e0035a96910e403e6dd2fda4a7a" title="TADCTrigger::GetNSamples" alt="" coords="475,613,664,640"/>
+<area shape="rect" id="node21" href="$class_t_a_d_c_trigger.html#af3961ff955fc4ffa881e5caf50b13c36" title="TADCTrigger::GetSample" alt="" coords="483,664,655,691"/>
+<area shape="rect" id="node23" href="$class_v_histo.html#a6c58310398c09cb9b7227c4bd06e7091" title="VHisto::Fill2DHisto" alt="" coords="502,56,637,83"/>
+</map>

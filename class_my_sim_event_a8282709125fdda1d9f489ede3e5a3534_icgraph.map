@@ -1,0 +1,5 @@
+<map id="MySimEvent::ClearEvent" name="MySimEvent::ClearEvent">
+<area shape="rect" id="node2" href="$class_my_event.html#a157c585223b4b7ae4b436f8eddcd257e" title="MyEvent::ClearEvent" alt="" coords="241,5,388,32"/>
+<area shape="rect" id="node4" href="$class_my_sim_event.html#aa94fb49089e84395b7abe6dd1c8ae84e" title="MySimEvent::MySimEvent" alt="" coords="225,56,405,83"/>
+<area shape="rect" id="node3" href="$class_my_event.html#a7ea5f6e3b938a2c04b12a35c0bafdce1" title="MyEvent::GetInstance" alt="" coords="454,5,607,32"/>
+</map>

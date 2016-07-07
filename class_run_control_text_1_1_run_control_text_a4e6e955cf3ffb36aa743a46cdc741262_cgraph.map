@@ -1,0 +1,9 @@
+<map id="RunControlText.RunControlText.ask_server" name="RunControlText.RunControlText.ask_server">
+<area shape="rect" id="node2" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aac7a5c3957881b38bbae84e97a1a9541" title="RunControlGUI.RunControl\lGUI.send_command" alt="" coords="238,5,421,46"/>
+<area shape="rect" id="node5" href="$class_run_control_text_1_1_run_control_text.html#aee87f33baec37349dcbbb630162c3484" title="RunControlText.RunControl\lText.send_command" alt="" coords="237,135,421,177"/>
+<area shape="rect" id="node7" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aa475589249dc6bd930e1d67cfaf9de7b" title="RunControlGUI.RunControl\lGUI.get_answer" alt="" coords="238,70,421,111"/>
+<area shape="rect" id="node8" href="$class_run_control_text_1_1_run_control_text.html#ac8ec76f65fbadff97b497923478a145b" title="RunControlText.RunControl\lText.get_answer" alt="" coords="237,201,421,242"/>
+<area shape="rect" id="node3" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a063f14694dd9df474079528b1ff1f199" title="RunControlGUI.RunControl\lGUI.error_exit" alt="" coords="470,87,653,129"/>
+<area shape="rect" id="node4" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a0080b150822eb7ab5d73641851997344" title="RunControlGUI.RunControl\lGUI.quit_daq" alt="" coords="702,87,885,129"/>
+<area shape="rect" id="node6" href="$class_run_control_text_1_1_run_control_text.html#adaccff897fd7140bb354a163e4254aa9" title="RunControlText.RunControl\lText.error_exit" alt="" coords="469,185,653,226"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="EVetoRootIO::NewRun" name="EVetoRootIO::NewRun">
+<area shape="rect" id="node2" href="$class_e_veto_geometry.html#a31c1f443f471bd57292aa51d7ea5b453" title="EVetoGeometry::GetHashTable" alt="" coords="225,5,431,32"/>
+<area shape="rect" id="node3" href="$class_t_detector_info.html#a902d0bc65881826e136c00d41fce53f5" title="TDetectorInfo::AddSubDetectorInfo" alt="" coords="214,56,442,83"/>
+<area shape="rect" id="node5" href="$class_t_sub_detector_info.html#a1572dc9d7a9e4772729bb148deaa8d90" title="TSubDetectorInfo::SetGeometry\lParameters" alt="" coords="223,107,433,149"/>
+<area shape="rect" id="node6" href="$class_t_sub_detector_info.html#af085761416480fa0c99d49f76545dd94" title="TSubDetectorInfo::Print" alt="" coords="248,173,408,200"/>
+<area shape="rect" id="node7" href="$class_root_i_o_manager.html#a18f7cfd03d3bf64bead960d14746a989" title="RootIOManager::GetInstance" alt="" coords="231,224,425,251"/>
+<area shape="rect" id="node12" href="$class_root_i_o_manager.html#a145947654333e57cdd6f9729c53f26d0" title="RootIOManager::GetEventTree" alt="" coords="227,275,429,301"/>
+<area shape="rect" id="node4" href="$class_t_detector_info.html#aebbc1eda2fefb84d502bc7d89cfe5521" title="TDetectorInfo::FindSubDetectorInfo" alt="" coords="491,56,722,83"/>
+<area shape="rect" id="node8" href="$class_root_i_o_manager.html#af9dd8488a53578a1c28ee8f27e28cb98" title="RootIOManager::RootIOManager" alt="" coords="499,224,714,251"/>
+<area shape="rect" id="node9" href="$class_datacard_manager.html#aa3e56b25776b3c2bcaafa5e8d992fc57" title="DatacardManager::GetInstance" alt="" coords="771,195,975,221"/>
+<area shape="rect" id="node11" href="$class_datacard_manager.html#a0442836b4ec12e82f2af81d526a33e89" title="DatacardManager::GetOutput\lFileName" alt="" coords="777,246,970,287"/>
+<area shape="rect" id="node10" href="$class_datacard_manager.html#a630c1faa0f8d9a8c2b9b1706c27e6640" title="DatacardManager::Datacard\lManager" alt="" coords="1024,187,1211,229"/>
+</map>

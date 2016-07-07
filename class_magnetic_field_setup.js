@@ -1,0 +1,28 @@
+var class_magnetic_field_setup =
+[
+    [ "MagneticFieldSetup", "class_magnetic_field_setup.html#ad39e23d95ff5a7ed49a591d7be7ffa7f", null ],
+    [ "MagneticFieldSetup", "class_magnetic_field_setup.html#aaf8f461be47efe935379fc596596befe", null ],
+    [ "~MagneticFieldSetup", "class_magnetic_field_setup.html#a8fb164d804289f639767f5bd414f7577", null ],
+    [ "GetConstantFieldValue", "class_magnetic_field_setup.html#a56f6a4460468faa4ec7c5f60575e2d09", null ],
+    [ "GetGlobalFieldManager", "class_magnetic_field_setup.html#a45263d2154de776e2bb069619b9ab81c", null ],
+    [ "GetLocalFieldManager", "class_magnetic_field_setup.html#ac12dd5efe0e3d58abe7b049f2b7cbc32", null ],
+    [ "GetLocalMagneticField", "class_magnetic_field_setup.html#a920dc0d199ff3c96bf4b9f63558f031b", null ],
+    [ "SetFieldValue", "class_magnetic_field_setup.html#a5fbb042c24eec9aa698ec11dc23d59e0", null ],
+    [ "SetFieldValue", "class_magnetic_field_setup.html#a1ce9baec6384fe1000b076527db77f01", null ],
+    [ "SetMinStep", "class_magnetic_field_setup.html#aff57d20148ee48143730b55dcd833a34", null ],
+    [ "SetStepper", "class_magnetic_field_setup.html#a2dc45c78d71a7b70558b1bda6cdfcc48", null ],
+    [ "SetStepperType", "class_magnetic_field_setup.html#ae2576a9743d00bbba1801e0865e4742b", null ],
+    [ "UpdateField", "class_magnetic_field_setup.html#adaad5c06186d1a4c8d684158217b00e5", null ],
+    [ "fChordFinder", "class_magnetic_field_setup.html#a84386e06317954e5ea5c379bff704f97", null ],
+    [ "fEquation", "class_magnetic_field_setup.html#a32639bf0f86a7ebce478af90d68fba7d", null ],
+    [ "fFieldManager", "class_magnetic_field_setup.html#a242af65c232b5192376c47d295fd5f9a", null ],
+    [ "fLocalChordFinder", "class_magnetic_field_setup.html#aab45355d2ed345d36c94d2b4f1eee426", null ],
+    [ "fLocalEquation", "class_magnetic_field_setup.html#a314e057b3ea82c66b3a0c3c0138562ea", null ],
+    [ "fLocalFieldManager", "class_magnetic_field_setup.html#aa926972b8823038752a8abb7d324ff99", null ],
+    [ "fLocalMagneticField", "class_magnetic_field_setup.html#a6de99a10259061f9888be2d97081862b", null ],
+    [ "fLocalStepper", "class_magnetic_field_setup.html#a7ee4493fc21fc880523c6183d5dab84f", null ],
+    [ "fMagneticField", "class_magnetic_field_setup.html#ae77e38bdb62943a4ca71c12567590f56", null ],
+    [ "fMinStep", "class_magnetic_field_setup.html#a3987ac4216154e2f782955368af6e782", null ],
+    [ "fStepper", "class_magnetic_field_setup.html#a93004e8bb3325ec9277cfe30380036dc", null ],
+    [ "fStepperType", "class_magnetic_field_setup.html#a742416ed508710dc94c0ff0739c70b32", null ]
+];

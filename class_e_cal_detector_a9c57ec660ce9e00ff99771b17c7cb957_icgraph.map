@@ -1,0 +1,6 @@
+<map id="ECalDetector::GetECalFrontFaceZ" name="ECalDetector::GetECalFrontFaceZ">
+<area shape="rect" id="node2" href="$class_detector_construction.html#a14926318f4740ac41f7134fe9ab4ebc1" title="DetectorConstruction\l::GetECalFrontFaceZ" alt="" coords="243,5,389,46"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#a3aa5d8198f5ba5c872e9da03894e2544" title="BeamGenerator::GenerateCalibration\lGamma" alt="" coords="438,5,674,46"/>
+<area shape="rect" id="node4" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="723,12,931,39"/>
+<area shape="rect" id="node5" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="979,5,1141,46"/>
+</map>

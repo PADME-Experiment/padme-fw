@@ -1,0 +1,7 @@
+<map id="DAQ_connect" name="DAQ_connect">
+<area shape="rect" id="node2" href="$_d_a_q_8c.html#a6cc054504ee6363102febc0468eb2339" title="get_LinkNum" alt="" coords="177,5,276,32"/>
+<area shape="rect" id="node3" href="$_d_a_q_8c.html#aa52999b1ad88362544cff2a3fa154014" title="get_ConetNode" alt="" coords="170,56,283,83"/>
+<area shape="rect" id="node4" href="$_d_a_q_8c.html#a80a58493d16c516eddb4f5b1280bfb76" title="set_signal_handlers" alt="" coords="158,107,295,133"/>
+<area shape="rect" id="node5" href="$_d_a_q_8c.html#a57dae6bcf94a70cbe68aedc2a25f2286" title="termination_handler" alt="" coords="345,107,479,133"/>
+<area shape="rect" id="node6" href="$_d_a_q_8h.html#a6e6a67bac43043d6ffcb235130240fe2" title="DAQ_close" alt="" coords="529,107,618,133"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="TargetHit::GetX" name="TargetHit::GetX">
+<area shape="rect" id="node2" href="$class_event_action.html#a259556af03bf980981e005e08b14e4ba" title="EventAction::AddTargetHits" alt="" coords="169,5,354,32"/>
+<area shape="rect" id="node3" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="403,5,613,32"/>
+</map>

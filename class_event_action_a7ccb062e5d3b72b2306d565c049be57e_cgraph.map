@@ -1,0 +1,8 @@
+<map id="EventAction::AddSACHits" name="EventAction::AddSACHits">
+<area shape="rect" id="node2" href="$class_s_a_c_hit.html#a32ec16cefedc2044611c52236e0a5594" title="SACHit::GetTrackID" alt="" coords="230,5,373,32"/>
+<area shape="rect" id="node3" href="$class_s_a_c_hit.html#ae791ad6d5f9aac6b997fcbe038c53b33" title="SACHit::GetEdep" alt="" coords="238,56,365,83"/>
+<area shape="rect" id="node4" href="$class_s_a_c_hit.html#afdfcf43482f11597e22c736aa8a4662c" title="SACHit::GetTime" alt="" coords="239,107,364,133"/>
+<area shape="rect" id="node5" href="$class_s_a_c_hit.html#a792159e6fafbcd238180f9079830ac1a" title="SACHit::GetPType" alt="" coords="234,157,369,184"/>
+<area shape="rect" id="node6" href="$class_s_a_c_hit.html#a63f6eab6f7eead4abc5ceae2c6ab0301" title="SACHit::GetX" alt="" coords="249,208,354,235"/>
+<area shape="rect" id="node7" href="$class_s_a_c_hit.html#a1d1ee11dfdaf6a75b7207b24a26df795" title="SACHit::GetY" alt="" coords="249,259,354,285"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$class_histo_manager.html#ab13b847a01eb2da01d1ce147ac891cd5" title="HistoManager::GetInstance" alt="" coords="105,5,287,32"/>
+<area shape="rect" id="node4" href="$class_grapher.html#a99ddbbac586ec40a1695193046ab0b6c" title="Grapher::GetInstance" alt="" coords="123,56,269,83"/>
+<area shape="rect" id="node6" href="$class_grapher.html#a7b51d0b565a2a208e862e4c7ec69f00f" title="Grapher::SetApplication" alt="" coords="116,107,276,133"/>
+<area shape="rect" id="node7" href="$class_grapher.html#a445abef9a32788e22f51a3cad1d34c5d" title="Grapher::SetFileName" alt="" coords="120,157,272,184"/>
+<area shape="rect" id="node8" href="$class_grapher.html#aeb1ec208037aa216e0028ffc08613c0d" title="Grapher::SetNEvents" alt="" coords="123,208,269,235"/>
+<area shape="rect" id="node3" href="$class_histo_manager.html#a88b135ed507e1ad1e7614da155e9f0b6" title="HistoManager::HistoManager" alt="" coords="336,5,528,32"/>
+<area shape="rect" id="node5" href="$class_grapher.html#a5e6967ec60280812ae37e09785287703" title="Grapher::Grapher" alt="" coords="371,56,493,83"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="SteppingAction" name="SteppingAction">
+<area shape="rect" id="node3" href="$class_event_action.html" title="EventAction" alt="" coords="525,277,619,304"/>
+<area shape="rect" id="node5" href="$class_run_action.html" title="RunAction" alt="" coords="168,187,251,213"/>
+<area shape="rect" id="node7" href="$class_histo_manager.html" title="HistoManager" alt="" coords="250,96,352,123"/>
+<area shape="rect" id="node8" href="$struct_n_t_event.html" title="NTEvent" alt="" coords="264,5,339,32"/>
+<area shape="rect" id="node9" href="$class_target_geometry.html" title="TargetGeometry" alt="" coords="422,187,537,213"/>
+<area shape="rect" id="node10" href="$class_e_cal_geometry.html" title="ECalGeometry" alt="" coords="645,187,752,213"/>
+<area shape="rect" id="node11" href="$class_beam_parameters.html" title="BeamParameters" alt="" coords="823,96,945,123"/>
+</map>

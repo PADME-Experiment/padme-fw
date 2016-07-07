@@ -1,0 +1,15 @@
+<map id="ChamberStructure::CreateGeometry" name="ChamberStructure::CreateGeometry">
+<area shape="rect" id="node2" href="$class_chamber_geometry.html#a6b412ef86191b66df5f54e8dcd0e6fbb" title="ChamberGeometry::GetInstance" alt="" coords="229,12,440,39"/>
+<area shape="rect" id="node4" href="$class_chamber_geometry.html#a23c1e7101561ce82e27aaff33a411866" title="ChamberGeometry::GetVCIn\lMagWallNVertices" alt="" coords="239,63,430,105"/>
+<area shape="rect" id="node5" href="$class_chamber_geometry.html#ae5e9f48ed9e1241f14033c690cd8f8ed" title="ChamberGeometry::GetVCIn\lMagWallVertex" alt="" coords="239,129,430,170"/>
+<area shape="rect" id="node6" href="$class_chamber_geometry.html#ab7fa4d25ae9c046d778b091fc1a2e746" title="ChamberGeometry::GetVCIn\lMagWallSizeY" alt="" coords="239,194,430,235"/>
+<area shape="rect" id="node7" href="$class_chamber_geometry.html#ae4de5ce492f43341127a4489bc3542ca" title="ChamberGeometry::GetVCIn\lMagThick" alt="" coords="239,259,430,301"/>
+<area shape="rect" id="node8" href="$class_chamber_geometry.html#accf0b9ffa4ddef950398f34e36fbfdda" title="ChamberGeometry::GetVCIn\lMagWallHoleRadius" alt="" coords="239,325,430,366"/>
+<area shape="rect" id="node9" href="$class_chamber_geometry.html#aa9a336e84536ae1681dd5fb0d8eb2b2d" title="ChamberGeometry::GetVCIn\lMagWallHolePosZ" alt="" coords="239,390,430,431"/>
+<area shape="rect" id="node10" href="$class_chamber_geometry.html#aca920bb3a406b1c1662fd2a7858dd780" title="ChamberGeometry::GetVCIn\lMagPlateNVertices" alt="" coords="239,455,430,497"/>
+<area shape="rect" id="node11" href="$class_chamber_geometry.html#a355d5daa90255fb3b22c20d5c1d9e165" title="ChamberGeometry::GetVCIn\lMagPlateVertex" alt="" coords="239,521,430,562"/>
+<area shape="rect" id="node12" href="$class_chamber_geometry.html#abf89e21b1794bb17f5fd3f42b4b4f352" title="ChamberGeometry::GetVCOut\lMagWallNVertices" alt="" coords="234,586,435,627"/>
+<area shape="rect" id="node13" href="$class_chamber_geometry.html#ae18051e0d7c39f77f030de8f331db59e" title="ChamberGeometry::GetVCOut\lMagWallVertex" alt="" coords="234,651,435,693"/>
+<area shape="rect" id="node14" href="$class_chamber_geometry.html#ac0e59894467a0a8aee195fcd69eb4439" title="ChamberGeometry::GetVCOut\lMagWallSizeY" alt="" coords="234,717,435,758"/>
+<area shape="rect" id="node3" href="$class_chamber_geometry.html#ac19284dd3fa73a42fb3a2d09d22478da" title="ChamberGeometry::Chamber\lGeometry" alt="" coords="489,5,682,46"/>
+</map>

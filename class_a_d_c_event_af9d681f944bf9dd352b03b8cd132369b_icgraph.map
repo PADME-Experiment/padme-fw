@@ -1,0 +1,5 @@
+<map id="ADCEvent::SetActiveChannelMask" name="ADCEvent::SetActiveChannelMask">
+<area shape="rect" id="node2" href="$class_a_d_c_board.html#a1d82cdec6f7a330617692115475ca591" title="ADCBoard::UnpackEvent" alt="" coords="286,5,458,32"/>
+<area shape="rect" id="node3" href="$class_a_d_c_board.html#a7d19efd2e13e6109965f233c9799568c" title="ADCBoard::ReadNextEvent" alt="" coords="507,5,693,32"/>
+<area shape="rect" id="node4" href="$class_a_d_c_board.html#a8840eeb4a904e6b112e3eb737c879cab" title="ADCBoard::NextEvent" alt="" coords="741,5,896,32"/>
+</map>

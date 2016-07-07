@@ -1,0 +1,6 @@
+<map id="TDetectorInfo::Clear" name="TDetectorInfo::Clear">
+<area shape="rect" id="node2" href="$class_t_padme_run.html#ab7109a7f9660a9c8eab2fef4a527031f" title="TPadmeRun::Clear" alt="" coords="195,31,330,57"/>
+<area shape="rect" id="node3" href="$class_root_i_o_manager.html#a7623dc41ca767d8c1ced6889f2fd8e28" title="RootIOManager::NewRun" alt="" coords="384,5,557,32"/>
+<area shape="rect" id="node5" href="$class_t_padme_run.html#afed6a51a8ce03f0338c38379e6270237" title="TPadmeRun::~TPadmeRun" alt="" coords="379,56,563,83"/>
+<area shape="rect" id="node4" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="611,5,810,32"/>
+</map>

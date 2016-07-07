@@ -1,0 +1,9 @@
+<map id="EventAction::AddEVetoHits" name="EventAction::AddEVetoHits">
+<area shape="rect" id="node2" href="$class_e_veto_hit.html#a0245b7948de97cfc10a1d9b550dc06cb" title="EVetoHit::GetEVetoNb" alt="" coords="237,5,395,32"/>
+<area shape="rect" id="node3" href="$class_e_veto_hit.html#af0537a64744583a77d9a3049374cd4ca" title="EVetoHit::GetHitE" alt="" coords="251,56,381,83"/>
+<area shape="rect" id="node4" href="$class_e_veto_hit.html#a89360e27562368b0b918cb8f02ccdc06" title="EVetoHit::GetTrackID" alt="" coords="241,107,391,133"/>
+<area shape="rect" id="node5" href="$class_e_veto_hit.html#a5a4d75dd3c7243619d39efda6f0bbc09" title="EVetoHit::GetEdep" alt="" coords="249,157,383,184"/>
+<area shape="rect" id="node6" href="$class_e_veto_hit.html#a28009aa37cdf2a7d584a7e678b13c3a6" title="EVetoHit::GetTime" alt="" coords="249,208,383,235"/>
+<area shape="rect" id="node7" href="$class_e_veto_hit.html#a09d15981a992de645fed6e55b9e08cf9" title="EVetoHit::GetX" alt="" coords="259,259,373,285"/>
+<area shape="rect" id="node8" href="$class_e_veto_hit.html#a2cdaa97bcb8dc0dcddde6fc798e94558" title="EVetoHit::GetY" alt="" coords="259,309,373,336"/>
+</map>

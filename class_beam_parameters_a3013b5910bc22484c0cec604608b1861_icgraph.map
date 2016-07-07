@@ -1,0 +1,6 @@
+<map id="BeamParameters::GetThreePhotonDecaysFilename" name="BeamParameters::GetThreePhotonDecaysFilename">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a3ec2173cdbf0ccc95e0bee2a5c80bf5e" title="BeamGenerator::CreateFinal\lStateThreeGamma" alt="" coords="242,5,430,46"/>
+<area shape="rect" id="node5" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="240,70,432,111"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="480,12,688,39"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="737,5,898,46"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="MyParticle::calcMass" name="MyParticle::calcMass">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a2ba8db42c2d8f34c82480995d98920d7" title="MyEventGenerator::Create\lIntermediateState" alt="" coords="203,5,381,46"/>
+<area shape="rect" id="node4" href="$class_my_particle.html#abcb1cc72de46e81138cec7fcb16fd126" title="MyParticle::operator+" alt="" coords="219,71,365,97"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="429,5,621,46"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="TDetectorInfo::Print" name="TDetectorInfo::Print">
+<area shape="rect" id="node2" href="$class_t_padme_run.html#a17e1fb9f33a4be8202451f4ca98d9cdd" title="TPadmeRun::Print" alt="" coords="192,31,323,57"/>
+<area shape="rect" id="node3" href="$class_root_i_o_manager.html#a907eaf5c71794b35ff20d919499bbf9a" title="RootIOManager::EndRun" alt="" coords="371,31,541,57"/>
+<area shape="rect" id="node4" href="$_p_a_d_m_e_m_c_8cc.html#abd382ad3c8079e6bd94332234d24f5a0" title="sighandler" alt="" coords="643,5,725,32"/>
+<area shape="rect" id="node6" href="$class_run_action.html#a49e3c5db63358317c3babca100163bd9" title="RunAction::EndOfRunAction" alt="" coords="589,56,779,83"/>
+<area shape="rect" id="node5" href="$_padme_reco_8cc.html#a43223cdecfe3d1b917b338e45139ef5f" title="main" alt="" coords="827,5,877,32"/>
+</map>

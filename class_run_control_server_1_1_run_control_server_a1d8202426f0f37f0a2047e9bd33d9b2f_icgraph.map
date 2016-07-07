@@ -1,0 +1,6 @@
+<map id="RunControlServer.RunControlServer.read_setup_list" name="RunControlServer.RunControlServer.read_setup_list">
+<area shape="rect" id="node2" href="$class_run_control_server_1_1_run_control_server.html#aec5130417c1cc0716e80d451d8174b79" title="RunControlServer.RunControl\lServer.get_setup_list" alt="" coords="251,5,447,46"/>
+<area shape="rect" id="node5" href="$class_run_control_server_1_1_run_control_server.html#a9b2ce73ecbd87e436bc11f5c03e6eb4b" title="RunControlServer.RunControl\lServer.change_setup" alt="" coords="251,70,447,111"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#a77f1bd06f189c7aa1ef851cae78579d3" title="RunControlServer.RunControl\lServer.state_idle" alt="" coords="497,38,693,79"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="742,38,938,79"/>
+</map>

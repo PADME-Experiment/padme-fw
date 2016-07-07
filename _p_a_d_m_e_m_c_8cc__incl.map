@@ -1,0 +1,28 @@
+<map id="PADMEMC.cc" name="PADMEMC.cc">
+<area shape="rect" id="node4" href="$_detector_construction_8hh.html" title="DetectorConstruction.hh" alt="" coords="991,229,1155,256"/>
+<area shape="rect" id="node10" href="$_physics_list_8hh.html" title="PhysicsList.hh" alt="" coords="830,229,937,256"/>
+<area shape="rect" id="node18" href="$_primary_generator_action_8hh.html" title="PrimaryGeneratorAction.hh" alt="" coords="3444,80,3623,107"/>
+<area shape="rect" id="node24" href="$_run_action_8hh.html" title="RunAction.hh" alt="" coords="3881,80,3983,107"/>
+<area shape="rect" id="node26" href="$_event_action_8hh.html" title="EventAction.hh" alt="" coords="2059,155,2169,181"/>
+<area shape="rect" id="node39" href="$_stepping_action_8hh.html" title="SteppingAction.hh" alt="" coords="2868,155,2996,181"/>
+<area shape="rect" id="node41" href="$_stepping_verbose_8hh.html" title="SteppingVerbose.hh" alt="" coords="4007,80,4145,107"/>
+<area shape="rect" id="node43" href="$_stacking_action_8hh.html" title="StackingAction.hh" alt="" coords="4361,80,4489,107"/>
+<area shape="rect" id="node45" href="$_datacard_manager_8hh.html" title="DatacardManager.hh" alt="" coords="3637,155,3779,181"/>
+<area shape="rect" id="node47" href="$_constants_8hh.html" title="Constants.hh" alt="" coords="4170,80,4269,107"/>
+<area shape="rect" id="node48" href="$_p_a_d_m_e___p_h_y_s_8hh.html" title="PADME_PHYS.hh" alt="" coords="4611,155,4743,181"/>
+<area shape="rect" id="node49" href="$_root_i_o_manager_8hh.html" title="RootIOManager.hh" alt="" coords="3803,155,3935,181"/>
+<area shape="rect" id="node20" href="$_beam_generator_8hh.html" title="BeamGenerator.hh" alt="" coords="3269,155,3400,181"/>
+<area shape="rect" id="node22" href="$_beam_parameters_8hh.html" title="BeamParameters.hh" alt="" coords="2971,229,3112,256"/>
+<area shape="rect" id="node28" href="$_e_cal_hit_8hh.html" title="ECalHit.hh" alt="" coords="1577,229,1663,256"/>
+<area shape="rect" id="node29" href="$_target_hit_8hh.html" title="TargetHit.hh" alt="" coords="1687,229,1781,256"/>
+<area shape="rect" id="node30" href="$_tracker_hit_8hh.html" title="TrackerHit.hh" alt="" coords="1807,229,1908,256"/>
+<area shape="rect" id="node31" href="$_h_e_p_veto_hit_8hh.html" title="HEPVetoHit.hh" alt="" coords="1932,229,2044,256"/>
+<area shape="rect" id="node32" href="$_p_veto_hit_8hh.html" title="PVetoHit.hh" alt="" coords="2068,229,2161,256"/>
+<area shape="rect" id="node33" href="$_e_veto_hit_8hh.html" title="EVetoHit.hh" alt="" coords="2185,229,2279,256"/>
+<area shape="rect" id="node34" href="$_s_a_c_hit_8hh.html" title="SACHit.hh" alt="" coords="2303,229,2388,256"/>
+<area shape="rect" id="node35" href="$_l_a_v_hit_8hh.html" title="LAVHit.hh" alt="" coords="1180,229,1263,256"/>
+<area shape="rect" id="node36" href="$_g_filt_hit_8hh.html" title="GFiltHit.hh" alt="" coords="1287,229,1372,256"/>
+<area shape="rect" id="node37" href="$_e_cal_geometry_8hh.html" title="ECalGeometry.hh" alt="" coords="2622,229,2748,256"/>
+<area shape="rect" id="node38" href="$_target_geometry_8hh.html" title="TargetGeometry.hh" alt="" coords="2463,229,2597,256"/>
+<area shape="rect" id="node46" href="$_datacard_messenger_8hh.html" title="DatacardMessenger.hh" alt="" coords="3693,229,3851,256"/>
+</map>

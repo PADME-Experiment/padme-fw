@@ -1,0 +1,8 @@
+<map id="BeamParameters::GetUbosonMass" name="BeamParameters::GetUbosonMass">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a9a61b6e4e538dd10536569013e22dffa" title="BeamGenerator::CreateFinal\lStateUboson" alt="" coords="298,5,486,46"/>
+<area shape="rect" id="node5" href="$class_beam_generator.html#a60f2fab5ee96813210233307f3dab117" title="BeamGenerator::GetUbosonMass" alt="" coords="283,71,501,97"/>
+<area shape="rect" id="node7" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="296,122,488,163"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="549,12,757,39"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="806,5,967,46"/>
+<area shape="rect" id="node6" href="$class_primary_generator_action.html#a615f48f04d00856ccc46f8ac8630fa9e" title="PrimaryGeneratorAction\l::GetUbosonMass" alt="" coords="573,63,734,105"/>
+</map>

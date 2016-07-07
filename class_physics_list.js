@@ -1,0 +1,25 @@
+var class_physics_list =
+[
+    [ "PhysicsList", "class_physics_list.html#aeecf835245a0b10c24e5e6c37cbb0dab", null ],
+    [ "~PhysicsList", "class_physics_list.html#a6cff761e006f8d5c57f0beca0e7d61ae", null ],
+    [ "AddParameterisation", "class_physics_list.html#afae2a01f65ac01ccca4d8bde2c0b31d5", null ],
+    [ "AddTransportation", "class_physics_list.html#af6e21e4ae5ed682e55c9971d8ec9cf60", null ],
+    [ "ConstructBaryons", "class_physics_list.html#a628054b8fcfbd759d3f1a65b1eba7e01", null ],
+    [ "ConstructBosons", "class_physics_list.html#ab7158dbb73a310fc99331005277502b5", null ],
+    [ "ConstructEM", "class_physics_list.html#a42728fc670ddaf9404a9e023f5843c73", null ],
+    [ "ConstructGeneral", "class_physics_list.html#a413551cc4da5cac5b51a462493890a0a", null ],
+    [ "ConstructIons", "class_physics_list.html#aa5c6333ccf1fa8a5ab9e36af1f8fc687", null ],
+    [ "ConstructLeptons", "class_physics_list.html#ab55f046b278d5c02b8c83aaa332504ec", null ],
+    [ "ConstructMesons", "class_physics_list.html#a2d4d082da733c65153a801a7c70a276e", null ],
+    [ "ConstructNuclearProcesses", "class_physics_list.html#abb23c9fa6d51de16a10d2a6659e2c240", null ],
+    [ "ConstructOpticalPhysics", "class_physics_list.html#a914f85017f241fe8396cba5dd68beebe", null ],
+    [ "ConstructParticle", "class_physics_list.html#af7906507122c985d2da3e61c56efe60e", null ],
+    [ "ConstructProcess", "class_physics_list.html#a9c08bc28eba2ae62104b967280901a3f", null ],
+    [ "SetCuts", "class_physics_list.html#a0ba901b82ae30657b109930645fe8017", null ],
+    [ "fAbsorptionProcess", "class_physics_list.html#ae97fe8f084d9a0f8048a48f6a0356d94", null ],
+    [ "fBoundaryProcess", "class_physics_list.html#a7150dc819f14a9912ce6df7954d10f6b", null ],
+    [ "fCerenkovProcess", "class_physics_list.html#a90ac515a4b11d5dc64011baf98761678", null ],
+    [ "fRayleighScatteringProcess", "class_physics_list.html#aad0286ccdc9a85eefa449a08f32cfb11", null ],
+    [ "fScintillationProcess", "class_physics_list.html#afd99e98276fe7765f9d81b58fa78bd69", null ],
+    [ "IsOpticsON", "class_physics_list.html#aeba218f4883c9ae5442107c84043ca09", null ]
+];

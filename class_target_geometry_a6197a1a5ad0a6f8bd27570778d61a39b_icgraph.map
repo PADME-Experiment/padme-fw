@@ -1,0 +1,10 @@
+<map id="TargetGeometry::GetTargetSizeZ" name="TargetGeometry::GetTargetSizeZ">
+<area shape="rect" id="node2" href="$class_target_detector.html#acc591f30087f1b1f15b26715ba10921a" title="TargetDetector::CreateGeometry" alt="" coords="237,15,451,41"/>
+<area shape="rect" id="node4" href="$class_target_detector.html#a321216a0b9ef2e135b326f8f30ff7a97" title="TargetDetector::GetTarget\lThickness" alt="" coords="257,67,431,109"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="500,5,647,46"/>
+<area shape="rect" id="node5" href="$class_detector_construction.html#a5a581ad2547f8dae583cb2c5156a9931" title="DetectorConstruction\l::GetTargetThickness" alt="" coords="499,70,647,111"/>
+<area shape="rect" id="node6" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="933,77,1141,104"/>
+<area shape="rect" id="node8" href="$class_beam_generator.html#a9a61b6e4e538dd10536569013e22dffa" title="BeamGenerator::CreateFinal\lStateUboson" alt="" coords="697,70,885,111"/>
+<area shape="rect" id="node9" href="$class_beam_generator.html#a3ec2173cdbf0ccc95e0bee2a5c80bf5e" title="BeamGenerator::CreateFinal\lStateThreeGamma" alt="" coords="697,135,885,177"/>
+<area shape="rect" id="node7" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="1190,70,1351,111"/>
+</map>

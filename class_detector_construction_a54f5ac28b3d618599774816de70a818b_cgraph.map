@@ -1,0 +1,6 @@
+<map id="DetectorConstruction::GetTargetFrontFaceZ" name="DetectorConstruction::GetTargetFrontFaceZ">
+<area shape="rect" id="node2" href="$class_target_detector.html#a65af261e0fd87e6e13f42711f25c0a63" title="TargetDetector::GetTarget\lFrontFaceZ" alt="" coords="209,27,383,69"/>
+<area shape="rect" id="node3" href="$class_target_geometry.html#af0068d4199d6642002f74d410303823f" title="TargetGeometry::GetInstance" alt="" coords="432,5,627,32"/>
+<area shape="rect" id="node5" href="$class_target_geometry.html#addedf7c3e121dbd8b32ecbf523903287" title="TargetGeometry::GetTarget\lFrontFacePosZ" alt="" coords="438,57,621,98"/>
+<area shape="rect" id="node4" href="$class_target_geometry.html#ac77e8fce88dd3829ffa280137ab90964" title="TargetGeometry::TargetGeometry" alt="" coords="675,5,893,32"/>
+</map>

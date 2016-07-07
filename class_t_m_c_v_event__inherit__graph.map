@@ -1,0 +1,8 @@
+<map id="TMCVEvent" name="TMCVEvent">
+<area shape="rect" id="node3" href="$class_t_e_cal_m_c_event.html" title="TECalMCEvent" alt="" coords="5,155,120,181"/>
+<area shape="rect" id="node4" href="$class_t_e_veto_m_c_event.html" title="TEVetoMCEvent" alt="" coords="145,155,265,181"/>
+<area shape="rect" id="node5" href="$class_t_h_e_p_veto_m_c_event.html" title="THEPVetoMCEvent" alt="" coords="290,155,429,181"/>
+<area shape="rect" id="node6" href="$class_t_p_veto_m_c_event.html" title="TPVetoMCEvent" alt="" coords="454,155,575,181"/>
+<area shape="rect" id="node7" href="$class_t_s_a_c_m_c_event.html" title="TSACMCEvent" alt="" coords="599,155,712,181"/>
+<area shape="rect" id="node8" href="$class_t_target_m_c_event.html" title="TTargetMCEvent" alt="" coords="737,155,860,181"/>
+</map>

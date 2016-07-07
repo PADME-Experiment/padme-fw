@@ -1,0 +1,35 @@
+<map id="DetectorConstruction" name="DetectorConstruction">
+<area shape="rect" id="node36" href="$class_detector_messenger.html" title="DetectorMessenger" alt="" coords="1309,527,1445,553"/>
+<area shape="rect" id="node3" href="$class_t_dump_detector.html" title="TDumpDetector" alt="" coords="672,404,787,431"/>
+<area shape="rect" id="node4" href="$class_t_dump_messenger.html" title="TDumpMessenger" alt="" coords="318,399,447,425"/>
+<area shape="rect" id="node8" href="$class_l_a_v_messenger.html" title="LAVMessenger" alt="" coords="327,657,438,684"/>
+<area shape="rect" id="node11" href="$class_t_pix_messenger.html" title="TPixMessenger" alt="" coords="326,44,439,71"/>
+<area shape="rect" id="node15" href="$class_target_messenger.html" title="TargetMessenger" alt="" coords="321,225,444,252"/>
+<area shape="rect" id="node18" href="$class_e_cal_messenger.html" title="ECalMessenger" alt="" coords="325,488,440,515"/>
+<area shape="rect" id="node22" href="$class_h_e_p_veto_messenger.html" title="HEPVetoMessenger" alt="" coords="312,585,453,612"/>
+<area shape="rect" id="node25" href="$class_e_veto_messenger.html" title="EVetoMessenger" alt="" coords="321,315,444,341"/>
+<area shape="rect" id="node28" href="$class_p_veto_messenger.html" title="PVetoMessenger" alt="" coords="321,825,444,852"/>
+<area shape="rect" id="node31" href="$class_magnet_messenger.html" title="MagnetMessenger" alt="" coords="318,135,447,161"/>
+<area shape="rect" id="node34" href="$class_s_a_c_messenger.html" title="SACMessenger" alt="" coords="325,759,440,785"/>
+<area shape="rect" id="node6" href="$class_t_dump_geometry.html" title="TDumpGeometry" alt="" coords="12,403,135,429"/>
+<area shape="rect" id="node7" href="$class_l_a_v_detector.html" title="LAVDetector" alt="" coords="681,657,778,684"/>
+<area shape="rect" id="node9" href="$class_l_a_v_geometry.html" title="LAVGeometry" alt="" coords="21,731,125,757"/>
+<area shape="rect" id="node10" href="$class_t_pix_detector.html" title="TPixDetector" alt="" coords="680,44,779,71"/>
+<area shape="rect" id="node12" href="$class_t_pix_geometry.html" title="TPixGeometry" alt="" coords="20,44,127,71"/>
+<area shape="rect" id="node13" href="$class_chamber_structure.html" title="ChamberStructure" alt="" coords="665,505,793,532"/>
+<area shape="rect" id="node14" href="$class_target_detector.html" title="TargetDetector" alt="" coords="675,225,784,252"/>
+<area shape="rect" id="node16" href="$class_target_geometry.html" title="TargetGeometry" alt="" coords="15,224,131,251"/>
+<area shape="rect" id="node17" href="$class_e_cal_detector.html" title="ECalDetector" alt="" coords="679,455,780,481"/>
+<area shape="rect" id="node19" href="$class_e_cal_geometry.html" title="ECalGeometry" alt="" coords="19,492,127,519"/>
+<area shape="rect" id="node20" href="$class_hall_structure.html" title="HallStructure" alt="" coords="680,607,779,633"/>
+<area shape="rect" id="node21" href="$class_h_e_p_veto_detector.html" title="HEPVetoDetector" alt="" coords="666,556,793,583"/>
+<area shape="rect" id="node23" href="$class_h_e_p_veto_geometry.html" title="HEPVetoGeometry" alt="" coords="6,641,141,668"/>
+<area shape="rect" id="node24" href="$class_e_veto_detector.html" title="EVetoDetector" alt="" coords="675,303,783,329"/>
+<area shape="rect" id="node26" href="$class_e_veto_geometry.html" title="EVetoGeometry" alt="" coords="16,313,131,340"/>
+<area shape="rect" id="node27" href="$class_p_veto_detector.html" title="PVetoDetector" alt="" coords="675,815,783,841"/>
+<area shape="rect" id="node29" href="$class_p_veto_geometry.html" title="PVetoGeometry" alt="" coords="16,939,131,965"/>
+<area shape="rect" id="node30" href="$class_magnet_structure.html" title="MagnetStructure" alt="" coords="670,135,789,161"/>
+<area shape="rect" id="node32" href="$class_magnet_geometry.html" title="MagnetGeometry" alt="" coords="12,135,135,161"/>
+<area shape="rect" id="node33" href="$class_s_a_c_detector.html" title="SACDetector" alt="" coords="679,724,779,751"/>
+<area shape="rect" id="node35" href="$class_s_a_c_geometry.html" title="SACGeometry" alt="" coords="20,820,127,847"/>
+</map>

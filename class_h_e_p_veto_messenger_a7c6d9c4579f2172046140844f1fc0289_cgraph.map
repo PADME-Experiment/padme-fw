@@ -1,0 +1,9 @@
+<map id="HEPVetoMessenger::SetNewValue" name="HEPVetoMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_h_e_p_veto_geometry.html#a4789b873431093f58ffa42acc566843f" title="HEPVetoGeometry::SetHEPVeto\lNFingers" alt="" coords="267,5,485,46"/>
+<area shape="rect" id="node3" href="$class_h_e_p_veto_geometry.html#abc411b1e533916a7f7e1ed797707860e" title="HEPVetoGeometry::SetFinger\lNominalSizeX" alt="" coords="277,70,475,111"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_geometry.html#a8d2f29e4bb19a7f01f4c6af6c03c31b7" title="HEPVetoGeometry::SetFinger\lNominalSizeZ" alt="" coords="277,135,475,177"/>
+<area shape="rect" id="node5" href="$class_h_e_p_veto_geometry.html#aa2a7189b7318ac91f7c9501a71af651c" title="HEPVetoGeometry::SetFinger\lNominalSizeY" alt="" coords="277,201,475,242"/>
+<area shape="rect" id="node6" href="$class_h_e_p_veto_geometry.html#a9fca3adaf2feebbfccfcceb09b31cc81" title="HEPVetoGeometry::SetHEPVetoPosX" alt="" coords="251,267,501,293"/>
+<area shape="rect" id="node7" href="$class_h_e_p_veto_geometry.html#a4a1bde5b0a6ecff42cf5bd50258e79de" title="HEPVetoGeometry::SetHEPVetoPosZ" alt="" coords="252,317,500,344"/>
+<area shape="rect" id="node8" href="$class_h_e_p_veto_geometry.html#ad887cc204ea5f54d2e65cb911986f5b4" title="HEPVetoGeometry::SetHEPVetoRotY" alt="" coords="253,368,499,395"/>
+</map>

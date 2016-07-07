@@ -1,0 +1,6 @@
+<map id="BeamParameters::GetBeamCenterPosXSpread" name="BeamParameters::GetBeamCenterPosXSpread">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a04d97ec9c48f30348ab4516244a4b2b9" title="BeamGenerator::GeneratePrimary\lPositron" alt="" coords="280,5,499,46"/>
+<area shape="rect" id="node5" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="293,70,485,111"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="547,12,755,39"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="803,5,965,46"/>
+</map>

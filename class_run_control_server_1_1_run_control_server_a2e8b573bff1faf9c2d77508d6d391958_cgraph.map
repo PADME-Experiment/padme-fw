@@ -1,0 +1,6 @@
+<map id="RunControlServer.RunControlServer.start_run" name="RunControlServer.RunControlServer.start_run">
+<area shape="rect" id="node2" href="$class_logger_1_1_logger.html#ade1a0912ff96d48e191ae35235a11cff" title="Logger.Logger.now_str" alt="" coords="272,5,427,32"/>
+<area shape="rect" id="node3" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#ae3a3950315b9e4e1ce712498f6e980db" title="RunControlGUI.RunControl\lGUI.now_str" alt="" coords="258,57,441,98"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#acff760c5fb30f4f0340f98c395b208d6" title="RunControlServer.RunControl\lServer.now_str" alt="" coords="251,122,447,163"/>
+<area shape="rect" id="node5" href="$class_run_control_server_1_1_run_control_server.html#a80c7de63bfa01ecff73af28b90fac41c" title="RunControlServer.RunControl\lServer.send_answer" alt="" coords="251,187,447,229"/>
+</map>

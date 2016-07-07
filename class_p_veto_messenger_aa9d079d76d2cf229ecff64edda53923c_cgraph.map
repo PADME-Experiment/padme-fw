@@ -1,0 +1,8 @@
+<map id="PVetoMessenger::SetNewValue" name="PVetoMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_p_veto_geometry.html#a9bd4302c6f4746ce9f3ba4bb7b80892a" title="PVetoGeometry::SetPVetoNFingers" alt="" coords="264,5,496,32"/>
+<area shape="rect" id="node3" href="$class_p_veto_geometry.html#a462fc400fb4570c1c2ab4559296b27b4" title="PVetoGeometry::SetFinger\lNominalSizeX" alt="" coords="291,57,469,98"/>
+<area shape="rect" id="node4" href="$class_p_veto_geometry.html#ae6aadd8420cd88bc76c4f9e6724057da" title="PVetoGeometry::SetFinger\lNominalSizeZ" alt="" coords="291,122,469,163"/>
+<area shape="rect" id="node5" href="$class_p_veto_geometry.html#a38e0bec58221efe4506252355225ea53" title="PVetoGeometry::SetFinger\lNominalSizeY" alt="" coords="291,187,469,229"/>
+<area shape="rect" id="node6" href="$class_p_veto_geometry.html#ac62ea2bd2b73756d5020365e1f53a0ce" title="PVetoGeometry::SetPVetoInner\lFacePosX" alt="" coords="276,253,484,294"/>
+<area shape="rect" id="node7" href="$class_p_veto_geometry.html#a3bea0578334fca344ec4fdae987c349b" title="PVetoGeometry::SetPVetoFront\lFacePosZ" alt="" coords="275,318,485,359"/>
+</map>

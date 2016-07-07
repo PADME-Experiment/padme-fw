@@ -1,0 +1,7 @@
+<map id="EVetoSD::ProcessHits" name="EVetoSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_e_veto_hit.html#a814374ec6c7fe51e7e5e7792f1147c72" title="EVetoHit::SetChannelId" alt="" coords="220,5,383,32"/>
+<area shape="rect" id="node3" href="$class_e_veto_hit.html#a56d049abc45fd184fc4394f3e966976f" title="EVetoHit::SetEnergy" alt="" coords="229,56,373,83"/>
+<area shape="rect" id="node4" href="$class_e_veto_hit.html#a19674d4f6f5134f24d2276741cfc0220" title="EVetoHit::SetTime" alt="" coords="235,107,367,133"/>
+<area shape="rect" id="node5" href="$class_e_veto_hit.html#a1dc10569f343c6e90c8d6bf606f4caa4" title="EVetoHit::SetPosition" alt="" coords="226,157,377,184"/>
+<area shape="rect" id="node6" href="$class_e_veto_hit.html#a30f4c120d2d3c638aa5e7f71b63fc6e6" title="EVetoHit::SetLocalPosition" alt="" coords="211,208,392,235"/>
+</map>

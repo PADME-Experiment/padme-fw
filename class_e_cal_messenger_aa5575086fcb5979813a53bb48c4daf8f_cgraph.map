@@ -1,0 +1,10 @@
+<map id="ECalMessenger::SetNewValue" name="ECalMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_e_cal_geometry.html#a6f498b6021695183038362a0ba5a2920" title="ECalGeometry::SetECalNRows" alt="" coords="257,5,466,32"/>
+<area shape="rect" id="node3" href="$class_e_cal_geometry.html#a27cc48fa564dff635c99192662dead7c" title="ECalGeometry::SetECalNCols" alt="" coords="260,56,463,83"/>
+<area shape="rect" id="node4" href="$class_e_cal_geometry.html#abc257ca707bfb5167bb468b3e82502bf" title="ECalGeometry::SetCrystal\lNominalSizeX" alt="" coords="272,107,451,149"/>
+<area shape="rect" id="node5" href="$class_e_cal_geometry.html#acf639fdcc48c8eb330b608c53d3c2da1" title="ECalGeometry::SetCrystal\lNominalSizeY" alt="" coords="272,173,451,214"/>
+<area shape="rect" id="node6" href="$class_e_cal_geometry.html#a2914f29099fd76ac25a39b3fcc032c12" title="ECalGeometry::SetCrystal\lNominalSizeZ" alt="" coords="272,238,451,279"/>
+<area shape="rect" id="node7" href="$class_e_cal_geometry.html#aaf3b9a881d20081a70ceed42d715d24f" title="ECalGeometry::SetECalInner\lRadius" alt="" coords="264,303,459,345"/>
+<area shape="rect" id="node8" href="$class_e_cal_geometry.html#a724b9b6ae262f8d91717b1b08584ea95" title="ECalGeometry::SetECalOuter\lRadius" alt="" coords="263,369,460,410"/>
+<area shape="rect" id="node9" href="$class_e_cal_geometry.html#a6e07a307c8bb39f63e9e0e15f9720efa" title="ECalGeometry::SetECalFront\lFacePosZ" alt="" coords="264,434,459,475"/>
+</map>

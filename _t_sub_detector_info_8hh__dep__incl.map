@@ -1,0 +1,28 @@
+<map id="TSubDetectorInfo.hh" name="TSubDetectorInfo.hh">
+<area shape="rect" id="node2" href="$_e_cal_root_i_o_8cc.html" title="ECalRootIO.cc" alt="" coords="480,304,590,331"/>
+<area shape="rect" id="node3" href="$_e_veto_root_i_o_8cc.html" title="EVetoRootIO.cc" alt="" coords="774,304,892,331"/>
+<area shape="rect" id="node4" href="$_h_e_p_veto_root_i_o_8cc.html" title="HEPVetoRootIO.cc" alt="" coords="1643,304,1780,331"/>
+<area shape="rect" id="node5" href="$_p_veto_root_i_o_8cc.html" title="PVetoRootIO.cc" alt="" coords="1852,304,1970,331"/>
+<area shape="rect" id="node6" href="$_s_a_c_root_i_o_8cc.html" title="SACRootIO.cc" alt="" coords="2019,304,2129,331"/>
+<area shape="rect" id="node7" href="$_target_root_i_o_8cc.html" title="TargetRootIO.cc" alt="" coords="20,304,138,331"/>
+<area shape="rect" id="node8" href="$_t_detector_info_8hh.html" title="TDetectorInfo.hh" alt="" coords="788,80,908,107"/>
+<area shape="rect" id="node24" href="$_persistency_dict_8cc.html" title="PersistencyDict.cc" alt="" coords="84,229,217,256"/>
+<area shape="rect" id="node27" href="$_t_sub_detector_info_8cc.html" title="TSubDetectorInfo.cc" alt="" coords="2184,80,2326,107"/>
+<area shape="rect" id="node9" href="$_m_c_v_root_i_o_8hh.html" title="MCVRootIO.hh" alt="" coords="1157,155,1269,181"/>
+<area shape="rect" id="node11" href="$_root_i_o_manager_8cc.html" title="RootIOManager.cc" alt="" coords="996,304,1128,331"/>
+<area shape="rect" id="node22" href="$_t_padme_run_8hh.html" title="TPadmeRun.hh" alt="" coords="407,155,520,181"/>
+<area shape="rect" id="node26" href="$_t_detector_info_8cc.html" title="TDetectorInfo.cc" alt="" coords="788,155,908,181"/>
+<area shape="rect" id="node10" href="$_e_cal_root_i_o_8hh.html" title="ECalRootIO.hh" alt="" coords="767,229,877,256"/>
+<area shape="rect" id="node12" href="$_e_veto_root_i_o_8hh.html" title="EVetoRootIO.hh" alt="" coords="902,229,1020,256"/>
+<area shape="rect" id="node13" href="$_h_e_p_veto_root_i_o_8hh.html" title="HEPVetoRootIO.hh" alt="" coords="1303,229,1440,256"/>
+<area shape="rect" id="node14" href="$_root_i_o_manager_8hh.html" title="RootIOManager.hh" alt="" coords="1147,229,1278,256"/>
+<area shape="rect" id="node18" href="$_p_veto_root_i_o_8hh.html" title="PVetoRootIO.hh" alt="" coords="1464,229,1582,256"/>
+<area shape="rect" id="node19" href="$_s_a_c_root_i_o_8hh.html" title="SACRootIO.hh" alt="" coords="1744,229,1854,256"/>
+<area shape="rect" id="node20" href="$_m_c_v_root_i_o_8cc.html" title="MCVRootIO.cc" alt="" coords="1608,229,1720,256"/>
+<area shape="rect" id="node21" href="$_target_root_i_o_8hh.html" title="TargetRootIO.hh" alt="" coords="624,229,742,256"/>
+<area shape="rect" id="node15" href="$_p_a_d_m_e_m_c_8cc.html" title="PADMEMC.cc" alt="" coords="1413,304,1522,331"/>
+<area shape="rect" id="node16" href="$_event_action_8cc.html" title="EventAction.cc" alt="" coords="1152,304,1262,331"/>
+<area shape="rect" id="node17" href="$_run_action_8cc.html" title="RunAction.cc" alt="" coords="1288,304,1389,331"/>
+<area shape="rect" id="node23" href="$_padme_reconstruction_8cc.html" title="PadmeReconstruction.cc" alt="" coords="379,229,548,256"/>
+<area shape="rect" id="node25" href="$_t_padme_run_8cc.html" title="TPadmeRun.cc" alt="" coords="242,229,354,256"/>
+</map>

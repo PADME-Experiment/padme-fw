@@ -1,0 +1,9 @@
+<map id="Run::GetTotal" name="Run::GetTotal">
+<area shape="rect" id="node2" href="$class_run.html#aadbc920c2deb985cdc6143f96b5e425a" title="Run::GetTotalE" alt="" coords="167,5,281,32"/>
+<area shape="rect" id="node3" href="$class_run.html#ab8859d66bf6fb67201d74918ca85c80e" title="Run::GetNGamma" alt="" coords="159,56,289,83"/>
+<area shape="rect" id="node5" href="$class_run.html#a860a811c4e27ff7850a1b9c70e4d6b55" title="Run::GetNElectron" alt="" coords="157,107,291,133"/>
+<area shape="rect" id="node6" href="$class_run.html#a57b776338e33a10d594bc49dfc8b57d2" title="Run::GetNPositron" alt="" coords="157,157,291,184"/>
+<area shape="rect" id="node7" href="$class_run.html#a704d55f94f4c99140430e83de8f8f799" title="Run::GetTotalL" alt="" coords="169,208,279,235"/>
+<area shape="rect" id="node8" href="$class_run.html#a8736ba6f3442a55072a989b4fd6920f7" title="Run::GetNStep" alt="" coords="168,259,280,285"/>
+<area shape="rect" id="node4" href="$class_run_action.html#a49e3c5db63358317c3babca100163bd9" title="RunAction::EndOfRunAction" alt="" coords="339,56,528,83"/>
+</map>

@@ -1,0 +1,23 @@
+<map id="DetectorConstruction.cc" name="DetectorConstruction.cc">
+<area shape="rect" id="node2" href="$_constants_8hh.html" title="Constants.hh" alt="" coords="5,80,104,107"/>
+<area shape="rect" id="node3" href="$_detector_construction_8hh.html" title="DetectorConstruction.hh" alt="" coords="2489,80,2652,107"/>
+<area shape="rect" id="node6" href="$_detector_messenger_8hh.html" title="DetectorMessenger.hh" alt="" coords="1687,80,1841,107"/>
+<area shape="rect" id="node7" href="$_target_detector_8hh.html" title="TargetDetector.hh" alt="" coords="181,80,307,107"/>
+<area shape="rect" id="node9" href="$_e_cal_detector_8hh.html" title="ECalDetector.hh" alt="" coords="331,80,449,107"/>
+<area shape="rect" id="node10" href="$_s_a_c_detector_8hh.html" title="SACDetector.hh" alt="" coords="474,80,592,107"/>
+<area shape="rect" id="node11" href="$_l_a_v_detector_8hh.html" title="LAVDetector.hh" alt="" coords="617,80,732,107"/>
+<area shape="rect" id="node12" href="$_p_veto_detector_8hh.html" title="PVetoDetector.hh" alt="" coords="757,80,883,107"/>
+<area shape="rect" id="node13" href="$_e_veto_detector_8hh.html" title="EVetoDetector.hh" alt="" coords="907,80,1033,107"/>
+<area shape="rect" id="node14" href="$_h_e_p_veto_detector_8hh.html" title="HEPVetoDetector.hh" alt="" coords="1058,80,1203,107"/>
+<area shape="rect" id="node15" href="$_t_dump_detector_8hh.html" title="TDumpDetector.hh" alt="" coords="1228,80,1361,107"/>
+<area shape="rect" id="node16" href="$_t_pix_detector_8hh.html" title="TPixDetector.hh" alt="" coords="1385,80,1503,107"/>
+<area shape="rect" id="node17" href="$_magnet_structure_8hh.html" title="MagnetStructure.hh" alt="" coords="1527,80,1663,107"/>
+<area shape="rect" id="node18" href="$_chamber_structure_8hh.html" title="ChamberStructure.hh" alt="" coords="1865,80,2012,107"/>
+<area shape="rect" id="node19" href="$_hall_structure_8hh.html" title="HallStructure.hh" alt="" coords="2037,80,2152,107"/>
+<area shape="rect" id="node20" href="$_t_pix_geometry_8hh.html" title="TPixGeometry.hh" alt="" coords="2177,80,2300,107"/>
+<area shape="rect" id="node22" href="$_magnet_geometry_8hh.html" title="MagnetGeometry.hh" alt="" coords="2325,80,2464,107"/>
+<area shape="rect" id="node23" href="$_t_rod_s_d_8hh.html" title="TRodSD.hh" alt="" coords="2779,80,2869,107"/>
+<area shape="rect" id="node24" href="$_m_rod_s_d_8hh.html" title="MRodSD.hh" alt="" coords="2894,80,2988,107"/>
+<area shape="rect" id="node25" href="$_tracker_s_d_8hh.html" title="TrackerSD.hh" alt="" coords="3013,80,3115,107"/>
+<area shape="rect" id="node26" href="$_g_filt_s_d_8hh.html" title="GFiltSD.hh" alt="" coords="3139,80,3225,107"/>
+</map>

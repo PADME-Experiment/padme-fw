@@ -1,0 +1,9 @@
+<map id="TDumpSD::ProcessHits" name="TDumpSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_t_dump_hit.html#a47b8d4ada175bc6fb4995ced10f03eed" title="TDumpHit::SetChannelId" alt="" coords="229,5,398,32"/>
+<area shape="rect" id="node3" href="$class_t_dump_hit.html#ae89195772694d9b33b15595df692b3fa" title="TDumpHit::SetEnergy" alt="" coords="238,56,389,83"/>
+<area shape="rect" id="node4" href="$class_t_dump_hit.html#a28620e234d26c43b972f960534f41563" title="TDumpHit::SetTime" alt="" coords="244,107,383,133"/>
+<area shape="rect" id="node5" href="$class_t_dump_hit.html#a024dea6afd7db37f85eab0d2933a26a6" title="TDumpHit::SetPosition" alt="" coords="235,157,392,184"/>
+<area shape="rect" id="node6" href="$class_t_dump_hit.html#a7baf6047b7726f6985e11bd2fc7d1ca1" title="TDumpHit::SetLocalPosition" alt="" coords="219,208,407,235"/>
+<area shape="rect" id="node7" href="$class_t_dump_hit.html#a067673d0d83b5536dcdc5bfa7a821360" title="TDumpHit::SetPType" alt="" coords="239,259,387,285"/>
+<area shape="rect" id="node8" href="$class_t_dump_s_d.html#ae246e71e59c5bfcd38ed663183642fb9" title="TDumpSD::ClassifyTrack" alt="" coords="227,309,400,336"/>
+</map>

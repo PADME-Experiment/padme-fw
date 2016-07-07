@@ -1,0 +1,8 @@
+<map id="MCVRootIO" name="MCVRootIO">
+<area shape="rect" id="node2" href="$class_e_cal_root_i_o.html" title="ECalRootIO" alt="" coords="5,80,99,107"/>
+<area shape="rect" id="node3" href="$class_e_veto_root_i_o.html" title="EVetoRootIO" alt="" coords="123,80,223,107"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_root_i_o.html" title="HEPVetoRootIO" alt="" coords="247,80,365,107"/>
+<area shape="rect" id="node5" href="$class_p_veto_root_i_o.html" title="PVetoRootIO" alt="" coords="390,80,489,107"/>
+<area shape="rect" id="node6" href="$class_s_a_c_root_i_o.html" title="SACRootIO" alt="" coords="514,80,605,107"/>
+<area shape="rect" id="node7" href="$class_target_root_i_o.html" title="TargetRootIO" alt="" coords="631,80,732,107"/>
+</map>

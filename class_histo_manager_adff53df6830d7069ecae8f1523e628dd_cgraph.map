@@ -1,0 +1,5 @@
+<map id="HistoManager::book" name="HistoManager::book">
+<area shape="rect" id="node2" href="$class_datacard_manager.html#aa3e56b25776b3c2bcaafa5e8d992fc57" title="DatacardManager::GetInstance" alt="" coords="193,12,397,39"/>
+<area shape="rect" id="node4" href="$class_datacard_manager.html#a87cc96e3560d5660423252f8408fe843" title="DatacardManager::GetHisto\lFileName" alt="" coords="202,63,387,105"/>
+<area shape="rect" id="node3" href="$class_datacard_manager.html#a630c1faa0f8d9a8c2b9b1706c27e6640" title="DatacardManager::Datacard\lManager" alt="" coords="445,5,632,46"/>
+</map>

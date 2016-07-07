@@ -1,0 +1,6 @@
+<map id="MyEventGenerator::CreateFinalState3Photon" name="MyEventGenerator::CreateFinalState3Photon">
+<area shape="rect" id="node2" href="$class_my_particle.html#a7ded7f4df12d3653a53ce222a4dbb467" title="MyParticle::setMass" alt="" coords="249,5,391,32"/>
+<area shape="rect" id="node3" href="$class_my_particle.html#a24e7a66871014ba7767919e97bd831c1" title="MyParticle::setType" alt="" coords="251,56,389,83"/>
+<area shape="rect" id="node4" href="$class_my_particle.html#a80b0547bfcb343e11821ebd43e696cd2" title="MyParticle::setMomentum" alt="" coords="233,107,407,133"/>
+<area shape="rect" id="node5" href="$class_my_particle.html#a4b2c6d831834852da0019c314a5279fe" title="MyParticle::calcE" alt="" coords="257,157,383,184"/>
+</map>

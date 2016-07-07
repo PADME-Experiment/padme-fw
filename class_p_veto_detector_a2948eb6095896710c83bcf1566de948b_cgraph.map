@@ -1,0 +1,28 @@
+<map id="PVetoDetector::CreateGeometry" name="PVetoDetector::CreateGeometry">
+<area shape="rect" id="node2" href="$class_p_veto_geometry.html#a79d396dc11582dcdc1248f6ce55446a8" title="PVetoGeometry::GetInstance" alt="" coords="287,5,481,32"/>
+<area shape="rect" id="node4" href="$class_p_veto_geometry.html#a19ba51666c49cc228d400d379c30002a" title="PVetoGeometry::GetPVetoPosX" alt="" coords="278,56,490,83"/>
+<area shape="rect" id="node6" href="$class_p_veto_geometry.html#a7842d4df17e1933717719728b5e2acfe" title="PVetoGeometry::GetPVetoPosY" alt="" coords="278,107,490,133"/>
+<area shape="rect" id="node7" href="$class_p_veto_geometry.html#a6b2c12bdaeadd50d294ede184984e786" title="PVetoGeometry::GetPVetoPosZ" alt="" coords="279,208,489,235"/>
+<area shape="rect" id="node5" href="$class_p_veto_geometry.html#a5c012d379cfd6898a4f3b5859674bbab" title="PVetoGeometry::GetPVetoSizeX" alt="" coords="550,107,765,133"/>
+<area shape="rect" id="node9" href="$class_p_veto_geometry.html#a86eb99771caf660f5be91dd315b3f217" title="PVetoGeometry::GetPVetoSizeY" alt="" coords="550,1145,765,1172"/>
+<area shape="rect" id="node8" href="$class_p_veto_geometry.html#a6a76f90033fc730e9ef8327c0c464515" title="PVetoGeometry::GetPVetoSizeZ" alt="" coords="550,233,765,260"/>
+<area shape="rect" id="node10" href="$class_p_veto_geometry.html#ae3d871af147bd9c44471013db7cf4858" title="PVetoGeometry::GetFinger\lSizeX" alt="" coords="294,361,474,402"/>
+<area shape="rect" id="node11" href="$class_p_veto_geometry.html#af799fd0942e3a60f204cef578518f61a" title="PVetoGeometry::GetFinger\lSizeY" alt="" coords="294,426,474,467"/>
+<area shape="rect" id="node12" href="$class_p_veto_geometry.html#ad10dd6d67d9c26083993baf1910db8a6" title="PVetoGeometry::GetFinger\lSizeZ" alt="" coords="294,491,474,533"/>
+<area shape="rect" id="node13" href="$class_p_veto_geometry.html#a6f7bc0601f538e24e6bdc9837b56a9ca" title="PVetoGeometry::GetPVetoSensitive\lDetectorName" alt="" coords="267,557,501,598"/>
+<area shape="rect" id="node14" href="$class_p_veto_geometry.html#a014a7b0e050e873d0dead958cce8c592" title="PVetoGeometry::GetPVetoNFingers" alt="" coords="267,623,501,649"/>
+<area shape="rect" id="node15" href="$class_p_veto_geometry.html#aa98214903b9e51cdb4fb1f1a74a4c8d6" title="PVetoGeometry::GetFingerRotY" alt="" coords="279,673,489,700"/>
+<area shape="rect" id="node16" href="$class_p_veto_geometry.html#a6a94f403e169932a9dd5e8d67ab7b1c3" title="PVetoGeometry::GetFingerPosX" alt="" coords="278,724,490,751"/>
+<area shape="rect" id="node17" href="$class_p_veto_geometry.html#a6a8ec660eb100e9fd932764c8a431db2" title="PVetoGeometry::GetFingerPosY" alt="" coords="278,775,490,801"/>
+<area shape="rect" id="node18" href="$class_p_veto_geometry.html#ae3afe38465ef609199f992db5c10808b" title="PVetoGeometry::GetFingerPosZ" alt="" coords="279,825,489,852"/>
+<area shape="rect" id="node19" href="$class_p_veto_geometry.html#a24a6bbd41cb9afcb7a8ff2efdb235300" title="PVetoGeometry::GetSupport\lUSizeX" alt="" coords="289,877,479,918"/>
+<area shape="rect" id="node20" href="$class_p_veto_geometry.html#a39f17121d5e65c0ba7e3f147b7a63a93" title="PVetoGeometry::GetSupport\lUSizeY" alt="" coords="289,942,479,983"/>
+<area shape="rect" id="node21" href="$class_p_veto_geometry.html#a559ccd343d8acba8bd349d377c87007d" title="PVetoGeometry::GetSupport\lUSizeZ" alt="" coords="289,1007,479,1049"/>
+<area shape="rect" id="node22" href="$class_p_veto_geometry.html#af694e7104b85bfb27ea2c4bd06f23466" title="PVetoGeometry::GetSupport\lUPosX" alt="" coords="289,1073,479,1114"/>
+<area shape="rect" id="node23" href="$class_p_veto_geometry.html#a38a282ddb02b704d6214178955ef3158" title="PVetoGeometry::GetSupport\lUPosY" alt="" coords="289,1138,479,1179"/>
+<area shape="rect" id="node24" href="$class_p_veto_geometry.html#a319e6e9649e2af306e5121ba9b19856d" title="PVetoGeometry::GetSupport\lUPosZ" alt="" coords="289,1203,479,1245"/>
+<area shape="rect" id="node25" href="$class_p_veto_geometry.html#a76af5fe3e6a2bda10f05a3ea9884343d" title="PVetoGeometry::GetSupport\lDPosX" alt="" coords="289,1269,479,1310"/>
+<area shape="rect" id="node26" href="$class_p_veto_geometry.html#a6fd9db731b51aae588299cbd05b56159" title="PVetoGeometry::GetSupport\lDPosY" alt="" coords="289,1334,479,1375"/>
+<area shape="rect" id="node27" href="$class_p_veto_geometry.html#a388cd4d075a42dc772713081f3da01e0" title="PVetoGeometry::GetSupport\lDPosZ" alt="" coords="289,1399,479,1441"/>
+<area shape="rect" id="node3" href="$class_p_veto_geometry.html#aaad9ce6742e19958843f24a7d08ee1ed" title="PVetoGeometry::PVetoGeometry" alt="" coords="549,5,765,32"/>
+</map>

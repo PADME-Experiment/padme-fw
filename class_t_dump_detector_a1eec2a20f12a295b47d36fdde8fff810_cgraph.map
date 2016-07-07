@@ -1,0 +1,25 @@
+<map id="TDumpDetector::CreateGeometry" name="TDumpDetector::CreateGeometry">
+<area shape="rect" id="node2" href="$class_t_dump_geometry.html#add82fadbab25390793808d2578cc1a7c" title="TDumpGeometry::GetInstance" alt="" coords="295,5,497,32"/>
+<area shape="rect" id="node4" href="$class_t_dump_geometry.html#a4dbcf971686df4d026f49f9565e3d9e9" title="TDumpGeometry::GetTDumpSizeX" alt="" coords="281,56,511,83"/>
+<area shape="rect" id="node5" href="$class_t_dump_geometry.html#ae9c050a43b5557d279156d2519c4286a" title="TDumpGeometry::GetTDumpSizeY" alt="" coords="281,107,511,133"/>
+<area shape="rect" id="node6" href="$class_t_dump_geometry.html#ac8523f22daa20b2a552df43e72097ffb" title="TDumpGeometry::GetTDumpSizeZ" alt="" coords="282,157,510,184"/>
+<area shape="rect" id="node7" href="$class_t_dump_geometry.html#ac4502f166ae03e4bf32bfc938998578c" title="TDumpGeometry::GetTDumpPosX" alt="" coords="283,208,509,235"/>
+<area shape="rect" id="node8" href="$class_t_dump_geometry.html#ad1480c81dec136b14a4c708f8d25bf38" title="TDumpGeometry::GetTDumpPosY" alt="" coords="283,259,509,285"/>
+<area shape="rect" id="node9" href="$class_t_dump_geometry.html#a3d99046fe828e3a8f0c34c76ed14016a" title="TDumpGeometry::GetTDumpPosZ" alt="" coords="283,309,509,336"/>
+<area shape="rect" id="node10" href="$class_t_dump_geometry.html#addfc16eb7197beb59617c1d3b4d65ab0" title="TDumpGeometry::GetTarget\lInnerRadius" alt="" coords="302,361,490,402"/>
+<area shape="rect" id="node11" href="$class_t_dump_geometry.html#ab5a01246f8f77a9b2b228626aa911ca5" title="TDumpGeometry::GetTarget\lOuterRadius" alt="" coords="302,426,490,467"/>
+<area shape="rect" id="node12" href="$class_t_dump_geometry.html#a5252b61c3a9eead4e69bb1ff3b829138" title="TDumpGeometry::GetTarget\lSizeZ" alt="" coords="302,491,490,533"/>
+<area shape="rect" id="node13" href="$class_t_dump_geometry.html#a40f5ed8e985f052d22760302eb74ee1d" title="TDumpGeometry::GetTargetPosX" alt="" coords="286,557,506,584"/>
+<area shape="rect" id="node14" href="$class_t_dump_geometry.html#a549724b18a1ff694d631ea03200a5add" title="TDumpGeometry::GetTargetPosY" alt="" coords="286,608,506,635"/>
+<area shape="rect" id="node15" href="$class_t_dump_geometry.html#a765f307d0384e7168b32760858a7f15c" title="TDumpGeometry::GetTargetPosZ" alt="" coords="287,659,505,685"/>
+<area shape="rect" id="node16" href="$class_t_dump_geometry.html#a02d8c743584b6a194963374be1719fa6" title="TDumpGeometry::GetBrickSizeX" alt="" coords="288,709,504,736"/>
+<area shape="rect" id="node17" href="$class_t_dump_geometry.html#a880152875e0d493e26ce899137c9543d" title="TDumpGeometry::GetBrickSizeY" alt="" coords="288,760,504,787"/>
+<area shape="rect" id="node18" href="$class_t_dump_geometry.html#a91bf086d9594a6351913f115d4bf9fcc" title="TDumpGeometry::GetBrickSizeZ" alt="" coords="289,811,503,837"/>
+<area shape="rect" id="node19" href="$class_t_dump_geometry.html#a4e997438e715ae2df490f4a43306c331" title="TDumpGeometry::GetNBricks" alt="" coords="297,861,495,888"/>
+<area shape="rect" id="node20" href="$class_t_dump_geometry.html#a9e19d2949dacb7e2798357d61dd9f6ed" title="TDumpGeometry::GetBrickPosX" alt="" coords="289,912,503,939"/>
+<area shape="rect" id="node21" href="$class_t_dump_geometry.html#a3e29bc9047e5f68c80e0d0a819b64638" title="TDumpGeometry::GetBrickPosY" alt="" coords="289,963,503,989"/>
+<area shape="rect" id="node22" href="$class_t_dump_geometry.html#a77c0b507d00117aaa3b3dd8a4e3447fa" title="TDumpGeometry::GetBrickPosZ" alt="" coords="290,1013,502,1040"/>
+<area shape="rect" id="node23" href="$class_t_dump_geometry.html#aafabf0def0994048390df9b1108ce46b" title="TDumpGeometry::GetBrickRotZ" alt="" coords="291,1064,501,1091"/>
+<area shape="rect" id="node24" href="$class_t_dump_geometry.html#a46a5ea6c651ffe031c95494487b4ce6e" title="TDumpGeometry::GetTDumpSensitive\lDetectorName" alt="" coords="272,1115,520,1157"/>
+<area shape="rect" id="node3" href="$class_t_dump_geometry.html#ab4742a400520d2651008cc766478f94e" title="TDumpGeometry::TDumpGeometry" alt="" coords="569,5,799,32"/>
+</map>

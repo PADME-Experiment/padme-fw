@@ -1,0 +1,4 @@
+<map id="PadmeReconstruction::ShowSubDetectorInfo" name="PadmeReconstruction::ShowSubDetectorInfo">
+<area shape="rect" id="node2" href="$class_t_detector_info.html#aebbc1eda2fefb84d502bc7d89cfe5521" title="TDetectorInfo::FindSubDetectorInfo" alt="" coords="214,5,445,32"/>
+<area shape="rect" id="node3" href="$class_t_sub_detector_info.html#ae340a6936d32d4f2baf0227c470bb2ec" title="TSubDetectorInfo::GetGeometry\lParameters" alt="" coords="224,57,435,98"/>
+</map>

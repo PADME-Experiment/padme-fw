@@ -1,0 +1,8 @@
+<map id="MagnetMessenger::SetNewValue" name="MagnetMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_magnet_structure.html#a78a2a1a1dc9816ec92c85ba36c4ff40b" title="MagnetStructure::EnableMagnetic\lField" alt="" coords="272,5,491,46"/>
+<area shape="rect" id="node3" href="$class_magnet_structure.html#abe85ec184a9e36627b0c1876ef33072b" title="MagnetStructure::Disable\lMagneticField" alt="" coords="296,70,467,111"/>
+<area shape="rect" id="node4" href="$class_magnet_structure.html#a2aad80709aad0c4e880db503cd9108cc" title="MagnetStructure::SetMagnetic\lVolumeVisible" alt="" coords="282,135,481,177"/>
+<area shape="rect" id="node5" href="$class_magnet_structure.html#a0772d1b6d2cbd2edbf19f18c649e2852" title="MagnetStructure::SetMagnetic\lVolumeInvisible" alt="" coords="282,201,481,242"/>
+<area shape="rect" id="node6" href="$class_magnet_geometry.html#a883eb6d4622e1166c8040649a5ef311c" title="MagnetGeometry::SetVacuum\lChamberWallThickness" alt="" coords="282,266,481,307"/>
+<area shape="rect" id="node7" href="$class_magnet_geometry.html#a3d77dc1fd7cb09791d696de1cbde5764" title="MagnetGeometry::SetMagnetic\lFieldConstantValue" alt="" coords="280,331,483,373"/>
+</map>

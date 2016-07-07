@@ -1,0 +1,4 @@
+<map id="EVetoHit::GetY" name="EVetoHit::GetY">
+<area shape="rect" id="node2" href="$class_event_action.html#a86670b1c773d5615e7c596a7565c1305" title="EventAction::AddEVetoHits" alt="" coords="168,5,352,32"/>
+<area shape="rect" id="node3" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="401,5,610,32"/>
+</map>

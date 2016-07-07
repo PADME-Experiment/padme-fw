@@ -1,0 +1,8 @@
+<map id="TSubDetectorInfo::SetGeometryParameters" name="TSubDetectorInfo::SetGeometryParameters">
+<area shape="rect" id="node2" href="$class_e_cal_root_i_o.html#a6b0f0a69e68ad7e56ef1705949422e7a" title="ECalRootIO::NewRun" alt="" coords="277,5,429,32"/>
+<area shape="rect" id="node3" href="$class_e_veto_root_i_o.html#a92e323b9dcab29b514bf0fe0d0b1dbb8" title="EVetoRootIO::NewRun" alt="" coords="274,56,433,83"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_root_i_o.html#a9f056b3ade3dacd5020df36ff07f2913" title="HEPVetoRootIO::NewRun" alt="" coords="264,107,443,133"/>
+<area shape="rect" id="node5" href="$class_p_veto_root_i_o.html#a122613390e78ec6a9b351bb887666bb0" title="PVetoRootIO::NewRun" alt="" coords="274,157,433,184"/>
+<area shape="rect" id="node6" href="$class_s_a_c_root_i_o.html#aa9a1f8421d7a45aa51eaa04a1fee447a" title="SACRootIO::NewRun" alt="" coords="278,208,429,235"/>
+<area shape="rect" id="node7" href="$class_target_root_i_o.html#ad86322b58c6d13652a7c7b39b90fe452" title="TargetRootIO::NewRun" alt="" coords="273,259,433,285"/>
+</map>

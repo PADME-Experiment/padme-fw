@@ -1,0 +1,4 @@
+<map id="MyEventGenerator::CreateInitialState" name="MyEventGenerator::CreateInitialState">
+<area shape="rect" id="node2" href="$class_my_particle.html#af6dc43e2dc0621f56d78589712968ffb" title="MyParticle::setEnergy" alt="" coords="247,5,398,32"/>
+<area shape="rect" id="node3" href="$class_my_particle.html#aa357af0c021d1da56388c2eda97cd97d" title="MyParticle::calcMomentum" alt="" coords="232,56,413,83"/>
+</map>

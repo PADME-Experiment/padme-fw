@@ -1,0 +1,6 @@
+<map id="EventAction::AddTargetHits" name="EventAction::AddTargetHits">
+<area shape="rect" id="node2" href="$class_target_hit.html#af2457df76c1d134c25cb227d64ba3820" title="TargetHit::GetEdep" alt="" coords="241,5,375,32"/>
+<area shape="rect" id="node3" href="$class_target_hit.html#ad3aae9cdb7ae0b87e73b5229ab437ffb" title="TargetHit::GetTime" alt="" coords="241,56,375,83"/>
+<area shape="rect" id="node4" href="$class_target_hit.html#ab0f8e58699a414d424674a47b4fb7584" title="TargetHit::GetX" alt="" coords="251,107,365,133"/>
+<area shape="rect" id="node5" href="$class_target_hit.html#ae148cd034de7fcc553f86207bbb0b3c5" title="TargetHit::GetY" alt="" coords="251,157,365,184"/>
+</map>

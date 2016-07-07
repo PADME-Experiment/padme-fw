@@ -1,0 +1,8 @@
+<map id="EventAction::AddECryHits" name="EventAction::AddECryHits">
+<area shape="rect" id="node2" href="$class_e_cal_geometry.html#a61abd708c8d69d67d549ea8315aa3f3b" title="ECalGeometry::GetECalNRows" alt="" coords="232,5,443,32"/>
+<area shape="rect" id="node3" href="$class_e_cal_geometry.html#acf980233c32dc264375c0d961aaf9708" title="ECalGeometry::GetECalNCols" alt="" coords="236,56,439,83"/>
+<area shape="rect" id="node4" href="$class_e_cal_hit.html#a6b3b0eaf4526b33c6360be00a593cc51" title="ECalHit::GetChannelId" alt="" coords="259,107,415,133"/>
+<area shape="rect" id="node5" href="$class_e_cal_hit.html#acc494ed91f2ac722d6c99b1158b3fd36" title="ECalHit::GetEdep" alt="" coords="274,157,401,184"/>
+<area shape="rect" id="node6" href="$class_e_cal_hit.html#a3953e92ca3f6cf2e23f7687bf5b0a137" title="ECalHit::GetTime" alt="" coords="274,208,401,235"/>
+<area shape="rect" id="node7" href="$class_event_action.html#a5014b9a945cc9becc55b03371d29588d" title="EventAction::GetCharge" alt="" coords="255,259,419,285"/>
+</map>

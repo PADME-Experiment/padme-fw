@@ -1,0 +1,15 @@
+<map id="BeamParameters::GetInstance" name="BeamParameters::GetInstance">
+<area shape="rect" id="node2" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="541,121,749,148"/>
+<area shape="rect" id="node4" href="$class_beam_generator.html#a04d97ec9c48f30348ab4516244a4b2b9" title="BeamGenerator::GeneratePrimary\lPositron" alt="" coords="265,48,484,90"/>
+<area shape="rect" id="node5" href="$class_beam_generator.html#a9a61b6e4e538dd10536569013e22dffa" title="BeamGenerator::CreateFinal\lStateUboson" alt="" coords="281,114,469,155"/>
+<area shape="rect" id="node6" href="$class_beam_generator.html#a3ec2173cdbf0ccc95e0bee2a5c80bf5e" title="BeamGenerator::CreateFinal\lStateThreeGamma" alt="" coords="281,179,469,220"/>
+<area shape="rect" id="node7" href="$class_beam_generator.html#a3aa5d8198f5ba5c872e9da03894e2544" title="BeamGenerator::GenerateCalibration\lGamma" alt="" coords="257,244,493,286"/>
+<area shape="rect" id="node8" href="$class_beam_generator.html#a60f2fab5ee96813210233307f3dab117" title="BeamGenerator::GetUbosonMass" alt="" coords="265,310,484,337"/>
+<area shape="rect" id="node10" href="$class_beam_messenger.html#a8c0a12c69a0dcbbdb1c1c7e525c9abb5" title="BeamMessenger::BeamMessenger" alt="" coords="261,361,488,388"/>
+<area shape="rect" id="node11" href="$class_event_action.html#a80ab94e9a28bbe6408fc245c8145ec97" title="EventAction::EventAction" alt="" coords="289,412,461,438"/>
+<area shape="rect" id="node12" href="$class_root_i_o_manager.html#a7623dc41ca767d8c1ced6889f2fd8e28" title="RootIOManager::NewRun" alt="" coords="288,462,461,489"/>
+<area shape="rect" id="node14" href="$class_stepping_action.html#adc9a4b2ffc6f1b403c09685bcbfae444" title="SteppingAction::Stepping\lAction" alt="" coords="290,514,459,555"/>
+<area shape="rect" id="node3" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="798,114,959,155"/>
+<area shape="rect" id="node9" href="$class_primary_generator_action.html#a615f48f04d00856ccc46f8ac8630fa9e" title="PrimaryGeneratorAction\l::GetUbosonMass" alt="" coords="565,303,726,344"/>
+<area shape="rect" id="node13" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="546,462,745,489"/>
+</map>

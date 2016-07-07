@@ -1,0 +1,4 @@
+<map id="Run.Run.change_setup" name="Run.Run.change_setup">
+<area shape="rect" id="node2" href="$class_run_control_server_1_1_run_control_server.html#a77f1bd06f189c7aa1ef851cae78579d3" title="RunControlServer.RunControl\lServer.state_idle" alt="" coords="214,5,410,46"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="459,5,655,46"/>
+</map>

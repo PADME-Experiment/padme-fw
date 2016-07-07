@@ -1,0 +1,9 @@
+<map id="EventAction::AddHEPVetoHits" name="EventAction::AddHEPVetoHits">
+<area shape="rect" id="node2" href="$class_h_e_p_veto_hit.html#a0add8102340e1d1c4657c3910c2aa479" title="HEPVetoHit::GetHEPVetoNb" alt="" coords="256,5,451,32"/>
+<area shape="rect" id="node3" href="$class_h_e_p_veto_hit.html#ad0219901a660385a8b243d43f165ada1" title="HEPVetoHit::GetHitE" alt="" coords="279,56,428,83"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_hit.html#a54a6b46db701b0a38e14f1bcb2e79905" title="HEPVetoHit::GetTrackID" alt="" coords="268,107,439,133"/>
+<area shape="rect" id="node5" href="$class_h_e_p_veto_hit.html#a77012385d807f3e395875d905c000cb6" title="HEPVetoHit::GetEdep" alt="" coords="277,157,430,184"/>
+<area shape="rect" id="node6" href="$class_h_e_p_veto_hit.html#af9ff835d42f99c143efa73907615c3a4" title="HEPVetoHit::GetTime" alt="" coords="277,208,429,235"/>
+<area shape="rect" id="node7" href="$class_h_e_p_veto_hit.html#a41157e478705958d36e7cc3725e2ab4a" title="HEPVetoHit::GetX" alt="" coords="287,259,419,285"/>
+<area shape="rect" id="node8" href="$class_h_e_p_veto_hit.html#ab10cd43142be50e20d0092aa13045823" title="HEPVetoHit::GetY" alt="" coords="287,309,419,336"/>
+</map>

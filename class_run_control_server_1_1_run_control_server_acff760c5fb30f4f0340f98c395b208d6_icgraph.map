@@ -1,0 +1,14 @@
+<map id="RunControlServer.RunControlServer.now_str" name="RunControlServer.RunControlServer.now_str">
+<area shape="rect" id="node2" href="$class_run_control_server_1_1_run_control_server.html#a7c05fc21e2a90de4694866452f0c9b98" title="RunControlServer.RunControl\lServer.sigint_handler" alt="" coords="251,5,447,46"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#adaa33aa3dc58abae3b09fcf6e61bb41a" title="RunControlServer.RunControl\lServer.write_log" alt="" coords="251,239,447,281"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#a88b6c1b51cf85f85fa5bf19c420f1754" title="RunControlServer.RunControl\lServer.new_run" alt="" coords="497,239,693,281"/>
+<area shape="rect" id="node8" href="$class_run_control_server_1_1_run_control_server.html#a2e8b573bff1faf9c2d77508d6d391958" title="RunControlServer.RunControl\lServer.start_run" alt="" coords="497,43,693,85"/>
+<area shape="rect" id="node10" href="$class_run_control_server_1_1_run_control_server.html#aae077e57d11f40701aeabc2dc7108ad0" title="RunControlServer.RunControl\lServer.terminate_run" alt="" coords="251,122,447,163"/>
+<area shape="rect" id="node5" href="$class_run_control_server_1_1_run_control_server.html#a77f1bd06f189c7aa1ef851cae78579d3" title="RunControlServer.RunControl\lServer.state_idle" alt="" coords="742,239,938,281"/>
+<area shape="rect" id="node7" href="$class_run_control_text_1_1_run_control_text.html#a960509aac5d8789ac57ea5c8013b5ba2" title="RunControlText.RunControl\lText.main_loop" alt="" coords="748,109,932,150"/>
+<area shape="rect" id="node6" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="987,174,1183,215"/>
+<area shape="rect" id="node9" href="$class_run_control_server_1_1_run_control_server.html#a31fc2b89bbaec6c971bae9b2f03624e9" title="RunControlServer.RunControl\lServer.state_initialized" alt="" coords="742,43,938,85"/>
+<area shape="rect" id="node11" href="$class_run_control_server_1_1_run_control_server.html#a04d314d5f4c8157cf6034f8744c134b2" title="RunControlServer.RunControl\lServer.stop_run" alt="" coords="497,174,693,215"/>
+<area shape="rect" id="node13" href="$class_run_control_server_1_1_run_control_server.html#acfa406f8ba24fc3fd3c3238dd0abd9ac" title="RunControlServer.RunControl\lServer.abort_run" alt="" coords="497,109,693,150"/>
+<area shape="rect" id="node12" href="$class_run_control_server_1_1_run_control_server.html#aad5e0096b6135a6380cbb63e57c05604" title="RunControlServer.RunControl\lServer.state_running" alt="" coords="742,174,938,215"/>
+</map>

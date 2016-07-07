@@ -1,0 +1,5 @@
+<map id="MyEventGenerator::ClearEvent" name="MyEventGenerator::ClearEvent">
+<area shape="rect" id="node2" href="$class_my_event.html#a157c585223b4b7ae4b436f8eddcd257e" title="MyEvent::ClearEvent" alt="" coords="281,5,428,32"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="259,57,451,98"/>
+<area shape="rect" id="node3" href="$class_my_event.html#a7ea5f6e3b938a2c04b12a35c0bafdce1" title="MyEvent::GetInstance" alt="" coords="499,5,653,32"/>
+</map>

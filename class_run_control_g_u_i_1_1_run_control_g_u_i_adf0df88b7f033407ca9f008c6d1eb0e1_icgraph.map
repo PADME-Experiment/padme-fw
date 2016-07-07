@@ -1,0 +1,6 @@
+<map id="RunControlGUI.RunControlGUI.decode_board_list" name="RunControlGUI.RunControlGUI.decode_board_list">
+<area shape="rect" id="node2" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a7eebe41bfa0e7610053dd38278e03650" title="RunControlGUI.RunControl\lGUI.change_setup" alt="" coords="238,38,421,79"/>
+<area shape="rect" id="node3" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aba2d8aaf4be5ec73092a1f5796ed8fb4" title="RunControlGUI.RunControl\lGUI.change_setup_bind" alt="" coords="477,5,659,46"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#a77f1bd06f189c7aa1ef851cae78579d3" title="RunControlServer.RunControl\lServer.state_idle" alt="" coords="470,70,666,111"/>
+<area shape="rect" id="node5" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="715,70,911,111"/>
+</map>

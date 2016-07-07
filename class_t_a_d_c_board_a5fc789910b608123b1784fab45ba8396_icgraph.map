@@ -1,0 +1,6 @@
+<map id="TADCBoard::ADCTrigger" name="TADCBoard::ADCTrigger">
+<area shape="rect" id="node2" href="$class_e_c_a_l_anal.html#a5fae3f7d0321ed97233a41c6fd0cf42f" title="ECALAnal::AnalyzeCharge" alt="" coords="226,5,406,32"/>
+<area shape="rect" id="node4" href="$_read_test_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97" title="main" alt="" coords="291,56,341,83"/>
+<area shape="rect" id="node5" href="$class_target_anal.html#ac157822b1237c680c0ae81e08bad218f" title="TargetAnal::AnalyzeCharge" alt="" coords="225,107,407,133"/>
+<area shape="rect" id="node3" href="$class_grapher.html#a3f3f944e4f7aa963d56eb3e08d05ce8c" title="Grapher::AnalyzeEvents" alt="" coords="457,5,621,32"/>
+</map>

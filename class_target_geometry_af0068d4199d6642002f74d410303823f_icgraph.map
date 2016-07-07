@@ -1,0 +1,15 @@
+<map id="TargetGeometry::GetInstance" name="TargetGeometry::GetInstance">
+<area shape="rect" id="node2" href="$class_event_action.html#a80ab94e9a28bbe6408fc245c8145ec97" title="EventAction::EventAction" alt="" coords="278,5,450,32"/>
+<area shape="rect" id="node3" href="$class_target_detector.html#acc591f30087f1b1f15b26715ba10921a" title="TargetDetector::CreateGeometry" alt="" coords="257,56,471,83"/>
+<area shape="rect" id="node5" href="$class_target_detector.html#a65af261e0fd87e6e13f42711f25c0a63" title="TargetDetector::GetTarget\lFrontFaceZ" alt="" coords="277,107,451,149"/>
+<area shape="rect" id="node11" href="$class_target_detector.html#a321216a0b9ef2e135b326f8f30ff7a97" title="TargetDetector::GetTarget\lThickness" alt="" coords="277,173,451,214"/>
+<area shape="rect" id="node13" href="$class_target_messenger.html#a02427f6537ee9ab7ca52a336e7556445" title="TargetMessenger::TargetMessenger" alt="" coords="248,239,480,265"/>
+<area shape="rect" id="node14" href="$class_target_root_i_o.html#a5b8c6e6ecd3f7359ef06eaa99047c94b" title="TargetRootIO::TargetRootIO" alt="" coords="270,289,458,316"/>
+<area shape="rect" id="node4" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="532,42,679,83"/>
+<area shape="rect" id="node6" href="$class_detector_construction.html#a54f5ac28b3d618599774816de70a818b" title="DetectorConstruction\l::GetTargetFrontFaceZ" alt="" coords="528,107,683,149"/>
+<area shape="rect" id="node7" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="968,148,1176,175"/>
+<area shape="rect" id="node9" href="$class_beam_generator.html#a9a61b6e4e538dd10536569013e22dffa" title="BeamGenerator::CreateFinal\lStateUboson" alt="" coords="731,107,919,149"/>
+<area shape="rect" id="node10" href="$class_beam_generator.html#a3ec2173cdbf0ccc95e0bee2a5c80bf5e" title="BeamGenerator::CreateFinal\lStateThreeGamma" alt="" coords="731,173,919,214"/>
+<area shape="rect" id="node8" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="1225,141,1386,182"/>
+<area shape="rect" id="node12" href="$class_detector_construction.html#a5a581ad2547f8dae583cb2c5156a9931" title="DetectorConstruction\l::GetTargetThickness" alt="" coords="531,173,679,214"/>
+</map>

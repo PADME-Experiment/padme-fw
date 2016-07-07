@@ -1,0 +1,9 @@
+<map id="ECalSD::ProcessHits" name="ECalSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_e_cal_hit.html#a52249d228321e18e22d826fad0d7fedd" title="ECalHit::SetChannelId" alt="" coords="216,5,371,32"/>
+<area shape="rect" id="node3" href="$class_e_cal_hit.html#a0a63b4cd0f1db2b140ebec2329f791b9" title="ECalHit::SetEnergy" alt="" coords="225,56,362,83"/>
+<area shape="rect" id="node4" href="$class_e_cal_hit.html#a1b2dcbbc54ad98b41a53f7353cb5517d" title="ECalHit::SetTime" alt="" coords="231,107,356,133"/>
+<area shape="rect" id="node5" href="$class_e_cal_hit.html#afb969b1767ade8ab9a23a4c2ac961a5e" title="ECalHit::SetPosition" alt="" coords="222,157,365,184"/>
+<area shape="rect" id="node6" href="$class_e_cal_hit.html#a98c4977405d596200914c9b6907009d6" title="ECalHit::SetLocalPosition" alt="" coords="206,208,381,235"/>
+<area shape="rect" id="node7" href="$class_e_cal_hit.html#a661f3287a49d45287a1da7b04a2d04c3" title="ECalHit::SetPType" alt="" coords="226,259,361,285"/>
+<area shape="rect" id="node8" href="$class_e_cal_s_d.html#a7585e3f700df65eafbbeaa8c89d1d939" title="ECalSD::ClassifyTrack" alt="" coords="214,309,373,336"/>
+</map>

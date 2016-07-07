@@ -1,0 +1,8 @@
+<map id="BeamParameters::GetBeamMomentum" name="BeamParameters::GetBeamMomentum">
+<area shape="rect" id="node2" href="$class_beam_generator.html#a04d97ec9c48f30348ab4516244a4b2b9" title="BeamGenerator::GeneratePrimary\lPositron" alt="" coords="304,5,523,46"/>
+<area shape="rect" id="node5" href="$class_beam_messenger.html#a7da1ff8d2787423e226a0357c87c84a3" title="BeamMessenger::GetCurrent\lValue" alt="" coords="317,70,509,111"/>
+<area shape="rect" id="node6" href="$class_event_action.html#a4e2a0961b746a526dad3b922af9c78a0" title="EventAction::FindClusters" alt="" coords="326,136,501,163"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="572,12,780,39"/>
+<area shape="rect" id="node4" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="830,5,991,46"/>
+<area shape="rect" id="node7" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="571,136,781,163"/>
+</map>

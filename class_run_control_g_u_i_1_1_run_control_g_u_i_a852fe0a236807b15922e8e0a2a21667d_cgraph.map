@@ -1,0 +1,6 @@
+<map id="RunControlGUI.RunControlGUI.change_run" name="RunControlGUI.RunControlGUI.change_run">
+<area shape="rect" id="node2" href="$class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#aa99fb3a756de585f65cb0c1abe39417d" title="ADCBoardGUI.ADCBoardGUI.show_log" alt="" coords="237,5,496,32"/>
+<area shape="rect" id="node3" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#adcfa191a77d0eb56f5aed83c1921ad56" title="RunControlGUI.RunControl\lGUI.show_log" alt="" coords="275,57,458,98"/>
+<area shape="rect" id="node4" href="$class_logger_1_1_logger.html#ade1a0912ff96d48e191ae35235a11cff" title="Logger.Logger.now_str" alt="" coords="559,35,713,61"/>
+<area shape="rect" id="node5" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#ae3a3950315b9e4e1ce712498f6e980db" title="RunControlGUI.RunControl\lGUI.now_str" alt="" coords="545,86,727,127"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="RunControlGUI.RunControlGUI.configure_board_buttons" name="RunControlGUI.RunControlGUI.configure_board_buttons">
+<area shape="rect" id="node2" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a06f232b800eb79feeba085a38704cf8e" title="RunControlGUI.RunControl\lGUI.ask_server" alt="" coords="246,38,429,79"/>
+<area shape="rect" id="node3" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aac7a5c3957881b38bbae84e97a1a9541" title="RunControlGUI.RunControl\lGUI.send_command" alt="" coords="478,5,661,46"/>
+<area shape="rect" id="node6" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aa475589249dc6bd930e1d67cfaf9de7b" title="RunControlGUI.RunControl\lGUI.get_answer" alt="" coords="478,70,661,111"/>
+<area shape="rect" id="node4" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a063f14694dd9df474079528b1ff1f199" title="RunControlGUI.RunControl\lGUI.error_exit" alt="" coords="710,38,893,79"/>
+<area shape="rect" id="node5" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a0080b150822eb7ab5d73641851997344" title="RunControlGUI.RunControl\lGUI.quit_daq" alt="" coords="942,38,1125,79"/>
+</map>

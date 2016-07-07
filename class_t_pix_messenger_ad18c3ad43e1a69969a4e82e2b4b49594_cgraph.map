@@ -1,0 +1,6 @@
+<map id="TPixMessenger::SetNewValue" name="TPixMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_t_pix_geometry.html#a0237eec8a204a66ebb423bed512aabb7" title="TPixGeometry::SetTPixNCols" alt="" coords="257,5,455,32"/>
+<area shape="rect" id="node3" href="$class_t_pix_geometry.html#a4b81f2e7c0f61675859551f75d4f2917" title="TPixGeometry::SetTPixPosX" alt="" coords="259,56,453,83"/>
+<area shape="rect" id="node4" href="$class_t_pix_geometry.html#a80621827d288f87429dca00c60052392" title="TPixGeometry::SetTPixPosZ" alt="" coords="260,107,452,133"/>
+<area shape="rect" id="node5" href="$class_t_pix_geometry.html#a7bb3e5cee48e8daf2b8268ea0ee9d30a" title="TPixGeometry::SetTPixRotY" alt="" coords="261,157,451,184"/>
+</map>

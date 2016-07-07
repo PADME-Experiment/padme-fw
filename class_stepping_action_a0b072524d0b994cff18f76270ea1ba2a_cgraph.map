@@ -1,0 +1,6 @@
+<map id="SteppingAction::UserSteppingAction" name="SteppingAction::UserSteppingAction">
+<area shape="rect" id="node2" href="$class_event_action.html#a06148949f50959f74b834a827369c8cb" title="EventAction::AddSACHitsStep" alt="" coords="259,5,461,32"/>
+<area shape="rect" id="node3" href="$class_stepping_action.html#af7456219f4c4e4daf21b181305b7c02c" title="SteppingAction::Classify\lTrack" alt="" coords="277,57,443,98"/>
+<area shape="rect" id="node4" href="$class_event_action.html#ab75841b9d0dc69a571437f7ec1646efe" title="EventAction::AddCalHitsStep" alt="" coords="263,123,457,149"/>
+<area shape="rect" id="node5" href="$class_beam_parameters.html#a28d4728d56992696e3f07a9b74d2f10f" title="BeamParameters::GetNPositrons\lPerBunch" alt="" coords="251,174,469,215"/>
+</map>

@@ -1,0 +1,28 @@
+<map id="RootIO::FillRawEvent" name="RootIO::FillRawEvent">
+<area shape="rect" id="node2" href="$class_t_raw_event.html#ac5968ef2302eff66b64edeb5422f9b3e" title="TRawEvent::Clear" alt="" coords="268,5,399,32"/>
+<area shape="rect" id="node3" href="$class_t_raw_event.html#abd468995effc78fa4895261cfc5803c9" title="TRawEvent::SetRunNumber" alt="" coords="239,56,428,83"/>
+<area shape="rect" id="node4" href="$class_t_raw_event.html#a519bc98b48bcd54399e1683f83b0d51a" title="TRawEvent::SetEventNumber" alt="" coords="234,107,433,133"/>
+<area shape="rect" id="node5" href="$class_t_raw_event.html#a0b7324204d61c85a9cc7fd5532a4c95c" title="TRawEvent::AddADCBoard" alt="" coords="241,157,426,184"/>
+<area shape="rect" id="node6" href="$class_t_a_d_c_board.html#abc2d4fd10e0ecedff2cce31fd501fb3d" title="TADCBoard::SetBoardId" alt="" coords="250,208,417,235"/>
+<area shape="rect" id="node7" href="$class_t_a_d_c_board.html#a229695b060a9e5db9c704325ba37a951" title="TADCBoard::SetLVDSPattern" alt="" coords="234,259,433,285"/>
+<area shape="rect" id="node8" href="$class_t_a_d_c_board.html#a69593a9897a2e20579748862f6d3c381" title="TADCBoard::SetStatus" alt="" coords="254,309,413,336"/>
+<area shape="rect" id="node9" href="$class_t_a_d_c_board.html#a058c382527c0f8cbb22e147d9c3285d7" title="TADCBoard::SetGroupMask" alt="" coords="239,360,427,387"/>
+<area shape="rect" id="node10" href="$class_t_a_d_c_board.html#a602e179be269a962ff6f5bf71d29b5c5" title="TADCBoard::SetEventCounter" alt="" coords="233,411,434,437"/>
+<area shape="rect" id="node11" href="$class_t_a_d_c_board.html#a2fb17880e5356c4e5ba05291d5241db4" title="TADCBoard::SetEventTimeTag" alt="" coords="230,461,437,488"/>
+<area shape="rect" id="node12" href="$class_t_a_d_c_board.html#a826064ffad32a941aee4e37588f04d5b" title="TADCBoard::SetActiveChannelMask" alt="" coords="214,512,453,539"/>
+<area shape="rect" id="node13" href="$class_t_a_d_c_board.html#a8bda7a56cd21a72f24fb726a365aa309" title="TADCBoard::SetAcceptedChannelMask" alt="" coords="205,563,461,589"/>
+<area shape="rect" id="node14" href="$class_t_a_d_c_board.html#a7ca9b7d062b3cf3cf9c850ba4c1f3ce3" title="TADCBoard::AddADCTrigger" alt="" coords="237,613,430,640"/>
+<area shape="rect" id="node15" href="$class_t_a_d_c_trigger.html#ae4ba4322f846137acb7dadc5c25d92ac" title="TADCTrigger::SetGroupNumber" alt="" coords="229,664,437,691"/>
+<area shape="rect" id="node16" href="$class_t_a_d_c_trigger.html#a40e491a1668f2dce879fe45eca37f87d" title="TADCTrigger::SetStartIndexCell" alt="" coords="228,715,439,741"/>
+<area shape="rect" id="node17" href="$class_t_a_d_c_trigger.html#aec12c4061b7212554e0ad7f1da021ba6" title="TADCTrigger::SetFrequency" alt="" coords="239,765,427,792"/>
+<area shape="rect" id="node18" href="$class_t_a_d_c_trigger.html#a38067866bbadc4f068c3616126b5b632" title="TADCTrigger::SetTriggerSignal" alt="" coords="232,816,435,843"/>
+<area shape="rect" id="node19" href="$class_t_a_d_c_trigger.html#a3c9de8537899ad72a5775b3941fae2cd" title="TADCTrigger::SetTriggerTimeTag" alt="" coords="224,867,443,893"/>
+<area shape="rect" id="node20" href="$class_t_a_d_c_trigger.html#a38d77678dc92a9fd563adf8ceb2b6704" title="TADCTrigger::SetSample" alt="" coords="248,917,419,944"/>
+<area shape="rect" id="node21" href="$class_t_a_d_c_board.html#ae42ed79cf13f36d9ffa675800decf6ad" title="TADCBoard::AddADCChannel" alt="" coords="233,968,434,995"/>
+<area shape="rect" id="node22" href="$class_t_a_d_c_channel.html#a51f1813db73f0dd7bd2b4146d7c61348" title="TADCChannel::SetChannelNumber" alt="" coords="219,1019,448,1045"/>
+<area shape="rect" id="node23" href="$class_t_a_d_c_channel.html#ac70514dceb7661690d8d7de3669bfa16" title="TADCChannel::SetSample" alt="" coords="244,1069,423,1096"/>
+<area shape="rect" id="node24" href="$class_root_i_o.html#a443255175d978c5f718c742e91de17d2" title="RootIO::ChangeOutFile" alt="" coords="254,1120,413,1147"/>
+<area shape="rect" id="node25" href="$class_root_i_o.html#a75ceaaaa66bb250e0784fdb14e0e7fe2" title="RootIO::CloseOutFile" alt="" coords="510,1069,658,1096"/>
+<area shape="rect" id="node26" href="$class_root_i_o.html#ab370084210e61ee26b4a9727fd2115f9" title="RootIO::SetOutFile" alt="" coords="517,1120,651,1147"/>
+<area shape="rect" id="node27" href="$class_root_i_o.html#ad83bf04f3b85c81c565e403db0e125e8" title="RootIO::OpenOutFile" alt="" coords="511,1171,657,1197"/>
+</map>

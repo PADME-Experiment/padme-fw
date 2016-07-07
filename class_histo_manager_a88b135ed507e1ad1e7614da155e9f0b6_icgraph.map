@@ -1,0 +1,12 @@
+<map id="HistoManager::HistoManager" name="HistoManager::HistoManager">
+<area shape="rect" id="node2" href="$class_histo_manager.html#ab13b847a01eb2da01d1ce147ac891cd5" title="HistoManager::GetInstance" alt="" coords="246,224,429,251"/>
+<area shape="rect" id="node3" href="$class_beam_generator.html#a123b164734befe2ef7cd3dd287411ef5" title="BeamGenerator::BeamGenerator" alt="" coords="478,5,690,32"/>
+<area shape="rect" id="node4" href="$class_e_c_a_l_anal.html#a44caa4d3e4ac80152d15fffe1e3c2d29" title="ECALAnal::ECALAnal" alt="" coords="508,56,660,83"/>
+<area shape="rect" id="node5" href="$class_e_c_a_l_online_monitor.html#adc08a2a5b5bba18ddac2afda771c34f2" title="ECALOnlineMonitor::\lECALOnlineMonitor" alt="" coords="511,107,657,149"/>
+<area shape="rect" id="node6" href="$class_event_action.html#a80ab94e9a28bbe6408fc245c8145ec97" title="EventAction::EventAction" alt="" coords="498,173,670,200"/>
+<area shape="rect" id="node7" href="$class_grapher.html#a3f3f944e4f7aa963d56eb3e08d05ce8c" title="Grapher::AnalyzeEvents" alt="" coords="502,224,666,251"/>
+<area shape="rect" id="node8" href="$_monitor_8cpp.html#a0ddf1224851353fc92bfbff6f499fa97" title="main" alt="" coords="559,275,609,301"/>
+<area shape="rect" id="node9" href="$class_run_action.html#a535a70dd2811b2212753372dcb5a2f50" title="RunAction::RunAction" alt="" coords="508,325,660,352"/>
+<area shape="rect" id="node10" href="$class_target_anal.html#abc2d5a4f2d4e5a2b90821c5c3be2a315" title="TargetAnal::TargetAnal" alt="" coords="506,376,662,403"/>
+<area shape="rect" id="node11" href="$class_target_online_monitor.html#a1c560733789024ea828d73a2e1a428bb" title="TargetOnlineMonitor\l::TargetOnlineMonitor" alt="" coords="511,427,657,469"/>
+</map>

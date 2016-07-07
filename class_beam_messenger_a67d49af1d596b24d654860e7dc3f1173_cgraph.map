@@ -1,0 +1,35 @@
+<map id="BeamMessenger::SetNewValue" name="BeamMessenger::SetNewValue">
+<area shape="rect" id="node2" href="$class_beam_parameters.html#a506d9b91d55db1c4ae2b3ed61856b26b" title="BeamParameters::SetNPositrons\lPerBunch" alt="" coords="281,5,497,46"/>
+<area shape="rect" id="node3" href="$class_beam_parameters.html#a4375aad6907f653e49a0542267cbe119" title="BeamParameters::NPositrons\lPerBunchEnableSpread" alt="" coords="291,70,487,111"/>
+<area shape="rect" id="node4" href="$class_beam_parameters.html#add43022d359a89fac8aed4e628e6eadc" title="BeamParameters::NPositrons\lPerBunchDisableSpread" alt="" coords="291,135,487,177"/>
+<area shape="rect" id="node5" href="$class_beam_parameters.html#aacd9a35d4b48cbf1c27a112e6f0d1f1c" title="BeamParameters::BeamEnable\lBunchStructure" alt="" coords="287,201,492,242"/>
+<area shape="rect" id="node6" href="$class_beam_parameters.html#a6372a464d574030c35fd5d35bd3065e8" title="BeamParameters::BeamDisable\lBunchStructure" alt="" coords="285,266,494,307"/>
+<area shape="rect" id="node7" href="$class_beam_parameters.html#aec4e3daa9965e8d4e707d866620cd982" title="BeamParameters::SetBunch\lTimeLength" alt="" coords="295,331,483,373"/>
+<area shape="rect" id="node8" href="$class_beam_parameters.html#a5e8ba780df2f3d21151017eb44fd9081" title="BeamParameters::SetMicro\lBunchTimeLength" alt="" coords="298,397,481,438"/>
+<area shape="rect" id="node9" href="$class_beam_parameters.html#a1ae94992489d8245358e626e961a0d06" title="BeamParameters::SetMicro\lBunchTimeDelay" alt="" coords="298,462,481,503"/>
+<area shape="rect" id="node10" href="$class_beam_parameters.html#a5d89ad572f75c3f390106163795318cb" title="BeamParameters::SetBeamCenterPosX" alt="" coords="261,528,517,555"/>
+<area shape="rect" id="node11" href="$class_beam_parameters.html#a84c63d615ac579c96226f9a0e58b49e9" title="BeamParameters::SetBeamCenterPosY" alt="" coords="261,579,517,605"/>
+<area shape="rect" id="node12" href="$class_beam_parameters.html#a4fac4a1516b4c7daef2af1a05ec6ceee" title="BeamParameters::BeamCenter\lPosEnableSpread" alt="" coords="287,630,491,671"/>
+<area shape="rect" id="node13" href="$class_beam_parameters.html#a0ba3e1201739c0ce235993750f42c1c6" title="BeamParameters::BeamCenter\lPosDisableSpread" alt="" coords="287,695,491,737"/>
+<area shape="rect" id="node14" href="$class_beam_parameters.html#a09756ac591ed6586dca0a4495a392405" title="BeamParameters::SetBeamCenter\lPosXSpread" alt="" coords="277,761,501,802"/>
+<area shape="rect" id="node15" href="$class_beam_parameters.html#ada959265155ec6325a136f80e5608bec" title="BeamParameters::SetBeamCenter\lPosYSpread" alt="" coords="277,826,501,867"/>
+<area shape="rect" id="node16" href="$class_beam_parameters.html#a25cff432bd5be2f23047d78da5284157" title="BeamParameters::SetBeamMomentum" alt="" coords="264,892,515,919"/>
+<area shape="rect" id="node17" href="$class_beam_parameters.html#a8f870592444a33fa551451c04a32a135" title="BeamParameters::BeamMomentum\lEnableSpread" alt="" coords="274,943,505,985"/>
+<area shape="rect" id="node18" href="$class_beam_parameters.html#adb3127bb617329ff2e4b273c3c1a720f" title="BeamParameters::BeamMomentum\lDisableSpread" alt="" coords="274,1009,505,1050"/>
+<area shape="rect" id="node19" href="$class_beam_parameters.html#af8c4569b682215746bc6d950ab1dc6c6" title="BeamParameters::SetBeamMomentum\lSpread" alt="" coords="264,1074,515,1115"/>
+<area shape="rect" id="node20" href="$class_beam_parameters.html#a3b598a4852414b8d04917e6babbd5511" title="BeamParameters::SetBeamDirection" alt="" coords="271,1140,508,1167"/>
+<area shape="rect" id="node21" href="$class_beam_parameters.html#a41b1daea64e3b454d857c6ca6fed33ea" title="BeamParameters::BeamEnable\lEmittance" alt="" coords="287,1191,492,1233"/>
+<area shape="rect" id="node22" href="$class_beam_parameters.html#ab70bae1317645cd9ca0dafe8fe648459" title="BeamParameters::BeamDisable\lEmittance" alt="" coords="285,1257,494,1298"/>
+<area shape="rect" id="node23" href="$class_beam_parameters.html#ac473879d1d0d2cb2826c026c87cb80d1" title="BeamParameters::SetBeamEmittanceX" alt="" coords="263,1323,516,1349"/>
+<area shape="rect" id="node24" href="$class_beam_parameters.html#a87d5d659cedf9e7c97fb36f306abfd7d" title="BeamParameters::SetBeamEmittanceY" alt="" coords="263,1373,516,1400"/>
+<area shape="rect" id="node25" href="$class_beam_parameters.html#a2deee3957b2057a6797a2dd65d12c17a" title="BeamParameters::SetNUboson\lDecaysPerBunch" alt="" coords="286,1425,493,1466"/>
+<area shape="rect" id="node26" href="$class_beam_parameters.html#a832a7e17c3d67ed0ebb8b5ef6a78afc9" title="BeamParameters::SetUbosonMass" alt="" coords="275,1491,503,1517"/>
+<area shape="rect" id="node27" href="$class_beam_parameters.html#ae5cf1943f0f7cfaac7d9e90912087fd6" title="BeamParameters::SetNThree\lPhotonDecaysPerBunch" alt="" coords="292,1542,487,1583"/>
+<area shape="rect" id="node28" href="$class_beam_parameters.html#a8a1980512790d5e32c4069e732093227" title="BeamParameters::SetThree\lPhotonDecaysFilename" alt="" coords="297,1607,481,1649"/>
+<area shape="rect" id="node29" href="$class_beam_generator.html#ae45e2a621ac17df8185a460fbeaa037c" title="BeamGenerator::Calibration\lRunEnable" alt="" coords="298,1673,481,1714"/>
+<area shape="rect" id="node30" href="$class_beam_generator.html#aa723c06a8f79995f160b176f8cf99cb7" title="BeamGenerator::Calibration\lRunDisable" alt="" coords="298,1738,481,1779"/>
+<area shape="rect" id="node31" href="$class_beam_generator.html#a3b56221c5cefe5648600044dd2312473" title="BeamGenerator::SetCalibRun\lEnergy" alt="" coords="292,1803,487,1845"/>
+<area shape="rect" id="node32" href="$class_beam_generator.html#a2aca729d165262e5693f282aca4c9082" title="BeamGenerator::SetCalibRun\lCenterX" alt="" coords="292,1869,487,1910"/>
+<area shape="rect" id="node33" href="$class_beam_generator.html#ae41050341b0a83fb5abe13b5333510dd" title="BeamGenerator::SetCalibRun\lCenterY" alt="" coords="292,1934,487,1975"/>
+<area shape="rect" id="node34" href="$class_beam_generator.html#ae6db01de54b6497f858d4029f12e4169" title="BeamGenerator::SetCalibRun\lRadius" alt="" coords="292,1999,487,2041"/>
+</map>

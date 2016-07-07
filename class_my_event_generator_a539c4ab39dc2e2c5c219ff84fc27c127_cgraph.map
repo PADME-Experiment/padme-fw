@@ -1,0 +1,28 @@
+<map id="MyEventGenerator::GenerateEvent" name="MyEventGenerator::GenerateEvent">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a9c8fbcafee00a43bd1c66c7d4607f497" title="MyEventGenerator::ClearEvent" alt="" coords="246,267,450,293"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a54a469d08d39f6fbd9d09febff7c3204" title="MyEventGenerator::Create\lInitialState" alt="" coords="499,181,677,222"/>
+<area shape="rect" id="node7" href="$class_my_event_generator.html#a2ba8db42c2d8f34c82480995d98920d7" title="MyEventGenerator::Create\lIntermediateState" alt="" coords="259,590,437,631"/>
+<area shape="rect" id="node9" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="259,377,437,418"/>
+<area shape="rect" id="node3" href="$class_my_particle.html#acc52f43eba0db251121af00028e8b167" title="MyParticle::clear" alt="" coords="528,129,648,156"/>
+<area shape="rect" id="node5" href="$class_my_particle.html#af6dc43e2dc0621f56d78589712968ffb" title="MyParticle::setEnergy" alt="" coords="742,56,893,83"/>
+<area shape="rect" id="node6" href="$class_my_particle.html#aa357af0c021d1da56388c2eda97cd97d" title="MyParticle::calcMomentum" alt="" coords="727,5,908,32"/>
+<area shape="rect" id="node8" href="$class_my_particle.html#a03704378aae976899e951b4b47d86054" title="MyParticle::calcMass" alt="" coords="514,772,662,799"/>
+<area shape="rect" id="node10" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="499,377,677,418"/>
+<area shape="rect" id="node25" href="$class_my_event_generator.html#a62ad7c2b6e9244ac3fe8d793be17d0c1" title="MyEventGenerator::Create\lFinalState3Photon" alt="" coords="499,706,677,747"/>
+<area shape="rect" id="node11" href="$class_my_particle.html#a7ded7f4df12d3653a53ce222a4dbb467" title="MyParticle::setMass" alt="" coords="746,739,889,765"/>
+<area shape="rect" id="node12" href="$class_my_particle.html#a24e7a66871014ba7767919e97bd831c1" title="MyParticle::setType" alt="" coords="748,688,887,715"/>
+<area shape="rect" id="node13" href="$class_my_particle.html#a3b7a8033e9621faa2efa4801bbed0d6b" title="MyParticle::m" alt="" coords="766,283,869,309"/>
+<area shape="rect" id="node14" href="$class_my_particle.html#af69310988a02a933c815d11bcc36605b" title="MyParticle::boostLAB" alt="" coords="743,333,892,360"/>
+<area shape="rect" id="node15" href="$class_my_particle.html#a0f46a658cef18cd1a6b6cb45dd3fd166" title="MyParticle::get4Momentum" alt="" coords="726,384,909,411"/>
+<area shape="rect" id="node16" href="$class_my_particle.html#ac7b33fd774e9c5c888c9deb7b165c1f6" title="MyParticle::calcGamma" alt="" coords="736,435,899,461"/>
+<area shape="rect" id="node18" href="$class_my_particle.html#ad43b242b5bd5d3199332ad30b378bc34" title="MyParticle::setPars" alt="" coords="749,485,886,512"/>
+<area shape="rect" id="node19" href="$class_my_particle.html#a96a10b96ff9054c534924afebde5197a" title="MyParticle::calcWidthU" alt="" coords="737,536,897,563"/>
+<area shape="rect" id="node20" href="$class_my_particle.html#ad4cae5bfe7be1ddce4e08670bf9e7a6b" title="MyParticle::calcTau" alt="" coords="748,587,887,613"/>
+<area shape="rect" id="node21" href="$class_my_particle.html#a4e714861924eb99d1fe0192675b6129a" title="MyParticle::calcBeta" alt="" coords="746,637,889,664"/>
+<area shape="rect" id="node22" href="$class_my_particle.html#af5ff6399dc8cc36360c0cf445d8b1ed5" title="MyParticle::genDecayVtx" alt="" coords="732,107,903,133"/>
+<area shape="rect" id="node23" href="$class_my_particle.html#a5d7a996379522ae07555e0b0e58ed7f5" title="MyParticle::setPVtx" alt="" coords="748,181,887,208"/>
+<area shape="rect" id="node24" href="$class_my_particle.html#a81b81d47f5607ea6e4b6e72f68cb3bf7" title="MyParticle::getDVtx" alt="" coords="747,232,887,259"/>
+<area shape="rect" id="node17" href="$class_my_particle.html#a6a226c8379e5f78b8b9a7ec6d37fd5f7" title="MyParticle::E" alt="" coords="957,435,1059,461"/>
+<area shape="rect" id="node26" href="$class_my_particle.html#a80b0547bfcb343e11821ebd43e696cd2" title="MyParticle::setMomentum" alt="" coords="730,840,905,867"/>
+<area shape="rect" id="node27" href="$class_my_particle.html#a4b2c6d831834852da0019c314a5279fe" title="MyParticle::calcE" alt="" coords="755,789,880,816"/>
+</map>

@@ -1,0 +1,27 @@
+var class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i =
+[
+    [ "__init__", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a7b09546bccfaa3dd96fe6c0b9eb60554", null ],
+    [ "change_status", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ada56f4fc8b6c1a8eae147bfe2fadd8ee", null ],
+    [ "close_gui", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a43c580d1eecf00e9f1f2cae88a5a8763", null ],
+    [ "open_gui", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a64149196f6574e9e3a95ad2efc0414a5", null ],
+    [ "show_cfg", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ab10ee10c54686e81a631909f1dc686d8", null ],
+    [ "show_log", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#aa99fb3a756de585f65cb0c1abe39417d", null ],
+    [ "update_log", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ad90d6439571e5dd401904d91767a3e97", null ],
+    [ "b_done", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#aa1c926bdc6de4edd1c650dfa24809173", null ],
+    [ "b_name", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a5b4ecc4da36823d12c58c08a206a0bb9", null ],
+    [ "board_id", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a686574228962221ace380cacbeed1086", null ],
+    [ "config", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a7db0aa259997966767323a5496163aea", null ],
+    [ "f_cfg", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a8c9ed90a273f0d9f027469d5b832205b", null ],
+    [ "f_log", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ad69b4af798cd332d32d53ba98afd6839", null ],
+    [ "file", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a835185acb5999442868f6f4683707773", null ],
+    [ "log_file", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ae4ac6c3b4f7dff9a9e25e2751a69305b", null ],
+    [ "mode", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#aa32c40e9e8d5b21e35f3a6fee7f2e34a", null ],
+    [ "my_after", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a5246306ca05006692b2ffd4a1f1a867f", null ],
+    [ "root", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#ad1b565c393666303017c6c5ef5addc11", null ],
+    [ "s_cfg", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#abe2e198fc8028c998ac82269cdf581e6", null ],
+    [ "s_log", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#afd6073fc8657699de8a932bbd1032fa2", null ],
+    [ "size", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a56a566dab4c95223b2f5d0bff0e139a7", null ],
+    [ "status", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a9f12b1c28d1283f1e7ff4552c054046c", null ],
+    [ "w_cfg", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a6f30fc2e3dcdca1156374c7a58f06655", null ],
+    [ "w_log", "class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#a4e6e3199e7da2f36e4ba8faf820f7b12", null ]
+];

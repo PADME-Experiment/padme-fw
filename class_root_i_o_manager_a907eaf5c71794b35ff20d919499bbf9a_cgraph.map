@@ -1,0 +1,5 @@
+<map id="RootIOManager::EndRun" name="RootIOManager::EndRun">
+<area shape="rect" id="node2" href="$class_t_padme_run.html#afc44406122b2fa84f48050adc8701131" title="TPadmeRun::SetTimeStop" alt="" coords="224,5,403,32"/>
+<area shape="rect" id="node3" href="$class_t_padme_run.html#a17e1fb9f33a4be8202451f4ca98d9cdd" title="TPadmeRun::Print" alt="" coords="248,56,379,83"/>
+<area shape="rect" id="node4" href="$class_t_detector_info.html#afece37754f1aef3d6950926f8c9ea28a" title="TDetectorInfo::Print" alt="" coords="451,56,589,83"/>
+</map>

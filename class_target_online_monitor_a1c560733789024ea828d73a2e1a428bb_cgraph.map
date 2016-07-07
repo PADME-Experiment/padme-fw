@@ -1,0 +1,8 @@
+<map id="TargetOnlineMonitor::TargetOnlineMonitor" name="TargetOnlineMonitor::TargetOnlineMonitor">
+<area shape="rect" id="node2" href="$class_histo_manager.html#ab13b847a01eb2da01d1ce147ac891cd5" title="HistoManager::GetInstance" alt="" coords="214,5,397,32"/>
+<area shape="rect" id="node4" href="$class_histo_manager.html#a87325f58be4f9b03465f9ffdb56c819f" title="HistoManager::Histo" alt="" coords="234,56,377,83"/>
+<area shape="rect" id="node5" href="$class_v_online_monitor.html#a0e5af97b0987f951147d25fa164e2c05" title="VOnlineMonitor::AddCanvasTab" alt="" coords="201,107,410,133"/>
+<area shape="rect" id="node6" href="$class_v_histo.html#a857e8b88eb7e3e199e40b156c30097fa" title="VHisto::Get1DHisto" alt="" coords="236,157,375,184"/>
+<area shape="rect" id="node7" href="$class_v_online_monitor.html#af0fd336a5d507ecde9073e047978c050" title="VOnlineMonitor::CompleteTab" alt="" coords="207,208,404,235"/>
+<area shape="rect" id="node3" href="$class_histo_manager.html#a88b135ed507e1ad1e7614da155e9f0b6" title="HistoManager::HistoManager" alt="" coords="459,5,651,32"/>
+</map>

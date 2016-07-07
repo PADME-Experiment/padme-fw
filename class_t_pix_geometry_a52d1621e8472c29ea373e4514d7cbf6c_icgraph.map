@@ -1,0 +1,5 @@
+<map id="TPixGeometry::GetTPixSizeY" name="TPixGeometry::GetTPixSizeY">
+<area shape="rect" id="node2" href="$class_t_pix_detector.html#a570ea48595a81f8dc5e1906594be2529" title="TPixDetector::CreateGeometry" alt="" coords="493,12,696,39"/>
+<area shape="rect" id="node4" href="$class_t_pix_geometry.html#ae83c0c2e8fefc4a5e2bc7905c5b5df80" title="TPixGeometry::GetChipPosY" alt="" coords="251,37,445,64"/>
+<area shape="rect" id="node3" href="$class_detector_construction.html#a662c618480b345a747f014b845d5ffdf" title="DetectorConstruction\l::Construct" alt="" coords="744,5,891,46"/>
+</map>

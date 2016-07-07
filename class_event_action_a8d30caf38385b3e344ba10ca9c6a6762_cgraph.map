@@ -1,0 +1,8 @@
+<map id="EventAction::AddLAVHits" name="EventAction::AddLAVHits">
+<area shape="rect" id="node2" href="$class_l_a_v_hit.html#a20d299ca21dd31c37f06f78d8268776a" title="LAVHit::GetTrackID" alt="" coords="227,5,367,32"/>
+<area shape="rect" id="node3" href="$class_l_a_v_hit.html#a05fce2239553cc4ad1884f6cd26b4f21" title="LAVHit::GetEdep" alt="" coords="236,56,359,83"/>
+<area shape="rect" id="node4" href="$class_l_a_v_hit.html#aa8e3f632e30b24b8371bcae14de904c5" title="LAVHit::GetTime" alt="" coords="236,107,359,133"/>
+<area shape="rect" id="node5" href="$class_l_a_v_hit.html#aa189fa64936fc23db2245d4f93537651" title="LAVHit::GetPType" alt="" coords="232,157,363,184"/>
+<area shape="rect" id="node6" href="$class_l_a_v_hit.html#a1cc7dd97ebdf3c2fa4269d6601631327" title="LAVHit::GetX" alt="" coords="246,208,349,235"/>
+<area shape="rect" id="node7" href="$class_l_a_v_hit.html#a88fc58ea4b1c8ea78eaa65576fb305fa" title="LAVHit::GetY" alt="" coords="246,259,349,285"/>
+</map>

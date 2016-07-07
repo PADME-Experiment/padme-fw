@@ -1,0 +1,5 @@
+<map id="RunControlGUI.RunControlGUI.start_run" name="RunControlGUI.RunControlGUI.start_run">
+<area shape="rect" id="node2" href="$class_run_control_server_1_1_run_control_server.html#a31fc2b89bbaec6c971bae9b2f03624e9" title="RunControlServer.RunControl\lServer.state_initialized" alt="" coords="238,5,434,46"/>
+<area shape="rect" id="node4" href="$class_run_control_text_1_1_run_control_text.html#a960509aac5d8789ac57ea5c8013b5ba2" title="RunControlText.RunControl\lText.main_loop" alt="" coords="244,70,428,111"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="483,5,679,46"/>
+</map>

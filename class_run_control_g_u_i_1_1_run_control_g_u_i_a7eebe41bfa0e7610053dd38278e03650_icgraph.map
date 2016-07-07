@@ -1,0 +1,5 @@
+<map id="RunControlGUI.RunControlGUI.change_setup" name="RunControlGUI.RunControlGUI.change_setup">
+<area shape="rect" id="node2" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aba2d8aaf4be5ec73092a1f5796ed8fb4" title="RunControlGUI.RunControl\lGUI.change_setup_bind" alt="" coords="245,5,427,46"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#a77f1bd06f189c7aa1ef851cae78579d3" title="RunControlServer.RunControl\lServer.state_idle" alt="" coords="238,70,434,111"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#abbe6729986636981f1e9f7903030035d" title="RunControlServer.RunControl\lServer.main_loop" alt="" coords="483,70,679,111"/>
+</map>

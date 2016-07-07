@@ -1,0 +1,7 @@
+<map id="MagnetSD::ProcessHits" name="MagnetSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_magnet_hit.html#acd13daf2b53810a3e018c9ded0ad08e6" title="MagnetHit::SetEnergy" alt="" coords="238,5,389,32"/>
+<area shape="rect" id="node3" href="$class_magnet_hit.html#af6b3f2674cd19f90cc255e6a01684ebf" title="MagnetHit::SetTime" alt="" coords="244,56,383,83"/>
+<area shape="rect" id="node4" href="$class_magnet_hit.html#a90cf64184134681d0403c1a8593b9942" title="MagnetHit::SetPosition" alt="" coords="235,107,392,133"/>
+<area shape="rect" id="node5" href="$class_magnet_hit.html#a4ecb36f92aae17f365abd605b6792870" title="MagnetHit::SetLocalPosition" alt="" coords="219,157,407,184"/>
+<area shape="rect" id="node6" href="$class_magnet_hit.html#a35c2921497d98a70a99da0e6601c51f1" title="MagnetHit::SetTrackID" alt="" coords="235,208,392,235"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="PVetoSD::ProcessHits" name="PVetoSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_p_veto_hit.html#ad7215f05671e1c20894e184a756867dc" title="PVetoHit::SetChannelId" alt="" coords="220,5,383,32"/>
+<area shape="rect" id="node3" href="$class_p_veto_hit.html#a9e92aeaeca782a6eae92d704127e95a1" title="PVetoHit::SetEnergy" alt="" coords="229,56,373,83"/>
+<area shape="rect" id="node4" href="$class_p_veto_hit.html#addd1d76e1bca7a6887ec0da994f76bf1" title="PVetoHit::SetTime" alt="" coords="235,107,367,133"/>
+<area shape="rect" id="node5" href="$class_p_veto_hit.html#aed194ff0a59cfa16497cb84e7cfc731b" title="PVetoHit::SetPosition" alt="" coords="226,157,377,184"/>
+<area shape="rect" id="node6" href="$class_p_veto_hit.html#ab547e2533a420de13b308bd52b436765" title="PVetoHit::SetLocalPosition" alt="" coords="211,208,392,235"/>
+</map>

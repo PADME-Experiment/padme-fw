@@ -1,0 +1,4 @@
+<map id="HEPVetoHit::GetEdep" name="HEPVetoHit::GetEdep">
+<area shape="rect" id="node2" href="$class_event_action.html#a802faa55d09ba403dad44d7b2dfc35b3" title="EventAction::AddHEPVetoHits" alt="" coords="208,5,411,32"/>
+<area shape="rect" id="node3" href="$class_event_action.html#acbb14da7b112e47ec22a253d4aa7dd4f" title="EventAction::EndOfEventAction" alt="" coords="459,5,669,32"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="MyParticle::calcTau" name="MyParticle::calcTau">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="192,5,371,46"/>
+<area shape="rect" id="node5" href="$class_my_particle.html#a77aa8bc00927003011cc3e063a9fba7f" title="MyParticle::calcTau" alt="" coords="212,71,351,97"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="419,5,597,46"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="645,5,837,46"/>
+</map>

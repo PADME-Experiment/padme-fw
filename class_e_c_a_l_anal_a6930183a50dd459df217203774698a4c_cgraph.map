@@ -1,0 +1,9 @@
+<map id="ECALAnal::AnalyzePosition" name="ECALAnal::AnalyzePosition">
+<area shape="rect" id="node2" href="$class_t_raw_event.html#aab8008ee592ac3522f6ae53ed876ef96" title="TRawEvent::GetNADCBoards" alt="" coords="256,5,456,32"/>
+<area shape="rect" id="node3" href="$class_t_raw_event.html#a8baba8508ffd9318cb921a7e9a190277" title="TRawEvent::ADCBoard" alt="" coords="275,56,437,83"/>
+<area shape="rect" id="node4" href="$class_t_a_d_c_board.html#a8c21c55ca15870297e41029acbbf00fc" title="TADCBoard::GetBoardId" alt="" coords="273,107,439,133"/>
+<area shape="rect" id="node5" href="$class_t_a_d_c_board.html#aaf0870a595de21c8477b8ad7eccdfe33" title="TADCBoard::GetNADCChannels" alt="" coords="248,157,464,184"/>
+<area shape="rect" id="node6" href="$class_t_a_d_c_board.html#a4a4c3f0f938294ecc0e9788be1430807" title="TADCBoard::ADCChannel" alt="" coords="267,208,445,235"/>
+<area shape="rect" id="node7" href="$class_t_a_d_c_channel.html#a8676dc5d37192284e2ad871f4ab68df7" title="TADCChannel::GetChannelNumber" alt="" coords="241,259,471,285"/>
+<area shape="rect" id="node8" href="$class_v_histo.html#a6c58310398c09cb9b7227c4bd06e7091" title="VHisto::Fill2DHisto" alt="" coords="289,309,423,336"/>
+</map>

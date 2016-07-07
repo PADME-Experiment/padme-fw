@@ -1,0 +1,7 @@
+<map id="MyEvent.hh" name="MyEvent.hh">
+<area shape="rect" id="node2" href="$_my_event_generation_8hh.html" title="MyEventGeneration.hh" alt="" coords="897,80,1052,107"/>
+<area shape="rect" id="node16" href="$_my_sim_event_8hh.html" title="MySimEvent.hh" alt="" coords="333,80,448,107"/>
+<area shape="rect" id="node13" href="$_my_particle_8hh.html" title="MyParticle.hh" alt="" coords="626,155,728,181"/>
+<area shape="rect" id="node17" href="$_my_calo_cluster_8hh.html" title="MyCaloCluster.hh" alt="" coords="327,155,453,181"/>
+<area shape="rect" id="node18" href="$_my_tracker_cluster_8hh.html" title="MyTrackerCluster.hh" alt="" coords="5,155,149,181"/>
+</map>

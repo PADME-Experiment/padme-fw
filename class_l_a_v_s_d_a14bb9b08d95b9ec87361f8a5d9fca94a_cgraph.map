@@ -1,0 +1,10 @@
+<map id="LAVSD::ProcessHits" name="LAVSD::ProcessHits">
+<area shape="rect" id="node2" href="$class_l_a_v_hit.html#aa8b9b2454bc3b30d09f08b69b732a079" title="LAVHit::SetChannelId" alt="" coords="210,5,361,32"/>
+<area shape="rect" id="node3" href="$class_l_a_v_hit.html#a5854d8e53aff66c7a90146c60d3d4f3e" title="LAVHit::SetEnergy" alt="" coords="219,56,352,83"/>
+<area shape="rect" id="node4" href="$class_l_a_v_hit.html#a1578d9d40e6c93c96930ba2e3bb762f9" title="LAVHit::SetTime" alt="" coords="225,107,346,133"/>
+<area shape="rect" id="node5" href="$class_l_a_v_hit.html#a8ebfd7ef9afecbdb4f74962ac645e1d7" title="LAVHit::SetPosition" alt="" coords="216,157,355,184"/>
+<area shape="rect" id="node6" href="$class_l_a_v_hit.html#a1bc730d61cdf1da4b4455a5ab3f8b285" title="LAVHit::SetLocalPosition" alt="" coords="200,208,371,235"/>
+<area shape="rect" id="node7" href="$class_l_a_v_hit.html#a3a6afd702fce5149acc2d93f51ca14b1" title="LAVHit::SetTrackID" alt="" coords="216,259,355,285"/>
+<area shape="rect" id="node8" href="$class_l_a_v_hit.html#a46cef259ba80c7f341c418ff69543f1f" title="LAVHit::SetPType" alt="" coords="220,309,351,336"/>
+<area shape="rect" id="node9" href="$class_l_a_v_s_d.html#a318cf783170c8be1cd4bc742d8791b27" title="LAVSD::ClassifyTrack" alt="" coords="208,360,363,387"/>
+</map>

@@ -1,0 +1,25 @@
+var class_grapher =
+[
+    [ "~Grapher", "class_grapher.html#ab0c2a3dc92e6f589c9eccb8a41198f5e", null ],
+    [ "Grapher", "class_grapher.html#a5e6967ec60280812ae37e09785287703", null ],
+    [ "AnalyzeEvents", "class_grapher.html#a3f3f944e4f7aa963d56eb3e08d05ce8c", null ],
+    [ "GetFileName", "class_grapher.html#ac40ce2a19f1ff6ee3429f7012e19c248", null ],
+    [ "GetNEvents", "class_grapher.html#acaf184ae2cf2af010dfbbc2331a37a12", null ],
+    [ "HoldMonitor", "class_grapher.html#a29324822c1c5ab3fc5fc7d94fb7a7664", null ],
+    [ "OnlineMonitor", "class_grapher.html#a40988d27a5fbf695dd11e4b64f73d4dd", null ],
+    [ "ResumeMonitor", "class_grapher.html#a045b5377082ebb81f29fc7f392f44eca", null ],
+    [ "SetApplication", "class_grapher.html#a7b51d0b565a2a208e862e4c7ec69f00f", null ],
+    [ "SetFileName", "class_grapher.html#a445abef9a32788e22f51a3cad1d34c5d", null ],
+    [ "SetNEvents", "class_grapher.html#aeb1ec208037aa216e0028ffc08613c0d", null ],
+    [ "fApplication", "class_grapher.html#af4bbbfc3bd3e12faf93df4f739a3c973", null ],
+    [ "fCurrentStatus", "class_grapher.html#ac960cb215e93cfc78fe472082a76cf31", null ],
+    [ "fDataFile", "class_grapher.html#a5d4779a33a8c2a200f214e97b12b7f7e", null ],
+    [ "fExitButton", "class_grapher.html#a654dd210f8b860e6bdde435ac033c665", null ],
+    [ "fFileName", "class_grapher.html#ab324a7ad04628c1a6bc34ae56dc03f47", null ],
+    [ "fHoldButton", "class_grapher.html#a04c6a1a524cb5b2e3f9788093c66f033", null ],
+    [ "fNEvents", "class_grapher.html#ac966f57d2ad0567fe1728818d7fef3f5", null ],
+    [ "fNextButton", "class_grapher.html#ae1f13e65c4557cd8a542962155f01776", null ],
+    [ "fOnlineMonitorList", "class_grapher.html#a774d49f93d8cbfc28d69308c7772cf50", null ],
+    [ "fResumeButton", "class_grapher.html#aa8ae59f3be6a2dfec979b41e2c3f4bdd", null ],
+    [ "fTimer", "class_grapher.html#a3190418d134049fa1605a006afbcf3e8", null ]
+];

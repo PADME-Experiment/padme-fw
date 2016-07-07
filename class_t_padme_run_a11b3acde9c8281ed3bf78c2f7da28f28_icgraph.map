@@ -1,0 +1,5 @@
+<map id="TPadmeRun::GetDetectorInfo" name="TPadmeRun::GetDetectorInfo">
+<area shape="rect" id="node2" href="$class_padme_reconstruction.html#a891d10689978faf17242459c097d4853" title="PadmeReconstruction\l::Init" alt="" coords="262,5,413,46"/>
+<area shape="rect" id="node3" href="$class_root_i_o_manager.html#a7623dc41ca767d8c1ced6889f2fd8e28" title="RootIOManager::NewRun" alt="" coords="251,71,424,97"/>
+<area shape="rect" id="node4" href="$class_run_action.html#a14b3433a6875194c4adfe1c222884f0d" title="RunAction::BeginOfRunAction" alt="" coords="473,71,671,97"/>
+</map>

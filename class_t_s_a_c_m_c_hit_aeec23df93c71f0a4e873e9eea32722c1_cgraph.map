@@ -1,0 +1,6 @@
+<map id="TSACMCHit::PrintTHisto" name="TSACMCHit::PrintTHisto">
+<area shape="rect" id="node2" href="$class_t_s_a_c_m_c_hit.html#ae2c10279f29b093d547a5b2b30137bc8" title="TSACMCHit::GetTHistoNBins" alt="" coords="224,5,424,32"/>
+<area shape="rect" id="node3" href="$class_t_s_a_c_m_c_hit.html#a594ba21a9dac4a254c0f5d0d3779b8e9" title="TSACMCHit::GetTHistoStart" alt="" coords="228,56,420,83"/>
+<area shape="rect" id="node4" href="$class_t_s_a_c_m_c_hit.html#a961d6acc38a27a0c87d59f2f90d2b56a" title="TSACMCHit::GetTHistoEnd" alt="" coords="231,107,417,133"/>
+<area shape="rect" id="node5" href="$class_t_s_a_c_m_c_hit.html#a6066272d6210edaa6329078c27f1fbcb" title="TSACMCHit::GetTHistoStep" alt="" coords="229,157,419,184"/>
+</map>

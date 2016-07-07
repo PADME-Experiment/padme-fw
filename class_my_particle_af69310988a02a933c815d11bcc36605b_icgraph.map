@@ -1,0 +1,5 @@
+<map id="MyParticle::boostLAB" name="MyParticle::boostLAB">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a04408cd3ab7a9671b44f355ae7a1d97c" title="MyEventGenerator::Create\lFinalStateUboson" alt="" coords="203,5,381,46"/>
+<area shape="rect" id="node3" href="$class_my_event_generator.html#afe41bd40f97cb6f0ffecea94af06af72" title="MyEventGenerator::Create\lFinalState" alt="" coords="429,5,608,46"/>
+<area shape="rect" id="node4" href="$class_my_event_generator.html#a539c4ab39dc2e2c5c219ff84fc27c127" title="MyEventGenerator::Generate\lEvent" alt="" coords="656,5,848,46"/>
+</map>

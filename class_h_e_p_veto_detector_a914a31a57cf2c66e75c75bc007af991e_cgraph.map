@@ -1,0 +1,19 @@
+<map id="HEPVetoDetector::CreateGeometry" name="HEPVetoDetector::CreateGeometry">
+<area shape="rect" id="node2" href="$class_h_e_p_veto_geometry.html#aa2f84cb2d18624052285078916ee1cda" title="HEPVetoGeometry::GetInstance" alt="" coords="304,12,517,39"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_geometry.html#af514717ffb2ab2701792003798b95d10" title="HEPVetoGeometry::GetHEPVetoPosX" alt="" coords="285,63,536,89"/>
+<area shape="rect" id="node5" href="$class_h_e_p_veto_geometry.html#a2210707bc8390bfbeb47d24a99c17523" title="HEPVetoGeometry::GetHEPVetoPosY" alt="" coords="285,113,536,140"/>
+<area shape="rect" id="node6" href="$class_h_e_p_veto_geometry.html#a281502f370f02530d6ab0da6fc7f7ebc" title="HEPVetoGeometry::GetHEPVetoPosZ" alt="" coords="286,164,535,191"/>
+<area shape="rect" id="node7" href="$class_h_e_p_veto_geometry.html#ae655ec07d8b67547e6944e1d0e39b485" title="HEPVetoGeometry::GetHEPVetoRotY" alt="" coords="287,215,535,241"/>
+<area shape="rect" id="node8" href="$class_h_e_p_veto_geometry.html#abb8405fc40e56c69c940c82c6d59efd4" title="HEPVetoGeometry::GetHEPVeto\lSizeX" alt="" coords="301,266,520,307"/>
+<area shape="rect" id="node9" href="$class_h_e_p_veto_geometry.html#a3d5de8d34130ddaba8c137f55122373e" title="HEPVetoGeometry::GetHEPVeto\lSizeY" alt="" coords="301,331,520,373"/>
+<area shape="rect" id="node10" href="$class_h_e_p_veto_geometry.html#a0ac2b30ab9448dff797b51cc7156d46b" title="HEPVetoGeometry::GetHEPVeto\lSizeZ" alt="" coords="584,630,803,671"/>
+<area shape="rect" id="node11" href="$class_h_e_p_veto_geometry.html#ad17efe6411bd34be0cf1cbff8a735e46" title="HEPVetoGeometry::GetFinger\lSizeX" alt="" coords="311,449,510,490"/>
+<area shape="rect" id="node12" href="$class_h_e_p_veto_geometry.html#af106534514dea5c475caab648594437c" title="HEPVetoGeometry::GetFinger\lSizeY" alt="" coords="311,514,510,555"/>
+<area shape="rect" id="node13" href="$class_h_e_p_veto_geometry.html#ae37a345bb3ea250716ce999f912815e2" title="HEPVetoGeometry::GetFinger\lSizeZ" alt="" coords="311,579,510,621"/>
+<area shape="rect" id="node14" href="$class_h_e_p_veto_geometry.html#ac8b322abb3ccf736fcf9fbde4e0e5f48" title="HEPVetoGeometry::GetHEPVeto\lSensitiveDetectorName" alt="" coords="301,645,520,686"/>
+<area shape="rect" id="node15" href="$class_h_e_p_veto_geometry.html#afb23cacebc878b4b1f90f80a49a87ef6" title="HEPVetoGeometry::GetHEPVeto\lNFingers" alt="" coords="301,710,520,751"/>
+<area shape="rect" id="node16" href="$class_h_e_p_veto_geometry.html#af1b979f968ca76a9394f330328aa1a99" title="HEPVetoGeometry::GetFingerPosX" alt="" coords="295,776,526,803"/>
+<area shape="rect" id="node17" href="$class_h_e_p_veto_geometry.html#a348515a807d7087826f7f0e8d3e6e36a" title="HEPVetoGeometry::GetFingerPosY" alt="" coords="295,827,526,853"/>
+<area shape="rect" id="node18" href="$class_h_e_p_veto_geometry.html#a2bb0ac7024b06b4e4a47445d9725a098" title="HEPVetoGeometry::GetFingerPosZ" alt="" coords="295,877,526,904"/>
+<area shape="rect" id="node3" href="$class_h_e_p_veto_geometry.html#ac6e8bb1ea4a45e5cc496ce0efeff9bc4" title="HEPVetoGeometry::HEPVeto\lGeometry" alt="" coords="595,5,792,46"/>
+</map>

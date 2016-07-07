@@ -1,0 +1,17 @@
+<map id="PadmeReconstruction::Init" name="PadmeReconstruction::Init">
+<area shape="rect" id="node2" href="$class_padme_reconstruction.html#a6703316ee5df94857b8f87af9901530f" title="PadmeReconstruction\l::BuildChain" alt="" coords="229,5,379,46"/>
+<area shape="rect" id="node4" href="$class_padme_v_named_module.html#a157b40235b125fbd596c6242e7c6ea41" title="PadmeVNamedModule::\lGetName" alt="" coords="731,278,895,319"/>
+<area shape="rect" id="node5" href="$class_t_padme_run.html#ae0366f67ce91cb142130dd1178066893" title="TPadmeRun::GetRunNumber" alt="" coords="207,121,401,148"/>
+<area shape="rect" id="node6" href="$class_t_padme_run.html#a105a533fc95a2bbba64e0d63c368c2ff" title="TPadmeRun::GetRunType" alt="" coords="215,172,393,199"/>
+<area shape="rect" id="node7" href="$class_t_padme_run.html#a575a2fed8852a49c57682d08891dabb1" title="TPadmeRun::GetTimeStart" alt="" coords="213,223,395,249"/>
+<area shape="rect" id="node8" href="$class_t_padme_run.html#a230183d6616b93a020e5ea601dcb957f" title="TPadmeRun::GetTimeStop" alt="" coords="214,273,394,300"/>
+<area shape="rect" id="node9" href="$class_t_padme_run.html#ac0c3a8287266a5809fc3a9f6581f2ca4" title="TPadmeRun::GetNEvents" alt="" coords="217,324,391,351"/>
+<area shape="rect" id="node10" href="$class_t_padme_run.html#a11b3acde9c8281ed3bf78c2f7da28f28" title="TPadmeRun::GetDetectorInfo" alt="" coords="206,375,402,401"/>
+<area shape="rect" id="node11" href="$class_padme_reconstruction.html#a265614c5eabdf1943d38affe8946d09e" title="PadmeReconstruction\l::ShowSubDetectorInfo" alt="" coords="225,426,383,467"/>
+<area shape="rect" id="node14" href="$class_padme_reconstruction.html#ab859bf0cebe0b42570866a5adda90b88" title="PadmeReconstruction\l::InitDetectorsInfo" alt="" coords="229,491,379,533"/>
+<area shape="rect" id="node3" href="$class_padme_reconstruction.html#ac69120ab24fcca45601e3d1330fa2115" title="PadmeReconstruction\l::CheckProtocols" alt="" coords="491,5,642,46"/>
+<area shape="rect" id="node12" href="$class_t_detector_info.html#aebbc1eda2fefb84d502bc7d89cfe5521" title="TDetectorInfo::FindSubDetectorInfo" alt="" coords="451,375,682,401"/>
+<area shape="rect" id="node13" href="$class_t_sub_detector_info.html#ae340a6936d32d4f2baf0227c470bb2ec" title="TSubDetectorInfo::GetGeometry\lParameters" alt="" coords="461,426,672,467"/>
+<area shape="rect" id="node15" href="$class_padme_reconstruction.html#a13468a80859d3dc85d54c080d1642098" title="PadmeReconstruction\l::FindReco" alt="" coords="491,491,642,533"/>
+<area shape="rect" id="node16" href="$class_padme_reconstruction.html#a88dbab39e629d4d3caad860e5841b71e" title="PadmeReconstruction\l::Init" alt="" coords="491,557,642,598"/>
+</map>

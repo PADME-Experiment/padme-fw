@@ -1,0 +1,10 @@
+<map id="BeamGenerator::GenerateCalibrationGamma" name="BeamGenerator::GenerateCalibrationGamma">
+<area shape="rect" id="node2" href="$class_beam_parameters.html#a2cbcc7cce0f25bc006afb5a40dcf360a" title="BeamParameters::GetInstance" alt="" coords="315,5,517,32"/>
+<area shape="rect" id="node4" href="$class_beam_parameters.html#adea0e056cb068f5c7a60be56a8b168cf" title="BeamParameters::GetBeamOriginPosZ" alt="" coords="291,56,541,83"/>
+<area shape="rect" id="node5" href="$class_detector_construction.html#a14926318f4740ac41f7134fe9ab4ebc1" title="DetectorConstruction\l::GetECalFrontFaceZ" alt="" coords="343,107,489,149"/>
+<area shape="rect" id="node3" href="$class_beam_parameters.html#a51b6ecad14ecd4e3567ae3ecb67341c3" title="BeamParameters::BeamParameters" alt="" coords="589,5,821,32"/>
+<area shape="rect" id="node6" href="$class_e_cal_detector.html#a9c57ec660ce9e00ff99771b17c7cb957" title="ECalDetector::GetECalFront\lFaceZ" alt="" coords="611,107,800,149"/>
+<area shape="rect" id="node7" href="$class_e_cal_geometry.html#adcf745bbfad13680132c2f512bc8460a" title="ECalGeometry::GetInstance" alt="" coords="875,85,1061,112"/>
+<area shape="rect" id="node9" href="$class_e_cal_geometry.html#ac7ca9b77a017d236512651bd6d7dedb7" title="ECalGeometry::GetECalFront\lFacePosZ" alt="" coords="870,137,1066,178"/>
+<area shape="rect" id="node8" href="$class_e_cal_geometry.html#a1de27ae8ca5b015304b61605924a5ee9" title="ECalGeometry::ECalGeometry" alt="" coords="1115,85,1317,112"/>
+</map>

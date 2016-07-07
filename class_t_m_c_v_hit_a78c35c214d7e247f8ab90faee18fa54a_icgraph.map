@@ -1,0 +1,7 @@
+<map id="TMCVHit::SetPosition" name="TMCVHit::SetPosition">
+<area shape="rect" id="node2" href="$class_e_cal_root_i_o.html#a757b59016ab6e94874bcf27a162f67e9" title="ECalRootIO::SaveEvent" alt="" coords="219,5,384,32"/>
+<area shape="rect" id="node3" href="$class_e_veto_root_i_o.html#add1810f1bbfe8202f8862c8ee897fd99" title="EVetoRootIO::SaveEvent" alt="" coords="215,56,387,83"/>
+<area shape="rect" id="node4" href="$class_h_e_p_veto_root_i_o.html#ae5778dadf68dd9322fc6d3300ace25fa" title="HEPVetoRootIO::SaveEvent" alt="" coords="206,107,397,133"/>
+<area shape="rect" id="node5" href="$class_p_veto_root_i_o.html#a112d0b5ce4a8566fa09e22bc35b332cf" title="PVetoRootIO::SaveEvent" alt="" coords="215,157,387,184"/>
+<area shape="rect" id="node6" href="$class_target_root_i_o.html#abbf1bf3a9759aac3f0a1d423bc6c5d73" title="TargetRootIO::SaveEvent" alt="" coords="215,208,388,235"/>
+</map>

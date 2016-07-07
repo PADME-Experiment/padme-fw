@@ -1,0 +1,4 @@
+<map id="RootIOManager::DisableSubDetectorIO" name="RootIOManager::DisableSubDetectorIO">
+<area shape="rect" id="node2" href="$class_root_i_o_manager.html#a6e2241cca8a45191f8ec1a528f2f224e" title="RootIOManager::FindRootIO" alt="" coords="243,5,432,32"/>
+<area shape="rect" id="node3" href="$class_m_c_v_root_i_o.html#a21392bb5386331ae88b12b5de31bc6fd" title="MCVRootIO::SetEnabled" alt="" coords="253,56,422,83"/>
+</map>

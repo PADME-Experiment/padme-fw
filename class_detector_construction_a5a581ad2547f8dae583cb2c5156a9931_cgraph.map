@@ -1,0 +1,6 @@
+<map id="DetectorConstruction::GetTargetThickness" name="DetectorConstruction::GetTargetThickness">
+<area shape="rect" id="node2" href="$class_target_detector.html#a321216a0b9ef2e135b326f8f30ff7a97" title="TargetDetector::GetTarget\lThickness" alt="" coords="203,27,378,69"/>
+<area shape="rect" id="node3" href="$class_target_geometry.html#af0068d4199d6642002f74d410303823f" title="TargetGeometry::GetInstance" alt="" coords="427,5,621,32"/>
+<area shape="rect" id="node5" href="$class_target_geometry.html#a6197a1a5ad0a6f8bd27570778d61a39b" title="TargetGeometry::GetTarget\lSizeZ" alt="" coords="433,57,615,98"/>
+<area shape="rect" id="node4" href="$class_target_geometry.html#ac77e8fce88dd3829ffa280137ab90964" title="TargetGeometry::TargetGeometry" alt="" coords="669,5,888,32"/>
+</map>

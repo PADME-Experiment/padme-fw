@@ -1,0 +1,4 @@
+<map id="BeamParameters::SetBeamOriginPosZ" name="BeamParameters::SetBeamOriginPosZ">
+<area shape="rect" id="node2" href="$class_beam_generator.html#ab307478b09cd92960f5f3deecb8d8b2a" title="BeamGenerator::GenerateBeam" alt="" coords="304,12,512,39"/>
+<area shape="rect" id="node3" href="$class_primary_generator_action.html#a8c796e33304646f4d9d905dbc6f2abc5" title="PrimaryGeneratorAction\l::GeneratePrimaries" alt="" coords="561,5,722,46"/>
+</map>

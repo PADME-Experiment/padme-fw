@@ -1,0 +1,5 @@
+<map id="MyEvent::ClearEvent" name="MyEvent::ClearEvent">
+<area shape="rect" id="node2" href="$class_my_event_generator.html#a9c8fbcafee00a43bd1c66c7d4607f497" title="MyEventGenerator::ClearEvent" alt="" coords="201,5,405,32"/>
+<area shape="rect" id="node4" href="$class_my_sim_event.html#a8282709125fdda1d9f489ede3e5a3534" title="MySimEvent::ClearEvent" alt="" coords="217,56,388,83"/>
+<area shape="rect" id="node3" href="$class_my_particle.html#acc52f43eba0db251121af00028e8b167" title="MyParticle::clear" alt="" coords="453,5,573,32"/>
+</map>

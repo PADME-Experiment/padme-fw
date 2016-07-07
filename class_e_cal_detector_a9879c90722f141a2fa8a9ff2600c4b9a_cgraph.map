@@ -1,0 +1,20 @@
+<map id="ECalDetector::CreateGeometry" name="ECalDetector::CreateGeometry">
+<area shape="rect" id="node2" href="$class_e_cal_geometry.html#adcf745bbfad13680132c2f512bc8460a" title="ECalGeometry::GetInstance" alt="" coords="276,5,463,32"/>
+<area shape="rect" id="node4" href="$class_e_cal_geometry.html#a748f320e3c82e2acf12b48ab629f5536" title="ECalGeometry::GetECalPosX" alt="" coords="270,56,469,83"/>
+<area shape="rect" id="node5" href="$class_e_cal_geometry.html#aae91fb33e6c2502bc2a72280a0668ff4" title="ECalGeometry::GetECalPosY" alt="" coords="270,107,469,133"/>
+<area shape="rect" id="node6" href="$class_e_cal_geometry.html#a37d98a832577b4b22987609a3d950c3d" title="ECalGeometry::GetECalPosZ" alt="" coords="271,157,468,184"/>
+<area shape="rect" id="node7" href="$class_e_cal_geometry.html#adee85e1e21658b4cadfce47418a46a5f" title="ECalGeometry::GetECalSizeX" alt="" coords="269,208,470,235"/>
+<area shape="rect" id="node8" href="$class_e_cal_geometry.html#aee82973ab18c47de4b1e3cf36e248ded" title="ECalGeometry::GetECalSizeY" alt="" coords="269,259,470,285"/>
+<area shape="rect" id="node9" href="$class_e_cal_geometry.html#a904684b4435cf75e6800d6e895b0e894" title="ECalGeometry::GetECalSizeZ" alt="" coords="269,309,469,336"/>
+<area shape="rect" id="node10" href="$class_e_cal_geometry.html#a3efbaef934c60670415c9b71acd3a41e" title="ECalGeometry::GetCrystal\lSizeX" alt="" coords="280,361,459,402"/>
+<area shape="rect" id="node11" href="$class_e_cal_geometry.html#a6799cf09ae7e82f2505c46d1dcc0986b" title="ECalGeometry::GetCrystal\lSizeY" alt="" coords="280,426,459,467"/>
+<area shape="rect" id="node12" href="$class_e_cal_geometry.html#a606cb5be43dbf2d9e5a3cb4d7af6a888" title="ECalGeometry::GetCrystal\lSizeZ" alt="" coords="280,491,459,533"/>
+<area shape="rect" id="node13" href="$class_e_cal_geometry.html#ac9e79674c82d3c2e112765dc3f8d374e" title="ECalGeometry::GetECalSensitive\lDetectorName" alt="" coords="259,557,479,598"/>
+<area shape="rect" id="node14" href="$class_e_cal_geometry.html#a61abd708c8d69d67d549ea8315aa3f3b" title="ECalGeometry::GetECalNRows" alt="" coords="264,623,475,649"/>
+<area shape="rect" id="node15" href="$class_e_cal_geometry.html#acf980233c32dc264375c0d961aaf9708" title="ECalGeometry::GetECalNCols" alt="" coords="268,673,471,700"/>
+<area shape="rect" id="node16" href="$class_e_cal_geometry.html#ac04dceb36423af6475ecb2d50155c709" title="ECalGeometry::ExistsCrystalAt" alt="" coords="265,724,473,751"/>
+<area shape="rect" id="node17" href="$class_e_cal_geometry.html#ae281e30f092e47c396e458ad045a4ad5" title="ECalGeometry::GetCrystalPosX" alt="" coords="264,775,475,801"/>
+<area shape="rect" id="node18" href="$class_e_cal_geometry.html#ac0161abb30158152cd5196829ec7196b" title="ECalGeometry::GetCrystalPosY" alt="" coords="264,825,475,852"/>
+<area shape="rect" id="node19" href="$class_e_cal_geometry.html#a052b5871b3deb09f1ddc3893522fcb95" title="ECalGeometry::GetCrystalPosZ" alt="" coords="264,876,475,903"/>
+<area shape="rect" id="node3" href="$class_e_cal_geometry.html#a1de27ae8ca5b015304b61605924a5ee9" title="ECalGeometry::ECalGeometry" alt="" coords="528,5,731,32"/>
+</map>

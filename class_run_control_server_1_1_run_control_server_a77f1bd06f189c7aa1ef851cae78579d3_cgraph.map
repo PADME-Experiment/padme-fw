@@ -1,0 +1,29 @@
+<map id="RunControlServer.RunControlServer.state_idle" name="RunControlServer.RunControlServer.state_idle">
+<area shape="rect" id="node2" href="$class_run_control_server_1_1_run_control_server.html#a51d6f70004271087aa27f477efaaea1f" title="RunControlServer.RunControl\lServer.get_command" alt="" coords="527,5,723,46"/>
+<area shape="rect" id="node3" href="$class_run_control_server_1_1_run_control_server.html#a80c7de63bfa01ecff73af28b90fac41c" title="RunControlServer.RunControl\lServer.send_answer" alt="" coords="527,70,723,111"/>
+<area shape="rect" id="node4" href="$class_run_control_server_1_1_run_control_server.html#aec5130417c1cc0716e80d451d8174b79" title="RunControlServer.RunControl\lServer.get_setup_list" alt="" coords="251,545,447,586"/>
+<area shape="rect" id="node6" href="$class_run_control_server_1_1_run_control_server.html#a88b6c1b51cf85f85fa5bf19c420f1754" title="RunControlServer.RunControl\lServer.new_run" alt="" coords="251,187,447,229"/>
+<area shape="rect" id="node11" href="$class_run_control_server_1_1_run_control_server.html#a4d39be9027632c3a36f6cd0f8fcbfa53" title="RunControlServer.RunControl\lServer.get_board_config" alt="" coords="251,675,447,717"/>
+<area shape="rect" id="node12" href="$class_run_1_1_run.html#a525bc2232b7731d57b42d73895a2fe5c" title="Run.Run.change_setup" alt="" coords="270,812,429,839"/>
+<area shape="rect" id="node18" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a7eebe41bfa0e7610053dd38278e03650" title="RunControlGUI.RunControl\lGUI.change_setup" alt="" coords="258,479,441,521"/>
+<area shape="rect" id="node28" href="$class_run_control_server_1_1_run_control_server.html#a9b2ce73ecbd87e436bc11f5c03e6eb4b" title="RunControlServer.RunControl\lServer.change_setup" alt="" coords="251,610,447,651"/>
+<area shape="rect" id="node5" href="$class_run_control_server_1_1_run_control_server.html#a1d8202426f0f37f0a2047e9bd33d9b2f" title="RunControlServer.RunControl\lServer.read_setup_list" alt="" coords="527,655,723,697"/>
+<area shape="rect" id="node7" href="$class_run_control_server_1_1_run_control_server.html#adaa33aa3dc58abae3b09fcf6e61bb41a" title="RunControlServer.RunControl\lServer.write_log" alt="" coords="527,187,723,229"/>
+<area shape="rect" id="node8" href="$class_logger_1_1_logger.html#ade1a0912ff96d48e191ae35235a11cff" title="Logger.Logger.now_str" alt="" coords="824,249,979,276"/>
+<area shape="rect" id="node9" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#ae3a3950315b9e4e1ce712498f6e980db" title="RunControlGUI.RunControl\lGUI.now_str" alt="" coords="810,301,993,342"/>
+<area shape="rect" id="node10" href="$class_run_control_server_1_1_run_control_server.html#acff760c5fb30f4f0340f98c395b208d6" title="RunControlServer.RunControl\lServer.now_str" alt="" coords="803,154,999,195"/>
+<area shape="rect" id="node13" href="$class_a_d_c_board_1_1_a_d_c_board.html#a41ec5f241262f17ee1a8b3c230e17b95" title="ADCBoard.ADCBoard.set\l_default_config" alt="" coords="538,773,713,814"/>
+<area shape="rect" id="node14" href="$class_run_1_1_run.html#a59805d79daafa4d9d19a005ef18cfb0b" title="Run.Run.set_default\l_config" alt="" coords="554,838,697,879"/>
+<area shape="rect" id="node15" href="$class_a_d_c_board_1_1_a_d_c_board.html#abf6c6cca8b0f54e3b936812166ce8589" title="ADCBoard.ADCBoard.read\l_setup" alt="" coords="535,903,716,945"/>
+<area shape="rect" id="node16" href="$class_run_1_1_run.html#ae3fcab656cb1651b5145434b635bf654" title="Run.Run.read_setup" alt="" coords="554,969,697,996"/>
+<area shape="rect" id="node17" href="$class_run_1_1_run.html#ad0a109b1ace740558b301737d42b41e1" title="Run.Run.configure_adcboard" alt="" coords="530,721,721,748"/>
+<area shape="rect" id="node19" href="$class_a_d_c_board_g_u_i_1_1_a_d_c_board_g_u_i.html#aa99fb3a756de585f65cb0c1abe39417d" title="ADCBoardGUI.ADCBoardGUI.show_log" alt="" coords="496,487,755,513"/>
+<area shape="rect" id="node20" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#adcfa191a77d0eb56f5aed83c1921ad56" title="RunControlGUI.RunControl\lGUI.show_log" alt="" coords="534,355,717,397"/>
+<area shape="rect" id="node21" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a06f232b800eb79feeba085a38704cf8e" title="RunControlGUI.RunControl\lGUI.ask_server" alt="" coords="810,567,993,609"/>
+<area shape="rect" id="node26" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#adf0df88b7f033407ca9f008c6d1eb0e1" title="RunControlGUI.RunControl\lGUI.decode_board_list" alt="" coords="534,421,717,462"/>
+<area shape="rect" id="node27" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aad6d5e22c9f93ca4304a38476e393688" title="RunControlGUI.RunControl\lGUI.configure_board_buttons" alt="" coords="529,538,721,579"/>
+<area shape="rect" id="node22" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aac7a5c3957881b38bbae84e97a1a9541" title="RunControlGUI.RunControl\lGUI.send_command" alt="" coords="1049,534,1231,575"/>
+<area shape="rect" id="node25" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#aa475589249dc6bd930e1d67cfaf9de7b" title="RunControlGUI.RunControl\lGUI.get_answer" alt="" coords="1049,599,1231,641"/>
+<area shape="rect" id="node23" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a063f14694dd9df474079528b1ff1f199" title="RunControlGUI.RunControl\lGUI.error_exit" alt="" coords="1281,567,1463,609"/>
+<area shape="rect" id="node24" href="$class_run_control_g_u_i_1_1_run_control_g_u_i.html#a0080b150822eb7ab5d73641851997344" title="RunControlGUI.RunControl\lGUI.quit_daq" alt="" coords="1513,567,1695,609"/>
+</map>

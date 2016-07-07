@@ -16,6 +16,8 @@
 #include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
 
+#include "TEntryList.h"
+
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
 {
@@ -88,7 +90,40 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   }
 
   Int_t nEntries = 0;
-  TString treeName = "MC";
+  TString treeName;
+  treeName = "RawEvents";
+  fRawChain = BuildChain(treeName);
+  std::cout<<fRawChain->GetEntries()<<std::endl;
+  //TEntryList* entryList=fRawChain->GetEntryList();
+  //for(int i=0;entryList->GetEntries();++i){
+  //  entryList->At(i)->Print();
+  //}
+
+
+
+  if(fRawChain) {
+    TObjArray* branches = fRawChain->GetListOfBranches();
+    std::cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    TBranch* bRawEv = fRawChain->GetBranch("RawEvent");
+      std::cout<<fRawChain->GetEntries()<<std::endl;
+
+    //if(bRawEv!=NULL){
+    //  std::cout<<"FOUND"<<std::endl;
+    //}else{
+    //  std::cout<<"NOT FOUND"<<std::endl;
+    //}
+    //for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+    //  TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
+    //  TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
+    //  std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+    //}
+
+  }
+
+
+
+
+  treeName = "MC";
   fMCChain = BuildChain(treeName);
   if(fMCChain) {
     nEntries = fMCChain->GetEntries();

@@ -7,8 +7,8 @@
 #include<vector>
 
 #include"TREVDigi.hh"
-#include"TSamplingREVDigi.hh"
-#include"TDiscretREVDigi.hh"
+#include"TREDigiVSampling.hh"
+#include"TREDigiVDiscret.hh"
 
 #ifndef _TREVSemiHit_hh_
 #define _TREVSemiHit_hh_ 0

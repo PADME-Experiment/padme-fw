@@ -7,9 +7,9 @@
 #include"TREVRaw.hh"
 #include<string>
 
-#ifndef _TSamplingREVRaw_hh_
-#define _TSamplingREVRaw_hh_ 0
-class TSamplingREVRaw:TREVRaw{
+#ifndef _TRERawVSampling_hh_
+#define _TRERawVSampling_hh_ 0
+class TRERawVSampling:TREVRaw{
   std::vector<int>* fSamples;
   int fSampleFirst; int fSampleLast;
 };

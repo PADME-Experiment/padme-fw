@@ -1,16 +1,16 @@
 /**
- * \file TDiscretREVDigi.hh
+ * \file TREDigiVDiscret.hh
  * \author Georgi Georgiev <ggeorge@cern.ch>
  * \date 2016-07-07
  */
 
 #include"TREVDigi.hh"
-#include"TDiscretREVRaw.hh"
+#include"TRERawVDiscret.hh"
 
-#ifndef _TDiscretREVDigi_hh_
-#define _TDiscretREVDigi_hh_ 0
+#ifndef _TREDigiVDiscret_hh_
+#define _TREDigiVDiscret_hh_ 0
 /**
- * \class TDiscretREVDigi
+ * \class TREDigiVDiscret
  * \brief RE Digi prototype class for Discret/Non sampling
  * digitizers
  *
@@ -18,12 +18,12 @@
  * Discret/Non sampling digitizers. Such as discriminators
  * and time stamplers.
  */
-class TDiscretREVDigi:TREVDigi{
+class TREDigiVDiscret:TREVDigi{
   public:
   /// Add Raw chuncks related to this Digi
-    void AddRaw(const TDiscretREVRaw *const raw){
+    void AddRaw(const TRERawVDiscret *const raw){
       fAssocDigis.push_back(raw);} //
   private:
-    std::vector<const TDiscretREVRaw*> fAssocDigis;
+    std::vector<const TRERawVDiscret*> fAssocDigis;
 };
 #endif

@@ -10,8 +10,7 @@
 
 #include "THEPVetoMCEvent.hh"
 #include "THEPVetoMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "THEPVetoConfigParser.hh"
 
 HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "HEPVeto", ConfigFileName)

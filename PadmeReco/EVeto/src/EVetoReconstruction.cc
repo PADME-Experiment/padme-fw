@@ -10,8 +10,7 @@
 
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "TEVetoConfigParser.hh"
 
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "EVeto", ConfigFileName)

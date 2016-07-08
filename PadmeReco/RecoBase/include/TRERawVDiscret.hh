@@ -6,9 +6,9 @@
 
 #include "TREVRaw.hh"
 
-#ifndef _TDiscretREVRaw_hh_
-#define _TDiscretREVRaw_hh_ 0
-class TDiscretREVRaw:TREVRaw{
+#ifndef _TRERawVDiscret_hh_
+#define _TRERawVDiscret_hh_ 0
+class TRERawVDiscret:TREVRaw{
   private:
     double fTimeStamp; ///< Timestamp of the amplitude change
     bool fIsRisingEdge; ///< True if rising edge, False if falling edge

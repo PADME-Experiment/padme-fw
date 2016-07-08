@@ -10,8 +10,7 @@
 
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "TPVetoConfigParser.hh"
 
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)

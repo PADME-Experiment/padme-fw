@@ -10,8 +10,7 @@
 
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "TSACConfigParser.hh"
 
 SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)

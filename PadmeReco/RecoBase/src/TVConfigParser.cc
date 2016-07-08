@@ -14,7 +14,7 @@
 
 TVConfigParser::TVConfigParser(std::string icfilename){
   fFileName=icfilename;
-  std::ifstream icfile(icfilename,std::ifstream::in);
+  std::ifstream icfile(icfilename.c_str());
   int lineNum=0;
   if(icfile.is_open()){
     std::string cfggroupname="[Default]";
@@ -97,7 +97,7 @@ void TVConfigParser::Verbose(){
 
 
 
-std::string TVConfigParser::GetConfig(std::string grp,std::string cfg){
+std::string TVConfigParser::GetSingleArgConfig(std::string grp,std::string cfg){
   if(fConfigLines.find(grp)!=fConfigLines.end()){
     std::map<std::string,std::vector<std::string> >& groupmap=fConfigLines[grp];
     if(groupmap.find(cfg)!=groupmap.end()){
@@ -116,6 +116,18 @@ std::string TVConfigParser::GetConfig(std::string grp,std::string cfg){
 
 
 bool TVConfigParser::HasConfig(std::string grp, std::string cfg){
+  if(fConfigLines.find(grp)!=fConfigLines.end()){
+    std::map<std::string,std::vector<std::string> >& groupmap=fConfigLines[grp];
+    if(groupmap.find(cfg)!=groupmap.end()){
+      std::vector<std::string>& cmdvec=groupmap[cfg];
+      if(cmdvec.size()>0){
+        return true;
+      }
+    }
+  }
+  return false;
+}
+bool TVConfigParser::IsSingleArgConfig(std::string grp, std::string cfg){
   if(fConfigLines.find(grp)!=fConfigLines.end()){
     std::map<std::string,std::vector<std::string> >& groupmap=fConfigLines[grp];
     if(groupmap.find(cfg)!=groupmap.end()){

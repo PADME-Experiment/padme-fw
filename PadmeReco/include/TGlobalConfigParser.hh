@@ -19,10 +19,12 @@
 class TGlobalConfigParser:TVConfigParser{
   public:
     TGlobalConfigParser(std::string a):TVConfigParser(a){}
-    std::string GetConfig(std::string grp,std::string cfg){
-      return TVConfigParser::GetConfig(grp,cfg);}
+    std::string GetSingleArgConfig(std::string grp,std::string cfg){
+      return TVConfigParser::GetSingleArgConfig(grp,cfg);}
     bool HasConfig(std::string grp,std::string cfg){
       return TVConfigParser::HasConfig(grp,cfg);}
+    bool IsSingleArgConfig(std::string grp,std::string cfg){
+      return TVConfigParser::IsSingleArgConfig(grp,cfg);}
 };
 
 #endif

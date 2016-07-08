@@ -1,32 +1,32 @@
 /**
- * \file TSamplingREVDigi.hh
+ * \file TREDigiVSampling.hh
  * \author Georgi Georgiev <ggeorge@cern.ch>
  * \date 2016-07-07
  */
 
 #include"TREVDigi.hh"
-#include"TSamplingREVRaw.hh"
+#include"TRERawVSampling.hh"
 #include<string>
 
-#ifndef _TSamplingREVDigi_hh_
-#define _TSamplingREVDigi_hh_ 0
+#ifndef _TREDigiVSampling_hh_
+#define _TREDigiVSampling_hh_ 0
 /**
- * \class TSamplingREVDigi
+ * \class TREDigiVSampling
  * \brief RE Digi prototype class for Sampling digitizers
  *
  * The class contains packed DAQ-Channel infomation for
  * Sampling digitizers. Such as ADCs.
  */
-class TSamplingREVDigi:TREVDigi{
+class TREDigiVSampling:TREVDigi{
   public:
   /// Add Raw chuncks related to this Digi
-    void AddRaw(const TSamplingREVRaw *const raw){
+    void AddRaw(const TRERawVSampling *const raw){
       fAssocDigis.push_back(raw);} //
   private:
     int fIndexBegin;
     int fIndexEnd;
     double fTimeStart;
     double fTimeStep;
-    std::vector<const TSamplingREVRaw*> fAssocDigis;
+    std::vector<const TRERawVSampling*> fAssocDigis;
 };
 #endif

@@ -10,8 +10,7 @@
 
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "TECalConfigParser.hh"
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)

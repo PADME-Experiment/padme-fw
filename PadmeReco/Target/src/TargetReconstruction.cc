@@ -10,8 +10,7 @@
 
 #include "TTargetMCEvent.hh"
 #include "TTargetMCHit.hh"
-
-#include "TConfigParser.hh"
+#include "TTargetConfigParser.hh"
 
 TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "Target", ConfigFileName)

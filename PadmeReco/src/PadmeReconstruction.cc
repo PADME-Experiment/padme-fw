@@ -31,12 +31,12 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
 
   Init(NEvt,Seed);
   //InitLibraries();
-fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,config.GetConfig("ConfigFile:Target" ).c_str()));
-fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,config.GetConfig("ConfigFile:EVeto"  ).c_str()));
-fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,config.GetConfig("ConfigFile:PVeto"  ).c_str()));
-fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,config.GetConfig("ConfigFile:HEPVeto").c_str()));
-fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,config.GetConfig("ConfigFile:ECal"   ).c_str()));
-fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,config.GetConfig("ConfigFile:SAC"    ).c_str()));
+fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,config.GetConfig("[ConfigFiles]","Target" ).c_str()));
+fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,config.GetConfig("[ConfigFiles]","EVeto"  ).c_str()));
+fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,config.GetConfig("[ConfigFiles]","PVeto"  ).c_str()));
+fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,config.GetConfig("[ConfigFiles]","HEPVeto").c_str()));
+fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,config.GetConfig("[ConfigFiles]","ECal"   ).c_str()));
+fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,config.GetConfig("[ConfigFiles]","SAC"    ).c_str()));
 }
 
 PadmeReconstruction::~PadmeReconstruction()

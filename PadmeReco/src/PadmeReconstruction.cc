@@ -16,27 +16,42 @@
 #include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
 
+#include "TConfigParser.hh"
+
 #include "TEntryList.h"
+
+#include<string>
+
+
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
 {
+  TGlobalConfigParser config(ConfFileName.Data());
+
   Init(NEvt,Seed);
-  InitLibraries();
+  //InitLibraries();
+fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,config.GetConfig("ConfigFile:Target" ).c_str()));
+fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,config.GetConfig("ConfigFile:EVeto"  ).c_str()));
+fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,config.GetConfig("ConfigFile:PVeto"  ).c_str()));
+fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,config.GetConfig("ConfigFile:HEPVeto").c_str()));
+fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,config.GetConfig("ConfigFile:ECal"   ).c_str()));
+fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,config.GetConfig("ConfigFile:SAC"    ).c_str()));
 }
 
 PadmeReconstruction::~PadmeReconstruction()
+
 {;}
 
 void PadmeReconstruction::InitLibraries()
 {
-  TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
+  //TString dummyConfFile = "pippo.conf";
+  //fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,dummyConfFile));
+  //fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,dummyConfFile));
+  //fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,dummyConfFile));
+  //fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
+  //fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,dummyConfFile));
+  //fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
@@ -71,20 +86,20 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
       std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
       if(branchName=="Run") {
-	runChain->SetBranchAddress(branchName.Data(),&run);
-	runChain->GetEntry(0); // Currently only one run per file
-	std::cout << "=== MC Run information - Start ===" << std::endl;
-	std::cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << std::endl;
-	std::cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << std::endl;
-	std::cout << "Run number of events " << run->GetNEvents() << std::endl;
-	TDetectorInfo* detInfo = run->GetDetectorInfo();
-	ShowSubDetectorInfo(detInfo,"Target");
-	ShowSubDetectorInfo(detInfo,"EVeto");
-	ShowSubDetectorInfo(detInfo,"PVeto");
-	ShowSubDetectorInfo(detInfo,"HEPVeto");
-	ShowSubDetectorInfo(detInfo,"ECal");
-	ShowSubDetectorInfo(detInfo,"SAC");
-	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
+        runChain->SetBranchAddress(branchName.Data(),&run);
+        runChain->GetEntry(0); // Currently only one run per file
+        std::cout << "=== MC Run information - Start ===" << std::endl;
+        std::cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << std::endl;
+        std::cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << std::endl;
+        std::cout << "Run number of events " << run->GetNEvents() << std::endl;
+        TDetectorInfo* detInfo = run->GetDetectorInfo();
+        ShowSubDetectorInfo(detInfo,"Target");
+        ShowSubDetectorInfo(detInfo,"EVeto");
+        ShowSubDetectorInfo(detInfo,"PVeto");
+        ShowSubDetectorInfo(detInfo,"HEPVeto");
+        ShowSubDetectorInfo(detInfo,"ECal");
+        ShowSubDetectorInfo(detInfo,"SAC");
+        std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
       }
     }
   }
@@ -105,7 +120,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     TObjArray* branches = fRawChain->GetListOfBranches();
     std::cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
     TBranch* bRawEv = fRawChain->GetBranch("RawEvent");
-      std::cout<<fRawChain->GetEntries()<<std::endl;
+    std::cout<<fRawChain->GetEntries()<<std::endl;
 
     //if(bRawEv!=NULL){
     //  std::cout<<"FOUND"<<std::endl;
@@ -136,19 +151,19 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
       std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
       if (branchName=="Event") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
       } else if (branchName=="Target") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
       } else if (branchName=="EVeto") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
       } else if (branchName=="PVeto") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
       } else if (branchName=="HEPVeto") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
       } else if (branchName=="ECal") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
       } else if (branchName=="SAC") {
-	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
+        fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
       }
     }
   }
@@ -165,20 +180,20 @@ Bool_t PadmeReconstruction::NextEvent()
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
     std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
-	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+      << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       if (fRecoLibrary[iLib]->GetName() == "Target") {
-	fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "EVeto") {
-	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto") {
-	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto") {
-	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal") {
-	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC") {
-	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
+        fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       }
 
     }

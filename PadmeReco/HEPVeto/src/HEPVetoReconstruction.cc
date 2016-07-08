@@ -11,11 +11,14 @@
 #include "THEPVetoMCEvent.hh"
 #include "THEPVetoMCHit.hh"
 
+#include "TConfigParser.hh"
+
 HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "HEPVeto", ConfigFileName)
 {
   //fRecoEvent = new TRecoHEPVetoEvent();
   //ParseConfFile(ConfigFileName);
+  THEPVetoConfigParser config(ConfigFileName.Data());
 }
 
 HEPVetoReconstruction::~HEPVetoReconstruction()

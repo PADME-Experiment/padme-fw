@@ -11,11 +11,14 @@
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
 
+#include "TConfigParser.hh"
+
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "EVeto", ConfigFileName)
 {
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
+  TEVetoConfigParser config(ConfigFileName.Data());
 }
 
 EVetoReconstruction::~EVetoReconstruction()

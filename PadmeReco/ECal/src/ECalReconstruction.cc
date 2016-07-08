@@ -11,11 +11,14 @@
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 
+#include "TConfigParser.hh"
+
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
+  TECalConfigParser config(ConfigFileName.Data());
 }
 
 ECalReconstruction::~ECalReconstruction()

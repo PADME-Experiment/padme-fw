@@ -11,11 +11,14 @@
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
 
+#include "TConfigParser.hh"
+
 SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
 {
   //fRecoEvent = new TRecoSACEvent();
   //ParseConfFile(ConfigFileName);
+  TSACConfigParser config(ConfigFileName.Data());
 }
 
 SACReconstruction::~SACReconstruction()

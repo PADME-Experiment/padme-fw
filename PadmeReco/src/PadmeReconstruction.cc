@@ -16,7 +16,7 @@
 #include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
 
-#include "TConfigParser.hh"
+#include "TGlobalConfigParser.hh"
 
 #include "TEntryList.h"
 

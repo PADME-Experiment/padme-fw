@@ -21,6 +21,8 @@
 
 #include "ChamberGeometry.hh"
 
+using namespace CLHEP;
+
 ChamberStructure::ChamberStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
 {}

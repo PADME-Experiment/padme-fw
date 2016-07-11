@@ -14,6 +14,7 @@
 
 #include "globals.hh"
 #include "G4TwoVector.hh"
+#include "G4SystemOfUnits.hh"
 
 class ChamberGeometry
 {

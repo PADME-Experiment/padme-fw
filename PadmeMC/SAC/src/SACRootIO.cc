@@ -24,6 +24,8 @@
 #include "TVector3.h"
 #include "TProcessID.h"
 
+using namespace CLHEP;
+
 SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
 {
 

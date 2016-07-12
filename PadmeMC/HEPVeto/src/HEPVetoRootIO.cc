@@ -114,8 +114,8 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    THEPVetoMCHit* Hit = (THEPVetoMCHit*)fEvent->AddHit();
-	    //Hit->SetChannelId((*HEPVetoC)[i]->GetCryNb()); 
-	    Hit->SetChannelId(0); 
+	    Hit->SetChannelId((*HEPVetoC)[i]->GetChannelId()); 
+	    //Hit->SetChannelId(0); 
 	    Hit->SetPosition(TVector3((*HEPVetoC)[i]->GetPos()[0],
 				      (*HEPVetoC)[i]->GetPos()[1],
 				      (*HEPVetoC)[i]->GetPos()[2])

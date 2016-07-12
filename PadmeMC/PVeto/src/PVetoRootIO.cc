@@ -114,8 +114,8 @@ void PVetoRootIO::SaveEvent(const G4Event* eventG4)
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    TPVetoMCHit* Hit = (TPVetoMCHit*)fEvent->AddHit();
-	    //Hit->SetChannelId((*PVetoC)[i]->GetCryNb()); 
-	    Hit->SetChannelId(0); 
+	    Hit->SetChannelId((*PVetoC)[i]->GetChannelId()); 
+	    //Hit->SetChannelId(0); 
 	    Hit->SetPosition(TVector3((*PVetoC)[i]->GetPos()[0],
 				      (*PVetoC)[i]->GetPos()[1],
 				      (*PVetoC)[i]->GetPos()[2])

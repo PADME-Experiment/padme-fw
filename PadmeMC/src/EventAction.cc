@@ -124,7 +124,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
     //    G4cout << "RootIO: Found hits collection " << HCname << G4endl;
-    if (HCname == "ECryCollection") {
+    //   if (HCname == "ECryCollection") {
+    if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
       FindClusters();
     } else if (HCname == "TargetCollection") {
@@ -292,6 +293,7 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   }
   
   // Copy all hits from G4 to ROOT event
+  //  std::cout << "Number of ECAL hits: " <<  nHits << std::endl;
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
@@ -299,8 +301,9 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
-      MatEtot[Yind][Xind] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo
-      ETotCal += hit->GetEdep();
+      MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+      ETotCal += hit->GetEnergy();
+      //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
     }
   }//end of loop on hits

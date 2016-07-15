@@ -19,5 +19,7 @@ class DatacardMessenger: public G4UImessenger
     DatacardManager*      fDatacardManager;
     G4UIcmdWithAString*   fOutNameCmd;
     G4UIcmdWithAString*   fHistoNameCmd;
+    G4UIcmdWithAString*   fEnableDetectorIOCmd;
+    G4UIcmdWithAString*   fDisableDetectorIOCmd;
 };
 #endif // DatacardMessenger_h

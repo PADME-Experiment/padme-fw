@@ -5,6 +5,7 @@
 //#include "G4UIcmdWithADouble.hh"
 //#include "G4UIcmdWithAnInteger.hh"
 //#include "G4UIcmdWith3Vector.hh"
+#include "RootIOManager.hh"
 
 DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardManager(datacardMng)
 {
@@ -15,11 +16,19 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fHistoNameCmd = new G4UIcmdWithAString("/output/HistoFileName",this);
   fHistoNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableDetectorIOCmd = new G4UIcmdWithAString("/output/EnableDetectorIO",this);
+  fEnableDetectorIOCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fDisableDetectorIOCmd = new G4UIcmdWithAString("/output/DisableDetectorIO",this);
+  fDisableDetectorIOCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
     delete fOutNameCmd;
     delete fHistoNameCmd;
+    delete fEnableDetectorIOCmd;
+    delete fDisableDetectorIOCmd;
 }
 
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
@@ -28,5 +37,7 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
 
     if (command == fOutNameCmd)   fDatacardManager->SetOutputFileName(newValue);
     if (command == fHistoNameCmd) fDatacardManager->SetHistoFileName(newValue);
+    if (command == fEnableDetectorIOCmd) RootIOManager::GetInstance()->EnableSubDetectorIO(newValue);
+    if (command == fDisableDetectorIOCmd) RootIOManager::GetInstance()->DisableSubDetectorIO(newValue);
 
 }

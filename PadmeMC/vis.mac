@@ -7,8 +7,29 @@
 /run/verbose 1
 #/tracking/verbose 1
 
-# Output root file
-#/output/fileName pippo.root
+# RootIO settings
+
+# Output root file with MC hits
+#/output/DataFileName mcdata.root
+
+# Output root file with analysis histograms/ntuple
+#/output/HistoFileName mchisto.root
+
+# Enable IO for single detectors
+#/output/EnableDetectorIO ECal
+#/output/EnableDetectorIO Target
+#/output/EnableDetectorIO PVeto
+#/output/EnableDetectorIO EVeto
+#/output/EnableDetectorIO HEPVeto
+#/output/EnableDetectorIO SAC
+
+# Disable IO for single detectors
+#/output/DisableDetectorIO ECal
+#/output/DisableDetectorIO Target
+#/output/DisableDetectorIO PVeto
+#/output/DisableDetectorIO EVeto
+#/output/DisableDetectorIO HEPVeto
+#/output/DisableDetectorIO SAC
 
 # Detector settings
 

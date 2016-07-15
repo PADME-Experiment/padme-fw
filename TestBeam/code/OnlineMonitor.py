@@ -19,7 +19,8 @@ def main():
     PADME = os.getenv('PADME',"..")
 
     # Dir where all log files are kept
-    log_dir = PADME+"/RunControl/log"
+    #log_dir = PADME+"/RunControl/log"
+    log_dir = "/home/daq/DAQ/log"
 
     # Path where one can find the "data" directory containing DAQ files
     daq_data_dir = PADME+"/RunControl"

@@ -229,7 +229,7 @@ void Grapher::AnalyzeEvents()
       // Do ECAL analysis
       ecalA->SetEvent(rawEv);
       ecalA->AnalyzeCharge();
-      ecalA->AnalyzePosition();
+      //ecalA->AnalyzePosition();
 
       /*
       // Do Target analysis

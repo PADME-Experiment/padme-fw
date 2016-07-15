@@ -39,6 +39,7 @@ G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
@@ -49,6 +50,8 @@ G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);

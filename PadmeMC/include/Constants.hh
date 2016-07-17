@@ -56,7 +56,7 @@ const double VacuumDensity = 1.290*VacuumP;  //mg*cm3
 const double MagneticField = 0.55; //0.6 
 
 //Physics list flags
-const int    UseNewPhysList = 1;   // was 0
+const int    UseNewPhysList = 0;   // was 0
 const int    IsSincrotronON = 0;    //Std=1
 const int    IsNuclearON    = 1;    //Std=1
 const int    NuclearBertini = 1;  //Bertini cascade

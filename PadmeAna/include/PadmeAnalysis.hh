@@ -4,27 +4,31 @@
 #include "PadmeVAnalyser.hh"
 #include "PadmeAnaEvent.hh"
 
-#include <stl>
+//#include <stl>
 #include <string>
+#include <vector>
+
+using namespace std;
 
 
 class PadmeAnalysis:public PadmeVAnalyser {
 public:
-  PadmeAnalysis();
-  ~PadmeAnalysis();
+PadmeAnalysis();
+~PadmeAnalysis();
 
-  void Init(string ConfigFileName);
-  void ProcessSoBEvent();
-  void ProcessSoREvent();
-  void ProcessDataEvent();
-  void ProcessEoBEvent();
-  void ProcessEoREvent();
+void Init(string ConfigFileName);
+// void ProcessSoBEvent();
+// void ProcessSoREvent();
+// void ProcessDataEvent();
+// void ProcessEoBEvent();
+// void ProcessEoREvent();
 
-  void EndProcessing();
-  void ProcessInputFile(string InFile);
-  void ProcessInputList(std::vector<string> FileList);
-  void AddAnalyser(PadmeVAnalyser *ann){fAnalysers.push_back(ann)};
-  void DelAnalyser();
+void EndProcessing();
+void ProcessInputFile(string InFile);
+void ProcessInputList(std::vector<string> FileList);
+void AddAnalyser(PadmeVAnalyser *ann){fAnalysers.push_back(ann);};
+void DelAnalyser();
+  
   
   
 private:

@@ -3,8 +3,12 @@
 
 #include "PadmeVAnaEvent.hh"
 
+#include <string>
+using namespace std;
+
 
 class PadmeVAnalyser{
+public:
   PadmeVAnalyser(){;};
   ~PadmeVAnalyser(){;};
 

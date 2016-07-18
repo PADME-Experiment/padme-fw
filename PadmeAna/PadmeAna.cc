@@ -7,6 +7,9 @@
 #include <fcntl.h>
 
 #include "PadmeAnalysis.hh"
+#include <iostream>
+#include <fstream>
+
 
 using namespace std;
 
@@ -19,11 +22,11 @@ void sighandler(int sig){
     exit(0);
 }
 
-void usage(){
+void usage(char *name){
   cout << "Usage" << endl;
 }
 
-int main(Int_t argc, char **argv) {
+int main(int argc, char **argv) {
 
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
@@ -36,7 +39,11 @@ int main(Int_t argc, char **argv) {
   vector<string> FileList;
   string ConfFileName;
 
-  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0;
+  int nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0;
+  int n_options_read = 0;
+
+
+
   while ((opt = getopt(argc, argv, "b:c:h:i:l:n:o:s:")) != -1) {
     n_options_read++;
     switch (opt) {
@@ -79,7 +86,7 @@ int main(Int_t argc, char **argv) {
     FileList.push_back(InputFileName);
   } else if (nl == 1) {
     cout << "Opening a list file: " << InputListFileName << endl;
-    ifstream listfile(InputListFileName);
+    ifstream listfile(InputListFileName.data());
     while (getline(listfile,InputFileName)) {
       FileList.push_back(InputFileName);
     }
@@ -87,7 +94,7 @@ int main(Int_t argc, char **argv) {
   cout << "[PadmeAna] will run on " <<  FileList.size() << " files" << endl;
   
   
-  PadmeAnalysis PadmeAna();
+  PadmeAnalysis PadmeAna;
   PadmeAna.ProcessInputList(FileList);
   PadmeAna.EndProcessing();
 

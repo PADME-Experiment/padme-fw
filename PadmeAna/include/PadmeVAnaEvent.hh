@@ -13,11 +13,13 @@
 
 
 class PadmeVAnaEvent {
+public:
   PadmeVAnaEvent(){ evType=0; };
   PadmeVAnaEvent(int type){ evType=type; };
-  ~PadmeVAnaEvent();
+  ~PadmeVAnaEvent(){;};
   void FillEvent();
   void Init();
+  int EventType(){return evType;};
 
   //private:
   int evType;

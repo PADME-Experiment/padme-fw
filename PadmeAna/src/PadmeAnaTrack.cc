@@ -10,5 +10,5 @@ PadmeAnaTrack::PadmeAnaTrack(){
 PadmeAnaTrack::PadmeAnaTrack(double pin, double qin, double tin){
   p = pin;
   q = qin;
-  t = tin;
+  time = tin;
 }

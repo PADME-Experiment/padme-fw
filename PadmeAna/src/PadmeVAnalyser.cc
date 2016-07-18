@@ -1,8 +1,10 @@
 #include "PadmeVAnalyser.hh"
+#include "iostream"
 
+using namespace std;
 
 void PadmeVAnalyser::ProcessEvent(PadmeVAnaEvent *Event){
-  
+  std::cout << "Event type: " << Event->EventType() << std::endl;
 }
 
 

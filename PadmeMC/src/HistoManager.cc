@@ -124,7 +124,7 @@ void HistoManager::book()
 
   // create 1 ntuple in subdirectory "tuples"
   //
-  ntupl = new TTree("U101", "Envent");
+  ntupl = new TTree("U102", "Envent");
   ntupl->Branch("Nevent", &(myEvt.NTNevent), "Nevent/I");
   ntupl->Branch("ETot", &(myEvt.NTEtot), "ETot/D");
 

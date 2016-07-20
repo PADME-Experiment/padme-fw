@@ -17,47 +17,72 @@
 
 class LAVHit : public G4VHit
 {
-  public:
+public:
 
-      LAVHit();
-     ~LAVHit();
-      LAVHit(const LAVHit&);
-      const LAVHit& operator=(const LAVHit&);
-      G4int operator==(const LAVHit&) const;
+  LAVHit();
+  ~LAVHit();
+  LAVHit(const LAVHit&);
+  const LAVHit& operator=(const LAVHit&);
+  G4int operator==(const LAVHit&) const;
 
-      inline void* operator new(size_t);
-      inline void  operator delete(void*);
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
 
-      void Draw();
-      void Print();
+  void Draw();
+  void Print();
 
-  public:
-  
-      void SetTrackID  (G4int track) { VtrackID = track; };
-      void SetLAVNb(G4int cry)  { LAVNb = cry; };
-      void SetPType(G4int typ)       { PType = typ; };
-      void SetEdep(G4double de)      { edep = de; };
-      void SetPos(G4ThreeVector xyz) { pos = xyz; };
-      void SetTime(G4double time)    { VetoT = time; };
-      
-      G4int GetTrackID()    { return VtrackID; };
-      G4int GetLAVNb() { return LAVNb; };
-      G4double GetEdep()    { return edep; };      
-      G4double GetTime()    { return VetoT; };
-      G4int GetPType()      { return PType; };
-      G4ThreeVector GetPos(){ return pos; };
-      G4double GetX(){ return pos.x(); };
-      G4double GetY(){ return pos.y(); };
-      G4double GetZ(){ return pos.z(); };
+public:
 
-  private:
-  
-      G4int         VtrackID;
-      G4int         PType;
-      G4int         LAVNb;
-      G4double      VetoT;
-      G4double      edep;
-      G4ThreeVector pos;
+  void SetChannelId(G4int c) { fChannelId = c; }
+  G4int GetChannelId() { return fChannelId; }
+
+  void SetTime(G4double t) { fTime = t; };
+  G4double GetTime() { return fTime; };
+
+  void SetEnergy(G4double e) { fEnergy = e; }
+  G4double GetEnergy() { return fEnergy; }
+
+  void SetPosition(G4ThreeVector p) { fPosition = p; }
+  G4ThreeVector GetPosition() { return fPosition; }
+  G4double GetPosX() { return fPosition.x(); };
+  G4double GetPosY() { return fPosition.y(); };
+  G4double GetPosZ() { return fPosition.z(); };
+
+  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
+  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
+  G4double GetLocalPosX() { return fLocalPosition.x(); };
+  G4double GetLocalPosY() { return fLocalPosition.y(); };
+  G4double GetLocalPosZ() { return fLocalPosition.z(); };
+ 
+  // Kept for backward compatibility: will be removed
+  void SetLAVNb(G4int cry) { fChannelId = cry; };
+  G4int GetLAVNb() { return fChannelId; };
+
+  void SetPType(G4int typ) { fTrackType = typ; };
+  G4int GetPType() { return fTrackType; };
+
+  void SetTrackID(G4int track) { fTrackId = track; };
+  G4int GetTrackID() { return fTrackId; };
+
+  void SetEdep(G4double de) { fEnergy = de; };
+  G4double GetEdep() { return fEnergy; };      
+
+  void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
+  G4ThreeVector GetPos(){ return fPosition; };
+  G4double GetX(){ return fPosition.x(); };
+  G4double GetY(){ return fPosition.y(); };
+  G4double GetZ(){ return fPosition.z(); };
+
+private:
+
+  G4int         fTrackType;
+  G4int         fTrackId;
+  G4int         fChannelId;
+  G4double      fTime;
+  G4double      fEnergy;
+  G4ThreeVector fPosition;
+  G4ThreeVector fLocalPosition;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

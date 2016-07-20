@@ -101,6 +101,9 @@ public:
   G4String GetThreePhotonDecaysFilename()        { return fThreePhotonDecaysFilename; }
   void SetThreePhotonDecaysFilename(G4String f) { fThreePhotonDecaysFilename = f; }
 
+  G4double GetBeamOriginPosZ()        { return fBeamOriginPosZ; }
+  void     SetBeamOriginPosZ(G4double z) { fBeamOriginPosZ = z; }
+
 private:
 
   // Average number of positrons in each bunch
@@ -140,6 +143,9 @@ private:
   // Insert three gamma decays
   G4int fNThreePhotonDecaysPerBunch;
   G4String fThreePhotonDecaysFilename;
+
+  // Origin of beam along Z (i.e. Z of beam when t=0)
+  G4double fBeamOriginPosZ;
 
 };
 #endif

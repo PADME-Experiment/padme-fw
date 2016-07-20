@@ -55,7 +55,8 @@ MagnetGeometry::MagnetGeometry()
 
   fMagneticVolumeLengthX = fYokeSizeInnerX;
   //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
-  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick;
+  //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick;
+  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY;
   fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
   fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point

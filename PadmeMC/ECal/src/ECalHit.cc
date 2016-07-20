@@ -1,35 +1,12 @@
+// --------------------------------------------------------------
+// History:
 //
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-17
 //
-//
-// $Id: ECalHit.cc,v 1.1.1.1 2014/01/22 15:35:03 veni Exp $
-//
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+// --------------------------------------------------------------
 
 #include "ECalHit.hh"
+
 #include "G4UnitsTable.hh"
 #include "G4VVisManager.hh"
 #include "G4Circle.hh"
@@ -51,21 +28,32 @@ ECalHit::~ECalHit() {}
 ECalHit::ECalHit(const ECalHit& right)
   : G4VHit()
 {
-  printf("Hey new hit\n");
-  trackID   = right.trackID;  //pointer to current hit 
-  // CryNb     = right.chamberNb;
-  edep      = right.edep;
-  pos       = right.pos;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  
+  // Obsolete and probably not used
+  trackID = right.trackID;
+  ECalHitT = right.ECalHitT;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const ECalHit& ECalHit::operator=(const ECalHit& right)
 {
-  trackID   = right.trackID;
-  CryNb     = right.CryNb;
-  edep      = right.edep;
-  pos       = right.pos;
+  fTrackType = right.fTrackType;
+  fChannelId = right.fChannelId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
+  
+  // Obsolete and probably not used
+  trackID = right.trackID;
+  ECalHitT = right.ECalHitT;
   return *this;
 }
 
@@ -83,7 +71,7 @@ void ECalHit::Draw()
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
   if(pVVisManager)
   {
-    G4Circle circle(pos);
+    G4Circle circle(fPosition);
     circle.SetScreenSize(2.);
     circle.SetFillStyle(G4Circle::filled);
     G4Colour colour(1.,0.,0.);
@@ -97,9 +85,13 @@ void ECalHit::Draw()
 
 void ECalHit::Print()
 {
-  G4cout << "  trackID: " << trackID << "  chamberNb: " << CryNb
-         << "  energy deposit: " << G4BestUnit(edep,"Energy")
-         << "  position: " << G4BestUnit(pos,"Length") << G4endl;
+  G4cout << "- channel: " << fChannelId
+	 << " time: " << G4BestUnit(fTime,"Time")
+         << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " track type: " << fTrackType
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

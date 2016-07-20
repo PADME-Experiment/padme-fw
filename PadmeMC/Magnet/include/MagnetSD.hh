@@ -22,7 +22,7 @@ public:
 
 private:
 
-  MagnetHitsCollection* MagnetCollection;
+  MagnetHitsCollection* fMagnetCollection;
 
 };
 

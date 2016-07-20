@@ -21,6 +21,8 @@
 
 #include "ChamberGeometry.hh"
 
+using namespace CLHEP;
+
 ChamberStructure::ChamberStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
 {}
@@ -60,7 +62,8 @@ void ChamberStructure::CreateGeometry()
   G4int nVP = geo->GetVCInMagPlateNVertices();
   std::vector<G4TwoVector> vP(nVP);
   for(G4int iV=0;iV<nVP;iV++) { vP[iV] = geo->GetVCInMagPlateVertex(iV); }
-  G4double halfPlateSizeY = 0.5*geo->GetVCInMagThick();
+  //G4double halfPlateSizeY = 0.5*geo->GetVCInMagThick();
+  G4double halfPlateSizeY = 0.5*(geo->GetVCInMagThick()-0.01*mm);
   G4ExtrudedSolid* solidVCInMagPlate = new G4ExtrudedSolid("VCInMagPlate",vP,halfPlateSizeY,G4TwoVector(0.,0.),1.,G4TwoVector(0.,0.),1.);
   G4LogicalVolume* logicalVCInMagPlate = new G4LogicalVolume(solidVCInMagPlate,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCInMagPlate",0,0,0);
   logicalVCInMagPlate->SetVisAttributes(G4VisAttributes(G4Colour::White()));

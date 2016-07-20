@@ -79,3 +79,68 @@ G4double HEPVetoGeometry::GetFingerPosZ(G4int idx)
   }
   return GetHEPVetoSizeZ()*0.5-fFingerNominalSizeZ*idx-fFingerNominalSizeZ*0.5;
 }
+
+std::vector<G4String> HEPVetoGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fFingerGap " << fFingerGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoNFingers " << fHEPVetoNFingers;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeX " << fFingerNominalSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeY " << fFingerNominalSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerNominalSizeZ " << fFingerNominalSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoSizeX " << fHEPVetoSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoSizeY " << fHEPVetoSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoSizeZ " << fHEPVetoSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoRotX " << fHEPVetoRotX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoRotY " << fHEPVetoRotY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoRotZ " << fHEPVetoRotZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoInnerFacePosX " << fHEPVetoInnerFacePosX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoInnerFacePosY " << fHEPVetoInnerFacePosY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fHEPVetoInnerFacePosZ " << fHEPVetoInnerFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
+}

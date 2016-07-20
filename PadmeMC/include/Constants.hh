@@ -58,7 +58,7 @@ const double MagneticField = 0.55; //0.6
 //Physics list flags
 const int    UseNewPhysList = 1;   // was 0
 const int    IsSincrotronON = 0;    //Std=1
-const int    IsNuclearON    = 1;    //Std=1
+const int    IsNuclearON    = 0;    //Std=1
 const int    NuclearBertini = 1;  //Bertini cascade
 const int    NuclearBinary  = 0;  //Binary cascade
 const int    NuclearHP      = 1;  //Nuclear high performance tracking (not speed!)

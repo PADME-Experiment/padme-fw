@@ -10,41 +10,54 @@
 
 class MagnetHit : public G4VHit
 {
-  public:
 
-      MagnetHit();
-     ~MagnetHit();
-      MagnetHit(const MagnetHit&);
-      const MagnetHit& operator=(const MagnetHit&);
-      G4int operator==(const MagnetHit&) const;
+public:
 
-      inline void* operator new(size_t);
-      inline void  operator delete(void*);
+  MagnetHit();
+  ~MagnetHit();
+  MagnetHit(const MagnetHit&);
+  const MagnetHit& operator=(const MagnetHit&);
+  G4int operator==(const MagnetHit&) const;
 
-      void Draw();
-      void Print();
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
 
-  public:
+  void Draw();
+  void Print();
+
+public:
+ 
+  void SetTime(G4double t) { fTime = t; };
+  G4double GetTime() { return fTime; };
+
+  void SetEnergy(G4double e) { fEnergy = e; }
+  G4double GetEnergy() { return fEnergy; }
+
+  void SetPosition(G4ThreeVector p) { fPosition = p; }
+  G4ThreeVector GetPosition() { return fPosition; }
+  G4double GetPosX() { return fPosition.x(); };
+  G4double GetPosY() { return fPosition.y(); };
+  G4double GetPosZ() { return fPosition.z(); };
+
+  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
+  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
+  G4double GetLocalPosX() { return fLocalPosition.x(); };
+  G4double GetLocalPosY() { return fLocalPosition.y(); };
+  G4double GetLocalPosZ() { return fLocalPosition.z(); };
+ 
+  void SetTrackID(G4int track) { fTrackId = track; };
+  G4int GetTrackID() { return fTrackId; };
+
+  //G4double GetX() { return fHitPosition.x(); }
+  //G4double GetY() { return fHitPosition.y(); }
+
+private:
   
-      void SetTrackID  (G4int track)       { fHitTrackId  = track; }
-      void SetTime     (G4double time)     { fHitTime     = time;  }
-      void SetEnergy   (G4double de)       { fHitEnergy   = de;    }
-      void SetPosition (G4ThreeVector xyz) { fHitPosition = xyz;   }
-
-      G4int         GetTrackID()  { return fHitTrackId;  }
-      G4double      GetEnergy()   { return fHitEnergy;   }
-      G4double      GetTime()     { return fHitTime;     }
-      G4ThreeVector GetPosition() { return fHitPosition; }
-
-      G4double      GetX() { return fHitPosition.x(); }
-      G4double      GetY() { return fHitPosition.y(); }
-
-  private:
-  
-      G4int         fHitTrackId;
-      G4double      fHitTime;
-      G4double      fHitEnergy;
-      G4ThreeVector fHitPosition;
+  G4int         fTrackId;
+  G4double      fTime;
+  G4double      fEnergy;
+  G4ThreeVector fPosition;
+  G4ThreeVector fLocalPosition;
 
 };
 

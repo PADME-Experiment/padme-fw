@@ -59,6 +59,10 @@ BeamParameters::BeamParameters()
   // Insert three gamma decays
   fNThreePhotonDecaysPerBunch = 0;
   fThreePhotonDecaysFilename = "ThreePhotonDecays.list";
+
+  // Generic beam position at t=0
+  fBeamOriginPosZ = -70.*cm;
+
 }
 
 BeamParameters::~BeamParameters()

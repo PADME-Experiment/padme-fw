@@ -8,6 +8,8 @@
 #ifndef TargetGeometry_H
 #define TargetGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 
@@ -20,6 +22,7 @@ public:
 
   ~TargetGeometry();
   static TargetGeometry* GetInstance();
+  std::vector<G4String> GetHashTable();
 
 private:
 

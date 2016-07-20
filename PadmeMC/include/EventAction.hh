@@ -90,13 +90,20 @@ class EventAction : public G4UserEventAction
    G4double HEPVetoTrackTime[100];
    G4double HEPVetoX[100];
    G4double HEPVetoY[100];
+   G4double HEPVetoTimeCl[100][10 ];
+   G4double HEPVetoECl[100][10];
+   G4int    HEPVetoClIndex[100];
 
    G4double ETotPVeto[100];
+   G4double TimePVeto[100];
    G4int    PVetoTrackCh[100];
    G4double PVetoEtrack [100];
    G4double PVetoTrackTime[100];
    G4double PVetoX[100];
    G4double PVetoY[100];
+   G4double PVetoTimeCl[100][10 ];
+   G4double PVetoECl[100][10];
+   G4int    PVetoClIndex[100];
 
    G4double ETotEVeto[100];
    G4int    EVetoTrackCh[100];
@@ -104,6 +111,9 @@ class EventAction : public G4UserEventAction
    G4double EVetoTrackTime[100];
    G4double EVetoX[100];
    G4double EVetoY[100];
+   G4double EVetoTimeCl[100][10];
+   G4double EVetoECl[100][10];
+   G4int    EVetoClIndex[100];
 
    G4double ETotSAC[100];
 

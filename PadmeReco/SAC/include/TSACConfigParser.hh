@@ -15,7 +15,7 @@
 #ifndef _TSACConfigParser_hh_
 #define _TSACConfigParser_hh_ 0
 
-class TSACConfigParser:TDetVConfigParser{
+class TSACConfigParser:public TDetVConfigParser{
   public:
     TSACConfigParser(std::string a):TDetVConfigParser(a){ }
 };

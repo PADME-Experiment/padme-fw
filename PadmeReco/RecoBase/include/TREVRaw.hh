@@ -11,6 +11,8 @@ class TREVRaw{
   public:
     TREVRaw(){};
     ~TREVRaw(){};
+    protected:
+    //THWVfDAQChannelp;
     private:
 };
 #endif

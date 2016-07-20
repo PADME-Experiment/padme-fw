@@ -16,7 +16,7 @@
 #ifndef _TECalConfigParser_hh_
 #define _TECalConfigParser_hh_ 0
 
-class TECalConfigParser:TDetVConfigParser{
+class TECalConfigParser:public TDetVConfigParser{
   public:
     TECalConfigParser(std::string a):TDetVConfigParser(a){ }
 };

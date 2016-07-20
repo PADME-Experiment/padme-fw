@@ -17,7 +17,10 @@
  */
 class TREVDigi{
   public:
+    void AddRaw(TREVRaw *raw);
   protected:
+    typedef typename fw::TSimpleList<TREVRaw*> rawCont_t;
+    rawCont_t  fAssocRaws;
     int fDAQChannelId;
     int fDAQBoardId;
 };

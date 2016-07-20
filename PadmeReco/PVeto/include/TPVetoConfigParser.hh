@@ -15,7 +15,7 @@
 #ifndef _TPVetoConfigParser_hh_
 #define _TPVetoConfigParser_hh_ 0
 
-class TPVetoConfigParser:TDetVConfigParser{
+class TPVetoConfigParser:public TDetVConfigParser{
   public:
     TPVetoConfigParser(std::string a):TDetVConfigParser(a){ }
 };

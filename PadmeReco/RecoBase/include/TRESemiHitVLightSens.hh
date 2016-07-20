@@ -9,6 +9,8 @@
 #ifndef _TRESemiHitVLightSens_hh_
 #define _TRESemiHitVLightSens_hh_ 0
 
-class TRESemiHitVLightSens:TREVSemiHit{
+class TRESemiHitVLightSens:public TREVSemiHit{
+  protected:
+    double fNPhotons; ///< Number of Photons
 };
 #endif

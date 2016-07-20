@@ -9,15 +9,18 @@
 #include"TREVDigi.hh"
 #include"TREDigiVSampling.hh"
 #include"TREDigiVDiscret.hh"
+#include"fwTSimpleList.hh"
 
 #ifndef _TREVSemiHit_hh_
 #define _TREVSemiHit_hh_ 0
 class TREVSemiHit{
   public:
   /// Add Digis related to this SemiHit
-    void AddDigi(const TREVDigi *const digi){
-      fAssocDigis.push_back(digi);} //
-  private:
-    std::vector<const TREVDigi*> fAssocDigis;
+    void AddDigi(TREVDigi *digi);
+  protected:
+    typedef typename fw::TSimpleList<TREVDigi*> digiCont_t;
+    digiCont_t  fAssocDigis;
+
+
 };
 #endif 

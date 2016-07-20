@@ -15,7 +15,7 @@
 #ifndef _TTargetConfigParser_hh_
 #define _TTargetConfigParser_hh_ 0
 
-class TTargetConfigParser:TDetVConfigParser{
+class TTargetConfigParser:public TDetVConfigParser{
   public:
     TTargetConfigParser(std::string a):TDetVConfigParser(a){ }
 };

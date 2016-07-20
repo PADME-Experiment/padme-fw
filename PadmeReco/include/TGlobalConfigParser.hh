@@ -16,15 +16,12 @@
 #define _TGlobalConfigParser_hh_ 0
 
 
-class TGlobalConfigParser:TVConfigParser{
+class TGlobalConfigParser:public TVConfigParser{
   public:
     TGlobalConfigParser(std::string a):TVConfigParser(a){}
-    std::string GetSingleArgConfig(std::string grp,std::string cfg){
-      return TVConfigParser::GetSingleArgConfig(grp,cfg);}
-    bool HasConfig(std::string grp,std::string cfg){
-      return TVConfigParser::HasConfig(grp,cfg);}
-    bool IsSingleArgConfig(std::string grp,std::string cfg){
-      return TVConfigParser::IsSingleArgConfig(grp,cfg);}
+    //std::string GetSingleArgConfig(std::string grp,std::string cfg){ return TVConfigParser::GetSingleArgConfig(grp,cfg);}
+    //bool HasConfig(std::string grp,std::string cfg){ return TVConfigParser::HasConfig(grp,cfg);}
+    //bool IsSingleArgConfig(std::string grp,std::string cfg){ return TVConfigParser::IsSingleArgConfig(grp,cfg);}
 };
 
 #endif

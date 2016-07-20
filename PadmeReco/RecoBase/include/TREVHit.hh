@@ -6,16 +6,17 @@
 
 #include<vector>
 #include"TREVSemiHit.hh"
+#include"fwTSimpleList.hh"
 
 #ifndef _TREVHit_hh_
 #define _TREVHit_hh_ 0
 class TREVHit{
   public:
   /// Add SemiHits related to this Hit
-    void AddSemiHit(const TREVSemiHit *const sHit){fAssocSemiHits.push_back(sHit);}
+    void AddSemiHit(TREVSemiHit *sHit);
+  protected:
+    typedef typename fw::TSimpleList<TREVSemiHit*> semiHitCont_t;
+    semiHitCont_t fAssocSemiHits;
   private:
-    std::vector<const TREVSemiHit*> fAssocSemiHits;
-   // something to be done for the case of single
-   // PMT for multiple scintillators. 
 };
 #endif

@@ -9,7 +9,7 @@
 #ifndef _TDetVConfigParser_hh_
 #define _TDetVConfigParser_hh_ 0
 
-class TDetVConfigParser:TVConfigParser{
+class TDetVConfigParser:public TVConfigParser{
   public:
     TDetVConfigParser(std::string a):TVConfigParser(a){ }
 };

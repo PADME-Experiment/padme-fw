@@ -20,6 +20,7 @@
 #include "G4Poisson.hh"
 
 #include "G4DigiManager.hh"
+#include "ECalDigitizer.hh"
 #include "PVetoDigitizer.hh"
 
 extern double NNeutrons;
@@ -38,8 +39,10 @@ EventAction::EventAction(RunAction* run)
 
   // Create and register digitizer modules for all detectors
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  PVetoDigitizer* pVetoDM = new PVetoDigitizer( "PVetoDigitizer" );
+  PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
   theDM->AddNewModule(pVetoDM);
+  ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
+  theDM->AddNewModule(eCalDM);
 
 }
 
@@ -102,6 +105,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
   pVetoDM->Digitize();
+  ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
+  eCalDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);

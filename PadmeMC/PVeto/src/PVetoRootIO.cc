@@ -159,8 +159,6 @@ void PVetoRootIO::SaveEvent(const G4Event* eventG4)
     }
   }
 
-
-
   TProcessID::SetObjectCount(savedObjNumber);
 
 }

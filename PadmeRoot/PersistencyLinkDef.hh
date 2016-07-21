@@ -16,6 +16,7 @@
 #pragma link C++ class TSubDetectorInfo+;
 
 #pragma link C++ class TMCVHit+;
+#pragma link C++ class TMCVDigi+;
 #pragma link C++ class TMCVEvent+;
 
 #pragma link C++ class TTargetMCHit+;
@@ -25,6 +26,7 @@
 #pragma link C++ class TEVetoMCEvent+;
 
 #pragma link C++ class TPVetoMCHit+;
+#pragma link C++ class TPVetoMCDigi+;
 #pragma link C++ class TPVetoMCEvent+;
 
 #pragma link C++ class THEPVetoMCHit+;

@@ -8,10 +8,11 @@
 #include "THEPVetoMCEvent.hh"
 
 #include "THEPVetoMCHit.hh"
+#include "THEPVetoMCDigi.hh"
 
 ClassImp(THEPVetoMCEvent)
 
-THEPVetoMCEvent::THEPVetoMCEvent() : TMCVEvent(THEPVetoMCHit::Class())
+THEPVetoMCEvent::THEPVetoMCEvent() : TMCVEvent(THEPVetoMCHit::Class(),THEPVetoMCDigi::Class())
 {;}
 
 THEPVetoMCEvent::~THEPVetoMCEvent()

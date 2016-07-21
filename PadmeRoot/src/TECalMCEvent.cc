@@ -8,10 +8,11 @@
 #include "TECalMCEvent.hh"
 
 #include "TECalMCHit.hh"
+#include "TECalMCDigi.hh"
 
 ClassImp(TECalMCEvent)
 
-TECalMCEvent::TECalMCEvent() : TMCVEvent(TECalMCHit::Class())
+TECalMCEvent::TECalMCEvent() : TMCVEvent(TECalMCHit::Class(),TECalMCDigi::Class())
 {;}
 
 TECalMCEvent::~TECalMCEvent()

@@ -71,4 +71,7 @@ void PVetoDigitizer::Digitize()
       }
     }
   }
+
+  StoreDigiCollection(pVetoDigiCollection);
+
 }

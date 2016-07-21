@@ -56,6 +56,9 @@ class PVetoDigi : public G4VDigi
   G4double GetLocalPosX() { return fLocalPosition.x(); };
   G4double GetLocalPosY() { return fLocalPosition.y(); };
   G4double GetLocalPosZ() { return fLocalPosition.z(); };
+  
+  G4int GetNHits(){return fNHits;};
+  void SetNHits(int nh){fNHits = nh;};
 
 private:
     
@@ -65,6 +68,7 @@ private:
   G4double      fEnergy;
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
+  G4int         fNHits;
 
 };
 

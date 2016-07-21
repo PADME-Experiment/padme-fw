@@ -78,10 +78,11 @@ void PVetoDigi::Draw()
 void PVetoDigi::Print()
 {
   G4cout << "- channel: " << fChannelId
+         << " NHits: " << fNHits
 	 << " time: " << G4BestUnit(fTime,"Time")
 	 << " time spread: " << G4BestUnit(fTimeSpread,"Time")
          << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
-         << " global position: " << G4BestUnit(fPosition,"Length")
+    //         << " global position: " << G4BestUnit(fPosition,"Length")
          << " local position: " << G4BestUnit(fLocalPosition,"Length")
 	 << G4endl;
 }

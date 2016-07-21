@@ -22,7 +22,6 @@ public:
   void Digitize();
 
 private: 
-  PVetoDigiCollection* fPVetoDigiCollection;
 
 };
 

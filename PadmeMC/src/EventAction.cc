@@ -19,21 +19,27 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
 
+#include "G4DigiManager.hh"
+#include "PVetoDigitizer.hh"
+
 extern double NNeutrons;
 extern double Npionc;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
-//EventAction::EventAction(RunAction* run, HistoManager* histo)
-//:fRunAct(run),fHistoManager(histo)
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
-
 {
+
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
+
+  // Create and register digitizer modules for all detectors
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  PVetoDigitizer* pVetoDM = new PVetoDigitizer( "PVetoDigitizer" );
+  theDM->AddNewModule(pVetoDM);
 
 }
 
@@ -92,6 +98,10 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Periodic printing
   if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
 
+  // Digitize this event
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
+  pVetoDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);

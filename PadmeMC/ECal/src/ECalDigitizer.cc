@@ -69,7 +69,7 @@ void ECalDigitizer::Digitize()
     // Create digis for active channels
     for (G4int i=0; i < dChannel.size(); i++) {
       ECalDigi* digi = new ECalDigi();
-      digi->SetChannelId(i);
+      digi->SetChannelId(dChannel[i]);
       digi->SetTime(dTime[i]);
       digi->SetEnergy(dEnergy[i]);
       eCalDigiCollection->insert(digi);

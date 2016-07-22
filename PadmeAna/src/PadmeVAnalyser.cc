@@ -4,7 +4,7 @@
 using namespace std;
 
 void PadmeVAnalyser::ProcessEvent(PadmeVAnaEvent *Event){
-  std::cout << "Event type: " << Event->EventType() << std::endl;
+  std::cout << "Event type: " << Event->GetEventType() << std::endl;
 }
 
 

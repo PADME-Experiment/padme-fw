@@ -1,4 +1,7 @@
 #include "PadmeAnalysis.hh"
+#include "PadmeAnaEvent.hh"
+
+
 #include "iostream"
 
 using namespace std;
@@ -7,12 +10,18 @@ using namespace std;
 PadmeAnalysis::PadmeAnalysis()
 {
   fAnalysers.clear();
-  Event= NULL;
+  Event = new PadmeAnaEvent();
   InEvent = NULL;
 }
 
 PadmeAnalysis::~PadmeAnalysis()
-{;}
+{
+  if (InEvent) {
+    std::cout << "[PadmeAnalysis] Input stream has to be cleared by the input handler..." << std::endl;
+  }
+  if(Event) delete Event;
+  
+}
 
 void PadmeAnalysis::ProcessEvent(){
   for(unsigned int iAna=0;iAna<fAnalysers.size();iAna++) {
@@ -24,7 +33,6 @@ void PadmeAnalysis::ProcessEvent(){
 int PadmeAnalysis::NextEvent() {
   if(InEvent) {
     return(InEvent->NextEvent());
-    return 0;
   }
   return 0;
 }
@@ -34,47 +42,38 @@ void PadmeAnalysis::GetEvent() {
 }
 
 
-void PadmeAnalysis::ProcessInputFile(string InFile){
+int PadmeAnalysis::ProcessInputFile(std::string InFile){
   //  std::cout << "Processing file " << InFile <<  std::endl;
+  long int nev = 0;
   
-  fInput = new  PadmeInputHandler(InFile);
+  fInput  = new PadmeInputHandler(InFile);
+  InEvent = fInput->GetEventHandler();
   
-
-  
-  // while(   ){
-    
-    
-  // }
+  if(InEvent != NULL) {    
+    while(NextEvent() ){
+      Event->FillEvent(InEvent);
+      ProcessEvent();      
+      nev++;
+    }
+  }
   
   delete fInput;
-  fInput = 0;
+  fInput = NULL;
+  InEvent = NULL;
+  std::cout << "Processed " << nev << " events in file " << InFile << std::endl;
+  return nev;
 }
 
 
-void PadmeAnalysis::ProcessInputList(std::vector<string> FileList){
+int PadmeAnalysis::ProcessInputList(std::vector<std::string> FileList){
+  int nev = 0;
   for(size_t ifile = 0; ifile<FileList.size(); ++ifile) {
-    ProcessInputFile(FileList[ifile]);
+    nev+=ProcessInputFile(FileList[ifile]);
   }
+  std::cout << "Processed total number of events: " << nev << std::endl;
+  return nev;
 }
 
-// void PadmeAnalysis::ProcessSoBEvent(){
-//   ;
-// }
-// void PadmeAnalysis::ProcessSoREvent(){
-//   ;
-// }
-// void PadmeAnalysis::ProcessEoBEvent(){
-//   ;
-// }
-// void PadmeAnalysis::ProcessEoREvent(){
-//   ;
-// }
-
-// void PadmeAnalysis::ProcessDataEvent(){
-
-  
-//   ;
-// }
 
 void PadmeAnalysis::Init(string ConfigFileName){
   ;

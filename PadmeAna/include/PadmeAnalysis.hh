@@ -2,16 +2,15 @@
 #define PadmeAnalysis_H
 
 #include "PadmeVAnalyser.hh"
-#include "PadmeVAnaEvent.hh"
+//#include "PadmeVAnaEvent.hh"
+#include "PadmeAnaEvent.hh"
 #include "PadmeVAnaInEvent.hh"
 #include "PadmeInputHandler.hh"
 
 
-//#include <stl>
 #include <string>
 #include <vector>
 
-//class PadmeVAnaInEvent;
 
 using namespace std;
 
@@ -29,8 +28,8 @@ public:
   // void ProcessEoREvent();
   
   void EndProcessing();
-  void ProcessInputFile(string InFile);
-  void ProcessInputList(std::vector<string> FileList);
+  int ProcessInputFile(string InFile);
+  int ProcessInputList(std::vector<string> FileList);
   void AddAnalyser(PadmeVAnalyser *ann){fAnalysers.push_back(ann);};
   void DelAnalyser();
   
@@ -42,7 +41,7 @@ public:
   
 private:
   PadmeInputHandler *fInput;
-  PadmeVAnaEvent *Event;
+  PadmeAnaEvent *Event;
   PadmeVAnaInEvent *InEvent;
   std::vector<PadmeVAnalyser *> fAnalysers;
   

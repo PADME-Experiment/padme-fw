@@ -3,7 +3,7 @@
 
 
 //Define all possible inputs
-#include "PadmeAnaInMCHitsEvent.hh"
+#include "PadmeVAnaInEvent.hh"
 
 
 #include <string>
@@ -14,13 +14,23 @@ class PadmeInputHandler{
 
 
 public:
-  PadmeInputHandler(){;};
+  PadmeInputHandler();
   PadmeInputHandler(std::string fname);
-  ~PadmeInputHandler(){;};
+  ~PadmeInputHandler(); 
 
-  PadmeVAnaInEvent *GetEventHandler(){return fInEvent};
+
+  void PadmeGeneralInputHandler(std::string fname);
+  void PadmeROOTInputHandler(std::string fname);
+  
+  PadmeVAnaInEvent *GetEventHandler(){return fInEvent;};
 
   int isROOTFile(std::string fname);
+  //Event handlers
+
+  void InputDigiEvent();
+  void InputMCHitsEvent();
+  void InputRecoEvent();
+
 
 protected:
   PadmeVAnaInEvent *fInEvent;

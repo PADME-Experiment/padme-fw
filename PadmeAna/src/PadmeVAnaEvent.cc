@@ -1,13 +1,13 @@
 #include "PadmeVAnaEvent.hh"
 
 
-void PadmeVAnaEvent::FillEvent () {
-  evType = 0;
+void PadmeVAnaEvent::FillEvent (PadmeVAnaEvent *evt ) {
+  evType = General;
   time = 0;
   size = 0;
 }
 void PadmeVAnaEvent::Init () {
-  evType = 0;
+  evType = General;
   time = 0;
   size = 0;
 }

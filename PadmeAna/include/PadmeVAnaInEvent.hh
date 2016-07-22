@@ -9,7 +9,7 @@ class PadmeVAnaInEvent:public PadmeVAnaEvent {
 
 public:
   PadmeVAnaInEvent(){;};
-  ~PadmeVAnaInEvent(){;};
+  virtual ~PadmeVAnaInEvent(){;};
 
   virtual int NextEvent(){return 0;};
   

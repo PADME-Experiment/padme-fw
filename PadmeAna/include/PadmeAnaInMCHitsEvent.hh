@@ -21,26 +21,27 @@ class TDetectorInfo;
 class PadmeAnaInMCHitsEvent:public PadmeVAnaInEvent {
 
 public: 
-  PadmeAnaInMCHitsEvent(){;};
-  ~PadmeAnaInMCHitsEvent(){;};
-  
+  PadmeAnaInMCHitsEvent();
+  PadmeAnaInMCHitsEvent(TTree *tree);
+  ~PadmeAnaInMCHitsEvent();
+  virtual int NextEvent();
+
   void Init();
   
 private:
 
-  TChain* BuildChain(TString);
-  TString CheckProtocols(TString);
+  
 
-  TObjArray* fInputFileNameList;
-  TFile* fHistoFile;
-  TChain* fMCChain;
-  TMCEvent* fMCEvent;
-  TTargetMCEvent* fTargetMCEvent;
-  TEVetoMCEvent* fEVetoMCEvent;
-  TPVetoMCEvent* fPVetoMCEvent;
-  THEPVetoMCEvent* fHEPVetoMCEvent;
-  TECalMCEvent* fECalMCEvent;
-  TSACMCEvent* fSACMCEvent;
+  TTree*            fMCTree             ;
+  TMCEvent*         fMCEvent            ;
+  TTargetMCEvent*   fTargetMCEvent      ;
+  TEVetoMCEvent*    fEVetoMCEvent       ;
+  TPVetoMCEvent*    fPVetoMCEvent       ;
+  THEPVetoMCEvent*  fHEPVetoMCEvent     ;
+  TECalMCEvent*     fECalMCEvent        ;
+  TSACMCEvent*      fSACMCEvent         ;
+
+  int fEntry;
 
 };
 

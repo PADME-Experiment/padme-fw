@@ -11,18 +11,22 @@
 //Event with data from the detectors
 //Etc...
 
+enum EventType{
+  General,MCDigi,MCHisto,MCHits,Digi,Reco,MCEOB,MCSOB,DATA,AnaData
+};
+
 
 class PadmeVAnaEvent {
 public:
-  PadmeVAnaEvent(){ evType=0; };
-  PadmeVAnaEvent(int type){ evType=type; };
-  ~PadmeVAnaEvent(){;};
-  void FillEvent();
-  void Init();
-  int EventType(){return evType;};
+  PadmeVAnaEvent(){ evType=General; };
+  PadmeVAnaEvent(EventType type){ evType=type; };
+  virtual ~PadmeVAnaEvent(){;};
+  virtual void FillEvent(PadmeVAnaEvent *evt);
+  virtual void Init();
+  EventType GetEventType(){return evType;};
 
   //private:
-  int evType;
+  EventType evType;
   int time;
   int size;
   

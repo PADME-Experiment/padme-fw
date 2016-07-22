@@ -2,6 +2,8 @@
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-17
+// Modified by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-07-22
+//   - added digis to output structure
 //
 // --------------------------------------------------------------
 
@@ -13,10 +15,12 @@
 
 #include "RootIOManager.hh"
 #include "SACGeometry.hh"
-#include "SACSD.hh"
+#include "SACHit.hh"
+#include "SACDigi.hh"
 
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
+#include "TSACMCDigi.hh"
 #include "TDetectorInfo.hh"
 #include "TSubDetectorInfo.hh"
 
@@ -123,53 +127,53 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->SetEventNumber(eventG4->GetEventID());
 
   // Get list of hit collections in this event
-  G4HCofThisEvent* LHC = eventG4->GetHCofThisEvent();
-  G4int nHC = LHC->GetNumberOfCollections();
+  G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
+  G4int nHC = theHC->GetNumberOfCollections();
 
   for(G4int iHC=0; iHC<nHC; iHC++) {
 
     // Handle each collection type with the right method
-    G4String HCname = LHC->GetHC(iHC)->GetName();
+    G4String HCname = theHC->GetHC(iHC)->GetName();
     if (HCname == "SACCollection"){
       if (fVerbose>=2)
 	G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
-      SACHitsCollection* SACC = (SACHitsCollection*)(LHC->GetHC(iHC));
+      SACHitsCollection* sacHC = (SACHitsCollection*)(theHC->GetHC(iHC));
       int n_hit=0;
-      if(SACC) {
-	n_hit = SACC->entries();
+      if(sacHC) {
+	n_hit = sacHC->entries();
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    // Check if an hit for this channel already exists
-	    Int_t chid = (*SACC)[i]->GetChannelId();
+	    Int_t chid = (*sacHC)[i]->GetChannelId();
 	    //G4cout << "SAC - Found hit for ch " << chid << G4endl;
-	    //G4cout << "    Energy " << (*SACC)[i]->GetEnergy() << G4endl;
-	    //G4cout << "    Time " << (*SACC)[i]->GetTime() << G4endl;
-	    TSACMCHit* Hit = fEvent->GetOrCreateHit(chid);
-	    //if (!Hit->GetEnergyHisto()) Hit->CreateEnergyHisto(fEHistoNBins,fEHistoTStart,fEHistoTEnd);
-	    //G4cout << "    Histo name " << Hit->GetEnergyHisto()->GetName() << G4endl;
+	    //G4cout << "    Energy " << (*sacHC)[i]->GetEnergy() << G4endl;
+	    //G4cout << "    Time " << (*sacHC)[i]->GetTime() << G4endl;
+	    TSACMCHit* hit = fEvent->GetOrCreateHit(chid);
+	    //if (!hit->GetEnergyHisto()) hit->CreateEnergyHisto(fEHistoNBins,fEHistoTStart,fEHistoTEnd);
+	    //G4cout << "    Histo name " << hit->GetEnergyHisto()->GetName() << G4endl;
 	    // If this is a new hit, initialize energy histogram
-	    //if (strcmp(Hit->GetEnergyHisto()->GetName(),"") == 0)
-	    //  Hit->CreateEnergyHisto(fEHistoNBins,fEHistoTStart,fEHistoTEnd);
+	    //if (strcmp(hit->GetEnergyHisto()->GetName(),"") == 0)
+	    //  hit->CreateEnergyHisto(fEHistoNBins,fEHistoTStart,fEHistoTEnd);
 	    // This should be done only once per hit
-	    Hit->SetTHistoStart(fEHistoTStart);
-	    Hit->SetTHistoStep(fEHistoTStep);
+	    hit->SetTHistoStart(fEHistoTStart);
+	    hit->SetTHistoStep(fEHistoTStep);
 
-	    Hit->AddEnergy((*SACC)[i]->GetEnergy());
-	    e_tot += (*SACC)[i]->GetEnergy()/MeV;
-	    Hit->AddEnergyAtTime((*SACC)[i]->GetEnergy(),(*SACC)[i]->GetTime());
+	    hit->AddEnergy((*sacHC)[i]->GetEnergy());
+	    e_tot += (*sacHC)[i]->GetEnergy()/MeV;
+	    hit->AddEnergyAtTime((*sacHC)[i]->GetEnergy(),(*sacHC)[i]->GetTime());
 	    // Hit time = earliest time
-	    if ( (*SACC)[i]->GetTime() < Hit->GetTime() )
-	      Hit->SetTime((*SACC)[i]->GetTime());
+	    if ( (*sacHC)[i]->GetTime() < hit->GetTime() )
+	      hit->SetTime((*sacHC)[i]->GetTime());
 
-	    //G4cout << "    THit Energy " << Hit->GetEnergy() << G4endl;;
-	    //G4cout << "    THit Time " << Hit->GetTime() << G4endl;;
+	    //G4cout << "    THit Energy " << hit->GetEnergy() << G4endl;;
+	    //G4cout << "    THit Time " << hit->GetTime() << G4endl;;
 	    /*
-	    TSACMCHit* Hit = (TSACMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId((*SACC)[i]->GetChannelId()); 
-	    Hit->SetPosition(TVector3((*SACC)[i]->GetX(),(*SACC)[i]->GetY(),(*SACC)[i]->GetZ()));
-	    Hit->SetEnergy((*SACC)[i]->GetEnergy());
-	    Hit->SetTime((*SACC)[i]->GetTime());
+	    TSACMCHit* hit = (TSACMCHit*)fEvent->AddHit();
+	    hit->SetChannelId((*sacHC)[i]->GetChannelId()); 
+	    hit->SetPosition(TVector3((*sacHC)[i]->GetX(),(*sacHC)[i]->GetY(),(*sacHC)[i]->GetZ()));
+	    hit->SetEnergy((*sacHC)[i]->GetEnergy());
+	    hit->SetTime((*sacHC)[i]->GetTime());
 	    */
 	  }
 	  G4cout << "SACRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
@@ -177,6 +181,36 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
       }
     }
   }
+
+  // Get list of digi collections in this event
+  G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
+  G4int nDC = theDC->GetNumberOfCollections();
+
+  for(G4int iDC=0; iDC<nDC; iDC++) {
+
+    // Handle each collection type with the right method
+    G4String DCname = theDC->GetDC(iDC)->GetName();
+    if (DCname == "SACDigiCollection"){
+      if (fVerbose>=2)
+	G4cout << "SACRootIO: Found digi collection " << DCname << G4endl;
+      SACDigiCollection* sacDC = (SACDigiCollection*)(theDC->GetDC(iDC));
+      if(sacDC) {
+	G4int n_digi = sacDC->entries();
+	if(n_digi>0){
+	  G4double e_tot = 0.;
+	  for(G4int i=0;i<n_digi;i++) {
+	    TSACMCDigi* digi = (TSACMCDigi*)fEvent->AddDigi();
+	    digi->SetChannelId((*sacDC)[i]->GetChannelId()); 
+	    digi->SetEnergy((*sacDC)[i]->GetEnergy());
+	    digi->SetTime((*sacDC)[i]->GetTime());
+	    e_tot += (*sacDC)[i]->GetEnergy()/MeV;
+	  }
+	  G4cout << "SACRootIO: " << n_digi << " digi with " << e_tot << " MeV total energy" << G4endl;
+	}
+      }
+    }
+  }
+
   TProcessID::SetObjectCount(savedObjNumber);
 
 }

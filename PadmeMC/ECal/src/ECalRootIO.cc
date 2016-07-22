@@ -94,7 +94,6 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 
   // Reset event structure
   fEvent->Clear();
-  //G4cout << "ECalRootIO: setting run/event to " << fRunNumber << "/" << eventG4->GetEventID() << G4endl;
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
 

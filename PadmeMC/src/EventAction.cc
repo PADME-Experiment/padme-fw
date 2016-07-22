@@ -21,10 +21,11 @@
 
 #include "G4DigiManager.hh"
 #include "TargetDigitizer.hh"
-#include "ECalDigitizer.hh"
 #include "PVetoDigitizer.hh"
 #include "EVetoDigitizer.hh"
 #include "HEPVetoDigitizer.hh"
+#include "ECalDigitizer.hh"
+#include "SACDigitizer.hh"
 
 extern double NNeutrons;
 extern double Npionc;
@@ -52,6 +53,8 @@ EventAction::EventAction(RunAction* run)
   theDM->AddNewModule(hepVetoDM);
   ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
   theDM->AddNewModule(eCalDM);
+  SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
+  theDM->AddNewModule(sacDM);
 
 }
 
@@ -122,6 +125,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   hepVetoDM->Digitize();
   ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
   eCalDM->Digitize();
+  SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
+  sacDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);

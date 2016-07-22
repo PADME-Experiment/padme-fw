@@ -22,6 +22,7 @@
 #include "G4DigiManager.hh"
 #include "ECalDigitizer.hh"
 #include "PVetoDigitizer.hh"
+#include "EVetoDigitizer.hh"
 
 extern double NNeutrons;
 extern double Npionc;
@@ -41,6 +42,8 @@ EventAction::EventAction(RunAction* run)
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
   theDM->AddNewModule(pVetoDM);
+  EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
+  theDM->AddNewModule(eVetoDM);
   ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
   theDM->AddNewModule(eCalDM);
 
@@ -105,6 +108,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
   pVetoDM->Digitize();
+  EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");
+  eVetoDM->Digitize();
   ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
   eCalDM->Digitize();
 

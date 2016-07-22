@@ -20,6 +20,7 @@
 #include "G4Poisson.hh"
 
 #include "G4DigiManager.hh"
+#include "TargetDigitizer.hh"
 #include "ECalDigitizer.hh"
 #include "PVetoDigitizer.hh"
 #include "EVetoDigitizer.hh"
@@ -41,6 +42,8 @@ EventAction::EventAction(RunAction* run)
 
   // Create and register digitizer modules for all detectors
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
+  theDM->AddNewModule(targetDM);
   PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
   theDM->AddNewModule(pVetoDM);
   EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
@@ -109,6 +112,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   // Digitize this event
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = (TargetDigitizer*)theDM->FindDigitizerModule("TargetDigitizer");
+  targetDM->Digitize();
   PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
   pVetoDM->Digitize();
   EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");

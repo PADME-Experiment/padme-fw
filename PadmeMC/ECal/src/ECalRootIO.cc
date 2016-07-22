@@ -141,7 +141,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
     G4String DCname = theDC->GetDC(iDC)->GetName();
     if (DCname == "ECalDigiCollection"){
       if (fVerbose>=2)
-	G4cout << "PVetoRootIO: Found digi collection " << DCname << G4endl;
+	G4cout << "ECalRootIO: Found digi collection " << DCname << G4endl;
       ECalDigiCollection* eCalDC = (ECalDigiCollection*)(theDC->GetDC(iDC));
       if(eCalDC) {
 	G4int n_digi = eCalDC->entries();

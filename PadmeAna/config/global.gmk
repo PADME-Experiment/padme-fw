@@ -16,7 +16,7 @@ CPPFLAGS     += -Iinclude -I$(PADMEANA)/include -I$(PADMEROOT)/include -g
 #CPPFLAGS     += -I$(PADMEANA)/Service/include
 CPPFLAGS     += -I$(PADMEANA)/RecoBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
-CPPFLAGS     += -I$(ROOTINCDIR)
+CPPFLAGS     += $(ROOTCFLAGS) -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
 
 #LDFLAGS      += -L$(NA62MCSOURCE)/Persistency/lib -lNA62Persistency \

@@ -13,10 +13,12 @@
 
 #include "RootIOManager.hh"
 #include "HEPVetoGeometry.hh"
-#include "HEPVetoSD.hh"
+#include "HEPVetoHit.hh"
+#include "HEPVetoDigi.hh"
 
 #include "THEPVetoMCEvent.hh"
 #include "THEPVetoMCHit.hh"
+#include "THEPVetoMCDigi.hh"
 #include "TDetectorInfo.hh"
 #include "TSubDetectorInfo.hh"
 
@@ -96,39 +98,67 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->SetEventNumber(eventG4->GetEventID());
 
   // Get list of hit collections in this event
-  G4HCofThisEvent* LHC = eventG4->GetHCofThisEvent();
-  G4int nHC = LHC->GetNumberOfCollections();
+  G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
+  G4int nHC = theHC->GetNumberOfCollections();
 
   for(G4int iHC=0; iHC<nHC; iHC++) {
 
     // Handle each collection type with the right method
-    G4String HCname = LHC->GetHC(iHC)->GetName();
+    G4String HCname = theHC->GetHC(iHC)->GetName();
     if (HCname == "HEPVetoCollection"){
       if (fVerbose>=2)
 	G4cout << "HEPVetoRootIO: Found hits collection " << HCname << G4endl;
-      HEPVetoHitsCollection* HEPVetoC = (HEPVetoHitsCollection*)(LHC->GetHC(iHC));
-      int n_hit=0;
-      if(HEPVetoC) {
-	n_hit = HEPVetoC->entries();
+      HEPVetoHitsCollection* hepVetoHC = (HEPVetoHitsCollection*)(theHC->GetHC(iHC));
+      if(hepVetoHC) {
+	G4int n_hit = hepVetoHC->entries();
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
-	    THEPVetoMCHit* Hit = (THEPVetoMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId((*HEPVetoC)[i]->GetChannelId()); 
-	    //Hit->SetChannelId(0); 
-	    Hit->SetPosition(TVector3((*HEPVetoC)[i]->GetPos()[0],
-				      (*HEPVetoC)[i]->GetPos()[1],
-				      (*HEPVetoC)[i]->GetPos()[2])
+	    THEPVetoMCHit* hit = (THEPVetoMCHit*)fEvent->AddHit();
+	    hit->SetChannelId((*hepVetoHC)[i]->GetChannelId()); 
+	    hit->SetPosition(TVector3((*hepVetoHC)[i]->GetPos()[0],
+				      (*hepVetoHC)[i]->GetPos()[1],
+				      (*hepVetoHC)[i]->GetPos()[2])
 			     );
-	    Hit->SetEnergy((*HEPVetoC)[i]->GetEdep());
-	    e_tot += (*HEPVetoC)[i]->GetEdep()/MeV;
-	    Hit->SetTime((*HEPVetoC)[i]->GetTime());
+	    hit->SetEnergy((*hepVetoHC)[i]->GetEnergy());
+	    hit->SetTime((*hepVetoHC)[i]->GetTime());
+	    e_tot += (*hepVetoHC)[i]->GetEnergy()/MeV;
 	  }
 	  G4cout << "HEPVetoRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
 	}
       }
     }
   }
+
+  // Get list of digi collections in this event
+  G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
+  G4int nDC = theDC->GetNumberOfCollections();
+
+  for(G4int iDC=0; iDC<nDC; iDC++) {
+
+    // Handle each collection type with the right method
+    G4String DCname = theDC->GetDC(iDC)->GetName();
+    if (DCname == "HEPVetoDigiCollection"){
+      if (fVerbose>=2)
+	G4cout << "HEPVetoRootIO: Found digi collection " << DCname << G4endl;
+      HEPVetoDigiCollection* hepVetoDC = (HEPVetoDigiCollection*)(theDC->GetDC(iDC));
+      if(hepVetoDC) {
+	G4int n_digi = hepVetoDC->entries();
+	if(n_digi>0){
+	  G4double e_tot = 0.;
+	  for(G4int i=0;i<n_digi;i++) {
+	    THEPVetoMCDigi* digi = (THEPVetoMCDigi*)fEvent->AddDigi();
+	    digi->SetChannelId((*hepVetoDC)[i]->GetChannelId()); 
+	    digi->SetEnergy((*hepVetoDC)[i]->GetEnergy());
+	    digi->SetTime((*hepVetoDC)[i]->GetTime());
+	    e_tot += (*hepVetoDC)[i]->GetEnergy()/MeV;
+	  }
+	  G4cout << "HEPVetoRootIO: " << n_digi << " digi with " << e_tot << " MeV total energy" << G4endl;
+	}
+      }
+    }
+  }
+
   TProcessID::SetObjectCount(savedObjNumber);
 
 }

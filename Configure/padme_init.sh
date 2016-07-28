@@ -9,8 +9,12 @@ export PADME=$( dirname $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) )
 export PADMEMC=${PADME}/PadmeMC
 export G4WORKDIR=${PADMEMC}
 
-# Add path to PadmeRoot libraries to LD_LIBRARY_PATH
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADME}/PadmeRoot/lib"
+# Define PADMERECO
+export PADMERECO=${PADME}/PadmeReco
+
+# Define path to PadmeRoot and add it to LD_LIBRARY_PATH
+export PADMEROOT=${PADME}/PadmeRoot
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
 
 # Configure PadmeDB access parameters fom convenitonal file
 if [ -f ${HOME}/.padme-dbaccess.sh ]

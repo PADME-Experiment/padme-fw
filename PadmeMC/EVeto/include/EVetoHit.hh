@@ -1,3 +1,10 @@
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-17
+//
+// --------------------------------------------------------------
+
 #ifndef EVetoHit_h
 #define EVetoHit_h 1
 
@@ -10,48 +17,78 @@
 
 class EVetoHit : public G4VHit
 {
-  public:
+public:
 
-      EVetoHit();
-     ~EVetoHit();
-      EVetoHit(const EVetoHit&);
-      const EVetoHit& operator=(const EVetoHit&);
-      G4int operator==(const EVetoHit&) const;
+  EVetoHit();
+  ~EVetoHit();
+  EVetoHit(const EVetoHit&);
+  const EVetoHit& operator=(const EVetoHit&);
+  G4int operator==(const EVetoHit&) const;
 
-      inline void* operator new(size_t);
-      inline void  operator delete(void*);
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
 
-      void Draw();
-      void Print();
+  void Draw();
+  void Print();
 
-  public:
+public:
   
-      void SetTrackID  (G4int track)      { VtrackID = track; };
-      void SetEVetoNb  (G4int cry)        { EVetoNb = cry; };
-      void SetEdep     (G4double de)      { edep = de; };
-      void SetHitE     (G4double hite)    { eHit = hite; };
-      void SetPos      (G4ThreeVector xyz){ pos = xyz; };
-      void SetTime     (G4double time)    { VetoT = time; };
-      
-      G4int GetTrackID()    { return VtrackID; };
-      G4int GetEVetoNb()    { return EVetoNb; };
-      G4double GetEdep()    { return edep; };
-      G4double GetHitE()    { return eHit; };
-      G4double GetTime()    { return VetoT; };
-      G4double GetX()       { return pos.x(); };
-      G4double GetY()       { return pos.y(); };
+  void SetChannelId(G4int c) { fChannelId = c; }
+  G4int GetChannelId() { return fChannelId; }
 
-      G4ThreeVector GetPos(){ return pos; };
-      
+  void SetTime(G4double t) { fTime = t; };
+  G4double GetTime() { return fTime; };
 
-  private:
+  void SetEnergy(G4double e) { fEnergy = e; }
+  G4double GetEnergy() { return fEnergy; }
+
+  void SetPosition(G4ThreeVector p) { fPosition = p; }
+  G4ThreeVector GetPosition() { return fPosition; }
+  G4double GetPosX() { return fPosition.x(); };
+  G4double GetPosY() { return fPosition.y(); };
+  G4double GetPosZ() { return fPosition.z(); };
+
+  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
+  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
+  G4double GetLocalPosX() { return fLocalPosition.x(); };
+  G4double GetLocalPosY() { return fLocalPosition.y(); };
+  G4double GetLocalPosZ() { return fLocalPosition.z(); };
+
+  void SetTrackId(G4int track) { fTrackId = track; };
+  G4int GetTrackId() { return fTrackId; };
   
-      G4int         VtrackID;
-      G4int         EVetoNb;
-      G4double      VetoT;
-      G4double      edep;
-      G4double      eHit;
-      G4ThreeVector pos;
+  void SetTrackEnergy(G4double e) { fTrackEnergy = e; }
+  G4double GetTrackEnergy() { return fTrackEnergy; }
+
+  // Kept for backward compatibility
+  void SetTrackID (G4int track) { fTrackId = track; };
+  G4int GetTrackID() { return fTrackId; };
+
+  void SetEVetoNb(G4int cry) { fChannelId = cry; };
+  G4int GetEVetoNb() { return fChannelId; };
+  
+  // Yes, this is how it was done in the past
+  void SetEdep(G4double de) { fTrackEnergy = de; };
+  G4double GetEdep() { return fTrackEnergy; };
+  void SetHitE(G4double hite) { fEnergy = hite; };
+  G4double GetHitE() { return fEnergy; };
+
+  void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
+  G4ThreeVector GetPos() { return fPosition; };
+  G4double GetX() { return fPosition.x(); };
+  G4double GetY() { return fPosition.y(); };
+
+private:
+    
+  G4int         fChannelId;
+  G4double      fTime;
+  G4double      fEnergy;
+  G4ThreeVector fPosition;
+  G4ThreeVector fLocalPosition;
+
+  G4int    fTrackId;
+  G4double fTrackEnergy;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

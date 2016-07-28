@@ -8,12 +8,13 @@
 #ifndef ChamberGeometry_H
 #define ChamberGeometry_H 1
 
-#define CHAMBERGEOMETRY_VCINMAGWALL_NVERTICES 12
+#define CHAMBERGEOMETRY_VCINMAGWALL_NVERTICES 14
 #define CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES 6
 #define CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES 6
 
 #include "globals.hh"
 #include "G4TwoVector.hh"
+#include "G4SystemOfUnits.hh"
 
 class ChamberGeometry
 {

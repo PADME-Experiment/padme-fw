@@ -7,8 +7,6 @@
 #include "G4SDManager.hh"
 #include "G4ios.hh"
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 MagnetSD::MagnetSD(G4String name)
 :G4VSensitiveDetector(name)
 {
@@ -16,22 +14,15 @@ MagnetSD::MagnetSD(G4String name)
   collectionName.insert(HCname="MagnetCollection"); //crea il collection name
 }
 
-//....Ooooo0ooooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 MagnetSD::~MagnetSD(){ }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void MagnetSD::Initialize(G4HCofThisEvent* HCE)
 {
-  MagnetCollection = new MagnetHitsCollection(SensitiveDetectorName,collectionName[0]); 
+  fMagnetCollection = new MagnetHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
-  HCE->AddHitsCollection(HCID,MagnetCollection); 
+  if (HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
+  HCE->AddHitsCollection(HCID,fMagnetCollection); 
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 G4bool MagnetSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
@@ -40,12 +31,32 @@ G4bool MagnetSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4double edep = aStep->GetTotalEnergyDeposit();
   if(edep==0.) return false;
 
+  G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
+
   MagnetHit* newHit = new MagnetHit();
-  newHit->SetTrackID(aStep->GetTrack()->GetTrackID());
-  newHit->SetTime(aStep->GetTrack()->GetGlobalTime())	;
+
   newHit->SetEnergy(edep);
-  newHit->SetPosition(aStep->GetPostStepPoint()->GetPosition());
-  MagnetCollection->insert(newHit);
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+
+  G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
+  G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPre,"Length")
+  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
+  //	 << " global " << G4BestUnit(worldPosPost,"Length")
+  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+
+  newHit->SetPosition(worldPosPre);
+  newHit->SetLocalPosition(localPosPre);
+
+  newHit->SetTrackID(aStep->GetTrack()->GetTrackID());
+
+  fMagnetCollection->insert(newHit);
 
   return true;
 }
@@ -54,14 +65,10 @@ G4bool MagnetSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
 void MagnetSD::EndOfEvent(G4HCofThisEvent*)
 {
-  G4int NbHits = MagnetCollection->entries();
-  //G4double totEnergy = 0.;
-  //for (G4int i=0;i<NbHits;i++) totEnergy += (*MagnetCollection)[i]->GetEnergy();
-  //G4cout << "\nTotal energy in the Magnet SD is " << G4BestUnit(totEnergy,"Energy") << G4endl;
   if (verboseLevel>0) { 
-    G4cout << "\n-------->Hits Collection: in this event there are " << NbHits 
-	   << " hits in the Magnet : " << G4endl;
-    for (G4int i=0;i<NbHits;i++) (*MagnetCollection)[i]->Print();
+    G4int NbHits = fMagnetCollection->entries();
+    G4cout << "\n-- Magnet Hits Collection: " << NbHits << " hits --" << G4endl;
+    for (G4int i=0;i<NbHits;i++) (*fMagnetCollection)[i]->Print();
   }
 }
 

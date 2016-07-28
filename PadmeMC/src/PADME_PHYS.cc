@@ -92,7 +92,8 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
 
   // Scintillation and Cerenkov radiation
   // includes: optical photon propagation
-  this->RegisterPhysics( new G4OpticalPhysics(ver) );
+  // Enable only if you really want to track optical photons
+  //this->RegisterPhysics( new G4OpticalPhysics(ver) );
 
   // Decays
   this->RegisterPhysics( new G4DecayPhysics(ver) );

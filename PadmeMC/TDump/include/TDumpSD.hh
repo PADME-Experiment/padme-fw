@@ -21,9 +21,8 @@ class TDumpSD : public G4VSensitiveDetector
 
   private:
 
-      TDumpHitsCollection* TDumpCollection;
+      TDumpHitsCollection* fTDumpCollection;
 
 };
 
 #endif
-

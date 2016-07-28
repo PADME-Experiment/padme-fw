@@ -8,6 +8,8 @@
 #ifndef ECalGeometry_H
 #define ECalGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 
@@ -23,6 +25,7 @@ public:
 
   ~ECalGeometry();
   static ECalGeometry* GetInstance();
+  std::vector<G4String> GetHashTable();
 
 private:
 

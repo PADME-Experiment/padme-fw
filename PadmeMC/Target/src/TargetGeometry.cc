@@ -32,3 +32,28 @@ TargetGeometry::TargetGeometry()
 
 TargetGeometry::~TargetGeometry()
 {}
+
+std::vector<G4String> TargetGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fTargetSizeX " << fTargetSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetSizeY " << fTargetSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetSizeZ " << fTargetSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetFrontFacePosZ " << fTargetFrontFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
+}

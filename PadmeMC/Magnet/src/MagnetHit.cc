@@ -20,20 +20,22 @@ MagnetHit::~MagnetHit() {}
 MagnetHit::MagnetHit(const MagnetHit& right)
   : G4VHit()
 {
-  fHitTrackId  = right.fHitTrackId;
-  fHitTime     = right.fHitTime;
-  fHitEnergy   = right.fHitEnergy;
-  fHitPosition = right.fHitPosition;
+  fTrackId = right.fTrackId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const MagnetHit& MagnetHit::operator=(const MagnetHit& right)
 {
-  fHitTrackId  = right.fHitTrackId;
-  fHitTime     = right.fHitTime;
-  fHitEnergy   = right.fHitEnergy;
-  fHitPosition = right.fHitPosition;
+  fTrackId = right.fTrackId;
+  fTime = right.fTime;
+  fEnergy = right.fEnergy;
+  fPosition = right.fPosition;
+  fLocalPosition = right.fLocalPosition;
   return *this;
 }
 
@@ -51,7 +53,7 @@ void MagnetHit::Draw()
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
   if(pVVisManager)
   {
-    G4Circle circle(fHitPosition);
+    G4Circle circle(fPosition);
     circle.SetScreenSize(2.);
     circle.SetFillStyle(G4Circle::filled);
     G4Colour colour(1.,0.,0.);
@@ -65,10 +67,12 @@ void MagnetHit::Draw()
 
 void MagnetHit::Print()
 {
-  G4cout << "  Track id: " << fHitTrackId
-         << "  Time: "     << G4BestUnit(fHitTime,"Time")
-         << "  Energy: "   << G4BestUnit(fHitEnergy,"Energy")
-         << "  Position: " << G4BestUnit(fHitPosition,"Length") << G4endl;
+  G4cout << "- time: " << G4BestUnit(fTime,"Time")
+         << " energy: " << G4BestUnit(fEnergy,"Energy")
+         << " global position: " << G4BestUnit(fPosition,"Length")
+         << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " track id: " << fTrackId
+	 << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -26,23 +26,35 @@ public:
   void Print();
 
 public:
-  
-  void SetChannelId (G4int id)          { fChannelId = id;  }
-  void SetEnergy    (G4double e)        { fEnergy    = e;    }
-  void SetTime      (G4double time)     { fTime      = time; }
-  void SetPosition  (G4ThreeVector xyz) { fPosition  = xyz;  }
+ 
+  void SetChannelId(G4int c) { fChannelId = c; }
+  G4int GetChannelId() { return fChannelId; }
 
-  G4int         GetChannelId() { return fChannelId; }
-  G4double      GetEnergy()    { return fEnergy;    }
-  G4double      GetTime()      { return fTime;      }
-  G4ThreeVector GetPosition()  { return fPosition;  }
+  void SetTime(G4double t) { fTime = t; };
+  G4double GetTime() { return fTime; };
+
+  void SetEnergy(G4double e) { fEnergy = e; }
+  G4double GetEnergy() { return fEnergy; }
+
+  void SetPosition(G4ThreeVector p) { fPosition = p; }
+  G4ThreeVector GetPosition() { return fPosition; }
+  G4double GetPosX() { return fPosition.x(); };
+  G4double GetPosY() { return fPosition.y(); };
+  G4double GetPosZ() { return fPosition.z(); };
+
+  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
+  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
+  G4double GetLocalPosX() { return fLocalPosition.x(); };
+  G4double GetLocalPosY() { return fLocalPosition.y(); };
+  G4double GetLocalPosZ() { return fLocalPosition.z(); };
       
 private:
   
   G4int         fChannelId;
-  G4double      fEnergy;
   G4double      fTime;
+  G4double      fEnergy;
   G4ThreeVector fPosition;
+  G4ThreeVector fLocalPosition;
 
 };
 

@@ -40,12 +40,12 @@ public:
   // Position of center of ECal box
   G4double GetECalPosX() { return 0.*cm; }
   G4double GetECalPosY() { return 0.*cm; }
-  G4double GetECalPosZ() { return fECalFrontFacePosZ+fCrystalNominalSizeZ*0.5; }
+  G4double GetECalPosZ() { return fECalFrontFacePosZ+(fCrystalSizeZ+fCrystalGap)*0.5; }
 
   // Size of ECal box
-  G4double GetECalSizeX() { return fCrystalNominalSizeX*fECalNCols; }
-  G4double GetECalSizeY() { return fCrystalNominalSizeY*fECalNRows; }
-  G4double GetECalSizeZ() { return fCrystalNominalSizeZ; }
+  G4double GetECalSizeX() { return (fCrystalSizeX+fCrystalGap)*fECalNCols; }
+  G4double GetECalSizeY() { return (fCrystalSizeY+fCrystalGap)*fECalNRows; }
+  G4double GetECalSizeZ() { return fCrystalSizeZ+fCrystalGap; }
 
   // Number of rows and columns of crystals in ECAL
   G4int GetECalNRows()        { return fECalNRows; }
@@ -62,14 +62,18 @@ public:
   G4double GetCrystalPosZ(G4int,G4int);
 
   // Size of BGO crystal
-  G4double GetCrystalSizeX() { return fCrystalNominalSizeX-fCrystalGap; }
-  G4double GetCrystalSizeY() { return fCrystalNominalSizeY-fCrystalGap; }
-  G4double GetCrystalSizeZ() { return fCrystalNominalSizeZ-fCrystalGap; }
+  G4double GetCrystalSizeX() { return fCrystalSizeX; }
+  G4double GetCrystalSizeY() { return fCrystalSizeY; }
+  G4double GetCrystalSizeZ() { return fCrystalSizeZ; }
 
-  // Set nominal size of crystal
-  void SetCrystalNominalSizeX(G4double s) { fCrystalNominalSizeX = s; }
-  void SetCrystalNominalSizeY(G4double s) { fCrystalNominalSizeY = s; }
-  void SetCrystalNominalSizeZ(G4double s) { fCrystalNominalSizeZ = s; }
+  // Set size of crystal
+  void SetCrystalSizeX(G4double s) { fCrystalSizeX = s; }
+  void SetCrystalSizeY(G4double s) { fCrystalSizeY = s; }
+  void SetCrystalSizeZ(G4double s) { fCrystalSizeZ = s; }
+
+  // Size of gap between crystals
+  G4double GetCrystalGap() { return fCrystalGap; }
+  void SetCrystalGap(G4double g) { fCrystalGap = g; }
 
   // Set position along Z of ECal front face
   G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
@@ -84,9 +88,9 @@ public:
 
 private:
 
-  G4double fCrystalNominalSizeX;
-  G4double fCrystalNominalSizeY;
-  G4double fCrystalNominalSizeZ;
+  G4double fCrystalSizeX;
+  G4double fCrystalSizeY;
+  G4double fCrystalSizeZ;
 
   G4int fECalNRows;
   G4int fECalNCols;

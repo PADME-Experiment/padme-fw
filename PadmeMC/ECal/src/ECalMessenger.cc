@@ -54,6 +54,13 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalLengthCmd->SetParameter(csLengthParameter);
   fSetCrystalLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetCrystalGapCmd = new G4UIcommand("/Detector/ECal/CrystalGap",this);
+  fSetCrystalGapCmd->SetGuidance("Set size of gap between crystals in mm.");
+  G4UIparameter* cgSizeParameter = new G4UIparameter("Gap",'d',false);
+  cgSizeParameter->SetParameterRange("Gap > 0. && Gap <= 10.");
+  fSetCrystalGapCmd->SetParameter(cgSizeParameter);
+  fSetCrystalGapCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
   fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
   G4UIparameter* eirRadParameter = new G4UIparameter("Rad",'d',false);
@@ -88,6 +95,8 @@ ECalMessenger::~ECalMessenger()
   delete fSetCrystalSizeCmd;
   delete fSetCrystalLengthCmd;
 
+  delete fSetCrystalGapCmd;
+
   delete fSetECalInnerRadiusCmd;
   delete fSetECalOuterRadiusCmd;
 
@@ -110,13 +119,18 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetCrystalSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fECalGeometry->SetCrystalNominalSizeX(s*cm);
-    fECalGeometry->SetCrystalNominalSizeY(s*cm);
+    fECalGeometry->SetCrystalSizeX(s*cm);
+    fECalGeometry->SetCrystalSizeY(s*cm);
   }
 
   if ( cmd == fSetCrystalLengthCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fECalGeometry->SetCrystalNominalSizeZ(s*cm);
+    fECalGeometry->SetCrystalSizeZ(s*cm);
+  }
+
+  if ( cmd == fSetCrystalGapCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fECalGeometry->SetCrystalGap(s*mm);
   }
 
   if ( cmd == fSetECalInnerRadiusCmd ) {

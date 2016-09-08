@@ -50,6 +50,9 @@ void ECalDetector::CreateGeometry()
   fECalVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,ecalPos,fECalVolume,"ECal",fMotherVolume,false,0,false);
 
+  // Show size of gap between crystals
+  printf("Gap between crystals is %f\n",geo->GetCrystalGap());
+
   // Create standard BGO crystal
   G4double crySizeX = geo->GetCrystalSizeX();
   G4double crySizeY = geo->GetCrystalSizeY();

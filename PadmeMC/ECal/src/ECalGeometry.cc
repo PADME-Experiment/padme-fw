@@ -20,9 +20,9 @@ ECalGeometry::ECalGeometry()
 
   // Inizialize default parameters
 
-  fCrystalNominalSizeX = 2.*cm;
-  fCrystalNominalSizeY = 2.*cm;
-  fCrystalNominalSizeZ = 22.*cm;
+  fCrystalSizeX =  2.1*cm;
+  fCrystalSizeY =  2.1*cm;
+  fCrystalSizeZ = 23.0*cm;
 
   fECalNRows = 29;
   fECalNCols = 29;
@@ -48,8 +48,8 @@ G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) return 0;
 
   // Compute X/Y position of center of crystal
-  G4double posX = fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
-  G4double posY = fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
+  G4double posX = (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
+  G4double posY = (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
 
   // See if center of crystal falls inside inner-outer radius range
   G4double r2 = posX*posX+posY*posY;
@@ -69,7 +69,7 @@ G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
   }
 
   // Return X position of center of crystal in local coordinate system
-  return fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
+  return (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
 
 }
 
@@ -83,7 +83,7 @@ G4double ECalGeometry::GetCrystalPosY(G4int row, G4int col)
   }
 
   // Return Y position of center of crystal in local coordinate system
-  return fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
+  return (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
 
 }
 
@@ -127,15 +127,15 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fCrystalNominalSizeX " << fCrystalNominalSizeX;
+  buffer << "fCrystalSizeX " << fCrystalSizeX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fCrystalNominalSizeY " << fCrystalNominalSizeY;
+  buffer << "fCrystalSizeY " << fCrystalSizeY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fCrystalNominalSizeZ " << fCrystalNominalSizeZ;
+  buffer << "fCrystalSizeZ " << fCrystalSizeZ;
   hash.push_back(buffer.str());
   buffer.str("");
 

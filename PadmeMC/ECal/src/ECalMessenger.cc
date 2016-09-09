@@ -61,19 +61,19 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalGapCmd->SetParameter(cgSizeParameter);
   fSetCrystalGapCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
-  fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
-  G4UIparameter* eirRadParameter = new G4UIparameter("Rad",'d',false);
-  eirRadParameter->SetParameterRange("Rad >= 0. && Rad < 20.");
-  fSetECalInnerRadiusCmd->SetParameter(eirRadParameter);
-  fSetECalInnerRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  //fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
+  //fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
+  //G4UIparameter* eirRadParameter = new G4UIparameter("Rad",'d',false);
+  //eirRadParameter->SetParameterRange("Rad >= 0. && Rad < 20.");
+  //fSetECalInnerRadiusCmd->SetParameter(eirRadParameter);
+  //fSetECalInnerRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetECalOuterRadiusCmd = new G4UIcommand("/Detector/ECal/OuterRadius",this);
-  fSetECalOuterRadiusCmd->SetGuidance("Set external radius of ECal detector in cm.");
-  G4UIparameter* eorRadParameter = new G4UIparameter("Rad",'d',false);
-  eorRadParameter->SetParameterRange("Rad >= 20. && Rad < 200.");
-  fSetECalOuterRadiusCmd->SetParameter(eorRadParameter);
-  fSetECalOuterRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  //fSetECalOuterRadiusCmd = new G4UIcommand("/Detector/ECal/OuterRadius",this);
+  //fSetECalOuterRadiusCmd->SetGuidance("Set external radius of ECal detector in cm.");
+  //G4UIparameter* eorRadParameter = new G4UIparameter("Rad",'d',false);
+  //eorRadParameter->SetParameterRange("Rad >= 20. && Rad < 200.");
+  //fSetECalOuterRadiusCmd->SetParameter(eorRadParameter);
+  //fSetECalOuterRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetECalFrontFaceZCmd = new G4UIcommand("/Detector/ECal/FrontFaceZ",this);
   fSetECalFrontFaceZCmd->SetGuidance("Set position along Z of ECal front face in cm.");
@@ -97,8 +97,8 @@ ECalMessenger::~ECalMessenger()
 
   delete fSetCrystalGapCmd;
 
-  delete fSetECalInnerRadiusCmd;
-  delete fSetECalOuterRadiusCmd;
+  //delete fSetECalInnerRadiusCmd;
+  //delete fSetECalOuterRadiusCmd;
 
   delete fSetECalFrontFaceZCmd;
 
@@ -133,15 +133,15 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fECalGeometry->SetCrystalGap(s*mm);
   }
 
-  if ( cmd == fSetECalInnerRadiusCmd ) {
-    G4double r; std::istringstream is(par); is >> r;
-    fECalGeometry->SetECalInnerRadius(r*cm);
-  }
+  //if ( cmd == fSetECalInnerRadiusCmd ) {
+  //  G4double r; std::istringstream is(par); is >> r;
+  //  fECalGeometry->SetECalInnerRadius(r*cm);
+  //}
 
-  if ( cmd == fSetECalOuterRadiusCmd ) {
-    G4double r; std::istringstream is(par); is >> r;
-    fECalGeometry->SetECalOuterRadius(r*cm);
-  }
+  //if ( cmd == fSetECalOuterRadiusCmd ) {
+  //  G4double r; std::istringstream is(par); is >> r;
+  //  fECalGeometry->SetECalOuterRadius(r*cm);
+  //}
 
   if ( cmd == fSetECalFrontFaceZCmd ) {
     G4double z; std::istringstream is(par); is >> z;

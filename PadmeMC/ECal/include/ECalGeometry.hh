@@ -80,8 +80,8 @@ public:
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
 
   // Set inner and outer radii of ECal
-  void SetECalInnerRadius(G4double r) { fECalInnerRadius = r; }
-  void SetECalOuterRadius(G4double r) { fECalOuterRadius = r; }
+  //void SetECalInnerRadius(G4double r) { fECalInnerRadius = r; }
+  //void SetECalOuterRadius(G4double r) { fECalOuterRadius = r; }
 
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
@@ -99,8 +99,10 @@ private:
 
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
-  G4double fECalInnerRadius; // Radius of hole at ECal center
-  G4double fECalOuterRadius; // External radius of ECal
+  //G4double fECalInnerRadius; // Radius of hole at ECal center
+  //G4double fECalOuterRadius; // External radius of ECal
+
+  G4int fECalCrystalMap[ECALGEOMETRY_N_ROWS_MAX][ECALGEOMETRY_N_COLS_MAX]; // Map of existing crystals
 
   G4String fECalSensitiveDetectorName;
 

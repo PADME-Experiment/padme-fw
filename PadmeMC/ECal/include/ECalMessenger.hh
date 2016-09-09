@@ -38,8 +38,10 @@ private:
   G4UIcommand* fSetCrystalSizeCmd;
   G4UIcommand* fSetCrystalLengthCmd;
 
-  G4UIcommand* fSetECalInnerRadiusCmd;
-  G4UIcommand* fSetECalOuterRadiusCmd;
+  G4UIcommand* fSetCrystalGapCmd;
+
+  //G4UIcommand* fSetECalInnerRadiusCmd;
+  //G4UIcommand* fSetECalOuterRadiusCmd;
 
   G4UIcommand* fSetECalFrontFaceZCmd;
 

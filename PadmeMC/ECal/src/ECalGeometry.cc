@@ -20,9 +20,9 @@ ECalGeometry::ECalGeometry()
 
   // Inizialize default parameters
 
-  fCrystalNominalSizeX = 2.*cm;
-  fCrystalNominalSizeY = 2.*cm;
-  fCrystalNominalSizeZ = 22.*cm;
+  fCrystalSizeX =  2.1*cm;
+  fCrystalSizeY =  2.1*cm;
+  fCrystalSizeZ = 23.0*cm;
 
   fECalNRows = 29;
   fECalNCols = 29;
@@ -31,8 +31,48 @@ ECalGeometry::ECalGeometry()
 
   fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
 
-  fECalInnerRadius = 5.9*cm;
-  fECalOuterRadius = 28.5*cm;
+  //fECalInnerRadius = 5.9*cm;
+  //fECalOuterRadius = 28.5*cm;
+
+  // Map of ECal crystals
+  // Y grows from top to bottom
+  // X grows from left to right
+  G4int tmpMap[29*29] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,
+  0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+  0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,
+  0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+  0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
+  };
+  for (G4int r=0; r<fECalNRows; r++) {
+    for (G4int c=0; c<fECalNCols; c++) {
+      fECalCrystalMap[r][c] = tmpMap[r*fECalNCols+c];
+    }
+  }
 
   fECalSensitiveDetectorName = "ECalSD";
 
@@ -47,15 +87,18 @@ G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
   // Verify we are within ECal box
   if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) return 0;
 
-  // Compute X/Y position of center of crystal
-  G4double posX = fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
-  G4double posY = fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
+  return fECalCrystalMap[row][col];
 
-  // See if center of crystal falls inside inner-outer radius range
-  G4double r2 = posX*posX+posY*posY;
-  if (r2<fECalInnerRadius*fECalInnerRadius || r2>fECalOuterRadius*fECalOuterRadius) return 0;
-
-  return 1;
+  // *** Replaced with explicit map ***
+  //// Compute X/Y position of center of crystal
+  //G4double posX = (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
+  //G4double posY = (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
+  //
+  //// See if center of crystal falls inside inner-outer radius range
+  //G4double r2 = posX*posX+posY*posY;
+  //if (r2<fECalInnerRadius*fECalInnerRadius || r2>fECalOuterRadius*fECalOuterRadius) return 0;
+  //
+  //return 1;
 
 }
 
@@ -69,7 +112,7 @@ G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
   }
 
   // Return X position of center of crystal in local coordinate system
-  return fCrystalNominalSizeX*(-fECalNCols*0.5+col+0.5);
+  return (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
 
 }
 
@@ -83,7 +126,7 @@ G4double ECalGeometry::GetCrystalPosY(G4int row, G4int col)
   }
 
   // Return Y position of center of crystal in local coordinate system
-  return fCrystalNominalSizeY*(-fECalNRows*0.5+row+0.5);
+  return (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
 
 }
 
@@ -119,23 +162,23 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fECalInnerRadius " << fECalInnerRadius;
+  //buffer << "fECalInnerRadius " << fECalInnerRadius;
+  //hash.push_back(buffer.str());
+  //buffer.str("");
+
+  //buffer << "fECalOuterRadius " << fECalOuterRadius;
+  //hash.push_back(buffer.str());
+  //buffer.str("");
+
+  buffer << "fCrystalSizeX " << fCrystalSizeX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fECalOuterRadius " << fECalOuterRadius;
+  buffer << "fCrystalSizeY " << fCrystalSizeY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fCrystalNominalSizeX " << fCrystalNominalSizeX;
-  hash.push_back(buffer.str());
-  buffer.str("");
-
-  buffer << "fCrystalNominalSizeY " << fCrystalNominalSizeY;
-  hash.push_back(buffer.str());
-  buffer.str("");
-
-  buffer << "fCrystalNominalSizeZ " << fCrystalNominalSizeZ;
+  buffer << "fCrystalSizeZ " << fCrystalSizeZ;
   hash.push_back(buffer.str());
   buffer.str("");
 

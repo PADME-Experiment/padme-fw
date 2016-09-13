@@ -124,7 +124,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
     //    G4cout << "RootIO: Found hits collection " << HCname << G4endl;
-    if (HCname == "ECryCollection") {
+    //   if (HCname == "ECryCollection") {
+    if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
       FindClusters();
     } else if (HCname == "TargetCollection") {
@@ -217,6 +218,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 	  fHistoManager->myEvt.NTHEPVetoX[i]   = HEPVetoX[i]; //Just one finger per track to be improve!
 	  fHistoManager->myEvt.NTHEPVetoY[i]   = HEPVetoY[i]; //Just one finger per track to be improved!
   }
+  for(int iBar=0;iBar<NHEPVetoBars;iBar++) {
+    fHistoManager->myEvt.NTHEPVetoClIndex[iBar] = HEPVetoClIndex[iBar];
+    for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
+      fHistoManager->myEvt.NTHEPVetoTimeCl[iBar][iCluster] = HEPVetoTimeCl[iBar][iCluster];
+      fHistoManager->myEvt.NTHEPVetoECl[iBar][iCluster] = HEPVetoECl[iBar][iCluster] ;
+    }
+  }
 
   for(int i=0;i<NPVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
@@ -231,6 +239,15 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 	  //if(VetoTrackCh[i]>100) G4cout<<i<<" Tracker Lay "<<VetoTrackCh[i]<<" "<<VetoEtrack[i]<<" "<<VetoTrackTime[i]<<G4endl;
 	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
   }
+  for(int iBar=0;iBar<NPVetoBars;iBar++) {
+    fHistoManager->myEvt.NTPVetoBarEnergy[iBar] = ETotPVeto[iBar];
+    fHistoManager->myEvt.NTPVetoBarTime[iBar] = TimePVeto[iBar];
+    fHistoManager->myEvt.NTPVetoClIndex[iBar] = PVetoClIndex[iBar];
+    for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
+      fHistoManager->myEvt.NTPVetoTimeCl[iBar][iCluster] = PVetoTimeCl[iBar][iCluster];
+      fHistoManager->myEvt.NTPVetoECl[iBar][iCluster] = PVetoECl[iBar][iCluster] ;
+    }
+  }
 
   for(int i=0;i<NEVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
@@ -243,6 +260,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 	  fHistoManager->myEvt.NTEVetoY[i]       = EVetoY[i]; //Just one finger per track to be improved!xs
 	  //	  G4cout<<i<<" Tracker Lay "<<EVetoTrackCh[i]<<" "<<EVetoEtrack[i]<<" "<<EVetoTrackTime[i]<<G4endl;
 	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
+  }
+  for(int iBar=0;iBar<NEVetoBars;iBar++) {
+    fHistoManager->myEvt.NTEVetoClIndex[iBar] = EVetoClIndex[iBar];
+    for(int iCluster = 0; iCluster < EVetoClIndex[iBar] ; iCluster++) {
+      fHistoManager->myEvt.NTEVetoTimeCl[iBar][iCluster] = EVetoTimeCl[iBar][iCluster];
+      fHistoManager->myEvt.NTEVetoECl[iBar][iCluster] = EVetoECl[iBar][iCluster] ;
+    }
   }
 
   for(int i=0;i<NClusters;i++){	
@@ -292,6 +316,7 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   }
   
   // Copy all hits from G4 to ROOT event
+  //  std::cout << "Number of ECAL hits: " <<  nHits << std::endl;
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
@@ -299,8 +324,9 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
-      MatEtot[Yind][Xind] += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristallo
-      ETotCal += hit->GetEdep();
+      MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+      ETotCal += hit->GetEnergy();
+      //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
     }
   }//end of loop on hits
@@ -462,16 +488,51 @@ void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
     HEPVetoTrackTime[jj]=0;
     HEPVetoX[jj]=0;
     HEPVetoY[jj]=0;
+    
+  }
+  for(int iBar=0;iBar<NPVetoBars;iBar++){
+    HEPVetoClIndex[iBar] = 0;
+    for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
+      HEPVetoTimeCl[iBar][iCluster] = 0.;
+      HEPVetoECl[iBar][iCluster]  = 0.;
+    }
   }
 
   G4int nHits = hcont->entries();
-  for (G4int h=0; h<nHits; h++) {									
-    HEPVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
+  for (G4int h=0; h<nHits; h++) {		
+    HEPVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+
     if ( hit != 0 ) {
+      int iBar = hit->GetChannelId();
+      if (iBar > NHEPVetoBars ) {
+	std::cerr << "[EventAction] [HEPVeto]  Bar index outside range" << std::endl;
+	exit(0);
+      }
+
+      int newhit = 1;
+
+      for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
+	if( fabs( hit->GetTime() - HEPVetoTimeCl[iBar][iCluster] ) < 5. ) {
+	  newhit=0;
+	  HEPVetoTimeCl[iBar][iCluster] = 
+	    (hit->GetTime()*hit->GetHitE() + HEPVetoECl[iBar][iCluster]*HEPVetoTimeCl[iBar][iCluster])/
+	    ( hit->GetHitE() + HEPVetoECl[iBar][iCluster]  ) ;
+	  HEPVetoECl[iBar][iCluster] +=  hit->GetHitE();
+	}
+	if(newhit==0) break;
+      }
+
+      if (newhit == 1 && HEPVetoClIndex[iBar]< NHEPVetoMaxNCl) {
+	HEPVetoECl[iBar][HEPVetoClIndex[iBar]] = hit->GetHitE();
+	HEPVetoTimeCl[iBar][HEPVetoClIndex[iBar]]  = hit->GetTime();
+	HEPVetoClIndex[iBar]++;
+      }
+
+
       ETotHEPVeto[hit->GetHEPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NHEPVetoTracks < MaxTracks && hit->GetEdep()>0.1*MeV) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NHEPVetoTracks < MaxTracks && hit->GetTrackEnergy()>0.1*MeV) {
     	  HEPVetoTrackCh[NHEPVetoTracks]    = hit->GetHEPVetoNb();   //bugs gives crazy numbers
-    	  HEPVetoEtrack[NHEPVetoTracks]     = hit->GetEdep();
+    	  HEPVetoEtrack[NHEPVetoTracks]     = hit->GetTrackEnergy();
     	  HEPVetoTrackTime[NHEPVetoTracks]  = hit->GetTime();
 	  HEPVetoX[NHEPVetoTracks]          = hit->GetX();
 	  HEPVetoY[NHEPVetoTracks]          = hit->GetY();
@@ -489,27 +550,74 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
   G4int LastID=-1;
   for(G4int jj=0;jj<MaxTracks;jj++){
     ETotPVeto[jj]=0.0;
+    TimePVeto[jj]=0.0;
     PVetoTrackCh[jj]=0;
     PVetoTrackTime[jj]=0;
     PVetoX[jj]=0;
     PVetoY[jj]=0;
+
   }
+
+  for(int iBar=0;iBar<NPVetoBars;iBar++){
+    TimePVeto[iBar]=0.0;
+    ETotPVeto[iBar]=0.0;
+    PVetoClIndex[iBar] = 0;
+    for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
+      PVetoTimeCl[iBar][iCluster] = 0.;
+      PVetoECl[iBar][iCluster]  = 0.;
+    }
+  }
+
+
   double puppo=0;
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {									
     PVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
     if ( hit != 0 ) {
+      // ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
+      int iBar = hit->GetChannelId();
+      if (iBar > NPVetoBars ) {
+	std::cerr << "[EventAction] [PVeto]  Bar index outside range" << std::endl;
+	exit(0);
+      }
+
+      int newhit = 1;
+
+      for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
+	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 5.) {
+	  newhit=0;
+	  PVetoTimeCl[iBar][iCluster] = 
+	    (hit->GetTime()*hit->GetHitE() + PVetoECl[iBar][iCluster]*PVetoTimeCl[iBar][iCluster])/
+	    ( hit->GetHitE() + PVetoECl[iBar][iCluster]  ) ;
+	  PVetoECl[iBar][iCluster] +=  hit->GetHitE();
+	}
+	if(newhit==0) break;
+      }
+
+      if (newhit == 1 && PVetoClIndex[iBar]< NPVetoMaxNCl) {
+	PVetoECl[iBar][PVetoClIndex[iBar]] = hit->GetHitE();
+	PVetoTimeCl[iBar][PVetoClIndex[iBar]]  = hit->GetTime();
+	PVetoClIndex[iBar]++;
+      }
+      
+      TimePVeto[hit->GetPVetoNb()] = 
+	(TimePVeto[hit->GetPVetoNb()]*ETotPVeto[hit->GetPVetoNb()] + hit->GetTime()*hit->GetHitE())/
+	(ETotPVeto[hit->GetPVetoNb()]+hit->GetHitE());
+
       ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
+
       ETotPVetoEvt += hit->GetHitE();
       puppo= hit->GetEdep();
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NPVetoTracks < MaxTracks && hit->GetEdep()>0.1*MeV) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NPVetoTracks < MaxTracks && hit->GetTrackEnergy() > 0.1*MeV) {
 	PVetoTrackCh[NPVetoTracks]    = hit->GetPVetoNb();   //bugs gives crazy numbers
-	PVetoEtrack[NPVetoTracks]     = hit->GetEdep();
+	PVetoEtrack[NPVetoTracks]     = hit->GetTrackEnergy();
 	PVetoTrackTime[NPVetoTracks]  = hit->GetTime();
 	PVetoX[NPVetoTracks]          = hit->GetX();
 	PVetoY[NPVetoTracks]          = hit->GetY();
 	NPVetoTracks++;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
+	
+
       }
       if(NPVetoTracks>MaxTracks) break; 
       LastID = hit->GetTrackID();
@@ -528,16 +636,52 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
     EVetoX[jj]=0;
     EVetoY[jj]=0;
   }
-  
+  for(int iBar=0;iBar<NPVetoBars;iBar++){
+    EVetoClIndex[iBar] = 0;
+    for(int iCluster = 0; iCluster < EVetoClIndex[iBar] ; iCluster++) {
+      EVetoTimeCl[iBar][iCluster] = 0.;
+      EVetoECl[iBar][iCluster]  = 0.;
+    }
+  }
+
+
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {									
     EVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
     if ( hit != 0 ) {
+
+      int iBar = hit->GetChannelId();
+      if (iBar > NEVetoBars ) {
+	std::cerr << "[EventAction] [EVeto]  Bar index outside range" << std::endl;
+	exit(0);
+      }
+
+      int newhit = 1;
+
+      for(int iCluster = 0; iCluster < EVetoClIndex[iBar] ; iCluster++) {
+	if( fabs( hit->GetTime() - EVetoTimeCl[iBar][iCluster] ) < 5.) {
+	  newhit=0;
+	  EVetoTimeCl[iBar][iCluster] = 
+	    (hit->GetTime()*hit->GetHitE() + EVetoECl[iBar][iCluster]*EVetoTimeCl[iBar][iCluster])/
+	    ( hit->GetHitE() + EVetoECl[iBar][iCluster]  ) ;
+	  EVetoECl[iBar][iCluster] +=  hit->GetHitE();
+	}
+	if(newhit==0) break;
+      }
+
+      if (newhit == 1 && EVetoClIndex[iBar]< NEVetoMaxNCl) {
+	EVetoECl[iBar][EVetoClIndex[iBar]] = hit->GetHitE();
+	EVetoTimeCl[iBar][EVetoClIndex[iBar]]  = hit->GetTime();
+	EVetoClIndex[iBar]++;
+      }
+
+
+
       ETotEVeto[hit->GetEVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NEVetoTracks < MaxTracks && hit->GetEdep()>0.1*MeV) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NEVetoTracks < MaxTracks && hit->GetTrackEnergy()>0.1*MeV) {
       //      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID) {
 	EVetoTrackCh[NEVetoTracks]    = hit->GetEVetoNb();   //bugs gives crazy numbers
-	EVetoEtrack[NEVetoTracks]     = hit->GetEdep();
+	EVetoEtrack[NEVetoTracks]     = hit->GetTrackEnergy();
 	EVetoTrackTime[NEVetoTracks]  = hit->GetTime();
 	EVetoX[NEVetoTracks]          = hit->GetX();
 	EVetoY[NEVetoTracks]          = hit->GetY();
@@ -554,14 +698,19 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
 
 void EventAction::AddSACHits(SACHitsCollection* hcont)
 {
+
   G4int LastID=-1;
-  G4int nHits = hcont->entries();			
+  G4int nHits = hcont->entries();
+
+  if (nHits == 0) return;
+
   for(G4int jj=0;jj<MaxTracks;jj++){
     ETotSAC[jj]=0.0;										     
     SACTrackTime[jj]=0.0;										     
     SACEtrack[jj]=0.0;
     SACPType[jj]=0.0;
-  }							
+  }
+  SACTracks = 0;
   for (G4int h=0; h<nHits; h++) {
     SACHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
@@ -594,7 +743,7 @@ void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
     SACCh[SACTracks]        = NCry;
 
     SACTracks++;
-    //    G4cout<<SACTracks<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<" Ncry "<<NCry<<" T "<<Thit<<G4endl;
+    //    G4cout<<SACTracks<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<" Ncry "<<NCry<<G4endl;
   }
 }
 

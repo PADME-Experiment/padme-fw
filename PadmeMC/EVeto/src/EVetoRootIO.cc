@@ -114,7 +114,7 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    TEVetoMCHit* Hit = (TEVetoMCHit*)fEvent->AddHit();
-	    //Hit->SetChannelId((*EVetoC)[i]->GetCryNb()); 
+	    Hit->SetChannelId((*EVetoC)[i]->GetChannelId()); 
 	    Hit->SetChannelId(0); 
 	    Hit->SetPosition(TVector3((*EVetoC)[i]->GetPos()[0],
 				      (*EVetoC)[i]->GetPos()[1],

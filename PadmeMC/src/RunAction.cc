@@ -68,7 +68,30 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     CLHEP::HepRandom::setTheSeeds(seeds);
     CLHEP::HepRandom::showEngineStatus();
 #endif
+  } else {
+    G4cout << "*******************" << G4endl;
+    G4cout << "*** AUTOSEED OFF***" << G4endl;
+    G4cout << "*******************" << G4endl;
+
+    long seeds[2];
+
+    seeds[0] = atol(getenv("PADME_SEED1"));
+    seeds[1] = atol(getenv("PADME_SEED2"));
+
+    G4cout << "SEEDS:  " << seeds[0] << "\t" << seeds[1] << G4endl;
+
+
+#ifdef  G4MULTITHREADED
+    G4MTHepRandom::setTheSeeds(seeds);
+    G4MTHepRandom::showEngineStatus();
+#else
+    CLHEP::HepRandom::setTheSeeds(seeds);
+    CLHEP::HepRandom::showEngineStatus();
+#endif
+
+
   }
+
   if(IsTurboOn){
 	  G4cout << "*******************" << G4endl;
 	  G4cout << "** TURBO MODE ON **" << G4endl;

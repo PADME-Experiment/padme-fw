@@ -58,7 +58,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Group header: start index cell|freq|tr|size
       pEvtGroupSize = PEVT_GRPHEAD_LEN+PEVT_GRPTTT_LEN;
-      freq = 2; // 0=5GHz, 1=2.5GHz, 2=1GHz
+      freq = Config->drs4_sampfreq; // 0=5GHz, 1=2.5GHz, 2=1GHz
       tr = 0; // trigger data - 0:no, 1:yes
       if ( (nSm = event->DataGroup[iGr].ChSize[8]) ) {
 	tr = 1;

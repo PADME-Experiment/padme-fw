@@ -50,6 +50,8 @@ G4bool PVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);

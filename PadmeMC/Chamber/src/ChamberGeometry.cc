@@ -7,6 +7,8 @@
 
 #include "ChamberGeometry.hh"
 
+using namespace CLHEP;
+
 ChamberGeometry* ChamberGeometry::fInstance = 0;
 
 ChamberGeometry* ChamberGeometry::GetInstance()

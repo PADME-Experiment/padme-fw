@@ -4,6 +4,13 @@
 #include "globals.hh"
        	       	       
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#define NPVetoBars   100
+#define NEVetoBars   100
+#define NHEPVetoBars 100
+#define NPVetoMaxNCl 10
+#define NEVetoMaxNCl 10
+#define NHEPVetoMaxNCl 10
+
 
 struct NTEvent{
   int NTNevent;
@@ -75,6 +82,9 @@ struct NTEvent{
   double NTHEPVetoFingerE[100];
   double NTHEPVetoX[100];
   double NTHEPVetoY[100];
+  double NTHEPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
+  double NTHEPVetoECl[NPVetoBars][NPVetoMaxNCl];
+  int    NTHEPVetoClIndex[NPVetoBars];
 
   //PVeto variables
   double NTPVetoTrkEne[100];
@@ -83,6 +93,12 @@ struct NTEvent{
   double NTPVetoFingerE[100];
   double NTPVetoX[100];
   double NTPVetoY[100];
+  double NTPVetoBarEnergy[NPVetoBars];
+  double NTPVetoBarTime[NPVetoBars];
+  double NTPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
+  double NTPVetoECl[NPVetoBars][NPVetoMaxNCl];
+  int    NTPVetoClIndex[NPVetoBars];
+
 
   //EVeto variables
   double NTEVetoTrkEne[100];
@@ -91,6 +107,9 @@ struct NTEvent{
   double NTEVetoFingerE[100];
   double NTEVetoX[100];
   double NTEVetoY[100];
+  double NTEVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
+  double NTEVetoECl[NPVetoBars][NPVetoMaxNCl];
+  int    NTEVetoClIndex[NPVetoBars];
 
   //NTSAC variables
   double  NTSACE[100];

@@ -13,6 +13,9 @@ run_*
 PersistencyDict.cc
 PersistencyDict.h
 .*.swp
+Session.vim
+html/
+*.pcm
 
 
 PadmeReco/ECal/lib/

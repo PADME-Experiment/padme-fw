@@ -54,7 +54,8 @@ void ECALAnal::AnalyzeCharge()
       UChar_t cnr = chn->GetChannelNumber();
 
       // Verify that we are monitoring the correct set of channels
-      if ( cnr>15 ) {
+      //if ( cnr>15 ) {
+      if ( cnr>1 ) {
         printf("WARNING Found channel %d in RAW file!\n",cnr);
         continue;
       }
@@ -74,6 +75,7 @@ void ECALAnal::AnalyzeCharge()
 	fSampleReco[s] = (fSample[s]-Avg)/4096.; // Counts to Volt
 	fQChannel[bid][cnr] += fSampleReco[s]/50*1E-9/1E-12; // dT(bin)=1ns, R=50 Ohm, Q in pC
       }
+      fQChannel[bid][cnr] = -fQChannel[bid][cnr]; // PMT have negative signal
 
       // PMT have signal V<0
       //if (cnr<9) {
@@ -92,8 +94,9 @@ void ECALAnal::AnalyzeCharge()
 	printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal2[bid]);
       }
       */
-      fQTotal1[bid] += fQChannel[bid][cnr];
-      printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal1[bid]);
+      //fQTotal1[bid] += fQChannel[bid][cnr];
+      //printf("%d ch %d AVG %f Q0 %f QTOT %f\n",c,cnr,Avg,fQChannel[bid][cnr],fQTotal1[bid]);
+      printf("%d ch %d AVG %f Q0 %f\n",c,cnr,Avg,fQChannel[bid][cnr]);
 
       if ( showEvent ) {
 	TH1D* sigH = fECALHisto->Get1DHisto(Form("ECALSigCh%d",cnr));
@@ -114,8 +117,8 @@ void ECALAnal::AnalyzeCharge()
 	TH1D* tH = NULL;
 	if (tnr == 0) {
 	  tH = fECALHisto->Get1DHisto("ECALTR00");
-	} else if (tnr == 1) {
-	  tH = fECALHisto->Get1DHisto("ECALTR01");
+	//} else if (tnr == 1) {
+	//  tH = fECALHisto->Get1DHisto("ECALTR01");
 	//} else if (tnr == 2) {
 	//  tH = fECALHisto->Get1DHisto("ECALTR10");
 	//} else if (tnr == 3) {
@@ -131,8 +134,8 @@ void ECALAnal::AnalyzeCharge()
       }
     }
 
-    fECALHisto->Fill1DHisto("ECALQTot",fQTotal1[bid]);
-    printf("%d Bd %d Qtot %f\n",b,bid,fQTotal1[bid]);
+    //fECALHisto->Fill1DHisto("ECALQTot",fQTotal1[bid]);
+    //printf("%d Bd %d Qtot %f\n",b,bid,fQTotal1[bid]);
     //fECALHisto->Fill1DHisto("ECALQTot2",fQTotal2[bid]);
     //printf("%d Bd %d Qtot %f\n",b,bid,fQTotal2[bid]);
 

@@ -23,7 +23,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
 }
 
 PadmeVReconstruction::~PadmeVReconstruction(){
-  std::cout << "Deleting " << fName << " Reconstruction.." << std::endl;
+  cout << "Deleting " << fName << " Reconstruction.." << endl;
   //if(fRecoEvent){
   //  delete fRecoEvent;
   //  fRecoEvent=0;
@@ -31,9 +31,9 @@ PadmeVReconstruction::~PadmeVReconstruction(){
 }
 
 void PadmeVReconstruction::Exception(TString Message){
-  std::cerr << std::endl << "********************************************************************************" << std::endl;
-  std::cerr << "Exception:" << std::endl << "        " << Message.Data() << std::endl;
-  std::cerr << std::endl << "********************************************************************************" << std::endl;
+  cerr << endl << "********************************************************************************" << endl;
+  cerr << "Exception:" << endl << "        " << Message.Data() << endl;
+  cerr << endl << "********************************************************************************" << endl;
   exit(1);
 }
 
@@ -65,7 +65,7 @@ void PadmeVReconstruction::EndProcessing(){
   if(!fHistoFile) return;
   /*
   if(!fHistoFile->cd(fName+"Monitor")){
-    std::cerr << "["+fName+"Reconstruction] WARNING: Failed to find directory '" << fName+"Monitor' in the output file, this should not happen" << std::endl;
+    cerr << "["+fName+"Reconstruction] WARNING: Failed to find directory '" << fName+"Monitor' in the output file, this should not happen" << endl;
     return;
   }
   */
@@ -74,7 +74,7 @@ void PadmeVReconstruction::EndProcessing(){
 /*
 TDirectory * PadmeVReconstruction::GetOrMakeDir(TDirectory *inDir,TString dirName){
   if( !inDir ){
-    std::cerr << "*** can not make a directory in a non-existent file ***" << std::endl;
+    cerr << "*** can not make a directory in a non-existent file ***" << endl;
     return 0;
   }
   TDirectory * newDir = inDir->GetDirectory(dirName);
@@ -85,7 +85,7 @@ TDirectory * PadmeVReconstruction::GetOrMakeDir(TDirectory *inDir,TString dirNam
 
 void PadmeVReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
+  ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);

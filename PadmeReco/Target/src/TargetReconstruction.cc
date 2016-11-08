@@ -32,7 +32,7 @@ void TargetReconstruction::Init(PadmeVReconstruction* MainReco)
 // Read Target reconstruction parameters from a configuration file
 void TargetReconstruction::ParseConfFile(TString ConfFileName) {
 
-  ifstream confFile(ConfFileName.Data());
+  std::ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);
@@ -48,7 +48,7 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TTargetMCEvent* tTargetEvent = (TTargetMCEvent*)tEvent;
-  cout << "TargetReconstruction: run/event/#hits " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << endl;
+  std::cout << "TargetReconstruction: run/event/#hits " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << std::endl;
   //for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
   //  TTargetMCHit* hit = (TTargetMCHit*)tTargetEvent->Hit(iH);
   //  hit->Print();

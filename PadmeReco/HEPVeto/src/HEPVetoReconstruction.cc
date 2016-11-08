@@ -32,7 +32,7 @@ void HEPVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 // Read HEPVeto reconstruction parameters from a configuration file
 void HEPVetoReconstruction::ParseConfFile(TString ConfFileName) {
 
-  ifstream confFile(ConfFileName.Data());
+  std::ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);
@@ -60,7 +60,7 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   THEPVetoMCEvent* tHEPVetoEvent = (THEPVetoMCEvent*)tEvent;
-  cout << "HEPVetoReconstruction: run/event/#hits " << tHEPVetoEvent->GetRunNumber() << " " << tHEPVetoEvent->GetEventNumber() << " " << tHEPVetoEvent->GetNHits() << endl;
+  std::cout << "HEPVetoReconstruction: run/event/#hits " << tHEPVetoEvent->GetRunNumber() << " " << tHEPVetoEvent->GetEventNumber() << " " << tHEPVetoEvent->GetNHits() << std::endl;
   for (Int_t iH=0; iH<tHEPVetoEvent->GetNHits(); iH++) {
     THEPVetoMCHit* hit = (THEPVetoMCHit*)tHEPVetoEvent->Hit(iH);
     hit->Print();

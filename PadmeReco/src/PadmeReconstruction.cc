@@ -62,19 +62,19 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   if (runChain) {
     Int_t runNEntries = runChain->GetEntries();
     TObjArray* runBranches = runChain->GetListOfBranches();
-    std::cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << std::endl;
+    cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << endl;
     TPadmeRun* run = new TPadmeRun();
     for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
       TString branchName = ((TBranch*)(*runBranches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
-      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+      cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << endl;
       if(branchName=="Run") {
 	runChain->SetBranchAddress(branchName.Data(),&run);
 	runChain->GetEntry(0); // Currently only one run per file
-	std::cout << "=== MC Run information - Start ===" << std::endl;
-	std::cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << std::endl;
-	std::cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << std::endl;
-	std::cout << "Run number of events " << run->GetNEvents() << std::endl;
+	cout << "=== MC Run information - Start ===" << endl;
+	cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << endl;
+	cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << endl;
+	cout << "Run number of events " << run->GetNEvents() << endl;
 	TDetectorInfo* detInfo = run->GetDetectorInfo();
 	ShowSubDetectorInfo(detInfo,"Target");
 	ShowSubDetectorInfo(detInfo,"EVeto");
@@ -82,7 +82,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"HEPVeto");
 	ShowSubDetectorInfo(detInfo,"ECal");
 	ShowSubDetectorInfo(detInfo,"SAC");
-	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
+	cout << "=== MC Run information - End ===" << endl << endl;
       }
     }
   }
@@ -93,13 +93,13 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   if(fMCChain) {
     nEntries = fMCChain->GetEntries();
     TObjArray* branches = fMCChain->GetListOfBranches();
-    std::cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << endl;
     fMCEvent = new TMCEvent();
     fSACMCEvent = new TSACMCEvent();
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
-      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+      cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << endl;
       if (branchName=="Event") {
 	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
       } else if (branchName=="Target") {
@@ -128,9 +128,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 Bool_t PadmeReconstruction::NextEvent()
 {
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
-    std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
-	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+    cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << endl;
+    cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
+	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << endl;
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       if (fRecoLibrary[iLib]->GetName() == "Target") {
 	fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
@@ -213,10 +213,10 @@ void PadmeReconstruction::ShowSubDetectorInfo(TDetectorInfo* detInfo, TString na
 {
   TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo(name);
   if (subDetInfo) {
-    std::cout << "--- " << name.Data() << " geometry parameters ---" << std::endl;
+    cout << "--- " << name.Data() << " geometry parameters ---" << endl;
     std::vector<TString> subPar = subDetInfo->GetGeometryParameters();
     for(UInt_t iPar = 0; iPar < subPar.size(); iPar++) {
-      std::cout << subPar[iPar].Data() << std::endl;
+      cout << subPar[iPar].Data() << endl;
     }
   }
 }

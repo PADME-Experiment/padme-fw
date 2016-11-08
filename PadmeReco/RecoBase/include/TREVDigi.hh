@@ -6,6 +6,7 @@
 
 #include<vector>
 #include"TREVRaw.hh"
+#include"fwTSimpleList.hh"
 
 #ifndef _TREVDigi_hh_
 #define _TREVDigi_hh_ 0

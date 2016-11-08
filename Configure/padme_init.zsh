@@ -12,6 +12,8 @@ export G4WORKDIR=${PADMEMC}
 # Define PADMERECO
 export PADMERECO=${PADME}/PadmeReco
 
+export CPATH=${(pja:a)"${(f)$(ls -d $PADMERECO/**/include)}"}:$CPATH
+
 # Define path to PadmeRoot and add it to LD_LIBRARY_PATH
 export PADMEROOT=${PADME}/PadmeRoot
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"

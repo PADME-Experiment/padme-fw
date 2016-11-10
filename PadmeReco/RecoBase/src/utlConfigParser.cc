@@ -12,6 +12,7 @@
 #include<map>
 
 #include"utlConfigParser.hh"
+#include"utl.hh"
 
 
 utl::ConfigParser::ConfigParser(const std::string&fn):fFileName(fn){
@@ -26,6 +27,7 @@ utl::ConfigParser::ConfigParser(const std::string&fn):fFileName(fn){
     if(!tmpstr.length()>0)continue;
     if(tmpstr.find_first_of('#')!=std::string::npos)
       tmpstr.erase(tmpstr.find_first_of('#'),tmpstr.length()); // # comment char
+    if(!tmpstr.length()>0)continue;
     tmpstr=tmpstr.substr(
         tmpstr.find_first_not_of(" \t\f\v\n\r"),
         tmpstr.find_last_not_of(" \t\f\v\n\r")+1

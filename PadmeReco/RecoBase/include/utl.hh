@@ -1,16 +1,16 @@
 #ifndef _RecoBase_utl_hh_
 #define _RecoBase_utl_hh_
-#define WARNING(     level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eWarning,   level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define SUCCESS(     level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eSuccess,   level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define INFO(        level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eInfo,      level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define ERROR(       level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eError,     level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define FATAL_ERROR( level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eFatalError,level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define WARNING_(     level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eWarning,   level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define SUCCESS_(     level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eSuccess,   level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define INFO_(        level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eInfo,      level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define ERROR_(       level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eError,     level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define FATAL_ERROR_( level__ , err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eFatalError,level__, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
 
-#define DEFAULT_WARNING(      err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eWarning,   1, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define DEFAULT_SUCCESS(      err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eSuccess,   3, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define DEFAULT_INFO(         err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eInfo,      2, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define DEFAULT_ERROR(        err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eError,     0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
-#define DEFAULT_FATAL_ERROR(  err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eFatalError,0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define WARNING(      err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eWarning,   1, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define SUCCESS(      err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eSuccess,   3, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define INFO(         err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eInfo,      2, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define ERROR(        err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eError,     0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
+#define FATAL_ERROR(  err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eFatalError,0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
 
 #include"fwk.hh"
 namespace utl{

@@ -66,6 +66,10 @@ namespace utl{
         fWhat=fn+" Syntax error. In ["+gr+"] for '"+cfg+"' exactly one argument expected.";
         return *this;
       }
+      ConfigParser_except& SyntaxErrorEmptyGroupName(const std::string&fn,int ln){
+        fWhat=fn+":"+std::to_string(ln)+" Syntax error. Empty group name is not allowed.";
+        return *this;
+      }
       ConfigParser_except& FileNotFound(const std::string&fn){
         fWhat="File not found '"+fn+"'.";
         return *this;

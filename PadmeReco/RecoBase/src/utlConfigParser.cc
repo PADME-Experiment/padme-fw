@@ -24,17 +24,20 @@ utl::ConfigParser::ConfigParser(const std::string&fn):fFileName(fn){
     std::string tmpstr;
     std::getline(icfile,tmpstr);
     ++lineNum;
-    if(!tmpstr.length()>0)continue;
+    if(!(tmpstr.length()>0))continue;
     if(tmpstr.find_first_of('#')!=std::string::npos)
       tmpstr.erase(tmpstr.find_first_of('#'),tmpstr.length()); // # comment char
-    if(!tmpstr.length()>0)continue;
+    if(!(tmpstr.length()>0))continue;
     tmpstr=tmpstr.substr(
         tmpstr.find_first_not_of(" \t\f\v\n\r"),
         tmpstr.find_last_not_of(" \t\f\v\n\r")+1
         );
-    if(!tmpstr.length()>0)continue;
+    if(!(tmpstr.length()>0))continue;
     if(tmpstr[0]=='[') {
       if(tmpstr[tmpstr.length()-1]==']'){
+        if(!(tmpstr.length()>2))
+          throw ConfigParser_except().SyntaxErrorEmptyGroupName(fFileName,lineNum);
+        tmpstr=tmpstr.substr(1,tmpstr.length()-2);
         cfggroupname=tmpstr;
       }
       continue;
@@ -59,18 +62,19 @@ void utl::ConfigParser::Print()const{
   std::cout<<std::endl;
   std::cout<<"Process config file "<<fFileName<<std::endl;
   for(auto groupmap_it=fConfigLines.begin(); groupmap_it!=fConfigLines.end();++groupmap_it){
-    const std::string& grouptag=groupmap_it->first;
     for(auto map_it=groupmap_it->second.begin(); map_it!=groupmap_it->second.end();++map_it){
+    std::cout<<"["<<groupmap_it->first<<"]  '"<<map_it->first<<"' = {";
       for(auto vec_it=map_it->second.begin();vec_it!=map_it->second.end();++vec_it){
-        std::cout<<grouptag<<" \""<<map_it->first<<"\"  <-  \""<<*vec_it<<"\""<<std::endl;
+        std::cout<<" '"<<*vec_it<<"'";
       }
+      std::cout<<"}"<<std::endl;
     }
   }
   std::cout<<"Finish processing"<<std::endl;
 }
 
 std::string utl::ConfigParser::GetSingleArg(const std::string&grp,const std::string&par)const{
-  if(!fConfigLines.count(grp))
+  if(!(fConfigLines.count(grp)))
     throw utl::ConfigParser_except().SyntaxErrorGroupNotFound(fFileName,grp);
   if(!fConfigLines.at(grp).count(par))
     throw utl::ConfigParser_except().SyntaxErrorParameterNotFound(fFileName,grp,par);

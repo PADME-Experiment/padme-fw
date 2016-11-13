@@ -21,14 +21,14 @@ namespace det{
         return a;
       }
 
-      std::map<std::string,std::shared_ptr<VDetector>>        ::const_iterator DetectorsBegin()        {return fAllDetectors         .begin();}
-      std::map<std::string,std::shared_ptr<VRODevice>>        ::const_iterator RODevicesBegin()        {return fAllRODevices         .begin();}
-      std::map<std::string,std::shared_ptr<VDigitizerChannel>>::const_iterator DigitizerChannelsBegin(){return fAllDigitizerChannels .begin();}
-      std::map<eSubSystem,std::shared_ptr<VSubSystem>>        ::const_iterator SubSystemsBegin()       {return fAllSubSystems        .begin();}
-      std::map<std::string,std::shared_ptr<VDetector>>        ::const_iterator DetectorsEnd()        {return fAllDetectors         .end();}
-      std::map<std::string,std::shared_ptr<VRODevice>>        ::const_iterator RODevicesEnd()        {return fAllRODevices         .end();}
-      std::map<std::string,std::shared_ptr<VDigitizerChannel>>::const_iterator DigitizerChannelsEnd(){return fAllDigitizerChannels .end();}
-      std::map<eSubSystem,std::shared_ptr<VSubSystem>>        ::const_iterator SubSystemsEnd()       {return fAllSubSystems        .end();}
+      std::map<std::string,std::shared_ptr<VDetector>>        ::iterator DetectorsBegin()        {return fAllDetectors         .begin();}
+      std::map<std::string,std::shared_ptr<VRODevice>>        ::iterator RODevicesBegin()        {return fAllRODevices         .begin();}
+      std::map<std::string,std::shared_ptr<VDigitizerChannel>>::iterator DigitizerChannelsBegin(){return fAllDigitizerChannels .begin();}
+      std::map<eSubSystem,std::shared_ptr<VSubSystem>>        ::iterator SubSystemsBegin()       {return fAllSubSystems        .begin();}
+      std::map<std::string,std::shared_ptr<VDetector>>        ::iterator DetectorsEnd()          {return fAllDetectors         .end();}
+      std::map<std::string,std::shared_ptr<VRODevice>>        ::iterator RODevicesEnd()          {return fAllRODevices         .end();}
+      std::map<std::string,std::shared_ptr<VDigitizerChannel>>::iterator DigitizerChannelsEnd()  {return fAllDigitizerChannels .end();}
+      std::map<eSubSystem,std::shared_ptr<VSubSystem>>        ::iterator SubSystemsEnd()         {return fAllSubSystems        .end();}
 
     private:
       std::map<std::string,std::shared_ptr<VDetector>>        fAllDetectors;
@@ -101,24 +101,30 @@ namespace det{
       //  enum class eSubSystem { eUnknown=0, eEVeto, ePVeto, eHEPVeto, eSAC, eECAL, eTarget };
       //  enum class eDigitizerTypes { eUnknown=0, eCAENv1751, eCAENv1742, eTEL62 } ;
       //  enum class eRODeviceTypes  { eUnknown=0, eHamamatsuH9500, ePhotonis, eChineesePMT, eSiPM };
-      enum class eDetectorTypes  { eUnknown=0, eVetoScintillatorBar, eECALScintillator};
+      //enum class eDetectorTypes  { eUnknown=0, eVetoScintillatorBar, eECALScintillator};
       VRODevice& EmplaceRODevice(const std::string& name,eRODeviceTypes s){
+        if(fAllRODevices.count(name)) ERROR("throw");
         switch(s) {
           case eRODeviceTypes::eHamamatsuH9500  : fAllRODevices.emplace(name,std::make_shared<HamamatsuH9500  >());break;
           case eRODeviceTypes::ePhotonis        : fAllRODevices.emplace(name,std::make_shared<Photonis        >());break;
-          default: true; //throw 
+          default: ERROR("throw");
         }
         return *fAllRODevices.at(name);
       }
-      VDetector& EmplaceRODevice(const std::string& name,eDetectorTypes s){
+      std::shared_ptr<VDetector> EmplaceDetector(const std::string& name,eDetectorTypes s){
+        if(fAllDetectors.count(name))ERROR("throw");
         switch(s) {
-          case eDetectorTypes::eVetoScintillatorBar : fAllDetectors.emplace(name,std::make_shared<VetoScintillatorBar>());break;
-          case eDetectorTypes::eECALScintillator    : fAllDetectors.emplace(name,std::make_shared<ECALScintillator   >());break;
-          default: true; //throw 
+          case eDetectorTypes::eEVetoScintillatorBar  : fAllDetectors.emplace(name,std::make_shared<  EVetoScintillatorBar>());break;
+          case eDetectorTypes::ePVetoScintillatorBar  : fAllDetectors.emplace(name,std::make_shared<  PVetoScintillatorBar>());break;
+          case eDetectorTypes::eHEPVetoScintillatorBar: fAllDetectors.emplace(name,std::make_shared<HEPVetoScintillatorBar>());break;
+          case eDetectorTypes::eECALScintillator      : fAllDetectors.emplace(name,std::make_shared<ECALScintillator   >());break;
+          default: ERROR("throw");
         }
-        return *fAllDetectors.at(name);
+        fAllDetectors.at(name)->SetName(name);
+        return fAllDetectors.at(name);
       }
       VDigitizerChannel& EmplaceDigitizerChannel(const std::string& name,eDigitizerTypes s){
+        if(fAllDigitizerChannels.count(name))throw true;
         switch(s) {
           case eDigitizerTypes::eCAENv1742 : fAllDigitizerChannels.emplace(name,std::make_shared<CAENv1742Channel>());break;
           default: true; //throw 

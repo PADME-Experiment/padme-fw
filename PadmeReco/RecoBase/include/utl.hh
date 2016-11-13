@@ -12,7 +12,12 @@
 #define ERROR(        err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eError,     0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
 #define FATAL_ERROR(  err___ ) (utl::MessageBus::GetInstance().NewMessage(utl::MessageBus::eMessageType::eFatalError,0, std::string(__FILE__)+":"+std::to_string(__LINE__) +"  ("+__FUNCTION__ +")  "+ err___))
 
+
+#include<iostream>
+#include<fstream>
+#include<sstream>
 #include"fwk.hh"
+
 namespace utl{
   class MessageBus_except:public fwk::Exception{
     public:
@@ -28,16 +33,16 @@ namespace utl{
    * There are preprocessor functions which make the usage
    * of the class easier.
    *
-   * WARNING     (LevelOfVerbosity, message )\n
-   * SUCCESS     (LevelOfVerbosity, message )\n
-   * INFO        (LevelOfVerbosity, message )\n
-   * ERROR       (LevelOfVerbosity, message )\n
-   * FATAL_ERROR (LevelOfVerbosity, message )\n
-   * DEFAULT_WARNING     (message ) = WARNING     (1, message )\n
-   * DEFAULT_SUCCESS     (message ) = SUCCESS     (3, message )\n
-   * DEFAULT_INFO        (message ) = INFO        (2, message )\n
-   * DEFAULT_ERROR       (message ) = ERROR       (0, message )\n
-   * DEFAULT_FATAL_ERROR (message ) = FATAL_ERROR (0, message )\n
+   * WARNING_     (LevelOfVerbosity, message )\n
+   * SUCCESS_     (LevelOfVerbosity, message )\n
+   * INFO_        (LevelOfVerbosity, message )\n
+   * ERROR_       (LevelOfVerbosity, message )\n
+   * FATAL_ERROR_ (LevelOfVerbosity, message )\n
+   * WARNING     (message ) = WARNING_     (1, message )\n
+   * SUCCESS     (message ) = SUCCESS_     (3, message )\n
+   * INFO        (message ) = INFO_        (2, message )\n
+   * ERROR       (message ) = ERROR_       (0, message )\n
+   * FATAL_ERROR (message ) = FATAL_ERROR_ (0, message )\n
    *
    * Example1:\n
    * DEFAULT_ERROR("Some error message")\n

@@ -12,7 +12,7 @@
 #include<map>
 
 #include"utlConfigParser.hh"
-#include"utl.hh"
+#include"fwk.hh"
 
 
 utl::ConfigParser::ConfigParser(const std::string&fn):fFileName(fn){
@@ -67,7 +67,7 @@ void utl::ConfigParser::Print()const{
       for(auto vec_it=map_it->second.begin();vec_it!=map_it->second.end();++vec_it){
         std::cout<<" '"<<*vec_it<<"'";
       }
-      std::cout<<"}"<<std::endl;
+      std::cout<<" }"<<std::endl;
     }
   }
   std::cout<<"Finish processing"<<std::endl;
@@ -94,10 +94,13 @@ std::vector<std::string> utl::ConfigParser::GetConfig(const std::string&grp,cons
 
 
 bool utl::ConfigParser::HasConfig(const std::string&grp,const std::string&par)const{
-  if(!fConfigLines.count(grp))
-    throw utl::ConfigParser_except().SyntaxErrorGroupNotFound(fFileName,grp);
-  return fConfigLines.at(grp).count(par);
+  //if(!fConfigLines.count(grp))
+    //throw utl::ConfigParser_except().SyntaxErrorGroupNotFound(fFileName,grp);
+  return fConfigLines.count(grp)&&fConfigLines.at(grp).count(par);
 }
+bool utl::ConfigParser::HasOneArgConfig(const std::string&grp,const std::string&par)const{
+  return fConfigLines.count(grp)&&fConfigLines.at(grp).count(par)&&(fConfigLines.at(grp).at(par).size()==1);
+      }
 
 
 bool utl::ConfigParser::IsSingleArgConfig(const std::string&grp,const std::string&par)const{

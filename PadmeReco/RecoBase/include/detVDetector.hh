@@ -10,11 +10,13 @@
 
 #include"det.hh"
 #include"fwk.hh"
+
 #include"detVPadmeElement.hh"
 #include"detVDigitizerChannel.hh"
 #include"detVDigitizer.hh"
 #include"detVDetectorSystem.hh"
 #include"detVRODevice.hh"
+#include"detVDetectorSystem.hh"
 
 namespace det{
   class VDetector       :public VPadmeElement{
@@ -27,8 +29,10 @@ namespace det{
       //std::shared_ptr<VVeto> fParentLayer
       det::eDetectorTypes fDetectorType;
   };
-  class VetoScintillatorBar:public VDetector{public:VetoScintillatorBar(){fDetectorType=eDetectorTypes::eVetoScintillatorBar;}  };
-  class ECALScintillator   :public VDetector{public:ECALScintillator   (){fDetectorType=eDetectorTypes::eECALScintillator   ;}  };
+  class EVetoScintillatorBar  :public VDetector{public:  EVetoScintillatorBar(){fDetectorType=eDetectorTypes::eEVetoScintillatorBar  ;}  };
+  class PVetoScintillatorBar  :public VDetector{public:  PVetoScintillatorBar(){fDetectorType=eDetectorTypes::ePVetoScintillatorBar  ;}  };
+  class HEPVetoScintillatorBar:public VDetector{public:HEPVetoScintillatorBar(){fDetectorType=eDetectorTypes::eHEPVetoScintillatorBar;}  };
+  class ECALScintillator      :public VDetector{public:      ECALScintillator(){fDetectorType=eDetectorTypes::eECALScintillator   ;}  };
 
 
 

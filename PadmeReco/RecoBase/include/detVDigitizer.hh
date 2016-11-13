@@ -29,10 +29,10 @@ namespace det{
       CAENv1742(){fDigitizerType=eDigitizerTypes::eCAENv1742;}
   };
 
-//  class DigitizerVCAEN:public VDigitizer {public: typedef unsigned nChannels_t;protected: int fSignalChannalMask, fTriggerChannelMask; nChannels_t fNSignalChannels, fNTriggerChannels;};
-//  class CAENv1742     : public DigitizerVCAEN {public:CAENv1742(){fNTriggerChannels=4;fNSignalChannels=32;}};
-//  class CAENv1751     : public DigitizerVCAEN {public:CAENv1751(){fNTriggerChannels=0;fNSignalChannels=8;}};
-//  class TEL62         : public VDigitizer     {public:TEL62    (){}};
+  //  class DigitizerVCAEN:public VDigitizer {public: typedef unsigned nChannels_t;protected: int fSignalChannalMask, fTriggerChannelMask; nChannels_t fNSignalChannels, fNTriggerChannels;};
+  //  class CAENv1742     : public DigitizerVCAEN {public:CAENv1742(){fNTriggerChannels=4;fNSignalChannels=32;}};
+  //  class CAENv1751     : public DigitizerVCAEN {public:CAENv1751(){fNTriggerChannels=0;fNSignalChannels=8;}};
+  //  class TEL62         : public VDigitizer     {public:TEL62    (){}};
 
 }
 #endif

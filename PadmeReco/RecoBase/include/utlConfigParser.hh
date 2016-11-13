@@ -14,7 +14,6 @@
 #include<map>
 
 
-#include"utl.hh"
 #include"fwk.hh"
 
 /**
@@ -83,6 +82,7 @@ namespace utl{
       std::string GetSingleArg(const std::string&grp,const std::string&cfg)const;
       std::vector<std::string> GetConfig(const std::string&grp,const std::string&cfg)const;
       bool HasConfig(const std::string&grp,const std::string&cfg)const;
+      bool HasOneArgConfig(const std::string&grp,const std::string&cfg)const;
       bool IsSingleArgConfig(const std::string&grp,const std::string& cfg)const;
       void Print()const;
       const conf_group_t& GetGroup(const std::string& str){

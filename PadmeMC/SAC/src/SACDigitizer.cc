@@ -34,11 +34,6 @@ void SACDigitizer::Digitize()
   // If hits are present, digitize them
   if (sacHC) {
 
-    // Create digi vectors
-    std::vector<G4int> dChannel;
-    std::vector<G4double> dEnergy;
-    std::vector<G4double> dTime;
-
     // Loop over all hits
     G4int n_hit = sacHC->entries();
     for (G4int i=0;i<n_hit;i++) {
@@ -48,33 +43,32 @@ void SACDigitizer::Digitize()
       G4double hTime    = (*sacHC)[i]->GetTime();
       G4double hEnergy  = (*sacHC)[i]->GetEnergy();
 
-      // Loop over used channels
-      G4int found = 0;
-      for (G4int i=0; i < dChannel.size(); i++) {
-	if (dChannel[i] == hChannel) {
-	  dEnergy[i] += hEnergy;
-	  if (hTime < dTime[i]) dTime[i] = hTime;
-	  found = 1;
+      // Look for corresponding digi or create it if not present
+      SACDigi* digi = 0;
+      for (G4int j=0; j < sacDigiCollection->entries(); j++) {
+	if ((*sacDigiCollection)[j]->GetChannelId() == hChannel) {
+	  digi = (*sacDigiCollection)[j];
 	  break;
 	}
       }
-      if (found == 0) {
-	dChannel.push_back(hChannel);
-	dEnergy.push_back(hEnergy);
-	dTime.push_back(hTime);
+      if (digi == 0) {
+	digi = new SACDigi();
+	digi->SetChannelId(hChannel);
+	sacDigiCollection->insert(digi);
       }
 
+      // Add hit info to digi
+      digi->AddEnergy(hEnergy);
+      if (hTime < digi->GetTime()) digi->SetTime(hTime);
+      digi->AddEnergyAtTime(hEnergy,hTime);
+
+    } // End loop over hits
+
+    // Print digis
+    for (G4int i=0; i < sacDigiCollection->entries(); i++) {
+      (*sacDigiCollection)[i]->Print();
     }
 
-    // Create digis for active channels
-    for (G4int i=0; i < dChannel.size(); i++) {
-      SACDigi* digi = new SACDigi();
-      digi->SetChannelId(dChannel[i]);
-      digi->SetTime(dTime[i]);
-      digi->SetEnergy(dEnergy[i]);
-      sacDigiCollection->insert(digi);
-      digi->Print();
-    }
   }
 
   StoreDigiCollection(sacDigiCollection);

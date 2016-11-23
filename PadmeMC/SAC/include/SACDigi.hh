@@ -15,6 +15,8 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+#define SACDIGI_N_BINS 500
+
 class SACDigi : public G4VDigi
 {
   public:
@@ -40,13 +42,31 @@ class SACDigi : public G4VDigi
   G4double GetTime() { return fTime; };
 
   void SetEnergy(G4double e) { fEnergy = e; }
+  void AddEnergy(G4double e) { fEnergy += e; }
   G4double GetEnergy() { return fEnergy; }
+
+  void ResetEHisto();
+  void PrintEHisto();
+  void SetEHistoStart(G4double v) { fEHistoStart = v; }
+  void SetEHistoStep(G4double v)  { fEHistoStep = v; }
+  G4int    GetEHistoNBins() { return SACDIGI_N_BINS; };
+  G4double GetEHistoStart() { return fEHistoStart; };
+  G4double GetEHistoStep()  { return fEHistoStep; };
+  G4double GetEHistoEnd()   { return fEHistoStart+fEHistoStep*SACDIGI_N_BINS; };
+  void     SetEHistoBin(G4int i,G4double e) { fEHisto[i] = e; }
+  G4double GetEHistoBin(G4int i) { return fEHisto[i]; }
+  void     AddEnergyAtTime(G4double,G4double); // Energy,Time
+  G4double GetEnergyAtTime(G4double); // Time
 
 private:
     
   G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
+
+  G4double fEHistoStart;
+  G4double fEHistoStep;
+  G4double fEHisto[SACDIGI_N_BINS];
 
 };
 

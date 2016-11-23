@@ -72,9 +72,10 @@
 
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
-#/Detector/ECal/CrystalSize 2.
-#/Detector/ECal/CrystalLength 22.
-#/Detector/ECal/InnerRadius 6.
+#/Detector/ECal/CrystalSize 2.1
+#/Detector/ECal/CrystalLength 23.
+#/Detector/ECal/CrystalGap 0.1
+#/Detector/ECal/InnerRadius 5.9
 #/Detector/ECal/OuterRadius 28.5
 #/Detector/ECal/FrontFaceZ 230.
 

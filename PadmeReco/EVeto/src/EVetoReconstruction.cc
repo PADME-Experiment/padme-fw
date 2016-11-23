@@ -32,7 +32,7 @@ void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 // Read EVeto reconstruction parameters from a configuration file
 void EVetoReconstruction::ParseConfFile(TString ConfFileName) {
 
-  ifstream confFile(ConfFileName.Data());
+  std::ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);
@@ -60,7 +60,7 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TEVetoMCEvent* tEVetoEvent = (TEVetoMCEvent*)tEvent;
-  cout << "EVetoReconstruction: run/event/#hits " << tEVetoEvent->GetRunNumber() << " " << tEVetoEvent->GetEventNumber() << " " << tEVetoEvent->GetNHits() << endl;
+  std::cout << "EVetoReconstruction: run/event/#hits " << tEVetoEvent->GetRunNumber() << " " << tEVetoEvent->GetEventNumber() << " " << tEVetoEvent->GetNHits() << std::endl;
   for (Int_t iH=0; iH<tEVetoEvent->GetNHits(); iH++) {
     TEVetoMCHit* hit = (TEVetoMCHit*)tEVetoEvent->Hit(iH);
     hit->Print();

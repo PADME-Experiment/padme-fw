@@ -20,8 +20,8 @@ setenv PADMEROOT ${PADME}/PadmeRoot
 setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
 
 # Configure PadmeDB access parameters fom convenitonal file
-if ( -f ${HOME}/.padme-dbaccess.sh ) then
-  source ${HOME}/.padme-dbaccess.sh
+if ( -f ${HOME}/.padme-dbaccess.csh ) then
+  source ${HOME}/.padme-dbaccess.csh
 else
-  echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
+  echo "WARNING - File ${HOME}/.padme-dbaccess.csh not found: no DB access"
 endif

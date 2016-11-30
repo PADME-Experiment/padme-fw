@@ -2,8 +2,11 @@
 # Find path to PADME software from position of this script
 # assuming that this script is located in the Configure subdirectory
 # of the main PADME software directory
-set PADME=`realpath $0`
-setenv PADME $PADME:h:h
+
+set PADME=($_)
+set PADME=`realpath -e $PADME[2]`
+set PADME=$PADME:h:h
+setenv PADME $PADME
 
 # Define PADMEMC and Geant4 working dir
 setenv PADMEMC ${PADME}/PadmeMC

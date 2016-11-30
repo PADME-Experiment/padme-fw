@@ -6,14 +6,14 @@
 #include<vector>
 #include<map>
 #include<stdarg.h>
-#include <typeinfo>   // operator typeid
+#include<typeinfo>   // operator typeid
 
 
 
 namespace det{
   enum class eSubSystem { eUnknown=0, eEVeto, ePVeto, eHEPVeto, eSAC, eECAL, eTarget };
   enum class eDigitizerTypes { eUnknown=0, eCAENv1751, eCAENv1742, eTEL62 } ;
-  enum class eRODeviceTypes  { eUnknown=0, eHamamatsuH9500, ePhotonis, eChineesePMT, eSiPM };
+  enum class eRODeviceTypes  { eUnknown=0, eMAPMTH9500, ePhotonis, eChineesePMT, eSiPM };
   enum class eDetectorTypes  { eUnknown=0, eEVetoScintillatorBar,ePVetoScintillatorBar,eHEPVetoScintillatorBar,eECALScintillator};
 
 

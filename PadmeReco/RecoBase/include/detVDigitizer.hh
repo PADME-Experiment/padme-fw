@@ -12,8 +12,8 @@
 #include"fwk.hh"
 #include"detVPadmeElement.hh"
 #include"detVDigitizerChannel.hh"
-#include"detVDetectorSystem.hh"
-#include"detVRODevice.hh"
+//#include"detVSubSystem.hh"
+//#include"detVRODevice.hh"
 #include"detVDetector.hh"
 namespace det{
   class VDigitizer      :public VPadmeElement{
@@ -24,6 +24,7 @@ namespace det{
       std::map<unsigned, std::shared_ptr<VRODevice>> fRODevices;
       det::eDigitizerTypes fDigitizerType;
   };
+
   class CAENv1742:public VDigitizer{
     public:
       CAENv1742(){fDigitizerType=eDigitizerTypes::eCAENv1742;}

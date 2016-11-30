@@ -12,7 +12,7 @@
 #include"fwk.hh"
 #include"detVPadmeElement.hh"
 #include"detVDigitizer.hh"
-#include"detVDetectorSystem.hh"
+#include"detVSubSystem.hh"
 #include"detVRODevice.hh"
 #include"detVDetector.hh"
 namespace det{

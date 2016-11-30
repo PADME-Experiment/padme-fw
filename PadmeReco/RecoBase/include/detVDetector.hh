@@ -12,27 +12,28 @@
 #include"fwk.hh"
 
 #include"detVPadmeElement.hh"
-#include"detVDigitizerChannel.hh"
-#include"detVDigitizer.hh"
-#include"detVDetectorSystem.hh"
-#include"detVRODevice.hh"
-#include"detVDetectorSystem.hh"
 
 namespace det{
+  class VDetectorLayer;
   class VDetector       :public VPadmeElement{
-    protected:
+    public:
       ~VDetector       (){}
+    protected:
+      VDetector       (){ERROR("default constructor");}
+      VDetector       (VDetectorLayer* lay):fParentLayer(lay){}
+      VDetector       (const std::string&n,VDetectorLayer* lay):VPadmeElement(n),fParentLayer(lay){}
+      VDetector       (const std::string&n):VPadmeElement(n){}
     protected:
       double fCoordinates[3];
       double fOrientation[2];
-      std::shared_ptr<VSubSystem> fParentDetector;
+      VDetectorLayer* fParentLayer;
       //std::shared_ptr<VVeto> fParentLayer
       det::eDetectorTypes fDetectorType;
   };
-  class EVetoScintillatorBar  :public VDetector{public:  EVetoScintillatorBar(){fDetectorType=eDetectorTypes::eEVetoScintillatorBar  ;}  };
-  class PVetoScintillatorBar  :public VDetector{public:  PVetoScintillatorBar(){fDetectorType=eDetectorTypes::ePVetoScintillatorBar  ;}  };
-  class HEPVetoScintillatorBar:public VDetector{public:HEPVetoScintillatorBar(){fDetectorType=eDetectorTypes::eHEPVetoScintillatorBar;}  };
-  class ECALScintillator      :public VDetector{public:      ECALScintillator(){fDetectorType=eDetectorTypes::eECALScintillator   ;}  };
+  class EVetoScintillatorBar  :public VDetector{public:  EVetoScintillatorBar(const std::string&n):VDetector(n){fDetectorType=eDetectorTypes::eEVetoScintillatorBar  ;}  };
+  class PVetoScintillatorBar  :public VDetector{public:  PVetoScintillatorBar(const std::string&n):VDetector(n){fDetectorType=eDetectorTypes::ePVetoScintillatorBar  ;}  };
+  class HEPVetoScintillatorBar:public VDetector{public:HEPVetoScintillatorBar(const std::string&n):VDetector(n){fDetectorType=eDetectorTypes::eHEPVetoScintillatorBar;}  };
+  class ECALScintillator      :public VDetector{public:      ECALScintillator(const std::string&n):VDetector(n){fDetectorType=eDetectorTypes::eECALScintillator   ;}  };
 
 
 

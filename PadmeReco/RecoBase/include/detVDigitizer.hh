@@ -17,7 +17,7 @@
 #include"detVDetector.hh"
 namespace det{
   class VDigitizer      :public VPadmeElement{
-    protected:
+    public:
       ~VDigitizer      (){}
     protected:
       std::map<unsigned, std::shared_ptr<VDigitizerChannel>> fChannels;

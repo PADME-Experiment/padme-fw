@@ -13,26 +13,30 @@
 #include"fwk.hh"
 #include"detVPadmeElement.hh"
 #include"detVDetector.hh"
+//#include"detVSubSystem.hh"
 
 namespace det{
+  class VSubSystem;
   class VDetectorLayer : public VPadmeElement,public std::enable_shared_from_this<VDetectorLayer>{
     public:
-      virtual ~VDetectorLayer(){}
-      VDetectorLayer(std::shared_ptr<VDetectorLayer> parent):fParentLayer(parent){}
-      std::shared_ptr<VDetectorLayer> GetThisLayerPtr(){ return shared_from_this(); }
+      virtual ~VDetectorLayer();
+      VDetectorLayer(const std::string&n,VDetectorLayer* parent):VPadmeElement(n),fParentLayer(parent){}
+      VDetectorLayer* GetThisLayerPtr(){ return this; }
       const VDetectorLayer& GetParentLayer(){return *fParentLayer;}
-      virtual VSubSystem& GetParentSubSystem(){return *fParentSubSystem;}
-      const VDetectorLayer& GetLayer(unsigned i){
-#warning throw
-        return *fLayers.at(i); }
+      virtual VSubSystem* GetParentSubSystem(){return fParentSubSystem;}
+      void SetParentSubSystem(VSubSystem* ss){fParentSubSystem=ss;}
+      //const VDetectorLayer& GetLayer(unsigned i){
+      //#warning throw
+      //  return *(fLayers[i]); }
       void AddDetector(unsigned i,VDetector* d){
 #warning if exists throw
       }
-      virtual std::shared_ptr<VDetectorLayer> GetLayerPtr(unsigned i){
-#warning try cast
-        return fLayers.at(i);
-      }
-      virtual VDetectorLayer& EmplaceLayer(unsigned)=0;
+      //      virtual VDetectorLayer* GetLayerPtr(unsigned i){
+      //#warning try cast
+      //        return fLayers.at(i);
+      //      }
+      virtual VDetectorLayer& EmplaceLayer(const std::string&n)=0;
+      virtual void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind)=0;
       //      VDetectorLayer& EmplaceLayer(unsigned i){
       //#warning throw if exists
       //        fLayers.emplace(i,std::make_shared<VDetectorLayer>(shared_from_this()));
@@ -40,57 +44,60 @@ namespace det{
 
 
     protected:
-      std::shared_ptr<VDetectorLayer> fParentLayer;
-      std::shared_ptr<VSubSystem> fParentSubSystem;
-      std::map<unsigned,std::shared_ptr<VDetectorLayer>> fLayers;
-      std::map<unsigned,std::shared_ptr<VDetectorLayer>> fDetectors;
+      VDetectorLayer* fParentLayer;
+      VSubSystem    * fParentSubSystem;
+      std::vector<VDetectorLayer*> fLayers;
+      std::map<unsigned,VDetector*> fDetectors;
   };
 
 
 
   class EVetoLayer     : public VDetectorLayer{
     public:
-      EVetoLayer(std::shared_ptr<VDetectorLayer> parent):VDetectorLayer(parent){}
+      EVetoLayer(const std::string&n,VDetectorLayer* parent):VDetectorLayer(n,parent){}
 #warning throw if exists
-      virtual EVetoLayer& EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<EVetoLayer>(*this)); return *(std::dynamic_pointer_cast<EVetoLayer,VDetectorLayer>(fLayers.at(i))); }
-      const EVetoLayer& GetLayer(unsigned i){
-        return *std::dynamic_pointer_cast<EVetoLayer,VDetectorLayer>(fLayers.at(i));
-      }
-      //      virtual std::shared_ptr<EVetoLayer> GetLayerPtr(unsigned i){
-      //#warning try cast
-      //        return std::dynamic_pointer_cast<EVetoLayer,VDetectorLayer>(fLayers.at(i));
+      EVetoLayer& EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
+
+      //      const EVetoLayer& GetLayer(unsigned i){
+      //#warning try throw
+      //        return *(dynamic_cast<EVetoLayer*>(fLayers.at(i)));
       //      }
   };
 
-
   class PVetoLayer     : public VDetectorLayer{
     public:
-      PVetoLayer(std::shared_ptr<PVetoLayer> parent): VDetectorLayer(parent){}
-      virtual PVetoLayer&      EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<PVetoLayer>                (*this));return *(std::dynamic_pointer_cast<PVetoLayer,VDetectorLayer>(fLayers.at(i))); }
+      PVetoLayer(const std::string&n,PVetoLayer* parent): VDetectorLayer(n,parent){}
+      PVetoLayer&      EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
   };
 
   class HEPVetoLayer   : public VDetectorLayer{
     public:
-      HEPVetoLayer(std::shared_ptr<HEPVetoLayer> parent): VDetectorLayer(parent){}
-      virtual HEPVetoLayer    &EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<HEPVetoLayer>              (*this)); return *(std::dynamic_pointer_cast<HEPVetoLayer,VDetectorLayer>(fLayers.at(i))); }
+      HEPVetoLayer(const std::string&n,HEPVetoLayer* parent): VDetectorLayer(n,parent){}
+      HEPVetoLayer    &EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
   };
 
   class SACLayer       : public VDetectorLayer{
     public:
-      SACLayer(std::shared_ptr<SACLayer> parent): VDetectorLayer(parent){}
-      virtual SACLayer        &EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<SACLayer>                  (*this)); return *(std::dynamic_pointer_cast<SACLayer,VDetectorLayer>(fLayers.at(i))); }
+      SACLayer(const std::string&n,SACLayer* parent): VDetectorLayer(n,parent){}
+      SACLayer        &EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
   };
 
   class ECALLayer      : public VDetectorLayer{
     public:
-      ECALLayer(std::shared_ptr<ECALLayer> parent): VDetectorLayer(parent){}
-      virtual ECALLayer   &EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<ECALLayer>                     (*this)); return *(std::dynamic_pointer_cast<ECALLayer,VDetectorLayer>(fLayers.at(i))); }
+      ECALLayer(const std::string&n,ECALLayer* parent): VDetectorLayer(n,parent){}
+      ECALLayer   &EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
   };
 
   class TargetLayer    : public VDetectorLayer{
     public:
-      TargetLayer(std::shared_ptr<TargetLayer> parent): VDetectorLayer(parent){}
-      virtual TargetLayer &EmplaceLayer(unsigned i){fLayers.emplace(i,std::make_shared<TargetLayer>                   (*this)); return *(std::dynamic_pointer_cast<TargetLayer,VDetectorLayer>(fLayers.at(i))); }
+      TargetLayer(const std::string&n,TargetLayer* parent): VDetectorLayer(n,parent){}
+      TargetLayer &EmplaceLayer(const std::string&n);
+      void EmplaceDetector(const std::string&n,eDetectorTypes t,int ind);
   };
 }
 #endif

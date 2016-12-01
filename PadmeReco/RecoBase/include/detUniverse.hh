@@ -14,84 +14,111 @@
 
 namespace det{
   class Universe{
-    protected:
-    public:
+    private:
       Universe(){};
       ~Universe(){
         DestroySubSystems();
         DestoryRODevices ();
         DestroyDigitizers();
-        };
+      };
     public:
       static Universe&GetInstance(){
         static Universe a=Universe();
         return a;
       }
+    public:
 
-      std::map<std::string,VDetector        *>::iterator DetectorsBegin()        {return fAllDetectors         .begin();}
-      std::map<std::string,VDetector        *>::iterator DetectorsEnd()          {return fAllDetectors         .end();}
-      std::map<std::string,VRODevice        *>::iterator RODevicesBegin()        {return fAllRODevices         .begin();}
-      std::map<std::string,VRODevice        *>::iterator RODevicesEnd()          {return fAllRODevices         .end();}
-      std::map<eSubSystem ,VSubSystem       *>::iterator SubSystemsBegin()       {return fAllSubSystems        .begin();}
-      std::map<eSubSystem ,VSubSystem       *>::iterator SubSystemsEnd()         {return fAllSubSystems        .end();}
+      std::map<std::string,VDigitizer*>::iterator DigitizersBegin(){return fAllDigitizers.begin();}
+      std::map<std::string,VDigitizer*>::iterator DigitizersEnd  (){return fAllDigitizers.end()  ;}
+      std::map<std::string,VRODevice *>::iterator RODevicesBegin (){return fAllRODevices .begin();}
+      std::map<std::string,VRODevice *>::iterator RODevicesEnd   (){return fAllRODevices .end()  ;}
+      std::map<eSubSystem ,VSubSystem*>::iterator SubSystemsBegin(){return fAllSubSystems.begin();}
+      std::map<eSubSystem ,VSubSystem*>::iterator SubSystemsEnd  (){return fAllSubSystems.end()  ;}
 
-      //std::map<std::string,VDigitizerChannel*>::iterator DigitizerChannelsBegin(){return fAllDigitizerChannels .begin();}
-      //std::map<std::string,VDigitizerChannel*>::iterator DigitizerChannelsEnd()  {return fAllDigitizerChannels .end();}
+      std::map<std::string,VDigitizerChannel*>::iterator DigitizerChannelsBegin(){return fAllDigitizerChannels .begin();}
+      std::map<std::string,VDigitizerChannel*>::iterator DigitizerChannelsEnd()  {return fAllDigitizerChannels .end();}
+      std::map<std::string,VDetector *>::iterator DetectorsBegin (){return fAllDetectors .begin();}
+      std::map<std::string,VDetector *>::iterator DetectorsEnd   (){return fAllDetectors .end()  ;}
 
     private:
-      std::map<std::string,VDetector        *>fAllDetectors;
-      std::map<std::string,VRODevice        *>fAllRODevices;
-      std::map<eSubSystem ,VSubSystem       *>fAllSubSystems;
+      std::map<std::string,VDigitizer*>fAllDigitizers; //owned
+      std::map<std::string,VRODevice *>fAllRODevices;  //owned
+      std::map<eSubSystem ,VSubSystem*>fAllSubSystems; //owned
 
-      std::map<std::string,VDigitizerChannel*>fAllDigitizerChannels;
+
+      std::map<std::string,VDetectorLayer*>fAllDetectorLayers; ///<owned by the parent layer. The top layer is owned by the subsystem
+      std::map<std::string,VDetector *>fAllDetectors; ///< VDetector is owned by DetectorLayer.
+      std::map<std::string,VDigitizerChannel*>fAllDigitizerChannels; ///< VDigitizerChannel is owned by VDigitizer.
     public:
-      // EVetoSubSystem  & GetEVetoSubSystem   (){
-      //   std::shared_ptr<EVetoSubSystem>   a=
-      //     std::dynamic_pointer_cast<EVetoSubSystem  ,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::eEVeto  ));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
-      // PVetoSubSystem  & GetPVetoSubSystem   (){
-      //   std::shared_ptr<PVetoSubSystem >  a=
-      //     std::dynamic_pointer_cast<PVetoSubSystem  ,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::ePVeto  ));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
-      // HEPVetoSubSystem& GetHEPVetoSubSystem (){
-      //   std::shared_ptr<HEPVetoSubSystem> a=
-      //     std::dynamic_pointer_cast<HEPVetoSubSystem,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::eHEPVeto));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
-      // SACSubSystem    & GetSACSubSystem     (){
-      //   std::shared_ptr<SACSubSystem  >   a=
-      //     std::dynamic_pointer_cast<SACSubSystem    ,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::eSAC    ));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
-      // ECALSubSystem   & GetECALSubSystem    (){
-      //   std::shared_ptr<ECALSubSystem  >  a=
-      //     std::dynamic_pointer_cast<ECALSubSystem   ,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::eECAL   ));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
-      // TargetSubSystem & GetTargetSubSystem  (){
-      //   std::shared_ptr<TargetSubSystem>  a=
-      //     std::dynamic_pointer_cast<TargetSubSystem ,VSubSystem>(
-      //         fAllSubSystems.at(eSubSystem::eTarget ));
-      //   if(!bool(a))throw true;//cannot cast
-      //   return *a;
-      // }
+      void RegisterLayer(VDetectorLayer*lay){
+        if(fAllDetectorLayers.count(lay->GetName())){
+          ERROR(lay->GetName()+" already exists");
+#warning check
+        }
+        fAllDetectorLayers[lay->GetName()]=lay;
+      }
+      VDetectorLayer* GetLayer(const std::string& n){
+        if(!fAllDetectorLayers.count(n)){
+          ERROR(n+" does not exist");
+#warning check
+        }
+        return fAllDetectorLayers.at(n);
+      }
+
+      void RegisterDetector(VDetector*det){
+        if(fAllDetectors.count(det->GetName())){
+          ERROR(det->GetName()+" already exists");
+#warning check
+        }
+        fAllDetectors[det->GetName()]=det;
+      }
+      VDetector* GetDetector(const std::string& n){
+        if(!fAllDetectors.count(n)){
+          ERROR(n+" does not exist");
+#warning check
+        }
+        return fAllDetectors.at(n);
+      }
+
+
+
+      EVetoSubSystem  & GetEVetoSubSystem   (){
+        EVetoSubSystem*   a=dynamic_cast<EVetoSubSystem*>(fAllSubSystems.at(eSubSystem::eEVeto  ));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+      PVetoSubSystem  & GetPVetoSubSystem   (){
+        PVetoSubSystem*  a=dynamic_cast<PVetoSubSystem*>(fAllSubSystems.at(eSubSystem::ePVeto  ));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+      HEPVetoSubSystem& GetHEPVetoSubSystem (){
+        HEPVetoSubSystem* a=dynamic_cast<HEPVetoSubSystem*>(fAllSubSystems.at(eSubSystem::eHEPVeto));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+      SACSubSystem    & GetSACSubSystem     (){
+        SACSubSystem    * a=dynamic_cast<SACSubSystem    *>(fAllSubSystems.at(eSubSystem::eSAC    ));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+      ECALSubSystem   & GetECALSubSystem    (){
+        ECALSubSystem   * a=dynamic_cast<ECALSubSystem   *>(fAllSubSystems.at(eSubSystem::eECAL   ));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+      TargetSubSystem & GetTargetSubSystem  (){
+        TargetSubSystem * a=dynamic_cast<TargetSubSystem *>(fAllSubSystems.at(eSubSystem::eTarget ));
+        if(!bool(a))throw true;//cannot cast
+        return *a;
+      }
+
       VSubSystem& GetSubSystem(eSubSystem s)    {
         if(!fAllSubSystems.count(s))
           throw true; // does not exist
         return *fAllSubSystems.at(s);
       }
+
       VSubSystem& EmplaceSubSystem(const std::string& name,eSubSystem s){
         if(fAllSubSystems.count(s))
           throw true; // already exists
@@ -108,45 +135,29 @@ namespace det{
         return *fAllSubSystems.at(s);
       }
 
-
-      //  enum class eSubSystem { eUnknown=0, eEVeto, ePVeto, eHEPVeto, eSAC, eECAL, eTarget };
-      //  enum class eDigitizerTypes { eUnknown=0, eCAENv1751, eCAENv1742, eTEL62 } ;
-      //  enum class eRODeviceTypes  { eUnknown=0, eHamamatsuH9500, ePhotonis, eChineesePMT, eSiPM };
-      //enum class eDetectorTypes  { eUnknown=0, eVetoScintillatorBar, eECALScintillator};
-
       VRODevice& EmplaceRODevice(const std::string& name,eRODeviceTypes s){
         if(fAllRODevices.count(name)) ERROR("throw");
         switch(s) {
           case eRODeviceTypes::eMAPMTH9500  : fAllRODevices.emplace(name,new RODeviceMAPMTH9500  (name));break;
           case eRODeviceTypes::ePhotonis    : fAllRODevices.emplace(name,new RODevicePhotonis    (name));break;
           default: ERROR("throw");
+#warning throw
         }
-        //fAllRODevices.at(name)->SetName(name);
         return *(fAllRODevices.at(name));
       }
-      VDetector* EmplaceDetector(const std::string& name,eDetectorTypes s){
-        if(fAllDetectors.count(name))ERROR("throw");
+
+      VDigitizerChannel& EmplaceDigitizer(const std::string& name,eDigitizerTypes s){
+        if(fAllDigitizerChannels.count(name))throw true;
         switch(s) {
-          case eDetectorTypes::eEVetoScintillatorBar   : fAllDetectors.emplace(name,new   EVetoScintillatorBar(name));break;
-          case eDetectorTypes::ePVetoScintillatorBar   : fAllDetectors.emplace(name,new   PVetoScintillatorBar(name));break;
-          case eDetectorTypes::eHEPVetoScintillatorBar : fAllDetectors.emplace(name,new HEPVetoScintillatorBar(name));break;
-          case eDetectorTypes::eECALScintillator       : fAllDetectors.emplace(name,new ECALScintillator      (name));break;
-          default: ERROR("throw");
+          case eDigitizerTypes::eCAENv1742 : fAllDigitizerChannels.emplace(name,new CAENv1742Channel());break;
+          default: ERROR("unknown type");
+#warning throw
         }
-        //fAllDetectors.at(name)->SetName(name);
-        return fAllDetectors.at(name);
+        return *fAllDigitizerChannels.at(name);
       }
-      //VDigitizerChannel& EmplaceDigitizerChannel(const std::string& name,eDigitizerTypes s){
-      //  if(fAllDigitizerChannels.count(name))throw true;
-      //  switch(s) {
-      //    case eDigitizerTypes::eCAENv1742 : fAllDigitizerChannels.emplace(name,new CAENv1742Channel());break;
-      //    default: true; //throw 
-      //  }
-      //  return *fAllDigitizerChannels.at(name);
-      //}
       void DestroySubSystems(){for(auto it=fAllSubSystems.begin();it!=fAllSubSystems.end();++it)delete it->second;}
       void DestoryRODevices (){for(auto it=fAllRODevices .begin();it!=fAllRODevices .end();++it)delete it->second;}
-      void DestroyDigitizers(){for(auto it=fAllDetectors .begin();it!=fAllDetectors .end();++it)delete it->second;}
+      void DestroyDigitizers(){for(auto it=fAllDigitizers.begin();it!=fAllDigitizers.end();++it)delete it->second;}
   };
 }
 

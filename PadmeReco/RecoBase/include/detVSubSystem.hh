@@ -28,10 +28,20 @@ namespace det{
       }
       virtual VDetectorLayer& GetTopLayer(){return *fTopLayer;}
       virtual ~VSubSystem(){ }
+      VDetectorLayer* GetLayer(const std::string& n){
+        if(!fLayers.count(n)){
+          ERROR(n+" does not exist");
+#warning throw
+        }
+        return fLayers.at(n);
+      }
+      void RegisterLayer(VDetectorLayer* lay);
+      void RegisterDetector(VDetector* det);
     protected:
       VSubSystem(){}
     protected:
-      std::deque<std::shared_ptr<VDetector>> fDetectors;
+      std::map<std::string, VDetectorLayer*> fLayers;
+      std::map<std::string, VDetector     *> fDetectors;
       det::eSubSystem fSubSystem;
       VDetectorLayer* fTopLayer;
   };
@@ -42,20 +52,54 @@ namespace det{
   class ChargedVetoVInMagnet : public DetectorVChargedVeto{};
   class ChargedVetoVOutMagnet: public DetectorVChargedVeto{};
 
- 
- 
- 
- 
- 
- 
-  class EVetoSubSystem  :public VSubSystem,public ChargedVetoVInMagnet { public: ~EVetoSubSystem  (){delete fTopLayer;}EVetoSubSystem  (const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::eEVeto  ;fTopLayer=new EVetoLayer  (nullptr);} };
-  class PVetoSubSystem  :public VSubSystem,public ChargedVetoVInMagnet { public: ~PVetoSubSystem  (){delete fTopLayer;}PVetoSubSystem  (const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::ePVeto  ;fTopLayer=new PVetoLayer  (nullptr);} };
-  class HEPVetoSubSystem:public VSubSystem,public ChargedVetoVOutMagnet{ public: ~HEPVetoSubSystem(){delete fTopLayer;}HEPVetoSubSystem(const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::eHEPVeto;fTopLayer=new HEPVetoLayer(nullptr);} };
-  class SACSubSystem    :public VSubSystem                             { public: ~SACSubSystem    (){delete fTopLayer;}SACSubSystem    (const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::eSAC    ;fTopLayer=new SACLayer    (nullptr);} };
-  class ECALSubSystem   :public VSubSystem                             { public: ~ECALSubSystem   (){delete fTopLayer;}ECALSubSystem   (const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::eECAL   ;fTopLayer=new ECALLayer   (nullptr);} };
-  class TargetSubSystem :public VSubSystem                             { public: ~TargetSubSystem (){delete fTopLayer;}TargetSubSystem (const std::string&n):VSubSystem(n){fSubSystem=eSubSystem::eTarget ;fTopLayer=new TargetLayer (nullptr);} };
 
+  class EVetoSubSystem  :public VSubSystem,public ChargedVetoVInMagnet {
+    public:
+      ~EVetoSubSystem  (){
+        delete fTopLayer;
+      }
+      EVetoSubSystem  (const std::string&n);
+  };
 
+  class PVetoSubSystem  :public VSubSystem,public ChargedVetoVInMagnet {
+    public:
+      ~PVetoSubSystem  (){
+        delete fTopLayer;
+      }
+      PVetoSubSystem  (const std::string&n);
+  };
+
+  class HEPVetoSubSystem:public VSubSystem,public ChargedVetoVOutMagnet{
+    public:
+      ~HEPVetoSubSystem(){
+        delete fTopLayer;
+      }
+      HEPVetoSubSystem(const std::string&n);
+  };
+
+  class SACSubSystem    :public VSubSystem               {
+    public:
+      ~SACSubSystem    (){
+        delete fTopLayer;
+      }
+      SACSubSystem    (const std::string&n);
+  };
+
+  class ECALSubSystem   :public VSubSystem               {
+    public:
+      ~ECALSubSystem   (){
+        delete fTopLayer;
+      }
+      ECALSubSystem   (const std::string&n);
+  };
+
+  class TargetSubSystem :public VSubSystem               {
+    public:
+      ~TargetSubSystem (){
+        delete fTopLayer;
+      }
+      TargetSubSystem (const std::string&n);
+  };
 }
 
 #endif

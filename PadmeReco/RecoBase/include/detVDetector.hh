@@ -12,6 +12,8 @@
 #include"fwk.hh"
 
 #include"detVPadmeElement.hh"
+#include"detVDetectorLayer.hh"
+
 
 namespace det{
   class VDetectorLayer;

@@ -52,12 +52,25 @@ fwk::UniverseBuilder::SubSystems()
   for(auto subs_it=subs.begin();subs_it!=subs.end();++subs_it){
     if(subs_it->second.size()!=1)throw true; //except
     const std::string&  det=subs_it->second[0];
-    if     ( det=="eEVeto"  ){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eEVeto  );s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
-    else if( det=="ePVeto"  ){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::ePVeto  );s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
-    else if( det=="eHEPVeto"){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eHEPVeto);s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
-    else if( det=="eSAC"    ){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eSAC    );s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
-    else if( det=="eECAL"   ){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eECAL   );s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
-    else if( det=="eTarget" ){det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eTarget );s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+"_topLayer");}
+    if       ( det=="eEVeto"  ){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eEVeto  );
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    } else if( det=="ePVeto"  ){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::ePVeto  );
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    } else if( det=="eHEPVeto"){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eHEPVeto);
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    } else if( det=="eSAC"    ){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eSAC    );
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    } else if( det=="eECAL"   ){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eECAL   );
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    } else if( det=="eTarget" ){
+      det::VSubSystem& s=uni.EmplaceSubSystem(subs_it->first,det::eSubSystem::eTarget );
+      //s.SetName(subs_it->first);s.GetTopLayer().SetName(subs_it->first+".topLayer");
+    }
     else   WARNING(subs_it->first+" skipped");
   }
 }
@@ -66,23 +79,19 @@ fwk::UniverseBuilder::Layers()
 {
   auto & uni= det::Universe::GetInstance();
   for(auto det_it=uni.SubSystemsBegin();det_it!=uni.SubSystemsEnd();++det_it){
-    const std::string& detName=uni.GetSubSystem(det_it->first).GetName();
-    auto det=det_it->second;
+    auto subSystemID=det_it->first;
+    det::VSubSystem* subSystem=det_it->second;
+    const std::string& ssName=subSystem->GetName();
 
     const std::map<std::string,std::vector<std::string>>&
-      layers = fConfig.GetGroup(detName+".Layers");
+      layers = fConfig.GetGroup(ssName+".Layers");
     for(auto line_it=layers.begin();line_it!=layers.end();++line_it){
-      const std::string& layerName=line_it->first;
-      auto const& layerIDs=line_it->second;
-      det::VDetectorLayer* layer=&det->GetTopLayer();
-      static int kkk=0;
-      INFO(std::to_string(kkk++));
-      for(auto num_it=layerIDs.begin();num_it!=(--layerIDs.end());++num_it){
-        int idInt=std::atoi(num_it->c_str());
-        layer=layer->GetLayerPtr(idInt).get();
+      const std::string& parLayerName=line_it->first;
+      auto const& subLayers=line_it->second;
+      for(auto num_it=subLayers.begin();num_it!=subLayers.end();++num_it){
+        subSystem->GetLayer(parLayerName)->EmplaceLayer(*num_it);
+        SUCCESS(*num_it+" as a sublayer of "+parLayerName);
       }
-      INFO(std::to_string(std::atoi(layerIDs.rbegin()->c_str())));
-      (layer->EmplaceLayer(std::atoi(layerIDs.rbegin()->c_str()))).SetName(layerName);
     }
   }
 }
@@ -91,22 +100,17 @@ fwk::UniverseBuilder::Detectors()
 {
   auto & uni= det::Universe::GetInstance();
   for(auto det_it=uni.SubSystemsBegin();det_it!=uni.SubSystemsEnd();++det_it){
-    const std::string& detName=uni.GetSubSystem(det_it->first).GetName();
-    auto det=det_it->second;
+    auto subSystemID=det_it->first;
+    det::VSubSystem* subSystem=det_it->second;
+    const std::string& ssName=subSystem->GetName();
 
     const std::map<std::string,std::vector<std::string>>&
-      detectors = fConfig.GetGroup(detName+".Detectors");
+      detectors = fConfig.GetGroup(ssName+".Detectors");
     for(auto line_it=detectors.begin();line_it!=detectors.end();++line_it){
-      const std::string& detectorName=line_it->first;
+      const std::string& detName=line_it->first;
       const auto& vect=line_it->second;
-      if(vect.size()<2)ERROR("throw");
-      det::VDetectorLayer* layer=&det->GetTopLayer();
-      for(unsigned i=1;i<vect.size()-1;++i){
-        INFO("i  "+std::to_string(i));
-        int idInt=std::atoi(vect[i].c_str());
-        INFO("idInt  "+std::to_string(idInt));
-        layer=layer->GetLayerPtr(idInt).get();
-      }
+      if(vect.size()!=3)ERROR("throw");
+#warning throw
       auto const& detTypeStr=vect[0];
       det::eDetectorTypes detType;
       if     (detTypeStr=="eEVetoScintillatorBar"  )detType=det::eDetectorTypes::eEVetoScintillatorBar   ;
@@ -115,9 +119,10 @@ fwk::UniverseBuilder::Detectors()
       else if(detTypeStr=="eECALScintillator"      )detType=det::eDetectorTypes::eECALScintillator       ;
 #warning throw
       else detType=det::eDetectorTypes::eUnknown;
-
-      det::VDetector* det=uni.EmplaceDetector(detectorName,detType);
-      layer->AddDetector(std::atoi(vect.rbegin()->c_str()),det);
+      const std::string& layName=vect[1];
+#warning atoi needs to be checked
+      const int detInd=std::atoi(vect[2].c_str());
+      uni.GetLayer(layName)->EmplaceDetector(detName,detType,detInd);
     }
   }
 }

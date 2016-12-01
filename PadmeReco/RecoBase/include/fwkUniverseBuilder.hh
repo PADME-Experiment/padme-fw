@@ -11,7 +11,7 @@ namespace fwk{
     private:
       utl::ConfigParser fConfig;
     public:
-      UniverseBuilder(const std::string & fn):fConfig(fn){ InitSeq(); }
+      UniverseBuilder(const std::string & fn):fConfig(fn){InitSeq();}
     private:
       void InitSeq();
       void SubSystems();

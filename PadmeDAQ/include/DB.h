@@ -7,7 +7,7 @@
 #define DB_CONNECTERROR 1
 #define DB_SQLERROR     2
 
-int db_init(char*); // db_file
+int db_init();
 int db_end();
 int db_run_check(int); // run_nr
 int db_process_create(int,int); // run_nr,board_id

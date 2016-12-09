@@ -41,7 +41,7 @@ int reset_config()
   strcpy(Config->initok_file,"run/initok.b00"); // InitOK file for default board 0
   strcpy(Config->initfail_file,"run/initfail.b00"); // InitFail file for default board 0
   strcpy(Config->lock_file,"run/lock.b00"); // Lock file for default board 0
-  strcpy(Config->db_file,"db/PadmeDAQ.db");
+  //strcpy(Config->db_file,"db/PadmeDAQ.db");
 
   // All data files written to subdirectory "data" of current directory
   strcpy(Config->data_file,"data/daq_b00"); // Data filename template for default board 0
@@ -87,7 +87,8 @@ int reset_config()
   Config->zs1_head = 80; // Use first 80 samples to compute mean and rms
   Config->zs1_tail = 30; // Do not use final 30 samples for zero suppression
   Config->zs1_nsigma = 3.; // Threshold set a mean +/- 3*rms
-  Config->zs1_nabovethr = 4; // Require at least 4 consecutive samples above threshold to accept the event
+  Config->zs1_nabovethr = 4; // Require at least 4 consecutive samples above threshold to accept the channel
+  Config->zs1_badrmsthr = 15.; // If rms is above 15 counts, channel has problems and is accepted
 
   // Enable DRS4 corrections to sampled data
   Config->drs4corr_enable = 1;
@@ -223,13 +224,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - lock_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
-      } else if ( strcmp(param,"db_file")==0 ) {
-	if ( strlen(value)<MAX_FILE_LEN ) {
-	  strcpy(Config->db_file,value);
-	  printf("Parameter %s set to '%s'\n",param,value);
-	} else {
-	  printf("WARNING - db_file name too long (%lu characters): %s\n",strlen(value),value);
-	}
+	//} else if ( strcmp(param,"db_file")==0 ) {
+	//	if ( strlen(value)<MAX_FILE_LEN ) {
+	//	  strcpy(Config->db_file,value);
+	//	  printf("Parameter %s set to '%s'\n",param,value);
+	//	} else {
+	//	  printf("WARNING - db_file name too long (%lu characters): %s\n",strlen(value),value);
+	//	}
       } else if ( strcmp(param,"data_file")==0 ) {
 	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
 	  strcpy(Config->data_file,value);
@@ -387,6 +388,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"zs1_badrmsthr")==0 ) {
+	if ( sscanf(value,"%f",&vf) ) {
+	  Config->zs1_badrmsthr = vf;
+	  printf("Parameter %s set to %f\n",param,vf);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"daq_loop_delay")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
 	  Config->daq_loop_delay = v;
@@ -501,7 +509,7 @@ int print_config(){
   printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
   printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
-  printf("db_file\t\t\t'%s'\tname of db file (sqlite3)\n",Config->db_file);
+  //printf("db_file\t\t\t'%s'\tname of db file (sqlite3)\n",Config->db_file);
   //printf("data_dir\t\t'%s'\t\tpath where data files will be written\n",Config->data_dir);
   printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
@@ -525,7 +533,8 @@ int print_config(){
     printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
     printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
     printf("zs1_nsigma\t\t%5.3f\t\tnumber of sigmas around mean used to set the threshold\n",Config->zs1_nsigma);
-    printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the event\n",Config->zs1_nabovethr);
+    printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
+    printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
   }
   printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
   printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
@@ -557,7 +566,7 @@ int save_config()
 
   db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
 
-  db_add_cfg_para(Config->process_id,"db_file",Config->db_file);
+  //db_add_cfg_para(Config->process_id,"db_file",Config->db_file);
 
   sprintf(line,"%d",Config->run_number);
   db_add_cfg_para(Config->process_id,"run_number",line);
@@ -628,6 +637,8 @@ int save_config()
     db_add_cfg_para(Config->process_id,"zs1_nsigma",line);
     sprintf(line,"%d",Config->zs1_nabovethr);
     db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
+    sprintf(line,"%f",Config->zs1_badrmsthr);
+    db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
   }
 
   sprintf(line,"%d",Config->file_max_duration);

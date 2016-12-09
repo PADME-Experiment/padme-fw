@@ -156,12 +156,13 @@ int main(int argc, char*argv[])
         abort ();
       }
 
-  // Run number verification
+  // Run number verification: if run number is not 0, it must exist in the DB
   if ( Config->run_number ) {
 
     // Connect to DB
     //if ( db_init(Config->db_file) != DB_OK ) exit(1);
-    if ( db_init(Config->db_file) != DB_OK ) init_fail();
+    //if ( db_init(Config->db_file) != DB_OK ) init_fail();
+    if ( db_init() != DB_OK ) init_fail();
 
     // Verify if run number is valid
     rc = db_run_check(Config->run_number);

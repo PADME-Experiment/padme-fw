@@ -114,6 +114,8 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
 	sum = 0.;
 	sum2 = 0.;
+	mean = 0.;
+	rms = 0.;
 	thrHi = 8192.;
 	thrLo = -8192;
 	overThr = 0;
@@ -171,7 +173,8 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
 	// Decide if channel is accepted. 1:channel accepted, 0:channel rejected
 	acceptCh = 0;
-	if (nMaxOverThr>=Config->zs1_nabovethr) acceptCh = 1;
+	// Channel is accepted if rms is bad or if at least zs1_nabovethr channels are above threshold
+	if ( (rms>Config->zs1_badrmsthr) ||  (nMaxOverThr>=Config->zs1_nabovethr) ) acceptCh = 1;
 	//	printf("Channel %d max consecutive samples over threshold: %d\n",Ch,nMaxOverThr);
 
 	if (acceptCh) {

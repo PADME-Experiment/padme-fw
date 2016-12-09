@@ -701,7 +701,8 @@ int DAQ_readdata ()
   if ( Config->run_number ) {
 
     //... connect to DB and create new process
-    if ( db_init(Config->db_file) != DB_OK ) return 1;
+    //if ( db_init(Config->db_file) != DB_OK ) return 1;
+    if ( db_init() != DB_OK ) return 1;
     if ( db_process_create(Config->run_number,Config->board_id) != DB_OK ) return 1;
     Config->process_id = db_get_process_id(Config->run_number,Config->board_id);
     if ( Config->process_id <= 0 ) return 1;

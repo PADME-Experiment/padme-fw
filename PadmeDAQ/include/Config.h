@@ -32,7 +32,7 @@ typedef struct config_s {
   char lock_file[MAX_FILE_LEN];
 
   // DB file (sqlite3)
-  char db_file[MAX_FILE_LEN];
+  //char db_file[MAX_FILE_LEN];
   
   // Run number
   int run_number;
@@ -103,7 +103,8 @@ typedef struct config_s {
   int zs1_head; // Number of samples to use to compute mean and rms
   int zs1_tail; // Number of samples to reject at the end (see V1742 manual)
   float zs1_nsigma; // Number of sigmas around mean to set the threshold
-  int zs1_nabovethr; // Number of consecutive above-threshold samples to accept the event
+  int zs1_nabovethr; // Number of consecutive above-threshold samples to accept the eventchannel
+  float zs1_badrmsthr; // RMS threshold above which channel is deemed problematic and is accepted
 
   // Set maximum per-file DAQ duration (secs).
   // After this time the output file will be closed and a new one will be opened

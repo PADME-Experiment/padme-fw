@@ -14,7 +14,7 @@
 MYSQL* DBHandle = NULL;
 
 // Create a connection to the SQLite database
-int db_init(char* db_file)
+int db_init()
 {
 
   char* db_host;

@@ -20,7 +20,6 @@ public:
   ~TSACMCDigi();
 
   void ResetTHisto();
-  void PrintTHisto();
   void SetTHistoStart(Double_t v) { fTHistoStart = v; }
   void SetTHistoStep(Double_t v)  { fTHistoStep = v; }
   Double_t GetTHistoNBins() { return TSACMCDIGI_N_BINS; };

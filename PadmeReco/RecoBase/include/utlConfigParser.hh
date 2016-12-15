@@ -6,15 +6,11 @@
 #ifndef _utlConfigParser_hh_
 #define _utlConfigParser_hh_ 1
 
-#include<fstream>
-#include<iostream>
+#include<map>
 #include<string>
 #include<vector>
-#include<sstream>
-#include<map>
 
-
-#include"fwk.hh"
+#include"fwkException.hh"
 
 /**
  * \class utl::ConfigParser
@@ -74,23 +70,20 @@ namespace utl{
         return *this;
       }
   };
+
+
   class ConfigParser{
     public:
       typedef std::map<std::string,std::vector<std::string>> conf_group_t;
     public:
       ConfigParser(const std::string& fn);
-      std::string GetSingleArg(const std::string&grp,const std::string&cfg)const;
-      std::vector<std::string> GetConfig(const std::string&grp,const std::string&cfg)const;
-      bool HasConfig(const std::string&grp,const std::string&cfg)const;
-      bool HasOneArgConfig(const std::string&grp,const std::string&cfg)const;
-      bool IsSingleArgConfig(const std::string&grp,const std::string& cfg)const;
-      void Print()const;
-      const conf_group_t& GetGroup(const std::string& str){
-        if(!fConfigLines.count(str)){
-          throw ConfigParser_except().SyntaxErrorGroupNotFound(fFileName,str);
-        }
-        return fConfigLines.at(str);
-      }
+      std::string              GetSingleArg(const std::string&grp,const std::string&cfg)const;
+      std::vector<std::string> GetConfig   (const std::string&grp,const std::string&cfg)const;
+      bool                     HasConfig   (const std::string&grp,const std::string&cfg)const;
+      bool                     HasOneArgConfig(const std::string&grp,const std::string&cfg)const;
+      bool                     IsSingleArgConfig(const std::string&grp,const std::string& cfg)const;
+      void                     Print       ()const;
+      const conf_group_t&      GetGroup    (const std::string& str);
     protected:
       std::string fFileName;
       std::map<std::string,conf_group_t> fConfigLines;

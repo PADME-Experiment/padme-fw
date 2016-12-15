@@ -10,6 +10,7 @@
 
 #include"fwk.hh"
 #include"utl.hh"
+#include"utlMessageBus.hh"
 
 
 namespace det{

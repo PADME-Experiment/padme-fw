@@ -13,11 +13,10 @@
 #include"fwk.hh"
 #include"detVPadmeElement.hh"
 #include"detVDetector.hh"
-//#include"detVSubSystem.hh"
 
 namespace det{
   class VSubSystem;
-  class VDetectorLayer : public VPadmeElement,public std::enable_shared_from_this<VDetectorLayer>{
+  class VDetectorLayer : public VPadmeElement{
     public:
       virtual ~VDetectorLayer();
       VDetectorLayer(const std::string&n,VDetectorLayer* parent):VPadmeElement(n),fParentLayer(parent){}

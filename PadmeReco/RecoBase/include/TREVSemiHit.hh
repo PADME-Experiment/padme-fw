@@ -19,7 +19,7 @@ class TREVSemiHit{
     void AddDigi(TREVDigi *digi);
   protected:
     typedef typename fw::TSimpleList<TREVDigi*> digiCont_t;
-    digiCont_t  fAssocDigis;
+    //digiCont_t  fAssocDigis;
 
 
 };

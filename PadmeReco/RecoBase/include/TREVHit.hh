@@ -16,7 +16,7 @@ class TREVHit{
     void AddSemiHit(TREVSemiHit *sHit);
   protected:
     typedef typename fw::TSimpleList<TREVSemiHit*> semiHitCont_t;
-    semiHitCont_t fAssocSemiHits;
+    //semiHitCont_t fAssocSemiHits;
   private:
 };
 #endif

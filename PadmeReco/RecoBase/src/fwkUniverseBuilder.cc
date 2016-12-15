@@ -1,5 +1,7 @@
 #include"fwkUniverseBuilder.hh"
 
+#include"utlMessageBus.hh"
+
 #include"detVROChannel.hh"
 #include"detVRODevice.hh"
 #include"detVSubSystem.hh"

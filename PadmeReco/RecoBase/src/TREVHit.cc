@@ -2,5 +2,5 @@
 #include"TREVHit.hh"
 
 void TREVHit::AddSemiHit(TREVSemiHit *sHit){
-  fAssocSemiHits.AddEntry(sHit);
+  //fAssocSemiHits.AddEntry(sHit);
 }

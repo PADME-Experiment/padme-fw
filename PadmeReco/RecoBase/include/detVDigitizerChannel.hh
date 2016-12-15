@@ -1,5 +1,5 @@
-#ifndef _RECOBASE_DETVDIGITIZERCHANNEL_HH_
-#define _RECOBASE_DETVDIGITIZERCHANNEL_HH_ 1
+#ifndef _RecoBase_detVDigitizerChannel_hh_
+#define _RecoBase_detVDigitizerChannel_hh_ 1
 #include<stdio.h>
 #include<memory>
 #include<iostream>

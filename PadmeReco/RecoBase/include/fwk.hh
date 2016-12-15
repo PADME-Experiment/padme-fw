@@ -1,5 +1,5 @@
-#ifndef _RECOBASE_FWK_HH_
-#define _RECOBASE_FWK_HH_ 1
+#ifndef _RecoBase_fwk_hh_
+#define _RecoBase_fwk_hh_ 1
 #include<stdio.h>
 #include<memory>
 #include<iostream>
@@ -21,18 +21,6 @@ namespace fwk{
   typedef std::string digitizer_name_t;
   typedef std::string digitizer_channel_name_t;
 }
-typedef unsigned int UShort_t ;
 
-namespace fwk{
-  class Exception:public std::exception{
-    public:
-      const char* what() const noexcept {return fWhat.c_str();}
-      const std::string& GetType()const{return fType;}
-    protected:
-      virtual ~Exception(){}
-      std::string fWhat;
-      std::string fType;
-  };
-}
 
 #endif

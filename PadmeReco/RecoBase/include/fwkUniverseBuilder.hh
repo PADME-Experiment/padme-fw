@@ -1,6 +1,7 @@
 #ifndef _RecoBase_fwkUniverseBuilder_HH_
 #define _RecoBase_fwkUniverseBuilder_HH_
 #include"fwk.hh"
+#include"fwkException.hh"
 #include"utlConfigParser.hh"
 #include"det.hh"
 #include"utl.hh"

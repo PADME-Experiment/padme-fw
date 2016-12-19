@@ -16,9 +16,10 @@ int main(int argc, char* argv[])
   int neventsperfile = 10000;
   int runnr = 0;
   int verbose = 0;
+  int updatedb = 0;
 
   // Parse options
-  while ((c = getopt (argc, argv, "n:d:r:l:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:d:r:l:o:v:uh")) != -1) {
     switch (c)
       {
       case 'r':
@@ -70,6 +71,10 @@ int main(int argc, char* argv[])
         }
         fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
+      case 'u':
+        fprintf(stdout,"Enabling DB update\n");
+	updatedb = 1;
+	break;
       case 'h':
         fprintf(stdout,"\nPadmeDigi ([-r run_number]|[-l list_file]) [-d input files directory] [-o output root file] [-n events per file] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -r: define run to process\n");
@@ -111,11 +116,11 @@ int main(int argc, char* argv[])
   ADCBoard* board;
   std::vector<ADCBoard*> boards;
 
+  // Initialize DB connection
+  DBService* db = DBService::GetInstance();
+
   // If no list is specified, get board and file lists from DB
   if (listfile.compare("")==0) {
-
-    // Initialize DB connection
-    DBService* db = DBService::GetInstance();
 
     // Get from DB list of board ids used in current run
     std::vector<int> boardList;
@@ -316,6 +321,33 @@ int main(int argc, char* argv[])
 
   // End of run procedure
   printf("Run %d closed after writing %d events\n",runnr,eventnr);
+
+  if (updatedb == 0) {
+    printf("Option -u was not specified: DB not updated.\n");
+    exit(0);
+  }
+
+  // Update DB with number of events for this run
+  int n_events;
+  int rc = db->GetRunEvents(n_events,runnr);
+  if (rc != DBSERVICE_OK) {
+    printf("ERROR retrieving from DB old number of events for run %d. Aborting\n",runnr);
+    exit(1);
+  }
+  if (n_events == eventnr) {
+    printf("Run %d Events %d. DB is up-to-date: no action.\n",runnr,eventnr);
+  } else {
+    if (n_events == 0) {
+      printf("Run %d Events %d. Writing number of events to DB.\n",runnr,eventnr);
+    } else {
+      printf("Run %d Events %d. WARNING - DB returns %d events: updating DB.\n",runnr,eventnr,n_events);
+    }
+    int rc = db->UpdateRunEvents(n_events,runnr);
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR updating DB for run %d. Aborting\n",runnr);
+      exit(1);
+    }
+  }
 
   exit(0);
 }

@@ -37,9 +37,8 @@ int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
 
   // Open output file
   //printf("RootIO::Init - Creating %s output file.\n",fOutFile.Data());
-  OpenOutFile();
+  return (int)OpenOutFile();
 
-  return 0;
 }
 
 int RootIO::Exit()
@@ -50,7 +49,7 @@ int RootIO::Exit()
   printf("Level1 process ended\n");
   printf("Total events written: %ld on %d files\n",fOutEventsTotal,fOutFileIndex+1);
 
-  return 0;
+  return ROOTIO_OK;
 }
 
 Int_t RootIO::ChangeOutFile()
@@ -61,13 +60,17 @@ Int_t RootIO::ChangeOutFile()
   fOutFileIndex++;
   SetOutFile();
 
-  OpenOutFile();
-
-  return 0;
+  return OpenOutFile();
 }
 
 Int_t RootIO::OpenOutFile()
 {
+
+  if (file_exists(fOutFile.Data())) {
+    printf("RootIO::OpenOutFile - ERROR: file %s already exists\n",fOutFile.Data());
+    return ROOTIO_ERROR;
+  }
+
   printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
   fTFileHandle->Open(fOutFile,"NEW","PADME Merged Raw Events");
 
@@ -77,7 +80,7 @@ Int_t RootIO::OpenOutFile()
   // Attach branch to TRawEvent
   fTTreeMain->Branch("RawEvent",&fTRawEvent);
 
-  return 0;
+  return ROOTIO_OK;
 }
 
 Int_t RootIO::CloseOutFile()
@@ -93,13 +96,13 @@ Int_t RootIO::CloseOutFile()
   // Delete TTree used for this file
   delete fTTreeMain;
 
-  return 0;
+  return ROOTIO_OK;
 }
 
 Int_t RootIO::SetOutFile()
 {
   fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
-  return 0;
+  return ROOTIO_OK;
 }
 
 int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
@@ -169,10 +172,10 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
   fOutEventsTotal++;
   fOutEventsCounter++;
   if (fNMaxEvtsPerOutFile && (fOutEventsCounter>=fNMaxEvtsPerOutFile)) {
-    ChangeOutFile();
+    if (ChangeOutFile() == ROOTIO_ERROR) return ROOTIO_ERROR;
     fOutEventsCounter = 0;
   }
 
-  return 0;
+  return ROOTIO_OK;
 
 }

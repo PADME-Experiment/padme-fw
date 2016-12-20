@@ -16,9 +16,10 @@ int main(int argc, char* argv[])
   int neventsperfile = 10000;
   int runnr = 0;
   int verbose = 0;
+  int updatedb = 0;
 
   // Parse options
-  while ((c = getopt (argc, argv, "n:d:r:l:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:d:r:l:o:v:uh")) != -1) {
     switch (c)
       {
       case 'r':
@@ -70,11 +71,16 @@ int main(int argc, char* argv[])
         }
         fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
+      case 'u':
+        fprintf(stdout,"Enabling DB update\n");
+	updatedb = 1;
+	break;
       case 'h':
         fprintf(stdout,"\nPadmeDigi ([-r run_number]|[-l list_file]) [-d input files directory] [-o output root file] [-n events per file] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -r: define run to process\n");
         fprintf(stdout,"  -l: define file with list of data files to process\n");
         fprintf(stdout,"      n.b. either -r or -l must be specified\n");
+        fprintf(stdout,"  -u: update DB with total number of events merged (default: no DB update)\n");
         fprintf(stdout,"  -d: define directory where input files are located (default: \"%s\")\n",datadir.c_str());
         fprintf(stdout,"  -o: define an output file in root format (default: \"%s\")\n",outfile.c_str());
         fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %d)\n",neventsperfile);
@@ -114,7 +120,7 @@ int main(int argc, char* argv[])
   // If no list is specified, get board and file lists from DB
   if (listfile.compare("")==0) {
 
-    // Initialize DB connection
+    // Get handle to DB
     DBService* db = DBService::GetInstance();
 
     // Get from DB list of board ids used in current run
@@ -212,8 +218,8 @@ int main(int argc, char* argv[])
   root->SetVerbose(verbose);
 
   // Initialize root output file
-  if ( root->Init(outfile,neventsperfile) != 0 ) {
-    printf("ERROR while initializing root output to file '%s'. Aborting\n",outfile.c_str());
+  if ( root->Init(outfile,neventsperfile) != ROOTIO_OK ) {
+    printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }
 
@@ -305,17 +311,64 @@ int main(int argc, char* argv[])
     }
 
     // The event is complete: copy structure to TRawEvent and send to output file
-    root->FillRawEvent(runnr,eventnr,boards);
+    if (root->FillRawEvent(runnr,eventnr,boards) != ROOTIO_OK) {
+      printf("ERROR while writing event %d to root file. Aborting\n",eventnr);
+      exit(1);
+    }
 
     // Count event
     eventnr++;
   }
 
   // Finalize root file
-  root->Exit();
+  if (root->Exit() != ROOTIO_OK) {
+      printf("ERROR while finalizing root file. Aborting\n");
+      exit(1);
+  }
 
-  // End of run procedure
-  printf("Run %d closed after writing %d events\n",runnr,eventnr);
+  // If input was from a real run, finalize output and update DB if required
+  if (listfile.compare("")==0) {
+
+    printf("Run %d closed after writing %d events\n",runnr,eventnr);
+
+    if (updatedb == 0) {
+
+      printf("Option -u was not specified: DB not updated.\n");
+
+    } else {
+
+      // Get handle to DB
+      DBService* db = DBService::GetInstance();
+
+      // Update DB with number of events for this run
+      int n_events;
+      int rc = db->GetRunEvents(n_events,runnr);
+      if (rc != DBSERVICE_OK) {
+	printf("ERROR retrieving from DB old number of events for run %d. Aborting\n",runnr);
+	exit(1);
+      }
+      if (n_events == eventnr) {
+	printf("Run %d Events %d. DB is up-to-date: no action.\n",runnr,eventnr);
+      } else {
+	if (n_events == 0) {
+	  printf("Run %d Events %d. Writing number of events to DB.\n",runnr,eventnr);
+	} else {
+	  printf("Run %d Events %d. WARNING - DB returns %d events: updating DB.\n",runnr,eventnr,n_events);
+	}
+	int rc = db->UpdateRunEvents(n_events,runnr);
+	if (rc != DBSERVICE_OK) {
+	  printf("ERROR updating DB for run %d. Aborting\n",runnr);
+	  exit(1);
+	}
+      }
+
+    }
+
+  } else {
+
+    printf("A total of %d merged events were written to the output file\n",eventnr);
+
+  }
 
   exit(0);
 }

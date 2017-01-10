@@ -50,7 +50,8 @@ G4bool ECalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   ECalHit* newHit = new ECalHit();
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber());
+  //newHit->SetChannelId(touchHPre->GetCopyNumber());
+  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
   newHit->SetEnergy(edep);
   newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
 

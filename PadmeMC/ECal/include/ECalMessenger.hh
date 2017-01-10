@@ -40,6 +40,8 @@ private:
 
   G4UIcommand* fSetCrystalGapCmd;
 
+  G4UIcommand* fSetCrystalCoatingCmd;
+
   //G4UIcommand* fSetECalInnerRadiusCmd;
   //G4UIcommand* fSetECalOuterRadiusCmd;
 

@@ -61,6 +61,13 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalGapCmd->SetParameter(cgSizeParameter);
   fSetCrystalGapCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetCrystalCoatingCmd = new G4UIcommand("/Detector/ECal/CrystalCoating",this);
+  fSetCrystalCoatingCmd->SetGuidance("Set thickness of paint coating around crystal in mm.");
+  G4UIparameter* ccThickParameter = new G4UIparameter("Thick",'d',false);
+  ccThickParameter->SetParameterRange("Thick >= 0. && Thick <= 1.");
+  fSetCrystalCoatingCmd->SetParameter(ccThickParameter);
+  fSetCrystalCoatingCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   //fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
   //fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
   //G4UIparameter* eirRadParameter = new G4UIparameter("Rad",'d',false);
@@ -97,6 +104,8 @@ ECalMessenger::~ECalMessenger()
 
   delete fSetCrystalGapCmd;
 
+  delete fSetCrystalCoatingCmd;
+
   //delete fSetECalInnerRadiusCmd;
   //delete fSetECalOuterRadiusCmd;
 
@@ -131,6 +140,11 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetCrystalGapCmd ) {
     G4double s; std::istringstream is(par); is >> s;
     fECalGeometry->SetCrystalGap(s*mm);
+  }
+
+  if ( cmd == fSetCrystalCoatingCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fECalGeometry->SetCrystalCoating(s*mm);
   }
 
   //if ( cmd == fSetECalInnerRadiusCmd ) {

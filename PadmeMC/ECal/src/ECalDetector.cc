@@ -53,6 +53,9 @@ void ECalDetector::CreateGeometry()
   // Show size of gap between crystals
   printf("Gap between crystals is %f\n",geo->GetCrystalGap());
 
+  // Show size of gap between crystals
+  printf("Coating around crystals is %f\n",geo->GetCrystalCoating());
+
   // Create standard BGO crystal
   G4double crySizeX = geo->GetCrystalSizeX();
   G4double crySizeY = geo->GetCrystalSizeY();
@@ -71,6 +74,18 @@ void ECalDetector::CreateGeometry()
   sdMan->AddNewDetector(ecalSD);
   fCrystalVolume->SetSensitiveDetector(ecalSD);
 
+  // Create ECal cell (BGO crystal+coating)
+  G4double cellSizeX = geo->GetCellSizeX();
+  G4double cellSizeY = geo->GetCellSizeY();
+  G4double cellSizeZ = geo->GetCellSizeZ();
+  printf("ECal cell size is %f %f %f\n",cellSizeX,cellSizeY,cellSizeZ);
+  G4Box* solidCell  = new G4Box("ECalCell",0.5*cellSizeX,0.5*cellSizeY,0.5*cellSizeZ);
+  fCellVolume  = new G4LogicalVolume(solidCell,G4Material::GetMaterial("EJ510Paint"),"ECalCell",0, 0, 0);
+  fCellVolume->SetVisAttributes(G4VisAttributes(G4Colour::Cyan()));
+
+  // Position BGO crystal inside cell
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"ECalCry",fCellVolume,false,0,false);
+
   // Get number of rows and columns of crystals and position all crystals
   G4int nTotCry = 0;
   G4int nRow = geo->GetECalNRows();
@@ -79,9 +94,10 @@ void ECalDetector::CreateGeometry()
      for (G4int col=0;col<nCol;col++){
        if (geo->ExistsCrystalAt(row,col)) {
 	 nTotCry++;
-	 G4int idxCry = row*ECALGEOMETRY_N_COLS_MAX+col;
+	 G4int idxCell = row*ECALGEOMETRY_N_COLS_MAX+col;
 	 G4ThreeVector positionCry = G4ThreeVector(geo->GetCrystalPosX(row,col),geo->GetCrystalPosY(row,col),geo->GetCrystalPosZ(row,col));
-	 new G4PVPlacement(0,positionCry,fCrystalVolume,"ECalCry",fECalVolume,false,idxCry,false);
+	 //new G4PVPlacement(0,positionCry,fCrystalVolume,"ECalCry",fECalVolume,false,idxCry,false);
+	 new G4PVPlacement(0,positionCry,fCellVolume,"ECalCell",fECalVolume,false,idxCell,false);
        }
      }
   }

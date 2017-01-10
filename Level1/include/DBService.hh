@@ -36,6 +36,9 @@ protected:
 
   int GetFileInfo(int&,int&,std::string&,std::string&,int&,long int&,std::string); // (Version, Index, Start Time, End Time, N Events, Size, File Name). Return info about raw file
 
+  int GetRunEvents(int&,int); // (N Events, Run nr). Returns number of events currently associated to run
+  int UpdateRunEvents(int,int); // (N Events, Run nr). Store number of events associated to run
+
  private:
 
   MYSQL* fDBHandle;

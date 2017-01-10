@@ -32,7 +32,7 @@ void SACReconstruction::Init(PadmeVReconstruction* MainReco)
 // Read SAC reconstruction parameters from a configuration file
 void SACReconstruction::ParseConfFile(TString ConfFileName) {
 
-  ifstream confFile(ConfFileName.Data());
+  std::ifstream confFile(ConfFileName.Data());
   if (!confFile.is_open()) {
     perror(ConfFileName);
     exit(1);
@@ -60,7 +60,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TSACMCEvent* tSACEvent = (TSACMCEvent*)tEvent;
-  cout << "SACReconstruction: run/event/#hits " << tSACEvent->GetRunNumber() << " " << tSACEvent->GetEventNumber() << " " << tSACEvent->GetNHits() << endl;
+  std::cout << "SACReconstruction: run/event/#hits " << tSACEvent->GetRunNumber() << " " << tSACEvent->GetEventNumber() << " " << tSACEvent->GetNHits() << std::endl;
   for (Int_t iH=0; iH<tSACEvent->GetNHits(); iH++) {
     TSACMCHit* hit = (TSACMCHit*)tSACEvent->Hit(iH);
     hit->Print();

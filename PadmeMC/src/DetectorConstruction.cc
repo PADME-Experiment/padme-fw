@@ -220,6 +220,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
   G4Material* StainlessSteel = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
+  G4Material* Oxygen = man->FindOrBuildMaterial("G4_O");
+  G4Material* Hydrogen = man->FindOrBuildMaterial("G4_H");
+  G4Material* Titanium = man->FindOrBuildMaterial("G4_Ti");
 
   //Materials for SF57
 
@@ -279,6 +282,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Diamond material to be used by target
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
   Diamond->AddElement(G4Element::GetElement("C"),100.*perCent);
+
+  // EJ510 reflective paint
+  G4Material* EJ510Paint = new G4Material("EJ510Paint",1.182*g/cm3,4);
+  EJ510Paint->AddElement(G4Element::GetElement("Ti"),41.08*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("C"), 17.18*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("H"),  2.88*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("O"), 38.86*perCent);
 
   //Print all the materials defined.
   //G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;

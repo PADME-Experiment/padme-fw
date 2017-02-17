@@ -103,4 +103,20 @@ void ECalDetector::CreateGeometry()
   }
   G4cout << "ECalDetector - Positioned " << nTotCry << " crystals." << G4endl;
 
+  // Create plastic panel in front of ECal
+  if ( geo->ECalPanelIsEnabled() ) {
+    printf("ECal panel will be placed at %f %f %f\n",geo->GetECalPanelPosX(),geo->GetECalPanelPosY(),geo->GetECalPanelPosZ());
+    G4ThreeVector ecalPanelPos = G4ThreeVector(geo->GetECalPanelPosX(),geo->GetECalPanelPosY(),geo->GetECalPanelPosZ()); 
+    G4double ecalPanelSizeX = geo->GetECalPanelSizeX();
+    G4double ecalPanelSizeY = geo->GetECalPanelSizeY();
+    G4double ecalPanelSizeZ = geo->GetECalPanelSizeZ();
+    printf("ECal panel size is %f %f %f\n",ecalPanelSizeX,ecalPanelSizeY,ecalPanelSizeZ);
+    G4Box* solidEcalPanel = new G4Box("ECalPanel",0.5*ecalPanelSizeX,0.5*ecalPanelSizeY,0.5*ecalPanelSizeZ);
+    fECalPanelVolume = new G4LogicalVolume(solidEcalPanel,G4Material::GetMaterial("G4_PLEXIGLASS"),"ECalPanel",0,0,0);
+    fECalPanelVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+    new G4PVPlacement(0,ecalPanelPos,fECalPanelVolume,"ECalPanel",fMotherVolume,false,0,false);
+  } else {
+    printf("ECal panel is disabled\n");
+  }
+
 }

@@ -12,6 +12,7 @@
 #include "G4UIdirectory.hh"
 #include "G4UIcommand.hh"
 #include "G4UIparameter.hh"
+#include "G4UIcmdWithABool.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithoutParameter.hh"
 
@@ -68,26 +69,32 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetCrystalCoatingCmd->SetParameter(ccThickParameter);
   fSetCrystalCoatingCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  //fSetECalInnerRadiusCmd = new G4UIcommand("/Detector/ECal/InnerRadius",this);
-  //fSetECalInnerRadiusCmd->SetGuidance("Set radius of inner hole of ECal detector in cm.");
-  //G4UIparameter* eirRadParameter = new G4UIparameter("Rad",'d',false);
-  //eirRadParameter->SetParameterRange("Rad >= 0. && Rad < 20.");
-  //fSetECalInnerRadiusCmd->SetParameter(eirRadParameter);
-  //fSetECalInnerRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-
-  //fSetECalOuterRadiusCmd = new G4UIcommand("/Detector/ECal/OuterRadius",this);
-  //fSetECalOuterRadiusCmd->SetGuidance("Set external radius of ECal detector in cm.");
-  //G4UIparameter* eorRadParameter = new G4UIparameter("Rad",'d',false);
-  //eorRadParameter->SetParameterRange("Rad >= 20. && Rad < 200.");
-  //fSetECalOuterRadiusCmd->SetParameter(eorRadParameter);
-  //fSetECalOuterRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-
   fSetECalFrontFaceZCmd = new G4UIcommand("/Detector/ECal/FrontFaceZ",this);
   fSetECalFrontFaceZCmd->SetGuidance("Set position along Z of ECal front face in cm.");
   G4UIparameter* effPosZParameter = new G4UIparameter("PosZ",'d',false);
   effPosZParameter->SetParameterRange("PosZ > 100. && PosZ <= 1000.");
   fSetECalFrontFaceZCmd->SetParameter(effPosZParameter);
   fSetECalFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fEnablePanelCmd = new G4UIcmdWithABool("/Detector/ECal/EnablePanel",this);
+  fEnablePanelCmd->SetGuidance("Enable (true) or disable (false) panel in front of ECal.");
+  fEnablePanelCmd->SetParameterName("EP",true);
+  fEnablePanelCmd->SetDefaultValue(true);
+  fEnablePanelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetECalPanelThickCmd = new G4UIcommand("/Detector/ECal/PanelThickness",this);
+  fSetECalPanelThickCmd->SetGuidance("Set thickness of plastic panel in front of ECal in cm.");
+  G4UIparameter* eptThickParameter = new G4UIparameter("Thick",'d',false);
+  eptThickParameter->SetParameterRange("Thick > 0. && Thick <= 10.");
+  fSetECalPanelThickCmd->SetParameter(eptThickParameter);
+  fSetECalPanelThickCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetECalPanelGapCmd = new G4UIcommand("/Detector/ECal/PanelGap",this);
+  fSetECalPanelGapCmd->SetGuidance("Set air gap between ECal and plastic panel in mm.");
+  G4UIparameter* eptGapParameter = new G4UIparameter("Gap",'d',false);
+  eptGapParameter->SetParameterRange("Gap >= 0. && Gap <= 10.");
+  fSetECalPanelGapCmd->SetParameter(eptGapParameter);
+  fSetECalPanelGapCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -106,10 +113,11 @@ ECalMessenger::~ECalMessenger()
 
   delete fSetCrystalCoatingCmd;
 
-  //delete fSetECalInnerRadiusCmd;
-  //delete fSetECalOuterRadiusCmd;
-
   delete fSetECalFrontFaceZCmd;
+
+  delete fEnablePanelCmd;
+  delete fSetECalPanelThickCmd;
+  delete fSetECalPanelGapCmd;
 
 }
 
@@ -133,33 +141,41 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   }
 
   if ( cmd == fSetCrystalLengthCmd ) {
-    G4double s; std::istringstream is(par); is >> s;
-    fECalGeometry->SetCrystalSizeZ(s*cm);
+    G4double l; std::istringstream is(par); is >> l;
+    fECalGeometry->SetCrystalSizeZ(l*cm);
   }
 
   if ( cmd == fSetCrystalGapCmd ) {
-    G4double s; std::istringstream is(par); is >> s;
-    fECalGeometry->SetCrystalGap(s*mm);
+    G4double g; std::istringstream is(par); is >> g;
+    fECalGeometry->SetCrystalGap(g*mm);
   }
 
   if ( cmd == fSetCrystalCoatingCmd ) {
-    G4double s; std::istringstream is(par); is >> s;
-    fECalGeometry->SetCrystalCoating(s*mm);
+    G4double c; std::istringstream is(par); is >> c;
+    fECalGeometry->SetCrystalCoating(c*mm);
   }
-
-  //if ( cmd == fSetECalInnerRadiusCmd ) {
-  //  G4double r; std::istringstream is(par); is >> r;
-  //  fECalGeometry->SetECalInnerRadius(r*cm);
-  //}
-
-  //if ( cmd == fSetECalOuterRadiusCmd ) {
-  //  G4double r; std::istringstream is(par); is >> r;
-  //  fECalGeometry->SetECalOuterRadius(r*cm);
-  //}
 
   if ( cmd == fSetECalFrontFaceZCmd ) {
     G4double z; std::istringstream is(par); is >> z;
     fECalGeometry->SetECalFrontFacePosZ(z*cm);
+  }
+
+  if ( cmd == fEnablePanelCmd ) {
+    if (fEnablePanelCmd->GetNewBoolValue(par)) {
+      fECalGeometry->EnableECalPanel();
+    } else {
+      fECalGeometry->DisableECalPanel();
+    }
+  }
+
+  if ( cmd == fSetECalPanelThickCmd ) {
+    G4double t; std::istringstream is(par); is >> t;
+    fECalGeometry->SetECalPanelThickness(t*cm);
+  }
+
+  if ( cmd == fSetECalPanelGapCmd ) {
+    G4double g; std::istringstream is(par); is >> g;
+    fECalGeometry->SetECalPanelGap(g*mm);
   }
 
 }

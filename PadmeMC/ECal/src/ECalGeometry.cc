@@ -36,6 +36,12 @@ ECalGeometry::ECalGeometry()
   //fECalInnerRadius = 5.9*cm;
   //fECalOuterRadius = 28.5*cm;
 
+  fECalPanelEnable = true;
+  fECalPanelThickness = 0.5*cm;
+  fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
+  fECalPanelSizeY = 62.*cm; // Slightly larger than ECal (61.625cm)
+  fECalPanelGap = 0.100*mm;
+
   // Map of ECal crystals
   // Y grows from top to bottom
   // X grows from left to right

@@ -40,13 +40,9 @@ public:
   // Position of center of ECal box
   G4double GetECalPosX() { return 0.*cm; }
   G4double GetECalPosY() { return 0.*cm; }
-  //G4double GetECalPosZ() { return fECalFrontFacePosZ+(fCrystalSizeZ+fCrystalGap)*0.5; }
   G4double GetECalPosZ() { return fECalFrontFacePosZ+GetECalSizeZ()*0.5; }
 
   // Size of ECal box
-  //G4double GetECalSizeX() { return (fCrystalSizeX+2.*fCrystalCoating+fCrystalGap)*fECalNCols; }
-  //G4double GetECalSizeY() { return (fCrystalSizeY+2.*fCrystalCoating+fCrystalGap)*fECalNRows; }
-  //G4double GetECalSizeZ() { return  fCrystalSizeZ+2.*fCrystalCoating+fCrystalGap; }
   G4double GetECalSizeX() { return (GetCellSizeX()+fCrystalGap)*fECalNCols; }
   G4double GetECalSizeY() { return (GetCellSizeY()+fCrystalGap)*fECalNRows; }
   G4double GetECalSizeZ() { return  GetCellSizeZ()+fCrystalGap; }
@@ -88,13 +84,32 @@ public:
   G4double GetCrystalCoating() { return fCrystalCoating; }
   void SetCrystalCoating(G4double c) { fCrystalCoating = c; }
 
-  // Set position along Z of ECal front face
+  // Position along Z of ECal front face
   G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
 
-  // Set inner and outer radii of ECal
-  //void SetECalInnerRadius(G4double r) { fECalInnerRadius = r; }
-  //void SetECalOuterRadius(G4double r) { fECalOuterRadius = r; }
+  // Enable/Disable plastic panel in front of ECal
+  void EnableECalPanel() { fECalPanelEnable = true; }
+  void DisableECalPanel() { fECalPanelEnable = false; }
+  G4bool ECalPanelIsEnabled() { return fECalPanelEnable; }
+
+  // Position of plastic panel
+  G4double GetECalPanelPosX() { return 0.*cm; }
+  G4double GetECalPanelPosY() { return 0.*cm; }
+  G4double GetECalPanelPosZ() { return fECalFrontFacePosZ-fECalPanelGap-0.5*fECalPanelThickness; }
+
+  // Dimensions of plastic panel
+  G4double GetECalPanelSizeX() { return fECalPanelSizeX; }
+  G4double GetECalPanelSizeY() { return fECalPanelSizeY; }
+  G4double GetECalPanelSizeZ() { return fECalPanelThickness; }
+
+  // Thickness of the plastic panel
+  G4double GetECalPanelThickness() { return fECalPanelThickness; }
+  void SetECalPanelThickness(G4double t) { fECalPanelThickness = t; }
+
+  // Air gap between plastic panel and ECal
+  G4double GetECalPanelGap() { return fECalPanelGap; }
+  void SetECalPanelGap(G4double g) { fECalPanelGap = g; }
 
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
@@ -114,8 +129,11 @@ private:
 
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
-  //G4double fECalInnerRadius; // Radius of hole at ECal center
-  //G4double fECalOuterRadius; // External radius of ECal
+  G4bool fECalPanelEnable; // Use (true) or do not use (false) the panel in front of ECal
+  G4double fECalPanelSizeX; // Size of plastic panel in front of ECal along X
+  G4double fECalPanelSizeY; // Size of plastic panel in front of ECal along Y
+  G4double fECalPanelThickness; // Thickness of the plastic panel in front of ECal
+  G4double fECalPanelGap; // Gap between back of plastic panel and front face of ECal
 
   G4int fECalCrystalMap[ECALGEOMETRY_N_ROWS_MAX][ECALGEOMETRY_N_COLS_MAX]; // Map of existing crystals
 

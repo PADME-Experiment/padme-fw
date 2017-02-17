@@ -219,6 +219,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Al       = man->FindOrBuildMaterial("G4_Al");
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
+  G4Material* Plexiglass = man->FindOrBuildMaterial("G4_PLEXIGLASS");
   G4Material* StainlessSteel = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
   G4Material* Oxygen = man->FindOrBuildMaterial("G4_O");
   G4Material* Hydrogen = man->FindOrBuildMaterial("G4_H");

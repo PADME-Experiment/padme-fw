@@ -28,6 +28,7 @@ public:
   G4LogicalVolume* GetECalLogicalVolume() { return fECalVolume; }
   G4LogicalVolume* GetCrystalLogicalVolume() { return fCrystalVolume; }
   G4LogicalVolume* GetCellLogicalVolume() { return fCellVolume; }
+  G4LogicalVolume* GetECalPanelLogicalVolume() { return fECalPanelVolume; }
 
   G4double GetECalFrontFaceZ() { return ECalGeometry::GetInstance()->GetECalFrontFacePosZ(); }
 
@@ -37,6 +38,7 @@ private:
   G4LogicalVolume* fECalVolume;
   G4LogicalVolume* fCrystalVolume;
   G4LogicalVolume* fCellVolume;
+  G4LogicalVolume* fECalPanelVolume;
   ECalMessenger* fECalMessenger;
 
 };

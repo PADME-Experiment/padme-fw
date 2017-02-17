@@ -16,6 +16,7 @@ class ECalDetector;
 class ECalGeometry;
 class G4UIdirectory;
 class G4UIcommand;
+class G4UIcmdWithABool;
 
 class ECalMessenger: public G4UImessenger
 {
@@ -42,10 +43,11 @@ private:
 
   G4UIcommand* fSetCrystalCoatingCmd;
 
-  //G4UIcommand* fSetECalInnerRadiusCmd;
-  //G4UIcommand* fSetECalOuterRadiusCmd;
-
   G4UIcommand* fSetECalFrontFaceZCmd;
+
+  G4UIcmdWithABool* fEnablePanelCmd;
+  G4UIcommand* fSetECalPanelThickCmd;
+  G4UIcommand* fSetECalPanelGapCmd;
 
 };
 #endif

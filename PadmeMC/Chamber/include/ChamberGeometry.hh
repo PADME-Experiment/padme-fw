@@ -50,6 +50,41 @@ public:
   G4int GetVCOutMagWallNVertices() { return CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES; }
   G4TwoVector GetVCOutMagWallVertex(G4int p) { return fVCOutMagWallVertex[p]; }
 
+  G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
+
+  // Properties of the big vacuum chamber cylinder
+
+  // Flange to connect ECal thin window
+  G4double GetVCCFPosZ() { return fVCBackFacePosZ-fEWFrontMylarThick-fEWKevlarThick-fEWBackMylarThick-fEWF2Thick-fEWF3Thick-fVCEWGap-0.5*fVCCFThick; }
+  G4double GetVCCFThick() { return fVCCFThick; }
+  G4double GetVCCFRIn() { return fEWF3RIn; }
+  G4double GetVCCFROut() { return fEWF2ROut; }
+
+  // Properties of thin window
+
+  G4double GetEWRadius() { return fEWRadius; }
+  G4double GetEWConvexity() { return fEWConvexity; }
+  G4double GetEWFrontMylarThick() { return fEWFrontMylarThick; }
+  G4double GetEWKevlarThick() { return fEWKevlarThick; }
+  G4double GetEWBackMylarThick() { return fEWBackMylarThick; }
+
+  // Properties of thin window flange
+
+  G4double GetEWF1PosZ() { return fVCBackFacePosZ+0.5*fEWF1Thick; }
+  G4double GetEWF1Thick() { return fEWF1Thick; }
+  G4double GetEWF1RIn() { return fEWRadius; }
+  G4double GetEWF1ROut() { return fEWF1ROut; }
+
+  G4double GetEWF2PosZ() { return fVCBackFacePosZ-fEWFrontMylarThick-fEWKevlarThick-fEWBackMylarThick-0.5*fEWF2Thick; }
+  G4double GetEWF2Thick() { return fEWF2Thick; }
+  G4double GetEWF2RIn() { return fEWRadius; }
+  G4double GetEWF2ROut() { return fEWF2ROut; }
+
+  G4double GetEWF3PosZ() { return fVCBackFacePosZ-fEWFrontMylarThick-fEWKevlarThick-fEWBackMylarThick-fEWF2Thick-0.5*fEWF3Thick; }
+  G4double GetEWF3Thick() { return fEWF3Thick; }
+  G4double GetEWF3RIn() { return fEWF3RIn; }
+  G4double GetEWF3ROut() { return fEWF2ROut; }
+
 private:
 
   G4double fVCInMagThick;
@@ -62,6 +97,31 @@ private:
   G4TwoVector fVCInMagPlateVertex[CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES];
 
   G4TwoVector fVCOutMagWallVertex[CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES];
+
+  G4double fVCCFThick; // Thickness of the VC flange toward thin window flange
+
+  G4double fVCBackFacePosZ; // Z position of the thin window border
+
+  G4double fVCEWGap; // Gap for o-ring between main VC body and thin window flange
+
+  // Thin window in front of ECal (EW)
+
+  G4double fEWRadius; // Radius of window
+  G4double fEWConvexity; // Convexity of window at its center
+
+  G4double fEWFrontMylarThick; // Thickness of mylar layer inside VC
+  G4double fEWKevlarThick; // Thickness of kevlar layer between mylar layers
+  G4double fEWBackMylarThick;  // Thickness of mylar layer outside VC
+
+  // Steel flange around thin window (three steel rings)
+
+  G4double fEWF1Thick;
+  G4double fEWF2Thick;
+  G4double fEWF3Thick;
+
+  G4double fEWF1ROut;
+  G4double fEWF2ROut;
+  G4double fEWF3RIn;
 
 };
 

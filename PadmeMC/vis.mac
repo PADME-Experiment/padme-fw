@@ -199,7 +199,7 @@
 #
 # Use this open statement to create a .heprep file suitable for
 # viewing in HepRApp:
-#/vis/open HepRepFile
+###/vis/open HepRepFile
 #/vis/open HepRepXML
 #/vis/heprep/setEventNumberSuffix -0001
 #/vis/scene/add/trajectories rich
@@ -290,4 +290,4 @@
 #/vis/viewer/panTo -0.5 0.
 #/vis/viewer/set/viewpointThetaPhi 0. 0.
 #/vis/viewer/zoom 50
-/run/beamOn 1	
+#/run/beamOn 1	

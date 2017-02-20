@@ -56,6 +56,31 @@ ChamberGeometry::ChamberGeometry()
   fVCOutMagWallVertex[ 4] = G4TwoVector( -67.9*cm, 52.4*cm);
   fVCOutMagWallVertex[ 5] = G4TwoVector( -56.0*cm, 52.4*cm);
 
+  fVCBackFacePosZ = 227.5*cm; // Z position of window: 2.5cm before front face of ECal
+
+  fVCEWGap = 5.9*mm; // Gap for o-ring between main VC body and thin window flange
+
+  fVCCFThick = 20.*mm; // Thickness of the VC flange toward thin window flange
+
+  // Thin window in front of ECal (EW)
+
+  fEWRadius = 310.*mm; // Radius of window
+  fEWConvexity = 30.*mm; // Convexity of window at its center
+
+  fEWFrontMylarThick = 0.1*mm; // Thickness of mylar layer inside VC
+  fEWKevlarThick = 0.6*mm;     // Thickness of kevlar layer between mylar layers
+  fEWBackMylarThick = 0.1*mm;  // Thickness of mylar layer outside VC
+
+  // Steel flange around thin window (three steel rings)
+
+  fEWF1Thick = 15.*mm;
+  fEWF2Thick = 15.*mm;
+  fEWF3Thick = 9.*mm;
+
+  fEWF1ROut = 360.*mm;
+  fEWF2ROut = 390.*mm;
+  fEWF3RIn = 325.5*mm;
+
 }
 
 ChamberGeometry::~ChamberGeometry()

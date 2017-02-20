@@ -16,6 +16,7 @@
 #include "G4LogicalVolume.hh"
 
 #include "G4Tubs.hh"
+#include "G4Sphere.hh"
 #include "G4ExtrudedSolid.hh"
 #include "G4SubtractionSolid.hh"
 
@@ -84,5 +85,92 @@ void ChamberStructure::CreateGeometry()
   G4RotationMatrix* rotWallO = new G4RotationMatrix;
   rotWallO->rotateX(-90.*deg);
   new G4PVPlacement(rotWallO,G4ThreeVector(0.,0.,0.),logicalVCOutMagWall,"VCOutMagWall",fMotherVolume,false,0);
+
+  /////////////////////////////////////////
+  // Thin window flange in front of ECal //
+  /////////////////////////////////////////
+
+  printf("Vacuum chamber window\n");
+  G4double ewR = geo->GetEWRadius(); // Radius of the membrane
+  G4double ewC = geo->GetEWConvexity(); // Convexity at membrane center
+
+  G4double ewd1 = geo->GetEWBackMylarThick(); // Thickness of mylar (layer 1) on external face of chamber
+  G4double ewd2 = geo->GetEWKevlarThick(); // Thickness of kevlar (layer 2) between mylar layers
+  G4double ewd3 = geo->GetEWFrontMylarThick(); // Thickness of mylar (layer 3) on internal face of chamber
+
+  printf("ewR %f ewC %f ewd1 %f ewd2 %f ewd3 %f\n",ewR,ewC,ewd1,ewd2,ewd3);
+
+  // External mylar membrane
+  G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
+  G4double ewz1 = geo->GetVCBackFacePosZ()+ewr1-ewC;
+  G4double ewth1 = asin(ewR/ewr1);
+  printf("ewr1 %f ewz1 %f ewth1 %11.9f pi-ewth1 %11.9f\n",ewr1,ewz1,ewth1,180.*deg-ewth1);
+  G4Sphere* solidEWSphere1 = new G4Sphere("EWSphere1",ewr1,ewr1+ewd1,0.*deg,360.*deg,180.*deg-ewth1,ewth1);
+  //G4LogicalVolume* logicalEWSphere1 = new G4LogicalVolume(solidEWSphere1,G4Material::GetMaterial("G4_MYLAR"), "EWSphere1",0,0,0);
+  //logicalEWSphere1->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWSphere1,"EWSphere1",fMotherVolume,false,0);
+  G4Tubs* solidEWRing1 = new G4Tubs("EWRing1",ewR-0.01*mm,ewR+10.*mm,0.7*ewd1,0.*deg,360.*deg);
+  G4ThreeVector ring1Pos = G4ThreeVector(0.,0.,-sqrt(ewr1*ewr1-ewR*ewR)-0.5*ewd1);
+  //G4LogicalVolume* logicalEWRing1 = new G4LogicalVolume(solidEWRing1,G4Material::GetMaterial("G4_MYLAR"), "EWRing1",0,0,0);
+  //logicalEWRing1->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+  //new G4PVPlacement(0,ring1Pos,logicalEWRing1,"EWRing1",fMotherVolume,false,0);
+  G4SubtractionSolid* solidEWLayer1 = new G4SubtractionSolid("EWLayer1",solidEWSphere1,solidEWRing1,0,ring1Pos);
+  G4LogicalVolume* logicalEWLayer1 = new G4LogicalVolume(solidEWLayer1,G4Material::GetMaterial("G4_MYLAR"), "EWLayer1",0,0,0);
+  logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWLayer1",fMotherVolume,false,0);
+
+  // Central kevlar membrane
+  G4double ewr2 = ewr1+ewd1;
+  G4double ewz2 = ewz1;
+  G4double ewth2 = asin(ewR/ewr2);
+  printf("ewr2 %f ewz2 %f ewth2 %11.9f\n",ewr2,ewz2,ewth2);
+  G4Sphere* solidEWSphere2 = new G4Sphere("EWSphere2",ewr2,ewr2+ewd2,0.*deg,360.*deg,180.*deg-ewth2,ewth2);
+  G4Tubs* solidEWRing2 = new G4Tubs("EWRing2",ewR-0.01*mm,ewR+10.*mm,0.7*ewd2,0.*deg,360.*deg);
+  G4ThreeVector ring2Pos = G4ThreeVector(0.,0.,-sqrt(ewr2*ewr2-ewR*ewR)-0.5*ewd2);
+  G4SubtractionSolid* solidEWLayer2 = new G4SubtractionSolid("EWLayer2",solidEWSphere2,solidEWRing2,0,ring2Pos);
+  G4LogicalVolume* logicalEWLayer2 = new G4LogicalVolume(solidEWLayer2,G4Material::GetMaterial("Kevlar"), "EWLayer2",0,0,0);
+  logicalEWLayer2->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz2),logicalEWLayer2,"EWLayer2",fMotherVolume,false,0);
+
+  // Internal mylar membrane
+  G4double ewr3 = ewr2+ewd2;
+  G4double ewz3 = ewz1;
+  G4double ewth3 = asin(ewR/ewr3);
+  printf("ewr3 %f ewz3 %f ewth3 %11.9f\n",ewr3,ewz3,ewth3);
+  G4Sphere* solidEWSphere3 = new G4Sphere("EWSphere3",ewr3,ewr3+ewd3,0.*deg,360.*deg,180.*deg-ewth3,ewth3);
+  G4Tubs* solidEWRing3 = new G4Tubs("EWRing3",ewR-0.01*mm,ewR+10.*mm,0.7*ewd3,0.*deg,360.*deg);
+  G4ThreeVector ring3Pos = G4ThreeVector(0.,0.,-sqrt(ewr3*ewr3-ewR*ewR)-0.5*ewd3);
+  G4SubtractionSolid* solidEWLayer3 = new G4SubtractionSolid("EWLayer3",solidEWSphere3,solidEWRing3,0,ring3Pos);
+  G4LogicalVolume* logicalEWLayer3 = new G4LogicalVolume(solidEWLayer3,G4Material::GetMaterial("G4_MYLAR"), "EWLayer3",0,0,0);
+  logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWLayer3",fMotherVolume,false,0);
+
+  // First steel ring (outer)
+  G4Tubs* solidEWIronRing1 = new G4Tubs("EWIronRing1",geo->GetEWF1RIn(),geo->GetEWF1ROut(),0.5*geo->GetEWF1Thick(),0.*deg,360.*deg);
+  G4LogicalVolume* logicalEWIronRing1 = new G4LogicalVolume(solidEWIronRing1,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing1",0,0,0);
+  logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fMotherVolume,false,0);
+
+  // Second steel ring
+  G4Tubs* solidEWIronRing2 = new G4Tubs("EWIronRing2",geo->GetEWF2RIn(),geo->GetEWF2ROut(),0.5*geo->GetEWF2Thick(),0.*deg,360.*deg);
+  G4LogicalVolume* logicalEWIronRing2 = new G4LogicalVolume(solidEWIronRing2,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing2",0,0,0);
+  logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fMotherVolume,false,0);
+
+  // Third steel ring
+  G4Tubs* solidEWIronRing3 = new G4Tubs("EWIronRing3",geo->GetEWF3RIn(),geo->GetEWF3ROut(),0.5*geo->GetEWF3Thick(),0.*deg,360.*deg);
+  G4LogicalVolume* logicalEWIronRing3 = new G4LogicalVolume(solidEWIronRing3,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing3",0,0,0);
+  logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fMotherVolume,false,0);
+
+  //////////////////////////////////
+  // Main vacuum chamber cylinder //
+  //////////////////////////////////
+
+  // Flange toward thin window flange
+  G4Tubs* solidVCCCFRing = new G4Tubs("VCCCFRing",geo->GetVCCFRIn(),geo->GetVCCFROut(),0.5*geo->GetVCCFThick(),0.*deg,360.*deg);
+  G4LogicalVolume* logicalVCCCFRing = new G4LogicalVolume(solidVCCCFRing,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "VCCCFRing",0,0,0);
+  logicalVCCCFRing->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetVCCFPosZ()),logicalVCCCFRing,"VCCCFRing",fMotherVolume,false,0);
 
 }

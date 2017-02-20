@@ -219,6 +219,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Al       = man->FindOrBuildMaterial("G4_Al");
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
+  G4Material* Mylar = man->FindOrBuildMaterial("G4_MYLAR");
   G4Material* Plexiglass = man->FindOrBuildMaterial("G4_PLEXIGLASS");
   G4Material* StainlessSteel = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
   G4Material* Oxygen = man->FindOrBuildMaterial("G4_O");
@@ -279,6 +280,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   myMPTPbGl->AddProperty("RINDEX",PhotonEnergy, RefractiveIndexPbGl, nEntries);
   myMPTPbGl->AddProperty("ABSLENGTH",PhotonEnergy, AbsorptionPbGl, nEntries);
   PbGl->SetMaterialPropertiesTable(myMPTPbGl);
+
+  // Kevlar used for ECal window
+  G4Material* Kevlar = new G4Material("Kevlar",1.44*g/cm3,4);
+  Kevlar -> AddElement(G4Element::GetElement("H"),0.04);
+  Kevlar -> AddElement(G4Element::GetElement("C"),0.71);
+  Kevlar -> AddElement(G4Element::GetElement("O"),0.12);
+  Kevlar -> AddElement(G4Element::GetElement("N"),0.13);
 
   // Diamond material to be used by target
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);

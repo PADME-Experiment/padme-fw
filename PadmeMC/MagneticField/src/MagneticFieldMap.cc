@@ -22,11 +22,12 @@ MagneticFieldMap::MagneticFieldMap()
   fSigmaFront = 22.5*cm;
   fSigmaBack  = 22.5*cm;
 
-  // These must be set by the creator of the volume before using it
+  // The magnetic volume is a box centered at magnet center with x and y dimensions
+  // as the magnet cavity and with z extends 50cm outside both sides of the magnet
   fMagneticVolumePosZ = 0.;
-  fMagneticVolumeLengthX = 0.;
-  fMagneticVolumeLengthY = 0.;
-  fMagneticVolumeLengthZ = 0.;
+  fMagneticVolumeLengthX = 112.*cm;
+  fMagneticVolumeLengthY = 23.*cm;
+  fMagneticVolumeLengthZ = 200.*cm;
 
 }
 

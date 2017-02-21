@@ -4,7 +4,6 @@
 #include "globals.hh"
 #include "G4VUserDetectorConstruction.hh"
 #include "G4SubtractionSolid.hh"
-//#include "MagneticField.hh"
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "G4PhysicalConstants.hh"
 
@@ -31,6 +30,7 @@ class TPixDetector;
 class MagnetStructure;
 class ChamberStructure;
 class HallStructure;
+class MagneticFieldSetup;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -61,6 +61,9 @@ public:
   void EnableStructure(G4String);
   void DisableStructure(G4String);
 
+  void EnableMagneticField()  { fEnableMagneticField = 1; }
+  void DisableMagneticField() { fEnableMagneticField = 0; }
+
   // Return some global information used by beam generator
   G4double GetECalFrontFaceZ();
   G4double GetTargetFrontFaceZ();
@@ -84,6 +87,8 @@ private:
   ChamberStructure* fChamberStructure;
   HallStructure*    fHallStructure;
 
+  MagneticFieldSetup* fEmFieldSetup;     
+
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
@@ -97,6 +102,8 @@ private:
   G4int fEnableWall;
   G4int fEnableChamber;
   G4int fEnableMagnet;
+
+  G4int fEnableMagneticField;
 
   G4Box*             solidWorld;    
   G4LogicalVolume*   logicWorld;    
@@ -202,9 +209,7 @@ private:
 
   G4UserLimits* stepLimit;             // pointer to user step limits
 
-  //G4UniformMagField*              fMagField;   // pointer to the magnetic field 
-  //F03FieldSetup*              fEmFieldSetup;     
-  DetectorMessenger*      fDetectorMessenger;  // pointer to the Messenger
+  DetectorMessenger* fDetectorMessenger;  // pointer to the Messenger
        
   G4double fWorldLength;            // Full length of the world volume
 

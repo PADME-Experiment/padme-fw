@@ -116,7 +116,7 @@ void ChamberStructure::CreateGeometry()
   //new G4PVPlacement(0,ring1Pos,logicalEWRing1,"EWRing1",fMotherVolume,false,0);
   G4SubtractionSolid* solidEWLayer1 = new G4SubtractionSolid("EWLayer1",solidEWSphere1,solidEWRing1,0,ring1Pos);
   G4LogicalVolume* logicalEWLayer1 = new G4LogicalVolume(solidEWLayer1,G4Material::GetMaterial("G4_MYLAR"), "EWLayer1",0,0,0);
-  logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWLayer1",fMotherVolume,false,0);
 
   // Central kevlar membrane
@@ -142,7 +142,7 @@ void ChamberStructure::CreateGeometry()
   G4ThreeVector ring3Pos = G4ThreeVector(0.,0.,-sqrt(ewr3*ewr3-ewR*ewR)-0.5*ewd3);
   G4SubtractionSolid* solidEWLayer3 = new G4SubtractionSolid("EWLayer3",solidEWSphere3,solidEWRing3,0,ring3Pos);
   G4LogicalVolume* logicalEWLayer3 = new G4LogicalVolume(solidEWLayer3,G4Material::GetMaterial("G4_MYLAR"), "EWLayer3",0,0,0);
-  logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWLayer3",fMotherVolume,false,0);
 
   // First steel ring (outer)
@@ -173,4 +173,17 @@ void ChamberStructure::CreateGeometry()
   logicalVCCCFRing->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetVCCFPosZ()),logicalVCCCFRing,"VCCCFRing",fMotherVolume,false,0);
 
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength();
+  G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut();
+  G4double cyPosZ = geo->GetVCCPosZ();
+  G4Tubs* solidVCCyRing = new G4Tubs("VCCyRing",cyRIn,cyROut,0.5*cyLen,0.*deg,360.*deg);
+  // Remove open section
+  G4ThreeVector cyOpenPos = G4ThreeVector(-cyROut,0.,0.);
+  G4Box* solidVCCyOpen = new G4Box("VCCyOpen",0.5*cyROut,0.5*geo->GetVCOutMagWallSizeY(),0.5*cyLen+1.*mm);
+  G4SubtractionSolid* solidVCCylinder = new G4SubtractionSolid("VCCylinder",solidVCCyRing,solidVCCyOpen,0,cyOpenPos);
+  G4LogicalVolume* logicalVCCylinder = new G4LogicalVolume(solidVCCylinder,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "VCCylinder",0,0,0);
+  logicalVCCylinder->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalVCCylinder,"VCCylinder",fMotherVolume,false,0);
 }

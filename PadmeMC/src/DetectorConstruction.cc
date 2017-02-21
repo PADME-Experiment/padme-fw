@@ -2,8 +2,7 @@
 #include "Constants.hh" 
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
-//#include "MagneticField.hh"
-//#include "MagneticFieldSetup.hh"
+#include "MagneticFieldSetup.hh"
 
 #include "TargetDetector.hh"
 #include "ECalDetector.hh"
@@ -65,8 +64,6 @@ DetectorConstruction::DetectorConstruction()
 :solidWorld(0),  logicWorld(0),  physiWorld(0), stepLimit(0), fWorldLength(0.)
 {
 
-  //fEmFieldSetup = new F03FieldSetup();
-  //fEmFieldSetup = new MagneticFieldSetup();
   fDetectorMessenger = new DetectorMessenger(this);
 
   fECalDetector    = new ECalDetector(0);
@@ -83,6 +80,8 @@ DetectorConstruction::DetectorConstruction()
   fChamberStructure = new ChamberStructure(0);
   fHallStructure    = new HallStructure(0);
 
+  fEmFieldSetup = new MagneticFieldSetup();
+
   fEnableECal    = 1;
   fEnableTarget  = 1;
   fEnableSAC     = 1;
@@ -97,14 +96,15 @@ DetectorConstruction::DetectorConstruction()
   fEnableChamber = 1;
   fEnableMagnet  = 1;
 
+  fEnableMagneticField = 1;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 DetectorConstruction::~DetectorConstruction()
 {
-  //delete fMagField;
-  //if (fEmFieldSetup) delete fEmFieldSetup ;
+  if (fEmFieldSetup) delete fEmFieldSetup ;
   delete stepLimit;
   delete fDetectorMessenger;             
 
@@ -317,6 +317,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
   physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
+  if (fEnableMagneticField) {
+    fEmFieldSetup = new MagneticFieldSetup();
+  }
+
   if(IsPipeON==1){
 
     // Create btf beam pipe
@@ -680,10 +684,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 //--------- Visualization attributes -------------------------------
 
   logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-
-  G4VisAttributes* BoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
-  //  logicWorld  ->SetVisAttributes(BoxVisAtt);  
-  //  logicTarget ->SetVisAttributes(BoxVisAtt);
 
   return physiWorld;  
 }

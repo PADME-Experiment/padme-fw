@@ -17,7 +17,7 @@
 #include "G4VisAttributes.hh"
 //#include "G4BlineTracer.hh"
 
-#include "MagneticFieldSetup.hh"
+//#include "MagneticFieldSetup.hh"
 #include "MagnetGeometry.hh"
 #include "MagnetSD.hh"
 
@@ -316,6 +316,7 @@ void MagnetStructure::CreateGeometry()
   yokeDownBarVolume->SetSensitiveDetector(magnetSD);
   //railVolume->SetSensitiveDetector(magnetSD);
 
+  /*
   // Create magnetic volume inside the magnet
   G4double magVolSizeX = geo->GetMagneticVolumeSizeX();
   G4double magVolSizeY = geo->GetMagneticVolumeSizeY();
@@ -348,5 +349,5 @@ void MagnetStructure::CreateGeometry()
 
   G4ThreeVector magVolPos = G4ThreeVector(geo->GetMagneticVolumePosX(),geo->GetMagneticVolumePosY(),geo->GetMagneticVolumePosZ());
   new G4PVPlacement(0,magVolPos,fMagneticVolume,"MagneticVolume",fMotherVolume,false,0,false);
-
+  */
 }

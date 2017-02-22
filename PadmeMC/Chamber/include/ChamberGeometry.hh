@@ -34,6 +34,11 @@ protected:
 
 public:
 
+  // This is the maximum Z reached by the whole VC structure
+  // Needed to define the main magnetic volume
+  G4double GetVCMostExternalX() { return fVCMostExternalX; }
+  G4double GetVCMostAdvancedZ() { return fEWBackFacePosZ+fEWF1Thick; }
+
   G4double GetVCInMagThick() { return fVCInMagThick; }
 
   G4double GetVCInMagWallSizeY() { return fVCInMagWallSizeY; }
@@ -104,6 +109,8 @@ private:
   G4TwoVector fVCInMagPlateVertex[CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES];
 
   G4TwoVector fVCOutMagWallVertex[CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES];
+
+  G4double fVCMostExternalX; // Absolute value of largest X coordinate of the chamber
 
   G4double fVCCFThick; // Thickness of the VC flange toward thin window flange
 

@@ -87,8 +87,6 @@ private:
   ChamberStructure* fChamberStructure;
   HallStructure*    fHallStructure;
 
-  MagneticFieldSetup* fEmFieldSetup;     
-
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;

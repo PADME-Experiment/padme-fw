@@ -34,9 +34,10 @@ HEPVetoGeometry::HEPVetoGeometry()
   fHEPVetoSizeZ = 60.*cm;
 
   // Position of center of HEPVeto inner face relative to center of magnet yoke
-  fHEPVetoInnerFacePosX = -93.*cm;
+  fHEPVetoInnerFacePosX = -85.*cm;
   fHEPVetoInnerFacePosY =   0.*cm;
-  fHEPVetoInnerFacePosZ = 250.*cm;
+  //fHEPVetoInnerFacePosZ = 250.*cm;
+  fHEPVetoInnerFacePosZ = 220.*cm;
 
   fHEPVetoRotX =  0.   *rad;
   //fHEPVetoRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)

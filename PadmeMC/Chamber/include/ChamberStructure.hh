@@ -20,14 +20,16 @@ public:
   ~ChamberStructure();
   ChamberStructure(G4LogicalVolume*);
 
-  void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v;   }
-  void SetMagneticVolume(G4LogicalVolume* v) { fMagneticVolume = v; }
+  void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
+  //void SetMagneticVolume(G4LogicalVolume* v) { fMagneticVolume = v; }
   void CreateGeometry();
+  G4double GetChamberMostExternalX();
+  G4double GetChamberMostAdvancedZ();
 
 private:
 
   G4LogicalVolume* fMotherVolume;
-  G4LogicalVolume* fMagneticVolume;
+  //G4LogicalVolume* fMagneticVolume;
 
 };
 

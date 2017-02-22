@@ -80,8 +80,6 @@ DetectorConstruction::DetectorConstruction()
   fChamberStructure = new ChamberStructure(0);
   fHallStructure    = new HallStructure(0);
 
-  fEmFieldSetup = new MagneticFieldSetup();
-
   fEnableECal    = 1;
   fEnableTarget  = 1;
   fEnableSAC     = 1;
@@ -104,7 +102,6 @@ DetectorConstruction::DetectorConstruction()
  
 DetectorConstruction::~DetectorConstruction()
 {
-  if (fEmFieldSetup) delete fEmFieldSetup ;
   delete stepLimit;
   delete fDetectorMessenger;             
 
@@ -317,10 +314,41 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
   physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
+  // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
+  // but excludes calorimeters
+
+  G4double magVolMinX = -fChamberStructure->GetChamberMostExternalX()-0.1*mm;
+  G4double magVolMaxX =  fChamberStructure->GetChamberMostExternalX()+0.1*mm;
+
+  G4double magVolMinY = -100.*cm;
+  G4double magVolMaxY =  100.*cm;
+
+  G4double magVolMinZ = -fChamberStructure->GetChamberMostAdvancedZ()-0.1*mm;
+  G4double magVolMaxZ =  fChamberStructure->GetChamberMostAdvancedZ()+0.1*mm; // Right after the thin window flange
+
+  G4double magVolPosX = 0.5*(magVolMinX+magVolMaxX);
+  G4double magVolPosY = 0.5*(magVolMinY+magVolMaxY);
+  G4double magVolPosZ = 0.5*(magVolMinZ+magVolMaxZ);
+  G4ThreeVector magVolPos = G4ThreeVector(magVolPosX,magVolPosY,magVolPosZ);
+
+  G4double magVolHLX = 0.5*(magVolMaxX-magVolMinX);
+  G4double magVolHLY = 0.5*(magVolMaxY-magVolMinY);
+  G4double magVolHLZ = 0.5*(magVolMaxZ-magVolMinZ);
+
+  printf ("%f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
+  printf ("%f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
+  printf ("%f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
+
+  G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
+  G4LogicalVolume* logicMagneticVolume = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
+  new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
+
   if (fEnableMagneticField) {
-    fEmFieldSetup = new MagneticFieldSetup();
+    MagneticFieldSetup* magField = new MagneticFieldSetup();
+    logicMagneticVolume->SetFieldManager(magField->GetLocalFieldManager(),true);
   }
 
+  /*
   if(IsPipeON==1){
 
     // Create btf beam pipe
@@ -391,6 +419,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }else{
     G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
   }
+  */
 
   // Concrete wall at large Z
   if (fEnableWall) {
@@ -404,28 +433,27 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Magnet physical structure
   if (fEnableMagnet) { 
-    fMagnetStructure->SetMotherVolume(logicWorld);
+    fMagnetStructure->SetMotherVolume(logicMagneticVolume);
     fMagnetStructure->CreateGeometry();
   }
 
   // Vacuum chamber structure
   if (fEnableChamber) {
+    /*
     fChamberStructure->SetMotherVolume(logicWorld);
     if (fEnableMagnet) {
       fChamberStructure->SetMagneticVolume(fMagnetStructure->GetMagneticVolume());
     } else {
       fChamberStructure->SetMagneticVolume(logicWorld);
     }
+    */
+    fChamberStructure->SetMotherVolume(logicMagneticVolume);
     fChamberStructure->CreateGeometry();
   }
 
   // Target
   if (fEnableTarget) {
-    if (fEnableMagnet) {
-      fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-    } else {
-      fTargetDetector->SetMotherVolume(logicWorld);
-    }
+    fTargetDetector->SetMotherVolume(logicMagneticVolume);
     fTargetDetector->CreateGeometry();
   }
 
@@ -435,6 +463,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fSACDetector->CreateGeometry();
   }
 
+  /*
   // LAV
   if (fEnableLAV) {
     if (fEnableMagnet) {
@@ -444,6 +473,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     }
     fLAVDetector->CreateGeometry();
   }
+  */
 
   // TDump
   if (fEnableTDump) {
@@ -453,6 +483,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // TPix
   if (fEnableTPix) {
+    /*
     if (fEnableMagnet) {
       // TPix can be used as beam tracking monitor and move around
       // Check if it is placed inside the magnetic volume (warning: only X,Z are checked)
@@ -475,175 +506,171 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     } else {
       fTPixDetector->SetMotherVolume(logicWorld);
     }
+    */
+    fTPixDetector->SetMotherVolume(logicMagneticVolume);
     fTPixDetector->CreateGeometry();
   }
 
- //------------------------------------------------- 
- // Direction monitor fused silica rods 
- //-------------------------------------------------
- if(IsMonitorON==1){
-   G4ThreeVector positionMonitor = G4ThreeVector(MonitorPosiX*cm,MonitorPosiY*cm,MonitorPosiZ*cm); 
-   G4double MonitorX      = MonitorSizeX*cm;
-   G4double MonitorY      = MonitorSizeY*cm;
-   G4double MonitorLength = MonitorSizeZ*cm;
-   
-   solidMonitor = new G4Box("target",MonitorX*0.5,MonitorY*0.5,MonitorLength*0.5);
-   logicMonitor = new G4LogicalVolume(solidMonitor,WorldMater,"Monitor",0,0,0);
-   physiMonitor = new G4PVPlacement(0,              // no rotation
-				    positionMonitor,   // at (x,y,z)
-				    logicMonitor,      // its logical volume                                  
-				    "Monitor",         // its name
-				    logicWorld,        // its mother  volume
-				    false,             // no boolean operations
-				    0,              // copy number 
-				    false);          //Check for overlaps
-   
-   G4double MXRodLength = 2*mm;
-   G4double MXRodX      = MonitorX-1;
-   G4double MXRodY      = 2*mm;
-   
-   G4double MYRodLength = 2*mm;
-   G4double MYRodX      = 2*mm;
-   G4double MYRodY      = MonitorY-1;
-   
-   solidMXRod  = new G4Box("MXRod",MXRodX*0.5,MXRodY*0.5,MXRodLength*0.5);
-   logicMXRod  = new G4LogicalVolume(solidMXRod,SiO2,"MXRod");
-   
-   solidMYRod  = new G4Box("MYRod",MYRodX*0.5,MYRodY*0.5,MYRodLength*0.5);
-   logicMYRod  = new G4LogicalVolume(solidMYRod,SiO2,"MYRod");
-   //
-   G4int NMRodRows=10;
-   for (G4int i=0;i<NMRodRows;i++){
-     G4ThreeVector positionMXRod = G4ThreeVector(0.   ,-MonitorY*0.5+0.5*MXRodY+1*cm+i*MXRodY,+0.*cm);
-     G4ThreeVector positionMYRod = G4ThreeVector(-MonitorX*0.5+0.5*MYRodX+i*MYRodX+1*cm,0.,1.*cm);
-     
-     physiMXRod  = new G4PVPlacement(0,             // no rotation
-				     positionMXRod, // at (x,y,z)
-				     logicMXRod,    // its logical volume                                  
-				     "MXRod",       // its name
-				     logicMonitor,  // its mother  volume
-				     false,         // no boolean operations
-				     i);            // copy number 
-     
-     physiMYRod  = new G4PVPlacement(0,              // no rotation
-				     positionMYRod,  // at (x,y,z)
-				     logicMYRod,     // its logical volume                                  
-				     "MYRod",        // its name
-				     logicMonitor,   // its mother  volume
-				     false,          // no boolean operations
-				     i+NMRodRows);   // copy number 
-   }
- }
+  /*
+  //------------------------------------------------- 
+  // Direction monitor fused silica rods 
+  //-------------------------------------------------
+  if(IsMonitorON==1){
+    G4ThreeVector positionMonitor = G4ThreeVector(MonitorPosiX*cm,MonitorPosiY*cm,MonitorPosiZ*cm); 
+    G4double MonitorX      = MonitorSizeX*cm;
+    G4double MonitorY      = MonitorSizeY*cm;
+    G4double MonitorLength = MonitorSizeZ*cm;
+    
+    solidMonitor = new G4Box("target",MonitorX*0.5,MonitorY*0.5,MonitorLength*0.5);
+    logicMonitor = new G4LogicalVolume(solidMonitor,WorldMater,"Monitor",0,0,0);
+    physiMonitor = new G4PVPlacement(0,              // no rotation
+				     positionMonitor,   // at (x,y,z)
+				     logicMonitor,      // its logical volume                                  
+				     "Monitor",         // its name
+				     logicWorld,        // its mother  volume
+				     false,             // no boolean operations
+				     0,              // copy number 
+				     false);          //Check for overlaps
+    
+    G4double MXRodLength = 2*mm;
+    G4double MXRodX      = MonitorX-1;
+    G4double MXRodY      = 2*mm;
+    
+    G4double MYRodLength = 2*mm;
+    G4double MYRodX      = 2*mm;
+    G4double MYRodY      = MonitorY-1;
+    
+    solidMXRod  = new G4Box("MXRod",MXRodX*0.5,MXRodY*0.5,MXRodLength*0.5);
+    logicMXRod  = new G4LogicalVolume(solidMXRod,SiO2,"MXRod");
+    
+    solidMYRod  = new G4Box("MYRod",MYRodX*0.5,MYRodY*0.5,MYRodLength*0.5);
+    logicMYRod  = new G4LogicalVolume(solidMYRod,SiO2,"MYRod");
+    //
+    G4int NMRodRows=10;
+    for (G4int i=0;i<NMRodRows;i++){
+      G4ThreeVector positionMXRod = G4ThreeVector(0.   ,-MonitorY*0.5+0.5*MXRodY+1*cm+i*MXRodY,+0.*cm);
+      G4ThreeVector positionMYRod = G4ThreeVector(-MonitorX*0.5+0.5*MYRodX+i*MYRodX+1*cm,0.,1.*cm);
+      
+      physiMXRod  = new G4PVPlacement(0,             // no rotation
+				      positionMXRod, // at (x,y,z)
+				      logicMXRod,    // its logical volume                                  
+				      "MXRod",       // its name
+				      logicMonitor,  // its mother  volume
+				      false,         // no boolean operations
+				      i);            // copy number 
+      
+      physiMYRod  = new G4PVPlacement(0,              // no rotation
+				      positionMYRod,  // at (x,y,z)
+				      logicMYRod,     // its logical volume                                  
+				      "MYRod",        // its name
+				      logicMonitor,   // its mother  volume
+				      false,          // no boolean operations
+				      i+NMRodRows);   // copy number 
+    }
+  }
+  */
 
- // ECal
- if (fEnableECal) {
-   fECalDetector->SetMotherVolume(logicWorld);
-   fECalDetector->CreateGeometry();
- }
+  // ECal
+  if (fEnableECal) {
+    fECalDetector->SetMotherVolume(logicWorld);
+    fECalDetector->CreateGeometry();
+  }
 
- // PVeto
- if (fEnablePVeto) {
-   if (fEnableMagnet) {
-     fPVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-   } else {
-     fPVetoDetector->SetMotherVolume(logicWorld);
-   }
-   fPVetoDetector->CreateGeometry();
- }
+  // PVeto
+  if (fEnablePVeto) {
+    fPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fPVetoDetector->CreateGeometry();
+  }
 
- // EVeto
- if (fEnableEVeto) {
-   if (fEnableMagnet) {
-     fEVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-   } else {
-     fEVetoDetector->SetMotherVolume(logicWorld);
-   }
-   fEVetoDetector->CreateGeometry();
- }
+  // EVeto
+  if (fEnableEVeto) {
+    fEVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fEVetoDetector->CreateGeometry();
+  }
 
- //---------------------------------------------------------------
- // High Energy positron veto scintillating part ouside the magnet
- //--------------------------------------------------------------- 
- // HEPVeto
- if (fEnableHEPVeto) {
-   fHEPVetoDetector->SetMotherVolume(logicWorld);
-   fHEPVetoDetector->CreateGeometry();
- }
+  // HEPVeto
+  if (fEnableHEPVeto) {
+    fHEPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fHEPVetoDetector->CreateGeometry();
+  }
 
- //PLANAR GEM BASED SPECTROMETER
- if(IsPlanarGEMON==1){
-   solidPGEM = new G4Box("pgem",PGEMSizeX*cm,PGEMSizeY*cm,PGEMSizeZ*cm);
-   logicPGEM = new G4LogicalVolume(solidPGEM,Air,"PGEM",0,0,0);
-   
-   for(G4int ii=0;ii<NChambers;ii++){
-     G4ThreeVector positionGEMPlane;
-     if(ii<NChambers/2){
-       positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,PGEMPosiY*cm-(PGEMSizeY*cm+2*ii*PGEMSizeY*cm+0.01*mm),0.);
-     }else{
-       positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,-PGEMPosiY*cm+(PGEMSizeY*cm+2*(ii-NChambers/2)*PGEMSizeY*cm+0.01*mm),0.);
-     }
-     G4cout<<positionGEMPlane<<" "<<PGEMSizeY<<" Nchambers "<<NChambers<<" "<<ii<<G4endl;
-     physiPGEM = new G4PVPlacement(0,
-				   positionGEMPlane,  // at (x,y,z)
-				   logicPGEM,         // its logical
-				   "PlanarGEM",       // its name
-				   logicSwepMag,      // its mother
-				   false,             // no boolean
-				   ii,                // Copy number
-				   false);
-   }
- }
+  /*
+  //PLANAR GEM BASED SPECTROMETER
+  if(IsPlanarGEMON==1){
+    solidPGEM = new G4Box("pgem",PGEMSizeX*cm,PGEMSizeY*cm,PGEMSizeZ*cm);
+    logicPGEM = new G4LogicalVolume(solidPGEM,Air,"PGEM",0,0,0);
+    
+    for(G4int ii=0;ii<NChambers;ii++){
+      G4ThreeVector positionGEMPlane;
+      if(ii<NChambers/2){
+	positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,PGEMPosiY*cm-(PGEMSizeY*cm+2*ii*PGEMSizeY*cm+0.01*mm),0.);
+      }else{
+	positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,-PGEMPosiY*cm+(PGEMSizeY*cm+2*(ii-NChambers/2)*PGEMSizeY*cm+0.01*mm),0.);
+      }
+      G4cout<<positionGEMPlane<<" "<<PGEMSizeY<<" Nchambers "<<NChambers<<" "<<ii<<G4endl;
+      physiPGEM = new G4PVPlacement(0,
+				    positionGEMPlane,  // at (x,y,z)
+				    logicPGEM,         // its logical
+				    "PlanarGEM",       // its name
+				    logicSwepMag,      // its mother
+				    false,             // no boolean
+				    ii,                // Copy number
+				    false);
+    }
+  }
+  */
  
+  /*
   //------------------------------------------------- 
   // Spectrometer chambers cilindrical
   //-------------------------------------------------
- /*
- if(IsTrackerON==1 && TrackerNLayers==1.){
-   solidTracker[0]= new G4Tubs("TrackerBox",TrackerInnerRad*cm,TrackerOuterRad*cm,TrackerHz*cm,0.*deg,360.*deg);
-   logicTracker[0]= new G4LogicalVolume(solidTracker[0],Air,"LogTracker",0,0,0);
-   logicTracker[0]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-   for(int kk=0;kk<TrackerNRings;kk++){
-     G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm+kk*TrackerHz*cm); 
-     physiTracker[0]=new G4PVPlacement(0,               // no rotation
-				    positionTracker,  // at (x,y,z)
-				    logicTracker[0],     // its logical volume    
-				    "Tracker",        // its name
-				    logicSwepMag,       // its mother volume
-				    false,            // no boolean operations
-				    kk,
-				    false);               // copy number 
-   }
- } else if(IsTrackerON==1 && TrackerNLayers>1.){
-   for(int kk=0;kk<TrackerNLayers;kk++){
-     //   G4cout<<TrackerInnerRad+kk*TrackerLayerTick<<" "<<(TrackerOuterRad+kk*TrackerLayerTick)<<G4endl;
-     //     G4cout<<TrackerInnerRad<<" "<<TrackerOuterRad<<G4endl;
-     G4double NewInn=TrackerInnerRad+kk*TrackerLayerTick;
-     G4double NewOut=TrackerOuterRad+kk*TrackerLayerTick;
-     G4cout<<NewInn<<" "<<NewOut<<G4endl;
-     solidTracker[kk]= new G4Tubs("TrackerBox",NewInn*cm,NewOut*cm,TrackerHz*cm,0.*deg,360.*deg);
-     logicTracker[kk]= new G4LogicalVolume(solidTracker[kk],Air,"LogTracker",0,0,0);
-     logicTracker[kk]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-     
-     G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm); 
-     physiTracker[0]= new G4PVPlacement(0,                // no rotation
-				     positionTracker,  // at (x,y,z)
-				     logicTracker[kk], // its logical volume    
-				     "Tracker",        // its name
-				     logicSwepMag,     // its mother volume
-				     false,            // no boolean operations
-				     kk,
-				     false);              // copy number 
-   }
- }
- */
- //------------------------------------------------ 
- // Sensitive detectors
- //------------------------------------------------ 
- G4SDManager* SDman     = G4SDManager::GetSDMpointer();
- G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
- G4String TRodSDname    = "TRodSD";      //target rods
- G4String MRodSDname    = "MRodSD";      //monitor rods
- // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
+  if(IsTrackerON==1 && TrackerNLayers==1.){
+    solidTracker[0]= new G4Tubs("TrackerBox",TrackerInnerRad*cm,TrackerOuterRad*cm,TrackerHz*cm,0.*deg,360.*deg);
+    logicTracker[0]= new G4LogicalVolume(solidTracker[0],Air,"LogTracker",0,0,0);
+    logicTracker[0]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
+    for(int kk=0;kk<TrackerNRings;kk++){
+      G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm+kk*TrackerHz*cm); 
+      physiTracker[0]=new G4PVPlacement(0,               // no rotation
+					positionTracker,  // at (x,y,z)
+					logicTracker[0],     // its logical volume    
+					"Tracker",        // its name
+					logicSwepMag,       // its mother volume
+					false,            // no boolean operations
+					kk,
+					false);               // copy number 
+    }
+  } else if(IsTrackerON==1 && TrackerNLayers>1.){
+    for(int kk=0;kk<TrackerNLayers;kk++){
+      //   G4cout<<TrackerInnerRad+kk*TrackerLayerTick<<" "<<(TrackerOuterRad+kk*TrackerLayerTick)<<G4endl;
+      //     G4cout<<TrackerInnerRad<<" "<<TrackerOuterRad<<G4endl;
+      G4double NewInn=TrackerInnerRad+kk*TrackerLayerTick;
+      G4double NewOut=TrackerOuterRad+kk*TrackerLayerTick;
+      G4cout<<NewInn<<" "<<NewOut<<G4endl;
+      solidTracker[kk]= new G4Tubs("TrackerBox",NewInn*cm,NewOut*cm,TrackerHz*cm,0.*deg,360.*deg);
+      logicTracker[kk]= new G4LogicalVolume(solidTracker[kk],Air,"LogTracker",0,0,0);
+      logicTracker[kk]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
+      
+      G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm); 
+      physiTracker[0]= new G4PVPlacement(0,                // no rotation
+					 positionTracker,  // at (x,y,z)
+					 logicTracker[kk], // its logical volume    
+					 "Tracker",        // its name
+					 logicSwepMag,     // its mother volume
+					 false,            // no boolean operations
+					 kk,
+					 false);              // copy number 
+    }
+  }
+  */
+
+  //------------------------------------------------ 
+  // Sensitive detectors
+  //------------------------------------------------ 
+  G4SDManager* SDman     = G4SDManager::GetSDMpointer();
+  G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
+  G4String TRodSDname    = "TRodSD";      //target rods
+  G4String MRodSDname    = "MRodSD";      //monitor rods
+  // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
 
  /*
   if(IsTrackerON==1){
@@ -655,11 +682,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
  */
 
+  /*
   if(IsPlanarGEMON==1){
     TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
     SDman->AddNewDetector( TrackSD );
     logicPGEM->SetSensitiveDetector( TrackSD );
   }
+  */
 
   /*
   if(IsTDumpON){
@@ -670,17 +699,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
   */
 
+  /*
   if(IsMonitorON==1){
     MRodSD* MRodSDet = new MRodSD( MRodSDname );
     SDman->AddNewDetector( MRodSDet );
     logicMXRod->SetSensitiveDetector( MRodSDet );
     logicMYRod->SetSensitiveDetector( MRodSDet );
   }
+  */
 
   //  TRodSD* TRodSDet = new TRodSD( TRodSDname );
   //  SDman->AddNewDetector( TRodSDet );
   //  logicTXRod->SetSensitiveDetector( TRodSDet );
   //  logicTYRod->SetSensitiveDetector( TRodSDet );
+
 //--------- Visualization attributes -------------------------------
 
   logicWorld->SetVisAttributes(G4VisAttributes::Invisible);

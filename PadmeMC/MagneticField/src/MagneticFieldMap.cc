@@ -67,6 +67,6 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
   B[2] = 0.;
 
   // Used for debug: comment out to reduce output
-  //  printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is (%7.4f,%7.4f,%7.4f) tesla\n",x/cm,y/cm,z/cm,B[0]/tesla,B[1]/tesla,B[2]/tesla);
+  //printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is (%7.4f,%7.4f,%7.4f) tesla\n",x/cm,y/cm,z/cm,B[0]/tesla,B[1]/tesla,B[2]/tesla);
 
 }

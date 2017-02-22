@@ -57,7 +57,8 @@ void ChamberStructure::CreateGeometry()
   logicalVCInMagWall->SetVisAttributes(G4VisAttributes(G4Colour::White()));
   G4RotationMatrix* rotWall = new G4RotationMatrix;
   rotWall->rotateX(-90.*deg);
-  new G4PVPlacement(rotWall,G4ThreeVector(0.,0.,0.),logicalVCInMagWall,"VCInMagWall",fMagneticVolume,false,0);
+  //new G4PVPlacement(rotWall,G4ThreeVector(0.,0.,0.),logicalVCInMagWall,"VCInMagWall",fMagneticVolume,false,0);
+  new G4PVPlacement(rotWall,G4ThreeVector(0.,0.,0.),logicalVCInMagWall,"VCInMagWall",fMotherVolume,false,0);
 
   // Create plates of chamber inside magnetic field
   G4int nVP = geo->GetVCInMagPlateNVertices();
@@ -71,8 +72,10 @@ void ChamberStructure::CreateGeometry()
   G4double yDispl = 0.5*(geo->GetVCInMagWallSizeY()+geo->GetVCInMagThick());
   G4RotationMatrix* rotPlate = new G4RotationMatrix;
   rotPlate->rotateX(-90.*deg);
-  new G4PVPlacement(rotPlate,G4ThreeVector(0.,yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,0);
-  new G4PVPlacement(rotPlate,G4ThreeVector(0.,-yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,1);
+  //new G4PVPlacement(rotPlate,G4ThreeVector(0.,yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,0);
+  //new G4PVPlacement(rotPlate,G4ThreeVector(0.,-yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,1);
+  new G4PVPlacement(rotPlate,G4ThreeVector(0., yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMotherVolume,false,0);
+  new G4PVPlacement(rotPlate,G4ThreeVector(0.,-yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMotherVolume,false,1);
 
   // Create vacuum chamber wall outside of magnetic field
   G4int nVWo = geo->GetVCOutMagWallNVertices();
@@ -186,4 +189,14 @@ void ChamberStructure::CreateGeometry()
   G4LogicalVolume* logicalVCCylinder = new G4LogicalVolume(solidVCCylinder,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "VCCylinder",0,0,0);
   logicalVCCylinder->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalVCCylinder,"VCCylinder",fMotherVolume,false,0);
+}
+
+G4double ChamberStructure::GetChamberMostExternalX()
+{
+  return ChamberGeometry::GetInstance()->GetVCMostExternalX();
+}
+
+G4double ChamberStructure::GetChamberMostAdvancedZ()
+{
+  return ChamberGeometry::GetInstance()->GetVCMostAdvancedZ();
 }

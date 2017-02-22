@@ -49,7 +49,7 @@ void HEPVetoDetector::CreateGeometry()
   G4Box* solidHEPVeto = new G4Box("HEPVetoSolid",0.5*hepVetoSizeX,0.5*hepVetoSizeY,0.5*hepVetoSizeZ);
   fHEPVetoVolume = new G4LogicalVolume(solidHEPVeto,G4Material::GetMaterial("Vacuum"),"HEPVetoLogic",0,0,0);
   fHEPVetoVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
-  fHEPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  //fHEPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(rotHEPVeto,posHEPVeto,fHEPVetoVolume,"HEPVeto",fMotherVolume,false,0,false);
 
   // Create standard scintillator finger
@@ -59,7 +59,7 @@ void HEPVetoDetector::CreateGeometry()
   printf("HEPVeto Finger size is %f %f %f\n",hepVetoFingerX,hepVetoFingerY,hepVetoFingerZ);
   G4Box* solidFinger  = new G4Box("HEPVetoFingerSolid",0.5*hepVetoFingerX,0.5*hepVetoFingerY,0.5*hepVetoFingerZ);
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"HEPVetoFingerLogic",0,0,0);
-  //  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
 
   // Make finger a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

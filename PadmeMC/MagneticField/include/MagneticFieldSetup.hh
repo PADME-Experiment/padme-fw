@@ -20,7 +20,7 @@ class MagneticFieldSetup
 
 public:
 
-  MagneticFieldSetup();               // A zero field
+  MagneticFieldSetup();
   ~MagneticFieldSetup();
       
   void SetStepperType(G4int i) { fStepperType = i; }
@@ -31,6 +31,7 @@ public:
 
   void UpdateField();
 
+  G4FieldManager*   GetLocalFieldManager()  { return fLocalFieldManager; }
   MagneticFieldMap* GetMagneticField() { return fMagneticField; }
 
 protected:
@@ -40,12 +41,18 @@ protected:
 private:
 
   G4FieldManager* fFieldManager;
+  G4FieldManager* fLocalFieldManager;
+
   MagneticFieldMap* fMagneticField; 
 
   G4ChordFinder* fChordFinder;
+  G4ChordFinder* fLocalChordFinder;
+
   G4Mag_UsualEqRhs* fEquation;
+  G4Mag_UsualEqRhs* fLocalEquation; 
 
   G4MagIntegratorStepper* fStepper;
+  G4MagIntegratorStepper* fLocalStepper;
   G4int fStepperType;
   G4double fMinStep;
  

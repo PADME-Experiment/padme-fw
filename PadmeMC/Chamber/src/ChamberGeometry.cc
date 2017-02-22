@@ -58,6 +58,8 @@ ChamberGeometry::ChamberGeometry()
 
   fVCBackFacePosZ = 224.5*cm; // Z position of back face of VC flange towards thin window
 
+  fVCMostExternalX = 156.6*cm; // Absolute value of largest X coordinate of the chamber
+
   //fVCEWGap = 5.9*mm; // Gap for o-ring between main VC body and thin window flange
 
   fVCCFThick = 20.*mm; // Thickness of VC flange toward thin window flange

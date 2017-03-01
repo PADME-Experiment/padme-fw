@@ -307,11 +307,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //------------------------------  
   //G4GeometryManager::GetInstance()->SetWorldMaximumExtent(fWorldLength);
   //  G4cout<<"Computed tolerance = "<<G4GeometryTolerance::GetInstance()->GetSurfaceTolerance()/mm<<" mm" << G4endl;
-  WorldMater=Vacuum;
+  //WorldMater=Vacuum;
   G4double HalfWorldLength = 0.5*WorldLength*m;
   
   solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
-  logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
+  //logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
+  logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
   physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
@@ -339,8 +341,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   printf ("%f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
   printf ("%f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
 
+  // The magnetic volume should contain air: will change Vacuum to G4_AIR as soon as the vacuum chamber is complete
+  // As of today, the target section is still missing
   G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
   G4LogicalVolume* logicMagneticVolume = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
+  logicMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
 
   if (fEnableMagneticField) {
@@ -578,19 +583,22 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // PVeto
   if (fEnablePVeto) {
-    fPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    //fPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fPVetoDetector->SetMotherVolume(fChamberStructure->GetChamberInternalLogicalVolume());
     fPVetoDetector->CreateGeometry();
   }
 
   // EVeto
   if (fEnableEVeto) {
-    fEVetoDetector->SetMotherVolume(logicMagneticVolume);
+    //fEVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fEVetoDetector->SetMotherVolume(fChamberStructure->GetChamberInternalLogicalVolume());
     fEVetoDetector->CreateGeometry();
   }
 
   // HEPVeto
   if (fEnableHEPVeto) {
-    fHEPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    //fHEPVetoDetector->SetMotherVolume(logicMagneticVolume);
+    fHEPVetoDetector->SetMotherVolume(fChamberStructure->GetChamberInternalLogicalVolume());
     fHEPVetoDetector->CreateGeometry();
   }
 
@@ -714,8 +722,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //  logicTYRod->SetSensitiveDetector( TRodSDet );
 
 //--------- Visualization attributes -------------------------------
-
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
 
   return physiWorld;  
 }

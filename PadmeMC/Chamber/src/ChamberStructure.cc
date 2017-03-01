@@ -15,10 +15,16 @@
 #include "G4VisAttributes.hh"
 #include "G4LogicalVolume.hh"
 
+#include "G4Box.hh"
+#include "G4Trap.hh"
+#include "G4GenericTrap.hh"
 #include "G4Tubs.hh"
 #include "G4Sphere.hh"
 #include "G4ExtrudedSolid.hh"
+#include "G4UnionSolid.hh"
 #include "G4SubtractionSolid.hh"
+
+#include "G4UIcommand.hh"
 
 #include "ChamberGeometry.hh"
 
@@ -36,6 +42,7 @@ void ChamberStructure::CreateGeometry()
 
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
+  /*
   // Create wall of chamber inside magnetic field
   G4int nVW = geo->GetVCInMagWallNVertices();
   std::vector<G4TwoVector> vW(nVW);
@@ -88,11 +95,12 @@ void ChamberStructure::CreateGeometry()
   G4RotationMatrix* rotWallO = new G4RotationMatrix;
   rotWallO->rotateX(-90.*deg);
   new G4PVPlacement(rotWallO,G4ThreeVector(0.,0.,0.),logicalVCOutMagWall,"VCOutMagWall",fMotherVolume,false,0);
+  */
 
   /////////////////////////////////////////
   // Thin window flange in front of ECal //
   /////////////////////////////////////////
-
+  /*
   printf("Vacuum chamber window\n");
   G4double ewR = geo->GetEWRadius(); // Radius of the membrane
   G4double ewC = geo->GetEWConvexity(); // Convexity at membrane center
@@ -165,11 +173,39 @@ void ChamberStructure::CreateGeometry()
   G4LogicalVolume* logicalEWIronRing3 = new G4LogicalVolume(solidEWIronRing3,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing3",0,0,0);
   logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fMotherVolume,false,0);
+  */
+    /////////////////////////
+   // Main vacuum chamber //
+  /////////////////////////
 
-  //////////////////////////////////
-  // Main vacuum chamber cylinder //
-  //////////////////////////////////
+  printf("Creating global VC volume\n");
+  G4UnionSolid* solidGlobVC = CreateVCGlobalSolid();
+  fGlobalLogicalVolume = new G4LogicalVolume(solidGlobVC,G4Material::GetMaterial("Vacuum"),
+					     "ChamberGlobal",0,0,0);
+  fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fGlobalLogicalVolume,"VacuumChamber",fMotherVolume,false,0);
 
+  printf("Creating external VC volume\n");
+  G4UnionSolid* solidExtVC = CreateVCExternalSolid();
+  fExternalLogicalVolume = new G4LogicalVolume(solidExtVC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),
+  					       "ChamberExternal",0,0,0);
+  fExternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fExternalLogicalVolume,"ChamberExternal",fGlobalLogicalVolume,false,0);
+  printf("Creating internal VC volume\n");
+  G4UnionSolid* solidIntVC = CreateVCInternalSolid();
+  fInternalLogicalVolume = new G4LogicalVolume(solidIntVC,G4Material::GetMaterial("Vacuum"), "VCInternal",0,0,0);
+  //fInternalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fInternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fInternalLogicalVolume,"ChamberInternal",fExternalLogicalVolume,false,0);
+
+  /*
+  // Create the empty vacuum chamber shell
+  G4SubtractionSolid* solidVCShell = new G4SubtractionSolid("VCShell",solidExtVC,solidIntVC);
+  fShellLogicalVolume = new G4LogicalVolume(solidVCShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCShell",0,0,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fShellLogicalVolume,"ChamberShell",fGlobalLogicalVolume,false,0);
+  */
+
+  /*
   // Flange toward thin window flange
   G4Tubs* solidVCCCFRing = new G4Tubs("VCCCFRing",geo->GetVCCFRIn(),geo->GetVCCFROut(),0.5*geo->GetVCCFThick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalVCCCFRing = new G4LogicalVolume(solidVCCCFRing,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "VCCCFRing",0,0,0);
@@ -189,6 +225,7 @@ void ChamberStructure::CreateGeometry()
   G4LogicalVolume* logicalVCCylinder = new G4LogicalVolume(solidVCCylinder,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "VCCylinder",0,0,0);
   logicalVCCylinder->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
   new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalVCCylinder,"VCCylinder",fMotherVolume,false,0);
+  */
 }
 
 G4double ChamberStructure::GetChamberMostExternalX()
@@ -199,4 +236,497 @@ G4double ChamberStructure::GetChamberMostExternalX()
 G4double ChamberStructure::GetChamberMostAdvancedZ()
 {
   return ChamberGeometry::GetInstance()->GetVCMostAdvancedZ();
+}
+
+G4UnionSolid* ChamberStructure::CreateVCGlobalSolid()
+{
+
+  // Create the main volume of the vacuum chamber
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4String solidTag = "VCGlobSect";
+  G4String unionSolidTag = "VCGlobSolid";
+  G4String solidName,unionSolidName;
+
+  // Vertices of the front and back face of each section
+  G4ThreeVector vf[4],vb[4];
+
+  // Number of rectangular sections which define the main chamber body
+  G4int nsect = geo->GetVCNSections();
+
+  // Start from the reference section, i.e. centered at (0,0,0)
+  G4int sref = geo->GetVCRefSection();
+  vf[0] = geo->GetVCExtVtx(sref,0);
+  vf[1] = geo->GetVCExtVtx(sref,1);
+  vf[2] = geo->GetVCExtVtx(sref,2);
+  vf[3] = geo->GetVCExtVtx(sref,3);
+  vb[0] = geo->GetVCExtVtx(sref+1,0);
+  vb[1] = geo->GetVCExtVtx(sref+1,1);
+  vb[2] = geo->GetVCExtVtx(sref+1,2);
+  vb[3] = geo->GetVCExtVtx(sref+1,3);
+
+  printf("Section %d\n",sref);
+  for(G4int i=0;i<4;i++) { printf("vf[%d] %f %f %f\n",i,vf[i].x(),vf[i].y(),vf[i].z()); }
+  for(G4int i=0;i<4;i++) { printf("vb[%d] %f %f %f\n",i,vb[i].x(),vb[i].y(),vb[i].z()); }
+
+  unionSolidName = unionSolidTag+"Ref";
+  G4double boxSideX = vf[0].x()-vf[1].x();
+  G4double boxSideY = vf[3].y()-vf[0].y();
+  G4double boxSideZ = vb[0].z()-vf[0].z();
+  printf("Box sides %f %f %f\n",boxSideX,boxSideY,boxSideZ);
+  G4Box* solidVCRef = new G4Box(unionSolidName,0.5*boxSideX,0.5*boxSideY,0.5*boxSideZ);
+
+  //G4LogicalVolume* logicalVC = new G4LogicalVolume(solidVCRef,G4Material::GetMaterial("Vacuum"), "VC",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalVC,"VC",fMotherVolume,false,0);
+
+  std::vector<G4UnionSolid*> solidVC(nsect);
+  G4int isolid = 0;
+  for(G4int is = 0; is<nsect-1; is++) {
+
+    //printf("Adding section %d as solid %d\n",is,isolid);
+    if (is != sref) {
+
+      // Get vertices coordinates from geometry
+      vf[0] = geo->GetVCExtVtx(is,0);
+      vf[1] = geo->GetVCExtVtx(is,1);
+      vf[2] = geo->GetVCExtVtx(is,2);
+      vf[3] = geo->GetVCExtVtx(is,3);
+      vb[0] = geo->GetVCExtVtx(is+1,0);
+      vb[1] = geo->GetVCExtVtx(is+1,1);
+      vb[2] = geo->GetVCExtVtx(is+1,2);
+      vb[3] = geo->GetVCExtVtx(is+1,3);
+
+      // Check if this section has depth
+      if (vf[0].z() != vb[0].z()) {
+
+	solidName = solidTag+G4UIcommand::ConvertToString(is);
+	unionSolidName = unionSolidTag+G4UIcommand::ConvertToString(isolid);
+
+	printf("Section %d\n",is);
+	for(G4int i=0;i<4;i++) { printf("vf[%d] %f %f %f\n",i,vf[i].x(),vf[i].y(),vf[i].z()); }
+	for(G4int i=0;i<4;i++) { printf("vb[%d] %f %f %f\n",i,vb[i].x(),vb[i].y(),vb[i].z()); }
+
+	// Check if it is a box or a trap
+	if ( (vf[0].x() == vb[0].x()) && (vf[1].x() == vb[1].x()) &&
+	     (vf[0].y() == vb[0].y()) && (vf[3].y() == vb[3].y()) ) {
+
+	  // It's a box
+	  //printf("It's a box\n");
+	  G4double boxSideX = vf[0].x()-vf[1].x();
+	  G4double boxSideY = vf[3].y()-vf[0].y();
+	  G4double boxSideZ = vb[0].z()-vf[0].z();
+	  printf("Box sides %f %f %f\n",boxSideX,boxSideY,boxSideZ);
+	  //G4Box* box = new G4Box(solidName,0.5*abs(vf[1].x()-vf[0].x()),0.5*abs(vf[3].y()-vf[0].y()),0.5*abs(vb[0].z()-vf[0].z()));
+	  G4Box* box = new G4Box(solidName,0.5*boxSideX,0.5*boxSideY,0.5*boxSideZ);
+	  G4ThreeVector boxPos = G4ThreeVector(0.5*(vf[1].x()+vf[0].x()),0.5*(vf[3].y()+vf[0].y()),0.5*(vb[0].z()+vf[0].z()));
+	  printf("boxPos %f %f %f\n",boxPos.x(),boxPos.y(),boxPos.z());
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(box,G4Material::GetMaterial("Vacuum"),solidName,0,0,0);
+	  //new G4PVPlacement(0,boxPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,box,0,boxPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],box,0,boxPos);
+	  }
+	  isolid++;
+
+	} else {
+
+	  // It's a trap
+	  //printf("It's a trap\n");
+	  std::vector<G4TwoVector> vtx;
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vf[i].x(),vf[i].y())); }
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vb[i].x(),vb[i].y())); }
+	  for(G4int i=0; i<8; i++) { printf("vtx[%d] %f %f\n",i,vtx[i].x(),vtx[i].y()); }
+	  G4double lenZ = vb[0].z()-vf[0].z();
+	  G4GenericTrap* trap = new G4GenericTrap(solidName,0.5*lenZ,vtx);
+	  G4ThreeVector trapPos = G4ThreeVector(0.,0.,0.5*(vb[0].z()+vf[0].z()));
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(trap,G4Material::GetMaterial("Vacuum"),solidName,0,0,0);
+	  //new G4PVPlacement(0,trapPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,trap,0,trapPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],trap,0,trapPos);
+	  }
+	  isolid++;
+
+	}
+
+	//} else {
+	//	printf("This section has no depth: no solid associated\n");
+      }
+
+      //} else {
+      //printf("This is the reference section: skipping\n");
+    }
+
+  }
+
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength();
+  //G4double cyThick = geo->GetVCCThick();
+  //G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut();
+  G4double cyPosZ = geo->GetVCCPosZ();
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  G4Tubs* solidCyl = new G4Tubs("VCCylGlob",0.,cyROut,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window
+  G4double flaThick = geo->GetVCCFThick();
+  //G4double flaRIn = geo->GetVCCFRIn();
+  G4double flaROut = geo->GetVCCFROut();
+  G4double flaPosZ = geo->GetVCCFPosZ();
+  G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaROut,0.5*flaThick,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCGlobal0",solidVC[isolid-1],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCGlobal0",solidVCRef,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCGlobal0",solidVC[2],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberGlobal",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+
+  return solidFinal;
+  //return solidVC[isolid-1];
+  //return solidVC[0];
+
+}
+
+G4UnionSolid* ChamberStructure::CreateVCExternalSolid()
+{
+
+  // Create the external volume of the vacuum chamber
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4String solidTag = "VCExtSect";
+  G4String unionSolidTag = "VCExtSolid";
+  G4String solidName,unionSolidName;
+
+  // Vertices of the front and back face of each section
+  G4ThreeVector vf[4],vb[4];
+
+  // Number of rectangular sections which define the main chamber body
+  G4int nsect = geo->GetVCNSections();
+
+  // Start from the reference section, i.e. centered at (0,0,0)
+  G4int sref = geo->GetVCRefSection();
+  // Shrink the section by 1um along X and Y wrt the global volume to avoid face overlaps
+  vf[0] = geo->GetVCExtVtx(sref,0)+G4ThreeVector(-1.*um, 1.*um,0.);
+  vf[1] = geo->GetVCExtVtx(sref,1)+G4ThreeVector( 1.*um, 1.*um,0.);
+  vf[2] = geo->GetVCExtVtx(sref,2)+G4ThreeVector( 1.*um,-1.*um,0.);
+  vf[3] = geo->GetVCExtVtx(sref,3)+G4ThreeVector(-1.*um,-1.*um,0.);
+  vb[0] = geo->GetVCExtVtx(sref+1,0)+G4ThreeVector(-1.*um, 1.*um,0.);
+  vb[1] = geo->GetVCExtVtx(sref+1,1)+G4ThreeVector( 1.*um, 1.*um,0.);
+  vb[2] = geo->GetVCExtVtx(sref+1,2)+G4ThreeVector( 1.*um,-1.*um,0.);
+  vb[3] = geo->GetVCExtVtx(sref+1,3)+G4ThreeVector(-1.*um,-1.*um,0.);
+
+  //printf("%d %f %f %f %f %f %f\n",sref,vf[1].x(),vf[0].x(),vf[2].y(),vf[1].y(),vb[0].z(),vf[0].z());
+  unionSolidName = unionSolidTag+"Ref";
+  G4Box* solidVCRef = new G4Box(unionSolidName,0.5*abs(vf[1].x()-vf[0].x()),0.5*abs(vf[2].y()-vf[1].y()),0.5*abs(vb[0].z()-vf[0].z()));
+
+  //G4LogicalVolume* logicalVC = new G4LogicalVolume(solidVCRef,G4Material::GetMaterial("Vacuum"), "VC",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalVC,"VC",fMotherVolume,false,0);
+
+  std::vector<G4UnionSolid*> solidVC(nsect);
+  G4int isolid = 0;
+  for(G4int is = 0; is<nsect-1; is++) {
+
+    //printf("Adding section %d as solid %d\n",is,isolid);
+    if (is != sref) {
+
+      // Get vertices coordinates from geometry
+      // Shrink the section by 1um along X and Y wrt the global volume to avoid face overlaps
+      vf[0] = geo->GetVCExtVtx(is,0)+G4ThreeVector(-1.*um, 1.*um,0.);
+      vf[1] = geo->GetVCExtVtx(is,1)+G4ThreeVector( 1.*um, 1.*um,0.);
+      vf[2] = geo->GetVCExtVtx(is,2)+G4ThreeVector( 1.*um,-1.*um,0.);
+      vf[3] = geo->GetVCExtVtx(is,3)+G4ThreeVector(-1.*um,-1.*um,0.);
+      vb[0] = geo->GetVCExtVtx(is+1,0)+G4ThreeVector(-1.*um, 1.*um,0.);
+      vb[1] = geo->GetVCExtVtx(is+1,1)+G4ThreeVector( 1.*um, 1.*um,0.);
+      vb[2] = geo->GetVCExtVtx(is+1,2)+G4ThreeVector( 1.*um,-1.*um,0.);
+      vb[3] = geo->GetVCExtVtx(is+1,3)+G4ThreeVector(-1.*um,-1.*um,0.);
+
+      // Shrink first and last sector by 1um along Z wrt the global volume to avoid face overlaps
+      if (is==0) {
+	vf[0] += G4ThreeVector(0.,0.,1.*um);
+	vf[1] += G4ThreeVector(0.,0.,1.*um);
+	vf[2] += G4ThreeVector(0.,0.,1.*um);
+	vf[3] += G4ThreeVector(0.,0.,1.*um);
+      } else if (is==nsect-2) {
+	vb[0] += G4ThreeVector(0.,0.,-1.*um);
+	vb[1] += G4ThreeVector(0.,0.,-1.*um);
+	vb[2] += G4ThreeVector(0.,0.,-1.*um);
+	vb[3] += G4ThreeVector(0.,0.,-1.*um);
+      }
+
+      // Check if this section has depth
+      if (vf[0].z() != vb[0].z()) {
+
+	solidName = solidTag+G4UIcommand::ConvertToString(is);
+	unionSolidName = unionSolidTag+G4UIcommand::ConvertToString(isolid);
+
+	printf("Section %d\n",is);
+	for(G4int i=0;i<4;i++) { printf("vf[%d] %f %f %f\n",i,vf[i].x(),vf[i].y(),vf[i].z()); }
+	for(G4int i=0;i<4;i++) { printf("vb[%d] %f %f %f\n",i,vb[i].x(),vb[i].y(),vb[i].z()); }
+
+	// Check if it is a box or a trap
+	if ( (vf[0].x() == vb[0].x()) && (vf[1].x() == vb[1].x()) &&
+	     (vf[0].y() == vb[0].y()) && (vf[3].y() == vb[3].y()) ) {
+
+	  // It's a box
+	  //printf("It's a box\n");
+	  G4double boxSideX = vf[0].x()-vf[1].x();
+	  G4double boxSideY = vf[3].y()-vf[0].y();
+	  G4double boxSideZ = vb[0].z()-vf[0].z();
+	  printf("Box sides %f %f %f\n",boxSideX,boxSideY,boxSideZ);
+	  //G4Box* box = new G4Box(solidName,0.5*abs(vf[1].x()-vf[0].x()),0.5*abs(vf[3].y()-vf[0].y()),0.5*abs(vb[0].z()-vf[0].z()));
+	  G4Box* box = new G4Box(solidName,0.5*boxSideX,0.5*boxSideY,0.5*boxSideZ);
+	  G4ThreeVector boxPos = G4ThreeVector(0.5*(vf[1].x()+vf[0].x()),0.5*(vf[3].y()+vf[0].y()),0.5*(vb[0].z()+vf[0].z()));
+	  printf("boxPos %f %f %f\n",boxPos.x(),boxPos.y(),boxPos.z());
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(box,G4Material::GetMaterial("Vacuum"),solidName,0,0,0);
+	  //new G4PVPlacement(0,boxPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,box,0,boxPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],box,0,boxPos);
+	  }
+	  isolid++;
+
+	} else {
+
+	  // It's a trap
+	  //printf("It's a trap\n");
+	  std::vector<G4TwoVector> vtx;
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vf[i].x(),vf[i].y())); }
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vb[i].x(),vb[i].y())); }
+	  for(G4int i=0; i<8; i++) { printf("vtx[%d] %f %f\n",i,vtx[i].x(),vtx[i].y()); }
+	  G4double lenZ = vb[0].z()-vf[0].z();
+	  G4GenericTrap* trap = new G4GenericTrap(solidName,0.5*lenZ,vtx);
+	  G4ThreeVector trapPos = G4ThreeVector(0.,0.,0.5*(vb[0].z()+vf[0].z()));
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(trap,G4Material::GetMaterial("Vacuum"),solidName,0,0,0);
+	  //new G4PVPlacement(0,trapPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,trap,0,trapPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],trap,0,trapPos);
+	  }
+	  isolid++;
+
+	}
+
+	//} else {
+	//printf("This section has no depth: no solid associated\n");
+      }
+
+      //} else {
+      //printf("This is the reference section: skipping\n");
+    }
+
+  }
+
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength();
+  //G4double cyThick = geo->GetVCCThick();
+  //G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut();
+  // Shift cylinder 1um forward to connect to flange
+  G4double cyPosZ = geo->GetVCCPosZ()+0.001*mm;
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  // Shrink radius of cylinder by 1um wrt global volume to avoid face overlaps
+  G4Tubs* solidCyl = new G4Tubs("VCTubsExt",0.,cyROut-0.001*mm,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window
+  G4double flaThick = geo->GetVCCFThick();
+  //G4double flaRIn = geo->GetVCCFRIn();
+  G4double flaROut = geo->GetVCCFROut();
+  G4double flaPosZ = geo->GetVCCFPosZ();
+  // Shrink radius and thickness of flange by 1um wrt global volume to avoid face overlaps
+  G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaROut-0.001*mm,0.5*flaThick-0.001*mm,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCExternal0",solidVC[isolid-1],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCExternal0",solidVCRef,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCExternal0",solidVC[2],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberExternal",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+
+  return solidFinal;
+
+}
+
+G4UnionSolid* ChamberStructure::CreateVCInternalSolid()
+{
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4String solidTag = "VCIntSect";
+  G4String unionSolidTag = "VCIntSolid";
+  G4String solidName,unionSolidName;
+
+  // Vertices of the front and back face of each section
+  G4ThreeVector vf[4],vb[4];
+
+  // Number of rectangular sections which define the main chamber body
+  G4int nsect = geo->GetVCNSections();
+
+  // Start from the reference section, i.e. centered at (0,0,0)
+  // Make z coordinate of the two faces sliiiiiightly far apart to guarantee overlap
+  G4int sref = geo->GetVCRefSection();
+  vf[0] = geo->GetVCIntVtx(sref,0);
+  vf[1] = geo->GetVCIntVtx(sref,1);
+  vf[2] = geo->GetVCIntVtx(sref,2);
+  vf[3] = geo->GetVCIntVtx(sref,3);
+  vb[0] = geo->GetVCIntVtx(sref+1,0);
+  vb[1] = geo->GetVCIntVtx(sref+1,1);
+  vb[2] = geo->GetVCIntVtx(sref+1,2);
+  vb[3] = geo->GetVCIntVtx(sref+1,3);
+
+  printf("Section %d\n",sref);
+  for(G4int i=0;i<4;i++) { printf("vf[%d] %f %f %f\n",i,vf[i].x(),vf[i].y(),vf[i].z()); }
+  for(G4int i=0;i<4;i++) { printf("vb[%d] %f %f %f\n",i,vb[i].x(),vb[i].y(),vb[i].z()); }
+
+  unionSolidName = unionSolidTag+"Ref";
+  G4double boxSideX = vf[0].x()-vf[1].x();
+  G4double boxSideY = vf[3].y()-vf[0].y();
+  G4double boxSideZ = vb[0].z()-vf[0].z();
+  printf("Box sides %f %f %f\n",boxSideX,boxSideY,boxSideZ);
+  G4Box* solidVCRef = new G4Box(unionSolidName,0.5*boxSideX,0.5*boxSideY,0.5*boxSideZ);
+
+  //G4LogicalVolume* logicalVC = new G4LogicalVolume(solidVCRef,G4Material::GetMaterial("Vacuum"), "VC",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalVC,"VC",fMotherVolume,false,0);
+
+  std::vector<G4UnionSolid*> solidVC(nsect);
+  G4int isolid = 0;
+  for(G4int is = 0; is<nsect-1; is++) {
+
+    //printf("Adding section %d as solid %d\n",is,isolid);
+    if (is != sref) {
+
+      // Get vertices coordinates from geometry
+      vf[0] = geo->GetVCIntVtx(is,0);
+      vf[1] = geo->GetVCIntVtx(is,1);
+      vf[2] = geo->GetVCIntVtx(is,2);
+      vf[3] = geo->GetVCIntVtx(is,3);
+      vb[0] = geo->GetVCIntVtx(is+1,0);
+      vb[1] = geo->GetVCIntVtx(is+1,1);
+      vb[2] = geo->GetVCIntVtx(is+1,2);
+      vb[3] = geo->GetVCIntVtx(is+1,3);
+
+      // Check if this section has depth
+      if (vf[0].z() != vb[0].z()) {
+
+	solidName = solidTag+G4UIcommand::ConvertToString(is);
+	unionSolidName = unionSolidTag+G4UIcommand::ConvertToString(isolid);
+
+	printf("Section %d\n",is);
+	for(G4int i=0;i<4;i++) { printf("vf[%d] %f %f %f\n",i,vf[i].x(),vf[i].y(),vf[i].z()); }
+	for(G4int i=0;i<4;i++) { printf("vb[%d] %f %f %f\n",i,vb[i].x(),vb[i].y(),vb[i].z()); }
+
+	// Check if it is a box or a trap
+	if ( (vf[0].x() == vb[0].x()) && (vf[1].x() == vb[1].x()) &&
+	     (vf[0].y() == vb[0].y()) && (vf[3].y() == vb[3].y()) ) {
+
+	  // It's a box
+	  //printf("It's a box\n");
+	  //printf("It's a box\n");
+	  G4double boxSideX = vf[0].x()-vf[1].x();
+	  G4double boxSideY = vf[3].y()-vf[0].y();
+	  G4double boxSideZ = vb[0].z()-vf[0].z();
+	  printf("Box sides %f %f %f\n",boxSideX,boxSideY,boxSideZ);
+	  //G4Box* box = new G4Box(solidName,0.5*abs(vf[1].x()-vf[0].x()),0.5*abs(vf[3].y()-vf[0].y()),0.5*abs(vb[0].z()-vf[0].z()));
+	  G4Box* box = new G4Box(solidName,0.5*boxSideX,0.5*boxSideY,0.5*boxSideZ);
+	  G4ThreeVector boxPos = G4ThreeVector(0.5*(vf[1].x()+vf[0].x()),0.5*(vf[3].y()+vf[0].y()),0.5*(vb[0].z()+vf[0].z()));
+	  printf("boxPos %f %f %f\n",boxPos.x(),boxPos.y(),boxPos.z());
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(box,G4Material::GetMaterial("Vacuum"),solidName,0,0,0);
+	  //new G4PVPlacement(0,boxPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,box,0,boxPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],box,0,boxPos);
+	  }
+	  isolid++;
+
+	} else {
+
+	  // It's a trap
+	  //printf("It's a trap\n");
+	  std::vector<G4TwoVector> vtx;
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vf[i].x(),vf[i].y())); }
+	  for(G4int i=0; i<4; i++) { vtx.push_back(G4TwoVector(vb[i].x(),vb[i].y())); }
+	  for(G4int i=0; i<8; i++) { printf("vtx[%d] %f %f\n",i,vtx[i].x(),vtx[i].y()); }
+	  G4double lenZ = vb[0].z()-vf[0].z();
+	  G4GenericTrap* trap = new G4GenericTrap(solidName,0.5*lenZ,vtx);
+	  G4ThreeVector trapPos = G4ThreeVector(0.,0.,0.5*(vb[0].z()+vf[0].z()));
+	  //G4LogicalVolume* logicalVC = new G4LogicalVolume(trap,G4Material::GetMaterial("Vacuum"), solidName,0,0,0);
+	  //new G4PVPlacement(0,trapPos,logicalVC,solidName,fMotherVolume,false,0);
+
+	  // Attach this solid to the existing structure
+	  if (isolid==0) {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVCRef,trap,0,trapPos);
+	  } else {
+	    solidVC[isolid] = new G4UnionSolid(unionSolidName,solidVC[isolid-1],trap,0,trapPos);
+	  }
+	  isolid++;
+
+	}
+
+	//} else {
+	//printf("This section has no depth: no solid associated\n");
+      }
+
+      //} else {
+      //printf("This is the reference section: skipping\n");
+    }
+
+  }
+
+  // Big cylinder
+  G4double cyThick = geo->GetVCCThick();
+  G4double cyRIn = geo->GetVCCRIn();
+  //G4double cyROut = geo->GetVCCROut();
+  G4double cyLen = geo->GetVCCLength()-cyThick+0.001*mm;
+  G4double cyPosZ = geo->GetVCCPosZ()+0.5*(cyThick+0.001*mm);
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  G4Tubs* solidCyl = new G4Tubs("VCTubsInt",0.,cyRIn,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window
+  G4double flaThick = geo->GetVCCFThick();
+  G4double flaRIn = geo->GetVCCFRIn();
+  //G4double flaROut = geo->GetVCCFROut();
+  G4double flaPosZ = geo->GetVCCFPosZ();
+  // Shrink thickness of flange by 1um wrt global volume to be identical to external flange
+  //G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaRIn,0.5*flaThick-0.001*mm,0.*deg,360.*deg);
+  G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaRIn,0.5*flaThick,0.*deg,360.*deg);
+
+  // Create hole at beam entrance (will need flange to connect to target structure)
+  G4double holeThick = geo->GetVCInHoleThick()+0.001*mm;
+  G4double holeRadius = geo->GetVCInHoleRadius();
+  G4double holePosZ = geo->GetVCInHolePosZ();
+  G4Tubs* solidHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVC[isolid-1],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVCRef,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVC[2],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solid1 = new G4UnionSolid("VCInternal1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberInternal",solid1,solidHole,0,G4ThreeVector(0.,0.,holePosZ));
+
+  return solidFinal;
+
 }

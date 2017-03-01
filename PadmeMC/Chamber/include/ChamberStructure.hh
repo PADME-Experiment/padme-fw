@@ -9,8 +9,10 @@
 #define ChamberStructure_H 1
 
 #include "globals.hh"
+#include "G4ThreeVector.hh"
 
 class G4LogicalVolume;
+class G4UnionSolid;
 
 class ChamberStructure
 {
@@ -21,15 +23,23 @@ public:
   ChamberStructure(G4LogicalVolume*);
 
   void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
-  //void SetMagneticVolume(G4LogicalVolume* v) { fMagneticVolume = v; }
   void CreateGeometry();
   G4double GetChamberMostExternalX();
   G4double GetChamberMostAdvancedZ();
+  G4LogicalVolume* GetChamberInternalLogicalVolume() { return fInternalLogicalVolume; }
+  G4LogicalVolume* GetChamberGlobalLogicalVolume() { return fGlobalLogicalVolume; }
 
 private:
 
+  G4UnionSolid* CreateVCGlobalSolid();
+  G4UnionSolid* CreateVCExternalSolid();
+  G4UnionSolid* CreateVCInternalSolid();
+
   G4LogicalVolume* fMotherVolume;
-  //G4LogicalVolume* fMagneticVolume;
+  G4LogicalVolume* fInternalLogicalVolume;
+  G4LogicalVolume* fExternalLogicalVolume;
+  G4LogicalVolume* fGlobalLogicalVolume;
+  //G4LogicalVolume* fShellLogicalVolume;
 
 };
 

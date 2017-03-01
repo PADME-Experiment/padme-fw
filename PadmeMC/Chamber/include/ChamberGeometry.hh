@@ -12,9 +12,16 @@
 #define CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES 6
 #define CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES 6
 
+#define CHAMBERGEOMETRY_VC_NSECTIONS 12
+#define CHAMBERGEOMETRY_VC_REFSECTION 1
+
 #include "globals.hh"
 #include "G4TwoVector.hh"
+#include "G4ThreeVector.hh"
 #include "G4SystemOfUnits.hh"
+
+class G4UnionSolid;
+class G4VSolid;
 
 class ChamberGeometry
 {
@@ -57,7 +64,14 @@ public:
 
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
 
-  // Properties of the big vacuum chamber cylinder
+  // Properties of the big vacuum chamber
+
+  // Vertices of the chamber sections
+  G4int GetVCNSections() { return CHAMBERGEOMETRY_VC_NSECTIONS; }
+  //G4int GetVCNSections() { return 7; }
+  G4int GetVCRefSection() { return CHAMBERGEOMETRY_VC_REFSECTION; }
+  G4ThreeVector GetVCExtVtx(G4int s, G4int v) { return fVCExtVtx[s][v]; }
+  G4ThreeVector GetVCIntVtx(G4int s, G4int v) { return fVCIntVtx[s][v]; }
 
   // Flange to connect ECal thin window
   G4double GetVCCFPosZ() { return fVCBackFacePosZ-0.5*fVCCFThick; }
@@ -66,11 +80,16 @@ public:
   G4double GetVCCFROut() { return fEWF2ROut; }
 
   // Big cylinder
-  G4double GetVCCPosZ() { return fVCBackFacePosZ-fVCCFThick-0.5*fVCCLength; }
-  G4double GetVCCLength() { return fVCCLength; }
+  G4double GetVCCPosZ() { return 0.5*(fVCCFrontFacePosZ+(fVCBackFacePosZ-fVCCFThick)); }
+  G4double GetVCCLength() { return (fVCBackFacePosZ-fVCCFThick)-fVCCFrontFacePosZ; }
   G4double GetVCCThick() { return fVCCThick; }
   G4double GetVCCRIn() { return fVCCRIn; }
   G4double GetVCCROut() { return fVCCRIn+fVCCThick; }
+
+  // Entrance hole
+  G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
+  G4double GetVCInHoleThick() { return fVCInHoleThick; }
+  G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
 
   // Properties of thin window
 
@@ -116,9 +135,15 @@ private:
 
   G4double fVCCThick; // Thickness of the big cylinder
   G4double fVCCRIn; // Inner radius of the big cylinder
-  G4double fVCCLength; // Length of the big cylinder
+  //G4double fVCCLength; // Length of the big cylinder
+  G4double fVCCFrontFacePosZ; // Z position of front face of big cylinder
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
+
+  // Beam entrance hole characteristics
+  G4double fVCInHoleRadius;
+  G4double fVCInHoleThick;
+  G4double fVCInHolePosZ;
 
   //G4double fVCEWGap; // Gap for o-ring between main VC body and thin window flange
 
@@ -142,6 +167,11 @@ private:
   G4double fEWF1ROut;
   G4double fEWF2ROut;
   G4double fEWF3RIn;
+
+  // Vectors to hold coordinates of the vertices of all sections of the chamber
+
+  G4ThreeVector fVCExtVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
+  G4ThreeVector fVCIntVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
 
 };
 

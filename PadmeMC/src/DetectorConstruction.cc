@@ -319,8 +319,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
   // but excludes calorimeters
 
-  G4double magVolMinX = -fChamberStructure->GetChamberMostExternalX()-0.1*mm;
-  G4double magVolMaxX =  fChamberStructure->GetChamberMostExternalX()+0.1*mm;
+  G4double magVolMinX = -fChamberStructure->GetChamberMostExternalX()-1.*cm;
+  G4double magVolMaxX =  fChamberStructure->GetChamberMostExternalX()+1.*cm;
 
   G4double magVolMinY = -100.*cm;
   G4double magVolMaxY =  100.*cm;
@@ -337,6 +337,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double magVolHLY = 0.5*(magVolMaxY-magVolMinY);
   G4double magVolHLZ = 0.5*(magVolMaxZ-magVolMinZ);
 
+  printf ("--- Magnetic Volume ---\n");
   printf ("%f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
   printf ("%f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
   printf ("%f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);

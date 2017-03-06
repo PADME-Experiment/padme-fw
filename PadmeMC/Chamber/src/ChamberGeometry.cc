@@ -56,11 +56,6 @@ ChamberGeometry::ChamberGeometry()
   fVCOutMagWallVertex[ 4] = G4TwoVector( -67.9*cm, 52.4*cm);
   fVCOutMagWallVertex[ 5] = G4TwoVector( -56.0*cm, 52.4*cm);
 
-  //fVCBackFacePosZ = 224.5*cm; // Z position of back face of VC flange towards thin window
-  fVCBackFacePosZ = 224.9*cm; // Z position of back face of VC flange towards thin window
-
-  fVCMostExternalX = 156.6*cm; // Absolute value of largest X coordinate of the chamber
-
   //fVCEWGap = 5.9*mm; // Gap for o-ring between main VC body and thin window flange
 
   fVCCFThick = 20.*mm; // Thickness of VC flange toward thin window flange
@@ -69,6 +64,8 @@ ChamberGeometry::ChamberGeometry()
   fVCCRIn = 335.*mm; // Inner radius of big cylinder
   //fVCCLength = 140.*cm; // Length of big cylinder
   fVCCFrontFacePosZ = 89.1*cm; // Z position of front face of big cylinder
+
+  fVCBackFacePosZ = 224.9*cm; // Z position of back face of VC flange towards thin window
 
   // Thin window in front of ECal (EW)
 
@@ -215,6 +212,255 @@ ChamberGeometry::ChamberGeometry()
   fVCIntVtx[11][2] = G4ThreeVector(-421.10*mm, 165.*mm,2239.*mm); // X ok
   fVCIntVtx[11][3] = G4ThreeVector( 224.00*mm, 165.*mm,2239.*mm);
 
+  // A few quantities derived from the vertices positions
+  fVCMostExternalX = -fVCExtVtx[10][1].x(); // Absolute value of largest X coordinate of the chamber
+
+  // S 0 -Z
+  fVCFacetVtx[0][0] =   0;
+  fVCFacetVtx[0][1] =   1;
+  fVCFacetVtx[0][2] =   2;
+  fVCFacetVtx[0][3] =   3;
+
+  // S 0-2 +X
+  fVCFacetVtx[1][0] =   0;
+  fVCFacetVtx[1][1] =   3;
+  fVCFacetVtx[1][2] =  23;
+  fVCFacetVtx[1][3] =  20;
+
+  // S 0-2 +Y
+  fVCFacetVtx[2][0] =   3;
+  fVCFacetVtx[2][1] =   2;
+  fVCFacetVtx[2][2] =  22;
+  fVCFacetVtx[2][3] =  23;
+
+  // S 0-2 -X
+  fVCFacetVtx[3][0] =   2;
+  fVCFacetVtx[3][1] =   1;
+  fVCFacetVtx[3][2] =  21;
+  fVCFacetVtx[3][3] =  22;
+
+  // S 0-2 -Y
+  fVCFacetVtx[4][0] =   1;
+  fVCFacetVtx[4][1] =   0;
+  fVCFacetVtx[4][2] =  20;
+  fVCFacetVtx[4][3] =  21;
+
+  // S 2-3 +X
+  fVCFacetVtx[5][0] =  20;
+  fVCFacetVtx[5][1] =  23;
+  fVCFacetVtx[5][2] =  33;
+  fVCFacetVtx[5][3] =  30;
+
+  // S 2-3 +Y
+  fVCFacetVtx[6][0] =  23;
+  fVCFacetVtx[6][1] =  22;
+  fVCFacetVtx[6][2] =  32;
+  fVCFacetVtx[6][3] =  33;
+
+  // S 2-3 -X
+  fVCFacetVtx[7][0] =  22;
+  fVCFacetVtx[7][1] =  21;
+  fVCFacetVtx[7][2] =  31;
+  fVCFacetVtx[7][3] =  32;
+
+  // S 2-3 -Y
+  fVCFacetVtx[8][0] =  21;
+  fVCFacetVtx[8][1] =  20;
+  fVCFacetVtx[8][2] =  30;
+  fVCFacetVtx[8][3] =  31;
+
+  // S 3-4 +X
+  fVCFacetVtx[9][0] =  30;
+  fVCFacetVtx[9][1] =  33;
+  fVCFacetVtx[9][2] =  43;
+  fVCFacetVtx[9][3] =  40;
+
+  // S 3-4 +Y
+  fVCFacetVtx[10][0] =  33;
+  fVCFacetVtx[10][1] =  32;
+  fVCFacetVtx[10][2] =  42;
+  fVCFacetVtx[10][3] =  43;
+
+  // S 3-4 -X
+  fVCFacetVtx[11][0] =  32;
+  fVCFacetVtx[11][1] =  31;
+  fVCFacetVtx[11][2] =  41;
+  fVCFacetVtx[11][3] =  42;
+
+  // S 3-4 -Y
+  fVCFacetVtx[12][0] =  31;
+  fVCFacetVtx[12][1] =  30;
+  fVCFacetVtx[12][2] =  40;
+  fVCFacetVtx[12][3] =  41;
+
+  // S 4-5, -Z
+  fVCFacetVtx[13][0] =  42;
+  fVCFacetVtx[13][1] =  41;
+  fVCFacetVtx[13][2] =  51;
+  fVCFacetVtx[13][3] =  52;
+
+  // S 4-6 +X
+  fVCFacetVtx[14][0] =  40;
+  fVCFacetVtx[14][1] =  43;
+  fVCFacetVtx[14][2] =  63;
+  fVCFacetVtx[14][3] =  60;
+
+  // S 4-6 +Y
+  fVCFacetVtx[15][0] =  43;
+  fVCFacetVtx[15][1] =  42;
+  fVCFacetVtx[15][2] =  62;
+  fVCFacetVtx[15][3] =  63;
+
+  // S 5-6 -X
+  fVCFacetVtx[16][0] =  52;
+  fVCFacetVtx[16][1] =  51;
+  fVCFacetVtx[16][2] =  61;
+  fVCFacetVtx[16][3] =  62;
+
+  // S 4-6 -Y
+  fVCFacetVtx[17][0] =  41;
+  fVCFacetVtx[17][1] =  40;
+  fVCFacetVtx[17][2] =  60;
+  fVCFacetVtx[17][3] =  61;
+
+  // S 6-7 +X
+  fVCFacetVtx[18][0] =  60;
+  fVCFacetVtx[18][1] =  63;
+  fVCFacetVtx[18][2] =  73;
+  fVCFacetVtx[18][3] =  70;
+
+  // S 6-7 +Y
+  fVCFacetVtx[19][0] =  63;
+  fVCFacetVtx[19][1] =  62;
+  fVCFacetVtx[19][2] =  72;
+  fVCFacetVtx[19][3] =  73;
+
+  // S 6-7 -X
+  fVCFacetVtx[20][0] =  62;
+  fVCFacetVtx[20][1] =  61;
+  fVCFacetVtx[20][2] =  71;
+  fVCFacetVtx[20][3] =  72;
+
+  // S 6-7 -Y
+  fVCFacetVtx[21][0] =  61;
+  fVCFacetVtx[21][1] =  60;
+  fVCFacetVtx[21][2] =  70;
+  fVCFacetVtx[21][3] =  71;
+
+  // S 7-8 +X
+  fVCFacetVtx[22][0] =  70;
+  fVCFacetVtx[22][1] =  73;
+  fVCFacetVtx[22][2] =  83;
+  fVCFacetVtx[22][3] =  80;
+
+  // S 7-8 +Y
+  fVCFacetVtx[23][0] =  73;
+  fVCFacetVtx[23][1] =  72;
+  fVCFacetVtx[23][2] =  82;
+  fVCFacetVtx[23][3] =  83;
+
+  // S 7-8 -X
+  fVCFacetVtx[24][0] =  72;
+  fVCFacetVtx[24][1] =  71;
+  fVCFacetVtx[24][2] =  81;
+  fVCFacetVtx[24][3] =  82;
+
+  // S 7-8 -Y
+  fVCFacetVtx[25][0] =  71;
+  fVCFacetVtx[25][1] =  70;
+  fVCFacetVtx[25][2] =  80;
+  fVCFacetVtx[25][3] =  81;
+
+  // S 8-9 +X
+  fVCFacetVtx[26][0] =  80;
+  fVCFacetVtx[26][1] =  83;
+  fVCFacetVtx[26][2] =  93;
+  fVCFacetVtx[26][3] =  90;
+
+  // S 8-9 +Y
+  fVCFacetVtx[27][0] =  83;
+  fVCFacetVtx[27][1] =  82;
+  fVCFacetVtx[27][2] =  92;
+  fVCFacetVtx[27][3] =  93;
+
+  // S 8-9 -X
+  fVCFacetVtx[28][0] =  82;
+  fVCFacetVtx[28][1] =  81;
+  fVCFacetVtx[28][2] =  91;
+  fVCFacetVtx[28][3] =  92;
+
+  // S 8-9 -Y
+  fVCFacetVtx[29][0] =  81;
+  fVCFacetVtx[29][1] =  80;
+  fVCFacetVtx[29][2] =  90;
+  fVCFacetVtx[29][3] =  91;
+
+  // S 9-10 +X
+  fVCFacetVtx[30][0] =  90;
+  fVCFacetVtx[30][1] =  93;
+  fVCFacetVtx[30][2] = 103;
+  fVCFacetVtx[30][3] = 100;
+
+  // S 9-10 +Y
+  fVCFacetVtx[31][0] =  93;
+  fVCFacetVtx[31][1] =  92;
+  fVCFacetVtx[31][2] = 102;
+  fVCFacetVtx[31][3] = 103;
+
+  // S 9-10 -X
+  fVCFacetVtx[32][0] =  92;
+  fVCFacetVtx[32][1] =  91;
+  fVCFacetVtx[32][2] = 101;
+  fVCFacetVtx[32][3] = 102;
+
+  // S 9-10 -Y
+  fVCFacetVtx[33][0] =  91;
+  fVCFacetVtx[33][1] =  90;
+  fVCFacetVtx[33][2] = 100;
+  fVCFacetVtx[33][3] = 101;
+
+  // S 10-11 +X
+  fVCFacetVtx[34][0] = 100;
+  fVCFacetVtx[34][1] = 103;
+  fVCFacetVtx[34][2] = 113;
+  fVCFacetVtx[34][3] = 110;
+
+  // S 10-11 +Y
+  fVCFacetVtx[35][0] = 103;
+  fVCFacetVtx[35][1] = 102;
+  fVCFacetVtx[35][2] = 112;
+  fVCFacetVtx[35][3] = 113;
+
+  // S 10-11 -X
+  fVCFacetVtx[36][0] = 102;
+  fVCFacetVtx[36][1] = 101;
+  fVCFacetVtx[36][2] = 111;
+  fVCFacetVtx[36][3] = 112;
+
+  // S 10-11 -Y
+  fVCFacetVtx[37][0] = 101;
+  fVCFacetVtx[37][1] = 100;
+  fVCFacetVtx[37][2] = 110;
+  fVCFacetVtx[37][3] = 111;
+
+  // S 11 +Z
+  fVCFacetVtx[38][0] = 113;
+  fVCFacetVtx[38][1] = 112;
+  fVCFacetVtx[38][2] = 111;
+  fVCFacetVtx[38][3] = 110;
+
+  // S 4-(5)-6 +Y
+  fVCFacetVtx[39][0] =  42;
+  fVCFacetVtx[39][1] =  52;
+  fVCFacetVtx[39][2] =  62;
+  fVCFacetVtx[39][3] =  -1;
+
+  // S 4-(5)-6 -Y
+  fVCFacetVtx[40][0] =  51;
+  fVCFacetVtx[40][1] =  41;
+  fVCFacetVtx[40][2] =  61;
+  fVCFacetVtx[40][3] =  -1;
+
   //printf("In geo %f %f %f\n",fVCExtVtx[1][0].x(),fVCExtVtx[1][0].y(),fVCExtVtx[1][0].z());
 
   // Properties of the beam entrance hole
@@ -222,7 +468,21 @@ ChamberGeometry::ChamberGeometry()
   fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
   fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
 
+  // Properties of the beam exit hole
+  fVCOutHoleRadius = 5.*cm; // Radius of the two circles
+  fVCOutHoleLength = 10.*cm; // Distance between circle centers
+  fVCOutHoleThick = 1.*cm; // Should be computed from distance between chamber faces
+  // Distance of center of hole from edge on the VC back face
+  fVCOutHoleDistToEdge = 30.*cm; // To verify with Cesidio
+
 }
 
 ChamberGeometry::~ChamberGeometry()
 {}
+
+G4double ChamberGeometry::GetVCBackFaceAngle()
+{
+  G4double angle =  atan2(fVCExtVtx[11][1].z()-fVCExtVtx[10][1].z(),
+			  fVCExtVtx[11][1].x()-fVCExtVtx[10][1].x());
+  return angle;
+}

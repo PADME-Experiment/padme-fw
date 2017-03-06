@@ -23,6 +23,10 @@
 #include "G4ExtrudedSolid.hh"
 #include "G4UnionSolid.hh"
 #include "G4SubtractionSolid.hh"
+#include "G4TessellatedSolid.hh"
+#include "G4TriangularFacet.hh"
+#include "G4QuadrangularFacet.hh"
+#include "G4Polyhedron.hh"
 
 #include "G4UIcommand.hh"
 
@@ -179,31 +183,32 @@ void ChamberStructure::CreateGeometry()
   /////////////////////////
 
   printf("Creating global VC volume\n");
-  G4UnionSolid* solidGlobVC = CreateVCGlobalSolid();
-  fGlobalLogicalVolume = new G4LogicalVolume(solidGlobVC,G4Material::GetMaterial("Vacuum"),
-					     "ChamberGlobal",0,0,0);
+  //G4UnionSolid* solidGlobVC = CreateVCGlobalSolid();
+  G4UnionSolid* solidGlobVC = CreateVCFacetGlobalSolid();
+  fGlobalLogicalVolume = new G4LogicalVolume(solidGlobVC,G4Material::GetMaterial("Vacuum"),"ChamberGlobal",0,0,0);
   fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fGlobalLogicalVolume,"VacuumChamber",fMotherVolume,false,0);
 
   printf("Creating external VC volume\n");
-  G4UnionSolid* solidExtVC = CreateVCExternalSolid();
-  fExternalLogicalVolume = new G4LogicalVolume(solidExtVC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),
-  					       "ChamberExternal",0,0,0);
-  fExternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fExternalLogicalVolume,"ChamberExternal",fGlobalLogicalVolume,false,0);
-  printf("Creating internal VC volume\n");
-  G4UnionSolid* solidIntVC = CreateVCInternalSolid();
-  fInternalLogicalVolume = new G4LogicalVolume(solidIntVC,G4Material::GetMaterial("Vacuum"), "VCInternal",0,0,0);
-  //fInternalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  fInternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fInternalLogicalVolume,"ChamberInternal",fExternalLogicalVolume,false,0);
+  //G4UnionSolid* solidExtVC = CreateVCExternalSolid();
+  G4UnionSolid* solidExtVC = CreateVCFacetExternalSolid();
+  //fExternalLogicalVolume = new G4LogicalVolume(solidExtVC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),
+  //					       "VCExternal",0,0,0);
+  //fExternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fExternalLogicalVolume,"ChamberExternal",fGlobalLogicalVolume,false,0);
 
-  /*
-  // Create the empty vacuum chamber shell
-  G4SubtractionSolid* solidVCShell = new G4SubtractionSolid("VCShell",solidExtVC,solidIntVC);
-  fShellLogicalVolume = new G4LogicalVolume(solidVCShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCShell",0,0,0);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fShellLogicalVolume,"ChamberShell",fGlobalLogicalVolume,false,0);
-  */
+  printf("Creating internal VC volume\n");
+  //G4UnionSolid* solidIntVC = CreateVCInternalSolid();
+  G4UnionSolid* solidIntVC = CreateVCFacetInternalSolid();
+  //fInternalLogicalVolume = new G4LogicalVolume(solidIntVC,G4Material::GetMaterial("Vacuum"), "VCInternal",0,0,0);
+  //fInternalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  //fInternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fInternalLogicalVolume,"ChamberInternal",fMotherVolume,false,0);
+
+  G4SubtractionSolid* solidSteelShell = new G4SubtractionSolid("ChamberSteelShell",solidExtVC,solidIntVC,0,G4ThreeVector(0.,0.,0.));
+  fSteelShellLogicalVolume = new G4LogicalVolume(solidSteelShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"ChamberShell",0,0,0);
+  fSteelShellLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fSteelShellLogicalVolume,"ChamberShell",fGlobalLogicalVolume,false,0);
 
   /*
   // Flange toward thin window flange
@@ -715,17 +720,268 @@ G4UnionSolid* ChamberStructure::CreateVCInternalSolid()
   G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaRIn,0.5*flaThick,0.*deg,360.*deg);
 
   // Create hole at beam entrance (will need flange to connect to target structure)
-  G4double holeThick = geo->GetVCInHoleThick()+0.001*mm;
+  G4double holeThick = geo->GetVCInHoleThick()+2.*um;
   G4double holeRadius = geo->GetVCInHoleRadius();
   G4double holePosZ = geo->GetVCInHolePosZ();
-  G4Tubs* solidHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
+  G4Tubs* solidInHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
+
+  // Create hole at beam exit (will need flange to connect to thin TPix window)
+  G4double hoT = geo->GetVCOutHoleThick();
+  G4double hoR = geo->GetVCOutHoleRadius();
+  G4double hoL = geo->GetVCOutHoleLength();
+  G4double hoD = geo->GetVCOutHoleDistToEdge();
+  G4double hoA = geo->GetVCBackFaceAngle();
+  G4Box* solidHO0 = new G4Box("VCHOut0",0.5*hoL,hoR,0.5*hoT+2.*um);
+  G4Tubs* solidHO1 = new G4Tubs("VCHOut1",0.,hoR,0.5*hoT+2.*um,0.*deg,360.*deg);
+  G4UnionSolid* solidHO2 = new G4UnionSolid("VCHOut2",solidHO0,solidHO1,0,G4ThreeVector(-0.5*hoL-0.7*mm,0.,0.));
+  G4UnionSolid* solidOutHole = new G4UnionSolid("VCHOut3",solidHO2,solidHO1,0,G4ThreeVector(0.5*hoL+0.7*mm,0.,0.));
+  G4RotationMatrix* rotHOut = new G4RotationMatrix;
+  rotHOut->rotateY(hoA);
+  G4ThreeVector hoEdge = geo->GetVCExtVtx(11,1);
+  G4double hoCX = hoEdge.x()-hoD*cos(hoA)+0.5*hoT*sin(hoA);
+  G4double hoCZ = hoEdge.z()-hoD*sin(hoA)-0.5*hoT*cos(hoA);
+  G4ThreeVector posHOut = G4ThreeVector(hoCX,0.,hoCZ);
+  //printf("Exit hole %f %f %f %f %f %f %f\n",hoT,hoR,hoL,hoD,hoA,hoCX,hoCZ);
+
+  //G4LogicalVolume* logicalHOut = new G4LogicalVolume(solidHO2,G4Material::GetMaterial("Vacuum"),"VOutHole",0,0,0);
+  //new G4PVPlacement(rotHOut,posHOut,logicalHOut,"VOutHole",fMotherVolume,false,0);
 
   // Attach cylinder and flange to vacuum chamber
   G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVC[isolid-1],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
   //G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVCRef,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
   //G4UnionSolid* solid0 = new G4UnionSolid("VCInternal0",solidVC[2],solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
   G4UnionSolid* solid1 = new G4UnionSolid("VCInternal1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
-  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberInternal",solid1,solidHole,0,G4ThreeVector(0.,0.,holePosZ));
+  G4UnionSolid* solid2 = new G4UnionSolid("VCInternal2",solid1,solidOutHole,rotHOut,posHOut);
+  //G4UnionSolid* solid2 = new G4UnionSolid("VCInternal2",solid1,solidHO2,rotHOut,posHOut);
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberInternal",solid2,solidInHole,0,G4ThreeVector(0.,0.,holePosZ));
+
+  return solidFinal;
+
+}
+
+G4UnionSolid* ChamberStructure::CreateVCFacetGlobalSolid()
+{
+
+  // Create the main volume of the vacuum chamber
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  // Create main VC volume as a tassellated solid
+  G4TessellatedSolid* solidMain = new G4TessellatedSolid("VCGlobMain");
+
+  G4int nFacets = geo->GetVCNFacets();
+  for(G4int f=0; f<nFacets; f++) {
+    G4ThreeVector vtx[4];
+    for(G4int v=0; v<4; v++) {
+      G4int ivtx = geo->GetVCFacetVtx(f,v);
+      if (ivtx != -1) {
+	G4int is = ivtx/10; // Section id
+	G4int iv = ivtx%10; // Vertex id
+	vtx[v] = geo->GetVCExtVtx(is,iv);
+      } else {
+	vtx[v] = G4ThreeVector(0.,0.,0.); // The vacuum chamber structure cannot go through the origin
+      }
+    }
+    if ( (vtx[3].x() == 0.) && (vtx[3].x() == 0.) && (vtx[3].x() == 0.) ) {
+      G4TriangularFacet* facet = new G4TriangularFacet(vtx[0],vtx[1],vtx[2],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    } else {
+      G4QuadrangularFacet* facet = new G4QuadrangularFacet(vtx[0],vtx[1],vtx[2],vtx[3],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    }
+  }
+  solidMain->SetSolidClosed(true);
+
+  //G4cout << "Dump of solid:\n" << solidMain << G4endl;
+  //G4Polyhedron* polyhedron = solidMain->GetPolyhedron();
+  //G4cout << "\nLocal polyhedron coordinates:\n" << *polyhedron << G4endl;
+
+  //G4LogicalVolume* logicalMain = new G4LogicalVolume(solidMain,G4Material::GetMaterial("Vacuum"),"VCGlobMain",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMain,"VCGlobMain",fMotherVolume,false,0);
+
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength();
+  //G4double cyThick = geo->GetVCCThick();
+  //G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut();
+  G4double cyPosZ = geo->GetVCCPosZ();
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  G4Tubs* solidCyl = new G4Tubs("VCCylGlob",0.,cyROut,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window (includes thin window and its flange)
+  G4double flaLen = geo->GetVCMostAdvancedZ()-(cyPosZ+0.5*cyLen);
+  //G4double flaThick = geo->GetVCCFThick();
+  //G4double flaRIn = geo->GetVCCFRIn();
+  G4double flaROut = geo->GetVCCFROut();
+  //G4double flaPosZ = geo->GetVCCFPosZ();
+  G4double flaPosZ = cyPosZ+0.5*cyLen+0.5*flaLen;
+  //G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaROut,0.5*flaThick,0.*deg,360.*deg);
+  G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaROut,0.5*flaLen,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCGlobal0",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberGlobal",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+  //G4UnionSolid* solidFinal = new G4UnionSolid("ChamberGlobal",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+
+  return solidFinal;
+
+}
+
+G4UnionSolid* ChamberStructure::CreateVCFacetExternalSolid()
+{
+
+  // Create the main volume of the vacuum chamber
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  // Shrinking factor
+  G4ThreeVector vShrink[4];
+  vShrink[0] = G4ThreeVector(-1.*um, 1.*um,0.);
+  vShrink[1] = G4ThreeVector( 1.*um, 1.*um,0.);
+  vShrink[2] = G4ThreeVector( 1.*um,-1.*um,0.);
+  vShrink[3] = G4ThreeVector(-1.*um,-1.*um,0.);
+
+  // Create main VC volume as a tassellated solid
+  G4TessellatedSolid* solidMain = new G4TessellatedSolid("VCExtMain");
+
+  G4int nFacets = geo->GetVCNFacets();
+  for(G4int f=0; f<nFacets; f++) {
+    G4ThreeVector vtx[4];
+    for(G4int v=0; v<4; v++) {
+      G4int ivtx = geo->GetVCFacetVtx(f,v);
+      if (ivtx != -1) {
+	G4int is = ivtx/10; // Section id
+	G4int iv = ivtx%10; // Vertex id
+	// Shrink the whole structure by 1um to avoid syrface overlap with VC global container
+	vtx[v] = geo->GetVCExtVtx(is,iv)+vShrink[iv];
+	if (is==0 || is == 4 || is == 5) { vtx[v] += G4ThreeVector(0.,0.,1.*um); }
+	if (is==11) { vtx[v] += G4ThreeVector(0.,0.,-1.*um); }
+      } else {
+	vtx[v] = G4ThreeVector(0.,0.,0.); // The vacuum chamber structure cannot go through the origin
+      }
+    }
+    if ( (vtx[3].x() == 0.) && (vtx[3].x() == 0.) && (vtx[3].x() == 0.) ) {
+      G4TriangularFacet* facet = new G4TriangularFacet(vtx[0],vtx[1],vtx[2],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    } else {
+      G4QuadrangularFacet* facet = new G4QuadrangularFacet(vtx[0],vtx[1],vtx[2],vtx[3],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    }
+  }
+  solidMain->SetSolidClosed(true);
+
+  //G4cout << "Dump of solid:\n" << solidMain << G4endl;
+  //G4Polyhedron* polyhedron = solidMain->GetPolyhedron();
+  //G4cout << "\nLocal polyhedron coordinates:\n" << *polyhedron << G4endl;
+
+  //G4LogicalVolume* logicalMain = new G4LogicalVolume(solidMain,G4Material::GetMaterial("Vacuum"),"VCGlobMain",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMain,"VCGlobMain",fMotherVolume,false,0);
+
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength();
+  //G4double cyThick = geo->GetVCCThick();
+  //G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut()-1.*um;
+  G4double cyPosZ = geo->GetVCCPosZ()+1.*um;
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  G4Tubs* solidCyl = new G4Tubs("VCCylExt",0.,cyROut,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window
+  G4double flaLen = geo->GetVCCFThick()-2.*um;
+  //G4double flaRIn = geo->GetVCCFRIn();
+  G4double flaROut = geo->GetVCCFROut()-1.*um;
+  //G4double flaPosZ = geo->GetVCCFPosZ();
+  G4double flaPosZ = geo->GetVCCFPosZ();
+  G4Tubs* solidFla = new G4Tubs("VCFlaExt",0.,flaROut,0.5*flaLen,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCExt0",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberExternal",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+  //G4UnionSolid* solidFinal = new G4UnionSolid("ChamberGlobal",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+
+  return solidFinal;
+
+}
+
+G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
+{
+
+  // Create the main volume of the vacuum chamber
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  // Create main VC volume as a tassellated solid
+  G4TessellatedSolid* solidMain = new G4TessellatedSolid("VCIntMain");
+
+  G4int nFacets = geo->GetVCNFacets();
+  for(G4int f=0; f<nFacets; f++) {
+    G4ThreeVector vtx[4];
+    for(G4int v=0; v<4; v++) {
+      G4int ivtx = geo->GetVCFacetVtx(f,v);
+      if (ivtx != -1) {
+	G4int is = ivtx/10; // Section id
+	G4int iv = ivtx%10; // Vertex id
+	vtx[v] = geo->GetVCIntVtx(is,iv);
+      } else {
+	vtx[v] = G4ThreeVector(0.,0.,0.); // The vacuum chamber structure cannot go through the origin
+      }
+    }
+    if ( (vtx[3].x() == 0.) && (vtx[3].x() == 0.) && (vtx[3].x() == 0.) ) {
+      G4TriangularFacet* facet = new G4TriangularFacet(vtx[0],vtx[1],vtx[2],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    } else {
+      G4QuadrangularFacet* facet = new G4QuadrangularFacet(vtx[0],vtx[1],vtx[2],vtx[3],ABSOLUTE);
+      solidMain->AddFacet((G4VFacet*)facet);
+    }
+  }
+  solidMain->SetSolidClosed(true);
+
+  G4cout << "Dump of solid:\n" << solidMain << G4endl;
+  G4Polyhedron* polyhedron = solidMain->GetPolyhedron();
+  G4cout << "\nLocal polyhedron coordinates:\n" << *polyhedron << G4endl;
+
+  //G4LogicalVolume* logicalMain = new G4LogicalVolume(solidMain,G4Material::GetMaterial("Vacuum"),"VCGlobMain",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMain,"VCGlobMain",fMotherVolume,false,0);
+
+  // Big cylinder
+  G4double cyLen = geo->GetVCCLength()-geo->GetVCCThick();
+  //G4double cyThick = geo->GetVCCThick();
+  //G4double cyRIn = geo->GetVCCRIn();
+  G4double cyROut = geo->GetVCCROut()-geo->GetVCCThick();
+  G4double cyPosZ = geo->GetVCCPosZ()+0.5*geo->GetVCCThick();
+  //printf("Cylinder %f %f %f %f %f\n",cyLen,cyThick,cyRIn,cyROut,cyPosZ);
+  G4Tubs* solidCyl = new G4Tubs("VCCylExt",0.,cyROut,0.5*cyLen,0.*deg,360.*deg);
+
+  //G4LogicalVolume* logicalCyl = new G4LogicalVolume(solidCyl,G4Material::GetMaterial("Vacuum"),"Cyl",0,0,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,cyPosZ),logicalCyl,"Cyl",fMotherVolume,false,0);
+
+  // Flange towards ECal thin window
+  G4double flaLen = geo->GetVCCFThick()+1.*m;
+  //G4double flaThick = geo->GetVCCFThick();
+  G4double flaRIn = geo->GetVCCFRIn();
+  //G4double flaROut = geo->GetVCCFROut();
+  G4double flaPosZ = geo->GetVCCFPosZ();
+  //G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaROut,0.5*flaThick,0.*deg,360.*deg);
+  G4Tubs* solidFla = new G4Tubs("VCFlaGlob",0.,flaRIn,0.5*flaLen,0.*deg,360.*deg);
+  printf("Flange hole %f %f %f\n",flaLen,flaRIn,flaPosZ);
+
+  // Create hole at beam entrance (will need flange to connect to target structure)
+  G4double holeThick = geo->GetVCInHoleThick()+1.*mm;
+  G4double holeRadius = geo->GetVCInHoleRadius();
+  G4double holePosZ = geo->GetVCInHolePosZ();
+  G4Tubs* solidInHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
+
+  // Attach cylinder and flange to vacuum chamber
+  G4UnionSolid* solid0 = new G4UnionSolid("VCInt0",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  G4UnionSolid* solid1 = new G4UnionSolid("VCInt1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
+  G4UnionSolid* solidFinal = new G4UnionSolid("ChamberInternal",solid1,solidInHole,0,G4ThreeVector(0.,0.,holePosZ));
+  //G4UnionSolid* solidFinal = new G4UnionSolid("ChamberGlobal",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
 
   return solidFinal;
 

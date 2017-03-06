@@ -15,6 +15,8 @@
 #define CHAMBERGEOMETRY_VC_NSECTIONS 12
 #define CHAMBERGEOMETRY_VC_REFSECTION 1
 
+#define CHAMBERGEOMETRY_VC_NFACETS 41
+
 #include "globals.hh"
 #include "G4TwoVector.hh"
 #include "G4ThreeVector.hh"
@@ -63,6 +65,7 @@ public:
   G4TwoVector GetVCOutMagWallVertex(G4int p) { return fVCOutMagWallVertex[p]; }
 
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
+  G4double GetVCBackFaceAngle();
 
   // Properties of the big vacuum chamber
 
@@ -72,6 +75,10 @@ public:
   G4int GetVCRefSection() { return CHAMBERGEOMETRY_VC_REFSECTION; }
   G4ThreeVector GetVCExtVtx(G4int s, G4int v) { return fVCExtVtx[s][v]; }
   G4ThreeVector GetVCIntVtx(G4int s, G4int v) { return fVCIntVtx[s][v]; }
+
+  // Facets of the chamber main structure
+  G4int GetVCNFacets() { return CHAMBERGEOMETRY_VC_NFACETS; }
+  G4int GetVCFacetVtx(G4int f, G4int v) { return fVCFacetVtx[f][v]; }
 
   // Flange to connect ECal thin window
   G4double GetVCCFPosZ() { return fVCBackFacePosZ-0.5*fVCCFThick; }
@@ -86,10 +93,16 @@ public:
   G4double GetVCCRIn() { return fVCCRIn; }
   G4double GetVCCROut() { return fVCCRIn+fVCCThick; }
 
-  // Entrance hole
+  // Beam entrance hole
   G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
   G4double GetVCInHoleThick() { return fVCInHoleThick; }
   G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
+
+  // Beam exit hole
+  G4double GetVCOutHoleRadius() { return fVCOutHoleRadius; }
+  G4double GetVCOutHoleLength() { return fVCOutHoleLength; }
+  G4double GetVCOutHoleThick() { return fVCOutHoleThick; }
+  G4double GetVCOutHoleDistToEdge() { return fVCOutHoleDistToEdge; }
 
   // Properties of thin window
 
@@ -145,6 +158,12 @@ private:
   G4double fVCInHoleThick;
   G4double fVCInHolePosZ;
 
+  // Beam exit Hole characteristics
+  G4double fVCOutHoleRadius;
+  G4double fVCOutHoleLength;
+  G4double fVCOutHoleThick;
+  G4double fVCOutHoleDistToEdge;
+
   //G4double fVCEWGap; // Gap for o-ring between main VC body and thin window flange
 
   // Thin window in front of ECal (EW)
@@ -172,6 +191,8 @@ private:
 
   G4ThreeVector fVCExtVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
   G4ThreeVector fVCIntVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
+
+  G4int fVCFacetVtx[CHAMBERGEOMETRY_VC_NFACETS][4];
 
 };
 

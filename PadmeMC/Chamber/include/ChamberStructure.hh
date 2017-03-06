@@ -35,11 +35,15 @@ private:
   G4UnionSolid* CreateVCExternalSolid();
   G4UnionSolid* CreateVCInternalSolid();
 
+  G4UnionSolid* CreateVCFacetGlobalSolid();
+  G4UnionSolid* CreateVCFacetExternalSolid();
+  G4UnionSolid* CreateVCFacetInternalSolid();
+
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fInternalLogicalVolume;
   G4LogicalVolume* fExternalLogicalVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
-  //G4LogicalVolume* fShellLogicalVolume;
+  G4LogicalVolume* fSteelShellLogicalVolume;
 
 };
 

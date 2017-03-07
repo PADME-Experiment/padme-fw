@@ -1,7 +1,7 @@
 #include "MagneticFieldSetup.hh"
 
-#include "G4UniformMagField.hh"
-#include "G4MagneticField.hh"
+//#include "G4UniformMagField.hh"
+//#include "G4MagneticField.hh"
 #include "G4FieldManager.hh"
 #include "G4TransportationManager.hh"
 #include "G4Mag_UsualEqRhs.hh"
@@ -156,4 +156,9 @@ void MagneticFieldSetup::SetStepper()
 G4FieldManager*  MagneticFieldSetup::GetGlobalFieldManager()
 {
   return G4TransportationManager::GetTransportationManager()->GetFieldManager();
+}
+
+void MagneticFieldSetup::SetMagneticFieldValue(G4double v)
+{
+  fMagneticField->SetConstantMagneticFieldValue(v);
 }

@@ -8,7 +8,8 @@ MagneticFieldMap::MagneticFieldMap()
 {
 
   // Default value: can be changed with set method
-  fConstantMagneticField = -0.55*tesla; // WARNING: not used! Real default is set in MagnetGeometry.cc
+  fConstantMagneticField = -0.55*tesla;
+  //fConstantMagneticField = 0.;
 
   fConstantMagneticFieldXmin = -26.0*cm;
   fConstantMagneticFieldXmax =  26.0*cm;

@@ -61,8 +61,14 @@ public:
   void EnableStructure(G4String);
   void DisableStructure(G4String);
 
-  void EnableMagneticField()  { fEnableMagneticField = 1; }
-  void DisableMagneticField() { fEnableMagneticField = 0; }
+  void EnableMagneticField();
+  void DisableMagneticField();
+
+  void MagneticVolumeIsVisible();
+  void MagneticVolumeIsInvisible();
+
+  void SetMagFieldValue(G4double v);
+  G4double GetMagFieldValue();
 
   // Return some global information used by beam generator
   G4double GetECalFrontFaceZ();
@@ -87,6 +93,8 @@ private:
   ChamberStructure* fChamberStructure;
   HallStructure*    fHallStructure;
 
+  MagneticFieldSetup* fMagneticFieldManager;
+
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
@@ -102,6 +110,7 @@ private:
   G4int fEnableMagnet;
 
   G4int fEnableMagneticField;
+  G4int fMagneticVolumeIsVisible;
 
   G4Box*             solidWorld;    
   G4LogicalVolume*   logicWorld;    

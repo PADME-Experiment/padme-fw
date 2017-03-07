@@ -12,14 +12,14 @@
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
 #include "G4Tubs.hh"
-#include "G4SDManager.hh"
+//#include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 //#include "G4BlineTracer.hh"
 
 //#include "MagneticFieldSetup.hh"
 #include "MagnetGeometry.hh"
-#include "MagnetSD.hh"
+//#include "MagnetSD.hh"
 
 MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -29,10 +29,10 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
   fMagnetMessenger = new MagnetMessenger(this);
 
   // Magnetic field is ON by default
-  fMagneticField = 1;
+  //fMagneticField = 1;
 
   // Magnetic volume is invisible by default
-  fMagneticVolumeIsVisible = 0;
+  //fMagneticVolumeIsVisible = 0;
 
 }
 
@@ -235,23 +235,6 @@ void MagnetStructure::CreateGeometry()
   new G4PVPlacement(0,slabDRPos,slabVolume,"SlabDR",fMotherVolume,false,0,false);
 
   /*
-  // Vacuum plates (will become the full vacuum chamber once the geometry is defined)
-
-  G4double vacSizeX = geo->GetVacuumUSizeX();
-  G4double vacSizeY = geo->GetVacuumUSizeY();
-  G4double vacSizeZ = geo->GetVacuumUSizeZ();
-  G4Box* vacSolid = new G4Box("VacChWall",0.5*(vacSizeX-magGap),0.5*(vacSizeY-magGap),0.5*(vacSizeZ-magGap));
-  G4LogicalVolume* vacVolume = new G4LogicalVolume(vacSolid,G4Material::GetMaterial("G4_Al"),"VacChWall",0,0,0);
-  vacVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-
-  G4ThreeVector vacUPos = G4ThreeVector(geo->GetVacuumUPosX(),geo->GetVacuumUPosY(),geo->GetVacuumUPosZ());
-  new G4PVPlacement(0,vacUPos,vacVolume,"VacChWallU",fMotherVolume,false,0,false);
-
-  G4ThreeVector vacDPos = G4ThreeVector(geo->GetVacuumDPosX(),geo->GetVacuumDPosY(),geo->GetVacuumDPosZ());
-  new G4PVPlacement(0,vacDPos,vacVolume,"VacChWallD",fMotherVolume,false,0,false);
-  */
-
-  /*
   // Create rails
 
   G4double railSizeX = geo->GetRailULSizeX();
@@ -273,6 +256,7 @@ void MagnetStructure::CreateGeometry()
   G4ThreeVector railDRPos = G4ThreeVector(geo->GetRailDRPosX(),geo->GetRailDRPosY(),geo->GetRailDRPosZ());
   new G4PVPlacement(0,railDRPos,railVolume,"RailDR",fMotherVolume,false,0,false);
   */
+
   // Neoprene sheets
 
   G4double neopreneSizeX = geo->GetNeopreneULTSizeX();
@@ -307,47 +291,13 @@ void MagnetStructure::CreateGeometry()
   new G4PVPlacement(0,neopreneDRBPos,neopreneVolume,"NeopreneDRB",fMotherVolume,false,0,false);
 
   // Make upper and lower sections of magnet yoke a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String magnetSDName = geo->GetMagnetSensitiveDetectorName();
-  printf("Registering Magnet SD %s\n",magnetSDName.data());
-  MagnetSD* magnetSD = new MagnetSD(magnetSDName);
-  sdMan->AddNewDetector(magnetSD);
-  yokeUpBarVolume->SetSensitiveDetector(magnetSD);
-  yokeDownBarVolume->SetSensitiveDetector(magnetSD);
+  //G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  //G4String magnetSDName = geo->GetMagnetSensitiveDetectorName();
+  //printf("Registering Magnet SD %s\n",magnetSDName.data());
+  //MagnetSD* magnetSD = new MagnetSD(magnetSDName);
+  //sdMan->AddNewDetector(magnetSD);
+  //yokeUpBarVolume->SetSensitiveDetector(magnetSD);
+  //yokeDownBarVolume->SetSensitiveDetector(magnetSD);
   //railVolume->SetSensitiveDetector(magnetSD);
 
-  /*
-  // Create magnetic volume inside the magnet
-  G4double magVolSizeX = geo->GetMagneticVolumeSizeX();
-  G4double magVolSizeY = geo->GetMagneticVolumeSizeY();
-  G4double magVolSizeZ = geo->GetMagneticVolumeSizeZ();
-  //G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*(magVolSizeX-magGap),0.5*(magVolSizeY-magGap),0.5*(magVolSizeZ-magGap));
-  G4Box* magVolSolid = new G4Box("MagneticVolume",0.5*magVolSizeX,0.5*magVolSizeY,0.5*magVolSizeZ);
-  fMagneticVolume = new G4LogicalVolume(magVolSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
-
-  if (fMagneticVolumeIsVisible) {
-    fMagneticVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
-  } else {
-    fMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  }
-
-  if ( fMagneticField == 1 ) {
-
-    // Define magnetic field for this volume (and all daughter volumes)
-    MagneticFieldSetup* magField = new MagneticFieldSetup();
-    magField->GetLocalMagneticField()->SetMagneticVolumePosZ(geo->GetMagneticVolumePosZ());
-    magField->GetLocalMagneticField()->SetMagneticVolumeLengthX(geo->GetMagneticVolumeSizeX());
-    magField->GetLocalMagneticField()->SetMagneticVolumeLengthY(geo->GetMagneticVolumeSizeY());
-    magField->GetLocalMagneticField()->SetMagneticVolumeLengthZ(geo->GetMagneticVolumeSizeZ());
-    magField->GetLocalMagneticField()->SetConstantMagneticFieldValue(geo->GetMagneticFieldConstantValue());
-    fMagneticVolume->SetFieldManager(magField->GetLocalFieldManager(),true);
-
-    // Enable visualziation of filed lines
-    //G4BlineTracer* theBlineTool = new G4BlineTracer();
-
-  }
-
-  G4ThreeVector magVolPos = G4ThreeVector(geo->GetMagneticVolumePosX(),geo->GetMagneticVolumePosY(),geo->GetMagneticVolumePosZ());
-  new G4PVPlacement(0,magVolPos,fMagneticVolume,"MagneticVolume",fMotherVolume,false,0,false);
-  */
 }

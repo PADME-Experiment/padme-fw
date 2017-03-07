@@ -24,24 +24,24 @@ public:
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
-  G4LogicalVolume* GetMagneticVolume() { return fMagneticVolume; }
+  //G4LogicalVolume* GetMagneticVolume() { return fMagneticVolume; }
 
-  void EnableMagneticField()  { fMagneticField = 1; }
-  void DisableMagneticField() { fMagneticField = 0; }
+  //void EnableMagneticField()  { fMagneticField = 1; }
+  //void DisableMagneticField() { fMagneticField = 0; }
 
-  void SetMagneticVolumeVisible()   { fMagneticVolumeIsVisible = 1; }
-  void SetMagneticVolumeInvisible() { fMagneticVolumeIsVisible = 0; }
+  //void SetMagneticVolumeVisible()   { fMagneticVolumeIsVisible = 1; }
+  //void SetMagneticVolumeInvisible() { fMagneticVolumeIsVisible = 0; }
 
 private:
 
   G4LogicalVolume* fMotherVolume;
-  G4LogicalVolume* fMagneticVolume;
+  //G4LogicalVolume* fMagneticVolume;
 
   MagnetMessenger* fMagnetMessenger;
 
-  G4int fMagneticField; // =1 Field ON, =0 Field OFF
+  //G4int fMagneticField; // =1 Field ON, =0 Field OFF
 
-  G4int fMagneticVolumeIsVisible; // =1 Visible, =0 Invisible
+  //G4int fMagneticVolumeIsVisible; // =1 Visible, =0 Invisible
 
 };
 

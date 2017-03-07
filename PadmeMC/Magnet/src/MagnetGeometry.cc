@@ -48,20 +48,20 @@ MagnetGeometry::MagnetGeometry()
   fNeopreneWidth   = 23.5*cm;
   fNeopreneLengthZ = fYokeSizeZ;
 
-  fVacuumThick = 0.8*cm; // Should be asked to the ChamberGeometry class
+  //fVacuumThick = 0.8*cm; // Should be asked to the ChamberGeometry class
   //fVacuumWidth = fYokeSizeInBarX-2.*fRailWidth;
   //fVacuumWidth = fYokeSizeInBarX;
   //fVacuumLengthZ = fYokeSizeZ;
 
-  fMagneticVolumeLengthX = fYokeSizeInnerX;
-  //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
-  //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick;
-  fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY;
-  fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
+  //fMagneticVolumeLengthX = fYokeSizeInnerX;
+  ////fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fRailThick;
+  ////fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY-2.*fVacuumThick;
+  //fMagneticVolumeLengthY = fYokeSizeInnerY-2.*fYokeSizeInBarY;
+  //fMagneticVolumeLengthZ = fYokeSizeZ+100.*cm; // Magnetic field extends outside magnet yoke
 
   fYokeFrontFacePosZ = -0.5*fYokeSizeZ; // Center of magnet yoke = global reference point
 
-  fMagneticFieldConstantValue = -0.55*tesla;
+  //fMagneticFieldConstantValue = -0.55*tesla;
 
   fMagnetSensitiveDetectorName = "MagnetSD";
 

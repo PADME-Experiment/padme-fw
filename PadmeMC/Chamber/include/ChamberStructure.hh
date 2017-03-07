@@ -26,8 +26,8 @@ public:
   void CreateGeometry();
   G4double GetChamberMostExternalX();
   G4double GetChamberMostAdvancedZ();
-  G4LogicalVolume* GetChamberInternalLogicalVolume() { return fInternalLogicalVolume; }
-  G4LogicalVolume* GetChamberGlobalLogicalVolume() { return fGlobalLogicalVolume; }
+  //G4LogicalVolume* GetChamberInternalLogicalVolume() { return fInternalLogicalVolume; }
+  G4LogicalVolume* GetChamberLogicalVolume() { return fGlobalLogicalVolume; }
 
 private:
 
@@ -40,8 +40,8 @@ private:
   G4UnionSolid* CreateVCFacetInternalSolid();
 
   G4LogicalVolume* fMotherVolume;
-  G4LogicalVolume* fInternalLogicalVolume;
-  G4LogicalVolume* fExternalLogicalVolume;
+  //G4LogicalVolume* fInternalLogicalVolume;
+  //G4LogicalVolume* fExternalLogicalVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
   G4LogicalVolume* fSteelShellLogicalVolume;
 

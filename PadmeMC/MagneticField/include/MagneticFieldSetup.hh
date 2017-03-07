@@ -2,15 +2,14 @@
 #define MagneticFieldSetup_H
 
 #include "G4MagneticField.hh"
-#include "G4UniformMagField.hh"
-
-#include "MagneticFieldMap.hh"
 
 class G4FieldManager;
+class G4MagneticField;
 class G4ChordFinder;
 class G4Mag_UsualEqRhs;
 class G4MagIntegratorStepper;
 
+class MagneticFieldMap;
 //class MagneticFieldMessenger;
 
 ///  A class for setting up the Magnetic Field
@@ -33,6 +32,8 @@ public:
 
   G4FieldManager*   GetLocalFieldManager()  { return fLocalFieldManager; }
   MagneticFieldMap* GetMagneticField() { return fMagneticField; }
+
+  void SetMagneticFieldValue(G4double);
 
 protected:
 

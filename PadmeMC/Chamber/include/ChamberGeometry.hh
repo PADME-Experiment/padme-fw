@@ -106,6 +106,7 @@ public:
 
   // Properties of thin window
 
+  G4double GetEWBackFacePosZ() { return fEWBackFacePosZ; }
   G4double GetEWRadius() { return fEWRadius; }
   G4double GetEWConvexity() { return fEWConvexity; }
   G4double GetEWFrontMylarThick() { return fEWFrontMylarThick; }
@@ -128,6 +129,19 @@ public:
   G4double GetEWF3Thick() { return fEWF3Thick; }
   G4double GetEWF3RIn() { return fEWF3RIn; }
   G4double GetEWF3ROut() { return fEWF2ROut; }
+
+  // Properties of crossed pipes at target position
+  G4double GetCPZRIn() { return fCPZRIn; }
+  G4double GetCPZROut() { return fCPZRIn+fCPZThick; }
+  G4double GetCPZThick() { return fCPZThick; }
+  G4double GetCPZLength() { return fCPZLength; }
+  G4double GetCPZPosZ() { return fCPZPosZ; }
+
+  G4double GetCPXRIn() { return fCPXRIn; }
+  G4double GetCPXROut() { return fCPXRIn+fCPXThick; }
+  G4double GetCPXThick() { return fCPXThick; }
+  G4double GetCPXLength() { return fCPXLength; }
+  G4double GetCPXPosZ() { return fCPXPosZ; }
 
 private:
 
@@ -187,11 +201,23 @@ private:
   G4double fEWF2ROut;
   G4double fEWF3RIn;
 
-  // Vectors to hold coordinates of the vertices of all sections of the chamber
+  // Crossed pipes (one parallel to Z, one parallel to X) at target position
 
+  G4double fCPZRIn;
+  G4double fCPZThick;
+  G4double fCPZLength;
+  G4double fCPZPosZ;
+
+  G4double fCPXRIn;
+  G4double fCPXThick;
+  G4double fCPXLength;
+  G4double fCPXPosZ;
+
+  // Vectors to hold coordinates of the vertices of all sections of the chamber
   G4ThreeVector fVCExtVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
   G4ThreeVector fVCIntVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
 
+  // Vectors to hold vertices of all facets of the chamber
   G4int fVCFacetVtx[CHAMBERGEOMETRY_VC_NFACETS][4];
 
 };

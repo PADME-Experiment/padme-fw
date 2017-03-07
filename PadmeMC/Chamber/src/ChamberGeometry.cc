@@ -473,7 +473,18 @@ ChamberGeometry::ChamberGeometry()
   fVCOutHoleLength = 10.*cm; // Distance between circle centers
   fVCOutHoleThick = 1.*cm; // Should be computed from distance between chamber faces
   // Distance of center of hole from edge on the VC back face
-  fVCOutHoleDistToEdge = 30.*cm; // To verify with Cesidio
+  fVCOutHoleDistToEdge = 35.*cm; // To verify with Cesidio
+
+  // Properties of crossed pipes at target position
+  fCPZRIn = 5.*cm;
+  fCPZThick = 1.*cm;
+  fCPZLength = 29.*cm;
+  fCPZPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
+
+  fCPXRIn = 5.*cm;
+  fCPXThick = 1.*cm;
+  fCPXLength = 25.*cm;
+  fCPXPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
 
 }
 

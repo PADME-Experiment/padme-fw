@@ -254,13 +254,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   //G4cout << *(G4Material::GetMaterialTable()) << G4endl;
   
-  //------------------------------ 
+  //------------------------------
   // World Volume
   //------------------------------  
   G4double HalfWorldLength = 0.5*WorldLength*m;
   
   solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
-  logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  //logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("Vacuum"),"World",0,0,0);
   logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
   physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
@@ -357,6 +358,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // TPix
   if (fEnableTPix) {
     fTPixDetector->SetMotherVolume(logicMagneticVolume);
+    // Position of TPix depends on shape of vacuum chamber
+    fTPixDetector->SetTPixChamberWallAngle(fChamberStructure->GetChamberBackFaceAngle());
+    fTPixDetector->SetTPixChamberWallCorner(fChamberStructure->GetChamberBackFaceCorner());
     fTPixDetector->CreateGeometry();
   }
 
@@ -382,8 +386,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // HEPVeto
   if (fEnableHEPVeto) {
-    //fHEPVetoDetector->SetMotherVolume(logicMagneticVolume);
     fHEPVetoDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
+    // Position of HEPVeto depends on shape of vacuum chamber
+    fHEPVetoDetector->SetHEPVetoChamberWallThickness(fChamberStructure->GetChamberBackFaceThickness());
+    fHEPVetoDetector->SetHEPVetoChamberWallAngle(fChamberStructure->GetChamberBackFaceAngle());
+    fHEPVetoDetector->SetHEPVetoChamberWallCorner(fChamberStructure->GetChamberBackFaceCorner());
     fHEPVetoDetector->CreateGeometry();
   }
 

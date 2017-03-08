@@ -10,6 +10,7 @@
 
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4ThreeVector.hh"
 
 class G4LogicalVolume;
 
@@ -32,25 +33,23 @@ protected:
 public:
 
   // Position of center of TPix box
-  G4double GetTPixPosX() { return fTPixCenterPosX; }
-  G4double GetTPixPosY() { return fTPixCenterPosY; }
-  G4double GetTPixPosZ() { return fTPixCenterPosZ; }
+  G4double GetTPixPosX() { return fTPixPosX; }
+  G4double GetTPixPosY() { return fTPixPosY; }
+  G4double GetTPixPosZ() { return fTPixPosZ; }
 
   // Rotation of TPix box
-  G4double GetTPixRotX() { return fTPixRotX; }
   G4double GetTPixRotY() { return fTPixRotY; }
-  G4double GetTPixRotZ() { return fTPixRotZ; }
 
   // Size of TPix box
-  G4double GetTPixSizeX() { return fChipNominalSizeX+fChipGap; }
-  G4double GetTPixSizeY() { return fTPixNRows*(fChipNominalSizeY+fChipGap); }
-  G4double GetTPixSizeZ() { return fTPixNCols*(fChipNominalSizeZ+fChipGap); }
+  G4double GetTPixSizeX() { return fTPixSizeX; }
+  G4double GetTPixSizeY() { return fTPixSizeY; }
+  G4double GetTPixSizeZ() { return fTPixSizeZ; }
 
   // Get/Set number of chip rows/cols in TPix
   G4int GetTPixNRows()        { return fTPixNRows; }
   //void  SetTPixNRows(G4int r) { fTPixNRows = r; }
   G4int GetTPixNCols()        { return fTPixNCols; }
-  void  SetTPixNCols(G4int c) { fTPixNCols = c; }
+  void  SetTPixNCols(G4int c) { fTPixNCols = c; UpdateDerivedMeasures(); }
 
   // Position of center of chip at given row/col
   G4double GetChipPosX(G4int,G4int);
@@ -58,41 +57,60 @@ public:
   G4double GetChipPosZ(G4int,G4int);
 
   // Size of TPix silicon chips
-  G4double GetChipSizeX() { return fChipNominalSizeX; }
-  G4double GetChipSizeY() { return fChipNominalSizeY; }
-  G4double GetChipSizeZ() { return fChipNominalSizeZ; }
+  G4double GetChipSizeX() { return fChipSizeX; }
+  G4double GetChipSizeY() { return fChipSizeY; }
+  G4double GetChipSizeZ() { return fChipSizeZ; }
 
-  // Set position of TPix center
-  void SetTPixPosX(G4double x) { fTPixCenterPosX = x; }
-  //void SetTPixPosY(G4double y) { fTPixCenterPosY = y; } // Always centered at 0
-  void SetTPixPosZ(G4double z) { fTPixCenterPosZ = z; }
+  // Angle of vacuum chamber wall behind HEPVeto wrt X axis
+  void SetTPixChamberWallAngle(G4double a) { fTPixChamberWallAngle = a; UpdateDerivedMeasures(); }
 
-  // Set rotation angles of TPix
-  //void SetTPixRotX(G4double a) { fTPixRotX = a; }
-  void SetTPixRotY(G4double a) { fTPixRotY = a; } // Can rotate only around Y axis
-  //void SetTPixRotZ(G4double a) { fTPixRotZ = a; }
+  // Thickness of the support structure between TPix and diagonal wall of the vacuum chamber
+  G4double GetTPixSupportThickness() { return fTPixSupportThickness; }
+  void SetTPixSupportThickness(G4double t) { fTPixSupportThickness = t; UpdateDerivedMeasures(); }
+
+   // Distance from the corner on the back face of the vacuum chamber
+  G4double GetTPixDistanceToCorner() { return fTPixDistanceToCorner; }
+  void SetTPixDistanceToCorner(G4double d) { fTPixDistanceToCorner = d; UpdateDerivedMeasures(); }
+
+  // Coordinates of the corner on the back face of the vacuum chamber
+  void SetTPixChamberWallCorner(G4ThreeVector c) { fTPixChamberWallCorner = c; UpdateDerivedMeasures(); }
 
   // Get name of TPix sensitive detector
   G4String GetTPixSensitiveDetectorName() { return fTPixSensitiveDetectorName; }
 
 private:
 
+  void UpdateDerivedMeasures();
+
   G4int    fTPixNRows;
   G4int    fTPixNCols;
 
-  G4double fChipNominalSizeX;
-  G4double fChipNominalSizeY;
-  G4double fChipNominalSizeZ;
+  G4double fChipSizeX;
+  G4double fChipSizeY;
+  G4double fChipSizeZ;
 
-  G4double fChipGap; // Gap size between adjacent fingers
+  G4double fChipStep; // Gap size between adjacent fingers
 
-  G4double fTPixCenterPosX; // Position along X axis of TPix center
-  G4double fTPixCenterPosY; // Position along Y axis of TPix center
-  G4double fTPixCenterPosZ; // Position along Z axis of TPix center
+  G4double fTPixSizeX;
+  G4double fTPixSizeY;
+  G4double fTPixSizeZ;
 
-  G4double fTPixRotX; // Rotation of TPix around X axis
+  G4double fTPixPosX; // Position along X axis of TPix center
+  G4double fTPixPosY; // Position along Y axis of TPix center
+  G4double fTPixPosZ; // Position along Z axis of TPix center
+
   G4double fTPixRotY; // Rotation of TPix around Y axis
-  G4double fTPixRotZ; // Rotation of TPix around Z axis
+
+  // Angle of vacuum chamber wall behind HEPVeto wrt X axis
+  G4double fTPixChamberWallAngle;
+
+  // Distance from the corner on the back face of the vacuum chamber
+  G4double fTPixDistanceToCorner;
+
+  // Coordinates of the corner on the back face of the vacuum chamber
+  G4ThreeVector fTPixChamberWallCorner;
+
+  G4double fTPixSupportThickness; // Thickness of HEPVeto support structure
 
   G4String fTPixSensitiveDetectorName;
 

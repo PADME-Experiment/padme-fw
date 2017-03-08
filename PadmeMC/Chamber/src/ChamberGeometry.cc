@@ -88,7 +88,11 @@ ChamberGeometry::ChamberGeometry()
   fEWF2ROut = 390.*mm;
   fEWF3RIn = 325.5*mm;
 
-  // Vertex coordinates of all sections of the chamber
+  // Vertex coordinates of all sections of the chamber (external shape of the steel shell)
+  // A section is a rectangular shape with fixed Z
+  // Vertices must be ordered as v[0]=(+x,-y); v[1]=(-x,-y);v[2]=(-x,+y);v[3]=(+x,+y)
+  // This corresponds to an anti-clockwise order when looking at the section from -z (i.e. as seen from the incoming beam)
+  // N.B. section 1 was used in an old model of the chamber and is not needed anymore
 
   fVCExtVtx[0][0] = G4ThreeVector( 234.00*mm,-112.5*mm,-555.*mm);
   fVCExtVtx[0][1] = G4ThreeVector(-234.00*mm,-112.5*mm,-555.*mm);
@@ -150,7 +154,7 @@ ChamberGeometry::ChamberGeometry()
   fVCExtVtx[11][2] = G4ThreeVector(-422.77*mm, 175.*mm,2249.*mm);
   fVCExtVtx[11][3] = G4ThreeVector( 234.00*mm, 175.*mm,2249.*mm);
 
-  //--------------------------------//
+  // Vertex coordinates of all sections of the chamber (internal shape of the steel shell)
 
   fVCIntVtx[0][0] = G4ThreeVector( 224.00*mm,-102.5*mm,-545.*mm); // Z ok
   fVCIntVtx[0][1] = G4ThreeVector(-224.00*mm,-102.5*mm,-545.*mm); // X ok
@@ -202,18 +206,37 @@ ChamberGeometry::ChamberGeometry()
   fVCIntVtx[9][2] = G4ThreeVector(-1294.00*mm, 165.*mm,1164.44*mm); // Z ok
   fVCIntVtx[9][3] = G4ThreeVector(  224.00*mm, 165.*mm,1164.44*mm);
 
-  fVCIntVtx[10][0] = G4ThreeVector(  224.00*mm,-165.*mm,1940.38*mm); // X ok
-  fVCIntVtx[10][1] = G4ThreeVector(-1294.00*mm,-165.*mm,1940.38*mm); // Y ok
-  fVCIntVtx[10][2] = G4ThreeVector(-1294.00*mm, 165.*mm,1940.38*mm); // Z ok
-  fVCIntVtx[10][3] = G4ThreeVector(  224.00*mm, 165.*mm,1940.38*mm);
+  fVCIntVtx[10][0] = G4ThreeVector(  224.00*mm,-165.*mm,1940.382*mm); // X ok
+  fVCIntVtx[10][1] = G4ThreeVector(-1294.00*mm,-165.*mm,1940.382*mm); // Y ok
+  fVCIntVtx[10][2] = G4ThreeVector(-1294.00*mm, 165.*mm,1940.382*mm); // Z ok
+  fVCIntVtx[10][3] = G4ThreeVector(  224.00*mm, 165.*mm,1940.382*mm);
 
-  fVCIntVtx[11][0] = G4ThreeVector( 224.00*mm,-165.*mm,2239.*mm); // Z ok
-  fVCIntVtx[11][1] = G4ThreeVector(-421.10*mm,-165.*mm,2239.*mm); // Y ok
-  fVCIntVtx[11][2] = G4ThreeVector(-421.10*mm, 165.*mm,2239.*mm); // X ok
-  fVCIntVtx[11][3] = G4ThreeVector( 224.00*mm, 165.*mm,2239.*mm);
+  fVCIntVtx[11][0] = G4ThreeVector( 224.000*mm,-165.*mm,2239.*mm); // Z ok
+  fVCIntVtx[11][1] = G4ThreeVector(-421.107*mm,-165.*mm,2239.*mm); // Y ok
+  fVCIntVtx[11][2] = G4ThreeVector(-421.107*mm, 165.*mm,2239.*mm); // X ok
+  fVCIntVtx[11][3] = G4ThreeVector( 224.000*mm, 165.*mm,2239.*mm);
 
-  // A few quantities derived from the vertices positions
-  fVCMostExternalX = -fVCExtVtx[10][1].x(); // Absolute value of largest X coordinate of the chamber
+  // Quantities derived from the vertices positions
+  fVCMostExternalX = -fVCExtVtx[9][1].x(); // Absolute value of largest X coordinate of the chamber
+
+  // Define facets used to create the chamber as a tesselated solid
+  // Each facet is defined by 3 or 4 (see below) vertices encoded as an integer number in the form ssv
+  // where ss is the section (0-11) and v is the section's vertex (0-3) taken from
+  // one of the two lists above
+  // Vertices must follow an anti-clockwise order when the facet is seen from outside the solid
+  // If v[3] >= 0 then the facet is quadrangular
+  // If v[3] = -1 then the facet is triangular and v[3] is not used
+  // Note that each side of a facet must be shared with exactly one single side
+  // of another facet: if this is not the case then the facet must be split.
+  //
+  // +-----------+       +-----------+
+  // |           |       |\          |
+  // |           |       | \         |
+  // |           | ----> |  \        |
+  // +---+-------+       +---+-------+
+  // |   |       |       |   |       |
+  // +---+-------+       +---+-------+
+  //     WRONG              CORRECT
 
   // S 0 -Z
   fVCFacetVtx[0][0] =   0;
@@ -464,9 +487,9 @@ ChamberGeometry::ChamberGeometry()
   //printf("In geo %f %f %f\n",fVCExtVtx[1][0].x(),fVCExtVtx[1][0].y(),fVCExtVtx[1][0].z());
 
   // Properties of the beam entrance hole
-  fVCInHoleRadius = 5.*cm;
-  fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
-  fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
+  //fVCInHoleRadius = 5.*cm;
+  //fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
+  //fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
 
   // Properties of the beam exit hole
   fVCOutHoleRadius = 5.*cm; // Radius of the two circles
@@ -496,4 +519,15 @@ G4double ChamberGeometry::GetVCBackFaceAngle()
   G4double angle =  atan2(fVCExtVtx[11][1].z()-fVCExtVtx[10][1].z(),
 			  fVCExtVtx[11][1].x()-fVCExtVtx[10][1].x());
   return angle;
+}
+
+G4ThreeVector ChamberGeometry::GetVCBackFaceCorner()
+{
+  return G4ThreeVector(fVCExtVtx[11][1].x(),0.,fVCExtVtx[11][1].z());
+}
+
+G4double ChamberGeometry::GetVCBackFaceThickness()
+{
+  G4double thick =  fVCExtVtx[11][0].z()-fVCIntVtx[11][0].z();
+  return thick;
 }

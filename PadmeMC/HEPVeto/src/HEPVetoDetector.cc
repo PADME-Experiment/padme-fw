@@ -38,18 +38,22 @@ void HEPVetoDetector::CreateGeometry()
   HEPVetoGeometry* geo = HEPVetoGeometry::GetInstance();
 
   // Create main HEPVeto box
-  printf("HEPVeto will be placed at %f %f %f\n",geo->GetHEPVetoPosX(),geo->GetHEPVetoPosY(),geo->GetHEPVetoPosZ());
-  G4ThreeVector posHEPVeto = G4ThreeVector(geo->GetHEPVetoPosX(),geo->GetHEPVetoPosY(),geo->GetHEPVetoPosZ());
-  G4RotationMatrix* rotHEPVeto = new G4RotationMatrix;
-  rotHEPVeto->rotateY(geo->GetHEPVetoRotY());
   G4double hepVetoSizeX = geo->GetHEPVetoSizeX();
   G4double hepVetoSizeY = geo->GetHEPVetoSizeY();
   G4double hepVetoSizeZ = geo->GetHEPVetoSizeZ();
   printf("HEPVeto size is %f %f %f\n",hepVetoSizeX,hepVetoSizeY,hepVetoSizeZ);
   G4Box* solidHEPVeto = new G4Box("HEPVetoSolid",0.5*hepVetoSizeX,0.5*hepVetoSizeY,0.5*hepVetoSizeZ);
   fHEPVetoVolume = new G4LogicalVolume(solidHEPVeto,G4Material::GetMaterial("Vacuum"),"HEPVetoLogic",0,0,0);
-  fHEPVetoVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
-  //fHEPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  //fHEPVetoVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  fHEPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+
+  G4double hepVetoPosX = geo->GetHEPVetoPosX();
+  G4double hepVetoPosY = geo->GetHEPVetoPosY();
+  G4double hepVetoPosZ = geo->GetHEPVetoPosZ();
+  printf("HEPVeto will be placed at %f %f %f\n",hepVetoPosX,hepVetoPosY,hepVetoPosZ);
+  G4ThreeVector posHEPVeto = G4ThreeVector(hepVetoPosX,hepVetoPosY,hepVetoPosZ);
+  G4RotationMatrix* rotHEPVeto = new G4RotationMatrix;
+  rotHEPVeto->rotateY(geo->GetHEPVetoRotY());
   new G4PVPlacement(rotHEPVeto,posHEPVeto,fHEPVetoVolume,"HEPVeto",fMotherVolume,false,0,false);
 
   // Create standard scintillator finger
@@ -76,4 +80,19 @@ void HEPVetoDetector::CreateGeometry()
     new G4PVPlacement(0,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
   }
 
+}
+
+void HEPVetoDetector::SetHEPVetoChamberWallThickness(G4double t)
+{
+  HEPVetoGeometry::GetInstance()->SetHEPVetoChamberWallThickness(t);
+}
+
+void HEPVetoDetector::SetHEPVetoChamberWallAngle(G4double a)
+{
+  HEPVetoGeometry::GetInstance()->SetHEPVetoChamberWallAngle(a);
+}
+
+void HEPVetoDetector::SetHEPVetoChamberWallCorner(G4ThreeVector c)
+{
+  HEPVetoGeometry::GetInstance()->SetHEPVetoChamberWallCorner(c);
 }

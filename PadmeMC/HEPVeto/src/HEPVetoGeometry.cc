@@ -18,39 +18,68 @@ HEPVetoGeometry* HEPVetoGeometry::GetInstance()
 HEPVetoGeometry::HEPVetoGeometry()
 {
 
-  // Inizialize default parameters
+  // Size of scintillator fingers
+  fFingerSizeX =  1.*cm;
+  fFingerSizeY = 20.*cm;
+  fFingerSizeZ =  1.*cm;
 
-  fFingerNominalSizeX =  1.*cm;
-  fFingerNominalSizeY = 20.*cm;
-  fFingerNominalSizeZ =  1.*cm;
+  // Number of fingers in HEPVeto
+  fHEPVetoNFingers = 32;
 
-  fHEPVetoNFingers = 50;
+  // Step between HEPVeto fingers
+  fFingerStep = 11.*mm;
 
-  fFingerGap = 0.1*mm;
+  // Distance from the corner on the back wall of the vacuum chamber and
+  // the projection of the center of the external face of the first finger
+  // of HEPVeto on the external surface of the diagonal wall of the vacuum chamber.
+  // Tune this to move HEPVeto along the diagonal wall of the vacuum chamber
+  fHEPVetoDistanceToCorner = 40.*cm;
 
-  // Size of HEPVeto box
-  fHEPVetoSizeX = 2.*cm;
-  fHEPVetoSizeY = fFingerNominalSizeY;
-  fHEPVetoSizeZ = 51.*cm;
+  // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
+  fHEPVetoSupportThickness = 1.*cm; // Check with final design
 
-  // Position of center of HEPVeto inner face relative to center of magnet yoke
-  fHEPVetoInnerFacePosX = -76.*cm;
-  fHEPVetoInnerFacePosY =   0.*cm;
-  //fHEPVetoInnerFacePosZ = 250.*cm;
-  fHEPVetoInnerFacePosZ = 210.*cm;
+  // Angle of vacuum chamber wall behind HEPVeto wrt X axis
+  // This value will be modified by main program according to actual chamber measures
+  fHEPVetoChamberWallAngle = 0.32962*rad;
 
-  fHEPVetoRotX =  0.   *rad;
-  //fHEPVetoRotY = 0.977*rad; // ~56deg (i.e. 90deg-34deg, see PADME drawings)
-  //fHEPVetoRotY = -0.977*rad; // ~-56deg (i.e. -90deg+34deg, see PADME drawings)
-  fHEPVetoRotY = -1.2412*rad; // ~-71deg (i.e. -90deg+19deg, see PADME drawings)
-  fHEPVetoRotZ =  0.   *rad;
+  // Thickness of the vacuum chamber wall behind HEPVeto
+  // This value will be modified by main program according to actual chamber measures
+  fHEPVetoChamberWallThickness = 1.*cm;
+
+  // Coordinates of the corner on the back face of the vacuum chamber
+  // These values will be modified by main program according to actual chamber measures
+  fHEPVetoChamberWallCorner = G4ThreeVector(-422.77*mm,0.,2249.*mm);
 
   fHEPVetoSensitiveDetectorName = "HEPVetoSD";
+
+  UpdateDerivedMeasures();
 
 }
 
 HEPVetoGeometry::~HEPVetoGeometry()
 {}
+
+void HEPVetoGeometry::UpdateDerivedMeasures()
+{
+
+  // Size of HEPVeto box
+  fHEPVetoSizeX = fFingerSizeX+1.*cm; // This takes into account the pedestal to hold the fingers
+  fHEPVetoSizeY = fFingerSizeY+1.*cm; // This takes into account the pedestal to hold the fingers
+  fHEPVetoSizeZ = fFingerStep*fHEPVetoNFingers;
+
+  // Angle of the rotation of HEPVeto around the Y axis
+  fHEPVetoRotY = -90.*deg+fHEPVetoChamberWallAngle;
+
+  // Position of center of HEPVeto box
+  fHEPVetoPosX = fHEPVetoChamberWallCorner.x()-fHEPVetoDistanceToCorner*cos(fHEPVetoChamberWallAngle)
+    +(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*sin(fHEPVetoChamberWallAngle)
+    -0.5*fHEPVetoSizeZ*cos(fHEPVetoChamberWallAngle);
+  fHEPVetoPosY = 0.;
+  fHEPVetoPosZ = fHEPVetoChamberWallCorner.z()-fHEPVetoDistanceToCorner*sin(fHEPVetoChamberWallAngle)
+    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*cos(fHEPVetoChamberWallAngle)
+    -0.5*fHEPVetoSizeZ*sin(fHEPVetoChamberWallAngle);
+
+}
 
 G4double HEPVetoGeometry::GetFingerPosX(G4int idx)
 {
@@ -79,7 +108,7 @@ G4double HEPVetoGeometry::GetFingerPosZ(G4int idx)
     printf("HEPVetoGeometry::GetFingerPosZ - ERROR - Requested finger at index %d\n",idx);
     return 0.;
   }
-  return GetHEPVetoSizeZ()*0.5-fFingerNominalSizeZ*idx-fFingerNominalSizeZ*0.5;
+  return 0.5*fHEPVetoSizeZ-(idx+0.5)*fFingerStep;
 }
 
 std::vector<G4String> HEPVetoGeometry::GetHashTable()
@@ -88,7 +117,7 @@ std::vector<G4String> HEPVetoGeometry::GetHashTable()
   std::vector<G4String> hash;
   std::ostringstream buffer;
 
-  buffer << "fFingerGap " << fFingerGap;
+  buffer << "fFingerStep " << fFingerStep;
   hash.push_back(buffer.str());
   buffer.str("");
 
@@ -96,15 +125,15 @@ std::vector<G4String> HEPVetoGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeX " << fFingerNominalSizeX;
+  buffer << "fFingerSizeX " << fFingerSizeX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeY " << fFingerNominalSizeY;
+  buffer << "fFingerSizeY " << fFingerSizeY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeZ " << fFingerNominalSizeZ;
+  buffer << "fFingerSizeZ " << fFingerSizeZ;
   hash.push_back(buffer.str());
   buffer.str("");
 
@@ -120,27 +149,19 @@ std::vector<G4String> HEPVetoGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fHEPVetoRotX " << fHEPVetoRotX;
-  hash.push_back(buffer.str());
-  buffer.str("");
-
   buffer << "fHEPVetoRotY " << fHEPVetoRotY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fHEPVetoRotZ " << fHEPVetoRotZ;
+  buffer << "fHEPVetoPosX " << fHEPVetoPosX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fHEPVetoInnerFacePosX " << fHEPVetoInnerFacePosX;
+  buffer << "fHEPVetoPosY " << fHEPVetoPosY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fHEPVetoInnerFacePosY " << fHEPVetoInnerFacePosY;
-  hash.push_back(buffer.str());
-  buffer.str("");
-
-  buffer << "fHEPVetoInnerFacePosZ " << fHEPVetoInnerFacePosZ;
+  buffer << "fHEPVetoPosZ " << fHEPVetoPosZ;
   hash.push_back(buffer.str());
   buffer.str("");
 

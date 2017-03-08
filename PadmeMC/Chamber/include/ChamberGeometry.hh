@@ -43,7 +43,7 @@ protected:
 
 public:
 
-  // This is the maximum Z reached by the whole VC structure
+  // These are the maximum X/Z coordinates reached by the whole VC structure
   // Needed to define the main magnetic volume
   G4double GetVCMostExternalX() { return fVCMostExternalX; }
   G4double GetVCMostAdvancedZ() { return fEWBackFacePosZ+fEWF1Thick; }
@@ -64,8 +64,12 @@ public:
   G4int GetVCOutMagWallNVertices() { return CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES; }
   G4TwoVector GetVCOutMagWallVertex(G4int p) { return fVCOutMagWallVertex[p]; }
 
+  // Info on the back face of the chamber
+  // Needed to correctly position exit hole, HEPVeto and TimePix
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
   G4double GetVCBackFaceAngle();
+  G4double GetVCBackFaceThickness();
+  G4ThreeVector GetVCBackFaceCorner();
 
   // Properties of the big vacuum chamber
 
@@ -94,9 +98,9 @@ public:
   G4double GetVCCROut() { return fVCCRIn+fVCCThick; }
 
   // Beam entrance hole
-  G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
-  G4double GetVCInHoleThick() { return fVCInHoleThick; }
-  G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
+  //G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
+  //G4double GetVCInHoleThick() { return fVCInHoleThick; }
+  //G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
 
   // Beam exit hole
   G4double GetVCOutHoleRadius() { return fVCOutHoleRadius; }

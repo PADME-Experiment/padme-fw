@@ -36,7 +36,10 @@ using namespace CLHEP;
 
 ChamberStructure::ChamberStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
-{}
+{
+  fChamberExists = 1;    // If =0 the physical structure of the chamber is not created
+  fChamberIsVisible = 1; // If =0 all chamber structures are invisible (debug only)
+}
 
 ChamberStructure::~ChamberStructure()
 {}
@@ -46,61 +49,6 @@ void ChamberStructure::CreateGeometry()
 
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
-  /*
-  // Create wall of chamber inside magnetic field
-  G4int nVW = geo->GetVCInMagWallNVertices();
-  std::vector<G4TwoVector> vW(nVW);
-  for(G4int iV=0;iV<nVW;iV++) { vW[iV] = geo->GetVCInMagWallVertex(iV); }
-  G4double halfWallSizeY = 0.5*geo->GetVCInMagWallSizeY();
-  G4ExtrudedSolid* solidVCInMagWallNoHole = new G4ExtrudedSolid("VCInMagWallNoHole",vW,halfWallSizeY,G4TwoVector(0.,0.),1.,G4TwoVector(0.,0.),1.);
-
-  // Drill a hole to let the beam in
-  G4double holeHalfSizeZ = 0.5*geo->GetVCInMagThick()+0.1*mm;
-  G4double holeRadius = geo->GetVCInMagWallHoleRadius();
-  G4Tubs* solidHole = new G4Tubs("VCInMagHole",0.,holeRadius,holeHalfSizeZ,0.,2.*M_PI*rad);
-  G4double holePosZ = geo->GetVCInMagWallHolePosZ();
-  G4RotationMatrix* holeRot = new G4RotationMatrix;
-  holeRot->rotateX(90.*deg);
-  G4ThreeVector holePos = G4ThreeVector(0.,holePosZ,0.);
-  G4SubtractionSolid* solidVCInMagWall = new G4SubtractionSolid("VCInMagWall",solidVCInMagWallNoHole,solidHole,holeRot,holePos);
-
-  G4LogicalVolume* logicalVCInMagWall = new G4LogicalVolume(solidVCInMagWall,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCInMagWall",0,0,0);
-  logicalVCInMagWall->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  G4RotationMatrix* rotWall = new G4RotationMatrix;
-  rotWall->rotateX(-90.*deg);
-  //new G4PVPlacement(rotWall,G4ThreeVector(0.,0.,0.),logicalVCInMagWall,"VCInMagWall",fMagneticVolume,false,0);
-  new G4PVPlacement(rotWall,G4ThreeVector(0.,0.,0.),logicalVCInMagWall,"VCInMagWall",fMotherVolume,false,0);
-
-  // Create plates of chamber inside magnetic field
-  G4int nVP = geo->GetVCInMagPlateNVertices();
-  std::vector<G4TwoVector> vP(nVP);
-  for(G4int iV=0;iV<nVP;iV++) { vP[iV] = geo->GetVCInMagPlateVertex(iV); }
-  //G4double halfPlateSizeY = 0.5*geo->GetVCInMagThick();
-  G4double halfPlateSizeY = 0.5*(geo->GetVCInMagThick()-0.01*mm);
-  G4ExtrudedSolid* solidVCInMagPlate = new G4ExtrudedSolid("VCInMagPlate",vP,halfPlateSizeY,G4TwoVector(0.,0.),1.,G4TwoVector(0.,0.),1.);
-  G4LogicalVolume* logicalVCInMagPlate = new G4LogicalVolume(solidVCInMagPlate,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCInMagPlate",0,0,0);
-  logicalVCInMagPlate->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  G4double yDispl = 0.5*(geo->GetVCInMagWallSizeY()+geo->GetVCInMagThick());
-  G4RotationMatrix* rotPlate = new G4RotationMatrix;
-  rotPlate->rotateX(-90.*deg);
-  //new G4PVPlacement(rotPlate,G4ThreeVector(0.,yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,0);
-  //new G4PVPlacement(rotPlate,G4ThreeVector(0.,-yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMagneticVolume,false,1);
-  new G4PVPlacement(rotPlate,G4ThreeVector(0., yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMotherVolume,false,0);
-  new G4PVPlacement(rotPlate,G4ThreeVector(0.,-yDispl,0.),logicalVCInMagPlate,"VCInMagPlate",fMotherVolume,false,1);
-
-  // Create vacuum chamber wall outside of magnetic field
-  G4int nVWo = geo->GetVCOutMagWallNVertices();
-  std::vector<G4TwoVector> vWo(nVWo);
-  for(G4int iV=0;iV<nVWo;iV++) { vWo[iV] = geo->GetVCOutMagWallVertex(iV); }
-  G4double halfWallOSizeY = 0.5*geo->GetVCOutMagWallSizeY();
-  G4ExtrudedSolid* solidVCOutMagWall = new G4ExtrudedSolid("VCOutMagWall",vWo,halfWallOSizeY,G4TwoVector(0.,0.),1.,G4TwoVector(0.,0.),1.);
-  G4LogicalVolume* logicalVCOutMagWall = new G4LogicalVolume(solidVCOutMagWall,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCOutMagWall",0,0,0);
-  logicalVCOutMagWall->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  G4RotationMatrix* rotWallO = new G4RotationMatrix;
-  rotWallO->rotateX(-90.*deg);
-  new G4PVPlacement(rotWallO,G4ThreeVector(0.,0.,0.),logicalVCOutMagWall,"VCOutMagWall",fMotherVolume,false,0);
-  */
-
     /////////////////////////
    // Main vacuum chamber //
   /////////////////////////
@@ -108,16 +56,21 @@ void ChamberStructure::CreateGeometry()
   printf("Creating global VC volume\n");
   G4UnionSolid* solidGlobVC = CreateVCFacetGlobalSolid();
   fGlobalLogicalVolume = new G4LogicalVolume(solidGlobVC,G4Material::GetMaterial("Vacuum"),"ChamberGlobal",0,0,0);
-  //fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
-  fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  if ( fChamberIsVisible && ! fChamberExists ) { // Used for vacuum chamber visual debug
+    fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  } else {
+    fGlobalLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  }
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fGlobalLogicalVolume,"VacuumChamber",fMotherVolume,false,0);
+
+  if ( ! fChamberExists ) return;
 
   printf("Creating external VC volume\n");
   G4UnionSolid* solidExtVC = CreateVCFacetExternalSolid();
-  //fExternalLogicalVolume = new G4LogicalVolume(solidExtVC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),
+  //externalLogicalVolume = new G4LogicalVolume(solidExtVC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),
   //					       "VCExternal",0,0,0);
-  //fExternalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
-  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fExternalLogicalVolume,"ChamberExternal",fGlobalLogicalVolume,false,0);
+  //externalLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),externalLogicalVolume,"ChamberExternal",fGlobalLogicalVolume,false,0);
 
   printf("Creating internal VC volume\n");
   G4UnionSolid* solidIntVC = CreateVCFacetInternalSolid();
@@ -127,16 +80,31 @@ void ChamberStructure::CreateGeometry()
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),internalLogicalVolume,"ChamberInternal",fMotherVolume,false,0);
 
   G4SubtractionSolid* solidSteelShell = new G4SubtractionSolid("ChamberSteelShell",solidExtVC,solidIntVC,0,G4ThreeVector(0.,0.,0.));
-  fSteelShellLogicalVolume = new G4LogicalVolume(solidSteelShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"ChamberShell",0,0,0);
-  //fSteelShellLogicalVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  fSteelShellLogicalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fSteelShellLogicalVolume,"ChamberShell",fGlobalLogicalVolume,false,0);
+  G4LogicalVolume* logicalSteelShell = new G4LogicalVolume(solidSteelShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"ChamberShell",0,0,0);
+  if ( fChamberIsVisible ) {
+    logicalSteelShell->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  } else {
+    logicalSteelShell->SetVisAttributes(G4VisAttributes::Invisible);
+  }
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalSteelShell,"ChamberShell",fGlobalLogicalVolume,false,0);
+
+  // Create the thin window membrane in front of ECal with its flange
+  CreateECalThinWindow();
+
+  // Create crossed pipes in the target area
+  CreateTargetPipes();
+
+}
+
+void ChamberStructure::CreateECalThinWindow()
+{
 
   /////////////////////////////////////////
   // Thin window flange in front of ECal //
   /////////////////////////////////////////
 
-  printf("Vacuum chamber window\n");
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
   G4double ewR = geo->GetEWRadius(); // Radius of the membrane
   G4double ewC = geo->GetEWConvexity(); // Convexity at membrane center
 
@@ -144,8 +112,15 @@ void ChamberStructure::CreateGeometry()
   G4double ewd2 = geo->GetEWKevlarThick(); // Thickness of kevlar (layer 2) between mylar layers
   G4double ewd3 = geo->GetEWFrontMylarThick(); // Thickness of mylar (layer 3) on internal face of chamber
 
-  printf("ewR %f ewC %f ewd1 %f ewd2 %f ewd3 %f\n",ewR,ewC,ewd1,ewd2,ewd3);
+  //printf("Vacuum chamber window\n");
+  //printf("ewR %f ewC %f ewd1 %f ewd2 %f ewd3 %f\n",ewR,ewC,ewd1,ewd2,ewd3);
 
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Blue());
+  G4VisAttributes membraneVisAttr = G4VisAttributes(G4Colour::Green());
+  if ( ! fChamberIsVisible ) {
+    steelVisAttr = G4VisAttributes::Invisible;
+    membraneVisAttr = G4VisAttributes::Invisible;
+  }
   // External mylar membrane
   G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
   G4double ewz1 = geo->GetEWBackFacePosZ()+(ewr1-ewC);
@@ -156,7 +131,8 @@ void ChamberStructure::CreateGeometry()
   G4ThreeVector ring1Pos = G4ThreeVector(0.,0.,-sqrt(ewr1*ewr1-ewR*ewR)-0.5*ewd1);
   G4SubtractionSolid* solidEWLayer1 = new G4SubtractionSolid("EWMylarExt",solidEWSphere1,solidEWRing1,0,ring1Pos);
   G4LogicalVolume* logicalEWLayer1 = new G4LogicalVolume(solidEWLayer1,G4Material::GetMaterial("G4_MYLAR"), "EWMylarExt",0,0,0);
-  logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  //logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  logicalEWLayer1->SetVisAttributes(membraneVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWMylarExt",fGlobalLogicalVolume,false,0);
 
   // Central kevlar membrane
@@ -169,7 +145,8 @@ void ChamberStructure::CreateGeometry()
   G4ThreeVector ring2Pos = G4ThreeVector(0.,0.,-sqrt(ewr2*ewr2-ewR*ewR)-0.5*ewd2);
   G4SubtractionSolid* solidEWLayer2 = new G4SubtractionSolid("EWKevlar",solidEWSphere2,solidEWRing2,0,ring2Pos);
   G4LogicalVolume* logicalEWLayer2 = new G4LogicalVolume(solidEWLayer2,G4Material::GetMaterial("Kevlar"), "EWKevlar",0,0,0);
-  logicalEWLayer2->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  //logicalEWLayer2->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  logicalEWLayer2->SetVisAttributes(membraneVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz2),logicalEWLayer2,"EWKevlar",fGlobalLogicalVolume,false,0);
 
   // Internal mylar membrane
@@ -182,27 +159,35 @@ void ChamberStructure::CreateGeometry()
   G4ThreeVector ring3Pos = G4ThreeVector(0.,0.,-sqrt(ewr3*ewr3-ewR*ewR)-0.5*ewd3);
   G4SubtractionSolid* solidEWLayer3 = new G4SubtractionSolid("EWMylarInt",solidEWSphere3,solidEWRing3,0,ring3Pos);
   G4LogicalVolume* logicalEWLayer3 = new G4LogicalVolume(solidEWLayer3,G4Material::GetMaterial("G4_MYLAR"), "EWMylarInt",0,0,0);
-  logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  //logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  logicalEWLayer3->SetVisAttributes(membraneVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWMylarInt",fGlobalLogicalVolume,false,0);
 
   // First steel ring (outer)
   G4Tubs* solidEWIronRing1 = new G4Tubs("EWIronRing1",geo->GetEWF1RIn(),geo->GetEWF1ROut(),0.5*geo->GetEWF1Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing1 = new G4LogicalVolume(solidEWIronRing1,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing1",0,0,0);
-  logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  logicalEWIronRing1->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fGlobalLogicalVolume,false,0);
 
   // Second steel ring
   G4Tubs* solidEWIronRing2 = new G4Tubs("EWIronRing2",geo->GetEWF2RIn(),geo->GetEWF2ROut(),0.5*geo->GetEWF2Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing2 = new G4LogicalVolume(solidEWIronRing2,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing2",0,0,0);
-  logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  logicalEWIronRing2->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fGlobalLogicalVolume,false,0);
 
   // Third steel ring
   G4Tubs* solidEWIronRing3 = new G4Tubs("EWIronRing3",geo->GetEWF3RIn(),geo->GetEWF3ROut(),0.5*geo->GetEWF3Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing3 = new G4LogicalVolume(solidEWIronRing3,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing3",0,0,0);
-  logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  logicalEWIronRing3->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fGlobalLogicalVolume,false,0);
 
+}
+
+void ChamberStructure::CreateTargetPipes()
+{
 }
 
 G4double ChamberStructure::GetChamberMostExternalX()

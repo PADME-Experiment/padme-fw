@@ -59,6 +59,22 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fSetMagFieldValueCmd->SetRange("MFV >= -2. && MFV <= 2.");
   fSetMagFieldValueCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fChamberVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetChamberVisible",this);
+  fChamberVisibleCmd->SetGuidance("Make vacuum chamber visible.");
+  fChamberVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fChamberInvisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetChamberInvisible",this);
+  fChamberInvisibleCmd->SetGuidance("Make vacuum chamber invisible.");
+  fChamberInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fWorldIsAirCmd = new G4UIcmdWithoutParameter("/Detector/WorldIsAir",this);
+  fWorldIsAirCmd->SetGuidance("Fill world (and magnetic volume) with air.");
+  fWorldIsAirCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fWorldIsVacuumCmd = new G4UIcmdWithoutParameter("/Detector/WorldIsVacuum",this);
+  fWorldIsVacuumCmd->SetGuidance("Fill world (and magnetic volume) with vacuum (i.e. low pressure air).");
+  fWorldIsVacuumCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,6 +91,10 @@ DetectorMessenger::~DetectorMessenger()
   delete fMagVolVisibleCmd;
   delete fMagVolInvisibleCmd;
   delete fSetMagFieldValueCmd;
+  delete fChamberVisibleCmd;
+  delete fChamberInvisibleCmd;
+  delete fWorldIsAirCmd;
+  delete fWorldIsVacuumCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -93,6 +113,12 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if ( command == fSetMagFieldValueCmd )
     fDetector->SetMagFieldValue(fSetMagFieldValueCmd->GetNewDoubleValue(newValue));
+
+  if( command == fChamberVisibleCmd )   fDetector->ChamberIsVisible();
+  if( command == fChamberInvisibleCmd ) fDetector->ChamberIsInvisible();
+
+  if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
+  if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();
 
 }
 

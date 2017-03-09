@@ -24,29 +24,35 @@ public:
 
   void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
   void CreateGeometry();
+
   G4double GetChamberMostExternalX();
   G4double GetChamberMostAdvancedZ();
   G4double GetChamberBackFaceAngle();
   G4double GetChamberBackFaceThickness();
   G4ThreeVector GetChamberBackFaceCorner();
-  //G4LogicalVolume* GetChamberInternalLogicalVolume() { return fInternalLogicalVolume; }
+
   G4LogicalVolume* GetChamberLogicalVolume() { return fGlobalLogicalVolume; }
 
-private:
+  void EnableChamber()  { fChamberExists = 1; }
+  void DisableChamber() { fChamberExists = 0; }
 
-  G4UnionSolid* CreateVCGlobalSolid();
-  G4UnionSolid* CreateVCExternalSolid();
-  G4UnionSolid* CreateVCInternalSolid();
+  void SetChamberVisible()   { fChamberIsVisible = 1; }
+  void SetChamberInvisible() { fChamberIsVisible = 0; }
+
+private:
 
   G4UnionSolid* CreateVCFacetGlobalSolid();
   G4UnionSolid* CreateVCFacetExternalSolid();
   G4UnionSolid* CreateVCFacetInternalSolid();
 
+  void CreateECalThinWindow();
+  void CreateTargetPipes();
+
   G4LogicalVolume* fMotherVolume;
-  //G4LogicalVolume* fInternalLogicalVolume;
-  //G4LogicalVolume* fExternalLogicalVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
-  G4LogicalVolume* fSteelShellLogicalVolume;
+
+  G4int fChamberExists;
+  G4int fChamberIsVisible;
 
 };
 

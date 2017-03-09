@@ -56,7 +56,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 DetectorConstruction::DetectorConstruction()
-:solidWorld(0),  logicWorld(0),  physiWorld(0), stepLimit(0), fWorldLength(0.)
+:fWorldLength(0.)
 {
 
   fDetectorMessenger = new DetectorMessenger(this);
@@ -88,11 +88,17 @@ DetectorConstruction::DetectorConstruction()
   fEnableTPix    = 0;
 
   fEnableWall    = 0;
-  fEnableChamber = 1;
   fEnableMagnet  = 1;
 
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
+
+  fEnableChamber = 1;
+  fChamberIsVisible = 1;
+
+  fWorldIsFilledWithAir = 1;
+
+  fWorldLength = 12.*m;
 
 }
 
@@ -101,7 +107,7 @@ DetectorConstruction::DetectorConstruction()
 DetectorConstruction::~DetectorConstruction()
 {
 
-  delete stepLimit;
+  //delete stepLimit;
   delete fDetectorMessenger;             
 
   delete fECalDetector;
@@ -257,13 +263,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //------------------------------
   // World Volume
   //------------------------------  
-  G4double HalfWorldLength = 0.5*WorldLength*m;
-  
-  solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
-  //logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
-  logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("Vacuum"),"World",0,0,0);
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-  physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
+  //G4double HalfWorldLength = 0.5*WorldLength*m;
+  //G4Box* solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
+  G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
+  G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  //logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
   // but excludes calorimeters
@@ -291,15 +297,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //printf ("%f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
   //printf ("%f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
 
-  // The magnetic volume should contain air: will change Vacuum to G4_AIR as soon as the vacuum chamber is complete
-  // As of today, the target section is still missing
   G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
-  G4LogicalVolume* logicMagneticVolume = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolume",0,0,0);
-  if (fMagneticVolumeIsVisible) {
-    logicMagneticVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  } else {
-    logicMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  }
+  G4LogicalVolume* logicMagneticVolume =
+    new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("G4_AIR"),"MagneticVolume",0,0,0);
+  if (! fWorldIsFilledWithAir) logicMagneticVolume->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  if (! fMagneticVolumeIsVisible) logicMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
 
   if (fEnableMagneticField) {
@@ -320,10 +322,19 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   // Vacuum chamber structure
+  // Note: vacuum volume is always created, only the physical structure is switched on/off
   if (fEnableChamber) {
-    fChamberStructure->SetMotherVolume(logicMagneticVolume);
-    fChamberStructure->CreateGeometry();
+    fChamberStructure->EnableChamber();
+  } else {
+    fChamberStructure->DisableChamber();
   }
+  if (fChamberIsVisible) {
+    fChamberStructure->SetChamberVisible();
+  } else {
+    fChamberStructure->SetChamberInvisible();
+  }
+  fChamberStructure->SetMotherVolume(logicMagneticVolume);
+  fChamberStructure->CreateGeometry();
 
   // Target
   if (fEnableTarget) {
@@ -394,7 +405,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fHEPVetoDetector->CreateGeometry();
   }
 
-  return physiWorld;
+  return physicWorld;
 
 }
 
@@ -406,25 +417,24 @@ void DetectorConstruction::SetupDetectors()
 void DetectorConstruction::DefineMaterials()
 {}
 
-void DetectorConstruction::setTargetMaterial(G4String materialName)
+void DetectorConstruction::SetTargetMaterial(G4String materialName)
 {
   // search the material by its name 
   G4Material* pttoMaterial = G4Material::GetMaterial(materialName);  
   if (pttoMaterial) {
-    //TargetMater = pttoMaterial;
-    //logicTarget->SetMaterial(pttoMaterial); 
     fTargetDetector->GetTargetLogicalVolume()->SetMaterial(pttoMaterial); 
-    //      G4cout << "\n----> The target is " << fTargetLength/cm << " cm of "
-    //             << materialName << G4endl;
-  }             
+    G4cout << "\n----> The Target material is now " << materialName << G4endl;
+  } else {
+    G4cout << "\n----> WARNING: attempt to use unknown material " << materialName << " for Target" << G4endl;
+  }
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void DetectorConstruction::SetMaxStep(G4double maxStep)
-{
-  if ((stepLimit)&&(maxStep>0.)) stepLimit->SetMaxAllowedStep(maxStep);
-}
+//void DetectorConstruction::SetMaxStep(G4double maxStep)
+//{
+//  if ((stepLimit)&&(maxStep>0.)) stepLimit->SetMaxAllowedStep(maxStep);
+//}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -529,4 +539,28 @@ void DetectorConstruction::SetMagFieldValue(G4double v)
 {
   printf("Setting constant value of magnetic field to %f\n",v);
   fMagneticFieldManager->SetMagneticFieldValue(v);
+}
+
+void DetectorConstruction::ChamberIsVisible()
+{
+  printf("Vacuum chamber is visible\n");
+  fChamberIsVisible = 1;
+}
+
+void DetectorConstruction::ChamberIsInvisible()
+{
+  printf("Vacuum chamber is invisible\n");
+  fChamberIsVisible = 0;
+}
+
+void DetectorConstruction::WorldIsAir()
+{
+  printf("World and magnetic volume are filled with air\n");
+  fWorldIsFilledWithAir = 1;
+}
+
+void DetectorConstruction::WorldIsVacuum()
+{
+  printf("World and magnetic volume are filled with vacuum (low pressure air)\n");
+  fWorldIsFilledWithAir = 0;
 }

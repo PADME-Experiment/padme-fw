@@ -61,12 +61,18 @@
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
 
+#/Detector/SetChamberVisible
+#/Detector/SetChamberInvisible
+
 #/Detector/EnableMagneticField
 #/Detector/DisableMagneticField
 #/Detector/SetMagneticFieldValue -0.55 tesla
 
-#/Detector/SetMagneticVolumeVisible
+/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
+
+#/Detector/WorldIsAir
+#/Detector/WorldIsVacuum
 
 #/Detector/Target/FrontFaceZ -50.
 #/Detector/Target/Size 2.

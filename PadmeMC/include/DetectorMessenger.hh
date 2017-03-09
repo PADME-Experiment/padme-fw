@@ -39,7 +39,13 @@ private:
   G4UIcmdWithoutParameter* fMagVolVisibleCmd;
   G4UIcmdWithoutParameter* fMagVolInvisibleCmd;
 
+  G4UIcmdWithoutParameter* fChamberVisibleCmd;
+  G4UIcmdWithoutParameter* fChamberInvisibleCmd;
+
   G4UIcmdWithADoubleAndUnit* fSetMagFieldValueCmd;
+
+  G4UIcmdWithoutParameter* fWorldIsAirCmd;
+  G4UIcmdWithoutParameter* fWorldIsVacuumCmd;
 
 };
 

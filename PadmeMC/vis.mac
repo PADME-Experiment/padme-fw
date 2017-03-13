@@ -41,15 +41,15 @@
 #/Detector/EnableSubDetector EVeto
 #/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
-/Detector/EnableSubDetector TPix
+#/Detector/EnableSubDetector TPix
 
 #/Detector/EnableStructure Wall
 #/Detector/EnableStructure Magnet
 #/Detector/EnableStructure Chamber
 
-/Detector/DisableSubDetector ECal
+#/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
-/Detector/DisableSubDetector SAC
+#/Detector/DisableSubDetector SAC
 #/Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
@@ -68,7 +68,7 @@
 #/Detector/DisableMagneticField
 #/Detector/SetMagneticFieldValue -0.55 tesla
 
-/Detector/SetMagneticVolumeVisible
+#/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
 #/Detector/WorldIsAir

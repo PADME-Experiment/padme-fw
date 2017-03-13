@@ -85,7 +85,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
   fEnableTDump   = 0;
-  fEnableTPix    = 0;
+  fEnableTPix    = 1;
 
   fEnableWall    = 0;
   fEnableMagnet  = 1;
@@ -268,7 +268,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
   G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
   if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
-  //logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
   G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
  
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix

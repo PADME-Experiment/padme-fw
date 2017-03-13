@@ -27,9 +27,9 @@ public:
   G4LogicalVolume* GetHEPVetoLogicalVolume() { return fHEPVetoVolume; }
   G4LogicalVolume* GetFingerLogicalVolume() { return fFingerVolume; }
 
-  void SetHEPVetoChamberWallThickness(G4double);
-  void SetHEPVetoChamberWallAngle(G4double);
-  void SetHEPVetoChamberWallCorner(G4ThreeVector);
+  //void SetHEPVetoChamberWallThickness(G4double);
+  //void SetHEPVetoChamberWallAngle(G4double);
+  //void SetHEPVetoChamberWallCorner(G4ThreeVector);
 
 private:
 

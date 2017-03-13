@@ -487,9 +487,9 @@ ChamberGeometry::ChamberGeometry()
   //printf("In geo %f %f %f\n",fVCExtVtx[1][0].x(),fVCExtVtx[1][0].y(),fVCExtVtx[1][0].z());
 
   // Properties of the beam entrance hole
-  //fVCInHoleRadius = 5.*cm;
-  //fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
-  //fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
+  fVCInHoleRadius = 5.*cm;
+  fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
+  fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
 
   // Properties of the beam exit hole
   fVCOutHoleRadius = 5.*cm; // Radius of the two circles

@@ -64,6 +64,12 @@ public:
   G4int GetVCOutMagWallNVertices() { return CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES; }
   G4TwoVector GetVCOutMagWallVertex(G4int p) { return fVCOutMagWallVertex[p]; }
 
+  // Get internal size of chamber in the magnet region
+  // Needed to create the internal magnetic volume
+  G4double GetVCInnerX() { return fVCIntVtx[0][3].x(); }
+  G4double GetVCInnerY() { return fVCIntVtx[0][3].y(); }
+  G4double GetVCInnerZ() { return fVCIntVtx[0][3].z(); }
+
   // Info on the back face of the chamber
   // Needed to correctly position exit hole, HEPVeto and TimePix
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
@@ -98,9 +104,9 @@ public:
   G4double GetVCCROut() { return fVCCRIn+fVCCThick; }
 
   // Beam entrance hole
-  //G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
-  //G4double GetVCInHoleThick() { return fVCInHoleThick; }
-  //G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
+  G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
+  G4double GetVCInHoleThick() { return fVCInHoleThick; }
+  G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
 
   // Beam exit hole
   G4double GetVCOutHoleRadius() { return fVCOutHoleRadius; }

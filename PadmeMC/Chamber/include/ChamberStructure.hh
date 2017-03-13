@@ -25,11 +25,15 @@ public:
   void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
   void CreateGeometry();
 
-  G4double GetChamberMostExternalX();
-  G4double GetChamberMostAdvancedZ();
-  G4double GetChamberBackFaceAngle();
-  G4double GetChamberBackFaceThickness();
-  G4ThreeVector GetChamberBackFaceCorner();
+  //G4double GetChamberMostExternalX();
+  //G4double GetChamberMostAdvancedZ();
+  //G4double GetChamberBackFaceAngle();
+  //G4double GetChamberBackFaceThickness();
+  //G4ThreeVector GetChamberBackFaceCorner();
+
+  //G4double GetChamberInnerX();
+  //G4double GetChamberInnerY();
+  //G4double GetChamberInnerZ();
 
   G4LogicalVolume* GetChamberLogicalVolume() { return fGlobalLogicalVolume; }
 

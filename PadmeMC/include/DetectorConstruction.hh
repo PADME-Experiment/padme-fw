@@ -21,7 +21,6 @@ class DetectorMessenger;
 class ECalDetector;
 class TargetDetector;
 class SACDetector;
-class LAVDetector;
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
@@ -86,7 +85,6 @@ private:
   ECalDetector*    fECalDetector;
   TargetDetector*  fTargetDetector;
   SACDetector*     fSACDetector;
-  LAVDetector*     fLAVDetector;
   PVetoDetector*   fPVetoDetector;
   EVetoDetector*   fEVetoDetector;
   HEPVetoDetector* fHEPVetoDetector;
@@ -102,7 +100,6 @@ private:
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
-  G4int fEnableLAV;
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;
@@ -125,13 +122,13 @@ private:
   //G4UserLimits* stepLimit; // pointer to user step limits
 
   DetectorMessenger* fDetectorMessenger;  // pointer to the Messenger
-       
+  /*
 private:
 
   G4double CryX[1000];
   G4double CryY[1000];
   G4double CryZ[1000];
-
+  */
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -108,6 +108,9 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
   if( command == fEnableStructCmd )  fDetector->EnableStructure(newValue);
   if( command == fDisableStructCmd ) fDetector->DisableStructure(newValue);
 
+  if( command == fEnableMagFieldCmd )  fDetector->EnableMagneticField();
+  if( command == fDisableMagFieldCmd ) fDetector->DisableMagneticField();
+
   if( command == fMagVolVisibleCmd )   fDetector->MagneticVolumeIsVisible();
   if( command == fMagVolInvisibleCmd ) fDetector->MagneticVolumeIsInvisible();
 

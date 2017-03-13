@@ -38,6 +38,12 @@ MagneticFieldMap::~MagneticFieldMap()
 void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
 {
 
+  //printf("Magnetic field map called\n");
+  //B[0] = 0.;
+  //B[1] = 0.;
+  //B[2] = 0.;
+  //return;
+
   // Get local coordinates (x,y are centered at 0,0 by definition)
   G4double x = p[0];
   G4double y = p[1];

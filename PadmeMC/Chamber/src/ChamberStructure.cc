@@ -188,8 +188,37 @@ void ChamberStructure::CreateECalThinWindow()
 
 void ChamberStructure::CreateTargetPipes()
 {
-}
 
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Blue());
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  // Crossed pipes at target position
+  G4double cpzRIn = geo->GetCPZRIn();
+  G4double cpzROut = geo->GetCPZROut();
+  G4double cpzLen = geo->GetCPZLength();
+  G4Tubs* solidCPZe = new G4Tubs("CPZe",0.,cpzROut-1.*um,0.5*cpzLen-1.*um,0.*deg,360.*deg);
+  G4Tubs* solidCPZi = new G4Tubs("CPZi",0.,cpzRIn,0.5*cpzLen+1.*mm,0.*deg,360.*deg);
+
+  G4double cpxRIn = geo->GetCPXRIn();
+  G4double cpxROut = geo->GetCPXROut();
+  G4double cpxLen = geo->GetCPXLength();
+  G4Tubs* solidCPXe = new G4Tubs("CPXe",0.,cpxROut-1.*um,0.5*cpxLen-1.*um,0.*deg,360.*deg);
+  G4Tubs* solidCPXi = new G4Tubs("CPXi",0.,cpxRIn,0.5*cpxLen+1.*mm,0.*deg,360.*deg);
+
+  G4RotationMatrix* rotCPX = new G4RotationMatrix;
+  rotCPX->rotateY(90.*deg);
+
+  G4UnionSolid* solidCP1 = new G4UnionSolid("VCCP1",solidCPZe,solidCPXe,rotCPX,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidCP2 = new G4SubtractionSolid("VCCP2",solidCP1,solidCPZi,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidCP3 = new G4SubtractionSolid("VCCP3",solidCP2,solidCPXi,rotCPX,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
+  logicalCP->SetVisAttributes(steelVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fGlobalLogicalVolume,false,0);
+
+}
+/*
 G4double ChamberStructure::GetChamberMostExternalX()
 {
   return ChamberGeometry::GetInstance()->GetVCMostExternalX();
@@ -215,6 +244,21 @@ G4double ChamberStructure::GetChamberBackFaceThickness()
   return ChamberGeometry::GetInstance()->GetVCBackFaceThickness();
 }
 
+G4double ChamberStructure::GetChamberInnerX()
+{
+  return ChamberGeometry::GetInstance()->GetVCInnerX();
+}
+
+G4double ChamberStructure::GetChamberInnerY()
+{
+  return ChamberGeometry::GetInstance()->GetVCInnerY();
+}
+
+G4double ChamberStructure::GetChamberInnerZ()
+{
+  return ChamberGeometry::GetInstance()->GetVCInnerZ();
+}
+*/
 G4UnionSolid* ChamberStructure::CreateVCFacetGlobalSolid()
 {
 
@@ -365,6 +409,7 @@ G4UnionSolid* ChamberStructure::CreateVCFacetExternalSolid()
   G4double flaPosZ = geo->GetVCCFPosZ();
   G4Tubs* solidFla = new G4Tubs("VCFlaExt",0.,flaROut,0.5*flaLen,0.*deg,360.*deg);
 
+  /*
   // Crossed pipes at target position
   G4double cpzR = geo->GetCPZROut();
   G4double cpzLen = geo->GetCPZLength();
@@ -379,15 +424,16 @@ G4UnionSolid* ChamberStructure::CreateVCFacetExternalSolid()
   G4ThreeVector posCPX = G4ThreeVector(0.,0.,cpxPosZ);
   G4RotationMatrix* rotCPX = new G4RotationMatrix;
   rotCPX->rotateY(90.*deg);
+  */
 
   // Attach cylinder and flange to vacuum chamber
   G4UnionSolid* solid0 = new G4UnionSolid("VCExt0",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
   G4UnionSolid* solid1 = new G4UnionSolid("VCExt1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
-  G4UnionSolid* solid2 = new G4UnionSolid("VCExt2",solid1,solidCPZ,0,posCPZ);
-  G4UnionSolid* solid3 = new G4UnionSolid("ChamberExternal",solid2,solidCPX,rotCPX,posCPX);
-  //G4UnionSolid* solidFinal = new G4UnionSolid("ChamberExternal",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
+  //G4UnionSolid* solid2 = new G4UnionSolid("VCExt2",solid1,solidCPZ,0,posCPZ);
+  //G4UnionSolid* solid3 = new G4UnionSolid("ChamberExternal",solid2,solidCPX,rotCPX,posCPX);
 
-  return solid3;
+  return solid1;
+  //return solid3;
 
 }
 
@@ -454,11 +500,10 @@ G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
   printf("Flange hole %f %f %f\n",flaLen,flaRIn,flaPosZ);
 
   // Create hole at beam entrance (will need flange to connect to target structure)
-  // This is now done with a prolugation of the along-Z section of the crossed pipe
-  //G4double holeThick = geo->GetVCInHoleThick()+1.*mm;
-  //G4double holeRadius = geo->GetVCInHoleRadius();
-  //G4double holePosZ = geo->GetVCInHolePosZ();
-  //G4Tubs* solidInHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
+  G4double holeThick = geo->GetVCInHoleThick()+1.*mm;
+  G4double holeRadius = geo->GetVCInHoleRadius();
+  G4double holePosZ = geo->GetVCInHolePosZ();
+  G4Tubs* solidInHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
 
   // Create hole at beam exit (will need flange to connect to thin TPix window)
   G4double hoT = geo->GetVCOutHoleThick();
@@ -478,6 +523,7 @@ G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
   G4ThreeVector posHOut = G4ThreeVector(hoCX,0.,hoCZ);
   //printf("Exit hole %f %f %f %f %f %f %f\n",hoT,hoR,hoL,hoD,hoA,hoCX,hoCZ);
 
+  /*
   // Crossed pipes at target position
   G4double cpzR = geo->GetCPZRIn();
   G4double cpzLen = geo->GetCPZLength();
@@ -492,16 +538,18 @@ G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
   G4ThreeVector posCPX = G4ThreeVector(0.,0.,cpxPosZ);
   G4RotationMatrix* rotCPX = new G4RotationMatrix;
   rotCPX->rotateY(90.*deg);
+  */
 
   // Attach cylinder, flange, hole, and pipes to vacuum chamber
   G4UnionSolid* solid0 = new G4UnionSolid("VCInt0",solidMain,solidCyl,0,G4ThreeVector(0.,0.,cyPosZ));
   G4UnionSolid* solid1 = new G4UnionSolid("VCInt1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
-  //G4UnionSolid* solid2 = new G4UnionSolid("VCInt2",solid1,solidInHole,0,G4ThreeVector(0.,0.,holePosZ));
-  G4UnionSolid* solid3 = new G4UnionSolid("VCInt3",solid1,solidOutHole,rotHOut,posHOut);
-  G4UnionSolid* solid4 = new G4UnionSolid("VCInt4",solid3,solidCPZ,0,posCPZ);
-  G4UnionSolid* solid5 = new G4UnionSolid("ChamberInternal",solid4,solidCPX,rotCPX,posCPX);
+  G4UnionSolid* solid2 = new G4UnionSolid("VCInt2",solid1,solidInHole,0,G4ThreeVector(0.,0.,holePosZ));
+  G4UnionSolid* solid3 = new G4UnionSolid("VCInt3",solid2,solidOutHole,rotHOut,posHOut);
+  //G4UnionSolid* solid4 = new G4UnionSolid("VCInt4",solid3,solidCPZ,0,posCPZ);
+  //G4UnionSolid* solid5 = new G4UnionSolid("ChamberInternal",solid4,solidCPX,rotCPX,posCPX);
 
-  return solid4; // Use this for visualization
+  return solid3;
+  //return solid4; // Use this for visualization
   //return solid5; // Use this for simulation
 
 }

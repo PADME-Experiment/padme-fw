@@ -81,7 +81,7 @@ void HEPVetoDetector::CreateGeometry()
   }
 
 }
-
+/*
 void HEPVetoDetector::SetHEPVetoChamberWallThickness(G4double t)
 {
   HEPVetoGeometry::GetInstance()->SetHEPVetoChamberWallThickness(t);
@@ -96,3 +96,4 @@ void HEPVetoDetector::SetHEPVetoChamberWallCorner(G4ThreeVector c)
 {
   HEPVetoGeometry::GetInstance()->SetHEPVetoChamberWallCorner(c);
 }
+*/

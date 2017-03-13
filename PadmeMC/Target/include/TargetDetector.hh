@@ -30,12 +30,17 @@ public:
   G4double GetTargetFrontFaceZ() { return TargetGeometry::GetInstance()->GetTargetFrontFacePosZ(); }
   G4double GetTargetThickness()  { return TargetGeometry::GetInstance()->GetTargetSizeZ(); }
 
+  // Define displacement of Target along Z due to position of magnetic volume
+  void SetTargetDisplacePosZ(G4double z) { fTargetDisplacePosZ = z; }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fTargetVolume;
 
   TargetMessenger* fTargetMessenger;
+
+  G4double fTargetDisplacePosZ; // Displacement of Target along Z due to positioning inside magnetic volume
 
 };
 

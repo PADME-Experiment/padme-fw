@@ -83,7 +83,7 @@ void TPixDetector::CreateGeometry()
   }
 
 }
-
+/*
 void TPixDetector::SetTPixChamberWallAngle(G4double a)
 {
   TPixGeometry::GetInstance()->SetTPixChamberWallAngle(a);
@@ -93,3 +93,4 @@ void TPixDetector::SetTPixChamberWallCorner(G4ThreeVector c)
 {
   TPixGeometry::GetInstance()->SetTPixChamberWallCorner(c);
 }
+*/

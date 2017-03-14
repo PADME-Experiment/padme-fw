@@ -116,22 +116,14 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
-	    TTargetMCHit* Hit = (TTargetMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId(0);
-	    Hit->SetTime((*TargetC)[i]->GetTime());
-	    /* Old hits style
-	    Hit->SetPosition(TVector3((*TargetC)[i]->GetPos()[0],
-				      (*TargetC)[i]->GetPos()[1],
-				      (*TargetC)[i]->GetPos()[2])
-			     );
-	    Hit->SetEnergy((*TargetC)[i]->GetEdep());
-	    e_tot += (*TargetC)[i]->GetEdep()/MeV;
-	    */
-	    Hit->SetPosition(TVector3((*TargetC)[i]->GetPosX(),
-				      (*TargetC)[i]->GetPosY(),
-				      (*TargetC)[i]->GetPosZ()));
-	    Hit->SetEnergy((*TargetC)[i]->GetEnergy());
-	    e_tot += Hit->GetEnergy();
+	    TTargetMCHit* hit = (TTargetMCHit*)fEvent->AddHit();
+	    hit->SetChannelId(0);
+	    hit->SetTime((*targetHC)[i]->GetTime());
+	    hit->SetPosition(TVector3((*targetHC)[i]->GetPosX(),
+				      (*targetHC)[i]->GetPosY(),
+				      (*targetHC)[i]->GetPosZ()));
+	    hit->SetEnergy((*targetHC)[i]->GetEnergy());
+	    e_tot += hit->GetEnergy();
 	  }
 	  G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}

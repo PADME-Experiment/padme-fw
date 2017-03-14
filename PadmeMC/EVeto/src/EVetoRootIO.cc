@@ -115,22 +115,14 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
-	    TEVetoMCHit* Hit = (TEVetoMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId((*EVetoC)[i]->GetChannelId()); 
-	    Hit->SetTime((*EVetoC)[i]->GetTime());
-	    /* Old hits counted the total track energy and used global position
-	    Hit->SetPosition(TVector3((*EVetoC)[i]->GetPos()[0],
-				      (*EVetoC)[i]->GetPos()[1],
-				      (*EVetoC)[i]->GetPos()[2])
-			     );
-	    Hit->SetEnergy((*EVetoC)[i]->GetEdep());
-	    e_tot += (*EVetoC)[i]->GetEdep()/MeV;
-	    */
-	    Hit->SetPosition(TVector3((*EVetoC)[i]->GetPosX(),
-				      (*EVetoC)[i]->GetPosY(),
-				      (*EVetoC)[i]->GetPosZ()));
-	    Hit->SetEnergy((*EVetoC)[i]->GetEnergy());
-	    e_tot += Hit->GetEnergy();
+	    TEVetoMCHit* hit = (TEVetoMCHit*)fEvent->AddHit();
+	    hit->SetChannelId((*eVetoHC)[i]->GetChannelId()); 
+	    hit->SetTime((*eVetoHC)[i]->GetTime());
+	    hit->SetPosition(TVector3((*eVetoHC)[i]->GetPosX(),
+				      (*eVetoHC)[i]->GetPosY(),
+				      (*eVetoHC)[i]->GetPosZ()));
+	    hit->SetEnergy((*eVetoHC)[i]->GetEnergy());
+	    e_tot += hit->GetEnergy();
 	  }
 	  G4cout << "EVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}

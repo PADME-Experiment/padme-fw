@@ -295,4 +295,4 @@
 #/vis/viewer/panTo -0.5 0.
 #/vis/viewer/set/viewpointThetaPhi 0. 0.
 #/vis/viewer/zoom 50
-/run/beamOn 1	
+#/run/beamOn 1	

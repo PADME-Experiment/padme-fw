@@ -12,6 +12,7 @@
 #include <sstream>
 
 #include "G4Event.hh"
+#include "G4UnitsTable.hh"
 
 #include "RootIOManager.hh"
 #include "SACGeometry.hh"
@@ -131,15 +132,14 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	  for(G4int i=0;i<n_hit;i++) {
 	    TSACMCHit* hit = (TSACMCHit*)fEvent->AddHit();
 	    hit->SetChannelId((*sacHC)[i]->GetChannelId()); 
-	    hit->SetPosition(TVector3((*sacHC)[i]->GetPos()[0],
-				      (*sacHC)[i]->GetPos()[1],
-				      (*sacHC)[i]->GetPos()[2])
-			     );
-	    hit->SetEnergy((*sacHC)[i]->GetEnergy());
 	    hit->SetTime((*sacHC)[i]->GetTime());
-	    e_tot += (*sacHC)[i]->GetEnergy()/MeV;
+	    hit->SetPosition(TVector3((*sacHC)[i]->GetPosX(),
+				      (*sacHC)[i]->GetPosY(),
+				      (*sacHC)[i]->GetPosZ()));
+	    hit->SetEnergy((*sacHC)[i]->GetEnergy());
+	    e_tot += hit->GetEnergy();
 	  }
-	  G4cout << "SACRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "SACRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

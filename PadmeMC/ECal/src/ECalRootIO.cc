@@ -115,22 +115,14 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
-	    TECalMCHit* Hit = (TECalMCHit*)fEvent->AddHit();
-	    Hit->SetChannelId((*ECalC)[i]->GetChannelId()); 
-	    Hit->SetTime((*ECalC)[i]->GetTime());
-	    /* Old hits style
-	    Hit->SetPosition(TVector3((*ECalC)[i]->GetPos()[0],
-				      (*ECalC)[i]->GetPos()[1],
-				      (*ECalC)[i]->GetPos()[2])
-			     );
-	    Hit->SetEnergy((*ECalC)[i]->GetEdep());
-	    e_tot += (*ECalC)[i]->GetEdep()/MeV;
-	    */
-	    Hit->SetPosition(TVector3((*ECalC)[i]->GetPosX(),
-				      (*ECalC)[i]->GetPosY(),
-				      (*ECalC)[i]->GetPosZ()));
-	    Hit->SetEnergy((*ECalC)[i]->GetEnergy());
-	    e_tot += Hit->GetEnergy();
+	    TECalMCHit* hit = (TECalMCHit*)fEvent->AddHit();
+	    hit->SetChannelId((*eCalHC)[i]->GetChannelId()); 
+	    hit->SetTime((*eCalHC)[i]->GetTime());
+	    hit->SetPosition(TVector3((*eCalHC)[i]->GetPosX(),
+				      (*eCalHC)[i]->GetPosY(),
+				      (*eCalHC)[i]->GetPosZ()));
+	    hit->SetEnergy((*eCalHC)[i]->GetEnergy());
+	    e_tot += hit->GetEnergy();
 	  }
 	  G4cout << "ECalRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}

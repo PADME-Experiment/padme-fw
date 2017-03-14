@@ -506,22 +506,23 @@ G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
   G4Tubs* solidInHole = new G4Tubs("VCInHole",0.,holeRadius,0.5*holeThick,0.*deg,360.*deg);
 
   // Create hole at beam exit (will need flange to connect to thin TPix window)
+  // Add some O(1mm) tolerances to avoid boolean solids bugs in GEANT4
   G4double hoT = geo->GetVCOutHoleThick();
   G4double hoR = geo->GetVCOutHoleRadius();
   G4double hoL = geo->GetVCOutHoleLength();
   G4double hoD = geo->GetVCOutHoleDistToEdge();
   G4double hoA = geo->GetVCBackFaceAngle();
-  G4Box* solidHO0 = new G4Box("VCHOut0",0.5*hoL,hoR,0.5*hoT+0.7*cm);
-  G4Tubs* solidHO1 = new G4Tubs("VCHOut1",0.,hoR,0.5*hoT+0.5*cm,0.*deg,360.*deg);
-  G4UnionSolid* solidHO2 = new G4UnionSolid("VCHOut2",solidHO0,solidHO1,0,G4ThreeVector(-0.5*hoL,0.,0.));
-  G4UnionSolid* solidOutHole = new G4UnionSolid("VCHOut3",solidHO2,solidHO1,0,G4ThreeVector(0.5*hoL,0.,0.));
+  G4Box* solidHO0 = new G4Box("VCHOut0",0.5*hoL,hoR,0.5*hoT+1.*mm);
+  G4Tubs* solidHO1 = new G4Tubs("VCHOut1",0.,hoR,0.5*hoT+1.*mm,0.*deg,360.*deg);
+  G4UnionSolid* solidHO2 = new G4UnionSolid("VCHOut2",solidHO0,solidHO1,0,G4ThreeVector(-0.5*hoL-0.5*mm,0.,0.));
+  G4UnionSolid* solidOutHole = new G4UnionSolid("VCHOut3",solidHO2,solidHO1,0,G4ThreeVector(0.5*hoL+0.5*mm,0.,0.));
   G4RotationMatrix* rotHOut = new G4RotationMatrix;
   rotHOut->rotateY(hoA);
   G4ThreeVector hoEdge = geo->GetVCExtVtx(11,1);
   G4double hoCX = hoEdge.x()-hoD*cos(hoA)+0.5*hoT*sin(hoA);
   G4double hoCZ = hoEdge.z()-hoD*sin(hoA)-0.5*hoT*cos(hoA);
   G4ThreeVector posHOut = G4ThreeVector(hoCX,0.,hoCZ);
-  //printf("Exit hole %f %f %f %f %f %f %f\n",hoT,hoR,hoL,hoD,hoA,hoCX,hoCZ);
+  printf("Exit hole %f %f %f %f %f %f %f\n",hoT,hoR,hoL,hoD,hoA,hoCX,hoCZ);
 
   /*
   // Crossed pipes at target position
@@ -545,6 +546,7 @@ G4UnionSolid* ChamberStructure::CreateVCFacetInternalSolid()
   G4UnionSolid* solid1 = new G4UnionSolid("VCInt1",solid0,solidFla,0,G4ThreeVector(0.,0.,flaPosZ));
   G4UnionSolid* solid2 = new G4UnionSolid("VCInt2",solid1,solidInHole,0,G4ThreeVector(0.,0.,holePosZ));
   G4UnionSolid* solid3 = new G4UnionSolid("VCInt3",solid2,solidOutHole,rotHOut,posHOut);
+  //G4UnionSolid* solid3 = new G4UnionSolid("VCInt3",solid2,solidHO0,rotHOut,posHOut);
   //G4UnionSolid* solid4 = new G4UnionSolid("VCInt4",solid3,solidCPZ,0,posCPZ);
   //G4UnionSolid* solid5 = new G4UnionSolid("ChamberInternal",solid4,solidCPX,rotCPX,posCPX);
 

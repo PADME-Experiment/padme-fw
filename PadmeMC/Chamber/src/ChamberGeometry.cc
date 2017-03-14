@@ -216,9 +216,6 @@ ChamberGeometry::ChamberGeometry()
   fVCIntVtx[11][2] = G4ThreeVector(-421.107*mm, 165.*mm,2239.*mm); // X ok
   fVCIntVtx[11][3] = G4ThreeVector( 224.000*mm, 165.*mm,2239.*mm);
 
-  // Quantities derived from the vertices positions
-  fVCMostExternalX = -fVCExtVtx[9][1].x(); // Absolute value of largest X coordinate of the chamber
-
   // Define facets used to create the chamber as a tesselated solid
   // Each facet is defined by 3 or 4 (see below) vertices encoded as an integer number in the form ssv
   // where ss is the section (0-11) and v is the section's vertex (0-3) taken from
@@ -486,15 +483,18 @@ ChamberGeometry::ChamberGeometry()
 
   //printf("In geo %f %f %f\n",fVCExtVtx[1][0].x(),fVCExtVtx[1][0].y(),fVCExtVtx[1][0].z());
 
+  // Quantities derived from the vertices positions
+  fVCMostExternalX = -fVCExtVtx[9][1].x(); // Absolute value of largest X coordinate of the chamber
+
   // Properties of the beam entrance hole
   fVCInHoleRadius = 5.*cm;
   fVCInHoleThick = fVCIntVtx[0][0].z()-fVCExtVtx[0][0].z();
   fVCInHolePosZ = 0.5*(fVCExtVtx[0][0].z()+fVCIntVtx[0][0].z());
 
   // Properties of the beam exit hole
-  fVCOutHoleRadius = 5.*cm; // Radius of the two circles
-  fVCOutHoleLength = 10.*cm; // Distance between circle centers
-  fVCOutHoleThick = 1.*cm; // Should be computed from distance between chamber faces
+  fVCOutHoleRadius = 25.*mm; // Radius of the two circles
+  fVCOutHoleLength = 100.*mm; // Distance between circle centers
+  fVCOutHoleThick = 10.*mm; // Should be computed from distance between chamber faces
   // Distance of center of hole from edge on the VC back face
   fVCOutHoleDistToEdge = 35.*cm; // To verify with Cesidio
 

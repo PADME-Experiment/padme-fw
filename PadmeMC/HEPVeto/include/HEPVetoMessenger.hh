@@ -14,8 +14,10 @@
 
 class HEPVetoDetector;
 class HEPVetoGeometry;
+
 class G4UIdirectory;
-class G4UIcommand;
+class G4UIcmdWithAnInteger;
+class G4UIcmdWithADoubleAndUnit;
 
 class HEPVetoMessenger: public G4UImessenger
 {
@@ -32,17 +34,13 @@ private:
 
   G4UIdirectory* fHEPVetoDetectorDir;
 
-  G4UIcommand* fSetHEPVetoNFingersCmd;
-  G4UIcommand* fSetFingerSizeCmd;
-  G4UIcommand* fSetFingerLengthCmd;
+  G4UIcmdWithAnInteger* fSetNFingersCmd;
 
-  G4UIcommand* fSetHEPVetoPosXCmd;
-  //G4UIcommand* fSetHEPVetoPosYCmd;
-  G4UIcommand* fSetHEPVetoPosZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetFingerStepCmd;
+  G4UIcmdWithADoubleAndUnit* fSetFingerSizeCmd;
+  G4UIcmdWithADoubleAndUnit* fSetFingerLengthCmd;
 
-  //G4UIcommand* fSetHEPVetoRotXCmd;
-  G4UIcommand* fSetHEPVetoRotYCmd;
-  //G4UIcommand* fSetHEPVetoRotZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetDistToCornerCmd;
 
 };
 #endif

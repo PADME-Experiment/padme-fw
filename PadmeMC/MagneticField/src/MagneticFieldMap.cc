@@ -8,7 +8,8 @@ MagneticFieldMap::MagneticFieldMap()
 {
 
   // Default value: can be changed with set method
-  fConstantMagneticField = -0.55*tesla; // WARNING: not used! Real default is set in MagnetGeometry.cc
+  fConstantMagneticField = -0.55*tesla;
+  //fConstantMagneticField = 0.;
 
   fConstantMagneticFieldXmin = -26.0*cm;
   fConstantMagneticFieldXmax =  26.0*cm;
@@ -22,11 +23,12 @@ MagneticFieldMap::MagneticFieldMap()
   fSigmaFront = 22.5*cm;
   fSigmaBack  = 22.5*cm;
 
-  // These must be set by the creator of the volume before using it
+  // The magnetic volume is a box centered at magnet center with x and y dimensions
+  // as the magnet cavity and with z extends 50cm outside both sides of the magnet
   fMagneticVolumePosZ = 0.;
-  fMagneticVolumeLengthX = 0.;
-  fMagneticVolumeLengthY = 0.;
-  fMagneticVolumeLengthZ = 0.;
+  fMagneticVolumeLengthX = 112.*cm;
+  fMagneticVolumeLengthY = 23.*cm;
+  fMagneticVolumeLengthZ = 200.*cm;
 
 }
 
@@ -35,6 +37,12 @@ MagneticFieldMap::~MagneticFieldMap()
 
 void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
 {
+
+  //printf("Magnetic field map called\n");
+  //B[0] = 0.;
+  //B[1] = 0.;
+  //B[2] = 0.;
+  //return;
 
   // Get local coordinates (x,y are centered at 0,0 by definition)
   G4double x = p[0];
@@ -66,6 +74,6 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
   B[2] = 0.;
 
   // Used for debug: comment out to reduce output
-  //  printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is (%7.4f,%7.4f,%7.4f) tesla\n",x/cm,y/cm,z/cm,B[0]/tesla,B[1]/tesla,B[2]/tesla);
+  //printf("Magnetic field at (%7.2f,%7.2f,%7.2f) cm is (%7.4f,%7.4f,%7.4f) tesla\n",x/cm,y/cm,z/cm,B[0]/tesla,B[1]/tesla,B[2]/tesla);
 
 }

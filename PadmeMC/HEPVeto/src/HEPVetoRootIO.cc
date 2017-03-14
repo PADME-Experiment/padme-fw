@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "G4Event.hh"
+#include "G4UnitsTable.hh"
 
 #include "RootIOManager.hh"
 #include "HEPVetoGeometry.hh"
@@ -114,17 +115,24 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
 	if(n_hit>0){
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
-	    THEPVetoMCHit* hit = (THEPVetoMCHit*)fEvent->AddHit();
-	    hit->SetChannelId((*hepVetoHC)[i]->GetChannelId()); 
-	    hit->SetPosition(TVector3((*hepVetoHC)[i]->GetPos()[0],
-				      (*hepVetoHC)[i]->GetPos()[1],
-				      (*hepVetoHC)[i]->GetPos()[2])
+	    THEPVetoMCHit* Hit = (THEPVetoMCHit*)fEvent->AddHit();
+	    Hit->SetChannelId((*HEPVetoC)[i]->GetChannelId());
+	    Hit->SetTime((*HEPVetoC)[i]->GetTime());
+	    /* Old hits counted the total track energy and used global position
+	    Hit->SetPosition(TVector3((*HEPVetoC)[i]->GetPos()[0],
+				      (*HEPVetoC)[i]->GetPos()[1],
+				      (*HEPVetoC)[i]->GetPos()[2])
 			     );
-	    hit->SetEnergy((*hepVetoHC)[i]->GetEnergy());
-	    hit->SetTime((*hepVetoHC)[i]->GetTime());
-	    e_tot += (*hepVetoHC)[i]->GetEnergy()/MeV;
+	    Hit->SetEnergy((*HEPVetoC)[i]->GetEdep());
+	    e_tot += (*HEPVetoC)[i]->GetEdep()/MeV;
+	    */
+	    Hit->SetPosition(TVector3((*HEPVetoC)[i]->GetPosX(),
+				      (*HEPVetoC)[i]->GetPosY(),
+				      (*HEPVetoC)[i]->GetPosZ()));
+	    Hit->SetEnergy((*HEPVetoC)[i]->GetEnergy());
+	    e_tot += Hit->GetEnergy();
 	  }
-	  G4cout << "HEPVetoRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "HEPVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

@@ -17,21 +17,22 @@
 
 class PVetoHit : public G4VHit
 {
-  public:
 
-      PVetoHit();
-     ~PVetoHit();
-      PVetoHit(const PVetoHit&);
-      const PVetoHit& operator=(const PVetoHit&);
-      G4int operator==(const PVetoHit&) const;
+public:
 
-      inline void* operator new(size_t);
-      inline void  operator delete(void*);
+  PVetoHit();
+  ~PVetoHit();
+  PVetoHit(const PVetoHit&);
+  const PVetoHit& operator=(const PVetoHit&);
+  G4int operator==(const PVetoHit&) const;
 
-      void Draw();
-      void Print();
+  inline void* operator new(size_t);
+  inline void  operator delete(void*);
 
-  public:
+  void Draw();
+  void Print();
+
+public:
     
   void SetChannelId(G4int c) { fChannelId = c; }
   G4int GetChannelId() { return fChannelId; }

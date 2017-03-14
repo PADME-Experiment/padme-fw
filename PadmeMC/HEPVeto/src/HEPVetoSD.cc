@@ -1,3 +1,10 @@
+// HEPVetoSD.cc
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #include "HEPVetoSD.hh"
 
 #include "G4HCofThisEvent.hh"
@@ -17,11 +24,10 @@ HEPVetoSD::~HEPVetoSD(){}
 
 void HEPVetoSD::Initialize(G4HCofThisEvent* HCE)
 {
-  HEPVetoCollection = new HEPVetoHitsCollection(SensitiveDetectorName,collectionName[0]); 
+  fHEPVetoCollection = new HEPVetoHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
-  HCE->AddHitsCollection(HCID,HEPVetoCollection); 
+  if(HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
+  HCE->AddHitsCollection(HCID,fHEPVetoCollection); 
 }
 
 G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
@@ -39,24 +45,24 @@ G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
-  
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
-  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
 
-  HEPVetoCollection ->insert( newHit );
+  newHit->SetTrackEnergy(aStep->GetTrack()->GetTotalEnergy());
+  newHit->SetTrackId(aStep->GetTrack()->GetTrackID());
+
+  fHEPVetoCollection ->insert( newHit );
 
   return true;
 }
@@ -64,8 +70,8 @@ G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 void HEPVetoSD::EndOfEvent(G4HCofThisEvent*)
 {
   if (verboseLevel>0) { 
-    G4int NbHits = HEPVetoCollection->entries();
+    G4int NbHits = fHEPVetoCollection->entries();
     G4cout << "\n-- HEPVeto Hits Collection: " << NbHits << " hits --" << G4endl;
-    for (G4int i=0;i<NbHits;i++) (*HEPVetoCollection)[i]->Print();
+    for (G4int i=0;i<NbHits;i++) (*fHEPVetoCollection)[i]->Print();
   } 
 }

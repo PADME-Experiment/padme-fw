@@ -1,3 +1,10 @@
+// EVetoSD.cc
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #include "EVetoSD.hh"
 
 #include "G4HCofThisEvent.hh"
@@ -43,17 +50,18 @@ G4bool EVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
-  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
+
+  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   fEVetoCollection->insert(newHit);
 

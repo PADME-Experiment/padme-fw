@@ -13,8 +13,8 @@ public:
 
   void GetFieldValue(const G4double p[4],G4double* B) const;
 
-  void     SetConstantMagneticFieldValue(G4double v) { fConstantMagneticField = v; }
-  G4double GetConstantMagneticFieldValue()           { return fConstantMagneticField; }
+  void SetConstantMagneticFieldValue(G4double v) { fConstantMagneticField = v; }
+  G4double GetConstantMagneticFieldValue() { return fConstantMagneticField; }
 
   void SetMagneticVolumePosZ(G4double z)    { fMagneticVolumePosZ    = z; }
 

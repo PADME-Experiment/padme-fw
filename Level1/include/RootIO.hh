@@ -1,6 +1,8 @@
 #ifndef RootIO_H
 #define RootIO_H
 
+#include <sys/stat.h>
+#include <unistd.h>
 #include <string>
 
 #include "TFile.h"
@@ -9,6 +11,9 @@
 #include "ADCBoard.hh"
 
 #include "TRawEvent.hh"
+
+#define ROOTIO_OK 0
+#define ROOTIO_ERROR -1
 
 class RootIO
 {
@@ -44,6 +49,11 @@ private:
   TFile* fTFileHandle;
   TTree* fTTreeMain;
   TRawEvent* fTRawEvent;
+
+  inline bool file_exists (const std::string& file) {
+    struct stat buffer;   
+    return (stat(file.c_str(), &buffer) == 0); 
+  }
 
 };
 #endif

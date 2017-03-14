@@ -188,3 +188,75 @@ int DBService::GetFileInfo(int& version,int& part,std::string& time_open, std::s
   return result;
 
 }
+
+int DBService::GetRunEvents(int& n_events, int run_nr)
+{
+
+  char sqlCode[10240];
+  MYSQL_RES* res;
+  MYSQL_ROW row;
+
+  sprintf(sqlCode,"SELECT total_events FROM run WHERE number = %d",run_nr);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::GetRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::GetRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  int result = DBSERVICE_OK;
+  if (mysql_num_rows(res) == 0) {
+    printf("DBService::GetRunEvents ERROR - run %d not found in DB\n", run_nr);
+    result = DBSERVICE_ERROR;
+  } else if (mysql_num_rows(res) == 1) {
+    row = mysql_fetch_row(res);
+    n_events   = atoi(row[0]);
+  } else {
+    printf("DBService::GetRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+    result = DBSERVICE_ERROR;
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return result;
+
+}
+
+int DBService::UpdateRunEvents(int n_events, int run_nr)
+{
+
+  char sqlCode[10240];
+  MYSQL_RES* res;
+
+  sprintf(sqlCode,"UPDATE run SET total_events = %d WHERE number = %d",n_events,run_nr);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::UpdateRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::UpdateRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  int result = DBSERVICE_OK;
+  if (mysql_num_rows(res) == 0) {
+    printf("DBService::UpdateRunEvents ERROR - run %d not found in DB\n", run_nr);
+    result = DBSERVICE_ERROR;
+  } else if (mysql_num_rows(res) != 1) {
+    printf("DBService::UpdateRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+    result = DBSERVICE_ERROR;
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return result;
+
+}

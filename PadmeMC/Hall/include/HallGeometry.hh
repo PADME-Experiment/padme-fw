@@ -10,7 +10,7 @@
 
 #include "G4ThreeVector.hh"
 
-#define HALLGEOMETRY_NUMBER_OF_BLOCKS 16
+#define HALLGEOMETRY_NUMBER_OF_BLOCKS 32
 
 class HallGeometry
 {
@@ -40,17 +40,20 @@ public:
   G4int GetNumberOfBlocks() { return HALLGEOMETRY_NUMBER_OF_BLOCKS; }
 
   // Get position of a block
-  G4ThreeVector GetBlockPosition(G4int i) { return fBlockPosition[i]; }
+  G4ThreeVector GetBlockPosition(G4int);
 
-  G4double GetBlockPosX(G4int i) { return fBlockPosition[i].x(); }
-  G4double GetBlockPosY(G4int i) { return fBlockPosition[i].y(); }
-  G4double GetBlockPosZ(G4int i) { return fBlockPosition[i].z(); }
+  G4double GetBlockPosX(G4int);
+  G4double GetBlockPosY(G4int);
+  G4double GetBlockPosZ(G4int);
 
 private:
 
   G4double fBlockGap;
   G4double fBlockNominalSide;
 
+  G4double fBackWallFrontFacePosZ;
+  G4double fSideWallFrontFacePosX;
+  G4double fFloorPosY;
   G4ThreeVector fBlockPosition[HALLGEOMETRY_NUMBER_OF_BLOCKS];
 
 };

@@ -12,6 +12,7 @@ export G4WORKDIR=${PADMEMC}
 # Define PADMERECO
 export PADMERECO=${PADME}/PadmeReco
 
+
 # Define path to PadmeRoot and add it to LD_LIBRARY_PATH
 export PADMEROOT=${PADME}/PadmeRoot
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
@@ -23,3 +24,7 @@ then
 else
     echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
 fi
+export CPATH=${(pja:a)"${(f)$(ls -d $PADME/**/include)}"}:$CPATH
+export LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMERECO/**/lib)}"}:$LIBRARY_PATH
+export LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMEROOT/**/lib)}"}:$LIBRARY_PATH
+export LD_LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMERECO/**/lib)}"}:$LD_LIBRARY_PATH

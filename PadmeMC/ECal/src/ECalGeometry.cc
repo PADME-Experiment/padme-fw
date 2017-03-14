@@ -27,12 +27,20 @@ ECalGeometry::ECalGeometry()
   fECalNRows = 29;
   fECalNCols = 29;
 
-  fCrystalGap = 0.1*mm;
+  fCrystalGap = 0.050*mm;
+
+  fCrystalCoating = 0.100*mm;
 
   fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
 
   //fECalInnerRadius = 5.9*cm;
   //fECalOuterRadius = 28.5*cm;
+
+  fECalPanelEnable = true;
+  fECalPanelThickness = 0.5*cm;
+  fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
+  fECalPanelSizeY = 62.*cm; // Slightly larger than ECal (61.625cm)
+  fECalPanelGap = 0.100*mm;
 
   // Map of ECal crystals
   // Y grows from top to bottom
@@ -112,7 +120,8 @@ G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
   }
 
   // Return X position of center of crystal in local coordinate system
-  return (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
+  //return (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
+  return (GetCellSizeX()+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
 
 }
 
@@ -126,7 +135,8 @@ G4double ECalGeometry::GetCrystalPosY(G4int row, G4int col)
   }
 
   // Return Y position of center of crystal in local coordinate system
-  return (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
+  //return (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
+  return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
 
 }
 
@@ -183,6 +193,10 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fCrystalGap " << fCrystalGap;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fCrystalCoating " << fCrystalCoating;
   hash.push_back(buffer.str());
   buffer.str("");
 

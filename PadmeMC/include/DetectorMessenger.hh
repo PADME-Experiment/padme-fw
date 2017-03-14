@@ -7,6 +7,8 @@
 class DetectorConstruction;
 class G4UIdirectory;
 class G4UIcmdWithAString;
+class G4UIcmdWithoutParameter;
+class G4UIcmdWithADoubleAndUnit;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -30,6 +32,20 @@ private:
 
   G4UIcmdWithAString* fEnableStructCmd;
   G4UIcmdWithAString* fDisableStructCmd;
+
+  G4UIcmdWithoutParameter* fEnableMagFieldCmd;
+  G4UIcmdWithoutParameter* fDisableMagFieldCmd;
+
+  G4UIcmdWithoutParameter* fMagVolVisibleCmd;
+  G4UIcmdWithoutParameter* fMagVolInvisibleCmd;
+
+  G4UIcmdWithoutParameter* fChamberVisibleCmd;
+  G4UIcmdWithoutParameter* fChamberInvisibleCmd;
+
+  G4UIcmdWithADoubleAndUnit* fSetMagFieldValueCmd;
+
+  G4UIcmdWithoutParameter* fWorldIsAirCmd;
+  G4UIcmdWithoutParameter* fWorldIsVacuumCmd;
 
 };
 

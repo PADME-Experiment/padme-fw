@@ -22,8 +22,12 @@
 
 TargetDetector::TargetDetector(G4LogicalVolume* motherVolume):fMotherVolume(motherVolume)
 {
+
   // Connect to TargetDetectorMessenger to enable datacard configuration
   fTargetMessenger = new TargetMessenger(this);
+
+  fTargetDisplacePosZ = 0.; // No default displacement
+
 }
 
 TargetDetector::~TargetDetector()
@@ -38,7 +42,7 @@ void TargetDetector::CreateGeometry()
 
   // Create main Target box
   printf("Target will be placed at %f %f %f\n",geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ());
-  G4ThreeVector positionTarget = G4ThreeVector(geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ()); 
+  G4ThreeVector positionTarget = G4ThreeVector(geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ()-fTargetDisplacePosZ); 
   G4double targetX = geo->GetTargetSizeX();
   G4double targetY = geo->GetTargetSizeY();
   G4double targetZ = geo->GetTargetSizeZ();

@@ -25,6 +25,8 @@ EVetoDetector::EVetoDetector(G4LogicalVolume* motherVolume)
   // Connect to EVetoMessenger to enable datacard configuration
   fEVetoMessenger = new EVetoMessenger(this);
 
+  fEVetoDisplacePosZ = 0.; // No default displacement
+
 }
 
 EVetoDetector::~EVetoDetector()
@@ -39,7 +41,7 @@ void EVetoDetector::CreateGeometry()
 
   // Create main EVeto box
   printf("EVeto will be placed at %f %f %f\n",geo->GetEVetoPosX(),geo->GetEVetoPosY(),geo->GetEVetoPosZ());
-  G4ThreeVector posEVeto = G4ThreeVector(geo->GetEVetoPosX(),geo->GetEVetoPosY(),geo->GetEVetoPosZ()); 
+  G4ThreeVector posEVeto = G4ThreeVector(geo->GetEVetoPosX(),geo->GetEVetoPosY(),geo->GetEVetoPosZ()-fEVetoDisplacePosZ); 
   G4double eVetoX      = geo->GetEVetoSizeX();
   G4double eVetoY      = geo->GetEVetoSizeY();
   G4double eVetoLength = geo->GetEVetoSizeZ();

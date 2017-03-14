@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "G4Event.hh"
+#include "G4UnitsTable.hh"
 
 #include "RootIOManager.hh"
 #include "ECalGeometry.hh"
@@ -115,15 +116,22 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	  for(G4int i=0;i<n_hit;i++) {
 	    TECalMCHit* Hit = (TECalMCHit*)fEvent->AddHit();
 	    Hit->SetChannelId((*ECalC)[i]->GetChannelId()); 
+	    Hit->SetTime((*ECalC)[i]->GetTime());
+	    /* Old hits style
 	    Hit->SetPosition(TVector3((*ECalC)[i]->GetPos()[0],
 				      (*ECalC)[i]->GetPos()[1],
 				      (*ECalC)[i]->GetPos()[2])
 			     );
 	    Hit->SetEnergy((*ECalC)[i]->GetEdep());
 	    e_tot += (*ECalC)[i]->GetEdep()/MeV;
-	    Hit->SetTime((*ECalC)[i]->GetTime());
+	    */
+	    Hit->SetPosition(TVector3((*ECalC)[i]->GetPosX(),
+				      (*ECalC)[i]->GetPosY(),
+				      (*ECalC)[i]->GetPosZ()));
+	    Hit->SetEnergy((*ECalC)[i]->GetEnergy());
+	    e_tot += Hit->GetEnergy();
 	  }
-	  G4cout << "ECalRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "ECalRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

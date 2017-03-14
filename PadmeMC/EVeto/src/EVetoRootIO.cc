@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "G4Event.hh"
+#include "G4UnitsTable.hh"
 
 #include "RootIOManager.hh"
 #include "EVetoGeometry.hh"
@@ -115,16 +116,22 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	  for(G4int i=0;i<n_hit;i++) {
 	    TEVetoMCHit* Hit = (TEVetoMCHit*)fEvent->AddHit();
 	    Hit->SetChannelId((*EVetoC)[i]->GetChannelId()); 
-	    Hit->SetChannelId(0); 
+	    Hit->SetTime((*EVetoC)[i]->GetTime());
+	    /* Old hits counted the total track energy and used global position
 	    Hit->SetPosition(TVector3((*EVetoC)[i]->GetPos()[0],
 				      (*EVetoC)[i]->GetPos()[1],
 				      (*EVetoC)[i]->GetPos()[2])
 			     );
 	    Hit->SetEnergy((*EVetoC)[i]->GetEdep());
 	    e_tot += (*EVetoC)[i]->GetEdep()/MeV;
-	    Hit->SetTime((*EVetoC)[i]->GetTime());
+	    */
+	    Hit->SetPosition(TVector3((*EVetoC)[i]->GetPosX(),
+				      (*EVetoC)[i]->GetPosY(),
+				      (*EVetoC)[i]->GetPosZ()));
+	    Hit->SetEnergy((*EVetoC)[i]->GetEnergy());
+	    e_tot += Hit->GetEnergy();
 	  }
-	  G4cout << "EVetoRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "EVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

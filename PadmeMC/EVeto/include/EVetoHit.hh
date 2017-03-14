@@ -17,6 +17,7 @@
 
 class EVetoHit : public G4VHit
 {
+
 public:
 
   EVetoHit();

@@ -27,6 +27,9 @@ public:
   G4LogicalVolume* GetTPixLogicalVolume() { return fTPixVolume; }
   G4LogicalVolume* GetChipLogicalVolume() { return fChipVolume; }
 
+  //void SetTPixChamberWallAngle(G4double);
+  //void SetTPixChamberWallCorner(G4ThreeVector);
+
 private:
 
   G4LogicalVolume* fMotherVolume;

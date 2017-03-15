@@ -111,7 +111,7 @@ void EVetoDigitizer::Digitize()
 	  digis[ich][idigi]->SetTimeSpread(0);
 	}
 	eVetoDigiCollection->insert( digis[ich][idigi] );
-	digis[ich][idigi]->Print();	  
+	//digis[ich][idigi]->Print();	  
       }
     }
 

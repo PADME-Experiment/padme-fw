@@ -8,6 +8,8 @@
 #ifndef TPixGeometry_H
 #define TPixGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
@@ -21,6 +23,7 @@ public:
 
   ~TPixGeometry();
   static TPixGeometry* GetInstance();
+  std::vector<G4String> GetHashTable();
 
 private:
 

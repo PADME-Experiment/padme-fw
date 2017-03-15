@@ -43,4 +43,8 @@
 #pragma link C++ class TSACMCDigi+;
 #pragma link C++ class TSACMCEvent+;
 
+#pragma link C++ class TTPixMCHit+;
+#pragma link C++ class TTPixMCDigi+;
+#pragma link C++ class TTPixMCEvent+;
+
 #endif

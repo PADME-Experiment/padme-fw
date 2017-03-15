@@ -151,9 +151,9 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	    digi->SetChannelId((*eVetoDC)[i]->GetChannelId()); 
 	    digi->SetEnergy((*eVetoDC)[i]->GetEnergy());
 	    digi->SetTime((*eVetoDC)[i]->GetTime());
-	    e_tot += (*eVetoDC)[i]->GetEnergy()/MeV;
+	    e_tot += (*eVetoDC)[i]->GetEnergy();
 	  }
-	  G4cout << "EVetoRootIO: " << n_digi << " digi with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "EVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

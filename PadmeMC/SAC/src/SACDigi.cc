@@ -97,11 +97,11 @@ void SACDigi::Draw()
 
 void SACDigi::Print()
 {
-  G4cout << "- channel: " << fChannelId
+  G4cout << "SAC - channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy: " << G4BestUnit(fEnergy,"Energy")
 	 << G4endl;
-  PrintEHisto();
+  //PrintEHisto();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

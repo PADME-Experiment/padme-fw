@@ -169,9 +169,9 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	    digi->SetTHistoStart((*sacDC)[i]->GetEHistoStart());
 	    digi->SetTHistoStep((*sacDC)[i]->GetEHistoStep());
 	    for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetEHistoBin(j));
-	    e_tot += (*sacDC)[i]->GetEnergy()/MeV;
+	    e_tot += (*sacDC)[i]->GetEnergy();
 	  }
-	  G4cout << "SACRootIO: " << n_digi << " digi with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

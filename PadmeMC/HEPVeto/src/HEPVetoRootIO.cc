@@ -151,9 +151,9 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
 	    digi->SetChannelId((*hepVetoDC)[i]->GetChannelId()); 
 	    digi->SetEnergy((*hepVetoDC)[i]->GetEnergy());
 	    digi->SetTime((*hepVetoDC)[i]->GetTime());
-	    e_tot += (*hepVetoDC)[i]->GetEnergy()/MeV;
+	    e_tot += (*hepVetoDC)[i]->GetEnergy();
 	  }
-	  G4cout << "HEPVetoRootIO: " << n_digi << " digi with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "HEPVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

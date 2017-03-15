@@ -26,6 +26,7 @@
 #include "HEPVetoDigitizer.hh"
 #include "ECalDigitizer.hh"
 #include "SACDigitizer.hh"
+#include "TPixDigitizer.hh"
 
 extern double NNeutrons;
 extern double Npionc;
@@ -55,6 +56,8 @@ EventAction::EventAction(RunAction* run)
   theDM->AddNewModule(eCalDM);
   SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
   theDM->AddNewModule(sacDM);
+  TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
+  theDM->AddNewModule(tPixDM);
 
 }
 
@@ -127,6 +130,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   eCalDM->Digitize();
   SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
   sacDM->Digitize();
+  TPixDigitizer* tPixDM = (TPixDigitizer*)theDM->FindDigitizerModule("TPixDigitizer");
+  tPixDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -159,8 +164,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   //  G4cout<<"N collections "<<nHC<<G4endl;
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
-    //    G4cout << "RootIO: Found hits collection " << HCname << G4endl;
-    //   if (HCname == "ECryCollection") {
     if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
       FindClusters();

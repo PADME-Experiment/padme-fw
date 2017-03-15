@@ -116,7 +116,7 @@ void PVetoDigitizer::Digitize()
 	  digis[ich][idigi]->SetTimeSpread(0);
 	}
 	pVetoDigiCollection->insert( digis[ich][idigi] );
-	digis[ich][idigi]->Print();	  
+	//digis[ich][idigi]->Print();	  
       }
     }
     

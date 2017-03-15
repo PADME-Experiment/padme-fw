@@ -111,7 +111,7 @@ void HEPVetoDigitizer::Digitize()
 	  digis[ich][idigi]->SetTimeSpread(0);
 	}
 	hepVetoDigiCollection->insert( digis[ich][idigi] );
-	digis[ich][idigi]->Print();	  
+	//digis[ich][idigi]->Print();	  
       }
     }
 

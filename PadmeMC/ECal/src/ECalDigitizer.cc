@@ -73,7 +73,7 @@ void ECalDigitizer::Digitize()
       digi->SetTime(dTime[i]);
       digi->SetEnergy(dEnergy[i]);
       eCalDigiCollection->insert(digi);
-      digi->Print();
+      //digi->Print();
     }
   }
 

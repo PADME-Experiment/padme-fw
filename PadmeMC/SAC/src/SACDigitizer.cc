@@ -65,9 +65,9 @@ void SACDigitizer::Digitize()
     } // End loop over hits
 
     // Print digis
-    for (G4int i=0; i < sacDigiCollection->entries(); i++) {
-      (*sacDigiCollection)[i]->Print();
-    }
+    //for (G4int i=0; i < sacDigiCollection->entries(); i++) {
+    //  (*sacDigiCollection)[i]->Print();
+    //}
 
   }
 

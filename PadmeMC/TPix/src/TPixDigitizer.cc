@@ -1,13 +1,13 @@
+// TPixDigitizer.cc
 // --------------------------------------------------------------
 // History:
 //
-// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-07-22
-//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2017-03-15
 // --------------------------------------------------------------
 
-#include "TargetDigitizer.hh"
+#include "TPixDigitizer.hh"
 
-#include "TargetHit.hh"
+#include "TPixHit.hh"
 
 #include "G4DigiManager.hh"
 #include "G4HCofThisEvent.hh"
@@ -17,29 +17,29 @@
 
 #include <vector>
 
-TargetDigitizer::TargetDigitizer(G4String name)
+TPixDigitizer::TPixDigitizer(G4String name)
 :G4VDigitizerModule(name)
 {
-  G4String colName = "TargetDigiCollection";
+  G4String colName = "TPixDigiCollection";
   collectionName.push_back(colName);
 }
 
-TargetDigitizer::~TargetDigitizer()
+TPixDigitizer::~TPixDigitizer()
 {}
 
-void TargetDigitizer::Digitize()
+void TPixDigitizer::Digitize()
 {
-  TargetDigiCollection* targetDigiCollection = new TargetDigiCollection("TargetDigitizer","TargetDigiCollection");
+  TPixDigiCollection* tPixDigiCollection = new TPixDigiCollection("TPixDigitizer","TPixDigiCollection");
 
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
 
-  // Get access to hit collection for Target
-  G4int targetHCID = theDM->GetHitsCollectionID("TargetCollection");
-  TargetHitsCollection* targetHC = 0;
-  targetHC = (TargetHitsCollection*)(theDM->GetHitsCollection(targetHCID));
+  // Get access to hit collection for TPix
+  G4int tPixHCID = theDM->GetHitsCollectionID("TPixCollection");
+  TPixHitsCollection* tPixHC = 0;
+  tPixHC = (TPixHitsCollection*)(theDM->GetHitsCollection(tPixHCID));
 
   // If hits are present, digitize them
-  if (targetHC) {
+  if (tPixHC) {
 
     // Create digi vectors
     std::vector<G4int> dChannel;
@@ -47,14 +47,13 @@ void TargetDigitizer::Digitize()
     std::vector<G4double> dTime;
 
     // Loop over all hits
-    G4int n_hit = targetHC->entries();
+    G4int n_hit = tPixHC->entries();
     for (G4int i=0;i<n_hit;i++) {
 
       // Get hit information
-      //G4int    hChannel = (*targetHC)[i]->GetChannelId();
-      G4int    hChannel = 0; // This must be computed from the local position of the hit
-      G4double hTime    = (*targetHC)[i]->GetTime();
-      G4double hEnergy  = (*targetHC)[i]->GetEnergy();
+      G4int    hChannel = (*tPixHC)[i]->GetChannelId();
+      G4double hTime    = (*tPixHC)[i]->GetTime();
+      G4double hEnergy  = (*tPixHC)[i]->GetEnergy();
 
       // Loop over used channels
       G4int found = 0;
@@ -76,15 +75,15 @@ void TargetDigitizer::Digitize()
 
     // Create digis for active channels
     for (G4int i=0; i < dChannel.size(); i++) {
-      TargetDigi* digi = new TargetDigi();
+      TPixDigi* digi = new TPixDigi();
       digi->SetChannelId(dChannel[i]);
       digi->SetTime(dTime[i]);
       digi->SetEnergy(dEnergy[i]);
-      targetDigiCollection->insert(digi);
+      tPixDigiCollection->insert(digi);
       //digi->Print();
     }
   }
 
-  StoreDigiCollection(targetDigiCollection);
+  StoreDigiCollection(tPixDigiCollection);
 
 }

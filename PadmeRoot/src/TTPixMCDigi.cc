@@ -12,7 +12,8 @@ ClassImp(TTPixMCDigi)
 TTPixMCDigi::TTPixMCDigi() : TMCVDigi()
 {
   fNPixels = 0;
-  fPixel = 0;
+  fPixelAddress = 0;
+  fPixelValue = 0;
 }
 
 TTPixMCDigi::~TTPixMCDigi()
@@ -29,18 +30,20 @@ Int_t TTPixMCDigi::AllocatePixels(Int_t n)
     return -1;
   } else if (n>0) {
       fNPixels = n;
-      fPixel = new ULong_t[fNPixels];
+      fPixelAddress = new UShort_t[fNPixels];
+      fPixelValue = new UInt_t[fNPixels];
   }
   return n;
 }
 
 // Assign 64bits value to pixel i. Return i if success, -1 if error 
-Int_t TTPixMCDigi::SetPixel(Int_t i,ULong_t v)
+Int_t TTPixMCDigi::SetPixel(Int_t i,UShort_t a,UInt_t v)
 {
   if (i<fNPixels) {
-    fPixel[i] = v;
+    fPixelAddress[i] = a;
+    fPixelValue[i] = v;
   } else {
-    printf("TTPixMCDigi::SetPixel - ERROR: trying to assign value to pixel %d. Max pixel index is %d\n",i,fNPixels);
+    printf("TTPixMCDigi::SetPixel - ERROR: trying to assign value to pixel %d. Max pixel index is %d\n",i,fNPixels-1);
     return -1;
   }
   return i;

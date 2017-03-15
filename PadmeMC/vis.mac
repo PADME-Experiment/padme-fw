@@ -21,6 +21,7 @@
 #/output/EnableDetectorIO EVeto
 #/output/EnableDetectorIO HEPVeto
 #/output/EnableDetectorIO SAC
+#/output/EnableDetectorIO TPix
 
 # Disable IO for single detectors
 /output/DisableDetectorIO ECal
@@ -29,6 +30,7 @@
 /output/DisableDetectorIO EVeto
 /output/DisableDetectorIO HEPVeto
 /output/DisableDetectorIO SAC
+/output/DisableDetectorIO TPix
 
 # Detector settings
 

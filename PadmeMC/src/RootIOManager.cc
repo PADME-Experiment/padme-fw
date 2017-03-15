@@ -118,15 +118,34 @@ void RootIOManager::Close()
 
 }
 
-void RootIOManager::EnableSubDetectorIO(G4String det)
+void RootIOManager::EnableSubDetectorIO(G4String para)
 {
-  MCVRootIO* drio = FindRootIO(det);
-  if (drio) {
-    printf("Enabling IO for subdetector %s\n",det.data());
-    drio->SetEnabled(true);
+
+  G4String detector,opts;
+  G4bool saveHits = true;
+  G4bool saveDigis = true;
+  if (para.contains(":")) { // If the [:HD] option is used, parse it
+    G4int idx = para.index(":");
+    detector = para(0,idx);
+    opts = para(idx+1,para.length()-idx-1);
+    if (! opts.contains("H")) saveHits = false;
+    if (! opts.contains("D")) saveDigis = false;
   } else {
-    printf("WARNING: request to enable IO for unknown subdetector %s\n",det.data());
+    detector = para;
   }
+
+  MCVRootIO* drio = FindRootIO(detector);
+  if (drio) {
+    printf("Enabling IO for subdetector %s:",detector.data());
+    drio->SetEnabled(true);
+    if (saveHits) { printf(" hits enabled,"); } else { printf(" hits disabled,"); }
+    drio->SetHitsEnabled(saveHits);
+    if (saveDigis) { printf(" digis enabled\n"); } else { printf(" digis disabled\n"); }
+    drio->SetDigisEnabled(saveDigis);
+  } else {
+    printf("WARNING: request to enable IO for unknown subdetector %s\n",detector.data());
+  }
+
 }
 
 void RootIOManager::DisableSubDetectorIO(G4String det)
@@ -189,8 +208,7 @@ void RootIOManager::NewRun(G4int nRun)
   }
 
   // Create tree to hold all events in this run
-  //if (fVerbose>=2)
-    G4cout << "RootIOManager: Creating new MC Event tree" << G4endl;
+  G4cout << "RootIOManager: Creating new MC Event tree" << G4endl;
   fEventTree = new TTree("MC","MC events tree");
   //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
   fEventTree->SetAutoSave(1000000);  // autosave when ~1 Mbyte written
@@ -209,19 +227,21 @@ void RootIOManager::NewRun(G4int nRun)
   TDetectorInfo* detInfo = fRun->GetDetectorInfo();
 
   // Set some geometry dependent parameters in detectors' RootIO handlers
-  G4cout << "Beam parameters " << BeamParameters::GetInstance()->GetBeamOriginPosZ() << " " << BeamParameters::GetInstance()->GetBunchTimeLength() << G4endl;
+  G4cout << "RootIOManager: Beam parameters " << BeamParameters::GetInstance()->GetBeamOriginPosZ()
+	 << " " << BeamParameters::GetInstance()->GetBunchTimeLength() << G4endl;
   ((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(BeamParameters::GetInstance()->GetBeamOriginPosZ());
   ((SACRootIO*)FindRootIO("SAC"))->SetBeamBunchLengthT(BeamParameters::GetInstance()->GetBunchTimeLength());
 
   // Tell all RootIO handlers about new run
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
-  while (iRootIO!=endRootIO){
-    G4cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << G4endl;
-    if((*iRootIO)->GetEnabled())
-      G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
+  while (iRootIO!=endRootIO) {
+    //G4cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << G4endl;
+    if ((*iRootIO)->GetEnabled()) {
+      //G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
       (*iRootIO)->NewRun(nRun,fFile,detInfo);
       //(*iRootIO)->NewRun(nRun,fFile);
+    }
     iRootIO++;
   }
 
@@ -305,10 +325,8 @@ void RootIOManager::SaveEvent(const G4Event* eventG4)
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
-
-  while(iRootIO!=endRootIO){
-    if((*iRootIO)->GetEnabled())
-      (*iRootIO)->SaveEvent(eventG4);
+  while (iRootIO!=endRootIO) {
+    if ((*iRootIO)->GetEnabled()) (*iRootIO)->SaveEvent(eventG4);
     iRootIO++;
   }
 

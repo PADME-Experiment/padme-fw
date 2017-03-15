@@ -18,9 +18,13 @@ MCVRootIO::MCVRootIO(G4String name)
   // Default verbose level
   fVerbose = 0;
 
+  // Detector name
+  fName = name;
+
   // Subdetector RootIO is disabled by default
-  fName    = name;
   fEnabled = false;
+  fHitsEnabled = false;
+  fDigisEnabled = false;
 
 }
 

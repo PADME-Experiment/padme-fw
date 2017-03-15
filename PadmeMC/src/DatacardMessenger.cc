@@ -10,16 +10,25 @@
 DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardManager(datacardMng)
 {
 
+  fOutputDir = new G4UIdirectory("/output/");
+  fOutputDir->SetGuidance("UI commands to manage data output.");
+
   fOutNameCmd = new G4UIcmdWithAString("/output/DataFileName",this);
+  fOutNameCmd->SetGuidance("Define name to use for hits/digis output file.");
   fOutNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fHistoNameCmd = new G4UIcmdWithAString("/output/HistoFileName",this);
+  fHistoNameCmd->SetGuidance("Define name to use for histos/ntuples output file.");
   fHistoNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableDetectorIOCmd = new G4UIcmdWithAString("/output/EnableDetectorIO",this);
+  fEnableDetectorIOCmd->SetGuidance("Enable hits/digis output for a specific detector.");
+  fEnableDetectorIOCmd->SetGuidance("Argument must be in the form <DetectorName>[:HD].");
+  fEnableDetectorIOCmd->SetGuidance("If [:HD] is not specified, both hits and digis are written.");
   fEnableDetectorIOCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fDisableDetectorIOCmd = new G4UIcmdWithAString("/output/DisableDetectorIO",this);
+  fDisableDetectorIOCmd->SetGuidance("Disable hits/digis output for a specific detector.");
   fDisableDetectorIOCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }

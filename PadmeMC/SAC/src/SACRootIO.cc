@@ -42,6 +42,8 @@ SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
+  fHitsEnabled = false;
+  fDigisEnabled = true;
 
   fEHistoBeamBunchLengthT = 40.*ns;
 
@@ -59,10 +61,12 @@ void SACRootIO::Close()
 void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 {
 
-  //if (fVerbose)
-    G4cout << "SACRootIO: Initializing I/O for run " << nRun << G4endl;
-
   fRunNumber = nRun;
+
+  G4cout << "SACRootIO: Initializing I/O for run " << fRunNumber;
+  if (fHitsEnabled)  G4cout << " - save hits";
+  if (fDigisEnabled) G4cout << " - save digis";
+  G4cout << G4endl;
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -73,10 +77,9 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* sacInfo = detInfo->AddSubDetectorInfo("SAC");
   sacInfo->SetGeometryParameters(geoParR);
-  //if (fVerbose>=2)
-    sacInfo->Print();
+  sacInfo->Print();
 
-  // Create a branch to hold SAC Hits and Digis
+  // Create branch to hold SAC Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
   fSACBranch = fEventTree->Branch("SAC", fEvent->IsA()->GetName(), &fEvent);
   fSACBranch->SetAutoDelete(kFALSE);
@@ -85,8 +88,7 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void SACRootIO::EndRun()
 {
-  if (fVerbose)
-    G4cout << "SACRootIO: Executing End-of-Run procedure" << G4endl;
+  G4cout << "SACRootIO: Executing End-of-Run procedure" << G4endl;
 
   // Dump last event to stdout (debug: remove for production)
   //for (Int_t iHit=0; iHit<fEvent->GetNHits(); iHit++) {
@@ -112,69 +114,79 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
 
-  // Get list of hit collections in this event
-  G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
-  G4int nHC = theHC->GetNumberOfCollections();
+  if (fHitsEnabled) {
 
-  for(G4int iHC=0; iHC<nHC; iHC++) {
+    // Get list of hit collections in this event
+    G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
+    G4int nHC = theHC->GetNumberOfCollections();
 
-    // Handle each collection type with the right method
-    G4String HCname = theHC->GetHC(iHC)->GetName();
-    if (HCname == "SACCollection"){
-      if (fVerbose>=2)
-	G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
-      SACHitsCollection* sacHC = (SACHitsCollection*)(theHC->GetHC(iHC));
-      int n_hit=0;
-      if(sacHC) {
-	n_hit = sacHC->entries();
-	if(n_hit>0){
-	  G4double e_tot = 0.;
-	  for(G4int i=0;i<n_hit;i++) {
-	    TSACMCHit* hit = (TSACMCHit*)fEvent->AddHit();
-	    hit->SetChannelId((*sacHC)[i]->GetChannelId()); 
-	    hit->SetTime((*sacHC)[i]->GetTime());
-	    hit->SetPosition(TVector3((*sacHC)[i]->GetPosX(),
-				      (*sacHC)[i]->GetPosY(),
-				      (*sacHC)[i]->GetPosZ()));
-	    hit->SetEnergy((*sacHC)[i]->GetEnergy());
-	    e_tot += hit->GetEnergy();
+    for(G4int iHC=0; iHC<nHC; iHC++) {
+
+      // Handle each collection type with the right method
+      G4String HCname = theHC->GetHC(iHC)->GetName();
+      if (HCname == "SACCollection"){
+	if (fVerbose>=2)
+	  G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
+	SACHitsCollection* sacHC = (SACHitsCollection*)(theHC->GetHC(iHC));
+	int n_hit=0;
+	if(sacHC) {
+	  n_hit = sacHC->entries();
+	  if(n_hit>0){
+	    G4double e_tot = 0.;
+	    for(G4int i=0;i<n_hit;i++) {
+	      TSACMCHit* hit = (TSACMCHit*)fEvent->AddHit();
+	      hit->SetChannelId((*sacHC)[i]->GetChannelId()); 
+	      hit->SetTime((*sacHC)[i]->GetTime());
+	      hit->SetPosition(TVector3((*sacHC)[i]->GetPosX(),
+					(*sacHC)[i]->GetPosY(),
+					(*sacHC)[i]->GetPosZ()));
+	      hit->SetEnergy((*sacHC)[i]->GetEnergy());
+	      e_tot += hit->GetEnergy();
+	    }
+	    G4cout << "SACRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
-	  G4cout << "SACRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
+
     }
+
   }
 
-  // Get list of digi collections in this event
-  G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
-  G4int nDC = theDC->GetNumberOfCollections();
+  if (fDigisEnabled) {
 
-  for(G4int iDC=0; iDC<nDC; iDC++) {
+    // Get list of digi collections in this event
+    G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
+    G4int nDC = theDC->GetNumberOfCollections();
 
-    // Handle each collection type with the right method
-    G4String DCname = theDC->GetDC(iDC)->GetName();
-    if (DCname == "SACDigiCollection"){
-      if (fVerbose>=2)
-	G4cout << "SACRootIO: Found digi collection " << DCname << G4endl;
-      SACDigiCollection* sacDC = (SACDigiCollection*)(theDC->GetDC(iDC));
-      if(sacDC) {
-	G4int n_digi = sacDC->entries();
-	if(n_digi>0){
-	  G4double e_tot = 0.;
-	  for(G4int i=0;i<n_digi;i++) {
-	    TSACMCDigi* digi = (TSACMCDigi*)fEvent->AddDigi();
-	    digi->SetChannelId((*sacDC)[i]->GetChannelId()); 
-	    digi->SetEnergy((*sacDC)[i]->GetEnergy());
-	    digi->SetTime((*sacDC)[i]->GetTime());
-	    digi->SetTHistoStart((*sacDC)[i]->GetEHistoStart());
-	    digi->SetTHistoStep((*sacDC)[i]->GetEHistoStep());
-	    for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetEHistoBin(j));
-	    e_tot += (*sacDC)[i]->GetEnergy();
+    for(G4int iDC=0; iDC<nDC; iDC++) {
+
+      // Handle each collection type with the right method
+      G4String DCname = theDC->GetDC(iDC)->GetName();
+      if (DCname == "SACDigiCollection"){
+	if (fVerbose>=2)
+	  G4cout << "SACRootIO: Found digi collection " << DCname << G4endl;
+	SACDigiCollection* sacDC = (SACDigiCollection*)(theDC->GetDC(iDC));
+	if(sacDC) {
+	  G4int n_digi = sacDC->entries();
+	  if(n_digi>0){
+	    G4double e_tot = 0.;
+	    for(G4int i=0;i<n_digi;i++) {
+	      TSACMCDigi* digi = (TSACMCDigi*)fEvent->AddDigi();
+	      digi->SetChannelId((*sacDC)[i]->GetChannelId()); 
+	      digi->SetEnergy((*sacDC)[i]->GetEnergy());
+	      digi->SetTime((*sacDC)[i]->GetTime());
+	      digi->SetTHistoStart((*sacDC)[i]->GetEHistoStart());
+	      digi->SetTHistoStep((*sacDC)[i]->GetEHistoStep());
+	      for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetEHistoBin(j));
+	      e_tot += (*sacDC)[i]->GetEnergy();
+	    }
+	    G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
-	  G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
+
     }
+
   }
 
   TProcessID::SetObjectCount(savedObjNumber);

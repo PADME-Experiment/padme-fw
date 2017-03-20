@@ -82,7 +82,8 @@ void ChamberStructure::CreateGeometry()
   G4SubtractionSolid* solidSteelShell = new G4SubtractionSolid("ChamberSteelShell",solidExtVC,solidIntVC,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalSteelShell = new G4LogicalVolume(solidSteelShell,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"ChamberShell",0,0,0);
   if ( fChamberIsVisible ) {
-    logicalSteelShell->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+    //logicalSteelShell->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+    logicalSteelShell->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
   } else {
     logicalSteelShell->SetVisAttributes(G4VisAttributes::Invisible);
   }
@@ -115,7 +116,8 @@ void ChamberStructure::CreateECalThinWindow()
   //printf("Vacuum chamber window\n");
   //printf("ewR %f ewC %f ewd1 %f ewd2 %f ewd3 %f\n",ewR,ewC,ewd1,ewd2,ewd3);
 
-  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Blue());
+  //G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Blue());
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
   G4VisAttributes membraneVisAttr = G4VisAttributes(G4Colour::Green());
   if ( ! fChamberIsVisible ) {
     steelVisAttr = G4VisAttributes::Invisible;
@@ -191,7 +193,7 @@ void ChamberStructure::CreateTargetPipes()
 
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
-  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Blue());
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
   if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
   // Crossed pipes at target position

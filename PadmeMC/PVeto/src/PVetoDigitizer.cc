@@ -30,6 +30,7 @@ void PVetoDigitizer::Digitize()
 
   // Get access to hit collection for PVeto
   G4int pVHCID = theDM->GetHitsCollectionID("PVetoCollection");
+  if (pVHCID<0) return;
   PVetoHitsCollection* pVHC = 0;
   pVHC = (PVetoHitsCollection*)(theDM->GetHitsCollection(pVHCID));
   

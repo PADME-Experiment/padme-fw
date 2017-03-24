@@ -37,6 +37,7 @@ void EVetoDigitizer::Digitize()
 
   // Get access to hit collection for EVeto
   G4int eVetoHCID = theDM->GetHitsCollectionID("EVetoCollection");
+  if (eVetoHCID<0) return;
   EVetoHitsCollection* eVetoHC = 0;
   eVetoHC = (EVetoHitsCollection*)(theDM->GetHitsCollection(eVetoHCID));
   

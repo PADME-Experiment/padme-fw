@@ -37,6 +37,7 @@ void HEPVetoDigitizer::Digitize()
 
   // Get access to hit collection for HEPVeto
   G4int hepVetoHCID = theDM->GetHitsCollectionID("HEPVetoCollection");
+  if (hepVetoHCID<0) return;
   HEPVetoHitsCollection* hepVetoHC = 0;
   hepVetoHC = (HEPVetoHitsCollection*)(theDM->GetHitsCollection(hepVetoHCID));
   

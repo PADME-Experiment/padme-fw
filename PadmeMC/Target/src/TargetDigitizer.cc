@@ -35,6 +35,7 @@ void TargetDigitizer::Digitize()
 
   // Get access to hit collection for Target
   G4int targetHCID = theDM->GetHitsCollectionID("TargetCollection");
+  if (targetHCID<0) return;
   TargetHitsCollection* targetHC = 0;
   targetHC = (TargetHitsCollection*)(theDM->GetHitsCollection(targetHCID));
 

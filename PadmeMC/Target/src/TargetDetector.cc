@@ -40,24 +40,36 @@ void TargetDetector::CreateGeometry()
 
   TargetGeometry* geo = TargetGeometry::GetInstance();
 
-  // Create main Target box
-  printf("Target will be placed at %f %f %f\n",geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ());
-  G4ThreeVector positionTarget = G4ThreeVector(geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ()-fTargetDisplacePosZ); 
-  G4double targetX = geo->GetTargetSizeX();
-  G4double targetY = geo->GetTargetSizeY();
-  G4double targetZ = geo->GetTargetSizeZ();
+  // Get target position and dimensions
 
-  G4Box* solidTarget = new G4Box("Target",targetX*0.5,targetY*0.5,targetZ*0.5);
-  //fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("G4_C"),"Target",0,0,0);
+  G4ThreeVector targetPos = G4ThreeVector(geo->GetTargetPosX(),geo->GetTargetPosY(),geo->GetTargetPosZ());
+  printf("Target will be placed at %f %f %f\n",targetPos.x(),targetPos.y(),targetPos.z());
+
+  G4double targetSizeX = geo->GetTargetSizeX();
+  G4double targetSizeY = geo->GetTargetSizeY();
+  G4double targetSizeZ = geo->GetTargetSizeZ();
+  printf("Target dimensions are %f %f %f\n",targetSizeX,targetSizeY,targetSizeZ);
+
+  // Create main Target box and position it
+  // Do not forget to take into account mother volume Z displacement
+  G4Box* solidTarget = new G4Box("Target",targetSizeX*0.5,targetSizeY*0.5,targetSizeZ*0.5);
   fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
-  new G4PVPlacement(0,positionTarget,fTargetVolume,"Target",fMotherVolume,false,0,false);
+  new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,false);
 
   // The whole target is a sensitive detector
+  // Digitization will take care of mapping hits to readout strips
+  G4String targetSDName = geo->GetTargetSensitiveDetectorName();
+  printf("Registering Target SD %s\n",targetSDName.data());
+  TargetSD* targetSD = new TargetSD(targetSDName);
+  fTargetVolume->SetSensitiveDetector(targetSD);
+  G4SDManager::GetSDMpointer()->AddNewDetector(targetSD);
+  /*
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
   G4String targetSDName = geo->GetTargetSensitiveDetectorName();
   printf("Registering Target SD %s\n",targetSDName.data());
   TargetSD* targetSD = new TargetSD(targetSDName);
   sdMan->AddNewDetector(targetSD);
   fTargetVolume->SetSensitiveDetector(targetSD);
+  */
 
 }

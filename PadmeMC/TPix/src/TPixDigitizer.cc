@@ -35,6 +35,7 @@ void TPixDigitizer::Digitize()
 
   // Get access to hit collection for TPix
   G4int tPixHCID = theDM->GetHitsCollectionID("TPixCollection");
+  if (tPixHCID<0) return;
   TPixHitsCollection* tPixHC = 0;
   tPixHC = (TPixHitsCollection*)(theDM->GetHitsCollection(tPixHCID));
 

@@ -28,6 +28,7 @@ void SACDigitizer::Digitize()
 
   // Get access to hit collection for SAC
   G4int sacHCID = theDM->GetHitsCollectionID("SACCollection");
+  if (sacHCID<0) return;
   SACHitsCollection* sacHC = 0;
   sacHC = (SACHitsCollection*)(theDM->GetHitsCollection(sacHCID));
 

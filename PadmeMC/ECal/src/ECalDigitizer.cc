@@ -28,6 +28,7 @@ void ECalDigitizer::Digitize()
 
   // Get access to hit collection for ECal
   G4int eCalHCID = theDM->GetHitsCollectionID("ECalCollection");
+  if (eCalHCID<0) return;
   ECalHitsCollection* eCalHC = 0;
   eCalHC = (ECalHitsCollection*)(theDM->GetHitsCollection(eCalHCID));
 

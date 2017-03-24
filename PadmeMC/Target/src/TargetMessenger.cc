@@ -9,9 +9,9 @@
 #include "TargetMessenger.hh"
 
 #include "G4UIdirectory.hh"
-#include "G4UIcommand.hh"
-#include "G4UIparameter.hh"
-#include "G4UIcmdWithAString.hh"
+//#include "G4UIcommand.hh"
+//#include "G4UIparameter.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithoutParameter.hh"
 
 #include "TargetDetector.hh"
@@ -26,26 +26,44 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fTargetDetectorDir = new G4UIdirectory("/Detector/Target/");
   fTargetDetectorDir->SetGuidance("UI commands to control Target detector geometry");
 
-  fSetTargetSizeCmd = new G4UIcommand("/Detector/Target/Size",this);
-  fSetTargetSizeCmd->SetGuidance("Set size (side of squared plaque) of Target detector in cm.");
-  G4UIparameter* tsSizeParameter = new G4UIparameter("Size",'d',false);
-  tsSizeParameter->SetParameterRange("Size >= 0.1 && Size <= 5.");
-  fSetTargetSizeCmd->SetParameter(tsSizeParameter);
+  fSetTargetSizeCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/Size",this);
+  fSetTargetSizeCmd->SetGuidance("Set size (side of squared plaque) of Target detector.");
+  fSetTargetSizeCmd->SetParameterName("Size",false);
+  fSetTargetSizeCmd->SetDefaultUnit("cm");
+  fSetTargetSizeCmd->SetRange("Size >= 0.1 && Size <= 5.");
   fSetTargetSizeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-
-  fSetTargetThicknessCmd = new G4UIcommand("/Detector/Target/Thickness",this);
-  fSetTargetThicknessCmd->SetGuidance("Set thickness of Target detector in um.");
-  G4UIparameter* ttThickParameter = new G4UIparameter("Thick",'d',false);
-  ttThickParameter->SetParameterRange("Thick >= 10. && Thick <= 500.");
-  fSetTargetThicknessCmd->SetParameter(ttThickParameter);
+ 
+  fSetTargetThicknessCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/Thickness",this);
+  fSetTargetThicknessCmd->SetGuidance("Set thickness of Target detector.");
+  fSetTargetThicknessCmd->SetParameterName("Thick",false);
+  fSetTargetThicknessCmd->SetDefaultUnit("um");
+  fSetTargetThicknessCmd->SetRange("Thick >= 10. && Thick <= 500.");
   fSetTargetThicknessCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetTargetFrontFaceZCmd = new G4UIcommand("/Detector/Target/FrontFaceZ",this);
-  fSetTargetFrontFaceZCmd->SetGuidance("Set position along Z of Target front face in cm.");
-  G4UIparameter* tffPosZParameter = new G4UIparameter("PosZ",'d',false);
-  tffPosZParameter->SetParameterRange("PosZ >= -100. && PosZ <= 100.");
-  fSetTargetFrontFaceZCmd->SetParameter(tffPosZParameter);
+  fSetTargetFrontFaceZCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/FrontFaceZ",this);
+  fSetTargetFrontFaceZCmd->SetGuidance("Set position along Z of Target front face (reference: center of magnet).");
+  fSetTargetFrontFaceZCmd->SetParameterName("PosZ",false);
+  fSetTargetFrontFaceZCmd->SetDefaultUnit("cm");
+  fSetTargetFrontFaceZCmd->SetRange("PosZ >= -100. && PosZ <= -56."); // Upper limit is close to back face of vacuum chamber
   fSetTargetFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fEnableFastDigitizationCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableFastDigitization",this);
+  fEnableFastDigitizationCmd->SetGuidance("Enable fast digitization for Target.");
+  fEnableFastDigitizationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fDisableFastDigitizationCmd = new G4UIcmdWithoutParameter("/Detector/Target/DisableFastDigitization",this);
+  fDisableFastDigitizationCmd->SetGuidance("Disable fast digitization for Target.");
+  fDisableFastDigitizationCmd->SetGuidance("WARNING: full digitization is VERY time consuming!");
+  fDisableFastDigitizationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fEnableSaveWaveformToDigiCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableSaveWaveformToDigi",this);
+  fEnableSaveWaveformToDigiCmd->SetGuidance("Enable saving of Target digitized waveforms to persistent digis.");
+  fEnableSaveWaveformToDigiCmd->SetGuidance("WARNING: saving waveforms adds O(300KB) of data to each event!");
+  fEnableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fDisableSaveWaveformToDigiCmd = new G4UIcmdWithoutParameter("/Detector/Target/DisableSaveWaveformToDigi",this);
+  fDisableSaveWaveformToDigiCmd->SetGuidance("Disable saving of Target digitized waveforms to persistent digis.");
+  fDisableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -58,26 +76,30 @@ TargetMessenger::~TargetMessenger()
   delete fSetTargetThicknessCmd;
   delete fSetTargetFrontFaceZCmd;
 
+  delete fEnableFastDigitizationCmd;
+  delete fDisableFastDigitizationCmd;
+  delete fEnableSaveWaveformToDigiCmd;
+  delete fDisableSaveWaveformToDigiCmd;
+
 }
 
 void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
 
   if ( cmd == fSetTargetSizeCmd ) {
-    G4double s; std::istringstream is(par); is >> s;
-    fTargetGeometry->SetTargetSizeX(s*cm);
-    fTargetGeometry->SetTargetSizeY(s*cm);
+    fTargetGeometry->SetTargetSizeX(fSetTargetSizeCmd->GetNewDoubleValue(par));
+    fTargetGeometry->SetTargetSizeY(fSetTargetSizeCmd->GetNewDoubleValue(par));
   }
 
-  if ( cmd == fSetTargetThicknessCmd ) {
-    G4double s; std::istringstream is(par); is >> s;
-    fTargetGeometry->SetTargetSizeZ(s*um);
-  }
+  if ( cmd == fSetTargetThicknessCmd )
+    fTargetGeometry->SetTargetSizeZ(fSetTargetThicknessCmd->GetNewDoubleValue(par));
 
-  if ( cmd == fSetTargetFrontFaceZCmd ) {
-    G4double z; std::istringstream is(par); is >> z;
-    printf("Setting TargetFrontFacePosZ to %f cm\n",z);
-    fTargetGeometry->SetTargetFrontFacePosZ(z*cm);
-  }
+  if ( cmd == fSetTargetFrontFaceZCmd )
+    fTargetGeometry->SetTargetFrontFacePosZ(fSetTargetFrontFaceZCmd->GetNewDoubleValue(par));
 
+  if ( cmd == fEnableFastDigitizationCmd )  fTargetGeometry->EnableFastDigitization();
+  if ( cmd == fDisableFastDigitizationCmd ) fTargetGeometry->DisableFastDigitization();
+
+  if ( cmd == fEnableSaveWaveformToDigiCmd )  fTargetGeometry->EnableSaveWaveformToDigi();
+  if ( cmd == fDisableSaveWaveformToDigiCmd ) fTargetGeometry->DisableSaveWaveformToDigi();
 }

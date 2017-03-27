@@ -64,9 +64,6 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   for (Int_t iH=0; iH<tSACEvent->GetNHits(); iH++) {
     TSACMCHit* hit = (TSACMCHit*)tSACEvent->Hit(iH);
     hit->Print();
-    if ( hit->GetChannelId() == 33 ) {
-      hit->PrintTHisto();
-    }
   }
 }
 

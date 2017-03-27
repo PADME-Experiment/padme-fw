@@ -27,7 +27,8 @@ SteppingAction::SteppingAction()
 void SteppingAction::UserSteppingAction(const G4Step* step)
 { 
 //  //Devi capire che fare con il monitor e che cosa succede con piu' di un interazione!!!!   |-------|
-  //return ;
+  //printf("Stepping\n");
+  // return; // Uncomment to disable MC analysis
   G4Track* track = step->GetTrack();
   //MySimEvent *evt = (MyEvent::GetInstance())->GetSimEvent();  
   

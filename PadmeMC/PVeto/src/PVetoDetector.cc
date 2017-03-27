@@ -25,6 +25,8 @@ PVetoDetector::PVetoDetector(G4LogicalVolume* motherVolume)
   // Connect to PVetoMessenger to enable datacard configuration
   fPVetoMessenger = new PVetoMessenger(this);
 
+  fPVetoDisplacePosZ = 0.; // No default displacement
+
 }
 
 PVetoDetector::~PVetoDetector()
@@ -39,7 +41,7 @@ void PVetoDetector::CreateGeometry()
 
   // Create main PVeto box
   printf("PVeto will be placed at %f %f %f\n",geo->GetPVetoPosX(),geo->GetPVetoPosY(),geo->GetPVetoPosZ());
-  G4ThreeVector posPVeto = G4ThreeVector(geo->GetPVetoPosX(),geo->GetPVetoPosY(),geo->GetPVetoPosZ()); 
+  G4ThreeVector posPVeto = G4ThreeVector(geo->GetPVetoPosX(),geo->GetPVetoPosY(),geo->GetPVetoPosZ()-fPVetoDisplacePosZ); 
   G4double pVetoX      = geo->GetPVetoSizeX();
   G4double pVetoY      = geo->GetPVetoSizeY();
   G4double pVetoLength = geo->GetPVetoSizeZ();

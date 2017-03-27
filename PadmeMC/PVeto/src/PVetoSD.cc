@@ -1,3 +1,10 @@
+// PVetoSD.cc
+// --------------------------------------------------------------
+// History:
+//
+// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
+// --------------------------------------------------------------
+
 #include "PVetoSD.hh"
 
 #include "G4HCofThisEvent.hh"
@@ -17,8 +24,7 @@ PVetoSD::~PVetoSD(){ }
 
 void PVetoSD::Initialize(G4HCofThisEvent* HCE)
 {
-  fPVetoCollection = new PVetoHitsCollection
-                          (SensitiveDetectorName,collectionName[0]); 
+  fPVetoCollection = new PVetoHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
   if (HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   HCE->AddHitsCollection(HCID,fPVetoCollection); 
@@ -44,17 +50,18 @@ G4bool PVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
-  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
+
+  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   fPVetoCollection->insert(newHit);
 

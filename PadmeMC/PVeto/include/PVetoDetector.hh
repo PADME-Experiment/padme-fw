@@ -27,12 +27,17 @@ public:
   G4LogicalVolume* GetPVetoLogicalVolume() { return fPVetoVolume; }
   G4LogicalVolume* GetFingerLogicalVolume() { return fFingerVolume; }
 
+  // Define displacement of PVeto along Z due to position of magnetic volume
+  void SetPVetoDisplacePosZ(G4double z) { fPVetoDisplacePosZ = z; }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fPVetoVolume;
   G4LogicalVolume* fFingerVolume;
   PVetoMessenger* fPVetoMessenger;
+
+  G4double fPVetoDisplacePosZ; // Displacement of PVeto along Z due to positioning inside magnetic volume
 
 };
 

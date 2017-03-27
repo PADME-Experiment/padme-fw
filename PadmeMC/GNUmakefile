@@ -11,7 +11,7 @@
 name := PADMEMC
 G4TARGET := $(name)
 G4EXLIB  := true
-SUBDIRS  := Beam ECal Target SAC LAV PVeto EVeto HEPVeto Magnet TDump TPix Chamber Hall
+SUBDIRS  := Beam ECal Target SAC LAV PVeto EVeto HEPVeto Magnet TDump TPix Chamber Hall MagneticField
 ALLTARGETDIRS := $(SUBDIRS)
 
 LOCALDIR := ${PWD}

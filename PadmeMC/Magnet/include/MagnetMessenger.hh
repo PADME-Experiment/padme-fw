@@ -35,15 +35,15 @@ private:
 
   G4UIdirectory* fMagnetDetectorDir;
 
-  G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
-  G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
+  //G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
+  //G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
 
-  G4UIcmdWithoutParameter* fSetMagneticVolumeVisibleCmd;
-  G4UIcmdWithoutParameter* fSetMagneticVolumeInvisibleCmd;
+  //G4UIcmdWithoutParameter* fSetMagneticVolumeVisibleCmd;
+  //G4UIcmdWithoutParameter* fSetMagneticVolumeInvisibleCmd;
 
-  G4UIcommand* fSetVacuumChamberWallThicknessCmd;
+  //G4UIcommand* fSetVacuumChamberWallThicknessCmd;
 
-  G4UIcommand* fSetMagneticFieldConstantValueCmd;
+  //G4UIcommand* fSetMagneticFieldConstantValueCmd;
 
 };
 #endif

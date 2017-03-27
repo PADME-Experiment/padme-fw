@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "G4Event.hh"
+#include "G4UnitsTable.hh"
 
 #include "RootIOManager.hh"
 #include "TargetGeometry.hh"
@@ -114,17 +115,23 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	  G4double e_tot = 0.;
 	  for(G4int i=0;i<n_hit;i++) {
 	    TTargetMCHit* Hit = (TTargetMCHit*)fEvent->AddHit();
-	    //Hit->SetChannelId((*TargetC)[i]->GetCryNb()); 
-	    Hit->SetChannelId(0); 
+	    Hit->SetChannelId(0);
+	    Hit->SetTime((*TargetC)[i]->GetTime());
+	    /* Old hits style
 	    Hit->SetPosition(TVector3((*TargetC)[i]->GetPos()[0],
 				      (*TargetC)[i]->GetPos()[1],
 				      (*TargetC)[i]->GetPos()[2])
 			     );
 	    Hit->SetEnergy((*TargetC)[i]->GetEdep());
 	    e_tot += (*TargetC)[i]->GetEdep()/MeV;
-	    Hit->SetTime((*TargetC)[i]->GetTime());
+	    */
+	    Hit->SetPosition(TVector3((*TargetC)[i]->GetPosX(),
+				      (*TargetC)[i]->GetPosY(),
+				      (*TargetC)[i]->GetPosZ()));
+	    Hit->SetEnergy((*TargetC)[i]->GetEnergy());
+	    e_tot += Hit->GetEnergy();
 	  }
-	  G4cout << "TargetRootIO: " << n_hit << " hits with " << e_tot << " MeV total energy" << G4endl;
+	  G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	}
       }
     }

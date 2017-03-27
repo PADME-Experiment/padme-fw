@@ -14,8 +14,10 @@
 
 class TPixDetector;
 class TPixGeometry;
+
 class G4UIdirectory;
-class G4UIcommand;
+class G4UIcmdWithAnInteger;
+class G4UIcmdWithADoubleAndUnit;
 
 class TPixMessenger: public G4UImessenger
 {
@@ -33,15 +35,8 @@ private:
 
   G4UIdirectory* fTPixDetectorDir;
 
-  G4UIcommand* fSetTPixNColumnsCmd;
-
-  G4UIcommand* fSetTPixPosXCmd;
-  //G4UIcommand* fSetTPixPosYCmd;
-  G4UIcommand* fSetTPixPosZCmd;
-
-  //G4UIcommand* fSetTPixRotXCmd;
-  G4UIcommand* fSetTPixRotYCmd;
-  //G4UIcommand* fSetTPixRotZCmd;
+  G4UIcmdWithAnInteger* fSetNColumnsCmd;
+  G4UIcmdWithADoubleAndUnit* fSetDistToCornerCmd;
 
 };
 #endif

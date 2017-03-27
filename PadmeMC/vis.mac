@@ -1,11 +1,10 @@
-# Macro file for the initialization phase of "exampleN02.cc"
-# when runing in interactive mode
+# Macro file for the visualization of the PADME experiment
 #
 # Sets some default verbose
 #
 /control/verbose 1
 /run/verbose 1
-#/tracking/verbose 1
+/tracking/verbose 1
 
 # RootIO settings
 
@@ -24,24 +23,24 @@
 #/output/EnableDetectorIO SAC
 
 # Disable IO for single detectors
-#/output/DisableDetectorIO ECal
-#/output/DisableDetectorIO Target
-#/output/DisableDetectorIO PVeto
-#/output/DisableDetectorIO EVeto
-#/output/DisableDetectorIO HEPVeto
-#/output/DisableDetectorIO SAC
+/output/DisableDetectorIO ECal
+/output/DisableDetectorIO Target
+/output/DisableDetectorIO PVeto
+/output/DisableDetectorIO EVeto
+/output/DisableDetectorIO HEPVeto
+/output/DisableDetectorIO SAC
 
 # Detector settings
 
 #/Detector/EnableSubDetector ECal
 #/Detector/EnableSubDetector Target
 #/Detector/EnableSubDetector SAC
-#/Detector/EnableSubDetector LAV
 #/Detector/EnableSubDetector PVeto
 #/Detector/EnableSubDetector EVeto
 #/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
 #/Detector/EnableSubDetector TPix
+
 #/Detector/EnableStructure Wall
 #/Detector/EnableStructure Magnet
 #/Detector/EnableStructure Chamber
@@ -49,26 +48,32 @@
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector SAC
-#/Detector/DisableSubDetector LAV
 #/Detector/DisableSubDetector PVeto
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 #/Detector/DisableSubDetector TDump
 #/Detector/DisableSubDetector TPix 
+
 #/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
 
+#/Detector/SetChamberVisible
+#/Detector/SetChamberInvisible
+
+#/Detector/EnableMagneticField
+#/Detector/DisableMagneticField
+#/Detector/SetMagneticFieldValue -0.55 tesla
+
+#/Detector/SetMagneticVolumeVisible
+#/Detector/SetMagneticVolumeInvisible
+
+#/Detector/WorldIsAir
+/Detector/WorldIsVacuum
+
 #/Detector/Target/FrontFaceZ -50.
 #/Detector/Target/Size 2.
 #/Detector/Target/Thickness 100.
-
-#/Detector/Magnet/VacuumChamberWallThickness 1.5
-#/Detector/Magnet/SetMagneticVolumeVisible
-#/Detector/Magnet/SetMagneticVolumeInvisible
-#/Detector/Magnet/EnableMagneticField
-#/Detector/Magnet/DisableMagneticField
-#/Detector/Magnet/MagneticFieldConstantValue -0.55
 
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
@@ -102,15 +107,11 @@
 #/Detector/EVeto/FingerSize 1.
 #/Detector/EVeto/FingerLength 16.
 
-#/Detector/HEPVeto/NFingers 50
-#/Detector/HEPVeto/FingerSize 1.
-#/Detector/HEPVeto/FingerLength 20.
-#/Detector/HEPVeto/PositionX -93.
-#/Detector/HEPVeto/PositionY 0.      # Disabled
-#/Detector/HEPVeto/PositionZ 250.
-#/Detector/HEPVeto/RotationX 0.      # Disabled
-#/Detector/HEPVeto/RotationY -0.977
-#/Detector/HEPVeto/RotationZ 0.      # Disabled
+#/Detector/HEPVeto/NFingers 32
+#/Detector/HEPVeto/FingerStep 1.1 cm
+#/Detector/HEPVeto/FingerSize 1. cm
+#/Detector/HEPVeto/FingerLength 20. cm
+#/Detector/HEPVeto/DistanceToCorner 40. cm
 
 #/Detector/TDump/TargetRadius 3.5
 #/Detector/TDump/TargetLength 6.0
@@ -147,7 +148,8 @@
 # Beam setup
 
 # Example for single three photon events
-#/beam/n_e+_per_bunch 1
+/beam/n_e+_per_bunch 1
+/beam/n_e+_poisson_on false
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
 
@@ -192,6 +194,7 @@
 #
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
+###/vis/open HepRepFile
 #
 # Use this open statement to create a .prim file suitable for
 # viewing in DAWN:
@@ -221,9 +224,11 @@
 # Side view
 #/vis/viewer/set/viewpointThetaPhi 90. 0. deg
 # Top view
-/vis/viewer/set/viewpointThetaPhi 90. 90. deg
+#/vis/viewer/set/viewpointThetaPhi 90. 90. deg
 # Front view
 #/vis/viewer/set/viewpointThetaPhi 0. 0. deg
+# Back view
+/vis/viewer/set/viewpointThetaPhi 180. 0. deg
 
 # Specify view angle:
 #/vis/viewer/set/viewpointThetaPhi 90. 180.
@@ -275,9 +280,9 @@
 /vis/scene/endOfEventAction accumulate 10000
 #/vis/viewer/set/viewpointThetaPhi 90. 180.
 #/vis/viewer/set/viewpointThetaPhi 180. 0.
-/vis/viewer/set/viewpointThetaPhi 90. 90.
+#/vis/viewer/set/viewpointThetaPhi 90. 90.
 #/vis/viewer/zoom 1.5
-/vis/viewer/zoom 0.5
+#/vis/viewer/zoom 0.5
 #/vis/scene/add/axes 0 -50. -50. 30. cm
 /vis/viewer/flush
 

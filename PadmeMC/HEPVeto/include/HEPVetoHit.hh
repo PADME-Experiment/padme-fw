@@ -17,6 +17,7 @@
 
 class HEPVetoHit : public G4VHit
 {
+
 public:
 
   HEPVetoHit();
@@ -59,7 +60,6 @@ public:
   
   void SetTrackEnergy(G4double e) { fTrackEnergy = e; }
   G4double GetTrackEnergy() { return fTrackEnergy; }
-
 
   // Kept for backward compatibility
   void SetTrackID (G4int track) { fTrackId = track; };

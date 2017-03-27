@@ -1,14 +1,13 @@
-//#include "InputParam.input"
 #include "Constants.hh" 
+
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
-//#include "MagneticField.hh"
-//#include "MagneticFieldSetup.hh"
+
+#include "MagneticFieldSetup.hh"
 
 #include "TargetDetector.hh"
 #include "ECalDetector.hh"
 #include "SACDetector.hh"
-#include "LAVDetector.hh"
 #include "PVetoDetector.hh"
 #include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
@@ -19,39 +18,45 @@
 #include "ChamberStructure.hh"
 #include "HallStructure.hh"
 
+#include "TargetGeometry.hh"
+#include "ECalGeometry.hh"
+#include "SACGeometry.hh"
+#include "PVetoGeometry.hh"
+#include "EVetoGeometry.hh"
+#include "HEPVetoGeometry.hh"
+#include "TDumpGeometry.hh"
 #include "TPixGeometry.hh"
-#include "MagnetGeometry.hh"
 
-#include "TRodSD.hh"
-#include "MRodSD.hh"
-#include "TrackerSD.hh"
-#include "GFiltSD.hh"
+#include "MagnetGeometry.hh"
+#include "ChamberGeometry.hh"
+#include "HallGeometry.hh"
 
 #include "G4Material.hh"
 
 #include "G4Box.hh"
 #include "G4Tubs.hh"
-#include "G4Cons.hh"
+#include "G4UnionSolid.hh"
+//#include "G4Cons.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
-#include "G4PVParameterised.hh"
-#include "G4SDManager.hh"
-#include "G4GeometryTolerance.hh"
-#include "G4GeometryManager.hh"
+//#include "G4PVParameterised.hh"
+//#include "G4SDManager.hh"
+//#include "G4GeometryTolerance.hh"
+//#include "G4GeometryManager.hh"
 #include "G4RotationMatrix.hh"
-#include "G4SubtractionSolid.hh"
+//#include "G4SubtractionSolid.hh"
 
-#include "G4UserLimits.hh"
+//#include "G4UserLimits.hh"
 #include "G4NistManager.hh"
-#include "G4VSDFilter.hh"
-#include "G4SDParticleFilter.hh"
-#include "G4MultiFunctionalDetector.hh"
-#include "G4VPrimitiveScorer.hh"
-#include "G4PSEnergyDeposit.hh"
-#include "G4PSNofSecondary.hh"
-#include "G4PSTrackLength.hh"
-#include "G4PSNofStep.hh"
-#include "G4PSMinKinEAtGeneration.hh"
+//#include "G4VSDFilter.hh"
+//#include "G4SDParticleFilter.hh"
+//#include "G4MultiFunctionalDetector.hh"
+//#include "G4VPrimitiveScorer.hh"
+//#include "G4PSEnergyDeposit.hh"
+//#include "G4PSNofSecondary.hh"
+//#include "G4PSTrackLength.hh"
+//#include "G4PSNofStep.hh"
+//#include "G4PSMinKinEAtGeneration.hh"
 
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
@@ -62,17 +67,14 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 DetectorConstruction::DetectorConstruction()
-:solidWorld(0),  logicWorld(0),  physiWorld(0), stepLimit(0), fWorldLength(0.)
+:fWorldLength(0.)
 {
 
-  //fEmFieldSetup = new F03FieldSetup();
-  //fEmFieldSetup = new MagneticFieldSetup();
   fDetectorMessenger = new DetectorMessenger(this);
 
   fECalDetector    = new ECalDetector(0);
   fTargetDetector  = new TargetDetector(0);
   fSACDetector     = new SACDetector(0);
-  fLAVDetector     = new LAVDetector(0);
   fPVetoDetector   = new PVetoDetector(0);
   fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
@@ -83,19 +85,31 @@ DetectorConstruction::DetectorConstruction()
   fChamberStructure = new ChamberStructure(0);
   fHallStructure    = new HallStructure(0);
 
+  fMagneticFieldManager = new MagneticFieldSetup();
+
   fEnableECal    = 1;
   fEnableTarget  = 1;
   fEnableSAC     = 1;
-  fEnableLAV     = 0;
   fEnablePVeto   = 1;
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
   fEnableTDump   = 0;
-  fEnableTPix    = 0;
+  fEnableTPix    = 1;
 
   fEnableWall    = 0;
-  fEnableChamber = 1;
   fEnableMagnet  = 1;
+
+  fEnableMagneticField = 1;
+  fMagneticVolumeIsVisible = 0;
+
+  fEnableChamber = 1;
+  fChamberIsVisible = 1;
+
+  fWorldIsFilledWithAir = 1;
+
+  fWorldLength = 12.*m;
+
+  DefineMaterials();
 
 }
 
@@ -103,15 +117,13 @@ DetectorConstruction::DetectorConstruction()
  
 DetectorConstruction::~DetectorConstruction()
 {
-  //delete fMagField;
-  //if (fEmFieldSetup) delete fEmFieldSetup ;
-  delete stepLimit;
+
+  //delete stepLimit;
   delete fDetectorMessenger;             
 
   delete fECalDetector;
   delete fTargetDetector;
   delete fSACDetector;
-  delete fLAVDetector;
   delete fPVetoDetector;
   delete fEVetoDetector;
   delete fHEPVetoDetector;
@@ -120,82 +132,263 @@ DetectorConstruction::~DetectorConstruction()
   delete fMagnetStructure;
   delete fChamberStructure;
   delete fHallStructure;
+  delete fMagneticFieldManager;
 
-}
-
-void DetectorConstruction::EnableSubDetector(G4String det)
-{
-  printf("Enabling subdetector %s\n",det.data());
-  if      (det=="ECal")    { fEnableECal    = 1; }
-  else if (det=="Target")  { fEnableTarget  = 1; }
-  else if (det=="SAC")     { fEnableSAC     = 1; }
-  else if (det=="LAV")     { fEnableLAV     = 1; }
-  else if (det=="PVeto")   { fEnablePVeto   = 1; }
-  else if (det=="EVeto")   { fEnableEVeto   = 1; }
-  else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
-  else if (det=="TDump")   { fEnableTDump   = 1; }
-  else if (det=="TPix")    { fEnableTPix    = 1; }
-  else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
-}
-
-void DetectorConstruction::DisableSubDetector(G4String det)
-{
-  printf("Disabling subdetector %s\n",det.data());
-  if      (det=="ECal")    { fEnableECal    = 0; }
-  else if (det=="Target")  { fEnableTarget  = 0; }
-  else if (det=="SAC")     { fEnableSAC     = 0; }
-  else if (det=="LAV")     { fEnableLAV     = 0; }
-  else if (det=="PVeto")   { fEnablePVeto   = 0; }
-  else if (det=="EVeto")   { fEnableEVeto   = 0; }
-  else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
-  else if (det=="TDump")   { fEnableTDump   = 0; }
-  else if (det=="TPix")    { fEnableTPix    = 0; }
-  else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
-}
-
-void DetectorConstruction::EnableStructure(G4String str)
-{
-  printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall   = 1;  }
-  else if (str=="Chamber") { fEnableChamber = 1; }
-  else if (str=="Magnet")  { fEnableMagnet = 1;  }
-  else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
-}
-
-void DetectorConstruction::DisableStructure(G4String str)
-{
-  printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall   = 0;  }
-  else if (str=="Chamber") { fEnableChamber = 0; }
-  else if (str=="Magnet")  { fEnableMagnet = 0;  }
-  else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
 G4VPhysicalVolume* DetectorConstruction::Construct()
 {
 
-//--------- Material definition ---------
+  // Access some useful geometries
+  ChamberGeometry* geoChamber = ChamberGeometry::GetInstance();
+  HEPVetoGeometry* geoHEPVeto = HEPVetoGeometry::GetInstance();
+  TPixGeometry* geoTPix = TPixGeometry::GetInstance();
+
+  //------------------------------
+  // World Volume
+  //------------------------------  
+  G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
+  G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
+
+  /*
+  // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
+  // but excludes calorimeters
+
+  G4double magVolMinX = -fChamberStructure->GetChamberMostExternalX()-1.*cm;
+  G4double magVolMaxX =  fChamberStructure->GetChamberMostExternalX()+1.*cm;
+
+  G4double magVolMinY = -100.*cm;
+  G4double magVolMaxY =  100.*cm;
+
+  G4double magVolMinZ = -fChamberStructure->GetChamberMostAdvancedZ()-0.1*mm;
+  G4double magVolMaxZ =  fChamberStructure->GetChamberMostAdvancedZ()+0.1*mm; // Right after the thin window flange
+
+  G4double magVolPosX = 0.5*(magVolMinX+magVolMaxX);
+  G4double magVolPosY = 0.5*(magVolMinY+magVolMaxY);
+  G4double magVolPosZ = 0.5*(magVolMinZ+magVolMaxZ);
+  G4ThreeVector magVolPos = G4ThreeVector(magVolPosX,magVolPosY,magVolPosZ);
+
+  G4double magVolHLX = 0.5*(magVolMaxX-magVolMinX);
+  G4double magVolHLY = 0.5*(magVolMaxY-magVolMinY);
+  G4double magVolHLZ = 0.5*(magVolMaxZ-magVolMinZ);
+
+  //printf ("--- Magnetic Volume ---\n");
+  //printf ("%f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
+  //printf ("%f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
+  //printf ("%f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
+
+  G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
+  G4LogicalVolume* logicMagneticVolume =
+    new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("G4_AIR"),"MagneticVolume",0,0,0);
+  if (! fWorldIsFilledWithAir) logicMagneticVolume->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  if (! fMagneticVolumeIsVisible) logicMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
+  */
+
+  // Vacuum chamber structure
+  // Note: vacuum volume is always created, only the physical structure is switched on/off
+  if (fEnableChamber) {
+    fChamberStructure->EnableChamber();
+  } else {
+    fChamberStructure->DisableChamber();
+  }
+  if (fChamberIsVisible) {
+    fChamberStructure->SetChamberVisible();
+  } else {
+    fChamberStructure->SetChamberInvisible();
+  }
+  //fChamberStructure->SetMotherVolume(logicMagneticVolume);
+  fChamberStructure->SetMotherVolume(logicWorld);
+  fChamberStructure->CreateGeometry();
+
+  // Create magnetic volume inside vacuum chamber
+
+  G4double magVolMinX = -geoChamber->GetVCInnerX()+1.*um;
+  G4double magVolMinY = -geoChamber->GetVCInnerY()+1.*um;
+  G4double magVolMinZ =  geoChamber->GetVCInnerZ()+1.*um;
+
+  G4double magVolMaxX =  geoChamber->GetVCInnerX()-1.*um;
+  G4double magVolMaxY =  geoChamber->GetVCInnerY()-1.*um;
+  G4double magVolMaxZ =  100.*cm; // from field map definition
+
+  G4double magVolPosX = 0.5*(magVolMinX+magVolMaxX);
+  G4double magVolPosY = 0.5*(magVolMinY+magVolMaxY);
+  G4double magVolPosZ = 0.5*(magVolMinZ+magVolMaxZ);
+  G4ThreeVector magVolPos = G4ThreeVector(magVolPosX,magVolPosY,magVolPosZ);
+
+  G4double magVolHLX = 0.5*(magVolMaxX-magVolMinX);
+  G4double magVolHLY = 0.5*(magVolMaxY-magVolMinY);
+  G4double magVolHLZ = 0.5*(magVolMaxZ-magVolMinZ);
+
+  printf ("--- Magnetic Volume ---\n");
+  printf ("Min/max coords %f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
+  printf ("Half sides %f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
+  printf ("Position %f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
+  printf ("-----------------------\n");
+
+  G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
+  G4LogicalVolume* logicMagneticVolumeVC =
+    new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
+
+  // Create magnetic volume inside crossed pipes at target
+
+  G4double cpzRIn = geoChamber->GetCPZRIn();
+  G4double cpzLen = geoChamber->GetCPZLength()+geoChamber->GetVCInHoleThick();
+  G4Tubs* solidCPZ = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
+  G4ThreeVector posCPZ(0.,0.,geoChamber->GetCPZPosZ()+0.5*geoChamber->GetVCInHoleThick());
+
+  G4double cpxRIn = geoChamber->GetCPXRIn();
+  G4double cpxLen = geoChamber->GetCPXLength();
+  G4Tubs* solidCPX = new G4Tubs("CPX",0.,cpxRIn-1.*um,0.5*cpxLen,0.*deg,360.*deg);
+
+  G4ThreeVector posCPX(0.,0.,-0.5*geoChamber->GetVCInHoleThick());
+  G4RotationMatrix* rotCPX = new G4RotationMatrix;
+  rotCPX->rotateY(90.*deg);
+  G4UnionSolid* solidCP = new G4UnionSolid("MVCP",solidCPZ,solidCPX,rotCPX,posCPX);
+
+  G4LogicalVolume* logicMagneticVolumeCP =
+    new G4LogicalVolume(solidCP,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
+  if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,posCPZ,logicMagneticVolumeCP,"MagneticVolumeCP",fChamberStructure->GetChamberLogicalVolume(),false,0);
+
+  // Add magnetic field to volumes
+  if (fEnableMagneticField) {
+    //MagneticFieldSetup* magField = new MagneticFieldSetup();
+    logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
+    logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
+  }
+
+  // Concrete wall at large Z
+  if (fEnableWall) {
+    fHallStructure->SetMotherVolume(logicWorld);
+    fHallStructure->CreateGeometry();
+  }
+
+  // Magnet physical structure
+  if (fEnableMagnet) { 
+    //fMagnetStructure->SetMotherVolume(logicMagneticVolume);
+    fMagnetStructure->SetMotherVolume(logicWorld);
+    fMagnetStructure->CreateGeometry();
+  }
+
+  /*
+  // Vacuum chamber structure
+  // Note: vacuum volume is always created, only the physical structure is switched on/off
+  if (fEnableChamber) {
+    fChamberStructure->EnableChamber();
+  } else {
+    fChamberStructure->DisableChamber();
+  }
+  if (fChamberIsVisible) {
+    fChamberStructure->SetChamberVisible();
+  } else {
+    fChamberStructure->SetChamberInvisible();
+  }
+  fChamberStructure->SetMotherVolume(logicMagneticVolume);
+  fChamberStructure->CreateGeometry();
+  */
+
+  // Target
+  if (fEnableTarget) {
+    //fTargetDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
+    fTargetDetector->SetMotherVolume(logicMagneticVolumeCP);
+    fTargetDetector->SetTargetDisplacePosZ(posCPZ.z());
+    fTargetDetector->CreateGeometry();
+  }
+
+  // SAC
+  if (fEnableSAC) {
+    fSACDetector->SetMotherVolume(logicWorld);
+    fSACDetector->CreateGeometry();
+  }
+
+  // TDump
+  if (fEnableTDump) {
+    fTDumpDetector->SetMotherVolume(logicWorld);
+    fTDumpDetector->CreateGeometry();
+  }
+
+  // TPix
+  if (fEnableTPix) {
+    //fTPixDetector->SetMotherVolume(logicMagneticVolume);
+    fTPixDetector->SetMotherVolume(logicWorld);
+    // Position of TPix depends on shape of vacuum chamber
+    geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
+    geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
+    fTPixDetector->CreateGeometry();
+  }
+
+  // ECal
+  if (fEnableECal) {
+    fECalDetector->SetMotherVolume(logicWorld);
+    fECalDetector->CreateGeometry();
+  }
+
+  // PVeto
+  if (fEnablePVeto) {
+    fPVetoDetector->SetMotherVolume(logicMagneticVolumeVC);
+    fPVetoDetector->SetPVetoDisplacePosZ(magVolPosZ);
+    //fPVetoDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
+    fPVetoDetector->CreateGeometry();
+  }
+
+  // EVeto
+  if (fEnableEVeto) {
+    fEVetoDetector->SetMotherVolume(logicMagneticVolumeVC);
+    fEVetoDetector->SetEVetoDisplacePosZ(magVolPosZ);
+    //fEVetoDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
+    fEVetoDetector->CreateGeometry();
+  }
+
+  // HEPVeto
+  if (fEnableHEPVeto) {
+    fHEPVetoDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
+    // Position of HEPVeto depends on shape of vacuum chamber
+    geoHEPVeto->SetHEPVetoChamberWallThickness(geoChamber->GetVCBackFaceThickness());
+    geoHEPVeto->SetHEPVetoChamberWallAngle(geoChamber->GetVCBackFaceAngle());
+    geoHEPVeto->SetHEPVetoChamberWallCorner(geoChamber->GetVCBackFaceCorner());
+    fHEPVetoDetector->CreateGeometry();
+  }
+
+  return physicWorld;
+
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void DetectorConstruction::SetupDetectors()
+{}
+ 
+void DetectorConstruction::DefineMaterials()
+{
+
+  //--------- Materials definition ---------
   G4double a, z, density;
   G4int ncomponents, natoms;
   G4double fractionmass;  
-  
-  G4Material* Vacuum;
-  G4Material* FewAir;
 
-  //LSO crystals for the calorimeter L2S1O5
+  // A few useful elements
   G4Element* O  = new G4Element("Oxygen",   "O",  z= 8., a=16.00*g/mole);
   G4Element* N  = new G4Element("Nitrogen" ,"N" , z= 7., a=14.01*g/mole);
   G4Element* Lu = new G4Element("Lutetium", "Lu", z=71., a=174.97*g/mole);
   G4Element* Si = new G4Element("Silicon",  "Si", z=14., a=28.09*g/mole);
 
+  // Vacuum inside vacuum chamber
+  G4Material* Vacuum;
   if(IsResGasON==1) {
-    //    Vacuum = new G4Material("Vacuum",z=1.,a=1.01*g/mole,VacuumDensity*mg/cm3,kStateGas,2.93*kelvin,VacuumP*bar);    
     Vacuum = new G4Material("Vacuum", density= (1.290*0.000001)*mg/cm3, ncomponents=2); //1mbar
     Vacuum->AddElement(N, fractionmass=70.*perCent);
     Vacuum->AddElement(O, fractionmass=30.*perCent);
   }else{
     Vacuum = new G4Material("Vacuum",z=1.,a=1.01*g/mole,universe_mean_density,kStateGas,2.73*kelvin,3.e-18*pascal);
   }
+
+  //LSO crystals for the calorimeter L2S1O5
   G4Material* LSO = new G4Material("LSO", density=7.4*g/cm3,3);
   LSO->AddElement(Lu,2);
   LSO->AddElement(Si,1);
@@ -219,6 +412,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4Material* Al       = man->FindOrBuildMaterial("G4_Al");
   G4Material* Silicon  = man->FindOrBuildMaterial("G4_Si");
   G4Material* Neoprene = man->FindOrBuildMaterial("G4_NEOPRENE");
+  G4Material* Mylar = man->FindOrBuildMaterial("G4_MYLAR");
   G4Material* Plexiglass = man->FindOrBuildMaterial("G4_PLEXIGLASS");
   G4Material* StainlessSteel = man->FindOrBuildMaterial("G4_STAINLESS-STEEL");
   G4Material* Oxygen = man->FindOrBuildMaterial("G4_O");
@@ -280,6 +474,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   myMPTPbGl->AddProperty("ABSLENGTH",PhotonEnergy, AbsorptionPbGl, nEntries);
   PbGl->SetMaterialPropertiesTable(myMPTPbGl);
 
+  // Kevlar used for ECal window
+  G4Material* Kevlar = new G4Material("Kevlar",1.44*g/cm3,4);
+  Kevlar -> AddElement(G4Element::GetElement("H"),0.04);
+  Kevlar -> AddElement(G4Element::GetElement("C"),0.71);
+  Kevlar -> AddElement(G4Element::GetElement("O"),0.12);
+  Kevlar -> AddElement(G4Element::GetElement("N"),0.13);
+
   // Diamond material to be used by target
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
   Diamond->AddElement(G4Element::GetElement("C"),100.*perCent);
@@ -297,457 +498,26 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   //G4cout << *(G4Material::GetMaterialTable()) << G4endl;
   
-  //------------------------------ 
-  // World Volume
-  //------------------------------  
-  //G4GeometryManager::GetInstance()->SetWorldMaximumExtent(fWorldLength);
-  //  G4cout<<"Computed tolerance = "<<G4GeometryTolerance::GetInstance()->GetSurfaceTolerance()/mm<<" mm" << G4endl;
-  WorldMater=Vacuum;
-  G4double HalfWorldLength = 0.5*WorldLength*m;
-  
-  solidWorld = new G4Box("World",HalfWorldLength,HalfWorldLength,HalfWorldLength);
-  logicWorld = new G4LogicalVolume(solidWorld,WorldMater,"World",0,0,0);
-  physiWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
- 
-  if(IsPipeON==1){
-
-    // Create btf beam pipe
-    G4double Pipe_ZLength      = 1.*m;
-    G4double Pipe_ZLength1     = 12.*cm;
-    G4double Pipe_AlThickness  = 3.*mm;
-    G4double Pipe_InnerRadius  = 4.*cm-Pipe_AlThickness;
-    G4double Pipe_OuterRadius  = 4.*cm;
-    G4ThreeVector posPipe   = G4ThreeVector(0.,0.,-0.5*Pipe_ZLength-2.*cm);
-    G4ThreeVector posPipe1  = G4ThreeVector(0.,0.,TargetPosiZ*cm+2.*cm+Pipe_ZLength1/2);
-    
-    G4Tubs* solidPipe = new G4Tubs("solidPipe",Pipe_InnerRadius,Pipe_OuterRadius,0.5*Pipe_ZLength,0.*rad,2.*M_PI*rad);
-    G4LogicalVolume* logicPipe    = new G4LogicalVolume(solidPipe,Al,"LogicPipe",0,0,0);
-    G4VPhysicalVolume * physiPipe = new G4PVPlacement(0,posPipe,logicPipe,"UpPipe",logicWorld,false,0);
-
-    G4Tubs* solidPipe1 = new G4Tubs("solidPipe1",Pipe_InnerRadius,Pipe_OuterRadius,0.5*Pipe_ZLength1,0.*rad,2.*M_PI*rad);
-    G4LogicalVolume* logicPipe1    = new G4LogicalVolume(solidPipe1,Al,"LogicPipe1",0,0,0);
-    G4VPhysicalVolume * physiPipe1 = new G4PVPlacement(0,posPipe1,logicPipe1,"UpPipe1",logicWorld,false,0);
-
-  }
-
-  if(IsSpecInside==1){
-
-    G4double Tolerance=1.*um; //avoid overlap with Yoke and Gem
-    G4double solidVacChambXSize=3*mm; 
-    G4double solidVacChambYSize=40*cm;
-    G4double solidVacChambZSize=1.1*m;
-
-    G4double solidVacChambXPos=10*cm-solidVacChambXSize/2; 
-    G4double solidVacChambYPos=0*cm;
-    G4double solidVacChambZPos=MagnetPosiZ*cm;
-
-    //Flat Part
-    G4ThreeVector posVacChambUp = G4ThreeVector(solidVacChambXPos,solidVacChambYPos,solidVacChambZPos);
-    G4ThreeVector posVacChambDw = G4ThreeVector(-solidVacChambXPos,solidVacChambYPos,solidVacChambZPos);
-    G4Box* solidVacChamb = new G4Box("solidVacChamb",(solidVacChambXSize-Tolerance)/2,(solidVacChambYSize-Tolerance)/2,solidVacChambZSize/2);
-    G4LogicalVolume* logicVacChamb = new G4LogicalVolume(solidVacChamb,Al, "logicVacCham", 0, 0, 0);
-    G4VPhysicalVolume * vacChambUp = new G4PVPlacement(0,posVacChambUp,logicVacChamb,"VacChambUp",logicWorld,false,0);
-    G4VPhysicalVolume * vacChambDw = new G4PVPlacement(0,posVacChambDw,logicVacChamb,"VacChambDw",logicWorld,false,0);
-
-    //curved lateral parts
-    G4double Cham_ZLength = 1.1*m;
-    G4double Cham_AlThick = 3*mm; //avoid overlap with Yoke and Gem
-    G4double Cham_InnRad  = 10.*cm-Cham_AlThick;
-    G4double Cham_OutRad  = 10.*cm;
-
-    G4ThreeVector posVacChamSide  = G4ThreeVector(0.,20.*cm,MagnetPosiZ*cm);
-    G4ThreeVector posVacChamSide1 = G4ThreeVector(0.,-20.*cm,MagnetPosiZ*cm);
-
-    G4Tubs* solidVacChamSide = new G4Tubs("solidVacChamSide",Cham_InnRad,Cham_OutRad-Tolerance,0.5*Cham_ZLength,0.*rad,M_PI*rad);
-    G4Tubs* solidVacChamSide1 = new G4Tubs("solidVacChamSide",Cham_InnRad,Cham_OutRad-Tolerance,0.5*Cham_ZLength,M_PI*rad,M_PI*rad);
-    G4LogicalVolume* logicChamSide = new G4LogicalVolume(solidVacChamSide,Al,"LogicChamSide",0,0,0);
-    G4LogicalVolume* logicChamSide1 = new G4LogicalVolume(solidVacChamSide1,Al,"LogicChamSide",0,0,0);
-    G4VPhysicalVolume * vacChambLS = new G4PVPlacement(0,posVacChamSide,logicChamSide,"VacChambLS",logicWorld,false,0);
-    G4VPhysicalVolume * vacChambRS = new G4PVPlacement(0,posVacChamSide1,logicChamSide1,"VacChambRS",logicWorld,false,0);
-  }else if(IsSpecInside==0){
-    G4ThreeVector posVacChamb = G4ThreeVector(0.*cm,0.*cm,MagnetPosiZ*cm);
-    G4double VacChaX=20*cm;
-    G4double VacChaY=20*cm;
-    G4double VacChaZ=110*cm;
-    G4double VacChaTh=0.4*cm;
-
-    G4Box *outerBox = new G4Box("Outer Box",VacChaX/2.,VacChaY/2.,VacChaZ/2.);
-    G4Box *innerBox = new G4Box("Inner Box",(VacChaX-VacChaTh)/2.,(VacChaY-VacChaTh)/2.,VacChaZ/2.+0.5*cm);
-    G4SubtractionSolid *hollowChamb = new G4SubtractionSolid("Hollow Box",outerBox,innerBox);
-    G4LogicalVolume* logicVacChamb = new G4LogicalVolume(hollowChamb,Al, "logicVacCham", 0, 0, 0);
-    G4VPhysicalVolume * vacChamb   = new G4PVPlacement(0,posVacChamb,logicVacChamb,"VacChamb",logicWorld,false,0);
-  }else{
-    G4cout<<"No vacuum equipment inside the magnet " <<G4endl;
-  }
-
-  // Concrete wall at large Z
-  if (fEnableWall) {
-    //G4ThreeVector wallPos = G4ThreeVector(WallPosiX*cm,WallPosiY*cm,WallPosiZ*cm); 
-    //solidWall = new G4Box("Wall",WallSizeX*0.5*cm,WallSizeY*0.5*cm,WallSizeZ*0.5*cm);
-    //logicWall = new G4LogicalVolume(solidWall,Concrete,"Wall",0,0,0);
-    //new G4PVPlacement(0,wallPos,logicWall,"Wall",logicWorld,false,0,false);
-    fHallStructure->SetMotherVolume(logicWorld);
-    fHallStructure->CreateGeometry();
-  }
-
-  // Magnet physical structure
-  if (fEnableMagnet) { 
-    fMagnetStructure->SetMotherVolume(logicWorld);
-    fMagnetStructure->CreateGeometry();
-  }
-
-  // Vacuum chamber structure
-  if (fEnableChamber) {
-    fChamberStructure->SetMotherVolume(logicWorld);
-    if (fEnableMagnet) {
-      fChamberStructure->SetMagneticVolume(fMagnetStructure->GetMagneticVolume());
-    } else {
-      fChamberStructure->SetMagneticVolume(logicWorld);
-    }
-    fChamberStructure->CreateGeometry();
-  }
-
-  // Target
-  if (fEnableTarget) {
-    if (fEnableMagnet) {
-      fTargetDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-    } else {
-      fTargetDetector->SetMotherVolume(logicWorld);
-    }
-    fTargetDetector->CreateGeometry();
-  }
-
-  // SAC
-  if (fEnableSAC) {
-    fSACDetector->SetMotherVolume(logicWorld);
-    fSACDetector->CreateGeometry();
-  }
-
-  // LAV
-  if (fEnableLAV) {
-    if (fEnableMagnet) {
-      fLAVDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-    } else {
-      fLAVDetector->SetMotherVolume(logicWorld);
-    }
-    fLAVDetector->CreateGeometry();
-  }
-
-  // TDump
-  if (fEnableTDump) {
-    fTDumpDetector->SetMotherVolume(logicWorld);
-    fTDumpDetector->CreateGeometry();
-  }
-
-  // TPix
-  if (fEnableTPix) {
-    if (fEnableMagnet) {
-      // TPix can be used as beam tracking monitor and move around
-      // Check if it is placed inside the magnetic volume (warning: only X,Z are checked)
-      G4double xpostpix = TPixGeometry::GetInstance()->GetTPixPosX();
-      G4double zpostpix = TPixGeometry::GetInstance()->GetTPixPosZ();
-      G4double xposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosX();
-      G4double xsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeX();
-      G4double zposmagvol = MagnetGeometry::GetInstance()->GetMagneticVolumePosZ();
-      G4double zsizemagvol = MagnetGeometry::GetInstance()->GetMagneticVolumeSizeZ();
-      if (
-	  (zpostpix>=zposmagvol-0.5*zsizemagvol) && (zpostpix<=zposmagvol+0.5*zsizemagvol)
-	  &&
-	  (xpostpix>=xposmagvol-0.5*xsizemagvol) && (xpostpix<=xposmagvol+0.5*xsizemagvol)
-	 ) {
-	G4cout << "WARNING: TPix at " << zpostpix << " is inside magnetic volume" << G4endl;
-	fTPixDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-      } else {
-	fTPixDetector->SetMotherVolume(logicWorld);
-      }
-    } else {
-      fTPixDetector->SetMotherVolume(logicWorld);
-    }
-    fTPixDetector->CreateGeometry();
-  }
-
- //------------------------------------------------- 
- // Direction monitor fused silica rods 
- //-------------------------------------------------
- if(IsMonitorON==1){
-   G4ThreeVector positionMonitor = G4ThreeVector(MonitorPosiX*cm,MonitorPosiY*cm,MonitorPosiZ*cm); 
-   G4double MonitorX      = MonitorSizeX*cm;
-   G4double MonitorY      = MonitorSizeY*cm;
-   G4double MonitorLength = MonitorSizeZ*cm;
-   
-   solidMonitor = new G4Box("target",MonitorX*0.5,MonitorY*0.5,MonitorLength*0.5);
-   logicMonitor = new G4LogicalVolume(solidMonitor,WorldMater,"Monitor",0,0,0);
-   physiMonitor = new G4PVPlacement(0,              // no rotation
-				    positionMonitor,   // at (x,y,z)
-				    logicMonitor,      // its logical volume                                  
-				    "Monitor",         // its name
-				    logicWorld,        // its mother  volume
-				    false,             // no boolean operations
-				    0,              // copy number 
-				    false);          //Check for overlaps
-   
-   G4double MXRodLength = 2*mm;
-   G4double MXRodX      = MonitorX-1;
-   G4double MXRodY      = 2*mm;
-   
-   G4double MYRodLength = 2*mm;
-   G4double MYRodX      = 2*mm;
-   G4double MYRodY      = MonitorY-1;
-   
-   solidMXRod  = new G4Box("MXRod",MXRodX*0.5,MXRodY*0.5,MXRodLength*0.5);
-   logicMXRod  = new G4LogicalVolume(solidMXRod,SiO2,"MXRod");
-   
-   solidMYRod  = new G4Box("MYRod",MYRodX*0.5,MYRodY*0.5,MYRodLength*0.5);
-   logicMYRod  = new G4LogicalVolume(solidMYRod,SiO2,"MYRod");
-   //
-   G4int NMRodRows=10;
-   for (G4int i=0;i<NMRodRows;i++){
-     G4ThreeVector positionMXRod = G4ThreeVector(0.   ,-MonitorY*0.5+0.5*MXRodY+1*cm+i*MXRodY,+0.*cm);
-     G4ThreeVector positionMYRod = G4ThreeVector(-MonitorX*0.5+0.5*MYRodX+i*MYRodX+1*cm,0.,1.*cm);
-     
-     physiMXRod  = new G4PVPlacement(0,             // no rotation
-				     positionMXRod, // at (x,y,z)
-				     logicMXRod,    // its logical volume                                  
-				     "MXRod",       // its name
-				     logicMonitor,  // its mother  volume
-				     false,         // no boolean operations
-				     i);            // copy number 
-     
-     physiMYRod  = new G4PVPlacement(0,              // no rotation
-				     positionMYRod,  // at (x,y,z)
-				     logicMYRod,     // its logical volume                                  
-				     "MYRod",        // its name
-				     logicMonitor,   // its mother  volume
-				     false,          // no boolean operations
-				     i+NMRodRows);   // copy number 
-   }
- }
-
- // ECal
- if (fEnableECal) {
-   fECalDetector->SetMotherVolume(logicWorld);
-   fECalDetector->CreateGeometry();
- }
-
- // PVeto
- if (fEnablePVeto) {
-   if (fEnableMagnet) {
-     fPVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-   } else {
-     fPVetoDetector->SetMotherVolume(logicWorld);
-   }
-   fPVetoDetector->CreateGeometry();
- }
-
- // EVeto
- if (fEnableEVeto) {
-   if (fEnableMagnet) {
-     fEVetoDetector->SetMotherVolume(fMagnetStructure->GetMagneticVolume());
-   } else {
-     fEVetoDetector->SetMotherVolume(logicWorld);
-   }
-   fEVetoDetector->CreateGeometry();
- }
-
- //---------------------------------------------------------------
- // High Energy positron veto scintillating part ouside the magnet
- //--------------------------------------------------------------- 
- // HEPVeto
- if (fEnableHEPVeto) {
-   fHEPVetoDetector->SetMotherVolume(logicWorld);
-   fHEPVetoDetector->CreateGeometry();
- }
-
- //PLANAR GEM BASED SPECTROMETER
- if(IsPlanarGEMON==1){
-   solidPGEM = new G4Box("pgem",PGEMSizeX*cm,PGEMSizeY*cm,PGEMSizeZ*cm);
-   logicPGEM = new G4LogicalVolume(solidPGEM,Air,"PGEM",0,0,0);
-   
-   for(G4int ii=0;ii<NChambers;ii++){
-     G4ThreeVector positionGEMPlane;
-     if(ii<NChambers/2){
-       positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,PGEMPosiY*cm-(PGEMSizeY*cm+2*ii*PGEMSizeY*cm+0.01*mm),0.);
-     }else{
-       positionGEMPlane = G4ThreeVector(PGEMPosiX*cm,-PGEMPosiY*cm+(PGEMSizeY*cm+2*(ii-NChambers/2)*PGEMSizeY*cm+0.01*mm),0.);
-     }
-     G4cout<<positionGEMPlane<<" "<<PGEMSizeY<<" Nchambers "<<NChambers<<" "<<ii<<G4endl;
-     physiPGEM = new G4PVPlacement(0,
-				   positionGEMPlane,  // at (x,y,z)
-				   logicPGEM,         // its logical
-				   "PlanarGEM",       // its name
-				   logicSwepMag,      // its mother
-				   false,             // no boolean
-				   ii,                // Copy number
-				   false);
-   }
- }
- 
-  //------------------------------------------------- 
-  // Spectrometer chambers cilindrical
-  //-------------------------------------------------
- /*
- if(IsTrackerON==1 && TrackerNLayers==1.){
-   solidTracker[0]= new G4Tubs("TrackerBox",TrackerInnerRad*cm,TrackerOuterRad*cm,TrackerHz*cm,0.*deg,360.*deg);
-   logicTracker[0]= new G4LogicalVolume(solidTracker[0],Air,"LogTracker",0,0,0);
-   logicTracker[0]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-   for(int kk=0;kk<TrackerNRings;kk++){
-     G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm+kk*TrackerHz*cm); 
-     physiTracker[0]=new G4PVPlacement(0,               // no rotation
-				    positionTracker,  // at (x,y,z)
-				    logicTracker[0],     // its logical volume    
-				    "Tracker",        // its name
-				    logicSwepMag,       // its mother volume
-				    false,            // no boolean operations
-				    kk,
-				    false);               // copy number 
-   }
- } else if(IsTrackerON==1 && TrackerNLayers>1.){
-   for(int kk=0;kk<TrackerNLayers;kk++){
-     //   G4cout<<TrackerInnerRad+kk*TrackerLayerTick<<" "<<(TrackerOuterRad+kk*TrackerLayerTick)<<G4endl;
-     //     G4cout<<TrackerInnerRad<<" "<<TrackerOuterRad<<G4endl;
-     G4double NewInn=TrackerInnerRad+kk*TrackerLayerTick;
-     G4double NewOut=TrackerOuterRad+kk*TrackerLayerTick;
-     G4cout<<NewInn<<" "<<NewOut<<G4endl;
-     solidTracker[kk]= new G4Tubs("TrackerBox",NewInn*cm,NewOut*cm,TrackerHz*cm,0.*deg,360.*deg);
-     logicTracker[kk]= new G4LogicalVolume(solidTracker[kk],Air,"LogTracker",0,0,0);
-     logicTracker[kk]->SetFieldManager(fEmFieldSetup->GetLocalFieldManager(),allLocal);
-     
-     G4ThreeVector positionTracker = G4ThreeVector(TrackerPosiX*cm,TrackerPosiY*cm,TrackerPosiZ*cm); 
-     physiTracker[0]= new G4PVPlacement(0,                // no rotation
-				     positionTracker,  // at (x,y,z)
-				     logicTracker[kk], // its logical volume    
-				     "Tracker",        // its name
-				     logicSwepMag,     // its mother volume
-				     false,            // no boolean operations
-				     kk,
-				     false);              // copy number 
-   }
- }
- */
- //------------------------------------------------ 
- // Sensitive detectors
- //------------------------------------------------ 
- G4SDManager* SDman     = G4SDManager::GetSDMpointer();
- G4String TrackerSDname = "TraSD";       //GEM Tracker sensitive detector
- G4String TRodSDname    = "TRodSD";      //target rods
- G4String MRodSDname    = "MRodSD";      //monitor rods
- // G4String GFiltSDname   = "GFiltSD";     //Gamma filter
-
- /*
-  if(IsTrackerON==1){
-    TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
-    SDman->AddNewDetector( TrackSD );
-    for(int kk=0;kk<TrackerNLayers;kk++){
-      logicTracker[kk]->SetSensitiveDetector( TrackSD );
-    }
-  }
- */
-
-  if(IsPlanarGEMON==1){
-    TrackerSD* TrackSD = new TrackerSD( TrackerSDname );
-    SDman->AddNewDetector( TrackSD );
-    logicPGEM->SetSensitiveDetector( TrackSD );
-  }
-
-  /*
-  if(IsTDumpON){
-    //Dump as Sensitive detector
-    TRodSD* TRodSDet = new TRodSD( TRodSDname );
-    SDman->AddNewDetector( TRodSDet );
-    logicTDump->SetSensitiveDetector( TRodSDet );
-  }
-  */
-
-  if(IsMonitorON==1){
-    MRodSD* MRodSDet = new MRodSD( MRodSDname );
-    SDman->AddNewDetector( MRodSDet );
-    logicMXRod->SetSensitiveDetector( MRodSDet );
-    logicMYRod->SetSensitiveDetector( MRodSDet );
-  }
-
-  //  TRodSD* TRodSDet = new TRodSD( TRodSDname );
-  //  SDman->AddNewDetector( TRodSDet );
-  //  logicTXRod->SetSensitiveDetector( TRodSDet );
-  //  logicTYRod->SetSensitiveDetector( TRodSDet );
-//--------- Visualization attributes -------------------------------
-
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-
-  G4VisAttributes* BoxVisAtt= new G4VisAttributes(G4Colour(1.0,1.0,1.0));
-  //  logicWorld  ->SetVisAttributes(BoxVisAtt);  
-  //  logicTarget ->SetVisAttributes(BoxVisAtt);
-
-  return physiWorld;  
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void DetectorConstruction::SetupDetectors()
-{
-//  G4SDManager::GetSDMpointer()->SetVerboseLevel(1);
-//  G4String filterName, particleName;
-//
-//  G4SDParticleFilter* gammaFilter   = new G4SDParticleFilter(filterName="gammaFilter",particleName="gamma");
-//  G4SDParticleFilter* electronFilter= new G4SDParticleFilter(filterName="electronFilter",particleName="e-");
-//  G4SDParticleFilter* positronFilter= new G4SDParticleFilter(filterName="positronFilter",particleName="e+");
-//  G4SDParticleFilter* epFilter      = new G4SDParticleFilter(filterName="epFilter");
-//  epFilter->add(particleName="e-");
-//  epFilter->add(particleName="e+");
-//
-//  G4MultiFunctionalDetector* det = new G4MultiFunctionalDetector("SDcalo");
-//  G4VPrimitiveScorer* primitive;
-//  primitive = new G4PSEnergyDeposit("eDep",0);
-//  det->RegisterPrimitive(primitive);
-//  primitive = new G4PSNofSecondary("nGamma",0);
-//  primitive->SetFilter(gammaFilter);
-//  det->RegisterPrimitive(primitive);
-//  G4SDManager::GetSDMpointer()->AddNewDetector(det);
-//  logicEcal->SetSensitiveDetector(det);
-}
- 
-void DetectorConstruction::DefineMaterials()
-{}
-
-void DetectorConstruction::setTargetMaterial(G4String materialName)
+void DetectorConstruction::SetTargetMaterial(G4String materialName)
 {
   // search the material by its name 
   G4Material* pttoMaterial = G4Material::GetMaterial(materialName);  
   if (pttoMaterial) {
-    //TargetMater = pttoMaterial;
-    //logicTarget->SetMaterial(pttoMaterial); 
     fTargetDetector->GetTargetLogicalVolume()->SetMaterial(pttoMaterial); 
-    //      G4cout << "\n----> The target is " << fTargetLength/cm << " cm of "
-    //             << materialName << G4endl;
-  }             
+    G4cout << "\n----> The Target material is now " << materialName << G4endl;
+  } else {
+    G4cout << "\n----> WARNING: attempt to use unknown material " << materialName << " for Target" << G4endl;
+  }
 }
- 
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-//void DetectorConstruction::setChamberMaterial(G4String materialName)
+//void DetectorConstruction::SetMaxStep(G4double maxStep)
 //{
-//  // search the material by its name 
-//  G4Material* pttoMaterial = G4Material::GetMaterial(materialName);  
-//  if (pttoMaterial)
-//     {ChamberMater = pttoMaterial;
-//      logicChamber->SetMaterial(pttoMaterial); 
-//      G4cout << "\n----> The chambers are " << ChamberWidth/cm << " cm of "
-//             << materialName << G4endl;
-//     }             
+//  if ((stepLimit)&&(maxStep>0.)) stepLimit->SetMaxAllowedStep(maxStep);
 //}
- 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
- 
-//void DetectorConstruction::SetMagField(G4double fieldValue)
-//{
-//  MagField->SetMagFieldValue(fieldValue);  
-//}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void DetectorConstruction::SetMaxStep(G4double maxStep)
-{
-  if ((stepLimit)&&(maxStep>0.)) stepLimit->SetMaxAllowedStep(maxStep);
-}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -755,8 +525,8 @@ G4double DetectorConstruction::GetECalFrontFaceZ()
 {
   if (fEnableECal) return fECalDetector->GetECalFrontFaceZ();
 
-  // ECal is disabled (?): return a position 300cm after the front face of the magnet yoke
-  return 250.*cm;
+  // ECal is disabled (?): return a position 300cm after the nominal position of the target
+  return 230.*cm;
 }
 
 
@@ -774,4 +544,104 @@ G4double DetectorConstruction::GetTargetThickness()
 
   // Target is disabled (?): return 100um
   return 0.1*mm;
+}
+
+void DetectorConstruction::EnableSubDetector(G4String det)
+{
+  printf("Enabling subdetector %s\n",det.data());
+  if      (det=="ECal")    { fEnableECal    = 1; }
+  else if (det=="Target")  { fEnableTarget  = 1; }
+  else if (det=="SAC")     { fEnableSAC     = 1; }
+  else if (det=="PVeto")   { fEnablePVeto   = 1; }
+  else if (det=="EVeto")   { fEnableEVeto   = 1; }
+  else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
+  else if (det=="TDump")   { fEnableTDump   = 1; }
+  else if (det=="TPix")    { fEnableTPix    = 1; }
+  else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
+}
+
+void DetectorConstruction::DisableSubDetector(G4String det)
+{
+  printf("Disabling subdetector %s\n",det.data());
+  if      (det=="ECal")    { fEnableECal    = 0; }
+  else if (det=="Target")  { fEnableTarget  = 0; }
+  else if (det=="SAC")     { fEnableSAC     = 0; }
+  else if (det=="PVeto")   { fEnablePVeto   = 0; }
+  else if (det=="EVeto")   { fEnableEVeto   = 0; }
+  else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
+  else if (det=="TDump")   { fEnableTDump   = 0; }
+  else if (det=="TPix")    { fEnableTPix    = 0; }
+  else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
+}
+
+void DetectorConstruction::EnableStructure(G4String str)
+{
+  printf("Enabling structure %s\n",str.data());
+  if      (str=="Wall")    { fEnableWall   = 1;  }
+  else if (str=="Chamber") { fEnableChamber = 1; }
+  else if (str=="Magnet")  { fEnableMagnet = 1;  }
+  else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
+}
+
+void DetectorConstruction::DisableStructure(G4String str)
+{
+  printf("Disabling structure %s\n",str.data());
+  if      (str=="Wall")    { fEnableWall   = 0;  }
+  else if (str=="Chamber") { fEnableChamber = 0; }
+  else if (str=="Magnet")  { fEnableMagnet = 0;  }
+  else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
+}
+
+void DetectorConstruction::EnableMagneticField()
+{
+  printf("Enabling magnetic field\n");
+  fEnableMagneticField = 1;
+}
+
+void DetectorConstruction::DisableMagneticField()
+{
+  printf("Disabling magnetic field\n");
+  fEnableMagneticField = 0;
+}
+
+void DetectorConstruction::MagneticVolumeIsVisible()
+{
+  printf("Magnetic volume is visible\n");
+  fMagneticVolumeIsVisible = 1;
+}
+
+void DetectorConstruction::MagneticVolumeIsInvisible()
+{
+  printf("Magnetic volume is invisible\n");
+  fMagneticVolumeIsVisible = 0;
+}
+
+void DetectorConstruction::SetMagFieldValue(G4double v)
+{
+  printf("Setting constant value of magnetic field to %f\n",v);
+  fMagneticFieldManager->SetMagneticFieldValue(v);
+}
+
+void DetectorConstruction::ChamberIsVisible()
+{
+  printf("Vacuum chamber is visible\n");
+  fChamberIsVisible = 1;
+}
+
+void DetectorConstruction::ChamberIsInvisible()
+{
+  printf("Vacuum chamber is invisible\n");
+  fChamberIsVisible = 0;
+}
+
+void DetectorConstruction::WorldIsAir()
+{
+  printf("World and magnetic volume are filled with air\n");
+  fWorldIsFilledWithAir = 1;
+}
+
+void DetectorConstruction::WorldIsVacuum()
+{
+  printf("World and magnetic volume are filled with vacuum (low pressure air)\n");
+  fWorldIsFilledWithAir = 0;
 }

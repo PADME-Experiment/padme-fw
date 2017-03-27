@@ -118,8 +118,9 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   //}
   //G4cout << "================================================" << G4endl  ;
   
+  G4int nHC = 0;
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
-  G4int nHC = LHC->GetNumberOfCollections();
+  if (LHC) nHC = LHC->GetNumberOfCollections();
   //  G4cout<<"N collections "<<nHC<<G4endl;
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione

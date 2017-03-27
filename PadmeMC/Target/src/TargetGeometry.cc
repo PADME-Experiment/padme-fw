@@ -26,6 +26,10 @@ TargetGeometry::TargetGeometry()
 
   fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
 
+  fTargetFastDigitization = true; // Use fast digitization
+
+  fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
+
   fTargetSensitiveDetectorName = "TargetSD";
 
 }
@@ -52,6 +56,14 @@ std::vector<G4String> TargetGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fTargetFrontFacePosZ " << fTargetFrontFacePosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetFastDigitization " << fTargetFastDigitization;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetSaveWaveformToDigi " << fTargetSaveWaveformToDigi;
   hash.push_back(buffer.str());
   buffer.str("");
 

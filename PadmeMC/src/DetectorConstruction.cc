@@ -105,7 +105,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableChamber = 1;
   fChamberIsVisible = 1;
 
-  fWorldIsFilledWithAir = 1;
+  fWorldIsFilledWithAir = 0;
 
   fWorldLength = 12.*m;
 

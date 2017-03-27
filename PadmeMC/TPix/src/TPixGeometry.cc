@@ -58,15 +58,15 @@ TPixGeometry::~TPixGeometry()
 void TPixGeometry::UpdateDerivedMeasures()
 {
 
-  // Size of HEPVeto box
+  // Size of TPix box
   fTPixSizeX = fChipStep*fTPixNCols;
   fTPixSizeY = fChipStep*fTPixNRows;
   fTPixSizeZ = fChipSizeZ+1.*um; // Small tolerance to avoid surface overlaps
 
-  // Angle of the rotation of HEPVeto around the Y axis
+  // Angle of the rotation of TPix around the Y axis
   fTPixRotY = fTPixChamberWallAngle;
 
-  // Position of center of HEPVeto box
+  // Position of center of TPix box
   fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
     -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
     -0.5*fTPixSizeX*cos(fTPixChamberWallAngle);
@@ -105,4 +105,61 @@ G4double TPixGeometry::GetChipPosX(G4int row, G4int col)
     return 0.*cm;
   }
   return 0.;
+}
+
+std::vector<G4String> TPixGeometry::GetHashTable()
+{
+
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+
+  buffer << "fTPixNRows " << fTPixNRows;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixNCols " << fTPixNCols;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fChipSizeX " << fChipSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fChipSizeY " << fChipSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fChipSizeZ " << fChipSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixSizeX " << fTPixSizeX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixSizeY " << fTPixSizeY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixSizeZ " << fTPixSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixRotY " << fTPixRotY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixPosX " << fTPixPosX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixPosY " << fTPixPosY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTPixPosZ " << fTPixPosZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  return hash;
 }

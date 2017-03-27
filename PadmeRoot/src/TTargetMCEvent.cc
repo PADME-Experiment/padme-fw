@@ -8,10 +8,11 @@
 #include "TTargetMCEvent.hh"
 
 #include "TTargetMCHit.hh"
+#include "TTargetMCDigi.hh"
 
 ClassImp(TTargetMCEvent)
 
-TTargetMCEvent::TTargetMCEvent() : TMCVEvent(TTargetMCHit::Class())
+TTargetMCEvent::TTargetMCEvent() : TMCVEvent(TTargetMCHit::Class(),TTargetMCDigi::Class())
 {;}
 
 TTargetMCEvent::~TTargetMCEvent()

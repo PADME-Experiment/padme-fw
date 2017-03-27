@@ -19,21 +19,45 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
 
+#include "G4DigiManager.hh"
+#include "TargetDigitizer.hh"
+#include "PVetoDigitizer.hh"
+#include "EVetoDigitizer.hh"
+#include "HEPVetoDigitizer.hh"
+#include "ECalDigitizer.hh"
+#include "SACDigitizer.hh"
+#include "TPixDigitizer.hh"
+
 extern double NNeutrons;
 extern double Npionc;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
-//EventAction::EventAction(RunAction* run, HistoManager* histo)
-//:fRunAct(run),fHistoManager(histo)
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
-
 {
+
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
+
+  // Create and register digitizer modules for all detectors
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
+  theDM->AddNewModule(targetDM);
+  PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
+  theDM->AddNewModule(pVetoDM);
+  EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
+  theDM->AddNewModule(eVetoDM);
+  HEPVetoDigitizer* hepVetoDM = new HEPVetoDigitizer("HEPVetoDigitizer");
+  theDM->AddNewModule(hepVetoDM);
+  ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
+  theDM->AddNewModule(eCalDM);
+  SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
+  theDM->AddNewModule(sacDM);
+  TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
+  theDM->AddNewModule(tPixDM);
 
 }
 
@@ -92,6 +116,22 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Periodic printing
   if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
 
+  // Digitize this event
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = (TargetDigitizer*)theDM->FindDigitizerModule("TargetDigitizer");
+  targetDM->Digitize();
+  PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
+  pVetoDM->Digitize();
+  EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");
+  eVetoDM->Digitize();
+  HEPVetoDigitizer* hepVetoDM = (HEPVetoDigitizer*)theDM->FindDigitizerModule("HEPVetoDigitizer");
+  hepVetoDM->Digitize();
+  ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
+  eCalDM->Digitize();
+  SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
+  sacDM->Digitize();
+  TPixDigitizer* tPixDM = (TPixDigitizer*)theDM->FindDigitizerModule("TPixDigitizer");
+  tPixDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -124,8 +164,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   //  G4cout<<"N collections "<<nHC<<G4endl;
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
-    //    G4cout << "RootIO: Found hits collection " << HCname << G4endl;
-    //   if (HCname == "ECryCollection") {
     if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
       FindClusters();

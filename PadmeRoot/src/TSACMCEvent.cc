@@ -8,10 +8,11 @@
 #include "TSACMCEvent.hh"
 
 #include "TSACMCHit.hh"
+#include "TSACMCDigi.hh"
 
 ClassImp(TSACMCEvent)
 
-TSACMCEvent::TSACMCEvent() : TMCVEvent(TSACMCHit::Class())
+TSACMCEvent::TSACMCEvent() : TMCVEvent(TSACMCHit::Class(),TSACMCDigi::Class())
 {;}
 
 TSACMCEvent::~TSACMCEvent()

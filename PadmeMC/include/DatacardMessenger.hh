@@ -10,16 +10,22 @@ class G4UIcmdWithAString;
 
 class DatacardMessenger: public G4UImessenger
 {
-  public:
-    DatacardMessenger(DatacardManager*);
-   ~DatacardMessenger();
-    void SetNewValue(G4UIcommand*, G4String);
 
-  private:
-    DatacardManager*      fDatacardManager;
-    G4UIcmdWithAString*   fOutNameCmd;
-    G4UIcmdWithAString*   fHistoNameCmd;
-    G4UIcmdWithAString*   fEnableDetectorIOCmd;
-    G4UIcmdWithAString*   fDisableDetectorIOCmd;
+public:
+  DatacardMessenger(DatacardManager*);
+  ~DatacardMessenger();
+  void SetNewValue(G4UIcommand*, G4String);
+
+private:
+
+  DatacardManager* fDatacardManager;
+
+  G4UIdirectory* fOutputDir;
+
+  G4UIcmdWithAString* fOutNameCmd;
+  G4UIcmdWithAString* fHistoNameCmd;
+  G4UIcmdWithAString* fEnableDetectorIOCmd;
+  G4UIcmdWithAString* fDisableDetectorIOCmd;
+
 };
 #endif // DatacardMessenger_h

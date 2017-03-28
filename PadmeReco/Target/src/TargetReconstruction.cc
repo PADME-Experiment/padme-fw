@@ -45,6 +45,7 @@ void TargetReconstruction::ParseConfFile(TString ConfFileName) {
   }
   confFile.close();
 }
+
 void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);

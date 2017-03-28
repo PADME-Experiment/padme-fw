@@ -20,7 +20,7 @@ TMCVDigi::TMCVDigi()
 }
 
 void TMCVDigi::Print(Option_t *) const {
-  std::cout << "ChannelId = " << fChannelId
+  std::cout << "Digi - ChannelId = " << fChannelId
 	    << " Energy = " << fEnergy
 	    << " Time = " << fTime << std::endl;
 }

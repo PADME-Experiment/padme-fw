@@ -10,6 +10,7 @@
 
 #include "TTargetMCEvent.hh"
 #include "TTargetMCHit.hh"
+#include "TTargetMCDigi.hh"
 
 TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "Target", ConfigFileName)
@@ -48,11 +49,15 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TTargetMCEvent* tTargetEvent = (TTargetMCEvent*)tEvent;
-  std::cout << "TargetReconstruction: run/event/#hits " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << std::endl;
-  //for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
-  //  TTargetMCHit* hit = (TTargetMCHit*)tTargetEvent->Hit(iH);
-  //  hit->Print();
-  //}
+  std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
+  for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
+    TTargetMCHit* hit = (TTargetMCHit*)tTargetEvent->Hit(iH);
+    hit->Print();
+  }
+  for (Int_t iD=0; iD<tTargetEvent->GetNDigi(); iD++) {
+    TTargetMCDigi* digi = (TTargetMCDigi*)tTargetEvent->Digi(iD);
+    digi->Print();
+  }
 }
 
 void TargetReconstruction::EndProcessing()

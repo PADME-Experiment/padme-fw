@@ -2,6 +2,7 @@
 
 #include "TPadmeRun.hh"
 #include "TMCEvent.hh"
+
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
 #include "TPVetoMCEvent.hh"
@@ -19,8 +20,19 @@
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
 {
+
+  // Input event structures will be allocated if corresponding branch exists
+  fMCEvent        = 0;
+  fTargetMCEvent  = 0;
+  fEVetoMCEvent   = 0;
+  fPVetoMCEvent   = 0;
+  fHEPVetoMCEvent = 0;
+  fECalMCEvent    = 0;
+  fSACMCEvent     = 0;
+
   Init(NEvt,Seed);
   InitLibraries();
+
 }
 
 PadmeReconstruction::~PadmeReconstruction()
@@ -29,23 +41,23 @@ PadmeReconstruction::~PadmeReconstruction()
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new SACReconstruction(fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,dummyConfFile));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
 {
   fMainReco = this; //init PadmeReconstruction main reco as itself
-  if (FindReco("Target")) ((TargetReconstruction*) FindReco("Target"))->Init(this);
-  if (FindReco("EVeto")) ((EVetoReconstruction*) FindReco("EVeto"))->Init(this);
-  if (FindReco("PVeto")) ((PVetoReconstruction*) FindReco("PVeto"))->Init(this);
+  if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
+  if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
+  if (FindReco("PVeto"))   ((PVetoReconstruction*)   FindReco("PVeto"))  ->Init(this);
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
-  if (FindReco("ECal")) ((ECalReconstruction*) FindReco("ECal"))->Init(this);
-  if (FindReco("SAC")) ((SACReconstruction*)FindReco("SAC"))->Init(this);
+  if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
+  if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
 }
 
 void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
@@ -91,31 +103,42 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   TString treeName = "MC";
   fMCChain = BuildChain(treeName);
   if(fMCChain) {
+
     nEntries = fMCChain->GetEntries();
     TObjArray* branches = fMCChain->GetListOfBranches();
     std::cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-    fMCEvent = new TMCEvent();
-    fSACMCEvent = new TSACMCEvent();
+
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
       std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+
       if (branchName=="Event") {
+	fMCEvent = new TMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
       } else if (branchName=="Target") {
+	fTargetMCEvent = new TTargetMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
       } else if (branchName=="EVeto") {
+	fEVetoMCEvent = new TEVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
       } else if (branchName=="PVeto") {
+	fPVetoMCEvent = new TPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
       } else if (branchName=="HEPVeto") {
+	fHEPVetoMCEvent = new THEPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
       } else if (branchName=="ECal") {
+	fECalMCEvent = new TECalMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
       } else if (branchName=="SAC") {
+	fSACMCEvent = new TSACMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
       }
+
     }
+
   }
 
   fNProcessedEventsInTotal = 0;
@@ -127,30 +150,37 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
 Bool_t PadmeReconstruction::NextEvent()
 {
+
+  // Check if there is a new event to process
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
+
     std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "PadmeReconstruction: run/event/time " << fMCEvent->GetRunNumber()
+    std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
 	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+
+    // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-      if (fRecoLibrary[iLib]->GetName() == "Target") {
+      if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "EVeto") {
+      } else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "PVeto") {
+      } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto") {
+      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "ECal") {
+      } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "SAC") {
+      } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       }
-
     }
+
     fNProcessedEventsInTotal++;
     return true;
+
   }
   return false;
+
 }
 
 void PadmeReconstruction::EndProcessing(){

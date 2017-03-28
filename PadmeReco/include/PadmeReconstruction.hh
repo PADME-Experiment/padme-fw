@@ -46,7 +46,9 @@ private:
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
+
   TMCEvent* fMCEvent;
+
   TTargetMCEvent* fTargetMCEvent;
   TEVetoMCEvent* fEVetoMCEvent;
   TPVetoMCEvent* fPVetoMCEvent;

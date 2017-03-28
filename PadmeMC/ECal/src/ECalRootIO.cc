@@ -159,6 +159,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetChannelId((*eCalDC)[i]->GetChannelId()); 
 	      digi->SetEnergy((*eCalDC)[i]->GetEnergy());
 	      digi->SetTime((*eCalDC)[i]->GetTime());
+	      digi->SetSignal((*eCalDC)[i]->GetSignal());
 	      e_tot += (*eCalDC)[i]->GetEnergy();
 	    }
 	    G4cout << "ECalRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;

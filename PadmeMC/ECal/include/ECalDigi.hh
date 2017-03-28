@@ -42,11 +42,15 @@ class ECalDigi : public G4VDigi
   void SetEnergy(G4double e) { fEnergy = e; }
   G4double GetEnergy() { return fEnergy; }
 
+  void SetSignal(G4double s) { fSignal = s; }
+  G4double GetSignal() { return fSignal; }
+
 private:
     
-  G4int         fChannelId;
-  G4double      fTime;
-  G4double      fEnergy;
+  G4int    fChannelId;
+  G4double fTime;
+  G4double fEnergy;
+  G4double fSignal;
 
 };
 

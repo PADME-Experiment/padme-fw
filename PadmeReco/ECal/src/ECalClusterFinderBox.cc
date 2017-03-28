@@ -18,8 +18,10 @@ ECalClusterFinderBox::ECalClusterFinderBox(ECalCrystalHandler* cryH,ECalClusterH
 
   // Get size of crystals from geometry
   ECalParameters* para = ECalParameters::GetInstance();
-  fCryXSize = para->GetCryXSize();
-  fCryYSize = para->GetCryYSize();
+  //fCryXSize = para->GetCryXSize();
+  //fCryYSize = para->GetCryYSize();
+  fCryXSize = para->GetCrystalSizeX()+para->GetCrystalGap();
+  fCryYSize = para->GetCrystalSizeY()+para->GetCrystalGap();
   fCryXSize2 = fCryXSize*fCryXSize;
   fCryYSize2 = fCryYSize*fCryYSize;
 

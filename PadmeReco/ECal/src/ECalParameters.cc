@@ -1,4 +1,7 @@
 #include "ECalParameters.hh"
+
+#include "TSubDetectorInfo.hh"
+
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TGraph.h>
@@ -54,7 +57,16 @@ void ECalParameters::WriteGeomParam()
 
 ECalParameters::ECalParameters()
 {
-//  printf("Calling Init histograms ");
+
+  // Initialize parameters to some default values (length is in mm)
+  fECalNRows = 29;
+  fECalNCols = 29;
+  fECalFrontFacePosZ = 3000.; // Relative to the front face of the target
+  fCrystalSizeX = 21.;
+  fCrystalSizeY = 21.;
+  fCrystalSizeZ =230.;
+  fCrystalGap = 0.25;
+
 }
 //
 ECalParameters::~ECalParameters()
@@ -62,4 +74,25 @@ ECalParameters::~ECalParameters()
 //  printf("Closing Init histograms ");
 }
 
-
+void ECalParameters::SetMCDetInfo(TSubDetectorInfo* detInfo)
+{
+  char par[100],sval[100];
+  Double_t gap = 0.;
+  Double_t coat = 0.;
+  std::vector<TString> subPar = detInfo->GetGeometryParameters();
+  for(UInt_t iPar = 0; iPar < subPar.size(); iPar++) {
+    sscanf(subPar[iPar].Data(),"%s %s",par,sval);
+    //printf("par %s sval %s\n",par,sval);
+    if (strcmp(par,"fECalNRows")==0) fECalNRows = atoi(sval);
+    if (strcmp(par,"fECalNCols")==0) fECalNCols = atoi(sval);
+    if (strcmp(par,"fCrystalSizeX")==0) fCrystalSizeX = atof(sval);
+    if (strcmp(par,"fCrystalSizeY")==0) fCrystalSizeY = atof(sval);
+    if (strcmp(par,"fCrystalSizeZ")==0) fCrystalSizeZ = atof(sval);
+    if (strcmp(par,"fCrystalGap")==0) gap = atof(sval);
+    if (strcmp(par,"fCrystalCoating")==0) coat = atof(sval);
+  }
+  fCrystalGap = gap+2.*coat; // Compute the total gap between two crystals
+  printf("ECalParameters received from MC:\n");
+  printf("fECalNRows %d fECalNCols %d fCrystalSizeX %f fCrystalSizeY %f fCrystalSizeZ %f fCrystalGap %f\n",
+	 fECalNRows,fECalNCols,fCrystalSizeX,fCrystalSizeY,fCrystalSizeZ,fCrystalGap);
+}

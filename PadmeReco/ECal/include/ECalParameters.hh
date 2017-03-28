@@ -6,6 +6,8 @@
 
 #include "Rtypes.h"
 
+class TSubDetectorInfo;
+
 class ECalParameters {
 
 public :
@@ -29,6 +31,19 @@ public :
   Double_t GetECalZ()   { return ECALZ; }
   Double_t GetSACZ()    { return SACZ; }
 
+  Double_t GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
+
+  Int_t GetECalNRows() { return fECalNRows; }
+  Int_t GetECalNCols() { return fECalNCols; }
+
+  Double_t GetCrystalSizeX() { return fCrystalSizeX; }
+  Double_t GetCrystalSizeY() { return fCrystalSizeY; }
+  Double_t GetCrystalSizeZ() { return fCrystalSizeZ; }
+
+  Double_t GetCrystalGap() { return fCrystalGap; }
+
+  void SetMCDetInfo(TSubDetectorInfo*);
+
 private :
 
   Int_t NCryX;
@@ -36,6 +51,15 @@ private :
   Double_t a, b, c; 
   Double_t TargetZ,ECALZ,SACZ;
   Double_t ECalToTarg;
+
+  Int_t fECalNRows;
+  Int_t fECalNCols;
+
+  Double_t fECalFrontFacePosZ;
+  Double_t fCrystalSizeX;
+  Double_t fCrystalSizeY;
+  Double_t fCrystalSizeZ;
+  Double_t fCrystalGap; // Warning: this gap includes the paint coating
 
  public:
 

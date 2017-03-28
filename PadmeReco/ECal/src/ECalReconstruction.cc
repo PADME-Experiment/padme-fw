@@ -10,6 +10,7 @@
 
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
+#include "TECalMCDigi.hh"
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
@@ -60,10 +61,14 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TECalMCEvent* tECalEvent = (TECalMCEvent*)tEvent;
-  std::cout << "ECalReconstruction: run/event/#hits " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << std::endl;
+  std::cout << "--- ECalReconstruction --- run/event/#hits/#digi " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << " " << tECalEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tECalEvent->GetNHits(); iH++) {
     TECalMCHit* hit = (TECalMCHit*)tECalEvent->Hit(iH);
     hit->Print();
+  }
+  for (Int_t iD=0; iD<tECalEvent->GetNDigi(); iD++) {
+    TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
+    digi->Print();
   }
 }
 

@@ -10,6 +10,7 @@
 
 #include "THEPVetoMCEvent.hh"
 #include "THEPVetoMCHit.hh"
+#include "THEPVetoMCDigi.hh"
 
 HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "HEPVeto", ConfigFileName)
@@ -60,10 +61,14 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   THEPVetoMCEvent* tHEPVetoEvent = (THEPVetoMCEvent*)tEvent;
-  std::cout << "HEPVetoReconstruction: run/event/#hits " << tHEPVetoEvent->GetRunNumber() << " " << tHEPVetoEvent->GetEventNumber() << " " << tHEPVetoEvent->GetNHits() << std::endl;
+  std::cout << "--- HEPVetoReconstruction --- run/event/#hits/#digi " << tHEPVetoEvent->GetRunNumber() << " " << tHEPVetoEvent->GetEventNumber() << " " << tHEPVetoEvent->GetNHits() << " " << tHEPVetoEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tHEPVetoEvent->GetNHits(); iH++) {
     THEPVetoMCHit* hit = (THEPVetoMCHit*)tHEPVetoEvent->Hit(iH);
     hit->Print();
+  }
+  for (Int_t iD=0; iD<tHEPVetoEvent->GetNDigi(); iD++) {
+    THEPVetoMCDigi* digi = (THEPVetoMCDigi*)tHEPVetoEvent->Digi(iD);
+    digi->Print();
   }
 }
 

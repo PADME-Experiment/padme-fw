@@ -10,6 +10,7 @@
 
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
+#include "TPVetoMCDigi.hh"
 
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
@@ -60,10 +61,14 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TPVetoMCEvent* tPVetoEvent = (TPVetoMCEvent*)tEvent;
-  std::cout << "PVetoReconstruction: run/event/#hits " << tPVetoEvent->GetRunNumber() << " " << tPVetoEvent->GetEventNumber() << " " << tPVetoEvent->GetNHits() << std::endl;
+  std::cout << "--- PVetoReconstruction --- run/event/#hits/#digi " << tPVetoEvent->GetRunNumber() << " " << tPVetoEvent->GetEventNumber() << " " << tPVetoEvent->GetNHits() << " " << tPVetoEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tPVetoEvent->GetNHits(); iH++) {
     TPVetoMCHit* hit = (TPVetoMCHit*)tPVetoEvent->Hit(iH);
     hit->Print();
+  }
+  for (Int_t iD=0; iD<tPVetoEvent->GetNDigi(); iD++) {
+    TPVetoMCDigi* digi = (TPVetoMCDigi*)tPVetoEvent->Digi(iD);
+    digi->Print();
   }
 }
 

@@ -31,6 +31,7 @@ ECalDigi::ECalDigi(const ECalDigi& right)
   fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fSignal = right.fSignal;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -40,6 +41,7 @@ const ECalDigi& ECalDigi::operator=(const ECalDigi& right)
   fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fSignal = right.fSignal;
   return *this;
 }
 
@@ -71,9 +73,10 @@ void ECalDigi::Draw()
 
 void ECalDigi::Print()
 {
-  G4cout << "- channel: " << fChannelId
+  G4cout << "ECal digi - channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy: " << G4BestUnit(fEnergy,"Energy")
+         << " signal: " << fSignal
 	 << G4endl;
 }
 

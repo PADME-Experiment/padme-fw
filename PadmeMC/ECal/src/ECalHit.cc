@@ -85,7 +85,7 @@ void ECalHit::Draw()
 
 void ECalHit::Print()
 {
-  G4cout << "- channel: " << fChannelId
+  G4cout << "ECal hit - channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
          << " global position: " << G4BestUnit(fPosition,"Length")

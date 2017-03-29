@@ -13,6 +13,8 @@
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
 
+#include <vector>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class TargetDigi : public G4VDigi
@@ -42,11 +44,35 @@ class TargetDigi : public G4VDigi
   void SetEnergy(G4double e) { fEnergy = e; }
   G4double GetEnergy() { return fEnergy; }
 
+  void SetDNumber(G4int dn) { fDNumber = dn; }
+  G4int GetDNumber() { return fDNumber; }
+
+  void SetChargeT(G4double c) { fChargeT = c; }
+  G4double GetChargeT() { return fChargeT; }
+
+  void SetCharge(G4double c) { fCharge = c; }
+  G4double GetCharge() { return fCharge; }
+
+  //  void SetTimeTrace(G4double* tt) { fTimeTrace = tt; }
+  void SetTimeTrace(const std::vector<G4double>& tt) { fTimeTrace = tt; }
+  // G4double* GetTimeTrace() { return fTimeTrace; }
+  const std::vector<G4double>& GetTimeTrace() const { return fTimeTrace; }
+
+  void SetTimeTraceV(const std::vector<G4double>& tt) { fTimeTraceV = tt; }
+  const std::vector<G4double>& GetTimeTraceV() const { return fTimeTraceV; }
+
+
 private:
     
   G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
+  G4int         fDNumber;
+  G4double      fChargeT;
+  G4double      fCharge;
+
+  std::vector<G4double> fTimeTrace;
+  std::vector<G4double> fTimeTraceV;
 
 };
 

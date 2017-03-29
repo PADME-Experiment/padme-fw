@@ -50,15 +50,17 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
+  newHit->SetGlobalPositionPost(worldPosPost);
+  newHit->SetLocalPositionPost(localPosPost);
 
   fTargetCollection->insert(newHit);
 

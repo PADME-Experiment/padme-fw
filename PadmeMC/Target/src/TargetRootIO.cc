@@ -40,7 +40,7 @@ TargetRootIO::TargetRootIO() : MCVRootIO(G4String("Target"))
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
-  fHitsEnabled = false;
+  fHitsEnabled = true;
   fDigisEnabled = true;
 
   G4cout << "TargetRootIO: Initialized" << G4endl;
@@ -120,8 +120,9 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	    G4double e_tot = 0.;
 	    for(G4int i=0;i<n_hit;i++) {
 	      TTargetMCHit* hit = (TTargetMCHit*)fEvent->AddHit();
-	      hit->SetChannelId(0);
+	      //hit->SetChannelId(0);
 	      hit->SetTime((*targetHC)[i]->GetTime());
+	      hit->SetHitVal((*targetHC)[i]->GetHitVal());
 	      hit->SetPosition(TVector3((*targetHC)[i]->GetPosX(),
 					(*targetHC)[i]->GetPosY(),
 					(*targetHC)[i]->GetPosZ()));
@@ -160,9 +161,14 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetChannelId((*targetDC)[i]->GetChannelId()); 
 	      digi->SetEnergy((*targetDC)[i]->GetEnergy());
 	      digi->SetTime((*targetDC)[i]->GetTime());
+	      digi->SetDNumber((*targetDC)[i]->GetDNumber());
+	      digi->SetChargeT((*targetDC)[i]->GetChargeT());
+	      digi->SetCharge((*targetDC)[i]->GetCharge());
+	      digi->SetTimeTrace((*targetDC)[i]->GetTimeTrace());
+	      digi->SetTimeTraceV((*targetDC)[i]->GetTimeTraceV());
 	      e_tot += (*targetDC)[i]->GetEnergy();
 	    }
-	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot/2.,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

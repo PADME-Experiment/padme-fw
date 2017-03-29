@@ -44,6 +44,6 @@ ECalCluster* ECalClusterHandler::GetCluster(Int_t i)
 
 void ECalClusterHandler::Print()
 {
-  std::cout << "I know " << fNClusters << " Clusters " << std::endl;
+  std::cout << "Found " << fNClusters << " clusters:" << std::endl;
   for(Int_t kk=0;kk<fNClusters;kk++) fClusterList[kk]->Print();
 }

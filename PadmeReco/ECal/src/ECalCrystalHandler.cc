@@ -14,13 +14,11 @@ ECalCrystalHandler::ECalCrystalHandler()
 
   // Get current number of crystals being used
   ECalParameters* para = ECalParameters::GetInstance();
-  //fNCryX = para->GetNCryX();
   fNCryX = para->GetECalNCols();
   if (fNCryX>CRYSTALHANDLER_N_MAX_CRYSTALS_X) {
     std::cout << "ERROR - CrystalHandler::CrystalHandler - Too many crystals along X: redefine CRYSTALHANDLER_N_MAX_CRYSTALS_X" << std::endl;
     exit(1);
   }
-  //fNCryY = para->GetNCryY();
   fNCryY = para->GetECalNRows();
   if (fNCryY>CRYSTALHANDLER_N_MAX_CRYSTALS_Y) {
     std::cout << "ERROR - CrystalHandler::CrystalHandler - Too many crystals along Y: redefine CRYSTALHANDLER_N_MAX_CRYSTALS_Y" << std::endl;
@@ -86,11 +84,7 @@ void ECalCrystalHandler::Print()
 
 ECalCrystal* ECalCrystalHandler::GetCrystal(Int_t ix,Int_t iy)
 {
-  if (ix<0 || ix>=fNCryX || iy<0 || iy>=fNCryY) {
-    //std::cout << "WARNING - CrystalHandler::GetCrystal(map) - Attempt to access crystal outside map: "
-    //	      << ix << " " << iy << std::endl;
-    return 0;
-  }
+  if (ix<0 || ix>=fNCryX || iy<0 || iy>=fNCryY) return 0;
   return fCrystalMap[ix][iy];
 }
 

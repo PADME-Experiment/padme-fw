@@ -10,8 +10,8 @@
 
 #include "ECalCrystalHandler.hh"
 #include "ECalCrystal.hh"
-#include "ECalClusterFinder.hh"
-#include "ECalClusterFinderBox.hh"
+#include "ECalClusterFinderIsland.hh"
+#include "ECalClusterFinderRadius.hh"
 #include "ECalCluster.hh"
 
 #include "TECalMCEvent.hh"
@@ -84,26 +84,40 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     Int_t iX = digi->GetChannelId()/100;
     Int_t iY = digi->GetChannelId()%100;
     ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
+    cry->SetCharge(digi->GetSignal());
     cry->SetEnergy(digi->GetSignal()); // Will need a signal->energy converter
+    cry->SetTime(digi->GetTime());
     cry->Print();
   }
   cryHand->SortEnergy();
 
   // Find clusters with PadmeIsland algorithm
-  ECalClusterHandler* cluHand = new ECalClusterHandler();
-  ECalClusterFinder* cluFind = new ECalClusterFinder(cryHand,cluHand);
-  cluFind->SetEThreshold(0.1); //min thr in each crystal
-  cluFind->SetEThresholdSeed(10.); //min thr for seed crystal
-  Int_t newNClu = cluFind->FindClusters();
-  cluHand->Print();
+  ECalClusterHandler* cluHandIsl = new ECalClusterHandler();
+  ECalClusterFinderIsland* cluFindIsl = new ECalClusterFinderIsland(cryHand,cluHandIsl);
+  cluFindIsl->SetEThreshold(0.1); //min thr in each crystal
+  cluFindIsl->SetEThresholdSeed(10.); //min thr for seed crystal
+  Int_t newNClu = cluFindIsl->FindClusters();
+  printf("- Cluster finding result - PadmeIsland algorithm -\n");
+  cluHandIsl->Print();
 
   // Find clusters with PadmeRadius algorithm
-  ECalClusterHandler* cluHandBox = new ECalClusterHandler();
-  ECalClusterFinderBox* cluFindBox = new ECalClusterFinderBox(cryHand,cluHandBox);
-  cluFindBox->SetEThreshold(0.1); //min thr in each crystal
-  cluFindBox->SetEThresholdSeed(10.); //min thr for seed crystal
-  Int_t newNCluBox = cluFindBox->FindClusters();
-  cluHandBox->Print();
+  ECalClusterHandler* cluHandRad = new ECalClusterHandler();
+  ECalClusterFinderRadius* cluFindRad = new ECalClusterFinderRadius(cryHand,cluHandRad);
+  cluFindRad->SetEThreshold(0.1); //min thr in each crystal
+  cluFindRad->SetEThresholdSeed(10.); //min thr for seed crystal
+  Int_t newNCluRad = cluFindRad->FindClusters();
+  printf("- Cluster finding result - PadmeRadius algorithm -\n");
+  cluHandRad->Print();
+
+  // Here you can do something with your clusters
+
+  // Final cleanup
+
+  delete cryHand;
+  delete cluHandIsl;
+  delete cluFindIsl;
+  delete cluHandRad;
+  delete cluFindRad;
 
 }
 

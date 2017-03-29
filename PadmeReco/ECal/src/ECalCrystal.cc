@@ -13,17 +13,11 @@ ECalCrystal::ECalCrystal(Int_t ix ,Int_t iy)
 
   Double_t calFrontFaceCenterX = 0.;
   Double_t calFrontFaceCenterY = 0.;
-  //Double_t calFrontFaceCenterZ = para->GetECalToTarg();
   Double_t calFrontFaceCenterZ = para->GetECalFrontFacePosZ();
 
-  //Int_t calNCryX = para->GetNCryX();
-  //Int_t calNCryY = para->GetNCryY();
   Int_t calNCryX = para->GetECalNCols();
   Int_t calNCryY = para->GetECalNRows();
 
-  //Double_t cryXSize = para->GetCryXSize();
-  //Double_t cryYSize = para->GetCryYSize();
-  //Double_t cryZSize = para->GetCryZSize();
   Double_t cryXSize = para->GetCrystalSizeX();
   Double_t cryYSize = para->GetCrystalSizeY();
   Double_t cryZSize = para->GetCrystalSizeZ();
@@ -45,8 +39,6 @@ ECalCrystal::ECalCrystal(Int_t ix ,Int_t iy)
   fTime=-1;
   fCharge=-1;
 
-  //fXCenter = calFrontFaceCenterX+cryXSize*(-0.5*calNCryX+0.5+ix);
-  //fYCenter = calFrontFaceCenterY+cryYSize*(-0.5*calNCryY+0.5+iy);
   fXCenter = calFrontFaceCenterX+(cryXSize+cryGap)*(-0.5*calNCryX+0.5+ix);
   fYCenter = calFrontFaceCenterY+(cryYSize+cryGap)*(-0.5*calNCryY+0.5+iy);
   fZCenter = calFrontFaceCenterZ+0.5*cryZSize;

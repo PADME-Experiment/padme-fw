@@ -1,43 +1,36 @@
-#include "ECalClusterFinderBox.hh"
+#include "ECalClusterFinderRadius.hh"
 
 #include <iostream>
 
 #include "ECalParameters.hh"
 
-ECalClusterFinderBox::ECalClusterFinderBox(ECalCrystalHandler* cryH,ECalClusterHandler* cluH)
+ECalClusterFinderRadius::ECalClusterFinderRadius(ECalCrystalHandler* cryH,ECalClusterHandler* cluH)
 {
 
   // Save crystal and cluster handlers
   fCrystalHandler = cryH;
   fClusterHandler = cluH;
 
-  // Set defaul energy thresholds for crystals and seeds. Currently both at 0.
-  // Change this using SetEThreshold and SetEThresholdSeed
-  fEThreshold = CLUSTERFINDERBOX_DEFAULT_ETHRESHOLD;
-  fEThresholdSeed = CLUSTERFINDERBOX_DEFAULT_ETHRESHOLDSEED;
-
-  // Get size of crystals from geometry
   ECalParameters* para = ECalParameters::GetInstance();
-  //fCryXSize = para->GetCryXSize();
-  //fCryYSize = para->GetCryYSize();
+
+  // Get thresholds from ECalParameters
+  fEThreshold = para->GetRadiusEThreshold();
+  fEThresholdSeed = para->GetRadiusEThresholdSeed();
+
+  // Get size of crystals from ECalParameters
   fCryXSize = para->GetCrystalSizeX()+para->GetCrystalGap();
   fCryYSize = para->GetCrystalSizeY()+para->GetCrystalGap();
-  fCryXSize2 = fCryXSize*fCryXSize;
-  fCryYSize2 = fCryYSize*fCryYSize;
 
   // Set radius to its default value
   fNNeighbor = 0;
-  SetBoxRadius(CLUSTERFINDERBOX_DEFAULT_RADIUS);
-
-  // Show neighbor map (mostly for debugging, can be disabled)
-  PrintNeighborMap();
+  SetRadius(para->GetRadiusRadius());
 
 }
 
-ECalClusterFinderBox::~ECalClusterFinderBox()
+ECalClusterFinderRadius::~ECalClusterFinderRadius()
 {;}
 
-Int_t ECalClusterFinderBox::FindClusters()
+Int_t ECalClusterFinderRadius::FindClusters()
 {
 
   Int_t nClusters = 0;
@@ -62,7 +55,7 @@ Int_t ECalClusterFinderBox::FindClusters()
 
 }
 
-void ECalClusterFinderBox::ExpandCluster(ECalCluster* clu,ECalCrystal* cry)
+void ECalClusterFinderRadius::ExpandCluster(ECalCluster* clu,ECalCrystal* cry)
 {
 
   // Get position of crystal
@@ -87,15 +80,15 @@ void ECalClusterFinderBox::ExpandCluster(ECalCluster* clu,ECalCrystal* cry)
 }
 
 // Change radius used in the algorithm and update all related quantities
-void ECalClusterFinderBox::SetBoxRadius(Double_t boxRad)
+void ECalClusterFinderRadius::SetRadius(Double_t radius)
 {
 
-  fBoxRadius = boxRad;
-  Double_t boxRadius2 = boxRad*boxRad;
+  fRadius = radius;
+  Double_t radius2 = fRadius*fRadius;
 
   // Get x and y range around seed crystal
-  Int_t cryXRange = (Int_t)(fBoxRadius/fCryXSize);
-  Int_t cryYRange = (Int_t)(fBoxRadius/fCryYSize);
+  Int_t cryXRange = (Int_t)(fRadius/fCryXSize);
+  Int_t cryYRange = (Int_t)(fRadius/fCryYSize);
 
   // Create map of crystals within the given radius from a generic crystal center
   fNNeighbor = 0;
@@ -105,14 +98,14 @@ void ECalClusterFinderBox::SetBoxRadius(Double_t boxRad)
       if (dx==0 && dy==0) continue; // Central crystal is not a neighbor
 
       // See if crystal center is within box radius from seed
-      Double_t r2 = fCryXSize2*(Double_t)(dx*dx)+fCryYSize2*(Double_t)(dy*dy);
-      if (r2<=boxRadius2){
-	if (fNNeighbor<CLUSTERFINDERBOX_NEIGHBORS_MAX){
+      Double_t r2 = (dx*fCryXSize)*(dx*fCryXSize)+(dy*fCryYSize)*(dy*fCryYSize);
+      if (r2<=radius2){
+	if (fNNeighbor<CLUSTERFINDERRADIUS_NEIGHBORS_MAX){
 	  fXNeighbor[fNNeighbor] = dx;
 	  fYNeighbor[fNNeighbor] = dy;
 	  fNNeighbor++;
 	} else {
-	  std::cout << "ERROR ClusterFinderBox: more than " << CLUSTERFINDERBOX_NEIGHBORS_MAX
+	  std::cout << "ERROR ClusterFinderRadius: more than " << CLUSTERFINDERRADIUS_NEIGHBORS_MAX
 		    << " neighbors found" << std::endl;
 	}
       }
@@ -120,13 +113,16 @@ void ECalClusterFinderBox::SetBoxRadius(Double_t boxRad)
     }
   }
 
+  // Show neighbor map (mostly for debugging, can be disabled)
+  //PrintNeighborMap();
+
 }
 
 // Show map of neighbor crystals
-void ECalClusterFinderBox::PrintNeighborMap()
+void ECalClusterFinderRadius::PrintNeighborMap()
 {
-  //  std::cout<<"ClusterFinderBox - Radius "<<fBoxRadius<<" cm - Neighbors "<<fNNeighbor<<std::endl;
-  for(Int_t in=0;in<fNNeighbor;in++){
-    //    std::cout<<in<<" "<<fXNeighbor[in]<<" "<<fYNeighbor[in]<<std::endl;
+  std::cout << "ClusterFinderRadius - Radius " << fRadius << " mm - Neighbors " << fNNeighbor << std::endl;
+  for (Int_t in=0;in<fNNeighbor;in++) {
+    std::cout << in << " " << fXNeighbor[in] << " " << fYNeighbor[in] << std::endl;
   }
 }

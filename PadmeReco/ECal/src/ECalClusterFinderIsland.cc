@@ -1,24 +1,25 @@
-#include "ECalClusterFinder.hh"
+#include "ECalClusterFinderIsland.hh"
+
+#include "ECalParameters.hh"
 
 #include <iostream>
 
-ECalClusterFinder::ECalClusterFinder(ECalCrystalHandler* cryH,ECalClusterHandler* cluH)
+ECalClusterFinderIsland::ECalClusterFinderIsland(ECalCrystalHandler* cryH,ECalClusterHandler* cluH)
 {
 
   fCrystalHandler = cryH;
   fClusterHandler = cluH;
 
-  // Default: any crystal with E>0 can be used and can be a seed
-  // Change this using SetEThreshold and SetEThresholdSeed
-  fEThreshold = 0.;
-  fEThresholdSeed = 0.;
+  // Get thresholds from ECalParameters
+  fEThreshold = ECalParameters::GetInstance()->GetIslandEThreshold();
+  fEThresholdSeed = ECalParameters::GetInstance()->GetIslandEThresholdSeed();
 
 }
 
-ECalClusterFinder::~ECalClusterFinder()
+ECalClusterFinderIsland::~ECalClusterFinderIsland()
 {;}
 
-Int_t ECalClusterFinder::FindClusters()
+Int_t ECalClusterFinderIsland::FindClusters()
 {
 
   Int_t nClusters = 0;
@@ -34,7 +35,7 @@ Int_t ECalClusterFinder::FindClusters()
       seed->SetSeed();
       ExpandCluster(cluster,seed);
     } else {
-      std::cout << "WARNING - ClusterFinder::FindClusters - Cannot create new cluster" << std::endl;
+      std::cout << "WARNING - ClusterFinderIsland::FindClusters - Cannot create new cluster" << std::endl;
       break;
     }
   }
@@ -43,7 +44,7 @@ Int_t ECalClusterFinder::FindClusters()
 
 }
 
-void ECalClusterFinder::ExpandCluster(ECalCluster* clu,ECalCrystal* cry)
+void ECalClusterFinderIsland::ExpandCluster(ECalCluster* clu,ECalCrystal* cry)
 {
   // Get position of crystal
   Int_t cx = cry->GetXi();

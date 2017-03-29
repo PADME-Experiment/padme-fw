@@ -12,24 +12,20 @@ class ECalParameters {
 
 public :
 
-  ECalParameters();
+  static ECalParameters* GetInstance();
   ~ECalParameters();
-  
-  void InitGeomParam();
-  void WriteGeomParam();
 
-  Int_t GetNCryX() { return NCryX; }
-  Int_t GetNCryY() { return NCryY; }
+private:
 
-  Double_t GetCryXSize() { return a; }
-  Double_t GetCryYSize() { return b; }
-  Double_t GetCryZSize() { return c; }
+  static ECalParameters* fInstance;
 
-  Double_t GetECalToTarg() { return ECalToTarg; }
- 
-  Double_t GetTargetZ() { return TargetZ; }
-  Double_t GetECalZ()   { return ECALZ; }
-  Double_t GetSACZ()    { return SACZ; }
+protected:
+
+  ECalParameters();
+
+public:
+
+  void SetMCDetInfo(TSubDetectorInfo*);
 
   Double_t GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
 
@@ -42,32 +38,35 @@ public :
 
   Double_t GetCrystalGap() { return fCrystalGap; }
 
-  void SetMCDetInfo(TSubDetectorInfo*);
+  Double_t GetIslandEThreshold() { return fIslandEThreshold; }
+  Double_t GetIslandEThresholdSeed() { return fIslandEThresholdSeed; }
+
+  Double_t GetRadiusEThreshold() { return fRadiusEThreshold; }
+  Double_t GetRadiusEThresholdSeed() { return fRadiusEThresholdSeed; }
+  Double_t GetRadiusRadius() { return fRadiusRadius; }
 
 private :
 
-  Int_t NCryX;
-  Int_t NCryY;
-  Double_t a, b, c; 
-  Double_t TargetZ,ECALZ,SACZ;
-  Double_t ECalToTarg;
+  // Geometry parameters
 
   Int_t fECalNRows;
   Int_t fECalNCols;
 
-  Double_t fECalFrontFacePosZ;
   Double_t fCrystalSizeX;
   Double_t fCrystalSizeY;
   Double_t fCrystalSizeZ;
   Double_t fCrystalGap; // Warning: this gap includes the paint coating
 
- public:
+  Double_t fECalFrontFacePosZ;
 
-  static ECalParameters* GetInstance();
+  // Cluster finding parameters
 
- private:
+  Double_t fIslandEThreshold;
+  Double_t fIslandEThresholdSeed;
 
-  static ECalParameters* fInstance;
+  Double_t fRadiusEThreshold;
+  Double_t fRadiusEThresholdSeed;
+  Double_t fRadiusRadius;
 
 };
 #endif

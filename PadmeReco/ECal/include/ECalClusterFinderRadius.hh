@@ -1,33 +1,29 @@
-#ifndef ECalClusterFinderBox_h
-#define ECalClusterFinderBox_h
+#ifndef ECalClusterFinderRadius_h
+#define ECalClusterFinderRadius_h
 
 #include "ECalCrystalHandler.hh"
 #include "ECalClusterHandler.hh"
 
-#define CLUSTERFINDERBOX_NEIGHBORS_MAX 900
+#define CLUSTERFINDERRADIUS_NEIGHBORS_MAX 900
 
-#define CLUSTERFINDERBOX_DEFAULT_RADIUS 5.
-#define CLUSTERFINDERBOX_DEFAULT_ETHRESHOLD 0.
-#define CLUSTERFINDERBOX_DEFAULT_ETHRESHOLDSEED 0.
-
-class ECalClusterFinderBox {
+class ECalClusterFinderRadius {
 
  public :
 
-  ECalClusterFinderBox(ECalCrystalHandler*,ECalClusterHandler*);
-  ~ECalClusterFinderBox();
+  ECalClusterFinderRadius(ECalCrystalHandler*,ECalClusterHandler*);
+  ~ECalClusterFinderRadius();
   
  public :
 
-  Int_t FindClusters(); // Returns number of clusters found
+  Int_t FindClusters(); // Find clusters and return number of clusters found
 
   Double_t GetEThreshold(){return fEThreshold;};
   Double_t GetEThresholdSeed(){return fEThresholdSeed;};
-  Double_t GetBoxRadius(){return fBoxRadius;};
+  Double_t GetRadius(){return fRadius;};
 
   void SetEThreshold(Double_t eThr){fEThreshold = eThr;};
   void SetEThresholdSeed(Double_t eThrS){fEThresholdSeed = eThrS;};
-  void SetBoxRadius(Double_t);
+  void SetRadius(Double_t);
 
   void PrintNeighborMap();
 
@@ -42,17 +38,15 @@ class ECalClusterFinderBox {
   Double_t fEThreshold;
   Double_t fEThresholdSeed;
 
-  // Box radius and related quantities
-  Double_t fBoxRadius;
+  // Radius and related quantities
+  Double_t fRadius;
   Double_t fCryXSize;
   Double_t fCryYSize;
-  Double_t fCryXSize2;
-  Double_t fCryYSize2;
 
   // Map of neighbor crystals within given radius
   Int_t fNNeighbor;
-  Int_t fXNeighbor[CLUSTERFINDERBOX_NEIGHBORS_MAX];
-  Int_t fYNeighbor[CLUSTERFINDERBOX_NEIGHBORS_MAX];
+  Int_t fXNeighbor[CLUSTERFINDERRADIUS_NEIGHBORS_MAX];
+  Int_t fYNeighbor[CLUSTERFINDERRADIUS_NEIGHBORS_MAX];
 
   ECalCrystalHandler* fCrystalHandler;
   ECalClusterHandler* fClusterHandler;

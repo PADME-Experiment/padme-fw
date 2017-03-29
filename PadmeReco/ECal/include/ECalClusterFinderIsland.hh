@@ -1,15 +1,15 @@
-#ifndef ECalClusterFinder_h
-#define ECalClusterFinder_h
+#ifndef ECalClusterFinderIsland_h
+#define ECalClusterFinderIsland_h
 
 #include "ECalCrystalHandler.hh"
 #include "ECalClusterHandler.hh"
 
-class ECalClusterFinder {
+class ECalClusterFinderIsland {
 
  public :
 
-  ECalClusterFinder(ECalCrystalHandler*,ECalClusterHandler*);
-  ~ECalClusterFinder();
+  ECalClusterFinderIsland(ECalCrystalHandler*,ECalClusterHandler*);
+  ~ECalClusterFinderIsland();
 
  public :
 

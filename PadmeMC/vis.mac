@@ -15,20 +15,20 @@
 #/output/HistoFileName mchisto.root
 
 # Enable IO for single detectors
-#/output/EnableDetectorIO ECal:HD
 #/output/EnableDetectorIO Target:D
 #/output/EnableDetectorIO PVeto:HD
 #/output/EnableDetectorIO EVeto:HD
 #/output/EnableDetectorIO HEPVeto:HD
+#/output/EnableDetectorIO ECal:D
 #/output/EnableDetectorIO SAC:D
 #/output/EnableDetectorIO TPix:D
 
 # Disable IO for single detectors
-/output/DisableDetectorIO ECal
 /output/DisableDetectorIO Target
 /output/DisableDetectorIO PVeto
 /output/DisableDetectorIO EVeto
 /output/DisableDetectorIO HEPVeto
+/output/DisableDetectorIO ECal
 /output/DisableDetectorIO SAC
 /output/DisableDetectorIO TPix
 

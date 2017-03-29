@@ -19,6 +19,8 @@
 #include "SACReconstruction.hh"
 #include "TPixReconstruction.hh"
 
+#include "ECalParameters.hh"
+
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
 {
@@ -101,6 +103,11 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"SAC");
 	ShowSubDetectorInfo(detInfo,"TPix");
 	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
+
+	// Pass detector info to corresponding Parameters class for decoding
+	TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
+	if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
+    
       }
     }
   }

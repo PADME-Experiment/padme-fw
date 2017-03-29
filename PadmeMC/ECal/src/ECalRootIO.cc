@@ -40,7 +40,7 @@ ECalRootIO::ECalRootIO() : MCVRootIO(G4String("ECal"))
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
-  fHitsEnabled = true;
+  fHitsEnabled = false;
   fDigisEnabled = true;
 
   G4cout << "ECalRootIO: Initialized" << G4endl;

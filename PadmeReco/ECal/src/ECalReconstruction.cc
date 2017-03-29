@@ -8,6 +8,12 @@
 
 #include "ECalReconstruction.hh"
 
+#include "ECalCrystalHandler.hh"
+#include "ECalCrystal.hh"
+#include "ECalClusterFinderIsland.hh"
+#include "ECalClusterFinderRadius.hh"
+#include "ECalCluster.hh"
+
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 #include "TECalMCDigi.hh"
@@ -70,6 +76,49 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
     digi->Print();
   }
+
+  // Let's do some cluster finding
+  ECalCrystalHandler* cryHand = new ECalCrystalHandler();
+  for (Int_t iD=0; iD<tECalEvent->GetNDigi(); iD++) {
+    TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
+    Int_t iX = digi->GetChannelId()/100;
+    Int_t iY = digi->GetChannelId()%100;
+    ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
+    cry->SetCharge(digi->GetSignal());
+    cry->SetEnergy(digi->GetSignal()); // Will need a signal->energy converter
+    cry->SetTime(digi->GetTime());
+    cry->Print();
+  }
+  cryHand->SortEnergy();
+
+  // Find clusters with PadmeIsland algorithm
+  ECalClusterHandler* cluHandIsl = new ECalClusterHandler();
+  ECalClusterFinderIsland* cluFindIsl = new ECalClusterFinderIsland(cryHand,cluHandIsl);
+  cluFindIsl->SetEThreshold(0.1); //min thr in each crystal
+  cluFindIsl->SetEThresholdSeed(10.); //min thr for seed crystal
+  Int_t newNClu = cluFindIsl->FindClusters();
+  printf("- Cluster finding result - PadmeIsland algorithm -\n");
+  cluHandIsl->Print();
+
+  // Find clusters with PadmeRadius algorithm
+  ECalClusterHandler* cluHandRad = new ECalClusterHandler();
+  ECalClusterFinderRadius* cluFindRad = new ECalClusterFinderRadius(cryHand,cluHandRad);
+  cluFindRad->SetEThreshold(0.1); //min thr in each crystal
+  cluFindRad->SetEThresholdSeed(10.); //min thr for seed crystal
+  Int_t newNCluRad = cluFindRad->FindClusters();
+  printf("- Cluster finding result - PadmeRadius algorithm -\n");
+  cluHandRad->Print();
+
+  // Here you can do something with your clusters
+
+  // Final cleanup
+
+  delete cryHand;
+  delete cluHandIsl;
+  delete cluFindIsl;
+  delete cluHandRad;
+  delete cluFindRad;
+
 }
 
 void ECalReconstruction::EndProcessing()

@@ -5,6 +5,7 @@
 
 #include "ECalGeometry.hh"
 
+#include "G4Poisson.hh"
 #include "G4UnitsTable.hh"
 #include "G4DigiManager.hh"
 #include "G4HCofThisEvent.hh"
@@ -25,9 +26,14 @@ ECalDigitizer::ECalDigitizer(G4String name)
   // Initialize digitization parameters
   fCrystalLength = ECalGeometry::GetInstance()->GetCrystalSizeZ();
   fPropagationSpeed = (2.998E8*m/s)/2.57; // Speed of light in BGO
-  fConversionFactor = 1.; // Need to decide final units
 
-  // Collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
+  // How many photoelectrons per MeV of hit energy are produced by photocathode?
+  // sqrt(N(E))/N(E) = sigma(E)/E = 2%/sqrt(E(GeV)) -> N(E) = 2.5*E(MeV)
+  fEHtoNPEConversion = 2.5;
+
+  fPEtoSConversion = 1.; // Contribution of 1 p.e. to integral ADC signal. Need to define some units
+
+  // Relative collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
   static const G4double cmap[] = {1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.};
   fCollMapNBins = sizeof(cmap)/sizeof(cmap[0]);   // Number of bins in the map
   fCollMapBinLen = fCrystalLength/fCollMapNBins;  // Length of a single bin along Z
@@ -36,7 +42,9 @@ ECalDigitizer::ECalDigitizer(G4String name)
   //G4cout << "ECalDigitizer -"
   //	 << " length " << G4BestUnit(fCrystalLength,"Length")
   //	 << " speed " << fPropagationSpeed << " mm/ns"
-  //	 << " conv " << fConversionFactor << " map";
+  //	 << " conv E->Npe " << fEHtoNPEConversion
+  //	 << " conv pe->Signal " << fPEtoSConversion
+  //     << " map";
   //for(G4int i=0;i<fCollectionMap.size();i++) G4cout << " " << fCollectionMap[i];
   //G4cout << G4endl;
 
@@ -100,14 +108,17 @@ void ECalDigitizer::Digitize()
     }
 
     // Create digis for active channels
+    // Active :== at least 1 hit and total signal>0
     for (G4int i=0; i < fDChannel.size(); i++) {
-      ECalDigi* digi = new ECalDigi();
-      digi->SetChannelId(fDChannel[i]);
-      digi->SetTime(fDTime[i]);
-      digi->SetEnergy(fDEnergy[i]);
-      digi->SetSignal(fDSignal[i]);
-      eCalDigiCollection->insert(digi);
-      //digi->Print();
+      if (fDSignal[i]>0.) {
+	ECalDigi* digi = new ECalDigi();
+	digi->SetChannelId(fDChannel[i]);
+	digi->SetTime(fDTime[i]);
+	digi->SetEnergy(fDEnergy[i]);
+	digi->SetSignal(fDSignal[i]);
+	eCalDigiCollection->insert(digi);
+	//digi->Print();
+      }
     }
   }
 
@@ -129,7 +140,9 @@ void ECalDigitizer::ComputeSignal(ECalHit* hit,G4double* signal,G4double* time)
   // Correct hit time with signal arrival time
   *time = t+dt;
 
-  // Compute signal from energy and position
-  *signal = e*fCollectionMap[iz]*fConversionFactor;
+  // Get the average number of photoelectrons produced by photocathode
+  // for a hit of energy e at position iz, spread it with Poisson
+  // and compute the contribution to the final signal
+  *signal = G4Poisson(e*fCollectionMap[iz]*fEHtoNPEConversion)*fPEtoSConversion;
 
 }

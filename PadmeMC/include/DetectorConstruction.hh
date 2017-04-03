@@ -70,6 +70,9 @@ public:
   void WorldIsAir();
   void WorldIsVacuum();
 
+  void UpdateGeometry();
+  void GenerateGDML();
+
   // Is this really needed?
   void SetTargetMaterial(G4String);
 
@@ -81,6 +84,10 @@ public:
 private:
 
   void DefineMaterials();
+
+  G4VSolid*          fSolidWorld;
+  G4LogicalVolume*   fLogicWorld;
+  G4VPhysicalVolume* fPhysicWorld;
 
   ECalDetector*    fECalDetector;
   TargetDetector*  fTargetDetector;
@@ -122,15 +129,7 @@ private:
   //G4UserLimits* stepLimit; // pointer to user step limits
 
   DetectorMessenger* fDetectorMessenger;  // pointer to the Messenger
-  /*
-private:
 
-  G4double CryX[1000];
-  G4double CryY[1000];
-  G4double CryZ[1000];
-  */
 };
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif

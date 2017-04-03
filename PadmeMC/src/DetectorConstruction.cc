@@ -64,6 +64,10 @@
 #include "G4SystemOfUnits.hh"
 #include "G4ios.hh"
 
+#ifdef G4LIB_USE_GDML
+#include "G4GDMLParser.hh"
+#endif
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 DetectorConstruction::DetectorConstruction()
@@ -146,12 +150,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   //------------------------------
   // World Volume
-  //------------------------------  
-  G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
-  G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
-  if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
-  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-  G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
+  //------------------------------
+
+  fSolidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
+
+  fLogicWorld = new G4LogicalVolume(fSolidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
+  if (! fWorldIsFilledWithAir) fLogicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  fLogicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+
+  fPhysicWorld = new G4PVPlacement(0,G4ThreeVector(),fLogicWorld,"World",0,false,0);
 
   /*
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
@@ -185,7 +192,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("G4_AIR"),"MagneticVolume",0,0,0);
   if (! fWorldIsFilledWithAir) logicMagneticVolume->SetMaterial(G4Material::GetMaterial("Vacuum"));
   if (! fMagneticVolumeIsVisible) logicMagneticVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
+  new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",fLogicWorld,false,0,false);
   */
 
   // Vacuum chamber structure
@@ -201,7 +208,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fChamberStructure->SetChamberInvisible();
   }
   //fChamberStructure->SetMotherVolume(logicMagneticVolume);
-  fChamberStructure->SetMotherVolume(logicWorld);
+  fChamberStructure->SetMotherVolume(fLogicWorld);
   fChamberStructure->CreateGeometry();
 
   // Create magnetic volume inside vacuum chamber
@@ -265,14 +272,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Concrete wall at large Z
   if (fEnableWall) {
-    fHallStructure->SetMotherVolume(logicWorld);
+    fHallStructure->SetMotherVolume(fLogicWorld);
     fHallStructure->CreateGeometry();
   }
 
   // Magnet physical structure
   if (fEnableMagnet) { 
     //fMagnetStructure->SetMotherVolume(logicMagneticVolume);
-    fMagnetStructure->SetMotherVolume(logicWorld);
+    fMagnetStructure->SetMotherVolume(fLogicWorld);
     fMagnetStructure->CreateGeometry();
   }
 
@@ -303,20 +310,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // SAC
   if (fEnableSAC) {
-    fSACDetector->SetMotherVolume(logicWorld);
+    fSACDetector->SetMotherVolume(fLogicWorld);
     fSACDetector->CreateGeometry();
   }
 
   // TDump
   if (fEnableTDump) {
-    fTDumpDetector->SetMotherVolume(logicWorld);
+    fTDumpDetector->SetMotherVolume(fLogicWorld);
     fTDumpDetector->CreateGeometry();
   }
 
   // TPix
   if (fEnableTPix) {
     //fTPixDetector->SetMotherVolume(logicMagneticVolume);
-    fTPixDetector->SetMotherVolume(logicWorld);
+    fTPixDetector->SetMotherVolume(fLogicWorld);
     // Position of TPix depends on shape of vacuum chamber
     geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
     geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
@@ -325,7 +332,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // ECal
   if (fEnableECal) {
-    fECalDetector->SetMotherVolume(logicWorld);
+    fECalDetector->SetMotherVolume(fLogicWorld);
     fECalDetector->CreateGeometry();
   }
 
@@ -355,7 +362,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fHEPVetoDetector->CreateGeometry();
   }
 
-  return physicWorld;
+  return fPhysicWorld;
 
 }
 
@@ -644,4 +651,16 @@ void DetectorConstruction::WorldIsVacuum()
 {
   printf("World and magnetic volume are filled with vacuum (low pressure air)\n");
   fWorldIsFilledWithAir = 0;
+}
+
+void DetectorConstruction::GenerateGDML() {
+
+#ifdef G4LIB_USE_GDML
+  G4GDMLParser parser;
+  parser.Write("Padme.gdml",fPhysicWorld);
+#else
+  G4cerr << "******************************" << G4endl << "GDML not available!!!!!" << G4endl
+         << "******************************" << G4endl;
+#endif
+
 }

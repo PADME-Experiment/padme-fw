@@ -75,6 +75,10 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fWorldIsVacuumCmd->SetGuidance("Fill world (and magnetic volume) with vacuum (i.e. low pressure air).");
   fWorldIsVacuumCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fGenerateGDMLCmd = new G4UIcmdWithoutParameter("/Detector/GenerateGDML",this);
+  fGenerateGDMLCmd->SetGuidance("Generate GDML file.");
+  fGenerateGDMLCmd->AvailableForStates(G4State_Idle);
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -95,6 +99,7 @@ DetectorMessenger::~DetectorMessenger()
   delete fChamberInvisibleCmd;
   delete fWorldIsAirCmd;
   delete fWorldIsVacuumCmd;
+  delete fGenerateGDMLCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -122,6 +127,8 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
   if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();
+
+  if (command==fGenerateGDMLCmd)   fDetector->GenerateGDML();
 
 }
 

@@ -47,6 +47,8 @@ private:
   G4UIcmdWithoutParameter* fWorldIsAirCmd;
   G4UIcmdWithoutParameter* fWorldIsVacuumCmd;
 
+  G4UIcmdWithoutParameter* fGenerateGDMLCmd;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

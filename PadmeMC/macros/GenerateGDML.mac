@@ -1,0 +1,21 @@
+# Padme detector visualization:
+# scripts/G4GeometryToRoot.csh uses this macro as an input,
+# and produces a file NA62.root, which can be visualized with
+# macros/CheckGeom.C (see CheckGeom.C for further documentation).
+#
+# Enable the subdetectors to be visualised from the list below.
+
+/Detector/EnableSubDetector Target
+/Detector/EnableSubDetector PVeto
+/Detector/EnableSubDetector EVeto
+/Detector/EnableSubDetector HEPVeto
+/Detector/EnableSubDetector ECal
+/Detector/EnableSubDetector SAC
+/Detector/EnableSubDetector TPix
+
+/Detector/EnableStructure Magnet
+/Detector/EnableStructure Chamber
+
+/run/initialize
+
+/Detector/GenerateGDML

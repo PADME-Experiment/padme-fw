@@ -82,6 +82,21 @@ ECalGeometry::ECalGeometry()
     }
   }
 
+  // Number of photoelectrons produced by photocathode per MeV of hit energy
+  // sqrt(N(E))/N(E) = sigma(E)/E = 2%/sqrt(E(GeV)) -> N(E) = 2.5*E(MeV)
+  fDigiEtoNPEConversion = 2.5/MeV;
+
+  fDigiPEtoSignalConversion = 1.; // Contribution of 1 p.e. to integral ADC signal
+ 
+  // Relative collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
+  static const G4double cmap[] = {1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.};
+  G4int nbins = 23;
+  fDigiPECollectionMap.assign(cmap,cmap+nbins);
+
+  fDigiPMTTransitTime = 23.*ns; // PMT transit time from photocathode to anode
+  fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
+
+
   fECalSensitiveDetectorName = "ECalSD";
 
 }
@@ -197,6 +212,27 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fCrystalCoating " << fCrystalCoating;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fDigiEtoNPEConversion " << fDigiEtoNPEConversion;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fDigiPEtoSignalConversion " << fDigiPEtoSignalConversion;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fDigiPMTTransitTime " << fDigiPMTTransitTime;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fDigiPMTCableDelay " << fDigiPMTCableDelay;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fDigiPECollectionMap";
+  for(G4int i=0;i<fDigiPECollectionMap.size();i++) buffer << " " << fDigiPECollectionMap[i];
   hash.push_back(buffer.str());
   buffer.str("");
 

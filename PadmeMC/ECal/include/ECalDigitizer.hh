@@ -22,8 +22,8 @@ public:
 
 private: 
 
-  // Compute time and signal contribution of an hit
-  void ComputeSignal(ECalHit*,G4double*,G4double*); // Hit, signal, time
+  // Compute number of photoelectrons produced by hit and time of first photoelectron
+  void ComputeNpe(ECalHit*,G4double*,G4double*); // Hit, signal, time
 
   // Digitization parameters
   G4double fCrystalLength; // Length of BGO crystal along Z
@@ -34,6 +34,10 @@ private:
   G4int fCollMapNBins;
   G4double fCollMapBinLen;
   std::vector<G4double> fCollectionMap;
+
+  // PMT parameters
+  G4double fPMTTransitTime;
+  G4double fPMTCableDelay;
 
   // Vectors to hold digi quantitites during digitization
   std::vector<G4int>    fDChannel;

@@ -111,10 +111,24 @@ public:
   G4double GetECalPanelGap() { return fECalPanelGap; }
   void SetECalPanelGap(G4double g) { fECalPanelGap = g; }
 
+  // Digitization parameters
+  G4double GetBGOLightPropagationSpeed() { return (2.998E8*m/s)/2.57; }
+  G4double GetDigiEtoNPEConversion() { return fDigiEtoNPEConversion; }
+  G4double GetDigiPEtoSignalConversion() { return fDigiPEtoSignalConversion; }
+
+  std::vector<G4double> GetDigiPECollectionMap() { return fDigiPECollectionMap; }
+  G4int GetDigiPECollectionMapNBins() { return fDigiPECollectionMap.size(); }
+  G4double  GetDigiPECollectionMapBinLength() { return fCrystalSizeZ/fDigiPECollectionMap.size(); }
+
+  G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
+  G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
+
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
 
 private:
+
+  // Geometry parameters
 
   G4double fCrystalSizeX;
   G4double fCrystalSizeY;
@@ -136,6 +150,18 @@ private:
   G4double fECalPanelGap; // Gap between back of plastic panel and front face of ECal
 
   G4int fECalCrystalMap[ECALGEOMETRY_N_ROWS_MAX][ECALGEOMETRY_N_COLS_MAX]; // Map of existing crystals
+
+  // Digitization parameters
+
+  G4double fDigiEtoNPEConversion; // Number of p.e. produced by photocathode per MeV of hit energy
+  G4double fDigiPEtoSignalConversion; // Contribution of 1 p.e. to integral ADC signal
+ 
+  std::vector<G4double> fDigiPECollectionMap; // Relative collection efficiency along crystal
+
+  G4double fDigiPMTTransitTime; // PMT transit time from photocathode to anode
+  G4double fDigiPMTCableDelay; // Delay due to connection cables
+
+  // Other parameteres
 
   G4String fECalSensitiveDetectorName;
 

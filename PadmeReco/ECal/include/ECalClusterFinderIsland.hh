@@ -18,9 +18,6 @@ class ECalClusterFinderIsland {
   Double_t GetEThreshold() { return fEThreshold; }
   Double_t GetEThresholdSeed() { return fEThresholdSeed; }
 
-  void SetEThreshold(Double_t eThr) { fEThreshold = eThr; }
-  void SetEThresholdSeed(Double_t eThrS) { fEThresholdSeed = eThrS; }
-
   ECalCrystalHandler* GetCrystalHandler() { return fCrystalHandler; }
   ECalClusterHandler* GetClusterHandler() { return fClusterHandler; }
 

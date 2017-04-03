@@ -28,6 +28,8 @@ ECalParameters::ECalParameters()
 
   fECalFrontFacePosZ = 2300.;
 
+  fSignalToEnergy = 0.4; // This is 1/fEHtoNPEConversion from MC digitization process
+
   fIslandEThreshold = 1.; // 1MeV
   fIslandEThresholdSeed = 10.; // 10MeV
 

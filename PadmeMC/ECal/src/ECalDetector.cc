@@ -15,6 +15,7 @@
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
+#include "ECalMessenger.hh"
 #include "ECalGeometry.hh"
 #include "ECalSD.hh"
 

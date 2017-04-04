@@ -45,28 +45,28 @@ class SACDigi : public G4VDigi
   void AddEnergy(G4double e) { fEnergy += e; }
   G4double GetEnergy() { return fEnergy; }
 
-  void ResetEHisto();
-  void PrintEHisto();
-  void SetEHistoStart(G4double v) { fEHistoStart = v; }
-  void SetEHistoStep(G4double v)  { fEHistoStep = v; }
-  G4int    GetEHistoNBins() { return SACDIGI_N_BINS; };
-  G4double GetEHistoStart() { return fEHistoStart; };
-  G4double GetEHistoStep()  { return fEHistoStep; };
-  G4double GetEHistoEnd()   { return fEHistoStart+fEHistoStep*SACDIGI_N_BINS; };
-  void     SetEHistoBin(G4int i,G4double e) { fEHisto[i] = e; }
-  G4double GetEHistoBin(G4int i) { return fEHisto[i]; }
-  void     AddEnergyAtTime(G4double,G4double); // Energy,Time
-  G4double GetEnergyAtTime(G4double); // Time
+  void ResetQHisto();
+  void PrintQHisto();
+  void SetQHistoStart(G4double v) { fQHistoStart = v; }
+  void SetQHistoStep(G4double v)  { fQHistoStep = v; }
+  G4int    GetQHistoNBins() { return SACDIGI_N_BINS; };
+  G4double GetQHistoStart() { return fQHistoStart; };
+  G4double GetQHistoStep()  { return fQHistoStep; };
+  G4double GetQHistoEnd()   { return fQHistoStart+fQHistoStep*SACDIGI_N_BINS; };
+  void     SetQHistoBin(G4int i,G4double q) { fQHisto[i] = q; }
+  G4double GetQHistoBin(G4int i) { return fQHisto[i]; }
+  void     AddChargeAtTime(G4double,G4double); // Charge,Time
+  G4double GetChargeAtTime(G4double); // Time
 
 private:
     
-  G4int         fChannelId;
-  G4double      fTime;
-  G4double      fEnergy;
+  G4int    fChannelId;
+  G4double fTime;
+  G4double fEnergy;
 
-  G4double fEHistoStart;
-  G4double fEHistoStep;
-  G4double fEHisto[SACDIGI_N_BINS];
+  G4double fQHistoStart;
+  G4double fQHistoStep;
+  G4double fQHisto[SACDIGI_N_BINS];
 
 };
 

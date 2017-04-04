@@ -33,9 +33,7 @@ ECalGeometry::ECalGeometry()
 
   fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
 
-  //fECalInnerRadius = 5.9*cm;
-  //fECalOuterRadius = 28.5*cm;
-
+  // Geometry parameters for plastic panel in front of ECal
   fECalPanelEnable = true;
   fECalPanelThickness = 0.5*cm;
   fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
@@ -95,7 +93,6 @@ ECalGeometry::ECalGeometry()
 
   fDigiPMTTransitTime = 23.*ns; // PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
-
 
   fECalSensitiveDetectorName = "ECalSD";
 
@@ -186,14 +183,6 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer << "fECalFrontFacePosZ " << fECalFrontFacePosZ;
   hash.push_back(buffer.str());
   buffer.str("");
-
-  //buffer << "fECalInnerRadius " << fECalInnerRadius;
-  //hash.push_back(buffer.str());
-  //buffer.str("");
-
-  //buffer << "fECalOuterRadius " << fECalOuterRadius;
-  //hash.push_back(buffer.str());
-  //buffer.str("");
 
   buffer << "fCrystalSizeX " << fCrystalSizeX;
   hash.push_back(buffer.str());

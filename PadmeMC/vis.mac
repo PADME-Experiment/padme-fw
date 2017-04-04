@@ -92,9 +92,13 @@
 #/Detector/ECal/PanelThickness 0.5
 #/Detector/ECal/PanelGap 0.1
 
-#/Detector/SAC/CrystalSize 2.
-#/Detector/SAC/CrystalLength 10.
-#/Detector/SAC/FrontFaceZ 300.
+#/Detector/SAC/NRows 7
+#/Detector/SAC/NCols 7
+#/Detector/SAC/CrystalSize 2. cm
+#/Detector/SAC/CrystalLength 20. cm
+#/Detector/SAC/CrystalGap 50. um
+#/Detector/SAC/CrystalCoating 100. um
+#/Detector/SAC/FrontFaceZ 300. cm
 
 #/Detector/LAV/InnerRadius 4.
 #/Detector/LAV/OuterRadius 10.

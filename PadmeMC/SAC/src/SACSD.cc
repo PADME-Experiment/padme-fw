@@ -29,8 +29,7 @@ void SACSD::Initialize(G4HCofThisEvent* HCE)
 {
   fSACCollection = new SACHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
+  if(HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   HCE->AddHitsCollection(HCID,fSACCollection); 
 }
 
@@ -44,7 +43,8 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   SACHit* newHit = new SACHit();
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber());
+  //newHit->SetChannelId(touchHPre->GetCopyNumber());
+  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
   newHit->SetEnergy(edep);
   newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
 

@@ -15,6 +15,7 @@
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
+#include "SACMessenger.hh"
 #include "SACGeometry.hh"
 #include "SACSD.hh"
 
@@ -49,7 +50,13 @@ void SACDetector::CreateGeometry()
   fSACVolume->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,sacPos,fSACVolume,"SAC",fMotherVolume,false,0,false);
 
-  // Create standard BaF2 crystal
+  // Show size of gap between crystals
+  printf("Gap between SAC crystals is %f\n",geo->GetCrystalGap());
+
+  // Show thickness of coating around crystals
+  printf("Coating around SAC crystals is %f\n",geo->GetCrystalCoating());
+
+  // Create standard SF57 crystal
   G4double crySizeX = geo->GetCrystalSizeX();
   G4double crySizeY = geo->GetCrystalSizeY();
   G4double crySizeZ = geo->GetCrystalSizeZ();
@@ -67,15 +74,27 @@ void SACDetector::CreateGeometry()
   sdMan->AddNewDetector(sacSD);
   fCrystalVolume->SetSensitiveDetector(sacSD);
 
+  // Create ECal cell (BGO crystal+coating)
+  G4double cellSizeX = geo->GetCellSizeX();
+  G4double cellSizeY = geo->GetCellSizeY();
+  G4double cellSizeZ = geo->GetCellSizeZ();
+  printf("SAC cell size is %f %f %f\n",cellSizeX,cellSizeY,cellSizeZ);
+  G4Box* solidCell  = new G4Box("SACCell",0.5*cellSizeX,0.5*cellSizeY,0.5*cellSizeZ);
+  fCellVolume  = new G4LogicalVolume(solidCell,G4Material::GetMaterial("EJ510Paint"),"SACCell",0, 0, 0);
+  fCellVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
+
+  // Position SAc crystal inside cell
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"SACCry",fCellVolume,false,0,false);
+
   // Get number of rows and columns of crystals and position all crystals
   G4int nRow = geo->GetSACNRows();
   G4int nCol = geo->GetSACNCols();
   for (G4int row=0;row<nRow;row++){
     for (G4int col=0;col<nCol;col++){
       if (geo->ExistsCrystalAt(row,col)) {
-	G4int idxCry = row*SACGEOMETRY_N_COLS_MAX+col;
 	G4ThreeVector positionCry = G4ThreeVector(geo->GetCrystalPosX(row,col),geo->GetCrystalPosY(row,col),geo->GetCrystalPosZ(row,col));
-	new G4PVPlacement(0,positionCry,fCrystalVolume,"SACCry",fSACVolume,false,idxCry,false);
+	G4int idxCell = row*SACGEOMETRY_N_COLS_MAX+col;
+	new G4PVPlacement(0,positionCry,fCellVolume,"SACCell",fSACVolume,false,idxCell,false);
       }
     }
   }

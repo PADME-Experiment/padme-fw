@@ -14,8 +14,10 @@
 
 class SACDetector;
 class SACGeometry;
+
 class G4UIdirectory;
-class G4UIcommand;
+class G4UIcmdWithAnInteger;
+class G4UIcmdWithADoubleAndUnit;
 
 class SACMessenger: public G4UImessenger
 {
@@ -32,10 +34,16 @@ private:
 
   G4UIdirectory* fSACDetectorDir;
 
-  G4UIcommand* fSetCrystalSizeCmd;
-  G4UIcommand* fSetCrystalLengthCmd;
+  G4UIcmdWithAnInteger* fSetSACNRowsCmd;
+  G4UIcmdWithAnInteger* fSetSACNColsCmd;
 
-  G4UIcommand* fSetSACFrontFaceZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetCrystalSizeCmd;
+  G4UIcmdWithADoubleAndUnit* fSetCrystalLengthCmd;
+
+  G4UIcmdWithADoubleAndUnit* fSetCrystalGapCmd;
+  G4UIcmdWithADoubleAndUnit* fSetCrystalCoatingCmd;
+
+  G4UIcmdWithADoubleAndUnit* fSetSACFrontFaceZCmd;
 
 };
 #endif

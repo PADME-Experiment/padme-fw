@@ -19,6 +19,8 @@ public:
   TSACMCDigi();
   ~TSACMCDigi();
 
+  void Print(Option_t* option="") const;
+
   void ResetTHisto();
   void SetTHistoStart(Double_t v) { fTHistoStart = v; }
   void SetTHistoStep(Double_t v)  { fTHistoStep = v; }

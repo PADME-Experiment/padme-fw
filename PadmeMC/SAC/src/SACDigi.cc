@@ -23,12 +23,12 @@ SACDigi::SACDigi()
   // Initialize digi
   fChannelId = -1;
   fEnergy = 0.;
-  fTime = 1.E9;
+  fTime = 1.E9; // Initialize to very high time value
 
   // Initialize histo limits to some default values
-  fEHistoStart = 12.; // Start at 12ns, i.e. 3.7m from target
-  fEHistoStep  = 0.1; // 100ps x 500bins = 50ns, i.e. >1 bunch length
-  ResetEHisto();
+  fQHistoStart = 12.; // Start at 12ns, i.e. 3.7m from target
+  fQHistoStep  = 0.1; // 100ps x 500bins = 50ns, i.e. >1 bunch length
+  ResetQHisto();
 
 }
 
@@ -46,9 +46,9 @@ SACDigi::SACDigi(const SACDigi& right)
   fTime = right.fTime;
   fEnergy = right.fEnergy;
 
-  fEHistoStart = right.fEHistoStart;
-  fEHistoStep = right.fEHistoStep;
-  for (G4int i=0;i<SACDIGI_N_BINS;i++) fEHisto[i] = right.fEHisto[i];
+  fQHistoStart = right.fQHistoStart;
+  fQHistoStep = right.fQHistoStep;
+  for (G4int i=0;i<SACDIGI_N_BINS;i++) fQHisto[i] = right.fQHisto[i];
 
 }
 
@@ -61,9 +61,9 @@ const SACDigi& SACDigi::operator=(const SACDigi& right)
   fTime = right.fTime;
   fEnergy = right.fEnergy;
 
-  fEHistoStart = right.fEHistoStart;
-  fEHistoStep = right.fEHistoStep;
-  for (G4int i=0;i<SACDIGI_N_BINS;i++) fEHisto[i] = right.fEHisto[i];
+  fQHistoStart = right.fQHistoStart;
+  fQHistoStep = right.fQHistoStep;
+  for (G4int i=0;i<SACDIGI_N_BINS;i++) fQHisto[i] = right.fQHisto[i];
 
   return *this;
 
@@ -101,38 +101,38 @@ void SACDigi::Print()
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy: " << G4BestUnit(fEnergy,"Energy")
 	 << G4endl;
-  //PrintEHisto();
+  //PrintQHisto();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void SACDigi::ResetEHisto()
+void SACDigi::ResetQHisto()
 {
-  for(G4int i=0;i<SACDIGI_N_BINS;i++) fEHisto[i] = 0.;
+  for(G4int i=0;i<SACDIGI_N_BINS;i++) fQHisto[i] = 0.;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void SACDigi::PrintEHisto()
+void SACDigi::PrintQHisto()
 {
-  std::cout << "NBins " << GetEHistoNBins() << " Start " << GetEHistoStart() << " End " << GetEHistoEnd() << " Step " << GetEHistoStep() << std::endl;
+  std::cout << "NBins " << GetQHistoNBins() << " Start " << GetQHistoStart() << " End " << GetQHistoEnd() << " Step " << GetQHistoStep() << std::endl;
   for(G4int i=0;i<SACDIGI_N_BINS;i++)
-    printf("%3.3d %9.3f\n",i,fEHisto[i]);
+    printf("%3.3d %9.3f\n",i,fQHisto[i]);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void SACDigi::AddEnergyAtTime(G4double e, G4double t)
+void SACDigi::AddChargeAtTime(G4double q, G4double t)
 {
-  // Bin 0 and SACDIGI_N_BINS-1 (399) act as under- and over-flow counters
-  G4int nbin = std::max(0,std::min(SACDIGI_N_BINS-1,(int)((t-fEHistoStart)/fEHistoStep)));
-  fEHisto[nbin] += e;
+  // Bin 0 and SACDIGI_N_BINS-1 act as under- and over-flow counters
+  G4int nbin = std::max(0,std::min(SACDIGI_N_BINS-1,(int)((t-fQHistoStart)/fQHistoStep)));
+  fQHisto[nbin] += q;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4double SACDigi::GetEnergyAtTime(G4double t)
+G4double SACDigi::GetChargeAtTime(G4double t)
 {
-  G4int nbin = std::max(0,std::min(SACDIGI_N_BINS-1,(int)((t-fEHistoStart)/fEHistoStep)));
-  return fEHisto[nbin];
+  G4int nbin = std::max(0,std::min(SACDIGI_N_BINS-1,(int)((t-fQHistoStart)/fQHistoStep)));
+  return fQHisto[nbin];
 }

@@ -40,7 +40,7 @@ public:
   // Position of center of SAC box
   G4double GetSACPosX() { return 0.*cm; }
   G4double GetSACPosY() { return 0.*cm; }
-  G4double GetSACPosZ() { return fSACFrontFacePosZ+GetSACSizeZ()*0.5; }
+  G4double GetSACPosZ() { return fSACFrontFacePosZ+GetCellSizeZ()*0.5; }
 
   // Size of SAC box
   G4double GetSACSizeX() { return (GetCellSizeX()+fCrystalGap)*fSACNCols; }
@@ -89,7 +89,7 @@ public:
   void     SetSACFrontFacePosZ(G4double z) { fSACFrontFacePosZ = z; }
 
   // Digitization parameters
-  G4double GetSACLightPropagationSpeed() { return (2.998E8*m/s)/1.85; }
+  G4double GetSACLightPropagationSpeed() { return fDigiAvgLightSpeed; }
   G4double GetDigiEtoNPEConversion() { return fDigiEtoNPEConversion; }
   G4double GetDigiPEtoSignalConversion() { return fDigiPEtoSignalConversion; }
 
@@ -121,6 +121,8 @@ private:
   G4double fSACFrontFacePosZ; // Position along Z axis of SAC front face
 
   // Digitization parameters
+
+  G4double fDigiAvgLightSpeed; // Average light speed inside SAC crystal for Cherenkov spectrum
 
   G4double fDigiEtoNPEConversion; // Number of p.e. produced by photocathode per MeV of hit energy
   G4double fDigiPEtoSignalConversion; // Contribution of 1 p.e. to integral ADC signal

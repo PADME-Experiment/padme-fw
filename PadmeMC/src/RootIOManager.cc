@@ -227,10 +227,10 @@ void RootIOManager::NewRun(G4int nRun)
   TDetectorInfo* detInfo = fRun->GetDetectorInfo();
 
   // Set some geometry dependent parameters in detectors' RootIO handlers
-  G4cout << "RootIOManager: Beam parameters " << BeamParameters::GetInstance()->GetBeamOriginPosZ()
-	 << " " << BeamParameters::GetInstance()->GetBunchTimeLength() << G4endl;
-  ((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(BeamParameters::GetInstance()->GetBeamOriginPosZ());
-  ((SACRootIO*)FindRootIO("SAC"))->SetBeamBunchLengthT(BeamParameters::GetInstance()->GetBunchTimeLength());
+  //G4cout << "RootIOManager: Beam parameters " << BeamParameters::GetInstance()->GetBeamOriginPosZ()
+  //	 << " " << BeamParameters::GetInstance()->GetBunchTimeLength() << G4endl;
+  //((SACRootIO*)FindRootIO("SAC"))->SetBeamStartZ(BeamParameters::GetInstance()->GetBeamOriginPosZ());
+  //((SACRootIO*)FindRootIO("SAC"))->SetBeamBunchLengthT(BeamParameters::GetInstance()->GetBunchTimeLength());
 
   // Tell all RootIO handlers about new run
   RootIOList::iterator iRootIO(fRootIOList.begin());

@@ -91,7 +91,7 @@ ECalGeometry::ECalGeometry()
   G4int nbins = 23;
   fDigiPECollectionMap.assign(cmap,cmap+nbins);
 
-  fDigiPMTTransitTime = 23.*ns; // PMT transit time from photocathode to anode
+  fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
   fECalSensitiveDetectorName = "ECalSD";

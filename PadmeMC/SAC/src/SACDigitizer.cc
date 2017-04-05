@@ -34,7 +34,7 @@ SACDigitizer::SACDigitizer(G4String name)
   fPMTCableDelay = geo->GetDigiPMTCableDelay(); // Delay due to connection cables
 
   // Compute minimal output signal time for SAC (assumes Target at -70cm wrt center of yoke)
-  fMinimumSignalTime = (70.*cm+geo->GetSACFrontFacePosZ())/(2.998E8*m/s)+fCrystalLength/fPropagationSpeed+fPMTTransitTime+fPMTCableDelay;
+  //fMinimumSignalTime = (70.*cm+geo->GetSACFrontFacePosZ())/(2.998E8*m/s)+fCrystalLength/fPropagationSpeed+fPMTTransitTime+fPMTCableDelay;
 
   // Relative collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
   fCollectionMap = geo->GetDigiPECollectionMap();
@@ -53,7 +53,7 @@ SACDigitizer::SACDigitizer(G4String name)
   G4cout << G4endl;
   G4cout << "PMT transit time: " << G4BestUnit(fPMTTransitTime,"Time") << G4endl;
   G4cout << "PMT cable delay: " << G4BestUnit(fPMTCableDelay,"Time") << G4endl;
-  G4cout << "Minimum output isgnal time: " << G4BestUnit(fMinimumSignalTime,"Time") << G4endl;
+  //G4cout << "Minimum output signal time: " << G4BestUnit(fMinimumSignalTime,"Time") << G4endl;
   G4cout << G4endl;
 
 }
@@ -103,7 +103,7 @@ void SACDigitizer::Digitize()
       if (digi == 0) {
 	digi = new SACDigi();
 	digi->SetChannelId(hChannel);
-	digi->SetQHistoStart(fMinimumSignalTime);
+	//digi->SetQHistoStart(fMinimumSignalTime);
 	sacDigiCollection->insert(digi);
       }
 

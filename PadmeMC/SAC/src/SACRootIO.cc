@@ -45,8 +45,6 @@ SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  fEHistoBeamBunchLengthT = 40.*ns;
-
   G4cout << "SACRootIO: Initialized" << G4endl;
 
 }

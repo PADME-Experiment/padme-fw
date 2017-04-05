@@ -59,8 +59,19 @@ public:
   double SetGammaAngle(G4ThreeVector GammaDir,G4ThreeVector BeamDir);
   double GetGammaAngle(){return ThetaGamma;};
 
+  void EnableSACAnalysis()  { fEnableSACAnalysis = 1; }
+  void DisableSACAnalysis() { fEnableSACAnalysis = 0; }
+
+  void EnableECalAnalysis()  { fEnableECalAnalysis = 1; }
+  void DisableECalAnalysis() { fEnableECalAnalysis = 0; }
+
 private:
   BeamParameters* bpar;
+  EventAction* fEventAction;
+
+  G4int fEnableSACAnalysis;
+  G4int fEnableECalAnalysis;
+
   double ProcID;
   double PositronE;
   double ElectronE;	
@@ -71,7 +82,6 @@ private:
   G4ThreeVector GammaDir;
   G4ThreeVector VertexPos;
   G4int NChild;
-  EventAction * fEventAction;
 
   G4int ClassifyTrack(G4Track* );
   //   HistoManager* fHistoManager;

@@ -15,7 +15,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-#define SACDIGI_N_BINS 500
+#define SACDIGI_N_BINS 1024
 
 class SACDigi : public G4VDigi
 {

@@ -20,18 +20,20 @@ SACGeometry::SACGeometry()
 
   // Inizialize default parameters
 
-  fCrystalSizeX =  2.*cm;
-  fCrystalSizeY =  2.*cm;
+  fCrystalSizeX =  3.*cm;
+  fCrystalSizeY =  3.*cm;
   fCrystalSizeZ = 20.*cm;
 
-  fSACNRows = 7;
-  fSACNCols = 7;
+  fSACNRows = 5;
+  fSACNCols = 5;
 
   fCrystalGap = 50.*um;
 
   fCrystalCoating = 100.*um;
 
   fSACFrontFacePosZ = 300.*cm; // from center of yoke, i.e. 370cm from target, 70cm from front of ECal
+
+  fDigiAvgLightSpeed = (2.998E8*m/s)/1.85; // Average light speed inside SAC crystal for Cherenkov spectrum
 
   // Number of photoelectrons produced by photocathode per MeV of hit energy
   fDigiEtoNPEConversion = 0.5/MeV; // Wild guess: fix it!!!
@@ -43,7 +45,7 @@ SACGeometry::SACGeometry()
   G4int nbins = 20;
   fDigiPECollectionMap.assign(cmap,cmap+nbins);
 
-  fDigiPMTTransitTime = 23.*ns; // PMT transit time from photocathode to anode
+  fDigiPMTTransitTime = 9.1*ns; // Hamamatsu R13478 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
   fSACSensitiveDetectorName = "SACSD";

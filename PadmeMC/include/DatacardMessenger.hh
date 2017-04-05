@@ -7,6 +7,7 @@
 class DatacardManager;
 class G4UIdirectory;
 class G4UIcmdWithAString;
+class G4UIcmdWithABool;
 
 class DatacardMessenger: public G4UImessenger
 {
@@ -24,8 +25,12 @@ private:
 
   G4UIcmdWithAString* fOutNameCmd;
   G4UIcmdWithAString* fHistoNameCmd;
+
   G4UIcmdWithAString* fEnableDetectorIOCmd;
   G4UIcmdWithAString* fDisableDetectorIOCmd;
+
+  G4UIcmdWithABool* fDisableSACAnalysisCmd;
+  G4UIcmdWithABool* fDisableECalAnalysisCmd;
 
 };
 #endif // DatacardMessenger_h

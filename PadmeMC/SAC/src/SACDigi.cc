@@ -7,6 +7,8 @@
 
 #include "SACDigi.hh"
 
+#include "G4SystemOfUnits.hh"
+
 #include "G4UnitsTable.hh"
 #include "G4VVisManager.hh"
 #include "G4Circle.hh"
@@ -23,11 +25,12 @@ SACDigi::SACDigi()
   // Initialize digi
   fChannelId = -1;
   fEnergy = 0.;
-  fTime = 1.E9; // Initialize to very high time value
+  fTime = 1.E9*s; // Initialize to very high time value
 
   // Initialize histo limits to some default values
-  fQHistoStart = 12.; // Start at 12ns, i.e. 3.7m from target
-  fQHistoStep  = 0.1; // 100ps x 500bins = 50ns, i.e. >1 bunch length
+  //fQHistoStart = 12.*ns; // Start at 12ns, i.e. 3.7m from target
+  fQHistoStart = 0.*ns; // Assume that ADC sampling starts at bunch start time
+  fQHistoStep  = 0.2*ns; // 5GHz ADC sample rate
   ResetQHisto();
 
 }

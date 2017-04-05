@@ -9,7 +9,7 @@
 
 #include "TMCVDigi.hh"
 
-#define TSACMCDIGI_N_BINS 500
+#define TSACMCDIGI_N_BINS 1024
 
 class TSACMCDigi : public TMCVDigi
 {

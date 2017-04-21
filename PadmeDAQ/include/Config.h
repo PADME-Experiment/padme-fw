@@ -64,7 +64,7 @@ typedef struct config_s {
   int trigger_mode;
 
   // Choose trigger signal IO level between NIM and TTL
-  char trigger_iolevel[3];
+  char trigger_iolevel[4];
 
   // Mask to choose will channel groups will be enabled
   // bit 0: group 0 (ch 0-7)

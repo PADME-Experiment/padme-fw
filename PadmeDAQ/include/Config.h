@@ -120,7 +120,7 @@ typedef struct config_s {
 
 } config_t;
 
-config_t* Config; // Common structure to hold configuration parameters
+extern config_t* Config; // Declare pointer to common configuration structure
 
 int init_config();      // Initialiaze configuration and set to default
 int reset_config();     // Set configuration to default

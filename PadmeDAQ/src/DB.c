@@ -17,11 +17,17 @@ MYSQL* DBHandle = NULL;
 int db_init()
 {
 
+  char db_host[1024];
+  char db_user[1024];
+  char db_passwd[1024];
+  char db_name[1024];
+  /*
   char* db_host;
   char* db_user;
   char* db_passwd;
   char* db_name;
   char* db_port_s;
+  */
   unsigned int db_port;
 
   // Check if this is the first time we are called
@@ -36,18 +42,45 @@ int db_init()
 
   // Get MySQL server connection parameters from environment variables
   printf("Reading env variables\n");
+  if (getenv("PADME_DB_HOST")) {
+    strcpy(db_host,getenv("PADME_DB_HOST"));
+  } else {
+    strcpy(db_host,"localhost");
+  }
+  if (getenv("PADME_DB_USER")) {
+    strcpy(db_user,getenv("PADME_DB_USER"));
+  } else {
+    strcpy(db_user,"padme");
+  }
+  if (getenv("PADME_DB_PASSWD")) {
+    strcpy(db_passwd,getenv("PADME_DB_PASSWD"));
+  } else {
+    strcpy(db_passwd,"unknown");
+  }
+  if (getenv("PADME_DB_NAME")) {
+    strcpy(db_name,getenv("PADME_DB_NAME"));
+  } else {
+    strcpy(db_name,"PadmeDB");
+  }
+  if (getenv("PADME_DB_PORT")) {
+    db_port = atoi(getenv("PADME_DB_PORT"));
+  } else {
+    db_port = 5501;
+  }
+  /*
   db_host = getenv("PADME_DB_HOST");
-  if (db_host == NULL) db_host = "localhost";
+  if (db_host == NULL) strcpy(db_host,"localhost");
   db_user = getenv("PADME_DB_USER");
-  if (db_user == NULL) db_user = "padme";
+  if (db_user == NULL) strcpy(db_user,"padme");
   db_passwd = getenv("PADME_DB_PASSWD");
-  if (db_passwd == NULL) db_passwd = "unknown";
+  if (db_passwd == NULL) strcpy(db_passwd,"unknown");
   db_name = getenv("PADME_DB_NAME");
-  if (db_name == NULL) db_name = "PadmeDB";
+  if (db_name == NULL) strcpy(db_name,"PadmeDB");
   db_port = 5501;
   db_port_s = getenv("PADME_DB_PORT");
   if (db_port_s != NULL) db_port = atoi(db_port_s);
   //printf("host %s user %s passwd %s name %s port %d\n",db_host,db_user,db_passwd,db_name,db_port);
+  */
 
   // Connect to MySQL server
   if (mysql_real_connect(DBHandle,db_host,db_user,db_passwd,db_name,db_port,NULL,0) == NULL) {
@@ -275,7 +308,7 @@ int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n
 
 }
 
-int db_add_cfg_para(int proc_id, char* para_name, char* para_val)
+int db_add_cfg_para(int proc_id, const char* para_name, char* para_val)
 {
 
   char sqlCode[10240];
@@ -297,7 +330,7 @@ int db_add_cfg_para(int proc_id, char* para_name, char* para_val)
 
 }
 
-int db_get_para_id(char* para_name)
+int db_get_para_id(const char* para_name)
 {
 
   int result = 0;

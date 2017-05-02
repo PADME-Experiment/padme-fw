@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <errno.h>
 
+//#include <sys/resource.h>
+
 #include "DB.h"
 #include "Config.h"
 #include "DAQ.h"
@@ -74,6 +76,29 @@ int main(int argc, char*argv[])
   int c;
   //int runnr;
   int rc;
+
+  /*
+  // Show current size of stack and set it to high value
+  int rlrc;
+  struct rlimit stack_rlim;
+  rlrc = getrlimit(RLIMIT_STACK,&stack_rlim);
+  if (rlrc==0) {
+    printf("Initial stack values: current %lld max %lld\n",(long long)stack_rlim.rlim_cur,(long long)stack_rlim.rlim_max);
+  } else {
+    printf("Initial getrlimit returned error %d\n",rlrc);
+  }
+  stack_rlim.rlim_cur = 100000000;
+  rlrc = setrlimit(RLIMIT_STACK,&stack_rlim);
+  if (rlrc!=0) {
+    printf("setrlimit returned error %d\n",rlrc);
+  }
+  rlrc = getrlimit(RLIMIT_STACK,&stack_rlim);
+  if (rlrc==0) {
+    printf("Final stack values: current %lld max %lld\n",(long long)stack_rlim.rlim_cur,(long long)stack_rlim.rlim_max);
+  } else {
+    printf("Final getrlimit returned error %d\n",rlrc);
+  }
+  */
 
   // Make sure local data types are correct for us
   //printf("char: %d\nshort: %d\nint: %d\nlong: %d\nlong long: %d\n",

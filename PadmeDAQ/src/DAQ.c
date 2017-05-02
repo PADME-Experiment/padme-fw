@@ -20,7 +20,8 @@
 #define TIME_TAG_LEN     20
 #define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
-#define MAX_N_OUTPUT_FILES 10240
+//#define MAX_N_OUTPUT_FILES 10240
+#define MAX_N_OUTPUT_FILES 1024
 
 // Global variables
 
@@ -193,6 +194,7 @@ int DAQ_init ()
   uint32_t reg,data;
   uint32_t tr_offset,tr_threshold;
   CAEN_DGTZ_TriggerPolarity_t tr_polarity;
+  CAEN_DGTZ_DRS4Frequency_t sampfreq;
 
   uint32_t kk;
 
@@ -219,7 +221,7 @@ int DAQ_init ()
   }
   // Read back per-group sampling frequency
   printf(" read");
-  for ( g=0; g<MAX_X742_GROUP_SIZE; g++ ) {
+  for(g=0;g<MAX_X742_GROUP_SIZE;g++) {
     reg = 0x10D8 + (g << 8); // 0x10D8, 0x11D8, 0x12D8, ox13D8
     ret = CAEN_DGTZ_ReadRegister(Handle,reg,&data);
     if (ret != CAEN_DGTZ_Success) {
@@ -230,29 +232,37 @@ int DAQ_init ()
   }
   printf("\n");
   */
-  data = CAEN_DGTZ_DRS4_1GHz;
+  //data = CAEN_DGTZ_DRS4_1GHz;
   if (Config->drs4_sampfreq == 2) {
     printf("- Setting DRS4 sampling frequency to 1GHz. Write %d",CAEN_DGTZ_DRS4_1GHz);
-    data = CAEN_DGTZ_DRS4_1GHz;
+    //data = CAEN_DGTZ_DRS4_1GHz;
+    sampfreq = CAEN_DGTZ_DRS4_1GHz;
   } else if (Config->drs4_sampfreq == 1) {
     printf("- Setting DRS4 sampling frequency to 2.5GHz. Write %d",CAEN_DGTZ_DRS4_2_5GHz);
-    data = CAEN_DGTZ_DRS4_2_5GHz;
+    //data = CAEN_DGTZ_DRS4_2_5GHz;
+    sampfreq = CAEN_DGTZ_DRS4_2_5GHz;
   } else if  (Config->drs4_sampfreq == 0) {
     printf("- Setting DRS4 sampling frequency to 5GHz. Write %d",CAEN_DGTZ_DRS4_5GHz);
-    data = CAEN_DGTZ_DRS4_5GHz;
+    //data = CAEN_DGTZ_DRS4_5GHz;
+    sampfreq = CAEN_DGTZ_DRS4_5GHz;
+  } else {
+    printf("\nERROR - DRS4 sampling frequency configuration parameter set to %d\n",Config->drs4_sampfreq);
+    return 1;
   }
-  //ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,CAEN_DGTZ_DRS4_1GHz);
-  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,data);
+  //ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,data);
+  ret = CAEN_DGTZ_SetDRS4SamplingFrequency(Handle,sampfreq);
   if (ret != CAEN_DGTZ_Success) {
     printf("\nERROR - Unable to set sampling frequency. Error code: %d\n",ret);
     return 1;
   }
-  ret = CAEN_DGTZ_GetDRS4SamplingFrequency(Handle,&data);
+  //ret = CAEN_DGTZ_GetDRS4SamplingFrequency(Handle,&data);
+  ret = CAEN_DGTZ_GetDRS4SamplingFrequency(Handle,&sampfreq);
   if (ret != CAEN_DGTZ_Success) {
     printf("\nERROR - Unable to read DRS4 sampling frequency. Error code: %d\n",ret);
     return 1;
   }
-  printf(" read %d\n",data);
+  //printf(" read %d\n",data);
+  printf(" read %d\n",sampfreq);
 
   /*
   // Set number of samples to 1024 (0=1024, 1=520, 2=256, 3=136)
@@ -473,12 +483,14 @@ int DAQ_init ()
       printf("\nERROR - Unable to set fast trigger polarity for TR0 & TR1. Error code: %d\n",ret);
       return 1;
     }
-    ret = CAEN_DGTZ_GetTriggerPolarity(Handle,0,&data);
+    //ret = CAEN_DGTZ_GetTriggerPolarity(Handle,0,&data);
+    ret = CAEN_DGTZ_GetTriggerPolarity(Handle,0,&tr_polarity);
     if (ret != CAEN_DGTZ_Success) {
       printf("\nERROR - Unable to read fast trigger polarity for TR0 & TR1. Error code: %d\n",ret);
       return 1;
     }
-    printf(" read 0x%04x\n",data);
+    //printf(" read 0x%04x\n",data);
+    printf(" read 0x%04x\n",tr_polarity);
 
     // Set fast trigger offset for TR0 and TR1 (see V1742 manual for details)
 
@@ -664,7 +676,7 @@ int DAQ_readdata ()
   // Output event information
   char *outEvtBuffer = NULL;
   int maxPEvtSize, pEvtSize;
-  int fHeadSize, fTailSize;
+  unsigned int fHeadSize, fTailSize;
 
   // Global counters for input data
   uint64_t totalReadSize;
@@ -689,7 +701,7 @@ int DAQ_readdata ()
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
 
-  int i;
+  unsigned int i;
 
   // If quit file is already there, assume this is a test run and do nothing
   if ( access(Config->quit_file,F_OK) != -1 ) {
@@ -880,7 +892,7 @@ int DAQ_readdata ()
       totalReadEvents += numEvents;
 
       // Loop over all events in data buffer
-      for (iEv=0;iEv<numEvents;iEv++) {
+      for(iEv=0;iEv<numEvents;iEv++) {
 
 	// Retrieve info and pointer for current event
 	ret = CAEN_DGTZ_GetEventInfo(Handle,buffer,readSize,iEv,&eventInfo,&eventPtr);

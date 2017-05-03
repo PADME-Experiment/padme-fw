@@ -497,6 +497,12 @@ int read_config(char *cfgfile)
   free(line);
   fclose(fin);
 
+  // Release memory used be regular expressions
+  regfree(&rex_empty);
+  regfree(&rex_comment);
+  regfree(&rex_setting);
+  regfree(&rex_chsetting);
+
   return 0;
 }
 

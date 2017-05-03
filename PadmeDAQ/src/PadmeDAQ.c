@@ -37,7 +37,7 @@ pid_t create_lock()
   lckf = fopen(Config->lock_file,"w");
   fprintf(lckf,"%d",getpid());
   fclose(lckf);
-  printf("- create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
+  printf("(PadmeDAQ)create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
   return 0;
 
 }
@@ -48,23 +48,24 @@ void remove_lock()
   if ( unlink(Config->lock_file) ) {
     printf("WARNING - Problem while removing lock file '%s'\n",Config->lock_file);
   } else {
-    printf("- remove_lock - Lock file '%s' removed\n",Config->lock_file);
+    printf("(PadmeDAQ)remove_lock - Lock file '%s' removed\n",Config->lock_file);
   }
   return;
 }
 
 // Handle failure in initialization phase
-void init_fail()
+// If rmv_lock<>0 the lock file will also be removed
+void init_fail(int rmv_lock)
 {
   FILE* iff;
   if ( access(Config->initfail_file,F_OK) == -1 ) {
     iff = fopen(Config->initfail_file,"w");
     fclose(iff);
-    printf("- init_fail - InitFail file '%s' created\n",Config->initfail_file);
+    printf("(PadmeDAQ)init_fail - InitFail file '%s' created\n",Config->initfail_file);
   } else {
-    printf("- init_fail - InitFail file '%s' already exists (?)\n",Config->initfail_file);
+    printf("(PadmeDAQ)init_fail - InitFail file '%s' already exists (?)\n",Config->initfail_file);
   }
-  remove_lock();
+  if (rmv_lock) remove_lock();
   exit(1);
 }
 
@@ -74,36 +75,9 @@ int main(int argc, char*argv[])
 
   pid_t pid;
   int c;
-  //int runnr;
   int rc;
 
-  /*
-  // Show current size of stack and set it to high value
-  int rlrc;
-  struct rlimit stack_rlim;
-  rlrc = getrlimit(RLIMIT_STACK,&stack_rlim);
-  if (rlrc==0) {
-    printf("Initial stack values: current %lld max %lld\n",(long long)stack_rlim.rlim_cur,(long long)stack_rlim.rlim_max);
-  } else {
-    printf("Initial getrlimit returned error %d\n",rlrc);
-  }
-  stack_rlim.rlim_cur = 100000000;
-  rlrc = setrlimit(RLIMIT_STACK,&stack_rlim);
-  if (rlrc!=0) {
-    printf("setrlimit returned error %d\n",rlrc);
-  }
-  rlrc = getrlimit(RLIMIT_STACK,&stack_rlim);
-  if (rlrc==0) {
-    printf("Final stack values: current %lld max %lld\n",(long long)stack_rlim.rlim_cur,(long long)stack_rlim.rlim_max);
-  } else {
-    printf("Final getrlimit returned error %d\n",rlrc);
-  }
-  */
-
   // Make sure local data types are correct for us
-  //printf("char: %d\nshort: %d\nint: %d\nlong: %d\nlong long: %d\n",
-  //	 sizeof(char),sizeof(short),sizeof(int),sizeof(long),sizeof(long long));
-  //printf("float: %d\ndouble: %d\nlong double: %d\n",sizeof(float),sizeof(double),sizeof(long double));
   if (sizeof(int)<4) {
     printf("*** On this system sizeof(int) is %lu bytes while we need at least 4 bytes. Aborting ***\n",sizeof(int));
     exit(1);
@@ -128,7 +102,6 @@ int main(int argc, char*argv[])
   }
 
   // Parse options
-  //while ((c = getopt (argc, argv, "c:r:h")) != -1)
   while ((c = getopt (argc, argv, "c:h")) != -1)
     switch (c)
       {
@@ -144,29 +117,10 @@ int main(int argc, char*argv[])
 	  exit(1);
 	}
         break;
-      /*
-      case 'r':
-	if ( Config->run_number != 0 ) {
-          fprintf (stderr, "Error: multiple definitions of run number.\n");
-	  exit(1);
-	}
-        if ( sscanf(optarg,"%d",&runnr) != 1 ) {
-          fprintf (stderr, "Error while processing option '-r'. Wrong parameter '%s'.\n", optarg);
-	  exit(1);
-	}
-	if (runnr < 0) {
-	  fprintf (stderr, "Error while processing option '-r'. Invalid run number %d.\n", runnr);
-	  exit(1);
-	}
-	Config->run_number = runnr;
-        break;
-      */
       case 'h':
 	fprintf(stdout,"\nPadmeDAQ [-c cfg_file] [-r run_nr] [-R] [-m comment] [-h]\n\n");
 	fprintf(stdout,"  -c: use file 'cfg_file' to set configuration parameters for this process\n");
 	fprintf(stdout,"     If no file is specified, use default settings\n");
-	//fprintf(stdout,"  -r: set run number to 'run_nr'\n");
-	//fprintf(stdout,"     If no run number is specified, the run is dummy: no data are saved to DB\n");
 	fprintf(stdout,"  -h: show this help message and exit\n\n");
 	exit(0);
       case '?':
@@ -181,22 +135,30 @@ int main(int argc, char*argv[])
         abort ();
       }
 
+  // Show configuration
+  print_config();
+
+  // Check if another DAQ is running
+  printf("\n=== Verifying that no other DAQ instances are running ===\n");
+  if ( (pid = create_lock()) ) {
+    printf("*** ERROR *** Another DAQ is running with PID %d. Exiting.\n",pid);
+    init_fail(0);
+  }
+
   // Run number verification: if run number is not 0, it must exist in the DB
   if ( Config->run_number ) {
 
     // Connect to DB
-    //if ( db_init(Config->db_file) != DB_OK ) exit(1);
-    //if ( db_init(Config->db_file) != DB_OK ) init_fail();
-    if ( db_init() != DB_OK ) init_fail();
+    if ( db_init() != DB_OK ) init_fail(1);
 
     // Verify if run number is valid
     rc = db_run_check(Config->run_number);
     if ( rc == -1 ) {
       printf("ERROR: DB check for run number %d returned ad error\n",Config->run_number);
-      init_fail();
+      init_fail(1);
     } else if ( rc == 0 ) {
       printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
-      init_fail();
+      init_fail(1);
     }
 
   }
@@ -210,28 +172,18 @@ int main(int argc, char*argv[])
   }
   printf("- Run type: '%s'\n",Config->run_type);
 
-  // Show configuration
-  print_config();
-
-  // Check if another DAQ is running
-  printf("\n=== Verifying that no other DAQ instances are running ===\n");
-  if ( (pid = create_lock()) ) {
-    printf("*** ERROR *** Another DAQ is running with PID %d. Exiting.\n",pid);
-    init_fail();
-  }
-
   // Connect to digitizer
   printf("\n=== Connect to digitizer ===\n");
   if ( DAQ_connect() ) {
     printf("*** ERROR *** Problem while connecting to V1742 digitizer. Exiting.\n");
-    init_fail();
+    init_fail(1);
   }
 
   // Initialize and configure digitizer
   printf("\n=== Initialize digitizer ===\n");
   if ( DAQ_init() ) {
     printf("*** ERROR *** Problem while initializing V1742 digitizer. Exiting.\n");
-    init_fail();
+    init_fail(1);
   }
 
   // Handle data acquisition
@@ -239,7 +191,7 @@ int main(int argc, char*argv[])
   rc = DAQ_readdata();
   if ( rc == 1 ) {
     printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
-    init_fail();
+    init_fail(1);
   } else if ( rc == 2 ) {
     printf("*** ERROR *** Data acquistion ended with an error. Please check log file for details. Exiting.\n");
     remove_lock();

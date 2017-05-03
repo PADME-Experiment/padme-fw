@@ -20,8 +20,7 @@
 #define TIME_TAG_LEN     20
 #define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
-//#define MAX_N_OUTPUT_FILES 10240
-#define MAX_N_OUTPUT_FILES 1024
+#define MAX_N_OUTPUT_FILES 10240
 
 // Global variables
 
@@ -87,10 +86,6 @@ void set_signal_handlers()
 // Return file name given the file open time. Return 0 if OK, <>0 error
 int generate_filename(char* name, const time_t time) {
   struct tm* t = localtime(&time);
-  //sprintf(name,"%s_b%.2d_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
-  //	  Config->data_file, Config->board_id,
-  //	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-  //	  t->tm_hour,      t->tm_min,   t->tm_sec);
   sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
 	  Config->data_file,
 	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
@@ -690,7 +685,9 @@ int DAQ_readdata ()
 
   unsigned int fileIndex;
   int tooManyOutputFiles;
-  char fileName[MAX_N_OUTPUT_FILES][MAX_FILENAME_LEN];
+  //char fileName[MAX_N_OUTPUT_FILES][MAX_FILENAME_LEN];
+  char tmpName[MAX_FILENAME_LEN];
+  char* fileName[MAX_N_OUTPUT_FILES];
   //char fileFullName[MAX_DATA_DIR_LEN+MAX_FILENAME_LEN];
   unsigned long int fileSize[MAX_N_OUTPUT_FILES];
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
@@ -813,7 +810,10 @@ int DAQ_readdata ()
   tooManyOutputFiles = 0;
 
   // Generate name for initial output file and verify it does not exist
-  generate_filename(fileName[fileIndex],t_daqstart);
+  //generate_filename(fileName[fileIndex],t_daqstart);
+  generate_filename(tmpName,t_daqstart);
+  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+  strcpy(fileName[fileIndex],tmpName);
   if ( Config->run_number ) {
     if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
   }
@@ -1062,7 +1062,10 @@ int DAQ_readdata ()
       if ( fileIndex<MAX_N_OUTPUT_FILES ) {
 
 	// Open new output file and reset all counters
-	generate_filename(fileName[fileIndex],t_now);
+	//generate_filename(fileName[fileIndex],t_now);
+	generate_filename(tmpName,t_daqstart);
+	fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+	strcpy(fileName[fileIndex],tmpName);
 	if ( Config->run_number ) {
 	  if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
 	}
@@ -1225,6 +1228,9 @@ int DAQ_readdata ()
   if ( Config->run_number ) {
     if ( db_end() != DB_OK ) return 2;
   }
+
+  // Free space allocated for file names
+  for(i=0;i<fileIndex;i++) free(fileName[i]);
 
   return 0;
 

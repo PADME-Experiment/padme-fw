@@ -109,7 +109,8 @@ int db_process_create(int run_nr,int board_id)
   char sqlCode[10240];
 
   // Insert run into DB and initialize to 0 all parameters
-  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
+  //sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
+  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0)",run_nr,board_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_process_create - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;

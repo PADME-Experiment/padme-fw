@@ -69,7 +69,8 @@ class PadmeDB:
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO run (number,type,status,time_init,time_start,time_stop,total_events,user,comment_start,comment_end) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,0,run_user,run_comment,""))
+        #c.execute("""INSERT INTO run (number,type,status,time_init,time_start,time_stop,total_events,user,comment_start,comment_end) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,0,run_user,run_comment,""))
+        c.execute("""INSERT INTO run (number,type,status,total_events,user,comment_start,comment_end) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,run_user,run_comment,""))
         self.conn.commit()
 
     def set_run_status(self,run_nr,status):

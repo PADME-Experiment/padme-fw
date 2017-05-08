@@ -56,28 +56,59 @@ class ADCBoardGUI:
     def show_cfg(self):
 
         # Frame to show configuration
+        #self.f_cfg = Frame(self.root,bg="black")
+        #self.f_cfg.grid(row=0,column=0,sticky=NSEW)
+        #self.s_cfg = Scrollbar(self.f_cfg)
+        #self.w_cfg = Text(self.f_cfg,height=30,width=80)
+        #self.s_cfg.pack(side=RIGHT,fill=Y)
+        #self.w_cfg.pack(side=LEFT,fill=Y)
+        #self.s_cfg.config(command=self.w_cfg.yview)
+        #self.w_cfg.config(yscrollcommand=self.s_cfg.set)
+        #self.w_cfg.insert(END,"=== Board configuration ===\n")
+        #self.w_cfg.insert(END,self.config)
+
         self.f_cfg = Frame(self.root,bg="black")
         self.f_cfg.grid(row=0,column=0,sticky=NSEW)
-        self.s_cfg = Scrollbar(self.f_cfg)
+
+        self.sx_cfg = Scrollbar(self.f_cfg,orient=HORIZONTAL,command=self.w_cfg.xview)
+        self.sx_cfg.grid(row=1,column=0)
+
+        self.sy_cfg = Scrollbar(self.f_cfg,orient=VERTICAL,command=self.w_cfg.yview)
+        self.sy_cfg.grid(row=0,column=1)
+
         self.w_cfg = Text(self.f_cfg,height=30,width=80)
-        self.s_cfg.pack(side=RIGHT,fill=Y)
-        self.w_cfg.pack(side=LEFT,fill=Y)
-        self.s_cfg.config(command=self.w_cfg.yview)
-        self.w_cfg.config(yscrollcommand=self.s_cfg.set)
+        self.w_cfg.grid(row=0,column=0)
+        self.w_cfg.config(xscrollcommand=self.sx_cfg.set)
+        self.w_cfg.config(yscrollcommand=self.sy_cfg.set)
         self.w_cfg.insert(END,"=== Board configuration ===\n")
         self.w_cfg.insert(END,self.config)
 
     def show_log(self):
 
         # Frame to show log file
+        #self.f_log = Frame(self.root,bg="black")
+        #self.f_log.grid(row=0,column=0,sticky=NSEW)
+        #self.s_log = Scrollbar(self.f_log)
+        #self.w_log = Text(self.f_log,height=30,width=80)
+        #self.s_log.pack(side=RIGHT,fill=Y)
+        #self.w_log.pack(side=LEFT,fill=Y)
+        #self.s_log.config(command=self.w_log.yview)
+        #self.w_log.config(yscrollcommand=self.s_log.set)
+        #self.w_log.insert(END,"=== Board log file "+self.log_file+" ===\n")
+
         self.f_log = Frame(self.root,bg="black")
         self.f_log.grid(row=0,column=0,sticky=NSEW)
-        self.s_log = Scrollbar(self.f_log)
+
+        self.sx_log = Scrollbar(self.f_log,orient=HORIZONTAL,command=self.w_log.xview)
+        self.sx_log.grid(row=1,column=0)
+
+        self.sy_log = Scrollbar(self.f_log,orient=VERTICAL,command=self.w_log.yview)
+        self.sy_log.grid(row=0,column=1)
+
         self.w_log = Text(self.f_log,height=30,width=80)
-        self.s_log.pack(side=RIGHT,fill=Y)
-        self.w_log.pack(side=LEFT,fill=Y)
-        self.s_log.config(command=self.w_log.yview)
-        self.w_log.config(yscrollcommand=self.s_log.set)
+        self.w_log.grid(row=0,column=0)
+        self.w_log.config(xscrollcommand=self.sx_log.set)
+        self.w_log.config(yscrollcommand=self.sy_log.set)
         self.w_log.insert(END,"=== Board log file "+self.log_file+" ===\n")
 
         # Open log file and read current content and size

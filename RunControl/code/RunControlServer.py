@@ -34,6 +34,7 @@ class RunControlServer:
         if (self.run.change_setup(initial_setup) == "error"):
             print "ERROR - Error while changing run setup to %s"%initial_setup
             #self.write_log("ERROR - Error while changing run setup to %s"%initial_setup)
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
 
         # Start in idle state
@@ -59,6 +60,7 @@ class RunControlServer:
         except:
             print "ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0])
             #self.write_log("ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0]))
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
         self.sock.listen(1)
 
@@ -150,7 +152,6 @@ class RunControlServer:
                 if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
             if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
             if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
-
 
         if os.path.exists(self.lock_file): os.remove(self.lock_file)
 

@@ -1063,7 +1063,7 @@ int DAQ_readdata ()
 
 	// Open new output file and reset all counters
 	//generate_filename(fileName[fileIndex],t_now);
-	generate_filename(tmpName,t_daqstart);
+	generate_filename(tmpName,t_now);
 	fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	strcpy(fileName[fileIndex],tmpName);
 	if ( Config->run_number ) {

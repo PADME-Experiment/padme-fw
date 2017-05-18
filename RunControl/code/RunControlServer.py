@@ -134,7 +134,7 @@ class RunControlServer:
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
                 self.db.set_run_time_stop(self.run.run_number,self.now_str())
-                self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+                self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
             open(self.run.quit_file,'w').close()
             for adc in (self.run.adcboard_list):
                 if adc.stop_daq():
@@ -697,7 +697,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         if (self.run.run_number):
             self.db.set_run_time_stop(self.run.run_number,self.now_str())
-            self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+            self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()

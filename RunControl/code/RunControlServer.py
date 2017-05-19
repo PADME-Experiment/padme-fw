@@ -34,6 +34,7 @@ class RunControlServer:
         if (self.run.change_setup(initial_setup) == "error"):
             print "ERROR - Error while changing run setup to %s"%initial_setup
             #self.write_log("ERROR - Error while changing run setup to %s"%initial_setup)
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
 
         # Start in idle state
@@ -59,6 +60,7 @@ class RunControlServer:
         except:
             print "ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0])
             #self.write_log("ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0]))
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
         self.sock.listen(1)
 
@@ -132,7 +134,7 @@ class RunControlServer:
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
                 self.db.set_run_time_stop(self.run.run_number,self.now_str())
-                self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+                self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
             open(self.run.quit_file,'w').close()
             for adc in (self.run.adcboard_list):
                 if adc.stop_daq():
@@ -150,7 +152,6 @@ class RunControlServer:
                 if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
             if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
             if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
-
 
         if os.path.exists(self.lock_file): os.remove(self.lock_file)
 
@@ -696,7 +697,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         if (self.run.run_number):
             self.db.set_run_time_stop(self.run.run_number,self.now_str())
-            self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+            self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()

@@ -10,11 +10,13 @@
 #define MAX_PARAM_NAME_LEN  128
 #define MAX_PARAM_VALUE_LEN 1024
 
+config_t* Config; // Allocate pointer to common configuration structure
+
 // Initialiaze configuration structure and set it to default
 int init_config()
 {
 
-  Config = malloc(sizeof(config_t));
+  Config = (config_t*)malloc(sizeof(config_t));
   if (Config == NULL) {
     printf("*** ERROR *** Memory allocation for configuration structure failed.\n");
     return 1;
@@ -494,6 +496,12 @@ int read_config(char *cfgfile)
 
   free(line);
   fclose(fin);
+
+  // Release memory used be regular expressions
+  regfree(&rex_empty);
+  regfree(&rex_comment);
+  regfree(&rex_setting);
+  regfree(&rex_chsetting);
 
   return 0;
 }

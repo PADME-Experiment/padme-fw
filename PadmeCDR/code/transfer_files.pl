@@ -1,8 +1,15 @@
 #!/usr/bin/perl
 
+use Getopt::Std;
+
 printf "Running on node $ENV{'HOSTNAME'} as user $ENV{'USER'} in dir $ENV{'HOME'}\n";
 
-$YEAR = 2017;
+$YEAR = 1900+(localtime)[5];
+getopts('y:');
+if ($opt_y) {
+    $YEAR = $opt_y;
+}
+printf "Will transfer files for year $YEAR\n";
 
 $DATA_DIR = "rawdata/$YEAR";
 
@@ -64,7 +71,7 @@ foreach my $file (@uniq_list) {
 	printf "Starting copy of $file from DAQ to LNF\n";
 
 	# Copy from PADME on-line server to LNF storage system
-	$cmd = "gfal-copy -D\"SFTP PLUGIN:USER=$DAQ_USER\" -D\"SFTP PLUGIN:PRIVKEY=/home/$ENV{'USER'}/.ssh/id_rsa\" $DAQ_SFTP/$DATA_DIR/$file $LNF_SRM/$DATA_DIR/$file";
+	$cmd = "gfal-copy -t 3600 -T 3600 -D\"SFTP PLUGIN:USER=$DAQ_USER\" -D\"SFTP PLUGIN:PRIVKEY=/home/$ENV{'USER'}/.ssh/id_rsa\" $DAQ_SFTP/$DATA_DIR/$file $LNF_SRM/$DATA_DIR/$file";
 	printf "> $cmd\n";
 	#system(split(/ /,$cmd));
 	system($cmd);
@@ -96,7 +103,7 @@ foreach my $file (@uniq_list) {
 	printf "Starting copy of $file from LNF to CNAF\n";
 
 	# Copy from LNF storage system to CNAF tape library using gfal-copy
-	$cmd = "gfal-copy $LNF_SRM/$DATA_DIR/$file $CNAF_SRM/$DATA_DIR/$file";
+	$cmd = "gfal-copy -t 3600 -T 3600 $LNF_SRM/$DATA_DIR/$file $CNAF_SRM/$DATA_DIR/$file";
 	printf "> $cmd\n";
 	system(split(/ /,$cmd));
 

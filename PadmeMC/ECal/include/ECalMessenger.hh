@@ -43,6 +43,8 @@ private:
 
   G4UIcommand* fSetCrystalCoatingCmd;
 
+  G4UIcommand* fSetTedlarThickCmd;
+
   G4UIcommand* fSetECalFrontFaceZCmd;
 
   G4UIcmdWithABool* fEnablePanelCmd;

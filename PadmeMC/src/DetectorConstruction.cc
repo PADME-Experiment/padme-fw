@@ -405,6 +405,7 @@ void DetectorConstruction::DefineMaterials()
   G4Material* Concrete = man->FindOrBuildMaterial("G4_CONCRETE");
   G4Material* Iron     = man->FindOrBuildMaterial("G4_Fe");
   G4Material* Scint    = man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE");
+  G4Material* Tedlar   = man->FindOrBuildMaterial("G4_POLYVINYLIDENE_FLUORIDE");
   G4Material* G4Vac    = man->FindOrBuildMaterial("G4_Galactic");
   G4Material* BGO      = man->FindOrBuildMaterial("G4_BGO");
   G4Material* BaF2     = man->FindOrBuildMaterial("G4_BARIUM_FLUORIDE");

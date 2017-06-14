@@ -27,14 +27,16 @@ ECalGeometry::ECalGeometry()
   fECalNRows = 29;
   fECalNCols = 29;
 
-  fCrystalGap = 0.050*mm;
+  fCrystalGap = 100.*um;
 
-  fCrystalCoating = 0.100*mm;
+  fCrystalCoating = 100.*um;
 
   fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
 
+  fTedlarThickness = 50.*um; // Thickness of Tedlar slips
+
   // Geometry parameters for plastic panel in front of ECal
-  fECalPanelEnable = true;
+  fECalPanelEnable = false;
   fECalPanelThickness = 0.5*cm;
   fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
   fECalPanelSizeY = 62.*cm; // Slightly larger than ECal (61.625cm)
@@ -109,16 +111,31 @@ G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
 
   return fECalCrystalMap[row][col];
 
-  // *** Replaced with explicit map ***
-  //// Compute X/Y position of center of crystal
-  //G4double posX = (fCrystalSizeX+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
-  //G4double posY = (fCrystalSizeY+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
-  //
-  //// See if center of crystal falls inside inner-outer radius range
-  //G4double r2 = posX*posX+posY*posY;
-  //if (r2<fECalInnerRadius*fECalInnerRadius || r2>fECalOuterRadius*fECalOuterRadius) return 0;
-  //
-  //return 1;
+}
+
+G4int ECalGeometry::ExistsTedlarHAt(G4int row,G4int col)
+{
+
+  // Verify we are within ECal box (excluding last row)
+  if ( row<0 || row>=fECalNRows-1 || col<0 || col>=fECalNCols ) return 0;
+
+  // Verify that we have two adjacent crystals
+  if ( fECalCrystalMap[row][col] && fECalCrystalMap[row+1][col] ) return 1;
+
+  return 0;
+
+}
+
+G4int ECalGeometry::ExistsTedlarVAt(G4int row,G4int col)
+{
+
+  // Verify we are within ECal box (excluding last column)
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols-1 ) return 0;
+
+  // Verify that we have two adjacent crystals
+  if ( fECalCrystalMap[row][col] && fECalCrystalMap[row][col+1] ) return 1;
+
+  return 0;
 
 }
 
@@ -166,6 +183,90 @@ G4double ECalGeometry::GetCrystalPosZ(G4int row, G4int col)
 
 }
 
+G4double ECalGeometry::GetTedlarHPosX(G4int row, G4int col)
+{
+
+  // Verify if horizontal Tedlar slip exists
+  if ( ! ExistsTedlarHAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarHPosX - ERROR - Requested position of horizontal Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return X position of center of slip in local coordinate system
+  return (GetCellSizeX()+fCrystalGap)*(-fECalNCols*0.5+col+0.5);
+
+}
+
+G4double ECalGeometry::GetTedlarHPosY(G4int row, G4int col)
+{
+
+  // Verify if horizontal Tedlar slip exists
+  if ( ! ExistsTedlarHAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarHPosY - ERROR - Requested position of horizontal Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return Y position of center of slip in local coordinate system
+  return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+1);
+
+}
+
+G4double ECalGeometry::GetTedlarHPosZ(G4int row, G4int col)
+{
+
+  // Verify if horizontal Tedlar slip exists
+  if ( ! ExistsTedlarHAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarHPosZ - ERROR - Requested position of horizontal Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return Z position of center of slip in local coordinate system
+  return 0.;
+
+}
+
+G4double ECalGeometry::GetTedlarVPosX(G4int row, G4int col)
+{
+
+  // Verify if vertical Tedlar slip exists
+  if ( ! ExistsTedlarVAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarVPosX - ERROR - Requested position of vertical Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return X position of center of slip in local coordinate system
+  return (GetCellSizeX()+fCrystalGap)*(-fECalNCols*0.5+col+1);
+
+}
+
+G4double ECalGeometry::GetTedlarVPosY(G4int row, G4int col)
+{
+
+  // Verify if vertical Tedlar slip exists
+  if ( ! ExistsTedlarVAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarVPosY - ERROR - Requested position of vertical Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return Y position of center of slip in local coordinate system
+  return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+0.5)-0.5*fCrystalCoating;
+
+}
+
+G4double ECalGeometry::GetTedlarVPosZ(G4int row, G4int col)
+{
+
+  // Verify if vertical Tedlar slip exists
+  if ( ! ExistsTedlarVAt(row,col) ) {
+    printf("ECalGeometry::GetTedlarVPosZ - ERROR - Requested position of vertical Tedlar slip at row %d col %d\n",row,col);
+    return 0.;
+  }
+
+  // Return Z position of center of slip in local coordinate system
+  return 0.;
+
+}
+
 std::vector<G4String> ECalGeometry::GetHashTable()
 {
 
@@ -201,6 +302,10 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fCrystalCoating " << fCrystalCoating;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTedlarThickness " << fTedlarThickness;
   hash.push_back(buffer.str());
   buffer.str("");
 

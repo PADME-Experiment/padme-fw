@@ -84,6 +84,36 @@ public:
   G4double GetCrystalCoating() { return fCrystalCoating; }
   void SetCrystalCoating(G4double c) { fCrystalCoating = c; }
 
+  // Thickness of Tedlar slips
+  G4double GetTedlarThickness() { return fTedlarThickness; }
+  void SetTedlarThickness(G4double t) { fTedlarThickness = t; }
+
+  // Check if horizontal Tedlar slip exists at given row/column
+  G4int ExistsTedlarHAt(G4int,G4int);
+
+  // Size of horizontal Tedlar slip
+  G4double GetTedlarHSizeX() { return fCrystalSizeX+2.*fCrystalCoating+fCrystalGap-1.*um; } // Approximate a continuous sheet
+  G4double GetTedlarHSizeY() { return fTedlarThickness; }
+  G4double GetTedlarHSizeZ() { return fCrystalSizeZ; }
+
+  // Position of center of horizontal Tedlar slip at given row/column
+  G4double GetTedlarHPosX(G4int,G4int);
+  G4double GetTedlarHPosY(G4int,G4int);
+  G4double GetTedlarHPosZ(G4int,G4int);
+
+  // Check if vertical Tedlar slip exists at given row/column
+  G4int ExistsTedlarVAt(G4int,G4int);
+
+  // Size of vertical Tedlar slip
+  G4double GetTedlarVSizeX() { return fTedlarThickness; }
+  G4double GetTedlarVSizeY() { return fCrystalSizeY+fCrystalCoating; }
+  G4double GetTedlarVSizeZ() { return fCrystalSizeZ; }
+
+  // Position of center of vertical Tedlar slip at given row/column
+  G4double GetTedlarVPosX(G4int,G4int);
+  G4double GetTedlarVPosY(G4int,G4int);
+  G4double GetTedlarVPosZ(G4int,G4int);
+
   // Position along Z of ECal front face
   G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
@@ -140,6 +170,8 @@ private:
   G4double fCrystalGap; // Air gap size between adjacent crystals+coating
 
   G4double fCrystalCoating; // Thickness of coating around crystals
+
+  G4double fTedlarThickness;  // Thickness of Tedlar slips
 
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 

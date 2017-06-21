@@ -67,19 +67,33 @@ def main(argv):
 
         if ( rawfile in daq_list and not rawfile in lnf_list ):
 
+            cmd = "ssh -l %s %s %s %s/%s/%s"%(DAQ_USER,DAQ_SRV,DAQ_ADLER32_CMD,DAQ_PATH,DATA_DIR,rawfile)
+            print("> %s"%cmd)
+            for line in run_command(cmd):
+                (a32_daq,fdummy) = line.rstrip().split()
+            print "Source file ADLER32 CRC: %s"%a32_daq
+
             print "Starting copy of %s from DAQ to LNF"%rawfile
-            cmd = "gfal-copy -t 3600 -T 3600 -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
+            cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32:%s --checksum-mode target -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(a32_daq,DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
             print("> %s"%cmd)
             for line in run_command(cmd):
                 print(line.rstrip())
+            # Need to learn how to handle gfal_copy errors, timeouts, etc...
+
+            print("Copy to LNF was successful: adding %s to LNF list"%rawfile)
+            lnf_list.append(rawfile)
 
         if ( rawfile in lnf_list and not rawfile in cnaf_list ):
 
             print "Starting copy of %s from LNF to CNAF"%rawfile
-            cmd = "gfal-copy -t 3600 -T 3600 %s/%s/%s %s/%s/%s"%(LNF_SRM,DATA_DIR,rawfile,CNAF_SRM,DATA_DIR,rawfile);
+            cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32 %s/%s/%s %s/%s/%s"%(LNF_SRM,DATA_DIR,rawfile,CNAF_SRM,DATA_DIR,rawfile);
             print("> %s"%cmd)
             for line in run_command(cmd):
                 print(line.rstrip())
+            # Need to learn how to handle gfal_copy errors, timeouts, etc...
+
+            print("Copy to CNAF was successful: adding %s to CNAF list"%rawfile)
+            cnaf_list.append(rawfile)
 
 def run_command(command):
     p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,shell=True)

@@ -89,8 +89,9 @@
 #/Detector/ECal/NCols 29
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
-#/Detector/ECal/CrystalGap 0.05
+#/Detector/ECal/CrystalGap 0.1
 #/Detector/ECal/CrystalCoating 0.1
+#/Detector/ECal/TedlarThickness 0.05
 #/Detector/ECal/FrontFaceZ 230.
 #/Detector/ECal/EnablePanel true
 #/Detector/ECal/PanelThickness 0.5

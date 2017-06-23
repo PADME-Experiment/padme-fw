@@ -19,7 +19,7 @@ def main(argv):
     # Top SRM path to CNAF tape library
     cnaf_padme_srm = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
-    (prod_name,job_name,mc_version,cfg_file,storage_dir) = argv
+    (prod_name,job_name,mc_version,cfg_file,storage_dir,proxy_file) = argv
 
     job_dir = os.getcwd()
 
@@ -27,9 +27,11 @@ def main(argv):
     print "Job starting at %s (GMT)"%now_str()
     print "Job running on node %s as user %s in dir %s"%(os.getenv('HOSTNAME'),os.getenv('USER'),job_dir)
 
-    print "PadmeMC version %s"%mc_version
-    print "SRM server URI %s"%cnaf_padme_srm
-    print "Storage directory %s"%storage_dir
+    print "PadmeMC version",mc_version
+    print "SRM server URI",cnaf_padme_srm
+    print "Storage directory",storage_dir
+    print "MC macro file",cfg_file
+    print "Proxy file",proxy_file
 
     # Check if software directory for this version is available
     padmemc_version_dir = "%s/%s"%(padmemc_cvmfs_dir,mc_version)
@@ -53,7 +55,7 @@ def main(argv):
     sf = open("job.sh","w")
     sf.write("#!/bin/bash\n")
     sf.write(". %s\n"%padmemc_init_file)
-    sf.write("padmemc_exe_file job.mac\n")
+    sf.write("%s job.mac\n"%padmemc_exe_file)
     sf.close()
 
     # Run job script sending its output/error to stdout/stderr
@@ -67,6 +69,11 @@ def main(argv):
 
         print "--- Saving output files to CNAF tape library ---"
 
+        # Obtain new VOMS proxy from long-lived proxy
+        proxy_cmd = "voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org"%(proxy_file,proxy_file)
+        print ">",proxy_cmd
+        rc = subprocess.call(proxy_cmd.split())
+
         if os.path.exists("data.root"):
 
             data_src_file = "data.root"
@@ -77,9 +84,9 @@ def main(argv):
             data_dst_file = "%s_%s_data.root"%(prod_name,job_name)
             data_dst_uri = "%s/%s/%s"%(cnaf_padme_srm,storage_dir,data_dst_file)
 
-            print "Copying %s to %s"%(data_src_uri,data_dst_uri)
+            print "Copying",data_src_uri,"to",data_dst_uri
             data_copy_cmd = "gfal_copy %s %s"%(data_src_uri,data_dst_uri)
-            print "> %s"%data_copy_cmd
+            print ">",data_copy_cmd
             rc = subprocess.call(split(data_copy_cmd))
 
             print "Data file %s with size %s and adler32 %s copied to CNAF"%(data_dst_file,data_size,data_adler32)
@@ -100,7 +107,7 @@ def main(argv):
 
             print "Copying %s to %s"%(hsto_src_uri,hsto_dst_uri)
             hsto_copy_cmd = "gfal_copy %s %s"%(hsto_src_uri,hsto_dst_uri)
-            print "> %s"%hsto_copy_cmd
+            print ">",hsto_copy_cmd
             rc = subprocess.call(split(hsto_copy_cmd))
 
             print "Hsto file %s with size %s and adler32 %s copied to CNAF"%(hsto_dst_file,hsto_size,hsto_adler32)

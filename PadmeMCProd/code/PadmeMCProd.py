@@ -18,6 +18,25 @@ def print_help():
 
     print "PadmeMCProd [-h] [-n <name>] [-j <number_of_jobs>] [-c <config_file>] [-s submission_site] [-m padmemc_version]"
 
+def renew_proxy(proxy_file):
+
+    renew = True
+
+    # Check if current proxy is valid and has at least 2 hours left
+    check_proxy_cmd = "voms-proxy-info"
+    p = subprocess.Popen(check_proxy_cmd.split(),stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    proxy_info = p.communicate()[0].split("\n")
+    for l in proxy_info:
+        r = re.match("^timeleft  : (\d+):.*$",l)
+        if r and r.group(1)>=2: renew = False
+
+    # Proxy needs renewal: create a new one using the long-lived proxy
+    if renew:
+        print "Renewing proxy"
+        renew_proxy_cmd = "voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org --valid 96:0"%(proxy_file,proxy_file)
+        print ">",renew_proxy_cmd
+        rc = subprocess.call(renew_proxy_cmd.split())
+
 def create_storage_dir(sdir):
 
     gfal_mkdir_cmd = "gfal-mkdir -p srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape%s"%sdir
@@ -87,21 +106,21 @@ def finalize_job_ok(job_id,job_name,ce_job_id):
         jof = open("job.out","r")
         for line in jof:
             r = re.match("^Job starting at (.*) \(GMT\)$",line)
-            if r: time_start = r.group(0)
+            if r: time_start = r.group(1)
             r = re.match("^Job ending at (.*) \(GMT\)$",line)
-            if r: time_end = r.group(0)
+            if r: time_end = r.group(1)
             r = re.match("^Job running on node (.*) as user",line)
-            if r: worker_node = r.group(0)
+            if r: worker_node = r.group(1)
             r = re.match("^Data file (.*) with size (.*) and adler32 (.*) copied to CNAF$",line)
             if r:
-                data_file_name = r.group(0)
-                data_file_size = r.group(1)
-                data_file_adler32 = r.group(2)
+                data_file_name = r.group(1)
+                data_file_size = r.group(2)
+                data_file_adler32 = r.group(3)
             r = re.match("^Hsto file (.*) with size (.*) and adler32 (.*) copied to CNAF$",line)
             if r:
-                hsto_file_name = r.group(0)
-                hsto_file_size = r.group(1)
-                hsto_file_adler32 = r.group(2)
+                hsto_file_name = r.group(1)
+                hsto_file_size = r.group(2)
+                hsto_file_adler32 = r.group(3)
             # Need some reg exp to retrieve number of generated events
     if time_start:
         print "Job was started at %s (GMT)"%time_start
@@ -239,7 +258,7 @@ def main(argv):
     print "prodScript",prodScript
     print "ceURI",ceURI
 
-    # Check if prdouction dir already exists
+    # Check if production dir already exists
     if os.path.exists(prodDir):
         print "ERROR Path %s already exists"%prodDir
         sys.exit(2)
@@ -257,9 +276,24 @@ def main(argv):
         print "ERROR A production named '%s' already exists in DB"%prodName
         sys.exit(2)
 
+    print "=== MC Production",prodName,"starting at",now_str(),"==="
+
+    # Create production directory to host support dirs for all jobs
+    os.mkdir(prodDir)
+
     # Create new production in DB
-    db.create_prod(prodName,ceURI,mcVersion,prodDir,prodConfig,storageDir,nJobs)
+    db.create_prod(prodName,ceURI,mcVersion,prodDir,prodConfig,storageDir,now_str(),nJobs)
     prodId = db.get_prod_id(prodName)
+    db.set_prod_status(prodId,0)
+
+    # Create long-lived (20 days) proxy. Will ask user for password
+    proxyFile = "%s/job.proxy"%prodDir
+    proxy_cmd = "voms-proxy-init --valid 480:0 --out %s"%proxyFile
+    print "> %s"%proxy_cmd
+    rc = subprocess.call(proxy_cmd.split())
+
+    # Renew VOMS proxy using long-lived proxy if needed
+    renew_proxy(proxyFile)
 
     # Create production directory in the CNAF tape library
     create_storage_dir(storageDir)
@@ -268,7 +302,6 @@ def main(argv):
     jobList = []
 
     # Create job structures
-    os.mkdir(prodDir)
     for j in range(0,nJobs):
 
         jobName = "job%05d"%j
@@ -283,16 +316,19 @@ def main(argv):
         # Copy common configuration file to job dir
         shutil.copyfile(configFile,"%s/job.mac"%jobDir)
 
+        # Copy long-lived proxy file to job dir
+        shutil.copyfile(proxyFile,"%s/job.proxy"%jobDir)
+
         # Create JDL file in job dir
         jf = open("%s/job.jdl"%jobDir,"w")
 	jf.write("[\n")
 	jf.write("Type = \"Job\";\n")
 	jf.write("JobType = \"Normal\";\n")
 	jf.write("Executable = \"/usr/bin/python\";\n")
-	jf.write("Arguments = \"job.py %s %s %s job.mac %s\";\n"%(prodName,jobName,mcVersion,storageDir))
+	jf.write("Arguments = \"job.py %s %s %s job.mac %s job.proxy\";\n"%(prodName,jobName,mcVersion,storageDir))
 	jf.write("StdOutput = \"job.out\";\n")
 	jf.write("StdError = \"job.err\";\n")
-	jf.write("InputSandbox = {\"job.py\",\"job.mac\"};\n")
+	jf.write("InputSandbox = {\"job.py\",\"job.mac\",\"job.proxy\"};\n")
 	jf.write("OutputSandbox = {\"job.out\", \"job.err\", \"job.sh\"};\n")
 	jf.write("OutputSandboxBaseDestURI=\"gsiftp://localhost\";\n")
 	jf.write("]\n")
@@ -306,14 +342,29 @@ def main(argv):
         # Submit job
         submit_job(jobId,jobDir,ceURI)
 
+    # All jobs submitted: production is officialy up
+    db.set_prod_status(prodId,1)
+
     # Main loop: wake up every 5min and check jobs status
     while True:
+
+        # Renew VOMS proxy using long-lived proxy (if needed)
+        renew_proxy(proxyFile)
+
+        # Check status of all jobs and exit if they all ended
         running_jobs = handle_jobs(jobList)
         if running_jobs == 0:
             print "No running jobs left: exiting"
             break
+
         print "%s jobs still running"%running_jobs
         time.sleep(300)
+
+    # Production is over: tag it as done and say bye bye
+    db.set_prod_status(prodId,2)
+    db.close_prod(prodId,now_str())
+
+    print "=== MC Production",prodName,"ended at",now_str(),"==="
 
 # Execution starts here
 if __name__ == "__main__":

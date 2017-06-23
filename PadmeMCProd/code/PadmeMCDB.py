@@ -54,11 +54,25 @@ class PadmeMCDB:
 
         return 0
 
-    def create_prod(self,name,ce_uri,mc_version,prod_dir,config,storage_dir,n_jobs):
+    def create_prod(self,name,ce_uri,mc_version,prod_dir,config,storage_dir,time_start,n_jobs):
 
         self.check_db()
         #c = self.conn.cursor()
-        #c.execute("""INSERT INTO production (name,description,user_req,n_events_req,ce_uri,mc_version,prod_dir,configuration,storage_dir,status,n_jobs) (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,"TEST","EL",100,ce_uri,mc_version,prod_dir,config,storage_dir,0,n_jobs))
+        #c.execute("""INSERT INTO production (name,description,user_req,n_events_req,ce_uri,mc_version,prod_dir,configuration,storage_dir,time_start,n_jobs) (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,"TEST","EL",100,ce_uri,mc_version,prod_dir,config,storage_dir,time_start,n_jobs))
+        #self.conn.commit()
+
+    def set_prod_status(self,pid,status):
+
+        self.check_db()
+        #c = self.conn.cursor()
+        #c.execute("""UPDATE production SET status = %s WHERE id = %s""",(status,pid))
+        #self.conn.commit()
+
+    def close_prod(self,pid,time_end,n_jobs_ok,n_events):
+
+        self.check_db()
+        #c = self.conn.cursor()
+        #c.execute("""UPDATE production SET time_end = %s, n_jobs_ok = %s, n_events = %s WHERE id = %s""",(time_end,n_jobs_ok,n_events,pid))
         #self.conn.commit()
 
     def get_prod_id(self,name):

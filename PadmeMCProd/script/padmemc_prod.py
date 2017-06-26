@@ -40,7 +40,7 @@ def main(argv):
         exit(2)
 
     # Check if padmemc configuration file is available
-    padmemc_init_file = "%s/padme-configure.sh"%padmemc_version_dir
+    padmemc_init_file = "%s/config/padme-configure.sh"%padmemc_version_dir
     if not os.path.exists(padmemc_init_file):
         print "ERROR File %s not found"%padmemc_init_file
         exit(2)

@@ -45,7 +45,15 @@ def create_storage_dir(sdir):
 
 def get_job_ce_status(ce_job_id):
 
-    return "DONE-OK"
+    # Retrieve status of job
+    job_status_cmd = "glite-ce-job-status %s"%ce_job_id
+    p = subprocess.Popen(job_status_cmd.split(),stdin=None,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    status_info = p.communicate()[0].split("\n")
+    status = ""
+    for l in status_info:
+        r = re.match("^\s*Status\s*= \[(.+)\].*$",l)
+        if r: status = r.group(1)
+    return status
 
 def finalize_job_ok(job_id,job_name,ce_job_id):
 
@@ -69,9 +77,7 @@ def finalize_job_ok(job_id,job_name,ce_job_id):
     rc = subprocess.call(purge_job_cmd.split())
 
     # Get name of dir where output files are stored from the ce_job_id
-    out_dir = ce_job_id[8:]
-    out_dir.replace(":","_")
-    out_dir.replace("/","_")
+    out_dir = ce_job_id[8:].replace(":","_").replace("/","_")
     print "Output files should be stored in dir %s"%out_dir
 
     # Recover files from output directory and move them to job directory
@@ -99,9 +105,12 @@ def finalize_job_ok(job_id,job_name,ce_job_id):
     time_start = ""
     time_end = ""
     worker_node = ""
-    file_name = ""
-    file_size = ""
-    file_adler32 = ""
+    data_file_name = ""
+    data_file_size = ""
+    data_file_adler32 = ""
+    hsto_file_name = ""
+    hsto_file_size = ""
+    hsto_file_adler32 = ""
     if os.path.exists("job.out"):
         jof = open("job.out","r")
         for line in jof:
@@ -138,17 +147,20 @@ def finalize_job_ok(job_id,job_name,ce_job_id):
         print "Hsto file %s with size % adler32 %s"%hsto_file_name,hsto_file_size,hsto_file_adler32
         db.create_job_file(job_id,hsto_file_name,hsto_file_size,hsto_file_adler32)
 
+    # Go back to top directory
+    os.chdir(main_dir)
+
     return True
 
 def handle_jobs(job_list):
 
     active_jobs = 0
 
+    print "--- Checking status of submitted jobs ---"
+
     for job_id in job_list:
 
         (name,status,ce_job_id) = db.get_job_info(job_id)
-
-        print "Checking job %s %s %s %s"%(job_id,name,status,ce_job_id)
 
         # Nothing to do if job is already in end status
         if status == 3 or status == 4: continue
@@ -156,6 +168,7 @@ def handle_jobs(job_list):
         # Last time job was still active: check if its status changed
         if status == 1 or status == 2:
             job_ce_status = get_job_ce_status(ce_job_id)
+            print ce_job_id,job_ce_status
             if job_ce_status == "PENDING":
                 active_jobs += 1
             elif job_ce_status == "RUNNING" or job_ce_status == "REALLY-RUNNING":
@@ -181,7 +194,7 @@ def submit_job(job_id,job_dir,ce_uri):
     submit_cmd = "glite-ce-job-submit -a -r %s job.jdl"%ce_uri
     #ce_job_id = subprocess.check_output(submit_cmd.split())
     p1 = subprocess.Popen(submit_cmd.split(),stdin=None,stdout=subprocess.PIPE)
-    ce_job_id = p1.communicate()[0]
+    ce_job_id = p1.communicate()[0].rstrip()
     print "Job submitted as %s"%(ce_job_id)
     db.set_job_submitted(job_id,ce_job_id,now_str())
 
@@ -358,11 +371,12 @@ def main(argv):
             break
 
         print "%s jobs still running"%running_jobs
-        time.sleep(300)
+        time.sleep(60)
 
     # Production is over: tag it as done and say bye bye
     db.set_prod_status(prodId,2)
-    db.close_prod(prodId,now_str())
+    nEvents = 0
+    db.close_prod(prodId,now_str(),nJobs,nEvents)
 
     print "=== MC Production",prodName,"ended at",now_str(),"==="
 

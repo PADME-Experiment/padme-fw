@@ -87,6 +87,7 @@
 
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
+#/Detector/ECal/CrystalMapId 0
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
 #/Detector/ECal/CrystalGap 0.1

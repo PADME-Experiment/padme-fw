@@ -23,7 +23,11 @@ class PadmeMCDB:
         DB_PASSWD = os.getenv('PADME_MCDB_PASSWD','unknown')
         DB_NAME   = os.getenv('PADME_MCDB_NAME'  ,'PadmeMCDB')
 
-        self.conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
+        try:
+            self.conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
+        except:
+            print "*** PadmeMCDB ERROR *** Unable to connect to DB"
+            sys.exit(2)
 
     def close_db(self):
 
@@ -77,12 +81,31 @@ class PadmeMCDB:
         self.check_db()
         c = self.conn.cursor()
         c.execute("""SELECT id FROM production WHERE name=%s""",(name,))
-        self.conn.commit()
         res = c.fetchone()
         self.conn.commit()
         if (res == None): return -1
         (id,) = res
         return id
+
+    def get_prod_info(self,pid):
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""SELECT name,ce_uri,prod_dir,n_jobs FROM production WHERE id=%s""",(pid,))
+        res = c.fetchone()
+        self.conn.commit()
+        return res
+
+    def get_job_list(self,prod_id):
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""SELECT id FROM job WHERE production_id=%s""",(prod_id,))
+        res = c.fetchall()
+        self.conn.commit()
+        job_list = []
+        for j in res: job_list.append(j[0])
+        return job_list    
 
     def create_job(self,prod_id,name,job_dir):
 
@@ -106,10 +129,9 @@ class PadmeMCDB:
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""SELECT name,status,ce_job_id FROM job WHERE id=%s""",(job_id,))
+        c.execute("""SELECT name,status,job_dir,ce_job_id FROM job WHERE id=%s""",(job_id,))
         res = c.fetchone()
         self.conn.commit()
-        if (res == None): return ("",-1,"")
         return res
 
     def set_job_status(self,job_id,status):
@@ -158,9 +180,13 @@ class PadmeMCDB:
         c.execute("""UPDATE job SET worker_node = %s WHERE id = %s""",(worker_node,job_id))
         self.conn.commit()
 
-    def create_job_file(self,job_id,file_name,file_size,file_adler32):
+    def create_job_file(self,job_id,file_name,file_type,seq_n,n_events,size,adler32):
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO file (job_id,name,size,adler32) VALUES (%s,%s,%s,%s)""",(job_id,file_name,file_size,file_adler32))
+        try:
+            c.execute("""INSERT INTO file (job_id,name,type,seq_n,n_events,size,adler32) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(job_id,file_name,file_type,seq_n,n_events,size,adler32))
+        except:
+            print "MySQL command",c._last_executed
+            sys.exit(2)
         self.conn.commit()

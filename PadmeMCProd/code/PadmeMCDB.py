@@ -55,11 +55,11 @@ class PadmeMCDB:
         if n: return 1
         return 0
 
-    def create_prod(self,name,ce_uri,mc_version,prod_dir,config,storage_dir,time_start,n_jobs):
+    def create_prod(self,name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,config,time_start,n_jobs):
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO production (name,description,user_req,n_events_req,ce_uri,mc_version,prod_dir,configuration,storage_dir,time_start,n_jobs) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,"TEST","EL",100,ce_uri,mc_version,prod_dir,config,storage_dir,time_start,n_jobs))
+        c.execute("""INSERT INTO production (name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,configuration,time_start,n_jobs) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,config,time_start,n_jobs))
         self.conn.commit()
 
     def set_prod_status(self,pid,status):
@@ -91,7 +91,7 @@ class PadmeMCDB:
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""SELECT name,ce_uri,prod_dir,n_jobs FROM production WHERE id=%s""",(pid,))
+        c.execute("""SELECT name,prod_ce,prod_dir,proxy_file,n_jobs FROM production WHERE id=%s""",(pid,))
         res = c.fetchone()
         self.conn.commit()
         return res

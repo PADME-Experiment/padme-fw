@@ -30,7 +30,7 @@ def main(argv):
     job_dir = os.getcwd()
 
     print "=== PadmeMC Production %s Job %s ==="%(prod_name,job_name)
-    print "Job starting at %s (GMT)"%now_str()
+    print "Job starting at %s (UTC)"%now_str()
     print "Job running on node %s as user %s in dir %s"%(os.getenv('HOSTNAME'),os.getenv('USER'),job_dir)
 
     print "PadmeMC version",mc_version
@@ -72,10 +72,10 @@ def main(argv):
     sf.close()
 
     # Run job script sending its output/error to stdout/stderr
-    print "Production starting at %s (GMT)"%now_str()
+    print "Production starting at %s (UTC)"%now_str()
     job_cmd = "/bin/bash job.sh"
     rc = subprocess.call(job_cmd.split())
-    print "Production ending at %s (GMT)"%now_str()
+    print "Production ending at %s (UTC)"%now_str()
 
     print "PADMEMC program ended with return code %s"%rc
 
@@ -135,7 +135,7 @@ def main(argv):
         print "ERROR Some errors occourred during simulation. Please check log."
         print "Output files will not be saved to tape storage."
 
-    print "Job ending at %s (GMT)"%now_str()
+    print "Job ending at %s (UTC)"%now_str()
 
 # Execution starts here
 if __name__ == "__main__":

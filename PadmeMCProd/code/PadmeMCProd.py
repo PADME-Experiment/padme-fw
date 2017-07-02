@@ -123,7 +123,7 @@ def main(argv):
     print "Main production directory:",PROD_DIR
     print "Production script:",PROD_SCRIPT
     print "PadmeMC macro file:",PROD_CONFIG_FILE
-    print "Storage directory:",PROD_MC_VERSION
+    print "Storage directory:",PROD_STORAGE_DIR
 
     # Check if production dir already exists
     if os.path.exists(PROD_DIR):
@@ -156,7 +156,11 @@ def main(argv):
 
     # Create new production in DB
     print "- Creating new production in DB"
-    db.create_prod(PROD_NAME,PROD_CE,PROD_MC_VERSION,PROD_DIR,prodConfig,PROD_STORAGE_DIR,now_str(),PROD_NJOBS)
+    # This will improve when we have a web interface to handle production requests
+    PROD_DESCRIPTION = "TEST"
+    PROD_USER_REQ = "EL"
+    PROD_NEVENTS_REQ = 100
+    db.create_prod(PROD_NAME,PROD_DESCRIPTION,PROD_USER_REQ,PROD_NEVENTS_REQ,PROD_CE,PROD_MC_VERSION,PROD_DIR,PROD_STORAGE_DIR,PROD_PROXY_FILE,prodConfig,now_str(),PROD_NJOBS)
     prodId = db.get_prod_id(PROD_NAME)
     #db.set_prod_status(prodId,0)
 
@@ -217,22 +221,21 @@ def start_production(prod_name):
 
     # Verify that production exists in DB and retrieve production id
     if not db.is_prod_in_db(prod_name):
-        print "*** ERROR *** Production %s not found in DB"%prod_name
+        print "*** ERROR *** Production '%s' not found in DB"%prod_name
         sys.exit(2)
     prod_id = db.get_prod_id(prod_name)
 
     # Get some info about this prod
-    (dummy,prod_ce,prod_dir,prod_njobs) = db.get_prod_info(prod_id)
+    (dummy,prod_ce,prod_dir,proxy_file,prod_njobs) = db.get_prod_info(prod_id)
 
     # Check if production dir exists
     if not os.path.isdir(prod_dir):
-        print "*** ERROR *** Production directory %s not found"%prod_dir
+        print "*** ERROR *** Production directory '%s' not found"%prod_dir
         sys.exit(2)
 
     # Check if proxy file exists
-    proxy_file = "%s/job.proxy"%prod_dir
     if not os.path.isfile(proxy_file):
-        print "*** ERROR *** Long-lived proxy file %s not found"%proxy_file
+        print "*** ERROR *** Long-lived proxy file '%s' not found"%proxy_file
         sys.exit(2)
         
     # Get list of job ids for this production

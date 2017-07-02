@@ -12,13 +12,28 @@ import re
 from PadmeMCDB import PadmeMCDB
 from Logger    import Logger
 
-# Define PADME grid servers
+# ### Define PADME grid resources ###
 
+# SRM to access PADME area on the CNAF tape library
 PADME_CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
-PADME_CNAF_CE = "ce04-lcg.cr.cnaf.infn.it:8443/cream-lsf-padme"
+# List of available submission sites and corresponding CE nodes
+PADME_CE_NODE = {
+    "LNF":  "atlasce1.lnf.infn.it:8443/cream-pbs-padme",
+    "CNAF": "ce04-lcg.cr.cnaf.infn.it:8443/cream-lsf-padme"
+}
 
-PADME_LNF_CE = "atlasce1.lnf.infn.it:8443/cream-pbs-padme"
+# Initialize global parameters and set some default values
+PROD_NAME = ""
+PROD_NJOBS = 0
+PROD_CONFIG_FILE = ""
+PROD_STORAGE_DIR = ""
+PROD_DIR = ""
+PROD_SCRIPT = "script/padmemc_prod.py"
+PROD_CE = PADME_CE_NODE["LNF"]
+PROD_MC_VERSION = "v0.4.0"
+PROD_PROXY_FILE = ""
+PROD_CHECK_DELAY = 60
 
 def now_str():
 
@@ -35,146 +50,143 @@ def print_help():
 
 def main(argv):
 
+    # Declare that here we can possibly modify these global variables
+    global PROD_NAME
+    global PROD_NJOBS
+    global PROD_CONFIG_FILE
+    global PROD_STORAGE_DIR
+    global PROD_DIR
+    global PROD_SCRIPT
+    global PROD_CE
+    global PROD_MC_VERSION
+    global PROD_PROXY_FILE
+    global PROD_CHECK_DELAY
+
     try:
         opts,args = getopt.getopt(argv,"hn:j:c:s:m:",[])
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
 
-    # Initialize some parameters and set default values
-    nJobs = 0
-    configFile = ""
-    prodName = ""
-    storageDir = ""
-    prodDir = ""
-    prodScript = "script/padmemc_prod.py"
-    ceURI = ""
-    mcVersion = "v0.4.0"
-
     for opt,arg in opts:
         if opt == '-h':
             print_help()
             sys.exit(0)
         elif opt == '-n':
-            prodName = arg
+            PROD_NAME = arg
         elif opt == '-c':
-            configFile = arg
+            PROD_CONFIG_FILE = arg
         elif opt == '-m':
-            mcVersion = arg
+            PROD_MC_VERSION = arg
         elif opt == '-s':
-            if arg == "CNAF":
-                ceURI = PADME_CNAF_CE
-            elif arg == "LNF":
-                ceURI = PADME_LNF_CE
+            if arg in PADME_CE_NODE.keys():
+                PROD_CE = PADME_CE_NODE[arg]
             else:
-                print "*** ERROR *** Invalid submission site %s. Valid: LNF,CNAF"%arg
+                print "*** ERROR *** Invalid submission site %s. Valid: %s"%(arg,",".join(PADME_CE_NODE.keys()))
                 print_help()
                 sys.exit(2)
         elif opt == '-j':
             try:
-                nJobs = int(arg)
+                PROD_NJOBS = int(arg)
             except ValueError:
-                print "*** ERROR *** Invalid number of jobs."
+                print "*** ERROR *** Invalid number of jobs: '%s'"%arg
                 print_help()
                 sys.exit(2)
 
-    if prodName == "":
+    if PROD_NAME == "":
         print "*** ERROR *** No production name specified."
         print_help()
         sys.exit(2)
 
-    if nJobs == 0:
+    if PROD_NJOBS == 0:
         print "*** ERROR *** Number of jobs was not specified."
         print_help()
         sys.exit(2)
 
-    if nJobs < 0 or nJobs > 1000:
-        print "*** ERROR *** Invalid number of jobs requested:",nJobs,"Max allowed: 1000."
+    if PROD_NJOBS < 0 or PROD_NJOBS > 1000:
+        print "*** ERROR *** Invalid number of jobs requested:",PROD_NJOBS,"Max allowed: 1000."
         print_help()
         sys.exit(2)
 
-    if ceURI == "":
-        ceURI = PADME_LNF_CE
+    if PROD_CONFIG_FILE == "":
+        PROD_CONFIG_FILE = "cfg/%s.cfg"%PROD_NAME
 
-    if configFile == "":
-        configFile = "cfg/%s.cfg"%prodName
+    if PROD_STORAGE_DIR == "":
+        PROD_STORAGE_DIR = "/mcprod/%s"%PROD_NAME
 
-    if storageDir == "":
-        storageDir = "/mcprod/%s"%prodName
-
-    if prodDir == "":
-        prodDir = "prod/%s"%prodName
+    if PROD_DIR == "":
+        PROD_DIR = "prod/%s"%PROD_NAME
 
     # Show info about required production
-    print "Starting production",prodName,"using PadmeMC version",mcVersion
-    print "Submitting",nJobs,"jobs to CE",ceURI
-    print "Main production directory:",prodDir
-    print "Production script:",prodScript
-    print "PadmeMC macro file:",configFile
-    print "Storage directory:",storageDir
+    print "Starting production",PROD_NAME,"using PadmeMC version",PROD_MC_VERSION
+    print "Submitting",PROD_NJOBS,"jobs to CE",PROD_CE
+    print "Main production directory:",PROD_DIR
+    print "Production script:",PROD_SCRIPT
+    print "PadmeMC macro file:",PROD_CONFIG_FILE
+    print "Storage directory:",PROD_MC_VERSION
 
     # Check if production dir already exists
-    if os.path.exists(prodDir):
-        print "*** ERROR *** Path %s already exists"%prodDir
+    if os.path.exists(PROD_DIR):
+        print "*** ERROR *** Path %s already exists"%PROD_DIR
         sys.exit(2)
 
     # Check configuration file and read it into a variable (will go to DB)
-    if not os.path.isfile(configFile):
-        print "*** ERROR *** Configuration file '%s' does not exist"%configFile
+    if not os.path.isfile(PROD_CONFIG_FILE):
+        print "*** ERROR *** Configuration file '%s' does not exist"%PROD_CONFIG_FILE
         sys.exit(2)
-    prodConfig = open(configFile,"r").read()
+    prodConfig = open(PROD_CONFIG_FILE,"r").read()
 
-    if (db.is_prod_in_db(prodName)):
-        print "*** ERROR *** A production named '%s' already exists in DB"%prodName
+    if (db.is_prod_in_db(PROD_NAME)):
+        print "*** ERROR *** A production named '%s' already exists in DB"%PROD_NAME
         sys.exit(2)
 
     # Create production directory to host support dirs for all jobs
-    print "- Creating production dir",prodDir
-    os.mkdir(prodDir)
+    print "- Creating production dir",PROD_DIR
+    os.mkdir(PROD_DIR)
 
     # Create long-lived (20 days) proxy. Will ask user for password
-    proxyFile = "%s/job.proxy"%prodDir
-    print "- Creating long-lived proxy file",proxyFile
-    proxy_cmd = "voms-proxy-init --valid 480:0 --out %s"%proxyFile
+    PROD_PROXY_FILE = "%s/job.proxy"%PROD_DIR
+    print "- Creating long-lived proxy file",PROD_PROXY_FILE
+    proxy_cmd = "voms-proxy-init --valid 480:0 --out %s"%PROD_PROXY_FILE
     print ">",proxy_cmd
     if subprocess.call(proxy_cmd.split()):
         print "*** ERROR *** while generating long-lived proxy. Aborting"
-        shutil.rmtree(prodDir)
+        shutil.rmtree(PROD_DIR)
         sys.exit(2)
 
     # Create new production in DB
-    print "- Creating production in DB"
-    db.create_prod(prodName,ceURI,mcVersion,prodDir,prodConfig,storageDir,now_str(),nJobs)
-    prodId = db.get_prod_id(prodName)
+    print "- Creating new production in DB"
+    db.create_prod(PROD_NAME,PROD_CE,PROD_MC_VERSION,PROD_DIR,prodConfig,PROD_STORAGE_DIR,now_str(),PROD_NJOBS)
+    prodId = db.get_prod_id(PROD_NAME)
     #db.set_prod_status(prodId,0)
 
     # Renew VOMS proxy using long-lived proxy if needed
-    renew_proxy(proxyFile)
+    renew_proxy(PROD_PROXY_FILE)
 
     # Create production directory in the CNAF tape library
-    print "- Creating dir",storageDir,"in the CNAF tape library"
-    gfal_mkdir_cmd = "gfal-mkdir -p %s%s"%(PADME_CNAF_SRM,storageDir)
+    print "- Creating dir",PROD_STORAGE_DIR,"in the CNAF tape library"
+    gfal_mkdir_cmd = "gfal-mkdir -p %s%s"%(PADME_CNAF_SRM,PROD_STORAGE_DIR)
     print ">",gfal_mkdir_cmd
     rc = subprocess.call(gfal_mkdir_cmd.split())
 
     # Create job structures
     print "- Creating directory structure for production jobs"
-    for j in range(0,nJobs):
+    for j in range(0,PROD_NJOBS):
 
         jobName = "job%05d"%j
 
         # Create dir to hold individual job info
-        jobDir = "%s/%s"%(prodDir,jobName)
+        jobDir = "%s/%s"%(PROD_DIR,jobName)
         os.mkdir(jobDir)
 
         # Copy production script to job dir
-        shutil.copyfile(prodScript,"%s/job.py"%jobDir)
+        shutil.copyfile(PROD_SCRIPT,"%s/job.py"%jobDir)
 
         # Copy common configuration file to job dir
-        shutil.copyfile(configFile,"%s/job.mac"%jobDir)
+        shutil.copyfile(PROD_CONFIG_FILE,"%s/job.mac"%jobDir)
 
         # Copy long-lived proxy file to job dir
-        shutil.copyfile(proxyFile,"%s/job.proxy"%jobDir)
+        shutil.copyfile(PROD_PROXY_FILE,"%s/job.proxy"%jobDir)
 
         # Create JDL file in job dir
         jf = open("%s/job.jdl"%jobDir,"w")
@@ -182,7 +194,7 @@ def main(argv):
 	jf.write("Type = \"Job\";\n")
 	jf.write("JobType = \"Normal\";\n")
 	jf.write("Executable = \"/usr/bin/python\";\n")
-	jf.write("Arguments = \"-u job.py %s %s %s job.mac %s job.proxy\";\n"%(prodName,jobName,mcVersion,storageDir))
+	jf.write("Arguments = \"-u job.py %s %s %s job.mac %s job.proxy\";\n"%(PROD_NAME,jobName,PROD_MC_VERSION,PROD_STORAGE_DIR))
 	jf.write("StdOutput = \"job.out\";\n")
 	jf.write("StdError = \"job.err\";\n")
 	jf.write("InputSandbox = {\"job.py\",\"job.mac\",\"job.proxy\"};\n")
@@ -195,16 +207,13 @@ def main(argv):
         db.create_job(prodId,jobName,jobDir)
 
     # Become a daemon and start the production
-    #with daemon.DaemonContext(): start_production(prodName)
-    start_production(prodName)
+    #with daemon.DaemonContext(): start_production()
+    start_production(PROD_NAME)
 
 def start_production(prod_name):
 
     # This is the daemonized code to start and handle the full production
     # It is structured to only depend on DB information
-
-    # Main loop delay between tests
-    check_delay = 60
 
     # Verify that production exists in DB and retrieve production id
     if not db.is_prod_in_db(prod_name):
@@ -213,7 +222,7 @@ def start_production(prod_name):
     prod_id = db.get_prod_id(prod_name)
 
     # Get some info about this prod
-    (dummy,ce_uri,prod_dir,prod_njobs) = db.get_prod_info(prod_id)
+    (dummy,prod_ce,prod_dir,prod_njobs) = db.get_prod_info(prod_id)
 
     # Check if production dir exists
     if not os.path.isdir(prod_dir):
@@ -238,7 +247,7 @@ def start_production(prod_name):
     err_file_name = "%s/%s.err"%(prod_dir,prod_name)
     sys.stderr = Logger(err_file_name)
 
-    # For the time being, enable terminal output
+    # For the time being, enable terminal output (remove when demonizing)
     sys.stdout.interactive = True
     sys.stderr.interactive = True
 
@@ -251,16 +260,16 @@ def start_production(prod_name):
         renew_proxy(proxy_file)
 
         # Call method to check jobs status and handle each job accordingly
-        (jobs_submitted,jobs_idle,jobs_active,jobs_success,jobs_fail,jobs_undef) = handle_jobs(ce_uri,job_id_list)
+        (jobs_submitted,jobs_idle,jobs_active,jobs_success,jobs_fail,jobs_undef) = handle_jobs(prod_ce,job_id_list)
 
         # If all jobs are in a final state, production is over
         if jobs_submitted+jobs_idle+jobs_active == 0:
-            print "No running jobs left: exiting"
+            print "*** No unfinished jobs left: exiting ***"
             break
 
         # Show current production state and sleep for a while
         print "Jobs: submitted %d idle %d running %d success %d fail %d undef %d"%(jobs_submitted,jobs_idle,jobs_active,jobs_success,jobs_fail,jobs_undef)
-        time.sleep(check_delay)
+        time.sleep(PROD_CHECK_DELAY)
 
     # Production is over: tag it as done and say bye bye
     n_events = 0
@@ -269,7 +278,7 @@ def start_production(prod_name):
     print "=== Ending MC Production %s ==="%prod_name
     sys.exit(0)
 
-def handle_jobs(ce_uri,job_id_list):
+def handle_jobs(prod_ce,job_id_list):
 
     jobs_submitted = 0
     jobs_idle = 0
@@ -286,7 +295,7 @@ def handle_jobs(ce_uri,job_id_list):
 
         # If status is 0, job was not submitted yet: do it now and get updated information
         if job_status == 0:
-            ce_job_id = submit_job(job_id,job_dir,ce_uri)
+            ce_job_id = submit_job(job_id,job_dir,prod_ce)
             print "- %s %s SUBMITTED"%(job_name,ce_job_id)
             jobs_submitted += 1
             continue
@@ -329,7 +338,7 @@ def handle_jobs(ce_uri,job_id_list):
        
     return (jobs_submitted,jobs_idle,jobs_active,jobs_success,jobs_fail,jobs_undef)
 
-def submit_job(job_id,job_dir,ce_uri):
+def submit_job(job_id,job_dir,prod_ce):
 
     # Save main directory, i.e. top production manager directory
     main_dir = os.getcwd()
@@ -338,7 +347,7 @@ def submit_job(job_id,job_dir,ce_uri):
     os.chdir(job_dir)
 
     # Submit job and log event to DB
-    submit_cmd = "glite-ce-job-submit -a -r %s job.jdl"%ce_uri
+    submit_cmd = "glite-ce-job-submit -a -r %s job.jdl"%prod_ce
     p = subprocess.Popen(submit_cmd.split(),stdin=None,stdout=subprocess.PIPE)
     ce_job_id = p.communicate()[0].rstrip()
     db.set_job_submitted(job_id,ce_job_id,now_str())
@@ -363,7 +372,7 @@ def renew_proxy(proxy_file):
 
     # Proxy needs renewal: create a new one using the long-lived proxy
     if renew:
-        print "Renewing proxy"
+        print "--- Renewing proxy ---"
         renew_proxy_cmd = "voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org --valid 96:0"%(proxy_file,proxy_file)
         print "> %s"%renew_proxy_cmd
         rc = subprocess.call(renew_proxy_cmd.split())
@@ -392,13 +401,13 @@ def finalize_job(job_id,job_name,ce_job_id):
     # Recover output files from job
     print "\tRecovering job output from CE"
     getout_cmd = "glite-ce-job-output -N %s"%ce_job_id
-    print "> %s"%getout_cmd
+    print "\t> %s"%getout_cmd
     rc = subprocess.call(getout_cmd.split())
 
     # Purge job
     print "\tPurging job from CE"
     purge_job_cmd = "glite-ce-job-purge -N %s"%ce_job_id
-    print "> %s"%purge_job_cmd
+    print "\t> %s"%purge_job_cmd
     rc = subprocess.call(purge_job_cmd.split())
 
     # Get name of dir where output files are stored from the ce_job_id

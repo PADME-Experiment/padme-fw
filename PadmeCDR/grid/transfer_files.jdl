@@ -1,11 +1,11 @@
 [
 Type = "Job";
 JobType = "Normal";
-Executable = "/usr/bin/perl";
-Arguments = "transfer_files.pl";
+Executable = "/usr/bin/python";
+Arguments = "transfer_files.py";
 StdOutput = "transfer_files.out";
 StdError = "transfer_files.err";
-InputSandbox = {"/home/leonardi/grid-test/transfer_files.pl"};
+InputSandbox = {"transfer_files.py"};
 OutputSandbox = {"transfer_files.out", "transfer_files.err"};
 OutputSandboxBaseDestURI="gsiftp://localhost";
 ]

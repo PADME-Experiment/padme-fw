@@ -30,7 +30,7 @@ def main(argv):
 
     DAQ_ADLER32_CMD = "/home/daq/DAQ/tools/adler32"
 
-    DAQ_SFTP = "sftp://$DAQ_SRV$DAQ_PATH"
+    DAQ_SFTP = "sftp://%s%s"%(DAQ_SRV,DAQ_PATH)
     LNF_SRM = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org/testbeam"
     CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape/testbeam"
 
@@ -63,18 +63,21 @@ def main(argv):
 
     for rawfile in (full_list):
 
-        print "=== Checking file %s ==="%rawfile
+        #print "=== Checking file %s ==="%rawfile
 
         if ( rawfile in daq_list and not rawfile in lnf_list ):
 
+            print "--- Getting ADLER32 checksum of %s ---"%rawfile
             cmd = "ssh -l %s %s %s %s/%s/%s"%(DAQ_USER,DAQ_SRV,DAQ_ADLER32_CMD,DAQ_PATH,DATA_DIR,rawfile)
             print("> %s"%cmd)
             for line in run_command(cmd):
                 (a32_daq,fdummy) = line.rstrip().split()
             print "Source file ADLER32 CRC: %s"%a32_daq
 
-            print "Starting copy of %s from DAQ to LNF"%rawfile
-            cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32:%s --checksum-mode target -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(a32_daq,DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
+            print "--- Starting copy of %s from DAQ to LNF ---"%rawfile
+            #cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32:%s --checksum-mode target -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(a32_daq,DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
+            #cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32:%s -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(a32_daq,DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
+            cmd = "gfal-copy -t 3600 -T 3600 -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/id_rsa\" %s/%s/%s %s/%s/%s"%(DAQ_USER,os.environ['USER'],DAQ_SFTP,DATA_DIR,rawfile,LNF_SRM,DATA_DIR,rawfile);
             print("> %s"%cmd)
             for line in run_command(cmd):
                 print(line.rstrip())
@@ -85,7 +88,7 @@ def main(argv):
 
         if ( rawfile in lnf_list and not rawfile in cnaf_list ):
 
-            print "Starting copy of %s from LNF to CNAF"%rawfile
+            print "--- Starting copy of %s from LNF to CNAF ---"%rawfile
             cmd = "gfal-copy -t 3600 -T 3600 --checksum ADLER32 %s/%s/%s %s/%s/%s"%(LNF_SRM,DATA_DIR,rawfile,CNAF_SRM,DATA_DIR,rawfile);
             print("> %s"%cmd)
             for line in run_command(cmd):

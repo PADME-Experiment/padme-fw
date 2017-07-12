@@ -7,7 +7,8 @@ import time
 import subprocess
 import shutil
 import re
-#import daemon
+import daemon
+import lockfile
 
 from PadmeMCDB import PadmeMCDB
 from Logger    import Logger
@@ -210,9 +211,33 @@ def main(argv):
         # Create job entry in DB and register job
         db.create_job(prodId,jobName,jobDir)
 
+    # Prepare daemon context
+
+    # Assume that the current directory is the top level MC Production directory
+    mcprod_dir = os.getcwd()
+
+    # Lock file with daemon pid is located inside the production directory
+    prod_lock = "%s/%s/%s.pid"%(mcprod_dir,PROD_DIR,PROD_NAME)
+
+    print "Daemon working dir is",mcprod_dir
+    print "Daemon lock file is",prod_lock
+
+    context = daemon.DaemonContext()
+    context.working_directory = mcprod_dir
+    context.umask = 0o002
+    context.pidfile = lockfile.FileLock(prod_lock)
+    #context.signal_map = {
+    #    signal.SIGTERM: program_cleanup,
+    #    signal.SIGHUP: 'terminate',
+    #    signal.SIGUSR1: reload_program_config,
+    #    }
+
     # Become a daemon and start the production
-    #with daemon.DaemonContext(): start_production()
+    #with context: start_production(PROD_NAME)
+    #with daemon.DaemonContext(): start_production(PROD_NAME)
+    context.open()
     start_production(PROD_NAME)
+    context.close()
 
 def start_production(prod_name):
 

@@ -167,11 +167,11 @@ void HistoManager::book()
   ntupl->Branch("SACCh", (myEvt.NTSACCh), "SACCh[100]/I");
 
 
-//  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
-//  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
-//  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
-//  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
-//  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+ ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
+ ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
+ ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
+ ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
+ ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
 
   ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
   ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");

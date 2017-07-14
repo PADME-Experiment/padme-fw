@@ -13,6 +13,7 @@
 #include "HEPVetoDetector.hh"
 #include "TDumpDetector.hh"
 #include "TPixDetector.hh"
+#include "LAVDetector.hh"
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
@@ -75,6 +76,7 @@ DetectorConstruction::DetectorConstruction()
   fECalDetector    = new ECalDetector(0);
   fTargetDetector  = new TargetDetector(0);
   fSACDetector     = new SACDetector(0);
+  fLAVDetector     = new LAVDetector(0);
   fPVetoDetector   = new PVetoDetector(0);
   fEVetoDetector   = new EVetoDetector(0);
   fHEPVetoDetector = new HEPVetoDetector(0);
@@ -90,6 +92,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableECal    = 1;
   fEnableTarget  = 1;
   fEnableSAC     = 1;
+  fEnableLAV     = 1;
   fEnablePVeto   = 1;
   fEnableEVeto   = 1;
   fEnableHEPVeto = 1;
@@ -305,6 +308,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (fEnableSAC) {
     fSACDetector->SetMotherVolume(logicWorld);
     fSACDetector->CreateGeometry();
+  }
+
+  if (fEnableLAV) {
+    fLAVDetector->SetMotherVolume(logicWorld);
+    fLAVDetector->CreateGeometry();
   }
 
   // TDump
@@ -553,6 +561,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   if      (det=="ECal")    { fEnableECal    = 1; }
   else if (det=="Target")  { fEnableTarget  = 1; }
   else if (det=="SAC")     { fEnableSAC     = 1; }
+  else if (det=="LAV")     { fEnableLAV     = 1; }
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
@@ -567,6 +576,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   if      (det=="ECal")    { fEnableECal    = 0; }
   else if (det=="Target")  { fEnableTarget  = 0; }
   else if (det=="SAC")     { fEnableSAC     = 0; }
+  else if (det=="LAV")     { fEnableLAV     = 0; }
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }

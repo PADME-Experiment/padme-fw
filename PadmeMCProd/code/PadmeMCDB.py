@@ -17,9 +17,9 @@ class PadmeMCDB:
         self.close_db()
 
         # Get DB connection parameters from environment variables
-        DB_HOST   = os.getenv('PADME_MCDB_HOST'  ,'localhost')
-        DB_PORT   = os.getenv('PADME_MCDB_PORT'  ,'5501')
-        DB_USER   = os.getenv('PADME_MCDB_USER'  ,'padme')
+        DB_HOST   = os.getenv('PADME_MCDB_HOST'  ,'percona.lnf.infn.it')
+        DB_PORT   = os.getenv('PADME_MCDB_PORT'  ,'3306')
+        DB_USER   = os.getenv('PADME_MCDB_USER'  ,'padmeMCDB')
         DB_PASSWD = os.getenv('PADME_MCDB_PASSWD','unknown')
         DB_NAME   = os.getenv('PADME_MCDB_NAME'  ,'PadmeMCDB')
 
@@ -62,12 +62,12 @@ class PadmeMCDB:
         c.execute("""INSERT INTO production (name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,configuration,time_start,n_jobs) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,config,time_start,n_jobs))
         self.conn.commit()
 
-    def set_prod_status(self,pid,status):
-
-        self.check_db()
-        c = self.conn.cursor()
-        c.execute("""UPDATE production SET status = %s WHERE id = %s""",(status,pid))
-        self.conn.commit()
+    #def set_prod_status(self,pid,status):
+    #
+    #    self.check_db()
+    #    c = self.conn.cursor()
+    #    c.execute("""UPDATE production SET status = %s WHERE id = %s""",(status,pid))
+    #    self.conn.commit()
 
     def close_prod(self,pid,time_end,n_jobs_ok,n_events):
 
@@ -163,14 +163,14 @@ class PadmeMCDB:
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""UPDATE job SET time_start = %s WHERE id = %s""",(time_start,job_id))
+        c.execute("""UPDATE job SET time_job_start = %s WHERE id = %s""",(time_start,job_id))
         self.conn.commit()
 
     def set_job_time_end(self,job_id,time_end):
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""UPDATE job SET time_end = %s WHERE id = %s""",(time_end,job_id))
+        c.execute("""UPDATE job SET time_job_end = %s WHERE id = %s""",(time_end,job_id))
         self.conn.commit()
 
     def set_job_worker_node(self,job_id,worker_node):

@@ -177,6 +177,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "LAVCollection") {
+      AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   int Ncells=0;
@@ -238,15 +240,26 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTSACCh[i]    = SACCh[i];
   }
 
-  for(int i=0;i<CalNPart;i++){	  
+  for(int i=0;i<CalNPart;i++){
     if(i>19) break;
     //    G4cout<<"NLAV Tr "<<LAVTracks<<" "<< LAVEtrack[i]<<" "<<LAVTrackTime[i]<<G4endl;
-    fHistoManager->myEvt.NTCalPartE[i]     = CalE[i];
-    fHistoManager->myEvt.NTCalPartT[i]     = CalTime[i];
-    fHistoManager->myEvt.NTCalPartPType[i] = CalPType[i];
-    fHistoManager->myEvt.NTCalPartX[i]     = CalX[i];
-    fHistoManager->myEvt.NTCalPartY[i]     = CalY[i];
+    fHistoManager->myEvt.NTCalPartE[i]     =  CalE[i];
+    fHistoManager->myEvt.NTCalPartT[i]     =  CalTime[i];
+    fHistoManager->myEvt.NTCalPartPType[i] =  CalPType[i];
+    fHistoManager->myEvt.NTCalPartX[i]     =  CalX[i];
+    fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
   }
+  
+  for(int i=0;i<  LAVTracks;i++){
+    if(i>100) break;
+
+    fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
+    fHistoManager->myEvt.NTLAVT    [i] = LAVTrackTime[i];
+    fHistoManager->myEvt.NTLAVPType[i] = LAVPType[i];
+    fHistoManager->myEvt.NTLAVX    [i] =LAVX[i]; 
+    fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
+  }
+  
 
   for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
@@ -813,10 +826,10 @@ void EventAction::AddLAVHits(LAVHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     LAVHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>0.1*MeV && LAVTracks < MaxTracks) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && LAVTracks < MaxTracks) {
 	//	ETotLAV[hit->GetLAVNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
 	//    	  LAVTrackCh[LAVTracks] = hit->GetLAVNb();
-	LAVEtrack[LAVTracks]    = hit->GetEdep();
+	LAVEtrack[LAVTracks]    = hit->GetETrack();
 	LAVTrackTime[LAVTracks] = hit->GetTime();
 	LAVPType[LAVTracks]     = hit->GetPType();
 	LAVX[LAVTracks]         = hit->GetX();

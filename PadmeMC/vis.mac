@@ -87,6 +87,7 @@
 
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
+#/Detector/ECal/CrystalMapId 0
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
 #/Detector/ECal/CrystalGap 0.1
@@ -163,8 +164,8 @@
 # Beam setup
 
 # Example for single three photon events
-/beam/n_e+_per_bunch 1
-/beam/n_e+_poisson_on false
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
 
@@ -189,7 +190,9 @@
 #/beam/emittance_y 0.001
 
 # Uboson generator
-#/beam/n_uboson_per_bunch 0
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_uboson_per_bunch 1
 #/beam/uboson_mass 22. MeV
 
 # Three photons events read from file

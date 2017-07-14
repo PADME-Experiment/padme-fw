@@ -224,10 +224,10 @@ void PhysicsList::ConstructOpticalPhysics() {
   // Removed because obsolete (Geant 9.6) RP
   // fBoundaryProcess->SetModel(themodel);
   
-  G4ParticleTable::G4PTblDicIterator* theParticleIterator;
-  theParticleIterator->reset();
-  while( (*theParticleIterator)() ){
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  G4ParticleTable::G4PTblDicIterator* myParticleIterator;
+  myParticleIterator->reset();
+  while( (*myParticleIterator)() ){
+    G4ParticleDefinition* particle = myParticleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     G4String particleName = particle->GetParticleName();
     if (particleName == "opticalphoton") {
@@ -260,14 +260,14 @@ void PhysicsList::ConstructOpticalPhysics() {
 
 
 void PhysicsList::ConstructNuclearProcesses(){
-  G4ParticleTable::G4PTblDicIterator* theParticleIterator;
-  theParticleIterator->reset();
+  G4ParticleTable::G4PTblDicIterator* myParticleIterator;
+  myParticleIterator->reset();
   if (NuclearBertini == 1){
     G4CascadeInterface* bertiniModel = new G4CascadeInterface();
   }
   
-  while( (*theParticleIterator)() ){
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  while( (*myParticleIterator)() ){
+    G4ParticleDefinition* particle = myParticleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     G4String particleName = particle->GetParticleName();
     
@@ -316,10 +316,10 @@ void PhysicsList::ConstructEM()
   G4QGSMFragmentation * theFragmentation;
   G4ExcitedStringDecay * theStringDecay;
 
-  G4ParticleTable::G4PTblDicIterator* theParticleIterator;
-  theParticleIterator->reset();
-  while( (*theParticleIterator)() ){
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  G4ParticleTable::G4PTblDicIterator* myParticleIterator;
+  myParticleIterator->reset();
+  while( (*myParticleIterator)() ){
+    G4ParticleDefinition* particle = myParticleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     G4String particleName = particle->GetParticleName();
      
@@ -470,10 +470,10 @@ void PhysicsList::ConstructGeneral()
 {
   // Add Decay Process
   G4Decay* theDecayProcess = new G4Decay();
-  G4ParticleTable::G4PTblDicIterator* theParticleIterator;
-  theParticleIterator->reset();
-  while( (*theParticleIterator)() ){
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  G4ParticleTable::G4PTblDicIterator* myParticleIterator;
+  myParticleIterator->reset();
+  while( (*myParticleIterator)() ){
+    G4ParticleDefinition* particle = myParticleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     if (theDecayProcess->IsApplicable(*particle)) { 
       pmanager ->AddProcess(theDecayProcess);
@@ -490,11 +490,11 @@ void PhysicsList::AddParameterisation()
   G4FastSimulationManagerProcess* fastSimProcess_massGeom     = new G4FastSimulationManagerProcess("G4FSMP_massGeom");
   // -- Fast simulation manager process for "parallel geometry":
   //  G4FastSimulationManagerProcess* fastSimProcess_parallelGeom = new G4FastSimulationManagerProcess("G4FSMP_parallelGeom", "pionGhostWorld");
-  G4ParticleTable::G4PTblDicIterator* theParticleIterator;
-  theParticleIterator->reset();
-  while( (*theParticleIterator)() )
+  G4ParticleTable::G4PTblDicIterator* myParticleIterator;
+  myParticleIterator->reset();
+  while( (*myParticleIterator)() )
     {
-      G4ParticleDefinition* particle = theParticleIterator->value();
+      G4ParticleDefinition* particle = myParticleIterator->value();
       G4ProcessManager* pmanager = particle->GetProcessManager();
       // -- For the mass geometry, G4FSMP is a PostStep process, ordering does not matter:
       if (particle->GetParticleName() == "e+"  || 

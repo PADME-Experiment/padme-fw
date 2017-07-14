@@ -42,10 +42,40 @@ ECalGeometry::ECalGeometry()
   fECalPanelSizeY = 62.*cm; // Slightly larger than ECal (61.625cm)
   fECalPanelGap = 0.100*mm;
 
-  // Map of ECal crystals
+  // Set default map of crystals in ECal to big (5x5) hole
+  fCrystalMapId = 0;
+  SetCrystalMap();
+
+  // Number of photoelectrons produced by photocathode per MeV of hit energy
+  // sqrt(N(E))/N(E) = sigma(E)/E = 2%/sqrt(E(GeV)) -> N(E) = 2.5*E(MeV)
+  fDigiEtoNPEConversion = 2.5/MeV;
+
+  fDigiPEtoSignalConversion = 1.; // Contribution of 1 p.e. to integral ADC signal
+ 
+  // Relative collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
+  static const G4double cmap[] = {1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.};
+  G4int nbins = 23;
+  fDigiPECollectionMap.assign(cmap,cmap+nbins);
+
+  fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
+  fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
+
+  fECalSensitiveDetectorName = "ECalSD";
+
+}
+
+ECalGeometry::~ECalGeometry()
+{}
+
+void ECalGeometry::SetCrystalMap()
+{
+
+  // Maps of ECal crystals
   // Y grows from top to bottom
   // X grows from left to right
-  G4int tmpMap[29*29] = {
+
+  // Big (5x5) hole
+  G4int tmpMap0[29*29] = {
   0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,
@@ -76,32 +106,70 @@ ECalGeometry::ECalGeometry()
   0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
   0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
   };
-  for (G4int r=0; r<fECalNRows; r++) {
-    for (G4int c=0; c<fECalNCols; c++) {
-      fECalCrystalMap[r][c] = tmpMap[r*fECalNCols+c];
+
+  // Small (3x3) hole
+  G4int tmpMap1[29*29] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,
+  0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+  0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
+  0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,
+  0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,
+  0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
+  };
+
+  if ( fCrystalMapId == 0 ) {
+
+    printf("ECalGeometry::SetCrystalMap - Using crystal map with 5x5 hole.\n");
+    for (G4int r=0; r<fECalNRows; r++) {
+      for (G4int c=0; c<fECalNCols; c++) {
+	fECalCrystalMap[r][c] = tmpMap0[r*fECalNCols+c];
+      }
     }
+
+  } else if ( fCrystalMapId == 1 ) {
+
+    printf("ECalGeometry::SetCrystalMap - Using crystal map with 3x3 hole.\n");
+    for (G4int r=0; r<fECalNRows; r++) {
+      for (G4int c=0; c<fECalNCols; c++) {
+	fECalCrystalMap[r][c] = tmpMap1[r*fECalNCols+c];
+      }
+    }
+
+  } else {
+
+    printf("ECalGeometry::SetCrystalMap - ERROR - Requested map %d does not exist. Using empty map.\n",fCrystalMapId);
+    for (G4int r=0; r<fECalNRows; r++) {
+      for (G4int c=0; c<fECalNCols; c++) {
+	fECalCrystalMap[r][c] = 0;
+      }
+    }
+
   }
 
-  // Number of photoelectrons produced by photocathode per MeV of hit energy
-  // sqrt(N(E))/N(E) = sigma(E)/E = 2%/sqrt(E(GeV)) -> N(E) = 2.5*E(MeV)
-  fDigiEtoNPEConversion = 2.5/MeV;
-
-  fDigiPEtoSignalConversion = 1.; // Contribution of 1 p.e. to integral ADC signal
- 
-  // Relative collection efficiency as function of Z along the crystal (bin 0: front face, bin N: readout face)
-  static const G4double cmap[] = {1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.};
-  G4int nbins = 23;
-  fDigiPECollectionMap.assign(cmap,cmap+nbins);
-
-  fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
-  fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
-
-  fECalSensitiveDetectorName = "ECalSD";
-
 }
-
-ECalGeometry::~ECalGeometry()
-{}
 
 G4int ECalGeometry::ExistsCrystalAt(G4int row, G4int col)
 {

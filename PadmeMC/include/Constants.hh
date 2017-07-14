@@ -1,5 +1,5 @@
 // GENERAL FLAGS
-const int   NPrint      = 1;
+const int   NPrint      = 1000;
 const bool  fAutoSeed   = true; //random seed with clock
 //const bool  fAutoSeed   = false; //fixed random seed
 // DETECTORS FLAGS

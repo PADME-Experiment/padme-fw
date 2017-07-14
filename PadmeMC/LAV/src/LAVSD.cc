@@ -47,6 +47,8 @@ void LAVSD::Initialize(G4HCofThisEvent* HCE)
 
 G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
+  G4double edep = aStep->GetTotalEnergyDeposit();
+  if (edep == 0.) return false;
 
   G4Track* track = aStep->GetTrack();
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
@@ -57,9 +59,19 @@ G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   LAVHit* newHit = new LAVHit();
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber());
-  newHit->SetEnergy(track->GetTotalEnergy());
+  newHit->SetChannelId(touchHPre->GetCopyNumber()); 
+  newHit->SetEnergy(aStep->GetTotalEnergyDeposit() );
+  
+
+
+  // G4cout << " LAVSD:   Energy of the track: " << preStepPoint->GetTotalEnergy()
+  //   //track->GetTotalEnergy() 
+  // 	 << "    Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
+  // 	 << G4endl;
+
   newHit->SetTime(track->GetGlobalTime());
+
+  newHit->SetETrack(track->GetTotalEnergy());
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);

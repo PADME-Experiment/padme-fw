@@ -47,6 +47,10 @@ public:
   G4double GetECalSizeY() { return (GetCellSizeY()+fCrystalGap)*fECalNRows; }
   G4double GetECalSizeZ() { return  GetCellSizeZ()+fCrystalGap; }
 
+  // Id of crystal map to use
+  G4int GetCrystalMapId() { return fCrystalMapId; }
+  void SetCrystalMapId(G4int m) { fCrystalMapId = m; SetCrystalMap(); }
+
   // Number of rows and columns of crystals in ECAL
   G4int GetECalNRows()        { return fECalNRows; }
   G4int GetECalNCols()        { return fECalNCols; }
@@ -158,7 +162,11 @@ public:
 
 private:
 
+  void SetCrystalMap();
+
   // Geometry parameters
+
+  G4int fCrystalMapId; // Id of crystal map to use
 
   G4double fCrystalSizeX;
   G4double fCrystalSizeY;

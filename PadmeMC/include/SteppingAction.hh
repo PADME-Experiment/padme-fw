@@ -39,6 +39,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 class EventAction;
 class G4Track;
+class HistoManager;
 class SteppingAction : public G4UserSteppingAction
 {
 public:
@@ -68,6 +69,7 @@ public:
 private:
   BeamParameters* bpar;
   EventAction* fEventAction;
+  HistoManager *fHistoManager;
 
   G4int fEnableSACAnalysis;
   G4int fEnableECalAnalysis;

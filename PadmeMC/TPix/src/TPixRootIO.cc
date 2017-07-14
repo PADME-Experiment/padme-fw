@@ -159,7 +159,7 @@ void TPixRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetTime((*tPixDC)[i]->GetTime());
 	      e_tot += (*tPixDC)[i]->GetEnergy();
 	    }
-	    G4cout << "TPixRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    //	    G4cout << "TPixRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

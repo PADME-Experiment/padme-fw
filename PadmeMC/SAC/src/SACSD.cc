@@ -42,6 +42,9 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
   SACHit* newHit = new SACHit();
+  
+  newHit->SetEdep(aStep->GetTrack()->GetTotalEnergy());
+  newHit->SetTrackID(aStep->GetTrack()->GetTrackID());
 
   //newHit->SetChannelId(touchHPre->GetCopyNumber());
   newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
@@ -63,9 +66,7 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
-
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-
   fSACCollection->insert(newHit);
 
   return true;

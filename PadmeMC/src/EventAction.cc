@@ -321,6 +321,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTNClusCells[i]= NCellsCl[i];
   }
 
+  //  if(SACTracks>0) for(int ll=0;ll<SACTracks;ll++) fHistoManager->FillHisto(18,SACEtrack[ll]);
 
 //  for(int i=0;i< ECalNCells;i++){
 //    fHistoManager->myEvt.NTECell[i]=ETotCry[i];
@@ -331,8 +332,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  if(IsTrackerRecoON==1){
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
-//    if(ETotCal>EMinSaveNT) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //  }
 }
@@ -623,7 +624,7 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
       int newhit = 1;
 
       for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
-	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 5.) {
+	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 0.1) {
 	  newhit=0;
 	  PVetoTimeCl[iBar][iCluster] = 
 	    (hit->GetTime()*hit->GetHitE() + PVetoECl[iBar][iCluster]*PVetoTimeCl[iBar][iCluster])/
@@ -644,8 +645,9 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
 	(ETotPVeto[hit->GetPVetoNb()]+hit->GetHitE());
 
       ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
-
       ETotPVetoEvt += hit->GetHitE();
+
+      //old style variable deprected.
       puppo= hit->GetEdep();
       if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NPVetoTracks < MaxTracks && hit->GetTrackEnergy() > 0.1*MeV) {
 	PVetoTrackCh[NPVetoTracks]    = hit->GetPVetoNb();   //bugs gives crazy numbers
@@ -655,8 +657,6 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
 	PVetoY[NPVetoTracks]          = hit->GetY();
 	NPVetoTracks++;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
-	
-
       }
       if(NPVetoTracks>MaxTracks) break; 
       LastID = hit->GetTrackID();
@@ -753,7 +753,7 @@ void EventAction::AddSACHits(SACHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     SACHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>2.*MeV && SACTracks < MaxTracks) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>0.1*MeV && SACTracks < MaxTracks) {
 	//	ETotSAC[hit->GetSACNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
 	//    	  SACTrackCh[SACTracks] = hit->GetSACNb();
 	SACEtrack[SACTracks]    = hit->GetEdep();

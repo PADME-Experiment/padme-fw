@@ -16,6 +16,7 @@ class ECalDetector;
 class ECalGeometry;
 class G4UIdirectory;
 class G4UIcommand;
+class G4UIcmdWithAnInteger;
 class G4UIcmdWithABool;
 
 class ECalMessenger: public G4UImessenger
@@ -35,6 +36,8 @@ private:
 
   G4UIcommand* fSetECalNRowsCmd;
   G4UIcommand* fSetECalNColsCmd;
+
+  G4UIcmdWithAnInteger* fSetCrystalMapIdCmd;
 
   G4UIcommand* fSetCrystalSizeCmd;
   G4UIcommand* fSetCrystalLengthCmd;

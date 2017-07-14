@@ -17,9 +17,9 @@ class PadmeMCDB:
         self.close_db()
 
         # Get DB connection parameters from environment variables
-        DB_HOST   = os.getenv('PADME_MCDB_HOST'  ,'localhost')
-        DB_PORT   = os.getenv('PADME_MCDB_PORT'  ,'5501')
-        DB_USER   = os.getenv('PADME_MCDB_USER'  ,'padme')
+        DB_HOST   = os.getenv('PADME_MCDB_HOST'  ,'percona.lnf.infn.it')
+        DB_PORT   = os.getenv('PADME_MCDB_PORT'  ,'3306')
+        DB_USER   = os.getenv('PADME_MCDB_USER'  ,'padmeMCDB')
         DB_PASSWD = os.getenv('PADME_MCDB_PASSWD','unknown')
         DB_NAME   = os.getenv('PADME_MCDB_NAME'  ,'PadmeMCDB')
 

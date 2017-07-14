@@ -21,7 +21,8 @@ PADME_CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=
 # List of available submission sites and corresponding CE nodes
 PADME_CE_NODE = {
     "LNF":  "atlasce1.lnf.infn.it:8443/cream-pbs-padme",
-    "CNAF": "ce04-lcg.cr.cnaf.infn.it:8443/cream-lsf-padme"
+    "CNAF": "ce04-lcg.cr.cnaf.infn.it:8443/cream-lsf-padme",
+    "SOFIA": "cream.grid.uni-sofia.bg:8443/cream-pbs-cms"
 }
 
 # Initialize global parameters and set some default values

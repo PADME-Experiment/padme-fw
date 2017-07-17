@@ -128,7 +128,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*targetHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    //	    G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -162,7 +162,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetTime((*targetDC)[i]->GetTime());
 	      e_tot += (*targetDC)[i]->GetEnergy();
 	    }
-	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    //	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

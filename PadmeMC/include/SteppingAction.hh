@@ -66,6 +66,9 @@ public:
   void EnableECalAnalysis()  { fEnableECalAnalysis = 1; }
   void DisableECalAnalysis() { fEnableECalAnalysis = 0; }
 
+  G4ThreeVector & GetPositronMomentum(){ return PositronMomentum;  };
+  
+
 private:
   BeamParameters* bpar;
   EventAction* fEventAction;
@@ -83,6 +86,7 @@ private:
   double ThetaGamma;
   G4ThreeVector GammaDir;
   G4ThreeVector VertexPos;
+  G4ThreeVector PositronMomentum;
   G4int NChild;
 
   G4int ClassifyTrack(G4Track* );

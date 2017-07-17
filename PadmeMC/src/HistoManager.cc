@@ -146,6 +146,9 @@ void HistoManager::book()
   ntupl->Branch("PPrim", &(myEvt.NTPriBeam), "PPrim/D");
   ntupl->Branch("XBeam", &(myEvt.NTXBeam), "XBeam/D");
   ntupl->Branch("YBeam", &(myEvt.NTYBeam), "YBeam/D");
+  ntupl->Branch("PosMomX", &(myEvt.PMomX), "PosMomX/D");
+  ntupl->Branch("PosMomY", &(myEvt.PMomY), "PosMomY/D");
+  ntupl->Branch("PosMomZ", &(myEvt.PMomZ), "PosMomZ/D");
 
   ntupl->Branch("NClusters", &(myEvt.NTNCluster), "NClusters/I");
   ntupl->Branch("NTracks",   &(myEvt.NTNTracks), "NTracks/I");

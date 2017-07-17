@@ -33,6 +33,7 @@ SteppingAction::SteppingAction()
 
 void SteppingAction::UserSteppingAction(const G4Step* step)
 { 
+  static int nt=0;
 //  //Devi capire che fare con il monitor e che cosa succede con piu' di un interazione!!!!   |-------|
   //printf("Stepping\n");
   // return; // Uncomment to disable MC analysis
@@ -118,11 +119,48 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   }
 
   //  G4cout<<"Primaries "<< bpar->GetNPositronsPerBunch() <<G4endl;
+
+  static G4String lastProc="";
+  static G4String prevProc="";
+
   //Cerca il primario
   if(bpar->GetNPositronsPerBunch()==1){
     if(track->GetTrackID()==1){ //primary particle
       if(track->GetParticleDefinition() == G4Positron::PositronDefinition()){
-	if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+	if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){ 
+	  prevProc = lastProc;
+	  lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+	  if(lastProc == "annihil" ||lastProc == "eBrem") {
+	    nt++;
+	  }
+
+	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
+	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target" && nt>1) {
+	    G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
+		   << "  ----  > " 
+		   << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
+	    G4cout << " Getting the momentum:   " << track->GetMomentum() 
+		   << "     "   << prevProc << "      " << lastProc << G4endl;
+	  }
+	  //Be somewhere
+	  // G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
+	  // 	 << "  ----> " 
+	  // 	 << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
+	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()!="Target" 
+	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") {
+	    PositronMomentum = G4ThreeVector(-1000,-1000,-1000);
+	    nt = 0;
+	    
+	  }
+
+	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
+	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() != "Target") {
+	    // G4cout << " Getting the momentum:   " << track->GetMomentum() << G4endl;
+	    PositronMomentum = G4ThreeVector(track->GetMomentum());
+	  }
+	  
+
+	
     	  if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
 	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
 	    G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();

@@ -189,6 +189,16 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4double BeamY  = myStepping->GetPositronY();
   G4double BeamZ  = myStepping->GetPositronZ();
   G4double PrimE  = myStepping->GetPrimE();
+  
+  
+  G4ThreeVector PositronMomentum = myStepping->GetPositronMomentum();
+  // G4cout << " Getting the momentum to store:   " << PositronMomentum << G4endl;
+
+  fHistoManager->myEvt.PMomX = PositronMomentum.x();
+  fHistoManager->myEvt.PMomY = PositronMomentum.y();
+  fHistoManager->myEvt.PMomZ = PositronMomentum.z();
+
+
 
   ProcID = myStepping->GetPhysProc();   
   fHistoManager->FillHisto(1,ETotCal);

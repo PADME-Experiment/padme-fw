@@ -21,10 +21,10 @@ LAVGeometry::LAVGeometry()
   // Inizialize default parameters
 
   fLAVInnerRadius = 5.1*cm;
-  fLAVOuterRadius = 12.*cm;
-  fLAVZLength = 2.*cm;
+  fLAVOuterRadius = 8.*cm;
+  fLAVZLength = 9.*cm;
 
-  fLAVFrontFacePosZ = -60.*cm; // Relative to center of magnet
+  fLAVFrontFacePosZ = -64.*cm; // Relative to center of magnet
 
   fLAVSensitiveDetectorName = "LAVSD";
 

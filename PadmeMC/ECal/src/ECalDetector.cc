@@ -15,6 +15,7 @@
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
+#include "ECalMessenger.hh"
 #include "ECalGeometry.hh"
 #include "ECalSD.hh"
 
@@ -86,6 +87,31 @@ void ECalDetector::CreateGeometry()
   // Position BGO crystal inside cell
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"ECalCry",fCellVolume,false,0,false);
 
+  // Verify if Tedlar slip thickness is compatible with gap between crystals
+  if (geo->GetCrystalGap() <= geo->GetTedlarThickness()) {
+    printf("ECalDetector::CreateGeometry - ERROR - Gap between crystals of %f is smaller than Tedlar slip thickness of %f\n",geo->GetCrystalGap(),geo->GetTedlarThickness());
+  } else {
+    printf("Tedlar slips thickness is %f\n",geo->GetTedlarThickness());
+  }
+
+  // Create horizontal Tedlar slip
+  G4double tedlarHSizeX = geo->GetTedlarHSizeX();
+  G4double tedlarHSizeY = geo->GetTedlarHSizeY();
+  G4double tedlarHSizeZ = geo->GetTedlarHSizeZ();
+  printf("ECal Tedlar horizontal slip size is %f %f %f\n",tedlarHSizeX,tedlarHSizeY,tedlarHSizeZ);
+  G4Box* solidTedlarH = new G4Box("ECalTedlarH",0.5*tedlarHSizeX,0.5*tedlarHSizeY,0.5*tedlarHSizeZ);
+  G4LogicalVolume* logicTedlarH = new G4LogicalVolume(solidTedlarH,G4Material::GetMaterial("G4_POLYVINYLIDENE_FLUORIDE"),"ECalTedlarH",0, 0, 0);
+  logicTedlarH->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+
+  // Create vertical Tedlar slip
+  G4double tedlarVSizeX = geo->GetTedlarVSizeX();
+  G4double tedlarVSizeY = geo->GetTedlarVSizeY();
+  G4double tedlarVSizeZ = geo->GetTedlarVSizeZ();
+  printf("ECal Tedlar vertical slip size is %f %f %f\n",tedlarVSizeX,tedlarVSizeY,tedlarVSizeZ);
+  G4Box* solidTedlarV = new G4Box("ECalTedlarV",0.5*tedlarVSizeX,0.5*tedlarVSizeY,0.5*tedlarVSizeZ);
+  G4LogicalVolume* logicTedlarV = new G4LogicalVolume(solidTedlarV,G4Material::GetMaterial("G4_POLYVINYLIDENE_FLUORIDE"),"ECalTedlarV",0, 0, 0);
+  logicTedlarV->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+
   // Get number of rows and columns of crystals and position all crystals
   G4int nTotCry = 0;
   G4int nRow = geo->GetECalNRows();
@@ -102,6 +128,26 @@ void ECalDetector::CreateGeometry()
      }
   }
   G4cout << "ECalDetector - Positioned " << nTotCry << " crystals." << G4endl;
+
+  // Position all tedlar slips
+  G4int nTotTedlarH = 0;
+  G4int nTotTedlarV = 0;
+  for (G4int row=0;row<nRow;row++){
+     for (G4int col=0;col<nCol;col++){
+       G4int idxCell = row*ECALGEOMETRY_N_COLS_MAX+col;
+       if (geo->ExistsTedlarHAt(row,col)) {
+	 nTotTedlarH++;
+	 G4ThreeVector positionTedlarH = G4ThreeVector(geo->GetTedlarHPosX(row,col),geo->GetTedlarHPosY(row,col),geo->GetTedlarHPosZ(row,col));
+	 new G4PVPlacement(0,positionTedlarH,logicTedlarH,"ECalTedlarH",fECalVolume,false,idxCell,false);
+       }
+       if (geo->ExistsTedlarVAt(row,col)) {
+	 nTotTedlarV++;
+	 G4ThreeVector positionTedlarV = G4ThreeVector(geo->GetTedlarVPosX(row,col),geo->GetTedlarVPosY(row,col),geo->GetTedlarVPosZ(row,col));
+	 new G4PVPlacement(0,positionTedlarV,logicTedlarV,"ECalTedlarV",fECalVolume,false,idxCell,false);
+       }
+     }
+  }
+  G4cout << "ECalDetector - Positioned " << nTotTedlarH << " horizontal and " << nTotTedlarV << " vertical Tedlar slips." << G4endl;
 
   // Create plastic panel in front of ECal
   if ( geo->ECalPanelIsEnabled() ) {

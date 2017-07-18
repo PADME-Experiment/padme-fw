@@ -26,7 +26,7 @@
 #define PEVT_STATUS_ZEROSUP_BIT 2
 
 int create_pevent(void*,CAEN_DGTZ_X742_EVENT_t*,void*); // evtPtr, event, pEvt
-int create_file_head(unsigned int,int,time_t,void*); // file_index,run_number,time_tag,fHead
-int create_file_tail(unsigned int,unsigned long int,time_t,void*); // n_events,file_size,time_tag,fTail
+unsigned int create_file_head(unsigned int,int,time_t,void*); // file_index,run_number,time_tag,fHead
+unsigned int create_file_tail(unsigned int,unsigned long int,time_t,void*); // n_events,file_size,time_tag,fTail
 
 #endif

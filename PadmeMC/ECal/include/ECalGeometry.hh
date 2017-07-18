@@ -47,6 +47,10 @@ public:
   G4double GetECalSizeY() { return (GetCellSizeY()+fCrystalGap)*fECalNRows; }
   G4double GetECalSizeZ() { return  GetCellSizeZ()+fCrystalGap; }
 
+  // Id of crystal map to use
+  G4int GetCrystalMapId() { return fCrystalMapId; }
+  void SetCrystalMapId(G4int m) { fCrystalMapId = m; SetCrystalMap(); }
+
   // Number of rows and columns of crystals in ECAL
   G4int GetECalNRows()        { return fECalNRows; }
   G4int GetECalNCols()        { return fECalNCols; }
@@ -84,6 +88,36 @@ public:
   G4double GetCrystalCoating() { return fCrystalCoating; }
   void SetCrystalCoating(G4double c) { fCrystalCoating = c; }
 
+  // Thickness of Tedlar slips
+  G4double GetTedlarThickness() { return fTedlarThickness; }
+  void SetTedlarThickness(G4double t) { fTedlarThickness = t; }
+
+  // Check if horizontal Tedlar slip exists at given row/column
+  G4int ExistsTedlarHAt(G4int,G4int);
+
+  // Size of horizontal Tedlar slip
+  G4double GetTedlarHSizeX() { return fCrystalSizeX+2.*fCrystalCoating+fCrystalGap-1.*um; } // Approximate a continuous sheet
+  G4double GetTedlarHSizeY() { return fTedlarThickness; }
+  G4double GetTedlarHSizeZ() { return fCrystalSizeZ; }
+
+  // Position of center of horizontal Tedlar slip at given row/column
+  G4double GetTedlarHPosX(G4int,G4int);
+  G4double GetTedlarHPosY(G4int,G4int);
+  G4double GetTedlarHPosZ(G4int,G4int);
+
+  // Check if vertical Tedlar slip exists at given row/column
+  G4int ExistsTedlarVAt(G4int,G4int);
+
+  // Size of vertical Tedlar slip
+  G4double GetTedlarVSizeX() { return fTedlarThickness; }
+  G4double GetTedlarVSizeY() { return fCrystalSizeY+fCrystalCoating; }
+  G4double GetTedlarVSizeZ() { return fCrystalSizeZ; }
+
+  // Position of center of vertical Tedlar slip at given row/column
+  G4double GetTedlarVPosX(G4int,G4int);
+  G4double GetTedlarVPosY(G4int,G4int);
+  G4double GetTedlarVPosZ(G4int,G4int);
+
   // Position along Z of ECal front face
   G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
@@ -111,10 +145,28 @@ public:
   G4double GetECalPanelGap() { return fECalPanelGap; }
   void SetECalPanelGap(G4double g) { fECalPanelGap = g; }
 
+  // Digitization parameters
+  G4double GetBGOLightPropagationSpeed() { return (2.998E8*m/s)/2.57; }
+  G4double GetDigiEtoNPEConversion() { return fDigiEtoNPEConversion; }
+  G4double GetDigiPEtoSignalConversion() { return fDigiPEtoSignalConversion; }
+
+  std::vector<G4double> GetDigiPECollectionMap() { return fDigiPECollectionMap; }
+  G4int GetDigiPECollectionMapNBins() { return fDigiPECollectionMap.size(); }
+  G4double  GetDigiPECollectionMapBinLength() { return fCrystalSizeZ/fDigiPECollectionMap.size(); }
+
+  G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
+  G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
+
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
 
 private:
+
+  void SetCrystalMap();
+
+  // Geometry parameters
+
+  G4int fCrystalMapId; // Id of crystal map to use
 
   G4double fCrystalSizeX;
   G4double fCrystalSizeY;
@@ -127,6 +179,8 @@ private:
 
   G4double fCrystalCoating; // Thickness of coating around crystals
 
+  G4double fTedlarThickness;  // Thickness of Tedlar slips
+
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
   G4bool fECalPanelEnable; // Use (true) or do not use (false) the panel in front of ECal
@@ -136,6 +190,18 @@ private:
   G4double fECalPanelGap; // Gap between back of plastic panel and front face of ECal
 
   G4int fECalCrystalMap[ECALGEOMETRY_N_ROWS_MAX][ECALGEOMETRY_N_COLS_MAX]; // Map of existing crystals
+
+  // Digitization parameters
+
+  G4double fDigiEtoNPEConversion; // Number of p.e. produced by photocathode per MeV of hit energy
+  G4double fDigiPEtoSignalConversion; // Contribution of 1 p.e. to integral ADC signal
+ 
+  std::vector<G4double> fDigiPECollectionMap; // Relative collection efficiency along crystal
+
+  G4double fDigiPMTTransitTime; // PMT transit time from photocathode to anode
+  G4double fDigiPMTCableDelay; // Delay due to connection cables
+
+  // Other parameteres
 
   G4String fECalSensitiveDetectorName;
 

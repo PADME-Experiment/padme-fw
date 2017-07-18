@@ -8,10 +8,11 @@
 #include "TEVetoMCEvent.hh"
 
 #include "TEVetoMCHit.hh"
+#include "TEVetoMCDigi.hh"
 
 ClassImp(TEVetoMCEvent)
 
-TEVetoMCEvent::TEVetoMCEvent() : TMCVEvent(TEVetoMCHit::Class())
+TEVetoMCEvent::TEVetoMCEvent() : TMCVEvent(TEVetoMCHit::Class(),TEVetoMCDigi::Class())
 {;}
 
 TEVetoMCEvent::~TEVetoMCEvent()

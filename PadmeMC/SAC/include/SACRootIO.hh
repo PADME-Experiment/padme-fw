@@ -34,10 +34,10 @@ public:
   void Close();
 
   // Z position where beam has t=0
-  void SetBeamStartZ(Double_t z) { fEHistoBeamStartZ = z; }
+  //void SetBeamStartZ(Double_t z) { fEHistoBeamStartZ = z; }
 
   // Time length of e+ bunch (40. ns for the time being)
-  void SetBeamBunchLengthT(Double_t t) { if (t > 0.) fEHistoBeamBunchLengthT = t; }
+  //void SetBeamBunchLengthT(Double_t t) { if (t > 0.) fEHistoBeamBunchLengthT = t; }
 
 private:
 
@@ -47,13 +47,13 @@ private:
 
   // Parameters used for energy distribution histogram
 
-  Double_t fEHistoBeamStartZ;
-  Double_t fEHistoBeamBunchLengthT;
-
-  Int_t    fEHistoNBins;
-  Double_t fEHistoTStart;
-  Double_t fEHistoTStep;
-  Double_t fEHistoTEnd;
+  //Double_t fEHistoBeamStartZ;
+  //Double_t fEHistoBeamBunchLengthT;
+  //
+  //Int_t    fEHistoNBins;
+  //Double_t fEHistoTStart;
+  //Double_t fEHistoTStep;
+  //Double_t fEHistoTEnd;
 
   SACGeometry* fGeoPars;
 

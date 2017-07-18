@@ -15,8 +15,7 @@
 class TargetDetector;
 class TargetGeometry;
 class G4UIdirectory;
-class G4UIcommand;
-class G4UIcmdWithAString;
+class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithoutParameter;
 
 class TargetMessenger: public G4UImessenger
@@ -34,9 +33,15 @@ private:
 
   G4UIdirectory* fTargetDetectorDir;
 
-  G4UIcommand* fSetTargetFrontFaceZCmd;
-  G4UIcommand* fSetTargetSizeCmd;
-  G4UIcommand* fSetTargetThicknessCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetFrontFaceZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetSizeCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetThicknessCmd;
+
+  G4UIcmdWithoutParameter* fEnableFastDigitizationCmd;
+  G4UIcmdWithoutParameter* fDisableFastDigitizationCmd;
+
+  G4UIcmdWithoutParameter* fEnableSaveWaveformToDigiCmd;
+  G4UIcmdWithoutParameter* fDisableSaveWaveformToDigiCmd;
 
 };
 #endif

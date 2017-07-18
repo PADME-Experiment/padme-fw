@@ -34,6 +34,7 @@ class RunControlServer:
         if (self.run.change_setup(initial_setup) == "error"):
             print "ERROR - Error while changing run setup to %s"%initial_setup
             #self.write_log("ERROR - Error while changing run setup to %s"%initial_setup)
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
 
         # Start in idle state
@@ -59,6 +60,7 @@ class RunControlServer:
         except:
             print "ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0])
             #self.write_log("ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0]))
+            if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
         self.sock.listen(1)
 
@@ -77,21 +79,32 @@ class RunControlServer:
         if (os.path.exists(self.lock_file)):
             if (os.path.isfile(self.lock_file)):
                 pid = 0
-                lf = open(self.lock_file,"r")
-                for ll in lf: pid = ll
-                lf.close()
-                print "ERROR - Lock file %s found for pid %s"%(self.lock_file,pid)
+                with open(self.lock_file,"r") as lf:
+                    for ll in lf: pid = ll
+
+                print "Lock file %s found for pid %s - checking status"%(self.lock_file,pid)
                 #self.write_log("ERROR - Lock file %s found for pid %s"%(self.lock_file,pid))
+
+                ppinfo = os.popen("ps -p %s"%pid)
+                pinfo = ppinfo.readlines()
+                ppinfo.close()
+                if len(pinfo)==2:
+                    if pinfo[1].find("<defunct>")>-1:
+                        print "There is zombie process with this pid. The RunControlServer is probably dead. Proceeding cautiously..."
+                    else:
+                        print "ERROR - there is already a RunControlServer running with pid %s"%pid
+                        return "error"
+                else:
+                    print "No RunControlServer process found. As you were..."
             else:
                 print "ERROR - Lock file %s found but it is not a file"%self.lock_file
                 #self.write_log("ERROR - Lock file %s found but it is not a file"%self.lock_file)
-            return "error"
+                return "error"
 
         # Create our own lock file
         pid = os.getpid()
-        lf = open(self.lock_file,"w")
-        lf.write("%d"%pid)
-        lf.close()
+        with open(self.lock_file,"w") as lf:
+            lf.write("%d"%pid)
 
         return "ok"
 
@@ -132,7 +145,7 @@ class RunControlServer:
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
                 self.db.set_run_time_stop(self.run.run_number,self.now_str())
-                self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+                self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
             open(self.run.quit_file,'w').close()
             for adc in (self.run.adcboard_list):
                 if adc.stop_daq():
@@ -150,7 +163,6 @@ class RunControlServer:
                 if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
             if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
             if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
-
 
         if os.path.exists(self.lock_file): os.remove(self.lock_file)
 
@@ -696,7 +708,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         if (self.run.run_number):
             self.db.set_run_time_stop(self.run.run_number,self.now_str())
-            self.db.set_run_comment_end(self.run.run_number,self.run.run_end_comment)
+            self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()

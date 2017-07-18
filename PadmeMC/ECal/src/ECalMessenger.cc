@@ -13,8 +13,7 @@
 #include "G4UIcommand.hh"
 #include "G4UIparameter.hh"
 #include "G4UIcmdWithABool.hh"
-#include "G4UIcmdWithAString.hh"
-#include "G4UIcmdWithoutParameter.hh"
+#include "G4UIcmdWithAnInteger.hh"
 
 #include "ECalGeometry.hh"
 
@@ -33,6 +32,12 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   egNRowsParameter->SetParameterRange("NRows >= 1 && NRows <= 100");
   fSetECalNRowsCmd->SetParameter(egNRowsParameter);
   fSetECalNRowsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCrystalMapIdCmd = new G4UIcmdWithAnInteger("/Detector/ECal/CrystalMapId",this);
+  fSetCrystalMapIdCmd->SetGuidance("Set id of crystal map to use for ECal.");
+  fSetCrystalMapIdCmd->SetParameterName("MI",false);
+  fSetCrystalMapIdCmd->SetRange("MI >= 0 && MI <= 1");
+  fSetCrystalMapIdCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetECalNColsCmd = new G4UIcommand("/Detector/ECal/NCols",this);
   fSetECalNColsCmd->SetGuidance("Set number of crystal columns in ECal.");
@@ -68,6 +73,13 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   ccThickParameter->SetParameterRange("Thick >= 0. && Thick <= 1.");
   fSetCrystalCoatingCmd->SetParameter(ccThickParameter);
   fSetCrystalCoatingCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTedlarThickCmd = new G4UIcommand("/Detector/ECal/TedlarThickness",this);
+  fSetTedlarThickCmd->SetGuidance("Set thickness of tedlar slips between crystals in mm.");
+  G4UIparameter* ttThickParameter = new G4UIparameter("Thick",'d',false);
+  ttThickParameter->SetParameterRange("Thick > 0. && Thick <= 10.");
+  fSetTedlarThickCmd->SetParameter(ttThickParameter);
+  fSetTedlarThickCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetECalFrontFaceZCmd = new G4UIcommand("/Detector/ECal/FrontFaceZ",this);
   fSetECalFrontFaceZCmd->SetGuidance("Set position along Z of ECal front face in cm.");
@@ -106,12 +118,16 @@ ECalMessenger::~ECalMessenger()
   delete fSetECalNRowsCmd;
   delete fSetECalNColsCmd;
 
+  delete fSetCrystalMapIdCmd;
+
   delete fSetCrystalSizeCmd;
   delete fSetCrystalLengthCmd;
 
   delete fSetCrystalGapCmd;
 
   delete fSetCrystalCoatingCmd;
+
+  delete fSetTedlarThickCmd;
 
   delete fSetECalFrontFaceZCmd;
 
@@ -133,6 +149,9 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     G4int c; std::istringstream is(par); is >> c;
     fECalGeometry->SetECalNCols(c);
   }
+ 
+ if ( cmd == fSetCrystalMapIdCmd )
+    fECalGeometry->SetCrystalMapId(fSetCrystalMapIdCmd->GetNewIntValue(par));
 
   if ( cmd == fSetCrystalSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
@@ -153,6 +172,11 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetCrystalCoatingCmd ) {
     G4double c; std::istringstream is(par); is >> c;
     fECalGeometry->SetCrystalCoating(c*mm);
+  }
+
+  if ( cmd == fSetTedlarThickCmd ) {
+    G4double t; std::istringstream is(par); is >> t;
+    fECalGeometry->SetTedlarThickness(t*mm);
   }
 
   if ( cmd == fSetECalFrontFaceZCmd ) {

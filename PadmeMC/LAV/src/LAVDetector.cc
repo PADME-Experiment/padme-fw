@@ -45,7 +45,8 @@ void LAVDetector::CreateGeometry()
   G4double lavZLength = geo->GetLAVZLength();
   printf("LAV size is %f %f %f\n",lavInnerR,lavOuterR,lavZLength);
   G4Tubs* solidLAV = new G4Tubs("LAV",lavInnerR,lavOuterR,lavZLength*0.5,0.*rad,2.*M_PI*rad);
-  fLAVVolume = new G4LogicalVolume(solidLAV,G4Material::GetMaterial("G4_PbWO4"),"LAV",0,0,0);
+  //  fLAVVolume = new G4LogicalVolume(solidLAV,G4Material::GetMaterial("G4_PbWO4"),"LAV",0,0,0);
+  fLAVVolume = new G4LogicalVolume(solidLAV,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"LAV",0,0,0);
   fLAVVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
   new G4PVPlacement(0,lavPos,fLAVVolume,"LAV",fMotherVolume,false,0,false);
 

@@ -63,7 +63,7 @@ void HEPVetoDetector::CreateGeometry()
   printf("HEPVeto Finger size is %f %f %f\n",hepVetoFingerX,hepVetoFingerY,hepVetoFingerZ);
   G4Box* solidFinger  = new G4Box("HEPVetoFingerSolid",0.5*hepVetoFingerX,0.5*hepVetoFingerY,0.5*hepVetoFingerZ);
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"HEPVetoFingerLogic",0,0,0);
-  fFingerVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Yellow()));
+  fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
   // Make finger a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

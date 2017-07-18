@@ -2,7 +2,7 @@
 #include "G4UImanager.hh"
 
 #include "DetectorConstruction.hh"
-#include "PhysicsList.hh"
+//#include "PhysicsList.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -108,8 +108,10 @@ int main(int argc,char** argv)
     runManager->SetUserInitialization(physicsList);
   } else {
     //Custom made user physics list, old style
-    G4VUserPhysicsList* physics = new PhysicsList;
-    runManager->SetUserInitialization(physics);
+    //G4VUserPhysicsList* physics = new PhysicsList;
+    //runManager->SetUserInitialization(physics);
+    printf("ERROR - PhysicsList is obsolete: use new physics list PADME_PHYS\n");
+    exit(1);
   }
   
 

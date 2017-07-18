@@ -67,6 +67,9 @@ public:
   void SetEdep(G4double de) { fEnergy = de; };
   G4double GetEdep() { return fEnergy; };      
 
+  void SetETrack(G4double de) { fETrack = de; };
+  G4double GetETrack() { return fETrack; };      
+
   void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
   G4ThreeVector GetPos(){ return fPosition; };
   G4double GetX(){ return fPosition.x(); };
@@ -80,6 +83,7 @@ private:
   G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
+  G4double      fETrack;
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
 

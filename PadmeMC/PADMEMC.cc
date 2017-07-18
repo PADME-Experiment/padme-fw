@@ -71,7 +71,8 @@ int main(int argc,char** argv)
   //  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
   //G4MTHepRandom::setTheEngine(new CLHEP::Ranlux64Engine);  
 #ifdef  G4MULTITHREADED
-  G4MTHepRandom::setTheEngine(new CLHEP::RanecuEngine);
+  //  G4MTHepRandom::setTheEngine(new CLHEP::RanecuEngine);
+  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
 #else 
   CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
 #endif

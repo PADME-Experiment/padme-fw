@@ -126,7 +126,8 @@ void MyParticle::genDecayVtx(){
   // double path = (G4MTHepRandom::getTheEngine())-> CLHEP::RandExponential::shoot(mean);
 
 #ifdef G4MULTITHREADED
-  double rnd =(G4MTHepRandom::getTheEngine())->flat();
+  //  double rnd =(G4MTHepRandom::getTheEngine())->flat();
+  double rnd = CLHEP::HepRandom::getTheEngine()->flat();
 #else
   double rnd = CLHEP::HepRandom::getTheEngine()->flat();
 #endif

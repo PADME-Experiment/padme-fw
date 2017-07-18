@@ -16,7 +16,7 @@
 #include "Constants.hh"
 
 #ifdef  G4MULTITHREADED
-#include "G4MTHepRandom.hh"
+//#include "G4MTHepRandom.hh"
 #else
 #endif
 
@@ -62,8 +62,10 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     seeds[1] = (long) (systime*G4UniformRand());
 
 #ifdef  G4MULTITHREADED
-    G4MTHepRandom::setTheSeeds(seeds);
-    G4MTHepRandom::showEngineStatus();
+    // G4MTHepRandom::setTheSeeds(seeds);
+    // G4MTHepRandom::showEngineStatus();
+    CLHEP::HepRandom::setTheSeeds(seeds);
+    CLHEP::HepRandom::showEngineStatus();
 #else
     CLHEP::HepRandom::setTheSeeds(seeds);
     CLHEP::HepRandom::showEngineStatus();
@@ -82,8 +84,10 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
 
 
 #ifdef  G4MULTITHREADED
-    G4MTHepRandom::setTheSeeds(seeds);
-    G4MTHepRandom::showEngineStatus();
+    // G4MTHepRandom::setTheSeeds(seeds);
+    // G4MTHepRandom::showEngineStatus();
+    CLHEP::HepRandom::setTheSeeds(seeds);
+    CLHEP::HepRandom::showEngineStatus();
 #else
     CLHEP::HepRandom::setTheSeeds(seeds);
     CLHEP::HepRandom::showEngineStatus();

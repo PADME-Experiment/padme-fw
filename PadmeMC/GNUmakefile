@@ -32,8 +32,9 @@ G4MINORVERSION = $(shell dirname $(G4INSTALL) | sed -e 's:/.*/::' -e 's:\-: :' -
 
 DEFINES += -D G4VERSION=$(G4VERSION) -D G4MAJORVERSION=$(G4MAJORVERSION) -D G4MINORVERSION=$(G4MINORVERSION) 
 
-CPPFLAGS += -I$(PADMEROOT)/include $(ROOTCFLAGS) -fPIC $(DEFINES)
+CPPFLAGS += -std=c++1y -I$(PADMEROOT)/include $(ROOTCFLAGS) -fPIC $(DEFINES)
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
+GPPFLAGS += -std=c++1y 
 
 EXTRALIBS := $(addprefix -l,$(SUBDIRS))
 EXTRALIBS += -L$(PADMEROOT)/lib -lPadmeRoot
@@ -79,7 +80,9 @@ cleanallsub:
 include $(G4INSTALL)/config/binmake.gmk
 
 #Standard flags from G4
-CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wno-shadow -O2 -fPIC 
-CXXFLAGS += -g
+CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wno-shadow -O2 -fPIC -std=c++1y
+CXXFLAGS += -g -std=c++1y  -static
+CPPFLAGS += -g -std=c++1y  -static
+
 #CXXFLAGS += -pg -fprofile-generate
 

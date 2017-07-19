@@ -79,21 +79,32 @@ class RunControlServer:
         if (os.path.exists(self.lock_file)):
             if (os.path.isfile(self.lock_file)):
                 pid = 0
-                lf = open(self.lock_file,"r")
-                for ll in lf: pid = ll
-                lf.close()
-                print "ERROR - Lock file %s found for pid %s"%(self.lock_file,pid)
+                with open(self.lock_file,"r") as lf:
+                    for ll in lf: pid = ll
+
+                print "Lock file %s found for pid %s - checking status"%(self.lock_file,pid)
                 #self.write_log("ERROR - Lock file %s found for pid %s"%(self.lock_file,pid))
+
+                ppinfo = os.popen("ps -p %s"%pid)
+                pinfo = ppinfo.readlines()
+                ppinfo.close()
+                if len(pinfo)==2:
+                    if pinfo[1].find("<defunct>")>-1:
+                        print "There is zombie process with this pid. The RunControlServer is probably dead. Proceeding cautiously..."
+                    else:
+                        print "ERROR - there is already a RunControlServer running with pid %s"%pid
+                        return "error"
+                else:
+                    print "No RunControlServer process found. As you were..."
             else:
                 print "ERROR - Lock file %s found but it is not a file"%self.lock_file
                 #self.write_log("ERROR - Lock file %s found but it is not a file"%self.lock_file)
-            return "error"
+                return "error"
 
         # Create our own lock file
         pid = os.getpid()
-        lf = open(self.lock_file,"w")
-        lf.write("%d"%pid)
-        lf.close()
+        with open(self.lock_file,"w") as lf:
+            lf.write("%d"%pid)
 
         return "ok"
 

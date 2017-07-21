@@ -25,7 +25,7 @@ echo
 echo
 echo rsync -auvvessh  ggeorge@lxplus.cern.ch:$LCGPREF/$pak/. /opt/${pak//\//_}
 echo
-rsync -auvvessh  ggeorge@lxplus.cern.ch:$LCGPREF/$pak/. /opt/${pak//\//_}
+rsync -auvvessh --del ggeorge@lxplus.cern.ch:$LCGPREF/$pak/. /opt/${pak//\//_}
 done
 
 

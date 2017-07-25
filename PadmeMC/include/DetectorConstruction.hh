@@ -6,6 +6,7 @@
 #include "G4SubtractionSolid.hh"
 #include "CLHEP/Units/PhysicalConstants.h"
 #include "G4PhysicalConstants.hh"
+#include "G4GDMLParser.hh"
 
 class G4Box;
 class G4Tubs;
@@ -83,6 +84,8 @@ public:
 private:
 
   void DefineMaterials();
+
+  G4GDMLParser fParser;
 
   ECalDetector*    fECalDetector;
   TargetDetector*  fTargetDetector;

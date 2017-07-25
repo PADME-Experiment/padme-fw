@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+
+    <define>
+        <constant name="HALFPI" value="pi/2."/>
+        <constant name="PI" value="1.*pi"/>
+        <constant name="TWOPI" value="2.*pi"/>
+        <position name="center"/>
+        <position name="posCameraEsterna" x="0." z="2300.000"/>
+        <rotation name="rotCameraEsterna" x="-HALFPI" z="-HALFPI" />
+        <position name="posCameraInterna" x="0." z="0."/>
+        <rotation name="rotCameraInterna" x="-HALFPI" />
+        <rotation name="identity"/>
+    </define>
+
+    <materials>
+        <element name="videRef" formula="VACUUM" Z="1"> <atom value="1."/> </element>
+        <material formula=" " name="Vacuum">
+            <D value="1.e-25" unit="g/cm3" />
+            <fraction n="1.0" ref="videRef" />
+        </material>
+    </materials>
+
+    <solids>
+        <box lunit="m" name="world_solid" x="12.0" y="12.0" z="12.0" />
+    </solids>
+
+    <structure>
+        <volume name="world_volume">
+            <materialref ref="Vacuum"/>
+            <solidref ref="world_solid"/>
+
+            <physvol>
+                <file name="gdml/ChamberInternal.gdml"/>
+		<positionref ref="posCameraInterna"/>
+		<rotationref ref="rotCameraInterna"/>
+             </physvol>
+
+            <physvol>
+                <file name="gdml/ChamberExternal.gdml"/>
+		<positionref ref="posCameraEsterna"/>
+		<rotationref ref="rotCameraEsterna"/>
+             </physvol>
+
+
+        </volume>
+    </structure>
+
+    <setup name="Default" version="1.0">
+        <world ref="world_volume"/>
+    </setup>
+</gdml>

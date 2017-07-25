@@ -149,12 +149,31 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   //------------------------------
   // World Volume
-  //------------------------------  
+  //------------------------------
+
+  /*
   G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
   G4LogicalVolume* logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
   if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
   logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
   G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
+  */
+
+  fParser.Read("gdml/Chamber.gdml");
+  G4VPhysicalVolume* physicWorld = fParser.GetWorldVolume();
+  G4LogicalVolume* logicWorld = physicWorld->GetLogicalVolume();
+  logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+  //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+  printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
+  G4int nD = logicWorld->GetNoDaughters();
+  for(G4int iD = 0; iD<nD;iD++) {
+    G4VPhysicalVolume* D = logicWorld->GetDaughter(iD);
+    G4LogicalVolume* Dlog = D->GetLogicalVolume();
+    Dlog->SetMaterial(G4Material::GetMaterial("G4_STAINLESS-STEEL"));
+    printf("Daughter %s %s\n",Dlog->GetName().data(),Dlog->GetMaterial()->GetName().data());
+  }
 
   /*
   // Create large magnetic volume which includes target, vacuum chamber, magnet, vetoes and timepix
@@ -191,6 +210,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   new G4PVPlacement(0,magVolPos,logicMagneticVolume,"MagneticVolume",logicWorld,false,0,false);
   */
 
+  /*
   // Vacuum chamber structure
   // Note: vacuum volume is always created, only the physical structure is switched on/off
   if (fEnableChamber) {
@@ -206,7 +226,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //fChamberStructure->SetMotherVolume(logicMagneticVolume);
   fChamberStructure->SetMotherVolume(logicWorld);
   fChamberStructure->CreateGeometry();
+  */
 
+  /*
   // Create magnetic volume inside vacuum chamber
 
   G4double magVolMinX = -geoChamber->GetVCInnerX()+1.*um;
@@ -236,7 +258,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4LogicalVolume* logicMagneticVolumeVC =
     new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
+  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
 
   // Create magnetic volume inside crossed pipes at target
 
@@ -257,7 +279,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4LogicalVolume* logicMagneticVolumeCP =
     new G4LogicalVolume(solidCP,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,posCPZ,logicMagneticVolumeCP,"MagneticVolumeCP",fChamberStructure->GetChamberLogicalVolume(),false,0);
+  //new G4PVPlacement(0,posCPZ,logicMagneticVolumeCP,"MagneticVolumeCP",fChamberStructure->GetChamberLogicalVolume(),false,0);
 
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
@@ -265,7 +287,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
     logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }
+  */
 
+  /*
   // Concrete wall at large Z
   if (fEnableWall) {
     fHallStructure->SetMotherVolume(logicWorld);
@@ -278,23 +302,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fMagnetStructure->SetMotherVolume(logicWorld);
     fMagnetStructure->CreateGeometry();
   }
-
-  /*
-  // Vacuum chamber structure
-  // Note: vacuum volume is always created, only the physical structure is switched on/off
-  if (fEnableChamber) {
-    fChamberStructure->EnableChamber();
-  } else {
-    fChamberStructure->DisableChamber();
-  }
-  if (fChamberIsVisible) {
-    fChamberStructure->SetChamberVisible();
-  } else {
-    fChamberStructure->SetChamberInvisible();
-  }
-  fChamberStructure->SetMotherVolume(logicMagneticVolume);
-  fChamberStructure->CreateGeometry();
-  */
 
   // Target
   if (fEnableTarget) {
@@ -310,10 +317,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fSACDetector->CreateGeometry();
   }
 
-  if (fEnableLAV) {
-    fLAVDetector->SetMotherVolume(logicWorld);
-    fLAVDetector->CreateGeometry();
-  }
+  //if (fEnableLAV) {
+  //  fLAVDetector->SetMotherVolume(logicWorld);
+  //  fLAVDetector->CreateGeometry();
+  //}
 
   // TDump
   if (fEnableTDump) {
@@ -362,7 +369,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     geoHEPVeto->SetHEPVetoChamberWallCorner(geoChamber->GetVCBackFaceCorner());
     fHEPVetoDetector->CreateGeometry();
   }
-
+  */
   return physicWorld;
 
 }

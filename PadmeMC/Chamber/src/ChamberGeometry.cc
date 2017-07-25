@@ -502,12 +502,14 @@ ChamberGeometry::ChamberGeometry()
   fCPZRIn = 5.*cm;
   fCPZThick = 1.*cm;
   fCPZLength = 29.*cm;
-  fCPZPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
+  //fCPZPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
+  fCPZPosZ = -1.*m;
 
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
   fCPXLength = 25.*cm;
-  fCPXPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
+  //fCPXPosZ = fVCExtVtx[0][0].z()-0.5*fCPZLength;
+  fCPXPosZ = -1.*m;
 
 }
 

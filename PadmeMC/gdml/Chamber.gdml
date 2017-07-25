@@ -15,7 +15,7 @@
 
     <materials>
         <element name="videRef" formula="VACUUM" Z="1"> <atom value="1."/> </element>
-        <material formula=" " name="Vacuum">
+        <material formula=" " name="vacuum_gdml">
             <D value="1.e-25" unit="g/cm3" />
             <fraction n="1.0" ref="videRef" />
         </material>
@@ -27,7 +27,7 @@
 
     <structure>
         <volume name="world_volume">
-            <materialref ref="Vacuum"/>
+            <materialref ref="vacuum_gdml"/>
             <solidref ref="world_solid"/>
 
             <physvol>

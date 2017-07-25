@@ -3403,6 +3403,14 @@
         <position name="CameraInterna_v3398" unit="mm" x="29.64104" y="-555.5" z="40.57672"/>
     </define>
 
+    <materials>
+        <element name="videRef" formula="VACUUM" Z="1"> <atom value="1."/> </element>
+        <material formula=" " name="vacuum_gdml">
+            <D value="1.e-25" unit="g/cm3" />
+            <fraction n="1.0" ref="videRef" />
+        </material>
+    </materials>
+
     <solids>
         <tessellated aunit="deg" lunit="mm" name="CameraInterna-SOL">
              <triangular vertex1="CameraInterna_v0" vertex2="CameraInterna_v1" vertex3="CameraInterna_v2"/>
@@ -10232,7 +10240,7 @@
 
     <structure>
         <volume name="CameraInterna">
-            <materialref ref="Vacuum"/>
+            <materialref ref="vacuum_gdml"/>
             <solidref ref="CameraInterna-SOL"/>
         </volume>
     </structure>

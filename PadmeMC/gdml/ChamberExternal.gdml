@@ -3844,6 +3844,14 @@
         <position name="CameraEsterna_v3839" unit="mm" x="-283.3965" y="-1280.124" z="-198.9018"/>
     </define>
 
+    <materials>
+        <element name="videRef" formula="VACUUM" Z="1"> <atom value="1."/> </element>
+        <material formula=" " name="vacuum_gdml">
+            <D value="1.e-25" unit="g/cm3" />
+            <fraction n="1.0" ref="videRef" />
+        </material>
+    </materials>
+
     <solids>
         <tessellated aunit="deg" lunit="mm" name="CameraEsterna-SOL">
              <triangular vertex1="CameraEsterna_v0" vertex2="CameraEsterna_v1" vertex3="CameraEsterna_v2"/>
@@ -11551,7 +11559,7 @@
 
     <structure>
         <volume name="CameraEsterna">
-            <materialref ref="Vacuum"/>
+            <materialref ref="vacuum_gdml"/>
             <solidref ref="CameraEsterna-SOL"/>
         </volume>
     </structure>

@@ -47,12 +47,36 @@ ChamberStructure::~ChamberStructure()
 void ChamberStructure::CreateGeometry()
 {
 
-  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+  /*
+  std::vector<G4TwoVector> s1_out;
+  s1_out.push_back(G4TwoVector( 227.50*mm,   0.00*mm));
+  s1_out.push_back(G4TwoVector(-227.50*mm,   0.00*mm));
+  s1_out.push_back(G4TwoVector(-227.50*mm,1008.28*mm));
+  s1_out.push_back(G4TwoVector( 551.23*mm,1008.28*mm));
+  s1_out.push_back(G4TwoVector( 227.50*mm, 657.81*mm));
+  G4ExtrudedSolid* s1_out_solid = new G4ExtrudedSolid("VC_S1OUT",s1_out,112.5*mm,0.,1.,0.,1.);
+  G4LogicalVolume* s1_out_logic = new G4LogicalVolume(s1_out_solid,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VC_S1OUT",0,0,0);
+  std::vector<G4TwoVector> s1_in;
+  s1_in.push_back(G4TwoVector( 217.50*mm,  10.00*mm));
+  s1_in.push_back(G4TwoVector(-217.50*mm,  10.00*mm));
+  s1_in.push_back(G4TwoVector(-217.50*mm,1008.28*mm));
+  s1_in.push_back(G4TwoVector( 536.71*mm,1008.28*mm));
+  s1_in.push_back(G4TwoVector( 217.50*mm, 661.80*mm));
+  G4ExtrudedSolid* s1_in_solid = new G4ExtrudedSolid("VC_S1IN",s1_in,102.5*mm,0.,1.,0.,1.);
+  G4LogicalVolume* s1_in_logic = new G4LogicalVolume(s1_in_solid,G4Material::GetMaterial("Vacuum"),"VC_S1IN",0,0,0);
+  //s1_in_logic->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),s1_in_logic,"VC_S1IN",s1_out_logic,false,0);
+
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),s1_out_logic,"VC_S1OUT",fMotherVolume,false,0);
+  */
+
+  //ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
     /////////////////////////
    // Main vacuum chamber //
   /////////////////////////
 
+  /*
   printf("Creating global VC volume\n");
   G4UnionSolid* solidGlobVC = CreateVCFacetGlobalSolid();
   fGlobalLogicalVolume = new G4LogicalVolume(solidGlobVC,G4Material::GetMaterial("Vacuum"),"ChamberGlobal",0,0,0);
@@ -88,11 +112,14 @@ void ChamberStructure::CreateGeometry()
     logicalSteelShell->SetVisAttributes(G4VisAttributes::Invisible);
   }
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalSteelShell,"ChamberShell",fGlobalLogicalVolume,false,0);
+  */
 
   // Create the thin window membrane in front of ECal with its flange
-  CreateECalThinWindow();
+  //printf("Creating ECal thin window\n");
+  //CreateECalThinWindow();
 
   // Create crossed pipes in the target area
+  printf("Creating Target pipe\n");
   CreateTargetPipes();
 
 }
@@ -135,7 +162,8 @@ void ChamberStructure::CreateECalThinWindow()
   G4LogicalVolume* logicalEWLayer1 = new G4LogicalVolume(solidEWLayer1,G4Material::GetMaterial("G4_MYLAR"), "EWMylarExt",0,0,0);
   //logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   logicalEWLayer1->SetVisAttributes(membraneVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWMylarExt",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWMylarExt",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWLayer1,"EWMylarExt",fMotherVolume,false,0);
 
   // Central kevlar membrane
   G4double ewr2 = ewr1+ewd1;
@@ -149,7 +177,8 @@ void ChamberStructure::CreateECalThinWindow()
   G4LogicalVolume* logicalEWLayer2 = new G4LogicalVolume(solidEWLayer2,G4Material::GetMaterial("Kevlar"), "EWKevlar",0,0,0);
   //logicalEWLayer2->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   logicalEWLayer2->SetVisAttributes(membraneVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz2),logicalEWLayer2,"EWKevlar",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz2),logicalEWLayer2,"EWKevlar",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz2),logicalEWLayer2,"EWKevlar",fMotherVolume,false,0);
 
   // Internal mylar membrane
   G4double ewr3 = ewr2+ewd2;
@@ -163,28 +192,32 @@ void ChamberStructure::CreateECalThinWindow()
   G4LogicalVolume* logicalEWLayer3 = new G4LogicalVolume(solidEWLayer3,G4Material::GetMaterial("G4_MYLAR"), "EWMylarInt",0,0,0);
   //logicalEWLayer3->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   logicalEWLayer3->SetVisAttributes(membraneVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWMylarInt",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWMylarInt",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz3),logicalEWLayer3,"EWMylarInt",fMotherVolume,false,0);
 
   // First steel ring (outer)
   G4Tubs* solidEWIronRing1 = new G4Tubs("EWIronRing1",geo->GetEWF1RIn(),geo->GetEWF1ROut(),0.5*geo->GetEWF1Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing1 = new G4LogicalVolume(solidEWIronRing1,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing1",0,0,0);
   //logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   logicalEWIronRing1->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fMotherVolume,false,0);
 
   // Second steel ring
   G4Tubs* solidEWIronRing2 = new G4Tubs("EWIronRing2",geo->GetEWF2RIn(),geo->GetEWF2ROut(),0.5*geo->GetEWF2Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing2 = new G4LogicalVolume(solidEWIronRing2,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing2",0,0,0);
   //logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   logicalEWIronRing2->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fMotherVolume,false,0);
 
   // Third steel ring
   G4Tubs* solidEWIronRing3 = new G4Tubs("EWIronRing3",geo->GetEWF3RIn(),geo->GetEWF3ROut(),0.5*geo->GetEWF3Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing3 = new G4LogicalVolume(solidEWIronRing3,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing3",0,0,0);
   //logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   logicalEWIronRing3->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fMotherVolume,false,0);
 
 }
 
@@ -200,13 +233,17 @@ void ChamberStructure::CreateTargetPipes()
   G4double cpzRIn = geo->GetCPZRIn();
   G4double cpzROut = geo->GetCPZROut();
   G4double cpzLen = geo->GetCPZLength();
-  G4Tubs* solidCPZe = new G4Tubs("CPZe",0.,cpzROut-1.*um,0.5*cpzLen-1.*um,0.*deg,360.*deg);
+  //G4Tubs* solidCPZe = new G4Tubs("CPZe",0.,cpzROut-1.*um,0.5*cpzLen-1.*um,0.*deg,360.*deg);
+  //G4Tubs* solidCPZi = new G4Tubs("CPZi",0.,cpzRIn,0.5*cpzLen+1.*mm,0.*deg,360.*deg);
+  G4Tubs* solidCPZe = new G4Tubs("CPZe",0.,cpzROut,0.5*cpzLen,0.*deg,360.*deg);
   G4Tubs* solidCPZi = new G4Tubs("CPZi",0.,cpzRIn,0.5*cpzLen+1.*mm,0.*deg,360.*deg);
 
   G4double cpxRIn = geo->GetCPXRIn();
   G4double cpxROut = geo->GetCPXROut();
   G4double cpxLen = geo->GetCPXLength();
-  G4Tubs* solidCPXe = new G4Tubs("CPXe",0.,cpxROut-1.*um,0.5*cpxLen-1.*um,0.*deg,360.*deg);
+  //G4Tubs* solidCPXe = new G4Tubs("CPXe",0.,cpxROut-1.*um,0.5*cpxLen-1.*um,0.*deg,360.*deg);
+  //G4Tubs* solidCPXi = new G4Tubs("CPXi",0.,cpxRIn,0.5*cpxLen+1.*mm,0.*deg,360.*deg);
+  G4Tubs* solidCPXe = new G4Tubs("CPXe",0.,cpxROut,0.5*cpxLen,0.*deg,360.*deg);
   G4Tubs* solidCPXi = new G4Tubs("CPXi",0.,cpxRIn,0.5*cpxLen+1.*mm,0.*deg,360.*deg);
 
   G4RotationMatrix* rotCPX = new G4RotationMatrix;
@@ -217,7 +254,8 @@ void ChamberStructure::CreateTargetPipes()
   G4SubtractionSolid* solidCP3 = new G4SubtractionSolid("VCCP3",solidCP2,solidCPXi,rotCPX,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
   logicalCP->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fGlobalLogicalVolume,false,0);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fGlobalLogicalVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fMotherVolume,false,0);
 
 }
 /*

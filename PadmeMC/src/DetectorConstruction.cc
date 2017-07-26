@@ -240,13 +240,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4double magVolMinX = -geoChamber->GetVCInnerX()+1.*um;
   //G4double magVolMinY = -geoChamber->GetVCInnerY()+1.*um;
   //G4double magVolMinZ =  geoChamber->GetVCInnerZ()+1.*um;
-  //G4double magVolMinX = -217.5*mm+1.*um;
-  G4double magVolMinX = -209.9*mm;
+  G4double magVolMinX = -217.5*mm+1.*um;
   G4double magVolMinY = -102.5*mm+1.*um;
   G4double magVolMinZ = -490.0*mm;
 
-  //G4double magVolMaxX =  217.5*mm-1.*um;
-  G4double magVolMaxX =  209.9*mm;
+  G4double magVolMaxX =  217.5*mm-1.*um;
   G4double magVolMaxY =  102.5*mm-1.*um;
   G4double magVolMaxZ = 1000.0*mm; // from field map definition
 
@@ -294,6 +292,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
   //new G4PVPlacement(0,posCPZ,logicMagneticVolumeCP,"MagneticVolumeCP",fChamberStructure->GetChamberLogicalVolume(),false,0);
   */
+
+  G4double cpzRIn = 5.*cm;
+  G4double cpzLen = 41.*cm;
+  G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
+  G4ThreeVector cpzPos(0.,0.,-49.0*cm-0.5*cpzLen);
+  G4LogicalVolume* logicMagneticVolumeCP =
+    new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
+  if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,cpzPos,logicMagneticVolumeCP,"MagneticVolumeCP",logicWorld,false,0,true);
 
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
@@ -579,8 +586,8 @@ G4double DetectorConstruction::GetTargetFrontFaceZ()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();
 
-  // Target is disabled (?): return a position 20cm before the front face of the magnet yoke
-  return -70.*cm;
+  // Target is disabled (?): return a position 50cm before the front face of the magnet yoke
+  return -100.*cm;
 }
 
 G4double DetectorConstruction::GetTargetThickness()

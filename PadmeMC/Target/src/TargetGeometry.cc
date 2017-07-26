@@ -24,7 +24,8 @@ TargetGeometry::TargetGeometry()
   fTargetSizeY =   2.*cm;
   fTargetSizeZ = 100.*um;
 
-  fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
+  //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
+  fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
 
   fTargetFastDigitization = true; // Use fast digitization
 

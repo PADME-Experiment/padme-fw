@@ -117,9 +117,10 @@ void ChamberStructure::CreateGeometry()
   // Create the thin window membrane in front of ECal with its flange
   //printf("Creating ECal thin window\n");
   //CreateECalThinWindow();
+  CreateECalAlThinWindow();
 
   // Create crossed pipes in the target area
-  printf("Creating Target pipe\n");
+  //printf("Creating Target pipe\n");
   CreateTargetPipes();
 
 }
@@ -198,26 +199,68 @@ void ChamberStructure::CreateECalThinWindow()
   // First steel ring (outer)
   G4Tubs* solidEWIronRing1 = new G4Tubs("EWIronRing1",geo->GetEWF1RIn(),geo->GetEWF1ROut(),0.5*geo->GetEWF1Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing1 = new G4LogicalVolume(solidEWIronRing1,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing1",0,0,0);
-  //logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  logicalEWIronRing1->SetVisAttributes(steelVisAttr);
+  logicalEWIronRing1->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalEWIronRing1->SetVisAttributes(steelVisAttr);
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fGlobalLogicalVolume,false,0);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF1PosZ()),logicalEWIronRing1,"EWIronRing1",fMotherVolume,false,0);
 
   // Second steel ring
   G4Tubs* solidEWIronRing2 = new G4Tubs("EWIronRing2",geo->GetEWF2RIn(),geo->GetEWF2ROut(),0.5*geo->GetEWF2Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing2 = new G4LogicalVolume(solidEWIronRing2,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing2",0,0,0);
-  //logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  logicalEWIronRing2->SetVisAttributes(steelVisAttr);
+  logicalEWIronRing2->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+  //logicalEWIronRing2->SetVisAttributes(steelVisAttr);
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fGlobalLogicalVolume,false,0);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF2PosZ()),logicalEWIronRing2,"EWIronRing2",fMotherVolume,false,0);
 
   // Third steel ring
   G4Tubs* solidEWIronRing3 = new G4Tubs("EWIronRing3",geo->GetEWF3RIn(),geo->GetEWF3ROut(),0.5*geo->GetEWF3Thick(),0.*deg,360.*deg);
   G4LogicalVolume* logicalEWIronRing3 = new G4LogicalVolume(solidEWIronRing3,G4Material::GetMaterial("G4_STAINLESS-STEEL"), "EWIronRing3",0,0,0);
-  //logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  logicalEWIronRing3->SetVisAttributes(steelVisAttr);
+  logicalEWIronRing3->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalEWIronRing3->SetVisAttributes(steelVisAttr);
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fGlobalLogicalVolume,false,0);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetEWF3PosZ()),logicalEWIronRing3,"EWIronRing3",fMotherVolume,false,0);
+
+}
+
+void ChamberStructure::CreateECalAlThinWindow()
+{
+
+  /////////////////////////////////////////
+  // Thin Al window flange in front of ECal //
+  /////////////////////////////////////////
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  // Get properties of thin window
+  G4double ewR = geo->GetEWAlRadius(); // Radius of window
+  G4double ewT = geo->GetEWAlThick(); // Thickness of window
+  G4double ewC = geo->GetEWAlConvexity(); // Convexity at window center
+
+  // Get properties of flange
+  G4double ewFRIn = geo->GetEWAlFlangeRIn();
+  G4double ewFROut = geo->GetEWAlFlangeROut();
+  G4double ewFThick = geo->GetEWAlFlangeThick();
+
+  // Get Z coordinate of front and back face of flange
+  //G4double efFFrontZ = geo->GetEWAlFrontFacePosZ();
+  G4double efFBackZ = geo->GetEWAlBackFacePosZ();
+
+  G4VisAttributes alVisAttr = G4VisAttributes(G4Colour::Blue());
+  if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::Invisible;
+
+  // Aluminum thin windowExternal mylar membrane
+  G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
+  G4double ewz1 = efFBackZ+(ewr1-ewC);
+  G4double ewth1 = asin(ewR/ewr1);
+  //printf("ewr1 %f ewz1 %f ewth1 %11.9f pi-ewth1 %11.9f\n",ewr1,ewz1,ewth1,180.*deg-ewth1);
+  G4Sphere* solidEWSphere = new G4Sphere("EWSphere",ewr1,ewr1+ewT,0.*deg,360.*deg,180.*deg-ewth1,ewth1);
+  G4Tubs* solidEWFlange = new G4Tubs("EWFlange",ewFRIn,ewFROut,0.5*ewFThick,0.*deg,360.*deg);
+  G4ThreeVector flangePos = G4ThreeVector(0.,0.,-sqrt(ewr1*ewr1-ewR*ewR)-0.5*ewT);
+  G4UnionSolid* solidEWindow = new G4UnionSolid("EAlWindow",solidEWSphere,solidEWFlange,0,flangePos);
+  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_Al"), "EAlWindow",0,0,0);
+  //logicalEWLayer1->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  logicalEWindow->SetVisAttributes(alVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWindow,"EAlWindow",fMotherVolume,false,0,true);
 
 }
 

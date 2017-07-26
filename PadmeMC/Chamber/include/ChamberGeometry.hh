@@ -140,6 +140,17 @@ public:
   G4double GetEWF3RIn() { return fEWF3RIn; }
   G4double GetEWF3ROut() { return fEWF2ROut; }
 
+  // Properties of aluminum thin window and its flange
+
+  G4double GetEWAlThick() { return fEWAlThick; }
+  G4double GetEWAlConvexity() { return fEWAlConvexity; }
+  G4double GetEWAlRadius() { return fEWAlFlangeRIn; }
+  G4double GetEWAlFlangeRIn() { return fEWAlFlangeRIn; }
+  G4double GetEWAlFlangeROut() { return fEWAlFlangeROut; }
+  G4double GetEWAlFlangeThick() { return fEWAlFlangeThick; }
+  G4double GetEWAlFrontFacePosZ() { return fEWAlFrontFacePosZ; }
+  G4double GetEWAlBackFacePosZ() { return fEWAlFrontFacePosZ+fEWAlFlangeThick; }
+
   // Properties of crossed pipes at target position
   G4double GetCPZRIn() { return fCPZRIn; }
   G4double GetCPZROut() { return fCPZRIn+fCPZThick; }
@@ -210,6 +221,15 @@ private:
   G4double fEWF1ROut;
   G4double fEWF2ROut;
   G4double fEWF3RIn;
+
+  // Aluminum thin window and aluminum flange
+
+  G4double fEWAlThick;
+  G4double fEWAlConvexity;
+  G4double fEWAlFlangeRIn;
+  G4double fEWAlFlangeROut;
+  G4double fEWAlFlangeThick;
+  G4double fEWAlFrontFacePosZ;
 
   // Crossed pipes (one parallel to Z, one parallel to X) at target position
 

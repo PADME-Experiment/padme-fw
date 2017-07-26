@@ -50,6 +50,7 @@ private:
   G4UnionSolid* CreateVCFacetInternalSolid();
 
   void CreateECalThinWindow();
+  void CreateECalAlThinWindow();
   void CreateTargetPipes();
 
   G4LogicalVolume* fMotherVolume;

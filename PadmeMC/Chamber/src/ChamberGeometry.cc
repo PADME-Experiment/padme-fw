@@ -65,11 +65,13 @@ ChamberGeometry::ChamberGeometry()
   //fVCCLength = 140.*cm; // Length of big cylinder
   fVCCFrontFacePosZ = 89.1*cm; // Z position of front face of big cylinder
 
-  fVCBackFacePosZ = 224.9*cm; // Z position of back face of VC flange towards thin window
+  //fVCBackFacePosZ = 224.9*cm; // Z position of back face of VC flange towards thin window
+  fVCBackFacePosZ = 2294.8*mm; // Z position of back face of VC flange towards thin window
 
   // Thin window in front of ECal (EW)
 
-  fEWBackFacePosZ = 227.5*cm; // Z position of window: 2.5cm before front face of ECal
+  //fEWBackFacePosZ = 227.5*cm; // Z position of window: 2.5cm before front face of ECal
+  fEWBackFacePosZ = 2325.5*mm; // Z position of window: 2.5cm before front face of ECal
 
   fEWRadius = 310.*mm; // Radius of window
   fEWConvexity = 30.*mm; // Convexity of window at its center
@@ -87,6 +89,15 @@ ChamberGeometry::ChamberGeometry()
   fEWF1ROut = 360.*mm;
   fEWF2ROut = 390.*mm;
   fEWF3RIn = 325.5*mm;
+
+  // Parameters for the aluminum thin window
+
+  fEWAlThick  = 4.*mm; // Thickness of aluminum window
+  fEWAlConvexity = 29.*mm; // Convexity of window at its center
+  fEWAlFlangeRIn = 326.*mm; // Inner radius of flange (also radius of window)
+  fEWAlFlangeROut = 375.*mm; // Outer radius of flange
+  fEWAlFlangeThick = 23.*mm; // Thickness of flange
+  fEWAlFrontFacePosZ = 2294.8*mm; // Front face of flange holding aluminum thin window
 
   // Vertex coordinates of all sections of the chamber (external shape of the steel shell)
   // A section is a rectangular shape with fixed Z

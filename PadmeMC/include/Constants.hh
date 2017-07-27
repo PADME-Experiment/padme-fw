@@ -1,7 +1,7 @@
 // GENERAL FLAGS
 const int   NPrint      = 1;
-const bool  fAutoSeed   = true; //random seed with clock
-//const bool  fAutoSeed   = false; //fixed random seed
+//const bool  fAutoSeed   = true; //random seed with clock
+const bool  fAutoSeed   = false; //fixed random seed
 // DETECTORS FLAGS
 const int    IsCalibRun  = 0;  //1 global Calo calibration 2 Calo Energy resolution
 const double EMinSaveNT  = 5.;

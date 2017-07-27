@@ -16,6 +16,7 @@
 
 #include "RootIOManager.hh"
 #include "TargetGeometry.hh"
+#include "TargetMessenger.hh"
 #include "TargetHit.hh"
 #include "TargetDigi.hh"
 
@@ -40,7 +41,7 @@ TargetRootIO::TargetRootIO() : MCVRootIO(G4String("Target"))
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
-  fHitsEnabled = true;
+  fHitsEnabled = false;
   fDigisEnabled = true;
 
   G4cout << "TargetRootIO: Initialized" << G4endl;
@@ -151,6 +152,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
       if (DCname == "TargetDigiCollection"){
 	if (fVerbose>=2)
 	  G4cout << "TargetRootIO: Found digi collection " << DCname << G4endl;
+	//G4cout<<"TARGETDIGIROOT MODE FAST: "<<fGeoPars->FastDigitizationIsEnabled()<<" WAVE: "<<fGeoPars->SaveWaveformToDigiIsEnabled()<<G4endl;
 	TargetDigiCollection* targetDC = (TargetDigiCollection*)(theDC->GetDC(iDC));
 	if(targetDC) {
 	  G4int n_digi = targetDC->entries();
@@ -164,11 +166,14 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetDNumber((*targetDC)[i]->GetDNumber());
 	      digi->SetChargeT((*targetDC)[i]->GetChargeT());
 	      digi->SetCharge((*targetDC)[i]->GetCharge());
-	      digi->SetTimeTrace((*targetDC)[i]->GetTimeTrace());
-	      digi->SetTimeTraceV((*targetDC)[i]->GetTimeTraceV());
+	      if(fGeoPars->SaveWaveformToDigiIsEnabled()){
+		digi->SetTimeTrace((*targetDC)[i]->GetTimeTrace());
+		digi->SetTimeTraceV((*targetDC)[i]->GetTimeTraceV());
+	      }
+
 	      e_tot += (*targetDC)[i]->GetEnergy();
 	    }
-	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot/2.,"Energy") << " total energy" << G4endl;
+	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot/2.,"Energy") << " total energy"<< G4endl;
 	  }
 	}
       }

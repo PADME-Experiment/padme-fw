@@ -14,7 +14,7 @@
 #include "TargetMessenger.hh"
 #include "TargetGeometry.hh"
 
-//#include "TFile.h"
+#include "TFile.h"
 #include "TH1D.h"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -30,23 +30,30 @@ public:
 private: 
 
   TargetMessenger* fTargetMessenger;
+  TargetGeometry* fTargetGeometry;
+
+  G4bool fFastDigi;
+  G4bool fSaveWaveforms;
 
   G4int PosToChannel(G4double pos);
 
+  std::vector<G4double> NsRebin (std::vector<G4double>& traceI);
   std::vector<G4double> RCFilter (std::vector<G4double>& traceI);
-  std::vector<G4double> AddNoise (std::vector<G4double>& traceI);
+  std::vector<G4double> AddNoiseAndBaseline (std::vector<G4double>& traceI);
   
-  G4double stepfunCCD(G4double& ct, G4int& neh, G4int& cn, G4double& cd, G4double& os, G4int& cb, G4double& nt);
+  G4double stepfunCCD(G4double& ct, G4int& neh, G4int& cn, G4double& cd, G4double& os, G4int& cb);
 
   G4String digiCollectionName;
-  G4int nChannels; 
-  G4double fThreshold;
-  G4double nTrackDiv; 
+  // G4int nChannels; 
+  // G4double fThreshold;
+  // G4double nTrackDiv; 
 
   // ROOT file target.root
-  //  TFile * fTargetFile;  
+  TFile * fTargetFile;  
   TH1D * dTraceHCCD[32]; // hardcoded nchannels to change
+  TH1D * dTraceNHCCD[32]; // 
   TH1D * dTraceVHCCD[32]; // 
+  TH1D * dTraceVHCCD1[32]; // 
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

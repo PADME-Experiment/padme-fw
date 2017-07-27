@@ -81,11 +81,11 @@ void TargetDigi::Draw()
 
 void TargetDigi::Print()
 {
-  G4cout << "- DIGIchannel: " << fChannelId
+  G4cout << "Target Digi - channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy: " << G4BestUnit(fEnergy,"Energy")
-	 << " multi: " << fDNumber 
 	 << " charge: " << fCharge
+	 << " multi: " << fDNumber 
 	 << G4endl;
 }
 

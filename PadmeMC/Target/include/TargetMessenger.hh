@@ -15,8 +15,10 @@
 class TargetDetector;
 class TargetGeometry;
 class G4UIdirectory;
+class G4UIcmdWithADouble;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithoutParameter;
+class G4UIcommand;
 
 class TargetMessenger: public G4UImessenger
 {
@@ -37,11 +39,27 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetTargetSizeCmd;
   G4UIcmdWithADoubleAndUnit* fSetTargetThicknessCmd;
 
+
+  G4UIcmdWithADoubleAndUnit* fSetTargetPitchCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetStripSizeCmd;
+
   G4UIcmdWithoutParameter* fEnableFastDigitizationCmd;
   G4UIcmdWithoutParameter* fDisableFastDigitizationCmd;
 
   G4UIcmdWithoutParameter* fEnableSaveWaveformToDigiCmd;
   G4UIcmdWithoutParameter* fDisableSaveWaveformToDigiCmd;
+
+  G4UIcommand* fSetTargetDigiNChannelsCmd;
+  G4UIcommand* fSetTargetDigiNTrackDivCmd;
+
+  G4UIcmdWithADouble* fSetTargetDigiNoiseRMSCmd;
+  G4UIcmdWithADouble* fSetTargetDigiThresholdCmd;
+  G4UIcmdWithADouble* fSetTargetDigiBaselineCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetDigiWindowCmd;
+
+  G4UIcmdWithADouble* fSetTargetDigiNoiseChargeRMSCmd;
+  G4UIcmdWithADouble* fSetTargetDigiCCDCmd;
+  G4UIcmdWithADouble* fSetTargetDigiMeV2QCmd;
 
 };
 #endif

@@ -61,6 +61,9 @@ class TargetDigi : public G4VDigi
   void SetTimeTraceV(const std::vector<G4double>& tt) { fTimeTraceV = tt; }
   const std::vector<G4double>& GetTimeTraceV() const { return fTimeTraceV; }
 
+  //  void SetTimeTraceV(const std::vector<G4int>& tt) { fTimeTraceV = tt; }
+  // const std::vector<G4int>& GetTimeTraceV() const { return fTimeTraceV; }
+
 
 private:
     
@@ -73,6 +76,7 @@ private:
 
   std::vector<G4double> fTimeTrace;
   std::vector<G4double> fTimeTraceV;
+  //std::vector<G4int> fTimeTraceV;
 
 };
 

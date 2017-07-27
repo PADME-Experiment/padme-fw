@@ -17,6 +17,8 @@ public:
   TTargetMCDigi();
   ~TTargetMCDigi();
 
+  void Print(Option_t* option="") const;
+
 public:
  
   Int_t GetDNumber()      const { return fDNumber;   };
@@ -31,7 +33,7 @@ public:
   void  SetTimeTrace   (const std::vector<double>& value) { fTimeTrace = value;      };
   void  SetTimeTraceV   (const std::vector<double>& value) { fTimeTraceV = value;      };
  
-protected:
+private:
   
   Int_t    fDNumber;
   Double_t    fChargeT;

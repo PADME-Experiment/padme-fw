@@ -40,11 +40,13 @@ TPixGeometry::TPixGeometry()
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures
-  fTPixChamberWallAngle = 0.32962*rad;
+  //fTPixChamberWallAngle = 0.32962*rad;
+  fTPixChamberWallAngle = 0.;
 
   // Coordinates of the corner on the back face of the vacuum chamber
   // These values will be modified by main program according to actual chamber measures
-  fTPixChamberWallCorner = G4ThreeVector(-422.77*mm,0.,2249.*mm);
+  //fTPixChamberWallCorner = G4ThreeVector(-422.77*mm,0.,2249.*mm);
+  fTPixChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
   fTPixSensitiveDetectorName = "TPixSD";
 
@@ -64,16 +66,24 @@ void TPixGeometry::UpdateDerivedMeasures()
   fTPixSizeZ = fChipSizeZ+1.*um; // Small tolerance to avoid surface overlaps
 
   // Angle of the rotation of TPix around the Y axis
-  fTPixRotY = fTPixChamberWallAngle;
+  fTPixRotY = -fTPixChamberWallAngle;
 
   // Position of center of TPix box
-  fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
-    -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
-    -0.5*fTPixSizeX*cos(fTPixChamberWallAngle);
+  //fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
+  //  -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
+  //  -0.5*fTPixSizeX*cos(fTPixChamberWallAngle);
+  fTPixPosX = fTPixChamberWallCorner.x()
+    +(fTPixDistanceToCorner+0.5*fTPixSizeX)*cos(fTPixChamberWallAngle)
+    +(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle);
   fTPixPosY = 0.;
-  fTPixPosZ = fTPixChamberWallCorner.z()-fTPixDistanceToCorner*sin(fTPixChamberWallAngle)
-    +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle)
-    -0.5*fTPixSizeX*sin(fTPixChamberWallAngle);
+  fTPixPosZ = fTPixChamberWallCorner.z()
+    -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
+    +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
+
+  printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
+  printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());
+  printf("TPix angle %f\n",fTPixChamberWallAngle);
+  printf("TPix distance %f support %f\n",fTPixDistanceToCorner,fTPixSupportThickness);
 
 }
 

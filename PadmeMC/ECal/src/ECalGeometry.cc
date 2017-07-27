@@ -31,7 +31,8 @@ ECalGeometry::ECalGeometry()
 
   fCrystalCoating = 100.*um;
 
-  fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
+  //fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
+  fECalFrontFacePosZ = 233.*cm; // From center of magnet yoke, i.e. 3.32m to target
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 

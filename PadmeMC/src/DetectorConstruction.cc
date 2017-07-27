@@ -322,12 +322,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fMagnetStructure->CreateGeometry();
   }
 
-  /*
   // Target
   if (fEnableTarget) {
     //fTargetDetector->SetMotherVolume(fChamberStructure->GetChamberLogicalVolume());
-    fTargetDetector->SetMotherVolume(logicMagneticVolumeCP);
-    fTargetDetector->SetTargetDisplacePosZ(posCPZ.z());
+
+    // If target is in magnetic volume, take into account its displacement
+    //fTargetDetector->SetMotherVolume(logicMagneticVolumeCP);
+    //fTargetDetector->SetTargetDisplacePosZ(cpzPos.z());
+    fTargetDetector->SetMotherVolume(logicWorld);
+    fTargetDetector->SetTargetDisplacePosZ(0.);
+
     fTargetDetector->CreateGeometry();
   }
 
@@ -364,6 +368,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fECalDetector->CreateGeometry();
   }
 
+  /*
   // PVeto
   if (fEnablePVeto) {
     fPVetoDetector->SetMotherVolume(logicMagneticVolumeVC);

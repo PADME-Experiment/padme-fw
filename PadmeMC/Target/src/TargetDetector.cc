@@ -17,6 +17,9 @@
 #include "G4Element.hh"
 #include "G4Material.hh"
 
+#include "G4VisAttributes.hh"
+#include "G4Colour.hh"
+
 #include "TargetGeometry.hh"
 #include "TargetSD.hh"
 
@@ -54,6 +57,7 @@ void TargetDetector::CreateGeometry()
   // Do not forget to take into account mother volume Z displacement
   G4Box* solidTarget = new G4Box("Target",targetSizeX*0.5,targetSizeY*0.5,targetSizeZ*0.5);
   fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
+  fTargetVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
   new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,false);
 
   // The whole target is a sensitive detector

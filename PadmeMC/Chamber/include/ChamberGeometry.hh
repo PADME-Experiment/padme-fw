@@ -77,6 +77,11 @@ public:
   G4double GetPHCapFlangeThick(G4int c) { return fPHCapFlangeThick[c]; }
   G4ThreeVector GetPHCapPos(G4int c) { return fPHCapPos[c]; }
 
+  // Properties of large TPix porthole
+  G4double GetTPPHCapThick() { return fTPPHCapThick; }
+  G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
+  G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
+
 private:
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
@@ -115,6 +120,11 @@ private:
   G4double fPHCapThick[CHAMBERGEOMETRY_N_PORTHOLES];
   G4double fPHCapFlangeThick[CHAMBERGEOMETRY_N_PORTHOLES];
   G4ThreeVector fPHCapPos[CHAMBERGEOMETRY_N_PORTHOLES];
+
+  // TPix porthole cap
+  G4double fTPPHCapThick;
+  G4double fTPPHCapWidth;
+  G4double fTPPHCapHeight;
 
 };
 

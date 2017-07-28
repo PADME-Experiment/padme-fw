@@ -59,6 +59,10 @@ void ChamberStructure::CreateGeometry()
   // Create porthole caps for both section of the chamber
   CreatePortholeCaps();
 
+  // Create cap for large porthole iin front of TimePix
+  // Includes round cap with thin Mylar window
+  //CreateTPixPortholeCap();
+
 }
 
 void ChamberStructure::CreateECalAlThinWindow()
@@ -173,5 +177,31 @@ void ChamberStructure::CreatePortholeCaps()
     printf("Porthole cap %d (%s) radius %f thick %f position %f %f %f\n",iPH,phcN,phcR,phcT,posPHC.x(),posPHC.y(),posPHC.z());
 
   }
+
+}
+void ChamberStructure::CreateTPixPortholeCap()
+{
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  G4double phcW = geo->GetTPPHCapWidth();
+  G4double phcH = geo->GetTPPHCapHeight();
+  G4double phcT = geo->GetTPPHCapThick();
+  G4Box* solidPHC = new G4Box("TPPHCap",0.5*phcW,0.5*phcH,0.5*phcT);
+  G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCap",0,0,0);
+  logicalPHC->SetVisAttributes(steelVisAttr);
+
+  G4ThreeVector corner = geo->GetVCBackFaceCorner();
+  G4double angle = geo->GetVCBackFaceAngle();
+  G4double phcPosX = corner.x()+0.5*phcW*cos(angle)+(0.5*phcT+1.5*mm)*sin(angle);
+  G4double phcPosY = 0.;
+  G4double phcPosZ = corner.z()-0.5*phcW*sin(angle)+(0.5*phcT+1.5*mm)*cos(angle);
+  G4ThreeVector posPHC = G4ThreeVector(phcPosX,phcPosY,phcPosZ);
+  G4RotationMatrix* rotPHC = new G4RotationMatrix;
+  rotPHC->rotateY(-angle);
+  new G4PVPlacement(rotPHC,posPHC,logicalPHC,"TPPHCap",fMotherVolume,false,0,true);
 
 }

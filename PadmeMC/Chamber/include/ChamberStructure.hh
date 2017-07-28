@@ -52,6 +52,7 @@ private:
   void CreateECalAlThinWindow();
   void CreateTargetPipes();
   void CreatePortholeCaps();
+  void CreateTPixPortholeCap();
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;

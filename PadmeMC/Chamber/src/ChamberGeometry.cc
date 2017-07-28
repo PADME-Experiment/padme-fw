@@ -97,6 +97,11 @@ ChamberGeometry::ChamberGeometry()
   fPHCapFlangeThick[7] = 35.0*mm;
   fPHCapPos[7] = G4ThreeVector(1290.0*mm+fPHCapFlangeThick[7]+0.5*fPHCapThick[7],0.,1750.*mm);
 
+  // Properties of large TPix porthole
+
+  fTPPHCapThick = 25.*mm;
+  fTPPHCapWidth = 996.*mm;
+  fTPPHCapHeight = 600.*mm;
 
 }
 

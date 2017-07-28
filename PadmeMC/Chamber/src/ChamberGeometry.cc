@@ -23,11 +23,16 @@ ChamberGeometry::ChamberGeometry()
   // Some basic chamber quantities from Cesidio's CAD drawings
 
   fVCBackFacePosZ = 2300.0*mm; // Z position of back face of VC flange towards thin window
-  fVCBackFaceAngle = atan2( (2769.8-2481.85) , (1290.0-403.78) ); // Angle of TPix/HEPVeto face of chamber
+  //fVCBackFaceAngle = atan2( (2269.8-1981.85) , (1290.0-403.78) ); // Angle of TPix/HEPVeto face of chamber
+  fVCBackFaceAngle = 18.*deg; // Angle of TPix/HEPVeto face of chamber
   printf("Chamber angle %f\n",fVCBackFaceAngle);
-  fVCBackFaceThick = fVCBackFacePosZ-2769.8*mm; // Thickness of back faces
+  fVCBackFaceThick = fVCBackFacePosZ-2269.8*mm; // Thickness of back faces
   fVCBackFaceCornerX = 403.78*mm;
   fVCBackFaceCornerZ = fVCBackFacePosZ;
+
+  fVCInnerSizeX = 435.0*mm; // Internal size along X of the rectangular section inside the magnet
+  fVCInnerSizeY = 205.0*mm; // Internal size along Y of the rectangular section inside the magnet
+  fVCInnerFacePosZ = -490.0*mm; // Position along Z of the internal face of the rectangular section inside the magnet
 
   // Parameters for the aluminum thin window
 

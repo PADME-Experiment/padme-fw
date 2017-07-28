@@ -37,6 +37,12 @@ public:
   G4double GetVCBackFaceThickness() { return fVCBackFaceThick; }
   G4ThreeVector GetVCBackFaceCorner() { return G4ThreeVector(fVCBackFaceCornerX,0.,fVCBackFaceCornerZ); }
 
+  // Info on section of the vacuum chamber inside magnet
+  // Used to define the magnetic volume
+  G4double GetVCInnerSizeX() { return fVCInnerSizeX; }
+  G4double GetVCInnerSizeY() { return fVCInnerSizeY; }
+  G4double GetVCInnerFacePosZ() { return fVCInnerFacePosZ; }
+
   // Properties of aluminum thin window and its flange
 
   G4double GetEWAlThick() { return fEWAlThick; }
@@ -68,6 +74,10 @@ private:
   G4double fVCBackFaceThick; // Thickness of back faces
   G4double fVCBackFaceCornerX; // X coordinate of the corner at the back face
   G4double fVCBackFaceCornerZ; // Z coordinate of the corner at the back face
+
+  G4double fVCInnerSizeX; // Internal size along X of the rectangular section inside the magnet
+  G4double fVCInnerSizeY; // Internal size along Y of the rectangular section inside the magnet
+  G4double fVCInnerFacePosZ; // Position along Z of the internal face of the rectangular section inside the magnet
 
   // Aluminum thin window and aluminum flange
 

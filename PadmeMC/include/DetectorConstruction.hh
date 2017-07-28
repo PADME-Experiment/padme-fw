@@ -64,7 +64,7 @@ public:
   void MagneticVolumeIsVisible();
   void MagneticVolumeIsInvisible();
 
-  void SetMagFieldValue(G4double v);
+  void SetMagFieldValue(G4double);
   G4double GetMagFieldValue();
 
   void ChamberIsVisible();
@@ -80,6 +80,9 @@ public:
   G4double GetECalFrontFaceZ();
   G4double GetTargetFrontFaceZ();
   G4double GetTargetThickness();
+
+  // Recursive method to check full geometry
+  void CheckDaughters(G4LogicalVolume*,G4int);
 
 private:
 

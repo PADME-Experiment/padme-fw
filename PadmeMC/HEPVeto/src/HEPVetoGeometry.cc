@@ -40,15 +40,15 @@ HEPVetoGeometry::HEPVetoGeometry()
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures
-  fHEPVetoChamberWallAngle = 0.32962*rad;
+  fHEPVetoChamberWallAngle = 0.;
 
   // Thickness of the vacuum chamber wall behind HEPVeto
   // This value will be modified by main program according to actual chamber measures
-  fHEPVetoChamberWallThickness = 1.*cm;
+  fHEPVetoChamberWallThickness = 0.;
 
   // Coordinates of the corner on the back face of the vacuum chamber
   // These values will be modified by main program according to actual chamber measures
-  fHEPVetoChamberWallCorner = G4ThreeVector(-422.77*mm,0.,2249.*mm);
+  fHEPVetoChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
   fHEPVetoSensitiveDetectorName = "HEPVetoSD";
 
@@ -68,16 +68,16 @@ void HEPVetoGeometry::UpdateDerivedMeasures()
   fHEPVetoSizeZ = fFingerStep*fHEPVetoNFingers;
 
   // Angle of the rotation of HEPVeto around the Y axis
-  fHEPVetoRotY = -90.*deg+fHEPVetoChamberWallAngle;
+  fHEPVetoRotY = 90.*deg-fHEPVetoChamberWallAngle;
 
   // Position of center of HEPVeto box
-  fHEPVetoPosX = fHEPVetoChamberWallCorner.x()-fHEPVetoDistanceToCorner*cos(fHEPVetoChamberWallAngle)
-    +(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*sin(fHEPVetoChamberWallAngle)
-    -0.5*fHEPVetoSizeZ*cos(fHEPVetoChamberWallAngle);
+  fHEPVetoPosX = fHEPVetoChamberWallCorner.x()
+    +(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeZ)*cos(fHEPVetoChamberWallAngle)
+    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*sin(fHEPVetoChamberWallAngle);
   fHEPVetoPosY = 0.;
-  fHEPVetoPosZ = fHEPVetoChamberWallCorner.z()-fHEPVetoDistanceToCorner*sin(fHEPVetoChamberWallAngle)
-    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*cos(fHEPVetoChamberWallAngle)
-    -0.5*fHEPVetoSizeZ*sin(fHEPVetoChamberWallAngle);
+  fHEPVetoPosZ = fHEPVetoChamberWallCorner.z()
+    -(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeZ)*sin(fHEPVetoChamberWallAngle)
+    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*cos(fHEPVetoChamberWallAngle);
 
 }
 

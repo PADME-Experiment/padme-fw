@@ -49,9 +49,9 @@ private:
   G4UnionSolid* CreateVCFacetExternalSolid();
   G4UnionSolid* CreateVCFacetInternalSolid();
 
-  void CreateECalThinWindow();
   void CreateECalAlThinWindow();
   void CreateTargetPipes();
+  void CreatePortholeCaps();
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;

@@ -12,6 +12,8 @@
 #include "G4ThreeVector.hh"
 #include "G4SystemOfUnits.hh"
 
+#define CHAMBERGEOMETRY_N_PORTHOLES 8
+
 class ChamberGeometry
 {
 
@@ -67,6 +69,14 @@ public:
   G4double GetCPXLength() { return fCPXLength; }
   G4double GetCPXPosZ() { return fCPXPosZ; }
 
+  // Properties of porthole caps
+
+  G4int GetPHCapNumber() { return CHAMBERGEOMETRY_N_PORTHOLES; }
+  G4double GetPHCapRadius(G4int c) { return fPHCapRadius[c]; }
+  G4double GetPHCapThick(G4int c) { return fPHCapThick[c]; }
+  G4double GetPHCapFlangeThick(G4int c) { return fPHCapFlangeThick[c]; }
+  G4ThreeVector GetPHCapPos(G4int c) { return fPHCapPos[c]; }
+
 private:
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
@@ -99,6 +109,12 @@ private:
   G4double fCPXThick;
   G4double fCPXLength;
   G4double fCPXPosZ;
+
+  // Porthole caps
+  G4double fPHCapRadius[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4double fPHCapThick[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4double fPHCapFlangeThick[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4ThreeVector fPHCapPos[CHAMBERGEOMETRY_N_PORTHOLES];
 
 };
 

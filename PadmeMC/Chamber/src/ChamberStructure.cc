@@ -56,6 +56,9 @@ void ChamberStructure::CreateGeometry()
   // Create crossed pipes in the target area
   CreateTargetPipes();
 
+  // Create porthole caps for both section of the chamber
+  CreatePortholeCaps();
+
 }
 
 void ChamberStructure::CreateECalAlThinWindow()
@@ -140,48 +143,35 @@ void ChamberStructure::CreateTargetPipes()
   G4SubtractionSolid* solidCP3 = new G4SubtractionSolid("VCCP3",solidCP2,solidCPXi,rotCPX,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
   logicalCP->SetVisAttributes(steelVisAttr);
-  //new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fGlobalLogicalVolume,false,0);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fMotherVolume,false,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
 
 }
-/*
-G4double ChamberStructure::GetChamberMostExternalX()
-{
-  return ChamberGeometry::GetInstance()->GetVCMostExternalX();
-}
 
-G4double ChamberStructure::GetChamberMostAdvancedZ()
+void ChamberStructure::CreatePortholeCaps()
 {
-  return ChamberGeometry::GetInstance()->GetVCMostAdvancedZ();
-}
 
-G4ThreeVector ChamberStructure::GetChamberBackFaceCorner()
-{
-  return ChamberGeometry::GetInstance()->GetVCBackFaceCorner();
-}
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
-G4double ChamberStructure::GetChamberBackFaceAngle()
-{
-  return ChamberGeometry::GetInstance()->GetVCBackFaceAngle();
-}
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
-G4double ChamberStructure::GetChamberBackFaceThickness()
-{
-  return ChamberGeometry::GetInstance()->GetVCBackFaceThickness();
-}
+  G4int nPH = geo->GetPHCapNumber();
+  for (G4int iPH=0; iPH<nPH; iPH++) {
+    char phcN[7];
+    sprintf(phcN,"PHCap%d",iPH);
+    G4double phcR = geo->GetPHCapRadius(iPH);
+    G4double phcT = geo->GetPHCapThick(iPH);
+    G4Tubs* solidPHC = new G4Tubs(phcN,0.,phcR,0.5*phcT,0.*deg,360.*deg);
+    G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),phcN,0,0,0);
+    logicalPHC->SetVisAttributes(steelVisAttr);
 
-G4double ChamberStructure::GetChamberInnerX()
-{
-  return ChamberGeometry::GetInstance()->GetVCInnerX();
-}
+    G4ThreeVector posPHC = geo->GetPHCapPos(iPH);
+    G4RotationMatrix* rotPHC = new G4RotationMatrix;
+    rotPHC->rotateY(90.*deg);
+    new G4PVPlacement(rotPHC,posPHC,logicalPHC,phcN,fMotherVolume,false,0,true);
 
-G4double ChamberStructure::GetChamberInnerY()
-{
-  return ChamberGeometry::GetInstance()->GetVCInnerY();
-}
+    printf("Porthole cap %d (%s) radius %f thick %f position %f %f %f\n",iPH,phcN,phcR,phcT,posPHC.x(),posPHC.y(),posPHC.z());
 
-G4double ChamberStructure::GetChamberInnerZ()
-{
-  return ChamberGeometry::GetInstance()->GetVCInnerZ();
+  }
+
 }
-*/

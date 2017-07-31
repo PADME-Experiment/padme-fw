@@ -61,7 +61,7 @@ void ChamberStructure::CreateGeometry()
 
   // Create cap for large porthole iin front of TimePix
   // Includes round cap with thin Mylar window
-  //CreateTPixPortholeCap();
+  CreateTPixPortholeCap();
 
 }
 
@@ -187,21 +187,123 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
   if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
+  // Create rectangular cap
   G4double phcW = geo->GetTPPHCapWidth();
   G4double phcH = geo->GetTPPHCapHeight();
   G4double phcT = geo->GetTPPHCapThick();
-  G4Box* solidPHC = new G4Box("TPPHCap",0.5*phcW,0.5*phcH,0.5*phcT);
+  G4Box* solidPHB = new G4Box("TPPHBox",0.5*phcW,0.5*phcH,0.5*phcT);
+
+  // Carve hole in cap
+  G4double phhR = geo->GetTPPHHoleRadius();
+  G4double phhD = geo->GetTPPHHoleDist();
+  G4Tubs* solidPHH = new G4Tubs("TPPHHole",0.,phhR,0.5*phcT+1.*mm,0.*deg,360.*deg);
+  G4ThreeVector posPHH = G4ThreeVector(-0.5*phcW+phhD,0.,0.);
+  G4SubtractionSolid* solidPHC = new G4SubtractionSolid("TPPHCap",solidPHB,solidPHH,0,posPHH);
+
   G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCap",0,0,0);
   logicalPHC->SetVisAttributes(steelVisAttr);
 
   G4ThreeVector corner = geo->GetVCBackFaceCorner();
   G4double angle = geo->GetVCBackFaceAngle();
+
   G4double phcPosX = corner.x()+0.5*phcW*cos(angle)+(0.5*phcT+1.5*mm)*sin(angle);
   G4double phcPosY = 0.;
   G4double phcPosZ = corner.z()-0.5*phcW*sin(angle)+(0.5*phcT+1.5*mm)*cos(angle);
   G4ThreeVector posPHC = G4ThreeVector(phcPosX,phcPosY,phcPosZ);
+
   G4RotationMatrix* rotPHC = new G4RotationMatrix;
   rotPHC->rotateY(-angle);
+
   new G4PVPlacement(rotPHC,posPHC,logicalPHC,"TPPHCap",fMotherVolume,false,0,true);
+
+  // Create circular cap
+  G4double circR = geo->GetTPPHCircRadius();
+  G4double circT = geo->GetTPPHCircThick();
+  G4Tubs* solidCirc = new G4Tubs("TPPHCirc",0.,circR,0.5*circT,0.*deg,360.*deg);
+
+  // Carve hole for Mylar window in cricular cap
+  G4double windR = geo->GetTPPHWindRadius();
+  G4double windW = geo->GetTPPHWindWidth();
+  G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*circT+1.*mm,0.*deg,360.*deg);
+  G4Box* solidWindB = new G4Box("WindB",0.5*windW,windR,0.5*circT+1.*mm);
+  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW,0.,0.);
+  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW,0.,0.);
+  G4ThreeVector posWindB  = G4ThreeVector(0.,0.,0.);
+  G4SubtractionSolid* solidCirc1 = new G4SubtractionSolid("TPPHCirc1",solidCirc,solidWindT,0,posWindT1);
+  G4SubtractionSolid* solidCirc2 = new G4SubtractionSolid("TPPHCirc2",solidCirc1,solidWindT,0,posWindT2);
+  G4SubtractionSolid* solidCirc3 = new G4SubtractionSolid("TPPHCirc3",solidCirc2,solidWindB,0,posWindB);
+
+  G4LogicalVolume* logicalCirc = new G4LogicalVolume(solidCirc3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCirc",0,0,0);
+  logicalCirc->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+
+  G4double circPosX = corner.x()+phhD*cos(angle)+(1.5*mm+phcT+0.5*circT)*sin(angle);
+  G4double circPosY = 0.;
+  G4double circPosZ = corner.z()-phhD*sin(angle)+(1.5*mm+phcT+0.5*circT)*cos(angle);
+  G4ThreeVector posCirc = G4ThreeVector(circPosX,circPosY,circPosZ);
+
+  G4RotationMatrix* rotCirc = new G4RotationMatrix;
+  rotCirc->rotateY(-angle);
+
+  new G4PVPlacement(rotCirc,posCirc,logicalCirc,"TPPHCirc",fMotherVolume,false,0,true);
+
+  // Create Mylar window
+  G4double windT = geo->GetTPPHWindThick();
+  G4Box* solidMylarB = new G4Box("MylarB",0.5*windW,windR,0.5*windT);
+  G4Tubs* solidMylarT1 = new G4Tubs("MylarT1",0.,windR,0.5*windT, 90.*deg,180.*deg);
+  G4Tubs* solidMylarT2 = new G4Tubs("MylarT2",0.,windR,0.5*windT,-90.*deg,180.*deg);
+  //G4ThreeVector posMylarT1 = G4ThreeVector(-0.5*windW-1.*mm,0.,0.);
+  //G4ThreeVector posMylarT2 = G4ThreeVector(+0.5*windW+1.*mm,0.,0.);
+  G4ThreeVector posMylarT1 = G4ThreeVector(-0.5*windW,0.,0.);
+  G4ThreeVector posMylarT2 = G4ThreeVector(+0.5*windW,0.,0.);
+  G4UnionSolid* solidMylar1 = new G4UnionSolid("Mylar1",solidMylarB,solidMylarT1,0,posMylarT1);
+  G4UnionSolid* solidMylar2 = new G4UnionSolid("Mylar2",solidMylar1,solidMylarT2,0,posMylarT2);
+
+  G4LogicalVolume* logicalMylar = new G4LogicalVolume(solidMylar2,G4Material::GetMaterial("G4_MYLAR"),"TPPHMylar",0,0,0);
+  logicalMylar->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+
+  G4double mylarPosX = corner.x()+phhD*cos(angle)+(1.5*mm+phcT+circT+0.5*windT)*sin(angle);
+  G4double mylarPosY = 0.;
+  G4double mylarPosZ = corner.z()-phhD*sin(angle)+(1.5*mm+phcT+circT+0.5*windT)*cos(angle);
+  G4ThreeVector posMylar = G4ThreeVector(mylarPosX,mylarPosY,mylarPosZ);
+
+  G4RotationMatrix* rotMylar = new G4RotationMatrix;
+  rotMylar->rotateY(-angle);
+
+  new G4PVPlacement(rotMylar,posMylar,logicalMylar,"TPPHMylar",fMotherVolume,false,0,true);
+
+  // Create stop flange for Mylar window
+  G4double stopR = geo->GetTPPHStopRadius();
+  G4double stopW = geo->GetTPPHStopWidth();
+  G4double stopT = geo->GetTPPHStopThick();
+
+  G4ThreeVector posStopT1 = G4ThreeVector(-0.5*stopW,0.,0.);
+  G4ThreeVector posStopT2 = G4ThreeVector(+0.5*stopW,0.,0.);
+
+  G4Box* solidStopBL = new G4Box("StopBL",0.5*stopW,stopR,0.5*stopT);
+  G4Tubs* solidStopTL1 = new G4Tubs("StopTL1",0.,stopR,0.5*stopT, 90.*deg,180.*deg);
+  G4Tubs* solidStopTL2 = new G4Tubs("StopTL2",0.,stopR,0.5*stopT,-90.*deg,180.*deg);
+  G4UnionSolid* solidStopL1 = new G4UnionSolid("StopL1",solidStopBL,solidStopTL1,0,posStopT1);
+  G4UnionSolid* solidStopL2 = new G4UnionSolid("StopL2",solidStopL1,solidStopTL2,0,posStopT2);
+
+  G4Box* solidStopBS = new G4Box("StopBS",0.5*stopW,windR,0.5*stopT+1.*mm);
+  G4Tubs* solidStopTS1 = new G4Tubs("StopTS1",0.,windR,0.5*stopT+1.*mm, 89.*deg,182.*deg);
+  G4Tubs* solidStopTS2 = new G4Tubs("StopTS2",0.,windR,0.5*stopT+1.*mm,-91.*deg,182.*deg);
+  G4UnionSolid* solidStopS1 = new G4UnionSolid("StopS1",solidStopBS,solidStopTS1,0,posStopT1);
+  G4UnionSolid* solidStopS2 = new G4UnionSolid("StopS2",solidStopS1,solidStopTS2,0,posStopT2);
+
+  G4SubtractionSolid* solidStop = new G4SubtractionSolid("TPPHStopFlange",solidStopL2,solidStopS2,0,G4ThreeVector(0.,0.,0.));
+
+  G4LogicalVolume* logicalStop = new G4LogicalVolume(solidStop,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHStopFlange",0,0,0);
+  logicalStop->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+
+  G4double stopPosX = corner.x()+phhD*cos(angle)+(1.5*mm+phcT+circT+windT+0.5*stopT)*sin(angle);
+  G4double stopPosY = 0.;
+  G4double stopPosZ = corner.z()-phhD*sin(angle)+(1.5*mm+phcT+circT+windT+0.5*stopT)*cos(angle);
+  G4ThreeVector posStop = G4ThreeVector(stopPosX,stopPosY,stopPosZ);
+
+  G4RotationMatrix* rotStop = new G4RotationMatrix;
+  rotStop->rotateY(-angle);
+
+  new G4PVPlacement(rotStop,posStop,logicalStop,"TPPHStopFlange",fMotherVolume,false,0,true);
 
 }

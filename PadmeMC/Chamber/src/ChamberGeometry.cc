@@ -25,7 +25,7 @@ ChamberGeometry::ChamberGeometry()
   fVCBackFacePosZ = 2300.0*mm; // Z position of back face of VC flange towards thin window
   //fVCBackFaceAngle = atan2( (2269.8-1981.85) , (1290.0-403.78) ); // Angle of TPix/HEPVeto face of chamber
   fVCBackFaceAngle = 18.*deg; // Angle of TPix/HEPVeto face of chamber
-  printf("Chamber angle %f\n",fVCBackFaceAngle);
+  //printf("Chamber angle %f\n",fVCBackFaceAngle);
   fVCBackFaceThick = fVCBackFacePosZ-2269.8*mm; // Thickness of back faces
   fVCBackFaceCornerX = 403.78*mm;
   fVCBackFaceCornerZ = fVCBackFacePosZ;
@@ -102,6 +102,20 @@ ChamberGeometry::ChamberGeometry()
   fTPPHCapThick = 25.*mm;
   fTPPHCapWidth = 996.*mm;
   fTPPHCapHeight = 600.*mm;
+
+  fTPPHHoleRadius = 106.5*mm;
+  fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
+
+  fTPPHCircRadius = 142.5*mm;
+  fTPPHCircThick = 12.0*mm;
+
+  fTPPHWindRadius = 25.0*mm;
+  fTPPHWindWidth = 100.0*mm;
+  fTPPHWindThick = 100.0*um;
+
+  fTPPHStopRadius = 55.0*mm;
+  fTPPHStopWidth = fTPPHWindWidth;
+  fTPPHStopThick = 12.0*mm;
 
 }
 

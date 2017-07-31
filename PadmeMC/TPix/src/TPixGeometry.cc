@@ -36,7 +36,7 @@ TPixGeometry::TPixGeometry()
   fTPixDistanceToCorner = 30.*cm;
 
   // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
-  fTPixSupportThickness = 1.*cm; // Check with final design
+  fTPixSupportThickness = 6.*cm; // Check with final design
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures

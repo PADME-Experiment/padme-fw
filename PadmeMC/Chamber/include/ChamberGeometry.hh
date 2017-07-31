@@ -82,6 +82,20 @@ public:
   G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
   G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
 
+  G4double GetTPPHHoleRadius() { return fTPPHHoleRadius; }
+  G4double GetTPPHHoleDist() { return fTPPHHoleDist; }
+
+  G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
+  G4double GetTPPHCircThick() { return fTPPHCircThick; }
+
+  G4double GetTPPHWindRadius() { return fTPPHWindRadius; }
+  G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
+  G4double GetTPPHWindThick() { return fTPPHWindThick; }
+
+  G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
+  G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
+  G4double GetTPPHStopThick() { return fTPPHStopThick; }
+
 private:
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
@@ -122,9 +136,23 @@ private:
   G4ThreeVector fPHCapPos[CHAMBERGEOMETRY_N_PORTHOLES];
 
   // TPix porthole cap
-  G4double fTPPHCapThick;
-  G4double fTPPHCapWidth;
-  G4double fTPPHCapHeight;
+  G4double fTPPHCapThick; // Thickness of rectangular porthole cap
+  G4double fTPPHCapWidth; // Width of rectangular porthole cap
+  G4double fTPPHCapHeight; // Height of rectangular porthole cap
+
+  G4double fTPPHHoleRadius; // Radius of TPix hole in cap
+  G4double fTPPHHoleDist; // Distance of center of hole from border of cap
+
+  G4double fTPPHCircRadius; // Radius of circular cap in front of hole
+  G4double fTPPHCircThick; // Thickness of circular cap in front of hole
+
+  G4double fTPPHWindRadius; // Radius of Mylar window
+  G4double fTPPHWindWidth; // Width of Mylar window
+  G4double fTPPHWindThick; // Thickness of Mylar window
+
+  G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
+  G4double fTPPHStopWidth; // Width of stop flange for Mylar window
+  G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
 
 };
 

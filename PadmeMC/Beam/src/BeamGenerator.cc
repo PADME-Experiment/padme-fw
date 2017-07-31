@@ -78,7 +78,11 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nUbosonDecays = bpar->GetNUbosonDecaysPerBunch();
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nPositrons = nTotPositrons-nUbosonDecays-nThreePhotonDecays;
-  //  G4cout << "BeamGenerator - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays << G4endl;
+  if (nPositrons<0) {
+    G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
+    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays << G4endl;
+    nPositrons = 0;
+  }
 
   //********************
   //U Boson generator MC

@@ -21,6 +21,9 @@ DEPS = $(INC) Makefile
 
 CC	=	gcc
 CFLAGS	=	-fPIC -DLINUX -O2 -g -Wall -I$(IDIR)
+# Use these for better debug
+#CC	=	g++
+#CFLAGS	=	-DLINUX -O0 -g -Wall -I$(IDIR)
 
 #LIBS	=	-lCAENDigitizer -lsqlite3
 LIBS	=	-lCAENDigitizer -L/usr/lib64/mysql -lmysqlclient

@@ -17,8 +17,10 @@
 #include "G4RandomDirection.hh"
 #include "G4Poisson.hh"
 #include "Randomize.hh"
+//#include "TRandom3.h"
 
 #include "BeamMessenger.hh"
+#include "HistoManager.hh"
 #include "DetectorConstruction.hh"
 
 BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
@@ -36,7 +38,8 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
-  fHistoManager = HistoManager::GetInstance();  
+  fHistoManager = HistoManager::GetInstance();
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -75,7 +78,11 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nUbosonDecays = bpar->GetNUbosonDecaysPerBunch();
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nPositrons = nTotPositrons-nUbosonDecays-nThreePhotonDecays;
-  //  G4cout << "BeamGenerator - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays << G4endl;
+  if (nPositrons<0) {
+    G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
+    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays << G4endl;
+    nPositrons = 0;
+  }
 
   //********************
   //U Boson generator MC
@@ -245,7 +252,32 @@ void BeamGenerator::CreateFinalStateUboson()
   // === Compute Uboson+gamma final state in the CM ===
 
   //Generate a random unit vector for the Uboson decay direction
-  G4ThreeVector dir = G4RandomDirection();
+  //G4ThreeVector dir = G4RandomDirection();
+
+  // Generate unit vector for the Uboson direction using cross section formula depending on costheta
+  G4double xmin = -1;
+  G4double xmax = 1;
+  G4double max = CS2(xmax,G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGMass(),ubosonM,pp[0]);
+  G4double val,xval,yval;
+  
+  //TRandom3 rand(0);
+  G4int flag=1;
+  while (flag) {
+    //xval=rand.Uniform(xmin,xmax);
+    xval = xmin+G4UniformRand()*(xmax-xmin);
+    val = CS2(xval,G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGMass(),ubosonM,pp[0]);
+    //yval=rand.Uniform(0,max);
+    yval = G4UniformRand()*max;
+    if (yval<val) flag=0;
+  }
+  G4double costheta = xval;
+  G4double sintheta = sqrt(1-costheta*costheta);
+  //double phi=rand.Uniform(0,2*M_PI);
+  G4double phi = G4UniformRand()*2.*M_PI;
+  G4ThreeVector dir = G4ThreeVector(sintheta*cos(phi),sintheta*sin(phi),costheta);
+  //  G4cout << "Cos(theta): " << costheta << G4endl;
+
+  //G4cout << "UthetaCM: " << acos(dir.z()/sqrt(dir.x()*dir.x()+dir.y()*dir.y()+dir.z()*dir.z())) << G4endl;
 
   // Compute Uboson four-momentum
   G4double UpCM[4];
@@ -289,6 +321,12 @@ void BeamGenerator::CreateFinalStateUboson()
   // Create gamma primary particle with generated four-momentum
   G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
 						   gp[1],gp[2],gp[3],gp[0]);
+
+  // Compute gamma emission angle
+  G4double Genergy = sqrt(gp[1]*gp[1]+gp[2]*gp[2]+gp[3]*gp[3]);
+  G4double Gtheta = acos(gp[3]/Genergy);
+  fHistoManager->FillHisto(17,Gtheta);
+  fHistoManager->FillHisto2(37,Gtheta,Genergy,1.);
 
   // Create primary vertex at generated position/time
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
@@ -417,11 +455,36 @@ void BeamGenerator::GenerateCalibrationGamma()
 
 G4double BeamGenerator::GetGammaAngle(G4ThreeVector gammaDir,G4ThreeVector beamDir)
 {
-  G4double product=0;
-  for (int i=0; i<3; i++)  product += gammaDir[i]*beamDir[i];
-  G4double theta = acos (product);// * 180.0 / 3.14159265;  //in degreees
+  //G4double product=0;
+  //for (int i=0; i<3; i++) product += gammaDir[i]*beamDir[i];
+  //G4double theta = acos (product);// * 180.0 / 3.14159265;  //in degreees
   //  G4cout<<"product"<< product <<"Theta " <<theta<<G4endl;
   G4double angle = gammaDir.angle(beamDir)/rad;
   //  G4cout << "Mauro dice " << theta << " io dico " << angle << G4endl;
   return angle;
+}
+
+G4double BeamGenerator::CS(G4double x,G4double m_e,G4double m_U,G4double E_beam){
+
+  G4double s=2*m_e*m_e+2*m_e*E_beam;
+  G4double ret;
+
+  ret = (s*s+m_U*m_U*m_U*m_U)/(1-x*x);
+  ret = ret-(s-m_U*m_U)*(s-m_U*m_U)/2;
+
+  return ret;
+
+}
+
+G4double BeamGenerator::CS2(G4double x,G4double m_e,G4double m_U,G4double E_beam){
+
+  G4double s=2*m_e*m_e+2*m_e*E_beam;
+  G4double p=(s-m_U*m_U)/2/sqrt(s);
+  G4double ret;
+
+  ret = p*p*(s*s+m_U*m_U*m_U*m_U)/(m_e*m_e+p*p*(1-x*x));
+  ret = ret-(s-m_U*m_U)*(s-m_U*m_U)/2;
+
+  return ret;
+
 }

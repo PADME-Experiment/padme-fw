@@ -38,6 +38,8 @@ public:
 
   Double_t GetCrystalGap() { return fCrystalGap; }
 
+  Double_t GetSignalToEnergy(Int_t c) { return fSignalToEnergy; } // No channel dependency yet
+
   Double_t GetIslandEThreshold() { return fIslandEThreshold; }
   Double_t GetIslandEThresholdSeed() { return fIslandEThresholdSeed; }
 
@@ -58,6 +60,10 @@ private :
   Double_t fCrystalGap; // Warning: this gap includes the paint coating
 
   Double_t fECalFrontFacePosZ;
+
+  // Calibration parameters
+
+  Double_t fSignalToEnergy; // Convert digi signal value to energy in MeV
 
   // Cluster finding parameters
 

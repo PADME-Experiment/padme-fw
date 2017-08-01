@@ -33,7 +33,7 @@ DEPEND = $(CXX) -MM
 
 # Define parameters for link command
 LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -L/usr/lib64/mysql -lmysqlclient
-LDFLAGS = -O4 $(ROOTLDFLAGS) $(ROOTLIBS) $(LIBS)
+LDFLAGS = -O4 $(ROOTLDFLAGS) $(LIBS) $(ROOTLIBS)
 
 # Get list of files to process
 SOURCES  := $(wildcard $(SDIR)/*.cc)

@@ -70,7 +70,7 @@ class RunControlText:
     def main_loop(self):
 
         while True:
-            
+
             # Get message to send
             message = raw_input("SEND (q or Q to Quit): ")
             if (message == 'q' or message == 'Q'): break
@@ -79,16 +79,20 @@ class RunControlText:
             if (message == 'new_run'): ans = self.new_run()
 
             elif (message == 'abort_run'): ans = self.abort_run()
-            
+
             elif (message == 'start_run'): ans = self.start_run()
-            
+
             elif (message == 'stop_run'): ans = self.stop_run()
-            
+
             # Handle simple command/answer commands
             else:
-                
+
                 print "Sending %s"%message
                 ans = self.ask_server(message)
+                if (message == "exit"):
+                    print ans
+                    print "Server's gone. I'll take my leave as well..."
+                    break
 
             # Show result of previous command
             print ans
@@ -105,7 +109,7 @@ class RunControlText:
         if (ans != "run_number"):
             print "new_run - protocol error: expected run_number, received %s"%ans
             return "error"
-        
+
         message = raw_input("Run number (next or dummy): ")
         if (message != 'next' and message != 'dummy'):
             print "new_run - invalid input %s - Expected next or dummy"%message
@@ -121,7 +125,7 @@ class RunControlText:
         if (ans != "run_type"):
             print "new_run - protocol error: expected run_type, received %s"%ans
             return "error"
-        
+
         message = raw_input("Run type (TEST, DAQ, COSMIC): ")
         if (message != 'TEST' and message != 'DAQ' and message != 'COSMIC'):
             print "new_run - invalid input %s - Expected TEST, DAQ, or COSMIC"%message
@@ -137,7 +141,7 @@ class RunControlText:
         if (ans != "shift_crew"):
             print "new_run - protocol error: expected shift_crew, received %s"%ans
             return "error"
-        
+
         message = raw_input("Shift crew: ")
         print "Sending %s"%message
         self.send_command(message)
@@ -146,7 +150,7 @@ class RunControlText:
         if (ans != "run_comment"):
             print "new_run - protocol error: expected run_comment, received %s"%ans
             return "error"
-        
+
         message = raw_input("Start of run comment: ")
         print "Sending %s"%message
         self.send_command(message)
@@ -220,7 +224,7 @@ class RunControlText:
         if (ans != "run_comment_end"):
             print "stop_run - protocol error: expected run_comment_end, received %s"%ans
             return "error"
-                
+
         message = raw_input("End of run comment: ")
         print "Sending %s"%message
         self.send_command(message)

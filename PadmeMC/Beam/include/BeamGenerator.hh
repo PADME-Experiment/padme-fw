@@ -14,11 +14,11 @@
 #include "G4ThreeVector.hh"
 
 #include "BeamParameters.hh"
-#include "HistoManager.hh"
 
 class G4Event;
 
 class BeamMessenger;
+class HistoManager;
 class DetectorConstruction;
 
 struct BeamPrimaryPositron
@@ -69,6 +69,9 @@ private:
   void GenerateCalibrationGamma();
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );
+
+  G4double CS(G4double,G4double,G4double,G4double);
+  G4double CS2(G4double,G4double,G4double,G4double);
 
   G4Event* fEvent;
   

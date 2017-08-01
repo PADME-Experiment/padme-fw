@@ -64,7 +64,7 @@ typedef struct config_s {
   int trigger_mode;
 
   // Choose trigger signal IO level between NIM and TTL
-  char trigger_iolevel[3];
+  char trigger_iolevel[4];
 
   // Mask to choose will channel groups will be enabled
   // bit 0: group 0 (ch 0-7)
@@ -120,7 +120,7 @@ typedef struct config_s {
 
 } config_t;
 
-config_t* Config; // Common structure to hold configuration parameters
+extern config_t* Config; // Declare pointer to common configuration structure
 
 int init_config();      // Initialiaze configuration and set to default
 int reset_config();     // Set configuration to default

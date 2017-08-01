@@ -9,7 +9,7 @@
 
 #include "TMCVDigi.hh"
 
-#define TSACMCDIGI_N_BINS 500
+#define TSACMCDIGI_N_BINS 1024
 
 class TSACMCDigi : public TMCVDigi
 {
@@ -18,6 +18,8 @@ public:
 
   TSACMCDigi();
   ~TSACMCDigi();
+
+  void Print(Option_t* option="") const;
 
   void ResetTHisto();
   void SetTHistoStart(Double_t v) { fTHistoStart = v; }

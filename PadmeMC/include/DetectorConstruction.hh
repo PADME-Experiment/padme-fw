@@ -30,6 +30,8 @@ class MagnetStructure;
 class ChamberStructure;
 class HallStructure;
 class MagneticFieldSetup;
+class LAVDetector;
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -90,6 +92,7 @@ private:
   HEPVetoDetector* fHEPVetoDetector;
   TDumpDetector*   fTDumpDetector;
   TPixDetector*    fTPixDetector;
+  LAVDetector*     fLAVDetector;
 
   MagnetStructure*  fMagnetStructure;
   ChamberStructure* fChamberStructure;
@@ -100,6 +103,7 @@ private:
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
+  G4int fEnableLAV;
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;

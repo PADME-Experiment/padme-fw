@@ -83,9 +83,14 @@ void HistoManager::book()
   if (!histo[14]) G4cout << "\n can't create histo 14" << G4endl; 
   histo[15] = new TH1D("h15", "Cluster Charge",1000.,0.,20000.);
   if (!histo[15]) G4cout << "\n can't create histo 15" << G4endl; 
-
   histo[16] = new TH1D("h16", "Massa 2g",1200.,0.,300.);
-  if (!histo[15]) G4cout << "\n can't create histo 15" << G4endl; 
+  if (!histo[16]) G4cout << "\n can't create histo 16" << G4endl; 
+  // Additional histos for kinematics studies
+  histo[17] = new TH1D("h17","Gamma emission angle in Uboson events",1000,0.,1.);
+  if (!histo[17]) G4cout << "\n can't create histo 17" << G4endl; 
+  // SAC energy study
+  histo[18] = new TH1D("h18","SAC energy",300,0.,600.);
+  if (!histo[18]) G4cout << "\n can't create histo 18" << G4endl; 
 
   histo2[1] = new TH2D("h21", "XY cell weigh energy ",ECalNRow,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNCol,-ECalSizeY*0.5,ECalSizeY*0.5);
   if (!histo2[1]) G4cout << "\n can't create histo 11" << G4endl;  
@@ -122,6 +127,14 @@ void HistoManager::book()
   histo2[36] = new TH2D("h36", "Beam X Y ",200,-5.,5.,200,-5.,5.);
   if (!histo2[36]) G4cout << "\n can't create histo 36" << G4endl;
 
+  // Additional histos for kinematics studies
+  histo2[37] = new TH2D("h37", "Gamma energy vs angle in Uboson events",100,0.,0.1,275,0.,550.);
+  if (!histo2[37]) G4cout << "\n can't create histo 37" << G4endl;
+  histo2[38] = new TH2D("h38", "Gamma energy vs angle Brem",100,0.,0.1,300,0.,600.);
+  if (!histo2[38]) G4cout << "\n can't create histo 38" << G4endl;
+  histo2[39] = new TH2D("h39", "Gamma energy vs angle Ann",315,0.,3.15,300,0.,600.);
+  if (!histo2[39]) G4cout << "\n can't create histo 39" << G4endl;
+
   // create 1 ntuple in subdirectory "tuples"
   //
   ntupl = new TTree("U102", "Envent");
@@ -133,6 +146,9 @@ void HistoManager::book()
   ntupl->Branch("PPrim", &(myEvt.NTPriBeam), "PPrim/D");
   ntupl->Branch("XBeam", &(myEvt.NTXBeam), "XBeam/D");
   ntupl->Branch("YBeam", &(myEvt.NTYBeam), "YBeam/D");
+  ntupl->Branch("PosMomX", &(myEvt.PMomX), "PosMomX/D");
+  ntupl->Branch("PosMomY", &(myEvt.PMomY), "PosMomY/D");
+  ntupl->Branch("PosMomZ", &(myEvt.PMomZ), "PosMomZ/D");
 
   ntupl->Branch("NClusters", &(myEvt.NTNCluster), "NClusters/I");
   ntupl->Branch("NTracks",   &(myEvt.NTNTracks), "NTracks/I");
@@ -154,11 +170,11 @@ void HistoManager::book()
   ntupl->Branch("SACCh", (myEvt.NTSACCh), "SACCh[100]/I");
 
 
-//  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
-//  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
-//  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
-//  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
-//  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+ ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
+ ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
+ ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
+ ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
+ ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
 
   ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
   ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");

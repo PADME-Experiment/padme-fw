@@ -260,7 +260,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
 }
 
-int create_file_head(unsigned int fIndex, int runNr, time_t timeTag, void *fHead)
+unsigned int create_file_head(unsigned int fIndex, int runNr, time_t timeTag, void *fHead)
 {
   uint32_t line;
   line = (PEVT_FHEAD_TAG << 28) + (PEVT_CURRENT_VERSION << 16) + (fIndex & 0xFFFF);
@@ -270,7 +270,7 @@ int create_file_head(unsigned int fIndex, int runNr, time_t timeTag, void *fHead
   return PEVT_FHEAD_LEN*4;    // Return total size of file header in bytes
 }
 
-int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_t timeTag, void *fTail)
+unsigned int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_t timeTag, void *fTail)
 {
   uint32_t line;
   unsigned long int fTotalSize = fSize + PEVT_FTAIL_LEN*4; // Add size of tail to total file size

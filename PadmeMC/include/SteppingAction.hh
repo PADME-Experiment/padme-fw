@@ -39,6 +39,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 class EventAction;
 class G4Track;
+class HistoManager;
 class SteppingAction : public G4UserSteppingAction
 {
 public:
@@ -59,8 +60,23 @@ public:
   double SetGammaAngle(G4ThreeVector GammaDir,G4ThreeVector BeamDir);
   double GetGammaAngle(){return ThetaGamma;};
 
+  void EnableSACAnalysis()  { fEnableSACAnalysis = 1; }
+  void DisableSACAnalysis() { fEnableSACAnalysis = 0; }
+
+  void EnableECalAnalysis()  { fEnableECalAnalysis = 1; }
+  void DisableECalAnalysis() { fEnableECalAnalysis = 0; }
+
+  G4ThreeVector & GetPositronMomentum(){ return PositronMomentum;  };
+  
+
 private:
   BeamParameters* bpar;
+  EventAction* fEventAction;
+  HistoManager *fHistoManager;
+
+  G4int fEnableSACAnalysis;
+  G4int fEnableECalAnalysis;
+
   double ProcID;
   double PositronE;
   double ElectronE;	
@@ -70,8 +86,8 @@ private:
   double ThetaGamma;
   G4ThreeVector GammaDir;
   G4ThreeVector VertexPos;
+  G4ThreeVector PositronMomentum;
   G4int NChild;
-  EventAction * fEventAction;
 
   G4int ClassifyTrack(G4Track* );
   //   HistoManager* fHistoManager;

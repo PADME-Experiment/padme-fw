@@ -33,7 +33,7 @@ HEPVetoGeometry::HEPVetoGeometry()
   // the projection of the center of the external face of the first finger
   // of HEPVeto on the external surface of the diagonal wall of the vacuum chamber.
   // Tune this to move HEPVeto along the diagonal wall of the vacuum chamber
-  fHEPVetoDistanceToCorner = 40.*cm;
+  fHEPVetoDistanceToCorner = 38.*cm;
 
   // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
   fHEPVetoSupportThickness = 1.*cm; // Check with final design

@@ -45,8 +45,6 @@ SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  fEHistoBeamBunchLengthT = 40.*ns;
-
   G4cout << "SACRootIO: Initialized" << G4endl;
 
 }
@@ -175,10 +173,10 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetChannelId((*sacDC)[i]->GetChannelId()); 
 	      digi->SetEnergy((*sacDC)[i]->GetEnergy());
 	      digi->SetTime((*sacDC)[i]->GetTime());
-	      digi->SetTHistoStart((*sacDC)[i]->GetEHistoStart());
-	      digi->SetTHistoStep((*sacDC)[i]->GetEHistoStep());
-	      for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetEHistoBin(j));
-	      e_tot += (*sacDC)[i]->GetEnergy();
+	      digi->SetTHistoStart((*sacDC)[i]->GetQHistoStart());
+	      digi->SetTHistoStep((*sacDC)[i]->GetQHistoStep());
+	      for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetQHistoBin(j));
+	      e_tot += digi->GetEnergy();
 	    }
 	    G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }

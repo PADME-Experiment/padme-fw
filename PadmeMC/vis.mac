@@ -14,6 +14,10 @@
 # Output root file with analysis histograms/ntuple
 #/output/HistoFileName mchisto.root
 
+# Disable/enable SAC/ECal analysis (WARNING! For SAC see command documentation)
+#/analysis/DisableSACAnalysis true
+#/analysis/DisableECalAnalysis true
+
 # Enable IO for single detectors
 #/output/EnableDetectorIO Target:D
 #/output/EnableDetectorIO PVeto:HD
@@ -83,18 +87,24 @@
 
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
+#/Detector/ECal/CrystalMapId 0
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
-#/Detector/ECal/CrystalGap 0.05
+#/Detector/ECal/CrystalGap 0.1
 #/Detector/ECal/CrystalCoating 0.1
+#/Detector/ECal/TedlarThickness 0.05
 #/Detector/ECal/FrontFaceZ 230.
 #/Detector/ECal/EnablePanel true
 #/Detector/ECal/PanelThickness 0.5
 #/Detector/ECal/PanelGap 0.1
 
-#/Detector/SAC/CrystalSize 2.
-#/Detector/SAC/CrystalLength 10.
-#/Detector/SAC/FrontFaceZ 300.
+#/Detector/SAC/NRows 7
+#/Detector/SAC/NCols 7
+#/Detector/SAC/CrystalSize 2. cm
+#/Detector/SAC/CrystalLength 20. cm
+#/Detector/SAC/CrystalGap 50. um
+#/Detector/SAC/CrystalCoating 100. um
+#/Detector/SAC/FrontFaceZ 300. cm
 
 #/Detector/LAV/InnerRadius 4.
 #/Detector/LAV/OuterRadius 10.
@@ -154,8 +164,8 @@
 # Beam setup
 
 # Example for single three photon events
-/beam/n_e+_per_bunch 1
-/beam/n_e+_poisson_on false
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
 
@@ -180,7 +190,9 @@
 #/beam/emittance_y 0.001
 
 # Uboson generator
-#/beam/n_uboson_per_bunch 0
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_uboson_per_bunch 1
 #/beam/uboson_mass 22. MeV
 
 # Three photons events read from file

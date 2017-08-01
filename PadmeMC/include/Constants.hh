@@ -1,7 +1,7 @@
 // GENERAL FLAGS
-const int   NPrint      = 1;
-//const bool  fAutoSeed   = true; //random seed with clock
-const bool  fAutoSeed   = false; //fixed random seed
+const int   NPrint      = 1000;
+const bool  fAutoSeed   = true; //random seed with clock
+//const bool  fAutoSeed   = false; //fixed random seed
 // DETECTORS FLAGS
 const int    IsCalibRun  = 0;  //1 global Calo calibration 2 Calo Energy resolution
 const double EMinSaveNT  = 5.;
@@ -9,12 +9,12 @@ const double EMinSaveNT  = 5.;
 const double WorldLength  = 12.; //in meters
 
 const int   IsBFieldON    = 1;  // 1 uniform B field 2 non uniform
-const int   IsMagIronON   = 1;  // 1 CERN magnet 
+const int   IsMagIronON   = 1;  // 1 CERN magnet
 const int   IsEcalON      = 1;
-const int   IsEcalRoundON = 1;  
+const int   IsEcalRoundON = 1;
 
 const int   IsTrackerON   = 0;   // cilindrical tracker obsolete set to 0
-const int   IsPlanarGEMON = 0;   // 1 planar GEM spectrometer 
+const int   IsPlanarGEMON = 0;   // 1 planar GEM spectrometer
 const int   IsPVetoON     = 1;   // 1  Veto inside the magnet Positron side
 const int   IsEleVetoON   = 1;   // Veto inside the magnet Electron side
 const int   IsEVetoON     = 1;   // Veto for High Momentum positron
@@ -46,14 +46,14 @@ const double SigmaBeamE    = BeamEnergy*0.01;  //in MeV
 const double BunchLenght   = 40.; //At present from 3-40 ns
 const double MicroBunchSpace = 0.350; //fixed to 350 ps
 const double MicroBunchLength= 0.150; //fixed to 350 ps
-const double SigmaBeamX    = 0.7;     // in mm 
+const double SigmaBeamX    = 0.7;     // in mm
 const double SigmaBeamY    = 0.7;     // in mm
 const double BeamDivX      = 1.e-3;   // in radiants Still to be tested
 const double BeamDivY      = 1.e-3;   // in radiants Still to be tested
 const double position      = -80.;    // in cm
 const double VacuumP       = 1e-6;    // is in bar
 const double VacuumDensity = 1.290*VacuumP;  //mg*cm3
-const double MagneticField = 0.55; //0.6 
+const double MagneticField = 0.55; //0.6
 
 //Physics list flags
 const int    UseNewPhysList = 1;   // was 0
@@ -73,9 +73,9 @@ const double nKillEnergy  = 10.;       // kill neutrons
 
 //Other background events generation:
 const int    NThreePhoton  = 0;
-// U boson parameters    
+// U boson parameters
 const int    NUBosons      = 0;  //Works only with 0 and 1 for the moment....
-const double UMass         = 22;  //in MeV 
+const double UMass         = 22;  //in MeV
 const double epsilon       = 1E-3; //in 10-33
 const int    UDecType      = 1;  //with 0 e+e-   and 1 for invisible DM
 const int    UGenType      = 0;  //with 0 annihi and 1 for Bremsstrahlung not implemented
@@ -84,7 +84,7 @@ const int    UGenType      = 0;  //with 0 annihi and 1 for Bremsstrahlung not im
 const double MonitorSizeX = 4.; //in cm
 const double MonitorSizeY = 4.; //in cm
 const double MonitorSizeZ = 4.; //in cm
-				
+
 const double MonitorPosiX = 0.;	  //in cm
 const double MonitorPosiY = 0.;	  //in cm
 const double MonitorPosiZ = -50.;  //in cm
@@ -150,9 +150,9 @@ const double SACY      = 12;
 const double SACLength = 10;
 
 //LAV geometry
-const double LAVInnRad = 4.0; 
+const double LAVInnRad = 4.0;
 const double LAVOutRad = 10.;
-const double LAVLength = 20; // in cm 
+const double LAVLength = 20; // in cm
 
 //  High Energy Positron Veto outside the magnet dimension
 const double EVetoPosiX = 0.;	//in cm
@@ -170,9 +170,9 @@ const double EVetoFingerSize =1.;    //in cm
 const double PVetoPosiX =  0.;	//in cm
 const double PVetoPosiY =-20.;	//in cm was 85 cm
 const double PVetoPosiZ =  0.;	//in cm
-	     
+
 const double PVetoSizeX = 19.8;    //in cm
-const double PVetoSizeY =1.;    //in cm full detector size will decide finger number 
+const double PVetoSizeY =1.;    //in cm full detector size will decide finger number
 const double PVetoSizeZ =100.;     //in cm
 
 const double PVetoFingerSize =1.;    //in cm
@@ -181,11 +181,11 @@ const double PVetoFingerSize =1.;    //in cm
 const double EleVetoPosiX = 0.;	//in cm
 const double EleVetoPosiY =20;	//in cm was 85 cm
 const double EleVetoPosiZ = 0.;	//in cm
-	     
+
 const double EleVetoSizeX =19.8;   //in cm
 const double EleVetoSizeY =1.;   //in cm was 80
 const double EleVetoSizeZ =100.;    //in cm
-	     
+
 const double EleVetoFingerSize =1.;    //in cm
 
 // Tracker geometry same position of the magnet
@@ -224,7 +224,7 @@ const double MagnetPosiY = 0.;	//in cm
 const double MagnetPosiZ = 20+MagnetSizeZ*0.5;	//in cm
 
 //top joke of magnet
-const double MagUpSizeX =  77.; 
+const double MagUpSizeX =  77.;
 const double MagUpSizeY = 200.; //was 116
 const double MagUpSizeZ = 100.;
 
@@ -232,7 +232,7 @@ const double MagUpX = 10.+MagUpSizeX/2;
 const double MagUpY = 0.;
 const double MagUpZ = MagnetPosiZ;	//in cm;
 
-const double MagRgSizeX = 20.; 
+const double MagRgSizeX = 20.;
 const double MagRgSizeY = 42.;
 const double MagRgSizeZ = 100.;
 
@@ -253,7 +253,7 @@ const double MagCoilPosZ = 20.;	//in cm;
 const int MaxTracks = 100; //to be less than 50 check in EVENT ACTION histoManager.cc HistoManager.hh
 const int MaxTrHits = 500;
 
-//  Beam Dump wall Dimension	     
+//  Beam Dump wall Dimension
 const double WallSizeX = 450.; // in cm
 const double WallSizeY = 200.; // in cm
 const double WallSizeZ =  50.; // in cm

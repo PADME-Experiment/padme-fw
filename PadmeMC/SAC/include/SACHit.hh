@@ -61,19 +61,18 @@ public:
   void SetPType(G4int typ) { fTrackType = typ; }; 
   G4int GetPType() { return fTrackType; };
 
-  void SetEdep(G4double de) { fEnergy = de; };
-  G4double GetEdep() { return fEnergy; };
-
-  void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
+   void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
   G4ThreeVector GetPos() { return fPosition; };
   G4double GetX() { return fPosition.x(); }
   G4double GetY() { return fPosition.y(); }
   G4double GetZ() { return fPosition.z(); }
 
-  // Obsolete and probably not used
+  // Obsolete and probably still used but deprecated
   void SetTrackID(G4int track) { fTrackId = track; };
   G4int GetTrackID() { return fTrackId; };
-      
+  void SetEdep(G4double de) { fTrackEnergy = de; };
+  G4double GetEdep() { return fTrackEnergy; };
+   
 private:
   
   G4int         fTrackType;
@@ -85,6 +84,7 @@ private:
 
   // Obsolete and probably not used
   G4int         fTrackId;
+  G4double      fTrackEnergy;
 
 };
 

@@ -79,7 +79,7 @@ ENGINE = InnoDB;
 -- Table `PadmeDB`.`daq_file`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `PadmeDB`.`daq_file` (
-  `id` INT UNSIGNED NULL AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
   `version` INT NULL,
   `process_id` INT NOT NULL,

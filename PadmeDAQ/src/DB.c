@@ -17,11 +17,10 @@ MYSQL* DBHandle = NULL;
 int db_init()
 {
 
-  char* db_host;
-  char* db_user;
-  char* db_passwd;
-  char* db_name;
-  char* db_port_s;
+  const char* db_host;
+  const char* db_user;
+  const char* db_passwd;
+  const char* db_name;
   unsigned int db_port;
 
   // Check if this is the first time we are called
@@ -45,8 +44,7 @@ int db_init()
   db_name = getenv("PADME_DB_NAME");
   if (db_name == NULL) db_name = "PadmeDB";
   db_port = 5501;
-  db_port_s = getenv("PADME_DB_PORT");
-  if (db_port_s != NULL) db_port = atoi(db_port_s);
+  if (getenv("PADME_DB_PORT")) db_port = atoi(getenv("PADME_DB_PORT"));
   //printf("host %s user %s passwd %s name %s port %d\n",db_host,db_user,db_passwd,db_name,db_port);
 
   // Connect to MySQL server
@@ -111,7 +109,8 @@ int db_process_create(int run_nr,int board_id)
   char sqlCode[10240];
 
   // Insert run into DB and initialize to 0 all parameters
-  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
+  //sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
+  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0)",run_nr,board_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_process_create - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;
@@ -275,7 +274,7 @@ int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n
 
 }
 
-int db_add_cfg_para(int proc_id, char* para_name, char* para_val)
+int db_add_cfg_para(int proc_id, const char* para_name, char* para_val)
 {
 
   char sqlCode[10240];
@@ -297,7 +296,7 @@ int db_add_cfg_para(int proc_id, char* para_name, char* para_val)
 
 }
 
-int db_get_para_id(char* para_name)
+int db_get_para_id(const char* para_name)
 {
 
   int result = 0;

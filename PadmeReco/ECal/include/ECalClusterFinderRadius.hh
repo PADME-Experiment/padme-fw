@@ -21,16 +21,14 @@ class ECalClusterFinderRadius {
   Double_t GetEThresholdSeed(){return fEThresholdSeed;};
   Double_t GetRadius(){return fRadius;};
 
-  void SetEThreshold(Double_t eThr){fEThreshold = eThr;};
-  void SetEThresholdSeed(Double_t eThrS){fEThresholdSeed = eThrS;};
-  void SetRadius(Double_t);
-
   void PrintNeighborMap();
 
   ECalCrystalHandler* GetCrystalHandler(){return fCrystalHandler;};
   ECalClusterHandler* GetClusterHandler(){return fClusterHandler;};
 
  private:
+
+  void SetRadius(Double_t);
 
   void ExpandCluster(ECalCluster*,ECalCrystal*);
 

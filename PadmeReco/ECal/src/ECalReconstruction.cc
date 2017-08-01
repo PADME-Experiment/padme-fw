@@ -8,6 +8,7 @@
 
 #include "ECalReconstruction.hh"
 
+#include "ECalParameters.hh"
 #include "ECalCrystalHandler.hh"
 #include "ECalCrystal.hh"
 #include "ECalClusterFinderIsland.hh"
@@ -65,6 +66,9 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 */
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
+
+  ECalParameters* para = ECalParameters::GetInstance();
+
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TECalMCEvent* tECalEvent = (TECalMCEvent*)tEvent;
   std::cout << "--- ECalReconstruction --- run/event/#hits/#digi " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << " " << tECalEvent->GetNDigi() << std::endl;
@@ -81,11 +85,13 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   ECalCrystalHandler* cryHand = new ECalCrystalHandler();
   for (Int_t iD=0; iD<tECalEvent->GetNDigi(); iD++) {
     TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
-    Int_t iX = digi->GetChannelId()/100;
-    Int_t iY = digi->GetChannelId()%100;
+    Int_t ch = digi->GetChannelId();
+    Double_t sig = digi->GetSignal();
+    Int_t iX = ch/100;
+    Int_t iY = ch%100;
     ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
-    cry->SetCharge(digi->GetSignal());
-    cry->SetEnergy(digi->GetSignal()); // Will need a signal->energy converter
+    cry->SetCharge(sig);
+    cry->SetEnergy(sig*para->GetSignalToEnergy(ch));
     cry->SetTime(digi->GetTime());
     cry->Print();
   }
@@ -94,8 +100,6 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   // Find clusters with PadmeIsland algorithm
   ECalClusterHandler* cluHandIsl = new ECalClusterHandler();
   ECalClusterFinderIsland* cluFindIsl = new ECalClusterFinderIsland(cryHand,cluHandIsl);
-  cluFindIsl->SetEThreshold(0.1); //min thr in each crystal
-  cluFindIsl->SetEThresholdSeed(10.); //min thr for seed crystal
   Int_t newNClu = cluFindIsl->FindClusters();
   printf("- Cluster finding result - PadmeIsland algorithm -\n");
   cluHandIsl->Print();
@@ -103,8 +107,6 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   // Find clusters with PadmeRadius algorithm
   ECalClusterHandler* cluHandRad = new ECalClusterHandler();
   ECalClusterFinderRadius* cluFindRad = new ECalClusterFinderRadius(cryHand,cluHandRad);
-  cluFindRad->SetEThreshold(0.1); //min thr in each crystal
-  cluFindRad->SetEThresholdSeed(10.); //min thr for seed crystal
   Int_t newNCluRad = cluFindRad->FindClusters();
   printf("- Cluster finding result - PadmeRadius algorithm -\n");
   cluHandRad->Print();

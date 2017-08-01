@@ -9,9 +9,11 @@
 #define SACDetector_H 1
 
 #include "globals.hh"
-#include "G4LogicalVolume.hh"
 
-#include "SACMessenger.hh"
+#include "SACGeometry.hh"
+
+class G4LogicalVolume;
+class SACMessenger;
 
 class SACDetector
 {
@@ -26,12 +28,17 @@ public:
 
   G4LogicalVolume* GetSACLogicalVolume() { return fSACVolume; }
   G4LogicalVolume* GetCrystalLogicalVolume() { return fCrystalVolume; }
+  G4LogicalVolume* GetCellLogicalVolume() { return fCellVolume; }
+
+  G4double GetSACFrontFaceZ() { return SACGeometry::GetInstance()->GetSACFrontFacePosZ(); }
 
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fSACVolume;
   G4LogicalVolume* fCrystalVolume;
+  G4LogicalVolume* fCellVolume;
+
   SACMessenger* fSACMessenger;
 
 };

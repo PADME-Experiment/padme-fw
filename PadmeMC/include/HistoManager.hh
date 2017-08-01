@@ -20,7 +20,10 @@ struct NTEvent{
   int NTNtotCell;
   double NTXBeam;
   double NTYBeam;
-  
+  G4double PMomX;
+  G4double PMomY;
+  G4double PMomZ;
+
   double NTIDProc;
   int NTNCluster;
   int NTNTracks;	

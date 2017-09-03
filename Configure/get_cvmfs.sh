@@ -8,17 +8,17 @@ LCGPREF=/cvmfs/sft.cern.ch/lcg/releases
 lxplusUserName=ggeorge
 
 PACKS=(
-#LCG_88/clhep/2.3.1.1/x86_64-slc6-gcc49-opt
-LCG_88/clhep/2.3.1.1/x86_64-slc6-gcc62-opt
+LCG_88/clhep/2.3.1.1/x86_64-slc6-gcc49-opt
+#LCG_88/clhep/2.3.1.1/x86_64-slc6-gcc62-opt
 #LCG_88/gcc/4.9.1/x86_64-slc6
-#LCG_88/gcc/4.9.3/x86_64-slc6
-LCG_88/gcc/6.2.0/x86_64-slc6
-#LCG_88/Geant4/10.02.p02/x86_64-slc6-gcc49-opt
-LCG_88/Geant4/10.02.p02/x86_64-slc6-gcc62-opt
-#LCG_88/ROOT/6.08.06/x86_64-slc6-gcc49-opt
-LCG_88/ROOT/6.08.06/x86_64-slc6-gcc62-opt
-#LCG_88/XercesC/3.1.3/x86_64-slc6-gcc49-opt
-LCG_88/XercesC/3.1.3/x86_64-slc6-gcc62-opt
+LCG_88/gcc/4.9.3/x86_64-slc6
+#LCG_88/gcc/6.2.0/x86_64-slc6
+LCG_88/Geant4/10.02.p02/x86_64-slc6-gcc49-opt
+#LCG_88/Geant4/10.02.p02/x86_64-slc6-gcc62-opt
+LCG_88/ROOT/6.08.06/x86_64-slc6-gcc49-opt
+#LCG_88/ROOT/6.08.06/x86_64-slc6-gcc62-opt
+LCG_88/XercesC/3.1.3/x86_64-slc6-gcc49-opt
+#LCG_88/XercesC/3.1.3/x86_64-slc6-gcc62-opt
 )
 
 

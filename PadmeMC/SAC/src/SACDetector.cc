@@ -56,14 +56,15 @@ void SACDetector::CreateGeometry()
   // Show thickness of coating around crystals
   printf("Coating around SAC crystals is %f\n",geo->GetCrystalCoating());
 
-  // Create standard SF57 crystal
+  // Create standard PbF2 crystal
   G4double crySizeX = geo->GetCrystalSizeX();
   G4double crySizeY = geo->GetCrystalSizeY();
   G4double crySizeZ = geo->GetCrystalSizeZ();
   printf("SAC Crystal size is %f %f %f\n",crySizeX,crySizeY,crySizeZ);
   G4Box* solidCry  = new G4Box("SACCry",0.5*crySizeX,0.5*crySizeY,0.5*crySizeZ);
-  //  fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BARIUM_FLUORIDE"),"SACCry",0,0,0);
-  fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("PbGl_SF57"),"SACCry",0,0,0);
+  //fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BARIUM_FLUORIDE"),"SACCry",0,0,0);
+  //fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("PbGl_SF57"),"SACCry",0,0,0);
+  fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("PbF2"),"SACCry",0,0,0);
   fCrystalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 
   // Make crystal a sensitive detector
@@ -74,7 +75,7 @@ void SACDetector::CreateGeometry()
   sdMan->AddNewDetector(sacSD);
   fCrystalVolume->SetSensitiveDetector(sacSD);
 
-  // Create ECal cell (BGO crystal+coating)
+  // Create SAC cell (PbF2 crystal+coating)
   G4double cellSizeX = geo->GetCellSizeX();
   G4double cellSizeY = geo->GetCellSizeY();
   G4double cellSizeZ = geo->GetCellSizeZ();

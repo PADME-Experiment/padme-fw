@@ -32,11 +32,11 @@ ECalGeometry::ECalGeometry()
   fCrystalCoating = 100.*um;
 
   //fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
-  fECalFrontFacePosZ = 233.*cm; // From center of magnet yoke, i.e. 3.32m to target
+  fECalFrontFacePosZ = 233.*cm; // From center of magnet yoke, i.e. 3.33m to target
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 
-  // Geometry parameters for plastic panel in front of ECal
+  // Geometry parameters for plastic panel in front of ECal (not used)
   fECalPanelEnable = false;
   fECalPanelThickness = 0.5*cm;
   fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
@@ -395,7 +395,7 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fDigiPECollectionMap";
-  for(G4int i=0;i<fDigiPECollectionMap.size();i++) buffer << " " << fDigiPECollectionMap[i];
+  for(G4int i=0;i<(G4int)fDigiPECollectionMap.size();i++) buffer << " " << fDigiPECollectionMap[i];
   hash.push_back(buffer.str());
   buffer.str("");
 

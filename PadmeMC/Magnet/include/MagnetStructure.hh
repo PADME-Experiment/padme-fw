@@ -32,12 +32,17 @@ public:
   //void SetMagneticVolumeVisible()   { fMagneticVolumeIsVisible = 1; }
   //void SetMagneticVolumeInvisible() { fMagneticVolumeIsVisible = 0; }
 
+  void SetMagnetVisible()   { fMagnetIsVisible = true;  }
+  void SetMagnetInvisible() { fMagnetIsVisible = false; }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   //G4LogicalVolume* fMagneticVolume;
 
   MagnetMessenger* fMagnetMessenger;
+
+  G4bool fMagnetIsVisible;
 
   //G4int fMagneticField; // =1 Field ON, =0 Field OFF
 

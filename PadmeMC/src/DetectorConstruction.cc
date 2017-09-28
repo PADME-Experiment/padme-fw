@@ -194,7 +194,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
     //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-    G4PVPlacement* physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
+    physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
 
   }
 
@@ -360,6 +360,57 @@ void DetectorConstruction::SetupDetectors()
 void DetectorConstruction::DefineMaterials()
 {
 
+  // Use NIST database to create all needed materials
+  G4NistManager* man = G4NistManager::Instance();
+  man->SetVerbose(1);
+
+  // Define materials already in the NIST database
+  man->FindOrBuildMaterial("G4_Al");                      // Aluminum (Chamber, Veto)
+  man->FindOrBuildMaterial("G4_Fe");                      // Iron (Magnet)
+  man->FindOrBuildMaterial("G4_Cu");                      // Copper (Magnet)
+  man->FindOrBuildMaterial("G4_Si");                      // Silicon (TPix)
+  man->FindOrBuildMaterial("G4_AIR");                     // Air (World)
+  man->FindOrBuildMaterial("G4_BGO");                     // BGO (ECal)
+  man->FindOrBuildMaterial("G4_CONCRETE");                // Concrete (Hall)
+  man->FindOrBuildMaterial("G4_MYLAR");                   // Mylar (Chamber)
+  man->FindOrBuildMaterial("G4_STAINLESS-STEEL");         // Stainless steel (Chamber)
+  man->FindOrBuildMaterial("G4_POLYVINYLIDENE_FLUORIDE"); // Tedlar (ECal)
+  man->FindOrBuildMaterial("G4_NEOPRENE");                // Neoprene (Magnet)
+  man->FindOrBuildMaterial("G4_PLEXIGLASS");              // Plexiglass (ECal)
+  man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
+
+  // Define all elements needed to define materials not in the NIST DB
+  man->FindOrBuildElement("H");  // Hydrogen
+  man->FindOrBuildElement("O");  // Oxygen
+  man->FindOrBuildElement("N");  // Nitrogen
+  man->FindOrBuildElement("C");  // Carbon
+  man->FindOrBuildElement("F");  // Fluoride
+  man->FindOrBuildElement("Pb"); // Lead
+  man->FindOrBuildElement("Al"); // Aluminum
+  man->FindOrBuildElement("Ti"); // Titanium
+
+  // Vacuum: leave some residual air with low density (Chamber, World)
+  G4Material* Vacuum = new G4Material("Vacuum",(1.290*0.000001)*mg/cm3,2); // 1mbar
+  Vacuum->AddElement(G4Element::GetElement("N"),70.*perCent);
+  Vacuum->AddElement(G4Element::GetElement("O"),30.*perCent);
+
+  // Diamond (Target)
+  G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
+  Diamond->AddElement(G4Element::GetElement("C"),1);
+
+  // Lead fluoride PbF2 (SAC)
+  G4Material* PbF2 = new G4Material("PbF2",7.77*g/cm3,2);
+  PbF2->AddElement(G4Element::GetElement("Pb"),1);
+  PbF2->AddElement(G4Element::GetElement("F"),2);
+
+  // EJ510 reflective paint (ECal, SAC)
+  G4Material* EJ510Paint = new G4Material("EJ510Paint",1.182*g/cm3,4);
+  EJ510Paint->AddElement(G4Element::GetElement("Ti"),41.053*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("C"), 17.194*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("H"),  2.899*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("O"), 38.854*perCent);
+
+  /*
   //--------- Materials definition ---------
   G4double a, z, density;
   G4int ncomponents, natoms;
@@ -444,6 +495,13 @@ void DetectorConstruction::DefineMaterials()
   K2OEl[1] = "O"; K2ONA[1] = 1;
   man->ConstructNewMaterial("K2O",K2OEl,K2ONA,2.32,true);
 
+  // Lead fluoride PbF2
+  man->FindOrBuildElement("Pb");
+  man->FindOrBuildElement("F");
+  G4Material* PbF2 = new G4Material("PbF2",7.77*g/cm3,2);
+  PbF2->AddElement(G4Element::GetElement("Pb"),84.5*perCent);
+  PbF2->AddElement(G4Element::GetElement("F"), 15.5*perCent);
+
   // Lead Glass (PbGl)
   G4Material* PbGl = new G4Material("PbGl_SF57",5.57*g/cm3,4);
   PbGl->AddMaterial(G4Material::GetMaterial("SAC_SiO2"), 24.0*perCent); // 22-26%
@@ -486,11 +544,13 @@ void DetectorConstruction::DefineMaterials()
   EJ510Paint->AddElement(G4Element::GetElement("H"),  2.88*perCent);
   EJ510Paint->AddElement(G4Element::GetElement("O"), 38.86*perCent);
 
+  */
+
   //Print all the materials defined.
-  //G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
-  //G4cout << *(G4Element::GetElementTable()) << G4endl;
-  //G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
-  //G4cout << *(G4Material::GetMaterialTable()) << G4endl;
+  G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
+  G4cout << *(G4Element::GetElementTable()) << G4endl;
+  G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
+  G4cout << *(G4Material::GetMaterialTable()) << G4endl;
   
 }
 

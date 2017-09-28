@@ -77,6 +77,9 @@
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
 
+#/Detector/Magnet/SetMagnetVisible
+#/Detector/Magnet/SetMagnetInvisible
+
 #/Detector/Target/FrontFaceZ -700. mm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um

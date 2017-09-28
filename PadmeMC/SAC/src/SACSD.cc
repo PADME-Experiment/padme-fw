@@ -39,7 +39,7 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep == 0.) return false;
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
-  G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
+  //G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
   SACHit* newHit = new SACHit();

@@ -181,13 +181,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
-  int Ncells=0;
+  //int Ncells=0;
 
   //Retrieve beam Infos!
   G4double BeamE  = myStepping->GetPositronE();
   G4double BeamX  = myStepping->GetPositronX();
   G4double BeamY  = myStepping->GetPositronY();
-  G4double BeamZ  = myStepping->GetPositronZ();
+  //G4double BeamZ  = myStepping->GetPositronZ();
   G4double PrimE  = myStepping->GetPrimE();
   
   
@@ -203,7 +203,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   ProcID = myStepping->GetPhysProc();   
   fHistoManager->FillHisto(1,ETotCal);
   fHistoManager->FillHisto(14,ProcID);
-  //  fHistoManager->FillHisto(15,BeamZ);
+  //fHistoManager->FillHisto(15,BeamZ);
 
   fHistoManager->FillHisto2(30,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
 
@@ -363,7 +363,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
 void EventAction::AddECryHits(ECalHitsCollection* hcont)
 {
-  G4double ETotEvt=0;
+  //G4double ETotEvt=0;
   G4int nHits = hcont->entries();
 
   G4double NRows= Egeom->GetECalNRows();  // righe sulla y 
@@ -543,7 +543,7 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
-  G4double ETotHEPVetoEvt=0.;
+  //G4double ETotHEPVetoEvt=0.;
   G4int LastID=-1;
   for(G4int jj=0;jj<MaxTracks;jj++){
     ETotHEPVeto[jj]=0.0;							
@@ -632,7 +632,7 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
   }
 
 
-  double puppo=0;
+  //double puppo=0;
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {									
     PVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
@@ -671,7 +671,7 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
       ETotPVetoEvt += hit->GetHitE();
 
       //old style variable deprected.
-      puppo= hit->GetEdep();
+      //puppo= hit->GetEdep();
       if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NPVetoTracks < MaxTracks && hit->GetTrackEnergy() > 0.1*MeV) {
 	PVetoTrackCh[NPVetoTracks]    = hit->GetPVetoNb();   //bugs gives crazy numbers
 	PVetoEtrack[NPVetoTracks]     = hit->GetTrackEnergy();
@@ -689,7 +689,7 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
 
 void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
   //  G4cout<<"vaffanculo "<<G4endl;
-  G4double TotEVetoEvt=0;
+  //G4double TotEVetoEvt=0;
   G4int LastID=-1;
   for(G4int jj=0;jj<MaxTracks;jj++){
     ETotEVeto[jj]=0.0;						  

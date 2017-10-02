@@ -130,27 +130,15 @@
 #/Detector/HEPVeto/FingerStep 1.1 cm
 #/Detector/HEPVeto/FingerSize 1. cm
 #/Detector/HEPVeto/FingerLength 20. cm
-#/Detector/HEPVeto/DistanceToCorner 40. cm
+#/Detector/HEPVeto/DistanceToCorner 43. cm
+
+#/Detector/TPix/NColumns 6
+#/Detector/TPix/DistanceToCorner 35.8 cm
 
 #/Detector/TDump/TargetRadius 3.5
 #/Detector/TDump/TargetLength 6.0
 #/Detector/TDump/TargetFrontFaceZ 10.
 #/Detector/TDump/FrontFaceZ -180.
-
-#/Detector/TPix/NColumns 5
-#/Detector/TPix/PositionX -92.
-#/Detector/TPix/PositionY 0.      # Disabled
-#/Detector/TPix/PositionZ 256.
-#/Detector/TPix/RotationX 0.      # Disabled
-#/Detector/TPix/RotationY -0.977
-#/Detector/TPix/RotationZ 0.      # Disabled
-
-### Setup for beam deflection tests
-#/Detector/EnableSubDetector TPix
-#/Detector/TPix/NColumns 20
-#/Detector/TPix/PositionX 70.
-#/Detector/TPix/PositionZ 230.
-#/Detector/TPix/RotationY 1.570796
 
 #/beam/n_e+_per_bunch 1
 #/beam/n_e+_poisson_on false

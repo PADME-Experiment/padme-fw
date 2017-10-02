@@ -104,7 +104,9 @@ ChamberGeometry::ChamberGeometry()
   fTPPHCapHeight = 600.*mm;
 
   fTPPHHoleRadius = 106.5*mm;
-  fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
+  // From Cesidio's drawings for 1GeV/.8Tesla configuration
+  //fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
+  fTPPHHoleDist = 400.*mm; // Will be changed to final position
 
   fTPPHCircRadius = 142.5*mm;
   fTPPHCircThick = 12.0*mm;

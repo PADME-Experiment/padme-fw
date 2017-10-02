@@ -21,7 +21,7 @@ TPixGeometry::TPixGeometry()
   // Inizialize default parameters
 
   fTPixNRows = 2;
-  fTPixNCols = 8;
+  fTPixNCols = 6;
 
   fChipSizeX =  14.08*mm; // 256 pixels of 55um each
   fChipSizeY =  14.08*mm; // 256 pixels of 55um each
@@ -33,7 +33,7 @@ TPixGeometry::TPixGeometry()
   // the projection of the center of the external side of the TPix on the
   // external surface of the diagonal wall of the vacuum chamber.
   // Tune this to move TPix along the diagonal wall of the vacuum chamber
-  fTPixDistanceToCorner = 30.*cm;
+  fTPixDistanceToCorner = 35.8*cm;
 
   // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
   fTPixSupportThickness = 6.*cm; // Check with final design

@@ -192,6 +192,7 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4double phcH = geo->GetTPPHCapHeight();
   G4double phcT = geo->GetTPPHCapThick();
   G4Box* solidPHB = new G4Box("TPPHBox",0.5*phcW,0.5*phcH,0.5*phcT);
+  printf("Rectangular flange size %f x %f mm2 thick %f mm\n",phcW/mm,phcH/mm,phcT/mm);
 
   // Carve hole in cap
   G4double phhR = geo->GetTPPHHoleRadius();
@@ -199,6 +200,7 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4Tubs* solidPHH = new G4Tubs("TPPHHole",0.,phhR,0.5*phcT+1.*mm,0.*deg,360.*deg);
   G4ThreeVector posPHH = G4ThreeVector(-0.5*phcW+phhD,0.,0.);
   G4SubtractionSolid* solidPHC = new G4SubtractionSolid("TPPHCap",solidPHB,solidPHH,0,posPHH);
+  printf("Center of beam exit (TPix) porthole cap at %f mm from flange border\n",phhD/mm);
 
   G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCap",0,0,0);
   logicalPHC->SetVisAttributes(steelVisAttr);
@@ -221,7 +223,7 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4double circT = geo->GetTPPHCircThick();
   G4Tubs* solidCirc = new G4Tubs("TPPHCirc",0.,circR,0.5*circT,0.*deg,360.*deg);
 
-  // Carve hole for Mylar window in cricular cap
+  // Carve hole for Mylar window in circular cap
   G4double windR = geo->GetTPPHWindRadius();
   G4double windW = geo->GetTPPHWindWidth();
   G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*circT+1.*mm,0.*deg,360.*deg);

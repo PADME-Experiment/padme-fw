@@ -57,6 +57,9 @@ void ChamberStructure::CreateGeometry()
   // Create crossed pipes in the target area
   CreateTargetPipes();
 
+  // Create junction pipe between cross and vacuum chamber
+  CreateJunctionPipe();
+
   // Create porthole caps for both section of the chamber
   CreatePortholeCaps();
 
@@ -198,6 +201,30 @@ void ChamberStructure::CreateTargetPipes()
   G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
   logicalCP->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,geo->GetCPZPosZ()),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
+
+}
+
+void ChamberStructure::CreateJunctionPipe()
+{
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  // Junction pipe
+
+  G4double junRIn  = geo->GetJunRIn();
+  G4double junROut = geo->GetJunROut();
+  G4double junLen  = geo->GetJunLength();
+  G4double junPosZ = geo->GetJunPosZ();
+
+  G4Tubs* solidJun = new G4Tubs("JunPipe",junRIn,junROut,0.5*junLen,0.*deg,360.*deg);
+  G4LogicalVolume* logicalJun = new G4LogicalVolume(solidJun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunPipe",0,0,0);
+  logicalJun->SetVisAttributes(steelVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,junPosZ),logicalJun,"JunctionPipe",fMotherVolume,false,0,true);
+
+  printf("Junction pipe RIn %.1fmm Rout %.1fmm Zlen %.3fmm Zpos %.3fmm\n",junRIn/mm,junROut/mm,junLen/mm,junPosZ/mm);
 
 }
 

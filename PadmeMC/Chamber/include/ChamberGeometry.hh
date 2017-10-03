@@ -74,6 +74,14 @@ public:
   G4double GetCPXLength() { return fCPXLength; }
   G4double GetCPXPosZ() { return fCPXPosZ; }
 
+  // Properties of junction pipe between cross and chamber
+
+  G4double GetJunRIn() { return fJunRIn; }
+  G4double GetJunROut() { return fJunRIn+fJunThick; }
+  G4double GetJunThick() { return fJunThick; }
+  G4double GetJunLength() { return fJunLength; }
+  G4double GetJunPosZ() { return fJunPosZ; }
+
   // Properties of porthole caps
 
   G4int GetPHCapNumber() { return CHAMBERGEOMETRY_N_PORTHOLES; }
@@ -83,6 +91,7 @@ public:
   G4ThreeVector GetPHCapPos(G4int c) { return fPHCapPos[c]; }
 
   // Properties of large TPix porthole
+
   G4double GetTPPHCapThick() { return fTPPHCapThick; }
   G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
   G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
@@ -138,13 +147,24 @@ private:
   G4double fCPXLength;
   G4double fCPXPosZ;
 
+  // Junction pipe
+
+  G4double fJunRIn;
+  G4double fJunThick;
+  G4double fJunFrontFacePosZ;
+  G4double fJunBackFacePosZ;
+  G4double fJunLength;
+  G4double fJunPosZ;
+
   // Porthole caps
+
   G4double fPHCapRadius[CHAMBERGEOMETRY_N_PORTHOLES];
   G4double fPHCapThick[CHAMBERGEOMETRY_N_PORTHOLES];
   G4double fPHCapFlangeThick[CHAMBERGEOMETRY_N_PORTHOLES];
   G4ThreeVector fPHCapPos[CHAMBERGEOMETRY_N_PORTHOLES];
 
   // TPix porthole cap
+
   G4double fTPPHCapThick; // Thickness of rectangular porthole cap
   G4double fTPPHCapWidth; // Width of rectangular porthole cap
   G4double fTPPHCapHeight; // Height of rectangular porthole cap

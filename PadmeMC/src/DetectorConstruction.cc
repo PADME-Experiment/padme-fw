@@ -14,6 +14,7 @@
 #include "TDumpDetector.hh"
 #include "TPixDetector.hh"
 #include "LAVDetector.hh"
+#include "TungstenDetector.hh"
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
@@ -73,31 +74,32 @@ DetectorConstruction::DetectorConstruction()
 
   fDetectorMessenger = new DetectorMessenger(this);
 
-  fECalDetector    = new ECalDetector(0);
-  fTargetDetector  = new TargetDetector(0);
-  fSACDetector     = new SACDetector(0);
-  fLAVDetector     = new LAVDetector(0);
-  fPVetoDetector   = new PVetoDetector(0);
-  fEVetoDetector   = new EVetoDetector(0);
-  fHEPVetoDetector = new HEPVetoDetector(0);
-  fTDumpDetector   = new TDumpDetector(0);
-  fTPixDetector    = new TPixDetector(0);
-
+  fECalDetector     = new ECalDetector(0);
+  fTargetDetector   = new TargetDetector(0);
+  fSACDetector      = new SACDetector(0);
+  fLAVDetector      = new LAVDetector(0);
+  fPVetoDetector    = new PVetoDetector(0);
+  fEVetoDetector    = new EVetoDetector(0);
+  fHEPVetoDetector  = new HEPVetoDetector(0);
+  fTDumpDetector    = new TDumpDetector(0);
+  fTPixDetector     = new TPixDetector(0);
+  fTungstenDetector = new TungstenDetector(0); 
   fMagnetStructure  = new MagnetStructure(0);
   fChamberStructure = new ChamberStructure(0);
   fHallStructure    = new HallStructure(0);
 
   fMagneticFieldManager = new MagneticFieldSetup();
 
-  fEnableECal    = 1;
-  fEnableTarget  = 1;
-  fEnableSAC     = 1;
-  fEnableLAV     = 1;
-  fEnablePVeto   = 1;
-  fEnableEVeto   = 1;
-  fEnableHEPVeto = 1;
-  fEnableTDump   = 0;
-  fEnableTPix    = 1;
+  fEnableECal     = 1;
+  fEnableTarget   = 1;
+  fEnableSAC      = 1;
+  fEnableLAV      = 1;
+  fEnablePVeto    = 1;
+  fEnableEVeto    = 1;
+  fEnableHEPVeto  = 1;
+  fEnableTDump    = 0;
+  fEnableTPix     = 1;
+  fEnableTungsten = 0;
 
   fEnableWall    = 0;
   fEnableMagnet  = 1;
@@ -132,6 +134,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fHEPVetoDetector;
   delete fTDumpDetector;
   delete fTPixDetector;
+  delete fTungstenDetector;
   delete fMagnetStructure;
   delete fChamberStructure;
   delete fHallStructure;
@@ -262,6 +265,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }
 
+  // Tungsten target dump
+  if (fEnableTungsten) {
+    fTungstenDetector->SetMotherVolume(logicMagneticVolumeCP);
+    fTungstenDetector->SetTungstenDisplacePosZ(cpzPos.z()); // Take into account magnetic volume displacement
+    fTungstenDetector->CreateGeometry();
+  }
+
   // Concrete wall at large Z
   if (fEnableWall) {
     fHallStructure->SetMotherVolume(logicWorld);
@@ -366,6 +376,7 @@ void DetectorConstruction::DefineMaterials()
 
   // Define materials already in the NIST database
   man->FindOrBuildMaterial("G4_C");                       // Carbon (Chamber)
+  man->FindOrBuildMaterial("G4_W");                       // Tungsten (Chamber)
   man->FindOrBuildMaterial("G4_Al");                      // Aluminum (Chamber, Veto)
   man->FindOrBuildMaterial("G4_Fe");                      // Iron (Magnet)
   man->FindOrBuildMaterial("G4_Cu");                      // Copper (Magnet)
@@ -407,9 +418,9 @@ void DetectorConstruction::DefineMaterials()
   // EJ510 reflective paint (ECal, SAC)
   G4Material* EJ510Paint = new G4Material("EJ510Paint",1.182*g/cm3,4);
   EJ510Paint->AddElement(G4Element::GetElement("Ti"),41.053*perCent);
-  EJ510Paint->AddElement(G4Element::GetElement("C"), 17.194*perCent);
-  EJ510Paint->AddElement(G4Element::GetElement("H"),  2.899*perCent);
-  EJ510Paint->AddElement(G4Element::GetElement("O"), 38.854*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("C"),17.194*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("H"),2.899*perCent);
+  EJ510Paint->AddElement(G4Element::GetElement("O"),38.854*perCent);
 
   /*
   //--------- Materials definition ---------
@@ -613,6 +624,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
   else if (det=="TDump")   { fEnableTDump   = 1; }
   else if (det=="TPix")    { fEnableTPix    = 1; }
+  else if (det=="Tungsten"){ fEnableTungsten= 1; }
   else { printf("WARNING: request to enable unknown subdetector %s\n",det.data()); }
 }
 
@@ -628,24 +640,25 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
   else if (det=="TDump")   { fEnableTDump   = 0; }
   else if (det=="TPix")    { fEnableTPix    = 0; }
+  else if (det=="Tungsten"){ fEnableTungsten= 0; }
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
 void DetectorConstruction::EnableStructure(G4String str)
 {
   printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall   = 1;  }
+  if      (str=="Wall")    { fEnableWall    = 1; }
   else if (str=="Chamber") { fEnableChamber = 1; }
-  else if (str=="Magnet")  { fEnableMagnet = 1;  }
+  else if (str=="Magnet")  { fEnableMagnet  = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
   printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall   = 0;  }
+  if      (str=="Wall")    { fEnableWall    = 0; }
   else if (str=="Chamber") { fEnableChamber = 0; }
-  else if (str=="Magnet")  { fEnableMagnet = 0;  }
+  else if (str=="Magnet")  { fEnableMagnet  = 0; }
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 

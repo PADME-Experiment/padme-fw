@@ -59,6 +59,15 @@ ChamberGeometry::ChamberGeometry()
   fCPXLength = 25.*cm;
   fCPXPosZ = -1.*m;
 
+  // Properties of junction pipe between cross and chamber
+
+  fJunRIn = 5.*cm;
+  fJunThick = 1.*cm;
+  fJunFrontFacePosZ = fCPZPosZ+0.5*fCPZLength;
+  fJunBackFacePosZ = -56.2*cm; // From vacuum chamber technical drawing
+  fJunLength = fJunBackFacePosZ-fJunFrontFacePosZ;
+  fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
+
   // Properties of porthole caps
 
   fPHCapRadius[0] = 112.5*mm;

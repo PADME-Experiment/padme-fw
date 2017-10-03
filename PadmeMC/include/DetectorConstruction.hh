@@ -27,6 +27,7 @@ class EVetoDetector;
 class HEPVetoDetector;
 class TDumpDetector;
 class TPixDetector;
+class TungstenDetector;
 class MagnetStructure;
 class ChamberStructure;
 class HallStructure;
@@ -90,15 +91,16 @@ private:
 
   G4GDMLParser fParser;
 
-  ECalDetector*    fECalDetector;
-  TargetDetector*  fTargetDetector;
-  SACDetector*     fSACDetector;
-  PVetoDetector*   fPVetoDetector;
-  EVetoDetector*   fEVetoDetector;
-  HEPVetoDetector* fHEPVetoDetector;
-  TDumpDetector*   fTDumpDetector;
-  TPixDetector*    fTPixDetector;
-  LAVDetector*     fLAVDetector;
+  ECalDetector*     fECalDetector;
+  TargetDetector*   fTargetDetector;
+  SACDetector*      fSACDetector;
+  PVetoDetector*    fPVetoDetector;
+  EVetoDetector*    fEVetoDetector;
+  HEPVetoDetector*  fHEPVetoDetector;
+  TDumpDetector*    fTDumpDetector;
+  TPixDetector*     fTPixDetector;
+  LAVDetector*      fLAVDetector;
+  TungstenDetector* fTungstenDetector;
 
   MagnetStructure*  fMagnetStructure;
   ChamberStructure* fChamberStructure;
@@ -115,6 +117,7 @@ private:
   G4int fEnableHEPVeto;
   G4int fEnableTDump;
   G4int fEnableTPix;
+  G4int fEnableTungsten;
 
   G4int fEnableWall;
   G4int fEnableChamber;

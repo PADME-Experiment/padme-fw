@@ -46,6 +46,7 @@
 #/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
 #/Detector/EnableSubDetector TPix
+#/Detector/EnableSubDetector Tungsten
 
 #/Detector/EnableStructure Wall
 #/Detector/EnableStructure Magnet
@@ -58,7 +59,8 @@
 #/Detector/DisableSubDetector EVeto
 #/Detector/DisableSubDetector HEPVeto
 #/Detector/DisableSubDetector TDump
-#/Detector/DisableSubDetector TPix 
+#/Detector/DisableSubDetector TPix
+#/Detector/DisableSubDetector Tungsten
 
 #/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet

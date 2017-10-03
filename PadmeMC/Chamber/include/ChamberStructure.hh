@@ -52,6 +52,7 @@ private:
   void CreateECalAlThinWindow();
   void CreateECalCarbonThinWindow();
   void CreateTargetPipes();
+  void CreateJunctionPipe();
   void CreatePortholeCaps();
   void CreateTPixPortholeCap();
 

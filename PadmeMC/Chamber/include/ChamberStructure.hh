@@ -50,6 +50,7 @@ private:
   G4UnionSolid* CreateVCFacetInternalSolid();
 
   void CreateECalAlThinWindow();
+  void CreateECalCarbonThinWindow();
   void CreateTargetPipes();
   void CreatePortholeCaps();
   void CreateTPixPortholeCap();

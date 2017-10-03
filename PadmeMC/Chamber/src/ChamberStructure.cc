@@ -51,7 +51,8 @@ void ChamberStructure::CreateGeometry()
   // Here we only define flanges, portholes and other components of the chamber
 
   // Create the thin window membrane in front of ECal with its flange
-  CreateECalAlThinWindow();
+  //CreateECalAlThinWindow();
+  CreateECalCarbonThinWindow();
 
   // Create crossed pipes in the target area
   CreateTargetPipes();
@@ -111,6 +112,55 @@ void ChamberStructure::CreateECalAlThinWindow()
   logicalEWindow->SetVisAttributes(alVisAttr);
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,ewz1),logicalEWindow,"ChamberAlWindow",fMotherVolume,false,0,true);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+0.5*ewFThick),logicalEWindow,"ChamberAlWindow",fMotherVolume,false,0,true);
+
+}
+
+void ChamberStructure::CreateECalCarbonThinWindow()
+{
+
+  ///////////////////////////////////////////////////////
+  // Thin Carbon window and Al flange in front of ECal //
+  ///////////////////////////////////////////////////////
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+
+  // Get properties of thin window
+  G4double ewR = geo->GetEWCarbonRadius(); // Radius of window
+  G4double ewT = geo->GetEWCarbonThick(); // Thickness of window
+  G4double ewC = geo->GetEWCarbonConvexity(); // Convexity at window center
+
+  // Get properties of flange
+  G4double ewFRIn = geo->GetEWAlFlangeRIn();
+  G4double ewFROut = geo->GetEWAlFlangeROut();
+  G4double ewFThick = geo->GetEWAlFlangeThick();
+
+  // Get Z coordinate of front face of flange
+  G4double efFFrontZ = geo->GetEWAlFrontFacePosZ();
+
+  G4VisAttributes alVisAttr = G4VisAttributes(G4Colour::Blue());
+  //if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::Invisible;
+
+  G4VisAttributes cVisAttr = G4VisAttributes(G4Colour::Yellow());
+  //if ( ! fChamberIsVisible ) cVisAttr = G4VisAttributes::Invisible;
+
+  // Compute thin window sphere's radius and z position of center
+  G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
+  //G4double ewz1 = efFBackZ+(ewr1-ewC);
+  G4double ewth1 = asin(ewR/ewr1);
+
+  // Create flange around thin window
+  G4Tubs* solidEWFlange = new G4Tubs("EWFlange",ewFRIn,ewFROut,0.5*ewFThick,0.*deg,360.*deg);
+  G4LogicalVolume* logicalEWFlange = new G4LogicalVolume(solidEWFlange,G4Material::GetMaterial("G4_Al"), "ChamberECalWindowFlange",0,0,0);
+  logicalEWFlange->SetVisAttributes(alVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+0.5*ewFThick),logicalEWFlange,"ChamberECalWindowFlange",fMotherVolume,false,0,true);
+
+  // Create the thin window spherical cap and subtract flange to smooth its edge
+  G4Sphere* solidEWSphere = new G4Sphere("EWSphere",ewr1,ewr1+ewT,0.*deg,360.*deg,180.*deg-ewth1,ewth1);
+  G4ThreeVector spherePos = G4ThreeVector(0.,0.,0.5*ewFThick+ewr1-ewC);
+  G4SubtractionSolid* solidEWindow = new G4SubtractionSolid("ChamberECalWindow",solidEWSphere,solidEWFlange,0,G4ThreeVector(0.,0.,-0.5*ewFThick-ewr1+ewC));
+  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_C"), "ChamberECalWindow",0,0,0);
+  logicalEWindow->SetVisAttributes(cVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);
 
 }
 

@@ -34,10 +34,14 @@ ChamberGeometry::ChamberGeometry()
   fVCInnerSizeY = 205.0*mm; // Internal size along Y of the rectangular section inside the magnet
   fVCInnerFacePosZ = -490.0*mm; // Position along Z of the internal face of the rectangular section inside the magnet
 
-  // Parameters for the aluminum thin window
+  // Parameters for the aluminum|carbon thin window
 
   fEWAlThick  = 4.*mm; // Thickness of aluminum window
-  fEWAlConvexity = 29.*mm; // Convexity of window at its center
+  fEWAlConvexity = 29.*mm; // Convexity of aluminum window at its center
+
+  fEWCarbonThick  = 2.*mm; // Thickness of carbon window
+  fEWCarbonConvexity = 29.*mm; // Convexity of carbon window at its center
+
   fEWAlFlangeRIn = 326.*mm; // Inner radius of flange (also radius of window)
   fEWAlFlangeROut = 375.*mm; // Outer radius of flange
   fEWAlFlangeThick = 23.*mm; // Thickness of flange

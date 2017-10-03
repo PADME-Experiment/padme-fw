@@ -365,6 +365,7 @@ void DetectorConstruction::DefineMaterials()
   man->SetVerbose(1);
 
   // Define materials already in the NIST database
+  man->FindOrBuildMaterial("G4_C");                       // Carbon (Chamber)
   man->FindOrBuildMaterial("G4_Al");                      // Aluminum (Chamber, Veto)
   man->FindOrBuildMaterial("G4_Fe");                      // Iron (Magnet)
   man->FindOrBuildMaterial("G4_Cu");                      // Copper (Magnet)

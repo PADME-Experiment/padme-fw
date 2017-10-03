@@ -45,11 +45,16 @@ public:
   G4double GetVCInnerSizeY() { return fVCInnerSizeY; }
   G4double GetVCInnerFacePosZ() { return fVCInnerFacePosZ; }
 
-  // Properties of aluminum thin window and its flange
+  // Properties of aluminum|carbon thin window and its flange
 
   G4double GetEWAlThick() { return fEWAlThick; }
   G4double GetEWAlConvexity() { return fEWAlConvexity; }
   G4double GetEWAlRadius() { return fEWAlFlangeRIn; }
+
+  G4double GetEWCarbonThick() { return fEWCarbonThick; }
+  G4double GetEWCarbonConvexity() { return fEWCarbonConvexity; }
+  G4double GetEWCarbonRadius() { return fEWAlFlangeRIn; }
+
   G4double GetEWAlFlangeRIn() { return fEWAlFlangeRIn; }
   G4double GetEWAlFlangeROut() { return fEWAlFlangeROut; }
   G4double GetEWAlFlangeThick() { return fEWAlFlangeThick; }
@@ -108,10 +113,14 @@ private:
   G4double fVCInnerSizeY; // Internal size along Y of the rectangular section inside the magnet
   G4double fVCInnerFacePosZ; // Position along Z of the internal face of the rectangular section inside the magnet
 
-  // Aluminum thin window and aluminum flange
+  // Aluminum|Carbon thin window and aluminum flange
 
   G4double fEWAlThick;
   G4double fEWAlConvexity;
+
+  G4double fEWCarbonThick;
+  G4double fEWCarbonConvexity;
+
   G4double fEWAlFlangeRIn;
   G4double fEWAlFlangeROut;
   G4double fEWAlFlangeThick;

@@ -69,7 +69,7 @@
 
 #/Detector/EnableMagneticField
 #/Detector/DisableMagneticField
-#/Detector/SetMagneticFieldValue -0.55 tesla
+#/Detector/SetMagneticFieldValue 0.55 tesla
 
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
@@ -298,5 +298,10 @@
 #/vis/viewer/panTo -0.5 0.
 #/vis/viewer/set/viewpointThetaPhi 0. 0.
 #/vis/viewer/zoom 50
+
+# Only show tracks with p>1MeV
+/vis/filtering/trajectories/create/attributeFilter
+/vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
+/vis/filtering/trajectories/attributeFilter-0/addInterval 1. MeV 1000. MeV
 
 #/run/beamOn 1	

@@ -67,12 +67,18 @@ public:
   G4double GetCPZThick() { return fCPZThick; }
   G4double GetCPZLength() { return fCPZLength; }
   G4double GetCPZPosZ() { return fCPZPosZ; }
+  G4double GetCPZFlangeRIn() { return GetCPZROut(); }
+  G4double GetCPZFlangeROut() { return fCPZFlangeR; }
+  G4double GetCPZFlangeThick() { return fCPZFlangeThick; }
 
   G4double GetCPXRIn() { return fCPXRIn; }
   G4double GetCPXROut() { return fCPXRIn+fCPXThick; }
   G4double GetCPXThick() { return fCPXThick; }
   G4double GetCPXLength() { return fCPXLength; }
   G4double GetCPXPosZ() { return fCPXPosZ; }
+  G4double GetCPXFlangeRIn() { return GetCPXROut(); }
+  G4double GetCPXFlangeROut() { return fCPXFlangeR; }
+  G4double GetCPXFlangeThick() { return fCPXFlangeThick; }
 
   // Properties of junction pipe between cross and chamber
 
@@ -81,6 +87,9 @@ public:
   G4double GetJunThick() { return fJunThick; }
   G4double GetJunLength() { return fJunLength; }
   G4double GetJunPosZ() { return fJunPosZ; }
+  G4double GetJunFlangeRIn() { return GetJunROut(); }
+  G4double GetJunFlangeROut() { return fJunFlangeR; }
+  G4double GetJunFlangeThick() { return fJunFlangeThick; }
 
   // Properties of porthole caps
 
@@ -141,11 +150,15 @@ private:
   G4double fCPZThick;
   G4double fCPZLength;
   G4double fCPZPosZ;
+  G4double fCPZFlangeR;
+  G4double fCPZFlangeThick;
 
   G4double fCPXRIn;
   G4double fCPXThick;
   G4double fCPXLength;
   G4double fCPXPosZ;
+  G4double fCPXFlangeR;
+  G4double fCPXFlangeThick;
 
   // Junction pipe
 
@@ -155,6 +168,8 @@ private:
   G4double fJunBackFacePosZ;
   G4double fJunLength;
   G4double fJunPosZ;
+  G4double fJunFlangeR;
+  G4double fJunFlangeThick;
 
   // Porthole caps
 

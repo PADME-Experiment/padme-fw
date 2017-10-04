@@ -144,6 +144,7 @@
 
 #/beam/n_e+_per_bunch 1
 #/beam/n_e+_poisson_on false
+#/beam/momentum 280. MeV
 #/beam/bunch_structure_on false
 #/beam/position_spread_on false
 #/beam/momentum_spread_on false
@@ -152,7 +153,6 @@
 #/Detector/DisableSubDetector Target
 ### Test for high energy/high field setup
 #/Detector/Magnet/MagneticFieldConstantValue -0.8
-#/beam/momentum 1. GeV
 
 # Beam setup
 

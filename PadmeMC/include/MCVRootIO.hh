@@ -44,6 +44,12 @@ public:
   G4bool   GetEnabled()             { return fEnabled;  };
   void     SetEnabled(G4bool value) { fEnabled = value; };
 
+  G4bool   GetHitsEnabled()             { return fHitsEnabled;  };
+  void     SetHitsEnabled(G4bool value) { fHitsEnabled = value; };
+
+  G4bool   GetDigisEnabled()             { return fDigisEnabled;  };
+  void     SetDigisEnabled(G4bool value) { fDigisEnabled = value; };
+
 protected:
 
   Int_t fBufSize;
@@ -53,7 +59,10 @@ protected:
   G4int fVerbose;
 
   G4String fName;
-  G4bool   fEnabled;
+
+  G4bool fEnabled;
+  G4bool fHitsEnabled;
+  G4bool fDigisEnabled;
 
 };
 

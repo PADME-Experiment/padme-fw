@@ -9,10 +9,11 @@
 #define ECalDetector_H 1
 
 #include "globals.hh"
-#include "G4LogicalVolume.hh"
 
 #include "ECalGeometry.hh"
-#include "ECalMessenger.hh"
+
+class G4LogicalVolume;
+class ECalMessenger;
 
 class ECalDetector
 {
@@ -39,6 +40,7 @@ private:
   G4LogicalVolume* fCrystalVolume;
   G4LogicalVolume* fCellVolume;
   G4LogicalVolume* fECalPanelVolume;
+
   ECalMessenger* fECalMessenger;
 
 };

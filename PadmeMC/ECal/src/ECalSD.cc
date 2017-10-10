@@ -75,6 +75,8 @@ G4bool ECalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   fECalCollection->insert(newHit);
 
+  //newHit->Print();
+
   return true;
 
 }

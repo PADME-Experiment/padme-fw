@@ -51,6 +51,16 @@ public:
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
   void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
 
+  // Handle (de-)activation of fast digitization
+  void EnableFastDigitization() { fTargetFastDigitization = true; }
+  void DisableFastDigitization() { fTargetFastDigitization = false; }
+  G4bool FastDigitizationIsEnabled() { return fTargetFastDigitization; }
+
+  // Handle saving of digitized waveforms to persistent digis
+  void EnableSaveWaveformToDigi() { fTargetSaveWaveformToDigi = true; }
+  void DisableSaveWaveformToDigi() { fTargetSaveWaveformToDigi = false; }
+  G4bool SaveWaveformToDigiIsEnabled() { return fTargetSaveWaveformToDigi; }
+
   // Get name of Target sensitive detector
   G4String GetTargetSensitiveDetectorName() { return fTargetSensitiveDetectorName; }
 
@@ -61,6 +71,10 @@ private:
   G4double fTargetSizeZ;
 
   G4double fTargetFrontFacePosZ; // Position along Z axis of Target front face
+
+  G4bool fTargetFastDigitization; // Enable/disable use of fast digitization
+
+  G4bool fTargetSaveWaveformToDigi; // Enable/disable saving of digitized waveforms to persistent digis
 
   G4String fTargetSensitiveDetectorName;
 

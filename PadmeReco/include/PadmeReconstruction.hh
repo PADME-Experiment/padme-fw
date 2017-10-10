@@ -7,12 +7,15 @@
 #include "TObjArray.h"
 
 class TMCEvent;
+
 class TTargetMCEvent;
 class TEVetoMCEvent;
 class TPVetoMCEvent;
 class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
+class TTPixMCEvent;
+
 class TDetectorInfo;
 
 #include "PadmeVReconstruction.hh"
@@ -46,13 +49,16 @@ private:
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
+
   TMCEvent* fMCEvent;
-  TTargetMCEvent* fTargetMCEvent;
-  TEVetoMCEvent* fEVetoMCEvent;
-  TPVetoMCEvent* fPVetoMCEvent;
+
+  TTargetMCEvent*  fTargetMCEvent;
+  TEVetoMCEvent*   fEVetoMCEvent;
+  TPVetoMCEvent*   fPVetoMCEvent;
   THEPVetoMCEvent* fHEPVetoMCEvent;
-  TECalMCEvent* fECalMCEvent;
-  TSACMCEvent* fSACMCEvent;
+  TECalMCEvent*    fECalMCEvent;
+  TSACMCEvent*     fSACMCEvent;
+  TTPixMCEvent*    fTPixMCEvent;
 
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;

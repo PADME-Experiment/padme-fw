@@ -20,8 +20,8 @@ TMCVHit::TMCVHit()
 }
 
 void TMCVHit::Print(Option_t *) const {
-  std::cout << "ChannelId = " << fChannelId << std::endl;
-  std::cout << "HitPosition = (" << fPosition.X() << "," << fPosition.Y() << "," << fPosition.Z() << ")" << std::endl;
-  std::cout << "Energy = " << fEnergy << std::endl;
-  std::cout << "Time = " << fTime << std::endl << std::endl;
+  std::cout << "Hit - ChannelId = " << fChannelId
+	    << " HitPosition = (" << fPosition.X() << "," << fPosition.Y() << "," << fPosition.Z() << ")"
+	    << " Energy = " << fEnergy
+	    << " Time = " << fTime << std::endl;
 }

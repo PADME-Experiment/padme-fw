@@ -355,7 +355,7 @@ int main(int argc, char* argv[])
 	} else {
 	  printf("Run %d Events %d. WARNING - DB returns %d events: updating DB.\n",runnr,eventnr,n_events);
 	}
-	int rc = db->UpdateRunEvents(n_events,runnr);
+	int rc = db->UpdateRunEvents(eventnr,runnr);
 	if (rc != DBSERVICE_OK) {
 	  printf("ERROR updating DB for run %d. Aborting\n",runnr);
 	  exit(1);

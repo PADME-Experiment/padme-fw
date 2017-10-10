@@ -59,7 +59,7 @@ G4bool HEPVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
 
-  newHit->SetTrackEnergy(aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy());
   newHit->SetTrackId(aStep->GetTrack()->GetTrackID());
 
   fHEPVetoCollection ->insert( newHit );

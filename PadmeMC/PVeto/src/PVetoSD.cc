@@ -60,7 +60,7 @@ G4bool PVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
 
-  newHit -> SetTrackEnergy( aStep->GetTrack()->GetTotalEnergy());
+  newHit -> SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy());
   newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
   fPVetoCollection->insert(newHit);

@@ -29,8 +29,7 @@ void SACSD::Initialize(G4HCofThisEvent* HCE)
 {
   fSACCollection = new SACHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
-  if(HCID<0)
-  { HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]); }
+  if(HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
   HCE->AddHitsCollection(HCID,fSACCollection); 
 }
 
@@ -39,17 +38,33 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep == 0.) return false;
-
+  G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
+  G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
   SACHit* newHit = new SACHit();
+  
+  newHit->SetEdep(preStepPoint->GetTotalEnergy());
+  //newHit->SetEdep(aStep->GetTrack()->GetTotalEnergy());
+  newHit->SetTrackID(aStep->GetTrack()->GetTrackID());
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber());
+  //newHit->SetChannelId(touchHPre->GetCopyNumber());
+  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
   newHit->SetEnergy(edep);
+
+  // G4cout << " SACSD:  Pre energy of the track: " << preStepPoint->GetTotalEnergy() 
+  // 	 << " Post energy of the track: " << postStepPoint->GetTotalEnergy() 
+  // 	 << " Total energy  " << aStep->GetTrack()->GetTotalEnergy() 
+  // 	 << "   Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
+  // 	 << G4endl;
+
   newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+
+  
+
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
@@ -63,9 +78,7 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
-
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-
   fSACCollection->insert(newHit);
 
   return true;

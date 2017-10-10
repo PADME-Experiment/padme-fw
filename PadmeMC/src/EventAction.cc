@@ -19,21 +19,45 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
 
+#include "G4DigiManager.hh"
+#include "TargetDigitizer.hh"
+#include "PVetoDigitizer.hh"
+#include "EVetoDigitizer.hh"
+#include "HEPVetoDigitizer.hh"
+#include "ECalDigitizer.hh"
+#include "SACDigitizer.hh"
+#include "TPixDigitizer.hh"
+
 extern double NNeutrons;
 extern double Npionc;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
-//EventAction::EventAction(RunAction* run, HistoManager* histo)
-//:fRunAct(run),fHistoManager(histo)
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
-
 {
+
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
+
+  // Create and register digitizer modules for all detectors
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
+  theDM->AddNewModule(targetDM);
+  PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
+  theDM->AddNewModule(pVetoDM);
+  EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
+  theDM->AddNewModule(eVetoDM);
+  HEPVetoDigitizer* hepVetoDM = new HEPVetoDigitizer("HEPVetoDigitizer");
+  theDM->AddNewModule(hepVetoDM);
+  ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
+  theDM->AddNewModule(eCalDM);
+  SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
+  theDM->AddNewModule(sacDM);
+  TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
+  theDM->AddNewModule(tPixDM);
 
 }
 
@@ -92,6 +116,22 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Periodic printing
   if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
 
+  // Digitize this event
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  TargetDigitizer* targetDM = (TargetDigitizer*)theDM->FindDigitizerModule("TargetDigitizer");
+  targetDM->Digitize();
+  PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
+  pVetoDM->Digitize();
+  EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");
+  eVetoDM->Digitize();
+  HEPVetoDigitizer* hepVetoDM = (HEPVetoDigitizer*)theDM->FindDigitizerModule("HEPVetoDigitizer");
+  hepVetoDM->Digitize();
+  ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
+  eCalDM->Digitize();
+  SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
+  sacDM->Digitize();
+  TPixDigitizer* tPixDM = (TPixDigitizer*)theDM->FindDigitizerModule("TPixDigitizer");
+  tPixDM->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -124,8 +164,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   //  G4cout<<"N collections "<<nHC<<G4endl;
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
-    //    G4cout << "RootIO: Found hits collection " << HCname << G4endl;
-    //   if (HCname == "ECryCollection") {
     if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
       FindClusters();
@@ -139,6 +177,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "LAVCollection") {
+      AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   int Ncells=0;
@@ -149,6 +189,16 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   G4double BeamY  = myStepping->GetPositronY();
   G4double BeamZ  = myStepping->GetPositronZ();
   G4double PrimE  = myStepping->GetPrimE();
+  
+  
+  G4ThreeVector PositronMomentum = myStepping->GetPositronMomentum();
+  // G4cout << " Getting the momentum to store:   " << PositronMomentum << G4endl;
+
+  fHistoManager->myEvt.PMomX = PositronMomentum.x();
+  fHistoManager->myEvt.PMomY = PositronMomentum.y();
+  fHistoManager->myEvt.PMomZ = PositronMomentum.z();
+
+
 
   ProcID = myStepping->GetPhysProc();   
   fHistoManager->FillHisto(1,ETotCal);
@@ -200,15 +250,26 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTSACCh[i]    = SACCh[i];
   }
 
-  for(int i=0;i<CalNPart;i++){	  
+  for(int i=0;i<CalNPart;i++){
     if(i>19) break;
     //    G4cout<<"NLAV Tr "<<LAVTracks<<" "<< LAVEtrack[i]<<" "<<LAVTrackTime[i]<<G4endl;
-    fHistoManager->myEvt.NTCalPartE[i]     = CalE[i];
-    fHistoManager->myEvt.NTCalPartT[i]     = CalTime[i];
-    fHistoManager->myEvt.NTCalPartPType[i] = CalPType[i];
-    fHistoManager->myEvt.NTCalPartX[i]     = CalX[i];
-    fHistoManager->myEvt.NTCalPartY[i]     = CalY[i];
+    fHistoManager->myEvt.NTCalPartE[i]     =  CalE[i];
+    fHistoManager->myEvt.NTCalPartT[i]     =  CalTime[i];
+    fHistoManager->myEvt.NTCalPartPType[i] =  CalPType[i];
+    fHistoManager->myEvt.NTCalPartX[i]     =  CalX[i];
+    fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
   }
+  
+  for(int i=0;i<  LAVTracks;i++){
+    if(i>100) break;
+
+    fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
+    fHistoManager->myEvt.NTLAVT    [i] = LAVTrackTime[i];
+    fHistoManager->myEvt.NTLAVPType[i] = LAVPType[i];
+    fHistoManager->myEvt.NTLAVX    [i] =LAVX[i]; 
+    fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
+  }
+  
 
   for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
@@ -283,6 +344,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTNClusCells[i]= NCellsCl[i];
   }
 
+  //  if(SACTracks>0) for(int ll=0;ll<SACTracks;ll++) fHistoManager->FillHisto(18,SACEtrack[ll]);
 
 //  for(int i=0;i< ECalNCells;i++){
 //    fHistoManager->myEvt.NTECell[i]=ETotCry[i];
@@ -293,8 +355,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  if(IsTrackerRecoON==1){
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
-//    if(ETotCal>EMinSaveNT) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //  }
 }
@@ -585,7 +647,7 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
       int newhit = 1;
 
       for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
-	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 5.) {
+	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 0.1) {
 	  newhit=0;
 	  PVetoTimeCl[iBar][iCluster] = 
 	    (hit->GetTime()*hit->GetHitE() + PVetoECl[iBar][iCluster]*PVetoTimeCl[iBar][iCluster])/
@@ -606,8 +668,9 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
 	(ETotPVeto[hit->GetPVetoNb()]+hit->GetHitE());
 
       ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
-
       ETotPVetoEvt += hit->GetHitE();
+
+      //old style variable deprected.
       puppo= hit->GetEdep();
       if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && NPVetoTracks < MaxTracks && hit->GetTrackEnergy() > 0.1*MeV) {
 	PVetoTrackCh[NPVetoTracks]    = hit->GetPVetoNb();   //bugs gives crazy numbers
@@ -617,8 +680,6 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
 	PVetoY[NPVetoTracks]          = hit->GetY();
 	NPVetoTracks++;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
-	
-
       }
       if(NPVetoTracks>MaxTracks) break; 
       LastID = hit->GetTrackID();
@@ -715,7 +776,7 @@ void EventAction::AddSACHits(SACHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     SACHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>2.*MeV && SACTracks < MaxTracks) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>0.1*MeV && SACTracks < MaxTracks) {
 	//	ETotSAC[hit->GetSACNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
 	//    	  SACTrackCh[SACTracks] = hit->GetSACNb();
 	SACEtrack[SACTracks]    = hit->GetEdep();
@@ -775,10 +836,10 @@ void EventAction::AddLAVHits(LAVHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     LAVHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>0.1*MeV && LAVTracks < MaxTracks) {
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && LAVTracks < MaxTracks) {
 	//	ETotLAV[hit->GetLAVNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
 	//    	  LAVTrackCh[LAVTracks] = hit->GetLAVNb();
-	LAVEtrack[LAVTracks]    = hit->GetEdep();
+	LAVEtrack[LAVTracks]    = hit->GetETrack();
 	LAVTrackTime[LAVTracks] = hit->GetTime();
 	LAVPType[LAVTracks]     = hit->GetPType();
 	LAVX[LAVTracks]         = hit->GetX();

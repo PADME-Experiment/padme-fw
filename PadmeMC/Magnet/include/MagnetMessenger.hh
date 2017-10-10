@@ -35,6 +35,9 @@ private:
 
   G4UIdirectory* fMagnetDetectorDir;
 
+  G4UIcmdWithoutParameter* fSetMagnetVisibleCmd;
+  G4UIcmdWithoutParameter* fSetMagnetInvisibleCmd;
+
   //G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
   //G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
 

@@ -34,6 +34,9 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
   // Magnetic volume is invisible by default
   //fMagneticVolumeIsVisible = 0;
 
+  // Magnet is visible by default
+  fMagnetIsVisible = true;
+
 }
 
 MagnetStructure::~MagnetStructure()
@@ -51,6 +54,12 @@ void MagnetStructure::CreateGeometry()
   G4VisAttributes coilVisAttr = G4VisAttributes(G4Colour::Red());
   G4VisAttributes slabVisAttr = G4VisAttributes(G4Colour::Green());
   G4VisAttributes neopreneVisAttr = G4VisAttributes(G4Colour::White());
+  if (!fMagnetIsVisible) {
+    yokeVisAttr = G4VisAttributes::Invisible;
+    coilVisAttr = G4VisAttributes::Invisible;
+    slabVisAttr = G4VisAttributes::Invisible;
+    neopreneVisAttr = G4VisAttributes::Invisible;
+  }
 
   // Small gap between magnet yoke's sections
   G4double magGap = geo->GetMagnetGap();

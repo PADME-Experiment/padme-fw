@@ -252,7 +252,16 @@
 #
 # Draw coordinate axes:
 /vis/scene/add/axes 0 0 0 1 m
-#
+
+# Decorations
+/vis/set/textColour green
+/vis/set/textLayout right
+/vis/scene/add/text2D 0.9 -.9 24 ! ! PadmeMC
+/vis/set/textLayout    # Revert to normal (left adjusted) layout
+/vis/set/textColour    # Revert to default text colour (blue)
+/vis/scene/add/eventID # Drawn at end of event
+/vis/scene/add/date    # Date stamp
+
 # Draw smooth trajectories at end of event, showing trajectory points
 # as markers 2 pixels wide:
 /vis/scene/add/trajectories smooth

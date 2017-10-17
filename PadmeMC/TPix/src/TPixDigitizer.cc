@@ -58,7 +58,7 @@ void TPixDigitizer::Digitize()
 
       // Loop over used channels
       G4int found = 0;
-      for (G4int i=0; i < dChannel.size(); i++) {
+      for (G4int i=0; i < (G4int)dChannel.size(); i++) {
 	if (dChannel[i] == hChannel) {
 	  dEnergy[i] += hEnergy;
 	  if (hTime < dTime[i]) dTime[i] = hTime;
@@ -75,7 +75,7 @@ void TPixDigitizer::Digitize()
     }
 
     // Create digis for active channels
-    for (G4int i=0; i < dChannel.size(); i++) {
+    for (G4int i=0; i < (G4int)dChannel.size(); i++) {
       TPixDigi* digi = new TPixDigi();
       digi->SetChannelId(dChannel[i]);
       digi->SetTime(dTime[i]);

@@ -46,7 +46,7 @@ ECalDigitizer::ECalDigitizer(G4String name)
   G4cout << "Contribution of 1 p.e. to integral ADC signal: " << fPEtoSConversion << G4endl;
   G4cout << "Collection probability along Z: " << fCollMapNBins << " bins of "
 	 << G4BestUnit(fCollMapBinLen,"Length") << " - Map:";
-  for(G4int i=0;i<fCollectionMap.size();i++) G4cout << " " << fCollectionMap[i];
+  for(G4int i=0;i<(G4int)fCollectionMap.size();i++) G4cout << " " << fCollectionMap[i];
   G4cout << G4endl;
   G4cout << "PMT transit time: " << G4BestUnit(fPMTTransitTime,"Time") << G4endl;
   G4cout << "PMT cable delay: " << G4BestUnit(fPMTCableDelay,"Time") << G4endl;
@@ -97,7 +97,7 @@ void ECalDigitizer::Digitize()
 
       // Add hit contribution to corresponding digi (create digi if needed)
       G4int found = 0;
-      for (G4int i=0; i < fDChannel.size(); i++) {
+      for (G4int i=0; i < (G4int)fDChannel.size(); i++) {
 	if (fDChannel[i] == hChannel) {
 	  fDEnergy[i] += hEnergy;
 	  fDSignal[i] += hSignal;
@@ -117,7 +117,7 @@ void ECalDigitizer::Digitize()
 
     // Create digis for active channels
     // Active means at least 1 hit and total signal>0
-    for (G4int i=0; i < fDChannel.size(); i++) {
+    for (G4int i=0; i < (G4int)fDChannel.size(); i++) {
       if (fDSignal[i]>0.) {
 	ECalDigi* digi = new ECalDigi();
 	digi->SetChannelId(fDChannel[i]);

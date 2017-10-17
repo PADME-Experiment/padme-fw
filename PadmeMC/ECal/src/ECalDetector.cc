@@ -49,7 +49,7 @@ void ECalDetector::CreateGeometry()
   G4Box* solidEcal = new G4Box("ECal",0.5*ecalSizeX,0.5*ecalSizeY,0.5*ecalSizeZ);
   fECalVolume = new G4LogicalVolume(solidEcal,G4Material::GetMaterial("Vacuum"),"ECal",0,0,0);
   fECalVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,ecalPos,fECalVolume,"ECal",fMotherVolume,false,0,false);
+  new G4PVPlacement(0,ecalPos,fECalVolume,"ECal",fMotherVolume,false,0,true);
 
   // Show size of gap between crystals
   printf("Gap between crystals is %f\n",geo->GetCrystalGap());

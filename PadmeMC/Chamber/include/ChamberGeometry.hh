@@ -8,22 +8,11 @@
 #ifndef ChamberGeometry_H
 #define ChamberGeometry_H 1
 
-#define CHAMBERGEOMETRY_VCINMAGWALL_NVERTICES 14
-#define CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES 6
-#define CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES 6
-
-#define CHAMBERGEOMETRY_VC_NSECTIONS 12
-#define CHAMBERGEOMETRY_VC_REFSECTION 1
-
-#define CHAMBERGEOMETRY_VC_NFACETS 41
-
 #include "globals.hh"
-#include "G4TwoVector.hh"
 #include "G4ThreeVector.hh"
 #include "G4SystemOfUnits.hh"
 
-class G4UnionSolid;
-class G4VSolid;
+#define CHAMBERGEOMETRY_N_PORTHOLES 8
 
 class ChamberGeometry
 {
@@ -43,173 +32,117 @@ protected:
 
 public:
 
-  // These are the maximum X/Z coordinates reached by the whole VC structure
-  // Needed to define the main magnetic volume
-  G4double GetVCMostExternalX() { return fVCMostExternalX; }
-  G4double GetVCMostAdvancedZ() { return fEWBackFacePosZ+fEWF1Thick; }
-
-  G4double GetVCInMagThick() { return fVCInMagThick; }
-
-  G4double GetVCInMagWallSizeY() { return fVCInMagWallSizeY; }
-  G4int GetVCInMagWallNVertices() { return CHAMBERGEOMETRY_VCINMAGWALL_NVERTICES; }
-  G4TwoVector GetVCInMagWallVertex(G4int p) { return fVCInMagWallVertex[p]; }
-
-  G4double GetVCInMagWallHoleRadius() { return fVCInMagWallHoleRadius; }
-  G4double GetVCInMagWallHolePosZ() { return fVCInMagWallHolePosZ; }
-
-  G4int GetVCInMagPlateNVertices() { return CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES; }
-  G4TwoVector GetVCInMagPlateVertex(G4int p) { return fVCInMagPlateVertex[p]; }
-
-  G4double GetVCOutMagWallSizeY() { return fVCInMagWallSizeY; }
-  G4int GetVCOutMagWallNVertices() { return CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES; }
-  G4TwoVector GetVCOutMagWallVertex(G4int p) { return fVCOutMagWallVertex[p]; }
-
-  // Get internal size of chamber in the magnet region
-  // Needed to create the internal magnetic volume
-  G4double GetVCInnerX() { return fVCIntVtx[0][3].x(); }
-  G4double GetVCInnerY() { return fVCIntVtx[0][3].y(); }
-  G4double GetVCInnerZ() { return fVCIntVtx[0][3].z(); }
-
   // Info on the back face of the chamber
   // Needed to correctly position exit hole, HEPVeto and TimePix
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
-  G4double GetVCBackFaceAngle();
-  G4double GetVCBackFaceThickness();
-  G4ThreeVector GetVCBackFaceCorner();
+  G4double GetVCBackFaceAngle() { return fVCBackFaceAngle; }
+  G4double GetVCBackFaceThickness() { return fVCBackFaceThick; }
+  G4ThreeVector GetVCBackFaceCorner() { return G4ThreeVector(fVCBackFaceCornerX,0.,fVCBackFaceCornerZ); }
 
-  // Properties of the big vacuum chamber
+  // Info on section of the vacuum chamber inside magnet
+  // Used to define the magnetic volume
+  G4double GetVCInnerSizeX() { return fVCInnerSizeX; }
+  G4double GetVCInnerSizeY() { return fVCInnerSizeY; }
+  G4double GetVCInnerFacePosZ() { return fVCInnerFacePosZ; }
 
-  // Vertices of the chamber sections
-  G4int GetVCNSections() { return CHAMBERGEOMETRY_VC_NSECTIONS; }
-  //G4int GetVCNSections() { return 7; }
-  G4int GetVCRefSection() { return CHAMBERGEOMETRY_VC_REFSECTION; }
-  G4ThreeVector GetVCExtVtx(G4int s, G4int v) { return fVCExtVtx[s][v]; }
-  G4ThreeVector GetVCIntVtx(G4int s, G4int v) { return fVCIntVtx[s][v]; }
+  // Properties of aluminum|carbon thin window and its flange
 
-  // Facets of the chamber main structure
-  G4int GetVCNFacets() { return CHAMBERGEOMETRY_VC_NFACETS; }
-  G4int GetVCFacetVtx(G4int f, G4int v) { return fVCFacetVtx[f][v]; }
+  G4double GetEWAlThick() { return fEWAlThick; }
+  G4double GetEWAlConvexity() { return fEWAlConvexity; }
+  G4double GetEWAlRadius() { return fEWAlFlangeRIn; }
 
-  // Flange to connect ECal thin window
-  G4double GetVCCFPosZ() { return fVCBackFacePosZ-0.5*fVCCFThick; }
-  G4double GetVCCFThick() { return fVCCFThick; }
-  G4double GetVCCFRIn() { return fEWF3RIn; }
-  G4double GetVCCFROut() { return fEWF2ROut; }
+  G4double GetEWCarbonThick() { return fEWCarbonThick; }
+  G4double GetEWCarbonConvexity() { return fEWCarbonConvexity; }
+  G4double GetEWCarbonRadius() { return fEWAlFlangeRIn; }
 
-  // Big cylinder
-  G4double GetVCCPosZ() { return 0.5*(fVCCFrontFacePosZ+(fVCBackFacePosZ-fVCCFThick)); }
-  G4double GetVCCLength() { return (fVCBackFacePosZ-fVCCFThick)-fVCCFrontFacePosZ; }
-  G4double GetVCCThick() { return fVCCThick; }
-  G4double GetVCCRIn() { return fVCCRIn; }
-  G4double GetVCCROut() { return fVCCRIn+fVCCThick; }
-
-  // Beam entrance hole
-  G4double GetVCInHoleRadius() { return fVCInHoleRadius; }
-  G4double GetVCInHoleThick() { return fVCInHoleThick; }
-  G4double GetVCInHolePosZ() { return fVCInHolePosZ; }
-
-  // Beam exit hole
-  G4double GetVCOutHoleRadius() { return fVCOutHoleRadius; }
-  G4double GetVCOutHoleLength() { return fVCOutHoleLength; }
-  G4double GetVCOutHoleThick() { return fVCOutHoleThick; }
-  G4double GetVCOutHoleDistToEdge() { return fVCOutHoleDistToEdge; }
-
-  // Properties of thin window
-
-  G4double GetEWBackFacePosZ() { return fEWBackFacePosZ; }
-  G4double GetEWRadius() { return fEWRadius; }
-  G4double GetEWConvexity() { return fEWConvexity; }
-  G4double GetEWFrontMylarThick() { return fEWFrontMylarThick; }
-  G4double GetEWKevlarThick() { return fEWKevlarThick; }
-  G4double GetEWBackMylarThick() { return fEWBackMylarThick; }
-
-  // Properties of thin window flange
-
-  G4double GetEWF1PosZ() { return fEWBackFacePosZ+0.5*fEWF1Thick; }
-  G4double GetEWF1Thick() { return fEWF1Thick; }
-  G4double GetEWF1RIn() { return fEWRadius; }
-  G4double GetEWF1ROut() { return fEWF1ROut; }
-
-  G4double GetEWF2PosZ() { return fEWBackFacePosZ-fEWFrontMylarThick-fEWKevlarThick-fEWBackMylarThick-0.5*fEWF2Thick; }
-  G4double GetEWF2Thick() { return fEWF2Thick; }
-  G4double GetEWF2RIn() { return fEWRadius; }
-  G4double GetEWF2ROut() { return fEWF2ROut; }
-
-  G4double GetEWF3PosZ() { return fEWBackFacePosZ-fEWFrontMylarThick-fEWKevlarThick-fEWBackMylarThick-fEWF2Thick-0.5*fEWF3Thick; }
-  G4double GetEWF3Thick() { return fEWF3Thick; }
-  G4double GetEWF3RIn() { return fEWF3RIn; }
-  G4double GetEWF3ROut() { return fEWF2ROut; }
+  G4double GetEWAlFlangeRIn() { return fEWAlFlangeRIn; }
+  G4double GetEWAlFlangeROut() { return fEWAlFlangeROut; }
+  G4double GetEWAlFlangeThick() { return fEWAlFlangeThick; }
+  G4double GetEWAlFrontFacePosZ() { return fEWAlFrontFacePosZ; }
 
   // Properties of crossed pipes at target position
+
   G4double GetCPZRIn() { return fCPZRIn; }
   G4double GetCPZROut() { return fCPZRIn+fCPZThick; }
   G4double GetCPZThick() { return fCPZThick; }
   G4double GetCPZLength() { return fCPZLength; }
   G4double GetCPZPosZ() { return fCPZPosZ; }
+  G4double GetCPZFlangeRIn() { return GetCPZROut(); }
+  G4double GetCPZFlangeROut() { return fCPZFlangeR; }
+  G4double GetCPZFlangeThick() { return fCPZFlangeThick; }
 
   G4double GetCPXRIn() { return fCPXRIn; }
   G4double GetCPXROut() { return fCPXRIn+fCPXThick; }
   G4double GetCPXThick() { return fCPXThick; }
   G4double GetCPXLength() { return fCPXLength; }
   G4double GetCPXPosZ() { return fCPXPosZ; }
+  G4double GetCPXFlangeRIn() { return GetCPXROut(); }
+  G4double GetCPXFlangeROut() { return fCPXFlangeR; }
+  G4double GetCPXFlangeThick() { return fCPXFlangeThick; }
+
+  // Properties of junction pipe between cross and chamber
+
+  G4double GetJunRIn() { return fJunRIn; }
+  G4double GetJunROut() { return fJunRIn+fJunThick; }
+  G4double GetJunThick() { return fJunThick; }
+  G4double GetJunLength() { return fJunLength; }
+  G4double GetJunPosZ() { return fJunPosZ; }
+  G4double GetJunFlangeRIn() { return GetJunROut(); }
+  G4double GetJunFlangeROut() { return fJunFlangeR; }
+  G4double GetJunFlangeThick() { return fJunFlangeThick; }
+
+  // Properties of porthole caps
+
+  G4int GetPHCapNumber() { return CHAMBERGEOMETRY_N_PORTHOLES; }
+  G4double GetPHCapRadius(G4int c) { return fPHCapRadius[c]; }
+  G4double GetPHCapThick(G4int c) { return fPHCapThick[c]; }
+  G4double GetPHCapFlangeThick(G4int c) { return fPHCapFlangeThick[c]; }
+  G4ThreeVector GetPHCapPos(G4int c) { return fPHCapPos[c]; }
+
+  // Properties of large TPix porthole
+
+  G4double GetTPPHCapThick() { return fTPPHCapThick; }
+  G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
+  G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
+
+  G4double GetTPPHHoleRadius() { return fTPPHHoleRadius; }
+  G4double GetTPPHHoleDist() { return fTPPHHoleDist; }
+
+  G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
+  G4double GetTPPHCircThick() { return fTPPHCircThick; }
+
+  G4double GetTPPHWindRadius() { return fTPPHWindRadius; }
+  G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
+  G4double GetTPPHWindThick() { return fTPPHWindThick; }
+
+  G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
+  G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
+  G4double GetTPPHStopThick() { return fTPPHStopThick; }
 
 private:
 
-  G4double fVCInMagThick;
-
-  G4double fVCInMagWallSizeY;
-  G4TwoVector fVCInMagWallVertex[CHAMBERGEOMETRY_VCINMAGWALL_NVERTICES];
-  G4double fVCInMagWallHoleRadius;
-  G4double fVCInMagWallHolePosZ;
-
-  G4TwoVector fVCInMagPlateVertex[CHAMBERGEOMETRY_VCINMAGPLATE_NVERTICES];
-
-  G4TwoVector fVCOutMagWallVertex[CHAMBERGEOMETRY_VCOUTMAGWALL_NVERTICES];
-
-  G4double fVCMostExternalX; // Absolute value of largest X coordinate of the chamber
-
-  G4double fVCCFThick; // Thickness of the VC flange toward thin window flange
-
-  G4double fVCCThick; // Thickness of the big cylinder
-  G4double fVCCRIn; // Inner radius of the big cylinder
-  //G4double fVCCLength; // Length of the big cylinder
-  G4double fVCCFrontFacePosZ; // Z position of front face of big cylinder
-
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
+  G4double fVCBackFaceAngle; // Angle of TPix/HEPVeto face of chamber
+  G4double fVCBackFaceThick; // Thickness of back faces
+  G4double fVCBackFaceCornerX; // X coordinate of the corner at the back face
+  G4double fVCBackFaceCornerZ; // Z coordinate of the corner at the back face
 
-  // Beam entrance hole characteristics
-  G4double fVCInHoleRadius;
-  G4double fVCInHoleThick;
-  G4double fVCInHolePosZ;
+  G4double fVCInnerSizeX; // Internal size along X of the rectangular section inside the magnet
+  G4double fVCInnerSizeY; // Internal size along Y of the rectangular section inside the magnet
+  G4double fVCInnerFacePosZ; // Position along Z of the internal face of the rectangular section inside the magnet
 
-  // Beam exit Hole characteristics
-  G4double fVCOutHoleRadius;
-  G4double fVCOutHoleLength;
-  G4double fVCOutHoleThick;
-  G4double fVCOutHoleDistToEdge;
+  // Aluminum|Carbon thin window and aluminum flange
 
-  //G4double fVCEWGap; // Gap for o-ring between main VC body and thin window flange
+  G4double fEWAlThick;
+  G4double fEWAlConvexity;
 
-  // Thin window in front of ECal (EW)
+  G4double fEWCarbonThick;
+  G4double fEWCarbonConvexity;
 
-  G4double fEWBackFacePosZ; // Z position of the external thin window face
-
-  G4double fEWRadius; // Radius of window
-  G4double fEWConvexity; // Convexity of window at its center
-
-  G4double fEWFrontMylarThick; // Thickness of mylar layer inside VC
-  G4double fEWKevlarThick; // Thickness of kevlar layer between mylar layers
-  G4double fEWBackMylarThick;  // Thickness of mylar layer outside VC
-
-  // Steel flange around thin window (three steel rings)
-
-  G4double fEWF1Thick;
-  G4double fEWF2Thick;
-  G4double fEWF3Thick;
-
-  G4double fEWF1ROut;
-  G4double fEWF2ROut;
-  G4double fEWF3RIn;
+  G4double fEWAlFlangeRIn;
+  G4double fEWAlFlangeROut;
+  G4double fEWAlFlangeThick;
+  G4double fEWAlFrontFacePosZ;
 
   // Crossed pipes (one parallel to Z, one parallel to X) at target position
 
@@ -217,18 +150,53 @@ private:
   G4double fCPZThick;
   G4double fCPZLength;
   G4double fCPZPosZ;
+  G4double fCPZFlangeR;
+  G4double fCPZFlangeThick;
 
   G4double fCPXRIn;
   G4double fCPXThick;
   G4double fCPXLength;
   G4double fCPXPosZ;
+  G4double fCPXFlangeR;
+  G4double fCPXFlangeThick;
 
-  // Vectors to hold coordinates of the vertices of all sections of the chamber
-  G4ThreeVector fVCExtVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
-  G4ThreeVector fVCIntVtx[CHAMBERGEOMETRY_VC_NSECTIONS][4];
+  // Junction pipe
 
-  // Vectors to hold vertices of all facets of the chamber
-  G4int fVCFacetVtx[CHAMBERGEOMETRY_VC_NFACETS][4];
+  G4double fJunRIn;
+  G4double fJunThick;
+  G4double fJunFrontFacePosZ;
+  G4double fJunBackFacePosZ;
+  G4double fJunLength;
+  G4double fJunPosZ;
+  G4double fJunFlangeR;
+  G4double fJunFlangeThick;
+
+  // Porthole caps
+
+  G4double fPHCapRadius[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4double fPHCapThick[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4double fPHCapFlangeThick[CHAMBERGEOMETRY_N_PORTHOLES];
+  G4ThreeVector fPHCapPos[CHAMBERGEOMETRY_N_PORTHOLES];
+
+  // TPix porthole cap
+
+  G4double fTPPHCapThick; // Thickness of rectangular porthole cap
+  G4double fTPPHCapWidth; // Width of rectangular porthole cap
+  G4double fTPPHCapHeight; // Height of rectangular porthole cap
+
+  G4double fTPPHHoleRadius; // Radius of TPix hole in cap
+  G4double fTPPHHoleDist; // Distance of center of hole from border of cap
+
+  G4double fTPPHCircRadius; // Radius of circular cap in front of hole
+  G4double fTPPHCircThick; // Thickness of circular cap in front of hole
+
+  G4double fTPPHWindRadius; // Radius of Mylar window
+  G4double fTPPHWindWidth; // Width of Mylar window
+  G4double fTPPHWindThick; // Thickness of Mylar window
+
+  G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
+  G4double fTPPHStopWidth; // Width of stop flange for Mylar window
+  G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
 
 };
 

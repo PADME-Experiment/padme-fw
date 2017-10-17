@@ -22,7 +22,7 @@ SACGeometry::SACGeometry()
 
   fCrystalSizeX =  3.*cm;
   fCrystalSizeY =  3.*cm;
-  fCrystalSizeZ = 20.*cm;
+  fCrystalSizeZ = 14.*cm;
 
   fSACNRows = 5;
   fSACNCols = 5;
@@ -166,7 +166,7 @@ std::vector<G4String> SACGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fDigiPECollectionMap";
-  for(G4int i=0;i<fDigiPECollectionMap.size();i++) buffer << " " << fDigiPECollectionMap[i];
+  for(G4int i=0;i<(G4int)fDigiPECollectionMap.size();i++) buffer << " " << fDigiPECollectionMap[i];
   hash.push_back(buffer.str());
   buffer.str("");
 

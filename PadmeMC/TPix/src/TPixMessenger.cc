@@ -24,11 +24,18 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
   fTPixDetectorDir = new G4UIdirectory("/Detector/TPix/");
   fTPixDetectorDir->SetGuidance("UI commands to control TPix detector geometry");
 
-  fSetNColumnsCmd = new G4UIcmdWithAnInteger("/Detector/TPix/Columns",this);
+  fSetNColumnsCmd = new G4UIcmdWithAnInteger("/Detector/TPix/NColumns",this);
   fSetNColumnsCmd->SetGuidance("Set number of TPix columns.");
   fSetNColumnsCmd->SetParameterName("NC",false);
   fSetNColumnsCmd->SetRange("NF >= 1 && NF <= 10");
   fSetNColumnsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetDistToCornerCmd = new G4UIcmdWithADoubleAndUnit("/Detector/TPix/DistanceToCorner",this);
+  fSetDistToCornerCmd->SetGuidance("Set distance of TPix to corner of vacuum chamber back wall.");
+  fSetDistToCornerCmd->SetParameterName("DTC",false);
+  fSetDistToCornerCmd->SetDefaultUnit("cm");
+  fSetDistToCornerCmd->SetRange("DTC > 0. && DTC <= 100.");
+  fSetDistToCornerCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 

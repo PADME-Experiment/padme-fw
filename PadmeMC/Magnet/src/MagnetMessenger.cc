@@ -26,6 +26,14 @@ MagnetMessenger::MagnetMessenger(MagnetStructure* mag)
   fMagnetDetectorDir = new G4UIdirectory("/Detector/Magnet/");
   fMagnetDetectorDir->SetGuidance("UI commands to control Magnet geometry");
 
+  fSetMagnetVisibleCmd = new G4UIcmdWithoutParameter("/Detector/Magnet/SetMagnetVisible",this);
+  fSetMagnetVisibleCmd->SetGuidance("Show magnet structure.");
+  fSetMagnetVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetMagnetInvisibleCmd = new G4UIcmdWithoutParameter("/Detector/Magnet/SetMagnetInvisible",this);
+  fSetMagnetInvisibleCmd->SetGuidance("Hide magnet structure.");
+  fSetMagnetInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   //fEnableMagneticFieldCmd = new G4UIcmdWithoutParameter("/Detector/Magnet/EnableMagneticField",this);
   //fEnableMagneticFieldCmd->SetGuidance("Enable magnetic field.");
   //fEnableMagneticFieldCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -63,6 +71,9 @@ MagnetMessenger::~MagnetMessenger()
 
   delete fMagnetDetectorDir;
 
+  delete fSetMagnetVisibleCmd;
+  delete fSetMagnetInvisibleCmd;
+
   //delete fEnableMagneticFieldCmd;
   //delete fDisableMagneticFieldCmd;
 
@@ -77,6 +88,16 @@ MagnetMessenger::~MagnetMessenger()
 
 void MagnetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
+
+  if ( cmd == fSetMagnetVisibleCmd ) {
+    printf("Magnet is Visible\n");
+    fMagnetStructure->SetMagnetVisible();
+  }
+
+  if ( cmd == fSetMagnetInvisibleCmd ) {
+    printf("Magnet is Invisible\n");
+    fMagnetStructure->SetMagnetInvisible();
+  }
 
   //if ( cmd == fEnableMagneticFieldCmd ) {
   //  printf("Enabling Magnetic Field\n");

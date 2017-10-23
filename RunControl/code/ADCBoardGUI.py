@@ -26,7 +26,7 @@ class ADCBoardGUI:
         # Initialize main graphic window
         self.root = Tk()
         #self.root.geometry("579x485+500+500")
-        self.root.geometry("579x485")
+        self.root.geometry("579x498")
         self.root.configure(background='black')
         self.root.title(self.b_name)
         self.root.grid_columnconfigure(0,weight=1)
@@ -70,14 +70,14 @@ class ADCBoardGUI:
         self.f_cfg = Frame(self.root,bg="black")
         self.f_cfg.grid(row=0,column=0,sticky=NSEW)
 
-        self.w_cfg = Text(self.f_cfg,height=30,width=80)
+        self.w_cfg = Text(self.f_cfg,height=30,width=80,wrap=NONE)
         self.w_cfg.grid(row=0,column=0)
 
         self.sx_cfg = Scrollbar(self.f_cfg,orient=HORIZONTAL,command=self.w_cfg.xview)
-        self.sx_cfg.grid(row=1,column=0)
+        self.sx_cfg.grid(row=1,column=0,sticky=EW)
 
         self.sy_cfg = Scrollbar(self.f_cfg,orient=VERTICAL,command=self.w_cfg.yview)
-        self.sy_cfg.grid(row=0,column=1)
+        self.sy_cfg.grid(row=0,column=1,sticky=NS)
 
         self.w_cfg.config(xscrollcommand=self.sx_cfg.set)
         self.w_cfg.config(yscrollcommand=self.sy_cfg.set)
@@ -100,14 +100,14 @@ class ADCBoardGUI:
         self.f_log = Frame(self.root,bg="black")
         self.f_log.grid(row=0,column=0,sticky=NSEW)
 
-        self.w_log = Text(self.f_log,height=30,width=80)
+        self.w_log = Text(self.f_log,height=30,width=80,wrap=NONE)
         self.w_log.grid(row=0,column=0)
 
         self.sx_log = Scrollbar(self.f_log,orient=HORIZONTAL,command=self.w_log.xview)
-        self.sx_log.grid(row=1,column=0)
+        self.sx_log.grid(row=1,column=0,sticky=EW)
 
         self.sy_log = Scrollbar(self.f_log,orient=VERTICAL,command=self.w_log.yview)
-        self.sy_log.grid(row=0,column=1)
+        self.sy_log.grid(row=0,column=1,sticky=NS)
 
         self.w_log.config(xscrollcommand=self.sx_log.set)
         self.w_log.config(yscrollcommand=self.sy_log.set)

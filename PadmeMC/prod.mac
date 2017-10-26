@@ -4,5 +4,7 @@
 /run/verbose 0
 /event/verbose 0
 /tracking/verbose 0
+#/Detector/Target/DisableFastDigitization
+#/Detector/Target/EnableSaveWaveformToDigi                                                    
 /run/initialize
-/run/beamOn 100   
+/run/beamOn 10   

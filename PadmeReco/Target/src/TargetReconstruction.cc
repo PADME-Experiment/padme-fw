@@ -128,7 +128,7 @@ void TargetReconstruction::MakeTargetRecoHitCollection(TTargetMCEvent* tTargetEv
 void TargetReconstruction::MakeTargetRecoEvent()
 {
 
-  double evtime=100.;
+  //  double evtime=100.;
   double baryx=0.;
   double baryy=0.;
   double xerr=0.;
@@ -147,7 +147,7 @@ void TargetReconstruction::MakeTargetRecoEvent()
   double offset =-7500;   // for nchx=16 offset=-first-(nchx/2-1)*pitch
   double pitch  = 1000.; // um
   int nchx=16;
-  int nchh=nchx-1;
+  //int nchh=nchx-1;
   double chc[nchx];
   for (int j=0;j<nchx;j++){
     chc[j]=offset+j*pitch; //channel center X (or Y) coord [um] from center of target

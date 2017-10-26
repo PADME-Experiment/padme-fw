@@ -38,6 +38,7 @@ CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 EXTRALIBS := $(addprefix -l,$(SUBDIRS))
 EXTRALIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 EXTRALIBS += $(ROOTLIBS)
+#EXTRALIBS += -L/cvmfs/atlas.cern.ch/repo/sw/software/21.0/sw/lcg/releases/LCG_87/expat/2.0.1/x86_64-slc6-gcc49-opt/lib/
 
 .PHONY: all bin makesub clean cleansub cleanall cleanallsub $(SUBDIRS)
 #all: turtle cmc persistency makesub lib bin

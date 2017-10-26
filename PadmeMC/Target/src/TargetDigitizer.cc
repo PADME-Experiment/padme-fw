@@ -49,9 +49,10 @@ void TargetDigitizer::Digitize()
 
   fFastDigi= fTargetGeometry->FastDigitizationIsEnabled();
   fSaveWaveforms= fTargetGeometry->SaveWaveformToDigiIsEnabled();
+  fReduceWaveforms= fTargetGeometry->ReduceWaveformIsEnabled();
 
-  // root file for debugging waveforms (last event)
-  //  fTargetFile= new TFile("target.root","UPDATE");
+  ////  root file for debugging waveforms
+  // fTargetFile= new TFile("target.root","UPDATE");
 
   // Create digi vectors
   std::vector<G4int> dChannel;
@@ -60,12 +61,13 @@ void TargetDigitizer::Digitize()
   std::vector<G4double> dNumber;
   std::vector<G4double> dChargeT;
   std::vector<G4double> dCharge;
+  std::vector<G4double> dNCharge;
 
   std::vector<G4double> dTTCCD;// 0.1 ns res
   std::vector<G4double> dTTCCD1; // 1ns res
   std::vector<G4double> dTTNCCD;
   std::vector<G4double> dTTVCCD;
-  std::vector<G4double> dTTVCCD1;// 1ns res
+  //  std::vector<G4double> dTTV1CCD; // for CSA
 
   G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
   G4double fThreshold=fTargetGeometry->GetTargetDigiThreshold();
@@ -78,27 +80,27 @@ void TargetDigitizer::Digitize()
     dNumber.push_back(0);
   }
 
-
   // used in full mode !fFastDigi
   
-  // histograms to store waveforms
+  // histograms to handle waveforms
   char hnameCCD [30];
   char hnameNCCD [30];
   char hnameVCCD [30];
-  char hnameVCCD1 [30];
   
-  // array to store waveforms
+  // array to handle waveforms
   G4double** dTimeTraceCCD = new G4double*[nChannels];
   
-  // constants needed for building waveforms  -> to move somewhere else
+  // constants needed for building waveforms and integrate signal
 
-  G4double baseline = fTargetGeometry->GetTargetDigiBaseline();     
+  G4int nbins = fTargetGeometry->GetTargetDigiNBins();     // def 1024
   G4double intwindow = fTargetGeometry->GetTargetDigiWindow();     // def 100*ns
+  G4double trigoff = fTargetGeometry->GetTargetDigiTrigOffset();     // def 0*ns
 
-  G4int nbins =1024; // 
-  G4int nmax =1024; // 
+  G4double binw =0.1; // resolution 0.1 ns; 
+  G4int nhires =int(nbins/binw); // 
+
+  // constants needed for calculating signal (move?)
   G4int nsteps=10;
-  G4double binw =0.1/ns; 
   G4double eion = 13.60*eV;
   G4int ele=1;
   G4int hole=0;
@@ -109,14 +111,18 @@ void TargetDigitizer::Digitize()
     sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
     sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
     sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
-    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
-    dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nbins,0.,nmax);
-    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nmax);
-    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nmax);
-    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,102,0.,102);
+    //sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
+    //    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
+    dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
+    //    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
+    //    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
+    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
+    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
+    //dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
+    //    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
     
-    dTimeTraceCCD[i]= new G4double[nbins];
-    for (G4int j=0; j< nbins; j++)
+    dTimeTraceCCD[i]= new G4double[nhires];
+    for (G4int j=0; j< nhires; j++)
       dTimeTraceCCD[i][j] = 0.;	
   }
 
@@ -177,7 +183,6 @@ void TargetDigitizer::Digitize()
 	  hitval +=1;  // hit in X channel
       }
 	
-
       if(hHChannel!=hHChannelPre){
 	hitval -=10;
       }
@@ -188,7 +193,6 @@ void TargetDigitizer::Digitize()
       
       (*targetHC)[i]->SetHitVal(hitval);
       
-
       // signal only if hit contained in both channels (X Y faces) 
       if(hitval==2){
 	
@@ -220,11 +224,11 @@ void TargetDigitizer::Digitize()
 
 	dNumber[hVChannel]+=1;
 	dNumber[hHChannel+nChannels/2]+=1;
-
+	
 	if(!fFastDigi){
-
+	  
 	  /// parameters for signal calculation in stepfun -> to be moved somewhere else
-	  G4int startbin = (G4int)(hTime/binw); // in ns
+	  G4int startbin = (G4int)(hTime/binw) * ns;
 	  G4double dd = hTrack/m; // 
 	  //G4int nehold = (G4int)(hTrack*36*1000);
 	  G4int neh = (G4int)(hEnergy/eion/fTargetGeometry->GetTargetDigiNTrackDiv());
@@ -236,7 +240,7 @@ void TargetDigitizer::Digitize()
 	    
 	    G4double econtr = 0.;
 	    G4double hcontr = 0.;
-	    G4double tbin= (j-startbin)*binw;
+	    G4double tbin= (j-startbin)*binw/ns;
 	    
 	    for(G4int nc=0; nc<neh;nc++){		
 	      econtr=stepfunCCD(tbin,neh,nc,dd,os,ele);
@@ -263,113 +267,138 @@ void TargetDigitizer::Digitize()
       } //if hitval==2
     }// hits loop
     
+    // fill digis for all channels above fThreshold
 
-    // Create digits for active channels
-    for (G4int i=0; i < (G4int)dChannel.size(); i++) {
+    G4int chn=(int)dChannel.size();
+
+    for (G4int i=0; i<chn; i++){
+      
       TargetDigi* digi = new TargetDigi();
       digi->SetChannelId(dChannel[i]);
       digi->SetTime(dTime[i]);
       digi->SetEnergy(dEnergy[i]);
       digi->SetDNumber(dNumber[i]);
-
+      
       if(!fFastDigi){
-	for(G4int j=0; j< nbins; j++){
+	for(G4int j=0; j< nhires; j++){
 	  // current waveform histogram
 	  dTraceHCCD[dChannel[i]]->Fill(j,dTimeTraceCCD[dChannel[i]][j]);	    
 	  dTTCCD.push_back(dTimeTraceCCD[dChannel[i]][j]);
 	} 
-
-	dTTCCD1=NsRebin(dTTCCD);  // rebin 1ns
 	
-	dTTNCCD=AddNoiseAndBaseline(dTTCCD);
-	dTTVCCD=RCFilter(dTTNCCD);  // integrate waveform ccd func 
-	dTTVCCD1=NsRebin(dTTVCCD);  // rebin 1ns
+	dTTCCD1=NsRebin(dTTCCD);  // rebin 1ns	
+	dTTNCCD=AddNoiseAndBaseline(dTTCCD1);
+	//dTTVCCD=RCFilter(dTTNCCD);  // integrate waveform ccd func 
+	dTTVCCD=CSAFilter(dTTNCCD);  // integrate with CSA 
 	
 	for(G4int j=0; j< nbins; j++){
+	  // current waveform histogram
 	  dTraceNHCCD[dChannel[i]]->SetBinContent(j,dTTNCCD[j]);
 	  // voltage waveform histogram
 	  dTraceVHCCD[dChannel[i]]->SetBinContent(j,dTTVCCD[j]);
-	} 
-	for(G4int j=0; j< int(nbins/10); j++)
-	  dTraceVHCCD1[dChannel[i]]->SetBinContent(j,dTTVCCD1[j]);
+	}	  
 
-	dChargeT.push_back(1e-10*dTraceHCCD[dChannel[i]]->Integral(1,intwindow/binw));// true charge
-	// dChargeT.push_back(1e-10/50*(dTraceVHCCD1[dChannel[i]]->Integral(1,intwindow/ns)));// intw/ns true charge
-	dCharge.push_back(1e-10/50*(dTraceVHCCD[dChannel[i]]->Integral(1,intwindow/binw)));// intw/bw ccd func integrated charge (50 ohm)
-	
-      } // if !fFastDigi
+	// Charge is calculated as: binsize in seconds * root method Integral(range) of trace histo 
+	// (same also for lowres waveform as NsRebin sums the signal in 10 bins)
+
+	dNCharge.push_back(1e-10*dTraceNHCCD[dChannel[i]]->Integral(nbins-intwindow,nbins));// noise charge 1ns res
+	dChargeT.push_back(1e-10*dTraceHCCD[dChannel[i]]->Integral(trigoff/binw,intwindow/binw));// true charge 0.1 nsres
+	dCharge.push_back(1e-10/50*(dTraceVHCCD[dChannel[i]]->Integral(trigoff,intwindow))); // ccd func integrated (CSAFilter) 1ns res (check factor 50 ohm)
+		
+      }// if !fFastDigi
       else{
+	//// FAST DIGI
 	
-	//// dEdX (MeV) to Charge conversion factor
-	G4double fMeV2Q=fTargetGeometry->GetTargetDigiMeV2Q();
-	//// Charge Collection factor
-	G4double fCCD=fTargetGeometry->GetTargetDigiCCD();
-	//// MC noise charge RMS
-	G4double fNoiseChargeRMS=fTargetGeometry->GetTargetDigiNoiseChargeRMS();
+	//// dEdX (MeV) to Charge conversion factor obtained in FULL mode
+	G4double fMeV2Q=fTargetGeometry->GetTargetDigiMeV2Q();	
+
+	//// Charge Collection factor 
+	// G4double fCCD=fTargetGeometry->GetTargetDigiCCD();
+  
+	//// MC noise charge RMS obtained from 0 multiplicity channels in FULL mode
+	G4double fNoiseChargeRMS=fTargetGeometry->GetTargetDigiNoiseChargeRMS(); 
+
 	G4double nran=G4RandGauss::shoot(0.,fNoiseChargeRMS);
-
-	dChargeT.push_back(dEnergy[i]/MeV*fMeV2Q);// eff charge converted from G4 dedx *ccd	
-	dCharge.push_back(dEnergy[i]/MeV*fMeV2Q+nran);// eff charge converted from G4dedx+noise  
-
+	dNCharge.push_back(nran); 
+	dChargeT.push_back(dEnergy[i]/MeV*fMeV2Q);// charge converted from G4 dEdX	
+	dCharge.push_back(dEnergy[i]/MeV*fMeV2Q+nran);// eff charge  
       }
-   
-      if (dCharge[i]<fThreshold){
+  
+      
+      if (dCharge[i]<fThreshold){	
+	// G4cout<<"DIGIDELETED - channel: "<<dChannel[i]<<" time: "<<dTime[i]<<" energy: "<<dEnergy[i]<<" multi: "<<dNumber[i]<<" charge: "<<dCharge[i]<<" noisecharge: "<<dNCharge[i]<<G4endl;
+	////	delete digi;
 
-	//G4cout<<"DIGIDELETED: "<<dChannel[i]<<" time: "<<dTime[i]<<" energy: "<<dEnergy[i]<<" multi: "<<dNumber[i]<<" chargeT "<<dChargeT[i]<<" charge: "<<dCharge[i]<<G4endl;
-	//	delete digi;
       }
       else{     
 
 	if(!fFastDigi){
-	  // save only intwindow
-	  dTTCCD1.erase(dTTCCD1.begin()+intwindow/binw,dTTCCD1.end());
-	  digi->SetTimeTrace(dTTCCD1);  // raw current waveform
-	  // save only intwindow and with 1ns res
-	  dTTVCCD1.erase(dTTVCCD1.begin()+intwindow/binw,dTTVCCD1.end());
-	  digi->SetTimeTraceV(dTTVCCD1);  // voltage waveform
+	  if (fReduceWaveforms){
+	    dTTCCD1.erase(dTTCCD1.begin(),dTTCCD1.begin()+trigoff); // delete offset
+	    dTTCCD1.resize(intwindow); // save only intwindow
+
+	  }
+	  digi->SetWaveformRaw(dTTCCD1);  // raw current waveform (no noise, 1ns res)
+	  
+	  if (fReduceWaveforms){	  
+	    dTTVCCD.erase(dTTVCCD.begin(),dTTVCCD.begin()+trigoff); // delete offset
+	    dTTVCCD.resize(intwindow); // save only intwindow
+	  } 
+	  digi->SetWaveform(dTTVCCD);  // voltage waveform (after noise and CSA filter, 1ns res)
 	}
 	digi->SetChargeT(dChargeT[i]);
 	digi->SetCharge(dCharge[i]);
+	digi->SetNoiseCharge(dNCharge[i]); 
 	digi->Print();
 	targetDigiCollection->insert(digi);
       }
 
-      // root file for debugging traces
-      //    dTraceHCCD[dChannel[i]]->Write();
-      //    dTraceNHCCD[dChannel[i]]->Write();
-      //    dTraceVHCCD[dChannel[i]]->Write();
-      //    dTraceVHCCD1[dChannel[i]]->Write();
-
-
+      /*      if(dNumber[i]){
+	//// root file for debugging traces
+	dTraceHCCD[dChannel[i]]->Write();
+	dTraceNHCCD[dChannel[i]]->Write();
+	dTraceVHCCD[dChannel[i]]->Write();
+	dTraceV1HCCD[dChannel[i]]->Write();
+	////dTraceVHCCD1[dChannel[i]]->Write();
+      }
+      */
+       
       delete  dTraceHCCD[dChannel[i]];
       delete  dTraceNHCCD[dChannel[i]];
       delete  dTraceVHCCD[dChannel[i]];
-      delete  dTraceVHCCD1[dChannel[i]];
       
       dTTCCD.clear();
       dTTCCD1.clear();
+      dTTNCCD.clear();
       dTTVCCD.clear();
-      dTTVCCD1.clear();
-      
+
     }// fill digis in targetdigicollection
     
-    //    if(!fFastDigi)
-      delete dTimeTraceCCD;	
-    
+    delete dTimeTraceCCD;	    
   }
-  //fTargetFile->Close();
+  //// root file for debuggind traces
+  // fTargetFile->Close();
   StoreDigiCollection(targetDigiCollection);
+
+  dChannel.clear();
+  dEnergy.clear();
+  dTime.clear();
+  dNumber.clear();
+  dChargeT.clear();
+  dCharge.clear();
+  dNCharge.clear();
+
 }
-
-
-G4int TargetDigitizer::PosToChannel(G4double pos)
-{
-
-  fTargetGeometry = TargetGeometry::GetInstance();
-  G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
-  G4double stripSize=fTargetGeometry->GetTargetStripSize();
-  G4double gapSize=fTargetGeometry->GetTargetGapSize();
-
+  
+  
+  G4int TargetDigitizer::PosToChannel(G4double pos)
+  {
+    
+    fTargetGeometry = TargetGeometry::GetInstance();
+    G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
+    G4double stripSize=fTargetGeometry->GetTargetStripSize();
+    G4double gapSize=fTargetGeometry->GetTargetGapSize();
+    
   
   /// target pitch 1.mm 
   //G4double fp=1.;
@@ -386,8 +415,7 @@ G4int TargetDigitizer::PosToChannel(G4double pos)
 
   if(posch<0||pos>porg){
     return -1;
-  }
-  
+  }  
   for(G4int ich=0; ich<nChannels/2; ich++){
     posch -= stripSize;   
     if (posch<0){
@@ -397,7 +425,6 @@ G4int TargetDigitizer::PosToChannel(G4double pos)
     if (posch<0){
       return -1;
     }
-
   }
   return -99;
 }
@@ -408,8 +435,9 @@ std::vector<G4double> TargetDigitizer::RCFilter (std::vector<G4double>& traceI){
   //G4double Rval=50.; //ohm
   G4double Rgain=50.; //ohm
   G4double RC=20.; // ns
-  G4double tstep=0.1; // ns
-  G4double RCalfa = tstep/(RC+tstep); //useful costant
+  //G4double tstep=0.1; // ns resolution of waveform
+  G4double tstep=1.; // ns resolution of waveform
+  G4double RCalfa = tstep/(RC+tstep); // useful costant
 
   std::vector<G4double> traceV;
   G4int binno= traceI.size();
@@ -429,10 +457,46 @@ std::vector<G4double> TargetDigitizer::RCFilter (std::vector<G4double>& traceI){
 
 
 
+
+std::vector<G4double> TargetDigitizer::CSAFilter (std::vector<G4double>& traceI){
+
+  std::vector<G4double> traceV;
+  G4int binno= traceI.size();
+  traceV.reserve(binno);
+  traceV.push_back(0.);
+
+  G4double Tr=10.;
+  G4double Tf=20.;
+  G4double T0=0.;
+  //  G4double G0=1.;
+  G4double G0=4.;
+
+  for(int i=1; i<binno; i++){
+    T0    = double (i);
+    G4double Vout = 0.;
+    for(G4int k=0; k<binno; k++){   
+      
+      G4double V0=0;
+      G4double t= double(k);
+      if(t-T0<0){
+	G4double exp_r = (t-T0)/Tr;
+	G4double exp_f = (t-T0)/Tf;
+	V0    = G0 * ( 1. - exp(exp_r))*exp(exp_f);
+	Vout  += V0 * traceI[k];
+      }    
+    }
+    traceV.push_back(Vout);
+  }
+  return traceV;
+}
+
+
+
+
+
 std::vector<G4double> TargetDigitizer::NsRebin (std::vector<G4double>& traceI){
 
-  G4int tstep=10; // ns
-
+  G4int tstep=10; // 0.1->1 ns rebin!
   std::vector<G4double> traceRI;
   //G4int binI= traceI.size();
   G4int binRI= int(traceI.size()/tstep);
@@ -445,7 +509,6 @@ std::vector<G4double> TargetDigitizer::NsRebin (std::vector<G4double>& traceI){
       }
       traceRI.push_back(val);
     }
-
   return traceRI;
 }
 
@@ -455,21 +518,20 @@ std::vector<G4double> TargetDigitizer::NsRebin (std::vector<G4double>& traceI){
 std::vector<G4double> TargetDigitizer::AddNoiseAndBaseline(std::vector<G4double>& traceI){
 
   fTargetGeometry = TargetGeometry::GetInstance();
-  G4double noisestddev = fTargetGeometry->GetTargetDigiNoiseRMS(); 
+  G4double noisestddev = sqrt(10.)*fTargetGeometry->GetTargetDigiNoiseRMS(); // factor sqrt(10.) as noise is put on 1ns trace 
   G4double baseline = fTargetGeometry->GetTargetDigiBaseline(); 
+  // G4double noisemean = 0.0;
+  //G4double stddev = 0.87; // uampere noise from 1800 e-
+  //G4double stddev = 2.42; // uampere noise from 5000 e-
 
   std::vector<G4double> traceN;
   G4int binno= traceI.size();
   traceN.reserve(binno);
-
-  G4double noisemean = 0.0;
-  //G4double stddev = 0.87; // uampere noise from 1800 e-
-  //G4double stddev = 2.42; // uampere noise from 5000 e-
       
   for (G4int i=0; i<binno; i++)
     {
-      G4double rnd = G4RandGauss::shoot(noisemean,noisestddev);
-      traceN.push_back(traceI[i]+rnd+baseline);
+      G4double rnd = G4RandGauss::shoot(baseline,noisestddev);
+      traceN.push_back(traceI[i]+rnd); // keep up- and downward fluctuations
     }
   return  traceN;  
 }

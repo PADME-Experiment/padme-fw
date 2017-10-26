@@ -49,13 +49,18 @@ private:
   G4UIcmdWithoutParameter* fEnableSaveWaveformToDigiCmd;
   G4UIcmdWithoutParameter* fDisableSaveWaveformToDigiCmd;
 
+  G4UIcmdWithoutParameter* fEnableReduceWaveformCmd;
+  G4UIcmdWithoutParameter* fDisableReduceWaveformCmd;
+
   G4UIcommand* fSetTargetDigiNChannelsCmd;
   G4UIcommand* fSetTargetDigiNTrackDivCmd;
 
   G4UIcmdWithADouble* fSetTargetDigiNoiseRMSCmd;
   G4UIcmdWithADouble* fSetTargetDigiThresholdCmd;
+  G4UIcommand* fSetTargetDigiNBinsCmd;
   G4UIcmdWithADouble* fSetTargetDigiBaselineCmd;
-  G4UIcmdWithADoubleAndUnit* fSetTargetDigiWindowCmd;
+  G4UIcmdWithADouble* fSetTargetDigiWindowCmd;
+  G4UIcmdWithADouble* fSetTargetDigiTrigOffsetCmd;
 
   G4UIcmdWithADouble* fSetTargetDigiNoiseChargeRMSCmd;
   G4UIcmdWithADouble* fSetTargetDigiCCDCmd;

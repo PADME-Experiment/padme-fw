@@ -53,13 +53,16 @@ class TargetDigi : public G4VDigi
   void SetCharge(G4double c) { fCharge = c; }
   G4double GetCharge() { return fCharge; }
 
-  //  void SetTimeTrace(G4double* tt) { fTimeTrace = tt; }
-  void SetTimeTrace(const std::vector<G4double>& tt) { fTimeTrace = tt; }
-  // G4double* GetTimeTrace() { return fTimeTrace; }
-  const std::vector<G4double>& GetTimeTrace() const { return fTimeTrace; }
+  void SetNoiseCharge(G4double nc) { fNCharge = nc; }
+  G4double GetNoiseCharge() { return fNCharge; }
 
-  void SetTimeTraceV(const std::vector<G4double>& tt) { fTimeTraceV = tt; }
-  const std::vector<G4double>& GetTimeTraceV() const { return fTimeTraceV; }
+  //   void SetTimeTrace(const std::vector<G4double>& tt) { fTimeTrace = tt; }
+  void SetWaveformRaw(const std::vector<G4double>& wfr) { fWaveformRaw = wfr; }
+
+  const std::vector<G4double>& GetWaveformRaw() const { return fWaveformRaw; }
+
+  void SetWaveform(const std::vector<G4double>& wf) { fWaveform = wf; }
+  const std::vector<G4double>& GetWaveform() const { return fWaveform; }
 
   //  void SetTimeTraceV(const std::vector<G4int>& tt) { fTimeTraceV = tt; }
   // const std::vector<G4int>& GetTimeTraceV() const { return fTimeTraceV; }
@@ -73,9 +76,10 @@ private:
   G4int         fDNumber;
   G4double      fChargeT;
   G4double      fCharge;
+  G4double      fNCharge;
 
-  std::vector<G4double> fTimeTrace;
-  std::vector<G4double> fTimeTraceV;
+  std::vector<G4double> fWaveformRaw;
+  std::vector<G4double> fWaveform;
   //std::vector<G4int> fTimeTraceV;
 
 };

@@ -25,8 +25,7 @@ TargetGeometry::TargetGeometry()
   fTargetSizeY =   2.*cm;
   fTargetSizeZ = 100.*um;
 
-  //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
-  fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
+  fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
 
   fTargetPitch = 1*mm;
   fTargetStripSize =850*um;
@@ -35,23 +34,38 @@ TargetGeometry::TargetGeometry()
   fTargetDigiNChannels =32;
   fTargetFastDigitization = true; // Use fast digitization
   fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
+  fTargetReduceWaveform = false; // Do not reduce waveforms to integration window in digi
 
+  // noise derived for 0.1 ns resolution
   fTargetDigiNoiseRMS = 0.87;   // uampere noise from 1800 e-
   //fTargetDigiNoiseRMS  = 2.42; // uampere noise from 5000 e-
+
   fTargetDigiThreshold = 4e-10; // uC low thres
   //fTargetDigiThreshold = 2e-9; // uC 1sigma thres with 1800 e- noise
+
   fTargetDigiBaseline = 0.; // uA
   //fTargetDigiBaseline = 10.; // uA 
-  fTargetDigiWindow = 100.*ns; // signal integration window
-  //fTargetDigiWindow = 40.*ns; // signal integration window
+
+  // 1.024 us window res 1ns 
+  fTargetDigiNBins = 1024; //    
+
+  fTargetDigiTrigOffset = 0.; // ns trigger offset    
+
+  fTargetDigiWindow = 100.; // ns signal integration window
+  //fTargetDigiWindow = 40.; // ns signal integration window
 
   // parameters for dedicated studies
+
   fTargetDigiNTrackDiv =100;
-  fTargetDigiCCD=0.1;  // take out
-  fTargetDigiNoiseChargeRMS=2.33e-9; // uampere charge noise from 1800 e-
-  //fTargetDigiNoiseChargeRMS=6.47e-9; // uampere charge noise from 5000 e-
-  fTargetDigiMeV2Q=1.901e-9;  // 
-  // fTargetDigiMeV2Q=1.88e-8*50;  // WAS 
+  fTargetDigiCCD=0.1;  // fix-remove
+
+  // noise derived for 0.1 ns resolution
+  fTargetDigiNoiseChargeRMS=2.33e-9; // uC charge noise from 1800 e-
+  //fTargetDigiNoiseChargeRMS=6.47e-9; // uC charge noise from 5000 e-
+
+  //  fTargetDigiMeV2Q=1.901e-9;  // RC Filter
+  //fTargetDigiMeV2Q=5.01e-10;  // CSA Filter gain 1
+  fTargetDigiMeV2Q=2.004e-9;  // CSA Filter gain 4
 
   fTargetSensitiveDetectorName = "TargetSD";
 
@@ -90,6 +104,10 @@ std::vector<G4String> TargetGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
+  buffer << "fTargetReduceWaveform " << fTargetReduceWaveform;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
   buffer << "fTargetPitch " << fTargetPitch;
   hash.push_back(buffer.str());
   buffer.str("");
@@ -119,6 +137,14 @@ std::vector<G4String> TargetGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fTargetDigiBaseline " << fTargetDigiBaseline;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDigiNBins " << fTargetDigiNBins;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDigiTrigOffset " << fTargetDigiTrigOffset;
   hash.push_back(buffer.str());
   buffer.str("");
 

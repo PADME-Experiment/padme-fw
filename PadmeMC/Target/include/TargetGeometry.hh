@@ -75,7 +75,13 @@ public:
   void DisableSaveWaveformToDigi() { fTargetSaveWaveformToDigi = false; }
   G4bool SaveWaveformToDigiIsEnabled() { return fTargetSaveWaveformToDigi; }
 
-  // Set RMS Noise, Threshold, steps for digitization of Target Channels
+  // Reduce persistence of digitized waveforms to integration window
+  void EnableReduceWaveform() { fTargetReduceWaveform = true; }
+  void DisableReduceWaveform() { fTargetReduceWaveform = false; }
+  G4bool ReduceWaveformIsEnabled() { return fTargetReduceWaveform; }
+
+
+  // Set RMS Noise, Threshold, Baseline, Bins, offset and integration window
   G4double GetTargetDigiNoiseRMS() { return fTargetDigiNoiseRMS; }
   void     SetTargetDigiNoiseRMS(G4double n) { fTargetDigiNoiseRMS = n; }
 
@@ -84,6 +90,12 @@ public:
 
   G4double GetTargetDigiBaseline() { return fTargetDigiBaseline; }
   void     SetTargetDigiBaseline(G4double b) { fTargetDigiBaseline = b; }
+
+  G4int    GetTargetDigiNBins() { return fTargetDigiNBins; }
+  void     SetTargetDigiNBins(G4int nb) { fTargetDigiNBins = nb; }
+
+  G4double GetTargetDigiTrigOffset() { return fTargetDigiTrigOffset; }
+  void     SetTargetDigiTrigOffset(G4double o) { fTargetDigiTrigOffset = o; }
 
   G4double GetTargetDigiWindow() { return fTargetDigiWindow; }
   void     SetTargetDigiWindow(G4double w) { fTargetDigiWindow = w; }
@@ -123,10 +135,13 @@ private:
   G4int fTargetDigiNChannels;  // Number of Target Channels
   G4bool fTargetFastDigitization; // Enable/disable use of fast digitization
   G4bool fTargetSaveWaveformToDigi; // Enable/disable saving of digitized waveforms to persistent digis
+  G4bool fTargetReduceWaveform; // Enable/disable reducing of digitized waveforms to integration window in persistent digis
 
   G4double fTargetDigiNoiseRMS;  // Noise RMS in micro Ampere from 1800-5000 e- 
   G4double fTargetDigiThreshold;  // Threshold for digitization of Target channels (uC)
   G4double fTargetDigiBaseline;  // Baseline for digitization of Target channels (uA)
+  G4int fTargetDigiNBins;  // Number of bins for digitization of Target channels 
+  G4double fTargetDigiTrigOffset;  // Offset for digitization (ns)
   G4double fTargetDigiWindow;  // Integration Window for digitization of Target channels (ns)
 
   // digitizer parameters to change for dedicated study

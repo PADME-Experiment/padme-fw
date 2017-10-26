@@ -70,21 +70,30 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
 
   fDisableFastDigitizationCmd = new G4UIcmdWithoutParameter("/Detector/Target/DisableFastDigitization",this);
   fDisableFastDigitizationCmd->SetGuidance("Disable fast digitization for Target.");
-  fDisableFastDigitizationCmd->SetGuidance("WARNING: full digitization is VERY time consuming!");
+  fDisableFastDigitizationCmd->SetGuidance("WARNING: full digitization is time consuming: 170ms/evt");
   fDisableFastDigitizationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableSaveWaveformToDigiCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableSaveWaveformToDigi",this);
   fEnableSaveWaveformToDigiCmd->SetGuidance("Enable saving of Target digitized waveforms to persistent digis.");
-  fEnableSaveWaveformToDigiCmd->SetGuidance("WARNING: saving waveforms adds O(300KB) of data to each event!");
+  fEnableSaveWaveformToDigiCmd->SetGuidance("WARNING: saving waveforms adds 50(30?)KB of data to each event!");
   fEnableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fDisableSaveWaveformToDigiCmd = new G4UIcmdWithoutParameter("/Detector/Target/DisableSaveWaveformToDigi",this);
   fDisableSaveWaveformToDigiCmd->SetGuidance("Disable saving of Target digitized waveforms to persistent digis.");
   fDisableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableReduceWaveformCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableReduceWaveform",this);
+  fEnableReduceWaveformCmd->SetGuidance("Enable reducing of Target digitized waveforms to integration window in persistent digis.");
+  fEnableReduceWaveformCmd->SetGuidance("WARNING: reducing waveforms saves XXKB for each event!");
+  fEnableReduceWaveformCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fDisableReduceWaveformCmd = new G4UIcmdWithoutParameter("/Detector/Target/DisableSaveWaveformToDigi",this);
+  fDisableReduceWaveformCmd->SetGuidance("Disable reducing of Target digitized waveforms in persistent digis.");
+  fDisableReduceWaveformCmd->SetGuidance("WARNING: not reducing waveforms adds XXKB for each event!");
+  fDisableReduceWaveformCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetTargetDigiNChannelsCmd = new G4UIcommand("/Detector/Target/NChannels",this);
-  fSetTargetDigiNChannelsCmd->SetGuidance("Set Number of Target channels  (1800-5000 e-)");
+  fSetTargetDigiNChannelsCmd->SetGuidance("Set Number of Target channels");
   G4UIparameter* tdNChannelsParameter = new G4UIparameter("NChannels",'i',false);
   tdNChannelsParameter->SetParameterRange("NChannels >= 16 && NChannels <= 64");
   fSetTargetDigiNChannelsCmd->SetParameter(tdNChannelsParameter);
@@ -109,10 +118,22 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fSetTargetDigiBaselineCmd->SetRange("Baseline >= 0. && Baseline <= 10.");
   fSetTargetDigiBaselineCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetTargetDigiWindowCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/Window",this);
-  fSetTargetDigiWindowCmd->SetGuidance("Set ns window for integrating Target channels signals.");
+  fSetTargetDigiNBinsCmd = new G4UIcommand("/Detector/Target/NBins",this);
+  fSetTargetDigiNBinsCmd->SetGuidance("Set number of bins for Target digitized signal");
+  G4UIparameter* tdNBinsParameter = new G4UIparameter("NBins",'i',false);
+  tdNBinsParameter->SetParameterRange("NBins >= 100 && NBins <= 1024");
+  fSetTargetDigiNBinsCmd->SetParameter(tdNBinsParameter);
+  fSetTargetDigiNBinsCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTargetDigiTrigOffsetCmd = new G4UIcmdWithADouble("/Detector/Target/TrigOffset",this);
+  fSetTargetDigiTrigOffsetCmd->SetGuidance("Set offset for signal integration.");
+  fSetTargetDigiTrigOffsetCmd->SetParameterName("TrigOffset",false);
+  fSetTargetDigiTrigOffsetCmd->SetRange("TrigOffset >= 0. && TrigOffset <= 900.");
+  fSetTargetDigiTrigOffsetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTargetDigiWindowCmd = new G4UIcmdWithADouble("/Detector/Target/Window",this);
+  fSetTargetDigiWindowCmd->SetGuidance("Set window for integrating Target channels signals.");
   fSetTargetDigiWindowCmd->SetParameterName("Window",false);
-  fSetTargetDigiWindowCmd->SetDefaultUnit("ns");
   fSetTargetDigiWindowCmd->SetRange("Window >= 0. && Window <= 100.");
   fSetTargetDigiWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
@@ -123,7 +144,7 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fSetTargetDigiThresholdCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetTargetDigiNoiseChargeRMSCmd = new G4UIcmdWithADouble("/Detector/Target/NoiseChargeRMS",this);
-  fSetTargetDigiNoiseChargeRMSCmd->SetGuidance("Set RMS Charge of noise channels  (1800-5000 e-)");
+  fSetTargetDigiNoiseChargeRMSCmd->SetGuidance("Set RMS Charge of noise channels");
   fSetTargetDigiNoiseChargeRMSCmd->SetParameterName("NoiseChargeRMS",false);
   fSetTargetDigiNoiseChargeRMSCmd->SetRange("NoiseChargeRMS >= 1.e-9  && NoiseChargeRMS <= 1.e-8");
   fSetTargetDigiNoiseChargeRMSCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -155,6 +176,8 @@ TargetMessenger::~TargetMessenger()
   delete fDisableFastDigitizationCmd;
   delete fEnableSaveWaveformToDigiCmd;
   delete fDisableSaveWaveformToDigiCmd;
+  delete fEnableReduceWaveformCmd;
+  delete fDisableReduceWaveformCmd;
 
 
   delete fSetTargetPitchCmd;
@@ -166,7 +189,9 @@ TargetMessenger::~TargetMessenger()
   delete fSetTargetDigiNoiseRMSCmd;
   delete fSetTargetDigiThresholdCmd;
   delete fSetTargetDigiBaselineCmd;
+  delete fSetTargetDigiNBinsCmd;
   delete fSetTargetDigiWindowCmd;
+  delete fSetTargetDigiTrigOffsetCmd;
 
   delete fSetTargetDigiNoiseChargeRMSCmd;
   delete fSetTargetDigiCCDCmd;
@@ -200,6 +225,9 @@ void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fEnableSaveWaveformToDigiCmd )  fTargetGeometry->EnableSaveWaveformToDigi();
   if ( cmd == fDisableSaveWaveformToDigiCmd ) fTargetGeometry->DisableSaveWaveformToDigi();
 
+  if ( cmd == fEnableReduceWaveformCmd )  fTargetGeometry->EnableReduceWaveform();
+  if ( cmd == fDisableReduceWaveformCmd ) fTargetGeometry->DisableReduceWaveform();
+
   //  if ( cmd == fSetTargetDigiNChannelsCmd )
   //  fTargetGeometry->SetTargetDigiNChannels(fSetTargetDigiNChannelsCmd->GetNewValue(par));
   //  if ( cmd == fSetTargetDigiNTrackDivCmd )
@@ -220,8 +248,15 @@ void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetTargetDigiThresholdCmd )
     fTargetGeometry->SetTargetDigiThreshold(fSetTargetDigiThresholdCmd->GetNewDoubleValue(par));
 
+  if ( cmd == fSetTargetDigiNBinsCmd ) {
+    G4int b; std::istringstream is(par); is >> b;
+    fTargetGeometry->SetTargetDigiNBins(b);
+  }
   if ( cmd == fSetTargetDigiBaselineCmd )
     fTargetGeometry->SetTargetDigiBaseline(fSetTargetDigiBaselineCmd->GetNewDoubleValue(par));
+
+  if ( cmd == fSetTargetDigiTrigOffsetCmd )
+    fTargetGeometry->SetTargetDigiTrigOffset(fSetTargetDigiTrigOffsetCmd->GetNewDoubleValue(par));
 
   if ( cmd == fSetTargetDigiWindowCmd )
     fTargetGeometry->SetTargetDigiWindow(fSetTargetDigiWindowCmd->GetNewDoubleValue(par));

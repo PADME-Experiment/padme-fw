@@ -34,8 +34,8 @@ TargetDigi::TargetDigi(const TargetDigi& right)
   fDNumber = right.fDNumber;
   fChargeT = right.fChargeT;
   fCharge = right.fCharge;
-  fTimeTrace = right.fTimeTrace;
-  fTimeTraceV = right.fTimeTraceV;
+  fWaveformRaw = right.fWaveformRaw;
+  fWaveform = right.fWaveform;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -48,8 +48,8 @@ const TargetDigi& TargetDigi::operator=(const TargetDigi& right)
   fDNumber = right.fDNumber;
   fChargeT = right.fChargeT;
   fCharge = right.fCharge;
-  fTimeTrace = right.fTimeTrace;
-  fTimeTraceV = right.fTimeTraceV;
+  fWaveformRaw = right.fWaveformRaw;
+  fWaveform = right.fWaveform;
   return *this;
 }
 

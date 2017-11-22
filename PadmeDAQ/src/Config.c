@@ -58,6 +58,10 @@ int reset_config()
 
   Config->board_id = 0; // Board 0 is the default board used for testing
 
+  // Use board_id as default to set connection info
+  Config->conet2_link = -1;
+  Config->conet2_slot = -1;
+
   Config->startdaq_mode = 0; // Default to SW controlled start/stop
 
   Config->drs4_sampfreq = 2; // Default to 1GHz sampling frequency
@@ -268,6 +272,28 @@ int read_config(char *cfgfile)
 	    printf("Parameter %s set to %d\n",param,v);
 	  } else {
 	    printf("WARNING - board_id set to %d, must be < %d\n",v,MAX_N_BOARDS);
+	  }
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"conet2_link")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  if (v<MAX_N_CONET2_LINKS) {
+	    Config->conet2_link = v;
+	    printf("Parameter %s set to %d\n",param,v);
+	  } else {
+	    printf("WARNING - conet2_link set to %d, must be < %d\n",v,MAX_N_CONET2_LINKS);
+	  }
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"conet2_slot")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  if (v<MAX_N_CONET2_SLOTS) {
+	    Config->conet2_slot = v;
+	    printf("Parameter %s set to %d\n",param,v);
+	  } else {
+	    printf("WARNING - conet2_slot set to %d, must be < %d\n",v,MAX_N_CONET2_SLOTS);
 	  }
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
@@ -523,6 +549,8 @@ int print_config(){
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
   printf("run_type\t\t'%s'\t\trun type (DAQ, COSMIC, TEST)\n",Config->run_type);
   printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
+  printf("conet2_link\t\t%d\t\tCONET2 link\n",Config->conet2_link);
+  printf("conet2_slot\t\t%d\t\tCONET2 slot\n",Config->conet2_slot);
   printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
   printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
   printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
@@ -593,6 +621,12 @@ int save_config()
 
   sprintf(line,"%d",Config->board_id);
   db_add_cfg_para(Config->process_id,"board_id",line);
+
+  sprintf(line,"%d",Config->conet2_link);
+  db_add_cfg_para(Config->process_id,"conet2_link",line);
+
+  sprintf(line,"%d",Config->conet2_slot);
+  db_add_cfg_para(Config->process_id,"conet2_slot",line);
 
   sprintf(line,"%d",Config->startdaq_mode);
   db_add_cfg_para(Config->process_id,"startdaq_mode",line);

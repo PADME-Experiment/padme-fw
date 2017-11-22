@@ -11,6 +11,12 @@
 // We store the board_id in 8 bits
 #define MAX_N_BOARDS         256
 
+// We accept up to 4 A3818 boards (16 links)
+#define MAX_N_CONET2_LINKS    16
+
+// Each CONET2 link can address up to 8 boards
+#define MAX_N_CONET2_SLOTS     8
+
 typedef struct config_s {
 
   // File used to read configuration
@@ -53,6 +59,10 @@ typedef struct config_s {
 
   // ID of board connected to this process
   int board_id;
+
+  // Board optical connection info
+  int conet2_link;
+  int conet2_slot;
 
   // Choose start DAQ mode (0 = SW control, 1 = S_IN control, 2 = Frist trg)
   int startdaq_mode;

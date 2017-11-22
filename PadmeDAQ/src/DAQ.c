@@ -103,34 +103,26 @@ char* format_time(const time_t time) {
   return tform;
 }
 
-// Get LinkNum (A2818 board local address) from board_id
+// Get LinkNum (link address of port on A3818 boards)
 int get_LinkNum()
 {
-  // This algorithm will evolve when more A3818 boards will be used
-  if (Config->board_id == 0) return 0;
-  // Board 1 and board 2 currently share the same optical channel
-  // Only one of the two can be used at the same time
-  //if (Config->board_id == 1) return 1;
-  //if (Config->board_id == 2) return 1;
-  // Daisy chain test
-  if (Config->board_id == 1) return 0;
-  if (Config->board_id == 2) return 0;
-  return -1;
+  if (Config->conet2_link == -1) {
+    // Link is not defined: extract from board_id
+    printf("WARNING - CONET2 link set from board_id");
+    return Config->board_id/8;
+  }
+  return Config->conet2_link;
 }
 
-// Get ConetNode (ADC board address within A3818 board) from board_id
+// Get ConetNode (ADC board address, 0-7, within its A3818 link)
 int get_ConetNode()
 {
-  // This algorithm will evolve when more A3818 boards will be used
-  //if ( (Config->board_id < 0) || (Config->board_id >= 8) )  { return -1; }
-  //return Config->board_id;
-  if (Config->board_id == 0) return 0;
-  //if (Config->board_id == 1) return 0;
-  //if (Config->board_id == 2) return 0;
-  // Daisy chain test
-  if (Config->board_id == 1) return 1;
-  if (Config->board_id == 2) return 2;
-  return -1;
+  if (Config->conet2_slot == -1) {
+    // Slot is not defined: extract from board_id
+    printf("WARNING - CONET2 slot set from board_id");
+    return Config->board_id%8;
+  }
+  return Config->conet2_slot;
 }
 
 // Handle initial connection to digitizer. Return 0 if OK, >0 if error
@@ -153,6 +145,8 @@ int DAQ_connect ()
     printf("Unable to obtain ConetNode from board id\n");
     return 1;
   }
+
+  printf("- Connecting to CAEN digitizer board %d on link %d slot %d\n",Config->board_id,linkNum,conetNode);
 
   // Open connection to digitizer and initialize Handle global variable
   ret = CAEN_DGTZ_OpenDigitizer(CAEN_DGTZ_OpticalLink,linkNum,conetNode,0,&Handle);

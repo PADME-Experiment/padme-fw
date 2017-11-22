@@ -108,7 +108,7 @@ int get_LinkNum()
 {
   if (Config->conet2_link == -1) {
     // Link is not defined: extract from board_id
-    printf("WARNING - CONET2 link set from board_id");
+    printf("WARNING - CONET2 link set from board_id\n");
     return Config->board_id/8;
   }
   return Config->conet2_link;
@@ -119,7 +119,7 @@ int get_ConetNode()
 {
   if (Config->conet2_slot == -1) {
     // Slot is not defined: extract from board_id
-    printf("WARNING - CONET2 slot set from board_id");
+    printf("WARNING - CONET2 slot set from board_id\n");
     return Config->board_id%8;
   }
   return Config->conet2_slot;

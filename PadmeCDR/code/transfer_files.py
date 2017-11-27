@@ -24,7 +24,7 @@ def main(argv):
 
     DATA_DIR = "rawdata/%s"%YEAR
 
-    DAQ_SRV = "padmesrv1"
+    DAQ_SRV = "padmesrv2"
     DAQ_USER = "daq"
     DAQ_PATH = "/home/daq/DAQ"
 

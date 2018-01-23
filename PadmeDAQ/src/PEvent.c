@@ -41,6 +41,10 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   void *cursor = pEvt;
   void *cursor_old; // Used to save old position when applying zero suppression
 
+  // Extract 0-suppression configuration
+  int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1= flagging
+  int pEvt0SupAlgr = Config->zero_suppression % 100; // 0=off, 1-15=algorithm code
+
   // Event header will be created at the end
 
   // Jump at beginning of group trigger section
@@ -105,7 +109,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
       // Tag channel as active
       pEvtChMaskActive |= bCh;
 
-      if ( Config->zero_suppression == 1 ) {
+      if ( pEvt0SupAlgr != 0 ) { // Apply a 0-suppression algorithm (only one available now)
 
 	// Copy the samples while applying zero suppression algorithm
 	//printf("Applying zero suppression\n"); // Debug message
@@ -177,16 +181,16 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 	if ( (rms>Config->zs1_badrmsthr) ||  (nMaxOverThr>=Config->zs1_nabovethr) ) acceptCh = 1;
 	//	printf("Channel %d max consecutive samples over threshold: %d\n",Ch,nMaxOverThr);
 
-	if (acceptCh) {
-	  // Channel accepted: tag it in the accepted_channels mask and increase event size
-	  pEvtChMaskAccepted |= bCh;
+	// If channel is accepted, tag it in the accepted_channels mask
+	if (acceptCh) pEvtChMaskAccepted |= bCh;
+
+	// If channel is accepted or 0-suppression algorithm is in flaggin mode...
+	if (acceptCh || pEvt0SupMode) {
+	  // ...increase event size
 	  pEvtSize += (nSm/2 + nSm%2);
-	  //	  printf("3 - pEvtSize %d\n",pEvtSize);
-	  //	  printf("Channel %d accepted\n",Ch);
 	} else {
-	  // Channel rejected: overwrite it
+	  // ...else reject event by resetting cursor to old position
 	  cursor = cursor_old;
-	  //	  printf("Channel %d rejected\n",Ch);
 	}
 
       } else {
@@ -229,10 +233,12 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   } else {
     pEvtStatus |=  (0x1 << PEVT_STATUS_DRS4COR_BIT);
   }
-  if (Config->zero_suppression == 0) { // Check if zero suppression algorithm was applied
-    pEvtStatus &= !(0x1 << PEVT_STATUS_ZEROSUP_BIT);
-  } else {
-    pEvtStatus |=  (0x1 << PEVT_STATUS_ZEROSUP_BIT);
+  if (pEvt0SupAlgr == 0) { // 0-suppression not applied
+    pEvtStatus = (pEvtStatus & 0x3) + (0x0 << PEVT_STATUS_ZEROSUP_BIT);
+  } else if (pEvt0SupMode == 0) { // 0-suppression applied in rejection mode
+    pEvtStatus = (pEvtStatus & 0x3) + (0x1 << PEVT_STATUS_ZEROSUP_BIT);
+  } else if (pEvt0SupMode == 1) { // 0-suppression applied in flagging mode
+    pEvtStatus = (pEvtStatus & 0x3) + (0x2 << PEVT_STATUS_ZEROSUP_BIT);
   }
 
   // Copy line 1 of V1742 event header to line 1 of pEvent header (board id,LVDS pattern)
@@ -260,14 +266,15 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
 }
 
-unsigned int create_file_head(unsigned int fIndex, int runNr, time_t timeTag, void *fHead)
+unsigned int create_file_head(unsigned int fIndex, int runNr, uint32_t boardSN, time_t timeTag, void *fHead)
 {
   uint32_t line;
   line = (PEVT_FHEAD_TAG << 28) + (PEVT_CURRENT_VERSION << 16) + (fIndex & 0xFFFF);
-  memcpy(fHead,&line,4);      // First line: file head tag (4) + version (12) + file index (16)
-  memcpy(fHead+4,&runNr,4);   // Second line: run number (32)
-  memcpy(fHead+8,&timeTag,4); // Third line: start of file time tag (32)
-  return PEVT_FHEAD_LEN*4;    // Return total size of file header in bytes
+  memcpy(fHead,&line,4);       // First line: file head tag (4) + version (12) + file index (16)
+  memcpy(fHead+4,&runNr,4);    // Second line: run number (32)
+  memcpy(fHead+8,&boardSN,4);  // Third line: board serial number (32)
+  memcpy(fHead+12,&timeTag,4); // Fourth line: start of file time tag (32)
+  return PEVT_FHEAD_LEN*4;     // Return total size of file header in bytes
 }
 
 unsigned int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_t timeTag, void *fTail)

@@ -172,6 +172,9 @@ int DAQ_connect ()
   printf("- AMC FPGA Release: %s\n", boardInfo.AMC_FirmwareRel);
   printf("- PCB revision number: %u\n", boardInfo.PCB_Revision);
 
+  // Save board serial number: will be written to file header
+  Config->board_sn = boardInfo.SerialNumber;
+
   return 0;
 }
 
@@ -834,7 +837,7 @@ int DAQ_readdata ()
   }
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
@@ -1085,7 +1088,7 @@ int DAQ_readdata ()
 	}
 
 	// Write header to file
-	fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
 	if (writeSize != fHeadSize) {
 	  printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",

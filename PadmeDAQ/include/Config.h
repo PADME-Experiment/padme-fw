@@ -60,6 +60,9 @@ typedef struct config_s {
   // ID of board connected to this process
   int board_id;
 
+  // Serial number of board connected to this process
+  uint32_t board_sn;
+
   // Board optical connection info
   int conet2_link;
   int conet2_slot;

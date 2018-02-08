@@ -62,15 +62,20 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Group header: start index cell|freq|tr|size
       pEvtGroupSize = PEVT_GRPHEAD_LEN+PEVT_GRPTTT_LEN;
-      freq = Config->drs4_sampfreq; // 0=5GHz, 1=2.5GHz, 2=1GHz
+      freq = Config->drs4_sampfreq; // 0=5GHz, 1=2.5GHz, 2=1GHz, 3=0.7GHz(new)
       tr = 0; // trigger data - 0:no, 1:yes
       if ( (nSm = event->DataGroup[iGr].ChSize[8]) ) {
 	tr = 1;
 	pEvtGroupSize += (nSm/2 + nSm%2);
       }
 
-      line = ((event->DataGroup[iGr].StartIndexCell & 0xFFFF)<<16)
-	+ ((freq & 0x3)<<14) + ((tr & 0x3)<<12) + (pEvtGroupSize & 0xFFF);
+      // pEvent group header includes:
+      // Start Index Cell (bit 22-31)
+      // ADC frequency (bit 20-21)
+      // Trigger data flag (bit 19)
+      // Size of group data in 4 bytes words (bit 0-11). Includes group header, trigger samples, and trigger time tag.
+      line = ((event->DataGroup[iGr].StartIndexCell & 0x3FF)<<22)
+	+ ((freq & 0x3)<<20) + ((tr & 0x1)<<19) + (pEvtGroupSize & 0xFFF);
       memcpy(cursor,&line,4);
       cursor += 4;
 
@@ -184,7 +189,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 	// If channel is accepted, tag it in the accepted_channels mask
 	if (acceptCh) pEvtChMaskAccepted |= bCh;
 
-	// If channel is accepted or 0-suppression algorithm is in flaggin mode...
+	// If channel is accepted or 0-suppression algorithm is in flagging mode...
 	if (acceptCh || pEvt0SupMode) {
 	  // ...increase event size
 	  pEvtSize += (nSm/2 + nSm%2);
@@ -217,7 +222,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
   // Create the event header
 
-  // Line 0: event tag + event size (in 4bytes words)
+  // Line 0 of pEvent header: event tag (bit 28-31) + event size in 4bytes words (bit 0-27)
   //  printf("Final - pEvtSize %d\n",pEvtSize);
   line = (PEVT_EVENT_TAG << 28) + (pEvtSize & 0x0FFFFFFF);
   memcpy(pEvt,&line,4);
@@ -245,17 +250,21 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
     pEvtStatus += (0x2 << PEVT_STATUS_ZEROSUP_BIT);
   }
 
-  // Copy line 1 of V1742 event header to line 1 of pEvent header
-  // (board_id,LVDS pattern,group mask) adding code of 0-suppression
-  // algorithm used and replacing original board id (5b) with our
-  // board id (8b). The board fail flag is saved to event status.
+  // 1) Get line 1 of V1742 event header
+  // 2) Save Board Fail flag (bit 26) to event status.
+  // 3) Extract LVDS pattern (bit 8-23) and group mask (bit 0-3).
+  // 4) Add our board id (bit 24-31) and 0-suppression algorithm code (bit 4-7).
+  // 5) Copy result to line 1 of pEvent header
   memcpy(&line,evtPtr+4,4);
   // Save BF flag to event status
   if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
   line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((Config->zero_suppression & 0xF) << 4);
   memcpy(pEvt+4,&line,4);
 
-  // Copy line 2 of V1742 event header to line 2 of pEvent header (event counter) adding event status pattern
+  // 1) Get line 2 of V1742 event header
+  // 2) Extract event counter (bit 0-21)
+  // 3) Add event status pattern (bit 22-31)
+  // 4) Copy result to line 2 of pEvent header
   memcpy(&line,evtPtr+8,4);
   line = (line & 0x003FFFFF) + ((pEvtStatus & 0x03FF) << 22);
   memcpy(pEvt+8,&line,4);

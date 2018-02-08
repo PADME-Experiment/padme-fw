@@ -20,7 +20,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 {
 
   int pEvtSize = 0;
-  int pEvtStatus = 0;
+  int pEvtStatus;
   int pEvtGroupSize;
 
   uint32_t pEvtChMaskActive = 0;
@@ -223,32 +223,42 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   memcpy(pEvt,&line,4);
 
   // Prepare events status mask for this event
+  pEvtStatus = 0; // Zero event status
+
   if (pEvtChMaskAccepted) { // Check if at least one channel was accepted
-    pEvtStatus |=  (0x1 << PEVT_STATUS_HASDATA_BIT);
+    pEvtStatus += (0x1 << PEVT_STATUS_HASDATA_BIT); // Event has data
   } else {
-    pEvtStatus &= !(0x1 << PEVT_STATUS_HASDATA_BIT);
-  }
-  if (Config->drs4corr_enable == 0) { // Check if DRS4 corrections were applied
-    pEvtStatus &= !(0x1 << PEVT_STATUS_DRS4COR_BIT);
-  } else {
-    pEvtStatus |=  (0x1 << PEVT_STATUS_DRS4COR_BIT);
-  }
-  if (pEvt0SupAlgr == 0) { // 0-suppression not applied
-    pEvtStatus = (pEvtStatus & 0x3) + (0x0 << PEVT_STATUS_ZEROSUP_BIT);
-  } else if (pEvt0SupMode == 0) { // 0-suppression applied in rejection mode
-    pEvtStatus = (pEvtStatus & 0x3) + (0x1 << PEVT_STATUS_ZEROSUP_BIT);
-  } else if (pEvt0SupMode == 1) { // 0-suppression applied in flagging mode
-    pEvtStatus = (pEvtStatus & 0x3) + (0x2 << PEVT_STATUS_ZEROSUP_BIT);
+    pEvtStatus += (0x0 << PEVT_STATUS_HASDATA_BIT); // Event has no data
   }
 
-  // Copy line 1 of V1742 event header to line 1 of pEvent header (board id,LVDS pattern)
-  // adding event status and replacing original board id (5b) with our board id (8b)
+  if (Config->drs4corr_enable) { // Check if DRS4 corrections were applied
+    pEvtStatus += (0x1 << PEVT_STATUS_DRS4COR_BIT); // Corrections applied
+  } else {
+    pEvtStatus += (0x0 << PEVT_STATUS_DRS4COR_BIT); // Corrections not applied
+  }
+
+  if (pEvt0SupAlgr == 0) { // 0-suppression not applied
+    pEvtStatus += (0x0 << PEVT_STATUS_ZEROSUP_BIT);
+  } else if (pEvt0SupMode == 0) { // 0-suppression applied in rejection mode
+    pEvtStatus += (0x1 << PEVT_STATUS_ZEROSUP_BIT);
+  } else if (pEvt0SupMode == 1) { // 0-suppression applied in flagging mode
+    pEvtStatus += (0x2 << PEVT_STATUS_ZEROSUP_BIT);
+  }
+
+  // Copy line 1 of V1742 event header to line 1 of pEvent header
+  // (board_id,LVDS pattern,group mask) adding code of 0-suppression
+  // algorithm used and replacing original board id (5b) with our
+  // board id (8b). The board fail flag is saved to event status.
   memcpy(&line,evtPtr+4,4);
-  line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((pEvtStatus & 0xF) << 4);
+  // Save BF flag to event status
+  if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
+  line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((Config->zero_suppression & 0xF) << 4);
   memcpy(pEvt+4,&line,4);
 
-  // Copy line 2 of V1742 event header to line 2 of pEvent header (event counter)
-  memcpy(pEvt+8,evtPtr+8,4);
+  // Copy line 2 of V1742 event header to line 2 of pEvent header (event counter) adding event status pattern
+  memcpy(&line,evtPtr+8,4);
+  line = (line & 0x003FFFFF) + ((pEvtStatus & 0x03FF) << 22);
+  memcpy(pEvt+8,&line,4);
 
   // Copy line 3 of V1742 event header to line 3 of pEvent header (event time tag)
   memcpy(pEvt+12,evtPtr+12,4);

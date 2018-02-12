@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include <cmath>
 
 #include "ADCBoard.hh"
 #include "DBService.hh"
@@ -248,27 +249,62 @@ int main(int argc, char* argv[])
       if (nEOR == boards.size()) {
 	printf("All boards reached end of run.\n");
       } else {
-	printf("WARNING: only %d board(s) reached end of run.\n",nEOR);
+	printf("WARNING: %d board(s) reached end of run.\n",nEOR);
       }
       break; // Exit from main loop
     }
 
-    nEOR = 0;
     UInt_t in_time = 0;
     while ( (! in_time) && (nEOR==0) ) {
 
-      // Get timing information
+      // Get timing information for each board
       UInt_t bmax = 0;
       for(unsigned int b=0; b<boards.size(); b++) {
-	TT[b]  = boards[b]->Event()->GetTriggerTimeTag(0);
-	if(eventnr==0) {
-	  //TT0[b] = TT[b];
-	  TTg[b] = TT[b]; // Event 0 is good by definition
+
+	UInt_t TT_evt = 0;
+
+	UInt_t board_in_time = 0;
+	while ( (! board_in_time) && (nEOR==0) ) {
+
+	  board_in_time = 1;
+
+	  UChar_t grMsk = boards[b]->Event()->GetGroupMask();
+	  UInt_t first_active_group = 1;
+	  for (unsigned int i=0; i<4; i++) {
+	    if (grMsk & 1<<i) {
+	      UInt_t TT_grp = boards[b]->Event()->GetTriggerTimeTag(i);
+	      if (first_active_group) { // This is the first active group: get its time as reference for event
+		TT_evt = TT_grp;
+		first_active_group = 0;
+	      } else { // Other groups are present: verify they are all in time (0x0100 clock cycles tolerance)
+		if ( std::abs(TT_evt-TT_grp) >= 0x0100 ) { // Time mismatch
+		  board_in_time = 0;
+		  printf("*** Board %2d - Internal mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+		  if ( boards[b]->NextEvent() == 0 ) {
+		    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+		    nEOR++;
+		  }
+		  break; // Break loop on trigger groups
+		}
+	      }
+	    }
+	  }
+
 	}
+
+	// If board reached EOR, stop processing events
+	if (nEOR != 0) {
+	  printf("WARNING: board %d reached end of run because of internal time mismatches.\n",b);
+	  break; // Exit from loop over boards
+	}
+
+	// We now have a time for the board
+	TT[b] = TT_evt;
+	if(eventnr==0) { TTg[b] = TT[b]; } // Event 0 is good by definition
 	dT[b] = TT[b]-TTg[b];
-	if (dT[b]<0) dT[b] += (1<<30);
-	if (dT[b]>dT[bmax]) bmax = b;
-	dTB0[b] = TT[b]-TT[0];
+	if (dT[b]<0) dT[b] += (1<<30); // Check if clock counter rolled over
+	if (dT[b]>dT[bmax]) bmax = b; // Check if this is the highest time in the current set of board times
+	dTB0[b] = TT[b]-TT[0]; // Compute time difference of this board wrt board 0
 
 	if (verbose>=2) {
 	  if (b==0) {
@@ -280,15 +316,17 @@ int main(int argc, char* argv[])
 
       }
 
-      // Verify if all events are in time (0x1000 clock cycles tolerance)
-      in_time = 1;
-      for(unsigned int b=0; b<boards.size(); b++) {
-	if ( (dT[bmax]-dT[b]) >= 0x1000 ) {
-	  in_time = 0;
-	  printf("*** Board %2d - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-	  if ( boards[b]->NextEvent() == 0 ) {
-	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-	    nEOR++;
+      // If no boards reached EOR, verify if all boards are in time (0x1000 clock cycles tolerance)
+      if (nEOR == 0) {
+	in_time = 1;
+	for(unsigned int b=0; b<boards.size(); b++) {
+	  if ( (dT[bmax]-dT[b]) >= 0x1000 ) {
+	    in_time = 0;
+	    printf("*** Board %2d - External mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+	    if ( boards[b]->NextEvent() == 0 ) {
+	      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+	      nEOR++;
+	    }
 	  }
 	}
       }
@@ -297,18 +335,12 @@ int main(int argc, char* argv[])
 
     // If one or more files reached EOR, stop processing events
     if (nEOR != 0) {
-      if (nEOR == boards.size()) {
-	printf("All boards reached end of run.\n");
-      } else {
-	printf("WARNING: only %d board(s) reached end of run.\n",nEOR);
-      }
+      printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
       break; // Exit from main loop
     }
 
-    // Tag current set of times ad "good"
-    for (unsigned int b=0; b<boards.size(); b++) {
-      TTg[b] = TT[b];
-    }
+    // Tag current set of times as "good"
+    for (unsigned int b=0; b<boards.size(); b++) TTg[b] = TT[b];
 
     // The event is complete: copy structure to TRawEvent and send to output file
     if (root->FillRawEvent(runnr,eventnr,boards) != ROOTIO_OK) {
@@ -318,7 +350,8 @@ int main(int argc, char* argv[])
 
     // Count event
     eventnr++;
-  }
+
+  } // End of main loop
 
   // Finalize root file
   if (root->Exit() != ROOTIO_OK) {

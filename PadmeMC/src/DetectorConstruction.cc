@@ -422,6 +422,13 @@ void DetectorConstruction::DefineMaterials()
   EJ510Paint->AddElement(G4Element::GetElement("H"),2.899*perCent);
   EJ510Paint->AddElement(G4Element::GetElement("O"),38.854*perCent);
 
+  // Alustep honeycomb (assume composition similar to Kevlar)
+  G4Material* Alustep = new G4Material("Alustep",0.032*g/cm3,4);
+  Alustep->AddElement(G4Element::GetElement("C"),14);
+  Alustep->AddElement(G4Element::GetElement("H"),10);
+  Alustep->AddElement(G4Element::GetElement("O"),2);
+  Alustep->AddElement(G4Element::GetElement("N"),2);
+
   /*
   //--------- Materials definition ---------
   G4double a, z, density;

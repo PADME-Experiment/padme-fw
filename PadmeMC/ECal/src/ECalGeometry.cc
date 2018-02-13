@@ -36,11 +36,11 @@ ECalGeometry::ECalGeometry()
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 
-  // Geometry parameters for plastic panel in front of ECal (not used)
-  fECalPanelEnable = false;
-  fECalPanelThickness = 0.5*cm;
-  fECalPanelSizeX = 62.*cm; // Slightly larger than ECal (61.625cm)
-  fECalPanelSizeY = 62.*cm; // Slightly larger than ECal (61.625cm)
+  // Geometry parameters for Alustep panel in front of ECal
+  fECalPanelEnable = true;
+  fECalPanelThickness = 15.*mm;
+  fECalPanelSizeX = 690.*mm;
+  fECalPanelSizeY = 690.*mm;
   fECalPanelGap = 0.100*mm;
 
   // Set default map of crystals in ECal to big (5x5) hole

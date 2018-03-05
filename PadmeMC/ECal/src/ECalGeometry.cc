@@ -20,6 +20,10 @@ ECalGeometry::ECalGeometry()
 
   // Inizialize default parameters
 
+  fECalSizeX = 690.*mm; // Same as front panel
+  fECalSizeY = 690.*mm; // Same as pront panel
+  fECalSizeZ = 250.*mm; // Will become longer if we include the length of PMTs
+
   fCrystalSizeX =  2.1*cm;
   fCrystalSizeY =  2.1*cm;
   fCrystalSizeZ = 23.0*cm;
@@ -27,21 +31,43 @@ ECalGeometry::ECalGeometry()
   fECalNRows = 29;
   fECalNCols = 29;
 
-  fCrystalGap = 100.*um;
+  fCrystalGap = 120.*um;
 
-  fCrystalCoating = 100.*um;
+  fCrystalCoating = 115.*um;
 
-  //fECalFrontFacePosZ = 230.*cm; // From center of magnet yoke, i.e. 3m to target
-  fECalFrontFacePosZ = 233.*cm; // From center of magnet yoke, i.e. 3.33m to target
+  // Back surface of thin window flange is at 2323mm
+  //fECalFrontFacePosZ = 2330.*mm; // From center of magnet yoke, i.e. 3.33m to target
+  fECalFrontFacePosZ = 2340.*mm; // From center of magnet yoke, i.e. 3.34m to target
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 
   // Geometry parameters for Alustep panel in front of ECal
   fECalPanelEnable = true;
   fECalPanelThickness = 15.*mm;
+  fECalPanelFoilThickness = 0.3*mm;
+  fECalPanelGlueThickness = 0.2*mm;
   fECalPanelSizeX = 690.*mm;
   fECalPanelSizeY = 690.*mm;
-  fECalPanelGap = 0.100*mm;
+  fECalPanelHoleRadius = 48.*mm;
+  fECalPanelGap = 0.1*mm;
+
+  // Geometry parameters for ASA support structure inside ECal central hole
+  fECalSupportEnable = true;
+
+  fECalSupportSizeX = 106.85*mm;
+  fECalSupportSizeY = 106.85*mm;
+  fECalSupportSizeZ = 240.*mm;
+  fECalSupportHoleRadius = 48.*mm;
+  fECalSupportFrontThickness = 5.*mm;
+  fECalSupportSideThickness = 2.*mm;
+  fECalSupportBackThickness = 2.*mm;
+
+  fECalSupportLatticeNCellXY = 4;
+  fECalSupportLatticeNCellZ = 7;
+  fECalSupportLatticeHoleWidth = 22.46*mm;
+  fECalSupportLatticeHoleLength = 31.*mm;
+  fECalSupportLatticeFrame = 1.*mm;
+  fECalSupportLatticeThickness = 2.*mm;
 
   // Set default map of crystals in ECal to big (5x5) hole
   fCrystalMapId = 0;
@@ -208,6 +234,31 @@ G4int ECalGeometry::ExistsTedlarVAt(G4int row,G4int col)
 
 }
 
+G4int ECalGeometry::ExistsExternalSupportAt(G4int row, G4int col)
+{
+
+  // Verify we are within ECal box
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) return 0;
+
+  // Check if a crystal exists at that position
+  if ( fECalCrystalMap[row][col] ) return 0;
+
+  // The central 5x5 hole has a special support structure
+  G4int centralHoleXStart = fECalNCols/2-2;
+  G4int centralHoleXEnd = fECalNCols/2+2;
+  G4int centralHoleYStart = fECalNRows/2-2;
+  G4int centralHoleYEnd = fECalNRows/2+2;
+  //printf("%d %d %d %d %d %d\n",row,centralHoleXStart,centralHoleXEnd,col,centralHoleYStart,centralHoleYEnd);
+  if ( row >= centralHoleYStart && row <= centralHoleYEnd && col >= centralHoleXStart && col <= centralHoleXEnd ) {
+    //printf("- Inside central hole\n");
+    return 0;
+  }
+
+  // No crystal and not in central hole: create external support structure
+  return 1;
+
+}
+
 G4double ECalGeometry::GetCrystalPosX(G4int row, G4int col)
 {
 
@@ -247,8 +298,8 @@ G4double ECalGeometry::GetCrystalPosZ(G4int row, G4int col)
     return 0.;
   }
 
-  // Return Z position of center of crystal in local coordinate system
-  return 0.;
+  // Return Z position of center of cell in local coordinate system
+  return 0.5*(-fECalSizeZ+fCrystalGap+GetCellSizeZ());
 
 }
 
@@ -290,7 +341,7 @@ G4double ECalGeometry::GetTedlarHPosZ(G4int row, G4int col)
   }
 
   // Return Z position of center of slip in local coordinate system
-  return 0.;
+  return 0.5*(-fECalSizeZ+fCrystalGap+GetCellSizeZ());
 
 }
 
@@ -318,7 +369,8 @@ G4double ECalGeometry::GetTedlarVPosY(G4int row, G4int col)
   }
 
   // Return Y position of center of slip in local coordinate system
-  return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+0.5)-0.5*fCrystalCoating;
+  //return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+0.5)-0.5*fCrystalCoating;
+  return (GetCellSizeY()+fCrystalGap)*(-fECalNRows*0.5+row+0.5);
 
 }
 
@@ -332,7 +384,49 @@ G4double ECalGeometry::GetTedlarVPosZ(G4int row, G4int col)
   }
 
   // Return Z position of center of slip in local coordinate system
-  return 0.;
+  return 0.5*(-fECalSizeZ+fCrystalGap+GetCellSizeZ());
+
+}
+
+G4double ECalGeometry::GetExternalSupportCellPosX(G4int row, G4int col)
+{
+
+  // Verify we are within ECal box
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
+    printf("ECalGeometry::GetExternalSupportCellPosX - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    return 0.;
+  }
+
+  // Return X position of center of ASA cell in local coordinate system
+  return GetExternalSupportCellSizeX()*(-fECalNCols*0.5+col+0.5);
+
+}
+
+G4double ECalGeometry::GetExternalSupportCellPosY(G4int row, G4int col)
+{
+
+  // Verify we are within ECal box
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
+    printf("ECalGeometry::GetExternalSupportCellPosY - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    return 0.;
+  }
+
+  // Return Y position of center of ASA cell in local coordinate system
+  return GetExternalSupportCellSizeY()*(-fECalNRows*0.5+row+0.5);
+
+}
+
+G4double ECalGeometry::GetExternalSupportCellPosZ(G4int row, G4int col)
+{
+
+  // Verify we are within ECal box
+  if ( row<0 || row>=fECalNRows || col<0 || col>=fECalNCols ) {
+    printf("ECalGeometry::GetExternalSupportCellPosZ - ERROR - Requested position of crystal at row %d col %d (outside ECal box)\n",row,col);
+    return 0.;
+  }
+
+  // Return Z position of center of cell in local coordinate system
+  return 0.5*(-fECalSizeZ+fCrystalGap+GetExternalSupportCellSizeZ());
 
 }
 

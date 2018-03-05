@@ -422,12 +422,26 @@ void DetectorConstruction::DefineMaterials()
   EJ510Paint->AddElement(G4Element::GetElement("H"),2.899*perCent);
   EJ510Paint->AddElement(G4Element::GetElement("O"),38.854*perCent);
 
-  // Alustep honeycomb (assume composition similar to Kevlar)
-  G4Material* Alustep = new G4Material("Alustep",0.032*g/cm3,4);
-  Alustep->AddElement(G4Element::GetElement("C"),14);
-  Alustep->AddElement(G4Element::GetElement("H"),10);
-  Alustep->AddElement(G4Element::GetElement("O"),2);
-  Alustep->AddElement(G4Element::GetElement("N"),2);
+  // Nomex honeycomb (ECal)
+  G4Material* Nomex = new G4Material("Nomex",0.032*g/cm3,4);
+  Nomex->AddElement(G4Element::GetElement("C"),13);
+  Nomex->AddElement(G4Element::GetElement("H"),10);
+  Nomex->AddElement(G4Element::GetElement("O"),2);
+  Nomex->AddElement(G4Element::GetElement("N"),2);
+
+  // Nomex foil(+glue) (ECal) => Should find better composition (now using that of Nomex)
+  G4Material* NomexFoil = new G4Material("NomexFoil",1.07*g/cm3,4);
+  NomexFoil->AddElement(G4Element::GetElement("C"),13);
+  NomexFoil->AddElement(G4Element::GetElement("H"),10);
+  NomexFoil->AddElement(G4Element::GetElement("O"),2);
+  NomexFoil->AddElement(G4Element::GetElement("N"),2);
+
+  // ASA (Acrylate Styrene Acrylonitrile) 3d printer plastic used for ECal support structures (ECal)
+  G4Material* ASA = new G4Material("ASA",1.07*g/cm3,4);
+  ASA->AddElement(G4Element::GetElement("C"),15);
+  ASA->AddElement(G4Element::GetElement("H"),17);
+  ASA->AddElement(G4Element::GetElement("O"),2);
+  ASA->AddElement(G4Element::GetElement("N"),1);
 
   /*
   //--------- Materials definition ---------

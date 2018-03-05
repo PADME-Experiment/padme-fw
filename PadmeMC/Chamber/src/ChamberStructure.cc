@@ -50,22 +50,26 @@ void ChamberStructure::CreateGeometry()
   // The main parts of the Vacuum Chamber are imported in DetectorConstruction.cc from GDML files
   // Here we only define flanges, portholes and other components of the chamber
 
-  // Create the thin window membrane in front of ECal with its flange
-  //CreateECalAlThinWindow();
-  CreateECalCarbonThinWindow();
+  if (fChamberExists) {
 
-  // Create crossed pipes in the target area
-  CreateTargetPipes();
+    // Create the thin window membrane in front of ECal with its flange
+    //CreateECalAlThinWindow();
+    CreateECalCarbonThinWindow();
 
-  // Create junction pipe between cross and vacuum chamber
-  CreateJunctionPipe();
+    // Create crossed pipes in the target area
+    CreateTargetPipes();
 
-  // Create porthole caps for both section of the chamber
-  CreatePortholeCaps();
+    // Create junction pipe between cross and vacuum chamber
+    CreateJunctionPipe();
 
-  // Create cap for large porthole iin front of TimePix
-  // Includes round cap with thin Mylar window
-  CreateTPixPortholeCap();
+    // Create porthole caps for both section of the chamber
+    CreatePortholeCaps();
+
+    // Create cap for large porthole iin front of TimePix
+    // Includes round cap with thin Mylar window
+    CreateTPixPortholeCap();
+
+  }
 
 }
 

@@ -39,9 +39,9 @@ class ADCBoard
 
   int ReadFileHead();
   int ReadNextEvent();
-  int UnpackEvent(UInt_t);
-  int UnpackFileHead();
-  int UnpackFileTail();
+  int UnpackEvent_v01(UInt_t);
+  int UnpackEvent_v02(UInt_t);
+  int UnpackEvent_v03(UInt_t);
 
  private:
 

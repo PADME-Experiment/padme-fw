@@ -7,8 +7,15 @@
 
 ADCBoard::ADCBoard(int board)
 {
-  UInt_t max_event_len = 4*(ADCEVENT_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
-  //printf("max_event_len %d\n",max_event_len);
+
+  UInt_t max_event_len_v01 = 4*(ADCEVENT_V01_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_V01_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_V01_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
+  UInt_t max_event_len_v02 = 4*(ADCEVENT_V02_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_V02_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_V02_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
+  UInt_t max_event_len_v03 = 4*(ADCEVENT_V03_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_V03_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_V03_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
+
+  UInt_t max_event_len = std::max(max_event_len_v01,std::max(max_event_len_v02,max_event_len_v03));
+
+  printf("max_event_len v01 %d v02 %d v03 %d max %d\n",max_event_len_v01,max_event_len_v02,max_event_len_v03,max_event_len);
+
   fBuffer = malloc(max_event_len);
   fBoardId = board;
   fADCEvent = new ADCEvent();
@@ -108,19 +115,52 @@ ADCEvent* ADCBoard::NextEvent()
 int ADCBoard::ReadFileHead()
 {
 
-  // Read file header into buffer
-  fFileHandle.read((char*)fBuffer,ADCEVENT_FHEAD_LEN*4);
+  // Read first line (4 bytes) of file header into buffer
+  // NB: format of this line MUST NOT change with version!
+  fFileHandle.read((char*)fBuffer,4);
 
   // Check if file header tag is correct
-  UChar_t tag = (UChar_t)( ( ((Int_t*)fBuffer)[ADCEVENT_TAG_LIN] & ADCEVENT_TAG_BIT ) >> ADCEVENT_TAG_POS );
+  UChar_t tag = (UChar_t)( ( ((UInt_t*)fBuffer)[ADCEVENT_TAG_LIN] & ADCEVENT_TAG_BIT ) >> ADCEVENT_TAG_POS );
   if (tag != ADCEVENT_FHEAD_TAG) {
     printf("ERROR - File does not start with the right tag - Expected 0x%1X - Found 0x%1X\n",ADCEVENT_FHEAD_TAG,tag);
     return 1;
   }
 
-  if (UnpackFileHead()) {
-    printf("ERROR while unpacking file head (?)\n");
+  // Get data format version
+  fFiles[fCurrentFile].SetVersion( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_VERSION_LIN] & ADCEVENT_VERSION_BIT) >> ADCEVENT_VERSION_POS) );
+
+  // Unpack rest of file header according to data format version
+
+  if (fFiles[fCurrentFile].GetVersion() == 1) {
+
+    // Version 1
+    fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V01_FHEAD_LEN-1));
+    fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_FILEINDEX_LIN] & ADCEVENT_V01_FILEINDEX_BIT) >> ADCEVENT_V01_FILEINDEX_POS) );
+    fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_RUNNUMBER_LIN] & ADCEVENT_V01_RUNNUMBER_BIT) >> ADCEVENT_V01_RUNNUMBER_POS) );
+    fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_TTAGSOF_LIN] & ADCEVENT_V01_TTAGSOF_BIT) >> ADCEVENT_V01_TTAGSOF_POS) );
+
+  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+
+    // Version 2
+    fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V02_FHEAD_LEN-1));
+    fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_FILEINDEX_LIN] & ADCEVENT_V02_FILEINDEX_BIT) >> ADCEVENT_V02_FILEINDEX_POS) );
+    fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_RUNNUMBER_LIN] & ADCEVENT_V02_RUNNUMBER_BIT) >> ADCEVENT_V02_RUNNUMBER_POS) );
+    fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_TTAGSOF_LIN] & ADCEVENT_V02_TTAGSOF_BIT) >> ADCEVENT_V02_TTAGSOF_POS) );
+
+  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+
+    // Version 3
+    fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V03_FHEAD_LEN-1));
+    fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_FILEINDEX_LIN] & ADCEVENT_V03_FILEINDEX_BIT) >> ADCEVENT_V03_FILEINDEX_POS) );
+    fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_RUNNUMBER_LIN] & ADCEVENT_V03_RUNNUMBER_BIT) >> ADCEVENT_V03_RUNNUMBER_POS) );
+    fFiles[fCurrentFile].SetBoardSN( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_BOARDSN_LIN] & ADCEVENT_V03_BOARDSN_BIT) >> ADCEVENT_V03_BOARDSN_POS) );
+    fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_TTAGSOF_LIN] & ADCEVENT_V03_TTAGSOF_BIT) >> ADCEVENT_V03_TTAGSOF_POS) );
+
+  } else {
+
+    printf("ERROR - File incompatible file version found: %d\n",fFiles[fCurrentFile].GetVersion());
     return 1;
+
   }
 
   return 0;
@@ -130,7 +170,8 @@ int ADCBoard::ReadFileHead()
 int ADCBoard::ReadNextEvent()
 {
 
-  // Read first word of event, check its tag
+  // Read first line (4 bytes) of event header or file tail into buffer
+  // Check tag to decide if it is an event header or a file tail
   fFileHandle.read((char*)fBuffer,4);
   UChar_t tag = (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_TAG_LIN] & ADCEVENT_TAG_BIT ) >> ADCEVENT_TAG_POS);
   if (tag == ADCEVENT_EVENT_TAG) {
@@ -139,20 +180,49 @@ int ADCBoard::ReadNextEvent()
     UInt_t size = (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_EVENTSIZE_LIN] & ADCEVENT_EVENTSIZE_BIT ) >> ADCEVENT_EVENTSIZE_POS);
     fFileHandle.read((char*)fBuffer+4,4*(size-1));
 
-    if (UnpackEvent(size)) {
+    // Decode event structure according to data format version
+    int rc = 0;
+    if (fFiles[fCurrentFile].GetVersion() == 1) {
+      rc = UnpackEvent_v01(size);
+    } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+      rc = UnpackEvent_v02(size);
+    } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+      rc = UnpackEvent_v03(size);
+    }
+    if (rc) {
       printf("ERROR while unpacking event\n");
       return 1;
     }
     
   } else if (tag == ADCEVENT_FTAIL_TAG) {
 
-    // This is a file tail block: read the remaining part to buffer
-    fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_FTAIL_LEN-1));
+    // This is a file tail block
+    // Read the remaining part to buffer and unpack it according to data format version
 
-    // Unpack tail of file
-    if (UnpackFileTail()) {
-      printf("ERROR while unpacking file tail (?)\n");
-      return 1;
+    if (fFiles[fCurrentFile].GetVersion() == 1) {
+
+      // Version 1
+      fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V01_FTAIL_LEN-1));
+      fFiles[fCurrentFile].SetNEvents( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_NEVENTS_LIN] & ADCEVENT_V01_NEVENTS_BIT) >> ADCEVENT_V01_NEVENTS_POS) );
+      fFiles[fCurrentFile].SetEndTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_TTAGEOF_LIN] & ADCEVENT_V01_TTAGEOF_BIT) >> ADCEVENT_V01_TTAGEOF_POS) );
+      fFiles[fCurrentFile].SetSize( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V01_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V01_FILESIZEHI_LIN] << 32 ) );
+
+    } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+
+      // Version 2
+      fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V02_FTAIL_LEN-1));
+      fFiles[fCurrentFile].SetNEvents( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_NEVENTS_LIN] & ADCEVENT_V02_NEVENTS_BIT) >> ADCEVENT_V02_NEVENTS_POS) );
+      fFiles[fCurrentFile].SetEndTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_TTAGEOF_LIN] & ADCEVENT_V02_TTAGEOF_BIT) >> ADCEVENT_V02_TTAGEOF_POS) );
+      fFiles[fCurrentFile].SetSize( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V02_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V02_FILESIZEHI_LIN] << 32 ) );
+
+    } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+
+      // Version 3
+      fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V03_FTAIL_LEN-1));
+      fFiles[fCurrentFile].SetNEvents( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_NEVENTS_LIN] & ADCEVENT_V03_NEVENTS_BIT) >> ADCEVENT_V03_NEVENTS_POS) );
+      fFiles[fCurrentFile].SetEndTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_TTAGEOF_LIN] & ADCEVENT_V03_TTAGEOF_BIT) >> ADCEVENT_V03_TTAGEOF_POS) );
+      fFiles[fCurrentFile].SetSize( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V03_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_V03_FILESIZEHI_LIN] << 32 ) );
+
     }
 
     // Return EOF condition
@@ -169,73 +239,40 @@ int ADCBoard::ReadNextEvent()
 
 }
 
-int ADCBoard::UnpackFileHead()
-{
-
-  // Unpack file header
-  fFiles[fCurrentFile].SetVersion( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_VERSION_LIN] & ADCEVENT_VERSION_BIT) >> ADCEVENT_VERSION_POS) );
-  fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_FILEINDEX_LIN] & ADCEVENT_FILEINDEX_BIT) >> ADCEVENT_FILEINDEX_POS) );
-  fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_RUNNUMBER_LIN] & ADCEVENT_RUNNUMBER_BIT) >> ADCEVENT_RUNNUMBER_POS) );
-  fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_TTAGSOF_LIN] & ADCEVENT_TTAGSOF_BIT) >> ADCEVENT_TTAGSOF_POS) );
-
-  // Verify if file has correct version
-  if (fFiles[fCurrentFile].GetVersion() != ADCEVENT_FORMAT_VERSION) {
-    printf("ERROR - File incompatible file version: expected %d found %d\n",ADCEVENT_FORMAT_VERSION,fFiles[fCurrentFile].GetVersion());
-    return 1;
-  }
-
-  return 0;
-
-}
-
-int ADCBoard::UnpackFileTail()
-{
-
-  // Unpack file tail
-  fFiles[fCurrentFile].SetNEvents( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_NEVENTS_LIN] & ADCEVENT_NEVENTS_BIT) >> ADCEVENT_NEVENTS_POS) );
-  fFiles[fCurrentFile].SetEndTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_TTAGEOF_LIN] & ADCEVENT_TTAGEOF_BIT) >> ADCEVENT_TTAGEOF_POS) );
-  //ULong_t filesize = (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZEHI_LIN] << 32 );
-  //fFiles[fCurrentFile].SetSize(filesize);
-  fFiles[fCurrentFile].SetSize( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZELO_LIN]+( (ULong_t)((UInt_t*)fBuffer)[ADCEVENT_FILESIZEHI_LIN] << 32 ) );
-
-  return 0;
-
-}
-
-int ADCBoard::UnpackEvent(UInt_t size)
+int ADCBoard::UnpackEvent_v01(UInt_t size)
 {
 
   // Decode event header
-  fADCEvent->SetBoardId( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_BOARDID_LIN] & ADCEVENT_BOARDID_BIT) >> ADCEVENT_BOARDID_POS) );
-  fADCEvent->SetLVDSPattern( (UShort_t)((((UInt_t*)fBuffer)[ADCEVENT_PATTERN_LIN] & ADCEVENT_PATTERN_BIT ) >> ADCEVENT_PATTERN_POS) );
-  fADCEvent->SetStatus( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_STATUS_LIN] & ADCEVENT_STATUS_BIT ) >> ADCEVENT_STATUS_POS) );
-  fADCEvent->SetGroupMask( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_GRMASK_LIN] & ADCEVENT_GRMASK_BIT ) >> ADCEVENT_GRMASK_POS) );
-  fADCEvent->SetEventCounter( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_EVENTNUMBER_LIN] & ADCEVENT_EVENTNUMBER_BIT ) >> ADCEVENT_EVENTNUMBER_POS) );
-  fADCEvent->SetEventTimeTag( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_TTAGEVENT_LIN] & ADCEVENT_TTAGEVENT_BIT ) >> ADCEVENT_TTAGEVENT_POS) );
-  fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_CHMASKACTIVE_LIN] & ADCEVENT_CHMASKACTIVE_BIT ) >> ADCEVENT_CHMASKACTIVE_POS) );
-  fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_CHMASKACCEPTED_LIN] & ADCEVENT_CHMASKACCEPTED_BIT ) >> ADCEVENT_CHMASKACCEPTED_POS) );
+  fADCEvent->SetBoardId( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_BOARDID_LIN] & ADCEVENT_V01_BOARDID_BIT) >> ADCEVENT_V01_BOARDID_POS) );
+  fADCEvent->SetLVDSPattern( (UShort_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_PATTERN_LIN] & ADCEVENT_V01_PATTERN_BIT ) >> ADCEVENT_V01_PATTERN_POS) );
+  fADCEvent->SetStatus( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_STATUS_LIN] & ADCEVENT_V01_STATUS_BIT ) >> ADCEVENT_V01_STATUS_POS) );
+  fADCEvent->SetGroupMask( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_GRMASK_LIN] & ADCEVENT_V01_GRMASK_BIT ) >> ADCEVENT_V01_GRMASK_POS) );
+  fADCEvent->SetEventCounter( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_EVENTNUMBER_LIN] & ADCEVENT_V01_EVENTNUMBER_BIT ) >> ADCEVENT_V01_EVENTNUMBER_POS) );
+  fADCEvent->SetEventTimeTag( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_TTAGEVENT_LIN] & ADCEVENT_V01_TTAGEVENT_BIT ) >> ADCEVENT_V01_TTAGEVENT_POS) );
+  fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_CHMASKACTIVE_LIN] & ADCEVENT_V01_CHMASKACTIVE_BIT ) >> ADCEVENT_V01_CHMASKACTIVE_POS) );
+  fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V01_CHMASKACCEPTED_LIN] & ADCEVENT_V01_CHMASKACCEPTED_BIT ) >> ADCEVENT_V01_CHMASKACCEPTED_POS) );
 
   // Decode trigger information
-  UInt_t cursor = ADCEVENT_EVENTHEAD_LEN;
+  UInt_t cursor = ADCEVENT_V01_EVENTHEAD_LEN;
   for(int ig=0;ig<ADCEVENT_NTRIGGERS;ig++){
 
     if (fADCEvent->GetGroupMask() & (0x1 << ig)) {
 
-      fADCEvent->SetTriggerStartIndexCell( ig,(UShort_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_STARTIDXCELL_LIN] & ADCEVENT_STARTIDXCELL_BIT) >> ADCEVENT_STARTIDXCELL_POS) );
-      fADCEvent->SetTriggerFrequency( ig,(UChar_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_FREQUENCY_LIN] & ADCEVENT_FREQUENCY_BIT ) >> ADCEVENT_FREQUENCY_POS) );
-      fADCEvent->SetTriggerHasSignal( ig,(Bool_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_TRHASDATA_LIN] & ADCEVENT_TRHASDATA_BIT ) >> ADCEVENT_TRHASDATA_POS) );
+      fADCEvent->SetTriggerStartIndexCell( ig,(UShort_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_STARTIDXCELL_LIN] & ADCEVENT_V01_STARTIDXCELL_BIT) >> ADCEVENT_V01_STARTIDXCELL_POS) );
+      fADCEvent->SetTriggerFrequency( ig,(UChar_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_FREQUENCY_LIN] & ADCEVENT_V01_FREQUENCY_BIT ) >> ADCEVENT_V01_FREQUENCY_POS) );
+      fADCEvent->SetTriggerHasSignal( ig,(Bool_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_TRHASDATA_LIN] & ADCEVENT_V01_TRHASDATA_BIT ) >> ADCEVENT_V01_TRHASDATA_POS) );
 
       if (fADCEvent->GetTriggerHasSignal(ig)) {
 	for(int is=0;is<ADCEVENT_NSAMPLES;is++){
-	  fADCEvent->SetADCTriggerSample( ig,is,(Short_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_GRHEAD_LEN+is/2] >> (16*(is%2))) & 0xFFFF) );
+	  fADCEvent->SetADCTriggerSample( ig,is,(Short_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_GRHEAD_LEN+is/2] >> (16*(is%2))) & 0xFFFF) );
 	}
-	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_NSAMPLES%2]);
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_NSAMPLES%2]);
       } else {
-	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_GRHEAD_LEN]);
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_GRHEAD_LEN]);
       }
 
       // Shift cursor to next trigger
-      cursor += (UInt_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_GRSIZE_LIN] & ADCEVENT_GRSIZE_BIT) >> ADCEVENT_GRSIZE_POS);
+      cursor += (UInt_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_GRSIZE_LIN] & ADCEVENT_V01_GRSIZE_BIT) >> ADCEVENT_V01_GRSIZE_POS);
 
     }
 
@@ -244,6 +281,140 @@ int ADCBoard::UnpackEvent(UInt_t size)
   // Decode signal information
   for(int ic=0;ic<ADCEVENT_NCHANNELS;ic++){
     if ( fADCEvent->GetAcceptedChannelMask() & (0x1 << ic) ) {
+      for(int is=0;is<ADCEVENT_NSAMPLES;is++){
+	fADCEvent->SetADCChannelSample( ic,is,(Short_t)((((UInt_t*)fBuffer)[cursor+is/2] >> (16*(is%2))) & 0xFFFF) );
+      }
+      // Shift cursor to next channel
+      cursor += (ADCEVENT_NSAMPLES/2 + ADCEVENT_NSAMPLES%2);
+    }
+  }
+
+  // Verify event size consistency
+  if (cursor != size) {
+    printf("ERROR - Inconsistent event structure found for event %d: event size is %d (expected %d)\n",
+	   fADCEvent->GetEventCounter(),cursor,size);
+    return 1;
+  }
+
+  // All ok: return 0
+  return 0;
+
+}
+
+int ADCBoard::UnpackEvent_v02(UInt_t size)
+{
+
+  // Decode event header
+  fADCEvent->SetBoardId( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_BOARDID_LIN] & ADCEVENT_V02_BOARDID_BIT) >> ADCEVENT_V02_BOARDID_POS) );
+  fADCEvent->SetLVDSPattern( (UShort_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_PATTERN_LIN] & ADCEVENT_V02_PATTERN_BIT ) >> ADCEVENT_V02_PATTERN_POS) );
+  fADCEvent->SetStatus( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_STATUS_LIN] & ADCEVENT_V02_STATUS_BIT ) >> ADCEVENT_V02_STATUS_POS) );
+  fADCEvent->SetGroupMask( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_GRMASK_LIN] & ADCEVENT_V02_GRMASK_BIT ) >> ADCEVENT_V02_GRMASK_POS) );
+  fADCEvent->SetEventCounter( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_EVENTNUMBER_LIN] & ADCEVENT_V02_EVENTNUMBER_BIT ) >> ADCEVENT_V02_EVENTNUMBER_POS) );
+  fADCEvent->SetEventTimeTag( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_TTAGEVENT_LIN] & ADCEVENT_V02_TTAGEVENT_BIT ) >> ADCEVENT_V02_TTAGEVENT_POS) );
+  fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_CHMASKACTIVE_LIN] & ADCEVENT_V02_CHMASKACTIVE_BIT ) >> ADCEVENT_V02_CHMASKACTIVE_POS) );
+  fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V02_CHMASKACCEPTED_LIN] & ADCEVENT_V02_CHMASKACCEPTED_BIT ) >> ADCEVENT_V02_CHMASKACCEPTED_POS) );
+
+  // Decode trigger information
+  UInt_t cursor = ADCEVENT_V02_EVENTHEAD_LEN;
+  for(int ig=0;ig<ADCEVENT_NTRIGGERS;ig++){
+
+    if (fADCEvent->GetGroupMask() & (0x1 << ig)) {
+
+      fADCEvent->SetTriggerStartIndexCell( ig,(UShort_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_STARTIDXCELL_LIN] & ADCEVENT_V02_STARTIDXCELL_BIT) >> ADCEVENT_V02_STARTIDXCELL_POS) );
+      fADCEvent->SetTriggerFrequency( ig,(UChar_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_FREQUENCY_LIN] & ADCEVENT_V02_FREQUENCY_BIT ) >> ADCEVENT_V02_FREQUENCY_POS) );
+      fADCEvent->SetTriggerHasSignal( ig,(Bool_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_TRHASDATA_LIN] & ADCEVENT_V02_TRHASDATA_BIT ) >> ADCEVENT_V02_TRHASDATA_POS) );
+
+      if (fADCEvent->GetTriggerHasSignal(ig)) {
+	for(int is=0;is<ADCEVENT_NSAMPLES;is++){
+	  fADCEvent->SetADCTriggerSample( ig,is,(Short_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_GRHEAD_LEN+is/2] >> (16*(is%2))) & 0xFFFF) );
+	}
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_NSAMPLES%2]);
+      } else {
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_GRHEAD_LEN]);
+      }
+
+      // Shift cursor to next trigger
+      cursor += (UInt_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_GRSIZE_LIN] & ADCEVENT_V02_GRSIZE_BIT) >> ADCEVENT_V02_GRSIZE_POS);
+
+    }
+
+  }
+
+  // Decode signal information
+  for(int ic=0;ic<ADCEVENT_NCHANNELS;ic++){
+    if ( fADCEvent->GetAcceptedChannelMask() & (0x1 << ic) ) {
+      for(int is=0;is<ADCEVENT_NSAMPLES;is++){
+	fADCEvent->SetADCChannelSample( ic,is,(Short_t)((((UInt_t*)fBuffer)[cursor+is/2] >> (16*(is%2))) & 0xFFFF) );
+      }
+      // Shift cursor to next channel
+      cursor += (ADCEVENT_NSAMPLES/2 + ADCEVENT_NSAMPLES%2);
+    }
+  }
+
+  // Verify event size consistency
+  if (cursor != size) {
+    printf("ERROR - Inconsistent event structure found for event %d: event size is %d (expected %d)\n",
+	   fADCEvent->GetEventCounter(),cursor,size);
+    return 1;
+  }
+
+  // All ok: return 0
+  return 0;
+
+}
+
+int ADCBoard::UnpackEvent_v03(UInt_t size)
+{
+
+  // Decode event header
+  fADCEvent->SetBoardId( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_BOARDID_LIN] & ADCEVENT_V03_BOARDID_BIT) >> ADCEVENT_V03_BOARDID_POS) );
+  fADCEvent->SetLVDSPattern( (UShort_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_PATTERN_LIN] & ADCEVENT_V03_PATTERN_BIT ) >> ADCEVENT_V03_PATTERN_POS) );
+  fADCEvent->Set0SuppAlgrtm( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_0SUPALG_LIN] & ADCEVENT_V03_0SUPALG_BIT ) >> ADCEVENT_V03_0SUPALG_POS) );
+  fADCEvent->SetGroupMask( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_GRMASK_LIN] & ADCEVENT_V03_GRMASK_BIT ) >> ADCEVENT_V03_GRMASK_POS) );
+  fADCEvent->SetBoardStatus( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_STATUS_LIN] & ADCEVENT_V03_STATUS_BIT ) >> ADCEVENT_V03_STATUS_POS) );
+  fADCEvent->SetEventCounter( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_EVENTNUMBER_LIN] & ADCEVENT_V03_EVENTNUMBER_BIT ) >> ADCEVENT_V03_EVENTNUMBER_POS) );
+  fADCEvent->SetEventTimeTag( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_TTAGEVENT_LIN] & ADCEVENT_V03_TTAGEVENT_BIT ) >> ADCEVENT_V03_TTAGEVENT_POS) );
+  fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACTIVE_LIN] & ADCEVENT_V03_CHMASKACTIVE_BIT ) >> ADCEVENT_V03_CHMASKACTIVE_POS) );
+  fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACCEPTED_LIN] & ADCEVENT_V03_CHMASKACCEPTED_BIT ) >> ADCEVENT_V03_CHMASKACCEPTED_POS) );
+
+  // Decode trigger information
+  UInt_t cursor = ADCEVENT_V03_EVENTHEAD_LEN;
+  for(int ig=0;ig<ADCEVENT_NTRIGGERS;ig++){
+
+    if (fADCEvent->GetGroupMask() & (0x1 << ig)) {
+
+      fADCEvent->SetTriggerStartIndexCell( ig,(UShort_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_STARTIDXCELL_LIN] & ADCEVENT_V03_STARTIDXCELL_BIT) >> ADCEVENT_V03_STARTIDXCELL_POS) );
+      fADCEvent->SetTriggerFrequency( ig,(UChar_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_FREQUENCY_LIN] & ADCEVENT_V03_FREQUENCY_BIT ) >> ADCEVENT_V03_FREQUENCY_POS) );
+      fADCEvent->SetTriggerHasSignal( ig,(Bool_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_TRHASDATA_LIN] & ADCEVENT_V03_TRHASDATA_BIT ) >> ADCEVENT_V03_TRHASDATA_POS) );
+
+      if (fADCEvent->GetTriggerHasSignal(ig)) {
+	for(int is=0;is<ADCEVENT_NSAMPLES;is++){
+	  fADCEvent->SetADCTriggerSample( ig,is,(Short_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_GRHEAD_LEN+is/2] >> (16*(is%2))) & 0xFFFF) );
+	}
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_NSAMPLES%2]);
+      } else {
+	fADCEvent->SetTriggerTimeTag(ig,(UInt_t)((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_GRHEAD_LEN]);
+      }
+
+      // Shift cursor to next trigger
+      cursor += (UInt_t)((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_GRSIZE_LIN] & ADCEVENT_V03_GRSIZE_BIT) >> ADCEVENT_V03_GRSIZE_POS);
+
+    }
+
+  }
+
+  // Decode signal information
+  // Mask of stored channels depends on 0-suppression mode
+  // - rejection: use AcceptedChannelMask
+  // - flagging: use ActiveChannelMask
+  UInt_t channel_mask = 0;
+  if ( fADCEvent->GetBoardStatus() & (0x1 << ADCEVENT_V03_STATUS_ZEROSUPP_BIT) ) {
+    channel_mask = fADCEvent->GetAcceptedChannelMask();
+  } else {
+    channel_mask = fADCEvent->GetActiveChannelMask();
+  }
+  for(int ic=0;ic<ADCEVENT_NCHANNELS;ic++){
+    if ( channel_mask & (0x1 << ic) ) {
       for(int is=0;is<ADCEVENT_NSAMPLES;is++){
 	fADCEvent->SetADCChannelSample( ic,is,(Short_t)((((UInt_t*)fBuffer)[cursor+is/2] >> (16*(is%2))) & 0xFFFF) );
       }

@@ -42,7 +42,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   void *cursor_old; // Used to save old position when applying zero suppression
 
   // Extract 0-suppression configuration
-  int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1= flagging
+  int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1=flagging
   int pEvt0SupAlgr = Config->zero_suppression % 100; // 0=off, 1-15=algorithm code
 
   // Event header will be created at the end
@@ -237,36 +237,35 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   }
 
   if (Config->drs4corr_enable) { // Check if DRS4 corrections were applied
-    pEvtStatus += (0x1 << PEVT_STATUS_DRS4COR_BIT); // Corrections applied
+    pEvtStatus += (0x1 << PEVT_STATUS_DRS4CORR_BIT); // Corrections applied
   } else {
-    pEvtStatus += (0x0 << PEVT_STATUS_DRS4COR_BIT); // Corrections not applied
+    pEvtStatus += (0x0 << PEVT_STATUS_DRS4CORR_BIT); // Corrections not applied
   }
 
-  if (pEvt0SupAlgr == 0) { // 0-suppression not applied
-    pEvtStatus += (0x0 << PEVT_STATUS_ZEROSUP_BIT);
-  } else if (pEvt0SupMode == 0) { // 0-suppression applied in rejection mode
-    pEvtStatus += (0x1 << PEVT_STATUS_ZEROSUP_BIT);
-  } else if (pEvt0SupMode == 1) { // 0-suppression applied in flagging mode
-    pEvtStatus += (0x2 << PEVT_STATUS_ZEROSUP_BIT);
+  if (pEvt0SupMode == 0) { // Save 0-suppression mode
+    pEvtStatus += (0x0 << PEVT_STATUS_ZEROSUPP_BIT); // 0-suppression in rejection mode
+  } else {
+    pEvtStatus += (0x1 << PEVT_STATUS_ZEROSUPP_BIT); // 0-suppression in flagging mode
   }
+
+  pEvtStatus += (0x0 << PEVT_STATUS_AUTOPASS_BIT); // No autopass for the moment
 
   // 1) Get line 1 of V1742 event header
+  memcpy(&line,evtPtr+4,4);
   // 2) Save Board Fail flag (bit 26) to event status.
+  if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
   // 3) Extract LVDS pattern (bit 8-23) and group mask (bit 0-3).
   // 4) Add our board id (bit 24-31) and 0-suppression algorithm code (bit 4-7).
+  line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((pEvt0SupAlgr & 0xF) << 4);
   // 5) Copy result to line 1 of pEvent header
-  memcpy(&line,evtPtr+4,4);
-  // Save BF flag to event status
-  if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
-  line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((Config->zero_suppression & 0xF) << 4);
   memcpy(pEvt+4,&line,4);
 
   // 1) Get line 2 of V1742 event header
+  memcpy(&line,evtPtr+8,4);
   // 2) Extract event counter (bit 0-21)
   // 3) Add event status pattern (bit 22-31)
-  // 4) Copy result to line 2 of pEvent header
-  memcpy(&line,evtPtr+8,4);
   line = (line & 0x003FFFFF) + ((pEvtStatus & 0x03FF) << 22);
+  // 4) Copy result to line 2 of pEvent header
   memcpy(pEvt+8,&line,4);
 
   // Copy line 3 of V1742 event header to line 3 of pEvent header (event time tag)

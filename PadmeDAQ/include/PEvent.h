@@ -9,8 +9,8 @@
 //            added id of 0-suppression algorithm to event header
 #define PEVT_CURRENT_VERSION 3
 
-#define PEVT_EVENT_TAG 0xE
 #define PEVT_FHEAD_TAG 0x9
+#define PEVT_EVENT_TAG 0xE
 #define PEVT_FTAIL_TAG 0x5
 
 #define PEVT_FHEAD_LEN 4
@@ -23,10 +23,11 @@
 #define PEVT_CHMASK_ACTIVE_LINE   4
 #define PEVT_CHMASK_ACCEPTED_LINE 5
 
-#define PEVT_STATUS_HASDATA_BIT 0
-#define PEVT_STATUS_DRS4COR_BIT 1
-#define PEVT_STATUS_ZEROSUP_BIT 2
-#define PEVT_STATUS_BRDFAIL_BIT 4
+#define PEVT_STATUS_HASDATA_BIT  0
+#define PEVT_STATUS_DRS4CORR_BIT 1
+#define PEVT_STATUS_ZEROSUPP_BIT 2
+#define PEVT_STATUS_BRDFAIL_BIT  3
+#define PEVT_STATUS_AUTOPASS_BIT 4
 
 int create_pevent(void*,CAEN_DGTZ_X742_EVENT_t*,void*); // evtPtr, event, pEvt
 unsigned int create_file_head(unsigned int,int,uint32_t,time_t,void*); // file_index,run_number,board_sn,time_tag,fHead

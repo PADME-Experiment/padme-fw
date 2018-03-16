@@ -38,6 +38,8 @@ int reset_config()
 
   strcpy(Config->config_file,"");
 
+  strcpy(Config->function_mode,"DAQ"); // Work in DAQ mode
+
   strcpy(Config->quit_file,"run/quit");
   strcpy(Config->start_file,"run/start");
   strcpy(Config->initok_file,"run/initok.b00"); // InitOK file for default board 0
@@ -195,7 +197,14 @@ int read_config(char *cfgfile)
       //printf("Parameter <%s> Value <%s>\n",param,value);
 
       // Interpret parameter
-      if ( strcmp(param,"quit_file")==0 ) {
+      if ( strcmp(param,"function_mode")==0 ) {
+	if ( strcmp(value,"DAQ")==0 || strcmp(value,"ZSUP")==0 ) {
+	  strcpy(Config->function_mode,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - Unknown functioning mode '%s' selected: ignoring\n",value);
+	}
+      } else if ( strcmp(param,"quit_file")==0 ) {
 	if ( strlen(value)<MAX_FILE_LEN ) {
 	  strcpy(Config->quit_file,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
@@ -230,13 +239,6 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - lock_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
-	//} else if ( strcmp(param,"db_file")==0 ) {
-	//	if ( strlen(value)<MAX_FILE_LEN ) {
-	//	  strcpy(Config->db_file,value);
-	//	  printf("Parameter %s set to '%s'\n",param,value);
-	//	} else {
-	//	  printf("WARNING - db_file name too long (%lu characters): %s\n",strlen(value),value);
-	//	}
       } else if ( strcmp(param,"data_file")==0 ) {
 	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
 	  strcpy(Config->data_file,value);
@@ -537,14 +539,13 @@ int print_config(){
   int i;
 
   printf("\n=== Configuration parameters for this run ===\n");
+  printf("function_mode\t\t'%s'\tfunctioning mode of this PadmeDAQ process (DAQ or ZSUP)\n",Config->function_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
   printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
   printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
   printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
   printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
-  //printf("db_file\t\t\t'%s'\tname of db file (sqlite3)\n",Config->db_file);
-  //printf("data_dir\t\t'%s'\t\tpath where data files will be written\n",Config->data_dir);
   printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
   printf("run_type\t\t'%s'\t\trun type (DAQ, COSMIC, TEST)\n",Config->run_type);
@@ -564,7 +565,9 @@ int print_config(){
   printf("post_trigger_size\t%d\t\tpost trigger size\n",Config->post_trigger_size);
   printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
   printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
-  printf("zero_suppression\t%d\t\tdisable (0) or enable/choose (>0) zero-suppression algorithm\n",Config->zero_suppression);
+  printf("zero_suppression\t%d\t\tzero-suppression - 100*mode+algorithm (mode:0=reject,1=flag - algorithm:0=OFF,1-15=algorithm id)\n",Config->zero_suppression);
+
+  // This will change when 0-suppression gets more sophisticated
   if (Config->zero_suppression == 1) {
     printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
     printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
@@ -572,6 +575,7 @@ int print_config(){
     printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
     printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
   }
+
   printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
   printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
   printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
@@ -590,6 +594,8 @@ int save_config()
   int i;
   char line[2048];
 
+  db_add_cfg_para(Config->process_id,"function_mode",Config->function_mode);
+
   db_add_cfg_para(Config->process_id,"config_file",Config->config_file);
 
   db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
@@ -602,8 +608,6 @@ int save_config()
 
   db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
 
-  //db_add_cfg_para(Config->process_id,"db_file",Config->db_file);
-
   sprintf(line,"%d",Config->run_number);
   db_add_cfg_para(Config->process_id,"run_number",line);
 
@@ -611,8 +615,6 @@ int save_config()
 
   sprintf(line,"%d",Config->process_id);
   db_add_cfg_para(Config->process_id,"process_id",line);
-
-  //db_add_cfg_para(Config->process_id,"data_dir",Config->data_dir);
 
   db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
 
@@ -670,6 +672,7 @@ int save_config()
   sprintf(line,"%d",Config->zero_suppression);
   db_add_cfg_para(Config->process_id,"zero_suppression",line);
 
+  // This will change when 0-suppression gets more sophisticated
   if (Config->zero_suppression == 1) {
     sprintf(line,"%d",Config->zs1_head);
     db_add_cfg_para(Config->process_id,"zs1_head",line);

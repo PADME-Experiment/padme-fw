@@ -19,6 +19,9 @@
 
 typedef struct config_s {
 
+  // Define PadmeDAQ functioning mode (can be "DAQ" or "ZSUP")
+  char function_mode[16];
+
   // File used to read configuration
   char config_file[MAX_FILE_LEN];
 
@@ -37,9 +40,6 @@ typedef struct config_s {
   // File to use for locking (".<PID>" will be appended)
   char lock_file[MAX_FILE_LEN];
 
-  // DB file (sqlite3)
-  //char db_file[MAX_FILE_LEN];
-  
   // Run number
   int run_number;
 
@@ -109,7 +109,9 @@ typedef struct config_s {
   // Delay in the DAQ main loop (usecs)
   useconds_t daq_loop_delay;
 
-  // Zero-suppression (0:OFF, 1-n:ON with choice of the algorithm)
+  // Zero-suppression
+  // Parameter is 100*mode+algorithm where mode=(0:rejection, 1:flagging)
+  // and algorithm=(0:OFF, 1-15:ON with selection of the algorithm)
   int zero_suppression;
 
   // Zero-suppression algorithm parameters

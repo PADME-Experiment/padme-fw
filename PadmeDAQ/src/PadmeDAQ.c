@@ -15,6 +15,7 @@
 #include "DB.h"
 #include "Config.h"
 #include "DAQ.h"
+#include "ZSUP.h"
 
 // Return pid of locking process or 0 if no other DAQ is running
 pid_t create_lock()
@@ -163,49 +164,82 @@ int main(int argc, char*argv[])
 
   }
 
-  // Show some startup message
-  if (Config->run_number == 0) {
-    printf("\n=== Starting PadmeDAQ acquisition for dummy run ===\n");
-    printf("- WARNING: data will not be registered in the DB!\n");
-  } else {
-    printf("\n=== Starting PadmeDAQ acquisition for run %d ===\n",Config->run_number);
-  }
-  printf("- Run type: '%s'\n",Config->run_type);
+  // Check if we are running in DAQ mode or 0-suppression mode
 
-  // Connect to digitizer
-  printf("\n=== Connect to digitizer ===\n");
-  if ( DAQ_connect() ) {
-    printf("*** ERROR *** Problem while connecting to V1742 digitizer. Exiting.\n");
-    init_fail(1);
-  }
+  if ( strcmp(Config->function_mode,"DAQ")==0 ) {
 
-  // Initialize and configure digitizer
-  printf("\n=== Initialize digitizer ===\n");
-  if ( DAQ_init() ) {
-    printf("*** ERROR *** Problem while initializing V1742 digitizer. Exiting.\n");
-    init_fail(1);
-  }
+    // Show some startup message
+    if (Config->run_number == 0) {
+      printf("\n=== Starting PadmeDAQ acquisition for dummy run ===\n");
+      printf("- WARNING: data will not be registered in the DB!\n");
+    } else {
+      printf("\n=== Starting PadmeDAQ acquisition for run %d ===\n",Config->run_number);
+    }
+    printf("- Run type: '%s'\n",Config->run_type);
 
-  // Handle data acquisition
-  printf("\n=== Starting data acquisition ===\n");
-  rc = DAQ_readdata();
-  if ( rc == 1 ) {
-    printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
-    init_fail(1);
-  } else if ( rc == 2 ) {
-    printf("*** ERROR *** Data acquistion ended with an error. Please check log file for details. Exiting.\n");
-    remove_lock();
-    exit(1);
-  } else if ( rc == 3 ) {
-    printf("=== Run aborted before starting DAQ ===\n");
-  }
+    // Connect to digitizer
+    printf("\n=== Connect to digitizer ===\n");
+    if ( DAQ_connect() ) {
+      printf("*** ERROR *** Problem while connecting to V1742 digitizer. Exiting.\n");
+      init_fail(1);
+    }
 
-  // Final reset of the digitizer
-  printf("\n=== Reset digitizer and close connection ===\n");
-  if ( DAQ_close() ) {
-    printf("*** ERROR *** Final reset of digitizer ended with an error. Exiting.\n");
-    remove_lock();
-    exit(1);
+    // Initialize and configure digitizer
+    printf("\n=== Initialize digitizer ===\n");
+    if ( DAQ_init() ) {
+      printf("*** ERROR *** Problem while initializing V1742 digitizer. Exiting.\n");
+      init_fail(1);
+    }
+
+    // Handle data acquisition
+    printf("\n=== Starting data acquisition ===\n");
+    rc = DAQ_readdata();
+    if ( rc == 1 ) {
+      printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
+      init_fail(1);
+    } else if ( rc == 2 ) {
+      printf("*** ERROR *** Data acquistion ended with an error. Please check log file for details. Exiting.\n");
+      remove_lock();
+      exit(1);
+    } else if ( rc == 3 ) {
+      printf("=== Run aborted before starting DAQ ===\n");
+    }
+
+    // Final reset of the digitizer
+    printf("\n=== Reset digitizer and close connection ===\n");
+    if ( DAQ_close() ) {
+      printf("*** ERROR *** Final reset of digitizer ended with an error. Exiting.\n");
+      remove_lock();
+      exit(1);
+    }
+
+  } else if ( strcmp(Config->function_mode,"ZSUP")==0 ) {
+
+    // Show some startup message
+    if (Config->run_number == 0) {
+      printf("\n=== Starting PadmeDAQ zero suppression for dummy run ===\n");
+      printf("- WARNING: data will not be registered in the DB!\n");
+    } else {
+      printf("\n=== Starting PadmeDAQ zero suppression for run %d ===\n",Config->run_number);
+    }
+    printf("- Run type: '%s'\n",Config->run_type);
+
+    // Handle zero suppression
+    printf("\n=== Starting zero suppression ===\n");
+    rc = ZSUP_readdata();
+    if ( rc == 1 ) {
+      printf("*** ERROR *** Problem while initializing ZSUP process. Exiting.\n");
+      init_fail(1);
+    } else if ( rc == 2 ) {
+      printf("*** ERROR *** Zero suppression ended with an error. Please check log file for details. Exiting.\n");
+      remove_lock();
+      exit(1);
+    } else if ( rc == 3 ) {
+      printf("=== Run aborted before starting DAQ ===\n");
+    }
+
+    printf("\n=== Zero suppression process ended ===\n");
+
   }
 
   // Remove lock file

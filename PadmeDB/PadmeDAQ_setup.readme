@@ -1,0 +1,64 @@
+PADME uses the MySQL database to store DAQ related information. These are the instructions to install
+and configure the database system on a CentOS 7 node.
+
+Make sure you know what are the default passwords for mysql "root" and "padme" accounts.
+Here they are referred to as <db_root_pw> and <db_padme_pw>.
+
+1) Login as root to install and configure the open source version of MySQL, MariaDB:
+
+- Use yum to install mariadb and mariadb-server
+
+$ yum install mariadb mariadb-server
+
+- Enable mysql server startup at boot
+
+$ systemctl enable mariadb
+$ systemctl start mariadb
+
+- Clean up the inital configuration and set the root password to <db_root_pw>
+
+$ mysql_secure_installation
+
+If you do not need external connectivity (e.g. from a web server) to this server,
+or it was already configured, you can skip to point 4.
+
+2) Make sure that mysqld is not binded to any specific interface by checking that the
+"bind-address" parameter in /etc/my.cnf file is commented out (or does not exist at all).
+
+If you had to change /etc/my.cnf then restart the server with
+
+$ /etc/init.d/mysqld restart
+
+3) Open port 3306 on the firewall with command
+
+$ firewall-cmd --add-port=3306/tcp
+$ firewall-cmd --permanent --add-port=3306/tcp
+
+4) Logout from root and reconnect as a standard user.
+
+5) Connect to MySQL as root (use the <db_root_pw> defined above) to create the
+"PademDAQ" database and the "padme" user to manage it. Only users from within LNF
+are allowed to connect.
+
+$ mysql -u root -p mysql
+mysql> CREATE DATABASE PadmeDAQ;
+mysql> CREATE USER 'padme'@'localhost' IDENTIFIED BY '<db_padme_pw>';
+mysql> CREATE USER 'padme'@'127.0.0.1' IDENTIFIED BY '<db_padme_pw>';
+mysql> CREATE USER 'padme'@'%.lnf.infn.it' IDENTIFIED BY '<db_padme_pw>';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'localhost';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'%.lnf.infn.it';
+mysql> exit
+
+8) Reconnect to MySQL as "padme" user (using <db_padme_pw>) and create the
+schema for the PadmeDAQ database:
+
+$ mysql -u padme -p PadmeDAQ
+mysql> source PadmeDAQ_schema.sql
+mysql> exit
+
+9) Edit file PadmeDAQ_data.txt to update the description of your ADC boards and then
+insert all board-related information in the database:
+
+$ ./PadmeDAQ_setup.py
+
+10) The PadmeDAQ database is now ready to accept data!

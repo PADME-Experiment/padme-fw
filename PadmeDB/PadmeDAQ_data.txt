@@ -1,0 +1,5 @@
+# List of boards with temporal evolution
+#      id type	 manuf	model  nchan  s/n  opt_lnk   from_date	 from_time
+board  0  ADC    CAEN	V1742  32     39   0:0:0:0   2015-11-01	 00:00:00
+board  1  ADC    CAEN	V1742  32     30   0:0:1:0   2015-11-01	 00:00:00
+board  2  ADC    CAEN	V1742  32     135  0:0:1:1   2016-04-04	 00:00:00

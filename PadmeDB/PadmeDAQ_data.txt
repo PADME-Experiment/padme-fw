@@ -34,6 +34,11 @@ board 30  ADC    CAEN	V1742  32     222
 board 31  ADC    CAEN	V1742  32     223
 board 32  ADC    CAEN	V1742  32     225
 
+# List of DAQ nodes
+#     id  node name		ip address lnf	ip address daq	mac address lnf   mac address daq
+node   0  l0padme4.lnf.infn.it  193.206.082.134 192.168.060.003 c8:1f:be:cf:c6:7a c8:1f:be:cf:c6:7b
+node   1  l0padme5.lnf.infn.it  xxx.xxx.xxx.xxx 192.168.060.004 xx:xx:xx:xx:xx:xx xx:xx:xx:xx:xx:xx
+
 # List of links with temporal evolution
 #    link      bid    from_date     from_time
 link 0:0:0:0    25    2018-03-19    00:00:00

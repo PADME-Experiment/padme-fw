@@ -7,8 +7,8 @@ import MySQLdb
 # Define regular expressions used in file parsing
 re_empty = re.compile("^\s*$")
 re_comment = re.compile("^\s*#")
-#re_board = re.compile("^\s*board\s+(\d+)\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\w+)\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)-(\d+)-(\d+)\s+(\d+):(\d+):(\d+)\s*$")
-re_board = re.compile("^\s*board\s+(\d+)\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\w+)\s*$")
+re_board = re.compile("^\s*board\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s*$")
+re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
 
 max_datetime = "2049-12-31 23:59:59"
@@ -87,6 +87,38 @@ def main():
                     print "  New",board_type_id,serial_number
                     return
 
+        # Check nodes
+        m = re_node.search(l)
+        if (m):
+
+            (node_id,node_name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq) = m.group(1,2,3,4,5,6)
+            node_id = int(node_id)
+
+            # Check if node with this id exists
+            c.execute("""SELECT name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq FROM node WHERE id=%s""",(node_id,))
+            res = c.fetchone()
+            if (res == None):
+                # Node id does not exist: create it
+                print "Creating node with id",node_id,"name",node_name,"addresses",ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq
+                c.execute("""INSERT INTO node(id,name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq) VALUES(%s,%s,%s,%s,%s,%s)""",(node_id,node_name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq))
+            else:
+                # Node id exists: check if it changed
+                (old_node_name,old_ip_addr_lnf,old_ip_addr_daq,old_mac_addr_lnf,old_mac_addr_daq) = res
+                if (old_node_name != node_name):
+                    print "Changing node id",node_id,"name from",old_node_name,"to",node_name
+                    c.execute("""UPDATE node SET name=%s WHERE id=%s""",(node_name,node_id))
+                if (old_ip_addr_lnf != ip_addr_lnf):
+                    print "Changing node id",node_id,"ip_addr_lnf from",old_ip_addr_lnf,"to",ip_addr_lnf
+                    c.execute("""UPDATE node SET ip_addr_lnf=%s WHERE id=%s""",(ip_addr_lnf,node_id))
+                if (old_ip_addr_daq != ip_addr_daq):
+                    print "Changing node id",node_id,"ip_addr_daq from",old_ip_addr_daq,"to",ip_addr_daq
+                    c.execute("""UPDATE node SET ip_addr_daq=%s WHERE id=%s""",(ip_addr_daq,node_id))
+                if (old_mac_addr_lnf != mac_addr_lnf):
+                    print "Changing node id",node_id,"mac_addr_lnf from",old_mac_addr_lnf,"to",mac_addr_lnf
+                    c.execute("""UPDATE node SET mac_addr_lnf=%s WHERE id=%s""",(mac_addr_lnf,node_id))
+                if (old_mac_addr_daq != mac_addr_daq):
+                    print "Changing node id",node_id,"mac_addr_daq from",old_mac_addr_daq,"to",mac_addr_daq
+                    c.execute("""UPDATE node SET mac_addr_daq=%s WHERE id=%s""",(mac_addr_daq,node_id))
 
         # Check links
         m = re_link.search(l)
@@ -100,6 +132,13 @@ def main():
             channel_id = int(channel_id)
             slot_id = int(slot_id)
             f_datetime = f_date+" "+f_time
+
+            # Verify if node_id exists
+            c.execute("""SELECT name FROM node WHERE id=%s""",(node_id,))
+            res = c.fetchone()
+            if (res == None):
+                print "ERROR - Trying to define optical link on non-existing node id",node_id
+                exit(1)
 
             # Get id of optical link or create it
             optical_link_id = -1

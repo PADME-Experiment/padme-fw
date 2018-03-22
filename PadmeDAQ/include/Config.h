@@ -5,7 +5,8 @@
 #include "CAENDigitizer.h"
 
 #define MAX_RUN_COMMENT_LEN 1024
-#define MAX_DATA_FILE_LEN   1024
+#define MAX_DATA_DIR_LEN    1024
+#define MAX_DATA_FILE_LEN    235
 #define MAX_FILE_LEN        1024
 
 // We store the board_id in 8 bits
@@ -19,8 +20,11 @@
 
 typedef struct config_s {
 
+  // Process id in PadmeDAQ DB
+  int process_id;
+
   // Define PadmeDAQ functioning mode (can be "DAQ" or "ZSUP")
-  char function_mode[16];
+  char process_mode[16];
 
   // File used to read configuration
   char config_file[MAX_FILE_LEN];
@@ -43,13 +47,19 @@ typedef struct config_s {
   // Run number
   int run_number;
 
-  // Run type (can be "DAQ", "COSMIC", or "TEST")
-  char run_type[16];
+  // Name of virtual file used for streaming in data. Only used when process_mode is "ZSUP"
+  char input_stream[MAX_DATA_FILE_LEN];
 
-  // Process id
-  int process_id;
+  // Output mode (can be "FILE" or "STREAM").
+  char output_mode[16];
 
-  // File name template for data files.
+  // Name of the virtual file used for streaming out data. Only used when output_mode is "STREAM"
+  char output_stream[MAX_DATA_FILE_LEN];
+
+  // Directory path where data files will be written. Only used when output_mode is "FILE"
+  char data_dir[MAX_DATA_DIR_LEN];
+
+  // File name template for data files. Only used when output_mode is "FILE"
   // The date/time string "_YYYY_MM_DD_hh_mm_ss" will be appended to each generated file
   // so the actual filename will have a maximum length of (MAX_DATA_FILE_LEN+20)
   char data_file[MAX_DATA_FILE_LEN];
@@ -60,7 +70,7 @@ typedef struct config_s {
   // ID of board connected to this process
   int board_id;
 
-  // Serial number of board connected to this process
+  // Serial number of board connected to this process (obtained during initialization)
   uint32_t board_sn;
 
   // Board optical connection info

@@ -8,21 +8,36 @@ import MySQLdb
 re_empty = re.compile("^\s*$")
 re_comment = re.compile("^\s*#")
 re_board = re.compile("^\s*board\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s*$")
-re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+#re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
 
 max_datetime = "2049-12-31 23:59:59"
 
-def main():
+# Get DB connection parameters from environment variables
+DB_HOST   = os.getenv('PADME_DB_HOST'  ,'localhost')
+DB_PORT   = os.getenv('PADME_DB_PORT'  ,'5501')
+DB_USER   = os.getenv('PADME_DB_USER'  ,'padme')
+DB_PASSWD = os.getenv('PADME_DB_PASSWD','unknown')
+DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDAQ')
+conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
+c = conn.cursor()
 
-    # Get DB connection parameters from environment variables
-    DB_HOST   = os.getenv('PADME_DB_HOST'  ,'localhost')
-    DB_PORT   = os.getenv('PADME_DB_PORT'  ,'5501')
-    DB_USER   = os.getenv('PADME_DB_USER'  ,'padme')
-    DB_PASSWD = os.getenv('PADME_DB_PASSWD','unknown')
-    DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDAQ')
-    conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
-    c = conn.cursor()
+def verify_address(id,field,old,new):
+
+    if (new != "-"):
+        if (old):
+            if (old != new):
+                print "Changing node id",id,field,"from",old,"to",new
+                c.execute("UPDATE node SET %s='%s' WHERE id=%d" % (field,new,id))
+        else:
+            print "Changing node id",id,field,"from NULL to",new
+            c.execute("UPDATE node SET %s='%s' WHERE id=%d" % (field,new,id))
+    elif (old):
+        print "Changing node id",id,field,"from",old,"to NULL"
+        c.execute("UPDATE node SET %s=NULL WHERE id=%d" % (field,id))
+
+def main():
 
     # Read DB setup file
     f = open("PadmeDAQ_data.txt","r")
@@ -91,34 +106,46 @@ def main():
         m = re_node.search(l)
         if (m):
 
-            (node_id,node_name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq) = m.group(1,2,3,4,5,6)
+            (node_id,node_name,mac_addr_lnf,ip_addr_lnf,mac_addr_daq,ip_addr_daq,mac_addr_dcs,ip_addr_dcs,mac_addr_ipmi,ip_addr_ipmi) = m.group(1,2,3,4,5,6,7,8,9,10)
             node_id = int(node_id)
 
             # Check if node with this id exists
-            c.execute("""SELECT name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq FROM node WHERE id=%s""",(node_id,))
+            c.execute("""SELECT name,mac_addr_lnf,ip_addr_lnf,mac_addr_daq,ip_addr_daq,mac_addr_dcs,ip_addr_dcs,mac_addr_ipmi,ip_addr_ipmi FROM node WHERE id=%s""",(node_id,))
             res = c.fetchone()
             if (res == None):
                 # Node id does not exist: create it
-                print "Creating node with id",node_id,"name",node_name,"addresses",ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq
-                c.execute("""INSERT INTO node(id,name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq) VALUES(%s,%s,%s,%s,%s,%s)""",(node_id,node_name,ip_addr_lnf,ip_addr_daq,mac_addr_lnf,mac_addr_daq))
+                print "Creating node with id",node_id,"name",node_name,"addresses",mac_addr_lnf,ip_addr_lnf,mac_addr_daq,ip_addr_daq,mac_addr_dcs,ip_addr_dcs,mac_addr_ipmi,ip_addr_ipmi
+                c.execute("""INSERT INTO node(id,name) VALUES(%s,%s)""",(node_id,node_name))
+                if (mac_addr_lnf != "-"):
+                    c.execute("""UPDATE node SET mac_addr_lnf=%s WHERE id=%s""",(mac_addr_lnf,node_id))
+                if (ip_addr_lnf != "-"):
+                    c.execute("""UPDATE node SET ip_addr_lnf=%s WHERE id=%s""",(ip_addr_lnf,node_id))
+                if (mac_addr_daq != "-"):
+                    c.execute("""UPDATE node SET mac_addr_daq=%s WHERE id=%s""",(mac_addr_daq,node_id))
+                if (ip_addr_daq != "-"):
+                    c.execute("""UPDATE node SET ip_addr_daq=%s WHERE id=%s""",(ip_addr_daq,node_id))
+                if (mac_addr_dcs != "-"):
+                    c.execute("""UPDATE node SET mac_addr_dcs=%s WHERE id=%s""",(mac_addr_dcs,node_id))
+                if (ip_addr_dcs != "-"):
+                    c.execute("""UPDATE node SET ip_addr_dcs=%s WHERE id=%s""",(ip_addr_dcs,node_id))
+                if (mac_addr_ipmi != "-"):
+                    c.execute("""UPDATE node SET mac_addr_ipmi=%s WHERE id=%s""",(mac_addr_ipmi,node_id))
+                if (ip_addr_ipmi != "-"):
+                    c.execute("""UPDATE node SET ip_addr_ipmi=%s WHERE id=%s""",(ip_addr_ipmi,node_id))
             else:
                 # Node id exists: check if it changed
-                (old_node_name,old_ip_addr_lnf,old_ip_addr_daq,old_mac_addr_lnf,old_mac_addr_daq) = res
+                (old_node_name,old_mac_addr_lnf,old_ip_addr_lnf,old_mac_addr_daq,old_ip_addr_daq,old_mac_addr_dcs,old_ip_addr_dcs,old_mac_addr_ipmi,old_ip_addr_ipmi) = res
                 if (old_node_name != node_name):
                     print "Changing node id",node_id,"name from",old_node_name,"to",node_name
                     c.execute("""UPDATE node SET name=%s WHERE id=%s""",(node_name,node_id))
-                if (old_ip_addr_lnf != ip_addr_lnf):
-                    print "Changing node id",node_id,"ip_addr_lnf from",old_ip_addr_lnf,"to",ip_addr_lnf
-                    c.execute("""UPDATE node SET ip_addr_lnf=%s WHERE id=%s""",(ip_addr_lnf,node_id))
-                if (old_ip_addr_daq != ip_addr_daq):
-                    print "Changing node id",node_id,"ip_addr_daq from",old_ip_addr_daq,"to",ip_addr_daq
-                    c.execute("""UPDATE node SET ip_addr_daq=%s WHERE id=%s""",(ip_addr_daq,node_id))
-                if (old_mac_addr_lnf != mac_addr_lnf):
-                    print "Changing node id",node_id,"mac_addr_lnf from",old_mac_addr_lnf,"to",mac_addr_lnf
-                    c.execute("""UPDATE node SET mac_addr_lnf=%s WHERE id=%s""",(mac_addr_lnf,node_id))
-                if (old_mac_addr_daq != mac_addr_daq):
-                    print "Changing node id",node_id,"mac_addr_daq from",old_mac_addr_daq,"to",mac_addr_daq
-                    c.execute("""UPDATE node SET mac_addr_daq=%s WHERE id=%s""",(mac_addr_daq,node_id))
+                verify_address(node_id,"mac_addr_lnf",old_mac_addr_lnf,mac_addr_lnf)
+                verify_address(node_id,"ip_addr_lnf",old_ip_addr_lnf,ip_addr_lnf)
+                verify_address(node_id,"mac_addr_daq",old_mac_addr_daq,mac_addr_daq)
+                verify_address(node_id,"ip_addr_daq",old_ip_addr_daq,ip_addr_daq)
+                verify_address(node_id,"mac_addr_dcs",old_mac_addr_dcs,mac_addr_dcs)
+                verify_address(node_id,"ip_addr_dcs",old_ip_addr_dcs,ip_addr_dcs)
+                verify_address(node_id,"mac_addr_ipmi",old_mac_addr_ipmi,mac_addr_ipmi)
+                verify_address(node_id,"ip_addr_ipmi",old_ip_addr_ipmi,ip_addr_ipmi)
 
         # Check links
         m = re_link.search(l)

@@ -35,9 +35,13 @@ board 31  ADC    CAEN	V1742  32     223
 board 32  ADC    CAEN	V1742  32     225
 
 # List of DAQ nodes
-#     id  node name		ip address lnf	ip address daq	mac address lnf   mac address daq
-node   0  l0padme4.lnf.infn.it  193.206.082.134 192.168.060.003 c8:1f:be:cf:c6:7a c8:1f:be:cf:c6:7b
-node   1  l0padme5.lnf.infn.it  xxx.xxx.xxx.xxx 192.168.060.004 xx:xx:xx:xx:xx:xx xx:xx:xx:xx:xx:xx
+#     id  node name		mac address lnf   ip address lnf  mac address daq   ip address daq  mac address dcs   ip address dcs  mac address ipmi  ip address ipmi
+node   0  l0padme4.lnf.infn.it  c8:1f:be:cf:c6:7a 193.206.82.134  c8:1f:be:cf:c6:7b 192.168.60.3    -		      -	 	      48:fd:8e:95:6d:de 192.168.61.6
+node   1  l0padme5.lnf.infn.it  -		  -		  -		    192.168.60.4    -		      -		      -			-
+node   2  l0padme1.lnf.infn.it  80:18:44:e5:d5:44 193.206.81.147  80:18:44:e5:d5:45 192.168.60.2    80:18:44:e5:d5:45 192.168.62.2    50:9a:4c:a9:ee:b6	192.168.61.2
+node   3  l0padme3.lnf.infn.it  80:18:44:e5:d5:f4 193.206.81.149  80:18:44:e5:d5:f5 192.168.60.7    -		      -		      50:9a:4c:a9:db:da	192.168.61.3
+node   4  l1padme1.lnf.infn.it  80:18:44:e5:e4:e4 193.206.81.150  f4:e9:d4:ba:0a:30 192.168.60.5    -		      -		      18:66:da:b9:b0:e1	192.168.61.4
+node   5  l1padme2.lnf.infn.it  80:18:44:e5:d7:54 193.206.81.151  f4:e9:d4:ba:13:10 192.168.60.6    -		      -		      18:66:da:bd:5a:18	192.168.61.5
 
 # List of links with temporal evolution
 #    link      bid    from_date     from_time

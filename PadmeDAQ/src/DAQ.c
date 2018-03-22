@@ -1204,7 +1204,7 @@ int DAQ_readdata ()
   // Deallocate output event buffer
   free(outEvtBuffer);
 
-  // Tell DB that the run has ended
+  // Tell DB that the process has ended
   if ( Config->run_number ) {
     if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
   }

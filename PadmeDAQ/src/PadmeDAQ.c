@@ -234,8 +234,6 @@ int main(int argc, char*argv[])
       printf("*** ERROR *** Zero suppression ended with an error. Please check log file for details. Exiting.\n");
       remove_lock();
       exit(1);
-    } else if ( rc == 3 ) {
-      printf("=== Run aborted before starting DAQ ===\n");
     }
 
     printf("\n=== Zero suppression process ended ===\n");

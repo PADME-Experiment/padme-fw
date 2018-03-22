@@ -73,7 +73,10 @@ typedef struct config_s {
   // Serial number of board connected to this process (obtained during initialization)
   uint32_t board_sn;
 
-  // Board optical connection info
+  // DB id of node where this process is running
+  int node_id;
+
+  // Board optical connection info (port and slot of A3818 board)
   int conet2_link;
   int conet2_slot;
 

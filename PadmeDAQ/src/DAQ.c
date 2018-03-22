@@ -172,7 +172,7 @@ int DAQ_connect ()
   printf("- AMC FPGA Release: %s\n", boardInfo.AMC_FirmwareRel);
   printf("- PCB revision number: %u\n", boardInfo.PCB_Revision);
 
-  // Save board serial number: will be written to file header
+  // Save board serial number: will be written to file header and to DB
   Config->board_sn = boardInfo.SerialNumber;
 
   return 0;
@@ -709,9 +709,9 @@ int DAQ_readdata ()
     //... connect to DB and create new process
     //if ( db_init(Config->db_file) != DB_OK ) return 1;
     if ( db_init() != DB_OK ) return 1;
-    if ( db_process_create(Config->run_number,Config->board_id) != DB_OK ) return 1;
-    Config->process_id = db_get_process_id(Config->run_number,Config->board_id);
-    if ( Config->process_id <= 0 ) return 1;
+    //if ( db_process_create(Config->run_number,Config->board_id) != DB_OK ) return 1;
+    //Config->process_id = db_get_process_id(Config->run_number,Config->board_id);
+    //if ( Config->process_id <= 0 ) return 1;
 
     // Save configuration to DB (by now Config knows the process_id)
     save_config();
@@ -806,13 +806,23 @@ int DAQ_readdata ()
   fileIndex = 0;
   tooManyOutputFiles = 0;
 
-  // Generate name for initial output file and verify it does not exist
-  //generate_filename(fileName[fileIndex],t_daqstart);
-  generate_filename(tmpName,t_daqstart);
-  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
-  strcpy(fileName[fileIndex],tmpName);
-  if ( Config->run_number ) {
-    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+
+    // Generate name for initial output file and verify it does not exist
+    //generate_filename(fileName[fileIndex],t_daqstart);
+    generate_filename(tmpName,t_daqstart);
+    fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+    strcpy(fileName[fileIndex],tmpName);
+    if ( Config->run_number ) {
+      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+    }
+
+  } else {
+
+    // Use only one virtual file for streaming out all data
+    fileName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(fileName[fileIndex],Config->output_stream);
+
   }
 
   // Open file
@@ -832,7 +842,7 @@ int DAQ_readdata ()
   fileEvents[fileIndex] = 0;
 
   // Register file in the DB
-  if ( Config->run_number ) {
+  if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
     if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
   }
 
@@ -1015,91 +1025,96 @@ int DAQ_readdata ()
 
     }
 
-    // Check if we need a new data file (required time elapsed or file size/events threshold exceeded)
-    time(&t_now);
-    if (
-	(t_now-fileTOpen[fileIndex] >= Config->file_max_duration) ||
-	(fileSize[fileIndex]        >= Config->file_max_size    ) ||
-	(fileEvents[fileIndex]      >= Config->file_max_events  )
-       ) {
+    // If we are running in FILE output mode, check if we need a new data file
+    // i.e. required time elapsed or file size/events threshold exceeded
+    if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
-      // Register file closing time
-      fileTClose[fileIndex] = t_now;
+      time(&t_now);
+      if (
+	  (t_now-fileTOpen[fileIndex] >= Config->file_max_duration) ||
+	  (fileSize[fileIndex]        >= Config->file_max_size    ) ||
+	  (fileEvents[fileIndex]      >= Config->file_max_events  )
+	  ) {
 
-      // Write tail to file
-      fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
-      writeSize = write(fileHandle,outEvtBuffer,fTailSize);
-      if (writeSize != fTailSize) {
-	printf("ERROR - Unable to write file header to file. Tail size: %d, Write result: %d\n",
-	       fTailSize,writeSize);
-	return 2;
-      }
-      fileSize[fileIndex] += fTailSize;
+	// Register file closing time
+	fileTClose[fileIndex] = t_now;
 
-      // Close old output file and show some info about counters
-      if (close(fileHandle) == -1) {
-	printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-	return 2;
-      };
-      //printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-      //	     format_time(fileTClose[fileIndex]),fileFullName,(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
-      //	     fileEvents[fileIndex],fileSize[fileIndex]);
-      printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-	     format_time(fileTClose[fileIndex]),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
-	     fileEvents[fileIndex],fileSize[fileIndex]);
-
-      // Close file in DB
-      if ( Config->run_number ) {
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-      }
-
-      // Update file counter
-      fileIndex++;
-
-      if ( fileIndex<MAX_N_OUTPUT_FILES ) {
-
-	// Open new output file and reset all counters
-	//generate_filename(fileName[fileIndex],t_now);
-	generate_filename(tmpName,t_now);
-	fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
-	strcpy(fileName[fileIndex],tmpName);
-	if ( Config->run_number ) {
-	  if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
-	}
-	//strcpy(fileFullName,Config->data_dir);
-	//strcat(fileFullName,fileName[fileIndex]);
-	//strcpy(fileFullName,fileName[fileIndex]);
-	//printf("- Opening file %d with name '%s'\n",fileIndex,fileFullName);
-	printf("- Opening file %d with name '%s'\n",fileIndex,fileName[fileIndex]);
-	//fileHandle = open(fileFullName,O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-	fileHandle = open(fileName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-	if (fileHandle == -1) {
-	  //printf("ERROR - Unable to open file '%s' for writing.\n",fileFullName);
-	  printf("ERROR - Unable to open file '%s' for writing.\n",fileName[fileIndex]);
+	// Write tail to file
+	fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
+	writeSize = write(fileHandle,outEvtBuffer,fTailSize);
+	if (writeSize != fTailSize) {
+	  printf("ERROR - Unable to write file header to file. Tail size: %d, Write result: %d\n",
+		 fTailSize,writeSize);
 	  return 2;
 	}
-	fileTOpen[fileIndex] = t_now;
-	fileSize[fileIndex] = 0;
-	fileEvents[fileIndex] = 0;
+	fileSize[fileIndex] += fTailSize;
 
-	// Register file in the DB
-	if ( Config->run_number ) {
-	  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-	}
-
-	// Write header to file
-	fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
-	writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
-	if (writeSize != fHeadSize) {
-	  printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
-		 fHeadSize,writeSize);
+	// Close old output file and show some info about counters
+	if (close(fileHandle) == -1) {
+	  printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
 	  return 2;
+	};
+	//printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
+	//	     format_time(fileTClose[fileIndex]),fileFullName,(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	//	     fileEvents[fileIndex],fileSize[fileIndex]);
+	printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
+	       format_time(fileTClose[fileIndex]),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	       fileEvents[fileIndex],fileSize[fileIndex]);
+
+	// Close file in DB
+	if ( Config->run_number ) {
+	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	}
-	fileSize[fileIndex] += fHeadSize;
 
-      } else {
+	// Update file counter
+	fileIndex++;
 
-	tooManyOutputFiles = 1;
+	if ( fileIndex<MAX_N_OUTPUT_FILES ) {
+
+	  // Open new output file and reset all counters
+	  //generate_filename(fileName[fileIndex],t_now);
+	  generate_filename(tmpName,t_now);
+	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+	  strcpy(fileName[fileIndex],tmpName);
+	  if ( Config->run_number ) {
+	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+	  }
+	  //strcpy(fileFullName,Config->data_dir);
+	  //strcat(fileFullName,fileName[fileIndex]);
+	  //strcpy(fileFullName,fileName[fileIndex]);
+	  //printf("- Opening file %d with name '%s'\n",fileIndex,fileFullName);
+	  printf("- Opening file %d with name '%s'\n",fileIndex,fileName[fileIndex]);
+	  //fileHandle = open(fileFullName,O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	  fileHandle = open(fileName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	  if (fileHandle == -1) {
+	    //printf("ERROR - Unable to open file '%s' for writing.\n",fileFullName);
+	    printf("ERROR - Unable to open file '%s' for writing.\n",fileName[fileIndex]);
+	    return 2;
+	  }
+	  fileTOpen[fileIndex] = t_now;
+	  fileSize[fileIndex] = 0;
+	  fileEvents[fileIndex] = 0;
+
+	  // Register file in the DB
+	  if ( Config->run_number ) {
+	    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+	  }
+
+	  // Write header to file
+	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
+	  if (writeSize != fHeadSize) {
+	    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
+		   fHeadSize,writeSize);
+	    return 2;
+	  }
+	  fileSize[fileIndex] += fHeadSize;
+
+	} else {
+
+	  tooManyOutputFiles = 1;
+
+	}
 
       }
 
@@ -1128,8 +1143,7 @@ int DAQ_readdata ()
   // Register file closing time
   fileTClose[fileIndex] = t_now;
 
-  // If DAQ was stopped for writing too many output files, we do not have
-  // to close the last file
+  // If DAQ was stopped for writing too many output files, we do not have to close the last file
   if ( ! tooManyOutputFiles ) {
 
     // Write tail to file
@@ -1152,7 +1166,7 @@ int DAQ_readdata ()
 	   fileEvents[fileIndex],fileSize[fileIndex]);
 
     // Close file in DB
-    if ( Config->run_number ) {
+    if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
       if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
     }
 
@@ -1213,11 +1227,13 @@ int DAQ_readdata ()
   printf("Total size of data acquired: %lu B - %6.2f KB/s\n",totalReadSize,sizeReadPerSec);
   printf("Total number of events written: %lu - %6.2f events/s\n",totalEvents,evtPerSec);
   printf("Total size of data written: %lu B - %6.2f KB/s\n",totalSize,sizePerSec);
-  printf("=== Files created =======================================\n");
-  for(i=0;i<fileIndex;i++) {
-    printf("'%s' %u %lu",fileName[i],fileEvents[i],fileSize[i]);
-    printf(" %s",format_time(fileTOpen[i])); // Optimizer effect! :)
-    printf(" %s\n",format_time(fileTClose[i]));
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("=== Files created =======================================\n");
+    for(i=0;i<fileIndex;i++) {
+      printf("'%s' %u %lu",fileName[i],fileEvents[i],fileSize[i]);
+      printf(" %s",format_time(fileTOpen[i])); // Optimizer effect! :)
+      printf(" %s\n",format_time(fileTClose[i]));
+    }
   }
   printf("=========================================================\n");
 

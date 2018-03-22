@@ -683,6 +683,9 @@ int save_config()
   sprintf(line,"%d",Config->board_id);
   db_add_cfg_para(Config->process_id,"board_id",line);
 
+  sprintf(line,"%d",Config->board_sn);
+  db_add_cfg_para(Config->board_sn,"board_sn",line);
+
   sprintf(line,"%d",Config->node_id);
   db_add_cfg_para(Config->process_id,"node_id",line);
 

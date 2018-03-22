@@ -103,58 +103,58 @@ int db_run_check(int run_nr)
 
 // Create a new process in the database
 // N.B. Default process status is 0 (i.e. DAQ not started)
-int db_process_create(int run_nr,int board_id)
-{
-
-  char sqlCode[10240];
-
-  // Insert run into DB and initialize to 0 all parameters
-  //sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
-  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0)",run_nr,board_id);
-  if ( mysql_query(DBHandle,sqlCode) ) {
-    printf("DB::db_process_create - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
-    return DB_SQLERROR;
-  }
-  return DB_OK;
-
-}
+//int db_process_create(int run_nr,int board_id)
+//{
+//
+//  char sqlCode[10240];
+//
+//  // Insert run into DB and initialize to 0 all parameters
+//  //sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,time_start,time_stop,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0,0,0)",run_nr,board_id);
+//  sprintf(sqlCode,"INSERT INTO process (run_number,board_id,status,n_daq_files,total_events,total_size) VALUES (%d,%d,0,0,0,0)",run_nr,board_id);
+//  if ( mysql_query(DBHandle,sqlCode) ) {
+//    printf("DB::db_process_create - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
+//    return DB_SQLERROR;
+//  }
+//  return DB_OK;
+//
+//}
 
 // Get process id from run_number and board_id (0: not found, -1: error)
-int db_get_process_id(int run_nr,int board_id)
-{
-
-  int result = 0;
-  char sqlCode[10240];
-  MYSQL_RES* res;
-  MYSQL_ROW row;
-
-  sprintf(sqlCode,"SELECT id FROM process WHERE run_number = %d AND board_id = %d",run_nr,board_id);
-  if ( mysql_query(DBHandle,sqlCode) ) {
-    printf("DB::db_get_process_id - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
-    return -1;
-  }
-
-  res = mysql_store_result(DBHandle);
-  if (res == NULL) {
-    printf("DB::db_get_process_id - ERROR retrieving result: %s\n", mysql_error(DBHandle));
-    return -1;
-  }
-
-  if (mysql_num_rows(res) == 0) {
-    result = 0;
-  } else if (mysql_num_rows(res) == 1) {
-    row = mysql_fetch_row(res);
-    result = atoi(row[0]);
-  } else {
-    printf("DB::db_get_process_id - ERROR multiple processes with same (run,board) pair (?)\n");
-    result = -1;
-  }
-
-  mysql_free_result(res);
-  res = NULL;
-
-  return result;
-}
+//int db_get_process_id(int run_nr,int board_id)
+//{
+//
+//  int result = 0;
+//  char sqlCode[10240];
+//  MYSQL_RES* res;
+//  MYSQL_ROW row;
+//
+//  sprintf(sqlCode,"SELECT id FROM process WHERE run_number = %d AND board_id = %d",run_nr,board_id);
+//  if ( mysql_query(DBHandle,sqlCode) ) {
+//    printf("DB::db_get_process_id - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
+//    return -1;
+//  }
+//
+//  res = mysql_store_result(DBHandle);
+//  if (res == NULL) {
+//    printf("DB::db_get_process_id - ERROR retrieving result: %s\n", mysql_error(DBHandle));
+//    return -1;
+//  }
+//
+//  if (mysql_num_rows(res) == 0) {
+//    result = 0;
+//  } else if (mysql_num_rows(res) == 1) {
+//    row = mysql_fetch_row(res);
+//    result = atoi(row[0]);
+//  } else {
+//    printf("DB::db_get_process_id - ERROR multiple processes with same (run,board) pair (?)\n");
+//    result = -1;
+//  }
+//
+//  mysql_free_result(res);
+//  res = NULL;
+//
+//  return result;
+//}
 
 int db_process_open(int proc_id,time_t t)
 {
@@ -163,7 +163,7 @@ int db_process_open(int proc_id,time_t t)
   char sqlCode[10240];
 
   t_st = localtime(&t);
-  sprintf(sqlCode,"UPDATE process SET status = 1, time_start = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+  sprintf(sqlCode,"UPDATE daq_process SET status = 1, time_start = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
 	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_process_open - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
@@ -180,7 +180,7 @@ int db_process_close(int proc_id,time_t t)
   char sqlCode[10240];
 
   t_st = localtime(&t);
-  sprintf(sqlCode,"UPDATE process SET status = 2, time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+  sprintf(sqlCode,"UPDATE daq_process SET status = 2, time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
 	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_process_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
@@ -215,7 +215,7 @@ int db_file_check(char* file_name)
   } else if (mysql_num_rows(res) == 1) {
     result = 1;
   } else {
-    printf("DB::db_run_check - ERROR multiple runs with same number (?)\n");
+    printf("DB::db_run_check - ERROR multiple files with same name (?)\n");
     result = -1;
   }
 
@@ -233,7 +233,7 @@ int db_file_open(char* file_name,int file_version,time_t t,int proc_id,int part)
   char sqlCode[10240];
 
   t_st = localtime(&t);
-  sprintf(sqlCode,"INSERT INTO daq_file (name,version,process_id,part,time_open,n_events,size) VALUES ('%s',%d,%d,%d,'%04d-%02d-%02d %02d:%02d:%02d',0,0)",file_name,file_version,proc_id,part,1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec);
+  sprintf(sqlCode,"INSERT INTO daq_file (name,version,daq_process_id,part,time_open,n_events,size) VALUES ('%s',%d,%d,%d,'%04d-%02d-%02d %02d:%02d:%02d',0,0)",file_name,file_version,proc_id,part,1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_file_open - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;
@@ -264,7 +264,7 @@ int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n
   }
 
   // Update size/events counters for this process
-  sprintf(sqlCode,"UPDATE process SET total_events = total_events + %u, total_size = total_size + %lu WHERE id = %d;",n_events,size,proc_id);
+  sprintf(sqlCode,"UPDATE daq_process SET total_events = total_events + %u, total_size = total_size + %lu WHERE id = %d;",n_events,size,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_file_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;
@@ -286,7 +286,7 @@ int db_add_cfg_para(int proc_id, const char* para_name, char* para_val)
   }
 
   // Update size/events counters for this run
-  sprintf(sqlCode,"INSERT INTO proc_config_para (process_id,config_para_name_id,value) VALUES (%d,%d,'%s');",proc_id,para_id,para_val);
+  sprintf(sqlCode,"INSERT INTO daq_proc_config_para (process_id,config_para_name_id,value) VALUES (%d,%d,'%s');",proc_id,para_id,para_val);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_add_cfg_para - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;

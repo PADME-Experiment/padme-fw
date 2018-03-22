@@ -10,8 +10,8 @@
 int db_init();
 int db_end();
 int db_run_check(int); // run_nr
-int db_process_create(int,int); // run_nr,board_id
-int db_get_process_id(int,int); // run_nr,board_id (returns id or -1 for error)
+//int db_process_create(int,int); // run_nr,board_id
+//int db_get_process_id(int,int); // run_nr,board_id (returns id or -1 for error)
 int db_process_open(int,time_t); // process_id,time
 int db_process_close(int,time_t); // process_id,time
 int db_file_check(char*); // file_name

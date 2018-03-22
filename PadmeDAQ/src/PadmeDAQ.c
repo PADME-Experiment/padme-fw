@@ -125,7 +125,7 @@ int main(int argc, char*argv[])
 	fprintf(stdout,"  -h: show this help message and exit\n\n");
 	exit(0);
       case '?':
-        if (optopt == 'c' || optopt == 'r')
+        if (optopt == 'c')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint (optopt))
           fprintf (stderr, "Unknown option '-%c'.\n", optopt);
@@ -166,7 +166,7 @@ int main(int argc, char*argv[])
 
   // Check if we are running in DAQ mode or 0-suppression mode
 
-  if ( strcmp(Config->function_mode,"DAQ")==0 ) {
+  if ( strcmp(Config->process_mode,"DAQ")==0 ) {
 
     // Show some startup message
     if (Config->run_number == 0) {
@@ -175,7 +175,7 @@ int main(int argc, char*argv[])
     } else {
       printf("\n=== Starting PadmeDAQ acquisition for run %d ===\n",Config->run_number);
     }
-    printf("- Run type: '%s'\n",Config->run_type);
+    //printf("- Run type: '%s'\n",Config->run_type);
 
     // Connect to digitizer
     printf("\n=== Connect to digitizer ===\n");
@@ -213,7 +213,7 @@ int main(int argc, char*argv[])
       exit(1);
     }
 
-  } else if ( strcmp(Config->function_mode,"ZSUP")==0 ) {
+  } else if ( strcmp(Config->process_mode,"ZSUP")==0 ) {
 
     // Show some startup message
     if (Config->run_number == 0) {
@@ -222,7 +222,7 @@ int main(int argc, char*argv[])
     } else {
       printf("\n=== Starting PadmeDAQ zero suppression for run %d ===\n",Config->run_number);
     }
-    printf("- Run type: '%s'\n",Config->run_type);
+    //printf("- Run type: '%s'\n",Config->run_type);
 
     // Handle zero suppression
     printf("\n=== Starting zero suppression ===\n");

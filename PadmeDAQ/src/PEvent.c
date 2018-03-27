@@ -33,13 +33,9 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
   int Ch,iGr,iCh,iSm;
   uint32_t bCh; // bit mask for channel
-  float s,sum,sum2,mean,rms,thrLo,thrHi;
-  int overThr,nOverThr,nMaxOverThr;
-  int acceptCh;
 
   // Pointer to move over the pEvt structure one byte at a time
   void *cursor = pEvt;
-  void *cursor_old; // Used to save old position when applying zero suppression
 
   // Extract 0-suppression configuration
   int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1=flagging
@@ -113,110 +109,22 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Tag channel as active
       pEvtChMaskActive |= bCh;
+      pEvtChMaskAccepted |= bCh;
 
-      if ( pEvt0SupAlgr != 0 ) { // Apply a 0-suppression algorithm (only one available now)
-
-	// Copy the samples while applying zero suppression algorithm
-	//printf("Applying zero suppression\n"); // Debug message
-
-	cursor_old = cursor; // Save current position: will restart from here if channel is rejected
-
-	sum = 0.;
-	sum2 = 0.;
-	mean = 0.;
-	rms = 0.;
-	thrHi = 8192.;
-	thrLo = -8192;
-	overThr = 0;
-	nOverThr = 0;
-	nMaxOverThr = 0;
-	for (iSm=0;iSm<nSm;iSm++) {
-
-	  // Get value of current sample
-	  s = event->DataGroup[iGr].DataChannel[iCh][iSm];
-
-	  // Use the first 80 samples to compute pedestal and sigma pedestal
-	  if (iSm<Config->zs1_head) {
-
-	    sum += s;
-	    sum2 += s*s;
-	    if (iSm==Config->zs1_head-1) {
-	      mean = sum/Config->zs1_head;
-	      rms = sqrt((sum2-sum*mean)/(Config->zs1_head-1));
-	      thrHi = mean+Config->zs1_nsigma*rms;
-	      thrLo = mean-Config->zs1_nsigma*rms;
-	      //	      printf("Channel %d mean %f rms %f thrHi %f thrLo %f\n",Ch,mean,rms,thrHi,thrLo);
-	    }
-
-	  } else if (iSm<1024-Config->zs1_tail) { // Do not consider final set of samples
-
-	    // Get longest set of consecutive samples above threshold
-	    if (overThr) {
-	      if (s<thrLo) {
-		nOverThr++;
-		if (nOverThr>nMaxOverThr) nMaxOverThr = nOverThr;
-	      } else {
-		overThr = 0;
-		nOverThr = 0;
-	      }
-	    } else {
-	      if (s<thrLo) {
-		overThr = 1;
-		nOverThr = 1;
-		if (nOverThr>nMaxOverThr) nMaxOverThr = nOverThr;
-	      }
-	    }
-
-	  }
-
-	  // Copy sample to output structure
-	  myshort = roundf(s);
-	  memcpy(cursor,&myshort,2);
-	  cursor += 2;
-	  //printf("Ch %d Sm %d %f %d\n",Ch,iSm,event->DataGroup[iGr].DataChannel[iCh][iSm],myshort);
-
-	}
-
-	// If number of samples is odd, pad last sample to full word (probably never used)
-	if (nSm%2) cursor += 2;
-
-	// Decide if channel is accepted. 1:channel accepted, 0:channel rejected
-	acceptCh = 0;
-	// Channel is accepted if rms is bad or if at least zs1_nabovethr channels are above threshold
-	if ( (rms>Config->zs1_badrmsthr) ||  (nMaxOverThr>=Config->zs1_nabovethr) ) acceptCh = 1;
-	//	printf("Channel %d max consecutive samples over threshold: %d\n",Ch,nMaxOverThr);
-
-	// If channel is accepted, tag it in the accepted_channels mask
-	if (acceptCh) pEvtChMaskAccepted |= bCh;
-
-	// If channel is accepted or 0-suppression algorithm is in flagging mode...
-	if (acceptCh || pEvt0SupMode) {
-	  // ...increase event size
-	  pEvtSize += (nSm/2 + nSm%2);
-	} else {
-	  // ...else reject event by resetting cursor to old position
-	  cursor = cursor_old;
-	}
-
-      } else {
-
-	// No zero suppression: just copy the samples and tag channel as accepted
-	for (iSm=0;iSm<nSm;iSm++) {
-	  myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
-	  memcpy(cursor,&myshort,2);
-	  cursor += 2;
-	}
-
-	// If number of samples is odd, pad last sample to full word (probably never used)
-	if (nSm%2) cursor += 2;
-
-	pEvtChMaskAccepted |= bCh;
-	pEvtSize += (nSm/2 + nSm%2);
-	//	printf("4 - pEvtSize %d\n",pEvtSize);
-
+      // Copy the samples to output structure
+      for (iSm=0;iSm<nSm;iSm++) {
+	myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
+	memcpy(cursor,&myshort,2);
+	cursor += 2;
       }
 
+      // If number of samples is odd, pad last sample to full word (probably never used)
+      if (nSm%2) cursor += 2;
+
+      pEvtSize += (nSm/2 + nSm%2);
+
     }
+
   }
   //  printf("Final masks 0x%08X 0x%08X\n",pEvtChMaskActive,pEvtChMaskAccepted);
 
@@ -303,5 +211,5 @@ unsigned int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_
   memcpy(fTail,&line,4);         // First line: file tail tag (4) + number of events (28)
   memcpy(fTail+4,&fTotalSize,8); // Second + third line: total file size (64)
   memcpy(fTail+12,&timeTag,4);   // Fourth line: end of file time tag (32)
-  return PEVT_FTAIL_LEN*4;       // Return total size of file header in bytes
+  return PEVT_FTAIL_LEN*4;       // Return total size of file tail in bytes
 }

@@ -105,12 +105,17 @@ int reset_config()
   // Do not apply zero-suppression (test phase, this default will change in production)
   Config->zero_suppression = 0;
 
-  // Set default parameters for zero-suppression algorithm
+  // Set default parameters for zero-suppression algorithm 1
   Config->zs1_head = 80; // Use first 80 samples to compute mean and rms
   Config->zs1_tail = 30; // Do not use final 30 samples for zero suppression
   Config->zs1_nsigma = 3.; // Threshold set a mean +/- 3*rms
   Config->zs1_nabovethr = 4; // Require at least 4 consecutive samples above threshold to accept the channel
   Config->zs1_badrmsthr = 15.; // If rms is above 15 counts, channel has problems and is accepted
+
+  // Set default parameters for zero-suppression algorithm 2
+  Config->zs2_tail = 30; // Do not use final 30 samples for zero suppression
+  Config->zs2_minrms = 4.6;
+  for(ch=0;ch<32;ch++) Config->zs2_minrms_ch[ch] = Config->zs2_minrms;
 
   // Ouput file limits
   Config->file_max_duration = 900; // 15 min
@@ -475,6 +480,21 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"zs2_tail")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->zs2_tail = v;
+	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"zs2_minrms")==0 ) {
+	if ( sscanf(value,"%f",&vf) ) {
+	  Config->zs2_minrms = vf;
+	  for(ch=0;ch<32;ch++) Config->zs2_minrms_ch[ch] = Config->zs2_minrms;
+	  printf("Parameter %s set to %f\n",param,vf);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"file_max_duration")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
 	  Config->file_max_duration = v;
@@ -555,6 +575,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"zs2_minrms_ch")==0 ) {
+	if ( sscanf(value,"%f",&vf) ) {
+	  Config->zs2_minrms_ch[ch] = vf;
+	  printf("Parameter %s for channel %d set to %f\n",param,ch,vf);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else {
 	printf("WARNING - Unknown channel parameter %s from line:\n%s\n",param,line);
       }
@@ -582,7 +609,7 @@ int print_config(){
   int i;
 
   printf("\n=== Configuration parameters for this run ===\n");
-  printf("process_id\t\t'%s'\tDB id for this process\n",Config->process_id);
+  printf("process_id\t\t%d\tDB id for this process\n",Config->process_id);
   printf("process_mode\t\t'%s'\tfunctioning mode for this PadmeDAQ process (DAQ or ZSUP)\n",Config->process_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
   printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
@@ -592,48 +619,60 @@ int print_config(){
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
   if (strcmp(Config->process_mode,"ZSUP")==0) {
-    printf("input_stream\t\t%s\t\tname of virtual file used as input stream\n",Config->input_stream);
+    printf("input_stream\t\t'%s'\tname of virtual file used as input stream\n",Config->input_stream);
   }
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {
     printf("output_stream\t\t%s\t\tname of virtual file used as output stream\n",Config->output_stream);
   } else {
-    printf("data_dir\t\t'%s'\tdirectory where output files will be stored\n",Config->data_dir);
+    printf("data_dir\t\t'%s'\t\tdirectory where output files will be stored\n",Config->data_dir);
     printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
   }
-  printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
   printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
-  printf("node_id\t\t%d\t\tDB id of node running the process\n",Config->node_id);
+  printf("node_id\t\t\t%d\t\tDB id of node running the process\n",Config->node_id);
   printf("conet2_link\t\t%d\t\tCONET2 link\n",Config->conet2_link);
   printf("conet2_slot\t\t%d\t\tCONET2 slot\n",Config->conet2_slot);
-  printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
-  printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
-  printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
-  printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);
-  printf("group_enable_mask\t0x%1x\t\tmask to enable groups of channels\n",Config->group_enable_mask);
-  printf("channel_enable_mask\t0x%08x\tmask to enable individual channels\n",Config->channel_enable_mask);
-  printf("offset_global\t\t0x%04x\t\tglobal DC offset\n",Config->offset_global);
-  for(i=0;i<32;i++) {
-    if (Config->offset_ch[i] != Config->offset_global) printf("offset_ch\t%.2d\t0x%04x\n",i,Config->offset_ch[i]);
+  if (strcmp(Config->process_mode,"DAQ")==0) {
+    printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
+    printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
+    printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
+    printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
+    printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);
+    printf("group_enable_mask\t0x%1x\t\tmask to enable groups of channels\n",Config->group_enable_mask);
+    printf("channel_enable_mask\t0x%08x\tmask to enable individual channels\n",Config->channel_enable_mask);
+    printf("offset_global\t\t0x%04x\t\tglobal DC offset\n",Config->offset_global);
+    for(i=0;i<32;i++) {
+      if (Config->offset_ch[i] != Config->offset_global) printf("offset_ch\t%.2d\t0x%04x\n",i,Config->offset_ch[i]);
+    }
+    printf("post_trigger_size\t%d\t\tpost trigger size\n",Config->post_trigger_size);
+    printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
+    printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
+    printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
   }
-  printf("post_trigger_size\t%d\t\tpost trigger size\n",Config->post_trigger_size);
-  printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
-  printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
-  printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
-  printf("zero_suppression\t%d\t\tzero-suppression - 100*mode+algorithm (mode:0=reject,1=flag - algorithm:0=OFF,1-15=algorithm id)\n",Config->zero_suppression);
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
+    printf("zero_suppression\t%d\t\tzero-suppression - 100*mode+algorithm (mode:0=reject,1=flag - algorithm:0=OFF,1-15=algorithm id)\n",Config->zero_suppression);
 
-  // This will change when 0-suppression gets more sophisticated
-  if (Config->zero_suppression == 1) {
-    printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
-    printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
-    printf("zs1_nsigma\t\t%5.3f\t\tnumber of sigmas around mean used to set the threshold\n",Config->zs1_nsigma);
-    printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
-    printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
+    // Only show parameters which are relevant for the selected zero suppression algorithm
+    if (Config->zero_suppression%100 == 1) {
+      printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
+      printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
+      printf("zs1_nsigma\t\t%5.3f\t\tnumber of sigmas around mean used to set the threshold\n",Config->zs1_nsigma);
+      printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
+      printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
+    } else if (Config->zero_suppression%100 == 2) {
+      printf("zs2_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs2_tail);
+      printf("zs2_minrms\t\t%8.3f\tglobal RMS threshold to accept the event\n",Config->zs2_minrms);
+    for(i=0;i<32;i++) {
+      if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) printf("zs2_minrms_ch\t%.2d\t%8.3f\tRMS threshold for channel %d\n",i,Config->zs2_minrms_ch[i],i);
+    }
+    }
   }
 
-  printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
-  printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
-  printf("file_max_events\t\t%d\t\tmax number of events to write before changing output file\n",Config->file_max_events);
+  if (strcmp(Config->output_mode,"FILE")==0) {
+    printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
+    printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
+    printf("file_max_events\t\t%d\t\tmax number of events to write before changing output file\n",Config->file_max_events);
+  }
   printf("=== End of configuration parameters ===\n\n");
 
   return 0;
@@ -737,7 +776,6 @@ int save_config()
   sprintf(line,"%d",Config->zero_suppression);
   db_add_cfg_para(Config->process_id,"zero_suppression",line);
 
-  // This will change when 0-suppression gets more sophisticated
   if (Config->zero_suppression % 100 == 1) {
     sprintf(line,"%d",Config->zs1_head);
     db_add_cfg_para(Config->process_id,"zs1_head",line);
@@ -749,6 +787,17 @@ int save_config()
     db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
     sprintf(line,"%f",Config->zs1_badrmsthr);
     db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
+  } if (Config->zero_suppression % 100 == 2) {
+    sprintf(line,"%d",Config->zs2_tail);
+    db_add_cfg_para(Config->process_id,"zs2_tail",line);
+    sprintf(line,"%f",Config->zs2_minrms);
+    db_add_cfg_para(Config->process_id,"zs2_minrms",line);
+    for(i=0;i<32;i++) {
+      if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) {
+	sprintf(line,"%02d %f",i,Config->zs2_minrms_ch[i]);
+	db_add_cfg_para(Config->process_id,"zs2_minrms_ch",line);
+      }
+    }
   }
 
   sprintf(line,"%d",Config->file_max_duration);
@@ -768,4 +817,24 @@ int end_config()
 {
   free(Config);
   return 0;
+}
+
+// Return file name given the file open time. Return 0 if OK, <>0 error
+int generate_filename(char* name, const time_t time) {
+  struct tm* t = localtime(&time);
+  sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
+	  Config->data_file,
+	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+	  t->tm_hour,      t->tm_min,   t->tm_sec);
+  return 0;
+}
+
+// Write time (in secs) to a string with standard formatting
+char* format_time(const time_t time) {
+  static char tform[20];
+  struct tm* t = localtime(&time);
+  sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
+	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+	  t->tm_hour,      t->tm_min,   t->tm_sec);
+  return tform;
 }

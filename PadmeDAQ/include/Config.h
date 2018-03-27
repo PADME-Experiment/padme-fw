@@ -4,10 +4,16 @@
 // Needed for special data formats (uint32_t)
 #include "CAENDigitizer.h"
 
+// Parameters used for configuration definitions
 #define MAX_RUN_COMMENT_LEN 1024
 #define MAX_DATA_DIR_LEN    1024
 #define MAX_DATA_FILE_LEN    235
 #define MAX_FILE_LEN        1024
+
+// Parameters used for final filenames
+#define TIME_TAG_LEN          20
+#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
+#define MAX_N_OUTPUT_FILES 10240
 
 // We store the board_id in 8 bits
 #define MAX_N_BOARDS         256
@@ -127,12 +133,17 @@ typedef struct config_s {
   // and algorithm=(0:OFF, 1-15:ON with selection of the algorithm)
   int zero_suppression;
 
-  // Zero-suppression algorithm parameters
+  // Zero-suppression algorithm 1 parameters
   int zs1_head; // Number of samples to use to compute mean and rms
   int zs1_tail; // Number of samples to reject at the end (see V1742 manual)
   float zs1_nsigma; // Number of sigmas around mean to set the threshold
   int zs1_nabovethr; // Number of consecutive above-threshold samples to accept the eventchannel
   float zs1_badrmsthr; // RMS threshold above which channel is deemed problematic and is accepted
+
+  // Zero-suppression algorithm 2 parameters
+  int zs2_tail; // Number of samples to reject at the end (see V1742 manual)
+  float zs2_minrms; // RMS threshold to use globally
+  float zs2_minrms_ch[32]; // RMS threshold to use for each channel
 
   // Set maximum per-file DAQ duration (secs).
   // After this time the output file will be closed and a new one will be opened
@@ -156,5 +167,8 @@ int read_config(char*); // Read configuration file
 int print_config();     // Print current configuration
 int save_config();      // Save config parameters into DB
 int end_config();       // Clear configuration
+
+int generate_filename(char*, const time_t); // Function to add time tag to file name
+char* format_time(const time_t); // Function to format time tags
 
 #endif

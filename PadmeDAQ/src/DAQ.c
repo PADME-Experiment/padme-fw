@@ -17,10 +17,10 @@
 
 #include "DAQ.h"
 
-#define TIME_TAG_LEN     20
-#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
+//#define TIME_TAG_LEN     20
+//#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
-#define MAX_N_OUTPUT_FILES 10240
+//#define MAX_N_OUTPUT_FILES 10240
 
 // Global variables
 
@@ -83,25 +83,25 @@ void set_signal_handlers()
   printf ("\n");
 }
 
-// Return file name given the file open time. Return 0 if OK, <>0 error
-int generate_filename(char* name, const time_t time) {
-  struct tm* t = localtime(&time);
-  sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
-	  Config->data_file,
-	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-	  t->tm_hour,      t->tm_min,   t->tm_sec);
-  return 0;
-}
+//// Return file name given the file open time. Return 0 if OK, <>0 error
+//int generate_filename(char* name, const time_t time) {
+//  struct tm* t = localtime(&time);
+//  sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
+//	  Config->data_file,
+//	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+//	  t->tm_hour,      t->tm_min,   t->tm_sec);
+//  return 0;
+//}
 
-// Write time (in secs) to a string with standard formatting
-char* format_time(const time_t time) {
-  static char tform[20];
-  struct tm* t = localtime(&time);
-  sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
-	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-	  t->tm_hour,      t->tm_min,   t->tm_sec);
-  return tform;
-}
+//// Write time (in secs) to a string with standard formatting
+//char* format_time(const time_t time) {
+//  static char tform[20];
+//  struct tm* t = localtime(&time);
+//  sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
+//	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+//	  t->tm_hour,      t->tm_min,   t->tm_sec);
+//  return tform;
+//}
 
 // Get LinkNum (link address of port on A3818 boards)
 int get_LinkNum()
@@ -680,12 +680,12 @@ int DAQ_readdata ()
   uint64_t totalEvents;
   float evtPerSec, sizePerSec;
 
+  // Information about output files
   unsigned int fileIndex;
   int tooManyOutputFiles;
-  //char fileName[MAX_N_OUTPUT_FILES][MAX_FILENAME_LEN];
   char tmpName[MAX_FILENAME_LEN];
   char* fileName[MAX_N_OUTPUT_FILES];
-  //char fileFullName[MAX_DATA_DIR_LEN+MAX_FILENAME_LEN];
+  char* pathName[MAX_N_OUTPUT_FILES];
   unsigned long int fileSize[MAX_N_OUTPUT_FILES];
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
@@ -816,25 +816,27 @@ int DAQ_readdata ()
     if ( Config->run_number ) {
       if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
     }
+    pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
+    strcpy(pathName[fileIndex],Config->data_dir);
+    strcat(pathName[fileIndex],fileName[fileIndex]);
 
   } else {
 
     // Use only one virtual file for streaming out all data
-    fileName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
-    strcpy(fileName[fileIndex],Config->output_stream);
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
 
   }
 
   // Open file
-  //strcpy(fileFullName,Config->data_dir);
-  //strcat(fileFullName,fileName[fileIndex]);
-  //strcpy(fileFullName,fileName[fileIndex]);
-  //printf("- Opening file '%s'\n",fileFullName);
-  printf("- Opening file '%s'\n",fileName[fileIndex]);
-  fileHandle = open(fileName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+  } else {
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+  }
+  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
   if (fileHandle == -1) {
-    //printf("ERROR - Unable to open file '%s' for writing.\n",fileFullName);
-    printf("ERROR - Unable to open file '%s' for writing.\n",fileName[fileIndex]);
+    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
     return 2;
   }
   fileTOpen[fileIndex] = t_daqstart;
@@ -1054,11 +1056,9 @@ int DAQ_readdata ()
 	  printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
 	  return 2;
 	};
-	//printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-	//	     format_time(fileTClose[fileIndex]),fileFullName,(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
-	//	     fileEvents[fileIndex],fileSize[fileIndex]);
-	printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-	       format_time(fileTClose[fileIndex]),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
+	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
+	       (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	       fileEvents[fileIndex],fileSize[fileIndex]);
 
 	// Close file in DB
@@ -1072,23 +1072,19 @@ int DAQ_readdata ()
 	if ( fileIndex<MAX_N_OUTPUT_FILES ) {
 
 	  // Open new output file and reset all counters
-	  //generate_filename(fileName[fileIndex],t_now);
 	  generate_filename(tmpName,t_now);
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
 	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
 	  }
-	  //strcpy(fileFullName,Config->data_dir);
-	  //strcat(fileFullName,fileName[fileIndex]);
-	  //strcpy(fileFullName,fileName[fileIndex]);
-	  //printf("- Opening file %d with name '%s'\n",fileIndex,fileFullName);
-	  printf("- Opening file %d with name '%s'\n",fileIndex,fileName[fileIndex]);
-	  //fileHandle = open(fileFullName,O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-	  fileHandle = open(fileName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
+	  strcpy(pathName[fileIndex],Config->data_dir);
+	  strcat(pathName[fileIndex],fileName[fileIndex]);
+	  printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+	  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 	  if (fileHandle == -1) {
-	    //printf("ERROR - Unable to open file '%s' for writing.\n",fileFullName);
-	    printf("ERROR - Unable to open file '%s' for writing.\n",fileName[fileIndex]);
+	    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
 	    return 2;
 	  }
 	  fileTOpen[fileIndex] = t_now;
@@ -1161,13 +1157,17 @@ int DAQ_readdata ()
       printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
       return 2;
     };
-    printf("%s - Closed file '%s' after %d secs with %u events and size %lu bytes\n",
-	   format_time(t_now),fileName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
-	   fileEvents[fileIndex],fileSize[fileIndex]);
-
-    // Close file in DB
-    if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
-      if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+    if ( strcmp(Config->output_mode,"FILE")==0 ) {
+      printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
+	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     fileEvents[fileIndex],fileSize[fileIndex]);
+      if ( Config->run_number ) {
+	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+      }
+    } else {
+      printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
+	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     fileEvents[fileIndex],fileSize[fileIndex]);
     }
 
     // Update file counter

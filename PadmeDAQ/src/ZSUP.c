@@ -124,10 +124,8 @@ int ZSUP_readdata ()
   }
 
   // Read file header (4 words) from input stream
-  //readSize = read(inFileHandle,inEvtBuffer,16);
-  //if (readSize != 16) {
-  readSize = read(inFileHandle,inEvtBuffer,12);
-  if (readSize != 12) {
+  readSize = read(inFileHandle,inEvtBuffer,16);
+  if (readSize != 16) {
     printf("ERROR - Unable to read header from input stream\n");
     return 2;
   }
@@ -141,11 +139,11 @@ int ZSUP_readdata ()
     return 2;
   }
   unsigned int version = (*line >> 16) & 0x0FFF;
-  //if ( version != 3 ) {
-  if ( version != 2 ) { // Waiting for v.3 files to be produced...
+  if ( version != 3 ) {
     printf("ERROR - Invalid input stream format version: %d. Should be 3\n",version);
     return 2;
   }
+  // This will be enabled after file-based tests have finished
   //unsigned int index = *line & 0xFFFF;
   //if ( index != 0 ) {
   //  printf("ERROR - Stream has non-zero index\n");
@@ -155,27 +153,19 @@ int ZSUP_readdata ()
   // Second line: run number
   int run_number;
   memcpy(&run_number,inEvtBuffer+4,4);
-  //line = (int *)(inEvtBuffer+4);
-  //int run_number = *line;
   if ( run_number != Config->run_number ) {
     printf("WARNING - Run number from stream not consistent with that from configuration: stream %d config %d\n",run_number,Config->run_number);
   }
   printf("- Run number %d\n",run_number);
 
-  //// Third line: board serial number
-  unsigned board_sn = 0;
-  //unsigned int board_sn;
-  //memcpy(&board_sn,inEvtBuffer+8,4);
-  ////line = (unsigned int *)(inEvtBuffer+8);
-  ////unsigned int board_sn = *line;
-  //printf("- Board S/N %d\n",board_sn);
+  // Third line: board serial number
+  unsigned int board_sn;
+  memcpy(&board_sn,inEvtBuffer+8,4);
+  printf("- Board S/N %d\n",board_sn);
 
   // Fourth line: start of file time tag
   unsigned int start_time;
-  //memcpy(&start_time,inEvtBuffer+12,4);
-  memcpy(&start_time,inEvtBuffer+8,4);
-  //line = (unsigned int *)(inEvtBuffer+12);
-  //unsigned int start_time = *line;
+  memcpy(&start_time,inEvtBuffer+12,4);
   printf("- Start time %s\n",format_time(start_time));
 
   // Now that we have a recognized input stream we open an output file/stream
@@ -584,6 +574,7 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
   // Third line of event header contains event status mask and event counter
   // Input line is copied to output after setting the zero suppression bit in the status mask
   line = (unsigned int *)(inCursor);
+  unsigned int eventNumber = *line & 0x003FFFFF;
   outLine = (*line & 0xFEFFFFFF) + (zsupMode << 24);
   memcpy(outCursor,&outLine,4);
 
@@ -637,7 +628,7 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
   unsigned int acceptedChannelMask = 0;
 
   // Loop over all channels and apply zero suppression
-  unsigned int iCh,bCh;
+  unsigned int iCh,bCh,accept;
   for (iCh=0;iCh<32;iCh++) {
 
     bCh = (1 << iCh); // Bit pattern for this channel
@@ -649,7 +640,7 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
       // The function MUST copy the 1024 16bit samples from the input buffer to the output buffer
       // while applying its zero suppression algorithm
       // WARNING: if required algorithm is unknown then channel is accepted!
-      unsigned int accept = 1;
+      accept = 1;
       if ( zsupAlgr == 1 ) {
 	accept = zsup_algorithm_1(inCursor,outCursor); // Channel number not needed
       } else if ( zsupAlgr == 2 ) {
@@ -672,7 +663,11 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
 
   }
 
-  //printf("\tActive 0x%08x Accepted 0x%08x\n",activeChannelMask,acceptedChannelMask);
+  if (eventNumber % 100 == 0) {
+    printf("Event %7d\tActive 0x%08x\tAccepted 0x%08x\n",eventNumber,activeChannelMask,acceptedChannelMask);
+  }
+  //printf("\tActive   0x%08x    Input   %6d\n",activeChannelMask,inSize);
+  //printf("\tAccepted 0x%08x    Output  %6d\n",acceptedChannelMask,outSize);
 
   // Verify that input event size is consistent
   if (inSize != inSizeCheck) {
@@ -718,6 +713,8 @@ unsigned int zsup_algorithm_1(void *inC,void *outC)
     memcpy(&s,inC+cursor,2);
     memcpy(outC+cursor,&s,2);
     fs = (float)s;
+    //if (s<0 || s>4095) printf("\tWARNING %d %f\n",s,fs);
+    //if (fs<0. || fs>4095.) printf("\tWARNING %d %f\n",s,fs);
 
     // Use the first 80 samples to compute pedestal and sigma pedestal
     if (i<Config->zs1_head) {
@@ -775,13 +772,13 @@ unsigned int zsup_algorithm_1(void *inC,void *outC)
 unsigned int zsup_algorithm_2(unsigned int ch,void *inC,void *outC)
 {
 
-  // Initialize some counters
-  float sum = 0.;
-  float sum2 = 0.;
-  float rms = 0.;
+  // Initialize some counters. NB double is needed as sums can exceed 2*10^9
+  double sum  = 0.;
+  double sum2 = 0.;
+  double rms  = 0.;
 
   short s; // Used to store sample values (can be negative due to DRS4 corrections)
-  float fs; // Used to store float version of sample values
+  double fs; // Used to store float version of sample values
 
   unsigned int cursor = 0; // Point cursor to first sample
 
@@ -793,10 +790,12 @@ unsigned int zsup_algorithm_2(unsigned int ch,void *inC,void *outC)
     // Get value of current sample and copy it to output
     memcpy(&s,inC+cursor,2);
     memcpy(outC+cursor,&s,2);
+    //if (s<0 || s>4095) printf("\tWARNING %d\n",s);
 
     // Compute sum of samples and sum of squares of samples (used for RMS) skipping last section of event
     if (i<imax) {
-      fs = (float)s;
+      fs = (double)s;
+      //if (fs<0. || fs>4095.) printf("\tWARNING %d %f\n",s,fs);
       sum += fs;
       sum2 += fs*fs;
     }
@@ -807,12 +806,13 @@ unsigned int zsup_algorithm_2(unsigned int ch,void *inC,void *outC)
   }
 
   rms = sqrt((sum2-sum*sum/imax)/(imax-1));
-  printf("\tch %.2d\t%8.3f\n",ch,rms);
+  //printf("\tch %.2d\t%8.3f\n",ch,rms);
   if (rms < Config->zs2_minrms_ch[ch]) {
-    printf("Rejected for low rms\n");
+    //printf("Rejected for low rms\n");
     return 0;
   }
 
+  //printf("Accepted for hi rms %8.3f\n",rms);
   return 1;
 
 }

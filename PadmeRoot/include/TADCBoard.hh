@@ -58,11 +58,11 @@ class TADCBoard : public TObject
 
   UChar_t GetNADCChannels() { return fNADCChannels; }
   TADCChannel* AddADCChannel();
-  TADCChannel* ADCChannel(int);
+  TADCChannel* ADCChannel(Int_t);
 
   UChar_t GetNADCTriggers() { return fNADCTriggers; }
   TADCTrigger* AddADCTrigger();
-  TADCTrigger* ADCTrigger(int);
+  TADCTrigger* ADCTrigger(Int_t);
 
  private:
 

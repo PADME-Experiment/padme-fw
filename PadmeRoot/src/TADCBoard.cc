@@ -57,12 +57,12 @@ TADCTrigger* TADCBoard::AddADCTrigger()
   }
 }
 
-TADCChannel* TADCBoard::ADCChannel(int i)
+TADCChannel* TADCBoard::ADCChannel(Int_t i)
 {
   return (TADCChannel*)(fADCChannels->At(i));
 }
 
-TADCTrigger* TADCBoard::ADCTrigger(int i)
+TADCTrigger* TADCBoard::ADCTrigger(Int_t i)
 {
   return (TADCTrigger*)(fADCTriggers->At(i));
 }

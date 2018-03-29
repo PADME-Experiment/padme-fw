@@ -5,6 +5,8 @@ ClassImp(TRawEvent)
 TRawEvent::TRawEvent()
 {
 
+  fTriggerInfo = new TTriggerInfo();
+
   //printf("Creating TADCBoards clonearray\n");
   fADCBoards = new TClonesArray("TADCBoard",TRAWEVENT_MAXADCBOARDS);
   fNADCBoards = 0;
@@ -14,6 +16,7 @@ TRawEvent::TRawEvent()
 TRawEvent::~TRawEvent()
 {
 
+  delete fTriggerInfo;
   Clear();
 
 }
@@ -38,7 +41,7 @@ TADCBoard* TRawEvent::AddADCBoard()
   }
 }
 
-TADCBoard* TRawEvent::ADCBoard(int i)
+TADCBoard* TRawEvent::ADCBoard(Int_t i)
 {
   return (TADCBoard*)(fADCBoards->At(i));
 }

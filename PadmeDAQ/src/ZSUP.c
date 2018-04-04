@@ -259,17 +259,10 @@ int ZSUP_readdata ()
       // Second and third lines of file tail contain the total size of the input file
       unsigned long int eofFileSize;
       memcpy(&eofFileSize,inEvtBuffer+4,8);
-      //line = (unsigned int *)(inEvtBuffer+4);
-      //unsigned int eofFileSizeLo = (unsigned int)(*line);
-      //line = (unsigned int *)(inEvtBuffer+8);
-      //unsigned int eofFileSizeHi = (unsigned int)(*line);
-      //unsigned long int eofFileSize = ((unsigned long int)eofFileSizeLo) + ( ((unsigned long int)eofFileSizeHi) << 32 );
 
       // Fourth line of file tail contains the end of file time tag
       unsigned int eofTimeTag;
       memcpy(&eofTimeTag,inEvtBuffer+12,4);
-      //line = (unsigned int *)(inEvtBuffer+12);
-      //unsigned int eofTimeTag = *line;
 
       // Print report about input stream
       printf("- Reached tail of stream - Events %u Size %lu Time %s\n",nInEvents,eofFileSize,format_time(eofTimeTag));
@@ -599,11 +592,11 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
   // Output accepted channel mask will be defined after applying zero suppression
   // ...hence not much to do here...
 
+  // ...just move to beginning of trigger group section
+  inCursor += 4; outCursor += 4;
+
   // Event header is over: add size of event header to event size counters...
   inSize += 6; outSize += 6;
-
-  // ...and move to beginning of trigger group section
-  inCursor += 4; outCursor += 4;
 
   // Get number of trigger groups from group mask
   unsigned int nGroups = ( (groupMask >> 0) && 0x1 ) + ( (groupMask >> 1) && 0x1 ) + ( (groupMask >> 2) && 0x1 ) + ( (groupMask >> 3) && 0x1 );

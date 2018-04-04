@@ -382,10 +382,10 @@ int ADCBoard::UnpackEvent_v03(UInt_t size)
   fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACTIVE_LIN] & ADCEVENT_V03_CHMASKACTIVE_BIT ) >> ADCEVENT_V03_CHMASKACTIVE_POS) );
   fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACCEPTED_LIN] & ADCEVENT_V03_CHMASKACCEPTED_BIT ) >> ADCEVENT_V03_CHMASKACCEPTED_POS) );
 
-  printf("Board Id %d LVDS %08x 0SuppAlg %d GrpMsk %1x Status %03x Event %d Time %d Active %08x Accept %08x\n",
-	 fADCEvent->GetBoardId(),fADCEvent->GetLVDSPattern(),fADCEvent->Get0SuppAlgrtm(),fADCEvent->GetGroupMask(),
-	 fADCEvent->GetBoardStatus(),fADCEvent->GetEventCounter(),fADCEvent->GetEventTimeTag(),
-	 fADCEvent->GetActiveChannelMask(),fADCEvent->GetAcceptedChannelMask());
+//printf("Board Id %d LVDS %08x 0SuppAlg %d GrpMsk %1x Status %03x Event %d Time %d Active %08x Accept %08x\n",
+//	 fADCEvent->GetBoardId(),fADCEvent->GetLVDSPattern(),fADCEvent->Get0SuppAlgrtm(),fADCEvent->GetGroupMask(),
+//	 fADCEvent->GetBoardStatus(),fADCEvent->GetEventCounter(),fADCEvent->GetEventTimeTag(),
+//	 fADCEvent->GetActiveChannelMask(),fADCEvent->GetAcceptedChannelMask());
 
   cursor += ADCEVENT_V03_EVENTHEAD_LEN;
 

@@ -5,9 +5,17 @@ ClassImp(TRawEvent)
 TRawEvent::TRawEvent()
 {
 
+  fRunNumber     = 0;
+  fEventNumber   = 0;
+
+  fEventAbsTime  = 0;
+  fEventRunTime  = 0;
+
+  fEventTrigMask = 0;
+  fEventStatus   = 0;
+
   fTriggerInfo = new TTriggerInfo();
 
-  //printf("Creating TADCBoards clonearray\n");
   fADCBoards = new TClonesArray("TADCBoard",TRAWEVENT_MAXADCBOARDS);
   fNADCBoards = 0;
 
@@ -24,7 +32,17 @@ TRawEvent::~TRawEvent()
 void TRawEvent::Clear(Option_t* option)
 {
 
-  //printf("Clearing TRawEvent\n");
+  fRunNumber     = 0;
+  fEventNumber   = 0;
+
+  fEventAbsTime  = 0;
+  fEventRunTime  = 0;
+
+  fEventTrigMask = 0;
+  fEventStatus   = 0;
+
+  fTriggerInfo->Clear(option);
+
   fNADCBoards = 0;
   fADCBoards->Clear(option);
 
@@ -33,7 +51,6 @@ void TRawEvent::Clear(Option_t* option)
 TADCBoard* TRawEvent::AddADCBoard()
 {
   if (fNADCBoards<TRAWEVENT_MAXADCBOARDS) {
-    //printf("Adding TADCBoard %d\n",fNADCBoards);
     return (TADCBoard*)(fADCBoards->ConstructedAt(fNADCBoards++));
   } else {
     printf("ERROR - TRawEvent::AddADCBoard - Too many ADCBoards\n");

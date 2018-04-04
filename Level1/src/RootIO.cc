@@ -126,11 +126,13 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
 
     // Save general board information for this event
     tBoard->SetBoardId            (boards[b]->Event()->GetBoardId());
+    tBoard->SetBoardSN            (boards[b]->Event()->GetBoardSN());
     tBoard->SetLVDSPattern        (boards[b]->Event()->GetLVDSPattern());
-    tBoard->SetStatus             (boards[b]->Event()->GetStatus());
+    tBoard->SetBoardStatus        (boards[b]->Event()->GetBoardStatus());
     tBoard->SetGroupMask          (boards[b]->Event()->GetGroupMask());
     tBoard->SetEventCounter       (boards[b]->Event()->GetEventCounter());
     tBoard->SetEventTimeTag       (boards[b]->Event()->GetEventTimeTag());
+    tBoard->Set0SuppAlgrtm        (boards[b]->Event()->Get0SuppAlgrtm());
     tBoard->SetActiveChannelMask  (boards[b]->Event()->GetActiveChannelMask());
     tBoard->SetAcceptedChannelMask(boards[b]->Event()->GetAcceptedChannelMask());
     //printf("TRawEvent board info saved\n");

@@ -93,6 +93,9 @@ ADCEvent* ADCBoard::NextEvent()
 	exit(1);
       }
 
+      printf("File %s opened with format version %d\n",
+	     fFiles[fCurrentFile].GetPath().c_str(),fFiles[fCurrentFile].GetVersion());
+
     }
 
     // Read next event (also handle file tail record). Returns 0:OK 1:Error 2:EOF
@@ -158,7 +161,7 @@ int ADCBoard::ReadFileHead()
 
   } else {
 
-    printf("ERROR - File incompatible file version found: %d\n",fFiles[fCurrentFile].GetVersion());
+    printf("ERROR - Incompatible file version found: %d\n",fFiles[fCurrentFile].GetVersion());
     return 1;
 
   }
@@ -366,6 +369,8 @@ int ADCBoard::UnpackEvent_v02(UInt_t size)
 int ADCBoard::UnpackEvent_v03(UInt_t size)
 {
 
+  UInt_t cursor = 0;
+
   // Decode event header
   fADCEvent->SetBoardId( (UChar_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_BOARDID_LIN] & ADCEVENT_V03_BOARDID_BIT) >> ADCEVENT_V03_BOARDID_POS) );
   fADCEvent->SetLVDSPattern( (UShort_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_PATTERN_LIN] & ADCEVENT_V03_PATTERN_BIT ) >> ADCEVENT_V03_PATTERN_POS) );
@@ -377,8 +382,14 @@ int ADCBoard::UnpackEvent_v03(UInt_t size)
   fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACTIVE_LIN] & ADCEVENT_V03_CHMASKACTIVE_BIT ) >> ADCEVENT_V03_CHMASKACTIVE_POS) );
   fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACCEPTED_LIN] & ADCEVENT_V03_CHMASKACCEPTED_BIT ) >> ADCEVENT_V03_CHMASKACCEPTED_POS) );
 
+  printf("Board Id %d LVDS %08x 0SuppAlg %d GrpMsk %1x Status %03x Event %d Time %d Active %08x Accept %08x\n",
+	 fADCEvent->GetBoardId(),fADCEvent->GetLVDSPattern(),fADCEvent->Get0SuppAlgrtm(),fADCEvent->GetGroupMask(),
+	 fADCEvent->GetBoardStatus(),fADCEvent->GetEventCounter(),fADCEvent->GetEventTimeTag(),
+	 fADCEvent->GetActiveChannelMask(),fADCEvent->GetAcceptedChannelMask());
+
+  cursor += ADCEVENT_V03_EVENTHEAD_LEN;
+
   // Decode trigger information
-  UInt_t cursor = ADCEVENT_V03_EVENTHEAD_LEN;
   for(int ig=0;ig<ADCEVENT_NTRIGGERS;ig++){
 
     if (fADCEvent->GetGroupMask() & (0x1 << ig)) {
@@ -405,13 +416,13 @@ int ADCBoard::UnpackEvent_v03(UInt_t size)
 
   // Decode signal information
   // Mask of stored channels depends on 0-suppression mode
-  // - rejection: use AcceptedChannelMask
-  // - flagging: use ActiveChannelMask
+  // - flagging (bit=1): use ActiveChannelMask
+  // - rejection (bit=0): use AcceptedChannelMask
   UInt_t channel_mask = 0;
   if ( fADCEvent->GetBoardStatus() & (0x1 << ADCEVENT_V03_STATUS_ZEROSUPP_BIT) ) {
-    channel_mask = fADCEvent->GetAcceptedChannelMask();
+    channel_mask = fADCEvent->GetActiveChannelMask(); // Flagging
   } else {
-    channel_mask = fADCEvent->GetActiveChannelMask();
+    channel_mask = fADCEvent->GetAcceptedChannelMask(); // Rejection
   }
   for(int ic=0;ic<ADCEVENT_NCHANNELS;ic++){
     if ( channel_mask & (0x1 << ic) ) {

@@ -831,10 +831,11 @@ int DAQ_readdata ()
   // Open file
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
   } else {
     printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY);
   }
-  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
   if (fileHandle == -1) {
     printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
     return 2;

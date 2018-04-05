@@ -25,7 +25,9 @@ public:
 
   int Init(std::string,int);
   int Exit();
-  int FillRawEvent(int,int,std::vector<ADCBoard*>&);
+  //int FillRawEvent(int,int,std::vector<ADCBoard*>&);
+  // run#, event#, time since start of run, trigger mask, event status
+  int FillRawEvent(int,int,unsigned long long int,unsigned int,unsigned int,std::vector<ADCBoard*>&);
   TRawEvent* GetRawEvent() { return fTRawEvent; }
   void SetVerbose(Int_t v) { fVerbose = v; }
 

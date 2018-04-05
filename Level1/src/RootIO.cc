@@ -105,7 +105,8 @@ Int_t RootIO::SetOutFile()
   return ROOTIO_OK;
 }
 
-int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
+//int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
+int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long long int runtime, unsigned int trgmsk, unsigned int evtstatus, std::vector<ADCBoard*>& boards)
 {
 
   // Emtpy event structure
@@ -113,9 +114,24 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
   //printf("TRawEvent cleared\n");
 
   // Set run and event number
-  fTRawEvent->SetRunNumber(runnr);
-  fTRawEvent->SetEventNumber(evtnr);
-  //printf("TRawEvent run/event set\n");
+  fTRawEvent->SetRunNumber((Int_t)runnr);
+  fTRawEvent->SetEventNumber((Int_t)evtnr);
+
+  // Set event time since start of run
+  fTRawEvent->SetEventRunTime((ULong64_t)runtime);
+
+  // Set trigger mask
+  fTRawEvent->SetEventTrigMask((UInt_t)trgmsk);
+
+  // Set event status
+  fTRawEvent->SetEventStatus((UInt_t)evtstatus);
+
+  // Set system time at event creation
+  TTimeStamp systime = TTimeStamp();
+  fTRawEvent->SetEventAbsTime(systime);
+
+  // Print event info when in verbose mode
+  if (fVerbose >= 1) printf("RootIO - Run %d Event %d Clock %llu Time %s Trig 0x%08x Status 0x%08x\n",runnr,evtnr,runtime,systime.AsString(),trgmsk,evtstatus);
 
   // Loop over all ADC boards
   for(unsigned int b=0; b<boards.size(); b++) {
@@ -137,9 +153,30 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
     tBoard->SetAcceptedChannelMask(boards[b]->Event()->GetAcceptedChannelMask());
     //printf("TRawEvent board info saved\n");
 
+    if (fVerbose >= 2)
+      printf("RootIO - Board %d S/N %d LVDS 0x%04x Status 0x%03x GMask 0x%1x Event %u Time %u 0SupAlg %u ActiveCh 0x%08x AcceptCh 0x%08x\n",
+	     tBoard->GetBoardId(),tBoard->GetBoardSN(),tBoard->GetLVDSPattern(),tBoard->GetBoardStatus(),tBoard->GetGroupMask(),
+	     tBoard->GetEventCounter(),tBoard->GetEventTimeTag(),tBoard->Get0SuppAlgrtm(),tBoard->GetActiveChannelMask(),tBoard->GetAcceptedChannelMask());
+
+    // Get mask of channel to save taking into account the zero suppression functioning mode
+    unsigned int channelmask;
+    if ( tBoard->GetBoardStatus() & (0x1 << 2) ) {
+      channelmask = tBoard->GetActiveChannelMask(); // Zero suppression is in flagging mode
+    } else {
+      channelmask = tBoard->GetAcceptedChannelMask(); // Zero suppression is in rejection mode
+    }
+
+    // If a tigger group has no channels, do not save its trigger information
+    unsigned char groupmask = 0;
+    for(unsigned int t=0; t<ADCEVENT_NTRIGGERS; t++) {
+      if ( channelmask & ( 0xff << (t*8) ) ) groupmask |= (0x1 << t);
+    }
+
     // Save triggers information for this board
     for(unsigned int t=0; t<ADCEVENT_NTRIGGERS; t++) {
-      if ( boards[b]->Event()->GetGroupMask() & (0x1 << t) ) {
+      //if ( boards[b]->Event()->GetGroupMask() & (0x1 << t) ) {
+      //if ( tBoard->GetGroupMask() & (0x1 << t) ) {
+      if ( groupmask & (0x1 << t) ) {
 	TADCTrigger* tTrig = tBoard->AddADCTrigger();
 	//printf("TRawEvent board %d trigger %d created with address %ld\n",b,t,(long)tTrig);
 	tTrig->SetGroupNumber   (t);
@@ -147,21 +184,38 @@ int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
 	tTrig->SetFrequency     (boards[b]->Event()->GetTriggerFrequency(t));
 	tTrig->SetTriggerSignal (boards[b]->Event()->GetTriggerHasSignal(t));
 	tTrig->SetTriggerTimeTag(boards[b]->Event()->GetTriggerTimeTag(t));
+	if (fVerbose >= 3)
+	  printf("RootIO - Board %u Group %u SIC %u Freq 0x%1x HasData 0x%1x TTT 0x%08x\n",
+	  tBoard->GetBoardId(),tTrig->GetGroupNumber(),tTrig->GetStartIndexCell(),tTrig->GetFrequency(),tTrig->GetTriggerSignal(),tTrig->GetTriggerTimeTag());
 	if ( boards[b]->Event()->GetTriggerHasSignal(t) ) {
 	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	    tTrig->SetSample(s,boards[b]->Event()->GetADCTriggerSample(t,s));
+	  if (fVerbose >= 4) {
+	    for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {
+	      if (s%16 == 0) printf("\t");
+	      printf("%4x ",tTrig->GetSample(s));
+	      if (s%16 == 15) printf("\n");
+	    }
+	  }
 	}
       }
     }
 
     // Save channels information for this board
     for(unsigned int c=0; c<ADCEVENT_NCHANNELS; c++) {
-      if ( boards[b]->Event()->GetAcceptedChannelMask() & (0x1 << c) ) {
+      if ( channelmask & (0x1 << c) ) {
 	TADCChannel* tChan = tBoard->AddADCChannel();
-	//printf("TRawEvent board %d channel %d created with address %ld\n",b,c,(long)tChan);
 	tChan->SetChannelNumber(c);
 	for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	  tChan->SetSample(s,boards[b]->Event()->GetADCChannelSample(c,s));
+	if (fVerbose >= 4) {
+	  printf("RootIO - Board %u Channel %u\n",tBoard->GetBoardId(),tChan->GetChannelNumber());
+	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {
+	    if (s%16 == 0) printf("\t");
+	    printf("%4x ",tChan->GetSample(s));
+	    if (s%16 == 15) printf("\n");
+	  }
+	}
       }
     }
 

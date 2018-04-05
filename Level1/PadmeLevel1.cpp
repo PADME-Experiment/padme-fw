@@ -226,13 +226,15 @@ int main(int argc, char* argv[])
 
   // Loop over all events in files
 
-  Int_t dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
-  UInt_t TT_old[boards.size()]; // Clock counter at previous event
-  ULong64_t CC[boards.size()]; // Total Clock Counts since start of run
+  int dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
+  int dTb; // Clock counter difference between two groups of the same board
+  unsigned int TT_evt,TT_grp; // Clock counters for board and for group
+  unsigned int TT_old[boards.size()]; // Clock counter at previous event
+  unsigned long long int CC[boards.size()]; // Total Clock Counts since start of run
 
-  UChar_t groupMaskRef[boards.size()]; // Reference group masks from event 0
+  unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
 
-  UInt_t nEOR;
+  unsigned int nEOR;
   int eventnr = 0;
   while(1){
 
@@ -256,22 +258,22 @@ int main(int argc, char* argv[])
       break; // Exit from main loop
     }
 
-    UInt_t all_in_time = 0;
+    unsigned int all_in_time = 0;
     while ( (! all_in_time) && (! nEOR) ) {
 
-      UInt_t bmax = 0; // Find board with largest time since start of run 
+      unsigned int bmax = 0; // Find board with largest time since start of run 
 
       // Get timing information for current event of each board
       for(unsigned int b=0; b<boards.size(); b++) {
 
-	UInt_t board_in_time = 0;
-	UInt_t board_EOR = 0;
+	unsigned int board_in_time = 0;
+	unsigned int board_EOR = 0;
 	while ( (! board_in_time) && (! board_EOR) ) {
 
 	  board_in_time = 1;
 
 	  // First check if board's group mask is consistent with that of first event
-	  UChar_t grMsk = boards[b]->Event()->GetGroupMask();
+	  unsigned char grMsk = boards[b]->Event()->GetGroupMask();
 	  if (eventnr == 0 ) {
 	    groupMaskRef[b] = grMsk;
 	  } else {
@@ -287,21 +289,18 @@ int main(int argc, char* argv[])
 
 	  // Check if board internal times are aligned. Stop the run if they are not
 	  // This may change when all time counters are correctly aligned by S/IN signal
-	  UInt_t TT_evt = 0;
-	  UInt_t first_active_group = 1;
-	  printf("grMsk %1x\n",grMsk);
+	  TT_evt = 0;
+	  unsigned int first_active_group = 1;
 	  for (unsigned int g=0; g<4; g++) {
 	    if (grMsk & 1<<g) {
-	      UInt_t TT_grp = boards[b]->Event()->GetTriggerTimeTag(g);
-	      printf("TT_grp %d\n",TT_grp);
+	      TT_grp = boards[b]->Event()->GetTriggerTimeTag(g);
 	      if (first_active_group) { // This is the first active group: get its time as reference for event
 		TT_evt = TT_grp;
 		first_active_group = 0;
 	      } else {
 		// Other groups are present: verify they are all in time (0x0010 clock cycles tolerance i.e. ~136ns)
-		Int_t delta = TT_evt-TT_grp;
-		printf("TT_evt %d TT_grp %d delta %d\n",TT_evt,TT_grp,std::abs(delta));
-		if ( std::abs(TT_evt-TT_grp) >= 0x0010 ) {
+		dTb = TT_evt-TT_grp;
+		if ( std::abs(dTb) >= 0x0010 ) {
 		  if (eventnr == 0) { // If this happens on first event stop the run
 		    printf("*** FATAL ERROR - Board %2d - Internal time mismatch at Start of Run\n",boards[b]->GetBoardId());
 		    root->Exit();
@@ -344,10 +343,12 @@ int main(int argc, char* argv[])
 
 	    }
 
-	    if (CC[b]>CC[bmax]) bmax = b; // Check if this is the highest time in the current set of board times
+	    // Check if this is the highest time in the current set of board times
+	    if (CC[b]>CC[bmax]) bmax = b;
 
 	    if (verbose>=2) {
-	      printf("- Board %2d NEv %8u Dt %f (0x%08x) T %f (0x%016llx)\n",b,boards[b]->Event()->GetEventCounter(),dT*8.5E-9,dT,CC[b]*8.5E-9,CC[b]);
+	      printf("- Board %2d NEv %8u Dt %f (0x%08x) T %f (0x%016llx)\n",
+		     b,boards[b]->Event()->GetEventCounter(),dT*8.5E-9,dT,CC[b]*8.5E-9,CC[b]);
 	    }
 
 	  }
@@ -389,7 +390,9 @@ int main(int argc, char* argv[])
     }
 
     // The event is complete and in time: copy structure to TRawEvent and send to output file
-    if (root->FillRawEvent(runnr,eventnr,boards) != ROOTIO_OK) {
+    // For the moment save clock counts of first board as event time.
+    // When trigger info will be added, replace this with number of ns since start of run
+    if (root->FillRawEvent(runnr,eventnr,CC[0],0,0,boards) != ROOTIO_OK) {
       printf("ERROR while writing event %d to root file. Aborting\n",eventnr);
       exit(1);
     }

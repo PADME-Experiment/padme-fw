@@ -20,7 +20,7 @@ class PadmeDB:
         DB_PORT   = os.getenv('PADME_DB_PORT'  ,'5501')
         DB_USER   = os.getenv('PADME_DB_USER'  ,'padme')
         DB_PASSWD = os.getenv('PADME_DB_PASSWD','unknown')
-        DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDB')
+        DB_NAME   = os.getenv('PADME_DB_NAME'  ,'PadmeDAQ')
 
         self.conn = MySQLdb.connect(host=DB_HOST,port=int(DB_PORT),user=DB_USER,passwd=DB_PASSWD,db=DB_NAME)
 
@@ -69,8 +69,23 @@ class PadmeDB:
 
         self.check_db()
         c = self.conn.cursor()
-        #c.execute("""INSERT INTO run (number,type,status,time_init,time_start,time_stop,total_events,user,comment_start,comment_end) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,0,0,0,run_user,run_comment,""))
-        c.execute("""INSERT INTO run (number,type,status,total_events,user,comment_start) VALUES (%s,%s,%s,%s,%s,%s)""",(run_nr,run_type,0,0,run_user,run_comment))
+
+        # Get run_type id
+        c.execute("""SELECT id FROM run_type WHERE short_name = %s""",(run_type,))
+        res = c.fetchone()
+        if (res == None):
+            print "PadmeDB - WARNING - Unknown run type selected: %s"%run_type
+            run_type_id = 0
+        else:
+            (run_type_id,) = res
+        self.conn.commit()
+
+        # Create run
+        c.execute("""INSERT INTO run (number,run_type_id,status,total_events,user) VALUES (%s,%s,%s,%s,%s)""",(run_nr,run_type_id,0,0,run_user))
+        self.conn.commit()
+
+        # Create start of run comment
+        c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_nr,"SOR",0,self.now_str(),run_comment))
         self.conn.commit()
 
     def set_run_status(self,run_nr,status):
@@ -133,3 +148,48 @@ class PadmeDB:
 
         (id,) = res
         return id
+
+    def now_str(self):
+        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
+    def get_node_id(self,node):
+
+        # Return DB id of node with given name/ip address (from DAQ VLAN)
+
+        self.check_db()
+        c = self.conn.cursor()
+
+        # First search by name
+        c.execute("""SELECT id FROM node WHERE name=%s""",(node,))
+        res = c.fetchone()
+        self.conn.commit()
+        if (res != None):
+            (id,) = res
+            return id
+
+        # Then search by IP address
+        c.execute("""SELECT id FROM node WHERE ip_addr_daq=%s""",(node,))
+        res = c.fetchone()
+        self.conn.commit()
+        if (res != None):
+            (id,) = res
+            return id
+
+        # If not found, return -1
+        return -1
+
+    def get_run_types(self):
+
+        # Return list of run types known to DB
+
+        self.check_db()
+        c = self.conn.cursor()
+
+        c.execute("""SELECT short_name FROM run_type""")
+        data = c.fetchall()
+        type_list = []
+        for row in data: type_list.append(row[0])
+
+        self.conn.commit()
+
+        return type_list

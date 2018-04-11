@@ -685,5 +685,5 @@ Received message \"%s\" """%ans)
         if (m): b_list = map(int,m.group(1).split(", "))
         return b_list
 
-    def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+    def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
 

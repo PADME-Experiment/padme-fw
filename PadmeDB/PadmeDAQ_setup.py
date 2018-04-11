@@ -11,6 +11,7 @@ re_board = re.compile("^\s*board\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)
 #re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
+re_run_type = re.compile("^\s*run_type\s+(\d+)\s+(\S+)\s+(\S.*)$")
 
 max_datetime = "2049-12-31 23:59:59"
 
@@ -194,6 +195,29 @@ def main():
                     print "Link",opt_link,"changed board from",old_board_id,"to",board_id,"at",f_datetime
                     c.execute("""UPDATE l_board_optical_link SET time_stop=%s WHERE id=%s""",(f_datetime,old_link_id))
                     c.execute("""INSERT INTO l_board_optical_link(board_id,optical_link_id,time_start,time_stop) VALUES(%s,%s,%s,%s)""",(board_id,optical_link_id,f_datetime,max_datetime))
+
+        # Check run types
+        m = re_run_type.search(l)
+        if (m):
+
+            (run_type_id,run_type,run_text) = m.group(1,2,3)
+            run_type_id = int(run_type_id)
+            c.execute("""SELECT id,description FROM run_type WHERE short_name=%s""",(run_type,))
+            res =  c.fetchone()
+            if (res == None):
+                print "Adding run type",run_type,"with id",run_type_id,"and description",run_text
+                c.execute("""INSERT INTO run_type(id,short_name,description) VALUES(%s,%s,%s)""",(run_type_id,run_type,run_text))
+            else:
+                (old_id,old_text) = res
+                old_id = int(old_id)
+                if (run_type_id != old_id):
+                    print "ERROR - Run type",run_type,"already exists with id",old_id,"!=",run_type_id
+                    exit(1)
+                if (run_text != old_text):
+                    print "WARNING - Updating run type",run_type,"description"
+                    print "\tOld:",old_text
+                    print "\tNew:",run_text
+                    c.execute("""UPDATE run_type SET description=%s WHERE id=%s""",(run_text,run_type_id))
 
     # Commit and close connection to DB
     conn.commit()

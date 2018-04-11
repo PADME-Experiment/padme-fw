@@ -32,4 +32,4 @@ class Logger(object):
         pass
 
     def now_str(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

@@ -79,3 +79,11 @@ link 1:0:3:0   	10    2018-03-19    00:00:00
 
 # Updates of links (test)
 #link 1:0:3:0   	 0    2018-03-20    00:00:00
+
+# List of accepted run types
+run_type 0 TEST	       Test run
+run_type 1 DAQ	       Standard DAQ run
+run_type 2 COSMICS     Cosmics run
+run_type 3 CALIBRATION Calibration run
+run_type 4 RNDM	       Random triggers run
+run_type 5 OTHER       Run of a type which was not forseen

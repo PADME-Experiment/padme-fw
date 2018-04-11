@@ -12,7 +12,7 @@ class RunControlText:
     def __init__(self):
 
         # Create a TCP/IP socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
         # Connect the socket to the port where the server is listening
         server_address = ('localhost', 10000)
@@ -98,6 +98,7 @@ class RunControlText:
             print ans
 
         print "Closing socket"
+        self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
 
     def new_run(self):
@@ -126,15 +127,19 @@ class RunControlText:
             print "new_run - protocol error: expected run_type, received %s"%ans
             return "error"
 
-        message = raw_input("Run type (TEST, DAQ, COSMIC): ")
-        if (message != 'TEST' and message != 'DAQ' and message != 'COSMIC'):
-            print "new_run - invalid input %s - Expected TEST, DAQ, or COSMIC"%message
-            self.send_command("error")
-            return
+        message = raw_input("Run type: ")
+        #message = raw_input("Run type (TEST, DAQ, COSMIC): ")
+        #if (message != 'TEST' and message != 'DAQ' and message != 'COSMIC'):
+        #    print "new_run - invalid input %s - Expected TEST, DAQ, or COSMIC"%message
+        #    self.send_command("error")
+        #    return
         print "Sending %s"%message
         self.send_command(message)
 
         ans = self.get_answer()
+        if (ans == "error"):
+            print "new_run - run_type command returned error"
+            return "error"
         print "new_run - new run will have type %s"%ans
 
         ans = self.get_answer()

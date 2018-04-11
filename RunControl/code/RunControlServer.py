@@ -43,13 +43,20 @@ class RunControlServer:
         # Create handler for PadmeDB
         self.db = PadmeDB()
 
+        # Get list of possible run types from DB
+        self.run_type_list = self.db.get_run_types()
+        print "--- Known run types ---"
+        print self.run_type_list
+
         # Create useful regular expressions
-        self.re_get_board_config = re.compile("^get_board_config (\d+)$")
-        self.re_get_board_log_file = re.compile("^get_board_log_file (\d+)$")
+        self.re_get_board_config_daq = re.compile("^get_board_config_daq (\d+)$")
+        self.re_get_board_config_zsup = re.compile("^get_board_config_zsup (\d+)$")
+        self.re_get_board_log_file_daq = re.compile("^get_board_log_file_daq (\d+)$")
+        self.re_get_board_log_file_zsup = re.compile("^get_board_log_file_zsup (\d+)$")
         self.re_change_setup = re.compile("^change_setup (\w+)$")
 
         # Create a TCP/IP socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
         # Bind the socket to the port
         server_address = ('localhost', 10000)
@@ -68,10 +75,16 @@ class RunControlServer:
         signal.signal(signal.SIGINT,self.sigint_handler)
 
         # Setup main interface
-        self.main_loop()
+        ret = self.main_loop()
 
         # Clean up before exiting
+        self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+        if os.path.exists(self.lock_file): os.remove(self.lock_file)
+
+        if ret == "error": exit(1)
+
+        exit(0)
 
     def create_lock_file(self):
 
@@ -149,10 +162,18 @@ class RunControlServer:
             open(self.run.quit_file,'w').close()
             for adc in (self.run.adcboard_list):
                 if adc.stop_daq():
-                    print "ADC board %02d - Terminated correctly"%adc.board_id
+                    print "ADC board %02d - DAQ terminated correctly"%adc.board_id
                     #self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
                 else:
                     print "ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id
+                    #self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
+                    if (self.run.run_number):
+                        self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+                if adc.stop_zsup():
+                    print "ADC board %02d - ZSUP terminated correctly"%adc.board_id
+                    #self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
+                else:
+                    print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
                     #self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
                     if (self.run.run_number):
                         self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
@@ -198,27 +219,25 @@ class RunControlServer:
 
             # See if status changed
                 if new_state == "idle" or new_state == "initialized" or new_state == "running" or new_state == "initfail":
+
                     self.current_state = new_state
-                elif new_state == "client_close":
-                    self.connection.close()
-                    break
-                elif new_state == "exit":
-                    print "=== RunControlSever received exit command: exiting"
-                    self.connection.close()
-                    if os.path.exists(self.lock_file): os.remove(self.lock_file)
-                    exit(0)
+
                 else:
-                    print "=== RunControlServer = ERROR: unknown new state %s - ABORTING"%new_state
-                    #self.write_log("ERROR: unknown new state %s - ABORTING"%new_state)
+
                     self.connection.close()
-                    if os.path.exists(self.lock_file): os.remove(self.lock_file)
-                    exit(1)
+
+                    if new_state == "exit":
+                        print "=== RunControlSever received exit command: exiting"
+                        return "exit"
+                    elif new_state != "client_close":
+                        print "=== RunControlServer = ERROR: unknown new state %s - ABORTING"%new_state
+                        return "error"
+
+                    # Exit from client handling loop and wait for a new client
+                    break
 
     def write_log(self,msg):
         print self.now_str()+" "+msg
-
-    def now_str(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 
     def state_idle(self):
 
@@ -264,7 +283,8 @@ get_state\tShow current state of RunControl
 get_setup\tShow current setup name
 get_setup_list\tShow list of available setups
 get_board_list\tShow list of boards in use with current setup
-get_board_config <b>\tShow current configuration of board <b>
+get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
+get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
@@ -275,9 +295,14 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 # See if command can be handled by a regular expression
                 found_re = False
 
-                m = self.re_get_board_config.match(cmd)
+                m = self.re_get_board_config_daq.match(cmd)
                 if (m):
-                    self.send_answer(self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config_daq(int(m.group(1))))
+                    found_re = True
+
+                m = self.re_get_board_config_zsup.match(cmd)
+                if (m):
+                    self.send_answer(self.get_board_config_zsup(int(m.group(1))))
                     found_re = True
 
                 m = self.re_change_setup.match(cmd)
@@ -322,8 +347,10 @@ help\t\tShow this help
 get_state\tShow current state of RunControl
 get_setup\tShow current setup name
 get_board_list\tShow list of boards in use with current setup
-get_board_config <b>\tShow current configuration of board <b>
-get_board_log_file <b>\tGet name of log file for board <b>
+get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
+get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
+get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
+get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
 get_run_number\tReturn current run number
 start_run\t\tStart run
 abort_run\t\tAbort run
@@ -335,14 +362,24 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 # See if command can be handled by a regular expression
                 found_re = False
 
-                m = self.re_get_board_config.match(cmd)
+                m = self.re_get_board_config_daq.match(cmd)
                 if (m):
-                    self.send_answer(self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config_daq(int(m.group(1))))
                     found_re = True
 
-                m = self.re_get_board_log_file.match(cmd)
+                m = self.re_get_board_config_zsup.match(cmd)
                 if (m):
-                    self.send_answer(self.get_board_log_file(int(m.group(1))))
+                    self.send_answer(self.get_board_config_zsup(int(m.group(1))))
+                    found_re = True
+
+                m = self.re_get_board_log_file_daq.match(cmd)
+                if (m):
+                    self.send_answer(self.get_board_log_file_daq(int(m.group(1))))
+                    found_re = True
+
+                m = self.re_get_board_log_file_zsup.match(cmd)
+                if (m):
+                    self.send_answer(self.get_board_log_file_zsup(int(m.group(1))))
                     found_re = True
 
                 # No regular expression matched: command is unknown
@@ -380,8 +417,10 @@ help\t\tShow this help
 get_state\tShow current state of RunControl
 get_setup\tShow current setup name
 get_board_list\tShow list of boards in use with current setup
-get_board_config <b>\tShow current configuration of board <b>
-get_board_log_file <b>\tGet name of log file for board <b>
+get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
+get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
+get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
+get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
 get_run_number\tReturn current run number
 stop_run\t\tStop the run
 exit\t\tTell RunControl server to exit (use with extreme care!)"""
@@ -392,14 +431,24 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 # See if command can be handled by a regular expression
                 found_re = False
 
-                m = self.re_get_board_config.match(cmd)
+                m = self.re_get_board_config_daq.match(cmd)
                 if (m):
-                    self.send_answer(self.get_board_config(int(m.group(1))))
+                    self.send_answer(self.get_board_config_daq(int(m.group(1))))
                     found_re = True
 
-                m = self.re_get_board_log_file.match(cmd)
+                m = self.re_get_board_config_zsup.match(cmd)
                 if (m):
-                    self.send_answer(self.get_board_log_file(int(m.group(1))))
+                    self.send_answer(self.get_board_config_zsup(int(m.group(1))))
+                    found_re = True
+
+                m = self.re_get_board_log_file_daq.match(cmd)
+                if (m):
+                    self.send_answer(self.get_board_log_file_daq(int(m.group(1))))
+                    found_re = True
+
+                m = self.re_get_board_log_file_zsup.match(cmd)
+                if (m):
+                    self.send_answer(self.get_board_log_file_zsup(int(m.group(1))))
                     found_re = True
 
                 # No regular expression matched: command is unknown
@@ -450,15 +499,27 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             #self.write_log('answer too long: cannot send')
             print "Answer is too long: cannot send"
 
-    def get_board_config(self,brdid):
+    def get_board_config_daq(self,brdid):
         if brdid in self.run.boardid_list:
-            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].format_config()
+            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].format_config_daq()
         else:
             return "ERROR: board id %d does not exist"%brdid
 
-    def get_board_log_file(self,brdid):
+    def get_board_config_zsup(self,brdid):
         if brdid in self.run.boardid_list:
-            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].log_file
+            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].format_config_zsup()
+        else:
+            return "ERROR: board id %d does not exist"%brdid
+
+    def get_board_log_file_daq(self,brdid):
+        if brdid in self.run.boardid_list:
+            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].log_file_daq
+        else:
+            return "ERROR: board id %d does not exist"%brdid
+
+    def get_board_log_file_zsup(self,brdid):
+        if brdid in self.run.boardid_list:
+            return self.run.adcboard_list[self.run.boardid_list.index(brdid)].log_file_zsup
         else:
             return "ERROR: board id %d does not exist"%brdid
 
@@ -520,24 +581,27 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             return "error"
         self.send_answer(str(newrun_number))
 
-        # Retrieve run type (TEST,DAQ,COSMIC)
+        # Retrieve run type. Accept only from list of known runs
         # Return run type used or "error" for invalid answer
         newrun_type = ""
         self.send_answer("run_type")
         ans = self.get_command()
-        if (ans=="TEST" or ans=="DAQ" or ans=="COSMIC"):
-            newrun_type = ans
-        elif (ans == "error"):
-            self.write_log("run_type - client returned error")
+        if (ans == "error"):
+            #self.write_log("run_type - client returned error")
+            print "run_type - client returned error"
             return "error"
         elif (ans=="client_close"):
             return "client_close"
+        newrun_type = None
+        for rtype in self.run_type_list:
+            if (ans == rtype): newrun_type = ans
+        if (newrun_type):
+            self.send_answer(newrun_type)
         else:
 #            self.write_log("run_type - invalid option %s received"%ans)
             print "run_type - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
-        self.send_answer(newrun_type)
 
         newrun_user = ""
         self.send_answer("shift_crew")
@@ -591,11 +655,11 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         # Write run and boards configuration files
         #self.write_log("Writing configuration file "+self.run.config_file)
-        print "Writing configuration file %s"%self.run.config_file
+        print "Writing configuration file %s for run %d"%(self.run.config_file,self.run.run_number)
         self.run.write_config()
         for adc in (self.run.adcboard_list):
             #self.write_log("Writing configuration file "+adc.config_file)
-            print "Writing configuration file %s"%adc.config_file
+            print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
             adc.write_config()
 
         # Start DAQ for all boards
@@ -742,4 +806,4 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         # At the end of this procedure RunControl is back to "idle" mode
         return "idle"
 
-    def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+    def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

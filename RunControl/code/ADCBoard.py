@@ -15,21 +15,33 @@ class ADCBoard:
 
     def set_default_config(self):
 
+        self.node_id = -1
+        self.conet2_link = -1
+        self.conet2_slot = -1
+
         self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ.exe"
 
         self.run_number = 0
 
-        self.config_file = "unset"
-        self.log_file = "unset"
+        self.config_file_daq = "unset"
+        self.log_file_daq = "unset"
+        self.lock_file_daq = "unset"
+        self.output_stream_daq = "unset"
+
+        self.config_file_zsup = "unset"
+        self.log_file_zsup = "unset"
+        self.lock_file_zsup = "unset"
+        self.output_stream_zsup = "unset"
+
+        self.input_stream_zsup = "unset"
 
         self.start_file = "unset"
         self.quit_file = "unset"
         self.initok_file = "unset"
         self.initfail_file = "unset"
-        self.lock_file = "unset"
-        #self.db_file = "unset"
 
-        self.data_file = "unset"
+        #self.data_dir = "unset"
+        #self.data_file = "unset"
 
         self.total_daq_time = 0
 
@@ -55,11 +67,13 @@ class ADCBoard:
         self.file_max_events = 100000
 
         # Default zero suppression settings
-        self.zero_suppression = 1
+        self.zero_suppression = 0
         self.zs1_head = 80
         self.zs1_tail = 30
         self.zs1_nsigma = 3.
         self.zs1_nabovethr = 4
+        self.zs2_minrms = 4.6
+        self.zs2_tail = 30
 
     def read_setup(self,setup):
 
@@ -113,6 +127,8 @@ class ADCBoard:
                 elif (p_name == "zs1_tail"): self.zs1_tail = int(p_value,0)
                 elif (p_name == "zs1_nsigma"): self.zs1_nsigma = float(p_value)
                 elif (p_name == "zs1_nabovethr"): self.zs1_nabovethr = int(p_value,0)
+                elif (p_name == "zs2_tail"): self.zs2_tail = int(p_value,0)
+                elif (p_name == "zs2_minrms"): self.zs2_minrms = float(p_value)
                 else:
                     print "ADCBoard - WARNNING: unknown parameter found while reading default config file: %s"%p_name
             else:
@@ -124,25 +140,32 @@ class ADCBoard:
 
         self.board_id = b_id
 
-    def format_config(self):
+    def format_config_daq(self):
 
         cfgstring = ""
         cfgstring += "executable\t\t"+self.executable+"\n"
-        cfgstring += "config_file\t\t"+self.config_file+"\n"
-        cfgstring += "log_file\t\t"+self.log_file+"\n"
+
+        cfgstring += "config_file\t\t"+self.config_file_daq+"\n"
+        cfgstring += "log_file\t\t"+self.log_file_daq+"\n"
+        cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
+
+        cfgstring += "process_mode\t\tDAQ\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
 
         cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
 
+        cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
+        cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
+        cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
+
         cfgstring += "start_file\t\t"+self.start_file+"\n"
         cfgstring += "quit_file\t\t"+self.quit_file+"\n"
         cfgstring += "initok_file\t\t"+self.initok_file+"\n"
         cfgstring += "initfail_file\t\t"+self.initfail_file+"\n"
-        cfgstring += "lock_file\t\t"+self.lock_file+"\n"
-        #cfgstring += "db_file\t\t\t"+self.db_file+"\n"
 
-        cfgstring += "data_file\t\t"+self.data_file+"\n"
+        cfgstring += "output_mode\t\tSTREAM\n"
+        cfgstring += "output_stream\t\t"+self.output_stream_daq+"\n"
 
         cfgstring += "total_daq_time\t\t"+repr(self.total_daq_time)+"\n"
 
@@ -166,69 +189,136 @@ class ADCBoard:
 
         cfgstring += "daq_loop_delay\t\t"+repr(self.daq_loop_delay)+"\n"
 
-        cfgstring += "file_max_duration\t"+repr(self.file_max_duration)+"\n"
-        cfgstring += "file_max_size\t\t"+repr(self.file_max_size)+"\n"
-        cfgstring += "file_max_events\t\t"+repr(self.file_max_events)+"\n"
+        return cfgstring
+
+    def format_config_zsup(self):
+
+        cfgstring = ""
+        cfgstring += "executable\t\t"+self.executable+"\n"
+
+        cfgstring += "config_file\t\t"+self.config_file_zsup+"\n"
+        cfgstring += "log_file\t\t"+self.log_file_zsup+"\n"
+        cfgstring += "lock_file\t\t"+self.lock_file_zsup+"\n"
+
+        cfgstring += "process_mode\t\tZSUP\n"
+
+        cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
+
+        cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
+
+        cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
+        cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
+        cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
+
+        cfgstring += "output_mode\t\tSTREAM\n"
+        cfgstring += "output_stream\t\t"+self.output_stream_zsup+"\n"
 
         cfgstring += "zero_suppression\t"+repr(self.zero_suppression)+"\n"
-        if (self.zero_suppression == 1):
+        if (self.zero_suppression%100 == 1):
             cfgstring += "zs1_head\t\t"+repr(self.zs1_head)+"\n"
             cfgstring += "zs1_tail\t\t"+repr(self.zs1_tail)+"\n"
             cfgstring += "zs1_nsigma\t\t"+repr(self.zs1_nsigma)+"\n"
             cfgstring += "zs1_nabovethr\t\t"+repr(self.zs1_nabovethr)+"\n"
+        elif (self.zero_suppression%100 == 2):
+            cfgstring += "zs2_tail\t\t"+repr(self.zs2_tail)+"\n"
+            cfgstring += "zs2_minrms\t\t"+repr(self.zs2_minrms)+"\n"
 
         return cfgstring
 
     def write_config(self):
 
-        if self.config_file == "unset":
-            print "ADCBoard - ERROR: write_config() called but config_file not set!"
+        if self.config_file_daq == "unset":
+            print "ADCBoard - ERROR: write_config() called but config_file_daq not set!"
             return
 
-        f = open(self.config_file,"w")
-        f.write(self.format_config())
+        f = open(self.config_file_daq,"w")
+        f.write(self.format_config_daq())
+        f.close()
+
+        if self.config_file_zsup == "unset":
+            print "ADCBoard - ERROR: write_config() called but config_file_zsup not set!"
+            return
+
+        f = open(self.config_file_zsup,"w")
+        f.write(self.format_config_zsup())
         f.close()
 
     def print_config(self):
 
-        print self.format_config()
+        print self.format_config_daq()
+        print self.format_config_zsup()
 
     def start_daq(self):
 
         # Open log file
-        self.log_handle = open(self.log_file,"w")
+        self.log_handle_daq = open(self.log_file_daq,"w")
 
         # Start DAQ process
         try:
-            self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
-            #self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdin=subprocess.DEVNULL,stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
-            #self.process = subprocess.Popen([self.executable,"-c",self.config_file],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1,creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
-            #self.process = subprocess.Popen(["/bin/sleep","60"],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process_daq = subprocess.Popen([self.executable,"-c",self.config_file_daq],stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "ADCBoard - ERROR: Execution failed: %s",e
             return 0
 
         # Return process id
-        return self.process.pid
+        return self.process_daq.pid
 
     def stop_daq(self):
 
         # Wait up to 5 seconds for DAQ to stop
         for i in range(5):
 
-            if self.process.poll() != None:
+            if self.process_daq.poll() != None:
 
                 # Process exited: clean up defunct process and close log file
-                self.process.wait()
-                self.log_handle.close()
+                self.process_daq.wait()
+                self.log_handle_daq.close()
                 return 1
 
             time.sleep(1)
 
         # Process did not stop smoothly: stop it
-        self.process.terminate()
+        self.process_daq.terminate()
         time.sleep(1)
-        if self.process.poll() != None:
-            self.process.wait()
-            self.log_handle.close()
+        if self.process_daq.poll() != None:
+            self.process_daq.wait()
+            self.log_handle_daq.close()
+        return 0
+
+    def start_zsup(self):
+
+        # Open log file
+        self.log_handle_zsup = open(self.log_file_zsup,"w")
+
+        # Start ZSUP process
+        try:
+            self.process_zsup = subprocess.Popen([self.executable,"-c",self.config_file_zsup],stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
+        except OSError as e:
+            print "ADCBoard - ERROR: ZSUP execution failed: %s",e
+            return 0
+
+        # Return process id
+        return self.process_zsup.pid
+
+
+    def stop_zsup(self):
+
+        # Wait up to 5 seconds for DAQ to stop
+        for i in range(5):
+
+            if self.process_zsup.poll() != None:
+
+                # Process exited: clean up defunct process and close log file
+                self.process_zsup.wait()
+                self.log_handle_zsup.close()
+                return 1
+
+            time.sleep(1)
+
+        # Process did not stop smoothly: stop it
+        self.process_zsup.terminate()
+        time.sleep(1)
+        if self.process_zsup.poll() != None:
+            self.process_zsup.wait()
+            self.log_handle_zsup.close()
         return 0

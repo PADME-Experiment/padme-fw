@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
   
   int c;
   std::string listfile = "";
-  std::string outfile = "rawdata.root";
+  std::string outfile = "rawdata";
   std::string datadir = "data";
   int neventsperfile = 10000;
   int runnr = 0;

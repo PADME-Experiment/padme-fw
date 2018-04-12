@@ -88,6 +88,27 @@ class PadmeDB:
         c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_nr,"SOR",0,self.now_str(),run_comment))
         self.conn.commit()
 
+    def create_merger(self,run_number,node_id):
+
+        self.check_db()
+        c = self.conn.cursor()
+
+        # Check if run exists
+        c.execute("""SELECT number FROM run WHERE number = %s""",(run_number,))
+        if (c.rowcount == 0):
+            print "PadmeDB::create_merger - WARNING - Unknown run number: %d\n"%run_number
+            return -1
+
+        # Check if node exists
+        c.execute("""SELECT id FROM node WHERE id = %s""",(node_id,))
+        if (c.rowcount == 0):
+            print "PadmeDB::create_merger - WARNING - Unknown node id: %d\n"%node_id
+            return -1
+
+        # Create merger and get its id
+        c.execute("""INSERT INTO lvl1_process (run_number,node_id) VALUES (%s,%s)""",(run_number,node_id))
+        return c.lastrowid
+
     def set_run_status(self,run_nr,status):
 
         self.check_db()
@@ -123,12 +144,22 @@ class PadmeDB:
         c.execute("""UPDATE run SET comment_end = %s WHERE number = %s""",(comment_end,run_nr))
         self.conn.commit()
 
-    def add_cfg_para(self,run_nr,para_name,para_val):
+    def add_cfg_para_run(self,run_nr,para_name,para_val):
 
         self.check_db()
         para_id = self.get_para_id(para_name)
         c = self.conn.cursor()
-        c.execute("""INSERT INTO run_config_para (run_number,config_para_name_id,value) VALUES (%s,%s,%s)""",(run_nr,para_id,para_val))
+        c.execute("""INSERT INTO run_config_para (run_number,config_para_name_id,value) VALUES (%s,%s,%s)""",
+                  (run_nr,para_id,para_val))
+        self.conn.commit()
+
+    def add_cfg_para_merger(self,merger_id,para_name,para_val):
+
+        self.check_db()
+        para_id = self.get_para_id(para_name)
+        c = self.conn.cursor()
+        c.execute("""INSERT INTO lvl1_proc_config_para (lvl1_process_id,config_para_name_id,value) VALUES (%s,%s,%s)""",
+                  (merger_id,para_id,para_val))
         self.conn.commit()
 
     def get_para_id(self,para_name):

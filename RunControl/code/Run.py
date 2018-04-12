@@ -2,8 +2,9 @@ import os
 import re
 import time
 
+from Merger   import Merger
 from ADCBoard import ADCBoard
-from PadmeDB import PadmeDB
+from PadmeDB  import PadmeDB
 
 class Run:
 
@@ -19,16 +20,23 @@ class Run:
         self.run_comment = "Generic run"
         self.run_end_comment = "Generic end of run"
 
+        self.rawdata_dir = "rawdata"
+
         self.set_default_config()
+
+        self.merger = Merger()
+        self.merger_host = "localhost"
 
     def change_run(self,run):
 
         self.run_number = run
 
         if (run == 0):
-            self.run_dir = "runs/run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
+            self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
         else:
-            self.run_dir = "runs/run_"+str(run)
+            self.run_name = "run_"+str(run)
+
+        self.run_dir = "runs/"+self.run_name
 
         #self.config_dir = "cfg/run_"+str(run)
         self.config_dir = self.run_dir+"/cfg"
@@ -42,6 +50,13 @@ class Run:
         self.stream_dir = self.run_dir+"/stream"
         self.stream_head = "run_"+str(run)
 
+        self.merger.config_file = self.config_dir+"/"+self.config_file_head+"_merger.cfg"
+        self.merger.log_file = self.log_dir+"/"+self.log_file_head+"_merger.log"
+        self.merger.run_number = self.run_number
+        self.merger.input_list = self.config_dir+"/"+self.config_file_head+"_merger.list"
+        self.merger.output_dir = self.rawdata_dir+"/"+self.run_name
+        self.merger.output_file = self.run_name
+
         for adcboard in self.adcboard_list:
             adcboard.run_number  = self.run_number
             s_bid = "b%02d"%adcboard.board_id
@@ -52,6 +67,13 @@ class Run:
             adcboard.output_stream_daq = self.stream_dir+"/"+self.stream_head+"_"+s_bid+"_daq"
             adcboard.output_stream_zsup = self.stream_dir+"/"+self.stream_head+"_"+s_bid+"_zsup"
             adcboard.input_stream_zsup = adcboard.output_stream_daq
+
+    def create_merger_input_list(self):
+
+        f = open(self.merger.input_list,"w")
+        for adcboard in self.adcboard_list:
+            f.write("%d %s\n"%(adcboard.board_id,adcboard.output_stream_zsup))
+        f.close()
 
     def set_default_config(self):
 
@@ -117,7 +139,8 @@ class Run:
                     else:
                         print "Run - WARNING: unable to decode board_link parameter while reading setup file %s"%(setup_file,)
                         print l
-   
+                elif (p_name == "merger_host"):
+                    self.merger_host = p_value
                 else:
                     print "Run - WARNING: unknown parameter %s found while reading setup file %s"%(p_name,setup_file)
             else:
@@ -148,6 +171,8 @@ class Run:
                     board_link = "%s %s %s %s"%(board,host,port,node)
                     cfgstring += "board_link\t\t"+board_link+"\n"
 
+        cfgstring += "merger_host\t\t%s\n"%self.merger_host
+
         cfgstring += "config_dir\t\t"+self.config_dir+"\n"
         cfgstring += "config_file\t\t"+self.config_file+"\n"
         cfgstring += "config_file_head\t"+self.config_file_head+"\n"
@@ -160,6 +185,7 @@ class Run:
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
         cfgstring += "run_type\t\t"+self.run_type+"\n"
+        cfgstring += "run_user\t\t"+self.run_user+"\n"
         cfgstring += "run_comment\t\t"+self.run_comment+"\n"
 
         cfgstring += "start_file\t\t"+self.start_file+"\n"
@@ -178,9 +204,17 @@ class Run:
     def create_log_dir(self):
 
         # Create log directory for this run (make sure the full tree is there)
-        if not os.path.exists(self.log_dir):
-            #os.mkdir(self.log_dir)
-            os.makedirs(self.log_dir)
+        if not os.path.exists(self.log_dir): os.makedirs(self.log_dir)
+
+    def create_stream_dir(self):
+
+        # Create stream directory for this run (make sure the full tree is there)
+        if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir)
+
+    def create_merger_output_dir(self):
+
+        # Create directory where Merger will write its output files (make sure the full tree is there)
+        if not os.path.exists(self.merger.output_dir): os.makedirs(self.merger.output_dir)
 
     def write_config(self):
 
@@ -210,7 +244,7 @@ class Run:
 
             # Write run configuration parameters to DB
 
-            self.db.add_cfg_para(self.run_number,"setup",self.setup)
+            self.db.add_cfg_para_run(self.run_number,"setup",self.setup)
 
             s_board_list = ""
             for b in self.boardid_list:
@@ -218,28 +252,29 @@ class Run:
                     s_board_list += " %d"%b
                 else:
                     s_board_list = "%d"%b
-            self.db.add_cfg_para(self.run_number,"board_list",s_board_list)
+            self.db.add_cfg_para_run(self.run_number,"board_list",s_board_list)
 
             for b in self.boardid_list:
                 for link in self.board_link_list:
                     (board,host,port,node) = link
                     if b == int(board):
                         board_link = "%s %s %s %s"%(board,host,port,node)
-                        self.db.add_cfg_para(self.run_number,"board_link",board_link)
+                        self.db.add_cfg_para_run(self.run_number,"board_link",board_link)
 
-            self.db.add_cfg_para(self.run_number,"config_dir",         self.config_dir)
-            self.db.add_cfg_para(self.run_number,"config_file",        self.config_file)
-            self.db.add_cfg_para(self.run_number,"config_file_head",   self.config_file_head)
-            self.db.add_cfg_para(self.run_number,"log_dir",            self.log_dir)
-            self.db.add_cfg_para(self.run_number,"log_file_head",      self.log_file_head)
-            self.db.add_cfg_para(self.run_number,"start_file",         self.start_file)
-            self.db.add_cfg_para(self.run_number,"quit_file",          self.quit_file)
-            self.db.add_cfg_para(self.run_number,"initok_file_head",   self.initok_file_head)
-            self.db.add_cfg_para(self.run_number,"initfail_file_head", self.initfail_file_head)
-            self.db.add_cfg_para(self.run_number,"lock_file_head",     self.lock_file_head)
-            #self.db.add_cfg_para(self.run_number,"data_dir",           self.data_dir)
-            #self.db.add_cfg_para(self.run_number,"data_file_head",     self.data_file_head)
-            self.db.add_cfg_para(self.run_number,"total_daq_time",     self.total_daq_time)
+            self.db.add_cfg_para_run(self.run_number,"merger_host",        self.merger_host)
+            self.db.add_cfg_para_run(self.run_number,"config_dir",         self.config_dir)
+            self.db.add_cfg_para_run(self.run_number,"config_file",        self.config_file)
+            self.db.add_cfg_para_run(self.run_number,"config_file_head",   self.config_file_head)
+            self.db.add_cfg_para_run(self.run_number,"log_dir",            self.log_dir)
+            self.db.add_cfg_para_run(self.run_number,"log_file_head",      self.log_file_head)
+            self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
+            self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
+            self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
+            self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
+            self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
+            #self.db.add_cfg_para_run(self.run_number,"data_dir",           self.data_dir)
+            #self.db.add_cfg_para_run(self.run_number,"data_file_head",     self.data_file_head)
+            self.db.add_cfg_para_run(self.run_number,"total_daq_time",     self.total_daq_time)
 
             #del db
 

@@ -15,7 +15,7 @@ class ADCBoard:
 
     def set_default_config(self):
 
-        self.node_id = -1
+        self.node_id = 0
         self.conet2_link = -1
         self.conet2_slot = -1
 
@@ -136,9 +136,9 @@ class ADCBoard:
                 print l
         f.close()
 
-    def set_board_id(self,b_id):
-
-        self.board_id = b_id
+    #def set_board_id(self,b_id):
+    #
+    #    self.board_id = b_id
 
     def format_config_daq(self):
 
@@ -209,6 +209,8 @@ class ADCBoard:
         cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
         cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
         cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
+
+        cfgstring += "input_stream\t\t"+self.input_stream_zsup+"\n"
 
         cfgstring += "output_mode\t\tSTREAM\n"
         cfgstring += "output_stream\t\t"+self.output_stream_zsup+"\n"

@@ -653,17 +653,54 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         print "Creating log directory %s"%self.run.log_dir
         self.run.create_log_dir()
 
-        # Write run and boards configuration files
+        # Write run, merger and boards configuration files
         #self.write_log("Writing configuration file "+self.run.config_file)
         print "Writing configuration file %s for run %d"%(self.run.config_file,self.run.run_number)
         self.run.write_config()
+        self.run.merger.write_config()
         for adc in (self.run.adcboard_list):
             #self.write_log("Writing configuration file "+adc.config_file)
             print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
             adc.write_config()
 
-        # Start DAQ for all boards
+        # Create pipes for data transfer
+        self.run.create_stream_dir()
+        for adc in (self.run.adcboard_list):
+            os.mkfifo(adc.output_stream_daq)
+            os.mkfifo(adc.output_stream_zsup)
+
+        # Create merger input list
+        print "Creating merger input list file %s"%self.run.merger.input_list
+        self.run.create_merger_input_list()
+
+        # Create merger output file directory
+        print "Creating merger output files directory %s"%self.run.merger.output_dir
+        self.run.create_merger_output_dir()
+
+        # Start run initialization procedure
         self.send_answer("start_init")
+
+        # Start merger
+        p_id = self.run.merger.start_merger()
+        if p_id:
+            print "Started Merger with process id %d"%p_id
+            self.send_answer("merger ready")
+        else:
+            print "ERROR: could not start Merger"
+            self.send_answer("merger fail")
+
+        # Start ZSUP for all boards
+        for adc in (self.run.adcboard_list):
+
+            p_id = adc.start_zsup()
+            if p_id:
+                print "ADC board %02d - Started ZSUP with process id %d"%(adc.board_id,p_id)
+                self.send_answer("adc "+str(adc.board_id)+" zsup_ready")
+            else:
+                print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
+                self.send_answer("adc "+str(adc.board_id)+" zsup_fail")
+
+        # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
 
             p_id = adc.start_daq()

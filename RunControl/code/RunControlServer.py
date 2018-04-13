@@ -58,6 +58,9 @@ class RunControlServer:
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
+        # Allow immediate reuse of socket after server restart (i.e. disable socket TIME_WAIT)
+        self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+
         # Bind the socket to the port
         server_address = ('localhost', 10000)
         print "Starting server socket on %s port %s"%server_address

@@ -19,6 +19,10 @@ int main(int argc, char* argv[])
   int verbose = 0;
   int updatedb = 0;
 
+  // Set standard output/error in unbuffered mode
+  setbuf(stdout,NULL);
+  setbuf(stderr,NULL);
+
   // Parse options
   while ((c = getopt (argc, argv, "n:d:r:l:o:v:uh")) != -1) {
     switch (c)

@@ -14,7 +14,7 @@ ADCBoard::ADCBoard(int board)
 
   UInt_t max_event_len = std::max(max_event_len_v01,std::max(max_event_len_v02,max_event_len_v03));
 
-  printf("max_event_len v01 %d v02 %d v03 %d max %d\n",max_event_len_v01,max_event_len_v02,max_event_len_v03,max_event_len);
+  //printf("max_event_len v01 %d v02 %d v03 %d max %d\n",max_event_len_v01,max_event_len_v02,max_event_len_v03,max_event_len);
 
   fBuffer = malloc(max_event_len);
   fBoardId = board;

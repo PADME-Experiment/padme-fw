@@ -16,6 +16,7 @@
 #include "Config.h"
 #include "DAQ.h"
 #include "ZSUP.h"
+#include "FAKE.h"
 
 // Return pid of locking process or 0 if no other DAQ is running
 pid_t create_lock()
@@ -164,7 +165,7 @@ int main(int argc, char*argv[])
 
   }
 
-  // Check if we are running in DAQ mode or 0-suppression mode
+  // Check current running mode (DAQ, ZSUP, FAKE)
 
   if ( strcmp(Config->process_mode,"DAQ")==0 ) {
 
@@ -212,6 +213,30 @@ int main(int argc, char*argv[])
       remove_lock();
       exit(1);
     }
+
+  } else if ( strcmp(Config->process_mode,"FAKE")==0 ) {
+
+    // Show some startup message
+    if (Config->run_number == 0) {
+      printf("\n=== Starting PadmeDAQ FAKE event generation for dummy run ===\n");
+      printf("- WARNING: data will not be registered in the DB!\n");
+    } else {
+      printf("\n=== Starting PadmeDAQ FAKE event generation for run %d ===\n",Config->run_number);
+    }
+
+    // Start generation of FAKE events
+    rc = FAKE_readdata();
+    if ( rc == 1 ) {
+      printf("*** ERROR *** Problem while initializing FAKE process. Exiting.\n");
+      init_fail(1);
+    } else if ( rc == 2 ) {
+      printf("*** ERROR *** FAKE event generation ended with an error. Please check log file for details. Exiting.\n");
+      remove_lock();
+      exit(1);
+    }
+
+    printf("\n=== FAKE event generation process ended ===\n");
+
 
   } else if ( strcmp(Config->process_mode,"ZSUP")==0 ) {
 

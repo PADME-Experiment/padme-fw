@@ -13,6 +13,7 @@
 #include "DB.h"
 #include "Config.h"
 #include "PEvent.h"
+#include "Signal.h"
 
 #include "ZSUP.h"
 
@@ -20,6 +21,9 @@
 #define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
 #define MAX_N_OUTPUT_FILES 10240
+
+extern int InBurst;
+extern int BreakSignal;
 
 // Handle zero suppression
 int ZSUP_readdata ()
@@ -71,6 +75,10 @@ int ZSUP_readdata ()
   time_t t_now;
 
   unsigned int i;
+
+  // Set signal handlers to make sure output file is closed correctly
+  InBurst = 1;
+  set_signal_handlers();
 
   // If this is a real run...
   if ( Config->run_number ) {
@@ -418,8 +426,8 @@ int ZSUP_readdata ()
 
     }
 
-    // Check if it is time to stop DAQ (too many output files)
-    if (tooManyOutputFiles) break;
+    // Check if it is time to stop DAQ (user interrupt, too many output files)
+    if ( BreakSignal || tooManyOutputFiles ) break;
 
   }
 
@@ -427,6 +435,8 @@ int ZSUP_readdata ()
   time(&t_now);
  
   // Tell user what stopped DAQ
+  if ( inputStreamEnd ) printf("=== Stopping ZSUP on End of Stream ===\n");
+  if ( BreakSignal ) printf("=== Stopping ZSUP on interrupt %d ===\n",BreakSignal);
   if ( tooManyOutputFiles ) printf("=== Stopping ZSUP after writing %d data files ===\n",fileIndex);
 
   // Close input stream file

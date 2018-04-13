@@ -29,7 +29,7 @@ typedef struct config_s {
   // Process id in PadmeDAQ DB
   int process_id;
 
-  // Define PadmeDAQ functioning mode (can be "DAQ" or "ZSUP")
+  // Define PadmeDAQ functioning mode (can be "DAQ", "ZSUP", or "FAKE")
   char process_mode[16];
 
   // File used to read configuration

@@ -218,7 +218,7 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"process_mode")==0 ) {
-	if ( strcmp(value,"DAQ")==0 || strcmp(value,"ZSUP")==0 ) {
+	if ( strcmp(value,"DAQ")==0 || strcmp(value,"ZSUP")==0 || strcmp(value,"FAKE")==0) {
 	  strcpy(Config->process_mode,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
 	} else {
@@ -610,17 +610,25 @@ int print_config(){
 
   printf("\n=== Configuration parameters for this run ===\n");
   printf("process_id\t\t%d\tDB id for this process\n",Config->process_id);
-  printf("process_mode\t\t'%s'\tfunctioning mode for this PadmeDAQ process (DAQ or ZSUP)\n",Config->process_mode);
+  printf("process_mode\t\t'%s'\tfunctioning mode for this PadmeDAQ process (DAQ, ZSUP, or FAKE)\n",Config->process_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
-  printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
-  printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
-  printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
-  printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
+
+  // Control files are only used by DAQ. Will disappear when HW run control signals will be in place
+  if (strcmp(Config->process_mode,"DAQ")==0) {
+    printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
+    printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
+    printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
+    printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
+  }
+
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
+
+  // ZSUP only works with STREAM input
   if (strcmp(Config->process_mode,"ZSUP")==0) {
     printf("input_stream\t\t'%s'\tname of virtual file used as input stream\n",Config->input_stream);
   }
+
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {
     printf("output_stream\t\t%s\t\tname of virtual file used as output stream\n",Config->output_stream);
@@ -628,11 +636,14 @@ int print_config(){
     printf("data_dir\t\t'%s'\t\tdirectory where output files will be stored\n",Config->data_dir);
     printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
   }
+
   printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
   printf("node_id\t\t\t%d\t\tDB id of node running the process\n",Config->node_id);
   printf("conet2_link\t\t%d\t\tCONET2 link\n",Config->conet2_link);
   printf("conet2_slot\t\t%d\t\tCONET2 slot\n",Config->conet2_slot);
-  if (strcmp(Config->process_mode,"DAQ")==0) {
+
+  // Show parameters which are relevant for DAQ or FAKE (N.B. FAKE only uses a subset of them)
+  if (strcmp(Config->process_mode,"DAQ")==0 || strcmp(Config->process_mode,"FAKE")==0) {
     printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
     printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
     printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
@@ -649,6 +660,8 @@ int print_config(){
     printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
     printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
   }
+
+  // Show parameters which are relevant for ZSUP
   if (strcmp(Config->process_mode,"ZSUP")==0) {
     printf("zero_suppression\t%d\t\tzero-suppression - 100*mode+algorithm (mode:0=reject,1=flag - algorithm:0=OFF,1-15=algorithm id)\n",Config->zero_suppression);
 
@@ -668,11 +681,13 @@ int print_config(){
     }
   }
 
+  // In STREAM mode the output file never changes
   if (strcmp(Config->output_mode,"FILE")==0) {
     printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
     printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
     printf("file_max_events\t\t%d\t\tmax number of events to write before changing output file\n",Config->file_max_events);
   }
+
   printf("=== End of configuration parameters ===\n\n");
 
   return 0;

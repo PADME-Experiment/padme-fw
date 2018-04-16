@@ -10,7 +10,7 @@ re_comment = re.compile("^\s*#")
 re_board = re.compile("^\s*board\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)\s*$")
 #re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
-re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
+re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(-*\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
 re_run_type = re.compile("^\s*run_type\s+(\d+)\s+(\S+)\s+(\S.*)$")
 
 max_datetime = "2049-12-31 23:59:59"
@@ -181,20 +181,35 @@ def main():
             else:
                 (optical_link_id,) = res
 
+            # Check if board is already connected to another link
+            board_on_other_link = 0
+            if (board_id != -1):
+                c.execute("""SELECT id FROM l_board_optical_link WHERE board_id=%s AND time_start<=%s AND time_stop>%s""",(board_id,f_datetime,f_datetime))
+                if (c.rowcount != 0):
+                    (old_link_id,) = c.fetchone()
+                    c.execute("""SELECT node_id,controller_id,channel_id,slot_id FROM optical_link WHERE id=%s""",(old_link_id,))
+                    (old_node_id,old_controller_id,old_channel_id,old_slot_id) = c.fetchone()
+                    if (old_node_id != node_id or old_controller_id != controller_id or old_channel_id != channel_id or old_slot_id != slot_id):
+                        print "WARNING - Cannot connect board %d to link %d:%d:%d:%d"%(board_id,node_id,controller_id,channel_id,slot_id)
+                        print "          Board already connected to link %d:%d:%d:%d"%(old_node_id,old_controller_id,old_channel_id,old_slot_id)
+                        board_on_other_link = 1
+
             # Check if board connected to link changed
-            c.execute("""SELECT id,board_id FROM l_board_optical_link WHERE optical_link_id=%s AND time_start<=%s AND time_stop>%s""",(optical_link_id,f_datetime,f_datetime))
-            res = c.fetchone()
-            if (res == None):
-                print "Creating connection of board",board_id,"to link",opt_link,"starting from",f_datetime
-                c.execute("""INSERT INTO l_board_optical_link(board_id,optical_link_id,time_start,time_stop) VALUES(%s,%s,%s,%s)""",(board_id,optical_link_id,f_datetime,max_datetime))
-            else:
-                (old_link_id,old_board_id) = res
-                old_link_id = int(old_link_id)
-                old_board_id = int(old_board_id)
-                if (old_board_id != board_id):
-                    print "Link",opt_link,"changed board from",old_board_id,"to",board_id,"at",f_datetime
-                    c.execute("""UPDATE l_board_optical_link SET time_stop=%s WHERE id=%s""",(f_datetime,old_link_id))
-                    c.execute("""INSERT INTO l_board_optical_link(board_id,optical_link_id,time_start,time_stop) VALUES(%s,%s,%s,%s)""",(board_id,optical_link_id,f_datetime,max_datetime))
+            if (not board_on_other_link):
+                c.execute("""SELECT id,board_id FROM l_board_optical_link WHERE optical_link_id=%s AND time_start<=%s AND time_stop>%s""",(optical_link_id,f_datetime,f_datetime))
+                if (c.rowcount == 0):
+                    if (board_id != -1):
+                        print "Creating connection of board",board_id,"to link",opt_link,"starting from",f_datetime
+                        c.execute("""INSERT INTO l_board_optical_link(board_id,optical_link_id,time_start,time_stop) VALUES(%s,%s,%s,%s)""",(board_id,optical_link_id,f_datetime,max_datetime))
+                else:
+                    (old_link_id,old_board_id) = c.fetchone()
+                    old_link_id = int(old_link_id)
+                    old_board_id = int(old_board_id)
+                    if (old_board_id != board_id):
+                        print "Link",opt_link,"changed board from",old_board_id,"to",board_id,"at",f_datetime
+                        c.execute("""UPDATE l_board_optical_link SET time_stop=%s WHERE id=%s""",(f_datetime,old_link_id))
+                        if (board_id != -1):
+                            c.execute("""INSERT INTO l_board_optical_link(board_id,optical_link_id,time_start,time_stop) VALUES(%s,%s,%s,%s)""",(board_id,optical_link_id,f_datetime,max_datetime))
 
         # Check run types
         m = re_run_type.search(l)

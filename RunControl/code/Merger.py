@@ -79,3 +79,26 @@ class Merger:
 
         # Return process id
         return self.process.pid
+
+
+    def stop_merger(self):
+
+        # Wait up to 5 seconds for Merger to stop
+        for i in range(5):
+
+            if self.process.poll() != None:
+
+                # Process exited: clean up defunct process and close log file
+                self.process.wait()
+                self.log_handle.close()
+                return 1
+
+            time.sleep(1)
+
+        # Process did not stop smoothly: stop it
+        self.process.terminate()
+        time.sleep(1)
+        if self.process.poll() != None:
+            self.process.wait()
+            self.log_handle.close()
+        return 0

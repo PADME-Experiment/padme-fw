@@ -259,7 +259,7 @@ class ADCBoard:
         try:
             self.process_daq = subprocess.Popen([self.executable,"-c",self.config_file_daq],stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
-            print "ADCBoard - ERROR: Execution failed: %s",e
+            print "ADCBoard - ERROR: DAQ Execution failed: %s",e
             return 0
 
         # Return process id

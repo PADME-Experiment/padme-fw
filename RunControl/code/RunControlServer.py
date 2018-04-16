@@ -80,6 +80,9 @@ class RunControlServer:
         # Setup main interface
         ret = self.main_loop()
 
+        # Save setup currently in use
+        save_final_setup(self.run.setup)
+
         # Clean up before exiting
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
@@ -147,6 +150,12 @@ class RunControlServer:
             #self.write_log("WARNING - Could not find file with last used setup %s - Using default setup %s"%(self.lus_file,setup))
 
         return setup
+
+    def save_final_setup(self,setup):
+
+        print "Saving current setup",setup,"to",self.lus_file
+        with open(self.lus_file,"w") as lf:
+            lf.write(setup)
 
     def sigint_handler(self,signal,frame):
 
@@ -817,19 +826,39 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         # Create "stop the run" tag file
         open(self.run.quit_file,'w').close()
 
-        # Run stop_daq procedure for each ADC board
         terminate_ok = True
+
+        # Run stop_daq procedure for each ADC board
         for adc in (self.run.adcboard_list):
             if adc.stop_daq():
-                self.send_answer("adc %d terminate_ok"%adc.board_id)
-                #self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
-                print "ADC board %02d - Terminated correctly"%adc.board_id
+                self.send_answer("adc %d daq_terminate_ok"%adc.board_id)
+                print "ADC board %02d - DAQ terminated correctly"%adc.board_id
             else:
                 terminate_ok = False
-                self.send_answer("adc %d terminate_error"%adc.board_id)
-                #self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
+                self.send_answer("adc %d daq_terminate_error"%adc.board_id)
                 print "ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
+        # Run stop_zsup procedure for each ADC board
+        for adc in (self.run.adcboard_list):
+            if adc.stop_zsup():
+                self.send_answer("adc %d zsup_terminate_ok"%adc.board_id)
+                print "ADC board %02d - ZSUP terminated correctly"%adc.board_id
+            else:
+                terminate_ok = False
+                self.send_answer("adc %d zsup_terminate_error"%adc.board_id)
+                print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
+                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
+        # Run stop_merger procedure
+        if self.run.merger.stop_merger():
+            self.send_answer("merger terminate_ok")
+            print "Merger terminated correctly"
+        else:
+            terminate_ok = False
+            self.send_answer("merger terminate_error")
+            print "WARNING: problems while terminating Merger"
+            if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Clean up run directory
         for adc in (self.run.adcboard_list):

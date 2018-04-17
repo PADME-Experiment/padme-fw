@@ -27,18 +27,19 @@ class ADCBoard:
         self.log_file_daq = "unset"
         self.lock_file_daq = "unset"
         self.output_stream_daq = "unset"
+        self.initok_file_daq = "unset"
+        self.initfail_file_daq = "unset"
 
         self.config_file_zsup = "unset"
         self.log_file_zsup = "unset"
         self.lock_file_zsup = "unset"
-        self.output_stream_zsup = "unset"
-
         self.input_stream_zsup = "unset"
+        self.output_stream_zsup = "unset"
+        self.initok_file_zsup = "unset"
+        self.initfail_file_zsup = "unset"
 
         self.start_file = "unset"
         self.quit_file = "unset"
-        self.initok_file = "unset"
-        self.initfail_file = "unset"
 
         #self.data_dir = "unset"
         #self.data_file = "unset"
@@ -149,6 +150,7 @@ class ADCBoard:
         cfgstring += "log_file\t\t"+self.log_file_daq+"\n"
         cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
 
+        if (self.run_number): cfgstring += "process_id\t\t"+self.proc_daq_id+"\n"
         cfgstring += "process_mode\t\tDAQ\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
@@ -161,8 +163,8 @@ class ADCBoard:
 
         cfgstring += "start_file\t\t"+self.start_file+"\n"
         cfgstring += "quit_file\t\t"+self.quit_file+"\n"
-        cfgstring += "initok_file\t\t"+self.initok_file+"\n"
-        cfgstring += "initfail_file\t\t"+self.initfail_file+"\n"
+        cfgstring += "initok_file\t\t"+self.initok_file_daq+"\n"
+        cfgstring += "initfail_file\t\t"+self.initfail_file_daq+"\n"
 
         cfgstring += "output_mode\t\tSTREAM\n"
         cfgstring += "output_stream\t\t"+self.output_stream_daq+"\n"
@@ -199,7 +201,10 @@ class ADCBoard:
         cfgstring += "config_file\t\t"+self.config_file_zsup+"\n"
         cfgstring += "log_file\t\t"+self.log_file_zsup+"\n"
         cfgstring += "lock_file\t\t"+self.lock_file_zsup+"\n"
+        cfgstring += "initok_file\t\t"+self.initok_file_zsup+"\n"
+        cfgstring += "initfail_file\t\t"+self.initfail_file_zsup+"\n"
 
+        if (self.run_number): cfgstring += "process_id\t\t"+self.proc_zsup_id+"\n"
         cfgstring += "process_mode\t\tZSUP\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
@@ -249,6 +254,22 @@ class ADCBoard:
 
         print self.format_config_daq()
         print self.format_config_zsup()
+
+    def create_proc_daq(self):
+
+        if (self.run_number):
+            self.proc_daq_id = self.db.create_process("DAQ",self.run_number,get_link_id())
+
+    def create_proc_zsup(self):
+
+        if (self.run_number):
+            self.proc_zsup_id = self.db.create_process("ZSUP",self.run_number,get_link_id())
+
+    def get_link_id():
+
+        # Convert PadmeDAQ link description to link id from DB
+        if (self.node_id == -1 or self.conet2_link == -1 or self.conet2_node == -1): return -1
+        return self.db.get_link_id(self.node_id,self.conet2_link/8,self.conet2_link%8,self.conet2_node)
 
     def start_daq(self):
 

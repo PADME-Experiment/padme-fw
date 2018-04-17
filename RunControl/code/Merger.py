@@ -49,7 +49,7 @@ class Merger:
         f.write(self.format_config())
         f.close()
 
-    def create_merger():
+    def create_merger(self):
 
         if (self.run_number):
 

@@ -17,8 +17,8 @@ class Run:
         self.run_number = 0
         self.run_type = "TEST"
         self.run_user = "PADME crew"
-        self.run_comment = "Generic run"
-        self.run_end_comment = "Generic end of run"
+        self.run_comment_start = "Generic run"
+        self.run_comment_end = "Generic end of run"
 
         self.rawdata_dir = "rawdata"
 
@@ -186,7 +186,7 @@ class Run:
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
         cfgstring += "run_type\t\t"+self.run_type+"\n"
         cfgstring += "run_user\t\t"+self.run_user+"\n"
-        cfgstring += "run_comment\t\t"+self.run_comment+"\n"
+        cfgstring += "run_comment_start\t"+self.run_comment_start+"\n"
 
         cfgstring += "start_file\t\t"+self.start_file+"\n"
         cfgstring += "quit_file\t\t"+self.quit_file+"\n"
@@ -237,10 +237,7 @@ class Run:
 
         if (self.run_number):
 
-            # Connect to DB
-            #db = PadmeDB()
-
-            self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment)
+            self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
 
             # Write run configuration parameters to DB
 
@@ -275,8 +272,6 @@ class Run:
             #self.db.add_cfg_para_run(self.run_number,"data_dir",           self.data_dir)
             #self.db.add_cfg_para_run(self.run_number,"data_file_head",     self.data_file_head)
             self.db.add_cfg_para_run(self.run_number,"total_daq_time",     self.total_daq_time)
-
-            #del db
 
     def change_setup(self,setup):
 
@@ -316,18 +311,20 @@ class Run:
                 adcboard.conet2_slot = int(node)
 
         s_bid = "b%02d"%adcboard.board_id
-        adcboard.config_file_daq  = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_daq.cfg"
-        adcboard.config_file_zsup = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_zsup.cfg"
-        adcboard.log_file_daq     = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_daq.log"
-        adcboard.log_file_zsup    = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_zsup.log"
-        adcboard.lock_file_daq    = self.lock_file_head+"_"+s_bid+"_daq"
-        adcboard.lock_file_zsup   = self.lock_file_head+"_"+s_bid+"_zsup"
-        adcboard.start_file       = self.start_file
-        adcboard.quit_file        = self.quit_file
-        adcboard.initok_file      = self.initok_file_head+"_"+s_bid
-        adcboard.initfail_file    = self.initfail_file_head+"_"+s_bid
-        #adcboard.data_file        = self.data_dir+"/"+self.data_file_head+"_"+s_bid
-        adcboard.total_daq_time   = self.total_daq_time
+        adcboard.config_file_daq    = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_daq.cfg"
+        adcboard.config_file_zsup   = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_zsup.cfg"
+        adcboard.log_file_daq       = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_daq.log"
+        adcboard.log_file_zsup      = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_zsup.log"
+        adcboard.lock_file_daq      = self.lock_file_head+"_"+s_bid+"_daq"
+        adcboard.lock_file_zsup     = self.lock_file_head+"_"+s_bid+"_zsup"
+        adcboard.start_file         = self.start_file
+        adcboard.quit_file          = self.quit_file
+        adcboard.initok_file_daq    = self.initok_file_head+"_"+s_bid+"_daq"
+        adcboard.initfail_file_daq  = self.initfail_file_head+"_"+s_bid+"_daq"
+        adcboard.initok_file_zsup   = self.initok_file_head+"_"+s_bid+"_zsup"
+        adcboard.initfail_file_zsup = self.initfail_file_head+"_"+s_bid+"_zsup"
+        #adcboard.data_file          = self.data_dir+"/"+self.data_file_head+"_"+s_bid
+        adcboard.total_daq_time     = self.total_daq_time
 
         # Read board setup
         adcboard.read_setup(self.setup)

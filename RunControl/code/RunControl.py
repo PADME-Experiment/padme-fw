@@ -34,10 +34,10 @@ def main(argv):
     if startServer:
 
         if serverInteractive:
-            RunControlServer()
+            RunControlServer("i")
         else:
             print "Starting RunControlServer in background"
-            with daemon.DaemonContext(working_directory="."): RunControlServer()
+            with daemon.DaemonContext(working_directory="."): RunControlServer("d")
 
     elif useGUI:
 

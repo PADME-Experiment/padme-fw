@@ -70,6 +70,9 @@ int ZSUP_readdata ()
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
 
+  // File to handle DAQ interaction with GUI
+  FILE* iokf; // InitOK file
+
   // Process timers
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
@@ -123,12 +126,23 @@ int ZSUP_readdata ()
   totalWriteSize = 0;
   totalWriteEvents = 0;
 
+  // Create initok file to tell RunControl that we are ready
+  printf("- Creating InitOK file '%s'\n",Config->initok_file);
+  if ( access(Config->initok_file,F_OK) == -1 ) {
+    iokf = fopen(Config->initok_file,"w");
+    fclose(iokf);
+    printf("- InitOK file '%s' created\n",Config->initok_file);
+  } else {
+    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
+    return 1;
+  }
+
   // Open virtual file for input data stream
   printf("- Opening input stream from file '%s'\n",Config->input_stream);
   inFileHandle = open(Config->input_stream,O_RDONLY, S_IRUSR | S_IWUSR);
   if (inFileHandle == -1) {
     printf("ERROR - Unable to open input stream '%s' for reading.\n",Config->input_stream);
-    return 2;
+    return 1;
   }
 
   // Read file header (4 words) from input stream

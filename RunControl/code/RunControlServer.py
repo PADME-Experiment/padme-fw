@@ -11,7 +11,7 @@ from PadmeDB import PadmeDB
 
 class RunControlServer:
 
-    def __init__(self):
+    def __init__(self,mode):
 
         # Define names of lock and last_used_setup files
         self.lock_file = "run/lock"
@@ -19,6 +19,7 @@ class RunControlServer:
 
         # Redefine print to send output to log file
         sys.stdout = Logger()
+        if mode == "i": sys.stdout.interactive = True
 
         # Create lock file
         if (self.create_lock_file() == "error"): exit(1)
@@ -27,13 +28,11 @@ class RunControlServer:
         initial_setup = self.get_initial_setup()
 
         print "=== Starting PADME Run Control server with %s setup"%initial_setup
-        #self.write_log("=== Starting PADME Run Control server with %s setup"%initial_setup)
 
         # Create run
         self.run = Run()
         if (self.run.change_setup(initial_setup) == "error"):
             print "ERROR - Error while changing run setup to %s"%initial_setup
-            #self.write_log("ERROR - Error while changing run setup to %s"%initial_setup)
             if os.path.exists(self.lock_file): os.remove(self.lock_file)
             exit(1)
 
@@ -56,41 +55,61 @@ class RunControlServer:
         self.re_change_setup = re.compile("^change_setup (\w+)$")
 
         # Create a TCP/IP socket
-        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-
-        # Allow immediate reuse of socket after server restart (i.e. disable socket TIME_WAIT)
-        self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-
-        # Bind the socket to the port
-        server_address = ('localhost', 10000)
-        print "Starting server socket on %s port %s"%server_address
-        #self.write_log("Starting server socket on %s port %s"%server_address)
-        try:
-            self.sock.bind(server_address) # Listen for incoming connections
-        except:
-            print "ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0])
-            #self.write_log("ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0]))
-            if os.path.exists(self.lock_file): os.remove(self.lock_file)
+        if not self.create_socket():
+            print "=== RunControlServer - ERROR while creating socket. Exiting"
+            self.final_cleanup()
             exit(1)
+
         self.sock.listen(1)
 
         # Define SIGINT handler
         signal.signal(signal.SIGINT,self.sigint_handler)
 
         # Setup main interface
-        ret = self.main_loop()
+        ret_main = self.main_loop()
 
-        # Save setup currently in use
-        save_final_setup(self.run.setup)
+        # Reset SIGINT handler to default
+        signal.signal(signal.SIGINT,signal.SIG_DFL)
+
+        # Handle server exit procedure
+        ret_exit = self.server_exit()
 
         # Clean up before exiting
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
-        if os.path.exists(self.lock_file): os.remove(self.lock_file)
+        self.final_cleanup()
 
-        if ret == "error": exit(1)
+        if ( ret_main == "error" or ret_exit == "terminate_error" ): exit(1)
 
         exit(0)
+
+    def create_socket(self):
+
+        # Create a TCP/IP socket
+        self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+
+        # Allow immediate reuse of socket after server restart (i.e. disable socket TIME_WAIT)
+        self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+
+        # Bind the socket to the port
+        server_address = ('localhost',10000)
+        print "Starting server socket on %s port %s"%server_address
+        try:
+            self.sock.bind(server_address) # Listen for incoming connections
+        except:
+            print "ERROR - Could not bind to socket: %s"%str(sys.exc_info()[0])
+            return False
+
+        return True
+
+    def final_cleanup(self):
+
+        # Save setup currently in use before exiting
+        self.save_final_setup(self.run.setup)
+
+        # Final clean up procedure before exiting
+        if self.sock:
+            self.sock.shutdown(socket.SHUT_RDWR)
+            self.sock.close()
+        if os.path.exists(self.lock_file): os.remove(self.lock_file)
 
     def create_lock_file(self):
 
@@ -102,7 +121,6 @@ class RunControlServer:
                     for ll in lf: pid = ll
 
                 print "Lock file %s found for pid %s - checking status"%(self.lock_file,pid)
-                #self.write_log("ERROR - Lock file %s found for pid %s"%(self.lock_file,pid))
 
                 ppinfo = os.popen("ps -p %s"%pid)
                 pinfo = ppinfo.readlines()
@@ -117,7 +135,6 @@ class RunControlServer:
                     print "No RunControlServer process found. As you were..."
             else:
                 print "ERROR - Lock file %s found but it is not a file"%self.lock_file
-                #self.write_log("ERROR - Lock file %s found but it is not a file"%self.lock_file)
                 return "error"
 
         # Create our own lock file
@@ -139,68 +156,59 @@ class RunControlServer:
                 lusf.close()
                 if (lus == ""):
                     print "WARNING - File with last used setup %s exists but it is empty - Using default setup %s"%(self.lus_file,setup)
-                    #self.write_log("WARNING - File with last used setup %s exists but it is empty - Using default setup %s"%(self.lus_file,setup))
                 else:
                     setup = lus
             else:
                 print "WARNING - File with last used setup %s exists but it is not a file - Using default setup %s"%(self.lus_file,setup)
-                #self.write_log("WARNING - File with last used setup %s exists but it is not a file - Using default setup %s"%(self.lus_file,setup))
         else:
             print "WARNING - Could not find file with last used setup %s - Using default setup %s"%(self.lus_file,setup)
-            #self.write_log("WARNING - Could not find file with last used setup %s - Using default setup %s"%(self.lus_file,setup))
 
         return setup
 
     def save_final_setup(self,setup):
 
-        print "Saving current setup",setup,"to",self.lus_file
+        print "Saving current setup %s to %s\n"%(setup,self.lus_file)
         with open(self.lus_file,"w") as lf:
             lf.write(setup)
 
     def sigint_handler(self,signal,frame):
 
-        print "RunControlSever received SIGINT: exiting"
+        print "=== RunControlSever received SIGINT: exiting"
+
+        # If a run is initialized/running, abort it as cleanly as possible
+        ret_exit = "terminate_ok"
+        if ( self.current_state == "initialized" or self.current_state == "running" ):
+
+            self.run.run_comment_end = "Run aborted due to RunControlServer SIGINT"
+            if (self.run.run_number):
+                self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
+
+            ret_exit = self.terminate_run()
+
+        # Clean up before exiting
+        self.final_cleanup()
+
+        if ( ret_exit == "terminate_error" ): exit(1)
+
+        exit(0)
+
+    def server_exit(self):
+
+        # Procedure to gracefully handle server shutdown
+
+        print "=== RunControlSever is shutting down"
 
         # If a run is initialized/running, abort it as cleanly as possible
         if ( self.current_state == "initialized" or self.current_state == "running" ):
 
-            self.run.run_comment_end = "Run aborted because of SIGINT"
-            print "Aborting run on SIGINT"
-            #self.write_log("Aborting run on SIGINT")
+            self.run.run_comment_end = "Run aborted due to RunControlServer shutdown"
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
-                self.db.set_run_time_stop(self.run.run_number,self.now_str())
-                self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
-            open(self.run.quit_file,'w').close()
-            for adc in (self.run.adcboard_list):
-                if adc.stop_daq():
-                    print "ADC board %02d - DAQ terminated correctly"%adc.board_id
-                    #self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
-                else:
-                    print "ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id
-                    #self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
-                    if (self.run.run_number):
-                        self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
-                if adc.stop_zsup():
-                    print "ADC board %02d - ZSUP terminated correctly"%adc.board_id
-                    #self.write_log("ADC board %02d - Terminated correctly"%adc.board_id)
-                else:
-                    print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
-                    #self.write_log("ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id)
-                    if (self.run.run_number):
-                        self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
-            # Clean up run directory
-            for adc in (self.run.adcboard_list):
-                if (os.path.exists(adc.initok_file)):   os.remove(adc.initok_file)
-                if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
-            if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
-            if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
+            return terminate_run()
 
-        if os.path.exists(self.lock_file): os.remove(self.lock_file)
-
-        # Now we can exit
-        exit(0)
+        # Otherwise nothing to do
+        return "ok"
 
     def main_loop(self):
 
@@ -258,7 +266,6 @@ class RunControlServer:
 
             cmd = self.get_command()
             print "Received command %s"%cmd
-            #self.write_log('Received command '+cmd)
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -276,14 +283,12 @@ class RunControlServer:
                 if (res == "client_close"):
                     return "client_close"
                 elif (res == "error"):
-                    #self.write_log('ERROR while initializing new run')
                     print "ERROR while initializing new run"
                 elif (res == "initialized"):
                     return "initialized"
                 elif (res == "initfail"):
                     return "initfail"
                 else:
-                    #self.write_log("ERROR: new_run returned unknown answer "+res+" (?)")
                     print "ERROR: new_run returned unknown answer %s (?)"%res
             elif (cmd == "exit"):
                 self.send_answer("exiting")
@@ -325,7 +330,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 # No regular expression matched: command is unknown
                 if not found_re:
                     self.send_answer("unknown command")
-                    #self.write_log('command '+cmd+' is unknown')
                     print "Command %s is unknown"%cmd
 
     def state_initialized(self):
@@ -334,7 +338,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         while True:
 
             cmd = self.get_command()
-            #self.write_log('received command '+cmd)
             print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
@@ -640,7 +643,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.change_run(newrun_number)
         self.run.run_type = newrun_type
         self.run.run_user = newrun_user
-        self.run.run_comment = newrun_comment
+        self.run.run_comment_start = newrun_comment
 
         # Check if requested run number was not used before
         # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
@@ -658,6 +661,10 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         #self.write_log("Initializing Run "+str(self.run.run_number))
         print "Initializing Run %d"%self.run.run_number
         self.run.create_run()
+        self.run.merger.create_merger()
+        for adc in (self.run.adcboard_list):
+            adc.create_proc_daq()
+            adc.create_proc_zsup()
         if (self.run.run_number): self.db.set_run_time_init(self.run.run_number,self.now_str())
 
         # Create directory to host log files
@@ -735,15 +742,13 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             for adc in (self.run.adcboard_list):
                 # Check if any board changed status
                 if (adc.status == "init"):
-                    if (os.path.exists(adc.initok_file)):
+                    if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
                         # Initialization ended OK
-                        #self.write_log("ADC board %02d - Initialized and ready for DAQ"%adc.board_id)
                         print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
                         self.send_answer("adc "+str(adc.board_id)+" ready")
                         adc.status = "ready"
-                    elif (os.path.exists(adc.initfail_file)):
+                    elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
                         # Problem during initialization
-                        #self.write_log("ADC board %02d - *** Initialization failed ***"%adc.board_id)
                         print "ADC board %02d - *** Initialization failed ***"%adc.board_id
                         self.send_answer("adc "+str(adc.board_id)+" fail")
                         adc.status = "fail"
@@ -757,20 +762,17 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 # Some boards are still initializing: keep waiting
                 n_try += 1
                 if (n_try>=10):
-                    #self.write_log("*** ERROR *** One or more boards did not initialize within 10sec. Cannot start run")
                     print "*** ERROR *** One or more boards did not initialize within 10sec. Cannot start run"
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                     self.send_answer("init_timeout")
-                    return "error"
+                    return "initfail"
                 time.sleep(1)
             elif (all_boards_ready):
-                #self.write_log("All boards completed initialization: DAQ run can be started")
                 print "All boards completed initialization: DAQ run can be started"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
                 self.send_answer("init_ready")
                 return "initialized"
             else:
-                #self.write_log("*** ERROR *** One or more boards failed the initialization. Cannot start run")
                 print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                 self.send_answer("init_fail")
@@ -862,8 +864,10 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         # Clean up run directory
         for adc in (self.run.adcboard_list):
-            if (os.path.exists(adc.initok_file)):   os.remove(adc.initok_file)
-            if (os.path.exists(adc.initfail_file)): os.remove(adc.initfail_file)
+            if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
+            if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
+            if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
+            if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
         if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
         if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
 

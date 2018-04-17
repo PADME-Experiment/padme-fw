@@ -88,6 +88,26 @@ class PadmeDB:
         c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_nr,"SOR",0,self.now_str(),run_comment))
         self.conn.commit()
 
+    def create_process(self,mode,run_number,link_id):
+
+        self.check_db()
+        c = self.conn.cursor()
+
+        # Check if run number exists
+        c.execute("""SELECT number FROM run WHERE number = %s""",(run_number,))
+        if c.rowcount == 0:
+            print "PadmeDB::create_daq_process - WARNING - Unknown run number: %d\n"%run_number
+            return
+
+        # Check if link id exists
+        c.execute("""SELECT id FROM optical_link WHERE id = %s""",(link_id,))
+        if c.rowcount == 0:
+            print "PadmeDB::create_daq_process - WARNING - Unknown optical_link id: %d\n"%link_id
+            return
+
+        c.execute("""INSERT INTO daq_process (mode,run_number,optical_link_id) VALUES (%s,%s,%s)""",(mode,run_number,link_id))
+        self.conn.commit()
+        
     def create_merger(self,run_number,node_id):
 
         self.check_db()
@@ -224,3 +244,16 @@ class PadmeDB:
         self.conn.commit()
 
         return type_list
+
+    def get_link_id(self,node_id,controller_id,channel_id,slot_id):
+
+        # Return id of optical link given its description
+        
+        self.check_db()
+        c = self.conn.cursor()
+
+        c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",
+                  (node_id,controller_id,channel_id,slot_id))
+        if c.numrows == 0: return -1
+        ret = c.fetchone()
+        return ret[0]

@@ -59,6 +59,8 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
 */
 void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
 
+void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
+
 void PadmeVReconstruction::EndProcessing(){ 
   // to be called from the derived classes
 

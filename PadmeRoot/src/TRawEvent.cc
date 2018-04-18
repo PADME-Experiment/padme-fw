@@ -24,7 +24,6 @@ TRawEvent::TRawEvent()
 TRawEvent::~TRawEvent()
 {
 
-  delete fTriggerInfo;
   Clear();
 
 }

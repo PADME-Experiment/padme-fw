@@ -74,8 +74,9 @@ int main(int argc, char* argv[])
         fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
       case 'h':
-        fprintf(stdout,"\nReadTest [-i input root file] [-v verbosity] [-h]\n\n");
+        fprintf(stdout,"\nReadTest [-i input root file] [-l list of input files] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -i: define an input file in root format\n");
+        fprintf(stdout,"  -l: define a list of input files\n");
         fprintf(stdout,"  -n: define number of events to read from input file (0: all events)\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
@@ -117,6 +118,9 @@ int main(int argc, char* argv[])
   // Get some info about the input chain
   Int_t runNEntries = inputChain->GetEntries();
   std::cout << "Found Tree 'RawEvents' with " << runNEntries << " entries" << std::endl;
+  //for(Int_t i=0; i < inputChain->GetListOfBranches()->GetEntries(); i++) {
+  //  std::cout << "Branch " << i << " is " << inputChain->GetListOfBranches()->At(i)->GetName() << std::endl;
+  //}
   TRawEvent* rawEv = new TRawEvent();
   inputChain->SetBranchAddress("RawEvent",&rawEv);
 

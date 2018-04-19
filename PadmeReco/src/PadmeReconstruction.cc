@@ -23,7 +23,7 @@
 #include "ECalParameters.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
-  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
+  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
 {
 
   // Input event structures will be allocated if corresponding branch exists
@@ -35,7 +35,6 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
   fTPixMCEvent    = 0;
-
   fRawEvent       = 0;
 
   Init(NEvt,Seed);
@@ -74,7 +73,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 {
 
   //gRandom->SetSeed(Seed);
-  //fNEvt = NEvt;
+  fNEvt = NEvt;
 
   TTree::SetMaxTreeSize(190000000000);
 
@@ -184,7 +183,7 @@ Bool_t PadmeReconstruction::NextEvent()
 {
 
   // Check if there is a new event to process
-  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
+  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
 
     std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
@@ -214,7 +213,7 @@ Bool_t PadmeReconstruction::NextEvent()
 
   }
 
-  if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) ) {
+  if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
 
     std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()

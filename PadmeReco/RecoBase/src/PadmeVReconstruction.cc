@@ -15,6 +15,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
 
   fConfigFileName = ConfigFileName;
+  HistoFile->mkdir(Name.Data());
 
   //----------- Parse config file for common parameters ----------//
 

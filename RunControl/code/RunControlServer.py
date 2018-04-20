@@ -498,7 +498,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             if ch:
                 cmd += ch
             else:
-                #self.write_log('no more data from client')
                 print "Client closed connection"
                 return "client_close"
 
@@ -507,11 +506,9 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
     def send_answer(self,answer):
 
         if len(answer)<100000:
-            #self.write_log("Sending answer "+answer)
             print "Sending answer %s"%answer
             self.connection.sendall("%5.5d"%len(answer)+answer)
         else:
-            #self.write_log('answer too long: cannot send')
             print "Answer is too long: cannot send"
 
     def get_board_config_daq(self,brdid):
@@ -557,18 +554,17 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         # Check if requested setup is known
         if not (setup in self.read_setup_list()):
-            #self.write_log("change_setup - ERROR: request to set unknown setup "+setup)
             print "change_setup - ERROR: request to set unknown setup %s"%setup
             return "error"
 
         # Change (or reload) setup
         if (setup==self.run.setup):
-            #self.write_log("change_setup - reloading setup "+setup)
             print "change_setup - reloading setup %s"%setup
         else:
-            #self.write_log("change_setup - changing setup from "+self.run.setup+" to "+setup)
             print "change_setup - changing setup from %s to %s"%(self.run.setup,setup)
-        self.run.change_setup(setup)
+        if self.run.change_setup(setup) == "error":
+            print "RunControlServer::change_setup - ERROR while loading new setup %s"%setup
+            return "error"
 
         return setup
 
@@ -584,7 +580,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         elif (ans=="dummy"):
             newrun_number = 0
         elif (ans == "error"):
-            #self.write_log("run_number - client returned error")
             print "run_number - client returned error"
             return "error"
         elif (ans=="client_close"):
@@ -602,7 +597,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         self.send_answer("run_type")
         ans = self.get_command()
         if (ans == "error"):
-            #self.write_log("run_type - client returned error")
             print "run_type - client returned error"
             return "error"
         elif (ans=="client_close"):
@@ -630,10 +624,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         if (ans=="client_close"): return "client_close"
         newrun_comment = ans
 
-        #self.write_log("Run number: "+str(newrun_number))
-        #self.write_log("Run type: "+newrun_type)
-        #self.write_log("Run crew: "+newrun_user)
-        #self.write_log("Run comment: "+newrun_comment)
         print "Run number:  %d"%newrun_number
         print "Run type:    %s"%newrun_type
         print "Run crew:    %s"%newrun_user
@@ -645,55 +635,60 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.run_user = newrun_user
         self.run.run_comment_start = newrun_comment
 
-        # Check if requested run number was not used before
-        # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
+
+        # Create run structure in the DB
         if (self.run.run_number):
+
+            # Check if requested run number was not used before
+            # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
             run_is_in_db = self.db.is_run_in_db(self.run.run_number)
             if (run_is_in_db):
-                #self.write_log("ERROR - Run "+str(self.run.run_number)+" is already in the DB: cannot use it again")
-                #self.write_log("Please check if someone else is using this RunControl before retrying")
                 print "ERROR - Run %d is already in the DB: cannot use it again"%self.run.run_number
                 print "Please check if someone else is using this RunControl before retrying"
                 self.send_answer("error_init")
                 return "error"
 
-        # Create run structure in the DB
-        #self.write_log("Initializing Run "+str(self.run.run_number))
-        print "Initializing Run %d"%self.run.run_number
-        self.run.create_run()
-        self.run.merger.create_merger()
-        for adc in (self.run.adcboard_list):
-            adc.create_proc_daq()
-            adc.create_proc_zsup()
-        if (self.run.run_number): self.db.set_run_time_init(self.run.run_number,self.now_str())
+            print "Creating Run %d strucure in DB"%self.run.run_number
+            if self.run.create_run() == "error":
+                print "ERROR - Cannot create Run in the DB"
+                return "error"
+            #if self.run.merger.create_merger() == "error":
+            #    print "ERROR - Cannot create MERGER process in the DB"
+            #    return "error"
+            #for adc in (self.run.adcboard_list):
+            #    if adc.create_proc_daq() == "error":
+            #        print "ERROR - Cannot create DAQ process in the DB"
+            #        return "error"
+            #    if adc.create_proc_zsup() == "error":
+            #        print "ERROR - Cannot create ZSUP process in the DB"
+            #        return "error"
+
+            # Save time when run initialization starts
+            self.db.set_run_time_init(self.run.run_number,self.now_str())
 
         # Create directory to host log files
-        #self.write_log("Creating log directory "+self.run.log_dir)
         print "Creating log directory %s"%self.run.log_dir
         self.run.create_log_dir()
 
-        # Write run, merger and boards configuration files
-        #self.write_log("Writing configuration file "+self.run.config_file)
-        print "Writing configuration file %s for run %d"%(self.run.config_file,self.run.run_number)
+        # Write configuration files
+        print "Writing configuration files for run %d"%self.run.run_number
         self.run.write_config()
-        self.run.merger.write_config()
-        for adc in (self.run.adcboard_list):
-            #self.write_log("Writing configuration file "+adc.config_file)
-            print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
-            adc.write_config()
+        #self.run.merger.write_config()
+        #for adc in (self.run.adcboard_list):
+        #    print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
+        #    adc.write_config()
 
         # Create pipes for data transfer
-        self.run.create_stream_dir()
-        for adc in (self.run.adcboard_list):
-            os.mkfifo(adc.output_stream_daq)
-            os.mkfifo(adc.output_stream_zsup)
+        print "Creating named pipes for run %d"%self.run.run_number
+        self.run.create_streams()
+        #for adc in (self.run.adcboard_list):
+        #    os.mkfifo(adc.output_stream_daq)
+        #    os.mkfifo(adc.output_stream_zsup)
 
         # Create merger input list
-        print "Creating merger input list file %s"%self.run.merger.input_list
         self.run.create_merger_input_list()
 
         # Create merger output file directory
-        print "Creating merger output files directory %s"%self.run.merger.output_dir
         self.run.create_merger_output_dir()
 
         # Start run initialization procedure
@@ -780,14 +775,15 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def start_run(self):
 
-        #self.write_log("Starting run")
         print "Starting run"
-        if (self.run.run_number):
-            self.db.set_run_time_start(self.run.run_number,self.now_str())
-            self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         # Create "start the run" tag file
         open(self.run.start_file,'w').close()
+
+        # Update run status in DB
+        if (self.run.run_number):
+            self.db.set_run_time_start(self.run.run_number,self.now_str())
+            self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         self.send_answer("run_started")
 
@@ -799,11 +795,9 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         self.send_answer("run_comment_end")
         ans = self.get_command()
         if (ans=="client_close"): return "client_close"
-        #self.write_log("End of Run comment: "+ans)
         print "End of Run comment: %s"%ans
         self.run.run_comment_end = ans
 
-        #self.write_log("Stopping run")
         print "Stopping run"
         if (self.run.run_number): self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
 
@@ -813,7 +807,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
         self.run.run_comment_end = "Run aborted"
 
-        #self.write_log("Aborting run")
         print "Aborting run"
         if (self.run.run_number): self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
 

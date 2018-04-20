@@ -1,5 +1,6 @@
 import MySQLdb
 import os
+import time
 
 class PadmeDB:
 
@@ -72,12 +73,11 @@ class PadmeDB:
 
         # Get run_type id
         c.execute("""SELECT id FROM run_type WHERE short_name = %s""",(run_type,))
+        if (c.rowcount == 0):
+            print "PadmeDB - WARNING - Unknown run type selected: %s - Defaulting to OTHER"%run_type
+            c.execute("""SELECT id FROM run_type WHERE short_name = OTHER""")
         res = c.fetchone()
-        if (res == None):
-            print "PadmeDB - WARNING - Unknown run type selected: %s"%run_type
-            run_type_id = 0
-        else:
-            (run_type_id,) = res
+        (run_type_id,) = res
         self.conn.commit()
 
         # Create run
@@ -96,17 +96,27 @@ class PadmeDB:
         # Check if run number exists
         c.execute("""SELECT number FROM run WHERE number = %s""",(run_number,))
         if c.rowcount == 0:
-            print "PadmeDB::create_daq_process - WARNING - Unknown run number: %d\n"%run_number
-            return
+            print "PadmeDB::create_daq_process - ERROR - Unknown run number: %d\n"%run_number
+            return -1
 
         # Check if link id exists
+        op_link_exists = True
         c.execute("""SELECT id FROM optical_link WHERE id = %s""",(link_id,))
         if c.rowcount == 0:
             print "PadmeDB::create_daq_process - WARNING - Unknown optical_link id: %d\n"%link_id
-            return
+            op_link_exists = False
 
-        c.execute("""INSERT INTO daq_process (mode,run_number,optical_link_id) VALUES (%s,%s,%s)""",(mode,run_number,link_id))
+        if op_link_exists:
+            c.execute("""INSERT INTO daq_process (mode,run_number,optical_link_id,status) VALUES (%s,%s,%s,%s)""",(mode,run_number,link_id,0))
+        else:
+            # Accept processes with no associated optical link (optical_link_id is NULL)
+            c.execute("""INSERT INTO daq_process (mode,run_number,status) VALUES (%s,%s,%s)""",(mode,run_number,0))
+
+        process_id = c.lastrowid
+
         self.conn.commit()
+
+        return process_id
         
     def create_merger(self,run_number,node_id):
 
@@ -116,18 +126,27 @@ class PadmeDB:
         # Check if run exists
         c.execute("""SELECT number FROM run WHERE number = %s""",(run_number,))
         if (c.rowcount == 0):
-            print "PadmeDB::create_merger - WARNING - Unknown run number: %d\n"%run_number
+            print "PadmeDB::create_merger - ERROR - Unknown run number: %d\n"%run_number
             return -1
 
         # Check if node exists
+        node_exists = True
         c.execute("""SELECT id FROM node WHERE id = %s""",(node_id,))
         if (c.rowcount == 0):
             print "PadmeDB::create_merger - WARNING - Unknown node id: %d\n"%node_id
-            return -1
+            node_exists = False
 
         # Create merger and get its id
-        c.execute("""INSERT INTO lvl1_process (run_number,node_id) VALUES (%s,%s)""",(run_number,node_id))
-        return c.lastrowid
+        if node_exists:
+            c.execute("""INSERT INTO lvl1_process (run_number,node_id,status) VALUES (%s,%s,%s)""",(run_number,node_id,0))
+        else:
+            # Accept mergers with no associated node id (node_id is NULL)
+            c.execute("""INSERT INTO lvl1_process (run_number,status) VALUES (%s,%s)""",(run_number,0))
+        merger_id = c.lastrowid
+
+        self.conn.commit()
+
+        return merger_id
 
     def set_run_status(self,run_nr,status):
 
@@ -157,11 +176,12 @@ class PadmeDB:
         c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
         self.conn.commit()
 
-    def set_run_comment_end(self,run_nr,comment_end):
+    def set_run_comment_end(self,run_number,comment_end):
 
+        # Create end of run comment
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""UPDATE run SET comment_end = %s WHERE number = %s""",(comment_end,run_nr))
+        c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_number,"EOR",0,self.now_str(),comment_end))
         self.conn.commit()
 
     def add_cfg_para_run(self,run_nr,para_name,para_val):
@@ -218,7 +238,7 @@ class PadmeDB:
             (id,) = res
             return id
 
-        # Then search by IP address
+        # Then search by IP address on the DAQ VLAN
         c.execute("""SELECT id FROM node WHERE ip_addr_daq=%s""",(node,))
         res = c.fetchone()
         self.conn.commit()
@@ -254,6 +274,6 @@ class PadmeDB:
 
         c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",
                   (node_id,controller_id,channel_id,slot_id))
-        if c.numrows == 0: return -1
+        if c.rowcount == 0: return -1
         ret = c.fetchone()
         return ret[0]

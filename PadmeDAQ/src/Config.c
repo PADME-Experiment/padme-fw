@@ -609,8 +609,8 @@ int print_config(){
   int i;
 
   printf("\n=== Configuration parameters for this run ===\n");
-  printf("process_id\t\t%d\tDB id for this process\n",Config->process_id);
-  printf("process_mode\t\t'%s'\tfunctioning mode for this PadmeDAQ process (DAQ, ZSUP, or FAKE)\n",Config->process_mode);
+  printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
+  printf("process_mode\t\t'%s'\t\tfunctioning mode for this PadmeDAQ process (DAQ, ZSUP, or FAKE)\n",Config->process_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
 
   // Control files are only used by DAQ. Will disappear when HW run control signals will be in place
@@ -836,7 +836,8 @@ int end_config()
 
 // Return file name given the file open time. Return 0 if OK, <>0 error
 int generate_filename(char* name, const time_t time) {
-  struct tm* t = localtime(&time);
+  //struct tm* t = localtime(&time);
+  struct tm* t = gmtime(&time);
   sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
 	  Config->data_file,
 	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
@@ -847,7 +848,8 @@ int generate_filename(char* name, const time_t time) {
 // Write time (in secs) to a string with standard formatting
 char* format_time(const time_t time) {
   static char tform[20];
-  struct tm* t = localtime(&time);
+  //struct tm* t = localtime(&time);
+  struct tm* t = gmtime(&time);
   sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
 	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
 	  t->tm_hour,      t->tm_min,   t->tm_sec);

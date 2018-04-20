@@ -51,15 +51,15 @@ class Merger:
 
     def create_merger(self):
 
-        if (self.run_number):
+        self.merger_id = self.db.create_merger(self.run_number,self.node_id)
+        if self.merger_id == -1: return "error"
 
-            self.merger_id = self.db.create_merger(self.run_number)
+        self.db.add_cfg_para_merger(self.merger_id,"input_list", self.input_list)
+        self.db.add_cfg_para_merger(self.merger_id,"output_dir",self.output_dir)
+        self.db.add_cfg_para_merger(self.merger_id,"output_file",self.output_file)
+        self.db.add_cfg_para_merger(self.merger_id,"max_events", self.max_events)
 
-            if (self.merger_id != -1):
-                self.db.add_cfg_para_merger(self.merger_id,"input_list", self.input_list)
-                self.db.add_cfg_para_merger(self.merger_id,"output_dir",self.output_dir)
-                self.db.add_cfg_para_merger(self.merger_id,"output_file",self.output_file)
-                self.db.add_cfg_para_merger(self.merger_id,"max_events", self.max_events)
+        return "ok"
 
     def start_merger(self):
 

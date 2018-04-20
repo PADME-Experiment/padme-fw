@@ -162,7 +162,8 @@ int db_process_open(int proc_id,time_t t)
   struct tm* t_st;
   char sqlCode[10240];
 
-  t_st = localtime(&t);
+  //t_st = localtime(&t);
+  t_st = gmtime(&t);
   sprintf(sqlCode,"UPDATE daq_process SET status = 1, time_start = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
 	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
@@ -179,7 +180,8 @@ int db_process_close(int proc_id,time_t t)
   struct tm* t_st;
   char sqlCode[10240];
 
-  t_st = localtime(&t);
+  //t_st = localtime(&t);
+  t_st = gmtime(&t);
   sprintf(sqlCode,"UPDATE daq_process SET status = 2, time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
 	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
@@ -232,7 +234,8 @@ int db_file_open(char* file_name,int file_version,time_t t,int proc_id,int part)
   struct tm* t_st;
   char sqlCode[10240];
 
-  t_st = localtime(&t);
+  //t_st = localtime(&t);
+  t_st = gmtime(&t);
   sprintf(sqlCode,"INSERT INTO daq_file (name,version,daq_process_id,part,time_open,n_events,size) VALUES ('%s',%d,%d,%d,'%04d-%02d-%02d %02d:%02d:%02d',0,0)",file_name,file_version,proc_id,part,1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_file_open - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
@@ -256,7 +259,8 @@ int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n
   struct tm* t_st;
   char sqlCode[10240];
 
-  t_st = localtime(&t);
+  //t_st = localtime(&t);
+  t_st = gmtime(&t);
   sprintf(sqlCode,"UPDATE daq_file SET time_close = '%04d-%02d-%02d %02d:%02d:%02d', size = %lu, n_events = %u WHERE name = '%s'",1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,size,n_events,file_name);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_file_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
@@ -286,7 +290,7 @@ int db_add_cfg_para(int proc_id, const char* para_name, char* para_val)
   }
 
   // Update size/events counters for this run
-  sprintf(sqlCode,"INSERT INTO daq_proc_config_para (process_id,config_para_name_id,value) VALUES (%d,%d,'%s');",proc_id,para_id,para_val);
+  sprintf(sqlCode,"INSERT INTO daq_proc_config_para (daq_process_id,config_para_name_id,value) VALUES (%d,%d,'%s');",proc_id,para_id,para_val);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_add_cfg_para - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;

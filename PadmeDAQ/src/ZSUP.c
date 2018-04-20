@@ -86,7 +86,7 @@ int ZSUP_readdata ()
   // If this is a real run...
   if ( Config->run_number ) {
 
-    //... connect to DB and create new process
+    //... connect to DB
     if ( db_init() != DB_OK ) return 1;
 
     // Save configuration to DB
@@ -523,7 +523,7 @@ int ZSUP_readdata ()
     evtWritePerSec = 1.*totalWriteEvents/t_daqtotal;
     sizeWritePerSec = totalWriteSize/(t_daqtotal*1024.);
   }
-  printf("\n=== DAQ ending on %s ===\n",format_time(t_daqstop));
+  printf("\n=== ZSUP ending on %s ===\n",format_time(t_daqstop));
   printf("Total running time: %d secs\n",(int)t_daqtotal);
   printf("Total number of events read: %u - %6.2f events/s\n",totalReadEvents,evtReadPerSec);
   printf("Total size of data read: %lu B - %6.2f KB/s\n",totalReadSize,sizeReadPerSec);

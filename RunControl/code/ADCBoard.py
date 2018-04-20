@@ -3,11 +3,15 @@ import re
 import subprocess
 import time
 
+from PadmeDB  import PadmeDB
+
 class ADCBoard:
 
     def __init__(self,b_id):
 
         self.board_id = b_id
+
+        self.db = PadmeDB()
 
         self.status = "idle"
 
@@ -150,7 +154,7 @@ class ADCBoard:
         cfgstring += "log_file\t\t"+self.log_file_daq+"\n"
         cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
 
-        if (self.run_number): cfgstring += "process_id\t\t"+self.proc_daq_id+"\n"
+        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_daq_id
         cfgstring += "process_mode\t\tDAQ\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
@@ -204,7 +208,7 @@ class ADCBoard:
         cfgstring += "initok_file\t\t"+self.initok_file_zsup+"\n"
         cfgstring += "initfail_file\t\t"+self.initfail_file_zsup+"\n"
 
-        if (self.run_number): cfgstring += "process_id\t\t"+self.proc_zsup_id+"\n"
+        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_zsup_id
         cfgstring += "process_mode\t\tZSUP\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
@@ -257,19 +261,27 @@ class ADCBoard:
 
     def create_proc_daq(self):
 
-        if (self.run_number):
-            self.proc_daq_id = self.db.create_process("DAQ",self.run_number,get_link_id())
+        self.proc_daq_id = self.db.create_process("DAQ",self.run_number,self.get_link_id())
+        if self.proc_daq_id == -1:
+            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
+            return "error"
+
+        return "ok"
 
     def create_proc_zsup(self):
 
-        if (self.run_number):
-            self.proc_zsup_id = self.db.create_process("ZSUP",self.run_number,get_link_id())
+        self.proc_zsup_id = self.db.create_process("ZSUP",self.run_number,self.get_link_id())
+        if self.proc_zsup_id == -1:
+            print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
+            return "error"
 
-    def get_link_id():
+        return "ok"
+
+    def get_link_id(self):
 
         # Convert PadmeDAQ link description to link id from DB
-        if (self.node_id == -1 or self.conet2_link == -1 or self.conet2_node == -1): return -1
-        return self.db.get_link_id(self.node_id,self.conet2_link/8,self.conet2_link%8,self.conet2_node)
+        if (self.node_id == -1 or self.conet2_link == -1 or self.conet2_slot == -1): return -1
+        return self.db.get_link_id(self.node_id,self.conet2_link/8,self.conet2_link%8,self.conet2_slot)
 
     def start_daq(self):
 

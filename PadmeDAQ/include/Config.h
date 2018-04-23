@@ -151,11 +151,11 @@ typedef struct config_s {
 
   // Set maximum size of a single DAQ file (bytes)
   // Output file will be close when its size exceeds this value and a new one will be opened
-  long file_max_size;
+  unsigned long int file_max_size;
 
   // Set maximum number of events to store in a single DAQ file
   // After writing this number of events, output file will be closed and a new one will be opened
-  int file_max_events;
+  unsigned int file_max_events;
 
 } config_t;
 

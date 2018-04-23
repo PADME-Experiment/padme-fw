@@ -83,16 +83,11 @@ int ZSUP_readdata ()
   InBurst = 1;
   set_signal_handlers();
 
-  // If this is a real run...
-  if ( Config->run_number ) {
-
-    //... connect to DB
-    if ( db_init() != DB_OK ) return 1;
-
-    // Save configuration to DB
-    save_config();
-
-  }
+  // If this is a real run save configuration to DB
+  //if ( Config->run_number ) {
+  //  if ( db_init() != DB_OK ) return 1;
+  //  save_config();
+  //}
 
   // Allocate buffers to hold input and output event structures (same max size)
 
@@ -119,6 +114,11 @@ int ZSUP_readdata ()
 
   time(&t_daqstart);
   printf("%s - Zero suppression started\n",format_time(t_daqstart));
+
+  if ( Config->run_number ) {
+    // Tell DB that the process has started
+    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
+  }
 
   // Zero counters
   totalReadSize = 0;
@@ -180,10 +180,17 @@ int ZSUP_readdata ()
   }
   printf("- Run number %d\n",run_number);
 
-  // Third line: board serial number
+  // Third line: board serial number (save it to DB)
   unsigned int board_sn;
   memcpy(&board_sn,inEvtBuffer+8,4);
   printf("- Board S/N %d\n",board_sn);
+
+  // Save board serial number to DB for this process
+  if ( Config->run_number ) {
+    char line[2048];
+    sprintf(line,"%d",board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",line);
+  }
 
   // Fourth line: start of file time tag
   unsigned int start_time;
@@ -387,7 +394,8 @@ int ZSUP_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
 	// Update file counter
@@ -486,7 +494,8 @@ int ZSUP_readdata ()
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
       if ( Config->run_number ) {
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	//if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
       }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
@@ -505,11 +514,6 @@ int ZSUP_readdata ()
   // Deallocate input/output event buffer
   free(inEvtBuffer);
   free(outEvtBuffer);
-
-  // Tell DB that the process has ended
-  if ( Config->run_number ) {
-    if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
-  }
 
   // Give some final report
   evtReadPerSec = 0.;
@@ -538,6 +542,12 @@ int ZSUP_readdata ()
     }
   }
   printf("=========================================================\n");
+
+  // Tell DB that the process has ended
+  if ( Config->run_number ) {
+    //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
+  }
 
   // Close DB file
   if ( Config->run_number ) {

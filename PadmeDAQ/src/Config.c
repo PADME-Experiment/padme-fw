@@ -136,7 +136,10 @@ int read_config(char *cfgfile)
   char param[MAX_PARAM_NAME_LEN];
   char value[MAX_PARAM_VALUE_LEN];
   size_t plen,vlen;
-  uint32_t v;
+  int32_t v;
+  //int64_t vl;
+  uint32_t vu;
+  uint64_t vul;
   float vf;
   int ch;
 
@@ -389,38 +392,38 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Value %s not valid for parameter %s: use NIM or TTL\n",value,param);
 	}
       } else if ( strcmp(param,"group_enable_mask")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->group_enable_mask = v;
-	  printf("Parameter %s set to 0x%1x\n",param,v);
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->group_enable_mask = vu;
+	  printf("Parameter %s set to 0x%1x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"channel_enable_mask")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->channel_enable_mask = v;
-	  printf("Parameter %s set to 0x%08x\n",param,v);
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->channel_enable_mask = vu;
+	  printf("Parameter %s set to 0x%08x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"offset_global")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->offset_global = v;
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->offset_global = vu;
 	  for(ch=0;ch<32;ch++) Config->offset_ch[ch] = Config->offset_global;
-	  printf("Parameter %s set to 0x%04x\n",param,v);
+	  printf("Parameter %s set to 0x%04x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"post_trigger_size")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->post_trigger_size = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->post_trigger_size = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"max_num_events_blt")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->max_num_events_blt = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->max_num_events_blt = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -503,16 +506,16 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"file_max_size")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->file_max_size = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%lu",&vul) ) {
+	  Config->file_max_size = vul;
+	  printf("Parameter %s set to %lu\n",param,vul);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"file_max_events")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->file_max_events = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->file_max_events = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -617,14 +620,15 @@ int print_config(){
   if (strcmp(Config->process_mode,"DAQ")==0) {
     printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
     printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
-    printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
-    printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   }
 
+  printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
+  printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
+
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
 
-  // ZSUP only works with STREAM input
+  // Only ZSUP uses STREAM input
   if (strcmp(Config->process_mode,"ZSUP")==0) {
     printf("input_stream\t\t'%s'\tname of virtual file used as input stream\n",Config->input_stream);
   }
@@ -681,11 +685,11 @@ int print_config(){
     }
   }
 
-  // In STREAM mode the output file never changes
+  // These are only relevant for FILE output mode as in STREAM mode the output file never changes
   if (strcmp(Config->output_mode,"FILE")==0) {
     printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
     printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
-    printf("file_max_events\t\t%d\t\tmax number of events to write before changing output file\n",Config->file_max_events);
+    printf("file_max_events\t\t%u\t\tmax number of events to write before changing output file\n",Config->file_max_events);
   }
 
   printf("=== End of configuration parameters ===\n\n");
@@ -702,28 +706,27 @@ int save_config()
   char line[2048];
 
   db_add_cfg_para(Config->process_id,"process_mode",Config->process_mode);
-
   db_add_cfg_para(Config->process_id,"config_file",Config->config_file);
 
-  db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
-
-  db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  // Control files are only used by DAQ. Will disappear when HW run control signals will be in place
+  if (strcmp(Config->process_mode,"DAQ")==0) {
+    db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
+    db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  }
 
   db_add_cfg_para(Config->process_id,"initok_file",Config->initok_file);
-
   db_add_cfg_para(Config->process_id,"initfail_file",Config->initfail_file);
-
   db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
 
   sprintf(line,"%d",Config->run_number);
   db_add_cfg_para(Config->process_id,"run_number",line);
 
+  // Only ZSUP uses STREAM input
   if (strcmp(Config->process_mode,"ZSUP")==0) {
     db_add_cfg_para(Config->process_id,"input_stream",Config->input_stream);
   }
 
   db_add_cfg_para(Config->process_id,"output_mode",Config->output_mode);
-
   if (strcmp(Config->output_mode,"STREAM")==0) {
     db_add_cfg_para(Config->process_id,"output_stream",Config->output_stream);
   } else {
@@ -731,14 +734,14 @@ int save_config()
     db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
   }
 
-  sprintf(line,"%d",Config->total_daq_time);
-  db_add_cfg_para(Config->process_id,"total_daq_time",line);
-
   sprintf(line,"%d",Config->board_id);
   db_add_cfg_para(Config->process_id,"board_id",line);
 
-  sprintf(line,"%d",Config->board_sn);
-  db_add_cfg_para(Config->board_sn,"board_sn",line);
+  // Only save board serial number if it is already defined
+  if (Config->board_sn > 0) {
+    sprintf(line,"%d",Config->board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",line);
+  }
 
   sprintf(line,"%d",Config->node_id);
   db_add_cfg_para(Config->process_id,"node_id",line);
@@ -749,80 +752,100 @@ int save_config()
   sprintf(line,"%d",Config->conet2_slot);
   db_add_cfg_para(Config->process_id,"conet2_slot",line);
 
-  sprintf(line,"%d",Config->startdaq_mode);
-  db_add_cfg_para(Config->process_id,"startdaq_mode",line);
 
-  sprintf(line,"%d",Config->drs4_sampfreq);
-  db_add_cfg_para(Config->process_id,"drs4_sampfreq",line);
+  // Save parameters which are relevant for DAQ or FAKE (N.B. FAKE only uses a subset of them)
+  if (strcmp(Config->process_mode,"DAQ")==0 || strcmp(Config->process_mode,"FAKE")==0) {
 
-  sprintf(line,"%d",Config->trigger_mode);
-  db_add_cfg_para(Config->process_id,"trigger_mode",line);
+    sprintf(line,"%d",Config->total_daq_time);
+    db_add_cfg_para(Config->process_id,"total_daq_time",line);
 
-  db_add_cfg_para(Config->process_id,"trigger_iolevel",Config->trigger_iolevel);
+    sprintf(line,"%d",Config->startdaq_mode);
+    db_add_cfg_para(Config->process_id,"startdaq_mode",line);
 
-  sprintf(line,"0x%1x",Config->group_enable_mask);
-  db_add_cfg_para(Config->process_id,"group_enable_mask",line);
+    sprintf(line,"%d",Config->drs4_sampfreq);
+    db_add_cfg_para(Config->process_id,"drs4_sampfreq",line);
 
-  sprintf(line,"0x%08x",Config->channel_enable_mask);
-  db_add_cfg_para(Config->process_id,"channel_enable_mask",line);
+    sprintf(line,"%d",Config->trigger_mode);
+    db_add_cfg_para(Config->process_id,"trigger_mode",line);
 
-  sprintf(line,"0x%04x",Config->offset_global);
-  db_add_cfg_para(Config->process_id,"offset_global",line);
+    db_add_cfg_para(Config->process_id,"trigger_iolevel",Config->trigger_iolevel);
 
-  for(i=0;i<32;i++) {
-    if (Config->offset_ch[i] != Config->offset_global) {
-      sprintf(line,"%02d 0x%04x",i,Config->offset_ch[i]);
-      db_add_cfg_para(Config->process_id,"offset_ch",line);
-    }
-  }
+    sprintf(line,"0x%1x",Config->group_enable_mask);
+    db_add_cfg_para(Config->process_id,"group_enable_mask",line);
 
-  sprintf(line,"%d",Config->post_trigger_size);
-  db_add_cfg_para(Config->process_id,"post_trigger_size",line);
+    sprintf(line,"0x%08x",Config->channel_enable_mask);
+    db_add_cfg_para(Config->process_id,"channel_enable_mask",line);
 
-  sprintf(line,"%d",Config->max_num_events_blt);
-  db_add_cfg_para(Config->process_id,"max_num_events_blt",line);
+    sprintf(line,"0x%04x",Config->offset_global);
+    db_add_cfg_para(Config->process_id,"offset_global",line);
 
-  sprintf(line,"%d",Config->drs4corr_enable);
-  db_add_cfg_para(Config->process_id,"drs4corr_enable",line);
-
-  sprintf(line,"%d",Config->daq_loop_delay);
-  db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
-
-  sprintf(line,"%d",Config->zero_suppression);
-  db_add_cfg_para(Config->process_id,"zero_suppression",line);
-
-  if (Config->zero_suppression % 100 == 1) {
-    sprintf(line,"%d",Config->zs1_head);
-    db_add_cfg_para(Config->process_id,"zs1_head",line);
-    sprintf(line,"%d",Config->zs1_tail);
-    db_add_cfg_para(Config->process_id,"zs1_tail",line);
-    sprintf(line,"%f",Config->zs1_nsigma);
-    db_add_cfg_para(Config->process_id,"zs1_nsigma",line);
-    sprintf(line,"%d",Config->zs1_nabovethr);
-    db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
-    sprintf(line,"%f",Config->zs1_badrmsthr);
-    db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
-  } if (Config->zero_suppression % 100 == 2) {
-    sprintf(line,"%d",Config->zs2_tail);
-    db_add_cfg_para(Config->process_id,"zs2_tail",line);
-    sprintf(line,"%f",Config->zs2_minrms);
-    db_add_cfg_para(Config->process_id,"zs2_minrms",line);
     for(i=0;i<32;i++) {
-      if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) {
-	sprintf(line,"%02d %f",i,Config->zs2_minrms_ch[i]);
-	db_add_cfg_para(Config->process_id,"zs2_minrms_ch",line);
+      if (Config->offset_ch[i] != Config->offset_global) {
+	sprintf(line,"%02d 0x%04x",i,Config->offset_ch[i]);
+	db_add_cfg_para(Config->process_id,"offset_ch",line);
       }
     }
+
+    sprintf(line,"%d",Config->post_trigger_size);
+    db_add_cfg_para(Config->process_id,"post_trigger_size",line);
+
+    sprintf(line,"%d",Config->max_num_events_blt);
+    db_add_cfg_para(Config->process_id,"max_num_events_blt",line);
+
+    sprintf(line,"%d",Config->drs4corr_enable);
+    db_add_cfg_para(Config->process_id,"drs4corr_enable",line);
+
+    sprintf(line,"%d",Config->daq_loop_delay);
+    db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
+
   }
 
-  sprintf(line,"%d",Config->file_max_duration);
-  db_add_cfg_para(Config->process_id,"file_max_duration",line);
+  // Save parameters which are relevant for ZSUP
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
 
-  sprintf(line,"%lu",Config->file_max_size);
-  db_add_cfg_para(Config->process_id,"file_max_size",line);
+    sprintf(line,"%d",Config->zero_suppression);
+    db_add_cfg_para(Config->process_id,"zero_suppression",line);
 
-  sprintf(line,"%d",Config->file_max_events);
-  db_add_cfg_para(Config->process_id,"file_max_events",line);
+    if (Config->zero_suppression % 100 == 1) {
+      sprintf(line,"%d",Config->zs1_head);
+      db_add_cfg_para(Config->process_id,"zs1_head",line);
+      sprintf(line,"%d",Config->zs1_tail);
+      db_add_cfg_para(Config->process_id,"zs1_tail",line);
+      sprintf(line,"%f",Config->zs1_nsigma);
+      db_add_cfg_para(Config->process_id,"zs1_nsigma",line);
+      sprintf(line,"%d",Config->zs1_nabovethr);
+      db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
+      sprintf(line,"%f",Config->zs1_badrmsthr);
+      db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
+    } if (Config->zero_suppression % 100 == 2) {
+      sprintf(line,"%d",Config->zs2_tail);
+      db_add_cfg_para(Config->process_id,"zs2_tail",line);
+      sprintf(line,"%f",Config->zs2_minrms);
+      db_add_cfg_para(Config->process_id,"zs2_minrms",line);
+      for(i=0;i<32;i++) {
+	if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) {
+	  sprintf(line,"%02d %f",i,Config->zs2_minrms_ch[i]);
+	  db_add_cfg_para(Config->process_id,"zs2_minrms_ch",line);
+	}
+      }
+    }
+
+  }
+
+
+  // In STREAM mode the output file never changes
+  if (strcmp(Config->output_mode,"FILE")==0) {
+
+    sprintf(line,"%u",Config->file_max_duration);
+    db_add_cfg_para(Config->process_id,"file_max_duration",line);
+
+    sprintf(line,"%lu",Config->file_max_size);
+    db_add_cfg_para(Config->process_id,"file_max_size",line);
+
+    sprintf(line,"%u",Config->file_max_events);
+    db_add_cfg_para(Config->process_id,"file_max_events",line);
+
+  }
 
   return 0;
 

@@ -71,16 +71,11 @@ int FAKE_readdata ()
   InBurst = 1;
   set_signal_handlers();
 
-  // If this is a real run...
-  if ( Config->run_number ) {
-
-    //... connect to DB and create new process
-    if ( db_init() != DB_OK ) return 1;
-
-    // Save configuration to DB
-    save_config();
-
-  }
+  // If this is a real run asve configuration to DB
+  //if ( Config->run_number ) {
+  //  if ( db_init() != DB_OK ) return 1;
+  //  save_config();
+  //}
 
   // Allocate buffers to hold input and output event structures (same max size)
 
@@ -227,7 +222,8 @@ int FAKE_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
 	// Update file counter
@@ -326,7 +322,8 @@ int FAKE_readdata ()
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
       if ( Config->run_number ) {
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	//if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
       }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
@@ -347,7 +344,8 @@ int FAKE_readdata ()
 
   // Tell DB that the process has ended
   if ( Config->run_number ) {
-    if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+    //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
   }
 
   // Give some final report

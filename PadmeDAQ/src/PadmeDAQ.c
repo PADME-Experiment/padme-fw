@@ -9,8 +9,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <errno.h>
-
-//#include <sys/resource.h>
+#include <libgen.h>
 
 #include "DB.h"
 #include "Config.h"
@@ -21,38 +20,60 @@
 // Return pid of locking process or 0 if no other DAQ is running
 pid_t create_lock()
 {
-  FILE* lckf;
+  FILE* lock_handle;
   pid_t pid;
+  struct stat sb;
 
   // Check if lock file exists and return its pid
   if ( access(Config->lock_file,F_OK) != -1 ) {
-    lckf = fopen(Config->lock_file,"r");
-    if ( fscanf(lckf,"%d",&pid) == 0 ) {
-      printf("WARNING - Lock file '%s' found but could not read the PID\n",Config->lock_file);
+    lock_handle = fopen(Config->lock_file,"r");
+    if ( fscanf(lock_handle,"%d",&pid) == 0 ) {
+      printf("PadmeDAQ::create_lock - ERROR - Lock file '%s' found but could not read the PID\n",Config->lock_file);
       pid = -1;
     }
-    fclose(lckf);
+    fclose(lock_handle);
     return pid;
   }
 
-  // Create lock file and write own pid in it
-  lckf = fopen(Config->lock_file,"w");
-  fprintf(lckf,"%d",getpid());
-  fclose(lckf);
-  printf("(PadmeDAQ)create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
-  return 0;
+  // Check if directory for lock file exists
+  char* path = strdup(Config->lock_file);
+  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(lock_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
+
+    // Create lock file and write own pid in it
+    lock_handle = fopen(Config->lock_file,"w");
+    fprintf(lock_handle,"%d",getpid());
+    fclose(lock_handle);
+    printf("PadmeDAQ::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
+    return 0;
+
+  }
+
+  printf("PadmeDAQ::create_lock - ERROR - Directory '%s' does not exist: cannot create lock file '%s'\n",lock_dir,Config->lock_file);
+  return -1;
 
 }
 
 // Remove lock file (called just before exiting)
 void remove_lock()
 {
-  if ( unlink(Config->lock_file) ) {
-    printf("WARNING - Problem while removing lock file '%s'\n",Config->lock_file);
+  struct stat sb;
+
+  // Check if lock file directory exists
+  char* path = strdup(Config->lock_file);
+  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(lock_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
+    if ( unlink(Config->lock_file) ) {
+      printf("PadmeDAQ::remove_lock - ERROR - Problem while removing lock file '%s'\n",Config->lock_file);
+    } else {
+      printf("PadmeDAQ::remove_lock - Lock file '%s' removed\n",Config->lock_file);
+    }
   } else {
-    printf("(PadmeDAQ)remove_lock - Lock file '%s' removed\n",Config->lock_file);
+    printf("PadmeDAQ::remove_lock - ERROR - Directory '%s' does not exist: cannot remove lock file '%s'.\n",lock_dir,Config->lock_file);
   }
+
   return;
+
 }
 
 // Handle failure in initialization phase
@@ -60,12 +81,21 @@ void remove_lock()
 void init_fail(int rmv_lock)
 {
   FILE* iff;
-  if ( access(Config->initfail_file,F_OK) == -1 ) {
-    iff = fopen(Config->initfail_file,"w");
-    fclose(iff);
-    printf("(PadmeDAQ)init_fail - InitFail file '%s' created\n",Config->initfail_file);
+  struct stat sb;
+
+  // Check if directory for initfail file exists
+  char* path = strdup(Config->initfail_file);
+  char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(iff_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
+    if ( access(Config->initfail_file,F_OK) == -1 ) {
+      iff = fopen(Config->initfail_file,"w");
+      fclose(iff);
+      printf("PadmeDAQ::init_fail - InitFail file '%s' created\n",Config->initfail_file);
+    } else {
+      printf("PadmeDAQ::init_fail - InitFail file '%s' already exists.\n",Config->initfail_file);
+    }
   } else {
-    printf("(PadmeDAQ)init_fail - InitFail file '%s' already exists (?)\n",Config->initfail_file);
+    printf("PadmeDAQ::init_fail - Directory '%s' does not exist: cannot create InitFail file '%s'.\n",iff_dir,Config->initfail_file);
   }
   if (rmv_lock) remove_lock();
   exit(1);
@@ -78,6 +108,8 @@ int main(int argc, char*argv[])
   pid_t pid;
   int c;
   int rc;
+
+  //printf("Size of int %lu long int %lu long long int %lu\n",sizeof(int),sizeof(long int),sizeof(long long int));
 
   // Make sure local data types are correct for us
   if (sizeof(int)<4) {
@@ -143,11 +175,14 @@ int main(int argc, char*argv[])
   // Check if another DAQ is running
   printf("\n=== Verifying that no other DAQ instances are running ===\n");
   if ( (pid = create_lock()) ) {
-    printf("*** ERROR *** Another DAQ is running with PID %d. Exiting.\n",pid);
+    if (pid > 0) {
+      printf("*** ERROR *** Another DAQ is running with PID %d. Exiting.\n",pid);
+    } else {
+      printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
+    }
     init_fail(0);
   }
 
-  // Run number verification: if run number is not 0, it must exist in the DB
   if ( Config->run_number ) {
 
     // Connect to DB
@@ -156,12 +191,25 @@ int main(int argc, char*argv[])
     // Verify if run number is valid
     rc = db_run_check(Config->run_number);
     if ( rc == -1 ) {
-      printf("ERROR: DB check for run number %d returned ad error\n",Config->run_number);
+      printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
       init_fail(1);
     } else if ( rc == 0 ) {
       printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
       init_fail(1);
     }
+
+    // Verify if process id is valid
+    rc = db_process_check(Config->process_id);
+    if ( rc == -1 ) {
+      printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
+      init_fail(1);
+    } else if ( rc == 0 ) {
+      printf("ERROR: process id %d does not exist in the DB\n",Config->process_id);
+      init_fail(1);
+    }
+
+    // Now we can save the process configuration to DB
+    save_config();
 
   }
 

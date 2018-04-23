@@ -101,6 +101,42 @@ int db_run_check(int run_nr)
 
 }
 
+// Check if process already exists (0: no, 1: yes, -1: error)
+int db_process_check(int proc_id)
+{
+
+  int result;
+  char sqlCode[10240];
+  MYSQL_RES* res;
+
+  sprintf(sqlCode,"SELECT id FROM daq_process WHERE id = %d",proc_id);
+  if ( mysql_query(DBHandle,sqlCode) ) {
+    printf("DB::db_process_check - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
+    return -1;
+  }
+
+  res = mysql_store_result(DBHandle);
+  if (res == NULL) {
+    printf("DB::db_process_check - ERROR retrieving result: %s\n", mysql_error(DBHandle));
+    return -1;
+  }
+
+  if (mysql_num_rows(res) == 0) {
+    result = 0;
+  } else if (mysql_num_rows(res) == 1) {
+    result = 1;
+  } else {
+    printf("DB::db_process_check - ERROR multiple processes with same id (?)\n");
+    result = -1;
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return result;
+
+}
+
 // Create a new process in the database
 // N.B. Default process status is 0 (i.e. DAQ not started)
 //int db_process_create(int run_nr,int board_id)
@@ -174,7 +210,7 @@ int db_process_open(int proc_id,time_t t)
 
 }
 
-int db_process_close(int proc_id,time_t t)
+int db_process_close(int proc_id,time_t t, unsigned long int size, unsigned int nevt)
 {
 
   struct tm* t_st;
@@ -182,8 +218,8 @@ int db_process_close(int proc_id,time_t t)
 
   //t_st = localtime(&t);
   t_st = gmtime(&t);
-  sprintf(sqlCode,"UPDATE daq_process SET status = 2, time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
-	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,proc_id);
+  sprintf(sqlCode,"UPDATE daq_process SET status = 2, time_stop = '%04d-%02d-%02d %02d:%02d:%02d', total_events = %u, total_size = %lu WHERE id = %d",
+	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,nevt,size,proc_id);
   if ( mysql_query(DBHandle,sqlCode) ) {
     printf("DB::db_process_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
     return DB_SQLERROR;
@@ -253,7 +289,8 @@ int db_file_open(char* file_name,int file_version,time_t t,int proc_id,int part)
 
 }
 
-int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n_events, int proc_id)
+//int db_file_close(char* file_name,time_t t,unsigned long long int size,unsigned int n_events, int proc_id)
+int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n_events)
 {
 
   struct tm* t_st;
@@ -268,12 +305,12 @@ int db_file_close(char* file_name,time_t t,unsigned long int size,unsigned int n
   }
 
   // Update size/events counters for this process
-  sprintf(sqlCode,"UPDATE daq_process SET total_events = total_events + %u, total_size = total_size + %lu WHERE id = %d;",n_events,size,proc_id);
-  if ( mysql_query(DBHandle,sqlCode) ) {
-    printf("DB::db_file_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
-    return DB_SQLERROR;
-  }
-  
+  //sprintf(sqlCode,"UPDATE daq_process SET total_events = total_events + %u, total_size = total_size + %llu WHERE id = %d;",n_events,size,proc_id);
+  //if ( mysql_query(DBHandle,sqlCode) ) {
+  //  printf("DB::db_file_close - ERROR executing SQL query: %s\n%s\n", mysql_error(DBHandle),sqlCode);
+  //  return DB_SQLERROR;
+  //}
+
   return DB_OK;
 
 }

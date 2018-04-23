@@ -176,8 +176,13 @@ int DAQ_connect ()
   printf("- AMC FPGA Release: %s\n", boardInfo.AMC_FirmwareRel);
   printf("- PCB revision number: %u\n", boardInfo.PCB_Revision);
 
-  // Save board serial number: will be written to file header and to DB
+  // Get board serial number and save it to DB
   Config->board_sn = boardInfo.SerialNumber;
+  if ( Config->run_number ) {
+    char line[2048];
+    sprintf(line,"%d",Config->board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",line);
+  }
 
   return 0;
 }
@@ -672,17 +677,17 @@ int DAQ_readdata ()
   // Output event information
   char *outEvtBuffer = NULL;
   int maxPEvtSize, pEvtSize;
-  unsigned int fHeadSize, fTailSize;
+  uint32_t fHeadSize, fTailSize;
 
   // Global counters for input data
   uint64_t totalReadSize;
-  uint64_t totalReadEvents;
+  uint32_t totalReadEvents;
   float evtReadPerSec, sizeReadPerSec;
 
   // Global counters for output data
-  uint64_t totalSize;
-  uint64_t totalEvents;
-  float evtPerSec, sizePerSec;
+  uint64_t totalWriteSize;
+  uint32_t totalWriteEvents;
+  float evtWritePerSec, sizeWritePerSec;
 
   // Information about output files
   unsigned int fileIndex;
@@ -690,8 +695,8 @@ int DAQ_readdata ()
   char tmpName[MAX_FILENAME_LEN];
   char* fileName[MAX_N_OUTPUT_FILES];
   char* pathName[MAX_N_OUTPUT_FILES];
-  unsigned long int fileSize[MAX_N_OUTPUT_FILES];
-  unsigned int fileEvents[MAX_N_OUTPUT_FILES];
+  uint64_t fileSize[MAX_N_OUTPUT_FILES];
+  uint32_t fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle;
@@ -707,20 +712,11 @@ int DAQ_readdata ()
     return 0;
   }
 
-  // If this is a real run...
-  if ( Config->run_number ) {
-
-    //... connect to DB and create new process
-    //if ( db_init(Config->db_file) != DB_OK ) return 1;
-    if ( db_init() != DB_OK ) return 1;
-    //if ( db_process_create(Config->run_number,Config->board_id) != DB_OK ) return 1;
-    //Config->process_id = db_get_process_id(Config->run_number,Config->board_id);
-    //if ( Config->process_id <= 0 ) return 1;
-
-    // Save configuration to DB (by now Config knows the process_id)
-    save_config();
-
-  }
+  // If this is a real run save configuration to DB
+  //if ( Config->run_number ) {
+  //  if ( db_init() != DB_OK ) return 1;
+  //  save_config();
+  //}
 
   // Allocate buffer to hold retrieved data
   ret = CAEN_DGTZ_MallocReadoutBuffer(Handle,&buffer,&bufferSize);
@@ -794,17 +790,17 @@ int DAQ_readdata ()
   InBurst = 1;
   time(&t_daqstart);
   printf("%s - Acquisition started\n",format_time(t_daqstart));
-
-  // Zero counters
-  totalReadSize = 0;
-  totalReadEvents = 0;
-  totalSize = 0;
-  totalEvents = 0;
   
   if ( Config->run_number ) {
     // Tell DB that the process has started
     if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
   }
+
+  // Zero counters
+  totalReadSize = 0;
+  totalReadEvents = 0;
+  totalWriteSize = 0;
+  totalWriteEvents = 0;
 
   // Start counting output files
   fileIndex = 0;
@@ -1023,8 +1019,8 @@ int DAQ_readdata ()
 	  fileEvents[fileIndex]++;
 	  
 	  // Update global counters
-	  totalSize += pEvtSize;
-	  totalEvents++;
+	  totalWriteSize += pEvtSize;
+	  totalWriteEvents++;
 	  
 	}
 
@@ -1068,7 +1064,8 @@ int DAQ_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
 	// Update file counter
@@ -1166,13 +1163,14 @@ int DAQ_readdata ()
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-      if ( Config->run_number ) {
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-      }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
+    }
+    if ( Config->run_number ) {
+      //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
+      if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
     }
 
     // Update file counter
@@ -1211,27 +1209,28 @@ int DAQ_readdata ()
 
   // Tell DB that the process has ended
   if ( Config->run_number ) {
-    if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+    //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
   }
 
   // Give some final report
   evtReadPerSec = 0.;
   sizeReadPerSec = 0.;
-  evtPerSec = 0.;
-  sizePerSec = 0.;
+  evtWritePerSec = 0.;
+  sizeWritePerSec = 0.;
   t_daqtotal = t_daqstop-t_daqstart;
   if (t_daqtotal>0) {
     evtReadPerSec = 1.*totalReadEvents/t_daqtotal;
     sizeReadPerSec = totalReadSize/(t_daqtotal*1024.);
-    evtPerSec = 1.*totalEvents/t_daqtotal;
-    sizePerSec = totalSize/(t_daqtotal*1024.);
+    evtWritePerSec = 1.*totalWriteEvents/t_daqtotal;
+    sizeWritePerSec = totalWriteSize/(t_daqtotal*1024.);
   }
   printf("\n=== DAQ ending on %s ===\n",format_time(t_daqstop));
   printf("Total running time: %d secs\n",(int)t_daqtotal);
-  printf("Total number of events acquired: %lu - %6.2f events/s\n",totalReadEvents,evtReadPerSec);
+  printf("Total number of events acquired: %u - %6.2f events/s\n",totalReadEvents,evtReadPerSec);
   printf("Total size of data acquired: %lu B - %6.2f KB/s\n",totalReadSize,sizeReadPerSec);
-  printf("Total number of events written: %lu - %6.2f events/s\n",totalEvents,evtPerSec);
-  printf("Total size of data written: %lu B - %6.2f KB/s\n",totalSize,sizePerSec);
+  printf("Total number of events written: %u - %6.2f events/s\n",totalWriteEvents,evtWritePerSec);
+  printf("Total size of data written: %lu B - %6.2f KB/s\n",totalWriteSize,sizeWritePerSec);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("=== Files created =======================================\n");
     for(i=0;i<fileIndex;i++) {

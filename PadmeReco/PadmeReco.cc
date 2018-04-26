@@ -14,6 +14,9 @@
 #include <signal.h>
 #include <fcntl.h>
 
+#include "RecoRootIOManager.hh"
+
+
 PadmeReconstruction* PadmeReco; 
                               
 void usage(char* name){
@@ -26,6 +29,8 @@ void sighandler(int sig){
     std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
     //PadmeReco->EndProcessing();
+    RecoRootIOManager::GetInstance()->EndRun();
+    RecoRootIOManager::GetInstance()->Close();
 
     std::cerr << "... Done" << std::endl;
     std::cerr << std::endl << "********************************************************************************" << std::endl;

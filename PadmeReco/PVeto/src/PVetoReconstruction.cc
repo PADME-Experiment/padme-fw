@@ -12,6 +12,9 @@
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
 
+#include "TH1F.h"
+#include "TDirectory.h"
+
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
@@ -22,11 +25,29 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 PVetoReconstruction::~PVetoReconstruction()
 {;}
 
+
+void PVetoReconstruction::HistoInit(){
+  if(fHistoFile == NULL) {
+    std::cout << "Output histo file not existing" << std::endl;
+    return;
+  }
+  fHistoFile->cd();
+  TDirectory *dir =  (TDirectory *)fHistoFile->Get(this->GetName().Data());
+  if(dir == NULL) {
+    std::cout << "Output directory does not exist: " << this->GetName().Data() << std::endl;
+    return;
+  }
+  dir->cd();
+  std::cout << "Creating the histograms" << std::endl;
+  TH1F * nb = new TH1F("nboards","Number of boards",100,0.0,100.0);
+}
+
 void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 {
 
   //common part for all the subdetectors
   PadmeVReconstruction::Init(MainReco);
+  HistoInit();
 
 }
 
@@ -71,6 +92,21 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+
+void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  printf("PVETO:  Run nr %d Event nr %d ADC boards %d\n",
+         rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
+  TDirectory *dir =  (TDirectory *)fHistoFile->Get(this->GetName().Data());
+  TH1F * nb = (TH1F *) dir->Get("nboards");
+  
+
+  //  ((TH1F *) ((TDirectory *)fHistoFile->Get(this->GetName().Data()))->Get("nboards")) ->Fill(nBoards);
+  //  nb->Fill((Int_t) nBoards  );
+
+
+}
+
 
 void PVetoReconstruction::EndProcessing()
 {;}

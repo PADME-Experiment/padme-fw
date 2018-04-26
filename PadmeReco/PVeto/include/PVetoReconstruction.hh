@@ -20,7 +20,14 @@ public:
   void ParseConfFile(TString);
   virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  virtual void ProcessEvent(TRawEvent*);
   virtual void EndProcessing();
+
+  void HistoInit();
+
+private:
+  
+  
 
 };
 #endif

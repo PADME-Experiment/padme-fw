@@ -22,6 +22,8 @@
 
 #include "ECalParameters.hh"
 
+#include "RecoRootIOManager.hh"
+
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
 {
@@ -248,9 +250,12 @@ void PadmeReconstruction::EndProcessing(){
   //}
   //if(fMCOutputTree) fMCOutputTree->Write();
 
-  //fHistoFile->Purge();
-  //fHistoFile->Close();
+  RecoRootIOManager::GetInstance()->Close();
+
+  fHistoFile->Purge();
+  fHistoFile->Close();
   //PrintRecoSummary(std::cout);
+
 }
 
 TChain* PadmeReconstruction::BuildChain(TString treeName){

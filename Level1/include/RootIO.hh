@@ -25,11 +25,16 @@ public:
 
   int Init(std::string,int);
   int Exit();
+
   //int FillRawEvent(int,int,std::vector<ADCBoard*>&);
   // run#, event#, time since start of run, trigger mask, event status
-  int FillRawEvent(int,int,unsigned long long int,unsigned int,unsigned int,std::vector<ADCBoard*>&);
+  int FillRawEvent(int,int,unsigned long int,unsigned int,unsigned int,std::vector<ADCBoard*>&);
   TRawEvent* GetRawEvent() { return fTRawEvent; }
+
   void SetVerbose(Int_t v) { fVerbose = v; }
+
+  unsigned int GetTotalEvents() { return (unsigned int)fOutEventsTotal; }
+  unsigned long int GetTotalSize() { return (unsigned long int)fOutSizeTotal; }
 
 private:
 
@@ -40,8 +45,9 @@ private:
 
   Int_t   fVerbose;
 
-  ULong_t fOutEventsTotal;
-  ULong_t fOutEventsCounter;
+  UInt_t  fOutEventsCounter;
+  UInt_t  fOutEventsTotal;
+  ULong_t fOutSizeTotal;
 
   TString fOutFile;
   TString fOutFileTemplate;

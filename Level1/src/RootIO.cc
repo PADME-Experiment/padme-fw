@@ -27,6 +27,7 @@ int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
   fOutFileIndex = 0;
   fOutEventsCounter = 0;
   fOutEventsTotal = 0;
+  fOutSizeTotal = 0;
 
   // Set initial output filename
   if (fNMaxEvtsPerOutFile == 0) {
@@ -46,8 +47,9 @@ int RootIO::Exit()
   printf("RootIO::Exit - Finalizing output.\n");
   CloseOutFile();
 
-  printf("Level1 process ended\n");
-  printf("Total events written: %ld on %d files\n",fOutEventsTotal,fOutFileIndex+1);
+  printf("RootIO::Exit - Total files created:  %u\n",fOutFileIndex+1);
+  printf("RootIO::Exit - Total events written: %u\n",fOutEventsTotal);
+  printf("RootIO::Exit - Total output size:    %lu\n",fOutSizeTotal);
 
   return ROOTIO_OK;
 }
@@ -90,6 +92,9 @@ Int_t RootIO::CloseOutFile()
   // Save TTree content
   fTTreeMain->Write();
 
+  // Add size of this file to total
+  fOutSizeTotal += fTFileHandle->GetSize();
+
   // Close output file
   fTFileHandle->Close();
 
@@ -106,7 +111,7 @@ Int_t RootIO::SetOutFile()
 }
 
 //int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
-int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long long int runtime, unsigned int trgmsk, unsigned int evtstatus, std::vector<ADCBoard*>& boards)
+int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsigned int trgmsk, unsigned int evtstatus, std::vector<ADCBoard*>& boards)
 {
 
   // Emtpy event structure
@@ -131,7 +136,7 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long long int runtime, u
   fTRawEvent->SetEventAbsTime(systime);
 
   // Print event info when in verbose mode
-  if (fVerbose >= 1) printf("RootIO - Run %d Event %d Clock %llu Time %s Trig 0x%08x Status 0x%08x\n",runnr,evtnr,runtime,systime.AsString(),trgmsk,evtstatus);
+  if (fVerbose >= 1) printf("RootIO - Run %d Event %d Clock %lu Time %s Trig 0x%08x Status 0x%08x\n",runnr,evtnr,runtime,systime.AsString(),trgmsk,evtstatus);
 
   // Loop over all ADC boards
   for(unsigned int b=0; b<boards.size(); b++) {

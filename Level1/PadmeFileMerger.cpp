@@ -4,40 +4,31 @@
 #include <cmath>
 
 #include "ADCBoard.hh"
-#include "Configuration.hh"
 #include "DBService.hh"
 #include "RootIO.hh"
 
 int main(int argc, char* argv[])
 {
+  
+  int c;
+  std::string listfile = "";
+  std::string outfile = "rawdata";
+  std::string datadir = "data";
+  int neventsperfile = 10000;
+  int runnr = 0;
+  int verbose = 0;
+  int updatedb = 0;
 
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
   setbuf(stderr,NULL);
 
-  // Make sure we are on a sane machine (int: 32bits, long int: 64bits)
-  if (sizeof(int) < 4 || sizeof(long int) < 8) {
-    printf("*** ERROR *** On this machine int is %lu bytes and long int is %lu bytes. Aborting.\n",sizeof(int),sizeof(long int));
-    exit(1);
-  }
-
-  // Connect to configuration handler
-  Configuration* cfg = Configuration::GetInstance();
-
-  // Get default parameters from configurator
-  int runnr = cfg->RunNumber();
-  unsigned int nevts = cfg->NEventsPerFile();
-  unsigned int verbose = cfg->Verbose();
-  std::string outhead = cfg->OutputFileHeader();
-  std::string listfile = cfg->StreamListFile();
-
   // Parse options
-  int c;
-  while ((c = getopt (argc, argv, "n:r:l:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:d:r:l:o:v:uh")) != -1) {
     switch (c)
       {
       case 'r':
-	if (runnr!=cfg->RunNumber()) {
+	if (runnr!=0) {
           fprintf (stderr, "Error while processing option '-r'. Multiple runs specified.\n");
           exit(1);
 	}
@@ -50,57 +41,63 @@ int main(int argc, char* argv[])
           exit(1);
         }
         fprintf(stdout,"Merging files from run %d\n",runnr);
-	cfg->SetRunNumber(runnr);
         break;
       case 'n':
-        if ( sscanf(optarg,"%u",&nevts) != 1 ) {
+        if ( sscanf(optarg,"%d",&neventsperfile) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
-        //if (neventsperfile<0) {
-        //  fprintf (stderr, "Error while processing option '-n'. Number of events must be >=0, found %d.\n", neventsperfile);
-        //  exit(1);
-        //}
-        fprintf(stdout,"Writing up to %u events per output file\n",nevts);
-	cfg->SetNEventsPerFile(nevts);
+        if (neventsperfile<0) {
+          fprintf (stderr, "Error while processing option '-n'. Number of events must be >=0, found %d.\n", neventsperfile);
+          exit(1);
+        }
+        fprintf(stdout,"Writing up to %d events per output file\n",neventsperfile);
+        break;
+      case 'd':
+        datadir = optarg;
+        fprintf(stdout,"Set input data directory to '%s'\n",datadir.c_str());
         break;
       case 'o':
-        outhead = optarg;
-        fprintf(stdout,"Set output data file header to '%s'\n",outhead.c_str());
-	cfg->SetOutputFileHeader(outhead);
+        outfile = optarg;
+        fprintf(stdout,"Set output data file to '%s'\n",outfile.c_str());
         break;
       case 'l':
         listfile = optarg;
-        fprintf(stdout,"Data will be read from streams listed in '%s'\n",listfile.c_str());
-	cfg->SetStreamListFile(listfile);
+        fprintf(stdout,"Data will be read from files listed in '%s'\n",listfile.c_str());
         break;
       case 'v':
-        if ( sscanf(optarg,"%u",&verbose) != 1 ) {
+        if ( sscanf(optarg,"%d",&verbose) != 1 ) {
           fprintf (stderr, "Error while processing option '-v'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
-        //if (verbose<0) {
-        //  fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
-        //  exit(1);
-        //}
-        fprintf(stdout,"Set verbose level to %u\n",verbose);
-	cfg->SetVerbose(verbose);
+        if (verbose<0) {
+          fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
+          exit(1);
+        }
+        fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
+      case 'u':
+        fprintf(stdout,"Enabling DB update\n");
+	updatedb = 1;
+	break;
       case 'h':
-        fprintf(stdout,"\nPadmeLevel1 -l stream_list [-r run_number] [-o output_head] [-n events] [-v level] [-h]\n\n");
-        fprintf(stdout,"  -l: define text file with list of data streams to process\n");
-        fprintf(stdout,"  -r: define run number to process (default: %d)\n",cfg->RunNumber());
-        fprintf(stdout,"  -o: define root output files header (includes path)\n");
-        fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %u)\n",cfg->NEventsPerFile());
-        fprintf(stdout,"  -v: define verbose level (default: %u)\n",cfg->Verbose());
+        fprintf(stdout,"\nPadmeLevel1 ([-r run_number]|[-l list_file]) [-d input files directory] [-o output root file] [-n events per file] [-v verbosity] [-h]\n\n");
+        fprintf(stdout,"  -r: define run to process\n");
+        fprintf(stdout,"  -l: define file with list of data files to process\n");
+        fprintf(stdout,"      n.b. either -r or -l must be specified\n");
+        fprintf(stdout,"  -u: update DB with total number of events merged (default: no DB update)\n");
+        fprintf(stdout,"  -d: define directory where input files are located (default: \"%s\")\n",datadir.c_str());
+        fprintf(stdout,"  -o: define an output file in root format (default: \"%s\")\n",outfile.c_str());
+        fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %d)\n",neventsperfile);
+        fprintf(stdout,"  -v: define verbose level (default: %d)\n",verbose);
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
       case '?':
         if (optopt == 'v') {
-          // verbose with no argument: increas verbose level by 1
-          cfg->SetVerbose(cfg->Verbose()+1);
+          // verbose with no argument: just enable at minimal level
+          verbose = 1;
           break;
-        } else if (optopt == 'r' || optopt == 'l' || optopt == 'o' || optopt == 'n')
+        } else if (optopt == 'r' || optopt == 'l' || optopt == 'd' || optopt == 'o' || optopt == 'n')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -112,70 +109,105 @@ int main(int argc, char* argv[])
       }
   }
 
-  // If this is an official run, connect to DB and get id of merger
-  if (cfg->RunNumber()) {
-
-    // Get handle to DB
-    DBService* db = DBService::GetInstance();
-
-    // Get id of merger for future DB accesses
-    int merger_id = 0;
-    int rc = db->GetMergerId(merger_id,cfg->RunNumber());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
-      exit(1);
-    }
-    cfg->SetMergerId(merger_id);
-
+  // Verify that some input was specified
+  if ( listfile.compare("")==0 && runnr==0 ) {
+    fprintf (stderr,"No run number and no list file were specified. Exiting.");
+    exit(1);
+  }
+  if ( listfile.compare("")!=0 && runnr!=0 ) {
+    fprintf (stderr,"Both run number and list file were specified. Exiting.");
+    exit(1);
   }
 
   ADCBoard* board;
   std::vector<ADCBoard*> boards;
 
-  // Check if input file list was defined
+  // If no list is specified, get board and file lists from DB
   if (listfile.compare("")==0) {
-    printf("ERROR no input file list defined with -l. Aborting\n");
-    exit(1);
-  }
 
-  // Get list of boards and files from input file list
-  std::ifstream list;
-  std::string line;
-  int bid;
-  char bfile[1024];
-  list.open(listfile.c_str());
-  while(!list.eof()){
+    // Get handle to DB
+    DBService* db = DBService::GetInstance();
 
-    getline(list,line);
-    if (line.compare("")!=0) {
-
-      if ( sscanf(line.c_str(),"%d %s",&bid,bfile) != 2 ) {
-	printf("ERROR while parsing list '%s'. Aborting\n",listfile.c_str());
-	exit(1);
-      }
-
-      // Find board with correct board id or add it to list if new
-      std::vector<ADCBoard*>::iterator it;
-      for (it = boards.begin(); it != boards.end(); ++it) {
-	board = *it;
-	if (board->GetBoardId() == bid) break;
-      }
-      if (it == boards.end()) {
-	printf("Board id %d\n",bid);
-	board = new ADCBoard(bid);
-	board->SetVerbose(verbose);
-	boards.push_back(board);
-      }
-
-      // Add file to board
-      std::string filePath = bfile;
-      //printf("\tBoard %d - File %s\n",bid,filePath.c_str());
-      board->AddFile(filePath);
-
+    // Get from DB list of board ids used in current run
+    std::vector<int> boardList;
+    int rc = db->GetBoardList(boardList,runnr);
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR retrieving from DB list of files for run %d. Aborting\n",runnr);
+      exit(1);
+    }
+    if (boardList.size() == 0) {
+      printf("ERROR no boards associated to run %d found in DB. Aborting\n",runnr);
+      exit(1);
     }
 
+    // Create vector of boards
+    for(unsigned int b=0; b<boardList.size(); b++) {
+
+      printf("Board %d\tReading data from board id %d\n",b,boardList[b]);
+      board = new ADCBoard(boardList[b]);
+      board->SetVerbose(verbose);
+
+      // Get list of files created for each board during run
+      std::vector<std::string> fileList;
+      rc = db->GetFileList(fileList,runnr,boardList[b]);
+      if (rc != DBSERVICE_OK) {
+	printf("ERROR retrieving from DB list of files for run %d board id %d. Aborting\n",runnr,boardList[b]);
+	exit(1);
+      }
+      // Add files to board
+      for(unsigned int f=0; f<fileList.size(); f++) {
+	std::string filePath = datadir+"/"+fileList[f];
+	//printf("\tFile %d - Reading from file %s\n",f,filePath.c_str());
+	board->AddFile(filePath);
+      }
+
+      // Add board to boards vector
+      boards.push_back(board);
+      
+    }
+
+  } else {
+
+    // Get list of boards and files from file
+    std::ifstream list;
+    std::string line;
+    int bid;
+    char bfile[1024];
+    list.open(listfile.c_str());
+    while(!list.eof()){
+
+      getline(list,line);
+      if (line.compare("")!=0) {
+
+	if ( sscanf(line.c_str(),"%d %s",&bid,bfile) != 2 ) {
+	  printf("ERROR while parsing list '%s'. Aborting\n",listfile.c_str());
+	  exit(1);
+	}
+
+	// Find board with correct board id or add it to list if new
+	std::vector<ADCBoard*>::iterator it;
+	for (it = boards.begin(); it != boards.end(); ++it) {
+	  board = *it;
+	  if (board->GetBoardId() == bid) break;
+	}
+	if (it == boards.end()) {
+	  printf("Board id %d\n",bid);
+	  board = new ADCBoard(bid);
+	  board->SetVerbose(verbose);
+	  boards.push_back(board);
+	}
+
+	// Add file to board
+	std::string filePath = datadir+"/"+bfile;
+	//printf("\tBoard %d - File %s\n",bid,filePath.c_str());
+	board->AddFile(filePath);
+
+      }
+
+    }
+    list.close();
+
   }
-  list.close();
 
   // Show list of known boards/files
   printf("Reading %d board(s)\n",(int)boards.size());
@@ -191,7 +223,7 @@ int main(int argc, char* argv[])
   root->SetVerbose(verbose);
 
   // Initialize root output file
-  if ( root->Init(cfg->OutputFileHeader(),cfg->NEventsPerFile()) != ROOTIO_OK ) {
+  if ( root->Init(outfile,neventsperfile) != ROOTIO_OK ) {
     printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }
@@ -207,10 +239,10 @@ int main(int argc, char* argv[])
   unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
 
   unsigned int nEOR;
-  unsigned int NumberOfEvents = 0;
+  int eventnr = 0;
   while(1){
 
-    if (verbose>=1) printf("=== Processing event %8u ===\n",NumberOfEvents);
+    if (verbose>=1) printf("=== Processing event %8d ===\n",eventnr);
 
     nEOR = 0; // Reset end_of_run counter
 
@@ -246,7 +278,7 @@ int main(int argc, char* argv[])
 
 	  // First check if board's group mask is consistent with that of first event
 	  unsigned char grMsk = boards[b]->Event()->GetGroupMask();
-	  if (NumberOfEvents == 0 ) {
+	  if (eventnr == 0 ) {
 	    groupMaskRef[b] = grMsk;
 	  } else {
 	    if (grMsk != groupMaskRef[b]) {
@@ -273,7 +305,7 @@ int main(int argc, char* argv[])
 		// Other groups are present: verify they are all in time (0x0010 clock cycles tolerance i.e. ~136ns)
 		dTb = TT_evt-TT_grp;
 		if ( std::abs(dTb) >= 0x0010 ) {
-		  if (NumberOfEvents == 0) { // If this happens on first event stop the run
+		  if (eventnr == 0) { // If this happens on first event stop the run
 		    printf("*** FATAL ERROR - Board %2d - Internal time mismatch at Start of Run\n",boards[b]->GetBoardId());
 		    root->Exit();
 		    exit(1);
@@ -298,7 +330,7 @@ int main(int argc, char* argv[])
 
 	  } else {
 
-	    if (NumberOfEvents == 0) {
+	    if (eventnr == 0) {
 
 	      // Board is in time: save current counter and start total time from it
 	      dT = 0;
@@ -364,13 +396,13 @@ int main(int argc, char* argv[])
     // The event is complete and in time: copy structure to TRawEvent and send to output file
     // For the moment save clock counts of first board as event time.
     // When trigger info will be added, replace this with number of ns since start of run
-    if (root->FillRawEvent(cfg->RunNumber(),NumberOfEvents,CC[0],0,0,boards) != ROOTIO_OK) {
-      printf("ERROR while writing event %d to root file. Aborting\n",NumberOfEvents);
+    if (root->FillRawEvent(runnr,eventnr,CC[0],0,0,boards) != ROOTIO_OK) {
+      printf("ERROR while writing event %d to root file. Aborting\n",eventnr);
       exit(1);
     }
 
     // Count event
-    NumberOfEvents++;
+    eventnr++;
 
   } // End of main while loop
 
@@ -380,23 +412,47 @@ int main(int argc, char* argv[])
       exit(1);
   }
 
-  // Verify that all events sent to ROOT were written to file
-  if (NumberOfEvents != root->GetTotalEvents()) {
-    printf("*** WARNING *** ROOT inconsistency: %u events sent, %u events written. This should never happen!",NumberOfEvents,root->GetTotalEvents());
-  }
+  // If input was from a real run, finalize output and update DB if required
+  if (listfile.compare("")==0) {
 
-  printf("Run %d closed after writing %d events\n",cfg->RunNumber(),root->GetTotalEvents());
+    printf("Run %d closed after writing %d events\n",runnr,eventnr);
 
-  // If input was from a real run, update DB
-  if (cfg->RunNumber()) {
+    if (updatedb == 0) {
 
-    // Update DB with number of events merged by this process and total amount of data written to file
-    DBService* db = DBService::GetInstance();
-    int rc = db->UpdateMergerInfo(root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR updating DB with number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-      exit(1);
+      printf("Option -u was not specified: DB not updated.\n");
+
+    } else {
+
+      //// Get handle to DB
+      //DBService* db = DBService::GetInstance();
+      //
+      //// Update DB with number of events for this run
+      //int n_events;
+      //int rc = db->GetRunEvents(n_events,runnr);
+      //if (rc != DBSERVICE_OK) {
+      //	printf("ERROR retrieving from DB old number of events for run %d. Aborting\n",runnr);
+      //	exit(1);
+      //}
+      //if (n_events == eventnr) {
+      //	printf("Run %d Events %d. DB is up-to-date: no action.\n",runnr,eventnr);
+      //} else {
+      //	if (n_events == 0) {
+      //	  printf("Run %d Events %d. Writing number of events to DB.\n",runnr,eventnr);
+      //	} else {
+      //	  printf("Run %d Events %d. WARNING - DB returns %d events: updating DB.\n",runnr,eventnr,n_events);
+      //	}
+      //	int rc = db->UpdateRunEvents(eventnr,runnr);
+      //	if (rc != DBSERVICE_OK) {
+      //	  printf("ERROR updating DB for run %d. Aborting\n",runnr);
+      //	  exit(1);
+      //	}
+      //}
+
     }
+
+  } else {
+
+    printf("A total of %d merged events were written to the output file\n",eventnr);
 
   }
 

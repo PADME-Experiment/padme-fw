@@ -189,34 +189,68 @@ int DBService::GetFileInfo(int& version,int& part,std::string& time_open, std::s
 
 }
 
-int DBService::GetRunEvents(int& n_events, int run_nr)
+//int DBService::GetRunEvents(int& n_events, int run_nr)
+//{
+//
+//  char sqlCode[10240];
+//  MYSQL_RES* res;
+//  MYSQL_ROW row;
+//
+//  sprintf(sqlCode,"SELECT total_events FROM run WHERE number = %d",run_nr);
+//  if ( mysql_query(fDBHandle,sqlCode) ) {
+//    printf("DBService::GetRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+//    return DBSERVICE_SQLERROR;
+//  }
+//
+//  res = mysql_store_result(fDBHandle);
+//  if (res == NULL) {
+//    printf("DBService::GetRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+//    return DBSERVICE_SQLERROR;
+//  }
+//
+//  int result = DBSERVICE_OK;
+//  if (mysql_num_rows(res) == 0) {
+//    printf("DBService::GetRunEvents ERROR - run %d not found in DB\n", run_nr);
+//    result = DBSERVICE_ERROR;
+//  } else if (mysql_num_rows(res) == 1) {
+//    row = mysql_fetch_row(res);
+//    n_events   = atoi(row[0]);
+//  } else {
+//    printf("DBService::GetRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+//    result = DBSERVICE_ERROR;
+//  }
+//
+//  mysql_free_result(res);
+//  res = NULL;
+//
+//  return result;
+//
+//}
+
+int DBService::UpdateMergerInfo(unsigned int n_events, unsigned long int size, int merger_id)
 {
 
   char sqlCode[10240];
   MYSQL_RES* res;
-  MYSQL_ROW row;
 
-  sprintf(sqlCode,"SELECT total_events FROM run WHERE number = %d",run_nr);
+  sprintf(sqlCode,"UPDATE lvl1_process SET total_events = %u, total_size = %lu WHERE id = %d",n_events,size,merger_id);
   if ( mysql_query(fDBHandle,sqlCode) ) {
-    printf("DBService::GetRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    printf("DBService::UpdateMergerInfo - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
   res = mysql_store_result(fDBHandle);
   if (res == NULL) {
-    printf("DBService::GetRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    printf("DBService::UpdateMergerInfo - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
     return DBSERVICE_SQLERROR;
   }
 
   int result = DBSERVICE_OK;
   if (mysql_num_rows(res) == 0) {
-    printf("DBService::GetRunEvents ERROR - run %d not found in DB\n", run_nr);
+    printf("DBService::UpdateMergerInfo ERROR - merger id %d not found in DB\n", merger_id);
     result = DBSERVICE_ERROR;
-  } else if (mysql_num_rows(res) == 1) {
-    row = mysql_fetch_row(res);
-    n_events   = atoi(row[0]);
-  } else {
-    printf("DBService::GetRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+  } else if (mysql_num_rows(res) != 1) {
+    printf("DBService::UpdateMergerInfo ERROR - merger id %d defined %d times in DB (?)\n", merger_id,(int)mysql_num_rows(res));
     result = DBSERVICE_ERROR;
   }
 
@@ -227,30 +261,34 @@ int DBService::GetRunEvents(int& n_events, int run_nr)
 
 }
 
-int DBService::UpdateRunEvents(int n_events, int run_nr)
+int DBService::GetMergerId(int& merger_id, int run_nr)
 {
 
   char sqlCode[10240];
   MYSQL_RES* res;
+  MYSQL_ROW row;
 
-  sprintf(sqlCode,"UPDATE run SET total_events = %d WHERE number = %d",n_events,run_nr);
+  sprintf(sqlCode,"SELECT id FROM lvl1_process WHERE run_number = %d",run_nr);
   if ( mysql_query(fDBHandle,sqlCode) ) {
-    printf("DBService::UpdateRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    printf("DBService::GetMergerId - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
   res = mysql_store_result(fDBHandle);
   if (res == NULL) {
-    printf("DBService::UpdateRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    printf("DBService::GetMergerId - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
     return DBSERVICE_SQLERROR;
   }
 
   int result = DBSERVICE_OK;
   if (mysql_num_rows(res) == 0) {
-    printf("DBService::UpdateRunEvents ERROR - run %d not found in DB\n", run_nr);
+    printf("DBService::GetMergerId - ERROR - merger not found for run %d\n", run_nr);
     result = DBSERVICE_ERROR;
-  } else if (mysql_num_rows(res) != 1) {
-    printf("DBService::UpdateRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+  } else if (mysql_num_rows(res) == 1) {
+    row = mysql_fetch_row(res);
+    merger_id = atoi(row[0]);
+  } else {
+    printf("DBService::GetMergerId ERROR - multiple mergers (n=%d) defined for run %d (?)\n",(int)mysql_num_rows(res),run_nr);
     result = DBSERVICE_ERROR;
   }
 

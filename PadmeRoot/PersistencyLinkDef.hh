@@ -50,5 +50,7 @@
 
 #pragma link C++ class TRecoEvent+;
 #pragma link C++ class TRecoVObject+;
+#pragma link C++ class TRecoVHit+;
+#pragma link C++ class TPVetoRecoEvent+;
 
 #endif

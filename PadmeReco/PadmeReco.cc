@@ -131,10 +131,21 @@ int main(Int_t argc, char **argv)
         perror(Form("No Input File"));
         exit(1);
     }
-    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
+    
+    //Perform the output initialization
+    RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance();
+    RecoIO->SetFileName(OutputFileName);
+    RecoIO->NewRun(1);
 
-    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
-    while(PadmeReco->NextEvent()) {}
+    //    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
+
+    //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
+    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    while(PadmeReco->NextEvent()) {
+      RecoIO->SaveEvent();
+    }
     PadmeReco->EndProcessing();
+    RecoIO->EndRun();
+    RecoIO->Close();
 
 }

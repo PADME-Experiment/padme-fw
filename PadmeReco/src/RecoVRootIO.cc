@@ -2,7 +2,7 @@
 
 RecoVRootIO::RecoVRootIO(TString name)
   : PadmeVNamedModule(name)
-{
+{ 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
   fBranchStyle = 1; //new branch style by default
@@ -13,4 +13,5 @@ RecoVRootIO::RecoVRootIO(TString name)
 
 }
 
-RecoVRootIO::~RecoVRootIO(){}
+RecoVRootIO::~RecoVRootIO(){;
+}

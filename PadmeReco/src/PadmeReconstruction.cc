@@ -250,10 +250,11 @@ void PadmeReconstruction::EndProcessing(){
   //}
   //if(fMCOutputTree) fMCOutputTree->Write();
 
-  RecoRootIOManager::GetInstance()->Close();
+  //This goes in the PadmeReco core
+  //RecoRootIOManager::GetInstance()->Close();
 
-  fHistoFile->Purge();
-  fHistoFile->Close();
+  //fHistoFile->Purge();
+  //fHistoFile->Close();
   //PrintRecoSummary(std::cout);
 
 }

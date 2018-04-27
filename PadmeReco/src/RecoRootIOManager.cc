@@ -3,7 +3,7 @@
 #include <sys/time.h>
 
 #include "RecoRootIOManager.hh"
-
+#include "PVetoRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
@@ -33,7 +33,7 @@ RecoRootIOManager::RecoRootIOManager()
   std::cout << "RecoRootIOManager: Initialized" << std::endl;
 
   // Add subdetectors persistency managers
-  //  fRootIOList.push_back(new PVetoRecoRootIO);
+  fRootIOList.push_back(new PVetoRecoRootIO);
 
 }
 
@@ -53,9 +53,12 @@ void RecoRootIOManager::Close()
   // Save latest data, clean run tree, and close file
   if ( fFile != 0 ) {
     fFile->cd();
-    fEventTree->Write();
-    if (fVerbose) fEventTree->Print();
-    delete fEventTree;
+    if(fEventTree!= 0) {
+      fEventTree->Write();
+      if (fVerbose) fEventTree->Print();
+      delete fEventTree;
+      fEventTree = 0;
+    }
     //fGVirtMem->GetYaxis()->SetTitle("Virtual Memory (MB)");
     //fGVirtMem->GetXaxis()->SetTitle("Processed Events");
     //fGVirtMem->Write();
@@ -112,6 +115,19 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
     fEventTree->SetDirectory(fFile->GetDirectory("/"));
 
+    
+    RootIOList::iterator iRootIO(fRootIOList.begin());
+    RootIOList::iterator endRootIO(fRootIOList.end());
+    while (iRootIO!=endRootIO) {
+      std::cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << std::endl;
+      if ((*iRootIO)->GetEnabled()) {
+	std::cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << std::endl;
+	(*iRootIO)->NewRun(nRun,fFile);
+	//(*iRootIO)->NewRun(nRun,fFile);
+      }
+      iRootIO++;
+    }
+
     // Create branch to hold the run content info
     fEventBranch = fEventTree->Branch("RecoEvent", &fEvent, fBufSize);
     fEventBranch->SetAutoDelete(kFALSE);
@@ -134,7 +150,8 @@ void RecoRootIOManager::EndRun()
     fFile->cd();
     fEventTree->Write();
     if (fVerbose>=2) fEventTree->Print();
-    delete fEventTree;
+    delete fEventTree; 
+    fEventTree = 0;
   }
 
   // Same for each subdetetctor
@@ -144,7 +161,6 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
-
 }
 
 
@@ -166,7 +182,10 @@ void RecoRootIOManager::SaveEvent(){
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
   while (iRootIO!=endRootIO) {
-    if ((*iRootIO)->GetEnabled()) (*iRootIO)->SaveEvent();
+    if ((*iRootIO)->GetEnabled()) {
+      (*iRootIO)->SaveEvent();
+      std::cout << (*iRootIO)->GetName() << std::endl;
+    }
     iRootIO++;
   }
 

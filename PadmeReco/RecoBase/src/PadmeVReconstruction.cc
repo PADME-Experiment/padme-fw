@@ -66,6 +66,7 @@ void PadmeVReconstruction::EndProcessing(){
   // to be called from the derived classes
 
   if(!fHistoFile) return;
+  HistoExit();
   /*
   if(!fHistoFile->cd(fName+"Monitor")){
     std::cerr << "["+fName+"Reconstruction] WARNING: Failed to find directory '" << fName+"Monitor' in the output file, this should not happen" << std::endl;
@@ -101,4 +102,38 @@ void PadmeVReconstruction::ParseConfFile(TString ConfFileName) {
 
   confFile.close();
 
+}
+
+
+void PadmeVReconstruction::HistoInit(){;}
+
+void PadmeVReconstruction::AddHisto(string name, TH1 *histo){
+  fHistoMap[name] = histo;
+}
+
+TH1*  PadmeVReconstruction::GetHisto(string name){
+  return fHistoMap[name];
+}
+
+
+
+
+void PadmeVReconstruction::HistoExit(){
+ 
+  cout << "Entering HistoExit for " << this->GetName() << endl;
+  
+  if(fHistoFile == 0) 
+    return;
+
+  fHistoFile->cd();
+  TDirectory *dir =  (TDirectory *)fHistoFile->Get(this->GetName().Data());
+  dir->cd();
+  
+  map<string, TH1*>::iterator itr;
+  for(itr = fHistoMap.begin(); itr != fHistoMap.end(); itr++)
+    {
+      TH1* histo = itr->second;
+      histo->Write();
+      delete histo;
+    }
 }

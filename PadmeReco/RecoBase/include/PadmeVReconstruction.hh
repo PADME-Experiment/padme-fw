@@ -8,12 +8,20 @@
 #define PadmeVReconstruction_H
 
 #include "TFile.h"
+#include "TDirectory.h"
 
 #include "TRawEvent.hh"
 #include "TMCEvent.hh"
 #include "TMCVEvent.hh"
 
 #include "PadmeVNamedModule.hh"
+
+#include "TH1.h"
+#include <vector>
+#include <string>
+#include <map>
+
+using namespace std;
 
 class PadmeVReconstruction : public PadmeVNamedModule
 {
@@ -27,6 +35,10 @@ public:
   virtual void Init(PadmeVReconstruction*) = 0;
   virtual void EndProcessing() = 0; ///< Call from derived classes
   virtual void ParseConfFile(TString);
+  virtual void HistoInit(); 
+  virtual void HistoExit();
+  virtual void AddHisto(string,TH1 *);
+  virtual TH1* GetHisto(string);
 
   static void Exception(TString);
 
@@ -54,6 +66,9 @@ protected:
   //TRecoVEvent * fRecoEvent;
 
   TString fConfigFileName;
+  
+  map<string,TH1 *> fHistoMap;
+
 
 };
 #endif

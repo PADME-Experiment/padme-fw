@@ -39,8 +39,8 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTPixMCEvent    = 0;
   fRawEvent       = 0;
 
-  Init(NEvt,Seed);
   InitLibraries();
+  Init(NEvt,Seed);
 
 }
 
@@ -61,6 +61,9 @@ void PadmeReconstruction::InitLibraries()
 
 void PadmeReconstruction::InitDetectorsInfo()
 {
+
+  std::cout << "PadmeReconstruction: Initializing" << std::endl;
+
   fMainReco = this; //init PadmeReconstruction main reco as itself
   if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
   if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
@@ -237,11 +240,14 @@ Bool_t PadmeReconstruction::NextEvent()
 
 void PadmeReconstruction::EndProcessing(){
 
-  //fHistoFile->cd("/");
-  //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
-  //  fReconstructions[iReco]->EndProcessing();
-  //  fHistoFile->cd("/");
-  //}
+  // Reconstruct individual detectors (but check if they exist, first!)
+  for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+    fHistoFile->cd("/");
+    fRecoLibrary[iLib]->EndProcessing();
+  }
+  fHistoFile->cd("/");
+
+
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EvaluateROSettings();
   //}

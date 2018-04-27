@@ -45,7 +45,11 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
 }
 
 PadmeReconstruction::~PadmeReconstruction()
-{;}
+{
+  for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+    delete fRecoLibrary[iLib];
+  }
+}
 
 void PadmeReconstruction::InitLibraries()
 {

@@ -22,11 +22,9 @@ public:
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   virtual void ProcessEvent(TRawEvent*);
   virtual void EndProcessing();
-
-  void HistoInit();
+  virtual void HistoInit();
 
 private:
-  
   
 
 };

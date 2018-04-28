@@ -147,5 +147,7 @@ int main(Int_t argc, char **argv)
     PadmeReco->EndProcessing();
     RecoIO->EndRun();
     RecoIO->Close();
-
+    
+    delete RecoIO;
+    delete PadmeReco;
 }

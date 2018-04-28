@@ -11,6 +11,7 @@
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
+#include "TPVetoRecoEvent.hh"
 
 #include "TH1F.h"
 #include "TDirectory.h"
@@ -20,6 +21,7 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   //fRecoEvent = new TRecoPVetoEvent();
   //ParseConfFile(ConfigFileName);
+  
 }
 
 PVetoReconstruction::~PVetoReconstruction()
@@ -47,10 +49,11 @@ PVetoReconstruction::~PVetoReconstruction()
 
 void PVetoReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
+  AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
+  AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
+  AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
+
 }
-
-
-
 
 
 void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
@@ -59,6 +62,11 @@ void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
   //common part for all the subdetectors
   PadmeVReconstruction::Init(MainReco);
   HistoInit();
+
+  // if(GetConfigParser()->HasConfig("ADC","NADC"))
+  //   std::cout << "Number of ADCs for detector:  " << this->GetName() << "  " << GetConfigParser()->GetSingleArg("ADC","NADC") << std::endl;
+
+  std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
 
 }
 
@@ -107,14 +115,35 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   UChar_t nBoards = rawEv->GetNADCBoards();
-  printf("PVETO:  Run nr %d Event nr %d ADC boards %d\n",
-         rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
-  
-  
-  
-
+  // printf("PVETO:  Run nr %d Event nr %d ADC boards %d\n",
+  //        rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
   GetHisto("nboards")->Fill( (Int_t) nBoards );
 
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    GetHisto("ADCs")->Fill(ADC->GetBoardId());
+    GetHisto("nchannels")->Fill(ADC->GetNADCChannels());
+    GetHisto("ntriggers")->Fill(ADC->GetNADCTriggers());
+  }
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      // std::cout << "ADC " << (Int_t) ADC->GetBoardId() << " is mine. Processing" << std::endl;
+    } else {
+      // std::cout << "ADC " << (int) ADC->GetBoardId() << " is NOT mine. Skipping" << std::endl;
+    }
+    
+    // std::cout << "ADC BID " << (int) ADC->GetBoardId() << std::endl;
+  }
+
+  
+
+  
+  
+
+  
 
 }
 

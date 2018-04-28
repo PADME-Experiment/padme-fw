@@ -56,7 +56,7 @@ void PadmeReconstruction::InitLibraries()
   TString dummyConfFile = "pippo.conf";
   fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
   fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,dummyConfFile));
   fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,dummyConfFile));
@@ -224,9 +224,9 @@ Bool_t PadmeReconstruction::NextEvent()
 
   if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
 
-    std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
-	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+    // std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    // std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
+    // 	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
 
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {

@@ -10,6 +10,12 @@ TRecoVObject::TRecoVObject(){
   ;
 }
 
+TRecoVObject::TRecoVObject(TClass* hCls) {
+  fNHits = 0;
+  fHits  = new TClonesArray(hCls,1000);
+}
+
+
 void TRecoVObject::Print(Option_t *) const {
   ;
 }

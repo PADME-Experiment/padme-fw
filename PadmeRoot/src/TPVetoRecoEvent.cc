@@ -3,7 +3,7 @@
 
 ClassImp(TPVetoRecoEvent)
 
-TPVetoRecoEvent::TPVetoRecoEvent() : TRecoVObject()
+TPVetoRecoEvent::TPVetoRecoEvent() : TRecoVObject(TRecoVHit::Class())
 {;}
 
 TPVetoRecoEvent::~TPVetoRecoEvent()

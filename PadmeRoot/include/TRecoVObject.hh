@@ -12,6 +12,7 @@ class TRecoVObject : public TObject
 public:
 
   TRecoVObject();
+  TRecoVObject(TClass* hCls);
   virtual ~TRecoVObject(); 
 
   void Print(Option_t* option="") const;

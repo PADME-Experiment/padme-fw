@@ -21,7 +21,7 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   //fRecoEvent = new TRecoPVetoEvent();
   //ParseConfFile(ConfigFileName);
-  
+  fChannelReco = new ADCChannelVReco();
 }
 
 PVetoReconstruction::~PVetoReconstruction()
@@ -61,12 +61,15 @@ void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
   std::cout << "PVeto: Initializing" << std::endl;
   //common part for all the subdetectors
   PadmeVReconstruction::Init(MainReco);
+  fChannelReco->Init(GetConfig());
   HistoInit();
 
   // if(GetConfigParser()->HasConfig("ADC","NADC"))
   //   std::cout << "Number of ADCs for detector:  " << this->GetName() << "  " << GetConfigParser()->GetSingleArg("ADC","NADC") << std::endl;
 
   std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
+
+  
 
 }
 
@@ -114,6 +117,14 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 }
 
 void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
+  //Perform some cleaning before:
+  vector<TRecoVHit *> Hits  = GetRecoHits();
+  for(int iHit = 0;iHit < Hits.size();iHit++){
+    delete Hits[iHit];
+  }
+  Hits.clear();
+
+
   UChar_t nBoards = rawEv->GetNADCBoards();
   // printf("PVETO:  Run nr %d Event nr %d ADC boards %d\n",
   //        rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
@@ -130,7 +141,15 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      
       // std::cout << "ADC " << (Int_t) ADC->GetBoardId() << " is mine. Processing" << std::endl;
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetSamples(chn->GetNSamples(),chn->GetSamplesArray());
+	fChannelReco->Reconstruct();
+	
+      }
     } else {
       // std::cout << "ADC " << (int) ADC->GetBoardId() << " is NOT mine. Skipping" << std::endl;
     }

@@ -8,6 +8,7 @@
 #define PVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "ADCChannelVReco.hh"
 
 class PVetoReconstruction : public PadmeVReconstruction
 {
@@ -25,6 +26,7 @@ public:
   virtual void HistoInit();
 
 private:
+  ADCChannelVReco *fChannelReco;
   
 
 };

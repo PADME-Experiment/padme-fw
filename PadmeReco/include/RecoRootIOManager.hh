@@ -9,6 +9,7 @@
 #include "TClonesArray.h"
 
 #include "TRecoEvent.hh"
+#include "PadmeReconstruction.hh"
 
 #include "RecoVRootIO.hh"
 #include <list>
@@ -57,7 +58,8 @@ public:
   void SetFileName(TString newName);
   TString GetFileName(){return fFileName;};
 
-
+  void SetReconstruction(PadmeReconstruction *r){fReco = r;};
+  PadmeReconstruction * GetReconstruction(){return fReco;};
 
 private:
 
@@ -73,6 +75,8 @@ private:
   TTree*   fEventTree; //Tree to hold all events in one run
   TBranch* fEventBranch;
   TRecoEvent*  fEvent;
+
+  PadmeReconstruction *fReco;
 
   typedef std::list<RecoVRootIO*> RootIOList;
   RootIOList fRootIOList;

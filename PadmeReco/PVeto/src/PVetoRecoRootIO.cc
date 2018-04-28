@@ -2,7 +2,8 @@
 #include "RecoVRootIO.hh"
 
 #include "TPVetoRecoEvent.hh"
-#include "TRecoVHit.hh"
+#include "PVetoReconstruction.hh"
+//#include "TRecoVHit.hh"
 
 #include "TString.h"
 #include "TVector3.h"
@@ -29,6 +30,7 @@ PVetoRecoRootIO::~PVetoRecoRootIO()
 void PVetoRecoRootIO::Close()
 {;}
 
+
 void PVetoRecoRootIO::NewRun(Int_t nRun, TFile* hfile)
 {
   fRunNumber = nRun;
@@ -51,6 +53,14 @@ void PVetoRecoRootIO::EndRun()
 
 void PVetoRecoRootIO::SaveEvent()
 {
+  //Clear the event before saving anything
+  fEvent->Clear();
+  PVetoReconstruction* MyReco = (PVetoReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  
+  vector<TRecoVHit *> Hits = MyReco->GetRecoHits();
+  for(int iHit = 0;iHit < Hits.size();iHit++){
+    fEvent->AddHit(Hits[iHit]);
+  }
 }
 
 

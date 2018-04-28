@@ -184,7 +184,7 @@ void RecoRootIOManager::SaveEvent(){
   while (iRootIO!=endRootIO) {
     if ((*iRootIO)->GetEnabled()) {
       (*iRootIO)->SaveEvent();
-      std::cout << (*iRootIO)->GetName() << std::endl;
+      //      std::cout << "Saving event for RECO: " << (*iRootIO)->GetName() << std::endl;
     }
     iRootIO++;
   }

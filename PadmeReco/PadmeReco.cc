@@ -141,6 +141,7 @@ int main(Int_t argc, char **argv)
 
     //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    RecoIO->SetReconstruction(PadmeReco);
     while(PadmeReco->NextEvent()) {
       RecoIO->SaveEvent();
     }

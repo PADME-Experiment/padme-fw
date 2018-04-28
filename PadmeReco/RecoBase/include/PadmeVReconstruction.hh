@@ -15,6 +15,8 @@
 #include "TMCVEvent.hh"
 
 #include "PadmeVNamedModule.hh"
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
 
 #include "TH1.h"
 #include <vector>
@@ -54,6 +56,9 @@ public:
 
   TString GetConfigFileName() { return fConfigFileName; };
   void    SetConfigFileName(TString val) { fConfigFileName = val; };
+  utl::ConfigParser *GetConfigParser(){return fConfigParser;};
+  PadmeVRecoConfig *GetConfig(){return fConfig;};
+
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -66,9 +71,11 @@ protected:
   //TRecoVEvent * fRecoEvent;
 
   TString fConfigFileName;
-  
-  map<string,TH1 *> fHistoMap;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
 
+
+  map<string,TH1 *> fHistoMap;
 
 };
 #endif

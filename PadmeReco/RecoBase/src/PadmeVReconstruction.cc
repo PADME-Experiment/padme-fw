@@ -16,7 +16,9 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
 
   fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
-
+  fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
+  
+  fConfig = new PadmeVRecoConfig(fConfigParser,Name);
   //----------- Parse config file for common parameters ----------//
 
   //ParseConfFile(ConfigFileName);
@@ -29,6 +31,7 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   //  delete fRecoEvent;
   //  fRecoEvent=0;
   //}
+  if(fConfigParser) {delete fConfigParser; fConfigParser=0;};
 }
 
 void PadmeVReconstruction::Exception(TString Message){

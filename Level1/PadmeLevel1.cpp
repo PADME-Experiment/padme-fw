@@ -11,6 +11,8 @@
 int main(int argc, char* argv[])
 {
 
+  int rc; // DB library retrun code
+
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
   setbuf(stderr,NULL);
@@ -120,7 +122,7 @@ int main(int argc, char* argv[])
 
     // Get id of merger for future DB accesses
     int merger_id = 0;
-    int rc = db->GetMergerId(merger_id,cfg->RunNumber());
+    rc = db->GetMergerId(merger_id,cfg->RunNumber());
     if (rc != DBSERVICE_OK) {
       printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
       exit(1);
@@ -195,6 +197,29 @@ int main(int argc, char* argv[])
     printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }
+
+  // Everything is set: tell DB merger has started
+  if (cfg->RunNumber()) {
+
+    // Get handle to DB
+    DBService* db = DBService::GetInstance();
+
+    // Update merger status
+    rc = db->SetMergerStatus(2,cfg->MergerId());
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR setting merger status in DB. Aborting\n");
+      exit(1);
+    }
+
+    // Update merger start time
+    rc = db->SetMergerTime("START",time(NULL),cfg->MergerId());
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR setting merger start time in DB. Aborting\n");
+      exit(1);
+    }
+
+  }
+
 
   // Loop over all events in files
 
@@ -385,14 +410,30 @@ int main(int argc, char* argv[])
     printf("*** WARNING *** ROOT inconsistency: %u events sent, %u events written. This should never happen!",NumberOfEvents,root->GetTotalEvents());
   }
 
-  printf("Run %d closed after writing %d events\n",cfg->RunNumber(),root->GetTotalEvents());
+  printf("Run %d closed after writing %u events\n",cfg->RunNumber(),root->GetTotalEvents());
 
   // If input was from a real run, update DB
   if (cfg->RunNumber()) {
 
-    // Update DB with number of events merged by this process and total amount of data written to file
+    // Get handle to DB
     DBService* db = DBService::GetInstance();
-    int rc = db->UpdateMergerInfo(root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
+
+    // Update merger status
+    rc = db->SetMergerStatus(3,cfg->MergerId());
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR setting merger status in DB. Aborting\n");
+      exit(1);
+    }
+
+    // Update merger start time
+    rc = db->SetMergerTime("STOP",time(NULL),cfg->MergerId());
+    if (rc != DBSERVICE_OK) {
+      printf("ERROR setting merger stop time in DB. Aborting\n");
+      exit(1);
+    }
+
+    // Update number of events merged by this process and total amount of data written to file
+    rc = db->UpdateMergerInfo(root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
     if (rc != DBSERVICE_OK) {
       printf("ERROR updating DB with number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
       exit(1);

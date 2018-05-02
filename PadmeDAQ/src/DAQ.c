@@ -1028,11 +1028,13 @@ int DAQ_readdata ()
 
     }
 
+    // Save current time
+    time(&t_now);
+
     // If we are running in FILE output mode, check if we need a new data file
     // i.e. required time elapsed or file size/events threshold exceeded
     if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
-      time(&t_now);
       if (
 	  (t_now-fileTOpen[fileIndex] >= Config->file_max_duration) ||
 	  (fileSize[fileIndex]        >= Config->file_max_size    ) ||

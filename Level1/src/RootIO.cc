@@ -93,7 +93,11 @@ Int_t RootIO::CloseOutFile()
   fTTreeMain->Write();
 
   // Add size of this file to total
-  fOutSizeTotal += fTFileHandle->GetSize();
+  Long64_t size = fTFileHandle->GetSize();
+  Long64_t bytes = fTFileHandle->GetBytesWritten();
+  printf("File has size %lld and bytes %lld\n",size,bytes);
+  //fOutSizeTotal += size;
+  fOutSizeTotal += bytes;
 
   // Close output file
   fTFileHandle->Close();

@@ -176,12 +176,20 @@ class PadmeDB:
         c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
         self.conn.commit()
 
-    def set_run_comment_end(self,run_number,comment_end):
+    def set_run_comment_end(self,run_nr,comment_end):
 
         # Create end of run comment
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_number,"EOR",0,self.now_str(),comment_end))
+        c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",(run_nr,"EOR",0,self.now_str(),comment_end))
+        self.conn.commit()
+
+    def set_run_total_events(self,run_nr,total_events):
+
+        # Add total number of events info to run
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""UPDATE run SET total_events = %s WHERE number = %s""",(total_events,run_nr))
         self.conn.commit()
 
     def add_cfg_para_run(self,run_nr,para_name,para_val):
@@ -277,3 +285,15 @@ class PadmeDB:
         if c.rowcount == 0: return -1
         ret = c.fetchone()
         return ret[0]
+
+    def get_merger_final_info(self,merger_id):
+
+        # Return final events and size info from merger
+        
+        self.check_db()
+        c = self.conn.cursor()
+
+        c.execute("""SELECT total_events,total_size FROM lvl1_process WHERE id=%s""",(merger_id,))
+        if c.rowcount == 0: return (-1,-1)
+        ret = c.fetchone()
+        return ret

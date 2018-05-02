@@ -66,13 +66,9 @@ class Merger:
         # Open log file
         self.log_handle = open(self.log_file,"w")
 
-        # Check if DB must be updated
-        update_db = ""
-        if (self.run_number): update_db = "-u"
-
         # Start DAQ process
         try:
-            self.process = subprocess.Popen([self.executable,"-l",self.input_list,"-d",".","-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events),update_db],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process = subprocess.Popen([self.executable,"-l",self.input_list,"-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events)],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
             return 0

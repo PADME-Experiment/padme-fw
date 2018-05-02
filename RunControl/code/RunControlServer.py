@@ -845,6 +845,11 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
+        # If this is a real run, get final info from merger before stopping it
+        if (self.run.run_number):
+            (tot_evts,tot_size) = self.db.get_merger_final_info(self.run.merger.merger_id)
+            self.db.set_run_total_events(self.run.run_number,tot_evts)
+
         # Run stop_merger procedure
         if self.run.merger.stop_merger():
             self.send_answer("merger terminate_ok")

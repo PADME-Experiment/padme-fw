@@ -41,6 +41,9 @@ public:
 
   int GetMergerId(int&,int); // (Merger id, Run nr). Returns id of merger for this run
 
+  int SetMergerStatus(int,int); // (Status, Merger Id)
+  int SetMergerTime(std::string,time_t,int); // ("START"|"STOP", Time, Merger Id)
+
 private:
 
   MYSQL* fDBHandle;

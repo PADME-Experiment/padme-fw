@@ -298,3 +298,90 @@ int DBService::GetMergerId(int& merger_id, int run_nr)
   return result;
 
 }
+
+int DBService::SetMergerStatus(int status, int merger_id)
+{
+
+  char sqlCode[10240];
+  MYSQL_RES* res;
+
+  sprintf(sqlCode,"UPDATE lvl1_process SET status = %d WHERE id = %d",status,merger_id);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::SetMergerStatus - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::SetMergerStatus - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  int result = DBSERVICE_OK;
+  if (mysql_num_rows(res) == 0) {
+    printf("DBService::SetMergerStatus ERROR - merger id %d not found in DB\n", merger_id);
+    result = DBSERVICE_ERROR;
+  } else if (mysql_num_rows(res) != 1) {
+    printf("DBService::SetMergerStatus ERROR - merger id %d defined %d times in DB (?)\n", merger_id,(int)mysql_num_rows(res));
+    result = DBSERVICE_ERROR;
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return result;
+
+}
+
+int DBService::SetMergerTime(std::string sel, time_t t, int merger_id)
+{
+
+  char sqlCode[10240];
+  MYSQL_RES* res;
+
+  struct tm* t_st = gmtime(&t);
+
+  if (sel.compare("START")) {
+
+    sprintf(sqlCode,"UPDATE lvl1_process SET time_start = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+	    1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,merger_id);
+
+  } else if (sel.compare("STOP")) {
+
+    sprintf(sqlCode,"UPDATE lvl1_process SET time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+	    1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,merger_id);
+
+  } else {
+
+    printf("DBService::SetMergerTime ERROR - unknown time tpe '%s' requested for merger id %d\n",
+	   sel.c_str(),merger_id);
+    return DBSERVICE_ERROR;
+
+  }
+
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::SetMergerTime - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  res = mysql_store_result(fDBHandle);
+  if (res == NULL) {
+    printf("DBService::SetMergerTime - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    return DBSERVICE_SQLERROR;
+  }
+
+  int result = DBSERVICE_OK;
+  if (mysql_num_rows(res) == 0) {
+    printf("DBService::SetMergerTime ERROR - merger id %d not found in DB\n", merger_id);
+    result = DBSERVICE_ERROR;
+  } else if (mysql_num_rows(res) != 1) {
+    printf("DBService::SetMergerTime ERROR - merger id %d defined %d times in DB (?)\n", merger_id,(int)mysql_num_rows(res));
+    result = DBSERVICE_ERROR;
+  }
+
+  mysql_free_result(res);
+  res = NULL;
+
+  return result;
+
+}

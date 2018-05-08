@@ -68,7 +68,7 @@ class Merger:
 
         # Start DAQ process
         try:
-            self.process = subprocess.Popen([self.executable,"-l",self.input_list,"-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events)],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process = subprocess.Popen([self.executable,"-r",str(self.run_number),"-l",self.input_list,"-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events)],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
             return 0

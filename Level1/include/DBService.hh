@@ -37,12 +37,15 @@ public:
   int GetFileInfo(int&,int&,std::string&,std::string&,int&,long int&,std::string); // (Version, Index, Start Time, End Time, N Events, Size, File Name). Return info about raw file
 
   // Store number of events written and size of output file to DB
-  int UpdateMergerInfo(unsigned int,unsigned long int,int); // (N Events, Size, Merger Id).
+  int UpdateMergerInfo(unsigned int,unsigned int,unsigned long int,int); // (N Files, N Events, Size, Merger Id).
 
   int GetMergerId(int&,int); // (Merger id, Run nr). Returns id of merger for this run
 
   int SetMergerStatus(int,int); // (Status, Merger Id)
-  int SetMergerTime(std::string,time_t,int); // ("START"|"STOP", Time, Merger Id)
+  int SetMergerTime(std::string,int); // ("START"|"STOP", Merger Id)
+
+  int OpenRawFile(int&,int,std::string,int); // (File id, Merger id, Filename, Part)
+  int CloseRawFile(int,unsigned int,unsigned long int); // (File id,N Events,Size)
 
 private:
 

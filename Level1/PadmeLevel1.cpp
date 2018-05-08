@@ -193,7 +193,8 @@ int main(int argc, char* argv[])
   root->SetVerbose(verbose);
 
   // Initialize root output file
-  if ( root->Init(cfg->OutputFileHeader(),cfg->NEventsPerFile()) != ROOTIO_OK ) {
+  //if ( root->Init(cfg->OutputFileHeader(),cfg->NEventsPerFile()) != ROOTIO_OK ) {
+  if ( root->Init() != ROOTIO_OK ) {
     printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }
@@ -212,7 +213,7 @@ int main(int argc, char* argv[])
     }
 
     // Update merger start time
-    rc = db->SetMergerTime("START",time(NULL),cfg->MergerId());
+    rc = db->SetMergerTime("START",cfg->MergerId());
     if (rc != DBSERVICE_OK) {
       printf("ERROR setting merger start time in DB. Aborting\n");
       exit(1);
@@ -396,6 +397,7 @@ int main(int argc, char* argv[])
 
     // Count event
     NumberOfEvents++;
+    if (NumberOfEvents%100 == 0) printf("- Written %u events\n",NumberOfEvents);
 
   } // End of main while loop
 
@@ -425,17 +427,17 @@ int main(int argc, char* argv[])
       exit(1);
     }
 
-    // Update merger start time
-    rc = db->SetMergerTime("STOP",time(NULL),cfg->MergerId());
+    // Update merger stop time
+    rc = db->SetMergerTime("STOP",cfg->MergerId());
     if (rc != DBSERVICE_OK) {
       printf("ERROR setting merger stop time in DB. Aborting\n");
       exit(1);
     }
 
-    // Update number of events merged by this process and total amount of data written to file
-    rc = db->UpdateMergerInfo(root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
+    // Update DB with final counters (files created, events written, data written)
+    rc = db->UpdateMergerInfo(root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
     if (rc != DBSERVICE_OK) {
-      printf("ERROR updating DB with number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
+      printf("ERROR updating DB with number of files (n=%u) number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
       exit(1);
     }
 

@@ -1,5 +1,7 @@
 #include <stdio.h>
 
+#include "DBService.hh"
+#include "Configuration.hh"
 #include "RootIO.hh"
 
 RootIO::RootIO()
@@ -10,6 +12,14 @@ RootIO::RootIO()
 
   // Create TRawEvent object
   fTRawEvent = new TRawEvent();
+
+  // Connect to configuration class
+  fConfig = Configuration::GetInstance();
+
+  // Connect to DB service
+  fDB = 0;
+  if (fConfig->RunNumber()) fDB = DBService::GetInstance();
+
 }
 
 RootIO::~RootIO()
@@ -18,20 +28,24 @@ RootIO::~RootIO()
   delete fTRawEvent;
 }
 
-int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
+//int RootIO::Init(std::string outfiletemplate, int nevtsperfile)
+int RootIO::Init()
 {
 
-  fNMaxEvtsPerOutFile = nevtsperfile;
-  fOutFileTemplate = outfiletemplate;
+  //fNMaxEvtsPerOutFile = nevtsperfile;
+  //fOutFileTemplate = outfiletemplate;
 
+  fOutFileDBId = 0;
   fOutFileIndex = 0;
-  fOutEventsCounter = 0;
+  fOutFileEvents = 0;
   fOutEventsTotal = 0;
   fOutSizeTotal = 0;
 
   // Set initial output filename
-  if (fNMaxEvtsPerOutFile == 0) {
-    fOutFile.Form("%s.root",fOutFileTemplate.Data());
+  //if (fNMaxEvtsPerOutFile == 0) {
+  if (fConfig->NEventsPerFile() == 0) {
+    //fOutFile.Form("%s.root",fOutFileTemplate.Data());
+    fOutFile.Form("%s.root",fConfig->OutputFileHeader().c_str());
   } else {
     SetOutFile();
   }
@@ -56,6 +70,7 @@ int RootIO::Exit()
 
 Int_t RootIO::ChangeOutFile()
 {
+
   CloseOutFile();
 
   // Update file index and create new filename
@@ -63,6 +78,7 @@ Int_t RootIO::ChangeOutFile()
   SetOutFile();
 
   return OpenOutFile();
+
 }
 
 Int_t RootIO::OpenOutFile()
@@ -82,35 +98,60 @@ Int_t RootIO::OpenOutFile()
   // Attach branch to TRawEvent
   fTTreeMain->Branch("RawEvent",&fTRawEvent);
 
+  // Reset event counter for this file
+  fOutFileEvents = 0;
+
+  // Register file in DB
+  if (fDB) {
+    int rc = fDB->OpenRawFile(fOutFileDBId,fConfig->MergerId(),fOutFile.Data(),fOutFileIndex);
+    if (rc != DBSERVICE_OK) {
+      printf("RootIO::OpenOutFile - ERROR while updating DB\n");
+      return ROOTIO_ERROR;
+    }
+  }
+
   return ROOTIO_OK;
+
 }
 
 Int_t RootIO::CloseOutFile()
 {
+
   printf("RootIO::CloseOutFile - Closing output file %s\n",fOutFile.Data());
 
   // Save TTree content
   fTTreeMain->Write();
 
-  // Add size of this file to total
-  Long64_t size = fTFileHandle->GetSize();
-  Long64_t bytes = fTFileHandle->GetBytesWritten();
-  printf("File has size %lld and bytes %lld\n",size,bytes);
-  //fOutSizeTotal += size;
-  fOutSizeTotal += bytes;
-
   // Close output file
   fTFileHandle->Close();
 
+  // Add size of this file to total (does not work)
+  //Long64_t size = fTFileHandle->GetSize();
+  //Long64_t bytes = fTFileHandle->GetBytesWritten();
+  //printf("File has size %lld and bytes %lld\n",size,bytes);
+  //fOutFileSize = fTFileHandle->GetSize();
+  //fOutSizeTotal += fOutFileSize;
+  fOutFileSize = 0;
+
   // Delete TTree used for this file
   delete fTTreeMain;
+
+  // Update DB with file close information
+  if (fDB) {
+    int rc = fDB->CloseRawFile(fOutFileDBId,fOutFileEvents,fOutFileSize);
+    if (rc != DBSERVICE_OK) {
+      printf("RootIO::CloseOutFile - ERROR while updating DB\n");
+      return ROOTIO_ERROR;
+    }
+  }
 
   return ROOTIO_OK;
 }
 
 Int_t RootIO::SetOutFile()
 {
-  fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
+  //fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
+  fOutFile.Form("%s_%03d.root",fConfig->OutputFileHeader().c_str(),fOutFileIndex);
   return ROOTIO_OK;
 }
 
@@ -235,10 +276,9 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
 
   // Count event and see if we have to change file
   fOutEventsTotal++;
-  fOutEventsCounter++;
-  if (fNMaxEvtsPerOutFile && (fOutEventsCounter>=fNMaxEvtsPerOutFile)) {
+  fOutFileEvents++;
+  if (fNMaxEvtsPerOutFile && (fOutFileEvents>=fNMaxEvtsPerOutFile)) {
     if (ChangeOutFile() == ROOTIO_ERROR) return ROOTIO_ERROR;
-    fOutEventsCounter = 0;
   }
 
   return ROOTIO_OK;

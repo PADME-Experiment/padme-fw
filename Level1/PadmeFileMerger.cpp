@@ -223,7 +223,8 @@ int main(int argc, char* argv[])
   root->SetVerbose(verbose);
 
   // Initialize root output file
-  if ( root->Init(outfile,neventsperfile) != ROOTIO_OK ) {
+  //if ( root->Init(outfile,neventsperfile) != ROOTIO_OK ) {
+  if ( root->Init() != ROOTIO_OK ) {
     printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }

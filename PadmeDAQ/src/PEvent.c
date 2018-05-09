@@ -29,6 +29,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   int nSm;
   int freq,tr;
   int16_t myshort; // Used to store rounded samples (can be negative)
+  unsigned int n_samples_on; // Counter for trigger length evaluation (autopass)
   uint32_t line;
 
   int Ch,iGr,iCh,iSm;
@@ -40,6 +41,23 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   // Extract 0-suppression configuration
   int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1=flagging
   int pEvt0SupAlgr = Config->zero_suppression % 100; // 0=off, 1-15=algorithm code
+
+  // Set autopass bit to 0. Will be set to 1 if trigger signal is long.
+  int pEvtAutoPass = 0;
+
+  // Define autopass trig ON duration taking into account sampling frequency
+  unsigned int autopass_trig_duration;
+  if (Config->drs4_sampfreq == 0) {
+    autopass_trig_duration = 5*Config->auto_duration; // 1ns = 5 samples
+  } else if (Config->drs4_sampfreq == 1) {
+    autopass_trig_duration = 2.5*Config->auto_duration; // 1ns = 2.5 samples
+  } else if (Config->drs4_sampfreq == 2) {
+    autopass_trig_duration = Config->auto_duration; // 1ns = 1 sample
+  } else {
+    printf("PEvent ERROR - drs4_sampfreq set to %d\n",Config->drs4_sampfreq);
+    return 0;
+  }
+  //printf("Autopass trigger ON duration set to %u samples\n",autopass_trig_duration);
 
   // Event header will be created at the end
 
@@ -77,11 +95,19 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Copy trigger samples (if present)
       if (nSm) {
+	n_samples_on = 0;
 	for (iSm=0;iSm<nSm;iSm++) {
 	  myshort = roundf(event->DataGroup[iGr].DataChannel[8][iSm]);
+	  if (myshort < Config->auto_threshold) n_samples_on++;
 	  memcpy(cursor,&myshort,2);
 	  cursor += 2;
 	  //printf("Tr %d Sm %d %f %d\n",iGr,iSm,event->DataGroup[iGr].DataChannel[8][iSm],myshort);
+	  //printf("Tr %d Sm %d 0x%04x\n",iGr,iSm,myshort);
+	}
+	//printf("Trigger ON for %u samples\n",n_samples_on);
+	if (n_samples_on > autopass_trig_duration) {
+	  //printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
+	  pEvtAutoPass = 1;
 	}
       }
 
@@ -156,10 +182,15 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
     pEvtStatus += (0x1 << PEVT_STATUS_ZEROSUPP_BIT); // 0-suppression in flagging mode
   }
 
-  pEvtStatus += (0x0 << PEVT_STATUS_AUTOPASS_BIT); // No autopass for the moment
+  if (pEvtAutoPass == 0) {
+    pEvtStatus += (0x0 << PEVT_STATUS_AUTOPASS_BIT); // No autopass
+  } else {
+    pEvtStatus += (0x1 << PEVT_STATUS_AUTOPASS_BIT); // Enable autopass for this even
+  }
 
   // 1) Get line 1 of V1742 event header
   memcpy(&line,evtPtr+4,4);
+  //printf("First line of header 0x%08x\n",line);
   // 2) Save Board Fail flag (bit 26) to event status.
   if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
   // 3) Extract LVDS pattern (bit 8-23) and group mask (bit 0-3).

@@ -117,6 +117,10 @@ int reset_config()
   Config->zs2_minrms = 4.6;
   for(ch=0;ch<32;ch++) Config->zs2_minrms_ch[ch] = Config->zs2_minrms;
 
+  // Set default parameters for trigger-based autopass system
+  Config->auto_threshold = 0x0400; // Threshold below which trigger is considered ON (usual levels are 0x0800/0x0100)
+  Config->auto_duration = 150; // Trigger ON duration (in ns) after which autopass is enabled
+
   // Ouput file limits
   Config->file_max_duration = 900; // 15 min
   Config->file_max_size = 1024*1024*1024; // 1GiB
@@ -498,6 +502,20 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"auto_threshold")==0 ) {
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->auto_threshold = vu;
+	  printf("Parameter %s set to 0x%04x\n",param,vu);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"auto_duration")==0 ) {
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->auto_duration = vu;
+	  printf("Parameter %s set to %u\n",param,vu);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"file_max_duration")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
 	  Config->file_max_duration = v;
@@ -663,6 +681,8 @@ int print_config(){
     printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
     printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
     printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
+    printf("auto_threshold\t\t0x%04x\t\tautopass: threshold below which trigger is considered ON\n",Config->auto_threshold);
+    printf("auto_duration\t\t%d\t\tautopass: number of ns of trigger ON above which autopass is enabled\n",Config->auto_duration);
   }
 
   // Show parameters which are relevant for ZSUP
@@ -739,7 +759,7 @@ int save_config()
 
   // Only save board serial number if it is already defined
   if (Config->board_sn > 0) {
-    sprintf(line,"%d",Config->board_sn);
+    sprintf(line,"%u",Config->board_sn);
     db_add_cfg_para(Config->process_id,"board_sn",line);
   }
 
@@ -786,17 +806,23 @@ int save_config()
       }
     }
 
-    sprintf(line,"%d",Config->post_trigger_size);
+    sprintf(line,"%u",Config->post_trigger_size);
     db_add_cfg_para(Config->process_id,"post_trigger_size",line);
 
-    sprintf(line,"%d",Config->max_num_events_blt);
+    sprintf(line,"%u",Config->max_num_events_blt);
     db_add_cfg_para(Config->process_id,"max_num_events_blt",line);
 
     sprintf(line,"%d",Config->drs4corr_enable);
     db_add_cfg_para(Config->process_id,"drs4corr_enable",line);
 
-    sprintf(line,"%d",Config->daq_loop_delay);
+    sprintf(line,"%u",Config->daq_loop_delay);
     db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
+
+    sprintf(line,"0x%04x",Config->auto_threshold);
+    db_add_cfg_para(Config->process_id,"auto_threshold",line);
+
+    sprintf(line,"%u",Config->auto_duration);
+    db_add_cfg_para(Config->process_id,"auto_duration",line);
 
   }
 

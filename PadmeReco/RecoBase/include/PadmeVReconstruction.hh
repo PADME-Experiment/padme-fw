@@ -59,7 +59,7 @@ public:
   void    SetConfigFileName(TString val) { fConfigFileName = val; };
   utl::ConfigParser *GetConfigParser(){return fConfigParser;};
   PadmeVRecoConfig *GetConfig(){return fConfig;};
-  vector<TRecoVHit *> GetRecoHits(){return fHits;};
+  vector<TRecoVHit *> &GetRecoHits(){return fHits;};
   
 
   // Use to get an existing directory or create if not already made

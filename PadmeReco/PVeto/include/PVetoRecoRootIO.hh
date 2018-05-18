@@ -22,10 +22,9 @@ public:
 
   static PVetoRecoRootIO* GetInstance();
 
-
   void NewRun(Int_t, TFile*);
   void EndRun();
-  void SaveEvent();
+  virtual void SaveEvent();
   void Close();
 
 private:

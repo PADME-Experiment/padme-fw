@@ -60,7 +60,10 @@ void PVetoRecoRootIO::SaveEvent()
   vector<TRecoVHit *> Hits = MyReco->GetRecoHits();
   for(int iHit = 0;iHit < Hits.size();iHit++){
     fEvent->AddHit(Hits[iHit]);
+    //    std::cout << "Adding a hit " << iHit << std::endl;
   }
+  
+  
 }
 
 

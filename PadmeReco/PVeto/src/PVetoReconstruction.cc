@@ -118,7 +118,7 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   //Perform some cleaning before:
-  vector<TRecoVHit *> Hits  = GetRecoHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
   for(int iHit = 0;iHit < Hits.size();iHit++){
     delete Hits[iHit];
   }
@@ -147,8 +147,10 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);
 	fChannelReco->SetSamples(chn->GetNSamples(),chn->GetSamplesArray());
-	fChannelReco->Reconstruct();
-	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	//	std::cout << "Added  " << nHitsAfter - nHitsBefore << "  hits for channel" << std::endl;
       }
     } else {
       // std::cout << "ADC " << (int) ADC->GetBoardId() << " is NOT mine. Skipping" << std::endl;
@@ -158,12 +160,7 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   }
 
   
-
-  
-  
-
-  
-
+ 
 }
 
 

@@ -53,6 +53,8 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
   AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
 
+  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",100,-100.,100.));
+
 }
 
 
@@ -153,7 +155,7 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
 	// std::cout << "Added  " << nHitsAfter - nHitsBefore << "  hits for channel " << ich<<  std::endl;
 	//Set the proper channel ID to the hit
 	
-	for(int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),ich));
 	  //	  std::cout << "Setting channel ID for hit: " << iHit << "  chID: " <<   GetChannelID(ADC->GetBoardId(),ich) << std::endl;
 	}
@@ -165,7 +167,12 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
     // std::cout << "ADC BID " << (int) ADC->GetBoardId() << std::endl;
   }
 
-  
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
+      GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+    }
+      
+  }
  
 }
 

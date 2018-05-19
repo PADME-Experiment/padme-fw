@@ -13,29 +13,44 @@ ADCChannelVReco::ADCChannelVReco(PadmeVRecoConfig *cfg){
 
 void ADCChannelVReco::Init(PadmeVRecoConfig *cfg){
   fType="SiPM";
-      fGain=8;//11.6; //E5
-      fFireThreshold=12;//7;
-      fSignalRangeBegin  =100;
-      fSignalRangeEnd    =800;
-      fNoiseRangeBegin=20;
-      fNoiseRangeEnd=80;
-      fPedestalRangeBegin=20;
-      fPedestalRangeEnd  =80;
-      fUseMultipeak = false;
-  ;
+  fGain=1;//11.6; //E5
+  fFireThreshold=12;//7;
+  fSignalRangeBegin  =200;
+  fSignalRangeEnd    =800;
+  fNoiseRangeBegin=20;
+  fNoiseRangeEnd=80;
+  fPedestalRangeBegin=20;
+  fPedestalRangeEnd  =80;
+  fUseMultipeak = false;
+  fThreshold = 0.;
+  fConfig = cfg;
+}
+
+Bool_t ADCChannelVReco::CheckSingleHit(){
+  if(GetTime2080LeadZeroCross() < -100. || GetTime2080LeadZeroCross() > 1000.) 
+    return false;
+  
+  if(GetValMax() > -0.3) 
+    return false;
+  return true;
 }
 
 void ADCChannelVReco::ReconstructSinglePeak(){
   CalcPedestal();
   SetT0(0);
   CalcTimeCharge();
-  
-  
+
+  if (!CheckSingleHit()) return; //Hit is not actually a hit, but more like noise
+
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(GetTime2080LeadZeroCross());
   //  Hit->SetPosition();
-  Hit->SetEnergy(GetCharge());
+  // std::cout << "Pedestal: " << fPedestal<< "  Hit time:  " << GetTime2080LeadZeroCross() 
+  // 	    << " Energy: "  << GetCharge() << std::endl;
+  
+  Hit->SetEnergy(GetValMax());
+  
   fHits.push_back(Hit);
 
   
@@ -66,9 +81,6 @@ void ADCChannelVReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   for(unsigned iHit = 0;iHit < fHits.size();iHit++){
     hitArray.push_back(fHits[iHit]);
   }
-
-  
-
-
+  fHits.clear();
 
 }

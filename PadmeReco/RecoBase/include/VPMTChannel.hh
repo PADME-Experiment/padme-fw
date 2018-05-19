@@ -11,14 +11,14 @@ class VPMTChannel:public VSamplingChannel{
       fSignalRangeEnd    (0),
       fNoiseRangeBegin   (50),
       fNoiseRangeEnd     (51),
-      fPedestalRangeBegin(30),
-      fPedestalRangeEnd  (250) {}
+      fPedestalRangeBegin(20),
+      fPedestalRangeEnd  (50) {}
     virtual ~VPMTChannel(){}
   public:
     bool IsFired()const{return fPhEAbs>fFireThreshold;}
-    void CalcPedestal();
+    virtual void CalcPedestal();
 
-    Short_t GetPedestal()const{return fPedestal;}
+    virtual Short_t GetPedestal()const{return fPedestal;}
     //Short_t GetSampT0PedCor   (int t)const{t-=fT0;return t>=0&&t<fNSamples?fSamples[t]-fPedestal:0;}
   //    double  GetValT0Ped       (int t)const{t-=fT0;return t>=0&&t<fNSamples?fValues[t]:0;}
     double  GetValT0Ped       (int t)const{       return t>=0&&t<fNSamples?fValues[t]:0;}

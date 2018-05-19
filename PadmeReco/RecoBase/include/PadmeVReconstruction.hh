@@ -18,6 +18,7 @@
 #include "PadmeVNamedModule.hh"
 #include "utlConfigParser.hh"
 #include "PadmeVRecoConfig.hh"
+#include "RecoVChannelID.hh"
 
 #include "TH1.h"
 #include <vector>
@@ -26,7 +27,7 @@
 
 using namespace std;
 
-class PadmeVReconstruction : public PadmeVNamedModule
+class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
 public:
 

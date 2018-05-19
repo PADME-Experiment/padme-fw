@@ -62,8 +62,8 @@ void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
   //common part for all the subdetectors
   PadmeVReconstruction::Init(MainReco);
   fChannelReco->Init(GetConfig());
+  InitChannelID(GetConfig());
   HistoInit();
-
   // if(GetConfigParser()->HasConfig("ADC","NADC"))
   //   std::cout << "Number of ADCs for detector:  " << this->GetName() << "  " << GetConfigParser()->GetSingleArg("ADC","NADC") << std::endl;
 
@@ -150,7 +150,13 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
-	//	std::cout << "Added  " << nHitsAfter - nHitsBefore << "  hits for channel" << std::endl;
+	// std::cout << "Added  " << nHitsAfter - nHitsBefore << "  hits for channel " << ich<<  std::endl;
+	//Set the proper channel ID to the hit
+	
+	for(int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),ich));
+	  //	  std::cout << "Setting channel ID for hit: " << iHit << "  chID: " <<   GetChannelID(ADC->GetBoardId(),ich) << std::endl;
+	}
       }
     } else {
       // std::cout << "ADC " << (int) ADC->GetBoardId() << " is NOT mine. Skipping" << std::endl;

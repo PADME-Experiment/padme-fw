@@ -6,18 +6,20 @@
 #include <vector>
 #include <string>
 #include "TRecoVHit.hh"
+#include "ChannelVReco.hh"
 
-class ADCChannelVReco : public VPMTChannel {
+class ADCChannelVReco : public VPMTChannel, public ChannelVReco {
 
 public:
   ADCChannelVReco();
   ADCChannelVReco(PadmeVRecoConfig *cfg);
   ~ADCChannelVReco(){;};
-  void Init(PadmeVRecoConfig *cfg);
+  virtual void Init(PadmeVRecoConfig *cfg);
   virtual void Reconstruct();
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
   virtual void ReconstructSinglePeak();
   virtual void ReconstructMultiPeak(){;};
+  virtual void SetDigis( UShort_t n,Short_t* arr  ){ SetSamples(n,arr);};
   Double_t GetCharge(){return fCharge;};  
   void SetCharge(Double_t q) { fCharge = q;};
   unsigned int GetChannelID(int bID, int chID){ return 32*bID + chID; }

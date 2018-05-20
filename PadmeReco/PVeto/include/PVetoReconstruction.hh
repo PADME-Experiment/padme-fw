@@ -18,15 +18,16 @@ public:
   PVetoReconstruction(TFile*, TString);
   ~PVetoReconstruction();
 
-  void ParseConfFile(TString);
-  virtual void Init(PadmeVReconstruction*);
+  //  void ParseConfFile(TString);
+  //  virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void ProcessEvent(TRawEvent*);
-  virtual void EndProcessing();
+  //  virtual void ProcessEvent(TRawEvent*);
+  //  virtual void EndProcessing();
   virtual void HistoInit();
+  virtual void AnalyzeEvent(TRawEvent* evt);
 
 private:
-  ADCChannelVReco *fChannelReco;
+  //ADCChannelVReco *fChannelReco;
   
 
 };

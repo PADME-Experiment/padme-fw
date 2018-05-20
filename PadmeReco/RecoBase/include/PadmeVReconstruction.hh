@@ -25,6 +25,8 @@
 #include <string>
 #include <map>
 
+#include "ChannelVReco.hh"
+
 using namespace std;
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
@@ -36,13 +38,16 @@ public:
   //virtual TRecoVEvent* ProcessEvent(TDetectorVEvent* = 0, Event* = 0) = 0;
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void ProcessEvent(TRawEvent* = 0);
-  virtual void Init(PadmeVReconstruction*) = 0;
-  virtual void EndProcessing() = 0; ///< Call from derived classes
+  virtual void AnalyzeEvent(TRawEvent* = 0);
+  virtual void Init(PadmeVReconstruction*);
+  virtual void EndProcessing(); ///< Call from derived classes
   virtual void ParseConfFile(TString);
   virtual void HistoInit(); 
   virtual void HistoExit();
   virtual void AddHisto(string,TH1 *);
   virtual TH1* GetHisto(string);
+  
+  
 
   static void Exception(TString);
 
@@ -81,6 +86,9 @@ protected:
   map<string,TH1 *> fHistoMap;
 
   vector<TRecoVHit *> fHits;
+
+  ChannelVReco *fChannelReco;
+
 
 };
 #endif

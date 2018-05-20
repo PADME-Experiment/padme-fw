@@ -13,7 +13,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
 {
 
   fMainReco = 0;
-
+  fChannelReco = 0;
   fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
@@ -42,12 +42,24 @@ void PadmeVReconstruction::Exception(TString Message){
 }
 
 void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
+  std::cout << this->GetName() <<": Initializing" << std::endl;
 
   fMainReco = MainReco;
+  if(fChannelReco) {
+    fChannelReco->Init(GetConfig());
+    InitChannelID(GetConfig());
+    std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
+  }
+  
+  HistoInit();
+  
 
   //GetOrMakeDir(fHistoFile,fName+"Monitor")->cd(); //go to the SubDet directory
-
 }
+
+
+
+
 
 /*
 TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event* tGenEvent) {
@@ -63,10 +75,12 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
 */
 void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
 
-void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
+//void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
+
 
 void PadmeVReconstruction::EndProcessing(){ 
   // to be called from the derived classes
+  cout << "Entering End processing for " << this->GetName() << endl;
 
   if(!fHistoFile) return;
   HistoExit();
@@ -77,6 +91,8 @@ void PadmeVReconstruction::EndProcessing(){
   }
   */
 }
+
+
 
 /*
 TDirectory * PadmeVReconstruction::GetOrMakeDir(TDirectory *inDir,TString dirName){
@@ -108,6 +124,8 @@ void PadmeVReconstruction::ParseConfFile(TString ConfFileName) {
 }
 
 
+
+
 void PadmeVReconstruction::HistoInit(){;}
 
 void PadmeVReconstruction::AddHisto(string name, TH1 *histo){
@@ -117,8 +135,6 @@ void PadmeVReconstruction::AddHisto(string name, TH1 *histo){
 TH1*  PadmeVReconstruction::GetHisto(string name){
   return fHistoMap[name];
 }
-
-
 
 
 void PadmeVReconstruction::HistoExit(){
@@ -140,3 +156,52 @@ void PadmeVReconstruction::HistoExit(){
       delete histo;
     }
 }
+
+
+void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
+
+  // If this is not a channel reconstruction, better exit
+  // No idea what to do with it...
+  if (!fChannelReco) return;
+
+  //Perform some cleaning before:
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
+    delete Hits[iHit];
+  }
+
+  Hits.clear();
+
+  UChar_t nBoards = rawEv->GetNADCBoards();
+
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),ich));
+	}
+      }
+    } else {
+    }
+  }
+ 
+  //Processing is over, let's analyze what's here, if foreseen
+  AnalyzeEvent(rawEv);
+  
+}
+
+
+void PadmeVReconstruction::AnalyzeEvent(TRawEvent *rawEv){
+  ;
+}
+
+

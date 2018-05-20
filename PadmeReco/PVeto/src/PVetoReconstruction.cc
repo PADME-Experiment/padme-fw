@@ -28,36 +28,16 @@ PVetoReconstruction::~PVetoReconstruction()
 {;}
 
 
-// void PVetoReconstruction::HistoInit(){
-//   if(fHistoFile == NULL) {
-//     std::cout << "Output histo file not existing" << std::endl;
-//     return;
-//   }
-//   fHistoFile->cd();
-//   TDirectory *dir =  (TDirectory *)fHistoFile->Get(this->GetName().Data());
-//   if(dir == NULL) {
-//     std::cout << "Output directory does not exist: " << this->GetName().Data() << std::endl;
-//     return;
-//   }
-//   dir->cd();
-//   std::cout << "Creating the histograms" << std::endl;
-//   TH1F * nb = new TH1F("nboards","Number of boards",100,0.0,100.0);
-
-  
-
-// }
 
 void PVetoReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
   AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
   AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
   AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
-
   AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",100,-100.,100.));
-
 }
 
-
+/*
 void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 {
   std::cout << "PVeto: Initializing" << std::endl;
@@ -71,10 +51,10 @@ void PVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 
   std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
 
-  
-
 }
+*/
 
+/*
 // Read PVeto reconstruction parameters from a configuration file
 void PVetoReconstruction::ParseConfFile(TString ConfFileName) {
 
@@ -90,6 +70,8 @@ void PVetoReconstruction::ParseConfFile(TString ConfFileName) {
   }
   confFile.close();
 }
+*/
+
 
 /*
 TRecoVEvent * PVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -118,6 +100,9 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 }
 
+
+
+/*
 void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   //Perform some cleaning before:
   vector<TRecoVHit *> &Hits  = GetRecoHits();
@@ -148,7 +133,7 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);
-	fChannelReco->SetSamples(chn->GetNSamples(),chn->GetSamplesArray());
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
@@ -175,7 +160,39 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   }
  
 }
+*/
 
+void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  GetHisto("nboards")->Fill( (Int_t) nBoards );
+
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    GetHisto("ADCs")->Fill(ADC->GetBoardId());
+    GetHisto("nchannels")->Fill(ADC->GetNADCChannels());
+    GetHisto("ntriggers")->Fill(ADC->GetNADCTriggers());
+  }
+  
+  //  std::cout << "Number of hits " << Hits.size() << std::endl;
+  
+  //  return;
+
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
+      GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+    }    
+  }
+ 
+}
+
+
+/*
 
 void PVetoReconstruction::EndProcessing()
 {
@@ -183,3 +200,4 @@ void PVetoReconstruction::EndProcessing()
 
   HistoExit();
 }
+*/

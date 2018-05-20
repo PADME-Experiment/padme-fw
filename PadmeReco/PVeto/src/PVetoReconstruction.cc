@@ -121,7 +121,7 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){
   //Perform some cleaning before:
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-  for(int iHit = 0;iHit < Hits.size();iHit++){
+  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
     delete Hits[iHit];
   }
   Hits.clear();

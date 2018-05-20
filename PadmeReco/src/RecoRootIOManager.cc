@@ -114,10 +114,15 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     fEventTree = new TTree("Events","List of events");
     //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
     fEventTree->SetDirectory(fFile->GetDirectory("/"));
-
     
+
+    // Create branch to hold the run content info
+    fEventBranch = fEventTree->Branch("RecoEvent", &fEvent, fBufSize);
+    fEventBranch->SetAutoDelete(kFALSE);
+
     RootIOList::iterator iRootIO(fRootIOList.begin());
     RootIOList::iterator endRootIO(fRootIOList.end());
+    std::cout << "Preparing the branches in  " << fEventTree << std::endl;
     while (iRootIO!=endRootIO) {
       std::cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << std::endl;
       if ((*iRootIO)->GetEnabled()) {
@@ -128,9 +133,6 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       iRootIO++;
     }
 
-    // Create branch to hold the run content info
-    fEventBranch = fEventTree->Branch("RecoEvent", &fEvent, fBufSize);
-    fEventBranch->SetAutoDelete(kFALSE);
 
   }
 
@@ -192,9 +194,6 @@ void RecoRootIOManager::SaveEvent(){
   // All data have been copied: write it to file
   fEventTree->Fill();
   
-
-
-
 }
 
 

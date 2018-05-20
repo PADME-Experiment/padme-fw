@@ -20,18 +20,18 @@ public:
   PVetoRecoRootIO();
   virtual ~PVetoRecoRootIO();
 
-  static PVetoRecoRootIO* GetInstance();
+  //  static PVetoRecoRootIO* GetInstance();
 
-  void NewRun(Int_t, TFile*);
-  void EndRun();
-  virtual void SaveEvent();
-  void Close();
+  //  void NewRun(Int_t, TFile*);
+  //  void EndRun();
+  //  virtual void SaveEvent();
+  // void Close();
 
 private:
 
-  TTree* fEventTree;
-  TBranch* fPVetoBranch;
-  TPVetoRecoEvent* fEvent;
+  //  TTree* fEventTree;
+  //  TBranch* fPVetoBranch;
+  //  TPVetoRecoEvent* fEvent;
 
   
 

@@ -4,6 +4,10 @@
 
 #include "TFile.h"
 #include "PadmeVNamedModule.hh"
+#include "TRecoVObject.hh"
+#include "TTree.h"
+#include "TBranch.h"
+#include "TRecoVHit.hh"
 
 class PadmeVNamedModule;
 
@@ -17,10 +21,10 @@ public:
   // In the concrete fInstance you need to implement
   // the mandatory virtual methods
   virtual ~RecoVRootIO();
-  virtual void NewRun(Int_t, TFile*) = 0;
-  virtual void EndRun() = 0;
-  virtual void SaveEvent() = 0;
-  virtual void Close() = 0;
+  virtual void NewRun(Int_t, TFile*);
+  virtual void EndRun();
+  virtual void SaveEvent();
+  virtual void Close();
 
 public:
 
@@ -47,6 +51,10 @@ protected:
 
 
   bool fEnabled;
+
+  TTree* fEventTree;
+  TBranch* fBranch;
+  TRecoVObject* fEvent;
 
 };
 

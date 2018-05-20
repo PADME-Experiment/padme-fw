@@ -27,10 +27,12 @@ PVetoRecoRootIO::PVetoRecoRootIO()
 PVetoRecoRootIO::~PVetoRecoRootIO()
 {;}
 
+/*
 void PVetoRecoRootIO::Close()
 {;}
+*/
 
-
+/*
 void PVetoRecoRootIO::NewRun(Int_t nRun, TFile* hfile)
 {
   fRunNumber = nRun;
@@ -43,27 +45,30 @@ void PVetoRecoRootIO::NewRun(Int_t nRun, TFile* hfile)
   fPVetoBranch->SetAutoDelete(kFALSE);
 
 }
-
+*/
+/*
 void PVetoRecoRootIO::EndRun()
 {
   std::cout << "PVetoRecoRootIO: Executing End-of-Run procedure" << std::endl;
 }
+*/
 
-
-
+/*
 void PVetoRecoRootIO::SaveEvent()
 {
   //Clear the event before saving anything
   fEvent->Clear();
-  PVetoReconstruction* MyReco = (PVetoReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  //  PVetoReconstruction* MyReco = (PVetoReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
   
   vector<TRecoVHit *> Hits = MyReco->GetRecoHits();
-  for(int iHit = 0;iHit < Hits.size();iHit++){
+  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
     fEvent->AddHit(Hits[iHit]);
     //    std::cout << "Adding a hit " << iHit << std::endl;
+    //    delete Hits[iHit];
   }
-  
+  //  Hits.clear();
   
 }
 
-
+*/

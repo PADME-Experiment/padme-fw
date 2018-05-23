@@ -21,7 +21,7 @@ public:
   //  Int_t 
   
   int GetParOrDefault(std::string,std::string,int);
-  float GetParOrDefault(std::string,std::string,float);
+  double GetParOrDefault(std::string,std::string,double);
 
 private:
   std::vector<Short_t> fBoards;

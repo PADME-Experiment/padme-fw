@@ -36,6 +36,6 @@ int PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,int val
   return fConfigParser->HasConfig(group,name)?std::stoi(fConfigParser->GetSingleArg(group,name)):val;
 }
 
-float PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,float val){
-  return fConfigParser->HasConfig(group,name)?std::stoi(fConfigParser->GetSingleArg(group,name)):val;
+double PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,double val){
+  return fConfigParser->HasConfig(group,name)?std::stof(fConfigParser->GetSingleArg(group,name)):val;
 }

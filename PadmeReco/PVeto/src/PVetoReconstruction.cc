@@ -12,6 +12,7 @@
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
 #include "TPVetoRecoEvent.hh"
+#include "DigitizerChannelReco.hh"
 
 #include "TH1F.h"
 #include "TDirectory.h"
@@ -21,7 +22,8 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   //fRecoEvent = new TRecoPVetoEvent();
   //ParseConfFile(ConfigFileName);
-  fChannelReco = new ADCChannelVReco();
+  //  fChannelReco = new ADCChannelVReco();
+  fChannelReco = new DigitizerChannelReco();
 }
 
 PVetoReconstruction::~PVetoReconstruction()

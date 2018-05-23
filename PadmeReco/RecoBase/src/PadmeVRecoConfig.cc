@@ -1,9 +1,10 @@
 #include "PadmeVRecoConfig.hh"
-#include<iostream>
+#include <iostream>
 
 PadmeVRecoConfig::PadmeVRecoConfig(utl::ConfigParser *cfgParser,TString Name) 
   :PadmeVNamedModule(Name)
 {
+  fConfigParser = cfgParser;
   if(cfgParser->HasConfig("ADC","NADC")){
     fNBoards = std::stoi(cfgParser->GetSingleArg("ADC","NADC"));
   }
@@ -31,3 +32,10 @@ Bool_t PadmeVRecoConfig::BoardIsMine(Int_t iBoard){
   return false;
 }
 
+int PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,int val){
+  return fConfigParser->HasConfig(group,name)?std::stoi(fConfigParser->GetSingleArg(group,name)):val;
+}
+
+float PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,float val){
+  return fConfigParser->HasConfig(group,name)?std::stoi(fConfigParser->GetSingleArg(group,name)):val;
+}

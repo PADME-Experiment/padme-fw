@@ -11,40 +11,42 @@
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
 #include "TSACMCDigi.hh"
+#include "DigitizerChannelReco.hh"
 
 SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
 {
   //fRecoEvent = new TRecoSACEvent();
   //ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelReco();
 }
 
 SACReconstruction::~SACReconstruction()
 {;}
 
-void SACReconstruction::Init(PadmeVReconstruction* MainReco)
-{
+// void SACReconstruction::Init(PadmeVReconstruction* MainReco)
+// {
 
-  //common part for all the subdetectors
-  PadmeVReconstruction::Init(MainReco);
+//   //common part for all the subdetectors
+//   PadmeVReconstruction::Init(MainReco);
 
-}
+// }
 
-// Read SAC reconstruction parameters from a configuration file
-void SACReconstruction::ParseConfFile(TString ConfFileName) {
+// // Read SAC reconstruction parameters from a configuration file
+// void SACReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
-  if (!confFile.is_open()) {
-    perror(ConfFileName);
-    exit(1);
-  }
+//   std::ifstream confFile(ConfFileName.Data());
+//   if (!confFile.is_open()) {
+//     perror(ConfFileName);
+//     exit(1);
+//   }
 
-  TString Line;
-  while (Line.ReadLine(confFile)) {
-    if (Line.BeginsWith("#")) continue;
-  }
-  confFile.close();
-}
+//   TString Line;
+//   while (Line.ReadLine(confFile)) {
+//     if (Line.BeginsWith("#")) continue;
+//   }
+//   confFile.close();
+// }
 
 /*
 TRecoVEvent * SACReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -72,5 +74,5 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   }
 }
 
-void SACReconstruction::EndProcessing()
-{;}
+// void SACReconstruction::EndProcessing()
+// {;}

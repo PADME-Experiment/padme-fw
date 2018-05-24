@@ -11,40 +11,42 @@
 #include "TTargetMCEvent.hh"
 #include "TTargetMCHit.hh"
 #include "TTargetMCDigi.hh"
+#include "DigitizerChannelReco.hh"
 
 TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "Target", ConfigFileName)
 {
   //fRecoEvent = new TRecoTargetEvent();
   //ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelReco();
 }
 
 TargetReconstruction::~TargetReconstruction()
 {;}
 
-void TargetReconstruction::Init(PadmeVReconstruction* MainReco)
-{
+// void TargetReconstruction::Init(PadmeVReconstruction* MainReco)
+// {
 
-  //common part for all the subdetectors
-  PadmeVReconstruction::Init(MainReco);
+//   //common part for all the subdetectors
+//   PadmeVReconstruction::Init(MainReco);
 
-}
+// }
 
-// Read Target reconstruction parameters from a configuration file
-void TargetReconstruction::ParseConfFile(TString ConfFileName) {
+// // Read Target reconstruction parameters from a configuration file
+// void TargetReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
-  if (!confFile.is_open()) {
-    perror(ConfFileName);
-    exit(1);
-  }
+//   std::ifstream confFile(ConfFileName.Data());
+//   if (!confFile.is_open()) {
+//     perror(ConfFileName);
+//     exit(1);
+//   }
 
-  TString Line;
-  while (Line.ReadLine(confFile)) {
-    if (Line.BeginsWith("#")) continue;
-  }
-  confFile.close();
-}
+//   TString Line;
+//   while (Line.ReadLine(confFile)) {
+//     if (Line.BeginsWith("#")) continue;
+//   }
+//   confFile.close();
+// }
 
 void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
@@ -61,5 +63,5 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   }
 }
 
-void TargetReconstruction::EndProcessing()
-{;}
+// void TargetReconstruction::EndProcessing()
+// {;}

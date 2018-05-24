@@ -17,10 +17,10 @@ public:
   ECalReconstruction(TFile*, TString);
   ~ECalReconstruction();
 
-  void ParseConfFile(TString);
-  virtual void Init(PadmeVReconstruction*);
+  // void ParseConfFile(TString);
+  // virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void EndProcessing();
+  // virtual void EndProcessing();
 
 };
 #endif

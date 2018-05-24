@@ -18,40 +18,42 @@
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 #include "TECalMCDigi.hh"
+#include "DigitizerChannelReco.hh"
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelReco();
 }
 
 ECalReconstruction::~ECalReconstruction()
 {;}
 
-void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
-{
+// void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
+// {
 
-  //common part for all the subdetectors
-  PadmeVReconstruction::Init(MainReco);
+//   //common part for all the subdetectors
+//   PadmeVReconstruction::Init(MainReco);
 
-}
+// }
 
-// Read ECal reconstruction parameters from a configuration file
-void ECalReconstruction::ParseConfFile(TString ConfFileName) {
+// // Read ECal reconstruction parameters from a configuration file
+// void ECalReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
-  if (!confFile.is_open()) {
-    perror(ConfFileName);
-    exit(1);
-  }
+//   std::ifstream confFile(ConfFileName.Data());
+//   if (!confFile.is_open()) {
+//     perror(ConfFileName);
+//     exit(1);
+//   }
 
-  TString Line;
-  while (Line.ReadLine(confFile)) {
-    if (Line.BeginsWith("#")) continue;
-  }
-  confFile.close();
-}
+//   TString Line;
+//   while (Line.ReadLine(confFile)) {
+//     if (Line.BeginsWith("#")) continue;
+//   }
+//   confFile.close();
+// }
 
 /*
 TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -123,5 +125,5 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 }
 
-void ECalReconstruction::EndProcessing()
-{;}
+// void ECalReconstruction::EndProcessing()
+// {;}

@@ -54,13 +54,13 @@ PadmeReconstruction::~PadmeReconstruction()
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
+  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
   fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
-  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
+  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
+  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
+  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()

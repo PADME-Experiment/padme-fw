@@ -4,6 +4,11 @@
 
 #include "RecoRootIOManager.hh"
 #include "PVetoRecoRootIO.hh"
+#include "EVetoRecoRootIO.hh"
+#include "HEPVetoRecoRootIO.hh"
+#include "SACRecoRootIO.hh"
+#include "TargetRecoRootIO.hh"
+#include "ECalRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
@@ -34,6 +39,11 @@ RecoRootIOManager::RecoRootIOManager()
 
   // Add subdetectors persistency managers
   fRootIOList.push_back(new PVetoRecoRootIO);
+  fRootIOList.push_back(new EVetoRecoRootIO);
+  fRootIOList.push_back(new HEPVetoRecoRootIO);
+  fRootIOList.push_back(new SACRecoRootIO);
+  fRootIOList.push_back(new TargetRecoRootIO);
+  fRootIOList.push_back(new ECalRecoRootIO);
 
 }
 

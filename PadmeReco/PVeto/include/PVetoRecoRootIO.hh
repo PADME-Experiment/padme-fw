@@ -10,7 +10,7 @@
 
 
 
-class TPVetoRecoEvent;-
+class TPVetoRecoEvent;
 class RecoVRootIO;
 
 class PVetoRecoRootIO : public RecoVRootIO

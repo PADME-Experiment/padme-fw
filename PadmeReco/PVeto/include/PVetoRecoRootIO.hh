@@ -10,7 +10,7 @@
 
 
 
-class TPVetoRecoEvent;
+class TPVetoRecoEvent;-
 class RecoVRootIO;
 
 class PVetoRecoRootIO : public RecoVRootIO
@@ -20,18 +20,7 @@ public:
   PVetoRecoRootIO();
   virtual ~PVetoRecoRootIO();
 
-  //  static PVetoRecoRootIO* GetInstance();
-
-  //  void NewRun(Int_t, TFile*);
-  //  void EndRun();
-  //  virtual void SaveEvent();
-  // void Close();
-
 private:
-
-  //  TTree* fEventTree;
-  //  TBranch* fPVetoBranch;
-  //  TPVetoRecoEvent* fEvent;
 
   
 

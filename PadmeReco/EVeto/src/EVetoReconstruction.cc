@@ -11,40 +11,42 @@
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
 #include "TEVetoMCDigi.hh"
+#include "DigitizerChannelReco.hh"
 
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "EVeto", ConfigFileName)
 {
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelReco();
 }
 
 EVetoReconstruction::~EVetoReconstruction()
 {;}
 
-void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
-{
+// void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
+// {
 
-  //common part for all the subdetectors
-  PadmeVReconstruction::Init(MainReco);
+//   //common part for all the subdetectors
+//   PadmeVReconstruction::Init(MainReco);
 
-}
+// }
 
-// Read EVeto reconstruction parameters from a configuration file
-void EVetoReconstruction::ParseConfFile(TString ConfFileName) {
+// // Read EVeto reconstruction parameters from a configuration file
+// void EVetoReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
-  if (!confFile.is_open()) {
-    perror(ConfFileName);
-    exit(1);
-  }
+//   std::ifstream confFile(ConfFileName.Data());
+//   if (!confFile.is_open()) {
+//     perror(ConfFileName);
+//     exit(1);
+//   }
 
-  TString Line;
-  while (Line.ReadLine(confFile)) {
-    if (Line.BeginsWith("#")) continue;
-  }
-  confFile.close();
-}
+//   TString Line;
+//   while (Line.ReadLine(confFile)) {
+//     if (Line.BeginsWith("#")) continue;
+//   }
+//   confFile.close();
+// }
 
 /*
 TRecoVEvent * EVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -72,5 +74,5 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   }
 }
 
-void EVetoReconstruction::EndProcessing()
-{;}
+// void EVetoReconstruction::EndProcessing()
+// {;}

@@ -19,6 +19,7 @@
 #include "utlConfigParser.hh"
 #include "PadmeVRecoConfig.hh"
 #include "RecoVChannelID.hh"
+#include "PadmeVCalibration.hh"
 
 #include "TH1.h"
 #include <vector>
@@ -88,6 +89,7 @@ protected:
   vector<TRecoVHit *> fHits;
 
   ChannelVReco *fChannelReco;
+  PadmeVCalibration *fChannelCalibration;
 
 
 };

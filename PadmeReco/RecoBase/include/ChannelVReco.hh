@@ -9,7 +9,7 @@ class ChannelVReco {
 
 public:
   ChannelVReco(){;};
-  ~ChannelVReco(){;};
+  virtual  ~ChannelVReco(){;};
   
   virtual void SetDigis(UShort_t n,Short_t* arr) = 0;  
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray)=0;

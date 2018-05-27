@@ -14,6 +14,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
 
   fMainReco = 0;
   fChannelReco = 0;
+  fChannelCalibration = 0;
   fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
@@ -32,6 +33,9 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   //  fRecoEvent=0;
   //}
   if(fConfigParser) {delete fConfigParser; fConfigParser=0;};
+  if(fConfig) {delete fConfig; fConfig=0;}; 
+  if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
+  if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
 }
 
 void PadmeVReconstruction::Exception(TString Message){
@@ -48,6 +52,7 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   if(fChannelReco) {
     fChannelReco->Init(GetConfig());
     InitChannelID(GetConfig());
+    if(fChannelCalibration) fChannelCalibration->Init(GetConfig());
     std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
   }
   
@@ -193,7 +198,8 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
     } else {
     }
   }
- 
+   
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(Hits);
   //Processing is over, let's analyze what's here, if foreseen
   AnalyzeEvent(rawEv);
   

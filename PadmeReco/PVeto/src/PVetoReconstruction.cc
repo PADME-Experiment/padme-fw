@@ -22,6 +22,7 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
   fChannelReco = new DigitizerChannelReco();
+  fChannelCalibration  = new PadmeVCalibration();
 }
 
 PVetoReconstruction::~PVetoReconstruction()
@@ -51,6 +52,8 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     TPVetoMCDigi* digi = (TPVetoMCDigi*)tPVetoEvent->Digi(iD);
     digi->Print();
   }
+
+  
 
 }
 

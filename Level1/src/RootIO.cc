@@ -8,7 +8,8 @@ RootIO::RootIO()
 {
 
   // Create TFile handle
-  fTFileHandle = new TFile();
+  //fTFileHandle = new TFile();
+  fTFileHandle = 0;
 
   // Create TRawEvent object
   fTRawEvent = new TRawEvent();
@@ -59,7 +60,7 @@ int RootIO::Init()
 int RootIO::Exit()
 {
   printf("RootIO::Exit - Finalizing output.\n");
-  CloseOutFile();
+  if (CloseOutFile() != ROOTIO_OK) return ROOTIO_ERROR;
 
   printf("RootIO::Exit - Total files created:  %u\n",fOutFileIndex+1);
   printf("RootIO::Exit - Total events written: %u\n",fOutEventsTotal);
@@ -71,7 +72,7 @@ int RootIO::Exit()
 Int_t RootIO::ChangeOutFile()
 {
 
-  CloseOutFile();
+  if (CloseOutFile() != ROOTIO_OK) return ROOTIO_ERROR;
 
   // Update file index and create new filename
   fOutFileIndex++;
@@ -90,7 +91,12 @@ Int_t RootIO::OpenOutFile()
   }
 
   printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
-  fTFileHandle->Open(fOutFile,"NEW","PADME Merged Raw Events");
+  //fTFileHandle->Open(fOutFile,"NEW","PADME Merged Raw Events");
+  fTFileHandle = TFile::Open(fOutFile,"NEW","PADME Merged Raw Events");
+  if ( (!fTFileHandle) || fTFileHandle->IsZombie() ) {
+    delete fTFileHandle;
+    return ROOTIO_ERROR;
+  }
 
   // Create TTree to hold raw events
   fTTreeMain = new TTree("RawEvents","PADME Raw Events Tree");
@@ -129,12 +135,13 @@ Int_t RootIO::CloseOutFile()
   //Long64_t size = fTFileHandle->GetSize();
   //Long64_t bytes = fTFileHandle->GetBytesWritten();
   //printf("File has size %lld and bytes %lld\n",size,bytes);
-  //fOutFileSize = fTFileHandle->GetSize();
-  //fOutSizeTotal += fOutFileSize;
-  fOutFileSize = 0;
+  fOutFileSize = fTFileHandle->GetSize();
+  fOutSizeTotal += fOutFileSize;
+  //fOutFileSize = 0;
 
-  // Delete TTree used for this file
-  delete fTTreeMain;
+  // Delete file handle for this file
+  //delete fTTreeMain;
+  delete fTFileHandle; // This takes also care of deleting the TTree
 
   // Update DB with file close information
   if (fDB) {
@@ -277,8 +284,9 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
   // Count event and see if we have to change file
   fOutEventsTotal++;
   fOutFileEvents++;
-  if (fNMaxEvtsPerOutFile && (fOutFileEvents>=fNMaxEvtsPerOutFile)) {
-    if (ChangeOutFile() == ROOTIO_ERROR) return ROOTIO_ERROR;
+  //if (fNMaxEvtsPerOutFile && (fOutFileEvents>=fNMaxEvtsPerOutFile)) {
+  if (fConfig->NEventsPerFile() && (fOutFileEvents>=fConfig->NEventsPerFile())) {
+    if (ChangeOutFile() != ROOTIO_OK) return ROOTIO_ERROR;
   }
 
   return ROOTIO_OK;

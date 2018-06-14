@@ -107,11 +107,6 @@ int ZSUP_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
-  }
-
   time(&t_daqstart);
   printf("%s - Zero suppression started\n",format_time(t_daqstart));
 
@@ -125,6 +120,46 @@ int ZSUP_readdata ()
   totalReadEvents = 0;
   totalWriteSize = 0;
   totalWriteEvents = 0;
+
+  // Start counting output files
+  fileIndex = 0;
+  tooManyOutputFiles = 0;
+
+  // We have to open the output file first to avoid network-related lock-ups
+
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+
+    // Generate name for initial output file and verify it does not exist
+    generate_filename(tmpName,t_daqstart);
+    fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+    strcpy(fileName[fileIndex],tmpName);
+    if ( Config->run_number ) {
+      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+    }
+    pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
+    strcpy(pathName[fileIndex],Config->data_dir);
+    strcat(pathName[fileIndex],fileName[fileIndex]);
+
+  } else {
+
+    // Use only one virtual file for streaming out all data
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
+
+  }
+
+  // Open output file
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+    outFileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+  } else {
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    outFileHandle = open(pathName[fileIndex],O_WRONLY);
+  }
+  if (outFileHandle == -1) {
+    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+    return 2;
+  }
 
   // Create initok file to tell RunControl that we are ready
   printf("- Creating InitOK file '%s'\n",Config->initok_file);
@@ -197,8 +232,9 @@ int ZSUP_readdata ()
   memcpy(&start_time,inEvtBuffer+12,4);
   printf("- Start time %s\n",format_time(start_time));
 
-  // Now that we have a recognized input stream we open an output file/stream
+  // Now that we have a recognized input stream we can register the output file in the DB and send it the header
 
+  /*
   // Start counting output files
   fileIndex = 0;
   tooManyOutputFiles = 0;
@@ -236,6 +272,9 @@ int ZSUP_readdata ()
     printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
     return 2;
   }
+
+  */
+
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
   fileEvents[fileIndex] = 0;
@@ -324,24 +363,25 @@ int ZSUP_readdata ()
       outputEventSize = inputEventSize;
       outputEventBuffer = inEvtBuffer;
 
+      // Even if zero suppression is off, show we are alive
+      if (totalReadEvents % 100 == 0) {
+	printf("Event %7d\tZero suppression OFF\n",totalReadEvents);
+      }
+
     } else {
 
-      // Check autopass bit
+      // Extract 0-suppression configuration
+      unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
+      unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
+
+      // If Autopass flag (bit 4 of status) is on, force zero suppression to flagging mode
       line = (unsigned int *)(inEvtBuffer+8);
       unsigned short int status = (*line >> 22) & 0x03FF;
-      if ( status & 0x0010 ) {
+      if ( status & 0x0010 ) zsupMode = 1;
 
-	// Autopass flag (bit 4 of status) is on: do not apply zero suppression
-	outputEventSize = inputEventSize;
-	outputEventBuffer = inEvtBuffer;
-
-      } else {
-
-	// Otherwise we copy input buffer to output buffer while applying zero suppression
-	outputEventSize = apply_zero_suppression((void *)inEvtBuffer,(void *)outEvtBuffer);
-	outputEventBuffer = outEvtBuffer;
-
-      }
+      // Apply zero suppression algorithm
+      outputEventSize = apply_zero_suppression(zsupMode,zsupAlgr,(void *)inEvtBuffer,(void *)outEvtBuffer);
+      outputEventBuffer = outEvtBuffer;
 
     }
 
@@ -558,7 +598,7 @@ int ZSUP_readdata ()
 
 }
 
-unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
+unsigned int apply_zero_suppression (unsigned int zsupMode, unsigned int zsupAlgr, void *inBuff,void *outBuff)
 {
   unsigned int *line;
   unsigned int outLine;
@@ -575,8 +615,8 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
   unsigned int i;
 
   // Extract 0-suppression configuration
-  unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
-  unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
+  //unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
+  //unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
 
   // Position cursors at beginning of input and output event structures
   inCursor = inStart; outCursor = outStart;

@@ -1,6 +1,7 @@
 import MySQLdb
 import os
 import time
+import re
 
 class PadmeDB:
 
@@ -238,24 +239,52 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
 
-        # First search by name
-        c.execute("""SELECT id FROM node WHERE name=%s""",(node,))
-        res = c.fetchone()
-        self.conn.commit()
+        # Check if this is an IP address
+        res = re.match("^\d+\.\d+\.\d+\.\d+$",node)
         if (res != None):
-            (id,) = res
-            return id
 
-        # Then search by IP address on the DAQ VLAN
-        c.execute("""SELECT id FROM node WHERE ip_addr_daq=%s""",(node,))
-        res = c.fetchone()
-        self.conn.commit()
-        if (res != None):
-            (id,) = res
-            return id
+            # Search by IP address on the DAQ VLAN
+            c.execute("""SELECT id FROM node WHERE ip_addr_daq=%s""",(node,))
+            res = c.fetchone()
+            self.conn.commit()
+            if (res != None):
+                (id,) = res
+                return id
+
+        else:
+
+            # If node name does not end with .lnf.infn.it, add it before searching
+            res = re.match("^\w*\.lnf\.infn\.it$",node)
+            if (res == None): node += ".lnf.infn.it"
+
+            # Search by name
+            c.execute("""SELECT id FROM node WHERE name=%s""",(node,))
+            res = c.fetchone()
+            self.conn.commit()
+            if (res != None):
+                (id,) = res
+                return id
 
         # If not found, return -1
         return -1
+
+    def get_node_daq_ip(self,id):
+
+        # Return IP address on DAQ VLAN (192.168.60.X) of node with given ID
+ 
+        self.check_db()
+        c = self.conn.cursor()
+
+        c.execute("""SELECT ip_addr_daq FROM node WHERE id=%s""",(id,))
+        res = c.fetchone()
+        self.conn.commit()
+        if (res != None):
+            (ip,) = res
+            if (ip != None):
+                return ip
+
+        # If not found, return null string
+        return ""
 
     def get_run_types(self):
 

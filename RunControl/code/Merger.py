@@ -19,6 +19,7 @@ class Merger:
         self.log_file = "undefined"
         self.config_file = "undefined"
         self.node_id = 0
+        self.node_ip = ""
         self.run_number = 0
         self.input_list = "undefined"
         self.output_dir = "."
@@ -32,6 +33,7 @@ class Merger:
         cfgstring += "config_file\t\t%s\n"%self.config_file
         cfgstring += "log_file\t\t%s\n"%self.log_file
         cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
         cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "input_list\t\t%s\n"%self.input_list
         cfgstring += "output_dir\t\t%s\n"%self.output_dir
@@ -61,21 +63,67 @@ class Merger:
 
         return "ok"
 
+    def create_output_dir(self):
+
+        if self.node_id == 0:
+
+            # Create directory on local host
+            print "Creating merger output files directory %s"%self.output_dir
+            if not os.path.exists(self.output_dir): os.makedirs(self.output_dir,0755)
+
+        else:
+
+            # Create directory on remote node
+            #node_ip = self.db.get_node_daq_ip(self.node_id)
+            #if (node_ip == ""):
+            #    print "Merger::create_output_dir - ERROR: node id %d has no address on DAQ VLAN",self.node_id
+            #    return "error"
+            print "Creating merger output files directory %s on %s"%(self.output_dir,self.node_ip)
+            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(self.node_ip,self.output_dir)
+            print command
+            subprocess.call(command.split())
+
+        return "ok"
+
     def start_merger(self):
+
+        command = "%s -r %d -l %s -o %s/%s -n %d"%(self.executable,self.run_number,self.input_list,self.output_dir,self.output_file,self.max_events)
+
+        # Check if Merger runs on a remote node (node_id 0 is localhost)
+        if self.node_id != 0:
+
+            # Get IP address of merger node on DAQ VLAN (192.168.60.X)
+            #node_ip = self.db.get_node_daq_ip(self.node_id)
+            #if (node_ip == ""):
+            #    print "Merger::start_merger - ERROR: node id %d has no address on DAQ VLAN",self.node_id
+            #    return 0
+
+            # Start Merger on remote node using passwordless ssh connection
+            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+
+        # Start Merger process on local node
+        #try:
+        #    self.process = subprocess.Popen([self.executable,"-r",str(self.run_number),"-l",self.input_list,"-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events)],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+        #except OSError as e:
+        #    print "Merger::start_merger - ERROR: Execution failed: %s",e
+        #    return 0
+
+        print "- Starting Merger"
+        print command
+        print "  Log written to %s"%self.log_file
 
         # Open log file
         self.log_handle = open(self.log_file,"w")
 
-        # Start DAQ process
+        # Start Merger process
         try:
-            self.process = subprocess.Popen([self.executable,"-r",str(self.run_number),"-l",self.input_list,"-o",self.output_dir+"/"+self.output_file,"-n",str(self.max_events)],stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
-            return 0
+            return 0                
 
         # Return process id
         return self.process.pid
-
 
     def stop_merger(self):
 

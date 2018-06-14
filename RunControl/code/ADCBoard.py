@@ -11,6 +11,10 @@ class ADCBoard:
 
         self.board_id = b_id
 
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
         self.db = PadmeDB()
 
         self.status = "idle"
@@ -20,12 +24,15 @@ class ADCBoard:
     def set_default_config(self):
 
         self.node_id = 0
+        self.node_ip = ""
         self.conet2_link = -1
         self.conet2_slot = -1
 
         self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ.exe"
 
         self.run_number = 0
+
+        self.process_mode = "DAQ"
 
         self.config_file_daq = "unset"
         self.log_file_daq = "unset"
@@ -93,7 +100,7 @@ class ADCBoard:
         re_choffset = re.compile("^\s*(\d+)\s+(\w+)\s*$")
 
         # Read default board configuration from file
-        setup_file = "setup/"+setup+"/board_%02d.cfg"%self.board_id
+        setup_file = self.daq_dir+"/setup/"+setup+"/board_%02d.cfg"%self.board_id
         if (not os.path.isfile(setup_file)):
             print "ADCBoard - WARNING: setup file %s not found for board %d"%(setup_file,self.board_id)
             return
@@ -155,13 +162,15 @@ class ADCBoard:
         cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
 
         if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_daq_id
-        cfgstring += "process_mode\t\tDAQ\n"
+        #cfgstring += "process_mode\t\tDAQ\n"
+        cfgstring += "process_mode\t\t"+self.process_mode+"\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
 
         cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
 
         cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
+        cfgstring += "node_ip\t\t\t"+self.node_ip+"\n"
         cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
         cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
 
@@ -216,6 +225,7 @@ class ADCBoard:
         cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
 
         cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
+        cfgstring += "node_ip\t\t\t"+self.node_ip+"\n"
         cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
         cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
 
@@ -261,6 +271,7 @@ class ADCBoard:
 
     def create_proc_daq(self):
 
+        # Create DAQ process in DB
         self.proc_daq_id = self.db.create_process("DAQ",self.run_number,self.get_link_id())
         if self.proc_daq_id == -1:
             print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
@@ -270,6 +281,7 @@ class ADCBoard:
 
     def create_proc_zsup(self):
 
+        # Create ZSUP process in DB
         self.proc_zsup_id = self.db.create_process("ZSUP",self.run_number,self.get_link_id())
         if self.proc_zsup_id == -1:
             print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
@@ -285,23 +297,50 @@ class ADCBoard:
 
     def start_daq(self):
 
+        command = "%s -c %s"%(self.executable,self.config_file_daq)
+
+        # If DAQ process runs on a remote node then start it using passwordless ssh connection
+        if self.node_id != 0:
+            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+
+        print "- Start DAQ process for board %d"%self.board_id
+        print command
+        print "  Log written to %s"%self.log_file_daq
+
         # Open log file
         self.log_handle_daq = open(self.log_file_daq,"w")
 
         # Start DAQ process
+        #try:
+        #    self.process_daq = subprocess.Popen([self.executable,"-c",self.config_file_daq],stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
+        #except OSError as e:
+        #    print "ADCBoard - ERROR: DAQ Execution failed: %s",e
+        #    return 0
+
+        # Start DAQ process
         try:
-            self.process_daq = subprocess.Popen([self.executable,"-c",self.config_file_daq],stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
+            self.process_daq = subprocess.Popen(command.split(),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
-            print "ADCBoard - ERROR: DAQ Execution failed: %s",e
-            return 0
+            print "ADCBoard::start_daq - ERROR: Execution failed: %s",e
+            return 0                
 
         # Return process id
         return self.process_daq.pid
 
     def stop_daq(self):
 
-        # Wait up to 5 seconds for DAQ to stop
-        for i in range(5):
+        # Send an interrupt to DAQ process
+        if self.node_id == 0:
+            # If process is on local host, just send a kill signal
+            command = "kill %d"%self.process_daq.pid
+        else:
+            # If it is on a remote host, use ssh to send kill command.
+            # PID on remote host is recovered from the lock file
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( kill `cat %s` )'"%(self.node_ip,self.lock_file_daq)
+        os.system(command)
+
+        # Wait up to 10 seconds for DAQ to stop
+        for i in range(10):
 
             if self.process_daq.poll() != None:
 
@@ -322,23 +361,39 @@ class ADCBoard:
 
     def start_zsup(self):
 
+        command = "%s -c %s"%(self.executable,self.config_file_zsup)
+
+        # If ZSUP process runs on a remote node then start it using passwordless ssh connection
+        if self.node_id != 0:
+            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+
+        print "- Start ZSUP process for board %d"%self.board_id
+        print command
+        print "  Log written to %s"%self.log_file_zsup
+
         # Open log file
         self.log_handle_zsup = open(self.log_file_zsup,"w")
 
         # Start ZSUP process
+        #try:
+        #    self.process_zsup = subprocess.Popen([self.executable,"-c",self.config_file_zsup],stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
+        #except OSError as e:
+        #    print "ADCBoard - ERROR: ZSUP execution failed: %s",e
+        #    return 0
+
+        # Start ZSUP process
         try:
-            self.process_zsup = subprocess.Popen([self.executable,"-c",self.config_file_zsup],stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
+            self.process_zsup = subprocess.Popen(command.split(),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
-            print "ADCBoard - ERROR: ZSUP execution failed: %s",e
-            return 0
+            print "ADCBoard::start_zsup - ERROR: Execution failed: %s",e
+            return 0                
 
         # Return process id
         return self.process_zsup.pid
 
-
     def stop_zsup(self):
 
-        # Wait up to 5 seconds for DAQ to stop
+        # Wait up to 5 seconds for ZSUP to stop
         for i in range(5):
 
             if self.process_zsup.poll() != None:

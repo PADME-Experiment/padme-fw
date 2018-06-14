@@ -14,14 +14,14 @@ def main(argv):
     try:
         opts,args = getopt.getopt(argv,"h",["no-gui","server","interactive"])
     except getopt.GetoptError:
-        print 'RunControl [--no-gui] [--server] [--interactive] [-h]'
+        print 'RunControl [--no-gui] [--server] [--interactive] [-h|--help]'
         sys.exit(2)
 
     useGUI = True
     startServer = False
     serverInteractive = False
     for opt,arg in opts:
-        if opt == '-h':
+        if opt == '-h' or opt == '--help':
             print 'RunControl [--no-gui] [--server] [--interactive] [-h]'
             sys.exit()
         elif opt == '--no-gui':

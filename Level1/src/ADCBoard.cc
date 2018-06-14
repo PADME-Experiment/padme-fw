@@ -31,9 +31,31 @@ ADCBoard::~ADCBoard()
 
 void ADCBoard::Reset()
 {
+  //printf("Calling ADCBoard::Reset\n");
   fFiles.clear();
   if (fFileHandle && fFileHandle.is_open()) fFileHandle.close();
   fCurrentFile = 0;
+  fNewFile = 0;
+  fADCEvent->Reset();
+}
+
+void ADCBoard::Init()
+{
+  // Initialize board after configuration
+
+  // Check if at least one file is in the input list
+  if (fFiles.size() == 0) {
+    printf("ADCBoard::Init - ERROR - Trying to initialize board with no input files. Aborting\n");
+    exit(1);
+  }
+
+  // Open first input file in list
+  fCurrentFile = 0;
+  if (OpenFile() != 0) {
+    printf("ADCBoard::Init - ERROR - Unable to open input file. Aborting\n");
+    exit(1);
+  }
+
 }
 
 ADCFile* ADCBoard::AddFile(std::string fileName)
@@ -67,6 +89,15 @@ std::string ADCBoard::GetFileName(int i)
 
 }
 
+int ADCBoard::OpenFile()
+{
+  // Will add some error checking later
+  printf("Opening file %s\n",fFiles[fCurrentFile].GetPath().c_str());
+  fFileHandle.open(fFiles[fCurrentFile].GetPath().c_str(), std::ios::in | std::ios::binary);
+  fNewFile = 1;
+  return 0;
+}
+
 ADCEvent* ADCBoard::NextEvent()
 {
 
@@ -75,16 +106,19 @@ ADCEvent* ADCBoard::NextEvent()
   while(1){
 
     // Starting a new file
-    if ( (! fFileHandle) || (! fFileHandle.is_open()) ) {
+    //if ( (! fFileHandle) || (! fFileHandle.is_open()) ) {
 
       // Open next file in list
-      if ( fCurrentFile >= fFiles.size() ) {
-	// No more files: we are done
-	fADCEvent = 0;
-	return fADCEvent;
-      }
-      printf("Opening file %s\n",fFiles[fCurrentFile].GetPath().c_str());
-      fFileHandle.open(fFiles[fCurrentFile].GetPath().c_str(), std::ios::in | std::ios::binary);
+      //printf ("Current file %d List size %lu\n",fCurrentFile,fFiles.size());
+      //if ( fCurrentFile >= fFiles.size() ) {
+      //	// No more files: we are done
+      //	fADCEvent = 0;
+      //	return fADCEvent;
+      //}
+      //printf("Opening file %s\n",fFiles[fCurrentFile].GetPath().c_str());
+      //fFileHandle.open(fFiles[fCurrentFile].GetPath().c_str(), std::ios::in | std::ios::binary);
+
+    if (fNewFile == 1) {
 
       // Read file head. Returns 0:OK 1:Error
       ret = ReadFileHead();
@@ -96,6 +130,8 @@ ADCEvent* ADCBoard::NextEvent()
       printf("File %s opened with format version %d\n",
 	     fFiles[fCurrentFile].GetPath().c_str(),fFiles[fCurrentFile].GetVersion());
 
+      fNewFile = 0;
+
     }
 
     // Read next event (also handle file tail record). Returns 0:OK 1:Error 2:EOF
@@ -105,8 +141,21 @@ ADCEvent* ADCBoard::NextEvent()
       exit(1);
     }
     if (ret == 2){
+      // EndOfFile reached: close current file
       fFileHandle.close();
+      // Check if more files are present, if not we end here
       fCurrentFile++;
+      if ( fCurrentFile >= fFiles.size() ) {
+	// No more files: we are done
+	fADCEvent = 0;
+	return fADCEvent;
+      }
+      // More files are available: open the next one
+      if (OpenFile() != 0) {
+	printf("ADCBoard::NextEvent - ERROR - Unable to open next input file. Aborting\n");
+	exit(1);
+      }
+      fNewFile = 1;
       continue;
     }
     return fADCEvent;

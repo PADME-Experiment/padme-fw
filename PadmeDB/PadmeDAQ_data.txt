@@ -95,3 +95,4 @@ run_type 2 COSMICS     Cosmics run
 run_type 3 CALIBRATION Calibration run
 run_type 4 RANDOM      Random triggers run
 run_type 5 OTHER       Run of a type which was not forseen
+run_type 6 FAKE        Run will use PadmeDAQ in FAKE mode (experts only!)

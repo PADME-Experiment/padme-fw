@@ -1121,6 +1121,7 @@ int DAQ_readdata ()
     }
 
     // Check if it is time to stop DAQ (user interrupt, quit file, time elapsed, too many output files)
+    //printf("Checking stop run condition %s %d\n",Config->quit_file,access(Config->quit_file,F_OK));
     if (
 	 BreakSignal || tooManyOutputFiles ||
 	 (access(Config->quit_file,F_OK) != -1) ||

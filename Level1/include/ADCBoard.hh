@@ -22,6 +22,7 @@ class ADCBoard
   ~ADCBoard();
 
   void Reset();
+  void Init();
 
   int GetBoardId() { return fBoardId; }
 
@@ -37,6 +38,7 @@ class ADCBoard
 
  private:
 
+  int OpenFile();
   int ReadFileHead();
   int ReadNextEvent();
   int UnpackEvent_v01(UInt_t);
@@ -53,6 +55,7 @@ class ADCBoard
 
   std::vector<ADCFile> fFiles;
 
+  UInt_t fNewFile;
   UInt_t fCurrentFile;
   std::ifstream fFileHandle;
   void* fBuffer;

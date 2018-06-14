@@ -13,9 +13,13 @@ class RunControlServer:
 
     def __init__(self,mode):
 
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
         # Define names of lock and last_used_setup files
-        self.lock_file = "run/lock"
-        self.lus_file = "setup/last_used_setup"
+        self.lock_file = self.daq_dir+"/run/lock"
+        self.lus_file = self.daq_dir+"/setup/last_used_setup"
 
         # Redefine print to send output to log file
         sys.stdout = Logger()
@@ -205,7 +209,7 @@ class RunControlServer:
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
 
-            return terminate_run()
+            return self.terminate_run()
 
         # Otherwise nothing to do
         return "ok"
@@ -256,8 +260,8 @@ class RunControlServer:
                     # Exit from client handling loop and wait for a new client
                     break
 
-    def write_log(self,msg):
-        print self.now_str()+" "+msg
+    #def write_log(self,msg):
+    #    print self.now_str()+" "+msg
 
     def state_idle(self):
 
@@ -538,7 +542,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
     def read_setup_list(self):
 
         # Get list of available setups
-        setup_main_dir = "setup"
+        setup_main_dir = self.daq_dir+"/setup"
         setups = []
         for top,dirs,files in os.walk(setup_main_dir):
             if (top == setup_main_dir):
@@ -605,9 +609,14 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         for rtype in self.run_type_list:
             if (ans == rtype): newrun_type = ans
         if (newrun_type):
+            # Verify that FAKE runs are not stored in the DB
+            if (newrun_type == "FAKE" and newrun_number != 0):
+                print "run_type - attempt to store FAKE run in DB: this is not allowed"
+                self.send_answer("error")
+                return "error"
             self.send_answer(newrun_type)
         else:
-#            self.write_log("run_type - invalid option %s received"%ans)
+            #self.write_log("run_type - invalid option %s received"%ans)
             print "run_type - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
@@ -630,11 +639,11 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         print "Run comment: %s"%newrun_comment
 
         # Set run configuration according to user's request
-        self.run.change_run(newrun_number)
+        self.run.run_number = newrun_number
         self.run.run_type = newrun_type
         self.run.run_user = newrun_user
         self.run.run_comment_start = newrun_comment
-
+        self.run.change_run()
 
         # Create run structure in the DB
         if (self.run.run_number):
@@ -678,21 +687,25 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         #    print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
         #    adc.write_config()
 
+        # Create merger input list
+        self.run.create_merger_input_list()
+
+        # Start run initialization procedure
+        self.send_answer("start_init")
+
+        ## Create merger output file directory
+        #self.run.create_merger_output_dir()
+        self.run.merger.create_output_dir()
+
         # Create pipes for data transfer
         print "Creating named pipes for run %d"%self.run.run_number
-        self.run.create_streams()
+        self.run.create_fifos()
         #for adc in (self.run.adcboard_list):
         #    os.mkfifo(adc.output_stream_daq)
         #    os.mkfifo(adc.output_stream_zsup)
 
-        # Create merger input list
-        self.run.create_merger_input_list()
-
-        # Create merger output file directory
-        self.run.create_merger_output_dir()
-
-        # Start run initialization procedure
-        self.send_answer("start_init")
+        # Create receiving end of network tunnels (if needed)
+        self.run.create_receivers()
 
         # Start merger
         p_id = self.run.merger.start_merger()
@@ -702,6 +715,9 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         else:
             print "ERROR: could not start Merger"
             self.send_answer("merger fail")
+
+        # Create sending ends of network tunnels (if needed)
+        self.run.create_senders()
 
         # Start ZSUP for all boards
         for adc in (self.run.adcboard_list):
@@ -713,6 +729,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
                 self.send_answer("adc "+str(adc.board_id)+" zsup_fail")
+            time.sleep(1)
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
@@ -728,6 +745,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
                 self.send_answer("adc "+str(adc.board_id)+" fail")
                 adc.status = "fail"
+            time.sleep(1)
 
         # Wait for all boards to finish initialization
         n_try = 0
@@ -754,10 +772,10 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 if (adc.status == "fail"): all_boards_ready = 0
 
             if (all_boards_init == 0):
-                # Some boards are still initializing: keep waiting
+                # Some boards are still initializing: keep waiting (NFS is very slow: wait 1min)
                 n_try += 1
-                if (n_try>=10):
-                    print "*** ERROR *** One or more boards did not initialize within 10sec. Cannot start run"
+                if (n_try>=60):
+                    print "*** ERROR *** One or more boards did not initialize within 60sec. Cannot start run"
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                     self.send_answer("init_timeout")
                     return "initfail"

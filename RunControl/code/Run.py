@@ -10,6 +10,18 @@ class Run:
 
     def __init__(self):
 
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
+        # Define name and position of control files
+        self.control_dir = self.daq_dir+"/run"
+        self.start_file = self.control_dir+"/start"
+        self.quit_file = self.control_dir+"/quit"
+        self.initok_file_head = self.control_dir+"/initok"
+        self.initfail_file_head = self.control_dir+"/initfail"
+        self.lock_file_head = self.control_dir+"/lock"
+
         self.db = PadmeDB()
 
         self.setup = "test"
@@ -20,51 +32,57 @@ class Run:
         self.run_comment_start = "Generic run"
         self.run_comment_end = "Generic end of run"
 
-        self.rawdata_dir = "rawdata"
+        self.rawdata_dir = self.daq_dir+"/local/rawdata"
 
         self.set_default_config()
 
         self.merger = Merger()
         #self.merger_node_list = ["l1padme1","l1padme2"]
-        self.merger_node_list = ["localhost"]
+        #self.merger_node_list = ["l1padme1"]
+        #self.merger_node_list = ["localhost"]
+        self.merger_node_list = []
         self.merger_node = ""
 
-    def change_run(self,run):
+    def change_run(self):
 
-        self.run_number = run
-
-        if (run == 0):
+        if (self.run_number == 0):
             self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
         else:
-            self.run_name = "run_"+str(run)
+            self.run_name = "run_"+str(self.run_number)
 
-        self.run_dir = "runs/"+self.run_name
+        self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
         #self.config_dir = "cfg/run_"+str(run)
         self.config_dir = self.run_dir+"/cfg"
-        self.config_file = "run_"+str(run)+".cfg"
-        self.config_file_head = "run_"+str(run)
+        self.config_file = "run_"+str(self.run_number)+".cfg"
+        self.config_file_head = "run_"+str(self.run_number)
 
         #self.log_dir = "runs/run_"+str(run)+"/log"
         self.log_dir = self.run_dir+"/log"
-        self.log_file_head = "run_"+str(run)
+        self.log_file_head = "run_"+str(self.run_number)
 
-        self.stream_dir = self.run_dir+"/stream"
-        self.stream_head = "run_"+str(run)
+        #self.stream_dir = self.run_dir+"/stream"
+        self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
+        self.stream_head = "run_"+str(self.run_number)
 
+        # Make sure Merger runs on a different node after each run
         self.merger_node = self.next_merger_node()
+        self.merger.node_id = self.db.get_node_id(self.merger_node)
+        self.merger.node_ip = self.db.get_node_daq_ip(self.merger.node_id)
 
         self.merger.config_file = self.config_dir+"/"+self.config_file_head+"_merger.cfg"
         self.merger.log_file = self.log_dir+"/"+self.log_file_head+"_merger.log"
         self.merger.run_number = self.run_number
-        self.merger.node_id = self.db.get_node_id(self.merger_node)
         self.merger.input_list = self.config_dir+"/"+self.config_file_head+"_merger.list"
         self.merger.output_dir = self.rawdata_dir+"/"+self.run_name
         self.merger.output_file = self.run_name
-        
 
         for adcboard in self.adcboard_list:
             adcboard.run_number  = self.run_number
+            if (self.run_type == "FAKE"):
+                adcboard.process_mode = "FAKE"
+            else:
+                adcboard.process_mode = "DAQ"
             s_bid = "b%02d"%adcboard.board_id
             adcboard.config_file_daq = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_daq.cfg"
             adcboard.config_file_zsup = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_zsup.cfg"
@@ -106,23 +124,26 @@ class Run:
         self.adcboard_list = []
         self.boardid_list = []
 
-        self.run_dir = "runs/dummy_run"
+        self.run_name = "dummy_run"
+
+        self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
         self.config_dir = self.run_dir+"/cfg"
-        self.config_file = "dummy_run.cfg"
-        self.config_file_head = "dummy_run"
+        self.config_file = self.run_name+".cfg"
+        self.config_file_head = self.run_name
 
         self.log_dir = self.run_dir+"/log"
-        self.log_file_head = "dummy_run"
+        self.log_file_head = self.run_name
 
-        self.stream_dir = self.run_dir+"/stream"
-        self.stream_head = "dummy_run"
+        #self.stream_dir = self.run_dir+"/stream"
+        self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
+        self.stream_head = self.run_name
 
-        self.start_file = "run/start"
-        self.quit_file = "run/quit"
-        self.initok_file_head = "run/initok"
-        self.initfail_file_head = "run/initfail"
-        self.lock_file_head = "run/lock"
+        #self.start_file = self.daq_dir+"/run/start"
+        #self.quit_file = self.daq_dir+"/run/quit"
+        #self.initok_file_head = self.daq_dir+"/run/initok"
+        #self.initfail_file_head = self.daq_dir+"/run/initfail"
+        #self.lock_file_head = self.daq_dir+"/run/lock"
 
         #self.data_dir = "data"
         #self.data_file_head = "daq"
@@ -140,7 +161,7 @@ class Run:
         re_board_link = re.compile("^\s*(\d+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
 
         # Read default run configuration from file
-        setup_file = "setup/%s/run.cfg"%self.setup
+        setup_file = self.daq_dir+"/setup/%s/run.cfg"%self.setup
         if (not os.path.isfile(setup_file)):
             print "Run - ERROR: setup file %s not found"%setup_file
             return "error"
@@ -168,6 +189,8 @@ class Run:
                         print l
                 elif (p_name == "merger_node"):
                     self.merger_node = p_value
+                elif (p_name == "merger_node_list"):
+                    self.merger_node_list = p_value.split()
                 else:
                     print "Run - WARNING: unknown parameter %s found while reading setup file %s"%(p_name,setup_file)
             else:
@@ -308,16 +331,172 @@ class Run:
 
         print self.format_config()
 
-    def create_streams(self):
+    def create_fifos(self):
 
-        # Create stream directory for this run (make sure the full tree is there)
-        if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
-
-        # Create named pipes to use for DAQ and ZSUP streams
+        # Create stream directories and fifo files for ADCBoards
         for adc in (self.adcboard_list):
-            print "Creating named pipes %s and %s for ADC board %d"%(adc.output_stream_daq,adc.output_stream_zsup,adc.board_id)
-            os.mkfifo(adc.output_stream_daq)
-            os.mkfifo(adc.output_stream_zsup)
+            if adc.node_id == 0:
+                if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+                os.mkfifo(adc.output_stream_daq)
+                os.mkfifo(adc.output_stream_zsup)
+            else:
+                #node_ip = self.db.get_node_daq_ip(adc.node_id)
+                #command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(adc.node_ip,self.stream_dir)
+                #os.system(command)
+                #command = "ssh -i ~/.ssh/id_rsa_daq %s mkfifo %s %s"%(adc.node_ip,adc.output_stream_daq,adc.output_stream_zsup)
+                #os.system(command)
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s %s )'"%(adc.node_ip,self.stream_dir,adc.output_stream_daq,adc.output_stream_zsup)
+                print command
+                os.system(command)
+
+        # Create stream directory on Merger
+        if self.merger.node_id == 0:
+            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+        else:
+            #node_ip = self.db.get_node_daq_ip(self.merger.node_id)
+            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(self.merger.node_ip,self.stream_dir)
+            os.system(command)
+
+        # If an ADCBoard process runs on a node which is different from the Merger
+        # we must replicate the ZSUP FIFO file on the Merger
+        for adc in (self.adcboard_list):
+
+            # Check if ADCBoard and Merger run on different nodes
+            if adc.node_id != self.merger.node_id:
+
+                # Duplicate ZSUP FIFO file on Merger node
+                if self.merger.node_id == 0:
+                    os.mkfifo(adc.output_stream_zsup)
+                else:
+                    command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s mkfifo %s"%(self.merger.node_ip,adc.output_stream_zsup)
+                    os.system(command)
+ 
+    def create_receivers(self):
+
+        # If an ADCBoard process runs on a node which is different from the Merger
+        # we create the receiving end of a network tunnel
+        for adc in (self.adcboard_list):
+
+            # Check if ADCBoard and Merger run on different nodes
+            if adc.node_id != self.merger.node_id:
+
+                # Define port for network tunnel
+                port_number = 31400+adc.board_id
+
+                # Open receiving end of tunnel on Merger node
+                print "Creating receiving end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
+                command = "nc -l --recv-only %s %d > %s < /dev/zero &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                if self.merger.node_id != 0:
+                    command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(self.merger.node_ip,command)
+                print command
+                os.system(command)
+                time.sleep(1)
+ 
+    def create_senders(self):
+
+        # If an ADCBoard process runs on a node which is different from the Merger
+        # we create the sending end of a network tunnel
+        for adc in (self.adcboard_list):
+
+            # Check if ADCBoard and Merger run on different nodes
+            if adc.node_id != self.merger.node_id:
+
+                # Define port for network tunnel
+                port_number = 31400+adc.board_id
+
+                # Open receiving end of tunnel on Merger node
+                print "Creating sending end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
+                command = "nc --send-only %s %d < %s > /dev/null &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                #command = "nc --send-only %s %d < %s &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                if adc.node_id != 0:
+                    command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(adc.node_ip,command)
+                print command
+                os.system(command)
+                time.sleep(1)
+
+    #def create_streams(self):
+    #
+    #    # Create stream directory for Merger
+    #    if self.merger.node_id == 0:
+    #        if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+    #    else:
+    #        node_ip = self.db.get_node_daq_ip(self.merger.node_id)
+    #        command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(node_ip,self.stream_dir)
+    #        os.system(command)
+    #
+    #    # Create stream directories and fifo files for ADCBoards
+    #    for adc in (self.adcboard_list):
+    #        if adc.node_id == 0:
+    #            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+    #            os.mkfifo(adc.output_stream_daq)
+    #            os.mkfifo(adc.output_stream_zsup)
+    #        else:
+    #            node_ip = self.db.get_node_daq_ip(adc.node_id)
+    #            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(node_ip,self.stream_dir)
+    #            os.system(command)
+    #            command = "ssh -i ~/.ssh/id_rsa_daq %s mkfifo %s %s"%(node_ip,adc.output_stream_daq,adc.output_stream_zsup)
+    #            os.system(command)
+    #
+    #    # If an ADCBoard process runs on a node which is different from the Merger
+    #    # we must replicate the ZSUP FIFO file on the merger node
+    #    # and create a network tunnel between the two FIFO files using the nc tool
+    #    # Tunnel will use port number 31400+board_id
+    #    for adc in (self.adcboard_list):
+    #
+    #        # Define host and port for network tunnel
+    #        port_number = 31400+adc.board_id
+    #        if self.merger.node_id == 0:
+    #            host_ip = "192.168.0.2"
+    #        else:
+    #            host_ip = self.db.get_node_daq_ip(self.merger.node_id)
+    #
+    #        # Check if ADCBoard and Merger run on different nodes
+    #        if adc.node_id != self.merger.node_id:
+    #
+    #            # Duplicate FIFO file and open receiving end of tunnel on Merger node
+    #            if self.merger.node_id == 0:
+    #                #os.mkfifo(adc.output_stream_zsup)
+    #                ##command = "nc -l %s %d > %s &"%(host_ip,port_number,adc.output_stream_zsup)
+    #                #command = "nc -l --recv-only %s %d > %s &"%(host_ip,port_number,adc.output_stream_zsup)
+    #                #os.system(command)
+    #                command = "%s -a %s -p %d -f %s"%(self.listener_script,host_ip,port_number,adc.output_stream_zsup)
+    #                os.system(command)
+    #            else:
+    #                print "Creating receiving end of tunnel"
+    #                #command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s mkfifo %s"%(host_ip,adc.output_stream_zsup)
+    #                #print command
+    #                #os.system(command)
+    #                ##command = "ssh -i /home/daq/.ssh/id_rsa_daq %s '( nc -l %s %d > %s )' &"%(host_ip,host_ip,port_number,adc.output_stream_zsup)
+    #                #command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( nc -l --recv-only -v -v %s %d > %s < /dev/zero )'"%(host_ip,host_ip,port_number,adc.output_stream_zsup)
+    #                #print command
+    #                #os.system(command)
+    #                command = "ssh -n -i /home/daq/.ssh/id_rsa_daq %s '( %s -a %s -p %d -f %s )'"%(host_ip,self.listener_script,host_ip,port_number,adc.output_stream_zsup)
+    #                os.system(command)
+    #
+    #            # Wait for listener to start
+    #            #time.sleep(5)
+    #
+    #            # Open sending end of tunnel on node running DAQ/ZSUP for this ADCBoard
+    #            if adc.node_id == 0:
+    #                #command = "nc %s %d < %s &"
+    #                command = "nc --send-only %s %d < %s &"
+    #                os.system(command)
+    #            else:
+    #                node_ip = self.db.get_node_daq_ip(adc.node_id)
+    #                print "Creating sending end of tunnel"
+    #                #command = "ssh -n -i /home/daq/.ssh/id_rsa_daq %s '( nc %s %d < %s )' &"%(node_ip,host_ip,port_number,adc.output_stream_zsup)
+    #                command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( nc --send-only -v -v %s %d < %s > /dev/null )'"%(node_ip,host_ip,port_number,adc.output_stream_zsup)
+    #                print command
+    #                os.system(command)
+    #
+    #    ## Create stream directory for this run (make sure the full tree is there)
+    #    #if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+    #    #
+    #    ## Create named pipes to use for DAQ and ZSUP streams
+    #    #for adc in (self.adcboard_list):
+    #    #    print "Creating named pipes %s and %s for ADC board %d"%(adc.output_stream_daq,adc.output_stream_zsup,adc.board_id)
+    #    #    os.mkfifo(adc.output_stream_daq)
+    #    #    os.mkfifo(adc.output_stream_zsup)
 
     def create_merger_input_list(self):
 
@@ -327,11 +506,11 @@ class Run:
             f.write("%d %s\n"%(adcboard.board_id,adcboard.output_stream_zsup))
         f.close()
 
-    def create_merger_output_dir(self):
-
-        # Create directory where Merger will write its output files (make sure the full tree is there)
-        print "Creating merger output files directory %s"%self.merger.output_dir
-        if not os.path.exists(self.merger.output_dir): os.makedirs(self.merger.output_dir,0755)
+    #def create_merger_output_dir(self):
+    #
+    #    # Create directory where Merger will write its output files (make sure the full tree is there)
+    #    print "Creating merger output files directory %s"%self.merger.output_dir
+    #    if not os.path.exists(self.merger.output_dir): os.makedirs(self.merger.output_dir,0755)
 
     def change_setup(self,setup):
 
@@ -360,13 +539,11 @@ class Run:
         adcboard.run_number = self.run_number
 
         # Get board connection information
-        adcboard.node_id     = -1
-        adcboard.conet2_link = -1
-        adcboard.conet2_slot = -1
         for link in self.board_link_list:
             (board,host,port,node) = link
             if (int(board) == adcboard.board_id):
                 adcboard.node_id     = self.db.get_node_id(host)
+                adcboard.node_ip     = self.db.get_node_daq_ip(adcboard.node_id)
                 adcboard.conet2_link = int(port)
                 adcboard.conet2_slot = int(node)
 

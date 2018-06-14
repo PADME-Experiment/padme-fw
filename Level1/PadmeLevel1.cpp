@@ -179,13 +179,14 @@ int main(int argc, char* argv[])
   }
   list.close();
 
-  // Show list of known boards/files
+  // Show list of known boards/files and initialize them
   printf("Reading %d board(s)\n",(int)boards.size());
   std::vector<ADCBoard*>::iterator it;
   for (it = boards.begin(); it != boards.end(); ++it) {
     board = *it;
     printf("Board %d Files %d\n",board->GetBoardId(),board->GetNFiles());
     for(int f=0; f<board->GetNFiles(); f++) printf("File %d %s\n",f,board->GetFileName(f).c_str());
+    board->Init();
   }
   
   // Connect to root services
@@ -220,7 +221,6 @@ int main(int argc, char* argv[])
     }
 
   }
-
 
   // Loop over all events in files
 

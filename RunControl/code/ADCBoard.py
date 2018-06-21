@@ -52,9 +52,6 @@ class ADCBoard:
         self.start_file = "unset"
         self.quit_file = "unset"
 
-        #self.data_dir = "unset"
-        #self.data_file = "unset"
-
         self.total_daq_time = 0
 
         # Default V1742 ADC settings

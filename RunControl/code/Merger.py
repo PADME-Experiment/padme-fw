@@ -22,8 +22,9 @@ class Merger:
         self.node_ip = ""
         self.run_number = 0
         self.input_list = "undefined"
-        self.output_dir = "."
-        self.output_file = "rawdata"
+        #self.output_dir = "."
+        #self.output_file = "rawdata"
+        self.output_list = "undefined"
         self.max_events = 10000
 
     def format_config(self):
@@ -36,8 +37,9 @@ class Merger:
         cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
         cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "input_list\t\t%s\n"%self.input_list
-        cfgstring += "output_dir\t\t%s\n"%self.output_dir
-        cfgstring += "output_file\t\t%s\n"%self.output_file
+        cfgstring += "output_list\t\t%s\n"%self.output_list
+        #cfgstring += "output_dir\t\t%s\n"%self.output_dir
+        #cfgstring += "output_file\t\t%s\n"%self.output_file
         cfgstring += "max_events\t\t%d\n"%self.max_events
         return cfgstring
 
@@ -57,37 +59,39 @@ class Merger:
         if self.merger_id == -1: return "error"
 
         self.db.add_cfg_para_merger(self.merger_id,"input_list", self.input_list)
-        self.db.add_cfg_para_merger(self.merger_id,"output_dir",self.output_dir)
-        self.db.add_cfg_para_merger(self.merger_id,"output_file",self.output_file)
+        self.db.add_cfg_para_merger(self.merger_id,"output_list",self.output_list)
+        #self.db.add_cfg_para_merger(self.merger_id,"output_dir",self.output_dir)
+        #self.db.add_cfg_para_merger(self.merger_id,"output_file",self.output_file)
         self.db.add_cfg_para_merger(self.merger_id,"max_events", self.max_events)
 
         return "ok"
 
-    def create_output_dir(self):
-
-        if self.node_id == 0:
-
-            # Create directory on local host
-            print "Creating merger output files directory %s"%self.output_dir
-            if not os.path.exists(self.output_dir): os.makedirs(self.output_dir,0755)
-
-        else:
-
-            # Create directory on remote node
-            #node_ip = self.db.get_node_daq_ip(self.node_id)
-            #if (node_ip == ""):
-            #    print "Merger::create_output_dir - ERROR: node id %d has no address on DAQ VLAN",self.node_id
-            #    return "error"
-            print "Creating merger output files directory %s on %s"%(self.output_dir,self.node_ip)
-            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(self.node_ip,self.output_dir)
-            print command
-            subprocess.call(command.split())
-
-        return "ok"
+    #def create_output_dir(self):
+    #
+    #    if self.node_id == 0:
+    #
+    #        # Create directory on local host
+    #        print "Creating merger output files directory %s"%self.output_dir
+    #        if not os.path.exists(self.output_dir): os.makedirs(self.output_dir,0755)
+    #
+    #    else:
+    #
+    #        # Create directory on remote node
+    #        #node_ip = self.db.get_node_daq_ip(self.node_id)
+    #        #if (node_ip == ""):
+    #        #    print "Merger::create_output_dir - ERROR: node id %d has no address on DAQ VLAN",self.node_id
+    #        #    return "error"
+    #        print "Creating merger output files directory %s on %s"%(self.output_dir,self.node_ip)
+    #        command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(self.node_ip,self.output_dir)
+    #        print command
+    #        subprocess.call(command.split())
+    #
+    #    return "ok"
 
     def start_merger(self):
 
-        command = "%s -r %d -l %s -o %s/%s -n %d"%(self.executable,self.run_number,self.input_list,self.output_dir,self.output_file,self.max_events)
+        #command = "%s -r %d -l %s -o %s/%s -n %d"%(self.executable,self.run_number,self.input_list,self.output_dir,self.output_file,self.max_events)
+        command = "%s -r %d -i %s -o %s"%(self.executable,self.run_number,self.input_list,self.output_list)
 
         # Check if Merger runs on a remote node (node_id 0 is localhost)
         if self.node_id != 0:

@@ -10,9 +10,24 @@ class Run:
 
     def __init__(self):
 
-        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Get location of DAQ main directory from PADME_DAQ_DIR
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
+        # Get location of padme-fw software from PADME
+        # Default to PADME_DAQ_DIR/padme-fw if not set
+        self.padme_fw = os.getenv('PADME',"%s/padme-fw"%self.daq_dir)
+
+        # Define executables to use in production
+        self.daq_executable = "%s/PadmeDAQ/PadmeDAQ.exe"%self.padme_fw
+        self.merger_executable = "%s/Level1/PadmeMerger.exe"%self.padme_fw
+        self.level1_executable = "%s/Level1/PadmeLevel1.exe"%self.padme_fw
+
+        # Define directory containing setup subdirectories
+        self.setup_root_dir = "%s/setup"%self.daq_dir
+
+        # Define directory containing rawdata directories for each run
+        self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
 
         # Define name and position of control files
         self.control_dir = self.daq_dir+"/run"
@@ -22,75 +37,52 @@ class Run:
         self.initfail_file_head = self.control_dir+"/initfail"
         self.lock_file_head = self.control_dir+"/lock"
 
+        # Connect to database services
         self.db = PadmeDB()
 
-        self.setup = "test"
+        # Define base port number for network tunnels
+        self.base_port_number = 31400
 
-        self.run_number = 0
-        self.run_type = "TEST"
-        self.run_user = "PADME crew"
-        self.run_comment_start = "Generic run"
-        self.run_comment_end = "Generic end of run"
-
-        self.rawdata_dir = self.daq_dir+"/local/rawdata"
+        # Do not define a default setup
+        self.setup = ""
 
         self.set_default_config()
-
-        self.merger = Merger()
-        #self.merger_node_list = ["l1padme1","l1padme2"]
-        #self.merger_node_list = ["l1padme1"]
-        #self.merger_node_list = ["localhost"]
-        self.merger_node_list = []
-        self.merger_node = ""
 
     def change_run(self):
 
         if (self.run_number == 0):
             self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
         else:
-            self.run_name = "run_"+str(self.run_number)
+            self.run_name = "run_%d"%self.run_number
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
-        #self.config_dir = "cfg/run_"+str(run)
         self.config_dir = self.run_dir+"/cfg"
-        self.config_file = "run_"+str(self.run_number)+".cfg"
-        self.config_file_head = "run_"+str(self.run_number)
+        self.config_file = "run_%d.cfg"%self.run_number
+        self.config_file_head = "run_%d"%self.run_number
 
-        #self.log_dir = "runs/run_"+str(run)+"/log"
         self.log_dir = self.run_dir+"/log"
-        self.log_file_head = "run_"+str(self.run_number)
+        self.log_file_head = "run_%d"%self.run_number
 
-        #self.stream_dir = self.run_dir+"/stream"
         self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
-        self.stream_head = "run_"+str(self.run_number)
+        self.stream_head = "run_%d"%self.run_number
+
+        self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
+        self.rawdata_head = "run_%d"%self.run_number
 
         # Make sure Merger runs on a different node after each run
         self.merger_node = self.next_merger_node()
-        self.merger.node_id = self.db.get_node_id(self.merger_node)
-        self.merger.node_ip = self.db.get_node_daq_ip(self.merger.node_id)
 
-        self.merger.config_file = self.config_dir+"/"+self.config_file_head+"_merger.cfg"
-        self.merger.log_file = self.log_dir+"/"+self.log_file_head+"_merger.log"
-        self.merger.run_number = self.run_number
-        self.merger.input_list = self.config_dir+"/"+self.config_file_head+"_merger.list"
-        self.merger.output_dir = self.rawdata_dir+"/"+self.run_name
-        self.merger.output_file = self.run_name
+        # Configure Merger for this run
+        self.runconfig_merger()
 
+        # Configure ADC boards for this run
         for adcboard in self.adcboard_list:
-            adcboard.run_number  = self.run_number
-            if (self.run_type == "FAKE"):
-                adcboard.process_mode = "FAKE"
-            else:
-                adcboard.process_mode = "DAQ"
-            s_bid = "b%02d"%adcboard.board_id
-            adcboard.config_file_daq = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_daq.cfg"
-            adcboard.config_file_zsup = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_zsup.cfg"
-            adcboard.log_file_daq = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_daq.log"
-            adcboard.log_file_zsup = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_zsup.log"
-            adcboard.output_stream_daq = self.stream_dir+"/"+self.stream_head+"_"+s_bid+"_daq"
-            adcboard.output_stream_zsup = self.stream_dir+"/"+self.stream_head+"_"+s_bid+"_zsup"
-            adcboard.input_stream_zsup = adcboard.output_stream_daq
+            self.runconfig_adcboard(adcboard)
+
+        # Configure Level1 processes for this run
+        for level1 in self.level1_list:
+            self.runconfig_level1(level1)
 
     def next_merger_node(self):
 
@@ -121,10 +113,20 @@ class Run:
 
     def set_default_config(self):
 
-        self.adcboard_list = []
-        self.boardid_list = []
+        # Clean up Run configuration and set all run parameters to default
 
-        self.run_name = "dummy_run"
+        self.adcboard_list = []
+
+        self.merger = None
+
+        self.level1_list = []
+
+        self.run_number = 0
+        self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
+        self.run_type = "TEST"
+        self.run_user = "PADME crew"
+        self.run_comment_start = "Generic run"
+        self.run_comment_end = "Generic end of run"
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
@@ -135,18 +137,14 @@ class Run:
         self.log_dir = self.run_dir+"/log"
         self.log_file_head = self.run_name
 
-        #self.stream_dir = self.run_dir+"/stream"
         self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
         self.stream_head = self.run_name
 
-        #self.start_file = self.daq_dir+"/run/start"
-        #self.quit_file = self.daq_dir+"/run/quit"
-        #self.initok_file_head = self.daq_dir+"/run/initok"
-        #self.initfail_file_head = self.daq_dir+"/run/initfail"
-        #self.lock_file_head = self.daq_dir+"/run/lock"
+        self.merger_node = "localhost"
+        self.merger_node_list = []
 
-        #self.data_dir = "data"
-        #self.data_file_head = "daq"
+        self.level1_nproc = 1
+        self.level1_maxevt = 10000
 
         self.total_daq_time = 0
 
@@ -157,11 +155,10 @@ class Run:
         re_comment = re.compile("^\s*#")
         re_param = re.compile("^\s*(\w+)\s+(.+?)\s*$")
         re_boardid = re.compile("\d+")
-        #re_board_link = re.compile("^\s*(\d+)\s+(\w+)\s+(\d+)\s+(\d+)\s*$")
         re_board_link = re.compile("^\s*(\d+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
 
-        # Read default run configuration from file
-        setup_file = self.daq_dir+"/setup/%s/run.cfg"%self.setup
+        # Read general run configuration from file
+        setup_file = "%s/%s/run.cfg"%(self.setup_root_dir,self.setup)
         if (not os.path.isfile(setup_file)):
             print "Run - ERROR: setup file %s not found"%setup_file
             return "error"
@@ -187,10 +184,16 @@ class Run:
                     else:
                         print "Run - WARNING: unable to decode board_link parameter while reading setup file %s"%(setup_file,)
                         print l
+                elif (p_name == "total_daq_time"):
+                    self.total_daq_time = int(p_value)
                 elif (p_name == "merger_node"):
                     self.merger_node = p_value
                 elif (p_name == "merger_node_list"):
                     self.merger_node_list = p_value.split()
+                elif (p_name == "level1_nproc"):
+                    self.level1_nproc = int(p_value)
+                elif (p_name == "level1_maxevt"):
+                    self.level1_maxevt = int(p_value)
                 else:
                     print "Run - WARNING: unknown parameter %s found while reading setup file %s"%(p_name,setup_file)
             else:
@@ -203,6 +206,13 @@ class Run:
     def format_config(self):
 
         cfgstring = ""
+
+        cfgstring += "start_file\t\t%s\n"%self.start_file
+        cfgstring += "quit_file\t\t%s\n"%self.quit_file
+        cfgstring += "initok_file_head\t%s\n"%self.initok_file_head
+        cfgstring += "initfail_file_head\t%s\n"%self.initfail_file_head
+        cfgstring += "lock_file_head\t\t%s\n"%self.lock_file_head
+        cfgstring += "rawdata_dir\t\t%s\n"%self.rawdata_dir
 
         cfgstring += "setup\t\t\t%s\n"%self.setup
 
@@ -219,33 +229,33 @@ class Run:
                 (board,host,port,node) = link
                 if b == int(board):
                     board_link = "%s %s %s %s"%(board,host,port,node)
-                    cfgstring += "board_link\t\t"+board_link+"\n"
+                    cfgstring += "board_link\t\t%s\n"%board_link
 
-        cfgstring += "merger_node\t\t%s\n"%self.merger_node
+        cfgstring += "run_number\t\t%d\n"%self.run_number
+        cfgstring += "run_name\t\t%s\n"%self.run_name
+        cfgstring += "run_type\t\t%s\n"%self.run_type
+        cfgstring += "run_user\t\t%s\n"%self.run_user
+        cfgstring += "run_comment_start\t%s\n"%self.run_comment_start
 
-        cfgstring += "config_dir\t\t"+self.config_dir+"\n"
-        cfgstring += "config_file\t\t"+self.config_file+"\n"
-        cfgstring += "config_file_head\t"+self.config_file_head+"\n"
+        cfgstring += "config_dir\t\t%s\n"%self.config_dir
+        cfgstring += "config_file\t\t%s\n"%self.config_file
+        cfgstring += "config_file_head\t%s\n"%self.config_file_head
 
-        cfgstring += "log_dir\t\t\t"+self.log_dir+"\n"
-        cfgstring += "log_file_head\t\t"+self.log_file_head+"\n"
+        cfgstring += "log_dir\t\t\t%s\n"%self.log_dir
+        cfgstring += "log_file_head\t\t%s\n"%self.log_file_head
 
-        cfgstring += "stream_dir\t\t"+self.stream_dir+"\n"
-        cfgstring += "stream_head\t\t"+self.stream_head+"\n"
+        cfgstring += "stream_dir\t\t%s\n"%self.stream_dir
+        cfgstring += "stream_head\t\t%s\n"%self.stream_head
 
-        cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
-        cfgstring += "run_type\t\t"+self.run_type+"\n"
-        cfgstring += "run_user\t\t"+self.run_user+"\n"
-        cfgstring += "run_comment_start\t"+self.run_comment_start+"\n"
+        if self.merger_node:
+            cfgstring += "merger_node\t\t%s\n"%self.merger_node
 
-        cfgstring += "start_file\t\t"+self.start_file+"\n"
-        cfgstring += "quit_file\t\t"+self.quit_file+"\n"
-        cfgstring += "initok_file_head\t"+self.initok_file_head+"\n"
-        cfgstring += "initfail_file_head\t"+self.initfail_file_head+"\n"
-        cfgstring += "lock_file_head\t\t"+self.lock_file_head+"\n"
+        if self.merger_node_list:
+            cfgstring += "merger_node_list\t\t%s\n"%" ".join(self.merger_node_list)
+            
 
-        #cfgstring += "data_dir\t\t"+self.data_dir+"\n"
-        #cfgstring += "data_file_head\t\t"+self.data_file_head+"\n"
+        cfgstring += "level1_nproc\t\t%d\n"%self.level1_nproc
+        cfgstring += "level1_maxevt\t\t%d\n"%self.level1_maxevt
 
         cfgstring += "total_daq_time\t\t"+str(self.total_daq_time)+"\n"
 
@@ -256,6 +266,12 @@ class Run:
         # Create run in DB and save its configuration parameters
 
         self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
+
+        self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
+        self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
+        self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
+        self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
+        self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
 
         self.db.add_cfg_para_run(self.run_number,"setup",self.setup)
 
@@ -274,19 +290,131 @@ class Run:
                     board_link = "%s %s %s %s"%(board,host,port,node)
                     self.db.add_cfg_para_run(self.run_number,"board_link",board_link)
 
-        self.db.add_cfg_para_run(self.run_number,"merger_node",        self.merger_node)
         self.db.add_cfg_para_run(self.run_number,"config_dir",         self.config_dir)
         self.db.add_cfg_para_run(self.run_number,"config_file",        self.config_file)
         self.db.add_cfg_para_run(self.run_number,"config_file_head",   self.config_file_head)
+
         self.db.add_cfg_para_run(self.run_number,"log_dir",            self.log_dir)
         self.db.add_cfg_para_run(self.run_number,"log_file_head",      self.log_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"stream_dir",         self.stream_dir)
+        self.db.add_cfg_para_run(self.run_number,"stream_head",        self.stream_head)
+
+        if self.merger_node:
+            self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)
+
+        if self.merger_node_list:
+            cfgstring += "merger_node_list\t\t%s\n"%" ".join(self.merger_node_list)
+            
+
+        cfgstring += "level1_nproc\t\t%d\n"%self.level1_nproc
+        cfgstring += "level1_maxevt\t\t%d\n"%self.level1_maxevt
+
+        cfgstring += "total_daq_time\t\t"+str(self.total_daq_time)+"\n"
+
+        return cfgstring
+
+    def create_run(self):
+
+        # Create run in DB and save its configuration parameters
+
+        self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
+
         self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
         self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
         self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
         self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
         self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
-        #self.db.add_cfg_para_run(self.run_number,"data_dir",           self.data_dir)
-        #self.db.add_cfg_para_run(self.run_number,"data_file_head",     self.data_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"setup",self.setup)
+
+        s_board_list = ""
+        for b in self.boardid_list:
+            if (s_board_list):
+                s_board_list += " %d"%b
+            else:
+                s_board_list = "%d"%b
+        self.db.add_cfg_para_run(self.run_number,"board_list",s_board_list)
+
+        for b in self.boardid_list:
+            for link in self.board_link_list:
+                (board,host,port,node) = link
+                if b == int(board):
+                    board_link = "%s %s %s %s"%(board,host,port,node)
+                    self.db.add_cfg_para_run(self.run_number,"board_link",board_link)
+
+        self.db.add_cfg_para_run(self.run_number,"config_dir",         self.config_dir)
+        self.db.add_cfg_para_run(self.run_number,"config_file",        self.config_file)
+        self.db.add_cfg_para_run(self.run_number,"config_file_head",   self.config_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"log_dir",            self.log_dir)
+        self.db.add_cfg_para_run(self.run_number,"log_file_head",      self.log_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"stream_dir",         self.stream_dir)
+        self.db.add_cfg_para_run(self.run_number,"stream_head",        self.stream_head)
+
+        if self.merger_node:
+            self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)
+
+        if self.merger_node_list:
+            cfgstring += "merger_node_list\t\t%s\n"%" ".join(self.merger_node_list)
+            
+
+        cfgstring += "level1_nproc\t\t%d\n"%self.level1_nproc
+        cfgstring += "level1_maxevt\t\t%d\n"%self.level1_maxevt
+
+        cfgstring += "total_daq_time\t\t"+str(self.total_daq_time)+"\n"
+
+        return cfgstring
+
+    def create_run(self):
+
+        # Create run in DB and save its configuration parameters
+
+        self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
+
+        self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
+        self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
+        self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
+        self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
+        self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"setup",self.setup)
+
+        s_board_list = ""
+        for b in self.boardid_list:
+            if (s_board_list):
+                s_board_list += " %d"%b
+            else:
+                s_board_list = "%d"%b
+        self.db.add_cfg_para_run(self.run_number,"board_list",s_board_list)
+
+        for b in self.boardid_list:
+            for link in self.board_link_list:
+                (board,host,port,node) = link
+                if b == int(board):
+                    board_link = "%s %s %s %s"%(board,host,port,node)
+                    self.db.add_cfg_para_run(self.run_number,"board_link",board_link)
+
+        self.db.add_cfg_para_run(self.run_number,"config_dir",         self.config_dir)
+        self.db.add_cfg_para_run(self.run_number,"config_file",        self.config_file)
+        self.db.add_cfg_para_run(self.run_number,"config_file_head",   self.config_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"log_dir",            self.log_dir)
+        self.db.add_cfg_para_run(self.run_number,"log_file_head",      self.log_file_head)
+
+        self.db.add_cfg_para_run(self.run_number,"stream_dir",         self.stream_dir)
+        self.db.add_cfg_para_run(self.run_number,"stream_head",        self.stream_head)
+
+        if self.merger_node:
+            self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)
+
+        if self.merger_node_list:
+            self.db.add_cfg_para_run(self.run_number,"merger_node_list",    " ".join(self.merger_node_list))
+
+        self.db.add_cfg_para_run(self.run_number,"level1_nproc",       str(self.level1_nproc))
+        self.db.add_cfg_para_run(self.run_number,"level1_maxevt",       str(self.level1_maxevt))
+
         self.db.add_cfg_para_run(self.run_number,"total_daq_time",     self.total_daq_time)
 
         # Create Merger structure in DB
@@ -327,6 +455,10 @@ class Run:
             print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
             adc.write_config()
 
+        for lvl1 in (self.level1_list):
+            print "Writing configuration files %s for Level1 %d"%(lvl1.config_file,lvl1.level1_id)
+            lvl1.write_config()
+
     def print_config(self):
 
         print self.format_config()
@@ -340,22 +472,26 @@ class Run:
                 os.mkfifo(adc.output_stream_daq)
                 os.mkfifo(adc.output_stream_zsup)
             else:
-                #node_ip = self.db.get_node_daq_ip(adc.node_id)
-                #command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(adc.node_ip,self.stream_dir)
-                #os.system(command)
-                #command = "ssh -i ~/.ssh/id_rsa_daq %s mkfifo %s %s"%(adc.node_ip,adc.output_stream_daq,adc.output_stream_zsup)
-                #os.system(command)
                 command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s %s )'"%(adc.node_ip,self.stream_dir,adc.output_stream_daq,adc.output_stream_zsup)
                 print command
                 os.system(command)
 
         # Create stream directory on Merger
         if self.merger.node_id == 0:
-            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+            if not os.path.exists(self.stream_dir):
+                os.makedirs(self.stream_dir,0755)
         else:
-            #node_ip = self.db.get_node_daq_ip(self.merger.node_id)
-            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(self.merger.node_ip,self.stream_dir)
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s )'"%(self.merger.node_ip,self.stream_dir)
             os.system(command)
+
+        # Create fifo files to connect Merger to Level1 processes
+        for lvl1 in (self.level1_list):
+            if lvl1.node_id == 0:
+                os.mkfifo(lvl1.input_stream)
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s )'"%(lvl1.node_ip,self.stream_dir,lvl1.input_stream)
+                print command
+                os.system(command)
 
         # If an ADCBoard process runs on a node which is different from the Merger
         # we must replicate the ZSUP FIFO file on the Merger
@@ -368,7 +504,8 @@ class Run:
                 if self.merger.node_id == 0:
                     os.mkfifo(adc.output_stream_zsup)
                 else:
-                    command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s mkfifo %s"%(self.merger.node_ip,adc.output_stream_zsup)
+                    command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( mkfifo %s )'"%(self.merger.node_ip,adc.output_stream_zsup)
+                    print command
                     os.system(command)
  
     def create_receivers(self):
@@ -381,7 +518,7 @@ class Run:
             if adc.node_id != self.merger.node_id:
 
                 # Define port for network tunnel
-                port_number = 31400+adc.board_id
+                port_number = self.base_port_number+adc.board_id
 
                 # Open receiving end of tunnel on Merger node
                 print "Creating receiving end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
@@ -390,7 +527,7 @@ class Run:
                     command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(self.merger.node_ip,command)
                 print command
                 os.system(command)
-                time.sleep(1)
+                #time.sleep(1)
  
     def create_senders(self):
 
@@ -402,7 +539,7 @@ class Run:
             if adc.node_id != self.merger.node_id:
 
                 # Define port for network tunnel
-                port_number = 31400+adc.board_id
+                port_number = self.base_port_number+adc.board_id
 
                 # Open receiving end of tunnel on Merger node
                 print "Creating sending end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
@@ -412,91 +549,7 @@ class Run:
                     command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(adc.node_ip,command)
                 print command
                 os.system(command)
-                time.sleep(1)
-
-    #def create_streams(self):
-    #
-    #    # Create stream directory for Merger
-    #    if self.merger.node_id == 0:
-    #        if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
-    #    else:
-    #        node_ip = self.db.get_node_daq_ip(self.merger.node_id)
-    #        command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(node_ip,self.stream_dir)
-    #        os.system(command)
-    #
-    #    # Create stream directories and fifo files for ADCBoards
-    #    for adc in (self.adcboard_list):
-    #        if adc.node_id == 0:
-    #            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
-    #            os.mkfifo(adc.output_stream_daq)
-    #            os.mkfifo(adc.output_stream_zsup)
-    #        else:
-    #            node_ip = self.db.get_node_daq_ip(adc.node_id)
-    #            command = "ssh -i ~/.ssh/id_rsa_daq %s mkdir -p %s"%(node_ip,self.stream_dir)
-    #            os.system(command)
-    #            command = "ssh -i ~/.ssh/id_rsa_daq %s mkfifo %s %s"%(node_ip,adc.output_stream_daq,adc.output_stream_zsup)
-    #            os.system(command)
-    #
-    #    # If an ADCBoard process runs on a node which is different from the Merger
-    #    # we must replicate the ZSUP FIFO file on the merger node
-    #    # and create a network tunnel between the two FIFO files using the nc tool
-    #    # Tunnel will use port number 31400+board_id
-    #    for adc in (self.adcboard_list):
-    #
-    #        # Define host and port for network tunnel
-    #        port_number = 31400+adc.board_id
-    #        if self.merger.node_id == 0:
-    #            host_ip = "192.168.0.2"
-    #        else:
-    #            host_ip = self.db.get_node_daq_ip(self.merger.node_id)
-    #
-    #        # Check if ADCBoard and Merger run on different nodes
-    #        if adc.node_id != self.merger.node_id:
-    #
-    #            # Duplicate FIFO file and open receiving end of tunnel on Merger node
-    #            if self.merger.node_id == 0:
-    #                #os.mkfifo(adc.output_stream_zsup)
-    #                ##command = "nc -l %s %d > %s &"%(host_ip,port_number,adc.output_stream_zsup)
-    #                #command = "nc -l --recv-only %s %d > %s &"%(host_ip,port_number,adc.output_stream_zsup)
-    #                #os.system(command)
-    #                command = "%s -a %s -p %d -f %s"%(self.listener_script,host_ip,port_number,adc.output_stream_zsup)
-    #                os.system(command)
-    #            else:
-    #                print "Creating receiving end of tunnel"
-    #                #command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s mkfifo %s"%(host_ip,adc.output_stream_zsup)
-    #                #print command
-    #                #os.system(command)
-    #                ##command = "ssh -i /home/daq/.ssh/id_rsa_daq %s '( nc -l %s %d > %s )' &"%(host_ip,host_ip,port_number,adc.output_stream_zsup)
-    #                #command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( nc -l --recv-only -v -v %s %d > %s < /dev/zero )'"%(host_ip,host_ip,port_number,adc.output_stream_zsup)
-    #                #print command
-    #                #os.system(command)
-    #                command = "ssh -n -i /home/daq/.ssh/id_rsa_daq %s '( %s -a %s -p %d -f %s )'"%(host_ip,self.listener_script,host_ip,port_number,adc.output_stream_zsup)
-    #                os.system(command)
-    #
-    #            # Wait for listener to start
-    #            #time.sleep(5)
-    #
-    #            # Open sending end of tunnel on node running DAQ/ZSUP for this ADCBoard
-    #            if adc.node_id == 0:
-    #                #command = "nc %s %d < %s &"
-    #                command = "nc --send-only %s %d < %s &"
-    #                os.system(command)
-    #            else:
-    #                node_ip = self.db.get_node_daq_ip(adc.node_id)
-    #                print "Creating sending end of tunnel"
-    #                #command = "ssh -n -i /home/daq/.ssh/id_rsa_daq %s '( nc %s %d < %s )' &"%(node_ip,host_ip,port_number,adc.output_stream_zsup)
-    #                command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( nc --send-only -v -v %s %d < %s > /dev/null )'"%(node_ip,host_ip,port_number,adc.output_stream_zsup)
-    #                print command
-    #                os.system(command)
-    #
-    #    ## Create stream directory for this run (make sure the full tree is there)
-    #    #if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
-    #    #
-    #    ## Create named pipes to use for DAQ and ZSUP streams
-    #    #for adc in (self.adcboard_list):
-    #    #    print "Creating named pipes %s and %s for ADC board %d"%(adc.output_stream_daq,adc.output_stream_zsup,adc.board_id)
-    #    #    os.mkfifo(adc.output_stream_daq)
-    #    #    os.mkfifo(adc.output_stream_zsup)
+                #time.sleep(1)
 
     def create_merger_input_list(self):
 
@@ -506,11 +559,13 @@ class Run:
             f.write("%d %s\n"%(adcboard.board_id,adcboard.output_stream_zsup))
         f.close()
 
-    #def create_merger_output_dir(self):
-    #
-    #    # Create directory where Merger will write its output files (make sure the full tree is there)
-    #    print "Creating merger output files directory %s"%self.merger.output_dir
-    #    if not os.path.exists(self.merger.output_dir): os.makedirs(self.merger.output_dir,0755)
+    def create_merger_output_list(self):
+
+        print "Creating merger output list file %s"%self.merger.output_list
+        f = open(self.merger.output_list,"w")
+        for lvl1 in self.level1_list:
+            f.write("%s\n"%(lvl1.input_stream))
+        f.close()
 
     def change_setup(self,setup):
 
@@ -521,47 +576,122 @@ class Run:
         self.setup = setup
         if (self.read_setup() == "error"): return "error"
 
-        # Create new set of ADC boards
+        # Create new set of ADC board processes (DAQ and ZSUP) handlers
         for b in self.boardid_list:
             print "Run - Configuring ADC board %d"%b
             adcboard = ADCBoard(b)
             self.configure_adcboard(adcboard)
             self.adcboard_list.append(adcboard)
 
+        # Create new Merger process handler
+        self.merger = Merger()
+        self.configure_merger()
+
+        # Create new set of Level1 process handlers
+        for l in range(self.level1_nproc):
+            print "Run - Configuring Level1 process %d"%l
+            lvl1_proc = Level1(l)
+            self.configure_level1(lvl1_proc)
+            self.level1_list.append(lvl1_proc)
+
         return setup
 
     def configure_adcboard(self,adcboard):
 
+        # Configure ADC board DAQ/ZSUP processes after changing setup
+
         # Reset ADC board to default configuration
         adcboard.set_default_config()
 
-        # Configure board for current run
-        adcboard.run_number = self.run_number
+        # Set executable
+        adcboard.executable = self.daq_executable
 
-        # Get board connection information
+        # Control files needed to start/stop DAQ (will disappear)
+        adcboard.start_file = self.start_file
+        adcboard.quit_file  = self.quit_file
+
+        # Define board connection information
         for link in self.board_link_list:
             (board,host,port,node) = link
             if (int(board) == adcboard.board_id):
-                adcboard.node_id     = self.db.get_node_id(host)
-                adcboard.node_ip     = self.db.get_node_daq_ip(adcboard.node_id)
+                adcboard.node_id = self.db.get_node_id(host)
+                adcboard.node_ip = self.db.get_node_daq_ip(adcboard.node_id)
                 adcboard.conet2_link = int(port)
                 adcboard.conet2_slot = int(node)
 
-        s_bid = "b%02d"%adcboard.board_id
-        adcboard.config_file_daq    = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_daq.cfg"
-        adcboard.config_file_zsup   = self.config_dir+"/"+self.config_file_head+"_"+s_bid+"_zsup.cfg"
-        adcboard.log_file_daq       = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_daq.log"
-        adcboard.log_file_zsup      = self.log_dir+"/"+self.log_file_head+"_"+s_bid+"_zsup.log"
-        adcboard.lock_file_daq      = self.lock_file_head+"_"+s_bid+"_daq"
-        adcboard.lock_file_zsup     = self.lock_file_head+"_"+s_bid+"_zsup"
-        adcboard.start_file         = self.start_file
-        adcboard.quit_file          = self.quit_file
-        adcboard.initok_file_daq    = self.initok_file_head+"_"+s_bid+"_daq"
-        adcboard.initfail_file_daq  = self.initfail_file_head+"_"+s_bid+"_daq"
-        adcboard.initok_file_zsup   = self.initok_file_head+"_"+s_bid+"_zsup"
-        adcboard.initfail_file_zsup = self.initfail_file_head+"_"+s_bid+"_zsup"
-        #adcboard.data_file          = self.data_dir+"/"+self.data_file_head+"_"+s_bid
+        # Define total DAQ time (default: 0, i.e. run forever)
+        # In most cases the default is what you want
         adcboard.total_daq_time     = self.total_daq_time
 
-        # Read board setup
+        # Read ADC settings from board setup file
         adcboard.read_setup(self.setup)
+
+    def configure_level1(self,level1):
+
+        # Configure Level1 processes after changing setup
+
+        # Reset Level1 process handler to default configuration
+        level1.set_default_config()
+
+        # Set maximum number of events to write in a single file
+        level1.max_events = self.level1_maxevt
+
+    def configure_merger(self):
+
+        # Configure Merger process after changing setup
+
+        # Reset Merger process handler to default configuration
+        self.merger.set_default_config()
+
+    def runconfig_adcboard(self,adcboard):
+
+        # Configure ADC board DAQ/ZSUP processes after changing run
+
+        adcboard.run_number = self.run_number
+
+        if (self.run_type == "FAKE"):
+            adcboard.process_mode = "FAKE"
+        else:
+            adcboard.process_mode = "DAQ"
+
+        s_bid = "b%02d"%adcboard.board_id
+        adcboard.config_file_daq = "%s/%s_%s_daq.cfg"%(self.config_dir,self.config_file_head,s_bid)
+        adcboard.config_file_zsup = "%s/%s_%s_zsup.cfg"%(self.config_dir,self.config_file_head,s_bid)
+        adcboard.log_file_daq = "%s/%s_%s_daq.log"%(self.log_dir,self.log_file_head,s_bid)
+        adcboard.log_file_zsup = "%s/%s_%s_zsup.log"%(self.log_dir,self.log_file_head,s_bid)
+        adcboard.output_stream_daq = "%s/%s_%s_daq"%(self.stream_dir,self.stream_head,s_bid)
+        adcboard.input_stream_zsup = adcboard.output_stream_daq
+        adcboard.output_stream_zsup = "%s/%s_%s_zsup"%(self.stream_dir,self.stream_head,s_bid)
+
+    def runconfig_level1(self,level1):
+
+        # Configure Level1 processes after changing run
+
+        level1.run_number = self.run_number
+
+        # Get node_id and node_ip from DB using Merger node
+        level1.node_id = self.db.get_node_id(self.merger_node)
+        level1.node_ip = self.db.get_node_daq_ip(level1.node_id)
+
+        s_lid = "lvl1_%02d"%level1.level1_id
+        level1.config_file = "%s/%s_%s.cfg"%(self.config_dir,self.config_file_head,s_lid)
+        level1.log_file = "%s/%s_%s.log"%(self.log_dir,self.log_file_head,s_lid)
+
+        level1.input_stream = "%s/%s_%s"%(self.stream_dir,self.stream_head,s_lid)
+        level1.output_dir = self.rawdata_dir
+        level1.output_header = self.rawdata_head
+
+    def runconfig_merger(self):
+
+        # Configure Merger process after changing run
+
+        self.merger.run_number = self.run_number
+
+        # Get node_id and node_ip from DB
+        self.merger.node_id = self.db.get_node_id(self.merger_node)
+        self.merger.node_ip = self.db.get_node_daq_ip(self.merger.node_id)
+
+        self.merger.config_file = "%s/%s_merger.cfg"%(self.config_dir,self.config_file_head)
+        self.merger.log_file = "%s/%s_merger.log"%(self.log_dir,self.log_file_head)
+        self.merger.input_list = "%s/%s_merger_input.list"%(self.config_dir,self.config_file_head)
+        self.merger.output_list = "%s/%s_merger_output.list"%(self.config_dir,self.config_file_head)

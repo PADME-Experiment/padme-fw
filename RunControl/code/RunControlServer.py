@@ -48,10 +48,13 @@ class RunControlServer:
 
         # Get list of possible run types from DB
         self.run_type_list = self.db.get_run_types()
+        if self.run_type_list == []:
+            print "WARNING - No run types found in DB. Using default."
+            self.run_type_list = ['TEST','FAKE']
         print "--- Known run types ---"
         print self.run_type_list
 
-        # Create useful regular expressions
+        # Create useful regular expressions to parse user commands
         self.re_get_board_config_daq = re.compile("^get_board_config_daq (\d+)$")
         self.re_get_board_config_zsup = re.compile("^get_board_config_zsup (\d+)$")
         self.re_get_board_log_file_daq = re.compile("^get_board_log_file_daq (\d+)$")
@@ -294,7 +297,7 @@ class RunControlServer:
                     return "initfail"
                 else:
                     print "ERROR: new_run returned unknown answer %s (?)"%res
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -309,7 +312,7 @@ get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
             else:
 
@@ -357,7 +360,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 return self.abort_run()
             elif (cmd == "start_run"):
                 return self.start_run()
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -373,7 +376,7 @@ get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
 get_run_number\tReturn current run number
 start_run\t\tStart run
 abort_run\t\tAbort run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -427,7 +430,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(str(self.run.run_number))
             elif (cmd == "stop_run"):
                 return self.stop_run()
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -442,7 +445,7 @@ get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
 get_run_number\tReturn current run number
 stop_run\t\tStop the run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -479,6 +482,8 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def state_initfail(self):
 
+        # Here we will insert some cleanup code to handle
+        # failed initialization
         return "idle"
 
     def get_command(self):
@@ -687,15 +692,16 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         #    print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
         #    adc.write_config()
 
-        # Create merger input list
+        # Create merger input and output lists
         self.run.create_merger_input_list()
+        self.run.create_merger_output_list()
 
         # Start run initialization procedure
         self.send_answer("start_init")
 
         ## Create merger output file directory
         #self.run.create_merger_output_dir()
-        self.run.merger.create_output_dir()
+        self.run.level1.create_output_dir()
 
         # Create pipes for data transfer
         print "Creating named pipes for run %d"%self.run.run_number

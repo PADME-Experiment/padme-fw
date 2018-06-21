@@ -46,7 +46,7 @@ int RootIO::Init()
   //if (fNMaxEvtsPerOutFile == 0) {
   if (fConfig->NEventsPerFile() == 0) {
     //fOutFile.Form("%s.root",fOutFileTemplate.Data());
-    fOutFile.Form("%s.root",fConfig->OutputFileHeader().c_str());
+    fOutFile.Form("%s.root",fConfig->RawFileHeader().c_str());
   } else {
     SetOutFile();
   }
@@ -158,7 +158,7 @@ Int_t RootIO::CloseOutFile()
 Int_t RootIO::SetOutFile()
 {
   //fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
-  fOutFile.Form("%s_%03d.root",fConfig->OutputFileHeader().c_str(),fOutFileIndex);
+  fOutFile.Form("%s_%03d.root",fConfig->RawFileHeader().c_str(),fOutFileIndex);
   return ROOTIO_OK;
 }
 

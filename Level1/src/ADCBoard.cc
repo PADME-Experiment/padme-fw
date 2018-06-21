@@ -1,12 +1,15 @@
 #include <stdlib.h>
 #include <stdexcept>
 
-#include "ADCEventTags.hh"
+#include "Configuration.hh"
 
 #include "ADCBoard.hh"
 
 ADCBoard::ADCBoard(int board)
 {
+
+  // Connect to configuration handler
+  fCfg = Configuration::GetInstance();
 
   UInt_t max_event_len_v01 = 4*(ADCEVENT_V01_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_V01_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_V01_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
   UInt_t max_event_len_v02 = 4*(ADCEVENT_V02_EVENTHEAD_LEN+ADCEVENT_NTRIGGERS*(ADCEVENT_V02_GRHEAD_LEN+ADCEVENT_NSAMPLES/2+ADCEVENT_V02_GRTAIL_LEN)+ADCEVENT_NCHANNELS*ADCEVENT_NSAMPLES/2);
@@ -20,7 +23,6 @@ ADCBoard::ADCBoard(int board)
   fBoardId = board;
   fADCEvent = new ADCEvent();
   Reset();
-  //fDB = DBService::GetInstance();
 }
 
 ADCBoard::~ADCBoard()
@@ -36,6 +38,7 @@ void ADCBoard::Reset()
   if (fFileHandle && fFileHandle.is_open()) fFileHandle.close();
   fCurrentFile = 0;
   fNewFile = 0;
+  fEventSize = 0;
   fADCEvent->Reset();
 }
 
@@ -98,7 +101,7 @@ int ADCBoard::OpenFile()
   return 0;
 }
 
-ADCEvent* ADCBoard::NextEvent()
+int ADCBoard::NextEvent()
 {
 
   int ret;
@@ -147,8 +150,7 @@ ADCEvent* ADCBoard::NextEvent()
       fCurrentFile++;
       if ( fCurrentFile >= fFiles.size() ) {
 	// No more files: we are done
-	fADCEvent = 0;
-	return fADCEvent;
+	return 1;
       }
       // More files are available: open the next one
       if (OpenFile() != 0) {
@@ -158,7 +160,7 @@ ADCEvent* ADCBoard::NextEvent()
       fNewFile = 1;
       continue;
     }
-    return fADCEvent;
+    return 0;
 
   }
 
@@ -229,23 +231,9 @@ int ADCBoard::ReadNextEvent()
   if (tag == ADCEVENT_EVENT_TAG) {
 
     // This is an event block: get its size and read the remaining part to buffer
-    UInt_t size = (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_EVENTSIZE_LIN] & ADCEVENT_EVENTSIZE_BIT ) >> ADCEVENT_EVENTSIZE_POS);
-    fFileHandle.read((char*)fBuffer+4,4*(size-1));
+    fEventSize = (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_EVENTSIZE_LIN] & ADCEVENT_EVENTSIZE_BIT ) >> ADCEVENT_EVENTSIZE_POS);
+    fFileHandle.read((char*)fBuffer+4,4*(fEventSize-1));
 
-    // Decode event structure according to data format version
-    int rc = 0;
-    if (fFiles[fCurrentFile].GetVersion() == 1) {
-      rc = UnpackEvent_v01(size);
-    } else if (fFiles[fCurrentFile].GetVersion() == 2) {
-      rc = UnpackEvent_v02(size);
-    } else if (fFiles[fCurrentFile].GetVersion() == 3) {
-      rc = UnpackEvent_v03(size);
-    }
-    if (rc) {
-      printf("ERROR while unpacking event\n");
-      return 1;
-    }
-    
   } else if (tag == ADCEVENT_FTAIL_TAG) {
 
     // This is a file tail block
@@ -291,7 +279,157 @@ int ADCBoard::ReadNextEvent()
 
 }
 
-int ADCBoard::UnpackEvent_v01(UInt_t size)
+unsigned char ADCBoard::GetGroupMask()
+{
+  // Get group mask
+  if (fFiles[fCurrentFile].GetVersion() == 1) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V01_GRMASK_LIN] & ADCEVENT_V01_GRMASK_BIT) >> ADCEVENT_V01_GRMASK_POS);
+  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V02_GRMASK_LIN] & ADCEVENT_V02_GRMASK_BIT) >> ADCEVENT_V02_GRMASK_POS);
+  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V03_GRMASK_LIN] & ADCEVENT_V03_GRMASK_BIT) >> ADCEVENT_V03_GRMASK_POS);
+  }
+  printf("ADCBoard::GetGroupMask - ERROR - Invalid event version %d\n",fFiles[fCurrentFile].GetVersion());
+  return 0;
+}
+
+UInt_t ADCBoard::GetEventCounter()
+{
+  // Get event counter
+  if (fFiles[fCurrentFile].GetVersion() == 1) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V01_EVENTNUMBER_LIN] & ADCEVENT_V01_EVENTNUMBER_BIT) >> ADCEVENT_V01_EVENTNUMBER_POS);
+  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V02_EVENTNUMBER_LIN] & ADCEVENT_V02_EVENTNUMBER_BIT) >> ADCEVENT_V02_EVENTNUMBER_POS);
+  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+    return ((((UInt_t*)fBuffer)[ADCEVENT_V03_EVENTNUMBER_LIN] & ADCEVENT_V03_EVENTNUMBER_BIT) >> ADCEVENT_V03_EVENTNUMBER_POS);
+  }
+  printf("ADCBoard::GetGroupMask - ERROR - Invalid event version %d\n",fFiles[fCurrentFile].GetVersion());
+  return 0;
+}
+
+int ADCBoard::GetTriggerTimeTags(UInt_t ttt[ADCEVENT_NTRIGGERS])
+{
+  // Extract all trigger time tags from buffer
+  int rc = 0;
+  if (fFiles[fCurrentFile].GetVersion() == 1) {
+    rc = GetTriggerTimeTags_v01(ttt);
+  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+    rc = GetTriggerTimeTags_v02(ttt);
+  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+    rc = GetTriggerTimeTags_v03(ttt);
+  }
+  if (rc) {
+    printf("ERROR while extracting trigger time tags from event buffer\n");
+    return 1;
+  }
+  return 0;
+}
+
+int ADCBoard::GetTriggerTimeTags_v01(UInt_t ttt[ADCEVENT_NTRIGGERS])
+{
+  // Get group mask
+  UInt_t grmsk = ((((UInt_t*)fBuffer)[ADCEVENT_V01_GRMASK_LIN] & ADCEVENT_V01_GRMASK_BIT) >> ADCEVENT_V01_GRMASK_POS);
+  // Skip event header and go to first trigger structure
+  UInt_t cursor = ADCEVENT_V01_EVENTHEAD_LEN;
+  // Loop over all triggers
+  for(UInt_t i=0;i<ADCEVENT_NTRIGGERS;i++){
+    // If group is active get its TTT
+    if (grmsk & (1 << i)) {
+      UInt_t trsize = ((((UInt_t*)fBuffer)[cursor+ADCEVENT_V01_GRSIZE_LIN] & ADCEVENT_V01_GRSIZE_BIT) >> ADCEVENT_V01_GRSIZE_POS);
+      // TTT is last word at end of trigger structure
+      ttt[i] = ((((UInt_t*)fBuffer)[cursor+trsize-1] & ADCEVENT_V01_TTAGTRIG_BIT) >> ADCEVENT_V01_TTAGTRIG_POS);
+      // Skip to next trigger structure
+      cursor += trsize;
+    } else {
+      // Trigger group is not there: set TTT to 0
+      ttt[i] = 0;
+    }
+  }
+  return 0; // All good
+}
+
+int ADCBoard::GetTriggerTimeTags_v02(UInt_t ttt[ADCEVENT_NTRIGGERS])
+{
+  // Get group mask
+  UInt_t grmsk = ((((UInt_t*)fBuffer)[ADCEVENT_V02_GRMASK_LIN] & ADCEVENT_V02_GRMASK_BIT) >> ADCEVENT_V02_GRMASK_POS);
+  // Skip event header and go to first trigger structure
+  UInt_t cursor = ADCEVENT_V02_EVENTHEAD_LEN;
+  // Loop over all triggers
+  for(UInt_t i=0;i<ADCEVENT_NTRIGGERS;i++){
+    // If group is active get its TTT
+    if (grmsk & (1 << i)) {
+      UInt_t trsize = ((((UInt_t*)fBuffer)[cursor+ADCEVENT_V02_GRSIZE_LIN] & ADCEVENT_V02_GRSIZE_BIT) >> ADCEVENT_V02_GRSIZE_POS);
+      // TTT is last word at end of trigger structure
+      ttt[i] = ((((UInt_t*)fBuffer)[cursor+trsize-1] & ADCEVENT_V02_TTAGTRIG_BIT) >> ADCEVENT_V02_TTAGTRIG_POS);
+      // Skip to next trigger structure
+      cursor += trsize;
+    } else {
+      // Trigger group is not there: set TTT to 0
+      ttt[i] = 0;
+    }
+  }
+  return 0; // All good
+}
+
+int ADCBoard::GetTriggerTimeTags_v03(UInt_t ttt[ADCEVENT_NTRIGGERS])
+{
+  // Get group mask
+  UInt_t grmsk = ((((UInt_t*)fBuffer)[ADCEVENT_V03_GRMASK_LIN] & ADCEVENT_V03_GRMASK_BIT) >> ADCEVENT_V03_GRMASK_POS);
+  // Skip event header and go to first trigger structure
+  UInt_t cursor = ADCEVENT_V03_EVENTHEAD_LEN;
+  // Loop over all triggers
+  for(UInt_t i=0;i<ADCEVENT_NTRIGGERS;i++){
+    // If group is active get its TTT
+    if (grmsk & (1 << i)) {
+      UInt_t trsize = ((((UInt_t*)fBuffer)[cursor+ADCEVENT_V03_GRSIZE_LIN] & ADCEVENT_V03_GRSIZE_BIT) >> ADCEVENT_V03_GRSIZE_POS);
+      // TTT is last word at end of trigger structure
+      ttt[i] = ((((UInt_t*)fBuffer)[cursor+trsize-1] & ADCEVENT_V03_TTAGTRIG_BIT) >> ADCEVENT_V03_TTAGTRIG_POS);
+      // Skip to next trigger structure
+      cursor += trsize;
+    } else {
+      // Trigger group is not there: set TTT to 0
+      ttt[i] = 0;
+    }
+  }
+  return 0; // All good
+}
+
+UInt_t ADCBoard::GetEventSize()
+{
+  // Return size of ADC event structure in 4-bytes words
+  return ((((UInt_t*)fBuffer)[ADCEVENT_EVENTSIZE_LIN] & ADCEVENT_EVENTSIZE_BIT) >> ADCEVENT_EVENTSIZE_POS);
+}
+
+UInt_t ADCBoard::GetSerialNumber()
+{
+  try {
+    return fFiles.at(0).GetBoardSN();
+  }
+  catch (const std::out_of_range& err) {
+    std::cout << "ADCBoard::GetSeralNumber WARNING - No files connected to board: " << err.what() << std::endl;
+    return 0;
+  }
+}
+
+int ADCBoard::UnpackEvent()
+{
+  // Decode event structure according to data format version
+  int rc = 0;
+  if (fFiles[fCurrentFile].GetVersion() == 1) {
+    rc = UnpackEvent_v01();
+  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+    rc = UnpackEvent_v02();
+  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+    rc = UnpackEvent_v03();
+  }
+  if (rc) {
+    printf("ERROR while unpacking event\n");
+    return 1;
+  }
+  return 0;
+}
+
+int ADCBoard::UnpackEvent_v01()
 {
 
   // Decode event header
@@ -342,9 +480,9 @@ int ADCBoard::UnpackEvent_v01(UInt_t size)
   }
 
   // Verify event size consistency
-  if (cursor != size) {
+  if (cursor != fEventSize) {
     printf("ERROR - Inconsistent event structure found for event %d: event size is %d (expected %d)\n",
-	   fADCEvent->GetEventCounter(),cursor,size);
+	   fADCEvent->GetEventCounter(),cursor,fEventSize);
     return 1;
   }
 
@@ -353,7 +491,7 @@ int ADCBoard::UnpackEvent_v01(UInt_t size)
 
 }
 
-int ADCBoard::UnpackEvent_v02(UInt_t size)
+int ADCBoard::UnpackEvent_v02()
 {
 
   // Decode event header
@@ -404,9 +542,9 @@ int ADCBoard::UnpackEvent_v02(UInt_t size)
   }
 
   // Verify event size consistency
-  if (cursor != size) {
+  if (cursor != fEventSize) {
     printf("ERROR - Inconsistent event structure found for event %d: event size is %d (expected %d)\n",
-	   fADCEvent->GetEventCounter(),cursor,size);
+	   fADCEvent->GetEventCounter(),cursor,fEventSize);
     return 1;
   }
 
@@ -415,7 +553,7 @@ int ADCBoard::UnpackEvent_v02(UInt_t size)
 
 }
 
-int ADCBoard::UnpackEvent_v03(UInt_t size)
+int ADCBoard::UnpackEvent_v03()
 {
 
   UInt_t cursor = 0;
@@ -484,9 +622,9 @@ int ADCBoard::UnpackEvent_v03(UInt_t size)
   }
 
   // Verify event size consistency
-  if (cursor != size) {
+  if (cursor != fEventSize) {
     printf("ERROR - Inconsistent event structure found for event %d: event size is %d (expected %d)\n",
-	   fADCEvent->GetEventCounter(),cursor,size);
+	   fADCEvent->GetEventCounter(),cursor,fEventSize);
     return 1;
   }
 

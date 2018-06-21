@@ -8,10 +8,10 @@
 
 #include "Rtypes.h"
 
-#include "DBService.hh"
-
 #include "ADCEvent.hh"
 #include "ADCFile.hh"
+
+class Configuration;
 
 class ADCBoard
 {
@@ -31,27 +31,34 @@ class ADCBoard
   int GetNFiles() { return fFiles.size(); }
   std::string GetFileName(int);
 
+  int NextEvent();
+  int UnpackEvent();
   ADCEvent* Event() { return fADCEvent; }
-  ADCEvent* NextEvent();
+  void* Buffer() { return fBuffer; }
 
-  void SetVerbose(Int_t v) { fVerbose = v; }
+  UInt_t GetEventSize();
+  UInt_t GetSerialNumber();
+  UInt_t GetEventCounter();
+  unsigned char GetGroupMask();
+  int GetTriggerTimeTags(UInt_t*);
 
  private:
 
   int OpenFile();
   int ReadFileHead();
   int ReadNextEvent();
-  int UnpackEvent_v01(UInt_t);
-  int UnpackEvent_v02(UInt_t);
-  int UnpackEvent_v03(UInt_t);
+  int UnpackEvent_v01();
+  int UnpackEvent_v02();
+  int UnpackEvent_v03();
+  int GetTriggerTimeTags_v01(UInt_t*);
+  int GetTriggerTimeTags_v02(UInt_t*);
+  int GetTriggerTimeTags_v03(UInt_t*);
 
  private:
 
   int fBoardId;
 
-  Int_t fVerbose;
-
-  //DBService* fDB;
+  Configuration* fCfg;
 
   std::vector<ADCFile> fFiles;
 
@@ -59,6 +66,7 @@ class ADCBoard
   UInt_t fCurrentFile;
   std::ifstream fFileHandle;
   void* fBuffer;
+  UInt_t fEventSize;
 
   ADCEvent* fADCEvent;
 

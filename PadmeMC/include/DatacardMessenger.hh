@@ -32,5 +32,9 @@ private:
   G4UIcmdWithABool* fDisableSACAnalysisCmd;
   G4UIcmdWithABool* fDisableECalAnalysisCmd;
 
+  //M. Raggi 06/23/2018
+  G4UIcmdWithABool* fEnableSaveSACCmd; 
+  G4UIcmdWithABool* fEnableSaveVetoCmd;
+  G4UIcmdWithABool* fEnableSaveEcalCmd;
 };
 #endif // DatacardMessenger_h

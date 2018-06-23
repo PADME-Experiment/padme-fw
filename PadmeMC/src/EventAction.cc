@@ -42,6 +42,11 @@ EventAction::EventAction(RunAction* run)
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
 
+  //M. Raggi defining default output settings 
+  fEnableSaveEcal = 1;
+  fEnableSaveSAC  = 0; 
+  fEnableSaveVeto = 0; 
+
   // Create and register digitizer modules for all detectors
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
@@ -70,6 +75,7 @@ EventAction::~EventAction()
  
 void EventAction::BeginOfEventAction(const G4Event*)
 {
+
   // Get current run and event numbers
   ETotCal  = 0;
   ECalHitT = 0;
@@ -198,8 +204,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.PMomY = PositronMomentum.y();
   fHistoManager->myEvt.PMomZ = PositronMomentum.z();
 
-
-
   ProcID = myStepping->GetPhysProc();   
   fHistoManager->FillHisto(1,ETotCal);
   fHistoManager->FillHisto(14,ProcID);
@@ -214,7 +218,9 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->FillHisto2(33,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
     if(ProcID==1) fHistoManager->FillHisto2(34,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
     if(ProcID==2) fHistoManager->FillHisto2(35,myStepping->GetGammaEnergy(),myStepping->GetGammaAngle(),1.);
-  }  
+  }
+
+  NTracks = NPVetoTracks+ NEVetoTracks;
   //  fill ntuple for the event
   fHistoManager->myEvt.NTNevent         = evt->GetEventID();
   fHistoManager->myEvt.NTNCluster       = NClusters;
@@ -270,7 +276,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
   }
   
-
   for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
 	  if(i>MaxTracks-1) break;
 	  fHistoManager->myEvt.NTHEPVetoTrkEne[i]    = HEPVetoEtrack[i];
@@ -344,7 +349,9 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTNClusCells[i]= NCellsCl[i];
   }
 
-  //  if(SACTracks>0) for(int ll=0;ll<SACTracks;ll++) fHistoManager->FillHisto(18,SACEtrack[ll]);
+  // Set conditions to write NTU using the datacards.  M. raggi 23/06/2018
+
+  // if(SACTracks>0) for(int ll=0;ll<SACTracks;ll++) fHistoManager->FillHisto(18,SACEtrack[ll]);
 
 //  for(int i=0;i< ECalNCells;i++){
 //    fHistoManager->myEvt.NTECell[i]=ETotCry[i];
@@ -355,7 +362,14 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  if(IsTrackerRecoON==1){
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
-  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+
+
+  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
+    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  }else{
+    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
+  }
 //    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //  }

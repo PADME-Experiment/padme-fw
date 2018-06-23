@@ -8,6 +8,7 @@
 
 #include "RootIOManager.hh"
 #include "SteppingAction.hh"
+#include "EventAction.hh" //M. Raggi
 
 DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardManager(datacardMng)
 {
@@ -49,6 +50,24 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fDisableECalAnalysisCmd->SetDefaultValue(true);
   fDisableECalAnalysisCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //M. Raggi addded flags for Nt save options.
+  fEnableSaveEcalCmd = new G4UIcmdWithABool("/analysis/SaveEcal",this);
+  fEnableSaveEcalCmd->SetGuidance("Enable (true) or disable (false) save based on ECal Energy.");
+  fEnableSaveEcalCmd->SetParameterName("SEC",true);
+  fEnableSaveEcalCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //M. Raggi addded flags for Nt save options.
+  fEnableSaveVetoCmd = new G4UIcmdWithABool("/analysis/SaveVeto",this);
+  fEnableSaveVetoCmd->SetGuidance("Enable (true) or disable (false) save based on Veto hits.");
+  fEnableSaveVetoCmd->SetParameterName("SVE",true);
+  fEnableSaveVetoCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //M. Raggi addded flags for Nt save options.
+  fEnableSaveSACCmd = new G4UIcmdWithABool("/analysis/SaveSAC",this);
+  fEnableSaveSACCmd->SetGuidance("Enable (true) or disable (false) save based on SAC Energy.");
+  fEnableSaveSACCmd->SetParameterName("SSA",true);
+  fEnableSaveSACCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
@@ -61,6 +80,10 @@ DatacardMessenger::~DatacardMessenger() {
 
     delete fDisableSACAnalysisCmd;
     delete fDisableECalAnalysisCmd;
+
+    delete fEnableSaveSACCmd;
+    delete fEnableSaveVetoCmd;
+    delete fEnableSaveEcalCmd;
 }
 
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
@@ -88,6 +111,37 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
 	stepAct->DisableECalAnalysis();
       } else {
 	stepAct->EnableECalAnalysis();
+      }
+    }
+
+
+    //M. Raggi 23/06/2018
+    if (command == fEnableSaveEcalCmd) {
+      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+      if (fEnableSaveEcalCmd->GetNewBoolValue(newValue)) {
+	evtAct->EnableSaveEcal();
+      } else {
+	evtAct->DisableSaveEcal();
+      }
+    }
+
+    if (command == fEnableSaveSACCmd) {
+      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+      if (fEnableSaveSACCmd->GetNewBoolValue(newValue)) {
+	evtAct->EnableSaveSAC();
+      } else {
+	evtAct->DisableSaveSAC();
+      }
+    }
+
+    if (command == fEnableSaveVetoCmd) {
+      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+      if (fEnableSaveVetoCmd->GetNewBoolValue(newValue)) {
+	//	G4cout<<"Enable "<<G4endl;
+	evtAct->EnableSaveVeto();
+      } else {
+	evtAct->DisableSaveVeto();
+	//	G4cout<<"Disable "<<G4endl;
       }
     }
 

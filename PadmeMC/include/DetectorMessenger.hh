@@ -5,10 +5,12 @@
 #include "G4UImessenger.hh"
 
 class DetectorConstruction;
+class G4UIcmdWithABool;
 class G4UIdirectory;
 class G4UIcmdWithAString;
 class G4UIcmdWithoutParameter;
 class G4UIcmdWithADoubleAndUnit;
+
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

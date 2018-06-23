@@ -389,7 +389,8 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildMaterial("G4_POLYVINYLIDENE_FLUORIDE"); // Tedlar (ECal)
   man->FindOrBuildMaterial("G4_NEOPRENE");                // Neoprene (Magnet)
   man->FindOrBuildMaterial("G4_PLEXIGLASS");              // Plexiglass (ECal)
-  man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
+  //man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
+  man->FindOrBuildMaterial("G4_POLYSTYRENE");             // Plastic scintillator (Veto)
 
   // Define all elements needed to define materials not in the NIST DB
   man->FindOrBuildElement("H");  // Hydrogen

@@ -71,6 +71,7 @@ PVetoMessenger::~PVetoMessenger()
   delete fSetPVetoNFingersCmd;
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
+
   delete fSetPVetoInnerFaceXCmd;
   delete fSetPVetoFrontFaceZCmd;
 
@@ -86,13 +87,13 @@ void PVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetFingerSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fPVetoGeometry->SetFingerNominalSizeX(s*cm);
-    fPVetoGeometry->SetFingerNominalSizeZ(s*cm);
+    fPVetoGeometry->SetFingerSizeX(s*cm);
+    fPVetoGeometry->SetFingerSizeZ(s*cm);
   }
 
   if ( cmd == fSetFingerLengthCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fPVetoGeometry->SetFingerNominalSizeY(s*cm);
+    fPVetoGeometry->SetFingerSizeY(s*cm);
   }
 
   if ( cmd == fSetPVetoInnerFaceXCmd ) {

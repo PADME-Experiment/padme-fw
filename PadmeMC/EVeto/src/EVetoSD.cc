@@ -63,8 +63,15 @@ G4bool EVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit -> SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy());
   newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
 
-  fEVetoCollection->insert(newHit);
+  //record track only the first time it enters the volume M. Raggi 30/05/2018
+  //it is not immune from tracks spinning around and entering a volume twice
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
+  }else{
+    newHit -> SetTrackID(0);
+  }
 
+  fEVetoCollection->insert(newHit);
   return true;
 
 }

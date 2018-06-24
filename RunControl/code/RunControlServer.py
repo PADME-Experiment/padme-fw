@@ -744,7 +744,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
                 self.send_answer("adc %d zsup_fail"%adc.board_id)
-            time.sleep(1)
+            time.sleep(0.2)
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
@@ -758,7 +758,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
                 self.send_answer("adc %d fail"%adc.board_id)
                 adc.status = "fail"
-            time.sleep(1)
+            time.sleep(0.2)
 
         # Wait for all boards to finish initialization
         n_try = 0
@@ -792,7 +792,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                     self.send_answer("init_timeout")
                     return "initfail"
-                time.sleep(1)
+                time.sleep(0.5)
             elif (all_boards_ready):
                 print "All boards completed initialization: DAQ run can be started"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
@@ -850,7 +850,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
         # Create "stop the run" tag file
-        open(self.run.quit_file,'w').close()
+        #open(self.run.quit_file,'w').close()
 
         terminate_ok = True
 

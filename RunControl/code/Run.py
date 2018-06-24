@@ -388,7 +388,8 @@ class Run:
             if lvl1.node_id == 0:
                 os.mkfifo(lvl1.input_stream)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s )'"%(lvl1.node_ip,self.stream_dir,lvl1.input_stream)
+                #command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s )'"%(lvl1.node_ip,self.stream_dir,lvl1.input_stream)
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkfifo %s )'"%(lvl1.node_ip,lvl1.input_stream)
                 print command
                 os.system(command)
 
@@ -550,11 +551,11 @@ class Run:
 
         # Configure Level1 processes after changing setup
 
-        # Set executable
-        level1.executable = self.level1_executable
-
         # Reset Level1 process handler to default configuration
         level1.set_default_config()
+
+        # Set executable
+        level1.executable = self.level1_executable
 
         # Set maximum number of events to write in a single file
         level1.max_events = self.level1_maxevt
@@ -605,7 +606,7 @@ class Run:
 
         level1.input_stream = "%s/%s_%s"%(self.stream_dir,self.stream_head,s_lid)
         level1.output_dir = self.rawdata_dir
-        level1.output_header = self.rawdata_head
+        level1.output_header = "%s_%s"%(self.rawdata_head,s_lid)
 
     def runconfig_merger(self,merger):
 

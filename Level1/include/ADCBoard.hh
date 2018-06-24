@@ -68,7 +68,9 @@ class ADCBoard
   UInt_t fNewFile;
   UInt_t fCurrentFile;
   std::ifstream fFileHandle;
+  UInt_t fFinished;
   void* fBuffer;
+
   UInt_t fEventSize;
   UInt_t fVersion;
 

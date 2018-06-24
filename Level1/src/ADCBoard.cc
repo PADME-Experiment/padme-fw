@@ -38,6 +38,7 @@ void ADCBoard::Reset()
   if (fFileHandle && fFileHandle.is_open()) fFileHandle.close();
   fCurrentFile = 0;
   fNewFile = 0;
+  fFinished = 0;
   fEventSize = 0;
   fVersion = 0;
   fADCEvent->Reset();
@@ -107,6 +108,8 @@ int ADCBoard::NextEvent()
 
   int ret;
 
+  if (fFinished) return 0;
+
   while(1){
 
     if (fNewFile == 1) {
@@ -139,6 +142,7 @@ int ADCBoard::NextEvent()
       fCurrentFile++;
       if ( fCurrentFile >= fFiles.size() ) {
 	// No more files: we are done
+	fFinished = 1;
 	return 0;
       }
       // More files are available: open the next one

@@ -256,7 +256,7 @@ int main(int argc, char* argv[])
       if (nEOR == boards.size()) {
 	printf("All boards reached end of run.\n");
       } else {
-	printf("WARNING: %d board(s) reached end of run.\n",nEOR);
+	printf("%d board(s) reached end of run.\n",nEOR);
       }
       break; // Exit from main loop
     }
@@ -516,7 +516,7 @@ int main(int argc, char* argv[])
 
   } // End of main while loop
 
-  // We are done: send file tail to output streams and close them
+  // We are done: send file tail to all output streams and close them
   for (unsigned int i=0; i<NOutputStreams; i++) {
 
     // Create file tail structure
@@ -544,6 +544,17 @@ int main(int argc, char* argv[])
     // Close stream
     output_stream_handle[i].close();
 
+  }
+
+  // At least one board reached EOR. Now wait for all boards to do the same.
+  int millisec = 100; // length of time to sleep between tests, in milliseconds
+  struct timespec req = {0}; req.tv_sec = 0; req.tv_nsec = millisec * 1000000L;
+  while (nEOR<boards.size()) {
+    nanosleep(&req, (struct timespec *)NULL);  
+    nEOR = 0;
+    for(unsigned int b=0; b<boards.size(); b++) {
+      if ( ! boards[b]->NextEvent() ) nEOR++;
+    }
   }
 
   printf("Run %d closed after writing %u events\n",cfg->RunNumber(),NumberOfEvents);

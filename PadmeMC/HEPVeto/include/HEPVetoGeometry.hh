@@ -50,6 +50,9 @@ public:
   G4double GetFingerPosY(G4int);
   G4double GetFingerPosZ(G4int);
 
+  // Rotation of fingers around Y axis M. Raggi 23/06/2018
+  G4double GetFingerRotY() { return fFingerRotY; }
+
   // Size of HEPVeto scintillator fingers
   G4double GetFingerSizeX() { return fFingerSizeX; }
   G4double GetFingerSizeY() { return fFingerSizeY; }
@@ -86,6 +89,14 @@ public:
   // Get name of HEPVeto sensitive detector
   G4String GetHEPVetoSensitiveDetectorName() { return fHEPVetoSensitiveDetectorName; }
 
+  // Size of groove on finger back side (add some tolerances for solid subtraction) M. Raggi
+  G4double GetGrooveSizeX() { return fGrooveSizeX+10.*um; }
+  G4double GetGrooveSizeY() { return fFingerSizeY+10.*um; }
+  G4double GetGrooveSizeZ() { return fGrooveSizeZ; }
+  G4double GetGroovePosX() { return 0.5*fFingerSizeX-0.5*fGrooveSizeX+5.*um; }
+  G4double GetGroovePosY() { return 0.; }
+  G4double GetGroovePosZ() { return 0.; }
+
 private:
 
   void UpdateDerivedMeasures();
@@ -97,6 +108,12 @@ private:
   G4double fFingerSizeX;
   G4double fFingerSizeY;
   G4double fFingerSizeZ;
+  
+  // M. Raggi
+  G4double fGrooveSizeX;
+  G4double fGrooveSizeZ;
+
+  G4double fFingerRotY; // Finger rotation around Y axis
 
   G4double fFingerStep; // Step between fingers
 

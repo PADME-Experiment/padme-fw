@@ -39,7 +39,26 @@ class EventAction : public G4UserEventAction
 
   SteppingAction * myStepping;
 
+  // M. Raggi 23/06/2018 datacard commands
+  void EnableSaveEcal()  { fEnableSaveEcal = 1; }
+  void DisableSaveEcal() { fEnableSaveEcal = 0; }
+
+  void EnableSaveSAC()  { fEnableSaveSAC = 1; }
+  void DisableSaveSAC() { fEnableSaveSAC = 0; }
+
+  void EnableSaveVeto()  { 
+    fEnableSaveVeto = 1; 
+    G4cout<< "saving Veto"<<G4endl;
+  }
+  void DisableSaveVeto() { fEnableSaveVeto = 0; }
+
   private:
+
+  //M. Raggi 
+  G4int fEnableSaveEcal;
+  G4int fEnableSaveSAC;
+  G4int fEnableSaveVeto;
+
   void  AddECryHits(ECalHitsCollection*);
   void  FindClusters();
 

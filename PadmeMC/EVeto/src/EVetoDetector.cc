@@ -86,7 +86,7 @@ void EVetoDetector::CreateGeometry()
   rotFinger->rotateY(geo->GetFingerRotY());
   for (G4int fin=0;fin<nFingers;fin++){
     G4ThreeVector posFinger = G4ThreeVector(geo->GetFingerPosX(fin),geo->GetFingerPosY(fin),geo->GetFingerPosZ(fin));
-    new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"EVetoFinger",fEVetoVolume,false,fin,true);
+    new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"EVetoFinger",fEVetoVolume,false,fin,false);
   }
 
   // Create and position Up and Down supports

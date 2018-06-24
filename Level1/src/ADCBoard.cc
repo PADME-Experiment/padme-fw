@@ -39,6 +39,7 @@ void ADCBoard::Reset()
   fCurrentFile = 0;
   fNewFile = 0;
   fEventSize = 0;
+  fVersion = 0;
   fADCEvent->Reset();
 }
 
@@ -108,19 +109,6 @@ int ADCBoard::NextEvent()
 
   while(1){
 
-    // Starting a new file
-    //if ( (! fFileHandle) || (! fFileHandle.is_open()) ) {
-
-      // Open next file in list
-      //printf ("Current file %d List size %lu\n",fCurrentFile,fFiles.size());
-      //if ( fCurrentFile >= fFiles.size() ) {
-      //	// No more files: we are done
-      //	fADCEvent = 0;
-      //	return fADCEvent;
-      //}
-      //printf("Opening file %s\n",fFiles[fCurrentFile].GetPath().c_str());
-      //fFileHandle.open(fFiles[fCurrentFile].GetPath().c_str(), std::ios::in | std::ios::binary);
-
     if (fNewFile == 1) {
 
       // Read file head. Returns 0:OK 1:Error
@@ -130,8 +118,9 @@ int ADCBoard::NextEvent()
 	exit(1);
       }
 
+      fVersion = fFiles[fCurrentFile].GetVersion();
       printf("File %s opened with format version %d\n",
-	     fFiles[fCurrentFile].GetPath().c_str(),fFiles[fCurrentFile].GetVersion());
+	     fFiles[fCurrentFile].GetPath().c_str(),fVersion);
 
       fNewFile = 0;
 
@@ -150,7 +139,7 @@ int ADCBoard::NextEvent()
       fCurrentFile++;
       if ( fCurrentFile >= fFiles.size() ) {
 	// No more files: we are done
-	return 1;
+	return 0;
       }
       // More files are available: open the next one
       if (OpenFile() != 0) {
@@ -160,7 +149,7 @@ int ADCBoard::NextEvent()
       fNewFile = 1;
       continue;
     }
-    return 0;
+    return 1;
 
   }
 
@@ -413,17 +402,24 @@ UInt_t ADCBoard::GetSerialNumber()
 
 int ADCBoard::UnpackEvent()
 {
+
+  // Get event size for final consistency check (does not depend on version)
+  fEventSize = (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_EVENTSIZE_LIN] & ADCEVENT_EVENTSIZE_BIT ) >> ADCEVENT_EVENTSIZE_POS);
+
   // Decode event structure according to data format version
   int rc = 0;
-  if (fFiles[fCurrentFile].GetVersion() == 1) {
+  if (fVersion == 1) {
     rc = UnpackEvent_v01();
-  } else if (fFiles[fCurrentFile].GetVersion() == 2) {
+  } else if (fVersion == 2) {
     rc = UnpackEvent_v02();
-  } else if (fFiles[fCurrentFile].GetVersion() == 3) {
+  } else if (fVersion == 3) {
     rc = UnpackEvent_v03();
+  } else {
+    printf("ADCBoard::UnpackEvent - ERROR - Data format version %u is unknown\n",fVersion);
+    return 1;
   }
   if (rc) {
-    printf("ERROR while unpacking event\n");
+    printf("ADCBoard::UnpackEvent - ERROR while unpacking event\n");
     return 1;
   }
   return 0;
@@ -569,7 +565,7 @@ int ADCBoard::UnpackEvent_v03()
   fADCEvent->SetActiveChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACTIVE_LIN] & ADCEVENT_V03_CHMASKACTIVE_BIT ) >> ADCEVENT_V03_CHMASKACTIVE_POS) );
   fADCEvent->SetAcceptedChannelMask( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_CHMASKACCEPTED_LIN] & ADCEVENT_V03_CHMASKACCEPTED_BIT ) >> ADCEVENT_V03_CHMASKACCEPTED_POS) );
 
-//printf("Board Id %d LVDS %08x 0SuppAlg %d GrpMsk %1x Status %03x Event %d Time %d Active %08x Accept %08x\n",
+//printf("Board Id %d LVDS %08x 0SuppAlg %u GrpMsk %1x Status %03x Event %u Time %u Active %08x Accept %08x\n",
 //	 fADCEvent->GetBoardId(),fADCEvent->GetLVDSPattern(),fADCEvent->Get0SuppAlgrtm(),fADCEvent->GetGroupMask(),
 //	 fADCEvent->GetBoardStatus(),fADCEvent->GetEventCounter(),fADCEvent->GetEventTimeTag(),
 //	 fADCEvent->GetActiveChannelMask(),fADCEvent->GetAcceptedChannelMask());

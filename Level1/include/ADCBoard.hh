@@ -36,6 +36,9 @@ class ADCBoard
   ADCEvent* Event() { return fADCEvent; }
   void* Buffer() { return fBuffer; }
 
+  UInt_t GetVersion() { return fVersion; }
+  void SetVersion(UInt_t v) { fVersion = v; }
+
   UInt_t GetEventSize();
   UInt_t GetSerialNumber();
   UInt_t GetEventCounter();
@@ -67,6 +70,7 @@ class ADCBoard
   std::ifstream fFileHandle;
   void* fBuffer;
   UInt_t fEventSize;
+  UInt_t fVersion;
 
   ADCEvent* fADCEvent;
 

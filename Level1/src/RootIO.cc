@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "DBService.hh"
 #include "Configuration.hh"
@@ -33,9 +34,6 @@ RootIO::~RootIO()
 int RootIO::Init()
 {
 
-  //fNMaxEvtsPerOutFile = nevtsperfile;
-  //fOutFileTemplate = outfiletemplate;
-
   fOutFileDBId = 0;
   fOutFileIndex = 0;
   fOutFileEvents = 0;
@@ -43,9 +41,7 @@ int RootIO::Init()
   fOutSizeTotal = 0;
 
   // Set initial output filename
-  //if (fNMaxEvtsPerOutFile == 0) {
   if (fConfig->NEventsPerFile() == 0) {
-    //fOutFile.Form("%s.root",fOutFileTemplate.Data());
     fOutFile.Form("%s.root",fConfig->RawFileHeader().c_str());
   } else {
     SetOutFile();
@@ -91,7 +87,6 @@ Int_t RootIO::OpenOutFile()
   }
 
   printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
-  //fTFileHandle->Open(fOutFile,"NEW","PADME Merged Raw Events");
   fTFileHandle = TFile::Open(fOutFile,"NEW","PADME Merged Raw Events");
   if ( (!fTFileHandle) || fTFileHandle->IsZombie() ) {
     delete fTFileHandle;
@@ -131,13 +126,9 @@ Int_t RootIO::CloseOutFile()
   // Close output file
   fTFileHandle->Close();
 
-  // Add size of this file to total (does not work)
-  //Long64_t size = fTFileHandle->GetSize();
-  //Long64_t bytes = fTFileHandle->GetBytesWritten();
-  //printf("File has size %lld and bytes %lld\n",size,bytes);
+  // Add size of this file to total
   fOutFileSize = fTFileHandle->GetSize();
   fOutSizeTotal += fOutFileSize;
-  //fOutFileSize = 0;
 
   // Delete file handle for this file
   //delete fTTreeMain;
@@ -163,39 +154,49 @@ Int_t RootIO::SetOutFile()
 }
 
 //int RootIO::FillRawEvent(int runnr, int evtnr, std::vector<ADCBoard*>& boards)
-int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsigned int trgmsk, unsigned int evtstatus, std::vector<ADCBoard*>& boards)
+//int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsigned int trgmsk, unsigned int evtstatus, std::vector<ADCBoard*>& boards)
+int RootIO::FillRawEvent(int run_number,
+			 unsigned int event_number,
+			 struct timespec event_time,
+			 unsigned long long int event_run_time,
+			 unsigned int event_trigger_mask,
+			 unsigned int event_status,
+			 unsigned int trigger_mask,
+			 unsigned int trigger_counter,
+			 unsigned long long int trigger_clock,
+			 unsigned int number_adc_boards,
+			 ADCBoard** boards)
 {
 
   // Emtpy event structure
   fTRawEvent->Clear("C");
-  //printf("TRawEvent cleared\n");
 
   // Set run and event number
-  fTRawEvent->SetRunNumber((Int_t)runnr);
-  fTRawEvent->SetEventNumber((Int_t)evtnr);
+  fTRawEvent->SetRunNumber((Int_t)run_number);
+  fTRawEvent->SetEventNumber((UInt_t)event_number);
 
-  // Set event time since start of run
-  fTRawEvent->SetEventRunTime((ULong64_t)runtime);
-
-  // Set trigger mask
-  fTRawEvent->SetEventTrigMask((UInt_t)trgmsk);
-
-  // Set event status
-  fTRawEvent->SetEventStatus((UInt_t)evtstatus);
-
-  // Set system time at event creation
-  TTimeStamp systime = TTimeStamp();
+  // Save system time when event was merged
+  TTimeStamp systime = TTimeStamp(event_time.tv_sec,event_time.tv_nsec);
   fTRawEvent->SetEventAbsTime(systime);
 
+  // Set event time since start of run
+  fTRawEvent->SetEventRunTime((ULong64_t)event_run_time);
+
+  // Set trigger mask
+  fTRawEvent->SetEventTrigMask((UInt_t)event_trigger_mask);
+
+  // Set event status
+  fTRawEvent->SetEventStatus((UInt_t)event_status);
+
   // Print event info when in verbose mode
-  if (fVerbose >= 1) printf("RootIO - Run %d Event %d Clock %lu Time %s Trig 0x%08x Status 0x%08x\n",runnr,evtnr,runtime,systime.AsString(),trgmsk,evtstatus);
+  if (fConfig->Verbose() >= 1) {
+    printf("RootIO - Run %d Event %u Time %s Clock %llu Trig 0x%08x Status 0x%08x\n",run_number,event_number,systime.AsString(),event_run_time,event_trigger_mask,event_status);
+  }
 
   // Loop over all ADC boards
-  for(unsigned int b=0; b<boards.size(); b++) {
+  for(unsigned int b=0; b<number_adc_boards; b++) {
 
-    //printf("TRawEvent creating board %d\n",b);
     TADCBoard* tBoard = fTRawEvent->AddADCBoard();
-    //printf("TRawEvent board %d created with address %ld\n",b,(long)tBoard);
 
     // Save general board information for this event
     tBoard->SetBoardId            (boards[b]->Event()->GetBoardId());
@@ -210,8 +211,8 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
     tBoard->SetAcceptedChannelMask(boards[b]->Event()->GetAcceptedChannelMask());
     //printf("TRawEvent board info saved\n");
 
-    if (fVerbose >= 2)
-      printf("RootIO - Board %d S/N %d LVDS 0x%04x Status 0x%03x GMask 0x%1x Event %u Time %u 0SupAlg %u ActiveCh 0x%08x AcceptCh 0x%08x\n",
+    if (fConfig->Verbose() >= 2)
+      printf("RootIO - Board %u S/N %u LVDS 0x%04x Status 0x%03x GMask 0x%1x Event %u Time %u 0SupAlg %u ActiveCh 0x%08x AcceptCh 0x%08x\n",
 	     tBoard->GetBoardId(),tBoard->GetBoardSN(),tBoard->GetLVDSPattern(),tBoard->GetBoardStatus(),tBoard->GetGroupMask(),
 	     tBoard->GetEventCounter(),tBoard->GetEventTimeTag(),tBoard->Get0SuppAlgrtm(),tBoard->GetActiveChannelMask(),tBoard->GetAcceptedChannelMask());
 
@@ -241,13 +242,13 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
 	tTrig->SetFrequency     (boards[b]->Event()->GetTriggerFrequency(t));
 	tTrig->SetTriggerSignal (boards[b]->Event()->GetTriggerHasSignal(t));
 	tTrig->SetTriggerTimeTag(boards[b]->Event()->GetTriggerTimeTag(t));
-	if (fVerbose >= 3)
+	if (fConfig->Verbose() >= 3)
 	  printf("RootIO - Board %u Group %u SIC %u Freq 0x%1x HasData 0x%1x TTT 0x%08x\n",
 	  tBoard->GetBoardId(),tTrig->GetGroupNumber(),tTrig->GetStartIndexCell(),tTrig->GetFrequency(),tTrig->GetTriggerSignal(),tTrig->GetTriggerTimeTag());
 	if ( boards[b]->Event()->GetTriggerHasSignal(t) ) {
 	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	    tTrig->SetSample(s,boards[b]->Event()->GetADCTriggerSample(t,s));
-	  if (fVerbose >= 4) {
+	  if (fConfig->Verbose() >= 4) {
 	    for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {
 	      if (s%16 == 0) printf("\t");
 	      printf("%4x ",tTrig->GetSample(s));
@@ -265,7 +266,7 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
 	tChan->SetChannelNumber(c);
 	for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	  tChan->SetSample(s,boards[b]->Event()->GetADCChannelSample(c,s));
-	if (fVerbose >= 4) {
+	if (fConfig->Verbose() >= 4) {
 	  printf("RootIO - Board %u Channel %u\n",tBoard->GetBoardId(),tChan->GetChannelNumber());
 	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {
 	    if (s%16 == 0) printf("\t");
@@ -284,7 +285,6 @@ int RootIO::FillRawEvent(int runnr, int evtnr, unsigned long int runtime, unsign
   // Count event and see if we have to change file
   fOutEventsTotal++;
   fOutFileEvents++;
-  //if (fNMaxEvtsPerOutFile && (fOutFileEvents>=fNMaxEvtsPerOutFile)) {
   if (fConfig->NEventsPerFile() && (fOutFileEvents>=fConfig->NEventsPerFile())) {
     if (ChangeOutFile() != ROOTIO_OK) return ROOTIO_ERROR;
   }

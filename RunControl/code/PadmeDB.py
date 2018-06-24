@@ -253,9 +253,9 @@ class PadmeDB:
 
         else:
 
-            # If node name does not end with .lnf.infn.it, add it before searching
+            # If node name does not end with .lnf.infn.it, add it before searching (allow localhost)
             res = re.match("^\w*\.lnf\.infn\.it$",node)
-            if (res == None): node += ".lnf.infn.it"
+            if (res == None and node != "localhost"): node += ".lnf.infn.it"
 
             # Search by name
             c.execute("""SELECT id FROM node WHERE name=%s""",(node,))

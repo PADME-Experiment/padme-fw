@@ -24,6 +24,9 @@ public:
   void SetRunNumber(int r) { fRunNumber = r; }
   int RunNumber() { return fRunNumber; }
 
+  void SetInputStream(std::string f) { fInputStream = f; }
+  std::string InputStream() { return fInputStream; }
+
   void SetInputStreamList(std::string f) { fInputStreamList = f; }
   std::string InputStreamList() { return fInputStreamList; }
 
@@ -47,6 +50,8 @@ private:
   int fRunNumber;
 
   int fMergerId;
+
+  std::string fInputStream;
 
   std::string fInputStreamList;
 

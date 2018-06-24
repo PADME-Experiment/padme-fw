@@ -699,9 +699,8 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         # Start run initialization procedure
         self.send_answer("start_init")
 
-        ## Create merger output file directory
-        #self.run.create_merger_output_dir()
-        self.run.level1.create_output_dir()
+        ## Create level1 output rawdata directories
+        self.run.create_level1_output_dirs()
 
         # Create pipes for data transfer
         print "Creating named pipes for run %d"%self.run.run_number
@@ -710,16 +709,26 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         #    os.mkfifo(adc.output_stream_daq)
         #    os.mkfifo(adc.output_stream_zsup)
 
+        # Start Level1 processes
+        for lvl1 in (self.run.level1_list):
+            p_id = lvl1.start_level1()
+            if p_id:
+                print "Level1 %d - Started with process id %d"%(lvl1.level1_id,p_id)
+                self.send_answer("level1 %d ready"%lvl1.level1_id)
+            else:
+                print "Level1 %d - ERROR: could not start process"%lvl1.level1_id
+                self.send_answer("level1 %d fail"%lvl1.level1_id)
+
         # Create receiving end of network tunnels (if needed)
         self.run.create_receivers()
 
         # Start merger
         p_id = self.run.merger.start_merger()
         if p_id:
-            print "Started Merger with process id %d"%p_id
+            print "Merger - Started with process id %d"%p_id
             self.send_answer("merger ready")
         else:
-            print "ERROR: could not start Merger"
+            print "Merger - ERROR: could not start process"
             self.send_answer("merger fail")
 
         # Create sending ends of network tunnels (if needed)
@@ -731,10 +740,10 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_zsup()
             if p_id:
                 print "ADC board %02d - Started ZSUP with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc "+str(adc.board_id)+" zsup_ready")
+                self.send_answer("adc %d zsup_ready"%adc.board_id)
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
-                self.send_answer("adc "+str(adc.board_id)+" zsup_fail")
+                self.send_answer("adc %d zsup_fail"%adc.board_id)
             time.sleep(1)
 
         # Start DAQ for all boards
@@ -742,14 +751,12 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
 
             p_id = adc.start_daq()
             if p_id:
-                #self.write_log("ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id))
                 print "ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc "+str(adc.board_id)+" init")
+                self.send_answer("adc %d init"%adc.board_id)
                 adc.status = "init"
             else:
-                #self.write_log("ADC board %02d - ERROR: could not start DAQ"%adc.board_id)
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
-                self.send_answer("adc "+str(adc.board_id)+" fail")
+                self.send_answer("adc %d fail"%adc.board_id)
                 adc.status = "fail"
             time.sleep(1)
 

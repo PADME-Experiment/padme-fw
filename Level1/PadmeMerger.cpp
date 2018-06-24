@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 
+#include "EventTags.hh"
 #include "ADCEventTags.hh"
 #include "ADCBoard.hh"
 #include "Configuration.hh"
@@ -101,6 +102,12 @@ int main(int argc, char* argv[])
       }
   }
 
+  // Check if input file list was defined
+  if (cfg->InputStreamList().compare("")==0) {
+    printf("ERROR no input file list defined. Aborting\n");
+    exit(1);
+  }
+
   // If this is an official run, connect to DB and get id of merger
   if (cfg->RunNumber()) {
 
@@ -120,12 +127,6 @@ int main(int argc, char* argv[])
 
   ADCBoard* board;
   std::vector<ADCBoard*> boards;
-
-  // Check if input file list was defined
-  if (cfg->InputStreamList().compare("")==0) {
-    printf("ERROR no input file list defined. Aborting\n");
-    exit(1);
-  }
 
   std::ifstream list;
   std::string line;
@@ -180,7 +181,7 @@ int main(int argc, char* argv[])
   std::string output_stream[LVL1_PROC_MAX];
   std::ofstream output_stream_handle[LVL1_PROC_MAX];
   unsigned int output_stream_nevents[LVL1_PROC_MAX];
-  unsigned long int output_stream_size[LVL1_PROC_MAX];
+  unsigned long long int output_stream_size[LVL1_PROC_MAX];
   unsigned int NOutputStreams = 0;
   list.open(cfg->OutputStreamList().c_str());
   while(!list.eof()){
@@ -190,7 +191,7 @@ int main(int argc, char* argv[])
 	printf("ERROR - file with list of output streams contains more than %d files. Aborting",LVL1_PROC_MAX);
 	exit(1);
       }
-      printf("Opening output stream %2u '%s'\n",NOutputStreams,line.c_str());
+      printf("- Opening output stream %2u '%s'\n",NOutputStreams,line.c_str());
       output_stream[NOutputStreams] = line;
       output_stream_handle[NOutputStreams].open(line.c_str(),std::ios::out | std::ios::binary);
       output_stream_nevents[NOutputStreams] = 0;
@@ -199,31 +200,7 @@ int main(int argc, char* argv[])
     }
   }
   list.close();
-
-  // Create file header structure
-  unsigned int fbuff;
-  char file_header[16+4*boards.size()];
-  unsigned int header_size = 0;
-  fbuff = (0x9 << 28) + ( (boards[0]->File(0)->GetVersion() & 0x0fff) << 16 );
-  memcpy(file_header+header_size,&fbuff,4); header_size += 4;
-  fbuff = cfg->RunNumber();
-  memcpy(file_header+header_size,&fbuff,4); header_size += 4;
-  fbuff = (boards.size() & 0xffff);
-  memcpy(file_header+header_size,&fbuff,4); header_size += 4;
-  for(unsigned int i=0; i<boards.size(); i++) {
-    fbuff = (boards[i]->GetSerialNumber() & 0xffff);
-    memcpy(file_header+header_size,&fbuff,4);
-    header_size += 4;
-  }
-  time_t t_open;
-  time(&t_open);
-  memcpy(file_header+header_size,&t_open,4); header_size += 4;
-
-  // Send header to all output files
-  for(unsigned int i = 0; i<NOutputStreams; i++) {
-    output_stream_handle[i].write(file_header,header_size);
-    output_stream_size[i] += header_size;
-  }
+  printf("- Using a total of %u output Level1 streams\n",NOutputStreams);
 
   // Everything is set: tell DB merger has started
   if (cfg->RunNumber()) {
@@ -263,13 +240,14 @@ int main(int argc, char* argv[])
   unsigned int NumberOfEvents = 0;
   while(1){
 
-    if (cfg->Verbose()>=1) printf("=== Processing event %8u ===\n",NumberOfEvents);
+    if (cfg->Verbose()>=1)
+      printf("=== Processing event %8u ===\n",NumberOfEvents);
 
     nEOR = 0; // Reset end_of_run counter
 
     // Load next event for all boards
     for(unsigned int b=0; b<boards.size(); b++) {
-      if ( boards[b]->NextEvent() == 0 ) {
+      if ( ! boards[b]->NextEvent() ) {
 	nEOR++;
 	printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
       }
@@ -281,6 +259,47 @@ int main(int argc, char* argv[])
 	printf("WARNING: %d board(s) reached end of run.\n",nEOR);
       }
       break; // Exit from main loop
+    }
+
+    if (NumberOfEvents == 0) {
+
+      // All the info we need to create the file header is now available
+      // (data format version and board serial numbers)
+
+      // Create file header structure
+      unsigned int fbuff;
+      char file_header[16+4*boards.size()];
+      unsigned int header_size = 0;
+
+      // First line: start of file tag, version (index is always 0)
+      printf("Version is %d\n",boards[0]->File(0)->GetVersion());
+      fbuff = (EVENT_FILE_HEAD_TAG << 28) + ( (boards[0]->File(0)->GetVersion() & 0x0fff) << 16 );
+      memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+      // Second line: run number
+      fbuff = cfg->RunNumber();
+      memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+      // Third line: number of ADC boards
+      fbuff = (boards.size() & 0xffffffff);
+      memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+      // Boards serial numbers
+      for(unsigned int i=0; i<boards.size(); i++) {
+	printf("Board %u has SN %u\n",i,boards[i]->GetSerialNumber());
+	fbuff = (boards[i]->GetSerialNumber() & 0xffffffff);
+	memcpy(file_header+header_size,&fbuff,4);
+	header_size += 4;
+      }
+      // Last line: time when file is opened
+      time_t t_open;
+      time(&t_open);
+      fbuff = (t_open & 0xffffffff);
+      memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+
+      // Send header to all output files
+      for(unsigned int i = 0; i<NOutputStreams; i++) {
+	output_stream_handle[i].write(file_header,header_size);
+	output_stream_size[i] += header_size;
+      }
+
     }
 
     unsigned int all_in_time = 0;
@@ -435,14 +454,17 @@ int main(int argc, char* argv[])
     char evt_h[4*8];
     unsigned int evt_h_size = 0;
     unsigned int evt_h_buff;
-    evt_h_buff = (0x6 << 28) + (total_event_size & 0x0fffffff);
+    evt_h_buff = (EVENT_HEADER_TAG << 28) + (total_event_size & 0x0fffffff);
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
     memcpy(evt_h+evt_h_size,&NumberOfEvents,4); evt_h_size += 4;
     //evt_h_buff = (unsigned int)now.tv_sec;
     //memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
     //evt_h_buff = (unsigned int)now.tv_nsec;
     //memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
-    memcpy(evt_h+evt_h_size,&now,8); evt_h_size += 8;
+    unsigned int now_sec = (now.tv_sec & 0xffffffff);
+    memcpy(evt_h+evt_h_size,&now_sec,4); evt_h_size += 4;
+    unsigned int now_nsec = (now.tv_nsec & 0xffffffff);
+    memcpy(evt_h+evt_h_size,&now_nsec,4); evt_h_size += 4;
     // For the moment save clock counts of first board as event run time.
     // When trigger info will be added, replace this with number of ns since start of run
     memcpy(evt_h+evt_h_size,CC,8); evt_h_size += 8;
@@ -466,7 +488,7 @@ int main(int argc, char* argv[])
     unsigned int trigger_mask = 0;
     unsigned int trigger_count = 0;
     unsigned long long int trigger_clock = 0;
-    trg_h_buff = (0x3 << 28) + ((trigger_mask & 0x00000fff) << 16) + ((trigger_count & 0x0000ffff) << 0);
+    trg_h_buff = (EVENT_TRIGGER_INFO_TAG << 28) + ((trigger_mask & 0x00000fff) << 16) + ((trigger_count & 0x0000ffff) << 0);
     memcpy(trg_h+trg_h_size,&trg_h_buff,4); trg_h_size += 4;
     memcpy(trg_h+trg_h_size,&trigger_clock,8); trg_h_size += 8;
 
@@ -482,7 +504,7 @@ int main(int argc, char* argv[])
     }
 
     // Update counters for this stream
-    output_stream_nevents[NOutputStreams]++;
+    output_stream_nevents[CurrentOutputStream]++;
 
     // Move to next output stream (round robin)
     CurrentOutputStream++;
@@ -494,14 +516,35 @@ int main(int argc, char* argv[])
 
   } // End of main while loop
 
-  // We are done: close output streams
+  // We are done: send file tail to output streams and close them
   for (unsigned int i=0; i<NOutputStreams; i++) {
+
+    // Create file tail structure
+    unsigned int fbuff;
+    unsigned long long int lbuff;
+    char file_tail[16]; // 4 words of 4 bytes
+    unsigned int tail_size = 0;
+    // Add size of tail to total size of output stream
+    output_stream_size[i] += 16;
+    // First line: end of file tag, #events written to stream
+    fbuff = (EVENT_FILE_TAIL_TAG << 28) + ((output_stream_nevents[i] & 0x0fffffff) << 0);
+    memcpy(file_tail+tail_size,&fbuff,4); tail_size += 4;
+    // Second and third line: bytes written to stream (add size of tail)
+    lbuff = output_stream_size[i];
+    memcpy(file_tail+tail_size,&lbuff,8); tail_size += 8;
+    // Fourth line: time when file is closed
+    time_t t_close;
+    time(&t_close);
+    fbuff = (t_close & 0xffffffff);
+    memcpy(file_tail+tail_size,&fbuff,4); tail_size += 4;
+
+    // Write tail structure to stream
+    output_stream_handle[i].write(file_tail,tail_size);
+
+    // Close stream
     output_stream_handle[i].close();
+
   }
-  //std::vector<std::ofstream>::iterator oit;
-  //for (oit = output_stream_handle.begin(); oit != output_stream_handle.end(); ++oit) {
-  //  (*oit).close();
-  //}
 
   printf("Run %d closed after writing %u events\n",cfg->RunNumber(),NumberOfEvents);
 

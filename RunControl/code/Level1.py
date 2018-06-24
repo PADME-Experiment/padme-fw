@@ -50,8 +50,8 @@ class Level1:
         cfgstring += "node_id\t\t\t%d\n"%self.node_id
         cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
 
-        cfgstring += "initok_file\t\t%s\n"%self.initok_file_daq
-        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file_daq
+        cfgstring += "initok_file\t\t%s\n"%self.initok_file
+        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file
 
         cfgstring += "input_stream\t\t%s\n"%self.input_stream
 

@@ -15,7 +15,7 @@ class Merger:
 
     def set_default_config(self):
 
-        self.executable = os.getenv('PADME',".")+"/Level1/PadmeLevel1.exe"
+        self.executable = os.getenv('PADME',".")+"/Level1/PadmeMerger.exe"
         self.log_file = "undefined"
         self.config_file = "undefined"
         self.node_id = 0

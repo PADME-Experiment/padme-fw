@@ -89,7 +89,7 @@ class RunControlText:
 
                 print "Sending %s"%message
                 ans = self.ask_server(message)
-                if (message == "exit"):
+                if (message == "shutdown"):
                     print ans
                     print "Server's gone. I'll take my leave as well..."
                     break

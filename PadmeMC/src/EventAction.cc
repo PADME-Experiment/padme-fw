@@ -266,7 +266,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
   }
   
-  for(int i=0;i<  LAVTracks;i++){
+  for(int i=0;i<LAVTracks;i++){
     if(i>100) break;
 
     fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
@@ -321,10 +321,10 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 	  fHistoManager->myEvt.NTEVetoTrkEne[i]  = EVetoEtrack[i];
 	  //	  if(EVetoTrackCh[i]<100 && EVetoTrackCh[i]>-100) fHistoManager->myEvt.NTVetoTrkFinger[i] = EVetoTrackCh[i];
 	  fHistoManager->myEvt.NTEVetoTrkFinger[i]  = EVetoTrackCh[i];
-	  fHistoManager->myEvt.NTEVetoTrkTime[i] = EVetoTrackTime[i];
-	  fHistoManager->myEvt.NTEVetoFingerE[i] = ETotEVeto[EVetoTrackCh[i]]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTEVetoX[i]       = EVetoX[i]; //Just one finger per track to be improve!
-	  fHistoManager->myEvt.NTEVetoY[i]       = EVetoY[i]; //Just one finger per track to be improved!xs
+	  fHistoManager->myEvt.NTEVetoTrkTime[i]    = EVetoTrackTime[i];
+	  fHistoManager->myEvt.NTEVetoFingerE[i]    = ETotEVeto[EVetoTrackCh[i]]; //Just one finger per track to be improved!
+	  fHistoManager->myEvt.NTEVetoX[i]          = EVetoX[i]; //Just one finger per track to be improved!
+	  fHistoManager->myEvt.NTEVetoY[i]          = EVetoY[i]; //Just one finger per track to be improved!
 	  //	  G4cout<<i<<" Tracker Lay "<<EVetoTrackCh[i]<<" "<<EVetoEtrack[i]<<" "<<EVetoTrackTime[i]<<G4endl;
 	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
   }

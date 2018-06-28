@@ -6,6 +6,7 @@
 #include "G4TrajectoryContainer.hh"
 #include "G4Trajectory.hh"
 #include "G4ios.hh"
+#include "TLorentzVector.h"
 
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -63,7 +64,6 @@ EventAction::EventAction(RunAction* run)
   theDM->AddNewModule(sacDM);
   TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
   theDM->AddNewModule(tPixDM);
-
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -86,7 +86,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   NClusters= 0;
   NTracks  = 0;
 
-  SACTracks  = 0;
+
   CalNPart   = 0;
   LAVTracks  = 0;
   NHEPVetoTracks = 0;
@@ -98,6 +98,14 @@ void EventAction::BeginOfEventAction(const G4Event*)
   XTarget  = 0;
   YTarget  = 0;
   NTarget  = 0;
+
+  SACTracks  = 0;
+  SACCh.clear();
+  SACEtrack.clear();  
+  SACTrackTime.clear();  
+  SACPType.clear();  
+  SACX.clear();
+  SACY.clear();
 
   memset(&(fHistoManager->myEvt),0,sizeof(NTEvent));
   myStepping->SetPhysProc(0);
@@ -187,8 +195,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
-  //int Ncells=0;
-
+  
   //Retrieve beam Infos!
   G4double BeamE  = myStepping->GetPositronE();
   G4double BeamX  = myStepping->GetPositronX();
@@ -245,15 +252,17 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.NTXTarget  = XTarget;
   fHistoManager->myEvt.NTYTarget  = YTarget;
 
+  // if(SACEtrack.size()) G4cout<<evt->GetEventID()<<" Event action out "<<SACTracks<<" "<<SACEtrack.size()<<G4endl;
   for(int i=0;i<SACTracks;i++){	  
+  //  for(int i=0;i<SACEtrack.size();i++){	  
+     G4cout<<evt->GetEventID()<<" Event action NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
     if(i>MaxTracks-1) break;
-    //    G4cout<<evt->GetEventID()<<" Event action NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
-    fHistoManager->myEvt.NTSACE[i]     = SACEtrack[i];
-    fHistoManager->myEvt.NTSACT[i]     = SACTrackTime[i];
-    fHistoManager->myEvt.NTSACPType[i] = SACPType[i];
-    fHistoManager->myEvt.NTSACX[i]     = SACX[i];
-    fHistoManager->myEvt.NTSACY[i]     = SACY[i];
-    fHistoManager->myEvt.NTSACCh[i]    = SACCh[i];
+    fHistoManager->myEvt.NTSACE.push_back(SACEtrack.at(i));
+    fHistoManager->myEvt.NTSACT.push_back(SACTrackTime.at(i));
+    fHistoManager->myEvt.NTSACPType.push_back(SACPType.at(i));
+    fHistoManager->myEvt.NTSACX.push_back(SACX.at(i));
+    fHistoManager->myEvt.NTSACY.push_back(SACY.at(i));
+    fHistoManager->myEvt.NTSACCh.push_back(SACCh.at(i));
   }
 
   for(int i=0;i<CalNPart;i++){
@@ -336,43 +345,35 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     }
   }
 
+  //Revised ECAL ntu filling using vectors M. Raggi 27/06/2018
+  if(NClusters>0) G4cout<<"Filling CALO vectors ECl size"<<EneCl.size()<<" NClusters "<<NClusters<<G4endl;
   for(int i=0;i<NClusters;i++){	
-    //    G4cout<<"DDD CALO"<<EneCl[i]<<" "<<NTQCl[i]<<G4endl;
-    if(i>19) break;              
-    fHistoManager->myEvt.NTECluster[i]  = EneCl[i];
-    fHistoManager->myEvt.NTQCluster[i]  = QCl[i];
-    fHistoManager->myEvt.NTXCluster[i]  = XCl[i];   
-    fHistoManager->myEvt.NTYCluster[i]  = YCl[i];   
-    fHistoManager->myEvt.NTThCluster[i] = ThCl[i];
-    fHistoManager->myEvt.NTM2Cluster[i] = MM2[i];
-    fHistoManager->myEvt.NTTCluster[i]  = TimeCl[i];
-    fHistoManager->myEvt.NTNClusCells[i]= NCellsCl[i];
+    fHistoManager->myEvt.NTECluster.push_back(EneCl.at(i));
+    fHistoManager->myEvt.NTQCluster.push_back(QCl.at(i));
+    fHistoManager->myEvt.NTXCluster.push_back(XCl.at(i));   
+    fHistoManager->myEvt.NTYCluster.push_back(YCl.at(i));   
+    fHistoManager->myEvt.NTThCluster.push_back(ThCl.at(i));
+    fHistoManager->myEvt.NTM2Cluster.push_back(MM2.at(i));
+    fHistoManager->myEvt.NTTCluster.push_back(TimeCl.at(i));
+    fHistoManager->myEvt.NTNClusCells.push_back(NCellsCl.at(i));
   }
 
-  // Set conditions to write NTU using the datacards.  M. raggi 23/06/2018
-
-  // if(SACTracks>0) for(int ll=0;ll<SACTracks;ll++) fHistoManager->FillHisto(18,SACEtrack[ll]);
-
 //  for(int i=0;i< ECalNCells;i++){
-//    fHistoManager->myEvt.NTECell[i]=ETotCry[i];
-//    fHistoManager->myEvt.NTQCell[i]=QTotCry[i];
-//    fHistoManager->myEvt.NTTCell[i]=TimeCry[i];
+//    fHistoManager->myEvt.NTECell.push_back(ETotCry.at(i));
+//    fHistoManager->myEvt.NTQCell.push_back(QTotCry.at(i));
+//    fHistoManager->myEvt.NTTCell.push_back(TimeCry.at(i));
 //  }
-
 //  if(IsTrackerRecoON==1){
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 
-
+  // Set conditions to write NTU using the datacards.  M. raggi 23/06/2018
   if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
     fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   }else{
     //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
   }
-//    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //  }
 }
 
 void EventAction::AddECryHits(ECalHitsCollection* hcont)
@@ -415,12 +416,23 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   }
   
 }
-void EventAction::FindClusters()
+
+void EventAction::FindClusters() //implement a fast square cluster algorithm revised M. Raggi 27/06/2018
 {
-  //  G4int NcellsCl=0;
   G4double NRows= Egeom->GetECalNRows();  // righe sulla y 
   G4double NCols= Egeom->GetECalNCols(); // colonne sulla X
+  G4int NAddCl=2;   //number of raw and columns added into the cluster
+  
   NClusters=0;
+  EneCl.clear();   
+  QCl.clear();     
+  XCl.clear();     
+  YCl.clear();     
+  ThCl.clear();    
+  MM2.clear();     
+  TimeCl.clear();  
+  NCellsCl.clear();
+  
   while(1){
     G4int SeedIndX=-1;
     G4int SeedIndY=-1;
@@ -437,73 +449,69 @@ void EventAction::FindClusters()
       }
     }
     if( EMax < SeedE ) break;  // Attenzione SeedE in Constants.hh
-     
-    EneCl[NClusters]   =0;
-    QCl[NClusters]     =0;
-    XCl[NClusters]     =0;
-    YCl[NClusters]     =0;
-    ThCl[NClusters]    =0;
-    MM2[NClusters]     =0;
-    TimeCl[NClusters]  =0;
-    NCellsCl[NClusters]=0;
-    
-    G4int NAddCl=2;
+    //    G4cout<<"Seed found "<<EMax<<"Seed Ind"<<SeedIndY<<G4endl;
+    double ECL=0,NCells=0,QCL_T=0,TCL=0,X_CL=0,Y_CL=0;
+
     for(G4int jj=SeedIndY-NAddCl; jj<=SeedIndY+NAddCl; jj++){
       if(jj>=0 && jj<NRows){
 	for(G4int kk=SeedIndX-NAddCl; kk<=SeedIndX+NAddCl; kk++){
 	  if( kk>=0 && kk<NCols){
 	    if(MatEtot[jj][kk]>CellsE && !MatUsed[jj][kk]) {//some fraction of E(SeedCell) // Attenzione ECells in Constants.hh
-	      EneCl[NClusters] += MatEtot[jj][kk];
-	      QCl[NClusters]   += MatQtot[jj][kk];
-	      TimeCl[NClusters]+= MatTstart[jj][kk]  * MatEtot[jj][kk];
-	      XCl[NClusters]   += Egeom->GetCrystalPosX(jj,kk)* MatEtot[jj][kk];
-	      YCl[NClusters]   += Egeom->GetCrystalPosY(jj,kk)* MatEtot[jj][kk];
+	      ECL   += MatEtot[jj][kk];
+	      QCL_T += MatQtot[jj][kk];
+	      TCL   += MatTstart[jj][kk]  * MatEtot[jj][kk];
+	      X_CL  += Egeom->GetCrystalPosX(jj,kk)* MatEtot[jj][kk];
+	      Y_CL  += Egeom->GetCrystalPosY(jj,kk)* MatEtot[jj][kk];
 	      MatUsed[jj][kk]  = 1;
-	      NCellsCl[NClusters]++;
+	      NCells++;
 	    }
 	  }
 	}    
       }
     }
-    TimeCl[NClusters]/= EneCl[NClusters];     
-    XCl[NClusters]   /= EneCl[NClusters];     
-    YCl[NClusters]   /= EneCl[NClusters];     
-
-    G4double DxDz=XCl[NClusters]/(Egeom->GetECalFrontFacePosZ() - Tgeom->GetTargetFrontFacePosZ() );
-    G4double DyDz=YCl[NClusters]/(Egeom->GetECalFrontFacePosZ() - Tgeom->GetTargetFrontFacePosZ() );
+    EneCl.push_back(ECL);
+    NCellsCl.push_back(NCells);
+    QCl.push_back(QCL_T);	      
+    XCl.push_back(X_CL/ECL);
+    YCl.push_back(Y_CL/ECL);
+    TimeCl.push_back(TCL/ECL);
+    G4double DxDz=XCl.at(NClusters)/(Egeom->GetECalFrontFacePosZ() - Tgeom->GetTargetFrontFacePosZ() );
+    G4double DyDz=YCl.at(NClusters)/(Egeom->GetECalFrontFacePosZ() - Tgeom->GetTargetFrontFacePosZ() );
     G4double norma=sqrt(DxDz*DxDz+DyDz*DyDz+1.);
-
-    G4double GMom[4],BeamMom[4],TargetEleMom[4],P4Miss[4];
+//
+    G4double GMom[4],BeamMom[4];//,P4_Miss[4];
+    TLorentzVector P4Gamma,P4em,P4Beam,P4Miss;
     G4double GDir[3];
-
     GDir[0]=DxDz/norma;
     GDir[1]=DyDz/norma;
     GDir[2]=1./norma;
 
-    //Compute gamma momentum (introduced average energy calibration constant 0.97 M. Raggi 24/04/2016)
-    GMom[0]= DxDz/norma * EneCl[NClusters]/0.97;
-    GMom[1]= DyDz/norma * EneCl[NClusters]/0.97;
-    GMom[2]= 1./norma   * EneCl[NClusters]/0.97;
-    GMom[3]= EneCl[NClusters]/0.97;         
-    
+ //Compute gamma momentum (introduced average energy calibration constant 0.97 M. Raggi 24/04/2016)
+    GMom[0]= DxDz/norma * EneCl.at(NClusters)/0.97;
+    GMom[1]= DyDz/norma * EneCl.at(NClusters)/0.97;
+    GMom[2]= 1./norma   * EneCl.at(NClusters)/0.97;
+    GMom[3]= EneCl.at(NClusters)/0.97; 
+    P4Gamma.SetPxPyPzE(GMom[0],GMom[1],GMom[2],GMom[3]);        
+
     //The target electron is at rest
-    TargetEleMom[0]=0.;
-    TargetEleMom[1]=0.;
-    TargetEleMom[2]=0.;
-    TargetEleMom[3]=0.511;
+    P4em.SetPxPyPzE(0.,0.,0.,0.511);// in MeV
     
     G4ThreeVector BDir=Bpar->GetBeamDirection().unit();
-    //Beam Momentum from Beam Paramets class 
+//    //Beam Momentum from Beam Paramets class 
     BeamMom[0]=BDir.x()*Bpar->GetBeamMomentum();
     BeamMom[1]=BDir.y()*Bpar->GetBeamMomentum();
     BeamMom[2]=BDir.z()*Bpar->GetBeamMomentum();
     BeamMom[3]=sqrt(Bpar->GetBeamMomentum()*Bpar->GetBeamMomentum()+0.511*0.511); 
+    P4Beam.SetPxPyPzE(BeamMom[0],BeamMom[1],BeamMom[2],BeamMom[3]);// in MeV
     
-    for (int i=0; i<4; i++){ 
-      P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
-    }
-    MM2[NClusters] = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-  
+//    for (int i=0; i<4; i++){ 
+//      P4_Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
+//    }
+    P4Miss=P4em+P4Beam-P4Gamma;
+    //    double MM2_CL= P4_Miss[3]*P4_Miss[3]-P4_Miss[2]*P4_Miss[2]-P4_Miss[1]*P4_Miss[1]-P4_Miss[0]*P4_Miss[0];
+    //    MM2.push_back(MM2_CL);
+    //    G4cout<<"MM2 "<<P4Miss.M2()<<" "<<MM2_CL<<G4endl;;
+    MM2.push_back(P4Miss.M2());
     G4double product=0.;
     G4double BDire[3];
 
@@ -512,27 +520,25 @@ void EventAction::FindClusters()
     BDire[2]=BDir.z();
 
     for (int i=0; i<3; i++)  product+= GDir[i]*BDire[i];
-    ThCl[NClusters] = acos (product);//* 180.0 / 3.14159265;
-    //    printf("Th Cl %f\n",ThCl[NClusters]);
+    ThCl.push_back(acos(product));//* 180.0 / 3.14159265;
+    printf("Th Cl %f Th Gamma %f\n",ThCl.at(NClusters),P4Gamma.Theta());
 
     G4double ProcID = myStepping->GetPhysProc();    
     printf("PROCID %f\n",ProcID);
-    if(ProcID==1) fHistoManager->FillHisto2(8,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==1
-    if(ProcID==2) fHistoManager->FillHisto2(9,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==2
-    if (NClusters==0 && EneCl[NClusters]>5.) {
-      fHistoManager->FillHisto(7,EneCl[NClusters]);
-      fHistoManager->FillHisto(8,ThCl[NClusters]);
-      fHistoManager->FillHisto(9,MM2[NClusters]);
-      fHistoManager->FillHisto(15,QCl[NClusters]);
+    if(ProcID==1) fHistoManager->FillHisto2(8,EneCl.at(NClusters),ThCl.at(NClusters),1.); //Nclus==1
+    if(ProcID==2) fHistoManager->FillHisto2(9,EneCl.at(NClusters),ThCl.at(NClusters),1.); //Nclus==2
+    if (NClusters==0 && EneCl.at(NClusters)>5.) {
+      fHistoManager->FillHisto(7,EneCl.at(NClusters));
+      fHistoManager->FillHisto(8,ThCl.at(NClusters));
+      fHistoManager->FillHisto(9,MM2.at(NClusters));
+      fHistoManager->FillHisto(15,QCl.at(NClusters));
     }
     NClusters++;
-    if(NClusters==2 && fabs(TimeCl[0]-TimeCl[1]<2.) ){ 
-     G4double mgg= GGMass();
-     fHistoManager->FillHisto(16,mgg);
-    }
-    if(NClusters>19){ 
-      G4cout<<"too many clusters \n!!"<<G4endl;
-      break;
+    G4cout<<ECL<<" Cluster find CALO "<<EneCl.at(0)<<" NCL "<<NClusters<<" "<<EneCl.size()<<G4endl;
+    
+    if(NClusters==2 && fabs(TimeCl.at(0)-TimeCl.at(1)<2.) ){ 
+      G4double mgg= GGMass();
+      fHistoManager->FillHisto(16,mgg);
     }
   }
   fHistoManager->FillHisto(11,NClusters);
@@ -773,52 +779,52 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
 
 void EventAction::AddSACHits(SACHitsCollection* hcont)
 {
-
-  G4int LastID=-1;
+  G4cout<<"Entering sac hits"<<SACTracks<<G4endl;
   G4int nHits = hcont->entries();
-
   if (nHits == 0) return;
 
-  for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotSAC[jj]=0.0;										     
-    SACTrackTime[jj]=0.0;										     
-    SACEtrack[jj]=0.0;
-    SACPType[jj]=0.0;
-  }
   SACTracks = 0;
+  ETotSAC=0;	     
+  SACCh.clear();
+  SACEtrack.clear();  
+  SACTrackTime.clear();  
+  SACPType.clear();  
+  SACX.clear();
+  SACY.clear();
+  
   for (G4int h=0; h<nHits; h++) {
     SACHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetEdep()>0.1*MeV && SACTracks < MaxTracks) {
+      if(hit->GetTrackID()!=0 && hit->GetEdep()>1.*MeV) {
 	//	ETotSAC[hit->GetSACNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
-	//    	  SACTrackCh[SACTracks] = hit->GetSACNb();
-	SACEtrack[SACTracks]    = hit->GetEdep();
-	SACTrackTime[SACTracks] = hit->GetTime();
-	SACPType[SACTracks]     = hit->GetPType();
-	SACX[SACTracks]         = hit->GetX();
-	SACY[SACTracks]         = hit->GetY();
-	//	G4cout<<"CC Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<G4endl;
-	//	G4cout<<"CC LastID "<<LastID<<" "<<SACY[SACTracks]<<G4endl;
+	SACCh.push_back(hit->GetChannelId());
+	SACEtrack.push_back(hit->GetEdep());
+	SACTrackTime.push_back(hit->GetTime());
+	SACPType.push_back(hit->GetPType());
+	SACX.push_back(hit->GetX());
+	SACY.push_back(hit->GetY());
+	//	G4cout<<"SAChits Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<" CHID "<<hit->GetChannelId()<<G4endl;
+	G4cout<<" AddSac Hits "<<SACTracks<<" T "<<SACTrackTime.at(SACTracks)<<" E "<<SACEtrack[SACTracks]<<" "<<hit->GetPType()<<G4endl;
 	SACTracks++;
       }
-      LastID = hit->GetTrackID();
     }
   }//end of loop
+  G4cout<<"********end of loop hits***************"<<G4endl;
 }
 
 void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y, G4int NCry)
 {
   //  static G4int SACTracks  = 0;
   if(SACTracks < MaxTracks){
-    SACEtrack[SACTracks]    = E;
-    SACTrackTime[SACTracks] = T;
-    SACPType[SACTracks]     = Ptype;
-    SACX[SACTracks]         = X;
-    SACY[SACTracks]         = Y;
-    SACCh[SACTracks]        = NCry;
-
+    SACEtrack.push_back(E);
+    SACTrackTime.push_back(T);
+    SACPType.push_back(Ptype);
+    SACX.push_back(X);
+    SACY.push_back(Y);
+    SACCh.push_back(NCry);
     SACTracks++;
-    //    G4cout<<SACTracks<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<" Ncry "<<NCry<<G4endl;
+    //    G4cout<<SACTracks<<" E SAC step "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<" Ncry "<<NCry<<G4endl;
+    //    G4cout<<"Step SAC "<<SACTracks<<" T "<<T<<" E "<<E<<" Type "<<Ptype<<G4endl;
   }
 }
 
@@ -881,14 +887,13 @@ G4double EventAction::GetCharge(G4double Energia)
   return Charge;
 }
 
-
-G4double EventAction::GGMass()
+G4double EventAction::GGMass() 
 {
-  double ECalPosiZ=3000.; //
+  double ECalPosiZ=3300.; //
   if(NClusters!=2)                        return -1;  // Need 2 clusters
   double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
   double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);
   double Massa  = sqrt(EneCl[0]*EneCl[1]*(XDiff2+YDiff2))/(ECalPosiZ);
-  G4cout<<"Massa "<<Massa<<G4endl;
+  G4cout<<XCl[0]<<" Massa "<<Massa<<G4endl;
   return Massa;
 }

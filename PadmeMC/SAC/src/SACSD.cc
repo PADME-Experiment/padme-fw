@@ -48,9 +48,26 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //newHit->SetEdep(aStep->GetTrack()->GetTotalEnergy());
   newHit->SetTrackID(aStep->GetTrack()->GetTrackID());
 
-  //newHit->SetChannelId(touchHPre->GetCopyNumber());
-  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
+
+  //  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
+
+  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // M. Raggi 27/06/2018
   newHit->SetEnergy(edep);
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+  G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
+  G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  newHit->SetPosition(worldPosPre);
+  newHit->SetLocalPosition(localPosPre);
+  newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
+
+  //record track only the first time it enters the volume M. Raggi 30/05/2018
+  //it is not immune from tracks spinning around and entering a volume twice
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    newHit -> SetTrackID(aStep->GetTrack()->GetTrackID());
+  }else{
+    newHit -> SetTrackID(0);
+  }
+  fSACCollection->insert(newHit);
 
   // G4cout << " SACSD:  Pre energy of the track: " << preStepPoint->GetTotalEnergy() 
   // 	 << " Post energy of the track: " << postStepPoint->GetTotalEnergy() 
@@ -58,13 +75,9 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   // 	 << "   Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
   // 	 << G4endl;
 
-  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
 
-  G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
-  G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
 
-  
-
+ 
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
@@ -75,11 +88,6 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-
-  newHit->SetPosition(worldPosPre);
-  newHit->SetLocalPosition(localPosPre);
-  newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-  fSACCollection->insert(newHit);
 
   return true;
 

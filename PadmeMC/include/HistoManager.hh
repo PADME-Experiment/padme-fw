@@ -36,18 +36,18 @@ struct NTEvent{
   //Simulated event variables
 
   //Calorimeter variables:
-  double NTECluster[20];
-  double NTQCluster[20];
-  double NTXCluster[20];
-  double NTYCluster[20];
-  double NTThCluster[20];
-  double NTM2Cluster[20];
-  double NTTCluster[20];
-  double NTNClusCells[20];
+  std::vector<double> NTECluster;
+  std::vector<double> NTQCluster;
+  std::vector<double> NTXCluster;
+  std::vector<double> NTYCluster;
+  std::vector<double> NTThCluster;
+  std::vector<double> NTM2Cluster;
+  std::vector<double> NTTCluster;
+  std::vector<double> NTNClusCells;
 
-  double NTECell[1000];
-  double NTQCell[1000];
-  double NTTCell[1000];
+  std::vector<double> NTECell;
+  std::vector<double> NTQCell;
+  std::vector<double> NTTCell;
 
   //NTLAV variables
   double  NTCalPartE[20];
@@ -57,7 +57,7 @@ struct NTEvent{
   double  NTCalPartY[20];
   int     NTNCal;
 
-  //Tracker variables
+  //Tracker variables  are these variables obsolite?
   double NTETracker[100];
   double NTTrackerLay[100];
   double NTTrackerTime[100];
@@ -72,7 +72,7 @@ struct NTEvent{
   int NTNTarget;
 
   //Tracker variables
-  int     NTNTrClus;
+  int     NTNTrClus; // are these variables obsolite?
   double  NTTrClusX[1000];
   double  NTTrClusY[1000];
   double  NTTrClusZ[1000];
@@ -115,13 +115,14 @@ struct NTEvent{
   int    NTEVetoClIndex[NPVetoBars];
 
   //NTSAC variables
-  double  NTSACE[100];
-  double  NTSACT[100];
-  double  NTSACPType[100];
-  double  NTSACX[100];
-  double  NTSACY[100];
-  int     NTSACCh[100];
-  int     NTSACNHit;
+  std::vector<double> NTSACE;
+  std::vector<double> NTSACT;
+  std::vector<double> NTSACPType;
+  std::vector<double> NTSACX;
+  std::vector<double> NTSACY;
+  std::vector<double> NTSACQ;  //added SAC charge
+  std::vector<int>    NTSACCh;
+  int NTSACNHit;
 
   //NTLAV variables
   double  NTLAVE[100];

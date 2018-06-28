@@ -162,34 +162,35 @@ void HistoManager::book()
   ntupl->Branch("NLAV", &(myEvt.NTLAVNHit), "NLAV/I");
   ntupl->Branch("NTarget", &(myEvt.NTNTarget), "NTarget/I");
 
-  ntupl->Branch("ESAC", (myEvt.NTSACE), "ESAC[100]/D");
-  ntupl->Branch("TSAC", (myEvt.NTSACT), "TSAC[100]/D");
-  ntupl->Branch("PTypeSAC", (myEvt.NTSACPType), "PTypeSAC[100]/D");
-  ntupl->Branch("XSAC", (myEvt.NTSACX), "XSAC[100]/D");
-  ntupl->Branch("YSAC", (myEvt.NTSACY), "YSAC[100]/D");
-  ntupl->Branch("SACCh", (myEvt.NTSACCh), "SACCh[100]/I");
+// New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("ESAC", (&myEvt.NTSACE));
+  ntupl->Branch("TSAC", (&myEvt.NTSACT));
+  ntupl->Branch("PTypeSAC",(&myEvt.NTSACPType));
+  ntupl->Branch("XSAC", (&myEvt.NTSACX));
+  ntupl->Branch("YSAC", (&myEvt.NTSACY));
+  ntupl->Branch("SACCh",(&myEvt.NTSACCh));
 
-
- ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
- ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
- ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
- ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
- ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
-
+  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
+  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
+  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
+  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
+  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+  
   ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
   ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");
   ntupl->Branch("PTypePartCal", (myEvt.NTCalPartPType), "CalPType[20]/I");
   ntupl->Branch("XPartCal",     (myEvt.NTCalPartX),     "CalX[20]/D");
   ntupl->Branch("YPartCal",     (myEvt.NTCalPartY),     "CalY[20]/D");
 
-  ntupl->Branch("ECluster", (myEvt.NTECluster), "ECluster[20]/D"); 
-  ntupl->Branch("QCluster", (myEvt.NTQCluster), "QCluster[20]/D");
-  ntupl->Branch("XCluster", (myEvt.NTXCluster), "XCluster[20]/D");
-  ntupl->Branch("YCluster", (myEvt.NTYCluster), "YCluster[20]/D");
-  ntupl->Branch("ThCluster",(myEvt.NTThCluster),"ThCluster[20]/D");
-  ntupl->Branch("M2Cluster",(myEvt.NTM2Cluster),"M2Cluster[20]/D");
-  ntupl->Branch("TCluster", (myEvt.NTTCluster), "TCluster[20]/D");  //last modified
-  ntupl->Branch("NClusCells",(myEvt.NTNClusCells), "NClusCells[20]/D");  //last modified
+// New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("ECluster",  (&myEvt.NTECluster)   ); 
+  ntupl->Branch("QCluster",  (&myEvt.NTQCluster)   );
+  ntupl->Branch("XCluster",  (&myEvt.NTXCluster)   );
+  ntupl->Branch("YCluster",  (&myEvt.NTYCluster)   );
+  ntupl->Branch("ThCluster", (&myEvt.NTThCluster)  );
+  ntupl->Branch("M2Cluster", (&myEvt.NTM2Cluster)  );
+  ntupl->Branch("TCluster",  (&myEvt.NTTCluster)   );  //last modified
+  ntupl->Branch("NClusCells",(&myEvt.NTNClusCells) );  //last modified
 
 //  ntupl->Branch("ECell",    (myEvt.NTECell), "ECell[1000]/D");
 //  ntupl->Branch("QCell",    (myEvt.NTQCell), "QCell[1000]/D");

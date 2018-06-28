@@ -15,6 +15,7 @@
 #include "ECalGeometry.hh"
 #include "TargetGeometry.hh"
 #include "BeamParameters.hh"
+#include <vector> // M. Raggi
 
 class G4Event;
 class RunAction;
@@ -46,11 +47,8 @@ class EventAction : public G4UserEventAction
   void EnableSaveSAC()  { fEnableSaveSAC = 1; }
   void DisableSaveSAC() { fEnableSaveSAC = 0; }
 
-  void EnableSaveVeto()  { 
-    fEnableSaveVeto = 1; 
-    G4cout<< "saving Veto"<<G4endl;
-  }
-  void DisableSaveVeto() { fEnableSaveVeto = 0; }
+  void EnableSaveVeto() { fEnableSaveVeto = 1; }
+  void DisableSaveVeto(){ fEnableSaveVeto = 0; }
 
   private:
 
@@ -134,14 +132,14 @@ class EventAction : public G4UserEventAction
    G4double EVetoECl[100][10];
    G4int    EVetoClIndex[100];
 
-
-   G4double ETotSAC[100];
-   G4double SACEtrack [100];
-   G4double SACTrackTime[100];
-   G4double SACPType[100];
-   G4double SACX[100];   
-   G4double SACY[100];
-   G4double SACCh[100];
+   G4double  ETotSAC;
+   std::vector<G4double>  SACEtrack;
+   std::vector<G4double>  SACTrackTime;
+   std::vector<int>       SACPType;
+   std::vector<G4double>  SACX;   
+   std::vector<G4double>  SACY;
+   std::vector<int>       SACCh;
+   std::vector<G4double>  SACQ;
 
   //Particles properties entering ECAL form stepping action
    G4double CalE[20];
@@ -159,19 +157,19 @@ class EventAction : public G4UserEventAction
    G4double LAVX[100];   
    G4double LAVY[100];
 
-   G4double EneCl[20];
-   G4double QCl[20];
-   G4double TimeCl[20];
-   G4double XCl[20];      //For the Ntuple
-   G4double YCl[20];      //For the Ntuple
-   G4double ThCl[20];     //For the Ntuple
-   G4double MM2[20];      //For the Ntuple
-   G4double NCellsCl[20]; //For the Ntuple
-
-   G4double ETotCry[1000];
-   G4double QTotCry[1000];
-   G4double TimeCry[1000];
-   G4double ETotRing[1000];
+   std::vector<G4double> EneCl;     
+   std::vector<G4double> QCl;	   
+   std::vector<G4double> TimeCl;  
+   std::vector<G4double> XCl;     
+   std::vector<G4double> YCl;     
+   std::vector<G4double> ThCl;    
+   std::vector<G4double> MM2;     
+   std::vector<G4int> NCellsCl;
+  
+   std::vector<G4double> ETotCry;
+   std::vector<G4double> QTotCry;
+   std::vector<G4double> TimeCry;
+   std::vector<G4double> ETotRing;
 
    G4double MatEtot[30][30];   
    G4double MatQtot[30][30];   

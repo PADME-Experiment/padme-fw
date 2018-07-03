@@ -286,7 +286,7 @@ int FAKE_readdata ()
 
     }
 
-    // Check if it is time to stop DAQ (user interrupt, too many output files, time elapsed)
+    // Check if it is time to stop DAQ (user interrupt, too many output files, quit file, time elapsed)
     if (
 	 BreakSignal || tooManyOutputFiles ||
 	 (access(Config->quit_file,F_OK) != -1) ||

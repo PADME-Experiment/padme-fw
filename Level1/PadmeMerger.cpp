@@ -538,6 +538,8 @@ int main(int argc, char* argv[])
     fbuff = (t_close & 0xffffffff);
     memcpy(file_tail+tail_size,&fbuff,4); tail_size += 4;
 
+    printf("Sending tail structure to Level1 stream %d\n",i);
+
     // Write tail structure to stream
     output_stream_handle[i].write(file_tail,tail_size);
 
@@ -558,6 +560,13 @@ int main(int argc, char* argv[])
   }
 
   printf("Run %d closed after writing %u events\n",cfg->RunNumber(),NumberOfEvents);
+
+  unsigned long long int total_output_size = 0;
+  for (unsigned int i=0; i<NOutputStreams; i++) {
+    total_output_size += output_stream_size[i];
+    printf("Out stream %2u Events %7u Data %10llu\n",i,output_stream_nevents[i],output_stream_size[i]);
+  }
+  printf("Total         Events %7u Data %10llu\n",NumberOfEvents,total_output_size);
 
   // If input was from a real run, update DB
   if (cfg->RunNumber()) {

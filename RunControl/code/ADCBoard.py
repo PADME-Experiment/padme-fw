@@ -1,7 +1,8 @@
 import os
 import re
-import subprocess
 import time
+import shlex
+import subprocess
 
 from PadmeDB  import PadmeDB
 
@@ -298,7 +299,7 @@ class ADCBoard:
 
         # If DAQ process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( %s )'"%(self.node_ip,command)
 
         print "- Start DAQ process for board %d"%self.board_id
         print command
@@ -316,7 +317,8 @@ class ADCBoard:
 
         # Start DAQ process
         try:
-            self.process_daq = subprocess.Popen(command.split(),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process_daq = subprocess.Popen(command.split(),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
+            self.process_daq = subprocess.Popen(shlex.split(command),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "ADCBoard::start_daq - ERROR: Execution failed: %s",e
             return 0                
@@ -326,17 +328,7 @@ class ADCBoard:
 
     def stop_daq(self):
 
-        # Send an interrupt to DAQ process
-        if self.node_id == 0:
-            # If process is on local host, just send a kill signal
-            command = "kill %d"%self.process_daq.pid
-        else:
-            # If it is on a remote host, use ssh to send kill command.
-            # PID on remote host is recovered from the lock file
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( kill `cat %s` )'"%(self.node_ip,self.lock_file_daq)
-        os.system(command)
-
-        # Wait up to 10 seconds for DAQ to stop
+        # Wait up to 5 seconds for DAQ to stop of its own (on quit file or on time elapsed)
         for i in range(10):
 
             if self.process_daq.poll() != None:
@@ -346,9 +338,32 @@ class ADCBoard:
                 self.log_handle_daq.close()
                 return 1
 
-            time.sleep(1)
+            time.sleep(0.5)
 
-        # Process did not stop smoothly: stop it
+        # Process did not stop: try sending and interrupt
+        if self.node_id == 0:
+            # If process is on local host, just send a kill signal
+            command = "kill %d"%self.process_daq.pid
+        else:
+            # If it is on a remote host, use ssh to send kill command.
+            # PID on remote host is recovered from the lock file
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( kill `cat %s` )'"%(self.node_ip,self.lock_file_daq)
+        print command
+        os.system(command)
+
+        # Wait up to 5 seconds for DAQ to stop on interrupt
+        for i in range(10):
+
+            if self.process_daq.poll() != None:
+
+                # Process exited: clean up defunct process and close log file
+                self.process_daq.wait()
+                self.log_handle_daq.close()
+                return 1
+
+            time.sleep(0.5)
+
+        # Process did not stop smoothly: terminate it
         self.process_daq.terminate()
         time.sleep(1)
         if self.process_daq.poll() != None:
@@ -362,7 +377,7 @@ class ADCBoard:
 
         # If ZSUP process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( %s )'"%(self.node_ip,command)
 
         print "- Start ZSUP process for board %d"%self.board_id
         print command
@@ -380,7 +395,8 @@ class ADCBoard:
 
         # Start ZSUP process
         try:
-            self.process_zsup = subprocess.Popen(command.split(),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process_zsup = subprocess.Popen(command.split(),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
+            self.process_zsup = subprocess.Popen(shlex.split(command),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "ADCBoard::start_zsup - ERROR: Execution failed: %s",e
             return 0                
@@ -391,7 +407,7 @@ class ADCBoard:
     def stop_zsup(self):
 
         # Wait up to 5 seconds for ZSUP to stop
-        for i in range(5):
+        for i in range(10):
 
             if self.process_zsup.poll() != None:
 
@@ -400,9 +416,9 @@ class ADCBoard:
                 self.log_handle_zsup.close()
                 return 1
 
-            time.sleep(1)
+            time.sleep(0.5)
 
-        # Process did not stop smoothly: stop it
+        # Process did not stop smoothly: terminate it
         self.process_zsup.terminate()
         time.sleep(1)
         if self.process_zsup.poll() != None:

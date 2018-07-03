@@ -1,6 +1,8 @@
 import os
 import re
 import time
+import shlex
+import subprocess
 
 from Level1   import Level1
 from Merger   import Merger
@@ -31,7 +33,8 @@ class Run:
         self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
 
         # Define name and position of control files
-        self.control_dir = self.daq_dir+"/run"
+        #self.control_dir = self.daq_dir+"/run"
+        self.control_dir = self.daq_dir+"/local/run"
         self.start_file = self.control_dir+"/start"
         self.quit_file = self.control_dir+"/quit"
         self.initok_file_head = self.control_dir+"/initok"
@@ -412,6 +415,7 @@ class Run:
 
         # If an ADCBoard process runs on a node which is different from the Merger
         # we create the receiving end of a network tunnel
+        self.proc_rcv = []
         for adc in (self.adcboard_list):
 
             # Check if ADCBoard and Merger run on different nodes
@@ -419,20 +423,30 @@ class Run:
 
                 # Define port for network tunnel
                 port_number = self.base_port_number+adc.board_id
+                log_file = "%s/%s_nc_%d_recv.log"%(self.log_dir,self.log_file_head,port_number)
+                log_handle = open(log_file,"w")
 
                 # Open receiving end of tunnel on Merger node
                 print "Creating receiving end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
-                command = "nc -l --recv-only %s %d > %s < /dev/zero &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                #command = "nc -l --recv-only %s %d > %s < /dev/zero &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if self.merger.node_id != 0:
                     command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(self.merger.node_ip,command)
                 print command
-                os.system(command)
+                #os.system(command)
                 #time.sleep(1)
- 
+                try:
+                    proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
+                    self.proc_rcv.append(proc)
+                except OSError as e:
+                    print "Run::create_receivers - ERROR: Execution failed: %s",e
+                time.sleep(0.5)
+
     def create_senders(self):
 
         # If an ADCBoard process runs on a node which is different from the Merger
         # we create the sending end of a network tunnel
+        self.proc_snd = []
         for adc in (self.adcboard_list):
 
             # Check if ADCBoard and Merger run on different nodes
@@ -440,16 +454,24 @@ class Run:
 
                 # Define port for network tunnel
                 port_number = self.base_port_number+adc.board_id
+                log_file = "%s/%s_nc_%d_send.log"%(self.log_dir,self.log_file_head,port_number)
+                log_handle = open(log_file,"w")
 
-                # Open receiving end of tunnel on Merger node
+                # Open receiving end of tunnel on Merger node. Add some code to wait for receiving end to appear before proceeding.
                 print "Creating sending end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
-                command = "nc --send-only %s %d < %s > /dev/null &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
-                #command = "nc --send-only %s %d < %s &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                #command = "nc --send-only %s %d < %s > /dev/null &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if adc.node_id != 0:
                     command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(adc.node_ip,command)
                 print command
-                os.system(command)
+                #os.system(command)
                 #time.sleep(1)
+                try:
+                    proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
+                    self.proc_snd.append(proc)
+                except OSError as e:
+                    print "Run::create_senders - ERROR: Execution failed: %s",e
+                time.sleep(0.5)
 
     def create_merger_input_list(self):
 
@@ -488,11 +510,16 @@ class Run:
         if (self.read_setup() == "error"): return "error"
 
         # Create new set of ADC board processes (DAQ and ZSUP) handlers
+        self.daq_nodes_id_list = []
         for b in self.boardid_list:
             print "Run - Configuring ADC board %d"%b
             adcboard = ADCBoard(b)
             self.configure_adcboard(adcboard)
             self.adcboard_list.append(adcboard)
+            self.daq_nodes_id_list.append(adcboard.node_id)
+
+        # Get unique list of DAQ nodes (needed to create start/stop files)
+        self.daq_nodes_id_list = list(set(self.daq_nodes_id_list))
 
         # Create new Merger process handler
         self.merger = Merger()
@@ -622,3 +649,67 @@ class Run:
         merger.log_file = "%s/%s_merger.log"%(self.log_dir,self.log_file_head)
         merger.input_list = "%s/%s_merger_input.list"%(self.config_dir,self.config_file_head)
         merger.output_list = "%s/%s_merger_output.list"%(self.config_dir,self.config_file_head)
+
+    def start(self):
+
+        # Create the "start the run" tag file on all DAQ nodes
+        for node_id in self.daq_nodes_id_list:
+            if (node_id == 0):
+                open(self.start_file,'w').close()
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( touch %s )'"%(self.db.get_node_daq_ip(node_id),self.start_file)
+                print command
+                os.system(command)
+
+    def stop(self):
+
+        # Create the "stop the run" tag file on all DAQ nodes
+        for node_id in self.daq_nodes_id_list:
+            if (node_id == 0):
+                open(self.quit_file,'w').close()
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( touch %s )'"%(self.db.get_node_daq_ip(node_id),self.quit_file)
+                print command
+                os.system(command)
+
+    def clean_up(self):
+
+        # Clean up control directories at end of run
+
+        # Remove the "start the run" tag file on all DAQ nodes
+        for node_id in self.daq_nodes_id_list:
+            if (node_id == 0):
+                if (os.path.exists(self.start_file)): os.remove(self.start_file)
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s )'"%(self.db.get_node_daq_ip(node_id),self.start_file)
+                print command
+                os.system(command)
+
+        # Remove the "end the run" tag file on all DAQ nodes
+        for node_id in self.daq_nodes_id_list:
+            if (node_id == 0):
+                if (os.path.exists(self.quit_file)): os.remove(self.quit_file)
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s )'"%(self.db.get_node_daq_ip(node_id),self.quit_file)
+                print command
+                os.system(command)
+
+        # Remove initok/initfail files for all ADC nodes
+        for adc in (self.adcboard_list):
+            if (adc.node_id == 0):
+                if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
+                if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
+                if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
+                if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
+            else:
+                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s %s %s %s)'"%(adc.node_ip,adc.initok_file_daq,adc.initok_file_zsup,adc.initfail_file_daq,adc.initfail_file_zsup)
+                print command
+                os.system(command)
+
+        # Stop all receiving nc processes on the merger nodes (clumsy but could not find another way)
+        if (self.merger.node_id == 0):
+            for proc in self.proc_rcv: proc.terminate()
+        else:
+            command = "ssh -i ~/.ssh/id_rsa_daq %s '( ps -fu daq | grep recv-only | grep -v bash | grep -v grep | awk \"{print \$2}\" | xargs kill )'"%self.merger.node_ip
+            print command
+            os.system(command)

@@ -1,7 +1,8 @@
 import os
 import re
-import subprocess
 import time
+import shlex
+import subprocess
 
 class Level1:
 
@@ -91,7 +92,8 @@ class Level1:
 
         # Start Level1 process
         try:
-            self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process = subprocess.Popen(shlex.split(command),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Level1::start_level1 - ERROR: Execution failed: %s",e
             return 0

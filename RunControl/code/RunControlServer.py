@@ -718,6 +718,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             else:
                 print "Level1 %d - ERROR: could not start process"%lvl1.level1_id
                 self.send_answer("level1 %d fail"%lvl1.level1_id)
+            time.sleep(0.5)
 
         # Create receiving end of network tunnels (if needed)
         self.run.create_receivers()
@@ -744,7 +745,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
                 self.send_answer("adc %d zsup_fail"%adc.board_id)
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
@@ -758,58 +759,84 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
                 self.send_answer("adc %d fail"%adc.board_id)
                 adc.status = "fail"
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         # Wait for all boards to finish initialization
         n_try = 0
         while(1):
-            all_boards_init = 1
-            all_boards_ready = 1
+
+            all_boards_init = True
+            all_boards_ready = True
             for adc in (self.run.adcboard_list):
+
                 # Check if any board changed status
                 if (adc.status == "init"):
-                    if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
+
+                    adc.status = self.check_init_status(adc)
+                    if (adc.status == "ready"):
                         # Initialization ended OK
                         print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
                         self.send_answer("adc "+str(adc.board_id)+" ready")
-                        adc.status = "ready"
-                    elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
+                    elif (adc.status == "fail"):
                         # Problem during initialization
                         print "ADC board %02d - *** Initialization failed ***"%adc.board_id
                         self.send_answer("adc "+str(adc.board_id)+" fail")
-                        adc.status = "fail"
                     else:
                         # This board is still initializing
-                        all_boards_init = 0
-                # Check if any board is in fail status
-                if (adc.status == "fail"): all_boards_ready = 0
+                        all_boards_init = False
 
-            if (all_boards_init == 0):
-                # Some boards are still initializing: keep waiting (NFS is very slow: wait 1min)
-                n_try += 1
-                if (n_try>=60):
-                    print "*** ERROR *** One or more boards did not initialize within 60sec. Cannot start run"
+                    #if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
+                    #    # Initialization ended OK
+                    #    print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
+                    #    self.send_answer("adc "+str(adc.board_id)+" ready")
+                    #    adc.status = "ready"
+                    #elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
+                    #    # Problem during initialization
+                    #    print "ADC board %02d - *** Initialization failed ***"%adc.board_id
+                    #    self.send_answer("adc "+str(adc.board_id)+" fail")
+                    #    adc.status = "fail"
+                    #else:
+                    #    # This board is still initializing
+                    #    all_boards_init = 0
+
+                # Check if any board is in fail status
+                if (adc.status == "fail"): all_boards_ready = False
+
+            # Check if all boards completed initialization
+            if (all_boards_init):
+
+                # Check if all boards initialized correctly
+                if (all_boards_ready):
+
+                    print "All boards completed initialization: DAQ run can be started"
+                    if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
+                    self.send_answer("init_ready")
+                    return "initialized"
+
+                else:
+
+                    print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
-                    self.send_answer("init_timeout")
+                    self.send_answer("init_fail")
                     return "initfail"
-                time.sleep(0.5)
-            elif (all_boards_ready):
-                print "All boards completed initialization: DAQ run can be started"
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
-                self.send_answer("init_ready")
-                return "initialized"
-            else:
-                print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
+
+            # Some boards are still initializing: keep waiting (wait up to ~30sec)
+            n_try += 1
+            if (n_try>=60):
+                print "*** ERROR *** One or more boards did not initialize within 60sec. Cannot start run"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
-                self.send_answer("init_fail")
+                self.send_answer("init_timeout")
                 return "initfail"
+            time.sleep(0.5)
 
     def start_run(self):
 
         print "Starting run"
 
-        # Create "start the run" tag file
-        open(self.run.start_file,'w').close()
+        ## Create "start the run" tag file
+        #open(self.run.start_file,'w').close()
+
+        self.run.start()
 
         # Update run status in DB
         if (self.run.run_number):
@@ -849,8 +876,10 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             self.db.set_run_time_stop(self.run.run_number,self.now_str())
             self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
-        # Create "stop the run" tag file
+        ## Create "stop the run" tag file
         #open(self.run.quit_file,'w').close()
+
+        self.run.stop()
 
         terminate_ok = True
 
@@ -891,14 +920,26 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             print "WARNING: problems while terminating Merger"
             if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
+        # Run stop_level1 procedures
+        for lvl1 in self.run.level1_list:
+            if lvl1.stop_level1():
+                self.send_answer("level1 %d terminate_ok"%lvl1.level1_id)
+                print "Level1 %02d terminated correctly"%lvl1.level1_id
+            else:
+                terminate_ok = False
+                self.send_answer("level1 %d terminate_error"%lvl1.level1_id)
+                print "Level1 %02d - WARNING: problems while terminating"%lvl1.level1_id
+                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
         # Clean up run directory
-        for adc in (self.run.adcboard_list):
-            if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
-            if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
-            if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
-            if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
-        if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
-        if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
+        #for adc in (self.run.adcboard_list):
+        #    if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
+        #    if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
+        #    if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
+        #    if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
+        #if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
+        #if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
+        self.run.clean_up()
 
         if terminate_ok:
             self.send_answer("terminate_ok")
@@ -909,3 +950,30 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         return "idle"
 
     def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
+    def check_init_status(self,adc):
+
+        if adc.node_id == 0:
+
+            if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
+                return "ready"
+            elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+        else:
+
+            if (self.file_exists(adc.node_ip,adc.initok_file_daq) and self.file_exists(adc.node_ip,adc.initok_file_zsup)):
+                return "ready"
+            elif (self.file_exists(adc.node_ip,adc.initfail_file_daq) or self.file_exists(adc.node_ip,adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+    def file_exists(self,node_ip,name):
+
+        command = "ssh -i ~/.ssh/id_rsa_daq %s '( test -e %s )'"%(node_ip,name)
+        rc = os.system(command)
+        if (rc == 0): return True
+        return False

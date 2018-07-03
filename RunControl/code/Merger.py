@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import shlex
 import subprocess
 
 from PadmeDB import PadmeDB
@@ -121,7 +122,8 @@ class Merger:
 
         # Start Merger process
         try:
-            self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            #self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
+            self.process = subprocess.Popen(shlex.split(command),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
             return 0                
@@ -131,8 +133,8 @@ class Merger:
 
     def stop_merger(self):
 
-        # Wait up to 5 seconds for Merger to stop
-        for i in range(5):
+        # Wait up to 60 seconds for Merger to stop
+        for i in range(60):
 
             if self.process.poll() != None:
 

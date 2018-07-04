@@ -152,7 +152,7 @@ int main(int argc, char*argv[])
 	}
         break;
       case 'h':
-	fprintf(stdout,"\nPadmeDAQ [-c cfg_file] [-r run_nr] [-R] [-m comment] [-h]\n\n");
+	fprintf(stdout,"\nPadmeDAQ [-c cfg_file] [-h]\n\n");
 	fprintf(stdout,"  -c: use file 'cfg_file' to set configuration parameters for this process\n");
 	fprintf(stdout,"     If no file is specified, use default settings\n");
 	fprintf(stdout,"  -h: show this help message and exit\n\n");

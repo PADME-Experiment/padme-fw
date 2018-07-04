@@ -6,7 +6,7 @@
 
 int trig_init();
 int trig_end();
-int trig_get_data(void*); // buffer
+int trig_get_data(void*,unsigned int*); // buffer,length
 int trig_get_temperature(float*); // temperature
 int trig_get_trigbusymask(char*); // 8b+8b trigger+busy mask
 int trig_get_trigmask(char*); // 8b trigger mask

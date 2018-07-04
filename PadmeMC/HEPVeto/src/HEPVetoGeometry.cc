@@ -19,14 +19,14 @@ HEPVetoGeometry::HEPVetoGeometry()
 {
   // Size of scintillator fingers
   fFingerSizeX =  1.*cm;
-  fFingerSizeY = 19.*cm;  // raw correction M. Raggi needs Drawing
+  fFingerSizeY = 17.8*cm;  // raw correction M. Raggi needs Drawing
   fFingerSizeZ =  1.*cm;
 
   //Groove size
   fGrooveSizeX = 1.3*mm;
   fGrooveSizeZ = 1.3*mm;
 
-  fFingerRotY = -10.*deg; // Need drawings!
+  fFingerRotY = -15.*deg; // Checked with drawings M. Raggi 24/06/2018
 
   // Number of fingers in HEPVeto
   fHEPVetoNFingers = 16;

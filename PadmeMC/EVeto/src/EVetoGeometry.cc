@@ -26,7 +26,7 @@ EVetoGeometry::EVetoGeometry()
   fEVetoNFingers = 96;
 
   fFingerSizeX =  1.0*cm;
-  fFingerSizeY = 19.0*cm;  //raw correction M. Raggi need Drawings
+  fFingerSizeY = 17.8*cm;  //raw correction M. Raggi need Drawings
   fFingerSizeZ =  1.0*cm;
 
   fGrooveSizeX = 1.3*mm;

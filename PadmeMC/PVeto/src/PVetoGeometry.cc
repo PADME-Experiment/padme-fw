@@ -26,7 +26,7 @@ PVetoGeometry::PVetoGeometry()
   fPVetoNFingers = 96;
 
   fFingerSizeX =  1.0*cm;
-  fFingerSizeY = 19.0*cm;
+  fFingerSizeY = 17.8*cm;
   fFingerSizeZ =  1.0*cm;
 
   fGrooveSizeX = 1.3*mm;

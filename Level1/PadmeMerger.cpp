@@ -12,15 +12,27 @@
 
 #define LVL1_PROC_MAX 16
 
+void fmt_time(char buf[20],time_t* t)
+{
+  struct tm* tgm = gmtime(t);
+  sprintf(buf,"%04d-%02d-%02d %02d:%02d:%02d",1900+tgm->tm_year,tgm->tm_mon+1,tgm->tm_mday,tgm->tm_hour,tgm->tm_min,tgm->tm_sec);
+}
+
 int main(int argc, char* argv[])
 {
 
   int rc; // DB library retrun code
 
+  time_t time_start, time_stop, time_first, time_last;
+  char t_fmt[20]; // Formatted time string "YYYY-MM-DD hh:mm:ss"
+
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
   setbuf(stderr,NULL);
 
+  time(&time_start); fmt_time(t_fmt,&time_start);
+  printf("=== PadmeMerger starting on %s UTC ===\n",t_fmt);
+  
   // Make sure we are on a sane machine (int: 32bits, long int: 64bits)
   if (sizeof(int) < 4 || sizeof(long int) < 8) {
     printf("*** ERROR *** On this machine int is %lu bytes and long int is %lu bytes. Aborting.\n",sizeof(int),sizeof(long int));
@@ -436,6 +448,9 @@ int main(int argc, char* argv[])
 
     // The event is complete and in time: send all data to next Level1 process
 
+    // Merging time is counted from the first in-time event
+    if (NumberOfEvents == 0) time(&time_first);
+
     // Compute total size of event in 4-bytes words
     UInt_t total_event_size = 8+3; // Header and trigger info
     // Add size of all boards
@@ -548,6 +563,9 @@ int main(int argc, char* argv[])
 
   }
 
+  // Record end-of-merging time
+  time(&time_last);
+
   // At least one board reached EOR. Now wait for all boards to do the same.
   int millisec = 100; // length of time to sleep between tests, in milliseconds
   struct timespec req = {0}; req.tv_sec = 0; req.tv_nsec = millisec * 1000000L;
@@ -559,14 +577,28 @@ int main(int argc, char* argv[])
     }
   }
 
-  printf("Run %d closed after writing %u events\n",cfg->RunNumber(),NumberOfEvents);
+  printf("Run %d closed after writing %u events in %lu s\n",cfg->RunNumber(),NumberOfEvents,time_last-time_first);
 
   unsigned long long int total_output_size = 0;
   for (unsigned int i=0; i<NOutputStreams; i++) {
     total_output_size += output_stream_size[i];
-    printf("Out stream %2u Events %7u Data %10llu\n",i,output_stream_nevents[i],output_stream_size[i]);
+    double size_mib = output_stream_size[i]/(1024.*1024.);
+    double event_rate = 0.;
+    double data_rate = 0.;
+    if (time_last-time_first) {
+      event_rate = (1.*output_stream_nevents[i])/(time_last-time_first);
+      data_rate = size_mib/(time_last-time_first);
+    }
+    printf("Out stream %2u Events %7u Data %11.1f MiB Rates %6.1f evt/s %7.3f MiB/s\n",i,output_stream_nevents[i],size_mib,event_rate,data_rate);
   }
-  printf("Total         Events %7u Data %10llu\n",NumberOfEvents,total_output_size);
+  double size_mib = total_output_size/(1024.*1024.);
+  double event_rate = 0.;
+  double data_rate = 0.;
+  if (time_last-time_first) {
+    event_rate = (1.*NumberOfEvents)/(time_last-time_first);
+    data_rate = size_mib/(time_last-time_first);
+  }
+  printf("Total         Events %7u Data %11.1f MiB Rates %6.1f evt/s %7.3f MiB/s\n",NumberOfEvents,size_mib,event_rate,data_rate);
 
   // If input was from a real run, update DB
   if (cfg->RunNumber()) {
@@ -596,6 +628,10 @@ int main(int argc, char* argv[])
     //}
 
   }
+
+  // Show exit time
+  time(&time_stop); fmt_time(t_fmt,&time_stop);
+  printf("=== PadmeMerger exiting on %s UTC ===\n",t_fmt);
 
   exit(0);
 }

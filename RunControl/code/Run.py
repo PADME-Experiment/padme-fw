@@ -713,3 +713,15 @@ class Run:
             command = "ssh -i ~/.ssh/id_rsa_daq %s '( ps -fu daq | grep recv-only | grep -v bash | grep -v grep | awk \"{print \$2}\" | xargs kill )'"%self.merger.node_ip
             print command
             os.system(command)
+
+        # Now we can clean up all nc processes
+        for proc in self.proc_snd:
+            if proc.poll() != None:
+                proc.wait()
+            else:
+                print "Run::clean_up - Problem closing sending nc process"
+        for proc in self.proc_rcv:
+            if proc.poll() != None:
+                proc.wait()
+            else:
+                print "Run::clean_up - Problem closing receiving nc process"

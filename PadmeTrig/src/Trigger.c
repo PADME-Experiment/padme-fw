@@ -69,9 +69,9 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
 
   // Send command to read timestamp buffer
   char cmd[2]; sprintf(cmd,"%c%c",TRIG_CMD_TIMESTAMP,TRIG_REG_TIMESTAMP);
-  printf("trig_get_data cmd = 0x");
-  int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
-  printf("\n");
+  //printf("trig_get_data cmd = 0x");
+  //int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
+  //printf("\n");
   rc = write(Trig_SockFD,cmd,2);
   if (rc<0) {
     perror("Error issuing timestamp command");
@@ -116,7 +116,7 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
 
     // Check if we reached the E0F0E0F0 final tag
     if ( memcmp((void*)buff,(void*)tail,4) == 0 ) {
-      printf("Footer found\n");
+      //printf("Footer found\n");
       break; // We are done: exit main loop
     }
 
@@ -130,12 +130,6 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
       rc = read(Trig_SockFD,(char*)(biff+rc),4-rc);
     }
     //printf("0x%02x%02x%02x%02x\n",biff[0],biff[1],biff[2],biff[3]);
-
-    // Check if we reached the E0F0E0F0 final tag
-    if ( memcmp((void*)biff,(void*)tail,4) == 0 ) {
-      printf("Footer found\n");
-      break; // We are done: exit main loop
-    }
 
     // Copy two halves of 8bytes packet to final buffer
     memcpy(pointer,buff,4); pointer += 4;
@@ -169,9 +163,9 @@ int trig_set_trigmask(char trig)
   }
 
   char cmd[6]; sprintf(cmd,"%c%c%c%c%c%c",TRIG_CMD_WRITE,TRIG_REG_BUSY_AND_TRIG_MASKS,0,0,busy,trig);
-  printf("trig_set_trigmask cmd = 0x");
-  int i; for(i=0;i<6;i++) printf("%02x",cmd[i]);
-  printf("\n");
+  //printf("trig_set_trigmask cmd = 0x");
+  //int i; for(i=0;i<6;i++) printf("%02x",cmd[i]);
+  //printf("\n");
   rc = write(Trig_SockFD,cmd,6);
   if (rc<0) {
     perror("Error setting trigger/busy mask");
@@ -195,9 +189,9 @@ int trig_set_busymask(char busy)
   }
 
   char cmd[6]; sprintf(cmd,"%c%c%c%c%c%c",TRIG_CMD_WRITE,TRIG_REG_BUSY_AND_TRIG_MASKS,0,0,busy,trig);
-  printf("trig_set_busymask cmd = 0x");
-  int i; for(i=0;i<6;i++) printf("%02x",cmd[i]);
-  printf("\n");
+  //printf("trig_set_busymask cmd = 0x");
+  //int i; for(i=0;i<6;i++) printf("%02x",cmd[i]);
+  //printf("\n");
   rc = write(Trig_SockFD,cmd,6);
   if (rc<0) {
     perror("Error setting trigger/busy mask");
@@ -216,9 +210,9 @@ int trig_get_trigbusymask(char* mask)
 
   // Send command to read trigger/busy mask
   sprintf(cmd,"%c%c",TRIG_CMD_READ,TRIG_REG_BUSY_AND_TRIG_MASKS);
-  printf("trig_get_trigbusymask cmd = 0x");
-  int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
-  printf("\n");
+  //printf("trig_get_trigbusymask cmd = 0x");
+  //int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
+  //printf("\n");
   rc = write(Trig_SockFD,cmd,2);
   if (rc<0) {
     perror("Error asking for trigger/busy mask");

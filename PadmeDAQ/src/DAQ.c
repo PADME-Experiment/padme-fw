@@ -567,7 +567,6 @@ int DAQ_init ()
 
   }
 
-
   // Set max number of events to transfer in a single readout
   ret = CAEN_DGTZ_GetMaxNumEventsBLT(Handle,&data);
   if (ret != CAEN_DGTZ_Success) {

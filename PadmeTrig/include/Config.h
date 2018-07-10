@@ -40,6 +40,9 @@ typedef struct config_s {
   // Run number
   int run_number;
 
+  // Trigger mask
+  unsigned char trigger_mask;
+
   // Output mode (can be "FILE" or "STREAM").
   char output_mode[16];
 
@@ -60,7 +63,7 @@ typedef struct config_s {
   // DB id of node where this process is running
   int node_id;
 
-  // Delay in the DAQ main loop (usecs)
+  // Delay in the Trigger main loop (usecs)
   useconds_t daq_loop_delay;
 
   // Set maximum per-file DAQ duration (secs).

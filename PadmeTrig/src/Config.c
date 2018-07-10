@@ -45,9 +45,11 @@ int reset_config()
 
   Config->run_number = 0; // Dummy run (no DB access)
 
-  strcpy(Config->output_mode,"FILE"); // Default to old functioning mode (write to file)
+  Config->trigger_mask = 0x3f; // All triggers active
 
-  strcpy(Config->output_stream,""); // No output stream defined when in FILE mode
+  strcpy(Config->output_mode,"STREAM"); // Default single stream mode
+
+  strcpy(Config->output_stream,""); // No default
 
   // All data files written to subdirectory "data" of current directory
   strcpy(Config->data_dir,"data/");
@@ -63,9 +65,9 @@ int reset_config()
   Config->daq_loop_delay = 10000; // wait 10msec after each iteration
 
   // Ouput file limits
-  Config->file_max_duration = 900; // 15 min
+  Config->file_max_duration = 3600; // 1 hour
   Config->file_max_size = 1024*1024*1024; // 1GiB
-  Config->file_max_events = 100000; // 1E5 events
+  Config->file_max_events = 1000000; // 1E6 events
 
   return 0;
 
@@ -200,6 +202,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"trigger_mask")==0 ) {
+	if ( sscanf(value,"%x",&v) ) {
+	  Config->trigger_mask = (v & 0x3f);
+	  printf("Parameter %s set to %d (0x%x)\n",param,v,Config->trigger_mask);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"output_mode")==0 ) {
 	if ( strcmp(value,"FILE")==0 || strcmp(value,"STREAM")==0 ) {
 	  strcpy(Config->output_mode,value);
@@ -305,6 +314,7 @@ int print_config(){
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
 
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
+  printf("trigger_mask\t\t0x%02x\t\ttrigger mask (6 bits)\n",Config->trigger_mask);
 
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {

@@ -25,6 +25,6 @@ unset clean_ld_library_path
 if [ -f ${HOME}/.padme-dbaccess.sh ]
 then
     source ${HOME}/.padme-dbaccess.sh
-else
-    echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
+#else
+#    echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
 fi

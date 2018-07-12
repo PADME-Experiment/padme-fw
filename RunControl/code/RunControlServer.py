@@ -17,12 +17,16 @@ class RunControlServer:
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
+        # Define id file for passwordless ssh command execution
+        self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
+
         # Define names of lock and last_used_setup files
         self.lock_file = self.daq_dir+"/run/lock"
         self.lus_file = self.daq_dir+"/setup/last_used_setup"
 
         # Redefine print to send output to log file
         sys.stdout = Logger()
+        sys.stderr = sys.stdout
         if mode == "i": sys.stdout.interactive = True
 
         # Create lock file
@@ -254,7 +258,7 @@ class RunControlServer:
                     self.connection.close()
 
                     if new_state == "exit":
-                        print "=== RunControlSever received exit command: exiting"
+                        print "=== RunControlSever received shutdown command: exiting"
                         return "exit"
                     elif new_state != "client_close":
                         print "=== RunControlServer = ERROR: unknown new state %s - ABORTING"%new_state
@@ -973,7 +977,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def file_exists(self,node_ip,name):
 
-        command = "ssh -i ~/.ssh/id_rsa_daq %s '( test -e %s )'"%(node_ip,name)
+        command = "ssh -i %s %s '( test -e %s )'"%(self.ssh_id_file,node_ip,name)
         rc = os.system(command)
         if (rc == 0): return True
         return False

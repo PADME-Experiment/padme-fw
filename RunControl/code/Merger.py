@@ -10,6 +10,9 @@ class Merger:
 
     def __init__(self):
 
+        # Define id file for passwordless ssh command execution
+        self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
+
         self.db = PadmeDB()
 
         self.set_default_config()
@@ -104,7 +107,7 @@ class Merger:
             #    return 0
 
             # Start Merger on remote node using passwordless ssh connection
-            command = "ssh -i ~/.ssh/id_rsa_daq %s %s"%(self.node_ip,command)
+            command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
         # Start Merger process on local node
         #try:

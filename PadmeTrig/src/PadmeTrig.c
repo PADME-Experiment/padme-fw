@@ -227,7 +227,7 @@ int main(int argc, char *argv[]) {
 	fprintf(stdout,"\nPadmeTrig [-c cfg_file] [-t mask] [-h]\n\n");
 	fprintf(stdout,"  -c: use file 'cfg_file' to set configuration parameters for this process\n");
 	fprintf(stdout,"     If no file is specified, use default settings\n");
-	fprintf(stdout,"  -t: set trigger mask and exit (default: mask = 0x00\n");
+	fprintf(stdout,"  -t: set trigger mask and exit (default mask: 0x00)\n");
 	fprintf(stdout,"  -h: show this help message and exit\n\n");
 	exit(0);
       case '?':
@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
   if (trigger != -1) {
 
     if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying trigger and busy masks. Exiting.\n");
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
       exit(1);
     }
     printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
     printf("Trigger mask set to 0x%02x\n",trig);
 
     if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying trigger and busy masks. Exiting.\n");
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
       exit(1);
     }
     printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);

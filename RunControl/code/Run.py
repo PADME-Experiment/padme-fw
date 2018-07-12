@@ -17,6 +17,9 @@ class Run:
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
+        # Define id file for passwordless ssh command execution
+        self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
+
         # Get location of padme-fw software from PADME
         # Default to PADME_DAQ_DIR/padme-fw if not set
         self.padme_fw = os.getenv('PADME',"%s/padme-fw"%self.daq_dir)
@@ -374,7 +377,7 @@ class Run:
                 os.mkfifo(adc.output_stream_daq)
                 os.mkfifo(adc.output_stream_zsup)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s %s )'"%(adc.node_ip,self.stream_dir,adc.output_stream_daq,adc.output_stream_zsup)
+                command = "ssh -i %s %s '( mkdir -p %s ; mkfifo %s %s )'"%(self.ssh_id_file,adc.node_ip,self.stream_dir,adc.output_stream_daq,adc.output_stream_zsup)
                 print command
                 os.system(command)
 
@@ -383,7 +386,7 @@ class Run:
             if not os.path.exists(self.stream_dir):
                 os.makedirs(self.stream_dir,0755)
         else:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s )'"%(self.merger.node_ip,self.stream_dir)
+            command = "ssh -i %s %s '( mkdir -p %s )'"%(self.ssh_id_file,self.merger.node_ip,self.stream_dir)
             os.system(command)
 
         # Create fifo files to connect Merger to Level1 processes
@@ -392,7 +395,7 @@ class Run:
                 os.mkfifo(lvl1.input_stream)
             else:
                 #command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s )'"%(lvl1.node_ip,self.stream_dir,lvl1.input_stream)
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkfifo %s )'"%(lvl1.node_ip,lvl1.input_stream)
+                command = "ssh -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,lvl1.node_ip,lvl1.input_stream)
                 print command
                 os.system(command)
 
@@ -407,7 +410,7 @@ class Run:
                 if self.merger.node_id == 0:
                     os.mkfifo(adc.output_stream_zsup)
                 else:
-                    command = "ssh -n -f -i /home/daq/.ssh/id_rsa_daq %s '( mkfifo %s )'"%(self.merger.node_ip,adc.output_stream_zsup)
+                    command = "ssh -n -f -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,self.merger.node_ip,adc.output_stream_zsup)
                     print command
                     os.system(command)
  
@@ -431,7 +434,7 @@ class Run:
                 #command = "nc -l --recv-only %s %d > %s < /dev/zero &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if self.merger.node_id != 0:
-                    command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(self.merger.node_ip,command)
+                    command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
                 print command
                 #os.system(command)
                 #time.sleep(1)
@@ -462,7 +465,7 @@ class Run:
                 #command = "nc --send-only %s %d < %s > /dev/null &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if adc.node_id != 0:
-                    command = "ssh -f -i /home/daq/.ssh/id_rsa_daq %s '( %s )'"%(adc.node_ip,command)
+                    command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,adc.node_ip,command)
                 print command
                 #os.system(command)
                 #time.sleep(1)
@@ -497,7 +500,7 @@ class Run:
                 if not os.path.exists(level1.output_dir):
                     os.makedirs(level1.output_dir,0755)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s )'"%(level1.node_ip,level1.output_dir)
+                command = "ssh -i %s %s '( mkdir -p %s )'"%(self.ssh_id_file,level1.node_ip,level1.output_dir)
                 os.system(command)
 
     def change_setup(self,setup):
@@ -520,6 +523,11 @@ class Run:
 
         # Get unique list of DAQ nodes (needed to create start/stop files)
         self.daq_nodes_id_list = list(set(self.daq_nodes_id_list))
+
+        # Store ip addresses of DAQ nodes in a dictionary
+        self.daq_nodes_ip_list = {}
+        for node_id in self.daq_nodes_id_list:
+            self.daq_nodes_ip_list[node_id] = self.db.get_node_daq_ip(node_id)
 
         # Create new Merger process handler
         self.merger = Merger()
@@ -657,7 +665,8 @@ class Run:
             if (node_id == 0):
                 open(self.start_file,'w').close()
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( touch %s )'"%(self.db.get_node_daq_ip(node_id),self.start_file)
+                #command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.start_file)
+                command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.start_file)
                 print command
                 os.system(command)
 
@@ -668,20 +677,23 @@ class Run:
             if (node_id == 0):
                 open(self.quit_file,'w').close()
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( touch %s )'"%(self.db.get_node_daq_ip(node_id),self.quit_file)
+                #command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.quit_file)
+                command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
                 print command
                 os.system(command)
 
     def clean_up(self):
 
         # Clean up control directories at end of run
+        print "Cleaning up run directories"
 
         # Remove the "start the run" tag file on all DAQ nodes
         for node_id in self.daq_nodes_id_list:
             if (node_id == 0):
                 if (os.path.exists(self.start_file)): os.remove(self.start_file)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s )'"%(self.db.get_node_daq_ip(node_id),self.start_file)
+                #command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.start_file)
+                command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.start_file)
                 print command
                 os.system(command)
 
@@ -690,7 +702,8 @@ class Run:
             if (node_id == 0):
                 if (os.path.exists(self.quit_file)): os.remove(self.quit_file)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s )'"%(self.db.get_node_daq_ip(node_id),self.quit_file)
+                #command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.quit_file)
+                command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
                 print command
                 os.system(command)
 
@@ -702,7 +715,7 @@ class Run:
                 if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
                 if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
             else:
-                command = "ssh -i ~/.ssh/id_rsa_daq %s '( rm -f %s %s %s %s)'"%(adc.node_ip,adc.initok_file_daq,adc.initok_file_zsup,adc.initfail_file_daq,adc.initfail_file_zsup)
+                command = "ssh -n -i %s %s '( rm -f %s %s %s %s)'"%(self.ssh_id_file,adc.node_ip,adc.initok_file_daq,adc.initok_file_zsup,adc.initfail_file_daq,adc.initfail_file_zsup)
                 print command
                 os.system(command)
 
@@ -710,7 +723,7 @@ class Run:
         if (self.merger.node_id == 0):
             for proc in self.proc_rcv: proc.terminate()
         else:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( ps -fu daq | grep recv-only | grep -v bash | grep -v grep | awk \"{print \$2}\" | xargs kill )'"%self.merger.node_ip
+            command = "ssh -i %s %s '( ps -fu %s | grep recv-only | grep -v bash | grep -v grep | awk \"{print \$2}\" | xargs kill )'"%(self.ssh_id_file,self.merger.node_ip,os.getenv('USER',"daq"))
             print command
             os.system(command)
 

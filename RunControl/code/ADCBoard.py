@@ -16,6 +16,9 @@ class ADCBoard:
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
+        # Define id file for passwordless ssh command execution
+        self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
+
         self.db = PadmeDB()
 
         self.status = "idle"
@@ -299,7 +302,7 @@ class ADCBoard:
 
         # If DAQ process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( %s )'"%(self.node_ip,command)
+            command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
         print "- Start DAQ process for board %d"%self.board_id
         print command
@@ -347,7 +350,7 @@ class ADCBoard:
         else:
             # If it is on a remote host, use ssh to send kill command.
             # PID on remote host is recovered from the lock file
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( kill `cat %s` )'"%(self.node_ip,self.lock_file_daq)
+            command = "ssh -i %s %s '( kill `cat %s` )'"%(self.ssh_id_file,self.node_ip,self.lock_file_daq)
         print command
         os.system(command)
 
@@ -377,7 +380,7 @@ class ADCBoard:
 
         # If ZSUP process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-            command = "ssh -i ~/.ssh/id_rsa_daq %s '( %s )'"%(self.node_ip,command)
+            command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
         print "- Start ZSUP process for board %d"%self.board_id
         print command

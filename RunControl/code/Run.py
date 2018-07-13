@@ -7,6 +7,7 @@ import subprocess
 from Level1   import Level1
 from Merger   import Merger
 from ADCBoard import ADCBoard
+from Trigger  import Trigger
 from PadmeDB  import PadmeDB
 
 class Run:
@@ -28,6 +29,7 @@ class Run:
         self.daq_executable = "%s/PadmeDAQ/PadmeDAQ.exe"%self.padme_fw
         self.merger_executable = "%s/Level1/PadmeMerger.exe"%self.padme_fw
         self.level1_executable = "%s/Level1/PadmeLevel1.exe"%self.padme_fw
+        self.trigger_executable = "%s/PadmeTrig/PadmeTrig.exe"%self.padme_fw
 
         # Define directory containing setup subdirectories
         self.setup_root_dir = "%s/setup"%self.daq_dir
@@ -36,10 +38,11 @@ class Run:
         self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
 
         # Define name and position of control files
-        #self.control_dir = self.daq_dir+"/run"
         self.control_dir = self.daq_dir+"/local/run"
         self.start_file = self.control_dir+"/start"
         self.quit_file = self.control_dir+"/quit"
+        self.trig_start_file = self.control_dir+"/start_trig"
+        self.trig_stop_file = self.control_dir+"/stop_trig"
         self.initok_file_head = self.control_dir+"/initok"
         self.initfail_file_head = self.control_dir+"/initfail"
         self.lock_file_head = self.control_dir+"/lock"
@@ -85,6 +88,9 @@ class Run:
         # Configure Merger for this run
         self.runconfig_merger(self.merger)
 
+        # Configure Trigger for this run
+        self.runconfig_trigger(self.trigger)
+
         # Configure ADC boards for this run
         for adcboard in self.adcboard_list:
             #print "--- Configuring for run board %d"%adcboard.board_id
@@ -92,7 +98,6 @@ class Run:
 
         # Configure Level1 processes for this run
         for level1 in self.level1_list:
-            #print "--- Configuring for run level1 %d"%level1.level1_id
             self.runconfig_level1(level1)
 
     def next_merger_node(self):
@@ -127,6 +132,8 @@ class Run:
         # Clean up Run configuration and set all run parameters to default
 
         self.adcboard_list = []
+
+        self.trigger = None
 
         self.merger = None
 
@@ -197,6 +204,8 @@ class Run:
                         print l
                 elif (p_name == "total_daq_time"):
                     self.total_daq_time = int(p_value)
+                elif (p_name == "trigger_node"):
+                    self.trigger_node = p_value
                 elif (p_name == "merger_node"):
                     self.merger_node = p_value
                 elif (p_name == "merger_node_list"):
@@ -220,6 +229,8 @@ class Run:
 
         cfgstring += "start_file\t\t%s\n"%self.start_file
         cfgstring += "quit_file\t\t%s\n"%self.quit_file
+        cfgstring += "trig_start_file\t\t%s\n"%self.trig_start_file
+        cfgstring += "trig_stop_file\t\t%s\n"%self.trig_stop_file
         cfgstring += "initok_file_head\t%s\n"%self.initok_file_head
         cfgstring += "initfail_file_head\t%s\n"%self.initfail_file_head
         cfgstring += "lock_file_head\t\t%s\n"%self.lock_file_head
@@ -258,6 +269,8 @@ class Run:
         cfgstring += "stream_dir\t\t%s\n"%self.stream_dir
         cfgstring += "stream_head\t\t%s\n"%self.stream_head
 
+        cfgstring += "trigger_node\t\t%s\n"%self.trigger_node
+
         if self.merger_node:
             cfgstring += "merger_node\t\t%s\n"%self.merger_node
 
@@ -280,6 +293,8 @@ class Run:
 
         self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
         self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
+        self.db.add_cfg_para_run(self.run_number,"trig_start_file",    self.trig_start_file)
+        self.db.add_cfg_para_run(self.run_number,"trig_stop_file",     self.trig_stop_file)
         self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
         self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
         self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
@@ -311,6 +326,8 @@ class Run:
         self.db.add_cfg_para_run(self.run_number,"stream_dir",         self.stream_dir)
         self.db.add_cfg_para_run(self.run_number,"stream_head",        self.stream_head)
 
+        self.db.add_cfg_para_run(self.run_number,"trigger_node",       self.trigger_node)
+
         if self.merger_node:
             self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)
 
@@ -336,6 +353,12 @@ class Run:
                 print "ERROR - Cannot create ZSUP process in the DB"
                 return "error"
 
+        # Create Level1 structures in DB
+        # To be added when DB will support this
+
+        # Create Trigger structure in DB
+        # To be added when DB will support this
+
         return "ok"
 
     def create_log_dir(self):
@@ -356,6 +379,9 @@ class Run:
         print "Writing configuration file %s for Merger"%self.merger.config_file
         self.merger.write_config()
 
+        print "Writing configuration file %s for Trigger"%self.trigger.config_file
+        self.trigger.write_config()
+
         for adc in (self.adcboard_list):
             print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
             adc.write_config()
@@ -370,6 +396,15 @@ class Run:
 
     def create_fifos(self):
 
+        # Create stream directory and fifo file for Trigger
+        if self.trigger.node_id == 0:
+            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
+            os.mkfifo(self.trigger.output_stream)
+        else:
+            command = "ssh -i %s %s '( mkdir -p %s ; mkfifo %s )'"%(self.ssh_id_file,self.trigger.node_ip,self.stream_dir,self.trigger.output_stream)
+            print command
+            os.system(command)
+
         # Create stream directories and fifo files for ADCBoards
         for adc in (self.adcboard_list):
             if adc.node_id == 0:
@@ -383,10 +418,10 @@ class Run:
 
         # Create stream directory on Merger
         if self.merger.node_id == 0:
-            if not os.path.exists(self.stream_dir):
-                os.makedirs(self.stream_dir,0755)
+            if not os.path.exists(self.stream_dir): os.makedirs(self.stream_dir,0755)
         else:
             command = "ssh -i %s %s '( mkdir -p %s )'"%(self.ssh_id_file,self.merger.node_ip,self.stream_dir)
+            print command
             os.system(command)
 
         # Create fifo files to connect Merger to Level1 processes
@@ -394,31 +429,48 @@ class Run:
             if lvl1.node_id == 0:
                 os.mkfifo(lvl1.input_stream)
             else:
-                #command = "ssh -i ~/.ssh/id_rsa_daq %s '( mkdir -p %s ; mkfifo %s )'"%(lvl1.node_ip,self.stream_dir,lvl1.input_stream)
                 command = "ssh -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,lvl1.node_ip,lvl1.input_stream)
+                print command
+                os.system(command)
+
+        # If Trigger process runs on a node which is different from the Merger
+        # we must replicate the Trigger FIFO file on the Merger
+        if self.trigger.node_id != self.merger.node_id:
+
+            # Duplicate Trigger FIFO file on Merger node
+            if self.merger.node_id == 0:
+                os.mkfifo(self.trigger.output_stream)
+            else:
+                command = "ssh -n -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,self.merger.node_ip,self.trigger.output_stream)
                 print command
                 os.system(command)
 
         # If an ADCBoard process runs on a node which is different from the Merger
         # we must replicate the ZSUP FIFO file on the Merger
-        for adc in (self.adcboard_list):
+        if self.merger.node_id == 0:
 
-            # Check if ADCBoard and Merger run on different nodes
-            if adc.node_id != self.merger.node_id:
+            for adc in (self.adcboard_list):
+                if adc.node_id != self.merger.node_id: os.mkfifo(adc.output_stream_zsup)
 
-                # Duplicate ZSUP FIFO file on Merger node
-                if self.merger.node_id == 0:
-                    os.mkfifo(adc.output_stream_zsup)
-                else:
-                    command = "ssh -n -f -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,self.merger.node_ip,adc.output_stream_zsup)
-                    print command
-                    os.system(command)
+        else:
+
+            # More efficient if we give a single (long) ssh command
+            stream_list = ""
+            for adc in (self.adcboard_list):
+                if adc.node_id != self.merger.node_id: stream_list = " ".join(stream_list,adc.output_stream_zsup)
+            if stream_list:
+                command = "ssh -n -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,self.merger.node_ip,stream_list)
+                print command
+                os.system(command)
  
     def create_receivers(self):
 
+        # Keep track of receiver processes and handles: needed for final celeanup
+        self.proc_rcv = []
+        self.hand_rcv = []
+
         # If an ADCBoard process runs on a node which is different from the Merger
         # we create the receiving end of a network tunnel
-        self.proc_rcv = []
         for adc in (self.adcboard_list):
 
             # Check if ADCBoard and Merger run on different nodes
@@ -426,18 +478,18 @@ class Run:
 
                 # Define port for network tunnel
                 port_number = self.base_port_number+adc.board_id
+                print "Creating receiving end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
+
+                # Define log file and open it
                 log_file = "%s/%s_nc_%d_recv.log"%(self.log_dir,self.log_file_head,port_number)
                 log_handle = open(log_file,"w")
+                self.hand_rcv.append(log_handle)
 
                 # Open receiving end of tunnel on Merger node
-                print "Creating receiving end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
-                #command = "nc -l --recv-only %s %d > %s < /dev/zero &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if self.merger.node_id != 0:
                     command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
                 print command
-                #os.system(command)
-                #time.sleep(1)
                 try:
                     proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
                     self.proc_rcv.append(proc)
@@ -445,11 +497,39 @@ class Run:
                     print "Run::create_receivers - ERROR: Execution failed: %s",e
                 time.sleep(0.5)
 
+        # If the Trigger process runs on a node which is different from the Merger
+        # we create the receiving end of a network tunnel
+        if self.trigger.node_id != self.merger.node_id:
+
+            # Define port for network tunnel
+            port_number = self.base_port_number+99
+            print "Creating receiving end of network tunnel for trigger on port %d"%port_number
+
+            # Define log file and open it
+            log_file = "%s/%s_nc_%d_recv.log"%(self.log_dir,self.log_file_head,port_number)
+            log_handle = open(log_file,"w")
+            self.hand_rcv.append(log_handle)
+
+            # Open receiving end of tunnel on Merger node
+            command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            if self.merger.node_id != 0:
+                command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
+            print command
+            try:
+                proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
+                self.proc_rcv.append(proc)
+            except OSError as e:
+                print "Run::create_receivers - ERROR: Execution failed: %s",e
+            time.sleep(0.5)
+
     def create_senders(self):
+
+        # Keep track of sender processes and handles: needed for final celeanup
+        self.proc_snd = []
+        self.hand_snd = []
 
         # If an ADCBoard process runs on a node which is different from the Merger
         # we create the sending end of a network tunnel
-        self.proc_snd = []
         for adc in (self.adcboard_list):
 
             # Check if ADCBoard and Merger run on different nodes
@@ -457,24 +537,49 @@ class Run:
 
                 # Define port for network tunnel
                 port_number = self.base_port_number+adc.board_id
+                print "Creating sending end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
+
+                # Define log file and open it
                 log_file = "%s/%s_nc_%d_send.log"%(self.log_dir,self.log_file_head,port_number)
                 log_handle = open(log_file,"w")
+                self.hand_snd.append(log_handle)
 
                 # Open receiving end of tunnel on Merger node. Add some code to wait for receiving end to appear before proceeding.
-                print "Creating sending end of network tunnel for board %d on port %d"%(adc.board_id,port_number)
-                #command = "nc --send-only %s %d < %s > /dev/null &"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if adc.node_id != 0:
                     command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,adc.node_ip,command)
                 print command
-                #os.system(command)
-                #time.sleep(1)
                 try:
                     proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
                     self.proc_snd.append(proc)
                 except OSError as e:
                     print "Run::create_senders - ERROR: Execution failed: %s",e
                 time.sleep(0.5)
+
+        # If the Trigger process runs on a node which is different from the Merger
+        # we create the sending end of a network tunnel
+        if self.trigger.node_id != self.merger.node_id:
+
+            # Define port for network tunnel
+            port_number = self.base_port_number+99
+            print "Creating sending end of network tunnel for trigger on port %d"%port_number
+
+            # Define log file and open it
+            log_file = "%s/%s_nc_%d_send.log"%(self.log_dir,self.log_file_head,port_number)
+            log_handle = open(log_file,"w")
+            self.hand_snd.append(log_handle)
+
+            # Open receiving end of tunnel on Merger node. Add some code to wait for receiving end to appear before proceeding.
+            command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,self.trigger.output_stream)
+            if adc.node_id != 0:
+                command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.trigger.node_ip,command)
+            print command
+            try:
+                proc = subprocess.Popen(shlex.split(command),stdout=log_handle,stderr=subprocess.STDOUT,bufsize=1)
+                self.proc_snd.append(proc)
+            except OSError as e:
+                print "Run::create_senders - ERROR: Execution failed: %s",e
+            time.sleep(0.5)
 
     def create_merger_input_list(self):
 
@@ -497,10 +602,10 @@ class Run:
         for level1 in self.level1_list:
             print "Creating output dir %s for level1 %d"%(level1.output_dir,level1.level1_id)
             if level1.node_id == 0:
-                if not os.path.exists(level1.output_dir):
-                    os.makedirs(level1.output_dir,0755)
+                if not os.path.exists(level1.output_dir): os.makedirs(level1.output_dir,0755)
             else:
                 command = "ssh -i %s %s '( mkdir -p %s )'"%(self.ssh_id_file,level1.node_ip,level1.output_dir)
+                print command
                 os.system(command)
 
     def change_setup(self,setup):
@@ -528,6 +633,10 @@ class Run:
         self.daq_nodes_ip_list = {}
         for node_id in self.daq_nodes_id_list:
             self.daq_nodes_ip_list[node_id] = self.db.get_node_daq_ip(node_id)
+
+        # Create new Trigger process handler
+        self.trigger = Trigger()
+        self.configure_trigger(self.trigger)
 
         # Create new Merger process handler
         self.merger = Merger()
@@ -595,6 +704,20 @@ class Run:
         # Set maximum number of events to write in a single file
         level1.max_events = self.level1_maxevt
 
+    def configure_trigger(self,trigger):
+
+        # Configure Trigger process after changing setup
+
+        # Reset Trigger process handler to default configuration
+        trigger.set_default_config()
+
+        # Set executable
+        trigger.executable = self.trigger_executable
+
+        # Set node where Trigger will run
+        trigger.node_id = self.db.get_node_id(self.trigger_node)
+        trigger.node_ip = self.db.get_node_daq_ip(trigger.node_id)
+
     def configure_merger(self,merger):
 
         # Configure Merger process after changing setup
@@ -643,6 +766,20 @@ class Run:
         level1.output_dir = self.rawdata_dir
         level1.output_header = "%s_%s"%(self.rawdata_head,s_lid)
 
+    def runconfig_trigger(self,trigger):
+
+        # Configure Trigger process after changing run
+
+        trigger.run_number = self.run_number
+
+        # Get node_id and node_ip from DB
+        trigger.node_id = self.db.get_node_id(self.trigger_node)
+        trigger.node_ip = self.db.get_node_daq_ip(trigger.node_id)
+
+        trigger.config_file = "%s/%s_trigger.cfg"%(self.config_dir,self.config_file_head)
+        trigger.log_file = "%s/%s_trigger.log"%(self.log_dir,self.log_file_head)
+        trigger.output_stream = "%s/%s_trigger"%(self.stream_dir,self.stream_head)
+
     def runconfig_merger(self,merger):
 
         # Configure Merger process after changing run
@@ -661,23 +798,46 @@ class Run:
     def start(self):
 
         # Create the "start the run" tag file on all DAQ nodes
+        print "Starting DAQs"
         for node_id in self.daq_nodes_id_list:
             if (node_id == 0):
                 open(self.start_file,'w').close()
             else:
-                #command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.start_file)
                 command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.start_file)
                 print command
                 os.system(command)
 
+        # Wait 1sec before enabling triggers
+        time.sleep(1)
+
+        # Enable triggers
+        print "Enabling triggers"
+        if (self.trigger.node_id) == 0:
+            open(self.trig_start_file,'w').close()
+        else:
+            command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.trigger.node_ip,self.trig_start_file)
+            print command
+            os.system(command)
+
     def stop(self):
+
+        # Disable triggers
+        print "Disabling triggers"
+        if (self.trigger.node_id) == 0:
+            open(self.trig_stop_file,'w').close()
+        else:
+            command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.trigger.node_ip,self.trig_stop_file)
+            print command
+            os.system(command)
+
+        # Wait 1sec before telling all processes to stop
+        time.sleep(1)
 
         # Create the "stop the run" tag file on all DAQ nodes
         for node_id in self.daq_nodes_id_list:
             if (node_id == 0):
                 open(self.quit_file,'w').close()
             else:
-                #command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.quit_file)
                 command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
                 print command
                 os.system(command)
@@ -687,25 +847,24 @@ class Run:
         # Clean up control directories at end of run
         print "Cleaning up run directories"
 
-        # Remove the "start the run" tag file on all DAQ nodes
+        # Remove the "start/stop the run" tag files on all DAQ nodes
         for node_id in self.daq_nodes_id_list:
             if (node_id == 0):
                 if (os.path.exists(self.start_file)): os.remove(self.start_file)
+                if (os.path.exists(self.quit_file)): os.remove(self.quit_file)
             else:
-                #command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.start_file)
-                command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.start_file)
+                command = "ssh -n -i %s %s '( rm -f %s %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.start_file,self.quit_file)
                 print command
                 os.system(command)
 
-        # Remove the "end the run" tag file on all DAQ nodes
-        for node_id in self.daq_nodes_id_list:
-            if (node_id == 0):
-                if (os.path.exists(self.quit_file)): os.remove(self.quit_file)
-            else:
-                #command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.db.get_node_daq_ip(node_id),self.quit_file)
-                command = "ssh -n -i %s %s '( rm -f %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
-                print command
-                os.system(command)
+        # Remove the "start/stop the triggers" tag files on Trigger node
+        if (self.trigger.node_id == 0):
+            if (os.path.exists(self.trig_start_file)): os.remove(self.trig_start_file)
+            if (os.path.exists(self.trig_stop_file)): os.remove(self.trig_stop_file)
+        else:
+            command = "ssh -n -i %s %s '( rm -f %s %s )'"%(self.ssh_id_file,self.trigger.node_ip,self.trig_start_file,self.trig_stop_file)
+            print command
+            os.system(command)
 
         # Remove initok/initfail files for all ADC nodes
         for adc in (self.adcboard_list):
@@ -738,3 +897,7 @@ class Run:
                 proc.wait()
             else:
                 print "Run::clean_up - Problem closing receiving nc process"
+
+        # Close all receiving/sending nc log files
+        for handler in self.hand_rcv: handler.close()
+        for handler in self.hand_snd: handler.close()

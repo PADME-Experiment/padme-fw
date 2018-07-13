@@ -179,8 +179,7 @@ class RunControlServer:
     def save_final_setup(self,setup):
 
         print "Saving current setup %s to %s\n"%(setup,self.lus_file)
-        with open(self.lus_file,"w") as lf:
-            lf.write(setup)
+        with open(self.lus_file,"w") as lf: lf.write("%s\n"%setup)
 
     def sigint_handler(self,signal,frame):
 
@@ -266,9 +265,6 @@ class RunControlServer:
 
                     # Exit from client handling loop and wait for a new client
                     break
-
-    #def write_log(self,msg):
-    #    print self.now_str()+" "+msg
 
     def state_idle(self):
 
@@ -486,8 +482,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def state_initfail(self):
 
-        # Here we will insert some cleanup code to handle
-        # failed initialization
+        # Here we will insert some cleanup code to handle failed initialization
         return "idle"
 
     def get_command(self):
@@ -499,7 +494,6 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             if ch:
                 l += ch
             else:
-                #self.write_log('no more data from client')
                 print "Client closed connection"
                 return "client_close"
         ll = int(l)
@@ -514,6 +508,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "Client closed connection"
                 return "client_close"
 
+        printf "Received command %s"%cmd
         return cmd
 
     def send_answer(self,answer):
@@ -670,16 +665,6 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             if self.run.create_run() == "error":
                 print "ERROR - Cannot create Run in the DB"
                 return "error"
-            #if self.run.merger.create_merger() == "error":
-            #    print "ERROR - Cannot create MERGER process in the DB"
-            #    return "error"
-            #for adc in (self.run.adcboard_list):
-            #    if adc.create_proc_daq() == "error":
-            #        print "ERROR - Cannot create DAQ process in the DB"
-            #        return "error"
-            #    if adc.create_proc_zsup() == "error":
-            #        print "ERROR - Cannot create ZSUP process in the DB"
-            #        return "error"
 
             # Save time when run initialization starts
             self.db.set_run_time_init(self.run.run_number,self.now_str())
@@ -691,10 +676,6 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         # Write configuration files
         print "Writing configuration files for run %d"%self.run.run_number
         self.run.write_config()
-        #self.run.merger.write_config()
-        #for adc in (self.run.adcboard_list):
-        #    print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
-        #    adc.write_config()
 
         # Create merger input and output lists
         self.run.create_merger_input_list()
@@ -709,9 +690,6 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         # Create pipes for data transfer
         print "Creating named pipes for run %d"%self.run.run_number
         self.run.create_fifos()
-        #for adc in (self.run.adcboard_list):
-        #    os.mkfifo(adc.output_stream_daq)
-        #    os.mkfifo(adc.output_stream_zsup)
 
         # Start Level1 processes
         for lvl1 in (self.run.level1_list):
@@ -738,6 +716,15 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
 
         # Create sending ends of network tunnels (if needed)
         self.run.create_senders()
+
+        # Start trigger process
+        p_id = self.run.trigger.start_trigger()
+        if p_id:
+            print "Trigger - Started with process id %d"%p_id
+            self.send_answer("trigger ready")
+        else:
+            print "Trigger - ERROR: could not start process"
+            self.send_answer("trigger fail")
 
         # Start ZSUP for all boards
         for adc in (self.run.adcboard_list):
@@ -780,28 +767,14 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                     if (adc.status == "ready"):
                         # Initialization ended OK
                         print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
-                        self.send_answer("adc "+str(adc.board_id)+" ready")
+                        self.send_answer("adc %d ready"%adc.board_id)
                     elif (adc.status == "fail"):
                         # Problem during initialization
                         print "ADC board %02d - *** Initialization failed ***"%adc.board_id
-                        self.send_answer("adc "+str(adc.board_id)+" fail")
+                        self.send_answer("adc %d fail"%adc.board_id)
                     else:
                         # This board is still initializing
                         all_boards_init = False
-
-                    #if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
-                    #    # Initialization ended OK
-                    #    print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
-                    #    self.send_answer("adc "+str(adc.board_id)+" ready")
-                    #    adc.status = "ready"
-                    #elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
-                    #    # Problem during initialization
-                    #    print "ADC board %02d - *** Initialization failed ***"%adc.board_id
-                    #    self.send_answer("adc "+str(adc.board_id)+" fail")
-                    #    adc.status = "fail"
-                    #else:
-                    #    # This board is still initializing
-                    #    all_boards_init = 0
 
                 # Check if any board is in fail status
                 if (adc.status == "fail"): all_boards_ready = False
@@ -827,7 +800,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             # Some boards are still initializing: keep waiting (wait up to ~30sec)
             n_try += 1
             if (n_try>=60):
-                print "*** ERROR *** One or more boards did not initialize within 60sec. Cannot start run"
+                print "*** ERROR *** One or more boards did not initialize within 30sec. Cannot start run"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                 self.send_answer("init_timeout")
                 return "initfail"

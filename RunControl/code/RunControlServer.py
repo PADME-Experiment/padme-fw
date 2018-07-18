@@ -150,8 +150,7 @@ class RunControlServer:
 
         # Create our own lock file
         pid = os.getpid()
-        with open(self.lock_file,"w") as lf:
-            lf.write("%d"%pid)
+        with open(self.lock_file,"w") as lf: lf.write("%d\n"%pid)
 
         return "ok"
 
@@ -272,7 +271,7 @@ class RunControlServer:
         while True:
 
             cmd = self.get_command()
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -345,7 +344,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         while True:
 
             cmd = self.get_command()
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -416,8 +415,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         while True:
 
             cmd = self.get_command()
-            #self.write_log('received command '+cmd)
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -508,7 +506,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "Client closed connection"
                 return "client_close"
 
-        printf "Received command %s"%cmd
+        print "Received command %s"%cmd
         return cmd
 
     def send_answer(self,answer):
@@ -718,7 +716,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.create_senders()
 
         # Start trigger process
-        p_id = self.run.trigger.start_trigger()
+        p_id = self.run.trigger.start_trig()
         if p_id:
             print "Trigger - Started with process id %d"%p_id
             self.send_answer("trigger ready")
@@ -887,6 +885,16 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             (tot_evts,tot_size) = self.db.get_merger_final_info(self.run.merger.merger_id)
             self.db.set_run_total_events(self.run.run_number,tot_evts)
 
+        # Run stop_trig procedure
+        if self.run.trigger.stop_trig():
+            self.send_answer("trigger terminate_ok")
+            print "Trigger terminated correctly"
+        else:
+            terminate_ok = False
+            self.send_answer("trigger terminate_error")
+            print "WARNING: problems while terminating Trigger"
+            if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
         # Run stop_merger procedure
         if self.run.merger.stop_merger():
             self.send_answer("merger terminate_ok")
@@ -909,13 +917,6 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Clean up run directory
-        #for adc in (self.run.adcboard_list):
-        #    if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
-        #    if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
-        #    if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
-        #    if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
-        #if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
-        #if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
         self.run.clean_up()
 
         if terminate_ok:

@@ -1,5 +1,5 @@
-#ifndef ADCBoard_H
-#define ADCBoard_H
+#ifndef Trigger_H
+#define Trigger_H
 
 #include<vector>
 #include<string>
@@ -8,66 +8,52 @@
 
 #include "Rtypes.h"
 
-#include "ADCEvent.hh"
-#include "ADCFile.hh"
+#include "TrigFile.hh"
 
 class Configuration;
 
-class ADCBoard
+class Trigger
 {
 
  public:
 
-  ADCBoard(int);
-  ~ADCBoard();
+  Trigger();
+  ~Trigger();
 
   void Reset();
   void Init();
 
-  int GetBoardId() { return fBoardId; }
-
-  ADCFile* File(int i);
-  ADCFile* AddFile(std::string);
+  TrigFile* File(int i);
+  TrigFile* AddFile(std::string);
   int GetNFiles() { return fFiles.size(); }
   std::string GetFileName(int);
 
   int NextEvent();
   int UnpackEvent();
-  ADCEvent* Event() { return fADCEvent; }
   void* Buffer() { return fBuffer; }
 
   UInt_t GetVersion() { return fVersion; }
   void SetVersion(UInt_t v) { fVersion = v; }
 
-  UInt_t GetEventSize();
-  UInt_t GetSerialNumber();
-  UInt_t GetEventCounter();
+  UInt_t GetEventSize() { return fEventSize; }
 
-  UInt_t GetClockCounter() { return fClockCounter; }
+  UChar_t GetTriggerMask() { return fTriggerMask; }
+  UInt_t GetTriggerCounter() { return fTriggerCounter; }
+  ULong64_t GetClockCounter() { return fClockCounter; }
   ULong64_t GetTotalClockCounter() { return fTotalClockCounter; }
-
-  unsigned char GetGroupMask();
-  int GetTriggerTimeTags(UInt_t*);
 
  private:
 
   int OpenFile();
   int ReadFileHead();
   int ReadNextEvent();
-  int UnpackEvent_v01();
-  int UnpackEvent_v02();
   int UnpackEvent_v03();
-  int GetTriggerTimeTags_v01(UInt_t*);
-  int GetTriggerTimeTags_v02(UInt_t*);
-  int GetTriggerTimeTags_v03(UInt_t*);
 
  private:
 
-  int fBoardId;
-
   Configuration* fCfg;
 
-  std::vector<ADCFile> fFiles;
+  std::vector<TrigFile> fFiles;
 
   UInt_t fNewFile;
   UInt_t fCurrentFile;
@@ -79,10 +65,10 @@ class ADCBoard
   UInt_t fVersion;
 
   UInt_t fFirstEvent;
+  UChar_t fTriggerMask;
+  UInt_t fTriggerCounter;
+  ULong64_t fClockCounter;
   ULong64_t fTotalClockCounter;
-  UInt_t fClockCounter;
-
-  ADCEvent* fADCEvent;
 
 };
 #endif

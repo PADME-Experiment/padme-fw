@@ -5,12 +5,21 @@
 #include <cmath>
 
 #include "EventTags.hh"
-#include "ADCEventTags.hh"
+//#include "ADCEventTags.hh"
+#include "Trigger.hh"
 #include "ADCBoard.hh"
 #include "Configuration.hh"
 #include "DBService.hh"
 
 #define LVL1_PROC_MAX 16
+
+// Clock frequencies (in GHz) from the board producers (P.Branchini of INFN Roma3 and P.Barba of CAEN)
+// N.B. as the values are specified with no suffix, they are double precision
+#define TRIGGER_CLOCK_FREQUENCY  80.0000E-3
+#define V1742_CLOCK_FREQUENCY   117.1875E-3
+
+// Time tolerance (in ns) for trigger and boards to be considered in-time
+#define INTIME_TOLERANCE_NS 10
 
 void fmt_time(char buf[20],time_t* t)
 {
@@ -143,6 +152,9 @@ int main(int argc, char* argv[])
   std::ifstream list;
   std::string line;
 
+  // Create Trigger handler
+  Trigger* trigger = new Trigger();
+
   // Get list of boards and files from input file list
   int bid;
   char bfile[1024];
@@ -157,29 +169,45 @@ int main(int argc, char* argv[])
 	exit(1);
       }
 
-      // Find board with correct board id or add it to list if new
-      std::vector<ADCBoard*>::iterator it;
-      for (it = boards.begin(); it != boards.end(); ++it) {
-	board = *it;
-	if (board->GetBoardId() == bid) break;
-      }
-      if (it == boards.end()) {
-	printf("Board id %d\n",bid);
-	board = new ADCBoard(bid);
-	boards.push_back(board);
-      }
+      // If board id is 99, this is the Trigger stream
+      if (bid == 99) {
 
-      // Add file to board
-      std::string filePath = bfile;
-      //printf("\tBoard %d - File %s\n",bid,filePath.c_str());
-      board->AddFile(filePath);
+	std::string filePath = bfile;
+	//printf("\tBoard %d - File %s\n",bid,filePath.c_str());
+	trigger->AddFile(filePath);
+
+      } else {
+
+	// Find board with correct board id or add it to list if new
+	std::vector<ADCBoard*>::iterator it;
+	for (it = boards.begin(); it != boards.end(); ++it) {
+	  board = *it;
+	  if (board->GetBoardId() == bid) break;
+	}
+	if (it == boards.end()) {
+	  printf("Board id %d\n",bid);
+	  board = new ADCBoard(bid);
+	  boards.push_back(board);
+	}
+
+	// Add file to board
+	std::string filePath = bfile;
+	//printf("\tBoard %d - File %s\n",bid,filePath.c_str());
+	board->AddFile(filePath);
+
+      }
 
     }
 
   }
   list.close();
 
-  // Show list of known boards/files and initialize them
+  // Show list of files with trigger info and initialize the trigger
+  printf("Trigger files %d\n",trigger->GetNFiles());
+  for(int f=0; f<trigger->GetNFiles(); f++) printf("File %d %s\n",f,trigger->GetFileName(f).c_str());
+  trigger->Init();
+
+  // Show list of known boards (with list of files) and initialize them
   printf("Reading %d board(s)\n",(int)boards.size());
   std::vector<ADCBoard*>::iterator it;
   for (it = boards.begin(); it != boards.end(); ++it) {
@@ -240,31 +268,44 @@ int main(int argc, char* argv[])
 
   // Loop over all events in files
 
-  int dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
-  int dTb; // Clock counter difference between two groups of the same board
-  unsigned int TT_evt,TT_grp[ADCEVENT_NTRIGGERS]; // Clock counters for board and for group
-  unsigned int TT_old[boards.size()]; // Clock counter at previous event
-  unsigned long long int CC[boards.size()]; // Total Clock Counts since start of run
+  //int dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
+  //int dTb; // Clock counter difference between two groups of the same board
+  //unsigned int TT_evt,TT_grp[ADCEVENT_NTRIGGERS]; // Clock counters for board and for group
+  //unsigned int TT_old[boards.size()]; // Clock counter at previous event
+  //unsigned long int CC[boards.size()]; // Total ADC Clock Counts since start of run (ns)
 
-  unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
+  //unsigned long int trigTotalCount, trigCount, trigCountOld; // Total, current and old values of trigger clock counter
+  unsigned long long int boardTime, trigTime; // Total Board/Trigger time since start of run in ns
+  long long int dT_board_trig; // Time difference between board and trigger
 
-  unsigned int nEOR;
+  //unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
+
+  unsigned int nEOR, trigEOR;
   unsigned int NumberOfEvents = 0;
   while(1){
 
     if (cfg->Verbose()>=1)
       printf("=== Processing event %8u ===\n",NumberOfEvents);
 
-    nEOR = 0; // Reset end_of_run counter
+    // Get next trigger event
+    trigEOR = 0;
+    if ( ! trigger->NextEvent() ) {
+      trigEOR = 1;
+      printf("*** Trigger - End of Run.\n");
+    }
 
     // Load next event for all boards
+    nEOR = 0;
     for(unsigned int b=0; b<boards.size(); b++) {
       if ( ! boards[b]->NextEvent() ) {
 	nEOR++;
 	printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
       }
     }
-    if (nEOR != 0) {
+
+    // Check if anybody reached End Of Run
+    if ( trigEOR || nEOR ) {
+      if (trigEOR) printf("Trigger reached end of run.\n");
       if (nEOR == boards.size()) {
 	printf("All boards reached end of run.\n");
       } else {
@@ -314,10 +355,25 @@ int main(int argc, char* argv[])
 
     }
 
-    unsigned int all_in_time = 0;
-    while ( (! all_in_time) && (! nEOR) ) {
+    /*
+    // Compute trigger time for this event
+    if (NumberOfEvents == 0) {
+      trigCount = trigger->GetTriggerTime();
+      trigCountOld = trigCount;
+      trigTotalCount = 0;
+    } else {
+      trigCount = trigger->GetTriggerTime(); // Get current clock counter
+      trig_dT = trigCount-trigCountOld; // Get difference with previous clock counter
+      if (trig_dT<0) trig_dT += (1<<40); // Compensate for clock counter roll over (NEED VERIFICATION!)
+      trigTotalCount += trig_dT; // Add time difference to total clock counter (64bits -> 2.3E11s @ 80MHz)
+      trigCountOld = trigCount; // Save current clock counter
+    }
 
-      unsigned int bmax = 0; // Find board with largest time since start of run 
+    unsigned int all_in_time = 0;
+    nEOR = 0; trigEOR = 0;
+    while ( (! all_in_time) && (! nEOR) && (! trigEOR) ) {
+
+      //unsigned int bmax = 0; // Find board with largest time since start of run 
 
       // Get timing information for current event of each board
       for(unsigned int b=0; b<boards.size(); b++) {
@@ -330,16 +386,13 @@ int main(int argc, char* argv[])
 
 	  // First check if board's group mask is consistent with that of first event (do we need this?)
 	  unsigned char grMsk = boards[b]->GetGroupMask();
-	  if (NumberOfEvents == 0 ) {
-	    groupMaskRef[b] = grMsk;
-	  } else {
-	    if (grMsk != groupMaskRef[b]) {
-	      board_in_time = 0;
-	      printf("*** Board %2d - Inconsistent group mask (exp: 0x%1x fnd: 0x%1x) - Skipping event %8u\n",boards[b]->GetBoardId(),groupMaskRef[b],grMsk,boards[b]->GetEventCounter());
-	      if ( boards[b]->NextEvent() == 0 ) {
-		printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-		board_EOR = 1;
-	      }
+	  if (NumberOfEvents == 0 ) groupMaskRef[b] = grMsk;
+	  if (grMsk != groupMaskRef[b]) {
+	    board_in_time = 0;
+	    printf("*** Board %2d - Inconsistent group mask (exp: 0x%1x fnd: 0x%1x) - Skipping event %8u\n",boards[b]->GetBoardId(),groupMaskRef[b],grMsk,boards[b]->GetEventCounter());
+	    if ( boards[b]->NextEvent() == 0 ) {
+	      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+	      board_EOR = 1;
 	    }
 	  }
 
@@ -399,8 +452,8 @@ int main(int argc, char* argv[])
 
 	    }
 
-	    // Check if this is the highest time in the current set of board times
-	    if (CC[b]>CC[bmax]) bmax = b;
+	    //// Check if this is the highest time in the current set of board times
+	    //if (CC[b]>CC[bmax]) bmax = b;
 
 	    if (cfg->Verbose()>=2) {
 	      printf("- Board %2d NEv %8u Dt %f (0x%08x) T %f (0x%016llx)\n",
@@ -413,26 +466,79 @@ int main(int argc, char* argv[])
 
 	if (board_EOR) nEOR++;
 
+      
       } // End of loop over boards
 
       if (nEOR != 0) {
 
 	// If one or more boards reached EOR, there is no need to continue
 	printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
+	break; // Exit while loop checking for in-time events
 
-      } else {
+      }
+    */
 
-	// Verify if all boards are in time (0x0010 clock cycles tolerance i.e. ~136ns)
-	all_in_time = 1;
-	for(unsigned int b=0; b<boards.size(); b++) {
-	  if ( CC[bmax]-CC[b] >= 0x0010 ) {
-	    // This board is still on an earlier event: skip to next event
-	    all_in_time = 0;
-	    printf("*** Board %2d - External mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-	    if ( boards[b]->NextEvent() == 0 ) {
-	      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-	      nEOR++;
-	    }
+      //// Verify if all boards are in time (0x0010 clock cycles tolerance i.e. ~136ns)
+      //all_in_time = 1;
+      //for(unsigned int b=0; b<boards.size(); b++) {
+      //	if ( CC[bmax]-CC[b] >= 0x0010 ) {
+      //	  // This board is still on an earlier event: skip to next event
+      //	  all_in_time = 0;
+      //	  printf("*** Board %2d - External mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+      //	  if ( boards[b]->NextEvent() == 0 ) {
+      //	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+      //	    nEOR++;
+      //	  }
+      //	}
+      //}
+
+    unsigned int skipped_trigger;
+    unsigned int all_in_time = 0;
+    nEOR = 0; trigEOR = 0;
+    while ( (! all_in_time) && (! nEOR) && (! trigEOR) ) {
+
+      // Verify if all boards are in time with the trigger (10ns tolerance)
+      trigTime = lrint(trigger->GetTotalClockCounter()/TRIGGER_CLOCK_FREQUENCY);
+      //printf("Trigger 0x%02x %u %llu %llu %llu\n",trigger->GetTriggerMask(),trigger->GetTriggerCounter(),trigger->GetClockCounter(),trigger->GetTotalClockCounter(),trigTime);
+      all_in_time = 1;
+      skipped_trigger = 0;
+      for(unsigned int b=0; b<boards.size(); b++) {
+
+	boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
+	//unsigned int ttt[4];
+	//boards[b]->GetTriggerTimeTags(ttt);
+	//printf("Board 0x%x %u %u %u %u %u %llu %llu\n",boards[b]->GetGroupMask(),ttt[0],ttt[1],ttt[2],ttt[3],boards[b]->GetClockCounter(),boards[b]->GetTotalClockCounter(),boardTime);
+
+	dT_board_trig = boardTime-trigTime;
+	if (cfg->Verbose()>=2)
+	  printf("Board %7u %16llu Trigger %4u %16llu dT %10lld\n",
+		 boards[b]->GetEventCounter(),boardTime,trigger->GetTriggerCounter(),trigTime,dT_board_trig);
+	if ( dT_board_trig < -INTIME_TOLERANCE_NS ) {
+
+	  // This board is still on an earlier event: skip to next event
+	  // This happens after one or more boards miss a trigger and the trigger is advanced to its next event
+      	  all_in_time = 0;
+      	  printf("*** Board %2d - Board on earlier event: skipping it %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+      	  if ( ! boards[b]->NextEvent() ) {
+      	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+      	    nEOR++;
+      	  }
+
+	} else if ( dT_board_trig > INTIME_TOLERANCE_NS ) {
+
+	  // This board skipped a trigger
+      	  printf("*** Board %2d - Board skipped a trigger on event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
+	  skipped_trigger = 1;
+
+	}
+
+	// If one or more boards skipped an event we move to the next trigger event
+	if (skipped_trigger) {
+	  all_in_time = 0;
+      	  printf("*** One or more boards skipped a trigger (see previous messages): getting next trigger event\n");
+	  if ( ! trigger->NextEvent() ) {
+	    printf("*** Trigger - End of Run.\n");
+	    trigEOR = 1;
 	  }
 	}
 
@@ -441,7 +547,7 @@ int main(int argc, char* argv[])
     } // End of while loop checking for in-time events
 
     // If one or more files reached EOR, stop processing events
-    if (nEOR) {
+    if (nEOR || trigEOR) {
       printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
       break; // Exit from main loop
     }
@@ -480,12 +586,11 @@ int main(int argc, char* argv[])
     memcpy(evt_h+evt_h_size,&now_sec,4); evt_h_size += 4;
     unsigned int now_nsec = (now.tv_nsec & 0xffffffff);
     memcpy(evt_h+evt_h_size,&now_nsec,4); evt_h_size += 4;
-    // For the moment save clock counts of first board as event run time.
-    // When trigger info will be added, replace this with number of ns since start of run
-    memcpy(evt_h+evt_h_size,CC,8); evt_h_size += 8;
-    // Trigger mask will come from trigger controller
-    // For now assume all triggers are from BTF (bit0 in trig mask)
-    evt_h_buff = 0x00000001;
+    // Run Time is the number of 80MHz clock cycles since the beginning of the run
+    unsigned long int trig_clock = trigger->GetTotalClockCounter();
+    memcpy(evt_h+evt_h_size,&trig_clock,8); evt_h_size += 8;
+    // Trigger mask currently contains a copy of the 6bits mask from the trigger
+    evt_h_buff = trigger->GetTriggerMask();
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
     // Event status not defined yet: set it to 0
     evt_h_buff = 0;
@@ -495,21 +600,9 @@ int main(int argc, char* argv[])
     output_stream_handle[CurrentOutputStream].write(evt_h,evt_h_size);
     output_stream_size[CurrentOutputStream] += evt_h_size;
 
-    // Create trigger data structure
-    // These data will come from the trigger controller. For now set to 0
-    char trg_h[4*3];
-    unsigned int trg_h_size = 0;
-    unsigned int trg_h_buff;
-    unsigned int trigger_mask = 0;
-    unsigned int trigger_count = 0;
-    unsigned long long int trigger_clock = 0;
-    trg_h_buff = (EVENT_TRIGGER_INFO_TAG << 28) + ((trigger_mask & 0x00000fff) << 16) + ((trigger_count & 0x0000ffff) << 0);
-    memcpy(trg_h+trg_h_size,&trg_h_buff,4); trg_h_size += 4;
-    memcpy(trg_h+trg_h_size,&trigger_clock,8); trg_h_size += 8;
-
-    // Send trigger data to current output stream
-    output_stream_handle[CurrentOutputStream].write(trg_h,trg_h_size);
-    output_stream_size[CurrentOutputStream] += trg_h_size;
+    // Copy trigger event structure to output (3 words, no need to change anything)
+    output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*3);
+    output_stream_size[CurrentOutputStream] += 4*3;
 
     // Loop over all boards and send its event data to output stream
     for(unsigned int b=0; b<boards.size(); b++) {
@@ -566,18 +659,24 @@ int main(int argc, char* argv[])
   // Record end-of-merging time
   time(&time_last);
 
-  // At least one board reached EOR. Now wait for all boards to do the same.
+  // At least one board or trigger reached EOR. Now wait for everybody else to do the same.
   int millisec = 100; // length of time to sleep between tests, in milliseconds
+  unsigned int n_test_max = 100; // Number of tests to do before giving up
   struct timespec req = {0}; req.tv_sec = 0; req.tv_nsec = millisec * 1000000L;
-  while (nEOR<boards.size()) {
-    nanosleep(&req, (struct timespec *)NULL);  
+  trigEOR = 0; nEOR = 0;
+  unsigned int n_test = 0;
+  while ( ( (! trigEOR) || nEOR<boards.size() ) && n_test<n_test_max ) {
+    nanosleep(&req, (struct timespec *)NULL);
+    trigEOR = 0;
+    if ( ! trigger->NextEvent() ) trigEOR = 1;
     nEOR = 0;
     for(unsigned int b=0; b<boards.size(); b++) {
       if ( ! boards[b]->NextEvent() ) nEOR++;
     }
+    n_test++;
   }
 
-  printf("Run %d closed after writing %u events in %lu s\n",cfg->RunNumber(),NumberOfEvents,time_last-time_first);
+  printf("Run %d closed after writing %u events in %lu s (%lu %lu)\n",cfg->RunNumber(),NumberOfEvents,time_last-time_first,time_last,time_first);
 
   unsigned long long int total_output_size = 0;
   for (unsigned int i=0; i<NOutputStreams; i++) {

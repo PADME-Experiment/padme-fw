@@ -700,6 +700,9 @@ int DAQ_readdata ()
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle;
 
+  // Flag to end run on ADC read error
+  int adcError;
+
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
 
@@ -861,10 +864,16 @@ int DAQ_readdata ()
   // Main DAQ loop: wait for some data to be present and copy it to output file
   //old_TT =0;
   //old_TTT=0;
+  adcError = 0;
   while(1){
 
     // Read Acquisition Status register
     ret = CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_ACQ_STATUS_ADD,&status);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("Cannot read acquisition status. Error code: %d\n",ret);
+      adcError = 1;
+      break; // Exit from main DAQ loop
+    }
 
     //printf("Register 0x%04X Status 0x%04X\n",CAEN_DGTZ_ACQ_STATUS_ADD,status);
     // Check if at least one event is available
@@ -874,25 +883,34 @@ int DAQ_readdata ()
       for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	if ( Config->group_enable_mask & (1 << iGr) ) {
 	  //printf("Checking buffer for group %d on register 0x%04X\n",iGr,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8));
-	  if (CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus) != CAEN_DGTZ_Success) {
+	  //if (CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus) != CAEN_DGTZ_Success) {
+	  ret = CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus);
+	  if (ret != CAEN_DGTZ_Success) {
 	    printf("Cannot read group %d status. Error code: %d\n",iGr,ret);
-	    return 2;
+	    //return 2;
+	    adcError = 1;
+	    break; // Exit from loop over groups
 	  } else if (grstatus & 1) { // Bit 0: Memory full
 	    printf("*** WARNING *** Group %d data buffer is full (!!!)\n",iGr);
 	  }
 	}
       }
+      if (adcError) break; // Exit from main DAQ loop
 
       // Read the data from digitizer
       ret = CAEN_DGTZ_ReadData(Handle,CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT,buffer,&readSize);
       if (ret != CAEN_DGTZ_Success) {
 	printf("Unable to read data from digitizer. Error code: %d\n",ret);
-	return 2;
+	//return 2;
+	adcError = 1;
+	break; // Exit from main DAQ loop
       }
       ret = CAEN_DGTZ_GetNumEvents(Handle,buffer,readSize,&numEvents);
       if (ret != CAEN_DGTZ_Success) {
 	printf("Unable to get number of events from read buffer. Error code: %d\n",ret);
-	return 2;
+	//return 2;
+	adcError = 1;
+	break; // Exit from main DAQ loop
       }
       //printf("Read %d event(s) with total size %d bytes\n",numEvents,readSize);
 
@@ -907,7 +925,9 @@ int DAQ_readdata ()
 	ret = CAEN_DGTZ_GetEventInfo(Handle,buffer,readSize,iEv,&eventInfo,&eventPtr);
 	if (ret != CAEN_DGTZ_Success) {
 	  printf("Unable to get event info from read buffer. Error code: %d\n",ret);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 
 	// *** EventInfo data structure (from CAENDigitizerType.h) ***
@@ -942,7 +962,9 @@ int DAQ_readdata ()
 	ret = CAEN_DGTZ_DecodeEvent(Handle,eventPtr,(void**)&event);
 	if (ret != CAEN_DGTZ_Success) {
 	  printf("Unable to decode event. Error code: %d\n",ret);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 
 	// *** Event data structures (from CAENDigitizerType.h) ***
@@ -999,7 +1021,9 @@ int DAQ_readdata ()
 	pEvtSize = create_pevent((void *)eventPtr,event,(void *)outEvtBuffer);
 	if (pEvtSize<0){
 	  printf("ERROR - Unable to copy decoded event to output event buffer. RC %d\n",pEvtSize);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 	
 	// If event is accepted, write it to file and update counters
@@ -1010,7 +1034,7 @@ int DAQ_readdata ()
 	  if (writeSize != pEvtSize) {
 	    printf("ERROR - Unable to write read data to file. Event size: %d, Write result: %d\n",
 		   pEvtSize,writeSize);
-	    return 2;
+	    return 2; // As this is an error while writing data to output file, no point in sending file tail
 	  }
 	  
 	  // Update file counters
@@ -1024,6 +1048,7 @@ int DAQ_readdata ()
 	}
 
       }
+      if (adcError) break; // Exit from main DAQ loop
 
     }
 
@@ -1049,14 +1074,14 @@ int DAQ_readdata ()
 	if (writeSize != fTailSize) {
 	  printf("ERROR - Unable to write file header to file. Tail size: %d, Write result: %d\n",
 		 fTailSize,writeSize);
-	  return 2;
+	  return 2; // As this is an error while writing data to output file, no point in sending file tail
 	}
 	fileSize[fileIndex] += fTailSize;
 
 	// Close old output file and show some info about counters
 	if (close(fileHandle) == -1) {
 	  printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-	  return 2;
+	  return 2; // As this is an error while writing data to output file, no point in sending file tail
 	};
 	printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
@@ -1079,7 +1104,7 @@ int DAQ_readdata ()
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2; // No output file currently open: no point in sending file tail
 	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
@@ -1088,7 +1113,7 @@ int DAQ_readdata ()
 	  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 	  if (fileHandle == -1) {
 	    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-	    return 2;
+	    return 2; // No output file currently open: no point in sending file tail
 	  }
 	  fileTOpen[fileIndex] = t_now;
 	  fileSize[fileIndex] = 0;
@@ -1105,7 +1130,7 @@ int DAQ_readdata ()
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
 		   fHeadSize,writeSize);
-	    return 2;
+	    return 2; // As this is an error while writing data to output file, no point in sending file tail
 	  }
 	  fileSize[fileIndex] += fHeadSize;
 
@@ -1133,6 +1158,7 @@ int DAQ_readdata ()
   }
 
   // Tell user what stopped DAQ
+  if ( adcError ) printf("=== Stopping DAQ on ADC access or data handling error ===\n");
   if ( BreakSignal ) printf("=== Stopping DAQ on interrupt %d ===\n",BreakSignal);
   if ( tooManyOutputFiles ) printf("=== Stopping DAQ after writing %d data files ===\n",fileIndex);
   if ( access(Config->quit_file,F_OK) != -1 )
@@ -1178,6 +1204,11 @@ int DAQ_readdata ()
     // Update file counter
     fileIndex++;
 
+  }
+
+  if (adcError) {
+    printf("DAQ was stopped because of an error related to ADC access or data handling: aborting\n");
+    return 2;
   }
 
   // Stop digitizer acquisition

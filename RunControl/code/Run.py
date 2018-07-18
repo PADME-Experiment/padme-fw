@@ -158,6 +158,8 @@ class Run:
         self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
         self.stream_head = self.run_name
 
+        self.trigger_node = "localhost"
+
         self.merger_node = "localhost"
         self.merger_node_list = []
 
@@ -457,7 +459,7 @@ class Run:
             # More efficient if we give a single (long) ssh command
             stream_list = ""
             for adc in (self.adcboard_list):
-                if adc.node_id != self.merger.node_id: stream_list = " ".join(stream_list,adc.output_stream_zsup)
+                if adc.node_id != self.merger.node_id: stream_list += " %s"%adc.output_stream_zsup
             if stream_list:
                 command = "ssh -n -i %s %s '( mkfifo %s )'"%(self.ssh_id_file,self.merger.node_ip,stream_list)
                 print command
@@ -585,9 +587,10 @@ class Run:
 
         print "Creating merger input list file %s"%self.merger.input_list
         f = open(self.merger.input_list,"w")
-        for adcboard in self.adcboard_list:
-            f.write("%d %s\n"%(adcboard.board_id,adcboard.output_stream_zsup))
+        for adcboard in self.adcboard_list: f.write("%d %s\n"%(adcboard.board_id,adcboard.output_stream_zsup))
+        f.write("%d %s\n"%(99,self.trigger.output_stream))
         f.close()
+        
 
     def create_merger_output_list(self):
 
@@ -714,9 +717,24 @@ class Run:
         # Set executable
         trigger.executable = self.trigger_executable
 
+        # Lock file (will contain PID of process)
+        trigger.lock_file = "%s_trigger"%self.lock_file_head
+
+        # Control files needed to start/stop trigger generation
+        trigger.start_file = self.trig_start_file
+        trigger.quit_file  = self.trig_stop_file
+
+        # Status files for initialization
+        trigger.initok_file = "%s_trigger"%self.initok_file_head
+        trigger.initfail_file = "%s_trigger"%self.initfail_file_head
+
         # Set node where Trigger will run
         trigger.node_id = self.db.get_node_id(self.trigger_node)
         trigger.node_ip = self.db.get_node_daq_ip(trigger.node_id)
+
+        # Define total DAQ time (default: 0, i.e. run forever)
+        # In most cases the default is what you want
+        trigger.total_daq_time = self.total_daq_time
 
     def configure_merger(self,merger):
 
@@ -877,6 +895,15 @@ class Run:
                 command = "ssh -n -i %s %s '( rm -f %s %s %s %s)'"%(self.ssh_id_file,adc.node_ip,adc.initok_file_daq,adc.initok_file_zsup,adc.initfail_file_daq,adc.initfail_file_zsup)
                 print command
                 os.system(command)
+
+        # Remove initok/initfail files on Trigger node
+        if (self.trigger.node_id == 0):
+            if (os.path.exists(self.trigger.initok_file)):   os.remove(self.trigger.initok_file)
+            if (os.path.exists(self.trigger.initfail_file)): os.remove(self.trigger.initfail_file)
+        else:
+            command = "ssh -n -i %s %s '( rm -f %s %s)'"%(self.ssh_id_file,self.trigger.node_ip,self.trigger.initok_file,self.trigger.initfail_file)
+            print command
+            os.system(command)
 
         # Stop all receiving nc processes on the merger nodes (clumsy but could not find another way)
         if (self.merger.node_id == 0):

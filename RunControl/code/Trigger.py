@@ -8,9 +8,7 @@ from PadmeDB  import PadmeDB
 
 class Trigger:
 
-    def __init__(self,b_id):
-
-        self.board_id = b_id
+    def __init__(self):
 
         # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
         # Default to current dir if not set
@@ -95,9 +93,9 @@ class Trigger:
         cfgstring = ""
         cfgstring += "executable\t\t"+self.executable+"\n"
 
-        cfgstring += "config_file\t\t"+self.config_file_daq+"\n"
-        cfgstring += "log_file\t\t"+self.log_file_daq+"\n"
-        cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
+        cfgstring += "config_file\t\t"+self.config_file+"\n"
+        cfgstring += "log_file\t\t"+self.log_file+"\n"
+        cfgstring += "lock_file\t\t"+self.lock_file+"\n"
 
         cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
 
@@ -109,11 +107,11 @@ class Trigger:
 
         cfgstring += "start_file\t\t"+self.start_file+"\n"
         cfgstring += "quit_file\t\t"+self.quit_file+"\n"
-        cfgstring += "initok_file\t\t"+self.initok_file_daq+"\n"
-        cfgstring += "initfail_file\t\t"+self.initfail_file_daq+"\n"
+        cfgstring += "initok_file\t\t"+self.initok_file+"\n"
+        cfgstring += "initfail_file\t\t"+self.initfail_file+"\n"
 
         cfgstring += "output_mode\t\tSTREAM\n"
-        cfgstring += "output_stream\t\t"+self.output_stream_daq+"\n"
+        cfgstring += "output_stream\t\t"+self.output_stream+"\n"
 
         cfgstring += "total_daq_time\t\t"+repr(self.total_daq_time)+"\n"
 

@@ -3,7 +3,8 @@
 
 #include "Rtypes.h"
 
-#include "ADCEventTags.hh"
+//#include "ADCEventTags.hh"
+#include "EventTags.hh"
 
 class ADCEvent
 {

@@ -65,6 +65,7 @@ void ADCBoard::Init()
   }
 
   fFirstEvent = 1;
+  fMissingEvent = 0;
 
 }
 
@@ -118,6 +119,13 @@ int ADCBoard::NextEvent()
   int dT; // Delta time between two clock counters
 
   if (fFinished) return 0;
+
+  // If current event was not used in previous trigger, use it again
+  if (fMissingEvent) {
+    printf("ADCBoard::NextEvent - WARNING - Current event was not used by previous trigger: see if it is usable now\n");
+    fMissingEvent = 0;
+    return 1;
+  }
 
   unsigned int board_in_time = 0;
   while (! board_in_time) {
@@ -208,6 +216,8 @@ int ADCBoard::NextEvent()
 
   if (fCfg->Verbose()>=2) printf("- Board %d size %u clock %u total clock %llu\n",fBoardId,fEventSize,fClockCounter,fTotalClockCounter);
 
+  fMissingEvent = 0;
+
   return 1; // An in-time event was read
 
 }
@@ -256,6 +266,7 @@ int ADCBoard::ReadFileHead()
     fFileHandle.read((char*)fBuffer+4,4*(ADCEVENT_V03_FHEAD_LEN-1));
     fFiles[fCurrentFile].SetIndex( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_FILEINDEX_LIN] & ADCEVENT_V03_FILEINDEX_BIT) >> ADCEVENT_V03_FILEINDEX_POS) );
     fFiles[fCurrentFile].SetRunNumber( (Int_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_RUNNUMBER_LIN] & ADCEVENT_V03_RUNNUMBER_BIT) >> ADCEVENT_V03_RUNNUMBER_POS) );
+    fFiles[fCurrentFile].SetBoardId( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_HBOARDID_LIN] & ADCEVENT_V03_HBOARDID_BIT) >> ADCEVENT_V03_HBOARDID_POS) );
     fFiles[fCurrentFile].SetBoardSN( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_BOARDSN_LIN] & ADCEVENT_V03_BOARDSN_BIT) >> ADCEVENT_V03_BOARDSN_POS) );
     fFiles[fCurrentFile].SetStartTime( (UInt_t)((((UInt_t*)fBuffer)[ADCEVENT_V03_TTAGSOF_LIN] & ADCEVENT_V03_TTAGSOF_BIT) >> ADCEVENT_V03_TTAGSOF_POS) );
 

@@ -18,6 +18,9 @@ class Run:
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
+        # Get base port number for network tunnels from PADME_RC_TUNNEL_BASE_PORT
+        self.base_port_number = int(os.getenv('PADME_RC_TUNNEL_BASE_PORT',"31400"))
+
         # Define id file for passwordless ssh command execution
         self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
 
@@ -49,9 +52,6 @@ class Run:
 
         # Connect to database services
         self.db = PadmeDB()
-
-        # Define base port number for network tunnels
-        self.base_port_number = 31400
 
         # Do not define a default setup
         self.setup = ""

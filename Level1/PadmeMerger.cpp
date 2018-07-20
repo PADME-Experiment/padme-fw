@@ -178,6 +178,12 @@ int main(int argc, char* argv[])
 
       } else {
 
+	// Up to 32 boards can be accepted in current setup
+	if (bid>=32) {
+	  printf("*** ERROR *** Out-of-bound board id specified in input list: %d. Aborting",bid);
+	  exit(1);
+	}
+
 	// Find board with correct board id or add it to list if new
 	std::vector<ADCBoard*>::iterator it;
 	for (it = boards.begin(); it != boards.end(); ++it) {
@@ -282,10 +288,16 @@ int main(int argc, char* argv[])
 
   unsigned int nEOR, trigEOR;
   unsigned int NumberOfEvents = 0;
+  unsigned int EventStatus; // Event status: only lower 16bits are used
+  unsigned int UsedADCBoards; // Bit mask of ADC boards used in current event
   while(1){
 
     if (cfg->Verbose()>=1)
       printf("=== Processing event %8u ===\n",NumberOfEvents);
+
+    // Initialize EventStatus and UsedADCBoards
+    EventStatus = (1 << EVENT_V03_STATUS_ISCOMPLETE_BIT); // Assume event is complete
+    UsedADCBoards = 0x00000000; // No boards present yet
 
     // Get next trigger event
     trigEOR = 0;
@@ -317,7 +329,7 @@ int main(int argc, char* argv[])
     if (NumberOfEvents == 0) {
 
       // All the info we need to create the file header is now available
-      // (data format version and board serial numbers)
+      // (data format version, board ids, and board serial numbers)
 
       // Create file header structure
       unsigned int fbuff;
@@ -328,18 +340,20 @@ int main(int argc, char* argv[])
       printf("Version is %d\n",boards[0]->File(0)->GetVersion());
       fbuff = (EVENT_FILE_HEAD_TAG << 28) + ( (boards[0]->File(0)->GetVersion() & 0x0fff) << 16 );
       memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+
       // Second line: run number
       fbuff = cfg->RunNumber();
       memcpy(file_header+header_size,&fbuff,4); header_size += 4;
+
       // Third line: number of ADC boards
       fbuff = (boards.size() & 0xffffffff);
       memcpy(file_header+header_size,&fbuff,4); header_size += 4;
-      // Boards serial numbers
+
+      // Several lines with boards ids (8bits) and serial numbers (24bits)
       for(unsigned int i=0; i<boards.size(); i++) {
-	printf("Board %u has SN %u\n",i,boards[i]->GetSerialNumber());
-	fbuff = (boards[i]->GetSerialNumber() & 0xffffffff);
-	memcpy(file_header+header_size,&fbuff,4);
-	header_size += 4;
+	printf("Board %u has id %d and SN %u\n",i,boards[i]->GetBoardId(),boards[i]->GetSerialNumber());
+	fbuff = ( (boards[i]->GetBoardId() & 0xff) << 24 ) + (boards[i]->GetSerialNumber() & 0x00ffffff);
+	memcpy(file_header+header_size,&fbuff,4); header_size += 4;
       }
       // Last line: time when file is opened
       time_t t_open;
@@ -356,142 +370,6 @@ int main(int argc, char* argv[])
     }
 
     /*
-    // Compute trigger time for this event
-    if (NumberOfEvents == 0) {
-      trigCount = trigger->GetTriggerTime();
-      trigCountOld = trigCount;
-      trigTotalCount = 0;
-    } else {
-      trigCount = trigger->GetTriggerTime(); // Get current clock counter
-      trig_dT = trigCount-trigCountOld; // Get difference with previous clock counter
-      if (trig_dT<0) trig_dT += (1<<40); // Compensate for clock counter roll over (NEED VERIFICATION!)
-      trigTotalCount += trig_dT; // Add time difference to total clock counter (64bits -> 2.3E11s @ 80MHz)
-      trigCountOld = trigCount; // Save current clock counter
-    }
-
-    unsigned int all_in_time = 0;
-    nEOR = 0; trigEOR = 0;
-    while ( (! all_in_time) && (! nEOR) && (! trigEOR) ) {
-
-      //unsigned int bmax = 0; // Find board with largest time since start of run 
-
-      // Get timing information for current event of each board
-      for(unsigned int b=0; b<boards.size(); b++) {
-
-	unsigned int board_in_time = 0;
-	unsigned int board_EOR = 0;
-	while ( (! board_in_time) && (! board_EOR) ) {
-
-	  board_in_time = 1;
-
-	  // First check if board's group mask is consistent with that of first event (do we need this?)
-	  unsigned char grMsk = boards[b]->GetGroupMask();
-	  if (NumberOfEvents == 0 ) groupMaskRef[b] = grMsk;
-	  if (grMsk != groupMaskRef[b]) {
-	    board_in_time = 0;
-	    printf("*** Board %2d - Inconsistent group mask (exp: 0x%1x fnd: 0x%1x) - Skipping event %8u\n",boards[b]->GetBoardId(),groupMaskRef[b],grMsk,boards[b]->GetEventCounter());
-	    if ( boards[b]->NextEvent() == 0 ) {
-	      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-	      board_EOR = 1;
-	    }
-	  }
-
-	  // Check if board internal times are aligned. Stop the run if they are not
-	  // This may change when all time counters are correctly aligned by S/IN signal
-	  TT_evt = 0;
-	  boards[b]->GetTriggerTimeTags(TT_grp);
-	  unsigned int first_active_group = 1;
-	  for (unsigned int g=0; g<4; g++) {
-	    if (grMsk & 1<<g) {
-	      if (first_active_group) { // This is the first active group: get its time as reference for event
-		TT_evt = TT_grp[g];
-		first_active_group = 0;
-	      } else {
-		// Other groups are present: verify they are all in time (0x0010 clock cycles tolerance i.e. ~136ns)
-		dTb = TT_evt-TT_grp[g];
-		if ( std::abs(dTb) >= 0x0010 ) {
-		  if (NumberOfEvents == 0) { // If this happens on first event stop the run
-		    printf("*** FATAL ERROR - Board %2d - Internal time mismatch at Start of Run\n",boards[b]->GetBoardId());
-		    //root->Exit();
-		    exit(1);
-		  } else {
-		    board_in_time = 0;
-		    printf("*** Board %2d - Internal time mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->GetEventCounter());
-		    if ( boards[b]->NextEvent() == 0 ) {
-		      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-		      board_EOR = 1;
-		    }
-		    break; // Break loop on trigger groups
-		  }
-		}
-	      }
-	    }
-	  }
-
-	  // If board reached EOR, stop processing this board
-	  if (board_EOR) {
-
-	    printf("WARNING: board %d reached end of run because of internal mismatches.\n",b);
-
-	  } else {
-
-	    if (NumberOfEvents == 0) {
-
-	      // Board is in time: save current counter and start total time from it
-	      dT = 0;
-	      CC[b] = 0;
-	      TT_old[b] = TT_evt;
-
-	    } else {
-
-	      // Board is in time: update its total clock counter
-	      dT = TT_evt-TT_old[b]; // Get time interval since last readout
-	      if (dT<0) dT += (1<<30); // Check if clock counter rolled over
-	      CC[b] += dT; // Add latest time interval to global clock counter
-	      TT_old[b] = TT_evt;
-
-	    }
-
-	    //// Check if this is the highest time in the current set of board times
-	    //if (CC[b]>CC[bmax]) bmax = b;
-
-	    if (cfg->Verbose()>=2) {
-	      printf("- Board %2d NEv %8u Dt %f (0x%08x) T %f (0x%016llx)\n",
-		     b,boards[b]->GetEventCounter(),dT*8.5E-9,dT,CC[b]*8.5E-9,CC[b]);
-	    }
-
-	  }
-
-	} // End on loop to get single board in-time event
-
-	if (board_EOR) nEOR++;
-
-      
-      } // End of loop over boards
-
-      if (nEOR != 0) {
-
-	// If one or more boards reached EOR, there is no need to continue
-	printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
-	break; // Exit while loop checking for in-time events
-
-      }
-    */
-
-      //// Verify if all boards are in time (0x0010 clock cycles tolerance i.e. ~136ns)
-      //all_in_time = 1;
-      //for(unsigned int b=0; b<boards.size(); b++) {
-      //	if ( CC[bmax]-CC[b] >= 0x0010 ) {
-      //	  // This board is still on an earlier event: skip to next event
-      //	  all_in_time = 0;
-      //	  printf("*** Board %2d - External mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-      //	  if ( boards[b]->NextEvent() == 0 ) {
-      //	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-      //	    nEOR++;
-      //	  }
-      //	}
-      //}
-
     unsigned int skipped_trigger;
     unsigned int all_in_time = 0;
     nEOR = 0; trigEOR = 0;
@@ -545,20 +423,57 @@ int main(int argc, char* argv[])
       }
 
     } // End of while loop checking for in-time events
+    */
+
+    // Verify if all boards are in time with the trigger (10ns tolerance)
+    trigTime = lrint(trigger->GetTotalClockCounter()/TRIGGER_CLOCK_FREQUENCY);
+    nEOR = 0;
+    for(unsigned int b=0; b<boards.size(); b++) {
+
+      boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
+      dT_board_trig = boardTime-trigTime;
+
+      while (dT_board_trig < -INTIME_TOLERANCE_NS) {
+	// Board time is earlier than trigger time: this should be impossible but we check for it anyway
+	printf("*** Board %2d - Board time %llu less then Trigger time %llu: skip event and try to recover\n",boards[b]->GetBoardId(),boardTime,trigTime);
+	if ( ! boards[b]->NextEvent() ) {
+	  printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
+	  nEOR++;
+	  break;
+	}
+	boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
+	dT_board_trig = boardTime-trigTime;
+      }
+
+      if (dT_board_trig > INTIME_TOLERANCE_NS) {
+	// Board time is after trigger time, i.e. board probably missed a trigger: tag it as missing
+	boards[b]->SetMissingEvent();
+      }
+
+    }
 
     // If one or more files reached EOR, stop processing events
-    if (nEOR || trigEOR) {
+    if (nEOR) {
       printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
       break; // Exit from main loop
     }
 
-    // The event is complete and in time: send all data to next Level1 process
+    // Create board mask and check for event completeness
+    for(unsigned int b=0; b<boards.size(); b++) {
+      if (boards[b]->EventIsMissing()) {
+	EventStatus = 0; // Need to use logical operator but no time for this now
+      } else {
+	UsedADCBoards |= (1 << boards[b]->GetBoardId()); // Set ADC board bit in mask
+      }
+    }
+
+    // Send all data to next Level1 process
 
     // Merging time is counted from the first in-time event
     if (NumberOfEvents == 0) time(&time_first);
 
     // Compute total size of event in 4-bytes words
-    UInt_t total_event_size = 8+3; // Header and trigger info
+    UInt_t total_event_size = EVENT_V03_EVENTHEAD_LEN+TRIGEVENT_V03_EVENTHEAD_LEN; // Header and trigger info
     // Add size of all boards
     for (unsigned int b=0; b<boards.size(); b++) {
       total_event_size += boards[b]->GetEventSize();
@@ -572,28 +487,35 @@ int main(int argc, char* argv[])
     }
 
     // Create event header structure
-    char evt_h[4*8];
+    char evt_h[4*EVENT_V03_EVENTHEAD_LEN];
     unsigned int evt_h_size = 0;
     unsigned int evt_h_buff;
-    evt_h_buff = (EVENT_HEADER_TAG << 28) + (total_event_size & 0x0fffffff);
+
+    // Line 0: tag + event size (in 4bytes words)
+    evt_h_buff = (EVENT_HEADER_TAG << 28) + ( (total_event_size & 0x0fffffff) << EVENT_EVENTSIZE_POS );
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
-    memcpy(evt_h+evt_h_size,&NumberOfEvents,4); evt_h_size += 4;
-    //evt_h_buff = (unsigned int)now.tv_sec;
-    //memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
-    //evt_h_buff = (unsigned int)now.tv_nsec;
-    //memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
-    unsigned int now_sec = (now.tv_sec & 0xffffffff);
-    memcpy(evt_h+evt_h_size,&now_sec,4); evt_h_size += 4;
-    unsigned int now_nsec = (now.tv_nsec & 0xffffffff);
-    memcpy(evt_h+evt_h_size,&now_nsec,4); evt_h_size += 4;
-    // Run Time is the number of 80MHz clock cycles since the beginning of the run
-    unsigned long int trig_clock = trigger->GetTotalClockCounter();
+
+    // Line 1: event number
+    evt_h_buff = ( (NumberOfEvents & 0xffffffff) << EVENT_V03_EVENTNUMBER_POS );
+    memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
+
+    // Line 2+3: event time sec+nsec
+    evt_h_buff = ( (now.tv_sec & 0xffffffff) << EVENT_V03_EVENTTIMESEC_POS );
+    memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
+    evt_h_buff = ( (now.tv_nsec & 0xffffffff) << EVENT_V03_EVENTTIMENSEC_POS );
+    memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
+
+    // Line 4+5: run time, i.e. the number of 80MHz clock cycles counted by the trigger controller since the beginning of the run
+    unsigned long long int trig_clock = trigger->GetTotalClockCounter();
     memcpy(evt_h+evt_h_size,&trig_clock,8); evt_h_size += 8;
+
+    // Line 6: event status + trigger mask
     // Trigger mask currently contains a copy of the 6bits mask from the trigger
-    evt_h_buff = trigger->GetTriggerMask();
+    evt_h_buff = ( (EventStatus & 0xffff) << EVENT_V03_EVENTSTATUS_POS ) + ( (trigger->GetTriggerMask() & 0xffff) << EVENT_V03_TRIGMASK_POS );
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
-    // Event status not defined yet: set it to 0
-    evt_h_buff = 0;
+
+    // Line 7: bit mask of boards used in current event
+    evt_h_buff = ( (UsedADCBoards & 0xffffffff) << EVENT_V03_ADCBOARDUSED_POS );
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
 
     // Send event header to current output stream
@@ -601,10 +523,10 @@ int main(int argc, char* argv[])
     output_stream_size[CurrentOutputStream] += evt_h_size;
 
     // Copy trigger event structure to output (3 words, no need to change anything)
-    output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*3);
-    output_stream_size[CurrentOutputStream] += 4*3;
+    output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*TRIGEVENT_V03_EVENTHEAD_LEN);
+    output_stream_size[CurrentOutputStream] += 4*TRIGEVENT_V03_EVENTHEAD_LEN;
 
-    // Loop over all boards and send its event data to output stream
+    // Loop over all boards and send their event data to output stream
     for(unsigned int b=0; b<boards.size(); b++) {
       unsigned int size = 4*boards[b]->GetEventSize();
       output_stream_handle[CurrentOutputStream].write((const char*)boards[b]->Buffer(),size);

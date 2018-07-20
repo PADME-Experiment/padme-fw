@@ -215,16 +215,20 @@ int ZSUP_readdata ()
   }
   printf("- Run number %d\n",run_number);
 
-  // Third line: board serial number (save it to DB)
-  unsigned int board_sn;
-  memcpy(&board_sn,inEvtBuffer+8,4);
-  printf("- Board S/N %d\n",board_sn);
+  // Third line: board_id and board serial number (save it to DB)
+  line = (unsigned int *)(inEvtBuffer+8);
+  int board_id = ( (*line & 0xff000000) >> 24 );
+  unsigned int board_sn = (*line & 0x00ffffff);
+  printf("- Board id %d S/N %u\n",board_id,board_sn);
+  if (board_id != Config->board_id) {
+    printf("WARNING - Board id from stream not consistent with that from configuration: stream %d config %d\n",board_id,Config->board_id);
+  }
 
   // Save board serial number to DB for this process
   if ( Config->run_number ) {
-    char line[2048];
-    sprintf(line,"%d",board_sn);
-    db_add_cfg_para(Config->process_id,"board_sn",line);
+    char outstr[2048];
+    sprintf(outstr,"%u",board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",outstr);
   }
 
   // Fourth line: start of file time tag
@@ -285,7 +289,7 @@ int ZSUP_readdata ()
   }
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,run_number,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,run_number,board_id,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -469,7 +473,7 @@ int ZSUP_readdata ()
 	  }
 
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,run_number,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,run_number,board_id,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",

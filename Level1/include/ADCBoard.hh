@@ -43,6 +43,10 @@ class ADCBoard
   UInt_t GetSerialNumber();
   UInt_t GetEventCounter();
 
+  void SetMissingEvent()   { fMissingEvent = 1; }
+  void ResetMissingEvent() { fMissingEvent = 0; }
+  UInt_t EventIsMissing()  { return fMissingEvent; }
+
   UInt_t GetClockCounter() { return fClockCounter; }
   ULong64_t GetTotalClockCounter() { return fTotalClockCounter; }
 
@@ -79,6 +83,7 @@ class ADCBoard
   UInt_t fVersion;
 
   UInt_t fFirstEvent;
+  UInt_t fMissingEvent;
   ULong64_t fTotalClockCounter;
   UInt_t fClockCounter;
 

@@ -132,6 +132,7 @@ int get_ConetNode()
 // Handle initial connection to digitizer. Return 0 if OK, >0 if error
 int DAQ_connect ()
 {
+
   CAEN_DGTZ_ErrorCode ret;
   CAEN_DGTZ_BoardInfo_t boardInfo;
   int linkNum,conetNode;
@@ -179,12 +180,13 @@ int DAQ_connect ()
   // Get board serial number and save it to DB
   Config->board_sn = boardInfo.SerialNumber;
   if ( Config->run_number ) {
-    char line[2048];
-    sprintf(line,"%d",Config->board_sn);
-    db_add_cfg_para(Config->process_id,"board_sn",line);
+    char outstr[2048];
+    sprintf(outstr,"%d",Config->board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",outstr);
   }
 
   return 0;
+
 }
 
 // Handle initialization of the digitizer. Return 0 if OK, >0 if error
@@ -852,7 +854,7 @@ int DAQ_readdata ()
   }
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
@@ -1125,7 +1127,7 @@ int DAQ_readdata ()
 	  }
 
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",

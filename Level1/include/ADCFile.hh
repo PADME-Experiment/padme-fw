@@ -28,6 +28,9 @@ class ADCFile
   void    SetRunNumber(Int_t v)  { fRunNumber = v; }
   Int_t   GetRunNumber()         { return fRunNumber; }
 
+  void    SetBoardId(UInt_t v)   { fBoardId = v; }
+  UInt_t  GetBoardId()           { return fBoardId; }
+
   void    SetBoardSN(UInt_t v)   { fBoardSN = v; }
   UInt_t  GetBoardSN()           { return fBoardSN; }
 
@@ -49,6 +52,7 @@ class ADCFile
   Int_t   fVersion;
   Int_t   fIndex;
   Int_t   fRunNumber;
+  Int_t   fBoardId;
   UInt_t  fBoardSN;
   UInt_t  fStartTime;
   UInt_t  fEndTime;

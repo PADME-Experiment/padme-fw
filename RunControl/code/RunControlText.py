@@ -2,6 +2,7 @@
 
 import socket
 import sys
+import os
 import readline
 
 # Enable line editing for raw_input()
@@ -11,11 +12,14 @@ class RunControlText:
 
     def __init__(self):
 
+        # Get port to use for RC connection from PADME_RC_PORT or use port 10000 as default
+        self.runcontrol_port = int(os.getenv('PADME_RC_PORT',"10000"))
+
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
         # Connect the socket to the port where the server is listening
-        server_address = ('localhost', 10000)
+        server_address = ('localhost', self.runcontrol_port)
         print 'Connecting to RunControl server on host %s port %s' % server_address
         try:
             self.sock.connect(server_address)

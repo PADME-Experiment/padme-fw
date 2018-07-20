@@ -171,7 +171,7 @@ int FAKE_readdata ()
   fileEvents[fileIndex] = 0;
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,Config->run_number,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -267,7 +267,7 @@ int FAKE_readdata ()
 	  fileEvents[fileIndex] = 0;
 
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,Config->run_number,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",

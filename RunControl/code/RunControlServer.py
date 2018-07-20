@@ -17,6 +17,9 @@ class RunControlServer:
         # Default to current dir if not set
         self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
+        # Get port to use for RC connection from PADME_RC_PORT or use port 10000 as default
+        self.runcontrol_port = int(os.getenv('PADME_RC_PORT',"10000"))
+
         # Define id file for passwordless ssh command execution
         self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
 
@@ -101,7 +104,7 @@ class RunControlServer:
         self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 
         # Bind the socket to the port
-        server_address = ('localhost',10000)
+        server_address = ('localhost',self.runcontrol_port)
         print "Starting server socket on %s port %s"%server_address
         try:
             self.sock.bind(server_address) # Listen for incoming connections

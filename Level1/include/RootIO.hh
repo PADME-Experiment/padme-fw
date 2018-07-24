@@ -39,6 +39,7 @@ public:
 		   unsigned long long int, // event clock time within run
 		   unsigned int,           // event trigger mask
 		   unsigned int,           // event status
+		   unsigned int,           // missing adc boards bit mask
 		   unsigned int,           // trigger mask
 		   unsigned int,           // trigger counter
 		   unsigned long long int, // trigger clock

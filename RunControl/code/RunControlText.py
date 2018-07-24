@@ -198,10 +198,10 @@ class RunControlText:
         while True:
             ans = self.get_answer()
             if (ans == "terminate_ok"):
-                print 'Run terminated correctly'
+                print "Run terminated correctly"
                 break
             elif (ans == "terminate_error"):
-                print 'Run terminated with errors'
+                print "Run terminated with errors"
                 break
             else:
                 print ans
@@ -217,7 +217,11 @@ class RunControlText:
         while True:
             ans = self.get_answer()
             if (ans == "run_started"):
-                print 'Run started correctly'
+                print "Run started correctly"
+                break
+            elif (ans == "unknown command"):
+                ans = self.ask_server("get_state")
+                print "Cannot use 'start_run' command while in '%s' state"%ans
                 break
             else:
                 print ans

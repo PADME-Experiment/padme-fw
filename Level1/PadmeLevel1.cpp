@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
   printf("- Input stream was created on %04d-%02d-%02d %02d:%02d:%02d\n",1900+stt->tm_year,stt->tm_mon+1,stt->tm_mday,stt->tm_hour,stt->tm_min,stt->tm_sec);
 
   // Add size of file header to input size counter
-  input_size += 16+number_of_boards*4;
+  input_size += 4*(4+number_of_boards);
 
   // Define some flags/counters to verify event structure consistency
   unsigned int header_found = 0;
@@ -231,6 +231,7 @@ int main(int argc, char* argv[])
   unsigned long long int event_run_time = 0;
   unsigned int event_trigger_mask = 0;
   unsigned int event_status = 0;
+  unsigned int missing_adcboards = 0;
 
   // Define variables to hold trigger information
   unsigned int trigger_mask = 0;
@@ -247,6 +248,55 @@ int main(int argc, char* argv[])
     // Check if tag is one of those allowed here
     if (tag != EVENT_FILE_TAIL_TAG && tag != EVENT_HEADER_TAG && tag != EVENT_TRIGGER_INFO_TAG && tag != EVENT_ADCBOARD_INFO_TAG) {
       printf("PadmeLevel1 - ERROR - Unknown tag 0x%1x found. Aborting\n",tag);
+    }
+
+    // If we found a new event header or the file tail, save previous event (if any) before proceeding
+    if ( (tag == EVENT_HEADER_TAG) || (tag == EVENT_FILE_TAIL_TAG) ) {
+
+      if (header_found) {
+
+	// Check if event is complete and size is consistent. Issue warning if they are not
+	if (! trigger_found) printf("PadmeLevel1 - WARNING - No Trigger information found in event %u",event_number);
+	if (adcboard_counter != number_of_boards) printf("PadmeLevel1 - WARNING - Expected data from %u ADC boards, only %u received in event %u",number_of_boards,adcboard_counter,event_number);
+	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u",total_event_size,event_size,event_number);
+
+	// Unpack info in all ADC boards
+	//for (unsigned int i=0; i<number_of_boards; i++) {
+	for (unsigned int i=0; i<adcboard_counter; i++) {
+	  unsigned int rc = boards[i]->UnpackEvent();
+	  if (rc) {
+	    printf("PadmeLevel1 - ERROR - Problem while unpacking event %u (rc=%u). Aborting\n",event_number,rc);
+	    input_stream_handle.close();
+	    root->Exit();
+	    exit(1);
+	  }
+	  // Add board serial number
+	  boards[i]->Event()->SetBoardSN(board_sn[i]);
+	}
+
+	// Send event to ROOT
+	//if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,trigger_mask,trigger_counter,trigger_clock,number_of_boards,boards) != ROOTIO_OK) {
+	if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,missing_adcboards,trigger_mask,trigger_counter,trigger_clock,adcboard_counter,boards) != ROOTIO_OK) {
+	  printf("PadmeLevel1 - ERROR while writing event %u (evt nr %u) to root file. Aborting\n",number_of_events,event_number);
+	  input_stream_handle.close();
+	  root->Exit();
+	  exit(1);
+	}
+
+	// Increase event counter
+	number_of_events++;
+	if (number_of_events%100 == 0) {
+	  printf("- Written event %u - Run %d Event %u\n",number_of_events,run_number,event_number);
+	}
+
+	// Reset counters for next event
+	header_found = 0;
+	trigger_found = 0;
+	adcboard_counter = 0;
+	event_size = 0;
+
+      }
+
     }
 
     // End of File procedure
@@ -277,7 +327,7 @@ int main(int argc, char* argv[])
       printf("- Input stream was finalized on %04d-%02d-%02d %02d:%02d:%02d\n",1900+ett->tm_year,ett->tm_mon+1,ett->tm_mday,ett->tm_hour,ett->tm_min,ett->tm_sec);
 
       // Add size of file tail and check if total input size is consistent with that reported by file tail
-      input_size += 16;
+      input_size += 4*4;
       if (eof_size != input_size) {
 	printf("PadmeLevel1 - WARNING - Input stream reports %llu size but %llu bytes were received.\n",eof_size,input_size);
       }
@@ -290,15 +340,15 @@ int main(int argc, char* argv[])
     if (tag == EVENT_HEADER_TAG) {
 
       // Check if previous event was correctly completed
-      if (header_found) {
-	printf("PadmeLevel1 - ERROR - Event is not complete but new Event Header found. Aborting\n");
-	input_stream_handle.close();
-	exit(1);
-      }
+      //if (header_found) {
+      //	printf("PadmeLevel1 - ERROR - Event is not complete but new Event Header found. Aborting\n");
+      //	input_stream_handle.close();
+      //	exit(1);
+      //}
       header_found = 1;
 
       // First word: total size of this event (4-bytes words!)
-      total_event_size = ((buff & 0x0fffffff) >> 0);
+      total_event_size = ((buff & EVENT_EVENTSIZE_BIT) >> EVENT_EVENTSIZE_POS);
 
       // Second word: event number
       input_stream_handle.read((char*)&event_number,4);
@@ -312,15 +362,17 @@ int main(int argc, char* argv[])
       // Fifth+sixth words: run time of event
       input_stream_handle.read((char*)&event_run_time,8);
 
-      // Seventh word: trigger mask
-      input_stream_handle.read((char*)&event_trigger_mask,4);
+      // Seventh word: event status+trigger mask
+      input_stream_handle.read((char*)&buff,4);
+      event_status = ( (buff & EVENT_V03_EVENTSTATUS_BIT) >> EVENT_V03_EVENTSTATUS_POS );
+      event_trigger_mask = ( (buff & EVENT_V03_TRIGMASK_BIT) >> EVENT_V03_TRIGMASK_POS );
 
-      // Eighth word: event status
-      input_stream_handle.read((char*)&event_status,4);
+      // Eighth word: missing adc boards bit mask
+      input_stream_handle.read((char*)&missing_adcboards,4);
 
       // Add header size to event size and to total input size
       event_size += 32;
-      input_size += 32;
+      input_size += 4*8;
 
     }
 
@@ -353,7 +405,7 @@ int main(int argc, char* argv[])
 
       // Add trigger info size to event size and total input size
       event_size += 12;
-      input_size += 12;
+      input_size += 4*3;
 
     }
 
@@ -413,6 +465,7 @@ int main(int argc, char* argv[])
 
     }
 
+    /*
     // Check if event is complete
     if (header_found && trigger_found && (adcboard_counter == number_of_boards)) {
 
@@ -455,6 +508,7 @@ int main(int argc, char* argv[])
       event_size = 0;
 
     }
+    */
 
   }
 

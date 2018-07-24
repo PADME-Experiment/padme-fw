@@ -161,6 +161,7 @@ int RootIO::FillRawEvent(int run_number,
 			 unsigned long long int event_run_time,
 			 unsigned int event_trigger_mask,
 			 unsigned int event_status,
+			 unsigned int missing_adcboards,
 			 unsigned int trigger_mask,
 			 unsigned int trigger_counter,
 			 unsigned long long int trigger_clock,
@@ -188,9 +189,12 @@ int RootIO::FillRawEvent(int run_number,
   // Set event status
   fTRawEvent->SetEventStatus((UInt_t)event_status);
 
+  // Set missing boards bit mask
+  fTRawEvent->SetMissingADCBoards((UInt_t)missing_adcboards);
+
   // Print event info when in verbose mode
   if (fConfig->Verbose() >= 1) {
-    printf("RootIO - Run %d Event %u Time %s Clock %llu Trig 0x%08x Status 0x%08x\n",run_number,event_number,systime.AsString(),event_run_time,event_trigger_mask,event_status);
+    printf("RootIO - Run %d Event %u Time %s Clock %llu Trig 0x%08x Status 0x%08x Missing boards 0x%08x\n",run_number,event_number,systime.AsString(),event_run_time,event_trigger_mask,event_status,missing_adcboards);
   }
 
   // Loop over all ADC boards

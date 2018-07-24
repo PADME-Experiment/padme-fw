@@ -45,6 +45,12 @@ class TRawEvent : public TObject
   void EventStatusUnsetBit(UChar_t b) { fEventStatus &= ~(1U << b); }
   Bool_t EventStatusGetBit(UChar_t b) { return ((fEventStatus >> b) & 1U) ? true : false;}
 
+  void SetMissingADCBoards(UInt_t m) { fMissingADCBoards = m; }
+  UInt_t GetMissingADCBoards() { return fMissingADCBoards; }
+  void MissingADCBoardsSetBit(UChar_t b) { fMissingADCBoards |= (1U << b); }
+  void MissingADCBoardsUnsetBit(UChar_t b) { fMissingADCBoards &= ~(1U << b); }
+  Bool_t MissingADCBoardsGetBit(UChar_t b) { return ((fMissingADCBoards >> b) & 1U) ? true : false;}
+
   TTriggerInfo* TriggerInfo() { return fTriggerInfo; }
 
   UChar_t GetNADCBoards() { return fNADCBoards; }
@@ -61,6 +67,7 @@ class TRawEvent : public TObject
 
   UInt_t fEventTrigMask;
   UInt_t fEventStatus;
+  UInt_t fMissingADCBoards;
 
   TTriggerInfo* fTriggerInfo;
 

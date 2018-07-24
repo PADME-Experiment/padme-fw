@@ -289,15 +289,14 @@ int main(int argc, char* argv[])
   unsigned int nEOR, trigEOR;
   unsigned int NumberOfEvents = 0;
   unsigned int EventStatus; // Event status: only lower 16bits are used
-  unsigned int UsedADCBoards; // Bit mask of ADC boards used in current event
+  unsigned int MissingADCBoards; // Bit mask of ADC boards missing in current event
   while(1){
 
-    if (cfg->Verbose()>=1)
-      printf("=== Processing event %8u ===\n",NumberOfEvents);
+    //if (cfg->Verbose()>=1) printf("=== Processing event %8u ===\n",NumberOfEvents);
 
-    // Initialize EventStatus and UsedADCBoards
+    // Initialize EventStatus and MissingADCBoards
     EventStatus = (1 << EVENT_V03_STATUS_ISCOMPLETE_BIT); // Assume event is complete
-    UsedADCBoards = 0x00000000; // No boards present yet
+    MissingADCBoards = 0x00000000; // No board is missing yet
 
     // Get next trigger event
     trigEOR = 0;
@@ -433,9 +432,13 @@ int main(int argc, char* argv[])
       boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
       dT_board_trig = boardTime-trigTime;
 
+      if (cfg->Verbose()>=2)
+	printf("Board %7u %16llu Trigger %4u %16llu dT %10lld\n",
+	       boards[b]->GetEventCounter(),boardTime,trigger->GetTriggerCounter(),trigTime,dT_board_trig);
+
       while (dT_board_trig < -INTIME_TOLERANCE_NS) {
 	// Board time is earlier than trigger time: this should be impossible but we check for it anyway
-	printf("*** Board %2d - Board time %llu less then Trigger time %llu: skip event and try to recover\n",boards[b]->GetBoardId(),boardTime,trigTime);
+	printf("*** Board %2d - Board time %llu less than Trigger time %llu: skip event and try to recover\n",boards[b]->GetBoardId(),boardTime,trigTime);
 	if ( ! boards[b]->NextEvent() ) {
 	  printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
 	  nEOR++;
@@ -447,6 +450,7 @@ int main(int argc, char* argv[])
 
       if (dT_board_trig > INTIME_TOLERANCE_NS) {
 	// Board time is after trigger time, i.e. board probably missed a trigger: tag it as missing
+	printf("*** Board %2d - Board time %llu greater than Trigger time %llu: setting board as MISSING in this event\n",boards[b]->GetBoardId(),boardTime,trigTime);
 	boards[b]->SetMissingEvent();
       }
 
@@ -458,12 +462,11 @@ int main(int argc, char* argv[])
       break; // Exit from main loop
     }
 
-    // Create board mask and check for event completeness
+    // Create missing boards mask and handle "Event complete" staus bit
     for(unsigned int b=0; b<boards.size(); b++) {
       if (boards[b]->EventIsMissing()) {
-	EventStatus = 0; // Need to use logical operator but no time for this now
-      } else {
-	UsedADCBoards |= (1 << boards[b]->GetBoardId()); // Set ADC board bit in mask
+	MissingADCBoards |= (1 << boards[b]->GetBoardId()); // Set ADC board bit in mask
+	EventStatus &= ( ~(1 << EVENT_V03_STATUS_ISCOMPLETE_BIT) ); // Reset "Event complete" status bit
       }
     }
 
@@ -476,7 +479,7 @@ int main(int argc, char* argv[])
     UInt_t total_event_size = EVENT_V03_EVENTHEAD_LEN+TRIGEVENT_V03_EVENTHEAD_LEN; // Header and trigger info
     // Add size of all boards
     for (unsigned int b=0; b<boards.size(); b++) {
-      total_event_size += boards[b]->GetEventSize();
+      if (! boards[b]->EventIsMissing()) total_event_size += boards[b]->GetEventSize();
     }
 
     // Get precise system time
@@ -514,8 +517,8 @@ int main(int argc, char* argv[])
     evt_h_buff = ( (EventStatus & 0xffff) << EVENT_V03_EVENTSTATUS_POS ) + ( (trigger->GetTriggerMask() & 0xffff) << EVENT_V03_TRIGMASK_POS );
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
 
-    // Line 7: bit mask of boards used in current event
-    evt_h_buff = ( (UsedADCBoards & 0xffffffff) << EVENT_V03_ADCBOARDUSED_POS );
+    // Line 7: bit mask of boards missing from current event
+    evt_h_buff = ( (MissingADCBoards & 0xffffffff) << EVENT_V03_MISSADCBOARDS_POS );
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
 
     // Send event header to current output stream
@@ -526,11 +529,16 @@ int main(int argc, char* argv[])
     output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*TRIGEVENT_V03_EVENTHEAD_LEN);
     output_stream_size[CurrentOutputStream] += 4*TRIGEVENT_V03_EVENTHEAD_LEN;
 
+    if (cfg->Verbose()>=1)
+      printf("Event %9u Status 0x%04x Trigger Mask 0x%04x Missing boards 0x%08x\n",NumberOfEvents,EventStatus,trigger->GetTriggerMask(),MissingADCBoards);
+
     // Loop over all boards and send their event data to output stream
     for(unsigned int b=0; b<boards.size(); b++) {
-      unsigned int size = 4*boards[b]->GetEventSize();
-      output_stream_handle[CurrentOutputStream].write((const char*)boards[b]->Buffer(),size);
-      output_stream_size[CurrentOutputStream] += size;
+      if (! boards[b]->EventIsMissing()) {
+	unsigned int size = 4*boards[b]->GetEventSize();
+	output_stream_handle[CurrentOutputStream].write((const char*)boards[b]->Buffer(),size);
+	output_stream_size[CurrentOutputStream] += size;
+      }
     }
 
     // Update counters for this stream
@@ -596,6 +604,12 @@ int main(int argc, char* argv[])
       if ( ! boards[b]->NextEvent() ) nEOR++;
     }
     n_test++;
+  }
+  if (nEOR<boards.size()) {
+    printf("WARNING - Only %u boards over %lu reached End of Run status. Stopping anyway but please check the board logs\n",nEOR,boards.size());
+  }
+  if (! trigEOR) {
+    printf("WARNING - Trigger did not reach End of Run status. Stopping anyway but please check the Trigger logs\n");
   }
 
   printf("Run %d closed after writing %u events in %lu s (%lu %lu)\n",cfg->RunNumber(),NumberOfEvents,time_last-time_first,time_last,time_first);

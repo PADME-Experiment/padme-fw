@@ -41,6 +41,7 @@ class Trigger:
         self.initok_file = "unset"
         self.initfail_file = "unset"
 
+        self.output_mode = "STREAM"
         self.output_stream = "unset"
 
         self.start_file = "unset"
@@ -79,8 +80,10 @@ class Trigger:
             m = re_param.search(l)
             if (m):
                 (p_name,p_value) = m.group(1,2)
-                if   (p_name == "daq_loop_delay"):    self.daq_loop_delay = int(p_value,0)
-                elif (p_name == "trigger_mask"):      self.trigger_mask = int(p_value,0)
+                if   (p_name == "trigger_mask"):      self.trigger_mask = int(p_value,0)
+                elif (p_name == "trigger_addr"):      self.trigger_addr = p_value
+                elif (p_name == "trigger_port"):      self.trigger_port = int(p_value,0)
+                elif (p_name == "daq_loop_delay"):    self.daq_loop_delay = int(p_value,0)
                 else:
                     print "Trigger - WARNING: unknown parameter found while reading config file: %s"%p_name
             else:
@@ -91,31 +94,35 @@ class Trigger:
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "executable\t\t"+self.executable+"\n"
+        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
+        cfgstring += "executable\t\t%s\n"%self.executable
+        cfgstring += "start_file\t\t%s\n"%self.start_file
+        cfgstring += "quit_file\t\t%s\n"%self.quit_file
 
-        cfgstring += "config_file\t\t"+self.config_file+"\n"
-        cfgstring += "log_file\t\t"+self.log_file+"\n"
-        cfgstring += "lock_file\t\t"+self.lock_file+"\n"
+        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "process_mode\t\t%s\n"%self.process_mode
+        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
 
-        cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
+        cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
 
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_daq_id
-        cfgstring += "process_mode\t\t"+self.process_mode+"\n"
+        cfgstring += "config_file\t\t%s\n"%self.config_file
+        cfgstring += "log_file\t\t%s\n"%self.log_file
+        cfgstring += "lock_file\t\t%s\n"%self.lock_file
+        cfgstring += "initok_file\t\t%s\n"%self.initok_file
+        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file
 
-        cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
-        cfgstring += "node_ip\t\t\t"+self.node_ip+"\n"
+        cfgstring += "output_mode\t\t%s\n"%self.output_mode
+        cfgstring += "output_stream\t\t%s\n"%self.output_stream
 
-        cfgstring += "start_file\t\t"+self.start_file+"\n"
-        cfgstring += "quit_file\t\t"+self.quit_file+"\n"
-        cfgstring += "initok_file\t\t"+self.initok_file+"\n"
-        cfgstring += "initfail_file\t\t"+self.initfail_file+"\n"
+        cfgstring += "total_daq_time\t\t%d\n"%self.total_daq_time
 
-        cfgstring += "output_mode\t\tSTREAM\n"
-        cfgstring += "output_stream\t\t"+self.output_stream+"\n"
+        cfgstring += "trigger_mask\t\t%#02x\n"%self.trigger_mask
+        cfgstring += "trigger_addr\t\t%s\n"%self.trigger_addr
+        cfgstring += "trigger_mask\t\t%d\n"%self.trigger_port
 
-        cfgstring += "total_daq_time\t\t"+repr(self.total_daq_time)+"\n"
-
-        cfgstring += "daq_loop_delay\t\t"+repr(self.daq_loop_delay)+"\n"
+        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
 
         return cfgstring
 
@@ -133,15 +140,44 @@ class Trigger:
 
         print self.format_config()
 
-    #def create_proc(self):
-    #
-    #    # Create Trigger process in DB
-    #    self.proc_daq_id = self.db.create_process("DAQ",self.run_number,self.get_link_id())
-    #    if self.proc_daq_id == -1:
-    #        print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
-    #        return "error"
-    #
-    #    return "ok"
+    def create_trigger(self):
+    
+        # Create Trigger process in DB
+        self.process_id = self.db.create_trigger_process(self.run_number,self.node_id)
+        if self.proc_daq_id == -1:
+            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
+            return "error"
+
+        self.db.add_cfg_para_trigger(self.process_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_trigger(self.process_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_trigger(self.process_id,"executable",         self.executable)
+        self.db.add_cfg_para_trigger(self.process_id,"start_file",         self.start_file)
+        self.db.add_cfg_para_trigger(self.process_id,"quit_file",          self.quit_file)
+
+        self.db.add_cfg_para_trigger(self.process_id,"run_number",         repr(self.run_number))
+        self.db.add_cfg_para_trigger(self.process_id,"process_mode",       self.process_mode)
+
+        self.db.add_cfg_para_trigger(self.process_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_trigger(self.process_id,"node_ip",            self.node_ip)
+                                                         
+        self.db.add_cfg_para_trigger(self.process_id,"config_file",        self.config_file)
+        self.db.add_cfg_para_trigger(self.process_id,"log_file",           self.log_file)
+        self.db.add_cfg_para_trigger(self.process_id,"lock_file",          self.lock_file)
+        self.db.add_cfg_para_trigger(self.process_id,"initok_file",        self.initok_file)
+        self.db.add_cfg_para_trigger(self.process_id,"initfail_file",      self.initfail_file)
+                                                                        
+        self.db.add_cfg_para_trigger(self.process_id,"output_mode",        self.output_mode)
+        self.db.add_cfg_para_trigger(self.process_id,"output_stream",      self.output_stream)
+
+        self.db.add_cfg_para_trigger(self.process_id,"total_daq_time",     repr(self.total_daq_time))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask",       "%#02x"%self.trigger_mask)
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_addr",       self.trigger_addr)
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_port",       repr(self.trigger_port))
+
+        self.db.add_cfg_para_trigger(self.process_id,"daq_loop_delay",     repr(self.daq_loop_delay))
+
+        return "ok"
 
     def start_trig(self):
 

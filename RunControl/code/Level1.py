@@ -10,6 +10,10 @@ class Level1:
 
         self.level1_id = l_id
 
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
         # Define id file for passwordless ssh command execution
         self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
 
@@ -28,9 +32,8 @@ class Level1:
 
         self.config_file = "unset"
         self.log_file = "unset"
-        self.lock_file = "unset"
-        self.initok_file = "unset"
-        self.initfail_file = "unset"
+
+        self.output_mode = "STREAM"
 
         self.input_stream = "unset"
         self.output_dir = "unset"
@@ -39,28 +42,27 @@ class Level1:
     def format_config(self):
 
         cfgstring = ""
+        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
         cfgstring += "executable\t\t%s\n"%self.executable
 
-        cfgstring += "level1_id\t\t%d\n"%self.level1_id
-
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-        cfgstring += "lock_file\t\t%s\n"%self.lock_file
-
         cfgstring += "run_number\t\t%d\n"%self.run_number
-
-        cfgstring += "max_events\t\t%d\n"%self.max_events
+        cfgstring += "level1_id\t\t%d\n"%self.level1_id
+        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
 
         cfgstring += "node_id\t\t\t%d\n"%self.node_id
         cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
 
-        cfgstring += "initok_file\t\t%s\n"%self.initok_file
-        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file
+        cfgstring += "config_file\t\t%s\n"%self.config_file
+        cfgstring += "log_file\t\t%s\n"%self.log_file
+
+        cfgstring += "output_mode\t\t%s\n"%self.output_mode
 
         cfgstring += "input_stream\t\t%s\n"%self.input_stream
-
         cfgstring += "output_dir\t\t%s\n"%self.output_dir
         cfgstring += "output_header\t\t%s\n"%self.output_header
+
+        cfgstring += "max_events\t\t%d\n"%self.max_events
 
         return cfgstring
 
@@ -77,6 +79,34 @@ class Level1:
     def print_config(self):
 
         print self.format_config()
+
+    def create_level1(self):
+
+        self.process_id = self.db.create_level1_process(self.run_number,self.node_id,self.level1_id)
+        if self.process_id == -1: return "error"
+
+        self.db.add_cfg_para_level1(self.process_id,"daq_dir",      self.daq_dir)
+        self.db.add_cfg_para_level1(self.process_id,"ssh_id_file",  self.ssh_id_file)
+        self.db.add_cfg_para_level1(self.process_id,"executable",   self.executable)
+
+        self.db.add_cfg_para_level1(self.process_id,"run_number",   repr(self.run_number))
+        self.db.add_cfg_para_level1(self.process_id,"level1_id",    repr(self.level1_id))
+
+        self.db.add_cfg_para_level1(self.process_id,"node_id",      repr(self.node_id))
+        self.db.add_cfg_para_level1(self.process_id,"node_ip",      self.node_ip)
+                                                         
+        self.db.add_cfg_para_level1(self.process_id,"config_file",  self.config_file)
+        self.db.add_cfg_para_level1(self.process_id,"log_file",     self.log_file)
+
+        self.db.add_cfg_para_level1(self.process_id,"output_mode",  self.output_mode)
+
+        self.db.add_cfg_para_level1(self.process_id,"input_stream", self.input_stream)
+        self.db.add_cfg_para_level1(self.process_id,"output_dir",   self.output_dir)
+        self.db.add_cfg_para_level1(self.process_id,"output_header",self.output_header)
+
+        self.db.add_cfg_para_level1(self.process_id,"max_events",   repr(self.max_events))
+
+        return "ok"
 
     def start_level1(self):
 

@@ -48,6 +48,7 @@ class ADCBoard:
         self.config_file_zsup = "unset"
         self.log_file_zsup = "unset"
         self.lock_file_zsup = "unset"
+        self.output_mode = "STREAM"
         self.input_stream_zsup = "unset"
         self.output_stream_zsup = "unset"
         self.initok_file_zsup = "unset"
@@ -156,94 +157,91 @@ class ADCBoard:
     def format_config_daq(self):
 
         cfgstring = ""
-        cfgstring += "executable\t\t"+self.executable+"\n"
+        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
+        cfgstring += "executable\t\t%s\n"%self.executable
+        cfgstring += "start_file\t\t%s\n"%self.start_file
+        cfgstring += "quit_file\t\t%s\n"%self.quit_file
 
-        cfgstring += "config_file\t\t"+self.config_file_daq+"\n"
-        cfgstring += "log_file\t\t"+self.log_file_daq+"\n"
-        cfgstring += "lock_file\t\t"+self.lock_file_daq+"\n"
-
+        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "board_id\t\t%d\n"%self.board_id
+        cfgstring += "process_mode\t\t%s\n"%self.process_mode
         if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_daq_id
-        #cfgstring += "process_mode\t\tDAQ\n"
-        cfgstring += "process_mode\t\t"+self.process_mode+"\n"
 
-        cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
+        cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        cfgstring += "conet2_link\t\t%d\n"%self.conet2_link
+        cfgstring += "conet2_slot\t\t%d\n"%self.conet2_slot
 
-        cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
+        cfgstring += "config_file\t\t%s\n"%self.config_file_daq
+        cfgstring += "log_file\t\t%s\n"%self.log_file_daq
+        cfgstring += "lock_file\t\t%s\n"%self.lock_file_daq
+        cfgstring += "initok_file\t\t%s\n"%self.initok_file_daq
+        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file_daq
 
-        cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
-        cfgstring += "node_ip\t\t\t"+self.node_ip+"\n"
-        cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
-        cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
+        cfgstring += "output_mode\t\t%s\n"%self.output_mode
+        cfgstring += "output_stream\t\t%s\n"%self.output_stream_daq
 
-        cfgstring += "start_file\t\t"+self.start_file+"\n"
-        cfgstring += "quit_file\t\t"+self.quit_file+"\n"
-        cfgstring += "initok_file\t\t"+self.initok_file_daq+"\n"
-        cfgstring += "initfail_file\t\t"+self.initfail_file_daq+"\n"
+        cfgstring += "total_daq_time\t\t%d\n"%self.total_daq_time
 
-        cfgstring += "output_mode\t\tSTREAM\n"
-        cfgstring += "output_stream\t\t"+self.output_stream_daq+"\n"
+        cfgstring += "startdaq_mode\t\t%d\n"%self.startdaq_mode
+        cfgstring += "trigger_mode\t\t%d\n"%self.trigger_mode
+        cfgstring += "trigger_iolevel\t\t%s\n"%self.trigger_iolevel
 
-        cfgstring += "total_daq_time\t\t"+repr(self.total_daq_time)+"\n"
+        cfgstring += "group_enable_mask\t%#1x\n"%self.group_enable_mask
+        cfgstring += "channel_enable_mask\t%#08x\n"%self.channel_enable_mask
 
-        cfgstring += "startdaq_mode\t\t"+repr(self.startdaq_mode)+"\n"
-        cfgstring += "trigger_mode\t\t"+repr(self.trigger_mode)+"\n"
-        cfgstring += "trigger_iolevel\t\t"+self.trigger_iolevel+"\n"
-
-        cfgstring += "group_enable_mask\t0x%1x\n"%self.group_enable_mask
-        cfgstring += "channel_enable_mask\t0x%08x\n"%self.channel_enable_mask
-
-        cfgstring += "offset_global\t\t0x%04x\n"%self.offset_global
+        cfgstring += "offset_global\t\t%#04x\n"%self.offset_global
         for ch in range(32):
             if (self.offset_ch[ch] != self.offset_global):
-                cfgstring += "offset_ch\t%d\t0x%04x\n"%(ch,self.offset_ch[ch])
+                cfgstring += "offset_ch\t%d\t%#04x\n"%(ch,self.offset_ch[ch])
 
-        cfgstring += "post_trigger_size\t"+repr(self.post_trigger_size)+"\n"
-        cfgstring += "max_num_events_blt\t"+repr(self.max_num_events_blt)+"\n"
+        cfgstring += "post_trigger_size\t%d\n"%self.post_trigger_size
+        cfgstring += "max_num_events_blt\t%d\n"%self.max_num_events_blt
 
-        cfgstring += "drs4corr_enable\t\t"+repr(self.drs4corr_enable)+"\n"
-        cfgstring += "drs4_sampfreq\t\t"+repr(self.drs4_sampfreq)+"\n"
+        cfgstring += "drs4corr_enable\t\t%d\n"%self.drs4corr_enable
+        cfgstring += "drs4_sampfreq\t\t%d\n"%self.drs4_sampfreq
 
-        cfgstring += "daq_loop_delay\t\t"+repr(self.daq_loop_delay)+"\n"
+        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
 
         return cfgstring
 
     def format_config_zsup(self):
 
         cfgstring = ""
-        cfgstring += "executable\t\t"+self.executable+"\n"
+        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
+        cfgstring += "executable\t\t%s\n"%self.executable
 
-        cfgstring += "config_file\t\t"+self.config_file_zsup+"\n"
-        cfgstring += "log_file\t\t"+self.log_file_zsup+"\n"
-        cfgstring += "lock_file\t\t"+self.lock_file_zsup+"\n"
-        cfgstring += "initok_file\t\t"+self.initok_file_zsup+"\n"
-        cfgstring += "initfail_file\t\t"+self.initfail_file_zsup+"\n"
-
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_zsup_id
+        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "board_id\t\t%d\n"%self.board_id
         cfgstring += "process_mode\t\tZSUP\n"
+        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_zsup_id
 
-        cfgstring += "run_number\t\t"+str(self.run_number)+"\n"
+        cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        cfgstring += "conet2_link\t\t%d\n"%self.conet2_link
+        cfgstring += "conet2_slot\t\t%d\n"%self.conet2_slot
 
-        cfgstring += "board_id\t\t"+str(self.board_id)+"\n"
+        cfgstring += "config_file\t\t%s\n"%self.config_file_zsup
+        cfgstring += "log_file\t\t%s\n"%self.log_file_zsup
+        cfgstring += "lock_file\t\t%s\n"%self.lock_file_zsup
+        cfgstring += "initok_file\t\t%s\n"%self.initok_file_zsup
+        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file_zsup
 
-        cfgstring += "node_id\t\t\t"+str(self.node_id)+"\n"
-        cfgstring += "node_ip\t\t\t"+self.node_ip+"\n"
-        cfgstring += "conet2_link\t\t"+str(self.conet2_link)+"\n"
-        cfgstring += "conet2_slot\t\t"+str(self.conet2_slot)+"\n"
+        cfgstring += "output_mode\t\t%s\n"%self.output_mode
+        cfgstring += "output_stream\t\t%s\n"%self.output_stream_zsup
+        cfgstring += "input_stream\t\t%s\n"%self.input_stream_zsup
 
-        cfgstring += "input_stream\t\t"+self.input_stream_zsup+"\n"
-
-        cfgstring += "output_mode\t\tSTREAM\n"
-        cfgstring += "output_stream\t\t"+self.output_stream_zsup+"\n"
-
-        cfgstring += "zero_suppression\t"+repr(self.zero_suppression)+"\n"
+        cfgstring += "zero_suppression\t%d\n"+repr(self.zero_suppression)+"\n"
         if (self.zero_suppression%100 == 1):
-            cfgstring += "zs1_head\t\t"+repr(self.zs1_head)+"\n"
-            cfgstring += "zs1_tail\t\t"+repr(self.zs1_tail)+"\n"
-            cfgstring += "zs1_nsigma\t\t"+repr(self.zs1_nsigma)+"\n"
-            cfgstring += "zs1_nabovethr\t\t"+repr(self.zs1_nabovethr)+"\n"
+            cfgstring += "zs1_head\t\t%d\n"%self.zs1_head)
+            cfgstring += "zs1_tail\t\t%d\n"%self.zs1_tail)
+            cfgstring += "zs1_nsigma\t\t%d\n"%self.zs1_nsigma)
+            cfgstring += "zs1_nabovethr\t\t%d\n"%self.zs1_nabovethr)
         elif (self.zero_suppression%100 == 2):
-            cfgstring += "zs2_tail\t\t"+repr(self.zs2_tail)+"\n"
-            cfgstring += "zs2_minrms\t\t"+repr(self.zs2_minrms)+"\n"
+            cfgstring += "zs2_tail\t\t%d\n"%self.zs2_tail)
+            cfgstring += "zs2_minrms\t\t%d\n"%self.zs2_minrms)
 
         return cfgstring
 
@@ -273,20 +271,99 @@ class ADCBoard:
     def create_proc_daq(self):
 
         # Create DAQ process in DB
-        self.proc_daq_id = self.db.create_process("DAQ",self.run_number,self.get_link_id())
+        self.proc_daq_id = self.db.create_daq_process("DAQ",self.run_number,self.get_link_id())
         if self.proc_daq_id == -1:
             print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
             return "error"
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"executable",         self.executable)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"start_file",         self.start_file)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"quit_file",          self.quit_file)
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"run_number",         repr(self.run_number))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"board_id",           repr(self.board_id))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"process_mode",       self.process_mode)
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"node_ip",            self.node_ip)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"conet2_link",        repr(self.conet2_link))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"conet2_slot",        repr(self.conet2_slot))
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"config_file",        self.config_file_daq)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"log_file",           self.log_file_daq)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"lock_file",          self.lock_file_daq)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"initok_file",        self.initok_file_daq)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"initfail_file",      self.initfail_file_daq)
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"output_mode",        self.output_mode)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"output_stream",      self.output_stream_daq)
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"total_daq_time",     repr(self.total_daq_time))
+                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"startdaq_mode",      repr(self.startdaq_mode))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"trigger_mode",       repr(self.trigger_mode))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"trigger_iolevel",    self.trigger_iolevel)
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"group_enable_mask",  "%#1x"%self.group_enable_mask)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"channel_enable_mask","%#08x"%self.channel_enable_mask)
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"offset_global",      "%#04x"%self.proc_daq_id)
+        for ch in range(32):
+            if (self.offset_ch[ch] != self.offset_global):
+                self.db.add_cfg_para_daq(self.proc_daq_id,"offset_ch",  "%d %#04x"%(ch,self.offset_ch[ch]))
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"post_trigger_size",  repr(self.post_trigger_size))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"max_num_events_blt", repr(self.max_num_events_blt))
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"drs4corr_enable",    repr(self.drs4corr_enable))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"drs4_sampfreq",      repr(self.drs4_sampfreq))
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
 
         return "ok"
 
     def create_proc_zsup(self):
 
         # Create ZSUP process in DB
-        self.proc_zsup_id = self.db.create_process("ZSUP",self.run_number,self.get_link_id())
+        self.proc_zsup_id = self.db.create_daq_process("ZSUP",self.run_number,self.get_link_id())
         if self.proc_zsup_id == -1:
             print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
             return "error"
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"executable",         self.executable)
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"run_number",         repr(self.run_number))
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"board_id",           repr(self.board_id))
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"process_mode",       "ZSUP")
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"node_ip",            self.node_ip)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"conet2_link",        repr(self.conet2_link))
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"conet2_slot",        repr(self.conet2_slot))
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"config_file",        self.config_file_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"log_file",           self.log_file_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"lock_file",          self.lock_file_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"initok_file",        self.initok_file_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"initfail_file",      self.initfail_file_zsup)
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_mode",        self.output_mode)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_stream",      self.output_stream_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"input_stream",       self.input_stream_zsup)
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"zero_suppression",   repr(self.zero_suppression))
+        if (self.zero_suppression%100 == 1):
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_head",       repr(self.zs1_head))
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_tail",       repr(self.zs1_tail))
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nsigma",     repr(self.zs1_nsigma))
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nabovethr",  repr(self.zs1_nabovethr))
+        elif (self.zero_suppression%100 == 2):
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_tail",       repr(self.zs2_tail))
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms",     repr(self.zs2_minrms))
 
         return "ok"
 

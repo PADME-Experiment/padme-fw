@@ -13,10 +13,12 @@
 
 #include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "DAQ.h"
 #include "ZSUP.h"
 #include "FAKE.h"
 
+/*
 // Return pid of locking process or 0 if no other DAQ is running
 pid_t create_lock()
 {
@@ -42,7 +44,7 @@ pid_t create_lock()
 
     // Create lock file and write own pid in it
     lock_handle = fopen(Config->lock_file,"w");
-    fprintf(lock_handle,"%d",getpid());
+    fprintf(lock_handle,"%d\n",getpid());
     fclose(lock_handle);
     printf("PadmeDAQ::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
     return 0;
@@ -76,30 +78,62 @@ void remove_lock()
 
 }
 
-// Handle failure in initialization phase
-// If rmv_lock<>0 the lock file will also be removed
-void init_fail(int rmv_lock)
+int create_initok_file()
 {
+
+  FILE* iff;
+  struct stat sb;
+
+  // Check if directory for initok file exists
+  char* path = strdup(Config->initok_file);
+  char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(iff_dir,&sb) != 0 || ! S_ISDIR(sb.st_mode) ) {
+    printf("PadmeDAQ::create_initok_file - Directory '%s' does not exist: cannot create InitOK file '%s'.\n",iff_dir,Config->initok_file);
+    return 1;
+  }
+
+  // Check if file is already there (not cleaned in previous run?)
+  if ( access(Config->initok_file,F_OK) != -1 ) {
+    printf("PadmeDAQ::create_initok_file - InitOK file '%s' already exists.\n",Config->initok_file);
+    return 1;
+  }
+
+  // Create InitOK file
+  iff = fopen(Config->initok_file,"w");
+  fclose(iff);
+  printf("- InitOK file '%s' created\n",Config->initok_file);
+  return 0;
+
+}
+
+int create_initfail_file()
+{
+
   FILE* iff;
   struct stat sb;
 
   // Check if directory for initfail file exists
   char* path = strdup(Config->initfail_file);
   char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
-  if ( stat(iff_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
-    if ( access(Config->initfail_file,F_OK) == -1 ) {
-      iff = fopen(Config->initfail_file,"w");
-      fclose(iff);
-      printf("PadmeDAQ::init_fail - InitFail file '%s' created\n",Config->initfail_file);
-    } else {
-      printf("PadmeDAQ::init_fail - InitFail file '%s' already exists.\n",Config->initfail_file);
-    }
-  } else {
-    printf("PadmeDAQ::init_fail - Directory '%s' does not exist: cannot create InitFail file '%s'.\n",iff_dir,Config->initfail_file);
+  if ( stat(iff_dir,&sb) != 0 || ! S_ISDIR(sb.st_mode) ) {
+    printf("PadmeDAQ::create_initfail_file - Directory '%s' does not exist: cannot create InitFail file '%s'.\n",iff_dir,Config->initfail_file);
+    return 1;
   }
-  if (rmv_lock) remove_lock();
-  exit(1);
+
+  // Check if file is already there (not cleaned in previous run?)
+  if ( access(Config->initfail_file,F_OK) == -1 ) {
+    printf("PadmeDAQ::create_initfail_file - InitFail file '%s' already exists.\n",Config->initfail_file);
+    return 1;
+  }
+
+  // Create InitFail file
+  iff = fopen(Config->initfail_file,"w");
+  fclose(iff);
+  printf("- InitFail file '%s' created\n",Config->initfail_file);
+  return 0;
+
 }
+*/
 
 // Start of main program
 int main(int argc, char*argv[])
@@ -180,37 +214,63 @@ int main(int argc, char*argv[])
     } else {
       printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
     }
-    init_fail(0);
+    //init_fail(0);
+    create_initfail_file();
+    exit(1);
   }
 
   if ( Config->run_number ) {
 
     // Connect to DB
-    if ( db_init() != DB_OK ) init_fail(1);
+    if ( db_init() != DB_OK ) {
+      printf("*** ERROR *** Unable to initialize DB connection. Exiting.\n");
+      create_initfail_file();
+      remove_lock();
+      exit(1);
+    }
 
     // Verify if run number is valid
     rc = db_run_check(Config->run_number);
-    if ( rc == -1 ) {
-      printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
-      init_fail(1);
-    } else if ( rc == 0 ) {
-      printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
-      init_fail(1);
+    if ( rc != 1 ) {
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
+      } else if ( rc == 0 ) {
+	printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
+      }
+      create_initfail_file();
+      remove_lock();
+      exit(1);
     }
 
     // Verify if process id is valid
     rc = db_process_check(Config->process_id);
-    if ( rc == -1 ) {
-      printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
-      init_fail(1);
-    } else if ( rc == 0 ) {
-      printf("ERROR: process id %d does not exist in the DB\n",Config->process_id);
-      init_fail(1);
+    if ( rc != 1 ) {
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
+      } else if ( rc == 0 ) {
+	printf("ERROR: process id %d does not exist in the DB\n",Config->process_id);
+      }
+      create_initfail_file();
+      remove_lock();
+      exit(1);
+    }
+    int status = db_process_get_status(Config->process_id);
+    if (status!=0) {
+      printf("ERROR: process id %d is not in IDLE (0) status (status=%d)\n",Config->process_id,status);
+      create_initfail_file();
+      remove_lock();
+      exit(1);
     }
 
-    // Now we can save the process configuration to DB
-    save_config();
+    // Save the process configuration to DB -> Now done by RunControl
+    //save_config();
 
+  }
+
+  // Update process status
+  if (Config->run_number) {
+    printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
+    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
   }
 
   // Check current running mode (DAQ, ZSUP, FAKE)
@@ -230,34 +290,76 @@ int main(int argc, char*argv[])
     printf("\n=== Connect to digitizer ===\n");
     if ( DAQ_connect() ) {
       printf("*** ERROR *** Problem while connecting to V1742 digitizer. Exiting.\n");
-      init_fail(1);
+      create_initfail_file();
+      if (Config->run_number) {
+	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
+      }
+      remove_lock();
+      exit(1);
     }
 
     // Initialize and configure digitizer
     printf("\n=== Initialize digitizer ===\n");
     if ( DAQ_init() ) {
       printf("*** ERROR *** Problem while initializing V1742 digitizer. Exiting.\n");
-      init_fail(1);
+      create_initfail_file();
+      if (Config->run_number) {
+	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
+      }
+      remove_lock();
+      exit(1);
     }
 
     // Handle data acquisition
     printf("\n=== Starting data acquisition ===\n");
     rc = DAQ_readdata();
-    if ( rc == 1 ) {
+    if ( rc == 0 ) {
+      printf("=== Run finished ===\n");
+      if (Config->run_number) {
+	printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
+      }
+    } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
-      init_fail(1);
+      create_initfail_file();
+      if (Config->run_number) {
+	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
+      }
+      remove_lock();
+      exit(1);
     } else if ( rc == 2 ) {
       printf("*** ERROR *** Data acquistion ended with an error. Please check log file for details. Exiting.\n");
+      if (Config->run_number) {
+	printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
+      }
       remove_lock();
       exit(1);
     } else if ( rc == 3 ) {
       printf("=== Run aborted before starting DAQ ===\n");
+      if (Config->run_number) {
+	printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
+	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
+      }
+    } else {
+      printf("=== DAQ reported unknown return code %d ===\n",rc);
+      if (Config->run_number) {
+	printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
+	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
+      }
     }
 
     // Final reset of the digitizer
     printf("\n=== Reset digitizer and close connection ===\n");
     if ( DAQ_close() ) {
       printf("*** ERROR *** Final reset of digitizer ended with an error. Exiting.\n");
+      if (Config->run_number) {
+	printf("- Setting process status to CLOSE_FAIL (%d) in DB\n",DB_STATUS_CLOSE_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_CLOSE_FAIL);
+      }
       remove_lock();
       exit(1);
     }
@@ -267,16 +369,20 @@ int main(int argc, char*argv[])
     // Show some startup message
     if (Config->run_number == 0) {
       printf("\n=== Starting PadmeDAQ FAKE event generation for dummy run ===\n");
-      printf("- WARNING: data will not be registered in the DB!\n");
     } else {
-      printf("\n=== Starting PadmeDAQ FAKE event generation for run %d ===\n",Config->run_number);
+      printf("\n*** ERROR *** Cannot run PadmeDAQ in FAKE mode for a real run. Exiting.\n");
+      create_initfail_file();
+      remove_lock();
+      exit(1);
     }
 
     // Start generation of FAKE events
     rc = FAKE_readdata();
     if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing FAKE process. Exiting.\n");
-      init_fail(1);
+      create_initfail_file();
+      remove_lock();
+      exit(1);
     } else if ( rc == 2 ) {
       printf("*** ERROR *** FAKE event generation ended with an error. Please check log file for details. Exiting.\n");
       remove_lock();
@@ -295,22 +401,56 @@ int main(int argc, char*argv[])
     } else {
       printf("\n=== Starting PadmeDAQ zero suppression for run %d ===\n",Config->run_number);
     }
-    //printf("- Run type: '%s'\n",Config->run_type);
 
     // Handle zero suppression
     printf("\n=== Starting zero suppression ===\n");
     rc = ZSUP_readdata();
-    if ( rc == 1 ) {
+    if ( rc == 0 ) {
+      printf("\n=== ZSUP process ended ===\n");
+      if (Config->run_number) {
+	printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
+      }
+    } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing ZSUP process. Exiting.\n");
-      init_fail(1);
+      create_initfail_file();
+      if (Config->run_number) {
+	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
+      }
+      remove_lock();
+      exit(1);
     } else if ( rc == 2 ) {
       printf("*** ERROR *** Zero suppression ended with an error. Please check log file for details. Exiting.\n");
+      if (Config->run_number) {
+	printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
+	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
+      }
+      remove_lock();
+      exit(1);
+    } else if ( rc == 3 ) {
+      printf("=== Run aborted before starting ZSUP ===\n");
+      if (Config->run_number) {
+	printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
+	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
+      }
+    } else {
+      printf("=== ZSUP reported unknown return code %d ===\n",rc);
+      if (Config->run_number) {
+	printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
+	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
+      }
+    }
+
+  }
+
+  // Close DB connection
+  if ( Config->run_number ) {
+    if ( db_end() != DB_OK ) {
+      printf("*** ERROR *** DB close procedure ended with an error. Please check log file for details. Exiting.\n");
       remove_lock();
       exit(1);
     }
-
-    printf("\n=== Zero suppression process ended ===\n");
-
   }
 
   // Remove lock file

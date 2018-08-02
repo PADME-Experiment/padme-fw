@@ -67,12 +67,15 @@ class ADCBoard:
         self.channel_enable_mask = int('0xffffffff',0)
         self.offset_global = int('0x5600',0)
         self.offset_ch = []
-        for ch in range(32):
-            self.offset_ch.append(self.offset_global)
+        for ch in range(32): self.offset_ch.append(self.offset_global)
         self.post_trigger_size = 65
         self.max_num_events_blt = 128
         self.drs4_sampfreq = 2
         self.drs4corr_enable = 1
+
+        # Autopass parameters (threshold in counts, duration in ns)
+        self.auto_threshold = int('0x0400',0)
+        self.auto_duration = 150
 
         # Default DAQ control parameters
         self.daq_loop_delay = 100000
@@ -82,12 +85,16 @@ class ADCBoard:
 
         # Default zero suppression settings
         self.zero_suppression = 0
+
         self.zs1_head = 80
         self.zs1_tail = 30
         self.zs1_nsigma = 3.
         self.zs1_nabovethr = 4
-        self.zs2_minrms = 4.6
+        self.zs1_badrmsthr = 15.
+
         self.zs2_tail = 30
+        self.zs2_minrms = 4.6
+        for ch in range(32): self.zs2_minrms_ch.append(self.zs2_minrms)
 
     def read_setup(self,setup):
 
@@ -99,7 +106,7 @@ class ADCBoard:
         re_empty = re.compile("^\s*$")
         re_comment = re.compile("^\s*#")
         re_param = re.compile("^\s*(\w+)\s+(.+?)\s*$")
-        re_choffset = re.compile("^\s*(\d+)\s+(\w+)\s*$")
+        re_chvalue = re.compile("^\s*(\d+)\s+(\w+)\s*$")
 
         # Read default board configuration from file
         setup_file = self.daq_dir+"/setup/"+setup+"/board_%02d.cfg"%self.board_id
@@ -121,7 +128,7 @@ class ADCBoard:
                     self.offset_global = int(p_value,0)
                     for ch in range(0,32): self.offset_ch[ch] = self.offset_global
                 elif (p_name == "offset_ch"):
-                    mm = re_choffset.search(p_value)
+                    mm = re_chvalue.search(p_value)
                     if (mm):
                         (ch,offset) = mm.group(1,2)
                         self.offset_ch[int(ch,0)] = int(offset,0)
@@ -143,6 +150,16 @@ class ADCBoard:
                 elif (p_name == "zs1_nabovethr"): self.zs1_nabovethr = int(p_value,0)
                 elif (p_name == "zs2_tail"): self.zs2_tail = int(p_value,0)
                 elif (p_name == "zs2_minrms"): self.zs2_minrms = float(p_value)
+                elif (p_name == "zs2_minrms_ch"):
+                    mm = re_chvalue.search(p_value)
+                    if (mm):
+                        (ch,minrms) = mm.group(1,2)
+                        self.zs2_minrms_ch[int(ch,0)] = int(minrms,0)
+                    else:
+                        print "ADCBoard - ERROR decoding channel zs2_minrms parameter in line:"
+                        print l
+                elif (p_name == "auto_threshold"): self.auto_threshold = int(p_value,0)
+                elif (p_name == "auto_duration"): self.auto_duration = int(p_value,0)
                 else:
                     print "ADCBoard - WARNNING: unknown parameter found while reading default config file: %s"%p_name
             else:
@@ -204,6 +221,9 @@ class ADCBoard:
 
         cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
 
+        cfgstring += "auto_threshold\t\t%#04x\n"%self.auto_threshold
+        cfgstring += "auto_duration\t\t%d\n"%self.auto_duration
+
         return cfgstring
 
     def format_config_zsup(self):
@@ -237,11 +257,15 @@ class ADCBoard:
         if (self.zero_suppression%100 == 1):
             cfgstring += "zs1_head\t\t%d\n"%self.zs1_head)
             cfgstring += "zs1_tail\t\t%d\n"%self.zs1_tail)
-            cfgstring += "zs1_nsigma\t\t%d\n"%self.zs1_nsigma)
+            cfgstring += "zs1_nsigma\t\t%f\n"%self.zs1_nsigma)
             cfgstring += "zs1_nabovethr\t\t%d\n"%self.zs1_nabovethr)
+            cfgstring += "zs1_badrmsthr\t\t%f\n"%self.zs1_badrmsthr)
         elif (self.zero_suppression%100 == 2):
             cfgstring += "zs2_tail\t\t%d\n"%self.zs2_tail)
-            cfgstring += "zs2_minrms\t\t%d\n"%self.zs2_minrms)
+            cfgstring += "zs2_minrms\t\t%f\n"%self.zs2_minrms)
+            for ch in range(32):
+                if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
+                    cfgstring += "zs2_minrms_ch\t%d\t%f\n"%(ch,self.zs2_minrms_ch[ch])
 
         return cfgstring
 
@@ -322,6 +346,9 @@ class ADCBoard:
 
         self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
 
+        self.db.add_cfg_para_daq(self.proc_daq_id,"auto_threshold",     "%#04x"%self.auto_threshold)
+        self.db.add_cfg_para_daq(self.proc_daq_id,"auto_duration",      repr(self.auto_duration))
+
         return "ok"
 
     def create_proc_zsup(self):
@@ -361,9 +388,13 @@ class ADCBoard:
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_tail",       repr(self.zs1_tail))
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nsigma",     repr(self.zs1_nsigma))
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nabovethr",  repr(self.zs1_nabovethr))
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_badrmsthr",  repr(self.zs1_badrmsthr))
         elif (self.zero_suppression%100 == 2):
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_tail",       repr(self.zs2_tail))
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms",     repr(self.zs2_minrms))
+            for ch in range(32):
+                if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
+                    self.db.add_cfg_para_daq(self.proc_daq_id,"zs2_minrms_ch",  "%d %d"%(ch,self.zs2_minrms_ch[ch]))
 
         return "ok"
 

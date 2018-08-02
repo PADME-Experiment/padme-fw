@@ -12,6 +12,7 @@
 
 #include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 
@@ -69,9 +70,10 @@ int ZSUP_readdata ()
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
+  int rc;
 
   // File to handle DAQ interaction with GUI
-  FILE* iokf; // InitOK file
+  //FILE* iokf; // InitOK file
 
   // Process timers
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -107,14 +109,6 @@ int ZSUP_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  time(&t_daqstart);
-  printf("%s - Zero suppression started\n",format_time(t_daqstart));
-
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
-  }
-
   // Zero counters
   totalReadSize = 0;
   totalReadEvents = 0;
@@ -134,7 +128,14 @@ int ZSUP_readdata ()
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
     if ( Config->run_number ) {
-      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+      rc = db_file_check(fileName[fileIndex]);
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	return 2;
+      } else if ( rc == 1 ) {
+	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	return 2;
+      }
     }
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
@@ -161,23 +162,25 @@ int ZSUP_readdata ()
     return 2;
   }
 
-  // Create initok file to tell RunControl that we are ready
-  printf("- Creating InitOK file '%s'\n",Config->initok_file);
-  if ( access(Config->initok_file,F_OK) == -1 ) {
-    iokf = fopen(Config->initok_file,"w");
-    fclose(iokf);
-    printf("- InitOK file '%s' created\n",Config->initok_file);
-  } else {
-    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
-    return 1;
-  }
-
   // Open virtual file for input data stream
   printf("- Opening input stream from file '%s'\n",Config->input_stream);
   inFileHandle = open(Config->input_stream,O_RDONLY, S_IRUSR | S_IWUSR);
   if (inFileHandle == -1) {
     printf("ERROR - Unable to open input stream '%s' for reading.\n",Config->input_stream);
     return 1;
+  }
+
+  // Create initok file to tell RunControl that we are ready
+  if ( create_initok_file() ) return 1;
+
+  time(&t_daqstart);
+  printf("%s - Zero suppression started\n",format_time(t_daqstart));
+
+  if ( Config->run_number ) {
+    // Tell DB that the process has started
+    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
+    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
   }
 
   // Read file header (4 words) from input stream
@@ -438,7 +441,6 @@ int ZSUP_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
@@ -452,7 +454,14 @@ int ZSUP_readdata ()
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+	    rc = db_file_check(fileName[fileIndex]);
+	    if ( rc < 0 ) {
+	      printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	      return 2;
+	    } else if ( rc == 1 ) {
+	      printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	      return 2;
+	    }
 	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
@@ -512,7 +521,7 @@ int ZSUP_readdata ()
     return 2;
   };
 
-  // If DAQ was stopped for writing too many output files, we do not have to close the last file
+  // If ZSUP was stopped for writing too many output files, we do not have to close the last file
   if ( ! tooManyOutputFiles ) {
 
     // Register file closing time
@@ -538,7 +547,6 @@ int ZSUP_readdata ()
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
       if ( Config->run_number ) {
-	//if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
       }
     } else {
@@ -594,9 +602,9 @@ int ZSUP_readdata ()
   }
 
   // Close DB file
-  if ( Config->run_number ) {
-    if ( db_end() != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  if ( db_end() != DB_OK ) return 2;
+  //}
 
   return 0;
 

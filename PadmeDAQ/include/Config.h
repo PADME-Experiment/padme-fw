@@ -172,7 +172,7 @@ int print_config();     // Print current configuration
 int save_config();      // Save config parameters into DB
 int end_config();       // Clear configuration
 
-int generate_filename(char*, const time_t); // Function to add time tag to file name
-char* format_time(const time_t); // Function to format time tags
+//int generate_filename(char*, const time_t); // Function to add time tag to file name
+//char* format_time(const time_t); // Function to format time tags
 
 #endif

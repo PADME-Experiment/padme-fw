@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 

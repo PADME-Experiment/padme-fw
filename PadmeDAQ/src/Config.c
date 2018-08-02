@@ -56,7 +56,7 @@ int reset_config()
 
   strcpy(Config->output_stream,""); // No output stream defined when in FILE mode
 
-  // All data files written to subdirectory "data" of current directory
+  // In FILE mode all data files written to subdirectory "data" of current directory
   strcpy(Config->data_dir,"data/");
   strcpy(Config->data_file,"daq_b00"); // Data filename template for default board 0
 
@@ -100,10 +100,10 @@ int reset_config()
   Config->drs4corr_enable = 1;
 
   // Add a delay between successive polls to the board
-  Config->daq_loop_delay = 100000; // wait 0.1 sec after each iteration
+  Config->daq_loop_delay = 10000; // wait 10 msec after each iteration
 
-  // Do not apply zero-suppression (test phase, this default will change in production)
-  Config->zero_suppression = 0;
+  // Apply zero-suppression algorithm 2 in flagging mode (test phase, this default will change in production)
+  Config->zero_suppression = 102;
 
   // Set default parameters for zero-suppression algorithm 1
   Config->zs1_head = 80; // Use first 80 samples to compute mean and rms
@@ -883,6 +883,7 @@ int end_config()
   return 0;
 }
 
+/*
 // Return file name given the file open time. Return 0 if OK, <>0 error
 int generate_filename(char* name, const time_t time) {
   //struct tm* t = localtime(&time);
@@ -904,3 +905,4 @@ char* format_time(const time_t time) {
 	  t->tm_hour,      t->tm_min,   t->tm_sec);
   return tform;
 }
+*/

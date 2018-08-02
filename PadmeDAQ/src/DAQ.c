@@ -13,6 +13,7 @@
 
 #include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 
@@ -659,7 +660,7 @@ int DAQ_readdata ()
   uint32_t status,grstatus;
 
   // File to handle DAQ interaction with GUI
-  FILE* iokf; // InitOK file
+  //FILE* iokf; // InitOK file
 
   // Input data information
   char *buffer = NULL;
@@ -701,6 +702,7 @@ int DAQ_readdata ()
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle;
+  int rc;
 
   // Flag to end run on ADC read error
   int adcError;
@@ -713,7 +715,7 @@ int DAQ_readdata ()
   // If quit file is already there, assume this is a test run and do nothing
   if ( access(Config->quit_file,F_OK) != -1 ) {
     printf("DAQ_readdata - Quit file '%s' found: will not run acquisition\n",Config->quit_file);
-    return 0;
+    return 3;
   }
 
   // If this is a real run save configuration to DB
@@ -747,15 +749,11 @@ int DAQ_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  // DAQ is now ready to start. Create InitOK file
-  printf("- Creating InitOK file '%s'\n",Config->initok_file);
-  if ( access(Config->initok_file,F_OK) == -1 ) {
-    iokf = fopen(Config->initok_file,"w");
-    fclose(iokf);
-    printf("- InitOK file '%s' created\n",Config->initok_file);
-  } else {
-    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
-    return 1;
+  // DAQ is now ready to start. Create InitOK file and set status to INITIALIZED
+  if ( create_initok_file() ) return 1;
+  if (Config->run_number) {
+    printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
   }
 
   if (Config->startdaq_mode == 0) {
@@ -797,6 +795,8 @@ int DAQ_readdata ()
   
   if ( Config->run_number ) {
     // Tell DB that the process has started
+    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
     if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
   }
 
@@ -813,12 +813,18 @@ int DAQ_readdata ()
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
     // Generate name for initial output file and verify it does not exist
-    //generate_filename(fileName[fileIndex],t_daqstart);
     generate_filename(tmpName,t_daqstart);
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
     if ( Config->run_number ) {
-      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+      rc = db_file_check(fileName[fileIndex]);
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	return 2;
+      } else if ( rc == 1 ) {
+	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	return 2;
+      }
     }
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
@@ -1092,7 +1098,6 @@ int DAQ_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
@@ -1106,7 +1111,14 @@ int DAQ_readdata ()
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2; // No output file currently open: no point in sending file tail
+	    rc = db_file_check(fileName[fileIndex]);
+	    if ( rc < 0 ) {
+	      printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	      return 2;
+	    } else if ( rc == 1 ) {
+	      printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	      return 2;
+	    }
 	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
@@ -1160,7 +1172,7 @@ int DAQ_readdata ()
   }
 
   // Tell user what stopped DAQ
-  if ( adcError ) printf("=== Stopping DAQ on ADC access or data handling error ===\n");
+  if ( adcError ) printf("=== Stopping DAQ on ADC access or data handling ERROR ===\n");
   if ( BreakSignal ) printf("=== Stopping DAQ on interrupt %d ===\n",BreakSignal);
   if ( tooManyOutputFiles ) printf("=== Stopping DAQ after writing %d data files ===\n",fileIndex);
   if ( access(Config->quit_file,F_OK) != -1 )
@@ -1193,14 +1205,13 @@ int DAQ_readdata ()
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
+      if ( Config->run_number ) {
+	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
+      }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-    }
-    if ( Config->run_number ) {
-      //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-      if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
     }
 
     // Update file counter
@@ -1277,9 +1288,9 @@ int DAQ_readdata ()
   printf("=========================================================\n");
 
   // Close DB file
-  if ( Config->run_number ) {
-    if ( db_end() != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  if ( db_end() != DB_OK ) return 2;
+  //}
 
   // Free space allocated for file names
   for(i=0;i<fileIndex;i++) free(fileName[i]);
@@ -1298,29 +1309,33 @@ int DAQ_close ()
   // Check if DAQ is running and stop it (should never happen!)
   reg = 0x8104; // Acquisition Status
   ret = CAEN_DGTZ_ReadRegister(Handle,reg,&data);
-  if (ret == CAEN_DGTZ_Success) {
-    if ( (data >> 2) & 0x1 ) { // bit 2: RUN on/off
-      printf ("WARNING!!! DAQ is active (should not happen): stopping... ");
-      ret = CAEN_DGTZ_SWStopAcquisition(Handle);
-      if (ret != CAEN_DGTZ_Success) {
-	printf("\nWARNING!!! Unable to stop data acquisition. Error code: %d\n",ret);
-      } else {
-	printf(" done\n");
-	ret = CAEN_DGTZ_ClearData(Handle); // Clear digitizer buffers
-      }
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to read Acquisition Status register 0x%04x. Error code: %d\n",reg,ret);
+    return 1;
+  }
+  if ( (data >> 2) & 0x1 ) { // bit 2: RUN on/off
+    printf ("WARNING!!! DAQ is active (should not happen): stopping... ");
+    ret = CAEN_DGTZ_SWStopAcquisition(Handle);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("\n*** ERROR *** Unable to stop data acquisition. Error code: %d\n",ret);
+      return 1;
     }
-  } else {
-    printf("WARNING!!! Unable to read Acquisition Status register 0x%04x. Error code: %d\n",reg,ret);
+    printf(" done\n");
+    ret = CAEN_DGTZ_ClearData(Handle); // Clear digitizer buffers
+    if (ret != CAEN_DGTZ_Success) {
+      printf("*** ERROR *** Unable to clear data after stopping data acquisition. Error code: %d\n",ret);
+      return 1;
+    }
   }
 
   // Reset
   printf ("- Resetting digitizer... ");
   ret = CAEN_DGTZ_Reset (Handle);
-  if (ret == CAEN_DGTZ_Success) {
-    printf ("done!\n");
-  } else {
-    printf("\nWARNING!!! Unable to reset digitizer. Error code: %d\n",ret);
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to reset digitizer. Error code: %d\n",ret);
+    return 1;
   }
+  printf ("done!\n");
 
   printf ("- Flushing all output files... ");
   fflush (NULL);
@@ -1328,11 +1343,11 @@ int DAQ_close ()
 
   printf ("- Closing connection to digitizer... ");
   ret = CAEN_DGTZ_CloseDigitizer (Handle);
-  if (ret == CAEN_DGTZ_Success) {
-    printf ("done!\n");
-  } else {
-    printf("\nWARNING!!! Unable to close digitizer connection. Error code: %d\n",ret);
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to close digitizer connection. Error code: %d\n",ret);
+    return 1;
   }
+  printf ("done!\n");
 
   return 0;
 

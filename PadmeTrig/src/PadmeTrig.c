@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <libgen.h>
 
+#include "DB.h"
 #include "Config.h"
 #include "Trigger.h"
 
@@ -32,6 +33,14 @@ pid_t create_lock()
     return 0;
   }
 
+  // Check if directory for lock file exists
+  char* path = strdup(Config->lock_file);
+  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(lock_dir,&sb) != 0 || (! S_ISDIR(sb.st_mode)) ) {
+    printf("PadmeTrig::create_lock - ERROR - Directory '%s' does not exist: cannot create lock file '%s'\n",lock_dir,Config->lock_file);
+    return -1;
+  }
+
   // Check if lock file exists and return its pid
   if ( access(Config->lock_file,F_OK) != -1 ) {
     lock_handle = fopen(Config->lock_file,"r");
@@ -43,22 +52,12 @@ pid_t create_lock()
     return pid;
   }
 
-  // Check if directory for lock file exists
-  char* path = strdup(Config->lock_file);
-  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
-  if ( stat(lock_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
-
-    // Create lock file and write own pid in it
-    lock_handle = fopen(Config->lock_file,"w");
-    fprintf(lock_handle,"%d",getpid());
-    fclose(lock_handle);
-    printf("PadmeTrig::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
-    return 0;
-
-  }
-
-  printf("PadmeTrig::create_lock - ERROR - Directory '%s' does not exist: cannot create lock file '%s'\n",lock_dir,Config->lock_file);
-  return -1;
+  // Create lock file and write own pid in it
+  lock_handle = fopen(Config->lock_file,"w");
+  fprintf(lock_handle,"%d",getpid());
+  fclose(lock_handle);
+  printf("PadmeTrig::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
+  return 0;
 
 }
 
@@ -109,45 +108,108 @@ unsigned int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_
   return 16;                     // Return total size of file tail in bytes
 }
 
-// Handle failure in initialization phase
-// If rmv_lock<>0 the lock file will also be removed
-void init_fail(int rmv_lock)
+int create_initok_file()
 {
+
   FILE* iff;
   struct stat sb;
 
-  if (strcmp(Config->initfail_file,"none")!=0) {
+  if (strcmp(Config->initok_file,"none")==0) return 0;
 
-    // Check if directory for initfail file exists
-    char* path = strdup(Config->initfail_file);
-    char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
-    if ( stat(iff_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
-      if ( access(Config->initfail_file,F_OK) == -1 ) {
-	iff = fopen(Config->initfail_file,"w");
-	fclose(iff);
-	printf("PadmeTrig::init_fail - InitFail file '%s' created\n",Config->initfail_file);
-      } else {
-	printf("PadmeTrig::init_fail - InitFail file '%s' already exists.\n",Config->initfail_file);
-      }
-    } else {
-      printf("PadmeTirg::init_fail - Directory '%s' does not exist: cannot create InitFail file '%s'.\n",iff_dir,Config->initfail_file);
-    }
-
+  // Check if directory for initok file exists
+  char* path = strdup(Config->initok_file);
+  char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(iff_dir,&sb) != 0 || (! S_ISDIR(sb.st_mode)) ) {
+    printf("PadmeTrig::create_initok_file - Directory '%s' does not exist: cannot create InitOK file '%s'.\n",iff_dir,Config->initok_file);
+    return 1;
   }
 
-  if (rmv_lock) remove_lock();
-  exit(1);
+  // Check if file is already there (not cleaned in previous run?)
+  if ( access(Config->initok_file,F_OK) != -1 ) {
+    printf("PadmeTrig::create_initok_file - InitOK file '%s' already exists.\n",Config->initok_file);
+    return 1;
+  }
 
+  // Create InitOK file
+  iff = fopen(Config->initok_file,"w");
+  fclose(iff);
+  printf("- InitOK file '%s' created\n",Config->initok_file);
+  return 0;
+
+}
+
+int create_initfail_file()
+{
+
+  FILE* iff;
+  struct stat sb;
+
+  if (strcmp(Config->initfail_file,"none")==0) return 0;
+
+  // Check if directory for initfail file exists
+  char* path = strdup(Config->initfail_file);
+  char* iff_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(iff_dir,&sb) != 0 || (! S_ISDIR(sb.st_mode)) ) {
+    printf("PadmeTrig::create_initfail_file - Directory '%s' does not exist: cannot create InitFail file '%s'.\n",iff_dir,Config->initfail_file);
+    return 1;
+  }
+
+  // Check if file is already there (not cleaned in previous run?)
+  if ( access(Config->initfail_file,F_OK) == -1 ) {
+    printf("PadmeTrig::create_initfail_file - InitFail file '%s' already exists.\n",Config->initfail_file);
+    return 1;
+  }
+
+  // Create InitFail file
+  iff = fopen(Config->initfail_file,"w");
+  fclose(iff);
+  printf("- InitFail file '%s' created\n",Config->initfail_file);
+  return 0;
+
+}
+
+void proc_finalize(int error,int rmv_lock,int create_file,int update_db,int status)
+{
+  if (create_file) create_initfail_file();
+  if (update_db && Config->run_number) {
+    if (status == DB_STATUS_IDLE) {
+      printf("- Setting process status to IDLE (%d) in DB\n",DB_STATUS_IDLE);
+    } else if (status == DB_STATUS_INITIALIZING) {
+      printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
+    } else if (status == DB_STATUS_INIT_FAIL) {
+      printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+    } else if (status == DB_STATUS_INITIALIZED) {
+      printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+    } else if (status == DB_STATUS_ABORTED) {
+      printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
+    } else if (status == DB_STATUS_RUNNING) {
+      printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    } else if (status == DB_STATUS_RUN_FAIL) {
+      printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
+    } else if (status == DB_STATUS_FINISHED) {
+      printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+    } else if (status == DB_STATUS_CLOSE_FAIL) {
+      printf("- Setting process status to CLOSE_FAIL (%d) in DB\n",DB_STATUS_CLOSE_FAIL);
+    } else {
+      printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
+      status = DB_STATUS_UNKNOWN;
+    }
+    db_process_set_status(Config->process_id,status);
+  }
+  if (rmv_lock) remove_lock();
+  if (error) exit(1);
+  exit(0);
 }
 
 int main(int argc, char *argv[]) {
 
   pid_t pid;
   int c;
+  int rc;
   char mask[4];
 
   // File to handle DAQ interaction with GUI
-  FILE* iokf; // InitOK file
+  //FILE* iokf; // InitOK file
 
   // Input data information
   unsigned char data[100000]; // Need more info from Albicocco to fine tune this size. Using a VERY conservative value
@@ -181,6 +243,12 @@ int main(int argc, char *argv[]) {
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle;
+
+  // Trigger debugging/logging variables
+  unsigned long int word;
+  unsigned long int trig_time;
+  unsigned int trig_map,trig_count;
+  unsigned long int old_time = 0;
 
   // Various timer variables
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -285,13 +353,58 @@ int main(int argc, char *argv[]) {
 
   // Check if another PadmeTrig program is running
   printf("\n=== Verifying that no other PadmeTrig instances are running ===\n");
-  if ( (pid = create_lock()) ) {
-    if (pid > 0) {
-      printf("*** ERROR *** Another PadmeTrig is running with PID %d. Exiting.\n",pid);
-    } else {
-      printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
+  pid = create_lock();
+  if (pid > 0) {
+    printf("*** ERROR *** Another PadmeTrig is running with PID %d. Exiting.\n",pid);
+    proc_finalize(1,0,1,0,0);
+  } else if (pid < 0) {
+    printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
+    proc_finalize(1,0,1,0,0);
+  }
+
+  if ( Config->run_number ) {
+
+    // Connect to DB
+    if ( db_init() != DB_OK ) {
+      printf("*** ERROR *** Unable to initialize DB connection. Exiting.\n");
+      proc_finalize(1,1,1,0,0);
     }
-    init_fail(0);
+
+    // Verify if run number is valid
+    rc = db_run_check(Config->run_number);
+    if ( rc != 1 ) {
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
+      } else if ( rc == 0 ) {
+	printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
+      }
+      proc_finalize(1,1,1,0,0);
+    }
+
+    // Verify if process id is valid
+    rc = db_process_check(Config->process_id);
+    if ( rc < 0 ) {
+      printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
+      proc_finalize(1,1,1,0,0);
+    } else if ( rc == 0 ) {
+      printf("ERROR: process id %d does not exist in DB\n",Config->process_id);
+      proc_finalize(1,1,1,0,0);
+    } else if ( rc > 1 ) {
+      printf("ERROR: multiple copies of process id %d found in DB\n",Config->process_id);
+      proc_finalize(1,1,1,0,0);
+    }
+    int status = db_process_get_status(Config->process_id);
+    if (status!=DB_STATUS_IDLE) {
+      printf("ERROR: process id %d is not in IDLE (%d) status (status=%d)\n",Config->process_id,DB_STATUS_IDLE,status);
+      proc_finalize(1,1,1,0,0);
+    }
+
+  }
+
+  // Update process status
+  if (Config->run_number) {
+    printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
+    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
   }
 
   // Allocate output event buffer (max among file header, trigger event, file tail)
@@ -299,7 +412,7 @@ int main(int argc, char *argv[]) {
   outEvtBuffer = (char *)malloc(maxPEvtSize);
   if (outEvtBuffer == NULL) {
     printf("Unable to allocate output event buffer of size %d\n",maxPEvtSize);
-    return 1;
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
@@ -307,71 +420,62 @@ int main(int argc, char *argv[]) {
   printf("\n=== Connect to Trigger board ===\n");
   if ( trig_init() != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while connecting to Trigger board. Exiting.\n");
-    init_fail(1);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   // Show current masks
   if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while readying trigger and busy masks. Exiting.\n");
-    init_fail(1);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
   printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
 
   // Disable all triggers
   if ( trig_set_trigmask(0) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while resetting trigger mask. Exiting.\n");
-    init_fail(1);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   // Disable busy
   if ( trig_set_busymask(0) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while resetting busy mask. Exiting.\n");
-    init_fail(1);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   // Drain trigger buffer
   while(data_len) {
     if ( trig_get_data((void*)data,&data_len) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while cleaning trigger buffer. Exiting.\n");
-      init_fail(1);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
     }
   }
 
   // Show current masks
   if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
-    init_fail(1);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
   printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
 
-  // If quit file is already there, assume this is a test run and do nothing
-  if ( access(Config->quit_file,F_OK) != -1 ) {
-    printf("PadmeTrig - Quit file '%s' found: will not run acquisition\n",Config->quit_file);
-    exit(0);
-  }
-
   // Initialization is now finished: create InitOK file to tell RunControl we are ready.
-  if (strcmp(Config->initok_file,"none")!=0) {
-    printf("- Creating InitOK file '%s'\n",Config->initok_file);
-    if ( access(Config->initok_file,F_OK) == -1 ) {
-      iokf = fopen(Config->initok_file,"w");
-      fclose(iokf);
-      printf("- InitOK file '%s' created\n",Config->initok_file);
-    } else {
-      printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
-      exit(1);
-    }
+  if (Config->run_number) {
+    printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
+  }
+  if ( create_initok_file() ) {
+    printf("PadmeTrig *** ERROR *** Problem while creating InitOK file. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   // Now wait for Start file before enabling triggers
   while(1){
+    if ( access(Config->quit_file,F_OK) != -1 ) {
+      printf("- Quit file '%s' found: exiting\n",Config->quit_file);
+      proc_finalize(0,1,0,1,DB_STATUS_ABORTED);
+    }
     if ( access(Config->start_file,F_OK) != -1 ) {
       printf("- Start file '%s' found: starting Triggers\n",Config->start_file);
       break;
-    }
-    if ( access(Config->quit_file,F_OK) != -1 ) {
-      printf("- Quit file '%s' found: exiting\n",Config->quit_file);
-      exit(0);
     }
     // Sleep for ~1ms before checking again
     usleep(1000);
@@ -379,6 +483,16 @@ int main(int argc, char *argv[]) {
 
   time(&t_daqstart);
   printf("%s - Starting trigger generation\n",format_time(t_daqstart));
+  
+  if ( Config->run_number ) {
+    // Tell DB that the process has started
+    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
+    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) {
+      printf("PadmeTrig *** ERROR *** Unable to open process in DB. Exiting.\n");
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+    }
+  }
 
   // Zero counters
   totalReadSize = 0;
@@ -418,8 +532,8 @@ int main(int argc, char *argv[]) {
     fileHandle = open(pathName[fileIndex],O_WRONLY);
   }
   if (fileHandle == -1) {
-    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-    exit(1);
+    printf("PadmeTrig *** ERROR *** Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
@@ -429,23 +543,23 @@ int main(int argc, char *argv[]) {
   fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
-    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
+    printf("*** ERROR *** Unable to write file header to file. Header size: %d, Write result: %d\n",
 	   fHeadSize,writeSize);
-    exit(1);
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
   fileSize[fileIndex] += fHeadSize;
   totalWriteSize += fHeadSize;
 
   // Enable all triggers
   if ( trig_set_trigmask(Config->trigger_mask) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while resetting trigger mask. Exiting.\n");
-    init_fail(1);
+    printf("*** ERROR *** Problem while resetting trigger mask. Exiting.\n");
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
 
   // Show current masks
   if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
-    init_fail(1);
+    printf("*** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
   printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
 
@@ -459,8 +573,8 @@ int main(int argc, char *argv[]) {
   while(1){
 
     if ( trig_get_data((void*)data,&data_len) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while reading data. Exiting.\n");
-      exit(1);
+      printf("*** ERROR *** Problem while reading data. Exiting.\n");
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
     //printf("New packet of length %u bytes received\n",data_len);
     numEvents = data_len/8;
@@ -469,10 +583,6 @@ int main(int argc, char *argv[]) {
     totalReadSize += data_len;
     totalReadEvents += numEvents;
 
-    //unsigned long int word;
-    //unsigned long int trig_time;
-    //unsigned int trig_map,trig_count;
-    //unsigned long int old_time = 0;
     for(p=0;p<data_len;p+=8){
       //printf("0x%02x%02x%02x%02x%02x%02x%02x%02x\n",data[p+0],data[p+1],data[p+2],data[p+3],data[p+4],data[p+5],data[p+6],data[p+7]);
       for(i=0;i<8;i++) buff[i] = data[p+7-i]; // Reverse order of the 8 bytes: LSB arrives first, MSB arrives last
@@ -483,8 +593,8 @@ int main(int argc, char *argv[]) {
       memcpy(outEvtBuffer+4,buff,8);
       writeSize = write(fileHandle,outEvtBuffer,pEvtSize);
       if (writeSize != pEvtSize) {
-	printf("ERROR - Unable to write data to output file. Data size: %d, Write result: %d\n",pEvtSize,writeSize);
-	exit(1);
+	printf("*** ERROR *** Unable to write data to output file. Data size: %d, Write result: %d\n",pEvtSize,writeSize);
+	proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
       }
 	  
       // Update file counters
@@ -496,16 +606,14 @@ int main(int argc, char *argv[]) {
       totalWriteEvents++;
 
       if (totalWriteEvents%100 == 0) {
-	printf("- Trigger %u received\n",totalWriteEvents);
+	memcpy(&word,buff,8);
+	trig_time  =                (word & 0x000000FFFFFFFFFF);
+	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
+	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
+	float dt = (trig_time-old_time)*12.5E-6;
+	printf("- Trigger %u %#016lx %13lu %#02x %4u %fns\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt);
+	old_time = trig_time;
       }
-
-      // Trigger debugging code
-      //trig_time  =                (word & 0x000000FFFFFFFFFF);
-      //trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
-      //trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
-      //float dt = (trig_time-old_time)*12.5E-6;
-      //printf("0x%016lx %13lu 0x%02x %4u %f\n",word,trig_time,trig_map,trig_count,dt);
-      //old_time = trig_time;
 
     }
 
@@ -529,17 +637,17 @@ int main(int argc, char *argv[]) {
 	fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
 	writeSize = write(fileHandle,outEvtBuffer,fTailSize);
 	if (writeSize != fTailSize) {
-	  printf("ERROR - Unable to write file tail to file. Tail size: %d, Write result: %d\n",
+	  printf("*** ERROR *** Unable to write file tail to file. Tail size: %d, Write result: %d\n",
 		 fTailSize,writeSize);
-	  return 2;
+	  proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
 	}
 	fileSize[fileIndex] += fTailSize;
 	totalWriteSize += fTailSize;
 
 	// Close old output file and show some info about counters
 	if (close(fileHandle) == -1) {
-	  printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-	  return 2;
+	  printf("*** ERROR *** Unable to close output file '%s'.\n",fileName[fileIndex]);
+	  proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
 	};
 	printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
@@ -561,8 +669,8 @@ int main(int argc, char *argv[]) {
 	  printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
 	  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 	  if (fileHandle == -1) {
-	    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-	    exit(1);
+	    printf("*** ERROR *** Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+	    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
 	  }
 	  fileTOpen[fileIndex] = t_now;
 	  fileSize[fileIndex] = 0;
@@ -572,9 +680,9 @@ int main(int argc, char *argv[]) {
 	  fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
-	    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
+	    printf("*** ERROR *** Unable to write file header to file. Header size: %d, Write result: %d\n",
 		   fHeadSize,writeSize);
-	    exit(1);
+	    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
 	  }
 	  fileSize[fileIndex] += fHeadSize;
 	  totalWriteSize += fHeadSize;
@@ -618,17 +726,17 @@ int main(int argc, char *argv[]) {
     fTailSize = create_file_tail(fileEvents[fileIndex],fileSize[fileIndex],fileTClose[fileIndex],(void *)outEvtBuffer);
     writeSize = write(fileHandle,outEvtBuffer,fTailSize);
     if (writeSize != fTailSize) {
-      printf("ERROR - Unable to write file tail to file. Tail size: %d, Write result: %d\n",
+      printf("*** ERROR *** Unable to write file tail to file. Tail size: %d, Write result: %d\n",
 	     fTailSize,writeSize);
-      return 2;
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
     fileSize[fileIndex] += fTailSize;
     totalWriteSize += fTailSize;
 
     // Close output file and show some info about counters
     if (close(fileHandle) == -1) {
-      printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-      return 2;
+      printf("*** ERROR *** Unable to close output file '%s'.\n",fileName[fileIndex]);
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     };
     if ( strcmp(Config->output_mode,"FILE")==0 ) {
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
@@ -647,15 +755,15 @@ int main(int argc, char *argv[]) {
 
   // Disable all triggers
   if ( trig_set_trigmask(0) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while resetting trigger mask. Exiting.\n");
-    exit(1);
+    printf("*** ERROR *** Problem while resetting trigger mask. Exiting.\n");
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
 
   // Drain trigger buffer
   while(data_len) {
     if ( trig_get_data((void*)data,&data_len) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while finalizing data readout. Exiting.\n");
-      exit(1);
+      printf("*** ERROR *** Problem while finalizing data readout. Exiting.\n");
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
   }
 
@@ -663,8 +771,18 @@ int main(int argc, char *argv[]) {
   printf("%s - Acquisition stopped\n",format_time(t_daqstop));
 
   if ( trig_end() != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while disconnecting from trigger board. Exiting.\n");
-    exit(1);
+    printf("*** ERROR *** Problem while disconnecting from trigger board. Exiting.\n");
+    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+  }
+
+  // Tell DB that the process has ended
+  if ( Config->run_number ) {
+    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) {
+      printf("*** ERROR *** Problem while closing process in DB. Exiting.\n");
+      proc_finalize(1,1,0,0,0);
+    }
+    printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+    db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
   }
 
   // Give some final report

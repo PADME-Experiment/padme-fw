@@ -206,11 +206,11 @@ int main(int argc, char*argv[])
   // Show configuration
   print_config();
 
-  // Check if another DAQ is running
+  // Check if another PadmeDAQ program is running
   printf("\n=== Verifying that no other DAQ instances are running ===\n");
   if ( (pid = create_lock()) ) {
     if (pid > 0) {
-      printf("*** ERROR *** Another DAQ is running with PID %d. Exiting.\n",pid);
+      printf("*** ERROR *** Another PadmeDAQ is running with PID %d. Exiting.\n",pid);
     } else {
       printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
     }
@@ -255,8 +255,8 @@ int main(int argc, char*argv[])
       exit(1);
     }
     int status = db_process_get_status(Config->process_id);
-    if (status!=0) {
-      printf("ERROR: process id %d is not in IDLE (0) status (status=%d)\n",Config->process_id,status);
+    if (status!=DB_STATUS_IDLE) {
+      printf("ERROR: process id %d is not in IDLE (%d) status (status=%d)\n",Config->process_id,DB_STATUS_IDLE,status);
       create_initfail_file();
       remove_lock();
       exit(1);

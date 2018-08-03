@@ -18,6 +18,19 @@ pid_t create_lock()
   pid_t pid;
   struct stat sb;
 
+  if ( strcmp(Config->lock_file,"none")==0 ) {
+    printf("PadmeDAQ::create_lock - No lock file required\n");
+    return 0;
+  }
+
+  // Check if directory for lock file exists
+  char* path = strdup(Config->lock_file);
+  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
+  if ( stat(lock_dir,&sb) != 0 || (! S_ISDIR(sb.st_mode)) ) {
+    printf("PadmeDAQ::create_lock - ERROR - Directory '%s' does not exist: cannot create lock file '%s'\n",lock_dir,Config->lock_file);
+    return -1;
+  }
+
   // Check if lock file exists and return its pid
   if ( access(Config->lock_file,F_OK) != -1 ) {
     lock_handle = fopen(Config->lock_file,"r");
@@ -29,22 +42,12 @@ pid_t create_lock()
     return pid;
   }
 
-  // Check if directory for lock file exists
-  char* path = strdup(Config->lock_file);
-  char* lock_dir = dirname(path); // N.B. dirname modifies its argument!
-  if ( stat(lock_dir,&sb) == 0 && S_ISDIR(sb.st_mode) ) {
-
-    // Create lock file and write own pid in it
-    lock_handle = fopen(Config->lock_file,"w");
-    fprintf(lock_handle,"%d\n",getpid());
-    fclose(lock_handle);
-    printf("PadmeDAQ::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
-    return 0;
-
-  }
-
-  printf("PadmeDAQ::create_lock - ERROR - Directory '%s' does not exist: cannot create lock file '%s'\n",lock_dir,Config->lock_file);
-  return -1;
+  // Create lock file and write own pid in it
+  lock_handle = fopen(Config->lock_file,"w");
+  fprintf(lock_handle,"%d\n",getpid());
+  fclose(lock_handle);
+  printf("PadmeDAQ::create_lock - Lock file '%s' created for PID %d\n",Config->lock_file,getpid());
+  return 0;
 
 }
 

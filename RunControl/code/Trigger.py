@@ -51,17 +51,13 @@ class Trigger:
 
         # Default trigger settings
         self.trigger_addr = "192.168.60.100"
-        self.trigger_port = "7"
+        self.trigger_port = 7
         self.trigger_mask = int('0x01',0)
 
         # Default DAQ control parameters
         self.daq_loop_delay = 100000
 
     def read_setup(self,setup):
-
-        if (self.board_id == -1):
-            print "ADCBoard - ERROR: board id not set while reading setup"
-            return
 
         # Define regular expressions used in file parsing
         re_empty = re.compile("^\s*$")
@@ -100,7 +96,7 @@ class Trigger:
         cfgstring += "start_file\t\t%s\n"%self.start_file
         cfgstring += "quit_file\t\t%s\n"%self.quit_file
 
-        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "process_mode\t\t%s\n"%self.process_mode
         if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
 
@@ -120,7 +116,7 @@ class Trigger:
 
         cfgstring += "trigger_mask\t\t%#02x\n"%self.trigger_mask
         cfgstring += "trigger_addr\t\t%s\n"%self.trigger_addr
-        cfgstring += "trigger_mask\t\t%d\n"%self.trigger_port
+        cfgstring += "trigger_port\t\t%d\n"%self.trigger_port
 
         cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
 

@@ -162,16 +162,16 @@ int ZSUP_readdata ()
     return 2;
   }
 
-  // Open virtual file for input data stream
+  // Create initok file to tell RunControl that we are ready
+  if ( create_initok_file() ) return 1;
+
+  // Open virtual file for input data stream (will wait for DAQ to start before proceeding)
   printf("- Opening input stream from file '%s'\n",Config->input_stream);
   inFileHandle = open(Config->input_stream,O_RDONLY, S_IRUSR | S_IWUSR);
   if (inFileHandle == -1) {
     printf("ERROR - Unable to open input stream '%s' for reading.\n",Config->input_stream);
     return 1;
   }
-
-  // Create initok file to tell RunControl that we are ready
-  if ( create_initok_file() ) return 1;
 
   time(&t_daqstart);
   printf("%s - Zero suppression started\n",format_time(t_daqstart));

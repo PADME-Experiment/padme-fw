@@ -285,6 +285,8 @@ class RunControlServer:
                 self.send_answer(self.get_setup_list())
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.db.get_last_run_in_db()))
             elif (cmd == "new_run"):
@@ -309,8 +311,9 @@ get_state\tShow current state of RunControl
 get_setup\tShow current setup name
 get_setup_list\tShow list of available setups
 get_board_list\tShow list of boards in use with current setup
-get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
-get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
+get_board_config_daq <b>\tShow current configuration of board DAQ process <b>
+get_board_config_zsup <b>\tShow current configuration of board ZSUP process <b>
+get_trig_config\tShow current configuration of trigger process
 get_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
@@ -356,6 +359,10 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
+            elif (cmd == "get_trig_log"):
+                self.send_answer(self.get_trig_log())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.run.run_number))
             elif (cmd == "abort_run"):
@@ -375,6 +382,8 @@ get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
+get_trig_config\tShow current configuration of trigger process
+get_trig_log\tGet name of log file for trigger process
 get_run_number\tReturn current run number
 start_run\t\tStart run
 abort_run\t\tAbort run
@@ -427,6 +436,10 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
+            elif (cmd == "get_trig_log"):
+                self.send_answer(self.get_trig_log())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.run.run_number))
             elif (cmd == "stop_run"):
@@ -444,6 +457,8 @@ get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
+get_trig_config\tShow current configuration of trigger process
+get_trig_log\tGet name of log file for trigger process
 get_run_number\tReturn current run number
 stop_run\t\tStop the run
 shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
@@ -543,6 +558,12 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             return self.run.adcboard_list[self.run.boardid_list.index(brdid)].log_file_zsup
         else:
             return "ERROR: board id %d does not exist"%brdid
+
+    def get_trig_config(self):
+        return self.run.trigger.format_config()
+
+    def get_trig_log(self):
+        return self.run.trigger.log_file
 
     def read_setup_list(self):
 

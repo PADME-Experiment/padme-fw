@@ -94,6 +94,7 @@ class ADCBoard:
 
         self.zs2_tail = 30
         self.zs2_minrms = 4.6
+        self.zs2_minrms_ch = []
         for ch in range(32): self.zs2_minrms_ch.append(self.zs2_minrms)
 
     def read_setup(self,setup):
@@ -180,7 +181,7 @@ class ADCBoard:
         cfgstring += "start_file\t\t%s\n"%self.start_file
         cfgstring += "quit_file\t\t%s\n"%self.quit_file
 
-        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "board_id\t\t%d\n"%self.board_id
         cfgstring += "process_mode\t\t%s\n"%self.process_mode
         if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_daq_id
@@ -233,7 +234,7 @@ class ADCBoard:
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
         cfgstring += "executable\t\t%s\n"%self.executable
 
-        cfgstring += "run_number\t\t%d\n"%self.run_number)
+        cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "board_id\t\t%d\n"%self.board_id
         cfgstring += "process_mode\t\tZSUP\n"
         if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.proc_zsup_id
@@ -253,16 +254,16 @@ class ADCBoard:
         cfgstring += "output_stream\t\t%s\n"%self.output_stream_zsup
         cfgstring += "input_stream\t\t%s\n"%self.input_stream_zsup
 
-        cfgstring += "zero_suppression\t%d\n"+repr(self.zero_suppression)+"\n"
+        cfgstring += "zero_suppression\t%d\n"%self.zero_suppression
         if (self.zero_suppression%100 == 1):
-            cfgstring += "zs1_head\t\t%d\n"%self.zs1_head)
-            cfgstring += "zs1_tail\t\t%d\n"%self.zs1_tail)
-            cfgstring += "zs1_nsigma\t\t%f\n"%self.zs1_nsigma)
-            cfgstring += "zs1_nabovethr\t\t%d\n"%self.zs1_nabovethr)
-            cfgstring += "zs1_badrmsthr\t\t%f\n"%self.zs1_badrmsthr)
+            cfgstring += "zs1_head\t\t%d\n"%self.zs1_head
+            cfgstring += "zs1_tail\t\t%d\n"%self.zs1_tail
+            cfgstring += "zs1_nsigma\t\t%f\n"%self.zs1_nsigma
+            cfgstring += "zs1_nabovethr\t\t%d\n"%self.zs1_nabovethr
+            cfgstring += "zs1_badrmsthr\t\t%f\n"%self.zs1_badrmsthr
         elif (self.zero_suppression%100 == 2):
-            cfgstring += "zs2_tail\t\t%d\n"%self.zs2_tail)
-            cfgstring += "zs2_minrms\t\t%f\n"%self.zs2_minrms)
+            cfgstring += "zs2_tail\t\t%d\n"%self.zs2_tail
+            cfgstring += "zs2_minrms\t\t%f\n"%self.zs2_minrms
             for ch in range(32):
                 if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
                     cfgstring += "zs2_minrms_ch\t%d\t%f\n"%(ch,self.zs2_minrms_ch[ch])
@@ -394,7 +395,7 @@ class ADCBoard:
             self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms",     repr(self.zs2_minrms))
             for ch in range(32):
                 if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
-                    self.db.add_cfg_para_daq(self.proc_daq_id,"zs2_minrms_ch",  "%d %d"%(ch,self.zs2_minrms_ch[ch]))
+                    self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms_ch",  "%d %d"%(ch,self.zs2_minrms_ch[ch]))
 
         return "ok"
 

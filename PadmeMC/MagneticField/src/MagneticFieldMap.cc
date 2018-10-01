@@ -8,7 +8,7 @@ MagneticFieldMap::MagneticFieldMap()
 {
 
   // Default value: can be changed with set method
-  fConstantMagneticField = -0.55*tesla;
+  fConstantMagneticField = 0.55*tesla;
   //fConstantMagneticField = 0.;
 
   fConstantMagneticFieldXmin = -26.0*cm;

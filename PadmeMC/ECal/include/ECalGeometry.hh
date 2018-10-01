@@ -43,9 +43,12 @@ public:
   G4double GetECalPosZ() { return fECalFrontFacePosZ+GetECalSizeZ()*0.5; }
 
   // Size of ECal box
-  G4double GetECalSizeX() { return (GetCellSizeX()+fCrystalGap)*fECalNCols; }
-  G4double GetECalSizeY() { return (GetCellSizeY()+fCrystalGap)*fECalNRows; }
-  G4double GetECalSizeZ() { return  GetCellSizeZ()+fCrystalGap; }
+  //G4double GetECalSizeX() { return (GetCellSizeX()+fCrystalGap)*fECalNCols; }
+  //G4double GetECalSizeY() { return (GetCellSizeY()+fCrystalGap)*fECalNRows; }
+  //G4double GetECalSizeZ() { return  GetCellSizeZ()+fCrystalGap; }
+  G4double GetECalSizeX() { return fECalSizeX; }
+  G4double GetECalSizeY() { return fECalSizeY; }
+  G4double GetECalSizeZ() { return fECalSizeZ; }
 
   // Id of crystal map to use
   G4int GetCrystalMapId() { return fCrystalMapId; }
@@ -96,9 +99,10 @@ public:
   G4int ExistsTedlarHAt(G4int,G4int);
 
   // Size of horizontal Tedlar slip
-  G4double GetTedlarHSizeX() { return fCrystalSizeX+2.*fCrystalCoating+fCrystalGap-1.*um; } // Approximate a continuous sheet
+  // G4double GetTedlarHSizeX() { return fCrystalSizeX+2.*fCrystalCoating+fCrystalGap-1.*um; } // Approximate a continuous sheet (creates overlap with support)
+  G4double GetTedlarHSizeX() { return fCrystalSizeX+2.*fCrystalCoating; }
   G4double GetTedlarHSizeY() { return fTedlarThickness; }
-  G4double GetTedlarHSizeZ() { return fCrystalSizeZ; }
+  G4double GetTedlarHSizeZ() { return GetCellSizeZ(); }
 
   // Position of center of horizontal Tedlar slip at given row/column
   G4double GetTedlarHPosX(G4int,G4int);
@@ -110,8 +114,9 @@ public:
 
   // Size of vertical Tedlar slip
   G4double GetTedlarVSizeX() { return fTedlarThickness; }
-  G4double GetTedlarVSizeY() { return fCrystalSizeY+fCrystalCoating; }
-  G4double GetTedlarVSizeZ() { return fCrystalSizeZ; }
+  //G4double GetTedlarVSizeY() { return fCrystalSizeY+fCrystalCoating; }
+  G4double GetTedlarVSizeY() { return fCrystalSizeY+2.*fCrystalCoating; }
+  G4double GetTedlarVSizeZ() { return GetCellSizeZ(); }
 
   // Position of center of vertical Tedlar slip at given row/column
   G4double GetTedlarVPosX(G4int,G4int);
@@ -122,28 +127,162 @@ public:
   G4double GetECalFrontFacePosZ() { return fECalFrontFacePosZ; }
   void SetECalFrontFacePosZ(G4double z) { fECalFrontFacePosZ = z; }
 
-  // Enable/Disable plastic panel in front of ECal
+    ////////////////////////////////////
+   // External ASA support structure //
+  ////////////////////////////////////
+
+  // Check if support structure exists at given row/column
+  G4int ExistsExternalSupportAt(G4int,G4int);
+
+  G4double GetExternalSupportCellSizeX() { return fCrystalSizeX+2.*fCrystalCoating+fCrystalGap; }
+  G4double GetExternalSupportCellSizeY() { return fCrystalSizeY+2.*fCrystalCoating+fCrystalGap; }
+  G4double GetExternalSupportCellSizeZ() { return fCrystalSizeZ+2.*fCrystalCoating; }
+
+  G4double GetExternalSupportCellPosX(G4int,G4int);
+  G4double GetExternalSupportCellPosY(G4int,G4int);
+  G4double GetExternalSupportCellPosZ(G4int,G4int);
+
+    //////////////////
+   // Nomex panel //
+  /////////////////
+
+  // Enable/Disable Nomex panel in front of ECal
   void EnableECalPanel() { fECalPanelEnable = true; }
   void DisableECalPanel() { fECalPanelEnable = false; }
   G4bool ECalPanelIsEnabled() { return fECalPanelEnable; }
 
-  // Position of plastic panel
+  // Position of Nomex panel
   G4double GetECalPanelPosX() { return 0.*cm; }
   G4double GetECalPanelPosY() { return 0.*cm; }
   G4double GetECalPanelPosZ() { return fECalFrontFacePosZ-fECalPanelGap-0.5*fECalPanelThickness; }
 
-  // Dimensions of plastic panel
+  // Dimensions of Nomex panel
   G4double GetECalPanelSizeX() { return fECalPanelSizeX; }
   G4double GetECalPanelSizeY() { return fECalPanelSizeY; }
   G4double GetECalPanelSizeZ() { return fECalPanelThickness; }
 
-  // Thickness of the plastic panel
+  // Total thickness of Nomex panel
   G4double GetECalPanelThickness() { return fECalPanelThickness; }
   void SetECalPanelThickness(G4double t) { fECalPanelThickness = t; }
 
-  // Air gap between plastic panel and ECal
+  // Thickness of glass fiber foils enclosing honeycomb
+  G4double GetECalPanelFoilThickness() { return fECalPanelFoilThickness; }
+  void SetECalPanelFoilThickness(G4double t) { fECalPanelFoilThickness = t; }
+
+  // Thickness of glue layers between glass fiber foils and honeycomb
+  G4double GetECalPanelGlueThickness() { return fECalPanelGlueThickness; }
+  void SetECalPanelGlueThickness(G4double t) { fECalPanelGlueThickness = t; }
+
+  // Thickness of honeycomb inside panel (derived quantity: can only be read)
+  G4double GetECalPanelHoneycombThickness() { return fECalPanelThickness - 2.*(fECalPanelFoilThickness+fECalPanelGlueThickness); }
+
+  // Radius of the hole at center of Nomex panel
+  G4double GetECalPanelHoleRadius() { return fECalPanelHoleRadius; }
+  void SetECalPanelHoleRadius(G4double r) { fECalPanelHoleRadius = r; }
+
+  // Air gap between Nomex panel and ECal
   G4double GetECalPanelGap() { return fECalPanelGap; }
   void SetECalPanelGap(G4double g) { fECalPanelGap = g; }
+
+    ///////////////////////////////////////////
+   // ASA support structure in central hole //
+  ///////////////////////////////////////////
+
+  // Enable/Disable ASA support in ECal hole
+  void EnableECalSupport() { fECalSupportEnable = true; }
+  void DisableECalSupport() { fECalSupportEnable = false; }
+  G4bool ECalSupportIsEnabled() { return fECalSupportEnable; }
+
+  // Position of ASA support in ECal hole (local main ECal box coordinates)
+  G4double GetECalSupportPosX() { return 0.*cm; }
+  G4double GetECalSupportPosY() { return 0.*cm; }
+  G4double GetECalSupportPosZ() { return 0.5*(-fECalSizeZ+fCrystalGap+fECalSupportSizeZ); }
+
+  // Dimensions of ASA support in ECal hole
+  G4double GetECalSupportSizeX() { return fECalSupportSizeX; }
+  G4double GetECalSupportSizeY() { return fECalSupportSizeY; }
+  G4double GetECalSupportSizeZ() { return fECalSupportSizeZ; }
+
+  // Radius of the hole at center of ASA support front face
+  G4double GetECalSupportHoleRadius() { return fECalSupportHoleRadius; }
+  void SetECalSupportHoleRadius(G4double r) { fECalSupportHoleRadius = r; }
+
+  // Position of hole in fron face of ASA support (local ASA support coordinates)
+  G4double GetECalSupportHolePosX() { return 0.; }
+  G4double GetECalSupportHolePosY() { return 0.; }
+  G4double GetECalSupportHolePosZ() { return 0.5*(-fECalSupportSizeZ+fECalSupportFrontThickness); }
+
+  // Thickness of front wall of ASA support
+  G4double GetECalSupportFrontThickness() { return fECalSupportFrontThickness; }
+
+  // Size of cavity inside ASA support
+  G4double GetECalSupportCavitySizeX() { return fECalSupportSizeX-2.*fECalSupportSideThickness; }
+  G4double GetECalSupportCavitySizeY() { return fECalSupportSizeY-2.*fECalSupportSideThickness; }
+  G4double GetECalSupportCavitySizeZ() { return fECalSupportSizeZ-fECalSupportFrontThickness-fECalSupportBackThickness; }
+
+  // Position of cavity inside ASA support (local ASA support coordinates)
+  G4double GetECalSupportCavityPosX() { return 0.; }
+  G4double GetECalSupportCavityPosY() { return 0.; }
+  G4double GetECalSupportCavityPosZ() { return 0.5*(fECalSupportFrontThickness-fECalSupportBackThickness); }
+
+  // Parameters for lattice along internal faces of support structure
+
+  G4int GetECalSupportLatticeNCellXY() { return fECalSupportLatticeNCellXY; }
+  G4int GetECalSupportLatticeNCellZ() { return fECalSupportLatticeNCellZ; }
+
+  G4double GetECalSupportLatticeThickness() { return fECalSupportLatticeThickness; }
+  G4double GetECalSupportLatticeHoleWidth() { return fECalSupportLatticeHoleWidth; }
+  G4double GetECalSupportLatticeHoleLength() { return fECalSupportLatticeHoleLength; }
+  G4double GetECalSupportLatticeCellWidth() { return fECalSupportLatticeHoleWidth+2.*fECalSupportLatticeFrame; }
+  G4double GetECalSupportLatticeCellLength() { return fECalSupportLatticeHoleLength+2.*fECalSupportLatticeFrame; }
+
+  G4double GetECalSupportLatticeXSizeX() { return fECalSupportLatticeNCellXY*GetECalSupportLatticeCellWidth(); }
+  G4double GetECalSupportLatticeXSizeY() { return fECalSupportLatticeThickness; }
+  G4double GetECalSupportLatticeXSizeZ() { return fECalSupportLatticeNCellZ*GetECalSupportLatticeCellLength(); }
+  G4double GetECalSupportLatticeXpPosX() { return 0.; }
+  G4double GetECalSupportLatticeXpPosY() { return 0.5*fECalSupportSizeY-fECalSupportSideThickness-0.5*fECalSupportLatticeThickness-5.*um; }
+  G4double GetECalSupportLatticeXpPosZ() { return 0.5*(fECalSupportFrontThickness-fECalSupportBackThickness); }
+  G4double GetECalSupportLatticeXmPosX() { return 0.; }
+  G4double GetECalSupportLatticeXmPosY() { return -0.5*fECalSupportSizeY+fECalSupportSideThickness+0.5*fECalSupportLatticeThickness+5.*um; }
+  G4double GetECalSupportLatticeXmPosZ() { return 0.5*(fECalSupportFrontThickness-fECalSupportBackThickness); }
+
+  G4double GetECalSupportLatticeXCellPosX(G4int x, G4int z) { return -0.5*GetECalSupportLatticeXSizeX()+(x+0.5)*GetECalSupportLatticeCellWidth(); }
+  G4double GetECalSupportLatticeXCellPosY(G4int x, G4int z) { return 0.; }
+  G4double GetECalSupportLatticeXCellPosZ(G4int x, G4int z) { return -0.5*GetECalSupportLatticeXSizeZ()+(z+0.5)*GetECalSupportLatticeCellLength(); }
+
+  G4double GetECalSupportLatticeYSizeX() { return fECalSupportLatticeThickness; }
+  G4double GetECalSupportLatticeYSizeY() { return fECalSupportLatticeNCellXY*GetECalSupportLatticeCellWidth(); }
+  G4double GetECalSupportLatticeYSizeZ() { return fECalSupportLatticeNCellZ*GetECalSupportLatticeCellLength(); }
+  G4double GetECalSupportLatticeYpPosX() { return 0.5*fECalSupportSizeX-fECalSupportSideThickness-0.5*fECalSupportLatticeThickness-5.*um; }
+  G4double GetECalSupportLatticeYpPosY() { return 0.; }
+  G4double GetECalSupportLatticeYpPosZ() { return 0.5*(fECalSupportFrontThickness-fECalSupportBackThickness); }
+  G4double GetECalSupportLatticeYmPosX() { return -0.5*fECalSupportSizeX+fECalSupportSideThickness+0.5*fECalSupportLatticeThickness+5.*um; }
+  G4double GetECalSupportLatticeYmPosY() { return 0.; }
+  G4double GetECalSupportLatticeYmPosZ() { return 0.5*(fECalSupportFrontThickness-fECalSupportBackThickness); }
+
+  G4double GetECalSupportLatticeYCellPosX(G4int y, G4int z) { return 0.; }
+  G4double GetECalSupportLatticeYCellPosY(G4int y, G4int z) { return -0.5*GetECalSupportLatticeYSizeY()+(y+0.5)*GetECalSupportLatticeCellWidth(); }
+  G4double GetECalSupportLatticeYCellPosZ(G4int y, G4int z) { return -0.5*GetECalSupportLatticeYSizeZ()+(z+0.5)*GetECalSupportLatticeCellLength(); }
+
+  G4double GetECalSupportCornerSizeX() { return 0.5*(GetECalSupportCavitySizeX()-GetECalSupportLatticeXSizeX()-10.*um); }
+  G4double GetECalSupportCornerSizeY() { return 0.5*(GetECalSupportCavitySizeY()-GetECalSupportLatticeYSizeY()-10.*um); }
+  G4double GetECalSupportCornerSizeZ() { return GetECalSupportLatticeXSizeZ(); }
+
+  G4double GetECalSupportCornerURPosX() { return 0.5*(GetECalSupportCavitySizeX()-GetECalSupportCornerSizeX()-10.*um); }
+  G4double GetECalSupportCornerURPosY() { return 0.5*(GetECalSupportCavitySizeY()-GetECalSupportCornerSizeY()-10.*um); }
+  G4double GetECalSupportCornerURPosZ() { return GetECalSupportCavityPosZ(); }
+
+  G4double GetECalSupportCornerULPosX() { return -0.5*(GetECalSupportCavitySizeX()-GetECalSupportCornerSizeX()-10.*um); }
+  G4double GetECalSupportCornerULPosY() { return 0.5*(GetECalSupportCavitySizeY()-GetECalSupportCornerSizeY()-10.*um); }
+  G4double GetECalSupportCornerULPosZ() { return GetECalSupportCavityPosZ(); }
+
+  G4double GetECalSupportCornerDRPosX() { return 0.5*(GetECalSupportCavitySizeX()-GetECalSupportCornerSizeX()-10.*um); }
+  G4double GetECalSupportCornerDRPosY() { return -0.5*(GetECalSupportCavitySizeY()-GetECalSupportCornerSizeY()-10.*um); }
+  G4double GetECalSupportCornerDRPosZ() { return GetECalSupportCavityPosZ(); }
+
+  G4double GetECalSupportCornerDLPosX() { return -0.5*(GetECalSupportCavitySizeX()-GetECalSupportCornerSizeX()-10.*um); }
+  G4double GetECalSupportCornerDLPosY() { return -0.5*(GetECalSupportCavitySizeY()-GetECalSupportCornerSizeY()-10.*um); }
+  G4double GetECalSupportCornerDLPosZ() { return GetECalSupportCavityPosZ(); }
 
   // Digitization parameters
   G4double GetBGOLightPropagationSpeed() { return (2.998E8*m/s)/2.57; }
@@ -175,6 +314,10 @@ private:
   G4int fECalNRows;
   G4int fECalNCols;
 
+  G4double fECalSizeX;
+  G4double fECalSizeY;
+  G4double fECalSizeZ;
+
   G4double fCrystalGap; // Air gap size between adjacent crystals+coating
 
   G4double fCrystalCoating; // Thickness of coating around crystals
@@ -184,10 +327,28 @@ private:
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
   G4bool fECalPanelEnable; // Use (true) or do not use (false) the panel in front of ECal
-  G4double fECalPanelSizeX; // Size of plastic panel in front of ECal along X
-  G4double fECalPanelSizeY; // Size of plastic panel in front of ECal along Y
-  G4double fECalPanelThickness; // Thickness of the plastic panel in front of ECal
-  G4double fECalPanelGap; // Gap between back of plastic panel and front face of ECal
+  G4double fECalPanelSizeX; // Size of Nomex panel in front of ECal along X
+  G4double fECalPanelSizeY; // Size of Nomex panel in front of ECal along Y
+  G4double fECalPanelThickness; // Total thickness of Nomex panel in front of ECal
+  G4double fECalPanelFoilThickness; // Thickness of glass fiber foils enclosing honeycomb
+  G4double fECalPanelGlueThickness; // Thickness of glue layers between glass fiber foils and honeycomb
+  G4double fECalPanelHoleRadius; // Radius of hole at center of Nomex panel in front of ECal
+  G4double fECalPanelGap; // Gap between back of Nomex panel and front face of ECal
+
+  G4bool fECalSupportEnable; // Use (true) or do not use (false) the ASA support structure inside ECal hole
+  G4double fECalSupportSizeX; // Size along X of ASA support structure inside ECal
+  G4double fECalSupportSizeY; // Size along Y of ASA support structure inside ECal
+  G4double fECalSupportSizeZ; // Size along Z of ASA support structure inside ECal
+  G4double fECalSupportHoleRadius; // Radius of hole at center of ASA support structure inside ECal
+  G4double fECalSupportFrontThickness; // Thickness of front face
+  G4double fECalSupportSideThickness; // Thickness of side faces
+  G4double fECalSupportBackThickness; // Thickness of back face
+  G4double fECalSupportLatticeFrame; // Width of frame around lattice cell
+  G4double fECalSupportLatticeHoleWidth; // Width (along X or Y) of hole inside lattice cell
+  G4double fECalSupportLatticeHoleLength; // Length (along Z) of hole inside lattice cell
+  G4double fECalSupportLatticeThickness; // Thickness of lattice
+  G4int fECalSupportLatticeNCellXY; // Number of cells along X or Y
+  G4int fECalSupportLatticeNCellZ; // Number of cells along Z
 
   G4int fECalCrystalMap[ECALGEOMETRY_N_ROWS_MAX][ECALGEOMETRY_N_COLS_MAX]; // Map of existing crystals
 

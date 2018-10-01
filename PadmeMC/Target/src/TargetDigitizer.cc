@@ -59,7 +59,7 @@ void TargetDigitizer::Digitize()
 
       // Loop over used channels
       G4int found = 0;
-      for (G4int i=0; i < dChannel.size(); i++) {
+      for (G4int i=0; i < (G4int)dChannel.size(); i++) {
 	if (dChannel[i] == hChannel) {
 	  dEnergy[i] += hEnergy;
 	  if (hTime < dTime[i]) dTime[i] = hTime;
@@ -76,7 +76,7 @@ void TargetDigitizer::Digitize()
     }
 
     // Create digis for active channels
-    for (G4int i=0; i < dChannel.size(); i++) {
+    for (G4int i=0; i < (G4int)dChannel.size(); i++) {
       TargetDigi* digi = new TargetDigi();
       digi->SetChannelId(dChannel[i]);
       digi->SetTime(dTime[i]);

@@ -20,28 +20,27 @@ PVetoGeometry::PVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerGap = 0.3*mm;
+  fFingerDist0 = 10.309*mm ; // Need drawings!
+  fFingerPitch = 10.309*mm; // Need drawings!
 
-  //fPVetoNFingers = 100;
   fPVetoNFingers = 96;
 
-  fFingerNominalSizeX =  1.0*cm;
-  fFingerNominalSizeY = 16.0*cm;
-  fFingerNominalSizeZ =  1.0*cm;
+  fFingerSizeX =  1.0*cm;
+  fFingerSizeY = 17.8*cm;
+  fFingerSizeZ =  1.0*cm;
 
-  //fFingerRotX = 0.*deg;
-  fFingerRotY = 10.*deg;
-  //fFingerRotZ = 0.*deg;
+  fGrooveSizeX = 1.3*mm;
+  fGrooveSizeZ = 1.3*mm;
 
-  fSupportGap = 0.1*mm;
+  fFingerRotY = -10.*deg; // Need drawings!
 
-  fSupportNominalSizeX =   2.0*cm;
-  fSupportNominalSizeY =   0.5*cm;
-  fSupportNominalSizeZ = 100.0*cm;
+  fSupportSizeX =   1.5*cm; // Need drawings!
+  fSupportSizeY =   0.5*cm; // Need drawings!
+  fSupportSizeZ = 100.0*cm; // Need drawings!
 
-  fPVetoInnerFacePosX =  -20.*cm;
+  fPVetoInnerFacePosX =  20.*cm;
 
-  fPVetoFrontFacePosZ = -50.*cm; // Start at front face of yoke
+  fPVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
 
   fPVetoSensitiveDetectorName = "PVetoSD";
 
@@ -77,7 +76,7 @@ G4double PVetoGeometry::GetFingerPosZ(G4int idx)
     printf("PVetoGeometry::GetFingerPosZ - ERROR - Requested finger at index %d\n",idx);
     return 0.*cm;
   }
-  return (fFingerNominalSizeZ+fFingerGap)*(-0.5*fPVetoNFingers+1.*idx+0.5);
+  return -0.5*fSupportSizeZ+fFingerDist0+idx*fFingerPitch;
 }
 
 std::vector<G4String> PVetoGeometry::GetHashTable()
@@ -86,7 +85,11 @@ std::vector<G4String> PVetoGeometry::GetHashTable()
   std::vector<G4String> hash;
   std::ostringstream buffer;
 
-  buffer << "fFingerGap " << fFingerGap;
+  buffer << "fFingerDist0 " << fFingerDist0;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fFingerPitch " << fFingerPitch;
   hash.push_back(buffer.str());
   buffer.str("");
 
@@ -94,15 +97,15 @@ std::vector<G4String> PVetoGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeX " << fFingerNominalSizeX;
+  buffer << "fFingerSizeX " << fFingerSizeX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeY " << fFingerNominalSizeY;
+  buffer << "fFingerSizeY " << fFingerSizeY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fFingerNominalSizeZ " << fFingerNominalSizeZ;
+  buffer << "fFingerSizeZ " << fFingerSizeZ;
   hash.push_back(buffer.str());
   buffer.str("");
 
@@ -110,19 +113,15 @@ std::vector<G4String> PVetoGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fSupportGap " << fSupportGap;
+  buffer << "fSupportSizeX " << fSupportSizeX;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fSupportNominalSizeX " << fSupportNominalSizeX;
+  buffer << "fSupportSizeY " << fSupportSizeY;
   hash.push_back(buffer.str());
   buffer.str("");
 
-  buffer << "fSupportNominalSizeY " << fSupportNominalSizeY;
-  hash.push_back(buffer.str());
-  buffer.str("");
-
-  buffer << "fSupportNominalSizeZ " << fSupportNominalSizeZ;
+  buffer << "fSupportSizeZ " << fSupportSizeZ;
   hash.push_back(buffer.str());
   buffer.str("");
 

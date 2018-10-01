@@ -39,7 +39,26 @@ class EventAction : public G4UserEventAction
 
   SteppingAction * myStepping;
 
+  // M. Raggi 23/06/2018 datacard commands
+  void EnableSaveEcal()  { fEnableSaveEcal = 1; }
+  void DisableSaveEcal() { fEnableSaveEcal = 0; }
+
+  void EnableSaveSAC()  { fEnableSaveSAC = 1; }
+  void DisableSaveSAC() { fEnableSaveSAC = 0; }
+
+  void EnableSaveVeto()  { 
+    fEnableSaveVeto = 1; 
+    G4cout<< "saving Veto"<<G4endl;
+  }
+  void DisableSaveVeto() { fEnableSaveVeto = 0; }
+
   private:
+
+  //M. Raggi 
+  G4int fEnableSaveEcal;
+  G4int fEnableSaveSAC;
+  G4int fEnableSaveVeto;
+
   void  AddECryHits(ECalHitsCollection*);
   void  FindClusters();
 
@@ -115,8 +134,8 @@ class EventAction : public G4UserEventAction
    G4double EVetoECl[100][10];
    G4int    EVetoClIndex[100];
 
-   G4double ETotSAC[100];
 
+   G4double ETotSAC[100];
    G4double SACEtrack [100];
    G4double SACTrackTime[100];
    G4double SACPType[100];
@@ -143,10 +162,10 @@ class EventAction : public G4UserEventAction
    G4double EneCl[20];
    G4double QCl[20];
    G4double TimeCl[20];
-   G4double XCl[20]; //For the Ntuple
-   G4double YCl[20]; //For the Ntuple
-   G4double ThCl[20];//For the Ntuple
-   G4double MM2[20]; //For the Ntuple
+   G4double XCl[20];      //For the Ntuple
+   G4double YCl[20];      //For the Ntuple
+   G4double ThCl[20];     //For the Ntuple
+   G4double MM2[20];      //For the Ntuple
    G4double NCellsCl[20]; //For the Ntuple
 
    G4double ETotCry[1000];

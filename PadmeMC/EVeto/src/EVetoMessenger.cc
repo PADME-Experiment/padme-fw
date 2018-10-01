@@ -87,8 +87,13 @@ void EVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetFingerSizeCmd ) {
     G4double s; std::istringstream is(par); is >> s;
-    fEVetoGeometry->SetFingerNominalSizeY(s*cm);
-    fEVetoGeometry->SetFingerNominalSizeZ(s*cm);
+    fEVetoGeometry->SetFingerSizeY(s*cm);
+    fEVetoGeometry->SetFingerSizeZ(s*cm);
+  }
+
+  if ( cmd == fSetFingerLengthCmd ) {
+    G4double s; std::istringstream is(par); is >> s;
+    fEVetoGeometry->SetFingerSizeY(s*cm);
   }
 
   if ( cmd == fSetEVetoInnerFaceXCmd ) {

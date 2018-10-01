@@ -749,6 +749,35 @@ int DAQ_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
+  // Initialize output files counter
+  fileIndex = 0;
+
+  // If we use STREAM output, the output stream must be initialized here
+  if ( strcmp(Config->output_mode,"STREAM")==0 ) {
+
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
+
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY);
+
+    // Increase stream buffer to 128MB (~1800evts)
+    //long pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+    long pipe_size = (long)fcntl(fileHandle,1024+8);
+    if (pipe_size == -1) { perror("get pipe size failed."); }
+    printf("Default pipe size: %ld\n", pipe_size);
+
+    //int ret = fcntl(fileHandle,F_SETPIPE_SZ,128*1024*1024);
+    int ret = fcntl(fileHandle,1024+7,128*1024*1024);
+    if (ret < 0) { perror("set pipe size failed."); }
+
+    //pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+    pipe_size = (long)fcntl(fileHandle,1024+8);
+    if (pipe_size == -1) { perror("get pipe size 2 failed."); }
+    printf("Pipe size: %ld\n", pipe_size);
+
+  }
+
   // DAQ is now ready to start. Create InitOK file and set status to INITIALIZED
   if ( create_initok_file() ) return 1;
   if (Config->run_number) {
@@ -807,8 +836,8 @@ int DAQ_readdata ()
   totalWriteEvents = 0;
 
   // Start counting output files
-  fileIndex = 0;
-  tooManyOutputFiles = 0;
+  //fileIndex = 0;
+  //tooManyOutputFiles = 0;
 
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
@@ -830,25 +859,43 @@ int DAQ_readdata ()
     strcpy(pathName[fileIndex],Config->data_dir);
     strcat(pathName[fileIndex],fileName[fileIndex]);
 
-  } else {
-
-    // Use only one virtual file for streaming out all data
-    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
-    strcpy(pathName[fileIndex],Config->output_stream);
-
-  }
-
-  // Open file
-  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+//  } else {
+//
+//    // Use only one virtual file for streaming out all data
+//    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+//    strcpy(pathName[fileIndex],Config->output_stream);
+//
+//  }
+//
+//  // Open file
+//  if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
     fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-  } else {
-    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
-    fileHandle = open(pathName[fileIndex],O_WRONLY);
-  }
-  if (fileHandle == -1) {
-    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-    return 2;
+//  } else {
+//
+//    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+//    fileHandle = open(pathName[fileIndex],O_WRONLY);
+//
+//    // Increase stream buffer to 128MB (~1800evts)
+//    //long pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+//    long pipe_size = (long)fcntl(fileHandle,1024+8);
+//    if (pipe_size == -1) { perror("get pipe size failed."); }
+//    printf("Default pipe size: %ld\n", pipe_size);
+//
+//    //int ret = fcntl(fileHandle,F_SETPIPE_SZ,128*1024*1024);
+//    int ret = fcntl(fileHandle,1024+7,128*1024*1024);
+//    if (ret < 0) { perror("set pipe size failed."); }
+//
+//    //pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+//    pipe_size = (long)fcntl(fileHandle,1024+8);
+//    if (pipe_size == -1) { perror("get pipe size 2 failed."); }
+//    printf("Pipe size: %ld\n", pipe_size);
+//
+//  }
+    if (fileHandle == -1) {
+      printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+      return 2;
+    }
   }
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
@@ -873,6 +920,7 @@ int DAQ_readdata ()
   //old_TT =0;
   //old_TTT=0;
   adcError = 0;
+  tooManyOutputFiles = 0;
   while(1){
 
     // Read Acquisition Status register

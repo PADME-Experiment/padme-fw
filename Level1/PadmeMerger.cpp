@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <fcntl.h>
 #include <vector>
 #include <cmath>
 
@@ -225,7 +226,9 @@ int main(int argc, char* argv[])
   
   // Get list of fifo files for output streams, open them and reset relative counters (#events and size)
   std::string output_stream[LVL1_PROC_MAX];
-  std::ofstream output_stream_handle[LVL1_PROC_MAX];
+  //std::ofstream output_stream_handle[LVL1_PROC_MAX];
+  int output_stream_handle[LVL1_PROC_MAX];
+  unsigned int writeSize;
   unsigned int output_stream_nevents[LVL1_PROC_MAX];
   unsigned long long int output_stream_size[LVL1_PROC_MAX];
   unsigned int NOutputStreams = 0;
@@ -239,7 +242,21 @@ int main(int argc, char* argv[])
       }
       printf("- Opening output stream %2u '%s'\n",NOutputStreams,line.c_str());
       output_stream[NOutputStreams] = line;
-      output_stream_handle[NOutputStreams].open(line.c_str(),std::ios::out | std::ios::binary);
+
+      // Open output stream and increase the stream buffer size
+      //output_stream_handle[NOutputStreams].open(line.c_str(),std::ios::out | std::ios::binary);
+      output_stream_handle[NOutputStreams] = open(line.c_str(),O_WRONLY);
+      long pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      if (pipe_size == -1) { perror("get pipe size failed."); }
+      printf("Default pipe size: %ld\n", pipe_size);
+
+      int ret = fcntl(output_stream_handle[NOutputStreams],1024+7,128*1024*1024);
+      if (ret < 0) { perror("set pipe size failed."); }
+
+      pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      if (pipe_size == -1) { perror("get pipe size 2 failed."); }
+      printf("Pipe size: %ld\n", pipe_size);
+
       output_stream_nevents[NOutputStreams] = 0;
       output_stream_size[NOutputStreams] = 0;
       NOutputStreams++;
@@ -290,6 +307,9 @@ int main(int argc, char* argv[])
   unsigned int NumberOfEvents = 0;
   unsigned int EventStatus; // Event status: only lower 16bits are used
   unsigned int MissingADCBoards; // Bit mask of ADC boards missing in current event
+  //struct timespec sys_time;
+  //long int old_sys_time_ns = 0;
+  //long int dt_ns;
   while(1){
 
     //if (cfg->Verbose()>=1) printf("=== Processing event %8u ===\n",NumberOfEvents);
@@ -300,19 +320,29 @@ int main(int argc, char* argv[])
 
     // Get next trigger event
     trigEOR = 0;
+    //clock_gettime(CLOCK_REALTIME,&sys_time);
+    //dt_ns = sys_time.tv_nsec-old_sys_time_ns; if (dt_ns<0) dt_ns += 1000000000;
+    //old_sys_time_ns = sys_time.tv_nsec;
+    //printf("Before trigger %9ld.%09ld dt %3ld\n",sys_time.tv_sec,sys_time.tv_nsec,dt_ns/1000000);
     if ( ! trigger->NextEvent() ) {
       trigEOR = 1;
       printf("*** Trigger - End of Run.\n");
     }
 
     // Load next event for all boards
+    //clock_gettime(CLOCK_REALTIME,&sys_time);
+    //printf("Before boards  %ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
     nEOR = 0;
     for(unsigned int b=0; b<boards.size(); b++) {
+      //clock_gettime(CLOCK_REALTIME,&sys_time);
+      //printf("Before brd. %2d %ld.%09ld\n",boards[b]->GetBoardId(),sys_time.tv_sec,sys_time.tv_nsec);
       if ( ! boards[b]->NextEvent() ) {
 	nEOR++;
 	printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
       }
     }
+    //clock_gettime(CLOCK_REALTIME,&sys_time);
+    //printf("After boards   %ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
 
     // Check if anybody reached End Of Run
     if ( trigEOR || nEOR ) {
@@ -362,7 +392,13 @@ int main(int argc, char* argv[])
 
       // Send header to all output files
       for(unsigned int i = 0; i<NOutputStreams; i++) {
-	output_stream_handle[i].write(file_header,header_size);
+	//output_stream_handle[i].write(file_header,header_size);
+	writeSize = write(output_stream_handle[i],file_header,header_size);
+	if (writeSize != header_size) {
+	  printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
+		 header_size,writeSize);
+	  exit(1);
+	}
 	output_stream_size[i] += header_size;
       }
 
@@ -462,7 +498,7 @@ int main(int argc, char* argv[])
       break; // Exit from main loop
     }
 
-    // Create missing boards mask and handle "Event complete" staus bit
+    // Create missing boards mask and handle "Event complete" status bit
     for(unsigned int b=0; b<boards.size(); b++) {
       if (boards[b]->EventIsMissing()) {
 	MissingADCBoards |= (1 << boards[b]->GetBoardId()); // Set ADC board bit in mask
@@ -488,6 +524,8 @@ int main(int argc, char* argv[])
       perror("clock gettime");
       exit(EXIT_FAILURE);
     }
+
+    //printf("Before output  %ld.%09ld\n",now.tv_sec,now.tv_nsec);
 
     // Create event header structure
     char evt_h[4*EVENT_V03_EVENTHEAD_LEN];
@@ -522,11 +560,23 @@ int main(int argc, char* argv[])
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
 
     // Send event header to current output stream
-    output_stream_handle[CurrentOutputStream].write(evt_h,evt_h_size);
+    //output_stream_handle[CurrentOutputStream].write(evt_h,evt_h_size);
+    writeSize = write(output_stream_handle[CurrentOutputStream],evt_h,evt_h_size);
+    if (writeSize != evt_h_size) {
+      printf("ERROR - Unable to write event header to file. Header size: %d, Write result: %d\n",
+	     evt_h_size,writeSize);
+      exit(1);
+    }
     output_stream_size[CurrentOutputStream] += evt_h_size;
 
     // Copy trigger event structure to output (3 words, no need to change anything)
-    output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*TRIGEVENT_V03_EVENTHEAD_LEN);
+    //output_stream_handle[CurrentOutputStream].write((const char*)trigger->Buffer(),4*TRIGEVENT_V03_EVENTHEAD_LEN);
+    writeSize = write(output_stream_handle[CurrentOutputStream],(const char*)trigger->Buffer(),4*TRIGEVENT_V03_EVENTHEAD_LEN);
+    if (writeSize != 4*TRIGEVENT_V03_EVENTHEAD_LEN) {
+      printf("ERROR - Unable to write trigger event structure to file. Structure size: %d, Write result: %d\n",
+	     4*TRIGEVENT_V03_EVENTHEAD_LEN,writeSize);
+      exit(1);
+    }
     output_stream_size[CurrentOutputStream] += 4*TRIGEVENT_V03_EVENTHEAD_LEN;
 
     if (cfg->Verbose()>=1)
@@ -536,10 +586,19 @@ int main(int argc, char* argv[])
     for(unsigned int b=0; b<boards.size(); b++) {
       if (! boards[b]->EventIsMissing()) {
 	unsigned int size = 4*boards[b]->GetEventSize();
-	output_stream_handle[CurrentOutputStream].write((const char*)boards[b]->Buffer(),size);
+	//output_stream_handle[CurrentOutputStream].write((const char*)boards[b]->Buffer(),size);
+	writeSize = write(output_stream_handle[CurrentOutputStream],(const char*)boards[b]->Buffer(),size);
+	if (writeSize != size) {
+	  printf("ERROR - Unable to write board data to file. Data size: %d, Write result: %d\n",
+		 size,writeSize);
+	  exit(1);
+	}
 	output_stream_size[CurrentOutputStream] += size;
       }
     }
+
+    //clock_gettime(CLOCK_REALTIME,&sys_time);
+    //printf("After output   %ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
 
     // Update counters for this stream
     output_stream_nevents[CurrentOutputStream]++;
@@ -579,10 +638,20 @@ int main(int argc, char* argv[])
     printf("Sending tail structure to Level1 stream %d\n",i);
 
     // Write tail structure to stream
-    output_stream_handle[i].write(file_tail,tail_size);
+    //output_stream_handle[i].write(file_tail,tail_size);
+    writeSize = write(output_stream_handle[i],file_tail,tail_size);
+    if (writeSize != tail_size) {
+      printf("ERROR - Unable to write stream tail to file. Tail size: %d, Write result: %d\n",
+	     tail_size,writeSize);
+      return 2;
+    }
 
     // Close stream
-    output_stream_handle[i].close();
+    //output_stream_handle[i].close();
+    if (close(output_stream_handle[i]) == -1) {
+      printf("ERROR - Unable to close output stream '%s'.\n",output_stream[i].c_str());
+      exit(1);
+    };
 
   }
 

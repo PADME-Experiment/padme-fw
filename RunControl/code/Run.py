@@ -66,25 +66,31 @@ class Run:
 
         #print "--- Changing run"
 
-        if (self.run_number == 0):
-            self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
-        else:
-            self.run_name = "run_%d"%self.run_number
+        #if (self.run_number == 0):
+        #    self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
+        #else:
+        #    self.run_name = "run_%d"%self.run_number
+        self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
         self.config_dir = self.run_dir+"/cfg"
-        self.config_file = "run_%d.cfg"%self.run_number
-        self.config_file_head = "run_%d"%self.run_number
+        #self.config_file = "run_%d.cfg"%self.run_number
+        #self.config_file_head = "run_%d"%self.run_number
+        self.config_file = "%s.cfg"%self.run_name
+        self.config_file_head = self.run_name
 
         self.log_dir = self.run_dir+"/log"
-        self.log_file_head = "run_%d"%self.run_number
+        #self.log_file_head = "run_%d"%self.run_number
+        self.log_file_head = self.run_name
 
         self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
-        self.stream_head = "run_%d"%self.run_number
+        #self.stream_head = "run_%d"%self.run_number
+        self.stream_head = self.run_name
 
         self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
-        self.rawdata_head = "run_%d"%self.run_number
+        #self.rawdata_head = "run_%d"%self.run_number
+        self.rawdata_head = self.run_name
 
         # Make sure Merger runs on a different node after each run
         self.merger_node = self.next_merger_node()
@@ -529,6 +535,7 @@ class Run:
 
                 # Open receiving end of tunnel on Merger node
                 command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
+                #command = "nc --udp -l -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if self.merger.node_id != 0:
                     command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
                 print command
@@ -553,7 +560,8 @@ class Run:
             self.hand_rcv.append(log_handle)
 
             # Open receiving end of tunnel on Merger node
-            command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            #command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            command = "nc --udp -l -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
             if self.merger.node_id != 0:
                 command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
             print command
@@ -586,8 +594,9 @@ class Run:
                 log_handle = open(log_file,"w")
                 self.hand_snd.append(log_handle)
 
-                # Open receiving end of tunnel on Merger node. Add some code to wait for receiving end to appear before proceeding.
+                # Open sending end of tunnel on DAQ node. Add some code to wait for receiving end to appear before proceeding.
                 command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,adc.output_stream_zsup)
+                #command = "nc -v --udp --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,adc.output_stream_zsup)
                 if adc.node_id != 0:
                     command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,adc.node_ip,command)
                 print command
@@ -611,8 +620,9 @@ class Run:
             log_handle = open(log_file,"w")
             self.hand_snd.append(log_handle)
 
-            # Open receiving end of tunnel on Merger node. Add some code to wait for receiving end to appear before proceeding.
-            command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,self.trigger.output_stream)
+            # Open sending end of tunnel on Trigger node. Add some code to wait for receiving end to appear before proceeding.
+            #command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,self.trigger.output_stream)
+            command = "nc -v --udp --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.trigger.output_stream)
             if adc.node_id != 0:
                 command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.trigger.node_ip,command)
             print command
@@ -867,8 +877,8 @@ class Run:
                 print command
                 os.system(command)
 
-        # Wait 1sec before enabling triggers
-        time.sleep(1)
+        # Wait 5sec before enabling triggers
+        time.sleep(5)
 
         # Enable triggers
         print "Enabling triggers"

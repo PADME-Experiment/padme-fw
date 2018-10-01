@@ -256,9 +256,9 @@ int main(int argc, char* argv[])
       if (header_found) {
 
 	// Check if event is complete and size is consistent. Issue warning if they are not
-	if (! trigger_found) printf("PadmeLevel1 - WARNING - No Trigger information found in event %u",event_number);
-	if (adcboard_counter != number_of_boards) printf("PadmeLevel1 - WARNING - Expected data from %u ADC boards, only %u received in event %u",number_of_boards,adcboard_counter,event_number);
-	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u",total_event_size,event_size,event_number);
+	if (! trigger_found) printf("PadmeLevel1 - WARNING - No Trigger information found in event %u\n",event_number);
+	if (adcboard_counter != number_of_boards) printf("PadmeLevel1 - WARNING - Expected data from %u ADC boards, only %u received in event %u\n",number_of_boards,adcboard_counter,event_number);
+	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u\n",total_event_size,event_size,event_number);
 
 	// Unpack info in all ADC boards
 	//for (unsigned int i=0; i<number_of_boards; i++) {

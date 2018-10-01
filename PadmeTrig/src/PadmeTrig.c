@@ -249,6 +249,7 @@ int main(int argc, char *argv[]) {
   unsigned long int trig_time;
   unsigned int trig_map,trig_count;
   unsigned long int old_time = 0;
+  time_t sys_time, old_sys_time;
 
   // Various timer variables
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -443,11 +444,14 @@ int main(int argc, char *argv[]) {
   }
 
   // Drain trigger buffer
+  data_len = 1; // Make sure trig_get_data is executed at least once
+  printf("- Draining trigger buffer\n");
   while(data_len) {
     if ( trig_get_data((void*)data,&data_len) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while cleaning trigger buffer. Exiting.\n");
       proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
     }
+    printf("- Draining trigger buffer - data_len = %d\n",data_len);
   }
 
   // Show current masks
@@ -483,6 +487,7 @@ int main(int argc, char *argv[]) {
 
   time(&t_daqstart);
   printf("%s - Starting trigger generation\n",format_time(t_daqstart));
+  old_sys_time = t_daqstart;
   
   if ( Config->run_number ) {
     // Tell DB that the process has started
@@ -566,7 +571,7 @@ int main(int argc, char *argv[]) {
   // Create trigger header (will be the same for all events)
   unsigned int header = ((PEVT_TRIG_TAG & 0xf) << 28) + ((3 & 0x0fffffff) << 0); // 4bits Trigger tag + 28bits Trigger size (4bytes words)
 
-  // Defienn fixed event length
+  // Define fixed event length
   pEvtSize = 12;
 
   // Run data acquisition
@@ -596,6 +601,24 @@ int main(int argc, char *argv[]) {
 	printf("*** ERROR *** Unable to write data to output file. Data size: %d, Write result: %d\n",pEvtSize,writeSize);
 	proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
       }
+
+      if (totalWriteEvents%100 == 0) {
+	time(&sys_time);
+	memcpy(&word,buff,8);
+	trig_time  =                (word & 0x000000FFFFFFFFFF);
+	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
+	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
+	//float dt = (trig_time-old_time)*12.5E-6;
+	float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz
+	int sys_dt = sys_time-old_sys_time;
+	if (totalWriteEvents == 0) {
+	  printf("- Trigger %u %#016lx %13lu %#02x %4u\n",totalWriteEvents,word,trig_time,trig_map,trig_count);
+	} else {
+	  printf("- Trigger %u %#016lx %13lu %#02x %4u %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt,sys_dt);
+	}
+	old_time = trig_time;
+	old_sys_time = sys_time;
+      }
 	  
       // Update file counters
       fileSize[fileIndex] += pEvtSize;
@@ -604,16 +627,6 @@ int main(int argc, char *argv[]) {
       // Update global counters
       totalWriteSize += pEvtSize;
       totalWriteEvents++;
-
-      if (totalWriteEvents%100 == 0) {
-	memcpy(&word,buff,8);
-	trig_time  =                (word & 0x000000FFFFFFFFFF);
-	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
-	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
-	float dt = (trig_time-old_time)*12.5E-6;
-	printf("- Trigger %u %#016lx %13lu %#02x %4u %fns\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt);
-	old_time = trig_time;
-      }
 
     }
 

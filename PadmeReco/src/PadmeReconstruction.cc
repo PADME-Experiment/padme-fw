@@ -1,6 +1,7 @@
 #include "PadmeReconstruction.hh"
 
 #include "TPadmeRun.hh"
+#include "TRawEvent.hh"
 #include "TMCEvent.hh"
 
 #include "TTargetMCEvent.hh"
@@ -22,7 +23,7 @@
 #include "ECalParameters.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
-  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList)
+  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
 {
 
   // Input event structures will be allocated if corresponding branch exists
@@ -34,6 +35,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
   fTPixMCEvent    = 0;
+  fRawEvent       = 0;
 
   Init(NEvt,Seed);
   InitLibraries();
@@ -71,7 +73,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 {
 
   //gRandom->SetSeed(Seed);
-  //fNEvt = NEvt;
+  fNEvt = NEvt;
 
   TTree::SetMaxTreeSize(190000000000);
 
@@ -112,14 +114,16 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     }
   }
 
-  Int_t nEntries = 0;
-  TString treeName = "MC";
-  fMCChain = BuildChain(treeName);
+  Int_t nEntries;
+
+  nEntries = 0;
+  TString mcTreeName = "MC";
+  fMCChain = BuildChain(mcTreeName);
   if(fMCChain) {
 
     nEntries = fMCChain->GetEntries();
     TObjArray* branches = fMCChain->GetListOfBranches();
-    std::cout << "Found Tree '" << treeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    std::cout << "Found Tree '" << mcTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
 
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
 
@@ -157,6 +161,17 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
   }
 
+  nEntries = 0;
+  TString rawTreeName = "RawEvents";
+  fRawChain = BuildChain(rawTreeName);
+  if(fRawChain) {
+    fRawEvent = new TRawEvent();
+    nEntries = fRawChain->GetEntries();
+    TObjArray* branches = fRawChain->GetListOfBranches();
+    std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
+  }
+
   fNProcessedEventsInTotal = 0;
 
   // Initialize reconstruction for each subdetector
@@ -168,7 +183,7 @@ Bool_t PadmeReconstruction::NextEvent()
 {
 
   // Check if there is a new event to process
-  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) ) {
+  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
 
     std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
@@ -197,6 +212,23 @@ Bool_t PadmeReconstruction::NextEvent()
     return true;
 
   }
+
+  if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
+
+    std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
+	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+
+    // Reconstruct individual detectors (but check if they exist, first!)
+    for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+      fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
+    }
+
+    fNProcessedEventsInTotal++;
+    return true;
+
+  }
+
   return false;
 
 }

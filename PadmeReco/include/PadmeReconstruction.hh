@@ -6,6 +6,8 @@
 #include "TTree.h"
 #include "TObjArray.h"
 
+class TRawEvent;
+
 class TMCEvent;
 
 class TTargetMCEvent;
@@ -49,6 +51,9 @@ private:
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
+  TChain* fRawChain;
+
+  TRawEvent* fRawEvent;
 
   TMCEvent* fMCEvent;
 

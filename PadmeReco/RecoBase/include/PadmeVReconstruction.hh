@@ -9,6 +9,7 @@
 
 #include "TFile.h"
 
+#include "TRawEvent.hh"
 #include "TMCEvent.hh"
 #include "TMCVEvent.hh"
 
@@ -22,6 +23,7 @@ public:
   virtual ~PadmeVReconstruction();
   //virtual TRecoVEvent* ProcessEvent(TDetectorVEvent* = 0, Event* = 0) = 0;
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
+  virtual void ProcessEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*) = 0;
   virtual void EndProcessing() = 0; ///< Call from derived classes
   virtual void ParseConfFile(TString);

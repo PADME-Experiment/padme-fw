@@ -15,6 +15,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
 
   fConfigFileName = ConfigFileName;
+  HistoFile->mkdir(Name.Data());
 
   //----------- Parse config file for common parameters ----------//
 
@@ -58,6 +59,8 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
 }
 */
 void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
+
+void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
 
 void PadmeVReconstruction::EndProcessing(){ 
   // to be called from the derived classes

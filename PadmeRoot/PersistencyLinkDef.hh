@@ -5,6 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TRawEvent+;
+#pragma link C++ class TTriggerInfo+;
 #pragma link C++ class TADCBoard+;
 #pragma link C++ class TADCChannel+;
 #pragma link C++ class TADCTrigger+;

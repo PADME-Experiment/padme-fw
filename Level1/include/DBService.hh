@@ -29,17 +29,25 @@ protected:
   int Connect(); // Connects to current DB file
   int Disconnect(); // Disconnects from DB
 
- public:
+public:
 
   int GetBoardList(std::vector<int>&,int); // (Board list, Run nr). Returns array of board ids for given run number
   int GetFileList(std::vector<std::string>&,int,int); // (File list, Run nr, Board id). Returns array of files
 
   int GetFileInfo(int&,int&,std::string&,std::string&,int&,long int&,std::string); // (Version, Index, Start Time, End Time, N Events, Size, File Name). Return info about raw file
 
-  int GetRunEvents(int&,int); // (N Events, Run nr). Returns number of events currently associated to run
-  int UpdateRunEvents(int,int); // (N Events, Run nr). Store number of events associated to run
+  // Store number of events written and size of output file to DB
+  int UpdateMergerInfo(unsigned int,unsigned int,unsigned long int,int); // (N Files, N Events, Size, Merger Id).
 
- private:
+  int GetMergerId(int&,int); // (Merger id, Run nr). Returns id of merger for this run
+
+  int SetMergerStatus(int,int); // (Status, Merger Id)
+  int SetMergerTime(std::string,int); // ("START"|"STOP", Merger Id)
+
+  int OpenRawFile(int&,int,std::string,int); // (File id, Merger id, Filename, Part)
+  int CloseRawFile(int,unsigned int,unsigned long int); // (File id,N Events,Size)
+
+private:
 
   MYSQL* fDBHandle;
 

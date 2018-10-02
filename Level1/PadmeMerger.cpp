@@ -20,7 +20,8 @@
 #define V1742_CLOCK_FREQUENCY   117.1875E-3
 
 // Time tolerance (in ns) for trigger and boards to be considered in-time
-#define INTIME_TOLERANCE_NS 10
+//#define INTIME_TOLERANCE_NS 10
+#define INTIME_TOLERANCE_NS 15
 
 void fmt_time(char buf[20],time_t* t)
 {

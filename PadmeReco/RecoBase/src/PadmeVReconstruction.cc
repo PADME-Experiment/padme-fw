@@ -20,6 +20,8 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
   
   fConfig = new PadmeVRecoConfig(fConfigParser,Name);
+  //  InitChannelID(fConfig);
+
   //----------- Parse config file for common parameters ----------//
 
   //ParseConfFile(ConfigFileName);

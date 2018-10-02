@@ -4,10 +4,41 @@
 PadmeVRecoConfig::PadmeVRecoConfig(utl::ConfigParser *cfgParser,TString Name) 
   :PadmeVNamedModule(Name)
 {
+
   fConfigParser = cfgParser;
+
+  if(cfgParser->HasConfig("DETECTOR","READOUT")){
+     fReadOutType = cfgParser->GetSingleArg("DETECTOR","READOUT");
+  } else {
+    fReadOutType = "NO_READOUT";
+  }
+  
+  std::cout << "Readout type: " << fReadOutType << std::endl;
+  
+
+
+
+
+  if(fReadOutType == "ADC") 
+    ConfigADCReadout();
+
+  //    InitChannelID(this);
+
+}
+
+
+
+void PadmeVRecoConfig::ConfigADCReadout(){
+  utl::ConfigParser *cfgParser = fConfigParser;
+  
   if(cfgParser->HasConfig("ADC","NADC")){
     fNBoards = std::stoi(cfgParser->GetSingleArg("ADC","NADC"));
+  } else {
+    return;
   }
+  
+  
+
   if(cfgParser->HasConfig("ADC","ID")){
     std::vector<std::string> bIDs = cfgParser->GetConfig("ADC","ID");
     for(auto it = bIDs.begin(); it != bIDs.end(); ++it) {
@@ -15,13 +46,20 @@ PadmeVRecoConfig::PadmeVRecoConfig(utl::ConfigParser *cfgParser,TString Name)
     }
   }
 
+  
   std::cout << fBoards.size() << "  boards belonging to detector " << this->GetName() << ", IDs   ";
   for(auto it = fBoards.begin(); it != fBoards.end(); ++it) {
     std::cout << (*it) << "   ";
   }
   std::cout << std::endl;
+  
+  
+  
 
 }
+
+
+
 
 PadmeVRecoConfig::~PadmeVRecoConfig() {;}
 

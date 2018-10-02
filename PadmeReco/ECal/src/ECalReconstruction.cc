@@ -19,6 +19,8 @@
 #include "TECalMCHit.hh"
 #include "TECalMCDigi.hh"
 #include "DigitizerChannelReco.hh"
+#include "TH2F.h"
+#include "TCanvas.h"
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
@@ -27,6 +29,15 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
 }
+
+void ECalReconstruction::HistoInit(){
+  AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
+  AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
+
+}
+
+
+
 
 ECalReconstruction::~ECalReconstruction()
 {;}
@@ -66,6 +77,8 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
   return fRecoEvent;
 }
 */
+
+
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
 
@@ -127,3 +140,26 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void ECalReconstruction::EndProcessing()
 // {;}
+void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+  static int nevt;
+  static TCanvas c;
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  //  return;
+
+  for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+    int ich = Hits[iHit1]->GetChannelId();
+    GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
+    //    GetHisto("ECalCharge") -> Fill(ich/10,ich%10,Hits[iHit1]->GetEnergy());
+
+  }
+
+  if(nevt % 100 == 0) {
+    c.cd();
+    GetHisto("ECalOccupancy") -> Draw();
+    c.Update();
+  }
+
+  nevt ++;
+}
+

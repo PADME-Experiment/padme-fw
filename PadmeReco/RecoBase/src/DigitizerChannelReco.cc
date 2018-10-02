@@ -11,11 +11,10 @@ void DigitizerChannelReco::PrintConfig(){
 void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
 
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
-  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.001);
+  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.00025);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
 
   fSignalWidth    = cfg->GetParOrDefault("RECO","SignalWindow",1024);
-  //std::cout << "Using signal window of " << fSignalWidth << " samples" << std::endl;
   fPedOffset      = cfg->GetParOrDefault("RECO","PedestalOffset",100);
   
   fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
@@ -27,7 +26,7 @@ void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
   fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
 
-  fMultihit       = cfg->GetParOrDefault("RECO","",0);
+  fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
 
 
 }
@@ -133,11 +132,11 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
     // }
 
     if( t3_ok == 0 && val1 <= fAmpThresholdLow && val2 >fAmpThresholdLow) {
-      t3 = i + (fAmpThresholdLow - val1)/(val2 - val1);
+      t3 = 1.*i + (fAmpThresholdLow - val1)/(val2 - val1);
       t3_ok = 1;
     }
     if( t3_ok = 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
-      t4 = i + (fAmpThresholdHigh - val1)/(val2 - val1);
+      t4 = 1.*i + (fAmpThresholdHigh - val1)/(val2 - val1);
       t4_ok = 1;
     }
 
@@ -156,6 +155,7 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   CalcCharge(fIMax);
+  if (fCharge < .1) return;
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();

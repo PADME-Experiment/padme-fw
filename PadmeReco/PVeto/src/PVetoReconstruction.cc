@@ -35,7 +35,9 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
   AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
   AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
-  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",100,-100.,100.));
+  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-100.,100.));
+  AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",100,0.0,100.0));
+
 }
 
 
@@ -82,6 +84,8 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  return;
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    GetHisto("PVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+
     for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
       GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
     }    

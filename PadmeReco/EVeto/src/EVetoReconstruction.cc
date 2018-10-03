@@ -21,6 +21,13 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fChannelReco = new DigitizerChannelReco();
 }
 
+void EVetoReconstruction::HistoInit(){
+
+  AddHisto("EVetoOccupancy",new TH1F("EVetoOccupancy","EVeto Occupancy",100,0.0,100.0));
+
+}
+
+
 EVetoReconstruction::~EVetoReconstruction()
 {;}
 
@@ -76,3 +83,13 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void EVetoReconstruction::EndProcessing()
 // {;}
+void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    GetHisto("EVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+  }    
+
+
+
+}

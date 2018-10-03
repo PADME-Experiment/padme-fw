@@ -21,6 +21,12 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
   fChannelReco = new DigitizerChannelReco();
 }
 
+void TargetReconstruction::HistoInit(){
+  AddHisto("TargetOccupancy",new TH1F("TargetOccupancy","Target Occupancy",33,0.0,33.0));
+
+}
+
+
 TargetReconstruction::~TargetReconstruction()
 {;}
 
@@ -65,3 +71,11 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void TargetReconstruction::EndProcessing()
 // {;}
+void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    GetHisto("TargetOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+
+  }
+}

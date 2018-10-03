@@ -3,7 +3,8 @@
 
 void DigitizerChannelReco::PrintConfig(){
   std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
-  
+  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;
+
   
 }
 
@@ -11,7 +12,7 @@ void DigitizerChannelReco::PrintConfig(){
 void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
 
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
-  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.00025);
+  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
 
   fSignalWidth    = cfg->GetParOrDefault("RECO","SignalWindow",1024);
@@ -27,10 +28,21 @@ void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
 
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
-
-
+  fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+  
+  
+  std::cout << cfg->GetName() << "*******************************" <<  std::endl;
+  PrintConfig();
 }
 
+
+void DigitizerChannelReco::SetAbsSignals(){
+  for(UShort_t i = 0;i<fNSamples;i++){
+    if (fSamples[i] < 2048) {
+      fSamples[i] = 4096 - fSamples[i];
+    }
+  }
+}
 
 Short_t DigitizerChannelReco::CalcMaximum() {
 
@@ -175,7 +187,10 @@ void DigitizerChannelReco::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 
 
 void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
-  
+  if(fUseAbsSignals) {
+    SetAbsSignals();
+  }
+
   CalcMaximum();
   CalcPedestal();
   if(fPed - fMax < fMinAmplitude ) return;

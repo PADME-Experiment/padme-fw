@@ -25,6 +25,7 @@ public:
   Short_t GetMaximum(){return fMax;};
   Double_t GetPedestal(){return fPed;};
 
+  void SetAbsSignals();
   
   
 
@@ -59,6 +60,7 @@ private:
   Double_t fAmpThresholdHigh;
 
   Bool_t fMultihit;
+  Bool_t fUseAbsSignals;
   
 
 };

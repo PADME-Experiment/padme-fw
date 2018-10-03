@@ -158,7 +158,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     int ich = Hits[iHit1]->GetChannelId();
     GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
-    //    GetHisto("ECalCharge") -> Fill(ich/10,ich%10,Hits[iHit1]->GetEnergy());
+    ((TH2F *) GetHisto("ECalCharge")) -> Fill(ich/100,ich%100,Hits[iHit1]->GetEnergy());
     
     int ix = ich/100;
     int iy = ich%100;

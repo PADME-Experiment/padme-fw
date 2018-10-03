@@ -32,6 +32,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 
 void ECalReconstruction::HistoInit(){
   AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
+  AddHisto("ECalEvent",new TH2F("ECalEvent","ECalEvent",31,0,31,31,0,31));
+
   AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
 
 }
@@ -143,22 +145,48 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   static int nevt;
   static TCanvas c;
+  static int filled  = 0;
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //  return;
+
+  float q1 = 0.;
+  float q2 = 0.;
+  float q3 = 0.;
+  float q4 = 0.;
+
 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     int ich = Hits[iHit1]->GetChannelId();
     GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
     //    GetHisto("ECalCharge") -> Fill(ich/10,ich%10,Hits[iHit1]->GetEnergy());
-
+    
+    int ix = ich/100;
+    int iy = ich%100;
+    
+    if(ix < 14 && iy < 14) q3+= Hits[iHit1]->GetEnergy();
+    if(ix < 14 && iy > 14) q2+= Hits[iHit1]->GetEnergy();
+    if(ix > 14 && iy > 14) q1+= Hits[iHit1]->GetEnergy();
+    if(ix > 14 && iy < 14) q4+= Hits[iHit1]->GetEnergy();
+        
   }
 
-  if(nevt % 100 == 0) {
-    c.cd();
-    GetHisto("ECalOccupancy") -> Draw();
-    c.Update();
+  if (q1 > 200 && q3 > 200 && filled==0) { 
+    for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      int ich = Hits[iHit1]->GetChannelId();
+      GetHisto("ECalOccupancy") -> SetBinContent(ich/100,ich%100, Hits[iHit1]->GetEnergy() );
+      filled = 1;
+    }
   }
+  
+
+
+
+  // if(nevt % 100 == 0) {
+  //   c.cd();
+  //   GetHisto("ECalOccupancy") -> Draw();
+  //   c.Update();
+  // }
 
   nevt ++;
 }

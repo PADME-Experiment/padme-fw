@@ -174,7 +174,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   if (q1 > 200 && q3 > 200 && filled==0) { 
     for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
       int ich = Hits[iHit1]->GetChannelId();
-      GetHisto("ECalOccupancy") -> SetBinContent(ich/100,ich%100, Hits[iHit1]->GetEnergy() );
+      GetHisto("ECalEvent") -> SetBinContent(ich/100,ich%100, Hits[iHit1]->GetEnergy() );
       filled = 1;
     }
   }

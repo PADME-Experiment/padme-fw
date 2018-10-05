@@ -22,6 +22,8 @@
 
 #include "ECalParameters.hh"
 
+#include "RecoRootIOManager.hh"
+
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
 {
@@ -37,28 +39,35 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTPixMCEvent    = 0;
   fRawEvent       = 0;
 
-  Init(NEvt,Seed);
   InitLibraries();
+  Init(NEvt,Seed);
 
 }
 
 PadmeReconstruction::~PadmeReconstruction()
-{;}
+{
+  for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+    delete fRecoLibrary[iLib];
+  }
+}
 
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,dummyConfFile));
-  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,dummyConfFile));
+  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
+  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
+  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
+  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
+  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
+  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
+  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
 {
+
+  std::cout << "PadmeReconstruction: Initializing" << std::endl;
+
   fMainReco = this; //init PadmeReconstruction main reco as itself
   if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
   if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
@@ -215,9 +224,9 @@ Bool_t PadmeReconstruction::NextEvent()
 
   if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
 
-    std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
-	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+    // std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    // std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
+    // 	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
 
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
@@ -235,11 +244,14 @@ Bool_t PadmeReconstruction::NextEvent()
 
 void PadmeReconstruction::EndProcessing(){
 
-  //fHistoFile->cd("/");
-  //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
-  //  fReconstructions[iReco]->EndProcessing();
-  //  fHistoFile->cd("/");
-  //}
+  // Reconstruct individual detectors (but check if they exist, first!)
+  for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+    fHistoFile->cd("/");
+    fRecoLibrary[iLib]->EndProcessing();
+  }
+  fHistoFile->cd("/");
+
+
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EvaluateROSettings();
   //}
@@ -248,9 +260,13 @@ void PadmeReconstruction::EndProcessing(){
   //}
   //if(fMCOutputTree) fMCOutputTree->Write();
 
+  //This goes in the PadmeReco core
+  //RecoRootIOManager::GetInstance()->Close();
+
   //fHistoFile->Purge();
   //fHistoFile->Close();
   //PrintRecoSummary(std::cout);
+
 }
 
 TChain* PadmeReconstruction::BuildChain(TString treeName){

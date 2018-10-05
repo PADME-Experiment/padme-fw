@@ -8,14 +8,29 @@
 #define PadmeVReconstruction_H
 
 #include "TFile.h"
+#include "TDirectory.h"
 
 #include "TRawEvent.hh"
 #include "TMCEvent.hh"
 #include "TMCVEvent.hh"
+#include "TRecoVHit.hh"
 
 #include "PadmeVNamedModule.hh"
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
+#include "RecoVChannelID.hh"
+#include "PadmeVCalibration.hh"
 
-class PadmeVReconstruction : public PadmeVNamedModule
+#include "TH1.h"
+#include <vector>
+#include <string>
+#include <map>
+
+#include "ChannelVReco.hh"
+
+using namespace std;
+
+class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
 public:
 
@@ -24,9 +39,16 @@ public:
   //virtual TRecoVEvent* ProcessEvent(TDetectorVEvent* = 0, Event* = 0) = 0;
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void ProcessEvent(TRawEvent* = 0);
-  virtual void Init(PadmeVReconstruction*) = 0;
-  virtual void EndProcessing() = 0; ///< Call from derived classes
+  virtual void AnalyzeEvent(TRawEvent* = 0);
+  virtual void Init(PadmeVReconstruction*);
+  virtual void EndProcessing(); ///< Call from derived classes
   virtual void ParseConfFile(TString);
+  virtual void HistoInit(); 
+  virtual void HistoExit();
+  virtual void AddHisto(string,TH1 *);
+  virtual TH1* GetHisto(string);
+  
+  
 
   static void Exception(TString);
 
@@ -42,6 +64,10 @@ public:
 
   TString GetConfigFileName() { return fConfigFileName; };
   void    SetConfigFileName(TString val) { fConfigFileName = val; };
+  utl::ConfigParser *GetConfigParser(){return fConfigParser;};
+  PadmeVRecoConfig *GetConfig(){return fConfig;};
+  vector<TRecoVHit *> &GetRecoHits(){return fHits;};
+  
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -54,6 +80,17 @@ protected:
   //TRecoVEvent * fRecoEvent;
 
   TString fConfigFileName;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
+
+
+  map<string,TH1 *> fHistoMap;
+
+  vector<TRecoVHit *> fHits;
+
+  ChannelVReco *fChannelReco;
+  PadmeVCalibration *fChannelCalibration;
+
 
 };
 #endif

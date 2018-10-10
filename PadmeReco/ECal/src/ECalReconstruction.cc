@@ -18,40 +18,54 @@
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 #include "TECalMCDigi.hh"
+#include "DigitizerChannelReco.hh"
+#include "TH2F.h"
+#include "TCanvas.h"
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelReco();
 }
+
+void ECalReconstruction::HistoInit(){
+  AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
+  AddHisto("ECalEvent",new TH2F("ECalEvent","ECalEvent",31,0,31,31,0,31));
+  AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
+
+}
+
+
+
 
 ECalReconstruction::~ECalReconstruction()
 {;}
 
-void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
-{
+// void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
+// {
 
-  //common part for all the subdetectors
-  PadmeVReconstruction::Init(MainReco);
+//   //common part for all the subdetectors
+//   PadmeVReconstruction::Init(MainReco);
 
-}
+// }
 
-// Read ECal reconstruction parameters from a configuration file
-void ECalReconstruction::ParseConfFile(TString ConfFileName) {
+// // Read ECal reconstruction parameters from a configuration file
+// void ECalReconstruction::ParseConfFile(TString ConfFileName) {
 
-  std::ifstream confFile(ConfFileName.Data());
-  if (!confFile.is_open()) {
-    perror(ConfFileName);
-    exit(1);
-  }
+//   std::ifstream confFile(ConfFileName.Data());
+//   if (!confFile.is_open()) {
+//     perror(ConfFileName);
+//     exit(1);
+//   }
 
-  TString Line;
-  while (Line.ReadLine(confFile)) {
-    if (Line.BeginsWith("#")) continue;
-  }
-  confFile.close();
-}
+//   TString Line;
+//   while (Line.ReadLine(confFile)) {
+//     if (Line.BeginsWith("#")) continue;
+//   }
+//   confFile.close();
+// }
 
 /*
 TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -64,6 +78,8 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
   return fRecoEvent;
 }
 */
+
+
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
 
@@ -123,5 +139,63 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 }
 
-void ECalReconstruction::EndProcessing()
-{;}
+// void ECalReconstruction::EndProcessing()
+// {;}
+void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+  static int nevt;
+  static TCanvas c;
+  static int filled  = 0;
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  //  return;
+
+  float q1 = 0.;
+  float q2 = 0.;
+  float q3 = 0.;
+  float q4 = 0.;
+
+
+  for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+    int ich = Hits[iHit1]->GetChannelId();
+    GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
+    ((TH2F *) GetHisto("ECalCharge")) -> Fill(ich/100,ich%100,Hits[iHit1]->GetEnergy());
+    
+    int ix = ich/100;
+    int iy = ich%100;
+    
+    if(ix > 14 && iy > 14) q1+= Hits[iHit1]->GetEnergy();
+    if(ix < 14 && iy < 14) q3+= Hits[iHit1]->GetEnergy();
+    if(ix < 14 && iy > 14) q2+= Hits[iHit1]->GetEnergy();
+    if(ix > 14 && iy < 14) q4+= Hits[iHit1]->GetEnergy();
+    
+  }
+
+  //  std::cout << "Quadrants:  "<< q1 << "  "  << q2 << "  " << q3 << "  " << q4 << std::endl;
+
+  if (q1 > 25. && q3 > 25. && filled==0) { 
+    for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      int ich = Hits[iHit1]->GetChannelId();
+      GetHisto("ECalEvent")->SetBinContent(ich/100+1,ich%100+1, Hits[iHit1]->GetEnergy() );
+      filled = 1;
+    }
+  }
+  if (q2 > 25. && q4 > 25. && filled==0) { 
+    for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      int ich = Hits[iHit1]->GetChannelId();
+      GetHisto("ECalEvent")->SetBinContent(ich/100+1,ich%100+1, Hits[iHit1]->GetEnergy() );
+      filled = 1;
+    }
+  }
+
+
+
+
+  // if(nevt % 100 == 0) {
+  //   c.cd();
+  //   GetHisto("ECalOccupancy") -> Draw();
+  //   c.Update();
+  // }
+
+  nevt ++;
+}
+

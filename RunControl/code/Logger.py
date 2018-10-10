@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 
@@ -5,9 +6,13 @@ class Logger(object):
 
     def __init__(self):
 
-        self.interactive = False
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
 
-        self.log_file = "log/RunControlServer.log"
+        self.log_file = self.daq_dir+"/log/RunControlServer.log"
+
+        self.interactive = False
 
         self.terminal = sys.stdout
         self.log = open(self.log_file,"a")
@@ -32,4 +37,4 @@ class Logger(object):
         pass
 
     def now_str(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

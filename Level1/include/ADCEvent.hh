@@ -3,7 +3,8 @@
 
 #include "Rtypes.h"
 
-#include "ADCEventTags.hh"
+//#include "ADCEventTags.hh"
+#include "EventTags.hh"
 
 class ADCEvent
 {
@@ -20,11 +21,18 @@ class ADCEvent
   void     SetBoardId(UChar_t v)            { fBoardId = v; }
   UChar_t  GetBoardId()                     { return fBoardId; }
 
+  void     SetBoardSN(UInt_t v)             { fBoardSN = v; }
+  UInt_t   GetBoardSN()                     { return fBoardSN; }
+
   void     SetLVDSPattern(UShort_t v)       { fLVDSPattern = v; }
   UShort_t GetLVDSPattern()                 { return fLVDSPattern; }
 
-  void     SetStatus(UChar_t v)             { fStatus = v; }
-  UChar_t  GetStatus()                      { return fStatus; }
+  // Support obsolete Status byte (8 bits)
+  void     SetStatus(UChar_t v)             { fBoardStatus = (UInt_t)v; }
+  UChar_t  GetStatus()                      { return (UChar_t)(fBoardStatus & 0xff); }
+
+  void     SetBoardStatus(UChar_t v)        { fBoardStatus = v; }
+  UInt_t   GetBoardStatus()                 { return fBoardStatus; }
 
   void     SetGroupMask(UChar_t v)          { fGroupMask = v; }
   UChar_t  GetGroupMask()                   { return fGroupMask; }
@@ -34,6 +42,9 @@ class ADCEvent
 
   void     SetEventTimeTag(UInt_t v)        { fEventTimeTag = v; }
   UInt_t   GetEventTimeTag()                { return fEventTimeTag; }
+
+  void     Set0SuppAlgrtm(UChar_t v)        { f0SuppAlgrtm = v; }
+  UChar_t  Get0SuppAlgrtm()                 { return f0SuppAlgrtm; }
 
   void     SetActiveChannelMask(UInt_t v)   { fActiveChannelMask = v; }
   UInt_t   GetActiveChannelMask()           { return fActiveChannelMask; }
@@ -53,20 +64,22 @@ class ADCEvent
   void   SetTriggerTimeTag(int i, UInt_t v)            { fTriggerTimeTag[i] = v; }
   UInt_t GetTriggerTimeTag(int i)                      { return fTriggerTimeTag[i]; }
 
-  void     SetADCChannelSample(int i, int s, Short_t v) { fADCChannelSample[i][s] = v; }
-  Short_t GetADCChannelSample(int i, int s)             { return fADCChannelSample[i][s]; }
+  void    SetADCChannelSample(int i, int s, Short_t v) { fADCChannelSample[i][s] = v; }
+  Short_t GetADCChannelSample(int i, int s)            { return fADCChannelSample[i][s]; }
 
-  void     SetADCTriggerSample(int i, int s, Short_t v) { fADCTriggerSample[i][s] = v; }
-  Short_t GetADCTriggerSample(int i, int s)             { return fADCTriggerSample[i][s]; }
+  void    SetADCTriggerSample(int i, int s, Short_t v) { fADCTriggerSample[i][s] = v; }
+  Short_t GetADCTriggerSample(int i, int s)            { return fADCTriggerSample[i][s]; }
 
  private:
 
   UChar_t  fBoardId;
+  UInt_t   fBoardSN;
   UShort_t fLVDSPattern;
-  UChar_t  fStatus;
+  UInt_t   fBoardStatus;
   UChar_t  fGroupMask;
   UInt_t   fEventCounter;
   UInt_t   fEventTimeTag;
+  UChar_t  f0SuppAlgrtm;
   UInt_t   fActiveChannelMask;
   UInt_t   fAcceptedChannelMask;
   
@@ -74,9 +87,9 @@ class ADCEvent
   UChar_t  fTriggerFrequency[ADCEVENT_NTRIGGERS];
   Bool_t   fTriggerHasSignal[ADCEVENT_NTRIGGERS];
   UInt_t   fTriggerTimeTag[ADCEVENT_NTRIGGERS];
-  Short_t fADCTriggerSample[ADCEVENT_NTRIGGERS][ADCEVENT_NSAMPLES];
+  Short_t  fADCTriggerSample[ADCEVENT_NTRIGGERS][ADCEVENT_NSAMPLES];
 
-  Short_t fADCChannelSample[ADCEVENT_NCHANNELS][ADCEVENT_NSAMPLES];
+  Short_t  fADCChannelSample[ADCEVENT_NCHANNELS][ADCEVENT_NSAMPLES];
 
 };
 #endif

@@ -312,7 +312,7 @@ Double_t DigitizerChannelTarget::CalcTime(UShort_t iMax) {
       t3 = 1.*i + (fAmpThresholdLow - val1)/(val2 - val1);
       t3_ok = 1;
     }
-    if( t3_ok = 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
+    if( t3_ok == 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
       t4 = 1.*i + (fAmpThresholdHigh - val1)/(val2 - val1);
       t4_ok = 1;
     }

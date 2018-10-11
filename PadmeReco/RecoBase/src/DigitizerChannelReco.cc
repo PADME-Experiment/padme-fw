@@ -109,15 +109,15 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
   fTime = 0.;
   //currently looking only at the signal rising edge
   
-  float t1;
-  float t2;
+  float t1=0.;
+  float t2=0.;
 
-  float t3;
-  float t4;
+  float t3=0.;
+  float t4=0.;
 
   
-  float val1;
-  float val2;
+  float val1=0.;
+  float val2=0.;
 
   int t1_ok=0;
   int t2_ok=0;
@@ -147,7 +147,7 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
       t3 = 1.*i + (fAmpThresholdLow - val1)/(val2 - val1);
       t3_ok = 1;
     }
-    if( t3_ok = 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
+    if( t3_ok == 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
       t4 = 1.*i + (fAmpThresholdHigh - val1)/(val2 - val1);
       t4_ok = 1;
     }
@@ -168,6 +168,8 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   CalcCharge(fIMax);
   if (fCharge < .1) return;
+  
+  
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();

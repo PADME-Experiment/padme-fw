@@ -7,10 +7,8 @@ class Logger(object):
 
         self.interactive = False
 
-        self.log_file = log_file
-
         self.terminal = sys.stdout
-        self.log = open(self.log_file,"a")
+        self.log = open(log_file,"a")
 
     def write(self, message):
 

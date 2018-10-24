@@ -40,7 +40,7 @@ def main(argv):
     # Create long-lived proxy file (will ask user for password)
     long_proxy_file = "%s/run/long_proxy"%cdr_dir
     print "- Creating long-lived proxy file",long_proxy_file
-    proxy_cmd = "voms-proxy-init --valid 480:0 --out %s"%long_proxy_file
+    proxy_cmd = "voms-proxy-init --valid 480:00 --out %s"%long_proxy_file
     print ">",proxy_cmd
     if subprocess.call(proxy_cmd.split()):
         print "*** ERROR *** while generating long-lived proxy. Aborting"

@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
   int output_stream_handle[LVL1_PROC_MAX];
   unsigned int writeSize;
   unsigned int output_stream_nevents[LVL1_PROC_MAX];
-  unsigned long long int output_stream_size[LVL1_PROC_MAX];
+  unsigned long int output_stream_size[LVL1_PROC_MAX];
   unsigned int NOutputStreams = 0;
   list.open(cfg->OutputStreamList().c_str());
   while(!list.eof()){
@@ -292,18 +292,10 @@ int main(int argc, char* argv[])
 
   // Loop over all events in files
 
-  //int dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
-  //int dTb; // Clock counter difference between two groups of the same board
-  //unsigned int TT_evt,TT_grp[ADCEVENT_NTRIGGERS]; // Clock counters for board and for group
-  //unsigned int TT_old[boards.size()]; // Clock counter at previous event
-  //unsigned long int CC[boards.size()]; // Total ADC Clock Counts since start of run (ns)
-
-  //unsigned long int trigTotalCount, trigCount, trigCountOld; // Total, current and old values of trigger clock counter
-  unsigned long long int boardTime, trigTime; // Total Board/Trigger time since start of run in ns
-  long long int dT_board_trig; // Time difference between board and trigger
-
-  //unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
-
+  unsigned long int boardTime, trigTime; // Total Board/Trigger time since start of run in ns
+  long int dT_board_trig; // Time difference between board and trigger
+  //unsigned long int trigIncrement; // Time increment since previous trigger
+  unsigned int nADCClockReset; // Number of ADC clock resets since last trigger
   unsigned int nEOR, trigEOR;
   unsigned int NumberOfEvents = 0;
   unsigned int EventStatus; // Event status: only lower 16bits are used
@@ -405,77 +397,68 @@ int main(int argc, char* argv[])
 
     }
 
-    /*
-    unsigned int skipped_trigger;
-    unsigned int all_in_time = 0;
-    nEOR = 0; trigEOR = 0;
-    while ( (! all_in_time) && (! nEOR) && (! trigEOR) ) {
+    // Verify if all boards are in time with the trigger (INTIME_TOLERANCE_NS is the time tolerance in ns)
+    trigTime = lrint(trigger->GetTotalClockCounter()/TRIGGER_CLOCK_FREQUENCY); // Trigger time in ns
 
-      // Verify if all boards are in time with the trigger (10ns tolerance)
-      trigTime = lrint(trigger->GetTotalClockCounter()/TRIGGER_CLOCK_FREQUENCY);
-      //printf("Trigger 0x%02x %u %llu %llu %llu\n",trigger->GetTriggerMask(),trigger->GetTriggerCounter(),trigger->GetClockCounter(),trigger->GetTotalClockCounter(),trigTime);
-      all_in_time = 1;
-      skipped_trigger = 0;
+    // Check if there was a long pause in DAQ and compute how many times the ADC 30bit clock counter did a reset
+    nADCClockReset = lrint(trigger->GetClockIncrement()*(V1742_CLOCK_FREQUENCY/TRIGGER_CLOCK_FREQUENCY)/(1LL<<30));
+
+    // If there was a long delay in the triggers, ADC clock counters could reset multiple times
+    // Check if we can recover the timing with all the boards
+    if (nADCClockReset > 0) {
+
+      printf("Long trigger pause of %lu ns: trying to recover sinchronization",lrint(trigger->GetClockIncrement()/TRIGGER_CLOCK_FREQUENCY));
+      printf("ADC clock resets since last trigger: %d\n",nADCClockReset);
+
+      unsigned int n_not_recovered = 0;
       for(unsigned int b=0; b<boards.size(); b++) {
 
-	boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
-	//unsigned int ttt[4];
-	//boards[b]->GetTriggerTimeTags(ttt);
-	//printf("Board 0x%x %u %u %u %u %u %llu %llu\n",boards[b]->GetGroupMask(),ttt[0],ttt[1],ttt[2],ttt[3],boards[b]->GetClockCounter(),boards[b]->GetTotalClockCounter(),boardTime);
+	unsigned int n_resets_added = 0;
+	unsigned int recovered = 0;
+	unsigned long int board_count = boards[b]->GetTotalClockCounter();
+	while(recovered == 0) {
 
-	dT_board_trig = boardTime-trigTime;
-	if (cfg->Verbose()>=2)
-	  printf("Board %7u %16llu Trigger %4u %16llu dT %10lld\n",
-		 boards[b]->GetEventCounter(),boardTime,trigger->GetTriggerCounter(),trigTime,dT_board_trig);
-	if ( dT_board_trig < -INTIME_TOLERANCE_NS ) {
-
-	  // This board is still on an earlier event: skip to next event
-	  // This happens after one or more boards miss a trigger and the trigger is advanced to its next event
-      	  all_in_time = 0;
-      	  printf("*** Board %2d - Board on earlier event: skipping it %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-      	  if ( ! boards[b]->NextEvent() ) {
-      	    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-      	    nEOR++;
-      	  }
-
-	} else if ( dT_board_trig > INTIME_TOLERANCE_NS ) {
-
-	  // This board skipped a trigger
-      	  printf("*** Board %2d - Board skipped a trigger on event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-	  skipped_trigger = 1;
-
-	}
-
-	// If one or more boards skipped an event we move to the next trigger event
-	if (skipped_trigger) {
-	  all_in_time = 0;
-      	  printf("*** One or more boards skipped a trigger (see previous messages): getting next trigger event\n");
-	  if ( ! trigger->NextEvent() ) {
-	    printf("*** Trigger - End of Run.\n");
-	    trigEOR = 1;
+	  boardTime = lrint(board_count/V1742_CLOCK_FREQUENCY);
+	  dT_board_trig = boardTime-trigTime;
+	  printf("Board %2d - Trigger %lu ns - Board %lu ns - dT %ld ns\n",boards[b]->GetBoardId(),trigTime,boardTime,dT_board_trig);
+	  if (dT_board_trig < -INTIME_TOLERANCE_NS) {
+	    board_count += (1LL<<30); // Add a clock reset period (~9s)
+	    if (++n_resets_added > nADCClockReset) {
+	      printf("ERROR - After %d clock counter resets board %2d time still behind trigger time.\n",n_resets_added,boards[b]->GetBoardId());
+	      break;
+	    }
+	  } else if (dT_board_trig > INTIME_TOLERANCE_NS) {
+	    printf("ERROR - Board %2d lost synchronization with trigger.\n",boards[b]->GetBoardId());
+	    break;
+	  } else {
+	    printf("After %d clock counter resets, board %2d recovered synchronization with trigger.\n",n_resets_added,boards[b]->GetBoardId());
+	    boards[b]->SetTotalClockCounter(board_count);
+	    recovered = 1;
 	  }
+
 	}
+	if (recovered == 0) n_not_recovered++;
 
       }
+      if (n_not_recovered > 0) {
+	printf("ERROR - %d boards lost synchronization with trigger: RUN MUST BE STOPPED.\n",n_not_recovered);
+	break; // Exit main loop and wait for run to finish
+      }
+    }
 
-    } // End of while loop checking for in-time events
-    */
-
-    // Verify if all boards are in time with the trigger (10ns tolerance)
-    trigTime = lrint(trigger->GetTotalClockCounter()/TRIGGER_CLOCK_FREQUENCY);
     nEOR = 0;
     for(unsigned int b=0; b<boards.size(); b++) {
 
       boardTime = lrint(boards[b]->GetTotalClockCounter()/V1742_CLOCK_FREQUENCY);
       dT_board_trig = boardTime-trigTime;
 
-      if (cfg->Verbose()>=2)
-	printf("Board %7u %16llu Trigger %4u %16llu dT %10lld\n",
-	       boards[b]->GetEventCounter(),boardTime,trigger->GetTriggerCounter(),trigTime,dT_board_trig);
+      //if (cfg->Verbose()>=2)
+	printf("Board %2d Evt %7u Time %16lu --- Trigger Evt %4u Time %16lu --- dT %10ld\n",
+	       boards[b]->GetBoardId(),boards[b]->GetEventCounter(),boardTime,trigger->GetTriggerCounter(),trigTime,dT_board_trig);
 
       while (dT_board_trig < -INTIME_TOLERANCE_NS) {
-	// Board time is earlier than trigger time: this should be impossible but we check for it anyway
-	printf("*** Board %2d - Board time %llu less than Trigger time %llu: skip event and try to recover\n",boards[b]->GetBoardId(),boardTime,trigTime);
+	// Board time is earlier than trigger time: this happens when trigger controller does not send a packet
+	printf("*** Board %2d - Board time %lu less than Trigger time %lu: skip event and try to recover\n",boards[b]->GetBoardId(),boardTime,trigTime);
 	if ( ! boards[b]->NextEvent() ) {
 	  printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
 	  nEOR++;
@@ -487,7 +470,7 @@ int main(int argc, char* argv[])
 
       if (dT_board_trig > INTIME_TOLERANCE_NS) {
 	// Board time is after trigger time, i.e. board probably missed a trigger: tag it as missing
-	printf("*** Board %2d - Board time %llu greater than Trigger time %llu: setting board as MISSING in this event\n",boards[b]->GetBoardId(),boardTime,trigTime);
+	printf("*** Board %2d - Board time %lu greater than Trigger time %lu: setting board as MISSING in this event\n",boards[b]->GetBoardId(),boardTime,trigTime);
 	boards[b]->SetMissingEvent();
       }
 
@@ -548,7 +531,7 @@ int main(int argc, char* argv[])
     memcpy(evt_h+evt_h_size,&evt_h_buff,4); evt_h_size += 4;
 
     // Line 4+5: run time, i.e. the number of 80MHz clock cycles counted by the trigger controller since the beginning of the run
-    unsigned long long int trig_clock = trigger->GetTotalClockCounter();
+    unsigned long int trig_clock = trigger->GetTotalClockCounter();
     memcpy(evt_h+evt_h_size,&trig_clock,8); evt_h_size += 8;
 
     // Line 6: event status + trigger mask
@@ -610,7 +593,9 @@ int main(int argc, char* argv[])
 
     // Count event
     NumberOfEvents++;
-    if (NumberOfEvents%100 == 0) printf("- Written %u events\n",NumberOfEvents);
+    if (NumberOfEvents%100 == 0) {
+      printf("- Written %7u events - Time %ld.%03ld\n",NumberOfEvents,now.tv_sec,now.tv_nsec/1000000);
+    }
 
   } // End of main while loop
 
@@ -619,7 +604,7 @@ int main(int argc, char* argv[])
 
     // Create file tail structure
     unsigned int fbuff;
-    unsigned long long int lbuff;
+    unsigned long int lbuff;
     char file_tail[16]; // 4 words of 4 bytes
     unsigned int tail_size = 0;
     // Add size of tail to total size of output stream
@@ -661,7 +646,8 @@ int main(int argc, char* argv[])
 
   // At least one board or trigger reached EOR. Now wait for everybody else to do the same.
   int millisec = 100; // length of time to sleep between tests, in milliseconds
-  unsigned int n_test_max = 100; // Number of tests to do before giving up
+  //unsigned int n_test_max = 100; // Number of tests to do before giving up
+  unsigned int n_test_max = 10000; // Number of tests to do before giving up
   struct timespec req = {0}; req.tv_sec = 0; req.tv_nsec = millisec * 1000000L;
   trigEOR = 0; nEOR = 0;
   unsigned int n_test = 0;
@@ -684,7 +670,7 @@ int main(int argc, char* argv[])
 
   printf("Run %d closed after writing %u events in %lu s (%lu %lu)\n",cfg->RunNumber(),NumberOfEvents,time_last-time_first,time_last,time_first);
 
-  unsigned long long int total_output_size = 0;
+  unsigned long int total_output_size = 0;
   for (unsigned int i=0; i<NOutputStreams; i++) {
     total_output_size += output_stream_size[i];
     double size_mib = output_stream_size[i]/(1024.*1024.);

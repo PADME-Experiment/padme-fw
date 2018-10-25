@@ -322,8 +322,9 @@ int main(int argc, char *argv[]) {
     }
     printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
 
-    // Disable busy
-    if ( trig_set_busymask(0) != TRIG_OK ) {
+    // Disable busy (bit 5 of the busy mask is the CPU busy and must always be on!)
+    //if ( trig_set_busymask(0) != TRIG_OK ) {
+    if ( trig_set_busymask(0x10) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while resetting busy mask. Exiting.\n");
       exit(1);
     }
@@ -437,8 +438,9 @@ int main(int argc, char *argv[]) {
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
-  // Disable busy
-  if ( trig_set_busymask(0) != TRIG_OK ) {
+  // Disable busy (bit 5 of the busy mask is the CPU busy and must always be on!)
+  //if ( trig_set_busymask(0) != TRIG_OK ) {
+  if ( trig_set_busymask(0x10) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while resetting busy mask. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
@@ -608,13 +610,13 @@ int main(int argc, char *argv[]) {
 	trig_time  =                (word & 0x000000FFFFFFFFFF);
 	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
 	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
-	//float dt = (trig_time-old_time)*12.5E-6;
-	float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz
+	long int dT = trig_time-old_time; if (dT<0) dT += (1LL<<40); // Compensate for clock counter roll over
+	float dt_ns = dT/80.0E3; // Trigger clock is 80.0MHz
 	int sys_dt = sys_time-old_sys_time;
 	if (totalWriteEvents == 0) {
 	  printf("- Trigger %u %#016lx %13lu %#02x %4u\n",totalWriteEvents,word,trig_time,trig_map,trig_count);
 	} else {
-	  printf("- Trigger %u %#016lx %13lu %#02x %4u %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt,sys_dt);
+	  printf("- Trigger %u %#016lx %13lu %#02x %4u %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt_ns,sys_dt);
 	}
 	old_time = trig_time;
 	old_sys_time = sys_time;

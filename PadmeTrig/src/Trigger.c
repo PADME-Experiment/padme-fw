@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <time.h>
 
 #include "Trigger.h"
 
@@ -66,6 +67,10 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
 {
 
   int rc;
+  struct timespec sys_time;
+
+  clock_gettime(CLOCK_REALTIME,&sys_time);
+  printf("trig_get_data - Entering %12ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
 
   // Send command to read timestamp buffer
   char cmd[2]; sprintf(cmd,"%c%c",TRIG_CMD_TIMESTAMP,TRIG_REG_TIMESTAMP);
@@ -84,6 +89,9 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   unsigned char buff[4],head[4],tail[4],biff[4];
   head[0] = 0xB0; head[1] = 0xF0; head[2] = 0xB0; head[3] = 0xF0;
   tail[0] = 0xE0; tail[1] = 0xF0; tail[2] = 0xE0; tail[3] = 0xF0;
+
+  clock_gettime(CLOCK_REALTIME,&sys_time);
+  printf("trig_get_data - Reading  %12ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
 
   // Read first 4 bytes from Trigger (must be B0F0B0F0 pattern)
   rc = read(Trig_SockFD,(char*)buff,4);
@@ -140,6 +148,9 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   unsigned int length = (unsigned int)(pointer-buffer);
   //printf("Length is %u\n",length);
   memcpy(buf_len,&length,4);
+
+  clock_gettime(CLOCK_REALTIME,&sys_time);
+  printf("trig_get_data - Ending   %12ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
 
   return TRIG_OK;
 

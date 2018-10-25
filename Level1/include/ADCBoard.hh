@@ -49,6 +49,7 @@ class ADCBoard
 
   UInt_t GetClockCounter() { return fClockCounter; }
   ULong64_t GetTotalClockCounter() { return fTotalClockCounter; }
+  void SetTotalClockCounter(ULong64_t t) { fTotalClockCounter = t; }
 
   unsigned char GetGroupMask();
   int GetTriggerTimeTags(UInt_t*);

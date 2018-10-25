@@ -163,12 +163,13 @@ int Trigger::NextEvent()
   if (fFirstEvent) {
     //printf("evt 0 old %llu new %llu\n",old_clock_counter,fClockCounter);
     fTotalClockCounter = 0; // Reset global time counter on first trigger
+    fClockIncrement = 0;
     fFirstEvent = 0;
   } else {
-    Long64_t dT = fClockCounter - old_clock_counter;
-    if (dT<0) dT += (1LL<<40); // Compensate for clock counter roll over (NEED VERIFICATION!)
+    Long64_t dT = fClockCounter-old_clock_counter; if (dT<0) dT += (1LL<<40); // Compensate for clock counter roll over
     fTotalClockCounter += dT;
-    //printf("evt N old %llu new %llu dT %lld TCC %llu\n",old_clock_counter,fClockCounter,dT,fTotalClockCounter);
+    fClockIncrement = dT;
+    //printf("evt N old %llu new %llu dT %llu TCC %llu\n",old_clock_counter,fClockCounter,fClockIncrement,fTotalClockCounter);
   }
 
   if (fCfg->Verbose()>=2) printf("- Trigger size %u clock %llu total clock %llu\n",fEventSize,fClockCounter,fTotalClockCounter);

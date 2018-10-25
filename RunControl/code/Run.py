@@ -71,6 +71,9 @@ class Run:
         #else:
         #    self.run_name = "run_%d"%self.run_number
         self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
+ 
+        # Write run name to current_run file for monitoring
+        with open("%s/run/current_run"%self.daq_dir,"w") as lf: lf.write("%s\n"%self.run_name)
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
@@ -560,8 +563,8 @@ class Run:
             self.hand_rcv.append(log_handle)
 
             # Open receiving end of tunnel on Merger node
-            #command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
-            command = "nc --udp -l -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            command = "nc -l -k -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            #command = "nc --udp -l -v --recv-only %s %d > %s < /dev/zero"%(self.merger.node_ip,port_number,self.trigger.output_stream)
             if self.merger.node_id != 0:
                 command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.merger.node_ip,command)
             print command
@@ -621,8 +624,8 @@ class Run:
             self.hand_snd.append(log_handle)
 
             # Open sending end of tunnel on Trigger node. Add some code to wait for receiving end to appear before proceeding.
-            #command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,self.trigger.output_stream)
-            command = "nc -v --udp --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.trigger.output_stream)
+            command = "while ! nc -z %s %d ; do sleep 1 ; done ; nc -v --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.merger.node_ip,port_number,self.trigger.output_stream)
+            #command = "nc -v --udp --send-only %s %d < %s > /dev/null"%(self.merger.node_ip,port_number,self.trigger.output_stream)
             if adc.node_id != 0:
                 command = "ssh -f -i %s %s '( %s )'"%(self.ssh_id_file,self.trigger.node_ip,command)
             print command

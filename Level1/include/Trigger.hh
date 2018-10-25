@@ -41,6 +41,7 @@ class Trigger
   UInt_t GetTriggerCounter() { return fTriggerCounter; }
   ULong64_t GetClockCounter() { return fClockCounter; }
   ULong64_t GetTotalClockCounter() { return fTotalClockCounter; }
+  ULong64_t GetClockIncrement() { return fClockIncrement; }
 
  private:
 
@@ -69,6 +70,7 @@ class Trigger
   UInt_t fTriggerCounter;
   ULong64_t fClockCounter;
   ULong64_t fTotalClockCounter;
+  ULong64_t fClockIncrement;
 
 };
 #endif

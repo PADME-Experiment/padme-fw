@@ -21,6 +21,17 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
   fChannelReco = new DigitizerChannelReco();
 }
 
+
+
+
+void HEPVetoReconstruction::HistoInit(){
+  AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",32,0.0,32.0));
+  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",1000,0.0,1000.0));
+
+  
+}
+
+
 HEPVetoReconstruction::~HEPVetoReconstruction()
 {;}
 
@@ -76,3 +87,21 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void HEPVetoReconstruction::EndProcessing()
 // {;}
+
+void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  GetHisto("nboards")->Fill( (Int_t) nBoards );
+
+  TADCBoard* ADC;
+  
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+  }
+
+  
+
+}

@@ -194,7 +194,7 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
-	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),ich));
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
 	}
       }
     } else {

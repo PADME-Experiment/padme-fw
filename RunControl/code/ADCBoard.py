@@ -150,7 +150,9 @@ class ADCBoard:
                 elif (p_name == "zs1_nsigma"): self.zs1_nsigma = float(p_value)
                 elif (p_name == "zs1_nabovethr"): self.zs1_nabovethr = int(p_value,0)
                 elif (p_name == "zs2_tail"): self.zs2_tail = int(p_value,0)
-                elif (p_name == "zs2_minrms"): self.zs2_minrms = float(p_value)
+                elif (p_name == "zs2_minrms"):
+                    self.zs2_minrms = float(p_value)
+                    for ch in range(32): self.zs2_minrms_ch[ch] = self.zs2_minrms
                 elif (p_name == "zs2_minrms_ch"):
                     mm = re_chvalue.search(p_value)
                     if (mm):

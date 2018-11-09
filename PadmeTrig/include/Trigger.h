@@ -14,5 +14,6 @@ int trig_get_busymask(char*); // 8b busy mask
 int trig_set_trigmask(char); // 8b trigger mask
 int trig_set_busymask(char); // 8b busy mask
 int trig_start_run();
-
+int trig_get_register(unsigned char,unsigned int*); // register number, 4B word output
+int trig_set_register(unsigned char,unsigned int); // register number, 4B word input
 #endif

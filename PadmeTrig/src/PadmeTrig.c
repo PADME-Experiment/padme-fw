@@ -206,7 +206,7 @@ int main(int argc, char *argv[]) {
   pid_t pid;
   int c;
   int rc;
-  char mask[4];
+  unsigned char mask[4];
 
   // File to handle DAQ interaction with GUI
   //FILE* iokf; // InitOK file

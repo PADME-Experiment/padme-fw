@@ -126,7 +126,7 @@ void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
       if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
 	(  (TH2F *) GetHisto("EVetoTimeVsEVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
-	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+	GetHisto("EVetoHitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
       }
 
 

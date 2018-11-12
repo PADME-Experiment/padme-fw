@@ -361,14 +361,22 @@ int trig_start_run()
 
 int trig_start_run()
 {
-  unsigned char start = (1 << 0); // bit 0: start run
-  return trig_set_register(0x00,&start);
+  unsigned char fullmask[4];
+  fullmask[0] = 0x00;
+  fullmask[1] = 0x00;
+  fullmask[2] = 0x00;
+  fullmask[3] = (1 << 0); // bit 0: start run
+  return trig_set_register(0x00,fullmask);
 }
 
 int trig_stop_run()
 {
-  unsigned char stop = (1 << 1); // bit 1: stop run
-  return trig_set_register(0x00,&stop);
+  unsigned char fullmask[4];
+  fullmask[0] = 0x00;
+  fullmask[1] = 0x00;
+  fullmask[2] = 0x00;
+  fullmask[3] = (1 << 1); // bit 1: stop run
+  return trig_set_register(0x00,fullmask);
 }
 
 int trig_get_trigbusymask(unsigned char* mask)
@@ -495,7 +503,7 @@ int trig_set_timepix_delay(unsigned char delay)
   if (rc != TRIG_OK) return rc;
   // Replace old timepix delay with new one
   fullmask[3] = delay;
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(0x05,fullmask);
 }
 
 int trig_get_timepix_width(unsigned char* width)
@@ -515,7 +523,7 @@ int trig_set_timepix_width(unsigned char width)
   if (rc != TRIG_OK) return rc;
   // Replace old timepix width with new one
   fullmask[2] = width;
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(0x05,fullmask);
 }
 
 int trig_get_trigger_global_factor(unsigned char trigger,unsigned short int* factor)

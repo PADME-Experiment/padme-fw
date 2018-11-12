@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Show registers before configuring board
-  for (reg=0x011;reg<0x0f;reg++) {
+  for (reg=0x00;reg<0x0f;reg++) {
     if ( trig_get_register(reg,mask) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
       proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -585,7 +585,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Show registers after initializing board
-  for (reg=0x011;reg<0x0f;reg++) {
+  for (reg=0x00;reg<0x0f;reg++) {
     if ( trig_get_register(reg,mask) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
       proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);

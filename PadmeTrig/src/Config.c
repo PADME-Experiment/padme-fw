@@ -45,7 +45,37 @@ int reset_config()
 
   Config->run_number = 0; // Dummy run (no DB access)
 
-  Config->trigger_mask = 0x3f; // All triggers active
+  Config->trigger_mask = 0x01; // Only BTF trigger active
+
+  Config->busy_mask = 0x10; // Only CPU busy active
+
+  // Leave timepix shutter deay and width to their firmware default values (25ns and 275ns)
+  Config->timepix_shutter_delay = 0x02;
+  Config->timepix_shutter_width = 0x16;
+
+  // Leave correlated trigger delay to its firmware default values (500us)
+  Config->correlated_trigger_delay = 0x01f4;
+
+  // Set all triggers downscaling to 1 (no downscaling)
+  Config->trig0_scale_global   = 1;
+  Config->trig1_scale_global   = 1;
+  Config->trig2_scale_global   = 1;
+  Config->trig3_scale_global   = 1;
+  Config->trig4_scale_global   = 1;
+  Config->trig5_scale_global   = 1;
+  Config->trig6_scale_global   = 1;
+  Config->trig7_scale_global   = 1;
+
+  // Disable autopass for all external triggers
+  Config->trig0_scale_autopass = 0;
+  Config->trig1_scale_autopass = 0;
+  Config->trig2_scale_autopass = 0;
+  Config->trig3_scale_autopass = 0;
+  Config->trig4_scale_autopass = 0;
+  Config->trig5_scale_autopass = 0;
+  // Enable autopass for all (un)correlated triggers
+  Config->trig6_scale_autopass = 1;
+  Config->trig7_scale_autopass = 1;
 
   strcpy(Config->output_mode,"STREAM"); // Default single stream mode
 
@@ -83,8 +113,9 @@ int read_config(char *cfgfile)
   char param[MAX_PARAM_NAME_LEN];
   char value[MAX_PARAM_VALUE_LEN];
   size_t plen,vlen;
+  unsigned short int su;
   int v;
-  //int64_t vl;
+  //long int vl;
   unsigned int vu;
   unsigned long int vul;
 
@@ -203,9 +234,149 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"trigger_mask")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->trigger_mask = (v & 0x3f);
-	  printf("Parameter %s set to %d (0x%x)\n",param,v,Config->trigger_mask);
+	if ( sscanf(value,"%hx",&su) ) {
+	  Config->trigger_mask = (su & 0x00ff);
+	  printf("Parameter %s set to 0x%x\n",param,Config->trigger_mask);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"busy_mask")==0 ) {
+	if ( sscanf(value,"%hx",&su) ) {
+	  Config->busy_mask = (su & 0x001f); // Only use bits 4:0
+	  printf("Parameter %s set to 0x%x\n",param,Config->busy_mask);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"timepix_shutter_delay")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->timepix_shutter_delay = (su & 0x00ff);
+	  printf("Parameter %s set to %u\n",param,Config->timepix_shutter_delay);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"timepix_shutter_width")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->timepix_shutter_width = (su & 0x00ff);
+	  printf("Parameter %s set to %u\n",param,Config->timepix_shutter_width);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"correlated_trigger_delay")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->correlated_trigger_delay = su;
+	  printf("Parameter %s set to %u\n",param,Config->correlated_trigger_delay);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig0_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig0_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig0_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig0_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig0_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig0_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig1_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig1_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig1_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig1_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig1_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig1_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig2_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig2_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig2_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig2_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig2_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig2_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig3_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig3_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig3_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig3_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig3_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig3_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig4_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig4_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig4_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig4_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig4_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig4_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig5_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig5_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig5_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig5_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig5_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig5_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig6_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig6_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig6_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig6_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig6_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig6_scale_autopass);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig7_scale_global")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig7_scale_global = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig7_scale_global);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"trig7_scale_autopass")==0 ) {
+	if ( sscanf(value,"%hu",&su) ) {
+	  Config->trig7_scale_autopass = su;
+	  printf("Parameter %s set to %u\n",param,Config->trig7_scale_autopass);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -314,7 +485,32 @@ int print_config(){
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
 
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
-  printf("trigger_mask\t\t0x%02x\t\ttrigger mask (6 bits)\n",Config->trigger_mask);
+
+  printf("trigger_mask\t\t0x%02x\t\ttrigger mask (8 bits)\n",Config->trigger_mask);
+  printf("busy_mask\t\t0x%02x\t\tbusy mask (5 bits)\n",Config->trigger_mask);
+
+  printf("timepix_shutter_delay\t%u\t\tDelay in clock counts from BTF trigger to open timepix shutter\n",Config->timepix_shutter_delay);
+  printf("timepix_shutter_width\t%u\t\tWidth in clock counts of timepix shutter\n",Config->timepix_shutter_width);
+
+  printf("correlated_trigger_delay\t%u\t\tDelay in us from BTF trigger for correlated trigger\n",Config->correlated_trigger_delay);
+
+  printf("trig0_scale_global\t%u\t\tTrigger 0 downscale factor\n",Config->trig0_scale_global);
+  printf("trig1_scale_global\t%u\t\tTrigger 1 downscale factor\n",Config->trig1_scale_global);
+  printf("trig2_scale_global\t%u\t\tTrigger 2 downscale factor\n",Config->trig2_scale_global);
+  printf("trig3_scale_global\t%u\t\tTrigger 3 downscale factor\n",Config->trig3_scale_global);
+  printf("trig4_scale_global\t%u\t\tTrigger 4 downscale factor\n",Config->trig4_scale_global);
+  printf("trig5_scale_global\t%u\t\tTrigger 5 downscale factor\n",Config->trig5_scale_global);
+  printf("trig6_scale_global\t%u\t\tTrigger 6 downscale factor\n",Config->trig6_scale_global);
+  printf("trig7_scale_global\t%u\t\tTrigger 7 downscale factor\n",Config->trig7_scale_global);
+
+  printf("trig0_scale_autopass\t%u\t\tTrigger 0 autopass downscale factor\n",Config->trig0_scale_autopass);
+  printf("trig1_scale_autopass\t%u\t\tTrigger 1 autopass downscale factor\n",Config->trig1_scale_autopass);
+  printf("trig2_scale_autopass\t%u\t\tTrigger 2 autopass downscale factor\n",Config->trig2_scale_autopass);
+  printf("trig3_scale_autopass\t%u\t\tTrigger 3 autopass downscale factor\n",Config->trig3_scale_autopass);
+  printf("trig4_scale_autopass\t%u\t\tTrigger 4 autopass downscale factor\n",Config->trig4_scale_autopass);
+  printf("trig5_scale_autopass\t%u\t\tTrigger 5 autopass downscale factor\n",Config->trig5_scale_autopass);
+  printf("trig6_scale_autopass\t%u\t\tTrigger 6 autopass downscale factor\n",Config->trig6_scale_autopass);
+  printf("trig7_scale_autopass\t%u\t\tTrigger 7 autopass downscale factor\n",Config->trig7_scale_autopass);
 
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {

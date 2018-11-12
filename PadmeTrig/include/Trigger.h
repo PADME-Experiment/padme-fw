@@ -23,8 +23,8 @@ int trig_disable_trigger(unsigned char); // trigger number (0-7)
 int trig_get_busymask(unsigned char*); // 8b busy mask
 int trig_set_busymask(unsigned char); // 8b busy mask
 
-int trig_get_correlated_delay(unsigned char*); // 16b correlated trigger delay in clock counts
-int trig_set_correlated_delay(unsigned char*); // 16b correlated trigger delay in clock counts
+int trig_get_correlated_delay(unsigned short int*); // 16b correlated trigger delay in clock counts
+int trig_set_correlated_delay(unsigned short int); // 16b correlated trigger delay in clock counts
 
 int trig_get_timepix_delay(unsigned char*); // 8b timepix shutter delay wrt trigger in clock counts
 int trig_set_timepix_delay(unsigned char); // 8b timepix shutter delay wrt trigger in clock counts
@@ -32,11 +32,11 @@ int trig_set_timepix_delay(unsigned char); // 8b timepix shutter delay wrt trigg
 int trig_get_timepix_width(unsigned char*); // 8b timepix shutter width in clock counts
 int trig_set_timepix_width(unsigned char); // 8b timepix shutter width in clock counts
 
-int trig_get_trigger_global_factor(unsigned char,unsigned char*); // trigger (0-7),16b global demultiplication factor
-int trig_set_trigger_global_factor(unsigned char,unsigned char*); // trigger (0-7),16b global demultiplication factor
+int trig_get_trigger_global_factor(unsigned char,unsigned short int*); // trigger (0-7),16b global demultiplication factor
+int trig_set_trigger_global_factor(unsigned char,unsigned short int); // trigger (0-7),16b global demultiplication factor
 
-int trig_get_trigger_autopass_factor(unsigned char,unsigned char*); // trigger (0-7),16b autopass demultiplication factor
-int trig_set_trigger_autopass_factor(unsigned char,unsigned char*); // trigger (0-7),16b autopass demultiplication factor
+int trig_get_trigger_autopass_factor(unsigned char,unsigned short int*); // trigger (0-7),16b autopass demultiplication factor
+int trig_set_trigger_autopass_factor(unsigned char,unsigned short int); // trigger (0-7),16b autopass demultiplication factor
 
 int trig_get_register(unsigned char,unsigned char*); // register number, 32b word output
 int trig_set_register(unsigned char,unsigned char*); // register number, 32b word input

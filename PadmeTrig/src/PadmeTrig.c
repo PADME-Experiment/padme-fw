@@ -207,6 +207,11 @@ int main(int argc, char *argv[]) {
   int c;
   int rc;
   unsigned char mask[4];
+  unsigned char val1;
+  unsigned short int val2;
+  //unsigned int val4;
+  //unsigned long int val8;
+  unsigned char trig,reg;
 
   // File to handle DAQ interaction with GUI
   //FILE* iokf; // InitOK file
@@ -247,7 +252,7 @@ int main(int argc, char *argv[]) {
   // Trigger debugging/logging variables
   unsigned long int word;
   unsigned long int trig_time;
-  unsigned int trig_map,trig_count;
+  unsigned char trig_map,trig_count,trig_fifo,trig_auto;
   unsigned long int old_time = 0;
   time_t sys_time, old_sys_time;
 
@@ -424,24 +429,149 @@ int main(int argc, char *argv[]) {
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
-  // Show current masks
-  if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while readying trigger and busy masks. Exiting.\n");
+  // Show registers before configuring board
+  for (reg=0x011;reg<0x0f;reg++) {
+    if ( trig_get_register(reg,mask) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+  }
+
+  // Program Trigger module with current configuration
+
+  // Trigger mask
+  if ( trig_get_trigmask(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading trigger mask. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
-  printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
+  printf("Trigger mask: 0x%02x\n",val1);
+
+  // Busy mask
+  if ( trig_get_busymask(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading busy mask. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Busy mask: 0x%02x\n",val1);
+
+  // Correlated trigger delay
+  if ( trig_get_correlated_delay(&val2) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading correlated delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Correlated delay: 0x%04x %u\n",val2,val2);
+  if ( trig_set_correlated_delay(Config->correlated_trigger_delay) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while setting correlated delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  if ( trig_get_correlated_delay(&val2) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading correlated delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Correlated delay: 0x%04x %u\n",val2,val2);
+
+  // Timepix shutter delay
+  if ( trig_get_timepix_delay(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading timepix delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Timepix shutter delay: 0x%02x %u\n",val1,val1);
+  if ( trig_set_timepix_delay(Config->timepix_shutter_delay) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while setting timepix delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  if ( trig_get_timepix_delay(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading timepix delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Timepix shutter delay: 0x%02x %u\n",val1,val1);
+
+  // Timepix shutter width
+  if ( trig_get_timepix_width(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading timepix width. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Timepix shutter width: 0x%02x %u\n",val1,val1);
+  if ( trig_set_timepix_width(Config->timepix_shutter_width) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading timepix width. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  if ( trig_get_timepix_width(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading timepix width. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Timepix shutter width: 0x%02x %u\n",val1,val1);
+
+  for (trig = 0; trig<8; trig++) {
+
+    unsigned short int tsg,tsa;
+    switch(trig){
+      case 0: tsg = Config->trig0_scale_global; tsa = Config->trig0_scale_autopass; break;
+      case 1: tsg = Config->trig1_scale_global; tsa = Config->trig1_scale_autopass; break;
+      case 2: tsg = Config->trig2_scale_global; tsa = Config->trig2_scale_autopass; break;
+      case 3: tsg = Config->trig3_scale_global; tsa = Config->trig3_scale_autopass; break;
+      case 4: tsg = Config->trig4_scale_global; tsa = Config->trig4_scale_autopass; break;
+      case 5: tsg = Config->trig5_scale_global; tsa = Config->trig5_scale_autopass; break;
+      case 6: tsg = Config->trig6_scale_global; tsa = Config->trig6_scale_autopass; break;
+      case 7: tsg = Config->trig7_scale_global; tsa = Config->trig7_scale_autopass; break;
+      default: printf("WHAT?\n");
+    }
+
+    if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Trigger 0x%02x global downscale factor old: 0x%04x %u\n",trig,val2,val2);
+    if ( trig_set_trigger_global_factor(trig,tsg) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while setting trigger 0x%02x global factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Trigger 0x%02x global downscale factor new: 0x%04x %u\n",trig,val2,val2);
+
+    if ( trig_get_trigger_autopass_factor(trig,&val2) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x autopass factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Trigger 0x%02x autopass downscale factor old: 0x%04x %u\n",trig,val2,val2);
+    if ( trig_set_trigger_autopass_factor(trig,tsa) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while setting trigger 0x%02x autopass factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    if ( trig_get_trigger_autopass_factor(trig,&val2) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x autopass factor. Exiting.\n",trig);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Trigger 0x%02x autopass downscale factor new: 0x%04x %u\n",trig,val2,val2);
+
+  }
 
   // Disable all triggers
-  if ( trig_set_trigmask(0) != TRIG_OK ) {
+  printf("- Disabling all triggers.\n");
+  if ( trig_set_trigmask(0x00) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while resetting trigger mask. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
+  if ( trig_get_trigmask(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading trigger mask. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Current trigger mask: 0x%02x\n",val1);
 
-  // Disable busy
-  if ( trig_set_busymask(0) != TRIG_OK ) {
+  // Disable all (non-CPU) busy
+  printf("- Disabling all busy.\n");
+  if ( trig_set_busymask(0x10) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while resetting busy mask. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
+  if ( trig_get_busymask(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading busy mask. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Current busy mask: 0x%02x\n",val1);
 
   // Drain trigger buffer
   data_len = 1; // Make sure trig_get_data is executed at least once
@@ -454,12 +584,14 @@ int main(int argc, char *argv[]) {
     printf("- Draining trigger buffer - data_len = %d\n",data_len);
   }
 
-  // Show current masks
-  if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
-    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  // Show registers after initializing board
+  for (reg=0x011;reg<0x0f;reg++) {
+    if ( trig_get_register(reg,mask) != TRIG_OK ) {
+      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    }
+    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
   }
-  printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
 
   // Initialization is now finished: create InitOK file to tell RunControl we are ready.
   if (Config->run_number) {
@@ -483,6 +615,12 @@ int main(int argc, char *argv[]) {
     }
     // Sleep for ~1ms before checking again
     usleep(1000);
+  }
+
+  // Start run: enable SIN
+  if ( trig_start_run() != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while starting the run. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   time(&t_daqstart);
@@ -556,17 +694,16 @@ int main(int argc, char *argv[]) {
   totalWriteSize += fHeadSize;
 
   // Enable all triggers
+  printf("- Enabling requested triggers.\n");
   if ( trig_set_trigmask(Config->trigger_mask) != TRIG_OK ) {
     printf("*** ERROR *** Problem while resetting trigger mask. Exiting.\n");
     proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
-
-  // Show current masks
-  if ( trig_get_trigbusymask(mask) != TRIG_OK ) {
-    printf("*** ERROR *** Problem while reading trigger and busy masks. Exiting.\n");
-    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+  if ( trig_get_trigmask(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading trigger mask. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
-  printf("Current masks: trig 0x%02x busy 0x%02x dummy 0x%02x 0x%02x\n",mask[3],mask[2],mask[1],mask[0]);
+  printf("Current trigger mask: 0x%02x\n",val1);
 
   // Create trigger header (will be the same for all events)
   unsigned int header = ((PEVT_TRIG_TAG & 0xf) << 28) + ((3 & 0x0fffffff) << 0); // 4bits Trigger tag + 28bits Trigger size (4bytes words)
@@ -605,16 +742,22 @@ int main(int argc, char *argv[]) {
       if (totalWriteEvents%100 == 0) {
 	time(&sys_time);
 	memcpy(&word,buff,8);
+	/*
 	trig_time  =                (word & 0x000000FFFFFFFFFF);
 	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
 	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
-	//float dt = (trig_time-old_time)*12.5E-6;
+	*/
+	trig_time  =                 (word & 0x000000FFFFFFFFFF);
+	trig_map   = (unsigned char)((word & 0x0000FF0000000000) >> 40);
+	trig_count = (unsigned char)((word & 0x00FF000000000000) >> 48);
+	trig_fifo  = (unsigned char)((word & 0x0100000000000000) >> 56);
+	trig_auto  = (unsigned char)((word & 0x0200000000000000) >> 57);
 	float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz
 	int sys_dt = sys_time-old_sys_time;
 	if (totalWriteEvents == 0) {
-	  printf("- Trigger %u %#016lx %13lu %#02x %4u\n",totalWriteEvents,word,trig_time,trig_map,trig_count);
+	  printf("- Trigger %9u %#016lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
 	} else {
-	  printf("- Trigger %u %#016lx %13lu %#02x %4u %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,dt,sys_dt);
+	  printf("- Trigger %9u %#016lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
 	}
 	old_time = trig_time;
 	old_sys_time = sys_time;
@@ -767,7 +910,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Disable all triggers
-  if ( trig_set_trigmask(0) != TRIG_OK ) {
+  if ( trig_set_trigmask(0x00) != TRIG_OK ) {
     printf("*** ERROR *** Problem while resetting trigger mask. Exiting.\n");
     proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
   }
@@ -778,6 +921,12 @@ int main(int argc, char *argv[]) {
       printf("*** ERROR *** Problem while finalizing data readout. Exiting.\n");
       proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
+  }
+
+  // Stop run: disable SIN
+  if ( trig_stop_run() != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while stopping the run. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
 
   time(&t_daqstop);

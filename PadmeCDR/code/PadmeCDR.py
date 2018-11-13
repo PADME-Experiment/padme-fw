@@ -8,15 +8,11 @@ import subprocess
 
 from PadmeCDRServer import PadmeCDRServer
 
-#def print_help():
-#    print 'PadmeCDR [-c config_file] [-i] [-h]'
-#    print '  -c config_file  Read CDR configuration from file <config_file>. (Currently not supported)'
-#    print '  -i              Run the PadmeCDR server in interactive mode'
-#    print '  -h              Show this help message and exit'
-
 def print_help():
-    print 'PadmeCDR -s data_server [-i] [-h]'
-    print '  -s              Define server from which data are copied'
+    print 'PadmeCDR -S src_site -D dst_site [-s data_srv] [-i] [-h]'
+    print '  -S src_site     Source site [DAQ, LNF, CNAF]'
+    print '  -D dst_site     Destination site [LNF, CNAF]'
+    print '  -s data_srv     Data server from which data are copied. Only used when -S is DAQ'
     print '  -i              Run the PadmeCDR server in interactive mode'
     print '  -h              Show this help message and exit'
 
@@ -29,35 +25,64 @@ def main(argv):
     # Define list of available data servers
     data_servers_list = [ "l1padme3", "l1padme4" ]
 
+    # Define lists of source and destination sites
+    source_sites_list = [ "DAQ", "LNF", "CNAF" ]
+    destination_sites_list = [ "LNF", "CNAF" ]
+
     try:
-        #opts,args = getopt.getopt(argv,"ic:h")
-        opts,args = getopt.getopt(argv,"is:h")
+        opts,args = getopt.getopt(argv,"iS:D:s:h")
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
 
-    cfg_file = ""
     data_server = ""
+    source_site = ""
+    destination_site = ""
     serverInteractive = False
     for opt,arg in opts:
         if opt == '-h':
             print_help()
             sys.exit()
-        #elif opt == '-c':
-        #    cfg_file = arg
         elif opt == '-s':
             data_server = arg
+        elif opt == '-S':
+            source_site = arg
+        elif opt == '-D':
+            destination_site = arg
         elif opt == '-i':
             serverInteractive = True
 
-    # Check if data server is valid
-    if (not data_server in data_servers_list):
+    # Check if source site is valid
+    if (not source_site in source_sites_list):
+        if (source_site):
+            print "ERROR - Source site",source_site,"is unknown. Use one of",source_sites_list
+        else:
+            print "ERROR - You must specify one data server from",source_sites_list
+        print_help()
+        sys.exit(2)
+
+    # When source is DAQ, check if data server was correctly specified
+    if ( (source_site == "DAQ") and not (data_server in data_servers_list) ):
         if (data_server):
             print "ERROR - Data server",data_server,"is unknown. Use one of",data_servers_list
         else:
             print "ERROR - You must specify one data server from",data_servers_list
         print_help()
         sys.exit(2)
+
+    # Check if destination site is valid
+    if (not destination_site in destination_sites_list):
+        if (destination_site):
+            print "ERROR - Destination site",destination_site,"is unknown. Use one of",destination_sites_list
+        else:
+            print "ERROR - You must specify one data server from",destination_sites_list
+        print_help()
+        sys.exit(2)
+
+    if (source_site == "DAQ"):
+        print "Starting PadmeCDRServer with source",source_site,"server",data_server,"and destination",destination_site
+    else:
+        print "Starting PadmeCDRServer with source",source_site,"and destination",destination_site
 
     # Create long-lived proxy file (will ask user for password)
     long_proxy_file = "%s/run/long_proxy"%cdr_dir
@@ -69,12 +94,11 @@ def main(argv):
         sys.exit(2)
 
     if serverInteractive:
-        #PadmeCDRServer(cfg_file,"i")
-        PadmeCDRServer(data_server,"i")
+        PadmeCDRServer(source_site,destination_site,data_server,"i")
     else:
         print "Starting PadmeCDRServer in background"
-        #with daemon.DaemonContext(working_directory="."): PadmeCDRServer(cfg_file,"d")
-        with daemon.DaemonContext(working_directory="."): PadmeCDRServer(data_server,"d")
+        with daemon.DaemonContext(working_directory="."): PadmeCDRServer(source_site,destination_site,data_server,"d")
+
 
 # Execution starts here
 if __name__ == "__main__":

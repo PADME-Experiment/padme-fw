@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Show registers before configuring board
-  for (reg=0x00;reg<0x0f;reg++) {
+  for (reg=0x00;reg<0x10;reg++) {
     if ( trig_get_register(reg,mask) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
       proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -585,7 +585,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Show registers after initializing board
-  for (reg=0x00;reg<0x0f;reg++) {
+  for (reg=0x00;reg<0x10;reg++) {
     if ( trig_get_register(reg,mask) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
       proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -755,9 +755,9 @@ int main(int argc, char *argv[]) {
 	float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz
 	int sys_dt = sys_time-old_sys_time;
 	if (totalWriteEvents == 0) {
-	  printf("- Trigger %9u %#016lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
+	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
 	} else {
-	  printf("- Trigger %9u %#016lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
+	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
 	}
 	old_time = trig_time;
 	old_sys_time = sys_time;

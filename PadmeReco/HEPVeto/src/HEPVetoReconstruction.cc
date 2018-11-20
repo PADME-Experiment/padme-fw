@@ -28,7 +28,7 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
 
 void HEPVetoReconstruction::HistoInit(){
   AddHisto("HEPVetoOccupancy",new TH1F("HEPVetoOccupancy","HEPVeto Occupancy",32,0.0,32.0));
-  AddHisto("HEPVetoTime",new TH1F("HEPVetoTime","HEPVeto Time",1000,0.0,1000.0));
+  AddHisto("HEPVetoTime",new TH1F("HEPVetoTime","HEPVeto Time",400,0.0,400.0));
   AddHisto("HEPVetoMultiplicity",new TH1F("HEPVetoMultiplicity","Number of hits in the HEPVeto per event", 100, 0.0,100.0));
   AddHisto("HEPVetoTimeVsPVetoTime",new TH2F("HEPVetoTimeVsPVetoTime","HEPVeto Time vs PVetoTime",100,100.0,500.0, 100,100.0,500.0));
  
@@ -102,11 +102,12 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   GetHisto("HEPVetoMultiplicity")->Fill(Hits.size());
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if( Hits[iHit1]->GetTime() > 50.) {
+    if( Hits[iHit1]->GetTime() > 10.) {
       //Real hit
         GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
-    }
+    
     GetHisto("HEPVetoTime")->Fill(Hits[iHit1]->GetTime());
+    }
   }
 
   PadmeReconstruction* MainReco = (PadmeReconstruction*  ) fMainReco;

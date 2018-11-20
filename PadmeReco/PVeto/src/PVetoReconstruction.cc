@@ -42,10 +42,10 @@ void PVetoReconstruction::HistoInit(){
 
 
   AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",1200,0.0,12.0));
-  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",1000,0.0,1000.0));
+  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",400,0.0,400.0));
 
-  AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,0.0,1000.0) );
-  AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",1000,0.0,1000.0, 1000,0.0,1000.0));
+  AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,0.0,400.0) );
+  AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,0.0,400.0, 400,0.0,400.0));
 
  
 

@@ -264,7 +264,7 @@ Double_t DigitizerChannelTarget::CalcCharge(UShort_t fCh) {
 
    fCharge = fCharge- ((1.*end-1.*begin) * fPed);
    fCharge *= (fVoltageBin*fTimeBin/fImpedance);
-   if (fabs(fCalibCh [fCh])>0.0001) fCharge = fCharge / fCalibCh [fCh];
+   if (fabs(fCalibCh [fCh])>0.0001) fCharge = fCharge / fCalibCh [fCh] * 1.3;
      
    //std::cout << "Integral: " << fCharge << "  Ped:  " << fPed << " Base: " << (end-begin) * fPed << std::endl;
   return fCharge;
@@ -340,6 +340,7 @@ Double_t DigitizerChannelTarget::CalcPosition(UShort_t fCh) {
    return fPosition;
 }
 void DigitizerChannelTarget::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
+  //GABRIELE 7-NOV-2018 **********   fCh IS NOT THE CHANNEL OR STRIP BUT THE SIZE OF THE RECOSTRUCTED HIT ARRAY UP TO NOW
   Int_t fCh =  hitArray.size();
   CalcCharge(fCh);
   

@@ -51,7 +51,7 @@ int main(Int_t argc, char **argv)
     TString InputFileName("InputFile.root");
     TString InputListFileName("InputListFile.txt");
     TString ConfFileName("config/PadmeReconstruction.conf");
-    Int_t iFile = 0, NFiles = 100000, NEvt = 100000000;
+    Int_t iFile = 0, NFiles = 100000, NEvt = 100;
     UInt_t Seed = 4357;
     struct stat filestat;
 

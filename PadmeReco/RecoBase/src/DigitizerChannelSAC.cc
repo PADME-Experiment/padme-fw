@@ -175,8 +175,10 @@ Double_t DigitizerChannelSAC::CalcTime(UShort_t iMax, UShort_t fCh) {
     Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
     Int_t nfound = s->Search(H1,2.,"",peak_thr);
     
-    Double_t *xpeaks = s->GetPositionX();
-    Double_t *ypeaks = s->GetPositionY();
+    //Double_t *xpeaks = s->GetPositionX();
+    //Double_t *ypeaks = s->GetPositionY();
+    Float_t *xpeaks = s->GetPositionX();
+    Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       Float_t xp   = xpeaks[ll];
@@ -208,8 +210,10 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     TSpectrum *s = new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
     Int_t nfound = s->Search(H1,NIntSamp,"",peak_thr);    //corrected for 2.5GHz cannot be less then 0.05 
-    Double_t *xpeaks = s->GetPositionX();
-    Double_t *ypeaks = s->GetPositionY();
+    //Double_t *xpeaks = s->GetPositionX();
+    //Double_t *ypeaks = s->GetPositionY();
+    Float_t *xpeaks = s->GetPositionX();
+    Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;

@@ -1,11 +1,10 @@
 #include "DigitizerChannelReco.hh"
 #include <iostream>
+#include "TMath.h"
 
 void DigitizerChannelReco::PrintConfig(){
   std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
-  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;
-
-  
+  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
 }
 
 
@@ -84,6 +83,17 @@ Double_t DigitizerChannelReco::CalcPedestal() {
 }
 
 
+Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
+  Double_t rms1000  = TMath::RMS(NAvg,&fSamples[0]);
+  Double_t ZSupHit=-1;
+  if(rms1000>Thr){
+    ZSupHit=0;
+  }else{
+    ZSupHit=1;
+  }
+  //std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
+  return ZSupHit;
+}
 
 Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
   
@@ -109,15 +119,15 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
   fTime = 0.;
   //currently looking only at the signal rising edge
   
-  float t1;
-  float t2;
+  float t1=0.;
+  float t2=0.;
 
-  float t3;
-  float t4;
+  float t3=0.;
+  float t4=0.;
 
   
-  float val1;
-  float val2;
+  float val1=0.;
+  float val2=0.;
 
   int t1_ok=0;
   int t2_ok=0;
@@ -147,7 +157,7 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
       t3 = 1.*i + (fAmpThresholdLow - val1)/(val2 - val1);
       t3_ok = 1;
     }
-    if( t3_ok = 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
+    if( t3_ok == 1 && t4_ok == 0 && val1 <= fAmpThresholdHigh && val2 > fAmpThresholdHigh) {
       t4 = 1.*i + (fAmpThresholdHigh - val1)/(val2 - val1);
       t4_ok = 1;
     }
@@ -161,13 +171,14 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 
   
 
-  return fTime;
+  return fTime = fTime*fTimeBin;
 }
 
 
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
+  Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  if (fCharge < .1) return;
+  if (fCharge < .3) return;
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
@@ -175,7 +186,6 @@ void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetEnergy(fCharge);
   hitArray.push_back(Hit);
 
-  
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
   
 }

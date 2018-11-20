@@ -1,14 +1,14 @@
 #ifndef ADCEventTags_H
 #define ADCEventTags_H
 
-// Informations which MUST NOT vary with version:
+// General informations which MUST NOT vary with version:
 // Section tags (highest 4 bits of each section)
-// --- file header: 0x9 - event header: 0xE - file tail: 0x5
+// --- file header: 0x9 - ADC event header: 0xE - Trigger header: 0x3 - file tail: 0x5
 // Data format version (next 16 bits of file header)
-// Event section size in 4-bytes words (next 28 bits of event header)
 
 // Section tags
 
+// These are obsolete: will be removed
 #define ADCEVENT_TAG_LIN 0
 #define ADCEVENT_TAG_POS 28
 #define ADCEVENT_TAG_BIT 0xF0000000
@@ -16,19 +16,42 @@
 #define ADCEVENT_FHEAD_TAG 0x9
 #define ADCEVENT_EVENT_TAG 0xE
 #define ADCEVENT_FTAIL_TAG 0x5
+///////////////////////////////////////
+
+#define EVENT_TAG_LIN 0
+#define EVENT_TAG_POS 28
+#define EVENT_TAG_BIT 0xF0000000
+
+#define EVENT_FHEAD_TAG    0x9
+#define EVENT_ADCEVENT_TAG 0xE
+#define EVENT_TRIGGER_TAG  0x3
+#define EVENT_FTAIL_TAG    0x5
 
 // Data format version
 
+// These are obsolete: will be removed
 #define ADCEVENT_VERSION_LIN 0
 #define ADCEVENT_VERSION_POS 16
 #define ADCEVENT_VERSION_BIT 0x0FFF0000
+///////////////////////////////////////
 
-// Event section total size in 4-bytes words
+#define EVENT_VERSION_LIN 0
+#define EVENT_VERSION_POS 16
+#define EVENT_VERSION_BIT 0x0FFF0000
 
+// Event section size in 4-bytes words (next 28 bits of event header)
+
+// These are obsolete: will be removed
 #define ADCEVENT_EVENTSIZE_LIN 0
 #define ADCEVENT_EVENTSIZE_POS 0
 #define ADCEVENT_EVENTSIZE_BIT 0x0FFFFFFF
+///////////////////////////////////////
 
+#define EVENT_EVENTSIZE_LIN 0
+#define EVENT_EVENTSIZE_POS 0
+#define EVENT_EVENTSIZE_BIT 0x0FFFFFFF
+
+// General informations which MUST NOT vary with version:
 // Information related to physical structure of V1742 ADC board
 
 #define ADCEVENT_NCHANNELS 32
@@ -370,5 +393,41 @@
 #define ADCEVENT_V03_TTAGTRIG_LIN 0
 #define ADCEVENT_V03_TTAGTRIG_POS 0
 #define ADCEVENT_V03_TTAGTRIG_BIT 0xFFFFFFFF
+
+// Trigger file header structure
+
+#define TRIGEVENT_V03_FHEAD_LEN 3
+
+#define TRIGEVENT_V03_FILEINDEX_LIN 0
+#define TRIGEVENT_V03_FILEINDEX_POS 0
+#define TRIGEVENT_V03_FILEINDEX_BIT 0x0000FFFF
+
+#define TRIGEVENT_V03_RUNNUMBER_LIN 1
+#define TRIGEVENT_V03_RUNNUMBER_POS 0
+#define TRIGEVENT_V03_RUNNUMBER_BIT 0xFFFFFFFF
+
+#define TRIGEVENT_V03_TTAGSOF_LIN 2
+#define TRIGEVENT_V03_TTAGSOF_POS 0
+#define TRIGEVENT_V03_TTAGSOF_BIT 0xFFFFFFFF
+
+// Trigger file tail structure
+
+#define TRIGEVENT_V03_FTAIL_LEN 4
+
+#define TRIGEVENT_V03_NEVENTS_LIN 0
+#define TRIGEVENT_V03_NEVENTS_POS 0
+#define TRIGEVENT_V03_NEVENTS_BIT 0x0FFFFFFF
+
+#define TRIGEVENT_V03_FILESIZELO_LIN 1
+#define TRIGEVENT_V03_FILESIZELO_POS 0
+#define TRIGEVENT_V03_FILESIZELO_BIT 0xFFFFFFFF
+
+#define TRIGEVENT_V03_FILESIZEHI_LIN 2
+#define TRIGEVENT_V03_FILESIZEHI_POS 0
+#define TRIGEVENT_V03_FILESIZEHI_BIT 0xFFFFFFFF
+
+#define TRIGEVENT_V03_TTAGEOF_LIN 3
+#define TRIGEVENT_V03_TTAGEOF_POS 0
+#define TRIGEVENT_V03_TTAGEOF_BIT 0xFFFFFFFF
 
 #endif

@@ -17,14 +17,19 @@ HEPVetoGeometry* HEPVetoGeometry::GetInstance()
 
 HEPVetoGeometry::HEPVetoGeometry()
 {
-
   // Size of scintillator fingers
   fFingerSizeX =  1.*cm;
-  fFingerSizeY = 20.*cm;
+  fFingerSizeY = 17.8*cm;  // raw correction M. Raggi needs Drawing
   fFingerSizeZ =  1.*cm;
 
+  //Groove size
+  fGrooveSizeX = 1.3*mm;
+  fGrooveSizeZ = 1.3*mm;
+
+  fFingerRotY = -15.*deg; // Checked with drawings M. Raggi 24/06/2018
+
   // Number of fingers in HEPVeto
-  fHEPVetoNFingers = 32;
+  fHEPVetoNFingers = 16;
 
   // Step between HEPVeto fingers
   fFingerStep = 11.*mm;
@@ -40,7 +45,7 @@ HEPVetoGeometry::HEPVetoGeometry()
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures
-  fHEPVetoChamberWallAngle = 0.;
+  fHEPVetoChamberWallAngle = 0.;    //raw rotation angle M. Raggi
 
   // Thickness of the vacuum chamber wall behind HEPVeto
   // This value will be modified by main program according to actual chamber measures

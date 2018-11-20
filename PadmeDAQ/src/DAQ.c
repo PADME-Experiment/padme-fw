@@ -13,6 +13,7 @@
 
 #include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 
@@ -132,6 +133,7 @@ int get_ConetNode()
 // Handle initial connection to digitizer. Return 0 if OK, >0 if error
 int DAQ_connect ()
 {
+
   CAEN_DGTZ_ErrorCode ret;
   CAEN_DGTZ_BoardInfo_t boardInfo;
   int linkNum,conetNode;
@@ -179,12 +181,13 @@ int DAQ_connect ()
   // Get board serial number and save it to DB
   Config->board_sn = boardInfo.SerialNumber;
   if ( Config->run_number ) {
-    char line[2048];
-    sprintf(line,"%d",Config->board_sn);
-    db_add_cfg_para(Config->process_id,"board_sn",line);
+    char outstr[2048];
+    sprintf(outstr,"%d",Config->board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",outstr);
   }
 
   return 0;
+
 }
 
 // Handle initialization of the digitizer. Return 0 if OK, >0 if error
@@ -567,7 +570,6 @@ int DAQ_init ()
 
   }
 
-
   // Set max number of events to transfer in a single readout
   ret = CAEN_DGTZ_GetMaxNumEventsBLT(Handle,&data);
   if (ret != CAEN_DGTZ_Success) {
@@ -658,7 +660,7 @@ int DAQ_readdata ()
   uint32_t status,grstatus;
 
   // File to handle DAQ interaction with GUI
-  FILE* iokf; // InitOK file
+  //FILE* iokf; // InitOK file
 
   // Input data information
   char *buffer = NULL;
@@ -700,6 +702,10 @@ int DAQ_readdata ()
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle;
+  int rc;
+
+  // Flag to end run on ADC read error
+  int adcError;
 
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
@@ -709,7 +715,7 @@ int DAQ_readdata ()
   // If quit file is already there, assume this is a test run and do nothing
   if ( access(Config->quit_file,F_OK) != -1 ) {
     printf("DAQ_readdata - Quit file '%s' found: will not run acquisition\n",Config->quit_file);
-    return 0;
+    return 3;
   }
 
   // If this is a real run save configuration to DB
@@ -743,15 +749,40 @@ int DAQ_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  // DAQ is now ready to start. Create InitOK file
-  printf("- Creating InitOK file '%s'\n",Config->initok_file);
-  if ( access(Config->initok_file,F_OK) == -1 ) {
-    iokf = fopen(Config->initok_file,"w");
-    fclose(iokf);
-    printf("- InitOK file '%s' created\n",Config->initok_file);
-  } else {
-    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
-    return 1;
+  // Initialize output files counter
+  fileIndex = 0;
+
+  // If we use STREAM output, the output stream must be initialized here
+  if ( strcmp(Config->output_mode,"STREAM")==0 ) {
+
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
+
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY);
+
+    // Increase stream buffer to 128MB (~1800evts)
+    //long pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+    long pipe_size = (long)fcntl(fileHandle,1024+8);
+    if (pipe_size == -1) { perror("get pipe size failed."); }
+    printf("Default pipe size: %ld\n", pipe_size);
+
+    //int ret = fcntl(fileHandle,F_SETPIPE_SZ,128*1024*1024);
+    int ret = fcntl(fileHandle,1024+7,128*1024*1024);
+    if (ret < 0) { perror("set pipe size failed."); }
+
+    //pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+    pipe_size = (long)fcntl(fileHandle,1024+8);
+    if (pipe_size == -1) { perror("get pipe size 2 failed."); }
+    printf("Pipe size: %ld\n", pipe_size);
+
+  }
+
+  // DAQ is now ready to start. Create InitOK file and set status to INITIALIZED
+  if ( create_initok_file() ) return 1;
+  if (Config->run_number) {
+    printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
   }
 
   if (Config->startdaq_mode == 0) {
@@ -793,6 +824,8 @@ int DAQ_readdata ()
   
   if ( Config->run_number ) {
     // Tell DB that the process has started
+    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
     if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
   }
 
@@ -803,42 +836,66 @@ int DAQ_readdata ()
   totalWriteEvents = 0;
 
   // Start counting output files
-  fileIndex = 0;
-  tooManyOutputFiles = 0;
+  //fileIndex = 0;
+  //tooManyOutputFiles = 0;
 
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
     // Generate name for initial output file and verify it does not exist
-    //generate_filename(fileName[fileIndex],t_daqstart);
     generate_filename(tmpName,t_daqstart);
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
     if ( Config->run_number ) {
-      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+      rc = db_file_check(fileName[fileIndex]);
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	return 2;
+      } else if ( rc == 1 ) {
+	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	return 2;
+      }
     }
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
     strcat(pathName[fileIndex],fileName[fileIndex]);
 
-  } else {
-
-    // Use only one virtual file for streaming out all data
-    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
-    strcpy(pathName[fileIndex],Config->output_stream);
-
-  }
-
-  // Open file
-  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+//  } else {
+//
+//    // Use only one virtual file for streaming out all data
+//    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+//    strcpy(pathName[fileIndex],Config->output_stream);
+//
+//  }
+//
+//  // Open file
+//  if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
     fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-  } else {
-    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
-    fileHandle = open(pathName[fileIndex],O_WRONLY);
-  }
-  if (fileHandle == -1) {
-    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-    return 2;
+//  } else {
+//
+//    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+//    fileHandle = open(pathName[fileIndex],O_WRONLY);
+//
+//    // Increase stream buffer to 128MB (~1800evts)
+//    //long pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+//    long pipe_size = (long)fcntl(fileHandle,1024+8);
+//    if (pipe_size == -1) { perror("get pipe size failed."); }
+//    printf("Default pipe size: %ld\n", pipe_size);
+//
+//    //int ret = fcntl(fileHandle,F_SETPIPE_SZ,128*1024*1024);
+//    int ret = fcntl(fileHandle,1024+7,128*1024*1024);
+//    if (ret < 0) { perror("set pipe size failed."); }
+//
+//    //pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
+//    pipe_size = (long)fcntl(fileHandle,1024+8);
+//    if (pipe_size == -1) { perror("get pipe size 2 failed."); }
+//    printf("Pipe size: %ld\n", pipe_size);
+//
+//  }
+    if (fileHandle == -1) {
+      printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+      return 2;
+    }
   }
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
@@ -850,7 +907,7 @@ int DAQ_readdata ()
   }
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
@@ -862,10 +919,17 @@ int DAQ_readdata ()
   // Main DAQ loop: wait for some data to be present and copy it to output file
   //old_TT =0;
   //old_TTT=0;
+  adcError = 0;
+  tooManyOutputFiles = 0;
   while(1){
 
     // Read Acquisition Status register
     ret = CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_ACQ_STATUS_ADD,&status);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("Cannot read acquisition status. Error code: %d\n",ret);
+      adcError = 1;
+      break; // Exit from main DAQ loop
+    }
 
     //printf("Register 0x%04X Status 0x%04X\n",CAEN_DGTZ_ACQ_STATUS_ADD,status);
     // Check if at least one event is available
@@ -875,25 +939,34 @@ int DAQ_readdata ()
       for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	if ( Config->group_enable_mask & (1 << iGr) ) {
 	  //printf("Checking buffer for group %d on register 0x%04X\n",iGr,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8));
-	  if (CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus) != CAEN_DGTZ_Success) {
+	  //if (CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus) != CAEN_DGTZ_Success) {
+	  ret = CAEN_DGTZ_ReadRegister(Handle,CAEN_DGTZ_CHANNEL_STATUS_BASE_ADDRESS+(iGr<<8),&grstatus);
+	  if (ret != CAEN_DGTZ_Success) {
 	    printf("Cannot read group %d status. Error code: %d\n",iGr,ret);
-	    return 2;
+	    //return 2;
+	    adcError = 1;
+	    break; // Exit from loop over groups
 	  } else if (grstatus & 1) { // Bit 0: Memory full
 	    printf("*** WARNING *** Group %d data buffer is full (!!!)\n",iGr);
 	  }
 	}
       }
+      if (adcError) break; // Exit from main DAQ loop
 
       // Read the data from digitizer
       ret = CAEN_DGTZ_ReadData(Handle,CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT,buffer,&readSize);
       if (ret != CAEN_DGTZ_Success) {
 	printf("Unable to read data from digitizer. Error code: %d\n",ret);
-	return 2;
+	//return 2;
+	adcError = 1;
+	break; // Exit from main DAQ loop
       }
       ret = CAEN_DGTZ_GetNumEvents(Handle,buffer,readSize,&numEvents);
       if (ret != CAEN_DGTZ_Success) {
 	printf("Unable to get number of events from read buffer. Error code: %d\n",ret);
-	return 2;
+	//return 2;
+	adcError = 1;
+	break; // Exit from main DAQ loop
       }
       //printf("Read %d event(s) with total size %d bytes\n",numEvents,readSize);
 
@@ -908,7 +981,9 @@ int DAQ_readdata ()
 	ret = CAEN_DGTZ_GetEventInfo(Handle,buffer,readSize,iEv,&eventInfo,&eventPtr);
 	if (ret != CAEN_DGTZ_Success) {
 	  printf("Unable to get event info from read buffer. Error code: %d\n",ret);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 
 	// *** EventInfo data structure (from CAENDigitizerType.h) ***
@@ -943,7 +1018,9 @@ int DAQ_readdata ()
 	ret = CAEN_DGTZ_DecodeEvent(Handle,eventPtr,(void**)&event);
 	if (ret != CAEN_DGTZ_Success) {
 	  printf("Unable to decode event. Error code: %d\n",ret);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 
 	// *** Event data structures (from CAENDigitizerType.h) ***
@@ -1000,7 +1077,9 @@ int DAQ_readdata ()
 	pEvtSize = create_pevent((void *)eventPtr,event,(void *)outEvtBuffer);
 	if (pEvtSize<0){
 	  printf("ERROR - Unable to copy decoded event to output event buffer. RC %d\n",pEvtSize);
-	  return 2;
+	  //return 2;
+	  adcError = 1;
+	  break; // Exit from loop over events
 	}
 	
 	// If event is accepted, write it to file and update counters
@@ -1011,7 +1090,7 @@ int DAQ_readdata ()
 	  if (writeSize != pEvtSize) {
 	    printf("ERROR - Unable to write read data to file. Event size: %d, Write result: %d\n",
 		   pEvtSize,writeSize);
-	    return 2;
+	    return 2; // As this is an error while writing data to output file, no point in sending file tail
 	  }
 	  
 	  // Update file counters
@@ -1025,14 +1104,17 @@ int DAQ_readdata ()
 	}
 
       }
+      if (adcError) break; // Exit from main DAQ loop
 
     }
+
+    // Save current time
+    time(&t_now);
 
     // If we are running in FILE output mode, check if we need a new data file
     // i.e. required time elapsed or file size/events threshold exceeded
     if ( strcmp(Config->output_mode,"FILE")==0 ) {
 
-      time(&t_now);
       if (
 	  (t_now-fileTOpen[fileIndex] >= Config->file_max_duration) ||
 	  (fileSize[fileIndex]        >= Config->file_max_size    ) ||
@@ -1048,14 +1130,14 @@ int DAQ_readdata ()
 	if (writeSize != fTailSize) {
 	  printf("ERROR - Unable to write file header to file. Tail size: %d, Write result: %d\n",
 		 fTailSize,writeSize);
-	  return 2;
+	  return 2; // As this is an error while writing data to output file, no point in sending file tail
 	}
 	fileSize[fileIndex] += fTailSize;
 
 	// Close old output file and show some info about counters
 	if (close(fileHandle) == -1) {
 	  printf("ERROR - Unable to close output file '%s'.\n",fileName[fileIndex]);
-	  return 2;
+	  return 2; // As this is an error while writing data to output file, no point in sending file tail
 	};
 	printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
@@ -1064,7 +1146,6 @@ int DAQ_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
@@ -1078,7 +1159,14 @@ int DAQ_readdata ()
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+	    rc = db_file_check(fileName[fileIndex]);
+	    if ( rc < 0 ) {
+	      printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	      return 2;
+	    } else if ( rc == 1 ) {
+	      printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	      return 2;
+	    }
 	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
@@ -1087,7 +1175,7 @@ int DAQ_readdata ()
 	  fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 	  if (fileHandle == -1) {
 	    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
-	    return 2;
+	    return 2; // No output file currently open: no point in sending file tail
 	  }
 	  fileTOpen[fileIndex] = t_now;
 	  fileSize[fileIndex] = 0;
@@ -1099,12 +1187,12 @@ int DAQ_readdata ()
 	  }
 
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(fileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %d, Write result: %d\n",
 		   fHeadSize,writeSize);
-	    return 2;
+	    return 2; // As this is an error while writing data to output file, no point in sending file tail
 	  }
 	  fileSize[fileIndex] += fHeadSize;
 
@@ -1119,6 +1207,7 @@ int DAQ_readdata ()
     }
 
     // Check if it is time to stop DAQ (user interrupt, quit file, time elapsed, too many output files)
+    //printf("Checking stop run condition %s %d\n",Config->quit_file,access(Config->quit_file,F_OK));
     if (
 	 BreakSignal || tooManyOutputFiles ||
 	 (access(Config->quit_file,F_OK) != -1) ||
@@ -1131,6 +1220,7 @@ int DAQ_readdata ()
   }
 
   // Tell user what stopped DAQ
+  if ( adcError ) printf("=== Stopping DAQ on ADC access or data handling ERROR ===\n");
   if ( BreakSignal ) printf("=== Stopping DAQ on interrupt %d ===\n",BreakSignal);
   if ( tooManyOutputFiles ) printf("=== Stopping DAQ after writing %d data files ===\n",fileIndex);
   if ( access(Config->quit_file,F_OK) != -1 )
@@ -1163,19 +1253,23 @@ int DAQ_readdata ()
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
+      if ( Config->run_number ) {
+	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
+      }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
     }
-    if ( Config->run_number ) {
-      //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-      if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-    }
 
     // Update file counter
     fileIndex++;
 
+  }
+
+  if (adcError) {
+    printf("DAQ was stopped because of an error related to ADC access or data handling: aborting\n");
+    return 2;
   }
 
   // Stop digitizer acquisition
@@ -1242,9 +1336,9 @@ int DAQ_readdata ()
   printf("=========================================================\n");
 
   // Close DB file
-  if ( Config->run_number ) {
-    if ( db_end() != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  if ( db_end() != DB_OK ) return 2;
+  //}
 
   // Free space allocated for file names
   for(i=0;i<fileIndex;i++) free(fileName[i]);
@@ -1263,29 +1357,33 @@ int DAQ_close ()
   // Check if DAQ is running and stop it (should never happen!)
   reg = 0x8104; // Acquisition Status
   ret = CAEN_DGTZ_ReadRegister(Handle,reg,&data);
-  if (ret == CAEN_DGTZ_Success) {
-    if ( (data >> 2) & 0x1 ) { // bit 2: RUN on/off
-      printf ("WARNING!!! DAQ is active (should not happen): stopping... ");
-      ret = CAEN_DGTZ_SWStopAcquisition(Handle);
-      if (ret != CAEN_DGTZ_Success) {
-	printf("\nWARNING!!! Unable to stop data acquisition. Error code: %d\n",ret);
-      } else {
-	printf(" done\n");
-	ret = CAEN_DGTZ_ClearData(Handle); // Clear digitizer buffers
-      }
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to read Acquisition Status register 0x%04x. Error code: %d\n",reg,ret);
+    return 1;
+  }
+  if ( (data >> 2) & 0x1 ) { // bit 2: RUN on/off
+    printf ("WARNING!!! DAQ is active (should not happen): stopping... ");
+    ret = CAEN_DGTZ_SWStopAcquisition(Handle);
+    if (ret != CAEN_DGTZ_Success) {
+      printf("\n*** ERROR *** Unable to stop data acquisition. Error code: %d\n",ret);
+      return 1;
     }
-  } else {
-    printf("WARNING!!! Unable to read Acquisition Status register 0x%04x. Error code: %d\n",reg,ret);
+    printf(" done\n");
+    ret = CAEN_DGTZ_ClearData(Handle); // Clear digitizer buffers
+    if (ret != CAEN_DGTZ_Success) {
+      printf("*** ERROR *** Unable to clear data after stopping data acquisition. Error code: %d\n",ret);
+      return 1;
+    }
   }
 
   // Reset
   printf ("- Resetting digitizer... ");
   ret = CAEN_DGTZ_Reset (Handle);
-  if (ret == CAEN_DGTZ_Success) {
-    printf ("done!\n");
-  } else {
-    printf("\nWARNING!!! Unable to reset digitizer. Error code: %d\n",ret);
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to reset digitizer. Error code: %d\n",ret);
+    return 1;
   }
+  printf ("done!\n");
 
   printf ("- Flushing all output files... ");
   fflush (NULL);
@@ -1293,11 +1391,11 @@ int DAQ_close ()
 
   printf ("- Closing connection to digitizer... ");
   ret = CAEN_DGTZ_CloseDigitizer (Handle);
-  if (ret == CAEN_DGTZ_Success) {
-    printf ("done!\n");
-  } else {
-    printf("\nWARNING!!! Unable to close digitizer connection. Error code: %d\n",ret);
+  if (ret != CAEN_DGTZ_Success) {
+    printf("*** ERROR *** Unable to close digitizer connection. Error code: %d\n",ret);
+    return 1;
   }
+  printf ("done!\n");
 
   return 0;
 

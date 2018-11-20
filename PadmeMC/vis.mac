@@ -18,6 +18,12 @@
 #/analysis/DisableSACAnalysis true
 #/analysis/DisableECalAnalysis true
 
+# Disable/enable saving to Fast analysis Tree U102
+# uses conditions on ECal Energy, SAC energy, Hit in the Veto
+#/analysis/SaveEcal  false 
+#/analysis/SaveSAC   false
+#/analysis/SaveVeto  false
+
 # Enable IO for single detectors
 #/output/EnableDetectorIO Target:D
 #/output/EnableDetectorIO PVeto:HD

@@ -29,6 +29,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   int nSm;
   int freq,tr;
   int16_t myshort; // Used to store rounded samples (can be negative)
+  unsigned int n_samples_on; // Counter for trigger length evaluation (autopass)
   uint32_t line;
 
   int Ch,iGr,iCh,iSm;
@@ -40,6 +41,23 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   // Extract 0-suppression configuration
   int pEvt0SupMode = Config->zero_suppression / 100; // 0=rejction, 1=flagging
   int pEvt0SupAlgr = Config->zero_suppression % 100; // 0=off, 1-15=algorithm code
+
+  // Set autopass bit to 0. Will be set to 1 if trigger signal is long.
+  int pEvtAutoPass = 0;
+
+  // Define autopass trig ON duration taking into account sampling frequency
+  unsigned int autopass_trig_duration;
+  if (Config->drs4_sampfreq == 0) {
+    autopass_trig_duration = 5*Config->auto_duration; // 1ns = 5 samples
+  } else if (Config->drs4_sampfreq == 1) {
+    autopass_trig_duration = 2.5*Config->auto_duration; // 1ns = 2.5 samples
+  } else if (Config->drs4_sampfreq == 2) {
+    autopass_trig_duration = Config->auto_duration; // 1ns = 1 sample
+  } else {
+    printf("PEvent ERROR - drs4_sampfreq set to %d\n",Config->drs4_sampfreq);
+    return 0;
+  }
+  //printf("Autopass trigger ON duration set to %u samples\n",autopass_trig_duration);
 
   // Event header will be created at the end
 
@@ -77,11 +95,19 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Copy trigger samples (if present)
       if (nSm) {
+	n_samples_on = 0;
 	for (iSm=0;iSm<nSm;iSm++) {
 	  myshort = roundf(event->DataGroup[iGr].DataChannel[8][iSm]);
+	  if (myshort < Config->auto_threshold) n_samples_on++;
 	  memcpy(cursor,&myshort,2);
 	  cursor += 2;
 	  //printf("Tr %d Sm %d %f %d\n",iGr,iSm,event->DataGroup[iGr].DataChannel[8][iSm],myshort);
+	  //printf("Tr %d Sm %d 0x%04x\n",iGr,iSm,myshort);
+	}
+	//printf("Trigger ON for %u samples\n",n_samples_on);
+	if (n_samples_on > autopass_trig_duration) {
+	  //printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
+	  pEvtAutoPass = 1;
 	}
       }
 
@@ -156,12 +182,17 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
     pEvtStatus += (0x1 << PEVT_STATUS_ZEROSUPP_BIT); // 0-suppression in flagging mode
   }
 
-  pEvtStatus += (0x0 << PEVT_STATUS_AUTOPASS_BIT); // No autopass for the moment
+  if (pEvtAutoPass == 0) {
+    pEvtStatus += (0x0 << PEVT_STATUS_AUTOPASS_BIT); // No autopass
+  } else {
+    pEvtStatus += (0x1 << PEVT_STATUS_AUTOPASS_BIT); // Enable autopass for this even
+  }
 
   // 1) Get line 1 of V1742 event header
   memcpy(&line,evtPtr+4,4);
-  // 2) Save Board Fail flag (bit 26) to event status.
-  if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
+  //printf("First line of header 0x%08x\n",line);
+  // 2) Save Board Fail flag (bit 26) to event status. *** NOT USED ANYMORE: replaced by "missing event" bit ***
+  //if (line & 0x04000000) pEvtStatus += (0x1 << PEVT_STATUS_BRDFAIL_BIT);
   // 3) Extract LVDS pattern (bit 8-23) and group mask (bit 0-3).
   // 4) Add our board id (bit 24-31) and 0-suppression algorithm code (bit 4-7).
   line = (line & 0x00FFFF0F) + ((Config->board_id & 0xFF) << 24) + ((pEvt0SupAlgr & 0xF) << 4);
@@ -192,24 +223,48 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
 }
 
-unsigned int create_file_head(unsigned int fIndex, int runNr, uint32_t boardSN, time_t timeTag, void *fHead)
+//unsigned int create_file_head(unsigned int fIndex, int runNr, uint32_t boardSN, time_t timeTag, void *fHead)
+unsigned int create_file_head(unsigned int fIndex, int runNr, int boardId, uint32_t boardSN, time_t timeTag, void *fHead)
 {
+
   uint32_t line;
+
+  // First line: file head tag (4) + version (12) + file index (16)
   line = (PEVT_FHEAD_TAG << 28) + (PEVT_CURRENT_VERSION << 16) + (fIndex & 0xFFFF);
-  memcpy(fHead,&line,4);       // First line: file head tag (4) + version (12) + file index (16)
-  memcpy(fHead+4,&runNr,4);    // Second line: run number (32)
-  memcpy(fHead+8,&boardSN,4);  // Third line: board serial number (32)
-  memcpy(fHead+12,&timeTag,4); // Fourth line: start of file time tag (32)
+  memcpy(fHead,&line,4);
+
+  // Second line: run number (32, signed int)
+  memcpy(fHead+4,&runNr,4);
+
+  // Third line: board id (8) + board serial number (24)
+  line = ( (boardId & 0xff) << 24 ) + (boardSN & 0xffffff);
+  memcpy(fHead+8,&line,4);
+
+  // Fourth line: start of file time tag (32)
+  line = (timeTag & 0xffffffff); // Avoid problems with 8Bytes time_t structure
+  memcpy(fHead+12,&line,4);
+
   return PEVT_FHEAD_LEN*4;     // Return total size of file header in bytes
+
 }
 
-unsigned int create_file_tail(unsigned int nEvts, unsigned long int fSize, time_t timeTag, void *fTail)
+unsigned int create_file_tail(unsigned int nEvts, unsigned long int fileSize, time_t timeTag, void *fTail)
 {
+
   uint32_t line;
-  unsigned long int fTotalSize = fSize + PEVT_FTAIL_LEN*4; // Add size of tail to total file size
+
+  // First line: file tail tag (4) + number of events (28)
   line = (PEVT_FTAIL_TAG << 28) + (nEvts & 0x0FFFFFFF);
-  memcpy(fTail,&line,4);         // First line: file tail tag (4) + number of events (28)
-  memcpy(fTail+4,&fTotalSize,8); // Second + third line: total file size (64)
-  memcpy(fTail+12,&timeTag,4);   // Fourth line: end of file time tag (32)
+  memcpy(fTail,&line,4);
+
+  // Second + third line: total file size (64)
+  unsigned long int totalSize = fileSize + PEVT_FTAIL_LEN*4; // Add size of tail to total file size
+  memcpy(fTail+4,&totalSize,8);
+
+  // Fourth line: end of file time tag (32)
+  line = (timeTag & 0xffffffff); // Avoid problems with 8Bytes time_t structure
+  memcpy(fTail+12,&line,4);
+
   return PEVT_FTAIL_LEN*4;       // Return total size of file tail in bytes
+
 }

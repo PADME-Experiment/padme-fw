@@ -13,12 +13,23 @@ class RunControlServer:
 
     def __init__(self,mode):
 
+        # Get position of DAQ main directory from PADME_DAQ_DIR environment variable
+        # Default to current dir if not set
+        self.daq_dir = os.getenv('PADME_DAQ_DIR',".")
+
+        # Get port to use for RC connection from PADME_RC_PORT or use port 10000 as default
+        self.runcontrol_port = int(os.getenv('PADME_RC_PORT',"10000"))
+
+        # Define id file for passwordless ssh command execution
+        self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
+
         # Define names of lock and last_used_setup files
-        self.lock_file = "run/lock"
-        self.lus_file = "setup/last_used_setup"
+        self.lock_file = self.daq_dir+"/run/lock"
+        self.lus_file = self.daq_dir+"/setup/last_used_setup"
 
         # Redefine print to send output to log file
         sys.stdout = Logger()
+        sys.stderr = sys.stdout
         if mode == "i": sys.stdout.interactive = True
 
         # Create lock file
@@ -44,10 +55,13 @@ class RunControlServer:
 
         # Get list of possible run types from DB
         self.run_type_list = self.db.get_run_types()
+        if self.run_type_list == []:
+            print "WARNING - No run types found in DB. Using default."
+            self.run_type_list = ['TEST','FAKE']
         print "--- Known run types ---"
         print self.run_type_list
 
-        # Create useful regular expressions
+        # Create useful regular expressions to parse user commands
         self.re_get_board_config_daq = re.compile("^get_board_config_daq (\d+)$")
         self.re_get_board_config_zsup = re.compile("^get_board_config_zsup (\d+)$")
         self.re_get_board_log_file_daq = re.compile("^get_board_log_file_daq (\d+)$")
@@ -90,7 +104,7 @@ class RunControlServer:
         self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 
         # Bind the socket to the port
-        server_address = ('localhost',10000)
+        server_address = ('localhost',self.runcontrol_port)
         print "Starting server socket on %s port %s"%server_address
         try:
             self.sock.bind(server_address) # Listen for incoming connections
@@ -139,8 +153,7 @@ class RunControlServer:
 
         # Create our own lock file
         pid = os.getpid()
-        with open(self.lock_file,"w") as lf:
-            lf.write("%d"%pid)
+        with open(self.lock_file,"w") as lf: lf.write("%d\n"%pid)
 
         return "ok"
 
@@ -168,8 +181,7 @@ class RunControlServer:
     def save_final_setup(self,setup):
 
         print "Saving current setup %s to %s\n"%(setup,self.lus_file)
-        with open(self.lus_file,"w") as lf:
-            lf.write(setup)
+        with open(self.lus_file,"w") as lf: lf.write("%s\n"%setup)
 
     def sigint_handler(self,signal,frame):
 
@@ -205,7 +217,7 @@ class RunControlServer:
             if (self.run.run_number):
                 self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
 
-            return terminate_run()
+            return self.terminate_run()
 
         # Otherwise nothing to do
         return "ok"
@@ -247,7 +259,7 @@ class RunControlServer:
                     self.connection.close()
 
                     if new_state == "exit":
-                        print "=== RunControlSever received exit command: exiting"
+                        print "=== RunControlSever received shutdown command: exiting"
                         return "exit"
                     elif new_state != "client_close":
                         print "=== RunControlServer = ERROR: unknown new state %s - ABORTING"%new_state
@@ -256,16 +268,13 @@ class RunControlServer:
                     # Exit from client handling loop and wait for a new client
                     break
 
-    def write_log(self,msg):
-        print self.now_str()+" "+msg
-
     def state_idle(self):
 
         # Receive and process commands for "idle" state
         while True:
 
             cmd = self.get_command()
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -276,6 +285,8 @@ class RunControlServer:
                 self.send_answer(self.get_setup_list())
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.db.get_last_run_in_db()))
             elif (cmd == "new_run"):
@@ -290,7 +301,7 @@ class RunControlServer:
                     return "initfail"
                 else:
                     print "ERROR: new_run returned unknown answer %s (?)"%res
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -300,12 +311,13 @@ get_state\tShow current state of RunControl
 get_setup\tShow current setup name
 get_setup_list\tShow list of available setups
 get_board_list\tShow list of boards in use with current setup
-get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
-get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
+get_board_config_daq <b>\tShow current configuration of board DAQ process <b>
+get_board_config_zsup <b>\tShow current configuration of board ZSUP process <b>
+get_trig_config\tShow current configuration of trigger process
 get_run_number\tReturn last run number in DB
 change_setup <setup>\tChange run setup to <setup>
 new_run\t\tInitialize system for a new run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
             else:
 
@@ -338,7 +350,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         while True:
 
             cmd = self.get_command()
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -347,13 +359,17 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
+            elif (cmd == "get_trig_log"):
+                self.send_answer(self.get_trig_log())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.run.run_number))
             elif (cmd == "abort_run"):
                 return self.abort_run()
             elif (cmd == "start_run"):
                 return self.start_run()
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -366,10 +382,12 @@ get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
+get_trig_config\tShow current configuration of trigger process
+get_trig_log\tGet name of log file for trigger process
 get_run_number\tReturn current run number
 start_run\t\tStart run
 abort_run\t\tAbort run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -409,8 +427,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         while True:
 
             cmd = self.get_command()
-            #self.write_log('received command '+cmd)
-            print "Received command %s"%cmd
+            #print "Received command %s"%cmd
             if (cmd == "client_close"):
                 return "client_close"
             elif (cmd == "get_state"):
@@ -419,11 +436,15 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(self.run.setup)
             elif (cmd == "get_board_list"):
                 self.send_answer(str(self.run.boardid_list))
+            elif (cmd == "get_trig_config"):
+                self.send_answer(self.get_trig_config())
+            elif (cmd == "get_trig_log"):
+                self.send_answer(self.get_trig_log())
             elif (cmd == "get_run_number"):
                 self.send_answer(str(self.run.run_number))
             elif (cmd == "stop_run"):
                 return self.stop_run()
-            elif (cmd == "exit"):
+            elif (cmd == "shutdown"):
                 self.send_answer("exiting")
                 return "exit"
             elif (cmd == "help"):
@@ -436,9 +457,11 @@ get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
+get_trig_config\tShow current configuration of trigger process
+get_trig_log\tGet name of log file for trigger process
 get_run_number\tReturn current run number
 stop_run\t\tStop the run
-exit\t\tTell RunControl server to exit (use with extreme care!)"""
+shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -475,6 +498,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def state_initfail(self):
 
+        # Here we will insert some cleanup code to handle failed initialization
         return "idle"
 
     def get_command(self):
@@ -486,7 +510,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             if ch:
                 l += ch
             else:
-                #self.write_log('no more data from client')
                 print "Client closed connection"
                 return "client_close"
         ll = int(l)
@@ -501,6 +524,7 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "Client closed connection"
                 return "client_close"
 
+        print "Received command %s"%cmd
         return cmd
 
     def send_answer(self,answer):
@@ -535,10 +559,16 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         else:
             return "ERROR: board id %d does not exist"%brdid
 
+    def get_trig_config(self):
+        return self.run.trigger.format_config()
+
+    def get_trig_log(self):
+        return self.run.trigger.log_file
+
     def read_setup_list(self):
 
         # Get list of available setups
-        setup_main_dir = "setup"
+        setup_main_dir = self.daq_dir+"/setup"
         setups = []
         for top,dirs,files in os.walk(setup_main_dir):
             if (top == setup_main_dir):
@@ -605,9 +635,14 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         for rtype in self.run_type_list:
             if (ans == rtype): newrun_type = ans
         if (newrun_type):
+            # Verify that FAKE runs are not stored in the DB
+            if (newrun_type == "FAKE" and newrun_number != 0):
+                print "run_type - attempt to store FAKE run in DB: this is not allowed"
+                self.send_answer("error")
+                return "error"
             self.send_answer(newrun_type)
         else:
-#            self.write_log("run_type - invalid option %s received"%ans)
+            #self.write_log("run_type - invalid option %s received"%ans)
             print "run_type - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
@@ -630,11 +665,11 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         print "Run comment: %s"%newrun_comment
 
         # Set run configuration according to user's request
-        self.run.change_run(newrun_number)
+        self.run.run_number = newrun_number
         self.run.run_type = newrun_type
         self.run.run_user = newrun_user
         self.run.run_comment_start = newrun_comment
-
+        self.run.change_run()
 
         # Create run structure in the DB
         if (self.run.run_number):
@@ -652,16 +687,6 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             if self.run.create_run() == "error":
                 print "ERROR - Cannot create Run in the DB"
                 return "error"
-            #if self.run.merger.create_merger() == "error":
-            #    print "ERROR - Cannot create MERGER process in the DB"
-            #    return "error"
-            #for adc in (self.run.adcboard_list):
-            #    if adc.create_proc_daq() == "error":
-            #        print "ERROR - Cannot create DAQ process in the DB"
-            #        return "error"
-            #    if adc.create_proc_zsup() == "error":
-            #        print "ERROR - Cannot create ZSUP process in the DB"
-            #        return "error"
 
             # Save time when run initialization starts
             self.db.set_run_time_init(self.run.run_number,self.now_str())
@@ -673,35 +698,55 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         # Write configuration files
         print "Writing configuration files for run %d"%self.run.run_number
         self.run.write_config()
-        #self.run.merger.write_config()
-        #for adc in (self.run.adcboard_list):
-        #    print "Writing configuration files %s and %s for ADC board %d"%(adc.config_file_daq,adc.config_file_zsup,adc.board_id)
-        #    adc.write_config()
 
-        # Create pipes for data transfer
-        print "Creating named pipes for run %d"%self.run.run_number
-        self.run.create_streams()
-        #for adc in (self.run.adcboard_list):
-        #    os.mkfifo(adc.output_stream_daq)
-        #    os.mkfifo(adc.output_stream_zsup)
-
-        # Create merger input list
+        # Create merger input and output lists
         self.run.create_merger_input_list()
-
-        # Create merger output file directory
-        self.run.create_merger_output_dir()
+        self.run.create_merger_output_list()
 
         # Start run initialization procedure
         self.send_answer("start_init")
 
+        ## Create level1 output rawdata directories
+        self.run.create_level1_output_dirs()
+
+        # Create pipes for data transfer
+        print "Creating named pipes for run %d"%self.run.run_number
+        self.run.create_fifos()
+
+        # Start Level1 processes
+        for lvl1 in (self.run.level1_list):
+            p_id = lvl1.start_level1()
+            if p_id:
+                print "Level1 %d - Started with process id %d"%(lvl1.level1_id,p_id)
+                self.send_answer("level1 %d ready"%lvl1.level1_id)
+            else:
+                print "Level1 %d - ERROR: could not start process"%lvl1.level1_id
+                self.send_answer("level1 %d fail"%lvl1.level1_id)
+            time.sleep(0.5)
+
+        # Create receiving end of network tunnels (if needed)
+        self.run.create_receivers()
+
         # Start merger
         p_id = self.run.merger.start_merger()
         if p_id:
-            print "Started Merger with process id %d"%p_id
+            print "Merger - Started with process id %d"%p_id
             self.send_answer("merger ready")
         else:
-            print "ERROR: could not start Merger"
+            print "Merger - ERROR: could not start process"
             self.send_answer("merger fail")
+
+        # Create sending ends of network tunnels (if needed)
+        self.run.create_senders()
+
+        # Start trigger process
+        p_id = self.run.trigger.start_trig()
+        if p_id:
+            print "Trigger - Started with process id %d"%p_id
+            self.send_answer("trigger ready")
+        else:
+            print "Trigger - ERROR: could not start process"
+            self.send_answer("trigger fail")
 
         # Start ZSUP for all boards
         for adc in (self.run.adcboard_list):
@@ -709,76 +754,88 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_zsup()
             if p_id:
                 print "ADC board %02d - Started ZSUP with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc "+str(adc.board_id)+" zsup_ready")
+                self.send_answer("adc %d zsup_ready"%adc.board_id)
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
-                self.send_answer("adc "+str(adc.board_id)+" zsup_fail")
+                self.send_answer("adc %d zsup_fail"%adc.board_id)
+            time.sleep(0.5)
 
         # Start DAQ for all boards
         for adc in (self.run.adcboard_list):
 
             p_id = adc.start_daq()
             if p_id:
-                #self.write_log("ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id))
                 print "ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc "+str(adc.board_id)+" init")
+                self.send_answer("adc %d init"%adc.board_id)
                 adc.status = "init"
             else:
-                #self.write_log("ADC board %02d - ERROR: could not start DAQ"%adc.board_id)
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
-                self.send_answer("adc "+str(adc.board_id)+" fail")
+                self.send_answer("adc %d fail"%adc.board_id)
                 adc.status = "fail"
+            time.sleep(0.5)
 
         # Wait for all boards to finish initialization
         n_try = 0
         while(1):
-            all_boards_init = 1
-            all_boards_ready = 1
+
+            all_boards_init = True
+            all_boards_ready = True
             for adc in (self.run.adcboard_list):
+
                 # Check if any board changed status
                 if (adc.status == "init"):
-                    if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
+
+                    adc.status = self.check_init_status(adc)
+                    if (adc.status == "ready"):
                         # Initialization ended OK
                         print "ADC board %02d - Initialized and ready for DAQ"%adc.board_id
-                        self.send_answer("adc "+str(adc.board_id)+" ready")
-                        adc.status = "ready"
-                    elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
+                        self.send_answer("adc %d ready"%adc.board_id)
+                    elif (adc.status == "fail"):
                         # Problem during initialization
                         print "ADC board %02d - *** Initialization failed ***"%adc.board_id
-                        self.send_answer("adc "+str(adc.board_id)+" fail")
-                        adc.status = "fail"
+                        self.send_answer("adc %d fail"%adc.board_id)
                     else:
                         # This board is still initializing
-                        all_boards_init = 0
-                # Check if any board is in fail status
-                if (adc.status == "fail"): all_boards_ready = 0
+                        all_boards_init = False
 
-            if (all_boards_init == 0):
-                # Some boards are still initializing: keep waiting
-                n_try += 1
-                if (n_try>=10):
-                    print "*** ERROR *** One or more boards did not initialize within 10sec. Cannot start run"
+                # Check if any board is in fail status
+                if (adc.status == "fail"): all_boards_ready = False
+
+            # Check if all boards completed initialization
+            if (all_boards_init):
+
+                # Check if all boards initialized correctly
+                if (all_boards_ready):
+
+                    print "All boards completed initialization: DAQ run can be started"
+                    if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
+                    self.send_answer("init_ready")
+                    return "initialized"
+
+                else:
+
+                    print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
                     if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
-                    self.send_answer("init_timeout")
+                    self.send_answer("init_fail")
                     return "initfail"
-                time.sleep(1)
-            elif (all_boards_ready):
-                print "All boards completed initialization: DAQ run can be started"
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
-                self.send_answer("init_ready")
-                return "initialized"
-            else:
-                print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
+
+            # Some boards are still initializing: keep waiting (wait up to ~30sec)
+            n_try += 1
+            if (n_try>=60):
+                print "*** ERROR *** One or more boards did not initialize within 30sec. Cannot start run"
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
-                self.send_answer("init_fail")
+                self.send_answer("init_timeout")
                 return "initfail"
+            time.sleep(0.5)
 
     def start_run(self):
 
         print "Starting run"
 
-        # Create "start the run" tag file
-        open(self.run.start_file,'w').close()
+        ## Create "start the run" tag file
+        #open(self.run.start_file,'w').close()
+
+        self.run.start()
 
         # Update run status in DB
         if (self.run.run_number):
@@ -818,8 +875,10 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             self.db.set_run_time_stop(self.run.run_number,self.now_str())
             self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
-        # Create "stop the run" tag file
-        open(self.run.quit_file,'w').close()
+        ## Create "stop the run" tag file
+        #open(self.run.quit_file,'w').close()
+
+        self.run.stop()
 
         terminate_ok = True
 
@@ -845,6 +904,21 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
                 print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
                 if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
+        # If this is a real run, get final info from merger before stopping it
+        if (self.run.run_number):
+            (tot_evts,tot_size) = self.db.get_merger_final_info(self.run.merger.merger_id)
+            self.db.set_run_total_events(self.run.run_number,tot_evts)
+
+        # Run stop_trig procedure
+        if self.run.trigger.stop_trig():
+            self.send_answer("trigger terminate_ok")
+            print "Trigger terminated correctly"
+        else:
+            terminate_ok = False
+            self.send_answer("trigger terminate_error")
+            print "WARNING: problems while terminating Trigger"
+            if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
         # Run stop_merger procedure
         if self.run.merger.stop_merger():
             self.send_answer("merger terminate_ok")
@@ -855,14 +929,19 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
             print "WARNING: problems while terminating Merger"
             if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
+        # Run stop_level1 procedures
+        for lvl1 in self.run.level1_list:
+            if lvl1.stop_level1():
+                self.send_answer("level1 %d terminate_ok"%lvl1.level1_id)
+                print "Level1 %02d terminated correctly"%lvl1.level1_id
+            else:
+                terminate_ok = False
+                self.send_answer("level1 %d terminate_error"%lvl1.level1_id)
+                print "Level1 %02d - WARNING: problems while terminating"%lvl1.level1_id
+                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+
         # Clean up run directory
-        for adc in (self.run.adcboard_list):
-            if (os.path.exists(adc.initok_file_daq)):    os.remove(adc.initok_file_daq)
-            if (os.path.exists(adc.initok_file_zsup)):   os.remove(adc.initok_file_zsup)
-            if (os.path.exists(adc.initfail_file_daq)):  os.remove(adc.initfail_file_daq)
-            if (os.path.exists(adc.initfail_file_zsup)): os.remove(adc.initfail_file_zsup)
-        if(os.path.exists(self.run.start_file)): os.remove(self.run.start_file)
-        if(os.path.exists(self.run.quit_file)):  os.remove(self.run.quit_file)
+        self.run.clean_up()
 
         if terminate_ok:
             self.send_answer("terminate_ok")
@@ -873,3 +952,30 @@ exit\t\tTell RunControl server to exit (use with extreme care!)"""
         return "idle"
 
     def now_str(self): return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
+    def check_init_status(self,adc):
+
+        if adc.node_id == 0:
+
+            if (os.path.exists(adc.initok_file_daq) and os.path.exists(adc.initok_file_zsup)):
+                return "ready"
+            elif (os.path.exists(adc.initfail_file_daq) or os.path.exists(adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+        else:
+
+            if (self.file_exists(adc.node_ip,adc.initok_file_daq) and self.file_exists(adc.node_ip,adc.initok_file_zsup)):
+                return "ready"
+            elif (self.file_exists(adc.node_ip,adc.initfail_file_daq) or self.file_exists(adc.node_ip,adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+    def file_exists(self,node_ip,name):
+
+        command = "ssh -i %s %s '( test -e %s )'"%(self.ssh_id_file,node_ip,name)
+        rc = os.system(command)
+        if (rc == 0): return True
+        return False

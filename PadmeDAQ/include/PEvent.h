@@ -26,11 +26,13 @@
 #define PEVT_STATUS_HASDATA_BIT  0
 #define PEVT_STATUS_DRS4CORR_BIT 1
 #define PEVT_STATUS_ZEROSUPP_BIT 2
-#define PEVT_STATUS_BRDFAIL_BIT  3
+//#define PEVT_STATUS_BRDFAIL_BIT  3
+#define PEVT_STATUS_MISSING_BIT  3
 #define PEVT_STATUS_AUTOPASS_BIT 4
 
 int create_pevent(void*,CAEN_DGTZ_X742_EVENT_t*,void*); // evtPtr, event, pEvt
-unsigned int create_file_head(unsigned int,int,uint32_t,time_t,void*); // file_index,run_number,board_sn,time_tag,fHead
+//unsigned int create_file_head(unsigned int,int,uint32_t,time_t,void*); // file_index,run_number,board_sn,time_tag,fHead
+unsigned int create_file_head(unsigned int,int,int,uint32_t,time_t,void*); // file_index,run_number,board_id,board_sn,time_tag,fHead
 unsigned int create_file_tail(unsigned int,unsigned long int,time_t,void*); // n_events,file_size,time_tag,fTail
 
 #endif

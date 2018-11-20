@@ -10,8 +10,8 @@
 #include <errno.h>
 #include <math.h>
 
-#include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 
@@ -59,6 +59,9 @@ int FAKE_readdata ()
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
 
+  // File to handle DAQ interaction with GUI
+  FILE* iokf; // InitOK file
+
   // Process timers
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
@@ -67,20 +70,14 @@ int FAKE_readdata ()
 
   unsigned int boardSN = 0; // Use a fake board serial number
 
-  // Set signal handlers to make sure output file is closed correctly
-  InBurst = 1;
-  set_signal_handlers();
+  // If quit file is already there, assume this is a test run and do nothing
+  if ( access(Config->quit_file,F_OK) != -1 ) {
+    printf("DAQ_readdata - Quit file '%s' found: will not generate FAKE events\n",Config->quit_file);
+    return 0;
+  }
 
-  // If this is a real run asve configuration to DB
-  //if ( Config->run_number ) {
-  //  if ( db_init() != DB_OK ) return 1;
-  //  save_config();
-  //}
-
-  // Allocate buffers to hold input and output event structures (same max size)
-
+  // Allocate buffer to hold output event structure
   maxPEvtSize = (PEVT_HEADER_LEN + 4*(PEVT_GRPHEAD_LEN + 512 + PEVT_GRPTTT_LEN) + 32*512)*4;
-
   outEvtBuffer = (char *)malloc(maxPEvtSize);
   if (outEvtBuffer == NULL) {
     printf("Unable to allocate output event buffer of size %d\n",maxPEvtSize);
@@ -88,10 +85,46 @@ int FAKE_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
+  // FAKE is now ready to start. Create InitOK file
+  printf("- Creating InitOK file '%s'\n",Config->initok_file);
+  if ( access(Config->initok_file,F_OK) == -1 ) {
+    iokf = fopen(Config->initok_file,"w");
+    fclose(iokf);
+    printf("- InitOK file '%s' created\n",Config->initok_file);
+  } else {
+    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
+    return 1;
   }
+
+  if (Config->startdaq_mode == 0) {
+
+    // If SW controlled DAQ is selected, we need to wait for the appearance of
+    // the start file before starting producing FAKE events
+
+    // Wait for Start/Quit file
+    while(1){
+      if ( access(Config->start_file,F_OK) != -1 ) {
+	printf("- Start file '%s' found: starting FAKE events production\n",Config->start_file);
+	break;
+      }
+      if ( access(Config->quit_file,F_OK) != -1 ) {
+	printf("- Quit file '%s' found: exiting\n",Config->quit_file);
+	return 3;
+      }
+      // Sleep for ~1ms before checking again
+      usleep(1000);
+    }
+
+  } else {
+
+    // Just start producing events
+    printf("- Starting FAKE events production\n");
+
+  }
+
+  // Set signal handlers to make sure output file is closed correctly
+  InBurst = 1;
+  set_signal_handlers();
 
   time(&t_daqstart);
   printf("%s - Fake data generation started\n",format_time(t_daqstart));
@@ -110,9 +143,6 @@ int FAKE_readdata ()
     generate_filename(tmpName,t_daqstart);
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
-    if ( Config->run_number ) {
-      if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
-    }
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
     strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -141,13 +171,8 @@ int FAKE_readdata ()
   fileSize[fileIndex] = 0;
   fileEvents[fileIndex] = 0;
 
-  // Register file in the DB
-  if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
-    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-  }
-
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,Config->run_number,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -220,12 +245,6 @@ int FAKE_readdata ()
 	       (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	       fileEvents[fileIndex],fileSize[fileIndex]);
 
-	// Close file in DB
-	if ( Config->run_number ) {
-	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-	}
-
 	// Update file counter
 	fileIndex++;
 
@@ -235,9 +254,6 @@ int FAKE_readdata ()
 	  generate_filename(tmpName,t_now);
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
-	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
-	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
 	  strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -251,13 +267,8 @@ int FAKE_readdata ()
 	  fileSize[fileIndex] = 0;
 	  fileEvents[fileIndex] = 0;
 
-	  // Register file in the DB
-	  if ( Config->run_number ) {
-	    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-	  }
-
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,Config->run_number,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,boardSN,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -276,9 +287,10 @@ int FAKE_readdata ()
 
     }
 
-    // Check if it is time to stop DAQ (user interrupt, too many output files, time elapsed)
+    // Check if it is time to stop DAQ (user interrupt, too many output files, quit file, time elapsed)
     if (
 	 BreakSignal || tooManyOutputFiles ||
+	 (access(Config->quit_file,F_OK) != -1) ||
 	 ( Config->total_daq_time && ( t_now-t_daqstart >= Config->total_daq_time ) )
        ) break;
 
@@ -293,6 +305,8 @@ int FAKE_readdata ()
   // Tell user what stopped DAQ
   if ( BreakSignal ) printf("=== Stopping FAKE on interrupt %d ===\n",BreakSignal);
   if ( tooManyOutputFiles ) printf("=== Stopping FAKE after writing %d data files ===\n",fileIndex);
+  if ( access(Config->quit_file,F_OK) != -1 )
+    printf("=== Stopping FAKE on quit file '%s' ===\n",Config->quit_file);
   if ( Config->total_daq_time && ( t_now-t_daqstart >= Config->total_daq_time ) )
     printf("=== Stopping FAKE after %d secs of run (requested %d) ===\n",(int)(t_now-t_daqstart),Config->total_daq_time);
 
@@ -321,10 +335,6 @@ int FAKE_readdata ()
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-      if ( Config->run_number ) {
-	//if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-      }
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
@@ -336,17 +346,12 @@ int FAKE_readdata ()
 
   }
 
+  InBurst = 0; // Signal FAKE has stopped
   time(&t_daqstop);
   printf("%s - Fake data generation stopped\n",format_time(t_daqstop));
 
   // Deallocate input/output event buffer
   free(outEvtBuffer);
-
-  // Tell DB that the process has ended
-  if ( Config->run_number ) {
-    //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
-    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
-  }
 
   // Give some final report
   evtWritePerSec = 0.;
@@ -369,11 +374,6 @@ int FAKE_readdata ()
     }
   }
   printf("=========================================================\n");
-
-  // Close DB file
-  if ( Config->run_number ) {
-    if ( db_end() != DB_OK ) return 2;
-  }
 
   return 0;
 

@@ -3,7 +3,8 @@
 
 #include "Rtypes.h"
 
-#include "ADCEventTags.hh"
+//#include "ADCEventTags.hh"
+#include "EventTags.hh"
 
 class ADCEvent
 {
@@ -63,11 +64,11 @@ class ADCEvent
   void   SetTriggerTimeTag(int i, UInt_t v)            { fTriggerTimeTag[i] = v; }
   UInt_t GetTriggerTimeTag(int i)                      { return fTriggerTimeTag[i]; }
 
-  void     SetADCChannelSample(int i, int s, Short_t v) { fADCChannelSample[i][s] = v; }
-  Short_t GetADCChannelSample(int i, int s)             { return fADCChannelSample[i][s]; }
+  void    SetADCChannelSample(int i, int s, Short_t v) { fADCChannelSample[i][s] = v; }
+  Short_t GetADCChannelSample(int i, int s)            { return fADCChannelSample[i][s]; }
 
-  void     SetADCTriggerSample(int i, int s, Short_t v) { fADCTriggerSample[i][s] = v; }
-  Short_t GetADCTriggerSample(int i, int s)             { return fADCTriggerSample[i][s]; }
+  void    SetADCTriggerSample(int i, int s, Short_t v) { fADCTriggerSample[i][s] = v; }
+  Short_t GetADCTriggerSample(int i, int s)            { return fADCTriggerSample[i][s]; }
 
  private:
 

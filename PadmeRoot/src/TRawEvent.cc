@@ -13,6 +13,7 @@ TRawEvent::TRawEvent()
 
   fEventTrigMask = 0;
   fEventStatus   = 0;
+  fMissingADCBoards = 0;
 
   fTriggerInfo = new TTriggerInfo();
 
@@ -39,6 +40,7 @@ void TRawEvent::Clear(Option_t* option)
 
   fEventTrigMask = 0;
   fEventStatus   = 0;
+  fMissingADCBoards = 0;
 
   fTriggerInfo->Clear(option);
 

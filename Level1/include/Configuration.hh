@@ -24,11 +24,17 @@ public:
   void SetRunNumber(int r) { fRunNumber = r; }
   int RunNumber() { return fRunNumber; }
 
-  void SetStreamListFile(std::string f) { fStreamListFile = f; }
-  std::string StreamListFile() { return fStreamListFile; }
+  void SetInputStream(std::string f) { fInputStream = f; }
+  std::string InputStream() { return fInputStream; }
 
-  void SetOutputFileHeader(std::string h) { fOutputFileHeader = h; }
-  std::string OutputFileHeader() { return fOutputFileHeader; }
+  void SetInputStreamList(std::string f) { fInputStreamList = f; }
+  std::string InputStreamList() { return fInputStreamList; }
+
+  void SetOutputStreamList(std::string f) { fOutputStreamList = f; }
+  std::string OutputStreamList() { return fOutputStreamList; }
+
+  void SetRawFileHeader(std::string h) { fRawFileHeader = h; }
+  std::string RawFileHeader() { return fRawFileHeader; }
 
   void SetNEventsPerFile(unsigned int n) { fNEventsPerFile = n; }
   unsigned int NEventsPerFile() { return fNEventsPerFile; }
@@ -45,9 +51,13 @@ private:
 
   int fMergerId;
 
-  std::string fStreamListFile;
+  std::string fInputStream;
 
-  std::string fOutputFileHeader;
+  std::string fInputStreamList;
+
+  std::string fOutputStreamList;
+
+  std::string fRawFileHeader;
 
   unsigned int fNEventsPerFile;
 

@@ -1,15 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <vector>
+#include <time.h>
 #include <cmath>
 
 #include "ADCBoard.hh"
 #include "Configuration.hh"
 #include "DBService.hh"
 #include "RootIO.hh"
+#include "EventTags.hh"
 
 int main(int argc, char* argv[])
 {
+
+  int rc; // DB library return code
 
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
@@ -28,12 +31,12 @@ int main(int argc, char* argv[])
   int runnr = cfg->RunNumber();
   unsigned int nevts = cfg->NEventsPerFile();
   unsigned int verbose = cfg->Verbose();
-  std::string outhead = cfg->OutputFileHeader();
-  std::string listfile = cfg->StreamListFile();
+  std::string rawhead = cfg->RawFileHeader();
+  std::string instream = cfg->InputStream();
 
   // Parse options
   int c;
-  while ((c = getopt (argc, argv, "n:r:l:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:r:i:o:v:h")) != -1) {
     switch (c)
       {
       case 'r':
@@ -57,40 +60,32 @@ int main(int argc, char* argv[])
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
-        //if (neventsperfile<0) {
-        //  fprintf (stderr, "Error while processing option '-n'. Number of events must be >=0, found %d.\n", neventsperfile);
-        //  exit(1);
-        //}
         fprintf(stdout,"Writing up to %u events per output file\n",nevts);
 	cfg->SetNEventsPerFile(nevts);
         break;
       case 'o':
-        outhead = optarg;
-        fprintf(stdout,"Set output data file header to '%s'\n",outhead.c_str());
-	cfg->SetOutputFileHeader(outhead);
+        rawhead = optarg;
+        fprintf(stdout,"Set output rawdata file header to '%s'\n",rawhead.c_str());
+	cfg->SetRawFileHeader(rawhead);
         break;
-      case 'l':
-        listfile = optarg;
-        fprintf(stdout,"Data will be read from streams listed in '%s'\n",listfile.c_str());
-	cfg->SetStreamListFile(listfile);
+      case 'i':
+        instream = optarg;
+        fprintf(stdout,"Data will be read from stream '%s'\n",instream.c_str());
+	cfg->SetInputStream(instream);
         break;
       case 'v':
         if ( sscanf(optarg,"%u",&verbose) != 1 ) {
           fprintf (stderr, "Error while processing option '-v'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
-        //if (verbose<0) {
-        //  fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
-        //  exit(1);
-        //}
         fprintf(stdout,"Set verbose level to %u\n",verbose);
 	cfg->SetVerbose(verbose);
         break;
       case 'h':
-        fprintf(stdout,"\nPadmeLevel1 -l stream_list [-r run_number] [-o output_head] [-n events] [-v level] [-h]\n\n");
-        fprintf(stdout,"  -l: define text file with list of data streams to process\n");
-        fprintf(stdout,"  -r: define run number to process (default: %d)\n",cfg->RunNumber());
-        fprintf(stdout,"  -o: define root output files header (includes path)\n");
+        fprintf(stdout,"\nPadmeLevel1 -i input_stream [-o rawfile_head] [-r run_number] [-n events] [-v level] [-h]\n\n");
+        fprintf(stdout,"  -i: define input stream FIFO file\n");
+        fprintf(stdout,"  -o: define rawdata output files header. Includes path. (default: %s)\n",cfg->RawFileHeader().c_str());
+        fprintf(stdout,"  -r: define run number being processes (default: %d)\n",cfg->RunNumber());
         fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %u)\n",cfg->NEventsPerFile());
         fprintf(stdout,"  -v: define verbose level (default: %u)\n",cfg->Verbose());
         fprintf(stdout,"  -h: show this help message and exit\n\n");
@@ -100,7 +95,7 @@ int main(int argc, char* argv[])
           // verbose with no argument: increas verbose level by 1
           cfg->SetVerbose(cfg->Verbose()+1);
           break;
-        } else if (optopt == 'r' || optopt == 'l' || optopt == 'o' || optopt == 'n')
+        } else if (optopt == 'r' || optopt == 'i' || optopt == 'o' || optopt == 'n')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -112,293 +107,464 @@ int main(int argc, char* argv[])
       }
   }
 
-  // If this is an official run, connect to DB and get id of merger
-  if (cfg->RunNumber()) {
+  // Check if input stream was defined
+  if (cfg->InputStream().compare("")==0) {
+    printf("ERROR no input stream defined with -i. Aborting\n");
+    exit(1);
+  }
 
+  // If this is an official run, connect to DB and get id of merger process
+  // N.B. merger id is needed to assign root files in DB
+  if (cfg->RunNumber()) {
+  
     // Get handle to DB
     DBService* db = DBService::GetInstance();
-
+  
     // Get id of merger for future DB accesses
     int merger_id = 0;
-    int rc = db->GetMergerId(merger_id,cfg->RunNumber());
+    rc = db->GetMergerId(merger_id,cfg->RunNumber());
     if (rc != DBSERVICE_OK) {
       printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
       exit(1);
     }
     cfg->SetMergerId(merger_id);
-
-  }
-
-  ADCBoard* board;
-  std::vector<ADCBoard*> boards;
-
-  // Check if input file list was defined
-  if (listfile.compare("")==0) {
-    printf("ERROR no input file list defined with -l. Aborting\n");
-    exit(1);
-  }
-
-  // Get list of boards and files from input file list
-  std::ifstream list;
-  std::string line;
-  int bid;
-  char bfile[1024];
-  list.open(listfile.c_str());
-  while(!list.eof()){
-
-    getline(list,line);
-    if (line.compare("")!=0) {
-
-      if ( sscanf(line.c_str(),"%d %s",&bid,bfile) != 2 ) {
-	printf("ERROR while parsing list '%s'. Aborting\n",listfile.c_str());
-	exit(1);
-      }
-
-      // Find board with correct board id or add it to list if new
-      std::vector<ADCBoard*>::iterator it;
-      for (it = boards.begin(); it != boards.end(); ++it) {
-	board = *it;
-	if (board->GetBoardId() == bid) break;
-      }
-      if (it == boards.end()) {
-	printf("Board id %d\n",bid);
-	board = new ADCBoard(bid);
-	board->SetVerbose(verbose);
-	boards.push_back(board);
-      }
-
-      // Add file to board
-      std::string filePath = bfile;
-      //printf("\tBoard %d - File %s\n",bid,filePath.c_str());
-      board->AddFile(filePath);
-
-    }
-
-  }
-  list.close();
-
-  // Show list of known boards/files
-  printf("Reading %d board(s)\n",(int)boards.size());
-  std::vector<ADCBoard*>::iterator it;
-  for (it = boards.begin(); it != boards.end(); ++it) {
-    board = *it;
-    printf("Board %d Files %d\n",board->GetBoardId(),board->GetNFiles());
-    for(int f=0; f<board->GetNFiles(); f++) printf("File %d %s\n",f,board->GetFileName(f).c_str());
-  }
   
+  }
+
   // Connect to root services
   RootIO* root = new RootIO();
-  root->SetVerbose(verbose);
-
-  // Initialize root output file
-  if ( root->Init(cfg->OutputFileHeader(),cfg->NEventsPerFile()) != ROOTIO_OK ) {
+  if ( root->Init() != ROOTIO_OK ) {
     printf("ERROR while initializing root output. Aborting\n");
     exit(1);
   }
 
-  // Loop over all events in files
+  // Open input stream
+  std::ifstream input_stream_handle;
+  printf("Opening stream %s\n",cfg->InputStream().c_str());
+  input_stream_handle.open(cfg->InputStream().c_str(), std::ios::in | std::ios::binary);
 
-  int dT; // Clock counter difference wrt previous event: can be negative if clock counter rolled over
-  int dTb; // Clock counter difference between two groups of the same board
-  unsigned int TT_evt,TT_grp; // Clock counters for board and for group
-  unsigned int TT_old[boards.size()]; // Clock counter at previous event
-  unsigned long long int CC[boards.size()]; // Total Clock Counts since start of run
+  // We are now ready to process data: get start time
+  time_t time_start;
+  time(&time_start);
 
-  unsigned char groupMaskRef[boards.size()]; // Reference group masks from event 0
+  // Define counters for input stream size and number of events
+  unsigned long long int input_size = 0;
+  unsigned int number_of_events = 0;
 
-  unsigned int nEOR;
-  unsigned int NumberOfEvents = 0;
-  while(1){
+  // Define 4B buffer used to read single lines from input file
+  unsigned int buff;
 
-    if (verbose>=1) printf("=== Processing event %8u ===\n",NumberOfEvents);
+  // First line: tag,version,index
+  input_stream_handle.read((char*)&buff,4);
+  unsigned int tag = ((buff & 0xf0000000) >> 28);
 
-    nEOR = 0; // Reset end_of_run counter
+  if (tag != EVENT_FILE_HEAD_TAG) {
+    printf("PadmeLevel1 - ERROR - Wrong file header tag: 0x%1x (expected 0x%1x)\n",tag,EVENT_FILE_HEAD_TAG);
+    input_stream_handle.close();
+    root->Exit();
+    exit(1);
+  }
+  unsigned int version = ((buff & 0x0fff0000) >> 16);
+  if (version != 3) {
+    printf("PadmeLevel1 - ERROR - Wrong data format version: %u (allowed version: 3)\n",version);
+    input_stream_handle.close();
+    root->Exit();
+    exit(1);
+  }
+  unsigned int findex = ((buff & 0x0000ffff) >> 0);
+  if (findex > 0) {
+    printf("PadmeLevel1 - WARNING - Input file is part %u of a multi-file batch. Is this correct?\n",findex);
+  }
 
-    // Load next event for all boards
-    for(unsigned int b=0; b<boards.size(); b++) {
-      if ( boards[b]->NextEvent() == 0 ) {
-	nEOR++;
-	printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-      }
+  // Second line: run number
+  int run_number;
+  input_stream_handle.read((char*)&run_number,4);
+  if (run_number != cfg->RunNumber()) {
+    printf("PadmeLevel1 - ERROR - Wrong run number found in data: %d (expected %d)\n",run_number,cfg->RunNumber());
+    input_stream_handle.close();
+    root->Exit();
+    exit(1);
+  }
+
+  // Third line: number of ADC boards
+  unsigned int number_of_boards;
+  input_stream_handle.read((char*)&number_of_boards,4);
+  if (number_of_boards == 0) {
+    printf("PadmeLevel1 - WARNING - DAQ stream contains 0 ADC boards. Is this correct?\n");
+  }
+  if (number_of_boards > 32) {
+    printf("PadmeLevel1 - WARNING - DAQ stream contains %u ADC boards. Is this correct?\n",number_of_boards);
+  }
+
+  // Read board serial numbers and allocate board structures
+  ADCBoard* boards[number_of_boards];
+  unsigned int board_sn[number_of_boards];
+  for (unsigned int i=0; i<number_of_boards; i++) {
+    input_stream_handle.read((char*)&buff,4);
+    board_sn[i] = buff;
+    // By default assign to board a progressive id number
+    boards[i] = new ADCBoard(i);
+    // Tell board which data format to handle
+    boards[i]->SetVersion(version);
+  }
+
+  // Last line of header contains the start of file time tag
+  input_stream_handle.read((char*)&buff,4);
+  //printf("Time tag size %lu value %ld\n",sizeof(time_t),start_time_tag);
+  time_t start_time_tag = buff;
+  tm* stt = gmtime(&start_time_tag);
+  printf("- Input stream was created on %04d-%02d-%02d %02d:%02d:%02d\n",1900+stt->tm_year,stt->tm_mon+1,stt->tm_mday,stt->tm_hour,stt->tm_min,stt->tm_sec);
+
+  // Add size of file header to input size counter
+  input_size += 4*(4+number_of_boards);
+
+  // Define some flags/counters to verify event structure consistency
+  unsigned int header_found = 0;
+  unsigned int trigger_found = 0;
+  unsigned int adcboard_counter = 0;
+  unsigned int event_size = 0;
+
+  // Define variables to hold event header information
+  unsigned int total_event_size = 0;
+  unsigned int event_number = 0;
+  struct timespec event_time;
+  unsigned long long int event_run_time = 0;
+  unsigned int event_trigger_mask = 0;
+  unsigned int event_status = 0;
+  unsigned int missing_adcboards = 0;
+
+  // Define variables to hold trigger information
+  unsigned int trigger_mask = 0;
+  unsigned int trigger_counter = 0;
+  unsigned long long int trigger_clock = 0;
+
+  // Main loop on input events
+  while(1) {
+
+    input_stream_handle.read((char*)&buff,4);
+    unsigned int tag = ((buff & 0xf0000000) >> 28);
+    //printf("buff 0x%08x tag 0x%01x\n",buff,tag);
+
+    // Check if tag is one of those allowed here
+    if (tag != EVENT_FILE_TAIL_TAG && tag != EVENT_HEADER_TAG && tag != EVENT_TRIGGER_INFO_TAG && tag != EVENT_ADCBOARD_INFO_TAG) {
+      printf("PadmeLevel1 - ERROR - Unknown tag 0x%1x found. Aborting\n",tag);
     }
-    if (nEOR != 0) {
-      if (nEOR == boards.size()) {
-	printf("All boards reached end of run.\n");
-      } else {
-	printf("WARNING: %d board(s) reached end of run.\n",nEOR);
-      }
-      break; // Exit from main loop
-    }
 
-    unsigned int all_in_time = 0;
-    while ( (! all_in_time) && (! nEOR) ) {
+    // If we found a new event header or the file tail, save previous event (if any) before proceeding
+    if ( (tag == EVENT_HEADER_TAG) || (tag == EVENT_FILE_TAIL_TAG) ) {
 
-      unsigned int bmax = 0; // Find board with largest time since start of run 
+      if (header_found) {
 
-      // Get timing information for current event of each board
-      for(unsigned int b=0; b<boards.size(); b++) {
+	// Check if event is complete and size is consistent. Issue warning if they are not
+	if (! trigger_found) printf("PadmeLevel1 - WARNING - No Trigger information found in event %u\n",event_number);
+	if (adcboard_counter != number_of_boards) printf("PadmeLevel1 - WARNING - Expected data from %u ADC boards, only %u received in event %u\n",number_of_boards,adcboard_counter,event_number);
+	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u\n",total_event_size,event_size,event_number);
 
-	unsigned int board_in_time = 0;
-	unsigned int board_EOR = 0;
-	while ( (! board_in_time) && (! board_EOR) ) {
-
-	  board_in_time = 1;
-
-	  // First check if board's group mask is consistent with that of first event
-	  unsigned char grMsk = boards[b]->Event()->GetGroupMask();
-	  if (NumberOfEvents == 0 ) {
-	    groupMaskRef[b] = grMsk;
-	  } else {
-	    if (grMsk != groupMaskRef[b]) {
-	      board_in_time = 0;
-	      printf("*** Board %2d - Inconsistent group mask (exp: 0x%1x fnd: 0x%1x) - Skipping event %8u\n",boards[b]->GetBoardId(),groupMaskRef[b],grMsk,boards[b]->Event()->GetEventCounter());
-	      if ( boards[b]->NextEvent() == 0 ) {
-		printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-		board_EOR = 1;
-	      }
-	    }
+	// Unpack info in all ADC boards
+	//for (unsigned int i=0; i<number_of_boards; i++) {
+	for (unsigned int i=0; i<adcboard_counter; i++) {
+	  unsigned int rc = boards[i]->UnpackEvent();
+	  if (rc) {
+	    printf("PadmeLevel1 - ERROR - Problem while unpacking event %u (rc=%u). Aborting\n",event_number,rc);
+	    input_stream_handle.close();
+	    root->Exit();
+	    exit(1);
 	  }
-
-	  // Check if board internal times are aligned. Stop the run if they are not
-	  // This may change when all time counters are correctly aligned by S/IN signal
-	  TT_evt = 0;
-	  unsigned int first_active_group = 1;
-	  for (unsigned int g=0; g<4; g++) {
-	    if (grMsk & 1<<g) {
-	      TT_grp = boards[b]->Event()->GetTriggerTimeTag(g);
-	      if (first_active_group) { // This is the first active group: get its time as reference for event
-		TT_evt = TT_grp;
-		first_active_group = 0;
-	      } else {
-		// Other groups are present: verify they are all in time (0x0010 clock cycles tolerance i.e. ~136ns)
-		dTb = TT_evt-TT_grp;
-		if ( std::abs(dTb) >= 0x0010 ) {
-		  if (NumberOfEvents == 0) { // If this happens on first event stop the run
-		    printf("*** FATAL ERROR - Board %2d - Internal time mismatch at Start of Run\n",boards[b]->GetBoardId());
-		    root->Exit();
-		    exit(1);
-		  } else {
-		    board_in_time = 0;
-		    printf("*** Board %2d - Internal time mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-		    if ( boards[b]->NextEvent() == 0 ) {
-		    printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-		    board_EOR = 1;
-		    }
-		    break; // Break loop on trigger groups
-		  }
-		}
-	      }
-	    }
-	  }
-
-	  // If board reached EOR, stop processing this board
-	  if (board_EOR) {
-
-	    printf("WARNING: board %d reached end of run because of internal mismatches.\n",b);
-
-	  } else {
-
-	    if (NumberOfEvents == 0) {
-
-	      // Board is in time: save current counter and start total time from it
-	      dT = 0;
-	      CC[b] = 0;
-	      TT_old[b] = TT_evt;
-
-	    } else {
-
-	      // Board is in time: update its total clock counter
-	      dT = TT_evt-TT_old[b]; // Get time interval since last readout
-	      if (dT<0) dT += (1<<30); // Check if clock counter rolled over
-	      CC[b] += dT; // Add latest time interval to global clock counter
-	      TT_old[b] = TT_evt;
-
-	    }
-
-	    // Check if this is the highest time in the current set of board times
-	    if (CC[b]>CC[bmax]) bmax = b;
-
-	    if (verbose>=2) {
-	      printf("- Board %2d NEv %8u Dt %f (0x%08x) T %f (0x%016llx)\n",
-		     b,boards[b]->Event()->GetEventCounter(),dT*8.5E-9,dT,CC[b]*8.5E-9,CC[b]);
-	    }
-
-	  }
-
-	} // End on loop to get single board in-time event
-
-	if (board_EOR) nEOR++;
-
-      } // End of loop over boards
-
-      if (nEOR != 0) {
-
-	// If one or more boards reached EOR, there is no need to continue
-	printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
-      } else {
-
-	// Verify if all boards are in time (0x0100 clock cycles tolerance i.e. ~2.176us)
-	all_in_time = 1;
-	for(unsigned int b=0; b<boards.size(); b++) {
-	  if ( CC[bmax]-CC[b] >= 0x0100 ) {
-	    // This board is still on an earlier event: skip to next event
-	    all_in_time = 0;
-	    printf("*** Board %2d - External mismatch - Skipping event %8u\n",boards[b]->GetBoardId(),boards[b]->Event()->GetEventCounter());
-	    if ( boards[b]->NextEvent() == 0 ) {
-	      printf("*** Board %2d - End of Run.\n",boards[b]->GetBoardId());
-	      nEOR++;
-	    }
-	  }
+	  // Add board serial number
+	  boards[i]->Event()->SetBoardSN(board_sn[i]);
 	}
 
+	// Send event to ROOT
+	//if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,trigger_mask,trigger_counter,trigger_clock,number_of_boards,boards) != ROOTIO_OK) {
+	if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,missing_adcboards,trigger_mask,trigger_counter,trigger_clock,adcboard_counter,boards) != ROOTIO_OK) {
+	  printf("PadmeLevel1 - ERROR while writing event %u (evt nr %u) to root file. Aborting\n",number_of_events,event_number);
+	  input_stream_handle.close();
+	  root->Exit();
+	  exit(1);
+	}
+
+	// Increase event counter
+	number_of_events++;
+	if (number_of_events%100 == 0) {
+	  printf("- Written event %u - Run %d Event %u\n",number_of_events,run_number,event_number);
+	}
+
+	// Reset counters for next event
+	header_found = 0;
+	trigger_found = 0;
+	adcboard_counter = 0;
+	event_size = 0;
+
       }
 
-    } // End of while loop checking for in-time events
-
-    // If one or more files reached EOR, stop processing events
-    if (nEOR) {
-      printf("WARNING: %d board(s) reached end of run because of time mismatches (see previous messages).\n",nEOR);
-      break; // Exit from main loop
     }
 
-    // The event is complete and in time: copy structure to TRawEvent and send to output file
-    // For the moment save clock counts of first board as event time.
-    // When trigger info will be added, replace this with number of ns since start of run
-    if (root->FillRawEvent(cfg->RunNumber(),NumberOfEvents,CC[0],0,0,boards) != ROOTIO_OK) {
-      printf("ERROR while writing event %d to root file. Aborting\n",NumberOfEvents);
-      exit(1);
+    // End of File procedure
+    if (tag == EVENT_FILE_TAIL_TAG) {
+
+      // Check if previous event was complete and issue warning if not
+      if (header_found || trigger_found || adcboard_counter || event_size) {
+	printf("PadmeLevel1 - WARNING - End of File tag 0x%1x found but previous event was not complete: H %d T %d B %d S %d\n",EVENT_FILE_TAIL_TAG,header_found,trigger_found,adcboard_counter,event_size);
+      }
+
+      // File tail tag found: decode final data and exit main loop
+      printf("- End of File tag 0x%1x received: finalizing Level1 procedure and exiting.\n",EVENT_FILE_TAIL_TAG);
+
+      // Check if total number of events is consistent
+      unsigned int eof_nevents = ((buff & 0x0fffffff) >> 0);
+      if (eof_nevents != number_of_events) {
+	printf("PadmeLevel1 - WARNING - Input stream reports %u events but %u were received.\n",eof_nevents,number_of_events);
+      }
+
+      // Get total size of input stream
+      unsigned long long eof_size;
+      input_stream_handle.read((char*)&eof_size,8);
+
+      // Get end of stream time tag and show it
+      input_stream_handle.read((char*)&buff,4);
+      time_t eof_time_tag = buff;
+      tm* ett = gmtime(&eof_time_tag);
+      printf("- Input stream was finalized on %04d-%02d-%02d %02d:%02d:%02d\n",1900+ett->tm_year,ett->tm_mon+1,ett->tm_mday,ett->tm_hour,ett->tm_min,ett->tm_sec);
+
+      // Add size of file tail and check if total input size is consistent with that reported by file tail
+      input_size += 4*4;
+      if (eof_size != input_size) {
+	printf("PadmeLevel1 - WARNING - Input stream reports %llu size but %llu bytes were received.\n",eof_size,input_size);
+      }
+
+      break;
+
     }
 
-    // Count event
-    NumberOfEvents++;
+    // Event Header procedure
+    if (tag == EVENT_HEADER_TAG) {
 
-  } // End of main while loop
+      // Check if previous event was correctly completed
+      //if (header_found) {
+      //	printf("PadmeLevel1 - ERROR - Event is not complete but new Event Header found. Aborting\n");
+      //	input_stream_handle.close();
+      //	exit(1);
+      //}
+      header_found = 1;
+
+      // First word: total size of this event (4-bytes words!)
+      total_event_size = ((buff & EVENT_EVENTSIZE_BIT) >> EVENT_EVENTSIZE_POS);
+
+      // Second word: event number
+      input_stream_handle.read((char*)&event_number,4);
+
+      // Third+fourth words: event time (timespec structure: sec+nsec)
+      input_stream_handle.read((char*)&buff,4);
+      event_time.tv_sec = buff;
+      input_stream_handle.read((char*)&buff,4);
+      event_time.tv_nsec = buff;
+      
+      // Fifth+sixth words: run time of event
+      input_stream_handle.read((char*)&event_run_time,8);
+
+      // Seventh word: event status+trigger mask
+      input_stream_handle.read((char*)&buff,4);
+      event_status = ( (buff & EVENT_V03_EVENTSTATUS_BIT) >> EVENT_V03_EVENTSTATUS_POS );
+      event_trigger_mask = ( (buff & EVENT_V03_TRIGMASK_BIT) >> EVENT_V03_TRIGMASK_POS );
+
+      // Eighth word: missing adc boards bit mask
+      input_stream_handle.read((char*)&missing_adcboards,4);
+
+      // Add header size to event size and to total input size
+      event_size += 32;
+      input_size += 4*8;
+
+    }
+
+    // Trigger Info procedure
+    if (tag == EVENT_TRIGGER_INFO_TAG) {
+
+      // Check if a header was previously found
+      if (! header_found) {
+	printf("PadmeLevel1 - ERROR - Trigger Info found but no Event Header. Aborting\n");
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
+
+      // Check if this is the first trigger found in this event
+      if (trigger_found) {
+	printf("PadmeLevel1 - ERROR - Multiple Trigger Info structures found in event. Aborting\n");
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
+      trigger_found = 1;
+
+      // First word: trigger mask and counter
+      trigger_mask = ((buff & 0x0fff0000) >> 16);
+      trigger_counter = ((buff & 0x0000ffff) >> 0);
+
+      // Second+third word: trigger controller clock counter
+      input_stream_handle.read((char*)&trigger_clock,8);
+
+      // Add trigger info size to event size and total input size
+      event_size += 12;
+      input_size += 4*3;
+
+    }
+
+    // ADC Board procedure
+    if (tag == EVENT_ADCBOARD_INFO_TAG) {
+
+      // Check if a header was previously found
+      if (! header_found) {
+	printf("PadmeLevel1 - ERROR - ADC Board found but no Event Header. Aborting\n");
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
+
+      // Check if too many ADC boards were found
+      if (adcboard_counter >= number_of_boards) {
+	printf("PadmeLevel1 - ERROR - %u ADC boards found. Expected %u. Aborting\n",adcboard_counter,number_of_boards);
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
+
+      // First line: get total size (in bytes) of ADC board info
+      unsigned int adcboard_size = 4*((buff & 0x0fffffff) >> 0);
+
+      //printf("adcboard_size %d\n",adcboard_size);
+
+      // Get buffer address for current board and copy info into it
+      void* adc_data = boards[adcboard_counter]->Buffer();
+      //printf("Addresses 0x%016x 0x%016x\n",*(boards[adcboard_counter]->Buffer()),*adc_data);
+
+      // The first line was already read
+      memcpy(adc_data,&buff,4);
+      // Now read the rest of the data
+      input_stream_handle.read((char*)(adc_data)+4,adcboard_size-4);
+
+      /*
+      memcpy(&buff,(char*)adc_data,4);
+      printf("Buffer line 0 0x%08x\n",buff);
+      memcpy(&buff,(char*)adc_data+4,4);
+      printf("Buffer line 1 0x%08x\n",buff);
+      memcpy(&buff,(char*)adc_data+8,4);
+      printf("Buffer line 2 0x%08x\n",buff);
+      memcpy(&buff,(char*)adc_data+12,4);
+      printf("Buffer line 3 0x%08x\n",buff);
+      memcpy(&buff,(char*)adc_data+16,4);
+      printf("Buffer line 4 0x%08x\n",buff);
+      memcpy(&buff,(char*)adc_data+20,4);
+      printf("Buffer line 5 0x%08x\n",buff);
+      */
+
+      adcboard_counter++;
+
+      // Add ADC board data to total size of event and of input data
+      event_size += adcboard_size;
+      input_size += adcboard_size;
+
+    }
+
+    /*
+    // Check if event is complete
+    if (header_found && trigger_found && (adcboard_counter == number_of_boards)) {
+
+      // Check event size for consistency
+      if (event_size != 4*total_event_size) {
+	printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u",total_event_size,event_size,event_number);
+      }
+
+      // Event is complete: unpack info in all ADC boards
+      for (unsigned int i=0; i<number_of_boards; i++) {
+	unsigned int rc = boards[i]->UnpackEvent();
+	if (rc) {
+	  printf("PadmeLevel1 - ERROR - Problem while unpacking event %u (rc=%u). Aborting\n",event_number,rc);
+	  input_stream_handle.close();
+	  root->Exit();
+	  exit(1);
+	}
+	// Add board serial number
+	boards[i]->Event()->SetBoardSN(board_sn[i]);
+      }
+
+      // Send event to ROOT
+      if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,trigger_mask,trigger_counter,trigger_clock,number_of_boards,boards) != ROOTIO_OK) {
+	printf("PadmeLevel1 - ERROR while writing event %u (evt nr %u) to root file. Aborting\n",number_of_events,event_number);
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
+
+      // Increase event counter
+      number_of_events++;
+      if (number_of_events%100 == 0) {
+	printf("- Written event %u - Run %d Event %u\n",number_of_events,run_number,event_number);
+      }
+
+      // Reset counters for next event
+      header_found = 0;
+      trigger_found = 0;
+      adcboard_counter = 0;
+      event_size = 0;
+
+    }
+    */
+
+  }
+
+  // Data processing in over: get stop time
+  time_t time_stop;
+  time(&time_stop);
 
   // Finalize root file
   if (root->Exit() != ROOTIO_OK) {
-      printf("ERROR while finalizing root file. Aborting\n");
+      printf("PadmeLevel1 - ERROR while finalizing root file. Aborting\n");
       exit(1);
   }
 
   // Verify that all events sent to ROOT were written to file
-  if (NumberOfEvents != root->GetTotalEvents()) {
-    printf("*** WARNING *** ROOT inconsistency: %u events sent, %u events written. This should never happen!",NumberOfEvents,root->GetTotalEvents());
+  if (number_of_events != root->GetTotalEvents()) {
+    printf("PadmeLevel1 - WARNING - ROOT inconsistency: %u events received, %u events written. This should never happen!",number_of_events,root->GetTotalEvents());
   }
 
-  printf("Run %d closed after writing %d events\n",cfg->RunNumber(),root->GetTotalEvents());
+  double dt = time_stop-time_start;
+  double evtpsec = 0.; if (dt>0.) evtpsec = root->GetTotalEvents()/dt;
+  double bytepsec = 0.; if (dt>0.) bytepsec = root->GetTotalSize()/dt;
+  printf("Level1 processing for Run %d done.\n",cfg->RunNumber());
+  printf("Total processing time: %ld secs\n",time_stop-time_start);
+  printf("Total files created: %u\n",root->GetTotalFiles());
+  printf("Events written: %u (%6.1f events/sec)\n",root->GetTotalEvents(),evtpsec);
+  printf("Bytes written: %llu (%10.1f bytes/sec)\n",root->GetTotalSize(),bytepsec);
 
-  // If input was from a real run, update DB
-  if (cfg->RunNumber()) {
-
-    // Update DB with number of events merged by this process and total amount of data written to file
-    DBService* db = DBService::GetInstance();
-    int rc = db->UpdateMergerInfo(root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR updating DB with number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-      exit(1);
-    }
-
-  }
+  //// If input was from a real run, update DB
+  //if (cfg->RunNumber()) {
+  //
+  //  // Get handle to DB
+  //  DBService* db = DBService::GetInstance();
+  //
+  //  // Update merger status
+  //  rc = db->SetMergerStatus(3,cfg->MergerId());
+  //  if (rc != DBSERVICE_OK) {
+  //    printf("ERROR setting merger status in DB. Aborting\n");
+  //    exit(1);
+  //  }
+  //
+  //  // Update merger stop time
+  //  rc = db->SetMergerTime("STOP",cfg->MergerId());
+  //  if (rc != DBSERVICE_OK) {
+  //    printf("ERROR setting merger stop time in DB. Aborting\n");
+  //    exit(1);
+  //  }
+  //  
+  //  // Update DB with final counters (files created, events written, data written)
+  //  rc = db->UpdateMergerInfo(root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
+  //  if (rc != DBSERVICE_OK) {
+  //    printf("ERROR updating DB with number of files (n=%u) number of events (n=%u) and output size (size=%llu) for merger id %d. Aborting\n",root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
+  //    exit(1);
+  //  }
+  //
+  //}
 
   exit(0);
+
 }

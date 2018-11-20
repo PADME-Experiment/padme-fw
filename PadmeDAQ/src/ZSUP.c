@@ -12,6 +12,7 @@
 
 #include "DB.h"
 #include "Config.h"
+#include "Tools.h"
 #include "PEvent.h"
 #include "Signal.h"
 
@@ -69,9 +70,10 @@ int ZSUP_readdata ()
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
+  int rc;
 
   // File to handle DAQ interaction with GUI
-  FILE* iokf; // InitOK file
+  //FILE* iokf; // InitOK file
 
   // Process timers
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -107,9 +109,68 @@ int ZSUP_readdata ()
   }
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
+  // Zero counters
+  totalReadSize = 0;
+  totalReadEvents = 0;
+  totalWriteSize = 0;
+  totalWriteEvents = 0;
+
+  // Start counting output files
+  fileIndex = 0;
+  tooManyOutputFiles = 0;
+
+  // We have to open the output file first to avoid network-related lock-ups
+
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+
+    // Generate name for initial output file and verify it does not exist
+    generate_filename(tmpName,t_daqstart);
+    fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+    strcpy(fileName[fileIndex],tmpName);
+    if ( Config->run_number ) {
+      rc = db_file_check(fileName[fileIndex]);
+      if ( rc < 0 ) {
+	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	return 2;
+      } else if ( rc == 1 ) {
+	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	return 2;
+      }
+    }
+    pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
+    strcpy(pathName[fileIndex],Config->data_dir);
+    strcat(pathName[fileIndex],fileName[fileIndex]);
+
+  } else {
+
+    // Use only one virtual file for streaming out all data
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
+
+  }
+
+  // Open output file
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+    outFileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+  } else {
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    outFileHandle = open(pathName[fileIndex],O_WRONLY);
+  }
+  if (outFileHandle == -1) {
+    printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+    return 2;
+  }
+
+  // Create initok file to tell RunControl that we are ready
+  if ( create_initok_file() ) return 1;
+
+  // Open virtual file for input data stream (will wait for DAQ to start before proceeding)
+  printf("- Opening input stream from file '%s'\n",Config->input_stream);
+  inFileHandle = open(Config->input_stream,O_RDONLY, S_IRUSR | S_IWUSR);
+  if (inFileHandle == -1) {
+    printf("ERROR - Unable to open input stream '%s' for reading.\n",Config->input_stream);
+    return 1;
   }
 
   time(&t_daqstart);
@@ -117,32 +178,9 @@ int ZSUP_readdata ()
 
   if ( Config->run_number ) {
     // Tell DB that the process has started
+    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
     if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
-  }
-
-  // Zero counters
-  totalReadSize = 0;
-  totalReadEvents = 0;
-  totalWriteSize = 0;
-  totalWriteEvents = 0;
-
-  // Create initok file to tell RunControl that we are ready
-  printf("- Creating InitOK file '%s'\n",Config->initok_file);
-  if ( access(Config->initok_file,F_OK) == -1 ) {
-    iokf = fopen(Config->initok_file,"w");
-    fclose(iokf);
-    printf("- InitOK file '%s' created\n",Config->initok_file);
-  } else {
-    printf("- InitOK file '%s' already exists (?)\n",Config->initok_file);
-    return 1;
-  }
-
-  // Open virtual file for input data stream
-  printf("- Opening input stream from file '%s'\n",Config->input_stream);
-  inFileHandle = open(Config->input_stream,O_RDONLY, S_IRUSR | S_IWUSR);
-  if (inFileHandle == -1) {
-    printf("ERROR - Unable to open input stream '%s' for reading.\n",Config->input_stream);
-    return 1;
   }
 
   // Read file header (4 words) from input stream
@@ -180,16 +218,20 @@ int ZSUP_readdata ()
   }
   printf("- Run number %d\n",run_number);
 
-  // Third line: board serial number (save it to DB)
-  unsigned int board_sn;
-  memcpy(&board_sn,inEvtBuffer+8,4);
-  printf("- Board S/N %d\n",board_sn);
+  // Third line: board_id and board serial number (save it to DB)
+  line = (unsigned int *)(inEvtBuffer+8);
+  int board_id = ( (*line & 0xff000000) >> 24 );
+  unsigned int board_sn = (*line & 0x00ffffff);
+  printf("- Board id %d S/N %u\n",board_id,board_sn);
+  if (board_id != Config->board_id) {
+    printf("WARNING - Board id from stream not consistent with that from configuration: stream %d config %d\n",board_id,Config->board_id);
+  }
 
   // Save board serial number to DB for this process
   if ( Config->run_number ) {
-    char line[2048];
-    sprintf(line,"%d",board_sn);
-    db_add_cfg_para(Config->process_id,"board_sn",line);
+    char outstr[2048];
+    sprintf(outstr,"%u",board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",outstr);
   }
 
   // Fourth line: start of file time tag
@@ -197,8 +239,9 @@ int ZSUP_readdata ()
   memcpy(&start_time,inEvtBuffer+12,4);
   printf("- Start time %s\n",format_time(start_time));
 
-  // Now that we have a recognized input stream we open an output file/stream
+  // Now that we have a recognized input stream we can register the output file in the DB and send it the header
 
+  /*
   // Start counting output files
   fileIndex = 0;
   tooManyOutputFiles = 0;
@@ -236,6 +279,9 @@ int ZSUP_readdata ()
     printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
     return 2;
   }
+
+  */
+
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
   fileEvents[fileIndex] = 0;
@@ -246,7 +292,7 @@ int ZSUP_readdata ()
   }
 
   // Write header to file
-  fHeadSize = create_file_head(fileIndex,run_number,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+  fHeadSize = create_file_head(fileIndex,run_number,board_id,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
   writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
   if (writeSize != fHeadSize) {
     printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -324,24 +370,25 @@ int ZSUP_readdata ()
       outputEventSize = inputEventSize;
       outputEventBuffer = inEvtBuffer;
 
+      // Even if zero suppression is off, show we are alive
+      if (totalReadEvents % 100 == 0) {
+	printf("Event %7d\tZero suppression OFF\n",totalReadEvents);
+      }
+
     } else {
 
-      // Check autopass bit
+      // Extract 0-suppression configuration
+      unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
+      unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
+
+      // If Autopass flag (bit 4 of status) is on, force zero suppression to flagging mode
       line = (unsigned int *)(inEvtBuffer+8);
       unsigned short int status = (*line >> 22) & 0x03FF;
-      if ( status & 0x0010 ) {
+      if ( status & 0x0010 ) zsupMode = 1;
 
-	// Autopass flag (bit 4 of status) is on: do not apply zero suppression
-	outputEventSize = inputEventSize;
-	outputEventBuffer = inEvtBuffer;
-
-      } else {
-
-	// Otherwise we copy input buffer to output buffer while applying zero suppression
-	outputEventSize = apply_zero_suppression((void *)inEvtBuffer,(void *)outEvtBuffer);
-	outputEventBuffer = outEvtBuffer;
-
-      }
+      // Apply zero suppression algorithm
+      outputEventSize = apply_zero_suppression(zsupMode,zsupAlgr,(void *)inEvtBuffer,(void *)outEvtBuffer);
+      outputEventBuffer = outEvtBuffer;
 
     }
 
@@ -394,7 +441,6 @@ int ZSUP_readdata ()
 
 	// Close file in DB
 	if ( Config->run_number ) {
-	  //if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
 	}
 
@@ -408,7 +454,14 @@ int ZSUP_readdata ()
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
 	  if ( Config->run_number ) {
-	    if ( db_file_check(fileName[fileIndex]) != DB_OK ) return 2;
+	    rc = db_file_check(fileName[fileIndex]);
+	    if ( rc < 0 ) {
+	      printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	      return 2;
+	    } else if ( rc == 1 ) {
+	      printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	      return 2;
+	    }
 	  }
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
@@ -429,7 +482,7 @@ int ZSUP_readdata ()
 	  }
 
 	  // Write header to file
-	  fHeadSize = create_file_head(fileIndex,run_number,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
+	  fHeadSize = create_file_head(fileIndex,run_number,board_id,board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
 	  writeSize = write(outFileHandle,outEvtBuffer,fHeadSize);
 	  if (writeSize != fHeadSize) {
 	    printf("ERROR - Unable to write file header to file. Header size: %u, Write result: %u\n",
@@ -468,7 +521,7 @@ int ZSUP_readdata ()
     return 2;
   };
 
-  // If DAQ was stopped for writing too many output files, we do not have to close the last file
+  // If ZSUP was stopped for writing too many output files, we do not have to close the last file
   if ( ! tooManyOutputFiles ) {
 
     // Register file closing time
@@ -494,7 +547,6 @@ int ZSUP_readdata ()
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
       if ( Config->run_number ) {
-	//if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex],Config->process_id) != DB_OK ) return 2;
 	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
       }
     } else {
@@ -550,15 +602,15 @@ int ZSUP_readdata ()
   }
 
   // Close DB file
-  if ( Config->run_number ) {
-    if ( db_end() != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  if ( db_end() != DB_OK ) return 2;
+  //}
 
   return 0;
 
 }
 
-unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
+unsigned int apply_zero_suppression (unsigned int zsupMode, unsigned int zsupAlgr, void *inBuff,void *outBuff)
 {
   unsigned int *line;
   unsigned int outLine;
@@ -575,8 +627,8 @@ unsigned int apply_zero_suppression (void *inBuff,void *outBuff)
   unsigned int i;
 
   // Extract 0-suppression configuration
-  unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
-  unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
+  //unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
+  //unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
 
   // Position cursors at beginning of input and output event structures
   inCursor = inStart; outCursor = outStart;

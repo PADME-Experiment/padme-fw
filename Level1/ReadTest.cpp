@@ -140,8 +140,13 @@ int main(int argc, char* argv[])
 
     // Show event header
     UChar_t nBoards = rawEv->GetNADCBoards();
-    printf("Event %d Run nr %d Event nr %d ADC boards %d\n",
-	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
+    printf("Event %d Run nr %d Event nr %d RunTime %llu ADC boards %d (",
+	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),rawEv->GetEventRunTime(),nBoards);
+    for(UChar_t b=0;b<nBoards;b++){
+      if (b>0) printf(",");
+      printf("%d",rawEv->ADCBoard(b)->GetBoardId());
+    }
+    printf(")\n");
 
     if (verbose>0) {
 

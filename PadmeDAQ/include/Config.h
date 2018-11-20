@@ -145,6 +145,10 @@ typedef struct config_s {
   float zs2_minrms; // RMS threshold to use globally
   float zs2_minrms_ch[32]; // RMS threshold to use for each channel
 
+  // Autopass system parameters
+  uint32_t auto_threshold; // Trigger is considered ON if below this threshold
+  unsigned int auto_duration; // Autopass is enabled if trigger is ON for more than this time (ns)
+
   // Set maximum per-file DAQ duration (secs).
   // After this time the output file will be closed and a new one will be opened
   int file_max_duration;
@@ -168,7 +172,7 @@ int print_config();     // Print current configuration
 int save_config();      // Save config parameters into DB
 int end_config();       // Clear configuration
 
-int generate_filename(char*, const time_t); // Function to add time tag to file name
-char* format_time(const time_t); // Function to format time tags
+//int generate_filename(char*, const time_t); // Function to add time tag to file name
+//char* format_time(const time_t); // Function to format time tags
 
 #endif

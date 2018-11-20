@@ -4,10 +4,13 @@ Configuration* Configuration::fInstance = 0;
 
 Configuration::Configuration()
 {
+  // Set default configuration parameters
   fRunNumber = 0;
   fMergerId = -1;
-  fStreamListFile = "";
-  fOutputFileHeader = "rawdata/rawdata";
+  fInputStream = "";
+  fInputStreamList = "";
+  fOutputStreamList = "";
+  fRawFileHeader = "rawdata/rawdata";
   fNEventsPerFile = 10000;
   fVerbose = 0;
 }

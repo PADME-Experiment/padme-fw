@@ -2,6 +2,7 @@
 
 import socket
 import sys
+import os
 import readline
 
 # Enable line editing for raw_input()
@@ -11,11 +12,14 @@ class RunControlText:
 
     def __init__(self):
 
+        # Get port to use for RC connection from PADME_RC_PORT or use port 10000 as default
+        self.runcontrol_port = int(os.getenv('PADME_RC_PORT',"10000"))
+
         # Create a TCP/IP socket
         self.sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
         # Connect the socket to the port where the server is listening
-        server_address = ('localhost', 10000)
+        server_address = ('localhost', self.runcontrol_port)
         print 'Connecting to RunControl server on host %s port %s' % server_address
         try:
             self.sock.connect(server_address)
@@ -89,7 +93,7 @@ class RunControlText:
 
                 print "Sending %s"%message
                 ans = self.ask_server(message)
-                if (message == "exit"):
+                if (message == "shutdown"):
                     print ans
                     print "Server's gone. I'll take my leave as well..."
                     break
@@ -194,10 +198,10 @@ class RunControlText:
         while True:
             ans = self.get_answer()
             if (ans == "terminate_ok"):
-                print 'Run terminated correctly'
+                print "Run terminated correctly"
                 break
             elif (ans == "terminate_error"):
-                print 'Run terminated with errors'
+                print "Run terminated with errors"
                 break
             else:
                 print ans
@@ -213,7 +217,11 @@ class RunControlText:
         while True:
             ans = self.get_answer()
             if (ans == "run_started"):
-                print 'Run started correctly'
+                print "Run started correctly"
+                break
+            elif (ans == "unknown command"):
+                ans = self.ask_server("get_state")
+                print "Cannot use 'start_run' command while in '%s' state"%ans
                 break
             else:
                 print ans

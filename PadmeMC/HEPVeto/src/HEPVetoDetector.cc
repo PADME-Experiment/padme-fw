@@ -14,6 +14,7 @@
 #include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
+#include "G4SubtractionSolid.hh"
 
 #include "HEPVetoGeometry.hh"
 #include "HEPVetoSD.hh"
@@ -61,8 +62,21 @@ void HEPVetoDetector::CreateGeometry()
   G4double hepVetoFingerY = geo->GetFingerSizeY();
   G4double hepVetoFingerZ = geo->GetFingerSizeZ();
   printf("HEPVeto Finger size is %f %f %f\n",hepVetoFingerX,hepVetoFingerY,hepVetoFingerZ);
-  G4Box* solidFinger  = new G4Box("HEPVetoFingerSolid",0.5*hepVetoFingerX,0.5*hepVetoFingerY,0.5*hepVetoFingerZ);
-  fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_PLASTIC_SC_VINYLTOLUENE"),"HEPVetoFingerLogic",0,0,0);
+  G4Box* solidFingerFull  = new G4Box("HEPVetoFingerSolidFull",0.5*hepVetoFingerX,0.5*hepVetoFingerY,0.5*hepVetoFingerZ);
+
+// Create groove and subtract from finger  M. Raggi 23/06/2018
+  G4double grooveSizeX = geo->GetGrooveSizeX();
+  G4double grooveSizeY = geo->GetGrooveSizeY();
+  G4double grooveSizeZ = geo->GetGrooveSizeZ();
+  G4double groovePosX = geo->GetGroovePosX();
+  G4double groovePosY = geo->GetGroovePosY();
+  G4double groovePosZ = geo->GetGroovePosZ();
+  G4cout<<"GSZ "<<grooveSizeX<<" "<<grooveSizeY<<" "<< grooveSizeZ<<G4endl;
+  G4Box* solidGroove = new G4Box("HEPVetoGrooveSolid",grooveSizeX*0.5,grooveSizeY*0.5,grooveSizeZ*0.5);
+//
+  G4SubtractionSolid* solidFinger = new G4SubtractionSolid("HEPVetoCrySolid",solidFingerFull,solidGroove,0,G4ThreeVector(groovePosX,groovePosY,groovePosZ));
+//
+  fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_POLYSTYRENE"),"HEPVetoFingerLogic",0,0,0);
   fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
   // Make finger a sensitive detector
@@ -75,9 +89,13 @@ void HEPVetoDetector::CreateGeometry()
 
   // Get number of fingers and position them
   G4int nFingers = geo->GetHEPVetoNFingers();
+  // Added rotation accordig to positron veto M. Raggi 23/06/2018 Check with drawing!
+  G4RotationMatrix* rotFinger = new G4RotationMatrix();
+  rotFinger->rotateY(geo->GetFingerRotY());
   for (G4int fin=0;fin<nFingers;fin++){
     G4ThreeVector posFinger = G4ThreeVector(geo->GetFingerPosX(fin),geo->GetFingerPosY(fin),geo->GetFingerPosZ(fin));
-    new G4PVPlacement(0,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
+    //  new G4PVPlacement(0,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
+  new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
   }
-
+  
 }

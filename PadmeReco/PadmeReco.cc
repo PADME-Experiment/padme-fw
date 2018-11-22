@@ -51,7 +51,7 @@ int main(Int_t argc, char **argv)
     TString InputFileName("InputFile.root");
     TString InputListFileName("InputListFile.txt");
     TString ConfFileName("config/PadmeReconstruction.conf");
-    Int_t iFile = 0, NFiles = 100000, NEvt = 100;
+    Int_t iFile = 0, NFiles = 100000, NEvt = 0;
     UInt_t Seed = 4357;
     struct stat filestat;
 
@@ -99,7 +99,7 @@ int main(Int_t argc, char **argv)
     }
 
     // Sanity checks on the input
-    if (!n_options_read || NEvt<=0 || NFiles<=0) {
+    if (!n_options_read || NEvt<0 || NFiles<=0) {
       usage(argv[0]);
       return 0;
     }

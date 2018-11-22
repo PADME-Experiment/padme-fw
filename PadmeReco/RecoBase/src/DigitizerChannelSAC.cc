@@ -162,29 +162,29 @@ Double_t DigitizerChannelSAC::CalcTime(UShort_t iMax, UShort_t fCh) {
   fTime = 0.;
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //M. Raggi 19/10/2018
-  Int_t npeaks =25;
-  Double_t AbsSamRec[1024];
-  //  TH1D* H1 = new TH1D("h1","h1",990,0.,990.);
-  for(UShort_t s=0;s<iMax;s++){
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[fCh]*0+3800)/4096*1000.;
-  }
-  H1->SetContent(AbsSamRec);
-  Double_t VMax = H1->GetMaximum();
-  if(VMax>fAmpThresholdHigh){
-    TSpectrum *s = new TSpectrum(npeaks);
-    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
-    Int_t nfound = s->Search(H1,2.,"",peak_thr);
-    
-    //Double_t *xpeaks = s->GetPositionX();
-    //Double_t *ypeaks = s->GetPositionY();
-    Float_t *xpeaks = s->GetPositionX();
-    Float_t *ypeaks = s->GetPositionY();
-    //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-    for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-      Float_t xp   = xpeaks[ll];
-    }
-    H1->Reset();
-  }
+//  Int_t npeaks =25;
+//  Double_t AbsSamRec[1024];
+//  //  TH1D* H1 = new TH1D("h1","h1",990,0.,990.);
+//  for(UShort_t s=0;s<iMax;s++){
+//    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[fCh]*0+3800)/4096*1000.;
+//  }
+//  H1->SetContent(AbsSamRec);
+//  Double_t VMax = H1->GetMaximum();
+//  if(VMax>fAmpThresholdHigh){
+//    TSpectrum *s = new TSpectrum(npeaks);
+//    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
+//    Int_t nfound = s->Search(H1,2.,"",peak_thr);
+//    
+//    Double_t *xpeaks = s->GetPositionX();
+//    Double_t *ypeaks = s->GetPositionY();
+//    //    Float_t *xpeaks = s->GetPositionX();
+//    //    Float_t *ypeaks = s->GetPositionY();
+//    //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+//    for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
+//      Float_t xp   = (Double_t) xpeaks[ll];
+//    }
+//    H1->Reset();
+//  }
   return fTime=fTime*fTimeBin;
 }
 
@@ -210,13 +210,17 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     TSpectrum *s = new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
     Int_t nfound = s->Search(H1,NIntSamp,"",peak_thr);    //corrected for 2.5GHz cannot be less then 0.05 
-    //Double_t *xpeaks = s->GetPositionX();
-    //Double_t *ypeaks = s->GetPositionY();
+    // ROOT 6 version
+    //    Double_t *xpeaks = s->GetPositionX();
+    //    Double_t *ypeaks = s->GetPositionY();
+    // ROOT 5 version
     Float_t *xpeaks = s->GetPositionX();
     Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
+//      Double_t xp   = xpeaks[ll];
+//      Double_t yp   = ypeaks[ll];
       Float_t xp   = xpeaks[ll];
       Float_t yp   = ypeaks[ll];
       fTime = xp*fTimeBin; //convert time in ns get it from data
@@ -225,7 +229,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
 	  if(H1->GetBinContent(ii)>0.001) fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;  //charge in pC
 	}
-	//	std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
+	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
       fEnergy = fCharge/pCMeV;	  
       TRecoVHit *Hit = new TRecoVHit();  

@@ -192,7 +192,7 @@ Bool_t PadmeReconstruction::NextEvent()
 {
 
   // Check if there is a new event to process
-  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
+  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
     std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
@@ -222,7 +222,7 @@ Bool_t PadmeReconstruction::NextEvent()
 
   }
 
-  if (fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) &&  fNProcessedEventsInTotal < fNEvt) {
+  if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
     // std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     // std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()

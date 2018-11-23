@@ -35,7 +35,7 @@ void TargetReconstruction::HistoInit(){
   hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
 
   // histos to be saved 
-  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  200,    0, 20000           ));
+  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  300,   0., 30000.          ));
   AddHisto("TargetProfileX"        , new TH1F("TargetProfileX"         ,"Target profile X"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileY"        , new TH1F("TargetProfileY"         ,"Target profile Y"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileLastX"    , new TH1F("TargetProfileLastX"     ,"Target last profile X"    ,   16, -7.5, 8.5             ));

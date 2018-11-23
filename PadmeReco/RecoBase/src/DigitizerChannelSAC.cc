@@ -309,9 +309,9 @@ void DigitizerChannelSAC::Reconstruct(std::vector<TRecoVHit *> &hitArray){
     SetAbsSignals();
   }
 
-  CalcMaximum();
-  CalcPedestal();
-  if(fPed - fMax < fMinAmplitude ) return;
+  //  CalcMaximum();
+  //  CalcPedestal();
+  // if(fPed - fMax < fMinAmplitude ) return;
 
   if(fMultihit) {
     ReconstructMultiHit(hitArray);

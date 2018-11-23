@@ -479,6 +479,17 @@ class PadmeCDRServer:
     def copy_file_cnaf_kloe(self,rawfile):
         print "Copying file %s from CNAF to KLOE: NOT!"%rawfile
 
+    def get_kloe_used_space(self):
+        used = 100
+        cmd = "%s \'( df | grep \/pdm | awk \"{print \$4}\" )\'"%self.kloe_ssh
+        for line in self.run_command(cmd):
+            try:
+                used = int(line.rstrip()[:-1])
+            except:
+                print "- WARNING - Could not extract used disk space from KLOE server"
+                used = 100
+        return used
+
     def now_str(self):
         return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
 
@@ -557,6 +568,9 @@ class PadmeCDRServer:
                     elif (self.destination_site == "KLOE"):
                         # LNF -> KLOE
                         if ( (rawfile in self.lnf_list) and not (rawfile in self.kloe_list) ):
+                            if self.get_kloe_used_space() > 95:
+                                print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
+                                break
                             if self.copy_file_lnf_kloe(rawfile) == "ok":
                                 print "- File %s - Copy from LNF to KLOE successful"%rawfile
                             self.check_stop_cdr()

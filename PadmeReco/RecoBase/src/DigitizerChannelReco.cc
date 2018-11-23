@@ -42,7 +42,7 @@ void DigitizerChannelReco::SetAbsSignals(){
     }
   }
 }
-
+ 
 Short_t DigitizerChannelReco::CalcMaximum() {
 
   fMax = 32767; // 2^15 - 1
@@ -86,7 +86,8 @@ Double_t DigitizerChannelReco::CalcPedestal() {
 Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
   Double_t rms1000  = TMath::RMS(NAvg,&fSamples[0]);
   Double_t ZSupHit=-1;
-  if(rms1000>Thr){
+  //  if(rms1000>Thr){
+  if(rms1000>4.){
     ZSupHit=0;
   }else{
     ZSupHit=1;
@@ -99,7 +100,11 @@ Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
   
   Short_t begin = iMax-fPreSamples > 0? iMax-fPreSamples:0;
   Short_t end = iMax+fPostSamples < fNSamples? iMax+fPostSamples:fNSamples;
-  
+ 
+  // M. Raggi for testing
+  begin = 180;
+  end =  1000;
+
   //  std::cout << "Begin: "<< begin << "  end: " << end << std::endl;
   fCharge=0.;
   for(Short_t i = begin;i<end;++i) {
@@ -110,7 +115,7 @@ Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
   // std::cout << "Pedestal: " << fPed << "  from: " << fNPedSamples << " samples"<< std::endl;
   // std::cout << "Maximum: " << fMax << "  at position: "<< fIMax << std::endl;
 
-  fCharge = ((1.*end-1.*begin) * fPed) - fCharge;
+  fCharge = ((1.*end-1.*begin) * fPed) - fCharge;  //subtract events pedestral
   fCharge *= (fVoltageBin*fTimeBin/fImpedance);
   return fCharge;
 }
@@ -137,8 +142,6 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 
   float max = ( fPed - fMax);
 
-  
-
   Short_t begin = fIMax - fPreSamples > 0? fIMax - fPreSamples:0;
   for(Short_t i = begin ;i < fIMax;i++) {
     val1 = fPed - fSamples[i];
@@ -161,16 +164,10 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
       t4 = 1.*i + (fAmpThresholdHigh - val1)/(val2 - val1);
       t4_ok = 1;
     }
-
-
-
   }
   
   //  fTime = (t1 + t2)/2.;
   fTime = t3 - (t4-t3)*fAmpThresholdLow/(fAmpThresholdHigh - fAmpThresholdLow);
-
-  
-
   return fTime = fTime*fTimeBin;
 }
 
@@ -178,12 +175,15 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  if (fCharge < .3) return;
+  if (fCharge < .01) return;
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(fTime);
-  Hit->SetEnergy(fCharge);
+  // M. Raggi going to charge
+  Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
+  //  Hit->SetEnergy(fCharge);
+  Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
 
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
@@ -203,7 +203,7 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
 
   CalcMaximum();
   CalcPedestal();
-  if(fPed - fMax < fMinAmplitude ) return;
+  if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
 
   if(fMultihit) {
     ReconstructMultiHit(hitArray);

@@ -19,15 +19,16 @@
 
 
 Int_t SACReconstruction::FindSeed(Int_t nele, Int_t * Used, Double_t* Ene) {
-  //  std::cout<<"N hits "<<nele<<std::endl;
+  
   Int_t iMax=-1;
   Double_t fMax=0;
   for(UShort_t i = 0;i<nele;i++){
-    if (fMax < Ene[i] && Used[i]==0 && Ene[i]>20.) {
+    if (fMax < Ene[i] && Used[i]==0 && Ene[i]>20.) { //ene
       fMax = Ene[i];
       iMax = i;
     }
   }
+  if(iMax>1024) std::cout<<"N hits "<<nele<<" "<<iMax<<" ene "<<fMax<<std::endl;
   return iMax;
 }
 
@@ -39,8 +40,9 @@ Int_t SACReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
 
   Int_t CellRow=cellID/10;
   Int_t CellCol=cellID%10;
-
-  if( abs(SeedRow-CellRow)==1 && abs(SeedCol-CellCol)==1) IsNeig=1;
+  //excludes the seed cell 
+  if( abs(SeedRow-CellRow)<=1 && abs(SeedCol-CellCol)<=1) IsNeig=1;
+  //  std::cout<<"seedID "<<seedID<<" cellID "<<cellID<<" Is Neig "<<IsNeig<<std::endl;
   return IsNeig;
 }
 
@@ -81,6 +83,8 @@ void SACReconstruction::HistoInit(){
 
   AddHisto("SACClSeed",new TH1F("SACClSeed","SACClSeed",50,0,50));
   AddHisto("SACClSeedEn",new TH1F("SACClSeedEn","SACClSeedEn",550,0,550));
+
+  AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
 
   //Waveform histograms
   for(int iCh=0; iCh<25 ; iCh++){
@@ -199,19 +203,20 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   Double_t cEnergy[Hits.size()]={0.};
   Int_t cChID[Hits.size()]={0};
   Int_t cUsed[Hits.size()]={0};
-
+  Int_t cCellUsed[50]={0};
+  for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-    cUsed[iHit1]={0};
-    cTime[iHit1]  =Hits[iHit1]->GetTime();;
-    cEnergy[iHit1]=Hits[iHit1]->GetEnergy();;
-    cChID[iHit1]  =Hits[iHit1]->GetChannelId();
+    cUsed[iHit1]  = {0};
+    cTime[iHit1]  = Hits[iHit1]->GetTime();;
+    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
+    cChID[iHit1]  = Hits[iHit1]->GetChannelId();
   }  
 
   Int_t iMax=0;
   Int_t HitUsed=0;
+  Double_t LastCell;
   while(iMax>-1){
-
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
     NCry=0;
@@ -227,24 +232,24 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
     ClE.push_back(0.);
     ClTime.push_back(0.); //use seed time for the moment
     ClSeed.push_back(iMax);
-//    ClX.push_back(4.5-cChID[iMax]/10);  //carbon copy of the occupancy
-//    ClY.push_back(0.5+cChID[iMax]%10);  //carbon copy of the occupancy
-    
+     
     ClX.push_back(0.);  //carbon copy of the occupancy
     ClY.push_back(0.);  //carbon copy of the occupancy
 
     // we may want to use the space coordinates in this loop.
     for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-      if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1]==1)){
+      if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
+	//	std::cout<<"is neig "<<pippo<<std::endl;
 	Double_t XCl=(60.-cChID[iHit1]/10*30.);
 	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	cUsed[iHit1]=1;
 	ClTime[NSeeds]+=cTime[iHit1];
 	ClE[NSeeds]+=cEnergy[iHit1];
-	ClX[NSeeds]+=XCl;
-	ClY[NSeeds]+=YCl;
+	ClX[NSeeds]+=XCl*cEnergy[iHit1];
+	ClY[NSeeds]+=YCl*cEnergy[iHit1];
 	NCry++;
 	HitUsed++;
+	cCellUsed[cChID[iHit1]]=1;
       }
     }
     ClNCry.push_back(NCry);
@@ -253,8 +258,8 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
     ClX[NSeeds]=ClX[NSeeds]/ClE[NSeeds];
     ClY[NSeeds]=ClY[NSeeds]/ClE[NSeeds];
     GetHisto("SACClTDiff")->Fill(ClTime[NSeeds]-SdTime[NSeeds]);
+    if(ClNCry[NSeeds]>9) std::cout<<NSeeds<<" Ncry >9 "<<NCry<<" Clseed "<<ClSeed[NSeeds]<<" ClE "<<ClE[NSeeds]<<std::endl;
     NSeeds++;
-    if(ClNCry[NSeeds]>9) std::cout<<"Ncry "<<NCry<<" Clseed "<<ClSeed[NSeeds]<<" ClE "<<ClE[NSeeds]<<std::endl;
     if(NCry>1 || ClE[NSeeds]>10.) NGoodClus++;
   }  //end of while loop on seeds
   
@@ -265,83 +270,6 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
       GetHisto("SACDropHitE")->Fill(cEnergy[iHit1]);
     }
   }
-  //  std::cout<<"Ci sono No hits !!!!"<<Hits.size()<<" NClusters "<<NSeeds<<" using "<<HitUsed<<" fraction "<<(Double_t)HitUsed/(Double_t)Hits.size()<<std::endl;
-  
-  //	//if another cell is not in time create a new seed
-  //      }else if(fabs(Time-SdTime[iseed])>2.){
-  //	SdTime.push_back(Time);    
-//	SdEn.push_back(Energy);    
-//	SdCell.push_back(NCh);    
-//	NSeeds++;
-//	//for each seed create a cluster
-//	TTotSAC.push_back(0.);
-//	ClE.push_back(0.);
-//	ClSeed.push_back(iMax);
-//	QTotSAC.push_back(0.);
-//	ClTime.push_back(0.);
-//	ClX.push_back(0.);
-//	ClY.push_back(0.);
-//	ClNCry.push_back(0.);
-//	break;
-//      } 
-//    }
-//  } //end of seeds selection
-   
-
-
-//  for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-//    int Used=0;
-//    int ChPos = Hits[iHit1]->GetChannelId();
-//    int NCh   = ChPos/10*NRows+ChPos%NCols;
-//    Time=Hits[iHit1]->GetTime();
-//    double Energy=Hits[iHit1]->GetEnergy();
-//    
-//    // loop to create clusters out of seeds 
-//    for(int iCl=0; iCl<NSeeds; iCl++){
-//      if(iCl>NMaxCl) break;
-//      //	G4cout<<h<<" SAC Ic Begin of event "<<ClTime[iCl]<<" CH "<<NCh<<" icl "<<iCl<<" Nclus "<<NClus<<G4endl;
-//      if(fabs(Time-SdTime[iCl])<2. && ChPos!=SdCell[iCl]) { //selects in time hits not in the same cel
-//	ETotSACCh[NCh][iCl] += Energy;             //sum single crystals energies
-//	TTotSACCh[NCh][iCl] = Time;        //sum single crystals times
-
-//	Used=1;
-//	break;  //hit assigned exit cluster loop
-//      }
-//      if(fabs(Time-SdTime[iCl])<1. && ChPos==SdCell[iCl]){  //add missing seed cell energy
-//	ETotSACCh[NCh][iCl] += Energy;             //sum single crystals energies
-//	TTotSACCh[NCh][iCl] += Time;               //sum single crystals times
-//      }
-//    }//end loop on cluster
-//  }//end of hits loop
-//
-// // Compute cluster variables 
-//  for(int cc=0;cc<NSeeds;cc++){
-//    NCry=0;
-//    ClX[cc]    = +6-( ((int)SdCell[cc])%5 )*3.;
-//    ClY[cc]    = -6+( ((int)SdCell[cc])/5 )*3.;
-//    if(SdCell[cc]==0) std::cout<<"CLX "<<ClX[cc]<<" CLY "<<ClY[cc]<<" "<<SdCell[cc]<<std::endl;
-//    for(int ii=0;ii<NTotCh;ii++){
-//      if(ETotSACCh[ii][cc]>2.){
-//	//	ClX[cc]  += +6-(ii%5)*3.*ETotSACCh[ii][cc];    //assume cl0 has x=+6
-//	//	ClY[cc]  += -6+(ii/NRows)*3.*ETotSACCh[ii][cc];
-//
-//	//    GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
-//	//  GetHisto("SACOccupancy_last") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
-//
-//
-//	TTotSAC[cc]+=TTotSACCh[ii][cc]*ETotSACCh[ii][cc];  // find the right algorithm
-//	ClE[cc]    +=ETotSACCh[ii][cc];
-//	EvTotE     +=ETotSACCh[ii][cc];
-//	NCry++;
-//      } 
-//    }
-//    ClNCry[cc] =NCry;
-//    //    ClX[cc]   /=ClE[cc];
-//    //    ClY[cc]   /=ClE[cc];
-//    //    ClTime[cc]/=ClE[cc];
-//    ClTime[cc]=SdTime[cc];
-  
-  //    std::cout<<cc<<" Ci sono N Crystalli "<<NCry<<" N good "<<NGoodClus<<" Etot "<<ETotSAC[cc]<<" "<<TTotSAC[cc]/ETotSAC[cc]<<std::endl;
   return NGoodClus;
 }
 

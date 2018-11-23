@@ -52,15 +52,23 @@ class PadmeCDRServer:
         # Path to stop_cdr file: when file appears, server will remove it and gently exit
         self.stop_cdr_file = "%s/run/stop_cdr_%s"%(self.cdr_dir,self.server_id)
 
+        # User running CDR
         self.cdr_user = os.environ['USER']
 
+        # Path of current year rawdata wrt top daq directory
         self.year = time.strftime("%Y",time.gmtime())
-
         self.data_dir = "%s/rawdata"%self.year
+
+        # Define minimum duration for an iteration (4 hours = 14400 seconds)
+        self.iteration_minimum_duration = 14400
+
+        ############################
+        ### DAQ data server data ###
+        ############################
 
         # Access information for DAQ data server
         self.daq_user = "daq"
-        self.daq_keyfile = "id_rsa_cdr"
+        self.daq_keyfile = "/home/%s/.ssh/id_rsa_cdr"%self.cdr_user
 
         # Path to top daq data directory on DAQ data server
         self.daq_path = "/data/DAQ"
@@ -72,7 +80,32 @@ class PadmeCDRServer:
         self.daq_sftp = "sftp://%s%s"%(self.daq_server,self.daq_path)
 
         # SSH syntax to execute a command on the DAQ data server
-        self.daq_ssh = "ssh -i /home/%s/.ssh/%s -l %s %s"%(self.cdr_user,self.daq_keyfile,self.daq_user,self.daq_server)
+        self.daq_ssh = "ssh -i %s -l %s %s"%(self.daq_keyfile,self.daq_user,self.daq_server)
+
+        ##############################
+        ### KLOE tape library data ###
+        ##############################
+
+        # Access information for KLOE front end
+        self.kloe_server = "fibm15"
+        self.kloe_user = "pdm"
+        self.kloe_keyfile = "/home/%s/.ssh/id_rsa_cdr"%self.cdr_user
+
+        # Path to top daq data directory on KLOE front end
+        self.kloe_path = "/pdm/padme/daq"
+
+        # Path to adler32 command on KLOE front end
+        self.kloe_adler32_cmd = "/pdm/bin/adler32"
+
+        # SFTP URL for rawdata on KLOE front end
+        self.kloe_sftp = "sftp://%s%s"%(self.kloe_server,self.kloe_path)
+
+        # SSH syntax to execute a command on KLOE front end
+        self.kloe_ssh = "ssh -i %s -l %s %s"%(self.kloe_keyfile,self.kloe_user,self.kloe_server)
+
+        ###################################
+        ### LNF and CNAF SRM sites data ###
+        ###################################
 
         # SRM addresses for PADME DAQ data at LNF and at CNAF
         self.lnf_srm = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org/daq"
@@ -136,39 +169,50 @@ class PadmeCDRServer:
 
         # Check if current proxy is still valid and renew it if less than 2 hours before it expires
         for line in self.run_command("voms-proxy-info"):
-            print(line.rstrip())
+            #print(line.rstrip())
             r = re.match("^timeleft  \: (\d+)\:.*$",line)
             if r and int(r.group(1))>=2: renew = False
 
         if renew:
             print "- Proxy is missing or will expire in less than 2 hours. Renewing it"
-            for line in self.run_command("voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org --valid 24:00"%(self.long_proxy_file,self.long_proxy_file)):
-                print(line.rstrip())
+            cmd = "voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org --valid 24:00"%(self.long_proxy_file,self.long_proxy_file)
+            for line in self.run_command(cmd): print(line.rstrip())
                 # Need code to handle proxy creation errors (e.g. when long-lived proxy expired)
                 # In this case we should issue some message and exit the program
 
     def get_file_list_daq(self):
         self.daq_list = []
         print "Getting list of raw data files for year %s on DAQ server %s"%(self.year,self.daq_server)
-        for line in self.run_command("%s \'( cd %s/%s; find -type f -name \*.root | sed -e s+\./++ )\'"%(self.daq_ssh,self.daq_path,self.data_dir)):
+        cmd = "%s \'( cd %s/%s; find -type f -name \*.root | sed -e s+\./++ )\'"%(self.daq_ssh,self.daq_path,self.data_dir)
+        for line in self.run_command(cmd):
             self.daq_list.append(line.rstrip())
         return "ok"
 
+    def get_file_list_kloe(self):
+
+        # Compile regexp to extract file name (improves performance)
+        re_get_rawdata_file = re.compile("^.* %s/%s/(.*\.root) .*$"%(self.kloe_path,self.data_dir))
+
+        self.kloe_list = []
+        print "Getting list of raw data files for year %s on KLOE tape library"%self.year
+
+        # First we get list of files currently on disk buffer
+        cmd = "%s \'( cd %s/%s; find . -type f -name \*.root | sed -e s+\./++ )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir)
+        for line in self.run_command(cmd):
+            self.kloe_list.append(line.rstrip())
+
+        # Second we get list of files already stored on the tape library
+        cmd = "%s \'( dsmc query archive -subdir=yes %s/%s/\*.root )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir)
+        for line in self.run_command(cmd):
+            m = re_get_rawdata_file.match(line)
+            if (m): self.kloe_list.append(m.group(1))
+
+        # Remove duplicates and sort
+        self.kloe_list = sorted(set(self.kloe_list))
+
+        return "ok"
+
     def get_file_list_lnf(self):
-        #self.renew_voms_proxy()
-        #self.lnf_list = []
-        #print "Getting list of raw data files for year %s on LNF disks"%self.year
-        #for line in self.run_command("gfal-ls %s/%s"%(self.lnf_srm,self.data_dir)):
-        #    if re.match("^gfal-ls error: ",line):
-        #        print "***ERROR*** gfal-ls returned error status while retrieving run list from LNF"
-        #        return "error"
-        #    self.check_stop_cdr()
-        #    run_dir = line.rstrip()
-        #    for line2 in self.run_command("gfal-ls %s/%s/%s"%(self.lnf_srm,self.data_dir,run_dir)):
-        #        if re.match("^gfal-ls error: ",line):
-        #            print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from LNF"%run_dir
-        #            return "error"
-        #        self.lnf_list.append("%s/%s"%(run_dir,line2.rstrip()))
         self.renew_voms_proxy()
         print "Getting list of raw data files for year %s on LNF disks"%self.year
         self.lnf_list = []
@@ -192,20 +236,6 @@ class PadmeCDRServer:
         return "ok"
 
     def get_file_list_cnaf(self):
-        #self.renew_voms_proxy()
-        #self.cnaf_list = []
-        #print "Getting list of raw data files for year %s on CNAF tape library"%self.year
-        #for line in self.run_command("gfal-ls %s/%s"%(self.cnaf_srm,self.data_dir)):
-        #    if re.match("^gfal-ls error: ",line):
-        #        print "***ERROR*** gfal-ls returned error status while retrieving run list from CNAF"
-        #        return "error"
-        #    self.check_stop_cdr()
-        #    run_dir = line.rstrip()
-        #    for line2 in self.run_command("gfal-ls %s/%s/%s"%(self.cnaf_srm,self.data_dir,run_dir)):
-        #        if re.match("^gfal-ls error: ",line):
-        #            print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from CNAF"%run_dir
-        #            return "error"
-        #        self.cnaf_list.append("%s/%s"%(run_dir,line2.rstrip()))
         self.renew_voms_proxy()
         print "Getting list of raw data files for year %s on CNAF tape library"%self.year
         self.cnaf_list = []
@@ -227,6 +257,50 @@ class PadmeCDRServer:
                 self.cnaf_list.append("%s/%s"%(run_dir,line.rstrip()))
 
         return "ok"
+
+    def get_checksum_cnaf(self,rawfile):
+        a32 = ""
+        cmd = "gfal-sum %s/%s/%s adler32"%(self.cnaf_srm,self.data_dir,rawfile);
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            try:
+                (fdummy,a32) = line.rstrip().split()
+            except:
+                a32 = ""
+        return a32
+
+    def get_checksum_lnf(self,rawfile):
+        a32 = ""
+        cmd = "gfal-sum %s/%s/%s adler32"%(self.lnf_srm,self.data_dir,rawfile);
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            try:
+                (fdummy,a32) = line.rstrip().split()
+            except:
+                a32 = ""
+        return a32
+
+    def get_checksum_daq(self,rawfile):
+        a32 = ""
+        cmd = "%s %s %s/%s/%s"%(self.daq_ssh,self.daq_adler32_cmd,self.daq_path,self.data_dir,rawfile)
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            try:
+                (a32,fdummy) = line.rstrip().split()
+            except:
+                a32 = ""
+        return a32
+
+    def get_checksum_kloe(self,rawfile):
+        a32 = ""
+        cmd = "%s %s %s/%s/%s"%(self.kloe_ssh,self.kloe_adler32_cmd,self.kloe_path,self.data_dir,rawfile)
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            try:
+                (a32,fdummy) = line.rstrip().split()
+            except:
+                a32 = ""
+        return a32
 
     def run_command(self,command):
         print "> %s"%command
@@ -252,40 +326,31 @@ class PadmeCDRServer:
 
         copy_failed = False
         print "- File %s - Starting copy from DAQ to LNF"%rawfile
-        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.cdr_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.lnf_srm,self.data_dir,rawfile);
+        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.lnf_srm,self.data_dir,rawfile);
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line):
-                print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to LNF"%rawfile
-                with open(self.transfer_error_list_file,"a") as telf:
-                    telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-                copy_failed = True
-        if copy_failed: return "error"
+            if re.match("^gfal-copy error: ",line): copy_failed = True
 
+        if copy_failed:
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to LNF"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            cmd = "gfal-rm %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
+            return "error"
+
+        # Verify checksum at source and destination
         print "- File %s - Getting ADLER32 checksum at source"%rawfile
-        cmd = "%s %s %s/%s/%s"%(self.daq_ssh,self.daq_adler32_cmd,self.daq_path,self.data_dir,rawfile)
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            try:
-                (a32_src,fdummy) = line.rstrip().split()
-            except:
-                a32_src = ""
-
+        a32_src = self.get_checksum_daq(rawfile)
         print "- File %s - Getting ADLER32 checksum at destination"%rawfile
-        cmd = "gfal-sum %s/%s/%s adler32"%(self.lnf_srm,self.data_dir,rawfile);
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            try:
-                (fdummy,a32_dst) = line.rstrip().split()
-            except:
-                a32_dst = ""
-
+        a32_dst = self.get_checksum_lnf(rawfile)
         print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
-
         if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
             print "- File %s - ***ERROR*** unmatched checksum while copying from DAQ to LNF"%rawfile
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
+            cmd = "gfal-rm %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
             return "error"
 
         return "ok"
@@ -296,19 +361,82 @@ class PadmeCDRServer:
 
         copy_failed = False
         print "- File %s - Starting copy from LNF to CNAF"%rawfile
-        cmd = "gfal-copy -p -t 3600 -T 3600 --checksum ADLER32 %s/%s/%s %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
+        cmd = "gfal-copy -t 3600 -T 3600 -p --checksum ADLER32 %s/%s/%s %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line):
-                print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to CNAF"%rawfile
-                with open(self.transfer_error_list_file,"a") as telf:
-                    telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-                copy_failed = True
+            if re.match("^gfal-copy error: ",line): copy_failed = True
 
-        if copy_failed: return "error"
+        if copy_failed:
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to CNAF"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
+            return "error"
 
         return "ok"
 
+    def copy_file_lnf_kloe(self,rawfile):
+
+        self.renew_voms_proxy()
+
+        tmp_file = "/tmp/%s"%rawfile
+
+        copy_failed = False
+
+        # As in gfal-copy SFTP destination is not working, first create a temporary local copy of the file
+        print "- File %s - Starting copy from LNF to KLOE"%rawfile
+        #cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.kloe_user,self.kloe_keyfile,self.lnf_srm,self.data_dir,rawfile,self.kloe_sftp,self.data_dir,rawfile);
+        cmd = "gfal-copy -t 3600 -T 3600 -p %s/%s/%s file://%s"%(self.lnf_srm,self.data_dir,rawfile,tmp_file);
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            if re.match("^gfal-copy error: ",line):
+                copy_failed = True
+
+        if copy_failed:
+            #print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to KLOE"%rawfile
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to local file"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            return "error"
+
+        # Make sure destination directory exists on KLOE server
+        m = re.match("(.*)/.*\.root",rawfile)
+        if (m):
+            rawdir = m.group(1)
+        else:
+            print "- File %s - ***ERROR*** cannot extract directory from file name"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            return "error"
+        cmd = "%s \'( mkdir -p %s/%s/%s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawdir)
+        for line in self.run_command(cmd): print line.rstrip()
+
+        # Now send local copy to KLOE using good old scp
+        cmd = "scp -i %s %s %s@%s:%s/%s/%s"%(self.kloe_keyfile,tmp_file,self.kloe_user,self.kloe_server,self.kloe_path,self.data_dir,rawfile);
+        for line in self.run_command(cmd): print line.rstrip()
+        # Probably need to add some scp error check
+
+        # Clean up local temporary file
+        for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+
+        # Verify if the copy was correctly completed
+        print "- File %s - Getting ADLER32 checksum at source"%rawfile
+        a32_src = self.get_checksum_lnf(rawfile)
+        print "- File %s - Getting ADLER32 checksum at destination"%rawfile
+        a32_dst = self.get_checksum_kloe(rawfile)
+        print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
+        if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
+            print "- File %s - ***ERROR*** unmatched checksum while copying from LNF to KLOE"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
+            cmd = "%s \'( cd %s/%s; rm -f %s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawfile);
+            for line in self.run_command(cmd): print line.rstrip()
+            return "error"
+
+        return "ok"
 
     def copy_file_daq_cnaf(self,rawfile):
 
@@ -316,52 +444,40 @@ class PadmeCDRServer:
 
         copy_failed = False
         print "- File %s - Starting copy from DAQ to CNAF"%rawfile
-        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=/home/%s/.ssh/%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.cdr_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
+        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line):
-                print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to CNAF"%rawfile
-                with open(self.transfer_error_list_file,"a") as telf:
-                    telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-                copy_failed = True
-        if copy_failed: return "error"
+            if re.match("^gfal-copy error: ",line): copy_failed = True
+
+        if copy_failed:
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to CNAF"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
+            return "error"
 
         print "- File %s - Getting ADLER32 checksum at source"%rawfile
-        cmd = "%s %s %s/%s/%s"%(self.daq_ssh,self.daq_adler32_cmd,self.daq_path,self.data_dir,rawfile)
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            try:
-                (a32_src,fdummy) = line.rstrip().split()
-            except:
-                a32_src = ""
-
+        a32_src = get_checksum_daq(rawfile)
         print "- File %s - Getting ADLER32 checksum at destination"%rawfile
+        a32_dst = get_checksum_cnaf(rawfile)
         cmd = "gfal-sum %s/%s/%s adler32"%(self.cnaf_srm,self.data_dir,rawfile);
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            try:
-                (fdummy,a32_dst) = line.rstrip().split()
-            except:
-                a32_dst = ""
-
         print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
-
         if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
             print "- File %s - ***ERROR*** unmatched checksum while copying from DAQ to CNAF"%rawfile
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
+            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
             return "error"
 
         return "ok"
 
     def copy_file_cnaf_lnf(self,rawfile):
-        print "Copying file %s from CNAF to LNF"%rawfile
-
-    def copy_file_lnf_kloe(self,rawfile):
-        print "Copying file %s from LNF to KLOE"%rawfile
+        print "Copying file %s from CNAF to LNF: NOT!"%rawfile
 
     def copy_file_cnaf_kloe(self,rawfile):
-        print "Copying file %s from CNAF to KLOE"%rawfile
+        print "Copying file %s from CNAF to KLOE: NOT!"%rawfile
 
     def now_str(self):
         return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
@@ -404,6 +520,12 @@ class PadmeCDRServer:
                     sys.exit(2)
                 full_list.extend(self.cnaf_list)
 
+            if (self.source_site == "KLOE" or self.destination_site == "KLOE"):
+                if self.get_file_list_kloe() == "error":
+                    print "WARNING - KLOE site has problems: aborting"
+                    sys.exit(2)
+                full_list.extend(self.kloe_list)
+
             # Remove duplicates and sort final list
             print "- Removing duplicates and sorting merged list"
             full_list = sorted(set(full_list))
@@ -432,6 +554,12 @@ class PadmeCDRServer:
                             if self.copy_file_lnf_cnaf(rawfile) == "ok":
                                 print "- File %s - Copy from LNF to CNAF successful"%rawfile
                             self.check_stop_cdr()
+                    elif (self.destination_site == "KLOE"):
+                        # LNF -> KLOE
+                        if ( (rawfile in self.lnf_list) and not (rawfile in self.kloe_list) ):
+                            if self.copy_file_lnf_kloe(rawfile) == "ok":
+                                print "- File %s - Copy from LNF to KLOE successful"%rawfile
+                            self.check_stop_cdr()
 
             end_iteration_time = time.time()
 
@@ -439,12 +567,12 @@ class PadmeCDRServer:
             print "=== PadmeCDRServer iteration finished ==="
             print ""
 
-            # Check if current iteration lasted at least a couple hours
-            # If not, pause for 1 hour to avoid stress on grid data servers
-            if (end_iteration_time-start_iteration_time < 7200):
-
-                # Sleep 1 hour but check for request to exit every 10 secs
-                print "- Iteration lasted less than 2 hours: sleeping for 1 hour"
-                for _ in range(360):
+            # Check if current iteration lasted a minimum time (currently 4 hours)
+            # If not, pause the remaining time to avoid stress on grid data servers
+            iteration_duration = end_iteration_time-start_iteration_time
+            if (iteration_duration < self.iteration_minimum_duration):
+                iteration_pause = self.iteration_minimum_duration-iteration_duration
+                print "- Iteration lasted %ds < %ds - Sleeping %ds"%(iteration_duration,self.iteration_minimum_duration,iteration_pause)
+                for _ in range(int(iteration_pause/10)):
                     self.check_stop_cdr()
                     time.sleep(10)

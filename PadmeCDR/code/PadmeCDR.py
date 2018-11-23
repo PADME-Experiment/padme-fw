@@ -8,11 +8,19 @@ import subprocess
 
 from PadmeCDRServer import PadmeCDRServer
 
+# Define list of available data servers
+data_servers_list = [ "l1padme3", "l1padme4" ]
+
+# Define lists of source and destination sites
+source_sites_list = [ "DAQ", "LNF", "CNAF" ]
+destination_sites_list = [ "LNF", "CNAF", "KLOE" ]
+
 def print_help():
     print 'PadmeCDR -S src_site -D dst_site [-s data_srv] [-i] [-h]'
-    print '  -S src_site     Source site [DAQ, LNF, CNAF]'
-    print '  -D dst_site     Destination site [LNF, CNAF]'
-    print '  -s data_srv     Data server from which data are copied. Only used when -S is DAQ'
+    print '  -S src_site     Source site %s'%source_sites_list
+    print '  -D dst_site     Destination site %s'%destination_sites_list
+    print '  -s data_srv     Data server from which data are copied %s'%data_servers_list
+    print '                  N.B. -s is only used when -S is DAQ'
     print '  -i              Run the PadmeCDR server in interactive mode'
     print '  -h              Show this help message and exit'
 
@@ -21,13 +29,6 @@ def main(argv):
     # Get position of CDR main directory from PADME_CDR_DIR environment variable
     # Default to current dir if not set
     cdr_dir = os.getenv('PADME_CDR_DIR',".")
-
-    # Define list of available data servers
-    data_servers_list = [ "l1padme3", "l1padme4" ]
-
-    # Define lists of source and destination sites
-    source_sites_list = [ "DAQ", "LNF", "CNAF" ]
-    destination_sites_list = [ "LNF", "CNAF" ]
 
     try:
         opts,args = getopt.getopt(argv,"iS:D:s:h")

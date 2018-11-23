@@ -17,7 +17,14 @@ TRecoVObject::TRecoVObject(TClass* hCls) {
 
 
 void TRecoVObject::Print(Option_t *) const {
-  ;
+  TRecoVHit* hit = NULL;
+  for (Int_t ih=0; ih<fNHits; ++ih)
+	 { 
+	   //hit = this->Hit(ih);
+	    hit = (TRecoVHit*)fHits->At(ih);
+	    std::cout<<GetName()<<" hit id, posx, posy, posz = "<<hit->GetChannelId()<<" "<<hit->GetPosition().x()<<" "<<hit->GetPosition().y()<<" "<<hit->GetPosition().z()<<" energy "<<hit->GetEnergy()<<" time "<<hit->GetTime()<<std::endl;
+	 }
+;
 }
 TRecoVObject::~TRecoVObject(){
   if (fHits) delete fHits;

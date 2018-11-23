@@ -11,7 +11,24 @@
 
 class SACReconstruction : public PadmeVReconstruction
 {
+private:
+  //Clusters vectors
+  std::vector<double> ClE;
+  std::vector<int> ClSeed;
+  std::vector<double> ClX;
+  std::vector<double> ClY;
+  std::vector<double> ClTime;
+  std::vector<int> ClNCry;
 
+  //Seeds vectors
+  std::vector<double> SdEn;
+  std::vector<double> SdTime;
+  std::vector<double> SdCell;
+
+  std::vector<double> TTotSAC;
+  std::vector<double> QTotSAC;
+  double EvTotE;
+ 
 public:
   
   SACReconstruction(TFile*, TString);
@@ -23,6 +40,8 @@ public:
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
-  
+  int SACBuildClusters(TRawEvent* evt);
+  Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
+  Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
 };
 #endif

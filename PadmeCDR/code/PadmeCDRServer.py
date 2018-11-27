@@ -517,13 +517,13 @@ class PadmeCDRServer:
 
             if (self.source_site == "DAQ"):
                 if self.get_file_list_daq() == "error":
-                    print "ERROR - DAQ server has problems: suspending iteration"%self.daq_server
+                    print "WARNING - DAQ server %s has problems: suspending iteration"%self.daq_server
                     all_sites_ok = False
                 full_list.extend(self.daq_list)
 
             if (self.source_site == "LNF" or self.destination_site == "LNF"):
                 if self.get_file_list_lnf() == "error":
-                    print "ERROR - LNF site has problems: suspending iteration"
+                    print "WARNING - LNF site has problems: suspending iteration"
                     all_sites_ok = False
                 full_list.extend(self.lnf_list)
 

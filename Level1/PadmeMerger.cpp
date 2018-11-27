@@ -23,6 +23,11 @@
 //#define INTIME_TOLERANCE_NS 10
 #define INTIME_TOLERANCE_NS 15
 
+// Define fcntl commands to test and increase size of fifo pipes (set:1024+7, get:1024+8)
+#define F_SETPIPE_SZ 1031
+#define F_GETPIPE_SZ 1032
+#define PIPESIZE_MB  16
+
 void fmt_time(char buf[20],time_t* t)
 {
   struct tm* tgm = gmtime(t);
@@ -180,7 +185,7 @@ int main(int argc, char* argv[])
 
       } else {
 
-	// Up to 32 boards can be accepted in current setup
+	// Up to 32 ADC boards can be accepted in current setup
 	if (bid>=32) {
 	  printf("*** ERROR *** Out-of-bound board id specified in input list: %d. Aborting",bid);
 	  exit(1);
@@ -247,14 +252,17 @@ int main(int argc, char* argv[])
       // Open output stream and increase the stream buffer size
       //output_stream_handle[NOutputStreams].open(line.c_str(),std::ios::out | std::ios::binary);
       output_stream_handle[NOutputStreams] = open(line.c_str(),O_WRONLY);
-      long pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      //long pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      long pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],F_GETPIPE_SZ);
       if (pipe_size == -1) { perror("get pipe size failed."); }
       printf("Default pipe size: %ld\n", pipe_size);
 
-      int ret = fcntl(output_stream_handle[NOutputStreams],1024+7,128*1024*1024);
+      //int ret = fcntl(output_stream_handle[NOutputStreams],1024+7,128*1024*1024);
+      int ret = fcntl(output_stream_handle[NOutputStreams],F_SETPIPE_SZ,PIPESIZE_MB*1024*1024);
       if (ret < 0) { perror("set pipe size failed."); }
 
-      pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      //pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],1024+8);
+      pipe_size = (long)fcntl(output_stream_handle[NOutputStreams],F_GETPIPE_SZ);
       if (pipe_size == -1) { perror("get pipe size 2 failed."); }
       printf("Pipe size: %ld\n", pipe_size);
 

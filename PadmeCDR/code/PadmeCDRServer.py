@@ -513,67 +513,82 @@ class PadmeCDRServer:
             # Make a full list by merging lists from source and destination sites
             full_list = []
 
+            all_sites_ok = True
+
             if (self.source_site == "DAQ"):
                 if self.get_file_list_daq() == "error":
-                    print "ERROR - DAQ server has problems: aborting"%self.daq_server
-                    sys.exit(2)
+                    print "ERROR - DAQ server has problems: suspending iteration"%self.daq_server
+                    all_sites_ok = False
                 full_list.extend(self.daq_list)
 
             if (self.source_site == "LNF" or self.destination_site == "LNF"):
                 if self.get_file_list_lnf() == "error":
-                    print "ERROR - LNF site has problems: aborting"
-                    sys.exit(2)
+                    print "ERROR - LNF site has problems: suspending iteration"
+                    all_sites_ok = False
                 full_list.extend(self.lnf_list)
 
             if (self.source_site == "CNAF" or self.destination_site == "CNAF"):
                 if self.get_file_list_cnaf() == "error":
-                    print "WARNING - CNAF site has problems: aborting"
-                    sys.exit(2)
+                    print "WARNING - CNAF site has problems: suspending iteration"
+                    all_sites_ok = False
                 full_list.extend(self.cnaf_list)
 
             if (self.source_site == "KLOE" or self.destination_site == "KLOE"):
                 if self.get_file_list_kloe() == "error":
-                    print "WARNING - KLOE site has problems: aborting"
-                    sys.exit(2)
+                    print "WARNING - KLOE site has problems: suspending iteration"
+                    all_sites_ok = False
                 full_list.extend(self.kloe_list)
 
-            # Remove duplicates and sort final list
-            print "- Removing duplicates and sorting merged list"
-            full_list = sorted(set(full_list))
-            self.check_stop_cdr()
+            if all_sites_ok:
 
-            print "- Starting copy of new files"
-            for rawfile in (full_list):
+                # Remove duplicates and sort final list
+                print "- Removing duplicates and sorting merged list"
+                full_list = sorted(set(full_list))
+                self.check_stop_cdr()
 
-                if (self.source_site == "DAQ"):
-                    if (self.destination_site == "LNF"):
-                        # DAQ -> LNF
-                        if ( (rawfile in self.daq_list) and not (rawfile in self.lnf_list) ):
-                            if self.copy_file_daq_lnf(rawfile) == "ok":
-                                print "- File %s - Copy from DAQ to LNF successful"%rawfile
-                            self.check_stop_cdr()
-                    elif (self.destination_site == "CNAF"):
-                        # DAQ -> CNAF
-                        if ( (rawfile in self.daq_list) and not (rawfile in self.cnaf_list) ):
-                            if self.copy_file_daq_cnaf(rawfile) == "ok":
-                                print "- File %s - Copy from DAQ to CNAF successful"%rawfile
-                            self.check_stop_cdr()
-                elif (self.source_site == "LNF"):
-                    if (self.destination_site == "CNAF"):
-                        # LNF -> CNAF
-                        if ( (rawfile in self.lnf_list) and not (rawfile in self.cnaf_list) ):
-                            if self.copy_file_lnf_cnaf(rawfile) == "ok":
-                                print "- File %s - Copy from LNF to CNAF successful"%rawfile
-                            self.check_stop_cdr()
-                    elif (self.destination_site == "KLOE"):
-                        # LNF -> KLOE
-                        if ( (rawfile in self.lnf_list) and not (rawfile in self.kloe_list) ):
-                            if self.get_kloe_used_space() > 95:
-                                print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
-                                break
-                            if self.copy_file_lnf_kloe(rawfile) == "ok":
-                                print "- File %s - Copy from LNF to KLOE successful"%rawfile
-                            self.check_stop_cdr()
+                print "- Starting copy of new files"
+                for rawfile in (full_list):
+
+                    # Source is PADME DAQ Data Server
+                    if (self.source_site == "DAQ"):
+
+                        # Destination is LNF Tier2 Storage System
+                        if (self.destination_site == "LNF"):
+                            # DAQ -> LNF
+                            if ( (rawfile in self.daq_list) and not (rawfile in self.lnf_list) ):
+                                if self.copy_file_daq_lnf(rawfile) == "ok":
+                                    print "- File %s - Copy from DAQ to LNF successful"%rawfile
+                                self.check_stop_cdr()
+
+                        # Destination is CNAF Tape Library
+                        elif (self.destination_site == "CNAF"):
+                            # DAQ -> CNAF
+                            if ( (rawfile in self.daq_list) and not (rawfile in self.cnaf_list) ):
+                                if self.copy_file_daq_cnaf(rawfile) == "ok":
+                                    print "- File %s - Copy from DAQ to CNAF successful"%rawfile
+                                self.check_stop_cdr()
+
+                    # Source is LNF Tier2 Storage System
+                    elif (self.source_site == "LNF"):
+
+                        # Destination is CNAF Tape Library
+                        if (self.destination_site == "CNAF"):
+                            # LNF -> CNAF
+                            if ( (rawfile in self.lnf_list) and not (rawfile in self.cnaf_list) ):
+                                if self.copy_file_lnf_cnaf(rawfile) == "ok":
+                                    print "- File %s - Copy from LNF to CNAF successful"%rawfile
+                                self.check_stop_cdr()
+
+                        # Destination is KLOE Tape Library
+                        elif (self.destination_site == "KLOE"):
+                            # LNF -> KLOE
+                            if ( (rawfile in self.lnf_list) and not (rawfile in self.kloe_list) ):
+                                if self.get_kloe_used_space() > 95:
+                                    print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
+                                    break
+                                if self.copy_file_lnf_kloe(rawfile) == "ok":
+                                    print "- File %s - Copy from LNF to KLOE successful"%rawfile
+                                self.check_stop_cdr()
 
             end_iteration_time = time.time()
 

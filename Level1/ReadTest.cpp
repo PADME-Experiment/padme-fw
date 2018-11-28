@@ -149,6 +149,17 @@ int main(int argc, char* argv[])
     }
     printf(")\n");
 
+    // Show trigger information
+    TTriggerInfo* trigInfo = rawEv->TriggerInfo();
+    if (trigInfo) {
+      UInt_t trigCount = trigInfo->GetTriggerCounter();
+      ULong64_t trigTime = trigInfo->GetTriggerTime();
+      UInt_t trigMask = trigInfo->GetTriggerPattern();
+      printf("    Trigger info: time %16llu count %4u mask 0x%08x\n",trigTime,trigCount,trigMask);
+    } else {
+      printf("    Trigger info is empty\n");
+    }
+
     if (verbose>0) {
 
       // Loop over boards

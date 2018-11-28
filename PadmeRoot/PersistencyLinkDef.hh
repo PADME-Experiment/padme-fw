@@ -48,4 +48,18 @@
 #pragma link C++ class TTPixMCDigi+;
 #pragma link C++ class TTPixMCEvent+;
 
+#pragma link C++ class TRecoEvent+;
+#pragma link C++ class TRecoVObject+;
+#pragma link C++ class TRecoVHit+;
+#pragma link C++ class TPVetoRecoEvent+;
+#pragma link C++ class TEVetoRecoEvent+;
+#pragma link C++ class THEPVetoRecoEvent+;
+#pragma link C++ class TSACRecoEvent+;
+#pragma link C++ class TECalRecoEvent+;
+#pragma link C++ class TTargetRecoEvent+;
+#pragma link C++ class TTargetRecoBeam+;
+#pragma link C++ class TTargetSignalFitParams+;
+#pragma link C++ class TTargetFitEvent+;
+
+
 #endif

@@ -41,6 +41,9 @@ class Run:
         # Define directory containing setup subdirectories
         self.setup_root_dir = "%s/setup"%self.daq_dir
 
+        # Define file where the current run name will be written
+        self.current_run_file = "%s/run/current_run"%self.daq_dir
+
         # Define directory containing rawdata directories for each run
         self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
 
@@ -74,6 +77,9 @@ class Run:
  
         # Write run name to current_run file for monitoring
         with open("%s/run/current_run"%self.daq_dir,"w") as lf: lf.write("%s\n"%self.run_name)
+
+        # Write run name to current_run file for monitoring
+        with open(self.current_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 

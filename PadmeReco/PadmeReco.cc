@@ -14,6 +14,9 @@
 #include <signal.h>
 #include <fcntl.h>
 
+#include "RecoRootIOManager.hh"
+
+
 PadmeReconstruction* PadmeReco; 
                               
 void usage(char* name){
@@ -26,6 +29,8 @@ void sighandler(int sig){
     std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
     //PadmeReco->EndProcessing();
+    RecoRootIOManager::GetInstance()->EndRun();
+    RecoRootIOManager::GetInstance()->Close();
 
     std::cerr << "... Done" << std::endl;
     std::cerr << std::endl << "********************************************************************************" << std::endl;
@@ -46,7 +51,7 @@ int main(Int_t argc, char **argv)
     TString InputFileName("InputFile.root");
     TString InputListFileName("InputListFile.txt");
     TString ConfFileName("config/PadmeReconstruction.conf");
-    Int_t iFile = 0, NFiles = 100000, NEvt = 100000000;
+    Int_t iFile = 0, NFiles = 100000, NEvt = 0;
     UInt_t Seed = 4357;
     struct stat filestat;
 
@@ -94,7 +99,7 @@ int main(Int_t argc, char **argv)
     }
 
     // Sanity checks on the input
-    if (!n_options_read || NEvt<=0 || NFiles<=0) {
+    if (!n_options_read || NEvt<0 || NFiles<=0) {
       usage(argv[0]);
       return 0;
     }
@@ -126,10 +131,24 @@ int main(Int_t argc, char **argv)
         perror(Form("No Input File"));
         exit(1);
     }
-    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
+    
+    //Perform the output initialization
+    RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance();
+    RecoIO->SetFileName(OutputFileName);
+    RecoIO->NewRun(1);
 
-    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
-    while(PadmeReco->NextEvent()) {}
+    //    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
+
+    //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
+    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    RecoIO->SetReconstruction(PadmeReco);
+    while(PadmeReco->NextEvent()) {
+      RecoIO->SaveEvent();
+    }
     PadmeReco->EndProcessing();
-
+    RecoIO->EndRun();
+    RecoIO->Close();
+    
+    delete RecoIO;
+    delete PadmeReco;
 }

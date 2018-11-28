@@ -188,11 +188,11 @@ int ADCBoard::NextEvent()
 	  dT = TT_evt-TT_grp[g];
 	  if ( std::abs(dT) >= 0x0002 ) {
 	    if (fFirstEvent) { // If this happens on first event stop the run
-	      printf("*** FATAL ERROR - Board %2d - Internal time mismatch at Start of Run\n",GetBoardId());
+	      printf("*** FATAL ERROR - Board %2d - Internal time mismatch %032x %032x at Start of Run\n",GetBoardId(),TT_evt,TT_grp[g]);
 	      exit(1);
 	    } else {
 	      board_in_time = 0;
-	      printf("*** Board %2d - Internal time mismatch - Skipping event %8u\n",GetBoardId(),GetEventCounter());
+	      printf("*** Board %2d - Internal time mismatch %032x %032x - Skipping event %8u\n",GetBoardId(),TT_evt,TT_grp[g],GetEventCounter());
 	      break; // Break loop on trigger groups
 	    }
 	  }

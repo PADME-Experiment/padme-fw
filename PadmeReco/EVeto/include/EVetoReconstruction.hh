@@ -17,10 +17,12 @@ public:
   EVetoReconstruction(TFile*, TString);
   ~EVetoReconstruction();
 
-  void ParseConfFile(TString);
-  virtual void Init(PadmeVReconstruction*);
+  // void ParseConfFile(TString);
+  // virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void EndProcessing();
+  //virtual void EndProcessing();
+  virtual void HistoInit();
+  virtual void AnalyzeEvent(TRawEvent* evt);
 
 };
 #endif

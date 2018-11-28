@@ -69,7 +69,7 @@ class PadmeCDRList:
         self.kloe_sftp = "sftp://%s%s"%(self.kloe_server,self.kloe_path)
 
         # SSH syntax to execute a command on KLOE front end
-        self.kloe_ssh = "ssh -i %s -l %s %s"%(self.kloe_keyfile,self.kloe_user,self.kloe_server)
+        self.kloe_ssh = "ssh -n -i %s -l %s %s"%(self.kloe_keyfile,self.kloe_user,self.kloe_server)
 
         ###################################
         ### LNF and CNAF SRM sites data ###
@@ -143,7 +143,6 @@ class PadmeCDRList:
         lnf_dir_list.sort()
 
         for run_dir in lnf_dir_list:
-            self.check_stop_cdr()
             for line in self.run_command("gfal-ls %s/%s/%s"%(self.lnf_srm,self.data_dir,run_dir)):
                 if re.match("^gfal-ls error: ",line):
                     print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from LNF"%run_dir
@@ -165,7 +164,6 @@ class PadmeCDRList:
             cnaf_dir_list.sort()
 
         for run_dir in cnaf_dir_list:
-            self.check_stop_cdr()
             for line in self.run_command("gfal-ls %s/%s/%s"%(self.cnaf_srm,self.data_dir,run_dir)):
                 if re.match("^gfal-ls error: ",line):
                     print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from CNAF"%run_dir
@@ -255,7 +253,66 @@ class PadmeCDRList:
                 sys.exit(2)
             full_list.extend(self.kloe_list)
 
+        elif (self.site == "ALL"):
+
+            self.daq3_list = []
+            self.daq_server = "l1padme3"
+            self.daq_ssh = "ssh -i %s -l %s %s"%(self.daq_keyfile,self.daq_user,self.daq_server)
+            if self.get_file_list_daq() == "error":
+                print "ERROR - DAQ server %s has problems: skippping"%self.daq_server
+            else:
+                self.daq3_list = self.daq_list
+                full_list.extend(self.daq_list)
+
+            self.daq4_list = []
+            self.daq_server = "l1padme4"
+            self.daq_ssh = "ssh -i %s -l %s %s"%(self.daq_keyfile,self.daq_user,self.daq_server)
+            if self.get_file_list_daq() == "error":
+                print "ERROR - DAQ server %s has problems: skippping"%self.daq_server
+            else:
+                self.daq4_list = self.daq_list
+                full_list.extend(self.daq_list)
+
+            if self.get_file_list_lnf() == "error":
+                print "ERROR - LNF site has problems: skipping"
+            else:
+                full_list.extend(self.lnf_list)
+
+            if self.get_file_list_cnaf() == "error":
+                print "ERROR - CNAF site has problems: skipping"
+            else:
+                full_list.extend(self.cnaf_list)
+
+            if self.get_file_list_kloe() == "error":
+                print "ERROR - KLOE site has problems: skipping"
+            else:
+                full_list.extend(self.kloe_list)
+
         # Remove duplicates and sort final list
         full_list = sorted(set(full_list))
         for rawfile in (full_list):
-            print rawfile
+            if (self.site == "ALL"):
+                match = ""
+                if (rawfile in self.daq3_list):
+                    match += "3"
+                else:
+                    match += "-"
+                if (rawfile in self.daq4_list):
+                    match += "4"
+                else:
+                    match += "-"
+                if (rawfile in self.lnf_list):
+                    match += "L"
+                else:
+                    match += "-"
+                if (rawfile in self.cnaf_list):
+                    match += "C"
+                else:
+                    match += "-"
+                if (rawfile in self.kloe_list):
+                    match += "K"
+                else:
+                    match += "-"
+                print rawfile,match
+            else:
+                print rawfile

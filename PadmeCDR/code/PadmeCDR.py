@@ -13,7 +13,7 @@ from PadmeCDRList import PadmeCDRList
 data_servers_list = [ "l1padme3", "l1padme4" ]
 
 # Define lists of source and destination sites
-sites_list = [ "DAQ", "LNF", "CNAF", "KLOE" ]
+sites_list = [ "ALL", "DAQ", "LNF", "CNAF", "KLOE" ]
 source_sites_list = [ "DAQ", "LNF", "CNAF" ]
 destination_sites_list = [ "LNF", "CNAF", "KLOE" ]
 
@@ -22,6 +22,7 @@ def print_help():
     print '  -S src_site     Source site %s'%source_sites_list
     print '  -D dst_site     Destination site %s'%destination_sites_list
     print '  -L site         Get list of files at site %s'%sites_list
+    print '                  ALL will compare content of all sites (SLOW!)'
     print '  -s data_srv     Data server from which data are copied %s'%data_servers_list
     print '                  N.B. -s is only used when -S/-L is DAQ'
     print '  -i              Run the PadmeCDR server in interactive mode'

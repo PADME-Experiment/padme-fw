@@ -214,8 +214,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //    Double_t *xpeaks = s->GetPositionX();
     //    Double_t *ypeaks = s->GetPositionY();
     // ROOT 5 version
-    Float_t *xpeaks = s->GetPositionX();
-    Float_t *ypeaks = s->GetPositionY();
+    Double_t *xpeaks = s->GetPositionX();
+    Double_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;

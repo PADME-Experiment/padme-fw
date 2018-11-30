@@ -199,10 +199,10 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
     }
   }
 
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
+  Double_t cTime[Hits.size()];
+  Double_t cEnergy[Hits.size()];
+  Int_t cChID[Hits.size()];
+  Int_t cUsed[Hits.size()];
   Int_t cCellUsed[50]={0};
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations

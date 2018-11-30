@@ -421,11 +421,11 @@ int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
     }
   }
 
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
-  Int_t cCellUsed[NTotCh]={0};
+  Double_t cTime[Hits.size()];
+  Double_t cEnergy[Hits.size()];
+  Int_t cChID[Hits.size()];
+  Int_t cUsed[Hits.size()];
+  Int_t cCellUsed[NTotCh];
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {

@@ -2,7 +2,7 @@
 
 NAME := PadmeReco
 
-SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix Analysis
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := $(SUBDIRS) RecoBase
 
@@ -13,19 +13,19 @@ ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC re
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
 CPPFLAGS += -IRecoBase/include -g
-#Uncomment if you want to use ROOT6
-#CPPFLAGS += -std=c++11 -IRecoBase/include 
+
 
 include ./config/global.gmk
 
 # Define libraries used for the creation of the final executable
-LIBS += -Llib -lPadmeReco$(STATIC)
+LIBS += -Llib -lPadmeReco$(STATIC) 
 LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Reco$(STATIC),$(SUBDIRS)))
 #LIBS += -LService/lib -lService$(STATIC)
 LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 LIBS += -L/usr/lib64/mysql -lmysqlclient
 LIBS += -Llib -lPadmeReco$(STATIC)
+
 
 #EXTRALIBS += -LEventDisplay/lib -lEventDisplay$(STATIC) -lEve -lGeom -lRGL -lFTGL -lGui -lGed -lTreePlayer -lEG 
 
@@ -39,6 +39,10 @@ LIBS += -Llib -lPadmeReco$(STATIC)
 all: PadmeReco
 
 PadmeReco: PadmeReco.cc makesub
+	@echo "Compiling $< ..."
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
+
+PadmeAnalysisMain: PadmeAnalysisMain.cc makesub
 	@echo "Compiling $< ..."
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
 

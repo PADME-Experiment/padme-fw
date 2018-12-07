@@ -190,6 +190,7 @@ def main(argv):
         if Verbose: print "DEBUG - File %s - Checksums: DAQ \'%s\' LNF \'%s\' CNAF \'%s\'"%(rawfile,a32_daq,a32_lnf,a32_cnaf)
 
         if (a32_daq == ""): print "File %s - Unable to get DAQ checksum"%rawfile
+
         if (at_lnf):
             if (a32_lnf == ""):
                 print "File %s - Unable to get LNF checksum"%rawfile
@@ -197,13 +198,14 @@ def main(argv):
                 print "File %s - LNF checksum mismatch - DAQ %s - LNF %s"%(rawfile,a32_daq,a32_lnf)
         else:
             print "File %s - Not at LNF"%rawfile
+
         if (at_cnaf):
             if (a32_cnaf == ""):
                 print "File %s - Unable to get CNAF checksum"%rawfile
             elif (a32_daq != "" and a32_daq != a32_cnaf):
                 print "File %s - CNAF checksum mismatch - DAQ %s - CNAF %s"%(rawfile,a32_daq,a32_cnaf)
         else:
-            print "File %s - Not at LNF"%rawfile
+            print "File %s - Not at CNAF"%rawfile
 
 # Execution starts here
 if __name__ == "__main__":

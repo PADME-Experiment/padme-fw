@@ -1,8 +1,10 @@
 #include "HEPVetoRecoRootIO.hh"
 #include "RecoVRootIO.hh"
 
-#include "THEPVetoRecoEvent.hh"
 #include "HEPVetoReconstruction.hh"
+#include "THEPVetoRecoEvent.hh"
+#include "THEPVetoClusCollection.hh"
+
 //#include "TRecoVHit.hh"
 
 #include "TString.h"
@@ -16,6 +18,8 @@ HEPVetoRecoRootIO::HEPVetoRecoRootIO()
   : RecoVRootIO(TString("HEPVeto"))
 {
   fEvent = new THEPVetoRecoEvent();
+  fClusColl = new THEPVetoClusCollection();
+  //fClusColl = new TRecoVClusCollection(TRecoVCluster::Class());
 
   TTree::SetBranchStyle(fBranchStyle);
 

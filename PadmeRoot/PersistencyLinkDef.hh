@@ -62,6 +62,11 @@
 #pragma link C++ class TTargetRecoBeam+;
 #pragma link C++ class TTargetSignalFitParams+;
 #pragma link C++ class TTargetFitEvent+;
+#pragma link C++ class TSACClusCollection+;
+#pragma link C++ class TECalClusCollection+;
+#pragma link C++ class TPVetoClusCollection+;
+#pragma link C++ class TEVetoClusCollection+;
+#pragma link C++ class THEPVetoClusCollection+;
 
 
 #endif

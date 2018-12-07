@@ -10,13 +10,13 @@ public:
 
   TTargetRecoEvent(); 
   ~TTargetRecoEvent();
-  TTargetRecoBeam* getTargetRecoBeam(){return fTargetRecoBeam;}
-  void setTargetRecoBeam(TTargetRecoBeam* iBeam){fTargetRecoBeam = iBeam;};
+  // TTargetRecoBeam* getTargetRecoBeam(){return fTargetRecoBeam;}
+  // void setTargetRecoBeam(TTargetRecoBeam* iBeam){fTargetRecoBeam = iBeam;};
 
 
 private:
   
-  TTargetRecoBeam* fTargetRecoBeam;
+  //  TTargetRecoBeam* fTargetRecoBeam;
 
   ClassDef(TTargetRecoEvent,1);
 };

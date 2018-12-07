@@ -73,13 +73,13 @@ PadmeReconstruction::~PadmeReconstruction()
 void PadmeReconstruction::InitLibraries()
 {
   TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
   fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
   fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
   fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
   fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
   fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
   fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
+  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
@@ -141,18 +141,20 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       }
     }
   }
+  else std::cout << " Tree " << runTree << " not found "<<std::endl;
 
   Int_t nEntries;
 
   nEntries = 0;
   TString mcTreeName = "MC";
+  fMCChain = NULL;
+  std::cout<<" Looking for tree named "<<mcTreeName<<std::endl;
   fMCChain = BuildChain(mcTreeName);
   if(fMCChain) {
-
+    
     nEntries = fMCChain->GetEntries();
+    std::cout<<" Tree named "<<mcTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fMCChain->GetListOfBranches();
-    std::cout << "Found Tree '" << mcTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
 
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
@@ -188,14 +190,19 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     }
 
   }
+  else std::cout << " Tree " << mcTreeName << " not found "<<std::endl;
+        
 
   // input are reco hits
   nEntries = 0;
   TString recoTreeName = "Events";
+  std::cout<<" Looking for tree named "<<recoTreeName<<std::endl;
+  fRecoChain = NULL;
   fRecoChain = BuildChain(recoTreeName);
   if(fRecoChain) {
 
     nEntries = fRecoChain->GetEntries();
+    std::cout<<" Tree named "<<recoTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fRecoChain->GetListOfBranches();
     std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
 
@@ -208,22 +215,22 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       if (branchName=="RecoEvent") {
 	fRecoEvent = new TRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
-      } else if (branchName=="Target") {
+      } else if (branchName=="Target_Hits") {
 	fTargetRecoEvent = new TTargetRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
-      } else if (branchName=="EVeto") {
+      } else if (branchName=="EVeto_Hits") {
 	fEVetoRecoEvent = new TEVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
-      } else if (branchName=="PVeto") {
+      } else if (branchName=="PVeto_Hits") {
 	fPVetoRecoEvent = new TPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
-      } else if (branchName=="HEPVeto") {
+      } else if (branchName=="HEPVeto_Hits") {
 	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
-      } else if (branchName=="ECal") {
+      } else if (branchName=="ECal_Hits") {
 	fECalRecoEvent = new TECalRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
-      } else if (branchName=="SAC") {
+      } else if (branchName=="SAC_Hits") {
 	fSACRecoEvent = new TSACRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
 	//      } else if (branchName=="TPix") {
@@ -234,17 +241,22 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     }
 
   }
+  else std::cout << " Tree " << recoTreeName << " not found "<<std::endl;
 
   nEntries = 0;
   TString rawTreeName = "RawEvents";
+  fRawChain = NULL;
   fRawChain = BuildChain(rawTreeName);
+  std::cout<<" Looking for tree named "<<rawTreeName<<std::endl;
   if(fRawChain) {
     fRawEvent = new TRawEvent();
     nEntries = fRawChain->GetEntries();
+    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fRawChain->GetListOfBranches();
     std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
     fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
   }
+  else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
 
   fNProcessedEventsInTotal = 0;
 
@@ -259,9 +271,11 @@ Bool_t PadmeReconstruction::NextEvent()
   // Check if there is a new event to process
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
-	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+    if (fNProcessedEventsInTotal%100==0) {
+      std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+      std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
+		<< " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+    }
 
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
@@ -290,10 +304,11 @@ Bool_t PadmeReconstruction::NextEvent()
   // Check if there is a new event to process
   if ( fRecoChain && fRecoChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    if (fNProcessedEventsInTotal%100==0) {
+    std::cout << "=== Read (from Hits) event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
     std::cout << "--- PadmeReconstruction --- run/event/time " << fRecoEvent->GetRunNumber()
 	 << " " << fRecoEvent->GetEventNumber() << " " << fRecoEvent->GetTime() << std::endl;
-
+    }
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetRecoEvent) {
@@ -313,17 +328,19 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
 
-    fNProcessedEventsInTotal++;
+    ++fNProcessedEventsInTotal;
+    //std::cout<<" fNProcessedEventsInTotal = "<<fNProcessedEventsInTotal<<std::endl;
     return true;
-
+    
   }
 
   if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    // std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    // std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
-    // 	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
-
+    if (fNProcessedEventsInTotal%100==0) {
+      std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+      std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
+		<< " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+    }
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       fRecoLibrary[iLib]->ProcessEvent(fRawEvent);

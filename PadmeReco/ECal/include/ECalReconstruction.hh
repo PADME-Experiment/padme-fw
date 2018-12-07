@@ -23,14 +23,14 @@ public:
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void ProcessEvent(TRawEvent*);
+  //  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
-  vector<TRecoVCluster *> &getClusters(){return fClusters;}
+  //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
   //Clusters vectors
@@ -51,7 +51,7 @@ private:
   double EvTotE;
 
   
-  vector<TRecoVCluster *> fClusters;
+  //  vector<TRecoVCluster *> fClusters;
 
 
 };

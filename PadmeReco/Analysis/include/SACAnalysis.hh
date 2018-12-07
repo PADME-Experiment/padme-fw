@@ -7,6 +7,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class TSACRecoEvent;
+class TRecoVClusCollection;
 
 class SACAnalysis : public TObject
 {
@@ -15,7 +16,7 @@ public:
   SACAnalysis();
   ~SACAnalysis();
 
-  Bool_t Init(Int_t nh, TSACRecoEvent* ev);
+  Bool_t Init(Int_t nh, TSACRecoEvent* ev, TRecoVClusCollection* cl);
   Bool_t Process();
   
   
@@ -23,6 +24,7 @@ public:
 private:
   Int_t fNhits;
   TSACRecoEvent* fhitEvent;
+  TRecoVClusCollection* fClColl;
 
 };
 

@@ -15,11 +15,12 @@ TargetAnalysis::~TargetAnalysis()
   fNhits=0;
   fhitEvent=NULL;
 }
-Bool_t TargetAnalysis::Init(Int_t nh, TTargetRecoEvent* ev)
+Bool_t TargetAnalysis::Init(Int_t nh, TTargetRecoEvent* ev, TTargetRecoBeam* b)
 {
   Bool_t retCode = 0;
   fNhits    = nh;
   fhitEvent = ev;
+  fRecoBeam = b;
 
   return retCode;
 }
@@ -104,8 +105,8 @@ Bool_t TargetAnalysis::Process()
    hSvc->FillHisto(hname, maxDt, 1.);
   
 
-   TTargetRecoBeam* pRecoBeam = fhitEvent->getTargetRecoBeam();
-   std::cout<<" from the TargetRecoEvent Beam X, Y "<<pRecoBeam->getX()<<" "<<pRecoBeam->getY()<<std::endl;
+   //TTargetRecoBeam* pRecoBeam = fhitEvent->getTargetRecoBeam();
+   std::cout<<" from the TargetRecoEvent Beam X, Y "<<fRecoBeam->getX()<<" "<<fRecoBeam->getY()<<std::endl;
    
    
    return retCode;

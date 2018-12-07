@@ -2,6 +2,8 @@
 
 #include "TECalRecoEvent.hh"
 #include "TRecoVHit.hh"
+#include "TRecoVClusCollection.hh"
+#include "TRecoVCluster.hh"
 #include "HistoSvc.hh"
 #include <iostream>
 
@@ -15,11 +17,12 @@ ECalAnalysis::~ECalAnalysis()
   fNhits=0;
   fhitEvent=NULL;
 }
-Bool_t ECalAnalysis::Init(Int_t nh, TECalRecoEvent* ev)
+Bool_t ECalAnalysis::Init(Int_t nh, TECalRecoEvent* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
   fNhits    = nh;
   fhitEvent = ev;
+  fClColl = cl;
 
   return retCode;
 }

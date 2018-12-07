@@ -4,6 +4,7 @@
 #include "TSACRecoEvent.hh"
 #include "SACReconstruction.hh"
 #include "TRecoVCluster.hh"
+#include "TSACClusCollection.hh"
 
 #include "TString.h"
 #include "TVector3.h"
@@ -17,6 +18,8 @@ SACRecoRootIO::SACRecoRootIO()
 {
   iev = 0;
   fEvent = new TSACRecoEvent();
+  fClusColl = new TSACClusCollection();
+  //fClusColl = new TRecoVClusCollection(TRecoVCluster::Class());
 
   TTree::SetBranchStyle(fBranchStyle);
 
@@ -28,11 +31,13 @@ SACRecoRootIO::SACRecoRootIO()
 SACRecoRootIO::~SACRecoRootIO()
 {;}
 
+/*
 void SACRecoRootIO::SaveEvent()
 {
   
   TSACRecoEvent* myEvt = (TSACRecoEvent*)fEvent;
   myEvt->Clear();
+  fClusColl->Clear();
   
   RecoVRootIO::SaveEvent();
 
@@ -40,30 +45,32 @@ void SACRecoRootIO::SaveEvent()
   SACReconstruction* Reco      = (SACReconstruction*)MyReco;
 
   vector<TRecoVCluster*> clVector = Reco->getClusters();
-  for (Int_t j=0; j<clVector.size(); ++j)
+  for (unsigned int j=0; j<clVector.size(); ++j)
     {
       myEvt->getClusCollection()->AddElement(clVector[j]);
+      fClusColl->AddElement(clVector[j]);
     }
-
-  /*
-  ++iev;
-  Int_t iCl = 1;
-  TRecoVCluster* cl = new TRecoVCluster();
-  cl->SetChannelId(iev);
-  cl->SetEnergy(10*iev);
-  cl->SetTime(100*iev);
-  myEvt->getClusCollection()->AddElement(cl);
-  std::cout<<"Event "<<iev<<" Adding cluster "<<iCl<<" with ch, energy, time "<<myEvt->getClusCollection()->LastElement()->GetChannelId()<<" "<<myEvt->getClusCollection()->LastElement()->GetEnergy()<<" "<<myEvt->getClusCollection()->LastElement()->GetTime()<<std::endl;
-  if ((iev%2)==0) {
-    TRecoVCluster* cl1 = new TRecoVCluster();
-    cl1->SetChannelId(iev+100);
-    cl1->SetEnergy(100*iev);
-    cl1->SetTime(1000*iev);
-    myEvt->getClusCollection()->AddElement(cl1);
-  std::cout<<"Event "<<iev<<" Adding cluster "<<iCl<<" with ch, energy, time "<<myEvt->getClusCollection()->LastElement()->GetChannelId()<<" "<<myEvt->getClusCollection()->LastElement()->GetEnergy()<<" "<<myEvt->getClusCollection()->LastElement()->GetTime()<<std::endl;
-  
-  }
-  */
 }
+*/
 
 
+ /*
+void SACRecoRootIO::NewRun(Int_t nRun, TFile* hfile){
+  
+  std::cout<<this->GetName()<<"::NewRun"<<std::endl;
+  // Book  branch Target (collection of hits)
+  RecoVRootIO::NewRun(nRun, hfile);
+    
+  std::cout<<this->GetName()<<"::NewRun - digit branch setup ... now moving to Target specific branches"<<std::endl;
+  fEventTree = RecoRootIOManager::GetInstance()->GetEventTree();
+  std::cout<<this->GetName()<<"::NewRun - pointer to the tree obtained: "<<fEventTree<<std::endl;
+
+
+  // Book branch TargetFitEvent (WF fit parameters)
+  fBranchClusColl = fEventTree->Branch("SACClusClollection", fClusColl->IsA()->GetName(), &fClusColl);
+  std::cout<<this->GetName()<<"::NewRun - branch SACClusClollection obtained"<<std::endl;
+  fBranchClusColl->SetAutoDelete(kFALSE);
+  std::cout<<this->GetName()<<"::NewRun - branch SACClusClollection autodelete set to false"<<std::endl;
+  
+}
+*/

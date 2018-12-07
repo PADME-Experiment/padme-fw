@@ -2,6 +2,8 @@
 
 #include "TSACRecoEvent.hh"
 #include "TRecoVHit.hh"
+#include "TRecoVClusCollection.hh"
+#include "TRecoVCluster.hh"
 #include "HistoSvc.hh"
 #include <iostream>
 
@@ -15,11 +17,12 @@ SACAnalysis::~SACAnalysis()
   fNhits=0;
   fhitEvent=NULL;
 }
-Bool_t SACAnalysis::Init(Int_t nh, TSACRecoEvent* ev)
+Bool_t SACAnalysis::Init(Int_t nh, TSACRecoEvent* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
   fNhits    = nh;
   fhitEvent = ev;
+  fClColl = cl;
 
   return retCode;
 }
@@ -40,8 +43,9 @@ Bool_t SACAnalysis::Process()
       TRecoVHit* h = fhitEvent->Hit(j);
       std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
     }
+
   
-  TRecoVClusCollection* clColl = fhitEvent->getClusCollection();
+  TRecoVClusCollection* clColl = fClColl;// fhitEvent->getClusCollection();
   std::cout<<" from the SACRecoEvent N elements:  "<<clColl->GetNElements()<< std::endl;
   hname = "SAC_NClusters";
   hSvc->FillHisto(hname,clColl->GetNElements());
@@ -77,6 +81,7 @@ Bool_t SACAnalysis::Process()
       if (chIdSeed!=chIdClus)std::cout<<" WARNING .... chIdSeed = "<<chIdSeed<<" chIdClus = "<<chIdClus<<std::endl;
 
     }
+  
   
   
   return retCode;

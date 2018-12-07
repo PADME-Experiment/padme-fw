@@ -31,7 +31,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
-  fClusters.clear();
+  //  fClusters.clear();
 }
 
 void ECalReconstruction::HistoInit(){
@@ -130,11 +130,11 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 */
 
 
-void ECalReconstruction::ProcessEvent(TRawEvent* rawEv)
-{
-  PadmeVReconstruction::ProcessEvent(rawEv);
-  BuildClusters();
-}
+// void ECalReconstruction::ProcessEvent(TRawEvent* rawEv)
+// {
+//   PadmeVReconstruction::ProcessEvent(rawEv);
+//   BuildClusters();
+// }
 
 
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
@@ -404,13 +404,13 @@ Int_t ECalReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
 void ECalReconstruction::BuildClusters()
 {
 
-  std::cout<<"In ECalBuildClusters "<<std::endl;
-  vector<TRecoVCluster *> &myClusters  = getClusters();
+  //std::cout<<"In ECalBuildClusters "<<std::endl;
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
     delete myClusters[iCl];
   }
   myClusters.clear();
-  std::cout<<"myClusters is now cleared  "<<std::endl;
+  //std::cout<<"myClusters is now cleared  "<<std::endl;
   
 
   
@@ -532,23 +532,25 @@ void ECalReconstruction::BuildClusters()
     myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
-    std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
+    //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
     for (unsigned int j=0; j<ClNCry[iCl]; ++j)
       {
 	tmpHitsInCl.push_back(clusMatrix[iCl][j]);
-	std::cout<<" "<<clusMatrix[iCl][j];
+	//std::cout<<" "<<clusMatrix[iCl][j];
       }
-    std::cout<<endl;
+    //std::cout<<endl;
     myCl->SetHitVecInClus(tmpHitsInCl);
     myClusters.push_back(myCl);
     tmpHitsInCl.clear();
-    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<getClusters()[iCl]->GetEnergy()<<std::endl;
-    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<getClusters()[iCl]->GetChannelId()<<"/"<<getClusters()[iCl]->GetEnergy()<<"/"<<getClusters()[iCl]->GetTime()<<"/"<<getClusters()[iCl]->GetNHitsInClus()<<"/ ";
-    for (int j=0; j<getClusters()[iCl]->GetNHitsInClus(); ++j)
+    /*
+    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<GetClusters()[iCl]->GetEnergy()<<std::endl;
+    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<GetClusters()[iCl]->GetChannelId()<<"/"<<GetClusters()[iCl]->GetEnergy()<<"/"<<GetClusters()[iCl]->GetTime()<<"/"<<GetClusters()[iCl]->GetNHitsInClus()<<"/ ";
+    for (int j=0; j<GetClusters()[iCl]->GetNHitsInClus(); ++j)
       {
-	std::cout<<" "<<getClusters()[iCl]->GetHitVecInClus()[j];
+	std::cout<<" "<<GetClusters()[iCl]->GetHitVecInClus()[j];
       }
     std::cout<<endl;
+    */
   }
 
   

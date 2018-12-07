@@ -7,6 +7,7 @@
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class TTargetRecoEvent;
+class TTargetRecoBeam;
 
 class TargetAnalysis : public TObject
 {
@@ -15,7 +16,7 @@ public:
   TargetAnalysis();
   ~TargetAnalysis();
 
-  Bool_t Init(Int_t nh, TTargetRecoEvent* ev);
+  Bool_t Init(Int_t nh, TTargetRecoEvent* ev, TTargetRecoBeam* b);
   Bool_t Process();
   
   
@@ -23,6 +24,7 @@ public:
 private:
   Int_t fNhits;
   TTargetRecoEvent* fhitEvent;
+  TTargetRecoBeam* fRecoBeam;
 
 };
 

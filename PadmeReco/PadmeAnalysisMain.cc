@@ -75,14 +75,25 @@ int main(Int_t argc, char **argv)
    THEPVetoRecoEvent* hepvetoRecoEv = new THEPVetoRecoEvent();
    TSACRecoEvent*     sacRecoEv     = new TSACRecoEvent()    ;
 
+   TRecoVClusCollection*    ecalRecoCl = new TRecoVClusCollection()   ;
+   TRecoVClusCollection*   pvetoRecoCl = new TRecoVClusCollection()  ;
+   TRecoVClusCollection*   evetoRecoCl = new TRecoVClusCollection()  ;
+   TRecoVClusCollection* hepvetoRecoCl = new TRecoVClusCollection();
+   TRecoVClusCollection*     sacRecoCl = new TRecoVClusCollection()    ;
+
    theTree->SetBranchAddress("RecoEvent"  ,&recoEv)            ;
-   theTree->SetBranchAddress("Target"     ,&targetRecoEv)      ;
+   theTree->SetBranchAddress("Target_Hits"     ,&targetRecoEv)      ;
    theTree->SetBranchAddress("TargetBeam" ,&targetRecoBeam)    ;
-   theTree->SetBranchAddress("ECal"       ,&ecalRecoEv)        ;
-   theTree->SetBranchAddress("PVeto"      ,&pvetoRecoEv)       ;
-   theTree->SetBranchAddress("EVeto"      ,&evetoRecoEv)       ;
-   theTree->SetBranchAddress("HEPVeto"    ,&hepvetoRecoEv)     ;
-   theTree->SetBranchAddress("SAC"        ,&sacRecoEv)         ;
+   theTree->SetBranchAddress("ECal_Hits"       ,&ecalRecoEv)        ;
+   theTree->SetBranchAddress("PVeto_Hits"      ,&pvetoRecoEv)       ;
+   theTree->SetBranchAddress("EVeto_Hits"      ,&evetoRecoEv)       ;
+   theTree->SetBranchAddress("HEPVeto_Hits"    ,&hepvetoRecoEv)     ;
+   theTree->SetBranchAddress("SAC_Hits"        ,&sacRecoEv)         ;
+   theTree->SetBranchAddress("ECal_Clusters"       ,&ecalRecoCl)        ;
+   theTree->SetBranchAddress("PVeto_Clusters"      ,&pvetoRecoCl)       ;
+   theTree->SetBranchAddress("EVeto_Clusters"      ,&evetoRecoCl)       ;
+   theTree->SetBranchAddress("HEPVeto_Clusters"    ,&hepvetoRecoCl)     ;
+   theTree->SetBranchAddress("SAC_Clusters"        ,&sacRecoCl)         ;
 
    
    //int histoOutput
@@ -123,9 +134,9 @@ int main(Int_t argc, char **argv)
 	 sacRecoEv->Print();
        }
        //
-       sacAn    ->Init(nSACHits,        sacRecoEv);
-       ecalAn   ->Init(nECalHits,      ecalRecoEv);
-       targetAn->Init(nTargetHits,  targetRecoEv);
+       sacAn    ->Init(nSACHits,        sacRecoEv, sacRecoCl);
+       ecalAn   ->Init(nECalHits,      ecalRecoEv, sacRecoCl);
+       targetAn->Init(nTargetHits,  targetRecoEv, targetRecoBeam);
 
        //
        sacAn     ->Process();

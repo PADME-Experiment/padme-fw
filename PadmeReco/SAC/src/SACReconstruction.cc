@@ -55,7 +55,6 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   ParseConfFile(ConfigFileName);
   //fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelSAC();
-  fClusters.clear();
 }
 
 void SACReconstruction::HistoInit(){
@@ -173,13 +172,13 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 //  Last revised by M. Raggi 16/11/2018 
 void SACReconstruction::BuildClusters(){
 
-  std::cout<<"In SACBuildClusters "<<std::endl;
-  vector<TRecoVCluster *> &myClusters  = getClusters();
+  //std::cout<<"In SACBuildClusters "<<std::endl;
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
     delete myClusters[iCl];
   }
   myClusters.clear();
-  std::cout<<"myClusters is now cleared  "<<std::endl;
+  //std::cout<<"myClusters is now cleared  "<<std::endl;
   
   
   ClNCry.clear();
@@ -203,7 +202,7 @@ void SACReconstruction::BuildClusters(){
   Double_t Time=0;
  
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-  std::cout<<"In SACBuildClusters ... n. of input hits = "<<Hits.size()<<std::endl;
+  //std::cout<<"In SACBuildClusters ... n. of input hits = "<<Hits.size()<<std::endl;
   int NCry=0;
   if(Hits.size()==0){
     //    std::cout<<"No hits !!!!"<<std::endl;
@@ -235,7 +234,7 @@ void SACReconstruction::BuildClusters(){
     cTime[iHit1]  = Hits[iHit1]->GetTime();
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
-    std::cout<<"SAChits "<<iHit1<<" "<<Hits[iHit1]->GetChannelId()<<" "<<Hits[iHit1]->GetEnergy()<<" "<<Hits[iHit1]->GetTime()<<std::endl;
+    //std::cout<<"SAChits "<<iHit1<<" "<<Hits[iHit1]->GetChannelId()<<" "<<Hits[iHit1]->GetEnergy()<<" "<<Hits[iHit1]->GetTime()<<std::endl;
   }  
 
   Int_t iMax=0;
@@ -246,8 +245,7 @@ void SACReconstruction::BuildClusters(){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
     NCry=0;
-    std::cout<<"Imax "<<iMax<<" E/T "<<cEnergy[iMax]<<"/"<<cTime[iMax]<<" nseeds so far = "<<NSeeds<<std::endl;
-    //  if(NSeeds==0){
+    //std::cout<<"Imax "<<iMax<<" E/T "<<cEnergy[iMax]<<"/"<<cTime[iMax]<<" nseeds so far = "<<NSeeds<<std::endl;
     SdTime.push_back(cTime[iMax]);    
     SdEn.push_back(cEnergy[iMax]);    
     SdCell.push_back(cChID[iMax]);    
@@ -293,7 +291,7 @@ void SACReconstruction::BuildClusters(){
     if(NCry>1 || ClE[NSeeds]>10.) NGoodClus++;
   }  //end of while loop on seeds
   
-  std::cout<<"In SACBuildClusters - before filling clusters NSeeds = "<<NSeeds<<std::endl;
+  //std::cout<<"In SACBuildClusters - before filling clusters NSeeds = "<<NSeeds<<std::endl;
   // fill here the clusters SS
   std::vector<Int_t> tmpHitsInCl;
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
@@ -305,23 +303,25 @@ void SACReconstruction::BuildClusters(){
     myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
-    std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
+    //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
     for (unsigned int j=0; j<ClNCry[iCl]; ++j)
       {
 	tmpHitsInCl.push_back(clusMatrix[iCl][j]);
-	std::cout<<" "<<clusMatrix[iCl][j];
+	//std::cout<<" "<<clusMatrix[iCl][j];
       }
-    std::cout<<endl;
+    //std::cout<<endl;
     myCl->SetHitVecInClus(tmpHitsInCl);
     myClusters.push_back(myCl);
     tmpHitsInCl.clear();
-    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<getClusters()[iCl]->GetEnergy()<<std::endl;
-    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<getClusters()[iCl]->GetChannelId()<<"/"<<getClusters()[iCl]->GetEnergy()<<"/"<<getClusters()[iCl]->GetTime()<<"/"<<getClusters()[iCl]->GetNHitsInClus()<<"/ ";
-    for (int j=0; j<getClusters()[iCl]->GetNHitsInClus(); ++j)
+    /*
+    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<GetClusters()[iCl]->GetEnergy()<<std::endl;
+    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<GetClusters()[iCl]->GetChannelId()<<"/"<<GetClusters()[iCl]->GetEnergy()<<"/"<<GetClusters()[iCl]->GetTime()<<"/"<<GetClusters()[iCl]->GetNHitsInClus()<<"/ ";
+    for (int j=0; j<GetClusters()[iCl]->GetNHitsInClus(); ++j)
       {
-	std::cout<<" "<<getClusters()[iCl]->GetHitVecInClus()[j];
+	std::cout<<" "<<GetClusters()[iCl]->GetHitVecInClus()[j];
       }
     std::cout<<endl;
+    */
   }
 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
@@ -332,12 +332,6 @@ void SACReconstruction::BuildClusters(){
     }
   }
   return; //NGoodClus;
-}
-
-void SACReconstruction::ProcessEvent(TRawEvent* rawEv)
-{
-  PadmeVReconstruction::ProcessEvent(rawEv);
-  BuildClusters();
 }
 
 
@@ -394,8 +388,8 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   SdCell.clear();
   EvTotE=0;
   //  std::cout<<"Builing clusters"<<std::endl;
-  int NClusters = getClusters().size();//SACBuildClusters(rawEv);
-  std::cout<<"Built clusters - size "<<NClusters<<std::endl;
+  int NClusters = GetClusters().size();//SACBuildClusters(rawEv);
+  //std::cout<<"Built clusters - size "<<NClusters<<std::endl;
   GetHisto("SACNPart")->Fill(SACNPart);
   GetHisto("SACNClus")->Fill(NClusters);
   GetHisto("SACETot") ->Fill(EvTotE);
@@ -412,7 +406,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   }
   //  std::cout<<" "<<hh<<" "<<votes[hh]<<std::endl;
 
-  if(nevt % 10 == 0)std::cout<<"Nev "<<nevt<<std::endl;
+  //if(nevt % 10 == 0)std::cout<<"Nev "<<nevt<<std::endl;
   if(nevt % 100 == 0) {
     c.cd();
     GetHisto("SACOccupancy") -> Draw();

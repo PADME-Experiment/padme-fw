@@ -155,15 +155,27 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
-  PadmeVReconstruction::ProcessEvent(rawEv);
+  PadmeVReconstruction::BuildHits(rawEv);
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
   ReconstructBeam();
   RetrieveSignalFitParams();
+  AnalyzeEvent(rawEv);
 }
 void TargetReconstruction::ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tRecoEvent){
+
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
-  PadmeVReconstruction::ProcessEvent(recoObj,tRecoEvent);
+
+  PadmeVReconstruction::ReadHits(recoObj,tRecoEvent);
+  //std::cout<<this->GetName()<<"::ProcessEvent  ........... HITS read"<<std::endl;
+
+  // placeholder for hit calibration
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+
   ReconstructBeam();
+  //std::cout<<this->GetName()<<"::ProcessEvent  ........... Beam reconstructed "<<std::endl;
+
   RetrieveSignalFitParams();
+  //std::cout<<this->GetName()<<"::ProcessEvent  ........... Fit Beam reconstructed "<<std::endl;
 }
 
 void TargetReconstruction::RetrieveSignalFitParams()
@@ -304,6 +316,11 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
+  if (Hits.size()!=32) 
+    {
+      std::cout<<this->GetName()<<"::AnalyzeEvent something wrong ... there are "<<Hits.size()<<" hits in this event; expected 32; skip event"<<std::endl;
+      return;
+    }
 
   char  iName                    [100]; 
   float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
@@ -445,8 +462,6 @@ void TargetReconstruction::ReconstructBeam(){
   float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   
-  //std::cout<<" SS Target Hits.size "<< Hits.size()<<std::endl;
-
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
   for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 

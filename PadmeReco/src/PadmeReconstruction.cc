@@ -12,6 +12,14 @@
 #include "TSACMCEvent.hh"
 #include "TTPixMCEvent.hh"
 
+#include "TTargetRecoEvent.hh"
+#include "TEVetoRecoEvent.hh"
+#include "TPVetoRecoEvent.hh"
+#include "THEPVetoRecoEvent.hh"
+#include "TECalRecoEvent.hh"
+#include "TSACRecoEvent.hh"
+//#include "TTPixRecoEvent.hh"
+
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
 #include "PVetoReconstruction.hh"
@@ -37,7 +45,18 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
   fTPixMCEvent    = 0;
+
   fRawEvent       = 0;
+  
+  fRecoEvent        = 0;
+  fTargetRecoEvent  = 0;
+  fEVetoRecoEvent   = 0;
+  fPVetoRecoEvent   = 0;
+  fHEPVetoRecoEvent = 0;
+  fECalRecoEvent    = 0;
+  fSACRecoEvent     = 0;
+  fTPixRecoEvent    = 0;
+  
 
   InitLibraries();
   Init(NEvt,Seed);
@@ -170,6 +189,52 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
   }
 
+  // input are reco hits
+  nEntries = 0;
+  TString recoTreeName = "Events";
+  fRecoChain = BuildChain(recoTreeName);
+  if(fRecoChain) {
+
+    nEntries = fRecoChain->GetEntries();
+    TObjArray* branches = fRecoChain->GetListOfBranches();
+    std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+
+    for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+
+      TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
+      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
+      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+
+      if (branchName=="RecoEvent") {
+	fRecoEvent = new TRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
+      } else if (branchName=="Target") {
+	fTargetRecoEvent = new TTargetRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
+      } else if (branchName=="EVeto") {
+	fEVetoRecoEvent = new TEVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
+      } else if (branchName=="PVeto") {
+	fPVetoRecoEvent = new TPVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
+      } else if (branchName=="HEPVeto") {
+	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
+      } else if (branchName=="ECal") {
+	fECalRecoEvent = new TECalRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
+      } else if (branchName=="SAC") {
+	fSACRecoEvent = new TSACRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+	//      } else if (branchName=="TPix") {
+	//	fTPixRecoEvent = new TTPixRecoEvent();
+	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      }
+
+    }
+
+  }
+
   nEntries = 0;
   TString rawTreeName = "RawEvents";
   fRawChain = BuildChain(rawTreeName);
@@ -214,6 +279,37 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
+      }
+    }
+
+    fNProcessedEventsInTotal++;
+    return true;
+
+  }
+
+  // Check if there is a new event to process
+  if ( fRecoChain && fRecoChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+
+    std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    std::cout << "--- PadmeReconstruction --- run/event/time " << fRecoEvent->GetRunNumber()
+	 << " " << fRecoEvent->GetEventNumber() << " " << fRecoEvent->GetTime() << std::endl;
+
+    // Reconstruct individual detectors (but check if they exist, first!)
+    for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+      if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fTargetRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fEVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fPVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
+	//      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
+	//	fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
       }
     }
 

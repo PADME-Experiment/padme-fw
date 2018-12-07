@@ -51,6 +51,8 @@
 #pragma link C++ class TRecoEvent+;
 #pragma link C++ class TRecoVObject+;
 #pragma link C++ class TRecoVHit+;
+#pragma link C++ class TRecoVClusCollection+;
+#pragma link C++ class TRecoVCluster+;
 #pragma link C++ class TPVetoRecoEvent+;
 #pragma link C++ class TEVetoRecoEvent+;
 #pragma link C++ class THEPVetoRecoEvent+;

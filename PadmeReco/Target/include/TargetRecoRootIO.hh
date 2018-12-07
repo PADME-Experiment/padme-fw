@@ -11,7 +11,7 @@
 
 
 class RecoVRootIO;
-class TTargetRecoBeam;
+//class TTargetRecoBeam;
 class TTargetFitEvent;
 
 class TargetRecoRootIO : public RecoVRootIO
@@ -25,8 +25,8 @@ public:
   void SaveTargetFitEvent();
   
 protected:
-  TBranch* fBranchTargetRecoBeam;
-  TTargetRecoBeam* fBeam;
+  //TBranch* fBranchTargetRecoBeam;
+  //TTargetRecoBeam* fBeam;
   TBranch* fBranchTargetFitEvent;
   TTargetFitEvent* fFitEvent;
 

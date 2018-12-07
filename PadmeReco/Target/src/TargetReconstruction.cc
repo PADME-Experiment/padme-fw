@@ -159,6 +159,12 @@ void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   ReconstructBeam();
   RetrieveSignalFitParams();
 }
+void TargetReconstruction::ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tRecoEvent){
+  //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
+  PadmeVReconstruction::ProcessEvent(recoObj,tRecoEvent);
+  ReconstructBeam();
+  RetrieveSignalFitParams();
+}
 
 void TargetReconstruction::RetrieveSignalFitParams()
 {

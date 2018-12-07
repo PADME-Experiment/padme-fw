@@ -82,8 +82,21 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
 */
 void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
 
-//void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
+void PadmeVReconstruction::ProcessEvent(TRecoVObject* tEvent,TRecoEvent* tRecoEvent)
+{
+  
+  std::cout<<this->GetName()<<"::ProcessEvent(TRecoVObject*) ... nhits readon input  "<<tEvent->GetNHits()<<std::endl;  
+  fHits.clear();
+  for (Int_t ih=0; ih<tEvent->GetNHits(); ++ih)
+    {
+      fHits.push_back( tEvent->Hit(ih) );
+    }
+  std::cout<<this->GetName()<<"::ProcessEvent(TRecoVObject*) ... nhits read from input tree  "<<fHits.size()<<std::endl;
+  BuildClusters();
+}
 
+void PadmeVReconstruction::BuildClusters(){;}
+//void PadmeVReconstruction::ProcessEvent(TRawEvent* tRawEvent) {;}
 
 void PadmeVReconstruction::EndProcessing(){ 
   // to be called from the derived classes

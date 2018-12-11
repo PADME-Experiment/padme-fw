@@ -42,7 +42,7 @@ monitor_file = "CDRMonitor.txt"
 # Define background colors to use for none/ok/warn/alarm/off
 color_none  = "#FFFFFF"
 color_ok    = "#00CC00"
-color_warn  = "#CCCC00"
+color_warn  = "#FFA500"
 color_alarm = "#CC0000"
 color_off   = "#0000CC"
 

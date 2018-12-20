@@ -2,7 +2,7 @@
 
 NAME := PadmeReco
 
-SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix Analysis
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := $(SUBDIRS) RecoBase
 
@@ -39,10 +39,6 @@ LIBS += -Llib -lPadmeReco$(STATIC)
 all: PadmeReco
 
 PadmeReco: PadmeReco.cc makesub
-	@echo "Compiling $< ..."
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
-
-PadmeAnalysisMain: PadmeAnalysisMain.cc makesub
 	@echo "Compiling $< ..."
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
 

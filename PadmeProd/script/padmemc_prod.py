@@ -19,8 +19,8 @@ def get_adler32(outfile):
 
 def main(argv):
 
-    # Top CVMFS direcotry for PadmeMC
-    padmemc_cvmfs_dir = "/cvmfs/padme.roma1.infn.it/PadmeMC"
+    # Top CVMFS directory for PadmeMC
+    padmemc_cvmfs_dir = "/cvmfs/padme.infn.it/PadmeMC"
 
     # Top SRM path to CNAF tape library
     cnaf_padme_srm = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
@@ -60,6 +60,10 @@ def main(argv):
         print "ERROR File %s not found"%padmemc_exe_file
         exit(2)
 
+    # Create local link to GDML files needed for geometry definition
+    padmemc_gdml_dir = "%s/gdml"%padmemc_version_dir
+    os.symlink(padmemc_gdml_dir,"gdml")
+
     # Prepare shell script to run PadmeMC
     sf = open("job.sh","w")
     sf.write("#!/bin/bash\n")
@@ -72,10 +76,10 @@ def main(argv):
     sf.close()
 
     # Run job script sending its output/error to stdout/stderr
-    print "Production starting at %s (UTC)"%now_str()
+    print "Program starting at %s (UTC)"%now_str()
     job_cmd = "/bin/bash job.sh"
     rc = subprocess.call(job_cmd.split())
-    print "Production ending at %s (UTC)"%now_str()
+    print "Program ending at %s (UTC)"%now_str()
 
     print "PADMEMC program ended with return code %s"%rc
 
@@ -103,7 +107,7 @@ def main(argv):
             print ">",data_copy_cmd
             rc = subprocess.call(data_copy_cmd.split())
 
-            print "Data file %s with size %s and adler32 %s copied to CNAF"%(data_dst_file,data_size,data_adler32)
+            print "MCDATA file %s with size %s and adler32 %s copied to CNAF"%(data_dst_file,data_size,data_adler32)
 
         else:
 
@@ -124,7 +128,7 @@ def main(argv):
             print ">",hsto_copy_cmd
             rc = subprocess.call(hsto_copy_cmd.split())
 
-            print "Hsto file %s with size %s and adler32 %s copied to CNAF"%(hsto_dst_file,hsto_size,hsto_adler32)
+            print "MCHSTO file %s with size %s and adler32 %s copied to CNAF"%(hsto_dst_file,hsto_size,hsto_adler32)
 
         else:
 

@@ -20,7 +20,7 @@ TargetRecoRootIO::TargetRecoRootIO()
   fEvent = new TTargetRecoEvent();
   fBeam  = new TTargetRecoBeam();
   fFitEvent = new TTargetFitEvent();
-  std::cout<<"fFitEvent created at <"<<fFitEvent<<">"<<std::endl;
+  fClusColl = NULL;
 
   TTree::SetBranchStyle(fBranchStyle);
 
@@ -33,6 +33,8 @@ TargetRecoRootIO::~TargetRecoRootIO()
 
 void TargetRecoRootIO::SaveEvent()
 {
+  //std::cout<<" in TargetRootIO::SaveEvent"<<std::endl;
+
   // Save  branch Target (collection of hits)
   RecoVRootIO::SaveEvent();
 
@@ -42,9 +44,16 @@ void TargetRecoRootIO::SaveEvent()
   // Save branch TargetBeam (beam parameters from the Target)
   TTargetRecoBeam* tBeam=Reco->getRecoBeam();
   fBeam=tBeam;
+  //std::cout<<" in TargetRootIO::SaveEvent after beam "<<std::endl;
+
+  /*
+  TTargetRecoEvent* myEvent = (TTargetRecoEvent*)fEvent;
+  myEvent->setTargetRecoBeam(tBeam);  
+  */
 
   // Save branch TargetFitEvent (WF fit parameters)
   SaveTargetFitEvent();
+  //std::cout<<" in TargetRootIO::SaveEvent after fit"<<std::endl;
 
 }
 void TargetRecoRootIO::SaveTargetFitEvent(){
@@ -76,11 +85,13 @@ void TargetRecoRootIO::NewRun(Int_t nRun, TFile* hfile){
   fEventTree = RecoRootIOManager::GetInstance()->GetEventTree();
   std::cout<<this->GetName()<<"::NewRun - pointer to the tree obtained: "<<fEventTree<<std::endl;
 
+  
   // Book branch TargetBeam (beam parameters from the Target)
   fBranchTargetRecoBeam = fEventTree->Branch("TargetBeam", fBeam->IsA()->GetName(), &fBeam);
   std::cout<<this->GetName()<<"::NewRun - branch TargetBeam obtained"<<std::endl;
   fBranchTargetRecoBeam->SetAutoDelete(kFALSE);
   std::cout<<this->GetName()<<"::NewRun - branch TargetBeam autodelete set to false"<<std::endl;
+  
 
   // Book branch TargetFitEvent (WF fit parameters)
   fBranchTargetFitEvent = fEventTree->Branch("TargetFitEvent", fFitEvent->IsA()->GetName(), &fFitEvent);

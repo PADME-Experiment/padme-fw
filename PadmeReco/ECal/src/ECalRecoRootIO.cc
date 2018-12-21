@@ -10,12 +10,17 @@
 #include "TProcessID.h"
 #include <stdio.h>
 #include "Riostream.h"
+//#include "TRecoVClusCollection.hh"
+#include "TECalClusCollection.hh"
+#include "TRecoVCluster.hh"
 
 
 ECalRecoRootIO::ECalRecoRootIO() 
   : RecoVRootIO(TString("ECal"))
 {
   fEvent = new TECalRecoEvent();
+  fClusColl = new TECalClusCollection();
+  //fClusColl = new TRecoVClusCollection(TRecoVCluster::Class());
 
   TTree::SetBranchStyle(fBranchStyle);
 

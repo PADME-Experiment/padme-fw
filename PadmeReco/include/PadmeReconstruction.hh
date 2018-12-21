@@ -7,8 +7,8 @@
 #include "TObjArray.h"
 
 class TRawEvent;
-
 class TMCEvent;
+class TRecoEvent;
 
 class TTargetMCEvent;
 class TEVetoMCEvent;
@@ -17,6 +17,14 @@ class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
 class TTPixMCEvent;
+
+class TTargetRecoEvent;
+class TEVetoRecoEvent;
+class TPVetoRecoEvent;
+class THEPVetoRecoEvent;
+class TECalRecoEvent;
+class TSACRecoEvent;
+class TTPixRecoEvent;
 
 class TDetectorInfo;
 
@@ -52,6 +60,7 @@ private:
   TFile* fHistoFile;
   TChain* fMCChain;
   TChain* fRawChain;
+  TChain* fRecoChain;
 
   TRawEvent* fRawEvent;
 
@@ -65,6 +74,16 @@ private:
   TSACMCEvent*     fSACMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
 
+
+  TRecoEvent*        fRecoEvent;
+  TTargetRecoEvent*  fTargetRecoEvent;
+  TEVetoRecoEvent*   fEVetoRecoEvent;
+  TPVetoRecoEvent*   fPVetoRecoEvent;
+  THEPVetoRecoEvent* fHEPVetoRecoEvent;
+  TECalRecoEvent*    fECalRecoEvent;
+  TSACRecoEvent*     fSACRecoEvent;
+  TTPixRecoEvent*    fTPixRecoEvent;
+  
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

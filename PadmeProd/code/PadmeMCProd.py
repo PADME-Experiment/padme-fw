@@ -228,7 +228,7 @@ def main(argv):
 	jf.write("Type = \"Job\";\n")
 	jf.write("JobType = \"Normal\";\n")
 	jf.write("Executable = \"/usr/bin/python\";\n")
-	jf.write("Arguments = \"-u job.py %s %s %s job.mac %s job.proxy\";\n"%(PROD_NAME,jobName,PROD_MC_VERSION,PROD_STORAGE_DIR))
+	jf.write("Arguments = \"-u job.py job.mac job.proxy %s %s %s %s %s\";\n"%(PROD_NAME,jobName,PROD_MC_VERSION,PROD_STORAGE_DIR,PROD_SRM))
 	jf.write("StdOutput = \"job.out\";\n")
 	jf.write("StdError = \"job.err\";\n")
 	jf.write("InputSandbox = {\"job.py\",\"job.mac\",\"job.proxy\"};\n")

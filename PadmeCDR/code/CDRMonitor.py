@@ -51,7 +51,7 @@ color_off   = "#0000CC"
 #############################
 
 # Access information for DAQ data server
-daq_server_list = ("l1padme3","l1padme4")
+daq_server_list = ("l1padme3","l1padme4","l0padme1")
 daq_user = "daq"
 daq_keyfile = "/home/%s/.ssh/id_rsa_cdr"%cdr_user
 

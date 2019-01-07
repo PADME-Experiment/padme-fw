@@ -10,16 +10,17 @@ from Logger import Logger
 
 class PadmeCDRServer:
 
-    def __init__(self,source_site,destination_site,daq_server,mode):
+    def __init__(self,source_site,destination_site,daq_server,year,mode):
 
         # Get position of CDR main directory from PADME_CDR_DIR environment variable
         # Default to current dir if not set
         self.cdr_dir = os.getenv('PADME_CDR_DIR',".")
 
-        # Get source and destination sites and name of data server
+        # Get source and destination sites, name of data server, and year of data taking
         self.source_site      = source_site
         self.destination_site = destination_site
         self.daq_server       = daq_server
+        self.year             = year
 
         self.server_id = ""
         if self.source_site == "DAQ":
@@ -37,6 +38,7 @@ class PadmeCDRServer:
         print "### PadmeCDRServer Initializing ###"
         print "Source: %s %s"%(self.source_site,self.daq_server)
         print "Destination: %s"%self.destination_site
+        print "Year of data taking: %s"%self.year
         print ""
 
         # Define file to store list of files with transfer errors
@@ -56,7 +58,7 @@ class PadmeCDRServer:
         self.cdr_user = os.environ['USER']
 
         # Path of current year rawdata wrt top daq directory
-        self.year = time.strftime("%Y",time.gmtime())
+        #self.year = time.strftime("%Y",time.gmtime())
         self.data_dir = "%s/rawdata"%self.year
 
         # Define minimum duration for an iteration (4 hours = 14400 seconds)

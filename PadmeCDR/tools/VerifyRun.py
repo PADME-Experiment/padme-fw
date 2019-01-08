@@ -70,12 +70,11 @@ def get_checksum_daq(rawfile):
     return a32
 
 def print_help():
-    print 'VerifyRunsToRemove -r run -s server [-c] [-Y year] [-h]'
+    print 'VerifyRun -r run -s server [-c] [-Y year] [-h]'
     print '  -r run     Select run to verify'
-    print '  -s server  Select DAQ data server where run can was stored'
-    #print '  -c         Enable checksum verification of files (safer but VERY SLOW)'
+    print '  -s server  Select DAQ data server where run is stored'
     print '  -Y year    Look for data from given year (default: current year)'
-    print '  -v         Run in verbose mode (repeat to increase verbose output)'
+    print '  -v         Run in verbose mode'
     print '  -h         Show this help message and exit'
 
 def main(argv):
@@ -138,13 +137,27 @@ def main(argv):
 
     if Verbose: print "DEBUG - Checking run %s on server %s"%(Run,Server)
 
+    # Get list of files for this run on DAQ server
+    daq_list = []
+    cmd = "%s \'( cd %s; ls %s )\'"%(daq_ssh,daq_path,Run)
+    for line in run_command(cmd):
+        if re.match("^.*No such file or directory",line):
+            print "ERROR - Run %s not found on DAQ server %s"%(Run,Server)
+            sys.exit(2)
+        else:
+            daq_list.append(line.rstrip())
+
     # Get list of files for this run at LNF
     lnf_list = []
     cmd = "gfal-ls %s/%s"%(lnf_srm,Run)
     for line in run_command(cmd):
         if re.match("^gfal-ls error: ",line):
-            print "ERROR accessing LNF"
-            sys.exit(2)
+            if re.match("^.*No such file or directory",line):
+                print "WARNING - Run %s not found at LNF"%Run
+            else:
+                print "ERROR - Unable to access LNF"
+                print line.rstrip()
+                sys.exit(2)
         else:
             lnf_list.append(line.rstrip())
 
@@ -153,20 +166,23 @@ def main(argv):
     cmd = "gfal-ls %s/%s"%(cnaf_srm,Run)
     for line in run_command(cmd):
         if re.match("^gfal-ls error: ",line):
-            print "ERROR accessing CNAF"
-            sys.exit(2)
+            if re.match("^.*No such file or directory",line):
+                print "WARNING - Run %s not found at CNAF"%Run
+            else:
+                print "ERROR - Unable to access CNAF"
+                print line.rstrip()
+                sys.exit(2)
         else:
             cnaf_list.append(line.rstrip())
-
-    # Get list of files for this run on DAQ server
-    daq_list = []
-    cmd = "%s \'( cd %s; ls %s )\'"%(daq_ssh,daq_path,Run)
-    for line in run_command(cmd): daq_list.append(line.rstrip())
 
     # Check if all files are at CNAF
     for rawfile in daq_list:
 
         print "Checking file %s"%rawfile
+
+        a32_daq = "undef"
+        a32_lnf = "undef"
+        a32_cnaf = "undef"
 
         a32_daq = get_checksum_daq("%s/%s"%(Run,rawfile))
         #if Verbose: print "DEBUG - File %s - DAQ checksum %s"%(rawfile,a32_daq)

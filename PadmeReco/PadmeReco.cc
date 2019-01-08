@@ -142,6 +142,9 @@ int main(Int_t argc, char **argv)
     //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
     RecoIO->SetReconstruction(PadmeReco);
+    std::cout<<"\n\n ======================================================================================="<<std::endl;
+    std::cout<<"======= PadmeReco: Initialization of the reconstruction is complete .... start processing events ................."<<std::endl;
+    std::cout<<"=======================================================================================\n\n"<<std::endl;
     while(PadmeReco->NextEvent()) {
       RecoIO->SaveEvent();
     }

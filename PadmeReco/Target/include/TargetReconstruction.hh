@@ -26,6 +26,7 @@ public:
   // virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   virtual void ProcessEvent(TRawEvent*);
+  virtual void ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tRecoEvent);
   virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);

@@ -196,13 +196,14 @@ void RecoRootIOManager::SaveEvent(){
   while (iRootIO!=endRootIO) {
     if ((*iRootIO)->GetEnabled()) {
       (*iRootIO)->SaveEvent();
-      //      std::cout << "Saving event for RECO: " << (*iRootIO)->GetName() << std::endl;
+      //std::cout << "Saving event for RECO: " << (*iRootIO)->GetName() << std::endl;
     }
     iRootIO++;
   }
 
   // All data have been copied: write it to file
   fEventTree->Fill();
+  //std::cout<<" tree filled ... "<<std::endl;
   
 }
 

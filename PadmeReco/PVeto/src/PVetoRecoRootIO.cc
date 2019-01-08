@@ -3,6 +3,7 @@
 
 #include "TPVetoRecoEvent.hh"
 #include "PVetoReconstruction.hh"
+#include "TPVetoClusCollection.hh"
 //#include "TRecoVHit.hh"
 
 #include "TString.h"
@@ -16,6 +17,8 @@ PVetoRecoRootIO::PVetoRecoRootIO()
   : RecoVRootIO(TString("PVeto"))
 {
   fEvent = new TPVetoRecoEvent();
+  fClusColl = new TPVetoClusCollection();
+  //  fClusColl = new TRecoVClusCollection(TRecoVCluster::Class());
 
   TTree::SetBranchStyle(fBranchStyle);
 

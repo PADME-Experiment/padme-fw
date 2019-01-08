@@ -16,6 +16,7 @@
 #include "TH2F.h"
 #include "TH1F.h"
 #include "TCanvas.h"
+#include "TRecoVCluster.hh"
 
 
 Int_t SACReconstruction::FindSeed(Int_t nele, Int_t * Used, Double_t* Ene) {
@@ -169,7 +170,28 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // {;}
 
 //  Last revised by M. Raggi 16/11/2018 
-int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
+void SACReconstruction::BuildClusters(){
+
+  //std::cout<<"In SACBuildClusters "<<std::endl;
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+  //std::cout<<"myClusters is now cleared  "<<std::endl;
+  
+  
+  ClNCry.clear();
+  ClTime.clear();
+  ClE.clear();
+  ClX.clear();
+  ClY.clear();
+  ClSeed.clear();
+  
+  SdTime.clear();
+  SdEn.clear();
+  SdCell.clear();
+
 
   const int NMaxCl=100;
   const int NRows=5;
@@ -180,10 +202,11 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   Double_t Time=0;
  
   vector<TRecoVHit *> &Hits  = GetRecoHits();
+  //std::cout<<"In SACBuildClusters ... n. of input hits = "<<Hits.size()<<std::endl;
   int NCry=0;
   if(Hits.size()==0){
     //    std::cout<<"No hits !!!!"<<std::endl;
-    return -1;
+    return; //-1;
   }
   int NClus =1;
   int NSeeds=0;
@@ -207,21 +230,22 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-    cUsed[iHit1]  = {0};
-    cTime[iHit1]  = Hits[iHit1]->GetTime();;
-    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
+    cUsed[iHit1]  = 0;
+    cTime[iHit1]  = Hits[iHit1]->GetTime();
+    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
+    //std::cout<<"SAChits "<<iHit1<<" "<<Hits[iHit1]->GetChannelId()<<" "<<Hits[iHit1]->GetEnergy()<<" "<<Hits[iHit1]->GetTime()<<std::endl;
   }  
 
   Int_t iMax=0;
   Int_t HitUsed=0;
   Double_t LastCell;
+  Int_t clusMatrix[NMaxCl][20]={0};
   while(iMax>-1){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
     NCry=0;
-    //    std::cout<<"Imax "<<iMax<<" "<<cEnergy[iMax]<<" "<<NSeeds<<std::endl;
-    //  if(NSeeds==0){
+    //std::cout<<"Imax "<<iMax<<" E/T "<<cEnergy[iMax]<<"/"<<cTime[iMax]<<" nseeds so far = "<<NSeeds<<std::endl;
     SdTime.push_back(cTime[iMax]);    
     SdEn.push_back(cEnergy[iMax]);    
     SdCell.push_back(cChID[iMax]);    
@@ -235,11 +259,15 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
      
     ClX.push_back(0.);  //carbon copy of the occupancy
     ClY.push_back(0.);  //carbon copy of the occupancy
+    
 
     // we may want to use the space coordinates in this loop.
     for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      //      std::cout<<"check if hit="<<iHit1<<" is next to seed "<<iMax<<" in space and time "<<SdTime[NSeeds]<<" "<<SdCell[NSeeds]<< std::endl;
+      //if (iHit1 == iMax ) std::cout<<" Hey there: iMax = "<<iMax<<" seed T/Hit Time  "<<SdTime[NSeeds]<<"/"<<cTime[iHit1]<<" seed/hit cell "<<SdCell[NSeeds]<<"/"<<cChID[iHit1]<<std::endl;
       if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
-	//	std::cout<<"is neig "<<pippo<<std::endl;
+	//std::cout<<"is neig "<<iHit1<<std::endl;
+	clusMatrix[NSeeds][NCry]=iHit1;
 	Double_t XCl=(60.-cChID[iHit1]/10*30.);
 	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	cUsed[iHit1]=1;
@@ -263,6 +291,39 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
     if(NCry>1 || ClE[NSeeds]>10.) NGoodClus++;
   }  //end of while loop on seeds
   
+  //std::cout<<"In SACBuildClusters - before filling clusters NSeeds = "<<NSeeds<<std::endl;
+  // fill here the clusters SS
+  std::vector<Int_t> tmpHitsInCl;
+  for (Int_t iCl=0; iCl<NSeeds; ++iCl){
+    tmpHitsInCl.clear();
+    TRecoVCluster* myCl = new TRecoVCluster();
+    myCl->SetChannelId( SdCell[iCl] );
+    myCl->SetEnergy( ClE[iCl]    );
+    myCl->SetTime(   ClTime[iCl] );
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetSeed(ClSeed[iCl]);
+    myCl->SetNHitsInClus(ClNCry[iCl]);
+    //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
+    for (unsigned int j=0; j<ClNCry[iCl]; ++j)
+      {
+	tmpHitsInCl.push_back(clusMatrix[iCl][j]);
+	//std::cout<<" "<<clusMatrix[iCl][j];
+      }
+    //std::cout<<endl;
+    myCl->SetHitVecInClus(tmpHitsInCl);
+    myClusters.push_back(myCl);
+    tmpHitsInCl.clear();
+    /*
+    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<GetClusters()[iCl]->GetEnergy()<<std::endl;
+    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<GetClusters()[iCl]->GetChannelId()<<"/"<<GetClusters()[iCl]->GetEnergy()<<"/"<<GetClusters()[iCl]->GetTime()<<"/"<<GetClusters()[iCl]->GetNHitsInClus()<<"/ ";
+    for (int j=0; j<GetClusters()[iCl]->GetNHitsInClus(); ++j)
+      {
+	std::cout<<" "<<GetClusters()[iCl]->GetHitVecInClus()[j];
+      }
+    std::cout<<endl;
+    */
+  }
+
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     //	 SACDropHitE
     GetHisto("SACHitE")->Fill(cEnergy[iHit1]);
@@ -270,8 +331,9 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
       GetHisto("SACDropHitE")->Fill(cEnergy[iHit1]);
     }
   }
-  return NGoodClus;
+  return; //NGoodClus;
 }
+
 
 void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   static int nevt;
@@ -326,7 +388,8 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   SdCell.clear();
   EvTotE=0;
   //  std::cout<<"Builing clusters"<<std::endl;
-  int NClusters = SACBuildClusters(rawEv);
+  int NClusters = GetClusters().size();//SACBuildClusters(rawEv);
+  //std::cout<<"Built clusters - size "<<NClusters<<std::endl;
   GetHisto("SACNPart")->Fill(SACNPart);
   GetHisto("SACNClus")->Fill(NClusters);
   GetHisto("SACETot") ->Fill(EvTotE);
@@ -343,7 +406,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   }
   //  std::cout<<" "<<hh<<" "<<votes[hh]<<std::endl;
 
-  if(nevt % 10 == 0)std::cout<<"Nev "<<nevt<<std::endl;
+  //if(nevt % 10 == 0)std::cout<<"Nev "<<nevt<<std::endl;
   if(nevt % 100 == 0) {
     c.cd();
     GetHisto("SACOccupancy") -> Draw();

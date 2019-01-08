@@ -91,7 +91,7 @@ def main(argv):
 
         if os.path.exists(output_file):
 
-            data_src_file = otuput_file
+            data_src_file = output_file
             data_size = os.path.getsize(data_src_file)
             data_adler32 = get_adler32(data_src_file)
             data_src_url = "file://%s/%s"%(job_dir,data_src_file)

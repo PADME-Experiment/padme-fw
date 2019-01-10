@@ -79,6 +79,8 @@ public:
   vector<TRecoVHit *> &GetRecoHits(){return fHits;};
   vector<TRecoVCluster *> &GetClusters(){return fClusters;}
 
+  PadmeVTrigger *GetTriggerProcessor(){return fTriggerProcessor;};
+
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  

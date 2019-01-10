@@ -39,6 +39,7 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   if(fConfig) {delete fConfig; fConfig=0;}; 
   if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
   if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
+  if(fTriggerProcessor) {delete fTriggerProcessor; fTriggerProcessor = 0;};
 }
 
 void PadmeVReconstruction::Exception(TString Message){
@@ -201,7 +202,7 @@ void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv){
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
       //Loop over the trigger channels and perform reco
       UChar_t nTriggers  = ADC->GetNADCTriggers();
-      for(Int_t iTr = 0; iTr<nTriggers;iTr++) {	
+      for(Int_t iTr = 0; iTr<nTriggers;iTr++) {
 	TADCTrigger* trigger = ADC->ADCTrigger(iTr);
 	fTriggerProcessor->ProcessTrigger(ADC->GetBoardId(),trigger);
       }

@@ -26,7 +26,8 @@ public:
   double GetTimeBin(int ib,int ig);
 
   void SetTrigMask(UInt_t val) {fTrigMask = val;};
-  
+  int GetTrigMask() {return fTrigMask;};
+
 private:
   int fTriggerNumber;
   int fFrequency;

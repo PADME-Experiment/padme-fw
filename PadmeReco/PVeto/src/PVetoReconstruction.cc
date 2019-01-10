@@ -24,6 +24,7 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   fChannelReco = new DigitizerChannelReco();
   fChannelCalibration  = new PadmeVCalibration();
+  fTriggerProcessor = new PadmeVTrigger();
 }
 
 PVetoReconstruction::~PVetoReconstruction()
@@ -85,6 +86,7 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 
 void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+
 
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();

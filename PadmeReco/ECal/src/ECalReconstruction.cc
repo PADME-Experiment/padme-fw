@@ -31,6 +31,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fTriggerProcessor = new PadmeVTrigger();
+
   //  fClusters.clear();
 }
 

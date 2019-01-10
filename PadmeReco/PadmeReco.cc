@@ -15,6 +15,7 @@
 #include <fcntl.h>
 
 #include "RecoRootIOManager.hh"
+#include "PadmePerfUtils.hh"
 
 
 PadmeReconstruction* PadmeReco; 
@@ -132,25 +133,78 @@ int main(Int_t argc, char **argv)
         exit(1);
     }
     
+    ////// init here memory allocated and cpu time
+    int mem = 0;
+    float cpu = 0;
+    int umem = 0;
+    float ucpu = 0;
+    umem = PadmePerfUtils::getMem();
+    ucpu = float(PadmePerfUtils::getCpu()/100.);
+    mem = umem;
+    cpu = ucpu;
+    std::cout <<"***** PadmeReco MAIN                     \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+    mem = umem;
+    cpu = ucpu;
+    
+
     //Perform the output initialization
     RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance();
     RecoIO->SetFileName(OutputFileName);
     RecoIO->NewRun(1);
 
+    umem = PadmePerfUtils::getMem();
+    ucpu = float(PadmePerfUtils::getCpu()/100.);
+    std::cout <<"***** PadmeReco MAIN recoIO init         \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+    mem = umem;
+    cpu = ucpu;
+
     //    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
 
     //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+
+    umem = PadmePerfUtils::getMem();
+    ucpu = float(PadmePerfUtils::getCpu()/100.);
+    std::cout <<"***** PadmeReco MAIN Reconstruction init \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+    mem = umem;
+    cpu = ucpu;
+
+    // memory before event loop
+    int memBeforeEvLoop = mem;
+    int cpuBeforeEvLoop = cpu;
+    int niter=0;
+    
     RecoIO->SetReconstruction(PadmeReco);
-    std::cout<<"\n\n ======================================================================================="<<std::endl;
+    
+    std::cout<<"\n\n======================================================================================="<<std::endl;
     std::cout<<"======= PadmeReco: Initialization of the reconstruction is complete .... start processing events ................."<<std::endl;
     std::cout<<"=======================================================================================\n\n"<<std::endl;
     while(PadmeReco->NextEvent()) {
       RecoIO->SaveEvent();
+
+      niter++;
+      umem = PadmePerfUtils::getMem();
+      ucpu = float(PadmePerfUtils::getCpu()/100.);
+      if (niter<20 || niter%500==0) {
+	std::cout <<"***** PadmeReco MAIN after this event    \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+	if (niter==1)
+	  {
+	    memBeforeEvLoop = umem;
+	    cpuBeforeEvLoop = ucpu;
+	    std::cout <<"***** PadmeReco MAIN AFTER FIRST EVENT      \t SZ= " << umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+	  }
+      }
+      mem = umem;
+      cpu = ucpu;
     }
+    std::cout <<"***** PadmeReco MAIN after event loop    \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM in the loop = "<<umem-memBeforeEvLoop<<" \t Delta T ="<<ucpu - cpuBeforeEvLoop <<" Events processed = "<<niter<< std::endl;
+    std::cout <<"***** PadmeReco MAIN AVERAGE mem leak/events    \t SZ= " << (umem-memBeforeEvLoop)/float(niter-1) << " Kb/event \t average total_cpuTime/events = " << (ucpu - cpuBeforeEvLoop)/float(niter-1) << " s/event  "<< std::endl;
+    
     PadmeReco->EndProcessing();
     RecoIO->EndRun();
     RecoIO->Close();
+    std::cout <<"***** PadmeReco MAIN after finalizing    \t SZ= " <<umem << " Kb \t Time = " << ucpu << " seconds  ---- \t DeltaM = "<<umem-mem<<" \t Delta T ="<<ucpu - cpu << std::endl;
+
     
     delete RecoIO;
     delete PadmeReco;

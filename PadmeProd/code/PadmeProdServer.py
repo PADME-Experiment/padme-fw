@@ -256,7 +256,7 @@ class PadmeProdServer:
                 r = re.match("^Job running on node (.*) as user",line)
                 if r: worker_node = r.group(1)
 
-                r = re.match("^(.*) file (.*) with size (.*) and adler32 (.*) copied to CNAF$",line)
+                r = re.match("^(.*) file (.*) with size (.*) and adler32 (.*) copied.*$",line)
                 if r:
                     file_type = r.group(1)
                     file_name = r.group(2)

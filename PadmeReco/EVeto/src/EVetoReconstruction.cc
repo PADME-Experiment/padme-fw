@@ -23,6 +23,7 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fTriggerProcessor = new PadmeVTrigger();
 }
 
 void EVetoReconstruction::HistoInit(){

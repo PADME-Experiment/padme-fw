@@ -29,7 +29,7 @@
 #include <map>
 
 #include "ChannelVReco.hh"
-
+#include "PadmeVTrigger.hh"
 
 using namespace std;
 
@@ -50,7 +50,7 @@ public:
   virtual void BuildHits(TRawEvent*);
   virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
   virtual void BuildClusters();
-
+  virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
   virtual void EndProcessing(); ///< Call from derived classes
@@ -102,7 +102,7 @@ protected:
 
   ChannelVReco *fChannelReco;
   PadmeVCalibration *fChannelCalibration;
-
+  PadmeVTrigger *fTriggerProcessor;
 
 };
 #endif

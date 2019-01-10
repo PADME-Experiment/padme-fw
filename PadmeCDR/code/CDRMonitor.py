@@ -42,7 +42,7 @@ monitor_file = "CDRMonitor.txt"
 # Define background colors to use for none/ok/warn/alarm/off
 color_none  = "#FFFFFF"
 color_ok    = "#00CC00"
-color_warn  = "#CCCC00"
+color_warn  = "#FFA500"
 color_alarm = "#CC0000"
 color_off   = "#0000CC"
 
@@ -51,7 +51,7 @@ color_off   = "#0000CC"
 #############################
 
 # Access information for DAQ data server
-daq_server_list = ("l1padme3","l1padme4")
+daq_server_list = ("l1padme3","l1padme4","l0padme1")
 daq_user = "daq"
 daq_keyfile = "/home/%s/.ssh/id_rsa_cdr"%cdr_user
 
@@ -61,6 +61,16 @@ daq_path = "/data"
 # Warning and alarm levels (in %) for DAQ disk servers
 daq_level_warn = 60
 daq_level_alarm = 85
+
+################################
+### LNF disk occupation data ###
+################################
+
+# Path to file with summary occupation info
+lnf_summary_file = "/home/%s/du-padme_dpm.ouput"%cdr_user
+
+# Total available space in TB
+lnf_disk_tot_TB = 80.
 
 ##############################
 ### KLOE tape library data ###
@@ -80,6 +90,9 @@ kloe_path = "/pdm"
 
 # Tool to get KLOE tape occupation
 kloe_tape_app = "/pdm/bin/padme_sum"
+
+# Total available tape space in TB
+kloe_tape_tot_TB = 350.
 
 # Warning and alarm levels (in %) for KLOE disk servers
 kloe_level_warn = 60
@@ -155,6 +168,15 @@ def get_kloe_info():
 
     return(tape_occ,disk_tot,disk_avl,disk_opc)
 
+def get_lnf_info():
+
+    disk_use = "0"
+    cmd = "tail -2 %s"%lnf_summary_file
+    for line in run_command(cmd):
+        rc = re.match("^\s*(\d+)B\s*$",line)
+        if rc: disk_use = rc.group(1)
+    return disk_use
+
 def run_command(command):
     print "> %s"%command
     p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,shell=True)
@@ -179,28 +201,39 @@ def start_monitor():
 
         for daq_server in daq_server_list:
             (daq_tot,daq_use,daq_avl,daq_opc) = get_daq_info(daq_server)
-            #daq_tot_TB = float(daq_tot)/1024/1024
+            daq_tot_TB = float(daq_tot)/1024/1024
             daq_use_TB = float(daq_use)/1024/1024
-            #daq_avl_TB = float(daq_avl)/1024/1024
+            daq_avl_TB = float(daq_avl)/1024/1024
             daq_color = color_ok
             if (int(daq_opc)>daq_level_warn): daq_color = color_warn
             if (int(daq_opc)>daq_level_alarm): daq_color = color_alarm
-            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1fTB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_opc,daq_color))
+            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
             mh.write(",")
 
-        (kloe_tape_occ,kloe_disk_tot,kloe_disk_avl,kloe_disk_opc) = get_kloe_info()
-        kloe_tape_TB = float(kloe_tape_occ)
-        kloe_tape_color = color_none
+        lnf_disk_use = get_lnf_info()
+        lnf_disk_use_TB = float(lnf_disk_use)/1024/1024/1024/1024
+        lnf_disk_opc = str(int(100.*lnf_disk_use_TB/lnf_disk_tot_TB))
+        lnf_disk_color = color_ok
+        if lnf_disk_use_TB > lnf_disk_tot_TB: lnf_disk_color = color_warn
+        mh.write("{\"title\":\"LNF Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc,lnf_disk_color))
+        mh.write(",")
+
+        (kloe_tape_use,kloe_disk_tot,kloe_disk_avl,kloe_disk_opc) = get_kloe_info()
+
+        kloe_tape_use_TB = float(kloe_tape_use)
+        kloe_tape_opc = str(int(100.*kloe_tape_use_TB/kloe_tape_tot_TB))
+        kloe_tape_color = color_ok
+        if kloe_tape_use_TB > kloe_tape_tot_TB: kloe_tape_color = color_warn
+        mh.write("{\"title\":\"KLOE Tape\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_tape_use_TB,kloe_tape_tot_TB,kloe_tape_opc,kloe_tape_color))
+        mh.write(",")
+
         kloe_disk_tot_TB = float(kloe_disk_tot)/1024/1024
         kloe_disk_avl_TB = float(kloe_disk_avl)/1024/1024
         kloe_disk_use_TB = kloe_disk_tot_TB-kloe_disk_avl_TB
         kloe_disk_color = color_ok
         if (int(kloe_disk_opc)>daq_level_warn):  kloe_disk_color = color_warn
         if (int(kloe_disk_opc)>daq_level_alarm): kloe_disk_color = color_alarm
-        #mh.write("{\"title\":\"KLOE Tape\",\"current\":{\"value\":\"Used:%6.1f TB\",\"col\":\"%s\"}}"%(kloe_tape_TB,kloe_tape_color))
-        mh.write("{\"title\":\"KLOE Tape\",\"current\":{\"value\":\"Used:%6.1f TB\"}}"%kloe_tape_TB)
-        mh.write(",")
-        mh.write("{\"title\":\"KLOE Disk\",\"current\":{\"value\":\"Used:%6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_disk_use_TB,kloe_disk_opc,kloe_disk_color))
+        mh.write("{\"title\":\"KLOE Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_disk_use_TB,kloe_disk_tot_TB,kloe_disk_opc,kloe_disk_color))
         #mh.write(",")
 
         mh.write("]\n")

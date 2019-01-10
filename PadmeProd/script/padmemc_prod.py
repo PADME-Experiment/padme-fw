@@ -19,13 +19,10 @@ def get_adler32(outfile):
 
 def main(argv):
 
-    # Top CVMFS direcotry for PadmeMC
-    padmemc_cvmfs_dir = "/cvmfs/padme.roma1.infn.it/PadmeMC"
+    # Top CVMFS directory for PadmeMC
+    padmemc_cvmfs_dir = "/cvmfs/padme.infn.it/PadmeMC"
 
-    # Top SRM path to CNAF tape library
-    cnaf_padme_srm = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
-
-    (prod_name,job_name,mc_version,cfg_file,storage_dir,proxy_file) = argv
+    (cfg_file,proxy_file,prod_name,job_name,mc_version,storage_dir,srm_uri) = argv
 
     job_dir = os.getcwd()
 
@@ -34,7 +31,7 @@ def main(argv):
     print "Job running on node %s as user %s in dir %s"%(os.getenv('HOSTNAME'),os.getenv('USER'),job_dir)
 
     print "PadmeMC version",mc_version
-    print "SRM server URI",cnaf_padme_srm
+    print "SRM server URI",srm_uri
     print "Storage directory",storage_dir
     print "MC macro file",cfg_file
     print "Proxy file",proxy_file
@@ -60,6 +57,10 @@ def main(argv):
         print "ERROR File %s not found"%padmemc_exe_file
         exit(2)
 
+    # Create local link to GDML files needed for geometry definition
+    padmemc_gdml_dir = "%s/gdml"%padmemc_version_dir
+    os.symlink(padmemc_gdml_dir,"gdml")
+
     # Prepare shell script to run PadmeMC
     sf = open("job.sh","w")
     sf.write("#!/bin/bash\n")
@@ -72,16 +73,16 @@ def main(argv):
     sf.close()
 
     # Run job script sending its output/error to stdout/stderr
-    print "Production starting at %s (UTC)"%now_str()
+    print "Program starting at %s (UTC)"%now_str()
     job_cmd = "/bin/bash job.sh"
     rc = subprocess.call(job_cmd.split())
-    print "Production ending at %s (UTC)"%now_str()
+    print "Program ending at %s (UTC)"%now_str()
 
     print "PADMEMC program ended with return code %s"%rc
 
     if rc == 0:
 
-        print "--- Saving output files to CNAF tape library ---"
+        print "--- Saving output files ---"
 
         # Obtain new VOMS proxy from long-lived proxy
         proxy_cmd = "voms-proxy-init --noregen --cert %s --key %s --voms vo.padme.org"%(proxy_file,proxy_file)
@@ -93,17 +94,17 @@ def main(argv):
             data_src_file = "data.root"
             data_size = os.path.getsize(data_src_file)
             data_adler32 = get_adler32(data_src_file)
-            data_src_uri = "file://%s/%s"%(job_dir,data_src_file)
+            data_src_url = "file://%s/%s"%(job_dir,data_src_file)
 
             data_dst_file = "%s_%s_data.root"%(prod_name,job_name)
-            data_dst_uri = "%s%s/%s"%(cnaf_padme_srm,storage_dir,data_dst_file)
+            data_dst_url = "%s%s/%s"%(srm_uri,storage_dir,data_dst_file)
 
-            print "Copying",data_src_uri,"to",data_dst_uri
-            data_copy_cmd = "gfal-copy %s %s"%(data_src_uri,data_dst_uri)
+            print "Copying",data_src_url,"to",data_dst_url
+            data_copy_cmd = "gfal-copy %s %s"%(data_src_url,data_dst_url)
             print ">",data_copy_cmd
             rc = subprocess.call(data_copy_cmd.split())
 
-            print "Data file %s with size %s and adler32 %s copied to CNAF"%(data_dst_file,data_size,data_adler32)
+            print "MCDATA file %s with size %s and adler32 %s copied"%(data_dst_file,data_size,data_adler32)
 
         else:
 
@@ -114,17 +115,17 @@ def main(argv):
             hsto_src_file = "hsto.root"
             hsto_size = os.path.getsize(hsto_src_file)
             hsto_adler32 = get_adler32(hsto_src_file)
-            hsto_src_uri = "file://%s/%s"%(job_dir,hsto_src_file)
+            hsto_src_url = "file://%s/%s"%(job_dir,hsto_src_file)
 
             hsto_dst_file = "%s_%s_hsto.root"%(prod_name,job_name)
-            hsto_dst_uri = "%s%s/%s"%(cnaf_padme_srm,storage_dir,hsto_dst_file)
+            hsto_dst_url = "%s%s/%s"%(srm_uri,storage_dir,hsto_dst_file)
 
-            print "Copying %s to %s"%(hsto_src_uri,hsto_dst_uri)
-            hsto_copy_cmd = "gfal-copy %s %s"%(hsto_src_uri,hsto_dst_uri)
+            print "Copying %s to %s"%(hsto_src_url,hsto_dst_url)
+            hsto_copy_cmd = "gfal-copy %s %s"%(hsto_src_url,hsto_dst_url)
             print ">",hsto_copy_cmd
             rc = subprocess.call(hsto_copy_cmd.split())
 
-            print "Hsto file %s with size %s and adler32 %s copied to CNAF"%(hsto_dst_file,hsto_size,hsto_adler32)
+            print "MCHSTO file %s with size %s and adler32 %s copied"%(hsto_dst_file,hsto_size,hsto_adler32)
 
         else:
 

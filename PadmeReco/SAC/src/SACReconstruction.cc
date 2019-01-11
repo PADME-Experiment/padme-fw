@@ -55,6 +55,7 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   ParseConfFile(ConfigFileName);
   //fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelSAC();
+  fTriggerProcessor = new PadmeVTrigger();
 }
 
 void SACReconstruction::HistoInit(){
@@ -342,11 +343,23 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //  return;
   Double_t Energy=0;
-  Double_t ECh[25]={0};
+  Double_t ECh[25];
   Double_t Time=0;
-  Double_t votes[1024]={0};
-  Double_t ESums[1024]={0};
+  Double_t votes[1024];
+  Double_t ESums[1024];
   Int_t SACNPart=0;
+
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  
+  for(int i = 0;i<25;i++) {
+    ECh[i] = 0.;
+  }
+  
+  for(int i = 0;i<1024;i++) {
+    votes[i] = 0.;
+    ESums[i] = 0.;
+  }
+
   GetHisto("SACOccupancy_last") -> Reset();
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     Time=Hits[iHit1]->GetTime();
@@ -361,8 +374,8 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     GetHisto("SACTime") -> Fill(Time);
     GetHisto("SACVoters")->Fill((double)Time,(double)ElCh);
     //    std::cout<<"Energy "<<Hits[iHit1]->GetEnergy()<<" Time "<<Time<<" ich "<<ich<<std::endl;
-    votes[(Int_t)Time]++;
-    ESums[(Int_t)Time]+=Hits[iHit1]->GetEnergy();
+    //    votes[(Int_t)Time]++;
+    // ESums[(Int_t)Time]+=Hits[iHit1]->GetEnergy();
   }
   GetHisto("SACQTot") -> Fill(Energy);
   for(int hh=0;hh<1000;hh++){
@@ -407,16 +420,17 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  std::cout<<" "<<hh<<" "<<votes[hh]<<std::endl;
 
   //if(nevt % 10 == 0)std::cout<<"Nev "<<nevt<<std::endl;
+  /*
   if(nevt % 100 == 0) {
     c.cd();
     GetHisto("SACOccupancy") -> Draw();
     c.Update();
   }
+  */
   nevt ++;
 
   //Waveform histograms
   char iName[1000];
-  UChar_t nBoards = rawEv->GetNADCBoards();
   Double_t adc_count[1024][25]        ; 
   Double_t adc_pedestal   [25]        ;
   Double_t adc_chsum    [1024]        ; 

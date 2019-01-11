@@ -15,6 +15,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
   fChannelReco = 0;
   fChannelCalibration = 0;
+  fTriggerProcessor = 0;
   fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
@@ -38,6 +39,7 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   if(fConfig) {delete fConfig; fConfig=0;}; 
   if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
   if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
+  if(fTriggerProcessor) {delete fTriggerProcessor; fTriggerProcessor = 0;};
 }
 
 void PadmeVReconstruction::Exception(TString Message){
@@ -189,10 +191,34 @@ void PadmeVReconstruction::HistoExit(){
     }
 }
 
+void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv){
+  fTriggerProcessor->Clear();
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  
+  TADCBoard* ADC;
+  
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the trigger channels and perform reco
+      UChar_t nTriggers  = ADC->GetNADCTriggers();
+      for(Int_t iTr = 0; iTr<nTriggers;iTr++) {
+	TADCTrigger* trigger = ADC->ADCTrigger(iTr);
+	fTriggerProcessor->ProcessTrigger(ADC->GetBoardId(),trigger);
+      }
+    }    
+  }
+}
 
 void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
   // From waveforms to Hits
+  
+  if(fTriggerProcessor) {
+    fTriggerProcessor->SetTrigMask(rawEv->GetEventTrigMask());
+    BuildTriggerInfo(rawEv);
+  }
+
   BuildHits(rawEv);
    
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
@@ -253,6 +279,13 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 	unsigned int nHitsAfter = Hits.size();
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+			      Hits[iHit]->GetTime() - 
+			      fTriggerProcessor->GetChannelTriggerTime( 
+								       ADC->GetBoardId(), chn->GetChannelNumber()
+									)
+			      );
 	}
       }
     } else {

@@ -27,6 +27,8 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
   //ParseConfFile(ConfigFileName);
   fChannelReco    = new DigitizerChannelTarget();
   fTargetRecoBeam = new TTargetRecoBeam();  
+  fTriggerProcessor = new PadmeVTrigger();
+
 }
 
 void TargetReconstruction::HistoInit(){

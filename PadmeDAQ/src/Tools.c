@@ -116,7 +116,7 @@ int create_initfail_file()
   }
 
   // Check if file is already there (not cleaned in previous run?)
-  if ( access(Config->initfail_file,F_OK) == -1 ) {
+  if ( access(Config->initfail_file,F_OK) != -1 ) {
     printf("PadmeDAQ::create_initfail_file - InitFail file '%s' already exists.\n",Config->initfail_file);
     return 1;
   }

@@ -16,6 +16,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fChannelReco = 0;
   fChannelCalibration = 0;
   fTriggerProcessor = 0;
+  fClusterTimeCut = 1.;
   fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());

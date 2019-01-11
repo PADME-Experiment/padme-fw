@@ -3,6 +3,8 @@
 
 #include "TEVetoRecoEvent.hh"
 #include "EVetoReconstruction.hh"
+#include "TEVetoClusCollection.hh"
+
 //#include "TRecoVHit.hh"
 
 #include "TString.h"
@@ -16,6 +18,9 @@ EVetoRecoRootIO::EVetoRecoRootIO()
   : RecoVRootIO(TString("EVeto"))
 {
   fEvent = new TEVetoRecoEvent();
+  fClusColl = new TEVetoClusCollection();
+  //  fClusColl = new TRecoVClusCollection(TRecoVCluster::Class());
+
 
   TTree::SetBranchStyle(fBranchStyle);
 

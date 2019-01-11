@@ -596,6 +596,9 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             print "RunControlServer::change_setup - ERROR while loading new setup %s"%setup
             return "error"
 
+        print "change_setup - saving new setup %s to %s\n"%(setup,self.lus_file)
+        with open(self.lus_file,"w") as lf: lf.write("%s\n"%setup)
+
         return setup
 
     def new_run(self):

@@ -14,6 +14,8 @@
 #include "TMCEvent.hh"
 #include "TMCVEvent.hh"
 #include "TRecoVHit.hh"
+#include "TRecoVCluster.hh"
+#include "TRecoVObject.hh"
 
 #include "PadmeVNamedModule.hh"
 #include "utlConfigParser.hh"
@@ -27,8 +29,11 @@
 #include <map>
 
 #include "ChannelVReco.hh"
+#include "PadmeVTrigger.hh"
 
 using namespace std;
+
+class TRecoEvent;
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
@@ -39,6 +44,13 @@ public:
   //virtual TRecoVEvent* ProcessEvent(TDetectorVEvent* = 0, Event* = 0) = 0;
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void ProcessEvent(TRawEvent* = 0);
+  virtual void ProcessEvent(TRecoVObject* =0, TRecoEvent* =0);
+  virtual void ClearHits();
+  virtual void ClearClusters();
+  virtual void BuildHits(TRawEvent*);
+  virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
+  virtual void BuildClusters();
+  virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
   virtual void EndProcessing(); ///< Call from derived classes
@@ -46,9 +58,7 @@ public:
   virtual void HistoInit(); 
   virtual void HistoExit();
   virtual void AddHisto(string,TH1 *);
-  virtual TH1* GetHisto(string);
-  
-  
+  virtual TH1* GetHisto(string);  
 
   static void Exception(TString);
 
@@ -67,7 +77,10 @@ public:
   utl::ConfigParser *GetConfigParser(){return fConfigParser;};
   PadmeVRecoConfig *GetConfig(){return fConfig;};
   vector<TRecoVHit *> &GetRecoHits(){return fHits;};
-  
+  vector<TRecoVCluster *> &GetClusters(){return fClusters;}
+
+  PadmeVTrigger *GetTriggerProcessor(){return fTriggerProcessor;};
+
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -87,10 +100,11 @@ protected:
   map<string,TH1 *> fHistoMap;
 
   vector<TRecoVHit *> fHits;
+  vector<TRecoVCluster *> fClusters;
 
   ChannelVReco *fChannelReco;
   PadmeVCalibration *fChannelCalibration;
-
+  PadmeVTrigger *fTriggerProcessor;
 
 };
 #endif

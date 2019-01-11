@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import MySQLdb
 import os
 import sys
@@ -55,12 +57,33 @@ class PadmeMCDB:
         if n: return 1
         return 0
 
-    def create_prod(self,name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,config,time_start,n_jobs):
+    def create_recoprod(self,name,run,description,prod_ce,reco_version,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs):
+
+        self.create_prod(name,prod_ce,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs)
+        prod_id = self.get_prod_id(name)
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO production (name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,configuration,time_start,n_jobs) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",(name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,proxy_file,config,time_start,n_jobs))
+        c.execute("""INSERT INTO reco_prod (production_id,description,run,reco_version) VALUES (%s,%s,%s,%s)""",(prod_id,description,run,reco_version))
         self.conn.commit()
+
+    def create_mcprod(self,name,description,user_req,n_events_req,prod_ce,mc_version,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs):
+
+        self.create_prod(name,prod_ce,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs)
+        prod_id = self.get_prod_id(name)
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""INSERT INTO mc_prod (production_id,description,user_req,n_events_req,mc_version) VALUES (%s,%s,%s,%s,%s)""",(prod_id,description,user_req,n_events_req,mc_version))
+        self.conn.commit()
+
+    def create_prod(self,name,prod_ce,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs):
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""INSERT INTO production (name,prod_ce,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",(name,prod_ce,prod_dir,storage_dir,srm_uri,proxy_file,time_start,n_jobs))
+        self.conn.commit()
+
 
     #def set_prod_status(self,pid,status):
     #
@@ -107,11 +130,17 @@ class PadmeMCDB:
         for j in res: job_list.append(j[0])
         return job_list    
 
-    def create_job(self,prod_id,name,job_dir):
+    def create_job(self,prod_id,name,job_dir,configuration,input_list):
+
+        # Random job configuration is not handled yet
+        random = ""
+
+        # Jobs are created in idle status
+        status = 0
 
         self.check_db()
         c = self.conn.cursor()
-        c.execute("""INSERT INTO job (production_id,name,job_dir,random,status) VALUES (%s,%s,%s,%s,0)""",(prod_id,name,job_dir,""))
+        c.execute("""INSERT INTO job (production_id,name,job_dir,configuration,input_list,random,status) VALUES (%s,%s,%s,%s,%s,%s,%s)""",(prod_id,name,job_dir,configuration,input_list,random,status))
         self.conn.commit()
 
     def get_job_id(self,prod_id,name):
@@ -171,6 +200,20 @@ class PadmeMCDB:
         self.check_db()
         c = self.conn.cursor()
         c.execute("""UPDATE job SET time_job_end = %s WHERE id = %s""",(time_end,job_id))
+        self.conn.commit()
+
+    def set_run_time_start(self,job_id,time_start):
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""UPDATE job SET time_run_start = %s WHERE id = %s""",(time_start,job_id))
+        self.conn.commit()
+
+    def set_run_time_end(self,job_id,time_end):
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""UPDATE job SET time_run_end = %s WHERE id = %s""",(time_end,job_id))
         self.conn.commit()
 
     def set_job_worker_node(self,job_id,worker_node):

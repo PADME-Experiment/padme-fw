@@ -22,6 +22,8 @@
 #include "TH2F.h"
 #include "TH1F.h"
 #include "TCanvas.h"
+#include "TRecoVCluster.hh"
+
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
@@ -29,6 +31,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fTriggerProcessor = new PadmeVTrigger();
+
+  //  fClusters.clear();
 }
 
 void ECalReconstruction::HistoInit(){
@@ -127,6 +132,13 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 */
 
 
+// void ECalReconstruction::ProcessEvent(TRawEvent* rawEv)
+// {
+//   PadmeVReconstruction::ProcessEvent(rawEv);
+//   BuildClusters();
+// }
+
+
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
 
@@ -196,18 +208,18 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  return;
   //  std::cout<<" calling cluster routine "<<std::endl;
   // M. Raggi 22/11/2018 bulding ECal clusters
-  ClNCry.clear();
-  ClTime.clear();
-  ClE.clear();
-  ClX.clear();
-  ClY.clear();
-  ClSeed.clear();
-  SdTime.clear();
-  SdEn.clear();
-  SdCell.clear();
+  // ClNCry.clear();
+  // ClTime.clear();
+  // ClE.clear();
+  // ClX.clear();
+  // ClY.clear();
+  // ClSeed.clear();
+  // SdTime.clear();
+  // SdEn.clear();
+  // SdCell.clear();
   EvTotE=0;
   //  std::cout<<"Builing clusters"<<std::endl;
-  int NClusters = ECalBuildClusters(rawEv);
+  int NClusters = fClusters.size();//ECalBuildClusters(rawEv);
   //  GetHisto("ECALNPart")->Fill(ECALNPart);
   GetHisto("ECALNClus")->Fill(NClusters);
   //  GetHisto("ECALETot") ->Fill(EvTotE);
@@ -391,7 +403,29 @@ Int_t ECalReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
 }
 
 //  Written by M. Raggi 22/11/2018 
-int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
+void ECalReconstruction::BuildClusters()
+{
+
+  //std::cout<<"In ECalBuildClusters "<<std::endl;
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+  //std::cout<<"myClusters is now cleared  "<<std::endl;
+  
+
+  
+  ClNCry.clear();
+  ClTime.clear();
+  ClE.clear();
+  ClX.clear();
+  ClY.clear();
+  ClSeed.clear();
+  SdTime.clear();
+  SdEn.clear();
+  SdCell.clear();
+  EvTotE=0;
 
   const int NMaxCl=100;
   const int NRows=29;
@@ -406,7 +440,7 @@ int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
  
   if(Hits.size()==0){
     //    std::cout<<"No hits !!!!"<<std::endl;
-    return -1;
+    return;// -1;
   }
   int NSeeds=0;
   int NGoodClus=0; 
@@ -437,7 +471,7 @@ int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
 
   Int_t iMax=0;
   Int_t HitUsed=0;
-
+  Int_t clusMatrix[NMaxCl][20]={0};
   while(iMax>-1){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
@@ -489,6 +523,38 @@ int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
     NSeeds++;
     if(NCry>1 || ClE[NSeeds]>10.) NGoodClus++;
   }  //end of while loop on seeds
+
+  std::vector<Int_t> tmpHitsInCl;
+  for (Int_t iCl=0; iCl<NSeeds; ++iCl){
+    tmpHitsInCl.clear();
+    TRecoVCluster* myCl = new TRecoVCluster();
+    myCl->SetChannelId( SdCell[iCl] );
+    myCl->SetEnergy( ClE[iCl]    );
+    myCl->SetTime(   ClTime[iCl] );
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetSeed(ClSeed[iCl]);
+    myCl->SetNHitsInClus(ClNCry[iCl]);
+    //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
+    for (unsigned int j=0; j<ClNCry[iCl]; ++j)
+      {
+	tmpHitsInCl.push_back(clusMatrix[iCl][j]);
+	//std::cout<<" "<<clusMatrix[iCl][j];
+      }
+    //std::cout<<endl;
+    myCl->SetHitVecInClus(tmpHitsInCl);
+    myClusters.push_back(myCl);
+    tmpHitsInCl.clear();
+    /*
+    std::cout<<" done .. icl "<<iCl<<" energy = "<<myCl->GetEnergy()<<" "<<GetClusters()[iCl]->GetEnergy()<<std::endl;
+    std::cout<<" cluster "<<iCl<<" id/e/t/nhit/hits"<<GetClusters()[iCl]->GetChannelId()<<"/"<<GetClusters()[iCl]->GetEnergy()<<"/"<<GetClusters()[iCl]->GetTime()<<"/"<<GetClusters()[iCl]->GetNHitsInClus()<<"/ ";
+    for (int j=0; j<GetClusters()[iCl]->GetNHitsInClus(); ++j)
+      {
+	std::cout<<" "<<GetClusters()[iCl]->GetHitVecInClus()[j];
+      }
+    std::cout<<endl;
+    */
+  }
+
   
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     //	 ECALDropHitE
@@ -497,5 +563,5 @@ int ECalReconstruction::ECalBuildClusters(TRawEvent* rawEv){
       GetHisto("ECALDropHitE")->Fill(cEnergy[iHit1]);
     }
   }
-  return NGoodClus;
+  return;// NGoodClus;
 }

@@ -10,16 +10,17 @@ from Logger import Logger
 
 class PadmeCDRServer:
 
-    def __init__(self,source_site,destination_site,daq_server,mode):
+    def __init__(self,source_site,destination_site,daq_server,year,mode):
 
         # Get position of CDR main directory from PADME_CDR_DIR environment variable
         # Default to current dir if not set
         self.cdr_dir = os.getenv('PADME_CDR_DIR',".")
 
-        # Get source and destination sites and name of data server
+        # Get source and destination sites, name of data server, and year of data taking
         self.source_site      = source_site
         self.destination_site = destination_site
         self.daq_server       = daq_server
+        self.year             = year
 
         self.server_id = ""
         if self.source_site == "DAQ":
@@ -37,6 +38,7 @@ class PadmeCDRServer:
         print "### PadmeCDRServer Initializing ###"
         print "Source: %s %s"%(self.source_site,self.daq_server)
         print "Destination: %s"%self.destination_site
+        print "Year of data taking: %s"%self.year
         print ""
 
         # Define file to store list of files with transfer errors
@@ -56,7 +58,7 @@ class PadmeCDRServer:
         self.cdr_user = os.environ['USER']
 
         # Path of current year rawdata wrt top daq directory
-        self.year = time.strftime("%Y",time.gmtime())
+        #self.year = time.strftime("%Y",time.gmtime())
         self.data_dir = "%s/rawdata"%self.year
 
         # Define minimum duration for an iteration (4 hours = 14400 seconds)
@@ -75,6 +77,10 @@ class PadmeCDRServer:
 
         # Path to adler32 command on DAQ data server
         self.daq_adler32_cmd = "/home/daq/DAQ/tools/adler32"
+
+        # Path to current_run and last_run files on DAQ data server
+        self.current_run_file = "/home/daq/DAQ/run/current_run"
+        self.last_run_file = "/home/daq/DAQ/run/last_run"
 
         # SFTP URL for rawdata on DAQ data server
         self.daq_sftp = "sftp://%s%s"%(self.daq_server,self.daq_path)
@@ -180,12 +186,51 @@ class PadmeCDRServer:
                 # Need code to handle proxy creation errors (e.g. when long-lived proxy expired)
                 # In this case we should issue some message and exit the program
 
+    def get_ongoing_run(self):
+
+        print "Getting on-going run from DAQ server %s"%self.daq_server
+
+        # current_run is the last started run
+        cmd = "%s \'( cat %s )\'"%(self.daq_ssh,self.current_run_file)
+        for line in self.run_command(cmd): current_run = line.rstrip()
+        if (current_run != "" and not re.match("run_\d+_\d+_\d+",current_run)): current_run = ""
+
+        # last_run is the last stopped run
+        cmd = "%s \'( cat %s )\'"%(self.daq_ssh,self.last_run_file)
+        for line in self.run_command(cmd): last_run = line.rstrip()
+        if (last_run != "" and not re.match("run_\d+_\d+_\d+",last_run)): last_run = ""
+
+        if (current_run == "" or current_run == last_run):
+            self.ongoing_run = ""
+        else:
+            self.ongoing_run = current_run
+
     def get_file_list_daq(self):
-        self.daq_list = []
+
+        # Make sure we do not try to transfer files while they are being written
+        if (self.ongoing_run != ""): print "Run %s is on-going: corresponding files will not be transferred"%self.ongoing_run
+
         print "Getting list of raw data files for year %s on DAQ server %s"%(self.year,self.daq_server)
         cmd = "%s \'( cd %s/%s; find -type f -name \*.root | sed -e s+\./++ )\'"%(self.daq_ssh,self.daq_path,self.data_dir)
         for line in self.run_command(cmd):
-            self.daq_list.append(line.rstrip())
+            ff = line.rstrip()
+            if (self.ongoing_run == "" or not re.match("^%s/"%self.ongoing_run,ff)):
+                self.daq_list.append(ff)
+
+        return "ok"
+
+    def get_run_list_daq(self):
+
+        # Make sure we do not try to transfer files while they are being written
+        if (self.ongoing_run != ""): print "Run %s is on-going and will not be transferred"%self.ongoing_run
+
+        print "Getting list of runs for year %s on DAQ server %s"%(self.year,self.daq_server)
+        cmd = "%s \'( cd %s/%s; ls )\'"%(self.daq_ssh,self.daq_path,self.data_dir)
+        for line in self.run_command(cmd):
+            run = line.rstrip()
+            if (self.ongoing_run == "" or not run == self.ongoing_run):
+                self.daq_run_list.append(run)
+
         return "ok"
 
     def get_file_list_kloe(self):
@@ -193,7 +238,6 @@ class PadmeCDRServer:
         # Compile regexp to extract file name (improves performance)
         re_get_rawdata_file = re.compile("^.* %s/%s/(.*\.root) .*$"%(self.kloe_path,self.data_dir))
 
-        self.kloe_list = []
         print "Getting list of raw data files for year %s on KLOE tape library"%self.year
 
         # First we get list of files currently on disk buffer
@@ -213,16 +257,19 @@ class PadmeCDRServer:
         return "ok"
 
     def get_file_list_lnf(self):
+
         self.renew_voms_proxy()
         print "Getting list of raw data files for year %s on LNF disks"%self.year
-        self.lnf_list = []
 
         lnf_dir_list = []
         for line in self.run_command("gfal-ls %s/%s"%(self.lnf_srm,self.data_dir)):
             if re.match("^gfal-ls error: ",line):
                 print "***ERROR*** gfal-ls returned error status while retrieving run list from LNF"
                 return "error"
-            lnf_dir_list.append(line.rstrip())
+            run = line.rstrip()
+            # If we are transferring from DAQ servers, no need to check runs which are not on disk
+            if ( (not self.daq_run_list) or (run in self.daq_run_list) ):
+                lnf_dir_list.append(run)
         lnf_dir_list.sort()
 
         for run_dir in lnf_dir_list:
@@ -236,17 +283,20 @@ class PadmeCDRServer:
         return "ok"
 
     def get_file_list_cnaf(self):
+
         self.renew_voms_proxy()
         print "Getting list of raw data files for year %s on CNAF tape library"%self.year
-        self.cnaf_list = []
 
         cnaf_dir_list = []
         for line in self.run_command("gfal-ls %s/%s"%(self.cnaf_srm,self.data_dir)):
             if re.match("^gfal-ls error: ",line):
                 print "***ERROR*** gfal-ls returned error status while retrieving run list from CNAF"
                 return "error"
-            cnaf_dir_list.append(line.rstrip())
-            cnaf_dir_list.sort()
+            run = line.rstrip()
+            # If we are transferring from DAQ servers, no need to check runs which are not on disk
+            if ( (not self.daq_run_list) or (run in self.daq_run_list) ):
+                cnaf_dir_list.append(run)
+        cnaf_dir_list.sort()
 
         for run_dir in cnaf_dir_list:
             self.check_stop_cdr()
@@ -510,13 +560,22 @@ class PadmeCDRServer:
 
             self.check_stop_cdr()
 
-            # Make a full list by merging lists from source and destination sites
+            # Reset all file/dir lists
+            self.ongoing_run = ""
+            self.daq_run_list = []
+            self.daq_list = []
+            self.lnf_list = []
+            self.cnaf_list = []
+            self.kloe_list = []
+
+            # Create a full list into which we will merge lists from source and destination sites
             full_list = []
 
             all_sites_ok = True
 
             if (self.source_site == "DAQ"):
-                if self.get_file_list_daq() == "error":
+                self.get_ongoing_run()
+                if ( (self.get_run_list_daq() == "error") or (self.get_file_list_daq() == "error") ):
                     print "WARNING - DAQ server %s has problems: suspending iteration"%self.daq_server
                     all_sites_ok = False
                 full_list.extend(self.daq_list)

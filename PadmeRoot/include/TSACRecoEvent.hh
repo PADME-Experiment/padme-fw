@@ -2,6 +2,7 @@
 #define TSACRecoEvent_H
 
 #include "TRecoVObject.hh"
+#include "TRecoVClusCollection.hh"
 
 class TSACRecoEvent : public TRecoVObject {
 
@@ -12,8 +13,6 @@ public:
 
 private:
   
-  
-
 
   ClassDef(TSACRecoEvent,1);
 };

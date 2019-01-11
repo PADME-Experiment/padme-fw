@@ -46,8 +46,8 @@ private:
   std::vector<double> SdTime; 
   std::vector<double> SdCell;
 
-  std::vector<double> TTotECAL;
-  std::vector<double> QTotECAL;
+  //  std::vector<double> TTotECAL;
+  //  std::vector<double> QTotECAL;
   double EvTotE;
 
   

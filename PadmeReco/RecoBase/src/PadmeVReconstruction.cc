@@ -253,6 +253,9 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 	unsigned int nHitsAfter = Hits.size();
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  //Hits[iHit]->SetBoardId(ADC->GetBoardId());
+	  //Hits[iHit]->SetChannelId(chn->GetChannelNumber()));
 	}
       }
     } else {
@@ -261,7 +264,151 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 }
 
 
-void PadmeVReconstruction::BuildClusters(){;}
+void PadmeVReconstruction::BuildClusters()
+{
+
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  if(Hits.size()==0){
+    return;
+  }
+
+  // declear all hits as "NOT-used" by any cluster at the beginning 
+  std::vector<Int_t> hUsed;
+  hUsed.clear();
+  for(unsigned int i =  0; i < Hits.size(); ++i) hUsed.push_back(0);
+
+  Double_t clE = 0.;
+  Double_t clT = 0.;
+  Double_t clX = 0.;
+  Double_t clY = 0.;
+  Double_t clZ = 0.;
+  Int_t    clSize =  0;
+  std::vector<Int_t> clHitIndices;
+  
+  Int_t    iSeed  = 0;
+  Int_t    seedID = 0;
+  Double_t seedT  = 0.;
+
+  Double_t dtThr = fClusterTimeCut;
+  
+  // start the loop over the unused hits looking for a new cluster seed 
+  while(iSeed > -1){
+
+    clE = 0.;
+    clT = 0.;
+    clX = 0.;
+    clY = 0.;
+    clZ = 0.;
+    clSize = 0;
+    iSeed  = 0;
+    seedID = 0;
+    seedT  = 0.;
+    clSize = 0;
+    clHitIndices.clear();
+    
+    // look for a new seed 
+    iSeed = findSeed(hUsed);
+    if(iSeed < 0) break; 
+    
+    // new seed found 
+    // seed properties
+    seedT  = Hits[iSeed]->GetTime();
+    seedID = Hits[iSeed]->GetChannelId();
+    
+    Double_t hitTime   = 0.;
+    Double_t hitEnergy = 0.;
+    Int_t    hitID     = 0 ;
+    // for this seed try and associate unused hits .... 
+    for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      
+      if (hUsed[iHit1]==1) continue;
+
+      hitTime = Hits[iHit1]->GetTime();
+      hitID   = Hits[iHit1]->GetChannelId();
+      if( fabs( hitTime - seedT ) < dtThr && IsSeedNeig( seedID, hitID)==1 ){
+	// the seed will be add to the cluster in this loop
+	
+	hUsed[iHit1]=1;
+	hitEnergy = Hits[iHit1]->GetEnergy();
+
+	clE  += hitEnergy;
+	//clT  += Hits[iSeed]->GetTime();
+	clT  +=  Hits[iHit1]->GetTime()*hitEnergy;
+	clX  += (Hits[iHit1]->GetPosition().X())*hitEnergy;
+	clY  += (Hits[iHit1]->GetPosition().Y())*hitEnergy;
+	clZ  += (Hits[iHit1]->GetPosition().Z())*hitEnergy;
+	++clSize;
+	clHitIndices.push_back(iHit1);
+      }
+    }
+    
+    if (clSize==0) break;
+    
+    //// a good cluster was found 
+
+    //clT=clX/(Float_t)clSize;
+    clT=clT/clE;
+    
+    clX=clX/clE;
+    clY=clY/clE;
+    clZ=clZ/clE;
+
+    TRecoVCluster* myCl = new TRecoVCluster();
+    myCl->SetChannelId   ( seedID );
+    myCl->SetEnergy      ( clE );
+    myCl->SetTime        ( clT );
+    myCl->SetPosition    ( TVector3( clX, clY, clZ) );
+    myCl->SetSeed        ( iSeed );
+    myCl->SetNHitsInClus ( clSize );
+    myCl->SetHitVecInClus( clHitIndices );
+    myClusters.push_back ( myCl );
+    
+  }  //end of while loop on seeds
+
+}
+Int_t PadmeVReconstruction::findSeed(std::vector<Int_t> hUsed)
+{
+  /// find the index of the Hit with highest energy (above threshold) not yet used in a cluster
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  Int_t iSeed   =-1;
+  Float_t eneMax=0.;
+  Float_t eneThr=0.;//=fClusterEneThr;
+  for(unsigned int iHit =  0; iHit < Hits.size(); ++iHit) {
+    if (hUsed[iHit]==0)
+      {
+	Float_t energy = Hits[iHit]->GetEnergy();
+	if (energy > eneThr && energy > eneMax)
+	  {
+	    iSeed=iHit;
+	    eneMax=energy;
+	  }
+      }
+  }  
+  return iSeed;
+}
+
+Int_t PadmeVReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
+
+  Int_t dChIDmax=2;//fClusterDChIDMax;
+  //uses cellID to find neig cells wrt seed of the cluster
+  Int_t IsNeig=-1;
+  //Int_t SeedRow=seedID/100;
+  Int_t SeedCol=seedID;
+
+  //Int_t CellRow=cellID/100;
+  Int_t CellCol=cellID;
+  //excludes the seed cell 
+  if( abs(SeedCol-CellCol)<=dChIDmax) IsNeig=1;
+  //  std::cout<<"seedID "<<seedID<<" cellID "<<cellID<<" Is Neig "<<IsNeig<<std::endl;
+  return IsNeig;
+}
 
 void PadmeVReconstruction::AnalyzeEvent(TRawEvent *rawEv){;}
 

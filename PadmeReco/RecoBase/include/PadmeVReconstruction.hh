@@ -50,6 +50,8 @@ public:
   virtual void BuildHits(TRawEvent*);
   virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
   virtual void BuildClusters();
+  virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
+  virtual Int_t findSeed(std::vector<Int_t> hUsed);
 
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
@@ -59,7 +61,6 @@ public:
   virtual void HistoExit();
   virtual void AddHisto(string,TH1 *);
   virtual TH1* GetHisto(string);  
-
   static void Exception(TString);
 
 public:
@@ -98,6 +99,7 @@ protected:
   map<string,TH1 *> fHistoMap;
 
   vector<TRecoVHit *> fHits;
+  Double_t                fClusterTimeCut;
   vector<TRecoVCluster *> fClusters;
 
   ChannelVReco *fChannelReco;

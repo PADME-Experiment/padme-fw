@@ -29,7 +29,7 @@
 #include <map>
 
 #include "ChannelVReco.hh"
-
+#include "PadmeVTrigger.hh"
 
 using namespace std;
 
@@ -52,7 +52,7 @@ public:
   virtual void BuildClusters();
   virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   virtual Int_t findSeed(std::vector<Int_t> hUsed);
-
+  virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
   virtual void EndProcessing(); ///< Call from derived classes
@@ -80,6 +80,8 @@ public:
   vector<TRecoVHit *> &GetRecoHits(){return fHits;};
   vector<TRecoVCluster *> &GetClusters(){return fClusters;}
 
+  PadmeVTrigger *GetTriggerProcessor(){return fTriggerProcessor;};
+
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -104,7 +106,7 @@ protected:
 
   ChannelVReco *fChannelReco;
   PadmeVCalibration *fChannelCalibration;
-
+  PadmeVTrigger *fTriggerProcessor;
 
 };
 #endif

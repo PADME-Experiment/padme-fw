@@ -46,6 +46,17 @@ color_warn  = "#FFA500"
 color_alarm = "#CC0000"
 color_off   = "#0000CC"
 
+####################
+### padmeui data ###
+####################
+
+# Path for root filesystem device (needed for df)
+pui_root_fs = "/dev/mapper/centos_l0padme2-root"
+
+# Warning and alarm levels (in %) for padmeui
+pui_level_warn = 60
+pui_level_alarm = 85
+
 #############################
 ### DAQ data servers data ###
 #############################
@@ -125,6 +136,24 @@ def main(argv):
     start_monitor()
     context.close()
 
+def get_pui_info():
+
+    disk_total = "0"
+    disk_used  = "0"
+    disk_avail = "0"
+    disk_usepc = "0"
+    cmd = "/bin/df -BG --output=size,used,avail,pcent %s"%pui_root_fs
+    for line in run_command(cmd):
+        #print line.rstrip()
+        #rc = re.match("^\s*(\S+)G\s+(\S+)G\s+(\S+)G\s+(\S+)%%.*$",line)
+        rc = re.match("^\s*(\S+)G\s+(\S+)G\s+(\S+)G\s+(\d+).*",line)
+        if rc:
+            disk_total = rc.group(1)
+            disk_used  = rc.group(2)
+            disk_avail = rc.group(3)
+            disk_usepc = rc.group(4)
+    return (disk_total,disk_used,disk_avail,disk_usepc,)
+
 def get_daq_info(server):
 
     daq_ssh = "ssh -i %s -l %s %s"%(daq_keyfile,daq_user,server)
@@ -199,6 +228,7 @@ def start_monitor():
         mh.write("PLOTTYPE activetext\n")
         mh.write("DATA [ ")
 
+        ### Get DAQ servers disk info ###
         for daq_server in daq_server_list:
             (daq_tot,daq_use,daq_avl,daq_opc) = get_daq_info(daq_server)
             daq_tot_TB = float(daq_tot)/1024/1024
@@ -208,16 +238,20 @@ def start_monitor():
             if (int(daq_opc)>daq_level_warn): daq_color = color_warn
             if (int(daq_opc)>daq_level_alarm): daq_color = color_alarm
             mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
+
             mh.write(",")
 
+        ### Get LNF disk system info ###
         lnf_disk_use = get_lnf_info()
         lnf_disk_use_TB = float(lnf_disk_use)/1024/1024/1024/1024
         lnf_disk_opc = str(int(100.*lnf_disk_use_TB/lnf_disk_tot_TB))
         lnf_disk_color = color_ok
         if lnf_disk_use_TB > lnf_disk_tot_TB: lnf_disk_color = color_warn
         mh.write("{\"title\":\"LNF Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc,lnf_disk_color))
+
         mh.write(",")
 
+        ### Get KLOE tape library info ###
         (kloe_tape_use,kloe_disk_tot,kloe_disk_avl,kloe_disk_opc) = get_kloe_info()
 
         kloe_tape_use_TB = float(kloe_tape_use)
@@ -225,6 +259,7 @@ def start_monitor():
         kloe_tape_color = color_ok
         if kloe_tape_use_TB > kloe_tape_tot_TB: kloe_tape_color = color_warn
         mh.write("{\"title\":\"KLOE Tape\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_tape_use_TB,kloe_tape_tot_TB,kloe_tape_opc,kloe_tape_color))
+
         mh.write(",")
 
         kloe_disk_tot_TB = float(kloe_disk_tot)/1024/1024
@@ -234,6 +269,16 @@ def start_monitor():
         if (int(kloe_disk_opc)>daq_level_warn):  kloe_disk_color = color_warn
         if (int(kloe_disk_opc)>daq_level_alarm): kloe_disk_color = color_alarm
         mh.write("{\"title\":\"KLOE Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_disk_use_TB,kloe_disk_tot_TB,kloe_disk_opc,kloe_disk_color))
+
+        mh.write(",")
+
+        ### Get PADMEUI disk info ###
+        (pui_tot,pui_use,pui_avl,pui_opc) = get_pui_info()
+        pui_color = color_ok
+        if (int(pui_opc)>pui_level_warn): pui_color = color_warn
+        if (int(pui_opc)>pui_level_alarm): pui_color = color_alarm
+        mh.write("{\"title\":\"PADMEUI Disk\",\"current\":{\"value\":\"Used:%s GB of %s GB (%s%%)\",\"col\":\"%s\"}}"%(pui_use,pui_tot,pui_opc,pui_color))
+
         #mh.write(",")
 
         mh.write("]\n")

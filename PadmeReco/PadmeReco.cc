@@ -51,7 +51,7 @@ int main(Int_t argc, char **argv)
     TString OutputFileName("OutputFile.root");
     TString InputFileName("InputFile.root");
     TString InputListFileName("InputListFile.txt");
-    TString ConfFileName("config/PadmeReconstruction.conf");
+    TString ConfFileName("config/PadmeReconstruction.cfg");
     Int_t iFile = 0, NFiles = 100000, NEvt = 0;
     UInt_t Seed = 4357;
     struct stat filestat;
@@ -148,9 +148,9 @@ int main(Int_t argc, char **argv)
     
 
     //Perform the output initialization
-    RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance();
+    RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance(ConfFileName);
     RecoIO->SetFileName(OutputFileName);
-    RecoIO->NewRun(1);
+    //RecoIO->NewRun(1);
 
     umem = PadmePerfUtils::getMem();
     ucpu = float(PadmePerfUtils::getCpu()/100.);
@@ -158,10 +158,10 @@ int main(Int_t argc, char **argv)
     mem = umem;
     cpu = ucpu;
 
-    //    TFile* OutputFile = TFile::Open(OutputFileName.Data(),"RECREATE");
-
-    //    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFile, NEvt, Seed);
     PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    RecoIO->SetReconstruction(PadmeReco);
+    RecoIO->NewRun(1);
+
 
     umem = PadmePerfUtils::getMem();
     ucpu = float(PadmePerfUtils::getCpu()/100.);
@@ -174,7 +174,6 @@ int main(Int_t argc, char **argv)
     int cpuBeforeEvLoop = cpu;
     int niter=0;
     
-    RecoIO->SetReconstruction(PadmeReco);
     
     std::cout<<"\n\n======================================================================================="<<std::endl;
     std::cout<<"======= PadmeReco: Initialization of the reconstruction is complete .... start processing events ................."<<std::endl;

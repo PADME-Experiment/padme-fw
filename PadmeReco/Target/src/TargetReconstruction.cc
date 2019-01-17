@@ -29,6 +29,11 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
   fTargetRecoBeam = new TTargetRecoBeam();  
   fTriggerProcessor = new PadmeVTrigger();
 
+  fWriteFitParams = false;
+  fWriteFitParams = (Bool_t)fConfig->GetParOrDefault("Output", "SignalFitParams"      , 0 );
+  fWriteTargetBeam = true;
+  fWriteTargetBeam = (Bool_t)fConfig->GetParOrDefault("Output", "Beam"      , 1 );
+
 }
 
 void TargetReconstruction::HistoInit(){

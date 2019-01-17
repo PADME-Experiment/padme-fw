@@ -56,8 +56,11 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalRecoEvent    = 0;
   fSACRecoEvent     = 0;
   fTPixRecoEvent    = 0;
-  
 
+  //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
+  fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
+  fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeReconstructionConfiguration");
+  
   InitLibraries();
   Init(NEvt,Seed);
 
@@ -72,15 +75,21 @@ PadmeReconstruction::~PadmeReconstruction()
 
 void PadmeReconstruction::InitLibraries()
 {
-  TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
-  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
-  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
-  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
-  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
-  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
-  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
-
+  
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1)) fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1)) fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1)) fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "TPix"    ,1)) fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1)) fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1)) fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
+  std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
+  for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
+    {
+      std::cout<<" **** <"<<fRecoLibrary[j]->GetName()<<"> is in library at location "<<j<<std::endl;
+    }
+  std::cout<<"************************** "<<std::endl;
+ 
   
 }
 
@@ -414,9 +423,13 @@ TString PadmeReconstruction::CheckProtocols(TString OldStr){
 }
 
 PadmeVReconstruction * PadmeReconstruction::FindReco(TString Name){
-  for(UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++)
+  //std::cout<<" input is <"<<Name<<">"<<std::endl;
+  UInt_t iLib = 0;
+  for(; iLib < fRecoLibrary.size(); iLib++) {
+    //std::cout<<" iLib "<<iLib<<" "<<fRecoLibrary[iLib]->GetName()<<" comparing with <"<<Name<<">"<<std::endl;
     if(fRecoLibrary[iLib]->GetName().CompareTo(Name) == 0)
       return fRecoLibrary[iLib];
+  }
   return 0;
 }
 

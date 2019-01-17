@@ -5,6 +5,8 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
 
 class TRawEvent;
 class TMCEvent;
@@ -56,6 +58,8 @@ private:
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 
   TObjArray* fInputFileNameList;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;

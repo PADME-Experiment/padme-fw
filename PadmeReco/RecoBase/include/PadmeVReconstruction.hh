@@ -34,6 +34,8 @@
 using namespace std;
 
 class TRecoEvent;
+class PadmeVClusterization;
+
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
@@ -50,8 +52,8 @@ public:
   virtual void BuildHits(TRawEvent*);
   virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
   virtual void BuildClusters();
-  virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
-  virtual Int_t findSeed(std::vector<Int_t> hUsed);
+  //  virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
+  //  virtual Int_t findSeed(std::vector<Int_t> hUsed);
   virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
@@ -82,6 +84,8 @@ public:
 
   PadmeVTrigger *GetTriggerProcessor(){return fTriggerProcessor;};
 
+  Bool_t writeHits(){return fWriteHits;}
+  Bool_t writeClusters(){return fWriteClusters;}
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -101,12 +105,15 @@ protected:
   map<string,TH1 *> fHistoMap;
 
   vector<TRecoVHit *> fHits;
-  Double_t                fClusterTimeCut;
   vector<TRecoVCluster *> fClusters;
 
   ChannelVReco *fChannelReco;
+  PadmeVClusterization *fClusterization;
   PadmeVCalibration *fChannelCalibration;
   PadmeVTrigger *fTriggerProcessor;
+
+  Bool_t fWriteHits;
+  Bool_t fWriteClusters;
 
 };
 #endif

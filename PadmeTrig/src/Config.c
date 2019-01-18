@@ -49,9 +49,12 @@ int reset_config()
 
   Config->busy_mask = 0x10; // Only CPU busy active
 
-  // Leave timepix shutter deay and width to their firmware default values (25ns and 275ns)
+  // Leave timepix shutter delay to its firmware default value (0x02 = 25ns)
   Config->timepix_shutter_delay = 0x02;
-  Config->timepix_shutter_width = 0x16;
+
+  // Change timepix shutter width to its maximum value (0xff = 3.2us)
+  //Config->timepix_shutter_width = 0x16; // This is the firmware default
+  Config->timepix_shutter_width = 0xff;
 
   // Leave correlated trigger delay to its firmware default values (500us)
   Config->correlated_trigger_delay = 0x01f4;

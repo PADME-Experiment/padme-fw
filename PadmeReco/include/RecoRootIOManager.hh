@@ -10,6 +10,8 @@
 
 #include "TRecoEvent.hh"
 #include "PadmeReconstruction.hh"
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
 
 #include "RecoVRootIO.hh"
 #include <list>
@@ -24,6 +26,7 @@ public:
 
   virtual ~RecoRootIOManager();
 
+  static RecoRootIOManager* GetInstance(TString t);
   static RecoRootIOManager* GetInstance();
 
   void NewRun(Int_t);
@@ -41,7 +44,7 @@ private:
 
 protected:
 
-  RecoRootIOManager();
+  RecoRootIOManager(TString t);
 
 public:
 
@@ -67,6 +70,7 @@ private:
   Int_t fBranchStyle;
   Int_t fCompLevel;
   Int_t fVerbose;
+  Bool_t firstTime;
 
   TString fFileName;
   bool   fFileNameHasChanged;
@@ -77,6 +81,8 @@ private:
   TRecoEvent*  fEvent;
 
   PadmeReconstruction *fReco;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
 
   typedef std::list<RecoVRootIO*> RootIOList;
   RootIOList fRootIOList;

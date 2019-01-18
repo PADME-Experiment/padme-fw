@@ -34,6 +34,8 @@ public:
   TTargetRecoBeam* getRecoBeam(){return fTargetRecoBeam;}
   vector<TTargetSignalFitParams *> &getSignalFitParams(){return fSignalFitParams;}
   void RetrieveSignalFitParams();
+  Bool_t writeFitParams(){return fWriteFitParams;}
+  Bool_t writeTargetBeam(){return fWriteTargetBeam;}
 
 private:
 
@@ -42,6 +44,8 @@ private:
   vector<TTargetSignalFitParams *> fSignalFitParams;
   TH1F * hprofile;
 
+  Bool_t fWriteFitParams;
+  Bool_t fWriteTargetBeam;
 };
 #endif
 

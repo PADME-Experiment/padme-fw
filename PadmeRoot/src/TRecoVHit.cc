@@ -6,6 +6,7 @@ ClassImp(TRecoVHit)
 
 TRecoVHit::TRecoVHit():TMCVHit()
 {
+  fBDCHid = 100000000;
   // // Initialize to invalid channel
   // fChannelId = -1;
   // fEnergy    = 0.;

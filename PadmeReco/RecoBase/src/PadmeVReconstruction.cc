@@ -1,5 +1,6 @@
 #include "PadmeVReconstruction.hh"
 #include "PadmeReconstruction.hh"
+#include "PadmeVClusterization.hh"
 
 #include "Riostream.h"
 
@@ -15,12 +16,19 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
   fChannelReco = 0;
   fChannelCalibration = 0;
+  fClusterization = 0;
   fTriggerProcessor = 0;
-  fConfigFileName = ConfigFileName;
   HistoFile->mkdir(Name.Data());
+  fConfigFileName = ConfigFileName;
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
-  
+  fClusterization = new PadmeVClusterization();
+    
   fConfig = new PadmeVRecoConfig(fConfigParser,Name);
+  fWriteHits = true;
+  fWriteClusters = true;
+  fWriteHits     = (Bool_t)fConfig->GetParOrDefault("Output", "Hits"          , 1 );
+  fWriteClusters = (Bool_t)fConfig->GetParOrDefault("Output", "Clusters"      , 1 );
+  
   //  InitChannelID(fConfig);
 
   //----------- Parse config file for common parameters ----------//
@@ -38,6 +46,7 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   if(fConfigParser) {delete fConfigParser; fConfigParser=0;};
   if(fConfig) {delete fConfig; fConfig=0;}; 
   if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
+  //if(fClusterization) {delete fClusterization; fClusterization = 0;};
   if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
   if(fTriggerProcessor) {delete fTriggerProcessor; fTriggerProcessor = 0;};
 }
@@ -55,6 +64,9 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   fMainReco = MainReco;
   if(fChannelReco) {
     fChannelReco->Init(GetConfig());
+    std::cout<<"digitizer inititialized OK"<<std::endl;
+    fClusterization->Init(GetConfig());
+    std::cout<<"Clusterization inititialized OK"<<std::endl;
     InitChannelID(GetConfig());
     if(fChannelCalibration) fChannelCalibration->Init(GetConfig());
     std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
@@ -279,13 +291,12 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 	unsigned int nHitsAfter = Hits.size();
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
 	  if(fTriggerProcessor)
 	    Hits[iHit]->SetTime(
-			      Hits[iHit]->GetTime() - 
-			      fTriggerProcessor->GetChannelTriggerTime( 
-								       ADC->GetBoardId(), chn->GetChannelNumber()
-									)
-			      );
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
 	}
       }
     } else {
@@ -294,7 +305,23 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 }
 
 
-void PadmeVReconstruction::BuildClusters(){;}
+void PadmeVReconstruction::BuildClusters()
+{
+
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  if(Hits.size()==0){
+    return;
+  }
+
+  fClusterization->Reconstruct(Hits, myClusters);
+
+}
 
 void PadmeVReconstruction::AnalyzeEvent(TRawEvent *rawEv){;}
 

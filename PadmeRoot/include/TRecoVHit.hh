@@ -14,6 +14,13 @@ public:
   TRecoVHit();
   virtual ~TRecoVHit(){};
 
+  void setBDCHid(unsigned int BDid, unsigned int CHid){fBDCHid = 100*BDid+CHid;}
+  unsigned int getBDCHid(){return fBDCHid;}
+  unsigned int getBDid(){return (unsigned int)(fBDCHid/100);}
+  unsigned int getCHid(){return fBDCHid%100;}
+  
+private:
+  unsigned int fBDCHid; 
 
 public:
  

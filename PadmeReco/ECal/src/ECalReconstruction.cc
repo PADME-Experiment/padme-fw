@@ -217,7 +217,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   // SdTime.clear();
   // SdEn.clear();
   // SdCell.clear();
-  EvTotE=0;
+  //EvTotE=0;
   //  std::cout<<"Builing clusters"<<std::endl;
   int NClusters = fClusters.size();//ECalBuildClusters(rawEv);
   //  GetHisto("ECALNPart")->Fill(ECALNPart);

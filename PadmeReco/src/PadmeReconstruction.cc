@@ -23,6 +23,7 @@
 #include "ECalParameters.hh"
 
 #include "RecoRootIOManager.hh"
+#include "ReadConf.hh"
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
   PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
@@ -41,7 +42,6 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
 
   InitLibraries();
   Init(NEvt,Seed);
-
 }
 
 PadmeReconstruction::~PadmeReconstruction()
@@ -53,14 +53,18 @@ PadmeReconstruction::~PadmeReconstruction()
 
 void PadmeReconstruction::InitLibraries()
 {
-  TString dummyConfFile = "pippo.conf";
-  fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
-  fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
-  fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
-  fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
-  fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
-  fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
-  fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
+// need to add the possibility of switching off different detectors reco M. Raggi 29/11/2018
+  ReadConf *readconf = ReadConf::GetInstance();
+  std::cout<<"Read conf"<<readconf<<std::endl;
+  //Added flags to exclude different reco analysis M. Raggi
+  if(readconf->IsTargetON())     fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
+  if(readconf->IsEVetoON())   fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
+  if(readconf->IsPVetoON())   fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
+  if(readconf->IsHEPVetoON()) fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
+  if(readconf->IsECalON())    fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
+  if(readconf->IsSACON())     fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
+  if(readconf->IsTPixON())    fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
+  		
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
@@ -316,3 +320,32 @@ void PadmeReconstruction::ShowSubDetectorInfo(TDetectorInfo* detInfo, TString na
     }
   }
 }
+
+
+//void PadmeReconstruction::ReadConfig(){
+////  TString ConfFileName = "config/PadmeReconstruction.conf";
+////  
+////  std::ifstream confFile(ConfFileName.Data());
+////  if (!confFile.is_open()) {
+////    perror(ConfFileName);
+////    std::cout<<"cannot open config file : "<<ConfFileName.Data()<<std::endl;
+////    exit(1);
+////  }
+////  //  
+////  TString Line;
+////  while (Line.ReadLine(confFile)) {
+////    if(Line.BeginsWith("#")) continue;
+////    if(Line.Contains("ECALReco")    && Line.Contains("true"))    fECalisON=true;
+////    if(Line.Contains("TargetReco")  && Line.Contains("true"))  fTargetisON=true;
+////    if(Line.Contains("SACReco")     && Line.Contains("true"))     fSACisON=true;
+////    if(Line.Contains("PVetoReco")   && Line.Contains("true"))   fPVetoisON=true;
+////    if(Line.Contains("EVetoReco")   && Line.Contains("true"))   fEVetoisON=true;
+////    if(Line.Contains("HEPVetoReco") && Line.Contains("true")) fHEPVetoisON=true;    
+////    if(Line.Contains("TPixReco")    && Line.Contains("true"))    fTPixisON=true;
+////    
+////    if(Line.Contains("UseMonitorMode") && Line.Contains("true"))  fUseMonitorMode=true;
+////    if(Line.Contains("UseFullMode")    && Line.Contains("true"))     fUseFullMode=true;
+////    //    std::cout<<Line.Data()<<std::endl;
+////  }
+////  confFile.close();  
+//}

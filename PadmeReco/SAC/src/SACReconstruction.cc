@@ -46,6 +46,52 @@ Int_t SACReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
   return IsNeig;
 }
 
+void SACReconstruction::ProcessEvent(TRawEvent* rawEv){
+  //  std::cout<<"processo nel SAC "<<std::endl;
+  // If this is not a channel 
+  // No idea what to do with it...
+  if (!fChannelReco) return;
+
+  //Perform some cleaning before:
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
+    delete Hits[iHit];
+  }
+
+  Hits.clear();
+
+  UChar_t nBoards = rawEv->GetNADCBoards();
+
+  TADCBoard* ADC;
+  //New M. Raggi
+  UInt_t  TrigMask=rawEv->GetEventTrigMask();
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	//New M. Raggi
+	Int_t ChID =GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber());
+	
+	((DigitizerChannelSAC*)fChannelReco)->SetChID(ChID);
+	((DigitizerChannelSAC*)fChannelReco)->SetTrigMask(TrigMask);
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	}
+      }
+    } else {
+    }
+  }
+   
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(Hits);
+  //Processing is over, let's analyze what's here, if foreseen
+  AnalyzeEvent(rawEv);
+}
 
 SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "SAC", ConfigFileName)
@@ -53,7 +99,7 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   //  fRecoEvent = new TRecoSACEvent();
   ParseConfFile(ConfigFileName);
   //fChannelReco = new DigitizerChannelReco();
-  fChannelReco = new DigitizerChannelSAC();
+  fChannelReco = new DigitizerChannelSAC(); //produce hits array
 }
 
 void SACReconstruction::HistoInit(){
@@ -77,6 +123,8 @@ void SACReconstruction::HistoInit(){
 
   AddHisto("SACRawClus",new TH1F("SACRawClus","SACRawClus",200,0,1000));
   AddHisto("SACClE",new TH1F("SACClE","SACClE",200,0,1000));
+
+  AddHisto("SACClE2",new TH1F("SACClE2","SACClE2",200,0,1000));
   
   AddHisto("SACClNCry",new TH1F("SACClNCry","SACClNCry",30,0,30));
   AddHisto("SACClTDiff",new TH1F("SACClTDiff","SACClTDiff",100,-5,5));
@@ -90,18 +138,18 @@ void SACReconstruction::HistoInit(){
   for(int iCh=0; iCh<25 ; iCh++){
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
-    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
-    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-
-    sprintf(iName,"SACLastCh%d",iCh);
-    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
-    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-
-//    sprintf(iName,"ESACLastCh%d",iCh);
-//    AddHisto(iName, new TH1F(iName, iName,  200,  0, 1000 ));
-//    (GetHisto(iName))->GetXaxis()->SetTitle("Energy MeV");
+    AddHisto(iName, new TH1F(iName, iName,1024,0.,200. ));
+    //    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
+    //    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
+    //
+    //    sprintf(iName,"SACLastCh%d",iCh);
+    //    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
+    //    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
+    //    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
+    //
+    ////    sprintf(iName,"ESACLastCh%d",iCh);
+    ////    AddHisto(iName, new TH1F(iName, iName,  200,  0, 1000 ));
+    ////    (GetHisto(iName))->GetXaxis()->SetTitle("Energy MeV");
   }
 }
 
@@ -168,7 +216,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // void SACReconstruction::EndProcessing()
 // {;}
 
-//  Last revised by M. Raggi 16/11/2018 
+//  Last revised by M. Raggi 16/11/2018 puoi levare rawEvent
 int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
 
   const int NMaxCl=100;
@@ -178,7 +226,11 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   double TTotSACCh[NTotCh][NMaxCl];
   double ETotSACCh[NTotCh][NMaxCl];
   Double_t Time=0;
- 
+  Double_t SACEtot=0;
+  SdEn.clear();
+  SdTime.clear();
+  SdCell.clear();
+
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   int NCry=0;
   if(Hits.size()==0){
@@ -208,8 +260,8 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     cUsed[iHit1]  = {0};
-    cTime[iHit1]  = Hits[iHit1]->GetTime();;
-    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
+    cTime[iHit1]  = Hits[iHit1]->GetTime();
+    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
   }  
 
@@ -238,8 +290,10 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
 
     // we may want to use the space coordinates in this loop.
     for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-      if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
-	//	std::cout<<"is neig "<<pippo<<std::endl;
+      //      if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
+      if(fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1 && cEnergy[iHit1]>5.){ //taglio in E
+      //      if(fabs(cTime[iHit1]-SdTime[NSeeds])<3.5 && cUsed[iHit1]==0 ){
+      	//	std::cout<<"is neig "<<pippo<<std::endl;
 	Double_t XCl=(60.-cChID[iHit1]/10*30.);
 	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	cUsed[iHit1]=1;
@@ -253,7 +307,7 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
       }
     }
     ClNCry.push_back(NCry);
-    GetHisto("SACClE")->Fill(ClE[NSeeds]);
+    //    GetHisto("SACClE")->Fill(ClE[NSeeds]);
     ClTime[NSeeds]=ClTime[NSeeds]/NCry;  //average time of the hit
     ClX[NSeeds]=ClX[NSeeds]/ClE[NSeeds];
     ClY[NSeeds]=ClY[NSeeds]/ClE[NSeeds];
@@ -265,11 +319,13 @@ int SACReconstruction::SACBuildClusters(TRawEvent* rawEv){
   
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     //	 SACDropHitE
+    SACEtot+=cEnergy[iHit1];
     GetHisto("SACHitE")->Fill(cEnergy[iHit1]);
     if(cUsed[iHit1]==0){ 
       GetHisto("SACDropHitE")->Fill(cEnergy[iHit1]);
     }
   }
+  GetHisto("SACETot")->Fill(SACEtot);
   return NGoodClus;
 }
 
@@ -291,7 +347,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     int ich  = Hits[iHit1]->GetChannelId();
     int ElCh = ich/10*5 +ich%5;
     Energy  += Hits[iHit1]->GetEnergy(); //SAC total energy
-    ECh[ich]+= Hits[iHit1]->GetEnergy(); //SAC total energy
+    ECh[ElCh]+= Hits[iHit1]->GetEnergy(); //SAC total energy
     GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     GetHisto("SACOccupancy_last") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     //GetHisto("SACOccupancy") -> Fill(ich/10-2,ich%10+2);
@@ -328,11 +384,17 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  std::cout<<"Builing clusters"<<std::endl;
   int NClusters = SACBuildClusters(rawEv);
   GetHisto("SACNPart")->Fill(SACNPart);
-  GetHisto("SACNClus")->Fill(NClusters);
-  GetHisto("SACETot") ->Fill(EvTotE);
-
+  if(NClusters>0) GetHisto("SACNClus")->Fill(NClusters);
+  //  GetHisto("SACETot") ->Fill(EvTotE);
+  // Fill charge histograms
+  char iNameCh[100];
+  for(int iCh=0; iCh<25 ; iCh++){
+    sprintf(iNameCh,"SACCh%d",iCh);
+    GetHisto(iNameCh)->Fill(ECh[iCh]);
+  }
   for(int gg=0;gg<NClusters;gg++){
-    GetHisto("SACClE")->Fill(ClE[gg]);
+    GetHisto("SACClE")->Fill(ClE[gg]); //fottuto
+    if(gg>1) GetHisto("SACClE2")->Fill(ClE[gg]); //fottuto
     GetHisto("SACClNCry")->Fill(ClNCry[gg]);
     GetHisto("SACClTime")->Fill(ClTime[gg]);
     if(ClNCry[gg]>1 && ClE[gg]>10.) {
@@ -352,47 +414,47 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   nevt ++;
 
   //Waveform histograms
-  char iName[1000];
-  UChar_t nBoards = rawEv->GetNADCBoards();
-  Double_t adc_count[1024][25]        ; 
-  Double_t adc_pedestal   [25]        ;
-  Double_t adc_chsum    [1024]        ; 
-  for(UShort_t s=0;s<1024;s++){  
-     adc_chsum    [s] = 0;
-  }
-  for(UChar_t b=0;b<nBoards;b++)// Loop over boards
-  {
-    TADCBoard* adcB = rawEv->ADCBoard(b);
-    if(adcB->GetBoardId()!=27)continue; //should correspond to SAC board ;
-    UChar_t nChn       = adcB ->GetNADCChannels(  );
-    
-
-   for(UChar_t c=0;c<nChn;c++){// Loop over channels
-	 TADCChannel* chn = adcB->ADCChannel(c);
-         UChar_t ch = chn->GetChannelNumber();
-  
-         for(UShort_t s=0;s<1024;s++){// 1-st loop over sampling          
-              adc_count[s][ch]= (Double_t) (chn->GetSample(s) ) ;
-              adc_chsum[s] += adc_count[s][ch]/16; 
-	 }//End 1-st loop over sampling
-
-         adc_pedestal[ch]=0; 
-         for(UShort_t s=0;s<100;s++){// 2-nd loop over sampling to calculate event by event pedestal                    
-              adc_pedestal[ch] += adc_count[s][ch]/100 ;
-	 }//End 2-nd loop over sampling
-         
-        
-         for(UShort_t s=0;s<1024;s++){// 3-rd loop over sampling to remove event by event pedestal and fill waveform  
-             adc_count[s][ch] = adc_count[s][ch] - adc_pedestal[ch]*0-3800;//Pedestal subtraction as digitization
-             float adc = float(adc_count[s][ch])/4096;        
-             sprintf(iName,"SACCh%d",ch);
-             (GetHisto(iName))->Fill(s,adc);        
-             sprintf(iName,"SACLastCh%d",ch);
-             (GetHisto(iName))->SetBinContent(s+1, fabs(adc));
-             (GetHisto(iName))->SetBinError  (s+1, 1/4096);          
-	 } 
-    }// End loop over channels
-  }// End loop over boards
+//  char iName[1000];
+//  UChar_t nBoards = rawEv->GetNADCBoards();
+//  Double_t adc_count[1024][25]        ; 
+//  Double_t adc_pedestal   [25]        ;
+//  Double_t adc_chsum    [1024]        ; 
+//  for(UShort_t s=0;s<1024;s++){  
+//     adc_chsum    [s] = 0;
+//  }
+//  for(UChar_t b=0;b<nBoards;b++)// Loop over boards
+//  {
+//    TADCBoard* adcB = rawEv->ADCBoard(b);
+//    if(adcB->GetBoardId()!=27)continue; //should correspond to SAC board ;
+//    UChar_t nChn       = adcB ->GetNADCChannels(  );
+//    
+//
+//   for(UChar_t c=0;c<nChn;c++){// Loop over channels
+//	 TADCChannel* chn = adcB->ADCChannel(c);
+//         UChar_t ch = chn->GetChannelNumber();
+//  
+//         for(UShort_t s=0;s<1024;s++){// 1-st loop over sampling          
+//              adc_count[s][ch]= (Double_t) (chn->GetSample(s) ) ;
+//              adc_chsum[s] += adc_count[s][ch]/16; 
+//	 }//End 1-st loop over sampling
+//
+//         adc_pedestal[ch]=0; 
+//         for(UShort_t s=0;s<100;s++){// 2-nd loop over sampling to calculate event by event pedestal                    
+//              adc_pedestal[ch] += adc_count[s][ch]/100 ;
+//	 }//End 2-nd loop over sampling
+//         
+//        
+//         for(UShort_t s=0;s<1024;s++){// 3-rd loop over sampling to remove event by event pedestal and fill waveform  
+//             adc_count[s][ch] = adc_count[s][ch] - adc_pedestal[ch]*0-3800;//Pedestal subtraction as digitization
+//             float adc = float(adc_count[s][ch])/4096;        
+//             sprintf(iName,"SACCh%d",ch);
+//             (GetHisto(iName))->Fill(s,adc);        
+//             sprintf(iName,"SACLastCh%d",ch);
+//             (GetHisto(iName))->SetBinContent(s+1, fabs(adc));
+//             (GetHistoi(Name))->SetBinError  (s+1, 1/4096);          
+//	 } 
+//    }// End loop over channels
+//   }// End loop over boards
 }
 
 

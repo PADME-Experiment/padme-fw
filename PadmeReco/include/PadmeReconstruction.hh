@@ -5,9 +5,9 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "ReadConf.hh"
 
 class TRawEvent;
-
 class TMCEvent;
 
 class TTargetMCEvent;
@@ -19,6 +19,7 @@ class TSACMCEvent;
 class TTPixMCEvent;
 
 class TDetectorInfo;
+
 
 #include "PadmeVReconstruction.hh"
 
@@ -38,14 +39,15 @@ public:
   PadmeVReconstruction* FindReco(TString);
 
 private:
-
   TChain* BuildChain(TString);
   TString CheckProtocols(TString);
 
   void InitDetectorsInfo();
   void InitLibraries();
+  //void ReadConfig();
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
+
 
   TObjArray* fInputFileNameList;
   //TString fConfigFileName;
@@ -64,6 +66,8 @@ private:
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
+
+
 
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;

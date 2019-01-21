@@ -38,7 +38,7 @@ public:
   void  SetVerbose(Int_t value)     { fVerbose = value;     };
 
   bool   GetEnabled()             { return fEnabled;  };
-  void     SetEnabled(bool value) { fEnabled = value; };
+  void   SetEnabled(bool value)   { fEnabled = value; };
 
 
 protected:

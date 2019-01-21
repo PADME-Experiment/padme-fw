@@ -1,14 +1,16 @@
-#include "DigitizerChannelReco.hh"
+// Written By M. Raggi 6/12/2019
+#include "DigitizerChannelVeto.hh"
 #include <iostream>
 #include "TMath.h"
 
-void DigitizerChannelReco::PrintConfig(){
+void DigitizerChannelVeto::PrintConfig(){
+  std::cout << "Hi I'm the Veto Digitizer: " << std::endl;
   std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
 }
 
 
-void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
+void DigitizerChannelVeto::Init(PadmeVRecoConfig *cfg){
 
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
@@ -35,7 +37,7 @@ void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
 }
 
 
-void DigitizerChannelReco::SetAbsSignals(){
+void DigitizerChannelVeto::SetAbsSignals(){
   for(UShort_t i = 0;i<fNSamples;i++){
     if (fSamples[i] < 2048) {
       fSamples[i] = 4096 - fSamples[i];
@@ -43,7 +45,7 @@ void DigitizerChannelReco::SetAbsSignals(){
   }
 }
 
-Short_t DigitizerChannelReco::CalcMaximum() {
+Short_t DigitizerChannelVeto::CalcMaximum() {
 
   fMax = 32767; // 2^15 - 1
   
@@ -57,7 +59,7 @@ Short_t DigitizerChannelReco::CalcMaximum() {
 }
 
 
-Double_t DigitizerChannelReco::CalcPedestal() {
+Double_t DigitizerChannelVeto::CalcPedestal() {
   fPed = 0.;
   fNPedSamples = 0;
   //Call this only after the maximum is set
@@ -83,7 +85,7 @@ Double_t DigitizerChannelReco::CalcPedestal() {
 }
 
 
-Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
+Double_t DigitizerChannelVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {
   Double_t rms1000  = TMath::RMS(NAvg,&fSamples[0]);
   Double_t ZSupHit=-1;
   if(rms1000>Thr){
@@ -95,7 +97,7 @@ Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
   return ZSupHit;
 }
 
-Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
+Double_t DigitizerChannelVeto::CalcCharge(UShort_t iMax) {
   
   Short_t begin = iMax-fPreSamples > 0? iMax-fPreSamples:0;
   Short_t end = iMax+fPostSamples < fNSamples? iMax+fPostSamples:fNSamples;
@@ -115,7 +117,7 @@ Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
   return fCharge;
 }
 
-Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
+Double_t DigitizerChannelVeto::CalcTime(UShort_t iMax) {
   fTime = 0.;
   //currently looking only at the signal rising edge
   
@@ -175,7 +177,7 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 }
  
 
-void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
+void DigitizerChannelVeto::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
   if (fCharge < .3) return;
@@ -190,13 +192,13 @@ void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   
 }
 
-void DigitizerChannelReco::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
+void DigitizerChannelVeto::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   
   
 }
 
 
-void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
+void DigitizerChannelVeto::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   if(fUseAbsSignals) {
     SetAbsSignals();
   }

@@ -1,7 +1,7 @@
 #include <sstream>
 //#include <ctime>
 #include <sys/time.h>
-
+//#include "PadmeReconstruction.hh" // M. Raggi 6/12/18
 #include "RecoRootIOManager.hh"
 #include "PVetoRecoRootIO.hh"
 #include "EVetoRecoRootIO.hh"
@@ -17,7 +17,11 @@ RecoRootIOManager::RecoRootIOManager()
 {
   // Create run and event objects
   fEvent = new TRecoEvent();
+  ReadConf *readconf = ReadConf::GetInstance();
+  //  std::cout<<"Read conf"<<readconf<<std::endl;
 
+  //connecto to Reco to retrieve the configuration
+  // PadmeReconstruction* PadmeReco; 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
   fBranchStyle = 1; //new branch style by default
@@ -36,15 +40,54 @@ RecoRootIOManager::RecoRootIOManager()
 
   TTree::SetBranchStyle(fBranchStyle);
   std::cout << "RecoRootIOManager: Initialized" << std::endl;
-
-  // Add subdetectors persistency managers
+    
+  // Add subdetectors persistency managers   !! Need to apply flags for different recosntructions
   fRootIOList.push_back(new PVetoRecoRootIO);
   fRootIOList.push_back(new EVetoRecoRootIO);
   fRootIOList.push_back(new HEPVetoRecoRootIO);
   fRootIOList.push_back(new SACRecoRootIO);
   fRootIOList.push_back(new TargetRecoRootIO);
   fRootIOList.push_back(new ECalRecoRootIO);
+  RootIOList::iterator iRootIO(fRootIOList.begin());
+  RootIOList::iterator endRootIO(fRootIOList.end());
+  std::cout << "Enabling branches  AAAAAAAAAAAAAAAA" <<readconf->IsSACON()<<std::endl;
+  while (iRootIO!=endRootIO) {
+    //    std::cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << std::endl;
+    if ((*iRootIO)->GetName()=="PVeto" && ! readconf->IsPVetoON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
 
+    if ((*iRootIO)->GetName()=="EVeto" && ! readconf->IsEVetoON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
+
+    if ((*iRootIO)->GetName()=="HEPVeto" && ! readconf->IsHEPVetoON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
+
+    if ((*iRootIO)->GetName()=="SAC" && ! readconf->IsSACON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
+
+    if ((*iRootIO)->GetName()=="ECal" && ! readconf->IsECalON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
+
+    if ((*iRootIO)->GetName()=="Target" && ! readconf->IsTargetON()) {
+      (*iRootIO)->SetEnabled(false);
+      std::cout << "RootIOManager: " << (*iRootIO)->GetName() << "Off "<<std::endl;
+    }
+
+    iRootIO++;
+  }
+  
+    
+  
 }
 
 RecoRootIOManager::~RecoRootIOManager()
@@ -195,15 +238,15 @@ void RecoRootIOManager::SaveEvent(){
   RootIOList::iterator endRootIO(fRootIOList.end());
   while (iRootIO!=endRootIO) {
     if ((*iRootIO)->GetEnabled()) {
-      (*iRootIO)->SaveEvent();
       //      std::cout << "Saving event for RECO: " << (*iRootIO)->GetName() << std::endl;
+      (*iRootIO)->SaveEvent();
+      
     }
     iRootIO++;
   }
 
   // All data have been copied: write it to file
   fEventTree->Fill();
-  
 }
 
 

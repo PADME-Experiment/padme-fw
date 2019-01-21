@@ -9,6 +9,8 @@
 #include "TTree.h"
 #include "TObjArray.h"
 #include "TGraph.h"
+#include "ReadConf.hh"
+
 #include "PadmeReconstruction.hh"
 
 #include <signal.h>
@@ -18,7 +20,8 @@
 
 
 PadmeReconstruction* PadmeReco; 
-                              
+ReadConf* readconf = ReadConf::GetInstance();
+                             
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
 	    << std::endl;
@@ -131,6 +134,9 @@ int main(Int_t argc, char **argv)
         perror(Form("No Input File"));
         exit(1);
     }
+
+    // M. Raggi read config files.
+    readconf->ReadConfig();
     
     //Perform the output initialization
     RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance();
@@ -152,3 +158,4 @@ int main(Int_t argc, char **argv)
     delete RecoIO;
     delete PadmeReco;
 }
+

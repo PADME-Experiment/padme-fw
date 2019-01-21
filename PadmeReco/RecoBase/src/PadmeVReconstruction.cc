@@ -125,12 +125,8 @@ void PadmeVReconstruction::ParseConfFile(TString ConfFileName) {
   while (Line.ReadLine(confFile)) {
     if (Line.BeginsWith("#")) continue;
   }
-
   confFile.close();
-
 }
-
-
 
 
 void PadmeVReconstruction::HistoInit(){;}

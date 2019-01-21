@@ -119,6 +119,9 @@ typedef struct config_s {
   // After writing this number of events, output file will be closed and a new one will be opened
   unsigned int file_max_events;
 
+  // Define how often program will write trigger to debug output (once every debug_scale triggers)
+  unsigned short int debug_scale;
+
 } config_t;
 
 extern config_t* Config; // Declare pointer to common configuration structure

@@ -201,6 +201,19 @@ void proc_finalize(int error,int rmv_lock,int create_file,int update_db,int stat
   exit(0);
 }
 
+void timespec_diff(const struct timespec *start, const struct timespec *stop,
+                   struct timespec *result)
+{
+    if ((stop->tv_nsec - start->tv_nsec) < 0) {
+        result->tv_sec = stop->tv_sec - start->tv_sec - 1;
+        result->tv_nsec = stop->tv_nsec - start->tv_nsec + 1000000000;
+    } else {
+        result->tv_sec = stop->tv_sec - start->tv_sec;
+        result->tv_nsec = stop->tv_nsec - start->tv_nsec;
+    }
+    return;
+}
+
 int main(int argc, char *argv[]) {
 
   pid_t pid;
@@ -254,7 +267,8 @@ int main(int argc, char *argv[]) {
   unsigned long int trig_time;
   unsigned char trig_map,trig_count,trig_fifo,trig_auto;
   unsigned long int old_time = 0;
-  time_t sys_time, old_sys_time;
+  //time_t sys_time, old_sys_time;
+  struct timespec clock_time, old_clock_time,clock_diff;
 
   // Various timer variables
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -594,6 +608,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Initialization is now finished: create InitOK file to tell RunControl we are ready.
+  printf("- Trigger board initialized: waiting for start_file '%s'\n",Config->start_file);
   if (Config->run_number) {
     printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
     db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
@@ -618,6 +633,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Start run: enable SIN
+  printf("- Sending start_run command to trigger board\n");
   if ( trig_start_run() != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while starting the run. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -625,7 +641,7 @@ int main(int argc, char *argv[]) {
 
   time(&t_daqstart);
   printf("%s - Starting trigger generation\n",format_time(t_daqstart));
-  old_sys_time = t_daqstart;
+  //old_sys_time = t_daqstart;
   
   if ( Config->run_number ) {
     // Tell DB that the process has started
@@ -739,10 +755,13 @@ int main(int argc, char *argv[]) {
 	proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
       }
 
-      if (totalWriteEvents%100 == 0) {
-	time(&sys_time);
+      // Write trigger info to stdout once every Config->debug_scale triggers
+      if (totalWriteEvents%Config->debug_scale == 0) {
+
+	//time(&sys_time);
+	clock_gettime(CLOCK_REALTIME,&clock_time);
 	memcpy(&word,buff,8);
-	/*
+	/* Trigger data packet changed with latest firmware release
 	trig_time  =                (word & 0x000000FFFFFFFFFF);
 	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
 	trig_count = (unsigned int)((word & 0x00FFC00000000000) >> 46);
@@ -752,15 +771,20 @@ int main(int argc, char *argv[]) {
 	trig_count = (unsigned char)((word & 0x00FF000000000000) >> 48);
 	trig_fifo  = (unsigned char)((word & 0x0100000000000000) >> 56);
 	trig_auto  = (unsigned char)((word & 0x0200000000000000) >> 57);
-	float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz
-	int sys_dt = sys_time-old_sys_time;
 	if (totalWriteEvents == 0) {
 	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
 	} else {
-	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
+	  float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz: get time interval in ms
+	  //int sys_dt = sys_time-old_sys_time;
+	  //printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
+	  timespec_diff(&old_clock_time,&clock_time,&clock_diff);
+	  int dclock_ms = clock_diff.tv_sec*1000+clock_diff.tv_nsec/1000000;
+	  int dclock_us = (clock_diff.tv_nsec%1000000)/1000;
+	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %11.3fms %7d.%3.3dms\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,dclock_ms,dclock_us);
 	}
 	old_time = trig_time;
-	old_sys_time = sys_time;
+	//old_sys_time = sys_time;
+	old_clock_time = clock_time;
       }
 	  
       // Update file counters

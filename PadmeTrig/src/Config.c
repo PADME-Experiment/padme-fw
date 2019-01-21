@@ -102,6 +102,9 @@ int reset_config()
   Config->file_max_size = 1024*1024*1024; // 1GiB
   Config->file_max_events = 1000000; // 1E6 events
 
+  // Rate of debug output (1=all events)
+  Config->debug_scale = 10; // Info about one event on 10 is written to debug output
+
   return 0;
 
 }
@@ -453,10 +456,16 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"debug_scale")==0 ) {
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->debug_scale = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else {
 	printf("WARNING - Unknown parameter %s from line:\n%s\n",param,line);
       }
-
     } else {
       printf("WARNING - Could not parse line in confg file:\n%s\n",line);
     }
@@ -517,7 +526,7 @@ int print_config(){
 
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {
-    printf("output_stream\t\t%s\t\tname of virtual file used as output stream\n",Config->output_stream);
+    printf("output_stream\t\t%s\tname of virtual file used as output stream\n",Config->output_stream);
   } else {
     printf("data_dir\t\t'%s'\t\tdirectory where output files will be stored\n",Config->data_dir);
     printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
@@ -534,6 +543,8 @@ int print_config(){
     printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
     printf("file_max_events\t\t%u\t\tmax number of events to write before changing output file\n",Config->file_max_events);
   }
+
+  printf("debug_scale\t\t%u\t\tDebug output downscale factor\n",Config->debug_scale);
 
   printf("=== End of configuration parameters ===\n\n");
 

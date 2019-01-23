@@ -242,35 +242,35 @@ int read_config(char *cfgfile)
       } else if ( strcmp(param,"trigger_mask")==0 ) {
 	if ( sscanf(value,"%hx",&su) ) {
 	  Config->trigger_mask = (su & 0x00ff);
-	  printf("Parameter %s set to 0x%x\n",param,Config->trigger_mask);
+	  printf("Parameter %s set to 0x%02x\n",param,Config->trigger_mask);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"busy_mask")==0 ) {
 	if ( sscanf(value,"%hx",&su) ) {
 	  Config->busy_mask = (su & 0x001f); // Only use bits 4:0
-	  printf("Parameter %s set to 0x%x\n",param,Config->busy_mask);
+	  printf("Parameter %s set to 0x%02x\n",param,Config->busy_mask);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"timepix_shutter_delay")==0 ) {
-	if ( sscanf(value,"%hu",&su) ) {
+	if ( sscanf(value,"%hx",&su) ) {
 	  Config->timepix_shutter_delay = (su & 0x00ff);
-	  printf("Parameter %s set to %u\n",param,Config->timepix_shutter_delay);
+	  printf("Parameter %s set to 0x%02x (%u)\n",param,Config->timepix_shutter_delay,Config->timepix_shutter_delay);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"timepix_shutter_width")==0 ) {
-	if ( sscanf(value,"%hu",&su) ) {
+	if ( sscanf(value,"%hx",&su) ) {
 	  Config->timepix_shutter_width = (su & 0x00ff);
-	  printf("Parameter %s set to %u\n",param,Config->timepix_shutter_width);
+	  printf("Parameter %s set to 0x%02x (%u)\n",param,Config->timepix_shutter_width,Config->timepix_shutter_width);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"correlated_trigger_delay")==0 ) {
-	if ( sscanf(value,"%hu",&su) ) {
+	if ( sscanf(value,"%hx",&su) ) {
 	  Config->correlated_trigger_delay = su;
-	  printf("Parameter %s set to %u\n",param,Config->correlated_trigger_delay);
+	  printf("Parameter %s set to 0x%04x (%u)\n",param,Config->correlated_trigger_delay,Config->correlated_trigger_delay);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -499,12 +499,12 @@ int print_config(){
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
 
   printf("trigger_mask\t\t0x%02x\t\ttrigger mask (8 bits)\n",Config->trigger_mask);
-  printf("busy_mask\t\t0x%02x\t\tbusy mask (5 bits)\n",Config->trigger_mask);
+  printf("busy_mask\t\t0x%02x\t\tbusy mask (5 bits)\n",Config->busy_mask);
 
-  printf("timepix_shutter_delay\t%u\t\tDelay in clock counts from BTF trigger to open timepix shutter\n",Config->timepix_shutter_delay);
-  printf("timepix_shutter_width\t%u\t\tWidth in clock counts of timepix shutter\n",Config->timepix_shutter_width);
+  printf("timepix_shutter_delay\t0x%02x (%u)\tDelay in clock counts from BTF trigger to open timepix shutter\n",Config->timepix_shutter_delay,Config->timepix_shutter_delay);
+  printf("timepix_shutter_width\t0x%02x (%u)\tWidth in clock counts of timepix shutter\n",Config->timepix_shutter_width,Config->timepix_shutter_width);
 
-  printf("correlated_trigger_delay\t%u\t\tDelay in us from BTF trigger for correlated trigger\n",Config->correlated_trigger_delay);
+  printf("correlated_trigger_delay\t0x%04x (%u)\t\tDelay in us from BTF trigger for correlated trigger\n",Config->correlated_trigger_delay,Config->correlated_trigger_delay);
 
   printf("trig0_scale_global\t%u\t\tTrigger 0 downscale factor\n",Config->trig0_scale_global);
   printf("trig1_scale_global\t%u\t\tTrigger 1 downscale factor\n",Config->trig1_scale_global);

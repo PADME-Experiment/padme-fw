@@ -140,60 +140,75 @@ class Trigger:
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        cfgstring += "executable\t\t%s\n"%self.executable
-        cfgstring += "start_file\t\t%s\n"%self.start_file
-        cfgstring += "quit_file\t\t%s\n"%self.quit_file
+        cfgstring += "daq_dir\t\t\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t\t%s\n"%self.ssh_id_file
+        cfgstring += "executable\t\t\t%s\n"%self.executable
+        cfgstring += "start_file\t\t\t%s\n"%self.start_file
+        cfgstring += "quit_file\t\t\t%s\n"%self.quit_file
 
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        cfgstring += "process_mode\t\t%s\n"%self.process_mode
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
+        cfgstring += "run_number\t\t\t%d\n"%self.run_number
+        cfgstring += "process_mode\t\t\t%s\n"%self.process_mode
+        if (self.run_number): cfgstring += "process_id\t\t\t%d\n"%self.process_id
 
-        cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        cfgstring += "node_id\t\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t\t%s\n"%self.node_ip
 
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-        cfgstring += "lock_file\t\t%s\n"%self.lock_file
-        cfgstring += "initok_file\t\t%s\n"%self.initok_file
-        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file
+        cfgstring += "config_file\t\t\t%s\n"%self.config_file
+        cfgstring += "log_file\t\t\t%s\n"%self.log_file
+        cfgstring += "lock_file\t\t\t%s\n"%self.lock_file
+        cfgstring += "initok_file\t\t\t%s\n"%self.initok_file
+        cfgstring += "initfail_file\t\t\t%s\n"%self.initfail_file
 
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
-        cfgstring += "output_stream\t\t%s\n"%self.output_stream
+        cfgstring += "output_mode\t\t\t%s\n"%self.output_mode
+        cfgstring += "output_stream\t\t\t%s\n"%self.output_stream
 
-        cfgstring += "total_daq_time\t\t%d\n"%self.total_daq_time
+        cfgstring += "total_daq_time\t\t\t%d\n"%self.total_daq_time
 
-        cfgstring += "trigger_addr\t\t%s\n"%self.trigger_addr
-        cfgstring += "trigger_port\t\t%d\n"%self.trigger_port
+        cfgstring += "trigger_addr\t\t\t%s\n"%self.trigger_addr
+        cfgstring += "trigger_port\t\t\t%d\n"%self.trigger_port
 
-        cfgstring += "trigger_mask\t\t%#02x\n"%self.trigger_mask
-        cfgstring += "busy_mask\t\t%#02x\n"%self.busy_mask
+        cfgstring += "trigger_mask\t\t\t0x%02x\n"%self.trigger_mask
+        cfgstring += "busy_mask\t\t\t0x%02x\n"%self.busy_mask
 
-        cfgstring += "correlated_trigger_delay\t\t%#04x\n"%self.correlated_trigger_delay
+        cfgstring += "correlated_trigger_delay\t0x%04x\n"%self.correlated_trigger_delay
 
-        cfgstring += "trig0_scale_global\t\t%d\n"%self.trig0_scale_global
-        cfgstring += "trig0_scale_autopass\t\t%d\n"%self.trig0_scale_autopass
-        cfgstring += "trig1_scale_global\t\t%d\n"%self.trig1_scale_global
-        cfgstring += "trig1_scale_autopass\t\t%d\n"%self.trig1_scale_autopass
-        cfgstring += "trig2_scale_global\t\t%d\n"%self.trig2_scale_global
-        cfgstring += "trig2_scale_autopass\t\t%d\n"%self.trig2_scale_autopass
-        cfgstring += "trig3_scale_global\t\t%d\n"%self.trig3_scale_global
-        cfgstring += "trig3_scale_autopass\t\t%d\n"%self.trig3_scale_autopass
-        cfgstring += "trig4_scale_global\t\t%d\n"%self.trig4_scale_global
-        cfgstring += "trig4_scale_autopass\t\t%d\n"%self.trig4_scale_autopass
-        cfgstring += "trig5_scale_global\t\t%d\n"%self.trig5_scale_global
-        cfgstring += "trig5_scale_autopass\t\t%d\n"%self.trig5_scale_autopass
-        cfgstring += "trig6_scale_global\t\t%d\n"%self.trig6_scale_global
-        cfgstring += "trig6_scale_autopass\t\t%d\n"%self.trig6_scale_autopass
-        cfgstring += "trig7_scale_global\t\t%d\n"%self.trig7_scale_global
-        cfgstring += "trig7_scale_autopass\t\t%d\n"%self.trig7_scale_autopass
+        if (self.trigger_mask & 0x01):
+            cfgstring += "trig0_scale_global\t\t%d\n"%self.trig0_scale_global
+            cfgstring += "trig0_scale_autopass\t\t%d\n"%self.trig0_scale_autopass
 
-        cfgstring += "timepix_shutter_delay\t\t%#02x\n"%self.timepix_shutter_delay
-        cfgstring += "timepix_shutter_width\t\t%#02x\n"%self.timepix_shutter_width
+        if (self.trigger_mask & 0x02):
+            cfgstring += "trig1_scale_global\t\t%d\n"%self.trig1_scale_global
+            cfgstring += "trig1_scale_autopass\t\t%d\n"%self.trig1_scale_autopass
 
-        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
-        cfgstring += "debug_scale\t\t%d\n"%self.debug_scale
+        if (self.trigger_mask & 0x04):
+            cfgstring += "trig2_scale_global\t\t%d\n"%self.trig2_scale_global
+            cfgstring += "trig2_scale_autopass\t\t%d\n"%self.trig2_scale_autopass
+
+        if (self.trigger_mask & 0x08):
+            cfgstring += "trig3_scale_global\t\t%d\n"%self.trig3_scale_global
+            cfgstring += "trig3_scale_autopass\t\t%d\n"%self.trig3_scale_autopass
+
+        if (self.trigger_mask & 0x10):
+            cfgstring += "trig4_scale_global\t\t%d\n"%self.trig4_scale_global
+            cfgstring += "trig4_scale_autopass\t\t%d\n"%self.trig4_scale_autopass
+
+        if (self.trigger_mask & 0x20):
+            cfgstring += "trig5_scale_global\t\t%d\n"%self.trig5_scale_global
+            cfgstring += "trig5_scale_autopass\t\t%d\n"%self.trig5_scale_autopass
+
+        if (self.trigger_mask & 0x40):
+            cfgstring += "trig6_scale_global\t\t%d\n"%self.trig6_scale_global
+            cfgstring += "trig6_scale_autopass\t\t%d\n"%self.trig6_scale_autopass
+
+        if (self.trigger_mask & 0x80):
+            cfgstring += "trig7_scale_global\t\t%d\n"%self.trig7_scale_global
+            cfgstring += "trig7_scale_autopass\t\t%d\n"%self.trig7_scale_autopass
+
+        cfgstring += "timepix_shutter_delay\t\t0x%02x\n"%self.timepix_shutter_delay
+        cfgstring += "timepix_shutter_width\t\t0x%02x\n"%self.timepix_shutter_width
+
+        cfgstring += "daq_loop_delay\t\t\t%d\n"%self.daq_loop_delay
+        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         return cfgstring
 

@@ -306,18 +306,18 @@ class RunControlServer:
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_setup_list\tShow list of available setups
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_setup_list\t\t\tShow list of available setups
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process <b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process <b>
-get_trig_config\tShow current configuration of trigger process
-get_run_number\tReturn last run number in DB
-change_setup <setup>\tChange run setup to <setup>
-new_run\t\tInitialize system for a new run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_run_number\t\t\tReturn last run number in DB
+change_setup <setup>\t\tChange run setup to <setup>
+new_run\t\t\t\tInitialize system for a new run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
             else:
 
@@ -374,20 +374,20 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
-get_trig_config\tShow current configuration of trigger process
-get_trig_log\tGet name of log file for trigger process
-get_run_number\tReturn current run number
-start_run\t\tStart run
-abort_run\t\tAbort run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_trig_log\t\t\tGet name of log file for trigger process
+get_run_number\t\t\tReturn current run number
+start_run\t\t\t\tStart run
+abort_run\t\t\t\tAbort run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -449,19 +449,19 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
-get_trig_config\tShow current configuration of trigger process
-get_trig_log\tGet name of log file for trigger process
-get_run_number\tReturn current run number
-stop_run\t\tStop the run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_trig_log\t\t\tGet name of log file for trigger process
+get_run_number\t\t\tReturn current run number
+stop_run\t\t\t\tStop the run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:

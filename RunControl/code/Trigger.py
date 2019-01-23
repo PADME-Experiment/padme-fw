@@ -53,9 +53,38 @@ class Trigger:
         self.trigger_addr = "192.168.60.100"
         self.trigger_port = 7
         self.trigger_mask = int('0x01',0)
+        self.busy_mask = int('0x10',0)
+
+        # BTF trigger settings (get all triggers, no autopass)
+        self.trig0_scale_global = 1
+        self.trig0_scale_autopass = 0
+
+        # External triggers settings (get all triggers, no autopass)
+        self.trig1_scale_global = 1
+        self.trig1_scale_autopass = 0
+        self.trig2_scale_global = 1
+        self.trig2_scale_autopass = 0
+        self.trig3_scale_global = 1
+        self.trig3_scale_autopass = 0
+        self.trig4_scale_global = 1
+        self.trig4_scale_autopass = 0
+        self.trig5_scale_global = 1
+        self.trig5_scale_autopass = 0
+
+        # Software triggers settings (get all triggers, all autopass)
+        self.trig6_scale_global = 1
+        self.trig6_scale_autopass = 1
+        self.trig7_scale_global = 1
+        self.trig7_scale_autopass = 1
+        self.correlated_trigger_delay = int('0x01f4 ',0)
+
+        # Default timepix settings
+        self.timepix_shutter_delay = int('0x02',0)
+        self.timepix_shutter_width = int('0xff',0)
 
         # Default DAQ control parameters
-        self.daq_loop_delay = 100000
+        self.daq_loop_delay = 10000
+        self.debug_scale = 100
 
     def read_setup(self,setup):
 
@@ -76,10 +105,31 @@ class Trigger:
             m = re_param.search(l)
             if (m):
                 (p_name,p_value) = m.group(1,2)
-                if   (p_name == "trigger_mask"):      self.trigger_mask = int(p_value,0)
-                elif (p_name == "trigger_addr"):      self.trigger_addr = p_value
-                elif (p_name == "trigger_port"):      self.trigger_port = int(p_value,0)
-                elif (p_name == "daq_loop_delay"):    self.daq_loop_delay = int(p_value,0)
+                if   (p_name == "trigger_addr"):             self.trigger_addr = p_value
+                elif (p_name == "trigger_port"):             self.trigger_port = int(p_value,0)
+                elif (p_name == "trigger_mask"):             self.trigger_mask = int(p_value,0)
+                elif (p_name == "busy_mask"):                self.busy_mask = int(p_value,0)
+                elif (p_name == "trig0_scale_global"):       self.trig0_scale_global = int(p_value,0)
+                elif (p_name == "trig0_scale_autopass"):     self.trig0_scale_autopass = int(p_value,0)
+                elif (p_name == "trig1_scale_global"):       self.trig1_scale_global = int(p_value,0)
+                elif (p_name == "trig1_scale_autopass"):     self.trig1_scale_autopass = int(p_value,0)
+                elif (p_name == "trig2_scale_global"):       self.trig2_scale_global = int(p_value,0)
+                elif (p_name == "trig2_scale_autopass"):     self.trig2_scale_autopass = int(p_value,0)
+                elif (p_name == "trig3_scale_global"):       self.trig3_scale_global = int(p_value,0)
+                elif (p_name == "trig3_scale_autopass"):     self.trig3_scale_autopass = int(p_value,0)
+                elif (p_name == "trig4_scale_global"):       self.trig4_scale_global = int(p_value,0)
+                elif (p_name == "trig4_scale_autopass"):     self.trig4_scale_autopass = int(p_value,0)
+                elif (p_name == "trig5_scale_global"):       self.trig5_scale_global = int(p_value,0)
+                elif (p_name == "trig5_scale_autopass"):     self.trig5_scale_autopass = int(p_value,0)
+                elif (p_name == "trig6_scale_global"):       self.trig6_scale_global = int(p_value,0)
+                elif (p_name == "trig6_scale_autopass"):     self.trig6_scale_autopass = int(p_value,0)
+                elif (p_name == "trig7_scale_global"):       self.trig7_scale_global = int(p_value,0)
+                elif (p_name == "trig7_scale_autopass"):     self.trig7_scale_autopass = int(p_value,0)
+                elif (p_name == "correlated_trigger_delay"): self.correlated_trigger_delay = int(p_value,0)
+                elif (p_name == "timepix_shutter_delay"):    self.timepix_shutter_delay = int(p_value,0)
+                elif (p_name == "timepix_shutter_width"):    self.timepix_shutter_width = int(p_value,0)
+                elif (p_name == "daq_loop_delay"):           self.daq_loop_delay = int(p_value,0)
+                elif (p_name == "debug_scale"):              self.debug_scale = int(p_value,0)
                 else:
                     print "Trigger - WARNING: unknown parameter found while reading config file: %s"%p_name
             else:
@@ -90,35 +140,75 @@ class Trigger:
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        cfgstring += "executable\t\t%s\n"%self.executable
-        cfgstring += "start_file\t\t%s\n"%self.start_file
-        cfgstring += "quit_file\t\t%s\n"%self.quit_file
+        cfgstring += "daq_dir\t\t\t\t%s\n"%self.daq_dir
+        cfgstring += "ssh_id_file\t\t\t%s\n"%self.ssh_id_file
+        cfgstring += "executable\t\t\t%s\n"%self.executable
+        cfgstring += "start_file\t\t\t%s\n"%self.start_file
+        cfgstring += "quit_file\t\t\t%s\n"%self.quit_file
 
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        cfgstring += "process_mode\t\t%s\n"%self.process_mode
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
+        cfgstring += "run_number\t\t\t%d\n"%self.run_number
+        cfgstring += "process_mode\t\t\t%s\n"%self.process_mode
+        if (self.run_number): cfgstring += "process_id\t\t\t%d\n"%self.process_id
 
-        cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        cfgstring += "node_id\t\t\t\t%d\n"%self.node_id
+        cfgstring += "node_ip\t\t\t\t%s\n"%self.node_ip
 
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-        cfgstring += "lock_file\t\t%s\n"%self.lock_file
-        cfgstring += "initok_file\t\t%s\n"%self.initok_file
-        cfgstring += "initfail_file\t\t%s\n"%self.initfail_file
+        cfgstring += "config_file\t\t\t%s\n"%self.config_file
+        cfgstring += "log_file\t\t\t%s\n"%self.log_file
+        cfgstring += "lock_file\t\t\t%s\n"%self.lock_file
+        cfgstring += "initok_file\t\t\t%s\n"%self.initok_file
+        cfgstring += "initfail_file\t\t\t%s\n"%self.initfail_file
 
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
-        cfgstring += "output_stream\t\t%s\n"%self.output_stream
+        cfgstring += "output_mode\t\t\t%s\n"%self.output_mode
+        cfgstring += "output_stream\t\t\t%s\n"%self.output_stream
 
-        cfgstring += "total_daq_time\t\t%d\n"%self.total_daq_time
+        cfgstring += "total_daq_time\t\t\t%d\n"%self.total_daq_time
 
-        cfgstring += "trigger_mask\t\t%#02x\n"%self.trigger_mask
-        cfgstring += "trigger_addr\t\t%s\n"%self.trigger_addr
-        cfgstring += "trigger_port\t\t%d\n"%self.trigger_port
+        cfgstring += "trigger_addr\t\t\t%s\n"%self.trigger_addr
+        cfgstring += "trigger_port\t\t\t%d\n"%self.trigger_port
 
-        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
+        cfgstring += "trigger_mask\t\t\t0x%02x\n"%self.trigger_mask
+        cfgstring += "busy_mask\t\t\t0x%02x\n"%self.busy_mask
+
+        cfgstring += "correlated_trigger_delay\t0x%04x\n"%self.correlated_trigger_delay
+
+        if (self.trigger_mask & 0x01):
+            cfgstring += "trig0_scale_global\t\t%d\n"%self.trig0_scale_global
+            cfgstring += "trig0_scale_autopass\t\t%d\n"%self.trig0_scale_autopass
+
+        if (self.trigger_mask & 0x02):
+            cfgstring += "trig1_scale_global\t\t%d\n"%self.trig1_scale_global
+            cfgstring += "trig1_scale_autopass\t\t%d\n"%self.trig1_scale_autopass
+
+        if (self.trigger_mask & 0x04):
+            cfgstring += "trig2_scale_global\t\t%d\n"%self.trig2_scale_global
+            cfgstring += "trig2_scale_autopass\t\t%d\n"%self.trig2_scale_autopass
+
+        if (self.trigger_mask & 0x08):
+            cfgstring += "trig3_scale_global\t\t%d\n"%self.trig3_scale_global
+            cfgstring += "trig3_scale_autopass\t\t%d\n"%self.trig3_scale_autopass
+
+        if (self.trigger_mask & 0x10):
+            cfgstring += "trig4_scale_global\t\t%d\n"%self.trig4_scale_global
+            cfgstring += "trig4_scale_autopass\t\t%d\n"%self.trig4_scale_autopass
+
+        if (self.trigger_mask & 0x20):
+            cfgstring += "trig5_scale_global\t\t%d\n"%self.trig5_scale_global
+            cfgstring += "trig5_scale_autopass\t\t%d\n"%self.trig5_scale_autopass
+
+        if (self.trigger_mask & 0x40):
+            cfgstring += "trig6_scale_global\t\t%d\n"%self.trig6_scale_global
+            cfgstring += "trig6_scale_autopass\t\t%d\n"%self.trig6_scale_autopass
+
+        if (self.trigger_mask & 0x80):
+            cfgstring += "trig7_scale_global\t\t%d\n"%self.trig7_scale_global
+            cfgstring += "trig7_scale_autopass\t\t%d\n"%self.trig7_scale_autopass
+
+        cfgstring += "timepix_shutter_delay\t\t0x%02x\n"%self.timepix_shutter_delay
+        cfgstring += "timepix_shutter_width\t\t0x%02x\n"%self.timepix_shutter_width
+
+        cfgstring += "daq_loop_delay\t\t\t%d\n"%self.daq_loop_delay
+        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         return cfgstring
 
@@ -167,11 +257,43 @@ class Trigger:
 
         self.db.add_cfg_para_trigger(self.process_id,"total_daq_time",     repr(self.total_daq_time))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask",       "%#02x"%self.trigger_mask)
         self.db.add_cfg_para_trigger(self.process_id,"trigger_addr",       self.trigger_addr)
         self.db.add_cfg_para_trigger(self.process_id,"trigger_port",       repr(self.trigger_port))
 
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask",       "%#02x"%self.trigger_mask)
+        self.db.add_cfg_para_trigger(self.process_id,"busy_mask",          "%#02x"%self.busy_mask)
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_global",   repr(self.trig0_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_autopass", repr(self.trig0_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_global",   repr(self.trig1_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_autopass", repr(self.trig1_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_global",   repr(self.trig2_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_autopass", repr(self.trig2_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_global",   repr(self.trig3_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_autopass", repr(self.trig3_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_global",   repr(self.trig4_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_autopass", repr(self.trig4_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_global",   repr(self.trig5_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_autopass", repr(self.trig5_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_global",   repr(self.trig6_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_autopass", repr(self.trig6_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_global",   repr(self.trig7_scale_global))
+        self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_autopass", repr(self.trig7_scale_autopass))
+
+        self.db.add_cfg_para_trigger(self.process_id,"correlated_trigger_delay","%#04x"%self.correlated_trigger_delay)
+
+        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_delay",   "%#02x"%self.timepix_shutter_delay)
+        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_width",   "%#02x"%self.timepix_shutter_width)
+
         self.db.add_cfg_para_trigger(self.process_id,"daq_loop_delay",     repr(self.daq_loop_delay))
+        self.db.add_cfg_para_trigger(self.process_id,"debug_scale",        repr(self.debug_scale))
 
         return "ok"
 

@@ -106,7 +106,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 	}
 	//printf("Trigger ON for %u samples\n",n_samples_on);
 	if (n_samples_on > autopass_trig_duration) {
-	  printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
+	  //printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
 	  pEvtAutoPass = 1;
 	}
       }

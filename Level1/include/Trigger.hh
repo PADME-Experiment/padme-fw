@@ -38,6 +38,8 @@ class Trigger
   UInt_t GetEventSize() { return fEventSize; }
 
   UChar_t GetTriggerMask() { return fTriggerMask; }
+  UChar_t GetTriggerFifo() { return fTriggerFifo; }
+  UChar_t GetTriggerAuto() { return fTriggerAuto; }
   UInt_t GetTriggerCounter() { return fTriggerCounter; }
   ULong64_t GetClockCounter() { return fClockCounter; }
   ULong64_t GetTotalClockCounter() { return fTotalClockCounter; }
@@ -69,6 +71,8 @@ class Trigger
   UInt_t fTriggerCounter;
   ULong64_t fClockCounter;
   ULong64_t fTotalClockCounter;
+  UChar_t fTriggerFifo;
+  UChar_t fTriggerAuto;
 
 };
 #endif

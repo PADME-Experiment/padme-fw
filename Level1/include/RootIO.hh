@@ -33,18 +33,20 @@ public:
   // FillRawEvent gets all information from a single merged event,
   // converts it to a TRawEvent, and sends it to the output RawData file.
   int FillRawEvent(
-		   int,                    // run number
-		   unsigned int,           // event number
-		   struct timespec,        // time when event was merged
-		   unsigned long long int, // event clock time within run
-		   unsigned int,           // event trigger mask
-		   unsigned int,           // event status
-		   unsigned int,           // missing adc boards bit mask
-		   unsigned int,           // trigger mask
-		   unsigned int,           // trigger counter
-		   unsigned long long int, // trigger clock
-		   unsigned int,           // number of ADC boards
-		   ADCBoard**              // array of pointers to ADCBoard
+		   int,               // run number
+		   unsigned int,      // event number
+		   struct timespec,   // time when event was merged
+		   unsigned long int, // event clock time within run
+		   unsigned int,      // event trigger mask
+		   unsigned int,      // event status
+		   unsigned int,      // missing adc boards bit mask
+		   unsigned int,      // trigger mask
+		   unsigned int,      // trigger counter
+		   unsigned long int, // trigger clock
+		   unsigned char,     // trigger fifo
+		   unsigned char,     // trigger autopass
+		   unsigned int,      // number of ADC boards
+		   ADCBoard**         // array of pointers to ADCBoard
 		   );
   TRawEvent* GetRawEvent() { return fTRawEvent; }
 

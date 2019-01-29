@@ -45,6 +45,9 @@ public:
   void SetVerbose(unsigned int v) { fVerbose = v; }
   unsigned int Verbose() { return fVerbose; }
 
+  void SetDebugScale(unsigned int v) { fDebugScale = v; }
+  unsigned int DebugScale() { return fDebugScale; }
+
 private:
 
   int fRunNumber;
@@ -62,6 +65,8 @@ private:
   unsigned int fNEventsPerFile;
 
   unsigned int fVerbose;
+
+  unsigned int fDebugScale;
 
 };
 #endif

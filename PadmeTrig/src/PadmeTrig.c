@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
   float evtWritePerSec, sizeWritePerSec;
 
   // Information about output files
-  unsigned int fileIndex;
+  unsigned int fileIndex = 0;
   int tooManyOutputFiles;
   char tmpName[MAX_FILENAME_LEN];
   char* fileName[MAX_N_OUTPUT_FILES];
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
-  int fileHandle;
+  int fileHandle = 0;
 
   // Trigger debugging/logging variables
   unsigned long int word;
@@ -607,6 +607,21 @@ int main(int argc, char *argv[]) {
     printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
   }
 
+  // If using STREAM output, open stream now to avoid DAQ locking
+  if ( strcmp(Config->output_mode,"STREAM")==0 ) {
+
+    pathName[fileIndex] = (char*)malloc(strlen(Config->output_stream)+1);
+    strcpy(pathName[fileIndex],Config->output_stream);
+
+    printf("- Opening output stream '%s'\n",pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY);
+    if (fileHandle == -1) {
+      printf("PadmeTrig *** ERROR *** Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+    }
+
+  }
+
   // Initialization is now finished: create InitOK file to tell RunControl we are ready.
   printf("- Trigger board initialized: waiting for start_file '%s'\n",Config->start_file);
   if (Config->run_number) {
@@ -659,6 +674,33 @@ int main(int argc, char *argv[]) {
   totalWriteSize = 0;
   totalWriteEvents = 0;
 
+  // When using FILE output, only open file when DAQ has started
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+
+    // Generate name for initial output file and verify it does not exist
+    //generate_filename(fileName[fileIndex],t_daqstart);
+    generate_filename(tmpName,t_daqstart);
+    fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
+    strcpy(fileName[fileIndex],tmpName);
+    pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
+    strcpy(pathName[fileIndex],Config->data_dir);
+    strcat(pathName[fileIndex],fileName[fileIndex]);
+
+    printf("- Opening output file %d with path '%s'\n",fileIndex,pathName[fileIndex]);
+    fileHandle = open(pathName[fileIndex],O_WRONLY | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+    if (fileHandle == -1) {
+      printf("PadmeTrig *** ERROR *** Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+    }
+
+  }
+
+  // Initialize file counters
+  fileTOpen[fileIndex] = t_daqstart;
+  fileSize[fileIndex] = 0;
+  fileEvents[fileIndex] = 0;
+ 
+  /*
   // Start counting output files
   fileIndex = 0;
   tooManyOutputFiles = 0;
@@ -697,6 +739,7 @@ int main(int argc, char *argv[]) {
   fileTOpen[fileIndex] = t_daqstart;
   fileSize[fileIndex] = 0;
   fileEvents[fileIndex] = 0;
+  */
 
   // Write header to file
   fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
@@ -728,6 +771,7 @@ int main(int argc, char *argv[]) {
   pEvtSize = 12;
 
   // Run data acquisition
+  tooManyOutputFiles = 0;
   while(1){
 
     if ( trig_get_data((void*)data,&data_len) != TRIG_OK ) {

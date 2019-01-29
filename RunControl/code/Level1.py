@@ -42,7 +42,7 @@ class Level1:
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
         cfgstring += "executable\t\t%s\n"%self.executable
 

@@ -746,7 +746,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         p_id = self.run.trigger.start_trig()
         if p_id:
             print "Trigger - Started with process id %d"%p_id
-            self.send_answer("trigger ready")
+            self.send_answer("trigger init")
         else:
             print "Trigger - ERROR: could not start process"
             self.send_answer("trigger fail")
@@ -757,7 +757,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_zsup()
             if p_id:
                 print "ADC board %02d - Started ZSUP with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc %d zsup_ready"%adc.board_id)
+                self.send_answer("adc %d zsup_init"%adc.board_id)
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
                 self.send_answer("adc %d zsup_fail"%adc.board_id)
@@ -769,15 +769,37 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_daq()
             if p_id:
                 print "ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc %d init"%adc.board_id)
+                self.send_answer("adc %d daq_init"%adc.board_id)
                 adc.status = "init"
             else:
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
-                self.send_answer("adc %d fail"%adc.board_id)
+                self.send_answer("adc %d daq_fail"%adc.board_id)
                 adc.status = "fail"
             time.sleep(0.5)
 
-        # Wait for all boards to finish initialization
+        # Wait for trigger to complete initialization
+        n_try = 1
+        while(True):
+            trig_status = self.check_trig_init_status(self.run.trigger)
+            if (trig_status == "ready"):
+                self.send_answer("trigger ready")
+                break
+            elif (trig_status == "fail"):
+                print "*** ERROR *** Trigger board failed the initialization. Cannot start run"
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                self.send_answer("init_fail")
+                return "initfail"
+            n_try += 1
+            if (n_try>=60):
+                print "*** ERROR *** Trigger board did not initialize within 30sec. Cannot start run"
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                self.send_answer("init_timeout")
+                return "initfail"
+            time.sleep(0.5)
+
+        # Wait for all boards to complete initialization
         n_try = 0
         while(1):
 
@@ -972,6 +994,26 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             if (self.file_exists(adc.node_ip,adc.initok_file_daq) and self.file_exists(adc.node_ip,adc.initok_file_zsup)):
                 return "ready"
             elif (self.file_exists(adc.node_ip,adc.initfail_file_daq) or self.file_exists(adc.node_ip,adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+    def check_trig_init_status(self,trig):
+
+        if trig.node_id == 0:
+
+            if (os.path.exists(trig.initok_file)):
+                return "ready"
+            elif (os.path.exists(trig.initfail_file)):
+                return "fail"
+            else:
+                return "init"
+
+        else:
+
+            if (self.file_exists(trig.node_ip,trig.initok_file)):
+                return "ready"
+            elif (self.file_exists(trig.node_ip,trig.initfail_file)):
                 return "fail"
             else:
                 return "init"

@@ -210,7 +210,7 @@ class Run:
                 (p_name,p_value) = m.group(1,2)
                 if (p_name == "boardid_list"):
                     # Get sorted list of board ids while removing duplicates
-                    s_boards = sorted(list(set(re_boardid.findall(p_value))))
+                    s_boards = sorted(list(set(re_boardid.findall(p_value))),key=int)
                     for s_bid in s_boards:
                         # Convert to int as findall returns strings
                         self.boardid_list.append(int(s_bid))

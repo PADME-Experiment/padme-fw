@@ -13,6 +13,7 @@
 #include "ECalCrystal.hh"
 #include "ECalClusterFinderIsland.hh"
 #include "ECalClusterFinderRadius.hh"
+#include "ECalSimpleClusterization.hh"
 #include "ECalCluster.hh"
 
 #include "TECalMCEvent.hh"
@@ -31,7 +32,10 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fClusterization = new ECalSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+  
+  fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
 
   //  fClusters.clear();
 }
@@ -218,21 +222,21 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   // SdEn.clear();
   // SdCell.clear();
   //EvTotE=0;
-  //  std::cout<<"Builing clusters"<<std::endl;
-  int NClusters = fClusters.size();//ECalBuildClusters(rawEv);
+  vector<TRecoVCluster *> myClus = GetClusters();
+  int NClusters = myClus.size();//ECalBuildClusters(rawEv);
+
   //  GetHisto("ECALNPart")->Fill(ECALNPart);
   GetHisto("ECALNClus")->Fill(NClusters);
   //  GetHisto("ECALETot") ->Fill(EvTotE);
   
+
   for(int gg=0;gg<NClusters;gg++){ 
-    GetHisto("ECALClE")->Fill(ClE[gg]);
-    GetHisto("ECALClNCry")->Fill(ClNCry[gg]);
-    GetHisto("ECALClTime")->Fill(ClTime[gg]);
-    if(ClNCry[gg]>1 && ClE[gg]>10.) {
-      GetHisto("ECALClTimeCut")->Fill(ClTime[gg]);
-      //      GetHisto("ECALClPos")->Fill(ClX[gg],ClY[gg]);
+    GetHisto("ECALClE")->Fill( myClus[gg]->GetEnergy() );
+    GetHisto("ECALClNCry")->Fill( myClus[gg]->GetNHitsInClus() );
+    GetHisto("ECALClTime")->Fill( myClus[gg]->GetTime() );
+    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>10.) {
+      GetHisto("ECALClTimeCut")->Fill( myClus[gg]->GetTime() );
     }
-    //    std::cout<<gg<<" Ncry "<<ClNCry[gg]<<" "<<" "<<std::endl;
   }	 
 
   float q1 = 0.;
@@ -406,6 +410,16 @@ Int_t ECalReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
 void ECalReconstruction::BuildClusters()
 {
 
+  if      (fClusterizationAlgo==1) ECalReconstruction::BuildSimpleECalClusters();
+  else if (fClusterizationAlgo==2) PadmeVReconstruction::BuildClusters();
+  else if (fClusterizationAlgo==3) {// use island algo
+  }
+  else if (fClusterizationAlgo==4) {// use Radius algo
+  }
+  return;   
+}
+void ECalReconstruction::BuildSimpleECalClusters()
+{
   //std::cout<<"In ECalBuildClusters "<<std::endl;
   vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){

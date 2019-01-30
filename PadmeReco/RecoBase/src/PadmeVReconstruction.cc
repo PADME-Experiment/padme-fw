@@ -16,12 +16,11 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
   fChannelReco = 0;
   fChannelCalibration = 0;
-  fClusterization = 0;
   fTriggerProcessor = 0;
   HistoFile->mkdir(Name.Data());
   fConfigFileName = ConfigFileName;
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
-  fClusterization = new PadmeVClusterization();
+  fClusterization = 0;//new PadmeVClusterization();
     
   fConfig = new PadmeVRecoConfig(fConfigParser,Name);
   fWriteHits = true;
@@ -64,9 +63,11 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   fMainReco = MainReco;
   if(fChannelReco) {
     fChannelReco->Init(GetConfig());
-    std::cout<<"digitizer inititialized OK"<<std::endl;
-    fClusterization->Init(GetConfig());
-    std::cout<<"Clusterization inititialized OK"<<std::endl;
+    std::cout<<"digitizer initialized OK"<<std::endl;
+    if (fClusterization) {
+      fClusterization->Init(GetConfig());
+      std::cout<<"Clusterization inititialized OK"<<std::endl;
+    }
     InitChannelID(GetConfig());
     if(fChannelCalibration) fChannelCalibration->Init(GetConfig());
     std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;

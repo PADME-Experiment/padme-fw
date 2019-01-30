@@ -43,12 +43,18 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 
 
   // Add subdetectors persistency managers
-  if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1))fRootIOList.push_back(new PVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1))fRootIOList.push_back(new EVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1))fRootIOList.push_back(new HEPVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1))fRootIOList.push_back(new SACRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1))fRootIOList.push_back(new TargetRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1))fRootIOList.push_back(new ECalRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
+    fRootIOList.push_back(new PVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
+    fRootIOList.push_back(new EVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1))
+    fRootIOList.push_back(new HEPVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
+    fRootIOList.push_back(new SACRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
+    fRootIOList.push_back(new TargetRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
+    fRootIOList.push_back(new ECalRecoRootIO);
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 

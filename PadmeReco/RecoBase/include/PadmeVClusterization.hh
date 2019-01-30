@@ -20,7 +20,7 @@ public:
   virtual Int_t findSeed(std::vector<TRecoVHit *> &hitArray);
 
   
-private:
+protected:
   // configuration parameters
   Double_t fClusterDtMax;
   Int_t    fClusterDcellMax;

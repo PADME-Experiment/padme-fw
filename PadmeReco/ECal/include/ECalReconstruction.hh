@@ -25,6 +25,7 @@ public:
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   //  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
+  void BuildSimpleECalClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
@@ -33,6 +34,8 @@ public:
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
+  Int_t fClusterizationAlgo;
+
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int>    ClSeed;

@@ -139,25 +139,34 @@ int main(int argc, char* argv[])
     //printf("Event %d read\n",iev);
 
     // Show event header
+    TTimeStamp tts = rawEv->GetEventAbsTime();
+    printf("N %7d Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask %08x EvtStatus %08x Boards %2d MissBoard %08x\n",
+	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
+	   rawEv->GetEventRunTime(),rawEv->GetEventTrigMask(),rawEv->GetEventStatus(),
+	   rawEv->GetNADCBoards(),rawEv->GetMissingADCBoards());
+
+    // Show list of boards in this event
     UChar_t nBoards = rawEv->GetNADCBoards();
-    printf("Event %d Run nr %d Event nr %d RunTime %llu TrigMask %08x EvtStatus %08x MissBoard %08x\n",
-	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),rawEv->GetEventRunTime(),rawEv->GetEventTrigMask(),rawEv->GetEventStatus(),rawEv->GetMissingADCBoards());
-    printf("    ADC boards %d (",nBoards);
-    for(UChar_t b=0;b<nBoards;b++){
-      if (b>0) printf(",");
-      printf("%d",rawEv->ADCBoard(b)->GetBoardId());
+    if (verbose>0) {
+      printf("    ADC boards %2d (",nBoards);
+      for(UChar_t b=0;b<nBoards;b++){
+	if (b>0) printf(",");
+	printf("%2d",rawEv->ADCBoard(b)->GetBoardId());
+      }
+      printf(")\n");
     }
-    printf(")\n");
 
     // Show trigger information
-    TTriggerInfo* trigInfo = rawEv->TriggerInfo();
-    if (trigInfo) {
-      UInt_t trigCount = trigInfo->GetTriggerCounter();
-      ULong64_t trigTime = trigInfo->GetTriggerTime();
-      UInt_t trigMask = trigInfo->GetTriggerPattern();
-      printf("    Trigger info: time %16llu count %4u mask 0x%08x\n",trigTime,trigCount,trigMask);
-    } else {
-      printf("    Trigger info is empty\n");
+    if (verbose>0) {
+      TTriggerInfo* trigInfo = rawEv->TriggerInfo();
+      if (trigInfo) {
+	UInt_t trigCount = trigInfo->GetTriggerCounter();
+	ULong64_t trigTime = trigInfo->GetTriggerTime();
+	UInt_t trigMask = trigInfo->GetTriggerPattern();
+	printf("    Trigger info: time %16llu count %4u mask 0x%08x\n",trigTime,trigCount,trigMask);
+      } else {
+	printf("    Trigger info is empty\n");
+      }
     }
 
     if (verbose>0) {

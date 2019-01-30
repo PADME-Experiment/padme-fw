@@ -216,17 +216,27 @@ void RecoRootIOManager::EndRun()
 
 void RecoRootIOManager::SaveEvent(){
   
-  int nRun=0;
-  int nEvent=0;
+  //int nRun=0;
+  //int nEvent=0;
+  //fEvent->SetRunNumber(nRun);
+  //fEvent->SetEventNumber(nEvent);
   
+  // This is obsolete and will be removed
   struct timeval tp;
   gettimeofday(&tp,NULL);
   double now = tp.tv_sec*1.+tp.tv_usec/1000000.;
-  
-  fEvent->SetRunNumber(nRun);
-  fEvent->SetEventNumber(nEvent);
   fEvent->SetTime(now);
-  
+
+  fEvent->SetRunNumber(fReco->GetRunNumber());
+  fEvent->SetEventNumber(fReco->GetEventNumber());
+  fEvent->SetEventTime(fReco->GetEventTime());
+  fEvent->SetRunClock(fReco->GetRunClock());
+
+  // Save current time as event reconstruction time
+  fEvent->SetRecoTime(TTimeStamp());
+
+  // Show event header information (for debug purposes)
+  //printf("RecoRootIOManager::SaveEvent() - Run nr %7d Event nr %7d Event time %8d-%06d.%09d Run clock %12lld Reco time %8d-%06d.%09d\n",fEvent->GetRunNumber(),fEvent->GetEventNumber(),fEvent->GetEventTime().GetDate(),fEvent->GetEventTime().GetTime(),fEvent->GetEventTime().GetNanoSec(),fEvent->GetRunClock(),fEvent->GetRecoTime().GetDate(),fEvent->GetRecoTime().GetTime(),fEvent->GetRecoTime().GetNanoSec());
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
@@ -244,8 +254,6 @@ void RecoRootIOManager::SaveEvent(){
   
 }
 
-
-
 RecoVRootIO* RecoRootIOManager::FindRecoRootIO(TString name){
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
@@ -257,5 +265,3 @@ RecoVRootIO* RecoRootIOManager::FindRecoRootIO(TString name){
   return 0;
 
 }
-
-

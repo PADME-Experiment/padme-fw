@@ -5,6 +5,8 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "TTimeStamp.h"
+
 #include "utlConfigParser.hh"
 #include "PadmeVRecoConfig.hh"
 
@@ -46,6 +48,11 @@ public:
   void EndProcessing();
 
   PadmeVReconstruction* FindReco(TString);
+
+  Int_t GetRunNumber();
+  Int_t GetEventNumber();
+  TTimeStamp GetEventTime();
+  ULong64_t GetRunClock();
 
 private:
 

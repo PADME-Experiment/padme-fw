@@ -11,6 +11,9 @@ TRecoEvent::TRecoEvent()
   fRunNumber = 0;
   fEventNumber = 0;
   fTime = 0.;
+  fRecoTime = TTimeStamp(0,0);
+  fEventTime = TTimeStamp(0,0);
+  fRunClock = 0;
 
   //fRandomDecayState = new TRandom3();
 }
@@ -20,6 +23,9 @@ void TRecoEvent::Clear(Option_t * /*option*/)
   fRunNumber = 0;
   fEventNumber = 0;
   fTime = 0.;
+  fRecoTime = TTimeStamp(0,0);
+  fEventTime = TTimeStamp(0,0);
+  fRunClock = 0;
 }
 void TRecoEvent::Reset(Option_t * /*option*/)
 {;}
@@ -30,4 +36,3 @@ void TRecoEvent::Print(Option_t * /*option*/) const
        << " Event " << fEventNumber
        << " Time "  << fTime <<std:: endl;
 }
-

@@ -888,12 +888,12 @@ unsigned int zsup_algorithm_2(unsigned int ch,void *inC,void *outC)
     // Get value of current sample and copy it to output
     memcpy(&s,inC+cursor,2);
     memcpy(outC+cursor,&s,2);
-    //if (s<0 || s>4095) printf("\tWARNING %d\n",s);
+    //if (s<0 || s>4095) printf("\tsample %d\n",s); // DEBUG
 
     // Compute sum of samples and sum of squares of samples (used for RMS) skipping last section of event
     if (i<imax) {
       fs = (double)s;
-      //if (fs<0. || fs>4095.) printf("\tWARNING %d %f\n",s,fs);
+      //if (fs<0. || fs>4095.) printf("\tsample %d float %f\n",s,fs); // DEBUG
       sum += fs;
       sum2 += fs*fs;
     }

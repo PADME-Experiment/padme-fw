@@ -504,3 +504,33 @@ ULong64_t PadmeReconstruction::GetRunClock()
   printf("PadmeReconstruction::GetRunClock() - Unknown input chain");
   return 0;
 }
+
+UInt_t PadmeReconstruction::GetEventStatus()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    // Not defined for MC events
+    return 0;
+  } else if (fRawChain) {
+    return fRawEvent->GetEventStatus();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetEventStatus();
+  }
+  printf("PadmeReconstruction::GetEventStatus() - Unknown input chain");
+  return 0;
+}
+
+UInt_t PadmeReconstruction::GetTriggerMask()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    // Not defined for MC events
+    return 0;
+  } else if (fRawChain) {
+    return fRawEvent->GetEventTrigMask();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetTriggerMask();
+  }
+  printf("PadmeReconstruction::GetTriggerMask() - Unknown input chain");
+  return 0;
+}

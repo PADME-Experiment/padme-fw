@@ -53,6 +53,8 @@ public:
   Int_t GetEventNumber();
   TTimeStamp GetEventTime();
   ULong64_t GetRunClock();
+  UInt_t GetEventStatus();
+  UInt_t GetTriggerMask();
 
 private:
 

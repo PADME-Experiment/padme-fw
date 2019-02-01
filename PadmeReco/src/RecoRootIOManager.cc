@@ -231,12 +231,14 @@ void RecoRootIOManager::SaveEvent(){
   fEvent->SetEventNumber(fReco->GetEventNumber());
   fEvent->SetEventTime(fReco->GetEventTime());
   fEvent->SetRunClock(fReco->GetRunClock());
+  fEvent->SetEventStatus(fReco->GetEventStatus());
+  fEvent->SetTriggerMask(fReco->GetTriggerMask());
 
   // Save current time as event reconstruction time
   fEvent->SetRecoTime(TTimeStamp());
 
   // Show event header information (for debug purposes)
-  //printf("RecoRootIOManager::SaveEvent() - Run nr %7d Event nr %7d Event time %8d-%06d.%09d Run clock %12lld Reco time %8d-%06d.%09d\n",fEvent->GetRunNumber(),fEvent->GetEventNumber(),fEvent->GetEventTime().GetDate(),fEvent->GetEventTime().GetTime(),fEvent->GetEventTime().GetNanoSec(),fEvent->GetRunClock(),fEvent->GetRecoTime().GetDate(),fEvent->GetRecoTime().GetTime(),fEvent->GetRecoTime().GetNanoSec());
+  //printf("RecoRootIOManager::SaveEvent() - Run nr %7d Event nr %7d Event time %8d-%06d.%09d Run clock %12lld Reco time %8d-%06d.%09d Status 0x%08x Trigger 0x%08x\n",fEvent->GetRunNumber(),fEvent->GetEventNumber(),fEvent->GetEventTime().GetDate(),fEvent->GetEventTime().GetTime(),fEvent->GetEventTime().GetNanoSec(),fEvent->GetRunClock(),fEvent->GetRecoTime().GetDate(),fEvent->GetRecoTime().GetTime(),fEvent->GetRecoTime().GetNanoSec(),fEvent->GetEventStatus(),fEvent->GetTriggerMask());
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());

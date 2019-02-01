@@ -38,6 +38,12 @@ public:
   void Reset(Option_t* option ="");
   void Print(Option_t* option="") const;
 
+  UInt_t GetEventStatus() { return fEventStatus; }
+  void SetEventStatus(UInt_t val) { fEventStatus = val; }
+
+  UInt_t GetTriggerMask() { return fTriggerMask; }
+  void SetTriggerMask(UInt_t val) { fTriggerMask = val; }
+
 private:
 
   Int_t fRunNumber;
@@ -46,6 +52,8 @@ private:
   TTimeStamp fRecoTime;
   TTimeStamp fEventTime;
   ULong64_t fRunClock;
+  UInt_t fEventStatus;
+  UInt_t fTriggerMask;
 
   //static TRandom3* fgRandomDecayState;
   //TRandom3* fRandomDecayState;

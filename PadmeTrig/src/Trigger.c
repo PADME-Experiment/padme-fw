@@ -14,14 +14,77 @@
 
 #define TRIG_CMD_READ 0x00
 #define TRIG_CMD_WRITE 0x01
-#define TRIG_REG_START_RUN 0x00
-#define TRIG_REG_BUSY_AND_TRIG_MASKS 0x02
 #define TRIG_CMD_TIMESTAMP 0x02
 #define TRIG_REG_TIMESTAMP 0x00
 #define TRIG_CMD_READ_I2C_TEMP 0x04
 #define TRIG_REG_READ_I2C_TEMP 0x00
 #define TRIG_CMD_READ_XADC_TEMP 0x04
 #define TRIG_REG_READ_XADC_TEMP 0x01
+
+// === Trigger registers ===
+//
+// 0x00 SC Start/stop run, busy reset
+//         [0] start run, [1] stop run, [7:4] reset busy_in counters (3:0), [8] reset CPU busy counter
+//
+// 0x01 RW Reset programmable logic, define post trigger dead time
+//         [0] programmable logic reset, [31:16] dead time in clock cycles (def: 0x3e7f = 15999 = 200us)
+//
+// 0x02 RW Trigger mask, busy mask, correlated trigger delay
+//         [5:0] input triggers mask (def: 0 = all off)
+//         [6] uncorrelated trigger (def: 0 = off), [7] correlated trigger (def: 0 = off)
+//         [11:8] busy_in mask (3:0) (def: 0 = all off), [12] CPU busy (def: 1 = on)
+//         [31:16] correlated trigger delay in us (def: 0x01f4 = 500 us)
+//
+// 0x03 RW run window duration (low 32bit)
+// 0x04 RW run window duration (high 32bit)
+//         [63:0] run duration in clock cycles (def: 0xffffffffffffffff = almost unlimited)
+//
+// 0x05 RW TimePix3 shutter delay and width
+//         [7:0] TimePix3 shutter delay from trig out in clock counts (def: 0x02 = 2 = 25ns)
+//         [15:8] TimePix3 shutter window width in clock cycles (def: 0x16 = 22 = 275ns)
+//
+// 0x06 RW trigger 0 (BTF trigger) start of pre-veto wrt start of previous trigger
+//         [31:0] pre-veto width in clock cycles (def: 0x001829ef = 1583599 = 19.794988ms
+//                i.e. 205us before next trigger assuming a 50Hz trigger rate)
+//
+// 0x07 RW trigger 0 (BTF trigger) pre-veto timeout if next BTF trigger does not arrive
+//         [31:0] pre-veto timeout in clock cycles (def: 0x04c4b3ff = 79999999 = 1s)
+//
+// 0x08 RW trigger 0 (BTF trigger) global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x09 RW trigger 1 global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0a RW trigger 2 global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0b RW trigger 3 global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0c RW trigger 4 global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0d RW trigger 5 global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0e RW trigger 6 (uncorrelated trigger) global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x0f RW trigger 7 (correlated trigger) global demultiplication factor and autopass demultiplication factor
+//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+//
+// 0x14 RO busy_in 0 counter in clock cycles
+// 0x15 RO busy_in 1 counter in clock cycles
+// 0x16 RO busy_in 2 counter in clock cycles
+// 0x17 RO busy_in 3 counter in clock cycles
+// 0x18 RO CPU busy counter in clock cycles
+//
+// 0x19 RO busy register
+//      [3:0] busy_in (3:0), [4] CPU busy
+
+// === Trigger data format (64bit) ===
+// [39:0]  timestamp in clock cycles, resets in 13744s = 3h49m
+// [47:40] trigger map (7:0), 0 = BTF, 6 = uncorrelated, 7 = correlated
+// [55:48] trigger counter, resets at 256 triggers
+// [56]    fifo empty (technical detail, ignore)
+// [57]    trigger type (0: standard, 1: autopass)
+
+#define TRIG_REG_START_RUN           0x00
+#define TRIG_REG_BUSY_AND_TRIG_MASKS 0x02
 
 int Trig_SockFD = 0;
 
@@ -74,7 +137,7 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   //printf("\n");
   rc = write(Trig_SockFD,cmd,2);
   if (rc<0) {
-    perror("Error issuing timestamp command");
+    perror("Trigger::trig_get_data - Error issuing timestamp command");
     return TRIG_ERROR;
   }
 
@@ -88,7 +151,7 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   // Read first 4 bytes from Trigger (must be B0F0B0F0 pattern)
   rc = read(Trig_SockFD,(char*)buff,4);
   if (rc<0) {
-    perror("Reading timestamp data (header)");
+    perror("Trigger::trig_get_data - Error reading timestamp data (header)");
     return TRIG_ERROR;
   }
   if (rc!=4) {
@@ -150,6 +213,7 @@ int trig_get_temperature(float* temp)
   return TRIG_OK;
 }
 
+/*
 int trig_set_trigmask(char trig)
 {
 
@@ -175,7 +239,9 @@ int trig_set_trigmask(char trig)
   return TRIG_OK;
 
 }
+*/
 
+/*
 int trig_set_busymask(char busy)
 {
 
@@ -201,7 +267,9 @@ int trig_set_busymask(char busy)
   return TRIG_OK;
 
 }
+*/
 
+ /*
 int trig_get_trigbusymask(char* mask)
 {
 
@@ -231,7 +299,9 @@ int trig_get_trigbusymask(char* mask)
   return TRIG_OK;
 
 }
+ */
 
+/*
 int trig_get_trigmask(char* mask)
 {
 
@@ -248,7 +318,9 @@ int trig_get_trigmask(char* mask)
   return TRIG_OK;
 
 }
+*/
 
+/*
 int trig_get_busymask(char* mask)
 {
 
@@ -265,7 +337,9 @@ int trig_get_busymask(char* mask)
   return TRIG_OK;
 
 }
+*/
 
+/*
 int trig_start_run()
 {
 
@@ -282,4 +356,288 @@ int trig_start_run()
     return TRIG_ERROR;
   }
   return TRIG_OK;
+}
+*/
+
+int trig_start_run()
+{
+  unsigned char fullmask[4];
+  fullmask[0] = 0x00;
+  fullmask[1] = 0x00;
+  fullmask[2] = 0x00;
+  fullmask[3] = (1 << 0); // bit 0: start run
+  return trig_set_register(0x00,fullmask);
+}
+
+int trig_stop_run()
+{
+  unsigned char fullmask[4];
+  fullmask[0] = 0x00;
+  fullmask[1] = 0x00;
+  fullmask[2] = 0x00;
+  fullmask[3] = (1 << 1); // bit 1: stop run
+  return trig_set_register(0x00,fullmask);
+}
+
+int trig_get_trigbusymask(unsigned char* mask)
+{
+  // WARNING this function is obsolete and will be removed
+  return trig_get_register(0x02,mask);
+}
+
+int trig_get_trigmask(unsigned char* mask)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc == TRIG_OK) mask[0] = fullmask[3];
+  return rc;
+}
+
+int trig_set_trigmask(unsigned char mask)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old trigger mask with new one (8bits)
+  fullmask[3] = mask;
+  return trig_set_register(0x02,fullmask);
+}
+
+int trig_enable_trigger(unsigned char trigger)
+{
+
+  int rc;
+  unsigned char fullmask[4];
+  char errmsg[80];
+
+  if (trigger >= 8) {
+    sprintf(errmsg,"trig_enable_trigger - Error request to enable trigger %u",trigger);
+    perror(errmsg);
+    return TRIG_ERROR;
+  }
+
+  rc = trig_get_register(0x02,fullmask);
+  if (rc != TRIG_OK) return rc;
+  fullmask[0] = ( fullmask[0] | (1 << trigger) );
+  return trig_set_register(0x02,fullmask);
+
+}
+
+int trig_disable_trigger(unsigned char trigger)
+{
+
+  int rc;
+  unsigned char fullmask[4];
+  char errmsg[80];
+
+  if (trigger >= 8) {
+    sprintf(errmsg,"trig_disable_trigger - Error request to disable trigger %u",trigger);
+    perror(errmsg);
+    return TRIG_ERROR;
+  }
+
+  rc = trig_get_register(0x02,fullmask);
+  if (rc != TRIG_OK) return rc;
+  fullmask[0] = ( fullmask[0] & ~(1 << trigger) );
+  return trig_set_register(0x02,fullmask);
+
+}
+
+int trig_get_busymask(unsigned char* mask)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc == TRIG_OK) mask[0] = fullmask[2];
+  return rc;
+}
+
+int trig_set_busymask(unsigned char mask)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old busy mask with new one (bits 3:0)
+  // Reminder: bit 4 (CPU busy) must never be touched
+  fullmask[2] = ( (fullmask[2] & 0xf0) | (mask & 0x0f) );
+  return trig_set_register(0x02,fullmask);
+}
+
+int trig_get_correlated_delay(unsigned short int* delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc == TRIG_OK) *delay = fullmask[0]*256+fullmask[1];
+  return rc;
+}
+
+int trig_set_correlated_delay(unsigned short int delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x02,fullmask);
+  if (rc != TRIG_OK) return rc;
+  fullmask[0] = ( (delay/256) & 0xff );
+  fullmask[1] = ( (delay%256) & 0xff );
+  return trig_set_register(0x02,fullmask);
+}
+
+int trig_get_timepix_delay(unsigned char* delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc == TRIG_OK) delay[0] = fullmask[3];
+  return rc;
+}
+
+int trig_set_timepix_delay(unsigned char delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old timepix delay with new one
+  fullmask[3] = delay;
+  return trig_set_register(0x05,fullmask);
+}
+
+int trig_get_timepix_width(unsigned char* width)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc == TRIG_OK) width[0] = fullmask[2];
+  return rc;
+}
+
+int trig_set_timepix_width(unsigned char width)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old timepix width with new one
+  fullmask[2] = width;
+  return trig_set_register(0x05,fullmask);
+}
+
+int trig_get_trigger_global_factor(unsigned char trigger,unsigned short int* factor)
+{
+  int rc;
+  unsigned char fullmask[4];
+  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  rc = trig_get_register(reg,fullmask);
+  if (rc == TRIG_OK) *factor = fullmask[2]*256+fullmask[3];
+  return rc;
+}
+
+int trig_set_trigger_global_factor(unsigned char trigger,unsigned short int factor)
+{
+  int rc;
+  unsigned char fullmask[4];
+  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  rc = trig_get_register(reg,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old global factor with new one
+  fullmask[2] = ( (factor/256) & 0xff );
+  fullmask[3] = ( (factor%256) & 0xff );
+  return trig_set_register(reg,fullmask);
+}
+
+int trig_get_trigger_autopass_factor(unsigned char trigger,unsigned short int* factor)
+{
+  int rc;
+  unsigned char fullmask[4];
+  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  rc = trig_get_register(reg,fullmask);
+  if (rc == TRIG_OK) *factor = fullmask[0]*256+fullmask[1];
+  return rc;
+}
+
+int trig_set_trigger_autopass_factor(unsigned char trigger,unsigned short int factor)
+{
+  int rc;
+  unsigned char fullmask[4];
+  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  rc = trig_get_register(reg,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old autopass factor with new one
+  fullmask[0] = ( (factor/256) & 0xff );
+  fullmask[1] = ( (factor%256) & 0xff );
+  return trig_set_register(reg,fullmask);
+}
+
+int trig_get_register(unsigned char reg, unsigned char* word)
+{
+
+  int rc;
+  unsigned char cmd[2];
+  char errmsg[80];
+
+  // Send command to read given register
+  cmd[0] = TRIG_CMD_READ;
+  cmd[1] = reg;
+
+  //printf("trig_get_register cmd = 0x");
+  //int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
+  //printf("\n");
+
+  rc = write(Trig_SockFD,cmd,2);
+  if (rc<0) {
+    sprintf(errmsg,"trig_get_register - Error requesting register %2u - Command %02x%02x",
+	    reg,cmd[0],cmd[1]);
+    perror(errmsg);
+    return TRIG_ERROR;
+  }
+
+  // Get response (make sure we read 4 bytes)
+  rc = read(Trig_SockFD,word,4);
+  if (rc<0) {
+    sprintf(errmsg,"trig_get_register - Error reading register %2u",reg);
+    perror(errmsg);
+    return TRIG_ERROR;
+  }
+  if (rc!=4) {
+    rc = read(Trig_SockFD,word+rc,4-rc);
+    if (rc<0) {
+      sprintf(errmsg,"trig_get_register - Error reading second part of register %2u",reg);
+      perror(errmsg);
+      return TRIG_ERROR;
+    }
+  }
+
+  return TRIG_OK;
+
+}
+
+int trig_set_register(unsigned char reg,unsigned char* word)
+{
+
+  int rc;
+  unsigned char cmd[6];
+  char errmsg[80];
+
+  cmd[0] = TRIG_CMD_WRITE;
+  cmd[1] = reg;
+  memcpy((void*)(cmd+2),(void*)word,4);
+
+  printf("trig_set_register cmd = 0x");
+  int i; for(i=0;i<6;i++) printf("%02x",cmd[i]);
+  printf("\n");
+
+  rc = write(Trig_SockFD,cmd,6);
+  if (rc<0) {
+    sprintf(errmsg,"trig_set_register - Error setting register %2u - Command %02x%02x%02x%02x%02x%02x",
+	    reg,cmd[0],cmd[1],cmd[2],cmd[3],cmd[4],cmd[5]);
+    perror(errmsg);
+    return TRIG_ERROR;
+  }
+
+  return TRIG_OK;
+
 }

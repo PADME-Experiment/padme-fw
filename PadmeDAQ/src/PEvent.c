@@ -45,7 +45,6 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   // Set autopass bit to 0. Will be set to 1 if trigger signal is long.
   int pEvtAutoPass = 0;
 
-  /* AUTOPASS logic will be supported with next Trigger firmware
   // Define autopass trig ON duration taking into account sampling frequency
   unsigned int autopass_trig_duration;
   if (Config->drs4_sampfreq == 0) {
@@ -59,7 +58,6 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
     return 0;
   }
   //printf("Autopass trigger ON duration set to %u samples\n",autopass_trig_duration);
-  */
 
   // Event header will be created at the end
 
@@ -106,13 +104,11 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 	  //printf("Tr %d Sm %d %f %d\n",iGr,iSm,event->DataGroup[iGr].DataChannel[8][iSm],myshort);
 	  //printf("Tr %d Sm %d 0x%04x\n",iGr,iSm,myshort);
 	}
-	/* AUTOPASS logic will be supported with next Trigger firmware
 	//printf("Trigger ON for %u samples\n",n_samples_on);
 	if (n_samples_on > autopass_trig_duration) {
-	  printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
+	  //printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
 	  pEvtAutoPass = 1;
 	}
-	*/
       }
 
       // Copy trigger time tag

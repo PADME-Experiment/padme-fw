@@ -162,10 +162,12 @@ def get_daq_info(server):
     disk_used  = "0"
     disk_avail = "0"
     disk_usepc = "0"
-    cmd = "%s df -m %s"%(daq_ssh,daq_path)
+    #cmd = "%s df -m %s"%(daq_ssh,daq_path)
+    cmd = "%s /bin/df -BG --output=size,used,avail,pcent %s"%(daq_ssh,daq_path)
     for line in run_command(cmd):
         #print line.rstrip()
-        rc = re.match("^\S+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%%\s+%s\s*$"%daq_path,line.rstrip())
+        #rc = re.match("^\S+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%%\s+%s\s*$"%daq_path,line.rstrip())
+        rc = re.match("^\s*(\S+)G\s+(\S+)G\s+(\S+)G\s+(\d+).*",line)
         if rc:
             disk_total = rc.group(1)
             disk_used  = rc.group(2)
@@ -231,13 +233,14 @@ def start_monitor():
         ### Get DAQ servers disk info ###
         for daq_server in daq_server_list:
             (daq_tot,daq_use,daq_avl,daq_opc) = get_daq_info(daq_server)
-            daq_tot_TB = float(daq_tot)/1024/1024
-            daq_use_TB = float(daq_use)/1024/1024
-            daq_avl_TB = float(daq_avl)/1024/1024
+            #daq_tot_TB = float(daq_tot)/1024/1024
+            #daq_use_TB = float(daq_use)/1024/1024
+            #daq_avl_TB = float(daq_avl)/1024/1024
             daq_color = color_ok
             if (int(daq_opc)>daq_level_warn): daq_color = color_warn
             if (int(daq_opc)>daq_level_alarm): daq_color = color_alarm
-            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
+            #mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
+            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%s GB of %s GB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use,daq_tot,daq_opc,daq_color))
 
             mh.write(",")
 

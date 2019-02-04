@@ -41,7 +41,48 @@ typedef struct config_s {
   int run_number;
 
   // Trigger mask
-  unsigned char trigger_mask;
+  unsigned char trigger_mask; // default 0x00 (all off)
+
+  // Busy mask
+  unsigned char busy_mask; // default 0x10 (CPU busy on, rest off)
+
+  // Timepix3 shutter delay and width in clock counts (80MHz: 1cc = 12.5ns)
+  unsigned char timepix_shutter_delay; // default 0x02 =  25ns
+  unsigned char timepix_shutter_width; // default 0x16 = 275ns
+
+  // Correlated trigger (trigger 7) delay wrt BTF trigger (trigger 0) in us
+  unsigned short int correlated_trigger_delay; // default 0x01f4 = 500us
+
+  // Triggers scale factors (global and autopass)
+
+  // Trigger 0: BTF trigger
+  unsigned short int trig0_scale_global;   // default 1
+  unsigned short int trig0_scale_autopass; // default 0
+
+  // Triggers 1-5: External triggers (2: cosmics, 4: dual timer)
+
+  unsigned short int trig1_scale_global;   // default 1
+  unsigned short int trig1_scale_autopass; // default 0
+
+  unsigned short int trig2_scale_global;   // default 1
+  unsigned short int trig2_scale_autopass; // default 0
+
+  unsigned short int trig3_scale_global;   // default 1
+  unsigned short int trig3_scale_autopass; // default 0
+
+  unsigned short int trig4_scale_global;   // default 1
+  unsigned short int trig4_scale_autopass; // default 0
+
+  unsigned short int trig5_scale_global;   // default 1
+  unsigned short int trig5_scale_autopass; // default 0
+
+  // Trigger 6: uncorrelated 1MHz trigger (minimum rate: 10MHz/65535 i.e. ~15Hz)
+  unsigned short int trig6_scale_global;   // default 0
+  unsigned short int trig6_scale_autopass; // default 1
+
+  // Trigger 7: BTF correlated trigger (delayed by <correlated_trigger_delay> us wrt BTF)
+  unsigned short int trig7_scale_global;   // default 0
+  unsigned short int trig7_scale_autopass; // default 1
 
   // Output mode (can be "FILE" or "STREAM").
   char output_mode[16];
@@ -77,6 +118,9 @@ typedef struct config_s {
   // Set maximum number of events to store in a single DAQ file
   // After writing this number of events, output file will be closed and a new one will be opened
   unsigned int file_max_events;
+
+  // Define how often program will write trigger to debug output (once every debug_scale triggers)
+  unsigned short int debug_scale;
 
 } config_t;
 

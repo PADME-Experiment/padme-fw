@@ -692,7 +692,7 @@ int DAQ_readdata ()
   float evtWritePerSec, sizeWritePerSec;
 
   // Information about output files
-  unsigned int fileIndex;
+  unsigned int fileIndex = 0;
   int tooManyOutputFiles;
   char tmpName[MAX_FILENAME_LEN];
   char* fileName[MAX_N_OUTPUT_FILES];
@@ -701,7 +701,7 @@ int DAQ_readdata ()
   uint32_t fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
-  int fileHandle;
+  int fileHandle = 0;
   int rc;
 
   // Flag to end run on ADC read error
@@ -750,7 +750,7 @@ int DAQ_readdata ()
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
   // Initialize output files counter
-  fileIndex = 0;
+  //fileIndex = 0;
 
   // If we use STREAM output, the output stream must be initialized here
   if ( strcmp(Config->output_mode,"STREAM")==0 ) {
@@ -760,6 +760,10 @@ int DAQ_readdata ()
 
     printf("- Opening output stream '%s'\n",pathName[fileIndex]);
     fileHandle = open(pathName[fileIndex],O_WRONLY);
+    if (fileHandle == -1) {
+      printf("ERROR - Unable to open file '%s' for writing.\n",pathName[fileIndex]);
+      return 2;
+    }
 
     // Increase stream buffer to 128MB (~1800evts)
     //long pipe_size = (long)fcntl(fileHandle,F_GETPIPE_SZ);
@@ -1042,7 +1046,8 @@ int DAQ_readdata ()
 	// *********************************************************
 
 	// Print output once in a while (can become a run-time monitor)
-	if ( (eventInfo.EventCounter % 100) == 0 ) {
+	//if ( (eventInfo.EventCounter % 100) == 0 ) {
+	if ( (eventInfo.EventCounter % Config->debug_scale) == 0 ) {
 
 	  // Print event header
 	  printf("- Evt# %u time %u size %u board 0x%02x pattern 0x%08x chmsk 0x%08x\n",
@@ -1055,20 +1060,13 @@ int DAQ_readdata ()
 		);
 
 	  // Print some group info
+	  printf("  Group(TTT,SIC)");
 	  for(iGr=0;iGr<MAX_X742_GROUP_SIZE;iGr++){
 	    if (event->GrPresent[iGr]) {
-	      printf("  Group %d TTT %d SIC %d\n",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
-	      //for(iCh=0;iCh<MAX_X742_CHANNEL_SIZE;iCh++){
-	        //printf("    Channel %d size %d\n",iCh,event->DataGroup[iGr].ChSize[iCh]);
-	        //for(iSm=0;iSm<event->DataGroup[iGr].ChSize[iCh];iSm++){
-	        //  printf(" %6.1f",event->DataGroup[iGr].DataChannel[iCh][iSm]);
-	        //}
-		//printf("\n");
-	      //}
-	    } else {
-	      //printf("  Group %d not present\n",iGr);
+	      printf(" %1d(%04x,%4d)",iGr,event->DataGroup[iGr].TriggerTimeTag,event->DataGroup[iGr].StartIndexCell);
 	    }
 	  }
+	  printf("\n");
 
 	}
 
@@ -1085,6 +1083,19 @@ int DAQ_readdata ()
 	// If event is accepted, write it to file and update counters
 	if (pEvtSize > 0) {
 	  
+	  // Write event header to debug info once in a while
+	  //if ( (eventInfo.EventCounter % 100) == 0 ) {
+	  if ( (eventInfo.EventCounter % Config->debug_scale) == 0 ) {
+	    unsigned char i,j;
+	    printf("  Header");
+	    for (i=0;i<6;i++) {
+	      printf(" %1d(",i);
+	      for (j=0;j<4;j++) { printf("%02x",(unsigned char)(outEvtBuffer[i*4+3-j])); }
+	      printf(")");
+	    }
+	    printf("\n");
+	  }
+
 	  // Write data to output file
 	  writeSize = write(fileHandle,outEvtBuffer,pEvtSize);
 	  if (writeSize != pEvtSize) {

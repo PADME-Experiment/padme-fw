@@ -244,6 +244,8 @@ int main(int argc, char* argv[])
   unsigned long int trigger_data = 0;
   unsigned int trigger_mask = 0;
   unsigned int trigger_counter = 0;
+  unsigned char trigger_fifo = 0;
+  unsigned char trigger_auto = 0;
   unsigned long int trigger_clock = 0;
 
   // Main loop on input events
@@ -288,18 +290,20 @@ int main(int argc, char* argv[])
 
 	// Send event to ROOT
 	//if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,trigger_mask,trigger_counter,trigger_clock,number_of_boards,boards) != ROOTIO_OK) {
-	if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,missing_adcboards,trigger_mask,trigger_counter,trigger_clock,adcboard_counter,boards) != ROOTIO_OK) {
+	if (root->FillRawEvent(run_number,event_number,event_time,event_run_time,event_trigger_mask,event_status,missing_adcboards,trigger_mask,trigger_counter,trigger_clock,trigger_fifo,trigger_auto,adcboard_counter,boards) != ROOTIO_OK) {
 	  printf("PadmeLevel1 - ERROR while writing event %u (evt nr %u) to root file. Aborting\n",number_of_events,event_number);
 	  input_stream_handle.close();
 	  root->Exit();
 	  exit(1);
 	}
 
+	// Show some debug info once in a while
+	if (number_of_events%cfg->DebugScale() == 0) {
+	  printf("%7u Run %7u Event %7u Time %9lu.%09lus Clock %12lu TrigMask 0x%04x Status 0x%04x Boards %2u Missing boards 0x%08x\n",number_of_events,run_number,event_number,event_time.tv_sec,event_time.tv_nsec,event_run_time,event_trigger_mask,event_status,adcboard_counter,missing_adcboards);
+	}
+
 	// Increase event counter
 	number_of_events++;
-	if (number_of_events%100 == 0) {
-	  printf("- Written event %u - Run %d Event %u\n",number_of_events,run_number,event_number);
-	}
 
 	// Reset counters for next event
 	header_found = 0;
@@ -426,6 +430,8 @@ int main(int argc, char* argv[])
       trigger_mask = ((trigger_data & TRIGEVENT_V03_TRIGGERMASK_BIT) >> TRIGEVENT_V03_TRIGGERMASK_POS);
       trigger_counter = ((trigger_data & TRIGEVENT_V03_TRIGGERCOUNT_BIT) >> TRIGEVENT_V03_TRIGGERCOUNT_POS);
       trigger_clock =  ((trigger_data & TRIGEVENT_V03_CLOCKCOUNT_BIT) >> TRIGEVENT_V03_CLOCKCOUNT_POS);
+      trigger_fifo = ((trigger_data & TRIGEVENT_V03_TRIGGERFIFO_BIT) >> TRIGEVENT_V03_TRIGGERFIFO_POS);
+      trigger_auto = ((trigger_data & TRIGEVENT_V03_TRIGGERAUTO_BIT) >> TRIGEVENT_V03_TRIGGERAUTO_POS);
       //printf("Trigger found. Data 0x%016lx Mask 0x%03x Count 0x%04x Clock 0x%lu\n",trigger_data,trigger_mask,trigger_counter,trigger_clock);
 
       // Add trigger info size to event size and total input size

@@ -508,9 +508,9 @@ class PadmeCDRServer:
             return "error"
 
         print "- File %s - Getting ADLER32 checksum at source"%rawfile
-        a32_src = get_checksum_daq(rawfile)
+        a32_src = self.get_checksum_daq(rawfile)
         print "- File %s - Getting ADLER32 checksum at destination"%rawfile
-        a32_dst = get_checksum_cnaf(rawfile)
+        a32_dst = self.get_checksum_cnaf(rawfile)
         cmd = "gfal-sum %s/%s/%s adler32"%(self.cnaf_srm,self.data_dir,rawfile);
         print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
         if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):

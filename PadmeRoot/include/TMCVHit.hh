@@ -19,6 +19,7 @@ public:
   virtual ~TMCVHit(){};
 
   void Print(Option_t* option="") const;
+  TMCVHit(const TMCVHit&);
 
 public:
  

@@ -44,6 +44,7 @@ Int_t ECalClusterFinderRadius::FindClusters()
       nClusters++;
       cluster->AddCrystal(seed);
       seed->SetSeed();
+      cluster->SetSeed(seed->GetHitIndex());
       ExpandCluster(cluster,seed);
     } else {
       std::cout << "WARNING - ClusterFinder::FindClusters - Cannot create new cluster" << std::endl;

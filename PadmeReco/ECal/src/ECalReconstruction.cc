@@ -36,6 +36,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fTriggerProcessor = new PadmeVTrigger();
   
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
+  std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
 
   //  fClusters.clear();
 }
@@ -143,10 +144,21 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 // }
 
 
-void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
+//void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
+void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
 {
+  /*
+  if (type==3)std::cout<<"In BuildECalIslandClusters "<<std::endl;
+  else if (type==4)std::cout<<"In BuildECalRadiusClusters "<<std::endl;
+  */
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
 
   ECalParameters* para = ECalParameters::GetInstance();
+  /*
 
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   TECalMCEvent* tECalEvent = (TECalMCEvent*)tEvent;
@@ -159,29 +171,105 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
     digi->Print();
   }
+  */
 
+  vector<TRecoVHit *> Hits = GetRecoHits();
   // Let's do some cluster finding
   ECalCrystalHandler* cryHand = new ECalCrystalHandler();
-  for (Int_t iD=0; iD<tECalEvent->GetNDigi(); iD++) {
-    TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
-    Int_t ch = digi->GetChannelId();
-    Double_t sig = digi->GetSignal();
+  for (Int_t ih=0; ih<Hits.size(); ++ih) {
+    TRecoVHit* rhit = Hits[ih];
+    Int_t     ch = rhit->GetChannelId();
+    Double_t sig = rhit->GetEnergy();
+    //std::cout<<" Crystal is given Energy / Time = "<<sig<<"  "<<rhit->GetTime()<<std::endl;
+    Int_t iX = ch/100;
+    Int_t iY = ch%100;
+    ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
+    cry->SetCharge(rhit->GetEnergy()/para->GetSignalToEnergy(ch));
+    cry->SetEnergy(sig);
+    cry->SetTime(rhit->GetTime());
+    cry->SetHitIndex(ih);
+    //cry->Print();
+  }
+  cryHand->SortEnergy();
+
+  // Find clusters with PadmeIsland algorithm
+  ECalClusterHandler* cluHand = new ECalClusterHandler();
+  ECalClusterFinderIsland* cluFindIsl=NULL;
+  ECalClusterFinderRadius* cluFindRad=NULL;
+  Int_t newNClu = 0;
+  if       (type==3) {
+    cluFindIsl = new ECalClusterFinderIsland(cryHand,cluHand);
+    newNClu = cluFindIsl->FindClusters();
+    //printf("- Cluster finding result - PadmeIsland algorithm -\n");
+  }
+  else if  (type==4) {
+    cluFindRad = new ECalClusterFinderRadius(cryHand,cluHand);
+    newNClu = cluFindRad->FindClusters();
+    //printf("- Cluster finding result - PadmeRadius algorithm -\n");
+  }
+  //cluHand->Print();
+
+  std::vector<Int_t> vHitInCl; 
+  for (Int_t ic=0; ic<newNClu; ++ic) {
+    TRecoVCluster* myCl = new TRecoVCluster();
+    ECalCluster* cl = cluHand->GetCluster(ic);
+    myCl->SetSeed        ( cl->GetSeed() );
+    TRecoVHit* seedhit = Hits[cl->GetSeed()];
+    myCl->SetChannelId   ( seedhit->GetChannelId() );
+    myCl->SetEnergy      ( cl->GetEnergy() );
+    myCl->SetTime        ( cl->GetTime() );
+    //std::cout<<"Cluster is given energy / time = "<< cl->GetEnergy() << " "<< cl->GetTime()<<std::endl;
+    myCl->SetPosition    ( TVector3( cl->GetXCenter(), cl->GetYCenter(), 1000.) );
+    Int_t clSize = cl->GetNCrystals();
+    myCl->SetNHitsInClus ( clSize );
+    vHitInCl.clear(); 
+    for (Int_t j=0; j<clSize; ++j)
+      {
+	vHitInCl.push_back( cl->GetCrystal(j)->GetHitIndex() ); 
+      }
+    myCl->SetHitVecInClus( vHitInCl );
+    myClusters.push_back ( myCl );
+  }
+ 
+  
+
+  delete cryHand;
+  delete cluHand;
+  if (cluFindIsl) delete cluFindIsl;
+  if (cluFindRad) delete cluFindRad;
+}
+
+/*
+void ECalReconstruction::BuildECalRadiusClusters()
+{
+  std::cout<<"In BuildECalRadiusClusters "<<std::endl;
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+  
+  ECalParameters* para = ECalParameters::GetInstance();
+
+  vector<TRecoVHit *> Hits = GetRecoHits();
+  // Let's do some cluster finding
+  ECalCrystalHandler* cryHand = new ECalCrystalHandler();
+  for (Int_t ih=0; ih<Hits.size(); ++ih) {
+    TRecoVHit* rhit = Hits[ih];
+    Int_t     ch = rhit->GetChannelId();
+    Double_t sig = rhit->GetEnergy();
     Int_t iX = ch/100;
     Int_t iY = ch%100;
     ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
     cry->SetCharge(sig);
     cry->SetEnergy(sig*para->GetSignalToEnergy(ch));
-    cry->SetTime(digi->GetTime());
+    //    cry->SetCharge(sig);
+    //    cry->SetEnergy(sig*para->GetSignalToEnergy(ch));
+    cry->SetTime(rhit->GetTime());
+    cry->SetHitIndex(ih);
     cry->Print();
   }
   cryHand->SortEnergy();
-
-  // Find clusters with PadmeIsland algorithm
-  ECalClusterHandler* cluHandIsl = new ECalClusterHandler();
-  ECalClusterFinderIsland* cluFindIsl = new ECalClusterFinderIsland(cryHand,cluHandIsl);
-  Int_t newNClu = cluFindIsl->FindClusters();
-  printf("- Cluster finding result - PadmeIsland algorithm -\n");
-  cluHandIsl->Print();
 
   // Find clusters with PadmeRadius algorithm
   ECalClusterHandler* cluHandRad = new ECalClusterHandler();
@@ -195,12 +283,11 @@ void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   // Final cleanup
 
   delete cryHand;
-  delete cluHandIsl;
-  delete cluFindIsl;
   delete cluHandRad;
   delete cluFindRad;
 
 }
+*/
 
 // void ECalReconstruction::EndProcessing()
 // {;}
@@ -412,15 +499,14 @@ void ECalReconstruction::BuildClusters()
 
   if      (fClusterizationAlgo==1) ECalReconstruction::BuildSimpleECalClusters();
   else if (fClusterizationAlgo==2) PadmeVReconstruction::BuildClusters();
-  else if (fClusterizationAlgo==3) {// use island algo
-  }
-  else if (fClusterizationAlgo==4) {// use Radius algo
+  else if (fClusterizationAlgo==3 || fClusterizationAlgo==4) {// use island(3) or Radius(4) algo
+    ECalReconstruction::BuildECalIslandRadiusClusters(fClusterizationAlgo);
   }
   return;   
 }
 void ECalReconstruction::BuildSimpleECalClusters()
 {
-  //std::cout<<"In ECalBuildClusters "<<std::endl;
+  //std::cout<<"In BuildSimpleECalClusters "<<std::endl;
   vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
     delete myClusters[iCl];

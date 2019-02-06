@@ -50,7 +50,8 @@ public:
   virtual void ClearHits();
   virtual void ClearClusters();
   virtual void BuildHits(TRawEvent*);
-  virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
+  virtual void ReadHits(TRecoVObject*, TRecoEvent*);
+  virtual void ConvertMCDigitsToRecoHits(TMCVEvent*, TMCEvent*);
   virtual void BuildClusters();
   //  virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   //  virtual Int_t findSeed(std::vector<Int_t> hUsed);

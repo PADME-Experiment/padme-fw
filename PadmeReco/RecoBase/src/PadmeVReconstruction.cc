@@ -95,7 +95,30 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
   return fRecoEvent;
 }
 */
-void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
+void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  // MC to reco hits
+  ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+  // Clustering  
+  ClearClusters();
+  BuildClusters();
+
+}
+void PadmeVReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    TRecoVHit *Hit = new TRecoVHit();
+    Hit->SetChannelId(digi->GetChannelId());
+    Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    fHits.push_back(Hit);
+  }
+}
 
 void PadmeVReconstruction::ProcessEvent(TRecoVObject* tEvent,TRecoEvent* tRecoEvent)
 {

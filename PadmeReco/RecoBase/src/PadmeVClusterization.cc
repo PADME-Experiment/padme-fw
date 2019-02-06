@@ -60,6 +60,7 @@ std::vector<TRecoVHit *>  PadmeVClusterization::removeOutOfTimeHits(std::vector<
       henergy = Hits[j]->GetEnergy();
       if (henergy < fClusterEthrForHit) {fhUsed[j]=1;++nskip;/* continue; */}
       cleanedHits.push_back(Hits[j]);
+      //std::cout<<"cleanedHits are "<<j<<" chId ="<<Hits[j]->GetChannelId()<<" Time ="<<htime<<" Energy = "<<henergy<<" ----is skipped = "<<fhUsed[j]<<std::endl;
     }
   //std::cout<<" cleanedHits size = "<<cleanedHits.size()<<" inputHits size = "<<Hits.size()<<" hits skipped = "<<nskip<<std::endl;
   return cleanedHits;
@@ -218,6 +219,8 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
     myCl->SetNHitsInClus ( clSize );
     myCl->SetHitVecInClus( clHitIndices );
     myClusters.push_back ( myCl );
+    //std::cout<<"Reconstruct --- New cluster stored with seed="<<iSeed<<" @CHid "<<seedID<<" clSize="<<clSize<<std::endl;
+
     
   }  //end of while loop on seeds
 

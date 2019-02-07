@@ -488,6 +488,68 @@ class PadmeCDRServer:
 
         return "ok"
 
+    def copy_file_cnaf_kloe(self,rawfile):
+
+        self.renew_voms_proxy()
+
+        tmp_file = "/tmp/%s"%rawfile
+
+        copy_failed = False
+
+        # As in gfal-copy SFTP destination is not working, first create a temporary local copy of the file
+        print "- File %s - Starting copy from CNAF to KLOE"%rawfile
+        #cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.kloe_user,self.kloe_keyfile,self.lnf_srm,self.data_dir,rawfile,self.kloe_sftp,self.data_dir,rawfile);
+        cmd = "gfal-copy -t 3600 -T 3600 -p %s/%s/%s file://%s"%(self.cnaf_srm,self.data_dir,rawfile,tmp_file);
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            if re.match("^gfal-copy error: ",line):
+                copy_failed = True
+
+        if copy_failed:
+            #print "- File %s - ***ERROR*** gfal-copy returned error status while copying from CNAF to KLOE"%rawfile
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from CNAF to local file"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            return "error"
+
+        # Make sure destination directory exists on KLOE server
+        m = re.match("(.*)/.*\.root",rawfile)
+        if (m):
+            rawdir = m.group(1)
+        else:
+            print "- File %s - ***ERROR*** cannot extract directory from file name"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            return "error"
+        cmd = "%s \'( mkdir -p %s/%s/%s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawdir)
+        for line in self.run_command(cmd): print line.rstrip()
+
+        # Now send local copy to KLOE using good old scp
+        cmd = "scp -i %s %s %s@%s:%s/%s/%s"%(self.kloe_keyfile,tmp_file,self.kloe_user,self.kloe_server,self.kloe_path,self.data_dir,rawfile);
+        for line in self.run_command(cmd): print line.rstrip()
+        # Probably need to add some scp error check
+
+        # Clean up local temporary file
+        for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+
+        # Verify if the copy was correctly completed
+        print "- File %s - Getting ADLER32 checksum at source"%rawfile
+        a32_src = self.get_checksum_cnaf(rawfile)
+        print "- File %s - Getting ADLER32 checksum at destination"%rawfile
+        a32_dst = self.get_checksum_kloe(rawfile)
+        print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
+        if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
+            print "- File %s - ***ERROR*** unmatched checksum while copying from LNF to KLOE"%rawfile
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
+            cmd = "%s \'( cd %s/%s; rm -f %s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawfile);
+            for line in self.run_command(cmd): print line.rstrip()
+            return "error"
+
+        return "ok"
+
     def copy_file_daq_cnaf(self,rawfile):
 
         self.renew_voms_proxy()
@@ -526,8 +588,8 @@ class PadmeCDRServer:
     def copy_file_cnaf_lnf(self,rawfile):
         print "Copying file %s from CNAF to LNF: NOT!"%rawfile
 
-    def copy_file_cnaf_kloe(self,rawfile):
-        print "Copying file %s from CNAF to KLOE: NOT!"%rawfile
+    #def copy_file_cnaf_kloe(self,rawfile):
+    #    print "Copying file %s from CNAF to KLOE: NOT!"%rawfile
 
     def get_kloe_used_space(self):
         used = 100
@@ -647,6 +709,20 @@ class PadmeCDRServer:
                                     break
                                 if self.copy_file_lnf_kloe(rawfile) == "ok":
                                     print "- File %s - Copy from LNF to KLOE successful"%rawfile
+                                self.check_stop_cdr()
+
+                    # Source is CNAF Tier0 Tape Library
+                    elif (self.source_site == "CNAF"):
+
+                        # Destination is KLOE Tape Library
+                        if (self.destination_site == "KLOE"):
+                            # CNAF -> KLOE
+                            if ( (rawfile in self.cnaf_list) and not (rawfile in self.kloe_list) ):
+                                if self.get_kloe_used_space() > 95:
+                                    print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
+                                    break
+                                if self.copy_file_cnaf_kloe(rawfile) == "ok":
+                                    print "- File %s - Copy from CNAF to KLOE successful"%rawfile
                                 self.check_stop_cdr()
 
             end_iteration_time = time.time()

@@ -7,6 +7,17 @@
 
 #include "Riostream.h"
 
+#define TRECOEVENT_STATUSBIT_COMPLETE   0
+#define TRECOEVENT_STATUSBIT_AUTOPASS   1
+#define TRECOEVENT_STATUSBIT_SIMULATED  2
+#define TRECOEVENT_STATUSBIT_BEAMON     3
+
+#define TRECOEVENT_TRIGMASKBIT_BEAM          0
+#define TRECOEVENT_TRIGMASKBIT_COSMICS       1
+#define TRECOEVENT_TRIGMASKBIT_DUALTIMER     3
+#define TRECOEVENT_TRIGMASKBIT_UNCORRELATED  6
+#define TRECOEVENT_TRIGMASKBIT_CORRELATED    7
+
 class TRecoEvent: public TObject
 {
 
@@ -34,15 +45,21 @@ public:
   ULong64_t GetRunClock() { return fRunClock; }
   void SetRunClock(ULong64_t t) { fRunClock = t; }
 
-  void Clear(Option_t* option ="");
-  void Reset(Option_t* option ="");
-  void Print(Option_t* option="") const;
-
   UInt_t GetEventStatus() { return fEventStatus; }
   void SetEventStatus(UInt_t val) { fEventStatus = val; }
+  Bool_t GetEventStatusBit(UChar_t b) { return ((fEventStatus >> b) & 1U) ? true : false; }
+  void EventStatusSetBit(UChar_t b) { fEventStatus |= (1U << b); }
+  void EventStatusUnsetBit(UChar_t b) { fEventStatus &= ~(1U << b); }
 
   UInt_t GetTriggerMask() { return fTriggerMask; }
   void SetTriggerMask(UInt_t val) { fTriggerMask = val; }
+  Bool_t GetTriggerMaskBit(UChar_t b) { return ((fTriggerMask >> b) & 1U) ? true : false; }
+  void TriggerMaskSetBit(UChar_t b) { fTriggerMask |= (1U << b); }
+  void TriggerMaskUnsetBit(UChar_t b) { fTriggerMask &= ~(1U << b); }
+
+  void Clear(Option_t* option ="");
+  void Reset(Option_t* option ="");
+  void Print(Option_t* option="") const;
 
 private:
 

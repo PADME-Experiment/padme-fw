@@ -36,7 +36,7 @@ void TRecoEvent::Reset(Option_t * /*option*/)
 
 void TRecoEvent::Print(Option_t * /*option*/) const
 {
-  printf("Run %7d Event %7d Time %8d-%06d.%9d Clock %12d Status 0x%08x Trigger 0x%08x RecoTime %8d-%06d.%9d\n",
+  printf("Run %7d Event %7d Time %8u-%06u.%9d Clock %12llu Status 0x%08x Trigger 0x%08x RecoTime %8u-%06u.%9d\n",
 	 fRunNumber,fEventNumber,fEventTime.GetDate(),fEventTime.GetTime(),fEventTime.GetNanoSec(),
 	 fRunClock,fEventStatus,fTriggerMask,fRecoTime.GetDate(),fRecoTime.GetTime(),fRecoTime.GetNanoSec());
   //std::cout << "Run "   << fRunNumber

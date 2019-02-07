@@ -78,7 +78,8 @@ daq_level_alarm = 85
 ################################
 
 # Path to file with summary occupation info
-lnf_summary_file = "/home/%s/du-padme_dpm.ouput"%cdr_user
+#lnf_summary_file = "/home/%s/du-padme_dpm.ouput"%cdr_user
+lnf_summary_file = "/home/%s/du-padme/padme_spazio-occupato.output"%cdr_user
 
 # Total available space in TB
 lnf_disk_tot_TB = 80.
@@ -202,10 +203,17 @@ def get_kloe_info():
 def get_lnf_info():
 
     disk_use = "0"
-    cmd = "tail -2 %s"%lnf_summary_file
+    #cmd = "tail -2 %s"%lnf_summary_file
+    #for line in run_command(cmd):
+    #    rc = re.match("^\s*(\d+)B\s*$",line)
+    #    if rc: disk_use = rc.group(1)
+    cmd = "tail -1 %s"%lnf_summary_file
     for line in run_command(cmd):
-        rc = re.match("^\s*(\d+)B\s*$",line)
-        if rc: disk_use = rc.group(1)
+        rc = re.match("^\s*(\d\d\d\d\d\d\d\d)_(\d\d\d\d)\s+(\d+)\s*$",line)
+        if rc:
+            read_date = rc.group(1)
+            read_time = rc.group(2)
+            disk_use = rc.group(3)
     return disk_use
 
 def run_command(command):

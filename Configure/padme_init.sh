@@ -15,10 +15,13 @@ export PADMERECO=${PADME}/PadmeReco
 # Define path to PadmeRoot and add it to LD_LIBRARY_PATH
 export PADMEROOT=${PADME}/PadmeRoot
 
+# Define path to PadmeGeom and add it to LD_LIBRARY_PATH
+export PADMEGEOM=${PADME}/PadmeGeom
+
 # Add PadmeRoot to LD_LIBRARY_PATH (also remove previous definitions)
 #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
 clean_ld_library_path=`echo $LD_LIBRARY_PATH | tr ":" "\n" | grep -v PadmeRoot | paste -sd ":"`
-export LD_LIBRARY_PATH="${clean_ld_library_path}:${PADMEROOT}/lib"
+export LD_LIBRARY_PATH="${clean_ld_library_path}:${PADMEROOT}/lib:${PADMEGEOM}/lib"
 unset clean_ld_library_path
 
 # Configure PadmeDB access parameters fom convenitonal file

@@ -2,7 +2,7 @@
 
 NAME := PadmeReco
 
-SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix Analysis
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := $(SUBDIRS) RecoBase
 
@@ -11,8 +11,10 @@ STATIC := -static
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
-#CPPFLAGS += -IEventDisplay/include -IService/include
+#####CPPFLAGS += -IEventDisplay/include -IService/include
+CPPFLAGS += -I/afs/le.infn.it/user/s/spagnolo/padme/PADMEsw/onDATA2018/padme-fw_develop211218/PadmeGeom/include 
 CPPFLAGS += -IRecoBase/include -g
+CXXFLAGS = $(CPPFLAGS)
 
 
 include ./config/global.gmk
@@ -23,6 +25,7 @@ LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix 
 #LIBS += -LService/lib -lService$(STATIC)
 LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
+LIBS += -L$(PADMEGEOM)/lib -lPadmeGeom
 LIBS += -L/usr/lib64/mysql -lmysqlclient
 LIBS += -Llib -lPadmeReco$(STATIC)
 
@@ -39,6 +42,10 @@ LIBS += -Llib -lPadmeReco$(STATIC)
 all: PadmeReco
 
 PadmeReco: PadmeReco.cc makesub
+	@echo "Compiling $< ..."
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
+
+PadmeAnalysisMain: PadmeAnalysisMain.cc makesub
 	@echo "Compiling $< ..."
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
 

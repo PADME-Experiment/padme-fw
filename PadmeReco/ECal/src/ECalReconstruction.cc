@@ -24,6 +24,7 @@
 #include "TH1F.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
+#include "ECalGeometry.hh"
 
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
@@ -34,6 +35,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fChannelReco = new DigitizerChannelReco();
   fClusterization = new ECalSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+
+  ECalGeometry * fgeom = ECalGeometry::GetInstance();
   
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;

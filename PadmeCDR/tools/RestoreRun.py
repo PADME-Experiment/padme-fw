@@ -14,7 +14,7 @@ LNF_SRM = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/hom
 CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
 def print_help():
-    print 'RecoverRun -R run_name [-S src_site] [-Y year] [-D dst_dir] [-h]'
+    print 'RestoreRun -R run_name [-S src_site] [-D dst_site] [-d dst_dir] [-Y year] [-h]'
     print '  -R run_name     Name of run to recover'
     print '  -S src_site     Source site. Default: CNAF. Available %s'%SRC_SITE_LIST
     print '  -D dst_site     Destination site. Default: LOCAL. Available %s'%DST_SITE_LIST
@@ -26,9 +26,8 @@ def main(argv):
 
     run = ""
     src_site = "CNAF"
+    src_dir = ""
     dst_site = "LOCAL"
-    srm = ""
-    data_dir = ""
     dst_dir = ""
     year = ""
     src_srm = ""
@@ -95,14 +94,14 @@ def main(argv):
     elif (dst_site == "CNAF"):
         dst_srm = CNAF_SRM
 
-    # Source dir is always the official directory for all runs of given year
-    data_dir = "/daq/%s/rawdata/%s"%(year,run)
+    # Source dir is always the official directory of desired runs in given year
+    src_dir = "/daq/%s/rawdata/%s"%(year,run)
 
     # If destination dir is not explicitly declared...
     if (not dst_dir):
         if (dst_site == "LNF" or dst_site == "CNAF"):
             # ...use official directory if using a storage system at LNF/CNAF
-            dst_dir = data_dir
+            dst_dir = src_dir
         else:
             # ...use subdir of current directory if LOCAL
             dst_dir = "%s/%s"%(os.getcwd(),run)
@@ -123,10 +122,10 @@ def main(argv):
     #    print "WARNING - Directory %s already exists or cannot be created"%dst_dir
 
     file_list = []
-    for line in run_command("gfal-ls %s%s"%(src_srm,data_dir)):
+    for line in run_command("gfal-ls %s%s"%(src_srm,src_dir)):
         if re.match("^gfal-ls error: ",line):
             print line.rstrip()
-            print "***ERROR*** gfal-ls returned error status while retrieving file list from %s%s"%(src_srm,data_dir)
+            print "***ERROR*** gfal-ls returned error status while retrieving file list from %s%s"%(src_srm,src_dir)
             sys.exit(2)
         file_list.append(line.rstrip())
     file_list.sort()
@@ -136,9 +135,9 @@ def main(argv):
     for rawfile in file_list:
         print "%s - Copying file %s"%(now_str(),rawfile)
         if (dst_site == "LOCAL"):
-            cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s file://%s/%s"%(src_srm,data_dir,rawfile,dst_dir,rawfile);
+            cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s file://%s/%s"%(src_srm,src_dir,rawfile,dst_dir,rawfile);
         else:
-            cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s %s%s/%s"%(src_srm,data_dir,rawfile,dst_srm,dst_dir,rawfile);
+            cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s %s%s/%s"%(src_srm,src_dir,rawfile,dst_srm,dst_dir,rawfile);
         if fake:
             print "> %s"%cmd
         else:

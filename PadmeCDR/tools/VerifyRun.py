@@ -32,6 +32,7 @@ def print_help():
     print '  -D dst_site     Destination site. Default: LNF. Available %s'%SITE_LIST
     print '  -s daq_server   Name of data server if src_site or dst_site is DAQ. Available %s'%DAQ_SERVERS
     print '  -Y year         Specify year of data taking to copy. Default: year from run name'
+    print '  -c              Enable checksum verification (very time consuming!)'
     print '  -v              Enable verbose mode'
     print '  -h              Show this help message and exit'
 
@@ -78,10 +79,11 @@ def main(argv):
     daq_ssh = ""
     year = ""
     fake = False
+    checksum = False
     verbose = False
 
     try:
-        opts,args = getopt.getopt(argv,"R:S:D:s:Y:fvh")
+        opts,args = getopt.getopt(argv,"R:S:D:s:Y:cfvh")
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -114,6 +116,8 @@ def main(argv):
             year = arg
         elif opt == '-f':
             fake = True
+        elif opt == '-c':
+            checksum = True
         elif opt == '-v':
             verbose = True
 
@@ -168,22 +172,28 @@ def main(argv):
     else:
         dst_dir = "/daq/%s/rawdata/%s"%(year,run)
 
-    print "=== VerifyRun %s between %s and %s ==="%(run,src_site,dst_site)
     print
+    print "=== VerifyRun %s between %s and %s ==="%(run,src_site,dst_site)
+
+    if checksum:
+        print
+        print "WARNING - Checksum is enabled: verification will take a long time..."
 
     # Get list of files at source site
     src_file_list = []
     src_file_size = {}
     src_missing = False
+    print
     if ( src_site == "DAQ" ):
-        cmd = "%s \'( cd %s; ls -l )\'"%(daq_ssh,src_dir)
+        #cmd = "%s \'( cd %s; ls -l )\'"%(daq_ssh,src_dir)
+        cmd = "%s \'( ls -l %s )\'"%(daq_ssh,src_dir)
     else:
         cmd = "gfal-ls -l %s%s"%(src_srm,src_dir)
     for line in run_command(cmd):
-        if re.match("^gfal-ls error: ",line):
+        if ( re.match("^ls: cannot access ",line) or re.match("^gfal-ls error: ",line) ):
             src_missing = True
             print line.rstrip()
-            print "%s - run %s is (probably) missing from %s"%(now_str(),run,dst_site)
+            print "%s - run %s is (probably) missing from %s"%(now_str(),run,src_site)
         m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
         if (m):
             src_file_list.append(m.group(2))
@@ -194,22 +204,31 @@ def main(argv):
     dst_file_list = []
     dst_file_size = {}
     dst_missing = False
+    print
     if ( dst_site == "DAQ" ):
         cmd = "%s \'( cd %s; ls -l )\'"%(daq_ssh,dst_dir)
     else:
         cmd = "gfal-ls -l %s%s"%(dst_srm,dst_dir)
     for line in run_command(cmd):
-        if re.match("^gfal-ls error: ",line):
+        if ( re.match("^ls: cannot access ",line) or re.match("^gfal-ls error: ",line) ):
             dst_missing = True
             print line.rstrip()
-            print "%s - run %s is (probably) missing from %s"%(now_str(),run,src_site)
+            print "%s - run %s is (probably) missing from %s"%(now_str(),run,dst_site)
         m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
         if (m):
             dst_file_list.append(m.group(2))
             dst_file_size[m.group(2)] = int(m.group(1))
     print "%s - at %s run %s contains %d files"%(now_str(),dst_site,run,len(dst_file_list))
 
-    if (src_missing or dst_missing): sys.exit()
+    if (src_missing or dst_missing):
+        print
+        if (src_missing and dst_missing):
+            print "=== Run %s is missing at %s and %s (WARNING) ==="%(run,src_site,dst_site)
+        elif src_missing:
+            print "=== Run %s is missing at %s (WARNING) ==="%(run,src_site)
+        elif dst_missing:
+            print "=== Run %s is missing at %s (WARNING) ==="%(run,dst_site)
+        sys.exit()
 
     if (len(src_file_list) != len(dst_file_list)):
         print "%s - run %s has %d files at %s and %d files at %s"%(now_str(),run,len(src_file_list),src_site,len(dst_file_list),dst_site)
@@ -223,19 +242,28 @@ def main(argv):
     print "%s - Starting verification of run %s (%d files) between %s and %s"%(now_str(),run,len(file_list),src_site,dst_site)
     warnings = 0
     for rawfile in file_list:
+
+        # Check if file is at source site
         if not rawfile in src_file_list:
             warnings += 1
             print "%s - not at %s"%(rawfile,src_site)
+
+        # Check if file is at destination site
         elif not rawfile in dst_file_list:
             warnings += 1
             print "%s - not at %s"%(rawfile,dst_site)
+
+        # Check if files have the same size
+        elif src_file_size[rawfile] != dst_file_size[rawfile]:
+            warnings += 1
+            print "%s - file sizes are different: %d at %s vs. %d at %s"%(rawfile,src_file_size[rawfile],src_site,dst_file_size[rawfile],dst_site)
+
         else:
-            # File is at both sites: check size
-            if src_file_size[rawfile] != dst_file_size[rawfile]:
-                warnings += 1
-                print "%s - file size differs: %d vs. %d"%(rawfile,src_file_size[rawfile],dst_file_size[rawfile])
-            # File size is OK, check adler32
-            else:
+
+            # Verify checksum only if requested by the user
+            if checksum:
+
+                # Get checksum at source site
                 src_checksum = ""
                 if (src_site == "DAQ"):
                     src_checksum = get_checksum_daq(daq_srv,"%s/%s"%(src_dir,rawfile))
@@ -243,6 +271,8 @@ def main(argv):
                     src_checksum = get_checksum_lnf("%s/%s"%(src_dir,rawfile))
                 elif (src_site == "CNAF"):
                     src_checksum = get_checksum_cnaf("%s/%s"%(src_dir,rawfile))
+
+                # Get checksum at destination site
                 dst_checksum = ""
                 if (dst_site == "DAQ"):
                     dst_checksum = get_checksum_daq(daq_srv,"%s/%s"%(dst_dir,rawfile))
@@ -250,16 +280,30 @@ def main(argv):
                     dst_checksum = get_checksum_lnf("%s/%s"%(dst_dir,rawfile))
                 elif (dst_site == "CNAF"):
                     dst_checksum = get_checksum_cnaf("%s/%s"%(dst_dir,rawfile))
-                if (src_checksum != dst_checksum):
+
+                # Check if checksums are consistent
+                if (src_checksum == "" and dst_checksum == ""):
                     warnings += 1
-                    print "%s - checksum differs: %s vs. %s"%(rawfile,src_checksum,dst_checksum)
+                    print "%s - unable to get checksum at %s and %s"%(rawfile,src_site,dst_site)
+                elif (src_checksum == ""):
+                    warnings += 1
+                    print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,src_site,dst_site,dst_checksum)
+                elif (dst_checksum == ""):
+                    warnings += 1
+                    print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,dst_site,src_site,src_checksum)
+                elif (src_checksum != dst_checksum):
+                    warnings += 1
+                    print "%s - checksums are different: %s at %s vs. %s at %s"%(rawfile,src_checksum,src_site,dst_checksum,dst_site)
                 else:
                     if verbose: print "%s - OK - size %d checksum %s"%(rawfile,src_file_size[rawfile],src_checksum)
 
+            else:
+                if verbose: print "%s - OK - size %d"%(rawfile,src_file_size[rawfile])
+
     if warnings:
-        print "%s - WARNING - Found file discrepancies for run %s between %s and %s"%(now_str(),run,src_site,dst_site)
+        print "=== Run %s has differences between %s and %s (WARNING) ==="%(run,src_site,dst_site)
     else:
-        print "%s - Files for run %s at %s and %s are identical"%(now_str(),run,src_site,dst_site)
+        print "=== Run %s is identical at %s and %s ==="%(run,src_site,dst_site)
 
 def run_command(command):
     #print "> %s"%command

@@ -137,7 +137,7 @@ def main(argv):
         if (dst_site == "LOCAL"):
             cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s file://%s/%s"%(src_srm,src_dir,rawfile,dst_dir,rawfile);
         else:
-            cmd = "gfal-copy -p -t 3600 -T 3600 %s%s/%s %s%s/%s"%(src_srm,src_dir,rawfile,dst_srm,dst_dir,rawfile);
+            cmd = "gfal-copy -p --checksum ADLER32 -t 3600 -T 3600 %s%s/%s %s%s/%s"%(src_srm,src_dir,rawfile,dst_srm,dst_dir,rawfile);
         if fake:
             print "> %s"%cmd
         else:

@@ -106,6 +106,7 @@ void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 }
 void PadmeVReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
+  if (tEvent==NULL) return;
   fHits.clear();
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -332,6 +333,7 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 void PadmeVReconstruction::BuildClusters()
 {
 
+  
   vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
     delete myClusters[iCl];
@@ -343,7 +345,7 @@ void PadmeVReconstruction::BuildClusters()
     return;
   }
 
-  fClusterization->Reconstruct(Hits, myClusters);
+  if (fClusterization) fClusterization->Reconstruct(Hits, myClusters);
   
 }
 

@@ -16,7 +16,7 @@ class ECalReconstruction : public PadmeVReconstruction
 {
 
 public:
-  
+
   ECalReconstruction(TFile*, TString);
   ~ECalReconstruction();
 
@@ -38,6 +38,10 @@ public:
 
 private:
   Int_t fClusterizationAlgo;
+  Double_t fClDeltaTime;
+  Int_t fClDeltaCellMax;
+  Double_t fClEnThrForHit;
+  Double_t fClEnThrForSeed;
 
   //Clusters vectors
   std::vector<double> ClE;
@@ -49,14 +53,14 @@ private:
 
   //Seeds vectors
   std::vector<double> SdEn;
-  std::vector<double> SdTime; 
+  std::vector<double> SdTime;
   std::vector<double> SdCell;
 
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
   double EvTotE;
 
-  
+
   //  vector<TRecoVCluster *> fClusters;
 
 

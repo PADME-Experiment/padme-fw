@@ -33,8 +33,8 @@ Int_t ECalCluster::AddCrystal(ECalCrystal* crystal)
     crystal->SetUsed();
     if (fNCrystals==1) fTime = 0.;
     fTime = fTime*fEnergy + crystal->GetTime()*crystal->GetEnergy();
-    fXCenter = fXCenter*fEnergy + crystal->GetTime()*crystal->GetXCenter();
-    fYCenter = fYCenter*fEnergy + crystal->GetTime()*crystal->GetYCenter();
+    fXCenter = fXCenter*fEnergy + crystal->GetEnergy()*crystal->GetXCenter();
+    fYCenter = fYCenter*fEnergy + crystal->GetEnergy()*crystal->GetYCenter();
     fEnergy += crystal->GetEnergy();
     fRawEnergy += crystal->GetEnergy();
     

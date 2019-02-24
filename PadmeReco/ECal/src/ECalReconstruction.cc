@@ -465,7 +465,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   nevt ++;
 }
 
-//  Wirtten by M. Raggi 22/11/2018
+//  Wirtten by M Raggi 22/11/2018
 Int_t ECalReconstruction::FindSeed(Int_t nele, Int_t * Used, Double_t* Ene) {
 
   Int_t iMax=-1;
@@ -573,7 +573,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
     if(cEnergy[iHit1]<fClEnThrForHit) {
       cUsed[iHit1]=1;
-      std::cout<<"cUsed changed in loop " << std::endl;
+      //std::cout<<"cUsed changed in loop " << std::endl;
     }
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
   }

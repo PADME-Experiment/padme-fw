@@ -3,6 +3,7 @@
 #include "TPadmeRun.hh"
 #include "TRawEvent.hh"
 #include "TMCEvent.hh"
+#include "TRecoEvent.hh"
 
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
@@ -509,12 +510,41 @@ UInt_t PadmeReconstruction::GetEventStatus()
 {
   // Check if we are dealing with MC/Raw/Reco event
   if (fMCChain) {
-    // Not defined for MC events
-    return 0;
+
+    // Start with a clean event status mask
+    UInt_t eventstatus = 0;
+
+    // This is a MC event: set Simulated bit
+    eventstatus |= (1U << TRECOEVENT_STATUSBIT_SIMULATED);
+
+    return eventstatus;
+
   } else if (fRawChain) {
-    return fRawEvent->GetEventStatus();
+
+    // Start with a clean event status mask
+    UInt_t eventstatus = 0;
+
+    // Get Complete bit from rawevent
+    if ( fRawEvent->EventStatusGetBit(TRAWEVENT_STATUSBIT_COMPLETE) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_COMPLETE);
+
+    // Get autopass bit from rawevent
+    if ( fRawEvent->EventStatusGetBit(TRAWEVENT_STATUSBIT_AUTOPASS) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_AUTOPASS);
+
+    // Simulated bit is already 0: no need for this
+    //eventstatus &= ~(1U << TRECOEVENT_STATUSBIT_SIMULATED);
+
+    // BeamOn bit is not currently used as it needs info from target: will be added asap
+    //eventstatus |= (1U << TRECOEVENT_STATUSBIT_BEAMON);
+
+    return eventstatus;
+
   } else if (fRecoChain) {
+
+    // Just copy the event status mask from input event
     return fRecoEvent->GetEventStatus();
+
   }
   printf("PadmeReconstruction::GetEventStatus() - Unknown input chain");
   return 0;

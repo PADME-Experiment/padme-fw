@@ -18,6 +18,14 @@ TMCVHit::TMCVHit()
   fEnergy    = 0.;
   fTime      = 1.E9;
 }
+TMCVHit::TMCVHit(const TMCVHit& h)
+{
+  // Initialize to invalid channel
+  fChannelId = h.fChannelId;
+  fPosition  = h.fPosition;
+  fEnergy    = h.fEnergy;
+  fTime      = h.fTime;
+}
 
 void TMCVHit::Print(Option_t *) const {
   std::cout << "Hit - ChannelId = " << fChannelId

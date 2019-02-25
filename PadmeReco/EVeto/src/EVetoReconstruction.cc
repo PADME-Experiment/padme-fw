@@ -12,6 +12,7 @@
 #include "TEVetoMCHit.hh"
 #include "TEVetoMCDigi.hh"
 #include "DigitizerChannelReco.hh"
+#include "EVetoSimpleClusterization.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -23,6 +24,7 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fClusterization = new EVetoSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
 }
 

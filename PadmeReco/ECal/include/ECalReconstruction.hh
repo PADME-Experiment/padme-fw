@@ -16,15 +16,19 @@ class ECalReconstruction : public PadmeVReconstruction
 {
 
 public:
-  
+
   ECalReconstruction(TFile*, TString);
   ~ECalReconstruction();
 
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   //  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
+  void BuildSimpleECalClusters();
+  void BuildECalIslandRadiusClusters(Int_t type);
+  //void BuildECalIslandClusters();
+  //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
@@ -33,6 +37,12 @@ public:
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
+  Int_t fClusterizationAlgo;
+  Double_t fClDeltaTime;
+  Int_t fClDeltaCellMax;
+  Double_t fClEnThrForHit;
+  Double_t fClEnThrForSeed;
+
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int>    ClSeed;
@@ -43,14 +53,14 @@ private:
 
   //Seeds vectors
   std::vector<double> SdEn;
-  std::vector<double> SdTime; 
+  std::vector<double> SdTime;
   std::vector<double> SdCell;
 
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
   double EvTotE;
 
-  
+
   //  vector<TRecoVCluster *> fClusters;
 
 

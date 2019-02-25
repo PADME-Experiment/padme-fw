@@ -16,12 +16,11 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fMainReco = 0;
   fChannelReco = 0;
   fChannelCalibration = 0;
-  fClusterization = 0;
   fTriggerProcessor = 0;
   HistoFile->mkdir(Name.Data());
   fConfigFileName = ConfigFileName;
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
-  fClusterization = new PadmeVClusterization();
+  fClusterization = 0;//new PadmeVClusterization();
     
   fConfig = new PadmeVRecoConfig(fConfigParser,Name);
   fWriteHits = true;
@@ -64,9 +63,11 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   fMainReco = MainReco;
   if(fChannelReco) {
     fChannelReco->Init(GetConfig());
-    std::cout<<"digitizer inititialized OK"<<std::endl;
-    fClusterization->Init(GetConfig());
-    std::cout<<"Clusterization inititialized OK"<<std::endl;
+    std::cout<<"digitizer initialized OK"<<std::endl;
+    if (fClusterization) {
+      fClusterization->Init(GetConfig());
+      std::cout<<"Clusterization inititialized OK"<<std::endl;
+    }
     InitChannelID(GetConfig());
     if(fChannelCalibration) fChannelCalibration->Init(GetConfig());
     std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
@@ -94,7 +95,31 @@ TRecoVEvent* PadmeVReconstruction::ProcessEvent (TDetectorVEvent* tEvent, Event*
   return fRecoEvent;
 }
 */
-void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {;}
+void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  // MC to reco hits
+  ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+  // Clustering  
+  ClearClusters();
+  BuildClusters();
+
+}
+void PadmeVReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    TRecoVHit *Hit = new TRecoVHit();
+    Hit->SetChannelId(digi->GetChannelId());
+    Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    fHits.push_back(Hit);
+  }
+}
 
 void PadmeVReconstruction::ProcessEvent(TRecoVObject* tEvent,TRecoEvent* tRecoEvent)
 {
@@ -308,6 +333,7 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 void PadmeVReconstruction::BuildClusters()
 {
 
+  
   vector<TRecoVCluster *> &myClusters  = GetClusters();
   for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
     delete myClusters[iCl];
@@ -319,8 +345,8 @@ void PadmeVReconstruction::BuildClusters()
     return;
   }
 
-  fClusterization->Reconstruct(Hits, myClusters);
-
+  if (fClusterization) fClusterization->Reconstruct(Hits, myClusters);
+  
 }
 
 void PadmeVReconstruction::AnalyzeEvent(TRawEvent *rawEv){;}

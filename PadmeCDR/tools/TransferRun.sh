@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-    echo "Usage: $0 -r run [-S src_site] [-D dst_site] [-y year] [-j jobs] [-h]" 1>&2
+    echo "Usage: $0 -r run [-S src_site] [-D dst_site] [-L dst_dir] [-y year] [-j jobs] [-h]" 1>&2
     echo "Default: copy from CNAF to LOCAL" 1>&2
     exit 1
 }
@@ -126,13 +126,13 @@ else
     usage
 fi
 
-# Transfer all files in source using parallel
+# Transfer all files from source to destination using parallel tool
 if [[ $test -eq 0 ]]; then
     echo $( now ) - Copying all files from $src_run_uri using $jobs parallel streams
-    #gfal-ls $src_run_uri | sort | parallel -j $jobs $0 -s "${src_run_uri}/"{} -d "${dst_run_uri}/"{}
     gfal-ls $src_run_uri | sort | parallel -j $jobs transfer "${src_run_uri}/"{} "${dst_run_uri}/"{}
+    echo $( now ) - All copy jobs completed
 else
     echo $( now ) - TEST MODE - Copying all files from $src_run_uri using $jobs parallel streams
-    #gfal-ls $src_run_uri | sort | parallel -j $jobs $0 -s "${src_run_uri}/"{} -d "file:///dev/null"
     gfal-ls $src_run_uri | sort | parallel -j $jobs transfer "${src_run_uri}/"{} "file:///dev/null"
+    echo $( now ) - TEST MODE - All copy jobs completed
 fi

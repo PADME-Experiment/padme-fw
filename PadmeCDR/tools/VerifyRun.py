@@ -8,7 +8,7 @@ import getopt
 import subprocess
 
 # List of available sites
-SITE_LIST = [ "LNF", "CNAF" , "DAQ" ]
+SITE_LIST = [ "LNF", "CNAF" , "KLOE" , "DAQ" ]
 
 # User running CDR
 CDR_USER = os.environ['USER']
@@ -17,6 +17,11 @@ CDR_USER = os.environ['USER']
 DAQ_USER = "daq"
 DAQ_KEYFILE = "/home/%s/.ssh/id_rsa_cdr"%CDR_USER
 DAQ_SERVERS = [ "l1padme3", "l1padme4" ]
+
+# Access information for KLOE tape library
+KLOE_SERVER = "fibm15"
+KLOE_USER = "pdm"
+KLOE_KEYFILE = "/home/%s/.ssh/id_rsa_cdr"%CDR_USER
 
 # Path to adler32 command on DAQ data server
 DAQ_ADLER32_CMD = "/home/daq/DAQ/tools/adler32"
@@ -36,9 +41,10 @@ def print_help():
     print '  -v              Enable verbose mode (repeat to increase level)'
     print '  -h              Show this help message and exit'
 
-def get_checksum_lnf(file):
+def get_checksum_lnf(file,year):
     a32 = ""
-    cmd = "gfal-sum %s%s adler32"%(LNF_SRM,file);
+    path = "/daq/%s/rawdata/%s"%(year,file)
+    cmd = "gfal-sum %s%s adler32"%(LNF_SRM,path);
     for line in run_command(cmd):
         try:
             (fdummy,a32) = line.rstrip().split()
@@ -46,9 +52,10 @@ def get_checksum_lnf(file):
             a32 = ""
     return a32
 
-def get_checksum_cnaf(file):
+def get_checksum_cnaf(file,year):
     a32 = ""
-    cmd = "gfal-sum %s%s adler32"%(CNAF_SRM,file);
+    path = "/daq/%s/rawdata/%s"%(year,file)
+    cmd = "gfal-sum %s%s adler32"%(CNAF_SRM,path);
     for line in run_command(cmd):
         try:
             (fdummy,a32) = line.rstrip().split()
@@ -56,9 +63,10 @@ def get_checksum_cnaf(file):
             a32 = ""
     return a32
 
-def get_checksum_daq(server,file):
+def get_checksum_daq(file,year,server):
     a32 = ""
-    cmd = "ssh -n -i %s -l %s %s %s %s"%(DAQ_KEYFILE,DAQ_USER,server,DAQ_ADLER32_CMD,file)
+    path = "/data/DAQ/%s/rawdata/%s"%(year,file)
+    cmd = "ssh -n -i %s -l %s %s %s %s"%(DAQ_KEYFILE,DAQ_USER,server,DAQ_ADLER32_CMD,path)
     for line in run_command(cmd):
         try:
             (a32,fdummy) = line.rstrip().split()
@@ -66,19 +74,83 @@ def get_checksum_daq(server,file):
             a32 = ""
     return a32
 
+def get_file_list_daq(run,year,server):
+    file_list = []
+    file_size = {}
+    missing = False
+    run_dir = "/data/DAQ/%s/rawdata/%s"%(year,run)
+    daq_ssh = "ssh -n -i %s -l %s %s"%(DAQ_KEYFILE,DAQ_USER,server)
+    cmd = "%s \'( cd %s; ls -l )\'"%(daq_ssh,run_dir)
+    for line in run_command(cmd):
+        if ( re.match("^ls: cannot access ",line) ):
+            missing = True
+            break
+        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
+        if (m):
+            file_list.append(m.group(2))
+            file_size[m.group(2)] = int(m.group(1))
+    return (missing,file_list,file_size)
+
+def get_file_list_cnaf(run,year):
+    file_list = []
+    file_size = {}
+    missing = False
+    run_dir = "/daq/%s/rawdata/%s"%(year,run)
+    cmd = "gfal-ls -l %s%s"%(CNAF_SRM,run_dir)
+    for line in run_command(cmd):
+        if ( re.match("^gfal-ls error: ",line) ):
+            missing = True
+            break
+        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
+        if (m):
+            file_list.append(m.group(2))
+            file_size[m.group(2)] = int(m.group(1))
+    return (missing,file_list,file_size)
+
+def get_file_list_lnf(run,year):
+    file_list = []
+    file_size = {}
+    missing = False
+    run_dir = "/daq/%s/rawdata/%s"%(year,run)
+    cmd = "gfal-ls -l %s%s"%(LNF_SRM,run_dir)
+    for line in run_command(cmd):
+        if ( re.match("^gfal-ls error: ",line) ):
+            missing = True
+            break
+        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
+        if (m):
+            file_list.append(m.group(2))
+            file_size[m.group(2)] = int(m.group(1))
+    return (missing,file_list,file_size)
+
+def get_file_list_kloe(run,year):
+    file_list = []
+    file_size = {}
+    missing = False
+    run_dir = "/data/DAQ/%s/rawdata/%s"%(year,run)
+    kloe_ssh = "ssh -n -i %s -l %s %s"%(KLOE_KEYFILE,KLOE_USER,KLOE_SERVER)
+    cmd = "%s \'( dsmc query archive /pdm/padme/daq/%s/rawdata/%s/\*.root )\'"%(kloe_ssh,year,run)
+    for line in run_command(cmd):
+        if ( re.match("^ANS1092W No files matching search criteria were found",line) ):
+            missing = True
+            break
+        #m = re.match("^\s*(\S+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s+.*$",line.rstrip())
+        m = re.match("^\s*([0-9,]+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s+.*$",line.rstrip())
+        if (m):
+            #print "Match %s %s - %s\n"%(m.group(1),m.group(2),line.rstrip())
+            file_name = os.path.basename(m.group(2))
+            file_list.append(file_name)
+            file_size[file_name] = int(m.group(1).replace(',',''))
+    return (missing,file_list,file_size)
+
 def main(argv):
 
     run = ""
     src_site = "CNAF"
-    src_srm = ""
-    src_dir = ""
     src_string = ""
     dst_site = "LNF"
-    dst_srm = ""
-    dst_dir = ""
     dst_string = ""
     daq_srv = ""
-    daq_ssh = ""
     year = ""
     fake = False
     checksum = False
@@ -147,31 +219,13 @@ def main(argv):
         print_help()
         sys.exit(2)
 
-    # Define command to access DAQ data server
-    daq_ssh = "ssh -n -i %s -l %s %s"%(DAQ_KEYFILE,DAQ_USER,daq_srv)
+            
 
-    # Define top directory, identification string, and SRM (if needed) of source and destination sites
-    # Source and destination dirs are always the official directory of desired run in given year
-    if (src_site == "DAQ"):
-        src_dir = "/data/DAQ/%s/rawdata/%s"%(year,run)
-        src_string = "%s(%s)"%(src_site,daq_srv)
-    else:
-        src_dir = "/daq/%s/rawdata/%s"%(year,run)
-        src_string = src_site
-        if (src_site == "LNF"):
-            src_srm = LNF_SRM
-        elif (src_site == "CNAF"):
-            src_srm = CNAF_SRM
-    if (dst_site == "DAQ"):
-        dst_dir = "/data/DAQ/%s/rawdata/%s"%(year,run)
-        dst_string = "%s(%s)"%(dst_site,daq_srv)
-    else:
-        dst_dir = "/daq/%s/rawdata/%s"%(year,run)
-        dst_string = dst_site
-        if (dst_site == "LNF"):
-            dst_srm = LNF_SRM
-        elif (dst_site == "CNAF"):
-            dst_srm = CNAF_SRM
+    # Define string to use to respresent sites
+    src_string = src_site
+    if (src_site == "DAQ"): src_string += "(%s)"%daq_srv
+    dst_string = dst_site
+    if (dst_site == "DAQ"): dst_string += "(%s)"%daq_srv
 
     if verbose:
         print
@@ -180,44 +234,34 @@ def main(argv):
             print "WARNING - Checksum is enabled: verification will take a long time..."
 
     # Get list of files at source site
-    src_file_list = []
-    src_file_size = {}
-    src_missing = False
-    if ( src_site == "DAQ" ):
-        cmd = "%s \'( ls -l %s )\'"%(daq_ssh,src_dir)
-    else:
-        cmd = "gfal-ls -l %s%s"%(src_srm,src_dir)
-    for line in run_command(cmd):
-        if ( re.match("^ls: cannot access ",line) or re.match("^gfal-ls error: ",line) ):
-            src_missing = True
-            if verbose:
-                print line.rstrip()
-                print "%s - run %s is (probably) missing from %s"%(now_str(),run,src_site)
-        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
-        if (m):
-            src_file_list.append(m.group(2))
-            src_file_size[m.group(2)] = int(m.group(1))
-    if verbose: print "%s - at %-13s run %s contains %d files"%(now_str(),src_string,run,len(src_file_list))
+    if (src_site == "DAQ"):
+        (src_missing,src_file_list,src_file_size) = get_file_list_daq(run,year,daq_srv)
+    elif (src_site == "LNF"):
+        (src_missing,src_file_list,src_file_size) = get_file_list_lnf(run,year)
+    elif (src_site == "CNAF"):
+        (src_missing,src_file_list,src_file_size) = get_file_list_cnaf(run,year)
+    elif (src_site == "KLOE"):
+        (src_missing,src_file_list,src_file_size) = get_file_list_kloe(run,year)
+    if verbose:
+        if src_missing:
+            print "%s - at %-13s run %s is missing"%(now_str(),src_string,run)
+        else:
+            print "%s - at %-13s run %s contains %d files"%(now_str(),src_string,run,len(src_file_list))
 
     # Get list of files at destination site
-    dst_file_list = []
-    dst_file_size = {}
-    dst_missing = False
-    if ( dst_site == "DAQ" ):
-        cmd = "%s \'( cd %s; ls -l )\'"%(daq_ssh,dst_dir)
-    else:
-        cmd = "gfal-ls -l %s%s"%(dst_srm,dst_dir)
-    for line in run_command(cmd):
-        if ( re.match("^ls: cannot access ",line) or re.match("^gfal-ls error: ",line) ):
-            dst_missing = True
-            if verbose:
-                print line.rstrip()
-                print "%s - run %s is (probably) missing from %s"%(now_str(),run,dst_site)
-        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
-        if (m):
-            dst_file_list.append(m.group(2))
-            dst_file_size[m.group(2)] = int(m.group(1))
-    if verbose: print "%s - at %-13s run %s contains %d files"%(now_str(),dst_string,run,len(dst_file_list))
+    if (dst_site == "DAQ"):
+        (dst_missing,dst_file_list,dst_file_size) = get_file_list_daq(run,year,daq_srv)
+    elif (dst_site == "LNF"):
+        (dst_missing,dst_file_list,dst_file_size) = get_file_list_lnf(run,year)
+    elif (dst_site == "CNAF"):
+        (dst_missing,dst_file_list,dst_file_size) = get_file_list_cnaf(run,year)
+    elif (dst_site == "KLOE"):
+        (dst_missing,dst_file_list,dst_file_size) = get_file_list_kloe(run,year)
+    if verbose:
+        if dst_missing:
+            print "%s - at %-13s run %s is missing"%(now_str(),dst_string,run)
+        else:
+            print "%s - at %-13s run %s contains %d files"%(now_str(),dst_string,run,len(dst_file_list))
 
     if (src_missing or dst_missing):
         if (src_missing and dst_missing):
@@ -263,20 +307,20 @@ def main(argv):
                 # Get checksum at source site
                 src_checksum = ""
                 if (src_site == "DAQ"):
-                    src_checksum = get_checksum_daq(daq_srv,"%s/%s"%(src_dir,rawfile))
+                    src_checksum = get_checksum_daq("%s/%s"%(run,rawfile),year,daq_srv)
                 elif (src_site == "LNF"):
-                    src_checksum = get_checksum_lnf("%s/%s"%(src_dir,rawfile))
+                    src_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
                 elif (src_site == "CNAF"):
-                    src_checksum = get_checksum_cnaf("%s/%s"%(src_dir,rawfile))
+                    src_checksum = get_checksum_cnaf("%s/%s"%(run,rawfile),year)
 
                 # Get checksum at destination site
                 dst_checksum = ""
                 if (dst_site == "DAQ"):
-                    dst_checksum = get_checksum_daq(daq_srv,"%s/%s"%(dst_dir,rawfile))
+                    dst_checksum = get_checksum_daq("%s/%s"%(run,rawfile),year,daq_srv)
                 elif (dst_site == "LNF"):
-                    dst_checksum = get_checksum_lnf("%s/%s"%(dst_dir,rawfile))
+                    dst_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
                 elif (dst_site == "CNAF"):
-                    dst_checksum = get_checksum_cnaf("%s/%s"%(dst_dir,rawfile))
+                    dst_checksum = get_checksum_cnaf("%s/%s"%(run,rawfile),year)
 
                 # Check if checksums are consistent
                 if (src_checksum == "" and dst_checksum == ""):
@@ -292,10 +336,10 @@ def main(argv):
                     warnings += 1
                     if verbose: print "%s - checksums are different: %s at %s vs. %s at %s"%(rawfile,src_checksum,src_site,dst_checksum,dst_site)
                 else:
-                    if (verbose > 1): print "%s - OK - size %d checksum %s"%(rawfile,src_file_size[rawfile],src_checksum)
+                    if (verbose > 1): print "%s - OK - size %10d checksum %8s"%(rawfile,src_file_size[rawfile],src_checksum)
 
             else:
-                if (verbose > 1): print "%s - OK - size %d"%(rawfile,src_file_size[rawfile])
+                if (verbose > 1): print "%s - OK - size %10d"%(rawfile,src_file_size[rawfile])
 
     if warnings:
         print "=== WARNING: Run %s DOES NOT MATCH between %s and %s ==="%(run,src_string,dst_string)

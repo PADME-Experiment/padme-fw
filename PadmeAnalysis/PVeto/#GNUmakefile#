@@ -1,5 +1,0 @@
-# Makefile
-
-NAME := 
-
-include ../config/global.gmk

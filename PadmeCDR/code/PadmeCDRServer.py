@@ -283,13 +283,14 @@ class PadmeCDRServer:
     def get_file_list_daq(self,run):
         print "Getting list of raw data files for run %s on DAQ server %s"%(run,self.daq_server)
         file_list = []
-        cmd = "%s \'( cd %s/%s/%s; ls \*.root )\'"%(self.daq_ssh,self.daq_path,self.data_dir,run)
+        cmd = "%s \'( cd %s/%s/%s; ls *.root )\'"%(self.daq_ssh,self.daq_path,self.data_dir,run)
         for line in self.run_command(cmd):
             if re.match("^ls: cannot access",line):
                 print "***ERROR*** ls returned error status while retrieving file list for run %s from DAQ"%run
                 return "error"
             file_list.append("%s/%s"%(run,line.rstrip()))
-        return file_list.sort()
+        file_list.sort()
+        return file_list
 
     def get_file_list_kloe(self,run):
 
@@ -310,7 +311,8 @@ class PadmeCDRServer:
             if (m): file_list.append(m.group(1))
 
         # Return list after removing duplicates and sorting
-        return sorted(set(file_list))
+        file_list = sorted(set(file_list))
+        return file_list
 
     def get_file_list_srm(self,site,run):
         self.renew_voms_proxy()
@@ -319,8 +321,13 @@ class PadmeCDRServer:
         self.check_stop_cdr()
         cmd = "gfal-ls %s/%s/%s"%(self.site_srm[site],self.data_dir,run)
         for line in self.run_command(cmd):
-            if re.match("^gfal-ls error: ",line):
-                print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from %s"%(run,site)
+            m = re.match("^gfal-ls error:\s+(\d+)\s+",line)
+            if m:
+                # If gfal-ls error is due to missing run directory, just return an empty list
+                if ( m.group(1) == "2" ): break
+                # Otherwise it is a real error and is reported as such
+                print line.rstrip()
+                print "***ERROR*** gfal-ls returned error status %s while retrieving file list from run dir %s from %s"%(m.group(1),run,site)
                 return "error"
             file_list.append("%s/%s"%(run,line.rstrip()))
         file_list.sort()

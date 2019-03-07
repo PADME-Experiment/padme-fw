@@ -351,19 +351,19 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4ThreeVector posWindBF = G4ThreeVector(0.,0.,-0.5*(circT+windT));
   G4ThreeVector posWindBB = G4ThreeVector(0.,0.,+0.5*(circT+windT));
 
-  G4ThreeVector posWindT1F = G4ThreeVector(-0.5*windW,0.,-0.5*(circT+windT));
-  G4ThreeVector posWindT1B = G4ThreeVector(-0.5*windW,0.,+0.5*(circT+windT));
+  G4ThreeVector posWindT1F = G4ThreeVector(-0.5*windW-1.*mm,0.,-0.5*(circT+windT));
+  G4ThreeVector posWindT1B = G4ThreeVector(-0.5*windW-1.*mm,0.,+0.5*(circT+windT));
  
-  G4ThreeVector posWindT2F = G4ThreeVector(0.5*windW,0.,-0.5*(circT+windT));
-  G4ThreeVector posWindT2B = G4ThreeVector(0.5*windW,0.,+0.5*(circT+windT));
+  G4ThreeVector posWindT2F = G4ThreeVector(0.5*windW+1.*mm,0.,-0.5*(circT+windT));
+  G4ThreeVector posWindT2B = G4ThreeVector(0.5*windW+1.*mm,0.,+0.5*(circT+windT));
 
-  G4Tubs* solidCirc1 = new G4Tubs("TPPHCirc1",0.,circR,0.5*circT,0.*deg,360.*deg);
+  G4Tubs*             solidCirc1 = new G4Tubs("TPPHCirc1",0.,circR,0.5*circT,0.*deg,360.*deg);
   G4SubtractionSolid* solidCirc2 = new G4SubtractionSolid("TPPHCirc2",solidCirc1,solidWindB,0,posWindBF);
   G4SubtractionSolid* solidCirc3 = new G4SubtractionSolid("TPPHCirc3",solidCirc2,solidWindB,0,posWindBB);
   G4SubtractionSolid* solidCirc4 = new G4SubtractionSolid("TPPHCirc4",solidCirc3,solidWindT,0,posWindT1F);
-  G4SubtractionSolid* solidCirc5 = new G4SubtractionSolid("TPPHCirc4",solidCirc4,solidWindT,0,posWindT1B);
-  G4SubtractionSolid* solidCirc6 = new G4SubtractionSolid("TPPHCirc4",solidCirc5,solidWindT,0,posWindT2F);
-  G4SubtractionSolid* solidCirc  = new G4SubtractionSolid("TPPHCirc4",solidCirc6,solidWindT,0,posWindT2B);
+  G4SubtractionSolid* solidCirc5 = new G4SubtractionSolid("TPPHCirc5",solidCirc4,solidWindT,0,posWindT1B);
+  G4SubtractionSolid* solidCirc6 = new G4SubtractionSolid("TPPHCirc6",solidCirc5,solidWindT,0,posWindT2F);
+  G4SubtractionSolid* solidCirc  = new G4SubtractionSolid("TPPHCirc",solidCirc6,solidWindT,0,posWindT2B);
 
   G4LogicalVolume* logicalCirc = new G4LogicalVolume(solidCirc,G4Material::GetMaterial("G4_Al"),"TPPHCirc",0,0,0);
   logicalCirc->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));

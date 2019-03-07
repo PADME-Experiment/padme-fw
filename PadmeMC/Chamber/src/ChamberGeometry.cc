@@ -56,7 +56,6 @@ ChamberGeometry::ChamberGeometry()
   fCPZFlangeR = 76.*mm;
   fCPZFlangeThick = 20.*mm;
 
-
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
   fCPXLength = 25.*cm;
@@ -119,25 +118,29 @@ ChamberGeometry::ChamberGeometry()
 
   // Properties of large TPix porthole
 
-  fTPPHCapThick = 25.*mm;
+  //  fTPPHCapThick = 25.*mm;
+  fTPPHCapThick = 35.*mm;  //MR EL 07/03/2019 from FANTINI drawing
   fTPPHCapWidth = 996.*mm;
   fTPPHCapHeight = 600.*mm;
-
-  fTPPHHoleRadius = 106.5*mm;
+  //  fTPPHHoleRadius = 106.5*mm;
+  fTPPHHoleRadius = 130.6*mm; //MR EL 07/03/2019 from FANTINI drawing
   // From Cesidio's drawings for 1GeV/.8Tesla configuration
   //fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
   fTPPHHoleDist = 400.*mm; // Will be changed to final position
 
-  fTPPHCircRadius = 142.5*mm;
+  //fTPPHCircRadius = 142.5*mm;
+  fTPPHCircRadius = 165.7*mm; // Measured from Fantini drawings: need Cesidio's feedback
   fTPPHCircThick = 12.0*mm;
 
   fTPPHWindRadius = 25.0*mm;
-  fTPPHWindWidth = 100.0*mm;
-  fTPPHWindThick = 100.0*um;
+  //fTPPHWindWidth = 100.0*mm;
+  fTPPHWindWidth = 188.2*mm; // Measured from Fantini drawings: need Cesidio's feedback
+  //fTPPHWindThick = 100.0*um; // This was Mylar foil
+  fTPPHWindThick = 2.0*mm; // This is Al (EL 07/03/2019)
 
-  fTPPHStopRadius = 55.0*mm;
-  fTPPHStopWidth = fTPPHWindWidth;
-  fTPPHStopThick = 12.0*mm;
+  //fTPPHStopRadius = 55.0*mm;
+  //fTPPHStopWidth = fTPPHWindWidth;
+  //fTPPHStopThick = 12.0*mm;
 
 }
 

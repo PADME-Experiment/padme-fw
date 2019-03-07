@@ -115,9 +115,9 @@ public:
   G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
   G4double GetTPPHWindThick() { return fTPPHWindThick; }
 
-  G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
-  G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
-  G4double GetTPPHStopThick() { return fTPPHStopThick; }
+  //G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
+  //G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
+  //G4double GetTPPHStopThick() { return fTPPHStopThick; }
 
 private:
 

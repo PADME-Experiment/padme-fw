@@ -8,7 +8,8 @@ MagneticFieldMap::MagneticFieldMap()
 {
 
   // Default value: can be changed with set method
-  fConstantMagneticField = 0.55*tesla;
+  //  fConstantMagneticField = 0.55*tesla;
+  fConstantMagneticField = 0.4542*tesla; // new default at 232A 07/03/2019 MR EL  B(gauss) = 19.44 I(A) + 32.8
   //fConstantMagneticField = 0.;
 
   fConstantMagneticFieldXmin = -26.0*cm;
@@ -20,9 +21,12 @@ MagneticFieldMap::MagneticFieldMap()
   fConstantMagneticFieldZmin = -37.5*cm;
   fConstantMagneticFieldZmax =  37.5*cm;
 
-  fSigmaFront = 22.5*cm;
-  fSigmaBack  = 22.5*cm;
+//  fSigmaFront = 22.5*cm;
+//  fSigmaBack  = 22.5*cm;
 
+  fSigmaFront = 27.4*cm;   //Based of the LNF magnetic measurement M. Raggi .ppt nov 2018
+  fSigmaBack  = 27.4*cm;   //Based of the LNF magnetic measurement M. Raggi .ppt nov 2018
+  
   // The magnetic volume is a box centered at magnet center with x and y dimensions
   // as the magnet cavity and with z extends 50cm outside both sides of the magnet
   fMagneticVolumePosZ = 0.;

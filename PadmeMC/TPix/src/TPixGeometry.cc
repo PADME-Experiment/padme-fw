@@ -32,20 +32,24 @@ TPixGeometry::TPixGeometry()
   // Distance from the corner on the back wall of the vacuum chamber and
   // the projection of the center of the external side of the TPix on the
   // external surface of the diagonal wall of the vacuum chamber.
-  // Tune this to move TPix along the diagonal wall of the vacuum chamber
-  fTPixDistanceToCorner = 35.8*cm;
+  // Six positions are possible given the TimePix support mounting screw holes (see Cesidio's drawings)
+  // Position of center of beam exit hole (400mm) is used as reference.
+  fTPixDistanceToCorner = 400.0*mm- 42.68*mm; // Selected by looking at photos: need check
+  //fTPixDistanceToCorner = 400.0*mm-115.70*mm;
+  //fTPixDistanceToCorner = 400.0*mm- 85.68*mm;
+  //fTPixDistanceToCorner = 400.0*mm-102.70*mm;
+  //fTPixDistanceToCorner = 400.0*mm- 55.70*mm;
+  //fTPixDistanceToCorner = 400.0*mm-145.68*mm;
 
-  // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
-  fTPixSupportThickness = 6.*cm; // Check with final design
+  // Distance between back surface of the diagonal wall of the vacuum chamber and front surface of the TimePix
+  fTPixSupportThickness = 62.5*mm; // 1.5mm(extra)+35mm(steel cap)+16mm(Al flange)+10mm(TimePix box thickness)
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures
-  //fTPixChamberWallAngle = 0.32962*rad;
   fTPixChamberWallAngle = 0.;
 
   // Coordinates of the corner on the back face of the vacuum chamber
   // These values will be modified by main program according to actual chamber measures
-  //fTPixChamberWallCorner = G4ThreeVector(-422.77*mm,0.,2249.*mm);
   fTPixChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
   fTPixSensitiveDetectorName = "TPixSD";
@@ -56,6 +60,48 @@ TPixGeometry::TPixGeometry()
 
 TPixGeometry::~TPixGeometry()
 {}
+
+void TPixGeometry::SetTPixNCols(G4int c)
+{
+  printf("TPixGeometry - Setting NCols to %d\n",c);
+  fTPixNCols = c;
+  UpdateDerivedMeasures();
+}
+
+void TPixGeometry::SetTPixNRows(G4int r)
+{
+  printf("TPixGeometry - Setting NRows to %d\n",r);
+  fTPixNRows = r;
+  UpdateDerivedMeasures();
+}
+
+void TPixGeometry::SetTPixChamberWallAngle(G4double a)
+{
+  printf("TPixGeometry - Setting ChamberWallAngle to %5.1f deg\n",a/deg);
+  fTPixChamberWallAngle = a;
+  UpdateDerivedMeasures();
+}
+
+void TPixGeometry::SetTPixSupportThickness(G4double t)
+{
+  printf("TPixGeometry - Setting SupportThikcness to %4.1f mm\n",t/mm);
+  fTPixSupportThickness = t;
+  UpdateDerivedMeasures();
+}
+
+void TPixGeometry::SetTPixDistanceToCorner(G4double d)
+{
+  printf("TPixGeometry - Setting DistanceToCorner to %5.1f mm\n",d/mm);
+  fTPixDistanceToCorner = d;
+  UpdateDerivedMeasures();
+}
+
+void TPixGeometry::SetTPixChamberWallCorner(G4ThreeVector c)
+{
+  printf("TPixGeometry - Setting ChamberWallCorner coordinates to (%.1f,%.1f,%.1f) mm\n",c.x()/mm,c.y()/mm,c.z()/mm);
+  fTPixChamberWallCorner = c;
+  UpdateDerivedMeasures();
+}
 
 void TPixGeometry::UpdateDerivedMeasures()
 {
@@ -80,10 +126,10 @@ void TPixGeometry::UpdateDerivedMeasures()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
 
-  printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
-  printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());
-  printf("TPix angle %f\n",fTPixChamberWallAngle);
-  printf("TPix distance %f support %f\n",fTPixDistanceToCorner,fTPixSupportThickness);
+  //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
+  //printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());
+  //printf("TPix angle %f\n",fTPixChamberWallAngle);
+  //printf("TPix distance %f support %f\n",fTPixDistanceToCorner,fTPixSupportThickness);
 
 }
 

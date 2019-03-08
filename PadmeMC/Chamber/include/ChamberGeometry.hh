@@ -101,16 +101,28 @@ public:
 
   // Properties of large TPix porthole
 
+  // Steel flange for rectangular porthole
   G4double GetTPPHCapThick() { return fTPPHCapThick; }
   G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
   G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
 
+  // Beam exit hole
   G4double GetTPPHHoleRadius() { return fTPPHHoleRadius; }
   G4double GetTPPHHoleDist() { return fTPPHHoleDist; }
 
-  G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
-  G4double GetTPPHCircThick() { return fTPPHCircThick; }
+  // Service hole
+  G4double GetTPPHHoleSRadius() { return fTPPHHoleSRadius; }
+  G4double GetTPPHHoleSDist() { return fTPPHHoleSDist; }
+ 
+  // Aluminum rectangular flange hosting the thin window
+  G4double GetTPPHFlangeWidth() { return fTPPHFlangeWidth; }
+  G4double GetTPPHFlangeHeight() { return fTPPHFlangeHeight; }
+  G4double GetTPPHFlangeThick() { return fTPPHFlangeThick; }
+ 
+  //G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
+  //G4double GetTPPHCircThick() { return fTPPHCircThick; }
 
+  // Thin window dimensions (rectangle with two semicircles at sides)
   G4double GetTPPHWindRadius() { return fTPPHWindRadius; }
   G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
   G4double GetTPPHWindThick() { return fTPPHWindThick; }
@@ -184,19 +196,26 @@ private:
   G4double fTPPHCapWidth; // Width of rectangular porthole cap
   G4double fTPPHCapHeight; // Height of rectangular porthole cap
 
-  G4double fTPPHHoleRadius; // Radius of TPix hole in cap
-  G4double fTPPHHoleDist; // Distance of center of hole from border of cap
+  G4double fTPPHHoleRadius; // Radius of TPix beam exit hole in cap
+  G4double fTPPHHoleDist; // Distance of center of beam exit hole from border of cap
 
-  G4double fTPPHCircRadius; // Radius of circular cap in front of hole
-  G4double fTPPHCircThick; // Thickness of circular cap in front of hole
+  G4double fTPPHHoleSRadius; // Radius of TPix service hole in cap
+  G4double fTPPHHoleSDist; // Distance of center of service hole from border of cap
 
-  G4double fTPPHWindRadius; // Radius of Mylar window
-  G4double fTPPHWindWidth; // Width of Mylar window
-  G4double fTPPHWindThick; // Thickness of Mylar window
+  //G4double fTPPHCircRadius; // Radius of circular cap in front of hole
+  //G4double fTPPHCircThick; // Thickness of circular cap in front of hole
 
-  G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
-  G4double fTPPHStopWidth; // Width of stop flange for Mylar window
-  G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
+  G4double fTPPHFlangeWidth; // Width of rectangular flange with thin window
+  G4double fTPPHFlangeHeight; // Height of rectangular flange with thin window
+  G4double fTPPHFlangeThick; // Thickness of rectangular flange with thin window
+
+  G4double fTPPHWindRadius; // Radius of thin window
+  G4double fTPPHWindWidth; // Width of tjin window
+  G4double fTPPHWindThick; // Thickness of thin window
+
+  //G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
+  //G4double fTPPHStopWidth; // Width of stop flange for Mylar window
+  //G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
 
 };
 

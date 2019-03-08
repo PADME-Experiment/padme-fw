@@ -118,23 +118,35 @@ ChamberGeometry::ChamberGeometry()
 
   // Properties of large TPix porthole
 
+  // Thickness, width and height of steel rectangular porthole cap
   //  fTPPHCapThick = 25.*mm;
   fTPPHCapThick = 35.*mm;  //MR EL 07/03/2019 from FANTINI drawing
   fTPPHCapWidth = 996.*mm;
   fTPPHCapHeight = 600.*mm;
+
+  // Radius and distance of beam exit hole
   //  fTPPHHoleRadius = 106.5*mm;
   fTPPHHoleRadius = 130.6*mm; //MR EL 07/03/2019 from FANTINI drawing
   // From Cesidio's drawings for 1GeV/.8Tesla configuration
   //fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
-  fTPPHHoleDist = 400.*mm; // Will be changed to final position
+  fTPPHHoleDist = 400.*mm; //MR EL 07/03/2019 from FANTINI drawing
+
+  // Radius and distance of service hole
+  fTPPHHoleSRadius = 76.6*mm; //MR EL 07/03/2019 from FANTINI drawing
+  fTPPHHoleSDist = 796.*mm; //MR EL 07/03/2019 from FANTINI drawing
 
   //fTPPHCircRadius = 142.5*mm;
-  fTPPHCircRadius = 165.7*mm; // Measured from Fantini drawings: need Cesidio's feedback
-  fTPPHCircThick = 12.0*mm;
+  //fTPPHCircRadius = 165.7*mm; // Measured from Fantini drawings: need Cesidio's feedback
+  //fTPPHCircThick = 12.0*mm;
 
+  // Thickness, width and height of aluminum beam exit flange (Cesidio's drawings of 08/03/2019)
+  fTPPHFlangeWidth = 337.0*mm;
+  fTPPHFlangeHeight = 337.0*mm;
+  fTPPHFlangeThick = 16.0*mm;
+
+  // Radius, width and thickness of thin window on the aluminum beam exit flange (Cesidio's drawings of 08/03/2019)
   fTPPHWindRadius = 25.0*mm;
-  //fTPPHWindWidth = 100.0*mm;
-  fTPPHWindWidth = 188.2*mm; // Measured from Fantini drawings: need Cesidio's feedback
+  fTPPHWindWidth = 200.0*mm;
   //fTPPHWindThick = 100.0*um; // This was Mylar foil
   fTPPHWindThick = 2.0*mm; // This is Al (EL 07/03/2019)
 

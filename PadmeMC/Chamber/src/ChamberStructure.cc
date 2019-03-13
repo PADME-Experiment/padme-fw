@@ -205,7 +205,6 @@ void ChamberStructure::CreateTargetPipes()
   logicalCP->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,cpzPosZ),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
 
-
   // Create flanges for crossed pipe
 
   G4double flangezRIn = geo->GetCPZFlangeRIn();
@@ -364,11 +363,11 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4Box* solidPHF1 = new G4Box("TPPHFlg1",0.5*flangeW,0.5*flangeH,0.5*flangeT);
 
   G4Box* solidWindB = new G4Box("WindB",0.5*windW,windR,0.5*flangeT);
-  G4ThreeVector posWindB  = G4ThreeVector(0.,0.,0.5*windT);
+  G4ThreeVector posWindB  = G4ThreeVector(0.,0.,windT);
 
   G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*flangeT,0.*deg,360.*deg);
-  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW-0.1*mm,0.,0.5*windT);
-  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW+0.1*mm,0.,0.5*windT);
+  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW-0.1*mm,0.,windT);
+  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW+0.1*mm,0.,windT);
 
   G4SubtractionSolid* solidPHF2 = new G4SubtractionSolid("TPPHFlg2",  solidPHF1,solidWindB,0,posWindB);
   G4SubtractionSolid* solidPHF3 = new G4SubtractionSolid("TPPHFlg3",  solidPHF2,solidWindT,0,posWindT1);
@@ -405,6 +404,20 @@ void ChamberStructure::CreateTPixPortholeCap()
   rotFlange->rotateY(-angle);
 
   new G4PVPlacement(rotFlange,posFlange,logicalFlange,"TPPHFlange",fMotherVolume,false,0,true);
+
+  // Create and position steel flange in front of service hole
+  G4double sflangeR = geo->GetTPPHSFlangeRadius();
+  G4double sflangeT = geo->GetTPPHSFlangeThick();
+  G4Tubs* solidSFlange = new G4Tubs("SFlange",0.,sflangeR,0.5*sflangeT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalSFlange = new G4LogicalVolume(solidSFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHSFlange",0,0,0);
+  logicalSFlange->SetVisAttributes(steelVisAttr);
+  G4RotationMatrix* rotSFlange = new G4RotationMatrix;
+  rotSFlange->rotateY(-angle);
+  G4double sflangePosX = corner.x()+phhsD*cos(angle)+(phExtraThick+phcT+0.5*sflangeT)*sin(angle);
+  G4double sflangePosY = 0.;
+  G4double sflangePosZ = corner.z()-phhsD*sin(angle)+(phExtraThick+phcT+0.5*sflangeT)*cos(angle);
+  G4ThreeVector posSFlange = G4ThreeVector(sflangePosX,sflangePosY,sflangePosZ);
+  new G4PVPlacement(rotSFlange,posSFlange,logicalSFlange,"TPPHFlangeS",fMotherVolume,false,0,true);
 
   //// Create Mylar window
   //G4double windT = geo->GetTPPHWindThick();

@@ -52,14 +52,16 @@ ChamberGeometry::ChamberGeometry()
   fCPZRIn = 5.*cm;
   fCPZThick = 1.*cm;
   fCPZLength = 29.*cm;
-  fCPZPosZ = -1.*m;
+  //fCPZPosZ = -1.*m;
+  fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPZFlangeR = 76.*mm;
   fCPZFlangeThick = 20.*mm;
 
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
   fCPXLength = 25.*cm;
-  fCPXPosZ = -1.*m;
+  //fCPXPosZ = -1.*m;
+  fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPXFlangeR = 76.*mm;
   fCPXFlangeThick = 20.*mm;
 
@@ -149,6 +151,11 @@ ChamberGeometry::ChamberGeometry()
   fTPPHWindWidth = 200.0*mm;
   //fTPPHWindThick = 100.0*um; // This was Mylar foil
   fTPPHWindThick = 2.0*mm; // This is Al (EL 07/03/2019)
+
+  // Radius and thickness of steel flange in front of service hole
+  // Will add cabling holes later
+  fTTPHSFlangeRadius = 112.5*mm;
+  fTTPHSFlangeThick = 16.0*mm;
 
   //fTPPHStopRadius = 55.0*mm;
   //fTPPHStopWidth = fTPPHWindWidth;

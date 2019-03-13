@@ -250,7 +250,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Create magnetic volume inside beam entrance pipe
 
   G4double cpzRIn = geoChamber->GetCPZRIn();
-  G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+  //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+  G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
   G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
   G4ThreeVector cpzPos(0.,0.,geoChamber->GetVCInnerFacePosZ()-0.5*cpzLen);
   G4LogicalVolume* logicMagneticVolumeCP =
@@ -261,6 +262,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
     //MagneticFieldSetup* magField = new MagneticFieldSetup();
+    printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
     logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }

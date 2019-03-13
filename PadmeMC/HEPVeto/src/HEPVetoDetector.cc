@@ -55,7 +55,7 @@ void HEPVetoDetector::CreateGeometry()
   G4ThreeVector posHEPVeto = G4ThreeVector(hepVetoPosX,hepVetoPosY,hepVetoPosZ);
   G4RotationMatrix* rotHEPVeto = new G4RotationMatrix;
   rotHEPVeto->rotateY(geo->GetHEPVetoRotY());
-  new G4PVPlacement(rotHEPVeto,posHEPVeto,fHEPVetoVolume,"HEPVeto",fMotherVolume,false,0,false);
+  new G4PVPlacement(rotHEPVeto,posHEPVeto,fHEPVetoVolume,"HEPVeto",fMotherVolume,false,0,true);
 
   // Create standard scintillator finger
   G4double hepVetoFingerX = geo->GetFingerSizeX();
@@ -95,7 +95,7 @@ void HEPVetoDetector::CreateGeometry()
   for (G4int fin=0;fin<nFingers;fin++){
     G4ThreeVector posFinger = G4ThreeVector(geo->GetFingerPosX(fin),geo->GetFingerPosY(fin),geo->GetFingerPosZ(fin));
     //  new G4PVPlacement(0,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
-  new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
+    new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,true);
   }
   
 }

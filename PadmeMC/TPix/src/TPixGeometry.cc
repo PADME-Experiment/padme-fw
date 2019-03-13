@@ -34,10 +34,10 @@ TPixGeometry::TPixGeometry()
   // external surface of the diagonal wall of the vacuum chamber.
   // Six positions are possible given the TimePix support mounting screw holes (see Cesidio's drawings)
   // Position of center of beam exit hole (400mm) is used as reference.
-  fTPixDistanceToCorner = 400.0*mm- 42.68*mm; // Selected by looking at photos: need check
+  //fTPixDistanceToCorner = 400.0*mm- 42.68*mm;
   //fTPixDistanceToCorner = 400.0*mm-115.70*mm;
   //fTPixDistanceToCorner = 400.0*mm- 85.68*mm;
-  //fTPixDistanceToCorner = 400.0*mm-102.70*mm;
+  fTPixDistanceToCorner = 400.0*mm-102.70*mm; // Selected by looking at photos: need check
   //fTPixDistanceToCorner = 400.0*mm- 55.70*mm;
   //fTPixDistanceToCorner = 400.0*mm-145.68*mm;
 
@@ -84,7 +84,7 @@ void TPixGeometry::SetTPixChamberWallAngle(G4double a)
 
 void TPixGeometry::SetTPixSupportThickness(G4double t)
 {
-  printf("TPixGeometry - Setting SupportThikcness to %4.1f mm\n",t/mm);
+  printf("TPixGeometry - Setting SupportThickness to %4.1f mm\n",t/mm);
   fTPixSupportThickness = t;
   UpdateDerivedMeasures();
 }

@@ -127,6 +127,10 @@ public:
   G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
   G4double GetTPPHWindThick() { return fTPPHWindThick; }
 
+  // Radius and thickness of steel flange in front of service hole
+  G4double GetTPPHSFlangeRadius() { return fTTPHSFlangeRadius; }
+  G4double GetTPPHSFlangeThick() { return fTTPHSFlangeThick; }
+
   //G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
   //G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
   //G4double GetTPPHStopThick() { return fTPPHStopThick; }
@@ -210,8 +214,11 @@ private:
   G4double fTPPHFlangeThick; // Thickness of rectangular flange with thin window
 
   G4double fTPPHWindRadius; // Radius of thin window
-  G4double fTPPHWindWidth; // Width of tjin window
+  G4double fTPPHWindWidth; // Width of thin window
   G4double fTPPHWindThick; // Thickness of thin window
+
+  G4double fTTPHSFlangeRadius; // Radius of steel flange in front of service hole
+  G4double fTTPHSFlangeThick; // Thickness of steel flange in front of service hole
 
   //G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
   //G4double fTPPHStopWidth; // Width of stop flange for Mylar window

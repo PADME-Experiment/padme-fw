@@ -205,7 +205,6 @@ void ChamberStructure::CreateTargetPipes()
   logicalCP->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,cpzPosZ),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
 
-
   // Create flanges for crossed pipe
 
   G4double flangezRIn = geo->GetCPZFlangeRIn();
@@ -306,20 +305,31 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
   if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
+  // Add 1.5mm to avoid overlap between extrnal vacuum chamber and large rectangular porthole cap
+  G4double phExtraThick = 1.5*mm;
+
   // Create rectangular cap
   G4double phcW = geo->GetTPPHCapWidth();
   G4double phcH = geo->GetTPPHCapHeight();
   G4double phcT = geo->GetTPPHCapThick();
-  G4Box* solidPHB = new G4Box("TPPHBox",0.5*phcW,0.5*phcH,0.5*phcT);
-  printf("Rectangular flange size %f x %f mm2 thick %f mm\n",phcW/mm,phcH/mm,phcT/mm);
+  G4Box* solidPHC1 = new G4Box("TPPHCAP1",0.5*phcW,0.5*phcH,0.5*phcT);
+  printf("Rectangular flange size %6.1f x %6.1f mm2 thick %4.1f mm\n",phcW/mm,phcH/mm,phcT/mm);
 
-  // Carve hole in cap
+  // Carve beam exit hole in cap
   G4double phhR = geo->GetTPPHHoleRadius();
   G4double phhD = geo->GetTPPHHoleDist();
   G4Tubs* solidPHH = new G4Tubs("TPPHHole",0.,phhR,0.5*phcT+1.*mm,0.*deg,360.*deg);
   G4ThreeVector posPHH = G4ThreeVector(-0.5*phcW+phhD,0.,0.);
-  G4SubtractionSolid* solidPHC = new G4SubtractionSolid("TPPHCap",solidPHB,solidPHH,0,posPHH);
-  printf("Center of beam exit (TPix) porthole cap at %f mm from flange border\n",phhD/mm);
+  G4SubtractionSolid* solidPHC2 = new G4SubtractionSolid("TPPHCAP2",solidPHC1,solidPHH,0,posPHH);
+  printf("Beam exit (TPix) porthole cap radius %5.1f mm, center at %5.1f mm from flange border\n",phhR/mm,phhD/mm);
+
+  // Carve service hole in cap
+  G4double phhsR = geo->GetTPPHHoleSRadius();
+  G4double phhsD = geo->GetTPPHHoleSDist();
+  G4Tubs* solidPHHS = new G4Tubs("TPPHHoleS",0.,phhsR,0.5*phcT+1.*mm,0.*deg,360.*deg);
+  G4ThreeVector posPHHS = G4ThreeVector(-0.5*phcW+phhsD,0.,0.);
+  G4SubtractionSolid* solidPHC = new G4SubtractionSolid("TPPHCap",solidPHC2,solidPHHS,0,posPHHS);
+  printf("Service porthole cap radius %5.1f mm, center at %5.1f mm from flange border\n",phhsR/mm,phhsD/mm);
 
   G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCap",0,0,0);
   logicalPHC->SetVisAttributes(steelVisAttr);
@@ -327,9 +337,9 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4ThreeVector corner = geo->GetVCBackFaceCorner();
   G4double angle = geo->GetVCBackFaceAngle();
 
-  G4double phcPosX = corner.x()+0.5*phcW*cos(angle)+(0.5*phcT+1.5*mm)*sin(angle);
+  G4double phcPosX = corner.x()+0.5*phcW*cos(angle)+(phExtraThick+0.5*phcT)*sin(angle);
   G4double phcPosY = 0.;
-  G4double phcPosZ = corner.z()-0.5*phcW*sin(angle)+(0.5*phcT+1.5*mm)*cos(angle);
+  G4double phcPosZ = corner.z()-0.5*phcW*sin(angle)+(phExtraThick+0.5*phcT)*cos(angle);
   G4ThreeVector posPHC = G4ThreeVector(phcPosX,phcPosY,phcPosZ);
 
   G4RotationMatrix* rotPHC = new G4RotationMatrix;
@@ -337,36 +347,34 @@ void ChamberStructure::CreateTPixPortholeCap()
 
   new G4PVPlacement(rotPHC,posPHC,logicalPHC,"TPPHCap",fMotherVolume,false,0,true);
 
-  // Create circular cap
-  G4double circR = geo->GetTPPHCircRadius();
-  G4double circT = geo->GetTPPHCircThick();
+  // Rectangular flange which will host the thin window
+  G4double flangeW = geo->GetTPPHFlangeWidth();
+  G4double flangeH = geo->GetTPPHFlangeHeight();
+  G4double flangeT = geo->GetTPPHFlangeThick();
+  printf("Timepix flange size %5.1f x %5.1f mm2, thick %3.1f mm\n",flangeW/mm,flangeH/mm,flangeT/mm);
 
-  // Carve holes on two sides of circular cap leaving a thin layer of aluminum at center
+  // Thin window
   G4double windR = geo->GetTPPHWindRadius();
   G4double windW = geo->GetTPPHWindWidth();
   G4double windT = geo->GetTPPHWindThick();
-  G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*circT,0.*deg,360.*deg);
-  G4Box* solidWindB = new G4Box("WindB",0.5*windW,windR,0.5*circT);
+  printf("Timepix thin window width %5.1f mm, radius %5.1f mm, thick %3.1f mm\n",windW/mm,windR/mm,windT/mm);
 
-  G4ThreeVector posWindBF = G4ThreeVector(0.,0.,-0.5*(circT+windT));
-  G4ThreeVector posWindBB = G4ThreeVector(0.,0.,+0.5*(circT+windT));
+  // Create thin window by carving hole on back side of rectangular flange leaving a thin layer of aluminum
+  G4Box* solidPHF1 = new G4Box("TPPHFlg1",0.5*flangeW,0.5*flangeH,0.5*flangeT);
 
-  G4ThreeVector posWindT1F = G4ThreeVector(-0.5*windW-1.*mm,0.,-0.5*(circT+windT));
-  G4ThreeVector posWindT1B = G4ThreeVector(-0.5*windW-1.*mm,0.,+0.5*(circT+windT));
- 
-  G4ThreeVector posWindT2F = G4ThreeVector(0.5*windW+1.*mm,0.,-0.5*(circT+windT));
-  G4ThreeVector posWindT2B = G4ThreeVector(0.5*windW+1.*mm,0.,+0.5*(circT+windT));
+  G4Box* solidWindB = new G4Box("WindB",0.5*windW,windR,0.5*flangeT);
+  G4ThreeVector posWindB  = G4ThreeVector(0.,0.,windT);
 
-  G4Tubs*             solidCirc1 = new G4Tubs("TPPHCirc1",0.,circR,0.5*circT,0.*deg,360.*deg);
-  G4SubtractionSolid* solidCirc2 = new G4SubtractionSolid("TPPHCirc2",solidCirc1,solidWindB,0,posWindBF);
-  G4SubtractionSolid* solidCirc3 = new G4SubtractionSolid("TPPHCirc3",solidCirc2,solidWindB,0,posWindBB);
-  G4SubtractionSolid* solidCirc4 = new G4SubtractionSolid("TPPHCirc4",solidCirc3,solidWindT,0,posWindT1F);
-  G4SubtractionSolid* solidCirc5 = new G4SubtractionSolid("TPPHCirc5",solidCirc4,solidWindT,0,posWindT1B);
-  G4SubtractionSolid* solidCirc6 = new G4SubtractionSolid("TPPHCirc6",solidCirc5,solidWindT,0,posWindT2F);
-  G4SubtractionSolid* solidCirc  = new G4SubtractionSolid("TPPHCirc",solidCirc6,solidWindT,0,posWindT2B);
+  G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*flangeT,0.*deg,360.*deg);
+  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW-0.1*mm,0.,windT);
+  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW+0.1*mm,0.,windT);
 
-  G4LogicalVolume* logicalCirc = new G4LogicalVolume(solidCirc,G4Material::GetMaterial("G4_Al"),"TPPHCirc",0,0,0);
-  logicalCirc->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  G4SubtractionSolid* solidPHF2 = new G4SubtractionSolid("TPPHFlg2",  solidPHF1,solidWindB,0,posWindB);
+  G4SubtractionSolid* solidPHF3 = new G4SubtractionSolid("TPPHFlg3",  solidPHF2,solidWindT,0,posWindT1);
+  G4SubtractionSolid* solidPHF  = new G4SubtractionSolid("TPPHFlange",solidPHF3,solidWindT,0,posWindT2);
+
+  G4LogicalVolume* logicalFlange = new G4LogicalVolume(solidPHF,G4Material::GetMaterial("G4_Al"),"TPPHFlange",0,0,0);
+  logicalFlange->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 
   //// Carve hole for Mylar window in circular cap
   //G4double windR = geo->GetTPPHWindRadius();
@@ -383,15 +391,33 @@ void ChamberStructure::CreateTPixPortholeCap()
   //G4LogicalVolume* logicalCirc = new G4LogicalVolume(solidCirc3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHCirc",0,0,0);
   //logicalCirc->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 
-  G4double circPosX = corner.x()+phhD*cos(angle)+(1.5*mm+phcT+0.5*circT)*sin(angle);
-  G4double circPosY = 0.;
-  G4double circPosZ = corner.z()-phhD*sin(angle)+(1.5*mm+phcT+0.5*circT)*cos(angle);
-  G4ThreeVector posCirc = G4ThreeVector(circPosX,circPosY,circPosZ);
+  // Position flange in front of circular porthole
+  //G4double flangePosX = corner.x()+phhD*cos(angle)+(1.5*mm+phcT+0.5*flangeT)*sin(angle);
+  //G4double flangePosY = 0.;
+  //G4double flangePosZ = corner.z()-phhD*sin(angle)+(1.5*mm+phcT+0.5*circT)*cos(angle);
+  G4double flangePosX = corner.x()+phhD*cos(angle)+(phExtraThick+phcT+0.5*flangeT)*sin(angle);
+  G4double flangePosY = 0.;
+  G4double flangePosZ = corner.z()-phhD*sin(angle)+(phExtraThick+phcT+0.5*flangeT)*cos(angle);
+  G4ThreeVector posFlange = G4ThreeVector(flangePosX,flangePosY,flangePosZ);
 
-  G4RotationMatrix* rotCirc = new G4RotationMatrix;
-  rotCirc->rotateY(-angle);
+  G4RotationMatrix* rotFlange = new G4RotationMatrix;
+  rotFlange->rotateY(-angle);
 
-  new G4PVPlacement(rotCirc,posCirc,logicalCirc,"TPPHCirc",fMotherVolume,false,0,true);
+  new G4PVPlacement(rotFlange,posFlange,logicalFlange,"TPPHFlange",fMotherVolume,false,0,true);
+
+  // Create and position steel flange in front of service hole
+  G4double sflangeR = geo->GetTPPHSFlangeRadius();
+  G4double sflangeT = geo->GetTPPHSFlangeThick();
+  G4Tubs* solidSFlange = new G4Tubs("SFlange",0.,sflangeR,0.5*sflangeT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalSFlange = new G4LogicalVolume(solidSFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"TPPHSFlange",0,0,0);
+  logicalSFlange->SetVisAttributes(steelVisAttr);
+  G4RotationMatrix* rotSFlange = new G4RotationMatrix;
+  rotSFlange->rotateY(-angle);
+  G4double sflangePosX = corner.x()+phhsD*cos(angle)+(phExtraThick+phcT+0.5*sflangeT)*sin(angle);
+  G4double sflangePosY = 0.;
+  G4double sflangePosZ = corner.z()-phhsD*sin(angle)+(phExtraThick+phcT+0.5*sflangeT)*cos(angle);
+  G4ThreeVector posSFlange = G4ThreeVector(sflangePosX,sflangePosY,sflangePosZ);
+  new G4PVPlacement(rotSFlange,posSFlange,logicalSFlange,"TPPHFlangeS",fMotherVolume,false,0,true);
 
   //// Create Mylar window
   //G4double windT = geo->GetTPPHWindThick();

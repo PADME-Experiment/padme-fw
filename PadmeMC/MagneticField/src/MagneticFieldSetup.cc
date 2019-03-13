@@ -20,7 +20,7 @@
 #include "G4RKG3_Stepper.hh"
 #include "G4SystemOfUnits.hh"
 
-#include "MagneticFieldMap.hh"
+//#include "MagneticFieldMap.hh"
 
 //////////////////////////////////////////////////////////////////////////
 //

@@ -40,15 +40,25 @@ public:
   G4double GetfBeWPosX() { return fBeWPosX; }
   G4double GetfBeWPosY() { return fBeWPosY; }
 
-//  The Be window Flange
+  //  The Be window Flange
   G4double GetBeFlThick()    { return fBeFlThick;}
   G4double GetBeFlDiameter() { return fBeFlDiameter;}
   G4double GetBeFlInnHole()  { return fBeFlInnHole;}
 
-//  DHSTB002 magnet
+  //  DHSTB002 magnet
   G4double GetDHSTB002Thick()    {return fDHSTB002Thick;}
   G4double GetDHSTB002Radius()   {return fDHSTB002Radius;}
   G4double GetDHSTB002InnHole()  {return fDHSTB002InnHole;}
+
+  //  DHSTB002 magnet inner vacuum pipe iron
+  G4double GetDHSTB002PipeThick()    {return fDHSTB002PipeThick;}
+  G4double GetDHSTB002PipeRadius()   {return fDHSTB002PipeRadius;}
+  G4double GetDHSTB002PipeInnHole()  {return fDHSTB002PipeInnHole;}
+
+  //  DHSTB002 magnet inner vacuum pipe vacuum gap
+  G4double GetDHSTB002PipeGapThick()    {return fDHSTB002PipeGapThick;}
+  G4double GetDHSTB002PipeGapRadius()   {return fDHSTB002PipeGapRadius;}
+  G4double GetDHSTB002PipeGapInnHole()  {return fDHSTB002PipeGapInnHole;}
 
   //Lower radius Gap
   G4double GetDHSTB002Gap1Thick()    {return fDHSTB002Gap1Thick;}
@@ -60,6 +70,7 @@ public:
   G4double GetDHSTB002Gap2Radius()   {return fDHSTB002Gap2Radius;}
   G4double GetDHSTB002Gap2InnHole()  {return fDHSTB002Gap2InnHole;}
 
+  //Central thin gap radius 
   G4double GetDHSTB002TGapThick()    {return fDHSTB002TGapThick;}
   G4double GetDHSTB002TGapRadius()   {return fDHSTB002TGapRadius;}
   G4double GetDHSTB002TGapInnHole()  {return fDHSTB002TGapInnHole;}
@@ -83,6 +94,15 @@ public:
   G4double fDHSTB002Thick;   
   G4double fDHSTB002Radius;
   G4double fDHSTB002InnHole; 
+
+//  DHSTB002 magnet inner vacuum pipe
+  G4double fDHSTB002PipeThick;   
+  G4double fDHSTB002PipeRadius;
+  G4double fDHSTB002PipeInnHole; 
+
+  G4double fDHSTB002PipeGapThick;   
+  G4double fDHSTB002PipeGapRadius;
+  G4double fDHSTB002PipeGapInnHole; 
 
   G4double fDHSTB002PosX ;
   G4double fDHSTB002PosY ;

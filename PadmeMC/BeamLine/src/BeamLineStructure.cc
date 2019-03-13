@@ -141,15 +141,15 @@ void BeamLineStructure::CreateBeThinWindow()
   //  G4Box* solidBeWindow = new G4Box("BeWind",BeWSizeX,BeWSizeY,BeWThick);
   G4Tubs* solidBeWindow = new G4Tubs("BeWind",0.,BeWDiam*0.5,BeWThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeWindow = new G4LogicalVolume(solidBeWindow,G4Material::GetMaterial("G4_Be"), "logicalBeWindow",0,0,0);
-  // logicalBeWindow->SetVisAttributes(BeVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,-3000.*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
+  logicalBeWindow->SetVisAttributes(alVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,-5000.*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
   // Create flange around thin window
   G4double FlThick    = geo->GetBeFlThick();
   G4double FlDiameter = geo->GetBeFlDiameter();
 
-  G4Tubs* solidBeFlange = new G4Tubs("solidBeFlange",0.,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
+  G4Tubs* solidBeFlange = new G4Tubs("solidBeFlange",BeWDiam*0.5,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeFlange = new G4LogicalVolume(solidBeFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeFlange",0,0,0);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,-3001.*mm),logicalBeFlange,"BeamLineBeFlange",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,-5001.*mm),logicalBeFlange,"BeamLineBeFlange",fMotherVolume,false,0,true);
 
 //  // Create the thin window spherical cap and subtract flange to smooth its edge
 //  G4Sphere* solidEWSphere = new G4Sphere("EWSphere",ewr1,ewr1+ewT,0.*deg,360.*deg,180.*deg-ewth1,ewth1);
@@ -158,69 +158,6 @@ void BeamLineStructure::CreateBeThinWindow()
 //  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_C"), "BeamLineECalWindow",0,0,0);
 //  logicalEWindow->SetVisAttributes(cVisAttr);
 //  new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick+ewr1-ewC),logicalEWindow,"BeamLineECalWindow",fMotherVolume,false,0,true);
-
-}
-
-void BeamLineStructure::CreateMagnetPipe()
-{
-
-  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
-
-// G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
-// if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
-// 
-// // Crossed pipes at target position
-// G4double cpzRIn = geo->GetCPZRIn();
-// G4double cpzROut = geo->GetCPZROut();
-// G4double cpzLen = geo->GetCPZLength();
-// G4double cpzPosZ = geo->GetCPZPosZ();
-// 
-// G4Tubs* solidCPZe = new G4Tubs("CPZe",0.,cpzROut,0.5*cpzLen,0.*deg,360.*deg);
-// G4Tubs* solidCPZi = new G4Tubs("CPZi",0.,cpzRIn,0.5*cpzLen+1.*mm,0.*deg,360.*deg);
-// 
-// G4double cpxRIn = geo->GetCPXRIn();
-// G4double cpxROut = geo->GetCPXROut();
-// G4double cpxLen = geo->GetCPXLength();
-// 
-// G4Tubs* solidCPXe = new G4Tubs("CPXe",0.,cpxROut,0.5*cpxLen,0.*deg,360.*deg);
-// G4Tubs* solidCPXi = new G4Tubs("CPXi",0.,cpxRIn,0.5*cpxLen+1.*mm,0.*deg,360.*deg);
-// 
-// G4RotationMatrix* rotCPX = new G4RotationMatrix;
-// rotCPX->rotateY(90.*deg);
-// 
-// G4UnionSolid* solidCP1 = new G4UnionSolid("VCCP1",solidCPZe,solidCPXe,rotCPX,G4ThreeVector(0.,0.,0.));
-// G4SubtractionSolid* solidCP2 = new G4SubtractionSolid("VCCP2",solidCP1,solidCPZi,0,G4ThreeVector(0.,0.,0.));
-// G4SubtractionSolid* solidCP3 = new G4SubtractionSolid("VCCP3",solidCP2,solidCPXi,rotCPX,G4ThreeVector(0.,0.,0.));
-// G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
-// logicalCP->SetVisAttributes(steelVisAttr);
-// new G4PVPlacement(0,G4ThreeVector(0.,0.,cpzPosZ),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
-
-
-  // Create flanges for crossed pipe
-
-//  G4double flangezRIn = geo->GetCPZFlangeRIn();
-//  G4double flangezROut = geo->GetCPZFlangeROut();
-//  G4double flangezThick = geo->GetCPZFlangeThick();
-//  G4Tubs* solidFlangeZ = new G4Tubs("JunFlangeZ",flangezRIn,flangezROut,0.5*flangezThick,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalFlangeZ = new G4LogicalVolume(solidFlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlangeZ",0,0,0);
-//  logicalFlangeZ->SetVisAttributes(steelVisAttr);
-//  G4double flangez0PosZ = cpzPosZ-0.5*cpzLen+0.5*flangezThick;
-//  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ),logicalFlangeZ,"CPZFlange",fMotherVolume,false,0,true);
-//  G4double flangez1PosZ = cpzPosZ+0.5*cpzLen-0.5*flangezThick;
-//  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez1PosZ),logicalFlangeZ,"CPZFlange",fMotherVolume,false,1,true);
-//
-//  G4double flangexRIn = geo->GetCPXFlangeRIn();
-//  G4double flangexROut = geo->GetCPXFlangeROut();
-//  G4double flangexThick = geo->GetCPXFlangeThick();
-//  G4Tubs* solidFlangeX = new G4Tubs("JunFlangeX",flangexRIn,flangexROut,0.5*flangexThick,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalFlangeX = new G4LogicalVolume(solidFlangeX,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlangeX",0,0,0);
-//  logicalFlangeX->SetVisAttributes(steelVisAttr);
-//  G4double flangex0PosX = -0.5*cpxLen+0.5*flangexThick;
-//  G4double flangex0PosZ = cpzPosZ;
-//  new G4PVPlacement(rotCPX,G4ThreeVector(flangex0PosX,0.,flangex0PosZ),logicalFlangeX,"CPXFlange",fMotherVolume,false,0,true);
-//  G4double flangex1PosX = +0.5*cpxLen-0.5*flangexThick;
-//  G4double flangex1PosZ = cpzPosZ;
-//  new G4PVPlacement(rotCPX,G4ThreeVector(flangex1PosX,0.,flangex1PosZ),logicalFlangeX,"CPXFlange",fMotherVolume,false,1,true);
 
 }
 
@@ -266,8 +203,8 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
+  G4VisAttributes DHSTB002VisAtt = G4VisAttributes(G4Colour::Red());
   if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
-
 
   G4double DHSTB002Thick    = geo->GetDHSTB002Thick();
   G4double DHSTB002Radius   = geo->GetDHSTB002Radius();
@@ -277,58 +214,83 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   G4RotationMatrix* rotDHSTB = new G4RotationMatrix;
   rotDHSTB->rotateX(90.*deg);
   rotDHSTB->rotateZ(180.*deg);
-  //  rotDHSTB->rotateY(-45.*deg);
-  //  rotDHSTB->rotateXYZ(90.*deg,0.,180.*deg);
 
-  G4Tubs* solidDHSTB002 = new G4Tubs("solidDHSTB002",DHSTB002InnHole,DHSTB002Radius,DHSTB002Thick*0.5,315.*deg,45.*deg);
-  G4LogicalVolume* logicalDHSTB002 = new G4LogicalVolume(solidDHSTB002,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002",0,0,0);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalDHSTB002,"BeamLineDHSTB002",fMotherVolume,false,0,true);
+
+  G4Tubs* solidDHSTB002Iron = new G4Tubs("solidDHSTB002Iron",DHSTB002InnHole,DHSTB002Radius,DHSTB002Thick*0.5,315.*deg,45.*deg);
+
+  //GAPs angulare extension greater than the iron to avoid surface problems
+  G4double GapStartAngle = 314;
+  G4double GapDeltaAngle = 46;
 
   G4double Gap1Thick    = geo->GetDHSTB002Gap1Thick();
   G4double Gap1Radius   = geo->GetDHSTB002Gap1Radius();
   G4double Gap1InnHole  = geo->GetDHSTB002Gap1InnHole();
-  //  G4double Gap1Center        = (DHSTB002Radius-DHSTB002InnHole)/2+DHSTB002InnHole; 
-  G4Tubs* solidGap1 = new G4Tubs("solidGap1",Gap1InnHole,Gap1Radius,Gap1Thick*0.5,315.*deg,45.*deg);
-  G4LogicalVolume* logicalGap1 = new G4LogicalVolume(solidGap1,G4Material::GetMaterial("G4_Vacuum"),"logicalGap1",0,0,0);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalGap1,"BeamLineDHSTB002Gap1",fMotherVolume,false,0,true);
 
-  G4double Gap2Thick    = geo->GetDHSTB002Gap2Thick();
-  G4double Gap2Radius   = geo->GetDHSTB002Gap2Radius();
-  G4double Gap2InnHole  = geo->GetDHSTB002Gap2InnHole();
-  //  G4double Gap2Center        = (DHSTB002Radius-DHSTB002InnHole)/2+DHSTB002InnHole; 
-  G4Tubs* solidGap2 = new G4Tubs("solidGap2",Gap2InnHole,Gap2Radius,Gap2Thick*0.5,315.*deg,45.*deg);
-  G4LogicalVolume* logicalGap2 = new G4LogicalVolume(solidGap2,G4Material::GetMaterial("G4_Vacuum"),"logicalGap2",0,0,0);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalGap2,"BeamLineDHSTB002Gap2",fMotherVolume,false,0,true);
-
-
+  G4double Gap2Thick     = geo->GetDHSTB002Gap2Thick();
+  G4double Gap2Radius    = geo->GetDHSTB002Gap2Radius();
+  G4double Gap2InnHole   = geo->GetDHSTB002Gap2InnHole();
 
   G4double TGapThick    = geo->GetDHSTB002TGapThick();
   G4double TGapRadius   = geo->GetDHSTB002TGapRadius();
   G4double TGapInnHole  = geo->GetDHSTB002TGapInnHole();
 
-  G4Tubs* solidTGap = new G4Tubs("solidTGap",TGapInnHole,TGapRadius,TGapThick*0.5,315.*deg,45.*deg);
-  G4LogicalVolume* logicalTGap = new G4LogicalVolume(solidTGap,G4Material::GetMaterial("G4_Vacuum"),"logicalTGap",0,0,0);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalTGap,"BeamLineDHSTB002TGap",fMotherVolume,false,0,true);
+  G4Tubs* solidGap2 = new G4Tubs("solidGap2",Gap2InnHole,Gap2Radius,Gap2Thick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
+  G4Tubs* solidGap1 = new G4Tubs("solidGap1",Gap1InnHole,Gap1Radius,Gap1Thick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
+  G4Tubs* solidTGap = new G4Tubs("solidTGap",TGapInnHole,TGapRadius,TGapThick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
 
-
- // G4int nPH = geo->GetPHCapNumber();
- // for (G4int iPH=0; iPH<nPH; iPH++) {
- //   char phcN[7];
- //   sprintf(phcN,"PHCap%d",iPH);
- //   G4double phcR = geo->GetPHCapRadius(iPH);
- //   G4double phcT = geo->GetPHCapThick(iPH);
- //   G4Tubs* solidPHC = new G4Tubs(phcN,0.,phcR,0.5*phcT,0.*deg,360.*deg);
- //   G4LogicalVolume* logicalPHC = new G4LogicalVolume(solidPHC,G4Material::GetMaterial("G4_STAINLESS-STEEL"),phcN,0,0,0);
- //   logicalPHC->SetVisAttributes(steelVisAttr);
- //
- //   G4ThreeVector posPHC = geo->GetPHCapPos(iPH);
- //   G4RotationMatrix* rotPHC = new G4RotationMatrix;
- //   rotPHC->rotateY(90.*deg);
- //   new G4PVPlacement(rotPHC,posPHC,logicalPHC,phcN,fMotherVolume,false,0,true);
- //
- //   printf("Porthole cap %d (%s) radius %f thick %f position %f %f %f\n",iPH,phcN,phcR,phcT,posPHC.x(),posPHC.y(),posPHC.z());
- //
- // }
+  G4UnionSolid* solidG12  = new G4UnionSolid("solidG12",solidGap1,solidGap2,0,G4ThreeVector(0.,0.,0.));
+  G4UnionSolid* solidGAll = new G4UnionSolid("solidGAll",solidTGap,solidG12,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidDHSTB002 = new G4SubtractionSolid("solidDHSTB002",solidDHSTB002Iron,solidGAll,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalDHSTB002 = new G4LogicalVolume(solidDHSTB002,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002",0,0,0);
+  logicalDHSTB002->SetVisAttributes(DHSTB002VisAtt);
+  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalDHSTB002,"BeamLineDHSTB002",fMotherVolume,false,0,true);
 
 }
 
+void BeamLineStructure::CreateMagnetPipe()
+{
+
+  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
+
+  //  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  G4double DHSTB002PipeThick    = geo->GetDHSTB002PipeThick();
+  G4double DHSTB002PipeRadius   = geo->GetDHSTB002PipeRadius();
+  G4double DHSTB002PipeInnHole  = geo->GetDHSTB002PipeInnHole();
+  G4double GapCenter            = (DHSTB002PipeRadius-DHSTB002PipeInnHole)/2+DHSTB002PipeInnHole; 
+
+  G4double DHSTB002PipeGapThick    = geo->GetDHSTB002PipeGapThick();
+  G4double DHSTB002PipeGapRadius   = geo->GetDHSTB002PipeGapRadius();
+  G4double DHSTB002PipeGapInnHole  = geo->GetDHSTB002PipeGapInnHole();
+
+  G4RotationMatrix* rotDHSTB = new G4RotationMatrix;
+  rotDHSTB->rotateX(90.*deg);
+  rotDHSTB->rotateZ(180.*deg);
+
+  G4Tubs* solidDHSTB002PipeIron = new G4Tubs("solidDHSTB002PipeIron",DHSTB002PipeInnHole,DHSTB002PipeRadius,DHSTB002PipeThick*0.5,315.*deg,45.*deg);
+  G4Tubs* solidDHSTB002PipeGap  = new G4Tubs("solidDHSTB002PipeGap",DHSTB002PipeGapInnHole,DHSTB002PipeGapRadius,DHSTB002PipeGapThick*0.5,314.*deg,46.*deg);
+  G4SubtractionSolid* solidDHSTB002Pipe = new G4SubtractionSolid("solidDHSTB002Pipe",solidDHSTB002PipeIron,solidDHSTB002PipeGap,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalDHSTB002Pipe = new G4LogicalVolume(solidDHSTB002Pipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002Pipe",0,0,0);
+  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,-3001.*mm),logicalDHSTB002Pipe,"BeamLineDHSTB002Pipe",fMotherVolume,false,0,true);
+
+  // Strait sections
+  G4double  PipeSizeX =  DHSTB002PipeRadius-DHSTB002PipeInnHole;
+  G4double  PipeSizeY =  DHSTB002PipeThick;
+  G4double  PipeSizeZ =  210*mm;
+
+  G4Box*    solidStraitPipeIron = new G4Box("solidStraitPipeIron",PipeSizeX/2.,PipeSizeY/2.,PipeSizeZ/2.);
+  G4Box*    solidStraitPipeGap  = new G4Box("solidStraitPipeGap",(PipeSizeX-6)/2*mm,(PipeSizeY-8)/2*mm,(PipeSizeZ+2)*mm);
+  G4SubtractionSolid* solidStraitPipe = new G4SubtractionSolid("solidStraitPipe",solidStraitPipeIron,solidStraitPipeGap,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalStraitPipe  = new G4LogicalVolume(solidStraitPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalStraitPipe",0,0,0);
+  new G4PVPlacement(0,G4ThreeVector(0,0.,-2900.*mm),logicalStraitPipe,"BeamLineStraitPipe",fMotherVolume,false,0,true);
+
+  G4double FlThick    = geo->GetBeFlThick();
+  G4double FlDiameter = geo->GetBeFlDiameter();
+
+  G4Tubs* solidFlangeIron = new G4Tubs("solidFlangeIron",0.,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
+  G4Box*  solidFlangeGap  = new G4Box("solidFlangeGap",((PipeSizeX-6)/2)*mm,((PipeSizeY-8)/2)*mm,(FlThick+2.)*mm);
+  G4SubtractionSolid* solidFlange = new G4SubtractionSolid("solidFlange",solidFlangeIron,solidFlangeGap,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalFlange = new G4LogicalVolume(solidFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalFlange",0,0,0);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,(-2900+PipeSizeZ/2+FlThick/2)*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
+
+}

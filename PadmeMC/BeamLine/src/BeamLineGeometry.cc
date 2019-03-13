@@ -35,6 +35,17 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002Radius   = 2057*mm;  //radius
   fDHSTB002InnHole  = 1389*mm; //radius
 
+
+  //From DHSTB002 inner chamber design
+  fDHSTB002PipeThick    = 40*mm;   
+  fDHSTB002PipeRadius   = (1723+59/2)*mm;  //radius
+  fDHSTB002PipeInnHole  = (1723-59/2)*mm;  //radius
+
+  //From DHSTB002 inner chamber design
+  fDHSTB002PipeGapThick    = 32*mm;   
+  fDHSTB002PipeGapRadius   = (1723+53/2)*mm;  //radius
+  fDHSTB002PipeGapInnHole  = (1723-53/2)*mm;  //radius
+
   //  fDHSTB002PosX = (fDHSTB002Radius-fDHSTB002InnHole)/2.+fDHSTB002InnHole;   
   fDHSTB002PosY = 0*mm;
   fDHSTB002PosZ = -3000*mm; 
@@ -59,8 +70,8 @@ BeamLineGeometry::BeamLineGeometry()
 
   //Thin gap in the H structure check drawings
   fDHSTB002TGapThick   = 43.*mm;    
-  fDHSTB002TGapRadius  = (1723.+85.)*mm;
-  fDHSTB002TGapInnHole = (1723.-85.)*mm; 
+  fDHSTB002TGapRadius  = (1723.+86.)*mm;
+  fDHSTB002TGapInnHole = (1723.-86.)*mm; 
 
   fDHSTB00TGap2PosX = 0.*mm;
   fDHSTB00TGap2PosY = 0.*mm;

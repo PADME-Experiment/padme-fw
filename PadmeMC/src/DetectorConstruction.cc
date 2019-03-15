@@ -38,6 +38,7 @@
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4UnionSolid.hh"
+#include "G4ExtrudedSolid.hh"
 //#include "G4Cons.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
@@ -240,11 +241,45 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   printf ("Position %f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
   printf ("-----------------------\n");
 
-  G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
-  G4LogicalVolume* logicMagneticVolumeVC =
-    new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  // Basic box, missing slanted section at end of magnet yoke
+  //G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
+  //G4LogicalVolume* logicMagneticVolumeVC =
+  //  new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  ////new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
+  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
+
+  // Precise shape definition but needs repositioning of P/EVetoes
+  //std::vector<G4TwoVector> magVolShape(3);
+  //magVolShape[0] = G4TwoVector(magVolMinX,magVolMinZ);
+  //magVolShape[1] = G4TwoVector(magVolMinX,magVolMaxZ);
+  //magVolShape[2] = G4TwoVector(551.0*mm,  magVolMaxZ);
+  //magVolShape[3] = G4TwoVector(551.0*mm,  524.*mm);
+  //magVolShape[4] = G4TwoVector(magVolMaxX,158.*mm);
+  //magVolShape[5] = G4TwoVector(magVolMaxX,magVolMinZ);
+  //G4ExtrudedSolid* solidMagneticVolume = new G4ExtrudedSolid("MagneticVolume",magVolShape,magVolHLY,G4TwoVector(0, 0), 1.0, G4TwoVector(0, 0), 1.0);
+  //G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  //G4RotationMatrix* magVolRot = new G4RotationMatrix;
+  //magVolRot->rotateX(-90.*deg);
+  //G4ThreeVector magVolPos = G4ThreeVector(0.,0.,0.);
+  //new G4PVPlacement(magVolRot,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
+
+  // Compromise to save goat and cabbages
+  // Some fine adjustments to improve volume matching after rotation
+  G4Box* solidMagVol1 = new G4Box("MagVol1",magVolHLX,magVolHLY,magVolHLZ);
+  std::vector<G4TwoVector> magVolShape(4);
+  magVolShape[0] = G4TwoVector(magVolMaxX-30.*um, magVolMaxZ-20.*um);
+  magVolShape[1] = G4TwoVector(551.0*mm,          magVolMaxZ-20.*um);
+  magVolShape[2] = G4TwoVector(551.0*mm,          524.0*mm);
+  magVolShape[3] = G4TwoVector(magVolMaxX-30.*um, 157.8*mm);
+  G4ExtrudedSolid* solidMagVol2 = new G4ExtrudedSolid("MagVol2",magVolShape,magVolHLY,G4TwoVector(0, 0), 1.0, G4TwoVector(0, 0), 1.0);
+  G4RotationMatrix* magVol2Rot = new G4RotationMatrix;
+  magVol2Rot->rotateX(-90.*deg);
+  G4ThreeVector magVol2Pos = G4ThreeVector(0.,0.,-magVolPosZ);
+  G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol1,solidMagVol2,magVol2Rot,magVol2Pos);
+  G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
-  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
   new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
   // Create magnetic volume inside beam entrance pipe

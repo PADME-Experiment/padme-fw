@@ -49,6 +49,10 @@ public:
   G4double GetDHSTB002Thick()    {return fDHSTB002Thick;}
   G4double GetDHSTB002Radius()   {return fDHSTB002Radius;}
   G4double GetDHSTB002InnHole()  {return fDHSTB002InnHole;}
+  G4double GetDHSTB002CenterRadius() {return fDHSTB002CenterRadius;}
+  G4double GetDHSTB002PosX()         {return fDHSTB002PosX;}
+  G4double GetDHSTB002PosY()         {return fDHSTB002PosY;}
+  G4double GetDHSTB002PosZ()         {return fDHSTB002PosZ;}
 
   //  DHSTB002 magnet inner vacuum pipe iron
   G4double GetDHSTB002PipeThick()    {return fDHSTB002PipeThick;}
@@ -75,9 +79,6 @@ public:
   G4double GetDHSTB002TGapRadius()   {return fDHSTB002TGapRadius;}
   G4double GetDHSTB002TGapInnHole()  {return fDHSTB002TGapInnHole;}
 
-  G4double GetDHSTB002PosX() {return fDHSTB002PosX;}
-  G4double GetDHSTB002PosY() {return fDHSTB002PosY;}
-  G4double GetDHSTB002PosZ() {return fDHSTB002PosZ;}
 
 //  Berillium thin window and stainless still flange
   G4double fBeWFrontFacePosZ;
@@ -94,6 +95,7 @@ public:
   G4double fDHSTB002Thick;   
   G4double fDHSTB002Radius;
   G4double fDHSTB002InnHole; 
+  G4double fDHSTB002CenterRadius; 
 
 //  DHSTB002 magnet inner vacuum pipe
   G4double fDHSTB002PipeThick;   

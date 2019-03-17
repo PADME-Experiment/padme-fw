@@ -49,10 +49,10 @@ public:
   G4double GetTPixSizeZ() { return fTPixSizeZ; }
 
   // Get/Set number of chip rows/cols in TPix
-  G4int GetTPixNRows()        { return fTPixNRows; }
-  //void  SetTPixNRows(G4int r) { fTPixNRows = r; }
-  G4int GetTPixNCols()        { return fTPixNCols; }
-  void  SetTPixNCols(G4int c) { fTPixNCols = c; UpdateDerivedMeasures(); }
+  G4int GetTPixNRows() { return fTPixNRows; }
+  G4int GetTPixNCols() { return fTPixNCols; }
+  void  SetTPixNRows(G4int);
+  void  SetTPixNCols(G4int);
 
   // Position of center of chip at given row/col
   G4double GetChipPosX(G4int,G4int);
@@ -65,18 +65,18 @@ public:
   G4double GetChipSizeZ() { return fChipSizeZ; }
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
-  void SetTPixChamberWallAngle(G4double a) { fTPixChamberWallAngle = a; UpdateDerivedMeasures(); }
+  void SetTPixChamberWallAngle(G4double);
 
   // Thickness of the support structure between TPix and diagonal wall of the vacuum chamber
   G4double GetTPixSupportThickness() { return fTPixSupportThickness; }
-  void SetTPixSupportThickness(G4double t) { fTPixSupportThickness = t; UpdateDerivedMeasures(); }
+  void SetTPixSupportThickness(G4double);
 
    // Distance from the corner on the back face of the vacuum chamber
   G4double GetTPixDistanceToCorner() { return fTPixDistanceToCorner; }
-  void SetTPixDistanceToCorner(G4double d) { fTPixDistanceToCorner = d; UpdateDerivedMeasures(); }
+  void SetTPixDistanceToCorner(G4double);
 
   // Coordinates of the corner on the back face of the vacuum chamber
-  void SetTPixChamberWallCorner(G4ThreeVector c) { fTPixChamberWallCorner = c; UpdateDerivedMeasures(); }
+  void SetTPixChamberWallCorner(G4ThreeVector);
 
   // Get name of TPix sensitive detector
   G4String GetTPixSensitiveDetectorName() { return fTPixSensitiveDetectorName; }

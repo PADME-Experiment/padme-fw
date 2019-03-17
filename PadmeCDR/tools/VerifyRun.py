@@ -31,7 +31,7 @@ LNF_SRM = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/hom
 CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
 def print_help():
-    print 'RestoreRun -R run_name [-S src_site] [-D dst_site] [-d dst_dir] [-Y year] [-h]'
+    print 'VerifyRun -R run_name [-S src_site] [-D dst_site] [-s daq_server] [-Y year] [-c] [-v] [-h]'
     print '  -R run_name     Name of run to recover'
     print '  -S src_site     Source site. Default: CNAF. Available %s'%SITE_LIST
     print '  -D dst_site     Destination site. Default: LNF. Available %s'%SITE_LIST
@@ -152,12 +152,11 @@ def main(argv):
     dst_string = ""
     daq_srv = ""
     year = ""
-    fake = False
     checksum = False
     verbose = 0
 
     try:
-        opts,args = getopt.getopt(argv,"R:S:D:s:Y:cfvh")
+        opts,args = getopt.getopt(argv,"R:S:D:s:Y:cvh")
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
@@ -188,8 +187,6 @@ def main(argv):
             daq_srv = arg
         elif opt == '-Y':
             year = arg
-        elif opt == '-f':
-            fake = True
         elif opt == '-c':
             checksum = True
         elif opt == '-v':
@@ -219,7 +216,9 @@ def main(argv):
         print_help()
         sys.exit(2)
 
-            
+    if ( (src_site == "KLOE" or dst_site == "KLOE") and checksum ):
+        print "WARNING - KLOE site does not support checksum verification: switching checksum off"
+        checksum = False
 
     # Define string to use to respresent sites
     src_string = src_site
@@ -280,24 +279,24 @@ def main(argv):
     file_list.sort()
 
     # Check file lists for differences
-    if (verbose > 1): print "%s - Starting verification of run %s (%d files) between %s and %s"%(now_str(),run,len(file_list),src_site,dst_site)
+    if (verbose > 1): print "%s - Starting verification of run %s (%d files) between %s and %s"%(now_str(),run,len(file_list),src_string,dst_string)
     warnings = 0
     for rawfile in file_list:
 
         # Check if file is at source site
         if not rawfile in src_file_list:
             warnings += 1
-            if verbose: print "%s - not at %s"%(rawfile,src_site)
+            if verbose: print "%s - not at %s"%(rawfile,src_string)
 
         # Check if file is at destination site
         elif not rawfile in dst_file_list:
             warnings += 1
-            if verbose: print "%s - not at %s"%(rawfile,dst_site)
+            if verbose: print "%s - not at %s"%(rawfile,dst_string)
 
         # Check if files have the same size
         elif src_file_size[rawfile] != dst_file_size[rawfile]:
             warnings += 1
-            if verbose: print "%s - file sizes are different: %d at %s vs. %d at %s"%(rawfile,src_file_size[rawfile],src_site,dst_file_size[rawfile],dst_site)
+            if verbose: print "%s - file sizes are different: %d at %s vs. %d at %s"%(rawfile,src_file_size[rawfile],src_string,dst_file_size[rawfile],dst_string)
 
         else:
 
@@ -325,16 +324,16 @@ def main(argv):
                 # Check if checksums are consistent
                 if (src_checksum == "" and dst_checksum == ""):
                     warnings += 1
-                    if verbose: print "%s - unable to get checksum at %s and %s"%(rawfile,src_site,dst_site)
+                    if verbose: print "%s - unable to get checksum at %s and %s"%(rawfile,src_string,dst_string)
                 elif (src_checksum == ""):
                     warnings += 1
-                    if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,src_site,dst_site,dst_checksum)
+                    if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,src_string,dst_string,dst_checksum)
                 elif (dst_checksum == ""):
                     warnings += 1
-                    if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,dst_site,src_site,src_checksum)
+                    if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,dst_string,src_string,src_checksum)
                 elif (src_checksum != dst_checksum):
                     warnings += 1
-                    if verbose: print "%s - checksums are different: %s at %s vs. %s at %s"%(rawfile,src_checksum,src_site,dst_checksum,dst_site)
+                    if verbose: print "%s - checksums are different: %s at %s vs. %s at %s"%(rawfile,src_checksum,src_string,dst_checksum,dst_string)
                 else:
                     if (verbose > 1): print "%s - OK - size %10d checksum %8s"%(rawfile,src_file_size[rawfile],src_checksum)
 

@@ -55,6 +55,10 @@ public:
 
   G4double GetBeamCenterPosY() { return fBeamCenterPosY; }
   void SetBeamCenterPosY(G4double y) { fBeamCenterPosY = y; }
+  
+  // M. Raggi 15/03/2019
+  G4double GetBeamCenterPosZ() { return fBeamCenterPosZ; }
+  void SetBeamCenterPosZ(G4double z) { fBeamCenterPosZ = z; }
 
   void BeamCenterPosEnableSpread()  { fBeamCenterPosApplySpread = true;  }
   void BeamCenterPosDisableSpread() { fBeamCenterPosApplySpread = false;  }
@@ -119,6 +123,8 @@ private:
   // Position and spread of beam at Target front face
   G4double fBeamCenterPosX;
   G4double fBeamCenterPosY;
+  G4double fBeamCenterPosZ;  //M Raggi 15/03/2019
+
   G4bool   fBeamCenterPosApplySpread;
   G4double fBeamCenterPosXSpread;
   G4double fBeamCenterPosYSpread;

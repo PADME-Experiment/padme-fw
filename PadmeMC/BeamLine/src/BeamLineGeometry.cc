@@ -22,9 +22,11 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Some basic chamber quantities from Cesidio's CAD drawings
   fBeWThick=250*um;  //250 microns 
+  //  fBeWThick=250*mm;  //250 microns 
   fBeWDiameter=61*mm;
-//  fBeWSizeX=55*mm;   //From DHSTB002 inner chamber design
-//  fBeWSizeY=35*mm;   //From DHSTB002 inner chamber design
+
+  //  fBeWPosZ=-3374.2 -1000.*cos(45*deg);  //1 meter from DHSTB002
+  //  fBeWPosX= 659.5  +1000.*sin(45*deg);  //1 meter from DHSTB002
 
   // Be window support flange.
   fBeFlThick=18*mm;      //250 microns 

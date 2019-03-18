@@ -70,7 +70,8 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Main positron beam origin is set to 1 um before the front face of the Target
   bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
-
+  //M. Raggi
+  bpar->SetBeamOriginPosZ(bpar->GetBeamCenterPosZ());
   G4int nTotPositrons = bpar->GetNPositronsPerBunch();
   if (bpar->NPositronsPerBunchApplySpread()) {
     nTotPositrons = G4Poisson(nTotPositrons);

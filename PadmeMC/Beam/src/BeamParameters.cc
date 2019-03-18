@@ -35,6 +35,8 @@ BeamParameters::BeamParameters()
   // Position and spread of beam at Target front face
   fBeamCenterPosX = 0.*cm;
   fBeamCenterPosY = 0.*cm;
+  fBeamCenterPosZ = 0.*cm;
+
   fBeamCenterPosApplySpread = true;
   fBeamCenterPosXSpread = 1.*mm;
   fBeamCenterPosYSpread = 1.*mm;

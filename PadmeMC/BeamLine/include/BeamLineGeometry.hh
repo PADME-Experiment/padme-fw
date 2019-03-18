@@ -37,8 +37,9 @@ public:
   G4double GetBeWDiameter()      { return fBeWDiameter; }
   G4double GetBeWFrontFacePosZ() { return fBeWFrontFacePosZ; }
   
-  G4double GetfBeWPosX() { return fBeWPosX; }
-  G4double GetfBeWPosY() { return fBeWPosY; }
+  G4double GetBeWPosX() { return fBeWPosX; }
+  G4double GetBeWPosY() { return fBeWPosY; }
+  G4double GetBeWPosZ() { return fBeWPosZ; }
 
   //  The Be window Flange
   G4double GetBeFlThick()    { return fBeFlThick;}
@@ -86,6 +87,7 @@ public:
   G4double fBeWDiameter;
   G4double fBeWPosX;
   G4double fBeWPosY;
+  G4double fBeWPosZ;
   
   G4double fBeFlDiameter;
   G4double fBeFlThick;

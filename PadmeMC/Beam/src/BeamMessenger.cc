@@ -81,6 +81,14 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYCmd->SetRange("Y >= -20. && Y <= 20.");
   fSetBeamCenterPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  // M. Raggi 15/03/2019 
+  fSetBeamCenterPosZCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_z",this);
+  fSetBeamCenterPosZCmd->SetGuidance("Set Beam origin Z coordinate at Target entrance.");
+  fSetBeamCenterPosZCmd->SetParameterName("Z",false);
+  fSetBeamCenterPosZCmd->SetDefaultUnit("mm");
+  fSetBeamCenterPosZCmd->SetRange("Z >= -10000. && Z <= 10000.");
+  fSetBeamCenterPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/position_spread_on",this);
   fEnableBeamCenterPosSpreadCmd->SetGuidance("Enable (true) or disable (false) gaussian spread of beam center X/Y coordinates.");
   fEnableBeamCenterPosSpreadCmd->SetParameterName("ECS",true);
@@ -217,6 +225,7 @@ BeamMessenger::~BeamMessenger()
 
   delete fSetBeamCenterPosXCmd;
   delete fSetBeamCenterPosYCmd;
+  delete fSetBeamCenterPosZCmd; //M Raggi 18/03/2019
   delete fEnableBeamCenterPosSpreadCmd;
   delete fSetBeamCenterPosXSpreadCmd;
   delete fSetBeamCenterPosYSpreadCmd;
@@ -280,6 +289,10 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetBeamCenterPosYCmd )
     fBeamParameters->SetBeamCenterPosY(fSetBeamCenterPosYCmd->GetNewDoubleValue(par));
+  //M. Raggi 18/03/2019
+  else if ( cmd == fSetBeamCenterPosZCmd )
+    fBeamParameters->SetBeamCenterPosZ(fSetBeamCenterPosZCmd->GetNewDoubleValue(par));
+
 
   else if ( cmd == fEnableBeamCenterPosSpreadCmd ) {
     if (fEnableBeamCenterPosSpreadCmd->GetNewBoolValue(par)) {
@@ -388,6 +401,9 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetBeamCenterPosYCmd )
     cv = fSetBeamCenterPosYCmd->ConvertToString(fBeamParameters->GetBeamCenterPosY(),"mm");
+  // M. Raggi
+  else if ( cmd == fSetBeamCenterPosZCmd )
+    cv = fSetBeamCenterPosZCmd->ConvertToString(fBeamParameters->GetBeamCenterPosZ(),"mm");
 
   else if ( cmd == fEnableBeamCenterPosSpreadCmd )
     cv = fEnableBeamCenterPosSpreadCmd->ConvertToString(fBeamParameters->BeamCenterPosApplySpread());

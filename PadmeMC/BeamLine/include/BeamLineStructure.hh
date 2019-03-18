@@ -11,6 +11,18 @@
 #include "globals.hh"
 #include "G4ThreeVector.hh"
 
+// Magnetic field
+//#include "G4FieldManager.hh"
+//#include "G4TransportationManager.hh"
+//#include "G4Mag_UsualEqRhs.hh"
+//#include "G4MagIntegratorStepper.hh"
+//#include "G4ChordFinder.hh"
+
+//#include "globals.hh"
+#include "G4MagneticField.hh"
+#include "G4FieldManager.hh"
+#include "G4TransportationManager.hh"
+
 class G4LogicalVolume;
 class G4UnionSolid;
 
@@ -42,6 +54,7 @@ public:
 
   void SetBeamLineVisible()   { fBeamLineIsVisible = 1; }
   void SetBeamLineInvisible() { fBeamLineIsVisible = 0; }
+  double GetFieldValue(){ return fBz; };
 
 private:
 
@@ -51,13 +64,14 @@ private:
 
   void CreateBeThinWindow();
   void CreateMagnetPipe();
-  void CreateJunctionPipe();
+  void CreateJunctionRegion();
   void CreateDHSTB002Magnet();
   //  void CreateTPixPortholeCap();
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
-
+  G4MagneticField* fmagField;
+  double fBz;
   G4int fBeamLineExists;
   G4int fBeamLineIsVisible;
 };

@@ -1,22 +1,22 @@
 #ifndef PVetoAnalysis_h
 #define PVetoAnalysis_h 1
 
-#include "TObject.h"
-
+#include "ValidationBase.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class TPVetoRecoEvent;
 class TRecoVClusCollection;
 
-class PVetoAnalysis : public TObject
+class PVetoAnalysis : public ValidationBase
 {
 
 public:
   PVetoAnalysis();
+  PVetoAnalysis(Int_t valid, Int_t verb);
   ~PVetoAnalysis();
 
-  Bool_t Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl, Int_t v);
+  Bool_t Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl);
   Bool_t Process();
   Bool_t Finalize(){return true;}
   Bool_t InitHistos();
@@ -24,12 +24,9 @@ public:
   
   
 private:
-  TPVetoRecoEvent* fhitEvent;
-  TRecoVClusCollection* fClColl;
   Double_t fTmax;
   Double_t fTmin;
   
-  Int_t fVerbose;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

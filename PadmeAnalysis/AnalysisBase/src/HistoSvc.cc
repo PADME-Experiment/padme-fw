@@ -52,7 +52,7 @@ void HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xu
 
 
 
-void HistoSvc::book()
+void HistoSvc::book(Int_t validation)
 { 
  
   // Creating a tree container to handle histograms and ntuples.
@@ -67,6 +67,7 @@ void HistoSvc::book()
   }
   std::cout << " HistoSvc::book :"<<" output ROOT TFile "<<fOutputFileName<<" created"<< std::endl;
 
+  if (validation) return;
   std::string hname;
 
   /////////////////////////////// Target histograms

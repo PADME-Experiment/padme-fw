@@ -28,6 +28,7 @@ std::vector<int> RecoVChannelID::GetChannelIDVector()
       for ( const auto &s : p.second )
 	{
 	  //cout << ' ' << s;
+	  if ((int)s<0) continue; // skip fake channelID = -1 (ECal case)
 	  IDs.push_back((int)s);
 	  //	  if (index==i) return (int)s;
 	  //	  ++i;

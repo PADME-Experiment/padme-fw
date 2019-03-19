@@ -53,6 +53,8 @@ void PadmeVCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
       if (fEnergyCalibMap->find(chIds[j])==fEnergyCalibMap->end()) fEnergyCalibMap->insert ( std::pair<int,double>(chIds[j], es) ); 
       //std::cout<<" init calibration consts  .... map size = "<<fTimeCalibMap->size()<<std::endl;
     }
+  std::cout<<"Energy calibration constants initialized for "<<fEnergyCalibMap->size()<<" values of channelIDs"<<std::endl;
+  std::cout<<"Time   calibration constants initialized for "<<fTimeCalibMap->size()<<" values of channelIDs"<<std::endl;
 }  
 void PadmeVCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {

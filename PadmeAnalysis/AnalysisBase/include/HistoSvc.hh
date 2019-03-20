@@ -183,7 +183,8 @@ public:
 private:
   static HistoSvc* fInstance;
 public:
-  void book();
+  //void book();
+  void book(Int_t validation);
   void save();
 
   void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);

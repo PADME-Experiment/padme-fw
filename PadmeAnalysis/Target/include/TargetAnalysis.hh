@@ -1,7 +1,7 @@
 #ifndef TargetAnalysis_h
 #define TargetAnalysis_h 1
 
-#include "TObject.h"
+#include "ValidationBase.hh"
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -9,25 +9,25 @@
 class TTargetRecoEvent;
 class TTargetRecoBeam;
 
-class TargetAnalysis : public TObject
+class TargetAnalysis : public ValidationBase
 {
 
 public:
   TargetAnalysis();
+  TargetAnalysis(Int_t valid, Int_t verb);
   ~TargetAnalysis();
 
-  Bool_t Init(TTargetRecoEvent* ev, TTargetRecoBeam* b, Int_t v);
+  Bool_t Init(TTargetRecoEvent* ev, TTargetRecoBeam* b);
+  Bool_t InitHistos();
+  Bool_t InitHistosValidation();
   Bool_t Process();
+  Bool_t ProcessValidation();
   Bool_t Finalize();
   
   
   
 private:
-  TTargetRecoEvent* fhitEvent;
   TTargetRecoBeam* fRecoBeam;
-
-  Int_t fVerbose;
-
 
   // my analysis variables
   Int_t nEvsTarget;

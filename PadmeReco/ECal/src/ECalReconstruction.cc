@@ -7,6 +7,8 @@
 #include "Riostream.h"
 
 #include "ECalReconstruction.hh"
+#include "ECalCalibration.hh"
+#include "DigitizerChannelReco.hh"
 
 #include "ECalParameters.hh"
 #include "ECalCrystalHandler.hh"
@@ -19,7 +21,6 @@
 #include "TECalMCEvent.hh"
 #include "TECalMCHit.hh"
 #include "TECalMCDigi.hh"
-#include "DigitizerChannelReco.hh"
 #include "TH2F.h"
 #include "TH1F.h"
 #include "TCanvas.h"
@@ -34,6 +35,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fChannelReco = new DigitizerChannelReco();
   fClusterization = new ECalSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+  fChannelCalibration = new ECalCalibration();
 
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
   fClDeltaTime            = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaTimeMax", 1.);

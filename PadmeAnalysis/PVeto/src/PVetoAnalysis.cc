@@ -14,11 +14,27 @@ PVetoAnalysis::PVetoAnalysis()
   InitHistos();
 
 }
+PVetoAnalysis::PVetoAnalysis(Int_t valid, Int_t verb)
+{
+  fhitEvent=NULL;
+  fClColl=NULL;
+  fValidation = valid;
+  fVerbose = verb;
+  
+  InitHistos();
+
+}
 PVetoAnalysis::~PVetoAnalysis()
 {
 }
 Bool_t PVetoAnalysis::InitHistos()
 {
+
+  if (fValidation) {
+    InitHistosValidation("PVeto");
+    return true;
+  }
+  
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
@@ -76,12 +92,11 @@ Bool_t PVetoAnalysis::InitHistos()
 
     return true;
 }
-Bool_t PVetoAnalysis::Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl, Int_t verb)
+Bool_t PVetoAnalysis::Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
   fhitEvent = ev;
   fClColl   = cl;
-  fVerbose  = verb;
   fTmin = -100.;
   fTmax =  180.;
 
@@ -92,6 +107,12 @@ Bool_t PVetoAnalysis::Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl, Int_t 
 Bool_t PVetoAnalysis::Process()
 {
   Bool_t retCode = 0;
+  if (fValidation)
+    {
+      ProcessValidation("PVeto");
+      return retCode;
+    }
+  
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

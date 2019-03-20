@@ -13,6 +13,7 @@
 #include "TSACMCDigi.hh"
 //#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelSAC.hh"
+#include "SACCalibration.hh"
 #include "SACSimpleClusterization.hh"
 #include "TH2F.h"
 #include "TH1F.h"
@@ -56,6 +57,7 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   ParseConfFile(ConfigFileName);
   //fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelSAC();
+  fChannelCalibration = new SACCalibration();
   fClusterization = new SACSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);

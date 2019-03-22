@@ -22,16 +22,15 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Some basic chamber quantities from Cesidio's CAD drawings
   fBeWThick=250*um;  //250 microns 
-  //  fBeWThick=250*mm;  //250 microns 
   fBeWDiameter=61*mm;
 
   //  fBeWPosZ=-3374.2 -1000.*cos(45*deg);  //1 meter from DHSTB002
   //  fBeWPosX= 659.5  +1000.*sin(45*deg);  //1 meter from DHSTB002
 
   // Be window support flange.
-  fBeFlThick=18*mm;      //250 microns 
+  fBeFlThick=18*mm;       //250 microns 
   fBeFlDiameter=114*mm;   //From DHSTB002 inner chamber design
-  fBeFlInnHole =28*mm;   //From DHSTB002 inner chamber design
+  fBeFlInnHole =28*mm;    //From DHSTB002 inner chamber design
 
   fDHSTB002Thick         =  670*mm;  // from drawings
   fDHSTB002Radius        = 2057*mm;  //radius
@@ -49,7 +48,8 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002PipeGapInnHole  = ( fDHSTB002CenterRadius-53/2)*mm;  //radius
 
   fDHSTB002PosY = 0*mm;
-  fDHSTB002PosZ = -2001*mm; 
+  // fDHSTB002PosZ = -2001*mm; 
+  fDHSTB002PosZ = (-2001+400*cos(45*deg))*mm; 
   
   double TGapXSize =170*mm;
   //First gap in the H structure

@@ -70,8 +70,9 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Main positron beam origin is set to 1 um before the front face of the Target
   bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
-  //M. Raggi
-  bpar->SetBeamOriginPosZ(bpar->GetBeamCenterPosZ());
+
+  bpar->SetBeamOriginPosZ(bpar->GetBeamCenterPosZ());   //M. Raggi 18/03/2019
+
   G4int nTotPositrons = bpar->GetNPositronsPerBunch();
   if (bpar->NPositronsPerBunchApplySpread()) {
     nTotPositrons = G4Poisson(nTotPositrons);
@@ -155,11 +156,11 @@ void BeamGenerator::GeneratePrimaryPositron()
   // Assign a time using bunch time structure (if required)
   G4double parTime = 0.;
   if ( bpar->BeamApplyBunchStructure() ) {
-    G4double bunchLen = bpar->GetBunchTimeLength();
+    G4double bunchLen  = bpar->GetBunchTimeLength();
     G4double ubunchLen = bpar->GetMicroBunchTimeLength();
     G4double ubunchDly = bpar->GetMicroBunchTimeDelay();
-    G4double nubunch = bunchLen/(ubunchDly+ubunchLen);
-    G4int ubunchNow = int(G4UniformRand()*nubunch);
+    G4double nubunch   = bunchLen/(ubunchDly+ubunchLen);
+    G4int ubunchNow    = int(G4UniformRand()*nubunch);
     parTime = ubunchNow*(ubunchDly+ubunchLen)+G4UniformRand()*ubunchLen;
   }
   fPositron.t = parTime;
@@ -169,7 +170,7 @@ void BeamGenerator::GeneratePrimaryPositron()
   G4double xPos = bpar->GetBeamCenterPosX();
   G4double yPos = bpar->GetBeamCenterPosY();
   //G4double zPos = fDetector->GetTargetFrontFaceZ()-1.*um;
-  G4double zPos = bpar->GetBeamOriginPosZ();
+  G4double zPos = bpar->GetBeamOriginPosZ();   //M. Raggi 18/03/2019
   if ( bpar->BeamCenterPosApplySpread() ) {
     xPos = G4RandGauss::shoot(xPos,bpar->GetBeamCenterPosXSpread());
     yPos = G4RandGauss::shoot(yPos,bpar->GetBeamCenterPosYSpread());
@@ -187,6 +188,8 @@ void BeamGenerator::GeneratePrimaryPositron()
   G4double pX = bpar->GetBeamDirection().x();
   G4double pY = bpar->GetBeamDirection().y();
   G4double pZ = bpar->GetBeamDirection().z();
+  //  std::cout<<"Px "<<pX<<" Py "<<pY<<" Pz "<<pZ<<std::endl;
+  /*
   if ( bpar->BeamApplyEmittance() ) { //Still to be tested
 //    pX = G4RandGauss::shoot(pX,bpar->GetBeamEmittanceX());	
 //    pY = G4RandGauss::shoot(pY,bpar->GetBeamEmittanceY());
@@ -196,6 +199,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     pY = sin(theta)*sin(phi);
     pZ = cos(theta);
   }
+  */
   fPositron.dir = G4ThreeVector(pX,pY,pZ).unit();
   //  G4cout << "BeamGenerator - Positron direction " << fPositron.dir << G4endl;
 

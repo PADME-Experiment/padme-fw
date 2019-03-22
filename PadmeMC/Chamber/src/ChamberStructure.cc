@@ -62,6 +62,9 @@ void ChamberStructure::CreateGeometry()
     // Create junction pipe between cross and vacuum chamber
     CreateJunctionPipe();
 
+    // Create junction between PADME cross and BTF vacuum M.Raggi 20/03/2019
+    CreateBTFJunction();
+
     // Create porthole caps for both section of the chamber
     CreatePortholeCaps();
 
@@ -266,6 +269,63 @@ void ChamberStructure::CreateJunctionPipe()
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flange0PosZ),logicalFlange,"JunctionFlange",fMotherVolume,false,0,true);
   G4double flange1PosZ = junPosZ+0.5*junLen-0.5*flangeThick;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flange1PosZ),logicalFlange,"JunctionFlange",fMotherVolume,false,1,true);
+
+}
+
+
+void ChamberStructure::CreateBTFJunction() //M. Raggi 20/03/2019
+{
+
+  ChamberGeometry* geo = ChamberGeometry::GetInstance();
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  //DN60 pipe from leibold chatalogue
+  G4double DN60RIn  =  63*mm;    // Diameter From Drawings
+  G4double DN60ROut =  70*mm;    // Diameter From Drawings
+  G4double DN60Len  =  95*mm;    // end to end of the flange 
+
+  //Create adapter DN100
+  G4double CF100FlangezRIn   = geo->GetCPZFlangeRIn();
+  G4double CF100FlangezROut  = DN60ROut+0.01*mm;//geo->GetCPZFlangeROut();
+  G4double CF100FlangezThick = geo->GetCPZFlangeThick();
+  G4Tubs* solidCF100FlangeZ = new G4Tubs("CF100JunFlangeZ",CF100FlangezRIn,CF100FlangezROut,0.5*CF100FlangezThick,0.*deg,360.*deg);
+  G4LogicalVolume* logicalCF100FlangeZ = new G4LogicalVolume(solidCF100FlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunCF100FlangeZ",0,0,0);
+  logicalCF100FlangeZ->SetVisAttributes(steelVisAttr);
+  G4double cpzPosZ = geo->GetCPZPosZ(); //center position of the Cross
+  G4double cpzLen  = geo->GetCPZLength();//Cross pipe length  
+  G4double CF100flangez1PosZ = cpzPosZ-0.5*cpzLen-0.5*CF100FlangezThick;
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,CF100flangez1PosZ),logicalCF100FlangeZ,"100mmCF100Flange",fMotherVolume,false,1,true);
+  
+  G4double DN60PosZ = CF100flangez1PosZ + CF100FlangezThick*0.5 - DN60Len/2;
+  G4Tubs* solidDN60Jun = new G4Tubs("DN60JunPipe",DN60RIn*0.5,DN60ROut*0.5,DN60Len*0.5,0.*deg,360.*deg);
+  G4LogicalVolume* logicalDN60Jun = new G4LogicalVolume(solidDN60Jun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"DN60JunPipe",0,0,0);
+  logicalDN60Jun->SetVisAttributes(steelVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,DN60PosZ),logicalDN60Jun,"DN60JunPipe",fMotherVolume,false,0,true);
+
+  //Create adapter CF60 flange laybold
+  G4double CF60FlangezRIn   =  66.0/2*mm+0.01*mm;
+  G4double CF60FlangezROut  = 113.5/2*mm;
+  G4double CF60FlangezThick = 17.5*mm;
+  G4Tubs* solidCF60Flange = new G4Tubs("CF60JunFlange",CF60FlangezRIn,CF60FlangezROut,0.5*CF60FlangezThick,0.*deg,360.*deg);
+  G4LogicalVolume* logicalCF60Flange = new G4LogicalVolume(solidCF60Flange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunCF60Flange",0,0,0);
+  logicalCF60Flange->SetVisAttributes(steelVisAttr);
+  G4double CF60flangezPosZ = DN60PosZ-DN60Len/2+0.5*CF60FlangezThick;
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,CF60flangezPosZ),logicalCF60Flange,"CF60Flange",fMotherVolume,false,1,true);
+  G4double CF60flangez1PosZ = DN60PosZ - DN60Len/2 - CF60FlangezThick + 0.5*CF60FlangezThick;
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,CF60flangez1PosZ),logicalCF60Flange,"CF60Flange1",fMotherVolume,false,1,true);
+
+  // Tube sobstituting the bellow at the exit of DHSTB002
+  G4double BellowLen  =  184*mm;    // end to end of the flange 
+  G4double DN601PosZ = CF60flangez1PosZ-CF60FlangezThick*0.5-BellowLen*0.5;
+
+  G4Tubs* solidDN601Jun = new G4Tubs("DN601JunPipe",DN60RIn*0.5,DN60ROut*0.5,BellowLen*0.5,0.*deg,360.*deg);
+  G4LogicalVolume* logicalDN601Jun = new G4LogicalVolume(solidDN601Jun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"DN601JunPipe",0,0,0);
+  logicalDN601Jun->SetVisAttributes(steelVisAttr);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,DN601PosZ),logicalDN601Jun,"DN601JunPipe",fMotherVolume,false,0,true);
+
+  G4double CF60flangez2PosZ = CF60flangez1PosZ - BellowLen - CF60FlangezThick/2;
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,CF60flangez2PosZ),logicalCF60Flange,"CF60Flange2",fMotherVolume,false,1,true);
 
 }
 

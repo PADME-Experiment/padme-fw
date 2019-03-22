@@ -11,17 +11,6 @@
 #include "globals.hh"
 #include "G4ThreeVector.hh"
 
-// Magnetic field
-//#include "G4FieldManager.hh"
-//#include "G4TransportationManager.hh"
-//#include "G4Mag_UsualEqRhs.hh"
-//#include "G4MagIntegratorStepper.hh"
-//#include "G4ChordFinder.hh"
-
-//#include "globals.hh"
-#include "G4MagneticField.hh"
-#include "G4FieldManager.hh"
-#include "G4TransportationManager.hh"
 
 class G4LogicalVolume;
 class G4UnionSolid;
@@ -36,16 +25,6 @@ public:
 
   void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
   void CreateGeometry();
-
-  //G4double GetBeamLineMostExternalX();
-  //G4double GetBeamLineMostAdvancedZ();
-  //G4double GetBeamLineBackFaceAngle();
-  //G4double GetBeamLineBackFaceThickness();
-  //G4ThreeVector GetBeamLineBackFaceCorner();
-
-  //G4double GetBeamLineInnerX();
-  //G4double GetBeamLineInnerY();
-  //G4double GetBeamLineInnerZ();
 
   G4LogicalVolume* GetBeamLineLogicalVolume() { return fGlobalLogicalVolume; }
 
@@ -66,14 +45,17 @@ private:
   void CreateMagnetPipe();
   void CreateJunctionRegion();
   void CreateDHSTB002Magnet();
-  //  void CreateTPixPortholeCap();
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
-  G4MagneticField* fmagField;
+  //  G4MagneticField* fmagField;
   double fBz;
   G4int fBeamLineExists;
   G4int fBeamLineIsVisible;
+
+  G4double UpStreamFlangePosX;
+  G4double UpStreamFlangePosZ;
+
 };
 
 #endif

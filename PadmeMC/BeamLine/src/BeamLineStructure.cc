@@ -249,7 +249,6 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   G4UnionSolid* solidGAll = new G4UnionSolid("solidGAll",solidTGap,solidG12,0,G4ThreeVector(0.,0.,0.));
   // adding gamma line hole
   
-
   G4SubtractionSolid* solidDHSTB002 = new G4SubtractionSolid("solidDHSTB002",solidDHSTB002Iron,solidGAll,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalDHSTB002  = new G4LogicalVolume(solidDHSTB002,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002",0,0,0);
   logicalDHSTB002->SetVisAttributes(DHSTB002VisAtt);
@@ -341,27 +340,27 @@ void BeamLineStructure::CreateMagnetPipe()
   UpStreamFlangePosX = xpipe+PipeSizeZ/2*cos(45*deg)+FlThick/2*cos(45*deg);
   UpStreamFlangePosZ = zpipe-PipeSizeZ/2*sin(45*deg)-FlThick/2*sin(45*deg);
   
-  // Gamma line pipe
-  G4double GLinSX = geo->GetDHSTB002GLinePipeSizeX();
-  G4double GLinSY = geo->GetDHSTB002GLinePipeSizeY();
-  G4double GLinSZ = geo->GetDHSTB002GLinePipeSizeZ();
-  G4Box*  solidGLinePipeIron  = new G4Box("solidGLinePipeIron",GLinSX/2*mm,GLinSY/2*mm,GLinSZ/2*mm);
-
-  G4double GLinPipeGapSX = geo->GetDHSTB002GLinePipeGapSizeX();
-  G4double GLinPipeGapSY = geo->GetDHSTB002GLinePipeGapSizeY();
-  G4double GLinPipeGapSZ = geo->GetDHSTB002GLinePipeGapSizeZ();
-  G4Box*  solidGLinePipeGap  = new G4Box("solidGLinePipeGap",GLinPipeGapSX/2*mm,GLinPipeGapSY/2*mm,GLinPipeGapSZ/2*mm);
-
-  G4double GLinePosX=0.;
-  G4double GLinePosZ=-5000.;
-
-  G4SubtractionSolid* solidGLine = new G4SubtractionSolid("solidGLine",solidGLinePipeIron,solidGLinePipeGap,0,G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* logicalGLine = new G4LogicalVolume(solidGLine,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalGLine",0,0,0);
-  logicalGLine->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotPipe,G4ThreeVector(0,0.,GLinePosZ),logicalGLine,"GLine",fMotherVolume,false,0,true);
-
-  // end of G line flange placement
-  new G4PVPlacement(rotPipe,G4ThreeVector(GLinePosX-(GLinSZ/2)*cos(45.*deg)*mm,0.,GLinePosZ+(GLinSZ/2)*sin(45.*deg)*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
+//// Gamma line pipe
+//G4double GLinSX = geo->GetDHSTB002GLinePipeSizeX();
+//G4double GLinSY = geo->GetDHSTB002GLinePipeSizeY();
+//G4double GLinSZ = geo->GetDHSTB002GLinePipeSizeZ();
+//G4Box*  solidGLinePipeIron  = new G4Box("solidGLinePipeIron",GLinSX/2*mm,GLinSY/2*mm,GLinSZ/2*mm);
+//
+//G4double GLinPipeGapSX = geo->GetDHSTB002GLinePipeGapSizeX();
+//G4double GLinPipeGapSY = geo->GetDHSTB002GLinePipeGapSizeY();
+//G4double GLinPipeGapSZ = geo->GetDHSTB002GLinePipeGapSizeZ();
+//G4Box*  solidGLinePipeGap  = new G4Box("solidGLinePipeGap",GLinPipeGapSX/2*mm,GLinPipeGapSY/2*mm,GLinPipeGapSZ/2*mm);
+//
+//G4double GLinePosX=0.;
+//G4double GLinePosZ=-5000.;
+//
+//G4SubtractionSolid* solidGLine = new G4SubtractionSolid("solidGLine",solidGLinePipeIron,solidGLinePipeGap,0,G4ThreeVector(0.,0.,0.));
+//G4LogicalVolume* logicalGLine = new G4LogicalVolume(solidGLine,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalGLine",0,0,0);
+//logicalGLine->SetVisAttributes(steelVisAttr);
+//new G4PVPlacement(rotPipe,G4ThreeVector(0,0.,GLinePosZ),logicalGLine,"GLine",fMotherVolume,false,0,true);
+//
+//// end of G line flange placement
+//new G4PVPlacement(rotPipe,G4ThreeVector(GLinePosX-(GLinSZ/2)*cos(45.*deg)*mm,0.,GLinePosZ+(GLinSZ/2)*sin(45.*deg)*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
 
 }
 

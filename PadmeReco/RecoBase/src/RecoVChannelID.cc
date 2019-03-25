@@ -2,7 +2,7 @@
 #include <iostream>
 
 RecoVChannelID::RecoVChannelID(){
-  ;
+  fnChannelID=0;
 }
 
 
@@ -16,6 +16,47 @@ int RecoVChannelID::GetChannelID(int bID,int chID){
   //return 32*bID + chID;
 }
 
+
+std::vector<int> RecoVChannelID::GetChannelIDVector()
+{
+  std::vector<int> IDs;
+  IDs.clear();
+  if (fnChannelID==0) return IDs;
+  for ( const auto &p : fChannelIDs )
+    {
+      //    cout << p.first << " :";
+      for ( const auto &s : p.second )
+	{
+	  //cout << ' ' << s;
+	  if ((int)s<0) continue; // skip fake channelID = -1 (ECal case)
+	  IDs.push_back((int)s);
+	  //	  if (index==i) return (int)s;
+	  //	  ++i;
+	}
+      //    cout << endl;
+    }
+  return IDs;  
+}
+int RecoVChannelID::scanChannelID(int index)
+{
+  if (fnChannelID==0) return -1;
+  if (index<0) return -1;
+  if (index>=fnChannelID) return -1;
+
+  int i=0;
+  for ( const auto &p : fChannelIDs )
+    {
+      //    cout << p.first << " :";
+      for ( const auto &s : p.second )
+	{
+	  //cout << ' ' << s;
+	  if (index==i) return (int)s;
+	  ++i;
+	}
+      //    cout << endl;
+    }
+
+}
 
 
 
@@ -42,6 +83,7 @@ void RecoVChannelID::InitChannelID(PadmeVRecoConfig *cfg){
 	std::vector<std::string> bMap = cfgParser->GetConfig("ADC",ParName);
 	for(auto it = bMap.begin(); it != bMap.end(); ++it) {
 	  fChannelIDs[bID].push_back(std::stoi(*it));
+	  ++fnChannelID;
 	  //	  fBoards.push_back(std::stoi(*it));
 	}
       }
@@ -53,7 +95,7 @@ void RecoVChannelID::InitChannelID(PadmeVRecoConfig *cfg){
     }
 
   }
-  
-  
+  std::cout << "Total n. of channelID for this detector is " << fnChannelID << std::endl;
+ 
 
 }

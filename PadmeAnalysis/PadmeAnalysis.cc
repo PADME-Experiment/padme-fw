@@ -35,7 +35,7 @@
 #include "HEPVetoAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf]" 
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-valid Validation]" 
 	    << std::endl;
 }
 
@@ -86,14 +86,15 @@ int main(Int_t argc, char **argv)
   TString InputFileName("PadmeRecoOutputFile.root");
   TString InputListFileName("InputListFile.txt");
   Int_t fVerbose=0;
+  Int_t fValidation=0;
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
   TString ConfFileName("config/PadmeReconstruction.conf");
 
   Int_t n_options_read = 0;
-  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:")) != -1) {
+  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0;
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:w:")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -131,6 +132,10 @@ int main(Int_t argc, char **argv)
       case 'v':
 	nv++;
 	fVerbose = (Int_t)TString(optarg).Atoi();
+	break;
+      case 'w':
+	nval++;
+	fValidation = (Int_t)TString(optarg).Atoi();
 	break;
       default:
 	usage(argv[0]);
@@ -291,14 +296,14 @@ int main(Int_t argc, char **argv)
    Int_t jevent = 0;
    
    //int histoOutput
-   hSvc->book();
+   hSvc->book(fValidation);
 
-   SACAnalysis*    sacAn    = new SACAnalysis(); 
-   ECalAnalysis*   ecalAn   = new ECalAnalysis(); 
-   TargetAnalysis* targetAn = new TargetAnalysis(); 
-   PVetoAnalysis*     pvetoAn  = new PVetoAnalysis();
-   EVetoAnalysis*     evetoAn  = new EVetoAnalysis();
-   HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis();
+   SACAnalysis*         sacAn  = new SACAnalysis(fValidation, fVerbose); 
+   ECalAnalysis*       ecalAn  = new ECalAnalysis(fValidation, fVerbose); 
+   TargetAnalysis*   targetAn  = new TargetAnalysis(fValidation, fVerbose); 
+   PVetoAnalysis*     pvetoAn  = new PVetoAnalysis(fValidation, fVerbose);
+   EVetoAnalysis*     evetoAn  = new EVetoAnalysis(fValidation, fVerbose);
+   HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fValidation, fVerbose);
 
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -340,12 +345,12 @@ int main(Int_t argc, char **argv)
 	 fSACRecoEvent->Print();
        }
        //
-       sacAn      ->Init(fSACRecoEvent,     fSACRecoCl            , fVerbose);
-       ecalAn     ->Init(fECalRecoEvent,    fECalRecoCl           , fVerbose);
-       targetAn   ->Init(fTargetRecoEvent,  fTargetRecoBeam       , fVerbose);
-       pvetoAn    ->Init(fPVetoRecoEvent,   fPVetoRecoCl          , fVerbose);
-       evetoAn    ->Init(fEVetoRecoEvent,   fEVetoRecoCl          , fVerbose);
-       hepvetoAn  ->Init(fHEPVetoRecoEvent, fHEPVetoRecoCl        , fVerbose);
+       sacAn      ->Init(fSACRecoEvent,     fSACRecoCl            );
+       ecalAn     ->Init(fECalRecoEvent,    fECalRecoCl           );
+       targetAn   ->Init(fTargetRecoEvent,  fTargetRecoBeam       );
+       pvetoAn    ->Init(fPVetoRecoEvent,   fPVetoRecoCl          );
+       evetoAn    ->Init(fEVetoRecoEvent,   fEVetoRecoCl          );
+       hepvetoAn  ->Init(fHEPVetoRecoEvent, fHEPVetoRecoCl        );
 
        //
        targetAn    ->Process();

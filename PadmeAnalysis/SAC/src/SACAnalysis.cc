@@ -7,33 +7,123 @@
 #include "HistoSvc.hh"
 #include <iostream>
 
-SACAnalysis::SACAnalysis()
+SACAnalysis::SACAnalysis(): ValidationBase()
 {
   fhitEvent=NULL;
   fClColl=NULL;
+  fVerbose = 0;
+  fValidation = 0;
+  InitHistos();
 }
+
+SACAnalysis::SACAnalysis(Int_t Validation, Int_t verb):ValidationBase()
+{
+  fhitEvent=NULL;
+  fClColl=NULL;
+  fValidation = Validation;
+  fVerbose    = verb;
+  InitHistos();
+}
+
 SACAnalysis::~SACAnalysis()
 {
   fhitEvent=NULL;
   fClColl=NULL;
 }
-Bool_t SACAnalysis::Init(TSACRecoEvent* ev, TRecoVClusCollection* cl, Int_t verb)
+Bool_t SACAnalysis::Init(TSACRecoEvent* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
   fhitEvent = ev;
   fClColl = cl;
-  fVerbose = verb;
 
   return retCode;
+}
+Bool_t SACAnalysis::InitHistos()
+{
+  if (fValidation)
+    {
+      return InitHistosValidation();
+    }
+  // TO DO: move here SAC histos currently hbooked in HistoSvc
+}
+Bool_t SACAnalysis::InitHistosValidation()
+{
+    HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::string hname;
+    int nBin, min, max;
+    nBin=300;
+    min=0;
+    max=300;
+    hname="SAC_NHits";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_NCluster";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=500;
+    min=0;
+    max=500;
+    hname = "SAC_HitEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname = "SAC_ClusterEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=700;
+    min=-300;
+    max=400;
+    hname = "SAC_HitTime";
+    hSvc->BookHisto(hname,nBin, min, max);
+    hname = "SAC_ClusterTime";
+    hSvc->BookHisto(hname,nBin, min, max);
+    nBin=60;
+    min=0;
+    max=6;
+    hname = "SAC_HitMap";
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+    hname = "SAC_ClusterMap";
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+    nBin=100;
+    min=0;
+    max=100;
+    hname="SAC_HitXPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterXPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_HitYPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterYPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=100;
+    min=0;
+    max=60;
+    hname="SAC_HitZPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterZPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_HitChannelId";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterSeedChannelId";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=16;
+    min=0;
+    max=15;
+    hname="SAC_NHitInCluster";
+    hSvc->BookHisto(hname, nBin, min, max);
+    
+    
+
+    return true;
 }
 Bool_t SACAnalysis::Process()
 {
 
+  Bool_t retCode = 0;
+  if (fValidation)
+    {
+      return ProcessValidation();
+    }
+  
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
   Int_t fNhits = fhitEvent->GetNHits();
   std::string hname;
-  Bool_t retCode = 0;
 
   hname = "SAC_NHits";
   hSvc->FillHisto(hname,fhitEvent->GetNHits());
@@ -85,4 +175,47 @@ Bool_t SACAnalysis::Process()
   
   std::cout<<"Out of SAC"<<std::endl;
   return retCode;
+}
+
+
+
+
+
+Bool_t SACAnalysis::ProcessValidation()
+{
+  ValidationBase::ProcessValidation("SAC");
+  Bool_t retCode = 0;
+
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  TRecoVHit* hit=NULL;
+  std::string hname;
+  Int_t fNhits = fhitEvent->GetNHits();
+  for (Int_t i=0; i<fNhits; ++i){
+    hit = fhitEvent->Hit(i);
+    Int_t ix = hit->GetChannelId()/10;
+    Int_t iy = hit->GetChannelId()%10;
+    //Int_t ix=position.X();
+    //Int_t iy=position.Y();
+  
+    hname = "SAC_HitMap";
+    hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+
+    
+   }
+
+
+   TRecoVCluster* clu=NULL;
+   Int_t fNclus = fClColl->GetNElements();
+
+   std::cout<<"NClusters:  " << fNclus << std::endl;
+   for (Int_t i=0; i<fNclus; ++i){
+     clu    = fClColl->Element(i);
+     Int_t ix = clu->GetChannelId()/10;
+     Int_t iy = clu->GetChannelId()%10;
+     //Int_t ix=position.X();
+     //Int_t iy=position.Y();
+     hname = "SAC_ClusterMap";
+     hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+   }
+   return retCode;
 }

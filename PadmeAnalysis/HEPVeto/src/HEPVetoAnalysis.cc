@@ -9,6 +9,16 @@ HEPVetoAnalysis::HEPVetoAnalysis()
 {
   fhitEvent=NULL;
   fClColl=NULL;
+  fVerbose = 0;
+  fValidation = 0;
+  InitHistos();
+}
+HEPVetoAnalysis::HEPVetoAnalysis(Int_t valid, Int_t verb)
+{
+  fhitEvent=NULL;
+  fClColl=NULL;
+  fVerbose = verb;
+  fValidation = valid;
   InitHistos();
 }
 HEPVetoAnalysis::~HEPVetoAnalysis()
@@ -16,6 +26,12 @@ HEPVetoAnalysis::~HEPVetoAnalysis()
 }
 Bool_t HEPVetoAnalysis::InitHistos()
 {
+  if (fValidation)
+    {
+      InitHistosValidation("HEPVeto");
+      return true;
+    }
+ 
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
@@ -53,12 +69,11 @@ Bool_t HEPVetoAnalysis::InitHistos()
 
     return true;
 }
-Bool_t HEPVetoAnalysis::Init(THEPVetoRecoEvent* ev, TRecoVClusCollection* cl, Int_t verb)
+Bool_t HEPVetoAnalysis::Init(THEPVetoRecoEvent* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
   fhitEvent = ev;
   fClColl   = cl;
-  fVerbose  = verb;
   fTmin = -100.;
   fTmax =  180.;
 
@@ -69,6 +84,12 @@ Bool_t HEPVetoAnalysis::Init(THEPVetoRecoEvent* ev, TRecoVClusCollection* cl, In
 Bool_t HEPVetoAnalysis::Process()
 {
   Bool_t retCode = 0;
+  if (fValidation)
+    {
+      ProcessValidation("HEPVeto");
+      return true;
+    }
+
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

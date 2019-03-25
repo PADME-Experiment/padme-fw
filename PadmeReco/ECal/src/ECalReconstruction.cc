@@ -534,7 +534,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   SdCell.clear();
   EvTotE=0;
 
-  const int NMaxCl=100;
+  const int NMaxCl=200;
   const int NRows=29;
   const int NCols=29;
   const int NTotCh=NRows*NCols;
@@ -611,10 +611,13 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	//	Double_t XCl=(60.-cChID[iHit1]/10*30.);
 	//	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	//std::cout<<"is neig "<<cChID[iHit1]<<" "<<cTime[iHit1]<<" "<<cEnergy[iHit1]<<std::endl;
+	if (cEnergy[iHit1]<fClEnThrForHit) continue;
 	Int_t XCl=cChID[iHit1]/100;
 	Int_t YCl=cChID[iHit1]%100;
 	((TH2F *)GetHisto("ECALCellPos"))->Fill(XCl,YCl,cEnergy[iHit1]);
 	cUsed[iHit1]=1;
+	// keep track of the indices of hits contributing to the cluster
+	clusMatrix[NSeeds][NCry] = iHit1;
 	ClTime[NSeeds]+=cTime[iHit1];
 	ClE[NSeeds]+=cEnergy[iHit1];
 	ClX[NSeeds]+=XCl*cEnergy[iHit1];
@@ -633,6 +636,11 @@ void ECalReconstruction::BuildSimpleECalClusters()
     //    if(ClNCry[NSeeds]>9) std::cout<<NSeeds<<" Ncry >9 "<<NCry<<" Clseed "<<ClSeed[NSeeds]<<" ClE "<<ClE[NSeeds]<<std::endl;
     NSeeds++;
     if(NCry>1 || ClE[NSeeds]>10.) NGoodClus++;
+    if (NSeeds==NMaxCl) 
+      {
+	std::cout<<"INFO: ECalReconstruction:: Maximum n. of clusters reached ("<<NMaxCl<<"); stop the search here"<<std::endl;
+	iMax = -1;
+      }
   }  //end of while loop on seeds
 
   std::vector<Int_t> tmpHitsInCl;

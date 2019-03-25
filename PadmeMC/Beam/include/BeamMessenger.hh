@@ -61,8 +61,8 @@ private:
 
   G4UIcmdWith3Vector* fSetBeamDirectionCmd;
   G4UIcmdWithABool* fEnableBeamEmittanceCmd;
-  G4UIcmdWithADouble* fSetBeamEmittanceXCmd;
-  G4UIcmdWithADouble* fSetBeamEmittanceYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceYCmd;
   
   G4UIcmdWithAnInteger* fSetNUbosonDecaysPerBunchCmd;
   G4UIcmdWithADoubleAndUnit* fSetUbosonMassCmd;

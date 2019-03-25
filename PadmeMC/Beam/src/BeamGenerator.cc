@@ -39,7 +39,8 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
   // Default Z position of beam is 1 um before the target.
   // Will be possible to change it with /beam/position_z datacard
   BeamParameters* bpar = BeamParameters::GetInstance();
-  bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
+  //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
+  bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
@@ -68,7 +69,8 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   // Special calibration run
   if ( fCalibrationRun ) {
     // Origin of calibration beam is on back face of Target
-    bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+    //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+    bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     GenerateCalibrationGamma();
     return;
   }
@@ -175,7 +177,8 @@ void BeamGenerator::GeneratePrimaryPositron()
   //  G4cout << "BeamGenerator - Positron momentum " << fPositron.P << G4endl;
 
   // Define position and direction for center of beam
-  G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamOriginPosZ());
+  //G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamOriginPosZ());
+  G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamCenterPosZ());
   G4ThreeVector beam_dir = bpar->GetBeamDirection();
   beam_dir = beam_dir.unit();
 
@@ -511,7 +514,8 @@ void BeamGenerator::GenerateCalibrationGamma()
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
   //G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
-  G4double vZ = bpar->GetBeamOriginPosZ();
+  //G4double vZ = bpar->GetBeamOriginPosZ();
+  G4double vZ = bpar->GetBeamCenterPosZ();
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(vX,vY,vZ),vT);
   //  printf("BeamGenerator::GenerateCalibrationGamma - Vertex at %f %f %f t=%f\n",vX,vY,vZ,vT);
 

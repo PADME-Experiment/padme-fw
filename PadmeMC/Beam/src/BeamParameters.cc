@@ -63,7 +63,7 @@ BeamParameters::BeamParameters()
   fThreePhotonDecaysFilename = "ThreePhotonDecays.list";
 
   // Generic beam position at t=0. Will be modified according to detector geometry
-  fBeamOriginPosZ = -100.*cm;
+  //fBeamOriginPosZ = -100.*cm;
 
 }
 

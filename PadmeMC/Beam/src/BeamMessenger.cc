@@ -68,14 +68,14 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetMicroBunchTimeDelayCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosXCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_x",this);
-  fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at Target entrance.");
+  fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at t=0.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosXCmd->SetRange("X >= -5000. && X <= 5000.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);
-  fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at Target entrance.");
+  fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at t=0.");
   fSetBeamCenterPosYCmd->SetParameterName("Y",false);
   fSetBeamCenterPosYCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosYCmd->SetRange("Y >= -20. && Y <= 20.");
@@ -83,7 +83,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 
   // M. Raggi 15/03/2019 
   fSetBeamCenterPosZCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_z",this);
-  fSetBeamCenterPosZCmd->SetGuidance("Set Beam origin Z coordinate at Target entrance.");
+  fSetBeamCenterPosZCmd->SetGuidance("Set center of beam Z coordinate at t=0.");
   fSetBeamCenterPosZCmd->SetParameterName("Z",false);
   fSetBeamCenterPosZCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosZCmd->SetRange("Z >= -10000. && Z <= 10000.");

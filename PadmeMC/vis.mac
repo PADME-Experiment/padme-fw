@@ -20,7 +20,7 @@
 
 # Disable/enable saving to Fast analysis Tree U102
 # uses conditions on ECal Energy, SAC energy, Hit in the Veto
-#/analysis/SaveEcal  false 
+#/analysis/SaveEcal  false
 #/analysis/SaveSAC   false
 #/analysis/SaveVeto  false
 
@@ -81,6 +81,11 @@
 
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
+
+# Beam line settings M. Raggi 25/03/2019
+#/Detector/SetBeamLineInvisible
+#/Detector/EnableStructure BeamLine
+#/Detector/DisableStructure BeamLine
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
@@ -148,29 +153,14 @@
 #/Detector/TDump/TargetFrontFaceZ 10.
 #/Detector/TDump/FrontFaceZ -180.
 
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/momentum 280. MeV
-#/beam/bunch_structure_on false
-#/beam/position_spread_on false
-#/beam/momentum_spread_on false
-#/beam/emittance_on false
-### Test for target energy loss
-#/Detector/DisableSubDetector Target
-### Test for high energy/high field setup
-#/Detector/Magnet/MagneticFieldConstantValue -0.8
-
 # Beam setup
 
-# Example for single three photon events
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/n_3g_per_bunch 1
-#/beam/3g_file events_ee-3g-550MeV-1M.txt
+/beam/n_e+_per_bunch 1
+/beam/n_e+_poisson_on false
 
 # Primary positrons setup
 #/beam/n_e+_per_bunch 5000
-#/beam/n_e+_poisson_on false
+#/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true
 #/beam/bunch_time_length 40. ns
 #/beam/ubunch_time_length 150 ps
@@ -185,8 +175,14 @@
 #/beam/momentum_spread 55. MeV
 #/beam/direction 0. 0. 1.
 #/beam/emittance_on true
-#/beam/emittance_x 0.001
-#/beam/emittance_y 0.001
+#/beam/emittance_x 1. mrad
+#/beam/emittance_y 1. mrad
+
+# Beam Line studies: position beam at Be window (need numbers from Mauro)
+#/beam/position_x 0. cm
+#/beam/position_y 0. cm
+#/beam/position_z 0. cm
+#/beam/direction -1. 0. 1.
 
 # Uboson generator
 #/beam/n_e+_per_bunch 1
@@ -194,9 +190,11 @@
 #/beam/n_uboson_per_bunch 1
 #/beam/uboson_mass 22. MeV
 
-# Three photons events read from file
-#/beam/n_3g_per_bunch 0
-#/beam/3g_file ThreeGamma_550MeV.txt
+# Example for single three photon events
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_3g_per_bunch 1
+#/beam/3g_file events_ee-3g-550MeV-1M.txt
 
 # Calibration run setup: single photon pointing to ECal front face
 #/beam/calibration false
@@ -208,42 +206,40 @@
 # Create detectors and initialize run
 /run/initialize
 
-#
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
-###/vis/open HepRepFile
-#
+
 # Use this open statement to create a .prim file suitable for
 # viewing in DAWN:
 #/vis/open DAWNFILE
-#
+
 # Use this open statement to create a .heprep file suitable for
 # viewing in HepRApp:
 #/vis/open HepRepFile
 #/vis/open HepRepXML
 #/vis/heprep/setEventNumberSuffix -0001
 #/vis/scene/add/trajectories rich
-#
+
 # Use this open statement to create a .wrl file suitable for
 # viewing in a VRML viewer:
 #/vis/open VRML2FILE
-#
+
 # Disable auto refresh and quieten vis messages whilst scene and
 # trajectories are established:
 /vis/viewer/set/autoRefresh false
 /vis/verbose errors
-#
+
 # Draw geometry:
 /vis/drawVolume
 #/geometry/test/grid_test true
-#
+
 #/vis/viewer/set/viewpointVector 0. 10. 0.
 
-# Choos viewpoint
+# Choose viewpoint
 # Side view
-/vis/viewer/set/viewpointThetaPhi -90. 0. deg
+#/vis/viewer/set/viewpointThetaPhi -90. 0. deg
 # Top view
-#/vis/viewer/set/viewpointThetaPhi 90. 90. deg
+/vis/viewer/set/viewpointThetaPhi 90. 90. deg
 # Front view
 #/vis/viewer/set/viewpointThetaPhi 0. 0. deg
 # Back view
@@ -251,7 +247,7 @@
 
 # Specify zoom value:
 /vis/viewer/zoom 1.4
-#
+
 # Specify style (surface or wireframe):
 /vis/viewer/set/style wireframe
 #/vis/viewer/set/style surface
@@ -275,26 +271,26 @@
 /vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true
 /vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 1
 # (if too many tracks cause core dump => /tracking/storeTrajectory 0)
-#
+
 # Draw hits at end of event:
 #/vis/scene/add/hits
-#
+
 # To draw only gammas:
 #/vis/filtering/trajectories/create/particleFilter
 #/vis/filtering/trajectories/particleFilter-0/add gamma
-#
+
 # To invert the above, drawing all particles except gammas,
 # keep the above two lines but also add:
 #/vis/filtering/trajectories/particleFilter-0/invert true
-#
+
 # Many other options are available with /vis/modeling and /vis/filtering.
 # For example, to select colour by particle ID:
 #/vis/modeling/trajectories/create/drawByParticleID
 #/vis/modeling/trajectories/drawByParticleID-0/set e- blue
-#
+
 # To superimpose all of the events from a given run:
 /vis/scene/endOfEventAction accumulate
-#
+
 # Re-establish auto refreshing and verbosity:
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings

@@ -105,8 +105,8 @@ public:
   G4String GetThreePhotonDecaysFilename()        { return fThreePhotonDecaysFilename; }
   void SetThreePhotonDecaysFilename(G4String f) { fThreePhotonDecaysFilename = f; }
 
-  G4double GetBeamOriginPosZ()        { return fBeamOriginPosZ; }
-  void     SetBeamOriginPosZ(G4double z) { fBeamOriginPosZ = z; }
+  //G4double GetBeamOriginPosZ()        { return fBeamOriginPosZ; }
+  //void     SetBeamOriginPosZ(G4double z) { fBeamOriginPosZ = z; }
 
 private:
 
@@ -151,7 +151,7 @@ private:
   G4String fThreePhotonDecaysFilename;
 
   // Origin of beam along Z (i.e. Z of beam when t=0)
-  G4double fBeamOriginPosZ;
+  //G4double fBeamOriginPosZ;
 
 };
 #endif

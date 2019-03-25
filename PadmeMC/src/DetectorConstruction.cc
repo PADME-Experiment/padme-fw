@@ -207,7 +207,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   }
 
-
   // Beam Line structure M. Raggi 07/03/2019
   if (fEnableBeamLine) {
     fBeamLineStructure->EnableBeamLine();

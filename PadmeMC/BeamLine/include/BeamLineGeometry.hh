@@ -80,6 +80,27 @@ public:
   G4double GetDHSTB002TGapRadius()   {return fDHSTB002TGapRadius;}
   G4double GetDHSTB002TGapInnHole()  {return fDHSTB002TGapInnHole;}
 
+ //Gamma line structure	      
+                                     
+  G4double GetDHSTB002GLineGapPosX(){return fDHSTB002GLineGapPosX;}    
+  G4double GetDHSTB002GLineGapPosY(){return fDHSTB002GLineGapPosY;}    
+  G4double GetDHSTB002GLineGapPosZ(){return fDHSTB002GLineGapPosZ;}    
+  				      
+  G4double GetDHSTB002GLineGapSizeX(){return fDHSTB002GLineGapSizeX;}   
+  G4double GetDHSTB002GLineGapSizeY(){return fDHSTB002GLineGapSizeY;}   
+  G4double GetDHSTB002GLineGapSizeZ(){return fDHSTB002GLineGapSizeZ;}   
+  				     
+  G4double GetDHSTB002GLinePipePosX(){return fDHSTB002GLinePipePosX;}   
+  G4double GetDHSTB002GLinePipePosY(){return fDHSTB002GLinePipePosY;}   
+  G4double GetDHSTB002GLinePipePosZ(){return fDHSTB002GLinePipePosZ;}   
+  				      
+  G4double GetDHSTB002GLinePipeSizeX(){return fDHSTB002GLinePipeSizeX;}   
+  G4double GetDHSTB002GLinePipeSizeY(){return fDHSTB002GLinePipeSizeY;}   
+  G4double GetDHSTB002GLinePipeSizeZ(){return fDHSTB002GLinePipeSizeZ;}   
+  				      
+  G4double GetDHSTB002GLinePipeGapSizeX(){return fDHSTB002GLinePipeGapSizeX;}
+  G4double GetDHSTB002GLinePipeGapSizeY(){return fDHSTB002GLinePipeGapSizeY;}
+  G4double GetDHSTB002GLinePipeGapSizeZ(){return fDHSTB002GLinePipeGapSizeZ;}
 
 //  Berillium thin window and stainless still flange
   G4double fBeWFrontFacePosZ;
@@ -135,12 +156,32 @@ public:
   G4double fDHSTB002TGapRadius;
   G4double fDHSTB002TGapInnHole; 
 
-  G4double fDHSTB00TGap2PosX ;
-  G4double fDHSTB00TGap2PosY ;
-  G4double fDHSTB00TGap2PosZ ;
+  G4double fDHSTB002TGap2PosX ;
+  G4double fDHSTB002TGap2PosY ;
+  G4double fDHSTB002TGap2PosZ ;
 
-
-
+ 
+ //Gamma line structure	      
+                                      
+ G4double fDHSTB002GLineGapPosX ;     
+ G4double fDHSTB002GLineGapPosY ;     
+ G4double fDHSTB002GLineGapPosZ ;     
+				       
+ G4double fDHSTB002GLineGapSizeX ;    
+ G4double fDHSTB002GLineGapSizeY ;    
+ G4double fDHSTB002GLineGapSizeZ ;    
+				       
+ G4double fDHSTB002GLinePipePosX ;    
+ G4double fDHSTB002GLinePipePosY ;    
+ G4double fDHSTB002GLinePipePosZ ;    
+				       
+ G4double fDHSTB002GLinePipeSizeX;    
+ G4double fDHSTB002GLinePipeSizeY;    
+ G4double fDHSTB002GLinePipeSizeZ;    
+				       
+ G4double fDHSTB002GLinePipeGapSizeX; 
+ G4double fDHSTB002GLinePipeGapSizeY; 
+ G4double fDHSTB002GLinePipeGapSizeZ;
 };
 
 #endif

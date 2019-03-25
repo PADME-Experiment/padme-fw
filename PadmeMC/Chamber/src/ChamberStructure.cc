@@ -286,10 +286,14 @@ void ChamberStructure::CreateBTFJunction() //M. Raggi 20/03/2019
   G4double DN60Len  =  95*mm;    // end to end of the flange 
 
   //Create adapter DN100
-  G4double CF100FlangezRIn   = geo->GetCPZFlangeRIn();
-  G4double CF100FlangezROut  = DN60ROut+0.01*mm;//geo->GetCPZFlangeROut();
+//  G4double CF100FlangezRIn   = geo->GetCPZFlangeRIn();
+//  G4double CF100FlangezROut  = DN60ROut+0.01*mm;//geo->GetCPZFlangeROut();
+//  G4double CF100FlangezThick = geo->GetCPZFlangeThick();
+  G4double CF100FlangezRIn   = DN60ROut+0.01*mm;
+  G4double CF100FlangezROut  = 152*mm;
   G4double CF100FlangezThick = geo->GetCPZFlangeThick();
-  G4Tubs* solidCF100FlangeZ = new G4Tubs("CF100JunFlangeZ",CF100FlangezRIn,CF100FlangezROut,0.5*CF100FlangezThick,0.*deg,360.*deg);
+
+  G4Tubs* solidCF100FlangeZ = new G4Tubs("CF100JunFlangeZ",CF100FlangezRIn*0.5,CF100FlangezROut*0.5,0.5*CF100FlangezThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalCF100FlangeZ = new G4LogicalVolume(solidCF100FlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunCF100FlangeZ",0,0,0);
   logicalCF100FlangeZ->SetVisAttributes(steelVisAttr);
   G4double cpzPosZ = geo->GetCPZPosZ(); //center position of the Cross
@@ -304,10 +308,11 @@ void ChamberStructure::CreateBTFJunction() //M. Raggi 20/03/2019
   new G4PVPlacement(0,G4ThreeVector(0.,0.,DN60PosZ),logicalDN60Jun,"DN60JunPipe",fMotherVolume,false,0,true);
 
   //Create adapter CF60 flange laybold
-  G4double CF60FlangezRIn   =  66.0/2*mm+0.01*mm;
-  G4double CF60FlangezROut  = 113.5/2*mm;
+  //  G4double CF60FlangezRIn   =  66.0/2*mm+0.01*mm;
+  G4double CF60FlangezRIn   =  70.*mm+0.01*mm;
+  G4double CF60FlangezROut  = 113.5*mm;
   G4double CF60FlangezThick = 17.5*mm;
-  G4Tubs* solidCF60Flange = new G4Tubs("CF60JunFlange",CF60FlangezRIn,CF60FlangezROut,0.5*CF60FlangezThick,0.*deg,360.*deg);
+  G4Tubs* solidCF60Flange = new G4Tubs("CF60JunFlange",CF60FlangezRIn*0.5,CF60FlangezROut*0.5,0.5*CF60FlangezThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalCF60Flange = new G4LogicalVolume(solidCF60Flange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunCF60Flange",0,0,0);
   logicalCF60Flange->SetVisAttributes(steelVisAttr);
   G4double CF60flangezPosZ = DN60PosZ-DN60Len/2+0.5*CF60FlangezThick;
@@ -326,6 +331,14 @@ void ChamberStructure::CreateBTFJunction() //M. Raggi 20/03/2019
 
   G4double CF60flangez2PosZ = CF60flangez1PosZ - BellowLen - CF60FlangezThick/2;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,CF60flangez2PosZ),logicalCF60Flange,"CF60Flange2",fMotherVolume,false,1,true);
+
+//  // additional Be window to test new configuration need to stay commented
+//  G4VisAttributes alVisAttr = G4VisAttributes(G4Colour::Blue());
+//  double BeWPosZ=CF60flangez2PosZ; 
+//  G4Tubs* solidBeWindow = new G4Tubs("BeWind",0.,DN60RIn*0.5-0.01*mm,0.250*mm,0.*deg,360.*deg);
+//  G4LogicalVolume* logicalBeWindow = new G4LogicalVolume(solidBeWindow,G4Material::GetMaterial("G4_Be"), "logicalBeWindow",0,0,0);
+//  logicalBeWindow->SetVisAttributes(alVisAttr);
+//  new G4PVPlacement(0,G4ThreeVector(0.,0.,BeWPosZ*mm),logicalBeWindow,"BeWindow",fMotherVolume,false,0,true);
 
 }
 

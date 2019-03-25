@@ -28,27 +28,26 @@ BeamLineGeometry::BeamLineGeometry()
   //  fBeWPosX= 659.5  +1000.*sin(45*deg);  //1 meter from DHSTB002
 
   // Be window support flange.
-  fBeFlThick=18*mm;       //250 microns 
-  fBeFlDiameter=114*mm;   //From DHSTB002 inner chamber design
-  fBeFlInnHole =28*mm;    //From DHSTB002 inner chamber design
+  fBeFlThick=17.5*mm;       //From leibold specs
+  fBeFlDiameter=113.5*mm;   //From DHSTB002 inner chamber design
+  //  fBeFlInnHole =66*mm;  //not used the flage is filled 
 
   fDHSTB002Thick         =  670*mm;  // from drawings
   fDHSTB002Radius        = 2057*mm;  //radius
   fDHSTB002InnHole       = 1389*mm; //radius
   fDHSTB002CenterRadius  = 1723.*mm; //radius
 
-  //From DHSTB002 inner chamber design
+  //Metal box DHSTB002 inner chamber design from chamber design
   fDHSTB002PipeThick    = 40*mm;   
   fDHSTB002PipeRadius   = ( fDHSTB002CenterRadius+59/2)*mm;  //radius
   fDHSTB002PipeInnHole  = ( fDHSTB002CenterRadius-59/2)*mm;  //radius
 
-  //From DHSTB002 inner chamber design
+  //pipe hole from DHSTB002 inner chamber design
   fDHSTB002PipeGapThick    = 32*mm;   
   fDHSTB002PipeGapRadius   = ( fDHSTB002CenterRadius+53/2)*mm;  //radius
   fDHSTB002PipeGapInnHole  = ( fDHSTB002CenterRadius-53/2)*mm;  //radius
 
   fDHSTB002PosY = 0*mm;
-  // fDHSTB002PosZ = -2001*mm; 
   fDHSTB002PosZ = (-2001+400*cos(45*deg))*mm; 
   
   double TGapXSize =170*mm;
@@ -75,9 +74,33 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002TGapRadius  = (fDHSTB002CenterRadius+86.)*mm;
   fDHSTB002TGapInnHole = (fDHSTB002CenterRadius-86.)*mm; 
 
-  fDHSTB00TGap2PosX = 0.*mm;
-  fDHSTB00TGap2PosY = 0.*mm;
-  fDHSTB00TGap2PosZ = 0.*mm;
+  fDHSTB002TGap2PosX = 0.*mm;
+  fDHSTB002TGap2PosY = 0.*mm;
+  fDHSTB002TGap2PosZ = 0.*mm;
+
+  //Gamma line pipe every number is currently a guess I have no drawing M. Raggi 25/03/2019
+
+  fDHSTB002GLineGapPosX = 0.*mm;
+  fDHSTB002GLineGapPosY = 0.*mm;
+  fDHSTB002GLineGapPosZ = 0.*mm;
+
+  fDHSTB002GLineGapSizeX = 120.*mm; //random numbers to be fixed
+  fDHSTB002GLineGapSizeY = 170.*mm; //random numbers to be fixed
+  fDHSTB002GLineGapSizeZ = 170.*mm; //random numbers to be fixed
+
+  fDHSTB002GLinePipePosX = 0.*mm;
+  fDHSTB002GLinePipePosY = 0.*mm;
+  fDHSTB002GLinePipePosZ = -5000.*mm;
+
+  fDHSTB002GLinePipeSizeX = 59.*mm; //from drawings same as curved pipe
+  fDHSTB002GLinePipeSizeY = fDHSTB002PipeThick*mm; //from drawings same as curved pipe
+  fDHSTB002GLinePipeSizeZ = 1645.1*mm; //1452.1 from drawings or 1645.1 flangia flangia
+  fDHSTB002GLinePipeGapSizeX = 53.*mm;  //from drawings same as curved pipe
+  fDHSTB002GLinePipeGapSizeY = fDHSTB002PipeGapThick*mm;  //from drawings same as curved pipe
+  fDHSTB002GLinePipeGapSizeZ = (fDHSTB002GLinePipeSizeZ+2)*mm; //from drawings same as curved pipe
+
+  
+
 
 
 }

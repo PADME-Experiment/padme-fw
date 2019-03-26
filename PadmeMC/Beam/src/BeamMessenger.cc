@@ -132,16 +132,18 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fEnableBeamEmittanceCmd->SetDefaultValue(true);
   fEnableBeamEmittanceCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamEmittanceXCmd = new G4UIcmdWithADouble("/beam/emittance_x",this);
+  fSetBeamEmittanceXCmd = new G4UIcmdWithADoubleAndUnit("/beam/emittance_x",this);
   fSetBeamEmittanceXCmd->SetGuidance("Set sigma of gaussian spread on beam X direction.");
   fSetBeamEmittanceXCmd->SetParameterName("EX",false);
-  fSetBeamEmittanceXCmd->SetRange("EX >= 0. && EX <= 1.");
+  fSetBeamEmittanceXCmd->SetDefaultUnit("mrad");
+  fSetBeamEmittanceXCmd->SetRange("EX >= 0. && EX <= 1000.");
   fSetBeamEmittanceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamEmittanceYCmd = new G4UIcmdWithADouble("/beam/emittance_y",this);
+  fSetBeamEmittanceYCmd = new G4UIcmdWithADoubleAndUnit("/beam/emittance_y",this);
   fSetBeamEmittanceYCmd->SetGuidance("Set sigma of gaussian spread on beam Y direction.");
   fSetBeamEmittanceYCmd->SetParameterName("EY",false);
-  fSetBeamEmittanceYCmd->SetRange("EY >= 0. && EY <= 1.");
+  fSetBeamEmittanceYCmd->SetDefaultUnit("mrad");
+  fSetBeamEmittanceYCmd->SetRange("EY >= 0. && EY <= 1000.");
   fSetBeamEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetNUbosonDecaysPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_uboson_per_bunch",this);

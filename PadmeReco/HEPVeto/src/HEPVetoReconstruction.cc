@@ -14,6 +14,7 @@
 #include "DigitizerChannelReco.hh"
 //#include "DigitizerChannelSAC.hh"
 #include "PadmeReconstruction.hh"
+#include "HEPVetoCalibration.hh"
 #include "HEPVetoSimpleClusterization.hh"
 #include "TH2F.h"
 
@@ -25,6 +26,7 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
   //fRecoEvent = new TRecoHEPVetoEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
+  fChannelCalibration = new HEPVetoCalibration();
   fClusterization = new HEPVetoSimpleClusterization();
   //fChannelReco = new DigitizerChannelSAC();
   fTriggerProcessor = new PadmeVTrigger();

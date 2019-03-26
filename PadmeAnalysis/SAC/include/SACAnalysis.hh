@@ -1,7 +1,7 @@
 #ifndef SACAnalysis_h
 #define SACAnalysis_h 1
 
-#include "TObject.h"
+#include "ValidationBase.hh"
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -9,25 +9,25 @@
 class TSACRecoEvent;
 class TRecoVClusCollection;
 
-class SACAnalysis : public TObject
+class SACAnalysis : public ValidationBase
 {
 
 public:
   SACAnalysis();
+  SACAnalysis(Int_t valid, Int_t verb);
   ~SACAnalysis();
 
-  Bool_t Init(TSACRecoEvent* ev, TRecoVClusCollection* cl, Int_t v);
+  Bool_t Init(TSACRecoEvent* ev, TRecoVClusCollection* cl);
+  Bool_t InitHistos();
+  Bool_t InitHistosValidation();
   Bool_t Process();
+  Bool_t ProcessValidation();
   Bool_t Finalize(){return true;}
 
   
   
   
 private:
-  TSACRecoEvent* fhitEvent;
-  TRecoVClusCollection* fClColl;
-
-  Int_t fVerbose;
 
 };
 

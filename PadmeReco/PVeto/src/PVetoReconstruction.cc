@@ -13,6 +13,7 @@
 #include "TPVetoMCDigi.hh"
 #include "TPVetoRecoEvent.hh"
 #include "DigitizerChannelReco.hh"
+#include "PVetoCalibration.hh"
 #include "PVetoSimpleClusterization.hh"
 #include "ADCChannelVReco.hh"
 
@@ -24,8 +25,9 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
   fChannelReco = new DigitizerChannelReco();
+  fChannelCalibration = new PVetoCalibration();
   fClusterization = new PVetoSimpleClusterization();
-  fChannelCalibration  = new PadmeVCalibration();
+  //fChannelCalibration  = new PadmeVCalibration();
   fTriggerProcessor = new PadmeVTrigger();
 }
 

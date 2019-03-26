@@ -7,31 +7,47 @@
 #include "HistoSvc.hh"
 #include <iostream>
 
-ECalAnalysis::ECalAnalysis()
+ECalAnalysis::ECalAnalysis(): ValidationBase()
 {
   fhitEvent=NULL;
   fClColl=NULL;
+  fValidation = 0;
+  fVerbose = 0;
+  InitHistos();
+}
+ECalAnalysis::ECalAnalysis(Int_t Validation, Int_t verb)
+{
+  fhitEvent=NULL;
+  fClColl=NULL;
+  fValidation = Validation;
+  fVerbose = verb;
+  InitHistos();
 }
 ECalAnalysis::~ECalAnalysis()
 {
 }
-Bool_t ECalAnalysis::Init(TECalRecoEvent* ev, TRecoVClusCollection* cl, Int_t verb)
+Bool_t ECalAnalysis::Init(TECalRecoEvent* ev, TRecoVClusCollection* cl)
 {
-  Bool_t retCode = 0;
+  Bool_t retCode = 0;  
   fhitEvent = ev;
   fClColl = cl;
-  fVerbose = verb;
-  InitHistos();
 
   return retCode;
 }
+
 Bool_t ECalAnalysis::InitHistos()
 {
+
+    if (fValidation)
+    {
+      return InitHistosValidation();
+    }
+
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
     Double_t xlow, ylow, xup, yup;
-    
+
     ny = 100;
     ylow = -0.5;
     yup  = 99.5;
@@ -56,14 +72,14 @@ Bool_t ECalAnalysis::InitHistos()
 
     hname = "ECal_Hit_DTime_DCh2";
     hSvc->BookHisto(hname, nx, xlow, xup);
-    
+
     xlow = -350.;
     xup  =  350.;
     hname = "ECal_Hit_DTime_DChLarge";
     hSvc->BookHisto(hname, nx, xlow, xup);
     */
 
-    //to be finalized 
+    //to be finalized
     nx = 31.;
     xlow = -15.5;
     xup  =  15.5;
@@ -89,13 +105,84 @@ Bool_t ECalAnalysis::InitHistos()
     hname = "ECal_Clus2Clus_seedDT";
     hSvc->BookHisto(hname, nx, xlow, xup);
 
-
     return true;
 }
+
+Bool_t ECalAnalysis::InitHistosValidation()
+{
+  //Validation histos
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  std::string hname;
+  int nBin, min, max;
+  nBin=200;
+  min=150;
+  max=350;
+  hname="ECal_NHits";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_NCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=500;
+  min=0;
+  max=500;
+  hname = "ECal_HitEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  hname = "ECal_ClusterEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  nBin=800;
+  min=-400;
+  max=400;
+  hname = "ECal_HitTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  hname = "ECal_ClusterTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  nBin=30;
+  min=0;
+  max=30;
+  hname = "ECal_HitMap";
+  hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
+  hname = "ECal_ClusterMap";
+  hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
+  nBin=300;
+  min=-1;
+  max=30;
+  hname="ECal_HitXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_ClusterXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_ClusterYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=300;
+  min=-1;
+  max=30;
+  hname="ECal_HitZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_ClusterZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=3000;
+  min=0;
+  max=3000;
+  hname="ECal_HitChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_ClusterSeedChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=16;
+  min=0;
+  max=15;
+  hname="ECal_NHitInCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  return true;
+}
+
 
 Bool_t ECalAnalysis::Process()
 {
   Bool_t retCode = 0;
+  if (fValidation)
+    {
+      return ProcessValidation();
+    }
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
@@ -116,25 +203,13 @@ Bool_t ECalAnalysis::Process()
     if (energy > eMax) {iLead = i; eMax=energy;}
     Double_t time = hit->GetTime();
 
-    hname = "ECal_HitEnergy";
-    hSvc->FillHisto(hname,energy,1.);
-    hname = "ECal_HitTime";
-    hSvc->FillHisto(hname,time,  1.);
-    hname = "ECal_HitMap";
-    hSvc->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
-    hname = "ECal_EneMap";
-    hSvc->FillHisto2(hname, (Double_t)ix, (Double_t)iy, energy);
-
-    // ntuple variables 
+    // ntuple variables
     hSvc->myEvt.NTECluster[i]=hit->GetEnergy();
     hSvc->myEvt.NTTCluster[i]=hit->GetTime();
     hSvc->myEvt.NTXCluster[i]=hit->GetChannelId()/100;
     hSvc->myEvt.NTYCluster[i]=hit->GetChannelId()%100;
-    
-   }
 
-   hname = "ECal_Etot";
-   hSvc->FillHisto(hname,eTot,1.);
+   }
 
    if (fNhits<1) return true;
    TRecoVHit* lHit = fhitEvent->Hit(iLead);
@@ -154,11 +229,12 @@ Bool_t ECalAnalysis::Process()
 
    TRecoVCluster* clu=NULL;
    TRecoVCluster* clun=NULL;
-   //std::cout<<"ECal sanity checks:" 
+   //std::cout<<"ECal sanity checks:"
    Int_t seed;
    Int_t seedId;
    Double_t seedE;
    Double_t seedT;
+   Double_t eTotCl;
    Int_t clSize;
    Int_t fNclus = fClColl->GetNElements();
    for (Int_t i=0; i<fNclus; ++i){
@@ -194,7 +270,7 @@ Bool_t ECalAnalysis::Process()
        hSvc->FillHisto(hname,hit->GetTime()-seedT,1.);
        for (Int_t ihn=ih+1; ihn<clSize; ++ihn){
 	 Int_t hitIndn    = vhinclu[ihn];
-	 //if (hitIndn == seed) continue; 
+	 //if (hitIndn == seed) continue;
 	 hitn = fhitEvent->Hit(hitIndn);
 	 //std::cout<<"ECal:: cluster n. "<<i<<" hit comp. n "<<ih<<" vs comp in="<<ihn<<" chId, T "<<hitn->GetChannelId()<<" "<<hitn->GetTime()<<std::endl;
 	 hname = "ECal_inClus_DCHXhits";
@@ -218,6 +294,51 @@ Bool_t ECalAnalysis::Process()
    }
 
 
-     
+   return retCode;
+}
+
+
+Bool_t ECalAnalysis::ProcessValidation()
+{
+  std::cout <<"Im in processValidation!!!!!!" << std::endl;
+  
+  ValidationBase::ProcessValidation("ECal");
+  
+  
+  Bool_t retCode = 0;
+
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  TRecoVHit* hit=NULL;
+  std::string hname;
+  Int_t fNhits = fhitEvent->GetNHits();
+  for (Int_t i=0; i<fNhits; ++i){
+    hit = fhitEvent->Hit(i);
+    Int_t ix = hit->GetChannelId()/100;
+    Int_t iy = hit->GetChannelId()%100;
+    //Int_t ix=position.X();
+    //Int_t iy=position.Y();
+  
+    hname = "ECal_HitMap";
+    hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+
+    
+   }
+
+
+   TRecoVCluster* clu=NULL;
+   Int_t fNclus = fClColl->GetNElements();
+
+   std::cout<<"NClusters:  " << fNclus << std::endl;
+   for (Int_t i=0; i<fNclus; ++i){
+     clu    = fClColl->Element(i);
+     Int_t ix = clu->GetChannelId()/100;
+     Int_t iy = clu->GetChannelId()%100;
+     //Int_t ix=position.X();
+     //Int_t iy=position.Y();
+     hname = "ECal_ClusterMap";
+     hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+   }
+
+
    return retCode;
 }

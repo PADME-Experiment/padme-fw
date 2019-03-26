@@ -58,23 +58,26 @@ void PadmeVReconstruction::Exception(TString Message){
 }
 
 void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
-  std::cout << this->GetName() <<": Initializing" << std::endl;
+  std::cout <<"--------------------------------------------------" <<this->GetName() <<": Initializing" << std::endl;
 
   fMainReco = MainReco;
   if(fChannelReco) {
     fChannelReco->Init(GetConfig());
-    std::cout<<"digitizer initialized OK"<<std::endl;
+    std::cout<<this->GetName() <<": Digitizer initialized OK"<<std::endl;
     if (fClusterization) {
       fClusterization->Init(GetConfig());
-      std::cout<<"Clusterization inititialized OK"<<std::endl;
+      std::cout<<this->GetName() <<": Clusterization inititialized OK"<<std::endl;
     }
     InitChannelID(GetConfig());
-    if(fChannelCalibration) fChannelCalibration->Init(GetConfig());
-    std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
+    std::cout <<this->GetName() <<": Number of ADC boards for this detector = "  << GetConfig()-> GetNBoards() << std::endl;
+    if(fChannelCalibration) {
+      fChannelCalibration->Init(GetConfig(), this);
+      std::cout<<this->GetName() <<": Calibration inititialized OK"<<std::endl;
+    }
+    else std::cout<<this->GetName() <<": fChannelCalibration = NULL"<<std::endl;
   }
   
   HistoInit();
-  
 
   //GetOrMakeDir(fHistoFile,fName+"Monitor")->cd(); //go to the SubDet directory
 }
@@ -127,11 +130,12 @@ void PadmeVReconstruction::ProcessEvent(TRecoVObject* tEvent,TRecoEvent* tRecoEv
   ReadHits(tEvent, tRecoEvent);
   //std::cout<<this->GetName()<<"::ProcessEvent(TRecoVObject*) ...   now  "<<fHits.size()<<" copied to internal vector "<<std::endl;  
 
-  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+  //if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
   
   // Clustering  
   ClearClusters();
   BuildClusters();
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
 }
 
@@ -263,6 +267,8 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
   // from Hits to Clusters
   ClearClusters();
   BuildClusters();
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
 
   //Processing is over, let's analyze what's here, if foreseen
   AnalyzeEvent(rawEv);

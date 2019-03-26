@@ -11,9 +11,10 @@
 #include "globals.hh"
 #include "G4ThreeVector.hh"
 
-
 class G4LogicalVolume;
 class G4UnionSolid;
+
+class BeamLineMessenger;
 
 class BeamLineStructure
 {
@@ -23,7 +24,7 @@ public:
   ~BeamLineStructure();
   BeamLineStructure(G4LogicalVolume*);
 
-  void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
+  void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
   G4LogicalVolume* GetBeamLineLogicalVolume() { return fGlobalLogicalVolume; }
@@ -33,13 +34,8 @@ public:
 
   void SetBeamLineVisible()   { fBeamLineIsVisible = 1; }
   void SetBeamLineInvisible() { fBeamLineIsVisible = 0; }
-  double GetFieldValue(){ return fBz; };
 
 private:
-
-  G4UnionSolid* CreateVCFacetGlobalSolid();
-  G4UnionSolid* CreateVCFacetExternalSolid();
-  G4UnionSolid* CreateVCFacetInternalSolid();
 
   void CreateBeThinWindow();
   void CreateMagnetPipe();
@@ -48,13 +44,14 @@ private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
-  //  G4MagneticField* fmagField;
-  double fBz;
+
   G4int fBeamLineExists;
   G4int fBeamLineIsVisible;
 
   G4double UpStreamFlangePosX;
   G4double UpStreamFlangePosZ;
+
+  BeamLineMessenger* fBeamLineMessenger;
 
 };
 

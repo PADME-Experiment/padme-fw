@@ -4,7 +4,7 @@
 #
 /control/verbose 1
 /run/verbose 1
-/tracking/verbose 1
+/tracking/verbose 0
 
 # RootIO settings
 
@@ -82,10 +82,12 @@
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
-# Beam line settings M. Raggi 25/03/2019
+# Beam line settings
 #/Detector/SetBeamLineInvisible
 #/Detector/EnableStructure BeamLine
 #/Detector/DisableStructure BeamLine
+#/Detector/BeamLine/Be_window false
+#/Detector/BeamLine/DHST002_FieldY -1.029 tesla
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
@@ -155,9 +157,6 @@
 
 # Beam setup
 
-/beam/n_e+_per_bunch 1
-/beam/n_e+_poisson_on false
-
 # Primary positrons setup
 #/beam/n_e+_per_bunch 5000
 #/beam/n_e+_poisson_on true
@@ -172,16 +171,16 @@
 #/beam/position_y_spread 1. mm
 #/beam/momentum 550. MeV
 #/beam/momentum_spread_on true
-#/beam/momentum_spread 55. MeV
+#/beam/momentum_spread 5.5 MeV
 #/beam/direction 0. 0. 1.
 #/beam/emittance_on true
 #/beam/emittance_x 1. mrad
 #/beam/emittance_y 1. mrad
 
-# Beam Line studies: position beam at Be window (need numbers from Mauro)
-#/beam/position_x 0. cm
+# Beam Line studies: position beam at Be window
+#/beam/position_x 2232.46 mm
 #/beam/position_y 0. cm
-#/beam/position_z 0. cm
+#/beam/position_z -4682.13 mm
 #/beam/direction -1. 0. 1.
 
 # Uboson generator

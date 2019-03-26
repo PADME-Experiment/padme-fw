@@ -35,6 +35,7 @@
 #include "G4UIcommand.hh"
 
 #include "BeamLineGeometry.hh"
+#include "BeamLineMessenger.hh"
 
 //#include "G4MagneticField.hh"
 
@@ -43,9 +44,12 @@ using namespace CLHEP;
 BeamLineStructure::BeamLineStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
 {
+
+  fBeamLineMessenger = new BeamLineMessenger(this);
+
   fBeamLineExists = 1;    // If =0 the physical structure of the chamber is not created
   fBeamLineIsVisible = 1; // If =0 all chamber structures are invisible (debug only)
-  fBz=1*tesla;
+
 }
 
 BeamLineStructure::~BeamLineStructure()
@@ -54,8 +58,6 @@ BeamLineStructure::~BeamLineStructure()
 void BeamLineStructure::CreateGeometry()
 {
 
-  // The main parts of the Vacuum BeamLine are imported in DetectorConstruction.cc from GDML files
-  // Here we only define flanges, portholes and other components of the chamber
   if (fBeamLineExists) {
 
     // Create DHSTB002 magnet
@@ -136,8 +138,8 @@ void BeamLineStructure::CreateBeThinWindow()
   G4LogicalVolume* logicalBeWindow = new G4LogicalVolume(solidBeWindow,G4Material::GetMaterial("G4_Be"), "logicalBeWindow",0,0,0);
   logicalBeWindow->SetVisAttributes(BeVisAttr);
 
-  double BeWPosX=junUpDN60PosX+UpDN60junLen*cos(45*deg)/2+FlThick*cos(45*deg)/2;
-  double BeWPosZ=junUpDN60PosZ-UpDN60junLen*sin(45*deg)/2-FlThick*sin(45*deg)/2;
+  double BeWPosX=junUpDN60PosX+UpDN60junLen*cos(45*deg)/2+FlThick*cos(45*deg)/2-5.*mm;
+  double BeWPosZ=junUpDN60PosZ-UpDN60junLen*sin(45*deg)/2-FlThick*sin(45*deg)/2+5.*mm;
   
   G4Tubs* solidBeFlange = new G4Tubs("solidBeFlange",BeWDiam*0.5,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeFlange = new G4LogicalVolume(solidBeFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeFlange",0,0,0);
@@ -146,9 +148,11 @@ void BeamLineStructure::CreateBeThinWindow()
   rotBe->rotateY(45.*deg);
 
   // place the BE window 
-  //  new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
-  std::cout<<"******************************************************************************** Flange X "<<BeWPosX<<std::endl;
-  std::cout<<"******************************************************************************** Flange Z "<<BeWPosZ<<std::endl;
+  if (geo->BeWindowIsEnabled()) {
+    printf("Berillium Window positioned at X = %.2f mm Z = %.2f mm\n",BeWPosX/mm,BeWPosZ/mm);
+    new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
+  }
+
 }
 
 //*******************************************
@@ -288,7 +292,9 @@ void BeamLineStructure::CreateMagnetPipe()
   new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,DHSTB002PosZ*mm),logicalDHSTB002PipeGap,"BeamLineDHSTB002PipeGap",fMotherVolume,false,0,true);
 
   // Let's add a constant magnetic field
-  G4ThreeVector fieldV(0.,-1.02*tesla,0.);
+  //G4ThreeVector fieldV(0.,-1.02*tesla,0.);
+  //G4ThreeVector fieldV(0.,-1.029*tesla,0.);
+  G4ThreeVector fieldV(0.,geo->GetDHSTB002MagneticFieldY(),0.);
   G4MagneticField* magField = new G4UniformMagField(fieldV);
   G4FieldManager* localFieldManager = new G4FieldManager(magField);
 

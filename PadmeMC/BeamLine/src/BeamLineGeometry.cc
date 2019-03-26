@@ -20,6 +20,9 @@ BeamLineGeometry* BeamLineGeometry::GetInstance()
 BeamLineGeometry::BeamLineGeometry()
 {
 
+  // By default the Be window is positioned
+  fBeWindowEnable = true;
+
   // Some basic chamber quantities from Cesidio's CAD drawings
   fBeWThick=250*um;  //250 microns 
   fBeWDiameter=61*mm;
@@ -99,9 +102,8 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002GLinePipeGapSizeY = fDHSTB002PipeGapThick*mm;  //from drawings same as curved pipe
   fDHSTB002GLinePipeGapSizeZ = (fDHSTB002GLinePipeSizeZ+2)*mm; //from drawings same as curved pipe
 
-  
-
-
+  // Default magnetic field
+  fDHSTB002MagneticFieldY = -1.029*tesla;
 
 }
 

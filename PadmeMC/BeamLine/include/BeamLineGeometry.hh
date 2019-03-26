@@ -32,6 +32,10 @@ protected:
 
 public:
 
+  void EnableBeWindow() { fBeWindowEnable = true; }
+  void DisableBeWindow() { fBeWindowEnable = false; }
+  G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
+
 //  The Be window
   G4double GetBeWThick()         { return fBeWThick; }
   G4double GetBeWDiameter()      { return fBeWDiameter; }
@@ -102,7 +106,17 @@ public:
   G4double GetDHSTB002GLinePipeGapSizeY(){return fDHSTB002GLinePipeGapSizeY;}
   G4double GetDHSTB002GLinePipeGapSizeZ(){return fDHSTB002GLinePipeGapSizeZ;}
 
-//  Berillium thin window and stainless still flange
+  // Magnetic field inside DHSTB002
+
+  void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
+  G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
+
+private:
+
+  //  Berillium thin window and stainless still flange
+
+  G4bool fBeWindowEnable;
+
   G4double fBeWFrontFacePosZ;
   G4double fBeWThick;
   G4double fBeWDiameter;
@@ -182,6 +196,10 @@ public:
  G4double fDHSTB002GLinePipeGapSizeX; 
  G4double fDHSTB002GLinePipeGapSizeY; 
  G4double fDHSTB002GLinePipeGapSizeZ;
+
+  // Magnetic field
+  G4double fDHSTB002MagneticFieldY;
+
 };
 
 #endif

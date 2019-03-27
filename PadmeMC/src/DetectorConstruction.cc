@@ -680,7 +680,7 @@ G4double DetectorConstruction::GetTargetFrontFaceZ()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();
 
-  // Target is disabled (?): return a position 53cm before the front face of the magnet yoke
+  // Target is disabled: return a position 53cm before the front face of the magnet yoke
   return -103.*cm;
 }
 
@@ -688,7 +688,7 @@ G4double DetectorConstruction::GetTargetThickness()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetThickness();
 
-  // Target is disabled (?): return 100um
+  // Target is disabled: return 100um
   return 0.1*mm;
 }
 

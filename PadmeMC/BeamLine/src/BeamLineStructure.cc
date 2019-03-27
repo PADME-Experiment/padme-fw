@@ -70,8 +70,10 @@ void BeamLineStructure::CreateGeometry()
     CreateBeThinWindow();
         
     // Create region in between DHSTB002 and PADME target cross
-    CreateJunctionRegion(); 
+    CreateJunctionRegion();
+
   }
+
 }
 
 

@@ -84,14 +84,17 @@ private:
   G4double fTargetSizeY;
   G4double fTargetSizeZ;
 
-  // Support is T-shaped with a squared hole
-  // +------------------------+
-  // |          L4            |
-  // |                        |L3
-  // +-----+            +-----+
-  //       |            |
-  //       |    L1      |L2
-  //       +------------+
+  //   Support is T-shaped with a squared hole
+  // Y  +------+
+  // ^  |      |   L2
+  // |  |      +-------+
+  // |  |         +-+  |
+  // |  |L4     HL| |  |L1
+  // |  |         +-+  |
+  // |  |      +-------+
+  // |  |  L3  |     HD
+  // |  +------+   |---|
+  // +-------------------> X
   G4double fTSupportL1;
   G4double fTSupportL2;
   G4double fTSupportL3;

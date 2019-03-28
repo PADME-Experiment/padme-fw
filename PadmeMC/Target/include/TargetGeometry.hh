@@ -47,6 +47,20 @@ public:
   void     SetTargetSizeY(G4double s) { fTargetSizeY = s; }
   void     SetTargetSizeZ(G4double s) { fTargetSizeZ = s; }
 
+  // Size of Target support
+  G4double GetTSupportL1() { return fTSupportL1; }
+  G4double GetTSupportL2() { return fTSupportL2; }
+  G4double GetTSupportL3() { return fTSupportL3; }
+  G4double GetTSupportL4() { return fTSupportL4; }
+  G4double GetTSupportHoleL() { return fTSupportHoleL; }
+  G4double GetTSupportHoleD() { return fTSupportHoleD; }
+  G4double GetTSupportThick() { return fTSupportThick; }
+  G4double GetTSupportPosX() { return -0.5*fTSupportL2+fTSupportHoleD; }
+  // Support is before Target
+  G4double GetTSupportPosZ() { return fTargetFrontFacePosZ-0.5*fTSupportThick; }
+  // Support is after Target
+  //G4double GetTSupportPosZ() { return fTargetFrontFacePosZ+fTargetSizeZ+0.5*fTSupportThick; }
+
   // Set position along Z of Target front face
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
   void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
@@ -69,6 +83,22 @@ private:
   G4double fTargetSizeX;
   G4double fTargetSizeY;
   G4double fTargetSizeZ;
+
+  // Support is T-shaped with a squared hole
+  // +------------------------+
+  // |          L4            |
+  // |                        |L3
+  // +-----+            +-----+
+  //       |            |
+  //       |    L1      |L2
+  //       +------------+
+  G4double fTSupportL1;
+  G4double fTSupportL2;
+  G4double fTSupportL3;
+  G4double fTSupportL4;
+  G4double fTSupportHoleL; // Length of hole side
+  G4double fTSupportHoleD; // Distance from L1 to center of hole
+  G4double fTSupportThick; // Thickness of T-shaped support
 
   G4double fTargetFrontFacePosZ; // Position along Z axis of Target front face
 

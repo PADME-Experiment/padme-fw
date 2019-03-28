@@ -502,6 +502,21 @@ void DetectorConstruction::DefineMaterials()
   ASA->AddElement(G4Element::GetElement("O"),2);
   ASA->AddElement(G4Element::GetElement("N"),1);
 
+  // PCB (epoxy+glass fiber) used for Target support board
+  // From https://agenda.infn.it/event/15579/contributions/30406/attachments/21543/24545/GEANTSimulations2018_Raffa.pdf
+  // Epoxy
+  G4Material* Epoxy = new G4Material("Epoxy",1.2*g/cm3,2);
+  Epoxy->AddElement(G4Element::GetElement("H"),2);
+  Epoxy->AddElement(G4Element::GetElement("C"),2);
+  // SiO2 (Quarz)
+  G4Material* SiO2 = new G4Material("SiO2",2.2*g/cm3,2);
+  SiO2->AddElement(G4Element::GetElement("Si"),1);
+  SiO2->AddElement(G4Element::GetElement("O"),2);
+  // PCB (Glass + Epoxy)
+  G4Material* PCB = new G4Material("PCB",1.86*g/cm3,2);
+  PCB->AddMaterial(Epoxy,0.472);
+  PCB->AddMaterial(SiO2, 0.528);
+
   /*
   //--------- Materials definition ---------
   G4double a, z, density;

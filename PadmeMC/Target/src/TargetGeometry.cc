@@ -41,7 +41,7 @@ TargetGeometry::TargetGeometry()
   fTSupportL4 = 8.0*cm;
   fTSupportHoleL = 1.5*cm; // Length of squared hole side
   fTSupportHoleD = 2.0*cm; // Distance from L1 to center of squared hole
-  fTSupportThick = 1.0*mm; // Thickness of T-shaped support (to be verified)
+  fTSupportThick = 1.6*mm; // Thickness of T-shaped support
 
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
   //  fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet

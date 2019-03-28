@@ -91,6 +91,36 @@ public:
   G4double GetJunFlangeROut() { return fJunFlangeR; }
   G4double GetJunFlangeThick() { return fJunFlangeThick; }
 
+  // Properties of junction pipe between cross and BTF pipes
+
+  G4double GetBTFJunRIn()    { return fBTFJunRIn; }
+  G4double GetBTFJunROut()   { return fBTFJunROut; }
+  G4double GetBTFJunLength() { return fBTFJunLength; }
+  G4double GetBTFJunPosZ()   { return fBTFJunPosZ; }
+  G4double GetBTFJunFFlgRIn()   { return fBTFJunFFlgRIn; }
+  G4double GetBTFJunFFlgROut()  { return fBTFJunFFlgROut; }
+  G4double GetBTFJunFFlgThick() { return fBTFJunFFlgThick; }
+  G4double GetBTFJunFFlgPosZ()  { return fBTFJunFFlgPosZ; }
+  G4double GetBTFJunBFlgRIn()   { return fBTFJunBFlgRIn; }
+  G4double GetBTFJunBFlgROut()  { return fBTFJunBFlgROut; }
+  G4double GetBTFJunBFlgThick() { return fBTFJunBFlgThick; }
+  G4double GetBTFJunBFlgPosZ()  { return fBTFJunBFlgPosZ; }
+
+  // Properties of bellow pipe between BTF junction and dipole magnet
+
+  G4double GetBellowRIn()    { return fBellowRIn; }
+  G4double GetBellowROut()   { return fBellowROut; }
+  G4double GetBellowLength() { return fBellowLength; }
+  G4double GetBellowPosZ()   { return fBellowPosZ; }
+  G4double GetBellowFFlgRIn()   { return fBellowFFlgRIn; }
+  G4double GetBellowFFlgROut()  { return fBellowFFlgROut; }
+  G4double GetBellowFFlgThick() { return fBellowFFlgThick; }
+  G4double GetBellowFFlgPosZ()  { return fBellowFFlgPosZ; }
+  G4double GetBellowBFlgRIn()   { return fBellowBFlgRIn; }
+  G4double GetBellowBFlgROut()  { return fBellowBFlgROut; }
+  G4double GetBellowBFlgThick() { return fBellowBFlgThick; }
+  G4double GetBellowBFlgPosZ()  { return fBellowBFlgPosZ; }
+
   // Properties of porthole caps
 
   G4int GetPHCapNumber() { return CHAMBERGEOMETRY_N_PORTHOLES; }
@@ -186,6 +216,39 @@ private:
   G4double fJunPosZ;
   G4double fJunFlangeR;
   G4double fJunFlangeThick;
+
+  // BTF Junction pipes
+
+  G4double fBTFJunRIn;
+  G4double fBTFJunROut;
+  G4double fBTFJunLength;
+  G4double fBTFJunPosZ;
+  // Flange towards cross
+  G4double fBTFJunFFlgRIn;
+  G4double fBTFJunFFlgROut;
+  G4double fBTFJunFFlgThick;
+  G4double fBTFJunFFlgPosZ;
+  // Flange towards bellow
+  G4double fBTFJunBFlgRIn;
+  G4double fBTFJunBFlgROut;
+  G4double fBTFJunBFlgThick;
+  G4double fBTFJunBFlgPosZ;
+
+  // Bellow pipe between junction and magnet
+  G4double fBellowRIn;
+  G4double fBellowROut;
+  G4double fBellowLength;
+  G4double fBellowPosZ;
+  // Flange towards juction
+  G4double fBellowFFlgRIn;
+  G4double fBellowFFlgROut;
+  G4double fBellowFFlgThick;
+  G4double fBellowFFlgPosZ;
+  // Flange towards magnet
+  G4double fBellowBFlgRIn;
+  G4double fBellowBFlgROut;
+  G4double fBellowBFlgThick;
+  G4double fBellowBFlgPosZ;
 
   // Porthole caps
 

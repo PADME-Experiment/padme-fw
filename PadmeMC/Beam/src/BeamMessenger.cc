@@ -31,7 +31,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
-  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 30000");
+  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 50000");
   fSetNPositronsPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableNPositronsPerBunchSpreadCmd = new G4UIcmdWithABool("/beam/n_e+_poisson_on",this);
@@ -61,41 +61,51 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetMicroBunchTimeLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetMicroBunchTimeDelayCmd = new G4UIcmdWithADoubleAndUnit("/beam/ubunch_time_delay",this);
-  fSetMicroBunchTimeDelayCmd->SetGuidance("Set time delay between and of a micro bunch and start of next micro bunch.");
+  fSetMicroBunchTimeDelayCmd->SetGuidance("Set time delay between end of a micro bunch and start of next micro bunch.");
   fSetMicroBunchTimeDelayCmd->SetParameterName("MTD",false);
   fSetMicroBunchTimeDelayCmd->SetDefaultUnit("ns");
   fSetMicroBunchTimeDelayCmd->SetRange("MTD > 0. && MTD <= 1.");
   fSetMicroBunchTimeDelayCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosXCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_x",this);
-  fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at Target entrance.");
+  fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at t=0.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXCmd->SetRange("X >= -20. && X <= 20.");
+  fSetBeamCenterPosXCmd->SetRange("X >= -5000. && X <= 5000.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);
-  fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at Target entrance.");
+  fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at t=0.");
   fSetBeamCenterPosYCmd->SetParameterName("Y",false);
   fSetBeamCenterPosYCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosYCmd->SetRange("Y >= -20. && Y <= 20.");
   fSetBeamCenterPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetBeamCenterPosZCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_z",this);
+  fSetBeamCenterPosZCmd->SetGuidance("Set center of beam Z coordinate at t=0.");
+  fSetBeamCenterPosZCmd->SetParameterName("Z",false);
+  fSetBeamCenterPosZCmd->SetDefaultUnit("mm");
+  fSetBeamCenterPosZCmd->SetRange("Z >= -10000. && Z <= 10000.");
+  fSetBeamCenterPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/position_spread_on",this);
   fEnableBeamCenterPosSpreadCmd->SetGuidance("Enable (true) or disable (false) gaussian spread of beam center X/Y coordinates.");
+  fEnableBeamCenterPosSpreadCmd->SetGuidance("N.B. X/Y coordinates are on plane perpendicular to beam direction.");
   fEnableBeamCenterPosSpreadCmd->SetParameterName("ECS",true);
   fEnableBeamCenterPosSpreadCmd->SetDefaultValue(true);
   fEnableBeamCenterPosSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_x_spread",this);
-  fSetBeamCenterPosXSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam X coordinate at Target entrance.");
+  fSetBeamCenterPosXSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam X coordinate at t=0.");
+  fSetBeamCenterPosXSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 5.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
-  fSetBeamCenterPosYSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam Y coordinate at Target entrance.");
+  fSetBeamCenterPosYSpreadCmd->SetGuidance("Set sigma of gaussian spread for center of beam Y coordinate at t=0.");
+  fSetBeamCenterPosYSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");
   fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 5.");
@@ -219,6 +229,7 @@ BeamMessenger::~BeamMessenger()
 
   delete fSetBeamCenterPosXCmd;
   delete fSetBeamCenterPosYCmd;
+  delete fSetBeamCenterPosZCmd; //M Raggi 18/03/2019
   delete fEnableBeamCenterPosSpreadCmd;
   delete fSetBeamCenterPosXSpreadCmd;
   delete fSetBeamCenterPosYSpreadCmd;
@@ -282,6 +293,10 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetBeamCenterPosYCmd )
     fBeamParameters->SetBeamCenterPosY(fSetBeamCenterPosYCmd->GetNewDoubleValue(par));
+  //M. Raggi 18/03/2019
+  else if ( cmd == fSetBeamCenterPosZCmd )
+    fBeamParameters->SetBeamCenterPosZ(fSetBeamCenterPosZCmd->GetNewDoubleValue(par));
+
 
   else if ( cmd == fEnableBeamCenterPosSpreadCmd ) {
     if (fEnableBeamCenterPosSpreadCmd->GetNewBoolValue(par)) {
@@ -342,23 +357,23 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {
-      fBeamGenerator->CalibrationRunEnable();
+      fBeamParameters->CalibrationRunEnable();
     } else {
-      fBeamGenerator->CalibrationRunDisable();
+      fBeamParameters->CalibrationRunDisable();
     }
   }
 
   else if ( cmd == fSetCalibRunEnergyCmd )
-    fBeamGenerator->SetCalibRunEnergy(fSetCalibRunEnergyCmd->GetNewDoubleValue(par));
+    fBeamParameters->SetCalibRunEnergy(fSetCalibRunEnergyCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fSetCalibRunCenterXCmd )
-    fBeamGenerator->SetCalibRunCenterX(fSetCalibRunCenterXCmd->GetNewDoubleValue(par));
+    fBeamParameters->SetCalibRunCenterX(fSetCalibRunCenterXCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fSetCalibRunCenterYCmd )
-    fBeamGenerator->SetCalibRunCenterY(fSetCalibRunCenterYCmd->GetNewDoubleValue(par));
+    fBeamParameters->SetCalibRunCenterY(fSetCalibRunCenterYCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fSetCalibRunRadiusCmd )
-    fBeamGenerator->SetCalibRunRadius(fSetCalibRunRadiusCmd->GetNewDoubleValue(par));
+    fBeamParameters->SetCalibRunRadius(fSetCalibRunRadiusCmd->GetNewDoubleValue(par));
 
 }
 
@@ -390,6 +405,9 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetBeamCenterPosYCmd )
     cv = fSetBeamCenterPosYCmd->ConvertToString(fBeamParameters->GetBeamCenterPosY(),"mm");
+  // M. Raggi
+  else if ( cmd == fSetBeamCenterPosZCmd )
+    cv = fSetBeamCenterPosZCmd->ConvertToString(fBeamParameters->GetBeamCenterPosZ(),"mm");
 
   else if ( cmd == fEnableBeamCenterPosSpreadCmd )
     cv = fEnableBeamCenterPosSpreadCmd->ConvertToString(fBeamParameters->BeamCenterPosApplySpread());
@@ -434,19 +452,19 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
     cv = fBeamParameters->GetThreePhotonDecaysFilename();
 
   else if ( cmd == fEnableCalibRunCmd )
-    cv = fEnableCalibRunCmd->ConvertToString(fBeamGenerator->CalibrationRun());
+    cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
 
   else if ( cmd == fSetCalibRunEnergyCmd )
-    cv = fSetCalibRunEnergyCmd->ConvertToString(fBeamGenerator->GetCalibRunEnergy());
+    cv = fSetCalibRunEnergyCmd->ConvertToString(fBeamParameters->GetCalibRunEnergy());
 
   else if ( cmd == fSetCalibRunCenterXCmd )
-    cv = fSetCalibRunCenterXCmd->ConvertToString(fBeamGenerator->GetCalibRunCenterX());
+    cv = fSetCalibRunCenterXCmd->ConvertToString(fBeamParameters->GetCalibRunCenterX());
 
   else if ( cmd == fSetCalibRunCenterYCmd )
-    cv = fSetCalibRunCenterYCmd->ConvertToString(fBeamGenerator->GetCalibRunCenterY());
+    cv = fSetCalibRunCenterYCmd->ConvertToString(fBeamParameters->GetCalibRunCenterY());
 
   else if ( cmd == fSetCalibRunRadiusCmd )
-    cv = fSetCalibRunRadiusCmd->ConvertToString(fBeamGenerator->GetCalibRunRadius());
+    cv = fSetCalibRunRadiusCmd->ConvertToString(fBeamParameters->GetCalibRunRadius());
 
   return cv;
 

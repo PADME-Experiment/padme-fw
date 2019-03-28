@@ -51,6 +51,7 @@ private:
 
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosXCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosZCmd; // M. Raggi 15/03/2019
   G4UIcmdWithABool* fEnableBeamCenterPosSpreadCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosXSpreadCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosYSpreadCmd;

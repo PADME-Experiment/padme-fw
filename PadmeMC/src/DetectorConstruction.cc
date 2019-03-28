@@ -18,6 +18,7 @@
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
+#include "BeamLineStructure.hh" //M. Raggi 07/03/2019
 #include "HallStructure.hh"
 
 #include "TargetGeometry.hh"
@@ -31,6 +32,7 @@
 
 #include "MagnetGeometry.hh"
 #include "ChamberGeometry.hh"
+#include "BeamLineGeometry.hh" //M. Raggi 07/03/2019
 #include "HallGeometry.hh"
 
 #include "G4Material.hh"
@@ -75,19 +77,20 @@ DetectorConstruction::DetectorConstruction()
 
   fDetectorMessenger = new DetectorMessenger(this);
 
-  fECalDetector     = new ECalDetector(0);
-  fTargetDetector   = new TargetDetector(0);
-  fSACDetector      = new SACDetector(0);
-  fLAVDetector      = new LAVDetector(0);
-  fPVetoDetector    = new PVetoDetector(0);
-  fEVetoDetector    = new EVetoDetector(0);
-  fHEPVetoDetector  = new HEPVetoDetector(0);
-  fTDumpDetector    = new TDumpDetector(0);
-  fTPixDetector     = new TPixDetector(0);
-  fTungstenDetector = new TungstenDetector(0); 
-  fMagnetStructure  = new MagnetStructure(0);
-  fChamberStructure = new ChamberStructure(0);
-  fHallStructure    = new HallStructure(0);
+  fECalDetector      = new ECalDetector(0);
+  fTargetDetector    = new TargetDetector(0);
+  fSACDetector       = new SACDetector(0);
+  fLAVDetector       = new LAVDetector(0);
+  fPVetoDetector     = new PVetoDetector(0);
+  fEVetoDetector     = new EVetoDetector(0);
+  fHEPVetoDetector   = new HEPVetoDetector(0);
+  fTDumpDetector     = new TDumpDetector(0);
+  fTPixDetector      = new TPixDetector(0);
+  fTungstenDetector  = new TungstenDetector(0); 
+  fMagnetStructure   = new MagnetStructure(0);
+  fChamberStructure  = new ChamberStructure(0);
+  fBeamLineStructure = new BeamLineStructure(0); //M. Raggi 07/03/2019
+  fHallStructure     = new HallStructure(0);
 
   fMagneticFieldManager = new MagneticFieldSetup();
 
@@ -109,7 +112,9 @@ DetectorConstruction::DetectorConstruction()
   fMagneticVolumeIsVisible = 0;
 
   fEnableChamber = 1;
+  fEnableBeamLine = 1;  //M. Raggi 07/03/2019
   fChamberIsVisible = 1;
+  fBeamLineIsVisible = 1; //M. Raggi 07/03/2019
 
   fWorldIsFilledWithAir = 0;
 
@@ -138,6 +143,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fTungstenDetector;
   delete fMagnetStructure;
   delete fChamberStructure;
+  delete fBeamLineStructure;    //M. Raggi 07/03/2019
   delete fHallStructure;
   delete fMagneticFieldManager;
 
@@ -201,6 +207,20 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
 
   }
+
+  // Beam Line structure M. Raggi 07/03/2019
+  if (fEnableBeamLine) {
+    fBeamLineStructure->EnableBeamLine();
+  } else {
+    fBeamLineStructure->DisableBeamLine();
+  }
+  if (fBeamLineIsVisible) {
+    fBeamLineStructure->SetBeamLineVisible();
+  } else {
+    fBeamLineStructure->SetBeamLineInvisible();
+  }
+  fBeamLineStructure->SetMotherVolume(logicWorld);
+  fBeamLineStructure->CreateGeometry();
 
   // Vacuum chamber structure
   if (fEnableChamber) {
@@ -413,6 +433,7 @@ void DetectorConstruction::DefineMaterials()
 
   // Define materials already in the NIST database
   man->FindOrBuildMaterial("G4_C");                       // Carbon (Chamber)
+  man->FindOrBuildMaterial("G4_Be");                      // Beam Line (Window) M. Raggi
   man->FindOrBuildMaterial("G4_W");                       // Tungsten (Chamber)
   man->FindOrBuildMaterial("G4_Al");                      // Aluminum (Chamber, Veto)
   man->FindOrBuildMaterial("G4_Fe");                      // Iron (Magnet)
@@ -659,7 +680,7 @@ G4double DetectorConstruction::GetTargetFrontFaceZ()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();
 
-  // Target is disabled (?): return a position 53cm before the front face of the magnet yoke
+  // Target is disabled: return a position 53cm before the front face of the magnet yoke
   return -103.*cm;
 }
 
@@ -667,7 +688,7 @@ G4double DetectorConstruction::GetTargetThickness()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetThickness();
 
-  // Target is disabled (?): return 100um
+  // Target is disabled: return 100um
   return 0.1*mm;
 }
 
@@ -706,18 +727,20 @@ void DetectorConstruction::DisableSubDetector(G4String det)
 void DetectorConstruction::EnableStructure(G4String str)
 {
   printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall    = 1; }
-  else if (str=="Chamber") { fEnableChamber = 1; }
-  else if (str=="Magnet")  { fEnableMagnet  = 1; }
+  if      (str=="Wall")     { fEnableWall    = 1; }
+  else if (str=="Chamber")  { fEnableChamber = 1; }
+  else if (str=="BemaLine") { fEnableBeamLine = 1; } 
+  else if (str=="Magnet")   { fEnableMagnet  = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
   printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall    = 0; }
-  else if (str=="Chamber") { fEnableChamber = 0; }
-  else if (str=="Magnet")  { fEnableMagnet  = 0; }
+  if      (str=="Wall")     { fEnableWall    = 0; }
+  else if (str=="Chamber")  { fEnableChamber = 0; }
+  else if (str=="BeamLine") { fEnableBeamLine = 0; }
+  else if (str=="Magnet")   { fEnableMagnet  = 0; }
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
@@ -756,11 +779,23 @@ void DetectorConstruction::ChamberIsVisible()
   printf("Vacuum chamber is visible\n");
   fChamberIsVisible = 1;
 }
+//M. Raggi 07/03/2019
+void DetectorConstruction::BeamLineIsVisible()
+{
+  printf("BeamLine is visible\n");
+  fBeamLineIsVisible = 1;
+}
 
 void DetectorConstruction::ChamberIsInvisible()
 {
   printf("Vacuum chamber is invisible\n");
   fChamberIsVisible = 0;
+}
+
+void DetectorConstruction::BeamLineIsInvisible()
+{
+  printf("Beam Line is invisible\n");
+  fBeamLineIsVisible = 0;
 }
 
 void DetectorConstruction::WorldIsAir()

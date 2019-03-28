@@ -30,16 +30,16 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
   fEvent = 0;
 
   // Initialize calibration run to some sensible values
-  fCalibrationRun  = false;
-  fCalibRunEnergy  = 50.*MeV;
-  fCalibRunCenterX = 14.*cm;
-  fCalibRunCenterY = 14.*cm;
-  fCalibRunRadius  =  1.*cm;
+  //fCalibrationRun  = false;
+  //fCalibRunEnergy  = 50.*MeV;
+  //fCalibRunCenterX = 14.*cm;
+  //fCalibRunCenterY = 14.*cm;
+  //fCalibRunRadius  =  1.*cm;
 
   // Default Z position of beam is 1 um before the target.
-  // Will be possible to change it with /beam/position_z datacard
+  // Can be changed with /beam/position_z datacard
   BeamParameters* bpar = BeamParameters::GetInstance();
-  bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
+  bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
@@ -66,9 +66,10 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   if(nev%10000 == 0) std::cout << "Generating event number " << nev << std::endl;
 
   // Special calibration run
-  if ( fCalibrationRun ) {
+  if ( bpar->CalibrationRun() ) {
     // Origin of calibration beam is on back face of Target
-    bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+    //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+    bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     GenerateCalibrationGamma();
     return;
   }
@@ -175,7 +176,8 @@ void BeamGenerator::GeneratePrimaryPositron()
   //  G4cout << "BeamGenerator - Positron momentum " << fPositron.P << G4endl;
 
   // Define position and direction for center of beam
-  G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamOriginPosZ());
+  //G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamOriginPosZ());
+  G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamCenterPosZ());
   G4ThreeVector beam_dir = bpar->GetBeamDirection();
   beam_dir = beam_dir.unit();
 
@@ -510,18 +512,17 @@ void BeamGenerator::GenerateCalibrationGamma()
   G4double vT = 0.*ns;
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
-  //G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
-  G4double vZ = bpar->GetBeamOriginPosZ();
+  G4double vZ = bpar->GetBeamCenterPosZ();
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(vX,vY,vZ),vT);
   //  printf("BeamGenerator::GenerateCalibrationGamma - Vertex at %f %f %f t=%f\n",vX,vY,vZ,vT);
 
   // Choose a point within circle on the surface of ECal
-  G4double pX = fCalibRunCenterX;
-  G4double pY = fCalibRunCenterY;
+  G4double pX = bpar->GetCalibRunCenterX();
+  G4double pY = bpar->GetCalibRunCenterY();
   G4double pZ = fDetector->GetECalFrontFaceZ();
-  if (fCalibRunRadius != 0.) {
+  if (bpar->GetCalibRunRadius() != 0.) {
     // Flat distribution over circle
-    G4double rd = fCalibRunRadius*sqrt(G4UniformRand());
+    G4double rd = bpar->GetCalibRunRadius()*sqrt(G4UniformRand());
     G4double th = 2.*pi*G4UniformRand();
     pX += rd*cos(th);
     pY += rd*sin(th);
@@ -533,8 +534,11 @@ void BeamGenerator::GenerateCalibrationGamma()
   //  printf("BeamGenerator::GenerateCalibrationGamma - Vector %f %f %f\n",vp.x(),vp.y(),vp.z());
 
   // Create gamma pointing from vertex to generated point
-  G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),fCalibRunEnergy*vp.x(),fCalibRunEnergy*vp.y(),fCalibRunEnergy*vp.z(),fCalibRunEnergy);
-  vtx->SetPrimary(gamma);
+  // Will be improved to use different particles (e.g. e+)
+  G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle("gamma");
+  G4double part_E = bpar->GetCalibRunEnergy();
+  G4PrimaryParticle* particle = new G4PrimaryParticle(part,part_E*vp.x(),part_E*vp.y(),part_E*vp.z(),part_E);
+  vtx->SetPrimary(particle);
 
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);

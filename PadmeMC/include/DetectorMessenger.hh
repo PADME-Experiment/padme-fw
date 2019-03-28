@@ -44,6 +44,9 @@ private:
   G4UIcmdWithoutParameter* fChamberVisibleCmd;
   G4UIcmdWithoutParameter* fChamberInvisibleCmd;
 
+  G4UIcmdWithoutParameter* fBeamLineVisibleCmd;     //M. Raggi 07/03/2019
+  G4UIcmdWithoutParameter* fBeamLineInvisibleCmd;   //M. Raggi 07/03/2019
+
   G4UIcmdWithADoubleAndUnit* fSetMagFieldValueCmd;
 
   G4UIcmdWithoutParameter* fWorldIsAirCmd;

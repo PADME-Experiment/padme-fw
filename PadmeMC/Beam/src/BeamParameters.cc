@@ -18,29 +18,27 @@ BeamParameters* BeamParameters::GetInstance()
 BeamParameters::BeamParameters()
 {
 
-  // Default is a single 550MeV positron starting at (0,0) and directed along Z
-  // No energy, time, position, or angle spreads are applied
-  // No Uboson or ThreePhoton decays are inserted
-
   // Average number of positrons in each bunch
-  fNPositronsPerBunch = 5000;
-  fNPositronsPerBunchApplySpread = false;
+  fNPositronsPerBunch = 25000;
+  fNPositronsPerBunchApplySpread = true;
 
   // Bunch time structure
   fBeamApplyBunchStructure = true;
-  fBunchTimeLength = 40.*ns;
+  fBunchTimeLength = 250.*ns;
   fMicroBunchTimeLength = 0.150*ns;
   fMicroBunchTimeDelay = 0.350*ns;
 
-  // Position and spread of beam at Target front face
+  // Position and spread of beam at Target front face (use default Target position: can be changed)
   fBeamCenterPosX = 0.*cm;
   fBeamCenterPosY = 0.*cm;
+  fBeamCenterPosZ = -103.*cm;
+
   fBeamCenterPosApplySpread = true;
   fBeamCenterPosXSpread = 1.*mm;
   fBeamCenterPosYSpread = 1.*mm;
 
   // Beam momentum
-  fBeamMomentum = 550.*MeV;
+  fBeamMomentum = 545.*MeV;
   fBeamMomentumApplySpread = true;
   fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
 
@@ -60,8 +58,12 @@ BeamParameters::BeamParameters()
   fNThreePhotonDecaysPerBunch = 0;
   fThreePhotonDecaysFilename = "ThreePhotonDecays.list";
 
-  // Generic beam position at t=0. Will be modified according to detector geometry
-  fBeamOriginPosZ = -100.*cm;
+  // Initialize calibration run to some sensible values
+  fCalibrationRun  = false;
+  fCalibRunEnergy  = 50.*MeV;
+  fCalibRunCenterX = 14.*cm;
+  fCalibRunCenterY = 14.*cm;
+  fCalibRunRadius  =  1.*cm;
 
 }
 

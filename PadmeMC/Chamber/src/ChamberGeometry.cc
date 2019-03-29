@@ -76,6 +76,40 @@ ChamberGeometry::ChamberGeometry()
   fJunFlangeR = 76.*mm;
   fJunFlangeThick = 20.*mm;
 
+  // Properties of junction pipe between cross and BTF pipes
+
+  fBTFJunRIn = 31.5*mm;
+  fBTFJunROut = 35.*mm;
+  fBTFJunLength = 95.*mm;
+  fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
+  // Flange towards cross
+  fBTFJunFFlgRIn = fBTFJunROut;
+  fBTFJunFFlgROut = fJunFlangeR;
+  fBTFJunFFlgThick = fJunFlangeThick;
+  fBTFJunFFlgPosZ = fBTFJunPosZ+0.5*fBTFJunLength-0.5*fBTFJunFFlgThick;
+  // Flange towards bellow
+  fBTFJunBFlgRIn = fBTFJunROut;
+  fBTFJunBFlgROut = 56.75*mm;
+  fBTFJunBFlgThick = 17.5*mm;
+  fBTFJunBFlgPosZ = fBTFJunPosZ-0.5*fBTFJunLength+0.5*fBTFJunBFlgThick;
+
+  // Properties of bellow-replacement pipe between BTF junction and dipole magnet
+
+  fBellowRIn = 31.5*mm;
+  fBellowROut = 35.*mm;
+  fBellowLength = 184.*mm;
+  fBellowPosZ = fBTFJunPosZ-0.5*fBTFJunLength-0.5*fBellowLength;
+  // Flange towards cross
+  fBellowFFlgRIn = fBellowROut;
+  fBellowFFlgROut = fBTFJunBFlgROut;
+  fBellowFFlgThick = fBTFJunBFlgThick;
+  fBellowFFlgPosZ = fBellowPosZ+0.5*fBellowLength-0.5*fBellowFFlgThick;
+  // Flange towards dipole magnet
+  fBellowBFlgRIn = fBellowROut;
+  fBellowBFlgROut = fBellowFFlgROut;
+  fBellowBFlgThick = fBellowFFlgThick;
+  fBellowBFlgPosZ = fBellowPosZ-0.5*fBellowLength+0.5*fBellowBFlgThick;
+
   // Properties of porthole caps
 
   fPHCapRadius[0] = 112.5*mm;

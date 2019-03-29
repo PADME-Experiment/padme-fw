@@ -4,7 +4,7 @@
 #
 /control/verbose 1
 /run/verbose 1
-/tracking/verbose 1
+/tracking/verbose 0
 
 # RootIO settings
 
@@ -20,7 +20,7 @@
 
 # Disable/enable saving to Fast analysis Tree U102
 # uses conditions on ECal Energy, SAC energy, Hit in the Veto
-#/analysis/SaveEcal  false 
+#/analysis/SaveEcal  false
 #/analysis/SaveSAC   false
 #/analysis/SaveVeto  false
 
@@ -77,10 +77,17 @@
 
 #/Detector/EnableMagneticField
 #/Detector/DisableMagneticField
-#/Detector/SetMagneticFieldValue 0.55 tesla
+#/Detector/SetMagneticFieldValue 0.4542 tesla
 
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
+
+# Beam line settings
+#/Detector/SetBeamLineInvisible
+#/Detector/EnableStructure BeamLine
+#/Detector/DisableStructure BeamLine
+#/Detector/BeamLine/Be_window false
+#/Detector/BeamLine/DHST002_FieldY -1.029 tesla
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
@@ -88,7 +95,7 @@
 #/Detector/Magnet/SetMagnetVisible
 #/Detector/Magnet/SetMagnetInvisible
 
-#/Detector/Target/FrontFaceZ -700. mm
+#/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
 #/Detector/Target/EnableFastDigitization
@@ -101,92 +108,81 @@
 #/Detector/ECal/CrystalMapId 0
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
-#/Detector/ECal/CrystalGap 0.1
-#/Detector/ECal/CrystalCoating 0.1
+#/Detector/ECal/CrystalGap 0.12
+#/Detector/ECal/CrystalCoating 0.115
 #/Detector/ECal/TedlarThickness 0.05
-#/Detector/ECal/FrontFaceZ 230.
+#/Detector/ECal/FrontFaceZ 244.
 #/Detector/ECal/EnablePanel true
-#/Detector/ECal/PanelThickness 0.5
+#/Detector/ECal/PanelThickness 1.5
 #/Detector/ECal/PanelGap 0.1
 
-#/Detector/SAC/NRows 7
-#/Detector/SAC/NCols 7
-#/Detector/SAC/CrystalSize 2. cm
-#/Detector/SAC/CrystalLength 20. cm
+#/Detector/SAC/NRows 5
+#/Detector/SAC/NCols 5
+#/Detector/SAC/CrystalSize 3. cm
+#/Detector/SAC/CrystalLength 14. cm
 #/Detector/SAC/CrystalGap 50. um
 #/Detector/SAC/CrystalCoating 100. um
 #/Detector/SAC/FrontFaceZ 300. cm
 
-#/Detector/LAV/InnerRadius 4.
-#/Detector/LAV/OuterRadius 10.
+#/Detector/LAV/InnerRadius 5.1
+#/Detector/LAV/OuterRadius 12.
 #/Detector/LAV/ZLength 20.
-#/Detector/LAV/FrontFaceZ -75.
+#/Detector/LAV/FrontFaceZ -60.
 
-#/Detector/PVeto/FrontFaceZ -50.
-#/Detector/PVeto/InnerFaceX -20.
-#/Detector/PVeto/NFingers 96
+#/Detector/PVeto/FrontFaceZ -47.255
+#/Detector/PVeto/InnerFaceX 17.75
+#/Detector/PVeto/NFingers 90
 #/Detector/PVeto/FingerSize 1.
-#/Detector/PVeto/FingerLength 16.
+#/Detector/PVeto/FingerLength 17.8
 
-#/Detector/EVeto/FrontFaceZ -50.
-#/Detector/EVeto/InnerFaceX  20.
+#/Detector/EVeto/FrontFaceZ -47.255
+#/Detector/EVeto/InnerFaceX  -17.75
 #/Detector/EVeto/NFingers 96
 #/Detector/EVeto/FingerSize 1.
-#/Detector/EVeto/FingerLength 16.
+#/Detector/EVeto/FingerLength 17.8
 
-#/Detector/HEPVeto/NFingers 32
+#/Detector/HEPVeto/NFingers 16
 #/Detector/HEPVeto/FingerStep 1.1 cm
 #/Detector/HEPVeto/FingerSize 1. cm
-#/Detector/HEPVeto/FingerLength 20. cm
-#/Detector/HEPVeto/DistanceToCorner 43. cm
+#/Detector/HEPVeto/FingerLength 17.8 cm
+#/Detector/HEPVeto/DistanceToCorner 40. cm
 
 #/Detector/TPix/NColumns 6
-#/Detector/TPix/DistanceToCorner 35.8 cm
+#/Detector/TPix/DistanceToCorner 29.73 cm
 
 #/Detector/TDump/TargetRadius 3.5
 #/Detector/TDump/TargetLength 6.0
 #/Detector/TDump/TargetFrontFaceZ 10.
 #/Detector/TDump/FrontFaceZ -180.
 
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/momentum 280. MeV
-#/beam/bunch_structure_on false
-#/beam/position_spread_on false
-#/beam/momentum_spread_on false
-#/beam/emittance_on false
-### Test for target energy loss
-#/Detector/DisableSubDetector Target
-### Test for high energy/high field setup
-#/Detector/Magnet/MagneticFieldConstantValue -0.8
-
 # Beam setup
 
-# Example for single three photon events
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/n_3g_per_bunch 1
-#/beam/3g_file events_ee-3g-550MeV-1M.txt
-
 # Primary positrons setup
-#/beam/n_e+_per_bunch 5000
-#/beam/n_e+_poisson_on false
+#/beam/n_e+_per_bunch 25000
+#/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true
-#/beam/bunch_time_length 40. ns
-#/beam/ubunch_time_length 150 ps
-#/beam/ubunch_time_delay 350 ps
+#/beam/bunch_time_length 250. ns
+#/beam/ubunch_time_length 150. ps
+#/beam/ubunch_time_delay 350. ps
 #/beam/position_x 0. cm
 #/beam/position_y 0. cm
+#/beam/position_z -103. cm
 #/beam/position_spread_on true
 #/beam/position_x_spread 1. mm
 #/beam/position_y_spread 1. mm
 #/beam/momentum 550. MeV
 #/beam/momentum_spread_on true
-#/beam/momentum_spread 55. MeV
+#/beam/momentum_spread 5.5 MeV
 #/beam/direction 0. 0. 1.
 #/beam/emittance_on true
-#/beam/emittance_x 0.001
-#/beam/emittance_y 0.001
+#/beam/emittance_x 1. mrad
+#/beam/emittance_y 1. mrad
+
+# Beam Line studies: position beam at Be window
+#/beam/position_x 2232.46 mm
+#/beam/position_y 0. cm
+#/beam/position_z -4682.13 mm
+#/beam/direction -1. 0. 1.
 
 # Uboson generator
 #/beam/n_e+_per_bunch 1
@@ -194,9 +190,11 @@
 #/beam/n_uboson_per_bunch 1
 #/beam/uboson_mass 22. MeV
 
-# Three photons events read from file
-#/beam/n_3g_per_bunch 0
-#/beam/3g_file ThreeGamma_550MeV.txt
+# Example for single three photon events
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_3g_per_bunch 1
+#/beam/3g_file events_ee-3g-550MeV-1M.txt
 
 # Calibration run setup: single photon pointing to ECal front face
 #/beam/calibration false
@@ -208,7 +206,6 @@
 # Create detectors and initialize run
 /run/initialize
 
-#
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
 
@@ -235,7 +232,7 @@
 
 #/vis/viewer/set/viewpointVector 0. 10. 0.
 
-# Choos viewpoint
+# Choose viewpoint
 # Side view
 #/vis/viewer/set/viewpointThetaPhi -90. 0. deg
 # Top view

@@ -654,11 +654,12 @@ void DetectorConstruction::DefineMaterials()
   */
 
   //Print all the materials defined.
+  /*
   G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
   G4cout << *(G4Element::GetElementTable()) << G4endl;
   G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
-  
+  */
 }
 
 void DetectorConstruction::SetTargetMaterial(G4String materialName)

@@ -198,8 +198,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     part_pos = beam_pos;
   }
   fPositron.pos = part_pos;
-  //G4cout << "BeamGenerator - Beam postion " << beam_pos
-  //	 << " Positron position " << fPositron.pos << G4endl;
+  //G4cout << "BeamGenerator - Beam postion " << beam_pos << " Positron position " << fPositron.pos << G4endl;
   
   // Add emittance around direction of beam axis
   G4ThreeVector part_dir;

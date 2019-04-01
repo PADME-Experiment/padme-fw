@@ -86,8 +86,8 @@
 #/Detector/SetBeamLineInvisible
 #/Detector/EnableStructure BeamLine
 #/Detector/DisableStructure BeamLine
-#/Detector/BeamLine/Be_window false
-#/Detector/BeamLine/DHST002_FieldY -1.029 tesla
+#/Detector/BeamLine/Be_window true
+#/Detector/BeamLine/DHST002_FieldY -1.055 tesla
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
@@ -179,9 +179,9 @@
 #/beam/emittance_y 1. mrad
 
 # Beam Line studies: position beam at Be window
-#/beam/position_x 2232.46 mm
+#/beam/position_x 2249.80 mm
 #/beam/position_y 0. cm
-#/beam/position_z -4682.13 mm
+#/beam/position_z -4681.74 mm
 #/beam/direction -1. 0. 1.
 
 # Uboson generator

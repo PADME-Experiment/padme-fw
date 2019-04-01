@@ -150,7 +150,7 @@ void BeamLineStructure::CreateBeThinWindow()
   // place the BE window 
   if (geo->BeWindowIsEnabled()) {
     printf("Berillium Window positioned at X = %.2f mm Z = %.2f mm\n",BeWPosX/mm,BeWPosZ/mm);
-    new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
+   new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
   }
 
 }

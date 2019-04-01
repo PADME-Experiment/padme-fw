@@ -39,7 +39,6 @@ private:
 
   void CreateBeThinWindow();
   void CreateMagnetPipe();
-  void CreateJunctionRegion();
   void CreateDHSTB002Magnet();
 
   G4LogicalVolume* fMotherVolume;
@@ -47,9 +46,6 @@ private:
 
   G4int fBeamLineExists;
   G4int fBeamLineIsVisible;
-
-  G4double UpStreamFlangePosX;
-  G4double UpStreamFlangePosZ;
 
   BeamLineMessenger* fBeamLineMessenger;
 

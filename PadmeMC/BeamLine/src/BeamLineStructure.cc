@@ -68,19 +68,19 @@ void BeamLineStructure::CreateGeometry()
     
     // Create the thin window membrane in front of ECal with its flange
     CreateBeThinWindow();
-        
-    // Create region in between DHSTB002 and PADME target cross
-    CreateJunctionRegion(); 
-  }
-}
 
+  }
+
+}
 
 void BeamLineStructure::CreateBeThinWindow()
 {
+
   ///////////////////////////////////////////////////////
   // Thin Be 250um window mounted before DHSTB002
   // and pipes in the upstream region
   ///////////////////////////////////////////////////////
+
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
@@ -89,299 +89,311 @@ void BeamLineStructure::CreateBeThinWindow()
   G4VisAttributes BeVisAttr = G4VisAttributes(G4Colour::Blue());
   if ( ! fBeamLineIsVisible ) BeVisAttr = G4VisAttributes::Invisible;
 
-  // Get properties of thin window
-  G4double BeWThick = geo->GetBeWThick() ; //Thickness of window
-  G4double BeWDiam  = geo->GetBeWDiameter() ; //Thickness of window
+  // Get position of entrance point to the magnet pipe section
+  G4double mpEntPosX = geo->GetMagPipeEnterPosX();
+  G4double mpEntPosY = geo->GetMagPipeEnterPosY();
+  G4double mpEntPosZ = geo->GetMagPipeEnterPosZ();
 
-  // Create flange around thin window
-  //  G4double FlThick    = geo->GetBeFlThick();
-  G4double FlThick    = 36*mm;
-  G4double FlDiameter = geo->GetBeFlDiameter();
-  G4RotationMatrix* rotBe= new G4RotationMatrix;
+  // Get rotation angle at magnet entrance
+  G4double magAngle = geo->GetDHSTB002AngularSpan();
 
-  G4double DN60junRIn  =  53*mm;    // From Drawings
-  G4double DN60junROut =  60*mm;    // From Drawings
+  // Create junction pipe between magnet pipe and Be flange
+  G4double beJunLen = geo->GetBeJunctionLength();
+  G4double beJunRIn = geo->GetBeJunctionRIn();
+  G4double beJunROut = geo->GetBeJunctionROut();
+  G4double beJunFlgFntR = geo->GetBeJunctionFlangeFrontRadius();
+  G4double beJunFlgFntT = geo->GetBeJunctionFlangeFrontThick();
+  G4double beJunFlgBckR = geo->GetBeJunctionFlangeBackRadius();
+  G4double beJunFlgBckT = geo->GetBeJunctionFlangeBackThick();
 
-  G4double UpDN60junLen  = 254*mm;    // From Drawings next to the Be Window
-  G4double DwDN60junLen  = 288*mm;    // From Drawings next to the magnet
+  // Create solid pipe
+  G4Tubs* solidBeJunFull1 = new G4Tubs("solidBeJunFull1",0.,beJunROut,0.5*beJunLen,0.*deg,360.*deg);
 
-  G4double junRIn  = 42*mm;    //Diameter  From Drawings
-  G4double junROut = 48*mm;    //Diameter  From Drawings
-  G4double junLen  = 1664*mm;  //From Drawings
+  // Add flange on front (upstream) side
+  G4Tubs* solidBeJunFlgFnt = new G4Tubs("solidBeJunFlgFnt",0.,beJunFlgFntR,0.5*beJunFlgFntT,0.*deg,360.*deg);
+  G4UnionSolid* solidBeJunFull2 = new G4UnionSolid("solidBeJunFull2",solidBeJunFull1,solidBeJunFlgFnt,0,G4ThreeVector(0.,0.,-0.5*beJunLen+0.5*beJunFlgFntT));
 
-  G4double junDwDN60PosX = UpStreamFlangePosX + DwDN60junLen/2*cos(45*deg)+0.5*FlThick*cos(45*deg);
-  G4double junDwDN60PosZ = UpStreamFlangePosZ-DwDN60junLen/2*sin(45*deg)-0.5*FlThick*sin(45*deg);
+  // Add flange on back (downstream) side
+  G4Tubs* solidBeJunFlgBck = new G4Tubs("solidBeJunFlgBck",0.,beJunFlgBckR,0.5*beJunFlgBckT,0.*deg,360.*deg);
+  G4UnionSolid* solidBeJunFull = new G4UnionSolid("solidBeJunFull",solidBeJunFull2,solidBeJunFlgBck,0,G4ThreeVector(0.,0.,0.5*beJunLen-0.5*beJunFlgBckT));
 
-  G4Tubs* solidDwDN60Jun = new G4Tubs("DwDN60JunPipe",DN60junRIn*0.5,DN60junROut*0.5,DwDN60junLen*0.5,0.*deg,360.*deg);
-  G4LogicalVolume* logicalDwDN60Jun = new G4LogicalVolume(solidDwDN60Jun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunPipe",0,0,0);
-  logicalDwDN60Jun->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotBe,G4ThreeVector(junDwDN60PosX,0.,junDwDN60PosZ),logicalDwDN60Jun,"DwDN60JunctionPipe",fMotherVolume,false,0,true);
-  
-  G4double junPosX =  UpStreamFlangePosX +DwDN60junLen*cos(45*deg)+junLen/2*cos(45*deg)+0.5*FlThick*cos(45*deg);
-  G4double junPosZ =  UpStreamFlangePosZ-DwDN60junLen*sin(45*deg)-junLen/2*sin(45*deg)-0.5*FlThick*sin(45*deg);
-  
-  G4Tubs* solidJun = new G4Tubs("JunPipe",junRIn*0.5,junROut*0.5,junLen*0.5,0.*deg,360.*deg);
-  G4LogicalVolume* logicalJun = new G4LogicalVolume(solidJun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunPipe",0,0,0);
-  logicalJun->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotBe,G4ThreeVector(junPosX,0.,junPosZ),logicalJun,"JunctionPipe",fMotherVolume,false,0,true);
+  // Carve hole inside junction (add usual small tolerance)
+  G4Tubs* solidBeJunHole = new G4Tubs("solidBeJunHole",0.,beJunRIn,0.5*beJunLen+10.*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidBeJunction = new G4SubtractionSolid("solidBeJunction",solidBeJunFull,solidBeJunHole,0,G4ThreeVector(0.,0.,0.));
 
-  G4double junUpDN60PosX =  UpStreamFlangePosX + UpDN60junLen*cos(45*deg)/2 + junLen*cos(45*deg) + DwDN60junLen*cos(45*deg)+0.5*FlThick*cos(45*deg);
-  G4double junUpDN60PosZ =  UpStreamFlangePosZ - UpDN60junLen*sin(45*deg)/2 - junLen*sin(45*deg) - DwDN60junLen*sin(45*deg)-0.5*FlThick*sin(45*deg);
+  // Create junction logical volume
+  G4LogicalVolume* logicalBeJunction = new G4LogicalVolume(solidBeJunction,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeJunction",0,0,0);
+  logicalBeJunction->SetVisAttributes(steelVisAttr);
 
-  G4Tubs* solidUpDN60Jun = new G4Tubs("UpDN60JunPipe",DN60junRIn*0.5,DN60junROut*0.5,0.5*UpDN60junLen,0.*deg,360.*deg);
-  G4LogicalVolume* logicalUpDN60Jun = new G4LogicalVolume(solidUpDN60Jun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"UpDN60JunPipe",0,0,0);
-  logicalJun->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotBe,G4ThreeVector(junUpDN60PosX,0.,junUpDN60PosZ),logicalUpDN60Jun,"UpDN60JunctionPipe",fMotherVolume,false,0,true);
+  // Position junction close to the magnet entrance
+  G4double beJunMgPosX = mpEntPosX+0.5*beJunLen*sin(magAngle);
+  G4double beJunMgPosY = mpEntPosY;
+  G4double beJunMgPosZ = mpEntPosZ-0.5*beJunLen*cos(magAngle);
+  G4ThreeVector beJunMgPos = G4ThreeVector(beJunMgPosX,beJunMgPosY,beJunMgPosZ);
+  G4RotationMatrix* beJunMgRot = new G4RotationMatrix;
+  beJunMgRot->rotateY(magAngle);
+  new G4PVPlacement(beJunMgRot,beJunMgPos,logicalBeJunction,"BeamLineMagnetJunction",fMotherVolume,false,0,true);
 
-  // Create Be window around thin window
-  G4Tubs* solidBeWindow = new G4Tubs("BeWind",0.,BeWDiam*0.5,BeWThick*0.5,0.*deg,360.*deg);
-  G4LogicalVolume* logicalBeWindow = new G4LogicalVolume(solidBeWindow,G4Material::GetMaterial("G4_Be"), "logicalBeWindow",0,0,0);
-  logicalBeWindow->SetVisAttributes(BeVisAttr);
+  // Create long pipe between magnet pipe and Be flange
+  G4double bePipeLen = geo->GetBePipeLength();
+  G4double bePipeRIn = geo->GetBePipeRIn();
+  G4double bePipeROut = geo->GetBePipeROut();
+  G4double bePipeFlgFntR = geo->GetBePipeFlangeFrontRadius();
+  G4double bePipeFlgFntT = geo->GetBePipeFlangeFrontThick();
+  G4double bePipeFlgBckR = geo->GetBePipeFlangeBackRadius();
+  G4double bePipeFlgBckT = geo->GetBePipeFlangeBackThick();
 
-  double BeWPosX=junUpDN60PosX+UpDN60junLen*cos(45*deg)/2+FlThick*cos(45*deg)/2-5.*mm;
-  double BeWPosZ=junUpDN60PosZ-UpDN60junLen*sin(45*deg)/2-FlThick*sin(45*deg)/2+5.*mm;
-  
-  G4Tubs* solidBeFlange = new G4Tubs("solidBeFlange",BeWDiam*0.5,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
-  G4LogicalVolume* logicalBeFlange = new G4LogicalVolume(solidBeFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeFlange",0,0,0);
-  logicalBeFlange->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeFlange,"BeamLineBeFlange",fMotherVolume,false,0,true);
-  rotBe->rotateY(45.*deg);
+  // Create solid pipe
+  G4Tubs* solidBePipeFull1 = new G4Tubs("solidBePipeFull1",0.,bePipeROut,0.5*bePipeLen,0.*deg,360.*deg);
 
-  // place the BE window 
-  if (geo->BeWindowIsEnabled()) {
-    printf("Berillium Window positioned at X = %.2f mm Z = %.2f mm\n",BeWPosX/mm,BeWPosZ/mm);
-    new G4PVPlacement(rotBe,G4ThreeVector(BeWPosX*mm,0.,BeWPosZ*mm),logicalBeWindow,"BeamLineBeWindow",fMotherVolume,false,0,true);
+  // Add flange on front (upstream) side
+  //G4Tubs* solidBePipeFlgFnt = new G4Tubs("solidBePipeFlgFnt",0.,bePipeFlgFntR,0.5*bePipeFlgFntT,0.*deg,360.*deg);
+  //G4UnionSolid* solidBePipeFull2 = new G4UnionSolid("solidBePipeFull2",solidBePipeFull1,solidBePipeFlgFnt,0,G4ThreeVector(0.,0.,-0.5*bePipeLen+0.5*bePipeFlgFntT));
+
+  // Add flange on back (downstream) side
+  //G4Tubs* solidBePipeFlgBck = new G4Tubs("solidBePipeFlgBck",0.,bePipeFlgBckR,0.5*bePipeFlgBckT,0.*deg,360.*deg);
+  //G4UnionSolid* solidBePipeFull = new G4UnionSolid("solidBePipeFull",solidBePipeFull2,solidBePipeFlgBck,0,G4ThreeVector(0.,0.,0.5*bePipeLen-0.5*bePipeFlgBckT));
+
+  // Carve hole inside pipe (add usual small tolerance)
+  G4Tubs* solidBePipeHole = new G4Tubs("solidBePipeHole",0.,bePipeRIn,0.5*bePipeLen+10.*um,0.*deg,360.*deg);
+  //G4SubtractionSolid* solidBePipe = new G4SubtractionSolid("solidBePipe",solidBePipeFull,solidBePipeHole,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidBePipe = new G4SubtractionSolid("solidBePipe",solidBePipeFull1,solidBePipeHole,0,G4ThreeVector(0.,0.,0.));
+
+  // Create junction logical volume
+  G4LogicalVolume* logicalBePipe = new G4LogicalVolume(solidBePipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBePipe",0,0,0);
+  logicalBePipe->SetVisAttributes(steelVisAttr);
+
+  // Position long pipe after the magnet-side junction
+  G4double bePipePosX = mpEntPosX+(beJunLen+0.5*bePipeLen)*sin(magAngle);
+  G4double bePipePosY = mpEntPosY;
+  G4double bePipePosZ = mpEntPosZ-(beJunLen+0.5*bePipeLen)*cos(magAngle);
+  G4ThreeVector bePipePos = G4ThreeVector(bePipePosX,bePipePosY,bePipePosZ);
+  G4RotationMatrix* bePipeRot = new G4RotationMatrix;
+  bePipeRot->rotateY(magAngle);
+  new G4PVPlacement(bePipeRot,bePipePos,logicalBePipe,"BeamLineBePipe",fMotherVolume,false,0,true);
+
+  // For some reason, boolean solid visualization fails to show solid created with fullpipe+flangeF+flangeB-hole
+  // Create here the flanges as independent volumes
+
+  G4Tubs* solidBePipeFlgFnt = new G4Tubs("solidBePipeFlgFnt",bePipeROut,bePipeFlgFntR,0.5*bePipeFlgFntT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBePipeFlgFnt = new G4LogicalVolume(solidBePipeFlgFnt,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBePipeFlangeFront",0,0,0);
+  logicalBePipeFlgFnt->SetVisAttributes(steelVisAttr);
+  G4double bePipeFFPosX = mpEntPosX+(beJunLen+bePipeLen-0.5*bePipeFlgFntT)*sin(magAngle);
+  G4double bePipeFFPosY = mpEntPosY;
+  G4double bePipeFFPosZ = mpEntPosZ-(beJunLen+bePipeLen-0.5*bePipeFlgFntT)*cos(magAngle);
+  G4ThreeVector bePipeFFPos = G4ThreeVector(bePipeFFPosX,bePipeFFPosY,bePipeFFPosZ);
+  new G4PVPlacement(bePipeRot,bePipeFFPos,logicalBePipeFlgFnt,"BeamLineBePipeFlangeFront",fMotherVolume,false,0,true);
+
+  G4Tubs* solidBePipeFlgBck = new G4Tubs("solidBePipeFlgBck",bePipeROut,bePipeFlgBckR,0.5*bePipeFlgBckT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBePipeFlgBck = new G4LogicalVolume(solidBePipeFlgBck,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBePipeFlangeBack",0,0,0);
+  logicalBePipeFlgBck->SetVisAttributes(steelVisAttr);
+  G4double bePipeFBPosX = mpEntPosX+(beJunLen+0.5*bePipeFlgBckT)*sin(magAngle);
+  G4double bePipeFBPosY = mpEntPosY;
+  G4double bePipeFBPosZ = mpEntPosZ-(beJunLen+0.5*bePipeFlgBckT)*cos(magAngle);
+  G4ThreeVector bePipeFBPos = G4ThreeVector(bePipeFBPosX,bePipeFBPosY,bePipeFBPosZ);
+  new G4PVPlacement(bePipeRot,bePipeFBPos,logicalBePipeFlgBck,"BeamLineBePipeFlangeBack",fMotherVolume,false,0,true);
+
+  // Position junction close to Be window
+  // Use same logical volume created for Magnet-side junction
+  G4double beJunBePosX = mpEntPosX+(beJunLen+bePipeLen+0.5*beJunLen)*sin(magAngle);
+  G4double beJunBePosY = mpEntPosY;
+  G4double beJunBePosZ = mpEntPosZ-(beJunLen+bePipeLen+0.5*beJunLen)*cos(magAngle);
+  G4ThreeVector beJunBePos = G4ThreeVector(beJunBePosX,beJunBePosY,beJunBePosZ);
+  G4RotationMatrix* beJunBeRot = new G4RotationMatrix;
+  beJunBeRot->rotateY(magAngle);
+  new G4PVPlacement(beJunBeRot,beJunBePos,logicalBeJunction,"BeamLineBeWinJunction",fMotherVolume,false,0,true);
+
+  // Create Be thin window and its support flange
+
+  G4double beWinR = geo->GetBeWindowRadius();
+  G4double beWinT = geo->GetBeWindowThick();
+  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_Be"),"logicalBeWin",0,0,0);
+  logicalBeWin->SetVisAttributes(BeVisAttr);
+
+  G4double beWinFlgR = geo->GetBeWindowFlangeRadius();
+  G4double beWinFlgT = geo->GetBeWindowFlangeThick();
+  G4Tubs* solidBeWinFlgFull = new G4Tubs("solidBeWinFlgFull",0.,beWinFlgR,0.5*beWinFlgT,0.*deg,360.*deg);
+  G4Tubs* solidBeWinFlgHole = new G4Tubs("solidBeWinFlgHole",0.,beWinR+1.*um,0.5*beWinFlgT+10*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidBeWinFlg = new G4SubtractionSolid("solidBeWinFlg",solidBeWinFlgFull,solidBeWinFlgHole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalBeWinFlg = new G4LogicalVolume(solidBeWinFlg,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeWinFlg",0,0,0);
+  logicalBeWinFlg->SetVisAttributes(steelVisAttr);
+
+  G4double beWinFlgPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*beWinFlgT)*sin(magAngle);
+  G4double beWinFlgPosY = mpEntPosY;
+  G4double beWinFlgPosZ = mpEntPosZ-(beJunLen+bePipeLen+beJunLen+0.5*beWinFlgT)*cos(magAngle);
+  G4ThreeVector beWinFlgPos = G4ThreeVector(beWinFlgPosX,beWinFlgPosY,beWinFlgPosZ);
+  G4RotationMatrix* beWinFlgRot = new G4RotationMatrix;
+  beWinFlgRot->rotateY(magAngle);
+  // Position flange
+  new G4PVPlacement(beWinFlgRot,beWinFlgPos,logicalBeWinFlg,"BeamLineBeWindowFlange",fMotherVolume,false,0,true);
+
+  // Position Be window if enabled
+  if ( geo->BeWindowIsEnabled() ) {
+    // N.B. upstream face of Be thin window is at center of support flange
+    G4double beWinPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*beWinFlgT-0.5*beWinT)*sin(magAngle);
+    G4double beWinPosY = mpEntPosY;
+    G4double beWinPosZ = mpEntPosZ-(beJunLen+bePipeLen+beJunLen+0.5*beWinFlgT-0.5*beWinT)*cos(magAngle);
+    G4ThreeVector beWinPos = G4ThreeVector(beWinPosX,beWinPosY,beWinPosZ);
+    G4RotationMatrix* beWinRot = new G4RotationMatrix;
+    beWinRot->rotateY(magAngle);
+    new G4PVPlacement(beWinRot,beWinPos,logicalBeWin,"BeamLineBeWindow",fMotherVolume,false,0,true);
   }
 
-}
-
-//*******************************************
-//  Describes PADME to BTF junction region.
-//*******************************************
-void BeamLineStructure::CreateJunctionRegion()
-{
-
-//BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
-//
-//G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
-//if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
-//
-//// Junction pipe
-//
-//G4double junRIn  = geo->GetJunRIn();
-//G4double junROut = geo->GetJunROut();
-//G4double junLen  = geo->GetJunLength();
-//G4double junPosZ = geo->GetJunPosZ();
-//
-//G4Tubs* solidJun = new G4Tubs("JunPipe",junRIn,junROut,0.5*junLen,0.*deg,360.*deg);
-//G4LogicalVolume* logicalJun = new G4LogicalVolume(solidJun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunPipe",0,0,0);
-//logicalJun->SetVisAttributes(steelVisAttr);
-//new G4PVPlacement(0,G4ThreeVector(0.,0.,junPosZ),logicalJun,"JunctionPipe",fMotherVolume,false,0,true);
-//
-//printf("Junction pipe RIn %.1fmm Rout %.1fmm Zlen %.3fmm Zpos %.3fmm\n",junRIn/mm,junROut/mm,junLen/mm,junPosZ/mm);
-//
-//// Add flanges
-//G4double flangeRIn = geo->GetJunFlangeRIn();
-//G4double flangeROut = geo->GetJunFlangeROut();
-//G4double flangeThick = geo->GetJunFlangeThick();
-//G4Tubs* solidFlange = new G4Tubs("JunFlange",flangeRIn,flangeROut,0.5*flangeThick,0.*deg,360.*deg);
-//G4LogicalVolume* logicalFlange = new G4LogicalVolume(solidFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlange",0,0,0);
-//logicalFlange->SetVisAttributes(steelVisAttr);
-//G4double flange0PosZ = junPosZ-0.5*junLen+0.5*flangeThick;
-//new G4PVPlacement(0,G4ThreeVector(0.,0.,flange0PosZ),logicalFlange,"JunctionFlange",fMotherVolume,false,0,true);
-//G4double flange1PosZ = junPosZ+0.5*junLen-0.5*flangeThick;
-//new G4PVPlacement(0,G4ThreeVector(0.,0.,flange1PosZ),logicalFlange,"JunctionFlange",fMotherVolume,false,1,true);
+  printf("BeamLine - Be window entry face center is at (%.2f,%.2f,%.2f) mm\n",beWinFlgPosX,beWinFlgPosY,beWinFlgPosZ);
 
 }
 
 void BeamLineStructure::CreateDHSTB002Magnet()
 {
-  class G4MagneticField;
+
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
 
-  //  G4VisAttributes steelVisAttr   = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   G4VisAttributes DHSTB002VisAtt = G4VisAttributes(G4Colour::Red());
-  if ( ! fBeamLineIsVisible ) steelVisAttr   = G4VisAttributes::Invisible;
-  if ( ! fBeamLineIsVisible ) DHSTB002VisAtt = G4VisAttributes::Invisible;
+  if ( ! fBeamLineIsVisible ) {
+    steelVisAttr   = G4VisAttributes::Invisible;
+    DHSTB002VisAtt = G4VisAttributes::Invisible;
+  }
 
-  G4double DHSTB002Thick    = geo->GetDHSTB002Thick();
-  G4double DHSTB002Radius   = geo->GetDHSTB002Radius();
-  G4double DHSTB002InnHole  = geo->GetDHSTB002InnHole();
-  G4double GapCenter        = geo->GetDHSTB002CenterRadius();
-  
-  G4double DHSTB002PosZ     = geo->GetDHSTB002PosZ();
+  // Create magnet yoke
+  G4double yokeMinR = geo->GetDHSTB002MinRadius();
+  G4double yokeMaxR = geo->GetDHSTB002MaxRadius();
+  G4double yokeSizeY = geo->GetDHSTB002SizeY();
+  G4double yokeAngle = geo->GetDHSTB002AngularSpan();
 
-  G4RotationMatrix* rotDHSTB = new G4RotationMatrix;
-  rotDHSTB->rotateX(90.*deg);
-  rotDHSTB->rotateZ(180.*deg);
+  G4Tubs* solidDHSTB002Iron = new G4Tubs("solidDHSTB002Iron",yokeMinR,yokeMaxR,0.5*yokeSizeY,0.*deg,yokeAngle);
 
-  G4Tubs* solidDHSTB002Iron = new G4Tubs("solidDHSTB002Iron",DHSTB002InnHole,DHSTB002Radius,DHSTB002Thick*0.5,315.*deg,45.*deg);
+  // Create three parts of H-shaped internal hole
+  G4double holeCenterR = geo->GetDHSTB002CenterRadius();
+  G4double holeL1 = geo->GetDHSTB002L1();
+  G4double holeL2 = geo->GetDHSTB002L2();
+  G4double holeL3 = geo->GetDHSTB002L3();
+  G4double holeL4 = geo->GetDHSTB002L4();
 
-  //GAPs angulare extension greater than the iron to avoid surface problems
-  G4double GapStartAngle = 314;
-  G4double GapDeltaAngle = 46;
+  G4double hole1MinR = holeCenterR-0.5*holeL1;
+  G4double hole1MaxR = holeCenterR-0.5*holeL2;
+  G4double hole1SizeY = holeL3;
+  G4Tubs* solidHole1 = new G4Tubs("solidDHSTB002Hole1",hole1MinR,hole1MaxR,0.5*hole1SizeY,
+				  0.*deg-0.01*deg,yokeAngle+0.02*deg);
 
-  G4double Gap1Thick    = geo->GetDHSTB002Gap1Thick();
-  G4double Gap1Radius   = geo->GetDHSTB002Gap1Radius();
-  G4double Gap1InnHole  = geo->GetDHSTB002Gap1InnHole();
+  G4double hole2MinR = holeCenterR-0.5*holeL2-100.*um; // Expand a bit to avoid graphic problems
+  G4double hole2MaxR = holeCenterR+0.5*holeL2+100.*um;
+  G4double hole2SizeY = holeL4;
+  G4Tubs* solidHole2 = new G4Tubs("solidDHSTB002Hole2",hole2MinR,hole2MaxR,0.5*hole2SizeY,
+				  0.*deg-0.01*deg,yokeAngle+0.02*deg);
 
-  G4double Gap2Thick     = geo->GetDHSTB002Gap2Thick();
-  G4double Gap2Radius    = geo->GetDHSTB002Gap2Radius();
-  G4double Gap2InnHole   = geo->GetDHSTB002Gap2InnHole();
+  G4double hole3MinR = holeCenterR+0.5*holeL2;
+  G4double hole3MaxR = holeCenterR+0.5*holeL1;
+  G4double hole3SizeY = holeL3;
+  G4Tubs* solidHole3 = new G4Tubs("solidDHSTB002Hole3",hole3MinR,hole3MaxR,0.5*hole3SizeY,
+				  0.*deg-0.01*deg,yokeAngle+0.02*deg);
 
-  G4double TGapThick    = geo->GetDHSTB002TGapThick();
-  G4double TGapRadius   = geo->GetDHSTB002TGapRadius();
-  G4double TGapInnHole  = geo->GetDHSTB002TGapInnHole();
-
-  G4Tubs* solidGap2 = new G4Tubs("solidGap2",Gap2InnHole,Gap2Radius,Gap2Thick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
-  G4Tubs* solidGap1 = new G4Tubs("solidGap1",Gap1InnHole,Gap1Radius,Gap1Thick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
-  G4Tubs* solidTGap = new G4Tubs("solidTGap",TGapInnHole,TGapRadius,TGapThick*0.5,GapStartAngle*deg,GapDeltaAngle*deg);
-  
-  // the gamma line gap
-  G4double GLinGapSX = geo->GetDHSTB002GLineGapSizeX();
-  G4double GLinGapSY = geo->GetDHSTB002GLineGapSizeY();
-  G4double GLinGapSZ = geo->GetDHSTB002GLineGapSizeZ();
-  G4Box*  solidGLineGap  = new G4Box("solidGLineGap",GLinGapSX/2*mm,GLinGapSY/2*mm,GLinGapSZ/2*mm);
-
-  G4double GLinGapPX = 1723.*cos(315+22.5*deg)*mm;
-  G4double GLinGapPY = 1723.*sin(315+22.5*deg)*mm;;
-
-  G4UnionSolid* solidG12  = new G4UnionSolid("solidG12",solidGap1,solidGap2,0,G4ThreeVector(0.,0.,0.));
-  //  G4UnionSolid* solidGAllGamma = new G4UnionSolid("solidGAllGamma",solidGLineGap,solidG12,0,G4ThreeVector(0.,0.,0.));
-  //  G4UnionSolid* solidGAll = new G4UnionSolid("solidGAll",solidTGap,solidGAllGamma,0,G4ThreeVector(GLinGapPX,GLinGapPY,0.));
-  G4UnionSolid* solidGAll = new G4UnionSolid("solidGAll",solidTGap,solidG12,0,G4ThreeVector(0.,0.,0.));
-  // adding gamma line hole
-  
-  G4SubtractionSolid* solidDHSTB002 = new G4SubtractionSolid("solidDHSTB002",solidDHSTB002Iron,solidGAll,0,G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* logicalDHSTB002  = new G4LogicalVolume(solidDHSTB002,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002",0,0,0);
+  G4SubtractionSolid* solidDHSTB002_1 = new G4SubtractionSolid("solidDHSTB002_1",solidDHSTB002Iron,solidHole1,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidDHSTB002_2 = new G4SubtractionSolid("solidDHSTB002_2",solidDHSTB002_1,solidHole2,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidDHSTB002 = new G4SubtractionSolid("solidDHSTB002",solidDHSTB002_2,solidHole3,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalDHSTB002 = new G4LogicalVolume(solidDHSTB002,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002",0,0,0);
   logicalDHSTB002->SetVisAttributes(DHSTB002VisAtt);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,DHSTB002PosZ*mm),logicalDHSTB002,"BeamLineDHSTB002",fMotherVolume,false,0,true);
+
+  // Now rotate DHSTB002 to the XZ plane and position it so that its exit is aligned with the PADME Z axis
+  G4RotationMatrix* rotDHSTB = new G4RotationMatrix;
+  rotDHSTB->rotateX(-90.*deg);
+  rotDHSTB->rotateZ(180.*deg);
+  G4ThreeVector posDHSTB = G4ThreeVector(holeCenterR,0.,geo->GetDHSTB002ExitPosZ());
+  new G4PVPlacement(rotDHSTB,posDHSTB,logicalDHSTB002,"DHSTB002",fMotherVolume,false,0,true);
+
 }
 
 void BeamLineStructure::CreateMagnetPipe()
 {
+
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   if ( ! fBeamLineIsVisible ) steelVisAttr   = G4VisAttributes::Invisible;
 
-  G4double DHSTB002PipeThick    = geo->GetDHSTB002PipeThick();
-  G4double DHSTB002PipeRadius   = geo->GetDHSTB002PipeRadius();
-  G4double DHSTB002PipeInnHole  = geo->GetDHSTB002PipeInnHole();
-  G4double GapCenter            = (DHSTB002PipeRadius-DHSTB002PipeInnHole)/2+DHSTB002PipeInnHole; 
+  // Angular span of the DHSTB002 magnet (45 deg)
+  G4double magnetAngle = geo->GetDHSTB002AngularSpan();
 
-  G4double DHSTB002PosZ            = geo->GetDHSTB002PosZ();
+  // Create the magnetic volume
+  G4double magvolSizeY = geo->GetMagVolSizeY();
+  G4double magvolMinR = geo->GetMagVolMinRadius();
+  G4double magvolMaxR = geo->GetMagVolMaxRadius();
+  G4Tubs* solidMagVol = new G4Tubs("solidMagVol",magvolMinR,magvolMaxR,0.5*magvolSizeY,0.*deg,magnetAngle);
+  G4LogicalVolume* logicalMagVol = new G4LogicalVolume(solidMagVol,G4Material::GetMaterial("Vacuum"),"logicalMagVol",0,0,0);
+  //logicalMagVol->SetVisAttributes(G4VisAttributes::Invisible);
 
-  G4double DHSTB002PipeGapThick    = geo->GetDHSTB002PipeGapThick();
-  G4double DHSTB002PipeGapRadius   = geo->GetDHSTB002PipeGapRadius();
-  G4double DHSTB002PipeGapInnHole  = geo->GetDHSTB002PipeGapInnHole();
-
-  G4RotationMatrix* rotDHSTB = new G4RotationMatrix;
-  rotDHSTB->rotateX(90.*deg);
-  rotDHSTB->rotateZ(180.*deg);
-
-  G4Tubs* solidDHSTB002PipeIron = new G4Tubs("solidDHSTB002PipeIron",DHSTB002PipeInnHole,DHSTB002PipeRadius,DHSTB002PipeThick*0.5,315.*deg,45.*deg);
-  G4Tubs* solidDHSTB002PipeGap  = new G4Tubs("solidDHSTB002PipeGap",DHSTB002PipeGapInnHole,DHSTB002PipeGapRadius,DHSTB002PipeGapThick*0.5,314.*deg,46.*deg);
-  G4SubtractionSolid* solidDHSTB002Pipe = new G4SubtractionSolid("solidDHSTB002Pipe",solidDHSTB002PipeIron,solidDHSTB002PipeGap,0,G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* logicalDHSTB002Pipe    = new G4LogicalVolume(solidDHSTB002Pipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002Pipe",0,0,0);
-  G4LogicalVolume* logicalDHSTB002PipeGap = new G4LogicalVolume(solidDHSTB002PipeGap,G4Material::GetMaterial("Vacuum"),"logicalDHSTB002PipeGap",0,0,0);
-  logicalDHSTB002Pipe   ->SetVisAttributes(steelVisAttr);
-  logicalDHSTB002PipeGap->SetVisAttributes(steelVisAttr);
-  // G4LogicalVolume* logicalDHSTB002Pipe = new G4LogicalVolume(solidDHSTB002PipeIron,G4Material::GetMaterial("G4_AIR"),"logicalDHSTB002Pipe",0,0,0);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,DHSTB002PosZ*mm),logicalDHSTB002Pipe,"BeamLineDHSTB002Pipe",fMotherVolume,false,0,true);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,DHSTB002PosZ*mm),logicalDHSTB002PipeGap,"BeamLineDHSTB002PipeGap",fMotherVolume,false,0,true);
-
-  // Let's add a constant magnetic field
-  //G4ThreeVector fieldV(0.,-1.02*tesla,0.);
-  //G4ThreeVector fieldV(0.,-1.029*tesla,0.);
+  // Add a constant magnetic field to the magnetic volume
   G4ThreeVector fieldV(0.,geo->GetDHSTB002MagneticFieldY(),0.);
   G4MagneticField* magField = new G4UniformMagField(fieldV);
   G4FieldManager* localFieldManager = new G4FieldManager(magField);
+  logicalMagVol->SetFieldManager(localFieldManager,true);
 
-  //Magnetized volume inside magnet gap better to put the pipe gap as child volume
-  G4double BGapThick    = geo->GetDHSTB002TGapThick()   -0.01*mm;
-  G4double BGapRadius   = geo->GetDHSTB002TGapRadius()  -0.01*mm;
-  G4double BGapInnHole  = geo->GetDHSTB002TGapInnHole() +0.01*mm;
-  G4Tubs* solidDHSTB002MagField  = new G4Tubs("solidDHSTB002MagField",BGapInnHole,BGapRadius,BGapThick*0.5,314*deg,46*deg);
-  G4LogicalVolume* logicalDHSTB002MagField = new G4LogicalVolume(solidDHSTB002MagField,G4Material::GetMaterial("Vacuum"),"logicalDHSTB002MagField",0,0,0);
-  logicalDHSTB002MagField->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(rotDHSTB,G4ThreeVector(GapCenter*mm,0.,DHSTB002PosZ*mm),logicalDHSTB002MagField,"DHSTB002MagField",fMotherVolume,false,0,true);
-  logicalDHSTB002PipeGap->SetFieldManager(localFieldManager,true);
-  logicalDHSTB002MagField->SetFieldManager(localFieldManager,true);
+  // Position the magnetic volume at center of H-shaped hole of DHSTB002
+  G4RotationMatrix* rotMagVol = new G4RotationMatrix;
+  rotMagVol->rotateX(-90.*deg);
+  rotMagVol->rotateZ(180.*deg);
+  G4ThreeVector posMagVol = G4ThreeVector(geo->GetDHSTB002CenterRadius(),0.,geo->GetDHSTB002ExitPosZ());
+  new G4PVPlacement(rotMagVol,posMagVol,logicalMagVol,"DHSTB002MagneticVolume",fMotherVolume,false,0,true);
 
-  // Strait sections
-  G4double  PipeSizeX =  DHSTB002PipeRadius-DHSTB002PipeInnHole;
-  G4double  PipeSizeY =  DHSTB002PipeThick;
-  G4double  PipeSizeZ =  210*mm;  //from drawings
+  // Create bended section of the rectangular beam pipe and position it inside the magnetic volume
 
-  G4Box*    solidStraitPipeIron = new G4Box("solidStraitPipeIron",PipeSizeX/2.,PipeSizeY/2.,PipeSizeZ/2.);
-  G4Box*    solidStraitPipeGap  = new G4Box("solidStraitPipeGap",(PipeSizeX-6)/2*mm,(PipeSizeY-8)/2*mm,(PipeSizeZ+2)*mm);
-  G4SubtractionSolid* solidStraitPipe = new G4SubtractionSolid("solidStraitPipe",solidStraitPipeIron,solidStraitPipeGap,0,G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* logicalStraitPipe  = new G4LogicalVolume(solidStraitPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalStraitPipe",0,0,0);
-  logicalStraitPipe->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0,0.,(DHSTB002PosZ+PipeSizeZ/2)*mm),logicalStraitPipe,"BeamLineStraitPipe",fMotherVolume,false,0,true);
+  // Steel pipe
+  G4double magBPSizeY = geo->GetMagPipeSizeY();
+  G4double magBPMinR = geo->GetMagPipeMinRadius();
+  G4double magBPMaxR = geo->GetMagPipeMaxRadius();
+  G4Tubs* solidBeamPipeFull = new G4Tubs("solidBeamPipeFull",magBPMinR,magBPMaxR,0.5*magBPSizeY,0.*deg,magnetAngle);
 
-  //Create a DN63 flange using Leibold specs 
-  G4double FlThick    = geo->GetBeFlThick();
-  G4double FlDiameter = geo->GetBeFlDiameter();
+  // Hole inside steel pipe
+  G4double magBPHSizeY = geo->GetMagPipeHoleSizeY();
+  G4double magBPHMinR = geo->GetMagPipeHoleMinRadius();
+  G4double magBPHMaxR = geo->GetMagPipeHoleMaxRadius();
+  G4Tubs* solidBeamPipeHole  = new G4Tubs("solidBeamPipeHole",magBPHMinR,magBPHMaxR,0.5*magBPHSizeY,0.*deg-0.001*deg,magnetAngle+0.002*deg);
 
-  G4Tubs* solidFlangeIron = new G4Tubs("solidFlangeIron",0.,FlDiameter*0.5,FlThick,0.*deg,360.*deg);
-  G4Box*  solidFlangeGap  = new G4Box("solidFlangeGap",((PipeSizeX-6)/2)*mm,((PipeSizeY-8)/2)*mm,(FlThick+2.)*mm);
-  G4SubtractionSolid* solidFlange = new G4SubtractionSolid("solidFlange",solidFlangeIron,solidFlangeGap,0,G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* logicalFlange = new G4LogicalVolume(solidFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalFlange",0,0,0);
-  logicalFlange->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,(DHSTB002PosZ+PipeSizeZ+FlThick/2)*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
+  // Final pipe (steel with hole inside)
+  G4SubtractionSolid* solidBeamPipe = new G4SubtractionSolid("solidBeamPipe",solidBeamPipeFull,solidBeamPipeHole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalBeamPipe = new G4LogicalVolume(solidBeamPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalBeamPipe",0,0,0);
+  logicalBeamPipe->SetVisAttributes(steelVisAttr);
 
-  G4RotationMatrix* rotPipe= new G4RotationMatrix;
-  rotPipe->rotateY(45.*deg);
+  // Beam pipe is placed inside the magnetic volume
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeamPipe,"DHSTB002MagneticPipe",logicalMagVol,false,0,true);
 
-  G4double xpipe = (GapCenter-GapCenter*cos(45*deg)+PipeSizeZ/2*cos(45*deg))*mm;
-  G4double zpipe = (DHSTB002PosZ-GapCenter*sin(45*deg)-PipeSizeZ/2*sin(45*deg))*mm;
-//  std::cout<<"******************************************************************************** Pipe "<<xpipe<<" X "<<504.+105.*cos(45*deg)<<std::endl;
-//  std::cout<<"******************************************************************************** Pipe "<<zpipe<<" Z "<<-3001-1218-105.*sin(45*deg)<<std::endl;
-  new G4PVPlacement(rotPipe,G4ThreeVector(xpipe,0.,zpipe),logicalStraitPipe,"BeamLineStraitPipe",fMotherVolume,false,0,true);
-  new G4PVPlacement(rotPipe,G4ThreeVector((xpipe+PipeSizeZ/2*cos(45*deg)+FlThick/2*cos(45*deg))*mm,0.,(zpipe-PipeSizeZ/2*sin(45*deg)-FlThick/2*sin(45*deg))*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
-  std::cout<<"******************************************************************************** Flange X "<<xpipe+PipeSizeZ/2*cos(45*deg)+FlThick/2*cos(45*deg)<<std::endl;
-  std::cout<<"******************************************************************************** Flange Z "<<zpipe-PipeSizeZ/2*sin(45*deg)-FlThick/2*sin(45*deg)<<std::endl;
-  UpStreamFlangePosX = xpipe+PipeSizeZ/2*cos(45*deg)+FlThick/2*cos(45*deg);
-  UpStreamFlangePosZ = zpipe-PipeSizeZ/2*sin(45*deg)-FlThick/2*sin(45*deg);
-  
-//// Gamma line pipe
-//G4double GLinSX = geo->GetDHSTB002GLinePipeSizeX();
-//G4double GLinSY = geo->GetDHSTB002GLinePipeSizeY();
-//G4double GLinSZ = geo->GetDHSTB002GLinePipeSizeZ();
-//G4Box*  solidGLinePipeIron  = new G4Box("solidGLinePipeIron",GLinSX/2*mm,GLinSY/2*mm,GLinSZ/2*mm);
-//
-//G4double GLinPipeGapSX = geo->GetDHSTB002GLinePipeGapSizeX();
-//G4double GLinPipeGapSY = geo->GetDHSTB002GLinePipeGapSizeY();
-//G4double GLinPipeGapSZ = geo->GetDHSTB002GLinePipeGapSizeZ();
-//G4Box*  solidGLinePipeGap  = new G4Box("solidGLinePipeGap",GLinPipeGapSX/2*mm,GLinPipeGapSY/2*mm,GLinPipeGapSZ/2*mm);
-//
-//G4double GLinePosX=0.;
-//G4double GLinePosZ=-5000.;
-//
-//G4SubtractionSolid* solidGLine = new G4SubtractionSolid("solidGLine",solidGLinePipeIron,solidGLinePipeGap,0,G4ThreeVector(0.,0.,0.));
-//G4LogicalVolume* logicalGLine = new G4LogicalVolume(solidGLine,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalGLine",0,0,0);
-//logicalGLine->SetVisAttributes(steelVisAttr);
-//new G4PVPlacement(rotPipe,G4ThreeVector(0,0.,GLinePosZ),logicalGLine,"GLine",fMotherVolume,false,0,true);
-//
-//// end of G line flange placement
-//new G4PVPlacement(rotPipe,G4ThreeVector(GLinePosX-(GLinSZ/2)*cos(45.*deg)*mm,0.,GLinePosZ+(GLinSZ/2)*sin(45.*deg)*mm),logicalFlange,"BeamLineFlange",fMotherVolume,false,0,true);
+  // Create the straight section of the beam pipe an dposition it at entrance and exit of magnet
+
+  G4double strPipeSizeX = geo->GetMagPipeSizeX();
+  G4double strPipeSizeY = geo->GetMagPipeSizeY();
+  G4double strPipeSizeZ = geo->GetMagPipeStraightLength();
+  G4double strHoleSizeX = geo->GetMagPipeHoleSizeX();
+  G4double strHoleSizeY = geo->GetMagPipeHoleSizeY();
+  G4double strHoleSizeZ = geo->GetMagPipeStraightLength()+10.*um;
+  G4double strFlangeR = geo->GetMagPipeFlangeRadius();
+  G4double strFlangeThick = geo->GetMagPipeFlangeThick();
+
+  G4Box* solidStrFull = new G4Box("solidStrFull",0.5*strPipeSizeX,0.5*strPipeSizeY,0.5*strPipeSizeZ);
+  G4Box* solidStrHole = new G4Box("solidStrHole",0.5*strHoleSizeX,0.5*strHoleSizeY,0.5*strHoleSizeZ);
+  G4Tubs* solidStrFlange = new G4Tubs("solidStrFlange",0.,strFlangeR,0.5*strFlangeThick,0.*deg,360.*deg);
+
+  G4ThreeVector posFlange = G4ThreeVector(0.,0.,geo->GetMagPipeFlangePosZ());
+  G4UnionSolid* solidStrFullFlange = new G4UnionSolid("solidStrFullFlange",solidStrFull,solidStrFlange,0,posFlange);
+  G4SubtractionSolid* solidStraightPipe = new G4SubtractionSolid("solidStraightPipe",solidStrFullFlange,solidStrHole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalStraightPipe = new G4LogicalVolume(solidStraightPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalStraightPipe",0,0,0);
+  logicalStraightPipe->SetVisAttributes(steelVisAttr);
+
+  // Position front straight section
+  G4double strFrontPosX = geo->GetMagPipeStraightFrontPosX();
+  G4double strFrontPosZ = geo->GetMagPipeStraightFrontPosZ();
+  G4double strFrontRotY = geo->GetMagPipeStraightFrontRotY();
+  G4RotationMatrix* strFrontRot = new G4RotationMatrix;
+  strFrontRot->rotateY(strFrontRotY);
+  G4ThreeVector strFrontPos = G4ThreeVector(strFrontPosX,0.,strFrontPosZ);
+  new G4PVPlacement(strFrontRot,strFrontPos,logicalStraightPipe,"DHSTB002StraightPipeFront",fMotherVolume,false,0,true);
+
+  // Position back straight section
+  G4double strBackPosX = geo->GetMagPipeStraightBackPosX();
+  G4double strBackPosZ = geo->GetMagPipeStraightBackPosZ();
+  G4double strBackRotY = geo->GetMagPipeStraightBackRotY();
+  G4RotationMatrix* strBackRot = new G4RotationMatrix;
+  strBackRot->rotateY(strBackRotY);
+  G4ThreeVector strBackPos = G4ThreeVector(strBackPosX,0.,strBackPosZ);
+  new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB002StraightPipeBack",fMotherVolume,false,0,true);
 
 }
-
-//double BeamLine::GetFieldValue(const double Point[3],double *Bfield) const
-//double BeamLineStructure::GetFieldValue()
-//{
-//  fBz = 1.0*tesla;
-////  Double rmax_sq = sqr(50.*cm);
-////  DOuble zmax = 100.*cm;
-////
-////  Bfield[0] = 0.;
-////  Bfield[1] = 0.;
-////  if(std::abs(Point[2])<zmax && (sqr(Point[0])+sqr(Point[1]))<rmax_sq)
-////  { Bfield[2] = Bz; }
-////  else
-////  { Bfield[2] = 0.; }
-//  return fBz;
-//}

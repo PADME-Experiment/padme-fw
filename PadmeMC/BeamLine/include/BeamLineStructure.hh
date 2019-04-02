@@ -27,10 +27,10 @@ public:
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
-  G4LogicalVolume* GetBeamLineLogicalVolume() { return fGlobalLogicalVolume; }
+  //G4LogicalVolume* GetBeamLineLogicalVolume() { return fGlobalLogicalVolume; }
 
-  void EnableBeamLine()  { fBeamLineExists = 1; }
-  void DisableBeamLine() { fBeamLineExists = 0; }
+  //void EnableBeamLine()  { fBeamLineExists = 1; }
+  //void DisableBeamLine() { fBeamLineExists = 0; }
 
   void SetBeamLineVisible()   { fBeamLineIsVisible = 1; }
   void SetBeamLineInvisible() { fBeamLineIsVisible = 0; }
@@ -38,13 +38,14 @@ public:
 private:
 
   void CreateBeThinWindow();
-  void CreateMagnetPipe();
+  void CreateBeamLine();
   void CreateDHSTB002Magnet();
 
   G4LogicalVolume* fMotherVolume;
-  G4LogicalVolume* fGlobalLogicalVolume;
+  //G4LogicalVolume* fGlobalLogicalVolume;
+  G4LogicalVolume* fBeWindowVolume;
 
-  G4int fBeamLineExists;
+  //G4int fBeamLineExists;
   G4int fBeamLineIsVisible;
 
   BeamLineMessenger* fBeamLineMessenger;

@@ -63,7 +63,6 @@ EventAction::EventAction(RunAction* run)
   theDM->AddNewModule(sacDM);
   TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
   theDM->AddNewModule(tPixDM);
-
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -185,6 +184,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "LAVCollection") {
       AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
+      AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   //int Ncells=0;
@@ -834,6 +835,32 @@ void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
     CalNPart++;
     //    G4cout<<CalNPart<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<G4endl;
   }
+}
+
+void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019 
+  G4int nHits = hcont->entries();			
+  for (G4int h=0; h<nHits; h++) {
+    TPixHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      G4double hTime = hit->GetTime();
+      G4double hE    = hit->GetEnergy();   //deposited energy useless
+      G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
+      G4double hX    = hit->GetLocalPosX();
+      G4double hY    = hit->GetLocalPosY();
+      G4double hChID = hit->GetChannelId();
+
+      fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
+      fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos
+      fHistoManager->FillHisto(52,hX);  //50 has Tpix Histos
+      fHistoManager->FillHisto(53,hY);  //50 has Tpix Histos
+
+      fHistoManager->FillHisto2(55,hX,hY,1.); //X vs Y local coordinates 
+      fHistoManager->FillHisto2(56,hTrE,hX,1.); //X vs Track energy
+      //      G4cout<<"CC Nhits "<<nHits<<" time  "<<hTime<<" edep "<<hE<<" X "<<hX<<" Y "<<hY<<G4endl;
+    }
+  }
+ 
+ 
 }
 
 void EventAction::AddLAVHits(LAVHitsCollection* hcont)

@@ -25,7 +25,7 @@ TPixGeometry::TPixGeometry()
 
   fChipSizeX =  14.08*mm; // 256 pixels of 55um each
   fChipSizeY =  14.08*mm; // 256 pixels of 55um each
-  fChipSizeZ =   0.10*mm; // Thickness
+  fChipSizeZ =   0.30*mm; // Thickness M. Raggi after E. Spiriti Mail 29/03/2019
 
   fChipStep = 14.10*mm; // Step between TPix chips
 

@@ -151,8 +151,11 @@ void HistoManager::book()
   if (!histo[61]) G4cout << "\n can't create histo 61" << G4endl;
   histo[62] = new TH1D("h62","X coord ",TarXBins,TarXmin,TarXmax);
   if (!histo[62]) G4cout << "\n can't create histo 62" << G4endl; 
-  histo[63] = new TH1D("h63","Y coord ",TarYBins,TarYmin,TarYmin);
+  histo[63] = new TH1D("h63","Y coord ",TarYBins,TarYmin,TarYmax);
   if (!histo[63]) G4cout << "\n can't create histo 63" << G4endl; 
+
+  histo[64] = new TH1D("h64","Y coord ",100,460.,560.);
+  if (!histo[64]) G4cout << "\n can't create histo 64" << G4endl; 
   
   histo2[65] = new TH2D("h65","Tar beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
   if (!histo2[65]) G4cout << "\n can't create histo 65" << G4endl;

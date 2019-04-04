@@ -557,14 +557,17 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
       G4double hX    = hit->GetLocalPosX();
       G4double hY    = hit->GetLocalPosY();
-
-      fHistoManager->FillHisto(60,hE);     //60 has Target Histos
-      fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
-      fHistoManager->FillHisto(62,hX);     //60 has Target Histos
-      fHistoManager->FillHisto(63,hY);     //60 has Target Histos
-
-      fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
-      fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+      
+      //      if(h==0){//using only first hit to get beam variables before it interacts with the target
+	fHistoManager->FillHisto(60,hE);     //60 has Target Histos
+	fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
+	fHistoManager->FillHisto(62,hX);     //60 has Target Histos
+	fHistoManager->FillHisto(63,hY);     //60 has Target Histos
+	fHistoManager->FillHisto(64,hTrE);   //60 has Target Histos
+	
+	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+	//      }
     }
   }//end of loop
   XTarget/=NTarget;

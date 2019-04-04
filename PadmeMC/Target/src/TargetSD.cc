@@ -40,9 +40,6 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   TargetHit* newHit = new TargetHit();
 
-  newHit->SetEnergy(edep);
-  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
-
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
@@ -50,17 +47,14 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
-  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPost,"Length")
-  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-  newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
-  newHit->SetPosition(worldPosPre);
-  newHit->SetLocalPosition(localPosPre);
-  fTargetCollection->insert(newHit);
-
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    newHit->SetEnergy(edep);
+    newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+    newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
+    newHit->SetPosition(worldPosPre);
+    newHit->SetLocalPosition(localPosPre);
+    fTargetCollection->insert(newHit);
+  }
   return true;
 
 }

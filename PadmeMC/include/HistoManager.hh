@@ -141,7 +141,7 @@ struct NTEvent{
  class TH1D;
  class TH2D;
 
- const G4int MaxHisto = 60;
+ const G4int MaxHisto = 70;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

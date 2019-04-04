@@ -39,6 +39,10 @@ public:
   G4double GetPosY() { return fPosition.y(); };
   G4double GetPosZ() { return fPosition.z(); };
 
+  //M. Raggi 2/04/2019 added track energy
+  void SetTrackEnergy(G4double etr) { fTrackEnergy = etr; }
+  G4double GetTrackEnergy() { return fTrackEnergy; }
+
   void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
   G4ThreeVector GetLocalPosition() { return fLocalPosition; }
   G4double GetLocalPosX() { return fLocalPosition.x(); };
@@ -58,6 +62,7 @@ private:
 
   G4double      fTime;
   G4double      fEnergy;
+  G4double      fTrackEnergy; //M. Raggi 2/04/2019 added track energy
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
 

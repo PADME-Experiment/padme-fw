@@ -56,10 +56,9 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-
+  newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
-
   fTargetCollection->insert(newHit);
 
   return true;

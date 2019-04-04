@@ -550,6 +550,21 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       XTarget += hit->GetX();
       YTarget += hit->GetY();
       NTarget++;
+
+      // Beam structure control histogras M. Raggi 2/04/2019
+      G4double hTime = hit->GetTime();
+      G4double hE    = hit->GetEnergy();   
+      G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
+      G4double hX    = hit->GetLocalPosX();
+      G4double hY    = hit->GetLocalPosY();
+
+      fHistoManager->FillHisto(60,hE);     //60 has Target Histos
+      fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
+      fHistoManager->FillHisto(62,hX);     //60 has Target Histos
+      fHistoManager->FillHisto(63,hY);     //60 has Target Histos
+
+      fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+      fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
     }
   }//end of loop
   XTarget/=NTarget;
@@ -855,7 +870,7 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
       fHistoManager->FillHisto(53,hY);  //50 has Tpix Histos
 
       fHistoManager->FillHisto2(55,hX,hY,1.); //X vs Y local coordinates 
-      fHistoManager->FillHisto2(56,hTrE,hX,1.); //X vs Track energy
+      fHistoManager->FillHisto2(56,hX,hTrE,1.); //X vs Track energy
       //      G4cout<<"CC Nhits "<<nHits<<" time  "<<hTime<<" edep "<<hE<<" X "<<hX<<" Y "<<hY<<G4endl;
     }
   }

@@ -8,6 +8,7 @@
 
 #include "TargetReconstruction.hh"
 #include "TargetCalibration.hh"
+#include "TargetGeometry.hh"
 #include "TTargetRecoBeam.hh"
 
 #include "TTargetMCEvent.hh"
@@ -30,7 +31,8 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
   fTargetRecoBeam = new TTargetRecoBeam();  
   fTriggerProcessor = new PadmeVTrigger();
   fChannelCalibration = new TargetCalibration();
-
+  fGeometry = new TargetGeometry();
+  
   fWriteFitParams = false;
   fWriteFitParams = (Bool_t)fConfig->GetParOrDefault("Output", "SignalFitParams"      , 0 );
   fWriteTargetBeam = true;
@@ -165,8 +167,17 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
   PadmeVReconstruction::BuildHits(rawEv);
+
+  // set geometry 
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
+  // set geometry 
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+
+  // GetBeamProfile
   ReconstructBeam();
+
+
   TargetCalibration* calSvc = (TargetCalibration*)fChannelCalibration;
   if(fChannelCalibration) calSvc->PerformBeamCalibration(getRecoBeam());
   RetrieveSignalFitParams();

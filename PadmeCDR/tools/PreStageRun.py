@@ -19,6 +19,47 @@ def print_help():
     print '  -Y year         Specify year of data taking. Default: year from run name'
     print '  -h              Show this help message and exit'
 
+def run_command(command):
+    #print "> %s"%command
+    p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,shell=True)
+    return iter(p.stdout.readline, b'')
+
+def now_str():
+    return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+
+def check_status(ffile):
+    cmd = "gfal-xattr %s user.status"%ffile
+    for line in run_command(cmd):
+        status = line.rstrip()
+        if re.match("^gfal-xattr error: ",status):
+            print "WARNING - gfal-xattr failed while checking status of file %s"%ffile
+            return "ERROR"
+        elif (status == "ONLINE" or status == "ONLINE_AND_NEARLINE"):
+            return "ONLINE"
+        else:
+            return "STAGING"
+
+def stage_in(file):
+
+    cmd = "gfal-legacy-bringonline --timeout 0 %s"%file
+    try:
+        rc = subprocess.check_output(cmd.split(),stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError as e:
+        timeout = False
+        for el in e.output.split("\n"):
+            if re.match("^Exception: Timeout expired while polling",el): timeout = True
+        if timeout:
+            rc = "TIMEOUT"
+        else:
+            rc = e.output
+
+    if rc != "TIMEOUT":
+        print "WARNING - gfal-legacy-bringonline did not return a timeout"
+        print rc
+        return "ERROR"
+
+    return "STAGING"
+
 def main(argv):
 
     run = ""
@@ -26,6 +67,7 @@ def main(argv):
     data_dir = ""
     year = ""
     src_srm = ""
+    timeout = 96800
     fake = False
 
     try:
@@ -86,69 +128,43 @@ def main(argv):
         file_list.append(line.rstrip())
     file_list.sort()
 
+    # Prepare list of full names
+    fullname = {}
+    for rawfile in file_list:
+        fullname[rawfile] = "%s%s/%s"%(src_srm,data_dir,rawfile)
+
     # Checking stage status of each file
     warnings = 0
-    files_to_stage_list = []
+    status = {}
     print "%s - Checking staging status of files in run %s (%d files)"%(now_str(),run,len(file_list))
     for rawfile in file_list:
-        print
-        print "%s - Checking file %s"%(now_str(),rawfile)
-        cmd = "gfal-xattr %s%s/%s user.status"%(src_srm,data_dir,rawfile)
-        for line in run_command(cmd):
-            status = line.rstrip()
-            if re.match("^gfal-xattr error: ",status):
-                warnings += 1
-                print "WARNING - gfal-xattr failed while checking status of file %s"%rawfile
-            elif (status == "ONLINE" or status == "ONLINE_AND_NEARLINE"):
-                print "%s - File %s status is %s"%(now_str(),rawfile,status)
-            else:
-                print "%s - File %s status is %s: staging it"%(now_str(),rawfile,status)
-                files_to_stage_list.append(rawfile)
+        status[rawfile] = check_status(fullname[rawfile])
+        if status[rawfile] == "STAGING":
+            status[rawfile] = stage_in(fullname[rawfile])
+        print "%s - Status of %s is %s"%(now_str(),rawfile,status[rawfile])
 
-    # Stage in all files which are not ONLINE
-    for rawfile in files_to_stage_list:
-        print
-        print "%s - Staging file %s"%(now_str(),rawfile)
-        cmd = "gfal-legacy-bringonline %s%s/%s"%(src_srm,data_dir,rawfile)
-        if fake:
-            print "> %s"%cmd
-        else:
-            for line in run_command(cmd):
-                print line.rstrip()
-                if re.match("^gfal-legacy-bringonline error: ",line):
-                    warnings += 1
-                    print "WARNING - gfal-legacy-bringonline failed while staging file %s"%rawfile
+    n = { "ONLINE": 0, "STAGING": 0, "ERROR": 0 }
+    start_time = time.time()
+    while True:
+        n["ONLINE"]  = 0
+        n["STAGING"] = 0
+        n["ERROR"]   = 0
+        for rawfile in file_list:
+            if status[rawfile] == "STAGING":
+                status[rawfile] = check_status(fullname[rawfile])
+            n[status[rawfile]] += 1
+        if n["STAGING"] == 0:
+            print "%s - No files are in STAGING mode: exiting"%now_str()
+            break
+        if time.time()-start_time > timeout:
+            print "%s - Timeout of %d seconds expired: exiting"%(now_str(),timeout)
+            break
+        print "%s - ONLINE %4d STAGING %4d ERROR %4d"%(now_str(),n["ONLINE"],n["STAGING"],n["ERROR"])
+        time.sleep(60)
 
-    # Re-check stage status of unstaged files after staging
-    print "%s - Re-checking staging status of unstaged files in run %s (%d files)"%(now_str(),run,len(files_to_stage_list))
-    for rawfile in files_to_stage_list:
-        print
-        print "%s - Checking file %s"%(now_str(),rawfile)
-        cmd = "gfal-xattr %s%s/%s user.status"%(src_srm,data_dir,rawfile)
-        for line in run_command(cmd):
-            status = line.rstrip()
-            if re.match("^gfal-xattr error: ",status):
-                warnings += 1
-                print "WARNING - gfal-xattr failed while checking status of file %s"%rawfile
-            elif (status == "ONLINE" or status == "ONLINE_AND_NEARLINE"):
-                print "%s - File %s status is %s"%(now_str(),rawfile,status)
-            else:
-                print "%s - WARNING - File %s status is still %s"%(now_str(),rawfile,status)
-                files_to_stage_list.append(rawfile)
-
-    print
-    if warnings:
-        print "%s - WARNING - Run %s may not be fully staged: %d files failed checking and/or staging"%(now_str(),run,warnings)
-    else:
-        print "%s - Run %s is now fully staged: you can use it"%(now_str(),run)
-
-def run_command(command):
-    print "> %s"%command
-    p = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,shell=True)
-    return iter(p.stdout.readline, b'')
-
-def now_str():
-    return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
+    print "= Final report ="
+    for status in ( "ONLINE","STAGING","ERROR"):
+        print "%-7s %4d"%(status,n[status])
 
 # Execution starts here
 if __name__ == "__main__":

@@ -35,7 +35,7 @@
 #include "HEPVetoAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-valid Validation]" 
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode]" 
 	    << std::endl;
 }
 
@@ -86,7 +86,7 @@ int main(Int_t argc, char **argv)
   TString InputFileName("PadmeRecoOutputFile.root");
   TString InputListFileName("InputListFile.txt");
   Int_t fVerbose=0;
-  Int_t fValidation=0;
+  Int_t fProcessingMode=0;
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
@@ -94,7 +94,7 @@ int main(Int_t argc, char **argv)
 
   Int_t n_options_read = 0;
   Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:w:")) != -1) {
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -133,9 +133,9 @@ int main(Int_t argc, char **argv)
 	nv++;
 	fVerbose = (Int_t)TString(optarg).Atoi();
 	break;
-      case 'w':
+      case 'm':
 	nval++;
-	fValidation = (Int_t)TString(optarg).Atoi();
+	fProcessingMode = (Int_t)TString(optarg).Atoi();
 	break;
       default:
 	usage(argv[0]);
@@ -195,19 +195,19 @@ int main(Int_t argc, char **argv)
   //   TTree* theTree = nullptr;
 
 
-  TRecoEvent*                     fRecoEvent            ;
-  TTargetRecoEvent*               fTargetRecoEvent      ;
-  TEVetoRecoEvent*                fEVetoRecoEvent       ;
-  TPVetoRecoEvent*                fPVetoRecoEvent       ;
-  THEPVetoRecoEvent*              fHEPVetoRecoEvent     ;
-  TECalRecoEvent*                 fECalRecoEvent        ;
-  TSACRecoEvent*                  fSACRecoEvent         ;
-  TTargetRecoBeam*                fTargetRecoBeam       ;
-  TRecoVClusCollection*           fSACRecoCl            ;
-  TRecoVClusCollection*           fECalRecoCl           ;
-  TRecoVClusCollection*           fPVetoRecoCl          ;
-  TRecoVClusCollection*           fEVetoRecoCl          ;
-  TRecoVClusCollection*           fHEPVetoRecoCl        ;
+  TRecoEvent*                     fRecoEvent            =0;
+  TTargetRecoEvent*               fTargetRecoEvent      =0;
+  TEVetoRecoEvent*                fEVetoRecoEvent       =0;
+  TPVetoRecoEvent*                fPVetoRecoEvent       =0;
+  THEPVetoRecoEvent*              fHEPVetoRecoEvent     =0;
+  TECalRecoEvent*                 fECalRecoEvent        =0;
+  TSACRecoEvent*                  fSACRecoEvent         =0;
+  TTargetRecoBeam*                fTargetRecoBeam       =0;
+  TRecoVClusCollection*           fSACRecoCl            =0;
+  TRecoVClusCollection*           fECalRecoCl           =0;
+  TRecoVClusCollection*           fPVetoRecoCl          =0;
+  TRecoVClusCollection*           fEVetoRecoCl          =0;
+  TRecoVClusCollection*           fHEPVetoRecoCl        =0;
 
    TTree::SetMaxTreeSize(190000000000);
 
@@ -244,15 +244,18 @@ int main(Int_t argc, char **argv)
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
       std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
 
+      Int_t branchSize = 0;
       if (branchName=="RecoEvent") {
 	fRecoEvent = new TRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
+	std::cout<<"RecoEvent branch size = "<< branchSize <<std::endl;
       } else if (branchName=="Target_Hits") {
 	fTargetRecoEvent = new TTargetRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
       } else if (branchName=="EVeto_Hits") {
 	fEVetoRecoEvent = new TEVetoRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
+	branchSize = fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
+	std::cout<<"EvetoREcoEvent branch size = "<< branchSize <<std::endl;
       } else if (branchName=="PVeto_Hits") {
 	fPVetoRecoEvent = new TPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
@@ -296,15 +299,25 @@ int main(Int_t argc, char **argv)
    Int_t jevent = 0;
    
    //int histoOutput
-   hSvc->book(fValidation);
+   hSvc->book(fProcessingMode);
 
-   SACAnalysis*         sacAn  = new SACAnalysis(fValidation, fVerbose); 
-   ECalAnalysis*       ecalAn  = new ECalAnalysis(fValidation, fVerbose); 
-   TargetAnalysis*   targetAn  = new TargetAnalysis(fValidation, fVerbose); 
-   PVetoAnalysis*     pvetoAn  = new PVetoAnalysis(fValidation, fVerbose);
-   EVetoAnalysis*     evetoAn  = new EVetoAnalysis(fValidation, fVerbose);
-   HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fValidation, fVerbose);
+   std::vector<ValidationBase*> algoList;
+   SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
+   algoList.push_back(sacAn);
+   ECalAnalysis*       ecalAn  = new ECalAnalysis(fProcessingMode, fVerbose); 
+   algoList.push_back(ecalAn);
+   TargetAnalysis*   targetAn  = new TargetAnalysis(fProcessingMode, fVerbose); 
+   algoList.push_back(targetAn);
+   PVetoAnalysis*     pvetoAn  = new PVetoAnalysis(fProcessingMode, fVerbose);
+   algoList.push_back(pvetoAn);
+   EVetoAnalysis*     evetoAn  = new EVetoAnalysis(fProcessingMode, fVerbose);
+   algoList.push_back(evetoAn);
+   HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
+   algoList.push_back(hepvetoAn);
 
+   
+   
+   
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
    Int_t nPVetoHits  =0;  
@@ -321,13 +334,15 @@ int main(Int_t argc, char **argv)
 	 std::cout<<"--------------------------------------------------------- jevent = "<<i<<"/"<<nevents<<" -- size of the event "<< jevent<<std::endl;
 	 std::cout<<"----------------------------------------------------Run/Event n. = "<<fRecoEvent->GetRunNumber()<<" "<<fRecoEvent->GetEventNumber()<<std::endl;
        }
-       nTargetHits = fTargetRecoEvent->GetNHits();
-       nECalHits   = fECalRecoEvent->GetNHits();
-       nPVetoHits  = fPVetoRecoEvent->GetNHits();
-       nEVetoHits  = fEVetoRecoEvent->GetNHits();
-       nHEPVetoHits= fHEPVetoRecoEvent->GetNHits();
-       nSACHits    = fSACRecoEvent->GetNHits();
-       if ( (fVerbose>0 && (i%10==0)) || fVerbose>1) {
+       
+       if (fECalRecoEvent)   nECalHits   = fECalRecoEvent->GetNHits();
+       if (fTargetRecoEvent) nTargetHits = fTargetRecoEvent->GetNHits(); 
+       if (fPVetoRecoEvent)  nPVetoHits  = fPVetoRecoEvent->GetNHits();
+       if (fEVetoRecoEvent)  nEVetoHits  = fEVetoRecoEvent->GetNHits();
+       if (fHEPVetoRecoEvent)nHEPVetoHits= fHEPVetoRecoEvent->GetNHits();
+       if (fSACRecoEvent)    nSACHits    = fSACRecoEvent->GetNHits();
+      
+       if ( (fVerbose>0 && (i%1==0)) || fVerbose>1) {
 	   std::cout<<"---- Hits in Target "<<nTargetHits
 		    <<" ECal "<<nECalHits
 		    <<" PVeto "<<nPVetoHits
@@ -337,25 +352,27 @@ int main(Int_t argc, char **argv)
 	   std::cout<<"---- TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
 	 }
        if (fVerbose>2){
-	 fTargetRecoEvent->Print();
-	 fECalRecoEvent->Print();
-	 fPVetoRecoEvent->Print();
-	 fEVetoRecoEvent->Print();
-	 fHEPVetoRecoEvent->Print();
-	 fSACRecoEvent->Print();
+	 if (fTargetRecoEvent) fTargetRecoEvent->Print();
+	 if (fECalRecoEvent)   fECalRecoEvent->Print();
+	 if (fPVetoRecoEvent)  fPVetoRecoEvent->Print();
+	 if (fEVetoRecoEvent)  fEVetoRecoEvent->Print();
+	 if (fHEPVetoRecoEvent)fHEPVetoRecoEvent->Print();
+	 if (fSACRecoEvent)    fSACRecoEvent->Print();
        }
        //
-       sacAn      ->Init(fSACRecoEvent,     fSACRecoCl            );
-       ecalAn     ->Init(fECalRecoEvent,    fECalRecoCl           );
-       targetAn   ->Init(fTargetRecoEvent,  fTargetRecoBeam       );
-       pvetoAn    ->Init(fPVetoRecoEvent,   fPVetoRecoCl          );
-       evetoAn    ->Init(fEVetoRecoEvent,   fEVetoRecoCl          );
-       hepvetoAn  ->Init(fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+      
+
+       sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
+       ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
+       targetAn   ->Init(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam       );
+       pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
+       evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
+       hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
 
        //
        targetAn    ->Process();
-       sacAn       ->Process();
        ecalAn      ->Process();
+       sacAn       ->Process();
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
@@ -365,12 +382,14 @@ int main(Int_t argc, char **argv)
        hSvc->FillNtuple();
      }
    
-   sacAn    ->Finalize();
    ecalAn   ->Finalize();
    targetAn ->Finalize();
+   /*
+   sacAn    ->Finalize();
    pvetoAn  ->Finalize();
    evetoAn  ->Finalize();
    hepvetoAn->Finalize();
+   */
 
    /// end of job..........
    hSvc->save();

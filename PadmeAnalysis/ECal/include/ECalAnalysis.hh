@@ -18,10 +18,9 @@ public:
   ECalAnalysis(Int_t  Validation, Int_t verb);
   ~ECalAnalysis();
 
-  Bool_t Init(TECalRecoEvent* ev, TRecoVClusCollection* cl);
-  Bool_t Process();
+  Bool_t ProcessAnalysis();
   Bool_t ProcessValidation();
-  Bool_t InitHistos();
+  Bool_t InitHistosAnalysis();
   Bool_t InitHistosValidation();
   Bool_t Finalize(){return true;}
 

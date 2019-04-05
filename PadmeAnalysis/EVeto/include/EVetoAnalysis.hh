@@ -17,10 +17,9 @@ public:
   EVetoAnalysis(Int_t  Validation, Int_t Verbose);
   ~EVetoAnalysis();
 
-  Bool_t Init(TEVetoRecoEvent* ev, TRecoVClusCollection* cl);
-  Bool_t Process();
+  Bool_t ProcessAnalysis();
   Bool_t Finalize(){return true;}
-  Bool_t InitHistos();
+  Bool_t InitHistosAnalysis();
   
   
   

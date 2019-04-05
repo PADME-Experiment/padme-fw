@@ -17,10 +17,9 @@ public:
   HEPVetoAnalysis(Int_t valid, Int_t verb);
   ~HEPVetoAnalysis();
 
-  Bool_t Init(THEPVetoRecoEvent* ev, TRecoVClusCollection* cl);
-  Bool_t Process();
+  Bool_t ProcessAnalysis();
   Bool_t Finalize(){return true;}
-  Bool_t InitHistos();
+  Bool_t InitHistosAnalysis();
   
   
   

@@ -10,6 +10,7 @@
 #include "EVetoHit.hh"
 #include "SACHit.hh"
 #include "LAVHit.hh"
+#include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "GFiltHit.hh"
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
@@ -69,6 +70,7 @@ class EventAction : public G4UserEventAction
 
   void  AddSACHits(SACHitsCollection*);
   void  AddLAVHits(LAVHitsCollection*);
+  void  AddTPixHits(TPixHitsCollection*); //M. Raggi 26/03/2019
 
   G4double GetCharge(G4double Energia);
   G4double GGMass();

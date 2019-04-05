@@ -36,6 +36,10 @@ public:
   void SetEnergy(G4double e) { fEnergy = e; }
   G4double GetEnergy() { return fEnergy; }
 
+  //M. Raggi 27/03/2019 added track energy
+  void SetTrackEnergy(G4double etr) { fTrackEnergy = etr; }
+  G4double GetTrackEnergy() { return fTrackEnergy; }
+
   void SetPosition(G4ThreeVector p) { fPosition = p; }
   G4ThreeVector GetPosition() { return fPosition; }
   G4double GetPosX() { return fPosition.x(); };
@@ -53,6 +57,7 @@ private:
   G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
+  G4double      fTrackEnergy; //M. Raggi 27/03/2019 added track energy
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
 

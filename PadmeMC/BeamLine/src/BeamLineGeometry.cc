@@ -83,6 +83,9 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeHoleMinRadius = fDHSTB002CenterRadius-0.5*fMagPipeHoleSizeX;
   fMagPipeHoleMaxRadius = fDHSTB002CenterRadius+0.5*fMagPipeHoleSizeX;
 
+  // Length of the straight section inside the magnet
+  fMagPipeLineLength = 1452.1*mm;
+
   // Straight section with flange (outside magnet yoke)
   fMagPipeStraightLength = 210.*mm;
   fMagPipeFlangeThick = 17.5*mm; // Thickness from DN63 datasheet
@@ -98,6 +101,10 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeStraightBackPosX = fDHSTB002CenterRadius*(1.-cos(fDHSTB002AngularSpan))+0.5*fMagPipeStraightLength*sin(fDHSTB002AngularSpan);
   fMagPipeStraightBackPosZ = fDHSTB002ExitPosZ-fDHSTB002CenterRadius*sin(fDHSTB002AngularSpan)-0.5*fMagPipeStraightLength*cos(fDHSTB002AngularSpan);
   fMagPipeStraightBackRotY = -(180.*deg-fDHSTB002AngularSpan);
+
+  fMagPipeStraightSidePosX = fDHSTB002CenterRadius*(1.-cos(fDHSTB002AngularSpan))-(fMagPipeLineLength+0.5*fMagPipeStraightLength)*sin(fDHSTB002AngularSpan);
+  fMagPipeStraightSidePosZ = fDHSTB002ExitPosZ-fDHSTB002CenterRadius*sin(fDHSTB002AngularSpan)+(fMagPipeLineLength+0.5*fMagPipeStraightLength)*cos(fDHSTB002AngularSpan);
+  fMagPipeStraightSideRotY = fDHSTB002AngularSpan;
 
   // Entrance (upstream) and exit (downstream) coordinates of center of magnet pipe
 

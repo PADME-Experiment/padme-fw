@@ -291,7 +291,7 @@
 /vis/verbose warnings
 
 # Fix problem in visualizing some circular parts
-/vis/viewer/set/lineSegmentsPerCircle 24
+/vis/viewer/set/lineSegmentsPerCircle 50
 
 /vis/scene/endOfEventAction accumulate 10000
 

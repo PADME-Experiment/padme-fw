@@ -281,21 +281,30 @@ def main(argv):
     # Check file lists for differences
     if (verbose > 1): print "%s - Starting verification of run %s (%d files) between %s and %s"%(now_str(),run,len(file_list),src_string,dst_string)
     warnings = 0
+    miss_at_src = 0
+    miss_at_dst = 0
+    wrong_size = 0
+    miss_chksum_src = 0
+    miss_chksum_dst = 0
+    wrong_checksum = 0
     for rawfile in file_list:
 
         # Check if file is at source site
         if not rawfile in src_file_list:
             warnings += 1
+            miss_at_src += 1
             if verbose: print "%s - not at %s"%(rawfile,src_string)
 
         # Check if file is at destination site
         elif not rawfile in dst_file_list:
             warnings += 1
+            miss_at_dst += 1
             if verbose: print "%s - not at %s"%(rawfile,dst_string)
 
         # Check if files have the same size
         elif src_file_size[rawfile] != dst_file_size[rawfile]:
             warnings += 1
+            wrong_size += 1
             if verbose: print "%s - file sizes are different: %d at %s vs. %d at %s"%(rawfile,src_file_size[rawfile],src_string,dst_file_size[rawfile],dst_string)
 
         else:
@@ -323,15 +332,20 @@ def main(argv):
 
                 # Check if checksums are consistent
                 if (src_checksum == "" and dst_checksum == ""):
+                    miss_chksum_src += 1
+                    miss_chksum_dst += 1
                     warnings += 1
                     if verbose: print "%s - unable to get checksum at %s and %s"%(rawfile,src_string,dst_string)
                 elif (src_checksum == ""):
+                    miss_chksum_src += 1
                     warnings += 1
                     if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,src_string,dst_string,dst_checksum)
                 elif (dst_checksum == ""):
+                    miss_chksum_dst += 1
                     warnings += 1
                     if verbose: print "%s - unable to get checksum at %s - checksum at %s is %s"%(rawfile,dst_string,src_string,src_checksum)
                 elif (src_checksum != dst_checksum):
+                    wrong_checksum += 1
                     warnings += 1
                     if verbose: print "%s - checksums are different: %s at %s vs. %s at %s"%(rawfile,src_checksum,src_string,dst_checksum,dst_string)
                 else:
@@ -341,7 +355,15 @@ def main(argv):
                 if (verbose > 1): print "%s - OK - size %10d"%(rawfile,src_file_size[rawfile])
 
     if warnings:
-        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s ==="%(run,src_string,dst_string)
+        report = ""
+        if  miss_at_src: report += "- %s: %d missing"%(src_string,miss_at_src)
+        if  miss_at_dst: report += "- %s: %d missing"%(dst_string,miss_at_dst)
+        if  wrong_size: report += "- %d wrong size"%wrong_size
+        if checksum:
+            if  miss_chksum_src: report += "- %s: %d no checksum"%(src_string,miss_chksum_src)
+            if  miss_chksum_dst: report += "- %s: %d no checksum"%(dst_string,miss_chksum_dst)
+            if  wrong_checksum: report += "- %d wrong checksum"%wrong_checksum
+        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s %s ==="%(run,src_string,dst_string,report)
     else:
         print "=== Run %s matches between %s and %s ==="%(run,src_string,dst_string)
 

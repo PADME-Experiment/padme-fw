@@ -112,8 +112,9 @@ DetectorConstruction::DetectorConstruction()
   fMagneticVolumeIsVisible = 0;
 
   fEnableChamber = 1;
-  fEnableBeamLine = 1;  //M. Raggi 07/03/2019
   fChamberIsVisible = 1;
+
+  fEnableBeamLine = 1;  //M. Raggi 07/03/2019
   fBeamLineIsVisible = 1; //M. Raggi 07/03/2019
 
   fWorldIsFilledWithAir = 0;
@@ -210,17 +211,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Beam Line structure M. Raggi 07/03/2019
   if (fEnableBeamLine) {
-    fBeamLineStructure->EnableBeamLine();
-  } else {
-    fBeamLineStructure->DisableBeamLine();
+    if (fBeamLineIsVisible) {
+      fBeamLineStructure->SetBeamLineVisible();
+    } else {
+      fBeamLineStructure->SetBeamLineInvisible();
+    }
+    fBeamLineStructure->SetMotherVolume(logicWorld);
+    fBeamLineStructure->CreateGeometry();
   }
-  if (fBeamLineIsVisible) {
-    fBeamLineStructure->SetBeamLineVisible();
-  } else {
-    fBeamLineStructure->SetBeamLineInvisible();
-  }
-  fBeamLineStructure->SetMotherVolume(logicWorld);
-  fBeamLineStructure->CreateGeometry();
 
   // Vacuum chamber structure
   if (fEnableChamber) {

@@ -2,41 +2,49 @@
 
 usage() { echo "Usage: $0 -r run [-y year] [-j jobs] [-h]" 1>&2; exit 1; }
 
+now() {
+    date -u +"%Y-%m-%d %H:%M:%S"
+}
+export -f now
+
 # Function to handle the prestage of a single file
-function prestage {
+prestage() {
     uri=$1
     status=$( gfal-xattr $uri user.status )
-    now=$( date )
-    echo $now $uri $status
+    echo $( now ) - $uri $status
     if [ "$status" == "NEARLINE " ]; then
-	echo Prestaging $uri
+	echo $( now ) - Prestaging $uri
 	gfal-legacy-bringonline $uri
+	rc=$?
+	if [[ $rc -ne 0 ]]; then
+	    echo $( now ) - WARNING - gfal-legacy-bringonline reported an error
+	    return $rc
+	fi
 	status=$( gfal-xattr $uri user.status )
-	now=$( date )
-	echo $now $uri $status
+	echo $( now ) - $uri $status
 	if [ "$status" == "NEARLINE " ]; then
-	    echo "*** WARNING *** Prestaging failed"
+	    echo $( now ) - WARNING - Prestaging failed
+	    return 1
 	fi
     fi
+    return 0
 }
+export -f prestage
 
 # Define Storm access point to CNAF tape library
 cnaf_srm="srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
 run=""
 year=""
-uri=""
+#uri=""
 jobs="200"
-while getopts ":r:y:u:j:h" o; do
+while getopts ":r:y:j:h" o; do
     case "${o}" in
 	r)
 	    run=${OPTARG}
 	    ;;
         y)
             year=${OPTARG}
-            ;;
-        u)
-            uri=${OPTARG}
             ;;
         j)
             jobs=${OPTARG}
@@ -46,12 +54,6 @@ while getopts ":r:y:u:j:h" o; do
             ;;
     esac
 done
-
-# If a file URI was specified, then just prestage it and exit
-if [ -n "${uri}" ]; then
-    prestage $uri
-    exit
-fi
 
 # Check if run was specified
 if [ -z "${run}" ]; then
@@ -75,4 +77,4 @@ fi
 
 # Run this script in "prestage a single file" mode using parallel to speed it up
 run_uri="$cnaf_srm/daq/$year/rawdata/$run"
-gfal-ls $run_uri | sort | parallel -j $jobs $0 -u "$run_uri/"{}
+gfal-ls $run_uri | sort | parallel -j $jobs prestage "$run_uri/"{}

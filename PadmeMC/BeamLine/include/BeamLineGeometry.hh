@@ -90,6 +90,13 @@ public:
   G4double GetMagPipeStraightBackPosZ() { return fMagPipeStraightBackPosZ; }
   G4double GetMagPipeStraightBackRotY() { return fMagPipeStraightBackRotY; }
 
+  G4double GetMagPipeStraightSidePosX() { return fMagPipeStraightSidePosX; }
+  G4double GetMagPipeStraightSidePosZ() { return fMagPipeStraightSidePosZ; }
+  G4double GetMagPipeStraightSideRotY() { return fMagPipeStraightSideRotY; }
+
+  // Length of the straight section inside the magnet
+  G4double GetMagPipeLineLength() { return fMagPipeLineLength; }
+
   // Entrance and exit coordinates of magnet pipe
 
   G4double GetMagPipeEnterPosX() { return fMagPipeEnterPosX; }
@@ -194,6 +201,9 @@ private:
   G4double fMagPipeHoleMinRadius;
   G4double fMagPipeHoleMaxRadius;
 
+  // Length of the straight section inside the magnet
+  G4double fMagPipeLineLength;
+
   // Straight section with flange (outside magnet yoke)
   G4double fMagPipeStraightLength;
   G4double fMagPipeFlangeThick;
@@ -207,6 +217,10 @@ private:
   G4double fMagPipeStraightBackPosX;
   G4double fMagPipeStraightBackPosZ;
   G4double fMagPipeStraightBackRotY;
+
+  G4double fMagPipeStraightSidePosX;
+  G4double fMagPipeStraightSidePosZ;
+  G4double fMagPipeStraightSideRotY;
 
   // Entrance and exit coordinates of magnet pipe
 

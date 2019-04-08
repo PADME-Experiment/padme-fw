@@ -7,34 +7,25 @@
 #include "HistoSvc.hh"
 #include <iostream>
 
-PVetoAnalysis::PVetoAnalysis()
+PVetoAnalysis::PVetoAnalysis()  : ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
+  fAlgoName = "PVeto";
   InitHistos();
-
+  return;
 }
-PVetoAnalysis::PVetoAnalysis(Int_t valid, Int_t verb)
+PVetoAnalysis::PVetoAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = valid;
-  fVerbose = verb;
-  
+  fAlgoName = "PVeto";
   InitHistos();
-
+  return;
 }
+
 PVetoAnalysis::~PVetoAnalysis()
 {
 }
-Bool_t PVetoAnalysis::InitHistos()
+Bool_t PVetoAnalysis::InitHistosAnalysis()
 {
 
-  if (fValidation) {
-    InitHistosValidation("PVeto");
-    return true;
-  }
-  
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
@@ -92,27 +83,10 @@ Bool_t PVetoAnalysis::InitHistos()
 
     return true;
 }
-Bool_t PVetoAnalysis::Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl)
-{
-  Bool_t retCode = 0;
-  fhitEvent = ev;
-  fClColl   = cl;
-  fTmin = -100.;
-  fTmax =  180.;
 
-  //InitHistos();
-  
-  return retCode;
-}
-Bool_t PVetoAnalysis::Process()
+Bool_t PVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
-  if (fValidation)
-    {
-      ProcessValidation("PVeto");
-      return retCode;
-    }
-  
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

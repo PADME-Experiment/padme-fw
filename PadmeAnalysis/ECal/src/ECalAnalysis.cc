@@ -9,39 +9,22 @@
 
 ECalAnalysis::ECalAnalysis(): ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = 0;
-  fVerbose = 0;
+  fAlgoName = "ECal";
   InitHistos();
+  return;
 }
-ECalAnalysis::ECalAnalysis(Int_t Validation, Int_t verb)
+ECalAnalysis::ECalAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = Validation;
-  fVerbose = verb;
+  fAlgoName = "ECal";
   InitHistos();
+  return;
 }
 ECalAnalysis::~ECalAnalysis()
 {
 }
-Bool_t ECalAnalysis::Init(TECalRecoEvent* ev, TRecoVClusCollection* cl)
+
+Bool_t ECalAnalysis::InitHistosAnalysis()
 {
-  Bool_t retCode = 0;  
-  fhitEvent = ev;
-  fClColl = cl;
-
-  return retCode;
-}
-
-Bool_t ECalAnalysis::InitHistos()
-{
-
-    if (fValidation)
-    {
-      return InitHistosValidation();
-    }
 
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
@@ -176,13 +159,9 @@ Bool_t ECalAnalysis::InitHistosValidation()
 }
 
 
-Bool_t ECalAnalysis::Process()
+Bool_t ECalAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
-  if (fValidation)
-    {
-      return ProcessValidation();
-    }
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
@@ -300,7 +279,7 @@ Bool_t ECalAnalysis::Process()
 
 Bool_t ECalAnalysis::ProcessValidation()
 {
-  std::cout <<"Im in processValidation!!!!!!" << std::endl;
+  std::cout <<"I'm in ECalAnalysis::ProcessValidation" << std::endl;
   
   ValidationBase::ProcessValidation("ECal");
   

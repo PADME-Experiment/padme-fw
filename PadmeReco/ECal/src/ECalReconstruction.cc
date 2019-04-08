@@ -535,6 +535,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   EvTotE=0;
 
   const int NMaxCl=200;
+  const int NMaxHitsInCl=100;
   const int NRows=29;
   const int NCols=29;
   const int NTotCh=NRows*NCols;
@@ -582,7 +583,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
   Int_t iMax=0;
   Int_t HitUsed=0;
-  Int_t clusMatrix[NMaxCl][20]={0};
+  Int_t clusMatrix[NMaxCl][NMaxHitsInCl]={0};
   while(iMax>-1){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
@@ -605,6 +606,11 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
     // we may want to use the space coordinates in this loop.
     for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+      if (NCry >= NMaxHitsInCl)
+	{
+	  if (NCry == NMaxHitsInCl) std::cout<<"INFO: ECalReconstruction:: Maximum n. of Hits in this cluster reached ("<<NMaxHitsInCl<<"); go to next seed, if any"<<std::endl;
+	  continue;
+	}
       if( fabs(cTime[iHit1]-SdTime[NSeeds])<fClDeltaTime && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
       //      if( fabs(cTime[iHit1]-SdTime[NSeeds])<15 && cUsed[iHit1]==0){// && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
 

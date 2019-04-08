@@ -1,6 +1,7 @@
 #include "ValidationBase.hh"
 
-#include "TECalRecoEvent.hh"
+#include "TRecoEvent.hh"
+#include "TRecoVObject.hh"
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
 #include "TRecoVCluster.hh"
@@ -11,31 +12,62 @@
 
 ValidationBase::ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = 0;
-  fVerbose    = 0;
+  fRecoEvent   = NULL;
+  fhitEvent    = NULL;
+  fClColl      = NULL;
+  fProcessingMode = 0;
+  fVerbose        = 0;
+}
+ValidationBase::ValidationBase(Int_t processingMode, Int_t verbosityFlag)
+{
+  fRecoEvent   = NULL;
+  fhitEvent    = NULL;
+  fClColl      = NULL;
+  fProcessingMode = processingMode;
+  fVerbose        = verbosityFlag;
 }
 ValidationBase::~ValidationBase()
 {
 }
 
-/*
-Bool_t ValidationBase::Init(TRecoVObject* ev, TRecoVClusCollection* cl, Int_t verb)
+Bool_t ValidationBase::Init(TRecoEvent* evHeader, TRecoVObject* ev, TRecoVClusCollection* cl)
 {
   Bool_t retCode = 0;
+  fRecoEvent = evHeader;
   fhitEvent = ev;
   fClColl = cl;
-  fVerbose = verb;
-
   return retCode;
 }
+/*
 Bool_t ValidationBase::InitValidation()
 {
   InitHistosValidation(fname);
 }
 */
 
+Bool_t ValidationBase::InitHistos()
+{
+  if (fProcessingMode==1)
+    {
+      return InitHistosValidation();
+    }
+  else if (fProcessingMode==2)
+    {
+      return InitHistosDataQuality();
+    }
+  else if ( fProcessingMode > 2 || fProcessingMode < 0 )
+    {
+      std::cout<<"Error:: fProcessingModel = "<<fProcessingMode<<" out of range "<<std::endl;
+      return true;
+    }
+  return InitHistosAnalysis();
+  // TO DO move here from HistSvc ;
+}
+
+Bool_t ValidationBase::InitHistosValidation()
+{
+  return InitHistosValidation(fAlgoName);
+}
 Bool_t ValidationBase::InitHistosValidation(TString name)
 {
   //Validation histos
@@ -96,6 +128,32 @@ Bool_t ValidationBase::InitHistosValidation(TString name)
 }
 
 
+Bool_t ValidationBase::Process()
+{
+  Bool_t retCode = 0;
+  if (fhitEvent == NULL)
+    {
+      std::cout<<fAlgoName<<"::Process - ERROR - no data found"<<std::endl;
+      return true;
+    }
+  
+  if (fProcessingMode==1)
+    {
+      return ProcessValidation();
+    }
+  else if (fProcessingMode==2)
+    {
+      return ProcessDataQuality();
+    }
+  else if ( fProcessingMode > 2 || fProcessingMode < 0 )
+    {
+      std::cout<<"Error:: fProcessingModel = "<<fProcessingMode<<" out of range "<<std::endl;
+      return true;
+    }
+  return ProcessAnalysis();
+}
+
+
 Bool_t ValidationBase::ProcessValidation(TString name)
 {
   //std::cout << "I'm in process Validation ValidationBase" << std::endl;
@@ -108,7 +166,13 @@ Bool_t ValidationBase::ProcessValidation(TString name)
   TVector3 position;
   TRecoVHit* hit=NULL;
   std::string hname;
-  //if (fhitEvent) std::cout << "hit is no empty" << std::endl;
+  std::cout << "in ProcessValidation("<<name<<")" << std::endl;
+  if (fhitEvent) std::cout << "in ProcessValidation("<<name<<")" << std::endl;
+  else
+    {
+      std::cout<<" no data "<<std::endl;
+      return true;
+    }
   Int_t fNhits = fhitEvent->GetNHits();
   hname=name+"_NHits";
   hSvcVal->FillHisto(hname,fNhits,1.);

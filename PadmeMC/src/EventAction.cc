@@ -552,22 +552,23 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       NTarget++;
 
       // Beam structure control histogras M. Raggi 2/04/2019
-      G4double hTime = hit->GetTime();
-      G4double hE    = hit->GetEnergy();   
-      G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
-      G4double hX    = hit->GetLocalPosX();
-      G4double hY    = hit->GetLocalPosY();
+      G4double hTime  = hit->GetTime();
+      G4double hE     = hit->GetEnergy();        // deposited energy
+      G4double hTrE   = hit->GetTrackEnergy();   // track energy
+      G4double hX     = hit->GetLocalPosX();
+      G4double hY     = hit->GetLocalPosY();
+      G4double htheta = (hit->GetPX()/hit->GetPZ()) *rad;
+      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+
+      fHistoManager->FillHisto(60,hE);     //60 has Target Histos
+      fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
+      fHistoManager->FillHisto(62,hX);     //60 has Target Histos
+      fHistoManager->FillHisto(63,hY);     //60 has Target Histos
+      fHistoManager->FillHisto(64,hTrE);   //60 has Target Histos
       
-      //      if(h==0){//using only first hit to get beam variables before it interacts with the target
-	fHistoManager->FillHisto(60,hE);     //60 has Target Histos
-	fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
-	fHistoManager->FillHisto(62,hX);     //60 has Target Histos
-	fHistoManager->FillHisto(63,hY);     //60 has Target Histos
-	fHistoManager->FillHisto(64,hTrE);   //60 has Target Histos
-	
-	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
-	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-	//      }
+      fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+      fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+      fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
     }
   }//end of loop
   XTarget/=NTarget;

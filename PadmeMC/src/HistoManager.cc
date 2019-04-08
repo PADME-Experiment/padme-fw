@@ -154,13 +154,16 @@ void HistoManager::book()
   histo[63] = new TH1D("h63","Y coord ",TarYBins,TarYmin,TarYmax);
   if (!histo[63]) G4cout << "\n can't create histo 63" << G4endl; 
 
-  histo[64] = new TH1D("h64","Y coord ",100,460.,560.);
+  histo[64] = new TH1D("h64","Beam energy ",100,460.,560.);
   if (!histo[64]) G4cout << "\n can't create histo 64" << G4endl; 
   
   histo2[65] = new TH2D("h65","Tar beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
   if (!histo2[65]) G4cout << "\n can't create histo 65" << G4endl;
   histo2[66] = new TH2D("h66","Tar XvsE",TarXBins,TarXmin,TarXmax,320,500.,560.);
   if (!histo2[66]) G4cout << "\n can't create histo 66" << G4endl;
+
+  histo2[67] = new TH2D("h67","Tar XvsE",TarXBins,TarXmin,TarXmax,1000,-0.5,0.5);
+  if (!histo2[67]) G4cout << "\n can't create histo 67" << G4endl;
 
   //Hystogram of generated variables 30-39
   histo2[30] = new TH2D("h30", "Energy vs Theta Gen ",275,0.,550.,60,0.,12.);

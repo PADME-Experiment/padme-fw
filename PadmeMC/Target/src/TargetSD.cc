@@ -43,6 +43,8 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+
+  //  G4cout << aStep->GetTrack()->GetMomentumDirection() << G4endl;
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
@@ -51,6 +53,7 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
+    newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());
     newHit->SetPosition(worldPosPre);
     newHit->SetLocalPosition(localPosPre);
     fTargetCollection->insert(newHit);

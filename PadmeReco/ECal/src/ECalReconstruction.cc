@@ -33,7 +33,6 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
-  fChannelReco = new DigitizerChannelReco();
   fClusterization = new ECalSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fChannelCalibration = new ECalCalibration();

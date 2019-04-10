@@ -41,6 +41,10 @@ class Run:
         # Define directory containing setup subdirectories
         self.setup_root_dir = "%s/setup"%self.daq_dir
 
+        # Define files where the current and last run name will be written
+        self.current_run_file = "%s/run/current_run"%self.daq_dir
+        self.last_run_file = "%s/run/last_run"%self.daq_dir
+
         # Define directory containing rawdata directories for each run
         self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
 
@@ -71,6 +75,9 @@ class Run:
         #else:
         #    self.run_name = "run_%d"%self.run_number
         self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
+
+        # Write run name to current_run file for monitoring
+        with open(self.current_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
@@ -911,6 +918,9 @@ class Run:
                 command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
                 print command
                 os.system(command)
+
+        # Write run name to last_run file for monitoring
+        with open(self.last_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
 
     def clean_up(self):
 

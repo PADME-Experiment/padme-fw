@@ -378,8 +378,10 @@ int ZSUP_readdata ()
     } else {
 
       // Extract 0-suppression configuration
+      //printf("Config-zero_suppression is %u\n",Config->zero_suppression);
       unsigned int zsupMode = (Config->zero_suppression / 100) & 0x1; // 0=rejction, 1=flagging
       unsigned int zsupAlgr = (Config->zero_suppression % 100) & 0xF; // 0=off, 1-15=algorithm code
+      //printf("Entering zsup with mode %u algorithm %u\n",zsupMode,zsupAlgr);
 
       // If Autopass flag (bit 4 of status) is on, force zero suppression to flagging mode
       line = (unsigned int *)(inEvtBuffer+8);
@@ -387,6 +389,7 @@ int ZSUP_readdata ()
       if ( status & 0x0010 ) zsupMode = 1;
 
       // Apply zero suppression algorithm
+      //printf("Calling apply_zero_suppression with mode %u algorithm %u\n",zsupMode,zsupAlgr);
       outputEventSize = apply_zero_suppression(zsupMode,zsupAlgr,(void *)inEvtBuffer,(void *)outEvtBuffer);
       outputEventBuffer = outEvtBuffer;
 

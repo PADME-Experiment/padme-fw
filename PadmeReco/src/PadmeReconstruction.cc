@@ -12,6 +12,14 @@
 #include "TSACMCEvent.hh"
 #include "TTPixMCEvent.hh"
 
+#include "TTargetRecoEvent.hh"
+#include "TEVetoRecoEvent.hh"
+#include "TPVetoRecoEvent.hh"
+#include "THEPVetoRecoEvent.hh"
+#include "TECalRecoEvent.hh"
+#include "TSACRecoEvent.hh"
+//#include "TTPixRecoEvent.hh"
+
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
 #include "PVetoReconstruction.hh"
@@ -38,8 +46,22 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
   fTPixMCEvent    = 0;
-  fRawEvent       = 0;
 
+  fRawEvent       = 0;
+  
+  fRecoEvent        = 0;
+  fTargetRecoEvent  = 0;
+  fEVetoRecoEvent   = 0;
+  fPVetoRecoEvent   = 0;
+  fHEPVetoRecoEvent = 0;
+  fECalRecoEvent    = 0;
+  fSACRecoEvent     = 0;
+  fTPixRecoEvent    = 0;
+
+  //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
+  fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
+  fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeReconstructionConfiguration");
+  
   InitLibraries();
   Init(NEvt,Seed);
 }
@@ -53,18 +75,22 @@ PadmeReconstruction::~PadmeReconstruction()
 
 void PadmeReconstruction::InitLibraries()
 {
-// need to add the possibility of switching off different detectors reco M. Raggi 29/11/2018
-  ReadConf *readconf = ReadConf::GetInstance();
-  std::cout<<"Read conf"<<readconf<<std::endl;
-  //Added flags to exclude different reco analysis M. Raggi
-  if(readconf->IsTargetON())     fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
-  if(readconf->IsEVetoON())   fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
-  if(readconf->IsPVetoON())   fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
-  if(readconf->IsHEPVetoON()) fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
-  if(readconf->IsECalON())    fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
-  if(readconf->IsSACON())     fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
-  if(readconf->IsTPixON())    fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
-  		
+  
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1)) fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1)) fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1)) fRecoLibrary.push_back(new SACReconstruction    (fHistoFile,"config/SAC.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "TPix"    ,1)) fRecoLibrary.push_back(new TPixReconstruction   (fHistoFile,"config/TPix.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1)) fRecoLibrary.push_back(new TargetReconstruction (fHistoFile,"config/Target.cfg"));
+  if (fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1)) fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,"config/HEPVeto.cfg"));
+  std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
+  for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
+    {
+      std::cout<<" **** <"<<fRecoLibrary[j]->GetName()<<"> is in library at location "<<j<<std::endl;
+    }
+  std::cout<<"************************** "<<std::endl;
+ 
+  
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
@@ -126,18 +152,20 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       }
     }
   }
+  else std::cout << " Tree " << runTree << " not found "<<std::endl;
 
   Int_t nEntries;
 
   nEntries = 0;
   TString mcTreeName = "MC";
+  fMCChain = NULL;
+  std::cout<<" Looking for tree named "<<mcTreeName<<std::endl;
   fMCChain = BuildChain(mcTreeName);
   if(fMCChain) {
-
+    
     nEntries = fMCChain->GetEntries();
+    std::cout<<" Tree named "<<mcTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fMCChain->GetListOfBranches();
-    std::cout << "Found Tree '" << mcTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-
     for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
 
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
@@ -173,17 +201,73 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     }
 
   }
+  else std::cout << " Tree " << mcTreeName << " not found "<<std::endl;
+        
+
+  // input are reco hits
+  nEntries = 0;
+  TString recoTreeName = "Events";
+  std::cout<<" Looking for tree named "<<recoTreeName<<std::endl;
+  fRecoChain = NULL;
+  fRecoChain = BuildChain(recoTreeName);
+  if(fRecoChain) {
+
+    nEntries = fRecoChain->GetEntries();
+    std::cout<<" Tree named "<<recoTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+    TObjArray* branches = fRecoChain->GetListOfBranches();
+    std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+
+    for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+
+      TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
+      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
+      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+
+      if (branchName=="RecoEvent") {
+	fRecoEvent = new TRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
+      } else if (branchName=="Target_Hits") {
+	fTargetRecoEvent = new TTargetRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
+      } else if (branchName=="EVeto_Hits") {
+	fEVetoRecoEvent = new TEVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
+      } else if (branchName=="PVeto_Hits") {
+	fPVetoRecoEvent = new TPVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
+      } else if (branchName=="HEPVeto_Hits") {
+	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
+      } else if (branchName=="ECal_Hits") {
+	fECalRecoEvent = new TECalRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
+      } else if (branchName=="SAC_Hits") {
+	fSACRecoEvent = new TSACRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+	//      } else if (branchName=="TPix") {
+	//	fTPixRecoEvent = new TTPixRecoEvent();
+	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      }
+
+    }
+
+  }
+  else std::cout << " Tree " << recoTreeName << " not found "<<std::endl;
 
   nEntries = 0;
   TString rawTreeName = "RawEvents";
+  fRawChain = NULL;
   fRawChain = BuildChain(rawTreeName);
+  std::cout<<" Looking for tree named "<<rawTreeName<<std::endl;
   if(fRawChain) {
     fRawEvent = new TRawEvent();
     nEntries = fRawChain->GetEntries();
+    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fRawChain->GetListOfBranches();
     std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
     fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
   }
+  else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
 
   fNProcessedEventsInTotal = 0;
 
@@ -198,9 +282,11 @@ Bool_t PadmeReconstruction::NextEvent()
   // Check if there is a new event to process
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
-	 << " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+    if (fNProcessedEventsInTotal%100==0) {
+      std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+      std::cout << "--- PadmeReconstruction --- run/event/time " << fMCEvent->GetRunNumber()
+		<< " " << fMCEvent->GetEventNumber() << " " << fMCEvent->GetTime() << std::endl;
+    }
 
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
@@ -226,12 +312,46 @@ Bool_t PadmeReconstruction::NextEvent()
 
   }
 
+  // Check if there is a new event to process
+  if ( fRecoChain && fRecoChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+
+    if (fNProcessedEventsInTotal%100==0) {
+    std::cout << "=== Read (from Hits) event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+    std::cout << "--- PadmeReconstruction --- run/event/time " << fRecoEvent->GetRunNumber()
+	 << " " << fRecoEvent->GetEventNumber() << " " << fRecoEvent->GetTime() << std::endl;
+    }
+    // Reconstruct individual detectors (but check if they exist, first!)
+    for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+      if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fTargetRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fEVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fPVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
+	//      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
+	//	fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
+      }
+    }
+
+    ++fNProcessedEventsInTotal;
+    //std::cout<<" fNProcessedEventsInTotal = "<<fNProcessedEventsInTotal<<std::endl;
+    return true;
+    
+  }
+
   if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    // std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-    // std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
-    // 	 << " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
-
+    if (fNProcessedEventsInTotal%100==0) {
+      std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+      std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
+		<< " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+    }
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
@@ -303,9 +423,13 @@ TString PadmeReconstruction::CheckProtocols(TString OldStr){
 }
 
 PadmeVReconstruction * PadmeReconstruction::FindReco(TString Name){
-  for(UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++)
+  //std::cout<<" input is <"<<Name<<">"<<std::endl;
+  UInt_t iLib = 0;
+  for(; iLib < fRecoLibrary.size(); iLib++) {
+    //std::cout<<" iLib "<<iLib<<" "<<fRecoLibrary[iLib]->GetName()<<" comparing with <"<<Name<<">"<<std::endl;
     if(fRecoLibrary[iLib]->GetName().CompareTo(Name) == 0)
       return fRecoLibrary[iLib];
+  }
   return 0;
 }
 

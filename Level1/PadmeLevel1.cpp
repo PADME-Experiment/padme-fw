@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
   time(&time_start);
 
   // Define counters for input stream size and number of events
-  unsigned long long int input_size = 0;
+  unsigned long int input_size = 0;
   unsigned int number_of_events = 0;
 
   // Define 4B buffer used to read single lines from input file
@@ -196,17 +196,24 @@ int main(int argc, char* argv[])
     printf("PadmeLevel1 - WARNING - DAQ stream contains %u ADC boards. Is this correct?\n",number_of_boards);
   }
 
+  printf("Run number %d with %u ADC boards\n",run_number,number_of_boards);
+
   // Read board serial numbers and allocate board structures
   ADCBoard* boards[number_of_boards];
+  unsigned int board_id[number_of_boards];
   unsigned int board_sn[number_of_boards];
+  unsigned int expected_adcboards = 0;
   for (unsigned int i=0; i<number_of_boards; i++) {
     input_stream_handle.read((char*)&buff,4);
-    board_sn[i] = buff;
-    // By default assign to board a progressive id number
+    board_id[i] = ((buff & 0xff000000) >> 24);
+    board_sn[board_id[i]] = ((buff & 0x00ffffff) >>  0);
     boards[i] = new ADCBoard(i);
     // Tell board which data format to handle
     boards[i]->SetVersion(version);
+    expected_adcboards |= (1 << board_id[i]); // Add current board to mask of expected ADC boards
+    printf("- Board %u Id %u SN %u\n",i,board_id[i],board_sn[board_id[i]]);
   }
+  printf("Expected ADC boards mask is 0x%08x\n",expected_adcboards);
 
   // Last line of header contains the start of file time tag
   input_stream_handle.read((char*)&buff,4);
@@ -228,15 +235,16 @@ int main(int argc, char* argv[])
   unsigned int total_event_size = 0;
   unsigned int event_number = 0;
   struct timespec event_time;
-  unsigned long long int event_run_time = 0;
+  unsigned long int event_run_time = 0;
   unsigned int event_trigger_mask = 0;
   unsigned int event_status = 0;
   unsigned int missing_adcboards = 0;
 
   // Define variables to hold trigger information
+  unsigned long int trigger_data = 0;
   unsigned int trigger_mask = 0;
   unsigned int trigger_counter = 0;
-  unsigned long long int trigger_clock = 0;
+  unsigned long int trigger_clock = 0;
 
   // Main loop on input events
   while(1) {
@@ -256,22 +264,26 @@ int main(int argc, char* argv[])
       if (header_found) {
 
 	// Check if event is complete and size is consistent. Issue warning if they are not
-	if (! trigger_found) printf("PadmeLevel1 - WARNING - No Trigger information found in event %u\n",event_number);
-	if (adcboard_counter != number_of_boards) printf("PadmeLevel1 - WARNING - Expected data from %u ADC boards, only %u received in event %u\n",number_of_boards,adcboard_counter,event_number);
-	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Expected %u bytes and received %u bytes in event %u\n",total_event_size,event_size,event_number);
+	if (! trigger_found) printf("PadmeLevel1 - WARNING - Event %u - No Trigger information found\n",event_number);
+	if (adcboard_counter != number_of_boards) {
+	  printf("PadmeLevel1 - WARNING - Event %u - Expected data from %u ADC boards, only %u received\n",event_number,number_of_boards,adcboard_counter);
+	  printf("                        Expected ADC boards mask 0x%08x\n",expected_adcboards);
+	  printf("                        Missing  ADC boards mask 0x%08x\n",missing_adcboards);
+	}
+	if (event_size != 4*total_event_size) printf("PadmeLevel1 - WARNING - Event %u - Expected %u bytes and received %u bytes\n",event_number,total_event_size,event_size);
 
 	// Unpack info in all ADC boards
 	//for (unsigned int i=0; i<number_of_boards; i++) {
 	for (unsigned int i=0; i<adcboard_counter; i++) {
 	  unsigned int rc = boards[i]->UnpackEvent();
 	  if (rc) {
-	    printf("PadmeLevel1 - ERROR - Problem while unpacking event %u (rc=%u). Aborting\n",event_number,rc);
+	    printf("PadmeLevel1 - ERROR - Event %u - Problem while unpacking event (rc=%u). Aborting\n",event_number,rc);
 	    input_stream_handle.close();
 	    root->Exit();
 	    exit(1);
 	  }
 	  // Add board serial number
-	  boards[i]->Event()->SetBoardSN(board_sn[i]);
+	  boards[i]->Event()->SetBoardSN(board_sn[boards[i]->Event()->GetBoardId()]);
 	}
 
 	// Send event to ROOT
@@ -317,7 +329,7 @@ int main(int argc, char* argv[])
       }
 
       // Get total size of input stream
-      unsigned long long eof_size;
+      unsigned long eof_size;
       input_stream_handle.read((char*)&eof_size,8);
 
       // Get end of stream time tag and show it
@@ -329,7 +341,7 @@ int main(int argc, char* argv[])
       // Add size of file tail and check if total input size is consistent with that reported by file tail
       input_size += 4*4;
       if (eof_size != input_size) {
-	printf("PadmeLevel1 - WARNING - Input stream reports %llu size but %llu bytes were received.\n",eof_size,input_size);
+	printf("PadmeLevel1 - WARNING - Input stream reports %lu size but %lu bytes were received.\n",eof_size,input_size);
       }
 
       break;
@@ -374,6 +386,8 @@ int main(int argc, char* argv[])
       event_size += 32;
       input_size += 4*8;
 
+      //printf("Header found. Event size %u number %u time %lu.%09lu run_time %lu status %04x trig_mask %04x miss_mask %08x\n",total_event_size,event_number,event_time.tv_sec,event_time.tv_nsec,event_run_time,event_status,event_trigger_mask,missing_adcboards);
+
     }
 
     // Trigger Info procedure
@@ -396,12 +410,23 @@ int main(int argc, char* argv[])
       }
       trigger_found = 1;
 
-      // First word: trigger mask and counter
-      trigger_mask = ((buff & 0x0fff0000) >> 16);
-      trigger_counter = ((buff & 0x0000ffff) >> 0);
+      // First word: tag + size of trigger event (currently fixed to 3 words)
+      unsigned int trigger_size = 4*((buff & 0x0fffffff) >> 0);
+      if (trigger_size != 4*3) {
+	printf("PadmeLevel1 - ERROR - Trigger Info structures with anomalous size (%u) found in event. Aborting\n",trigger_size);
+	input_stream_handle.close();
+	root->Exit();
+	exit(1);
+      }
 
-      // Second+third word: trigger controller clock counter
-      input_stream_handle.read((char*)&trigger_clock,8);
+      // Second+third word: 64bits trigger data
+      input_stream_handle.read((char*)&trigger_data,8);
+
+      // Extract trigger mask, trigger counter and clock counter from trigger data
+      trigger_mask = ((trigger_data & TRIGEVENT_V03_TRIGGERMASK_BIT) >> TRIGEVENT_V03_TRIGGERMASK_POS);
+      trigger_counter = ((trigger_data & TRIGEVENT_V03_TRIGGERCOUNT_BIT) >> TRIGEVENT_V03_TRIGGERCOUNT_POS);
+      trigger_clock =  ((trigger_data & TRIGEVENT_V03_CLOCKCOUNT_BIT) >> TRIGEVENT_V03_CLOCKCOUNT_POS);
+      //printf("Trigger found. Data 0x%016lx Mask 0x%03x Count 0x%04x Clock 0x%lu\n",trigger_data,trigger_mask,trigger_counter,trigger_clock);
 
       // Add trigger info size to event size and total input size
       event_size += 12;

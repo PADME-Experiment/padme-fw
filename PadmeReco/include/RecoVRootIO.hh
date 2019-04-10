@@ -4,13 +4,14 @@
 
 #include "TFile.h"
 #include "PadmeVNamedModule.hh"
-#include "TRecoVObject.hh"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TRecoVCluster.hh"
 #include "TRecoVHit.hh"
+#include "TRecoVClusCollection.hh"
+#include "TRecoVObject.hh"
 
 class PadmeVNamedModule;
-
 
 class RecoVRootIO: public PadmeVNamedModule
 {
@@ -38,7 +39,7 @@ public:
   void  SetVerbose(Int_t value)     { fVerbose = value;     };
 
   bool   GetEnabled()             { return fEnabled;  };
-  void   SetEnabled(bool value)   { fEnabled = value; };
+  void   SetEnabled(bool value) { fEnabled = value; };
 
 
 protected:
@@ -55,6 +56,8 @@ protected:
   TTree* fEventTree;
   TBranch* fBranch;
   TRecoVObject* fEvent;
+  TBranch* fBranchClusColl;
+  TRecoVClusCollection* fClusColl;
 
 };
 

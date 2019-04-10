@@ -5,10 +5,12 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
-#include "ReadConf.hh"
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
 
 class TRawEvent;
 class TMCEvent;
+class TRecoEvent;
 
 class TTargetMCEvent;
 class TEVetoMCEvent;
@@ -17,6 +19,14 @@ class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
 class TTPixMCEvent;
+
+class TTargetRecoEvent;
+class TEVetoRecoEvent;
+class TPVetoRecoEvent;
+class THEPVetoRecoEvent;
+class TECalRecoEvent;
+class TSACRecoEvent;
+class TTPixRecoEvent;
 
 class TDetectorInfo;
 
@@ -50,10 +60,13 @@ private:
 
 
   TObjArray* fInputFileNameList;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
   TChain* fRawChain;
+  TChain* fRecoChain;
 
   TRawEvent* fRawEvent;
 
@@ -68,7 +81,15 @@ private:
   TTPixMCEvent*    fTPixMCEvent;
 
 
-
+  TRecoEvent*        fRecoEvent;
+  TTargetRecoEvent*  fTargetRecoEvent;
+  TEVetoRecoEvent*   fEVetoRecoEvent;
+  TPVetoRecoEvent*   fPVetoRecoEvent;
+  THEPVetoRecoEvent* fHEPVetoRecoEvent;
+  TECalRecoEvent*    fECalRecoEvent;
+  TSACRecoEvent*     fSACRecoEvent;
+  TTPixRecoEvent*    fTPixRecoEvent;
+  
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

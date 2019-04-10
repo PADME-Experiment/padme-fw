@@ -370,10 +370,11 @@ int ZSUP_readdata ()
       outputEventSize = inputEventSize;
       outputEventBuffer = inEvtBuffer;
 
-      // Even if zero suppression is off, show we are alive
-      if (totalReadEvents % 100 == 0) {
-	printf("Event %7d\tZero suppression OFF\n",totalReadEvents);
-      }
+      //// Even if zero suppression is off, show we are alive
+      ////if (totalReadEvents % 100 == 0) {
+      //if (totalReadEvents % Config->debug_scale == 0) {
+      //	printf("Event %7d\tZero suppression OFF\n",totalReadEvents);
+      //}
 
     } else {
 
@@ -393,6 +394,19 @@ int ZSUP_readdata ()
       outputEventSize = apply_zero_suppression(zsupMode,zsupAlgr,(void *)inEvtBuffer,(void *)outEvtBuffer);
       outputEventBuffer = outEvtBuffer;
 
+    }
+	  
+    // Write event header to debug info once in a while
+    //if ( (eventInfo.EventCounter % 100) == 0 ) {
+    if ( (totalReadEvents % Config->debug_scale) == 0 ) {
+      unsigned char i,j;
+      printf("- Event %7d - Header",totalReadEvents);
+      for (i=0;i<6;i++) {
+	printf(" %1d(",i);
+	for (j=0;j<4;j++) { printf("%02x",(unsigned char)(outputEventBuffer[i*4+3-j])); }
+	printf(")");
+      }
+      printf("\n");
     }
 
     // Write data to output file
@@ -657,7 +671,7 @@ unsigned int apply_zero_suppression (unsigned int zsupMode, unsigned int zsupAlg
   // Third line of event header contains event status mask and event counter
   // Input line is copied to output after setting the zero suppression bit in the status mask
   line = (unsigned int *)(inCursor);
-  unsigned int eventNumber = *line & 0x003FFFFF;
+  //unsigned int eventNumber = *line & 0x003FFFFF;
   outLine = (*line & 0xFEFFFFFF) + (zsupMode << 24);
   memcpy(outCursor,&outLine,4);
 
@@ -746,9 +760,10 @@ unsigned int apply_zero_suppression (unsigned int zsupMode, unsigned int zsupAlg
 
   }
 
-  if (eventNumber % 100 == 0) {
-    printf("Event %7d\tActive 0x%08x\tAccepted 0x%08x\n",eventNumber,activeChannelMask,acceptedChannelMask);
-  }
+  ////if (eventNumber % 100 == 0) {
+  //if (eventNumber % Config->debug_scale == 0) {
+  //  printf("Event %7d\tActive 0x%08x\tAccepted 0x%08x\n",eventNumber,activeChannelMask,acceptedChannelMask);
+  //}
   //printf("\tActive   0x%08x    Input   %6d\n",activeChannelMask,inSize);
   //printf("\tAccepted 0x%08x    Output  %6d\n",acceptedChannelMask,outSize);
 

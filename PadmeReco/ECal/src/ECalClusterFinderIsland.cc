@@ -32,6 +32,7 @@ Int_t ECalClusterFinderIsland::FindClusters()
     if ( ECalCluster* cluster = fClusterHandler->NewCluster() ) {
       nClusters++;
       cluster->AddCrystal(seed);
+      cluster->SetSeed(seed->GetHitIndex());
       seed->SetSeed();
       ExpandCluster(cluster,seed);
     } else {

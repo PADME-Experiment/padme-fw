@@ -6,12 +6,17 @@
 #include "TVector3.h"
 #include "TMCVHit.hh"
 
+class TMCVDigi;
+
 class TRecoVHit : public TMCVHit
 {
 
 public:
 
   TRecoVHit();
+  //TRecoVHit(const TMCVDigi&);
+
+
   virtual ~TRecoVHit(){};
 
   void setBDCHid(unsigned int BDid, unsigned int CHid){fBDCHid = 100*BDid+CHid;}

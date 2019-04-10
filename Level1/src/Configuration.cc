@@ -13,6 +13,7 @@ Configuration::Configuration()
   fRawFileHeader = "rawdata/rawdata";
   fNEventsPerFile = 10000;
   fVerbose = 0;
+  fDebugScale = 100;
 }
 
 Configuration::~Configuration()

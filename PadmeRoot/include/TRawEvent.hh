@@ -9,6 +9,9 @@
 
 #define TRAWEVENT_MAXADCBOARDS 50
 
+#define TRAWEVENT_STATUSBIT_COMPLETE   0
+#define TRAWEVENT_STATUSBIT_AUTOPASS   1
+
 class TRawEvent : public TObject
 {
 

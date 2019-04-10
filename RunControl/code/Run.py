@@ -210,7 +210,7 @@ class Run:
                 (p_name,p_value) = m.group(1,2)
                 if (p_name == "boardid_list"):
                     # Get sorted list of board ids while removing duplicates
-                    s_boards = sorted(list(set(re_boardid.findall(p_value))))
+                    s_boards = sorted(list(set(re_boardid.findall(p_value))),key=int)
                     for s_bid in s_boards:
                         # Convert to int as findall returns strings
                         self.boardid_list.append(int(s_bid))
@@ -249,14 +249,14 @@ class Run:
         cfgstring = ""
 
         cfgstring += "user_account\t\t%s\n"%self.user_account
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
         cfgstring += "base_port_number\t\t%s\n"%self.base_port_number
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
 
         cfgstring += "daq_executable\t\t%s\n"%self.daq_executable
-        cfgstring += "trigger_executable\t\t%s\n"%self.trigger_executable
-        cfgstring += "merger_executable\t\t%s\n"%self.merger_executable
-        cfgstring += "level1_executable\t\t%s\n"%self.level1_executable
+        cfgstring += "trigger_executable\t%s\n"%self.trigger_executable
+        cfgstring += "merger_executable\t%s\n"%self.merger_executable
+        cfgstring += "level1_executable\t%s\n"%self.level1_executable
 
         cfgstring += "start_file\t\t%s\n"%self.start_file
         cfgstring += "quit_file\t\t%s\n"%self.quit_file
@@ -269,7 +269,7 @@ class Run:
 
         cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "run_name\t\t%s\n"%self.run_name
-        cfgstring += "run_dir\t\t%s\n"%self.run_dir
+        cfgstring += "run_dir\t\t\t%s\n"%self.run_dir
         cfgstring += "run_type\t\t%s\n"%self.run_type
         cfgstring += "run_user\t\t%s\n"%self.run_user
         cfgstring += "run_comment_start\t%s\n"%self.run_comment_start

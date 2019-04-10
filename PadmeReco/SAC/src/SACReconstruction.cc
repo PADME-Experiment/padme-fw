@@ -13,6 +13,8 @@
 #include "TSACMCDigi.hh"
 //#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelSAC.hh"
+#include "SACCalibration.hh"
+#include "SACSimpleClusterization.hh"
 #include "TH2F.h"
 #include "TH1F.h"
 #include "TCanvas.h"
@@ -102,7 +104,10 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   ParseConfFile(ConfigFileName);
   //fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelSAC();
+  fChannelCalibration = new SACCalibration();
+  fClusterization = new SACSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+  fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
 }
 
 void SACReconstruction::HistoInit(){
@@ -220,7 +225,13 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // {;}
 
 //  Last revised by M. Raggi 16/11/2018 
-void SACReconstruction::BuildClusters(){
+void SACReconstruction::BuildClusters()
+{
+  if      (fClusterizationAlgo==1) SACReconstruction::BuildSimpleSACClusters();
+  else if (fClusterizationAlgo==2) PadmeVReconstruction::BuildClusters();
+  return;   
+}
+void SACReconstruction::BuildSimpleSACClusters(){
 
   //std::cout<<"In SACBuildClusters "<<std::endl;
   vector<TRecoVCluster *> &myClusters  = GetClusters();
@@ -459,22 +470,35 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   int NClusters = GetClusters().size();//SACBuildClusters(rawEv);
   //std::cout<<"Built clusters - size "<<NClusters<<std::endl;
   GetHisto("SACNPart")->Fill(SACNPart);
-  if(NClusters>0) GetHisto("SACNClus")->Fill(NClusters);
-  //  GetHisto("SACETot") ->Fill(EvTotE);
-  // Fill charge histograms
-  char iNameCh[100];
-  for(int iCh=0; iCh<25 ; iCh++){
-    sprintf(iNameCh,"SACCh%d",iCh);
-    GetHisto(iNameCh)->Fill(ECh[iCh]);
-  }
+// <<<<<<< HEAD
+//  if(NClusters>0) GetHisto("SACNClus")->Fill(NClusters);
+//  //  GetHisto("SACETot") ->Fill(EvTotE);
+//  // Fill charge histograms
+//  char iNameCh[100];
+//  for(int iCh=0; iCh<25 ; iCh++){
+//    sprintf(iNameCh,"SACCh%d",iCh);
+//    GetHisto(iNameCh)->Fill(ECh[iCh]);
+//  }
+//  for(int gg=0;gg<NClusters;gg++){
+//    GetHisto("SACClE")->Fill(ClE[gg]);
+//    if(gg>1) GetHisto("SACClE2")->Fill(ClE[gg]); 
+//    GetHisto("SACClNCry")->Fill(ClNCry[gg]);
+//    GetHisto("SACClTime")->Fill(ClTime[gg]);
+//    if(ClNCry[gg]>1 && ClE[gg]>10.) {
+//      GetHisto("SACClTimeCut")->Fill(ClTime[gg]);
+//      GetHisto("SACClPos")->Fill(ClX[gg],ClY[gg]);
+//=======
+  GetHisto("SACNClus")->Fill(NClusters);
+  GetHisto("SACETot") ->Fill(EvTotE);
+
+  vector<TRecoVCluster *> myClus = GetClusters();
   for(int gg=0;gg<NClusters;gg++){
-    GetHisto("SACClE")->Fill(ClE[gg]);
-    if(gg>1) GetHisto("SACClE2")->Fill(ClE[gg]); 
-    GetHisto("SACClNCry")->Fill(ClNCry[gg]);
-    GetHisto("SACClTime")->Fill(ClTime[gg]);
-    if(ClNCry[gg]>1 && ClE[gg]>10.) {
-      GetHisto("SACClTimeCut")->Fill(ClTime[gg]);
-      GetHisto("SACClPos")->Fill(ClX[gg],ClY[gg]);
+    GetHisto("SACClE")->Fill( myClus[gg]->GetEnergy() );
+    GetHisto("SACClNCry")->Fill( myClus[gg]->GetNHitsInClus());
+    GetHisto("SACClTime")->Fill( myClus[gg]->GetTime());
+    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>10.) {
+      GetHisto("SACClTimeCut")->Fill( myClus[gg]->GetTime() );
+      GetHisto("SACClPos")->Fill( (myClus[gg]->GetPosition()).X(), (myClus[gg]->GetPosition()).Y() );
     }
     //    std::cout<<gg<<" Ncry "<<ClNCry[gg]<<" "<<" "<<std::endl;
   }

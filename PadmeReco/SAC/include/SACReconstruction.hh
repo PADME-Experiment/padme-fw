@@ -27,11 +27,13 @@ public:
   virtual void AnalyzeEvent(TRawEvent* evt);
   virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
+  void BuildSimpleSACClusters();
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
+  Int_t fClusterizationAlgo;
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int> ClSeed;

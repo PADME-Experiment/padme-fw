@@ -16,15 +16,19 @@ class ECalReconstruction : public PadmeVReconstruction
 {
 
 public:
-  
+
   ECalReconstruction(TFile*, TString);
   ~ECalReconstruction();
 
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void ProcessEvent(TRawEvent*);
+  //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  //  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
+  void BuildSimpleECalClusters();
+  void BuildECalIslandRadiusClusters(Int_t type);
+  //void BuildECalIslandClusters();
+  //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void InitFlags();
@@ -34,6 +38,12 @@ public:
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
+  Int_t fClusterizationAlgo;
+  Double_t fClDeltaTime;
+  Int_t fClDeltaCellMax;
+  Double_t fClEnThrForHit;
+  Double_t fClEnThrForSeed;
+
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int>    ClSeed;
@@ -44,12 +54,11 @@ private:
 
   //Seeds vectors
   std::vector<double> SdEn;
-  std::vector<double> SdTime; 
+  std::vector<double> SdTime;
   std::vector<double> SdCell;
 
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
-  //  vector<TRecoVCluster *> fClusters;
 
   double EvTotE;
 
@@ -64,14 +73,8 @@ private:
   Int_t  fIsGlobalDebug;
   Int_t  fIsLocalDebug;
 
-//// Methods for the Digitizer Class
-//  bool  DigiGetIsPed()          {return fIsPed;}
-//  bool  DigiGetIsReco()         {return fIsReco;}
-//  bool  DigiGetIsCosmic()       {return fIsCosmic;}
-//  bool  DigiGetIsMonitor()      {return fIsMonitor;}
-//  Int_t DigiGetIsGlobalDebug()  {return fIsGlobalDebug; }
-//  Int_t DigiGetIsLocalDebug()   {return fIsGlobalDebug; }
-//  void  DigiSetIsLocalDebug(Int_t value) { fIsLocalDebug = value; }
+  //  vector<TRecoVCluster *> fClusters;
+
 
 };
 #endif

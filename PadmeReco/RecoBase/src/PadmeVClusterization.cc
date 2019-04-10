@@ -50,30 +50,33 @@ std::vector<TRecoVHit *>  PadmeVClusterization::removeOutOfTimeHits(std::vector<
   std::vector<TRecoVHit *> cleanedHits;
   Double_t htime = 0.;
   Double_t henergy = 0.;
+  Int_t nskip = 0;
   for (unsigned int j=0; j<Hits.size(); ++j)
     {
       //Int_t ch = Hits[j]->GetChannelId();
       htime = Hits[j]->GetTime();
-      if (htime < fClusterTLowForHit) continue; 
-      if (htime > fClusterTHighForHit) continue;
+      if (htime < fClusterTLowForHit) {fhUsed[j]=1;++nskip;/* continue; */}
+      if (htime > fClusterTHighForHit){fhUsed[j]=1;++nskip;/* continue; */}
       henergy = Hits[j]->GetEnergy();
-      if (henergy < fClusterEthrForHit) continue;
+      if (henergy < fClusterEthrForHit) {fhUsed[j]=1;++nskip;/* continue; */}
       cleanedHits.push_back(Hits[j]);
+      //std::cout<<"cleanedHits are "<<j<<" chId ="<<Hits[j]->GetChannelId()<<" Time ="<<htime<<" Energy = "<<henergy<<" ----is skipped = "<<fhUsed[j]<<std::endl;
     }
+  //std::cout<<" cleanedHits size = "<<cleanedHits.size()<<" inputHits size = "<<Hits.size()<<" hits skipped = "<<nskip<<std::endl;
   return cleanedHits;
 }
 
 void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std::vector<TRecoVCluster *> &myClusters)
 {
-
+  Bool_t mdebug = false;
+  
+  // clear the vector keeping track of hits already used in clusters,  or out of time, or below threshold for used. 
+  fhUsed.clear();
+  for(unsigned int i =  0; i < inputHits.size(); ++i) fhUsed.push_back(0);
   // remove out of time hits
   //std::cout<<"PadmeVClusterization   inputHits size "<<inputHits.size()<<std::endl;
   std::vector<TRecoVHit *> Hits     = removeOutOfTimeHits(inputHits);
   //std::cout<<"PadmeVClusterization  inTimeHits size "<<Hits.size()<<std::endl;
-  
-  // clear the vector keeping track of hits used in clusters 
-  fhUsed.clear();
-  for(unsigned int i =  0; i < Hits.size(); ++i) fhUsed.push_back(0);
 
   Double_t clE = 0.;
   Double_t clT = 0.;
@@ -87,6 +90,7 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
   Int_t    seedID = 0;
   Double_t seedT  = 0.;
 
+  if (mdebug) std::cout<<"PadmeVClusterization::Reconstruct --------------------------------------------------------------------- nHits = "<<inputHits.size()<<";  in time "<<Hits.size()<<std::endl; 
   Double_t dtThr = fClusterDtMax;
   // start the loop over the unused hits looking for a new cluster seed 
   while(iSeed > -1){
@@ -112,6 +116,7 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
     seedT  = Hits[iSeed]->GetTime();    
     seedID = Hits[iSeed]->GetChannelId();
 
+    if (mdebug) std::cout<<"Reconstruct --- New Seed is hit n. "<<iSeed<<" @CHid "<<seedID<<" time  "<<seedT<<std::endl;
     Double_t hitTime   = 0.;
     Double_t hitEnergy = 0.;
     Int_t    hitID     = 0 ;
@@ -133,11 +138,12 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
       hitID   = Hits[iHit1]->GetChannelId();
       if( fabs( hitTime - seedT ) < dtThr ){
 	Int_t dCell = IsSeedNeig( seedID, hitID);
+	if (mdebug) std::cout<<"Reconstruct --- Try to add hit n. "<<iHit1<<" @CHid "<<hitID<<" time  "<<hitTime<<" energy "<<hitEnergy<<" --- dist from seed = "<<dCell<<std::endl;
 
 	if ( dCell < 0 ) continue;
 	if ( dCell <= 1 ){
 	// the seed will be add to the cluster in this loop
-	
+	  if (mdebug) std::cout<<"Reconstruct --- let's add this hit n. "<<iHit1<<" @CHid "<<hitID<<" NEXT in space to the seed"<<std::endl;
 	  fhUsed[iHit1]=1;
 	  
 	  clE  += hitEnergy;
@@ -148,9 +154,15 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
 	  clZ  += (Hits[iHit1]->GetPosition().Z())*hitEnergy;
 	  ++clSize;
 	  clHitIndices.push_back(iHit1);
+	  if (mdebug) {
+	    std::cout<<"Reconstruct --- Hits in Cluster: ";
+	    for (unsigned int j=0; j<clHitIndices.size(); ++j) std::cout<<Hits[clHitIndices[j]]->GetChannelId()<<" ";
+	    std::cout<<std::endl;
+	  }
 	}
  	else if ( dCell>1 )
 	  {
+	    if (mdebug)std::cout<<"Reconstruct --- let's consider this hit n. "<<iHit1<<" @CHid "<<hitID<<" close in space to the seed for later addition "<<std::endl;
  	    //fDistantHits.push_back(iHit1);
  	    //fDistFromSeed.push_back(dCell);
 	    myDistHits.push_back( fFarHits() );
@@ -163,25 +175,30 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
     if (clSize==0) break;
     std::sort(myDistHits.begin(), myDistHits.end(), by_distance());
     
-    unsigned int nCloseHits=clHitIndices.size();
-    Int_t startDCell=2; 
+    // unsigned int nCloseHits=clHitIndices.size();
+    // Int_t startDCell=2; 
     for (unsigned int i2 =  0; i2 < myDistHits.size(); ++i2)
       {
     	Int_t iHit2         = myDistHits[i2].hitIndex;
-    	Int_t iDistFromSeed = myDistHits[i2].distFromSeed;
-    	if ( iDistFromSeed > startDCell )
-    	  {
-    	    nCloseHits = clHitIndices.size();
-    	    startDCell = iDistFromSeed;
-    	  }
+    	// Int_t iDistFromSeed = myDistHits[i2].distFromSeed;
+    	// if ( iDistFromSeed > startDCell )
+    	//   {
+    	//     nCloseHits = clHitIndices.size();
+    	//     startDCell = iDistFromSeed;
+    	//   }
     	if (fhUsed[iHit2]==1) continue;
     	hitEnergy=Hits[iHit2]->GetEnergy();
+	if (mdebug) std::cout<<"Reconstruct --- consider for addition to the cluster this hit n. "<<iHit2<<" @CHid "<<Hits[iHit2]->GetChannelId()<<" close in space to the seed"<<std::endl;
 	
-    	for (unsigned int iHit =  0; iHit < nCloseHits; ++iHit)
+//    	for (unsigned int iHit =  0; iHit < nCloseHits; ++iHit)
+    	for (unsigned int iHit =  0; iHit < clHitIndices.size(); ++iHit)
     	  {
-    	    if ((Int_t)iHit==iSeed) continue;
-    	    if (IsSeedNeig( Hits[iHit]->GetChannelId(), Hits[iHit2]->GetChannelId() ) == 1)
+	    Int_t closeHitIndex = clHitIndices[iHit];
+    	    if (closeHitIndex == iSeed) continue;
+	    if (mdebug) std::cout<<"Reconstruct --- check closeness with hit n. "<<closeHitIndex<<" @CHid "<<Hits[closeHitIndex]->GetChannelId()<<std::endl;
+    	    if (IsSeedNeig( Hits[closeHitIndex]->GetChannelId(), Hits[iHit2]->GetChannelId() ) == 1)
     	      {
+		//std::cout<<"Reconstruct --- let's add this hit n. "<<iHit2<<" @CHid "<<Hits[iHit2]->GetChannelId()<<" close in space to already associated hits"<<std::endl;
     		fhUsed[iHit2]=1;
 	  
     		clE  += hitEnergy;
@@ -193,6 +210,7 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
     		++clSize;
     		clHitIndices.push_back(iHit2);
     		iHit = clHitIndices.size();
+		if (mdebug)std::cout<<"Reconstruct --- accepted "<<std::endl;
     	      }
     	  }
       }
@@ -215,8 +233,13 @@ void PadmeVClusterization::Reconstruct(std::vector<TRecoVHit *> &inputHits, std:
     myCl->SetNHitsInClus ( clSize );
     myCl->SetHitVecInClus( clHitIndices );
     myClusters.push_back ( myCl );
+    //std::cout<<"Reconstruct --- New cluster stored with seed="<<iSeed<<" @CHid "<<seedID<<" clSize="<<clSize<<std::endl;
+
     
   }  //end of while loop on seeds
+
+
+  
   
 }
 
@@ -233,7 +256,7 @@ Int_t PadmeVClusterization::IsSeedNeig(Int_t seedID, Int_t cellID) {
   Int_t CellCol=cellID;
   //excludes the seed cell 
   if( abs(SeedCol-CellCol)<=dChIDmax) IsNeig = abs(SeedCol-CellCol); 
-  //  std::cout<<"seedID "<<seedID<<" cellID "<<cellID<<" Is Neig "<<IsNeig<<std::endl;
+  //std::cout<<"PadmeVClusterization::IsSeedNeig-  seedID "<<seedID<<" cellID "<<cellID<<" Is Neig "<<IsNeig<<std::endl;
   return IsNeig;
 }
 

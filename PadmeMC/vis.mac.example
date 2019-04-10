@@ -4,7 +4,7 @@
 #
 /control/verbose 1
 /run/verbose 1
-/tracking/verbose 1
+/tracking/verbose 0
 
 # RootIO settings
 
@@ -20,7 +20,7 @@
 
 # Disable/enable saving to Fast analysis Tree U102
 # uses conditions on ECal Energy, SAC energy, Hit in the Veto
-#/analysis/SaveEcal  false 
+#/analysis/SaveEcal  false
 #/analysis/SaveSAC   false
 #/analysis/SaveVeto  false
 
@@ -77,10 +77,17 @@
 
 #/Detector/EnableMagneticField
 #/Detector/DisableMagneticField
-#/Detector/SetMagneticFieldValue 0.55 tesla
+#/Detector/SetMagneticFieldValue 0.4542 tesla
 
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
+
+# Beam line settings
+#/Detector/SetBeamLineInvisible
+#/Detector/EnableStructure BeamLine
+#/Detector/DisableStructure BeamLine
+#/Detector/BeamLine/Be_window true
+#/Detector/BeamLine/DHST002_FieldY -1.055 tesla
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
@@ -88,7 +95,7 @@
 #/Detector/Magnet/SetMagnetVisible
 #/Detector/Magnet/SetMagnetInvisible
 
-#/Detector/Target/FrontFaceZ -700. mm
+#/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
 #/Detector/Target/EnableFastDigitization
@@ -101,92 +108,81 @@
 #/Detector/ECal/CrystalMapId 0
 #/Detector/ECal/CrystalSize 2.1
 #/Detector/ECal/CrystalLength 23.
-#/Detector/ECal/CrystalGap 0.1
-#/Detector/ECal/CrystalCoating 0.1
+#/Detector/ECal/CrystalGap 0.12
+#/Detector/ECal/CrystalCoating 0.115
 #/Detector/ECal/TedlarThickness 0.05
-#/Detector/ECal/FrontFaceZ 230.
+#/Detector/ECal/FrontFaceZ 244.
 #/Detector/ECal/EnablePanel true
-#/Detector/ECal/PanelThickness 0.5
+#/Detector/ECal/PanelThickness 1.5
 #/Detector/ECal/PanelGap 0.1
 
-#/Detector/SAC/NRows 7
-#/Detector/SAC/NCols 7
-#/Detector/SAC/CrystalSize 2. cm
-#/Detector/SAC/CrystalLength 20. cm
+#/Detector/SAC/NRows 5
+#/Detector/SAC/NCols 5
+#/Detector/SAC/CrystalSize 3. cm
+#/Detector/SAC/CrystalLength 14. cm
 #/Detector/SAC/CrystalGap 50. um
 #/Detector/SAC/CrystalCoating 100. um
 #/Detector/SAC/FrontFaceZ 300. cm
 
-#/Detector/LAV/InnerRadius 4.
-#/Detector/LAV/OuterRadius 10.
+#/Detector/LAV/InnerRadius 5.1
+#/Detector/LAV/OuterRadius 12.
 #/Detector/LAV/ZLength 20.
-#/Detector/LAV/FrontFaceZ -75.
+#/Detector/LAV/FrontFaceZ -60.
 
-#/Detector/PVeto/FrontFaceZ -50.
-#/Detector/PVeto/InnerFaceX -20.
-#/Detector/PVeto/NFingers 96
+#/Detector/PVeto/FrontFaceZ -47.255
+#/Detector/PVeto/InnerFaceX 17.75
+#/Detector/PVeto/NFingers 90
 #/Detector/PVeto/FingerSize 1.
-#/Detector/PVeto/FingerLength 16.
+#/Detector/PVeto/FingerLength 17.8
 
-#/Detector/EVeto/FrontFaceZ -50.
-#/Detector/EVeto/InnerFaceX  20.
+#/Detector/EVeto/FrontFaceZ -47.255
+#/Detector/EVeto/InnerFaceX  -17.75
 #/Detector/EVeto/NFingers 96
 #/Detector/EVeto/FingerSize 1.
-#/Detector/EVeto/FingerLength 16.
+#/Detector/EVeto/FingerLength 17.8
 
-#/Detector/HEPVeto/NFingers 32
+#/Detector/HEPVeto/NFingers 16
 #/Detector/HEPVeto/FingerStep 1.1 cm
 #/Detector/HEPVeto/FingerSize 1. cm
-#/Detector/HEPVeto/FingerLength 20. cm
-#/Detector/HEPVeto/DistanceToCorner 43. cm
+#/Detector/HEPVeto/FingerLength 17.8 cm
+#/Detector/HEPVeto/DistanceToCorner 40. cm
 
 #/Detector/TPix/NColumns 6
-#/Detector/TPix/DistanceToCorner 35.8 cm
+#/Detector/TPix/DistanceToCorner 29.73 cm
 
 #/Detector/TDump/TargetRadius 3.5
 #/Detector/TDump/TargetLength 6.0
 #/Detector/TDump/TargetFrontFaceZ 10.
 #/Detector/TDump/FrontFaceZ -180.
 
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/momentum 280. MeV
-#/beam/bunch_structure_on false
-#/beam/position_spread_on false
-#/beam/momentum_spread_on false
-#/beam/emittance_on false
-### Test for target energy loss
-#/Detector/DisableSubDetector Target
-### Test for high energy/high field setup
-#/Detector/Magnet/MagneticFieldConstantValue -0.8
-
 # Beam setup
 
-# Example for single three photon events
-#/beam/n_e+_per_bunch 1
-#/beam/n_e+_poisson_on false
-#/beam/n_3g_per_bunch 1
-#/beam/3g_file events_ee-3g-550MeV-1M.txt
-
 # Primary positrons setup
-#/beam/n_e+_per_bunch 5000
-#/beam/n_e+_poisson_on false
+#/beam/n_e+_per_bunch 25000
+#/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true
-#/beam/bunch_time_length 40. ns
-#/beam/ubunch_time_length 150 ps
-#/beam/ubunch_time_delay 350 ps
+#/beam/bunch_time_length 250. ns
+#/beam/ubunch_time_length 150. ps
+#/beam/ubunch_time_delay 350. ps
 #/beam/position_x 0. cm
 #/beam/position_y 0. cm
+#/beam/position_z -103. cm
 #/beam/position_spread_on true
 #/beam/position_x_spread 1. mm
 #/beam/position_y_spread 1. mm
 #/beam/momentum 550. MeV
 #/beam/momentum_spread_on true
-#/beam/momentum_spread 55. MeV
+#/beam/momentum_spread 5.5 MeV
 #/beam/direction 0. 0. 1.
 #/beam/emittance_on true
-#/beam/emittance_x 0.001
-#/beam/emittance_y 0.001
+#/beam/emittance_x 1. mrad
+#/beam/emittance_y 1. mrad
+
+# Beam Line studies: position beam at Be window
+#/beam/position_x 2249.80 mm
+#/beam/position_y 0. cm
+#/beam/position_z -4681.74 mm
+#/beam/direction -1. 0. 1.
 
 # Uboson generator
 #/beam/n_e+_per_bunch 1
@@ -194,9 +190,11 @@
 #/beam/n_uboson_per_bunch 1
 #/beam/uboson_mass 22. MeV
 
-# Three photons events read from file
-#/beam/n_3g_per_bunch 0
-#/beam/3g_file ThreeGamma_550MeV.txt
+# Example for single three photon events
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_3g_per_bunch 1
+#/beam/3g_file events_ee-3g-550MeV-1M.txt
 
 # Calibration run setup: single photon pointing to ECal front face
 #/beam/calibration false
@@ -208,42 +206,37 @@
 # Create detectors and initialize run
 /run/initialize
 
-#
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
-###/vis/open HepRepFile
-#
-# Use this open statement to create a .prim file suitable for
-# viewing in DAWN:
+
+# Use this open statement to create a .prim file suitable for viewing in DAWN:
 #/vis/open DAWNFILE
-#
-# Use this open statement to create a .heprep file suitable for
-# viewing in HepRApp:
+
+# Use this open statement to create a .heprep file suitable for viewing in HepRApp:
 #/vis/open HepRepFile
 #/vis/open HepRepXML
 #/vis/heprep/setEventNumberSuffix -0001
 #/vis/scene/add/trajectories rich
-#
+
 # Use this open statement to create a .wrl file suitable for
 # viewing in a VRML viewer:
 #/vis/open VRML2FILE
-#
-# Disable auto refresh and quieten vis messages whilst scene and
-# trajectories are established:
+
+# Disable auto refresh and quieten vis messages whilst scene and trajectories are established:
 /vis/viewer/set/autoRefresh false
 /vis/verbose errors
-#
+
 # Draw geometry:
 /vis/drawVolume
 #/geometry/test/grid_test true
-#
+
 #/vis/viewer/set/viewpointVector 0. 10. 0.
 
-# Choos viewpoint
+# Choose viewpoint
 # Side view
-/vis/viewer/set/viewpointThetaPhi -90. 0. deg
+#/vis/viewer/set/viewpointThetaPhi -90. 0. deg
 # Top view
-#/vis/viewer/set/viewpointThetaPhi 90. 90. deg
+/vis/viewer/set/viewpointThetaPhi 90. 90. deg
 # Front view
 #/vis/viewer/set/viewpointThetaPhi 0. 0. deg
 # Back view
@@ -251,11 +244,11 @@
 
 # Specify zoom value:
 /vis/viewer/zoom 1.4
-#
+
 # Specify style (surface or wireframe):
 /vis/viewer/set/style wireframe
 #/vis/viewer/set/style surface
-#
+
 # Draw coordinate axes:
 /vis/scene/add/axes 0 0 0 1 m
 
@@ -268,39 +261,37 @@
 /vis/scene/add/eventID # Drawn at end of event
 /vis/scene/add/date    # Date stamp
 
-# Draw smooth trajectories at end of event, showing trajectory points
-# as markers 2 pixels wide:
+# Draw smooth trajectories at end of event, showing trajectory points as markers 2 pixels wide:
 /vis/scene/add/trajectories smooth
 /vis/modeling/trajectories/create/drawByCharge
 /vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true
 /vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 1
 # (if too many tracks cause core dump => /tracking/storeTrajectory 0)
-#
+
 # Draw hits at end of event:
 #/vis/scene/add/hits
-#
+
 # To draw only gammas:
 #/vis/filtering/trajectories/create/particleFilter
 #/vis/filtering/trajectories/particleFilter-0/add gamma
-#
-# To invert the above, drawing all particles except gammas,
-# keep the above two lines but also add:
+
+# To invert the above, drawing all particles except gammas, keep the above two lines but also add:
 #/vis/filtering/trajectories/particleFilter-0/invert true
-#
+
 # Many other options are available with /vis/modeling and /vis/filtering.
 # For example, to select colour by particle ID:
 #/vis/modeling/trajectories/create/drawByParticleID
 #/vis/modeling/trajectories/drawByParticleID-0/set e- blue
-#
+
 # To superimpose all of the events from a given run:
 /vis/scene/endOfEventAction accumulate
-#
+
 # Re-establish auto refreshing and verbosity:
 /vis/viewer/set/autoRefresh true
 /vis/verbose warnings
 
 # Fix problem in visualizing some circular parts
-/vis/viewer/set/lineSegmentsPerCircle 24
+/vis/viewer/set/lineSegmentsPerCircle 50
 
 /vis/scene/endOfEventAction accumulate 10000
 

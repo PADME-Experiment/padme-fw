@@ -30,10 +30,10 @@ class TPixDetector;
 class TungstenDetector;
 class MagnetStructure;
 class ChamberStructure;
+class BeamLineStructure; //M. Raggi 07/03/2019
 class HallStructure;
 class MagneticFieldSetup;
 class LAVDetector;
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -71,6 +71,10 @@ public:
   void ChamberIsVisible();
   void ChamberIsInvisible();
 
+  //M. Raggi 07/03/2019
+  void BeamLineIsVisible();
+  void BeamLineIsInvisible();
+
   void WorldIsAir();
   void WorldIsVacuum();
 
@@ -104,6 +108,7 @@ private:
 
   MagnetStructure*  fMagnetStructure;
   ChamberStructure* fChamberStructure;
+  BeamLineStructure* fBeamLineStructure; //M. Raggi 07/03/2019
   HallStructure*    fHallStructure;
 
   MagneticFieldSetup* fMagneticFieldManager;
@@ -121,12 +126,14 @@ private:
 
   G4int fEnableWall;
   G4int fEnableChamber;
+  G4int fEnableBeamLine;  //M. Raggi 07/03/2019
   G4int fEnableMagnet;
 
   G4int fEnableMagneticField;
   G4int fMagneticVolumeIsVisible;
 
   G4int fChamberIsVisible;
+  G4int fBeamLineIsVisible; //M. Raggi 07/03/2019
 
   G4int fWorldIsFilledWithAir;
 

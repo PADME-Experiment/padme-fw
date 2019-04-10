@@ -126,6 +126,9 @@ int reset_config()
   Config->file_max_size = 1024*1024*1024; // 1GiB
   Config->file_max_events = 100000; // 1E5 events
 
+  // Rate of debug output (1=all events)
+  Config->debug_scale = 100; // Info about one event on 100 is written to debug output
+
   return 0;
 
 }
@@ -537,6 +540,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"debug_scale")==0 ) {
+        if ( sscanf(value,"%u",&vu) ) {
+          Config->debug_scale = vu;
+          printf("Parameter %s set to %d\n",param,vu);
+        } else {
+          printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+        }
       } else {
 	printf("WARNING - Unknown parameter %s from line:\n%s\n",param,line);
       }
@@ -712,6 +722,8 @@ int print_config(){
     printf("file_max_events\t\t%u\t\tmax number of events to write before changing output file\n",Config->file_max_events);
   }
 
+  printf("debug_scale\t\t%u\t\tDebug output downscale factor\n",Config->debug_scale);
+
   printf("=== End of configuration parameters ===\n\n");
 
   return 0;
@@ -872,6 +884,9 @@ int save_config()
     db_add_cfg_para(Config->process_id,"file_max_events",line);
 
   }
+
+  sprintf(line,"%u",Config->debug_scale);
+  db_add_cfg_para(Config->process_id,"debug_scale",line);
 
   return 0;
 

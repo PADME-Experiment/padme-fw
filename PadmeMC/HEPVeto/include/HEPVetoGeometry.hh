@@ -65,26 +65,27 @@ public:
   G4double GetHEPVetoRotY() { return fHEPVetoRotY; }
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
-  void SetHEPVetoChamberWallAngle(G4double a) { fHEPVetoChamberWallAngle = a; UpdateDerivedMeasures(); }
+  void SetHEPVetoChamberWallAngle(G4double);
 
   // Number of fingers in HEPVeto
   G4int GetHEPVetoNFingers()        { return fHEPVetoNFingers; }
-  void  SetHEPVetoNFingers(G4int f) { fHEPVetoNFingers = f; UpdateDerivedMeasures(); }
+  //void  SetHEPVetoNFingers(G4int f) { fHEPVetoNFingers = f; UpdateDerivedMeasures(); }
+  void  SetHEPVetoNFingers(G4int f) { fHEPVetoNFingers = f; }
 
   // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
-  G4double GetHEPVetoSupportThickness() { return fHEPVetoSupportThickness; }
-  void SetHEPVetoSupportThickness(G4double t) { fHEPVetoSupportThickness = t; UpdateDerivedMeasures(); }
+  //G4double GetHEPVetoSupportThickness() { return fHEPVetoSupportThickness; }
+  //void SetHEPVetoSupportThickness(G4double t) { fHEPVetoSupportThickness = t; UpdateDerivedMeasures(); }
 
   // Thickness of the wall of the vacuum chamber behind HEPVeto
   G4double GetHEPVetoChamberWallThickness() { return fHEPVetoChamberWallThickness; }
-  void SetHEPVetoChamberWallThickness(G4double t) { fHEPVetoChamberWallThickness = t; UpdateDerivedMeasures(); }
+  void SetHEPVetoChamberWallThickness(G4double);
 
    // Distance from the corner on the back face of the vacuum chamber
   G4double GetHEPVetoDistanceToCorner() { return fHEPVetoDistanceToCorner; }
-  void SetHEPVetoDistanceToCorner(G4double d) { fHEPVetoDistanceToCorner = d; UpdateDerivedMeasures(); }
+  void SetHEPVetoDistanceToCorner(G4double);
 
   // Coordinates of the corner on the back face of the vacuum chamber
-  void SetHEPVetoChamberWallCorner(G4ThreeVector c) { fHEPVetoChamberWallCorner = c; UpdateDerivedMeasures(); }
+  void SetHEPVetoChamberWallCorner(G4ThreeVector);
 
   // Get name of HEPVeto sensitive detector
   G4String GetHEPVetoSensitiveDetectorName() { return fHEPVetoSensitiveDetectorName; }
@@ -125,7 +126,14 @@ private:
   G4double fHEPVetoSizeY; // Size of HEPVeto box
   G4double fHEPVetoSizeZ; // Size of HEPVeto box
 
+  G4double fFirstFingerDistX; // Position along X of center of first finger wrt border of T-shaped support
+
+  G4double fFingersDistZ; // Position along Z of center of fingers wrt border of vertical support
+
   G4double fHEPVetoRotY; // Rotation of HEPVeto around Y axis
+
+  // Distance between back face of the vertical support and the internal wall of the vacuum chamber
+  G4double fHEPVetoDistanceToChamberWall;
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   G4double fHEPVetoChamberWallAngle;
@@ -136,7 +144,7 @@ private:
   // Coordinates of the corner on the back face of the vacuum chamber
   G4ThreeVector fHEPVetoChamberWallCorner;
 
-  G4double fHEPVetoSupportThickness; // Thickness of HEPVeto support structure
+  //G4double fHEPVetoSupportThickness; // Thickness of HEPVeto support structure
   G4double fHEPVetoChamberWallThickness; // Thickness of vacuum chamber wall
 
   G4String fHEPVetoSensitiveDetectorName;

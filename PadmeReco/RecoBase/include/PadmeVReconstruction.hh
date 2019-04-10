@@ -35,6 +35,7 @@ using namespace std;
 
 class TRecoEvent;
 class PadmeVClusterization;
+class PadmeVGeometry;
 
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
@@ -50,7 +51,8 @@ public:
   virtual void ClearHits();
   virtual void ClearClusters();
   virtual void BuildHits(TRawEvent*);
-  virtual void ReadHits(TRecoVObject*, TRecoEvent*); 
+  virtual void ReadHits(TRecoVObject*, TRecoEvent*);
+  virtual void ConvertMCDigitsToRecoHits(TMCVEvent*, TMCEvent*);
   virtual void BuildClusters();
   //  virtual Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   //  virtual Int_t findSeed(std::vector<Int_t> hUsed);
@@ -141,6 +143,7 @@ protected:
   PadmeVClusterization *fClusterization;
   PadmeVCalibration *fChannelCalibration;
   PadmeVTrigger *fTriggerProcessor;
+  PadmeVGeometry *fGeometry;
 
   Bool_t fWriteHits;
   Bool_t fWriteClusters;

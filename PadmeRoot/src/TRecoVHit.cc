@@ -1,4 +1,5 @@
 #include "TRecoVHit.hh"
+#include "TMCVDigi.hh"
 
 #include "Riostream.h"
 
@@ -13,7 +14,15 @@ TRecoVHit::TRecoVHit():TMCVHit()
   // fTime      = 1.E9;
 }
 
-
+/*
+TRecoVHit::TRecoVHit(const TMCVDigi& dig)
+{
+  fBDCHid = 100000000;
+  fChannelId = dig.GetChannelId();
+  fEnergy    = dig.GetEnergy();
+  fTime      = dig.GetTime();
+}
+*/
 // void TRecoVHit::Print(Option_t *) const {
 //   std::cout << "Hit - ChannelId = " << fChannelId
 // 	    << " HitPosition = (" << fPosition.X() << "," << fPosition.Y() << "," << fPosition.Z() << ")"

@@ -25,7 +25,7 @@ public:
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
-  //  virtual void ProcessEvent(TRawEvent*);
+  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
@@ -52,6 +52,5 @@ private:
 
   //  vector<TRecoVCluster *> fClusters;
 
->>>>>>> develop
 };
 #endif

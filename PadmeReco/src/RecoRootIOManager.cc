@@ -1,7 +1,6 @@
 #include <sstream>
 //#include <ctime>
 #include <sys/time.h>
-//#include "PadmeReconstruction.hh" // M. Raggi 6/12/18
 #include "RecoRootIOManager.hh"
 #include "PVetoRecoRootIO.hh"
 #include "EVetoRecoRootIO.hh"
@@ -17,11 +16,7 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
   // Create run and event objects
   fEvent = new TRecoEvent();
-  ReadConf *readconf = ReadConf::GetInstance();
-  //  std::cout<<"Read conf"<<readconf<<std::endl;
 
-  //connecto to Reco to retrieve the configuration
-  // PadmeReconstruction* PadmeReco; 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
   fBranchStyle = 1; //new branch style by default

@@ -78,10 +78,6 @@ void DigitizerChannelSAC::SetAnalogOffSets(){
     std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
   } 
 
-//  for(int i=0;i<25;i++){
-//    histo=(TH1D*) hListCal->FindObject(name);
-//    fPedCh[i]->GetMean();
-//  }
 }
 
 //void DigitizerChannelSAC::SetAbsSignals(){
@@ -108,8 +104,8 @@ Short_t DigitizerChannelSAC::CalcMaximum() {
 Double_t DigitizerChannelSAC::CalcPedestal() {
   double rms;
   double avg;
-  Int_t fCh=GetChID();
-  Int_t fTrigMask=GetTrigMask();
+  Int_t fCh       = GetChID();
+  UInt_t fTrigMask= GetTrigMask();
   Int_t ElCh = fCh/10*5 +fCh%5;
   //  std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
   // Se non trovo eventi vuoti?

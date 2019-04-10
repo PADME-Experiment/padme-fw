@@ -62,8 +62,11 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   std::cout << this->GetName() <<": Initializing" << std::endl;
 
   fMainReco = MainReco;
+  InitFlags(); //Initialize running modes M. Raggi   
   if(fChannelReco) {
+
     fChannelReco->Init(GetConfig());
+ 
     std::cout<<"digitizer inititialized OK"<<std::endl;
     fClusterization->Init(GetConfig());
     std::cout<<"Clusterization inititialized OK"<<std::endl;
@@ -72,8 +75,7 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
     std::cout <<"Number of ADCs for detector: " << this->GetName() << ": " << GetConfig()-> GetNBoards() << std::endl;
   }
   
-  HistoInit();
-  
+  HistoInit(); 
 
   //GetOrMakeDir(fHistoFile,fName+"Monitor")->cd(); //go to the SubDet directory
 }
@@ -169,6 +171,7 @@ void PadmeVReconstruction::ParseConfFile(TString ConfFileName) {
 
 
 void PadmeVReconstruction::HistoInit(){;}
+void PadmeVReconstruction::InitFlags(){;}
 
 void PadmeVReconstruction::AddHisto(string name, TH1 *histo){
   fHistoMap[name] = histo;
@@ -204,7 +207,12 @@ void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv){
   UChar_t nBoards = rawEv->GetNADCBoards();
   
   TADCBoard* ADC;
-  
+  // Added trigMask M. Raggi 21/01/2019
+  UInt_t TrigMask = rawEv->GetEventTrigMask();
+  //  std::cout<<" trig Mask "<<TrigMask<<std::endl;
+  fTriggerProcessor->SetTrigMask(TrigMask);
+  //  std::cout<<" trig Mask recupera "<<fTriggerProcessor->GetTrigMask()<<std::endl;
+
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
@@ -223,7 +231,6 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
   // From waveforms to Hits
   
   if(fTriggerProcessor) {
-    fTriggerProcessor->SetTrigMask(rawEv->GetEventTrigMask());
     BuildTriggerInfo(rawEv);
   }
 

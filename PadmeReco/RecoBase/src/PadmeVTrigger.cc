@@ -57,20 +57,14 @@ void PadmeVTrigger::ProcessTrigger(int bID, TADCTrigger* tr){
 
   //  std::cout << "Board: " << bID << " gID:  " <<  gID  <<  "  frequency:  " <<  fSamplingFrequency.find(std::make_pair(bID,gID))->second << std::endl;
   //  std::cout << "Board: " << bID << " gID:  " <<  gID  <<  "  frequency:  " <<  fSamplingFrequency[std::make_pair(bID,gID)] << std::endl;
-  
 
   double Time = CalcTime(tr->GetSamplesArray());
   fTriggerTime[std::make_pair(bID,gID)] = Time*GetTimeBin(bID,gID);
-  
 }
-
-
 
 double PadmeVTrigger::CalcTime(Short_t * sample){
   int ns = TADCTRIGGER_NSAMPLES;
-  
 
-  
   //  std::cout << " === Trigger === "  << std::endl;
 
   float avgmax;

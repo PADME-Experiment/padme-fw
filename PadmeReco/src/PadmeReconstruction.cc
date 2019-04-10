@@ -75,7 +75,31 @@ PadmeReconstruction::~PadmeReconstruction()
 
 void PadmeReconstruction::InitLibraries()
 {
-  
+
+  if (fConfig->GetParOrDefault("RUNNINGMODE", "Debug"   ,1)){ 
+    std::cout<<"Debug Mode ON "<<std::endl;
+    fIsGlobalDebug=1;
+  }
+
+  if (fConfig->GetParOrDefault("RUNNINGMODE", "Reconstruct"   ,1)){
+    std::cout<<"Reconstruct Mode ON "<<std::endl;
+    fIsReco=true;  
+  }
+
+  if (fConfig->GetParOrDefault("RUNNINGMODE", "Pedestal"   ,1)){
+    std::cout<<"Pedestal Mode ON "<<std::endl;
+    fIsPed=true;
+  }
+  if (fConfig->GetParOrDefault("RUNNINGMODE", "Monitor"   ,1)){ 
+    std::cout<<"Monitor Mode ON "<<std::endl;
+    fIsMonitor=true;
+  }
+
+  if (fConfig->GetParOrDefault("RUNNINGMODE", "Cosmics"   ,1)){ 
+    std::cout<<"Cosmic Mode ON "<<std::endl;
+    fIsCosmic=true;
+  }
+
   if (fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1)) fRecoLibrary.push_back(new EVetoReconstruction  (fHistoFile,"config/EVeto.cfg"));
   if (fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) fRecoLibrary.push_back(new PVetoReconstruction  (fHistoFile,"config/PVeto.cfg"));
   if (fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1)) fRecoLibrary.push_back(new ECalReconstruction   (fHistoFile,"config/ECal.cfg"));
@@ -87,9 +111,28 @@ void PadmeReconstruction::InitLibraries()
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
     {
       std::cout<<" **** <"<<fRecoLibrary[j]->GetName()<<"> is in library at location "<<j<<std::endl;
+      // Configuring running modes in sub detectors M. Raggi 05/02/2019
+      if( fIsGlobalDebug==1) fRecoLibrary[j]->SetIsGlobalDebug(1);
+      if( fIsGlobalDebug==0) fRecoLibrary[j]->SetIsGlobalDebug(0);
+      
+      if( fIsReco)  fRecoLibrary[j]->SetIsRecoOn();
+      if(!fIsReco)  fRecoLibrary[j]->SetIsRecoOff();
+      
+      if( fIsPed)   fRecoLibrary[j]->SetIsPedOn();
+      if(!fIsPed)   fRecoLibrary[j]->SetIsPedOff();
+      
+      if(fIsCosmic)   fRecoLibrary[j]->SetIsCosmicOn();
+      if(!fIsCosmic)  fRecoLibrary[j]->SetIsCosmicOff();
+      
+      if( fIsMonitor)  fRecoLibrary[j]->SetIsMonitorOn();
+      if(!fIsMonitor)  fRecoLibrary[j]->SetIsMonitorOff();
+      
+      std::cout<<j<<" fIsDebug   "<<fRecoLibrary[j]->GetIsGlobalDebug()<< std::endl;
+      std::cout<<j<<" fIsPed   "<<fRecoLibrary[j]->GetIsPed()<< std::endl;
+
+     
     }
   std::cout<<"************************** "<<std::endl;
- 
   
 }
 
@@ -106,6 +149,8 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
+
+  //  if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))  ->InitFlags(); //M. Raggi 5/02/2019
 }
 
 void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
@@ -444,32 +489,3 @@ void PadmeReconstruction::ShowSubDetectorInfo(TDetectorInfo* detInfo, TString na
     }
   }
 }
-
-
-//void PadmeReconstruction::ReadConfig(){
-////  TString ConfFileName = "config/PadmeReconstruction.conf";
-////  
-////  std::ifstream confFile(ConfFileName.Data());
-////  if (!confFile.is_open()) {
-////    perror(ConfFileName);
-////    std::cout<<"cannot open config file : "<<ConfFileName.Data()<<std::endl;
-////    exit(1);
-////  }
-////  //  
-////  TString Line;
-////  while (Line.ReadLine(confFile)) {
-////    if(Line.BeginsWith("#")) continue;
-////    if(Line.Contains("ECALReco")    && Line.Contains("true"))    fECalisON=true;
-////    if(Line.Contains("TargetReco")  && Line.Contains("true"))  fTargetisON=true;
-////    if(Line.Contains("SACReco")     && Line.Contains("true"))     fSACisON=true;
-////    if(Line.Contains("PVetoReco")   && Line.Contains("true"))   fPVetoisON=true;
-////    if(Line.Contains("EVetoReco")   && Line.Contains("true"))   fEVetoisON=true;
-////    if(Line.Contains("HEPVetoReco") && Line.Contains("true")) fHEPVetoisON=true;    
-////    if(Line.Contains("TPixReco")    && Line.Contains("true"))    fTPixisON=true;
-////    
-////    if(Line.Contains("UseMonitorMode") && Line.Contains("true"))  fUseMonitorMode=true;
-////    if(Line.Contains("UseFullMode")    && Line.Contains("true"))     fUseFullMode=true;
-////    //    std::cout<<Line.Data()<<std::endl;
-////  }
-////  confFile.close();  
-//}

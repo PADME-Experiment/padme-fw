@@ -64,8 +64,10 @@ void SACReconstruction::ProcessEvent(TRawEvent* rawEv){
   UChar_t nBoards = rawEv->GetNADCBoards();
 
   TADCBoard* ADC;
-  //New M. Raggi
-  UInt_t  TrigMask=rawEv->GetEventTrigMask();
+  //New M. Raggi uses trigger processor does'nt work
+  //  UInt_t  TrigMask = fTriggerProcessor->GetTrigMask();
+  UInt_t  TrigMask = rawEv->GetEventTrigMask();
+  //  std::cout<<"Reco mask "<<TrigMask<<std::endl;
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
@@ -75,7 +77,6 @@ void SACReconstruction::ProcessEvent(TRawEvent* rawEv){
 	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
 	//New M. Raggi
 	Int_t ChID =GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber());
-	
 	((DigitizerChannelSAC*)fChannelReco)->SetChID(ChID);
 	((DigitizerChannelSAC*)fChannelReco)->SetTrigMask(TrigMask);
 	unsigned int nHitsBefore = Hits.size();
@@ -141,17 +142,17 @@ void SACReconstruction::HistoInit(){
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
     AddHisto(iName, new TH1F(iName, iName,1024,0.,200. ));
-    //    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    //    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-    //
-    //    sprintf(iName,"SACLastCh%d",iCh);
-    //    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
-    //    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    //    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-    //
-    ////    sprintf(iName,"ESACLastCh%d",iCh);
-    ////    AddHisto(iName, new TH1F(iName, iName,  200,  0, 1000 ));
-    ////    (GetHisto(iName))->GetXaxis()->SetTitle("Energy MeV");
+    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
+    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
+    
+    sprintf(iName,"SACLastCh%d",iCh);
+    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
+    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
+    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
+    
+    sprintf(iName,"ESACLastCh%d",iCh);
+    AddHisto(iName, new TH1F(iName, iName,  200,  0, 1000 ));
+    (GetHisto(iName))->GetXaxis()->SetTitle("Energy MeV");
   }
 }
 
@@ -467,8 +468,8 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     GetHisto(iNameCh)->Fill(ECh[iCh]);
   }
   for(int gg=0;gg<NClusters;gg++){
-    GetHisto("SACClE")->Fill(ClE[gg]); //fottuto
-    if(gg>1) GetHisto("SACClE2")->Fill(ClE[gg]); //fottuto
+    GetHisto("SACClE")->Fill(ClE[gg]);
+    if(gg>1) GetHisto("SACClE2")->Fill(ClE[gg]); 
     GetHisto("SACClNCry")->Fill(ClNCry[gg]);
     GetHisto("SACClTime")->Fill(ClTime[gg]);
     if(ClNCry[gg]>1 && ClE[gg]>10.) {

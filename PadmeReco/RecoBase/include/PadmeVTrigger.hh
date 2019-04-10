@@ -36,8 +36,8 @@ private:
   //   BoardID,GroupID -> Trigger Time
   //                   bID,gID
   std::map < std::pair<int,int>,double> fTriggerTime;
-  std::map < std::pair<int,int>,double>   fSamplingFrequency;
-  std::map < std::pair<int,int>,double>    fTriggerLength;
+  std::map < std::pair<int,int>,double> fSamplingFrequency;
+  std::map < std::pair<int,int>,double> fTriggerLength;
 
 
   // map<int,double> fTimeCalib;

@@ -60,10 +60,40 @@ public:
   virtual void EndProcessing(); ///< Call from derived classes
   virtual void ParseConfFile(TString);
   virtual void HistoInit(); 
+  virtual void InitFlags(); 
   virtual void HistoExit();
   virtual void AddHisto(string,TH1 *);
   virtual TH1* GetHisto(string);  
   static void Exception(TString);
+
+//Configuration variables
+  Bool_t fIsPed;
+  Bool_t fIsReco;
+  Bool_t fIsCosmic;
+  Bool_t fIsMonitor;
+  Int_t  fIsLocalDebug;
+  Int_t  fIsGlobalDebug;
+
+  //M. Raggi propagating config flags
+  void  SetIsPedOn()     { fIsPed = true; }
+  void  SetIsPedOff()    { fIsPed = false; }
+  bool  GetIsPed()      { return fIsPed;}
+
+  void  SetIsRecoOn()    { fIsReco = true; }
+  void  SetIsRecoOff()   { fIsReco = false; }
+  bool  GetIsReco()      { return fIsReco;}
+
+  void  SetIsCosmicOn()  { fIsCosmic = true; }
+  void  SetIsCosmicOff() { fIsCosmic = false; }
+  bool  GetIsCosmic()    { return fIsCosmic;}
+
+  void  SetIsMonitorOn()  { fIsMonitor = true; }
+  void  SetIsMonitorOff() { fIsMonitor = false; }
+  bool  GetIsMonitor()    { return fIsMonitor;}
+
+  void  SetIsGlobalDebug(Int_t value) { fIsGlobalDebug = value; }
+  void  SetIsLocalDebug(Int_t value)  { fIsLocalDebug = value; }
+  Int_t  GetIsGlobalDebug()  { return fIsGlobalDebug; }
 
 public:
 

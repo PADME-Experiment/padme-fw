@@ -23,10 +23,11 @@ public:
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  //  virtual void ProcessEvent(TRawEvent*);
+  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
+  virtual void InitFlags();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
@@ -48,11 +49,29 @@ private:
 
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
-  double EvTotE;
-
-  
   //  vector<TRecoVCluster *> fClusters;
 
+  double EvTotE;
+
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
+
+// Run type variables
+  Bool_t fIsPed;
+  Bool_t fIsReco;
+  Bool_t fIsCosmic;
+  Bool_t fIsMonitor;
+  Int_t  fIsGlobalDebug;
+  Int_t  fIsLocalDebug;
+
+//// Methods for the Digitizer Class
+//  bool  DigiGetIsPed()          {return fIsPed;}
+//  bool  DigiGetIsReco()         {return fIsReco;}
+//  bool  DigiGetIsCosmic()       {return fIsCosmic;}
+//  bool  DigiGetIsMonitor()      {return fIsMonitor;}
+//  Int_t DigiGetIsGlobalDebug()  {return fIsGlobalDebug; }
+//  Int_t DigiGetIsLocalDebug()   {return fIsGlobalDebug; }
+//  void  DigiSetIsLocalDebug(Int_t value) { fIsLocalDebug = value; }
 
 };
 #endif

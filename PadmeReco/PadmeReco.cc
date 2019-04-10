@@ -21,7 +21,6 @@
 
 
 PadmeReconstruction* PadmeReco; 
-ReadConf* readconf = ReadConf::GetInstance();
                              
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
@@ -136,9 +135,6 @@ int main(Int_t argc, char **argv)
         exit(1);
     }
 
-    // M. Raggi read config files.
-    readconf->ReadConfig();
-    
     ////// init here memory allocated and cpu time
     int mem = 0;
     float cpu = 0;

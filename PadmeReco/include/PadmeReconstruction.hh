@@ -54,10 +54,8 @@ private:
 
   void InitDetectorsInfo();
   void InitLibraries();
-  //void ReadConfig();
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
-
 
   TObjArray* fInputFileNameList;
   utl::ConfigParser *fConfigParser;
@@ -95,6 +93,7 @@ private:
  
   Int_t fNEvt;
   Int_t fNProcessedEventsInTotal;
+
 
 };
 #endif

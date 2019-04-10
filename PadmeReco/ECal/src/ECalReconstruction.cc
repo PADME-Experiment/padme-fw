@@ -32,7 +32,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
-  //ParseConfFile(ConfigFileName);
+  //  ParseConfFile(ConfigFileName);
+  fChannelReco = new DigitizerChannelECal();
   fClusterization = new ECalSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fChannelCalibration = new ECalCalibration();
@@ -45,7 +46,6 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
 
-  fChannelReco = new DigitizerChannelECal();
   fTriggerProcessor = new PadmeVTrigger();
  
   //  fClusters.clear();
@@ -403,6 +403,7 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEv){
    
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(Hits);
   //Processing is over, let's analyze what's here, if foreseen
+  BuildClusters();
   AnalyzeEvent(rawEv);
 }
 
@@ -437,7 +438,6 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  if(NClusters>0) GetHisto("ECALNClus")->Fill(NClusters);
   GetHisto("ECALNClus")->Fill(NClusters);
   //  GetHisto("ECALETot") ->Fill(EvTotE);
-
 
   for(int gg=0;gg<NClusters;gg++){
     GetHisto("ECALClE")->Fill( myClus[gg]->GetEnergy() );

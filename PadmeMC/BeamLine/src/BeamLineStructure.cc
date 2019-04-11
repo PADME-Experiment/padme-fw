@@ -37,6 +37,8 @@
 #include "BeamLineGeometry.hh"
 #include "BeamLineMessenger.hh"
 
+#include "Quad.hh"  // M. Raggi 8/04/2019
+
 //#include "G4MagneticField.hh"
 
 using namespace CLHEP;
@@ -117,6 +119,7 @@ void BeamLineStructure::CreateBeThinWindow()
 
 void BeamLineStructure::CreateDHSTB002Magnet()
 {
+  G4QuadrupoleMagField Q1(0.1);
 
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
 

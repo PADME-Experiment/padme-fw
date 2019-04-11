@@ -557,11 +557,15 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
-      G4double htheta = (hit->GetPX()/hit->GetPZ()) *rad;
-      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      // computing angle at the entrance of the target using the directions of the particles:
+      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
+      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
+      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
+
+      //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
 
       fHistoManager->FillHisto(60,hE);     //60 has Target Histos
-      fHistoManager->FillHisto(61,hTime);  //60 has Target Histos
+      fHistoManager->FillHisto(61,htheta);  //60 has Target Histos
       fHistoManager->FillHisto(62,hX);     //60 has Target Histos
       fHistoManager->FillHisto(63,hY);     //60 has Target Histos
       fHistoManager->FillHisto(64,hTrE);   //60 has Target Histos

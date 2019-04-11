@@ -147,7 +147,7 @@ void HistoManager::book()
   // Target study
   histo[60] = new TH1D("h60","Target energy",500,0.,0.1);
   if (!histo[60]) G4cout << "\n can't create histo 60" << G4endl; 
-  histo[61] = new TH1D("h61","Target Time ",600,0.,600.);
+  histo[61] = new TH1D("h61","Target Angle ",500,0.,0.050);
   if (!histo[61]) G4cout << "\n can't create histo 61" << G4endl;
   histo[62] = new TH1D("h62","X coord ",TarXBins,TarXmin,TarXmax);
   if (!histo[62]) G4cout << "\n can't create histo 62" << G4endl; 
@@ -156,13 +156,14 @@ void HistoManager::book()
 
   histo[64] = new TH1D("h64","Beam energy ",100,460.,560.);
   if (!histo[64]) G4cout << "\n can't create histo 64" << G4endl; 
+
   
   histo2[65] = new TH2D("h65","Tar beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
   if (!histo2[65]) G4cout << "\n can't create histo 65" << G4endl;
   histo2[66] = new TH2D("h66","Tar XvsE",TarXBins,TarXmin,TarXmax,320,500.,560.);
   if (!histo2[66]) G4cout << "\n can't create histo 66" << G4endl;
 
-  histo2[67] = new TH2D("h67","Tar XvsE",TarXBins,TarXmin,TarXmax,1000,-0.5,0.5);
+  histo2[67] = new TH2D("h67","Tar XvsE",TarXBins,TarXmin,TarXmax,200,0,0.100);
   if (!histo2[67]) G4cout << "\n can't create histo 67" << G4endl;
 
   //Hystogram of generated variables 30-39

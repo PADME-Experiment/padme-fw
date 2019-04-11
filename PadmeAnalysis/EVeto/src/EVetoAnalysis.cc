@@ -5,35 +5,23 @@
 #include "HistoSvc.hh"
 #include <iostream>
 
-EVetoAnalysis::EVetoAnalysis()
+EVetoAnalysis::EVetoAnalysis(): ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = 0;
-  fVerbose = 0;
+  fAlgoName = "EVeto";
   InitHistos();
-
+  return;
 }
-EVetoAnalysis::EVetoAnalysis(Int_t Validation, Int_t verb)
+EVetoAnalysis::EVetoAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  
-  fVerbose = verb;
-  fValidation = Validation;
-  
+  fAlgoName = "EVeto";
   InitHistos();
+  return;
 }
 EVetoAnalysis::~EVetoAnalysis()
 {
 }
-Bool_t EVetoAnalysis::InitHistos()
+Bool_t EVetoAnalysis::InitHistosAnalysis()
 {
-  if(fValidation)
-    {
-      InitHistosValidation("EVeto");
-      return true;
-    }
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
@@ -74,27 +62,9 @@ Bool_t EVetoAnalysis::InitHistos()
 
     return true;
 }
-Bool_t EVetoAnalysis::Init(TEVetoRecoEvent* ev, TRecoVClusCollection* cl)
+Bool_t EVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
-  fhitEvent = ev;
-  fClColl   = cl;
-  fTmin = -100.;
-  fTmax =  180.;
-
-  //InitHistos();
-  
-  return retCode;
-}
-Bool_t EVetoAnalysis::Process()
-{
-  Bool_t retCode = 0;
-
-  if (fValidation)
-    {
-      ProcessValidation("EVeto");
-      return retCode;
-    }
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

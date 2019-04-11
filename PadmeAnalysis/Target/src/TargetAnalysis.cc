@@ -1,5 +1,5 @@
 #include "TargetAnalysis.hh"
-
+#include "TRecoEvent.hh"
 #include "TTargetRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "HistoSvc.hh"
@@ -7,10 +7,12 @@
 
 TargetAnalysis::TargetAnalysis()
 {
-  fhitEvent=NULL;
-  fRecoBeam = NULL;
-  fValidation = 0;
-  fVerbose = 0;
+  fRecoEvent = NULL; 
+  fhitEvent  = NULL;
+  fRecoBeam  = NULL;
+  fProcessingMode = 0;
+  fVerbose   = 0;
+  fAlgoName  = "Target"; 
 
 
   nEvsTarget         = 0;
@@ -26,10 +28,12 @@ TargetAnalysis::TargetAnalysis()
 
 TargetAnalysis::TargetAnalysis(Int_t Validation, Int_t verb)
 {
-  fhitEvent=NULL;
-  fRecoBeam = NULL;
-  fValidation = Validation;
-  fVerbose = verb;
+  fRecoEvent = NULL; 
+  fhitEvent  = NULL;
+  fRecoBeam  = NULL;
+  fProcessingMode = Validation;
+  fVerbose    = verb;
+  fAlgoName   = "Target"; 
 
   nEvsTarget         = 0;
   nEvsGoodX          = 0;
@@ -46,21 +50,13 @@ TargetAnalysis::~TargetAnalysis()
 {
   fhitEvent=NULL;
 }
-Bool_t TargetAnalysis::Init(TTargetRecoEvent* ev, TTargetRecoBeam* b)
+Bool_t TargetAnalysis::Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTargetRecoBeam* b)
 {
   Bool_t retCode = 0;
+  fRecoEvent = EventHeader;
   fhitEvent = ev;
   fRecoBeam = b;
-
   return retCode;
-}
-Bool_t TargetAnalysis::InitHistos()
-{
-  if (fValidation)
-    {
-      return InitHistosValidation();
-    }
-  // TO DO move here from HistSvc ;
 }
 Bool_t TargetAnalysis::InitHistosValidation()
 {
@@ -200,15 +196,133 @@ Bool_t TargetAnalysis::InitHistosValidation()
 
     return true;
 }
+Bool_t TargetAnalysis::InitHistosDataQuality()
+{
+    HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::string hname;
 
-Bool_t TargetAnalysis::Process()
+    int Bin=  19;
+    int minX= -0.5;
+    int maxX= 18.5;
+    int minY= -0.5;
+    int maxY= 18.5;
+    /*int minX= -8.5;
+    int maxX=  7.5;
+    int minY= -8.5;
+    int maxY=  7.5;*/
+    hname = "Target_HitXprofile";
+    hSvc->BookHisto(hname, Bin, minX, maxX);
+    hname = "Target_HitYprofile";
+    hSvc->BookHisto(hname, Bin, minY, maxY);
+    hname="Target_HitChannelId";
+    hSvc->BookHisto(hname, Bin, minX, maxY);
+    int nBin=36;
+    int min=-0.5;
+    int max=35.5;
+    hname="Target_NHits";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin= 200;
+    min=-1; //pC
+    max=3;
+    hname ="TargetBeam_XCharge";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCharge";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_XCharge_CRtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCharge_CRtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_XCharge_BTFtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCharge_BTFtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_XCharge_AUTOtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCharge_AUTOtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_MeanXYCharge";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_MeanXYCharge_CRtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_MeanXYCharge_BTFtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_MeanXYCharge_AUTOtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+
+
+    nBin= 110;
+    min=-1;
+    max=10;
+    hname ="TargetBeam_XChargeError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YChargeError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+
+    nBin= 800;
+    min =-8.5;
+    max = 7.5;
+    hname ="TargetBeam_XCentroid";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCentroid";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_XCfit";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCfit";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    nBin= 500;
+    min=-1;
+    max=5;
+    hname ="TargetBeam_XCentroidError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCentroidError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    nBin= 500;
+    min=-1;
+    max=30;
+    hname ="TargetBeam_XCfitError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_YCfitError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+ 
+    min=0;
+    max=33000;
+    hname ="TargetBeam_nPOT";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    nBin=400;
+    min=0;
+    max=200;
+    hname ="TargetBeam_nPOTError";
+    hSvc->BookHisto(hname,nBin ,min,max);
+
+    nBin=36;
+    int binX=15000;
+    int binY=20;
+    minX=0;
+    maxX=15000;
+    minY=-1;
+    maxY=3;
+    hname="Trend_ChargeXvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="Trend_ChargeYvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="Trend_CentroidXvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="Trend_CentroidYvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="Trend_XCfitvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="Trend_YCfitvsEventNumber";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+
+
+   
+
+    return true;
+}
+
+Bool_t TargetAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
-  if (fValidation)
-    {
-      return ProcessValidation();
-    }
-
   
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   
@@ -432,6 +546,131 @@ Bool_t TargetAnalysis::Process()
 }
 
 
+Bool_t TargetAnalysis::ProcessDataQuality()
+{
+  Bool_t retCode = 0;
+
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  TRecoVHit* hit=NULL;
+  std::string hname;
+  Int_t fNhits = fhitEvent->GetNHits();
+  hname="Target_NHits";
+  hSvc->FillHisto(hname,fNhits,1.);
+  if ( fNhits < 0 ) return retCode;
+  for (Int_t i=0; i<fNhits; ++i){
+    hit = fhitEvent->Hit(i);
+    Bool_t isX=true;
+    Int_t istrip    = hit->GetChannelId();
+    hname="Target_HitChannelId";
+    hSvc->FillHisto(hname,istrip,1.); 
+    Double_t energy = hit->GetEnergy();
+    Double_t faenergy = fabs(energy);
+    Double_t time   = hit->GetTime();
+    if (istrip > 16) {
+      istrip = istrip-16;
+      hname = "Target_HitYprofile";
+      hSvc->FillHisto(hname,(Double_t)istrip,energy);
+    }
+    else {
+      hname = "Target_HitXprofile";
+      hSvc->FillHisto(hname,(Double_t)istrip,energy);
+    }
+   }
+   
+   //recoBeam sector
+    hname ="TargetBeam_XCharge";
+    hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);
+    hname ="TargetBeam_YCharge";
+    hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
+    hname ="TargetBeam_XChargeError";
+    hSvc->FillHisto(hname,fRecoBeam->getXChargeErr(),1.);
+    hname ="TargetBeam_YChargeError";
+    hSvc->FillHisto(hname,fRecoBeam->getYChargeErr(),1.);
+
+    hname ="TargetBeam_XCentroid";
+    hSvc->FillHisto(hname,fRecoBeam->getX(),1.);
+    hname ="TargetBeam_YCentroid";
+    hSvc->FillHisto(hname,fRecoBeam->getY(),1.);
+    hname ="TargetBeam_XCentroidError";
+    hSvc->FillHisto(hname,fRecoBeam->getXError(),1.);
+    hname ="TargetBeam_YCentroidError";
+    hSvc->FillHisto(hname,fRecoBeam->getYError(),1.);
+ 
+    hname ="TargetBeam_XCfit";
+    hSvc->FillHisto(hname,fRecoBeam->getXCfit(),1.);
+    hname ="TargetBeam_XCfitError";
+    hSvc->FillHisto(hname,fRecoBeam->getXCfitError(),1.);
+    hname ="TargetBeam_YCfit";
+    hSvc->FillHisto(hname,fRecoBeam->getYCfit(),1.);
+    hname ="TargetBeam_YCfitError";
+    hSvc->FillHisto(hname,fRecoBeam->getYCfitError(),1.);
+    hname ="TargetBeam_nPOT";
+    hSvc->FillHisto(hname,fRecoBeam->getnPOT(),1.);
+    hname ="TargetBeam_nPOTError";
+    hSvc->FillHisto(hname,fRecoBeam->getnPOTError(),1.);
+
+    
+    hname ="TargetBeam_MeanXYCharge";
+    hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+
+   if(fRecoEvent->GetTriggerMask()==1) {
+    hname ="TargetBeam_XCharge_BTFtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);
+    hname ="TargetBeam_YCharge_BTFtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
+    hname ="TargetBeam_MeanXYCharge_BTFtrigger";
+    hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+   }
+   
+   if(fRecoEvent->GetTriggerMask()==2) {
+    hname ="TargetBeam_XCharge_CRtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);
+    hname ="TargetBeam_YCharge_CRtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
+    hname ="TargetBeam_MeanXYCharge_CRtrigger";
+    hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+   }
+
+  if(fRecoEvent->GetTriggerMask()==128) {
+    hname ="TargetBeam_XCharge_AUTOtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);
+    hname ="TargetBeam_YCharge_AUTOtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
+    hname ="TargetBeam_MeanXYCharge_AUTOtrigger";
+    hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+   }
+
+
+ /*   hname ="TargetBeam_XCharge_CRtrigger";
+    if(fRecoEvent->GetTriggerMask()==2) hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);   //only cosmic rays
+    hname ="TargetBeam_YCharge_CRtrigger";
+    if(fRecoEvent->GetTriggerMask()==2) hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
+    hname ="TargetBeam_XCharge_BTFtrigger";
+    if(fRecoEvent->GetTriggerMask()==1) hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);   
+    hname ="TargetBeam_YCharge_BTFtrigger";
+    if(fRecoEvent->GetTriggerMask()==1) hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.); 
+    hname ="TargetBeam_XCharge_AUTOtrigger";
+    if(fRecoEvent->GetTriggerMask()==128) hSvc->FillHisto(hname,fRecoBeam->getXCharge(),1.);   
+    hname ="TargetBeam_YCharge_AUTOtrigger";
+    if(fRecoEvent->GetTriggerMask()==128) hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.); */
+  
+    hname ="Trend_ChargeXvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getXCharge(), 1.);
+    hname ="Trend_ChargeYvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getYCharge(), 1.);
+    hname ="Trend_CentroidXvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getX(), 1.);
+     hname ="Trend_CentroidYvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getY(), 1.);
+    hname ="Trend_XCfitvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getXCfit(), 1.);
+    hname ="Trend_YCfitvsEventNumber";
+    hSvc->FillHisto2(hname,fRecoEvent->GetEventNumber(),fRecoBeam->getYCfit(), 1.);
+  
+
+   return retCode;
+}
 Bool_t TargetAnalysis::ProcessValidation()
 {
   Bool_t retCode = 0;
@@ -541,6 +780,8 @@ Bool_t TargetAnalysis::ProcessValidation()
 Bool_t TargetAnalysis::Finalize()
 {
   Bool_t retCode = 0;
+
+  if (fProcessingMode!=0) return retCode;
   
   nPOTErrgoodXY_job = sqrt(nPOTErrgoodXY_job);
   nPOTErrbadXorY_job = sqrt(nPOTErrbadXorY_job);

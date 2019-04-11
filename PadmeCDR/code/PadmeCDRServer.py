@@ -265,7 +265,7 @@ class PadmeCDRServer:
         for line in self.run_command(cmd):
             if re.match("^gfal-ls error: ",line):
                 print "***ERROR*** gfal-ls returned error status while retrieving run list from %s"%site
-                return "error"
+                return [ "error" ]
             run_list.append(line.rstrip())
         run_list.sort()
         return run_list
@@ -287,7 +287,7 @@ class PadmeCDRServer:
         for line in self.run_command(cmd):
             if re.match("^ls: cannot access",line):
                 print "***ERROR*** ls returned error status while retrieving file list for run %s from DAQ"%run
-                return "error"
+                return [ "error" ]
             file_list.append("%s/%s"%(run,line.rstrip()))
         file_list.sort()
         return file_list
@@ -328,7 +328,7 @@ class PadmeCDRServer:
                 # Otherwise it is a real error and is reported as such
                 print line.rstrip()
                 print "***ERROR*** gfal-ls returned error status %s while retrieving file list from run dir %s from %s"%(m.group(1),run,site)
-                return "error"
+                return [ "error" ]
             file_list.append("%s/%s"%(run,line.rstrip()))
         file_list.sort()
         return file_list
@@ -428,7 +428,8 @@ class PadmeCDRServer:
         cmd = "gfal-copy -t 3600 -T 3600 -p --checksum ADLER32 %s/%s/%s %s/%s/%s"%(self.site_srm[src_site],self.data_dir,rawfile,self.site_srm[dst_site],self.data_dir,rawfile)
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line): copy_failed = True
+            if ( re.match("^gfal-copy error: ",line) or re.match("^Command timed out",line) ):
+                copy_failed = True
 
         if copy_failed:
             print "- File %s - ***ERROR*** gfal-copy returned error status while copying from %s to %s"%(rawfile,src_site,dst_site)
@@ -465,7 +466,8 @@ class PadmeCDRServer:
         cmd = "gfal-copy -t 3600 -T 3600 -p %s/%s/%s file://%s"%(self.site_srm[site],self.data_dir,rawfile,tmp_file)
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line): copy_failed = True
+            if ( re.match("^gfal-copy error: ",line) or re.match("^Command timed out",line) ):
+                copy_failed = True
 
         if copy_failed:
             print "- File %s - ***ERROR*** gfal-copy returned error status while copying from %s to local file"%(rawfile,site)
@@ -574,7 +576,7 @@ class PadmeCDRServer:
             # Get list of runs at source site
             self.check_stop_cdr()
             src_run_list = self.get_run_list(self.src_site)
-            if (src_run_list == "error"):
+            if (src_run_list and src_run_list[0] == "error"):
                 print "WARNING - Source site %s has problems: suspending iteration"%self.src_site
             else:
 
@@ -584,24 +586,26 @@ class PadmeCDRServer:
                     # Get list of files for this run at source site
                     self.check_stop_cdr()
                     src_file_list = self.get_file_list(self.src_site,run)
-                    if (src_file_list == "error"):
+                    if (src_file_list and src_file_list[0] == "error"):
                         print "WARNING - Source site %s has problems: suspending iteration"%self.src_site
                         break
 
                     # Get list of files for this run at destination site
                     self.check_stop_cdr()
                     dst_file_list = self.get_file_list(self.dst_site,run)
-                    if (dst_file_list == "error"):
+                    if (dst_file_list and dst_file_list[0] == "error"):
                         print "WARNING - Destination site %s has problems: suspending iteration"%self.dst_site
                         break
 
+                    suspend_iteration = False
                     for rawfile in src_file_list:
                         self.check_stop_cdr()
                         if ( not rawfile in dst_file_list ):
 
                             # Check disk space at KLOE front end before copying
                             if ( (self.dst_site == "KLOE") and (self.get_kloe_used_space() > 95) ):
-                                print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
+                                print "- WARNING - KLOE disk space is more than 95% full - Suspending iteration"
+                                suspend_iteration = True
                                 break
 
                             # Copy file from source to destination
@@ -609,6 +613,8 @@ class PadmeCDRServer:
                                 print "- File %s - Copy from %s to %s successful"%(rawfile,self.src_site,self.dst_site)
                             else:
                                 print "- File %s - Copy from %s to %s failed"%(rawfile,self.src_site,self.dst_site)
+
+                    if suspend_iteration: break
 
             end_iteration_time = time.time()
 

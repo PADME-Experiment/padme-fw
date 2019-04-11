@@ -10,7 +10,7 @@ ROOTCONFIG   := root-config
 ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
 ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
-ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
+ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum -lGenVector
 
 CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -g
 #CPPFLAGS     += -I$(PADMERECO)/Service/include

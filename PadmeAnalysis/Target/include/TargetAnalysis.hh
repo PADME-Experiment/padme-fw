@@ -17,11 +17,12 @@ public:
   TargetAnalysis(Int_t valid, Int_t verb);
   ~TargetAnalysis();
 
-  Bool_t Init(TTargetRecoEvent* ev, TTargetRecoBeam* b);
-  Bool_t InitHistos();
+  Bool_t Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTargetRecoBeam* b);
   Bool_t InitHistosValidation();
-  Bool_t Process();
+  Bool_t InitHistosDataQuality();
+  Bool_t ProcessAnalysis();
   Bool_t ProcessValidation();
+  Bool_t ProcessDataQuality();
   Bool_t Finalize();
   
   

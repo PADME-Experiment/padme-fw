@@ -5,33 +5,23 @@
 #include "HistoSvc.hh"
 #include <iostream>
 
-HEPVetoAnalysis::HEPVetoAnalysis()
+HEPVetoAnalysis::HEPVetoAnalysis(): ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fVerbose = 0;
-  fValidation = 0;
+  fAlgoName = "HEPVeto";
   InitHistos();
+  return;
 }
-HEPVetoAnalysis::HEPVetoAnalysis(Int_t valid, Int_t verb)
+HEPVetoAnalysis::HEPVetoAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fVerbose = verb;
-  fValidation = valid;
+  fAlgoName = "HEPVeto";
   InitHistos();
+  return;
 }
 HEPVetoAnalysis::~HEPVetoAnalysis()
 {
 }
-Bool_t HEPVetoAnalysis::InitHistos()
+Bool_t HEPVetoAnalysis::InitHistosAnalysis()
 {
-  if (fValidation)
-    {
-      InitHistosValidation("HEPVeto");
-      return true;
-    }
- 
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::string hname;
     Int_t nx, ny;
@@ -69,27 +59,9 @@ Bool_t HEPVetoAnalysis::InitHistos()
 
     return true;
 }
-Bool_t HEPVetoAnalysis::Init(THEPVetoRecoEvent* ev, TRecoVClusCollection* cl)
+Bool_t HEPVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
-  fhitEvent = ev;
-  fClColl   = cl;
-  fTmin = -100.;
-  fTmax =  180.;
-
-  //InitHistos();
-  
-  return retCode;
-}
-Bool_t HEPVetoAnalysis::Process()
-{
-  Bool_t retCode = 0;
-  if (fValidation)
-    {
-      ProcessValidation("HEPVeto");
-      return true;
-    }
-
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

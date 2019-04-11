@@ -17,10 +17,9 @@ public:
   SACAnalysis(Int_t valid, Int_t verb);
   ~SACAnalysis();
 
-  Bool_t Init(TSACRecoEvent* ev, TRecoVClusCollection* cl);
-  Bool_t InitHistos();
+  Bool_t InitHistosAnalysis();
   Bool_t InitHistosValidation();
-  Bool_t Process();
+  Bool_t ProcessAnalysis();
   Bool_t ProcessValidation();
   Bool_t Finalize(){return true;}
 

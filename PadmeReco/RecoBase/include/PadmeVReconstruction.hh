@@ -35,6 +35,7 @@ using namespace std;
 
 class TRecoEvent;
 class PadmeVClusterization;
+class PadmeVGeometry;
 
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
@@ -112,6 +113,7 @@ protected:
   PadmeVClusterization *fClusterization;
   PadmeVCalibration *fChannelCalibration;
   PadmeVTrigger *fTriggerProcessor;
+  PadmeVGeometry *fGeometry;
 
   Bool_t fWriteHits;
   Bool_t fWriteClusters;

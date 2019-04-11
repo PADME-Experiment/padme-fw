@@ -19,6 +19,7 @@ public:
   
   TargetCalibration();
   ~TargetCalibration();
+  void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
   void InitCommonEnergyScale(PadmeVRecoConfig *cfg);
   void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
   void PerformBeamCalibration(TTargetRecoBeam* b);
@@ -26,8 +27,13 @@ public:
 private:
 
   double fAverageGain;
+  int    fUseIndChannelGain;
   double fHVsign;
   double fCCD;
+  int    fCommonModeNoiseSubtr;
+  int    fCMNS_offBeamIdForX;
+  int    fCMNS_offBeamIdForY;
+  std::map<int, double>* fChannelGainMap;
 };
 #endif
 

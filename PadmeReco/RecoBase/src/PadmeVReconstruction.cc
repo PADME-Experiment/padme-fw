@@ -1,6 +1,7 @@
 #include "PadmeVReconstruction.hh"
 #include "PadmeReconstruction.hh"
 #include "PadmeVClusterization.hh"
+#include "PadmeVGeometry.hh"
 
 #include "Riostream.h"
 
@@ -17,6 +18,7 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fChannelReco = 0;
   fChannelCalibration = 0;
   fTriggerProcessor = 0;
+  fGeometry = 0;
   HistoFile->mkdir(Name.Data());
   fConfigFileName = ConfigFileName;
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
@@ -75,6 +77,11 @@ void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
       std::cout<<this->GetName() <<": Calibration inititialized OK"<<std::endl;
     }
     else std::cout<<this->GetName() <<": fChannelCalibration = NULL"<<std::endl;
+    if(fGeometry) {
+      fGeometry->Init(GetConfig(), this);
+      std::cout<<this->GetName() <<": GeometrySvc inititialized OK"<<std::endl;
+    }
+    else std::cout<<this->GetName() <<": fGeometry = NULL"<<std::endl;
   }
   
   HistoInit();
@@ -263,6 +270,7 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
   BuildHits(rawEv);
    
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
   
   // from Hits to Clusters
   ClearClusters();

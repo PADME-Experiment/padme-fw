@@ -9,20 +9,15 @@
 
 SACAnalysis::SACAnalysis(): ValidationBase()
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fVerbose = 0;
-  fValidation = 0;
+  fAlgoName = "SAC";
   InitHistos();
+  return;
 }
-
-SACAnalysis::SACAnalysis(Int_t Validation, Int_t verb):ValidationBase()
+SACAnalysis::SACAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
-  fhitEvent=NULL;
-  fClColl=NULL;
-  fValidation = Validation;
-  fVerbose    = verb;
+  fAlgoName = "SAC";
   InitHistos();
+  return;
 }
 
 SACAnalysis::~SACAnalysis()
@@ -30,21 +25,9 @@ SACAnalysis::~SACAnalysis()
   fhitEvent=NULL;
   fClColl=NULL;
 }
-Bool_t SACAnalysis::Init(TSACRecoEvent* ev, TRecoVClusCollection* cl)
+Bool_t SACAnalysis::InitHistosAnalysis()
 {
-  Bool_t retCode = 0;
-  fhitEvent = ev;
-  fClColl = cl;
-
-  return retCode;
-}
-Bool_t SACAnalysis::InitHistos()
-{
-  if (fValidation)
-    {
-      return InitHistosValidation();
-    }
-  // TO DO: move here SAC histos currently hbooked in HistoSvc
+  return true;
 }
 Bool_t SACAnalysis::InitHistosValidation()
 {
@@ -111,14 +94,10 @@ Bool_t SACAnalysis::InitHistosValidation()
 
     return true;
 }
-Bool_t SACAnalysis::Process()
+Bool_t SACAnalysis::ProcessAnalysis()
 {
 
   Bool_t retCode = 0;
-  if (fValidation)
-    {
-      return ProcessValidation();
-    }
   
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 

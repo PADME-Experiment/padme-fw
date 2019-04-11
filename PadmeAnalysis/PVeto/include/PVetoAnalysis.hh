@@ -16,10 +16,9 @@ public:
   PVetoAnalysis(Int_t valid, Int_t verb);
   ~PVetoAnalysis();
 
-  Bool_t Init(TPVetoRecoEvent* ev, TRecoVClusCollection* cl);
-  Bool_t Process();
   Bool_t Finalize(){return true;}
-  Bool_t InitHistos();
+  Bool_t InitHistosAnalysis();
+  Bool_t ProcessAnalysis();
   
   
   

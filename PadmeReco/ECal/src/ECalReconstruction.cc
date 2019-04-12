@@ -104,28 +104,6 @@ void ECalReconstruction::HistoInit(){
 ECalReconstruction::~ECalReconstruction()
 {;}
 
-// void ECalReconstruction::Init(PadmeVReconstruction* MainReco)
-// {
-//   //common part for all the subdetectors
-//   PadmeVReconstruction::Init(MainReco);
-
-// }
-
-// // Read ECal reconstruction parameters from a configuration file
-// void ECalReconstruction::ParseConfFile(TString ConfFileName) {
-
-//   std::ifstream confFile(ConfFileName.Data());
-//   if (!confFile.is_open()) {
-//     perror(ConfFileName);
-//     exit(1);
-//   }
-
-//   TString Line;
-//   while (Line.ReadLine(confFile)) {
-//     if (Line.BeginsWith("#")) continue;
-//   }
-//   confFile.close();
-// }
 
 /*
 TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
@@ -190,7 +168,7 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
 	}
       }
     } else {
-      std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
     }
   }    
 }

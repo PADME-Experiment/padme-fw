@@ -51,7 +51,8 @@ ChamberGeometry::ChamberGeometry()
 
   fCPZRIn = 5.*cm;
   fCPZThick = 1.*cm;
-  fCPZLength = 29.*cm;
+  //fCPZLength = 29.*cm;
+  fCPZLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - El 2019-04-12
   //fCPZPosZ = -1.*m;
   fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPZFlangeR = 76.*mm;
@@ -59,7 +60,8 @@ ChamberGeometry::ChamberGeometry()
 
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
-  fCPXLength = 25.*cm;
+  //fCPXLength = 25.*cm;
+  fCPXLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - EL 2019-04-12
   //fCPXPosZ = -1.*m;
   fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPXFlangeR = 76.*mm;

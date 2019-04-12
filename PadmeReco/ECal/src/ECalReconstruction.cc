@@ -210,20 +210,6 @@ void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
   myClusters.clear();
 
   ECalParameters* para = ECalParameters::GetInstance();
-  /*
-
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
-  TECalMCEvent* tECalEvent = (TECalMCEvent*)tEvent;
-  std::cout << "--- ECalReconstruction --- run/event/#hits/#digi " << tECalEvent->GetRunNumber() << " " << tECalEvent->GetEventNumber() << " " << tECalEvent->GetNHits() << " " << tECalEvent->GetNDigi() << std::endl;
-  for (Int_t iH=0; iH<tECalEvent->GetNHits(); iH++) {
-    TECalMCHit* hit = (TECalMCHit*)tECalEvent->Hit(iH);
-    hit->Print();
-  }
-  for (Int_t iD=0; iD<tECalEvent->GetNDigi(); iD++) {
-    TECalMCDigi* digi = (TECalMCDigi*)tECalEvent->Digi(iD);
-    digi->Print();
-  }
-  */
 
   vector<TRecoVHit *> Hits = GetRecoHits();
   // Let's do some cluster finding

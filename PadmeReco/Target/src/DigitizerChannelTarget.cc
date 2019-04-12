@@ -3,6 +3,11 @@
 #include "TObject.h"
 #include "TVector3.h"
 
+DigitizerChannelTarget::DigitizerChannelTarget()
+{
+  fGlobalMode = NULL;
+  fLocalMode  = NULL;
+}
 void DigitizerChannelTarget::PrintConfig(){
   std::cout << "TimeBin "		 << fTimeBin	      << std::endl;
   std::cout << "VoltageBin "		 << fVoltageBin       << std::endl;
@@ -57,8 +62,12 @@ void DigitizerChannelTarget::PrintConfig(){
 }
 
 
-void DigitizerChannelTarget::Init(PadmeVRecoConfig *cfg){
+void DigitizerChannelTarget::Init(GlobalRecoConfigOptions* gMode,
+				  PadmeVRecoConfig *cfg)
+{
 
+  fGlobalMode = gMode;
+    
   fTimeBin           = cfg->GetParOrDefault( "ADC","TimeBin"                ,      1.);
   fVoltageBin        = cfg->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
   fImpedance         = cfg->GetParOrDefault( "ADC","InputImpedance"         ,     50.);

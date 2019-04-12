@@ -1,6 +1,7 @@
 #include "PadmeVReconstruction.hh"
-#include "PadmeReconstruction.hh"
+//#include "PadmeReconstruction.hh"
 #include "PadmeVClusterization.hh"
+#include "GlobalRecoConfigOptions.hh"
 #include "PadmeVGeometry.hh"
 
 #include "Riostream.h"
@@ -13,16 +14,26 @@
 //PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile), fRecoEvent(0)
 PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile)
 {
+  /*
+  fIsPed          = false;
+  fIsReco         = false;
+  fIsCosmic       = false;
+  fIsMonitor      = false;
+  fIsLocalDebug   = false;
+  fIsGlobalDebug  = false;
+  fRunningMode    = 0;
+  */
 
   fMainReco = 0;
   fChannelReco = 0;
   fChannelCalibration = 0;
-  fTriggerProcessor = 0;
+  fTriggerProcessor = new PadmeVTrigger();
   fGeometry = 0;
   HistoFile->mkdir(Name.Data());
   fConfigFileName = ConfigFileName;
   fConfigParser = new utl::ConfigParser(ConfigFileName.Data());
   fClusterization = 0;//new PadmeVClusterization();
+  fGlobalRecoConfigOptions = NULL;
     
   fConfig = new PadmeVRecoConfig(fConfigParser,Name);
   fWriteHits = true;
@@ -59,13 +70,33 @@ void PadmeVReconstruction::Exception(TString Message){
   exit(1);
 }
 
+/*
+void PadmeVReconstruction::InitRunningModeFlags()
+{
+  fRunningMode = GetMainReco()->GetRunningMode()        ;
+  
+  if (GetMainReco()->GetIsPed()) SetIsPedOn()           ;
+  if (GetMainReco()->GetIsReco()) SetIsRecoOn()         ;
+  if (GetMainReco()->GetIsCosmic()) SetIsCosmicOn()     ;
+  if (GetMainReco()->GetIsMonitor()) SetIsMonitorOn()   ;
+  SetIsGlobalDebug(GetMainReco()->GetIsGlobalDebug())   ;
+  
+  return;
+}
+*/
+
 void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
   std::cout <<"--------------------------------------------------" <<this->GetName() <<": Initializing" << std::endl;
 
   fMainReco = MainReco;
+
+  fGlobalRecoConfigOptions = MainReco->GetGlobalRecoConfigOptions();
+  //InitRunningModeFlags();
+
   if(fChannelReco) {
-    fChannelReco->Init(GetConfig());
+    fChannelReco->Init(MainReco->GetGlobalRecoConfigOptions(), GetConfig());
     std::cout<<this->GetName() <<": Digitizer initialized OK"<<std::endl;
+    
     if (fClusterization) {
       fClusterization->Init(GetConfig());
       std::cout<<this->GetName() <<": Clusterization inititialized OK"<<std::endl;
@@ -239,8 +270,13 @@ void PadmeVReconstruction::HistoExit(){
     }
 }
 
-void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv){
+void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv)
+{
+  
   fTriggerProcessor->Clear();
+
+  fTriggerProcessor->SetTrigMask(rawEv->GetEventTrigMask());
+
   UChar_t nBoards = rawEv->GetNADCBoards();
   
   TADCBoard* ADC;
@@ -258,15 +294,20 @@ void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv){
   }
 }
 
+bool PadmeVReconstruction::TriggerToBeSkipped()
+{
+  return false; 
+}
 void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
-  // From waveforms to Hits
-  
-  if(fTriggerProcessor) {
-    fTriggerProcessor->SetTrigMask(rawEv->GetEventTrigMask());
-    BuildTriggerInfo(rawEv);
-  }
 
+  // use trigger info 
+  if(fTriggerProcessor) {
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
   BuildHits(rawEv);
    
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());

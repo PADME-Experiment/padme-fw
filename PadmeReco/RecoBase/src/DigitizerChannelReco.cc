@@ -8,8 +8,10 @@ void DigitizerChannelReco::PrintConfig(){
 }
 
 
-void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
+void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
 
+  fGlobalMode = gMode;
+  
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
@@ -87,7 +89,9 @@ Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
   Double_t rms1000  = TMath::RMS(NAvg,&fSamples[0]);
   Double_t ZSupHit=-1;
   //  if(rms1000>Thr){
-  if(rms1000>4.){
+  //  if(rms1000>4.){
+  // come back to a veto setup 
+  if(rms1000>Thr){
     ZSupHit=0;
   }else{
     ZSupHit=1;
@@ -102,8 +106,9 @@ Double_t DigitizerChannelReco::CalcCharge(UShort_t iMax) {
   Short_t end = iMax+fPostSamples < fNSamples? iMax+fPostSamples:fNSamples;
  
   // M. Raggi for testing
-  begin = 180;
-  end =  1000;
+  //begin = 180;
+  //end =  1000;
+  // come back to a veto setup
 
   //  std::cout << "Begin: "<< begin << "  end: " << end << std::endl;
   fCharge=0.;
@@ -175,15 +180,18 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  if (fCharge < .01) return;
+  //  if (fCharge < .01) return;
+  // come back to a Veto setup
+  if (fCharge < 2.) return;
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(fTime);
   // M. Raggi going to charge
-  Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
-  //  Hit->SetEnergy(fCharge);
-  Hit->SetEnergy(fEnergy);
+  // Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
+  // Hit->SetEnergy(fCharge);
+  // come back to a Veto setup
+  Hit->SetEnergy(fCharge);
   hitArray.push_back(Hit);
 
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;

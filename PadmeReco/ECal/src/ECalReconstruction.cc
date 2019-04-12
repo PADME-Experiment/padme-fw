@@ -8,7 +8,7 @@
 
 #include "ECalReconstruction.hh"
 #include "ECalCalibration.hh"
-#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelECal.hh"
 
 #include "ECalParameters.hh"
 #include "ECalCrystalHandler.hh"
@@ -32,9 +32,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 {
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
-  fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelECal();
   fClusterization = new ECalSimpleClusterization();
-  fTriggerProcessor = new PadmeVTrigger();
+  //fTriggerProcessor = new PadmeVTrigger(); // this is done for all detectors in the constructor of PadmeVReconstruction
   fChannelCalibration = new ECalCalibration();
 
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
@@ -47,7 +47,6 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 
   //  fClusters.clear();
 }
-
 void ECalReconstruction::HistoInit(){
   AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
   AddHisto("ECalOccupancyOffTime",new TH2F("ECalOccupancyOffTime","ECalOccupancyOffTime",31,0,31,31,0,31));
@@ -88,20 +87,17 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALNeig",new TH1F("ECALNeig","ECALNeig",9,-4.5,4.5));
 
 
-  //Waveform histograms
-  for(int iCh=0; iCh!=15+1 ; iCh++){
-    char iName[100];
-
-    sprintf(iName,"EcalCh%d",iCh);
-    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
-    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-
-    sprintf(iName,"EcalLastCh%d",iCh);
-    AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
-    (GetHisto(iName))->GetXaxis()->SetTitle("Sampling #");
-    (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
-  }
+  // new histograms from Mauro
+  AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));
+  AddHisto("ECALTDiffCos",new TH1F("ECALTDiffCos","ECALTDiffCos",200,-20,20));
+  AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",100,-10,10));
+  AddHisto("EtotInner",new TH1F("EtotInner","EtotInner",550,-1000.,10000.));
+  AddHisto("EtotOuter",new TH1F("EtotOuter","EtotOuter",550,-1000.,10000.));
+  AddHisto("EtotMiddle",new TH1F("EtotMiddle","EtotMiddle",550,-1000.,10000.));
+  AddHisto("EtotCorner",new TH1F("EtotCorner","EtotCorner",550,-1000.,10000.));
+  AddHisto("Etot",     new TH1F("Etot","Etot",1200,-1000.,5000.));
+  AddHisto("Esum-2",     new TH1F("Esum-2","Esum-2",1000,0.,1000.));  
+  AddHisto("Esum-2G",     new TH1F("Esum-2G","Esum-2G",1000,0.,1000.));
 
 }
 
@@ -144,11 +140,60 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 */
 
 
-// void ECalReconstruction::ProcessEvent(TRawEvent* rawEv)
-// {
-//   PadmeVReconstruction::ProcessEvent(rawEv);
-//   BuildClusters();
-// }
+bool ECalReconstruction::TriggerToBeSkipped()
+{
+  if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
+  return false; 
+}
+
+void ECalReconstruction::BuildHits(TRawEvent* rawEv)
+{
+
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  ((DigitizerChannelECal*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
+}
 
 
 //void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
@@ -338,7 +383,10 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   float q3 = 0.;
   float q4 = 0.;
   float summa = 0.;
-
+  float Einner = 0.;
+  float Eouter = 0.;
+  float Emiddle = 0.;
+  float Ecorner = 0.;
   int NHighEgamma = 0;
 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
@@ -368,6 +416,17 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
     int nnn=nevt+1;
     summa += Hits[iHit1]->GetEnergy();
+    if(ix>=7 && ix<22 && iy>=7 && iy<22) {
+      Einner+= Hits[iHit1]->GetEnergy();
+    } else {
+      Eouter+= Hits[iHit1]->GetEnergy();
+      float rr = sqrt( (ix-14.5)* (ix-14.5) +  (iy-14.5)* (iy-14.5) );
+      if( rr < 13.) {
+	Emiddle+= Hits[iHit1]->GetEnergy();
+      } else {
+	Ecorner+= Hits[iHit1]->GetEnergy();
+      }
+    }
     double carica, newcarica;
 
     carica = GetHisto("ECalOccupancyOffTime") -> GetBinContent(ix,iy);
@@ -383,6 +442,12 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     if(ix > 14 && iy < 14) q4+= Hits[iHit1]->GetEnergy();
 
   }
+
+  (GetHisto("Etot")) -> Fill(summa);
+  (GetHisto("EtotInner")) -> Fill(Einner);
+  (GetHisto("EtotOuter")) -> Fill(Eouter);
+  (GetHisto("EtotCorner")) -> Fill(Ecorner);
+  (GetHisto("EtotMiddle")) -> Fill(Emiddle);
 
   ((TH1F *) GetHisto("ECalTotCharge")) -> Fill(summa);
 
@@ -413,6 +478,59 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     }
   }
 
+  //2gamma control histograms 
+  float xcl[10];
+  float ycl[10];
+  float ecl[10];
+  float tcl[10];
+
+  for(int ii=0;ii<10;ii++) {
+    xcl[ii] = 0.;
+    ycl[ii] = 0.;
+    ecl[ii] = 0.;
+    tcl[ii] = 0.;
+  }
+
+  int icl=0;
+
+  for(unsigned int iHit1 =  0; iHit1 < Hits.size() && icl < 10  ; ++iHit1) {
+    if( Hits[iHit1]->GetEnergy()< 50  ) continue;
+    //Otherwise - good seed:    
+    int ich1 = Hits[iHit1]->GetChannelId();
+    int ix1 = ich1/100;
+    int iy1 = ich1%100;
+    
+    xcl[icl] = ix1;
+    ycl[icl] = iy1;
+
+    for(unsigned int iHit2 = iHit1 ; iHit2 < Hits.size(); ++iHit2) {
+      //      if  ( Hits[iHit1]->GetEnergy()< 50 || Hits[iHit2]->GetEnergy()< 50  ) continue;
+      int ich2 = Hits[iHit2]->GetChannelId();
+
+      int ix2 = ich2/100;
+      int iy2 = ich2%100;
+
+      //Getting the cluster energy:
+      if(fabs(ix1 - ix2) < 2 && fabs(iy1 - iy2) < 2) {
+	//Cell belongs to the cluster
+	ecl[icl] +=  Hits[iHit2]->GetEnergy();
+      }
+    }
+    
+    icl++;
+  }
+
+  if(icl == 2) {    
+    GetHisto("Esum-2") ->Fill( ecl[0] + ecl[1]);
+    
+    
+    
+    if( xcl[0] < 10 && xcl[1] > 20  )   
+      GetHisto("Esum-2G") ->Fill(ecl[0] + ecl[1] ); 
+    if( xcl[0] > 20 && xcl[1] < 10  )   
+      GetHisto("Esum-2G") ->Fill(ecl[0] + ecl[1] ); 
+    
+  }
 
   // if(nevt % 100 == 0) {
   //   c.cd();
@@ -429,6 +547,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(UShort_t s=0;s<1024;s++){
      adc_chsum    [s] = 0;
   }
+  /*
   for(UChar_t b=0;b<nBoards;b++)// Loop over boards
   {
     TADCBoard* adcB = rawEv->ADCBoard(b);
@@ -462,7 +581,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 	 }
     }// End loop over channels
   }// End loop over boards
-
+  */
 
   nevt ++;
 }
@@ -624,18 +743,20 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	cUsed[iHit1]=1;
 	// keep track of the indices of hits contributing to the cluster
 	clusMatrix[NSeeds][NCry] = iHit1;
-	ClTime[NSeeds]+=cTime[iHit1];
+	ClTime[NSeeds]+=cTime[iHit1]*cEnergy[iHit1];
 	ClE[NSeeds]+=cEnergy[iHit1];
 	ClX[NSeeds]+=XCl*cEnergy[iHit1];
 	ClY[NSeeds]+=YCl*cEnergy[iHit1];
+	if(SdCell[NSeeds]!=cChID[iHit1]) GetHisto("ECALHitTDiff")->Fill( (cTime[iHit1]-SdTime[NSeeds]) );
 	NCry++;
 	HitUsed++;
 	cCellUsed[cChID[iHit1]]=1;
       }
     }
     ClNCry.push_back(NCry);
-    GetHisto("ECALClE")->Fill(ClE[NSeeds]);
-    ClTime[NSeeds]=ClTime[NSeeds]/NCry;  //average time of the hit
+    //GetHisto("ECALClE")->Fill(ClE[NSeeds]);
+    //ClTime[NSeeds]=ClTime[NSeeds]/NCry;  //average time of the hit
+    ClTime[NSeeds]=ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
     ClX[NSeeds]=ClX[NSeeds]/ClE[NSeeds];
     ClY[NSeeds]=ClY[NSeeds]/ClE[NSeeds];
     GetHisto("ECALClTDiff")->Fill(ClTime[NSeeds]-SdTime[NSeeds]);

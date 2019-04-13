@@ -25,12 +25,16 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
-
+  //  fQuadMagneticFieldGrad  =  10*tesla/m;
+  fQ1MagneticFieldGrad  =  5*tesla/m;
+  fQ2MagneticFieldGrad  =  5*tesla/m;
+  printf("***************************** tesla %f m %f \n ",tesla,m);
   // Radius of BeamPipe center
   fDHSTB002CenterRadius = 1723.*mm;
 
   // Z coordinate of magnet exit side (aligned with PADME Z axis)
-  fDHSTB002ExitPosZ = -2001.*mm+400.*mm*cos(45.*deg); // Verify from drawings
+  //  fDHSTB002ExitPosZ = -2001.*mm+400.*mm*cos(45.*deg); // Verify from drawings
+  fDHSTB002ExitPosZ = -1627.44*mm; // From CAD drawings 12/04
 
   // Dimensions of DHSTB002 magnet
 
@@ -146,6 +150,21 @@ BeamLineGeometry::BeamLineGeometry()
   fBeWindowThick = 250.*um;
   fBeWindowFlangeRadius = 0.5*113.5*mm;
   fBeWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
+
+  // Geometry of the quadrupoles 
+
+  fQuadBoxSizeX = 348.*mm; // M. Raggi From L. Foggetta Drawings 11/04/2019
+  fQuadBoxSizeY = 348.*mm; // guess L. Foggetta Drawings are 2 dimentional 11/04/2019
+  fQuadBoxSizeZ = 186.*mm; // M. Raggi From L. Foggetta Drawings 11/04/2019
+  // There is a inner square hole of unknown size with the coils insideit 
+	       
+  fQuadMagSizeX = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
+  fQuadMagSizeY = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
+  fQuadMagSizeZ = 200.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
+
+  //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
+  fQ2DistFromDHSTB002 = 379.*mm; 
+  fQ1Q2Dist = 900.*mm; //center to center
 
 }
 

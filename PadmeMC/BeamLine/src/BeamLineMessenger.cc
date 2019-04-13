@@ -40,6 +40,13 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetDHSTB002MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
   fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  // Q1 magnetic field gradient
+  fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/Q1_FieldGrad",this);
+  fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set gradient of the Q1 quadrupole");
+  fSetDHSTB002MagneticFieldYCmd->SetParameterName("Q1GF",false);
+  fSetDHSTB002MagneticFieldYCmd->SetDefaultUnit("tesla/m");
+  fSetDHSTB002MagneticFieldYCmd->SetRange("Q1GF > 0. && DFY < 10.");
+  fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 }
 
 BeamLineMessenger::~BeamLineMessenger()

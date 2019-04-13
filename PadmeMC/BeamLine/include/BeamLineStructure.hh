@@ -13,7 +13,7 @@
 
 class G4LogicalVolume;
 class G4UnionSolid;
-
+class QuadSetup;
 class BeamLineMessenger;
 
 class BeamLineStructure
@@ -40,14 +40,15 @@ private:
   void CreateBeThinWindow();
   void CreateBeamLine();
   void CreateDHSTB002Magnet();
+  void CreateQuadMagnets();
 
   G4LogicalVolume* fMotherVolume;
   //G4LogicalVolume* fGlobalLogicalVolume;
   G4LogicalVolume* fBeWindowVolume;
 
+  QuadSetup * fMagneticFieldManager;
   //G4int fBeamLineExists;
-  G4int fBeamLineIsVisible;
-
+  G4int fBeamLineIsVisible; 
   BeamLineMessenger* fBeamLineMessenger;
 
 };

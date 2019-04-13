@@ -41,6 +41,13 @@ public:
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
 
+  // Magnetic field gradient inside quadrupoles
+  void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g; }
+  G4double GetQ1MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
+
+  void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g; }
+  G4double GetQ2MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
+
   // Dimensions of DHSTB002 magnet yoke
 
   G4double GetDHSTB002CenterRadius() { return fDHSTB002CenterRadius; }
@@ -138,6 +145,19 @@ public:
   G4double GetBeWindowFlangeRadius() { return fBeWindowFlangeRadius; }
   G4double GetBeWindowFlangeThick() { return fBeWindowFlangeThick; }
 
+  // Properties of the quadrupoles
+  G4double  GetQuadBoxSizeX(){return fQuadBoxSizeX;}
+  G4double  GetQuadBoxSizeY(){return fQuadBoxSizeY;}
+  G4double  GetQuadBoxSizeZ(){return fQuadBoxSizeZ;}
+     
+  G4double GetQuadMagSizeX(){return fQuadMagSizeX;}
+  G4double GetQuadMagSizeY(){return fQuadMagSizeY;}
+  G4double GetQuadMagSizeZ(){return fQuadMagSizeZ;}
+
+  G4double GetQ2DistFromDHSTB002(){return fQ2DistFromDHSTB002;} 
+  G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
+
+
 private:
 
   //  Berillium thin window and stainless still flange
@@ -146,6 +166,10 @@ private:
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
+
+  // Gradient of Quadrupoles Magnetic field 
+  G4double fQ1MagneticFieldGrad;
+  G4double fQ2MagneticFieldGrad;
 
   // Radius of magnet at center of beam line
   G4double fDHSTB002CenterRadius;
@@ -263,6 +287,17 @@ private:
   G4double fBeWindowFlangeRadius;
   G4double fBeWindowFlangeThick;
 
+  // Properties of the quadrupoles
+  G4double  fQuadBoxSizeX;  
+  G4double  fQuadBoxSizeY;
+  G4double  fQuadBoxSizeZ;
+     
+  G4double fQuadMagSizeX;
+  G4double fQuadMagSizeY;
+  G4double fQuadMagSizeZ;
+
+  G4double fQ2DistFromDHSTB002;
+  G4double fQ1Q2Dist;  //center to center
 };
 
 #endif

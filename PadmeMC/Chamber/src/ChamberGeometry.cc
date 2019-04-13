@@ -78,9 +78,9 @@ ChamberGeometry::ChamberGeometry()
 
   // Properties of junction pipe between cross and BTF pipes
 
-  fBTFJunRIn = 31.5*mm;
-  fBTFJunROut = 35.*mm;
-  fBTFJunLength = 95.*mm;
+  fBTFJunRIn    =  31.5*mm;
+  fBTFJunROut   =  35.*mm;
+  fBTFJunLength = 113.*mm; //was 95.*mm fixed  after checking from CAD 12/04/2019
   fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
   // Flange towards cross
   fBTFJunFFlgRIn = fBTFJunROut;
@@ -97,7 +97,7 @@ ChamberGeometry::ChamberGeometry()
 
   fBellowRIn = 31.5*mm;
   fBellowROut = 35.*mm;
-  fBellowLength = 184.*mm;
+  fBellowLength = 128.*mm;//was 184.*mm fixed  after checking from CAD 12/04/2019
   fBellowPosZ = fBTFJunPosZ-0.5*fBTFJunLength-0.5*fBellowLength;
   // Flange towards cross
   fBellowFFlgRIn = fBellowROut;

@@ -364,6 +364,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     if(rnd<0.02) hListEv->Write();
   }
   // TSPECTRUM search is too time consuming.
+  /*
   if(Max>250){
     TSpectrum *s = new TSpectrum(npeaks);
     //  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
@@ -391,6 +392,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     //  std::cout<<"fTime "<<fTimeSin<<std::endl;
     //  hTime->Write();
   }
+  */
   // if(fIsGlobalDebug!=0) histo->Write(); //use only with few events for debug
   // if(fIsGlobalDebug!=0) histo1->Write();
   histo->Reset();

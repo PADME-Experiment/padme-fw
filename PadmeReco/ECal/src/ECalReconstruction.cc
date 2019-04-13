@@ -255,58 +255,6 @@ void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
   if (cluFindRad) delete cluFindRad;
 }
 
-/*
-void ECalReconstruction::BuildECalRadiusClusters()
-{
-  std::cout<<"In BuildECalRadiusClusters "<<std::endl;
-  vector<TRecoVCluster *> &myClusters  = GetClusters();
-  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
-    delete myClusters[iCl];
-  }
-  myClusters.clear();
-
-  ECalParameters* para = ECalParameters::GetInstance();
-
-  vector<TRecoVHit *> Hits = GetRecoHits();
-  // Let's do some cluster finding
-  ECalCrystalHandler* cryHand = new ECalCrystalHandler();
-  for (Int_t ih=0; ih<Hits.size(); ++ih) {
-    TRecoVHit* rhit = Hits[ih];
-    Int_t     ch = rhit->GetChannelId();
-    Double_t sig = rhit->GetEnergy();
-    Int_t iX = ch/100;
-    Int_t iY = ch%100;
-    ECalCrystal* cry = cryHand->CreateCrystal(iX,iY);
-    cry->SetCharge(sig);
-    cry->SetEnergy(sig*para->GetSignalToEnergy(ch));
-    //    cry->SetCharge(sig);
-    //    cry->SetEnergy(sig*para->GetSignalToEnergy(ch));
-    cry->SetTime(rhit->GetTime());
-    cry->SetHitIndex(ih);
-    cry->Print();
-  }
-  cryHand->SortEnergy();
-
-  // Find clusters with PadmeRadius algorithm
-  ECalClusterHandler* cluHandRad = new ECalClusterHandler();
-  ECalClusterFinderRadius* cluFindRad = new ECalClusterFinderRadius(cryHand,cluHandRad);
-  Int_t newNCluRad = cluFindRad->FindClusters();
-  printf("- Cluster finding result - PadmeRadius algorithm -\n");
-  cluHandRad->Print();
-
-  // Here you can do something with your clusters
-
-  // Final cleanup
-
-  delete cryHand;
-  delete cluHandRad;
-  delete cluFindRad;
-
-}
-*/
-
-// void ECalReconstruction::EndProcessing()
-// {;}
 void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   static int nevt;
   static TCanvas c;
@@ -617,7 +565,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   SdCell.clear();
   EvTotE=0;
 
-  const int NMaxCl=200;
+  const int NMaxCl=600;
   const int NMaxHitsInCl=100;
   const int NRows=29;
   const int NCols=29;

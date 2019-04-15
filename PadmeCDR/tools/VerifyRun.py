@@ -392,14 +392,14 @@ def main(argv):
 
     if warnings:
         report = ""
-        if  miss_at_src: report += "- %s: %d missing"%(src_string,miss_at_src)
-        if  miss_at_dst: report += "- %s: %d missing"%(dst_string,miss_at_dst)
-        if  wrong_size: report += "- %d wrong size"%wrong_size
+        if  miss_at_src: report += " - %s: %d missing"%(src_string,miss_at_src)
+        if  miss_at_dst: report += " - %s: %d missing"%(dst_string,miss_at_dst)
+        if  wrong_size: report += " - %d wrong size"%wrong_size
         if checksum:
-            if  miss_chksum_src: report += "- %s: %d no checksum"%(src_string,miss_chksum_src)
-            if  miss_chksum_dst: report += "- %s: %d no checksum"%(dst_string,miss_chksum_dst)
-            if  wrong_checksum: report += "- %d wrong checksum"%wrong_checksum
-        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s %s ==="%(run,src_string,dst_string,report)
+            if  miss_chksum_src: report += " - %s: %d no checksum"%(src_string,miss_chksum_src)
+            if  miss_chksum_dst: report += " - %s: %d no checksum"%(dst_string,miss_chksum_dst)
+            if  wrong_checksum: report += " - %d wrong checksum"%wrong_checksum
+        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s%s ==="%(run,src_string,dst_string,report)
     else:
         print "=== Run %s matches between %s and %s ==="%(run,src_string,dst_string)
 

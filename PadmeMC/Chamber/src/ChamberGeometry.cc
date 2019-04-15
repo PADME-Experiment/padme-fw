@@ -51,7 +51,8 @@ ChamberGeometry::ChamberGeometry()
 
   fCPZRIn = 5.*cm;
   fCPZThick = 1.*cm;
-  fCPZLength = 29.*cm;
+  //fCPZLength = 29.*cm;
+  fCPZLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - El 2019-04-12
   //fCPZPosZ = -1.*m;
   fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPZFlangeR = 76.*mm;
@@ -59,7 +60,8 @@ ChamberGeometry::ChamberGeometry()
 
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
-  fCPXLength = 25.*cm;
+  //fCPXLength = 25.*cm;
+  fCPXLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - EL 2019-04-12
   //fCPXPosZ = -1.*m;
   fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPXFlangeR = 76.*mm;
@@ -80,7 +82,8 @@ ChamberGeometry::ChamberGeometry()
 
   fBTFJunRIn = 31.5*mm;
   fBTFJunROut = 35.*mm;
-  fBTFJunLength = 95.*mm;
+  //fBTFJunLength = 95.*mm;
+  fBTFJunLength = 113.*mm; // From Foggetta's drawings - EL 2019-04-15
   fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
   // Flange towards cross
   fBTFJunFFlgRIn = fBTFJunROut;
@@ -97,7 +100,8 @@ ChamberGeometry::ChamberGeometry()
 
   fBellowRIn = 31.5*mm;
   fBellowROut = 35.*mm;
-  fBellowLength = 184.*mm;
+  //fBellowLength = 184.*mm;
+  fBellowLength = 150.*mm; // From Foggetta's drawings - EL 2019-04-15
   fBellowPosZ = fBTFJunPosZ-0.5*fBTFJunLength-0.5*fBellowLength;
   // Flange towards cross
   fBellowFFlgRIn = fBellowROut;

@@ -8,7 +8,7 @@ import getopt
 import subprocess
 
 # List of available sites
-SITE_LIST = [ "LNF", "CNAF" , "KLOE" , "DAQ" ]
+SITE_LIST = [ "LNF", "LNF2", "CNAF" , "KLOE" , "DAQ" ]
 
 # User running CDR
 CDR_USER = os.environ['USER']
@@ -28,15 +28,16 @@ DAQ_ADLER32_CMD = "/home/daq/DAQ/tools/adler32"
 
 # SRM addresses for storage elements at LNF and CNAF
 LNF_SRM = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org"
+LNF2_SRM = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org_scratch"
 CNAF_SRM = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape"
 
 def print_help():
     print 'VerifyRun -R run_name [-S src_site] [-D dst_site] [-s daq_server] [-Y year] [-c] [-v] [-h]'
-    print '  -R run_name     Name of run to recover'
+    print '  -R run_name     Name of run to verify'
     print '  -S src_site     Source site. Default: CNAF. Available %s'%SITE_LIST
     print '  -D dst_site     Destination site. Default: LNF. Available %s'%SITE_LIST
     print '  -s daq_server   Name of data server if src_site or dst_site is DAQ. Available %s'%DAQ_SERVERS
-    print '  -Y year         Specify year of data taking to copy. Default: year from run name'
+    print '  -Y year         Specify year of data taking. Default: year from run name'
     print '  -c              Enable checksum verification (very time consuming!)'
     print '  -v              Enable verbose mode (repeat to increase level)'
     print '  -h              Show this help message and exit'
@@ -45,6 +46,17 @@ def get_checksum_lnf(file,year):
     a32 = ""
     path = "/daq/%s/rawdata/%s"%(year,file)
     cmd = "gfal-sum %s%s adler32"%(LNF_SRM,path);
+    for line in run_command(cmd):
+        try:
+            (fdummy,a32) = line.rstrip().split()
+        except:
+            a32 = ""
+    return a32
+
+def get_checksum_lnf2(file,year):
+    a32 = ""
+    path = "/daq/%s/rawdata/%s"%(year,file)
+    cmd = "gfal-sum %s%s adler32"%(LNF2_SRM,path);
     for line in run_command(cmd):
         try:
             (fdummy,a32) = line.rstrip().split()
@@ -113,6 +125,22 @@ def get_file_list_lnf(run,year):
     missing = False
     run_dir = "/daq/%s/rawdata/%s"%(year,run)
     cmd = "gfal-ls -l %s%s"%(LNF_SRM,run_dir)
+    for line in run_command(cmd):
+        if ( re.match("^gfal-ls error: ",line) ):
+            missing = True
+            break
+        m = re.match("^\s*\S+\s+\S+\s+\S+\s+\S+\s+(\d+)\s+\S+\s+\S+\s+\S+\s+(\S+)\s*$",line.rstrip())
+        if (m):
+            file_list.append(m.group(2))
+            file_size[m.group(2)] = int(m.group(1))
+    return (missing,file_list,file_size)
+
+def get_file_list_lnf2(run,year):
+    file_list = []
+    file_size = {}
+    missing = False
+    run_dir = "/daq/%s/rawdata/%s"%(year,run)
+    cmd = "gfal-ls -l %s%s"%(LNF2_SRM,run_dir)
     for line in run_command(cmd):
         if ( re.match("^gfal-ls error: ",line) ):
             missing = True
@@ -237,6 +265,8 @@ def main(argv):
         (src_missing,src_file_list,src_file_size) = get_file_list_daq(run,year,daq_srv)
     elif (src_site == "LNF"):
         (src_missing,src_file_list,src_file_size) = get_file_list_lnf(run,year)
+    elif (src_site == "LNF2"):
+        (src_missing,src_file_list,src_file_size) = get_file_list_lnf2(run,year)
     elif (src_site == "CNAF"):
         (src_missing,src_file_list,src_file_size) = get_file_list_cnaf(run,year)
     elif (src_site == "KLOE"):
@@ -252,6 +282,8 @@ def main(argv):
         (dst_missing,dst_file_list,dst_file_size) = get_file_list_daq(run,year,daq_srv)
     elif (dst_site == "LNF"):
         (dst_missing,dst_file_list,dst_file_size) = get_file_list_lnf(run,year)
+    elif (dst_site == "LNF2"):
+        (dst_missing,dst_file_list,dst_file_size) = get_file_list_lnf2(run,year)
     elif (dst_site == "CNAF"):
         (dst_missing,dst_file_list,dst_file_size) = get_file_list_cnaf(run,year)
     elif (dst_site == "KLOE"):
@@ -318,6 +350,8 @@ def main(argv):
                     src_checksum = get_checksum_daq("%s/%s"%(run,rawfile),year,daq_srv)
                 elif (src_site == "LNF"):
                     src_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
+                elif (src_site == "LNF2"):
+                    src_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
                 elif (src_site == "CNAF"):
                     src_checksum = get_checksum_cnaf("%s/%s"%(run,rawfile),year)
 
@@ -326,6 +360,8 @@ def main(argv):
                 if (dst_site == "DAQ"):
                     dst_checksum = get_checksum_daq("%s/%s"%(run,rawfile),year,daq_srv)
                 elif (dst_site == "LNF"):
+                    dst_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
+                elif (dst_site == "LNF2"):
                     dst_checksum = get_checksum_lnf("%s/%s"%(run,rawfile),year)
                 elif (dst_site == "CNAF"):
                     dst_checksum = get_checksum_cnaf("%s/%s"%(run,rawfile),year)
@@ -356,14 +392,14 @@ def main(argv):
 
     if warnings:
         report = ""
-        if  miss_at_src: report += "- %s: %d missing"%(src_string,miss_at_src)
-        if  miss_at_dst: report += "- %s: %d missing"%(dst_string,miss_at_dst)
-        if  wrong_size: report += "- %d wrong size"%wrong_size
+        if  miss_at_src: report += " - %s: %d missing"%(src_string,miss_at_src)
+        if  miss_at_dst: report += " - %s: %d missing"%(dst_string,miss_at_dst)
+        if  wrong_size: report += " - %d wrong size"%wrong_size
         if checksum:
-            if  miss_chksum_src: report += "- %s: %d no checksum"%(src_string,miss_chksum_src)
-            if  miss_chksum_dst: report += "- %s: %d no checksum"%(dst_string,miss_chksum_dst)
-            if  wrong_checksum: report += "- %d wrong checksum"%wrong_checksum
-        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s %s ==="%(run,src_string,dst_string,report)
+            if  miss_chksum_src: report += " - %s: %d no checksum"%(src_string,miss_chksum_src)
+            if  miss_chksum_dst: report += " - %s: %d no checksum"%(dst_string,miss_chksum_dst)
+            if  wrong_checksum: report += " - %d wrong checksum"%wrong_checksum
+        print "=== WARNING: Run %s DOES NOT MATCH between %s and %s%s ==="%(run,src_string,dst_string,report)
     else:
         print "=== Run %s matches between %s and %s ==="%(run,src_string,dst_string)
 

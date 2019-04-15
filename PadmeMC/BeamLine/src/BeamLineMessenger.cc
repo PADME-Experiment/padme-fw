@@ -40,20 +40,23 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetDHSTB002MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
   fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  // Q1 magnetic field gradient
-  fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/Q1_FieldGrad",this);
-  fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set gradient of the Q1 quadrupole");
-  fSetDHSTB002MagneticFieldYCmd->SetParameterName("Q1GF",false);
-  fSetDHSTB002MagneticFieldYCmd->SetDefaultUnit("tesla/m");
-  fSetDHSTB002MagneticFieldYCmd->SetRange("Q1GF > 0. && DFY < 10.");
-  fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  //  G4UnitDefinition ("tesla/meter","tesla/m","Bgradient",tesla/(1000*mm));
+  // Q1 magnetic field gradient problems with tesla/m units gets crazy results if used
+  //  fSetQ1_FieldGradCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/Q1_FieldGrad",this);
+  fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
+  fSetQ1_FieldGradCmd->SetGuidance("Set gradient of the Q1 quadrupole in T/m");
+  fSetQ1_FieldGradCmd->SetParameterName("Q1GF",false);
+  //  fSetQ1_FieldGradCmd->SetDefaultUnit("tesla/m");
+  //  fSetQ1_FieldGradCmd->SetDefaultUnit("tesla");
+  fSetQ1_FieldGradCmd->SetRange("Q1GF > 0. && Q1GF < 15.");
+  fSetQ1_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 }
 
 BeamLineMessenger::~BeamLineMessenger()
 {
 
   delete fBeamLineDir;
-
+  delete fSetQ1_FieldGradCmd; 
   delete fEnableBeWindowCmd;
   delete fSetDHSTB002MagneticFieldYCmd;
 
@@ -73,6 +76,10 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     fBeamLineGeometry->SetDHSTB002MagneticFieldY(fSetDHSTB002MagneticFieldYCmd->GetNewDoubleValue(par));
 
+  // Set Q1 gradient
+  else if ( cmd == fSetQ1_FieldGradCmd )
+    fBeamLineGeometry->SetQ1MagneticFieldGrad(fSetQ1_FieldGradCmd->GetNewDoubleValue(par));
+
 }
 
 G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
@@ -85,6 +92,11 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");
+
+  // added now
+  else if ( cmd == fSetQ1_FieldGradCmd )
+    //   cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");
+   cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");
 
   return cv;
 

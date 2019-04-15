@@ -44,6 +44,7 @@ private:
 
   G4UIcmdWithABool* fEnableBeWindowCmd;
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
+  G4UIcmdWithADouble* fSetQ1_FieldGradCmd;
 
 };
 #endif

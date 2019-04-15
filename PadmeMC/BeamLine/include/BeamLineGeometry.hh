@@ -42,10 +42,10 @@ public:
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
 
   // Magnetic field gradient inside quadrupoles
-  void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g; }
-  G4double GetQ1MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
+  void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g*tesla/m; }
+  G4double GetQ1MagneticFieldGrad() { return fQ1MagneticFieldGrad; }
 
-  void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g; }
+  void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g*tesla/m; }
   G4double GetQ2MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
 
   // Dimensions of DHSTB002 magnet yoke
@@ -168,6 +168,8 @@ private:
   G4double fDHSTB002MagneticFieldY;
 
   // Gradient of Quadrupoles Magnetic field 
+  G4double fQ1_FieldGrad;  //from data cards
+
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
 

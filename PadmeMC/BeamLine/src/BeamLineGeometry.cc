@@ -34,7 +34,7 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Z coordinate of magnet exit side (aligned with PADME Z axis)
   //  fDHSTB002ExitPosZ = -2001.*mm+400.*mm*cos(45.*deg); // Verify from drawings
-  fDHSTB002ExitPosZ = -1627.44*mm; // From CAD drawings 12/04
+  fDHSTB002ExitPosZ = -1635.00*mm; // From CAD drawings 12/04
 
   // Dimensions of DHSTB002 magnet
 
@@ -91,7 +91,7 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeLineLength = 1452.1*mm;
 
   // Straight section with flange (outside magnet yoke)
-  fMagPipeStraightLength = 210.*mm;
+  fMagPipeStraightLength = 207.*mm;
   fMagPipeFlangeThick = 17.5*mm; // Thickness from DN63 datasheet
   fMagPipeFlangeRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet
   fMagPipeFlangePosZ = 0.5*fMagPipeStraightLength-0.5*fMagPipeFlangeThick;

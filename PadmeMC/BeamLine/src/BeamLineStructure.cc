@@ -498,6 +498,7 @@ void BeamLineStructure::CreateBeamLine()
   G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
   G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
+  printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
   QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
   G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
   logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
@@ -511,6 +512,7 @@ void BeamLineStructure::CreateBeamLine()
   G4double Q2PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q1Q2Dist*cos(magnetAngle);  
   G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
 
+  printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
   QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
   G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
   logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);

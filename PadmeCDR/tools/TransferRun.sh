@@ -17,8 +17,11 @@ export -f now
 transfer() {
     src_file=$1
     dst_file=$2
-    echo "$( now ) ${src_file} -> ${dst_file}"
-    gfal-copy -p --checksum ADLER32 -t 3600 -T 3600 "${src_file}" "${dst_file}"
+    space_token=$3
+    #echo "$( now ) ${src_file} -> ${dst_file}"
+    #gfal-copy -p --checksum ADLER32 -t 3600 -T 3600 "${src_file}" "${dst_file}"
+    echo "$( now ) gfal-copy -p --checksum ADLER32 -t 3600 -T 3600 ${space_token} ${src_file} ${dst_file}"
+    gfal-copy -p --checksum ADLER32 -t 3600 -T 3600 ${space_token} ${src_file} ${dst_file}
     rc=$?
     if [[ $rc -eq 0 ]]; then
 	echo $( now ) - Copy was successful
@@ -120,11 +123,13 @@ else
 fi
 
 # Define full URI of destination run directory
+space_token=""
 if [[ $dst_site = "CNAF" ]]; then
     dst_run_uri="${srm_cnaf}/daq/${year}/rawdata/${run}"
 elif [[ $dst_site = "LNF" ]]; then
     dst_run_uri="${srm_lnf}/daq/${year}/rawdata/${run}"
 elif [[ $dst_site = "LNF2" ]]; then
+    space_token="-S PADME_SCRATCH"
     dst_run_uri="${srm_lnf2}/daq/${year}/rawdata/${run}"
 elif [[ $dst_site = "LOCAL" ]]; then
     dst_run_uri="file://${dst_dir}/${run}"
@@ -136,7 +141,7 @@ fi
 # Transfer all files from source to destination using parallel tool
 if [[ $test -eq 0 ]]; then
     echo $( now ) - Copying all files from $src_run_uri using $jobs parallel streams
-    gfal-ls $src_run_uri | sort | parallel -j $jobs transfer "${src_run_uri}/"{} "${dst_run_uri}/"{}
+    gfal-ls $src_run_uri | sort | parallel -j $jobs transfer "${src_run_uri}/"{} "${dst_run_uri}/"{} "\"${space_token}\""
     echo $( now ) - All copy jobs completed
 else
     echo $( now ) - TEST MODE - Copying all files from $src_run_uri using $jobs parallel streams

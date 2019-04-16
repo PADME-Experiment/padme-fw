@@ -58,9 +58,9 @@ void BasicExample_Padme()
   
   TCanvas *c0 = new TCanvas("c1", "c1", 600,800);
   TPad *newpad=new TPad("newpad","a transparent pad",0,0,1,1);
-  newpad.SetFillStyle(4000);
-  newpad.Draw();
-  newpad.cd();
+  newpad->SetFillStyle(4000);
+  newpad->Draw();
+  newpad->cd();
   TPaveLabel *title = new TPaveLabel(0.1,0.94,0.9,0.98,"Dimension of PADME variables");
   title->SetFillColor(5);
   title->SetTextFont(52);
@@ -99,7 +99,7 @@ void BasicExample_Padme()
          temp1Hist_DATA->GetYaxis()->SetTitleOffset(1.5);
          temp1Hist_DATA->GetXaxis()->SetTitleOffset(0.9);
          double EntryDATA = temp1Hist_DATA->GetEntries();
-         temp1Hist_DATA->Scale(1./EntryDATA);
+         if (EntryDATA!=0) temp1Hist_DATA->Scale(1./EntryDATA);
          temp1Hist_DATA->Draw();
          //temp1Hist_DATA->DrawNormalized();
          myText( 0.3,  0.78, 1, "Ref");
@@ -115,7 +115,7 @@ void BasicExample_Padme()
          temp1Hist_MC->GetYaxis()->SetTitleOffset(1.5);
          temp1Hist_MC->GetXaxis()->SetTitleOffset(0.9);
          double EntryMC = temp1Hist_MC->GetEntries();
-         temp1Hist_MC->Scale(1./EntryMC);
+         if (EntryMC!=0) temp1Hist_MC->Scale(1./EntryMC);
          temp1Hist_MC->Draw();
          myText( 0.3,  0.78, 1, "Test");
          myTitle( 0.3,  0.85, 1, Form("%s",ObjName.Data()));

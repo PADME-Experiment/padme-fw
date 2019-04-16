@@ -13,8 +13,9 @@
 
 void DigitizerChannelECal::PrintConfig(){
   std::cout << "Hi I'm the ECal: " << std::endl;
-  std::cout << "Signal width: "   << fSignalWidth << " samples" << std::endl;
-  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
+  std::cout << "Signal width:    " << fSignalWidth << " samples" << std::endl;
+  std::cout << "fUseAbsSignals:  " << fUseAbsSignals << std::endl;  
+  std::cout << "fPedestalMode:   " << fPedestalMode <<std::endl;
 //  Int_t NBD=8;
 //  for(int i=0;i<32;i++){
 //    std::cout<<"Ped "<<i<<" "<<fPedMap[std::make_pair(NBD,i)]<<" "<<std::endl;
@@ -55,6 +56,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
   fPostSamples    = cfg->GetParOrDefault("RECO","SignalPostSamples",1024);
   fPedMaxNSamples = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",100);  
+  fPedestalMode   = cfg->GetParOrDefault("RECO","PedestalMode",0);  
 
   fMinAmplitude    = cfg->GetParOrDefault("RECO","MinAmplitude",10);
   fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
@@ -194,34 +196,57 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
   Short_t begin = iStart;  //to become iStart
   Short_t end   = 1000;
 
-  Int_t Ch   = GetElChID();
-  Int_t BID  = GetBdID();
+  Double_t Charge=0;
   Double_t ChargeSin=0;
   Double_t Charge200=0;
   Double_t ChargeHyb=0;
+  Int_t Ch=0;
+  Int_t BID=0;
+  if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+      Int_t Ch   = GetElChID();
+      Int_t BID  = GetBdID();
 
-  //  Int_t TrigType = GetTrigMask();
-  //  if(TrigType!=0) return -1.;
-  //  std::cout<<"Trig type "<<TrigType<<std::endl;
-  fAvg200  = TMath::Mean(iStart,&fSamples[0]);
-  fRMS200  = TMath::RMS(iStart,&fSamples[0]);
-  Zsup  = fRMS1000;  
-  for(Short_t s=0;s<end;s++){
-    AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
-    AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-
-    // Hybrid calculation just an attempt most probably useless
-    if(fRMS200 < 5){ 
-      AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
-    }else{
-      AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
+      fAvg200  = TMath::Mean(iStart,&fSamples[0]);
+      fRMS200  = TMath::RMS(iStart,&fSamples[0]);
+      Zsup  = fRMS1000;  
+      for(Short_t s=0;s<end;s++){
+	AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
+	
+	if(s>iStart && s<1000) {
+	  Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+	}
+	if (pedestalsFromFirstSamples()) Charge = Charge200; 
+      }
     }
-    //    std::cout<<s<<" Sample "<<AbsSamRec[s]<<std::endl;
-    if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-    if(s>iStart && s<1000) Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-    if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
-  }
-  
+  if (pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+      Ch   = GetElChID();
+      BID  = GetBdID();
+
+      for(Short_t s=0;s<end;s++){
+	AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
+	if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+      }
+      if (pedestalsFromAutoTrgEvents()) Charge = ChargeSin;
+    }
+  if (hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+      Int_t Ch   = GetElChID();
+      Int_t BID  = GetBdID();
+
+      Zsup  = fRMS1000;  
+      for(Short_t s=0;s<end;s++){
+	// Hybrid calculation just an attempt most probably useless
+	if(fRMS200 < 5){ 
+	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
+	}else{
+	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
+	}
+	if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
+      }
+      if (hybridPedestals()) Charge = ChargeHyb;
+    }
   if(fGlobalMode->GetGlobalDebugMode()!=0){
     //filling NTU Variables
     HitE    = ChargeSin/15.;
@@ -233,6 +258,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     Col=GetChID()/100;
     //    ECal->Fill();
   }
+
   if(BID==14 && fGlobalMode->GetGlobalDebugMode()!=0){
     char name[50];
     //     std::cout<<Ch<<" "<<BID<<" Charge "<<ChargeSin<<std::endl;
@@ -271,8 +297,11 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
 //      //      m++;
 //    }
 //  }
-  fCharge=Charge200;
-  return fCharge;
+
+  
+
+  fCharge=Charge;
+  return Charge;
 }
 
 Double_t DigitizerChannelECal::CalcCharge(UShort_t iMax) {
@@ -457,18 +486,19 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   IsSaturated(); //check if the event is saturated M. Raggi 03/2019
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
-  if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
-  if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
+  Double_t Charge=0;
+  if(GetTrigMask()!=2) Charge = CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
+  if(GetTrigMask()==2) Charge = CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   
   // M. Raggi going to energy with Nominal Calibration
-  Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
+  Double_t fEnergy= Charge/15.; //going from pC to MeV using 15pC/MeV
   //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
   if(Zsup>5) HitT = CalcTimeSing(10);
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(fTimeSin);
-  //  Hit->SetEnergy(fEnergy);
-  Hit->SetEnergy(HitE200);
+  Hit->SetEnergy(fEnergy);
+  //Hit->SetEnergy(HitE200);
   hitArray.push_back(Hit);
   if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
   //  std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl; 

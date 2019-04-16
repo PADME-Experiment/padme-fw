@@ -180,7 +180,7 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  //  if (fCharge < .01) return;
+  //if (fCharge < .01) return;
   // come back to a Veto setup
   if (fCharge < 2.) return;
   CalcTime(fIMax);

@@ -659,7 +659,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	ClE[NSeeds]+=cEnergy[iHit1];
 	ClX[NSeeds]+=XCl*cEnergy[iHit1];
 	ClY[NSeeds]+=YCl*cEnergy[iHit1];
-	if(SdCell[NSeeds]!=cChID[iHit1]) GetHisto("ECALHitTDiff")->Fill( (cTime[iHit1]-SdTime[NSeeds]) );
+	if(SdCell[NSeeds]!=cChID[iHit1] && cEnergy[iHit1]>10.) GetHisto("ECALHitTDiff")->Fill( (cTime[iHit1]-SdTime[NSeeds]) );
 	NCry++;
 	HitUsed++;
 	cCellUsed[cChID[iHit1]]=1;

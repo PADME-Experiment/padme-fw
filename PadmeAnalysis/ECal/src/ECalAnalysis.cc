@@ -102,6 +102,8 @@ Bool_t ECalAnalysis::InitHistosValidation()
   max=350;
   hname="ECal_NHits";
   hSvcVal->BookHisto(hname, nBin, min, max);
+  min=40;
+  max=200;
   hname="ECal_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
   nBin=500;

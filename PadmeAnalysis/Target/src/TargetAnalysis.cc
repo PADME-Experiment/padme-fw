@@ -288,6 +288,12 @@ Bool_t TargetAnalysis::InitHistosDataQuality()
     max=33000;
     hname ="TargetBeam_nPOT";
     hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_nPOT_CRtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_nPOT_BTFtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
+    hname ="TargetBeam_nPOT_AUTOtrigger";
+    hSvc->BookHisto(hname,nBin ,min,max);
     nBin=400;
     min=0;
     max=200;
@@ -621,6 +627,8 @@ Bool_t TargetAnalysis::ProcessDataQuality()
     hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
     hname ="TargetBeam_MeanXYCharge_BTFtrigger";
     hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+    hname ="TargetBeam_nPOT_BTFtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getnPOT(),1.);
    }
    
    if(fRecoEvent->GetTriggerMask()==2) {
@@ -630,6 +638,8 @@ Bool_t TargetAnalysis::ProcessDataQuality()
     hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
     hname ="TargetBeam_MeanXYCharge_CRtrigger";
     hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+    hname ="TargetBeam_nPOT_CRtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getnPOT(),1.);
    }
 
   if(fRecoEvent->GetTriggerMask()==128) {
@@ -639,6 +649,8 @@ Bool_t TargetAnalysis::ProcessDataQuality()
     hSvc->FillHisto(hname,fRecoBeam->getYCharge(),1.);
     hname ="TargetBeam_MeanXYCharge_AUTOtrigger";
     hSvc->FillHisto(hname,(fRecoBeam->getXCharge()+fRecoBeam->getYCharge())/2,1.);
+    hname ="TargetBeam_nPOT_AUTOtrigger";
+    hSvc->FillHisto(hname,fRecoBeam->getnPOT(),1.);
    }
 
 

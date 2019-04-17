@@ -29,7 +29,7 @@ public:
 
   virtual Bool_t Process();
   virtual Bool_t ProcessAnalysis(){return true;}
-  virtual Bool_t ProcessValidation(){return true;}
+  virtual Bool_t ProcessValidation();
   virtual Bool_t ProcessValidation(TString name);
   virtual Bool_t ProcessDataQuality(){return true;}
 

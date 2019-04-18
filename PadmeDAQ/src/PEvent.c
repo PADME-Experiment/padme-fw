@@ -28,6 +28,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
   int nSm;
   int freq,tr;
+  float sample; // Used to store corrected sample value from CAEN
   int16_t myshort; // Used to store rounded samples (can be negative)
   unsigned int n_samples_on; // Counter for trigger length evaluation (autopass)
   uint32_t line;
@@ -139,7 +140,15 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Copy the samples to output structure
       for (iSm=0;iSm<nSm;iSm++) {
-	myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
+	//myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
+	sample = event->DataGroup[iGr].DataChannel[iCh][iSm];
+	//printf("g %1d c %2d s %4d v %f\n",iGr,iCh,iSm,sample); // DEBUG
+	if (sample<-32767. || sample>32767.) { // Take into account CAEN library bug for underflow sample values
+	  myshort = 0;
+	} else {
+	  myshort = roundf(sample);
+	}
+	//if (myshort<=0 || myshort>4095) printf("\tsample %d\n",myshort); // DEBUG
 	memcpy(cursor,&myshort,2);
 	cursor += 2;
       }

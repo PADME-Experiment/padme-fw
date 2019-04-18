@@ -241,7 +241,7 @@ int RootIO::FillRawEvent(int run_number,
       channelmask = tBoard->GetAcceptedChannelMask(); // Zero suppression is in rejection mode
     }
 
-    // If a tigger group has no channels, do not save its trigger information
+    // If a trigger group has no channels, do not save its trigger information
     unsigned char groupmask = 0;
     for(unsigned int t=0; t<ADCEVENT_NTRIGGERS; t++) {
       if ( channelmask & ( 0xff << (t*8) ) ) groupmask |= (0x1 << t);
@@ -283,6 +283,11 @@ int RootIO::FillRawEvent(int run_number,
 	tChan->SetChannelNumber(c);
 	for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	  tChan->SetSample(s,boards[b]->Event()->GetADCChannelSample(c,s));
+	//for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) { // DEBUG
+	//  Short_t sample = boards[b]->Event()->GetADCChannelSample(c,s); // DEBUG
+	//  if (sample<0 || sample>4095) printf("\tsample %d\n",sample); // DEBUG
+	//  tChan->SetSample(s,sample); // DEBUG
+	//} // DEBUG
 	if (fConfig->Verbose() >= 4) {
 	  printf("RootIO - Board %u Channel %u\n",tBoard->GetBoardId(),tChan->GetChannelNumber());
 	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {

@@ -8,6 +8,7 @@
 ECalCluster::ECalCluster()
 {
 
+  fSeed = -1;
   fRawEnergy=0;
   fEnergy=-1;
   fTime=-1;
@@ -30,7 +31,17 @@ Int_t ECalCluster::AddCrystal(ECalCrystal* crystal)
     fCrystalList[fNCrystals]=crystal;
     fNCrystals++;
     crystal->SetUsed();
+    if (fNCrystals==1) fTime = 0.;
+    fTime = fTime*fEnergy + crystal->GetTime()*crystal->GetEnergy();
+    fXCenter = fXCenter*fEnergy + crystal->GetEnergy()*crystal->GetXCenter();
+    fYCenter = fYCenter*fEnergy + crystal->GetEnergy()*crystal->GetYCenter();
+    fEnergy += crystal->GetEnergy();
     fRawEnergy += crystal->GetEnergy();
+    
+    fTime = fTime/fEnergy;
+    fXCenter = fXCenter/fEnergy;
+    fYCenter = fYCenter/fEnergy;
+
     return fNCrystals;
   } else {
     std::cout << "WARNING - ECalCluster::AddCrystal - Too many crystals in cluster: " << fNCrystals << std::endl;

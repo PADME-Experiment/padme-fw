@@ -3,6 +3,7 @@
 #include "TPadmeRun.hh"
 #include "TRawEvent.hh"
 #include "TMCEvent.hh"
+#include "TRecoEvent.hh"
 
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
@@ -443,4 +444,123 @@ void PadmeReconstruction::ShowSubDetectorInfo(TDetectorInfo* detInfo, TString na
       std::cout << subPar[iPar].Data() << std::endl;
     }
   }
+}
+
+// Methods to return general information about current event
+
+Int_t PadmeReconstruction::GetRunNumber()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    return fMCEvent->GetRunNumber();
+  } else if (fRawChain) {
+    return fRawEvent->GetRunNumber();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetRunNumber();
+  }
+  printf("PadmeReconstruction::GetRunNumber() - Unknown input chain");
+  return 0;
+}
+
+Int_t PadmeReconstruction::GetEventNumber()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    return fMCEvent->GetEventNumber();
+  } else if (fRawChain) {
+    return fRawEvent->GetEventNumber();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetEventNumber();
+  }
+  printf("PadmeReconstruction::GetEventNumber() - Unknown input chain");
+  return 0;
+}
+
+TTimeStamp PadmeReconstruction::GetEventTime()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    // Not defined for MC events yet
+    return TTimeStamp(0,0);
+  } else if (fRawChain) {
+    return fRawEvent->GetEventAbsTime();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetEventTime();
+  }
+  printf("PadmeReconstruction::GetEventTime() - Unknown input chain");
+  return TTimeStamp(0,0);
+}
+
+ULong64_t PadmeReconstruction::GetRunClock()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    // Not defined for MC events
+    return 0;
+  } else if (fRawChain) {
+    return fRawEvent->GetEventRunTime();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetRunClock();
+  }
+  printf("PadmeReconstruction::GetRunClock() - Unknown input chain");
+  return 0;
+}
+
+UInt_t PadmeReconstruction::GetEventStatus()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+
+    // Start with a clean event status mask
+    UInt_t eventstatus = 0;
+
+    // This is a MC event: set Simulated bit
+    eventstatus |= (1U << TRECOEVENT_STATUSBIT_SIMULATED);
+
+    return eventstatus;
+
+  } else if (fRawChain) {
+
+    // Start with a clean event status mask
+    UInt_t eventstatus = 0;
+
+    // Get Complete bit from rawevent
+    if ( fRawEvent->EventStatusGetBit(TRAWEVENT_STATUSBIT_COMPLETE) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_COMPLETE);
+
+    // Get autopass bit from rawevent
+    if ( fRawEvent->EventStatusGetBit(TRAWEVENT_STATUSBIT_AUTOPASS) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_AUTOPASS);
+
+    // Simulated bit is already 0: no need for this
+    //eventstatus &= ~(1U << TRECOEVENT_STATUSBIT_SIMULATED);
+
+    // BeamOn bit is not currently used as it needs info from target: will be added asap
+    //eventstatus |= (1U << TRECOEVENT_STATUSBIT_BEAMON);
+
+    return eventstatus;
+
+  } else if (fRecoChain) {
+
+    // Just copy the event status mask from input event
+    return fRecoEvent->GetEventStatus();
+
+  }
+  printf("PadmeReconstruction::GetEventStatus() - Unknown input chain");
+  return 0;
+}
+
+UInt_t PadmeReconstruction::GetTriggerMask()
+{
+  // Check if we are dealing with MC/Raw/Reco event
+  if (fMCChain) {
+    // Not defined for MC events
+    return 0;
+  } else if (fRawChain) {
+    return fRawEvent->GetEventTrigMask();
+  } else if (fRecoChain) {
+    return fRecoEvent->GetTriggerMask();
+  }
+  printf("PadmeReconstruction::GetTriggerMask() - Unknown input chain");
+  return 0;
 }

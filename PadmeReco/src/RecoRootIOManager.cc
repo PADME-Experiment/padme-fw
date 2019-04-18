@@ -43,12 +43,18 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 
 
   // Add subdetectors persistency managers
-  if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1))fRootIOList.push_back(new PVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1))fRootIOList.push_back(new EVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1))fRootIOList.push_back(new HEPVetoRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1))fRootIOList.push_back(new SACRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1))fRootIOList.push_back(new TargetRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1))fRootIOList.push_back(new ECalRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
+    fRootIOList.push_back(new PVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
+    fRootIOList.push_back(new EVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1))
+    fRootIOList.push_back(new HEPVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
+    fRootIOList.push_back(new SACRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
+    fRootIOList.push_back(new TargetRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
+    fRootIOList.push_back(new ECalRecoRootIO);
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 
@@ -216,17 +222,29 @@ void RecoRootIOManager::EndRun()
 
 void RecoRootIOManager::SaveEvent(){
   
-  int nRun=0;
-  int nEvent=0;
+  //int nRun=0;
+  //int nEvent=0;
+  //fEvent->SetRunNumber(nRun);
+  //fEvent->SetEventNumber(nEvent);
   
+  // This is obsolete and will be removed
   struct timeval tp;
   gettimeofday(&tp,NULL);
   double now = tp.tv_sec*1.+tp.tv_usec/1000000.;
-  
-  fEvent->SetRunNumber(nRun);
-  fEvent->SetEventNumber(nEvent);
   fEvent->SetTime(now);
-  
+
+  fEvent->SetRunNumber(fReco->GetRunNumber());
+  fEvent->SetEventNumber(fReco->GetEventNumber());
+  fEvent->SetEventTime(fReco->GetEventTime());
+  fEvent->SetRunClock(fReco->GetRunClock());
+  fEvent->SetEventStatus(fReco->GetEventStatus());
+  fEvent->SetTriggerMask(fReco->GetTriggerMask());
+
+  // Save current time as event reconstruction time
+  fEvent->SetRecoTime(TTimeStamp());
+
+  // Show event header information (for debug purposes)
+  //printf("RecoRootIOManager::SaveEvent() - Run nr %7d Event nr %7d Event time %8d-%06d.%09d Run clock %12lld Reco time %8d-%06d.%09d Status 0x%08x Trigger 0x%08x\n",fEvent->GetRunNumber(),fEvent->GetEventNumber(),fEvent->GetEventTime().GetDate(),fEvent->GetEventTime().GetTime(),fEvent->GetEventTime().GetNanoSec(),fEvent->GetRunClock(),fEvent->GetRecoTime().GetDate(),fEvent->GetRecoTime().GetTime(),fEvent->GetRecoTime().GetNanoSec(),fEvent->GetEventStatus(),fEvent->GetTriggerMask());
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
   RootIOList::iterator endRootIO(fRootIOList.end());
@@ -244,8 +262,6 @@ void RecoRootIOManager::SaveEvent(){
   
 }
 
-
-
 RecoVRootIO* RecoRootIOManager::FindRecoRootIO(TString name){
 
   RootIOList::iterator iRootIO(fRootIOList.begin());
@@ -257,5 +273,3 @@ RecoVRootIO* RecoRootIOManager::FindRecoRootIO(TString name){
   return 0;
 
 }
-
-

@@ -91,6 +91,36 @@ public:
   G4double GetJunFlangeROut() { return fJunFlangeR; }
   G4double GetJunFlangeThick() { return fJunFlangeThick; }
 
+  // Properties of junction pipe between cross and BTF pipes
+
+  G4double GetBTFJunRIn()    { return fBTFJunRIn; }
+  G4double GetBTFJunROut()   { return fBTFJunROut; }
+  G4double GetBTFJunLength() { return fBTFJunLength; }
+  G4double GetBTFJunPosZ()   { return fBTFJunPosZ; }
+  G4double GetBTFJunFFlgRIn()   { return fBTFJunFFlgRIn; }
+  G4double GetBTFJunFFlgROut()  { return fBTFJunFFlgROut; }
+  G4double GetBTFJunFFlgThick() { return fBTFJunFFlgThick; }
+  G4double GetBTFJunFFlgPosZ()  { return fBTFJunFFlgPosZ; }
+  G4double GetBTFJunBFlgRIn()   { return fBTFJunBFlgRIn; }
+  G4double GetBTFJunBFlgROut()  { return fBTFJunBFlgROut; }
+  G4double GetBTFJunBFlgThick() { return fBTFJunBFlgThick; }
+  G4double GetBTFJunBFlgPosZ()  { return fBTFJunBFlgPosZ; }
+
+  // Properties of bellow pipe between BTF junction and dipole magnet
+
+  G4double GetBellowRIn()    { return fBellowRIn; }
+  G4double GetBellowROut()   { return fBellowROut; }
+  G4double GetBellowLength() { return fBellowLength; }
+  G4double GetBellowPosZ()   { return fBellowPosZ; }
+  G4double GetBellowFFlgRIn()   { return fBellowFFlgRIn; }
+  G4double GetBellowFFlgROut()  { return fBellowFFlgROut; }
+  G4double GetBellowFFlgThick() { return fBellowFFlgThick; }
+  G4double GetBellowFFlgPosZ()  { return fBellowFFlgPosZ; }
+  G4double GetBellowBFlgRIn()   { return fBellowBFlgRIn; }
+  G4double GetBellowBFlgROut()  { return fBellowBFlgROut; }
+  G4double GetBellowBFlgThick() { return fBellowBFlgThick; }
+  G4double GetBellowBFlgPosZ()  { return fBellowBFlgPosZ; }
+
   // Properties of porthole caps
 
   G4int GetPHCapNumber() { return CHAMBERGEOMETRY_N_PORTHOLES; }
@@ -101,23 +131,39 @@ public:
 
   // Properties of large TPix porthole
 
+  // Steel flange for rectangular porthole
   G4double GetTPPHCapThick() { return fTPPHCapThick; }
   G4double GetTPPHCapWidth() { return fTPPHCapWidth; }
   G4double GetTPPHCapHeight() { return fTPPHCapHeight; }
 
+  // Beam exit hole
   G4double GetTPPHHoleRadius() { return fTPPHHoleRadius; }
   G4double GetTPPHHoleDist() { return fTPPHHoleDist; }
 
-  G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
-  G4double GetTPPHCircThick() { return fTPPHCircThick; }
+  // Service hole
+  G4double GetTPPHHoleSRadius() { return fTPPHHoleSRadius; }
+  G4double GetTPPHHoleSDist() { return fTPPHHoleSDist; }
+ 
+  // Aluminum rectangular flange hosting the thin window
+  G4double GetTPPHFlangeWidth() { return fTPPHFlangeWidth; }
+  G4double GetTPPHFlangeHeight() { return fTPPHFlangeHeight; }
+  G4double GetTPPHFlangeThick() { return fTPPHFlangeThick; }
+ 
+  //G4double GetTPPHCircRadius() { return fTPPHCircRadius; }
+  //G4double GetTPPHCircThick() { return fTPPHCircThick; }
 
+  // Thin window dimensions (rectangle with two semicircles at sides)
   G4double GetTPPHWindRadius() { return fTPPHWindRadius; }
   G4double GetTPPHWindWidth() { return fTPPHWindWidth; }
   G4double GetTPPHWindThick() { return fTPPHWindThick; }
 
-  G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
-  G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
-  G4double GetTPPHStopThick() { return fTPPHStopThick; }
+  // Radius and thickness of steel flange in front of service hole
+  G4double GetTPPHSFlangeRadius() { return fTTPHSFlangeRadius; }
+  G4double GetTPPHSFlangeThick() { return fTTPHSFlangeThick; }
+
+  //G4double GetTPPHStopRadius() { return fTPPHStopRadius; }
+  //G4double GetTPPHStopWidth() { return fTPPHStopWidth; }
+  //G4double GetTPPHStopThick() { return fTPPHStopThick; }
 
 private:
 
@@ -171,6 +217,39 @@ private:
   G4double fJunFlangeR;
   G4double fJunFlangeThick;
 
+  // BTF Junction pipes
+
+  G4double fBTFJunRIn;
+  G4double fBTFJunROut;
+  G4double fBTFJunLength;
+  G4double fBTFJunPosZ;
+  // Flange towards cross
+  G4double fBTFJunFFlgRIn;
+  G4double fBTFJunFFlgROut;
+  G4double fBTFJunFFlgThick;
+  G4double fBTFJunFFlgPosZ;
+  // Flange towards bellow
+  G4double fBTFJunBFlgRIn;
+  G4double fBTFJunBFlgROut;
+  G4double fBTFJunBFlgThick;
+  G4double fBTFJunBFlgPosZ;
+
+  // Bellow pipe between junction and magnet
+  G4double fBellowRIn;
+  G4double fBellowROut;
+  G4double fBellowLength;
+  G4double fBellowPosZ;
+  // Flange towards juction
+  G4double fBellowFFlgRIn;
+  G4double fBellowFFlgROut;
+  G4double fBellowFFlgThick;
+  G4double fBellowFFlgPosZ;
+  // Flange towards magnet
+  G4double fBellowBFlgRIn;
+  G4double fBellowBFlgROut;
+  G4double fBellowBFlgThick;
+  G4double fBellowBFlgPosZ;
+
   // Porthole caps
 
   G4double fPHCapRadius[CHAMBERGEOMETRY_N_PORTHOLES];
@@ -184,19 +263,29 @@ private:
   G4double fTPPHCapWidth; // Width of rectangular porthole cap
   G4double fTPPHCapHeight; // Height of rectangular porthole cap
 
-  G4double fTPPHHoleRadius; // Radius of TPix hole in cap
-  G4double fTPPHHoleDist; // Distance of center of hole from border of cap
+  G4double fTPPHHoleRadius; // Radius of TPix beam exit hole in cap
+  G4double fTPPHHoleDist; // Distance of center of beam exit hole from border of cap
 
-  G4double fTPPHCircRadius; // Radius of circular cap in front of hole
-  G4double fTPPHCircThick; // Thickness of circular cap in front of hole
+  G4double fTPPHHoleSRadius; // Radius of TPix service hole in cap
+  G4double fTPPHHoleSDist; // Distance of center of service hole from border of cap
 
-  G4double fTPPHWindRadius; // Radius of Mylar window
-  G4double fTPPHWindWidth; // Width of Mylar window
-  G4double fTPPHWindThick; // Thickness of Mylar window
+  //G4double fTPPHCircRadius; // Radius of circular cap in front of hole
+  //G4double fTPPHCircThick; // Thickness of circular cap in front of hole
 
-  G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
-  G4double fTPPHStopWidth; // Width of stop flange for Mylar window
-  G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
+  G4double fTPPHFlangeWidth; // Width of rectangular flange with thin window
+  G4double fTPPHFlangeHeight; // Height of rectangular flange with thin window
+  G4double fTPPHFlangeThick; // Thickness of rectangular flange with thin window
+
+  G4double fTPPHWindRadius; // Radius of thin window
+  G4double fTPPHWindWidth; // Width of thin window
+  G4double fTPPHWindThick; // Thickness of thin window
+
+  G4double fTTPHSFlangeRadius; // Radius of steel flange in front of service hole
+  G4double fTTPHSFlangeThick; // Thickness of steel flange in front of service hole
+
+  //G4double fTPPHStopRadius; // Radius of stop flange for Mylar window
+  //G4double fTPPHStopWidth; // Width of stop flange for Mylar window
+  //G4double fTPPHStopThick; // Thickness of stop flange for Mylar window
 
 };
 

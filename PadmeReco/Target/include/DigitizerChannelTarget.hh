@@ -62,8 +62,8 @@ private:
   Short_t fMax;
   Short_t fIMax;
   Double_t fPed;
-  Double_t fCharge;
-  Double_t fTime;
+  //Double_t fCharge;
+  //Double_t fTime;
   UShort_t fNPedSamples;
 
   //Configuration variables
@@ -109,6 +109,10 @@ private:
   Double_t feXbeam      ;
   Double_t fYbeam       ;
   Double_t feYbeam      ;
+  Double_t fAverageGain	;		 
+  Double_t fHVsign    	;
+  Double_t fDefaultRuler; 
+  Double_t fRuler       ; 		 
 
 };
 

@@ -18,6 +18,7 @@
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
+#include "BeamLineStructure.hh" //M. Raggi 07/03/2019
 #include "HallStructure.hh"
 
 #include "TargetGeometry.hh"
@@ -31,6 +32,7 @@
 
 #include "MagnetGeometry.hh"
 #include "ChamberGeometry.hh"
+#include "BeamLineGeometry.hh" //M. Raggi 07/03/2019
 #include "HallGeometry.hh"
 
 #include "G4Material.hh"
@@ -38,6 +40,7 @@
 #include "G4Box.hh"
 #include "G4Tubs.hh"
 #include "G4UnionSolid.hh"
+#include "G4ExtrudedSolid.hh"
 //#include "G4Cons.hh"
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
@@ -74,19 +77,20 @@ DetectorConstruction::DetectorConstruction()
 
   fDetectorMessenger = new DetectorMessenger(this);
 
-  fECalDetector     = new ECalDetector(0);
-  fTargetDetector   = new TargetDetector(0);
-  fSACDetector      = new SACDetector(0);
-  fLAVDetector      = new LAVDetector(0);
-  fPVetoDetector    = new PVetoDetector(0);
-  fEVetoDetector    = new EVetoDetector(0);
-  fHEPVetoDetector  = new HEPVetoDetector(0);
-  fTDumpDetector    = new TDumpDetector(0);
-  fTPixDetector     = new TPixDetector(0);
-  fTungstenDetector = new TungstenDetector(0); 
-  fMagnetStructure  = new MagnetStructure(0);
-  fChamberStructure = new ChamberStructure(0);
-  fHallStructure    = new HallStructure(0);
+  fECalDetector      = new ECalDetector(0);
+  fTargetDetector    = new TargetDetector(0);
+  fSACDetector       = new SACDetector(0);
+  fLAVDetector       = new LAVDetector(0);
+  fPVetoDetector     = new PVetoDetector(0);
+  fEVetoDetector     = new EVetoDetector(0);
+  fHEPVetoDetector   = new HEPVetoDetector(0);
+  fTDumpDetector     = new TDumpDetector(0);
+  fTPixDetector      = new TPixDetector(0);
+  fTungstenDetector  = new TungstenDetector(0); 
+  fMagnetStructure   = new MagnetStructure(0);
+  fChamberStructure  = new ChamberStructure(0);
+  fBeamLineStructure = new BeamLineStructure(0); //M. Raggi 07/03/2019
+  fHallStructure     = new HallStructure(0);
 
   fMagneticFieldManager = new MagneticFieldSetup();
 
@@ -109,6 +113,9 @@ DetectorConstruction::DetectorConstruction()
 
   fEnableChamber = 1;
   fChamberIsVisible = 1;
+
+  fEnableBeamLine = 1;  //M. Raggi 07/03/2019
+  fBeamLineIsVisible = 1; //M. Raggi 07/03/2019
 
   fWorldIsFilledWithAir = 0;
 
@@ -137,6 +144,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fTungstenDetector;
   delete fMagnetStructure;
   delete fChamberStructure;
+  delete fBeamLineStructure;    //M. Raggi 07/03/2019
   delete fHallStructure;
   delete fMagneticFieldManager;
 
@@ -201,6 +209,17 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   }
 
+  // Beam Line structure M. Raggi 07/03/2019
+  if (fEnableBeamLine) {
+    if (fBeamLineIsVisible) {
+      fBeamLineStructure->SetBeamLineVisible();
+    } else {
+      fBeamLineStructure->SetBeamLineInvisible();
+    }
+    fBeamLineStructure->SetMotherVolume(logicWorld);
+    fBeamLineStructure->CreateGeometry();
+  }
+
   // Vacuum chamber structure
   if (fEnableChamber) {
     fChamberStructure->EnableChamber();
@@ -240,17 +259,52 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   printf ("Position %f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
   printf ("-----------------------\n");
 
-  G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
-  G4LogicalVolume* logicMagneticVolumeVC =
-    new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  // Basic box, missing slanted section at end of magnet yoke
+  //G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
+  //G4LogicalVolume* logicMagneticVolumeVC =
+  //  new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  ////new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
+  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
+
+  // Precise shape definition but needs repositioning of P/EVetoes
+  //std::vector<G4TwoVector> magVolShape(3);
+  //magVolShape[0] = G4TwoVector(magVolMinX,magVolMinZ);
+  //magVolShape[1] = G4TwoVector(magVolMinX,magVolMaxZ);
+  //magVolShape[2] = G4TwoVector(551.0*mm,  magVolMaxZ);
+  //magVolShape[3] = G4TwoVector(551.0*mm,  524.*mm);
+  //magVolShape[4] = G4TwoVector(magVolMaxX,158.*mm);
+  //magVolShape[5] = G4TwoVector(magVolMaxX,magVolMinZ);
+  //G4ExtrudedSolid* solidMagneticVolume = new G4ExtrudedSolid("MagneticVolume",magVolShape,magVolHLY,G4TwoVector(0, 0), 1.0, G4TwoVector(0, 0), 1.0);
+  //G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  //G4RotationMatrix* magVolRot = new G4RotationMatrix;
+  //magVolRot->rotateX(-90.*deg);
+  //G4ThreeVector magVolPos = G4ThreeVector(0.,0.,0.);
+  //new G4PVPlacement(magVolRot,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
+
+  // Compromise to save goat and cabbages
+  // Some fine adjustments to improve volume matching after rotation
+  G4Box* solidMagVol1 = new G4Box("MagVol1",magVolHLX,magVolHLY,magVolHLZ);
+  std::vector<G4TwoVector> magVolShape(4);
+  magVolShape[0] = G4TwoVector(magVolMaxX-30.*um, magVolMaxZ-20.*um);
+  magVolShape[1] = G4TwoVector(551.0*mm,          magVolMaxZ-20.*um);
+  magVolShape[2] = G4TwoVector(551.0*mm,          524.0*mm);
+  magVolShape[3] = G4TwoVector(magVolMaxX-30.*um, 157.8*mm);
+  G4ExtrudedSolid* solidMagVol2 = new G4ExtrudedSolid("MagVol2",magVolShape,magVolHLY,G4TwoVector(0, 0), 1.0, G4TwoVector(0, 0), 1.0);
+  G4RotationMatrix* magVol2Rot = new G4RotationMatrix;
+  magVol2Rot->rotateX(-90.*deg);
+  G4ThreeVector magVol2Pos = G4ThreeVector(0.,0.,-magVolPosZ);
+  G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol1,solidMagVol2,magVol2Rot,magVol2Pos);
+  G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
-  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
   new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
   // Create magnetic volume inside beam entrance pipe
 
   G4double cpzRIn = geoChamber->GetCPZRIn();
-  G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+  //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+  G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
   G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
   G4ThreeVector cpzPos(0.,0.,geoChamber->GetVCInnerFacePosZ()-0.5*cpzLen);
   G4LogicalVolume* logicMagneticVolumeCP =
@@ -261,6 +315,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
     //MagneticFieldSetup* magField = new MagneticFieldSetup();
+    printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
     logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }
@@ -376,6 +431,7 @@ void DetectorConstruction::DefineMaterials()
 
   // Define materials already in the NIST database
   man->FindOrBuildMaterial("G4_C");                       // Carbon (Chamber)
+  man->FindOrBuildMaterial("G4_Be");                      // Beam Line (Window) M. Raggi
   man->FindOrBuildMaterial("G4_W");                       // Tungsten (Chamber)
   man->FindOrBuildMaterial("G4_Al");                      // Aluminum (Chamber, Veto)
   man->FindOrBuildMaterial("G4_Fe");                      // Iron (Magnet)
@@ -443,6 +499,21 @@ void DetectorConstruction::DefineMaterials()
   ASA->AddElement(G4Element::GetElement("H"),17);
   ASA->AddElement(G4Element::GetElement("O"),2);
   ASA->AddElement(G4Element::GetElement("N"),1);
+
+  // PCB (epoxy+glass fiber) used for Target support board
+  // From https://agenda.infn.it/event/15579/contributions/30406/attachments/21543/24545/GEANTSimulations2018_Raffa.pdf
+  // Epoxy
+  G4Material* Epoxy = new G4Material("Epoxy",1.2*g/cm3,2);
+  Epoxy->AddElement(G4Element::GetElement("H"),2);
+  Epoxy->AddElement(G4Element::GetElement("C"),2);
+  // SiO2 (Quarz)
+  G4Material* SiO2 = new G4Material("SiO2",2.2*g/cm3,2);
+  SiO2->AddElement(G4Element::GetElement("Si"),1);
+  SiO2->AddElement(G4Element::GetElement("O"),2);
+  // PCB (Glass + Epoxy)
+  G4Material* PCB = new G4Material("PCB",1.86*g/cm3,2);
+  PCB->AddMaterial(Epoxy,0.472);
+  PCB->AddMaterial(SiO2, 0.528);
 
   /*
   //--------- Materials definition ---------
@@ -581,11 +652,12 @@ void DetectorConstruction::DefineMaterials()
   */
 
   //Print all the materials defined.
+  /*
   G4cout << G4endl << "The elements defined are : " << G4endl << G4endl;
   G4cout << *(G4Element::GetElementTable()) << G4endl;
   G4cout << G4endl << "The materials defined are : " << G4endl << G4endl;
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
-  
+  */
 }
 
 void DetectorConstruction::SetTargetMaterial(G4String materialName)
@@ -622,15 +694,15 @@ G4double DetectorConstruction::GetTargetFrontFaceZ()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetFrontFaceZ();
 
-  // Target is disabled (?): return a position 50cm before the front face of the magnet yoke
-  return -100.*cm;
+  // Target is disabled: return a position 53cm before the front face of the magnet yoke
+  return -103.*cm;
 }
 
 G4double DetectorConstruction::GetTargetThickness()
 {
   if (fEnableTarget) return fTargetDetector->GetTargetThickness();
 
-  // Target is disabled (?): return 100um
+  // Target is disabled: return 100um
   return 0.1*mm;
 }
 
@@ -669,18 +741,20 @@ void DetectorConstruction::DisableSubDetector(G4String det)
 void DetectorConstruction::EnableStructure(G4String str)
 {
   printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall    = 1; }
-  else if (str=="Chamber") { fEnableChamber = 1; }
-  else if (str=="Magnet")  { fEnableMagnet  = 1; }
+  if      (str=="Wall")     { fEnableWall    = 1; }
+  else if (str=="Chamber")  { fEnableChamber = 1; }
+  else if (str=="BemaLine") { fEnableBeamLine = 1; } 
+  else if (str=="Magnet")   { fEnableMagnet  = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
   printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")    { fEnableWall    = 0; }
-  else if (str=="Chamber") { fEnableChamber = 0; }
-  else if (str=="Magnet")  { fEnableMagnet  = 0; }
+  if      (str=="Wall")     { fEnableWall    = 0; }
+  else if (str=="Chamber")  { fEnableChamber = 0; }
+  else if (str=="BeamLine") { fEnableBeamLine = 0; }
+  else if (str=="Magnet")   { fEnableMagnet  = 0; }
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
@@ -719,11 +793,23 @@ void DetectorConstruction::ChamberIsVisible()
   printf("Vacuum chamber is visible\n");
   fChamberIsVisible = 1;
 }
+//M. Raggi 07/03/2019
+void DetectorConstruction::BeamLineIsVisible()
+{
+  printf("BeamLine is visible\n");
+  fBeamLineIsVisible = 1;
+}
 
 void DetectorConstruction::ChamberIsInvisible()
 {
   printf("Vacuum chamber is invisible\n");
   fChamberIsVisible = 0;
+}
+
+void DetectorConstruction::BeamLineIsInvisible()
+{
+  printf("Beam Line is invisible\n");
+  fBeamLineIsVisible = 0;
 }
 
 void DetectorConstruction::WorldIsAir()

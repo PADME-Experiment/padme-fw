@@ -10,23 +10,26 @@ from Logger import Logger
 
 class PadmeCDRServer:
 
-    def __init__(self,source_site,destination_site,daq_server,year,mode):
+    def __init__(self,source_site,destination_site,daq_server,year,date_after,date_before,mode):
 
         # Get position of CDR main directory from PADME_CDR_DIR environment variable
         # Default to current dir if not set
         self.cdr_dir = os.getenv('PADME_CDR_DIR',".")
 
         # Get source and destination sites, name of data server, and year of data taking
-        self.source_site      = source_site
-        self.destination_site = destination_site
-        self.daq_server       = daq_server
-        self.year             = year
+        self.src_site    = source_site
+        self.dst_site    = destination_site
+        self.daq_server  = daq_server
+        self.year        = year
+        self.date_after  = date_after
+        self.date_before = date_before
 
+        # Define id of this server to be used for service files
         self.server_id = ""
-        if self.source_site == "DAQ":
-            self.server_id += "%s_%s_%s"%(self.source_site,self.daq_server,self.destination_site)
+        if self.src_site == "DAQ":
+            self.server_id += "%s_%s_%s"%(self.src_site,self.daq_server,self.dst_site)
         else:
-            self.server_id += "%s_%s"%(self.source_site,self.destination_site)
+            self.server_id += "%s_%s"%(self.src_site,self.dst_site)
 
         # Redefine print to send output to log file
         self.log_file = "%s/log/PadmeCDRServer_%s.log"%(self.cdr_dir,self.server_id)
@@ -36,9 +39,14 @@ class PadmeCDRServer:
 
         print ""
         print "### PadmeCDRServer Initializing ###"
-        print "Source: %s %s"%(self.source_site,self.daq_server)
-        print "Destination: %s"%self.destination_site
+        if (self.src_site == "DAQ"):
+            print "Source: %s server %s"%(self.src_site,self.daq_server)
+        else:
+            print "Source: %s"%self.src_site
+        print "Destination: %s"%self.dst_site
         print "Year of data taking: %s"%self.year
+        if self.date_after:  print "          from date: %s"%self.date_after
+        if self.date_before: print "            to date: %s"%self.date_before
         print ""
 
         # Define file to store list of files with transfer errors
@@ -58,7 +66,6 @@ class PadmeCDRServer:
         self.cdr_user = os.environ['USER']
 
         # Path of current year rawdata wrt top daq directory
-        #self.year = time.strftime("%Y",time.gmtime())
         self.data_dir = "%s/rawdata"%self.year
 
         # Define minimum duration for an iteration (4 hours = 14400 seconds)
@@ -100,6 +107,9 @@ class PadmeCDRServer:
         # Path to top daq data directory on KLOE front end
         self.kloe_path = "/pdm/padme/daq"
 
+        # Path to temporary directory on KLOE front end
+        self.kloe_tmpdir = "/pdm/tmp"
+
         # Path to adler32 command on KLOE front end
         self.kloe_adler32_cmd = "/pdm/bin/adler32"
 
@@ -113,9 +123,10 @@ class PadmeCDRServer:
         ### LNF and CNAF SRM sites data ###
         ###################################
 
-        # SRM addresses for PADME DAQ data at LNF and at CNAF
-        self.lnf_srm = "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org/daq"
-        self.cnaf_srm = "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape/daq"
+        self.site_srm = {
+            "LNF" : "srm://atlasse.lnf.infn.it:8446/srm/managerv2?SFN=/dpm/lnf.infn.it/home/vo.padme.org/daq",
+            "CNAF": "srm://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2?SFN=/padmeTape/daq"
+        }
 
         # Initialization is finished: start the main CDR loop
         self.main_loop()
@@ -205,21 +216,35 @@ class PadmeCDRServer:
         else:
             self.ongoing_run = current_run
 
-    def get_file_list_daq(self):
+    def get_run_list(self,site):
 
-        # Make sure we do not try to transfer files while they are being written
-        if (self.ongoing_run != ""): print "Run %s is on-going: corresponding files will not be transferred"%self.ongoing_run
+        run_list = []
+        if (site == "DAQ"):
+            run_list = self.get_run_list_daq()
+        elif (site == "LNF"):
+            run_list = self.get_run_list_srm("LNF")
+        elif (site == "CNAF"):
+            run_list = self.get_run_list_srm("CNAF")
 
-        print "Getting list of raw data files for year %s on DAQ server %s"%(self.year,self.daq_server)
-        cmd = "%s \'( cd %s/%s; find -type f -name \*.root | sed -e s+\./++ )\'"%(self.daq_ssh,self.daq_path,self.data_dir)
-        for line in self.run_command(cmd):
-            ff = line.rstrip()
-            if (self.ongoing_run == "" or not re.match("^%s/"%self.ongoing_run,ff)):
-                self.daq_list.append(ff)
+        # No date interval specified: just return the run list
+        if (self.date_after == "" and self.date_before == ""): return run_list
 
-        return "ok"
+        # Check which runs are within the specified date interval
+        run_list_ok = []
+        for run in run_list:
+            m = re.match("^run_\d+_(\d+)_\d+",run)
+            if m:
+                date_run = m.group(1)
+                if ( (self.date_after == "" or date_run >= self.date_after) and (self.date_before == "" or date_run <= self.date_before) ):
+                    run_list_ok.append(run)
+            else:
+                # Run name is unusual: just accept it
+                run_list_ok.append(run)
+        return run_list_ok
 
     def get_run_list_daq(self):
+
+        run_list = []
 
         # Make sure we do not try to transfer files while they are being written
         if (self.ongoing_run != ""): print "Run %s is on-going and will not be transferred"%self.ongoing_run
@@ -228,100 +253,89 @@ class PadmeCDRServer:
         cmd = "%s \'( cd %s/%s; ls )\'"%(self.daq_ssh,self.daq_path,self.data_dir)
         for line in self.run_command(cmd):
             run = line.rstrip()
-            if (self.ongoing_run == "" or not run == self.ongoing_run):
-                self.daq_run_list.append(run)
+            if (self.ongoing_run == "" or run != self.ongoing_run): run_list.append(run)
 
-        return "ok"
+        run_list.sort()
+        return run_list
 
-    def get_file_list_kloe(self):
+    def get_run_list_srm(self,site):
+        run_list = []
+        print "Getting list of runs for year %s at %s"%(self.year,site)
+        cmd = "gfal-ls %s/%s"%(self.site_srm[site],self.data_dir)
+        for line in self.run_command(cmd):
+            if re.match("^gfal-ls error: ",line):
+                print "***ERROR*** gfal-ls returned error status while retrieving run list from %s"%site
+                return [ "error" ]
+            run_list.append(line.rstrip())
+        run_list.sort()
+        return run_list
+
+    def get_file_list(self,site,run):
+        if (site == "DAQ"):
+            return self.get_file_list_daq(run)
+        elif (site == "KLOE"):
+            return self.get_file_list_kloe(run)
+        elif (site == "LNF"):
+            return self.get_file_list_srm("LNF",run)
+        elif (site == "CNAF"):
+            return self.get_file_list_srm("CNAF",run)
+
+    def get_file_list_daq(self,run):
+        print "Getting list of raw data files for run %s on DAQ server %s"%(run,self.daq_server)
+        file_list = []
+        cmd = "%s \'( cd %s/%s/%s; ls *.root )\'"%(self.daq_ssh,self.daq_path,self.data_dir,run)
+        for line in self.run_command(cmd):
+            if re.match("^ls: cannot access",line):
+                print "***ERROR*** ls returned error status while retrieving file list for run %s from DAQ"%run
+                return [ "error" ]
+            file_list.append("%s/%s"%(run,line.rstrip()))
+        file_list.sort()
+        return file_list
+
+    def get_file_list_kloe(self,run):
 
         # Compile regexp to extract file name (improves performance)
         re_get_rawdata_file = re.compile("^.* %s/%s/(.*\.root) .*$"%(self.kloe_path,self.data_dir))
 
-        print "Getting list of raw data files for year %s on KLOE tape library"%self.year
+        print "Getting list of raw data files for run %s at KLOE"%run
+        file_list = []
 
         # First we get list of files currently on disk buffer
-        cmd = "%s \'( cd %s/%s; find . -type f -name \*.root | sed -e s+\./++ )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir)
-        for line in self.run_command(cmd):
-            self.kloe_list.append(line.rstrip())
+        cmd = "%s \'( cd %s/%s/%s; ls )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,run)
+        for line in self.run_command(cmd): file_list.append("%s/%s"%(run,line.rstrip()))
 
         # Second we get list of files already stored on the tape library
-        cmd = "%s \'( dsmc query archive -subdir=yes %s/%s/\*.root )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir)
+        cmd = "%s \'( dsmc query archive %s/%s/%s/\*.root )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,run)
         for line in self.run_command(cmd):
             m = re_get_rawdata_file.match(line)
-            if (m): self.kloe_list.append(m.group(1))
+            if (m): file_list.append(m.group(1))
 
-        # Remove duplicates and sort
-        self.kloe_list = sorted(set(self.kloe_list))
+        # Return list after removing duplicates and sorting
+        file_list = sorted(set(file_list))
+        return file_list
 
-        return "ok"
-
-    def get_file_list_lnf(self):
-
+    def get_file_list_srm(self,site,run):
         self.renew_voms_proxy()
-        print "Getting list of raw data files for year %s on LNF disks"%self.year
-
-        lnf_dir_list = []
-        for line in self.run_command("gfal-ls %s/%s"%(self.lnf_srm,self.data_dir)):
-            if re.match("^gfal-ls error: ",line):
-                print "***ERROR*** gfal-ls returned error status while retrieving run list from LNF"
-                return "error"
-            run = line.rstrip()
-            # If we are transferring from DAQ servers, no need to check runs which are not on disk
-            if ( (not self.daq_run_list) or (run in self.daq_run_list) ):
-                lnf_dir_list.append(run)
-        lnf_dir_list.sort()
-
-        for run_dir in lnf_dir_list:
-            self.check_stop_cdr()
-            for line in self.run_command("gfal-ls %s/%s/%s"%(self.lnf_srm,self.data_dir,run_dir)):
-                if re.match("^gfal-ls error: ",line):
-                    print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from LNF"%run_dir
-                    return "error"
-                self.lnf_list.append("%s/%s"%(run_dir,line.rstrip()))
-
-        return "ok"
-
-    def get_file_list_cnaf(self):
-
-        self.renew_voms_proxy()
-        print "Getting list of raw data files for year %s on CNAF tape library"%self.year
-
-        cnaf_dir_list = []
-        for line in self.run_command("gfal-ls %s/%s"%(self.cnaf_srm,self.data_dir)):
-            if re.match("^gfal-ls error: ",line):
-                print "***ERROR*** gfal-ls returned error status while retrieving run list from CNAF"
-                return "error"
-            run = line.rstrip()
-            # If we are transferring from DAQ servers, no need to check runs which are not on disk
-            if ( (not self.daq_run_list) or (run in self.daq_run_list) ):
-                cnaf_dir_list.append(run)
-        cnaf_dir_list.sort()
-
-        for run_dir in cnaf_dir_list:
-            self.check_stop_cdr()
-            for line in self.run_command("gfal-ls %s/%s/%s"%(self.cnaf_srm,self.data_dir,run_dir)):
-                if re.match("^gfal-ls error: ",line):
-                    print "***ERROR*** gfal-ls returned error status while retrieving file list from run dir %s from CNAF"%run_dir
-                    return "error"
-                self.cnaf_list.append("%s/%s"%(run_dir,line.rstrip()))
-
-        return "ok"
-
-    def get_checksum_cnaf(self,rawfile):
-        a32 = ""
-        cmd = "gfal-sum %s/%s/%s adler32"%(self.cnaf_srm,self.data_dir,rawfile);
+        print "Getting list of raw data files for run %s at %s"%(run,site)
+        file_list = []
+        self.check_stop_cdr()
+        cmd = "gfal-ls %s/%s/%s"%(self.site_srm[site],self.data_dir,run)
         for line in self.run_command(cmd):
-            print line.rstrip()
-            try:
-                (fdummy,a32) = line.rstrip().split()
-            except:
-                a32 = ""
-        return a32
+            m = re.match("^gfal-ls error:\s+(\d+)\s+",line)
+            if m:
+                # If gfal-ls error is due to missing run directory, just return an empty list
+                if ( m.group(1) == "2" ): break
+                # Otherwise it is a real error and is reported as such
+                print line.rstrip()
+                print "***ERROR*** gfal-ls returned error status %s while retrieving file list from run dir %s from %s"%(m.group(1),run,site)
+                return [ "error" ]
+            file_list.append("%s/%s"%(run,line.rstrip()))
+        file_list.sort()
+        return file_list
 
-    def get_checksum_lnf(self,rawfile):
+    def get_checksum_srm(self,site,rawfile):
         a32 = ""
-        cmd = "gfal-sum %s/%s/%s adler32"%(self.lnf_srm,self.data_dir,rawfile);
+        cmd = "gfal-sum %s/%s/%s adler32"%(self.site_srm[site],self.data_dir,rawfile)
         for line in self.run_command(cmd):
             print line.rstrip()
             try:
@@ -343,7 +357,7 @@ class PadmeCDRServer:
 
     def get_checksum_kloe(self,rawfile):
         a32 = ""
-        cmd = "%s %s %s/%s/%s"%(self.kloe_ssh,self.kloe_adler32_cmd,self.kloe_path,self.data_dir,rawfile)
+        cmd = "%s %s %s/%s"%(self.kloe_ssh,self.kloe_adler32_cmd,self.kloe_tmpdir,rawfile)
         for line in self.run_command(cmd):
             print line.rstrip()
             try:
@@ -370,22 +384,22 @@ class PadmeCDRServer:
             print "### PadmeCDRServer ### Exiting ###"
             sys.exit(0)
 
-    def copy_file_daq_lnf(self,rawfile):
+    def copy_file_daq_srm(self,site,rawfile):
 
         self.renew_voms_proxy()
 
         copy_failed = False
-        print "- File %s - Starting copy from DAQ to LNF"%rawfile
-        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.lnf_srm,self.data_dir,rawfile);
+        print "- File %s - Starting copy from DAQ to %s"%(rawfile,site)
+        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.site_srm[site],self.data_dir,rawfile)
         for line in self.run_command(cmd):
             print line.rstrip()
             if re.match("^gfal-copy error: ",line): copy_failed = True
 
         if copy_failed:
-            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to LNF"%rawfile
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to %s"%(rawfile,site)
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-            cmd = "gfal-rm %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile)
+            cmd = "gfal-rm %s/%s/%s"%(self.site_srm[site],self.data_dir,rawfile)
             for line in self.run_command(cmd): print line.rstrip()
             return "error"
 
@@ -393,69 +407,47 @@ class PadmeCDRServer:
         print "- File %s - Getting ADLER32 checksum at source"%rawfile
         a32_src = self.get_checksum_daq(rawfile)
         print "- File %s - Getting ADLER32 checksum at destination"%rawfile
-        a32_dst = self.get_checksum_lnf(rawfile)
+        a32_dst = self.get_checksum_srm(site,rawfile)
         print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
         if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
-            print "- File %s - ***ERROR*** unmatched checksum while copying from DAQ to LNF"%rawfile
+            print "- File %s - ***ERROR*** unmatched checksum while copying from DAQ to %s"%(rawfile,site)
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
-            cmd = "gfal-rm %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile)
+            cmd = "gfal-rm %s/%s/%s"%(self.site_srm[site],self.data_dir,rawfile)
             for line in self.run_command(cmd): print line.rstrip()
             return "error"
 
         return "ok"
 
-    def copy_file_lnf_cnaf(self,rawfile):
+    def copy_file_srm_srm(self,src_site,dst_site,rawfile):
 
         self.renew_voms_proxy()
 
         copy_failed = False
-        print "- File %s - Starting copy from LNF to CNAF"%rawfile
-        cmd = "gfal-copy -t 3600 -T 3600 -p --checksum ADLER32 %s/%s/%s %s/%s/%s"%(self.lnf_srm,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
+        print "- File %s - Starting copy from %s to %s"%(rawfile,src_site,dst_site)
+        cmd = "gfal-copy -t 3600 -T 3600 -p --checksum ADLER32 %s/%s/%s %s/%s/%s"%(self.site_srm[src_site],self.data_dir,rawfile,self.site_srm[dst_site],self.data_dir,rawfile)
         for line in self.run_command(cmd):
             print line.rstrip()
-            if re.match("^gfal-copy error: ",line): copy_failed = True
-
-        if copy_failed:
-            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to CNAF"%rawfile
-            with open(self.transfer_error_list_file,"a") as telf:
-                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
-            for line in self.run_command(cmd): print line.rstrip()
-            return "error"
-
-        return "ok"
-
-    def copy_file_lnf_kloe(self,rawfile):
-
-        self.renew_voms_proxy()
-
-        tmp_file = "/tmp/%s"%rawfile
-
-        copy_failed = False
-
-        # As in gfal-copy SFTP destination is not working, first create a temporary local copy of the file
-        print "- File %s - Starting copy from LNF to KLOE"%rawfile
-        #cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.kloe_user,self.kloe_keyfile,self.lnf_srm,self.data_dir,rawfile,self.kloe_sftp,self.data_dir,rawfile);
-        cmd = "gfal-copy -t 3600 -T 3600 -p %s/%s/%s file://%s"%(self.lnf_srm,self.data_dir,rawfile,tmp_file);
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            if re.match("^gfal-copy error: ",line):
+            if ( re.match("^gfal-copy error: ",line) or re.match("^Command timed out",line) ):
                 copy_failed = True
 
         if copy_failed:
-            #print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to KLOE"%rawfile
-            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from LNF to local file"%rawfile
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from %s to %s"%(rawfile,src_site,dst_site)
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            cmd = "gfal-rm %s/%s/%s"%(self.site_srm[dst_site],self.data_dir,rawfile)
+            for line in self.run_command(cmd): print line.rstrip()
             return "error"
 
+        return "ok"
+
+    def copy_file_srm_kloe(self,site,rawfile):
+
+        self.renew_voms_proxy()
+
         # Make sure destination directory exists on KLOE server
-        m = re.match("(.*)/.*\.root",rawfile)
-        if (m):
-            rawdir = m.group(1)
-        else:
+        rawdir = os.path.dirname(rawfile)
+        if (rawdir == ""):
             print "- File %s - ***ERROR*** cannot extract directory from file name"%rawfile
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
@@ -464,70 +456,83 @@ class PadmeCDRServer:
         cmd = "%s \'( mkdir -p %s/%s/%s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawdir)
         for line in self.run_command(cmd): print line.rstrip()
 
-        # Now send local copy to KLOE using good old scp
-        cmd = "scp -i %s %s %s@%s:%s/%s/%s"%(self.kloe_keyfile,tmp_file,self.kloe_user,self.kloe_server,self.kloe_path,self.data_dir,rawfile);
+        # Name of temporary file to use during copy (will be erased after use)
+        tmp_file = "/tmp/%s"%rawfile
+
+        copy_failed = False
+        print "- File %s - Starting copy from %s to KLOE"%(rawfile,site)
+
+        # gfal-copy SFTP destination is not working: create a temporary local copy of the file
+        cmd = "gfal-copy -t 3600 -T 3600 -p %s/%s/%s file://%s"%(self.site_srm[site],self.data_dir,rawfile,tmp_file)
+        for line in self.run_command(cmd):
+            print line.rstrip()
+            if ( re.match("^gfal-copy error: ",line) or re.match("^Command timed out",line) ):
+                copy_failed = True
+
+        if copy_failed:
+            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from %s to local file"%(rawfile,site)
+            with open(self.transfer_error_list_file,"a") as telf:
+                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
+            for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+            return "error"
+
+        # Now send local copy to KLOE temporary directory using good old scp
+        cmd = "%s \'( mkdir -p %s/%s )\'"%(self.kloe_ssh,self.kloe_tmpdir,rawdir)
         for line in self.run_command(cmd): print line.rstrip()
-        # Probably need to add some scp error check
+        cmd = "scp -i %s %s %s@%s:%s/%s"%(self.kloe_keyfile,tmp_file,self.kloe_user,self.kloe_server,self.kloe_tmpdir,rawfile)
+        for line in self.run_command(cmd): print line.rstrip()
+        # Could add some scp error check but checksum should be enough
 
         # Clean up local temporary file
-        for line in self.run_command("rm -f %s"%tmp_file): print line.rstrip()
+        cmd = "rm -f %s"%tmp_file
+        for line in self.run_command(cmd): print line.rstrip()
 
         # Verify if the copy was correctly completed
         print "- File %s - Getting ADLER32 checksum at source"%rawfile
-        a32_src = self.get_checksum_lnf(rawfile)
+        a32_src = self.get_checksum_srm(site,rawfile)
         print "- File %s - Getting ADLER32 checksum at destination"%rawfile
         a32_dst = self.get_checksum_kloe(rawfile)
         print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
         if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
-            print "- File %s - ***ERROR*** unmatched checksum while copying from LNF to KLOE"%rawfile
+            print "- File %s - ***ERROR*** unmatched checksum while copying from %s to KLOE"%(rawfile,site)
             with open(self.transfer_error_list_file,"a") as telf:
                 telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
-            cmd = "%s \'( cd %s/%s; rm -f %s )\'"%(self.kloe_ssh,self.kloe_path,self.data_dir,rawfile);
+            cmd = "%s \'( rm -f %s/%s )\'"%(self.kloe_ssh,self.kloe_tmpdir,rawfile)
             for line in self.run_command(cmd): print line.rstrip()
             return "error"
+
+        # Finally move file from temporary directory to daq data directory
+        cmd = "%s \'( mv %s/%s %s/%s/%s )\'"%(self.kloe_ssh,self.kloe_tmpdir,rawfile,self.kloe_path,self.data_dir,rawfile)
+        for line in self.run_command(cmd): print line.rstrip()
 
         return "ok"
 
-    def copy_file_daq_cnaf(self,rawfile):
+    def copy_file(self,src_site,dst_site,rawfile):
 
-        self.renew_voms_proxy()
+        # DAQ -> LNF or DAQ -> CNAF
+        if (src_site == "DAQ"):
+            if (dst_site == "LNF"):
+                return self.copy_file_daq_srm("LNF",rawfile)
+            elif (dst_site == "CNAF"):
+                return self.copy_file_daq_srm("CNAF",rawfile)
 
-        copy_failed = False
-        print "- File %s - Starting copy from DAQ to CNAF"%rawfile
-        cmd = "gfal-copy -t 3600 -T 3600 -p -D\"SFTP PLUGIN:USER=%s\" -D\"SFTP PLUGIN:PRIVKEY=%s\" %s/%s/%s %s/%s/%s"%(self.daq_user,self.daq_keyfile,self.daq_sftp,self.data_dir,rawfile,self.cnaf_srm,self.data_dir,rawfile);
-        for line in self.run_command(cmd):
-            print line.rstrip()
-            if re.match("^gfal-copy error: ",line): copy_failed = True
+        # LNF -> CNAF or LNF -> KLOE
+        elif (src_site == "LNF"):
+            if (dst_site == "CNAF"):
+                return self.copy_file_srm_srm("LNF","CNAF",rawfile)
+            elif (dst_site == "KLOE"):
+                return self.copy_file_srm_kloe("LNF",rawfile)
 
-        if copy_failed:
-            print "- File %s - ***ERROR*** gfal-copy returned error status while copying from DAQ to CNAF"%rawfile
-            with open(self.transfer_error_list_file,"a") as telf:
-                telf.write("%s - %s copy\n"%(self.now_str(),rawfile))
-            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
-            for line in self.run_command(cmd): print line.rstrip()
-            return "error"
+        # CNAF -> LNF or CNAF -> KLOE
+        elif (src_site == "CNAF"):
+            if (dst_site == "LNF"):
+                return self.copy_file_srm_srm("CNAF","LNF",rawfile)
+            elif (dst_site == "KLOE"):
+                return self.copy_file_srm_kloe("CNAF",rawfile)
 
-        print "- File %s - Getting ADLER32 checksum at source"%rawfile
-        a32_src = get_checksum_daq(rawfile)
-        print "- File %s - Getting ADLER32 checksum at destination"%rawfile
-        a32_dst = get_checksum_cnaf(rawfile)
-        cmd = "gfal-sum %s/%s/%s adler32"%(self.cnaf_srm,self.data_dir,rawfile);
-        print "- File %s - ADLER32 CRC - Source: %s - Destination: %s"%(rawfile,a32_src,a32_dst)
-        if ( a32_src == "" or a32_dst == "" or a32_src != a32_dst ):
-            print "- File %s - ***ERROR*** unmatched checksum while copying from DAQ to CNAF"%rawfile
-            with open(self.transfer_error_list_file,"a") as telf:
-                telf.write("%s - %s checksum\n"%(self.now_str(),rawfile))
-            cmd = "gfal-rm %s/%s/%s"%(self.cnaf_srm,self.data_dir,rawfile)
-            for line in self.run_command(cmd): print line.rstrip()
-            return "error"
-
-        return "ok"
-
-    def copy_file_cnaf_lnf(self,rawfile):
-        print "Copying file %s from CNAF to LNF: NOT!"%rawfile
-
-    def copy_file_cnaf_kloe(self,rawfile):
-        print "Copying file %s from CNAF to KLOE: NOT!"%rawfile
+        # Anything else is forbidden
+        print "- WARNING - Copy from %s to %s is not supported"%(src_site,dst_site)
+        return "error"
 
     def get_kloe_used_space(self):
         used = 100
@@ -558,96 +563,58 @@ class PadmeCDRServer:
 
             start_iteration_time = time.time()
 
-            self.check_stop_cdr()
-
             # Reset all file/dir lists
             self.ongoing_run = ""
-            self.daq_run_list = []
-            self.daq_list = []
-            self.lnf_list = []
-            self.cnaf_list = []
-            self.kloe_list = []
+            src_run_list = []
+            src_file_list = []
+            dst_file_list = []
 
-            # Create a full list into which we will merge lists from source and destination sites
-            full_list = []
+            # Check on DAQ servers if a run is ongoing
+            self.check_stop_cdr()
+            if (self.src_site == "DAQ"): self.get_ongoing_run()
 
-            all_sites_ok = True
+            # Get list of runs at source site
+            self.check_stop_cdr()
+            src_run_list = self.get_run_list(self.src_site)
+            if (src_run_list and src_run_list[0] == "error"):
+                print "WARNING - Source site %s has problems: suspending iteration"%self.src_site
+            else:
 
-            if (self.source_site == "DAQ"):
-                self.get_ongoing_run()
-                if ( (self.get_run_list_daq() == "error") or (self.get_file_list_daq() == "error") ):
-                    print "WARNING - DAQ server %s has problems: suspending iteration"%self.daq_server
-                    all_sites_ok = False
-                full_list.extend(self.daq_list)
+                # Loop over all runs at source site and get list of files
+                for run in src_run_list:
 
-            if (self.source_site == "LNF" or self.destination_site == "LNF"):
-                if self.get_file_list_lnf() == "error":
-                    print "WARNING - LNF site has problems: suspending iteration"
-                    all_sites_ok = False
-                full_list.extend(self.lnf_list)
+                    # Get list of files for this run at source site
+                    self.check_stop_cdr()
+                    src_file_list = self.get_file_list(self.src_site,run)
+                    if (src_file_list and src_file_list[0] == "error"):
+                        print "WARNING - Source site %s has problems: suspending iteration"%self.src_site
+                        break
 
-            if (self.source_site == "CNAF" or self.destination_site == "CNAF"):
-                if self.get_file_list_cnaf() == "error":
-                    print "WARNING - CNAF site has problems: suspending iteration"
-                    all_sites_ok = False
-                full_list.extend(self.cnaf_list)
+                    # Get list of files for this run at destination site
+                    self.check_stop_cdr()
+                    dst_file_list = self.get_file_list(self.dst_site,run)
+                    if (dst_file_list and dst_file_list[0] == "error"):
+                        print "WARNING - Destination site %s has problems: suspending iteration"%self.dst_site
+                        break
 
-            if (self.source_site == "KLOE" or self.destination_site == "KLOE"):
-                if self.get_file_list_kloe() == "error":
-                    print "WARNING - KLOE site has problems: suspending iteration"
-                    all_sites_ok = False
-                full_list.extend(self.kloe_list)
+                    suspend_iteration = False
+                    for rawfile in src_file_list:
+                        self.check_stop_cdr()
+                        if ( not rawfile in dst_file_list ):
 
-            if all_sites_ok:
+                            # Check disk space at KLOE front end before copying
+                            if ( (self.dst_site == "KLOE") and (self.get_kloe_used_space() > 95) ):
+                                print "- WARNING - KLOE disk space is more than 95% full - Suspending iteration"
+                                suspend_iteration = True
+                                break
 
-                # Remove duplicates and sort final list
-                print "- Removing duplicates and sorting merged list"
-                full_list = sorted(set(full_list))
-                self.check_stop_cdr()
+                            # Copy file from source to destination
+                            if self.copy_file(self.src_site,self.dst_site,rawfile) == "ok":
+                                print "- File %s - Copy from %s to %s successful"%(rawfile,self.src_site,self.dst_site)
+                            else:
+                                print "- File %s - Copy from %s to %s failed"%(rawfile,self.src_site,self.dst_site)
 
-                print "- Starting copy of new files"
-                for rawfile in (full_list):
-
-                    # Source is PADME DAQ Data Server
-                    if (self.source_site == "DAQ"):
-
-                        # Destination is LNF Tier2 Storage System
-                        if (self.destination_site == "LNF"):
-                            # DAQ -> LNF
-                            if ( (rawfile in self.daq_list) and not (rawfile in self.lnf_list) ):
-                                if self.copy_file_daq_lnf(rawfile) == "ok":
-                                    print "- File %s - Copy from DAQ to LNF successful"%rawfile
-                                self.check_stop_cdr()
-
-                        # Destination is CNAF Tape Library
-                        elif (self.destination_site == "CNAF"):
-                            # DAQ -> CNAF
-                            if ( (rawfile in self.daq_list) and not (rawfile in self.cnaf_list) ):
-                                if self.copy_file_daq_cnaf(rawfile) == "ok":
-                                    print "- File %s - Copy from DAQ to CNAF successful"%rawfile
-                                self.check_stop_cdr()
-
-                    # Source is LNF Tier2 Storage System
-                    elif (self.source_site == "LNF"):
-
-                        # Destination is CNAF Tape Library
-                        if (self.destination_site == "CNAF"):
-                            # LNF -> CNAF
-                            if ( (rawfile in self.lnf_list) and not (rawfile in self.cnaf_list) ):
-                                if self.copy_file_lnf_cnaf(rawfile) == "ok":
-                                    print "- File %s - Copy from LNF to CNAF successful"%rawfile
-                                self.check_stop_cdr()
-
-                        # Destination is KLOE Tape Library
-                        elif (self.destination_site == "KLOE"):
-                            # LNF -> KLOE
-                            if ( (rawfile in self.lnf_list) and not (rawfile in self.kloe_list) ):
-                                if self.get_kloe_used_space() > 95:
-                                    print "- WARNING - KLOE disk space is more than 95% full - Suspending file copy"
-                                    break
-                                if self.copy_file_lnf_kloe(rawfile) == "ok":
-                                    print "- File %s - Copy from LNF to KLOE successful"%rawfile
-                                self.check_stop_cdr()
+                    if suspend_iteration: break
 
             end_iteration_time = time.time()
 

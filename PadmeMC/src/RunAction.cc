@@ -7,6 +7,7 @@
 #include "G4ProductionCuts.hh"
 #include "G4ios.hh"
 #include "G4UnitsTable.hh"
+#include "G4UImanager.hh"
 
 #include "G4VSteppingVerbose.hh"
 #include "SteppingVerbose.hh"
@@ -15,12 +16,12 @@
 #include "HistoManager.hh"
 #include "Constants.hh"
 
+#include "BeamParameters.hh"
+
 #ifdef  G4MULTITHREADED
 #include "G4MTHepRandom.hh"
 #else
 #endif
-
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 G4Run* RunAction::GenerateRun()
@@ -98,6 +99,18 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
 	  G4cout << "*******************" << G4endl;
   }
 
+  // Show some info about current run on display
+  char cmd[100];
+  BeamParameters* bpar = BeamParameters::GetInstance();
+  if (bpar->CalibrationRun()) {
+    sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! gamma @ %.0f MeV",bpar->GetCalibRunEnergy()/MeV);
+  } else {
+    sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! %d e+ @ %.0f MeV",bpar->GetNPositronsPerBunch(),bpar->GetBeamMomentum()/MeV);
+  }
+  G4UImanager* UI = G4UImanager::GetUIpointer();
+  UI->ApplyCommand("/vis/set/textColour cyan");
+  UI->ApplyCommand(cmd);
+  UI->ApplyCommand("/vis/set/textColour");
 
 }
 

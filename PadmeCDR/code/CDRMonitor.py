@@ -46,6 +46,30 @@ color_warn  = "#FFA500"
 color_alarm = "#CC0000"
 color_off   = "#0000CC"
 
+# Timeline files
+timeline_storage = [
+    "padmeui",
+    "l1padme3",
+    "l1padme4",
+    "l0padme1",
+    "lnfdisk",
+    "lnf2disk",
+    "cnaftape",
+    "kloetape",
+    "kloedisk"
+]
+timeline_file = {
+    "padmeui" :"%s/log/timeline_padmeui.log"%cdr_dir,
+    "l1padme3":"%s/log/timeline_l1padme3.log"%cdr_dir,
+    "l1padme4":"%s/log/timeline_l1padme4.log"%cdr_dir,
+    "l0padme1":"%s/log/timeline_l0padme1.log"%cdr_dir,
+    "lnfdisk" :"%s/log/timeline_lnfdisk.log"%cdr_dir,
+    "lnf2disk":"%s/log/timeline_lnf2disk.log"%cdr_dir,
+    "cnaftape":"%s/log/timeline_cnaftape.log"%cdr_dir,
+    "kloetape":"%s/log/timeline_kloetape.log"%cdr_dir,
+    "kloedisk":"%s/log/timeline_kloedisk.log"%cdr_dir
+}
+
 ####################
 ### padmeui data ###
 ####################
@@ -78,10 +102,31 @@ daq_level_alarm = 85
 ################################
 
 # Path to file with summary occupation info
-lnf_summary_file = "/home/%s/du-padme_dpm.ouput"%cdr_user
+#lnf_summary_file = "/home/%s/du-padme_dpm.ouput"%cdr_user
+lnf_summary_file = "/home/%s/du-padme/padme_spazio-occupato.output"%cdr_user
 
 # Total available space in TB
-lnf_disk_tot_TB = 80.
+lnf_disk_tot_TB = 180.
+
+################################
+### LNF2 disk occupation data ###
+################################
+
+# Path to file with summary occupation info
+lnf2_summary_file = "/home/%s/du-padme/padme_scratch-occupato.output"%cdr_user
+
+# Total available space in TB
+lnf2_disk_tot_TB = 100.
+
+#################################
+### CNAF tape occupation data ###
+#################################
+
+# Path to file with summary occupation info
+cnaf_summary_file = "/home/%s/du-padme/cnaf_spazio-occupato.output"%cdr_user
+
+# Total available space in TB
+cnaf_tape_tot_TB = 500.
 
 ##############################
 ### KLOE tape library data ###
@@ -162,10 +207,12 @@ def get_daq_info(server):
     disk_used  = "0"
     disk_avail = "0"
     disk_usepc = "0"
-    cmd = "%s df -m %s"%(daq_ssh,daq_path)
+    #cmd = "%s df -m %s"%(daq_ssh,daq_path)
+    cmd = "%s /bin/df -BG --output=size,used,avail,pcent %s"%(daq_ssh,daq_path)
     for line in run_command(cmd):
         #print line.rstrip()
-        rc = re.match("^\S+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%%\s+%s\s*$"%daq_path,line.rstrip())
+        #rc = re.match("^\S+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)%%\s+%s\s*$"%daq_path,line.rstrip())
+        rc = re.match("^\s*(\S+)G\s+(\S+)G\s+(\S+)G\s+(\d+).*",line)
         if rc:
             disk_total = rc.group(1)
             disk_used  = rc.group(2)
@@ -200,11 +247,117 @@ def get_kloe_info():
 def get_lnf_info():
 
     disk_use = "0"
-    cmd = "tail -2 %s"%lnf_summary_file
+    #cmd = "tail -2 %s"%lnf_summary_file
+    #for line in run_command(cmd):
+    #    rc = re.match("^\s*(\d+)B\s*$",line)
+    #    if rc: disk_use = rc.group(1)
+    cmd = "tail -1 %s"%lnf_summary_file
     for line in run_command(cmd):
-        rc = re.match("^\s*(\d+)B\s*$",line)
-        if rc: disk_use = rc.group(1)
+        rc = re.match("^\s*(\d\d\d\d\d\d\d\d)_(\d\d\d\d)\s+(\d+)\s*$",line)
+        if rc:
+            read_date = rc.group(1)
+            read_time = rc.group(2)
+            disk_use = rc.group(3)
     return disk_use
+
+def get_lnf2_info():
+
+    disk_use = "0"
+    cmd = "tail -1 %s"%lnf2_summary_file
+    for line in run_command(cmd):
+        rc = re.match("^\s*(\d\d\d\d\d\d\d\d)_(\d\d\d\d)\s+(\d+)\s*$",line)
+        if rc:
+            read_date = rc.group(1)
+            read_time = rc.group(2)
+            disk_use = rc.group(3)
+    return disk_use
+
+def get_cnaf_info():
+
+    tape_use = "0"
+    cmd = "tail -1 %s"%cnaf_summary_file
+    for line in run_command(cmd):
+        rc = re.match("^\s*(\d\d\d\d\d\d\d\d)_(\d\d\d\d)\s+(\d+)\s*$",line)
+        if rc:
+            read_date = rc.group(1)
+            read_time = rc.group(2)
+            tape_use = rc.group(3)
+    return tape_use
+
+def append_timeline_info(storage,now,data_list):
+    with open(timeline_file[storage],"a") as tlf:
+        tlf.write("%s"%now)
+        for d in data_list: tlf.write(" %s"%d)
+        tlf.write("\n")
+
+def format_timeline_info(storage,mode):
+
+    old_date = "0."
+    old_used = "0."
+    old_free = "0."
+    old_percent = "0."
+
+    fmt = "["
+    first = True
+    used = True
+    with open(timeline_file[storage],"r") as tlf:
+        for l in tlf:
+            m = re.match("^(\S+) (\S+) (\S+) (\S+)",l)
+            if m:
+
+                # Extract new values
+                new_date = m.group(1)
+                new_used = m.group(2)
+                new_free = str(float(m.group(3))-float(m.group(2)))
+                new_percent = m.group(4)
+                #print "%s %s ### %s %s ### %s %s ### %s %s"%(old_date,new_date,old_used,new_used,old_free,new_free,old_percent,new_percent)
+
+                # Do not prepend a comma before first value in list
+                if first:
+                    first = False
+                elif used:
+                    fmt += ","
+
+                # Add new value to timeline plot only if it changed since previous reading
+                if mode == "PERCENT":
+                    if ( new_percent != old_percent ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_percent)
+                        fmt += "[\"%s\",%s]"%(new_date,new_percent)
+                        used = True
+                    else:
+                        used = False
+                elif mode == "USED":
+                    if ( new_used != old_used ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_used)
+                        fmt += "[\"%s\",%s]"%(new_date,new_used)
+                        used = True
+                    else:
+                        used = False
+                elif mode == "FREE":
+                    if ( new_free != old_free ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_free)
+                        fmt += "[\"%s\",%s]"%(new_date,new_free)
+                        used = True
+                    else:
+                        used = False
+
+                # Store values for future checks
+                old_date = new_date
+                old_used = new_used
+                old_free = new_free
+                old_percent = new_percent
+
+    # Last reading must be stored even if it did not change
+    if not used:
+        if mode == "PERCENT":
+            fmt += "[\"%s\",%s]"%(old_date,old_percent)
+        elif mode == "USED":
+            fmt += "[\"%s\",%s]"%(old_date,old_used)
+        elif mode == "FREE":
+            fmt += "[\"%s\",%s]"%(old_date,old_free)
+
+    fmt += "]"
+    return fmt
 
 def run_command(command):
     print "> %s"%command
@@ -222,6 +375,8 @@ def start_monitor():
 
     while(True):
 
+        now_time = time.time()
+
         mh = open("/tmp/%s"%monitor_file,"w")
         mh.write("PLOTID CDR_status\n")
         mh.write("PLOTNAME PADME CDR Status - %s\n"%now_str())
@@ -231,13 +386,15 @@ def start_monitor():
         ### Get DAQ servers disk info ###
         for daq_server in daq_server_list:
             (daq_tot,daq_use,daq_avl,daq_opc) = get_daq_info(daq_server)
-            daq_tot_TB = float(daq_tot)/1024/1024
-            daq_use_TB = float(daq_use)/1024/1024
-            daq_avl_TB = float(daq_avl)/1024/1024
+            #daq_tot_TB = float(daq_tot)/1024/1024
+            #daq_use_TB = float(daq_use)/1024/1024
+            #daq_avl_TB = float(daq_avl)/1024/1024
             daq_color = color_ok
             if (int(daq_opc)>daq_level_warn): daq_color = color_warn
             if (int(daq_opc)>daq_level_alarm): daq_color = color_alarm
-            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
+            #mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%4.1f TB of %4.1f TB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use_TB,daq_tot_TB,daq_opc,daq_color))
+            mh.write("{\"title\":\"%s\",\"current\":{\"value\":\"Used:%s GB of %s GB (%s%%)\",\"col\":\"%s\"}}"%(daq_server,daq_use,daq_tot,daq_opc,daq_color))
+            append_timeline_info(daq_server,now_time,(daq_use,daq_tot,daq_opc))
 
             mh.write(",")
 
@@ -248,6 +405,29 @@ def start_monitor():
         lnf_disk_color = color_ok
         if lnf_disk_use_TB > lnf_disk_tot_TB: lnf_disk_color = color_warn
         mh.write("{\"title\":\"LNF Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc,lnf_disk_color))
+        append_timeline_info("lnfdisk",now_time,(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc))
+
+        mh.write(",")
+
+        ### Get LNF2 disk system info ###
+        lnf2_disk_use = get_lnf2_info()
+        lnf2_disk_use_TB = float(lnf2_disk_use)/1024/1024/1024/1024
+        lnf2_disk_opc = str(int(100.*lnf2_disk_use_TB/lnf2_disk_tot_TB))
+        lnf2_disk_color = color_ok
+        if lnf2_disk_use_TB > lnf2_disk_tot_TB: lnf2_disk_color = color_warn
+        mh.write("{\"title\":\"LNF2 Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf2_disk_use_TB,lnf2_disk_tot_TB,lnf2_disk_opc,lnf2_disk_color))
+        append_timeline_info("lnf2disk",now_time,(lnf2_disk_use_TB,lnf2_disk_tot_TB,lnf2_disk_opc))
+
+        mh.write(",")
+
+        ### Get CNAF tape library info ###
+        cnaf_tape_use = get_cnaf_info()
+        cnaf_tape_use_TB = float(cnaf_tape_use)/1024/1024/1024/1024
+        cnaf_tape_opc = str(int(100.*cnaf_tape_use_TB/cnaf_tape_tot_TB))
+        cnaf_tape_color = color_ok
+        if cnaf_tape_use_TB > cnaf_tape_tot_TB: cnaf_tape_color = color_warn
+        mh.write("{\"title\":\"CNAF Tape\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(cnaf_tape_use_TB,cnaf_tape_tot_TB,cnaf_tape_opc,cnaf_tape_color))
+        append_timeline_info("cnaftape",now_time,(cnaf_tape_use_TB,cnaf_tape_tot_TB,cnaf_tape_opc))
 
         mh.write(",")
 
@@ -259,6 +439,7 @@ def start_monitor():
         kloe_tape_color = color_ok
         if kloe_tape_use_TB > kloe_tape_tot_TB: kloe_tape_color = color_warn
         mh.write("{\"title\":\"KLOE Tape\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_tape_use_TB,kloe_tape_tot_TB,kloe_tape_opc,kloe_tape_color))
+        append_timeline_info("kloetape",now_time,(kloe_tape_use_TB,kloe_tape_tot_TB,kloe_tape_opc))
 
         mh.write(",")
 
@@ -269,6 +450,7 @@ def start_monitor():
         if (int(kloe_disk_opc)>daq_level_warn):  kloe_disk_color = color_warn
         if (int(kloe_disk_opc)>daq_level_alarm): kloe_disk_color = color_alarm
         mh.write("{\"title\":\"KLOE Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(kloe_disk_use_TB,kloe_disk_tot_TB,kloe_disk_opc,kloe_disk_color))
+        append_timeline_info("kloedisk",now_time,(kloe_disk_use_TB,kloe_disk_tot_TB,kloe_disk_opc))
 
         mh.write(",")
 
@@ -278,10 +460,52 @@ def start_monitor():
         if (int(pui_opc)>pui_level_warn): pui_color = color_warn
         if (int(pui_opc)>pui_level_alarm): pui_color = color_alarm
         mh.write("{\"title\":\"PADMEUI Disk\",\"current\":{\"value\":\"Used:%s GB of %s GB (%s%%)\",\"col\":\"%s\"}}"%(pui_use,pui_tot,pui_opc,pui_color))
+        append_timeline_info("padmeui",now_time,(pui_use,pui_tot,pui_opc))
 
         #mh.write(",")
 
+        mh.write(" ]\n")
+
+        mh.write("\n")
+
+        mh.write("PLOTID CDR_DAQ_timeline\n")
+        mh.write("PLOTNAME PADME CDR - DAQ Servers - %s\n"%now_str())
+        mh.write("PLOTTYPE timeline\n")
+        mh.write("TITLE_X Time\n")
+        mh.write("TITLE_Y Occupation(%)\n")
+        mh.write("RANGE_Y 0. 100.\n")
+        mh.write("MODE [ \"lines\" , \"lines\" , \"lines\" ]\n")
+        mh.write("COLOR [ \"ff0000\" , \"0000ff\" , \"00ff00\" ]\n")
+        mh.write("LEGEND [ \"l1padme3\" , \"l1padme4\" , \"l0padme1\" ]\n")
+        mh.write("DATA [ ")
+        mh.write(format_timeline_info("l1padme3","PERCENT"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("l1padme4","PERCENT"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("l0padme1","PERCENT"))
+        mh.write(" ]\n")
+
+        mh.write("\n")
+
+        mh.write("PLOTID CDR_Tape_timeline\n")
+        mh.write("PLOTNAME PADME CDR - Storage - %s\n"%now_str())
+        mh.write("PLOTTYPE timeline\n")
+        mh.write("TITLE_X Time\n")
+        mh.write("TITLE_Y Occupation(TB)\n")
+        mh.write("RANGE_Y 0. 500.\n")
+        mh.write("MODE [ \"lines\" , \"lines\" , \"lines\" , \"lines\" ]\n")
+        mh.write("COLOR [ \"ff0000\" , \"ffff00\" , \"0000ff\" , \"00ff00\" ]\n")
+        mh.write("LEGEND [ \"LNF Disk\" , \"LNF2 Disk\" , \"CNAF Tape\" , \"KLOE Tape\" ]\n")
+        mh.write("DATA [ ")
+        mh.write(format_timeline_info("lnfdisk","USED"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("lnf2disk","USED"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("cnaftape","USED"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("kloetape","USED"))
         mh.write("]\n")
+
         mh.close()
 
         cmd = "scp -i %s /tmp/%s %s@%s:%s/%s"%(monitor_keyfile,monitor_file,monitor_user,monitor_server,monitor_dir,monitor_file)

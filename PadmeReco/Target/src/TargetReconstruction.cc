@@ -7,6 +7,8 @@
 #include "Riostream.h"
 
 #include "TargetReconstruction.hh"
+#include "TargetCalibration.hh"
+#include "TargetGeometry.hh"
 #include "TTargetRecoBeam.hh"
 
 #include "TTargetMCEvent.hh"
@@ -28,7 +30,9 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
   fChannelReco    = new DigitizerChannelTarget();
   fTargetRecoBeam = new TTargetRecoBeam();  
   fTriggerProcessor = new PadmeVTrigger();
-
+  fChannelCalibration = new TargetCalibration();
+  fGeometry = new TargetGeometry();
+  
   fWriteFitParams = false;
   fWriteFitParams = (Bool_t)fConfig->GetParOrDefault("Output", "SignalFitParams"      , 0 );
   fWriteTargetBeam = true;
@@ -42,7 +46,7 @@ void TargetReconstruction::HistoInit(){
   hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
 
   // histos to be saved 
-  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  300,   0., 30000.          ));
+  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          ));
   AddHisto("TargetProfileX"        , new TH1F("TargetProfileX"         ,"Target profile X"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileY"        , new TH1F("TargetProfileY"         ,"Target profile Y"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileLastX"    , new TH1F("TargetProfileLastX"     ,"Target last profile X"    ,   16, -7.5, 8.5             ));
@@ -105,7 +109,7 @@ void TargetReconstruction::HistoInit(){
     (GetHisto(iName))->GetYaxis()->SetTitle("Amplitude[V]");
 
     sprintf(iName,"TargetQCh%d",iCh);
-    AddHisto(iName, new TH1F(iName, iName,  200,  0, 2000 ));
+    AddHisto(iName, new TH1F(iName, iName,  400,  -20000, 20000 ));
     (GetHisto(iName))->GetXaxis()->SetTitle("Number of e^{+}");
     (GetHisto(iName))->GetYaxis()->SetTitle("Counts/10e^{+}");
 
@@ -163,8 +167,19 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
   PadmeVReconstruction::BuildHits(rawEv);
+
+  // set geometry 
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
+  // set geometry 
   if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+
+  // GetBeamProfile
   ReconstructBeam();
+
+
+  TargetCalibration* calSvc = (TargetCalibration*)fChannelCalibration;
+  if(fChannelCalibration) calSvc->PerformBeamCalibration(getRecoBeam());
   RetrieveSignalFitParams();
   AnalyzeEvent(rawEv);
 }
@@ -175,11 +190,10 @@ void TargetReconstruction::ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tReco
   PadmeVReconstruction::ReadHits(recoObj,tRecoEvent);
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... HITS read"<<std::endl;
 
-  // placeholder for hit calibration
-  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
-
   ReconstructBeam();
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... Beam reconstructed "<<std::endl;
+  TargetCalibration* calSvc = (TargetCalibration*)fChannelCalibration;
+  if(fChannelCalibration) calSvc->PerformBeamCalibration(getRecoBeam());
 
   RetrieveSignalFitParams();
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... Fit Beam reconstructed "<<std::endl;
@@ -335,19 +349,20 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
 
   ((TH2F *)GetHisto("TargetBeamSpot"))->Fill(getRecoBeam()->getX(),getRecoBeam()->getY());
+  (GetHisto("TargetBeamMultiplicity" ))->Fill(getRecoBeam()->getnPOT());
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     if(iHit1<16){
-     (GetHisto("TargetProfileX"    ))->Fill         (Hits[iHit1]->GetChannelId()-8,Hits[iHit1]->GetEnergy()*charge_signX);
-     (GetHisto("TargetProfileLastX"))->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy()*charge_signX);       
+     (GetHisto("TargetProfileX"    ))->Fill         (Hits[iHit1]->GetChannelId()-8,Hits[iHit1]->GetEnergy());
+     (GetHisto("TargetProfileLastX"))->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy());	    
      sprintf(iName,"TargetQCh%d",iHit1);
-     (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy()*charge_signX);
+     (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy());
     }
     else{
-     (GetHisto("TargetProfileY"    ))->Fill         (Hits[iHit1]->GetChannelId()-16-8,Hits[iHit1]->GetEnergy()*charge_signY);
-     (GetHisto("TargetProfileLastY"))->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()*charge_signY);   
+     (GetHisto("TargetProfileY"    ))->Fill         (Hits[iHit1]->GetChannelId()-16-8,Hits[iHit1]->GetEnergy());
+     (GetHisto("TargetProfileLastY"))->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy());   
      sprintf(iName,"TargetQCh%d",iHit1);
-     (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy()*charge_signY); 
+     (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy()); 
     }
   }
 
@@ -472,7 +487,7 @@ void TargetReconstruction::ReconstructBeam(){
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
   for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy()*charge_signX); 
+   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy()); 
   }
   TF1 *fitFcn = new TF1("fitFcn",TargetReconstruction::fitProfile,-100,100,4);
   float baselineX  =                                           0 ; fitFcn->SetParameter(0, baselineX);
@@ -505,7 +520,7 @@ void TargetReconstruction::ReconstructBeam(){
   float NdofX         =fitFcn->GetNDF();
  
   for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()*charge_signY); 
+   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()); 
   }
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
   float amplitudeY =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
@@ -567,25 +582,25 @@ void TargetReconstruction::ReconstructBeam(){
      Qy += Hits[iHit1]->GetEnergy();
      HitsY++;       
     }
+    //std::cout<<" hit energy to nPOT "<<Hits[iHit1]->GetEnergy()<<std::endl;
   }
 
-  // ChargeToNPOT
-  Double_t chargeToNPOT = 1000/0.05;
   
-  //std::cout<< "Charge X: " << Qx << " ErrX " << ErrQx << " Y " << Qy << " ErrY "<< ErrQy << std::endl;
-  
-  float BeamMultiplicity = (fabs(Qx)+fabs(Qy))*chargeToNPOT/2.;
-  (GetHisto("TargetBeamMultiplicity" ))->Fill(BeamMultiplicity);
+  float BeamMultiplicity = (fabs(Qx)+fabs(Qy))/2.;
+  double nominalCCD = 10.;//in micron 
+  double chargeToNPOT = 1./1.60217662e-7/nominalCCD/36.;
+  BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;
   float ErrBeamMultiplicity=sqrt(BeamMultiplicity);
   fTargetRecoBeam->setPOT(BeamMultiplicity, ErrBeamMultiplicity);
-
+  //std::cout<<" nPOT set to "<<BeamMultiplicity<<std::endl;
 
   float xBeamMultiplicity = fabs(Qx)*chargeToNPOT;
   float yBeamMultiplicity = fabs(Qy)*chargeToNPOT;
   ErrQx=sqrt(xBeamMultiplicity)/chargeToNPOT;
   ErrQy=sqrt(yBeamMultiplicity)/chargeToNPOT;
   fTargetRecoBeam->setCharge(Qx,ErrQx,Qy,ErrQy);
-
+  //std::cout<<" Qx set to "<<(fabs(Qx)+fabs(Qy))/2.<<" charge ToNPOT = "<<chargeToNPOT<<" "<<chargeToNPOT*(fabs(Qx)+fabs(Qy))/2.<<std::endl;
+   
 
 }
 

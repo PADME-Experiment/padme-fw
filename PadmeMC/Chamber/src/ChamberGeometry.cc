@@ -84,6 +84,7 @@ ChamberGeometry::ChamberGeometry()
   fBTFJunROut = 35.*mm;
   //fBTFJunLength = 95.*mm;
   fBTFJunLength = 113.*mm; // From Foggetta's drawings - EL 2019-04-15
+
   fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
   // Flange towards cross
   fBTFJunFFlgRIn = fBTFJunROut;
@@ -102,6 +103,7 @@ ChamberGeometry::ChamberGeometry()
   fBellowROut = 35.*mm;
   //fBellowLength = 184.*mm;
   fBellowLength = 150.*mm; // From Foggetta's drawings - EL 2019-04-15
+
   fBellowPosZ = fBTFJunPosZ-0.5*fBTFJunLength-0.5*fBellowLength;
   // Flange towards cross
   fBellowFFlgRIn = fBellowROut;

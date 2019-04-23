@@ -1,4 +1,5 @@
 #include "PadmeReconstruction.hh"
+#include "GlobalRecoConfigOptions.hh"
 
 #include "TPadmeRun.hh"
 #include "TRawEvent.hh"
@@ -62,9 +63,29 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeReconstructionConfiguration");
   
+  InitRunningModeFlags();
   InitLibraries();
   Init(NEvt,Seed);
 
+  fGlobalRecoConfigOptions=NULL;
+
+}
+void PadmeReconstruction::InitRunningModeFlags()
+{
+  Int_t flagR = fConfig->GetParOrDefault("RUNNINGMODE", "Reconstruct"   ,1);
+  Int_t flagC = fConfig->GetParOrDefault("RUNNINGMODE", "Cosmics"       ,0);
+  Int_t flagP = fConfig->GetParOrDefault("RUNNINGMODE", "Pedestals"     ,0);
+  Int_t flagM = fConfig->GetParOrDefault("RUNNINGMODE", "Monitor"       ,0);
+  Int_t flagD = fConfig->GetParOrDefault("RUNNINGMODE", "Debug"         ,1);
+  fGlobalRecoConfigOptions = new GlobalRecoConfigOptions();
+  fGlobalRecoConfigOptions->SetRunningMode(flagR, flagP, flagC, flagM, flagD);
+  std::cout<<"Global debug set to            = "<<fGlobalRecoConfigOptions->GetGlobalDebugMode()<<std::endl;
+  std::cout<<"Global running mode RECO       = "<<fGlobalRecoConfigOptions->IsRecoMode()<<std::endl;
+  std::cout<<"Global running mode COSMICS    = "<<fGlobalRecoConfigOptions->IsCosmicsMode()<<std::endl;
+  std::cout<<"Global running mode PEDESTALS  = "<<fGlobalRecoConfigOptions->IsPedestalMode()<<std::endl;
+  std::cout<<"Global running mode MONITOR    = "<<fGlobalRecoConfigOptions->IsMonitorMode()<<std::endl;
+
+  return;
 }
 
 PadmeReconstruction::~PadmeReconstruction()
@@ -279,6 +300,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
 Bool_t PadmeReconstruction::NextEvent()
 {
+  //  std::cout<<" and do we come here "<<std::endl; 
 
   // Check if there is a new event to process
   if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
@@ -346,8 +368,11 @@ Bool_t PadmeReconstruction::NextEvent()
     
   }
 
+  
   if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
+    //std::cout<<"Do we come here .... "<<std::endl;
+    
     if (fNProcessedEventsInTotal%100==0) {
       std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
       std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()

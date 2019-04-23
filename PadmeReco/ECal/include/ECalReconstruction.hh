@@ -22,9 +22,12 @@ public:
 
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
+  // void Init(PadmeVReconstruction* MainReco);
   //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   //  virtual void ProcessEvent(TRawEvent*);
+  void BuildHits(TRawEvent* rawEv);
   virtual void BuildClusters();
+  bool TriggerToBeSkipped();
   void BuildSimpleECalClusters();
   void BuildECalIslandRadiusClusters(Int_t type);
   //void BuildECalIslandClusters();

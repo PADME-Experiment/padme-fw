@@ -6,6 +6,10 @@
 #include "TObject.h"
 #include "TVector3.h"
 
+class GlobalRecoConfigOptions;
+typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
+
+
   /*
  //vertical Strips
  X2  X3  X4  X5
@@ -32,12 +36,13 @@
 
 class DigitizerChannelTarget : public ChannelVReco {
 public:
-  DigitizerChannelTarget(){;};
+  DigitizerChannelTarget();
   ~DigitizerChannelTarget(){;};
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
-  virtual void Init(PadmeVRecoConfig *cfg);
+  virtual void Init(PadmeVRecoConfig *cfg){return;}
+  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
@@ -87,6 +92,11 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
+
+  // Global and local running options
+  GlobalRecoConfigOptions* fGlobalMode;
+  LocalRecoConfigOptions*  fLocalMode;
+
 
   //Target variables
 

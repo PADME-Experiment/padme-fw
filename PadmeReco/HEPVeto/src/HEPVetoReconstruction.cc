@@ -140,7 +140,11 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   PadmeReconstruction* MainReco = (PadmeReconstruction*  ) fMainReco;
   
   
-  PadmeVReconstruction* PVetoReco = ( MainReco->FindReco("PVeto") );
+  PadmeVReconstruction* PVetoReco = NULL;
+  PVetoReco = MainReco->FindReco("PVeto") ;
+  if (PVetoReco==NULL)                  return;
+  if (MainReco->FindReco("ECal")==NULL) return;  
+  if (MainReco->FindReco("SAC")==NULL)  return;  
   
   vector<TRecoVHit *> &PVetoHits  = PVetoReco->GetRecoHits();
   
@@ -164,13 +168,14 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   double tECal2=0;
   double tPVeto=0;
   double tSAC=0;
+
   
   tECal1 = ECalTrig->GetTriggerTime(0,0);
   tECal2 = ECalTrig->GetTriggerTime(15,0);
   tPVeto = PVetoTrig->GetTriggerTime(11,0);
   if(SACTrig)  tSAC = SACTrig->GetTriggerTime(27,0);
   
-
+  
   GetHisto("TriggerTimeDiffECalECal")->Fill(tECal1 - tECal2);
   GetHisto("TriggerTimeDiffECalSAC"  )->Fill(tECal1 - tSAC );
   GetHisto("TriggerTimeDiffECalPVeto")->Fill(tECal1 - tPVeto);
@@ -221,7 +226,6 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   }
 
 
-  
   
 
   

@@ -55,7 +55,7 @@ int RecoVChannelID::scanChannelID(int index)
 	}
       //    cout << endl;
     }
-
+  return -1;
 }
 
 

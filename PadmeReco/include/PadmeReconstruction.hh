@@ -63,6 +63,7 @@ private:
 
   void InitDetectorsInfo();
   void InitLibraries();
+  void InitRunningModeFlags();
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 

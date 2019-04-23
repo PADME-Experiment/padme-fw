@@ -36,7 +36,7 @@ using namespace std;
 class TRecoEvent;
 class PadmeVClusterization;
 class PadmeVGeometry;
-
+class GlobalRecoConfigOptions;
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
@@ -48,6 +48,7 @@ public:
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void ProcessEvent(TRawEvent* = 0);
   virtual void ProcessEvent(TRecoVObject* =0, TRecoEvent* =0);
+  virtual bool TriggerToBeSkipped();
   virtual void ClearHits();
   virtual void ClearClusters();
   virtual void BuildHits(TRawEvent*);
@@ -59,6 +60,7 @@ public:
   virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
   virtual void Init(PadmeVReconstruction*);
+  //virtual void InitRunningModeFlags();
   virtual void EndProcessing(); ///< Call from derived classes
   virtual void ParseConfFile(TString);
   virtual void HistoInit(); 
@@ -66,6 +68,7 @@ public:
   virtual void AddHisto(string,TH1 *);
   virtual TH1* GetHisto(string);  
   static void Exception(TString);
+  GlobalRecoConfigOptions* GetGlobalRecoConfigOptions(){return fGlobalRecoConfigOptions;}
 
 public:
 
@@ -86,8 +89,32 @@ public:
 
   PadmeVTrigger *GetTriggerProcessor(){return fTriggerProcessor;};
 
+
   Bool_t writeHits(){return fWriteHits;}
   Bool_t writeClusters(){return fWriteClusters;}
+  /*
+  void  SetIsPedOn()     { fIsPed = true; }
+  void  SetIsPedOff()    { fIsPed = false; }
+  bool  GetIsPed()      { return fIsPed;}
+
+  void  SetIsRecoOn()    { fIsReco = true; }
+  void  SetIsRecoOff()   { fIsReco = false; }
+  bool  GetIsReco()      { return fIsReco;}
+
+  void  SetIsCosmicOn()  { fIsCosmic = true; }
+  void  SetIsCosmicOff() { fIsCosmic = false; }
+  bool  GetIsCosmic()    { return fIsCosmic;}
+
+  void  SetIsMonitorOn()  { fIsMonitor = true; }
+  void  SetIsMonitorOff() { fIsMonitor = false; }
+  bool  GetIsMonitor()    { return fIsMonitor;}
+
+  void  SetIsGlobalDebug(Int_t value) { fIsGlobalDebug = value; }
+  void  SetIsLocalDebug(Int_t value)  { fIsLocalDebug = value; }
+  Int_t GetIsGlobalDebug()  { return fIsGlobalDebug; }
+  
+  Int_t GetRunningMode() {return fRunningMode;}
+  */
 
   // Use to get an existing directory or create if not already made
   //TDirectory* GetOrMakeDir(TDirectory *inDir,TString dirName);	  
@@ -117,6 +144,17 @@ protected:
 
   Bool_t fWriteHits;
   Bool_t fWriteClusters;
+
+  GlobalRecoConfigOptions* fGlobalRecoConfigOptions;
+  /*
+  Bool_t fIsPed;
+  Bool_t fIsReco;
+  Bool_t fIsCosmic;
+  Bool_t fIsMonitor;
+  Int_t  fIsLocalDebug;
+  Int_t  fIsGlobalDebug;
+  Int_t  fRunningMode;
+  */
 
 };
 #endif

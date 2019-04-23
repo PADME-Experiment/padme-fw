@@ -26,7 +26,10 @@ public:
   double GetTimeBin(int ib,int ig);
 
   void SetTrigMask(UInt_t val) {fTrigMask = val;};
-  int GetTrigMask() {return fTrigMask;};
+  int GetTrigMask()      {return fTrigMask;};
+  bool IsBTFTrigger()    {return (fTrigMask==1);}
+  bool IsAutoTrigger()   {return (fTrigMask==128);}
+  bool IsCosmicsTrigger(){return (fTrigMask==2);}
 
 private:
   int fTriggerNumber;

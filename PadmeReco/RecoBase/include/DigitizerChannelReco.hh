@@ -2,7 +2,10 @@
 #define DIGITIZER_CHANNEL_RECO_H
 
 #include "ChannelVReco.hh"
+#include "GlobalRecoConfigOptions.hh"
 #include "utlConfigParser.hh"
+
+typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
 class DigitizerChannelReco : public ChannelVReco {
 public:
@@ -11,7 +14,8 @@ public:
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
-  virtual void Init(PadmeVRecoConfig *cfg);
+  virtual void Init(PadmeVRecoConfig *cfg){return ;}
+  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
@@ -61,7 +65,11 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
-  
+
+  //mode variables
+  GlobalRecoConfigOptions* fGlobalMode;
+  LocalRecoConfigOptions*  fLocalMode;
+
 
 };
 #endif

@@ -377,7 +377,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     int ich  = Hits[iHit1]->GetChannelId();
     int ElCh = ich/10*5 +ich%5;
     Energy  += Hits[iHit1]->GetEnergy(); //SAC total energy
-    ECh[ich]+= Hits[iHit1]->GetEnergy(); //SAC total energy
+    ECh[ElCh]+= Hits[iHit1]->GetEnergy(); //SAC total energy
     GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     GetHisto("SACOccupancy_last") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     //GetHisto("SACOccupancy") -> Fill(ich/10-2,ich%10+2);

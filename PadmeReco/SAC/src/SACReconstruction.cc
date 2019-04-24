@@ -234,10 +234,15 @@ void SACReconstruction::BuildSimpleSACClusters(){
     }
   }
 
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
+  // C++11 doesn't allow list initialization
+  // of variable-length array. In any case,
+  // we don't need to initialize here since
+  // every variable gets overridden.
+  Double_t cTime[Hits.size()]; //={0.};
+  Double_t cEnergy[Hits.size()]; //={0.};
+  Int_t cChID[Hits.size()]; //={0};
+  Int_t cUsed[Hits.size()]; //={0};
+  // This one can stay since NTotCh=50 is fixed.
   Int_t cCellUsed[50]={0};
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations

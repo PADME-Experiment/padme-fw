@@ -166,6 +166,14 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   //std::cout<<this->GetName()<<"::ProcessEvent  ........... "<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+
   PadmeVReconstruction::BuildHits(rawEv);
 
   // set geometry 

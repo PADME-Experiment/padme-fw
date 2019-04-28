@@ -69,9 +69,9 @@ void PadmeVTrigger::ProcessTrigger(int bID, TADCTrigger* tr){
   }
   */
   double Time = CalcTime(tr->GetSamplesArray());
-  if (Time < -100.) std::cout << "Trigger time NOT COMPUTED: (set to " << time << ") for Board: " << bID << " group gID:  "<< gID<<std::endl;
+  if (Time < -100.) std::cout << "Trigger time NOT COMPUTED: (set to " << Time << ") for Board: " << bID << " group gID:  "<< gID<<std::endl;
   fTriggerTime[std::make_pair(bID,gID)] = Time*GetTimeBin(bID,gID);
-  std::cout << "Processed trigger for Board: " << bID << " group gID:  "<< gID<<" trigger time = "<<Time*GetTimeBin(bID,gID)<<" time bin = "<<GetTimeBin(bID,gID)<<std::endl;;
+  //std::cout << "Processed trigger for Board: " << bID << " group gID:  "<< gID<<" trigger time = "<<Time*GetTimeBin(bID,gID)<<" time bin = "<<GetTimeBin(bID,gID)<<std::endl;;
 
 }
 
@@ -168,12 +168,18 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
     if (ss < 0 || ss > ns-1) continue;
     count++;
     //std::cout<<" search ... ss="<<ss<<" sample[ss]="<<sample[ss]<<" avg="<<avg<<std::endl;
-    if (sample[ss] > avg && sample[ss+1] < avg){
+    if (sample[ss] >= avg && sample[ss+1] < avg){
       time = ss + (sample[ss] - avg )/ (sample[ss] - sample[ss+1]);
     }
   }
 
-  //if (time < -100.) std::cout << "Trigger time NOT COMPUTED:  " << time << " search for Trigger time done over "<<count<<" samples"<<std::endl;
+  if (time < -100.) {
+    std::cout << "Trigger time NOT COMPUTED"<<std::endl;
+    std::cout << "Trigger time NOT COMPUTED: min, max, middle, imin, imax, imiddle, avg "<< min<<" "<<max<<" "<<middle<<" "
+	      <<imin<<" "<<imax<<" "<<imiddle<<" "<<avg<<std::endl;
+    std::cout << "unsuccessfull search for Trigger time done over "<<count<<" samples:"<<std::endl;
+    for (int ss = imiddle-20;ss < imiddle + 20; ss++ ) std::cout<<" sample "<<ss<<" value "<<sample[ss]<<std::endl;
+  }
   //else std::cout << "Trigger time:  " << time << std::endl;
 
   return time;

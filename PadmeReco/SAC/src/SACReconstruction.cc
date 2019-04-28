@@ -234,14 +234,22 @@ void SACReconstruction::BuildSimpleSACClusters(){
     }
   }
 
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
+  // Double_t cTime[Hits.size()]={0.};
+  // Double_t cEnergy[Hits.size()]={0.};
+  // Int_t cChID[Hits.size()]={0};
+  // Int_t cUsed[Hits.size()]={0};
+  Double_t   cTime[3000]={0.};
+  Double_t cEnergy[3000]={0.};
+  Int_t      cChID[3000]={0};
+  Int_t      cUsed[3000]={0};
   Int_t cCellUsed[50]={0};
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+    if (iHit1==3000) {
+      std::cout<<"SACReconstruction::BuildSimpleSACClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
+      break;
+    }
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();

@@ -112,22 +112,29 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
   }
 
   avgmax = 0.;
+  int count = 0;
   for (int ss = imiddle-20; ss >  imiddle - 100; ss--) {
+    if (ss < 0 || ss > ns-1) continue;
+    count++;
     avgmax+= sample[ss];
   } 
-  avgmax/=80.;
+  avgmax/=(double)count;
 
   
   avgmin = 0.;
+  count = 0;
   for (int ss = imiddle+20; ss <  imiddle + 100; ss++) {
+    if (ss < 0 || ss > ns-1) continue;
+    count++;
     avgmin+= sample[ss];
   } 
-  avgmin/=80.;
+  avgmin/=(double)count;
 
   avg = (avgmin + avgmax)/2.;
 
 
   for (int ss = imiddle-20;ss < imiddle + 20; ss++) {
+    if (ss < 0 || ss > ns-1) continue;
     if (sample[ss] > avg && sample[ss+1] < avg){
       time = ss + (sample[ss] - avg )/ (sample[ss] - sample[ss+1]);
     }

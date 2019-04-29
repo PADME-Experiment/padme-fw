@@ -234,10 +234,15 @@ void SACReconstruction::BuildSimpleSACClusters(){
     }
   }
 
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
+  // C++11 doesn't allow list initialization
+  // of variable-length array. In any case,
+  // we don't need to initialize here since
+  // every variable gets overridden.
+  Double_t cTime[Hits.size()]; //={0.};
+  Double_t cEnergy[Hits.size()]; //={0.};
+  Int_t cChID[Hits.size()]; //={0};
+  Int_t cUsed[Hits.size()]; //={0};
+  // This one can stay since NTotCh=50 is fixed.
   Int_t cCellUsed[50]={0};
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
@@ -377,7 +382,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     int ich  = Hits[iHit1]->GetChannelId();
     int ElCh = ich/10*5 +ich%5;
     Energy  += Hits[iHit1]->GetEnergy(); //SAC total energy
-    ECh[ich]+= Hits[iHit1]->GetEnergy(); //SAC total energy
+    ECh[ElCh]+= Hits[iHit1]->GetEnergy(); //SAC total energy
     GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     GetHisto("SACOccupancy_last") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     //GetHisto("SACOccupancy") -> Fill(ich/10-2,ich%10+2);

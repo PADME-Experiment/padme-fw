@@ -44,18 +44,26 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
 
-  //  G4cout << aStep->GetTrack()->GetMomentumDirection() << G4endl;
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-
+  if(aStep->GetTrack()->GetParentID()==0){ 
+    newHit->SetPrimary();
+  }else{
+    newHit->SetNotPrimary();
+  }
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
-    newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());
+    newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
     newHit->SetPosition(worldPosPre);
     newHit->SetLocalPosition(localPosPre);
+
+    //    std::cout<<"Evento strano "<<localPosPre<<std::endl;
+    //    if(abs(localPosPre.y())>0.00001){ 
+      //      std::cout<<"Evento strano "<<aStep->GetTrack()->GetParentID()<<" "<<std::endl; 
+    //    }
     fTargetCollection->insert(newHit);
   }
   return true;

@@ -186,6 +186,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
+      AddBeWHits((BeWHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   //int Ncells=0;
@@ -557,6 +559,48 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
+      G4bool IsPrimary = hit->IsPrimary(); //identify primary positrons
+      // computing angle at the entrance of the target using the directions of the particles:
+      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
+      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
+      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
+
+      //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      if(IsPrimary){
+	fHistoManager->FillHisto(60,hE);     // All hit energies
+	fHistoManager->FillHisto(61,htheta); // after the target
+	fHistoManager->FillHisto(62,hX);     // 
+	fHistoManager->FillHisto(63,hY);     // 
+	fHistoManager->FillHisto(64,hTrE);   // At the target entrance
+	
+	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+	fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+      }
+    }
+  }//end of loop
+  XTarget/=NTarget;
+  YTarget/=NTarget;
+}
+
+void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
+{
+  G4int nHits = hcont->entries();
+  for (G4int h=0; h<nHits; h++) {
+    BeWHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      EBeW += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
+      if (hit->GetTime()<TBeW) TBeW  = hit->GetTime();
+      XBeW += hit->GetX();
+      YBeW += hit->GetY();
+      NBeW++;
+
+      // Beam structure control histogras M. Raggi 2/04/2019
+      G4double hTime  = hit->GetTime();
+      G4double hE     = hit->GetEnergy();        // deposited energy
+      G4double hTrE   = hit->GetTrackEnergy();   // track energy
+      G4double hX     = hit->GetLocalPosX();
+      G4double hY     = hit->GetLocalPosY();
       // computing angle at the entrance of the target using the directions of the particles:
       G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
       // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
@@ -564,20 +608,39 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
 
       //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
 
-      fHistoManager->FillHisto(60,hE);     //60 has Target Histos
-      fHistoManager->FillHisto(61,htheta);  //60 has Target Histos
-      fHistoManager->FillHisto(62,hX);     //60 has Target Histos
-      fHistoManager->FillHisto(63,hY);     //60 has Target Histos
-      fHistoManager->FillHisto(64,hTrE);   //60 has Target Histos
+      fHistoManager->FillHisto(70,hE);     // All hit energies
+      fHistoManager->FillHisto(71,htheta); // after the target
+      fHistoManager->FillHisto(72,hX);     // 
+      fHistoManager->FillHisto(73,hY);     // 
+      fHistoManager->FillHisto(74,hTrE);   // At the target entrance
       
-      fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
-      fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-      fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+      fHistoManager->FillHisto2(75,hX,hY,1.);   //X vs Y local coordinates 
+      fHistoManager->FillHisto2(76,hX,hTrE,1.); //X vs Track energy
+      fHistoManager->FillHisto2(77,hX,htheta,1.); //X vs Track energy
     }
   }//end of loop
-  XTarget/=NTarget;
-  YTarget/=NTarget;
+  XBeW/=NBeW;
+  YBeW/=NBeW;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
@@ -934,7 +997,7 @@ G4double EventAction::GetCharge(G4double Energia)
 
 G4double EventAction::GGMass()
 {
-  double ECalPosiZ=3000.; //
+  double ECalPosiZ=-4000.; // sbagliato guarda nella geometria
   if(NClusters!=2)                        return -1;  // Need 2 clusters
   double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
   double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);

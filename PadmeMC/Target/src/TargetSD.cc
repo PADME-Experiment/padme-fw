@@ -47,7 +47,11 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-
+  if(aStep->GetTrack()->GetParentID()==0){ 
+    newHit->SetPrimary();
+  }else{
+    newHit->SetNotPrimary();
+  }
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());

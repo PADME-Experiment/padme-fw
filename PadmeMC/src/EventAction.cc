@@ -559,22 +559,24 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
+      G4bool IsPrimary = hit->IsPrimary(); //identify primary positrons
       // computing angle at the entrance of the target using the directions of the particles:
       G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
       // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
       G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
 
       //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-
-      fHistoManager->FillHisto(60,hE);     // All hit energies
-      fHistoManager->FillHisto(61,htheta); // after the target
-      fHistoManager->FillHisto(62,hX);     // 
-      fHistoManager->FillHisto(63,hY);     // 
-      fHistoManager->FillHisto(64,hTrE);   // At the target entrance
-      
-      fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
-      fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-      fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+      if(IsPrimary){
+	fHistoManager->FillHisto(60,hE);     // All hit energies
+	fHistoManager->FillHisto(61,htheta); // after the target
+	fHistoManager->FillHisto(62,hX);     // 
+	fHistoManager->FillHisto(63,hY);     // 
+	fHistoManager->FillHisto(64,hTrE);   // At the target entrance
+	
+	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+	fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+      }
     }
   }//end of loop
   XTarget/=NTarget;

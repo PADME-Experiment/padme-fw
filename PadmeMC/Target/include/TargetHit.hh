@@ -49,6 +49,11 @@ public:
   G4double GetPZ() { return fMomentumDirection.z(); };
   void SetPDir(G4ThreeVector pdir) {fMomentumDirection=pdir;}
 
+  void SetPrimary()    {fIsPrimary=true;}
+  void SetNotPrimary() {fIsPrimary=false;}
+
+  G4bool IsPrimary() {return fIsPrimary;}
+
   void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
   G4ThreeVector GetLocalPosition() { return fLocalPosition; }
   G4double GetLocalPosX() { return fLocalPosition.x(); };
@@ -72,7 +77,7 @@ private:
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
   G4ThreeVector fMomentumDirection; //M. Raggi 5/04/2019 added track energy
-
+  G4bool fIsPrimary; //M. Raggi 3/05/2019 true if it's a primary positron
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

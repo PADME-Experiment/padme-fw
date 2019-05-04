@@ -195,8 +195,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //    Double_t *xpeaks = s->GetPositionX();
     //    Double_t *ypeaks = s->GetPositionY();
     // ROOT 5 version
-    Float_t *xpeaks = s->GetPositionX();
-    Float_t *ypeaks = s->GetPositionY();
+    //    Float_t *xpeaks = s->GetPositionX();
+    //    Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
@@ -204,8 +204,10 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 //      Double_t xp   = xpeaks[ll];
 //      Double_t yp   = ypeaks[ll];
 // ROOT 5 version
-      Float_t xp   = xpeaks[ll];
-      Float_t yp   = ypeaks[ll];
+//      Float_t xp   = xpeaks[ll];
+//      Float_t yp   = ypeaks[ll];
+      Double_t xp   =s->GetPositionX()[ll];
+      Double_t yp   =s->GetPositionY()[ll];
       fTime = xp*fTimeBin; //convert time in ns get it from data
       Int_t bin    = H1->GetXaxis()->FindBin(xp);
       if(bin<1000){

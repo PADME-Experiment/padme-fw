@@ -283,9 +283,11 @@ void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv)
   
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
+    if (ADC==NULL) continue;
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
       //Loop over the trigger channels and perform reco
       UChar_t nTriggers  = ADC->GetNADCTriggers();
+      //std::cout<<"BuildTriggerInfo ..... nTriggers = "<<(unsigned int)nTriggers<<" to be processed in board "<<iBoard<<std::endl;
       for(Int_t iTr = 0; iTr<nTriggers;iTr++) {
 	TADCTrigger* trigger = ADC->ADCTrigger(iTr);
 	fTriggerProcessor->ProcessTrigger(ADC->GetBoardId(),trigger);
@@ -303,6 +305,7 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
   // use trigger info 
   if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
     BuildTriggerInfo(rawEv);
     if (TriggerToBeSkipped()) return;
   }
@@ -357,6 +360,7 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 
   UChar_t nBoards = rawEv->GetNADCBoards();
 
+  //std::cout<<"Prova nBoards = "<<(unsigned int)nBoards<<std::endl;
   TADCBoard* ADC;
 
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {

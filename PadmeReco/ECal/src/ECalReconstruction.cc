@@ -55,19 +55,16 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
   AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
   AddHisto("ECalChCharge",new TH1F("ECalChCharge","ECalChCharge",1001,0,100));
-  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,0,1000));
-
-
-
+  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,-200,800));
 
   AddHisto("ECALClPos",new TH2F("ECALClPos","ECALClPos",30,-15,15,30,-15,15));
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",200,0,1000));
-  AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",200,0,1000));
-  AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",200,0,1000));
-  AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",200,0,1000));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",500,-200,800));
+  AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
+  AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
+  AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));
   AddHisto("ECALETot",new TH1F("ECALETot","ECALETot",500,0,2500));
   AddHisto("ECALQTot",new TH1F("ECALQTot","ECALQTot",500,0,2500));
   AddHisto("ECALNPart",new TH1F("ECALNPart","ECALNPart",200,0,200));
@@ -77,7 +74,7 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALHitE",new TH1F("ECALHitE","ECALHitE",550,0,550));
 
   AddHisto("ECALRawClus",new TH1F("ECALRawClus","ECALRawClus",200,0,1000));
-  AddHisto("ECALClE",new TH1F("ECALClE","ECALClE",200,0,1000));
+  AddHisto("ECALClE",new TH1F("ECALClE","ECALClE",500,0,1000));
 
   AddHisto("ECALClNCry",new TH1F("ECALClNCry","ECALClNCry",30,0,30));
   AddHisto("ECALClTDiff",new TH1F("ECALClTDiff","ECALClTDiff",100,-10,10));
@@ -85,7 +82,6 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALClSeed",new TH1F("ECALClSeed","ECALClSeed",3000,0,3000));
   AddHisto("ECALClSeedEn",new TH1F("ECALClSeedEn","ECALClSeedEn",550,0,550));
   AddHisto("ECALNeig",new TH1F("ECALNeig","ECALNeig",9,-4.5,4.5));
-
 
   // new histograms from Mauro
   AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));

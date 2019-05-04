@@ -33,14 +33,15 @@ public:
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
+  void ResetPedestal();
 
   Short_t CalcMaximum();
   Double_t CalcPedestal();
-  Double_t ResetPedestal();
   Double_t CalcCharge(UShort_t);
   Double_t CalcChargeSin(UShort_t); //single hit pedestal M. Raggi 22/01/2019
   Double_t CalcTime(UShort_t);
   Double_t CalcTimeSing(UShort_t);
+  Double_t CalcTimeOver(UShort_t);
 
   //Standard hits corrections
   Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
@@ -70,7 +71,8 @@ public:
   void SaveBDPed(Int_t BID);
 
 
-  void OverSample4(Double_t *v, Double_t *o,Int_t n);
+  //  void OverSample4(Double_t *v, Double_t *o,Int_t n);
+  void OverSample4(Short_t *v, Double_t *o,Int_t n);
   Int_t GetStartTime(Double_t *v,Int_t nshift);
 
 private:
@@ -84,6 +86,7 @@ private:
   // Double_t fChargeSin;
   Double_t fTime;
   Double_t fTimeSin;
+  Double_t fTimeOv;
   UShort_t fNPedSamples;
 
   Int_t fChID;
@@ -121,12 +124,13 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
+  Bool_t fUseOverSample;
 
   
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;
-  std::map < std::pair<int,int>,double> fCalibMap;
-  std::map < std::pair<int,int>,double> fT0Map;
+  //  std::map < std::pair<int,int>,double> fCalibMap;   //moved into ECalCalibration class M. Raggi 19/04/2019
+  //  std::map < std::pair<int,int>,double> fT0Map;       //moved into ECalCalibration class M. Raggi 19/04/2019
 
   std::map < std::pair<int,int>,double> TempPedMap;
   std::map < std::pair<int,int>,double> TempMapCount;
@@ -165,8 +169,13 @@ private:
   TH1F * hTimeOv;
   TH1F * hSignal;
   TH1F * hSat;
-  TH1F * hSigOv;
   TH1F * hDiff;
+
+  TH1F * hSigOv;
+  TH1F * hSigOvSm;
+  TH1F * hdxdtSigOvSm;
+
+
 
   TH1D *  H1;
   TH1D *  H2;

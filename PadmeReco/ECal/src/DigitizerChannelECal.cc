@@ -14,12 +14,12 @@
 void DigitizerChannelECal::PrintConfig(){
   std::cout << "Hi I'm the ECal: " << std::endl;
   std::cout << "Signal width: "   << fSignalWidth << " samples" << std::endl;
-  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
+  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl; 
+  std::cout << "fUseOverSample: " << fUseOverSample << std::endl;  
 //  Int_t NBD=8;
 //  for(int i=0;i<32;i++){
 //    std::cout<<"Ped "<<i<<" "<<fPedMap[std::make_pair(NBD,i)]<<" "<<std::endl;
 //  }  
-
 
  if(fGlobalMode->GetGlobalDebugMode()!=0){
    std::cout<<"General Config Flags ECal Digi***************** "<<std::endl;
@@ -62,6 +62,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+  fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
@@ -70,14 +71,18 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     PrepareDebugHistos(); //debugging mode histos
   }else{
-    PrepareTmpHistos();  //Temp histos
+    PrepareTmpHistos();  //Temp histo
   }
 }
 void DigitizerChannelECal::PrepareTmpHistos(){
   hListTmp    = new TList();  
   hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
   hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
-  hListTmp->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
+  // over sampled histograms
+  Int_t nbinx=4096;
+  hListTmp->Add(hSigOv       = new TH1F("hSigOv","hSigOv",nbinx,0.,nbinx/4));
+  hListTmp->Add(hSigOvSm     = new TH1F("hSigOvSm","hSigOvSm",nbinx,0.,nbinx/4));
+  hListTmp->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOv","hdxdtSigOv",nbinx,0.,nbinx/4));
 }
 
 void DigitizerChannelECal::PrepareDebugHistos(){
@@ -106,14 +111,18 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
 
-  hListEv->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListEv->Add(hdxdt        = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListEv->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOvSm","hdxdtSigOvSm",1000,0.,1000.));
+
   hListEv->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
   hListEv->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
   hListEv->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
   hListEv->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
-  hListEv->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
-  hListEv->Add(hDiff   = new TH1F("hDiff","hDiff",4000,0.,1000.));
 
+  hListEv->Add(hSigOv   = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
+  hListEv->Add(hSigOvSm = new TH1F("hSigOvSm","hSigOvSm",4000,0.,1000.));
+  
+  hListEv->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
@@ -168,7 +177,7 @@ Double_t DigitizerChannelECal::CalcPedestal() {
 }
 
 // Cleans the pedestals map structure
-Double_t DigitizerChannelECal::ResetPedestal() {
+void DigitizerChannelECal::ResetPedestal() {
   std::cout<<"Cleaning Ecal pedestal map structure "<<std::endl;
   TempPedMap.clear();
   TempMapCount.clear();
@@ -295,14 +304,81 @@ Double_t DigitizerChannelECal::CalcCharge(UShort_t iMax) {
   return fCharge;
 }
 
+// try using oversampled histograms to improve time resolution
+Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
+  Double_t dxdt[4096];
+  Double_t Over4[4096];
+  Double_t Temp[4096];
+  Double_t Temp1[4096];
+  Int_t MaxSam = 4000;
+
+  // oversample the signal by factor 4 with linear interpolation
+  //  if(fGlobalMode->GetGlobalDebugMode()){
+  histo   = (TH1D*)  hListEv->FindObject("hdxdtSigOvSm");
+  histo1  = (TH1D*)  hListEv->FindObject("hSigOvSm");
+  histoOv = (TH1D*)  hListEv->FindObject("hSigOv");
+  OverSample4(fSamples,Over4,1001);    
+  for(Int_t kk=0;kk<MaxSam;kk++){
+    histoOv->SetBinContent(kk,Over4[kk]);
+  }
+  //  }
+  
+  Int_t npeaks=4;
+  Int_t nsmooth=5*4;
+  // Smooth the signal by averaging nsmooth samples 
+  for(Int_t ll=0;ll<MaxSam;ll++){
+    if(ll>nsmooth/2){
+    Temp[ll] =TMath::Mean(nsmooth,&Over4[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples on the oversampled histogram 
+    Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
+    }else{
+      Temp[ll]=0;
+      Temp1[ll]=0;
+    }
+    histo1->SetBinContent(ll,Temp1[ll]);
+    // compute raw derivative subracting samples
+    if(ll>iDer+nsmooth/2 && ll<2200){ 
+      dxdt[ll]=-(Temp[ll]-Temp[ll-iDer]);
+    }else{
+      dxdt[ll]=0;
+    }
+    histo->SetBinContent(ll,dxdt[ll]);
+    //  std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
+  }
+  Int_t Ch   = GetElChID();
+  Int_t BID  = GetBdID();
+
+  Int_t MaxBin = histo->GetMaximumBin();
+  Int_t Max    = histo->GetMaximum();
+  if(fGlobalMode->GetGlobalDebugMode()){  
+    hdxdtMax->Fill(Max);
+    hdxdtRMS->Fill(TMath::RMS(1000,&dxdt[0]));
+    if(Max>100) hTimeCut->Fill(fTimeSin);
+    hTime->Fill(fTimeSin);
+  }
+  fTimeOv = MaxBin/4*fTimeBin;   //convert the time back in ns
+  //  std::cout<<" MaxBin "<<MaxBin<<" Max "<<Max<<" "<<fTimeOv<<" "<<std::endl;
+
+  if(fGlobalMode->GetGlobalDebugMode()){
+    Double_t rnd=((double) rand() / (RAND_MAX));
+    if(rnd<0.02) hListEv->Write();
+  }
+
+  histo->Reset();
+  histo1->Reset();
+  histoOv->Reset();
+  return fTimeOv;
+}
+
+
+
 // first approximation timing algorithm to be optimized
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t ll;
   Double_t dxdt[1001];
   Double_t Temp[1001];
   Double_t Temp1[1001];
-  //  Short_t Over4[4096];
   Double_t Over4[4096];
+
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     histo   = (TH1D*)  hListEv->FindObject("hdxdt");
     histo1  = (TH1D*)  hListEv->FindObject("hSignal");
@@ -314,9 +390,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   }
   Int_t npeaks=4;
   Int_t nsmooth=5;
-///  for(ll>0;ll<nsmooth;ll++){
-///    dxdt[ll]=0;
-///  }
+  // Smooth the signal by averaging nsmooth samples 
   for(ll>0;ll<1001;ll++){
     if(ll>nsmooth/2){
     Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
@@ -337,12 +411,12 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
   // oversample the signal by factor 4 with linear interpolation
-  if(fGlobalMode->GetGlobalDebugMode()){
-    OverSample4(Temp1,Over4,1001);    
-    for(Int_t kk=0;kk<4004;kk++){
-      histoOv->SetBinContent(kk,Over4[kk]);
-    }
-  }
+//  if(fGlobalMode->GetGlobalDebugMode()){
+//    OverSample4(Temp1,Over4,1001);    
+//    for(Int_t kk=0;kk<4004;kk++){
+//      histoOv->SetBinContent(kk,Over4[kk]);
+//    }
+//  }
   Int_t Ch   = GetElChID();
   Int_t BID  = GetBdID();
 
@@ -462,8 +536,14 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
-  if(Zsup>5) HitT = CalcTimeSing(10);
+  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+  if(fUseOverSample){
+    //    std::cout<<" over sampled "<<std::endl;
+    if(Zsup>5) HitT = CalcTimeOver(40);
+  }else{
+    //    std::cout<<" NON over sampled "<<std::endl;
+    if(Zsup>5) HitT = CalcTimeSing(10);
+  } 
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(fTimeSin);
@@ -579,14 +659,15 @@ void DigitizerChannelECal::SaveDebugHistos(){
 
 
 // Increase the number of samples to 4Gs interpolating. M. Raggi preliminary needs tests 04/2019
-void DigitizerChannelECal::OverSample4(Double_t* v, Double_t* o, Int_t n) {
+//void DigitizerChannelECal::OverSample4(Double_t* v, Double_t* o, Int_t n) {
+void DigitizerChannelECal::OverSample4(Short_t* v, Double_t* o, Int_t n) {
   int j,k;
   double v1[2048];
   for (j=0;j<n;j++)
   {
      v1[2*j]=v[j];
      v1[2*j+1]=(v[j]+v[j+1])/2.;
-     //     std::cout<<j<<" "<<v[j]<<" "<<v1[j]<<std::endl;
+     // std::cout<<"Azz "<<j<<" "<<v[j]<<" "<<v1[j]<<std::endl;
   }
   v1[2*n]=v[n];
   for (j=0;j<2*n;j++){
@@ -596,7 +677,7 @@ void DigitizerChannelECal::OverSample4(Double_t* v, Double_t* o, Int_t n) {
   }
   o[4*n]=v1[2*n];
   for(k=0;k<4*n;k++){
-    // std::cout<<k<<" "<<v[k/4]<<" "<<o[k]<<std::endl;
+    //std::cout<<k<<" "<<v[k/4]<<" "<<o[k]<<std::endl;
   }
 }
 

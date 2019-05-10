@@ -86,7 +86,7 @@ void ECalReconstruction::HistoInit(){
   // new histograms from Mauro
   AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));
   AddHisto("ECALTDiffCos",new TH1F("ECALTDiffCos","ECALTDiffCos",200,-20,20));
-  AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",100,-10,10));
+  AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",1000,-125,125));
   AddHisto("EtotInner",new TH1F("EtotInner","EtotInner",550,-1000.,10000.));
   AddHisto("EtotOuter",new TH1F("EtotOuter","EtotOuter",550,-1000.,10000.));
   AddHisto("EtotMiddle",new TH1F("EtotMiddle","EtotMiddle",550,-1000.,10000.));
@@ -600,12 +600,14 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     cUsed[iHit1]  = {0};
     cTime[iHit1]  = Hits[iHit1]->GetTime();;
+
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
     if(cEnergy[iHit1]<fClEnThrForHit) {
       cUsed[iHit1]=1;
       //std::cout<<"cUsed changed in loop " << std::endl;
     }
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
+    //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
   }
 
   Int_t iMax=0;

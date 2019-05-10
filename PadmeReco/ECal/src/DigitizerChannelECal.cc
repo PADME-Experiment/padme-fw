@@ -36,14 +36,6 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 {
 // Setting flags for running modes.
   fGlobalMode = gOptions;
-  /*
-  fIsGlobalDebug = GetIsGlobalDebug();
-  fIsPed         = GetIsPed();
-  fIsReco        = GetIsReco();
-  fIsMonitor     = GetIsMonitor();
-  fIsCosmic      = GetIsCosmic();
-  */
-
   
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
@@ -68,21 +60,27 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   SetAnalogOffSets(); //M. Raggi: 21/01/2019  read anaolg offsets values from files
   PrintConfig();
+  PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     PrepareDebugHistos(); //debugging mode histos
-  }else{
-    PrepareTmpHistos();  //Temp histo
   }
+//else{
+//    PrepareTmpHistos();  //Temp histo
+//  }
 }
 void DigitizerChannelECal::PrepareTmpHistos(){
-  hListTmp    = new TList();  
-  hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
-  hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  hListTmp    = new TList();
+  if(!fUseOverSample){
+    hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+    hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  }
   // over sampled histograms
-  Int_t nbinx=4096;
-  hListTmp->Add(hSigOv       = new TH1F("hSigOv","hSigOv",nbinx,0.,nbinx/4));
-  hListTmp->Add(hSigOvSm     = new TH1F("hSigOvSm","hSigOvSm",nbinx,0.,nbinx/4));
-  hListTmp->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOv","hdxdtSigOv",nbinx,0.,nbinx/4));
+  Int_t nbinx=4000;
+  if(fUseOverSample){
+    hListTmp->Add(hSigOv       = new TH1F("hSigOv","hSigOv",nbinx,0.,nbinx/4));
+    hListTmp->Add(hSigOvSm     = new TH1F("hSigOvSm","hSigOvSm",nbinx,0.,nbinx/4));
+    hListTmp->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOvSm","hdxdtSigOvSm",nbinx,0.,nbinx/4));
+  }
 }
 
 void DigitizerChannelECal::PrepareDebugHistos(){
@@ -111,21 +109,13 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
 
-  hListEv->Add(hdxdt        = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
-  hListEv->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOvSm","hdxdtSigOvSm",1000,0.,1000.));
-
-  hListEv->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
-  hListEv->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
-  hListEv->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
   hListEv->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
-
-  hListEv->Add(hSigOv   = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
-  hListEv->Add(hSigOvSm = new TH1F("hSigOvSm","hSigOvSm",4000,0.,1000.));
-  
-  hListEv->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
+  //  hListEv->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
+  hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
+  hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
   
   for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
@@ -314,19 +304,19 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
   // oversample the signal by factor 4 with linear interpolation
   //  if(fGlobalMode->GetGlobalDebugMode()){
-  histo   = (TH1D*)  hListEv->FindObject("hdxdtSigOvSm");
-  histo1  = (TH1D*)  hListEv->FindObject("hSigOvSm");
-  histoOv = (TH1D*)  hListEv->FindObject("hSigOv");
+  histo   = (TH1D*)  hListTmp->FindObject("hdxdtSigOvSm");
+  histo1  = (TH1D*)  hListTmp->FindObject("hSigOvSm");
+  histoOv = (TH1D*)  hListTmp->FindObject("hSigOv");
   OverSample4(fSamples,Over4,1001);    
-  for(Int_t kk=0;kk<MaxSam;kk++){
+  for(Int_t kk=0;kk<=MaxSam;kk++){
     histoOv->SetBinContent(kk,Over4[kk]);
   }
-  //  }
+    //  }
   
   Int_t npeaks=4;
   Int_t nsmooth=5*4;
   // Smooth the signal by averaging nsmooth samples 
-  for(Int_t ll=0;ll<MaxSam;ll++){
+  for(Int_t ll=0;ll<=MaxSam-nsmooth/2;ll++){
     if(ll>nsmooth/2){
     Temp[ll] =TMath::Mean(nsmooth,&Over4[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples on the oversampled histogram 
     Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
@@ -349,27 +339,31 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
+  fTimeOv = (Double_t)MaxBin/4*fTimeBin;   //convert the time back in ns
+
   if(fGlobalMode->GetGlobalDebugMode()){  
     hdxdtMax->Fill(Max);
     hdxdtRMS->Fill(TMath::RMS(1000,&dxdt[0]));
-    if(Max>100) hTimeCut->Fill(fTimeSin);
-    hTime->Fill(fTimeSin);
+    if(Max>200) hTimeCut->Fill(fTimeOv);
+    hTimeOv->Fill(fTimeOv);
   }
-  fTimeOv = MaxBin/4*fTimeBin;   //convert the time back in ns
+
   //  std::cout<<" MaxBin "<<MaxBin<<" Max "<<Max<<" "<<fTimeOv<<" "<<std::endl;
+
 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.02) hListEv->Write();
+    if(rnd<0.02){ 
+      hListEv->Write();
+      hListTmp->Write();
+    }
   }
-
+  //  Int_t TOver4=GetStartTime(Over4,150);
   histo->Reset();
   histo1->Reset();
   histoOv->Reset();
   return fTimeOv;
 }
-
-
 
 // first approximation timing algorithm to be optimized
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
@@ -380,13 +374,11 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Double_t Over4[4096];
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
-    histo   = (TH1D*)  hListEv->FindObject("hdxdt");
-    histo1  = (TH1D*)  hListEv->FindObject("hSignal");
-    histoOv = (TH1D*)  hListEv->FindObject("hSigOv");
+    histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
   }else{
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
-    histoOv = (TH1D*)  hListTmp->FindObject("hSigOv");
   }
   Int_t npeaks=4;
   Int_t nsmooth=5;
@@ -401,8 +393,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     }
     histo1->SetBinContent(ll,Temp1[ll]);
     // compute raw derivative subracting samples
-    //    if(ll>iDer){ 
-    if(ll>iDer+nsmooth/2 && ll<550){ 
+       if(ll>iDer+nsmooth/2 && ll<550){ 
       dxdt[ll]=-(Temp[ll]-Temp[ll-iDer]);
     }else{
       dxdt[ll]=0;
@@ -410,13 +401,6 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo->SetBinContent(ll,dxdt[ll]);
     //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
-  // oversample the signal by factor 4 with linear interpolation
-//  if(fGlobalMode->GetGlobalDebugMode()){
-//    OverSample4(Temp1,Over4,1001);    
-//    for(Int_t kk=0;kk<4004;kk++){
-//      histoOv->SetBinContent(kk,Over4[kk]);
-//    }
-//  }
   Int_t Ch   = GetElChID();
   Int_t BID  = GetBdID();
 
@@ -428,50 +412,50 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     if(Max>100) hTimeCut->Fill(fTimeSin);
     hTime->Fill(fTimeSin);
   }
-  fTimeSin = MaxBin*fTimeBin; 
-  //  if(Max>30) std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
-
-  //  Int_t TOver4=GetStartTime(Over4,150);
+  fTimeSin = (Double_t)MaxBin*fTimeBin; 
+  //  if(Max>30) 
+  //  std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.02) hListEv->Write();
+    if(rnd<0.02){ 
+      hListEv ->Write();
+      hListTmp->Write();
+    }
   }
-  // TSPECTRUM search is too time consuming.
-  /*
-  if(Max>250){
-    TSpectrum *s = new TSpectrum(npeaks);
-    //  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
-    Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
-    //  std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-    //  // ROOT 6 version
-    //  //    Double_t *xpeaks = s->GetPositionX();
-    //  //    Double_t *ypeaks = s->GetPositionY();
-    //  // ROOT 5 version
-    //  Float_t *xpeaks = s->GetPositionX();
-    //  Float_t *ypeaks = s->GetPositionY();
-    //  //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-    //  for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-    //    // ROOT 6 version
-    //    //      Double_t xp   = xpeaks[ll];
-    //    //      Double_t yp   = ypeaks[ll];
-    //    // ROOT 5 version
-    //    Float_t xp   = xpeaks[ll];
-    //    Float_t yp   = ypeaks[ll];
-    //    fTimeSin = xp*fTimeBin; //convert time in ns get it from data
-    //    //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
-    //    hTime->Fill(fTimeSin);
-    //  }
-    //  histo->Fit("gaus");
-    //  std::cout<<"fTime "<<fTimeSin<<std::endl;
-    //  hTime->Write();
-  }
-  */
-  // if(fIsGlobalDebug!=0) histo->Write(); //use only with few events for debug
-  // if(fIsGlobalDebug!=0) histo1->Write();
+  //// TSPECTRUM search is too time consuming.
+  //double XBig=10000.;
+  //fTimeSin=XBig;
+  ////  if(Max>150){
+  //TSpectrum *s = new TSpectrum(npeaks);
+  ////  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
+  //Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
+  //// std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+  //// ROOT 6 version
+  ////    Double_t *xpeaks = s->GetPositionX();
+  ////    Double_t *ypeaks = s->GetPositionY();
+  //// ROOT 5 version
+  //Float_t *xpeaks = s->GetPositionX();
+  //Float_t *ypeaks = s->GetPositionY();
+  ////    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+  //for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
+  //  // ROOT 6 version
+  //  //      Double_t xp   = xpeaks[ll];
+  //  //      Double_t yp   = ypeaks[ll];
+  //  // ROOT 5 version
+  //  Float_t xp   = xpeaks[ll];
+  //  Float_t yp   = ypeaks[ll];
+  //  if(xp<fTimeSin) fTimeSin = xp*fTimeBin; //convert time in ns get it from data
+  //  //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
+  //  hTime->Fill(fTimeSin);
+  //}
+  //  histo->Fit("gaus");
+  //      std::cout<<"fTime "<<fTimeSin<<std::endl;
+  //     hTime->Write();
+  //  }
+  
   histo->Reset();
   histo1->Reset();
-  histoOv->Reset();
   return fTimeSin;
 }
 
@@ -539,14 +523,15 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if (fEnergy < 1.) return; //cut at 1 MeV nominal
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
-    if(Zsup>5) HitT = CalcTimeOver(40);
+    HitT = CalcTimeOver(40);
   }else{
     //    std::cout<<" NON over sampled "<<std::endl;
-    if(Zsup>5) HitT = CalcTimeSing(10);
+    HitT = CalcTimeSing(10);
   } 
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
-  Hit->SetTime(fTimeSin);
+  //  Hit->SetTime(fTimeSin);
+  Hit->SetTime(HitT);
   //  Hit->SetEnergy(fEnergy);
   Hit->SetEnergy(HitE200);
   hitArray.push_back(Hit);
@@ -731,7 +716,7 @@ Bool_t DigitizerChannelECal::IsSaturated(){
     if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListEv->FindObject("hSat"); // swt the debug flag.
     
     //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<"fPed "<<fPedMap[std::make_pair(BID,Ch)]<<std::endl;
-    for(int ll=1;ll<1001;ll++){
+    for(int ll=0;ll<1001;ll++){
       if(fSamples[ll]<5) nsat++;
       if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
     }

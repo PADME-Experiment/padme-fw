@@ -23,22 +23,21 @@ ECalCalibration::~ECalCalibration()
 void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalib    = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
+  ECalib.open("config/Calibration/ECalCalibConst.txt");
+  if(fUseCalib==1 && !ECalib.is_open()){ 
+    std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
+    exit(1);
+  }
   if(fUseCalib==1) ReadCalibConstant();
 }
 
 void ECalCalibration::ReadCalibConstant()
 {
-  std::ifstream ECalib; 
-  std::ifstream TCalib; 
-//  sprintf(fname,"config/BDPed/ECalCalibConst.txt",NBD);
-//  sprintf(fname,"config/BDPed/ECalT0.txt",NBD);
-  ECalib.open("config/Calibration/ECalCalibConst.txt");
-
   double MIPCharge;
   int NBD,CID;
   int row,col;
 
-  fMuonDepositedEnergy=18;
+  fMuonDepositedEnergy=17;
   fGlobEnScale=15;
   if(ECalib.is_open()){
     double temp;
@@ -46,15 +45,14 @@ void ECalCalibration::ReadCalibConstant()
       ECalib >> row >> col >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-check
       fCalibMap[std::make_pair(NBD,CID)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
       //      fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
-
-      std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(row,col)]<<std::endl;
+      std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
     }
     ECalib.close();
   } else{ 
       std::cout << "WARNING:: No calibration file available "<<std::endl;
   } 
 }
-
+ 
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
   if (fUseCalib == 1){
@@ -64,10 +62,13 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
       unsigned int ChID = Hits[iHit]->getCHid(); 
       // Correcting for different crystals response
       fHitE   = Hits[iHit]->GetEnergy();
-      fHitECalibrated= fHitE/fCalibMap[std::make_pair(BD,ChID)];
-      std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
-      Hits[iHit]->SetEnergy(fHitECalibrated);
-
+      if(fCalibMap[std::make_pair(BD,ChID)]!=0){ 
+	fHitECalibrated= fHitE/fCalibMap[std::make_pair(BD,ChID)];
+	Hits[iHit]->SetEnergy(fHitECalibrated);
+	//	std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
+      }else{
+	std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+      }
       // Correcting for time offestets in between channels
       fHitT          = Hits[iHit]->GetTime();
       fHitTCorrected = fHitT-fT0Map[std::make_pair(fBID,fChID)];

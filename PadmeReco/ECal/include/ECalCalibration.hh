@@ -26,7 +26,7 @@ private:
   Int_t     fUseCalib;
   Double_t  fGlobEnScale;
   Double_t  fMuonDepositedEnergy;
-
+  Bool_t fCalibFileFound;
 
   double fHitE;
   double fHitECalibrated;
@@ -37,6 +37,9 @@ private:
   double fCalibConst;
   double fBID;
   double fChID;
+
+  std::ifstream ECalib; 
+  std::ifstream TCalib; 
 
   std::map < std::pair<int,int>,double> fCalibMap;
   std::map < std::pair<int,int>,double> fT0Map;

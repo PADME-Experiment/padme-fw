@@ -17,7 +17,10 @@ ECalCalibration::ECalCalibration()
 }
 
 ECalCalibration::~ECalCalibration()
-{;}
+{
+  fT0Map.clear();
+  fCalibMap.clear();
+}
 
 
 void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){

@@ -23,7 +23,9 @@ public:
   void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
 
 private:
-  Int_t     fUseCalib;
+  Int_t     fUseCalibE;
+  Int_t     fUseCalibT;
+
   Double_t  fGlobEnScale;
   Double_t  fMuonDepositedEnergy;
   Bool_t fCalibFileFound;

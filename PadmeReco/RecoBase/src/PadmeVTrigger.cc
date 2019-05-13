@@ -58,10 +58,21 @@ void PadmeVTrigger::ProcessTrigger(int bID, TADCTrigger* tr){
   //  std::cout << "Board: " << bID << " gID:  " <<  gID  <<  "  frequency:  " <<  fSamplingFrequency.find(std::make_pair(bID,gID))->second << std::endl;
   //  std::cout << "Board: " << bID << " gID:  " <<  gID  <<  "  frequency:  " <<  fSamplingFrequency[std::make_pair(bID,gID)] << std::endl;
   
-
+  /*
+  if (bID==27 && gID==2) {
+    Short_t * sample = tr->GetSamplesArray();
+    for (unsigned int j=0; j<TADCTRIGGER_NSAMPLES; ++j)std::cout<<"dID 27; gID 2 sample @ "<<j<<" = "<<sample[j]<<std::endl;
+  }
+  if (bID==27 && gID==3) {
+    Short_t * sample = tr->GetSamplesArray();
+    for (unsigned int j=0; j<TADCTRIGGER_NSAMPLES; ++j)std::cout<<"dID 27; gID 3 sample @ "<<j<<" = "<<sample[j]<<std::endl;
+  }
+  */
   double Time = CalcTime(tr->GetSamplesArray());
+  if (Time < -100.) std::cout << "Trigger time NOT COMPUTED: (set to " << Time << ") for Board: " << bID << " group gID:  "<< gID<<std::endl;
   fTriggerTime[std::make_pair(bID,gID)] = Time*GetTimeBin(bID,gID);
-  
+  //std::cout << "Processed trigger for Board: " << bID << " group gID:  "<< gID<<" trigger time = "<<Time*GetTimeBin(bID,gID)<<" time bin = "<<GetTimeBin(bID,gID)<<std::endl;;
+
 }
 
 
@@ -83,7 +94,8 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
   int imin;
   int max;
   int imax;
-  double time;
+  double time=-10000.;
+  int imiddle=0;
 
   min = 4096;
   max = 0;
@@ -100,17 +112,34 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
     //    std::cout <<"sample[" << ss<< "]="  <<  sample[ss] << std::endl;    
   }
 
+  //std::cout<<"1)min, max, middle "<<min<<" "<<max<<" "<<middle<<" imin, imax, imiddle "<< imin <<" "<< imax <<" "<<imiddle<<std::endl;
+  if (imin<imax) {
+    //std::cout<<" since imin < imax look for another max"<<std::endl;
+    //The logic assumes that the signal starts high and then goes low.... the max must be found before the min
+    max=0;
+    for(int ss=0;ss<imin;ss++){
+      if(sample[ss] > max){
+	max = sample[ss];
+	imax = ss;
+      }
+    }
+  }
+
+  //std::cout<<"2)min, max, middle "<<min<<" "<<max<<" "<<middle<<" imin, imax, imiddle "<< imin <<" "<< imax <<" "<<imiddle<<std::endl;
   middle = (min*1. + max*1.)/2.;
   
-  int imiddle=0;
 
   for(int ss=0;ss<ns-1;ss++){
-    if(sample[ss] > middle && sample[ss+1]< middle  ){
+    //std::cout<<ss<<" bohhhh "<<sample[ss]<<" "<<middle<<sample[ss+1]<<std::endl;
+    if(sample[ss] > middle && sample[ss+1]<= middle  ){
       imiddle = ss;
+      //std::cout<<" imiddle = "<<imiddle<<std::endl;
       break;
     }    
   }
+  //std::cout<<"3)min, max, middle "<<min<<" "<<max<<" "<<middle<<" imin, imax, imiddle "<< imin <<" "<< imax <<" "<<imiddle<<std::endl;
 
+  
   avgmax = 0.;
   int count = 0;
   for (int ss = imiddle-20; ss >  imiddle - 100; ss--) {
@@ -118,9 +147,10 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
     count++;
     avgmax+= sample[ss];
   } 
-  avgmax/=(double)count;
-
-  
+  if (count > 0) avgmax/=(double)count;
+  //std::cout<<" avgmax = "<<avgmax<<" over ncounts ="<<count<<std::endl;
+ 
+  count=0;
   avgmin = 0.;
   count = 0;
   for (int ss = imiddle+20; ss <  imiddle + 100; ss++) {
@@ -128,19 +158,30 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
     count++;
     avgmin+= sample[ss];
   } 
-  avgmin/=(double)count;
-
+  if (count > 0) avgmin/=(double)count;
+  //std::cout<<" avgmin = "<<avgmin<<" over ncounts ="<<count<<std::endl;
+ 
   avg = (avgmin + avgmax)/2.;
+  //std::cout<<" avg = "<<avg<<std::endl;
 
-
+  count = 0;
   for (int ss = imiddle-20;ss < imiddle + 20; ss++) {
     if (ss < 0 || ss > ns-1) continue;
-    if (sample[ss] > avg && sample[ss+1] < avg){
+    count++;
+    //std::cout<<" search ... ss="<<ss<<" sample[ss]="<<sample[ss]<<" avg="<<avg<<std::endl;
+    if (sample[ss] >= avg && sample[ss+1] < avg){
       time = ss + (sample[ss] - avg )/ (sample[ss] - sample[ss+1]);
     }
   }
 
-  //  std::cout << "Trigger time:  " << time << std::endl;
+  if (time < -100.) {
+    std::cout << "Trigger time NOT COMPUTED"<<std::endl;
+    std::cout << "Trigger time NOT COMPUTED: min, max, middle, imin, imax, imiddle, avg "<< min<<" "<<max<<" "<<middle<<" "
+	      <<imin<<" "<<imax<<" "<<imiddle<<" "<<avg<<std::endl;
+    std::cout << "unsuccessfull search for Trigger time done over "<<count<<" samples:"<<std::endl;
+    for (int ss = imiddle-20;ss < imiddle + 20; ss++ ) std::cout<<" sample "<<ss<<" value "<<sample[ss]<<std::endl;
+  }
+  //else std::cout << "Trigger time:  " << time << std::endl;
 
   return time;
   

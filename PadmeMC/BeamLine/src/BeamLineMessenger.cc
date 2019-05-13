@@ -24,7 +24,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
 
   fBeamLineGeometry = BeamLineGeometry::GetInstance();
 
-  fBeamLineDir = new G4UIdirectory("/Detector/BeamLine");
+  fBeamLineDir = new G4UIdirectory("/Detector/BeamLine/");
   fBeamLineDir->SetGuidance("UI commands to control BeamLine setup");
 
   fEnableBeWindowCmd = new G4UIcmdWithABool("/Detector/BeamLine/Be_window",this);

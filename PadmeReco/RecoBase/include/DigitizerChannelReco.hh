@@ -33,12 +33,15 @@ private:
   //What do we operate
   UShort_t fNSamples;
   Short_t *fSamples;
-  Short_t fMax;
+  Short_t fMax; //Short_t = Signed Short integer 2 bytes (short)
   Short_t fIMax;
   Double_t fPed;
   Double_t fCharge;
   Double_t fTime;
   UShort_t fNPedSamples;
+
+  //Beth 14/5/19
+  Double_t fWaveform[1024];
 
   //Configuration variables
   Int_t fSignalWidth;
@@ -58,6 +61,8 @@ private:
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
+
+  Double_t fChargeCut; //added by Beth 19/4/19
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;

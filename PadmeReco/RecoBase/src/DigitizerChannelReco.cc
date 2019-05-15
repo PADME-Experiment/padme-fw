@@ -28,6 +28,8 @@ void DigitizerChannelReco::Init(PadmeVRecoConfig *cfg){
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+
+  fChargeCut      = cfg->GetParOrDefault("RECO","ChargeCut",0.001);//added by Beth 19/4/19
   
   
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
@@ -45,7 +47,7 @@ void DigitizerChannelReco::SetAbsSignals(){
  
 Short_t DigitizerChannelReco::CalcMaximum() {
 
-  fMax = 32767; // 2^15 - 1
+  fMax = 32767; // 2^15 - 1 signal amplitude in units of ADC
   
   for(UShort_t i = 0;i<fNSamples;i++){
     if (fMax > fSamples[i]) {
@@ -55,7 +57,6 @@ Short_t DigitizerChannelReco::CalcMaximum() {
   }
   return fMax;
 }
-
 
 Double_t DigitizerChannelReco::CalcPedestal() {
   fPed = 0.;
@@ -81,6 +82,22 @@ Double_t DigitizerChannelReco::CalcPedestal() {
 
   return fPed;
 }
+
+/*Double_t DigitizerChannelReco::CalcPedestal() {  //the pedestal is calculated using the first 200 samples //C&Ped by Beth from Federica O 15/5/19
+  fPed = 0.;
+  fNPedSamples = 0;
+  fPedMaxNSamples=200;
+
+  // average of first fPedMaxNSamples
+  for(Short_t i = 0 ; i  <   fPedMaxNSamples; i++) {
+       fNPedSamples ++;
+       fPed+= fSamples[i];
+  }
+  //std::cout << " fNPedSamples " << fNPedSamples <<" fPed Veto"<< std::endl;
+  fPed /= fNPedSamples;
+  //std::cout <<  fPed << " fNPedSamples " << fNPedSamples << std::endl;
+  return fPed;
+  }*/
 
 
 Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
@@ -175,15 +192,26 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  if (fCharge < .01) return;
+  if (fCharge < .01) return;//this is in nC, so it's = 10pC - big cut. Should be closer to 25 photo electrons*electron charge*CPM gain, so about 1pC or 0.001nC. Therefore a cut of 5pC Should also go within config file
   CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(fTime);
   // M. Raggi going to charge
-  Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
-  //  Hit->SetEnergy(fCharge);
+  Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV //This is for the ECal. If they were coded in the config file then you could have an independent value for each detector, instead of using this conversion for every detector
+  //  Double_t fEnergy = fMax;//Changed by Beth 19/4/19 to see what the effect of the charge calculation is on the Occupancy of the PVeto. Original, pre-19/4/19 is commented out in the line above
+  //Double_t fEnergy = fPed-fMax; //Changed by Beth 24/4/19 again to see what the effect of the charge calculation is on the Occupancy of the PVeto, using maximum amplitude (with pedestal subtracted) as a calculation of energy
+  //  Double_t fEnergy = fPed; // Changed by Beth 6/5/19 to inspect pedestals. Now (8/5/19) obsolete since hit pedestal can be accessed directly, thanks to changing the persistency in TRecoVHit.hh  
+//  Hit->SetEnergy(fCharge);
   Hit->SetEnergy(fEnergy);
+  Hit->SetPed(fPed);
+  Hit->SetCharge(fCharge);
+  Hit->SetAmplitude(fPed-fMax);
+
+  for(UShort_t i = 0;i<fNSamples;i++){
+    Hit->SetWaveform(i,fSamples[i]);
+  }
+
   hitArray.push_back(Hit);
 
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
@@ -203,6 +231,7 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
 
   CalcMaximum();
   CalcPedestal();
+
   if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
 
   if(fMultihit) {
@@ -213,6 +242,3 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   // std::cout << "Maximum: " << fMax << "  at position: "<< fIMax << std::endl;
   // std::cout << "Pedestal: " << fPed << "  from: " << fNPedSamples << " samples"<< std::endl;
 }
-
-
-

@@ -55,13 +55,13 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
   AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
   AddHisto("ECalChCharge",new TH1F("ECalChCharge","ECalChCharge",1001,0,100));
-  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,-200,800));
+  //  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,-200,800));
 
   AddHisto("ECALClPos",new TH2F("ECALClPos","ECALClPos",30,-15,15,30,-15,15));
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",500,-200,800));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
   AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
   AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
   AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));
@@ -343,7 +343,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     double tempo = Hits[iHit1]->GetTime();
 
     //    std::cout << "ECal time:  "<< tempo << "  "  << ich << std::endl;
-    if (tempo > 0) ((TH1F *) GetHisto("ECalTime")) -> Fill(tempo);
+    ((TH1F *) GetHisto("ECALTime")) -> Fill(tempo);
     if(ix > 14 && iy > 14) q1+= Hits[iHit1]->GetEnergy();
     if(ix < 14 && iy < 14) q3+= Hits[iHit1]->GetEnergy();
     if(ix < 14 && iy > 14) q2+= Hits[iHit1]->GetEnergy();

@@ -26,7 +26,6 @@ ECalCalibration::~ECalCalibration()
 void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
-
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
 
   // Energy calibration 
@@ -54,7 +53,7 @@ void ECalCalibration::ReadCalibConstant()
   int NBD,CID;
   int row,col;
 
-  fMuonDepositedEnergy=17.4;
+  fMuonDepositedEnergy=17.5;
   fGlobEnScale=15;
 
   //Read Energy calibration constants

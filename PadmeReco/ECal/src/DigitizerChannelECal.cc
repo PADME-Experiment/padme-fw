@@ -55,6 +55,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
+  fIntCorrection = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
@@ -109,8 +110,8 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
 
-  hListEv->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
-  //  hListEv->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
+  hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
+  //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
@@ -132,6 +133,15 @@ void DigitizerChannelECal::PrepareDebugHistos(){
     hListCal->Add(hQCh[kk]); //CT
   }
 
+}
+
+void DigitizerChannelECal::SaveDebugHistos(){
+  fileOut->cd();
+  hListCal->Write(); //use it in monitor mode only  
+  ECal->Write();
+  // fileOut->Write();
+  //  hListCal->ls();
+  fileOut->Close();
 }
 
 void DigitizerChannelECal::SetAbsSignals(){
@@ -354,7 +364,7 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
     if(rnd<0.02){ 
-      hListEv->Write();
+      //      hListEv->Write();
       hListTmp->Write();
     }
   }
@@ -406,54 +416,59 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
 
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
+  fTimeSin = (Double_t)MaxBin*fTimeBin; 
+
+  //  if(Max>30) 
+  //  std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
+
+//  //// TSPECTRUM search is too time consuming.
+ // double XBig=10000.;
+ // fTimeSin=XBig;
+ // if(Max>100){
+ //   TSpectrum *s = new TSpectrum(npeaks);
+ //   //  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
+ //   Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
+ //   // std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+ //   // ROOT 6 version
+ //   //    Double_t *xpeaks = s->GetPositionX();
+ //   //    Double_t *ypeaks = s->GetPositionY();
+ //   // ROOT 5 version
+ //   Float_t *xpeaks = s->GetPositionX();
+ //   Float_t *ypeaks = s->GetPositionY();
+ //   //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+ //   for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
+ //     // ROOT 6 version
+ //     //      Double_t xp   = xpeaks[ll];
+ //     //      Double_t yp   = ypeaks[ll];
+ //     // ROOT 5 version
+ //     Float_t xp   = xpeaks[ll];
+ //     Float_t yp   = ypeaks[ll];
+ //     if(xp<fTimeSin) fTimeSin = xp*fTimeBin; //convert time in ns get it from data
+ //     //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
+ //   }
+ // }
+
   if(fGlobalMode->GetGlobalDebugMode()){  
     hdxdtMax->Fill(Max);
     hdxdtRMS->Fill(TMath::RMS(1000,&dxdt[0]));
     if(Max>100) hTimeCut->Fill(fTimeSin);
     hTime->Fill(fTimeSin);
   }
-  fTimeSin = (Double_t)MaxBin*fTimeBin; 
-  //  if(Max>30) 
-  //  std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
-
+ 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
     if(rnd<0.02){ 
-      hListEv ->Write();
+      //      hListEv ->Write();
       hListTmp->Write();
     }
   }
-  //// TSPECTRUM search is too time consuming.
-  //double XBig=10000.;
-  //fTimeSin=XBig;
-  ////  if(Max>150){
-  //TSpectrum *s = new TSpectrum(npeaks);
-  ////  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
-  //Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
-  //// std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-  //// ROOT 6 version
-  ////    Double_t *xpeaks = s->GetPositionX();
-  ////    Double_t *ypeaks = s->GetPositionY();
-  //// ROOT 5 version
-  //Float_t *xpeaks = s->GetPositionX();
-  //Float_t *ypeaks = s->GetPositionY();
-  ////    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-  //for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-  //  // ROOT 6 version
-  //  //      Double_t xp   = xpeaks[ll];
-  //  //      Double_t yp   = ypeaks[ll];
-  //  // ROOT 5 version
-  //  Float_t xp   = xpeaks[ll];
-  //  Float_t yp   = ypeaks[ll];
-  //  if(xp<fTimeSin) fTimeSin = xp*fTimeBin; //convert time in ns get it from data
-  //  //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
-  //  hTime->Fill(fTimeSin);
-  //}
+
+
+//  hTime->Fill(fTimeSin);
   //  histo->Fit("gaus");
-  //      std::cout<<"fTime "<<fTimeSin<<std::endl;
-  //     hTime->Write();
-  //  }
-  
+  // std::cout<<"fTime "<<fTimeSin<<std::endl;
+  //  hTime->Write();
+ 
   histo->Reset();
   histo1->Reset();
   return fTimeSin;
@@ -528,6 +543,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     //    std::cout<<" NON over sampled "<<std::endl;
     HitT = CalcTimeSing(10);
   } 
+  if(fIntCorrection){ 
+    Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
+    //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
+    HitE200 /= QIntCorr; //correct for non integrated charge
+    //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
+  }
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   //  Hit->SetTime(fTimeSin);
@@ -633,15 +654,24 @@ void DigitizerChannelECal::SaveBDPed(Int_t BID){
   cout.close();
 }
 
-void DigitizerChannelECal::SaveDebugHistos(){
-  fileOut->cd();
-  hListCal->Write(); //use it in monitor mode only  
-  ECal->Write();
-  // fileOut->Write();
-  //  hListCal->ls();
-  fileOut->Close();
+// M. Raggi 15/05/2019
+// Provides correct amount of deposited charge correcting for shorter integration 
+// window in the digitizer due to different hit arrival time. 
+// Be carefull if the arrival time is wrong you will get worst charge determination 
+Double_t DigitizerChannelECal::CorrectIntegrationTime(Double_t TStart,Double_t TStop){
+  Double_t CorrectedCharge=0;
+  Double_t IntWindowEnd=1000.; //ns 
+  Double_t IntWindowWdt=0.;    //ns 
+  Double_t tau=300.;    //BGO decay time in ns need tuning
+  IntWindowWdt=IntWindowEnd-TStart;   // compute the effective integration window
+  //  Double_t Correction =( (tau)*exp(-0./tau)-(tau)*exp(-IntWindowWdt/tau) )/tau;
+  Double_t Correction = exp(-0./tau)-exp(-IntWindowWdt/tau);
+  CorrectedCharge=fCharge/Correction;
+  //  std::cout<<"Hit Energy "<<fCharge<<" Hit Time "<<TStart<<" TWind "<<IntWindowWdt<<std::endl;
+  //  std::cout<<"All time   "<<(tau)*exp(-0./tau)-(tau)*exp(-3000/tau)<<" fraction "<<Correction<<" QCorr "<<CorrectedCharge<<std::endl;
+  //  std::cout<<" fraction "<<Correction<<" QCorr "<<CorrectedCharge<<std::endl;
+  return Correction;
 }
-
 
 // Increase the number of samples to 4Gs interpolating. M. Raggi preliminary needs tests 04/2019
 //void DigitizerChannelECal::OverSample4(Double_t* v, Double_t* o, Int_t n) {
@@ -670,7 +700,7 @@ void DigitizerChannelECal::OverSample4(Short_t* v, Double_t* o, Int_t n) {
 Int_t DigitizerChannelECal::GetStartTime(Double_t* v, Int_t nshift) {
   //  Int_t nshift = 6;
   Int_t bins=950*4;
-  histoDiff = (TH1D*) hListEv->FindObject("hDiff");
+  histoDiff = (TH1D*) hListTmp->FindObject("hDiff");
   Double_t orig[4*1024];
   Double_t shift[4*1024];
   Double_t diff[4*1024];
@@ -713,7 +743,7 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   //  if(min < 5 || max>5050){ 
   if(min < 5){ 
     IsSaturated=true;
-    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListEv->FindObject("hSat"); // swt the debug flag.
+    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
     
     //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<"fPed "<<fPedMap[std::make_pair(BID,Ch)]<<std::endl;
     for(int ll=0;ll<1001;ll++){

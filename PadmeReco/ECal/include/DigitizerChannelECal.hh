@@ -47,6 +47,7 @@ public:
   Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
   Bool_t   IsSaturated();   // Check if the signal is saturated
   Double_t CorrectSaturation(UShort_t); // Correct saturated signals
+  Double_t CorrectIntegrationTime(Double_t TStart,Double_t TStop); // Corrects for charge outside integration window
 
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
 
@@ -125,6 +126,7 @@ private:
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
   Bool_t fUseOverSample;
+  Bool_t fIntCorrection;
 
   
   Double_t fPedCh[32];//Adc channel pedestals

@@ -182,6 +182,7 @@ void SACReconstruction::BuildClusters()
   else if (fClusterizationAlgo==2) PadmeVReconstruction::BuildClusters();
   return;   
 }
+
 void SACReconstruction::BuildSimpleSACClusters(){
 
   //std::cout<<"In SACBuildClusters "<<std::endl;
@@ -280,12 +281,12 @@ void SACReconstruction::BuildSimpleSACClusters(){
       if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
 	//std::cout<<"is neig "<<iHit1<<std::endl;
 	clusMatrix[NSeeds][NCry]=iHit1;
-	Double_t XCl=(60.-cChID[iHit1]/10*30.);
-	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
+	Double_t XCl=(60.-cChID[iHit1]/10*30.);  //verificato con la mappa.
+	Double_t YCl=(-60.+cChID[iHit1]%10*30.); //verificato con la mappa.
 	cUsed[iHit1]=1;
-	ClTime[NSeeds]+=cTime[iHit1];
-	ClE[NSeeds]+=cEnergy[iHit1];
-	ClX[NSeeds]+=XCl*cEnergy[iHit1];
+	ClTime[NSeeds]+=cTime[iHit1];   // questo pesa tutto uguale
+	ClE[NSeeds]+=cEnergy[iHit1];    // questo deve essere calibrato prima.
+	ClX[NSeeds]+=XCl*cEnergy[iHit1]; // deve essere calibrata E
 	ClY[NSeeds]+=YCl*cEnergy[iHit1];
 	NCry++;
 	HitUsed++;
@@ -401,6 +402,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     }
   }
 
+
   ClNCry.clear();
   ClTime.clear();
   ClE.clear();
@@ -453,7 +455,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(UChar_t b=0;b<nBoards;b++)// Loop over boards
   {
     TADCBoard* adcB = rawEv->ADCBoard(b);
-    if(adcB->GetBoardId()!=27)continue; //should correspond to SAC board ;
+    if(adcB->GetBoardId()!=27) continue; //should correspond to SAC board ;
     UChar_t nChn       = adcB ->GetNADCChannels(  );
     
 

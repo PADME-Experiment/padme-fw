@@ -375,7 +375,7 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
   return fTimeOv;
 }
 
-// first approximation timing algorithm to be optimized
+// first approximation timing algorithm to be optimized  M. Raggi
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t ll;
   Double_t dxdt[1001];
@@ -530,12 +530,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   IsSaturated(); //check if the event is saturated M. Raggi 03/2019
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
-  if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
-  if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   
-  // M. Raggi going to energy with Nominal Calibration
-  Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  if (fEnergy < 1.) return; //cut at 1 MeV nominal
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
     HitT = CalcTimeOver(40);
@@ -543,6 +538,14 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     //    std::cout<<" NON over sampled "<<std::endl;
     HitT = CalcTimeSing(10);
   } 
+
+  if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
+  if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
+
+  // M. Raggi going to energy with Nominal Calibration
+  Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
+  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+
   if(fIntCorrection){ 
     Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
     //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
@@ -551,9 +554,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   }
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
-  //  Hit->SetTime(fTimeSin);
   Hit->SetTime(HitT);
-  //  Hit->SetEnergy(fEnergy);
   Hit->SetEnergy(HitE200);
   hitArray.push_back(Hit);
   if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
@@ -607,7 +608,14 @@ void DigitizerChannelECal::SetAnalogOffSets(){
 }
 
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
-  std::cout<<"Not yet implemented "<<std::endl;   
+  std::cout<<"************************ RUNNING ECAL MULTI HIT RECONSTRUCTION *****************"<<std::endl;   
+  std::cout<<"************************  V1 M. Raggi 16/05/2019               *****************"<<std::endl;   
+
+  Double_t IsZeroSup = ZSupHit(5.,1000.);
+  IsSaturated(); //check if the event is saturated M. Raggi 03/2019
+  if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
+  fTrig = GetTrigMask();
+
 }
 
 void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){

@@ -79,6 +79,7 @@ class ADCBoard:
 
         # Default DAQ control parameters
         self.daq_loop_delay = 100000
+        self.debug_scale = 100
         self.file_max_duration = 900
         self.file_max_size = 1024*1024*1024
         self.file_max_events = 100000
@@ -141,6 +142,7 @@ class ADCBoard:
                 elif (p_name == "drs4corr_enable"): self.drs4corr_enable = int(p_value,0)
                 elif (p_name == "drs4_sampfreq"): self.drs4_sampfreq = int(p_value,0)
                 elif (p_name == "daq_loop_delay"): self.daq_loop_delay = int(p_value,0)
+                elif (p_name == "debug_scale"): self.debug_scale = int(p_value,0)
                 elif (p_name == "file_max_duration"): self.file_max_duration = int(p_value,0)
                 elif (p_name == "file_max_size"): self.file_max_size = int(p_value,0)
                 elif (p_name == "file_max_events"): self.file_max_events = int(p_value,0)
@@ -177,7 +179,7 @@ class ADCBoard:
     def format_config_daq(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
         cfgstring += "executable\t\t%s\n"%self.executable
         cfgstring += "start_file\t\t%s\n"%self.start_file
@@ -223,6 +225,7 @@ class ADCBoard:
         cfgstring += "drs4_sampfreq\t\t%d\n"%self.drs4_sampfreq
 
         cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
+        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         cfgstring += "auto_threshold\t\t%#04x\n"%self.auto_threshold
         cfgstring += "auto_duration\t\t%d\n"%self.auto_duration
@@ -232,7 +235,7 @@ class ADCBoard:
     def format_config_zsup(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
         cfgstring += "executable\t\t%s\n"%self.executable
 
@@ -269,6 +272,8 @@ class ADCBoard:
             for ch in range(32):
                 if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
                     cfgstring += "zs2_minrms_ch\t%d\t%f\n"%(ch,self.zs2_minrms_ch[ch])
+
+        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         return cfgstring
 
@@ -348,6 +353,7 @@ class ADCBoard:
         self.db.add_cfg_para_daq(self.proc_daq_id,"drs4_sampfreq",      repr(self.drs4_sampfreq))
 
         self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
+        self.db.add_cfg_para_daq(self.proc_daq_id,"debug_scale",        repr(self.debug_scale))
 
         self.db.add_cfg_para_daq(self.proc_daq_id,"auto_threshold",     "%#04x"%self.auto_threshold)
         self.db.add_cfg_para_daq(self.proc_daq_id,"auto_duration",      repr(self.auto_duration))
@@ -398,6 +404,8 @@ class ADCBoard:
             for ch in range(32):
                 if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
                     self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms_ch",  "%d %d"%(ch,self.zs2_minrms_ch[ch]))
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"debug_scale",        repr(self.debug_scale))
 
         return "ok"
 

@@ -9,7 +9,8 @@ class G4ChordFinder;
 class G4Mag_UsualEqRhs;
 class G4MagIntegratorStepper;
 
-class MagneticFieldMap;
+//class MagneticFieldMap;
+#include "MagneticFieldMap.hh"
 //class MagneticFieldMessenger;
 
 ///  A class for setting up the Magnetic Field

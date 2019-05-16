@@ -306,7 +306,7 @@ int main(int argc, char* argv[])
   unsigned int nADCClockReset; // Number of ADC clock resets since last trigger
   unsigned int nEOR, trigEOR;
   unsigned int NumberOfEvents = 0;
-  unsigned int EventStatus; // Event status: only lower 16bits are used
+  unsigned short int EventStatus = 0;
   unsigned int MissingADCBoards; // Bit mask of ADC boards missing in current event
   //struct timespec sys_time;
   //long int old_sys_time_ns = 0;
@@ -498,6 +498,14 @@ int main(int argc, char* argv[])
       }
     }
 
+    // Add autopass bit to event status (0: autopass OFF, 1: autopass ON)
+    if (! trigger->GetTriggerAuto()) { // autopass bit from trigger board is inverted: 0:ON, 1:OFF
+      EventStatus |= (1 << EVENT_V03_STATUS_AUTOPASS_BIT);
+    } else {
+      EventStatus &= ( ~(1 << EVENT_V03_STATUS_AUTOPASS_BIT) );
+    }
+
+
     // Send all data to next Level1 process
 
     // Merging time is counted from the first in-time event
@@ -601,8 +609,9 @@ int main(int argc, char* argv[])
 
     // Count event
     NumberOfEvents++;
-    if (NumberOfEvents%100 == 0) {
-      printf("- Written %7u events - Time %ld.%03ld\n",NumberOfEvents,now.tv_sec,now.tv_nsec/1000000);
+    if (NumberOfEvents%100 == 0) printf("- Written %u events\n",NumberOfEvents);
+    if (NumberOfEvents%cfg->DebugScale() == 0) {
+      printf("  Event %7u size %7u time %10lu.%09lus clock %10llu status %04x trigger mask %02x fifo %02x auto %02x missing boards %08x\n",NumberOfEvents,total_event_size,now.tv_sec,now.tv_nsec,trig_clock,EventStatus,trigger->GetTriggerMask(),trigger->GetTriggerFifo(),trigger->GetTriggerAuto(),MissingADCBoards);
     }
 
   } // End of main while loop

@@ -67,6 +67,16 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fChamberInvisibleCmd->SetGuidance("Make vacuum chamber invisible.");
   fChamberInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //M. Raggi 07/03/2019
+  fBeamLineVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetBeamLineVisible",this);
+  fBeamLineVisibleCmd->SetGuidance("Make BeamLine visible.");
+  fBeamLineVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //M. Raggi 07/03/2019
+  fBeamLineInvisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetBeamLineInvisible",this);
+  fBeamLineInvisibleCmd->SetGuidance("Make Beam Line invisible.");
+  fBeamLineInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fWorldIsAirCmd = new G4UIcmdWithoutParameter("/Detector/WorldIsAir",this);
   fWorldIsAirCmd->SetGuidance("Fill world (and magnetic volume) with air.");
   fWorldIsAirCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -93,6 +103,8 @@ DetectorMessenger::~DetectorMessenger()
   delete fSetMagFieldValueCmd;
   delete fChamberVisibleCmd;
   delete fChamberInvisibleCmd;
+  delete fBeamLineVisibleCmd;   //M. Raggi 07/03/2019
+  delete fBeamLineInvisibleCmd; //M. Raggi 07/03/2019
   delete fWorldIsAirCmd;
   delete fWorldIsVacuumCmd;
 }
@@ -119,6 +131,10 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if( command == fChamberVisibleCmd )   fDetector->ChamberIsVisible();
   if( command == fChamberInvisibleCmd ) fDetector->ChamberIsInvisible();
+
+  if( command == fBeamLineVisibleCmd )   fDetector->BeamLineIsVisible(); //M. Raggi 07/03/2019
+  if( command == fBeamLineInvisibleCmd ) fDetector->BeamLineIsInvisible(); //M. Raggi 07/03/2019
+
 
   if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
   if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();

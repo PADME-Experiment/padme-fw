@@ -41,8 +41,9 @@ class Run:
         # Define directory containing setup subdirectories
         self.setup_root_dir = "%s/setup"%self.daq_dir
 
-        # Define file where the current run name will be written
+        # Define files where the current and last run name will be written
         self.current_run_file = "%s/run/current_run"%self.daq_dir
+        self.last_run_file = "%s/run/last_run"%self.daq_dir
 
         # Define directory containing rawdata directories for each run
         self.rawdata_root_dir = self.daq_dir+"/local/rawdata"
@@ -212,7 +213,7 @@ class Run:
                 (p_name,p_value) = m.group(1,2)
                 if (p_name == "boardid_list"):
                     # Get sorted list of board ids while removing duplicates
-                    s_boards = sorted(list(set(re_boardid.findall(p_value))))
+                    s_boards = sorted(list(set(re_boardid.findall(p_value))),key=int)
                     for s_bid in s_boards:
                         # Convert to int as findall returns strings
                         self.boardid_list.append(int(s_bid))
@@ -251,14 +252,14 @@ class Run:
         cfgstring = ""
 
         cfgstring += "user_account\t\t%s\n"%self.user_account
-        cfgstring += "daq_dir\t\t%s\n"%self.daq_dir
+        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
         cfgstring += "base_port_number\t\t%s\n"%self.base_port_number
         cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
 
         cfgstring += "daq_executable\t\t%s\n"%self.daq_executable
-        cfgstring += "trigger_executable\t\t%s\n"%self.trigger_executable
-        cfgstring += "merger_executable\t\t%s\n"%self.merger_executable
-        cfgstring += "level1_executable\t\t%s\n"%self.level1_executable
+        cfgstring += "trigger_executable\t%s\n"%self.trigger_executable
+        cfgstring += "merger_executable\t%s\n"%self.merger_executable
+        cfgstring += "level1_executable\t%s\n"%self.level1_executable
 
         cfgstring += "start_file\t\t%s\n"%self.start_file
         cfgstring += "quit_file\t\t%s\n"%self.quit_file
@@ -271,7 +272,7 @@ class Run:
 
         cfgstring += "run_number\t\t%d\n"%self.run_number
         cfgstring += "run_name\t\t%s\n"%self.run_name
-        cfgstring += "run_dir\t\t%s\n"%self.run_dir
+        cfgstring += "run_dir\t\t\t%s\n"%self.run_dir
         cfgstring += "run_type\t\t%s\n"%self.run_type
         cfgstring += "run_user\t\t%s\n"%self.run_user
         cfgstring += "run_comment_start\t%s\n"%self.run_comment_start
@@ -920,6 +921,9 @@ class Run:
                 command = "ssh -n -i %s %s '( touch %s )'"%(self.ssh_id_file,self.daq_nodes_ip_list[node_id],self.quit_file)
                 print command
                 os.system(command)
+
+        # Write run name to last_run file for monitoring
+        with open(self.last_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
 
     def clean_up(self):
 

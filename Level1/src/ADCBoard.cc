@@ -688,6 +688,9 @@ int ADCBoard::UnpackEvent_v03()
     if ( channel_mask & (0x1 << ic) ) {
       for(int is=0;is<ADCEVENT_NSAMPLES;is++){
 	fADCEvent->SetADCChannelSample( ic,is,(Short_t)((((UInt_t*)fBuffer)[cursor+is/2] >> (16*(is%2))) & 0xFFFF) );
+	//Short_t sample = (Short_t)((((UInt_t*)fBuffer)[cursor+is/2] >> (16*(is%2))) & 0xFFFF); // DEBUG
+	//if (sample<0 || sample>4095) printf("\tsample %d\n",sample); // DEBUG
+	//fADCEvent->SetADCChannelSample(ic,is,sample); // DEBUG
       }
       // Shift cursor to next channel
       cursor += (ADCEVENT_NSAMPLES/2 + ADCEVENT_NSAMPLES%2);

@@ -1,5 +1,4 @@
 #include "MagneticFieldSetup.hh"
-
 //#include "G4UniformMagField.hh"
 //#include "G4MagneticField.hh"
 #include "G4FieldManager.hh"
@@ -20,7 +19,7 @@
 #include "G4RKG3_Stepper.hh"
 #include "G4SystemOfUnits.hh"
 
-#include "MagneticFieldMap.hh"
+//#include "MagneticFieldMap.hh"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -29,22 +28,21 @@
 MagneticFieldSetup::MagneticFieldSetup()
   : fChordFinder(0), fLocalChordFinder(0), fStepper(0)
 {
-
   fMagneticField = new MagneticFieldMap();
-
+  
   //fFieldMessenger = new MagneticFieldMessenger(this) ;  
-
+  
   //fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   fLocalEquation = new G4Mag_UsualEqRhs(fMagneticField); 
- 
+  
   fMinStep     = 0.25*mm; // minimal step of 1 mm is default
   fStepperType = 4;       // ClassicalRK4 is default stepper
-
+  
   fFieldManager = GetGlobalFieldManager();
   fLocalFieldManager = new G4FieldManager();
-
+  
   UpdateField();
-
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////

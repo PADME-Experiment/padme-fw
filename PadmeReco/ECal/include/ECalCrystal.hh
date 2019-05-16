@@ -18,10 +18,12 @@ class ECalCrystal {
   Double_t GetEnergy()  {return fEnergy;}
   Double_t GetTime()    {return fTime;}	
   Double_t GetCharge()  {return fCharge;}
+  Int_t    GetHitIndex(){return fHitIndex;}
 
   void SetEnergy(Double_t e)   { fEnergy=e; }
   void SetTime(Double_t t)     { fTime=t; }	
   void SetCharge(Double_t cha) { fCharge=cha; }
+  void SetHitIndex(Int_t i)    { fHitIndex=i; }
 
   Double_t GetXCenter() { return fXCenter; }
   Double_t GetYCenter() { return fYCenter; }
@@ -42,6 +44,7 @@ class ECalCrystal {
 
  private:
 
+  Int_t fHitIndex;	 
   Int_t fXi;	 
   Int_t fYi;
 

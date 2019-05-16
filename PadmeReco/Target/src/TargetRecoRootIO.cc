@@ -20,7 +20,7 @@ TargetRecoRootIO::TargetRecoRootIO()
   fEvent = new TTargetRecoEvent();
   fBeam  = new TTargetRecoBeam();
   fFitEvent = new TTargetFitEvent();
-  std::cout<<"fFitEvent created at <"<<fFitEvent<<">"<<std::endl;
+  fClusColl = NULL;
 
   TTree::SetBranchStyle(fBranchStyle);
 
@@ -33,18 +33,30 @@ TargetRecoRootIO::~TargetRecoRootIO()
 
 void TargetRecoRootIO::SaveEvent()
 {
+  //std::cout<<" in TargetRootIO::SaveEvent"<<std::endl;
+  RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+
   // Save  branch Target (collection of hits)
   RecoVRootIO::SaveEvent();
 
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) ioMgr->GetReconstruction()->FindReco(this->GetName());
   TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
-  
+
+  if ( Reco->writeTargetBeam() )
+    {
   // Save branch TargetBeam (beam parameters from the Target)
-  TTargetRecoBeam* tBeam=Reco->getRecoBeam();
-  fBeam=tBeam;
+      TTargetRecoBeam* tBeam=Reco->getRecoBeam();
+      fBeam=tBeam;
+  //std::cout<<" in TargetRootIO::SaveEvent after beam "<<std::endl;
+    }
+  /*
+  TTargetRecoEvent* myEvent = (TTargetRecoEvent*)fEvent;
+  myEvent->setTargetRecoBeam(tBeam);  
+  */
 
   // Save branch TargetFitEvent (WF fit parameters)
-  SaveTargetFitEvent();
+  if (Reco->writeFitParams()) SaveTargetFitEvent();
+  //std::cout<<" in TargetRootIO::SaveEvent after fit"<<std::endl;
 
 }
 void TargetRecoRootIO::SaveTargetFitEvent(){
@@ -71,21 +83,30 @@ void TargetRecoRootIO::NewRun(Int_t nRun, TFile* hfile){
   std::cout<<this->GetName()<<"::NewRun"<<std::endl;
   // Book  branch Target (collection of hits)
   RecoVRootIO::NewRun(nRun, hfile);
-    
-  std::cout<<this->GetName()<<"::NewRun - digit branch setup ... now moving to Target specific branches"<<std::endl;
-  fEventTree = RecoRootIOManager::GetInstance()->GetEventTree();
+  std::cout<<this->GetName()<<"::NewRun - recoHit branch setup ... now moving to Target specific branches"<<std::endl;
+
+  RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) ioMgr->GetReconstruction()->FindReco(this->GetName());
+  TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
+
+
+  fEventTree = ioMgr->GetEventTree();
   std::cout<<this->GetName()<<"::NewRun - pointer to the tree obtained: "<<fEventTree<<std::endl;
 
+  
   // Book branch TargetBeam (beam parameters from the Target)
-  fBranchTargetRecoBeam = fEventTree->Branch("TargetBeam", fBeam->IsA()->GetName(), &fBeam);
-  std::cout<<this->GetName()<<"::NewRun - branch TargetBeam obtained"<<std::endl;
-  fBranchTargetRecoBeam->SetAutoDelete(kFALSE);
-  std::cout<<this->GetName()<<"::NewRun - branch TargetBeam autodelete set to false"<<std::endl;
+  if (Reco->writeTargetBeam()) {
+    fBranchTargetRecoBeam = fEventTree->Branch("TargetBeam", fBeam->IsA()->GetName(), &fBeam);
+    std::cout<<this->GetName()<<"::NewRun - branch TargetBeam obtained"<<std::endl;  
+    fBranchTargetRecoBeam->SetAutoDelete(kFALSE);
+    std::cout<<this->GetName()<<"::NewRun - branch TargetBeam autodelete set to false"<<std::endl;
+  }
 
   // Book branch TargetFitEvent (WF fit parameters)
-  fBranchTargetFitEvent = fEventTree->Branch("TargetFitEvent", fFitEvent->IsA()->GetName(), &fFitEvent);
-  std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent obtained"<<std::endl;
-  fBranchTargetFitEvent->SetAutoDelete(kFALSE);
-  std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent autodelete set to false"<<std::endl;
-  
+  if (Reco->writeFitParams()) {
+    fBranchTargetFitEvent = fEventTree->Branch("TargetFitEvent", fFitEvent->IsA()->GetName(), &fFitEvent);
+    std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent obtained"<<std::endl;
+    fBranchTargetFitEvent->SetAutoDelete(kFALSE);
+    std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent autodelete set to false"<<std::endl;
+  }
 }

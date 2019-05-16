@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
 import os
+import re
 import sys
+import time
 import daemon
 import getopt
 import subprocess
@@ -17,14 +19,20 @@ sites_list = [ "ALL", "DAQ", "LNF", "CNAF", "KLOE" ]
 source_sites_list = [ "DAQ", "LNF", "CNAF" ]
 destination_sites_list = [ "LNF", "CNAF", "KLOE" ]
 
+# Define list of years of data taking
+years_list = [ "2018", "2019" ]
+
 def print_help():
-    print 'PadmeCDR [-S src_site -D dst_site] [-L site] [-s data_srv] [-i] [-h]'
+    print 'PadmeCDR [-S src_site -D dst_site] [-L site] [-s data_srv] [-Y year] [-a after] [-b before] [-i] [-h]'
     print '  -S src_site     Source site %s'%source_sites_list
     print '  -D dst_site     Destination site %s'%destination_sites_list
     print '  -L site         Get list of files at site %s'%sites_list
     print '                  ALL will compare content of all sites (SLOW!)'
     print '  -s data_srv     Data server from which data are copied %s'%data_servers_list
     print '                  N.B. -s is only used when -S/-L is DAQ'
+    print '  -Y year         Specify year of data taking to copy. Default: current year'
+    print '  -a after_date   Only transfer runs collected after specified date (included). Format: yyyymmdd. Default: no limit'
+    print '  -b before_date  Only transfer runs collected before specified date (included). Format: yyyymmdd. Default: no limit'
     print '  -i              Run the PadmeCDR server in interactive mode'
     print '  -h              Show this help message and exit'
 
@@ -35,15 +43,18 @@ def main(argv):
     cdr_dir = os.getenv('PADME_CDR_DIR',".")
 
     try:
-        opts,args = getopt.getopt(argv,"iS:D:L:s:h")
+        opts,args = getopt.getopt(argv,"iS:D:L:s:Y:a:b:h")
     except getopt.GetoptError:
         print_help()
         sys.exit(2)
 
+    year = time.strftime("%Y",time.gmtime())
     data_server = ""
     source_site = ""
     destination_site = ""
     list_site = ""
+    date_after = ""
+    date_before = ""
     serverInteractive = False
     for opt,arg in opts:
         if opt == '-h':
@@ -57,8 +68,20 @@ def main(argv):
             destination_site = arg
         elif opt == '-L':
             list_site = arg
+        elif opt == '-Y':
+            year = arg
+        elif opt == '-a':
+            date_after = arg
+        elif opt == '-b':
+            date_before = arg
         elif opt == '-i':
             serverInteractive = True
+
+    # Check if year is permitted
+    if (not year in years_list):
+        print "ERROR - Requested year",year,"is not available. Use one of",years_list
+        print_help()
+        sys.exit(2)
 
     # Check if either -L or -S/-D was specified
     if ( list_site and (source_site or destination_site) ):
@@ -72,6 +95,16 @@ def main(argv):
             print "ERROR - Data server",data_server,"is unknown. Use one of",data_servers_list
         else:
             print "ERROR - You must specify one data server from",data_servers_list
+        print_help()
+        sys.exit(2)
+
+    # Check if date interval was specified with the correct format
+    if ( date_after != "" and not re.match("\d\d\d\d\d\d\d\d",date_after) ):
+        print "ERROR - Start date (-a) has wrong format: %s",date_after
+        print_help()
+        sys.exit(2)
+    if ( date_before != "" and not re.match("\d\d\d\d\d\d\d\d",date_before) ):
+        print "ERROR - End date (-b) has wrong format: %s",date_before
         print_help()
         sys.exit(2)
 
@@ -120,11 +153,10 @@ def main(argv):
             sys.exit(2)
 
         if serverInteractive:
-            PadmeCDRServer(source_site,destination_site,data_server,"i")
+            PadmeCDRServer(source_site,destination_site,data_server,year,date_after,date_before,"i")
         else:
             print "Starting PadmeCDRServer in background"
-            with daemon.DaemonContext(working_directory="."): PadmeCDRServer(source_site,destination_site,data_server,"d")
-
+            with daemon.DaemonContext(working_directory="."): PadmeCDRServer(source_site,destination_site,data_server,year,date_after,date_before,"d")
 
 # Execution starts here
 if __name__ == "__main__":

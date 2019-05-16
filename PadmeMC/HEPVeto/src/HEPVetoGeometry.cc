@@ -17,6 +17,21 @@ HEPVetoGeometry* HEPVetoGeometry::GetInstance()
 
 HEPVetoGeometry::HEPVetoGeometry()
 {
+
+  // HEPVeto box includes all the fingers, the T-shaped bars with the square holes for the fingers
+  // and the vertical support structure
+  fHEPVetoSizeX = 215.0*mm; // Need info from Cesidio
+  // Two possible sizes of the vertical support structure: which one is used?
+  //fHEPVetoSizeY = 198.0*mm; // Long fingers
+  fHEPVetoSizeY = 190.0*mm; // Short fingers
+  fHEPVetoSizeZ =  37.3*mm; // Need info from Cesidio
+
+  // Position along X of center of first finger wrt border of T-shaped support
+  fFirstFingerDistX = 25.0*mm; // Need info from Cesidio
+
+  // Position along Z of center of fingers wrt border of vertical support
+  fFingersDistZ = 21.9*mm; // Need info from Cesidio
+
   // Size of scintillator fingers
   fFingerSizeX =  1.*cm;
   fFingerSizeY = 17.8*cm;  // raw correction M. Raggi needs Drawing
@@ -34,14 +49,17 @@ HEPVetoGeometry::HEPVetoGeometry()
   // Step between HEPVeto fingers
   fFingerStep = 11.*mm;
 
-  // Distance from the corner on the back wall of the vacuum chamber and
-  // the projection of the center of the external face of the first finger
-  // of HEPVeto on the external surface of the diagonal wall of the vacuum chamber.
+  // Distance between back face of the vertical support and the internal wall of the vacuum chamber
+  fHEPVetoDistanceToChamberWall = 0.; // Need info from Cesidio
+
+  // Distance from the corner on the back wall of the vacuum chamber to the border of
+  // the T-shaped support bars
   // Tune this to move HEPVeto along the diagonal wall of the vacuum chamber
-  fHEPVetoDistanceToCorner = 43.*cm;
+  // Position of center of beam exit hole (400mm) is used as reference.
+  fHEPVetoDistanceToCorner = 400.0*mm;
 
   // Thickness of the support structure between HEPVeto and diagonal wall of the vacuum chamber
-  fHEPVetoSupportThickness = 1.*cm; // Check with final design
+  //fHEPVetoSupportThickness = 1.*cm; // Check with final design
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   // This value will be modified by main program according to actual chamber measures
@@ -67,22 +85,17 @@ HEPVetoGeometry::~HEPVetoGeometry()
 void HEPVetoGeometry::UpdateDerivedMeasures()
 {
 
-  // Size of HEPVeto box
-  fHEPVetoSizeX = fFingerSizeX+1.*cm; // This takes into account the pedestal to hold the fingers
-  fHEPVetoSizeY = fFingerSizeY+1.*cm; // This takes into account the pedestal to hold the fingers
-  fHEPVetoSizeZ = fFingerStep*fHEPVetoNFingers;
-
   // Angle of the rotation of HEPVeto around the Y axis
-  fHEPVetoRotY = 90.*deg-fHEPVetoChamberWallAngle;
+  fHEPVetoRotY = -fHEPVetoChamberWallAngle;
 
   // Position of center of HEPVeto box
   fHEPVetoPosX = fHEPVetoChamberWallCorner.x()
-    +(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeZ)*cos(fHEPVetoChamberWallAngle)
-    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*sin(fHEPVetoChamberWallAngle);
+    +(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeX)*cos(fHEPVetoChamberWallAngle)
+    -(fHEPVetoChamberWallThickness+fHEPVetoDistanceToChamberWall+0.5*fHEPVetoSizeZ)*sin(fHEPVetoChamberWallAngle);
   fHEPVetoPosY = 0.;
   fHEPVetoPosZ = fHEPVetoChamberWallCorner.z()
-    -(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeZ)*sin(fHEPVetoChamberWallAngle)
-    -(fHEPVetoChamberWallThickness+fHEPVetoSupportThickness+0.5*fHEPVetoSizeX)*cos(fHEPVetoChamberWallAngle);
+    -(fHEPVetoDistanceToCorner+0.5*fHEPVetoSizeX)*sin(fHEPVetoChamberWallAngle)
+    -(fHEPVetoChamberWallThickness+fHEPVetoDistanceToChamberWall+0.5*fHEPVetoSizeZ)*cos(fHEPVetoChamberWallAngle);
 
 }
 
@@ -93,7 +106,8 @@ G4double HEPVetoGeometry::GetFingerPosX(G4int idx)
     printf("HEPVetoGeometry::GetFingerPosX - ERROR - Requested finger at index %d\n",idx);
     return 0.;
   }
-  return 0;
+  //return 0;
+  return -0.5*fHEPVetoSizeX+fFirstFingerDistX+idx*fFingerStep;
 }
 
 G4double HEPVetoGeometry::GetFingerPosY(G4int idx)
@@ -113,7 +127,36 @@ G4double HEPVetoGeometry::GetFingerPosZ(G4int idx)
     printf("HEPVetoGeometry::GetFingerPosZ - ERROR - Requested finger at index %d\n",idx);
     return 0.;
   }
-  return 0.5*fHEPVetoSizeZ-(idx+0.5)*fFingerStep;
+  //return 0.5*fHEPVetoSizeZ-(idx+0.5)*fFingerStep;
+  return 0.5*fHEPVetoSizeZ-fFingersDistZ;
+}
+
+void HEPVetoGeometry::SetHEPVetoChamberWallAngle(G4double a)
+{
+  printf("HEPVetoGeometry - Setting ChamberWallAngle to %5.1f deg\n",a/deg);
+  fHEPVetoChamberWallAngle = a;
+  UpdateDerivedMeasures();
+}
+
+void HEPVetoGeometry::SetHEPVetoChamberWallThickness(G4double t)
+{
+  printf("HEPVetoGeometry - Setting ChamberWallThickness to %4.1f mm\n",t/mm);
+  fHEPVetoChamberWallThickness = t;
+  UpdateDerivedMeasures();
+}
+
+void HEPVetoGeometry::SetHEPVetoDistanceToCorner(G4double d)
+{
+  printf("HEPVetoGeometry - Setting DistanceToCorner to %5.1f mm\n",d/mm);
+  fHEPVetoDistanceToCorner = d;
+  UpdateDerivedMeasures();
+}
+
+void HEPVetoGeometry::SetHEPVetoChamberWallCorner(G4ThreeVector c)
+{
+  printf("HEPVetoGeometry - Setting ChamberWallCorner coordinates to (%.1f,%.1f,%.1f) mm\n",c.x()/mm,c.y()/mm,c.z()/mm);
+  fHEPVetoChamberWallCorner = c;
+  UpdateDerivedMeasures();
 }
 
 std::vector<G4String> HEPVetoGeometry::GetHashTable()

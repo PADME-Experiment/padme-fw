@@ -306,18 +306,18 @@ class RunControlServer:
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_setup_list\tShow list of available setups
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_setup_list\t\t\tShow list of available setups
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process <b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process <b>
-get_trig_config\tShow current configuration of trigger process
-get_run_number\tReturn last run number in DB
-change_setup <setup>\tChange run setup to <setup>
-new_run\t\tInitialize system for a new run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_run_number\t\t\tReturn last run number in DB
+change_setup <setup>\t\tChange run setup to <setup>
+new_run\t\t\t\tInitialize system for a new run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
             else:
 
@@ -374,20 +374,20 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
-get_trig_config\tShow current configuration of trigger process
-get_trig_log\tGet name of log file for trigger process
-get_run_number\tReturn current run number
-start_run\t\tStart run
-abort_run\t\tAbort run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_trig_log\t\t\tGet name of log file for trigger process
+get_run_number\t\t\tReturn current run number
+start_run\t\t\t\tStart run
+abort_run\t\t\t\tAbort run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -449,19 +449,19 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "exit"
             elif (cmd == "help"):
                 msg = """Available commands:
-help\t\tShow this help
-get_state\tShow current state of RunControl
-get_setup\tShow current setup name
-get_board_list\tShow list of boards in use with current setup
+help\t\t\t\tShow this help
+get_state\t\t\tShow current state of RunControl
+get_setup\t\t\tShow current setup name
+get_board_list\t\t\tShow list of boards in use with current setup
 get_board_config_daq <b>\tShow current configuration of board DAQ process<b>
 get_board_config_zsup <b>\tShow current configuration of board ZSUP process<b>
 get_board_log_file_daq <b>\tGet name of log file for board DAQ process<b>
 get_board_log_file_zsup <b>\tGet name of log file for board ZSUP process<b>
-get_trig_config\tShow current configuration of trigger process
-get_trig_log\tGet name of log file for trigger process
-get_run_number\tReturn current run number
-stop_run\t\tStop the run
-shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
+get_trig_config\t\t\tShow current configuration of trigger process
+get_trig_log\t\t\tGet name of log file for trigger process
+get_run_number\t\t\tReturn current run number
+stop_run\t\t\t\tStop the run
+shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 self.send_answer(msg)
 
             else:
@@ -595,6 +595,9 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         if self.run.change_setup(setup) == "error":
             print "RunControlServer::change_setup - ERROR while loading new setup %s"%setup
             return "error"
+
+        print "change_setup - saving new setup %s to %s\n"%(setup,self.lus_file)
+        with open(self.lus_file,"w") as lf: lf.write("%s\n"%setup)
 
         return setup
 
@@ -743,7 +746,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
         p_id = self.run.trigger.start_trig()
         if p_id:
             print "Trigger - Started with process id %d"%p_id
-            self.send_answer("trigger ready")
+            self.send_answer("trigger init")
         else:
             print "Trigger - ERROR: could not start process"
             self.send_answer("trigger fail")
@@ -754,7 +757,7 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_zsup()
             if p_id:
                 print "ADC board %02d - Started ZSUP with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc %d zsup_ready"%adc.board_id)
+                self.send_answer("adc %d zsup_init"%adc.board_id)
             else:
                 print "ADC board %02d - ERROR: could not start ZSUP"%adc.board_id
                 self.send_answer("adc %d zsup_fail"%adc.board_id)
@@ -766,15 +769,37 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             p_id = adc.start_daq()
             if p_id:
                 print "ADC board %02d - Started DAQ with process id %d"%(adc.board_id,p_id)
-                self.send_answer("adc %d init"%adc.board_id)
+                self.send_answer("adc %d daq_init"%adc.board_id)
                 adc.status = "init"
             else:
                 print "ADC board %02d - ERROR: could not start DAQ"%adc.board_id
-                self.send_answer("adc %d fail"%adc.board_id)
+                self.send_answer("adc %d daq_fail"%adc.board_id)
                 adc.status = "fail"
             time.sleep(0.5)
 
-        # Wait for all boards to finish initialization
+        # Wait for trigger to complete initialization
+        n_try = 1
+        while(True):
+            trig_status = self.check_trig_init_status(self.run.trigger)
+            if (trig_status == "ready"):
+                self.send_answer("trigger ready")
+                break
+            elif (trig_status == "fail"):
+                print "*** ERROR *** Trigger board failed the initialization. Cannot start run"
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                self.send_answer("init_fail")
+                return "initfail"
+            n_try += 1
+            if (n_try>=60):
+                print "*** ERROR *** Trigger board did not initialize within 30sec. Cannot start run"
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                self.send_answer("init_timeout")
+                return "initfail"
+            time.sleep(0.5)
+
+        # Wait for all boards to complete initialization
         n_try = 0
         while(1):
 
@@ -969,6 +994,26 @@ shutdown\t\tTell RunControl server to exit (use with extreme care!)"""
             if (self.file_exists(adc.node_ip,adc.initok_file_daq) and self.file_exists(adc.node_ip,adc.initok_file_zsup)):
                 return "ready"
             elif (self.file_exists(adc.node_ip,adc.initfail_file_daq) or self.file_exists(adc.node_ip,adc.initfail_file_zsup)):
+                return "fail"
+            else:
+                return "init"
+
+    def check_trig_init_status(self,trig):
+
+        if trig.node_id == 0:
+
+            if (os.path.exists(trig.initok_file)):
+                return "ready"
+            elif (os.path.exists(trig.initfail_file)):
+                return "fail"
+            else:
+                return "init"
+
+        else:
+
+            if (self.file_exists(trig.node_ip,trig.initok_file)):
+                return "ready"
+            elif (self.file_exists(trig.node_ip,trig.initfail_file)):
                 return "fail"
             else:
                 return "init"

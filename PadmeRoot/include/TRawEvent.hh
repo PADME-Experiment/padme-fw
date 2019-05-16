@@ -9,6 +9,9 @@
 
 #define TRAWEVENT_MAXADCBOARDS 50
 
+#define TRAWEVENT_STATUSBIT_COMPLETE   0
+#define TRAWEVENT_STATUSBIT_AUTOPASS   1
+
 class TRawEvent : public TObject
 {
 
@@ -63,7 +66,8 @@ class TRawEvent : public TObject
   UInt_t fEventNumber;
 
   TTimeStamp fEventAbsTime;
-  UInt_t fEventRunTime;
+  //UInt_t fEventRunTime;
+  ULong64_t fEventRunTime;
 
   UInt_t fEventTrigMask;
   UInt_t fEventStatus;
@@ -74,6 +78,6 @@ class TRawEvent : public TObject
   UChar_t fNADCBoards;
   TClonesArray* fADCBoards;
 
-  ClassDef(TRawEvent,2);
+  ClassDef(TRawEvent,3);
 };
 #endif

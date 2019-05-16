@@ -20,8 +20,11 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerDist0 = 10.309*mm ; // Need drawings!
-  fFingerPitch = 10.309*mm; // Need drawings!
+  // fFingerDist0 = 10.309*mm ; // Need drawings!
+  // fFingerPitch = 10.309*mm; // Need drawings!
+  fFingerPitch = 11.*mm; // Raggi 7/03/2019 construction drawings
+  fFingerDist0 = 26.*mm; // Raggi 7/03/2019 construction drawings
+ 
 
   fEVetoNFingers = 96;
 
@@ -36,12 +39,14 @@ EVetoGeometry::EVetoGeometry()
 
   fSupportSizeX =   1.5*cm; // Need drawings!
   fSupportSizeY =   0.5*cm; // Need drawings!
-  fSupportSizeZ = 100.0*cm; // Need drawings!
+  //  fSupportSizeZ = 100.0*cm; // Need drawings!
+  fSupportSizeZ = 110.0*cm; // Raggi 07/03/2019 construction drawings
 
-  fEVetoInnerFacePosX = -20.*cm;
+  // fEVetoInnerFacePosX = -20.*cm;
+  fEVetoInnerFacePosX = -17.75*cm;  //M. Raggi from drawings 07/03/2019
 
-  fEVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
-
+  //  fEVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
+  fEVetoFrontFacePosZ = -472.55*mm; // Start 17.45mm from inner face of vacuum chamber (wrong but real position M. Raggi 07/03/2019)
   fEVetoSensitiveDetectorName = "EVetoSD";
 
 }

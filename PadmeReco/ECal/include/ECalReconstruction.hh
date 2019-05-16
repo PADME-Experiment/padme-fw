@@ -9,25 +9,43 @@
 
 #include "PadmeVReconstruction.hh"
 
+class TRecoVCluster;
+
+
 class ECalReconstruction : public PadmeVReconstruction
 {
 
 public:
-  
+
   ECalReconstruction(TFile*, TString);
   ~ECalReconstruction();
 
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  // void Init(PadmeVReconstruction* MainReco);
+  //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  //  virtual void ProcessEvent(TRawEvent*);
+  void BuildHits(TRawEvent* rawEv);
+  virtual void BuildClusters();
+  bool TriggerToBeSkipped();
+  void BuildSimpleECalClusters();
+  void BuildECalIslandRadiusClusters(Int_t type);
+  //void BuildECalIslandClusters();
+  //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
-  int ECalBuildClusters(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
+  //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
 
 private:
+  Int_t fClusterizationAlgo;
+  Double_t fClDeltaTime;
+  Int_t fClDeltaCellMax;
+  Double_t fClEnThrForHit;
+  Double_t fClEnThrForSeed;
+
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int>    ClSeed;
@@ -38,12 +56,16 @@ private:
 
   //Seeds vectors
   std::vector<double> SdEn;
-  std::vector<double> SdTime; 
+  std::vector<double> SdTime;
   std::vector<double> SdCell;
 
-  std::vector<double> TTotECAL;
-  std::vector<double> QTotECAL;
+  //  std::vector<double> TTotECAL;
+  //  std::vector<double> QTotECAL;
   double EvTotE;
+
+
+  //  vector<TRecoVCluster *> fClusters;
+
 
 };
 #endif

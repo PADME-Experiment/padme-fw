@@ -158,13 +158,15 @@ Int_t RootIO::SetOutFile()
 int RootIO::FillRawEvent(int run_number,
 			 unsigned int event_number,
 			 struct timespec event_time,
-			 unsigned long long int event_run_time,
+			 unsigned long int event_run_time,
 			 unsigned int event_trigger_mask,
 			 unsigned int event_status,
 			 unsigned int missing_adcboards,
 			 unsigned int trigger_mask,
 			 unsigned int trigger_counter,
-			 unsigned long long int trigger_clock,
+			 unsigned long int trigger_clock,
+			 unsigned char trigger_fifo,
+			 unsigned char trigger_auto,
 			 unsigned int number_adc_boards,
 			 ADCBoard** boards)
 {
@@ -194,8 +196,19 @@ int RootIO::FillRawEvent(int run_number,
 
   // Print event info when in verbose mode
   if (fConfig->Verbose() >= 1) {
-    printf("RootIO - Run %d Event %u Time %s Clock %llu Trig 0x%08x Status 0x%08x Missing boards 0x%08x\n",run_number,event_number,systime.AsString(),event_run_time,event_trigger_mask,event_status,missing_adcboards);
+    printf("RootIO - Run %d Event %u Time %s Clock %lu Trig 0x%08x Status 0x%08x Missing boards 0x%08x\n",run_number,event_number,systime.AsString(),event_run_time,event_trigger_mask,event_status,missing_adcboards);
   }
+
+  // Save low level trigger info to TTriggerInfo structure
+  TTriggerInfo* tTrigInfo = fTRawEvent->TriggerInfo();
+  tTrigInfo->SetTriggerCounter(trigger_counter);
+  tTrigInfo->SetTriggerTime(trigger_clock);
+  // Copy trigger mask to first 8 bits of trigger pattern
+  UInt_t trig_pattern = trigger_mask;
+  // Save trigger FIFO and AUTO bits onbits 16 and 17 of trigger pattern
+  if (trigger_fifo) trig_pattern |= (1 << 16);
+  if (trigger_auto) trig_pattern |= (1 << 17);
+  tTrigInfo->SetTriggerPattern(trig_pattern);
 
   // Loop over all ADC boards
   for(unsigned int b=0; b<number_adc_boards; b++) {
@@ -228,7 +241,7 @@ int RootIO::FillRawEvent(int run_number,
       channelmask = tBoard->GetAcceptedChannelMask(); // Zero suppression is in rejection mode
     }
 
-    // If a tigger group has no channels, do not save its trigger information
+    // If a trigger group has no channels, do not save its trigger information
     unsigned char groupmask = 0;
     for(unsigned int t=0; t<ADCEVENT_NTRIGGERS; t++) {
       if ( channelmask & ( 0xff << (t*8) ) ) groupmask |= (0x1 << t);
@@ -270,6 +283,11 @@ int RootIO::FillRawEvent(int run_number,
 	tChan->SetChannelNumber(c);
 	for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++)
 	  tChan->SetSample(s,boards[b]->Event()->GetADCChannelSample(c,s));
+	//for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) { // DEBUG
+	//  Short_t sample = boards[b]->Event()->GetADCChannelSample(c,s); // DEBUG
+	//  if (sample<0 || sample>4095) printf("\tsample %d\n",sample); // DEBUG
+	//  tChan->SetSample(s,sample); // DEBUG
+	//} // DEBUG
 	if (fConfig->Verbose() >= 4) {
 	  printf("RootIO - Board %u Channel %u\n",tBoard->GetBoardId(),tChan->GetChannelNumber());
 	  for(unsigned int s=0; s<ADCEVENT_NSAMPLES; s++) {

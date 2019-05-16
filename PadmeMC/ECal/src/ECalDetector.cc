@@ -98,7 +98,7 @@ void ECalDetector::CreateGeometry()
   fCellVolume->SetVisAttributes(G4VisAttributes(coatingColour));
 
   // Position BGO crystal inside cell
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"ECalCry",fCellVolume,false,0,false);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"ECalCry",fCellVolume,false,0,true);
 
   // Verify if Tedlar slip thickness is compatible with gap between crystals
   if (geo->GetCrystalGap() <= geo->GetTedlarThickness()) {

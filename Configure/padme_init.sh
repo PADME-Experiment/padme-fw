@@ -12,6 +12,9 @@ export G4WORKDIR=${PADMEMC}
 # Define PADMERECO
 export PADMERECO=${PADME}/PadmeReco
 
+# Define PADMEANALYSIS
+export PADMEANALYSIS=${PADME}/PadmeAnalysis
+
 # Define path to PadmeRoot and add it to LD_LIBRARY_PATH
 export PADMEROOT=${PADME}/PadmeRoot
 

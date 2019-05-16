@@ -1,29 +1,54 @@
 #ifndef PADMEVCALIBRATION_H
 #define PADMEVCALIBRATION_H
 
-#include "TRecoVHit.hh"
+//#include "TRecoVHit.hh"
 #include "PadmeVRecoConfig.hh"
+//#include <map>
+//#include <vector>
 
-
+class RecoVChannelID;
+class TRecoVHit;
+class TRecoVCluster;
 
 class PadmeVCalibration {
 public:
   PadmeVCalibration();
   virtual  ~PadmeVCalibration();
   
-  virtual void Init(PadmeVRecoConfig *cfg);
-  double GetChannelT0(int ich){return (ich>=0  && ich<fNChannels)?fTimeCalib[ich]:-1e23;};
-  double GetChannelEnergyResponse(int ich){return (ich>=0  && ich<fNChannels)?fEnergyCalib[ich]:-1e23;};
-  void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
+  virtual void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr);
+  virtual void InitCommonT0(PadmeVRecoConfig *cfg)         ;
+  virtual void InitCommonEnergyScale(PadmeVRecoConfig *cfg);
+  double GetCommonT0(){return fCommonT0;}
+  double GetCommonEnergyScale(){return fCommonEnergyScale;}
+  void SetCommonT0(double x)         {fCommonT0=x;}
+  void SetCommonEnergyScale(double x){fCommonEnergyScale=x;}
+
+
+  double GetRelChannelT0(int ich){
+    if ( fTimeCalibMap->find(ich) != fTimeCalibMap->end() )
+      return fTimeCalibMap->find(ich)->second;
+    else
+      return -1e23;
+  }
+  double GetRelChannelEnergyResponse(int ich){
+    if ( fEnergyCalibMap->find(ich) != fEnergyCalibMap->end() )
+      return fEnergyCalibMap->find(ich)->second;
+    else
+      return -1e23;
+  }
+  double GetChannelT0(int ich)            { return GetRelChannelT0(ich) + GetCommonT0(); }
+  double GetChannelEnergyResponse(int ich){ return GetRelChannelEnergyResponse(ich)*GetCommonEnergyScale(); }
+
+  virtual void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
+  virtual void PerformCalibration(std::vector<TRecoVCluster*> &clusArray){;}
   
   
-private:
+protected:
   int fNChannels;
-  // map<int,double> fTimeCalib;
-  // map<int,double> fEnergyCalib;
-  
-  double *fTimeCalib;
-  double *fEnergyCalib;
+  double fCommonT0;
+  double fCommonEnergyScale;
+  std::map<int,double> *fTimeCalibMap;
+  std::map<int,double> *fEnergyCalibMap;
   
 };
 

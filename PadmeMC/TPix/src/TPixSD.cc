@@ -41,28 +41,32 @@ G4bool TPixSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   TPixHit* newHit = new TPixHit();
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber());
-  newHit->SetEnergy(edep);
-  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
-
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  // devi usare la formula giusta non e' questa anche se quasi funziona per hit singoli
+  G4ThreeVector worldPosPost   = aStep->GetPostStepPoint()->GetPosition();
+  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  G4ThreeVector localPosPost   = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);  //Uncommented M. Raggi 26/03/2019
   //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPost,"Length")
   //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+  //  newHit->SetLocalPosition(localPosPre);
 
-  newHit->SetPosition(worldPosPre);
-  newHit->SetLocalPosition(localPosPre);
 
-  fTPixCollection->insert(newHit);
-
+  // Saving only hits exiting the TPix not correct if you want to study clustering
+  if(aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary){
+    newHit->SetChannelId(touchHPre->GetCopyNumber());
+    newHit->SetEnergy(edep);
+    newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+    newHit->SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 27/03/2019
+    newHit->SetPosition(worldPosPre); 
+    newHit->SetLocalPosition(localPosPost); //M Raggi 26/03/2019
+    fTPixCollection->insert(newHit);
+  }
   return true;
 
 }

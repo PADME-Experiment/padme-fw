@@ -314,6 +314,8 @@ int Trigger::UnpackEvent_v03()
   fTriggerMask = (UChar_t)( (data & TRIGEVENT_V03_TRIGGERMASK_BIT) >> TRIGEVENT_V03_TRIGGERMASK_POS );
   fTriggerCounter = (UInt_t)( (data & TRIGEVENT_V03_TRIGGERCOUNT_BIT) >> TRIGEVENT_V03_TRIGGERCOUNT_POS );
   fClockCounter = (ULong64_t)( (data & TRIGEVENT_V03_CLOCKCOUNT_BIT) >> TRIGEVENT_V03_CLOCKCOUNT_POS );
+  fTriggerFifo = (UChar_t)( (data & TRIGEVENT_V03_TRIGGERFIFO_BIT) >> TRIGEVENT_V03_TRIGGERFIFO_POS );
+  fTriggerAuto = (UChar_t)( (data & TRIGEVENT_V03_TRIGGERAUTO_BIT) >> TRIGEVENT_V03_TRIGGERAUTO_POS );
 
   // All ok: return 0
   return 0;

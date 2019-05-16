@@ -51,16 +51,19 @@ ChamberGeometry::ChamberGeometry()
 
   fCPZRIn = 5.*cm;
   fCPZThick = 1.*cm;
-  fCPZLength = 29.*cm;
-  fCPZPosZ = -1.*m;
+  //fCPZLength = 29.*cm;
+  fCPZLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - El 2019-04-12
+  //fCPZPosZ = -1.*m;
+  fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPZFlangeR = 76.*mm;
   fCPZFlangeThick = 20.*mm;
 
-
   fCPXRIn = 5.*cm;
   fCPXThick = 1.*cm;
-  fCPXLength = 25.*cm;
-  fCPXPosZ = -1.*m;
+  //fCPXLength = 25.*cm;
+  fCPXLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - EL 2019-04-12
+  //fCPXPosZ = -1.*m;
+  fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPXFlangeR = 76.*mm;
   fCPXFlangeThick = 20.*mm;
 
@@ -74,6 +77,44 @@ ChamberGeometry::ChamberGeometry()
   fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
   fJunFlangeR = 76.*mm;
   fJunFlangeThick = 20.*mm;
+
+  // Properties of junction pipe between cross and BTF pipes
+
+  fBTFJunRIn = 31.5*mm;
+  fBTFJunROut = 35.*mm;
+  //fBTFJunLength = 95.*mm;
+  fBTFJunLength = 113.*mm; // From Foggetta's drawings - EL 2019-04-15
+
+  fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
+  // Flange towards cross
+  fBTFJunFFlgRIn = fBTFJunROut;
+  fBTFJunFFlgROut = fJunFlangeR;
+  fBTFJunFFlgThick = fJunFlangeThick;
+  fBTFJunFFlgPosZ = fBTFJunPosZ+0.5*fBTFJunLength-0.5*fBTFJunFFlgThick;
+  // Flange towards bellow
+  fBTFJunBFlgRIn = fBTFJunROut;
+  fBTFJunBFlgROut = 56.75*mm;
+  fBTFJunBFlgThick = 17.5*mm;
+  fBTFJunBFlgPosZ = fBTFJunPosZ-0.5*fBTFJunLength+0.5*fBTFJunBFlgThick;
+
+  // Properties of bellow-replacement pipe between BTF junction and dipole magnet
+
+  fBellowRIn = 31.5*mm;
+  fBellowROut = 35.*mm;
+  //fBellowLength = 184.*mm;
+  fBellowLength = 150.*mm; // From Foggetta's drawings - EL 2019-04-15
+
+  fBellowPosZ = fBTFJunPosZ-0.5*fBTFJunLength-0.5*fBellowLength;
+  // Flange towards cross
+  fBellowFFlgRIn = fBellowROut;
+  fBellowFFlgROut = fBTFJunBFlgROut;
+  fBellowFFlgThick = fBTFJunBFlgThick;
+  fBellowFFlgPosZ = fBellowPosZ+0.5*fBellowLength-0.5*fBellowFFlgThick;
+  // Flange towards dipole magnet
+  fBellowBFlgRIn = fBellowROut;
+  fBellowBFlgROut = fBellowFFlgROut;
+  fBellowBFlgThick = fBellowFFlgThick;
+  fBellowBFlgPosZ = fBellowPosZ-0.5*fBellowLength+0.5*fBellowBFlgThick;
 
   // Properties of porthole caps
 
@@ -119,25 +160,46 @@ ChamberGeometry::ChamberGeometry()
 
   // Properties of large TPix porthole
 
-  fTPPHCapThick = 25.*mm;
+  // Thickness, width and height of steel rectangular porthole cap
+  //  fTPPHCapThick = 25.*mm;
+  fTPPHCapThick = 35.*mm;  //MR EL 07/03/2019 from FANTINI drawing
   fTPPHCapWidth = 996.*mm;
   fTPPHCapHeight = 600.*mm;
 
-  fTPPHHoleRadius = 106.5*mm;
+  // Radius and distance of beam exit hole
+  //  fTPPHHoleRadius = 106.5*mm;
+  fTPPHHoleRadius = 130.6*mm; //MR EL 07/03/2019 from FANTINI drawing
   // From Cesidio's drawings for 1GeV/.8Tesla configuration
   //fTPPHHoleDist = (624.38*mm-fVCBackFaceCornerX)/cos(fVCBackFaceAngle);
-  fTPPHHoleDist = 400.*mm; // Will be changed to final position
+  fTPPHHoleDist = 400.*mm; //MR EL 07/03/2019 from FANTINI drawing
 
-  fTPPHCircRadius = 142.5*mm;
-  fTPPHCircThick = 12.0*mm;
+  // Radius and distance of service hole
+  fTPPHHoleSRadius = 76.6*mm; //MR EL 07/03/2019 from FANTINI drawing
+  fTPPHHoleSDist = 796.*mm; //MR EL 07/03/2019 from FANTINI drawing
 
+  //fTPPHCircRadius = 142.5*mm;
+  //fTPPHCircRadius = 165.7*mm; // Measured from Fantini drawings: need Cesidio's feedback
+  //fTPPHCircThick = 12.0*mm;
+
+  // Thickness, width and height of aluminum beam exit flange (Cesidio's drawings of 08/03/2019)
+  fTPPHFlangeWidth = 337.0*mm;
+  fTPPHFlangeHeight = 337.0*mm;
+  fTPPHFlangeThick = 16.0*mm;
+
+  // Radius, width and thickness of thin window on the aluminum beam exit flange (Cesidio's drawings of 08/03/2019)
   fTPPHWindRadius = 25.0*mm;
-  fTPPHWindWidth = 100.0*mm;
-  fTPPHWindThick = 100.0*um;
+  fTPPHWindWidth = 200.0*mm;
+  //fTPPHWindThick = 100.0*um; // This was Mylar foil
+  fTPPHWindThick = 2.0*mm; // This is Al (EL 07/03/2019)
 
-  fTPPHStopRadius = 55.0*mm;
-  fTPPHStopWidth = fTPPHWindWidth;
-  fTPPHStopThick = 12.0*mm;
+  // Radius and thickness of steel flange in front of service hole
+  // Will add cabling holes later
+  fTTPHSFlangeRadius = 112.5*mm;
+  fTTPHSFlangeThick = 16.0*mm;
+
+  //fTPPHStopRadius = 55.0*mm;
+  //fTPPHStopWidth = fTPPHWindWidth;
+  //fTPPHStopThick = 12.0*mm;
 
 }
 

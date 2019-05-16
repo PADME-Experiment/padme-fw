@@ -19,11 +19,11 @@ PVetoGeometry::PVetoGeometry()
 {
 
   // Inizialize default parameters
-
-  fFingerDist0 = 10.309*mm ; // Need drawings!
-  fFingerPitch = 10.309*mm; // Need drawings!
-
-  fPVetoNFingers = 96;
+  //  fFingerDist0 = 10.309*mm ; // Need drawings!
+  //  fFingerPitch = 10.309*mm;  // Need drawings!
+  fFingerPitch = 11.*mm; // Need drawings! Raggi 11/10/2018 construction drawings
+  fFingerDist0 = 26.*mm; // Need drawings! Raggi 11/10/2018 construction drawings
+  fPVetoNFingers = 90;   // changed M. Raggi 7/3/2019 was 96 6 have been dismounted
 
   fFingerSizeX =  1.0*cm;
   fFingerSizeY = 17.8*cm;
@@ -36,11 +36,14 @@ PVetoGeometry::PVetoGeometry()
 
   fSupportSizeX =   1.5*cm; // Need drawings!
   fSupportSizeY =   0.5*cm; // Need drawings!
-  fSupportSizeZ = 100.0*cm; // Need drawings!
+  // fSupportSizeZ = 100.0*cm; // Need drawings!
+  fSupportSizeZ = 110.0*cm; // Need drawings!  Raggi 11/10/2018 construction drawings
 
-  fPVetoInnerFacePosX =  20.*cm;
+  //  fPVetoInnerFacePosX =  20.*cm;
+  fPVetoInnerFacePosX =  17.75*cm;  //M. Raggi from drawings 18/10/18
 
-  fPVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
+  //  fPVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
+  fPVetoFrontFacePosZ = -472.55*mm; // Start 56.45mm from inner face of vacuum chamber (wrong but real position M. Raggi)
 
   fPVetoSensitiveDetectorName = "PVetoSD";
 

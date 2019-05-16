@@ -8,10 +8,32 @@
 #define SACReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+	     
+class TRecoVCluster;
 
 class SACReconstruction : public PadmeVReconstruction
 {
+ 
+public:
+  
+  SACReconstruction(TFile*, TString);
+  ~SACReconstruction();
+
+  // void ParseConfFile(TString);
+  // virtual void Init(PadmeVReconstruction*);
+  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  // virtual void EndProcessing();
+  virtual void HistoInit();
+  virtual void AnalyzeEvent(TRawEvent* evt);
+  //  virtual void ProcessEvent(TRawEvent*);
+  virtual void BuildClusters();
+  void BuildSimpleSACClusters();
+  Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
+  Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
+  //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
+
 private:
+  Int_t fClusterizationAlgo;
   //Clusters vectors
   std::vector<double> ClE;
   std::vector<int> ClSeed;
@@ -28,20 +50,9 @@ private:
   std::vector<double> TTotSAC;
   std::vector<double> QTotSAC;
   double EvTotE;
- 
-public:
-  
-  SACReconstruction(TFile*, TString);
-  ~SACReconstruction();
 
-  // void ParseConfFile(TString);
-  // virtual void Init(PadmeVReconstruction*);
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  // virtual void EndProcessing();
-  virtual void HistoInit();
-  virtual void AnalyzeEvent(TRawEvent* evt);
-  int SACBuildClusters(TRawEvent* evt);
-  Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
-  Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
+
+  //  vector<TRecoVCluster *> fClusters;
+
 };
 #endif

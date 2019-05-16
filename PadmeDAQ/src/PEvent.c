@@ -28,6 +28,7 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
   int nSm;
   int freq,tr;
+  float sample; // Used to store corrected sample value from CAEN
   int16_t myshort; // Used to store rounded samples (can be negative)
   unsigned int n_samples_on; // Counter for trigger length evaluation (autopass)
   uint32_t line;
@@ -45,7 +46,6 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
   // Set autopass bit to 0. Will be set to 1 if trigger signal is long.
   int pEvtAutoPass = 0;
 
-  /* AUTOPASS logic will be supported with next Trigger firmware
   // Define autopass trig ON duration taking into account sampling frequency
   unsigned int autopass_trig_duration;
   if (Config->drs4_sampfreq == 0) {
@@ -59,7 +59,6 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
     return 0;
   }
   //printf("Autopass trigger ON duration set to %u samples\n",autopass_trig_duration);
-  */
 
   // Event header will be created at the end
 
@@ -106,13 +105,11 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 	  //printf("Tr %d Sm %d %f %d\n",iGr,iSm,event->DataGroup[iGr].DataChannel[8][iSm],myshort);
 	  //printf("Tr %d Sm %d 0x%04x\n",iGr,iSm,myshort);
 	}
-	/* AUTOPASS logic will be supported with next Trigger firmware
 	//printf("Trigger ON for %u samples\n",n_samples_on);
 	if (n_samples_on > autopass_trig_duration) {
-	  printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
+	  //printf("Autopass enabled: %u > %u\n",n_samples_on,autopass_trig_duration);
 	  pEvtAutoPass = 1;
 	}
-	*/
       }
 
       // Copy trigger time tag
@@ -143,7 +140,15 @@ int create_pevent(void *evtPtr, CAEN_DGTZ_X742_EVENT_t *event, void *pEvt)
 
       // Copy the samples to output structure
       for (iSm=0;iSm<nSm;iSm++) {
-	myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
+	//myshort = roundf(event->DataGroup[iGr].DataChannel[iCh][iSm]);
+	sample = event->DataGroup[iGr].DataChannel[iCh][iSm];
+	//printf("g %1d c %2d s %4d v %f\n",iGr,iCh,iSm,sample); // DEBUG
+	if (sample<-32767. || sample>32767.) { // Take into account CAEN library bug for underflow sample values
+	  myshort = 0;
+	} else {
+	  myshort = roundf(sample);
+	}
+	//if (myshort<=0 || myshort>4095) printf("\tsample %d\n",myshort); // DEBUG
 	memcpy(cursor,&myshort,2);
 	cursor += 2;
       }

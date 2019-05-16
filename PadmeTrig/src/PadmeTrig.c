@@ -576,9 +576,12 @@ int main(int argc, char *argv[]) {
   printf("Current trigger mask: 0x%02x\n",val1);
 
   // Disable all (non-CPU) busy
-  printf("- Disabling all busy.\n");
-  if ( trig_set_busymask(0x10) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while resetting busy mask. Exiting.\n");
+  //printf("- Disabling all busy.\n");
+  //if ( trig_set_busymask(0x10) != TRIG_OK ) {
+  // Set busy mask
+  printf("- Setting busy mask to 0x%02x.\n",Config->busy_mask);
+  if ( trig_set_busymask(Config->busy_mask) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while setting busy mask. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
   if ( trig_get_busymask(&val1) != TRIG_OK ) {

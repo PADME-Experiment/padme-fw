@@ -60,7 +60,6 @@ private:
   G4double      fTrackEnergy; //M. Raggi 27/03/2019 added track energy
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
-
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

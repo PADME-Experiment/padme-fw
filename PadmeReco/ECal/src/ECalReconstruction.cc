@@ -30,6 +30,7 @@
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
+  NNoHits=0;
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelECal();
@@ -136,6 +137,7 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
@@ -430,9 +432,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
   if(icl == 2) {    
     GetHisto("Esum-2") ->Fill( ecl[0] + ecl[1]);
-    
-    
-    
+        
     if( xcl[0] < 10 && xcl[1] > 20  )   
       GetHisto("Esum-2G") ->Fill(ecl[0] + ecl[1] ); 
     if( xcl[0] > 20 && xcl[1] < 10  )   
@@ -548,8 +548,6 @@ void ECalReconstruction::BuildSimpleECalClusters()
   myClusters.clear();
   //std::cout<<"myClusters is now cleared  "<<std::endl;
 
-
-
   ClNCry.clear();
   ClTime.clear();
   ClE.clear();
@@ -574,7 +572,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
   int NCry=0;
 
   if(Hits.size()==0){
-    //    std::cout<<"No hits !!!!"<<std::endl;
+    NNoHits++;
+    //    std::cout<<"No hits !!!! "<<NNoHits<<std::endl;
     return;// -1;
   }
   int NSeeds=0;
@@ -589,22 +588,31 @@ void ECalReconstruction::BuildSimpleECalClusters()
       //      YECALCh[kk][ll]=0.;
     }
   }
-
+  
   Double_t cTime[Hits.size()]={0.};
   Double_t cEnergy[Hits.size()]={0.};
   Int_t cChID[Hits.size()]={0};
   Int_t cUsed[Hits.size()]={0};
+  //  Double_t   cTime[3000]={0.};
+  //  Double_t cEnergy[3000]={0.};
+  //  Int_t      cChID[3000]={0};
+  //  Int_t      cUsed[3000]={0};
   Int_t cCellUsed[NTotCh]={0};
-  for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
+  //  for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
+  //  std::cout<<"IOOOO entra nel loop " << std::endl;
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
-    cUsed[iHit1]  = {0};
-    cTime[iHit1]  = Hits[iHit1]->GetTime();;
-
-    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();;
+    if (iHit1==3000) {
+      std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
+      break;
+    }
+    // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
+    cUsed[iHit1]  = 0;
+    cTime[iHit1]  = Hits[iHit1]->GetTime();
+    cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
     if(cEnergy[iHit1]<fClEnThrForHit) {
       cUsed[iHit1]=1;
-      //std::cout<<"cUsed changed in loop " << std::endl;
+      //      std::cout<<"cUsed changed in loop " << std::endl;
     }
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
     //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
@@ -613,6 +621,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   Int_t iMax=0;
   Int_t HitUsed=0;
   Int_t clusMatrix[NMaxCl][NMaxHitsInCl]={0};
+  //std::cout<<"Imax "<<iMax<<" "<<cEnergy[iHit1]<<" "<<NSeeds<<std::endl;
   while(iMax>-1){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;

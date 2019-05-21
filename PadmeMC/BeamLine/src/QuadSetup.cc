@@ -1,4 +1,5 @@
-#include "MagneticFieldSetup.hh"
+#include "QuadSetup.hh"
+#include "QuadrupoleMagField.hh"
 //#include "G4UniformMagField.hh"
 //#include "G4MagneticField.hh"
 #include "G4FieldManager.hh"
@@ -18,19 +19,18 @@
 #include "G4CashKarpRKF45.hh"
 #include "G4RKG3_Stepper.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4ThreeVector.hh"
 
-//#include "MagneticFieldMap.hh"
+#include "QuadrupoleMagField.hh"
 
 //////////////////////////////////////////////////////////////////////////
 //
 //  Constructors:
 
-MagneticFieldSetup::MagneticFieldSetup()
+QuadSetup::QuadSetup(G4double pGradient, G4ThreeVector pOrigin, G4RotationMatrix* pMatrix)
   : fChordFinder(0), fLocalChordFinder(0), fStepper(0)
 {
-  fMagneticField = new MagneticFieldMap();
-  
-  //fFieldMessenger = new MagneticFieldMessenger(this) ;  
+  fMagneticField = new QuadrupoleMagField(pGradient,pOrigin,pMatrix);
   
   //fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   fLocalEquation = new G4Mag_UsualEqRhs(fMagneticField); 
@@ -47,7 +47,7 @@ MagneticFieldSetup::MagneticFieldSetup()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MagneticFieldSetup::~MagneticFieldSetup()
+QuadSetup::~QuadSetup()
 {
   if (fMagneticField) delete fMagneticField;
   if (fChordFinder)   delete fChordFinder;
@@ -59,7 +59,7 @@ MagneticFieldSetup::~MagneticFieldSetup()
 // Update field
 //
 
-void MagneticFieldSetup::UpdateField()
+void QuadSetup::UpdateField()
 {
 
   SetStepper();
@@ -86,7 +86,7 @@ void MagneticFieldSetup::UpdateField()
 // Set stepper according to the stepper type
 //
 
-void MagneticFieldSetup::SetStepper()
+void QuadSetup::SetStepper()
 {
 
   if(fStepper) delete fStepper;
@@ -151,12 +151,12 @@ void MagneticFieldSetup::SetStepper()
 //
 //  Utility methods
 
-G4FieldManager*  MagneticFieldSetup::GetGlobalFieldManager()
+G4FieldManager*  QuadSetup::GetGlobalFieldManager()
 {
   return G4TransportationManager::GetTransportationManager()->GetFieldManager();
 }
 
-void MagneticFieldSetup::SetMagneticFieldValue(G4double v)
+void QuadSetup::SetMagneticFieldValue(G4double v)
 {
-  fMagneticField->SetConstantMagneticFieldValue(v);
+  //  fMagneticField->SetConstantMagneticFieldValue(v);
 }

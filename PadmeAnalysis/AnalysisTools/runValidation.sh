@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #do PADME Reco
 cd ../../PadmeReco
 ./PadmeReco -l /afs/le.infn.it/user/s/spagnolo/padme/PADMEsw/onDATA2018/prod/input_prova.list -n 1000 -o RecoFromRawOutputFile_ref.root

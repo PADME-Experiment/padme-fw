@@ -36,10 +36,19 @@ public:
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
 
+  G4String fBeWSensitiveDetectorName; 
+
   // Magnetic field inside DHSTB002
 
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
+
+  // Magnetic field gradient inside quadrupoles
+  void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g*tesla/m; }
+  G4double GetQ1MagneticFieldGrad() { return fQ1MagneticFieldGrad; }
+
+  void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g*tesla/m; }
+  G4double GetQ2MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
 
   // Dimensions of DHSTB002 magnet yoke
 
@@ -138,6 +147,22 @@ public:
   G4double GetBeWindowFlangeRadius() { return fBeWindowFlangeRadius; }
   G4double GetBeWindowFlangeThick() { return fBeWindowFlangeThick; }
 
+  // Properties of the quadrupoles
+  G4double  GetQuadBoxSizeX(){return fQuadBoxSizeX;}
+  G4double  GetQuadBoxSizeY(){return fQuadBoxSizeY;}
+  G4double  GetQuadBoxSizeZ(){return fQuadBoxSizeZ;}
+     
+  G4double GetQuadMagSizeX(){return fQuadMagSizeX;}
+  G4double GetQuadMagSizeY(){return fQuadMagSizeY;}
+  G4double GetQuadMagSizeZ(){return fQuadMagSizeZ;}
+
+  G4double GetQ2DistFromDHSTB002(){return fQ2DistFromDHSTB002;} 
+  G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
+
+
+  // Get name of BeW sensitive detector
+  G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
+
 private:
 
   //  Berillium thin window and stainless still flange
@@ -146,6 +171,12 @@ private:
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
+
+  // Gradient of Quadrupoles Magnetic field 
+  G4double fQ1_FieldGrad;  //from data cards
+
+  G4double fQ1MagneticFieldGrad;
+  G4double fQ2MagneticFieldGrad;
 
   // Radius of magnet at center of beam line
   G4double fDHSTB002CenterRadius;
@@ -263,6 +294,17 @@ private:
   G4double fBeWindowFlangeRadius;
   G4double fBeWindowFlangeThick;
 
+  // Properties of the quadrupoles
+  G4double  fQuadBoxSizeX;  
+  G4double  fQuadBoxSizeY;
+  G4double  fQuadBoxSizeZ;
+     
+  G4double fQuadMagSizeX;
+  G4double fQuadMagSizeY;
+  G4double fQuadMagSizeZ;
+
+  G4double fQ2DistFromDHSTB002;
+  G4double fQ1Q2Dist;  //center to center
 };
 
 #endif

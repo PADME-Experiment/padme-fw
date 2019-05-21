@@ -15,7 +15,9 @@ void DigitizerChannelECal::PrintConfig(){
   std::cout << "Hi I'm the ECal: " << std::endl;
   std::cout << "Signal width: "   << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl; 
+  std::cout << "fPedestalMode:   " << fPedestalMode <<std::endl;
   std::cout << "fUseOverSample: " << fUseOverSample << std::endl;  
+
 //  Int_t NBD=8;
 //  for(int i=0;i<32;i++){
 //    std::cout<<"Ped "<<i<<" "<<fPedMap[std::make_pair(NBD,i)]<<" "<<std::endl;
@@ -47,6 +49,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
   fPostSamples    = cfg->GetParOrDefault("RECO","SignalPostSamples",1024);
   fPedMaxNSamples = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",100);  
+  fPedestalMode   = cfg->GetParOrDefault("RECO","PedestalMode",0);  
 
   fMinAmplitude    = cfg->GetParOrDefault("RECO","MinAmplitude",10);
   fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
@@ -91,7 +94,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal = new TTree("ECAL","ECAL");
 
   ECal->Branch("ElCh",&ElCh);
-  ECal->Branch("Raw",&Raw);
+  ECal->Branch("Row",&Row);
   ECal->Branch("Col",&Col);
   ECal->Branch("Zsup",&Zsup);
   ECal->Branch("Avg200",&fAvg200);
@@ -200,48 +203,76 @@ Double_t DigitizerChannelECal::ZSupHit(Float_t Thr, UShort_t NAvg) {
 
 Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
   
-  Short_t begin = iStart;  //to become iStart
+  //  Short_t begin = iStart;  //to become iStart
   Short_t end   = 1000;
 
-  Int_t Ch   = GetElChID();
-  Int_t BID  = GetBdID();
+  Double_t Charge=0;
   Double_t ChargeSin=0;
   Double_t Charge200=0;
   Double_t ChargeHyb=0;
+  Int_t Ch=0;
+  Int_t BID=0;
+  //  std::cout<<"Pedestal modes in charge "<<pedestalsFromFirstSamples()<<" "<< hybridPedestals()<<std::endl;
+  if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+//      Int_t Ch   = GetElChID();
+//      Int_t BID  = GetBdID();
+      Ch   = GetElChID();
+      BID  = GetBdID();      
 
-  //  Int_t TrigType = GetTrigMask();
-  //  if(TrigType!=0) return -1.;
-  //  std::cout<<"Trig type "<<TrigType<<std::endl;
-  fAvg200  = TMath::Mean(iStart,&fSamples[0]);
-  fRMS200  = TMath::RMS(iStart,&fSamples[0]);
-  Zsup  = fRMS1000;  
-  for(Short_t s=0;s<end;s++){
-    AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
-    AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-
-    // Hybrid calculation just an attempt most probably useless
-    if(fRMS200 < 5){ 
-      AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
-    }else{
-      AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
+      fAvg200  = TMath::Mean(iStart,&fSamples[0]);
+      fRMS200  = TMath::RMS(iStart,&fSamples[0]);
+      Zsup  = fRMS1000;  
+      for(Short_t s=0;s<end;s++){
+	AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
+	
+	if(s>iStart && s<1000) {
+	  Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+	}
+	if (pedestalsFromFirstSamples()) Charge = Charge200; 
+      }
     }
-    //    std::cout<<s<<" Sample "<<AbsSamRec[s]<<std::endl;
-    if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-    if(s>iStart && s<1000) Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-    if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
-  }
-  
+  if (pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+      Ch   = GetElChID();
+      BID  = GetBdID();
+
+      for(Short_t s=0;s<end;s++){
+	AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
+	if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+      }
+      if (pedestalsFromAutoTrgEvents()) Charge = ChargeSin;
+    }
+  if (hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
+    {
+      Int_t Ch   = GetElChID();
+      Int_t BID  = GetBdID();
+
+      Zsup  = fRMS1000;  
+      for(Short_t s=0;s<end;s++){
+	// Hybrid calculation just an attempt most probably useless
+	if(fRMS200 < 5){ 
+	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
+	}else{
+	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
+	}
+	if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
+      }
+      if (hybridPedestals()) Charge = ChargeHyb;
+    }
   if(fGlobalMode->GetGlobalDebugMode()!=0){
+    //    std::cout<<"Pedestal first 200 in charge "<<pedestalsFromFirstSamples()<<" Charge "<<Charge<<" Charge 200 "<<Charge200<<std::endl;
     //filling NTU Variables
     HitE    = ChargeSin/15.;
     HitE200 = Charge200/15.;
     HitEHyb = ChargeHyb/15.;
     Int_t code=BID*100+Ch;
     ElCh=code;
-    Raw=GetChID()%100;
+    Row=GetChID()%100;
     Col=GetChID()/100;
     //    ECal->Fill();
   }
+
   if(BID==14 && fGlobalMode->GetGlobalDebugMode()!=0){
     char name[50];
     //     std::cout<<Ch<<" "<<BID<<" Charge "<<ChargeSin<<std::endl;
@@ -280,8 +311,9 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
 //      //      m++;
 //    }
 //  }
-  fCharge=Charge200;
-  return fCharge;
+
+  fCharge=Charge;
+  return Charge;
 }
 
 Double_t DigitizerChannelECal::CalcCharge(UShort_t iMax) {
@@ -323,13 +355,13 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
   }
     //  }
   
-  Int_t npeaks=4;
+  //  Int_t npeaks=4;
   Int_t nsmooth=5*4;
   // Smooth the signal by averaging nsmooth samples 
   for(Int_t ll=0;ll<=MaxSam-nsmooth/2;ll++){
     if(ll>nsmooth/2){
-    Temp[ll] =TMath::Mean(nsmooth,&Over4[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples on the oversampled histogram 
-    Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
+      Temp[ll] =TMath::Mean(nsmooth,&Over4[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples on the oversampled histogram 
+      Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
     }else{
       Temp[ll]=0;
       Temp1[ll]=0;
@@ -344,8 +376,8 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
     histo->SetBinContent(ll,dxdt[ll]);
     //  std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
-  Int_t Ch   = GetElChID();
-  Int_t BID  = GetBdID();
+//  Int_t Ch   = GetElChID();
+//  Int_t BID  = GetBdID();
 
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
@@ -381,7 +413,6 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Double_t dxdt[1001];
   Double_t Temp[1001];
   Double_t Temp1[1001];
-  Double_t Over4[4096];
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
@@ -390,10 +421,10 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
   }
-  Int_t npeaks=4;
+
   Int_t nsmooth=5;
   // Smooth the signal by averaging nsmooth samples 
-  for(ll>0;ll<1001;ll++){
+  for(ll=1;ll<1001;ll++){
     if(ll>nsmooth/2){
     Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
     Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
@@ -411,8 +442,8 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo->SetBinContent(ll,dxdt[ll]);
     //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
-  Int_t Ch   = GetElChID();
-  Int_t BID  = GetBdID();
+//  Int_t Ch   = GetElChID();
+//  Int_t BID  = GetBdID();
 
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
@@ -423,6 +454,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
 
 //  //// TSPECTRUM search is too time consuming.
  // double XBig=10000.;
+ //  Int_t npeaks=4;
  // fTimeSin=XBig;
  // if(Max>100){
  //   TSpectrum *s = new TSpectrum(npeaks);
@@ -530,7 +562,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   IsSaturated(); //check if the event is saturated M. Raggi 03/2019
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
-  
+
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
     HitT = CalcTimeOver(40);
@@ -544,11 +576,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+  //  std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
+  //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
 
   if(fIntCorrection){ 
     Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
-    //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
+    //  std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
     HitE200 /= QIntCorr; //correct for non integrated charge
     //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
   }
@@ -558,7 +591,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetEnergy(HitE200);
   hitArray.push_back(Hit);
   if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
-  //  std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl; 
+  // std::cout << "Hit charge:  " << fCharge << "  Time: " <<HitT << "Hit array size "<< hitArray.size()<<std::endl; 
 }
 
 
@@ -745,8 +778,8 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
   Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
   Short_t nsat = 0;
-  Int_t Ch     = GetElChID();
-  Int_t BID    = GetBdID();
+//  Int_t Ch     = GetElChID();
+//  Int_t BID    = GetBdID();
 
   //  if(min < 5 || max>5050){ 
   if(min < 5){ 

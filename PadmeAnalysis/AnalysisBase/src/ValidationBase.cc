@@ -154,6 +154,10 @@ Bool_t ValidationBase::Process()
 }
 
 
+Bool_t ValidationBase::ProcessValidation()
+{
+  return ProcessValidation(fAlgoName);
+}
 Bool_t ValidationBase::ProcessValidation(TString name)
 {
   //std::cout << "I'm in process Validation ValidationBase" << std::endl;

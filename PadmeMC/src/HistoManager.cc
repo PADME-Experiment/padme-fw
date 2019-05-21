@@ -63,7 +63,7 @@ void HistoManager::book()
   if (!histo[4]) G4cout << "\n can't create histo 4" << G4endl;  
   histo[5] = new TH1D("h5", "beam angle",200,-0.01,0.01);
   if (!histo[5]) G4cout << "\n can't create histo 5" << G4endl;  
-  histo[6] = new TH1D("h6", "NPrimary", 100,0.,10000.);
+  histo[6] = new TH1D("h6", "NPrimary", 1000,0.,25000.);
   if (!histo[6]) G4cout << "\n can't create histo 6" << G4endl;  
   histo[7] = new TH1D("h7", "ECluster",1100,0.,1100.);
   if (!histo[7]) G4cout << "\n can't create histo 7" << G4endl;  
@@ -112,7 +112,6 @@ void HistoManager::book()
   histo2[9] = new TH2D("h29", "Energy vs Theta Annhi ",200,50.,450.,50,0.,10.);
   if (!histo2[9]) G4cout << "\n can't create histo 19" << G4endl;
  
-
   // Additional histos for TimePix
   double TPixXmin=-14.08*6/2;
   double TPixXmax=+14.08*6/2;
@@ -125,17 +124,71 @@ void HistoManager::book()
   // TimePix study
   histo[50] = new TH1D("h50","Tpix energy",500,0.,1.);
   if (!histo[50]) G4cout << "\n can't create histo 18" << G4endl; 
-  histo[51] = new TH1D("h51","TPix Time ",600,0.,600.);
+  histo[51] = new TH1D("h51","TPix Time ",500,0.,500.);
   if (!histo[51]) G4cout << "\n can't create histo 51" << G4endl;
   histo[52] = new TH1D("h52","X coord",TPiXBins,TPixXmin,TPixXmax);
   if (!histo[52]) G4cout << "\n can't create histo 52" << G4endl; 
-  histo[53] = new TH1D("h53","Y coord ",TPiYBins,TPixXmin,TPixYmin);
+  histo[53] = new TH1D("h53","Y coord ",TPiYBins,TPixYmin,TPixYmax);
   if (!histo[53]) G4cout << "\n can't create histo 53" << G4endl; 
   
   histo2[55] = new TH2D("h55","TPix beam spot",TPiXBins,TPixXmin,TPixXmax,TPiYBins,TPixYmin,TPixYmax);
   if (!histo2[55]) G4cout << "\n can't create histo 55" << G4endl;
-  histo2[56] = new TH2D("h56","TPix XvsE",100,400.,600.,TPiXBins,TPixXmin,TPixXmax);
+  histo2[56] = new TH2D("h56","TPix X vs E",TPiXBins,TPixXmin,TPixXmax,160,400.,560.);
   if (!histo2[56]) G4cout << "\n can't create histo 56" << G4endl;
+
+  double TarXmin = -10.;
+  double TarXmax =  10.;
+  double TarXBins = 200.;
+
+  double TarYmin = -10.;
+  double TarYmax =  10.;
+  double TarYBins = 200.;
+
+  // Target study
+  histo[60] = new TH1D("h60","Target energy",500,0.,0.1);
+  if (!histo[60]) G4cout << "\n can't create histo 60" << G4endl; 
+  histo[61] = new TH1D("h61","Target Angle ",500,0.,0.050);
+  if (!histo[61]) G4cout << "\n can't create histo 61" << G4endl;
+  histo[62] = new TH1D("h62","X coord ",TarXBins,TarXmin,TarXmax);
+  if (!histo[62]) G4cout << "\n can't create histo 62" << G4endl; 
+  histo[63] = new TH1D("h63","Y coord ",TarYBins,TarYmin,TarYmax);
+  if (!histo[63]) G4cout << "\n can't create histo 63" << G4endl; 
+
+  histo[64] = new TH1D("h64","Beam energy ",100,460.,560.);
+  if (!histo[64]) G4cout << "\n can't create histo 64" << G4endl; 
+
+  
+  histo2[65] = new TH2D("h65","Tar beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
+  if (!histo2[65]) G4cout << "\n can't create histo 65" << G4endl;
+  histo2[66] = new TH2D("h66","Tar XvsE",TarXBins,TarXmin,TarXmax,320,500.,560.);
+  if (!histo2[66]) G4cout << "\n can't create histo 66" << G4endl;
+
+  histo2[67] = new TH2D("h67","Tar ThetavsE",TarXBins,TarXmin,TarXmax,200,0,0.100);
+  if (!histo2[67]) G4cout << "\n can't create histo 67" << G4endl;
+
+
+  // BeW study
+  histo[70] = new TH1D("h70","BeW energy",500,0.,0.1);
+  if (!histo[70]) G4cout << "\n can't create histo 70" << G4endl; 
+  histo[71] = new TH1D("h71","BeW Angle ",500,0.,0.050);
+  if (!histo[71]) G4cout << "\n can't create histo 71" << G4endl;
+  histo[72] = new TH1D("h72","BeW X coord ",TarXBins,TarXmin,TarXmax);
+  if (!histo[72]) G4cout << "\n can't create histo 72" << G4endl; 
+  histo[73] = new TH1D("h73","BeW Y coord ",TarYBins,TarYmin,TarYmax);
+  if (!histo[73]) G4cout << "\n can't create histo 73" << G4endl; 
+
+  histo[74] = new TH1D("h74","BeW Beam energy ",100,470.,570.);
+  if (!histo[74]) G4cout << "\n can't create histo 74" << G4endl; 
+
+  
+  histo2[75] = new TH2D("h75","BeW beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
+  if (!histo2[75]) G4cout << "\n can't create histo 75" << G4endl;
+  histo2[76] = new TH2D("h76","BeW XvsE",TarXBins,TarXmin,TarXmax,320,500.,560.);
+  if (!histo2[76]) G4cout << "\n can't create histo 76" << G4endl;
+
+  histo2[77] = new TH2D("h77","BeW ThetavsE",TarXBins,TarXmin,TarXmax,200,0,0.100);
+  if (!histo2[77]) G4cout << "\n can't create histo 77" << G4endl;
+
 
   //Hystogram of generated variables 30-39
   histo2[30] = new TH2D("h30", "Energy vs Theta Gen ",275,0.,550.,60,0.,12.);

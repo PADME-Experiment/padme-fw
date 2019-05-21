@@ -53,6 +53,7 @@ timeline_storage = [
     "l1padme4",
     "l0padme1",
     "lnfdisk",
+    "lnf2disk",
     "cnaftape",
     "kloetape",
     "kloedisk"
@@ -63,6 +64,7 @@ timeline_file = {
     "l1padme4":"%s/log/timeline_l1padme4.log"%cdr_dir,
     "l0padme1":"%s/log/timeline_l0padme1.log"%cdr_dir,
     "lnfdisk" :"%s/log/timeline_lnfdisk.log"%cdr_dir,
+    "lnf2disk":"%s/log/timeline_lnf2disk.log"%cdr_dir,
     "cnaftape":"%s/log/timeline_cnaftape.log"%cdr_dir,
     "kloetape":"%s/log/timeline_kloetape.log"%cdr_dir,
     "kloedisk":"%s/log/timeline_kloedisk.log"%cdr_dir
@@ -104,7 +106,17 @@ daq_level_alarm = 85
 lnf_summary_file = "/home/%s/du-padme/padme_spazio-occupato.output"%cdr_user
 
 # Total available space in TB
-lnf_disk_tot_TB = 80.
+lnf_disk_tot_TB = 180.
+
+################################
+### LNF2 disk occupation data ###
+################################
+
+# Path to file with summary occupation info
+lnf2_summary_file = "/home/%s/du-padme/padme_scratch-occupato.output"%cdr_user
+
+# Total available space in TB
+lnf2_disk_tot_TB = 100.
 
 #################################
 ### CNAF tape occupation data ###
@@ -248,6 +260,18 @@ def get_lnf_info():
             disk_use = rc.group(3)
     return disk_use
 
+def get_lnf2_info():
+
+    disk_use = "0"
+    cmd = "tail -1 %s"%lnf2_summary_file
+    for line in run_command(cmd):
+        rc = re.match("^\s*(\d\d\d\d\d\d\d\d)_(\d\d\d\d)\s+(\d+)\s*$",line)
+        if rc:
+            read_date = rc.group(1)
+            read_time = rc.group(2)
+            disk_use = rc.group(3)
+    return disk_use
+
 def get_cnaf_info():
 
     tape_use = "0"
@@ -267,22 +291,71 @@ def append_timeline_info(storage,now,data_list):
         tlf.write("\n")
 
 def format_timeline_info(storage,mode):
+
+    old_date = "0."
+    old_used = "0."
+    old_free = "0."
+    old_percent = "0."
+
     fmt = "["
     first = True
+    used = True
     with open(timeline_file[storage],"r") as tlf:
         for l in tlf:
             m = re.match("^(\S+) (\S+) (\S+) (\S+)",l)
             if m:
+
+                # Extract new values
+                new_date = m.group(1)
+                new_used = m.group(2)
+                new_free = str(float(m.group(3))-float(m.group(2)))
+                new_percent = m.group(4)
+                #print "%s %s ### %s %s ### %s %s ### %s %s"%(old_date,new_date,old_used,new_used,old_free,new_free,old_percent,new_percent)
+
+                # Do not prepend a comma before first value in list
                 if first:
                     first = False
-                else:
+                elif used:
                     fmt += ","
+
+                # Add new value to timeline plot only if it changed since previous reading
                 if mode == "PERCENT":
-                    fmt += "[\"%s\",%s]"%(m.group(1),m.group(4))
+                    if ( new_percent != old_percent ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_percent)
+                        fmt += "[\"%s\",%s]"%(new_date,new_percent)
+                        used = True
+                    else:
+                        used = False
                 elif mode == "USED":
-                    fmt += "[\"%s\",%s]"%(m.group(1),m.group(2))
+                    if ( new_used != old_used ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_used)
+                        fmt += "[\"%s\",%s]"%(new_date,new_used)
+                        used = True
+                    else:
+                        used = False
                 elif mode == "FREE":
-                    fmt += "[\"%s\",%s]"%(m.group(1),str(int(m.group(3))-int(m.group(2))))
+                    if ( new_free != old_free ):
+                        if not used: fmt += "[\"%s\",%s],"%(old_date,old_free)
+                        fmt += "[\"%s\",%s]"%(new_date,new_free)
+                        used = True
+                    else:
+                        used = False
+
+                # Store values for future checks
+                old_date = new_date
+                old_used = new_used
+                old_free = new_free
+                old_percent = new_percent
+
+    # Last reading must be stored even if it did not change
+    if not used:
+        if mode == "PERCENT":
+            fmt += "[\"%s\",%s]"%(old_date,old_percent)
+        elif mode == "USED":
+            fmt += "[\"%s\",%s]"%(old_date,old_used)
+        elif mode == "FREE":
+            fmt += "[\"%s\",%s]"%(old_date,old_free)
+
     fmt += "]"
     return fmt
 
@@ -333,6 +406,17 @@ def start_monitor():
         if lnf_disk_use_TB > lnf_disk_tot_TB: lnf_disk_color = color_warn
         mh.write("{\"title\":\"LNF Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc,lnf_disk_color))
         append_timeline_info("lnfdisk",now_time,(lnf_disk_use_TB,lnf_disk_tot_TB,lnf_disk_opc))
+
+        mh.write(",")
+
+        ### Get LNF2 disk system info ###
+        lnf2_disk_use = get_lnf2_info()
+        lnf2_disk_use_TB = float(lnf2_disk_use)/1024/1024/1024/1024
+        lnf2_disk_opc = str(int(100.*lnf2_disk_use_TB/lnf2_disk_tot_TB))
+        lnf2_disk_color = color_ok
+        if lnf2_disk_use_TB > lnf2_disk_tot_TB: lnf2_disk_color = color_warn
+        mh.write("{\"title\":\"LNF2 Disk\",\"current\":{\"value\":\"Used:%6.1f TB of %6.1f TB (%s%%)\",\"col\":\"%s\"}}"%(lnf2_disk_use_TB,lnf2_disk_tot_TB,lnf2_disk_opc,lnf2_disk_color))
+        append_timeline_info("lnf2disk",now_time,(lnf2_disk_use_TB,lnf2_disk_tot_TB,lnf2_disk_opc))
 
         mh.write(",")
 
@@ -399,7 +483,7 @@ def start_monitor():
         mh.write(format_timeline_info("l1padme4","PERCENT"))
         mh.write(" , ")
         mh.write(format_timeline_info("l0padme1","PERCENT"))
-        mh.write("]\n")
+        mh.write(" ]\n")
 
         mh.write("\n")
 
@@ -409,11 +493,13 @@ def start_monitor():
         mh.write("TITLE_X Time\n")
         mh.write("TITLE_Y Occupation(TB)\n")
         mh.write("RANGE_Y 0. 500.\n")
-        mh.write("MODE [ \"lines\" , \"lines\" , \"lines\" ]\n")
-        mh.write("COLOR [ \"ff0000\" , \"0000ff\" , \"00ff00\" ]\n")
-        mh.write("LEGEND [ \"LNF Disk\" , \"CNAF Tape\" , \"KLOE Tape\" ]\n")
+        mh.write("MODE [ \"lines\" , \"lines\" , \"lines\" , \"lines\" ]\n")
+        mh.write("COLOR [ \"ff0000\" , \"ffff00\" , \"0000ff\" , \"00ff00\" ]\n")
+        mh.write("LEGEND [ \"LNF Disk\" , \"LNF2 Disk\" , \"CNAF Tape\" , \"KLOE Tape\" ]\n")
         mh.write("DATA [ ")
         mh.write(format_timeline_info("lnfdisk","USED"))
+        mh.write(" , ")
+        mh.write(format_timeline_info("lnf2disk","USED"))
         mh.write(" , ")
         mh.write(format_timeline_info("cnaftape","USED"))
         mh.write(" , ")

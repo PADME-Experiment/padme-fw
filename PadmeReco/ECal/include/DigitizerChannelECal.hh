@@ -33,7 +33,12 @@ public:
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
+
   void ResetPedestal();
+
+  Bool_t pedestalsFromFirstSamples() {return (fPedestalMode==0);}
+  Bool_t pedestalsFromAutoTrgEvents(){return (fPedestalMode==1);}
+  Bool_t hybridPedestals()        {return (fPedestalMode==2);}
 
   Short_t CalcMaximum();
   Double_t CalcPedestal();
@@ -110,6 +115,7 @@ private:
   Int_t fPostSamples;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
+  Int_t fPedestalMode;
   
   Int_t fMinAmplitude;
 
@@ -188,7 +194,7 @@ private:
   Double_t HitEHyb;
   Double_t HitT;
   Int_t ElCh;
-  Int_t Raw;
+  Int_t Row;
   Int_t Col;
 
   // calc charge

@@ -43,7 +43,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fClDeltaCellMax         = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaCellMax", 4);
   fClEnThrForHit          = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForHit", 5.);
   fClEnThrForSeed         = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
-
+  fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
 
   //  fClusters.clear();
@@ -519,6 +519,18 @@ void ECalReconstruction::BuildClusters()
   }
   return;
 }
+
+
+//  Written by M. Raggi 21/05/2019
+Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
+{
+  Double_t EFraction;
+  //  EFraction[490]=0.95;
+  EFraction=0.95;
+  return EFraction;
+}
+
+
 void ECalReconstruction::BuildSimpleECalClusters()
 {
   //std::cout<<"In BuildSimpleECalClusters "<<std::endl;
@@ -569,19 +581,15 @@ void ECalReconstruction::BuildSimpleECalClusters()
       //      YECALCh[kk][ll]=0.;
     }
   }
-  
+
+  //fill the vector with hits informations  
   Double_t cTime[Hits.size()]={0.};
   Double_t cEnergy[Hits.size()]={0.};
   Int_t cChID[Hits.size()]={0};
   Int_t cUsed[Hits.size()]={0};
-  //  Double_t   cTime[3000]={0.};
-  //  Double_t cEnergy[3000]={0.};
-  //  Int_t      cChID[3000]={0};
-  //  Int_t      cUsed[3000]={0};
   Int_t cCellUsed[NTotCh]={0};
-  //  for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
-  //fill the vector with hits informations
-  //  std::cout<<"IOOOO entra nel loop " << std::endl;
+
+
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
@@ -672,6 +680,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
   std::vector<Int_t> tmpHitsInCl;
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
+    // Correct the cluster energy for missing energy
+    if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
     tmpHitsInCl.clear();
     TRecoVCluster* myCl = new TRecoVCluster();
     myCl->SetChannelId( SdCell[iCl] );

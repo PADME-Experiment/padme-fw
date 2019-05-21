@@ -117,6 +117,8 @@ private:
   G4double fSupportSizeY;
   G4double fSupportSizeZ;
 
+  G4double fFingerCenterPosX;
+
   G4double fEVetoInnerFacePosX; // Position along X axis of EVeto inner face (i.e. inner face of support)
   G4double fEVetoFrontFacePosZ; // Position along Z axis of EVeto front face (i.e. front face of support)
 

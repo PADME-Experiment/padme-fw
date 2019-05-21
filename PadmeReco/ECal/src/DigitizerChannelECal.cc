@@ -120,6 +120,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
   hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
   hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
+  hListCal->Add(hTIntCorr= new TH1F("hTIntCorr","hTIntCorr",500,0.,1.));
   
   for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
@@ -395,7 +396,7 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.02){ 
+    if(rnd<0.01){ 
       //      hListEv->Write();
       hListTmp->Write();
     }
@@ -579,16 +580,16 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
   //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
 
+  //correct for non integrated charge M. Raggi 15/05/2019
   if(fIntCorrection){ 
     Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
-    //  std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
-    fEnergy /= QIntCorr; //correct for non integrated charge
-    //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
+    if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
+    fEnergy /= QIntCorr; 
   }
+
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);
-  //  Hit->SetEnergy(HitE200);
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
   if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
@@ -701,17 +702,12 @@ void DigitizerChannelECal::SaveBDPed(Int_t BID){
 // window in the digitizer due to different hit arrival time. 
 // Be carefull if the arrival time is wrong you will get worst charge determination 
 Double_t DigitizerChannelECal::CorrectIntegrationTime(Double_t TStart,Double_t TStop){
-  Double_t CorrectedCharge=0;
   Double_t IntWindowEnd=1000.; //ns 
   Double_t IntWindowWdt=0.;    //ns 
-  Double_t tau=300.;    //BGO decay time in ns need tuning
+  Double_t tau=300.;                  //BGO decay time in ns need tuning
   IntWindowWdt=IntWindowEnd-TStart;   // compute the effective integration window
-  //  Double_t Correction =( (tau)*exp(-0./tau)-(tau)*exp(-IntWindowWdt/tau) )/tau;
-  Double_t Correction = exp(-0./tau)-exp(-IntWindowWdt/tau);
-  CorrectedCharge=fCharge/Correction;
-  //  std::cout<<"Hit Energy "<<fCharge<<" Hit Time "<<TStart<<" TWind "<<IntWindowWdt<<std::endl;
-  //  std::cout<<"All time   "<<(tau)*exp(-0./tau)-(tau)*exp(-3000/tau)<<" fraction "<<Correction<<" QCorr "<<CorrectedCharge<<std::endl;
-  //  std::cout<<" fraction "<<Correction<<" QCorr "<<CorrectedCharge<<std::endl;
+  // gives the fraction of integrated charge in the available window
+  Double_t Correction = 1-exp(-IntWindowWdt/tau);
   return Correction;
 }
 

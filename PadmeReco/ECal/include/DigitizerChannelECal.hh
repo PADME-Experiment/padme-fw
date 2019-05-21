@@ -173,6 +173,7 @@ private:
   TH1F * hdxdtMax;
   TH1F * hdxdtRMS;
   TH1F * hTime;
+  TH1F * hTIntCorr;
   TH1F * hTimeCut;
   TH1F * hTimeOv;
   TH1F * hSignal;

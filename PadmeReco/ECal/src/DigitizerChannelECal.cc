@@ -576,19 +576,20 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  //  std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
+  // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
   //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
 
   if(fIntCorrection){ 
     Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
     //  std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
-    HitE200 /= QIntCorr; //correct for non integrated charge
+    fEnergy /= QIntCorr; //correct for non integrated charge
     //    std::cout << "Hit charge:  " << HitE200 << "  Time: " << fTime << std::endl; 
   }
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);
-  Hit->SetEnergy(HitE200);
+  //  Hit->SetEnergy(HitE200);
+  Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
   if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
   // std::cout << "Hit charge:  " << fCharge << "  Time: " <<HitT << "Hit array size "<< hitArray.size()<<std::endl; 

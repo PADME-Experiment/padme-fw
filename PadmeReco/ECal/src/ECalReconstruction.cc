@@ -54,7 +54,7 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECalEvent",new TH2F("ECalEvent","ECalEvent",31,0,31,31,0,31));
   AddHisto("ECalChEvent",new TH2F("ECalChEvent","ECalChEvent",31,0,31,31,0,31));
   AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
-  AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
+  //  AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
   AddHisto("ECalChCharge",new TH1F("ECalChCharge","ECalChCharge",1001,0,100));
   //  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,-200,800));
 
@@ -74,7 +74,7 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALDropHitE",new TH1F("ECALDropHitE","ECALDropHitE",500,0,500));
   AddHisto("ECALHitE",new TH1F("ECALHitE","ECALHitE",550,0,550));
 
-  AddHisto("ECALRawClus",new TH1F("ECALRawClus","ECALRawClus",200,0,1000));
+  //  AddHisto("ECALRawClus",new TH1F("ECALRawClus","ECALRawClus",200,0,1000));
   AddHisto("ECALClE",new TH1F("ECALClE","ECALClE",500,0,1000));
 
   AddHisto("ECALClNCry",new TH1F("ECALClNCry","ECALClNCry",30,0,30));
@@ -84,7 +84,7 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALClSeedEn",new TH1F("ECALClSeedEn","ECALClSeedEn",550,0,550));
   AddHisto("ECALNeig",new TH1F("ECALNeig","ECALNeig",9,-4.5,4.5));
 
-  // new histograms from Mauro
+  // new histograms from Venelin
   AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));
   AddHisto("ECALTDiffCos",new TH1F("ECALTDiffCos","ECALTDiffCos",200,-20,20));
   AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",1000,-125,125));
@@ -283,7 +283,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     GetHisto("ECALClE")->Fill( myClus[gg]->GetEnergy() );
     GetHisto("ECALClNCry")->Fill( myClus[gg]->GetNHitsInClus() );
     GetHisto("ECALClTime")->Fill( myClus[gg]->GetTime() );
-    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>10.) {
+    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>50.) {
       GetHisto("ECALClTimeCut")->Fill( myClus[gg]->GetTime() );
     }
   }
@@ -302,19 +302,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     //    std::cout<<"gli hit di Venelin "<<Hits.size()<<std::endl;
     int ich = Hits[iHit1]->GetChannelId();
-    /*
-    if(
-//	1 ||
-	Hits[iHit1]->GetTime() < 450.  ) {
-    */
     GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
-	//    }
-
-    /*    if(
-        Hits[iHit1]->GetTime() >450 && Hits[iHit1]->GetTime() < 800  ) {
-        GetHisto("ECalOccupancyOffTime") -> Fill(ich/100,ich%100);
-    }
-    */
 
     ((TH2F *) GetHisto("ECalCharge")) -> Fill(ich/100,ich%100,Hits[iHit1]->GetEnergy());
     (GetHisto("ECalChCharge")) -> Fill(Hits[iHit1]->GetEnergy());
@@ -350,7 +338,6 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     if(ix < 14 && iy < 14) q3+= Hits[iHit1]->GetEnergy();
     if(ix < 14 && iy > 14) q2+= Hits[iHit1]->GetEnergy();
     if(ix > 14 && iy < 14) q4+= Hits[iHit1]->GetEnergy();
-
   }
 
   (GetHisto("Etot")) -> Fill(summa);
@@ -359,7 +346,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   (GetHisto("EtotCorner")) -> Fill(Ecorner);
   (GetHisto("EtotMiddle")) -> Fill(Emiddle);
 
-  ((TH1F *) GetHisto("ECalTotCharge")) -> Fill(summa);
+  //  ((TH1F *) GetHisto("ECalTotCharge")) -> Fill(summa);
 
   //  std::cout << "Quadrants:  "<< q1 << "  "  << q2 << "  " << q3 << "  " << q4 << std::endl;
 
@@ -440,21 +427,15 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     
   }
 
-  // if(nevt % 100 == 0) {
-  //   c.cd();
-  //   GetHisto("ECalOccupancy") -> Draw();
-  //   c.Update();
-  // }
-
   //Waveform histograms
-  char iName[1000];
-  UChar_t nBoards = rawEv->GetNADCBoards();
-  Double_t adc_count[1024][25]        ;
-  Double_t adc_pedestal   [25]        ;
-  Double_t adc_chsum    [1024]        ;
-  for(UShort_t s=0;s<1024;s++){
-     adc_chsum    [s] = 0;
-  }
+//  char iName[1000];
+//  UChar_t nBoards = rawEv->GetNADCBoards();
+//  Double_t adc_count[1024][25]        ;
+//  Double_t adc_pedestal   [25]        ;
+//  Double_t adc_chsum    [1024]        ;
+//  for(UShort_t s=0;s<1024;s++){
+//     adc_chsum    [s] = 0;
+//  }
   /*
   for(UChar_t b=0;b<nBoards;b++)// Loop over boards
   {

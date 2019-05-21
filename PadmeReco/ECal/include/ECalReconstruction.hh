@@ -45,6 +45,7 @@ private:
   Int_t fClDeltaCellMax;
   Double_t fClEnThrForHit;
   Double_t fClEnThrForSeed;
+  Int_t NNoHits;
 
   //Clusters vectors
   std::vector<double> ClE;

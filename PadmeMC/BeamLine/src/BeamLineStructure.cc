@@ -37,6 +37,9 @@
 #include "BeamLineGeometry.hh"
 #include "BeamLineMessenger.hh"
 
+#include "G4SDManager.hh" // 29/04/2019 M. Raggi
+#include "BeWSD.hh"       // 29/04/2019 M. Raggi
+
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
 #include "QuadSetup.hh" // M. Raggi 10/04/2019
 
@@ -121,8 +124,15 @@ void BeamLineStructure::CreateBeThinWindow()
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeWinFlange,"BeamLineBeWinFlange",fBeWindowVolume,false,0,true);
   if ( geo->BeWindowIsEnabled() ) {
     new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*beWinT),logicalBeWin,"BeamLineBeWindow",fBeWindowVolume,false,0,true);
+    
+    // The Be window is a sensitive detector
+    G4String BeWSDName = geo->GetBeWSensitiveDetectorName();
+    printf("Registering BeW SD %s\n",BeWSDName.data());
+    BeWSD* beWSD = new BeWSD(BeWSDName);
+    fBeWindowVolume->SetSensitiveDetector(beWSD);
+    G4SDManager::GetSDMpointer()->AddNewDetector(beWSD);
   }
-
+  
 }
 
 void BeamLineStructure::CreateDHSTB002Magnet()

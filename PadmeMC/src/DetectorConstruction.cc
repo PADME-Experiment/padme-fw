@@ -459,7 +459,7 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildElement("Ti"); // Titanium
 
   // Vacuum: leave some residual air with low density (Chamber, World)
-  G4Material* Vacuum = new G4Material("Vacuum",(1.290*0.000001)*mg/cm3,2); // 1mbar
+  G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-10)*mg/cm3,2); // 1mbar
   Vacuum->AddElement(G4Element::GetElement("N"),70.*perCent);
   Vacuum->AddElement(G4Element::GetElement("O"),30.*perCent);
 

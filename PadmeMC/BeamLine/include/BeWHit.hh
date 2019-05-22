@@ -1,5 +1,5 @@
-#ifndef TargetHit_h
-#define TargetHit_h 1
+#ifndef BeWHit_h
+#define BeWHit_h 1
 
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"
@@ -8,16 +8,16 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class TargetHit : public G4VHit
+class BeWHit : public G4VHit
 {
 
 public:
 
-  TargetHit();
-  ~TargetHit();
-  TargetHit(const TargetHit&);
-  const TargetHit& operator=(const TargetHit&);
-  G4int operator==(const TargetHit&) const;
+  BeWHit();
+  ~BeWHit();
+  BeWHit(const BeWHit&);
+  const BeWHit& operator=(const BeWHit&);
+  G4int operator==(const BeWHit&) const;
 
   inline void* operator new(size_t);
   inline void  operator delete(void*);
@@ -49,11 +49,6 @@ public:
   G4double GetPZ() { return fMomentumDirection.z(); };
   void SetPDir(G4ThreeVector pdir) {fMomentumDirection=pdir;}
 
-  void SetPrimary()    {fIsPrimary=true;}
-  void SetNotPrimary() {fIsPrimary=false;}
-
-  G4bool IsPrimary() {return fIsPrimary;}
-
   void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
   G4ThreeVector GetLocalPosition() { return fLocalPosition; }
   G4double GetLocalPosX() { return fLocalPosition.x(); };
@@ -77,29 +72,29 @@ private:
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
   G4ThreeVector fMomentumDirection; //M. Raggi 5/04/2019 added track energy
-  G4bool fIsPrimary; //M. Raggi 3/05/2019 true if it's a primary positron
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-typedef G4THitsCollection<TargetHit> TargetHitsCollection;
+typedef G4THitsCollection<BeWHit> BeWHitsCollection;
 
-extern G4Allocator<TargetHit> TargetHitAllocator;
+extern G4Allocator<BeWHit> BeWHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void* TargetHit::operator new(size_t)
+inline void* BeWHit::operator new(size_t)
 {
   void *aHit;
-  aHit = (void *) TargetHitAllocator.MallocSingle();
+  aHit = (void *) BeWHitAllocator.MallocSingle();
   return aHit;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void TargetHit::operator delete(void *aHit)
+inline void BeWHit::operator delete(void *aHit)
 {
-  TargetHitAllocator.FreeSingle((TargetHit*) aHit);
+  BeWHitAllocator.FreeSingle((BeWHit*) aHit);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

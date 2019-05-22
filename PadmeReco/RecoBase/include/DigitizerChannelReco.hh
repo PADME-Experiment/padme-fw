@@ -9,6 +9,8 @@
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
+typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
+
 class DigitizerChannelReco : public ChannelVReco {
 public:
   DigitizerChannelReco(){;};
@@ -74,6 +76,7 @@ private:
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
+
 
   /*
   //Veto variables 

@@ -65,7 +65,7 @@ void ECalCalibration::ReadCalibConstant()
       ECalib >> row >> col >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-check
       fCalibMap[std::make_pair(NBD,CID)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
       //      fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
-      std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
+      //std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
     }
     ECalib.close();
   } else{ 
@@ -78,7 +78,7 @@ void ECalCalibration::ReadCalibConstant()
       TCalib >> row >> col >> NBD >> CID>>TimeOffSet;   //reads Piperno informations need cross-check
       fT0Map[std::make_pair(NBD,CID)] = TimeOffSet;
       //      fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
-      std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fT0Map[std::make_pair(NBD,CID)]<<std::endl;
+      //std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fT0Map[std::make_pair(NBD,CID)]<<std::endl;
     }
     TCalib.close();
   } else{ 

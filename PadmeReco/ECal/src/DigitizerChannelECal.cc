@@ -103,8 +103,8 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal->Branch("Hit200E",&HitE200);
   ECal->Branch("HitT",&HitT);
   ECal->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
-//  ECal->Branch("ETotInner",&IEnner);
-//  ECal->Branch("EInner",&HitEInner);
+  ECal->Branch("IsSat",&IsSat);
+  ECal->Branch("VMax",&VMax);
 
   hPedCalo = new TH1D*[32];
   hAvgCalo = new TH1D*[32];
@@ -226,7 +226,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
       Zsup  = fRMS1000;  
       for(Short_t s=0;s<end;s++){
 	AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-	
+	VMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
 	if(s>iStart && s<1000) {
 	  Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
 	}
@@ -559,8 +559,11 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 }
 
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
+  IsSat=0;
   Double_t IsZeroSup = ZSupHit(5.,1000.);
-  IsSaturated(); //check if the event is saturated M. Raggi 03/2019
+  // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
+  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
+  
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
 
@@ -585,6 +588,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
     if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
     fEnergy /= QIntCorr; 
+    HitE200 /= QIntCorr; 
   }
 
   //Filling hit structure
@@ -648,6 +652,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   IsSaturated(); //check if the event is saturated M. Raggi 03/2019
+  //  if(IsSaturated()) return;  //remove is a test
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
 

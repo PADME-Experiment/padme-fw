@@ -30,7 +30,9 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 
   // Energy calibration 
   if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
-  if(fUseCalibE==1 && !ECalib.is_open()){ 
+  if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  if(fUseCalibE>0 && !ECalib.is_open()){ 
+  //  if(fUseCalibE==1 && !ECalib.is_open()){ 
     std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
     exit(1);
   }
@@ -44,7 +46,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   }
   //  if(fUseCalibE==1) ReadCalibConstant();
 
-  if(fUseCalibE==1 || fUseCalibT==1) ReadCalibConstant();
+  //  if(fUseCalibE==1 || fUseCalibT==1) ReadCalibConstant();
+  if(fUseCalibE>0 || fUseCalibT==1) ReadCalibConstant();
 }
 
 void ECalCalibration::ReadCalibConstant()
@@ -87,7 +90,7 @@ void ECalCalibration::ReadCalibConstant()
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
   for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
-    if (fUseCalibE == 1){
+    if (fUseCalibE > 0){
       int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
       unsigned int BD   = Hits[iHit]->getBDid(); 
       unsigned int ChID = Hits[iHit]->getCHid(); 

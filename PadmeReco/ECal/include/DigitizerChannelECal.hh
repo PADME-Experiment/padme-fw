@@ -190,6 +190,7 @@ private:
   TH1D *  H2;
   //  Int_t m;
   Double_t Zsup;
+  Double_t VMax;
   Double_t HitE;
   Double_t HitE200;
   Double_t HitEHyb;
@@ -197,6 +198,7 @@ private:
   Int_t ElCh;
   Int_t Row;
   Int_t Col;
+  Int_t IsSat;
 
   // calc charge
   Double_t AbsSamRec[1024];

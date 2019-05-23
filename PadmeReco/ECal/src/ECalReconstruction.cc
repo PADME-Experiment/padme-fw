@@ -30,6 +30,7 @@
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
+  NNoHits=0;
   //fRecoEvent = new TRecoECalEvent();
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelECal();
@@ -42,7 +43,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fClDeltaCellMax         = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaCellMax", 4);
   fClEnThrForHit          = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForHit", 5.);
   fClEnThrForSeed         = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
-
+  fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
 
   //  fClusters.clear();
@@ -53,21 +54,18 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECalEvent",new TH2F("ECalEvent","ECalEvent",31,0,31,31,0,31));
   AddHisto("ECalChEvent",new TH2F("ECalChEvent","ECalChEvent",31,0,31,31,0,31));
   AddHisto("ECalCharge",new TH2F("ECalCharge","ECalCharge",31,0,31,31,0,31));
-  AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
+  //  AddHisto("ECalTotCharge",new TH1F("ECalTotCharge","ECalTotCharge",1001,0,100));
   AddHisto("ECalChCharge",new TH1F("ECalChCharge","ECalChCharge",1001,0,100));
-  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,0,1000));
-
-
-
+  //  AddHisto("ECalTime",new TH1F("ECalTime","ECalTime",1000,-200,800));
 
   AddHisto("ECALClPos",new TH2F("ECALClPos","ECALClPos",30,-15,15,30,-15,15));
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",200,0,1000));
-  AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",200,0,1000));
-  AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",200,0,1000));
-  AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",200,0,1000));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
+  AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
+  AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));
   AddHisto("ECALETot",new TH1F("ECALETot","ECALETot",500,0,2500));
   AddHisto("ECALQTot",new TH1F("ECALQTot","ECALQTot",500,0,2500));
   AddHisto("ECALNPart",new TH1F("ECALNPart","ECALNPart",200,0,200));
@@ -76,8 +74,8 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALDropHitE",new TH1F("ECALDropHitE","ECALDropHitE",500,0,500));
   AddHisto("ECALHitE",new TH1F("ECALHitE","ECALHitE",550,0,550));
 
-  AddHisto("ECALRawClus",new TH1F("ECALRawClus","ECALRawClus",200,0,1000));
-  AddHisto("ECALClE",new TH1F("ECALClE","ECALClE",200,0,1000));
+  //  AddHisto("ECALRawClus",new TH1F("ECALRawClus","ECALRawClus",200,0,1000));
+  AddHisto("ECALClE",new TH1F("ECALClE","ECALClE",500,0,1000));
 
   AddHisto("ECALClNCry",new TH1F("ECALClNCry","ECALClNCry",30,0,30));
   AddHisto("ECALClTDiff",new TH1F("ECALClTDiff","ECALClTDiff",100,-10,10));
@@ -86,11 +84,10 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALClSeedEn",new TH1F("ECALClSeedEn","ECALClSeedEn",550,0,550));
   AddHisto("ECALNeig",new TH1F("ECALNeig","ECALNeig",9,-4.5,4.5));
 
-
-  // new histograms from Mauro
+  // new histograms from Venelin
   AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));
   AddHisto("ECALTDiffCos",new TH1F("ECALTDiffCos","ECALTDiffCos",200,-20,20));
-  AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",100,-10,10));
+  AddHisto("ECALHitTDiff",new TH1F("ECALHitTDiff","ECALHitTDiff",1000,-125,125));
   AddHisto("EtotInner",new TH1F("EtotInner","EtotInner",550,-1000.,10000.));
   AddHisto("EtotOuter",new TH1F("EtotOuter","EtotOuter",550,-1000.,10000.));
   AddHisto("EtotMiddle",new TH1F("EtotMiddle","EtotMiddle",550,-1000.,10000.));
@@ -140,6 +137,7 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
@@ -285,7 +283,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     GetHisto("ECALClE")->Fill( myClus[gg]->GetEnergy() );
     GetHisto("ECALClNCry")->Fill( myClus[gg]->GetNHitsInClus() );
     GetHisto("ECALClTime")->Fill( myClus[gg]->GetTime() );
-    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>10.) {
+    if(myClus[gg]->GetNHitsInClus()>1 &&  myClus[gg]->GetEnergy()>50.) {
       GetHisto("ECALClTimeCut")->Fill( myClus[gg]->GetTime() );
     }
   }
@@ -304,19 +302,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     //    std::cout<<"gli hit di Venelin "<<Hits.size()<<std::endl;
     int ich = Hits[iHit1]->GetChannelId();
-    /*
-    if(
-//	1 ||
-	Hits[iHit1]->GetTime() < 450.  ) {
-    */
     GetHisto("ECalOccupancy") -> Fill(ich/100,ich%100);
-	//    }
-
-    /*    if(
-        Hits[iHit1]->GetTime() >450 && Hits[iHit1]->GetTime() < 800  ) {
-        GetHisto("ECalOccupancyOffTime") -> Fill(ich/100,ich%100);
-    }
-    */
 
     ((TH2F *) GetHisto("ECalCharge")) -> Fill(ich/100,ich%100,Hits[iHit1]->GetEnergy());
     (GetHisto("ECalChCharge")) -> Fill(Hits[iHit1]->GetEnergy());
@@ -347,12 +333,11 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     double tempo = Hits[iHit1]->GetTime();
 
     //    std::cout << "ECal time:  "<< tempo << "  "  << ich << std::endl;
-    if (tempo > 0) ((TH1F *) GetHisto("ECalTime")) -> Fill(tempo);
+    ((TH1F *) GetHisto("ECALTime")) -> Fill(tempo);
     if(ix > 14 && iy > 14) q1+= Hits[iHit1]->GetEnergy();
     if(ix < 14 && iy < 14) q3+= Hits[iHit1]->GetEnergy();
     if(ix < 14 && iy > 14) q2+= Hits[iHit1]->GetEnergy();
     if(ix > 14 && iy < 14) q4+= Hits[iHit1]->GetEnergy();
-
   }
 
   (GetHisto("Etot")) -> Fill(summa);
@@ -361,7 +346,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   (GetHisto("EtotCorner")) -> Fill(Ecorner);
   (GetHisto("EtotMiddle")) -> Fill(Emiddle);
 
-  ((TH1F *) GetHisto("ECalTotCharge")) -> Fill(summa);
+  //  ((TH1F *) GetHisto("ECalTotCharge")) -> Fill(summa);
 
   //  std::cout << "Quadrants:  "<< q1 << "  "  << q2 << "  " << q3 << "  " << q4 << std::endl;
 
@@ -434,9 +419,7 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
   if(icl == 2) {    
     GetHisto("Esum-2") ->Fill( ecl[0] + ecl[1]);
-    
-    
-    
+        
     if( xcl[0] < 10 && xcl[1] > 20  )   
       GetHisto("Esum-2G") ->Fill(ecl[0] + ecl[1] ); 
     if( xcl[0] > 20 && xcl[1] < 10  )   
@@ -444,21 +427,15 @@ void ECalReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     
   }
 
-  // if(nevt % 100 == 0) {
-  //   c.cd();
-  //   GetHisto("ECalOccupancy") -> Draw();
-  //   c.Update();
-  // }
-
   //Waveform histograms
-  char iName[1000];
-  UChar_t nBoards = rawEv->GetNADCBoards();
-  Double_t adc_count[1024][25]        ;
-  Double_t adc_pedestal   [25]        ;
-  Double_t adc_chsum    [1024]        ;
-  for(UShort_t s=0;s<1024;s++){
-     adc_chsum    [s] = 0;
-  }
+//  char iName[1000];
+//  UChar_t nBoards = rawEv->GetNADCBoards();
+//  Double_t adc_count[1024][25]        ;
+//  Double_t adc_pedestal   [25]        ;
+//  Double_t adc_chsum    [1024]        ;
+//  for(UShort_t s=0;s<1024;s++){
+//     adc_chsum    [s] = 0;
+//  }
   /*
   for(UChar_t b=0;b<nBoards;b++)// Loop over boards
   {
@@ -542,6 +519,18 @@ void ECalReconstruction::BuildClusters()
   }
   return;
 }
+
+
+//  Written by M. Raggi 21/05/2019
+Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
+{
+  Double_t EFraction;
+  //  EFraction[490]=0.95;
+  EFraction=0.95;
+  return EFraction;
+}
+
+
 void ECalReconstruction::BuildSimpleECalClusters()
 {
   //std::cout<<"In BuildSimpleECalClusters "<<std::endl;
@@ -551,8 +540,6 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
   myClusters.clear();
   //std::cout<<"myClusters is now cleared  "<<std::endl;
-
-
 
   ClNCry.clear();
   ClTime.clear();
@@ -578,7 +565,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
   int NCry=0;
 
   if(Hits.size()==0){
-    //    std::cout<<"No hits !!!!"<<std::endl;
+    NNoHits++;
+    //    std::cout<<"No hits !!!! "<<NNoHits<<std::endl;
     return;// -1;
   }
   int NSeeds=0;
@@ -594,35 +582,35 @@ void ECalReconstruction::BuildSimpleECalClusters()
     }
   }
 
-  // Double_t cTime[Hits.size()]={0.};
-  // Double_t cEnergy[Hits.size()]={0.};
-  // Int_t cChID[Hits.size()]={0};
-  // Int_t cUsed[Hits.size()]={0};
-  Double_t   cTime[3000]={0.};
-  Double_t cEnergy[3000]={0.};
-  Int_t      cChID[3000]={0};
-  Int_t      cUsed[3000]={0};
+  //fill the vector with hits informations  
+  Double_t cTime[Hits.size()]={0.};
+  Double_t cEnergy[Hits.size()]={0.};
+  Int_t cChID[Hits.size()]={0};
+  Int_t cUsed[Hits.size()]={0};
   Int_t cCellUsed[NTotCh]={0};
-  for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
-  //fill the vector with hits informations
+
+
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
       break;
     }
+    // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
     if(cEnergy[iHit1]<fClEnThrForHit) {
       cUsed[iHit1]=1;
-      //std::cout<<"cUsed changed in loop " << std::endl;
+      //      std::cout<<"cUsed changed in loop " << std::endl;
     }
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
+    //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
   }
 
   Int_t iMax=0;
   Int_t HitUsed=0;
   Int_t clusMatrix[NMaxCl][NMaxHitsInCl]={0};
+  //std::cout<<"Imax "<<iMax<<" "<<cEnergy[iHit1]<<" "<<NSeeds<<std::endl;
   while(iMax>-1){
     iMax = FindSeed(Hits.size(),cUsed, cEnergy);
     if(iMax<0) break;
@@ -667,7 +655,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	ClE[NSeeds]+=cEnergy[iHit1];
 	ClX[NSeeds]+=XCl*cEnergy[iHit1];
 	ClY[NSeeds]+=YCl*cEnergy[iHit1];
-	if(SdCell[NSeeds]!=cChID[iHit1]) GetHisto("ECALHitTDiff")->Fill( (cTime[iHit1]-SdTime[NSeeds]) );
+	if(SdCell[NSeeds]!=cChID[iHit1] && cEnergy[iHit1]>10.) GetHisto("ECALHitTDiff")->Fill( (cTime[iHit1]-SdTime[NSeeds]) );
 	NCry++;
 	HitUsed++;
 	cCellUsed[cChID[iHit1]]=1;
@@ -692,6 +680,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
   std::vector<Int_t> tmpHitsInCl;
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
+    // Correct the cluster energy for missing energy
+    if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
     tmpHitsInCl.clear();
     TRecoVCluster* myCl = new TRecoVCluster();
     myCl->SetChannelId( SdCell[iCl] );

@@ -59,10 +59,11 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
   fIntCorrection = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
+  fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
-  SetAnalogOffSets(); //M. Raggi: 21/01/2019  read anaolg offsets values from files
+  SetAnalogOffSets(); //M. Raggi: 21/01/2019 read anaolg offsets values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
@@ -77,6 +78,7 @@ void DigitizerChannelECal::PrepareTmpHistos(){
   if(!fUseOverSample){
     hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
     hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+    hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
   }
   // over sampled histograms
   Int_t nbinx=4000;
@@ -113,7 +115,6 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
 
-  hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
   //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
@@ -396,7 +397,8 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.01){ 
+    //    if(rnd<0.01){ 
+    if(rnd<1){    /////CAMBIARE
       //      hListEv->Write();
       hListTmp->Write();
     }
@@ -562,7 +564,6 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   IsSat=0;
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
@@ -577,11 +578,19 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
-
+  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
-  //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+
+
+  //correct for saturation effects integrated charge M. Raggi 23/05/2019
+  if(IsSat && fSaturatioCorrection) {
+    Double_t ESatCorr = CorrectSaturation();
+    fEnergy += ESatCorr; 
+    HitE200 += ESatCorr;     
+  }
 
   //correct for non integrated charge M. Raggi 15/05/2019
   if(fIntCorrection){ 
@@ -589,6 +598,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
     fEnergy /= QIntCorr; 
     HitE200 /= QIntCorr; 
+  
   }
 
   //Filling hit structure
@@ -779,24 +789,49 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   Bool_t IsSaturated=false;
   Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
   Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
-  Short_t nsat = 0;
-//  Int_t Ch     = GetElChID();
-//  Int_t BID    = GetBdID();
+  fNSat = 0;
+  Short_t SatThr = 20;
+  Short_t  FirstSat = -1;
+  Short_t  LastSat  = -1;
+  Int_t Ch     = GetElChID();
+  Int_t BID    = GetBdID();
+
 
   //  if(min < 5 || max>5050){ 
-  if(min < 5){ 
-    IsSaturated=true;
-    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
+  if(min < SatThr){ 
+    //    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
+    histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
     
     //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<"fPed "<<fPedMap[std::make_pair(BID,Ch)]<<std::endl;
     for(int ll=0;ll<1001;ll++){
-      if(fSamples[ll]<5) nsat++;
-      if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
+      if(fSamples[ll]<SatThr){
+	if(FirstSat==-1) FirstSat = ll;
+	LastSat=ll;
+	fCountsLastSat=fSamples[ll];
+	fNSat++;
+      }
+      //  if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
+      histoSat->SetBinContent(ll,(Double_t)fSamples[ll]);
+      ///      std::cout<<"Filling "<<ll<<" fSample "<<fSamples[ll]<<std::endl;
     }
-    //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<" nsat "<<nsat<<std::endl;
-    //    if(fIsGlobalDebug) histoSat->Write();
-    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
+    if(fNSat>4) IsSaturated=true;
   }
   return IsSaturated;
 };
 
+// Return the energy to be added due to saturation of the signal.
+Double_t DigitizerChannelECal::CorrectSaturation(){
+  Double_t VLastSat = 0.;
+  Double_t tau=300.;
+  VLastSat = (Double_t) (-1.*fCountsLastSat+fAvg200)/4096*1000.; //in mV positivi using first Istart samples for the pedestal
+  Double_t VMax           = VLastSat/(exp(-fNSat/tau));
+  Double_t ChargeCorr     = (VMax-VLastSat)*fNSat/2;
+  Double_t ChargeCorrpC   = ChargeCorr*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+  Double_t CorretedEnergy = ChargeCorrpC/15.;
+  
+  //  std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<" nsat "<<nsat<<" First "<<FirstSat<<" last "<<LastSat<<" VLast "<<VLastSat<<std::endl;
+  std::cout<<"New Max "<<VMax<<" charge corr "<<ChargeCorrpC<<" Energy corr "<<ChargeCorrpC/15.<<std::endl;
+  //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Write();
+  //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
+  return CorretedEnergy;
+}

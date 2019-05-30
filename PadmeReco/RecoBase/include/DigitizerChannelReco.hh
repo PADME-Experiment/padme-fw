@@ -31,7 +31,6 @@ public:
 
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
 
-
   void SetAbsSignals();
   
 private:
@@ -44,6 +43,9 @@ private:
   Double_t fCharge;
   Double_t fTime;
   UShort_t fNPedSamples;
+
+  //Beth 14/5/19
+  //  Double_t fWaveform[1024];
 
   //Configuration variables
   Int_t fSignalWidth;
@@ -67,6 +69,8 @@ private:
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
+
+  Double_t fChargeCut; //added by Beth 19/4/19
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;

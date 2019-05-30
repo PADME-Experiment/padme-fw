@@ -48,6 +48,7 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0); //if MultiHit=1, Peaks finding with TSpectrum
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+  fChargeCut      = cfg->GetParOrDefault("RECO","ChargeCut",0.001);//added by Beth 19/4/19
   
   
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
@@ -72,7 +73,7 @@ void DigitizerChannelReco::SetAbsSignals(){
  
 Short_t DigitizerChannelReco::CalcMaximum() {
 
-  fMax = 32767; // 2^15 - 1
+  fMax = 32767; // 2^15 - 1 signal amplitude in units of ADC
   
   for(UShort_t i = 0;i<fNSamples;i++){
     if (fMax > fSamples[i]) {
@@ -127,6 +128,7 @@ Double_t DigitizerChannelReco::CalcPedestal() {  //the pedestal is calculated us
 }
 
 Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
+  //std::cout<<"in ZSupHit"<<std::endl;
   Double_t rms1000  = TMath::RMS(NAvg,&fSamples[0]);
   Double_t ZSupHit=-1;
   //  if(rms1000>Thr){
@@ -227,9 +229,9 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
 Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax, UShort_t ped) {
   double Time   = 0.;
   fCharge = 0.;
-  Double_t pCMeV= 3.2E5*2*1.67E-7; 
+  Double_t pCMeV= 3.2E5*2*1.67E-7;
   Int_t NIntSamp= fSignalWidth/fTimeBin; 
-  
+
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //Int_t npeaks =25;
   Int_t npeaks =50;
@@ -282,6 +284,12 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
       //      Hit->SetEnergy(fCharge);
       //Hit->SetEnergy(fCharge);     
       Hit->SetEnergy(fAmpli);
+      
+      for(Int_t i = 0;i<fNSamples;i++){
+	Hit->SetWaveform(i,fPed-1.*fSamples[i]);
+	//    std::cout<<"fSamples[i] = "<< fSamples[i]<< "Hit->GetWaveform() = "<<Hit->GetWaveform()[i]<<std::endl;
+      }
+
       hitArray.push_back(Hit);
       //if (fAmpli>800) fPeaksSaturated++; 
       //if(fPeaksSaturated>1 && fEventsSaturated==0)fEventsSaturated++; 
@@ -296,20 +304,32 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
 }
 
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
+  //  std::cout<<"Reconstructing single hit" <<std::endl;
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-  //if (fCharge < .01) return;
+  //if (fCharge < .01) return; //this is in nC, so it's = 10pC - big cut. Should be closer to 25 photo electrons*electron charge*CPM gain, so about 1pC or 0.001nC. Therefore a cut of 5pC should also go in config file
   // come back to a Veto setup
-  if (fCharge < 2.) return;
+  if (fCharge < fChargeCut) return;
   double time = CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(time);
   // M. Raggi going to charge
-  // Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
-  // Hit->SetEnergy(fCharge);
-  // come back to a Veto setup
+  //Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV //This is for the ECal. If they were coded in the config file then you could have an independent value for each detector, instead of using this conversion for every detector
   Hit->SetEnergy(fCharge);
+  // come back to a Veto setup
+  // Hit->SetEnergy(fEnergy);
+  // std::cout<<"fEnergy is... "<< fEnergy <<std::endl;
+  // Hit->SetPed(fPed);
+  // Hit->SetCharge(fCharge);
+  // Hit->SetAmplitude(fPed-fMax);
+  
+  for(Int_t i = 0;i<fNSamples;i++){
+    Hit->SetWaveform(i,fPed-1.*fSamples[i]);
+    //    std::cout<<"fSamples[i] = "<< fSamples[i]<< "Hit->GetWaveform() = "<<Hit->GetWaveform()[i]<<std::endl;
+  }
+
+
   hitArray.push_back(Hit);
 
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
@@ -317,7 +337,7 @@ void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 }
 
 void DigitizerChannelReco::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){  //using TSpectrum
-  
+    std::cout<<"Reconstructing multi hit" <<std::endl;
   Double_t ped=CalcPedestal();
   //std::cout<<"Pedestal    "<<ped<<std::endl;
   //ped=3650;
@@ -330,7 +350,6 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
  /* if(fUseAbsSignals) {
     SetAbsSignals();
   }*/
-
   if(fMultihit) {
     ReconstructMultiHit(hitArray);
   } else {

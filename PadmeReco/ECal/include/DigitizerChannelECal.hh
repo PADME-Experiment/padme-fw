@@ -103,6 +103,7 @@ private:
   Double_t fRMS200;
   Double_t fAvg200;
   Double_t fTrig;
+  Double_t fVMax;
 
   Int_t fNSat;
   Int_t fCountsLastSat;
@@ -137,6 +138,7 @@ private:
   Bool_t fUseOverSample;
   Bool_t fIntCorrection;
   Bool_t fSaturatioCorrection;
+  Bool_t fSaveAnalog;
 
   
   Double_t fPedCh[32];//Adc channel pedestals
@@ -194,7 +196,6 @@ private:
   TH1D *  H2;
   //  Int_t m;
   Double_t Zsup;
-  Double_t VMax;
   Double_t HitE;
   Double_t HitE200;
   Double_t HitEHyb;

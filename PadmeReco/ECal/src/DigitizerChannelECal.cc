@@ -38,6 +38,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 {
 // Setting flags for running modes.
   fGlobalMode = gOptions;
+
   
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
@@ -60,6 +61,8 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
   fIntCorrection = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
   fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
+  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
+  //  fSaveAnalog=false;
  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
@@ -106,7 +109,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal->Branch("HitT",&HitT);
   ECal->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
   ECal->Branch("IsSat",&IsSat);
-  ECal->Branch("VMax",&VMax);
+  ECal->Branch("VMax",&fVMax);
 
   hPedCalo = new TH1D*[32];
   hAvgCalo = new TH1D*[32];
@@ -142,7 +145,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
 
 void DigitizerChannelECal::SaveDebugHistos(){
   fileOut->cd();
-  hListCal->Write(); //use it in monitor mode only  
+  if(fSaveAnalog) hListCal->Write(); //use it in monitor mode only  
   ECal->Write();
   // fileOut->Write();
   //  hListCal->ls();
@@ -227,7 +230,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
       Zsup  = fRMS1000;  
       for(Short_t s=0;s<end;s++){
 	AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-	VMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
+	fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
 	if(s>iStart && s<1000) {
 	  Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
 	}
@@ -400,7 +403,7 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
     //    if(rnd<0.01){ 
     if(rnd<1){    /////CAMBIARE
       //      hListEv->Write();
-      hListTmp->Write();
+      if(fSaveAnalog) hListTmp->Write();
     }
   }
   //  Int_t TOver4=GetStartTime(Over4,150);
@@ -494,7 +497,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     Double_t rnd=((double) rand() / (RAND_MAX));
     if(rnd<0.02){ 
       //      hListEv ->Write();
-      hListTmp->Write();
+      if(fSaveAnalog) hListTmp->Write();
     }
   }
 
@@ -586,6 +589,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 
 
   //correct for saturation effects integrated charge M. Raggi 23/05/2019
+  // do it before extrapolating to full integral
   if(IsSat && fSaturatioCorrection) {
     Double_t ESatCorr = CorrectSaturation();
     fEnergy += ESatCorr; 
@@ -790,7 +794,7 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
   Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
   fNSat = 0;
-  Short_t SatThr = 20;
+  Short_t SatThr = 15;
   Short_t  FirstSat = -1;
   Short_t  LastSat  = -1;
   Int_t Ch     = GetElChID();
@@ -820,18 +824,24 @@ Bool_t DigitizerChannelECal::IsSaturated(){
 };
 
 // Return the energy to be added due to saturation of the signal.
+// using first Istart samples to compute pedestal
 Double_t DigitizerChannelECal::CorrectSaturation(){
   Double_t VLastSat = 0.;
   Double_t tau=300.;
-  VLastSat = (Double_t) (-1.*fCountsLastSat+fAvg200)/4096*1000.; //in mV positivi using first Istart samples for the pedestal
-  Double_t VMax           = VLastSat/(exp(-fNSat/tau));
-  Double_t ChargeCorr     = (VMax-VLastSat)*fNSat/2;
-  Double_t ChargeCorrpC   = ChargeCorr*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
-  Double_t CorretedEnergy = ChargeCorrpC/15.;
-  
+  VLastSat = (Double_t) (-1.*fCountsLastSat+fAvg200)/4096*1000.; 
+  fVMax                   = VLastSat/(exp(-fNSat/tau));
+  Double_t ChargeCorrExp  = (fVMax-VLastSat)*tau-(fVMax-VLastSat)*tau*(exp(-fNSat/tau));
+  Double_t ChargeCorrTri  = (fVMax-VLastSat)*fNSat/2;
+
+  Double_t ChargeCorrpC     = ChargeCorrTri*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+  // Double_t AdditionalEnergy = ChargeCorrpC/15.;  
+
+  ChargeCorrExp     = ChargeCorrExp*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+  Double_t AdditionalEnergy = ChargeCorrExp/15.;  
+
   //  std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<" nsat "<<nsat<<" First "<<FirstSat<<" last "<<LastSat<<" VLast "<<VLastSat<<std::endl;
-  std::cout<<"New Max "<<VMax<<" charge corr "<<ChargeCorrpC<<" Energy corr "<<ChargeCorrpC/15.<<std::endl;
+  std::cout<<"New Max "<<fVMax<<" charge corr "<<ChargeCorrpC<<" Charge corr exp "<<ChargeCorrExp<<std::endl;
   //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Write();
   //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
-  return CorretedEnergy;
+  return AdditionalEnergy;
 }

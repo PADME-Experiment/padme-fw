@@ -15,6 +15,9 @@ setenv G4WORKDIR ${PADMEMC}
 # Define PADMERECO
 setenv PADMERECO ${PADME}/PadmeReco
 
+# Define PADMEANALYSIS
+setenv PADMEANALYSIS ${PADME}/PadmeAnalysis
+
 # Define path to PadmeRoot and add it to LD_LIBRARY_PATH
 setenv PADMEROOT ${PADME}/PadmeRoot
 setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:${PADMEROOT}/lib"

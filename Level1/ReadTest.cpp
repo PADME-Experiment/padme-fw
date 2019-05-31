@@ -74,8 +74,9 @@ int main(int argc, char* argv[])
         fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
       case 'h':
-        fprintf(stdout,"\nReadTest [-i input root file] [-v verbosity] [-h]\n\n");
+        fprintf(stdout,"\nReadTest [-i input root file] [-l list of input files] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -i: define an input file in root format\n");
+        fprintf(stdout,"  -l: define a list of input files\n");
         fprintf(stdout,"  -n: define number of events to read from input file (0: all events)\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
@@ -117,6 +118,9 @@ int main(int argc, char* argv[])
   // Get some info about the input chain
   Int_t runNEntries = inputChain->GetEntries();
   std::cout << "Found Tree 'RawEvents' with " << runNEntries << " entries" << std::endl;
+  //for(Int_t i=0; i < inputChain->GetListOfBranches()->GetEntries(); i++) {
+  //  std::cout << "Branch " << i << " is " << inputChain->GetListOfBranches()->At(i)->GetName() << std::endl;
+  //}
   TRawEvent* rawEv = new TRawEvent();
   inputChain->SetBranchAddress("RawEvent",&rawEv);
 
@@ -135,9 +139,35 @@ int main(int argc, char* argv[])
     //printf("Event %d read\n",iev);
 
     // Show event header
+    TTimeStamp tts = rawEv->GetEventAbsTime();
+    printf("N %7d Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask %08x EvtStatus %08x Boards %2d MissBoard %08x\n",
+	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
+	   rawEv->GetEventRunTime(),rawEv->GetEventTrigMask(),rawEv->GetEventStatus(),
+	   rawEv->GetNADCBoards(),rawEv->GetMissingADCBoards());
+
+    // Show list of boards in this event
     UChar_t nBoards = rawEv->GetNADCBoards();
-    printf("Event %d Run nr %d Event nr %d ADC boards %d\n",
-	   iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),nBoards);
+    if (verbose>0) {
+      printf("    ADC boards %2d (",nBoards);
+      for(UChar_t b=0;b<nBoards;b++){
+	if (b>0) printf(",");
+	printf("%2d",rawEv->ADCBoard(b)->GetBoardId());
+      }
+      printf(")\n");
+    }
+
+    // Show trigger information
+    if (verbose>0) {
+      TTriggerInfo* trigInfo = rawEv->TriggerInfo();
+      if (trigInfo) {
+	UInt_t trigCount = trigInfo->GetTriggerCounter();
+	ULong64_t trigTime = trigInfo->GetTriggerTime();
+	UInt_t trigMask = trigInfo->GetTriggerPattern();
+	printf("    Trigger info: time %16llu count %4u mask 0x%08x\n",trigTime,trigCount,trigMask);
+      } else {
+	printf("    Trigger info is empty\n");
+      }
+    }
 
     if (verbose>0) {
 
@@ -148,8 +178,8 @@ int main(int argc, char* argv[])
 	TADCBoard* adcB = rawEv->ADCBoard(b);
 	UChar_t nTrg = adcB->GetNADCTriggers();
 	UChar_t nChn = adcB->GetNADCChannels();
-	printf("\tBoard %u Board Id %u LVDS %u Status %u GMsk 0x%1x EvtCnt %u Time %u ActMsk 0x%08x AccMsk 0x%08x #Trg %u #Chn %u\n",
-	       b,adcB->GetBoardId(),adcB->GetLVDSPattern(),adcB->GetStatus(),adcB->GetGroupMask(),adcB->GetEventCounter(),
+	printf("\tBoard %2u Board Id %2u Board SN %3u LVDS 0x%04x Status 0x%03x GMsk 0x%1x EvtCnt %7u Time %10u ActMsk 0x%08x AccMsk 0x%08x #Trg %u #Chn %2u\n",
+	       b,adcB->GetBoardId(),adcB->GetBoardSN(),adcB->GetLVDSPattern(),adcB->GetBoardStatus(),adcB->GetGroupMask(),adcB->GetEventCounter(),
 	       adcB->GetEventTimeTag(),adcB->GetActiveChannelMask(),adcB->GetAcceptedChannelMask(),nTrg,nChn);
 
 	if (verbose>1) {
@@ -160,24 +190,28 @@ int main(int argc, char* argv[])
 	    printf("\t\tTrig %u Grp %u SIC %u Freq %u Sign %u Time %u\n",
 		   t,trg->GetGroupNumber(),trg->GetStartIndexCell(),trg->GetFrequency(),trg->GetTriggerSignal(),
 		   trg->GetTriggerTimeTag());
-	    for(UShort_t s=0;s<trg->GetNSamples();s++){
-	      if ( (s%40)==0 ) printf("\t\t\t");
-	      printf(" %04u",trg->GetSample(s));
-	      if ( (s%40)==39 ) printf("\n");
+	    if (verbose>2) {
+	      for(UShort_t s=0;s<trg->GetNSamples();s++){
+		if ( (s%40)==0 ) printf("\t\t\t");
+		printf(" %04u",trg->GetSample(s));
+		if ( (s%40)==39 ) printf("\n");
+	      }
+	      printf("\n");
 	    }
-	    printf("\n");
 	  }
 
 	  // Loop over channels
 	  for(UChar_t c=0;c<nChn;c++){
 	    TADCChannel* chn = adcB->ADCChannel(c);
 	    printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
-	    for(UShort_t s=0;s<chn->GetNSamples();s++){
-	      if ( (s%40)==0 ) printf("\t\t\t");
-	      printf(" %04u",chn->GetSample(s));
-	      if ( (s%40)==39 ) printf("\n");
+	    if (verbose>2) {
+	      for(UShort_t s=0;s<chn->GetNSamples();s++){
+		if ( (s%40)==0 ) printf("\t\t\t");
+		printf(" %04u",chn->GetSample(s));
+		if ( (s%40)==39 ) printf("\n");
+	      }
+	      printf("\n");
 	    }
-	    printf("\n");
 	  }
 
 	}

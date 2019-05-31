@@ -15,6 +15,9 @@
 #define ROOTIO_OK 0
 #define ROOTIO_ERROR -1
 
+class Configuration;
+class DBService;
+
 class RootIO
 {
 
@@ -23,11 +26,33 @@ public:
   RootIO();
   ~RootIO();
 
-  int Init(std::string,int);
+  //int Init(std::string,int);
+  int Init();
   int Exit();
-  int FillRawEvent(int,int,std::vector<ADCBoard*>&);
+
+  // FillRawEvent gets all information from a single merged event,
+  // converts it to a TRawEvent, and sends it to the output RawData file.
+  int FillRawEvent(
+		   int,               // run number
+		   unsigned int,      // event number
+		   struct timespec,   // time when event was merged
+		   unsigned long int, // event clock time within run
+		   unsigned int,      // event trigger mask
+		   unsigned int,      // event status
+		   unsigned int,      // missing adc boards bit mask
+		   unsigned int,      // trigger mask
+		   unsigned int,      // trigger counter
+		   unsigned long int, // trigger clock
+		   unsigned char,     // trigger fifo
+		   unsigned char,     // trigger autopass
+		   unsigned int,      // number of ADC boards
+		   ADCBoard**         // array of pointers to ADCBoard
+		   );
   TRawEvent* GetRawEvent() { return fTRawEvent; }
-  void SetVerbose(Int_t v) { fVerbose = v; }
+
+  unsigned int GetTotalFiles() { return (unsigned int)fOutFileIndex+1; }
+  unsigned int GetTotalEvents() { return (unsigned int)fOutEventsTotal; }
+  unsigned long long int GetTotalSize() { return (unsigned long long int)fOutSizeTotal; }
 
 private:
 
@@ -36,14 +61,18 @@ private:
   Int_t CloseOutFile();
   Int_t SetOutFile();
 
-  Int_t   fVerbose;
+  Configuration* fConfig;
+  DBService* fDB;
 
-  ULong_t fOutEventsTotal;
-  ULong_t fOutEventsCounter;
+  UInt_t  fOutEventsTotal;
+  ULong_t fOutSizeTotal;
 
   TString fOutFile;
+  Int_t   fOutFileDBId;
   TString fOutFileTemplate;
   UInt_t  fOutFileIndex;
+  UInt_t  fOutFileEvents;
+  ULong_t fOutFileSize;
   UInt_t  fNMaxEvtsPerOutFile;
 
   TFile* fTFileHandle;

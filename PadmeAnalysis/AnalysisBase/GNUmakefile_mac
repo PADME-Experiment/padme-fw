@@ -1,0 +1,5 @@
+# Makefile
+
+NAME := AnalysisBase
+
+include ../config/subdirs_mac.gmk

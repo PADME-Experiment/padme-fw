@@ -37,7 +37,7 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fSetTargetThicknessCmd->SetGuidance("Set thickness of Target detector.");
   fSetTargetThicknessCmd->SetParameterName("Thick",false);
   fSetTargetThicknessCmd->SetDefaultUnit("um");
-  fSetTargetThicknessCmd->SetRange("Thick >= 10. && Thick <= 500.");
+  fSetTargetThicknessCmd->SetRange("Thick >= 0.001 && Thick <= 500.");
   fSetTargetThicknessCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetTargetFrontFaceZCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/FrontFaceZ",this);

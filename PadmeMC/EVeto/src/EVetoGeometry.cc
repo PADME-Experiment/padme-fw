@@ -20,8 +20,11 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
-  fFingerDist0 = 10.309*mm ; // Need drawings!
-  fFingerPitch = 10.309*mm; // Need drawings!
+  // fFingerDist0 = 10.309*mm ; // Need drawings!
+  // fFingerPitch = 10.309*mm; // Need drawings!
+  fFingerPitch = 11.*mm; // Raggi 7/03/2019 construction drawings
+  fFingerDist0 = 26.*mm; // Raggi 7/03/2019 construction drawings
+ 
 
   fEVetoNFingers = 96;
 
@@ -34,14 +37,21 @@ EVetoGeometry::EVetoGeometry()
 
   fFingerRotY = 10.*deg; // Need drawings!
 
-  fSupportSizeX =   1.5*cm; // Need drawings!
+  //fSupportSizeX =   1.5*cm; // Need drawings!
+  fSupportSizeX =   32.0*mm; // EL 2019/05/21 Rough measurement on technical drawings from Sofia
   fSupportSizeY =   0.5*cm; // Need drawings!
-  fSupportSizeZ = 100.0*cm; // Need drawings!
+  //  fSupportSizeZ = 100.0*cm; // Need drawings!
+  //fSupportSizeZ = 110.0*cm; // Raggi 07/03/2019 construction drawings
+  fSupportSizeZ = 109.5*cm; // EL 2019/05/21 Technical drawings from Sofia
 
-  fEVetoInnerFacePosX = -20.*cm;
+  // Distance along X from front face of support to center of finger
+  fFingerCenterPosX = 15.0*mm; // EL 2019/05/21 Rough measurement on technical drawings from Sofia
 
-  fEVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
+  // fEVetoInnerFacePosX = -20.*cm;
+  fEVetoInnerFacePosX = -17.75*cm;  //M. Raggi from drawings 07/03/2019
 
+  //  fEVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
+  fEVetoFrontFacePosZ = -472.55*mm; // Start 17.45mm from inner face of vacuum chamber (wrong but real position M. Raggi 07/03/2019)
   fEVetoSensitiveDetectorName = "EVetoSD";
 
 }
@@ -56,7 +66,8 @@ G4double EVetoGeometry::GetFingerPosX(G4int idx)
     printf("EVetoGeometry::GetFingerPosX - ERROR - Requested finger at index %d\n",idx);
     return 0.*cm;
   }
-  return 0.*cm;
+  //return 0.*cm;
+  return 0.5*fSupportSizeX-fFingerCenterPosX;
 }
 
 G4double EVetoGeometry::GetFingerPosY(G4int idx)

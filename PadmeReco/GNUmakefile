@@ -14,6 +14,7 @@ CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
 CPPFLAGS += -IRecoBase/include -g
 
+
 include ./config/global.gmk
 
 # Define libraries used for the creation of the final executable
@@ -22,7 +23,9 @@ LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix 
 #LIBS += -LService/lib -lService$(STATIC)
 LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
-LIBS += -L/usr/lib64/mysql -lmysqlclient
+#LIBS += -L/usr/lib64/mysql -lmysqlclient
+LIBS += -Llib -lPadmeReco$(STATIC)
+
 
 #EXTRALIBS += -LEventDisplay/lib -lEventDisplay$(STATIC) -lEve -lGeom -lRGL -lFTGL -lGui -lGed -lTreePlayer -lEG 
 

@@ -5,8 +5,14 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "TTimeStamp.h"
 
+#include "utlConfigParser.hh"
+#include "PadmeVRecoConfig.hh"
+
+class TRawEvent;
 class TMCEvent;
+class TRecoEvent;
 
 class TTargetMCEvent;
 class TEVetoMCEvent;
@@ -15,6 +21,14 @@ class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
 class TTPixMCEvent;
+
+class TTargetRecoEvent;
+class TEVetoRecoEvent;
+class TPVetoRecoEvent;
+class THEPVetoRecoEvent;
+class TECalRecoEvent;
+class TSACRecoEvent;
+class TTPixRecoEvent;
 
 class TDetectorInfo;
 
@@ -35,6 +49,13 @@ public:
 
   PadmeVReconstruction* FindReco(TString);
 
+  Int_t GetRunNumber();
+  Int_t GetEventNumber();
+  TTimeStamp GetEventTime();
+  ULong64_t GetRunClock();
+  UInt_t GetEventStatus();
+  UInt_t GetTriggerMask();
+
 private:
 
   TChain* BuildChain(TString);
@@ -42,13 +63,20 @@ private:
 
   void InitDetectorsInfo();
   void InitLibraries();
+  void InitRunningModeFlags();
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 
   TObjArray* fInputFileNameList;
+  utl::ConfigParser *fConfigParser;
+  PadmeVRecoConfig *fConfig;
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;
+  TChain* fRawChain;
+  TChain* fRecoChain;
+
+  TRawEvent* fRawEvent;
 
   TMCEvent* fMCEvent;
 
@@ -60,6 +88,16 @@ private:
   TSACMCEvent*     fSACMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
 
+
+  TRecoEvent*        fRecoEvent;
+  TTargetRecoEvent*  fTargetRecoEvent;
+  TEVetoRecoEvent*   fEVetoRecoEvent;
+  TPVetoRecoEvent*   fPVetoRecoEvent;
+  THEPVetoRecoEvent* fHEPVetoRecoEvent;
+  TECalRecoEvent*    fECalRecoEvent;
+  TSACRecoEvent*     fSACRecoEvent;
+  TTPixRecoEvent*    fTPixRecoEvent;
+  
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

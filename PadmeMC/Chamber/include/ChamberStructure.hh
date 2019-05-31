@@ -53,6 +53,7 @@ private:
   void CreateECalCarbonThinWindow();
   void CreateTargetPipes();
   void CreateJunctionPipe();
+  void CreateBTFJunction(); //M. Raggi 20/03/2019
   void CreatePortholeCaps();
   void CreateTPixPortholeCap();
 

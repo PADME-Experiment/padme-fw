@@ -5,6 +5,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TRawEvent+;
+#pragma link C++ class TTriggerInfo+;
 #pragma link C++ class TADCBoard+;
 #pragma link C++ class TADCChannel+;
 #pragma link C++ class TADCTrigger+;
@@ -46,5 +47,26 @@
 #pragma link C++ class TTPixMCHit+;
 #pragma link C++ class TTPixMCDigi+;
 #pragma link C++ class TTPixMCEvent+;
+
+#pragma link C++ class TRecoEvent+;
+#pragma link C++ class TRecoVObject+;
+#pragma link C++ class TRecoVHit+;
+#pragma link C++ class TRecoVClusCollection+;
+#pragma link C++ class TRecoVCluster+;
+#pragma link C++ class TPVetoRecoEvent+;
+#pragma link C++ class TEVetoRecoEvent+;
+#pragma link C++ class THEPVetoRecoEvent+;
+#pragma link C++ class TSACRecoEvent+;
+#pragma link C++ class TECalRecoEvent+;
+#pragma link C++ class TTargetRecoEvent+;
+#pragma link C++ class TTargetRecoBeam+;
+#pragma link C++ class TTargetSignalFitParams+;
+#pragma link C++ class TTargetFitEvent+;
+#pragma link C++ class TSACClusCollection+;
+#pragma link C++ class TECalClusCollection+;
+#pragma link C++ class TPVetoClusCollection+;
+#pragma link C++ class TEVetoClusCollection+;
+#pragma link C++ class THEPVetoClusCollection+;
+
 
 #endif

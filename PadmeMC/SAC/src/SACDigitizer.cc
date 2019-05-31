@@ -42,7 +42,7 @@ SACDigitizer::SACDigitizer(G4String name)
   fCollMapBinLen = geo->GetDigiPECollectionMapBinLength();
 
   G4cout << G4endl;
-  G4cout << "=== ECalDigitizer parameters ===" << G4endl;
+  G4cout << "=== SACDigitizer parameters ===" << G4endl;
   G4cout << "Crystal length along Z: " << G4BestUnit(fCrystalLength,"Length") << G4endl;
   G4cout << "Light propagation speed in SAC crystal: " << fPropagationSpeed << " mm/ns" << G4endl;
   G4cout << "Number of photoelectorns produced per MeV of hit energy: " << fEHtoNPEConversion << "/MeV" << G4endl;

@@ -51,6 +51,7 @@ private:
 
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosXCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosZCmd; // M. Raggi 15/03/2019
   G4UIcmdWithABool* fEnableBeamCenterPosSpreadCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosXSpreadCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamCenterPosYSpreadCmd;
@@ -61,8 +62,8 @@ private:
 
   G4UIcmdWith3Vector* fSetBeamDirectionCmd;
   G4UIcmdWithABool* fEnableBeamEmittanceCmd;
-  G4UIcmdWithADouble* fSetBeamEmittanceXCmd;
-  G4UIcmdWithADouble* fSetBeamEmittanceYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceYCmd;
   
   G4UIcmdWithAnInteger* fSetNUbosonDecaysPerBunchCmd;
   G4UIcmdWithADoubleAndUnit* fSetUbosonMassCmd;

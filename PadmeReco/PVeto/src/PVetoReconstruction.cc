@@ -126,8 +126,8 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     //    if(Hits[iHit1]->GetTime() < 10.) continue;
     //    std::cout<<"iHit1 = " << iHit1 << " passes time cut "<<std::endl;
-    int derivbins = 5;
-    int nsmoothing =5;//Number of samples either side used to smooth the signal
+    int derivbins = 10;
+    int nsmoothing =1;//Number of samples either side used to smooth the signal
     char name[256];
     double Signal[1024];
     double SmoothedSignal[1024];
@@ -155,18 +155,20 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 	//std::cout<<"iSample = "<<iSample<<std::endl;
 	double SignalDerivative = 0;
 	if(iSample>=derivbins&&iSample<1024){ //otherwise the derivative doesn't make sense - you can't calculate the derivative of the first bin because you have nothing before it to compare it to because the first position in SignalSmoothed will be 0
-	SignalDerivative = (Signal[iSample+derivbins]-Signal[iSample-derivbins])/((2*derivbins)*0.4); //0.4 = timebin = time between samples. Samples are taken at 2.5GHz, so time =1/2.5e9 = 4ns. Maybe there's a way of reading this directly from the config file in case the frequency changes?
+	  //	SignalDerivative = (Signal[iSample+derivbins]-Signal[iSample-derivbins])/((2*derivbins)*0.4); //0.4 = timebin = time between samples. Samples are taken at 2.5GHz, so time =1/2.5e9 = 4ns. Maybe there's a way of reading this directly from the config file in case the frequency changes?
+	  SignalDerivative = (Signal[iSample]-Signal[iSample-derivbins])/((derivbins)*0.4); //Calculating the derivative only backwards gives the highest possible value for the derivative as it isn't confused by the peak
 	}
 	double SignalDerivativeSmoothed =0;
        	if(iSample>=derivbins&&iSample<1024){
-	  SignalDerivativeSmoothed = (SmoothedSignal[iSample+derivbins]-SmoothedSignal[iSample-derivbins])/((2*derivbins)*0.4);
+	  //	  SignalDerivativeSmoothed = (SmoothedSignal[iSample+derivbins]-SmoothedSignal[iSample-derivbins])/((2*derivbins)*0.4);
+	  SignalDerivativeSmoothed = (SmoothedSignal[iSample]-SmoothedSignal[iSample-derivbins])/((derivbins)*0.4);
 	}
 
 	//	std::cout<<"iSample = "<< iSample << " Signal = "<<Signal[iSample]<<" smoothed signal = "<<SmoothedSignal[iSample]<<std::endl;
-	if(iSample+derivbins<1024){
+	//	if(iSample+derivbins<1024){
 	  //std::cout<<"Signal = "<<Signal[iSample]<< " Signal + derivbins = "<<Signal[iSample + derivbins]<<" Signal - derivbins = "<<Signal[iSample - derivbins]<<std::endl;
 	//std::cout<<"Smoothed signal = "<<SmoothedSignal[iSample]<< " Smoothed signal + derivbins = "<<SmoothedSignal[iSample + derivbins]<<" Smoothed signal - derivbins = "<<SmoothedSignal[iSample - derivbins]<<std::endl;
-	}
+	//	}
 	//	std::cout<<"SignalDerivative = "<<SignalDerivative<<" SignalDerivativeSmoothed = "<<SignalDerivativeSmoothed<<std::endl;
 	double DerivativetoSignalRatio = SignalDerivative/Signal[iSample];
 	//	if(SmoothedSignal[iSample]==0) std::cout<<"iSample = "<< iSample << " Signal = "<<Signal[iSample]<<" smoothed signal = "<<SmoothedSignal[iSample]<<std::endl;

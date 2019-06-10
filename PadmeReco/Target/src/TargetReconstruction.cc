@@ -154,16 +154,31 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   if (tEvent==NULL) return;
   fHits.clear();
   // MC to reco hits
-  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
-    TMCVDigi* digi = tEvent->Digi(i);
-    //TRecoVHit *Hit = new TRecoVHit(digi);
+  for (Int_t ich=0; ich<32; ++ich) {
     TRecoVHit *Hit = new TRecoVHit();
-    Hit->SetChannelId(digi->GetChannelId());
-    Hit->SetEnergy(digi->GetEnergy()*1.6e-3);
-    Hit->SetTime(digi->GetTime());
-    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      //TRecoVHit *Hit = new TRecoVHit(digi);
+      if (digi->GetChannelId()==ich)
+	{
+	  Hit->SetChannelId(digi->GetChannelId());
+	  Hit->SetEnergy(digi->GetEnergy()*1.6e-3);
+	  Hit->SetTime(digi->GetTime());
+	  Hit->SetPosition(TVector3(0.,0.,0.)); 
+	}
+      else
+	{
+	  Hit->SetChannelId(ich);
+	  Hit->SetEnergy(0.);
+	  Hit->SetTime(0.);
+	  Hit->SetPosition(TVector3(0.,0.,0.)); 
+	}
+    }
     fHits.push_back(Hit);
   }
+
+  // set geometry 
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
   
   ClearClusters();
   BuildClusters();

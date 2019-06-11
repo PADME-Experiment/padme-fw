@@ -4,6 +4,7 @@
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
 #include "TRecoVCluster.hh"
+#include "TRecoEvent.hh"
 #include "HistoSvc.hh"
 #include <iostream>
 
@@ -27,8 +28,104 @@ SACAnalysis::~SACAnalysis()
 }
 Bool_t SACAnalysis::InitHistosAnalysis()
 {
-  return true;
+    return true;
 }
+
+Bool_t SACAnalysis::InitHistosDataQuality()
+{
+
+    HistoSvc* hSvc =  HistoSvc::GetInstance();    
+    std::string hname;
+    int nBin;
+    Double_t min, max;
+
+    nBin=250;
+    min=0.;
+    max=1000;
+    hname="SAC_HitEnergy";
+    hSvc->BookHisto(hname, nBin, min, max);
+
+    nBin=250;
+    min=0.;
+    max=1000;
+    hname="SAC_ClEnergy";
+    hSvc->BookHisto(hname, nBin, min, max);
+
+    nBin=250;
+    min=0.;
+    max=10000;
+    hname="SAC_SumHitEnergy";
+    hSvc->BookHisto(hname, nBin, min, max);
+
+    nBin=250;
+    min=0.;
+    max=10000;
+    hname="SAC_SumHitEnergy_BTFtrg";
+    hSvc->BookHisto(hname, nBin, min, max);
+
+    hname = "SAC_HitOccupancyEWeig";
+    nBin=7;
+    min=-1.5;
+    max=5.5;
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+
+    hname = "SAC_HitOccupancy";
+    nBin=7;
+    min=-1.5;
+    max=5.5;
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+    
+    return true;
+}
+Bool_t SACAnalysis::ProcessDataQuality()
+{
+    HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::cout<<"In SACAnalysis::ProcessDataQuality"<<std::endl;
+    
+
+    Int_t fNhits = fhitEvent->GetNHits();
+
+    std::string hname;
+
+    Double_t EHitSum = 0.;
+    TRecoVHit* h;
+    for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
+    {
+      h = fhitEvent->Hit(j);
+      hname = "SAC_HitEnergy";
+      hSvc->FillHisto(hname, h->GetEnergy());
+      EHitSum = EHitSum+h->GetEnergy();
+      hname = "SAC_HitOccupancyEWeig";
+      int chid =  h->GetChannelId();
+      int chidx =  chid/10;
+      int chidy =  chid%10;
+      hSvc->FillHisto2(hname, float(chidx),  float(chidy), h->GetEnergy());	
+      hname = "SAC_HitOccupancy";
+      hSvc->FillHisto2(hname, float(chidx),  float(chidy));
+    }
+    hname = "SAC_SumHitEnergy";
+    hSvc->FillHisto(hname, EHitSum);
+    UInt_t trgMask = fRecoEvent->GetTriggerMask();
+    if (trgMask==1)
+    {
+	hname = "SAC_SumHitEnergy_BTFtrg";
+	hSvc->FillHisto(hname, EHitSum);
+    }
+    
+
+    hname = "SAC_ClEnergy";
+    TRecoVCluster* k;
+    for (Int_t j=0; j<fClColl->GetNElements(); ++j)
+    {
+      k = fClColl->Element(j);
+      hSvc->FillHisto(hname, k->GetEnergy());
+    }
+
+    
+    return true;
+}
+
+
 Bool_t SACAnalysis::InitHistosValidation()
 {
     HistoSvc* hSvc =  HistoSvc::GetInstance();
@@ -99,60 +196,60 @@ Bool_t SACAnalysis::ProcessAnalysis()
 
   Bool_t retCode = 0;
   
-  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  // HistoSvc* hSvc =  HistoSvc::GetInstance();
 
-  Int_t fNhits = fhitEvent->GetNHits();
-  std::string hname;
+  // Int_t fNhits = fhitEvent->GetNHits();
+  // std::string hname;
 
-  hname = "SAC_NHits";
-  hSvc->FillHisto(hname,fhitEvent->GetNHits());
+  // hname = "SAC_NHits";
+  // hSvc->FillHisto(hname,fhitEvent->GetNHits());
   
-  for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
-    {
-      TRecoVHit* h = fhitEvent->Hit(j);
-      //std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
-    }
+  // for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
+  //   {
+  //     TRecoVHit* h = fhitEvent->Hit(j);
+  //     std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+  //   }
 
   
-  TRecoVClusCollection* clColl = fClColl;// fhitEvent->getClusCollection();
-  std::cout<<" from the SACRecoEvent N elements:  "<<clColl->GetNElements()<< std::endl;
-  hname = "SAC_NClusters";
-  hSvc->FillHisto(hname,clColl->GetNElements());
-  for (Int_t j=0; j<clColl->GetNElements(); ++j)
-    {
-      Int_t clSize =  (clColl->Element(j)->GetHitVecInClus()).size();
+  // TRecoVClusCollection* clColl = fClColl;fhitEvent->getClusCollection();
+  // std::cout<<" from the SACRecoEvent N elements:  "<<clColl->GetNElements()<< std::endl;
+  // hname = "SAC_NClusters";
+  // hSvc->FillHisto(hname,clColl->GetNElements());
+  // for (Int_t j=0; j<clColl->GetNElements(); ++j)
+  //   {
+  //     Int_t clSize =  (clColl->Element(j)->GetHitVecInClus()).size();
       
-      std::cout<<"... in the tree ... SAC_Cluster "<<j<<"  chId/energy/time " << clColl->Element(j)->GetChannelId() <<" "<<clColl->Element(j)->GetEnergy() <<" "<<clColl->Element(j)->GetTime() << std::endl;
-      std::cout <<"the index of the seed hits is " << clColl->Element(j)->GetSeed()<< std::endl;
-      std::cout <<"the number of hit belonging to this cluster is " << clColl->Element(j)->GetNHitsInClus() << std::endl;
-      std::cout << "size of vector of hits in cl " << clSize << std::endl;
-      //      std::cout << "the list of hits in the cluster is ";
-      std::cout<<" cluster "<<j<<" id/e/t/nhit/hits"<<clColl->Element(j)->GetChannelId()<<"/"<<clColl->Element(j)->GetEnergy()<<"/"<<clColl->Element(j)->GetTime()<<"/"<<clColl->Element(j)->GetNHitsInClus()<<"/ ";
-      for (unsigned int i=0; i<(clColl->Element(j)->GetHitVecInClus()).size(); i++) std::cout << " "<<(clColl->Element(j)->GetHitVecInClus()).at(i);
-      std::cout<<std::endl;
-      hname = "SAC_Cluster_size";
-      hSvc->FillHisto(hname,(Double_t)clSize);
-      hname = "SAC_Cluster_time";
-      hSvc->FillHisto(hname,clColl->Element(j)->GetTime());
-      hname = "SAC_Cluster_chId";
-      hSvc->FillHisto(hname,clColl->Element(j)->GetChannelId());
-      hname = "SAC_Cluster_energy";
-      hSvc->FillHisto(hname,clColl->Element(j)->GetEnergy());
-      hname = "SAC_Cluster_XY";
-      hSvc->FillHisto2(hname,clColl->Element(j)->GetPosition().x(),clColl->Element(j)->GetPosition().y());
-      hname = "SAC_Cluster_EwXY";
-      hSvc->FillHisto2(hname,clColl->Element(j)->GetPosition().x(),clColl->Element(j)->GetPosition().y(),
-		       clColl->Element(j)->GetEnergy());
+  //     std::cout<<"... in the tree ... SAC_Cluster "<<j<<"  chId/energy/time " << clColl->Element(j)->GetChannelId() <<" "<<clColl->Element(j)->GetEnergy() <<" "<<clColl->Element(j)->GetTime() << std::endl;
+  //     std::cout <<"the index of the seed hits is " << clColl->Element(j)->GetSeed()<< std::endl;
+  //     std::cout <<"the number of hit belonging to this cluster is " << clColl->Element(j)->GetNHitsInClus() << std::endl;
+  //     std::cout << "size of vector of hits in cl " << clSize << std::endl;
+  //          std::cout << "the list of hits in the cluster is ";
+  //     std::cout<<" cluster "<<j<<" id/e/t/nhit/hits"<<clColl->Element(j)->GetChannelId()<<"/"<<clColl->Element(j)->GetEnergy()<<"/"<<clColl->Element(j)->GetTime()<<"/"<<clColl->Element(j)->GetNHitsInClus()<<"/ ";
+  //     for (unsigned int i=0; i<(clColl->Element(j)->GetHitVecInClus()).size(); i++) std::cout << " "<<(clColl->Element(j)->GetHitVecInClus()).at(i);
+  //     std::cout<<std::endl;
+  //     hname = "SAC_Cluster_size";
+  //     hSvc->FillHisto(hname,(Double_t)clSize);
+  //     hname = "SAC_Cluster_time";
+  //     hSvc->FillHisto(hname,clColl->Element(j)->GetTime());
+  //     hname = "SAC_Cluster_chId";
+  //     hSvc->FillHisto(hname,clColl->Element(j)->GetChannelId());
+  //     hname = "SAC_Cluster_energy";
+  //     hSvc->FillHisto(hname,clColl->Element(j)->GetEnergy());
+  //     hname = "SAC_Cluster_XY";
+  //     hSvc->FillHisto2(hname,clColl->Element(j)->GetPosition().x(),clColl->Element(j)->GetPosition().y());
+  //     hname = "SAC_Cluster_EwXY";
+  //     hSvc->FillHisto2(hname,clColl->Element(j)->GetPosition().x(),clColl->Element(j)->GetPosition().y(),
+  // 		       clColl->Element(j)->GetEnergy());
 
-      Int_t iSeed = clColl->Element(j)->GetSeed();
-      Int_t chIdSeed = fhitEvent->Hit(iSeed)->GetChannelId(); 
-      Int_t chIdClus = clColl->Element(j)->GetChannelId(); 
-      if (chIdSeed!=chIdClus)std::cout<<" WARNING .... chIdSeed = "<<chIdSeed<<" chIdClus = "<<chIdClus<<std::endl;
+  //     Int_t iSeed = clColl->Element(j)->GetSeed();
+  //     Int_t chIdSeed = fhitEvent->Hit(iSeed)->GetChannelId(); 
+  //     Int_t chIdClus = clColl->Element(j)->GetChannelId(); 
+  //     if (chIdSeed!=chIdClus)std::cout<<" WARNING .... chIdSeed = "<<chIdSeed<<" chIdClus = "<<chIdClus<<std::endl;
 
-    }
+  //   }
   
   
-  std::cout<<"Out of SAC"<<std::endl;
+  // std::cout<<"Out of SAC"<<std::endl;
   return retCode;
 }
 

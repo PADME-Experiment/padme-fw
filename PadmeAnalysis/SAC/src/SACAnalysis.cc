@@ -104,12 +104,12 @@ Bool_t SACAnalysis::ProcessDataQuality()
       hSvc->FillHisto2(hname, float(chidx),  float(chidy));
     }
     hname = "SAC_SumHitEnergy";
-    hSvc->FillHisto(hname, EHitSum);
+    if (fhitEvent->GetNHits()>0) hSvc->FillHisto(hname, EHitSum);
     UInt_t trgMask = fRecoEvent->GetTriggerMask();
     if (trgMask==1)
     {
 	hname = "SAC_SumHitEnergy_BTFtrg";
-	hSvc->FillHisto(hname, EHitSum);
+	 if (fhitEvent->GetNHits()>0) hSvc->FillHisto(hname, EHitSum);
     }
     
 

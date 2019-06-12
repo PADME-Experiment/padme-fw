@@ -69,7 +69,7 @@ void PadmeVGeometry::InitFromPrimaryNumbers(PadmeVRecoConfig *cfg)
     *RotationX(fLocAngleXPadmeFrame)
     *RotationY(fLocAngleYPadmeFrame)
     *RotationZ(fLocAngleZPadmeFrame);
-  fLocalToGlobal = &a;
+  *fLocalToGlobal = a;
 }
 void PadmeVGeometry::InitFromChIdPositionMap(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {

@@ -47,6 +47,8 @@ public:
   Double_t CalcTime(UShort_t);
   Double_t CalcTimeSing(UShort_t);
   Double_t CalcTimeOver(UShort_t);
+  Double_t PeakSearch();
+
 
   //Standard hits corrections
   Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
@@ -139,8 +141,8 @@ private:
   Bool_t fIntCorrection;
   Bool_t fSaturatioCorrection;
   Bool_t fSaveAnalog;
+  Double_t fZeroSuppression;
 
-  
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;
   //  std::map < std::pair<int,int>,double> fCalibMap;   //moved into ECalCalibration class M. Raggi 19/04/2019

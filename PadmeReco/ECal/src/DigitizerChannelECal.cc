@@ -589,10 +589,6 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
 
-  if(fPrepareTemplate) {
-    fECalTemplate->PrepareTemplate(fSamples);  
-  }
-
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
     HitT = CalcTimeOver(40);
@@ -609,6 +605,11 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
   if (fEnergy < 1. && !fGlobalMode->IsPedestalMode()) return; //cut at 1 MeV nominal
 
+  if(fEnergy>50 && fPrepareTemplate && !IsSat){
+    fECalTemplate->PrepareTemplate(fSamples,HitT);  
+  }
+    
+    
   if(!fGlobalMode->IsPedestalMode()){
     //correct for saturation effects integrated charge M. Raggi 23/05/2019
     // do it before extrapolating to full integral

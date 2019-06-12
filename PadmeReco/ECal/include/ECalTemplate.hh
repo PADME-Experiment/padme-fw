@@ -28,7 +28,7 @@ protected:
 public:
   void Init();
   void WriteHist();
-  void PrepareTemplate(Short_t * v);
+  void PrepareTemplate(Short_t * v, Double_t time);
   void ReadTemplate();
 private :
 

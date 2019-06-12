@@ -38,6 +38,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 {
 // Setting flags for running modes.
   fGlobalMode = gOptions;
+
   
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
@@ -58,25 +59,27 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
-  fIntCorrection = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
- 
+  fIntCorrection  = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
+  fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
+  fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
+  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
+
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
-  SetAnalogOffSets(); //M. Raggi: 21/01/2019  read anaolg offsets values from files
+  SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     PrepareDebugHistos(); //debugging mode histos
   }
-//else{
-//    PrepareTmpHistos();  //Temp histo
-//  }
 }
+
 void DigitizerChannelECal::PrepareTmpHistos(){
   hListTmp    = new TList();
   if(!fUseOverSample){
     hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
     hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+    hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
   }
   // over sampled histograms
   Int_t nbinx=4000;
@@ -104,7 +107,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal->Branch("HitT",&HitT);
   ECal->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
   ECal->Branch("IsSat",&IsSat);
-  ECal->Branch("VMax",&VMax);
+  ECal->Branch("VMax",&fVMax);
 
   hPedCalo = new TH1D*[32];
   hAvgCalo = new TH1D*[32];
@@ -113,7 +116,6 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
 
-  hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
   //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
@@ -141,7 +143,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
 
 void DigitizerChannelECal::SaveDebugHistos(){
   fileOut->cd();
-  hListCal->Write(); //use it in monitor mode only  
+  if(fSaveAnalog) hListCal->Write(); //use it in monitor mode only  
   ECal->Write();
   // fileOut->Write();
   //  hListCal->ls();
@@ -192,13 +194,14 @@ void DigitizerChannelECal::ResetPedestal() {
 Double_t DigitizerChannelECal::ZSupHit(Float_t Thr, UShort_t NAvg) {
   fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
   Double_t ZSupHit=-1;
-  //  std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
+
   if(fRMS1000>Thr){
     ZSupHit=0;
   }else{
     ZSupHit=1;
     //    std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
   }
+  //  std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
   return ZSupHit;
 }
 
@@ -214,53 +217,53 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
   Int_t Ch=0;
   Int_t BID=0;
   //  std::cout<<"Pedestal modes in charge "<<pedestalsFromFirstSamples()<<" "<< hybridPedestals()<<std::endl;
-  if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
-    {
-//      Int_t Ch   = GetElChID();
-//      Int_t BID  = GetBdID();
-      Ch   = GetElChID();
-      BID  = GetBdID();      
-
-      fAvg200  = TMath::Mean(iStart,&fSamples[0]);
-      fRMS200  = TMath::RMS(iStart,&fSamples[0]);
-      Zsup  = fRMS1000;  
-      for(Short_t s=0;s<end;s++){
-	AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-	VMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
-	if(s>iStart && s<1000) {
-	  Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-	}
-	if (pedestalsFromFirstSamples()) Charge = Charge200; 
+  if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
+    //      Int_t Ch   = GetElChID();
+    //      Int_t BID  = GetBdID();
+//    Ch   = GetElChID();
+//    BID  = GetBdID();      
+    
+    fAvg200  = TMath::Mean(iStart,&fSamples[0]);
+    fRMS200  = TMath::RMS(iStart,&fSamples[0]);
+    Zsup  = fRMS1000;  
+    for(Short_t s=0;s<end;s++){
+      AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
+      fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
+      if(s>iStart && s<1000) {
+	Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
       }
     }
-  if (pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
-    {
-      Ch   = GetElChID();
-      BID  = GetBdID();
-
-      for(Short_t s=0;s<end;s++){
-	AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
-	if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
-      }
-      if (pedestalsFromAutoTrgEvents()) Charge = ChargeSin;
+    //    Double_t ZeromV=TMath::Mean(iStart,&AbsSamRec200[0]);
+    //if(abs(ZeromV)>0.0001 )  std::cout<<"BAD PEDESTAL!!! "<<ZeromV<<std::endl;
+    if(pedestalsFromFirstSamples()) Charge = Charge200; 
+  }
+  
+  if(pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
+    Ch   = GetElChID();
+    BID  = GetBdID();
+    
+    for(Short_t s=0;s<end;s++){
+      AbsSamRec[s]    = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi
+      if(s>iStart && s<1000) ChargeSin += 1*AbsSamRec[s]   *1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
     }
-  if (hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0)
-    {
-      Int_t Ch   = GetElChID();
-      Int_t BID  = GetBdID();
-
-      Zsup  = fRMS1000;  
-      for(Short_t s=0;s<end;s++){
-	// Hybrid calculation just an attempt most probably useless
-	if(fRMS200 < 5){ 
-	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
-	}else{
-	  AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
-	}
-	if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
+    if (pedestalsFromAutoTrgEvents()) Charge = ChargeSin;
+  }
+  if (hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
+    Int_t Ch   = GetElChID();
+    Int_t BID  = GetBdID();
+    
+    Zsup  = fRMS1000;  
+    for(Short_t s=0;s<end;s++){
+      // Hybrid calculation just an attempt most probably useless
+      if(fRMS200 < 5){ 
+	AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi
+      }else{
+	AbsSamRecHyb[s] = (Double_t) (-1.*fSamples[s]+fPedMap[std::make_pair(BID,Ch)])/4096*1000.; //in mV positivi     
       }
-      if (hybridPedestals()) Charge = ChargeHyb;
+      if(s>iStart && s<1000) ChargeHyb += 1*AbsSamRecHyb[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12;     
     }
+    if (hybridPedestals()) Charge = ChargeHyb;
+  }
   if(fGlobalMode->GetGlobalDebugMode()!=0){
     //    std::cout<<"Pedestal first 200 in charge "<<pedestalsFromFirstSamples()<<" Charge "<<Charge<<" Charge 200 "<<Charge200<<std::endl;
     //filling NTU Variables
@@ -396,9 +399,10 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.01){ 
+    //    if(rnd<0.01){ 
+    if(rnd<0.02){    /////CAMBIARE
       //      hListEv->Write();
-      hListTmp->Write();
+      if(fSaveAnalog) hListTmp->Write();
     }
   }
   //  Int_t TOver4=GetStartTime(Over4,150);
@@ -422,20 +426,21 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
   }
-
+  
   Int_t nsmooth=5;
   // Smooth the signal by averaging nsmooth samples 
-  for(ll=1;ll<1001;ll++){
+  //  for(ll=1;ll<1001;ll++){
+  for(ll=nsmooth/2;ll<1001;ll++){
     if(ll>nsmooth/2){
-    Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
-    Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
+      Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
+      Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
     }else{
       Temp[ll]=0;
       Temp1[ll]=0;
     }
     histo1->SetBinContent(ll,Temp1[ll]);
     // compute raw derivative subracting samples
-       if(ll>iDer+nsmooth/2 && ll<550){ 
+    if(ll>iDer+nsmooth/2 && ll<550){ 
       dxdt[ll]=-(Temp[ll]-Temp[ll-iDer]);
     }else{
       dxdt[ll]=0;
@@ -443,43 +448,45 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo->SetBinContent(ll,dxdt[ll]);
     //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
-//  Int_t Ch   = GetElChID();
-//  Int_t BID  = GetBdID();
+  histo->SetBinContent(ll,dxdt[ll]);
 
+  //  Int_t Ch   = GetElChID();
+  //  Int_t BID  = GetBdID();
+  
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
   fTimeSin = (Double_t)MaxBin*fTimeBin; 
-
+  
   //  if(Max>30) 
   //  std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
-
-//  //// TSPECTRUM search is too time consuming.
- // double XBig=10000.;
- //  Int_t npeaks=4;
- // fTimeSin=XBig;
- // if(Max>100){
- //   TSpectrum *s = new TSpectrum(npeaks);
- //   //  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
- //   Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
- //   // std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
- //   // ROOT 6 version
- //   //    Double_t *xpeaks = s->GetPositionX();
- //   //    Double_t *ypeaks = s->GetPositionY();
- //   // ROOT 5 version
- //   Float_t *xpeaks = s->GetPositionX();
- //   Float_t *ypeaks = s->GetPositionY();
- //   //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
- //   for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
- //     // ROOT 6 version
- //     //      Double_t xp   = xpeaks[ll];
- //     //      Double_t yp   = ypeaks[ll];
- //     // ROOT 5 version
- //     Float_t xp   = xpeaks[ll];
- //     Float_t yp   = ypeaks[ll];
- //     if(xp<fTimeSin) fTimeSin = xp*fTimeBin; //convert time in ns get it from data
- //     //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
- //   }
- // }
+  
+  //  //// TSPECTRUM search is too time consuming.
+  // double XBig=10000.;
+  //  Int_t npeaks=4;
+  // fTimeSin=XBig;
+  // if(Max>100){
+  //   TSpectrum *s = new TSpectrum(npeaks);
+  //   //  Double_t peak_thr  = fAmpThresholdLow/Max;   //minimum peak height allowed.
+  //   Int_t nfound = s->Search(histo,6,"",0.3);   //corrected for 2.5GHz cannot be less then 0.05
+  //   // std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+  //   // ROOT 6 version
+  //   //    Double_t *xpeaks = s->GetPositionX();
+  //   //    Double_t *ypeaks = s->GetPositionY();
+  //   // ROOT 5 version
+  //   Float_t *xpeaks = s->GetPositionX();
+  //   Float_t *ypeaks = s->GetPositionY();
+  //   //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+  //   for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
+  //     // ROOT 6 version
+  //     //      Double_t xp   = xpeaks[ll];
+  //     //      Double_t yp   = ypeaks[ll];
+  //     // ROOT 5 version
+  //     Float_t xp   = xpeaks[ll];
+  //     Float_t yp   = ypeaks[ll];
+  //     if(xp<fTimeSin) fTimeSin = xp*fTimeBin; //convert time in ns get it from data
+  //     //    fTimeSin = Max*fTimeBin; //convert time in ns get it from data
+  //   }
+  // }
 
   if(fGlobalMode->GetGlobalDebugMode()){  
     hdxdtMax->Fill(Max);
@@ -490,12 +497,13 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
  
   if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
-    if(rnd<0.02){ 
+    if(rnd<0.2){ 
       //      hListEv ->Write();
-      hListTmp->Write();
+      if(fSaveAnalog) hListTmp->Write();
     }
   }
 
+  //  PeakSearch();
 
 //  hTime->Fill(fTimeSin);
   //  histo->Fit("gaus");
@@ -560,9 +568,11 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
-  Double_t IsZeroSup = ZSupHit(5.,1000.);
+  //  std::cout<<"Zsupp "<<fZeroSuppression<<std::endl;
+  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
+  //  Double_t IsZeroSup = ZSupHit(5,1000.);
+  // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
@@ -577,20 +587,29 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
 
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
-
+  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
-  //  if (fEnergy < 1.) return; //cut at 1 MeV nominal
+  if (fEnergy < 1. && !fGlobalMode->IsPedestalMode()) return; //cut at 1 MeV nominal
 
-  //correct for non integrated charge M. Raggi 15/05/2019
-  if(fIntCorrection){ 
-    Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
-    if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
-    fEnergy /= QIntCorr; 
-    HitE200 /= QIntCorr; 
+  if(!fGlobalMode->IsPedestalMode()){
+    //correct for saturation effects integrated charge M. Raggi 23/05/2019
+    // do it before extrapolating to full integral
+    if(IsSat && fSaturatioCorrection) {
+      Double_t ESatCorr = CorrectSaturation();
+      fEnergy += ESatCorr; 
+      HitE200 += ESatCorr;     
+    }
+    
+    //correct for non integrated charge M. Raggi 15/05/2019
+    if(fIntCorrection){ 
+      Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
+      if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
+      fEnergy /= QIntCorr; 
+      HitE200 /= QIntCorr; 
+    }
   }
-
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);
@@ -620,14 +639,15 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     PrevPed.close();
     }
     else{ 
-      std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
+      std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
+      exit(-1);
     } 
   }
 
   // reading second half of the pedestals
   for(Int_t NBD=14;NBD<24;NBD++){
-    sprintf(fname,"config/BDPed/PedBD%d.ped",NBD);
-    //sprintf(fname,"config/BDPed/Ped%d.txt",NBD);
+    //sprintf(fname,"config/BDPed/PedBD%d.ped",NBD);
+    sprintf(fname,"config/BDPed/Ped%d.txt",NBD);
     PrevPed.open(fname);
     if(PrevPed.is_open()){
       double temp;
@@ -640,7 +660,8 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     PrevPed.close();
     }
     else{ 
-      std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
+      std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
+      exit(-1);
     } 
   }
 
@@ -779,24 +800,83 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   Bool_t IsSaturated=false;
   Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
   Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
-  Short_t nsat = 0;
-//  Int_t Ch     = GetElChID();
-//  Int_t BID    = GetBdID();
+  fNSat = 0;
+  Short_t SatThr = 15;
+  Short_t  FirstSat = -1;
+  Short_t  LastSat  = -1;
+  Int_t Ch     = GetElChID();
+  Int_t BID    = GetBdID();
+
 
   //  if(min < 5 || max>5050){ 
-  if(min < 5){ 
-    IsSaturated=true;
-    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
+  if(min < SatThr){ 
+    //    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
+    histoSat = (TH1D*) hListTmp->FindObject("hSat"); // swt the debug flag.
     
     //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<"fPed "<<fPedMap[std::make_pair(BID,Ch)]<<std::endl;
     for(int ll=0;ll<1001;ll++){
-      if(fSamples[ll]<5) nsat++;
-      if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
+      if(fSamples[ll]<SatThr){
+	if(FirstSat==-1) FirstSat = ll;
+	LastSat=ll;
+	fCountsLastSat=fSamples[ll];
+	fNSat++;
+      }
+      //  if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
+      histoSat->SetBinContent(ll,(Double_t)fSamples[ll]);
+      ///      std::cout<<"Filling "<<ll<<" fSample "<<fSamples[ll]<<std::endl;
     }
-    //    std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<" nsat "<<nsat<<std::endl;
-    //    if(fIsGlobalDebug) histoSat->Write();
-    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
+    if(fNSat>4) IsSaturated=true;
   }
   return IsSaturated;
 };
 
+// Return the energy to be added due to saturation of the signal.
+// using first Istart samples to compute pedestal
+Double_t DigitizerChannelECal::CorrectSaturation(){
+  Double_t VLastSat = 0.;
+  Double_t tau=150.;
+  VLastSat = (Double_t) (-1.*fCountsLastSat+fAvg200)/4096*1000.; 
+  fVMax                   = VLastSat/(exp(-fNSat/tau));
+  Double_t ChargeCorrExp  = (fVMax-VLastSat)*tau-(fVMax-VLastSat)*tau*(exp(-fNSat/tau));
+  Double_t ChargeCorrTri  = (fVMax-VLastSat)*fNSat/2;
+
+  Double_t ChargeCorrpC     = ChargeCorrTri*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+  // Double_t AdditionalEnergy = ChargeCorrpC/15.;  
+
+  ChargeCorrExp     = ChargeCorrExp*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+  Double_t AdditionalEnergy = ChargeCorrExp/15.;  
+  //  Double_t AdditionalEnergy = ChargeCorrTri/15.;  
+
+//  // Use the average correlation of Vmax to energy to compute the value of the energy given
+//  Double_t EnergyExtrapolated=
+
+  //  std::cout<<"saturated!! "<<min<<" BID "<<BID<<" CH "<<Ch<<" nsat "<<nsat<<" First "<<FirstSat<<" last "<<LastSat<<" VLast "<<VLastSat<<std::endl;
+  //  std::cout<<"New Max "<<fVMax<<" charge corr "<<ChargeCorrpC<<" Charge corr exp "<<ChargeCorrExp<<std::endl;
+  //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Write();
+  //    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
+  return AdditionalEnergy;
+}
+
+
+// searches for peak in the signal derivative
+Double_t DigitizerChannelECal::PeakSearch(){
+  TH1D* histo     = (TH1D*)  hListTmp->FindObject("hdxdt");
+  TH1D* Signal    = (TH1D*)  hListTmp->FindObject("hSignal");
+  TH1D* histotmp  = (TH1D*) histo->Clone();
+  TH1D* SignalTmp = (TH1D*) Signal->Clone();
+  Int_t Max    = histotmp->GetMaximum();
+  Int_t npeaks = 0.;
+  Int_t NRise  = 20.;
+  histotmp->Write();
+  //  SignalTmp->Write();
+  while(Max>50){
+    Int_t MaxBin = histotmp->GetMaximumBin();
+    for(Int_t kk=MaxBin-NRise;kk<MaxBin+NRise;kk++){
+      histotmp->SetBinContent(kk,0.);
+    }
+    std::cout<<histotmp<<" Dtdt max "<<Max<<" maxbin "<<MaxBin<<std::endl;
+    Max    = histotmp->GetMaximum();
+    npeaks++;
+  }
+  //  std::cout<<"changing histogram "<<npeaks<<std::endl;
+}

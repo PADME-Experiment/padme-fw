@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <cstdlib>
+#include <ctime>
 
 #include "DBService.hh"
 
@@ -153,15 +154,15 @@ int DBService::GetFileInfo(int& version,int& part,std::string& time_open, std::s
   MYSQL_RES* res;
   MYSQL_ROW row;
 
-  sprintf(sqlCode,"SELECT version,part,time_open,time_close,n_events,size FROM raw_file WHERE name = '%s'",filename.c_str());
+  sprintf(sqlCode,"SELECT version,part,time_open,time_close,n_events,size FROM daq_file WHERE name = '%s'",filename.c_str());
   if ( mysql_query(fDBHandle,sqlCode) ) {
-    printf("DBService::GetBoardList - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    printf("DBService::GetFileInfo - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
   res = mysql_store_result(fDBHandle);
   if (res == NULL) {
-    printf("DBService::GetBoardList - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    printf("DBService::GetFileInfo - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
     return DBSERVICE_SQLERROR;
   }
 
@@ -189,34 +190,88 @@ int DBService::GetFileInfo(int& version,int& part,std::string& time_open, std::s
 
 }
 
-int DBService::GetRunEvents(int& n_events, int run_nr)
+//int DBService::GetRunEvents(int& n_events, int run_nr)
+//{
+//
+//  char sqlCode[10240];
+//  MYSQL_RES* res;
+//  MYSQL_ROW row;
+//
+//  sprintf(sqlCode,"SELECT total_events FROM run WHERE number = %d",run_nr);
+//  if ( mysql_query(fDBHandle,sqlCode) ) {
+//    printf("DBService::GetRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+//    return DBSERVICE_SQLERROR;
+//  }
+//
+//  res = mysql_store_result(fDBHandle);
+//  if (res == NULL) {
+//    printf("DBService::GetRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+//    return DBSERVICE_SQLERROR;
+//  }
+//
+//  int result = DBSERVICE_OK;
+//  if (mysql_num_rows(res) == 0) {
+//    printf("DBService::GetRunEvents ERROR - run %d not found in DB\n", run_nr);
+//    result = DBSERVICE_ERROR;
+//  } else if (mysql_num_rows(res) == 1) {
+//    row = mysql_fetch_row(res);
+//    n_events   = atoi(row[0]);
+//  } else {
+//    printf("DBService::GetRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+//    result = DBSERVICE_ERROR;
+//  }
+//
+//  mysql_free_result(res);
+//  res = NULL;
+//
+//  return result;
+//
+//}
+
+int DBService::UpdateMergerInfo(unsigned int n_files, unsigned int n_events, unsigned long int size, int merger_id)
+{
+
+  char sqlCode[10240];
+  //MYSQL_RES* res;
+
+  sprintf(sqlCode,"UPDATE lvl1_process SET n_raw_files = %u, total_events = %u, total_size = %lu WHERE id = %d",n_files,n_events,size,merger_id);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::UpdateMergerInfo - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  return DBSERVICE_OK;
+
+}
+
+int DBService::GetMergerId(int& merger_id, int run_nr)
 {
 
   char sqlCode[10240];
   MYSQL_RES* res;
   MYSQL_ROW row;
 
-  sprintf(sqlCode,"SELECT total_events FROM run WHERE number = %d",run_nr);
+  sprintf(sqlCode,"SELECT id FROM lvl1_process WHERE run_number = %d",run_nr);
   if ( mysql_query(fDBHandle,sqlCode) ) {
-    printf("DBService::GetRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    printf("DBService::GetMergerId - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
   res = mysql_store_result(fDBHandle);
   if (res == NULL) {
-    printf("DBService::GetRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+    printf("DBService::GetMergerId - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
     return DBSERVICE_SQLERROR;
   }
 
   int result = DBSERVICE_OK;
   if (mysql_num_rows(res) == 0) {
-    printf("DBService::GetRunEvents ERROR - run %d not found in DB\n", run_nr);
+    printf("DBService::GetMergerId - ERROR - merger not found for run %d\n", run_nr);
     result = DBSERVICE_ERROR;
   } else if (mysql_num_rows(res) == 1) {
     row = mysql_fetch_row(res);
-    n_events   = atoi(row[0]);
+    merger_id = atoi(row[0]);
   } else {
-    printf("DBService::GetRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
+    printf("DBService::GetMergerId ERROR - multiple mergers (n=%d) defined for run %d (?)\n",(int)mysql_num_rows(res),run_nr);
     result = DBSERVICE_ERROR;
   }
 
@@ -227,36 +282,99 @@ int DBService::GetRunEvents(int& n_events, int run_nr)
 
 }
 
-int DBService::UpdateRunEvents(int n_events, int run_nr)
+int DBService::SetMergerStatus(int status, int merger_id)
 {
 
   char sqlCode[10240];
-  MYSQL_RES* res;
+  //MYSQL_RES* res;
 
-  sprintf(sqlCode,"UPDATE run SET total_events = %d WHERE number = %d",n_events,run_nr);
+  sprintf(sqlCode,"UPDATE lvl1_process SET status = %d WHERE id = %d",status,merger_id);
   if ( mysql_query(fDBHandle,sqlCode) ) {
-    printf("DBService::UpdateRunEvents - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    printf("DBService::SetMergerStatus - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
-  res = mysql_store_result(fDBHandle);
-  if (res == NULL) {
-    printf("DBService::UpdateRunEvents - ERROR retrieving result: %s\n", mysql_error(fDBHandle));
+  return DBSERVICE_OK;
+
+}
+
+int DBService::SetMergerTime(std::string sel, int merger_id)
+{
+
+  char sqlCode[10240];
+  //MYSQL_RES* res;
+
+  time_t t = time(0);
+  struct tm* t_st = gmtime(&t);
+
+  if (sel.compare("START") == 0) {
+
+    sprintf(sqlCode,"UPDATE lvl1_process SET time_start = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+	    1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,merger_id);
+
+  } else if (sel.compare("STOP") == 0) {
+
+    sprintf(sqlCode,"UPDATE lvl1_process SET time_stop = '%04d-%02d-%02d %02d:%02d:%02d' WHERE id = %d",
+	    1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,merger_id);
+
+  } else {
+
+    printf("DBService::SetMergerTime ERROR - unknown time tpe '%s' requested for merger id %d\n",
+	   sel.c_str(),merger_id);
+    return DBSERVICE_ERROR;
+
+  }
+
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::SetMergerTime - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
     return DBSERVICE_SQLERROR;
   }
 
-  int result = DBSERVICE_OK;
-  if (mysql_num_rows(res) == 0) {
-    printf("DBService::UpdateRunEvents ERROR - run %d not found in DB\n", run_nr);
-    result = DBSERVICE_ERROR;
-  } else if (mysql_num_rows(res) != 1) {
-    printf("DBService::UpdateRunEvents ERROR - run %d defined %d times in DB (?)\n", run_nr,(int)mysql_num_rows(res));
-    result = DBSERVICE_ERROR;
+  return DBSERVICE_OK;
+
+}
+
+int DBService::OpenRawFile(int& file_id,int merger_id,std::string name,int part)
+{
+
+  char sqlCode[10240];
+  //MYSQL_RES* res;
+
+  time_t t = time(0);
+  struct tm* t_st = gmtime(&t);
+  sprintf(sqlCode,"INSERT INTO raw_file (lvl1_process_id,name,part,status,time_open,n_events,size) VALUES (%d,'%s',%d,0,'%04d-%02d-%02d %02d:%02d:%02d',0,0)",
+	  merger_id,name.c_str(),part,1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec);
+
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::OpenRawFile - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
   }
 
-  mysql_free_result(res);
-  res = NULL;
+  file_id = mysql_insert_id(fDBHandle);
+  if (file_id == 0) {
+    printf("DBService::OpenRawFile - ERROR unable to get file id from DB\n");
+    return DBSERVICE_ERROR;
+  }
 
-  return result;
+  return DBSERVICE_OK;
+
+}
+
+int DBService::CloseRawFile(int file_id,unsigned int nevents,unsigned long int size)
+{
+
+  char sqlCode[10240];
+  //MYSQL_RES* res;
+
+  time_t t = time(0);
+  struct tm* t_st = gmtime(&t);
+  sprintf(sqlCode,"UPDATE raw_file SET status = 1, time_close = '%04d-%02d-%02d %02d:%02d:%02d', n_events = %u, size = %lu WHERE id = %d",
+	  1900+t_st->tm_year,t_st->tm_mon+1,t_st->tm_mday,t_st->tm_hour,t_st->tm_min,t_st->tm_sec,nevents,size,file_id);
+  if ( mysql_query(fDBHandle,sqlCode) ) {
+    printf("DBService::CloseRawFile - ERROR executing SQL query: %s\n%s\n", mysql_error(fDBHandle),sqlCode);
+    return DBSERVICE_SQLERROR;
+  }
+
+  return DBSERVICE_OK;
 
 }

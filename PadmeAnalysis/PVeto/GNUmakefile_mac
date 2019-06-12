@@ -1,0 +1,5 @@
+# Makefile
+
+NAME := PVeto
+
+include ../config/subdirs_mac.gmk

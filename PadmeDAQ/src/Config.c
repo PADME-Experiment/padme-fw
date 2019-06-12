@@ -36,6 +36,10 @@ int reset_config()
 
   int ch;
 
+  Config->process_id = 0;
+
+  strcpy(Config->process_mode,"DAQ"); // Work in DAQ mode
+
   strcpy(Config->config_file,"");
 
   strcpy(Config->quit_file,"run/quit");
@@ -43,22 +47,28 @@ int reset_config()
   strcpy(Config->initok_file,"run/initok.b00"); // InitOK file for default board 0
   strcpy(Config->initfail_file,"run/initfail.b00"); // InitFail file for default board 0
   strcpy(Config->lock_file,"run/lock.b00"); // Lock file for default board 0
-  //strcpy(Config->db_file,"db/PadmeDAQ.db");
 
-  // All data files written to subdirectory "data" of current directory
-  strcpy(Config->data_file,"data/daq_b00"); // Data filename template for default board 0
+  Config->run_number = 0; // Dummy run (no DB access)
 
-  // Dummy test run
-  Config->run_number = 0;
-  strcpy(Config->run_type,"TEST");
-  Config->process_id = 0; // Id of process in the DB
+  strcpy(Config->input_stream,""); // No input stream defined for DAQ mode
+
+  strcpy(Config->output_mode,"FILE"); // Default to old functioning mode (write to file)
+
+  strcpy(Config->output_stream,""); // No output stream defined when in FILE mode
+
+  // In FILE mode all data files written to subdirectory "data" of current directory
+  strcpy(Config->data_dir,"data/");
+  strcpy(Config->data_file,"daq_b00"); // Data filename template for default board 0
 
   Config->total_daq_time = 0; // Run forever
   //Config->total_daq_time = 2; // While testing use a 2s run time
 
   Config->board_id = 0; // Board 0 is the default board used for testing
 
+  Config->board_sn = 0; // Default to dummy board serial number
+
   // Use board_id as default to set connection info
+  Config->node_id = -1;
   Config->conet2_link = -1;
   Config->conet2_slot = -1;
 
@@ -86,26 +96,38 @@ int reset_config()
   // Use digitizer buffer up to its full size (128 events for V1742, 1024 for V1742B)
   Config->max_num_events_blt = 128;
 
-  // Do not apply zero-suppression (test phase, this default will change in production)
-  Config->zero_suppression = 0;
+  // Enable DRS4 corrections to sampled data
+  Config->drs4corr_enable = 1;
 
-  // Set default parameters for zero-suppression algorithm
+  // Add a delay between successive polls to the board
+  Config->daq_loop_delay = 10000; // wait 10 msec after each iteration
+
+  // Apply zero-suppression algorithm 2 in flagging mode (test phase, this default will change in production)
+  Config->zero_suppression = 102;
+
+  // Set default parameters for zero-suppression algorithm 1
   Config->zs1_head = 80; // Use first 80 samples to compute mean and rms
   Config->zs1_tail = 30; // Do not use final 30 samples for zero suppression
   Config->zs1_nsigma = 3.; // Threshold set a mean +/- 3*rms
   Config->zs1_nabovethr = 4; // Require at least 4 consecutive samples above threshold to accept the channel
   Config->zs1_badrmsthr = 15.; // If rms is above 15 counts, channel has problems and is accepted
 
-  // Enable DRS4 corrections to sampled data
-  Config->drs4corr_enable = 1;
+  // Set default parameters for zero-suppression algorithm 2
+  Config->zs2_tail = 30; // Do not use final 30 samples for zero suppression
+  Config->zs2_minrms = 4.6;
+  for(ch=0;ch<32;ch++) Config->zs2_minrms_ch[ch] = Config->zs2_minrms;
 
-  // Add a delay between successive polls to the board
-  Config->daq_loop_delay = 100000; // wait 0.1 sec after each iteration
+  // Set default parameters for trigger-based autopass system
+  Config->auto_threshold = 0x0400; // Threshold below which trigger is considered ON (usual levels are 0x0800/0x0100)
+  Config->auto_duration = 150; // Trigger ON duration (in ns) after which autopass is enabled
 
   // Ouput file limits
   Config->file_max_duration = 900; // 15 min
   Config->file_max_size = 1024*1024*1024; // 1GiB
   Config->file_max_events = 100000; // 1E5 events
+
+  // Rate of debug output (1=all events)
+  Config->debug_scale = 100; // Info about one event on 100 is written to debug output
 
   return 0;
 
@@ -121,7 +143,10 @@ int read_config(char *cfgfile)
   char param[MAX_PARAM_NAME_LEN];
   char value[MAX_PARAM_VALUE_LEN];
   size_t plen,vlen;
-  uint32_t v;
+  int32_t v;
+  //int64_t vl;
+  uint32_t vu;
+  uint64_t vul;
   float vf;
   int ch;
 
@@ -195,12 +220,19 @@ int read_config(char *cfgfile)
       //printf("Parameter <%s> Value <%s>\n",param,value);
 
       // Interpret parameter
-      if ( strcmp(param,"quit_file")==0 ) {
-	if ( strlen(value)<MAX_FILE_LEN ) {
-	  strcpy(Config->quit_file,value);
+      if ( strcmp(param,"process_id")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->process_id = v;
+	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"process_mode")==0 ) {
+	if ( strcmp(value,"DAQ")==0 || strcmp(value,"ZSUP")==0 || strcmp(value,"FAKE")==0) {
+	  strcpy(Config->process_mode,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
 	} else {
-	  printf("WARNING - quit_file name too long (%lu characters): %s\n",strlen(value),value);
+	  printf("WARNING - Unknown process mode '%s' selected: ignoring\n",value);
 	}
       } else if ( strcmp(param,"start_file")==0 ) {
 	if ( strlen(value)<MAX_FILE_LEN ) {
@@ -208,6 +240,13 @@ int read_config(char *cfgfile)
 	  printf("Parameter %s set to '%s'\n",param,value);
 	} else {
 	  printf("WARNING - start_file name too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"quit_file")==0 ) {
+	if ( strlen(value)<MAX_FILE_LEN ) {
+	  strcpy(Config->quit_file,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - quit_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
       } else if ( strcmp(param,"initok_file")==0 ) {
 	if ( strlen(value)<MAX_FILE_LEN ) {
@@ -230,20 +269,6 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - lock_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
-	//} else if ( strcmp(param,"db_file")==0 ) {
-	//	if ( strlen(value)<MAX_FILE_LEN ) {
-	//	  strcpy(Config->db_file,value);
-	//	  printf("Parameter %s set to '%s'\n",param,value);
-	//	} else {
-	//	  printf("WARNING - db_file name too long (%lu characters): %s\n",strlen(value),value);
-	//	}
-      } else if ( strcmp(param,"data_file")==0 ) {
-	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
-	  strcpy(Config->data_file,value);
-	  printf("Parameter %s set to '%s'\n",param,value);
-	} else {
-	  printf("WARNING - data_file name too long (%lu characters): %s\n",strlen(value),value);
-	}
       } else if ( strcmp(param,"run_number")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
 	  Config->run_number = v;
@@ -251,12 +276,40 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
-      } else if ( strcmp(param,"run_type")==0 ) {
-	if ( strcmp(value,"DAQ")==0 || strcmp(value,"COSMIC")==0 || strcmp(value,"TEST")==0 ) {
-	  strcpy(Config->run_type,value);
+      } else if ( strcmp(param,"input_stream")==0 ) {
+	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
+	  strcpy(Config->input_stream,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
 	} else {
-	  printf("WARNING - Unknown run type '%s' selected: ignoring\n",value);
+	  printf("WARNING - input_stream name too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"output_mode")==0 ) {
+	if ( strcmp(value,"FILE")==0 || strcmp(value,"STREAM")==0 ) {
+	  strcpy(Config->output_mode,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - Unknown output mode '%s' selected: ignoring\n",value);
+	}
+      } else if ( strcmp(param,"output_stream")==0 ) {
+	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
+	  strcpy(Config->output_stream,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - output_stream name too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"data_dir")==0 ) {
+	if ( strlen(value)<MAX_DATA_DIR_LEN ) {
+	  strcpy(Config->data_dir,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - data_dir name too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"data_file")==0 ) {
+	if ( strlen(value)<MAX_DATA_FILE_LEN ) {
+	  strcpy(Config->data_file,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - data_file name too long (%lu characters): %s\n",strlen(value),value);
 	}
       } else if ( strcmp(param,"total_daq_time")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
@@ -273,6 +326,13 @@ int read_config(char *cfgfile)
 	  } else {
 	    printf("WARNING - board_id set to %d, must be < %d\n",v,MAX_N_BOARDS);
 	  }
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"node_id")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->node_id = v;
+	  printf("Parameter %s set to %d\n",param,v);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -339,44 +399,51 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Value %s not valid for parameter %s: use NIM or TTL\n",value,param);
 	}
       } else if ( strcmp(param,"group_enable_mask")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->group_enable_mask = v;
-	  printf("Parameter %s set to 0x%1x\n",param,v);
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->group_enable_mask = vu;
+	  printf("Parameter %s set to 0x%1x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"channel_enable_mask")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->channel_enable_mask = v;
-	  printf("Parameter %s set to 0x%08x\n",param,v);
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->channel_enable_mask = vu;
+	  printf("Parameter %s set to 0x%08x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"offset_global")==0 ) {
-	if ( sscanf(value,"%x",&v) ) {
-	  Config->offset_global = v;
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->offset_global = vu;
 	  for(ch=0;ch<32;ch++) Config->offset_ch[ch] = Config->offset_global;
-	  printf("Parameter %s set to 0x%04x\n",param,v);
+	  printf("Parameter %s set to 0x%04x\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"post_trigger_size")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->post_trigger_size = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->post_trigger_size = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"max_num_events_blt")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->max_num_events_blt = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->max_num_events_blt = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"drs4corr_enable")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
 	  Config->drs4corr_enable = v;
+	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"daq_loop_delay")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->daq_loop_delay = v;
 	  printf("Parameter %s set to %d\n",param,v);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
@@ -423,10 +490,32 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
-      } else if ( strcmp(param,"daq_loop_delay")==0 ) {
+      } else if ( strcmp(param,"zs2_tail")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
-	  Config->daq_loop_delay = v;
+	  Config->zs2_tail = v;
 	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"zs2_minrms")==0 ) {
+	if ( sscanf(value,"%f",&vf) ) {
+	  Config->zs2_minrms = vf;
+	  for(ch=0;ch<32;ch++) Config->zs2_minrms_ch[ch] = Config->zs2_minrms;
+	  printf("Parameter %s set to %f\n",param,vf);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"auto_threshold")==0 ) {
+	if ( sscanf(value,"%x",&vu) ) {
+	  Config->auto_threshold = vu;
+	  printf("Parameter %s set to 0x%04x\n",param,vu);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
+      } else if ( strcmp(param,"auto_duration")==0 ) {
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->auto_duration = vu;
+	  printf("Parameter %s set to %u\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
@@ -438,19 +527,26 @@ int read_config(char *cfgfile)
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"file_max_size")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->file_max_size = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%lu",&vul) ) {
+	  Config->file_max_size = vul;
+	  printf("Parameter %s set to %lu\n",param,vul);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"file_max_events")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->file_max_events = v;
-	  printf("Parameter %s set to %d\n",param,v);
+	if ( sscanf(value,"%u",&vu) ) {
+	  Config->file_max_events = vu;
+	  printf("Parameter %s set to %d\n",param,vu);
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"debug_scale")==0 ) {
+        if ( sscanf(value,"%u",&vu) ) {
+          Config->debug_scale = vu;
+          printf("Parameter %s set to %d\n",param,vu);
+        } else {
+          printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+        }
       } else {
 	printf("WARNING - Unknown parameter %s from line:\n%s\n",param,line);
       }
@@ -510,6 +606,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"zs2_minrms_ch")==0 ) {
+	if ( sscanf(value,"%f",&vf) ) {
+	  Config->zs2_minrms_ch[ch] = vf;
+	  printf("Parameter %s for channel %d set to %f\n",param,ch,vf);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else {
 	printf("WARNING - Unknown channel parameter %s from line:\n%s\n",param,line);
       }
@@ -537,46 +640,90 @@ int print_config(){
   int i;
 
   printf("\n=== Configuration parameters for this run ===\n");
+  printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
+  printf("process_mode\t\t'%s'\t\tfunctioning mode for this PadmeDAQ process (DAQ, ZSUP, or FAKE)\n",Config->process_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
-  printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
-  printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
+
+  // Control files are only used by DAQ. Will disappear when HW run control signals will be in place
+  if (strcmp(Config->process_mode,"DAQ")==0) {
+    printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);
+    printf("quit_file\t\t'%s'\tname of quit file. DAQ will exit when this file is created\n",Config->quit_file);
+  }
+
   printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
   printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
-  //printf("db_file\t\t\t'%s'\tname of db file (sqlite3)\n",Config->db_file);
-  //printf("data_dir\t\t'%s'\t\tpath where data files will be written\n",Config->data_dir);
-  printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
+
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
-  printf("run_type\t\t'%s'\t\trun type (DAQ, COSMIC, TEST)\n",Config->run_type);
+
+  // Only ZSUP uses STREAM input
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
+    printf("input_stream\t\t'%s'\tname of virtual file used as input stream\n",Config->input_stream);
+  }
+
+  printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
+  if (strcmp(Config->output_mode,"STREAM")==0) {
+    printf("output_stream\t\t%s\t\tname of virtual file used as output stream\n",Config->output_stream);
+  } else {
+    printf("data_dir\t\t'%s'\t\tdirectory where output files will be stored\n",Config->data_dir);
+    printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
+  }
+
   printf("board_id\t\t%d\t\tboard ID\n",Config->board_id);
+  printf("node_id\t\t\t%d\t\tDB id of node running the process\n",Config->node_id);
   printf("conet2_link\t\t%d\t\tCONET2 link\n",Config->conet2_link);
   printf("conet2_slot\t\t%d\t\tCONET2 slot\n",Config->conet2_slot);
-  printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
-  printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
-  printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
-  printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);
-  printf("group_enable_mask\t0x%1x\t\tmask to enable groups of channels\n",Config->group_enable_mask);
-  printf("channel_enable_mask\t0x%08x\tmask to enable individual channels\n",Config->channel_enable_mask);
-  printf("offset_global\t\t0x%04x\t\tglobal DC offset\n",Config->offset_global);
-  for(i=0;i<32;i++) {
-    if (Config->offset_ch[i] != Config->offset_global) printf("offset_ch\t%.2d\t0x%04x\n",i,Config->offset_ch[i]);
+
+  // Show parameters which are relevant for DAQ or FAKE (N.B. FAKE only uses a subset of them)
+  if (strcmp(Config->process_mode,"DAQ")==0 || strcmp(Config->process_mode,"FAKE")==0) {
+    printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
+    printf("startdaq_mode\t\t%d\t\tstart/stop daq mode (0:SW, 1:S_IN, 2:trg)\n",Config->startdaq_mode);
+    printf("drs4_sampfreq\t\t%d\t\tDRS4 sampling frequency (0:5GHz, 1:2.5GHz, 2:1GHz)\n",Config->drs4_sampfreq);
+    printf("trigger_mode\t\t%d\t\ttrigger mode (0:ext, 1:fast, 2:sw)\n",Config->trigger_mode);
+    printf("trigger_iolevel\t\t'%s'\t\ttrigger signal IO level (NIM or TTL)\n",Config->trigger_iolevel);
+    printf("group_enable_mask\t0x%1x\t\tmask to enable groups of channels\n",Config->group_enable_mask);
+    printf("channel_enable_mask\t0x%08x\tmask to enable individual channels\n",Config->channel_enable_mask);
+    printf("offset_global\t\t0x%04x\t\tglobal DC offset\n",Config->offset_global);
+    for(i=0;i<32;i++) {
+      if (Config->offset_ch[i] != Config->offset_global) printf("offset_ch\t%.2d\t0x%04x\n",i,Config->offset_ch[i]);
+    }
+    printf("post_trigger_size\t%d\t\tpost trigger size\n",Config->post_trigger_size);
+    printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
+    printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
+    printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
+    printf("auto_threshold\t\t0x%04x\t\tautopass: threshold below which trigger is considered ON\n",Config->auto_threshold);
+    printf("auto_duration\t\t%d\t\tautopass: number of ns of trigger ON above which autopass is enabled\n",Config->auto_duration);
   }
-  printf("post_trigger_size\t%d\t\tpost trigger size\n",Config->post_trigger_size);
-  printf("max_num_events_blt\t%d\t\tmax number of events to transfer in a single readout\n",Config->max_num_events_blt);
-  printf("drs4corr_enable\t\t%d\t\tenable (1) or disable (0) DRS4 corrections to sampled data\n",Config->drs4corr_enable);
-  printf("zero_suppression\t%d\t\tdisable (0) or enable/choose (>0) zero-suppression algorithm\n",Config->zero_suppression);
-  if (Config->zero_suppression == 1) {
-    printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
-    printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
-    printf("zs1_nsigma\t\t%5.3f\t\tnumber of sigmas around mean used to set the threshold\n",Config->zs1_nsigma);
-    printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
-    printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
+
+  // Show parameters which are relevant for ZSUP
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
+    printf("zero_suppression\t%d\t\tzero-suppression - 100*mode+algorithm (mode:0=reject,1=flag - algorithm:0=OFF,1-15=algorithm id)\n",Config->zero_suppression);
+
+    // Only show parameters which are relevant for the selected zero suppression algorithm
+    if (Config->zero_suppression%100 == 1) {
+      printf("zs1_head\t\t%d\t\tnumber of samples to use to compute mean and rms\n",Config->zs1_head);
+      printf("zs1_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs1_tail);
+      printf("zs1_nsigma\t\t%5.3f\t\tnumber of sigmas around mean used to set the threshold\n",Config->zs1_nsigma);
+      printf("zs1_nabovethr\t\t%d\t\tnumber of consecutive above-threshold samples required to accept the channel\n",Config->zs1_nabovethr);
+      printf("zs1_badrmsthr\t\t%5.1f\t\trms value above which channel is accepted as problematic\n",Config->zs1_badrmsthr);
+    } else if (Config->zero_suppression%100 == 2) {
+      printf("zs2_tail\t\t%d\t\tnumber of samples to reject at the end\n",Config->zs2_tail);
+      printf("zs2_minrms\t\t%8.3f\tglobal RMS threshold to accept the event\n",Config->zs2_minrms);
+    for(i=0;i<32;i++) {
+      if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) printf("zs2_minrms_ch\t%.2d\t%8.3f\tRMS threshold for channel %d\n",i,Config->zs2_minrms_ch[i],i);
+    }
+    }
   }
-  printf("total_daq_time\t\t%d\t\ttime (secs) after which daq will stop. 0=run forever\n",Config->total_daq_time);
-  printf("daq_loop_delay\t\t%d\t\twait time inside daq loop in usecs\n",Config->daq_loop_delay);
-  printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
-  printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
-  printf("file_max_events\t\t%d\t\tmax number of events to write before changing output file\n",Config->file_max_events);
+
+  // These are only relevant for FILE output mode as in STREAM mode the output file never changes
+  if (strcmp(Config->output_mode,"FILE")==0) {
+    printf("file_max_duration\t%d\t\tmax time to write data before changing output file\n",Config->file_max_duration);
+    printf("file_max_size\t\t%lu\tmax size of output file before changing it\n",Config->file_max_size);
+    printf("file_max_events\t\t%u\t\tmax number of events to write before changing output file\n",Config->file_max_events);
+  }
+
+  printf("debug_scale\t\t%u\t\tDebug output downscale factor\n",Config->debug_scale);
+
   printf("=== End of configuration parameters ===\n\n");
 
   return 0;
@@ -590,37 +737,46 @@ int save_config()
   int i;
   char line[2048];
 
+  db_add_cfg_para(Config->process_id,"process_mode",Config->process_mode);
   db_add_cfg_para(Config->process_id,"config_file",Config->config_file);
 
-  db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
-
-  db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  // Control files are only used by DAQ. Will disappear when HW run control signals will be in place
+  if (strcmp(Config->process_mode,"DAQ")==0) {
+    db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
+    db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  }
 
   db_add_cfg_para(Config->process_id,"initok_file",Config->initok_file);
-
   db_add_cfg_para(Config->process_id,"initfail_file",Config->initfail_file);
-
   db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
-
-  //db_add_cfg_para(Config->process_id,"db_file",Config->db_file);
 
   sprintf(line,"%d",Config->run_number);
   db_add_cfg_para(Config->process_id,"run_number",line);
 
-  db_add_cfg_para(Config->process_id,"run_type",Config->run_type);
+  // Only ZSUP uses STREAM input
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
+    db_add_cfg_para(Config->process_id,"input_stream",Config->input_stream);
+  }
 
-  sprintf(line,"%d",Config->process_id);
-  db_add_cfg_para(Config->process_id,"process_id",line);
-
-  //db_add_cfg_para(Config->process_id,"data_dir",Config->data_dir);
-
-  db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
-
-  sprintf(line,"%d",Config->total_daq_time);
-  db_add_cfg_para(Config->process_id,"total_daq_time",line);
+  db_add_cfg_para(Config->process_id,"output_mode",Config->output_mode);
+  if (strcmp(Config->output_mode,"STREAM")==0) {
+    db_add_cfg_para(Config->process_id,"output_stream",Config->output_stream);
+  } else {
+    db_add_cfg_para(Config->process_id,"data_dir",Config->data_dir);
+    db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
+  }
 
   sprintf(line,"%d",Config->board_id);
   db_add_cfg_para(Config->process_id,"board_id",line);
+
+  // Only save board serial number if it is already defined
+  if (Config->board_sn > 0) {
+    sprintf(line,"%u",Config->board_sn);
+    db_add_cfg_para(Config->process_id,"board_sn",line);
+  }
+
+  sprintf(line,"%d",Config->node_id);
+  db_add_cfg_para(Config->process_id,"node_id",line);
 
   sprintf(line,"%d",Config->conet2_link);
   db_add_cfg_para(Config->process_id,"conet2_link",line);
@@ -628,69 +784,109 @@ int save_config()
   sprintf(line,"%d",Config->conet2_slot);
   db_add_cfg_para(Config->process_id,"conet2_slot",line);
 
-  sprintf(line,"%d",Config->startdaq_mode);
-  db_add_cfg_para(Config->process_id,"startdaq_mode",line);
 
-  sprintf(line,"%d",Config->drs4_sampfreq);
-  db_add_cfg_para(Config->process_id,"drs4_sampfreq",line);
+  // Save parameters which are relevant for DAQ or FAKE (N.B. FAKE only uses a subset of them)
+  if (strcmp(Config->process_mode,"DAQ")==0 || strcmp(Config->process_mode,"FAKE")==0) {
 
-  sprintf(line,"%d",Config->trigger_mode);
-  db_add_cfg_para(Config->process_id,"trigger_mode",line);
+    sprintf(line,"%d",Config->total_daq_time);
+    db_add_cfg_para(Config->process_id,"total_daq_time",line);
 
-  db_add_cfg_para(Config->process_id,"trigger_iolevel",Config->trigger_iolevel);
+    sprintf(line,"%d",Config->startdaq_mode);
+    db_add_cfg_para(Config->process_id,"startdaq_mode",line);
 
-  sprintf(line,"0x%1x",Config->group_enable_mask);
-  db_add_cfg_para(Config->process_id,"group_enable_mask",line);
+    sprintf(line,"%d",Config->drs4_sampfreq);
+    db_add_cfg_para(Config->process_id,"drs4_sampfreq",line);
 
-  sprintf(line,"0x%08x",Config->channel_enable_mask);
-  db_add_cfg_para(Config->process_id,"channel_enable_mask",line);
+    sprintf(line,"%d",Config->trigger_mode);
+    db_add_cfg_para(Config->process_id,"trigger_mode",line);
 
-  sprintf(line,"0x%04x",Config->offset_global);
-  db_add_cfg_para(Config->process_id,"offset_global",line);
+    db_add_cfg_para(Config->process_id,"trigger_iolevel",Config->trigger_iolevel);
 
-  for(i=0;i<32;i++) {
-    if (Config->offset_ch[i] != Config->offset_global) {
-      sprintf(line,"%02d 0x%04x",i,Config->offset_ch[i]);
-      db_add_cfg_para(Config->process_id,"offset_ch",line);
+    sprintf(line,"0x%1x",Config->group_enable_mask);
+    db_add_cfg_para(Config->process_id,"group_enable_mask",line);
+
+    sprintf(line,"0x%08x",Config->channel_enable_mask);
+    db_add_cfg_para(Config->process_id,"channel_enable_mask",line);
+
+    sprintf(line,"0x%04x",Config->offset_global);
+    db_add_cfg_para(Config->process_id,"offset_global",line);
+
+    for(i=0;i<32;i++) {
+      if (Config->offset_ch[i] != Config->offset_global) {
+	sprintf(line,"%02d 0x%04x",i,Config->offset_ch[i]);
+	db_add_cfg_para(Config->process_id,"offset_ch",line);
+      }
     }
+
+    sprintf(line,"%u",Config->post_trigger_size);
+    db_add_cfg_para(Config->process_id,"post_trigger_size",line);
+
+    sprintf(line,"%u",Config->max_num_events_blt);
+    db_add_cfg_para(Config->process_id,"max_num_events_blt",line);
+
+    sprintf(line,"%d",Config->drs4corr_enable);
+    db_add_cfg_para(Config->process_id,"drs4corr_enable",line);
+
+    sprintf(line,"%u",Config->daq_loop_delay);
+    db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
+
+    sprintf(line,"0x%04x",Config->auto_threshold);
+    db_add_cfg_para(Config->process_id,"auto_threshold",line);
+
+    sprintf(line,"%u",Config->auto_duration);
+    db_add_cfg_para(Config->process_id,"auto_duration",line);
+
   }
 
-  sprintf(line,"%d",Config->post_trigger_size);
-  db_add_cfg_para(Config->process_id,"post_trigger_size",line);
+  // Save parameters which are relevant for ZSUP
+  if (strcmp(Config->process_mode,"ZSUP")==0) {
 
-  sprintf(line,"%d",Config->max_num_events_blt);
-  db_add_cfg_para(Config->process_id,"max_num_events_blt",line);
+    sprintf(line,"%d",Config->zero_suppression);
+    db_add_cfg_para(Config->process_id,"zero_suppression",line);
 
-  sprintf(line,"%d",Config->drs4corr_enable);
-  db_add_cfg_para(Config->process_id,"drs4corr_enable",line);
+    if (Config->zero_suppression % 100 == 1) {
+      sprintf(line,"%d",Config->zs1_head);
+      db_add_cfg_para(Config->process_id,"zs1_head",line);
+      sprintf(line,"%d",Config->zs1_tail);
+      db_add_cfg_para(Config->process_id,"zs1_tail",line);
+      sprintf(line,"%f",Config->zs1_nsigma);
+      db_add_cfg_para(Config->process_id,"zs1_nsigma",line);
+      sprintf(line,"%d",Config->zs1_nabovethr);
+      db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
+      sprintf(line,"%f",Config->zs1_badrmsthr);
+      db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
+    } if (Config->zero_suppression % 100 == 2) {
+      sprintf(line,"%d",Config->zs2_tail);
+      db_add_cfg_para(Config->process_id,"zs2_tail",line);
+      sprintf(line,"%f",Config->zs2_minrms);
+      db_add_cfg_para(Config->process_id,"zs2_minrms",line);
+      for(i=0;i<32;i++) {
+	if (Config->zs2_minrms_ch[i] != Config->zs2_minrms) {
+	  sprintf(line,"%02d %f",i,Config->zs2_minrms_ch[i]);
+	  db_add_cfg_para(Config->process_id,"zs2_minrms_ch",line);
+	}
+      }
+    }
 
-  sprintf(line,"%d",Config->daq_loop_delay);
-  db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
-
-  sprintf(line,"%d",Config->zero_suppression);
-  db_add_cfg_para(Config->process_id,"zero_suppression",line);
-
-  if (Config->zero_suppression == 1) {
-    sprintf(line,"%d",Config->zs1_head);
-    db_add_cfg_para(Config->process_id,"zs1_head",line);
-    sprintf(line,"%d",Config->zs1_tail);
-    db_add_cfg_para(Config->process_id,"zs1_tail",line);
-    sprintf(line,"%f",Config->zs1_nsigma);
-    db_add_cfg_para(Config->process_id,"zs1_nsigma",line);
-    sprintf(line,"%d",Config->zs1_nabovethr);
-    db_add_cfg_para(Config->process_id,"zs1_nabovethr",line);
-    sprintf(line,"%f",Config->zs1_badrmsthr);
-    db_add_cfg_para(Config->process_id,"zs1_badrmsthr",line);
   }
 
-  sprintf(line,"%d",Config->file_max_duration);
-  db_add_cfg_para(Config->process_id,"file_max_duration",line);
 
-  sprintf(line,"%lu",Config->file_max_size);
-  db_add_cfg_para(Config->process_id,"file_max_size",line);
+  // In STREAM mode the output file never changes
+  if (strcmp(Config->output_mode,"FILE")==0) {
 
-  sprintf(line,"%d",Config->file_max_events);
-  db_add_cfg_para(Config->process_id,"file_max_events",line);
+    sprintf(line,"%u",Config->file_max_duration);
+    db_add_cfg_para(Config->process_id,"file_max_duration",line);
+
+    sprintf(line,"%lu",Config->file_max_size);
+    db_add_cfg_para(Config->process_id,"file_max_size",line);
+
+    sprintf(line,"%u",Config->file_max_events);
+    db_add_cfg_para(Config->process_id,"file_max_events",line);
+
+  }
+
+  sprintf(line,"%u",Config->debug_scale);
+  db_add_cfg_para(Config->process_id,"debug_scale",line);
 
   return 0;
 
@@ -701,3 +897,27 @@ int end_config()
   free(Config);
   return 0;
 }
+
+/*
+// Return file name given the file open time. Return 0 if OK, <>0 error
+int generate_filename(char* name, const time_t time) {
+  //struct tm* t = localtime(&time);
+  struct tm* t = gmtime(&time);
+  sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
+	  Config->data_file,
+	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+	  t->tm_hour,      t->tm_min,   t->tm_sec);
+  return 0;
+}
+
+// Write time (in secs) to a string with standard formatting
+char* format_time(const time_t time) {
+  static char tform[20];
+  //struct tm* t = localtime(&time);
+  struct tm* t = gmtime(&time);
+  sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
+	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
+	  t->tm_hour,      t->tm_min,   t->tm_sec);
+  return tform;
+}
+*/

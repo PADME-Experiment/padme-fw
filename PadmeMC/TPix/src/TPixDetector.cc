@@ -41,7 +41,7 @@ void TPixDetector::CreateGeometry()
   G4double tpixSizeX = geo->GetTPixSizeX();
   G4double tpixSizeY = geo->GetTPixSizeY();
   G4double tpixSizeZ = geo->GetTPixSizeZ();
-  printf("TPix size is %f %f %f\n",tpixSizeX,tpixSizeY,tpixSizeZ);
+  printf("TPix size is %.2f x %.2f x %.2f mm3\n",tpixSizeX/mm,tpixSizeY/mm,tpixSizeZ/mm);
   G4Box* solidTPix = new G4Box("TPixSolid",0.5*tpixSizeX,0.5*tpixSizeY,0.5*tpixSizeZ);
   fTPixVolume = new G4LogicalVolume(solidTPix,G4Material::GetMaterial("Vacuum"),"TPixLogic",0,0,0);
   fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
@@ -50,7 +50,7 @@ void TPixDetector::CreateGeometry()
   G4double tpixPosX = geo->GetTPixPosX();
   G4double tpixPosY = geo->GetTPixPosY();
   G4double tpixPosZ = geo->GetTPixPosZ();
-  printf("TPix will be placed at %f %f %f\n",tpixPosX,tpixPosY,tpixPosZ);
+  printf("TPix will be placed at (%.1f,%.1f,%.1f) mm\n",tpixPosX/mm,tpixPosY/mm,tpixPosZ/mm);
   G4ThreeVector posTPix = G4ThreeVector(tpixPosX,tpixPosY,tpixPosZ);
   G4RotationMatrix* rotTPix = new G4RotationMatrix;
   rotTPix->rotateY(geo->GetTPixRotY());
@@ -60,7 +60,7 @@ void TPixDetector::CreateGeometry()
   G4double tpixChipX = geo->GetChipSizeX();
   G4double tpixChipY = geo->GetChipSizeY();
   G4double tpixChipZ = geo->GetChipSizeZ();
-  printf("TPix Chip size is %f %f %f\n",tpixChipX,tpixChipY,tpixChipZ);
+  printf("TPix Chip size is %.2f x %.2f x %.2f mm3\n",tpixChipX/mm,tpixChipY/mm,tpixChipZ/mm);
   G4Box* solidChip  = new G4Box("TPixChipSolid",0.5*tpixChipX,0.5*tpixChipY,0.5*tpixChipZ);
   fChipVolume  = new G4LogicalVolume(solidChip,G4Material::GetMaterial("G4_Si"),"TPixChipLogic",0,0,0);
   fChipVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
@@ -77,7 +77,11 @@ void TPixDetector::CreateGeometry()
   for (G4int row=0;row<geo->GetTPixNRows();row++){
     for (G4int col=0;col<geo->GetTPixNCols();col++){
       G4int idx = 10*row+col;
-      G4ThreeVector posChip = G4ThreeVector(geo->GetChipPosX(row,col),geo->GetChipPosY(row,col),geo->GetChipPosZ(row,col));
+      G4double x = geo->GetChipPosX(row,col);
+      G4double y = geo->GetChipPosY(row,col);
+      G4double z = geo->GetChipPosZ(row,col);
+      printf("TPix chip %02d will be placed at (%.1f,%.1f,%.1f) mm\n",idx,x/mm,y/mm,z/mm);
+      G4ThreeVector posChip = G4ThreeVector(x,y,z);
       new G4PVPlacement(0,posChip,fChipVolume,"TPixChip",fTPixVolume,false,idx,false);
     }
   }

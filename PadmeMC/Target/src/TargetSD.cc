@@ -40,28 +40,32 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   TargetHit* newHit = new TargetHit();
 
-  newHit->SetEnergy(edep);
-  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
-
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+  if(aStep->GetTrack()->GetParentID()==0){ 
+    newHit->SetPrimary();
+  }else{
+    newHit->SetNotPrimary();
+  }
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    newHit->SetEnergy(edep);
+    newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+    newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
+    newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
+    newHit->SetPosition(worldPosPre);
+    newHit->SetLocalPosition(localPosPre);
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
-  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPost,"Length")
-  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
-
-  newHit->SetPosition(worldPosPre);
-  newHit->SetLocalPosition(localPosPre);
-
-  fTargetCollection->insert(newHit);
-
+    //    std::cout<<"Evento strano "<<localPosPre<<std::endl;
+    //    if(abs(localPosPre.y())>0.00001){ 
+      //      std::cout<<"Evento strano "<<aStep->GetTrack()->GetParentID()<<" "<<std::endl; 
+    //    }
+    fTargetCollection->insert(newHit);
+  }
   return true;
 
 }

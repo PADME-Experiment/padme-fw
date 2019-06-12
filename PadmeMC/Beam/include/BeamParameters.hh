@@ -55,6 +55,10 @@ public:
 
   G4double GetBeamCenterPosY() { return fBeamCenterPosY; }
   void SetBeamCenterPosY(G4double y) { fBeamCenterPosY = y; }
+  
+  // M. Raggi 15/03/2019
+  G4double GetBeamCenterPosZ() { return fBeamCenterPosZ; }
+  void SetBeamCenterPosZ(G4double z) { fBeamCenterPosZ = z; }
 
   void BeamCenterPosEnableSpread()  { fBeamCenterPosApplySpread = true;  }
   void BeamCenterPosDisableSpread() { fBeamCenterPosApplySpread = false;  }
@@ -101,8 +105,21 @@ public:
   G4String GetThreePhotonDecaysFilename()        { return fThreePhotonDecaysFilename; }
   void SetThreePhotonDecaysFilename(G4String f) { fThreePhotonDecaysFilename = f; }
 
-  G4double GetBeamOriginPosZ()        { return fBeamOriginPosZ; }
-  void     SetBeamOriginPosZ(G4double z) { fBeamOriginPosZ = z; }
+  void CalibrationRunEnable()  { fCalibrationRun = true; }
+  void CalibrationRunDisable() { fCalibrationRun = false; }
+  G4bool CalibrationRun() { return fCalibrationRun; }
+
+  G4double GetCalibRunEnergy() { return fCalibRunEnergy; }
+  void SetCalibRunEnergy(G4double e) { fCalibRunEnergy  = e; }
+
+  G4double GetCalibRunCenterX() { return fCalibRunCenterX; }
+  void SetCalibRunCenterX(G4double x) { fCalibRunCenterX = x; }
+
+  G4double GetCalibRunCenterY() { return fCalibRunCenterY; }
+  void SetCalibRunCenterY(G4double y) { fCalibRunCenterY = y; }
+
+  G4double GetCalibRunRadius()  { return fCalibRunRadius; }
+  void SetCalibRunRadius(G4double r)  { fCalibRunRadius  = r; }
 
 private:
 
@@ -119,6 +136,8 @@ private:
   // Position and spread of beam at Target front face
   G4double fBeamCenterPosX;
   G4double fBeamCenterPosY;
+  G4double fBeamCenterPosZ;  //M Raggi 15/03/2019
+
   G4bool   fBeamCenterPosApplySpread;
   G4double fBeamCenterPosXSpread;
   G4double fBeamCenterPosYSpread;
@@ -144,8 +163,13 @@ private:
   G4int fNThreePhotonDecaysPerBunch;
   G4String fThreePhotonDecaysFilename;
 
-  // Origin of beam along Z (i.e. Z of beam when t=0)
-  G4double fBeamOriginPosZ;
+  // In calibration mode we shoot gamma of fixed energy from
+  // the center of the Target to a circle on the ECal surface (flat distribution)
+  G4bool   fCalibrationRun;
+  G4double fCalibRunEnergy;  // Energy of the photon
+  G4double fCalibRunCenterX; // X of center of cirlce 
+  G4double fCalibRunCenterY; // Y of center of circle
+  G4double fCalibRunRadius;  // Radius of circle
 
 };
 #endif

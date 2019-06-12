@@ -11,6 +11,7 @@ ECalCrystal::ECalCrystal(Int_t ix ,Int_t iy)
 
   ECalParameters* para = ECalParameters::GetInstance();
 
+  Int_t fHitIndex = -1;
   Double_t calFrontFaceCenterX = 0.;
   Double_t calFrontFaceCenterY = 0.;
   Double_t calFrontFaceCenterZ = para->GetECalFrontFacePosZ();

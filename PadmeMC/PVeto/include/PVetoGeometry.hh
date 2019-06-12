@@ -117,6 +117,8 @@ private:
   G4double fSupportSizeY;
   G4double fSupportSizeZ;
 
+  G4double fFingerCenterPosX;
+
   G4double fPVetoInnerFacePosX; // Position along X axis of PVeto inner face (i.e. inner face of support)
   G4double fPVetoFrontFacePosZ; // Position along Z axis of PVeto front face (i.e. front face of support)
 

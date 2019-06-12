@@ -12,11 +12,13 @@ void ADCEvent::Reset()
 {
 
   fBoardId             = 0;
+  fBoardSN             = 0;
   fLVDSPattern         = 0;
-  fStatus              = 0;
+  fBoardStatus         = 0;
   fGroupMask           = 0;
   fEventCounter        = 0;
   fEventTimeTag        = 0;
+  f0SuppAlgrtm         = 0;
   fActiveChannelMask   = 0;
   fAcceptedChannelMask = 0;
 

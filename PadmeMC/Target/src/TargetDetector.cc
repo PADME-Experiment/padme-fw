@@ -11,6 +11,8 @@
 #include "G4ThreeVector.hh"
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
+#include "G4UnionSolid.hh"
+#include "G4SubtractionSolid.hh"
 
 #include "G4SDManager.hh"
 
@@ -58,7 +60,29 @@ void TargetDetector::CreateGeometry()
   G4Box* solidTarget = new G4Box("Target",targetSizeX*0.5,targetSizeY*0.5,targetSizeZ*0.5);
   fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
   fTargetVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
-  new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,false);
+  new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,true);
+
+  // Create Target support structure
+  G4double tsL1 = geo->GetTSupportL1();
+  G4double tsL2 = geo->GetTSupportL2();
+  G4double tsL3 = geo->GetTSupportL3();
+  G4double tsL4 = geo->GetTSupportL4();
+  G4double tsThick = geo->GetTSupportThick();
+  G4Box* solidTS1 = new G4Box("TS1",0.5*tsL2,0.5*tsL1,0.5*tsThick);
+  G4Box* solidTS2 = new G4Box("TS2",0.5*tsL3,0.5*tsL4,0.5*tsThick);
+  G4ThreeVector posTS2TS1 = G4ThreeVector(-0.5*(tsL2+tsL3),0.,0.);
+  G4UnionSolid* solidTS3 = new G4UnionSolid("TS3",solidTS1,solidTS2,0,posTS2TS1);
+
+  G4double tsHL = geo->GetTSupportHoleL();
+  G4double tsHD = geo->GetTSupportHoleD();
+  G4Box* solidTSH = new G4Box("TSH",0.5*tsHL,0.5*tsHL,0.5*tsThick+1.*um);
+  G4ThreeVector posTSHTS3 = G4ThreeVector(0.5*tsL2-tsHD,0.,0.);
+  G4SubtractionSolid* solidTargetSupport = new G4SubtractionSolid("TargetSupport",solidTS3,solidTSH,0,posTSHTS3);
+
+  G4LogicalVolume* logicTargetSupport = new G4LogicalVolume(solidTargetSupport,G4Material::GetMaterial("PCB"),"TargetSupport",0,0,0);
+  logicTargetSupport->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  G4ThreeVector tsPosition = G4ThreeVector(geo->GetTSupportPosX(),0.,geo->GetTSupportPosZ());
+  new G4PVPlacement(0,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
 
   // The whole target is a sensitive detector
   // Digitization will take care of mapping hits to readout strips
@@ -67,13 +91,5 @@ void TargetDetector::CreateGeometry()
   TargetSD* targetSD = new TargetSD(targetSDName);
   fTargetVolume->SetSensitiveDetector(targetSD);
   G4SDManager::GetSDMpointer()->AddNewDetector(targetSD);
-  /*
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String targetSDName = geo->GetTargetSensitiveDetectorName();
-  printf("Registering Target SD %s\n",targetSDName.data());
-  TargetSD* targetSD = new TargetSD(targetSDName);
-  sdMan->AddNewDetector(targetSD);
-  fTargetVolume->SetSensitiveDetector(targetSD);
-  */
 
 }

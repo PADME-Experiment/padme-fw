@@ -4,9 +4,16 @@
 // Needed for special data formats (uint32_t)
 #include "CAENDigitizer.h"
 
+// Parameters used for configuration definitions
 #define MAX_RUN_COMMENT_LEN 1024
-#define MAX_DATA_FILE_LEN   1024
+#define MAX_DATA_DIR_LEN    1024
+#define MAX_DATA_FILE_LEN    235
 #define MAX_FILE_LEN        1024
+
+// Parameters used for final filenames
+#define TIME_TAG_LEN          20
+#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
+#define MAX_N_OUTPUT_FILES 10240
 
 // We store the board_id in 8 bits
 #define MAX_N_BOARDS         256
@@ -18,6 +25,12 @@
 #define MAX_N_CONET2_SLOTS     8
 
 typedef struct config_s {
+
+  // Process id in PadmeDAQ DB
+  int process_id;
+
+  // Define PadmeDAQ functioning mode (can be "DAQ", "ZSUP", or "FAKE")
+  char process_mode[16];
 
   // File used to read configuration
   char config_file[MAX_FILE_LEN];
@@ -37,19 +50,22 @@ typedef struct config_s {
   // File to use for locking (".<PID>" will be appended)
   char lock_file[MAX_FILE_LEN];
 
-  // DB file (sqlite3)
-  //char db_file[MAX_FILE_LEN];
-  
   // Run number
   int run_number;
 
-  // Run type (can be "DAQ", "COSMIC", or "TEST")
-  char run_type[16];
+  // Name of virtual file used for streaming in data. Only used when process_mode is "ZSUP"
+  char input_stream[MAX_DATA_FILE_LEN];
 
-  // Process id
-  int process_id;
+  // Output mode (can be "FILE" or "STREAM").
+  char output_mode[16];
 
-  // File name template for data files.
+  // Name of the virtual file used for streaming out data. Only used when output_mode is "STREAM"
+  char output_stream[MAX_DATA_FILE_LEN];
+
+  // Directory path where data files will be written. Only used when output_mode is "FILE"
+  char data_dir[MAX_DATA_DIR_LEN];
+
+  // File name template for data files. Only used when output_mode is "FILE"
   // The date/time string "_YYYY_MM_DD_hh_mm_ss" will be appended to each generated file
   // so the actual filename will have a maximum length of (MAX_DATA_FILE_LEN+20)
   char data_file[MAX_DATA_FILE_LEN];
@@ -60,7 +76,13 @@ typedef struct config_s {
   // ID of board connected to this process
   int board_id;
 
-  // Board optical connection info
+  // Serial number of board connected to this process (obtained during initialization)
+  uint32_t board_sn;
+
+  // DB id of node where this process is running
+  int node_id;
+
+  // Board optical connection info (port and slot of A3818 board)
   int conet2_link;
   int conet2_slot;
 
@@ -106,15 +128,26 @@ typedef struct config_s {
   // Delay in the DAQ main loop (usecs)
   useconds_t daq_loop_delay;
 
-  // Zero-suppression (0:OFF, 1-n:ON with choice of the algorithm)
+  // Zero-suppression
+  // Parameter is 100*mode+algorithm where mode=(0:rejection, 1:flagging)
+  // and algorithm=(0:OFF, 1-15:ON with selection of the algorithm)
   int zero_suppression;
 
-  // Zero-suppression algorithm parameters
+  // Zero-suppression algorithm 1 parameters
   int zs1_head; // Number of samples to use to compute mean and rms
   int zs1_tail; // Number of samples to reject at the end (see V1742 manual)
   float zs1_nsigma; // Number of sigmas around mean to set the threshold
   int zs1_nabovethr; // Number of consecutive above-threshold samples to accept the eventchannel
   float zs1_badrmsthr; // RMS threshold above which channel is deemed problematic and is accepted
+
+  // Zero-suppression algorithm 2 parameters
+  int zs2_tail; // Number of samples to reject at the end (see V1742 manual)
+  float zs2_minrms; // RMS threshold to use globally
+  float zs2_minrms_ch[32]; // RMS threshold to use for each channel
+
+  // Autopass system parameters
+  uint32_t auto_threshold; // Trigger is considered ON if below this threshold
+  unsigned int auto_duration; // Autopass is enabled if trigger is ON for more than this time (ns)
 
   // Set maximum per-file DAQ duration (secs).
   // After this time the output file will be closed and a new one will be opened
@@ -122,11 +155,14 @@ typedef struct config_s {
 
   // Set maximum size of a single DAQ file (bytes)
   // Output file will be close when its size exceeds this value and a new one will be opened
-  long file_max_size;
+  unsigned long int file_max_size;
 
   // Set maximum number of events to store in a single DAQ file
   // After writing this number of events, output file will be closed and a new one will be opened
-  int file_max_events;
+  unsigned int file_max_events;
+
+  // Define how often program will write trigger to debug output (once every debug_scale triggers)
+  unsigned short int debug_scale;
 
 } config_t;
 
@@ -138,5 +174,8 @@ int read_config(char*); // Read configuration file
 int print_config();     // Print current configuration
 int save_config();      // Save config parameters into DB
 int end_config();       // Clear configuration
+
+//int generate_filename(char*, const time_t); // Function to add time tag to file name
+//char* format_time(const time_t); // Function to format time tags
 
 #endif

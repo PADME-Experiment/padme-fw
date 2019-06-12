@@ -5,6 +5,7 @@
 #include "TMath.h"
 #include "TSpectrum.h"
 #include "TRandom.h"
+#include "ECalTemplate.hh" //M. Raggi 12/06/2019
 
 #include <stdio.h>
 #include <fstream>
@@ -39,7 +40,9 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 // Setting flags for running modes.
   fGlobalMode = gOptions;
 
-  
+  fECalTemplate = ECalTemplate::GetInstance();
+  fECalTemplate ->Init(); 
+
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
@@ -63,6 +66,8 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
   fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
+
+  fPrepareTemplate = cfg->GetParOrDefault("RECO","PrepareTemplate",0); //M. Raggi: 12/06/2019  
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
@@ -426,6 +431,8 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
   }
+
+
   
   Int_t nsmooth=5;
   // Smooth the signal by averaging nsmooth samples 
@@ -449,6 +456,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
   }
   histo->SetBinContent(ll,dxdt[ll]);
+  // prepare template add IF(on flag)
 
   //  Int_t Ch   = GetElChID();
   //  Int_t BID  = GetBdID();
@@ -569,6 +577,10 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
   //  std::cout<<"Zsupp "<<fZeroSuppression<<std::endl;
+
+  //  fECalTemplate->PrepareTemplate(fSamples); 
+  //  fPrepareTemplate=false;
+
   Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   //  Double_t IsZeroSup = ZSupHit(5,1000.);
   // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
@@ -576,6 +588,10 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
+
+  if(fPrepareTemplate) {
+    fECalTemplate->PrepareTemplate(fSamples);  
+  }
 
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
@@ -709,6 +725,7 @@ DigitizerChannelECal::~DigitizerChannelECal(){
   }
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
     SaveDebugHistos();
+    fECalTemplate->WriteHist(); 
   }
 }
 
@@ -880,3 +897,11 @@ Double_t DigitizerChannelECal::PeakSearch(){
   }
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
 }
+
+//// Prepare a template fit function M. Raggi 12/06/2019
+//void DigitizerChannelECal::PrepareTemplate(){
+//  TH1D* deri    = (TH1D*)  hListTmp->FindObject("hdxdt");
+//  TH1D* signal  = (TH1D*)  hListTmp->FindObject("hSignal");
+//
+//  //  std::cout<<"changing histogram "<<npeaks<<std::endl;
+//}

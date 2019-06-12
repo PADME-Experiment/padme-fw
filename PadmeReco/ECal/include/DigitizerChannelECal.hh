@@ -12,6 +12,7 @@
 #include "TList.h"
 #include "TH1D.h"
 #include "TTree.h"
+#include "ECalTemplate.hh" //M. Raggi 12/06/2019
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
@@ -77,11 +78,13 @@ public:
 
   void SetAnalogOffSets();
   void SaveBDPed(Int_t BID);
-
+  void PrepareTemplate();
 
   //  void OverSample4(Double_t *v, Double_t *o,Int_t n);
   void OverSample4(Short_t *v, Double_t *o,Int_t n);
   Int_t GetStartTime(Double_t *v,Int_t nshift);
+
+  ECalTemplate* fECalTemplate;
 
 private:
   //What do we operate
@@ -113,6 +116,7 @@ private:
   // Added connection to general configuration 
   utl::ConfigParser *fConfigParser;
   PadmeVRecoConfig *fConfig;
+
   Int_t fRunType;
 
   //Configuration variables
@@ -142,6 +146,8 @@ private:
   Bool_t fSaturatioCorrection;
   Bool_t fSaveAnalog;
   Double_t fZeroSuppression;
+
+  Bool_t fPrepareTemplate;
 
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;
@@ -224,7 +230,8 @@ private:
 
   TList* hListCal; // single board related histograms 
   TList* hListEv;  // More general histograms 
-  TList* hListTmp;  // More general histograms 
+  TList* hListTmp;       // More general histograms 
+  TList* hTemplateList;  // TempTemplate  
   TTree* ECal;
   
 };

@@ -22,7 +22,12 @@ public:
   Bool_t ProcessAnalysis();
   Bool_t ProcessValidation();
   Bool_t Finalize(){return true;}
+  Bool_t InitHistosDataQuality();
+  Bool_t ProcessDataQuality();
+    
+     
 
+   
   
   
   

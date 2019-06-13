@@ -41,7 +41,7 @@ private :
   TH1D * hSample;
   TProfile* hprof;
 //  TH1F * hdxdtRMS;
-//  TH1F * hTime;
+  TH1D * hTMax;
 //  TH1F * hTIntCorr;
 //  TH1F * hTimeCut;
 //  TH1F * hTimeOv;

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "cstdlib"
 #include "TProfile.h"
+#include "TSpline.h"
 #include "TMath.h"
 
 ECalTemplate* ECalTemplate::fInstance = 0;
@@ -44,49 +45,55 @@ void ECalTemplate::WriteHist()
 
 void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
 {
-  //  for(Int_t kk=0;kk<200;kk++) std::cout<<"Preparing template *******************************"<<fSample[kk]<<std::endl;
-  //  std::cout<<"List "<<hListTemplate<<std::endl;
   //  hListTemplate->Print();
   TH1D * HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
   TH1D * hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
   TH1D * hTMax = (TH1D*) hListTemplate->FindObject("hTimeMax");
   //  HistoTemp->Reset();
   hTMax->Fill(Time);
-  //for(Int_t kk=0;kk<1001;kk++) HistoTemp->SetBinContent(kk,fSample[kk]);
-//  for(Int_t kk=0;kk<1001;kk++){ 
-//    if(kk<=100) hTemplate->Fill(kk,3700.);
-//    if(kk>100) hTemplate->Fill(kk-(Int_t)Time+100,fSample[kk]); //sistemare
-//  }
-
 
   double templateVec[1000];
+  Int_t PeakPos = 400;
+  Int_t RiseMargin = 80;
+
   double Baseline = TMath::Mean(200,&fSample[0]);
   for(Int_t kk=0;kk<1000;kk++){ 
-    if (kk+(Time-400) > 0 && kk+(Time-400) < 1000) {
-      // Double_t temp = Smooth[j+(minj-200)];
-      //temp = (baseline - temp)/(baseline - minj);
-      // temp = (4096 - temp)/4096;
-      if (kk < Time-80) templateVec[kk] = Baseline;
-      else              templateVec[kk] = fSample[kk+((Int_t)Time-400)];
-      //      numTraces[j]++;
+    if (kk+(Time-PeakPos) > 0 && kk+(Time-PeakPos) < 1000) {
+      if (kk < Time-RiseMargin) templateVec[kk] = Baseline;
+      else              templateVec[kk] = fSample[kk+((Int_t)Time-PeakPos)];
     }else{
       templateVec[kk] = Baseline;
     }
   }
   
   for (int j = 0; j < 1000; j++) {
-    //  hTemplate->SetBinContent(j+1, templateVec[j]);
     HistoTemp->SetBinContent(j+1,templateVec[j]);
     hTemplate->Fill(j+1,templateVec[j]); //sistemare
     // std::cout << "j: " << j << ", template: " << templateVec[j] << std::endl;
-  }
-  
+  }  
   fileOut->cd();
   HistoTemp->Write();
 }
 
 void ECalTemplate::ReadTemplate()
 {
-  std::cout<<"Reading template "<<std::endl;
+  fileOut = new TFile("ECalTemplate.root");
+  if(fileOut->IsOpen()){ 
+    printf("File opened successfully\n");
+  }else{
+    printf("failed to open Template File \n");
+    exit(-1);
+  }
+  std::cout<<"Reading template from File ECalTemplate.root"<<std::endl;
+  TProfile* hECalTempl = (TProfile *) fileOut->Get("hprof");
+  //  hECalTempl->Draw();
+  Double_t templateVec[1000];
+  Int_t Nent = hECalTempl->GetEntries();
+  for(Int_t kk=0;kk<1000;kk++){ 
+    templateVec[kk] = hECalTempl->GetBinContent(kk);
+    //   std::cout<<" "<<templateVec[kk]<<std::endl;
+  }
+  TSpline3 * templateSpline = new TSpline3("templateSpline", -1, 1000, templateVec, 1000);
+  //  templateSpline->Draw("LCPSAME");
 }
 

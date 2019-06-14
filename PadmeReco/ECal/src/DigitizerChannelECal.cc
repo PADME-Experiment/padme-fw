@@ -40,9 +40,6 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 // Setting flags for running modes.
   fGlobalMode = gOptions;
 
-  fECalTemplate = ECalTemplate::GetInstance();
-  fECalTemplate ->Init(); 
-
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
@@ -71,6 +68,11 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
+  fECalTemplate = ECalTemplate::GetInstance();
+  if(fPrepareTemplate) fECalTemplate->Init(); 
+  // Using template fitting on multi Hits
+  if(!fPrepareTemplate) fECalTemplate->ReadTemplate();  
+ 
   SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode

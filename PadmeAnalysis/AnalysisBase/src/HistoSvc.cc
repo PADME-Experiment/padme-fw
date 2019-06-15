@@ -450,9 +450,9 @@ void HistoSvc::book(Int_t validation, Int_t ntuple) //flatNTP
   ntupl->Branch("NTSAC_Hits_Energy",       &(myEvt.NTSAC_Hits_Energy),           "NTSAC_Hits_Energy[NTNSAC_Hits]/D");
   ntupl->Branch("NTSAC_Hits_Time",         &(myEvt.NTSAC_Hits_Time),               "NTSAC_Hits_Time[NTNSAC_Hits]/D");
   ntupl->Branch("NTSAC_Hits_ChannelId",    &(myEvt.NTSAC_Hits_ChannelId),     "NTSAC_Hits_ChannelId[NTNSAC_Hits]/D");
-  ntupl->Branch("NTSAC_Clusters_Xpos",     &(myEvt.NTSAC_Clusters_Xpos), "NTSAC_Clusters_Xpos[NTNEVeto_Clusters]/D");
-  ntupl->Branch("NTSAC_Clusters_Ypos",     &(myEvt.NTSAC_Clusters_Ypos), "NTSAC_Clusters_Ypos[NTNEVeto_Clusters]/D");
-  ntupl->Branch("NTSAC_Clusters_Zpos",     &(myEvt.NTSAC_Clusters_Zpos), "NTSAC_Clusters_Zpos[NTNEVeto_Clusters]/D");
+  ntupl->Branch("NTSAC_Hits_Xpos",     &(myEvt.NTSAC_Clusters_Xpos), "NTSAC_Clusters_Xpos[NTNEVeto_Clusters]/D");
+  ntupl->Branch("NTSAC_Hits_Ypos",     &(myEvt.NTSAC_Clusters_Ypos), "NTSAC_Clusters_Ypos[NTNEVeto_Clusters]/D");
+  ntupl->Branch("NTSAC_Hits_Zpos",     &(myEvt.NTSAC_Clusters_Zpos), "NTSAC_Clusters_Zpos[NTNEVeto_Clusters]/D");
 
   ntupl->Branch("NTNSAC_Clusters",           &(myEvt.NTNSAC_Clusters),                                  "NTNSAC_Clusters/I" );
   ntupl->Branch("NTSAC_Clusters_Energy",     &(myEvt.NTSAC_Clusters_Energy),      "NTSAC_Clusters_Energy[NTNSAC_Clusters]/D");

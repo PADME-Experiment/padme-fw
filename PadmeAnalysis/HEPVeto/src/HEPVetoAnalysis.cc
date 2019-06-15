@@ -1,7 +1,8 @@
 #include "HEPVetoAnalysis.hh"
-
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
+#include "TRecoVClusCollection.hh"
+#include "TRecoVCluster.hh"
 #include "HistoSvc.hh"
 #include <iostream>
 
@@ -62,6 +63,55 @@ Bool_t HEPVetoAnalysis::InitHistosAnalysis()
 Bool_t HEPVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
+ 
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  TRecoVHit* hit=NULL;
+  TRecoVHit* hitn=NULL;
+  TRecoVCluster* clu=NULL;
+  TRecoVCluster* clun=NULL;
+  std::string hname;
+  Int_t      chId;
+  Double_t energy;
+  Double_t   time;
+  Int_t      chIdn;
+  Double_t energyn;
+  Double_t   timen;
+
+  Int_t fNhits = fhitEvent->GetNHits();
+  Int_t fNclus = fClColl->GetNElements();
+  Int_t seedId;
+  Int_t clSize;
+  
+  for (Int_t i=0; i<fNhits; ++i){
+    hit    = fhitEvent->Hit(i);
+    chId   = hit->GetChannelId();
+    energy = hit->GetEnergy();
+    time   = hit->GetTime();
+
+   (hSvc->myEvt).NTNHEPVeto_Hits=fhitEvent->GetNHits();
+   (hSvc->myEvt).NTHEPVeto_Hits_ChannelId[i]=(Double_t)chId;
+   (hSvc->myEvt).NTHEPVeto_Hits_Energy[i]=hit->GetEnergy();
+   (hSvc->myEvt).NTHEPVeto_Hits_Time[i]=hit->GetTime();
+   (hSvc->myEvt).NTHEPVeto_Hits_Xpos[i]=hit->GetPosition().X();
+   (hSvc->myEvt).NTHEPVeto_Hits_Ypos[i]=hit->GetPosition().Y();
+   (hSvc->myEvt).NTHEPVeto_Hits_Zpos[i]=hit->GetPosition().Z();
+  }
+
+    //fillClustersFlatNTP  
+
+   for (Int_t j=0; j<fNclus; ++j){
+     clu    = fClColl->Element(j);
+     seedId = clu->GetChannelId();
+  
+   (hSvc->myEvt).NTNHEPVeto_Clusters= fClColl->GetNElements();
+   (hSvc->myEvt).NTHEPVeto_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
+   (hSvc->myEvt).NTHEPVeto_Clusters_Energy[j]=clu->GetEnergy();
+   (hSvc->myEvt).NTHEPVeto_Clusters_Time[j]=clu->GetTime();
+   (hSvc->myEvt).NTHEPVeto_Clusters_Xpos[j]=clu->GetPosition().X();
+   (hSvc->myEvt).NTHEPVeto_Clusters_Ypos[j]=clu->GetPosition().Y();
+   (hSvc->myEvt).NTHEPVeto_Clusters_Zpos[j]=clu->GetPosition().Z();
+  }
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 

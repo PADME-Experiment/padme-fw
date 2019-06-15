@@ -1,5 +1,4 @@
 #include "ECalAnalysis.hh"
-
 #include "TECalRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
@@ -163,8 +162,58 @@ Bool_t ECalAnalysis::InitHistosValidation()
 
 Bool_t ECalAnalysis::ProcessAnalysis()
 {
-
   Bool_t retCode = 0;
+
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  TRecoVHit* hit=NULL;
+  TRecoVHit* hitn=NULL;
+  TRecoVCluster* clu=NULL;
+  TRecoVCluster* clun=NULL;
+  std::string hname;
+  Int_t      chId;
+  Double_t energy;
+  Double_t   time;
+  Int_t      chIdn;
+  Double_t energyn;
+  Double_t   timen;
+
+  Int_t fNhits = fhitEvent->GetNHits();
+  Int_t fNclus = fClColl->GetNElements();
+  Int_t seedId;
+  Int_t clSize;
+
+     //fillHitsFlatNTP
+  
+  for (Int_t i=0; i<fNhits; ++i){
+    hit    = fhitEvent->Hit(i);
+    chId   = hit->GetChannelId();
+    energy = hit->GetEnergy();
+    time   = hit->GetTime();
+
+   (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
+   (hSvc->myEvt).NTECal_Hits_ChannelId[i]=(Double_t)chId;
+   (hSvc->myEvt).NTECal_Hits_Energy[i]=hit->GetEnergy();
+   (hSvc->myEvt).NTECal_Hits_Time[i]=hit->GetTime();
+   (hSvc->myEvt).NTECal_Hits_Xpos[i]=hit->GetPosition().X();
+   (hSvc->myEvt).NTECal_Hits_Ypos[i]=hit->GetPosition().Y();
+   (hSvc->myEvt).NTECal_Hits_Zpos[i]=hit->GetPosition().Z();
+  }
+
+    //fillClustersFlatNTP  
+
+   for (Int_t j=0; j<fNclus; ++j){
+     clu    = fClColl->Element(j);
+     seedId = clu->GetChannelId();
+  
+   (hSvc->myEvt).NTNECal_Clusters= fClColl->GetNElements();
+   (hSvc->myEvt).NTECal_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
+   (hSvc->myEvt).NTECal_Clusters_Energy[j]=clu->GetEnergy();
+   (hSvc->myEvt).NTECal_Clusters_Time[j]=clu->GetTime();
+   (hSvc->myEvt).NTECal_Clusters_Xpos[j]=clu->GetPosition().X();
+   (hSvc->myEvt).NTECal_Clusters_Ypos[j]=clu->GetPosition().Y();
+   (hSvc->myEvt).NTECal_Clusters_Zpos[j]=clu->GetPosition().Z();
+  }
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 

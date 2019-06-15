@@ -87,6 +87,57 @@ Bool_t PVetoAnalysis::InitHistosAnalysis()
 Bool_t PVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
+ 
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  TRecoVHit* hit=NULL;
+  TRecoVHit* hitn=NULL;
+  TRecoVCluster* clu=NULL;
+  TRecoVCluster* clun=NULL;
+  std::string hname;
+  Int_t      chId;
+  Double_t energy;
+  Double_t   time;
+  Int_t      chIdn;
+  Double_t energyn;
+  Double_t   timen;
+
+  Int_t fNhits = fhitEvent->GetNHits();
+  Int_t fNclus = fClColl->GetNElements();
+  Int_t seedId;
+  Int_t clSize;
+  
+   //fillHitsFlatNTP
+  
+  for (Int_t i=0; i<fNhits; ++i){
+    hit    = fhitEvent->Hit(i);
+    chId   = hit->GetChannelId();
+    energy = hit->GetEnergy();
+    time   = hit->GetTime();
+
+   (hSvc->myEvt).NTNPVeto_Hits=fhitEvent->GetNHits();
+   (hSvc->myEvt).NTPVeto_Hits_ChannelId[i]=(Double_t)chId;
+   (hSvc->myEvt).NTPVeto_Hits_Energy[i]=hit->GetEnergy();
+   (hSvc->myEvt).NTPVeto_Hits_Time[i]=hit->GetTime();
+   (hSvc->myEvt).NTPVeto_Hits_Xpos[i]=hit->GetPosition().X();
+   (hSvc->myEvt).NTPVeto_Hits_Ypos[i]=hit->GetPosition().Y();
+   (hSvc->myEvt).NTPVeto_Hits_Zpos[i]=hit->GetPosition().Z();
+  }
+
+    //fillClustersFlatNTP  
+
+   for (Int_t j=0; j<fNclus; ++j){
+     clu    = fClColl->Element(j);
+     seedId = clu->GetChannelId();
+  
+   (hSvc->myEvt).NTNPVeto_Clusters= fClColl->GetNElements();
+   (hSvc->myEvt).NTPVeto_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
+   (hSvc->myEvt).NTPVeto_Clusters_Energy[j]=clu->GetEnergy();
+   (hSvc->myEvt).NTPVeto_Clusters_Time[j]=clu->GetTime();
+   (hSvc->myEvt).NTPVeto_Clusters_Xpos[j]=clu->GetPosition().X();
+   (hSvc->myEvt).NTPVeto_Clusters_Ypos[j]=clu->GetPosition().Y();
+   (hSvc->myEvt).NTPVeto_Clusters_Zpos[j]=clu->GetPosition().Z();
+  }
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 

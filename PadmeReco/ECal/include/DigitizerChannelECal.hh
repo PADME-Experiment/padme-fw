@@ -11,6 +11,7 @@
 #include "TFile.h"
 #include "TList.h"
 #include "TH1D.h"
+#include "TF1.h"
 #include "TTree.h"
 #include "ECalTemplate.hh" //M. Raggi 12/06/2019
 
@@ -94,7 +95,7 @@ private:
   Short_t fIMax;
   Double_t fPed;
   Double_t fCharge;
-  // Double_t fChargeSin;
+  TF1 * fECalFitf;
   Double_t fTime;
   Double_t fTimeSin;
   Double_t fTimeOv;

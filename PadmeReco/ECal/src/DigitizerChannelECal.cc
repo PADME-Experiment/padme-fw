@@ -4,6 +4,7 @@
 #include "TCanvas.h"
 #include "TMath.h"
 #include "TSpectrum.h"
+#include "TFitResult.h"
 #include "TRandom.h"
 #include "ECalTemplate.hh" //M. Raggi 12/06/2019
 
@@ -68,11 +69,16 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
+  // Preparing for Template Fitting M. Raggi 17/06/2019
   fECalTemplate = ECalTemplate::GetInstance();
   if(fPrepareTemplate) fECalTemplate->Init(); 
-  // Using template fitting on multi Hits
-  if(!fPrepareTemplate) fECalTemplate->ReadTemplate();  
- 
+  if(!fPrepareTemplate){ 
+    fECalTemplate->ReadTemplate();  
+    fECalTemplate->BuildFitFunction();
+    fECalFitf = fECalTemplate->GetECalFitFunction();
+    fECalFitf ->SetParameters(1, 0, 0, 1);
+    // get the fit function just at the moment 
+  }  
   SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
@@ -283,7 +289,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     Col=GetChID()/100;
     //    ECal->Fill();
   }
-
+  
   if(BID==14 && fGlobalMode->GetGlobalDebugMode()!=0){
     char name[50];
     //     std::cout<<Ch<<" "<<BID<<" Charge "<<ChargeSin<<std::endl;
@@ -307,22 +313,41 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
   }
 
 //  if(ChargeSin/15.<-15) {
-//    if(fIsGlobalDebug){
-//      Int_t code=BID*100+Ch;
-//      H1 = new TH1D(Form("hV%d",code),Form("hV%d",code),end,0.,end);
-//      H1->SetContent(AbsSamRec);
-//      //     H2 = new TH1D(Form("h2V%d",m),Form("h2V%d",m),end,0.,end);
-//      //      H2->SetContent(AbsSamRec200);
-//      //  
-//      fileOut->cd();
-//      H1->Write();
-//      //      H2->Write();
-//      //      H1->Reset();
-//      //      H2->Reset();
-//      //      m++;
-//    }
-//  }
+if(fGlobalMode->GetGlobalDebugMode()!=0){
+  Int_t code=BID*100+Ch;
+  H1 = new TH1D(Form("hV%d",code),Form("hV%d",code),1000,0.,1000);
+  for(Int_t ll=0;ll<1001;ll++) H1->SetBinContent(ll,(Double_t)fSamples[ll]);
+//    //     H2 = new TH1D(Form("h2V%d",m),Form("h2V%d",m),end,0.,end);
+//    //      H2->SetContent(AbsSamRec200);
+//    //  
+//    
+//   fECalFitf->GetParameters();
+  fECalFitf->SetParameters(1,0,fRMS200, 1);
+  fECalFitf->SetParLimits(2,0.,4096.);
+  //  fECalFitf->FixParameter(3,1);
+  TFitResultPtr fp = H1->Fit("fitf", "RS");
+  if(fp->Status()==0);
+  Double_t Ampl=fECalFitf->GetParameter(0);
+  Double_t TOff=fECalFitf->GetParameter(1);
+  Double_t VOff=fECalFitf->GetParameter(2);
+  Double_t Stre=fECalFitf->GetParameter(3);
+  Double_t chi2=fECalFitf->GetChisquare();
+  
+//  hAmpl->Fill(fitfunction->GetParameter(0));
+//  hOffset->Fill(fitfunction->GetParameter(1));
+//  hBaseline->Fill(fitfunction->GetParameter(2));
+//  hStretch->Fill(fitfunction->GetParameter(3));
 
+  fileOut->cd();
+  if(fp->Status()!=0);H1->Write();
+  H1->Reset();
+//    //      //      H2->Write();
+  //      //      
+//    //      //      H2->Reset();
+//    //      //      m++;
+//  }
+ }
+  
   fCharge=Charge;
   return Charge;
 }
@@ -578,17 +603,9 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
-  //  std::cout<<"Zsupp "<<fZeroSuppression<<std::endl;
-
-  //  fECalTemplate->PrepareTemplate(fSamples); 
-  //  fPrepareTemplate=false;
-
   Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
-  //  Double_t IsZeroSup = ZSupHit(5,1000.);
-  // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
-  // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
+
   fTrig = GetTrigMask();
 
   if(fUseOverSample){
@@ -602,6 +619,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
+
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
@@ -610,8 +628,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(fEnergy>50 && fPrepareTemplate && !IsSat){
     fECalTemplate->PrepareTemplate(fSamples,HitT);  
   }
-    
-    
+        
   if(!fGlobalMode->IsPedestalMode()){
     //correct for saturation effects integrated charge M. Raggi 23/05/2019
     // do it before extrapolating to full integral
@@ -629,6 +646,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
       HitE200 /= QIntCorr; 
     }
   }
+  
   //Filling hit structure
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);

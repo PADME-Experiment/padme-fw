@@ -123,7 +123,7 @@ void ECalTemplate::ReadTemplate()
 }
 
 void ECalTemplate::BuildFitFunction(){
-  fECalFitFunction = new TF1("fitf",fitf,0,1000,4);
+  fECalFitFunction = new TF1("fitf",fitf,20,1000,4);
   fECalFitFunction -> SetParameters(1,0,0,1);
 }
 

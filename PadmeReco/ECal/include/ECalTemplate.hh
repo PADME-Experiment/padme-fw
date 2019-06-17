@@ -6,9 +6,11 @@
 
 #include "TFile.h"
 #include "TList.h"
+#include "TF1.h"
 #include "TH1D.h"
 #include "TTree.h"
 #include "TProfile.h"
+#include "TSpline.h"
 
 class ECalTemplate {
 
@@ -30,29 +32,26 @@ public:
   void WriteHist();
   void PrepareTemplate(Short_t * v, Double_t time);
   void ReadTemplate();
+  void BuildFitFunction();
+  TSpline3 * GetTemplateSpline(){return fTemplateSpline;};
+  TF1 * GetECalFitFunction(){return fECalFitFunction;};
+  //  static Double_t fitf(Double_t * x, Double_t * par);
 private :
+
+  std::vector <TH1D*> hVSig;
 
   TTree* ECal;
   TList* hListTemplate;// single board related histograms 
   TFile * fileOut;
 
   Double_t fVMax;
-
+  TSpline3 * fTemplateSpline;
   TH1D * hSample;
   TProfile* hprof;
-//  TH1F * hdxdtRMS;
-  TH1D * hTMax;
-//  TH1F * hTIntCorr;
-//  TH1F * hTimeCut;
-//  TH1F * hTimeOv;
-//  TH1D * hSignal;
-  TH1D * hSat;
-  //  TH1F * hDiff;
-  
+  Int_t NHist=0;
+  TH1D * hTMax; 
+  TF1 * fECalFitFunction;
 
-  // Geometry parameters
-//  Int_t fECalNRows;
-//  Int_t fECalNCols;
   Short_t * fSample;
 };
 #endif

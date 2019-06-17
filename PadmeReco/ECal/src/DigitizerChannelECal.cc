@@ -728,7 +728,7 @@ DigitizerChannelECal::~DigitizerChannelECal(){
   }
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
     SaveDebugHistos();
-    fECalTemplate->WriteHist(); 
+    if(fPrepareTemplate) fECalTemplate->WriteHist(); 
   }
 }
 

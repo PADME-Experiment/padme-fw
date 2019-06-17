@@ -4,8 +4,16 @@
 #include "TProfile.h"
 #include "TSpline.h"
 #include "TMath.h"
+#include "TF1.h"
+#include <vector>
 
 ECalTemplate* ECalTemplate::fInstance = 0;
+
+static Double_t fitf(Double_t * x, Double_t * par) {
+  TSpline3 *  templateSpline =  ECalTemplate::GetInstance()->GetTemplateSpline();
+  double arg = (x[0] - par[1])/par[3];
+  return par[0]*templateSpline->Eval(arg)+par[2];
+}
 
 ECalTemplate* ECalTemplate::GetInstance()
 {
@@ -24,8 +32,15 @@ void ECalTemplate::Init()
   //  hListTemplate->Add(hSignal = new TH1D("hSignal","hSignal",1000,0.,1000.));
   hListTemplate->Add(hTMax    = new TH1D("hTimeMax","hTimeMax",1000,0.,1000.));
   hListTemplate->Add(hprof= new TProfile("hprof","Signal Profile",1000,0,1000,0,4096));
-}
 
+
+
+  //  for(int ii=0;ii<100;ii++){
+  //    TH1D* h = new TH1D(Form("hSig%d",ii),Form("hSig%d",ii),1000,0.,1000.);
+  //    hVSig.push_back(h);
+  // }
+
+}
 
 ECalTemplate::ECalTemplate()
 {
@@ -49,6 +64,9 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   TH1D * HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
   TH1D * hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
   TH1D * hTMax = (TH1D*) hListTemplate->FindObject("hTimeMax");
+
+  //  TH1D * hSVec = (TH1D*) hListTemplate->FindObject(Form("hPResReco%d",0));
+
   //  HistoTemp->Reset();
   hTMax->Fill(Time);
 
@@ -65,19 +83,23 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
       templateVec[kk] = Baseline;
     }
   }
-  
+  TH1D* h = new TH1D(Form("hSig%d",NHist),Form("hSig%d",NHist),1000,0.,1000.);
+  hVSig.push_back(h);
   for (int j = 0; j < 1000; j++) {
     HistoTemp->SetBinContent(j+1,templateVec[j]);
+    hVSig.at(NHist)->SetBinContent(j+1,templateVec[j]);
+
     hTemplate->Fill(j+1,templateVec[j]); //sistemare
     // std::cout << "j: " << j << ", template: " << templateVec[j] << std::endl;
   }  
   fileOut->cd();
-  HistoTemp->Write();
+  hVSig.at(NHist)->Write();
+  NHist++;
 }
 
 void ECalTemplate::ReadTemplate()
 {
-  fileOut = new TFile("ECalTemplate.root");
+  fileOut = new TFile("ECalTemplate.root","update");
   if(fileOut->IsOpen()){ 
     printf("File opened successfully\n");
   }else{
@@ -86,6 +108,7 @@ void ECalTemplate::ReadTemplate()
   }
   std::cout<<"Reading template from File ECalTemplate.root"<<std::endl;
   TProfile* hECalTempl = (TProfile *) fileOut->Get("hprof");
+  TH1D* hTest = (TH1D *) fileOut->Get("hSample");
   //  hECalTempl->Draw();
   Double_t templateVec[1000];
   Int_t Nent = hECalTempl->GetEntries();
@@ -93,7 +116,29 @@ void ECalTemplate::ReadTemplate()
     templateVec[kk] = hECalTempl->GetBinContent(kk);
     //   std::cout<<" "<<templateVec[kk]<<std::endl;
   }
-  TSpline3 * templateSpline = new TSpline3("templateSpline", -1, 1000, templateVec, 1000);
-  //  templateSpline->Draw("LCPSAME");
+  fTemplateSpline = new TSpline3("templateSpline", -1, 1000, templateVec, 1000);
+  fileOut->cd();
+  std::cout<<"Writing template "<<std::endl;
+  fTemplateSpline->Write();
 }
 
+void ECalTemplate::BuildFitFunction(){
+  fECalFitFunction = new TF1("fitf",fitf,0,1000,4);
+  fECalFitFunction -> SetParameters(1,0,0,1);
+}
+
+//void ECalTemplate::GetFitFunction()
+//  hSample->Fit("fitf", "R");
+//
+//  Double_t Ampl=fitfunction->GetParameter(0);
+//  Double_t TOff=fitfunction->GetParameter(1);
+//  Double_t VOff=fitfunction->GetParameter(2);
+//  Double_t Stre=fitfunction->GetParameter(3);
+//  
+//  hAmpl->Fill(fitfunction->GetParameter(0));
+//  hOffset->Fill(fitfunction->GetParameter(1));
+//  hBaseline->Fill(fitfunction->GetParameter(2));
+//  hStretch->Fill(fitfunction->GetParameter(3));
+//
+//  fileOut->Close();
+//}

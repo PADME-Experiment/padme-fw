@@ -640,7 +640,7 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     }
     else{ 
       std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
-      exit(-1);
+      //exit(-1);
     } 
   }
 
@@ -661,7 +661,8 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     }
     else{ 
       std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
-      exit(-1);
+      //exit(-1);
+      
     } 
   }
 

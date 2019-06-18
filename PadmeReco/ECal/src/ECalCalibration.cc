@@ -41,8 +41,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   // Time offsets calibration 
   if(fUseCalibT==1) TCalib.open("config/Calibration/ECalTimeOffSets.txt");
   if(fUseCalibT==1 && !TCalib.is_open()){ 
-    std::cout<<"ERROR: Cannot find ECal time ofsset file "<<"**************"<<std::endl;
-    exit(1);
+    std::cout<<"ERROR: Cannot find ECal time offset file "<<"**************"<<std::endl;
+    //exit(1);
   }
   //  if(fUseCalibE==1) ReadCalibConstant();
 

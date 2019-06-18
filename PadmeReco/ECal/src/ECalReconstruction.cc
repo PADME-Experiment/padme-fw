@@ -8,6 +8,7 @@
 
 #include "ECalReconstruction.hh"
 #include "ECalCalibration.hh"
+#include "ECalGeometry.hh"
 #include "DigitizerChannelECal.hh"
 
 #include "ECalParameters.hh"
@@ -35,6 +36,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelECal();
   fClusterization = new ECalSimpleClusterization();
+  fGeometry = new ECalGeometry();
   //fTriggerProcessor = new PadmeVTrigger(); // this is done for all detectors in the constructor of PadmeVReconstruction
   fChannelCalibration = new ECalCalibration();
 

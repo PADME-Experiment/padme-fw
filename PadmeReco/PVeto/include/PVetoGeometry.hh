@@ -18,8 +18,8 @@ public:
   
   PVetoGeometry();
   //~PVetoGeometry();
-  //void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
-  //TVector3  LocalPosition(Int_t chId);
+  void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
+  TVector3  LocalPosition(Int_t chId);
   
 
 private:

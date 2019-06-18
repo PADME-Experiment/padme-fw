@@ -16,7 +16,7 @@ EVetoGeometry::EVetoGeometry()
   std::cout<<"EVetoGeometry being created ............"<<std::endl ;
   
 }
-/*
+
 
 void EVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
@@ -26,11 +26,10 @@ void EVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 TVector3  EVetoGeometry::LocalPosition(Int_t chId)
 {
 
-  double x = ((fChIdx0-fChIdx0))*fStep1ChLocalX + fChIdx0Offset;
-  double y = ((fChIdx0-fChIdy0))*fStep1ChLocalY + fChIdy0Offset;
-  double z = ((fChIdy0-fChIdz0))*fStep1ChLocalZ + fChIdz0Offset;
-
+  double x = ((chId-fChIdx0))*fStep1ChLocalX + fChIdx0Offset;
+  double y = ((chId-fChIdy0))*fStep1ChLocalY + fChIdy0Offset;
+  double z = ((chId-fChIdz0))*fStep1ChLocalZ + fChIdz0Offset;
 
   return TVector3(x,y,z);
 }
-*/
+

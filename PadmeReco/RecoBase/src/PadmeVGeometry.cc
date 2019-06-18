@@ -44,7 +44,7 @@ void PadmeVGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
   fLocalToGlobal = new Transform3D();
 
   fUsePrimaryNumbers = (bool)cfg->GetParOrDefault("GEOMETRY","ComputeFromPrimaryNumbers",1);
-  if (!fUsePrimaryNumbers) InitFromChIdPositionMap(cfg, chIdMgr);
+  if (!fUsePrimaryNumbers) InitFromChIdPositionMap(cfg, chIdMgr); 
   else InitFromPrimaryNumbers(cfg);
 }
 
@@ -93,6 +93,7 @@ void PadmeVGeometry::InitFromChIdPositionMap(PadmeVRecoConfig *cfg, RecoVChannel
 	    fGlobalPosMap->insert ( std::pair<int,XYZPoint>(chIds[j], XYZPoint(gposX, gposY, gposZ)) ); 
 	}
     }
+    
 }
 
 TVector3  PadmeVGeometry::LocalPosition(Int_t chId)
@@ -100,6 +101,7 @@ TVector3  PadmeVGeometry::LocalPosition(Int_t chId)
   double x = (chId-fChIdx0)*fStep1ChLocalX + fChIdx0Offset;
   double y = (chId-fChIdy0)*fStep1ChLocalY + fChIdy0Offset;
   double z = (chId-fChIdz0)*fStep1ChLocalZ + fChIdz0Offset;
+
   return TVector3(x,y,z);
 }
 TVector3  PadmeVGeometry::GlobalPosition(Int_t chId)
@@ -120,11 +122,21 @@ TVector3  PadmeVGeometry::GlobalPosition(Int_t chId)
 	}
     }
   
-  TVector3 myPos = LocalPosition(chId);
-  XYZPoint lPos = XYZPoint(myPos.X(), myPos.Y(), myPos.Z());
+       TVector3 myPos = LocalPosition(chId);
+       XYZPoint lPos = XYZPoint(myPos.X(), myPos.Y(), myPos.Z());
+     
+       //std::cout << "****x " <<myPos.X() << "***y  " << myPos.Y() << "   **z   "<<myPos.Z()<<std::endl;
+ 
+
+
   
   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPos = 
     GetLocalToGlobalTransf()*lPos;
+
+  //std::cout << "****************GetLocalToGlobalTransf()   "   <<*fLocalToGlobal<<std::endl;
+
+  //std::cout << "channelId  "<<chId<<"   gpos  x " << gPos.X() << "  y  " << gPos.Y() << "   z   "<<gPos.Z()<<std::endl;
+  
   return TVector3(gPos.X(), gPos.Y(), gPos.Z());
 }
 
@@ -135,6 +147,17 @@ void PadmeVGeometry::ComputePositions(std::vector<TRecoVHit *> &Hits)
     int ich = Hits[iHit]->GetChannelId();
     //std::cout << "Computing position of chId " << ich << "  " << GlobalPosition(ich) << std::endl;
     Hits[iHit]->SetPosition( GlobalPosition(ich) );
+    
+    
   }
+
+}
+void PadmeVGeometry::UpdateTransform()
+{
+ Transform3D a = Translation3D(fLocOxinPadmeFrame, fLocOyinPadmeFrame, fLocOzinPadmeFrame)
+    *RotationX(fLocAngleXPadmeFrame)
+    *RotationY(fLocAngleYPadmeFrame)
+    *RotationZ(fLocAngleZPadmeFrame);
+    *fLocalToGlobal = a;
 
 }

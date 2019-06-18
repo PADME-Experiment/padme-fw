@@ -51,6 +51,7 @@ public:
   virtual double GetLocalAngleAroundY(){return fLocAngleYPadmeFrame;}
   virtual double GetLocalAngleAroundZ(){return fLocAngleZPadmeFrame;}
   virtual TVector3 GetLocalOriginInPadmeFrame(){return TVector3(fLocOxinPadmeFrame,fLocOyinPadmeFrame,fLocOzinPadmeFrame);}
+  virtual void UpdateTransform();
  
   
 protected:

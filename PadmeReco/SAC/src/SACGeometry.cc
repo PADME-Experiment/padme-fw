@@ -39,8 +39,8 @@ TVector3  SACGeometry::LocalPosition(Int_t chId)
   int iy = chId%10;
   int iz = iz0;
 
-  fStep1ChLocalX = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
-  fStep1ChLocalY = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
+  //fStep1ChLocalX = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
+  //fStep1ChLocalY = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
 
 
   double x = (ix - ix0)*fStep1ChLocalX + fChIdx0Offset;

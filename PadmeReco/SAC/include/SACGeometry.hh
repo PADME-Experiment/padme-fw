@@ -24,10 +24,13 @@ public:
 
 private:
 
-  double fCrystalWidth;
+  double fCrystalSizeX;
+  double fCrystalSizeY;
+  double fCrystalSizeZ;
   double fCrystalGap;
   double fCrystalCoating;
   double fTedlarThickness;
+  double fSACFrontFacePosZ;
   
  
 };

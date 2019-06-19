@@ -21,20 +21,33 @@ ECalGeometry::ECalGeometry()
 void ECalGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
+  
+  fCrystalSizeX      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeX", 21. );
+  fCrystalSizeY      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeY", 21. );
+  fCrystalSizeZ      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeZ",230. );
+  fCrystalGap        = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap", 0.    );
+  fCrystalCoating    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0. );
+  fTedlarThickness   = (double)cfg->GetParOrDefault("GEOMETRY","TedlarThickness",0.);
+  fECalFrontFacePosZ = (double)cfg->GetParOrDefault("GEOMETRY","ECalFrontFacePosZ",3000.);
 
-  fCrystalWidth    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalWidth",21.);
-  fCrystalGap      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap", 0.);
-  fCrystalCoating  = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0.);
-  fTedlarThickness = (double)cfg->GetParOrDefault("GEOMETRY","TedlarThickness",0.);
+  float PitchX        = fCrystalSizeX+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness;
+  float PitchY        = fCrystalSizeY+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness;
+  float ECalZdistance = fECalFrontFacePosZ+0.5*fCrystalSizeZ;
+
  
-  if (fStep1ChLocalX!=fCrystalWidth+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness)
+  if (fStep1ChLocalX!=PitchX)
  {
-  std::cout<<" WARNING!!! The ECal pitch value X may be wrong! "<<std::endl ;
+  std::cout<<" WARNING!!! The ECal pitch X may be wrong! "<<std::endl ;
  }
 
- if (fStep1ChLocalY!=fCrystalWidth+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness)
+ if (fStep1ChLocalY!=PitchY)
  {
-  std::cout<<" WARNING!!! The ECal pitch value Y may be wrong! "<<std::endl ;
+  std::cout<<" WARNING!!! The ECal pitch Y may be wrong! "<<std::endl ;
+ }
+ 
+ if (fLocOzinPadmeFrame!=ECalZdistance)
+ {
+  std::cout<<" WARNING!!! The ECal Z distance from 0 may be wrong! "<<std::endl ;
  }
 
 }

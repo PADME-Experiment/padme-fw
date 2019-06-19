@@ -22,18 +22,30 @@ SACGeometry::SACGeometry()
 void SACGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
-  fCrystalWidth    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalWidth",30.);
-  fCrystalGap      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap",0.);
-  fCrystalCoating  = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0.);
+  fCrystalSizeX      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeX",30.   );
+  fCrystalSizeY      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeY",30.   );
+  fCrystalSizeZ      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalSizeZ",140.  );
+  fCrystalGap        = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap",0.      );
+  fCrystalCoating    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0.  );
+  fSACFrontFacePosZ  = (double)cfg->GetParOrDefault("GEOMETRY","SACFrontFacePosZ",3000.);
   
-  if (fStep1ChLocalX!=fCrystalWidth+fCrystalGap+2*fCrystalCoating)
+  float PitchX      = fCrystalSizeX+fCrystalGap+2*fCrystalCoating;
+  float PitchY      = fCrystalSizeX+fCrystalGap+2*fCrystalCoating;
+  float SACZdistance= fSACFrontFacePosZ+0.5*fCrystalSizeZ;
+
+  if (fStep1ChLocalX!=PitchX)
  {
-  std::cout<<" WARNING!!! The SAC pitch value X may be wrong! "<<std::endl ;
+  std::cout<<" WARNING!!! The SAC pitch X may be wrong! "<<std::endl ;
  }
 
- if (fStep1ChLocalY!=fCrystalWidth+fCrystalGap+2*fCrystalCoating)
+ if (fStep1ChLocalY!=PitchY)
  {
-  std::cout<<" WARNING!!! The SAC pitch value Y may be wrong! "<<std::endl ;
+  std::cout<<" WARNING!!! The SAC pitch Y may be wrong! "<<std::endl ;
+ }
+
+ if (fLocOzinPadmeFrame!=SACZdistance)
+ {
+  std::cout<<" WARNING!!! The SAC Z distance from 0 may be wrong! "<<std::endl ;
  }
 }
 

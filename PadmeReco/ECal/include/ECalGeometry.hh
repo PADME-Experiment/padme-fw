@@ -23,6 +23,8 @@ public:
   
 
 private:
+
+  double fCrystalWidth;
   double fCrystalGap;
   double fCrystalCoating;
   double fTedlarThickness;

@@ -22,9 +22,19 @@ SACGeometry::SACGeometry()
 void SACGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
+  fCrystalWidth    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalWidth",30.);
   fCrystalGap      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap",0.);
   fCrystalCoating  = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0.);
   
+  if (fStep1ChLocalX!=fCrystalWidth+fCrystalGap+2*fCrystalCoating)
+ {
+  std::cout<<" WARNING!!! The SAC pitch value X may be wrong! "<<std::endl ;
+ }
+
+ if (fStep1ChLocalY!=fCrystalWidth+fCrystalGap+2*fCrystalCoating)
+ {
+  std::cout<<" WARNING!!! The SAC pitch value Y may be wrong! "<<std::endl ;
+ }
 }
 
 TVector3  SACGeometry::LocalPosition(Int_t chId)
@@ -38,10 +48,6 @@ TVector3  SACGeometry::LocalPosition(Int_t chId)
   int ix = chId/10;
   int iy = chId%10;
   int iz = iz0;
-
-  //fStep1ChLocalX = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
-  //fStep1ChLocalY = fStep1ChLocalX + fCrystalGap + fCrystalCoating ;
-
 
   double x = (ix - ix0)*fStep1ChLocalX + fChIdx0Offset;
   double y = (iy - iy0)*fStep1ChLocalY + fChIdy0Offset;

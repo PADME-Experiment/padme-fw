@@ -22,9 +22,21 @@ void ECalGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
 
+  fCrystalWidth    = (double)cfg->GetParOrDefault("GEOMETRY","CrystalWidth",21.);
   fCrystalGap      = (double)cfg->GetParOrDefault("GEOMETRY","CrystalGap", 0.);
   fCrystalCoating  = (double)cfg->GetParOrDefault("GEOMETRY","CrystalCoating",0.);
   fTedlarThickness = (double)cfg->GetParOrDefault("GEOMETRY","TedlarThickness",0.);
+ 
+  if (fStep1ChLocalX!=fCrystalWidth+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness)
+ {
+  std::cout<<" WARNING!!! The ECal pitch value X may be wrong! "<<std::endl ;
+ }
+
+ if (fStep1ChLocalY!=fCrystalWidth+fCrystalGap+2*fCrystalCoating+2*fTedlarThickness)
+ {
+  std::cout<<" WARNING!!! The ECal pitch value Y may be wrong! "<<std::endl ;
+ }
+
 }
 
 TVector3  ECalGeometry::LocalPosition(Int_t chId)
@@ -38,10 +50,9 @@ TVector3  ECalGeometry::LocalPosition(Int_t chId)
   int iy = chId%100;
   int iz = iz0;
 
-  double x = (ix - ix0)*(fStep1ChLocalX + fCrystalGap + 2*fCrystalCoating + 2*fTedlarThickness) + fChIdx0Offset;
-  double y = (iy - iy0)*(fStep1ChLocalY + fCrystalGap + 2*fCrystalCoating + 2*fTedlarThickness) + fChIdy0Offset;
-  double z = (iz - iz0)*fStep1ChLocalZ + fChIdz0Offset;
-
+  double x = (ix - ix0)* fStep1ChLocalX + fChIdx0Offset;
+  double y = (iy - iy0)* fStep1ChLocalY + fChIdy0Offset;
+  double z = (iz - iz0)* fStep1ChLocalZ + fChIdz0Offset;
 
   
   return TVector3(x,y,z);

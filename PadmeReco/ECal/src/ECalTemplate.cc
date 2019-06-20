@@ -29,17 +29,8 @@ void ECalTemplate::Init()
   ECal = new TTree("ECAL","ECAL");
   ECal->Branch("VMax",&fVMax);
   hListTemplate->Add(hSample   = new TH1D("hSample","hSample",1000,0.,1000.));
-  //  hListTemplate->Add(hSignal = new TH1D("hSignal","hSignal",1000,0.,1000.));
   hListTemplate->Add(hTMax    = new TH1D("hTimeMax","hTimeMax",1000,0.,1000.));
   hListTemplate->Add(hprof= new TProfile("hprof","Signal Profile",1000,0,1000,0,4096));
-
-
-
-  //  for(int ii=0;ii<100;ii++){
-  //    TH1D* h = new TH1D(Form("hSig%d",ii),Form("hSig%d",ii),1000,0.,1000.);
-  //    hVSig.push_back(h);
-  // }
-
 }
 
 ECalTemplate::ECalTemplate()
@@ -64,10 +55,6 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   TH1D * HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
   TH1D * hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
   TH1D * hTMax = (TH1D*) hListTemplate->FindObject("hTimeMax");
-
-  //  TH1D * hSVec = (TH1D*) hListTemplate->FindObject(Form("hPResReco%d",0));
-
-  //  HistoTemp->Reset();
   hTMax->Fill(Time);
 
   double templateVec[1000];
@@ -86,9 +73,9 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   TH1D* h = new TH1D(Form("hSig%d",NHist),Form("hSig%d",NHist),1000,0.,1000.);
   hVSig.push_back(h);
   for (int j = 0; j < 1000; j++) {
-    HistoTemp->SetBinContent(j+1,templateVec[j]);
-    hVSig.at(NHist)->SetBinContent(j+1,templateVec[j]);
-
+    HistoTemp->SetBinContent(j,templateVec[j]);
+    //    hVSig.at(NHist)->SetBinContent(j+1,templateVec[j]);
+    hVSig.at(NHist)->SetBinContent(j+1,fSample[j]);
     hTemplate->Fill(j+1,templateVec[j]); //sistemare
     // std::cout << "j: " << j << ", template: " << templateVec[j] << std::endl;
   }  

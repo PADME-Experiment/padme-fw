@@ -21,6 +21,22 @@ HEPVetoGeometry::HEPVetoGeometry()
 void HEPVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
+  fFingerSizeX           = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeX",10. );
+  fFingerSizeY           = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeY",178.);
+  fFingerSizeZ           = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeZ",10. );
+  fHEPVetoInnerFacePosX  = (double)cfg->GetParOrDefault("GEOMETRY","HEPVetoInnerFacePosX",3000.);
+  fHEPVetoInnerFacePosZ  = (double)cfg->GetParOrDefault("GEOMETRY","HEPVetoInnerFacePosZ",3000.);
+
+
+  if (fLocOxinPadmeFrame!=fHEPVetoInnerFacePosX+0.5*fFingerSizeX)
+ {
+  std::cout<<" WARNING!!! The HEPVeto X position in PADME frame  may be wrong! "<<std::endl ;
+ }
+
+  if (fLocOzinPadmeFrame!=fHEPVetoInnerFacePosZ)
+ {
+  std::cout<<" WARNING!!! The HEPVeto Z position in PADME frame  may be wrong! "<<std::endl ;
+ }
 }
 
 TVector3  HEPVetoGeometry::LocalPosition(Int_t chId)

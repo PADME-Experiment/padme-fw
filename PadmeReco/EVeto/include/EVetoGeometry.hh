@@ -23,7 +23,12 @@ public:
   
 
 private:
-  
+
+  double fFingerSizeX;
+  double fFingerSizeY;
+  double fFingerSizeZ;
+  double fEVetoInnerFacePosX;
+  double fEVetoInnerFacePosZ;
  
 };
 #endif

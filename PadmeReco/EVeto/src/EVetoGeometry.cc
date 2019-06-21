@@ -21,6 +21,25 @@ EVetoGeometry::EVetoGeometry()
 void EVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 {
   PadmeVGeometry::Init(cfg, chIdMgr);
+  
+  fFingerSizeX         = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeX",10. );
+  fFingerSizeY         = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeY",178.);
+  fFingerSizeZ         = (double)cfg->GetParOrDefault("GEOMETRY","FingerSizeZ",10. );
+  fEVetoInnerFacePosX  = (double)cfg->GetParOrDefault("GEOMETRY","EVetoInnerFacePosX",3000.);
+  fEVetoInnerFacePosZ  = (double)cfg->GetParOrDefault("GEOMETRY","EVetoInnerFacePosZ",3000.);
+
+
+  if (fLocOxinPadmeFrame!=fEVetoInnerFacePosX+0.5*fFingerSizeX)
+ {
+  std::cout<<" WARNING!!! The EVeto X position in PADME frame  may be wrong! "<<std::endl ;
+ }
+
+  if (fLocOzinPadmeFrame!=fEVetoInnerFacePosZ)
+ {
+  std::cout<<" WARNING!!! The EVeto Z position in PADME frame  may be wrong! "<<std::endl ;
+ }
+
+  
 }
 
 TVector3  EVetoGeometry::LocalPosition(Int_t chId)

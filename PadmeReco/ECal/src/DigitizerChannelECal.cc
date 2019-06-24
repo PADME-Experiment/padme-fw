@@ -66,7 +66,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
-  SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
+  if (!pedestalsFromFirstSamples()) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
@@ -878,5 +878,6 @@ Double_t DigitizerChannelECal::PeakSearch(){
     Max    = histotmp->GetMaximum();
     npeaks++;
   }
+  return 0.;
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
 }

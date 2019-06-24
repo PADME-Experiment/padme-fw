@@ -526,27 +526,27 @@ Double_t TargetReconstruction::fitProfile(Double_t *x, Double_t *par) {
 
 
 void TargetReconstruction::ReconstructBeam(){
-  std::cout<<"In TARGETRECONSTRUCTION " << std::endl;
+  //  std::cout<<"In TARGETRECONSTRUCTION " << std::endl;
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-  std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;
+  //std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;
   //  char  iName                    [100]; 
   float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
-  std::cout<<"I'm going to recovered the X profile " << std::endl;
+  //std::cout<<"I'm going to recovered the X profile " << std::endl;
   for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 
    hprofile->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
-   std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
+   //std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
   }
-  std::cout<<"profile X recovered " << std::endl;
+  //std::cout<<"profile X recovered " << std::endl;
   TF1 *fitFcn = new TF1("fitFcn",TargetReconstruction::fitProfile,-100,100,4);
   float baselineX  =                                           0 ; fitFcn->SetParameter(0, baselineX);
   float amplitudeX =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
-  std::cout<<"TargetBeam amplitude " << amplitudeX<< std::endl;
+  //std::cout<<"TargetBeam amplitude " << amplitudeX<< std::endl;
   float averageX   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
-  std::cout<<"TargetBeam mean " << averageX<< std::endl;
+  //std::cout<<"TargetBeam mean " << averageX<< std::endl;
   float widthX     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
   float NonEmpty= hprofile->Integral();
   float MeanX=averageX;
@@ -576,7 +576,7 @@ void TargetReconstruction::ReconstructBeam(){
   for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
    hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16,Hits[iHit1]->GetEnergy()); 
   }
-  std::cout<<"profile Y recovered " << std::endl;
+  //std::cout<<"profile Y recovered " << std::endl;
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
   float amplitudeY =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
   float averageY   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
@@ -605,7 +605,7 @@ void TargetReconstruction::ReconstructBeam(){
   float widthYErr     =fitFcn->GetParError(3);
   float chi2Y         =fitFcn->GetChisquare();
   float NdofY         =fitFcn->GetNDF();
-  std::cout<<"In TARGETRECONSTRUCTION targetBeam fulling " << std::endl;
+  //std::cout<<"In TARGETRECONSTRUCTION targetBeam fulling " << std::endl;
   fTargetRecoBeam->setCentroid(MeanX,MeanXErr,MeanY,MeanYErr);
   fTargetRecoBeam->setWidth(RMS_X,RMS_Xerr,RMS_Y,RMS_Yerr);
   fTargetRecoBeam->setFitCentroid(averageX,averageXErr,averageY,averageYErr);

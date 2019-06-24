@@ -150,17 +150,57 @@ TargetReconstruction::~TargetReconstruction()
 
 void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+  //PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+  if (tEvent==NULL) return;
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t ich=0; ich<32; ++ich) {
+    TRecoVHit *Hit = new TRecoVHit();
+    Bool_t found=false;
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      if(found)continue;
+      TMCVDigi* digi = tEvent->Digi(i);
+      //TRecoVHit *Hit = new TRecoVHit(digi);
+      
+      if (digi->GetChannelId()==ich)
+	   {
+	      Hit->SetChannelId(digi->GetChannelId()+1);
+	      Hit->SetEnergy(digi->GetEnergy()*1.6e-3);
+	      Hit->SetTime(digi->GetTime());
+	      Hit->SetPosition(TVector3(0.,0.,0.)); 
+	      //std::cout<<"ChId " << digi->GetChannelId() << "  contatore " << ich<<" energia " << (Double_t)digi->GetEnergy()*1.6e-3 << std::endl;
+	      found=true;
+	   }
+   }
+   if(!found){
+       Hit->SetChannelId(ich+1);
+	     Hit->SetEnergy(0.);
+	     Hit->SetTime(0.);
+	     Hit->SetPosition(TVector3(0.,0.,0.)); 
+	     //std::cout << "ich not found in digi list" << std::endl;
+   }
+   fHits.push_back(Hit);
+  }
+   
+   std::cout<< "size hit " << fHits.size() << " energia " <<  std::endl;
+  // set geometry 
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+  
+  ClearClusters();
+  BuildClusters();
+  
+  
   TTargetMCEvent* tTargetEvent = (TTargetMCEvent*)tEvent;
-  std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
+  //std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
     TTargetMCHit* hit = (TTargetMCHit*)tTargetEvent->Hit(iH);
-    hit->Print();
+    //hit->Print();
   }
   for (Int_t iD=0; iD<tTargetEvent->GetNDigi(); iD++) {
     TTargetMCDigi* digi = (TTargetMCDigi*)tTargetEvent->Digi(iD);
-    digi->Print();
+    //digi->Print();
   }
+ ReconstructBeam();
 }
 
 
@@ -486,21 +526,27 @@ Double_t TargetReconstruction::fitProfile(Double_t *x, Double_t *par) {
 
 
 void TargetReconstruction::ReconstructBeam(){
+  std::cout<<"In TARGETRECONSTRUCTION " << std::endl;
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-
+  std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;
   //  char  iName                    [100]; 
   float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
+  std::cout<<"I'm going to recovered the X profile " << std::endl;
   for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy()); 
+   hprofile->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
+   std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
   }
+  std::cout<<"profile X recovered " << std::endl;
   TF1 *fitFcn = new TF1("fitFcn",TargetReconstruction::fitProfile,-100,100,4);
   float baselineX  =                                           0 ; fitFcn->SetParameter(0, baselineX);
   float amplitudeX =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
+  std::cout<<"TargetBeam amplitude " << amplitudeX<< std::endl;
   float averageX   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
+  std::cout<<"TargetBeam mean " << averageX<< std::endl;
   float widthX     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
   float NonEmpty= hprofile->Integral();
   float MeanX=averageX;
@@ -528,8 +574,9 @@ void TargetReconstruction::ReconstructBeam(){
   float NdofX         =fitFcn->GetNDF();
  
   for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()); 
+   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16,Hits[iHit1]->GetEnergy()); 
   }
+  std::cout<<"profile Y recovered " << std::endl;
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
   float amplitudeY =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
   float averageY   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
@@ -558,7 +605,7 @@ void TargetReconstruction::ReconstructBeam(){
   float widthYErr     =fitFcn->GetParError(3);
   float chi2Y         =fitFcn->GetChisquare();
   float NdofY         =fitFcn->GetNDF();
-
+  std::cout<<"In TARGETRECONSTRUCTION targetBeam fulling " << std::endl;
   fTargetRecoBeam->setCentroid(MeanX,MeanXErr,MeanY,MeanYErr);
   fTargetRecoBeam->setWidth(RMS_X,RMS_Xerr,RMS_Y,RMS_Yerr);
   fTargetRecoBeam->setFitCentroid(averageX,averageXErr,averageY,averageYErr);
@@ -595,7 +642,7 @@ void TargetReconstruction::ReconstructBeam(){
 
   
   float BeamMultiplicity = (fabs(Qx)+fabs(Qy))/2.;
-  double nominalCCD = 10.;//in micron 
+  double nominalCCD = 12.;//in micron 
   double chargeToNPOT = 1./1.60217662e-7/nominalCCD/36.;
   BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;
   float ErrBeamMultiplicity=sqrt(BeamMultiplicity);

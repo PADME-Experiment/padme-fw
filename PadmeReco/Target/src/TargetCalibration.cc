@@ -60,7 +60,7 @@ void TargetCalibration::InitCommonEnergyScale(PadmeVRecoConfig *cfg)
 }
 void TargetCalibration::PerformBeamCalibration(TTargetRecoBeam* b)
 {
-  double ccdCorr = 10./fCCD;
+  double ccdCorr = 12./fCCD;
   double npot    =b->getnPOT();
   double npoterr =b->getnPOTError();
   //std::cout<<" POT before calib "<<npot; 

@@ -59,6 +59,22 @@ public:
   G4double GetLocalPosX() { return fLocalPosition.x(); };
   G4double GetLocalPosY() { return fLocalPosition.y(); };
   G4double GetLocalPosZ() { return fLocalPosition.z(); };
+  
+  void SetGlobalPositionPost(G4ThreeVector p) { fGlobalPositionPost = p; }
+  G4ThreeVector GetGlobalPositionPost() { return fGlobalPositionPost; }
+  G4double GetGlobalPosPostX() { return fGlobalPositionPost.x(); };
+  G4double GetGlobalPosPostY() { return fGlobalPositionPost.y(); };
+  G4double GetGlobalPosPostZ() { return fGlobalPositionPost.z(); };
+
+  void SetLocalPositionPost(G4ThreeVector p) { fLocalPositionPost = p; }
+  G4ThreeVector GetLocalPositionPost() { return fLocalPositionPost; }
+  G4double GetLocalPosPostX() { return fLocalPositionPost.x(); };
+  G4double GetLocalPosPostY() { return fLocalPositionPost.y(); };
+  G4double GetLocalPosPostZ() { return fLocalPositionPost.z(); };
+  
+  // hit diagnostics
+  void SetHitVal(G4int hv) { fHitVal = hv; }
+  G4int GetHitVal() { return fHitVal; }
 
   // Kept for backward compatibility: will be removed
   void SetEdep(G4double e) { fEnergy = e; }
@@ -76,8 +92,13 @@ private:
   G4double      fTrackEnergy; //M. Raggi 2/04/2019 added track energy
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
+  G4ThreeVector fGlobalPositionPost;
+  G4ThreeVector fLocalPositionPost;
   G4ThreeVector fMomentumDirection; //M. Raggi 5/04/2019 added track energy
   G4bool fIsPrimary; //M. Raggi 3/05/2019 true if it's a primary positron
+  
+  //hit diagnostics
+  G4int fHitVal;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

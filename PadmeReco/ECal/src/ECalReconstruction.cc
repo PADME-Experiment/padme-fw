@@ -647,8 +647,10 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	//	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	//std::cout<<"is neig "<<cChID[iHit1]<<" "<<cTime[iHit1]<<" "<<cEnergy[iHit1]<<std::endl;
 	if (cEnergy[iHit1]<fClEnThrForHit) continue;
-	Int_t XCl=cChID[iHit1]/100;
-	Int_t YCl=cChID[iHit1]%100;
+	//Int_t XCl=cChID[iHit1]/100;
+	//Int_t YCl=cChID[iHit1]%100;
+	Double_t XCl = Hits[iHit1]->GetPosition().X();
+	Double_t YCl = Hits[iHit1]->GetPosition().Y();
 	((TH2F *)GetHisto("ECALCellPos"))->Fill(XCl,YCl,cEnergy[iHit1]);
 	cUsed[iHit1]=1;
 	// keep track of the indices of hits contributing to the cluster
@@ -689,7 +691,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     myCl->SetChannelId( SdCell[iCl] );
     myCl->SetEnergy( ClE[iCl]    );
     myCl->SetTime(   ClTime[iCl] );
-    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],Hits[0]->GetPosition().Z() ));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";

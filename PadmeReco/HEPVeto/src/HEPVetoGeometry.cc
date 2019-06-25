@@ -39,9 +39,11 @@ void HEPVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
  }
 }
 
-TVector3  HEPVetoGeometry::LocalPosition(Int_t chId)
+TVector3  HEPVetoGeometry::LocalPosition(Int_t chIdInput)
 {
 
+  Int_t chId = chIdInput;
+  if (chId > 15)  chId = chId - 16;
   double x = ((chId-fChIdx0))*fStep1ChLocalX + fChIdx0Offset;
   double y = ((chId-fChIdy0))*fStep1ChLocalY + fChIdy0Offset;
   double z = ((chId-fChIdz0))*fStep1ChLocalZ + fChIdz0Offset;

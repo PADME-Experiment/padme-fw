@@ -44,7 +44,8 @@ void TargetReconstruction::HistoInit(){
 
   // a service histigram, no need to save it to root output 
   //  hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
-  hprofile = new TH1F("hprofile","hprofile",16,-8.5,7.5); /// center of the target is in the mddle of strip with chId 9 
+  hprofileX = new TH1F("hprofileX","hprofileX",16, 0.5,16.5); /// center of the target is in the mddle of strip with chId 9 
+  hprofileY = new TH1F("hprofileY","hprofileY",16,16.5,32.5); /// center of the target is in the mddle of strip with chId 9 
 
   // histos to be saved 
   AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          ));
@@ -539,32 +540,32 @@ void TargetReconstruction::ReconstructBeam(){
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
   //std::cout<<"I'm going to recovered the X profile " << std::endl;
-  for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
+  for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
+    if (Hits[iHit1]->GetChannelId()<17) hprofileX->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
    //std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
   }
   //std::cout<<"profile X recovered " << std::endl;
   TF1 *fitFcn = new TF1("fitFcn",TargetReconstruction::fitProfile,-100,100,4);
   float baselineX  =                                           0 ; fitFcn->SetParameter(0, baselineX);
-  float amplitudeX =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
+  float amplitudeX =  hprofileX-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
   //std::cout<<"TargetBeam amplitude " << amplitudeX<< std::endl;
-  float averageX   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
+  float averageX   =  hprofileX->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
   //std::cout<<"TargetBeam mean " << averageX<< std::endl;
-  float widthX     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
-  float NonEmpty= hprofile->Integral();
+  float widthX     =  hprofileX->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
+  float NonEmpty= hprofileX->Integral();
   float MeanX=averageX;
-  float MeanXErr=hprofile->GetMeanError();
+  float MeanXErr=hprofileX->GetMeanError();
   float RMS_X=widthX;
-  float RMS_Xerr=hprofile->GetRMSError();
-  if(NonEmpty)hprofile->Fit("fitFcn","q");
+  float RMS_Xerr=hprofileX->GetRMSError();
+  if(NonEmpty)hprofileX->Fit("fitFcn","q");
   baselineX  =        fitFcn->GetParameter(0) ;
   amplitudeX =        fitFcn->GetParameter(1) ;
   averageX   =        fitFcn->GetParameter(2) ;
   widthX     =  fabs( fitFcn->GetParameter(3));
   fitFcn->FixParameter(0,baselineX);
-  float xlow  = averageX-widthX;if(xlow  <-7.5|| xlow >8.5)xlow =-7.5;
-  float xhigh = averageX+widthX;if(xhigh <-7.5|| xhigh>8.5)xhigh= 8.5;
-  if(NonEmpty)hprofile->Fit("fitFcn","q","",xlow,xhigh);
+  float xlow  = averageX-widthX;if(xlow  < hprofileX->GetXaxis()->GetXmin() || xlow  > hprofileX->GetXaxis()->GetXmax() ) xlow =1.;
+  float xhigh = averageX+widthX;if(xhigh < hprofileX->GetXaxis()->GetXmin() || xhigh > hprofileX->GetXaxis()->GetXmax()) xhigh=16.;
+  if(NonEmpty)hprofileX->Fit("fitFcn","q","",xlow,xhigh);
   baselineX  =        fitFcn->GetParameter(0) ;
   amplitudeX =        fitFcn->GetParameter(1) ;
   averageX   =        fitFcn->GetParameter(2) ;
@@ -576,28 +577,29 @@ void TargetReconstruction::ReconstructBeam(){
   float chi2X         =fitFcn->GetChisquare();
   float NdofX         =fitFcn->GetNDF();
  
-  for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16,Hits[iHit1]->GetEnergy()); 
+  for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
+    //for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
+    if (Hits[iHit1]->GetChannelId()>16) hprofileY->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
   }
   //std::cout<<"profile Y recovered " << std::endl;
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
-  float amplitudeY =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
-  float averageY   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
-  float widthY     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthY    ); 
+  float amplitudeY =  hprofileY-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
+  float averageY   =  hprofileY->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
+  float widthY     =  hprofileY->    GetRMS (); fitFcn->SetParameter(3, widthY    ); 
   float MeanY=averageY;
-  float MeanYErr=hprofile->GetMeanError();
+  float MeanYErr=hprofileY->GetMeanError();
   float RMS_Y=widthY;
-  float RMS_Yerr=hprofile->GetRMSError();
-  NonEmpty= hprofile->Integral();
-  if(NonEmpty)hprofile->Fit("fitFcn","q");
+  float RMS_Yerr=hprofileY->GetRMSError();
+  NonEmpty= hprofileY->Integral();
+  if(NonEmpty)hprofileY->Fit("fitFcn","q");
   baselineY  =        fitFcn->GetParameter(0) ;
   amplitudeY =        fitFcn->GetParameter(1) ;
   averageY   =        fitFcn->GetParameter(2) ;
   widthY     =  fabs( fitFcn->GetParameter(3));
   fitFcn->FixParameter(0,baselineY);
-  xlow  = averageY-widthY;if(xlow  <-7.5|| xlow >8.5)xlow =-7.5;
-  xhigh = averageY+widthY;if(xhigh <-7.5|| xhigh>8.5)xhigh= 8.5;
-  if(NonEmpty)hprofile->Fit("fitFcn","q","",xlow,xhigh);
+  xlow  = averageY-widthY;if(xlow  < hprofileY->GetXaxis()->GetXmin() || xlow >  hprofileY->GetXaxis()->GetXmax() ) xlow =17.;
+  xhigh = averageY+widthY;if(xhigh < hprofileY->GetXaxis()->GetXmin() || xhigh > hprofileY->GetXaxis()->GetXmax() ) xhigh=32.;
+  if(NonEmpty)hprofileY->Fit("fitFcn","q","",xlow,xhigh);
   baselineY  =        fitFcn->GetParameter(0) ;
   amplitudeY =        fitFcn->GetParameter(1) ;
   averageY   =        fitFcn->GetParameter(2) ;

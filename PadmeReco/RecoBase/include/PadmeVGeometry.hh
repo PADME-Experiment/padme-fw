@@ -39,6 +39,7 @@ public:
 
 
   virtual TVector3 LocalPosition(Int_t chId);
+  virtual TVector3 LocalPosition(Double_t posXInChIdUnits, Double_t posYInChIdUnits);
   virtual TVector3 GlobalPosition(Int_t chId);
   virtual TVector3 GetPosition(Int_t chId){return this->GlobalPosition(chId);}
   virtual void SetLocalOriginInPadmeFrame(double x, double y, double z) {fLocOxinPadmeFrame=x; fLocOyinPadmeFrame=y; fLocOzinPadmeFrame=z;}
@@ -52,6 +53,8 @@ public:
   virtual double GetLocalAngleAroundZ(){return fLocAngleZPadmeFrame;}
   virtual TVector3 GetLocalOriginInPadmeFrame(){return TVector3(fLocOxinPadmeFrame,fLocOyinPadmeFrame,fLocOzinPadmeFrame);}
   virtual void UpdateTransform();
+  XYZPoint globalFromLocal(TVector3& p);
+  XYZPoint localFromGlobal(TVector3& p);
  
   
 protected:
@@ -60,9 +63,7 @@ protected:
   bool fUsePrimaryNumbers;  
   
   Transform3D& GetLocalToGlobalTransf(){return *fLocalToGlobal;}
-  //  tranf3D  GetGlobalToLocalTransf(){return fLocalToGlobal.inverse();}
-  XYZPoint globalFromLocal(TVector3& p);
-  XYZPoint localFromGlobal(TVector3& p);
+  Transform3D GetGlobalToLocalTransf(){return (*fLocalToGlobal).Inverse();}
   
   //  std::map<int, XYZPoint> *fLocalPosMap;
   std::map<int, XYZPoint> *fGlobalPosMap;

@@ -104,6 +104,14 @@ TVector3  PadmeVGeometry::LocalPosition(Int_t chId)
 
   return TVector3(x,y,z);
 }
+TVector3  PadmeVGeometry::LocalPosition(Double_t posXInChIdUnits, Double_t posYInChIdUnits)
+{
+  double x = (posXInChIdUnits-(Double_t)fChIdx0)*fStep1ChLocalX + fChIdx0Offset;
+  double y = (posYInChIdUnits-(Double_t)fChIdy0)*fStep1ChLocalY + fChIdy0Offset;
+  double z = (0.-(Double_t)fChIdz0)*fStep1ChLocalZ + fChIdz0Offset;
+
+  return TVector3(x,y,z);
+}
 TVector3  PadmeVGeometry::GlobalPosition(Int_t chId)
 {
 
@@ -123,15 +131,15 @@ TVector3  PadmeVGeometry::GlobalPosition(Int_t chId)
     }
   
        TVector3 myPos = LocalPosition(chId);
-       XYZPoint lPos = XYZPoint(myPos.X(), myPos.Y(), myPos.Z());
+       //XYZPoint lPos = XYZPoint(myPos.X(), myPos.Y(), myPos.Z());
      
        //std::cout << "****x " <<myPos.X() << "***y  " << myPos.Y() << "   **z   "<<myPos.Z()<<std::endl;
  
 
-
+       
   
-  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPos = 
-    GetLocalToGlobalTransf()*lPos;
+       ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPos = globalFromLocal(myPos);
+       //GetLocalToGlobalTransf()*lPos;
 
   //std::cout << "****************GetLocalToGlobalTransf()   "   <<*fLocalToGlobal<<std::endl;
 
@@ -140,6 +148,24 @@ TVector3  PadmeVGeometry::GlobalPosition(Int_t chId)
   return TVector3(gPos.X(), gPos.Y(), gPos.Z());
 }
 
+XYZPoint PadmeVGeometry::globalFromLocal(TVector3& p)
+{
+
+  XYZPoint lPos = XYZPoint(p.X(), p.Y(), p.Z());
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPos = 
+    GetLocalToGlobalTransf()*lPos;
+  return (XYZPoint)gPos;
+  
+}
+XYZPoint PadmeVGeometry::localFromGlobal(TVector3& p)
+{
+
+  XYZPoint gPos = XYZPoint(p.X(), p.Y(), p.Z());
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> lPos = 
+    GetGlobalToLocalTransf()*gPos;
+  return (XYZPoint)lPos;
+  
+}
 
 void PadmeVGeometry::ComputePositions(std::vector<TRecoVHit *> &Hits)
 {

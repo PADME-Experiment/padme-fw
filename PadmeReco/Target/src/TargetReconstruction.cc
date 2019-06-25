@@ -43,7 +43,8 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
 void TargetReconstruction::HistoInit(){
 
   // a service histigram, no need to save it to root output 
-  hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
+  //  hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
+  hprofile = new TH1F("hprofile","hprofile",16,-8.5,7.5); /// center of the target is in the mddle of strip with chId 9 
 
   // histos to be saved 
   AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          ));
@@ -190,16 +191,18 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   BuildClusters();
   
   
+  /*
   TTargetMCEvent* tTargetEvent = (TTargetMCEvent*)tEvent;
-  //std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
+  std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
     TTargetMCHit* hit = (TTargetMCHit*)tTargetEvent->Hit(iH);
-    //hit->Print();
+    hit->Print();
   }
   for (Int_t iD=0; iD<tTargetEvent->GetNDigi(); iD++) {
     TTargetMCDigi* digi = (TTargetMCDigi*)tTargetEvent->Digi(iD);
-    //digi->Print();
+    digi->Print();
   }
+  */
  ReconstructBeam();
 }
 
@@ -606,10 +609,21 @@ void TargetReconstruction::ReconstructBeam(){
   float chi2Y         =fitFcn->GetChisquare();
   float NdofY         =fitFcn->GetNDF();
   //std::cout<<"In TARGETRECONSTRUCTION targetBeam fulling " << std::endl;
-  fTargetRecoBeam->setCentroid(MeanX,MeanXErr,MeanY,MeanYErr);
+
+  // Here all positions are in the local Target Reference frame 
+  TVector3 myPosCentr, myPosFitCentr;
+  myPosCentr    = fGeometry->LocalPosition(MeanX,    MeanY);
+  myPosFitCentr = fGeometry->LocalPosition(averageX, averageY);
+
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosCentr = fGeometry->globalFromLocal(myPosCentr);
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosFitCentr = fGeometry->globalFromLocal(myPosFitCentr);
+  
+  fTargetRecoBeam->setCentroid(gPosCentr.X(),MeanXErr,gPosCentr.Y(),MeanYErr);
   fTargetRecoBeam->setWidth(RMS_X,RMS_Xerr,RMS_Y,RMS_Yerr);
-  fTargetRecoBeam->setFitCentroid(averageX,averageXErr,averageY,averageYErr);
+  
+  fTargetRecoBeam->setFitCentroid(gPosFitCentr.X(),averageXErr,gPosFitCentr.Y(),averageYErr);
   fTargetRecoBeam->setFitWidth(widthX,widthXErr,widthY,widthYErr);
+  
   fTargetRecoBeam->setFitParameter(chi2X,chi2Y, NdofX, NdofY);
   //std::cout<< "Centroid X: " << MeanX << " ErrX " << RMS_X << " Y " << MeanY << " ErrY "<< RMS_Y << std::endl;
   //std::cout<< "Centroid Fit X: " << averageX << " ErrX " << widthX << " Y " << averageY << " ErrY "<< widthY << std::endl;

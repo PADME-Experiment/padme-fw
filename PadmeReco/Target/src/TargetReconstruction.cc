@@ -534,14 +534,14 @@ void TargetReconstruction::ReconstructBeam(){
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;
   //  char  iName                    [100]; 
-  float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
-  float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
+  //  float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
+  //  float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
   //std::cout<<"I'm going to recovered the X profile " << std::endl;
   for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
-    if (Hits[iHit1]->GetChannelId()<17) hprofileX->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
+    if (Hits[iHit1]->GetChannelId()<17) hprofileX->Fill(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
    //std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
   }
   //std::cout<<"profile X recovered " << std::endl;
@@ -579,7 +579,7 @@ void TargetReconstruction::ReconstructBeam(){
  
   for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
     //for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
-    if (Hits[iHit1]->GetChannelId()>16) hprofileY->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
+    if (Hits[iHit1]->GetChannelId()>16) hprofileY->Fill(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
   }
   //std::cout<<"profile Y recovered " << std::endl;
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
@@ -617,8 +617,14 @@ void TargetReconstruction::ReconstructBeam(){
   myPosCentr    = fGeometry->LocalPosition(MeanX,    MeanY);
   myPosFitCentr = fGeometry->LocalPosition(averageX, averageY);
 
+  //  std::cout<<" In the local Frame: x, y "<<MeanX<<" "<<MeanY<<std::endl;
+  //  std::cout<<" In the local Frame: x, y "<<myPosCentr.X()<<" "<<myPosCentr.Y()<<std::endl;
+  //  std::cout<<" In the local Frame(fit): x, y "<<averageX<<" "<<averageY<<std::endl;
+  //  std::cout<<" In the local Frame(fit): x, y "<<myPosFitCentr.X()<<" "<<myPosFitCentr.Y()<<std::endl;
   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosCentr = fGeometry->globalFromLocal(myPosCentr);
   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosFitCentr = fGeometry->globalFromLocal(myPosFitCentr);
+  //  std::cout<<" In the global Frame:      x, y "<<gPosCentr.X()<<" "<<gPosCentr.Y()<<std::endl;
+  //  std::cout<<" In the global Frame(fit): x, y "<<gPosFitCentr.X()<<" "<<gPosFitCentr.Y()<<std::endl;
   
   fTargetRecoBeam->setCentroid(gPosCentr.X(),MeanXErr,gPosCentr.Y(),MeanYErr);
   fTargetRecoBeam->setWidth(RMS_X,RMS_Xerr,RMS_Y,RMS_Yerr);

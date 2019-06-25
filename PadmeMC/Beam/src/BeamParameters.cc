@@ -57,6 +57,10 @@ BeamParameters::BeamParameters()
   // Insert three gamma decays
   fNThreePhotonDecaysPerBunch = 0;
   fThreePhotonDecaysFilename = "ThreePhotonDecays.list";
+  
+  // Insert two gamma decays
+  fNTwoPhotonDecaysPerBunch = 0;
+  fTwoPhotonDecaysFilename = "TwoPhotonDecays.list";
 
   // Initialize calibration run to some sensible values
   fCalibrationRun  = false;

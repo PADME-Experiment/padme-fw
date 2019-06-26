@@ -68,9 +68,9 @@ Bool_t HEPVetoAnalysis::InitHistosDataQuality()
     std::string hname;
     Double_t nx, xlow, xup;
 
-    nx = 100.;
+    nx =  50.;
     xlow = 0;
-    xup  =  100.0;
+    xup  = 50;
    
     hname = "HEPVeto_ChId_Hits_BTFtrigger";
     hSvc->BookHisto(hname, nx, xlow, xup);

@@ -1,5 +1,5 @@
 #include "PVetoAnalysis.hh"
-
+#include "TRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
@@ -83,7 +83,77 @@ Bool_t PVetoAnalysis::InitHistosAnalysis()
 
     return true;
 }
+Bool_t PVetoAnalysis::InitHistosDataQuality()
+{
 
+    HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::string hname;
+    Double_t nx, xlow, xup;
+
+    nx = 100.;
+    xlow = 0;
+    xup  =  100.0;
+   
+    hname = "PVeto_ChId_Hits_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_HitsEnergy_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+     hname = "PVeto_ChId_Hits_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_HItsEnergy_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+     hname = "PVeto_ChId_Hits_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_HitsEnergy_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+
+
+    hname = "PVeto_ChId_Clusters_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_ClustersEnergy_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+     hname = "PVeto_ChId_Clusters_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_ClustersEnergy_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+     hname = "PVeto_ChId_Clusters_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ChId_ClustersEnergy_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    
+
+    nx = 300.;
+    xlow = 0;
+    xup  =  1000.0;
+    hname = "PVeto_HitsEnergy_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_HitsEnergy_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_HitsEnergy_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+
+    hname = "PVeto_ClustersEnergy_BTFtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ClustersEnergy_CRtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    hname = "PVeto_ClustersEnergy_AUTOtrigger";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+
+    int binX =  100;
+    int binY =  600;
+    int minX =    0;
+    int maxX =  100;
+    int minY = -300;
+    int maxY =  300;
+    hname="PVeto_HitsTimevsChIdHits";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    hname="PVeto_ClustersTimevsChIdClusters";
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+     
+     
+    return true;
+
+}
 Bool_t PVetoAnalysis::ProcessAnalysis()
 {
   Bool_t retCode = 0;
@@ -269,8 +339,126 @@ Bool_t PVetoAnalysis::ProcessAnalysis()
   //    }
   //  }
 
-
-
-  
    return retCode;
+}
+
+Bool_t PVetoAnalysis::ProcessDataQuality()
+{
+  Bool_t retCode = 0;
+
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::cout<<"In PVetoAnalysis::ProcessDataQuality"<<std::endl;
+
+  Double_t eMax  =  0.;
+  Int_t    iLead = -1;
+  TRecoVHit* hit=NULL;
+  TRecoVHit* hitn=NULL;
+  TRecoVCluster* clu=NULL;
+  TRecoVCluster* clun=NULL;
+  std::string hname;
+
+  Int_t      chId;
+  Double_t energy;
+  Double_t   time;
+  //Int_t      chIdn;
+  Double_t energyn;
+  Double_t   timen;
+
+  Int_t fNhits = fhitEvent->GetNHits();
+  Int_t fNclus = fClColl->GetNElements();
+
+
+  for (Int_t i=0; i<fNhits; ++i){  
+
+  hit = fhitEvent->Hit(i);
+  chId =hit->GetChannelId();
+  energy=hit->GetEnergy();
+  time   = hit->GetTime();
+
+ // hname = "PVeto_ChId_Hits";
+ // hSvc->FillHisto(hname, (Double_t)chId, 1. );
+ // hname = "PVeto_ChId_Energy";
+ // hSvc->FillHisto(hname, (Double_t)chId,  energy);
+ // hname = "PVeto_Energy";
+ // hSvc->FillHisto(hname, energy, 1.);
+
+  hname ="PVeto_HitsTimevsChIdHits";
+  hSvc->FillHisto2(hname,chId,time, 1.);
+
+  if(fRecoEvent->GetTriggerMask()==1) {
+
+  hname = "PVeto_ChId_Hits_BTFtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId, 1. );
+  hname = "PVeto_ChId_HitsEnergy_BTFtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId,  energy);
+  hname = "PVeto_HitsEnergy_BTFtrigger";
+  hSvc->FillHisto(hname, energy, 1.);
+}
+  if(fRecoEvent->GetTriggerMask()==2) {
+
+  hname = "PVeto_ChId_Hits_CRtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId, 1. );
+  hname = "PVeto_ChId_HitsEnergy_CRtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId,  energy);
+  hname = "PVeto_HitsEnergy_CRtrigger";
+  hSvc->FillHisto(hname, energy, 1.);
+}
+if(fRecoEvent->GetTriggerMask()==128) {
+
+  hname = "PVeto_ChId_Hits_AUTOtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId, 1. );
+  hname = "PVeto_ChId_HitsEnergy_AUTOtrigger";
+  hSvc->FillHisto(hname, (Double_t)chId,  energy);
+  hname = "PVeto_HitsEnergy_AUTOtrigger";
+  hSvc->FillHisto(hname, energy, 1.);
+}
+
+} //end loop On Hits
+
+  Int_t seed;
+  Int_t seedId;
+  Double_t seedE;
+  Double_t seedT;
+  Int_t clSize;
+
+ for (Int_t j=0; j<fNclus; ++j){
+     clu    = fClColl->Element(j);
+     seedId = clu->GetChannelId();
+     seedE  = clu->GetEnergy();
+     seedT  = clu->GetTime();
+
+  if(fRecoEvent->GetTriggerMask()==1) {
+
+  hname = "PVeto_ChId_Clusters_BTFtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId, 1. );
+  hname = "PVeto_ChId_ClustersEnergy_BTFtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId,  seedE);
+  hname = "PVeto_ClustersEnergy_BTFtrigger";
+  hSvc->FillHisto(hname, seedE, 1.);
+}
+  if(fRecoEvent->GetTriggerMask()==2) {
+
+  hname = "PVeto_ChId_Clusters_CRtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId, 1. );
+  hname = "PVeto_ChId_ClustersEnergy_CRtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId,  seedE);
+  hname = "PVeto_ClustersEnergy_CRtrigger";
+  hSvc->FillHisto(hname, seedE, 1.);
+}
+if(fRecoEvent->GetTriggerMask()==128) {
+
+  hname = "PVeto_ChId_Clusters_AUTOtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId, 1. );
+  hname = "PVeto_ChId_ClustersEnergy_AUTOtrigger";
+  hSvc->FillHisto(hname, (Double_t)seedId,  seedE);
+  hname = "PVeto_ClustersEnergy_AUTOtrigger";
+  hSvc->FillHisto(hname, seedE, 1.);
+}
+
+}// end loop on clusters
+
+  hname ="PVeto_ClustersTimevsChIdClusters";
+  hSvc->FillHisto2(hname,seedId,seedT, 1.);
+
+  return retCode;
 }

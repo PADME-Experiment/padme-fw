@@ -624,6 +624,8 @@ Bool_t TargetAnalysis::ProcessDataQuality()
   Bool_t retCode = 0;
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::cout<<"In TargetAnalysis::ProcessDataQuality"<<std::endl;
+
 
   TRecoVHit* hit=NULL;
   std::string hname;
@@ -640,6 +642,11 @@ Bool_t TargetAnalysis::ProcessDataQuality()
     Double_t energy = hit->GetEnergy();
     Double_t faenergy = fabs(energy);
     Double_t time   = hit->GetTime();
+    
+ if(fRecoEvent->GetTriggerMask()==1) 
+
+   {
+
     if (istrip > 16) {
       istrip = istrip-16;
       hname = "Target_HitYprofile";
@@ -648,7 +655,9 @@ Bool_t TargetAnalysis::ProcessDataQuality()
     else {
       hname = "Target_HitXprofile";
       hSvc->FillHisto(hname,(Double_t)istrip,energy);
-    }
+         }
+   }
+   
    }
    
    //recoBeam sector

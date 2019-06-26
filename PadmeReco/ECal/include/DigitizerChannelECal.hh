@@ -49,7 +49,7 @@ public:
   Double_t CalcTime(UShort_t);
   Double_t CalcTimeSing(UShort_t);
   Double_t CalcTimeOver(UShort_t);
-  Double_t PeakSearch();
+  Int_t PeakSearch();
 
 
   //Standard hits corrections

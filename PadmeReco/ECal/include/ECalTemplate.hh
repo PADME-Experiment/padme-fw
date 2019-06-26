@@ -35,10 +35,10 @@ public:
   void BuildFitFunction();
   TSpline3 * GetTemplateSpline(){return fTemplateSpline;};
   TF1 * GetECalFitFunction(){return fECalFitFunction;};
-  //  static Double_t fitf(Double_t * x, Double_t * par);
-private :
 
+private :
   std::vector <TH1D*> hVSig;
+  std::vector <TH1D*> hVTemp;
 
   TTree* ECal;
   TList* hListTemplate;// single board related histograms 

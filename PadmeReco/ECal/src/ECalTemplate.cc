@@ -51,29 +51,36 @@ void ECalTemplate::WriteHist()
 
 void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
 {
+  fileOut->cd();
   //  hListTemplate->Print();
   TH1D * HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
   TH1D * hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
-  TH1D * hTMax = (TH1D*) hListTemplate->FindObject("hTimeMax");
+  TH1D * hTMax     = (TH1D*) hListTemplate->FindObject("hTimeMax");
   hTMax->Fill(Time);
 
   double templateVec[1000];
   Int_t PeakPos = 400;
-  Int_t RiseMargin = 80;
+  Int_t RiseMargin = 45;
 
   double Baseline = TMath::Mean(200,&fSample[0]);
+  Int_t shift = Time-PeakPos;
   for(Int_t kk=0;kk<1000;kk++){ 
-    if (kk+(Time-PeakPos) > 0 && kk+(Time-PeakPos) < 1000) {
-      if (kk < Time-RiseMargin) templateVec[kk] = Baseline;
-      else              templateVec[kk] = fSample[kk+((Int_t)Time-PeakPos)];
+    if (kk+shift > 0 && kk+shift < 1000) {
+      //      if (kk < Time-RiseMargin) templateVec[kk] = Baseline;
+      if (kk < Time-RiseMargin) templateVec[kk] = fSample[kk];
+      else templateVec[kk] = fSample[kk+shift];
     }else{
       templateVec[kk] = Baseline;
+      //      std::cout<<"aho "<<fSample[1000-((Int_t)Time-PeakPos)]<<std::endl;
+      if(shift>0) templateVec[kk] =  fSample[1000-shift];
     }
   }
+  TH1D* htmp    = new TH1D(Form("hVtemp%d",NHist),Form("hVtemp%d",NHist),1000,0.,1000.);
   TH1D* h = new TH1D(Form("hSig%d",NHist),Form("hSig%d",NHist),1000,0.,1000.);
   hVSig.push_back(h);
+  hVTemp.push_back(htmp);
   for (int j = 0; j < 1000; j++) {
-    HistoTemp->SetBinContent(j,templateVec[j]);
+    hVTemp.at(NHist)->SetBinContent(j+1,templateVec[j]);
     //    hVSig.at(NHist)->SetBinContent(j+1,templateVec[j]);
     hVSig.at(NHist)->SetBinContent(j+1,fSample[j]);
     hTemplate->Fill(j+1,templateVec[j]); //sistemare
@@ -81,6 +88,7 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   }  
   fileOut->cd();
   hVSig.at(NHist)->Write();
+  hVTemp.at(NHist)->Write();;
   NHist++;
 }
 

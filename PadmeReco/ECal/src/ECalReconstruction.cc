@@ -235,7 +235,8 @@ void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
     myCl->SetEnergy      ( cl->GetEnergy() );
     myCl->SetTime        ( cl->GetTime() );
     //std::cout<<"Cluster is given energy / time = "<< cl->GetEnergy() << " "<< cl->GetTime()<<std::endl;
-    myCl->SetPosition    ( TVector3( cl->GetXCenter(), cl->GetYCenter(), 1000.) );
+    //myCl->SetPosition    ( TVector3( cl->GetXCenter(), cl->GetYCenter(), 1000.) );
+    myCl->SetPosition    ( TVector3( cl->GetXCenter(), cl->GetYCenter(), 3000.) );
     Int_t clSize = cl->GetNCrystals();
     myCl->SetNHitsInClus ( clSize );
     vHitInCl.clear();
@@ -647,8 +648,10 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	//	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	//std::cout<<"is neig "<<cChID[iHit1]<<" "<<cTime[iHit1]<<" "<<cEnergy[iHit1]<<std::endl;
 	if (cEnergy[iHit1]<fClEnThrForHit) continue;
-	Int_t XCl=cChID[iHit1]/100;
-	Int_t YCl=cChID[iHit1]%100;
+	//Int_t XCl=cChID[iHit1]/100;
+	//Int_t YCl=cChID[iHit1]%100;
+        double XCl=Hits[iHit1]->GetPosition().X();
+        double YCl=Hits[iHit1]->GetPosition().Y();
 	((TH2F *)GetHisto("ECALCellPos"))->Fill(XCl,YCl,cEnergy[iHit1]);
 	cUsed[iHit1]=1;
 	// keep track of the indices of hits contributing to the cluster
@@ -689,7 +692,9 @@ void ECalReconstruction::BuildSimpleECalClusters()
     myCl->SetChannelId( SdCell[iCl] );
     myCl->SetEnergy( ClE[iCl]    );
     myCl->SetTime(   ClTime[iCl] );
-    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    //myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    double ZCl=Hits[0]->GetPosition().Z();
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],ZCl));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";

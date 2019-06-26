@@ -79,7 +79,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
     fECalFitf ->SetParameters(1, 0, 0, 1);
     // get the fit function just at the moment 
   }  
-  SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
+  if(fGlobalMode->IsPedestalMode()==1) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
@@ -619,7 +619,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
-  //  PeakSearch();
+  //PeakSearch();
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
   // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 

@@ -72,7 +72,7 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
     }else{
       templateVec[kk] = Baseline;
       //      std::cout<<"aho "<<fSample[1000-((Int_t)Time-PeakPos)]<<std::endl;
-      if(shift>0) templateVec[kk] =  fSample[1000-shift];
+      if(shift>0) templateVec[kk] =  fSample[1000-shift];  // prone to noise fluctuation better to use avg and scale with e-^(t/tau)
     }
   }
   TH1D* htmp    = new TH1D(Form("hVtemp%d",NHist),Form("hVtemp%d",NHist),1000,0.,1000.);
@@ -88,7 +88,7 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   }  
   fileOut->cd();
   hVSig.at(NHist)->Write();
-  hVTemp.at(NHist)->Write();;
+  hVTemp.at(NHist)->Write();
   NHist++;
 }
 

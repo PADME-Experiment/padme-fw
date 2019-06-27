@@ -102,8 +102,14 @@ public:
   G4int GetNThreePhotonDecaysPerBunch()        { return fNThreePhotonDecaysPerBunch; }
   void SetNThreePhotonDecaysPerBunch(G4int n) { fNThreePhotonDecaysPerBunch = n;    }
 
-  G4String GetThreePhotonDecaysFilename()        { return fThreePhotonDecaysFilename; }
-  void SetThreePhotonDecaysFilename(G4String f) { fThreePhotonDecaysFilename = f; }
+  G4String GetThreePhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
+  void SetThreePhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
+  
+  G4int GetNTwoPhotonDecaysPerBunch()        { return fNTwoPhotonDecaysPerBunch; }
+  void SetNTwoPhotonDecaysPerBunch(G4int n) { fNTwoPhotonDecaysPerBunch = n;    }
+
+  G4String GetTwoPhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
+  void SetTwoPhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
 
   void CalibrationRunEnable()  { fCalibrationRun = true; }
   void CalibrationRunDisable() { fCalibrationRun = false; }
@@ -162,6 +168,10 @@ private:
   // Insert three gamma decays
   G4int fNThreePhotonDecaysPerBunch;
   G4String fThreePhotonDecaysFilename;
+  
+  // Insert two gamma decays
+  G4int fNTwoPhotonDecaysPerBunch;
+  G4String fTwoPhotonDecaysFilename;
 
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)

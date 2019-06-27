@@ -160,6 +160,14 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetChannelId((*targetDC)[i]->GetChannelId()); 
 	      digi->SetEnergy((*targetDC)[i]->GetEnergy());
 	      digi->SetTime((*targetDC)[i]->GetTime());
+	      digi->SetDNumber((*targetDC)[i]->GetDNumber());
+	      digi->SetChargeT((*targetDC)[i]->GetChargeT());
+	      digi->SetCharge((*targetDC)[i]->GetCharge());
+	      digi->SetNoiseCharge((*targetDC)[i]->GetNoiseCharge());
+	      if(fGeoPars->SaveWaveformToDigiIsEnabled()){
+		digi->SetWaveformRaw((*targetDC)[i]->GetWaveformRaw());
+		digi->SetWaveform((*targetDC)[i]->GetWaveform());
+	      }
 	      e_tot += (*targetDC)[i]->GetEnergy();
 	    }
 	    //	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;

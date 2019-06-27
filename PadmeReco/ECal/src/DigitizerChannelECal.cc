@@ -66,7 +66,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
-  SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
+  if (!pedestalsFromFirstSamples()) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
   PrintConfig();
   PrepareTmpHistos();  //Temp histo servono anche in non debug mode
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
@@ -640,7 +640,7 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     }
     else{ 
       std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
-      exit(-1);
+      //exit(-1);
     } 
   }
 
@@ -661,7 +661,8 @@ void DigitizerChannelECal::SetAnalogOffSets(){
     }
     else{ 
       std::cout << "ERROR: No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
-      exit(-1);
+      //exit(-1);
+      
     } 
   }
 
@@ -878,5 +879,6 @@ Double_t DigitizerChannelECal::PeakSearch(){
     Max    = histotmp->GetMaximum();
     npeaks++;
   }
+  return 0.;
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
 }

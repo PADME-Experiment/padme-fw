@@ -89,7 +89,7 @@ void ECalCalibration::ReadCalibConstant()
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
-  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
+  for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     if (fUseCalibE > 0){
       int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
       unsigned int BD   = Hits[iHit]->getBDid(); 

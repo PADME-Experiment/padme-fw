@@ -26,61 +26,6 @@ PVetoAnalysis::~PVetoAnalysis()
 Bool_t PVetoAnalysis::InitHistosAnalysis()
 {
 
-    HistoSvc* hSvc =  HistoSvc::GetInstance();
-    std::string hname;
-    Int_t nx, ny;
-    Double_t xlow, ylow, xup, yup;
-    
-    ny = 100;
-    ylow = -0.5;
-    yup  = 99.5;
-    nx = 100;
-    xlow = -350.;
-    xup  =  350.;
-    hname = "PVeto_Hit_TimeVSch";
-    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-    nx = 100.;
-    xlow = -25.;
-    xup  =  25.;
-    hname = "PVeto_Hit_DTime_DCh0";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    hname = "PVeto_Hit_DTime_DCh1";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    hname = "PVeto_Hit_DTimeVSch_DCh1";
-    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-    hname = "PVeto_Hit_DTime_DCh2";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    
-    xlow = -350.;
-    xup  =  350.;
-    hname = "PVeto_Hit_DTime_DChLarge";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    //to be finalized 
-    nx = 31.;
-    xlow = -15.5;
-    xup  =  15.5;
-    hname = "PVeto_inClus_DCHseed";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "PVeto_inClus_DCHhits";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "PVeto_Clus2Clus_seedDCH";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    nx = 100.;
-    xlow = -10.0;
-    xup  =  10.0;
-    hname = "PVeto_inClus_DTseed";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "PVeto_inClus_DThits";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "PVeto_Clus2Clus_seedDT";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-
     return true;
 }
 Bool_t PVetoAnalysis::InitHistosDataQuality()

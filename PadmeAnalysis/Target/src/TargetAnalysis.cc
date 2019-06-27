@@ -58,6 +58,20 @@ Bool_t TargetAnalysis::Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTarg
   fRecoBeam = b;
   return retCode;
 }
+
+Bool_t TargetAnalysis::InitHistosAnalysis()
+{
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+
+   hname = "Target_Yprofile";
+   hSvc->BookHisto(hname, 19, 0.5, 19.5);
+   hname = "Target_Xprofile";
+   hSvc->BookHisto(hname, 19, 0.5, 19.5);
+   hname = "TargetBeam_nPOT";
+   hSvc->BookHisto(hname, 100, 0., 30000.);
+   return true;
+}
 Bool_t TargetAnalysis::InitHistosValidation()
 {
     HistoSvc* hSvc =  HistoSvc::GetInstance();
@@ -333,16 +347,6 @@ Bool_t TargetAnalysis::ProcessAnalysis()
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
-  Double_t eMaxX  =  0.;
-  Double_t eMaxY  =  0.;
-  Int_t    iLeadX = -1;
-  Int_t    iLeadY = -1;
-  Double_t eTotX  =  0.;
-  Double_t eTotY  =  0.;
-  Double_t maxDt  =  0.;
-  Int_t      chId;
-  Double_t energy;
-  Double_t   time;
   TRecoVHit* hit=NULL;
   std::string hname;
   Int_t fNhits = fhitEvent->GetNHits();
@@ -351,12 +355,10 @@ Bool_t TargetAnalysis::ProcessAnalysis()
  
   //fill Hits flat ntuple
 
+  
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
-    chId =hit->GetChannelId();
-    energy=hit->GetEnergy();
-    time   = hit->GetTime();
-    (hSvc->myEvt).NTTarget_Hits_ChannelId[i]=(Double_t)chId;
+    (hSvc->myEvt).NTTarget_Hits_ChannelId[i]=(Double_t)hit->GetChannelId();
     (hSvc->myEvt).NTTarget_Hits_Energy[i]=hit->GetEnergy();
     (hSvc->myEvt).NTTarget_Hits_Time[i]=hit->GetTime();
     (hSvc->myEvt).NTTarget_Hits_Xpos[i]=hit->GetPosition().X();
@@ -393,23 +395,10 @@ Bool_t TargetAnalysis::ProcessAnalysis()
    
    
   
-  HistoSvc* hSvc =  HistoSvc::GetInstance();
-  
-  Double_t eMaxX  =  0.;
-  Double_t eMaxY  =  0.;
-  Int_t    iLeadX = -1;
-  Int_t    iLeadY = -1;
-  Double_t eTotX  =  0.;
-  Double_t eTotY  =  0.;
-  Double_t maxDt  =  0.;
-  TRecoVHit* hit=NULL;
-  std::string hname;
-  Int_t fNhits = fhitEvent->GetNHits();
-  if ( fNhits < 0 ) return retCode;
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
     //Bool_t isX=true;
-    Int_t istrip    = hit->GetChannelId();
+    Int_t    istrip    = hit->GetChannelId();
     Double_t energy = hit->GetEnergy();
     
     if (istrip > 16) {
@@ -421,130 +410,14 @@ Bool_t TargetAnalysis::ProcessAnalysis()
       hname = "Target_Xprofile";
       hSvc->FillHisto(hname,(Double_t)istrip,energy);
     }
+  }
 
-   
-    Double_t faenergy = fabs(energy);
-    Double_t time   = hit->GetTime();
-	
-    for (Int_t j=0; j<i; ++j)
-      {
-	if ( fabs(time - fhitEvent->Hit(j)->GetTime() ) > fabs(maxDt))
-	  {
-	    maxDt = time - fhitEvent->Hit(j)->GetTime();
-	  }
-      }
     
-   /* if (istrip > 16) {
-      //isX = false;
-      istrip = istrip-16;
-      // Y strip       
-      if (faenergy > fabs(eMaxY)) {iLeadY = i; eMaxY=energy;}
-      eTotY += energy;
-      hname = "Target_Yprofile";
-      hSvc->FillHisto(hname,(Double_t)istrip,energy);
-      hname = "Target_YstripTime";
-      hSvc->FillHisto(hname,time,  1.);
-      hname = "Target_YstripEne";
-      hSvc->FillHisto(hname,energy,1.);
-    }
-    else {
-      // X strip 
-      if (faenergy > fabs(eMaxX)) {iLeadX = i; eMaxX=energy;}
-      eTotX += energy;
-      hname = "Target_Xprofile";
-      hSvc->FillHisto(hname,(Double_t)istrip,energy);
-      hname = "Target_XstripTime";
-      hSvc->FillHisto(hname,time,  1.);
-      hname = "Target_XstripEne";
-      hSvc->FillHisto(hname,energy,1.);
-    }*/
-   }
-/*
-   hname = "Target_XtotEne";
-   hSvc->FillHisto(hname,eTotX,1.);
-   hname = "Target_YtotEne";
-   hSvc->FillHisto(hname,eTotY,1.);*/
-   
-
-
-   if (iLeadX<0) std::cout<<" a problem here with an X strip "<<iLeadX<<std::endl;
-   if (iLeadY<0) std::cout<<" a problem here with an Y strip "<<iLeadY<<std::endl;
-   if (iLeadX >=0 && iLeadY >= 0) {
-     TRecoVHit* lHitX = fhitEvent->Hit(iLeadX);
-     TRecoVHit* lHitY = fhitEvent->Hit(iLeadY);
-     if (!lHitX) std::cout<<" a problem here with an X strip "<<iLeadX<<std::endl;
-     if (!lHitY) std::cout<<" a problem here with an Y strip "<<iLeadY<<std::endl;
-   
-     Int_t lix = lHitX->GetChannelId();
-     Int_t liy = lHitY->GetChannelId()-16;
-     Double_t lenergyX = lHitX->GetEnergy();
-     Double_t lenergyY = lHitY->GetEnergy();
-     
-     hname = "Target_LeadingHitMap";
-     hSvc->FillHisto2(hname, lix, liy, 1.);
-     hname = "Target_LeadingEneMap";
-     hSvc->FillHisto2(hname, lix, liy, 0.5*(lenergyX+lenergyY));
-
-     hname = "Target_maxDt";
-     hSvc->FillHisto(hname, maxDt, 1.);
-   }
-
+    
    //TTargetRecoBeam* pRecoBeam = fhitEvent->getTargetRecoBeam();
    if (fVerbose>1) std::cout<<" from the TargetRecoEvent Beam X, Y "<<fRecoBeam->getX()<<" "<<fRecoBeam->getY()<<std::endl;
 
 
-  					 	                          			   
-   // using recoBeam now:
-   hname = "TargetBeam_X";
-   hSvc->FillHisto(hname, fRecoBeam->getX(), 1.);
-   (hSvc->myEvt).NTTargetBeamX=fRecoBeam->getX();
-   hname = "TargetBeam_Y";
-   hSvc->FillHisto(hname, fRecoBeam->getY(), 1.);
-   (hSvc->myEvt).NTTargetBeamY=fRecoBeam->getY();
-   hname = "TargetBeam_XErr";
-   hSvc->FillHisto(hname, fRecoBeam->getXError(), 1.);
-   (hSvc->myEvt).NTTargetBeamXErr=fRecoBeam->getXError();
-   hname = "TargetBeam_YErr";
-   hSvc->FillHisto(hname, fRecoBeam->getYError(), 1.);
-   (hSvc->myEvt).NTTargetBeamYErr=fRecoBeam->getYError();
-   hname = "TargetBeam_XW";
-   hSvc->FillHisto(hname, fRecoBeam->getXWidth(), 1.);
-   (hSvc->myEvt).NTTargetBeamXW=fRecoBeam->getXWidth();
-   hname = "TargetBeam_YW";
-   hSvc->FillHisto(hname, fRecoBeam->getYWidth(), 1.);
-   (hSvc->myEvt).NTTargetBeamYW=fRecoBeam->getYWidth();
-   hname = "TargetBeam_XWErr";
-   hSvc->FillHisto(hname, fRecoBeam->getXWidthError(), 1.);
-   (hSvc->myEvt).NTTargetBeamXWErr=fRecoBeam->getXWidthError();
-   hname = "TargetBeam_YWErr";
-   hSvc->FillHisto(hname, fRecoBeam->getYWidthError(), 1.);
-   (hSvc->myEvt).NTTargetBeamYWErr=fRecoBeam->getYWidthError();
-
-   (hSvc->myEvt).NTTargetBeamXCharge=fRecoBeam->getXCharge();
-   (hSvc->myEvt).NTTargetBeamXChargeErr=fRecoBeam->getXChargeErr();
-   (hSvc->myEvt).NTTargetBeamYCharge=fRecoBeam->getYCharge();
-   (hSvc->myEvt).NTTargetBeamYChargeErr=fRecoBeam->getYChargeErr();
-   (hSvc->myEvt).NTTargetBeamXTime=fRecoBeam->getXTime();
-   (hSvc->myEvt).NTTargetBeamXTimeErr=fRecoBeam->getXTimeErr();
-   (hSvc->myEvt).NTTargetBeamYTime=fRecoBeam->getYTime();
-   (hSvc->myEvt).NTTargetBeamYTimeErr=fRecoBeam->getYTimeErr();
-
-   (hSvc->myEvt).NTTargetBeamNPOT=fRecoBeam->getnPOT();
-   (hSvc->myEvt).NTTargetBeamNPOTErr=fRecoBeam->getnPOTError();
-
-   
-   hname = "TargetBeam_XChi2";
-   hSvc->FillHisto(hname, fRecoBeam->getXChi2(), 1.);
-   (hSvc->myEvt).NTTargetBeamXChi2=fRecoBeam->getXChi2();
-   hname = "TargetBeam_YChi2";
-   hSvc->FillHisto(hname, fRecoBeam->getYChi2(), 1.);
-   (hSvc->myEvt).NTTargetBeamYChi2=fRecoBeam->getYChi2();
-   hname = "TargetBeam_XNdof";
-   hSvc->FillHisto(hname, fRecoBeam->getXNdof(), 1.);
-   (hSvc->myEvt).NTTargetBeamXNdof=fRecoBeam->getXNdof();
-   hname = "TargetBeam_YNdof";
-   hSvc->FillHisto(hname, fRecoBeam->getYNdof(), 1.);
-   (hSvc->myEvt).NTTargetBeamYNdof=fRecoBeam->getYNdof();
    Bool_t goodX = false;
    Bool_t goodY = false;
    ++nEvsTarget;
@@ -570,36 +443,8 @@ Bool_t TargetAnalysis::ProcessAnalysis()
      {
        ++nEvsGoodXY;
        
-       hname = "TargetBeam_Xfit";
-       hSvc->FillHisto(hname, fRecoBeam->getXCfit(), 1.);
-       (hSvc->myEvt).NTTargetBeamXfit=fRecoBeam->getXCfit();
-       hname = "TargetBeam_Yfit";
-       hSvc->FillHisto(hname, fRecoBeam->getYCfit(), 1.);
-       (hSvc->myEvt).NTTargetBeamYfit=fRecoBeam->getYCfit();
-       hname = "TargetBeam_XWfit";
-       hSvc->FillHisto(hname, fRecoBeam->getXWfit(), 1.);
-       (hSvc->myEvt).NTTargetBeamXWfit=fRecoBeam->getXWfit();
-       hname = "TargetBeam_YWfit";
-       hSvc->FillHisto(hname, fRecoBeam->getYWfit(), 1.);
-       (hSvc->myEvt).NTTargetBeamYWfit=fRecoBeam->getYWfit();
-       hname = "TargetBeam_XfitErr";
-       hSvc->FillHisto(hname, fRecoBeam->getXCfitError(), 1.);
-       (hSvc->myEvt).NTTargetBeamXfitErr=fRecoBeam->getXCfitError();
-       hname = "TargetBeam_YfitErr";
-       hSvc->FillHisto(hname, fRecoBeam->getYCfitError(), 1.);
-       (hSvc->myEvt).NTTargetBeamYfitErr=fRecoBeam->getYCfitError();
-       hname = "TargetBeam_XWfitErr";
-       hSvc->FillHisto(hname, fRecoBeam->getXWfitError(), 1.);
-       (hSvc->myEvt).NTTargetBeamXWfitErr=fRecoBeam->getXWfitError();
-       hname = "TargetBeam_YWfitErr";
-       hSvc->FillHisto(hname, fRecoBeam->getYWfitError(), 1.);
-       (hSvc->myEvt).NTTargetBeamYWfitErr=fRecoBeam->getYWfitError();
        hname = "TargetBeam_nPOT";
        hSvc->FillHisto(hname, fRecoBeam->getnPOT(), 1.);
-       (hSvc->myEvt).NTTargetBeamNPOT=fRecoBeam->getnPOT();
-       hname = "TargetBeam_nPOTErr";
-       hSvc->FillHisto(hname, fRecoBeam->getnPOTError(), 1.);
-       (hSvc->myEvt).NTTargetBeamNPOTErr=fRecoBeam->getnPOTError();
        
        nPOTgoodXY_job = nPOTgoodXY_job+fRecoBeam->getnPOT();
        nPOTErrgoodXY_job = nPOTErrgoodXY_job + fRecoBeam->getnPOTError()*fRecoBeam->getnPOTError();
@@ -622,9 +467,6 @@ Bool_t TargetAnalysis::ProcessAnalysis()
        }
      }
 
-   // here the tuple event counter 
-   (hSvc->myEvt).NTNevent = nEvsTarget;
-   
    return retCode;
 }
 

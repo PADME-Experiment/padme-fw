@@ -24,44 +24,6 @@ EVetoAnalysis::~EVetoAnalysis()
 }
 Bool_t EVetoAnalysis::InitHistosAnalysis()
 {
-    HistoSvc* hSvc =  HistoSvc::GetInstance();
-    std::string hname;
-    Int_t nx, ny;
-    Double_t xlow, ylow, xup, yup;
-    
-    ny = 100;
-    ylow = -0.5;
-    yup  = 99.5;
-    nx = 100;
-    xlow = -350.;
-    xup  =  350.;
-    hname = "EVeto_Hit_TimeVSch";
-    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-
-    nx = 100.;
-    xlow = -25.;
-    xup  =  25.;
-    hname = "EVeto_Hit_DTime_DCh0";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    nx = 200.;
-    hname = "EVeto_Hit_DTime_DCh1";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    nx = 100.;
-    hname = "EVeto_Hit_DTimeVSch_DCh1";
-    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-    nx = 100.;
-    hname = "EVeto_Hit_DTime_DCh2";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    
-    xlow = -350.;
-    xup  =  350.;
-    hname = "EVeto_Hit_DTime_DChLarge";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
     return true;
 }
 Bool_t EVetoAnalysis::InitHistosDataQuality()

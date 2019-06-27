@@ -25,67 +25,6 @@ ECalAnalysis::~ECalAnalysis()
 Bool_t ECalAnalysis::InitHistosAnalysis()
 {
 
-    HistoSvc* hSvc =  HistoSvc::GetInstance();
-    std::string hname;
-    Int_t nx, ny;
-    Double_t xlow, ylow, xup, yup;
-
-    ny = 100;
-    ylow = -0.5;
-    yup  = 99.5;
-    nx = 100;
-    xlow = -350.;
-    xup  =  350.;
-    //    hname = "ECal_Hit_TimeVSch";
-    //    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-    /*
-    nx = 100.;
-    xlow = -25.;
-    xup  =  25.;
-    hname = "ECal_Hit_DTime_DCh0";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    hname = "ECal_Hit_DTime_DCh1";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    hname = "ECal_Hit_DTimeVSch_DCh1";
-    hSvc->BookHisto2(hname, nx, xlow, xup, ny, ylow, yup);
-
-    hname = "ECal_Hit_DTime_DCh2";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-
-    xlow = -350.;
-    xup  =  350.;
-    hname = "ECal_Hit_DTime_DChLarge";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    */
-
-    //to be finalized
-    nx = 31.;
-    xlow = -15.5;
-    xup  =  15.5;
-    hname = "ECal_inClus_DCHXseed";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_inClus_DCHXseed";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_inClus_DCXHhits";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_inClus_DCHYhits";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_Clus2Clus_seedDCHX";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_Clus2Clus_seedDCHY";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    nx = 100.;
-    xlow = -10.0;
-    xup  =  10.0;
-    hname = "ECal_inClus_DTseed";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_inClus_DThits";
-    hSvc->BookHisto(hname, nx, xlow, xup);
-    hname = "ECal_Clus2Clus_seedDT";
-    hSvc->BookHisto(hname, nx, xlow, xup);
 
     return true;
 }

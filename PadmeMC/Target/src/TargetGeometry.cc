@@ -52,6 +52,44 @@ TargetGeometry::TargetGeometry()
   fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
 
   fTargetSensitiveDetectorName = "TargetSD";
+  
+  fTargetPitch = 1*mm;
+  fTargetStripSize =850*um;
+  fTargetGapSize =150*um;
+
+  fTargetDigiNChannels =32;
+  fTargetReduceWaveform = false; // Do not reduce waveforms to integration window in digi
+
+  // noise derived for 0.1 ns resolution
+  fTargetDigiNoiseRMS = 0.87;   // uampere noise from 1800 e-
+  //fTargetDigiNoiseRMS  = 2.42; // uampere noise from 5000 e-
+
+  fTargetDigiThreshold = 4e-10; // uC low thres
+  //fTargetDigiThreshold = 2e-9; // uC 1sigma thres with 1800 e- noise
+
+  fTargetDigiBaseline = 0.; // uA
+  //fTargetDigiBaseline = 10.; // uA 
+
+  // 1.024 us window res 1ns 
+  fTargetDigiNBins = 1024; //    
+
+  fTargetDigiTrigOffset = 0.; // ns trigger offset    
+
+  fTargetDigiWindow = 100.; // ns signal integration window
+  //fTargetDigiWindow = 40.; // ns signal integration window
+
+  // parameters for dedicated studies
+
+  fTargetDigiNTrackDiv =100;
+  fTargetDigiCCD=0.1;  // fix-remove
+
+  // noise derived for 0.1 ns resolution
+  fTargetDigiNoiseChargeRMS=2.33e-9; // uC charge noise from 1800 e-
+  //fTargetDigiNoiseChargeRMS=6.47e-9; // uC charge noise from 5000 e-
+
+  //  fTargetDigiMeV2Q=1.901e-9;  // RC Filter
+  //fTargetDigiMeV2Q=5.01e-10;  // CSA Filter gain 1
+  fTargetDigiMeV2Q=2.004e-9;  // CSA Filter gain 4
 
 }
 

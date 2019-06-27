@@ -43,7 +43,9 @@ TargetReconstruction::TargetReconstruction(TFile* HistoFile, TString ConfigFileN
 void TargetReconstruction::HistoInit(){
 
   // a service histigram, no need to save it to root output 
-  hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
+  //  hprofile = new TH1F("hprofile","hprofile",16,-7.5,8.5);
+  hprofileX = new TH1F("hprofileX","hprofileX",16, 0.5,16.5); /// center of the target is in the mddle of strip with chId 9 
+  hprofileY = new TH1F("hprofileY","hprofileY",16,16.5,32.5); /// center of the target is in the mddle of strip with chId 9 
 
   // histos to be saved 
   AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          ));
@@ -150,7 +152,47 @@ TargetReconstruction::~TargetReconstruction()
 
 void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+  //PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+  if (tEvent==NULL) return;
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t ich=0; ich<32; ++ich) {
+    TRecoVHit *Hit = new TRecoVHit();
+    Bool_t found=false;
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      if(found)continue;
+      TMCVDigi* digi = tEvent->Digi(i);
+      //TRecoVHit *Hit = new TRecoVHit(digi);
+      
+      if (digi->GetChannelId()==ich)
+	   {
+	      Hit->SetChannelId(digi->GetChannelId()+1);
+	      Hit->SetEnergy(digi->GetEnergy()*1.6e-3);
+	      Hit->SetTime(digi->GetTime());
+	      Hit->SetPosition(TVector3(0.,0.,0.)); 
+	      //std::cout<<"ChId " << digi->GetChannelId() << "  contatore " << ich<<" energia " << (Double_t)digi->GetEnergy()*1.6e-3 << std::endl;
+	      found=true;
+	   }
+   }
+   if(!found){
+       Hit->SetChannelId(ich+1);
+	     Hit->SetEnergy(0.);
+	     Hit->SetTime(0.);
+	     Hit->SetPosition(TVector3(0.,0.,0.)); 
+	     //std::cout << "ich not found in digi list" << std::endl;
+   }
+   fHits.push_back(Hit);
+  }
+   
+   std::cout<< "size hit " << fHits.size() << " energia " <<  std::endl;
+  // set geometry 
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+  
+  ClearClusters();
+  BuildClusters();
+  
+  
+  /*
   TTargetMCEvent* tTargetEvent = (TTargetMCEvent*)tEvent;
   std::cout << "--- TargetReconstruction --- run/event/#hits/#digi " << tTargetEvent->GetRunNumber() << " " << tTargetEvent->GetEventNumber() << " " << tTargetEvent->GetNHits() << " " << tTargetEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tTargetEvent->GetNHits(); iH++) {
@@ -161,6 +203,8 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     TTargetMCDigi* digi = (TTargetMCDigi*)tTargetEvent->Digi(iD);
     digi->Print();
   }
+  */
+ ReconstructBeam();
 }
 
 
@@ -486,36 +530,42 @@ Double_t TargetReconstruction::fitProfile(Double_t *x, Double_t *par) {
 
 
 void TargetReconstruction::ReconstructBeam(){
+  //  std::cout<<"In TARGETRECONSTRUCTION " << std::endl;
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-
+  //std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;
   //  char  iName                    [100]; 
-  float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
-  float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
+  //  float charge_signX       = 1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
+  //  float charge_signY       =-1000/0.05;// 0.05 fC corresponds to about 10 um CCD in diamond
   
   //estimate Xbeam and Ybeam of the event
   //TH1F * hprofile = new TH1F  ("hprofile","hprofile",16,-7.5,8.5);
-  for(unsigned int iHit1 = 0; iHit1 < 16;++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy()); 
+  //std::cout<<"I'm going to recovered the X profile " << std::endl;
+  for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
+    if (Hits[iHit1]->GetChannelId()<17) hprofileX->Fill(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
+   //std::cout<<"Recovered the bin content for the profile, channel " <<  Hits[iHit1]->GetChannelId()+1 << "  energy  "<< Hits[iHit1]->GetEnergy() <<   std::endl;
   }
+  //std::cout<<"profile X recovered " << std::endl;
   TF1 *fitFcn = new TF1("fitFcn",TargetReconstruction::fitProfile,-100,100,4);
   float baselineX  =                                           0 ; fitFcn->SetParameter(0, baselineX);
-  float amplitudeX =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
-  float averageX   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
-  float widthX     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
-  float NonEmpty= hprofile->Integral();
+  float amplitudeX =  hprofileX-> GetMaximum(); fitFcn->SetParameter(1, amplitudeX);
+  //std::cout<<"TargetBeam amplitude " << amplitudeX<< std::endl;
+  float averageX   =  hprofileX->    GetMean(); fitFcn->SetParameter(2, averageX  ); //float meanX=averageX; 
+  //std::cout<<"TargetBeam mean " << averageX<< std::endl;
+  float widthX     =  hprofileX->    GetRMS (); fitFcn->SetParameter(3, widthX    ); 
+  float NonEmpty= hprofileX->Integral();
   float MeanX=averageX;
-  float MeanXErr=hprofile->GetMeanError();
+  float MeanXErr=hprofileX->GetMeanError();
   float RMS_X=widthX;
-  float RMS_Xerr=hprofile->GetRMSError();
-  if(NonEmpty)hprofile->Fit("fitFcn","q");
+  float RMS_Xerr=hprofileX->GetRMSError();
+  if(NonEmpty)hprofileX->Fit("fitFcn","q");
   baselineX  =        fitFcn->GetParameter(0) ;
   amplitudeX =        fitFcn->GetParameter(1) ;
   averageX   =        fitFcn->GetParameter(2) ;
   widthX     =  fabs( fitFcn->GetParameter(3));
   fitFcn->FixParameter(0,baselineX);
-  float xlow  = averageX-widthX;if(xlow  <-7.5|| xlow >8.5)xlow =-7.5;
-  float xhigh = averageX+widthX;if(xhigh <-7.5|| xhigh>8.5)xhigh= 8.5;
-  if(NonEmpty)hprofile->Fit("fitFcn","q","",xlow,xhigh);
+  float xlow  = averageX-widthX;if(xlow  < hprofileX->GetXaxis()->GetXmin() || xlow  > hprofileX->GetXaxis()->GetXmax() ) xlow =1.;
+  float xhigh = averageX+widthX;if(xhigh < hprofileX->GetXaxis()->GetXmin() || xhigh > hprofileX->GetXaxis()->GetXmax()) xhigh=16.;
+  if(NonEmpty)hprofileX->Fit("fitFcn","q","",xlow,xhigh);
   baselineX  =        fitFcn->GetParameter(0) ;
   amplitudeX =        fitFcn->GetParameter(1) ;
   averageX   =        fitFcn->GetParameter(2) ;
@@ -527,27 +577,29 @@ void TargetReconstruction::ReconstructBeam(){
   float chi2X         =fitFcn->GetChisquare();
   float NdofX         =fitFcn->GetNDF();
  
-  for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
-   hprofile->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()); 
+  for(unsigned int iHit1 = 0; iHit1 <Hits.size() ;++iHit1){
+    //for(unsigned int iHit1 = 16; iHit1 < Hits.size();++iHit1){ 
+    if (Hits[iHit1]->GetChannelId()>16) hprofileY->Fill(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy()); 
   }
+  //std::cout<<"profile Y recovered " << std::endl;
   float baselineY  =                                           0 ; fitFcn->SetParameter(0, baselineY);
-  float amplitudeY =  hprofile-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
-  float averageY   =  hprofile->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
-  float widthY     =  hprofile->    GetRMS (); fitFcn->SetParameter(3, widthY    ); 
+  float amplitudeY =  hprofileY-> GetMaximum(); fitFcn->SetParameter(1, amplitudeY);
+  float averageY   =  hprofileY->    GetMean(); fitFcn->SetParameter(2, averageY  ); //float meanY=averageY; 
+  float widthY     =  hprofileY->    GetRMS (); fitFcn->SetParameter(3, widthY    ); 
   float MeanY=averageY;
-  float MeanYErr=hprofile->GetMeanError();
+  float MeanYErr=hprofileY->GetMeanError();
   float RMS_Y=widthY;
-  float RMS_Yerr=hprofile->GetRMSError();
-  NonEmpty= hprofile->Integral();
-  if(NonEmpty)hprofile->Fit("fitFcn","q");
+  float RMS_Yerr=hprofileY->GetRMSError();
+  NonEmpty= hprofileY->Integral();
+  if(NonEmpty)hprofileY->Fit("fitFcn","q");
   baselineY  =        fitFcn->GetParameter(0) ;
   amplitudeY =        fitFcn->GetParameter(1) ;
   averageY   =        fitFcn->GetParameter(2) ;
   widthY     =  fabs( fitFcn->GetParameter(3));
   fitFcn->FixParameter(0,baselineY);
-  xlow  = averageY-widthY;if(xlow  <-7.5|| xlow >8.5)xlow =-7.5;
-  xhigh = averageY+widthY;if(xhigh <-7.5|| xhigh>8.5)xhigh= 8.5;
-  if(NonEmpty)hprofile->Fit("fitFcn","q","",xlow,xhigh);
+  xlow  = averageY-widthY;if(xlow  < hprofileY->GetXaxis()->GetXmin() || xlow >  hprofileY->GetXaxis()->GetXmax() ) xlow =17.;
+  xhigh = averageY+widthY;if(xhigh < hprofileY->GetXaxis()->GetXmin() || xhigh > hprofileY->GetXaxis()->GetXmax() ) xhigh=32.;
+  if(NonEmpty)hprofileY->Fit("fitFcn","q","",xlow,xhigh);
   baselineY  =        fitFcn->GetParameter(0) ;
   amplitudeY =        fitFcn->GetParameter(1) ;
   averageY   =        fitFcn->GetParameter(2) ;
@@ -558,11 +610,28 @@ void TargetReconstruction::ReconstructBeam(){
   float widthYErr     =fitFcn->GetParError(3);
   float chi2Y         =fitFcn->GetChisquare();
   float NdofY         =fitFcn->GetNDF();
+  //std::cout<<"In TARGETRECONSTRUCTION targetBeam fulling " << std::endl;
 
-  fTargetRecoBeam->setCentroid(MeanX,MeanXErr,MeanY,MeanYErr);
+  // Here all positions are in the local Target Reference frame 
+  TVector3 myPosCentr, myPosFitCentr;
+  myPosCentr    = fGeometry->LocalPosition(MeanX,    MeanY);
+  myPosFitCentr = fGeometry->LocalPosition(averageX, averageY);
+
+  //  std::cout<<" In the local Frame: x, y "<<MeanX<<" "<<MeanY<<std::endl;
+  //  std::cout<<" In the local Frame: x, y "<<myPosCentr.X()<<" "<<myPosCentr.Y()<<std::endl;
+  //  std::cout<<" In the local Frame(fit): x, y "<<averageX<<" "<<averageY<<std::endl;
+  //  std::cout<<" In the local Frame(fit): x, y "<<myPosFitCentr.X()<<" "<<myPosFitCentr.Y()<<std::endl;
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosCentr = fGeometry->globalFromLocal(myPosCentr);
+  ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>, ROOT::Math::DefaultCoordinateSystemTag> gPosFitCentr = fGeometry->globalFromLocal(myPosFitCentr);
+  //  std::cout<<" In the global Frame:      x, y "<<gPosCentr.X()<<" "<<gPosCentr.Y()<<std::endl;
+  //  std::cout<<" In the global Frame(fit): x, y "<<gPosFitCentr.X()<<" "<<gPosFitCentr.Y()<<std::endl;
+  
+  fTargetRecoBeam->setCentroid(gPosCentr.X(),MeanXErr,gPosCentr.Y(),MeanYErr);
   fTargetRecoBeam->setWidth(RMS_X,RMS_Xerr,RMS_Y,RMS_Yerr);
-  fTargetRecoBeam->setFitCentroid(averageX,averageXErr,averageY,averageYErr);
+  
+  fTargetRecoBeam->setFitCentroid(gPosFitCentr.X(),averageXErr,gPosFitCentr.Y(),averageYErr);
   fTargetRecoBeam->setFitWidth(widthX,widthXErr,widthY,widthYErr);
+  
   fTargetRecoBeam->setFitParameter(chi2X,chi2Y, NdofX, NdofY);
   //std::cout<< "Centroid X: " << MeanX << " ErrX " << RMS_X << " Y " << MeanY << " ErrY "<< RMS_Y << std::endl;
   //std::cout<< "Centroid Fit X: " << averageX << " ErrX " << widthX << " Y " << averageY << " ErrY "<< widthY << std::endl;
@@ -595,7 +664,7 @@ void TargetReconstruction::ReconstructBeam(){
 
   
   float BeamMultiplicity = (fabs(Qx)+fabs(Qy))/2.;
-  double nominalCCD = 10.;//in micron 
+  double nominalCCD = 12.;//in micron 
   double chargeToNPOT = 1./1.60217662e-7/nominalCCD/36.;
   BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;
   float ErrBeamMultiplicity=sqrt(BeamMultiplicity);

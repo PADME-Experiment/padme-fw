@@ -4,26 +4,32 @@
 // Created by Stefania Spagnolo (stefania.spagnolo@le.infn.it) 2019-03-14
 //
 // --------------------------------------------------------------
-#ifndef TargetGeometry_H
-#define TargetGeometry_H
+#ifndef PVetoGeometry_H
+#define PVetoGeometry_H
 
 #include "PadmeVGeometry.hh"
 
-class TTargetRecoBeam;
 
-class TargetGeometry : public PadmeVGeometry
+
+class PVetoGeometry : public PadmeVGeometry
 {
 
 public:
   
-  TargetGeometry();
-  //~TargetGeometry();
+  PVetoGeometry();
+  //~PVetoGeometry();
   void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
   TVector3  LocalPosition(Int_t chId);
+  
 
 private:
-  
-  double fRuler;
+
+  double fFingerSizeX;
+  double fFingerSizeY;
+  double fFingerSizeZ;
+  double fPVetoInnerFacePosX;
+  double fPVetoInnerFacePosZ;
+ 
 };
 #endif
 

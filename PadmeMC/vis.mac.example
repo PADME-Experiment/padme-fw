@@ -98,7 +98,7 @@
 #/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
-#/Detector/Target/EnableFastDigitization
+/Detector/Target/EnableFastDigitization
 #/Detector/Target/DisableFastDigitization
 #/Detector/Target/EnableSaveWaveformToDigi
 #/Detector/Target/DisableSaveWaveformToDigi
@@ -195,6 +195,12 @@
 #/beam/n_e+_poisson_on false
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
+
+# Example for single two photon events
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_2g_per_bunch 1
+#/beam/2g_file ee-gg_550MeV-10M.txt
 
 # Calibration run setup: single photon pointing to ECal front face
 #/beam/calibration false

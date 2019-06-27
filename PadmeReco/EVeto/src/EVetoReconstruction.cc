@@ -14,6 +14,7 @@
 #include "DigitizerChannelReco.hh"
 #include "EVetoCalibration.hh"
 #include "EVetoSimpleClusterization.hh"
+#include "EVetoGeometry.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -28,6 +29,7 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fChannelCalibration = new EVetoCalibration();
   fClusterization = new EVetoSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+  fGeometry = new EVetoGeometry();
 }
 
 void EVetoReconstruction::HistoInit(){

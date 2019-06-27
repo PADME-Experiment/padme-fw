@@ -20,6 +20,7 @@ public:
   ~SACDigitizer();
 
   void Digitize();
+  void DigitizeSinglHit();
 
 private: 
 

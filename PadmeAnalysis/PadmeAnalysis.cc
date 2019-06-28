@@ -35,7 +35,7 @@
 #include "HEPVetoAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode]" 
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
 	    << std::endl;
 }
 
@@ -87,14 +87,15 @@ int main(Int_t argc, char **argv)
   TString InputListFileName("InputListFile.txt");
   Int_t fVerbose=0;
   Int_t fProcessingMode=0;
+  Int_t fntuple=0;
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
   TString ConfFileName("config/PadmeReconstruction.conf");
 
   Int_t n_options_read = 0;
-  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:")) != -1) {
+  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0;
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t:")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -137,7 +138,11 @@ int main(Int_t argc, char **argv)
 	nval++;
 	fProcessingMode = (Int_t)TString(optarg).Atoi();
 	break;
+      case 't':
+	nt++;
+	fntuple = (Int_t)TString(optarg).Atoi();
       default:
+      break;
 	usage(argv[0]);
 	return 0;
       }
@@ -299,7 +304,8 @@ int main(Int_t argc, char **argv)
    Int_t jevent = 0;
    
    //int histoOutput
-   hSvc->book(fProcessingMode);
+   //hSvc->book(fProcessingMode);
+   hSvc->book(fProcessingMode, fntuple);
 
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);

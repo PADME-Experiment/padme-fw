@@ -18,6 +18,7 @@ public:
   ~TargetAnalysis();
 
   Bool_t Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTargetRecoBeam* b);
+  Bool_t InitHistosAnalysis();
   Bool_t InitHistosValidation();
   Bool_t InitHistosDataQuality();
   Bool_t ProcessAnalysis();

@@ -17,9 +17,13 @@ public:
   HEPVetoAnalysis(Int_t valid, Int_t verb);
   ~HEPVetoAnalysis();
 
-  Bool_t ProcessAnalysis();
+  
   Bool_t Finalize(){return true;}
   Bool_t InitHistosAnalysis();
+  Bool_t InitHistosDataQuality();
+  Bool_t ProcessAnalysis();
+  Bool_t ProcessDataQuality();
+  
   
   
   

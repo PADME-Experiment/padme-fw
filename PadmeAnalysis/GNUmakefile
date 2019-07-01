@@ -20,7 +20,6 @@ include ./config/global.gmk
 LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Analysis$(STATIC),$(SUBDIRS)))
 LIBS += -LAnalysisBase/lib -lAnalysisBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
-LIBS += -L/usr/lib64/mysql -lmysqlclient
 
 
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)

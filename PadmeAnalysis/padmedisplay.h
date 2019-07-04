@@ -21,6 +21,7 @@ public :
    Int_t           fCurrent; //!current Tree number in a TChain
 
    // Declaration of leaf types
+   Int_t	   NTEventNumber;
    Int_t           NTEventStatus;
    Int_t           NTNTarget_Hits;
    Double_t        NTTarget_Hits_Energy[32];   //[NTNTarget_Hits]
@@ -131,6 +132,7 @@ public :
    Double_t        NTSAC_Clusters_Zpos[1000];   //[NTNEVeto_Clusters]
 
    // List of branches
+   TBranch        *b_NTEventNumber;
    TBranch        *b_NTEventStatus;
    TBranch        *b_NTNTarget_Hits;   //!
    TBranch        *b_NTTarget_Hits_Energy;   //!
@@ -323,6 +325,7 @@ void padmedisplay::Init(TTree *tree)
    fCurrent = -1;
    fChain->SetMakeClass(1);
 
+   fChain->SetBranchAddress("NTEventNumber", &NTEventNumber, &b_NTEventNumber);  
    fChain->SetBranchAddress("NTEventStatus", &NTEventStatus, &b_NTEventStatus);   
    fChain->SetBranchAddress("NTNTarget_Hits", &NTNTarget_Hits, &b_NTNTarget_Hits);
    fChain->SetBranchAddress("NTTarget_Hits_Energy", NTTarget_Hits_Energy, &b_NTTarget_Hits_Energy);
@@ -456,11 +459,11 @@ void padmedisplay::Show(Long64_t entry)
 void padmedisplay::Draw(int event)
 {
 
-   TCanvas *c1 = new TCanvas("c1", "c1", 600,800);
-   TCanvas *c2 = new TCanvas("c2", "c2", 1000,800);
-   TCanvas *c3 = new TCanvas("c3", "c3", 700,700);
+   TCanvas *targetmap = new TCanvas("targetmap", "targetmap", 600,800);
+   TCanvas *vetomap = new TCanvas("vetomap", "vetomap", 1000,800);
+   TCanvas *ecalmap = new TCanvas("ecalmap", "ecalmap", 700,700);
    //TCanvas *c4 = new TCanvas("c4", "c4", 700,700);
-   TCanvas *map = new TCanvas("map", "map", 800,1200);
+   TCanvas *padmemap = new TCanvas("padmemap", "padmemap", 800,1200);
    
 
    //TH1F *hProfileX   = new TH1F("hProfileX","ProfileX",16,0.5,16.5);
@@ -475,7 +478,7 @@ void padmedisplay::Draw(int event)
   
    TH2F *hECalMap   = new TH2F("hECalMap","hECalMap",50,-500,500, 50,-500,500);
 
-   map->cd();
+   padmemap->cd();
    TH2F *hXZMap   = new TH2F("hXZMap","PADME map",500,-400, 400, 2000,-1300,4000);
    gStyle->SetOptStat("");
    hXZMap -> Draw( );
@@ -509,8 +512,8 @@ void padmedisplay::Draw(int event)
    box1->SetLineWidth(1);
 
 
-   c1->Divide(1,2);
-   c2->Divide(2,1);
+   targetmap->Divide(1,2);
+   vetomap->Divide(2,1);
 
    if (fChain == 0) return;
 
@@ -538,10 +541,6 @@ void padmedisplay::Draw(int event)
           hProfileY->Fill(NTTarget_Hits_Ypos[i], NTTarget_Hits_Energy[i]);
        
          }
-      
-     
-     
-      
       // if (Cut(ientry) < 0) continue;
    }
    //hBeamSpot->Fill(NTTargetBeam_X, NTTargetBeam_Y);
@@ -570,7 +569,7 @@ void padmedisplay::Draw(int event)
       kdrawsac  = 50;
     }
    else
-    { kdrawcal  = 3; 
+    { kdrawcal  = 5; 
       kdrawveto = 1;
       kdrawsac  = 5;
     }
@@ -666,31 +665,47 @@ void padmedisplay::Draw(int event)
       } 
   
    
-   c1->cd(1);
+   targetmap->cd(1);
    //hChargeX->Draw("");
    //hProfileX->SetFillColor(kBlue);
    hProfileX->SetFillColor(3);
    hProfileX->Draw("");
-   c1->cd(2);
+   targetmap->cd(2);
    hProfileY->SetFillColor(kRed);
    hProfileY->Draw("");
-   //c1->cd(2);
+   //targetmap->cd(2);
    //hChargeY->Draw("");
    //TPad::SetVertical;
-   c2->cd(1);
+   vetomap->cd(1);
    hPVetoZPos->SetMarkerStyle(3);
    hPVetoZPos->SetMarkerColor(3);
    hPVetoZPos->Draw("P");
-   c2->cd(2);
+   vetomap->cd(2);
    hEVetoZPos->SetMarkerStyle(3);
    hEVetoZPos->SetMarkerColor(2);
    hEVetoZPos->Draw("P");
-   c3->cd();
+   ecalmap->cd();
    hECalMap->Draw("COLZ");
    //c4->cd();
    //hBeamSpot->Draw("COLZ");
 
 }
+}
+
+int padmedisplay::SearchChainEvent(int EventNumber)
+{
+  Long64_t nentries = fChain->GetEntriesFast();
+  int ChainEvent;
+  Long64_t nbytes = 0, nb = 0;
+  for (Long64_t jentry=0; jentry<nentries;jentry++) {
+   Long64_t ientry = LoadTree(jentry);
+   if (ientry < 0) break;
+   nb = fChain->GetEntry(jentry);   nbytes += nb;
+   if (NTEventNumber==EventNumber)  ChainEvent=jentry;
+  }
+  cout << " Chain Event    "<<ChainEvent<<"  Event Number     "<<EventNumber<< endl;
+  
+  return ChainEvent;
 }
 Int_t padmedisplay::Cut(Long64_t entry)
 {

@@ -56,10 +56,17 @@ void padmedisplay(char *filename, int event)
   
   //Macro * t = new Macro (mychain);
   padmedisplay * t = new padmedisplay (mychain);
-  t->GetEntry(event);
+
+  int ChainEvent;
+  ChainEvent=t->SearchChainEvent(event);
+  t->GetEntry(ChainEvent);
+  //t->Loop();
+  t->Draw(ChainEvent);
+  /*t->GetEntry(event);
   t->Show(event);    
   //t->Loop();
-  t->Draw(event); 
+  t->Draw(event); */
+  
           
 }
 

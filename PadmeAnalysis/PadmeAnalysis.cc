@@ -385,8 +385,10 @@ int main(Int_t argc, char **argv)
        
        //
        //
-      (hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventStatus();
+      //(hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventStatus();
        hSvc->FillNtuple();
+       (hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventNumber();
+       (hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventStatus();
      }
    
    ecalAn   ->Finalize();

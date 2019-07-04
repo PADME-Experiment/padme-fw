@@ -91,9 +91,12 @@ TRecoVEvent * EVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* 
   return fRecoEvent;
 }
 */
+
+/* this was just for debugging via printout 
 void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
+
   TEVetoMCEvent* tEVetoEvent = (TEVetoMCEvent*)tEvent;
   std::cout << "--- EVetoReconstruction --- run/event/#hits/#digi " << tEVetoEvent->GetRunNumber() << " " << tEVetoEvent->GetEventNumber() << " " << tEVetoEvent->GetNHits() << " " << tEVetoEvent->GetNDigi() << std::endl;
   for (Int_t iH=0; iH<tEVetoEvent->GetNHits(); iH++) {
@@ -105,6 +108,7 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void EVetoReconstruction::EndProcessing()
 // {;}

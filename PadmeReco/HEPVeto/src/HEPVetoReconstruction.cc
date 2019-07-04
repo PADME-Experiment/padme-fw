@@ -102,6 +102,8 @@ TRecoVEvent * HEPVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event
   return fRecoEvent;
 }
 */
+
+/* for debugging only 
 void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -116,6 +118,7 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void HEPVetoReconstruction::EndProcessing()
 // {;}

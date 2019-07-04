@@ -184,7 +184,7 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
    fHits.push_back(Hit);
   }
    
-   std::cout<< "size hit " << fHits.size() << " energia " <<  std::endl;
+  // std::cout<< "size hit " << fHits.size() << " energia " <<  std::endl;
   // set geometry 
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
   

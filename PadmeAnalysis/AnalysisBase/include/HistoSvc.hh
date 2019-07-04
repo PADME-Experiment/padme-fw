@@ -22,6 +22,9 @@
 
    //for flat Ntuple
   struct NTEvent{
+
+  int NTEventStatus;
+ 
   int NTNPVeto_Hits;
   int NTNPVeto_Clusters;
   int NTNEVeto_Hits;

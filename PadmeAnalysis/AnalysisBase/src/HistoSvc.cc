@@ -78,7 +78,8 @@ void HistoSvc::book(Int_t validation, Int_t ntuple) //flatNTP
   
   ntupl = new TTree("PADME_FlatNT", "PADME_Event");
 
-  ntupl->Branch("NTNTarget_Hits"     ,    &(myEvt.NTNTarget_Hits)   ,                            "NTNTarget_Hits/I"   );
+  ntupl->Branch("NTEventStatus"     ,    &(myEvt.NTEventStatus)   ,                                  "NTEventStatus/I");
+  ntupl->Branch("NTNTarget_Hits"     ,    &(myEvt.NTNTarget_Hits)   ,                               "NTNTarget_Hits/I");
   ntupl->Branch("NTTarget_Hits_Energy",   &(myEvt.NTTarget_Hits_Energy),      "NTTarget_Hits_Energy[NTNTarget_Hits]/D");
   ntupl->Branch("NTTarget_Hits_Time",     &(myEvt.NTTarget_Hits_Time),          "NTTarget_Hits_Time[NTNTarget_Hits]/D");
   ntupl->Branch("NTTarget_Hits_ChannelId",&(myEvt.NTTarget_Hits_ChannelId),"NTTarget_Hits_ChannelId[NTNTarget_Hits]/D");

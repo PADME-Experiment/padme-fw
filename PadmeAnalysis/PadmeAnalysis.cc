@@ -386,7 +386,7 @@ int main(Int_t argc, char **argv)
        //
        //
       
-      (hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventNumber();
+      (hSvc->myEvt).NTEventNumber=fRecoEvent->GetEventNumber();
       (hSvc->myEvt).NTEventStatus=fRecoEvent->GetEventStatus();
        hSvc->FillNtuple();
       

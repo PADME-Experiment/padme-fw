@@ -561,16 +561,18 @@ void padmedisplay::Draw(int event)
    float LeadingTime   = 0.;
    float LeadingEnergy = 0.;
 
-   int kdrawcal, kdrawveto;
+   int kdrawcal, kdrawveto, kdrawsac;
 
    if(NTEventStatus==1)  
 
-   {  kdrawcal=50; 
-      kdrawveto=100;
+   {  kdrawcal  = 50; 
+      kdrawveto = 100;
+      kdrawsac  = 50;
     }
    else
-    { kdrawcal =5; 
-      kdrawveto=1;
+    { kdrawcal  = 3; 
+      kdrawveto = 1;
+      kdrawsac  = 5;
     }
    
       //if()>NTECalEnergy
@@ -652,13 +654,13 @@ void padmedisplay::Draw(int event)
      }
      
       
-     for(Long64_t iev=0; iev<NTNSAC_Clusters;iev++)   
+     for(Long64_t isac=0; isac<NTNSAC_Clusters;isac++)   
      {
         
-	float XSAC = NTSAC_Clusters_Xpos[iev];
+	float XSAC = NTSAC_Clusters_Xpos[isac];
         //float Y = NTSAC_Clusters_Ypos[iev]+1000;
-        float YSAC = NTSAC_Clusters_Ypos[iev] + NTSAC_Hits_Zpos[iev];
-        float EnSAC =  NTEVeto_Clusters_Energy[iev]/kdrawcal;
+        float YSAC = NTSAC_Clusters_Ypos[isac] + NTSAC_Hits_Zpos[isac];
+        float EnSAC =  NTSAC_Clusters_Energy[isac]/kdrawsac;
 	//float Y =   (NTEVetoBarClZpos[iev]-500)  / 10  + 0; 
 	SACClus->DrawArc(XSAC, YSAC , EnSAC);
       } 

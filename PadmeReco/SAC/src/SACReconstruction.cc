@@ -153,6 +153,8 @@ TRecoVEvent * SACReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tG
   return fRecoEvent;
 }
 */
+
+/* only for debugging printout 
 void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -173,6 +175,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void SACReconstruction::EndProcessing()
 // {;}

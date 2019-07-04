@@ -70,6 +70,7 @@ void PVetoReconstruction::HistoInit(){
 }
 
 
+/* only for debugging 
 void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -84,9 +85,8 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 
-  
-
 }
+*/
 
 
 

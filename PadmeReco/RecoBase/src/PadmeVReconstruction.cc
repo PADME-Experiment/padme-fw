@@ -140,6 +140,9 @@ void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   // MC to reco hits
   ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
   // Clustering  
   ClearClusters();
   BuildClusters();

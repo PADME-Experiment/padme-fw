@@ -40,25 +40,25 @@ public:
 
   Bool_t pedestalsFromFirstSamples() {return (fPedestalMode==0);}
   Bool_t pedestalsFromAutoTrgEvents(){return (fPedestalMode==1);}
-  Bool_t hybridPedestals()        {return (fPedestalMode==2);}
+  Bool_t hybridPedestals()           {return (fPedestalMode==2);}
 
   Short_t CalcMaximum();
   Double_t CalcPedestal();
   Double_t CalcCharge(UShort_t);
   Double_t CalcChargeSin(UShort_t); //single hit pedestal M. Raggi 22/01/2019
+  Double_t CalcTemplateCharge(UShort_t); //Template fitting based charge M. Raggi 02/07/2019
   Double_t CalcTime(UShort_t);
   Double_t CalcTimeSing(UShort_t);
   Double_t CalcTimeOver(UShort_t);
+  Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
   Int_t PeakSearch();
 
-
   //Standard hits corrections
-  Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
   Bool_t   IsSaturated();   // Check if the signal is saturated
   Double_t CorrectSaturation(); // Correct saturated signals
   Double_t CorrectIntegrationTime(Double_t TStart,Double_t TStop); // Corrects for charge outside integration window
 
-  Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
+
 
   Short_t GetMaximum(){return fMax;};
   Double_t GetPedestal(){return fPed;};
@@ -149,6 +149,7 @@ private:
   Double_t fZeroSuppression;
 
   Bool_t fPrepareTemplate;
+  Bool_t fTemplateFit;
 
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;
@@ -213,6 +214,7 @@ private:
   Int_t Row;
   Int_t Col;
   Int_t IsSat;
+  Int_t fNPeaks;
 
   // calc charge
   Double_t AbsSamRec[1024];

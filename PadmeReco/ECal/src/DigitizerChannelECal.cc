@@ -20,11 +20,6 @@ void DigitizerChannelECal::PrintConfig(){
   std::cout << "fPedestalMode:   " << fPedestalMode <<std::endl;
   std::cout << "fUseOverSample: " << fUseOverSample << std::endl;  
 
-//  Int_t NBD=8;
-//  for(int i=0;i<32;i++){
-//    std::cout<<"Ped "<<i<<" "<<fPedMap[std::make_pair(NBD,i)]<<" "<<std::endl;
-//  }  
-
  if(fGlobalMode->GetGlobalDebugMode()!=0){
    std::cout<<"General Config Flags ECal Digi***************** "<<std::endl;
    std::cout<<"fIsPed          "<<fGlobalMode->IsPedestalMode()<< std::endl;
@@ -62,29 +57,31 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
   fIntCorrection  = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
   fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
-  fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
-  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
-
+  fZeroSuppression = cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
+  fSaveAnalog      = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
   fPrepareTemplate = cfg->GetParOrDefault("RECO","PrepareTemplate",0); //M. Raggi: 12/06/2019  
+  fTemplateFit     = cfg->GetParOrDefault("RECO","TemplateFit",0); //M. Raggi:     1/07/2019  
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
+  PrintConfig();
+
+  if(fGlobalMode->IsPedestalMode()==1) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
+  PrepareTmpHistos();  //Temp histo servono anche in non debug mode
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    PrepareDebugHistos(); //debugging mode histos
+  }
 
   // Preparing for Template Fitting M. Raggi 17/06/2019
   fECalTemplate = ECalTemplate::GetInstance();
   if(fPrepareTemplate) fECalTemplate->Init(); 
-  if(!fPrepareTemplate){ 
+  if(!fPrepareTemplate && fTemplateFit){ 
     fECalTemplate->ReadTemplate();  
     fECalTemplate->BuildFitFunction();
     fECalFitf = fECalTemplate->GetECalFitFunction();
     fECalFitf ->SetParameters(1, 0, 0, 1);
     // get the fit function just at the moment 
   }  
-  if(fGlobalMode->IsPedestalMode()==1) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
-  PrintConfig();
-  PrepareTmpHistos();  //Temp histo servono anche in non debug mode
-  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
-    PrepareDebugHistos(); //debugging mode histos
-  }
+
 }
 
 void DigitizerChannelECal::PrepareTmpHistos(){
@@ -121,6 +118,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
   ECal->Branch("IsSat",&IsSat);
   ECal->Branch("VMax",&fVMax);
+  ECal->Branch("NPeaks",&fNPeaks);
 
   hPedCalo = new TH1D*[32];
   hAvgCalo = new TH1D*[32];
@@ -190,7 +188,7 @@ Double_t DigitizerChannelECal::CalcPedestal() {
   Int_t BID  = GetBdID();
   TempPedMap[std::make_pair(BID,Ch)]   = TempPedMap[std::make_pair(BID,Ch)] + TMath::Mean(1000,&fSamples[0]);
   TempMapCount[std::make_pair(BID,Ch)] = TempMapCount[std::make_pair(BID,Ch)]+1;
-  fPedMap[std::make_pair(BID,Ch)] = TempPedMap[std::make_pair(BID,Ch)]/TempMapCount[std::make_pair(BID,Ch)];
+  fPedMap[std::make_pair(BID,Ch)]      = TempPedMap[std::make_pair(BID,Ch)]/TempMapCount[std::make_pair(BID,Ch)];
   return fPed;
 }
 
@@ -230,11 +228,6 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
   Int_t BID=0;
   //  std::cout<<"Pedestal modes in charge "<<pedestalsFromFirstSamples()<<" "<< hybridPedestals()<<std::endl;
   if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
-    //      Int_t Ch   = GetElChID();
-    //      Int_t BID  = GetBdID();
-//    Ch   = GetElChID();
-//    BID  = GetBdID();      
-    
     fAvg200  = TMath::Mean(iStart,&fSamples[0]);
     fRMS200  = TMath::RMS(iStart,&fSamples[0]);
     Zsup  = fRMS1000;  
@@ -261,10 +254,10 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     if (pedestalsFromAutoTrgEvents()) Charge = ChargeSin;
   }
   if (hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
-    Int_t Ch   = GetElChID();
-    Int_t BID  = GetBdID();
+    Ch   = GetElChID();
+    BID  = GetBdID();
     
-    Zsup  = fRMS1000;  
+    //    Zsup  = fRMS1000;  
     for(Short_t s=0;s<end;s++){
       // Hybrid calculation just an attempt most probably useless
       if(fRMS200 < 5){ 
@@ -276,6 +269,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     }
     if (hybridPedestals()) Charge = ChargeHyb;
   }
+
   if(fGlobalMode->GetGlobalDebugMode()!=0){
     //    std::cout<<"Pedestal first 200 in charge "<<pedestalsFromFirstSamples()<<" Charge "<<Charge<<" Charge 200 "<<Charge200<<std::endl;
     //filling NTU Variables
@@ -311,9 +305,15 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     histo->Fill(Charge200/15.);
   }
 
-//  if(ChargeSin/15.<-15) {
-//if(fGlobalMode->GetGlobalDebugMode()!=0){
+  fCharge=Charge;
+  return Charge;
+}
+
+// compute the charge by using template fitting algorithm
+Double_t DigitizerChannelECal::CalcTemplateCharge(UShort_t iStart) {
   if(!fPrepareTemplate){
+    Int_t Ch   = GetElChID();
+    Int_t BID  = GetBdID();
     Int_t code=BID*100+Ch;
     H1 = new TH1D(Form("hV%d",code),Form("hV%d",code),1000,0.,1000);
     for(Int_t ll=0;ll<1001;ll++) H1->SetBinContent(ll,(Double_t)fSamples[ll]);
@@ -344,15 +344,6 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     if(fp->Status()!=0);H1->Write();
     H1->Reset();
   }
-  //    //      //      H2->Write();
-  //      //      
-  //    //      //      H2->Reset();
-  //    //      //      m++;
-  //  }
-  //}
-
-  fCharge=Charge;
-  return Charge;
 }
 
 Double_t DigitizerChannelECal::CalcCharge(UShort_t iMax) {
@@ -529,24 +520,21 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
     hdxdtRMS->Fill(TMath::RMS(1000,&dxdt[0]));
     if(Max>100) hTimeCut->Fill(fTimeSin);
     hTime->Fill(fTimeSin);
-  }
- 
-  if(fGlobalMode->GetGlobalDebugMode()){
     Double_t rnd=((double) rand() / (RAND_MAX));
     if(rnd<1){ 
       //      hListEv ->Write();
       if(fSaveAnalog) hListTmp->Write();
     }
   }
-
+  
   //  PeakSearch();
   //  hTime->Fill(fTimeSin);
   //  histo->Fit("gaus");
   // std::cout<<"fTime "<<fTimeSin<<std::endl;
   //  hTime->Write();
   
-//  histo->Reset();
-//  histo1->Reset();
+  //  histo->Reset();
+  //  histo1->Reset();
   return fTimeSin;
 }
 
@@ -605,7 +593,6 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   IsSat=0;
   Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
-
   fTrig = GetTrigMask();
   
   if(fUseOverSample){
@@ -613,19 +600,20 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     HitT = CalcTimeOver(40);
   }else{
     //    std::cout<<" NON over sampled "<<std::endl;
-    HitT = CalcTimeSing(10);
+    HitT = CalcTimeSing(10);   //warining there is no pedestal subtraction in this signals.
   } 
-
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
+
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
-  //PeakSearch();
+
+  fNPeaks = PeakSearch();
   // M. Raggi going to energy with Nominal Calibration
   Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
+  //  std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
   if (fEnergy < 1. && !fGlobalMode->IsPedestalMode()) return; //cut at 1 MeV nominal
 
-  if(fEnergy>50 && fPrepareTemplate && !IsSat){
+  if(fEnergy>50 && fPrepareTemplate && !IsSat && fNPeaks==1){
     fECalTemplate->PrepareTemplate(fSamples,HitT);  
   }
         
@@ -712,14 +700,16 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   //  if(IsSaturated()) return;  //remove is a test
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
   fTrig = GetTrigMask();
+  Int_t NPeaks =1;
+  CalcTemplateCharge(NPeaks); //input parameter best guess on number of peaks
 }
 
 void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   fTrigMask = GetTrigMask();
-  if(fUseAbsSignals) {
+  if(fUseAbsSignals) {  //useless try to remove it
     SetAbsSignals();
   }
-  CalcMaximum();
+  //  CalcMaximum(); //useless
   if(fGlobalMode->IsPedestalMode()) CalcPedestal();
   //  if(GetTrigMask()==0) CalcPedestal();
   // if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
@@ -742,9 +732,9 @@ DigitizerChannelECal::~DigitizerChannelECal(){
   for(Int_t KK=14;KK<24;KK++){
     if(fTrigMask==128 && fGlobalMode->IsPedestalMode()) SaveBDPed(KK); //save only if pedestal run type is selected
   }
+  if(fPrepareTemplate) fECalTemplate->WriteHist(); 
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
     SaveDebugHistos();
-    if(fPrepareTemplate) fECalTemplate->WriteHist(); 
   }
 }
 
@@ -837,7 +827,7 @@ Bool_t DigitizerChannelECal::IsSaturated(){
   Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
   Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
   fNSat = 0;
-  Short_t SatThr = 15;
+  Short_t SatThr = 10;
   Short_t  FirstSat = -1;
   Short_t  LastSat  = -1;
   Int_t Ch     = GetElChID();
@@ -893,13 +883,14 @@ Double_t DigitizerChannelECal::CorrectSaturation(){
 
 // searches for peak in the signal derivative
 Int_t DigitizerChannelECal::PeakSearch(){
-  TH1D* histo     = (TH1D*)  hListTmp->FindObject("hdxdt");
-  TH1D* Signal    = (TH1D*)  hListTmp->FindObject("hSignal");
+  TH1D* histo     = (TH1D*) hListTmp->FindObject("hdxdt");
+  TH1D* Signal    = (TH1D*) hListTmp->FindObject("hSignal");
   TH1D* hdxdttmp  = (TH1D*) histo->Clone();
   TH1D* SignalTmp = (TH1D*) Signal->Clone();
-  Double_t MaxV    = histo->GetMaximum();
-  Double_t Min    = histo->GetMinimum();
+  Double_t MaxV    = Signal->GetMaximum();
+  Double_t Min     = Signal->GetMinimum();
   Int_t NRise  = 25;
+  //  std::cout<<"Ciao "<<MaxV<<" Min "<<Min<<std::endl;
   // hdxdttmp->Write();
   //  SignalTmp->Write();
   if(MaxV<5) return -1;
@@ -915,13 +906,18 @@ Int_t DigitizerChannelECal::PeakSearch(){
     for(Int_t kk=MaxBin-NRise;kk<MaxBin+NRise;kk++){
       hdxdttmp->SetBinContent(kk,0.);
     }
-    if(npeaks==0 && Max[npeaks]<10) break;
-    if(Max[npeaks]<Max[0]/20 || Max[npeaks]<20 ) break;
+    if(npeaks==0 && Max[npeaks]<10){
+      npeaks=-1;
+      break;
+    }
+    if(Max[npeaks]<Max[0]/2 || Max[npeaks]<20 ){
+      break;
+    }
     if(npeaks>9) break;
     //    std::cout<<npeaks<<" Passati Dtdt max "<<Max[npeaks]<<" maxbin "<<MaxBin<<" MAx0 "<<Max[0]<<std::endl;
     npeaks++;
-    // std::cout<<"Dopo Dtdt max "<<Max[npeaks]<<" maxbin "<<MaxBin<<" "<<Max[0]<<std::endl;
+    //    std::cout<<"Dopo Dtdt max "<<Max[npeaks]<<" maxbin "<<MaxBin<<" "<<Max[0]<<std::endl;
   }
-  //  std::cout<<"changing histogram "<<npeaks<<std::endl;
+  //  std::cout<<"changing histogram "<<npeaks<<" Max "<<Max[0]<<std::endl;
   return npeaks;
 }

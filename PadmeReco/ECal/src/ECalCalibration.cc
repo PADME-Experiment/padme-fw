@@ -31,6 +31,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   // Energy calibration 
   if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
   if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  if(fUseCalibE==3) ECalib.open("config/Calibration/equalisation_constants_march.dat");
   if(fUseCalibE>0 && !ECalib.is_open()){ 
   //  if(fUseCalibE==1 && !ECalib.is_open()){ 
     std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
@@ -53,19 +54,21 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 void ECalCalibration::ReadCalibConstant()
 {
   double MIPCharge,TimeOffSet;
-  int NBD,CID;
-  int row,col;
+  unsigned int NBD,CID;
+  unsigned int row,col;
 
   fMuonDepositedEnergy=17.5;
-  fGlobEnScale=15;
-
+  //  fGlobEnScale=15;
+  std::cout << "Config:: global en Scale "<<fGlobEnScale<<std::endl;
   //Read Energy calibration constants
   if(ECalib.is_open()){
     for(int i=0;i<616;i++){
-      ECalib >> row >> col >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-check
+      //      ECalib >> row >> col >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-chec
+      ECalib >> col >> row >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-check
       fCalibMap[std::make_pair(NBD,CID)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
       //      fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
-      //std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
+      //      std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" MIP Q "<<MIPCharge<<" const "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
+      //      std::cout<<i<<" col "<<col<<" row "<<row<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
     }
     ECalib.close();
   } else{ 
@@ -91,7 +94,7 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
   for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
     if (fUseCalibE > 0){
-      int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
+      int ich           = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
       unsigned int BD   = Hits[iHit]->getBDid(); 
       unsigned int ChID = Hits[iHit]->getCHid(); 
       // Correcting for different crystals response

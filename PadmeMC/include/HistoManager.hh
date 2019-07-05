@@ -49,21 +49,21 @@ struct NTEvent{
   std::vector<double> NTQCell;
   std::vector<double> NTTCell;
 
-  //NTLAV variables
-  double  NTCalPartE[20];
-  double  NTCalPartT[20];
-  int     NTCalPartPType[20];
-  double  NTCalPartX[20];
-  double  NTCalPartY[20];
-  int     NTNCal;
-
+  //True ACal values from steppin
+  std::vector<double> NTCalPartE;
+  std::vector<double> NTCalPartT;
+  std::vector<int>    NTCalPartPType;
+  std::vector<double> NTCalPartX;
+  std::vector<double> NTCalPartY;
+  int    NTNCal;
+  
   //Tracker variables  are these variables obsolite?
-  double NTETracker[100];
-  double NTTrackerLay[100];
-  double NTTrackerTime[100];
-  double NTTrackerZ[100];
-  double NTTrackerX[100];
-  double NTTrackerY[100];
+//  double NTETracker[100];
+//  double NTTrackerLay[100];
+//  double NTTrackerTime[100];
+//  double NTTrackerZ[100];
+//  double NTTrackerX[100];
+//  double NTTrackerY[100];
 
   double NTETarget;
   double NTTTarget;
@@ -72,44 +72,47 @@ struct NTEvent{
   int NTNTarget;
 
   //Tracker variables
-  int     NTNTrClus; // are these variables obsolite?
+  int     NTNTrClus;
   double  NTTrClusX[1000];
   double  NTTrClusY[1000];
   double  NTTrClusZ[1000];
   int     NTTrClusLayer[1000];
 
   //HEPVeto variables
-  double  NTHEPVetoTrkEne[100];
-  int  NTHEPVetoTrkFinger[100];
-  double NTHEPVetoTrkTime[100];
-  double NTHEPVetoFingerE[100];
-  double NTHEPVetoX[100];
-  double NTHEPVetoY[100];
+  std::vector<G4double>  NTHEPVetoTrkEne;
+  std::vector<G4double>  NTHEPVetoTrkTime;
+  std::vector<int>       NTHEPVetoTrkFinger;
+  std::vector<G4double>  NTHEPVetoFingerE;
+  std::vector<G4double>  NTHEPVetoX;
+  std::vector<G4double>  NTHEPVetoY;
+
   double NTHEPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
   double NTHEPVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTHEPVetoClIndex[NPVetoBars];
 
-  //PVeto variables
-  double NTPVetoTrkEne[100];
-  int    NTPVetoTrkFinger[100];
-  double NTPVetoTrkTime[100];
-  double NTPVetoFingerE[100];
-  double NTPVetoX[100];
-  double NTPVetoY[100];
+  //PVeto variables changed to vectors
+  std::vector<G4double>  NTPVetoTrkEne;
+  std::vector<G4double>  NTPVetoTrkTime;
+  std::vector<int>       NTPVetoTrkFinger;
+  std::vector<G4double>  NTPVetoFingerE;
+  std::vector<G4double>  NTPVetoX;
+  std::vector<G4double>  NTPVetoY;
+  //  std::vector<G4double>  NTPVetoBarEnergy;
+  //  std::vector<G4double>  NTPVetoBarTime;
   double NTPVetoBarEnergy[NPVetoBars];
   double NTPVetoBarTime[NPVetoBars];
   double NTPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
   double NTPVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTPVetoClIndex[NPVetoBars];
 
-
   //EVeto variables
-  double NTEVetoTrkEne[100];
-  int    NTEVetoTrkFinger[100];
-  double NTEVetoTrkTime[100];
-  double NTEVetoFingerE[100];
-  double NTEVetoX[100];
-  double NTEVetoY[100];
+  std::vector<G4double> NTEVetoTrkEne;
+  std::vector<G4double> NTEVetoTrkTime;
+  std::vector<int>      NTEVetoTrkFinger;
+  std::vector<G4double> NTEVetoFingerE;
+  std::vector<G4double> NTEVetoX;
+  std::vector<G4double> NTEVetoY;
+
   double NTEVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
   double NTEVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTEVetoClIndex[NPVetoBars];
@@ -125,16 +128,12 @@ struct NTEvent{
   int NTSACNHit;
 
   //NTLAV variables
-  double  NTLAVE[100];
-  double  NTLAVT[100];
-  double  NTLAVPType[100];
-  double  NTLAVX[100];
-  double  NTLAVY[100];
+  std::vector<double>  NTLAVE;
+  std::vector<double>  NTLAVT;
+  std::vector<int>     NTLAVPType;
+  std::vector<double>  NTLAVX;
+  std::vector<double>  NTLAVY;
   int     NTLAVNHit;
-
-
-
-
 }; 
 
  class TFile;

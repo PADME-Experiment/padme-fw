@@ -13,9 +13,10 @@
 #include "GFiltHit.hh"
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
+#include "SACGeometry.hh"
 #include "TargetGeometry.hh"
 #include "BeamParameters.hh"
-#include <vector> // M. Raggi
+#include <vector>
 
 class G4Event;
 class RunAction;
@@ -69,6 +70,7 @@ class EventAction : public G4UserEventAction
   void  AddLAVHits(LAVHitsCollection*);
 
   G4double GetCharge(G4double Energia);
+  G4double GetSACCharge(G4double Energia);
   G4double GGMass();
 
   private:
@@ -76,6 +78,7 @@ class EventAction : public G4UserEventAction
   HistoManager* fHistoManager;
   ECalGeometry   * Egeom; 
   TargetGeometry * Tgeom;
+  SACGeometry * Sgeom;
   BeamParameters * Bpar;
 
   //che devo fare ce debbo mettere il detector?
@@ -84,7 +87,8 @@ class EventAction : public G4UserEventAction
   G4double ProcID;
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 
   G4double ClPosX,ClPosY;
-  G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
+  //  G4double ClTime;
+  G4double EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
   G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget;
   G4int CalNPart;
 
@@ -101,38 +105,46 @@ class EventAction : public G4UserEventAction
    G4double YTarget;
    G4double XTarget;
 
+
+   //introduced vectors to sobstitue arrays M. Raggi 28/06/2018
+   std::vector<G4int>     HEPVetoTrackCh;
+   std::vector<G4double>  HEPVetoEtrack ;
+   std::vector<G4double>  HEPVetoTrackTime;
+   std::vector<G4double>  HEPVetoX;
+   std::vector<G4double>  HEPVetoY;
+
    G4double ETotHEPVeto[100];
-   G4int    HEPVetoTrackCh[100];
-   G4double HEPVetoEtrack [100];
-   G4double HEPVetoTrackTime[100];
-   G4double HEPVetoX[100];
-   G4double HEPVetoY[100];
    G4double HEPVetoTimeCl[100][10 ];
    G4double HEPVetoECl[100][10];
    G4int    HEPVetoClIndex[100];
 
-   G4double ETotPVeto[100];
-   G4double TimePVeto[100];
-   G4int    PVetoTrackCh[100];
-   G4double PVetoEtrack [100];
-   G4double PVetoTrackTime[100];
-   G4double PVetoX[100];
-   G4double PVetoY[100];
-   G4double PVetoTimeCl[100][10 ];
-   G4double PVetoECl[100][10];
-   G4int    PVetoClIndex[100];
+  //introduced vectors to sobstitue arrays M. Raggi 28/06/2018
+  std::vector<G4int>     PVetoTrackCh;  //int
+  std::vector<G4double>  PVetoEtrack;
+  std::vector<G4double>  PVetoTrackTime;
+  std::vector<G4double>  PVetoX;
+  std::vector<G4double>  PVetoY;
+  //std::vector<double> ETotPVeto(100);
+  // This part I did'nt touched 
+  G4double  ETotPVeto[100];
+  G4double  TimePVeto[100];
+  G4double  PVetoTimeCl[100][10];
+  G4double  PVetoECl[100][10];
+  G4int     PVetoClIndex[100];  //int
+
+
+  std::vector<G4int>     EVetoTrackCh;
+  std::vector<G4double>  EVetoEtrack ;
+  std::vector<G4double>  EVetoTrackTime;
+  std::vector<G4double>  EVetoX;
+  std::vector<G4double>  EVetoY;
 
    G4double ETotEVeto[100];
-   G4int    EVetoTrackCh[100];
-   G4double EVetoEtrack [100];
-   G4double EVetoTrackTime[100];
-   G4double EVetoX[100];
-   G4double EVetoY[100];
    G4double EVetoTimeCl[100][10];
    G4double EVetoECl[100][10];
    G4int    EVetoClIndex[100];
 
-   G4double  ETotSAC;
+   G4double  ETotSACCh[25][100];
    std::vector<G4double>  SACEtrack;
    std::vector<G4double>  SACTrackTime;
    std::vector<int>       SACPType;
@@ -140,23 +152,24 @@ class EventAction : public G4UserEventAction
    std::vector<G4double>  SACY;
    std::vector<int>       SACCh;
    std::vector<G4double>  SACQ;
+  
+  //Particles properties entering ECAL form stepping action to be checked
+  std::vector<G4double> CalE;
+  std::vector<G4double> CalTime;
+  std::vector<G4int>    CalPType;
+  std::vector<G4double> CalX;   
+  std::vector<G4double> CalY;
+  G4int    NCalPart;
 
-  //Particles properties entering ECAL form stepping action
-   G4double CalE[20];
-   G4double CalTime[20];
-   G4int    CalPType[20];
-   G4double CalX[20];   
-   G4double CalY[20];
-   G4double NCalPart;
-
-   G4double ETotLAV[100];
-   G4double LAVTrackCh[100];
-   G4double LAVPType[100];
-   G4double LAVEtrack [100];
-   G4double LAVTrackTime[100];
-   G4double LAVX[100];   
-   G4double LAVY[100];
-
+  // not used 
+  std::vector<G4double> ETotLAV;
+  std::vector<G4double> LAVTrackCh;
+  std::vector<G4double> LAVPType;
+  std::vector<G4double> LAVEtrack ;
+  std::vector<G4double> LAVTrackTime;
+  std::vector<G4double> LAVX;   
+  std::vector<G4double> LAVY;
+  
    std::vector<G4double> EneCl;     
    std::vector<G4double> QCl;	   
    std::vector<G4double> TimeCl;  
@@ -169,14 +182,13 @@ class EventAction : public G4UserEventAction
    std::vector<G4double> ETotCry;
    std::vector<G4double> QTotCry;
    std::vector<G4double> TimeCry;
-   std::vector<G4double> ETotRing;
+  //std::vector<G4double> ETotRing;
 
    G4double MatEtot[30][30];   
    G4double MatQtot[30][30];   
    G4double MatTstart[30][30]; 
    G4int    MatUsed[30][30];   
   
-
    G4int Used[1000];
    G4int UsedRing[1000];
    G4int Empty[1000];

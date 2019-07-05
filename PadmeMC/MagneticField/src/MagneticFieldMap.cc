@@ -50,6 +50,7 @@ void MagneticFieldMap::GetFieldValue(const G4double p[4],G4double* B) const
   G4double z = p[2]-fMagneticVolumePosZ;
 
   G4double B0 = 1.;
+
   if ( (x<-0.5*fMagneticVolumeLengthX) || (x>0.5*fMagneticVolumeLengthX) ||
        (y<-0.5*fMagneticVolumeLengthY) || (y>0.5*fMagneticVolumeLengthY) ||
        (z<-0.5*fMagneticVolumeLengthZ) || (z>0.5*fMagneticVolumeLengthZ) ) {

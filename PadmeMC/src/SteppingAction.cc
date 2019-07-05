@@ -87,7 +87,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 				       step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo()
 				       );
       
-	//      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<" X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
+	G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<" X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
 	track->SetTrackStatus(fStopAndKill);      
       }
     }

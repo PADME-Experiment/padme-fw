@@ -62,9 +62,16 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Special calibration run
   if ( fCalibrationRun ) {
+    // adding possibility to generate multiple photon to test SAC reco M. Raggi 01/07/2018
+    G4int nTotPositrons = bpar->GetNPositronsPerBunch();
+    if (bpar->NPositronsPerBunchApplySpread()) {
+      nTotPositrons = G4Poisson(nTotPositrons);
+    }
     // Origin of calibration beam is on back face of Target
-    bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
-    GenerateCalibrationGamma();
+    for(G4int nn=0;nn<nTotPositrons;nn++){
+      bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+      GenerateCalibrationGamma();
+    }
     return;
   }
 
@@ -150,7 +157,7 @@ void BeamGenerator::GeneratePrimaryPositron()
   // Get mass of positron
   fPositron.m = G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGMass(); // Mass
   //  G4cout << "BeamGenerator - Positron mass " << fPositron.m << G4endl;
-
+ 
   // Assign a time using bunch time structure (if required)
   G4double parTime = 0.;
   if ( bpar->BeamApplyBunchStructure() ) {
@@ -162,7 +169,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     parTime = ubunchNow*(ubunchDly+ubunchLen)+G4UniformRand()*ubunchLen;
   }
   fPositron.t = parTime;
-  //  G4cout << "BeamGenerator - Positron time " << fPositron.t << G4endl;
+ //  G4cout << "BeamGenerator - Positron time " << fPositron.t << G4endl;
 
   // All positrons are generated 1um before the front face of the target
   G4double xPos = bpar->GetBeamCenterPosX();
@@ -418,8 +425,19 @@ void BeamGenerator::GenerateCalibrationGamma()
 
   BeamParameters* bpar = BeamParameters::GetInstance();
 
-  // Create primary vertex at center of back face of target with t=0.
+  // bunch time structure for multiple particles added M. Raggi 01/07/2018
   G4double vT = 0.*ns;
+  if ( bpar->BeamApplyBunchStructure() ) {
+    G4double bunchLen = bpar->GetBunchTimeLength();
+    G4double ubunchLen = bpar->GetMicroBunchTimeLength();
+    G4double ubunchDly = bpar->GetMicroBunchTimeDelay();
+    G4double nubunch = bunchLen/(ubunchDly+ubunchLen);
+    G4int ubunchNow = int(G4UniformRand()*nubunch);
+    vT = ubunchNow*(ubunchDly+ubunchLen)+G4UniformRand()*ubunchLen;
+  }
+
+  // Create primary vertex at center of back face of target with t=0.
+  //  G4double vT = 0.*ns;
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
   //G4double vZ = fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness();
@@ -450,7 +468,6 @@ void BeamGenerator::GenerateCalibrationGamma()
 
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);
-
 }
 
 G4double BeamGenerator::GetGammaAngle(G4ThreeVector gammaDir,G4ThreeVector beamDir)

@@ -41,7 +41,6 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
   //G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
-
   SACHit* newHit = new SACHit();
   
   newHit->SetEdep(preStepPoint->GetTotalEnergy());
@@ -52,6 +51,7 @@ G4bool SACSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   //  newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
 
   newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // M. Raggi 27/06/2018
+  //  G4cout<<"ChID SD " <<touchHPre->GetCopyNumber(1)<<G4endl;  //sum single fingers energies and get total finger
   newHit->SetEnergy(edep);
   newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();

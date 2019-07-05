@@ -163,24 +163,26 @@ void HistoManager::book()
   ntupl->Branch("NTarget", &(myEvt.NTNTarget), "NTarget/I");
 
 // New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("SACChE",(myEvt.NTSACNHit), "ETotSACCh[25]/D");
   ntupl->Branch("ESAC", (&myEvt.NTSACE));
   ntupl->Branch("TSAC", (&myEvt.NTSACT));
   ntupl->Branch("PTypeSAC",(&myEvt.NTSACPType));
   ntupl->Branch("XSAC", (&myEvt.NTSACX));
   ntupl->Branch("YSAC", (&myEvt.NTSACY));
+  ntupl->Branch("QSAC", (&myEvt.NTSACQ));
   ntupl->Branch("SACCh",(&myEvt.NTSACCh));
 
-  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
-  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
-  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
-  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
-  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+  ntupl->Branch("ELAV",    (&myEvt.NTLAVE));    
+  ntupl->Branch("TLAV",    (&myEvt.NTLAVT));    
+  ntupl->Branch("PTypeLAV",(&myEvt.NTLAVPType));
+  ntupl->Branch("XLAV",    (&myEvt.NTLAVX));    
+  ntupl->Branch("YLAV",    (&myEvt.NTLAVY));     
   
-  ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
-  ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");
-  ntupl->Branch("PTypePartCal", (myEvt.NTCalPartPType), "CalPType[20]/I");
-  ntupl->Branch("XPartCal",     (myEvt.NTCalPartX),     "CalX[20]/D");
-  ntupl->Branch("YPartCal",     (myEvt.NTCalPartY),     "CalY[20]/D");
+  ntupl->Branch("EPartCal",    (&myEvt.NTCalPartE));     
+  ntupl->Branch("TPartCal",    (&myEvt.NTCalPartT));     
+  ntupl->Branch("PTypePartCal",(&myEvt.NTCalPartPType)); 
+  ntupl->Branch("XPartCal",    (&myEvt.NTCalPartX));     
+  ntupl->Branch("YPartCal",    (&myEvt.NTCalPartY));     
 
 // New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
   ntupl->Branch("ECluster",  (&myEvt.NTECluster)   ); 
@@ -208,39 +210,43 @@ void HistoManager::book()
   ntupl->Branch("XTarget", &(myEvt.NTXTarget), "XTarget/D");
   ntupl->Branch("YTarget", &(myEvt.NTYTarget), "YTarget/D");
 
-  ntupl->Branch("HEPVetoTrEne" ,(myEvt.NTHEPVetoTrkEne),   "NTHEPVetoTrkEne[100]/D");
-  ntupl->Branch("HEPVetoNFing" ,(myEvt.NTHEPVetoTrkFinger),"NTHEPVetoTrkFinger[100]/I");
-  ntupl->Branch("HEPVetoTrTime",(myEvt.NTHEPVetoTrkTime),  "NTHEPVetoTrkTime[100]/D");
-  ntupl->Branch("HEPVetoFingE", (myEvt.NTHEPVetoFingerE),  "NTHEPVetoFingE[100]/D");
-  ntupl->Branch("HEPVetoX", (myEvt.NTHEPVetoX),  "NTHEPVetoX[100]/D");
-  ntupl->Branch("HEPVetoY", (myEvt.NTHEPVetoY),  "NTHEPVetoY[100]/D");
+// New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("HEPVetoTrEne" ,(&myEvt.NTHEPVetoTrkEne));   
+  ntupl->Branch("HEPVetoNFing" ,(&myEvt.NTHEPVetoTrkFinger));
+  ntupl->Branch("HEPVetoTrTime",(&myEvt.NTHEPVetoTrkTime));  
+  ntupl->Branch("HEPVetoFingE", (&myEvt.NTHEPVetoFingerE));  
+  ntupl->Branch("HEPVetoX",     (&myEvt.NTHEPVetoX));        
+  ntupl->Branch("HEPVetoY",     (&myEvt.NTHEPVetoY));        
+
   ntupl->Branch("HEPVetoClIndex",   (myEvt.NTHEPVetoClIndex),  "NTHEPVetoClIndex[100]/I");
   ntupl->Branch("HEPVetoECl",       (myEvt.NTHEPVetoECl),      "NTHEPVetoECl[100][10]/D");
   ntupl->Branch("HEPVetoTimeCl",    (myEvt.NTHEPVetoTimeCl),   "NTHEPVetoTimeCl[100][10]/D");
 
-  ntupl->Branch("PVetoTrEne" ,(myEvt.NTPVetoTrkEne),   "NTPVetoTrkEne[100]/D");
-  ntupl->Branch("PVetoNFing" ,(myEvt.NTPVetoTrkFinger),"NTPVetoTrkFinger[100]/I");
-  ntupl->Branch("PVetoTrTime",(myEvt.NTPVetoTrkTime),  "NTPVetoTrkTime[100]/D");
-  ntupl->Branch("PVetoFingE", (myEvt.NTPVetoFingerE),  "NTPVetoFingE[100]/D");
-  ntupl->Branch("PVetoX",     (myEvt.NTPVetoX),        "NTPVetoX[100]/D");
-  ntupl->Branch("PVetoY",     (myEvt.NTPVetoY),        "NTPVetoY[100]/D");
-  ntupl->Branch("PVetoBarE",     (myEvt.NTPVetoBarEnergy),        "NTPVetoBarEnergy[100]/D");
-  ntupl->Branch("PVetoBarT",     (myEvt.NTPVetoBarTime),        "NTPVetoBarTime[100]/D");
+// New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("PVetoTrEne" ,(&myEvt.NTPVetoTrkEne)   );
+  ntupl->Branch("PVetoNFing" ,(&myEvt.NTPVetoTrkFinger));
+  ntupl->Branch("PVetoTrTime",(&myEvt.NTPVetoTrkTime)  );
+  ntupl->Branch("PVetoFingE", (&myEvt.NTPVetoFingerE)  );
+  ntupl->Branch("PVetoX",     (&myEvt.NTPVetoX)        );
+  ntupl->Branch("PVetoY",     (&myEvt.NTPVetoY)        );
+  // clustering still to be fixed
+  ntupl->Branch("PVetoBarE",    (myEvt.NTPVetoBarEnergy),"NTPVetoBarEnergy[100]/D");
+  ntupl->Branch("PVetoBarT",    (myEvt.NTPVetoBarTime),  "NTPVetoBarTime[100]/D");
+  ntupl->Branch("PVetoClIndex", (myEvt.NTPVetoClIndex),  "NTPVetoClIndex[100]/I");
+  ntupl->Branch("PVetoECl",     (myEvt.NTPVetoECl),      "NTPVetoECl[100][10]/D");
+  ntupl->Branch("PVetoTimeCl",  (myEvt.NTPVetoTimeCl),   "NTPVetoTimeCl[100][10]/D");
 
-  ntupl->Branch("PVetoClIndex",   (myEvt.NTPVetoClIndex),  "NTPVetoClIndex[100]/I");
-  ntupl->Branch("PVetoECl",       (myEvt.NTPVetoECl),      "NTPVetoECl[100][10]/D");
-  ntupl->Branch("PVetoTimeCl",    (myEvt.NTPVetoTimeCl),   "NTPVetoTimeCl[100][10]/D");
+// New version of the NTuple based on Vectors instead of Array M. Raggi 26/06/2018
+  ntupl->Branch("EVetoTrEne" , (&myEvt.NTEVetoTrkEne));   
+  ntupl->Branch("EVetoNFing" , (&myEvt.NTEVetoTrkFinger));
+  ntupl->Branch("EVetoTrTime", (&myEvt.NTEVetoTrkTime));  
+  ntupl->Branch("EVetoFingE",  (&myEvt.NTEVetoFingerE));  
+  ntupl->Branch("EVetoX",      (&myEvt.NTEVetoX));        
+  ntupl->Branch("EVetoY",      (&myEvt.NTEVetoY));        
 
-
-  ntupl->Branch("EVetoTrEne" ,(myEvt.NTEVetoTrkEne),   "NTEVetoTrkEne[100]/D");
-  ntupl->Branch("EVetoNFing" ,(myEvt.NTEVetoTrkFinger),"NTEVetoTrkFinger[100]/I");
-  ntupl->Branch("EVetoTrTime",(myEvt.NTEVetoTrkTime),  "NTEVetoTrkTime[100]/D");
-  ntupl->Branch("EVetoFingE", (myEvt.NTEVetoFingerE),  "NTEVetoFingE[100]/D");
-  ntupl->Branch("EVetoX",     (myEvt.NTEVetoX),        "NTEVetoX[100]/D");
-  ntupl->Branch("EVetoY",     (myEvt.NTEVetoY),        "NTEVetoY[100]/D");
-  ntupl->Branch("EVetoClIndex",   (myEvt.NTEVetoClIndex),  "NTEVetoClIndex[100]/I");
-  ntupl->Branch("EVetoECl",       (myEvt.NTEVetoECl),      "NTEVetoECl[100][10]/D");
-  ntupl->Branch("EVetoTimeCl",    (myEvt.NTEVetoTimeCl),   "NTEVetoTimeCl[100][10]/D");
+  ntupl->Branch("EVetoClIndex",(myEvt.NTEVetoClIndex),   "NTEVetoClIndex[100]/I");
+  ntupl->Branch("EVetoECl",    (myEvt.NTEVetoECl),      "NTEVetoECl[100][10]/D");
+  ntupl->Branch("EVetoTimeCl", (myEvt.NTEVetoTimeCl),   "NTEVetoTimeCl[100][10]/D");
 
 
   //MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();

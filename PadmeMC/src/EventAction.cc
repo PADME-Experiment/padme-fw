@@ -42,6 +42,7 @@ EventAction::EventAction(RunAction* run)
   Egeom = ECalGeometry::GetInstance();
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
+  Sgeom = SACGeometry::GetInstance(); //M. Raggi 29/06/2018
 
   //M. Raggi defining default output settings 
   fEnableSaveEcal = 1;
@@ -75,7 +76,6 @@ EventAction::~EventAction()
  
 void EventAction::BeginOfEventAction(const G4Event*)
 {
-
   // Get current run and event numbers
   ETotCal  = 0;
   ECalHitT = 0;
@@ -106,6 +106,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   SACPType.clear();  
   SACX.clear();
   SACY.clear();
+  SACQ.clear();
 
   memset(&(fHistoManager->myEvt),0,sizeof(NTEvent));
   myStepping->SetPhysProc(0);
@@ -180,8 +181,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
     if (HCname == "ECalCollection") {
       AddECryHits((ECalHitsCollection*) (LHC->GetHC(iHC)));
-      FindClusters();
-    } else if (HCname == "TargetCollection") {
+      FindClusters(); 
+   } else if (HCname == "TargetCollection") {
       AddTargetHits((TargetHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "HEPVetoCollection") {
       AddHEPVetoHits((HEPVetoHitsCollection*)(LHC->GetHC(iHC)));
@@ -190,7 +191,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     } else if (HCname == "EVetoCollection") {
       AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
-      AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
+      //      AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "LAVCollection") {
       AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
     }
@@ -252,48 +253,50 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.NTXTarget  = XTarget;
   fHistoManager->myEvt.NTYTarget  = YTarget;
 
-  // if(SACEtrack.size()) G4cout<<evt->GetEventID()<<" Event action out "<<SACTracks<<" "<<SACEtrack.size()<<G4endl;
+  // Revised SAC filling now based on vectors M.Raggi 28/06/2018
   for(int i=0;i<SACTracks;i++){	  
-  //  for(int i=0;i<SACEtrack.size();i++){	  
-     G4cout<<evt->GetEventID()<<" Event action NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
+    //    G4cout<<evt->GetEventID()<<" Event action NSAC Tr "<<SACTracks<<" "<< SACEtrack[i]<<" "<<SACTrackTime[i]<<G4endl;
     if(i>MaxTracks-1) break;
     fHistoManager->myEvt.NTSACE.push_back(SACEtrack.at(i));
     fHistoManager->myEvt.NTSACT.push_back(SACTrackTime.at(i));
-    fHistoManager->myEvt.NTSACPType.push_back(SACPType.at(i));
+    //    fHistoManager->myEvt.NTSACPType.push_back(SACPType.at(i));
     fHistoManager->myEvt.NTSACX.push_back(SACX.at(i));
     fHistoManager->myEvt.NTSACY.push_back(SACY.at(i));
-    fHistoManager->myEvt.NTSACCh.push_back(SACCh.at(i));
+    //    fHistoManager->myEvt.NTSACCh.push_back(SACCh.at(i));
+    fHistoManager->myEvt.NTSACQ.push_back(SACQ.at(i));
   }
+  //  for(int ii=0;ii<25;ii++) fHistoManager->myEvt.NTSACQ.push_back(ETotSACCh[i]);
 
+
+  //FIX IT
   for(int i=0;i<CalNPart;i++){
-    if(i>19) break;
-    //    G4cout<<"NLAV Tr "<<LAVTracks<<" "<< LAVEtrack[i]<<" "<<LAVTrackTime[i]<<G4endl;
-    fHistoManager->myEvt.NTCalPartE[i]     =  CalE[i];
-    fHistoManager->myEvt.NTCalPartT[i]     =  CalTime[i];
-    fHistoManager->myEvt.NTCalPartPType[i] =  CalPType[i];
-    fHistoManager->myEvt.NTCalPartX[i]     =  CalX[i];
-    fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
+    //    if(i>19) break;
+    fHistoManager->myEvt.NTCalPartE.push_back(CalE[i]);
+    fHistoManager->myEvt.NTCalPartT.push_back(CalTime[i]);
+    fHistoManager->myEvt.NTCalPartPType.push_back(CalPType[i]);
+    fHistoManager->myEvt.NTCalPartX.push_back(CalX[i]);
+    fHistoManager->myEvt.NTCalPartY.push_back(CalY[i]);
   }
   
   for(int i=0;i<LAVTracks;i++){
-    if(i>100) break;
-
-    fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
-    fHistoManager->myEvt.NTLAVT    [i] = LAVTrackTime[i];
-    fHistoManager->myEvt.NTLAVPType[i] = LAVPType[i];
-    fHistoManager->myEvt.NTLAVX    [i] =LAVX[i]; 
-    fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
+    //    if(i>100) break;
+    fHistoManager->myEvt.NTLAVE.push_back(LAVEtrack[i]);
+    fHistoManager->myEvt.NTLAVT.push_back(LAVTrackTime[i]);
+    fHistoManager->myEvt.NTLAVPType.push_back(LAVPType[i]);
+    fHistoManager->myEvt.NTLAVX.push_back(LAVX[i]); 
+    fHistoManager->myEvt.NTLAVY.push_back(LAVY[i]);
   }
   
-  for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
-	  if(i>MaxTracks-1) break;
-	  fHistoManager->myEvt.NTHEPVetoTrkEne[i]    = HEPVetoEtrack[i];
-	  if(HEPVetoTrackCh[i]<100 && HEPVetoTrackCh[i]>-100) fHistoManager->myEvt.NTHEPVetoTrkFinger[i] = HEPVetoTrackCh[i];
-	  fHistoManager->myEvt.NTHEPVetoTrkTime[i]   = HEPVetoTrackTime[i];
-	  fHistoManager->myEvt.NTHEPVetoFingerE[i]   = ETotHEPVeto[HEPVetoTrackCh[i]]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTHEPVetoX[i]   = HEPVetoX[i]; //Just one finger per track to be improve!
-	  fHistoManager->myEvt.NTHEPVetoY[i]   = HEPVetoY[i]; //Just one finger per track to be improved!
+  // HEP veto ntupla changed to vectors M. Raggi 28/06/2018
+  for(int i=0;i<NHEPVetoTracks;i++){  
+    fHistoManager->myEvt.NTHEPVetoTrkEne.push_back(HEPVetoEtrack[i]);
+    fHistoManager->myEvt.NTHEPVetoTrkFinger.push_back(HEPVetoTrackCh[i]);
+    fHistoManager->myEvt.NTHEPVetoTrkTime.push_back(HEPVetoTrackTime[i]);
+    fHistoManager->myEvt.NTHEPVetoFingerE.push_back(ETotHEPVeto[HEPVetoTrackCh[i]]); //Just one finger per track to be improved!
+    fHistoManager->myEvt.NTHEPVetoX.push_back(HEPVetoX[i]); //Just one finger per track to be improve!
+    fHistoManager->myEvt.NTHEPVetoY.push_back(HEPVetoY[i]); //Just one finger per track to be improved!
   }
+
   for(int iBar=0;iBar<NHEPVetoBars;iBar++) {
     fHistoManager->myEvt.NTHEPVetoClIndex[iBar] = HEPVetoClIndex[iBar];
     for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
@@ -301,41 +304,35 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       fHistoManager->myEvt.NTHEPVetoECl[iBar][iCluster] = HEPVetoECl[iBar][iCluster] ;
     }
   }
-
-  for(int i=0;i<NPVetoTracks;i++){  //BUG on number of channel!
-	  if(i>MaxTracks-1) break;
-	  fHistoManager->myEvt.NTPVetoTrkEne[i]  = PVetoEtrack[i];
-	  //	  if(PVetoTrackCh[i]<100 && PVetoTrackCh[i]>-100) fHistoManager->myEvt.NTVetoTrkFinger[i] = PVetoTrackCh[i];
-	  fHistoManager->myEvt.NTPVetoTrkFinger[i] = PVetoTrackCh[i];
-	  fHistoManager->myEvt.NTPVetoTrkTime[i] = PVetoTrackTime[i];
-	  fHistoManager->myEvt.NTPVetoFingerE[i] = ETotPVeto[PVetoTrackCh[i]]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTPVetoX[i]       = PVetoX[i]; //Just one finger per track to be improve!
-	  fHistoManager->myEvt.NTPVetoY[i]       = PVetoY[i]; //Just one finger per track to be improved!
-
-	  //if(VetoTrackCh[i]>100) G4cout<<i<<" Tracker Lay "<<VetoTrackCh[i]<<" "<<VetoEtrack[i]<<" "<<VetoTrackTime[i]<<G4endl;
-	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
+  // Positron veto ntupla changed to vectors M. Raggi 28/06/2018
+  for(int i=0;i<NPVetoTracks;i++){  
+    fHistoManager->myEvt.NTPVetoTrkEne.push_back(PVetoEtrack[i]);
+    fHistoManager->myEvt.NTPVetoTrkFinger.push_back(PVetoTrackCh[i]);
+    fHistoManager->myEvt.NTPVetoTrkTime.push_back(PVetoTrackTime[i]);
+    fHistoManager->myEvt.NTPVetoFingerE.push_back(ETotPVeto[PVetoTrackCh[i]]); 
+    fHistoManager->myEvt.NTPVetoX.push_back(PVetoX[i]);                        
+    fHistoManager->myEvt.NTPVetoY.push_back(PVetoY[i]);                        
   }
   for(int iBar=0;iBar<NPVetoBars;iBar++) {
-    fHistoManager->myEvt.NTPVetoBarEnergy[iBar] = ETotPVeto[iBar];
+    fHistoManager->myEvt.NTPVetoBarEnergy[iBar]= ETotPVeto[iBar];
     fHistoManager->myEvt.NTPVetoBarTime[iBar] = TimePVeto[iBar];
-    fHistoManager->myEvt.NTPVetoClIndex[iBar] = PVetoClIndex[iBar];
+    fHistoManager->myEvt.NTPVetoClIndex[iBar] = PVetoClIndex[iBar]; ///means the bar is in cluster  PVetoClIndex[iBar]
     for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
       fHistoManager->myEvt.NTPVetoTimeCl[iBar][iCluster] = PVetoTimeCl[iBar][iCluster];
       fHistoManager->myEvt.NTPVetoECl[iBar][iCluster] = PVetoECl[iBar][iCluster] ;
     }
   }
-
-  for(int i=0;i<NEVetoTracks;i++){  //BUG on number of channel!
-	  if(i>MaxTracks-1) break;
-	  fHistoManager->myEvt.NTEVetoTrkEne[i]  = EVetoEtrack[i];
-	  //	  if(EVetoTrackCh[i]<100 && EVetoTrackCh[i]>-100) fHistoManager->myEvt.NTVetoTrkFinger[i] = EVetoTrackCh[i];
-	  fHistoManager->myEvt.NTEVetoTrkFinger[i]  = EVetoTrackCh[i];
-	  fHistoManager->myEvt.NTEVetoTrkTime[i]    = EVetoTrackTime[i];
-	  fHistoManager->myEvt.NTEVetoFingerE[i]    = ETotEVeto[EVetoTrackCh[i]]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTEVetoX[i]          = EVetoX[i]; //Just one finger per track to be improved!
-	  fHistoManager->myEvt.NTEVetoY[i]          = EVetoY[i]; //Just one finger per track to be improved!
-	  //	  G4cout<<i<<" Tracker Lay "<<EVetoTrackCh[i]<<" "<<EVetoEtrack[i]<<" "<<EVetoTrackTime[i]<<G4endl;
-	  //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
+  
+  // EVeto ntupla Moved to Vectors 28/06/2018
+  for(int i=0;i<NEVetoTracks;i++){
+    fHistoManager->myEvt.NTEVetoTrkEne.push_back(EVetoEtrack[i]);
+    fHistoManager->myEvt.NTEVetoTrkFinger.push_back(EVetoTrackCh[i]);
+    fHistoManager->myEvt.NTEVetoTrkTime.push_back(EVetoTrackTime[i]);
+    fHistoManager->myEvt.NTEVetoFingerE.push_back(ETotEVeto[EVetoTrackCh[i]]); 
+    fHistoManager->myEvt.NTEVetoX.push_back(EVetoX[i]); 
+    fHistoManager->myEvt.NTEVetoY.push_back( EVetoY[i]); 
+    //	  G4cout<<i<<" Tracker Lay "<<EVetoTrackCh[i]<<" "<<EVetoEtrack[i]<<" "<<EVetoTrackTime[i]<<G4endl;
+    //	  G4cout<<VetoX[i]<<" "<<myEvt.NTVetoY[i]<<G4endl;
   }
   for(int iBar=0;iBar<NEVetoBars;iBar++) {
     fHistoManager->myEvt.NTEVetoClIndex[iBar] = EVetoClIndex[iBar];
@@ -346,7 +343,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   }
 
   //Revised ECAL ntu filling using vectors M. Raggi 27/06/2018
-  if(NClusters>0) G4cout<<"Filling CALO vectors ECl size"<<EneCl.size()<<" NClusters "<<NClusters<<G4endl;
+  //  if(NClusters>0) G4cout<<"Filling CALO vectors ECl size"<<EneCl.size()<<" NClusters "<<NClusters<<G4endl;
   for(int i=0;i<NClusters;i++){	
     fHistoManager->myEvt.NTECluster.push_back(EneCl.at(i));
     fHistoManager->myEvt.NTQCluster.push_back(QCl.at(i));
@@ -363,11 +360,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //    fHistoManager->myEvt.NTQCell.push_back(QTotCry.at(i));
 //    fHistoManager->myEvt.NTTCell.push_back(TimeCry.at(i));
 //  }
-//  if(IsTrackerRecoON==1){
-//    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-//  }else{
-//  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-
+  
   // Set conditions to write NTU using the datacards.  M. raggi 23/06/2018
   if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
     fHistoManager->FillNtuple(&(fHistoManager->myEvt));
@@ -380,10 +373,10 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
 {
   //G4double ETotEvt=0;
   G4int nHits = hcont->entries();
-
+  
   G4double NRows= Egeom->GetECalNRows();  // righe sulla y 
   G4double NCols= Egeom->GetECalNCols(); // colonne sulla X
-
+  
   for(G4int jj=0;jj<NRows;jj++){
     for(G4int kk=0;kk<NCols;kk++){
       MatEtot  [jj][kk]=0.;   
@@ -398,7 +391,6 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     ECalHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      //G4int index = hit->GetCryNb();
       G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
@@ -414,14 +406,13 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
     }
   }
-  
 }
 
 void EventAction::FindClusters() //implement a fast square cluster algorithm revised M. Raggi 27/06/2018
 {
   G4double NRows= Egeom->GetECalNRows();  // righe sulla y 
   G4double NCols= Egeom->GetECalNCols(); // colonne sulla X
-  G4int NAddCl=2;   //number of raw and columns added into the cluster
+  G4int   NAddCl= 2;   //number of raw and columns added into the cluster 2 means a 5x5 cells cluster
   
   NClusters=0;
   EneCl.clear();   
@@ -521,7 +512,7 @@ void EventAction::FindClusters() //implement a fast square cluster algorithm rev
 
     for (int i=0; i<3; i++)  product+= GDir[i]*BDire[i];
     ThCl.push_back(acos(product));//* 180.0 / 3.14159265;
-    printf("Th Cl %f Th Gamma %f\n",ThCl.at(NClusters),P4Gamma.Theta());
+    //    printf("Th Cl %f Th Gamma %f\n",ThCl.at(NClusters),P4Gamma.Theta());
 
     G4double ProcID = myStepping->GetPhysProc();    
     printf("PROCID %f\n",ProcID);
@@ -534,7 +525,7 @@ void EventAction::FindClusters() //implement a fast square cluster algorithm rev
       fHistoManager->FillHisto(15,QCl.at(NClusters));
     }
     NClusters++;
-    G4cout<<ECL<<" Cluster find CALO "<<EneCl.at(0)<<" NCL "<<NClusters<<" "<<EneCl.size()<<G4endl;
+    //    G4cout<<ECL<<" Cluster find CALO "<<EneCl.at(0)<<" NCL "<<NClusters<<" "<<EneCl.size()<<G4endl;
     
     if(NClusters==2 && fabs(TimeCl.at(0)-TimeCl.at(1)<2.) ){ 
       G4double mgg= GGMass();
@@ -563,15 +554,14 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
-  //G4double ETotHEPVetoEvt=0.;
-  for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotHEPVeto[jj]=0.0;							
-    HEPVetoTrackCh[jj]=0;
-    HEPVetoTrackTime[jj]=0;
-    HEPVetoX[jj]=0;
-    HEPVetoY[jj]=0;
-    
-  }
+  for(Int_t ii=0;ii<32;ii++) ETotHEPVeto[ii]=0;							
+  HEPVetoEtrack.clear();
+  HEPVetoTrackCh.clear();
+  HEPVetoTrackTime.clear();
+  HEPVetoX.clear();
+  HEPVetoY.clear();
+  
+  // Zero cluster variables
   for(int iBar=0;iBar<NPVetoBars;iBar++){
     HEPVetoClIndex[iBar] = 0;
     for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
@@ -579,18 +569,18 @@ void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
       HEPVetoECl[iBar][iCluster]  = 0.;
     }
   }
-
+  
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {		
     HEPVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
-
+    
     if ( hit != 0 ) {
       int iBar = hit->GetChannelId();
       if (iBar > NHEPVetoBars ) {
 	std::cerr << "[EventAction] [HEPVeto]  Bar index outside range" << std::endl;
 	exit(0);
       }
-
+      
       int newhit = 1;
 
       for(int iCluster = 0; iCluster < HEPVetoClIndex[iBar] ; iCluster++) {
@@ -609,7 +599,7 @@ void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 	HEPVetoTimeCl[iBar][HEPVetoClIndex[iBar]]  = hit->GetTime();
 	HEPVetoClIndex[iBar]++;
       }
-
+      
       ETotHEPVeto[hit->GetHEPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
     }
   }//end of first loop on hits
@@ -617,31 +607,28 @@ void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
   for (G4int h=0; h<nHits; h++) {
     HEPVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && NHEPVetoTracks < MaxTracks && ETotHEPVeto[hit->GetHEPVetoNb()] > 0.1*MeV) {
-	HEPVetoTrackCh[NHEPVetoTracks]    = hit->GetHEPVetoNb();
-	HEPVetoEtrack[NHEPVetoTracks]     = hit->GetTrackEnergy();
-	HEPVetoTrackTime[NHEPVetoTracks]  = hit->GetTime();
-	HEPVetoX[NHEPVetoTracks]          = hit->GetX();
-	HEPVetoY[NHEPVetoTracks]          = hit->GetY();
+      if(hit->GetTrackID()!=0 && ETotHEPVeto[hit->GetHEPVetoNb()]>0.1*MeV){
+	HEPVetoTrackCh.push_back(hit->GetHEPVetoNb());
+	HEPVetoEtrack.push_back(hit->GetTrackEnergy());
+	HEPVetoTrackTime.push_back(hit->GetTime());
+	HEPVetoX.push_back(hit->GetX());
+	HEPVetoY.push_back(hit->GetY());
 	NHEPVetoTracks++;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
       }
-      if(NHEPVetoTracks>MaxTracks) break; 
+      //      if(NHEPVetoTracks>MaxTracks) break; 
     }
   }//end of loop
 }
 
 void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
-  G4double ETotPVetoEvt=0;
-  for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotPVeto[jj]=0.0;
-    TimePVeto[jj]=0.0;
-    PVetoTrackCh[jj]=0;
-    PVetoTrackTime[jj]=0;
-    PVetoX[jj]=0;
-    PVetoY[jj]=0;
-  }
-
+  G4double ETotPVetoEvt=0;  
+  PVetoTrackCh.clear();
+  PVetoTrackTime.clear();
+  PVetoX.clear();
+  PVetoY.clear();
+  PVetoEtrack.clear();
+  //zero clusters variables
   for(int iBar=0;iBar<NPVetoBars;iBar++){
     TimePVeto[iBar]=0.0;
     ETotPVeto[iBar]=0.0;
@@ -653,29 +640,29 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
   }
 
   G4int nHits = hcont->entries();
-  for (G4int h=0; h<nHits; h++) {									
-    PVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit					
-    if ( hit != 0 ) {
-      // ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
+  for (G4int h=0; h<nHits; h++){	
+    PVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore
+    if( hit != 0 ) {
       int iBar = hit->GetChannelId();
       if (iBar > NPVetoBars ) {
 	std::cerr << "[EventAction] [PVeto]  Bar index outside range" << std::endl;
 	exit(0);
       }
-
       int newhit = 1;
-
+      // each bar can have signal for different clusters checks needed!!!!
+      //      G4cout<<"T "<<hit->GetTime()<<" indexbar "<<PVetoClIndex[iBar]<<G4endl;
       for(int iCluster = 0; iCluster < PVetoClIndex[iBar] ; iCluster++) {
-	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 0.1) {
+	//	G4cout<<hit->GetTime()<<" PVTC "<<PVetoTimeCl[iBar][iCluster]<<G4endl;
+	// if hit exists accumulate energy and time
+	if( fabs( hit->GetTime() - PVetoTimeCl[iBar][iCluster] ) < 0.15) {
 	  newhit=0;
 	  PVetoTimeCl[iBar][iCluster] = 
 	    (hit->GetTime()*hit->GetHitE() + PVetoECl[iBar][iCluster]*PVetoTimeCl[iBar][iCluster])/
 	    ( hit->GetHitE() + PVetoECl[iBar][iCluster]  ) ;
 	  PVetoECl[iBar][iCluster] +=  hit->GetHitE();
 	}
-	if(newhit==0) break;
+	if(newhit==0) break; //next hit
       }
-
       if (newhit == 1 && PVetoClIndex[iBar]< NPVetoMaxNCl) {
 	PVetoECl[iBar][PVetoClIndex[iBar]] = hit->GetHitE();
 	PVetoTimeCl[iBar][PVetoClIndex[iBar]]  = hit->GetTime();
@@ -685,38 +672,39 @@ void EventAction::AddPVetoHits(PVetoHitsCollection* hcont){
       TimePVeto[hit->GetPVetoNb()] = 
 	(TimePVeto[hit->GetPVetoNb()]*ETotPVeto[hit->GetPVetoNb()] + hit->GetTime()*hit->GetHitE())/
 	(ETotPVeto[hit->GetPVetoNb()]+hit->GetHitE());
-
+      
       ETotPVeto[hit->GetPVetoNb()] += hit->GetHitE();  //sum single fingers energies and get total finger
       ETotPVetoEvt += hit->GetHitE();
     }
   }
 
   // M. Raggi 30/05/2018 select only tracks when they enter the volume and deposit >0.1 MeV energy in the finger
+  // M. Raggi 28/06/2018 moved to vector output
   for (G4int h=0; h<nHits; h++) {
     PVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && NPVetoTracks < MaxTracks && ETotPVeto[hit->GetPVetoNb()] > 0.1*MeV) {
-	PVetoTrackCh[NPVetoTracks]    = hit->GetPVetoNb();   //bugs gives crazy numbers
-	PVetoEtrack[NPVetoTracks]     = hit->GetTrackEnergy();
-	PVetoTrackTime[NPVetoTracks]  = hit->GetTime();
-	PVetoX[NPVetoTracks]          = hit->GetX();
-	PVetoY[NPVetoTracks]          = hit->GetY();
+      if(hit->GetTrackID()!=0 && ETotPVeto[hit->GetPVetoNb()] > 0.1*MeV) {
+	PVetoTrackCh.push_back(hit->GetPVetoNb());   //bugs gives crazy numbers
+	PVetoEtrack.push_back(hit->GetTrackEnergy());
+	PVetoTrackTime.push_back(hit->GetTime());
+	PVetoX.push_back(hit->GetX());
+	PVetoY.push_back(hit->GetY());
 	NPVetoTracks++;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
       }
-      if(NPVetoTracks>MaxTracks) break; 
     }
   }
 }
 
 void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
-  for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotEVeto[jj]=0.0;						  
-    EVetoTrackCh[jj]=0;
-    EVetoTrackTime[jj]=0;
-    EVetoX[jj]=0;
-    EVetoY[jj]=0;
-  }
+  for(G4int jj=0;jj<MaxTracks;jj++)  ETotEVeto[jj]=0.0;						  
+  
+  EVetoEtrack.clear();
+  EVetoTrackCh.clear();
+  EVetoTrackTime.clear();
+  EVetoX.clear();
+  EVetoY.clear();
+  
   for(int iBar=0;iBar<NPVetoBars;iBar++){
     EVetoClIndex[iBar] = 0;
     for(int iCluster = 0; iCluster < EVetoClIndex[iBar] ; iCluster++) {
@@ -724,7 +712,6 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
       EVetoECl[iBar][iCluster]  = 0.;
     }
   }
-
 
   G4int nHits = hcont->entries();
   for (G4int h=0; h<nHits; h++) {									
@@ -762,12 +749,12 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
   for (G4int h=0; h<nHits; h++) {
     EVetoHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && NEVetoTracks < MaxTracks && ETotEVeto[hit->GetEVetoNb()] > 0.1*MeV) {
-	EVetoTrackCh[NEVetoTracks]    = hit->GetEVetoNb();   //bugs gives crazy numbers
-	EVetoEtrack[NEVetoTracks]     = hit->GetTrackEnergy();
-	EVetoTrackTime[NEVetoTracks]  = hit->GetTime();
-	EVetoX[NEVetoTracks]          = hit->GetX();
-	EVetoY[NEVetoTracks]          = hit->GetY();
+      if(hit->GetTrackID()!=0 && ETotEVeto[hit->GetEVetoNb()] > 0.1*MeV) {
+	EVetoTrackCh.push_back(hit->GetEVetoNb());   //bugs gives crazy numbers
+	EVetoEtrack.push_back(hit->GetTrackEnergy());
+	EVetoTrackTime.push_back(hit->GetTime());
+	EVetoX.push_back(hit->GetX());
+	EVetoY.push_back(hit->GetY());
 	NEVetoTracks++;
 	//	G4cout<<"cazzo "<<NEVetoTracks<<G4endl;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
@@ -779,53 +766,126 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
 
 void EventAction::AddSACHits(SACHitsCollection* hcont)
 {
-  G4cout<<"Entering sac hits"<<SACTracks<<G4endl;
+  std::vector<double> ECluster;
+  const int NMaxCl=100;
+  const int NRows=Sgeom->GetSACNRows();
+  const int NCols=Sgeom->GetSACNCols();
+  const int NTotCh=NRows*NCols;
+  G4double TTotSACCh[NTotCh][NMaxCl];
+  G4double ETotSACCh[NTotCh][NMaxCl];
+
+  std::vector<G4double> ETotSAC;
+  std::vector<G4double> TTotSAC;
+  std::vector<G4double> QTotSAC;
+  std::vector<G4double> XTotSAC;
+  std::vector<G4double> YTotSAC;
+  std::vector<G4double> ClTime;
+
+  G4int NCry=0;
   G4int nHits = hcont->entries();
   if (nHits == 0) return;
+  //  G4cout<<"Entering sac hits analysis "<<nHits<<G4endl;
+  G4int NClus=1;
 
+  for(Int_t ll=0;ll<NMaxCl;ll++){ 
+    for(Int_t kk=0;kk<NTotCh;kk++){ 
+      ETotSACCh[kk][ll]=0.;
+      TTotSACCh[kk][ll]=0.;
+      //      XSACCh[kk][ll]=0.;
+      //      YSACCh[kk][ll]=0.;
+    }
+  }
+  ClTime.clear();
   SACTracks = 0;
-  ETotSAC=0;	     
   SACCh.clear();
   SACEtrack.clear();  
   SACTrackTime.clear();  
   SACPType.clear();  
   SACX.clear();
   SACY.clear();
-  
+
+  //  G4cout<<"SAC Begin of event "<<NClus<<G4endl;
+  //Summing hits energy in each single crystal
   for (G4int h=0; h<nHits; h++) {
+    G4int Used=0;
     SACHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetEdep()>1.*MeV) {
-	//	ETotSAC[hit->GetSACNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
-	SACCh.push_back(hit->GetChannelId());
-	SACEtrack.push_back(hit->GetEdep());
-	SACTrackTime.push_back(hit->GetTime());
-	SACPType.push_back(hit->GetPType());
-	SACX.push_back(hit->GetX());
-	SACY.push_back(hit->GetY());
-	//	G4cout<<"SAChits Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<" CHID "<<hit->GetChannelId()<<G4endl;
-	G4cout<<" AddSac Hits "<<SACTracks<<" T "<<SACTrackTime.at(SACTracks)<<" E "<<SACEtrack[SACTracks]<<" "<<hit->GetPType()<<G4endl;
-	SACTracks++;
+      G4int ChPos = hit->GetChannelId();
+      G4int NCh   = ChPos/10*NRows+ChPos%NCols;
+      if(h==0) ClTime.push_back(hit->GetTime());    //prova ad usare il Tmin del cluster
+      // loop to create clusters 
+      for(int iCl=0; iCl<NClus; iCl++){
+	if(iCl>NMaxCl) break;
+	//	G4cout<<h<<" SAC Ic Begin of event "<<ClTime[iCl]<<" CH "<<NCh<<" icl "<<iCl<<" Nclus "<<NClus<<G4endl;
+	if(fabs(hit->GetTime()-ClTime[iCl])<1) {     //selects in time cluter and sum energies
+	  ETotSACCh[NCh][iCl] += hit->GetEnergy();                    //sum single crystals energies
+	  if(hit->GetTime()<ClTime[iCl]) ClTime[iCl]=hit->GetTime();  //Get the first time!
+	  Used=1;
+	  break;  //hit assigned exit cluster loop
+	}
+      }//end loop on cluster
+
+      if(Used==0){
+	//	G4cout<< "MA ce passi ?"<<G4endl;
+	//	G4cout<<h<<" SAC New cluster "<<ClTime[NClus]<<" hitTime "<<hit->GetTime()<<G4endl;
+	//after checking for all existing clusters create a new one
+	ETotSACCh[NCh][NClus] = hit->GetEnergy(); //sum single crystals energies
+	TTotSACCh[NCh][NClus] = hit->GetTime(); //Get the first time!
+	ClTime.push_back(hit->GetTime());
+	//intialize vector location for the new cluster
+	ETotSAC.push_back(0.);
+	TTotSAC.push_back(0.);
+	QTotSAC.push_back(0.);
+	XTotSAC.push_back(0.);
+	YTotSAC.push_back(0.);
+	NClus++;
       }
     }
-  }//end of loop
-  G4cout<<"********end of loop hits***************"<<G4endl;
+  } //end on loop on hits.
+  G4cout<<"End of event "<<NClus<<G4endl;
+
+  // compute cluster variables (non credo che la somma funzioni!!)
+  for(int cc=0;cc<NClus;cc++){
+    for(int ii=0;ii<NTotCh;ii++){
+      if(ETotSACCh[ii][cc]>0.2){
+	XTotSAC[cc]+=Sgeom->GetCrystalPosX(ii/NRows,ii%NCols)*ETotSACCh[ii][cc];
+	YTotSAC[cc]+=Sgeom->GetCrystalPosY(ii/NRows,ii%NCols)*ETotSACCh[ii][cc];
+	ETotSAC[cc]+=ETotSACCh[ii][cc];
+	QTotSAC[cc]+=GetSACCharge(ETotSACCh[ii][cc]);
+	//	TTotSAC[cc]=ClTime[cc];  // find the right 
+	TTotSAC[cc]+=TTotSACCh[ii][cc]*ETotSACCh[ii][cc];  // find the right 
+	NCry++;
+      }
+    }
+    //push back variables to TTree
+    SACEtrack.push_back(ETotSAC[cc]);
+    SACTrackTime.push_back(TTotSAC[cc]/ETotSAC[cc]);
+    //    SACTrackTime.push_back(TTotSAC[cc]);
+    SACX.push_back(XTotSAC[cc]/ETotSAC[cc]);
+    SACY.push_back(YTotSAC[cc]/ETotSAC[cc]);
+    SACQ.push_back(QTotSAC[cc]); 
+    SACTracks++;
+    G4cout<<"********end of loop hits***************"<<G4endl;
+    G4cout<<"QSAC "<<QTotSAC[cc]<<ETotSAC[cc]<<G4endl;
+    G4cout<<"********end of loop hits***************"<<G4endl;
+  }
 }
 
 void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y, G4int NCry)
 {
   //  static G4int SACTracks  = 0;
-  if(SACTracks < MaxTracks){
+  //  if(SACTracks < MaxTracks){
     SACEtrack.push_back(E);
     SACTrackTime.push_back(T);
     SACPType.push_back(Ptype);
     SACX.push_back(X);
     SACY.push_back(Y);
     SACCh.push_back(NCry);
+    SACQ.push_back(GetSACCharge(E)); 
     SACTracks++;
     //    G4cout<<SACTracks<<" E SAC step "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<" Ncry "<<NCry<<G4endl;
     //    G4cout<<"Step SAC "<<SACTracks<<" T "<<T<<" E "<<E<<" Type "<<Ptype<<G4endl;
-  }
+    //  }
 }
 
 void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y)
@@ -863,7 +923,7 @@ void EventAction::AddLAVHits(LAVHitsCollection* hcont)
 	LAVPType[LAVTracks]     = hit->GetPType();
 	LAVX[LAVTracks]         = hit->GetX();
 	LAVY[LAVTracks]         = hit->GetY();
-	G4cout<<"CC Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<G4endl;
+	//	G4cout<<"CC Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<G4endl;
 	//	G4cout<<"CC LastID "<<LastID<<" "<<LAVY[LAVTracks]<<G4endl;
 	LAVTracks++;
       }
@@ -885,6 +945,19 @@ G4double EventAction::GetCharge(G4double Energia)
   G4double Charge = rnd*Gain*Echarge/1E-12;  //in pC
   //  G4cout<<"Energia "<<Energia<<" rnd " << rnd <<" nph "<<NPh<<" Charge "<<Charge<<" pC"<<G4endl;
   return Charge;
+}
+
+G4double EventAction::GetSACCharge(G4double Energia)
+{
+  G4double LY      =     1.7;    //p.e per MeV (measured)
+  G4double Gain    =     3.2E5;  //typical gain tapered PMT
+  G4double Echarge = 1.6E-19;
+  //  G4double CollEff =     0.1; //geometrical factor due to photodetector area
+  //  G4double QE      =    0.25; //photodetector quantum efficiency
+  G4double NPh = Energia*LY;
+  G4double rnd = G4Poisson(NPh);
+  G4double SACCharge = rnd*Gain*Echarge/1E-12;  //in pC
+  return SACCharge;
 }
 
 G4double EventAction::GGMass() 

@@ -415,9 +415,9 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 // first approximation timing algorithm to be optimized  M. Raggi
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t ll;
-  Double_t dxdt[1001];
-  Double_t Temp[1001];
-  Double_t Temp1[1001];
+  static Double_t dxdt[1001];
+  static Double_t Temp[1001];
+  static Double_t Temp1[1001];
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");

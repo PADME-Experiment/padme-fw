@@ -326,7 +326,9 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 
   //Processing is over, let's analyze what's here, if foreseen
-  AnalyzeEvent(rawEv);
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
   
 }
 

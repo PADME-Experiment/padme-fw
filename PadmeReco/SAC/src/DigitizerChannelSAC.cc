@@ -26,7 +26,7 @@ void DigitizerChannelSAC::PrintConfig(){
 void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
 
   fGlobalMode = gMode;
-  H1 = new TH1D("h1","h1",990,0.,990.);
+  H1 = new TH1D("h1","h1",1000,0.,1000.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
 

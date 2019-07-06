@@ -77,6 +77,18 @@ private:
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
 
+  
+
+
+
+  Int_t fUsePulseProcessing ;
+  Int_t fPeakSearchWidth    ;
+  Double_t fZeroSuppression    ;
+  Double_t fChargeCut          ;
+  Double_t fDPParameterR1      ;
+  Double_t fDPParameterR2      ;
+  Double_t fDPParameterC       ;
+  
 
   /*
   //Veto variables 

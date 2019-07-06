@@ -26,7 +26,7 @@ void DigitizerChannelSAC::PrintConfig(){
 void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
 
   fGlobalMode = gMode;
-  H1 = new TH1D("h1","h1",990,0.,990.);
+  H1 = new TH1D("h1","h1",1000,0.,1000.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
 
@@ -191,21 +191,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t fTrigMask=GetTrigMask();
     
-    // ROOT 6 version
-    //    Double_t *xpeaks = s->GetPositionX();
-    //    Double_t *ypeaks = s->GetPositionY();
-    // ROOT 5 version
-    //    Float_t *xpeaks = s->GetPositionX();
-    //    Float_t *ypeaks = s->GetPositionY();
-    //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-// ROOT 6 version
-//      Double_t xp   = xpeaks[ll];
-//      Double_t yp   = ypeaks[ll];
-// ROOT 5 version
-//      Float_t xp   = xpeaks[ll];
-//      Float_t yp   = ypeaks[ll];
       Double_t xp   =s->GetPositionX()[ll];
       Double_t yp   =s->GetPositionY()[ll];
       fTime = xp*fTimeBin; //convert time in ns get it from data

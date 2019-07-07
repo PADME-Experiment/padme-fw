@@ -14,7 +14,7 @@ typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 class DigitizerChannelReco : public ChannelVReco {
 public:
   DigitizerChannelReco(){;};
-  ~DigitizerChannelReco(){;};
+  virtual ~DigitizerChannelReco();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);

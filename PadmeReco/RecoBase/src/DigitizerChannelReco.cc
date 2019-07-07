@@ -17,11 +17,15 @@ void DigitizerChannelReco::PrintConfig(){
 }
 
 
+DigitizerChannelReco::~DigitizerChannelReco(){;}
+
+
 void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
 
   fGlobalMode = gMode;
-
-  H1 = new TH1D("h1","h1",1000,0.,1000.);
+  std::string name;
+  name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
+  H1 = new TH1D(name.c_str(),name.c_str(),1000,0.,1000.);
   //hListCal    = new TList();  // needs to be simplified
   //hPedCalo = new TH1D*[100];
 
@@ -284,6 +288,8 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
     AbsSamRec[s] = 0;
   }
 
+  // H1->Reset();
+
   if (fUsePulseProcessing) {
     DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,iMax-1 ,fTimeBin*1e-9);
     H1->SetContent(AbsSamRecDP);
@@ -326,7 +332,6 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
       Hit->SetEnergy(fAmpli);
       hitArray.push_back(Hit);
     }
-    H1->Reset();
     //    delete s;
   }
 

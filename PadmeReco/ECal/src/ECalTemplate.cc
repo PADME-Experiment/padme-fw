@@ -10,9 +10,9 @@
 ECalTemplate* ECalTemplate::fInstance = 0;
 
 static Double_t fitf(Double_t * x, Double_t * par) {
-  TSpline3 *  templateSpline =  ECalTemplate::GetInstance()->GetTemplateSpline();
+   TSpline3 *TemplateSpline =  ECalTemplate::GetInstance()->GetTemplateSpline();
   double arg = (x[0] - par[1])/par[3];
-  return par[0]*templateSpline->Eval(arg)+par[2];
+  return par[0]*TemplateSpline->Eval(arg)+par[2];
 }
 
 ECalTemplate* ECalTemplate::GetInstance()
@@ -38,6 +38,7 @@ ECalTemplate::ECalTemplate()
   std::cout<<"Creating template class "<<std::endl;
 }
 ECalTemplate::~ECalTemplate(){
+  if(hListTemplate) {hListTemplate->Delete();}
 }
 
 void ECalTemplate::WriteHist()
@@ -53,14 +54,13 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
 {
   fileOut->cd();
   //  hListTemplate->Print();
-  TH1D * HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
-  TH1D * hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
-  TH1D * hTMax     = (TH1D*) hListTemplate->FindObject("hTimeMax");
+  HistoTemp = (TH1D*) hListTemplate->FindObject("hSample");
+  hTemplate = (TH1D*) hListTemplate->FindObject("hprof");
+  hTMax     = (TH1D*) hListTemplate->FindObject("hTimeMax");
   hTMax->Fill(Time);
 
-  double templateVec[1000];
-  Int_t PeakPos = 400;
-  Int_t RiseMargin = 25;
+  static Int_t PeakPos    = 400;
+  static Int_t RiseMargin = 25;
 
   double Baseline = TMath::Mean(200,&fSample[0]);
   // double Baseline = TMath::Mean(40,&fSample[0]);
@@ -68,16 +68,16 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   Int_t shift = Time-PeakPos;
   for(Int_t kk=0;kk<1000;kk++){ 
     if (kk+shift > 0 && kk+shift < 1000) {
-      //      if (kk < Time-RiseMargin) templateVec[kk] = Baseline;
-      if (kk < Time-RiseMargin) templateVec[kk] = fSample[kk];
-      else templateVec[kk] = fSample[kk+shift];
+      //      if (kk < Time-RiseMargin) fTemplateVec[kk] = Baseline;
+      if (kk < Time-RiseMargin) fTemplateVec[kk] = fSample[kk];
+      else fTemplateVec[kk] = fSample[kk+shift];
     }else{
-      templateVec[kk] = Baseline;
+      fTemplateVec[kk] = Baseline;
       //      std::cout<<"aho "<<fSample[1000-((Int_t)Time-PeakPos)]<<std::endl;
 
       if(shift>0){ 
 	double LastAvg  = TMath::Mean(200,&fSample[0]);
-	templateVec[kk] =  fSample[1000-shift];  // prone to noise fluctuation better to use avg and scale with e-^(t/tau)
+	fTemplateVec[kk] =  fSample[1000-shift];  // prone to noise fluctuation better to use avg and scale with e-^(t/tau)
       }
     }
   }
@@ -86,10 +86,10 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   hVSig.push_back(h);
   hVTemp.push_back(htmp);
   for (int j = 0; j < 1000; j++) {
-    hVTemp.at(NHist)->SetBinContent(j+1,templateVec[j]);
+    hVTemp.at(NHist)->SetBinContent(j+1,fTemplateVec[j]);
     //    hVSig.at(NHist)->SetBinContent(j+1,templateVec[j]);
     hVSig.at(NHist)->SetBinContent(j+1,fSample[j]);
-    hTemplate->Fill(j+1,templateVec[j]); //sistemare
+    hTemplate->Fill(j+1,fTemplateVec[j]); //sistemare
     // std::cout << "j: " << j << ", template: " << templateVec[j] << std::endl;
   }  
   fileOut->cd();
@@ -98,6 +98,7 @@ void ECalTemplate::PrepareTemplate(Short_t * fSample, Double_t Time)
   NHist++;
 }
 
+// reads the template function
 void ECalTemplate::ReadTemplate()
 {
   fileOut = new TFile("ECalTemplate.root","update");
@@ -109,15 +110,19 @@ void ECalTemplate::ReadTemplate()
   }
   std::cout<<"Reading template from File ECalTemplate.root"<<std::endl;
   TProfile* hECalTempl = (TProfile *) fileOut->Get("hprof");
+  if(hECalTempl==0){ 
+    std::cout<<"ERROR: Missing profile function"<<hECalTempl<<std::endl;
+    std::cout<<"go to the config file and run prepate template mode"<<std::endl;
+    exit(-1);
+  }
   TH1D* hTest = (TH1D *) fileOut->Get("hSample");
   //  hECalTempl->Draw();
-  Double_t templateVec[1000];
   Int_t Nent = hECalTempl->GetEntries();
   for(Int_t kk=0;kk<1000;kk++){ 
-    templateVec[kk] = hECalTempl->GetBinContent(kk);
+    fTemplateVec[kk] = hECalTempl->GetBinContent(kk);
     //   std::cout<<" "<<templateVec[kk]<<std::endl;
   }
-  fTemplateSpline = new TSpline3("templateSpline", -1, 1000, templateVec, 1000);
+  fTemplateSpline = new TSpline3("templateSpline", -1, 1000, fTemplateVec, 1000);
   fileOut->cd();
   std::cout<<"Writing template "<<std::endl;
   fTemplateSpline->Write();
@@ -127,19 +132,3 @@ void ECalTemplate::BuildFitFunction(){
   fECalFitFunction = new TF1("fitf",fitf,20,1000,4);
   fECalFitFunction -> SetParameters(1,0,0,1);
 }
-
-//void ECalTemplate::GetFitFunction()
-//  hSample->Fit("fitf", "R");
-//
-//  Double_t Ampl=fitfunction->GetParameter(0);
-//  Double_t TOff=fitfunction->GetParameter(1);
-//  Double_t VOff=fitfunction->GetParameter(2);
-//  Double_t Stre=fitfunction->GetParameter(3);
-//  
-//  hAmpl->Fill(fitfunction->GetParameter(0));
-//  hOffset->Fill(fitfunction->GetParameter(1));
-//  hBaseline->Fill(fitfunction->GetParameter(2));
-//  hStretch->Fill(fitfunction->GetParameter(3));
-//
-//  fileOut->Close();
-//}

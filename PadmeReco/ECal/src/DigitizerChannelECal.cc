@@ -736,6 +736,9 @@ DigitizerChannelECal::~DigitizerChannelECal(){
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
     SaveDebugHistos();
   }
+
+//  if(hListTmp) {hListTmp->Delete();}
+//  if(hListCal) {hListCal->Delete();}
 }
 
 void DigitizerChannelECal::SaveBDPed(Int_t BID){

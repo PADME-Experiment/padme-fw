@@ -36,6 +36,8 @@ public:
   TSpline3 * GetTemplateSpline(){return fTemplateSpline;};
   TF1 * GetECalFitFunction(){return fECalFitFunction;};
 
+  TSpline3 * fTemplateSpline;
+
 private :
   std::vector <TH1D*> hVSig;
   std::vector <TH1D*> hVTemp;
@@ -43,13 +45,17 @@ private :
   TTree* ECal;
   TList* hListTemplate;// single board related histograms 
   TFile * fileOut;
+  
+  TH1D * hTMax; 
+  TH1D * HistoTemp;
+  TH1D * hTemplate;
+  //  TH1D * hTMax;    
 
   Double_t fVMax;
-  TSpline3 * fTemplateSpline;
   TH1D * hSample;
   TProfile* hprof;
   Int_t NHist=0;
-  TH1D * hTMax; 
+  double fTemplateVec[1000];
   TF1 * fECalFitFunction;
 
   Short_t * fSample;

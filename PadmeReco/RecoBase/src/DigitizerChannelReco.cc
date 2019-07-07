@@ -25,6 +25,7 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
   fGlobalMode = gMode;
   std::string name;
   name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
+  name += "DIGI";
   H1 = new TH1D(name.c_str(),name.c_str(),1000,0.,1000.);
   //hListCal    = new TList();  // needs to be simplified
   //hPedCalo = new TH1D*[100];

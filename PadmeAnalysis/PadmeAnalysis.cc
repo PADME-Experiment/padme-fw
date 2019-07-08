@@ -378,6 +378,10 @@ int main(Int_t argc, char **argv)
        hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
 
        //
+       evSel ->InitSelection(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam, fECalRecoEvent, fECalRecoCl,fPVetoRecoEvent, fPVetoRecoCl,fEVetoRecoEvent, fEVetoRecoCl,fHEPVetoRecoEvent, fHEPVetoRecoCl,fSACRecoEvent, fSACRecoCl );
+      
+       evSel->ProcessSelection();
+  
        targetAn    ->Process();
        ecalAn      ->Process();
        sacAn       ->Process();

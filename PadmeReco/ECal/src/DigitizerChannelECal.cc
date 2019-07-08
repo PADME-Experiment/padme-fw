@@ -226,9 +226,9 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     fAvg200  = TMath::Mean(iStart,&fSamples[0]);
     fRMS200  = TMath::RMS(iStart,&fSamples[0]);
     Zsup  = fRMS1000;  
+    fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
     for(Short_t s=0;s<end;s++){
       AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
-      fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
       if(s>iStart && s<1000) {
 	Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
       }
@@ -415,9 +415,9 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 // first approximation timing algorithm to be optimized  M. Raggi
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t ll;
-  Double_t dxdt[1001];
-  Double_t Temp[1001];
-  Double_t Temp1[1001];
+  static Double_t dxdt[1001];
+  static Double_t Temp[1001];
+  static Double_t Temp1[1001];
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");

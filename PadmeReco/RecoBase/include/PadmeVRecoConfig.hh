@@ -24,6 +24,7 @@ public:
   
   int GetParOrDefault(std::string,std::string,int);
   double GetParOrDefault(std::string,std::string,double);
+  std::string GetParOrDefault(std::string,std::string,std::string);
 
   void ConfigADCReadout();
 

@@ -17,11 +17,16 @@ void DigitizerChannelReco::PrintConfig(){
 }
 
 
+DigitizerChannelReco::~DigitizerChannelReco(){;}
+
+
 void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
 
   fGlobalMode = gMode;
-
-  H1 = new TH1D("h1","h1",990,0.,990.);
+  std::string name;
+  name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
+  name += "DIGI";
+  H1 = new TH1D(name.c_str(),name.c_str(),1000,0.,1000.);
   //hListCal    = new TList();  // needs to be simplified
   //hPedCalo = new TH1D*[100];
 
@@ -48,8 +53,19 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0); //if MultiHit=1, Peaks finding with TSpectrum
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
-  
-  
+
+
+ fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
+ fPeakSearchWidth     = cfg->GetParOrDefault("RECO","PeakSearchWidth",6);
+ fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
+ fChargeCut           = cfg->GetParOrDefault("RECO","ChargeCut",0.01);
+ fDPParameterR1       = cfg->GetParOrDefault("RECO","fDPParameterR1",650.);
+ fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
+ fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.030e-9);
+
+
+
+
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   PrintConfig();
   if (fMultihit==0)
@@ -224,70 +240,100 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
   return Time;
 }
 
+
+void DigitizerChannelReco::DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin) {
+
+  // Double_t R1=1300;//ohms
+  // Double_t R2=100.; //ohms
+  // Double_t C=0.015e-9; //nF
+
+  Double_t R1=fDPParameterR1;//ohms
+  Double_t R2=fDPParameterR2; //ohms
+  Double_t C=fDPParameterC; //nF
+
+  
+  //Calculating the output pulse:
+  Double_t integr=0;
+  
+  static Double_t ic[1024];
+
+  Double_t bin_width=timebin;
+
+  integr=0;
+  ic[0]= uin[0]/R2;
+
+  for(int i=1;i<NPOINTS;i++) {
+    integr+=ic[i-1]*bin_width;
+    ic[i]= uin[i]/R2 - ((R1+R2)/(C*R1*R2))* integr;
+    uout[i] = uin[i] - integr/(C);
+  }  
+}
+
 Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax, UShort_t ped) {
+  Int_t npeaks = 10;
+  static TSpectrum SpectrumProcessor(20);// = new TSpectrum(20);
   double Time   = 0.;
   fCharge = 0.;
-  Double_t pCMeV= 3.2E5*2*1.67E-7; 
-  Int_t NIntSamp= fSignalWidth/fTimeBin; 
-  
+
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //Int_t npeaks =25;
-  Int_t npeaks =50;
-  Double_t AbsSamRec[1024];
-  
+  static Double_t AbsSamRec[1024];
+  static Double_t AbsSamRecDP[1024];
+
 
   for(UShort_t s=0;s<iMax;s++){
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+ped)/4096*1000.; //in mV positivo
-    //std::cout<< s  <<" V "<< AbsSamRec[s]  <<std::endl;
+    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+ped)/4096.*1000.; //in mV positivo
+    //std::cout<< s << "     "  << fSamples[s]  <<" V "<< AbsSamRec[s]  <<std::endl;
   }
+  for(UShort_t s=iMax;s<1024;s++){
+    AbsSamRec[s] = 0;
+  }
+
+  // H1->Reset();
+
+  if (fUsePulseProcessing) {
+    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,iMax-1 ,fTimeBin*1e-9);
+    H1->SetContent(AbsSamRecDP);
+  } else {
+    H1->SetContent(AbsSamRec);
+  }
+
+  // for(UShort_t s = 0;s<256;s++) {
+  //   AbsSamRecRebin[s]=0;
+  //   for(int i = 0;i<4;i++) {
+  //     AbsSamRecRebin[s]+=AbsSamRecDP[4*s + i];
+  //   }
+  // }
+
   
-  H1->SetContent(AbsSamRec);
-  
-  
+  //  H1->Rebin(4);
+
   Double_t VMax = H1->GetMaximum();
   Double_t VMin = H1->GetMinimum();
-  //std::cout<<"Get Maximum     "<<VMax<<"   Get Minimum    "<<VMin<<std::endl;
-  //if (VMax>800) fEventsSaturated++;
+  //   std::cout<<"Get Maximum     "<<VMax<<"   Get Minimum    "<<VMin<<std::endl;
   
   //if (VMax>fAmpThresholdHigh) std::cout<<VMax<<" VMax "<<std::endl;
-  
-   if(VMax>fAmpThresholdHigh){
-    TSpectrum *s = new TSpectrum(2*npeaks);  //npeaks max number of peaks
-    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
-    //Int_t nfound = s->Search(H1,10,"",peak_thr);     
-    Int_t nfound = s->Search(H1,10,"",peak_thr);     
-    //Float_t *xpeaks = s->GetPositionX();
-    //Float_t *ypeaks = s->GetPositionY();
-    //std::cout<<"Threshold    file Config     "<<fAmpThresholdLow<<"  Peak in Search with TSpectrum   "<<peak_thr<<"Vmax    "<<VMax<<std::endl;
-    //std::cout<<"found Npeaks "<<nfound<<" *xpeaks    "<<*xpeaks<<" *ypeaks    "<<*ypeaks<<std::endl;
+
+  //  fMinAmplitude
+  if(VMax>fAmpThresholdHigh){
+    TSpectrum *s = &SpectrumProcessor;// new TSpectrum(2*npeaks);  //npeaks max number of peaks
+    Double_t peak_thr  = fAmpThresholdLow /VMax; //minimum peak height allowed. 
+    Int_t nfound = s->Search(H1,fPeakSearchWidth,"",peak_thr);     
+
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-      //Float_t xp   = xpeaks[ll];
       Double_t xp = (s->GetPositionX())[ll];
-      //Float_t yp   = ypeaks[ll];
       Double_t yp = (s->GetPositionY())[ll];
       fAmpli=yp;
       Time=xp*fTimeBin;
       Int_t bin    = H1->GetXaxis()->FindBin(xp);
-      if(bin<1000){
-	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
-	  if(H1->GetBinContent(ii)>0.005) fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
-	}
-	//std::cout<<nfound<<"number of peak "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
-        //std::cout<<nfound<<"number of peak "<<ll<<" fAmplitude     "<<fAmpli<<"   x peak"<<xp<<std::endl;
-      }
-      //fEnergy = fCharge/pCMeV;	  
+
       TRecoVHit *Hit = new TRecoVHit();  
       Hit->SetTime(Time);
-      //      Hit->SetEnergy(fCharge);
-      //Hit->SetEnergy(fCharge);     
       Hit->SetEnergy(fAmpli);
       hitArray.push_back(Hit);
-      //if (fAmpli>800) fPeaksSaturated++; 
-      //if(fPeaksSaturated>1 && fEventsSaturated==0)fEventsSaturated++; 
-      //std::cout<<xp<<" "<<xp<<" yp "<<yp<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }
-    H1->Reset();
+    //    delete s;
   }
 
   Time = Time*fTimeBin;
@@ -296,12 +342,12 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
 }
 
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
-  Double_t IsZeroSup = ZSupHit(5.,1000.);
+  //  Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
-
-  if (fCharge < .01) return;
-  Double_t time=CalcTime(fIMax);
-
+  //if (fCharge < .01) return;
+  // come back to a Veto setup
+  if (fCharge < fChargeCut) return;
+  double time = CalcTime(fIMax);
   // if (fTime < 20.) return;
   
   TRecoVHit *Hit = new TRecoVHit();
@@ -328,6 +374,11 @@ void DigitizerChannelReco::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 
 
 void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
+
+  if(fZeroSuppression > 1 ) {
+    if (ZSupHit(fZeroSuppression,1000.) < 0) return; 
+  }
+
   /*
   UShort_t nsmooth = 20; //real  = 2*nsmooth + 1
   Short_t samples[1024];
@@ -363,9 +414,9 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
     ReconstructMultiHit(hitArray);
   } else {
     CalcMaximum();
-    //std::cout<<" fIMax =  "<<fIMax<<std::endl;
+    //    std::cout<<" fIMax =  "<<fIMax << " Amplitude   " << fPed - fMax <<std::endl;
     CalcPedestal();
-    if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
+    //    if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
     ReconstructSingleHit(hitArray);
   }
   // std::cout << "Maximum: " << fMax << "  at position: "<< fIMax << std::endl;

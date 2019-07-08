@@ -58,9 +58,13 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   if(fConfigParser) {delete fConfigParser; fConfigParser=0;};
   if(fConfig) {delete fConfig; fConfig=0;}; 
   if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
-  //if(fClusterization) {delete fClusterization; fClusterization = 0;};
   if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
   if(fTriggerProcessor) {delete fTriggerProcessor; fTriggerProcessor = 0;};
+  if(fGeometry) {delete fGeometry; fGeometry = 0;};
+  if(fClusterization) {delete fClusterization; fClusterization = 0;};
+  ClearHits();
+  ClearClusters();
+ 
 }
 
 void PadmeVReconstruction::Exception(TString Message){
@@ -326,7 +330,9 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 
   //Processing is over, let's analyze what's here, if foreseen
-  AnalyzeEvent(rawEv);
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
   
 }
 

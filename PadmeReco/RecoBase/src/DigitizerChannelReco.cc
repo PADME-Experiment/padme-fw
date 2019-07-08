@@ -348,7 +348,8 @@ void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // come back to a Veto setup
   if (fCharge < fChargeCut) return;
   double time = CalcTime(fIMax);
-
+  // if (fTime < 20.) return;
+  
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(time);
   // M. Raggi going to charge
@@ -376,6 +377,37 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
 
   if(fZeroSuppression > 1 ) {
     if (ZSupHit(fZeroSuppression,1000.) < 0) return; 
+  }
+
+  /*
+  UShort_t nsmooth = 20; //real  = 2*nsmooth + 1
+  Short_t samples[1024];
+  
+  for(UShort_t i = nsmooth; i<fNSamples-nsmooth;i++){
+    int sum = 0;
+    for(UShort_t j = i - nsmooth; j<= i + nsmooth; j++) {
+      sum+= fSamples[j];
+    }    
+    samples[i] = sum /(2*nsmooth + 1);
+  }
+
+
+  int ndiff = 9;
+  
+  for(UShort_t i = 0;i<=ndiff;i++) {
+    fSamples[i] = 0;
+    fSamples[fNSamples-1-i]=0; 
+  }
+	
+  for(UShort_t i = ndiff; i<fNSamples-ndiff;i++){
+    fSamples[i] =  samples[i] - samples[i-ndiff];
+  }
+
+
+  */
+  
+  if(fUseAbsSignals) {
+    SetAbsSignals();
   }
 
   if(fMultihit) {

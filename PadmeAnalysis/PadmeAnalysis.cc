@@ -33,6 +33,7 @@
 #include "PVetoAnalysis.hh"
 #include "EVetoAnalysis.hh"
 #include "HEPVetoAnalysis.hh"
+#include "EventSelection.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -322,7 +323,8 @@ int main(Int_t argc, char **argv)
    algoList.push_back(hepvetoAn);
 
    
-   
+   EventSelection*         evSel  = new EventSelection(fProcessingMode, fVerbose);
+   evSel->InitHistosSelection();
    
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   

@@ -26,7 +26,7 @@ void DigitizerChannelSAC::PrintConfig(){
 void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
 
   fGlobalMode = gMode;
-  H1 = new TH1D("h1","h1",990,0.,990.);
+  H1 = new TH1D("h1","h1",1000,0.,1000.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
 
@@ -151,15 +151,17 @@ Double_t DigitizerChannelSAC::CalcTime(UShort_t iMax, UShort_t fCh) {
 Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax) {
   fTime   = 0.;
   fCharge = 0.;
+  static TSpectrum SpectrumProcessor(50);// = new TSpectrum(20);
+
   Int_t NImage=0;
-  Double_t pCMeV= 3.2E5*2*1.67E-7; //Nominal Gain at 1500 x npe/MeV x echarge (in pC) needs tuning by calibration
+  static const Double_t pCMeV= 3.2E5*2*1.67E-7; //Nominal Gain at 1500 x npe/MeV x echarge (in pC) needs tuning by calibration
   //  Double_t pCMeV= 1.; //Nominal Gain at 1500 x npe/MeV x echarge (in pC)
-  Int_t NIntSamp= fSignalWidth/fTimeBin; 
+  static Int_t NIntSamp= fSignalWidth/fTimeBin; 
       
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //M. Raggi 19/10/2018
-  Int_t npeaks =50;
-  Double_t AbsSamRec[1024];
+  static const Int_t npeaks =50;
+  static Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10*5 +fCh%5;
@@ -186,7 +188,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //  std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
   if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
-    TSpectrum *s = new TSpectrum(npeaks);
+    TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
     Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t fTrigMask=GetTrigMask();

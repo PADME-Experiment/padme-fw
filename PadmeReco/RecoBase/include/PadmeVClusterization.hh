@@ -10,7 +10,7 @@ class TRecoVCluster;
 class PadmeVClusterization {
 public:
   PadmeVClusterization(){;};
-  ~PadmeVClusterization(){;};
+  virtual ~PadmeVClusterization(){;};
 
   virtual void Init(PadmeVRecoConfig *cfg);
   virtual void PrintConfig();

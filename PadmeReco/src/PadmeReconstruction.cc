@@ -58,6 +58,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalRecoEvent    = 0;
   fSACRecoEvent     = 0;
   fTPixRecoEvent    = 0;
+  fGlobalRecoConfigOptions=NULL;
 
   //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
@@ -67,7 +68,6 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   InitLibraries();
   Init(NEvt,Seed);
 
-  fGlobalRecoConfigOptions=NULL;
 
 }
 void PadmeReconstruction::InitRunningModeFlags()
@@ -93,6 +93,7 @@ PadmeReconstruction::~PadmeReconstruction()
   for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
     delete fRecoLibrary[iLib];
   }
+  if(fGlobalRecoConfigOptions) delete fGlobalRecoConfigOptions;
 }
 
 void PadmeReconstruction::InitLibraries()

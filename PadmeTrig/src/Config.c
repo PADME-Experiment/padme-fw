@@ -49,18 +49,17 @@ int reset_config()
 
   Config->busy_mask = 0x10; // Only CPU busy active
 
-  // Leave timepix shutter delay to its firmware default value (0x02 = 25ns)
-  Config->timepix_shutter_delay = 0x02;
+  // Set timepix shutter delay to 0 (no need for it as the BTF trigger is tuned for the timepix)
+  Config->timepix_shutter_delay = 0x00;
 
-  // Change timepix shutter width to its maximum value (0xff = 3.2us)
-  //Config->timepix_shutter_width = 0x16; // This is the firmware default
-  Config->timepix_shutter_width = 0xff;
+  // Leave timepix shutter width to its default value (0x64 = 10us)
+  Config->timepix_shutter_width = 0x64;
 
   // Leave correlated trigger delay to its firmware default values (500us)
   Config->correlated_trigger_delay = 0x01f4;
 
   // Set all triggers downscaling to 1 (no downscaling)
-  Config->trig0_scale_global   = 1;
+  //Config->trig0_scale_global   = 1;
   Config->trig1_scale_global   = 1;
   Config->trig2_scale_global   = 1;
   Config->trig3_scale_global   = 1;
@@ -267,6 +266,13 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+      } else if ( strcmp(param,"trigger0_delay")==0 ) {
+	if ( sscanf(value,"%hx",&su) ) {
+	  Config->trigger0_delay = (su & 0x00ff);
+	  printf("Parameter %s set to 0x%02x (%u)\n",param,Config->trigger0_delay,Config->trigger0_delay);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+	}
       } else if ( strcmp(param,"correlated_trigger_delay")==0 ) {
 	if ( sscanf(value,"%hx",&su) ) {
 	  Config->correlated_trigger_delay = su;
@@ -274,6 +280,7 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+/*
       } else if ( strcmp(param,"trig0_scale_global")==0 ) {
 	if ( sscanf(value,"%hu",&su) ) {
 	  Config->trig0_scale_global = su;
@@ -281,6 +288,7 @@ int read_config(char *cfgfile)
 	} else {
 	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
+*/
       } else if ( strcmp(param,"trig0_scale_autopass")==0 ) {
 	if ( sscanf(value,"%hu",&su) ) {
 	  Config->trig0_scale_autopass = su;
@@ -501,12 +509,14 @@ int print_config(){
   printf("trigger_mask\t\t0x%02x\t\ttrigger mask (8 bits)\n",Config->trigger_mask);
   printf("busy_mask\t\t0x%02x\t\tbusy mask (5 bits)\n",Config->busy_mask);
 
-  printf("timepix_shutter_delay\t0x%02x (%u)\tDelay in clock counts from BTF trigger to open timepix shutter\n",Config->timepix_shutter_delay,Config->timepix_shutter_delay);
-  printf("timepix_shutter_width\t0x%02x (%u)\tWidth in clock counts of timepix shutter\n",Config->timepix_shutter_width,Config->timepix_shutter_width);
+  printf("timepix_shutter_delay\t0x%02x (%u)\tDelay in clock counts from BTF trigger to start of timepix readout procedure\n",Config->timepix_shutter_delay,Config->timepix_shutter_delay);
+  printf("timepix_shutter_width\t0x%02x (%u)\tWidth in 100ns counts of timepix shutter\n",Config->timepix_shutter_width,Config->timepix_shutter_width);
+
+  printf("trigger0_delay\t\t0x%02x (%u)\tTrigger 0 (BTF) distribution delay in clock counts\n",Config->trigger0_delay,Config->trigger0_delay);
 
   printf("correlated_trigger_delay\t0x%04x (%u)\t\tDelay in us from BTF trigger for correlated trigger\n",Config->correlated_trigger_delay,Config->correlated_trigger_delay);
 
-  printf("trig0_scale_global\t%u\t\tTrigger 0 downscale factor\n",Config->trig0_scale_global);
+  //printf("trig0_scale_global\t%u\t\tTrigger 0 downscale factor\n",Config->trig0_scale_global);
   printf("trig1_scale_global\t%u\t\tTrigger 1 downscale factor\n",Config->trig1_scale_global);
   printf("trig2_scale_global\t%u\t\tTrigger 2 downscale factor\n",Config->trig2_scale_global);
   printf("trig3_scale_global\t%u\t\tTrigger 3 downscale factor\n",Config->trig3_scale_global);

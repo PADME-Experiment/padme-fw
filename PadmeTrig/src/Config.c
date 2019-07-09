@@ -55,6 +55,9 @@ int reset_config()
   // Leave timepix shutter width to its default value (0x64 = 10us)
   Config->timepix_shutter_width = 0x64;
 
+  // Leave delay to trigger 0 (BTF) to its default value (0x7E = 126 = 1.575us)
+  Config->trigger0_delay = 0x7E;
+
   // Leave correlated trigger delay to its firmware default values (500us)
   Config->correlated_trigger_delay = 0x01f4;
 

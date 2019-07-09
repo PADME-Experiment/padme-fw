@@ -57,7 +57,7 @@ ECalDigitizer::ECalDigitizer(G4String name)
 ECalDigitizer::~ECalDigitizer()
 {}
 
-void ECalDigitizer::Digitize()
+void ECalDigitizer::DigitizeSingleDigi()
 {
   ECalDigiCollection* eCalDigiCollection = new ECalDigiCollection("ECalDigitizer","ECalDigiCollection");
 
@@ -151,5 +151,129 @@ void ECalDigitizer::ComputeNpe(ECalHit* hit,G4double* npe,G4double* time)
   // Get the average number of photoelectrons produced by photocathode
   // for a hit of energy e at position iz, spread it with Poisson
   *npe = G4Poisson(e*fCollectionMap[iz]*fEHtoNPEConversion);
+
+}
+
+
+void ECalDigitizer::Digitize()
+{
+  const double ECalDigiTimeWindow = 5.;
+
+  ECalDigiCollection* ECaldigiCollection = new ECalDigiCollection("ECalDigitizer","ECalDigiCollection");
+
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  // Get access to hit collection for ECal
+  G4int ECalHCID = theDM->GetHitsCollectionID("ECalCollection");
+  if (ECalHCID<0) return;
+  ECalHitsCollection* ECalHC = 0;
+  ECalHC = (ECalHitsCollection*)(theDM->GetHitsCollection(ECalHCID));
+  
+  std::vector <ECalDigi* >  digis[10000];
+  for(int ich = 0;ich < 10000;ich ++) {
+    digis[ich].clear();
+  }
+  
+  // If hits are present, digitize them
+  if (ECalHC) {
+
+    // Zero digi vectors
+    G4double dEnergy[10000];
+    G4double dTime[10000];
+    for (G4int i=0;i<10000;i++) {
+      dEnergy[i] = 0.;
+      dTime[i] = 1.E23; // Infinite ;)
+    }
+    // Loop over all hits
+    G4int n_hit = ECalHC->entries();
+    for (G4int i=0;i<n_hit;i++) {
+
+      // Get hit information
+      G4int    hChannel = (*ECalHC)[i]->GetChannelId();
+      //std::cout<<"chID ECALDIGITIZE " << hChannel << std::endl;
+      G4double hTime    = (*ECalHC)[i]->GetTime();
+      G4double hEnergy  = (*ECalHC)[i]->GetEnergy();
+      G4ThreeVector hLocPos = (*ECalHC)[i]->GetLocalPosition();
+      // Add information to digi (just an example)
+      dEnergy[hChannel] += hEnergy;
+      if (hTime < dTime[hChannel]) dTime[hChannel] = hTime;
+      
+      // Check if the hit is related to some of the present digis
+      
+      int newdigi = 1;
+      for(unsigned int idigi = 0;idigi<digis[hChannel].size();idigi++) {
+	if(fabs(digis[hChannel][idigi]->GetTime()/digis[hChannel][idigi]->GetEnergy()  - hTime ) < ECalDigiTimeWindow ) {
+	  //Energy deposit in the same channel close to previous energy deposit
+	  digis[hChannel][idigi]->SetTime(
+					  //(hEnergy*hTime + digis[hChannel][idigi]->GetTime()*digis[hChannel][idigi]->GetEnergy())
+					  //					  / ( hEnergy + digis[hChannel][idigi]->GetEnergy())  
+					  
+					  hEnergy*hTime + digis[hChannel][idigi]->GetTime()
+					  );
+	  digis[hChannel][idigi]->SetTimeSpread(digis[hChannel][idigi]->GetTimeSpread() +  hTime*hEnergy*hTime);
+	  
+	  
+	  digis[hChannel][idigi]->SetLocalPosition(
+						   //(digis[hChannel][idigi]->GetLocalPosition()*digis[hChannel][idigi]->GetEnergy() + hLocPos*hEnergy)
+						  ///( hEnergy + digis[hChannel][idigi]->GetEnergy())
+						   hLocPos*hEnergy + digis[hChannel][idigi]->GetLocalPosition()
+						  );
+	  
+	  
+	  digis[hChannel][idigi]->SetEnergy(digis[hChannel][idigi]->GetEnergy() + hEnergy );
+	  digis[hChannel][idigi]->SetNHits(digis[hChannel][idigi]->GetNHits()+1);
+	  newdigi=0;	  
+	  break;
+	}
+      }
+      if(newdigi) {
+	ECalDigi* digi = new ECalDigi();
+	digi->SetChannelId( hChannel );
+	digi->SetTime(hTime*hEnergy);
+	digi->SetTimeSpread( hTime*hTime*hEnergy  );
+	digi->SetEnergy(hEnergy);
+	digi->SetPosition(G4ThreeVector(0.,0.,0.));
+	digi->SetLocalPosition(hLocPos*hEnergy);
+	digi->SetNHits(1);
+	digis[hChannel].push_back(digi);
+      }           
+    }
+    
+    for(unsigned int ich=0;ich<10000;ich++) {
+      for(unsigned int idigi=0;idigi < digis[ich].size();idigi++) {
+	//Compute the proper quantities of the digi
+	digis[ich][idigi]->SetTime(digis[ich][idigi]->GetTime() / digis[ich][idigi]->GetEnergy());
+	digis[ich][idigi]->SetLocalPosition(digis[ich][idigi]->GetLocalPosition()/digis[ich][idigi]->GetEnergy());
+	if(digis[ich][idigi]->GetNHits() > 1) {
+	  digis[ich][idigi]->SetTimeSpread( std::sqrt(	digis[ich][idigi]->GetTimeSpread()/digis[ich][idigi]->GetEnergy() -  digis[ich][idigi]->GetTime()* digis[ich][idigi]->GetTime()      ) );
+	} else {
+	  digis[ich][idigi]->SetTimeSpread(0);
+	}
+	ECaldigiCollection->insert( digis[ich][idigi] );
+	//digis[ich][idigi]->Print();	  
+      }
+    }
+    
+    
+
+
+
+  //   // Create digis if energy is not zero
+  //   for (G4int i=0;i<100;i++) {
+  //     if (dEnergy[i] > 0.) {
+  // 	ECalDigi* digi = new ECalDigi();
+  // 	digi->SetChannelId(i);
+  // 	digi->SetTime(dTime[i]);
+  // 	digi->SetTimeSpread(0.);
+  // 	digi->SetEnergy(dEnergy[i]);
+  // 	digi->SetPosition(G4ThreeVector(0.,0.,0.));
+  // 	digi->SetLocalPosition(G4ThreeVector(0.,0.,0.));
+  // 	ECaldigiCollection->insert(digi);
+  // 	digi->Print();
+  //     }
+  //   }
+  
+  }
+
+  StoreDigiCollection(ECaldigiCollection);
 
 }

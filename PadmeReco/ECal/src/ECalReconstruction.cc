@@ -36,7 +36,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelECal();
   fClusterization = new ECalSimpleClusterization();
-  fGeometry = new ECalGeometry();
+  fGeometry = new ECalGeometry(); 
   //fTriggerProcessor = new PadmeVTrigger(); // this is done for all detectors in the constructor of PadmeVReconstruction
   fChannelCalibration = new ECalCalibration();
 
@@ -47,6 +47,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fClEnThrForSeed         = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
+  fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
+
+
 
   //  fClusters.clear();
 }
@@ -675,7 +678,12 @@ void ECalReconstruction::BuildSimpleECalClusters()
     ClNCry.push_back(NCry);
     //GetHisto("ECALClE")->Fill(ClE[NSeeds]);
     //ClTime[NSeeds]=ClTime[NSeeds]/NCry;  //average time of the hit
-    ClTime[NSeeds]=ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    
+    if (fClusterTimeAlgo == 0) {
+      ClTime[NSeeds]= ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    } else {
+      ClTime[NSeeds]= cTime[iMax];//ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    }    
     ClX[NSeeds]=ClX[NSeeds]/ClE[NSeeds];
     ClY[NSeeds]=ClY[NSeeds]/ClE[NSeeds];
     GetHisto("ECALClTDiff")->Fill(ClTime[NSeeds]-SdTime[NSeeds]);

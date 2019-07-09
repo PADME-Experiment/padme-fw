@@ -49,7 +49,7 @@ public:
   Double_t CalcTimeOver(UShort_t);
   Double_t PeakSearch();
 
-
+  void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
   //Standard hits corrections
   Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
   Bool_t   IsSaturated();   // Check if the signal is saturated
@@ -142,6 +142,11 @@ private:
   Bool_t fSaturatioCorrection;
   Bool_t fSaveAnalog;
   Double_t fZeroSuppression;
+
+  Int_t fUsePulseProcessing ;
+  Double_t fDPParameterR1      ;
+  Double_t fDPParameterR2      ;
+  Double_t fDPParameterC       ;
 
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;

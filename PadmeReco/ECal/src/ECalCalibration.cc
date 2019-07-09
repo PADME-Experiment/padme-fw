@@ -27,10 +27,17 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
-
+  fCalibVersion = (int)cfg->GetParOrDefault("EnergyCalibration","CalibVersion",3);
   // Energy calibration 
-  if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
-  if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
+  if(fUseCalibE) {
+    char fname[256];
+    sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
+    ECalib.open(fname);
+  }
+  // if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
+  // if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
   if(fUseCalibE>0 && !ECalib.is_open()){ 
   //  if(fUseCalibE==1 && !ECalib.is_open()){ 
     std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;

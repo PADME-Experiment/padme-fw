@@ -89,6 +89,7 @@ void ECalCalibration::ReadCalibConstant()
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
+  static int PRINTED = 0; 
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     if (fUseCalibE > 0){
       int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
@@ -101,7 +102,10 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 	Hits[iHit]->SetEnergy(fHitECalibrated);
 	//	std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
       }else{
-	std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	if(!PRINTED) {
+	  std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	  PRINTED++;
+	}
       }
       
     }

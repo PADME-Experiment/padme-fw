@@ -22,7 +22,9 @@ public:
   Bool_t ProcessAnalysis();
   Bool_t ProcessValidation();
   Bool_t Finalize(){return true;}
-
+  //Once these are declared here they'll be called automatically by the main
+  Bool_t InitHistosDataQuality();//hackathon 11/6
+  Bool_t ProcessDataQuality();//hackathon 11/6
   
   
   

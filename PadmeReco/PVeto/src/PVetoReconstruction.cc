@@ -35,6 +35,53 @@ PVetoReconstruction::~PVetoReconstruction()
 {;}
 
 
+void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelReco*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelReco*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelReco*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelReco*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
+}
+
 
 void PVetoReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
@@ -46,18 +93,15 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
 
-  AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",1200,0.0,12.0));
+  AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",1200,0.0,3500.0));
   AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",400,0.0,400.0));
 
   AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,0.0,400.0) );
   AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,0.0,400.0, 400,0.0,400.0));
 
- 
-
-
   char name[256];
 
-  for (int i=0; i<95; i++) { 
+  for (int i=0; i<95; i++) {  //There are 96 channels (0-95), but here we compare one channel to the next, meaning only 95 histograms are needed 
     sprintf(name, "PVetoDTch%dch%d",i,i+1);
     AddHisto(name, new TH1F(name,"Difference in time",400,-10.,10.));
   }
@@ -112,7 +156,7 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  return;
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if(Hits[iHit1]->GetTime() < 10.) continue;
+    //    if(Hits[iHit1]->GetTime() < 10.) continue;
 
     GetHisto("PVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
     GetHisto("PVetoTime")->Fill(Hits[iHit1]->GetTime());

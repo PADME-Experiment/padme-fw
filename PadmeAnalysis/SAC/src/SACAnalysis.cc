@@ -29,6 +29,70 @@ Bool_t SACAnalysis::InitHistosAnalysis()
 {
   return true;
 }
+Bool_t SACAnalysis:: InitHistosDataQuality(){//hackathon 11/6
+  HistoSvc* hSvc =  HistoSvc::GetInstance();//books & writes histos
+  
+  std::string hname;
+  int nBin, min, max;
+  nBin=200;
+  min=0;
+  max=1000;
+  hname="SAC_HitEnergy";
+  hSvc->BookHisto(hname, nBin, min, max);
+
+  nBin=150;
+  min=0;
+  max=1000;
+  hname="SAC_ClEnergy";//cluster energy
+  hSvc->BookHisto(hname, nBin, min, max);
+
+  nBin=250;
+  min=0;
+  max=2000;
+  hname="SAC_SumHitEnergy";//cluster energy
+  hSvc->BookHisto(hname, nBin, min, max);
+
+  return true;
+}
+Bool_t SACAnalysis:: ProcessDataQuality(){//hackathon 11/6
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  
+  Int_t fNhits = fhitEvent->GetNHits();
+  std::string hname;
+  
+  hname = "SAC_NHits";
+  hSvc->FillHisto(hname,fhitEvent->GetNHits());
+  
+  hname = "SAC_HitEnergy";
+  for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
+    {
+      TRecoVHit* h = fhitEvent->Hit(j);
+      hSvc->FillHisto(hname,h->GetEnergy());
+      //std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+    }
+
+  hname = "SAC_ClEnergy";
+  for (Int_t j=0; j<fClColl->GetNElements(); ++j)
+    {
+      TRecoVCluster* h = fClColl->Element(j);
+      hSvc->FillHisto(hname,h->GetEnergy());
+      //std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+    }
+
+  double EHitSum =0;
+  TRecoVHit* h;
+  for (Int_t j=0; j<fClColl->GetNElements(); ++j)
+    {
+      h = fhitEvent->Hit(j);
+      hSvc->FillHisto(hname,h->GetEnergy());
+      EHitSum = EHitSum+h->GetEnergy();
+      //std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+    }
+  hname = "SAC_SumHitEnergy";
+  hSvc->FillHisto(hname,EHitSum);
+
+  return true;
+}
 Bool_t SACAnalysis::InitHistosValidation()
 {
     HistoSvc* hSvc =  HistoSvc::GetInstance();

@@ -89,8 +89,8 @@ void DigitizerChannelECal::PrepareTmpHistos(){
 
 void DigitizerChannelECal::PrepareDebugHistos(){
   fileOut    = new TFile("ECalAn.root", "RECREATE");
-  hListCal   = new TList();  
-  hListEv    = new TList();  
+  hListCal   = new TList(); // single board related histograms  
+  hListEv    = new TList(); // More general histograms 
   ECal = new TTree("ECAL","ECAL");
 
   ECal->Branch("ElCh",&ElCh);
@@ -319,7 +319,7 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
 
 Double_t DigitizerChannelECal::CalcCharge(UShort_t iMax) {
   
-  Short_t begin = iMax-fPreSamples > 0? iMax-fPreSamples:0;
+  Short_t begin = iMax-fPreSamples > 0? iMax-fPreSamples:0; //if(iMax-fPreSample)>0 begin =iMax-fPreSample, else = 0
   Short_t end   = iMax+fPostSamples < fNSamples? iMax+fPostSamples:fNSamples;
  
   //  std::cout << "Begin: "<< begin << "  end: " << end << std::endl;
@@ -718,7 +718,7 @@ Double_t DigitizerChannelECal::CorrectIntegrationTime(Double_t TStart,Double_t T
 
 // Increase the number of samples to 4Gs interpolating. M. Raggi preliminary needs tests 04/2019
 //void DigitizerChannelECal::OverSample4(Double_t* v, Double_t* o, Int_t n) {
-void DigitizerChannelECal::OverSample4(Short_t* v, Double_t* o, Int_t n) {
+void DigitizerChannelECal::OverSample4(Short_t* v, Double_t* o, Int_t n) {//takes in fSamples->v, gives out array of oversampled samples->o for n samples
   int j,k;
   double v1[2048];
   for (j=0;j<n;j++)

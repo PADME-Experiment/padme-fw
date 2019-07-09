@@ -18,6 +18,7 @@ public:
   ~PVetoReconstruction();
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   virtual void HistoInit();
+  void BuildHits(TRawEvent* rawEv);//Beth 24/6/19 copied from ECal to get board/channel info at digitizer level
   virtual void AnalyzeEvent(TRawEvent* evt);
 
 private:

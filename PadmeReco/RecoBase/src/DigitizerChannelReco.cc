@@ -11,6 +11,14 @@
 #include <iostream>
 #include <stdlib.h>
 
+static int waveformhit=0;
+int waveformhitmax=10;
+char name[256];
+
+//running parameters:
+//int fNewPed = 0; //0 = old pedestal calculation, 1 = new pedestal calculation
+//int fTimeCut=1; //0 = no time cut, 1= time cut
+
 void DigitizerChannelReco::PrintConfig(){
   std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
@@ -30,7 +38,7 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
     hListCal->Add(hPedCalo[kk]);
   }*/
   
-  fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
+  fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);//reads in variable "TimeBin" under heading "ADC" in file cfg (passed to method when called) and sets it to local variable named fTimeBin
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
 
@@ -48,10 +56,18 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0); //if MultiHit=1, Peaks finding with TSpectrum
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+
+  fNewPed  = cfg->GetParOrDefault("RECO","NewPed",0);
+  fTimeCut  = cfg->GetParOrDefault("RECO","TimeCut",0);
   
   
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   PrintConfig();
+  PrepareTmpHistos();  //Temp histo servono anche in non debug mode
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    std::cout<<"preparing debug histos"<<std::endl;
+    PrepareDebugHistos(); //debugging mode histos
+  }
   if (fMultihit==0)
     {
       if (fabs(fAmpThresholdLow-fAmpThresholdHigh)<0.001)
@@ -61,6 +77,173 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
     }
 }
 
+void DigitizerChannelReco::PrepareTmpHistos(){ //Copied from DigitizerChannelEco.cc Beth 7/6/2019
+  hListTmp    = new TList();
+  if(!fUseOverSample){
+    hListTmp->Add(hdxdtTmp   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+    hListTmp->Add(hSignalTmp = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  }
+  // over sampled histograms
+  Int_t nbinx=4000;
+  if(fUseOverSample){
+    hListTmp->Add(hSigOv       = new TH1F("hSigOv","hSigOv",nbinx,0.,nbinx/4));
+    hListTmp->Add(hSigOvSm     = new TH1F("hSigOvSm","hSigOvSm",nbinx,0.,nbinx/4));
+    hListTmp->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOvSm","hdxdtSigOvSm",nbinx,0.,nbinx/4));
+  }
+
+
+}
+
+void DigitizerChannelReco::PrepareDebugHistos(){
+  //  std::cout<<"I'm in Debug fNewPed = "<<fNewPed<<" fTimeCut = "<<fTimeCut<<std::endl;
+  
+  // char* outputfilename="RecoAn";
+  // outputfilename+="SingleHit";
+  // if(fNewPed == 1 && fTimeCut == 1) outputfilename += "TimeCutNewPed.root";
+  // if(fNewPed == 1 && fTimeCut == 0) outputfilename += "NoTimeCutNewPed.root";
+  // if(fNewPed == 0 && fTimeCut == 1) outputfilename += "TimeCutOldPed.root";
+  // if(fNewPed == 0 && fTimeCut == 0) outputfilename += "NoTimeCutOldPed.root";
+
+  // if(waveformhit==0) std::cout<<outputfilename<<std::endl;
+  
+  fileOut    = new TFile("RecoAn.root", "RECREATE");
+
+  fileOut->mkdir("Waveforms");
+  fileOut->mkdir("AmpSpectra");
+  fileOut->mkdir("PedSpectra");
+  fileOut->mkdir("AmpChargeSpectra");
+  fileOut->mkdir("AmpCharge2D");
+
+  hListCal            = new TList(); // single board related histograms  
+  hListWaveform       = new TList(); //Waveform histograms
+  hListAmp            = new TList(); //Amplitude spectra
+  hListPed            = new TList(); //Pedestal spectra
+  hListAmpChargeRatio = new TList(); //Spectra of ratio of amplitude to charge
+  hListAmpCharge2D    = new TList(); //2D amplitude/charge plots
+  hListEv             = new TList(); // More general histograms 
+
+  Reco = new TTree("RECO","RECO");//Tree variables:
+  Reco->Branch("ElCh",&ElCh);
+  // Reco->Branch("Row",&Row);
+  // Reco->Branch("Col",&Col);
+  // Reco->Branch("Zsup",&Zsup);
+  // Reco->Branch("Avg200",&fAvg200);
+  // Reco->Branch("HitE",&HitE);
+  // Reco->Branch("HitEHyb",&HitEHyb);
+  // Reco->Branch("Hit200E",&HitE200);
+  // Reco->Branch("HitT",&HitT);
+  // Reco->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
+  // Reco->Branch("IsSat",&IsSat);
+  // Reco->Branch("VMax",&VMax);
+
+  // hPedCalo = new TH1D*[32];
+  // hAvgCalo = new TH1D*[32];
+  // hPedMean = new TH1D*[32];
+  // hVMax    = new TH1D*[32];
+  // h200QCh  = new TH1D*[32]; //CT
+  // hQCh     = new TH1D*[32]; //CT
+
+  hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
+  //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
+
+  //Waveform analysis histograms
+  for(int i =0;i<waveformhitmax;i++){
+    sprintf(name, "hSignal%d", i);
+    hListWaveform->Add(hSignal[i] = new TH1F(name,"Waveform",1024,0.,1024.)); //Signal waveform
+    sprintf(name, "hSignalSmooth%d", i);
+    hListWaveform->Add(hSignalSmooth[i] =  new TH1F(name,"Smoothed Waveform",1024,0,1024));//smoothed waveform
+    sprintf(name, "hdxdt%d", i);
+    hListWaveform->Add(hdxdt[i] = new TH1F(name,"Waveform derivative",1024,0.,1024.)); //Signal derivative
+    sprintf(name, "hdxdtSmooth%d", i);
+    hListWaveform->Add(hdxdtSmooth[i] = new TH1F(name,"Derivative of SignalSmooth",1024,0.,1024.)); //Derivative of smoothed signal
+    sprintf(name, "hdxdtRatio%d", i);
+    hListWaveform->Add(hDerivRatio[i] = new TH1F(name,"Ratio of Derivative to Signal", 1024,0.,1024.));
+    sprintf(name, "hdxdtRatioSmooth%d", i);
+    hListWaveform->Add(hDerivRatioSmooth[i] = new TH1F(name,"Ratio of Derivative to SignalSmooth", 1024,0.,1024.));
+    sprintf(name, "hRCVoltage%d", i);
+    hListWaveform->Add(hRCVoltage[i]= new TH1F(name,"RChVoltage",1024,0.,1024.));
+  }
+
+
+  //More generic histograms to check reconstruction
+  sprintf(name,"charge integrated between %d samples below max signal bin and %d samples above",fPreSamples,fPostSamples);
+  hListCal->Add(hChargeInt = new TH1F("hChargeInt",name,1000,0.,3500.));
+  
+  for (int i=0; i<96; i++) {  //Here we need one histogram for each channel
+    sprintf(name, "SignalAmplitudePerEventChannel%d",i); //This histogram stores the the spectrum of signal amplitudes
+    hListAmp->Add(hAmpSpectrum[i] = new TH1F(name,"SignalAmplitudePerEvent",100,0.0,4000.0));
+
+    sprintf(name, "HitPedestalChannel%d",i); //This histogram stores the spectrum of hit pedestals
+    hListPed->Add(hPedSpectrum[i] = new TH1F(name,"HitPedestal",100,1500.0,4000.0));
+
+    sprintf(name, "AmplitudetoChargeRatioChannel%d",i);
+    if(fMultihit==0&&fNewPed==0)      hListAmpChargeRatio->Add(hAmpChargeRatio[i] = new TH1F(name,"AmplitudetoChargeRatio",100,0.0,20000.0));
+    else if(fMultihit==0&&fNewPed==1) hListAmpChargeRatio->Add(hAmpChargeRatio[i] = new TH1F(name,"AmplitudetoChargeRatio",100,0.0,5000.0));
+    else if(fMultihit==1&&fNewPed==1) hListAmpChargeRatio->Add(hAmpChargeRatio[i] = new TH1F(name,"AmplitudetoChargeRatio",100,0.0,25.0));
+
+    sprintf(name, "AmplitudeVsChargeChannel%d",i);
+    if(fMultihit ==0)              hListAmpCharge2D->Add(hAmpCharge2D[i] = new TH2F(name,"AmplitudeVsCharge",500,0.,4000.,1000.,0.,4.));
+    else if(fMultihit==1&&i<72)    hListAmpCharge2D->Add(hAmpCharge2D[i] = new TH2F(name,"AmplitudeVsCharge",500,0.,4000.,1000.,0.,500.));
+    else if(fMultihit==1&&i<82)    hListAmpCharge2D->Add(hAmpCharge2D[i] = new TH2F(name,"AmplitudeVsCharge",500,0.,4000.,1000.,0.,1500.));
+    else if(fMultihit==1&&i<96)    hListAmpCharge2D->Add(hAmpCharge2D[i] = new TH2F(name,"AmplitudeVsCharge",500,0.,4000.,1000.,0.,3500.));
+  }
+
+
+  hListWaveform->Add(hTrialSignal = new TH1F("hTrialSignal","hTrialSignal",1000,0.,1200.));
+  hListWaveform->Add(hRCProcessedTrialSignal = new TH1F("hRCProcessedTrialSignal","hRCProcessedTrialSignal",1000,0.,1200.));
+  hListWaveform->Add(hSigFinal = new TH1F("hSigFinal","hSigFinal",1000,0.,1000.));
+  hListWaveform->Add(hSigMax = new TH1F("hSigMax","hSigMax",1000,0.,1000.));
+  hListWaveform->Add(hdxdtFinal = new TH1F("hdxdtFinal","hdxdtFinal",1000,0.,1000.));
+  hListWaveform->Add(hdxdtMaxTime= new TH1F("hdxdtMaxTime","hdxdtMaxTime",400,0.,400.));//Time of max derivative
+
+  // hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));//Time of maximum signal
+  // hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
+  // hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.hc));
+  // hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
+  // hListCal->Add(hTIntCorr= new TH1F("hTIntCorr","hTIntCorr",500,0.,1.));
+  
+  // for(int kk=0;kk<32;kk++){
+  //   hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
+  //   hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
+  //   hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
+  //   hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
+  //   h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
+  //   hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400); 
+    //CT
+    // hListCal->Add(hPedCalo[kk]);
+    // hListCal->Add(hAvgCalo[kk]);
+    // hListCal->Add(hPedMean[kk]);
+    // hListCal->Add(hVMax[kk]);
+    // hListCal->Add(h200QCh[kk]); //CT
+    // hListCal->Add(hQCh[kk]); //CT
+  //}
+
+}
+
+void DigitizerChannelReco::SaveDebugHistos(){
+  fileOut->cd();
+  Reco->Write();
+  hListCal->Write(); //use it in monitor mode only  
+
+  fileOut->cd("Waveforms");
+  hListWaveform->Write();
+
+  fileOut->cd("AmpSpectra");
+  hListAmp->Write();
+
+  fileOut->cd("PedSpectra");
+  hListPed->Write();
+
+  fileOut->cd("AmpChargeSpectra");
+  hListAmpChargeRatio->Write();
+
+  fileOut->cd("AmpCharge2D");
+  hListAmpCharge2D->Write();
+
+  // fileOut->Write();
+  //  hListCal->ls();
+  fileOut->Close();
+}
 
 void DigitizerChannelReco::SetAbsSignals(){
   for(UShort_t i = 0;i<fNSamples;i++){
@@ -83,47 +266,43 @@ Short_t DigitizerChannelReco::CalcMaximum() {
   return fMax;
 }
 
-
-/*Double_t DigitizerChannelReco::CalcPedestal() {
-  fPed = 0.;
-  fNPedSamples = 0;
-  //Call this only after the maximum is set
-  if(fIMax - fPedOffset < 0) {
-    //What to do if not enough samples for pedestal calculation... 
-    //Use the first few samples
-    fPed = fSamples[0];
-    fNPedSamples = 1;
+Double_t DigitizerChannelReco::CalcPedestal() {
+  if(fNewPed==0){//"old" pedestal calculation
+    fPed = 0.;
+    fNPedSamples = 0;
+    //Call this only after the maximum is set
+    if(fIMax - fPedOffset < 0) {
+      //What to do if not enough samples for pedestal calculation... 
+      //Use the first few samples
+      fPed = fSamples[0];
+      fNPedSamples = 1;
+    } 
+    
+    for(Short_t i = fIMax - fPedOffset; 
+	i >= 0 &&  fNPedSamples <  fPedMaxNSamples; 
+	--i,++fNPedSamples) {
+      //    std::cout << i << "  " << fNPedSamples << std::endl;
+      fPed+= fSamples[i];
+    }
+       
+    fPed /= fNPedSamples;
+  }
+ 
+  if(fNewPed==1){//"new" pedestal calculation - the pedestal is calculated using the first 200 samples
+    fPed = 0.;
+    fNPedSamples = 0;
+    fPedMaxNSamples=200;
+    
+    // average of first fPedMaxNSamples
+    for(Short_t i = 0 ; i  <   fPedMaxNSamples; i++) {
+      fNPedSamples ++;
+      fPed+= fSamples[i];
+    }
+    //std::cout << " fNPedSamples " << fNPedSamples <<" fPed Veto"<< std::endl;
+    fPed /= fNPedSamples;
+    //std::cout <<  fPed << " fNPedSamples " << fNPedSamples << std::endl;
+  }
     return fPed;
-  } 
-
-  for(Short_t i = fIMax - fPedOffset; 
-      i >= 0 &&  fNPedSamples <  fPedMaxNSamples; 
-      --i,++fNPedSamples) {
-    //    std::cout << i << "  " << fNPedSamples << std::endl;
-    fPed+= fSamples[i];
-  }
-  
-
-  fPed /= fNPedSamples;
-
-  return fPed;
-}
-*/
-
-Double_t DigitizerChannelReco::CalcPedestal() {  //the pedestal is calculated using the first 200 samples
-  fPed = 0.;
-  fNPedSamples = 0;
-  fPedMaxNSamples=200;
-
-  // average of first fPedMaxNSamples
-  for(Short_t i = 0 ; i  <   fPedMaxNSamples; i++) {
-       fNPedSamples ++;
-       fPed+= fSamples[i];
-  }
-  //std::cout << " fNPedSamples " << fNPedSamples <<" fPed Veto"<< std::endl;
-  fPed /= fNPedSamples;
-  //std::cout <<  fPed << " fNPedSamples " << fNPedSamples << std::endl;
-  return fPed;
 }
 
 Double_t DigitizerChannelReco::ZSupHit(Float_t Thr, UShort_t NAvg) {
@@ -255,7 +434,7 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
     TSpectrum *s = new TSpectrum(2*npeaks);  //npeaks max number of peaks
     Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. 
     //Int_t nfound = s->Search(H1,10,"",peak_thr);     
-    Int_t nfound = s->Search(H1,10,"",peak_thr);     
+    Int_t nfound = s->Search(H1,10,"",peak_thr);     //10 = sigma
     //Float_t *xpeaks = s->GetPositionX();
     //Float_t *ypeaks = s->GetPositionY();
     //std::cout<<"Threshold    file Config     "<<fAmpThresholdLow<<"  Peak in Search with TSpectrum   "<<peak_thr<<"Vmax    "<<VMax<<std::endl;
@@ -271,7 +450,9 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
       Int_t bin    = H1->GetXaxis()->FindBin(xp);
       if(bin<1000){
 	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
-	  if(H1->GetBinContent(ii)>0.005) fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+	  if(H1->GetBinContent(ii)>0.005){ 
+	    fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;//charge in pC as opposed to for single hit where it's in nC
+	  }
 	}
 	//std::cout<<nfound<<"number of peak "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
         //std::cout<<nfound<<"number of peak "<<ll<<" fAmplitude     "<<fAmpli<<"   x peak"<<xp<<std::endl;
@@ -281,14 +462,16 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
       Hit->SetTime(Time);
       //      Hit->SetEnergy(fCharge);
       //Hit->SetEnergy(fCharge);     
-      Hit->SetEnergy(fAmpli);
+      Hit->SetEnergy(fAmpli);//amplitude in digitizer units
+
       hitArray.push_back(Hit);
       //if (fAmpli>800) fPeaksSaturated++; 
       //if(fPeaksSaturated>1 && fEventsSaturated==0)fEventsSaturated++; 
       //std::cout<<xp<<" "<<xp<<" yp "<<yp<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }
+    HistoFill();
     H1->Reset();
-  }
+   }
 
   Time = Time*fTimeBin;
   return Time;
@@ -298,10 +481,12 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
 void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   Double_t IsZeroSup = ZSupHit(5.,1000.);
   CalcCharge(fIMax);
+  //  std::cout<<"GetChID() before cut = "<< GetChID()<<std::endl;
   //if (fCharge < .01) return;
   // come back to a Veto setup
-  if (fCharge < 2.) return;
-  double time = CalcTime(fIMax);
+  //if (fCharge < 2.) return; //changed by Beth 27/6/19 see note below
+  if (fCharge < 0.01) return;//this is in nC, so it's = 10pC - big cut. Should be closer to 25 photo electrons*electron charge*CPM gain, so about 1pC or 0.001nC. Therefore a cut of 5pC Should also go within config file 
+ double time = CalcTime(fIMax);
 
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(time);
@@ -310,6 +495,10 @@ void DigitizerChannelReco::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // Hit->SetEnergy(fCharge);
   // come back to a Veto setup
   Hit->SetEnergy(fCharge);
+
+  //std::cout<<"GetChID() after cut = "<< GetChID()<<std::endl;
+  HistoFill();
+
   hitArray.push_back(Hit);
 
   // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
@@ -322,7 +511,6 @@ void DigitizerChannelReco::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   //std::cout<<"Pedestal    "<<ped<<std::endl;
   //ped=3650;
   CalcChaTime(hitArray,1000,ped);
-
 }
 
 
@@ -344,5 +532,160 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   // std::cout << "Pedestal: " << fPed << "  from: " << fNPedSamples << " samples"<< std::endl;
 }
 
+void DigitizerChannelReco::HistoFill(){  
 
+  Double_t Signal[fNSamples];
+  Double_t SmoothedSignal[fNSamples];
+  Double_t SignalDerivative[fNSamples];
+  Double_t SignalDerivativeSmoothed[fNSamples];
+  Double_t DerivativetoSignalRatio[fNSamples];
+  Double_t DerivativetoSignalRatioSmoothed[fNSamples];
+
+  Int_t    dxdtMaxbin; //bin containing maximum dxdt
+  Double_t sigmax; //maximum signal
+  Int_t    sigmaxbin;  //bin containing maximum signal
+  Double_t ChargeInt =0; //Integral of charge from fPreSamples below max signal to fPostSamples after
+
+  int derivbins = 10;
+  int nsmoothing =1;//Number of samples either side used to smooth the signal
+
+    for(Int_t SignalSample = 0;SignalSample<fNSamples;SignalSample++){
+      Signal[SignalSample]=fPed-(1.*fSamples[SignalSample]);
+      hSigFinal->SetBinContent(SignalSample,Signal[SignalSample]);//stores last hit in last event, used to fill sigmax histo
+      hSigMax->Fill(hSigFinal->GetMaximum()/4096*1e3);//in mV
+    }
+    
+    for(int SmoothSample = 0; SmoothSample < fNSamples; ++SmoothSample){
+      double SignalTot=0;
+      for(int k = -1*nsmoothing;k<nsmoothing+1;k++){
+	if(SmoothSample <nsmoothing||SmoothSample>(fNSamples-nsmoothing)) continue;
+	SignalTot += Signal[SmoothSample+k];
+      }
+      SmoothedSignal[SmoothSample]=SignalTot/(2.*nsmoothing+1.);
+    }
+
+    //Beth 17/6/19 to try to optimise R1, R2, C, we create a sample input signal with form exp(-t/20.5), where 20.5 has been found by using root to fit the exponential tale of a signal
+
+    Double_t TrialSamp[1024];
+
+    for(int itri=0;itri<1024;itri++){
+      if(itri>200){
+	TrialSamp[itri]=100*exp(-(itri-200)*fTimeBin/20.5);
+      }
+      else{TrialSamp[itri]=0;}
+    }
+
+    Double_t TrialOut[fNSamples];
+    Double_t SignalOut[fNSamples];
+    
+    RCVoltage(TrialSamp, TrialOut, fNSamples);//reconstruct what would happen if signal were passed through an RC circuit
+    RCVoltage(Signal, SignalOut, fNSamples);
+      
+    for(int iSample = 0; iSample < fNSamples; ++iSample){
+      //std::cout<<"iSample = "<<iSample<<std::endl;
+      SignalDerivative[iSample] = 0;
+      if(iSample>=derivbins&&iSample<fNSamples){ //otherwise the derivative doesn't make sense - you can't calculate the derivative of the first bin because you have nothing before it to compare it to
+	//	SignalDerivative[iSample] = (Signal[iSample+derivbins]-Signal[iSample-derivbins])/((2*derivbins)*fTimeBin); //fTimeBin = time between samples.
+	SignalDerivative[iSample] = (Signal[iSample]-Signal[iSample-derivbins])/((derivbins)*fTimeBin); //Calculating the derivative only backwards gives the highest possible value for the derivative as it isn't confused by the peak
+	hdxdtFinal->SetBinContent(iSample, SignalDerivative[iSample]);
+      }
+      SignalDerivativeSmoothed[iSample] =0;
+      if(iSample>=derivbins&&iSample<fNSamples){
+	//	  SignalDerivativeSmoothed[iSample] = (SmoothedSignal[iSample+derivbins]-SmoothedSignal[iSample-derivbins])/((2*derivbins)*fTimeBin);
+	SignalDerivativeSmoothed[iSample] = (SmoothedSignal[iSample]-SmoothedSignal[iSample-derivbins])/((derivbins)*fTimeBin);
+      }
+      DerivativetoSignalRatio[iSample] = SignalDerivative[iSample]/Signal[iSample];
+      DerivativetoSignalRatioSmoothed[iSample] = SignalDerivativeSmoothed[iSample]/SmoothedSignal[iSample];
+    }
+    
+    
+    dxdtMaxbin = hdxdtFinal->TH1::GetMaximumBin();//Returns bin number of bin of maximum content - that is the location of the histogram peak
+    hdxdtMaxTime->Fill(dxdtMaxbin*fTimeBin);//Converts bin number to time
+    
+    sigmaxbin = hSigFinal->TH1::GetMaximumBin();
+  
+  Int_t begin = sigmaxbin-10>0? sigmaxbin-10:0;//if(sigmaxbin-10)>0, begin=sigmaxbun-10, else begin = 0
+  Int_t end = sigmaxbin+150>fNSamples? sigmaxbin+150:fNSamples;
+  
+  for(int i=begin;i<end;i++){
+    ChargeInt+=Signal[i]/(4096*fImpedance)*fTimeBin*1e-9/1E-12; //in pC
+  }
+  
+  hChargeInt->Fill(ChargeInt);
+
+  //  if(fMultihit==1&&fNewPed==1&&(TMath::MaxElement(fNSamples,Signal)/fCharge)>25) std::cout<<"GetChID() "<<GetChID()<<" TMath::MaxElement(fNSamples,Signal)/fCharge = "<<TMath::MaxElement(fNSamples,Signal)/fCharge<<std::endl;
+
+  if(fTimeCut==1){ //If we're using the time cut...
+    if(CalcTime(fIMax)>10.) { //use the time cut
+      hPedSpectrum[GetChID()]->Fill(fPed);
+      hAmpSpectrum[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal));
+      hAmpChargeRatio[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal)/fCharge);
+      hAmpCharge2D[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal),fCharge);
+    }
+  }
+
+  else if (fTimeCut==0){ //Otherwise, if we're not using the time cut, fill the histograms anyway
+      hPedSpectrum[GetChID()]->Fill(fPed);
+      hAmpSpectrum[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal));
+      hAmpChargeRatio[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal)/fCharge);
+      //      if(((GetChID()==60||GetChID()==71)&&fCharge>500)||(GetChID()==80&&fCharge>1500)||(GetChID()==87&&fCharge>3500))      std::cout<<"GetChID() "<<GetChID()<<" amp = "<<TMath::MaxElement(fNSamples,Signal)<<" charge = "<<fCharge<<std::endl;
+      hAmpCharge2D[GetChID()]->Fill(TMath::MaxElement(fNSamples,Signal),fCharge);
+    }
+
+  if(waveformhit<waveformhitmax){
+    for(int i=0;i<fNSamples;i++){
+      hSignal[waveformhit]->SetBinContent(i,Signal[i]);
+      hSignalSmooth[waveformhit]->SetBinContent(i,SmoothedSignal[i]);
+      hdxdt[waveformhit]->SetBinContent(i, SignalDerivative[i]);
+      hdxdtSmooth[waveformhit]->SetBinContent(i, SignalDerivativeSmoothed[i]);
+      hDerivRatio[waveformhit]->SetBinContent(i,DerivativetoSignalRatio[i]);
+      hDerivRatioSmooth[waveformhit]->SetBinContent(i,DerivativetoSignalRatioSmoothed[i]);
+      hRCVoltage[waveformhit]->SetBinContent(i+1, SignalOut[i]);
+      hTrialSignal->SetBinContent(i,TrialSamp[i]);
+      hRCProcessedTrialSignal->SetBinContent(i,TrialOut[i]);
+    }
+  }
+
+  if(waveformhit==0) std::cout<<"parameters are: fNewPed = "<<fNewPed<<" fTimeCut = "<<fTimeCut<<std::endl;
+  waveformhit++;//after every hit increase the value of the hit counting variable
+}
+
+void DigitizerChannelReco::RCVoltage(Double_t* uin, Double_t* uout, Int_t sampleno){    //Calculating voltage output by an RC circuit 13/6/19
+    
+    // Double_t R1=150.;//ohms
+    // Double_t R2=50.; //ohms
+    // Double_t C=.1e-9; //nF
+    
+    Double_t R1=1300.;//resistor in parallel (ohms) - original guess 150 Ohms
+    Double_t R2=100.; //resistor in series with capacitor - over which voltage is measured (ohms) - original guess 150 Ohms
+    Double_t C=0.015e-9; //nF capacitor in series with R2 - original guess 0.13e-9
+    //Calculating the output pulse:
+    Double_t integr=0;//charge integral
+    
+    Double_t ic[sampleno];//curent through capacitor
+    
+    Double_t bin_width=fTimeBin*1e-9;
+    //Double_t bin_width=0.2e-9; //0.2 ns
+    // std::cout << bin_width << std::endl;
+    
+    for(int i=0;i<sampleno;i++) {
+      //      uin[i]=Signal[i];
+      integr=0;
+      for(int j=0;j<i;j++) {
+	integr+=ic[j]*bin_width;
+	//      cout << integr;
+      }
+      ic[i]= uin[i]/R2 - ((R1+R2)/(C*R1*R2))* integr;
+      
+      //    cout << integr;
+      uout[i] = uin[i] - integr/(C);
+    }
+}
+
+
+DigitizerChannelReco::~DigitizerChannelReco(){
+  if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
+    SaveDebugHistos();
+  }
+}; //Beth 7/6/19 - destructor, without this it will crash when the compiling process tries to finish //content copied from DigitizerChannelECal.cc 10/6/19
 

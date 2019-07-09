@@ -270,7 +270,9 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     //if(abs(ZeromV)>0.0001 )  std::cout<<"BAD PEDESTAL!!! "<<ZeromV<<std::endl;
     if(pedestalsFromFirstSamples()) Charge = Charge200; 
   }
-  
+
+  fCharge=Charge;
+  return fCharge;
   if(pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
     Ch   = GetElChID();
     BID  = GetBdID();

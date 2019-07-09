@@ -24,6 +24,7 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
+#include "EventSelection.hh"
 #include "TRecoVHit.hh"
 
 #include "HistoSvc.hh"
@@ -320,6 +321,9 @@ int main(Int_t argc, char **argv)
    algoList.push_back(evetoAn);
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
+   
+   EventSelection*         evSel  = new EventSelection(fProcessingMode, fVerbose);
+   evSel->InitHistosSelection();
 
    
    
@@ -374,6 +378,8 @@ int main(Int_t argc, char **argv)
        pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
        evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
        hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+      evSel ->InitSelection(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam, fECalRecoEvent, fECalRecoCl,fPVetoRecoEvent, fPVetoRecoCl,fEVetoRecoEvent,   fEVetoRecoCl,fHEPVetoRecoEvent, fHEPVetoRecoCl,fSACRecoEvent, fSACRecoCl );
+      
 
        //
        targetAn    ->Process();
@@ -382,6 +388,7 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
+       evSel       ->ProcessSelection();
        
        //
        //

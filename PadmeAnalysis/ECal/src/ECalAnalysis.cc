@@ -67,23 +67,23 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_ClusterInTimeEnergy_angularRequest_thrEne_FiducialRegion";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
+    hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_SeedInTimeEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_SeedInTimeEnergy_DeltaPhi20";
+    hname="ECal_SeedInTimeEnergy_DeltaPhi5";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_LeadingSubLeadingInTimeEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20";
+    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_LeadingSubLeadingInTimeEnergy_Gamma2inDeltaPhi45";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20_Gamma2inDeltaPhi45";
+    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5_Gamma2inDeltaPhi45";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_SeedInTimeEnergy_sameEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
+    hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
     hSvc->BookHisto(hname,nBin,min, max);
     /*
     nBin=1001;
@@ -558,12 +558,12 @@ Bool_t ECalAnalysis::ProcessAnalysis()
 
        Double_t ixGamma1            = clu->GetPosition().X();
        Int_t iyGamma1               = clu->GetPosition().Y();
-       Double_t AngGamma1           = atan2((iyGamma1-14.),(ixGamma1-14.));//rad
-       Double_t Radius2Gamma1       = (ixGamma1-14)*(ixGamma1-14)+(iyGamma1-14)*(iyGamma1-14);
+       Double_t AngGamma1           = atan2((iyGamma1),(ixGamma1));//rad
+       Double_t Radius2Gamma1       = (ixGamma1)*(ixGamma1)+(iyGamma1)*(iyGamma1);
        Int_t ixGamma2               = clun->GetPosition().X();
        Int_t iyGamma2               = clun->GetPosition().Y();
-       Double_t AngGamma2           = atan2((iyGamma2-14.),(ixGamma2-14.));
-       Double_t Radius2Gamma2       = (ixGamma2-14)*(ixGamma2-14)+(iyGamma2-14)*(iyGamma2-14);
+       Double_t AngGamma2           = atan2((iyGamma2),(ixGamma2));
+       Double_t Radius2Gamma2       = (ixGamma2)*(ixGamma2)+(iyGamma2)*(iyGamma2);
        Double_t Distance2Gamma1_2   = (ixGamma1-ixGamma2)*(ixGamma1-ixGamma2)+(iyGamma1-iyGamma2)*(iyGamma1-iyGamma2);
        hname="ECAL_DistanceDifferenceGamma1Gamma2-Gamma1Center";
        hSvc->FillHisto(hname, sqrt(Distance2Gamma1_2) - sqrt(Radius2Gamma1),1.);
@@ -579,7 +579,7 @@ Bool_t ECalAnalysis::ProcessAnalysis()
 
      }
      else{
-       hname="ECAL_ClusterInTimeEnergyPlusAloneCl";
+       hname="ECal_ClusterInTimeEnergyPlusAloneCl";
        hSvc->FillHisto(hname,clu->GetEnergy(),1.);
      }
     //close loop on cl
@@ -784,16 +784,16 @@ void ECalAnalysis::AnnihilationPhiSimmetry(Int_t indexGamma1, Int_t indexGamma2,
     hname="ECAL_AngularGamma2";
     hSvc->FillHisto(hname,AngGamma2,1.);
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
+         hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
+         hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
    }
@@ -813,12 +813,12 @@ void ECalAnalysis::AnnihilationLeading(Int_t indexGamma1, Int_t indexGamma2)
   
    Double_t ixGamma1            = clu->GetPosition().X();
    Int_t iyGamma1               = clu->GetPosition().Y();
-   Double_t AngGamma1           = atan2((iyGamma1-14.),(ixGamma1-14.));//rad
-   Double_t Radius2Gamma1       = (ixGamma1-14)*(ixGamma1-14)+(iyGamma1-14)*(iyGamma1-14);
+   Double_t AngGamma1           = atan2((iyGamma1),(ixGamma1));//rad
+   Double_t Radius2Gamma1       = (ixGamma1)*(ixGamma1)+(iyGamma1)*(iyGamma1);
    Int_t ixGamma2               = clun->GetPosition().X();
    Int_t iyGamma2               = clun->GetPosition().Y();
-   Double_t AngGamma2           = atan2((iyGamma2-14.),(ixGamma2-14.));
-   Double_t Radius2Gamma2       = (ixGamma2-14)*(ixGamma2-14)+(iyGamma2-14)*(iyGamma2-14);
+   Double_t AngGamma2           = atan2((iyGamma2),(ixGamma2));
+   Double_t Radius2Gamma2       = (ixGamma2)*(ixGamma2)+(iyGamma2)*(iyGamma2);
    Double_t Distance2Gamma1_2   = (ixGamma1-ixGamma2)*(ixGamma1-ixGamma2)+(iyGamma1-iyGamma2)*(iyGamma1-iyGamma2);
 
   hname="ECal_SeedInTimeEnergy";
@@ -836,23 +836,23 @@ void ECalAnalysis::AnnihilationLeading(Int_t indexGamma1, Int_t indexGamma2)
   
   if(sqrt(Distance2Gamma1_2) > sqrt(Radius2Gamma1) ){
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_SeedInTimeEnergy_DeltaPhi20";
+         hname="ECal_SeedInTimeEnergy_DeltaPhi5";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          if(sameEnergy){
-           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
+           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
            hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          }
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_SeedInTimeEnergy_DeltaPhi20";
+         hname="ECal_SeedInTimeEnergy_DeltaPhi5";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          if(sameEnergy){
-           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
+           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
            hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          }
      }
@@ -872,28 +872,28 @@ void ECalAnalysis::AnnihilationLeadingSubLeading(Int_t indexGamma1, Int_t indexG
   
    Double_t ixGamma1            = clu->GetPosition().X();
    Int_t iyGamma1               = clu->GetPosition().Y();
-   Double_t AngGamma1           = atan2((iyGamma1-14.),(ixGamma1-14.));//rad
-   Double_t Radius2Gamma1       = (ixGamma1-14)*(ixGamma1-14)+(iyGamma1-14)*(iyGamma1-14);
+   Double_t AngGamma1           = atan2((iyGamma1),(ixGamma1));//rad
+   Double_t Radius2Gamma1       = (ixGamma1)*(ixGamma1)+(iyGamma1)*(iyGamma1);
    Int_t ixGamma2               = clun->GetPosition().X();
    Int_t iyGamma2               = clun->GetPosition().Y();
-   Double_t AngGamma2           = atan2((iyGamma2-14.),(ixGamma2-14.));
-   Double_t Radius2Gamma2       = (ixGamma2-14)*(ixGamma2-14)+(iyGamma2-14)*(iyGamma2-14);
+   Double_t AngGamma2           = atan2((iyGamma2),(ixGamma2));
+   Double_t Radius2Gamma2       = (ixGamma2)*(ixGamma2)+(iyGamma2)*(iyGamma2);
    Double_t Distance2Gamma1_2   = (ixGamma1-ixGamma2)*(ixGamma1-ixGamma2)+(iyGamma1-iyGamma2)*(iyGamma1-iyGamma2);
 
   hname="ECal_LeadingSubLeadingInTimeEnergy"+name;
   hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
   if(sqrt(Distance2Gamma1_2) > sqrt(Radius2Gamma1) ){
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20"+name;
+         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5"+name;
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
      {
-         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20"+name;
+         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5"+name;
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
    }
@@ -938,16 +938,16 @@ Int_t ECalAnalysis::ReserchGamma2InDeltaPhi(Int_t indexGamma1){
    clu     = fClColl->Element(indexGamma1);
    Double_t ixGamma1            = clu->GetPosition().X();
    Int_t iyGamma1               = clu->GetPosition().Y();
-   Double_t AngGamma1           = atan2((iyGamma1-14.),(ixGamma1-14.));//rad
-   Double_t Radius2Gamma1       = (ixGamma1-14)*(ixGamma1-14)+(iyGamma1-14)*(iyGamma1-14);
+   Double_t AngGamma1           = atan2((iyGamma1),(ixGamma1));//rad
+   Double_t Radius2Gamma1       = (ixGamma1)*(ixGamma1)+(iyGamma1)*(iyGamma1);
    
    Int_t fNclus = fClColl->GetNElements();
    for (Int_t in=indexGamma1+1; in<fNclus; ++in){
      clun    = fClColl->Element(in);
      Int_t ixGamma2               = clun->GetPosition().X();
      Int_t iyGamma2               = clun->GetPosition().Y();
-     Double_t AngGamma2           = atan2((iyGamma2-14.),(ixGamma2-14.));
-     Double_t Radius2Gamma2       = (ixGamma2-14)*(ixGamma2-14)+(iyGamma2-14)*(iyGamma2-14);
+     Double_t AngGamma2           = atan2((iyGamma2),(ixGamma2));
+     Double_t Radius2Gamma2       = (ixGamma2)*(ixGamma2)+(iyGamma2)*(iyGamma2);
      Double_t Distance2Gamma1_2   = (ixGamma1-ixGamma2)*(ixGamma1-ixGamma2)+(iyGamma1-iyGamma2)*(iyGamma1-iyGamma2);
 
     if(sqrt(Distance2Gamma1_2) > sqrt(Radius2Gamma1) ){

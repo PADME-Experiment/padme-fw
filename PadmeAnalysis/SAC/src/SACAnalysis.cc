@@ -356,7 +356,6 @@ Bool_t SACAnalysis::ProcessAnalysis()
      }
      //Int_t evNumb = fRecoEvent->GetEventNumber();
      if(clu->GetEnergy() >MaxEn){
-     std::cout<<"ClE> maxEn " << std::endl;
        MaxSubLeadT=TimeMaxEn;
        TimeMaxEn=clu->GetTime();
        MaxSubLeadEn=MaxEn;
@@ -520,11 +519,11 @@ Bool_t SACAnalysis::ProcessAnalysis()
    
    Int_t SeedIndexHitBetterTime=-1;
    SeedIndexHitBetterTime = GammaCloseInTime(MaxIndex, TimeMaxEn);
-   std::cout<<"max index and indexInTime maxsubLeading " <<  MaxIndex << "  " << SeedIndexHitBetterTime << "  "<< MaxSubLeadIndex << std::endl;
+   //std::cout<<"max index and indexInTime maxsubLeading " <<  MaxIndex << "  " << SeedIndexHitBetterTime << "  "<< MaxSubLeadIndex << std::endl;
    if(MaxIndex>-1)AnnihilationLeading(MaxIndex, SeedIndexHitBetterTime);
   
           
-     if(MaxIndex>-1 )AnnihilationLeadingSubLeading(MaxIndex, MaxSubLeadIndex, TimeMaxEn, MaxSubLeadT, " ");
+     if(MaxIndex>-1 )AnnihilationLeadingSubLeading(MaxIndex, MaxSubLeadIndex, TimeMaxEn, MaxSubLeadT, "");
    
    /*
    if(MaxIndex>-1){

@@ -580,6 +580,11 @@ void padmedisplay::Draw(int event)
      {
      
        hECalMap->Fill(int(NTECal_Clusters_Xpos[iecal]), int(NTECal_Clusters_Ypos[iecal]));
+       float XECal =   NTECal_Clusters_Xpos[iecal];
+       float YECal =   NTECal_Clusters_Ypos[iecal] + NTECal_Clusters_Zpos[iecal];
+       float EnECal =  NTECal_Clusters_Energy[iecal] /kdrawcal    ; 
+	  
+       ECalClus->DrawArc(XECal, YECal ,EnECal);
        //cout << " ChId   "<<   NTECal_Clusters_ChannelId[iecal] <<"X " <<NTECal_Clusters_Xpos[iecal] <<   "   Y   "<<NTECal_Clusters_Ypos[iecal]<< endl;
          
       // if (Cut(ientry) < 0) continue;
@@ -600,29 +605,18 @@ void padmedisplay::Draw(int event)
       box4->SetLineWidth(20);
       box4->Draw();*/
 
-      //TBox *target = new TBox(-20,-610,20,-600);
       TBox *target = new TBox(-20,-1030,20,-1030);   
       target->SetFillColor(1);
       target->SetLineWidth(11);
       target->Draw();
-     //DrawBox(-70,-70,70,70);
+     
 
       arc0->SetFillColor(1);
       arc0->SetLineColor(1);
       arc0->DrawArc(0, 0 ,1);
-   /*for(Long64_t jecal=0; jecal<NTNECal_Hits;jecal++)   
-     {
-        float X =  NTECal_Hits_Xpos[jecal];
-	//float Y =  NTECal_Hits_Ypos[jecal] + NTECal_Hits_Zpos[jecal]; 
-        float Y =  NTECal_Hits_Ypos[jecal] + NTECal_Hits_Zpos[jecal];
-	float E =  NTECal_Hits_Energy     [jecal] /100    ; 
-	  
-	ECalClus->DrawArc(X, Y ,E);
-	
-     }*/
 
 
-   for(Long64_t jecal=0; jecal<NTNECal_Clusters;jecal++)   
+   /*for(Long64_t jecal=0; jecal<NTNECal_Clusters;jecal++)   
      {
         float XECal =  NTECal_Clusters_Xpos[jecal];
         //float Y =  NTECal_Clusters_Ypos[jecal] + NTECal_Clusters_Zpos[jecal];
@@ -631,24 +625,22 @@ void padmedisplay::Draw(int event)
 	  
 	ECalClus->DrawArc(XECal, YECal ,EnECal);
 	
-     }
+     }*/
 
    for(Long64_t ipv=0; ipv<NTNPVeto_Clusters;ipv++)   
      {
 	float XPVeto =  -NTPVeto_Clusters_Xpos[ipv];
         float YPVeto =   NTPVeto_Clusters_Zpos[ipv];
         float EnPVeto =  NTPVeto_Clusters_Energy[ipv]/kdrawveto; 
-	//float Y =   (NTPVetoBarClZpos[ipv]-500)  / 10  + 0;
-	PVetoClus->DrawArc(XPVeto, YPVeto , EnPVeto);
-     
+	PVetoClus->DrawArc(XPVeto, YPVeto , EnPVeto);   
      }
+
      for(Long64_t iev=0; iev<NTNEVeto_Clusters;iev++)   
      {
         
 	float XEVeto =  -NTEVeto_Clusters_Xpos[iev];
         float YEVeto =   NTEVeto_Clusters_Zpos[iev];
         float EnEVeto =  NTEVeto_Clusters_Energy[iev]/kdrawveto;
-	//float Y =   (NTEVetoBarClZpos[iev]-500)  / 10  + 0; 
 	EVetoClus->DrawArc(XEVeto, YEVeto , EnEVeto);
      }
      
@@ -657,10 +649,8 @@ void padmedisplay::Draw(int event)
      {
         
 	float XSAC = NTSAC_Clusters_Xpos[isac];
-        //float Y = NTSAC_Clusters_Ypos[iev]+1000;
         float YSAC = NTSAC_Clusters_Ypos[isac] + NTSAC_Hits_Zpos[isac];
         float EnSAC =  NTSAC_Clusters_Energy[isac]/kdrawsac;
-	//float Y =   (NTEVetoBarClZpos[iev]-500)  / 10  + 0; 
 	SACClus->DrawArc(XSAC, YSAC , EnSAC);
       } 
   

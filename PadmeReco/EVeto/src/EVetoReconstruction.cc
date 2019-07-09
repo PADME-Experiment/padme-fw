@@ -36,6 +36,7 @@ void EVetoReconstruction::HistoInit(){
 
   AddHisto("EVetoOccupancy",new TH1F("EVetoOccupancy","EVeto Occupancy",100,0.0,100.0));
   AddHisto("EVetoEnergy",new TH1F("EVetoEnergy","EVeto Energy",1200,0.0,12.0));
+  AddHisto("EVetoEnergyClean",new TH1F("EVetoEnergyClean","EVeto Energy",2000,0.0,.4));
   AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,0.0,400.0));
   AddHisto("EVetoTimeVsChannelID",new TH2F("EVetoTimeVsChannelID","EVeto Time vs Ch. ID",100,0,100,100,0.0,400.0));
   AddHisto("EVetoHitTimeDifference",new TH1F("EVetoHitTimeDifference","Difference in time",400,-100.,100.));
@@ -43,11 +44,16 @@ void EVetoReconstruction::HistoInit(){
 
   char name[256];
 
+  
   for (int i=0; i<95; i++) { 
     sprintf(name, "EVetoDTch%dch%d",i,i+1);
-    AddHisto(name, new TH1F(name,"Difference in time",400,-10.,10.));
+    AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
   }
   
+  for (int i=0; i<96; i++) { 
+    sprintf(name, "EVetoCharge-%d",i);
+    AddHisto(name, new TH1F(name,"Charge",2000,00.,0.4));
+  }
 
 
 }
@@ -113,10 +119,13 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // void EVetoReconstruction::EndProcessing()
 // {;}
 void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+  float charges[96];
+  for(int i=0;i<96;i++) charges[i] = -1.;
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if(Hits[iHit1]->GetTime() < 10.) continue;
+    charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
+    //    if(Hits[iHit1]->GetTime() < 10.) continue;
 
     
     GetHisto("EVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
@@ -132,6 +141,17 @@ void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   int ih1,ih2;
 
+  for(int i = 1; i < 95; i++) {
+    if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
+      sprintf(name, "EVetoCharge-%d", i);
+      GetHisto(name)->Fill(charges[i]);
+      GetHisto("EVetoEnergyClean") -> Fill(charges[i] );
+
+    }
+  }
+  
+
+  
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     for(unsigned int iHit2 = 0; iHit2 < Hits.size();++iHit2) {
 
@@ -144,9 +164,9 @@ void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
       if(Hits[iHit1]->GetChannelId() + 1 ==  Hits[iHit2]->GetChannelId()   ) {
 
 	sprintf(name, "EVetoDTch%dch%d", Hits[iHit1]->GetChannelId() ,Hits[iHit1]->GetChannelId()+1);
-	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
+	//	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
 	  GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-	}
+	  //	}
       }
     }
   }

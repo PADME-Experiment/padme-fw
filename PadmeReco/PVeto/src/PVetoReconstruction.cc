@@ -48,11 +48,12 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
 
-  AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",1200,0.0,12.0));
-  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",400,0.0,400.0));
+  AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",2000,0.0,40.0));
+  AddHisto("PVetoEnergyClean",new TH1F("PVetoEnergyClean","PVeto Energy",2000,0.0,.4));
+  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
 
-  AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,0.0,400.0) );
-  AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,0.0,400.0, 400,0.0,400.0));
+  AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,-200.0,200.0) );
+  AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,-200.0,200.0, 400,-200.0,200.0));
 
  
 
@@ -61,9 +62,14 @@ void PVetoReconstruction::HistoInit(){
 
   for (int i=0; i<95; i++) { 
     sprintf(name, "PVetoDTch%dch%d",i,i+1);
-    AddHisto(name, new TH1F(name,"Difference in time",400,-10.,10.));
+    AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
   }
   
+  for (int i=0; i<96; i++) { 
+    sprintf(name, "PVetoCharge-%d",i);
+    AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
+  }
+
 
   //  AddHisto("PVetoDTch1ch2",new TH1F("PVetoDTch1ch2","Difference in time",100,-10.,10.));
 
@@ -93,7 +99,9 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
-
+  float charges[96];
+  for(int i=0;i<96;i++) charges[i] = -1.;
+  
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
 
@@ -114,7 +122,7 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  return;
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if(Hits[iHit1]->GetTime() < 10.) continue;
+    //    if(Hits[iHit1]->GetTime() < 10.) continue;
 
     GetHisto("PVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
     GetHisto("PVetoTime")->Fill(Hits[iHit1]->GetTime());
@@ -126,28 +134,40 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
       
       (  (TH2F *) GetHisto("PVetoTimeVsPVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
-      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+      //      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
 	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-      }
+	//      }
     }        
 
     GetHisto("PVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
-
+    int chid = Hits[iHit1]->GetChannelId();
+    
+    charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
+    
   }
-
-
+  
   char name[256];
   
   int ih1,ih2;
+
+  for(int i = 1; i < 95; i++) {
+    if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
+      sprintf(name, "PVetoCharge-%d", i);
+      GetHisto(name)->Fill(charges[i]);
+      GetHisto("PVetoEnergyClean") -> Fill(charges[i] );
+
+    }
+  }
+  
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     for(unsigned int iHit2 = 0; iHit2 < Hits.size();++iHit2) {
       if(Hits[iHit1]->GetChannelId() + 1 ==  Hits[iHit2]->GetChannelId()   ) {
 
 	sprintf(name, "PVetoDTch%dch%d", Hits[iHit1]->GetChannelId() ,Hits[iHit1]->GetChannelId()+1);
-	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
+	//	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
 	  GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-	}
+	  //	}
       }
     }
   }
@@ -157,6 +177,9 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
       GetHisto("PVetoOccupancyLast")->Fill(Hits[iHit1]->GetChannelId());
     }
   }  
+
+  
+  
   
   
 }

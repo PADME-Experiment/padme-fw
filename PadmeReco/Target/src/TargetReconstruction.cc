@@ -233,7 +233,9 @@ void TargetReconstruction::ProcessEvent(TRawEvent* rawEv){
   TargetCalibration* calSvc = (TargetCalibration*)fChannelCalibration;
   if(fChannelCalibration) calSvc->PerformBeamCalibration(getRecoBeam());
   RetrieveSignalFitParams();
-  AnalyzeEvent(rawEv);
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  } 
 }
 void TargetReconstruction::ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tRecoEvent){
 

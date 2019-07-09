@@ -14,7 +14,7 @@ typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 class DigitizerChannelReco : public ChannelVReco {
 public:
   DigitizerChannelReco(){;};
-  ~DigitizerChannelReco(){;};
+  virtual ~DigitizerChannelReco();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
@@ -32,7 +32,7 @@ public:
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
 
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
-
+  void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
 
   void SetAbsSignals();
   
@@ -77,6 +77,18 @@ private:
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
 
+  
+
+
+
+  Int_t fUsePulseProcessing ;
+  Int_t fPeakSearchWidth    ;
+  Double_t fZeroSuppression    ;
+  Double_t fChargeCut          ;
+  Double_t fDPParameterR1      ;
+  Double_t fDPParameterR2      ;
+  Double_t fDPParameterC       ;
+  
 
   /*
   //Veto variables 

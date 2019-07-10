@@ -33,10 +33,14 @@
 #include "PVetoAnalysis.hh"
 #include "EVetoAnalysis.hh"
 #include "HEPVetoAnalysis.hh"
+#include "EventSelection.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
 	    << std::endl;
+  std::cout<< "NOTE: ProcessingMode = 1 -> Validation"<<std::endl;
+  std::cout<< "NOTE: ProcessingMode = 2 -> DataQuality"<<std::endl;
+  std::cout<< "NOTE: ProcessingMode = 0 -> Event Selection"<<std::endl;
 }
 
 void sighandler(int sig){
@@ -320,9 +324,23 @@ int main(Int_t argc, char **argv)
    algoList.push_back(evetoAn);
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
+   EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
+   
+   evSel->InitHistos();
 
-   
-   
+   sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
+   ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
+   targetAn   ->Init(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam       );
+   pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
+   evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
+   hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+   evSel->Init(fRecoEvent, 
+	       fECalRecoEvent,    fECalRecoCl, 
+	       fPVetoRecoEvent,   fPVetoRecoCl, 
+	       fEVetoRecoEvent,   fEVetoRecoCl, 
+	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
+	       fSACRecoEvent,     fSACRecoCl, 
+	       fTargetRecoEvent,  fTargetRecoBeam );
    
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -367,13 +385,14 @@ int main(Int_t argc, char **argv)
        }
        //
       
-
+       /*
        sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
        ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
        targetAn   ->Init(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam       );
        pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
        evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
        hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+       */
 
        //
        targetAn    ->Process();
@@ -382,7 +401,8 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
-       
+       evSel       ->Process();
+
        //
        //
        hSvc->FillNtuple();

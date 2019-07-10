@@ -48,6 +48,7 @@ private:
   Double_t fClEnThrForHit;
   Double_t fClEnThrForSeed;
   Int_t NNoHits;
+  Int_t fClusterTimeAlgo; 
 
   //Clusters vectors
   std::vector<double> ClE;

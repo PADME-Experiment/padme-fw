@@ -64,6 +64,12 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
 
+  fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",0);
+  fDPParameterR1       = cfg->GetParOrDefault("RECO","fDPParameterR1",650.);
+  fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
+  fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.30e-9);
+
+
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
   if (!pedestalsFromFirstSamples()) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
@@ -139,6 +145,33 @@ void DigitizerChannelECal::PrepareDebugHistos(){
     hListCal->Add(hQCh[kk]); //CT
   }
 
+}
+void DigitizerChannelECal::DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin) {
+
+  Double_t R1=1300;//ohms
+  Double_t R2=100.; //ohms
+  Double_t C=0.15e-9; //nF
+
+  // Double_t R1=fDPParameterR1;//ohms
+  // Double_t R2=fDPParameterR2; //ohms
+  // Double_t C=fDPParameterC; //nF
+
+  
+  //Calculating the output pulse:
+  Double_t integr=0;
+  
+  static Double_t ic[1024];
+
+  Double_t bin_width=timebin;
+
+  integr=0;
+  ic[0]= uin[0]/R2;
+
+  for(int i=1;i<NPOINTS;i++) {
+    integr+=ic[i-1]*bin_width;
+    ic[i]= uin[i]/R2 - ((R1+R2)/(C*R1*R2))* integr;
+    uout[i] = uin[i] - integr/(C);
+  }  
 }
 
 void DigitizerChannelECal::SaveDebugHistos(){
@@ -237,7 +270,9 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     //if(abs(ZeromV)>0.0001 )  std::cout<<"BAD PEDESTAL!!! "<<ZeromV<<std::endl;
     if(pedestalsFromFirstSamples()) Charge = Charge200; 
   }
-  
+
+  fCharge=Charge;
+  return fCharge;
   if(pedestalsFromAutoTrgEvents() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
     Ch   = GetElChID();
     BID  = GetBdID();
@@ -415,9 +450,34 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 // first approximation timing algorithm to be optimized  M. Raggi
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t ll;
+
   static Double_t dxdt[1001];
   static Double_t Temp[1001];
   static Double_t Temp1[1001];
+
+  if(fUsePulseProcessing ) {
+    static Double_t DPP[1001];
+    
+    static Double_t AbsSamRec[1024];
+    static Double_t AbsSamRecDP[1024];
+
+
+    for(UShort_t s=0;s < 1000 ;s++){
+      AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096.*1000.; //in mV positivo
+      //std::cout<< s << "     "  << fSamples[s]  <<" V "<< AbsSamRec[s]  <<std::endl;
+    }
+    for(UShort_t s=1000;s<1024;s++){
+      AbsSamRec[s] = 0;
+    }
+    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,999 ,fTimeBin*1e-9);
+  }
+  
+  // H1->Reset();
+
+  //  if (fUsePulseProcessing) {
+  //DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,iMax-1 ,fTimeBin*1e-9);
+
+
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     histo   = (TH1D*)  hListTmp->FindObject("hdxdt");

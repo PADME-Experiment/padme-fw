@@ -193,7 +193,7 @@ Bool_t UserAnalysis::Process(){
     evt->PVetoRecoEvent->Hit(ipv)->SetTime(tPv);
   }
   
-  /*
+  
   for(int ipv = 0;ipv <  evt->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv1 = evt->PVetoRecoEvent->Hit(ipv)->GetTime();
     int chPV = evt->PVetoRecoEvent->Hit(ipv)->GetChannelId();
@@ -213,7 +213,7 @@ Bool_t UserAnalysis::Process(){
       }
     }
   }
-  */
+  
 
   for(int ipv = 0;ipv <  evt->PVetoRecoEvent->GetNHits(); ipv++) {
     int chPV = evt->PVetoRecoEvent->Hit(ipv)->GetChannelId();
@@ -247,7 +247,7 @@ Bool_t UserAnalysis::Process(){
       }
     }
 
-    continue;
+    // continue;
 
 
     
@@ -273,7 +273,7 @@ Bool_t UserAnalysis::Process(){
     
   }
 
-  return true;
+  //  return true;
 
   //Calo-Calo checks
   for(int ical = 0;ical <  evt->ECalRecoCl->GetNElements(); ical++) {

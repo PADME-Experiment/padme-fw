@@ -104,6 +104,16 @@ Bool_t EventSelection::InitHistosSelection()
   hname="AnnihilationGammaEcalGammaSac"; 
   hSvc->BookHisto(hname, binX, minX, maxX); 
   
+  binX=501;   
+  minX=-0.5;
+  maxX=500.5;
+
+  hname="DTimeECalSac";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="DTimeECalPVeto";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  
+  
   return true;
 }
 
@@ -113,6 +123,7 @@ Bool_t EventSelection::ProcessSelection()
   Bool_t retCode = 0;
   TRecoVCluster* ecalclu=NULL;
   TRecoVCluster* SACclu=NULL;
+  TRecoVCluster* PVetoclu=NULL;
   std::string hname;
   int loop=0;
   
@@ -120,7 +131,7 @@ Bool_t EventSelection::ProcessSelection()
  
   Int_t NClSAC = fClCollSAC->GetNElements();
   Int_t NClECal = fClCollECal->GetNElements();
-   
+  Int_t NClPVeto = fClCollPVeto->GetNElements();
   for (Int_t jecal=0; jecal<NClECal; ++jecal){
   ecalclu          = fClCollECal->Element(jecal);
   Double_t ClTECal = ecalclu->GetTime();
@@ -130,14 +141,25 @@ Bool_t EventSelection::ProcessSelection()
     SACclu          = fClCollSAC->Element(jsac);
     Double_t ClTsac = SACclu->GetTime();
     Double_t EnClsac= SACclu->GetEnergy();
+    Double_t DTimeECalSAC = fabs(ClTECal-ClTsac) ;
+    hname="DTimeECalSac";
+    hSvc->FillHisto(hname, DTimeECalSAC , 1.);
     if(fabs(ClTECal-ClTsac)<50.){ 
        hname="AnnihilationGammaEcalGammaSac";
        hSvc->FillHisto(hname, float(EnClECal) + float(EnClsac), 1.);
     } 
    }
+   
+    for (Int_t jpveto=0; jpveto<NClPVeto; ++jpveto){
+    PVetoclu          = fClCollPVeto->Element(jpveto);
+    Double_t ClTpv = PVetoclu->GetTime();
+    Double_t EnClpv= PVetoclu->GetEnergy();
+    Double_t DTimeECalPVeto = fabs(ClTECal-ClTpv);
+    hname="DTimeECalPVeto";
+    hSvc->FillHisto(hname, DTimeECalPVeto , 1.);
   
   }
-   
+ } 
    return retCode;
 }
 

@@ -67,23 +67,23 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_ClusterInTimeEnergy_angularRequest_thrEne_FiducialRegion";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
+    hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_SeedInTimeEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_SeedInTimeEnergy_DeltaPhi5";
+    hname="ECal_SeedInTimeEnergy_DeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy";
+    hname="ECal_LeadingSubLeadingInTimeEnergy ";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5";
+    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy_Gamma2inDeltaPhi45";
+    hname="ECal_LeadingSubLeadingInTimeEnergy_Gamma2inDeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5_Gamma2inDeltaPhi45";
+    hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20_Gamma2inDeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="ECal_SeedInTimeEnergy_sameEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
-    hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
+    hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
     hSvc->BookHisto(hname,nBin,min, max);
     /*
     nBin=1001;
@@ -179,6 +179,11 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
     hname="ECal_DTimeEMaxHitAllHit";
     hSvc->BookHisto(hname, nx, xlow, xup);
     hname="ECAL_WeigDstanceGammaGamma";
+    hSvc->BookHisto(hname, nx, xlow, xup);
+    nx = 300.;
+    xlow = -250.0;
+    xup  =  250.0;
+    hname = "ECal_HitTimeMenusPreviusHitTime";
     hSvc->BookHisto(hname, nx, xlow, xup);
     nx=200;
     xlow=0;
@@ -345,6 +350,7 @@ Bool_t ECalAnalysis::ProcessAnalysis()
   std::cout<<"+++++++++++++++++++++++++++++++++++++++++ ECalAnalysis ... "<<fNhits<<std::endl;
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
+    
     Int_t ix = hit->GetChannelId()/100;
     Int_t iy = hit->GetChannelId()%100;
     hname = "ECal_HitMap";
@@ -365,7 +371,11 @@ Bool_t ECalAnalysis::ProcessAnalysis()
     Double_t time = hit->GetTime();
     hname= "ECal_ClTime";
     hSvc->FillHisto(hname, time, 1.);
-   
+    if (i<=fNhits-2){
+      hitn= fhitEvent->Hit(i+1);
+      hname = "ECal_HitTimeMenusPreviusHitTime";
+      hSvc->FillHisto(hname, time-hitn->GetTime(), 1.);
+    }
    }
 
    for (Int_t i=0; i<fNhits; ++i){
@@ -612,7 +622,7 @@ Bool_t ECalAnalysis::ProcessAnalysis()
      Int_t LeadingDeltaPhi = ReserchGamma2InDeltaPhi(MaxIndex);
      Double_t timeLeadingDeltaPhi = (fClColl->Element(LeadingDeltaPhi))->GetTime();
      if(LeadingDeltaPhi >-1){
-       if(fabs(TimeMaxEn-timeLeadingDeltaPhi)<fAnnhilationDeltaTime )AnnihilationLeadingSubLeading(MaxIndex, LeadingDeltaPhi, "_Gamma2inDeltaPhi45");
+       if(fabs(TimeMaxEn-timeLeadingDeltaPhi)<fAnnhilationDeltaTime )AnnihilationLeadingSubLeading(MaxIndex, LeadingDeltaPhi, "_Gamma2inDeltaPhi20");
      }
    }
    
@@ -784,16 +794,16 @@ void ECalAnalysis::AnnihilationPhiSimmetry(Int_t indexGamma1, Int_t indexGamma2,
     hname="ECAL_AngularGamma2";
     hSvc->FillHisto(hname,AngGamma2,1.);
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
+         hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_ClusterInTimeEnergy_DeltaPhi5";
+         hname="ECal_ClusterInTimeEnergy_DeltaPhi20";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
    }
@@ -836,23 +846,23 @@ void ECalAnalysis::AnnihilationLeading(Int_t indexGamma1, Int_t indexGamma2)
   
   if(sqrt(Distance2Gamma1_2) > sqrt(Radius2Gamma1) ){
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_SeedInTimeEnergy_DeltaPhi5";
+         hname="ECal_SeedInTimeEnergy_DeltaPhi20";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          if(sameEnergy){
-           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
+           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
            hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          }
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_SeedInTimeEnergy_DeltaPhi5";
+         hname="ECal_SeedInTimeEnergy_DeltaPhi20";
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          if(sameEnergy){
-           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi5";
+           hname="ECal_SeedInTimeEnergy_sameEnergy_DeltaPhi20";
            hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
          }
      }
@@ -884,16 +894,16 @@ void ECalAnalysis::AnnihilationLeadingSubLeading(Int_t indexGamma1, Int_t indexG
   hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
   if(sqrt(Distance2Gamma1_2) > sqrt(Radius2Gamma1) ){
     if(AngGamma1*AngGamma2<0){
-     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1-AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5"+name;
+         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20"+name;
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
     }
    else{
-     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 1*0.09) //0.09=5deg
+     if(fabs(fabs(AngGamma1+AngGamma2)-3.14)< 4*0.09) //0.09=5deg
      {
-         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi5"+name;
+         hname="ECal_LeadingSubLeadingInTimeEnergy_DeltaPhi20"+name;
          hSvc->FillHisto(hname,clun->GetEnergy()+clu->GetEnergy(),1.);
      }
    }

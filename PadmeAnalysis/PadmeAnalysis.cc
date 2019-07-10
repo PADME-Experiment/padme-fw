@@ -34,6 +34,8 @@
 #include "EVetoAnalysis.hh"
 #include "HEPVetoAnalysis.hh"
 
+#include "UserAnalysis.hh"
+
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
 	    << std::endl;
@@ -214,6 +216,7 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection*           fEVetoRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
 
+
    TTree::SetMaxTreeSize(190000000000);
 
    TString recoTreeName = "Events";
@@ -298,6 +301,22 @@ int main(Int_t argc, char **argv)
 
    }
 
+   PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
+   
+   event->RecoEvent            =fRecoEvent          ;
+   event->TargetRecoEvent      =fTargetRecoEvent    ;
+   event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+   event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+   event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+   event->ECalRecoEvent        =fECalRecoEvent      ;
+   event->SACRecoEvent         =fSACRecoEvent       ;
+   event->TargetRecoBeam       =fTargetRecoBeam     ;
+   event->SACRecoCl            =fSACRecoCl          ;
+   event->ECalRecoCl           =fECalRecoCl         ;
+   event->PVetoRecoCl          =fPVetoRecoCl        ;
+   event->EVetoRecoCl          =fEVetoRecoCl        ;
+   event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+   
 
 
    //////////// You come here if a Chain with >=0 events has been found 
@@ -322,7 +341,8 @@ int main(Int_t argc, char **argv)
    algoList.push_back(hepvetoAn);
 
    
-   
+   UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+   UserAn->Init(event);
    
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -382,7 +402,7 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
-       
+       UserAn      ->Process();
        //
        //
        hSvc->FillNtuple();

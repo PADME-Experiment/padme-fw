@@ -546,7 +546,7 @@ void padmedisplay::Draw(int event)
    //hBeamSpot->Fill(NTTargetBeam_X, NTTargetBeam_Y);
    for(Long64_t ipv=0; ipv<NTNPVeto_Clusters;ipv++)   
      {
-       hPVetoZPos->Fill(NTPVeto_Clusters_Zpos[ipv], NTPVeto_Clusters_Energy[ipv]);
+       hPVetoZPos->Fill(NTPVeto_Clusters_Zpos[ipv]);
          
       // if (Cut(ientry) < 0) continue;
      }

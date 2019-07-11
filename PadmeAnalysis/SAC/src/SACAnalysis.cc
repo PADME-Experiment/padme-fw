@@ -17,7 +17,7 @@ SACAnalysis::SACAnalysis(): ValidationBase()
 SACAnalysis::SACAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
   fAlgoName = "SAC";
-  fAnnhilationDeltaTime=1.;
+  fAnnhilationDeltaTime=3.;
   fAnnhilationDeltaSpaceGravCenter=1.;
   InitHistos();
   return;
@@ -629,10 +629,10 @@ Int_t SACAnalysis::GammaCloseInTime(Int_t i, Double_t timeGamma1){
   Int_t indexHitBetterTime=-1;
   TRecoVCluster* clun=NULL;
   Int_t fNclus = fClColl->GetNElements();
-  for (Int_t in=i+1; in<fNclus; ++in){
+  for (Int_t in=0; in<fNclus; ++in){
     clun    = fClColl->Element(in);
     distanceInTime=clun->GetTime()-timeGamma1;
-    if(fabs(distanceInTime)<fAnnhilationDeltaTime)
+    if(fabs(distanceInTime)<fAnnhilationDeltaTime && i!=in)
     {
        //std::cout<<"In loop for better time, delta time "<< fabs(distanceInTime) << " betterDeltatime "<<  betterDeltaTime<<std::endl;
        if(abs(distanceInTime)< betterDeltaTime)

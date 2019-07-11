@@ -33,14 +33,15 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   if(fUseCalibE) {
     char fname[256];
     sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
+    std::cout<<"fname ECal calib " << fname <<std::endl;
     ECalib.open(fname);
   }
-  // if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
+  //if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
   // if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
   
   if(fUseCalibE>0 && !ECalib.is_open()){ 
   //  if(fUseCalibE==1 && !ECalib.is_open()){ 
-    std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
+    std::cout<<"ERROR: Cannot find ECal calibration file " << fCalibVersion <<"**************"<<std::endl;
     exit(1);
   }
   //  if(fUseCalibE==1) ReadCalibConstant();

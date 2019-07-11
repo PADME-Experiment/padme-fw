@@ -281,9 +281,7 @@ Bool_t ECalAnalysis::ProcessAnalysis()
 
 
 Bool_t ECalAnalysis::ProcessValidation()
-{
-  std::cout <<"I'm in ECalAnalysis::ProcessValidation" << std::endl;
-  
+{  
   ValidationBase::ProcessValidation("ECal");
   
   

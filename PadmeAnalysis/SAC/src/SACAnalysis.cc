@@ -364,7 +364,7 @@ Bool_t SACAnalysis::ProcessValidation()
      
      for(int j=0; j< fNclus; j++){
        clun   = fClColl->Element(j);
-       if(fabs(clu->GetTime() - clun->GetTime())<3.)
+       if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
        {
          Annihilation=false; 
        }

@@ -130,7 +130,6 @@ Bool_t SACAnalysis::InitHistosAnalysis()
     hname="SAC_AhhinilationMAPGravMethod";
     hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
 
-
     min=-0.5;
     max= 201;
     nBin=201;
@@ -221,6 +220,18 @@ Bool_t SACAnalysis::InitHistosValidation()
     hname = "SAC_HitEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
     hname = "SAC_ClusterEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=500;
+    min=0;
+    max=1000;
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=1000;
+    min=0;
+    max=15000;
+    hname = "SAC_HitTotEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname = "SAC_ClusterTotEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
     nBin=700;
     min=-300;
@@ -591,11 +602,13 @@ Bool_t SACAnalysis::ProcessValidation()
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   TRecoVHit* hit=NULL;
   std::string hname;
+  Double_t ETotHit=0.;
   Int_t fNhits = fhitEvent->GetNHits();
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
-    Int_t ix = hit->GetChannelId()/10;
-    Int_t iy = hit->GetChannelId()%10;
+    Int_t ix = hit->GetPosition().X();
+    Int_t iy = hit->GetPosition().Y();
+    ETotHit += hit->GetEnergy();
     //Int_t ix=position.X();
     //Int_t iy=position.Y();
   
@@ -604,21 +617,39 @@ Bool_t SACAnalysis::ProcessValidation()
 
     
    }
-
+   hname="SAC_HitTotEnergy";
+   hSvcVal->FillHisto(hname, ETotHit, 1.);
 
    TRecoVCluster* clu=NULL;
+   TRecoVCluster* clun=NULL;
    Int_t fNclus = fClColl->GetNElements();
-
-   std::cout<<"NClusters:  " << fNclus << std::endl;
+   Double_t ETotCl=0.;
+   Bool_t Annihilation=true;
    for (Int_t i=0; i<fNclus; ++i){
      clu    = fClColl->Element(i);
-     Int_t ix = clu->GetChannelId()/10;
-     Int_t iy = clu->GetChannelId()%10;
+     Int_t ix = clu->GetPosition().X();
+     Int_t iy = clu->GetPosition().Y();
+     ETotCl += clu->GetEnergy();
      //Int_t ix=position.X();
      //Int_t iy=position.Y();
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+     
+     for(int j=0; j< fNclus; j++){
+       clun   = fClColl->Element(j);
+       if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
+       {
+         Annihilation=false; 
+       }
+     }
+     if(Annihilation){
+       hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+       hSvcVal->FillHisto(hname, clu->GetEnergy());
+     }
    }
+   hname="ECal_HitTotEnergy";
+   hSvcVal->FillHisto(hname, ETotCl, 1.);
+   
    return retCode;
 }
 

@@ -157,7 +157,7 @@ void ECalDigitizer::ComputeNpe(ECalHit* hit,G4double* npe,G4double* time)
 
 void ECalDigitizer::Digitize()
 {
-  const double ECalDigiTimeWindow = 1.;
+  const double ECalDigiTimeWindow = 5.;
 
   ECalDigiCollection* ECaldigiCollection = new ECalDigiCollection("ECalDigitizer","ECalDigiCollection");
 

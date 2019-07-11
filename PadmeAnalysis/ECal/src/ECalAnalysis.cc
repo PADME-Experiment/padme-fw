@@ -54,7 +54,7 @@ Bool_t ECalAnalysis::InitHistosValidation()
   nBin=500;
   min=0;
   max=1000;
-  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns()";
+  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
   hSvcVal->BookHisto(hname,nBin,min, max);
   nBin=1000;
   min=0;
@@ -323,11 +323,11 @@ Bool_t ECalAnalysis::ProcessValidation()
      //Int_t iy=position.Y();
      hname = "ECal_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
-     for(int j=i; j< fNclus; j++){
+     for(int j=i+1; j< fNclus; j++){
        clun   = fClColl->Element(j);
        if(fabs(clu->GetTime() - clun->GetTime())<3.)
        {
-          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns()";
+          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
           hSvcVal->FillHisto(hname, clu->GetEnergy()+clun->GetEnergy());
        }
      }

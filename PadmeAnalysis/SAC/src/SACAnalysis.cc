@@ -148,7 +148,7 @@ Bool_t SACAnalysis::InitHistosValidation()
     nBin=500;
     min=0;
     max=1000;
-    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns()";
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
     hSvc->BookHisto(hname,nBin,min, max);
     nBin=1000;
     min=0;
@@ -351,6 +351,7 @@ Bool_t SACAnalysis::ProcessValidation()
    TRecoVCluster* clun=NULL;
    Int_t fNclus = fClColl->GetNElements();
    Double_t ETotCl=0.;
+   Bool_t Annihilation=true;
    for (Int_t i=0; i<fNclus; ++i){
      clu    = fClColl->Element(i);
      Int_t ix = clu->GetPosition().X();
@@ -361,13 +362,16 @@ Bool_t SACAnalysis::ProcessValidation()
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
      
-     for(int j=i; j< fNclus; j++){
+     for(int j=0; j< fNclus; j++){
        clun   = fClColl->Element(j);
-       if(fabs(clu->GetTime() - clun->GetTime())>3.)
+       if(fabs(clu->GetTime() - clun->GetTime())<3.)
        {
-          hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns()";
-          hSvcVal->FillHisto(hname, clu->GetEnergy());
+         Annihilation=false; 
        }
+     }
+     if(Annihilation){
+       hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+       hSvcVal->FillHisto(hname, clu->GetEnergy());
      }
    }
    hname="ECal_HitTotEnergy";

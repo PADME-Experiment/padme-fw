@@ -34,6 +34,8 @@
 #include "EVetoAnalysis.hh"
 #include "HEPVetoAnalysis.hh"
 #include "EventSelection.hh"
+#include "UserAnalysis.hh"
+#include "PadmeAnalysisEvent.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -342,6 +344,24 @@ int main(Int_t argc, char **argv)
 	       fSACRecoEvent,     fSACRecoCl, 
 	       fTargetRecoEvent,  fTargetRecoBeam );
    
+    PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
+
+    event->RecoEvent            =fRecoEvent          ;
+    event->TargetRecoEvent      =fTargetRecoEvent    ;
+    event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+    event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+    event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+    event->ECalRecoEvent        =fECalRecoEvent      ;
+    event->SACRecoEvent         =fSACRecoEvent       ;
+    event->TargetRecoBeam       =fTargetRecoBeam     ;
+    event->SACRecoCl            =fSACRecoCl          ;
+    event->ECalRecoCl           =fECalRecoCl         ;
+    event->PVetoRecoCl          =fPVetoRecoCl        ;
+    event->EVetoRecoCl          =fEVetoRecoCl        ;
+    event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+    UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+    UserAn->Init(event);
+
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
    Int_t nPVetoHits  =0;  
@@ -385,14 +405,6 @@ int main(Int_t argc, char **argv)
        }
        //
       
-       /*
-       sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
-       ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
-       targetAn   ->Init(fRecoEvent, fTargetRecoEvent,  fTargetRecoBeam       );
-       pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
-       evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
-       hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
-       */
 
        //
        targetAn    ->Process();
@@ -402,6 +414,7 @@ int main(Int_t argc, char **argv)
        evetoAn     ->Process();
        hepvetoAn   ->Process();
        evSel       ->Process();
+       UserAn      ->Process();
 
        //
        //

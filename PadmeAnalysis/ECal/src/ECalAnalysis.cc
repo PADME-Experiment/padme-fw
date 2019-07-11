@@ -51,6 +51,18 @@ Bool_t ECalAnalysis::InitHistosValidation()
   hSvcVal->BookHisto(hname,nBin,min, max);
   hname = "ECal_ClusterEnergy";
   hSvcVal->BookHisto(hname,nBin,min, max);
+  nBin=500;
+  min=0;
+  max=1000;
+  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns()";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  nBin=1000;
+  min=0;
+  max=15000;
+  hname = "ECal_HitTotEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  hname = "ECal_ClusterTotEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
   nBin=800;
   min=-400;
   max=400;
@@ -280,11 +292,13 @@ Bool_t ECalAnalysis::ProcessValidation()
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   TRecoVHit* hit=NULL;
   std::string hname;
+  Double_t ETotHit=0.;
   Int_t fNhits = fhitEvent->GetNHits();
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
-    Int_t ix = hit->GetChannelId()/100;
-    Int_t iy = hit->GetChannelId()%100;
+    Int_t ix = hit->GetPosition().X();
+    Int_t iy = hit->GetPosition().Y();
+    ETotHit += hit->GetEnergy();
     //Int_t ix=position.X();
     //Int_t iy=position.Y();
   
@@ -293,21 +307,33 @@ Bool_t ECalAnalysis::ProcessValidation()
 
     
    }
-
+   hname="ECal_HitTotEnergy";
+   hSvcVal->FillHisto(hname, ETotHit, 1.);
 
    TRecoVCluster* clu=NULL;
+   TRecoVCluster* clun=NULL;
    Int_t fNclus = fClColl->GetNElements();
-
-   std::cout<<"NClusters:  " << fNclus << std::endl;
+   Double_t ETotCl=0.;
    for (Int_t i=0; i<fNclus; ++i){
      clu    = fClColl->Element(i);
-     Int_t ix = clu->GetChannelId()/100;
-     Int_t iy = clu->GetChannelId()%100;
+     Int_t ix = clu->GetPosition().X();
+     Int_t iy = clu->GetPosition().Y();
+     ETotCl+=clu->GetEnergy();
      //Int_t ix=position.X();
      //Int_t iy=position.Y();
      hname = "ECal_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+     for(int j=i; j< fNclus; j++){
+       clun   = fClColl->Element(j);
+       if(fabs(clu->GetTime() - clun->GetTime())<3.)
+       {
+          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns()";
+          hSvcVal->FillHisto(hname, clu->GetEnergy()+clun->GetEnergy());
+       }
+     }
    }
+   hname="ECal_ClusterTotEnergy";
+   hSvcVal->FillHisto(hname, ETotCl, 1.);
 
 
    return retCode;

@@ -27,10 +27,17 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
-
+  fCalibVersion = (int)cfg->GetParOrDefault("EnergyCalibration","CalibVersion",3);
   // Energy calibration 
-  if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
-  if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
+  if(fUseCalibE) {
+    char fname[256];
+    sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
+    ECalib.open(fname);
+  }
+  // if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
+  // if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
   if(fUseCalibE>0 && !ECalib.is_open()){ 
   //  if(fUseCalibE==1 && !ECalib.is_open()){ 
     std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
@@ -89,6 +96,7 @@ void ECalCalibration::ReadCalibConstant()
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
+  static int PRINTED = 0; 
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     if (fUseCalibE > 0){
       int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
@@ -101,7 +109,10 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 	Hits[iHit]->SetEnergy(fHitECalibrated);
 	//	std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
       }else{
-	std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	if(!PRINTED) {
+	  std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	  PRINTED++;
+	}
       }
       
     }

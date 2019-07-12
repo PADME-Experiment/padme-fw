@@ -9,6 +9,7 @@
 #define TungstenGeometry_H 1
 
 #include "globals.hh"
+#include <vector>
 
 class G4LogicalVolume;
 

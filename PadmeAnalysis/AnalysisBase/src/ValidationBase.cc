@@ -170,13 +170,13 @@ Bool_t ValidationBase::ProcessValidation(TString name)
   TVector3 position;
   TRecoVHit* hit=NULL;
   std::string hname;
-  std::cout << "in ProcessValidation("<<name<<")" << std::endl;
-  if (fhitEvent) std::cout << "in ProcessValidation("<<name<<")" << std::endl;
-  else
-    {
-      std::cout<<" no data "<<std::endl;
-      return true;
-    }
+  //std::cout << "in ProcessValidation("<<name<<")" << std::endl;
+  //if (fhitEvent) std::cout << "in ProcessValidation("<<name<<")" << std::endl;
+  //else
+  //  {
+  //    std::cout<<" no data "<<std::endl;
+  //    return true;
+  //  }
   Int_t fNhits = fhitEvent->GetNHits();
   hname=name+"_NHits";
   hSvcVal->FillHisto(hname,fNhits,1.);

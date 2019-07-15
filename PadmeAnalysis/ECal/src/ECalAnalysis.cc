@@ -17,7 +17,7 @@ ECalAnalysis::ECalAnalysis(): ValidationBase()
 ECalAnalysis::ECalAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
   //fAlgoName = "ECal";
-  fAnnhilationDeltaTime=2.;
+  fAnnhilationDeltaTime=3.;
   InitHistos();
   return;
 }

@@ -50,6 +50,9 @@ Bool_t SACAnalysis::InitHistosAnalysis()
     hSvc->BookHisto(hname,nBin,min, max);
     hname = "SAC_ClusterEnergyInFiducialRegion";
     hSvc->BookHisto(hname,nBin,min, max);
+    nBin=500;
+    min=0;
+    max=1000;
     hname="SAC_ClusterInTimeEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="SAC_ClusterInTimeEnergyPlusAloneCl";
@@ -57,6 +60,14 @@ Bool_t SACAnalysis::InitHistosAnalysis()
     hname="SAC_AnnihilationGravCenterCloseInZero";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="SAC_AnnihilationGravCenterCloseInZero_PlusAloneCl";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_ForEachCluster";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_ForEvent";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_For2ndAnnCluster";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_For3thAnnCluster";
     hSvc->BookHisto(hname,nBin,min, max);
     hname="SAC_ClusterInTimeEnergy_thrEne";
     hSvc->BookHisto(hname,nBin,min, max);
@@ -98,6 +109,11 @@ Bool_t SACAnalysis::InitHistosAnalysis()
     max=1000.5;
     hname="SAC_NEvent_ClInTime";
     hSvc->BookHisto(hname, nBin, min, max); */
+    nBin=101;
+    min=-0.5;
+    max=100.5;
+    hname="SAC_NClusterOutOfAnnihilationTimeWindow";
+    hSvc->BookHisto(hname, nBin, min, max);
 
     nBin=600;
     min=0;
@@ -350,8 +366,10 @@ Bool_t SACAnalysis::ProcessAnalysis()
    
 
    Int_t fNclus = fClColl->GetNElements();
+   std::cout<<"+++++++++++++++++++++++++++++++++++++++++ SACAnalysis ...cluster  "<<fNclus<<std::endl;
    hname = "SAC_NCluster";
    hSvc->FillHisto(hname, fNclus,1.);
+   Bool_t AnnihilationForEvent=true;
    for (Int_t i=0; i<fNclus; ++i){
      clu    = fClColl->Element(i);
      seed   = clu->GetSeed();
@@ -383,15 +401,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
        hname = "SAC_ClusterEnergyInFiducialRegion";
        hSvc->FillHisto(hname, clu->GetEnergy(), 1.);
      }
-      if(ix<9){
-       hname="SAC_EClLeftSize";
-       hSvc->FillHisto(hname, clu->GetEnergy(), 1.);
-     }
-     if(iy<3 || iy>24){
-       hname="SAC_EClTopBottomSize";
-       hSvc->FillHisto(hname, clu->GetEnergy(), 1.);
-     }
-
+      
      seedT  = clu->GetTime();
      clSize = clu->GetNHitsInClus();
      hname = "SAC_NHitsInClus";
@@ -425,18 +435,18 @@ Bool_t SACAnalysis::ProcessAnalysis()
        hname = "SAC_inClus_DTseed";
        hSvc->FillHisto(hname,hit->GetTime()-seedT,1.);
 
-       for (Int_t ihn=ih+1; ihn<clSize; ++ihn){
-	 Int_t hitIndn    = vhinclu[ihn];
-	 if (hitIndn == seed) continue;
-	 hitn = fhitEvent->Hit(hitIndn);
-	 //std::cout<<" hit comp. n "<<ih<<" vs comp in= "<<ihn<<" chId:  "<<hit->GetChannelId()<<"   "<<hitn->GetChannelId()<<std::endl;
-	 hname = "SAC_inClus_DCHXhits";
-	 hSvc->FillHisto(hname,hit->GetChannelId()/10-hitn->GetChannelId()/10,1.);
-	 hname = "SAC_inClus_DCHYhits";
-	 hSvc->FillHisto(hname,hit->GetChannelId()%10-hitn->GetChannelId()%10,1.);
-	 hname = "SAC_inClus_DThits";
-	 hSvc->FillHisto(hname,hit->GetTime()-hitn->GetTime(),1.);
-       }
+     for (Int_t ihn=ih+1; ihn<clSize; ++ihn){
+       Int_t hitIndn    = vhinclu[ihn];
+       if (hitIndn == seed) continue;
+       hitn = fhitEvent->Hit(hitIndn);
+       //std::cout<<" hit comp. n "<<ih<<" vs comp in= "<<ihn<<" chId:  "<<hit->GetChannelId()<<"   "<<hitn->GetChannelId()<<std::endl;
+       hname = "SAC_inClus_DCHXhits";
+       hSvc->FillHisto(hname,hit->GetChannelId()/10-hitn->GetChannelId()/10,1.);
+       hname = "SAC_inClus_DCHYhits";
+       hSvc->FillHisto(hname,hit->GetChannelId()%10-hitn->GetChannelId()%10,1.);
+       hname = "SAC_inClus_DThits";
+       hSvc->FillHisto(hname,hit->GetTime()-hitn->GetTime(),1.);
+   }
      }
 
      for (Int_t in=0; in<fNclus; ++in){
@@ -449,7 +459,38 @@ Bool_t SACAnalysis::ProcessAnalysis()
        hname = "SAC_Clus2Clus_seedDT";
        hSvc->FillHisto(hname,clun->GetTime()-clu->GetTime(),1.);
      }
-
+      Bool_t AnnihilationForEachCluster=true;
+      Int_t countAnnihilation=0;
+      for(int j= 0; j< fNclus; j++){
+       clun   = fClColl->Element(j);
+       if(fabs(clu->GetTime() - clun->GetTime())<3. && j!=i)
+       {
+         AnnihilationForEachCluster=false;
+         AnnihilationForEvent=false; 
+       }
+       else{countAnnihilation++;}
+        if(countAnnihilation==2){
+          hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_For2ndAnnCluster";
+          hSvc->FillHisto(hname, clu->GetEnergy());
+       }
+       if(countAnnihilation==3){
+          hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_For3thAnnCluster";
+          hSvc->FillHisto(hname, clu->GetEnergy());
+       }
+     }
+     
+     if(AnnihilationForEachCluster){
+       hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_ForEachCluster";
+       hSvc->FillHisto(hname, clu->GetEnergy());
+     }
+     if(AnnihilationForEvent){
+       hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest_ForEvent";
+       hSvc->FillHisto(hname, clu->GetEnergy());
+     }
+     
+     hname="SAC_NClusterOutOfAnnihilationTimeWindow";
+     hSvc->FillHisto(hname, countAnnihilation);
+    
      
      Int_t indexHitBetterTime = GammaCloseInTime(i, seedT);
 
@@ -635,7 +676,7 @@ Bool_t SACAnalysis::ProcessValidation()
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
      
-     for(int j=0; j< fNclus; j++){
+     for(int j=i+1; j< fNclus; j++){
        clun   = fClColl->Element(j);
        if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
        {

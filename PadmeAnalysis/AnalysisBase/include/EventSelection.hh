@@ -21,6 +21,8 @@ public:
   EventSelection(Int_t processingMode, Int_t verbosityFlag);
   ~EventSelection();
 
+  Double_t applyTimePVetoLinCorr(Double_t  xChId, Double_t xTime);
+
   virtual Bool_t InitSelection(TRecoEvent* evHeader, TRecoVObject* targetev, TTargetRecoBeam* targetcl, TRecoVObject* ecalev, TRecoVClusCollection* ecalcl, TRecoVObject* pvetoev, TRecoVClusCollection* pvetocl, TRecoVObject* evetoev, TRecoVClusCollection* evetocl, TRecoVObject* hepvetoev, TRecoVClusCollection* hepvetocl,TRecoVObject* sacev, TRecoVClusCollection* saccl);
   
 

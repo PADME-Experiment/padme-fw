@@ -21,15 +21,17 @@ public:
   
   void ReadCalibrationConstants();
   void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
-  void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
+  //void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
 private:
 
   Double_t fCalibCh   [25];
   int fCalibrationFile;
+  int fUseIndividualChannelGain;
   //std::map<int, double>* fChannelGainMap;
 
 
 };
 #endif
+
 
 

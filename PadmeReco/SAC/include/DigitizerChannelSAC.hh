@@ -9,6 +9,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TTree.h"
 
 //ADC board 27, Ch0-25
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
@@ -23,7 +24,12 @@ public:
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
   virtual void Init(PadmeVRecoConfig *cfg){return;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
+  virtual void PrepareDebugHistos();
+  virtual void PrepareTmpHistos();
+  virtual void SaveDebugHistos();
 
+  void SetGlobalRunningMode(GlobalRecoConfigOptions* o){fGlobalMode = o;}
+  void SetLocalRunningMode(LocalRecoConfigOptions* o)  {fLocalMode  = o;}
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
@@ -58,6 +64,11 @@ private:
   Double_t fCharge;
   Double_t fEnergy;
   Double_t fCalibEnergy;
+  Double_t fAvg200;
+  Double_t fTrig;
+
+  Int_t fElChID;
+  Int_t fBdID;
 
   Double_t fTime;
   UShort_t fNPedSamples;
@@ -88,29 +99,43 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
+  Bool_t   IsSaturated();   // Check if the signal is saturated
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
 
+  Int_t GetElChID(){return fElChID;};
 
-//  // Robaccia da levare
-//  TFile *fileOut;
+  Int_t GetBdID(){return fBdID;};
+  void  SetBdID(Int_t BdID){fBdID=BdID;};
+
   TH1D ** hPedCalo;
-//  TH1D ** hPedMean;
-//  TH1D ** hVMax;
-//  TH1D ** hQCh;
-//  TH1D ** hChTime;
-//  TH1D *  hVPeak;
-//  TH1D *  hMean;
-//  TH1D *  hCharge;
-//  TH1D *  hTime;
+  TH1D ** hPedMean;
+  TH1D ** hVMax;
+  TH1D ** hQCh;
+  TH1D ** hChTime;
+  TH1D *  hVPeak;
+  TH1D *  hMean;
+  TH1D *  hCharge;
+   TH1D *  hTime;
 //
 //
-  TList* hListCal;  
-  TH1D* histo;
-  
-  //SAC variables 
+
+  TFile * fileOut;
+
+  TH1F * hdxdt;
+  TH1F * hdxdtMax;
+  TH1F * hdxdtRMS;
+  //TH1F * hTime;
+  TH1D * hTimeCut;
+  TH1D * hTimeOv;
+  TH1F * hSignal;
+  TH1F * hSat;
+  TH1F * hSigOv;
+  TH1F * hDiff;
+
+   //SAC variables 
   Double_t fCh        [25];
   Double_t fCry       [25];//fCrystal mapping
   Double_t fMeasure   [25];//fCrystal position in mm
@@ -121,6 +146,24 @@ private:
   Double_t fQtot        ;
   Double_t fXbeam       ;
   Double_t fYbeam       ;
+
+  Double_t Zsup;
+  Double_t HitE;
+  Double_t HitE200;
+  Double_t HitEHyb;
+  Double_t HitT;
+  Int_t ElCh;
+  Int_t Raw;
+  Int_t Col;
+
+  TH1D* histo;
+  TH1D* histoSat;
+
+  TList* hListCal;
+  TList* hListEv;
+  TList* hListTmp;  // More general histograms 
+  TTree* SAC;
+
 };
 
 #endif

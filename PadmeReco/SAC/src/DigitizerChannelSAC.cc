@@ -20,12 +20,23 @@ void DigitizerChannelSAC::PrintConfig(){
     std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
     // if(i%5==0) std::cout<<std::endl;
   }
+
+
+ if(fGlobalMode->GetGlobalDebugMode()!=0){
+   std::cout<<"General Config Flags SAC Digi***************** "<<std::endl;
+   std::cout<<"fIsPed          "<<fGlobalMode->IsPedestalMode()<< std::endl;
+   std::cout<<"fIsReco         "<<fGlobalMode->IsRecoMode()<< std::endl;
+   std::cout<<"fIsMonitor      "<<fGlobalMode->IsMonitorMode()<< std::endl;
+   std::cout<<"fIsCosmic       "<<fGlobalMode->IsCosmicsMode()<< std::endl;
+   std::cout<<"fIsDebug  SAC  "<<fGlobalMode->GetGlobalDebugMode()<< std::endl;
+  }
 }
 
 
-void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
+void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConfig *cfg){
 
-  fGlobalMode = gMode;
+  //fGlobalMode = gMode;
+  fGlobalMode = gOptions; //CT
   H1 = new TH1D("h1","h1",990,0.,990.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
@@ -60,6 +71,18 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   SetAnalogOffSets(); //M. Raggi: 19/10/2018  read anaolg offsets values from file
   PrintConfig();
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    PrepareDebugHistos(); //debugging mode histos
+  }else{
+    PrepareTmpHistos();  //Temp histos
+  }
+}
+
+void DigitizerChannelSAC::PrepareTmpHistos(){
+  hListTmp    = new TList();  
+  hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  hListTmp->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
 }
 
 //M. Raggi: 19/10/2018
@@ -79,8 +102,64 @@ void DigitizerChannelSAC::SetAnalogOffSets(){
   else{ 
     std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
   } 
+ 
+}
+
+void DigitizerChannelSAC::PrepareDebugHistos(){
+  fileOut    = new TFile("SACAn.root", "RECREATE");
+  hListCal   = new TList();  
+  hListEv    = new TList();  
+  SAC = new TTree("SAC","SAC");
+
+  SAC->Branch("ElCh",&ElCh);
+  SAC->Branch("Raw",&Raw);
+  SAC->Branch("Col",&Col);
+  SAC->Branch("Zsup",&Zsup);
+  SAC->Branch("Avg200",&fAvg200);
+  SAC->Branch("HitE",&HitE);
+  SAC->Branch("HitEHyb",&HitEHyb);
+  SAC->Branch("Hit200E",&HitE200);
+  SAC->Branch("HitT",&HitT);
+  SAC->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
+//  SAC->Branch("ETotInner",&IEnner);
+//  SAC->Branch("EInner",&HitEInner);
+
+  hPedCalo = new TH1D*[32];
+  //  hAvgCalo = new TH1D*[32];
+  hPedMean = new TH1D*[32];
+  hVMax    = new TH1D*[32];
+  //  h200QCh  = new TH1D*[32]; //CT
+  hQCh     = new TH1D*[32]; //CT
+
+  hListEv->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListEv->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
+  hListEv->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
+  hListEv->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  hListEv->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
+  hListEv->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
+  hListEv->Add(hDiff   = new TH1F("hDiff","hDiff",4000,0.,1000.));
+
+  hListCal->Add(hTime= new TH1D("hTime","hTime",1000,0.,1000.));
+  hListCal->Add(hTimeCut= new TH1D("hTimeCut","hTimeCut",1000,0.,1000.));
+  hListCal->Add(hTimeOv= new TH1D("hTimeOv","hTimeOv",1000,0.,1000.));
+  
+  for(int kk=0;kk<32;kk++){
+    hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
+    //  hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
+    hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
+    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
+    //  h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
+    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400); //CT
+    hListCal->Add(hPedCalo[kk]);
+    //    hListCal->Add(hAvgCalo[kk]);
+    hListCal->Add(hPedMean[kk]);
+    hListCal->Add(hVMax[kk]);
+    // hListCal->Add(h200QCh[kk]); //CT
+    hListCal->Add(hQCh[kk]); //CT
+  }
 
 }
+
 
 //void DigitizerChannelSAC::SetAbsSignals(){
 //  for(UShort_t i = 0;i<fNSamples;i++){
@@ -247,12 +326,13 @@ Double_t DigitizerChannelSAC::CalcPosition(UShort_t fCh) {
    return fPosition;
 }
 void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
-  Double_t fchPed=CalcPedestal();
+  //  Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
+  //  IsSaturated(); //check if the signal is saturated //CT
 }
 
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
-  Double_t fchPed=CalcPedestal();
+  //  Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
 }
 
@@ -284,26 +364,56 @@ void DigitizerChannelSAC::SetAbsSignals(){
 
 
 DigitizerChannelSAC::~DigitizerChannelSAC(){
-
-//  hVPeak->Write();
+  SaveDebugHistos();
+  //  hVPeak->Write();
 //  fileOut->cd();    
 //  for(Int_t ElCh=0;ElCh<25;ElCh++){
 //    char name[50];
 //    sprintf(name,"hVMax%d",ElCh);
 //    hVPeak=(TH1D*) hListCal->FindObject(name);
 //    hVPeak->Write();
-//
+//    
 //    sprintf(name,"hPedCalo%d",ElCh);
 //    hMean=(TH1D*) hListCal->FindObject(name);
 //    hMean->Write();
-//
+//    
 //    sprintf(name,"hQCh%d",ElCh);
 //    hCharge=(TH1D*) hListCal->FindObject(name);
 //    hCharge->Write();
-//
+//    
 //    sprintf(name,"hChTime%d",ElCh);
 //    hTime=(TH1D*) hListCal->FindObject(name);
-//    hTime->Write();
-//
+//    hTime->Write(); 
 //  }
+};
+
+void DigitizerChannelSAC::SaveDebugHistos(){
+  fileOut->cd();
+  hListCal->Write();  
+  SAC->Write();
+  fileOut->Close();
+}
+
+// check on saturated signals //CT 
+Bool_t DigitizerChannelSAC::IsSaturated(){
+  Bool_t IsSaturated=false;
+  Short_t min  = TMath::MinElement(1000,&fSamples[0]); 
+  Short_t max  = TMath::MaxElement(1000,&fSamples[0]); 
+  Short_t nsat = 0;
+  Int_t Ch     = GetElChID();
+  Int_t BID    = GetBdID();
+ 
+  if(min < 5){ 
+    IsSaturated=true;
+    if(fGlobalMode->GetGlobalDebugMode()) histoSat = (TH1D*) hListEv->FindObject("hSat"); // swt the debug flag.
+    
+    for(int ll=1;ll<1001;ll++){
+      if(fSamples[ll]<5) nsat++;
+      if(fGlobalMode->GetGlobalDebugMode()) histoSat->SetBinContent(ll,fSamples[ll]);
+    }
+
+    if(fGlobalMode->GetGlobalDebugMode()) histoSat->Reset();
+  }
+  return IsSaturated;
+
 };

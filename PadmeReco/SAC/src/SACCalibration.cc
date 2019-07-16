@@ -26,16 +26,24 @@ void SACCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   PadmeVCalibration::Init(cfg, chIdMgr );
   
   fCalibrationFile  = (int)cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 0); 
-  std::cout <<"Calibration File Chosen "<<fCalibrationFile<<std::endl; 
+  //std::cout <<"Calibration File Chosen "<<fCalibrationFile<<std::endl; 
+  fUseIndividualChannelGain  = (int)cfg->GetParOrDefault("EnergyCalibration", "UseIndividualChannelGain", 1); 
+  std::cout <<"Choose to do or not calibration "<<fUseIndividualChannelGain<<std::endl;
 
   ReadCalibrationConstants();
 
   std::vector<int> chIds = chIdMgr->GetChannelIDVector();
 
-  for (unsigned int j=0; j<chIds.size();++j)
+ 
+  
+   for (unsigned int j=0; j<chIds.size();++j)
 	{
-	  //std::cout<<" init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... "<<std::endl;
+	  
 	  double channelGain = fCalibCh[j];
+
+          std::cout<<" **********************************init calib consts .... j "<<j<<" ID="<<chIds[j]<<" Calib Values   "<<channelGain<<std::endl;
+  
+          if(fUseIndividualChannelGain==0) channelGain=1;
 
 	  if (fEnergyCalibMap->find(chIds[j])!=fEnergyCalibMap->end()) 
 	    {
@@ -43,11 +51,14 @@ void SACCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 	    }
 	  else std::cout<<"SACCalibration::Init - WARNING - no entry found in energy calib map for id="<<chIds[j]<<std::endl;  
 	}
+  
 
 }
 void SACCalibration::ReadCalibrationConstants(){
 
 
+  //fname='SAC';
+  //PadmeVCalibration::ReadCalibrationConstants(fname);
   std::ifstream Calib;
   char fname[50];
   //Int_t Calibration=0;
@@ -69,7 +80,7 @@ void SACCalibration::ReadCalibrationConstants(){
   return;
 
 }
-
+/*
 void SACCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits){
  
   double Energy = 0.;
@@ -98,6 +109,7 @@ void SACCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits){
 
 }
 
+*/
 
 
 

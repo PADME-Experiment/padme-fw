@@ -87,7 +87,8 @@ Bool_t EventSelection::InitHistos()
 {
   if (fProcessingMode==1)
     {
-      return 0;//InitHistosValidation();
+      //return 0;//
+      return InitHistosAnalysis();
     }
   else if (fProcessingMode==2)
     {
@@ -120,7 +121,8 @@ Bool_t EventSelection::Process()
   
   if (fProcessingMode==1)
     {
-      return 0;//ProcessValidation();
+      //return 0;//ProcessValidation();
+      return ProcessAnalysis();
     }
   else if (fProcessingMode==2)
     {

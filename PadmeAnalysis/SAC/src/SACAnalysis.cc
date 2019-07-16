@@ -361,12 +361,14 @@ Bool_t SACAnalysis::ProcessValidation()
      //Int_t iy=position.Y();
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
-     
+     Annihilation=true;  
+ 
      for(int j=0; j< fNclus; j++){
        clun   = fClColl->Element(j);
        if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
        {
-         Annihilation=false; 
+         Annihilation=false;
+	 j=fNclus;
        }
      }
      if(Annihilation){

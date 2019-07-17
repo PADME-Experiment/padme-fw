@@ -154,8 +154,13 @@ Bool_t EventSelection::ProcessAnalysis()
   TRecoVCluster* yClu;
   Double_t xTime, xTimeLinCorr, yTime, xEne, yEne, aEne, aTime;
   Int_t xChId, yChId, aChId;
- 
+
+
+  if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) std::cout<<"input data are simulatetd "<<std::endl;
+  else std::cout<<"input data are NOT simulated "<<std::endl;
+      
   Double_t eSumECalHits=0.;
+  Double_t xEnergy=0;
   std::string hname;
   if (fPVeto_hitEvent->GetNHits() > 0){
   for (unsigned int hPVeto=0; hPVeto<fPVeto_hitEvent->GetNHits(); ++hPVeto)
@@ -163,6 +168,7 @@ Bool_t EventSelection::ProcessAnalysis()
       xHit = fPVeto_hitEvent->Hit(hPVeto);
       xTime= xHit->GetTime();
       xChId= xHit->GetChannelId();
+      xEnergy = xHit->GetEnergy();
       hname="timePVetoVsCh_Hits";
       hSvc->FillHisto2(hname, xTime, (float)xChId);
       hname="timePVetoVsCh_linearCorr_Hits";
@@ -202,10 +208,16 @@ Bool_t EventSelection::ProcessAnalysis()
       for (unsigned int cSAC=0; cSAC<fSAC_ClColl->GetNElements(); ++cSAC)
 	{
 	  yClu = fSAC_ClColl->Element(cSAC);
+	  
 	  if (yClu->GetEnergy()<50.) continue;
 	  if ( fabs(yClu->GetTime()-xTimeLinCorr) > 1. ) continue;
 	  
 	  hname="SACClEVsPVetoHitChId_1ns_linearCorr";
+	  hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
+	  if (yClu->GetChannelId()!=21) continue;
+	  if(xEnergy < 10.) continue;
+	  if(xEnergy > 50.) continue;
+	  hname="SACClE21VsPVetoHitChId_1ns_linearCorr";
 	  hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
 	}
     }
@@ -475,6 +487,8 @@ Bool_t EventSelection::InitHistosAnalysis()
   hSvc->BookHisto(hname, 200, -20., 20.);
 
   hname="SACClEVsPVetoHitChId_1ns_linearCorr";
+  hSvc->BookHisto2(hname, 101, -0.5, 100.5, 250, 50., 300.);
+  hname="SACClE21VsPVetoHitChId_1ns_linearCorr";
   hSvc->BookHisto2(hname, 101, -0.5, 100.5, 250, 50., 300.);
 
   

@@ -122,6 +122,7 @@ private:
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
   Int_t fPedestalMode;
+  Int_t fProcessing;
   
   Int_t fMinAmplitude;
 
@@ -131,7 +132,8 @@ private:
   Double_t fTimeBin;
   Double_t fVoltageBin;
   Double_t fImpedance;
-  Double_t fAmpli;
+  Double_t fAmpli1;//1 refers to multihit
+  Double_t fAmpli2;//2 refers to RC processing
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
@@ -192,11 +194,16 @@ private:
   TH1F * hDerivRatio[10];
   TH1F * hDerivRatioSmooth[10];
 
-  TH1F * hAmpSpectrum[96];
   TH1F * hPedSpectrum[96];
-  TH1F * hAmpChargeRatio[96];
 
+  TH1F * hAmpSpectrum[96];
+  TH1F * hAmpChargeRatio[96];
   TH2F * hAmpCharge2D[96];
+
+  TH1F * hAmpSpectrumRC[96];
+  TH1F * hAmpChargeRatioRC[96];
+  TH2F * hAmpCharge2DRC[96];
+
 
   TH1F * hdxdtMaxTime;
   TH1F * hSigMax;
@@ -205,6 +212,7 @@ private:
   TH1F * hTrialSignal;
   TH1F * hRCProcessedTrialSignal;
   TH1F * hChargeInt;
+  TH1F * hChargeIntRC;
   TH1F * hdxdtRMS;
   TH1F * hTime;
   TH1F * hTIntCorr;
@@ -253,9 +261,19 @@ private:
   TList* hListAmp; //Amplitude spectra
   TList* hListPed; //Pedestal spectra
   TList* hListAmpChargeRatio; //Spectra of ratio of amplitude to charge
-TList*   hListAmpCharge2D; //2D amplitude/charge plots
+  TList* hListAmpCharge2D; //2D amplitude/charge plots
   TList* hListEv;  // More general histograms 
   TList* hListTmp;  // More general histograms 
+
+  TList* hListCalRC; // single board related histograms 
+  TList* hListWaveformRC; //Waveform histograms
+  TList* hListAmpRC; //Amplitude spectra
+  TList* hListPedRC; //Pedestal spectra
+  TList* hListAmpChargeRatioRC; //Spectra of ratio of amplitude to charge
+  TList* hListAmpCharge2DRC; //2D amplitude/charge plots
+  TList* hListEvRC;  // More general histograms 
+  TList* hListTmpRC;  // More general histograms 
+
   TTree* Reco;
   
 };

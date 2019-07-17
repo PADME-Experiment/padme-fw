@@ -43,6 +43,10 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+  
+  G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
 
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
@@ -59,6 +63,8 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
     newHit->SetPosition(worldPosPre);
     newHit->SetLocalPosition(localPosPre);
+    newHit->SetGlobalPositionPost(worldPosPost);
+    newHit->SetLocalPositionPost(localPosPost);
 
     //    std::cout<<"Evento strano "<<localPosPre<<std::endl;
     //    if(abs(localPosPre.y())>0.00001){ 

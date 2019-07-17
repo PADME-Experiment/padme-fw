@@ -8,6 +8,7 @@
 
 #include "ECalReconstruction.hh"
 #include "ECalCalibration.hh"
+#include "ECalGeometry.hh"
 #include "DigitizerChannelECal.hh"
 
 #include "ECalParameters.hh"
@@ -35,6 +36,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelECal();
   fClusterization = new ECalSimpleClusterization();
+  fGeometry = new ECalGeometry(); 
   //fTriggerProcessor = new PadmeVTrigger(); // this is done for all detectors in the constructor of PadmeVReconstruction
   fChannelCalibration = new ECalCalibration();
 
@@ -45,6 +47,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fClEnThrForSeed         = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
+  fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
+
+
 
   //  fClusters.clear();
 }
@@ -137,8 +142,8 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
-    //    std::cout<<"iBdID "<<iBdID<<std::endl;
-    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+    //std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( iBdID )) {
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);
@@ -151,10 +156,17 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
  	((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
  	((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
  	((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
+	/*
+	if (ChID<0)std::cout<<"Why chId<0 ???? ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich<<" ... ADC channel = "<<(Int_t)chn->GetChannelNumber()<<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" ADB board n. "<<iBdID<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
+	else std::cout<<"ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich
+		      <<" ... idBD/idCH = "<<(Int_t)ADC->GetBoardId()<<"/"<<(Int_t)chn->GetChannelNumber()
+		      <<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
+	*/
 	
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
+	//if (ChID==1625) std::cout<<" n. of hits in chid 1625 = "<<nHitsAfter-nHitsBefore<<std::endl;
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
 	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
@@ -645,8 +657,10 @@ void ECalReconstruction::BuildSimpleECalClusters()
 	//	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
 	//std::cout<<"is neig "<<cChID[iHit1]<<" "<<cTime[iHit1]<<" "<<cEnergy[iHit1]<<std::endl;
 	if (cEnergy[iHit1]<fClEnThrForHit) continue;
-	Int_t XCl=cChID[iHit1]/100;
-	Int_t YCl=cChID[iHit1]%100;
+	//Int_t XCl=cChID[iHit1]/100;
+	//Int_t YCl=cChID[iHit1]%100;
+	Double_t XCl = Hits[iHit1]->GetPosition().X();
+	Double_t YCl = Hits[iHit1]->GetPosition().Y();
 	((TH2F *)GetHisto("ECALCellPos"))->Fill(XCl,YCl,cEnergy[iHit1]);
 	cUsed[iHit1]=1;
 	// keep track of the indices of hits contributing to the cluster
@@ -664,7 +678,12 @@ void ECalReconstruction::BuildSimpleECalClusters()
     ClNCry.push_back(NCry);
     //GetHisto("ECALClE")->Fill(ClE[NSeeds]);
     //ClTime[NSeeds]=ClTime[NSeeds]/NCry;  //average time of the hit
-    ClTime[NSeeds]=ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    
+    if (fClusterTimeAlgo == 0) {
+      ClTime[NSeeds]= ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    } else {
+      ClTime[NSeeds]= cTime[iMax];//ClTime[NSeeds]/ClE[NSeeds];  //energy weighted average time of the hit
+    }    
     ClX[NSeeds]=ClX[NSeeds]/ClE[NSeeds];
     ClY[NSeeds]=ClY[NSeeds]/ClE[NSeeds];
     GetHisto("ECALClTDiff")->Fill(ClTime[NSeeds]-SdTime[NSeeds]);
@@ -687,7 +706,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     myCl->SetChannelId( SdCell[iCl] );
     myCl->SetEnergy( ClE[iCl]    );
     myCl->SetTime(   ClTime[iCl] );
-    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],Hits[0]->GetPosition().Z() ));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";

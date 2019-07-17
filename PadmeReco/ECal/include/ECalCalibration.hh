@@ -37,6 +37,7 @@ private:
   double fHitTCorrected;
 
   double fCalibConst;
+  int fCalibVersion;
   double fBID;
   double fChID;
 

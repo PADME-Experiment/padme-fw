@@ -20,7 +20,7 @@ typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 class DigitizerChannelReco : public ChannelVReco {
 public:
   DigitizerChannelReco(){;};
-  ~DigitizerChannelReco();
+  virtual ~DigitizerChannelReco();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
@@ -64,6 +64,7 @@ public:
 
   Short_t GetMaximum(){return fMax;};
   Double_t GetPedestal(){return fPed;};
+  void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
 
   void SetAbsSignals();
   
@@ -156,6 +157,17 @@ private:
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
+
+
+  Int_t fUsePulseProcessing ;
+  Int_t fPeakSearchWidth    ;
+  Double_t fZeroSuppression    ;
+  Double_t fChargeCut          ;
+  Double_t fDPParameterR1      ;
+  Double_t fDPParameterR2      ;
+  Double_t fDPParameterC       ;
+  
+
   /*
   Bool_t fIsPed;
   Bool_t fIsReco;

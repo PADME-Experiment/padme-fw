@@ -19,6 +19,7 @@ public:
   ~ECalDigitizer();
 
   void Digitize();
+  void DigitizeSingleDigi();
 
 private: 
 

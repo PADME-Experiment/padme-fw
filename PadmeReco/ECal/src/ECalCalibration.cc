@@ -27,10 +27,17 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
-
+  fCalibVersion = (int)cfg->GetParOrDefault("EnergyCalibration","CalibVersion",3);
   // Energy calibration 
-  if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
-  if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
+  if(fUseCalibE) {
+    char fname[256];
+    sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
+    ECalib.open(fname);
+  }
+  // if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
+  // if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  
   if(fUseCalibE>0 && !ECalib.is_open()){ 
   //  if(fUseCalibE==1 && !ECalib.is_open()){ 
     std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
@@ -41,8 +48,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   // Time offsets calibration 
   if(fUseCalibT==1) TCalib.open("config/Calibration/ECalTimeOffSets.txt");
   if(fUseCalibT==1 && !TCalib.is_open()){ 
-    std::cout<<"ERROR: Cannot find ECal time ofsset file "<<"**************"<<std::endl;
-    exit(1);
+    std::cout<<"ERROR: Cannot find ECal time offset file "<<"**************"<<std::endl;
+    //exit(1);
   }
   //  if(fUseCalibE==1) ReadCalibConstant();
 
@@ -89,7 +96,8 @@ void ECalCalibration::ReadCalibConstant()
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
-  for(unsigned int iHit = 0;iHit < Hits.size();iHit++){
+  static int PRINTED = 0; 
+  for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     if (fUseCalibE > 0){
       int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
       unsigned int BD   = Hits[iHit]->getBDid(); 
@@ -101,7 +109,10 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 	Hits[iHit]->SetEnergy(fHitECalibrated);
 	//	std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
       }else{
-	std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	if(!PRINTED) {
+	  std::cout<<"Missing calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+	  PRINTED++;
+	}
       }
       
     }

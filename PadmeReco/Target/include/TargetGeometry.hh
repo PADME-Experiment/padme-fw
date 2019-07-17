@@ -18,10 +18,12 @@ public:
   
   TargetGeometry();
   //~TargetGeometry();
-  // void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
+  void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
+  TVector3  LocalPosition(Int_t chId);
 
 private:
-
+  
+  double fRuler;
 };
 #endif
 

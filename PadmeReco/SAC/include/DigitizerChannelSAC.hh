@@ -153,7 +153,7 @@ private:
   Double_t HitEHyb;
   Double_t HitT;
   Int_t ElCh;
-  Int_t Raw;
+  Int_t Row;
   Int_t Col;
 
   TH1D* histo;

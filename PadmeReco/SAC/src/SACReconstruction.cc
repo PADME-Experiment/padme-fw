@@ -7,13 +7,13 @@
 #include "Riostream.h"
 
 #include "SACReconstruction.hh"
+#include "SACCalibration.hh"
+#include "DigitizerChannelSAC.hh"
 
 #include "TSACMCEvent.hh"
 #include "TSACMCHit.hh"
 #include "TSACMCDigi.hh"
 //#include "DigitizerChannelReco.hh"
-#include "DigitizerChannelSAC.hh"
-#include "SACCalibration.hh"
 #include "SACSimpleClusterization.hh"
 #include "TH2F.h"
 #include "TH1F.h"
@@ -94,7 +94,7 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
 
   //Waveform histograms
-  for(int iCh=0; iCh<25 ; iCh++){
+  for(int iCh=0; iCh<32 ; iCh++){
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
     AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
@@ -170,6 +170,54 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     //------
     digi->Print();
   }
+}
+
+// M. Raggi 17/07/2019
+void SACReconstruction::BuildHits(TRawEvent* rawEv)
+{
+  
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  
+  ((DigitizerChannelSAC*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  
+  TADCBoard* ADC;
+  
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelSAC*)fChannelReco)->SetChID(ChID);
+	// 	((DigitizerChannelSAC*)fChannelReco)->SetElChID(ElChID);
+	// 	((DigitizerChannelSAC*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
 }
 
 // void SACReconstruction::EndProcessing()
@@ -486,6 +534,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
              (GetHisto(iName))->SetBinContent(s+1, fabs(adc));
              (GetHisto(iName))->SetBinError  (s+1, 1/4096);          
 	 } 
+
     }// End loop over channels
   }// End loop over boards
 }

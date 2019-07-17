@@ -112,17 +112,11 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
   SAC = new TTree("SAC","SAC");
 
   SAC->Branch("ElCh",&ElCh);
-  SAC->Branch("Raw",&Raw);
+  SAC->Branch("Row",&Row);
   SAC->Branch("Col",&Col);
   SAC->Branch("Zsup",&Zsup);
   SAC->Branch("Avg200",&fAvg200);
   SAC->Branch("HitE",&HitE);
-  SAC->Branch("HitEHyb",&HitEHyb);
-  SAC->Branch("Hit200E",&HitE200);
-  SAC->Branch("HitT",&HitT);
-  SAC->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
-//  SAC->Branch("ETotInner",&IEnner);
-//  SAC->Branch("EInner",&HitEInner);
 
   hPedCalo = new TH1D*[32];
   //  hAvgCalo = new TH1D*[32];
@@ -237,52 +231,71 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //M. Raggi 19/10/2018
-  Int_t npeaks =50;
+  Int_t npeaks =20;
   Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10*5 +fCh%5;
-
+  //  std::cout<<fCh<<" ElCh "<<ElCh<<std::endl;
+  Double_t fAvg40  = TMath::Mean(40,&fSamples[0]);
+  Double_t fRMS40  = TMath::RMS(40,&fSamples[0]);
   for(UShort_t s=0;s<iMax;s++){
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi
+    //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi MR 17/07
+    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg40)/4096*1000.; //in mV positivi using first Istart samples
   }
+
   H1->SetContent(AbsSamRec);
   char name[50];
-//  if(fTrigMask==2){
-//    //    std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
-//    fileOut->cd();
-//    sprintf(name,"hSig%d",ElCh);
-//    histo=(TH1D*) hListCal->FindObject(name);
-//    histo->SetContent(AbsSamRec);
-//    //histo->Write();
-//  }
-  
+  //  if(fTrigMask==2){
   Double_t VMax = H1->GetMaximum();
   Double_t VMin = H1->GetMinimum();
-
+     
   Double_t Charge; //CT
-  //  Charge = (VMax*2*pow(10,-9))/(2*50); // in pC, CT
-  //  std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<std::endl;
+  //Charge = (VMax*2*pow(10,-9))/(2*50); // in pC, CT
+  //std::cout<<Charge<<" Charge "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
+//  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
+//    if(VMax>3 && ElCh>=0){
+//      //	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
+//      fileOut->cd();
+//      sprintf(name,"hSig%d",ElCh);
+//      histo=(TH1D*) hListCal->FindObject(name);
+//      histo->SetContent(AbsSamRec);
+//      histo->Write();
+//      histo->Reset();
+//      sprintf(name,"hVMax%d",ElCh);
+//      histo=(TH1D*) hListCal->FindObject(name);
+//      histo->Fill(VMax);
+//    }
+//  }
+  
   if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
     TSpectrum *s = new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
     Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t fTrigMask=GetTrigMask();
     
-    // ROOT 6 version
-    //    Double_t *xpeaks = s->GetPositionX();
-    //    Double_t *ypeaks = s->GetPositionY();
-    // ROOT 5 version
+    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
+      if(VMax>3 && ElCh>=0){
+	//	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
+	fileOut->cd();
+	sprintf(name,"hSig%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	histo->SetContent(AbsSamRec);
+	//	histo->Write(); histo->Reset();
+	sprintf(name,"hVMax%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	histo->Fill(VMax);
+      }
+    }
+    
+    
     Float_t *xpeaks = s->GetPositionX();
     Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-// ROOT 6 version
-//      Double_t xp   = xpeaks[ll];
-//      Double_t yp   = ypeaks[ll];
-// ROOT 5 version
+
       Float_t xp   = xpeaks[ll];
       Float_t yp   = ypeaks[ll];
       fTime = xp*fTimeBin; //convert time in ns get it from data
@@ -291,9 +304,23 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
 	  //	  if(H1->GetBinContent(ii)>0.003) 
 	  fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;  //charge in pC
+          Charge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+	  //std::cout<<"Charge is "<<Charge<<std::endl;
 	}
 	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
+
+    //CT trying to fill hQCh
+    if(fGlobalMode->GetGlobalDebugMode()!=0){
+    Int_t Ch   = GetElChID();
+    char name[50];
+    //     std::cout<<Ch<<" "<<BID<<" Charge "<<ChargeSin<<std::endl;
+    //std::cout<<"Are you running on ch ?"<<Ch<<std::endl;
+    sprintf(name,"hQCh%d",ElCh);
+    histo =(TH1D*) hListCal->FindObject(name);
+    histo->Fill(Charge);
+
+  }
       fEnergy = fCharge/pCMeV; //this is really the energy
       fCalibEnergy = fCharge/pCMeV*fCalibCh[ElCh]; //calibrated energy of the hit
 
@@ -332,7 +359,7 @@ void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArra
 }
 
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
-  //  Double_t fchPed=CalcPedestal();
+  Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
 }
 
@@ -417,3 +444,4 @@ Bool_t DigitizerChannelSAC::IsSaturated(){
   return IsSaturated;
 
 };
+

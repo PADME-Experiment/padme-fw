@@ -96,7 +96,8 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
 
   //Waveform histograms
-  for(int iCh=0; iCh<25 ; iCh++){
+  //  for(int iCh=0; iCh<25 ; iCh++){
+  for(int iCh=0; iCh<32; iCh++){ //MR After cosmic rays bars have been added to the digitizer july 2019
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
     AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));

@@ -73,7 +73,12 @@ private:
   Double_t fTime;
   UShort_t fNPedSamples;
   Int_t fChID;
+  Double_t fESpec;
+  Int_t fNPeak; 
+
+
   Int_t fTrigMask;
+
 
   Double_t fSigAvg[50];
   TH1D *H1;

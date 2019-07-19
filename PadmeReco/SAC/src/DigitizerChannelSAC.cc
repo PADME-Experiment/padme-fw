@@ -16,8 +16,8 @@ void DigitizerChannelSAC::PrintConfig(){
   std::cout << "Thr low  "<< fAmpThresholdLow  << std::endl;
   std::cout << "Time bin "<< fTimeBin  << std::endl;
   std::cout << "Time window per single hit "<< fSignalWidth  << std::endl;
-  for(int i=0;i<25;i++){
-    std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
+  for(int i=0;i<32;i++){
+    //  std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
     // if(i%5==0) std::cout<<std::endl;
   }
 
@@ -41,7 +41,7 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConf
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
 
-  for(int kk=0;kk<25;kk++){
+  for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),600,3700.,3900);
     hListCal->Add(hPedCalo[kk]);
   }
@@ -94,7 +94,7 @@ void DigitizerChannelSAC::SetAnalogOffSets(){
   PrevPed.open(fname);
   if(PrevPed.is_open()){
     double temp;
-    for(int i=0;i<25;i++){
+    for(int i=0;i<32;i++){
       PrevPed >> temp >> fPedCh[i] >> temp>> temp >> fCalibCh[i];//reads channel number and discards it
       //      std::cout <<"PEDCH "<<i<<" "<<fPedCh[i]<<std::endl;      
     }
@@ -111,12 +111,15 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
   hListEv    = new TList();  
   SAC = new TTree("SAC","SAC");
 
-  SAC->Branch("ElCh",&ElCh);
+  SAC->Branch("ElCh",&fChID);
   SAC->Branch("Row",&Row);
   SAC->Branch("Col",&Col);
   SAC->Branch("Zsup",&Zsup);
   SAC->Branch("Avg200",&fAvg200);
   SAC->Branch("HitE",&HitE);
+  SAC->Branch("ESpec",&fESpec);
+  SAC->Branch("HitT",&fTime);
+  SAC->Branch("NPeaks",&fNPeak);
 
   hPedCalo = new TH1D*[32];
   //  hAvgCalo = new TH1D*[32];
@@ -133,17 +136,17 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
   hListEv->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
   hListEv->Add(hDiff   = new TH1F("hDiff","hDiff",4000,0.,1000.));
 
-  hListCal->Add(hTime= new TH1D("hTime","hTime",1000,0.,1000.));
-  hListCal->Add(hTimeCut= new TH1D("hTimeCut","hTimeCut",1000,0.,1000.));
-  hListCal->Add(hTimeOv= new TH1D("hTimeOv","hTimeOv",1000,0.,1000.));
+  hListCal->Add(hTime  = new TH1D("hTime","hTime",1000,0.,1000.));
+  //hListCal->Add(hTimeCut= new TH1D("hTimeCut","hTimeCut",1000,0.,1000.));
+  //hListCal->Add(hTimeOv= new TH1D("hTimeOv","hTimeOv",1000,0.,1000.));
   
   for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
     //  hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
     hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
-    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
+    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),250,0.,500.); // in mV
     //  h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
-    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400); //CT
+    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),250,0,500); //CT
     hListCal->Add(hPedCalo[kk]);
     //    hListCal->Add(hAvgCalo[kk]);
     hListCal->Add(hPedMean[kk]);
@@ -180,6 +183,7 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   double rms;
   double avg;
   Int_t fCh       = GetChID();
+  Int_t fChID     = GetChID();
   UInt_t fTrigMask= GetTrigMask();
   Int_t ElCh = fCh/10*5 +fCh%5;
   //  std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
@@ -208,7 +212,6 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   return fPed;
 }
 
-
 Double_t DigitizerChannelSAC::CalcCharge(UShort_t fCh) {  //not used
   // can include a better algorithm to compute hit charge
   return fCharge;
@@ -236,17 +239,29 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10*5 +fCh%5;
+  if(ElCh<0) return -1;
   //  std::cout<<fCh<<" ElCh "<<ElCh<<std::endl;
-  Double_t fAvg40  = TMath::Mean(40,&fSamples[0]);//questo fa la media sui primi 40 samples e la usa come piedistallo
-  Double_t fRMS40  = TMath::RMS(40,&fSamples[0]);
+  fAvg200  = TMath::Mean(80,&fSamples[0]);//questo fa la media sui primi 40 samples e la usa come piedistallo
+  Double_t fRMS40  = TMath::RMS(80,&fSamples[0]);
+
+  //  std::cout<<"fTrigMask" <<fTrigMask<<std::endl;
+  if(fTrigMask!=2) return -1.;  //tengo solo cosmici
+  //  std::cout<<"fTrigMask dopo " <<fTrigMask<<std::endl;
+
+  char name[50];
+  if(ElCh>=0){
+    sprintf(name,"hPedCalo%d",ElCh);
+    histo=(TH1D*) hListCal->FindObject(name);
+    histo->Fill(fAvg200);
+  }
   for(UShort_t s=0;s<iMax;s++){
     //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi MR 
 //07
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg40)/4096*1000.; //in mV positivi using first Istart samples
+    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
   }
 
   H1->SetContent(AbsSamRec);
-  char name[50];
+  //  char name[50];
   //  if(fTrigMask==2){
   Double_t VMax = H1->GetMaximum();
   Double_t VMin = H1->GetMinimum();
@@ -270,15 +285,24 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 //    }
 //  }
   
-  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+//  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+  // if(VMax>fAmpThresholdLow){ // zero suppression on Voltage normalize to energy.
+
+  if(VMax>5){ // zero suppression on Voltage normalize to energy.
     TSpectrum *s = new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
-    Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
+    //    Int_t nfound = s->Search(H1,3,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
+    Int_t nfound = s->Search(H1,4,"",0.7);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t fTrigMask=GetTrigMask();
     
+    Float_t *xpeaks = s->GetPositionX();
+    Float_t *ypeaks = s->GetPositionY();
+    //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+    fNPeak=nfound;
+    
     if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
-      if(VMax>3 && ElCh>=0){
-	//	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
+      if(VMax>10 && ElCh>=0){
+//	//	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
 	fileOut->cd();
 	sprintf(name,"hSig%d",ElCh);
 	histo=(TH1D*) hListCal->FindObject(name);
@@ -286,57 +310,63 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	//	histo->Write(); histo->Reset();
 	sprintf(name,"hVMax%d",ElCh);
 	histo=(TH1D*) hListCal->FindObject(name);
-	histo->Fill(VMax);
+	histo->Fill(VMax);//CT hVMax contains histogram maximum
+      }
+//      //CT trying to fill hQCh
+//      
+//      Int_t Ch   = GetElChID();
+      if(ElCh>=0){
+	char name[50];
+	sprintf(name,"hQCh%d",ElCh);
+	histo =(TH1D*) hListCal->FindObject(name);
+	//      std::cout<<"ElCh "<<ElCh<<
+	//	if(140<xpeaks[0]*fTimeBin && xpeaks[0]<160) 
+	histo->Fill(ypeaks[0]);//CT hQCh contains TSpectrum max
+	//      
+	sprintf(name,"hTime");
+	histo =(TH1D*) hListCal->FindObject(name);
+	histo->Fill(xpeaks[0]*fTimeBin);
       }
     }
     
-    
-    Float_t *xpeaks = s->GetPositionX();
-    Float_t *ypeaks = s->GetPositionY();
-    //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
+   
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-
+      
       Float_t xp   = xpeaks[ll];
       Float_t yp   = ypeaks[ll];
       fTime = xp*fTimeBin; //convert time in ns get it from data
+
       Int_t bin    = H1->GetXaxis()->FindBin(xp);
       if(bin<1000){
 	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
 	  //	  if(H1->GetBinContent(ii)>0.003) 
 	  fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;  //charge in pC
-          Charge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
-	  //std::cout<<"Charge is "<<Charge<<std::endl;
+          Charge  += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
+	  //	  std::cout<<"Charge is "<<fCharge<<" "<<ElCh<<std::endl;
 	}
 	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
-
-    //CT trying to fill hQCh
-    if(fGlobalMode->GetGlobalDebugMode()!=0){
-    Int_t Ch   = GetElChID();
-    char name[50];
-    //     std::cout<<Ch<<" "<<BID<<" Charge "<<ChargeSin<<std::endl;
-    //std::cout<<"Are you running on ch ?"<<Ch<<std::endl;
-    sprintf(name,"hQCh%d",ElCh);
-    histo =(TH1D*) hListCal->FindObject(name);
-    //histo->Fill(Charge);
-
-  }
-      fEnergy = fCharge/pCMeV; //this is really the energy
+      
+      fEnergy      = fCharge/pCMeV; //this is really the energy
       fCalibEnergy = fCharge/pCMeV*fCalibCh[ElCh]; //calibrated energy of the hit
-
+      
       TRecoVHit *Hit = new TRecoVHit();
+      HitE=VMax;
+      fESpec=yp;
+      if(ElCh>=0) SAC->Fill(); //fil the tree
       if(yp>-3*VMin){
 	Hit->SetTime(fTime);
 	//	Hit->SetEnergy(fCharge);    // need to add hit status 
-	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
+	Hit->SetEnergy(yp);    // need to add hit status 
+	//	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
 	//Hit->SetEnergy(yp);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
       }else{
-//	fileOut->cd();
-//	H1->Write();
-//	std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<" NImage "<<NImage<<std::endl;
-//	NImage++;
+	//	fileOut->cd();
+	//	H1->Write();
+	//	std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<" NImage "<<NImage<<std::endl;
+	//	NImage++;
       }  
       //      std::cout<<ll<<" "<<xp<<" yp "<<ypeaks[ll]<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }

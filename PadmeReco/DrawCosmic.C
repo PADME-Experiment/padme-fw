@@ -36,23 +36,23 @@ void SACCosmic()
 	TCanvas *histo=new TCanvas();
 	histo->Divide(Ncol,Nrow);
 
-	//TCanvas *histo2=new TCanvas();
-	//histo2->Divide(2,1);
+	TCanvas *histo2=new TCanvas();
+	histo2->Divide(Ncol,Nrow);
 
 	//TCanvas *mean=new TCanvas();
 
 	//TFile *fileMauro = new TFile("SACAn_prova.root","READ");
-	TFile *fileMauro = new TFile("SACAn.root","READ");
+	TFile *fileMauro = new TFile("SACAn20190719_083232.root","READ");
 
 	//TH1D *H2 = new TH1D("Charge of cluster","",10,0,50);
 
-	TH1D ** H2;
-	H2 = new TH1D*[2];
-	for (int g=0;g<2;g++)
+	//TH1D ** H2;
+	//H2 = new TH1D*[2];
+	//for (int g=0;g<2;g++)
 
 		{
 
-		H2[g] = new TH1D("Charge of cluster","Charge of cluster",100,0.,50.);
+		//H2[g] = new TH1D("Charge of cluster","Charge of cluster",100,0.,50.);
 
 		}
 
@@ -72,7 +72,7 @@ void SACCosmic()
 		TH1D* H1 = (TH1D*)fileMauro->Get(hisname);
 		H1->SetFillColor(kBlue);
 		H1->SetLineColor(kBlack);
-		H1->GetXaxis()->SetTitle("Amplitude [mV]");
+		H1->GetXaxis()->SetTitle("Amplitude (histo max) [mV]");
 		
 		H1->Rebin(5);
 		H1->GetXaxis()->SetRange(0,200);
@@ -89,6 +89,18 @@ void SACCosmic()
 		double* ampl =  spec->GetPositionY();
 
 		Q[i]=peakpos[1]-peakpos[0];	
+
+		histo2->cd(25-i);
+		sprintf(hisname,Form("hQCh%d",i));
+		TH1D* H2 = (TH1D*)fileMauro->Get(hisname);
+		H2->SetFillColor(kMagenta);
+		H2->SetLineColor(kBlack);
+		H2->GetXaxis()->SetTitle("Amplitude (TSpectrum max) [mV]");
+		
+		H2->Rebin(5);
+		H2->GetXaxis()->SetRange(0,200);
+
+		H2->Draw("");
 
 		if (i==18||i==12||i==13||i==17) 
 

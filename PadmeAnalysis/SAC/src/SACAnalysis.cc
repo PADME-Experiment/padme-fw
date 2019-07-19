@@ -110,7 +110,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
   for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
     {
       TRecoVHit* h = fhitEvent->Hit(j);
-      //std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+      std::cout<<fhitEvent->GetNHits()<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
     }
 
   

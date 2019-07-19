@@ -237,10 +237,11 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10*5 +fCh%5;
   //  std::cout<<fCh<<" ElCh "<<ElCh<<std::endl;
-  Double_t fAvg40  = TMath::Mean(40,&fSamples[0]);
+  Double_t fAvg40  = TMath::Mean(40,&fSamples[0]);//questo fa la media sui primi 40 samples e la usa come piedistallo
   Double_t fRMS40  = TMath::RMS(40,&fSamples[0]);
   for(UShort_t s=0;s<iMax;s++){
-    //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi MR 17/07
+    //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi MR 
+//07
     AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg40)/4096*1000.; //in mV positivi using first Istart samples
   }
 
@@ -318,7 +319,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //std::cout<<"Are you running on ch ?"<<Ch<<std::endl;
     sprintf(name,"hQCh%d",ElCh);
     histo =(TH1D*) hListCal->FindObject(name);
-    histo->Fill(Charge);
+    //histo->Fill(Charge);
 
   }
       fEnergy = fCharge/pCMeV; //this is really the energy

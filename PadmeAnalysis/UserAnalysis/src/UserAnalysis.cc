@@ -1,6 +1,7 @@
 #include "UserAnalysis.hh"
 #include "HistoSvc.hh"
 #include <iostream>
+#include "TLorentzVector.h"
 
 
 UserAnalysis::UserAnalysis(){
@@ -67,6 +68,23 @@ Bool_t UserAnalysis::InitHistos(){
   hSvcVal->BookHisto("ECal2ClEnergyTimeDistCut2",1000,0.0,1000.0);
   hSvcVal->BookHisto("ECal2ClEnergyTimeDist2Cut2",1000,0.0,1000.0);
   hSvcVal->BookHisto("ECal_ClCl_dist2",1000,0.0,1000.0);
+
+  hSvcVal->BookHisto("ECal_COG_X",300,-300.0,300.0);
+  hSvcVal->BookHisto("ECal_COG_Y",300,-300.0,300.0);
+  hSvcVal->BookHisto("ECal_COG",300,0.0,300.0);
+
+  hSvcVal->BookHisto("ECal2ClEnergyTimeDistCut2Cog",1000,0.0,1000.0);
+  hSvcVal->BookHisto("ECal2ClEnergyTimeDistCut2Cog2",1000,0.0,1000.0);
+
+  hSvcVal->BookHisto2("ECal_COG_vs_m2",300,0.0,300.0,1000,0.0,1000.0 );
+  hSvcVal->BookHisto2("ECal_COG_vs_m",300,0.0,300.0,200,0.0,50.0 );
+
+  hSvcVal->BookHisto("ee_e",1000,0.0,1000.0);
+  hSvcVal->BookHisto("ee_m2",1000,0.0,1000.0);
+  hSvcVal->BookHisto("ee_m",200,0.0,50.0);
+  
+
+  
 
 
   return true;
@@ -193,7 +211,7 @@ Bool_t UserAnalysis::Process(){
     evt->PVetoRecoEvent->Hit(ipv)->SetTime(tPv);
   }
   
-  
+  /*
   for(int ipv = 0;ipv <  evt->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv1 = evt->PVetoRecoEvent->Hit(ipv)->GetTime();
     int chPV = evt->PVetoRecoEvent->Hit(ipv)->GetChannelId();
@@ -214,7 +232,7 @@ Bool_t UserAnalysis::Process(){
     }
   }
   
-
+  */
   for(int ipv = 0;ipv <  evt->PVetoRecoEvent->GetNHits(); ipv++) {
     int chPV = evt->PVetoRecoEvent->Hit(ipv)->GetChannelId();
     double tPv = evt->PVetoRecoEvent->Hit(ipv)->GetTime();
@@ -247,7 +265,7 @@ Bool_t UserAnalysis::Process(){
       }
     }
 
-    // continue;
+    continue;
 
 
     
@@ -281,16 +299,33 @@ Bool_t UserAnalysis::Process(){
     double tECal =  evt->ECalRecoCl->Element(ical)->GetTime();
     TVector3 pos1 =  evt->ECalRecoCl->Element(ical)->GetPosition();
     hSvc->FillHisto("ECalClEnergy",eECal,1);
-    if(eECal < 50.) continue;
+    if(eECal < 20.) continue;
     for(int ical2 = ical + 1;ical2 <  evt->ECalRecoCl->GetNElements(); ical2++) {
       double eECal2 =  evt->ECalRecoCl->Element(ical2)->GetEnergy();
       double tECal2 =  evt->ECalRecoCl->Element(ical2)->GetTime();
       TVector3 pos2 =  evt->ECalRecoCl->Element(ical2)->GetPosition();
       hSvc->FillHisto("ECalClCldT",tECal - tECal2,1);
-      if(eECal2 < 50.) continue;
+      if(eECal2 < 20.) continue;
+      double etot = eECal + eECal2;
       hSvc->FillHisto("ECal2ClEnergy",eECal + eECal2,1);
       hSvc->FillHisto("ECalClCldT_Ecut",tECal - tECal2,1);
       TVector3 dist = pos2 - pos1;
+
+      double cog_x = (pos1.X()*eECal + pos2.X()*eECal2)/( etot  );
+      double cog_y = (pos1.Y()*eECal + pos2.Y()*eECal2)/etot;
+
+      double cog = sqrt(cog_x*cog_x + cog_y*cog_y);
+
+      TVector3 posTarget(0,0,-1030+100);
+      
+      TVector3 Dir1 = pos1 - posTarget;
+      TVector3 Dir2 = pos2 - posTarget;
+
+      TLorentzVector g1(eECal*Dir1.X()/Dir1.Mag(),eECal*Dir1.Y()/Dir1.Mag(),eECal*Dir1.Z()/Dir1.Mag(),eECal);
+      TLorentzVector g2(eECal2*Dir2.X()/Dir2.Mag(),eECal2*Dir2.Y()/Dir2.Mag(),eECal2*Dir2.Z()/Dir2.Mag(),eECal2);
+
+      TLorentzVector ee = g1+g2;
+      
 
       if(tECal - tECal2 > -2.  && tECal - tECal2 < 2.) {
 	hSvc->FillHisto("ECal2ClEnergyTimeCut",eECal + eECal2,1);
@@ -311,6 +346,34 @@ Bool_t UserAnalysis::Process(){
 	hSvc->FillHisto("ECal_ClCl_dist2",dist.Mag(),1);
 	if(dist.Mag() > 300.) {
 	  hSvc->FillHisto("ECal2ClEnergyTimeDistCut2",eECal + eECal2,1);
+	  hSvc->FillHisto("ECal_COG_X",cog_x);
+	  hSvc->FillHisto("ECal_COG_Y",cog_y);
+	  hSvc->FillHisto("ECal_COG",cog);
+
+	  hSvc->FillHisto2("ECal_COG_vs_m2",cog,ee.Mag2());
+	  if(ee.Mag2()>0) {
+	    hSvc->FillHisto2("ECal_COG_vs_m",cog,ee.Mag());
+	  }
+
+	  if (cog < 50) {
+	    hSvc->FillHisto("ECal2ClEnergyTimeDistCut2Cog",eECal + eECal2,1);
+
+	  }
+	  if (cog < 40) {
+	    hSvc->FillHisto("ECal2ClEnergyTimeDistCut2Cog2",eECal + eECal2,1);
+	    hSvc->FillHisto("ee_e",ee.E(),1);
+	    hSvc->FillHisto("ee_m2",ee.Mag2(),1);
+	    if(ee.Mag2()>0) {
+	      hSvc->FillHisto("ee_m",ee.Mag(),1);
+	    }
+	    
+	    
+	  }
+
+	  
+
+
+
 	}
 
 	if(dist.Mag() > 200.) {

@@ -7,6 +7,7 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+class TVector3;
 class TRecoEvent;
 class TRecoVObject;
 class TRecoVClusCollection;
@@ -34,6 +35,7 @@ public:
   virtual Bool_t Process();
   virtual Bool_t ProcessAnalysis();
   Bool_t phiSymmetricalInECal(int xChId, int aChId, double& distR, double& distPhi);
+  Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& distR, double& distPhi, double& b);
   Double_t applyTimePVetoLinCorr(Double_t  xChId, Double_t xTime);
   
 protected:

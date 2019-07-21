@@ -155,9 +155,10 @@ Bool_t EventSelection::ProcessAnalysis()
   Double_t xTime, xTimeLinCorr, yTime, xEne, yEne, aEne, aTime;
   Int_t xChId, yChId, aChId;
 
-
+  /*
   if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) std::cout<<"input data are simulatetd "<<std::endl;
   else std::cout<<"input data are NOT simulated "<<std::endl;
+  */
       
   Double_t eSumECalHits=0.;
   Double_t xEnergy=0;
@@ -289,6 +290,10 @@ Bool_t EventSelection::ProcessAnalysis()
   TRecoVHit* hit = 0;
   TRecoVHit* hitSeed = 0;
   std::vector<Int_t> hitVInCl;
+  TVector3 pos1;
+  TVector3 pos2;
+  double impactPar=0.;
+  
   //std::cout<<" pointer to collection = "<<(long)fECal_ClColl<<std::endl;
   //std::cout<<" Going to ECal Clusters "<<fECal_ClColl->GetNElements()<<std::endl;
   for (unsigned int hECal=0; hECal<fECal_ClColl->GetNElements(); ++hECal)
@@ -302,10 +307,9 @@ Bool_t EventSelection::ProcessAnalysis()
 	  xEne = xClu->GetEnergy();
 	  hname = "ECalClEnergy";
 	  hSvc->FillHisto(hname, xEne);
-	  
-
+	  pos1 = xClu->GetPosition();
 	  eSumCl = eSumCl+xEne;
-	  //if (xEne<50.) continue;
+	  if (xEne<50.) continue;
 	  
 	  if (xEne > eMax)
 	    {
@@ -332,10 +336,11 @@ Bool_t EventSelection::ProcessAnalysis()
 	      if (aClu) 
 		{
 		  aEne = aClu->GetEnergy();
-		  //if (aEne<50.) continue;
-
+		  if (aEne<50.) continue;
+		  
 		  aChId  = aClu->GetChannelId();
 		  aTime  = aClu->GetTime();
+		  pos2   = aClu->GetPosition();
 		  aSumCl = xEne+aEne;	
 	  
 		  if (aSumCl > aSumClMax)
@@ -345,7 +350,18 @@ Bool_t EventSelection::ProcessAnalysis()
 		      aSumClMax = aSumCl;
 		    }
 
-		  if (fabs(aTime-xTime)<10.)
+		  dR   = -999.;
+		  dPhi = -999.;
+		  //bool isPhySym = phiSymmetricalInECal(xChId, aChId, dR, dPhi);
+		  bool isPhySym = phiSymmetricalInECal(pos1, pos2, dR, dPhi, impactPar);
+		  double dt=aTime-xTime;
+		  hname = "ECal2gsearch_dPhiVsDt";
+		  hSvc->FillHisto2(hname, dt, dPhi);
+		  hname = "ECal2gsearch_dRVsDt";
+		  hSvc->FillHisto2(hname, dt, dR);
+		  hname = "ECal2gsearch_ImpactParVsDt";
+		  hSvc->FillHisto2(hname, dt, impactPar);
+		  if (fabs(aTime-xTime)<3.)
 		    {
 		      if (aSumCl > aSumClIn10Max)
 			{
@@ -353,13 +369,148 @@ Bool_t EventSelection::ProcessAnalysis()
 			  igamma2In10 = clCal;
 			  aSumClIn10Max = aSumCl;
 			}
-		      dR   = -999.;
-		      dPhi = -999.;
-		      if (phiSymmetricalInECal(xChId, aChId, dR, dPhi))
+
+		      
+		      double m2inv = xEne*aEne*dR*dR/3000./3000.;
+		      double minv = sqrt(m2inv);
+		      double xcog = (pos1.x()*xEne+pos2.x()*aEne)/aSumCl;
+		      double ycog = (pos1.y()*xEne+pos2.y()*aEne)/aSumCl;
+		      double rcog = sqrt(xcog*xcog+ycog*ycog);
+
+		      /*
+		      std::cout<<"xEne, pos1 "<<xEne<<" "<<pos1.x()<<" "<<pos1.y()<<" "<<pos1.z()<<std::endl; 
+		      std::cout<<"aEne, pos2 "<<aEne<<" "<<pos2.x()<<" "<<pos2.y()<<" "<<pos2.z()<<std::endl; 
+		      std::cout<<"rcog = "<<rcog<<" minv = "<<minv<<std::endl;
+		      */
+
+		      hname = "ECal2gsearch_ImpactPar";////////////change 
+		      hSvc->FillHisto(hname, impactPar);
+		      hname = "DPhi2gammaIn10";
+		      hSvc->FillHisto(hname, dPhi);
+		      hname = "DR2gammaIn10";
+		      hSvc->FillHisto(hname, dR);
+
+		      hname = "ECal2gsearch_ESumDt3";
+		      hSvc->FillHisto(hname, aSumCl);
+		      hname = "ECal2gsearch_MinvVsRcogDt3";
+		      hSvc->FillHisto2(hname, rcog, minv);
+		      hname = "ECal2gsearch_MinvDt3";
+		      hSvc->FillHisto(hname, minv);
+		      if (cos(dPhi)<-0.9915)
+			{
+			  hname = "ECal2gsearch_ESumDt3Phi75";
+			  hSvc->FillHisto(hname, aSumCl);
+			  hname = "ECal2gsearch_MinvVsRcogDt3Phi75";
+			  hSvc->FillHisto2(hname, rcog, minv);
+			  hname = "ECal2gsearch_MinvDt3Phi75";
+			  hSvc->FillHisto(hname, minv);
+			  if (cos(dPhi)<-0.9962)
+			    {
+			      hname = "ECal2gsearch_ESumDt3Phi50";
+			      hSvc->FillHisto(hname, aSumCl);
+			      hname = "ECal2gsearch_MinvVsRcogDt3Phi50";
+			      hSvc->FillHisto2(hname, rcog, minv);
+			      hname = "ECal2gsearch_MinvDt3Phi50";
+			      hSvc->FillHisto(hname, minv);
+			      if (cos(dPhi)<-0.999)
+				{
+				  hname = "ECal2gsearch_ESumDt3Phi25";
+				  hSvc->FillHisto(hname, aSumCl);
+				  hname = "ECal2gsearch_MinvVsRcogDt3Phi25";
+				  hSvc->FillHisto2(hname, rcog, minv);
+				  hname = "ECal2gsearch_MinvDt3Phi25";
+				  hSvc->FillHisto(hname, minv);
+				}
+			    }
+			}
+		      
+		      
+		      if (isPhySym)
 			{
 			  // here fill dR 
 			  hname = "DR2gammaIn10PhiSym";
 			  hSvc->FillHisto(hname, dR);
+
+			  hname = "ECal2gsearch_ESumDt3Phi100";
+			  hSvc->FillHisto(hname, aSumCl);
+			  hname = "ECal2gsearch_MinvVsRcogDt3Phi100";
+			  hSvc->FillHisto2(hname, rcog, minv);
+			  hname = "ECal2gsearch_MinvDt3Phi100";
+			  hSvc->FillHisto(hname, minv);
+
+			  if (fabs(dt)<2.)
+			    {
+			      hname = "ECal2gsearch_ESumDt2Phi100";
+			      hSvc->FillHisto(hname, aSumCl);
+			      hname = "ECal2gsearch_MinvVsRcogDt2Phi100";
+			      hSvc->FillHisto2(hname, rcog, minv);
+			      hname = "ECal2gsearch_MinvDt2Phi100";
+			      hSvc->FillHisto(hname, minv);
+			      if (cos(dPhi)<-0.9915)
+				{
+				  hname = "ECal2gsearch_ESumDt2Phi75";
+				  hSvc->FillHisto(hname, aSumCl);
+				  hname = "ECal2gsearch_MinvVsRcogDt2Phi75";
+				  hSvc->FillHisto2(hname, rcog, minv);
+				  hname = "ECal2gsearch_MinvDt2Phi75";
+				  hSvc->FillHisto(hname, minv);
+				  if (cos(dPhi)<-0.9962)
+				    {
+				      hname = "ECal2gsearch_ESumDt2Phi50";
+				      hSvc->FillHisto(hname, aSumCl);
+				      hname = "ECal2gsearch_MinvVsRcogDt2Phi50";
+				      hSvc->FillHisto2(hname, rcog, minv);
+				      hname = "ECal2gsearch_MinvDt2Phi50";
+				      hSvc->FillHisto(hname, minv);
+				      if (cos(dPhi)<-0.999)
+					{
+					  hname = "ECal2gsearch_ESumDt2Phi25";
+					  hSvc->FillHisto(hname, aSumCl);
+					  hname = "ECal2gsearch_MinvVsRcogDt2Phi25";
+					  hSvc->FillHisto2(hname, rcog, minv);
+					  hname = "ECal2gsearch_MinvDt2Phi25";
+					  hSvc->FillHisto(hname, minv);
+					}
+				    }
+				}
+			       if (fabs(dt)<1.)
+				 {
+				   hname = "ECal2gsearch_ESumDt1Phi100";
+				   hSvc->FillHisto(hname, aSumCl);
+				   hname = "ECal2gsearch_MinvVsRcogDt1Phi100";
+				   hSvc->FillHisto2(hname, rcog, minv);
+				   hname = "ECal2gsearch_MinvDt1Phi100";
+				   hSvc->FillHisto(hname, minv);
+				   if (cos(dPhi)<-0.9915)
+				     {
+				       hname = "ECal2gsearch_ESumDt1Phi75";
+				       hSvc->FillHisto(hname, aSumCl);
+				       hname = "ECal2gsearch_MinvVsRcogDt1Phi75";
+				       hSvc->FillHisto2(hname, rcog, minv);
+				       hname = "ECal2gsearch_MinvDt1Phi75";
+				       hSvc->FillHisto(hname, minv);
+				       if (cos(dPhi)<-0.9962)
+					 {
+					   hname = "ECal2gsearch_ESumDt1Phi50";
+					   hSvc->FillHisto(hname, aSumCl);
+					   hname = "ECal2gsearch_MinvVsRcogDt1Phi50";
+					   hSvc->FillHisto2(hname, rcog, minv);
+					   hname = "ECal2gsearch_MinvDt1Phi50";
+					   hSvc->FillHisto(hname, minv);
+					   if (cos(dPhi)<-0.999)
+					     {
+					       hname = "ECal2gsearch_ESumDt1Phi25";
+					       hSvc->FillHisto(hname, aSumCl);
+					       hname = "ECal2gsearch_MinvVsRcogDt1Phi25";
+					       hSvc->FillHisto2(hname, rcog, minv);
+					       hname = "ECal2gsearch_MinvDt1Phi25";
+					       hSvc->FillHisto(hname, minv);
+					     }
+					 }
+				     }
+				 }
+			    }
+
 			  if (aSumCl > aSumClIn10PhiSMax)
 			    {
 			      igamma1In10PhiS = hECal;
@@ -370,9 +521,6 @@ Bool_t EventSelection::ProcessAnalysis()
 			      hSvc->FillHisto(hname, dR);
 			    }
 			}
-		      // here fill dPhi histo 
-		      hname = "DPhi2gammaIn10";
-		      hSvc->FillHisto(hname, dPhi);
 		    }		  
 		}
 	    }
@@ -435,6 +583,30 @@ Bool_t EventSelection::ProcessAnalysis()
   return true;
 }
 
+Bool_t EventSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& distR, double& distPhi, double& b)
+{
+  distPhi = -999.;
+  distR   = -999.;
+  b       = -999.;
+  P1.SetZ(0.);
+  P2.SetZ(0.);
+  TVector3 Pb = P2-P1;
+  double impactPar = (P1.Cross(Pb)).Perp()/Pb.Perp();
+
+ 
+  double scalarP = P1.Dot(P2);
+  double cosphi = scalarP/P1.Perp()/P2.Perp();
+  double dPhi = acos(cosphi);
+
+  distPhi = dPhi;
+  distR   = Pb.Perp();
+  b = impactPar;
+
+  if (cosphi<-0.985 && fabs(b)<10.) return true;
+  return false;
+  
+}
+
 Bool_t EventSelection::phiSymmetricalInECal(int xChId, int aChId, double& distR, double& distPhi)
 {
   Bool_t isPhiSym = false;
@@ -446,8 +618,8 @@ Bool_t EventSelection::phiSymmetricalInECal(int xChId, int aChId, double& distR,
   float_t y1 = (xChId%100 - 14.);
   float_t y2 = (aChId%100 - 14.);
   
-  //  std::cout<<" 1) x,y "<<x1<<" "<<y1<<std::endl;
-  //  std::cout<<" 2) x,y "<<x2<<" "<<y2<<std::endl;
+    std::cout<<" 1) x,y "<<x1<<" "<<y1<<std::endl;
+    std::cout<<" 2) x,y "<<x2<<" "<<y2<<std::endl;
   if (x1*x2 >0.1) return isPhiSym;
   if (y1*y2 >0.1) return isPhiSym;
   
@@ -515,6 +687,104 @@ Bool_t EventSelection::InitHistosAnalysis()
   minX =  0.;
   maxX =  1500.;
   hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+  hname = "ECal2gsearch_ESumDt3";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt3Phi100";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt3Phi75";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt3Phi50";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt3Phi25";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt2";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt2Phi100";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt2Phi75";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt2Phi50";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt2Phi25";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt1";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt1Phi100";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt1Phi75";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt1Phi50";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_ESumDt1Phi25";
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+
+  hname = "ECal2gsearch_MinvDt3";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt3Phi100";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt3Phi75";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt3Phi50";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt3Phi25";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt2";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt2Phi100";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt2Phi75";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt2Phi50";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt2Phi25";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt1";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt1Phi100";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt1Phi75";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt1Phi50";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvDt1Phi25";
+  hSvc->BookHisto(hname, 200, 0., 50.);
+
+
+  hname = "ECal2gsearch_MinvVsRcogDt3";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt3Phi100";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt3Phi75";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt3Phi50";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt3Phi25";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt2";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt2Phi100";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt2Phi75";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt2Phi50";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt2Phi25";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt1";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt1Phi100";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt1Phi75";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt1Phi50";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsRcogDt1Phi25";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
+
+
+  
   hname="energySum2LeadingECalCl_inTime10_PhiSim";
   nBinX=  750;
   minX =  0.;
@@ -540,6 +810,18 @@ Bool_t EventSelection::InitHistosAnalysis()
   nBinX=  750;
   minX =  0.;
   hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+  hname = "ECal2gsearch_dPhiVsDt";
+  hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 3.2);
+  hname = "ECal2gsearch_dRVsDt";
+  hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 500.);
+  hname = "ECal2gsearch_ImpactParVsDt";
+  hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 500.);
+  hname = "ECal2gsearch_ImpactPar";
+  hSvc->BookHisto(hname, 200, 0., 300.);
+
+
+  
   hname="energyLeadingECalCl";
   nBinX=  750;
   minX =  0.;
@@ -560,6 +842,11 @@ Bool_t EventSelection::InitHistosAnalysis()
   maxX =   30.;
   hSvc->BookHisto(hname, nBinX, minX, maxX);
 
+  hname = "DR2gammaIn10";
+  nBinX=  100;
+  minX =  0.;
+  maxX =  600.;
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
   hname = "DR2gammaIn10PhiSym";
   nBinX=  100;
   minX =  0.;
@@ -568,8 +855,12 @@ Bool_t EventSelection::InitHistosAnalysis()
   hname = "DR2gammaIn10PhiSymMaxESum";
   hSvc->BookHisto(hname, nBinX, minX, maxX);
   hname = "DPhi2gammaIn10";
-  minX =  -1.;
-  maxX =   1.;
+  minX =   0.;
+  maxX =   3.2;
+  hSvc->BookHisto(hname, nBinX, minX, maxX);
+  hname = "ECal2gsearch_impactParam";
+  minX =   0.;
+  maxX =   300.;
   hSvc->BookHisto(hname, nBinX, minX, maxX);
 
 

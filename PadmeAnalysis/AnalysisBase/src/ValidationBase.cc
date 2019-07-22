@@ -55,7 +55,11 @@ Bool_t ValidationBase::InitHistos()
     {
       return InitHistosDataQuality();
     }
-  else if ( fProcessingMode > 2 || fProcessingMode < 0 )
+  else if (fProcessingMode==3)
+    {
+      return InitHistosCosmics();
+    }
+  else if ( fProcessingMode > 3 || fProcessingMode < 0 )
     {
       std::cout<<"Error:: fProcessingModel = "<<fProcessingMode<<" out of range "<<std::endl;
       return true;
@@ -145,7 +149,11 @@ Bool_t ValidationBase::Process()
     {
       return ProcessDataQuality();
     }
-  else if ( fProcessingMode > 2 || fProcessingMode < 0 )
+  else if (fProcessingMode==3)
+    {
+      return ProcessCosmics();
+    }
+  else if ( fProcessingMode > 3 || fProcessingMode < 0 )
     {
       std::cout<<"Error:: fProcessingModel = "<<fProcessingMode<<" out of range "<<std::endl;
       return true;

@@ -14,7 +14,7 @@ SACAnalysis::SACAnalysis(): ValidationBase()
   InitHistos();
   return;
 }
-SACAnalysis::SACAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
+SACAnalysis::SACAnalysis(Int_t processingMode , Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
   fAlgoName = "SAC";
   InitHistos();
@@ -77,11 +77,129 @@ Bool_t SACAnalysis::InitHistosDataQuality()
     
     return true;
 }
+
+Bool_t SACAnalysis::InitHistosCosmics()
+{
+
+    HistoSvc* hSvc =  HistoSvc::GetInstance();    
+    std::string hname;
+    int nBin;
+    Double_t min, max;
+
+    nBin=250;
+    min=0.;
+    max=1000;
+    hname="SAC_HitEnergy";
+    hSvc->BookHisto(hname, nBin, min, max);
+
+    /*HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::string hname;
+    int nBin, min, max;
+    nBin=300;
+    min=0;
+    max=300;
+    hname="SAC_NHits";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_NCluster";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=500;
+    min=0;
+    max=500;
+    hname = "SAC_HitEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname = "SAC_ClusterEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=500;
+    min=0;
+    max=1000;
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=1000;
+    min=0;
+    max=15000;
+    hname = "SAC_HitTotEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname = "SAC_ClusterTotEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=700;
+    min=-300;
+    max=400;
+    hname = "SAC_HitTime";
+    hSvc->BookHisto(hname,nBin, min, max);
+    hname = "SAC_ClusterTime";
+    hSvc->BookHisto(hname,nBin, min, max);
+    nBin=60;
+    min=0;
+    max=6;
+    hname = "SAC_HitMap";
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+    hname = "SAC_ClusterMap";
+    hSvc->BookHisto2(hname, nBin, min, max, nBin, min, max);
+    nBin=100;
+    min=0;
+    max=100;
+    hname="SAC_HitXPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterXPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_HitYPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterYPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=100;
+    min=0;
+    max=60;
+    hname="SAC_HitZPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterZPos";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_HitChannelId";
+    hSvc->BookHisto(hname, nBin, min, max);
+    hname="SAC_ClusterSeedChannelId";
+    hSvc->BookHisto(hname, nBin, min, max);
+    nBin=16;
+    min=0;
+    max=15;
+    hname="SAC_NHitInCluster";
+    hSvc->BookHisto(hname, nBin, min, max);
+    
+    
+
+    return true;*/
+
+
+    return true;
+
+}
+
+Bool_t SACAnalysis::ProcessCosmics()
+{
+    HistoSvc* hSvc =  HistoSvc::GetInstance();
+    std::cout<<"In SACAnalysis::ProcessCosmics"<<std::endl;
+
+    Int_t fNhits = fhitEvent->GetNHits();
+
+    std::string hname;
+
+    Double_t EHitSum = 0.;
+    TRecoVHit* h;
+    for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
+    {
+      h = fhitEvent->Hit(j);
+      hname = "SAC_HitEnergy";
+      hSvc->FillHisto(hname, h->GetEnergy());
+
+    }
+
+    return true;
+
+}
+
+
 Bool_t SACAnalysis::ProcessDataQuality()
 {
     HistoSvc* hSvc =  HistoSvc::GetInstance();
     std::cout<<"In SACAnalysis::ProcessDataQuality"<<std::endl;
-    
 
     Int_t fNhits = fhitEvent->GetNHits();
 
@@ -295,6 +413,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
     chId   = hit->GetChannelId();
+    //chId   = (hit->GetChannelId())/10*5+(hit->GetChannelId())%5;//CT, use this if you want to give a look to the ElCh
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 

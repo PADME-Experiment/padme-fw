@@ -25,6 +25,9 @@ public:
   virtual Bool_t InitHistosAnalysis(){return true;}
   virtual Bool_t InitHistosValidation();
   virtual Bool_t InitHistosValidation(TString name);
+  virtual Bool_t InitHistosCosmics(){return true;}//il return true è perché in questa classe non fanno nulla
+  virtual Bool_t ProcessCosmics(){return true;}//CT
+
   virtual Bool_t InitHistosDataQuality(){return true;}
 
   virtual Bool_t Process();

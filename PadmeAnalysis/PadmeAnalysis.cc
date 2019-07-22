@@ -35,7 +35,7 @@
 #include "HEPVetoAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple] " 
 	    << std::endl;
 }
 
@@ -95,7 +95,7 @@ int main(Int_t argc, char **argv)
 
   Int_t n_options_read = 0;
   Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t:")) != -1) {
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -153,7 +153,7 @@ int main(Int_t argc, char **argv)
       usage(argv[0]);
       return 0;
     }
-    if (nb>1 || nc>1 || ni>1 || nl>1 || nn>1 || no>1 || ns>0) {
+    if (nb>1 || nc>1 || ni>1 || nl>1 || nn>1 || no>1 || ns>0 ) {
       std::cerr << "[PadmeReco] Multiple arguments of the same type are not allowed" << std::endl;
       return 0;
     }
@@ -320,10 +320,7 @@ int main(Int_t argc, char **argv)
    algoList.push_back(evetoAn);
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
-
-   
-   
-   
+  
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
    Int_t nPVetoHits  =0;  

@@ -227,18 +227,18 @@ Bool_t SACAnalysis::ProcessAnalysis()
   Int_t seedId;
   Int_t clSize;
   
-<<<<<<< HEAD
+
   for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
     {
       TRecoVHit* h = fhitEvent->Hit(j);
       std::cout<<fhitEvent->GetNHits()<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
     }
-=======
+
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 
   // Int_t fNhits = fhitEvent->GetNHits();
   // std::string hname;
->>>>>>> develop
+
 
   // hname = "SAC_NHits";
   // hSvc->FillHisto(hname,fhitEvent->GetNHits());

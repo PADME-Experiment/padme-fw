@@ -184,14 +184,14 @@ Short_t DigitizerChannelSAC::CalcMaximum() {
   return fMax;
 }
 
-Double_t DigitizerChannelSAC::CalcPedestal() {
+/*Double_t DigitizerChannelSAC::CalcPedestal() {
   double rms;
   double avg;
   Int_t fCh       = GetChID();
   Int_t fChID     = GetChID();
   UInt_t fTrigMask= GetTrigMask();
   Int_t ElCh = fCh/10*5 +fCh%5;
-  //  std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
+  //std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
   // Se non trovo eventi vuoti?
   //  fSigRms[] = TMath::RMS(1000,&fSamples[0]);
   rms = TMath::RMS(1000,&fSamples[0]);
@@ -208,14 +208,14 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   } 
   Double_t PedDiff= histo->GetMean()-fPedCh[ElCh];
   if(histo->GetEntries()>50 && PedDiff>2.){    // 2. value needs tuning
-    std::cout<<ElCh<<" Pedestal diff "<<PedDiff<<std::endl;
+    //std::cout<<ElCh<<" Pedestal diff "<<PedDiff<<std::endl;
     fPedCh[ElCh]=histo->GetMean();
   }
   
   // fill histogram and take averge.
   //  std::cout << " RMS " << rms <<" fPed SAC "<<histo->GetMean()<<" el Ch"<<ElCh<< std::endl;
   return fPed;
-}
+}*/
 
 Double_t DigitizerChannelSAC::CalcCharge(UShort_t fCh) {  //not used
   // can include a better algorithm to compute hit charge
@@ -407,13 +407,13 @@ Double_t DigitizerChannelSAC::CalcPosition(UShort_t fCh) {
    return fPosition;
 }
 void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
-  //  Double_t fchPed=CalcPedestal();
+  //Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
   //  IsSaturated(); //check if the signal is saturated //CT
 }
 
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
-  Double_t fchPed=CalcPedestal();
+  //Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
 }
 

@@ -36,6 +36,8 @@ public:
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
 
+  G4String fBeWSensitiveDetectorName; 
+
   // Magnetic field inside DHSTB002
 
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
@@ -157,6 +159,9 @@ public:
   G4double GetQ2DistFromDHSTB002(){return fQ2DistFromDHSTB002;} 
   G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
 
+
+  // Get name of BeW sensitive detector
+  G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
 
 private:
 

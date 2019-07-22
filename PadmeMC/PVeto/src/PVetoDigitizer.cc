@@ -102,13 +102,20 @@ void PVetoDigitizer::Digitize()
 	digi->SetLocalPosition(hLocPos*hEnergy);
 	digi->SetNHits(1);
 	digis[hChannel].push_back(digi);
+	// std::cout << "Size of PVetoDigi:   " << sizeof(PVetoDigi ) 
+	// 	  << "  Size of unsigned short:  "    << sizeof(unsigned short)
+	// 	  << std::endl; 
+	
       }           
     }
     
-    
+    int nch=0;
+    double etot=0;
     for(unsigned int ich=0;ich<100;ich++) {
+      etot = 0.;
       for(unsigned int idigi=0;idigi < digis[ich].size();idigi++) {
 	//Compute the proper quantities of the digi
+	etot+=digis[ich][idigi]->GetEnergy();
 	digis[ich][idigi]->SetTime(digis[ich][idigi]->GetTime() / digis[ich][idigi]->GetEnergy());
 	digis[ich][idigi]->SetLocalPosition(digis[ich][idigi]->GetLocalPosition()/digis[ich][idigi]->GetEnergy());
 	if(digis[ich][idigi]->GetNHits() > 1) {
@@ -118,9 +125,11 @@ void PVetoDigitizer::Digitize()
 	}
 	pVetoDigiCollection->insert( digis[ich][idigi] );
 	//digis[ich][idigi]->Print();	  
-      }
+      }      
+      if (etot > 0.1 ) nch++;
     }
     
+    //    std::cout << "Number of channels fired: " << nch << "  NDigis:  "<<  pVetoDigiCollection->GetSize() << std::endl;
     
 
 

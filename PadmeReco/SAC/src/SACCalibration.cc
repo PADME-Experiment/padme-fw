@@ -38,8 +38,10 @@ void SACCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   
    for (unsigned int j=0; j<chIds.size();++j)
 	{
-	  
+
 	  double channelGain = fCalibCh[j];
+	  std::cout<<" init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
+	  
 
           std::cout<<" **********************************init calib consts .... j "<<j<<" ID="<<chIds[j]<<" Calib Values   "<<channelGain<<std::endl;
   
@@ -63,7 +65,7 @@ void SACCalibration::ReadCalibrationConstants(){
   char fname[50];
   //Int_t Calibration=0;
 
-  sprintf(fname,"config/Calib/SAC_EnergyCalibration_%d.txt", fCalibrationFile);
+  sprintf(fname,"config/Calibration/SAC_EnergyCalibration_%d.txt", fCalibrationFile);
   Calib.open(fname);
   if (Calib.is_open()){
   	double temp;
@@ -80,6 +82,7 @@ void SACCalibration::ReadCalibrationConstants(){
   return;
 
 }
+
 /*
 void SACCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits){
  
@@ -108,7 +111,6 @@ void SACCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits){
   return;
 
 }
-
 */
 
 

@@ -139,8 +139,8 @@ const int ECalNCol       = ECalSizeY/ECalCellSize;
 const int ECalNCells     = ECalNRow*ECalNCol;
 
 //Cluster reconstruction variables
-const double SeedE    = 5.;     //in MeV
-const double CellsE   = 0.3;     //in MeV
+const double SeedE    = 20.;     //in MeV
+const double CellsE   = 1.;     //in MeV
 const double RadiusCl = 4.5;     //in cm 25 crystal 2x2 involved
 const double IsCaloCalibON= 0.;  //Calor calibration constants: 0 all 1; 1 gauss with sigma = 1%
 

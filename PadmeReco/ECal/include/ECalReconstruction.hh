@@ -26,6 +26,7 @@ public:
   //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   //  virtual void ProcessEvent(TRawEvent*);
   void BuildHits(TRawEvent* rawEv);
+  Double_t CompensateMissingE(Double_t ECl,Int_t ClSeed); //M. Raggi 21/05/2019
   virtual void BuildClusters();
   bool TriggerToBeSkipped();
   void BuildSimpleECalClusters();
@@ -41,10 +42,13 @@ public:
 
 private:
   Int_t fClusterizationAlgo;
+  Int_t fCompensateMissingE;
   Double_t fClDeltaTime;
   Int_t fClDeltaCellMax;
   Double_t fClEnThrForHit;
   Double_t fClEnThrForSeed;
+  Int_t NNoHits;
+  Int_t fClusterTimeAlgo; 
 
   //Clusters vectors
   std::vector<double> ClE;

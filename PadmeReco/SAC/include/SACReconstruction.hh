@@ -21,8 +21,10 @@ public:
 
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
+
   virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   void BuildHits(TRawEvent* rawEv);
+  // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);

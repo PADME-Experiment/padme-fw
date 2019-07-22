@@ -46,9 +46,14 @@ typedef struct config_s {
   // Busy mask
   unsigned char busy_mask; // default 0x10 (CPU busy on, rest off)
 
-  // Timepix3 shutter delay and width in clock counts (80MHz: 1cc = 12.5ns)
+  // Timepix3 shutter delay in clock counts (80MHz: 1cc = 12.5ns)
   unsigned char timepix_shutter_delay; // default 0x02 =  25ns
-  unsigned char timepix_shutter_width; // default 0x16 = 275ns
+
+  // Timepix3 shutter width in 100ns counts
+  unsigned char timepix_shutter_width; // default 0x64 = 10us
+
+  // Trigger 0 distribution delay in clock counts (80MHz: 1cc = 12.5ns)
+  unsigned char trigger0_delay; // default 0x7E = 1.575us
 
   // Correlated trigger (trigger 7) delay wrt BTF trigger (trigger 0) in us
   unsigned short int correlated_trigger_delay; // default 0x01f4 = 500us
@@ -56,7 +61,7 @@ typedef struct config_s {
   // Triggers scale factors (global and autopass)
 
   // Trigger 0: BTF trigger
-  unsigned short int trig0_scale_global;   // default 1
+  //unsigned short int trig0_scale_global;   // default 1
   unsigned short int trig0_scale_autopass; // default 0
 
   // Triggers 1-5: External triggers (2: cosmics, 4: dual timer)

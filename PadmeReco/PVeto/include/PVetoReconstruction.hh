@@ -16,7 +16,7 @@ public:
   
   PVetoReconstruction(TFile*, TString);
   ~PVetoReconstruction();
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
 

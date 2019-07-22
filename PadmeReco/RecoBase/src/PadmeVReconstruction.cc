@@ -58,9 +58,13 @@ PadmeVReconstruction::~PadmeVReconstruction(){
   if(fConfigParser) {delete fConfigParser; fConfigParser=0;};
   if(fConfig) {delete fConfig; fConfig=0;}; 
   if(fChannelReco) {delete fChannelReco; fChannelReco = 0;};
-  //if(fClusterization) {delete fClusterization; fClusterization = 0;};
   if(fChannelCalibration) {delete fChannelCalibration; fChannelCalibration = 0;};
   if(fTriggerProcessor) {delete fTriggerProcessor; fTriggerProcessor = 0;};
+  if(fGeometry) {delete fGeometry; fGeometry = 0;};
+  if(fClusterization) {delete fClusterization; fClusterization = 0;};
+  ClearHits();
+  ClearClusters();
+ 
 }
 
 void PadmeVReconstruction::Exception(TString Message){
@@ -140,6 +144,9 @@ void PadmeVReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   // MC to reco hits
   ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
   // Clustering  
   ClearClusters();
   BuildClusters();
@@ -283,9 +290,11 @@ void PadmeVReconstruction::BuildTriggerInfo(TRawEvent* rawEv)
   
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
+    if (ADC==NULL) continue;
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
       //Loop over the trigger channels and perform reco
       UChar_t nTriggers  = ADC->GetNADCTriggers();
+      //std::cout<<"BuildTriggerInfo ..... nTriggers = "<<(unsigned int)nTriggers<<" to be processed in board "<<iBoard<<std::endl;
       for(Int_t iTr = 0; iTr<nTriggers;iTr++) {
 	TADCTrigger* trigger = ADC->ADCTrigger(iTr);
 	fTriggerProcessor->ProcessTrigger(ADC->GetBoardId(),trigger);
@@ -303,6 +312,7 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
   // use trigger info 
   if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
     BuildTriggerInfo(rawEv);
     if (TriggerToBeSkipped()) return;
   }
@@ -320,7 +330,9 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 
   //Processing is over, let's analyze what's here, if foreseen
-  AnalyzeEvent(rawEv);
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
   
 }
 
@@ -357,6 +369,7 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
 
   UChar_t nBoards = rawEv->GetNADCBoards();
 
+  //std::cout<<"Prova nBoards = "<<(unsigned int)nBoards<<std::endl;
   TADCBoard* ADC;
 
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {

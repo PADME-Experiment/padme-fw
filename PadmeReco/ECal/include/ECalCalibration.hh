@@ -18,10 +18,34 @@ public:
   
   ECalCalibration();
   ~ECalCalibration();
-  
+  void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
+  void ReadCalibConstant();
+  void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
 
 private:
+  Int_t     fUseCalibE;
+  Int_t     fUseCalibT;
 
+  Double_t  fGlobEnScale;
+  Double_t  fMuonDepositedEnergy;
+  Bool_t fCalibFileFound;
+
+  double fHitE;
+  double fHitECalibrated;
+
+  double fHitT;
+  double fHitTCorrected;
+
+  double fCalibConst;
+  int fCalibVersion;
+  double fBID;
+  double fChID;
+
+  std::ifstream ECalib; 
+  std::ifstream TCalib; 
+
+  std::map < std::pair<int,int>,double> fCalibMap;
+  std::map < std::pair<int,int>,double> fT0Map;
 };
 #endif
 

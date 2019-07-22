@@ -25,6 +25,9 @@ TargetHit::TargetHit(const TargetHit& right)
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;
   fLocalPosition = right.fLocalPosition;
+  fGlobalPositionPost = right.fGlobalPositionPost;
+  fLocalPositionPost = right.fLocalPositionPost;
+  fHitVal = right.fHitVal; 
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -35,6 +38,9 @@ const TargetHit& TargetHit::operator=(const TargetHit& right)
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;
   fLocalPosition = right.fLocalPosition;
+  fGlobalPositionPost = right.fGlobalPositionPost;
+  fLocalPositionPost = right.fLocalPositionPost;
+  fHitVal = right.fHitVal;
   return *this;
 }
 
@@ -70,6 +76,9 @@ void TargetHit::Print()
          << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
          << " global position: " << G4BestUnit(fPosition,"Length")
          << " local position: " << G4BestUnit(fLocalPosition,"Length")
+         << " global position post: " << G4BestUnit(fGlobalPositionPost,"Length")
+         << " local position post: " << G4BestUnit(fLocalPositionPost,"Length")
+         << " hit value: " << fHitVal
 	 << G4endl;
 }
 

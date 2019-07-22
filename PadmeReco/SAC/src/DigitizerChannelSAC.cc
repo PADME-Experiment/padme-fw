@@ -35,9 +35,14 @@ void DigitizerChannelSAC::PrintConfig(){
 
 void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConfig *cfg){
 
+
   //fGlobalMode = gMode;
   fGlobalMode = gOptions; //CT
-  H1 = new TH1D("h1","h1",990,0.,990.);
+  //H1 = new TH1D("h1","h1",990,0.,990.);
+
+  //fGlobalMode = gMode;
+  H1 = new TH1D("h1","h1",1000,0.,1000.);
+
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
 
@@ -227,15 +232,18 @@ Double_t DigitizerChannelSAC::CalcTime(UShort_t iMax, UShort_t fCh) {
 Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax) {
   fTime   = 0.;
   fCharge = 0.;
+  static TSpectrum SpectrumProcessor(50);// = new TSpectrum(20);
+
   Int_t NImage=0;
-  Double_t pCMeV= 3.2E5*2*1.67E-7; //Nominal Gain at 1500 x npe/MeV x echarge (in pC) needs tuning by calibration
+  static const Double_t pCMeV= 3.2E5*2*1.67E-7; //Nominal Gain at 1500 x npe/MeV x echarge (in pC) needs tuning by calibration
   //  Double_t pCMeV= 1.; //Nominal Gain at 1500 x npe/MeV x echarge (in pC)
-  Int_t NIntSamp= fSignalWidth/fTimeBin; 
+  static Int_t NIntSamp= fSignalWidth/fTimeBin; 
       
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //M. Raggi 19/10/2018
-  Int_t npeaks =20;
-  Double_t AbsSamRec[1024];
+
+  static const Int_t npeaks =50;
+  static Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10*5 +fCh%5;
@@ -270,6 +278,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //Charge = (VMax*2*pow(10,-9))/(2*50); // in pC, CT
   //std::cout<<Charge<<" Charge "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
+
 //  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
 //    if(VMax>3 && ElCh>=0){
 //      //	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
@@ -288,15 +297,22 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 //  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
   // if(VMax>fAmpThresholdLow){ // zero suppression on Voltage normalize to energy.
 
-  if(VMax>5){ // zero suppression on Voltage normalize to energy.
-    TSpectrum *s = new TSpectrum(npeaks);
+
+  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+    TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
+
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
     //    Int_t nfound = s->Search(H1,3,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t nfound = s->Search(H1,4,"",0.7);   //corrected for 2.5GHz cannot be less then 0.05
     Int_t fTrigMask=GetTrigMask();
     
-    Float_t *xpeaks = s->GetPositionX();
-    Float_t *ypeaks = s->GetPositionY();
+    // ROOT 6 version
+    //    Double_t *xpeaks = s->GetPositionX();
+    //    Double_t *ypeaks = s->GetPositionY();
+    // ROOT 5 version
+        Float_t *xpeaks = s->GetPositionX();
+        Float_t *ypeaks = s->GetPositionY();
+
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     fNPeak=nfound;
     
@@ -332,9 +348,16 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
    
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-      
-      Float_t xp   = xpeaks[ll];
-      Float_t yp   = ypeaks[ll];
+
+// ROOT 6 version
+//      Double_t xp   = xpeaks[ll];
+//      Double_t yp   = ypeaks[ll];
+// ROOT 5 version
+//      Float_t xp   = xpeaks[ll];
+//      Float_t yp   = ypeaks[ll];
+      Double_t xp   =s->GetPositionX()[ll];
+      Double_t yp   =s->GetPositionY()[ll];
+
       fTime = xp*fTimeBin; //convert time in ns get it from data
 
       Int_t bin    = H1->GetXaxis()->FindBin(xp);

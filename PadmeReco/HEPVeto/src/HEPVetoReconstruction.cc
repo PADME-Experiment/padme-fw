@@ -15,6 +15,7 @@
 //#include "DigitizerChannelSAC.hh"
 #include "PadmeReconstruction.hh"
 #include "HEPVetoCalibration.hh"
+#include "HEPVetoGeometry.hh"
 #include "HEPVetoSimpleClusterization.hh"
 #include "TH2F.h"
 
@@ -30,6 +31,7 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
   fClusterization = new HEPVetoSimpleClusterization();
   //fChannelReco = new DigitizerChannelSAC();
   fTriggerProcessor = new PadmeVTrigger();
+  fGeometry = new HEPVetoGeometry();
 }
 
 
@@ -100,6 +102,8 @@ TRecoVEvent * HEPVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event
   return fRecoEvent;
 }
 */
+
+/* for debugging only 
 void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -114,6 +118,7 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void HEPVetoReconstruction::EndProcessing()
 // {;}

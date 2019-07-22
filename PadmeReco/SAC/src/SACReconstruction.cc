@@ -14,6 +14,9 @@
 #include "TSACMCHit.hh"
 #include "TSACMCDigi.hh"
 //#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelSAC.hh"
+#include "SACCalibration.hh"
+#include "SACGeometry.hh"
 #include "SACSimpleClusterization.hh"
 #include "TH2F.h"
 #include "TH1F.h"
@@ -60,6 +63,7 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   fChannelCalibration = new SACCalibration();
   fClusterization = new SACSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
+  fGeometry = new SACGeometry();
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
 }
 
@@ -94,7 +98,9 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
 
   //Waveform histograms
-  for(int iCh=0; iCh<32 ; iCh++){
+  //  for(int iCh=0; iCh<25 ; iCh++){
+  for(int iCh=0; iCh<32; iCh++){ //MR After cosmic rays bars have been added to the digitizer july 2019
+
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
     AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
@@ -151,6 +157,8 @@ TRecoVEvent * SACReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tG
   return fRecoEvent;
 }
 */
+
+/* only for debugging printout 
 void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -171,6 +179,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // M. Raggi 17/07/2019
 void SACReconstruction::BuildHits(TRawEvent* rawEv)
@@ -230,6 +239,7 @@ void SACReconstruction::BuildClusters()
   else if (fClusterizationAlgo==2) PadmeVReconstruction::BuildClusters();
   return;   
 }
+
 void SACReconstruction::BuildSimpleSACClusters(){
 
   //std::cout<<"In SACBuildClusters "<<std::endl;
@@ -282,19 +292,22 @@ void SACReconstruction::BuildSimpleSACClusters(){
     }
   }
 
-  // C++11 doesn't allow list initialization
-  // of variable-length array. In any case,
-  // we don't need to initialize here since
-  // every variable gets overridden.
-  Double_t cTime[Hits.size()]; //={0.};
-  Double_t cEnergy[Hits.size()]; //={0.};
-  Int_t cChID[Hits.size()]; //={0};
-  Int_t cUsed[Hits.size()]; //={0};
-  // This one can stay since NTotCh=50 is fixed.
+  // Double_t cTime[Hits.size()]={0.};
+  // Double_t cEnergy[Hits.size()]={0.};
+  // Int_t cChID[Hits.size()]={0};
+  // Int_t cUsed[Hits.size()]={0};
+  Double_t   cTime[3000]={0.};
+  Double_t cEnergy[3000]={0.};
+  Int_t      cChID[3000]={0};
+  Int_t      cUsed[3000]={0};
   Int_t cCellUsed[50]={0};
   for(Int_t mm=0;mm<50;mm++) cCellUsed[mm]=0;
   //fill the vector with hits informations
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
+    if (iHit1==3000) {
+      std::cout<<"SACReconstruction::BuildSimpleSACClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
+      break;
+    }
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();
     cEnergy[iHit1]= Hits[iHit1]->GetEnergy();
@@ -333,12 +346,14 @@ void SACReconstruction::BuildSimpleSACClusters(){
       if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
 	//std::cout<<"is neig "<<iHit1<<std::endl;
 	clusMatrix[NSeeds][NCry]=iHit1;
-	Double_t XCl=(60.-cChID[iHit1]/10*30.);
-	Double_t YCl=(-60.+cChID[iHit1]%10*30.);
+	//Double_t XCl=(60.-cChID[iHit1]/10*30.);  //verificato con la mappa.
+	//Double_t YCl=(-60.+cChID[iHit1]%10*30.); //verificato con la mappa.
+	Double_t XCl=(Hits[iHit1]->GetPosition()).X();
+	Double_t YCl=(Hits[iHit1]->GetPosition()).Y();
 	cUsed[iHit1]=1;
-	ClTime[NSeeds]+=cTime[iHit1];
-	ClE[NSeeds]+=cEnergy[iHit1];
-	ClX[NSeeds]+=XCl*cEnergy[iHit1];
+	ClTime[NSeeds]+=cTime[iHit1];   // questo pesa tutto uguale
+	ClE[NSeeds]+=cEnergy[iHit1];    // questo deve essere calibrato prima.
+	ClX[NSeeds]+=XCl*cEnergy[iHit1]; // deve essere calibrata E
 	ClY[NSeeds]+=YCl*cEnergy[iHit1];
 	NCry++;
 	HitUsed++;
@@ -365,7 +380,7 @@ void SACReconstruction::BuildSimpleSACClusters(){
     myCl->SetChannelId( SdCell[iCl] );
     myCl->SetEnergy( ClE[iCl]    );
     myCl->SetTime(   ClTime[iCl] );
-    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],Hits[0]->GetPosition().Z()));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
@@ -454,6 +469,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     }
   }
 
+
   ClNCry.clear();
   ClTime.clear();
   ClE.clear();
@@ -506,7 +522,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(UChar_t b=0;b<nBoards;b++)// Loop over boards
   {
     TADCBoard* adcB = rawEv->ADCBoard(b);
-    if(adcB->GetBoardId()!=27)continue; //should correspond to SAC board ;
+    if(adcB->GetBoardId()!=27) continue; //should correspond to SAC board ;
     UChar_t nChn       = adcB ->GetNADCChannels(  );
     
 

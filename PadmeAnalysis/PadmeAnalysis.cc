@@ -88,6 +88,7 @@ int main(Int_t argc, char **argv)
   Int_t fVerbose=0;
   Int_t fProcessingMode=0;
   Int_t fntuple=0;
+  //Int_t fntupleSAC=0;//CT 23/07/19
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
@@ -95,7 +96,7 @@ int main(Int_t argc, char **argv)
 
   Int_t n_options_read = 0;
   Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t")) != -1) {
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t:")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -137,6 +138,7 @@ int main(Int_t argc, char **argv)
       case 'm':
 	nval++;
 	fProcessingMode = (Int_t)TString(optarg).Atoi();
+	//fntuple = (Int_t)TString(optarg).Atoi(); //CT, trying to add the tree in processing mode
 	break;
       case 't':
 	nt++;
@@ -382,6 +384,8 @@ int main(Int_t argc, char **argv)
        
        //
        //
+      (hSvc->myEvt).NTNEvent=fRecoEvent->GetEventNumber();//CT
+
        hSvc->FillNtuple();
      }
    

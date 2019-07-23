@@ -33,8 +33,9 @@
   int NTNSAC_Hits;
   int NTNSAC_Clusters;
   int NTNTarget_Hits;
-  
-  
+
+  int NTNEvent;//CT
+    
   double NTPVeto_Hits_Energy[NPVetoMaxHits];
   double NTPVeto_Hits_Time[NPVetoMaxHits];
   double NTPVeto_Hits_ChannelId[NPVetoMaxHits];

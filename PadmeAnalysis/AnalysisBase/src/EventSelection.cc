@@ -383,7 +383,29 @@ Bool_t EventSelection::ProcessAnalysis()
 		      std::cout<<"rcog = "<<rcog<<" minv = "<<minv<<std::endl;
 		      */
 
-		      hname = "ECal2gsearch_ImpactPar";////////////change 
+
+		      hname = "ECal2gsearchDt3_ImpactParVsMinv";
+		      hSvc->FillHisto2(hname, minv, impactPar);
+		      hname = "ECal2gsearchDt3_ImpactParVsRcog";
+		      hSvc->FillHisto2(hname, rcog, impactPar);
+		      
+		      hname = "ECal2gsearchDt3_ImpactParVsDPhi";
+		      hSvc->FillHisto2(hname, dPhi, impactPar);
+		      hname = "ECal2gsearchDt3_ImpactParVsDR";
+		      hSvc->FillHisto2(hname, dR, impactPar);
+		      hname = "ECal2gsearchDt3_ESumVsMinv";
+		      hSvc->FillHisto2(hname, minv, aSumCl);
+
+		      //		      if (dPhi>2.8 && fabs(impactPar)<50.)
+		      if (aSumCl>300 && aSumCl<700. && minv>15. && minv<35.) 
+			{
+			  hname = "ECal2gsearchDt3_ESumVsMinv_phibcut";
+			  hSvc->FillHisto2(hname, minv, aSumCl);
+			  hname = "ECal2gsearchDt3_ImpactParVsDPhi_phibcut";
+			  hSvc->FillHisto2(hname, dPhi, impactPar);
+			}
+		      
+		      hname = "ECal2gsearchDt3_ImpactPar";////////////change 
 		      hSvc->FillHisto(hname, impactPar);
 		      hname = "DPhi2gammaIn10";
 		      hSvc->FillHisto(hname, dPhi);
@@ -592,7 +614,10 @@ Bool_t EventSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& di
   P2.SetZ(0.);
   TVector3 Pb = P2-P1;
   double impactPar = (P1.Cross(Pb)).Perp()/Pb.Perp();
-
+  //std::cout<<" P1.X, Y "<<P1.X()<<" "<<P1.Y()<<std::endl;
+  //std::cout<<" P2.X, Y "<<P2.X()<<" "<<P2.Y()<<std::endl;
+  double impPar = (P1.X()*Pb.Y()-P2.X()*Pb.Y())/Pb.Perp();
+  
  
   double scalarP = P1.Dot(P2);
   double cosphi = scalarP/P1.Perp()/P2.Perp();
@@ -600,9 +625,11 @@ Bool_t EventSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& di
 
   distPhi = dPhi;
   distR   = Pb.Perp();
-  b = impactPar;
+  b = impPar;
+  //std::cout<<"dPhi = "<<distPhi<<" b = "<<b<<" impPar "<<impPar<<std::endl;
 
-  if (cosphi<-0.985 && fabs(b)<10.) return true;
+  //if (cosphi<-0.985 && fabs(b)<10.) return true;
+  if (cosphi<-0.985) return true;
   return false;
   
 }
@@ -815,10 +842,24 @@ Bool_t EventSelection::InitHistosAnalysis()
   hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 3.2);
   hname = "ECal2gsearch_dRVsDt";
   hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 500.);
+  hname = "ECal2gsearchDt3_ImpactParVsDPhi";
+  hSvc->BookHisto2(hname, 200, 0., 3.2, 200, -300., 300.);
+  hname = "ECal2gsearchDt3_ImpactParVsDR";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, -300., 300.);
+  hname = "ECal2gsearchDt3_ImpactParVsMinv";
+  hSvc->BookHisto2(hname, 200, 0., 50., 200, -300., 300.);
+  hname = "ECal2gsearchDt3_ImpactParVsRcog";
+  hSvc->BookHisto2(hname, 200, 0., 300., 200, -300., 300.);
+  hname = "ECal2gsearchDt3_ESumVsMinv";
+  hSvc->BookHisto2(hname, 200, 0., 50., 200, 0., 1500.);
+  hname = "ECal2gsearchDt3_ESumVsMinv_phibcut";
+  hSvc->BookHisto2(hname, 200, 0., 50., 200, 0., 1500.);
+  hname = "ECal2gsearchDt3_ImpactParVsDPhi_phibcut";
+  hSvc->BookHisto2(hname,  200, 0., 3.2, 200, -300., 300.);
   hname = "ECal2gsearch_ImpactParVsDt";
-  hSvc->BookHisto2(hname, 200, -100., 100., 200, 0., 500.);
-  hname = "ECal2gsearch_ImpactPar";
-  hSvc->BookHisto(hname, 200, 0., 300.);
+  hSvc->BookHisto2(hname, 200, -100., 100., 200, -300., 300.);
+  hname = "ECal2gsearchDt3_ImpactPar";
+  hSvc->BookHisto(hname, 200, -300., 300.);
 
 
   
@@ -857,10 +898,6 @@ Bool_t EventSelection::InitHistosAnalysis()
   hname = "DPhi2gammaIn10";
   minX =   0.;
   maxX =   3.2;
-  hSvc->BookHisto(hname, nBinX, minX, maxX);
-  hname = "ECal2gsearch_impactParam";
-  minX =   0.;
-  maxX =   300.;
   hSvc->BookHisto(hname, nBinX, minX, maxX);
 
 

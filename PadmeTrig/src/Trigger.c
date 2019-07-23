@@ -501,6 +501,7 @@ int trig_set_timepix_delay(unsigned char delay)
 {
   int rc;
   unsigned char fullmask[4];
+  if (delay == 0) { printf("WARNING - trig_set_timepix_delay - delay set to 0: timepix shutter will start ~25us after the BTF trigger. Are you sure?\n"); }
   rc = trig_get_register(0x05,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old timepix delay with new one

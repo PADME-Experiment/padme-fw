@@ -214,6 +214,16 @@ void timespec_diff(const struct timespec *start, const struct timespec *stop,
     return;
 }
 
+void show_register(unsigned char reg)
+{
+  unsigned char mask[4];
+  if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+}
+
 int main(int argc, char *argv[]) {
 
   pid_t pid;
@@ -445,12 +455,22 @@ int main(int argc, char *argv[]) {
 
   // Show registers before configuring board
   for (reg=0x00;reg<0x10;reg++) {
-    if ( trig_get_register(reg,mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    //if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    //  printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    //  proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    //}
+    //printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    show_register(reg);
   }
+  show_register(0x1D);
+
+  // Show firmware version
+  unsigned int fw_ver;
+  if ( trig_get_fw_version(&fw_ver) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading firmware version. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Firmware version: 0x%04x (%d)\n",fw_ver,fw_ver);
 
   // Program Trigger module with current configuration
 
@@ -622,12 +642,14 @@ int main(int argc, char *argv[]) {
 
   // Show registers after initializing board
   for (reg=0x00;reg<0x10;reg++) {
-    if ( trig_get_register(reg,mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    //if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    //  printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    //  proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    //}
+    //printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    show_register(reg);
   }
+  show_register(0x1D);
 
   // If using STREAM output, open stream now to avoid DAQ locking
   if ( strcmp(Config->output_mode,"STREAM")==0 ) {

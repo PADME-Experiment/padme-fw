@@ -50,7 +50,9 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 BeamGenerator::~BeamGenerator()
-{}
+{
+  delete fBeamMessenger;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

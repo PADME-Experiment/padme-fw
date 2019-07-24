@@ -107,25 +107,25 @@ void TargetDigitizer::Digitize()
   G4int hole=0;
  
   
-  for (G4int i=0;i<nChannels;i++){
-    
-    sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
-    sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
-    sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
-    //sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
-    //    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
-    dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
-    //    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
-    //    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
-    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
-    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
-    //dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
-    //    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
-    
-    dTimeTraceCCD[i]= new G4double[nhires];
-    for (G4int j=0; j< nhires; j++)
-      dTimeTraceCCD[i][j] = 0.;	
-  }
+ // for (G4int i=0;i<nChannels;i++){
+ //   
+ //   sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
+ //   sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
+ //   sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
+ //   //sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
+ //   //    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
+ //   dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
+ //   //    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
+ //   //    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
+ //   dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
+ //   dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
+ //   //dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
+ //   //    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
+ //   
+ //   dTimeTraceCCD[i]= new G4double[nhires];
+ //   for (G4int j=0; j< nhires; j++)
+ //     dTimeTraceCCD[i][j] = 0.;	
+ // }
 
   
   TargetDigiCollection* targetDigiCollection = new TargetDigiCollection("TargetDigitizer",digiCollectionName);
@@ -350,7 +350,7 @@ void TargetDigitizer::Digitize()
 	digi->SetChargeT(dChargeT[i]);
 	digi->SetCharge(dCharge[i]);
 	digi->SetNoiseCharge(dNCharge[i]); 
-	digi->Print();
+	//	digi->Print();
 	targetDigiCollection->insert(digi);
       }
 

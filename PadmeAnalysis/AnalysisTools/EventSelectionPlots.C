@@ -30,7 +30,7 @@
 //#include "PadmeStyle.h"
 
 //void DATAqualityTarget(char *filename)
-void EventSelectionPlots()
+void EventSelectionPlots(std::string run="")
 {
 
   /*
@@ -55,20 +55,35 @@ void EventSelectionPlots()
 
    gStyle->SetOptStat(0);
 
-   std::string runName = "run_0000000_20190228_131527_";
-     
+   //std::string runName = "run_0000000_20190228_131527";
+   std::string runName = "run_0000000_20190721_070421";
+   if (run!="") runName = run+"_";
+   else runName = runName+"_";
+
    //TFile *f1 = TFile::Open(filename);
-   std::string fName = "run_0000000_20190228_131527_recoFromRaw.AnalysisOut2.root";
+   std::string fName = runName+"recoFromRaw.AnalysisOut.root";
    std::string fNameToOpen = ""+fName;
    TFile *f1 = TFile::Open(fNameToOpen.c_str());
    
+
+   TH1D *TargetBeam_nPOT = (TH1D*)f1->Get("TargetBeam_nPOT");
+   double nevents = TargetBeam_nPOT->GetEntries();
+   double avenpot = TargetBeam_nPOT->GetMean();
+   double npot = nevents*avenpot/1.E10;
+   std::cout<<"========      nEvents = "<<nevents<<" includes non BTF triggers"<<std::endl;
+   std::cout<<"======== <nPOT>/bunch = "<<avenpot<<std::endl;
+   std::cout<<"=============    NPOT = "<<npot<<std::endl;
 
    TCanvas *c1 = new TCanvas("Beam_Target", "Beam_Target", 600,700);
    c1->SetFixedAspectRatio(true);
 
    //title->Draw();
 
-   TText *t = new TText(0.5,0.5,"Primary beam; nPOT=10^10");
+   char titlearray[100];
+   
+   sprintf(titlearray, "Primary beam; nPOT= %05f.3x10^10", npot);
+
+   TText *t = new TText(0.5,0.5,titlearray);
    t->SetTextAlign(22);
    //t->SetTextColor(kRed+2);
    t->SetTextFont(43);
@@ -115,7 +130,7 @@ void EventSelectionPlots()
    c1->cd(5);
    gPad->SetBottomMargin(10);
    gPad->SetRightMargin(10);
-   TH1D *TargetBeam_nPOT = (TH1D*)f1->Get("TargetBeam_nPOT");
+   //TH1D *TargetBeam_nPOT = (TH1D*)f1->Get("TargetBeam_nPOT");
    TargetBeam_nPOT->SetXTitle("Target nPOT");
    TargetBeam_nPOT->SetYTitle("Counts");
    TargetBeam_nPOT->Draw();
@@ -134,7 +149,7 @@ void EventSelectionPlots()
    c1->SaveAs((runName+std::string(c1->GetName())+".png").c_str());
 
 
-   TCanvas *c2 = new TCanvas("c2", "c2", 600,600);
+   TCanvas *c2 = new TCanvas("ECal_TwoPhotonEnergySum_TimeCoincidenceRequest3ns", "ECal_TwoPhotonEnergySum_TimeCoincidenceRequest3ns", 600,600);
    
    TH1D *ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns = (TH1D*)f1->Get("ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns");
    ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns->SetXTitle("E1+E2 [MeV]");
@@ -185,10 +200,10 @@ void EventSelectionPlots()
    L2->SetTextSize(0.03);
    L2->SetTextAlign(12);
    L2->AddEntry(ECal2gsearch_MinvDt3,"no Phi cut", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt3Phi100,"DPhi<10", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt3Phi75, "DPhi<7.5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt3Phi50, "DPhi<5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt3Phi25, "DPhi<2.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt3Phi100,"180-DPhi<10", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt3Phi75, "180-DPhi<7.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt3Phi50, "180-DPhi<5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt3Phi25, "180-DPhi<2.5", "L");
    L2->Draw();
    c3->SaveAs((runName+std::string(c3->GetName())+".pdf").c_str());
    c3->SaveAs((runName+std::string(c3->GetName())+".png").c_str());
@@ -221,10 +236,10 @@ void EventSelectionPlots()
    L2->SetBorderSize(0);
    L2->SetTextSize(0.03);
    L2->SetTextAlign(12);
-   L2->AddEntry(ECal2gsearch_MinvDt2Phi100,"DPhi<10", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt2Phi75, "DPhi<7.5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt2Phi50, "DPhi<5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt2Phi25, "DPhi<2.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt2Phi100,"180-DPhi<10", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt2Phi75, "180-DPhi<7.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt2Phi50, "180-DPhi<5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt2Phi25, "180-DPhi<2.5", "L");
    L2->Draw();
    c30->SaveAs((runName+std::string(c30->GetName())+".pdf").c_str());
    c30->SaveAs((runName+std::string(c30->GetName())+".png").c_str());
@@ -257,10 +272,10 @@ void EventSelectionPlots()
    L2->SetBorderSize(0);
    L2->SetTextSize(0.03);
    L2->SetTextAlign(12);
-   L2->AddEntry(ECal2gsearch_MinvDt1Phi100,"DPhi<10", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt1Phi75, "DPhi<7.5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt1Phi50, "DPhi<5", "L");
-   L2->AddEntry(ECal2gsearch_MinvDt1Phi25, "DPhi<2.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt1Phi100,"180-DPhi<10", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt1Phi75, "180-DPhi<7.5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt1Phi50, "180-DPhi<5", "L");
+   L2->AddEntry(ECal2gsearch_MinvDt1Phi25, "180-DPhi<2.5", "L");
    L2->Draw();
    c301->SaveAs((runName+std::string(c301->GetName())+".pdf").c_str());
    c301->SaveAs((runName+std::string(c301->GetName())+".png").c_str());
@@ -293,10 +308,10 @@ void EventSelectionPlots()
    L32->SetTextSize(0.03);
    L32->SetTextAlign(12);
    L32->AddEntry(ECal2gsearch_ESumDt3,"no Phi cut", "L");
-   L32->AddEntry(ECal2gsearch_ESumDt3Phi100,"DPhi<10", "L");
-   L32->AddEntry(ECal2gsearch_ESumDt3Phi75, "DPhi<7.5", "L");
-   L32->AddEntry(ECal2gsearch_ESumDt3Phi50, "DPhi<5", "L");
-   L32->AddEntry(ECal2gsearch_ESumDt3Phi25, "DPhi<2.5", "L");
+   L32->AddEntry(ECal2gsearch_ESumDt3Phi100,"180-DPhi<10", "L");
+   L32->AddEntry(ECal2gsearch_ESumDt3Phi75, "180-DPhi<7.5", "L");
+   L32->AddEntry(ECal2gsearch_ESumDt3Phi50, "180-DPhi<5", "L");
+   L32->AddEntry(ECal2gsearch_ESumDt3Phi25, "180-DPhi<2.5", "L");
    L32->Draw();
    c32->SaveAs((runName+std::string(c32->GetName())+".pdf").c_str());
    c32->SaveAs((runName+std::string(c32->GetName())+".png").c_str());
@@ -319,7 +334,7 @@ void EventSelectionPlots()
 
 
 
-   TCanvas *c33 = new TCanvas("ECal dPhiVsdT", "ECal dPhiVsdT", 1000,400);
+   TCanvas *c33 = new TCanvas("ECal_PhiVsdT", "ECal_PhiVsdT", 1000,400);
 
    c33->Divide(2,1);
    c33->cd(1);
@@ -336,6 +351,29 @@ void EventSelectionPlots()
    ECal2gsearch_dRVsDt->Draw("ZCOL");
    c33->SaveAs((runName+std::string(c33->GetName())+".pdf").c_str());
    c33->SaveAs((runName+std::string(c33->GetName())+".png").c_str());
+
+   TCanvas *c37 = new TCanvas("ECal2gsearch_MinvVsDphi", "ECal2gsearch_MinvVsDphi", 1000,600);
+   TH1D* ECal2gsearch_MinvVsDPhiDt3 = (TH1D*)f1->Get("ECal2gsearch_MinvVsDPhiDt3");
+   TH1D* ECal2gsearch_MinvVsDPhiDt2 = (TH1D*)f1->Get("ECal2gsearch_MinvVsDPhiDt2");
+   TH1D* ECal2gsearch_MinvVsDPhiDt1 = (TH1D*)f1->Get("ECal2gsearch_MinvVsDPhiDt1");
+   c37->Divide(3,1);
+   c37->cd(1);
+   ECal2gsearch_MinvVsDPhiDt3->SetXTitle("Phi [rad]");
+   ECal2gsearch_MinvVsDPhiDt3->SetYTitle("Minv [MeV]");
+   ECal2gsearch_MinvVsDPhiDt3->Draw("ZCOL");
+   t2->DrawText(10.,2.8,"dT= 3ns");
+   c37->cd(2);
+   ECal2gsearch_MinvVsDPhiDt2->SetXTitle("Phi [rad]");
+   ECal2gsearch_MinvVsDPhiDt2->SetYTitle("Minv [MeV]");
+   ECal2gsearch_MinvVsDPhiDt2->Draw("ZCOL");
+   t2->DrawText(10.,2.8,"dT= 1ns");
+   c37->cd(3);
+   ECal2gsearch_MinvVsDPhiDt1->SetXTitle("Phi [rad]");
+   ECal2gsearch_MinvVsDPhiDt1->SetYTitle("Minv [MeV]");
+   ECal2gsearch_MinvVsDPhiDt1->Draw("ZCOL");
+   t2->DrawText(10.,2.8,"dT= 1ns");
+   c37->SaveAs((runName+std::string(c33->GetName())+".pdf").c_str());
+   c37->SaveAs((runName+std::string(c33->GetName())+".png").c_str());
 
 
    TCanvas *c34 = new TCanvas("ECal2gsearch_MinvVsRcog", "ECal2gsearch_MinvVsRcog", 1000,600);
@@ -427,7 +465,7 @@ void EventSelectionPlots()
    c36->cd(3);
    ECal2gsearchDt3_ImpactParVsDPhi->Draw("ZCOL");
    t2->DrawText(0.15, -250.,"dT= 3ns");
-   ECal2gsearchDt3_ImpactParVsDPhi->SetXTitle("Dphi [rad]");
+   ECal2gsearchDt3_ImpactParVsDPhi->SetXTitle("Phi [rad]");
    ECal2gsearchDt3_ImpactParVsDPhi->SetYTitle("Impact parameter [mm]");
    c36->cd(4);
    ECal2gsearchDt3_ImpactParVsDR->Draw("ZCOL");

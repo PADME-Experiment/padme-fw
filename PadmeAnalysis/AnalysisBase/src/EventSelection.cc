@@ -414,6 +414,18 @@ Bool_t EventSelection::ProcessAnalysis()
 
 		      hname = "ECal2gsearch_ESumDt3";
 		      hSvc->FillHisto(hname, aSumCl);
+		      hname = "ECal2gsearch_MinvVsDPhiDt3";
+		      hSvc->FillHisto2(hname, dPhi, minv);
+		      if (fabs(aTime-xTime)<2.)
+			{
+			  hname = "ECal2gsearch_MinvVsDPhiDt2";
+			  hSvc->FillHisto2(hname, dPhi, minv);
+			  if (fabs(aTime-xTime)<1.)
+			    {
+			      hname = "ECal2gsearch_MinvVsDPhiDt1";
+			      hSvc->FillHisto2(hname, dPhi, minv);
+			    }
+			}
 		      hname = "ECal2gsearch_MinvVsRcogDt3";
 		      hSvc->FillHisto2(hname, rcog, minv);
 		      hname = "ECal2gsearch_MinvDt3";
@@ -779,6 +791,12 @@ Bool_t EventSelection::InitHistosAnalysis()
   hSvc->BookHisto(hname, 200, 0., 50.);
 
 
+  hname = "ECal2gsearch_MinvVsDPhiDt3";
+  hSvc->BookHisto2(hname, 200, 0., 3.2, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsDPhiDt2";
+  hSvc->BookHisto2(hname, 200, 0., 3.2, 200, 0., 50.);
+  hname = "ECal2gsearch_MinvVsDPhiDt1";
+  hSvc->BookHisto2(hname, 200, 0., 3.2, 200, 0., 50.);
   hname = "ECal2gsearch_MinvVsRcogDt3";
   hSvc->BookHisto2(hname, 200, 0., 300., 200, 0., 50.);
   hname = "ECal2gsearch_MinvVsRcogDt3Phi100";

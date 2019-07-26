@@ -283,6 +283,8 @@ Bool_t SACAnalysis::ProcessAnalysis()
   // std::cout<<"Out of SAC"<<std::endl;
 
    //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -290,7 +292,6 @@ Bool_t SACAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTSAC_Hits_Time[i]=hit->GetTime();

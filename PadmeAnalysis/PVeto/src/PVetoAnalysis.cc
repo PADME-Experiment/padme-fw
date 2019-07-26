@@ -123,14 +123,15 @@ Bool_t PVetoAnalysis::ProcessAnalysis()
   Int_t clSize;
   
    //fillHitsFlatNTP
-  
+
+  (hSvc->myEvt).NTNPVeto_Hits=fhitEvent->GetNHits();  
+
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
     chId   = hit->GetChannelId();
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNPVeto_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTPVeto_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTPVeto_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTPVeto_Hits_Time[i]=hit->GetTime();

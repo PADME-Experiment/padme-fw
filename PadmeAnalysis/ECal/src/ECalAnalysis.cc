@@ -135,6 +135,8 @@ Bool_t ECalAnalysis::ProcessAnalysis()
   Int_t clSize;
 
      //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -142,7 +144,6 @@ Bool_t ECalAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTECal_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTECal_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTECal_Hits_Time[i]=hit->GetTime();

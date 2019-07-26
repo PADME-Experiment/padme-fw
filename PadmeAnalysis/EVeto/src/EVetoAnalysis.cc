@@ -121,6 +121,8 @@ Bool_t EVetoAnalysis::ProcessAnalysis()
   Int_t clSize;
 
     //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNEVeto_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -128,7 +130,6 @@ Bool_t EVetoAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNEVeto_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTEVeto_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTEVeto_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTEVeto_Hits_Time[i]=hit->GetTime();

@@ -349,7 +349,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
   for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
     {
       TRecoVHit* h = fhitEvent->Hit(j);
-      std::cout<<fhitEvent->GetNHits()<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
+      std::cout<<"Event = "<<fRecoEvent->GetEventNumber()<<" , number of hit = "<<fhitEvent->GetNHits()<<" , channel Id = "<<h->GetChannelId()<<" , energy = "<<h->GetEnergy()<<" , time = "<<h->GetTime()<<std::endl;
     }
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
@@ -409,6 +409,8 @@ Bool_t SACAnalysis::ProcessAnalysis()
   // std::cout<<"Out of SAC"<<std::endl;
 
    //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -417,7 +419,8 @@ Bool_t SACAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
+   //if (fhitEvent->GetNHits()==0) std::cout<<"Hit n. "<<hit<<" , energy = "<<energy<<endl;//CT
+
    (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTSAC_Hits_Time[i]=hit->GetTime();
@@ -503,6 +506,9 @@ Bool_t SACAnalysis::ProcessValidation()
    }
    hname="ECal_HitTotEnergy";
    hSvcVal->FillHisto(hname, ETotCl, 1.);
+
+   //std::cout<<"Event = "<<fRecoEvent->GetEventNumber()<<" , number of hit = "<<j<<" , channel Id = "<<h->GetChannelId()<<" , energy = "<<h->GetEnergy()<<" , time = "<<h->GetTime()<<std::endl;
    
    return retCode;
+
 }

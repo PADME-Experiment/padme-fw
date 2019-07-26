@@ -59,6 +59,8 @@ private:
   Double_t fEnergy;
   Double_t fCalibEnergy;
 
+  Double_t fAvg80;
+
   Double_t fTime;
   UShort_t fNPedSamples;
   Int_t fChID;

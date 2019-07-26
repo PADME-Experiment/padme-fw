@@ -152,13 +152,14 @@ Bool_t ECalAnalysis::ProcessAnalysis()
    (hSvc->myEvt).NTECal_Hits_Zpos[i]=hit->GetPosition().Z();
   }
 
-    //fillClustersFlatNTP  
+    //fillClustersFlatNTP 
+
+  (hSvc->myEvt).NTNECal_Clusters= fClColl->GetNElements(); 
 
    for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNECal_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTECal_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTECal_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTECal_Clusters_Time[j]=clu->GetTime();

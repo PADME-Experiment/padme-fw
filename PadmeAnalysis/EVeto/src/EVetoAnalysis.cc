@@ -140,11 +140,12 @@ Bool_t EVetoAnalysis::ProcessAnalysis()
 
     //fillClustersFlatNTP  
 
+  (hSvc->myEvt).NTNEVeto_Clusters= fClColl->GetNElements();
+
    for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNEVeto_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTEVeto_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTEVeto_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTEVeto_Clusters_Time[j]=clu->GetTime();

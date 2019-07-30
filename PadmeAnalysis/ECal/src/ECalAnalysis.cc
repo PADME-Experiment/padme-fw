@@ -359,7 +359,7 @@ Bool_t ECalAnalysis::ProcessAnalysis()
   Double_t ChIDMaxEnHit=-1;
   std::string hname;
   Int_t fNhits = fhitEvent->GetNHits();
-  std::cout<<"+++++++++++++++++++++++++++++++++++++++++ ECalAnalysis ... "<<fNhits<<std::endl;
+  //std::cout<<"+++++++++++++++++++++++++++++++++++++++++ ECalAnalysis ... "<<fNhits<<std::endl;
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
     

@@ -20,13 +20,11 @@ void DigitizerChannelReco::PrintConfig(){
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
 }
 
-
 DigitizerChannelReco::~DigitizerChannelReco(){
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
     SaveDebugHistos();
   }
 ;}
-
 
 void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
 

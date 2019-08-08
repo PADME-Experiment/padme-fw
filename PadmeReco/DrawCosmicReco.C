@@ -17,7 +17,7 @@
 //#include <iterator>
 //#include <vector>
 
-void SACCosmic()
+void DrawCosmic()
 
 	{
 
@@ -42,7 +42,7 @@ void SACCosmic()
 	//TCanvas *mean=new TCanvas();
 
 	//TFile *fileMauro = new TFile("SACAn_prova.root","READ");
-	TFile *fileMauro = new TFile("SACAn20190721_171912.root","READ");
+	TFile *fileMauro = new TFile("SACAn.root","READ");
 
 	//TH1D *H2 = new TH1D("Charge of cluster","",10,0,50);
 

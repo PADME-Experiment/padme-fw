@@ -108,7 +108,7 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   double avg;
   Int_t fCh       = GetChID();
   UInt_t fTrigMask= GetTrigMask();
-  Int_t ElCh = fCh/10*5 +fCh%5;
+  Int_t ElCh = fCh/10 +fCh%10*5;
   //  std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
   // Se non trovo eventi vuoti?
   //  fSigRms[] = TMath::RMS(1000,&fSamples[0]);
@@ -164,7 +164,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   static Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
-  Int_t ElCh = fCh/10*5 +fCh%5;
+  Int_t ElCh = fCh/10 +fCh%10*5;
   fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
 
   for(UShort_t s=0;s<iMax;s++){

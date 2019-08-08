@@ -70,6 +70,8 @@ private:
   Int_t fElChID;
   Int_t fBdID;
 
+  Double_t fAvg80;
+
   Double_t fTime;
   UShort_t fNPedSamples;
   Int_t fChID;

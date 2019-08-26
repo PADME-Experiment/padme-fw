@@ -22,7 +22,7 @@ void DrawCosmic()
 
 {
 
-TFile *file = new TFile("an_t1_cosmic201907.root");
+TFile *file = new TFile("output/an_t1_cosmic201907.root");
 TTree *tree = new TTree();
 tree = (TTree*) file->Get("PADME_FlatNT");
 TCanvas *canvas  = new TCanvas ("SAC_Energy", "SAC_Energy", 100, 10, 700, 580);

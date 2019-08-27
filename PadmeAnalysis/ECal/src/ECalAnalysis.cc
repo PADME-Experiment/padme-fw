@@ -228,6 +228,8 @@ Bool_t ECalAnalysis::ProcessAnalysis()
 
 
      //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -235,7 +237,6 @@ Bool_t ECalAnalysis::ProcessAnalysis()
     Double_t energy = hit->GetEnergy();
     Double_t time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTECal_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTECal_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTECal_Hits_Time[i]=hit->GetTime();
@@ -244,13 +245,14 @@ Bool_t ECalAnalysis::ProcessAnalysis()
    (hSvc->myEvt).NTECal_Hits_Zpos[i]=hit->GetPosition().Z();
   }
 
-    //fillClustersFlatNTP  
+    //fillClustersFlatNTP 
+
+  (hSvc->myEvt).NTNECal_Clusters= fClColl->GetNElements(); 
 
    for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNECal_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTECal_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTECal_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTECal_Clusters_Time[j]=clu->GetTime();

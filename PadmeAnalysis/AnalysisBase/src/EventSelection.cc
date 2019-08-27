@@ -890,7 +890,7 @@ Bool_t EventSelection::ProcessSelection()
         hname="DTimeCorrectPVetoSAC";
         hSvc->FillHisto(hname, DTimePVetoCorrectSAC , 1.);
         
-        if(fabs(xTimeLinCorr-ClTsac)<.2){
+        if(fabs(xTimeLinCorr-ClTsac)<.1){
           hname="EnTotEvBremsstrhlungSACPVeto";
           hSvc->FillHisto(hname, EnClsac+EnClpv , 1.);
           hname="PVetoChIdClEnSAC";

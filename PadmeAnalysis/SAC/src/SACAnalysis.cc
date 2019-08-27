@@ -17,8 +17,8 @@ SACAnalysis::SACAnalysis(): ValidationBase()
 SACAnalysis::SACAnalysis(Int_t processingMode, Int_t verbosityFlag): ValidationBase(processingMode, verbosityFlag)
 {
   fAlgoName = "SAC";
-  fAnnhilationDeltaTime=3.;
-  fAnnhilationDeltaSpaceGravCenter=1.;
+  fAnnhilationDeltaTime=.1;
+  fAnnhilationDeltaSpaceGravCenter=.1;
   InitHistos();
   return;
 }
@@ -596,7 +596,10 @@ Bool_t SACAnalysis::ProcessAnalysis()
   fNhits = fhitEvent->GetNHits();
   fNclus = fClColl->GetNElements();
 
-  
+   //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
+
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -604,7 +607,6 @@ Bool_t SACAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTSAC_Hits_Time[i]=hit->GetTime();
@@ -614,11 +616,12 @@ Bool_t SACAnalysis::ProcessAnalysis()
   }
   
 
+  (hSvc->myEvt).NTNSAC_Clusters= fClColl->GetNElements();
+
   for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNSAC_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTSAC_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTSAC_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTSAC_Clusters_Time[j]=clu->GetTime();

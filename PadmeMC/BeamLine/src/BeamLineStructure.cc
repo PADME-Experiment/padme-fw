@@ -39,6 +39,7 @@
 
 #include "G4SDManager.hh" // 29/04/2019 M. Raggi
 #include "BeWSD.hh"       // 29/04/2019 M. Raggi
+#include "BeamFlagSD.hh"       // 29/08/2019 M. Raggi
 
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
 #include "QuadSetup.hh" // M. Raggi 10/04/2019
@@ -122,9 +123,10 @@ void BeamLineStructure::CreateBeThinWindow()
   // Position Be window and its flange inside top volume
   // Shift Be window so that its entry face is at center of support flange
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeWinFlange,"BeamLineBeWinFlange",fBeWindowVolume,false,0,true);
+
+
   if ( geo->BeWindowIsEnabled() ) {
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*beWinT),logicalBeWin,"BeamLineBeWindow",fBeWindowVolume,false,0,true);
-    
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*beWinT),logicalBeWin,"BeamLineBeWindow",fBeWindowVolume,false,0,true);    
     // The Be window is a sensitive detector
     G4String BeWSDName = geo->GetBeWSensitiveDetectorName();
     printf("Registering BeW SD %s\n",BeWSDName.data());
@@ -132,7 +134,7 @@ void BeamLineStructure::CreateBeThinWindow()
     fBeWindowVolume->SetSensitiveDetector(beWSD);
     G4SDManager::GetSDMpointer()->AddNewDetector(beWSD);
   }
-  
+
 }
 
 void BeamLineStructure::CreateDHSTB002Magnet()
@@ -216,6 +218,7 @@ void BeamLineStructure::CreateBeamLine()
 
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
+  G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
   // Angular span of the DHSTB002 magnet (45 deg)
@@ -329,6 +332,33 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector strFrontPos = G4ThreeVector(strFrontPosX,0.,strFrontPosZ);
   new G4PVPlacement(strFrontRot,strFrontPos,logicalStraightPipe,"DHSTB002FlangeFront",fMotherVolume,false,0,true);
 
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double FlagR = geo->GetBeWindowRadius(); //Use the same of the BeW
+  G4double FlagT = geo->GetBeWindowThick();  //Use the same of the BeW
+
+  G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX();
+  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2;
+  G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
+
+  G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,FlagR,0.5*FlagT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("G4_Be"),"logicalBeamFlag1",0,0,0);
+  logicalBeamFlag1->SetVisAttributes(FlagVisAttr);
+  
+  //  printf("Registering Flag1 %b\n",geo->BeamFlagIsEnabled());
+  if ( geo->BeamFlagIsEnabled() ) {
+    //   printf("Registering Flag1 %b\n",geo->BeamFlagIsEnabled());
+    new G4PVPlacement(strFrontRot,FlagFrontPos,logicalBeamFlag1,"BeamLineBeamFlag1",fMotherVolume,false,0,true);    
+    G4String BeamFlag1SDName = geo->GetBeamFlag1SensitiveDetectorName();
+    printf("Registering BeW SD %s\n",BeamFlag1SDName.data());
+    BeamFlagSD* bfupSD = new BeamFlagSD(BeamFlag1SDName);
+    logicalBeamFlag1->SetSensitiveDetector(bfupSD);
+    G4SDManager::GetSDMpointer()->AddNewDetector(bfupSD);
+  }
+  // end of test
+
   // Position back straight section
   G4double strBackPosX = geo->GetMagPipeStraightBackPosX();
   G4double strBackPosZ = geo->GetMagPipeStraightBackPosZ();
@@ -388,6 +418,35 @@ void BeamLineStructure::CreateBeamLine()
   G4RotationMatrix* beJunMgRot = new G4RotationMatrix;
   beJunMgRot->rotateY(magnetAngle);
   new G4PVPlacement(beJunMgRot,beJunMgPos,logicalBeJunction,"BeamLineMagnetJunction",fMotherVolume,false,0,true);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      FlagBackPosX = mpEntPosX;
+  G4double      FlagBackPosY = mpEntPosY;
+  G4double      FlagBackPosZ = mpEntPosZ;
+  G4ThreeVector FlagBackPos  = G4ThreeVector(FlagBackPosX,FlagBackPosY,FlagBackPosZ);
+
+  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn(),0.5*FlagT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("G4_Be"),"logicalBeamFlag2",0,0,0);
+  logicalBeamFlag2->SetVisAttributes(FlagVisAttr);
+
+  //  if ( geo->BeamFlagIsEnabled() ) {
+  new G4PVPlacement(strBackRot,FlagBackPos,logicalBeamFlag2,"BeamLineBeamFlag2",fMotherVolume,false,0,true);    
+//  G4String BeamFlag1SDName = geo->GetBeamFlag1SensitiveDetectorName();
+//  printf("Registering BeW SD %s\n",BeamFlag1SDName.data());
+//  BF1SD* bf1SD = new BeWSD(BeamFlag1SDName);
+//  fBeamFlag1Volume->SetSensitiveDetector(bf1SD);
+//  G4SDManager::GetSDMpointer()->AddNewDetector(bf1SD);
+  
+    //  }
+  // end of test
+
+
+
+
+
 
   // Create long pipe between magnet pipe and Be flange
   G4double bePipeLen = geo->GetBePipeLength();
@@ -512,7 +571,7 @@ void BeamLineStructure::CreateBeamLine()
   QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
   G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
   logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
-  new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+  //  new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
 
   // Generating quadrupole Q2
   G4double Q1Q2Dist = geo->GetQ1Q2Dist();
@@ -526,6 +585,6 @@ void BeamLineStructure::CreateBeamLine()
   QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
   G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
   logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
-  new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
+  //  new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
 
 }

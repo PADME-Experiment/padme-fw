@@ -36,7 +36,12 @@ public:
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
 
+  void EnableBeamFlag()  { fBeamFlagEnable = true; }
+  void DisableBeamFlag() { fBeamFlagEnable = false; }
+  G4bool BeamFlagIsEnabled() { return fBeamFlagEnable; } // M. Raggi 28/08/2019
+
   G4String fBeWSensitiveDetectorName; 
+  G4String fBeamFlag1SensitiveDetectorName; 
 
   // Magnetic field inside DHSTB002
 
@@ -162,12 +167,14 @@ public:
 
   // Get name of BeW sensitive detector
   G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
+  G4String GetBeamFlag1SensitiveDetectorName() { return fBeamFlag1SensitiveDetectorName; }
 
 private:
 
   //  Berillium thin window and stainless still flange
 
   G4bool fBeWindowEnable;
+  G4bool fBeamFlagEnable;
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;

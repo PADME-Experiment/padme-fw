@@ -367,13 +367,13 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 
-
-  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
-    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-  }else{
-    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
-  }
+// M. Raggi metti a posto!!!!
+//  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
 //    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//  }else{
+//    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
+//  }
+    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
     //  }
 }
@@ -622,25 +622,6 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
   XBeW/=NBeW;
   YBeW/=NBeW;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
@@ -997,7 +978,7 @@ G4double EventAction::GetCharge(G4double Energia)
 
 G4double EventAction::GGMass()
 {
-  double ECalPosiZ=-4000.; // sbagliato guarda nella geometria
+  double ECalPosiZ=-3470.; // sbagliato guarda nella geometria
   if(NClusters!=2)                        return -1;  // Need 2 clusters
   double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
   double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);

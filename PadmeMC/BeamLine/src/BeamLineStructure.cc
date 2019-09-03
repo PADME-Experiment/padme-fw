@@ -216,6 +216,7 @@ void BeamLineStructure::CreateBeamLine()
 
   // Create all pipes along the beam line from the Be window to the Target junction
 
+  BeamFlagSD* beamFlagSD;
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
@@ -344,7 +345,7 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
 
   G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,FlagR,0.5*FlagT,0.*deg,360.*deg);
-  G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("G4_Be"),"logicalBeamFlag1",0,0,0);
+  G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag1",0,0,0);
   logicalBeamFlag1->SetVisAttributes(FlagVisAttr);
   
   //  printf("Registering Flag1 %b\n",geo->BeamFlagIsEnabled());
@@ -353,9 +354,9 @@ void BeamLineStructure::CreateBeamLine()
     new G4PVPlacement(strFrontRot,FlagFrontPos,logicalBeamFlag1,"BeamLineBeamFlag1",fMotherVolume,false,0,true);    
     G4String BeamFlag1SDName = geo->GetBeamFlag1SensitiveDetectorName();
     printf("Registering BeW SD %s\n",BeamFlag1SDName.data());
-    BeamFlagSD* bfupSD = new BeamFlagSD(BeamFlag1SDName);
-    logicalBeamFlag1->SetSensitiveDetector(bfupSD);
-    G4SDManager::GetSDMpointer()->AddNewDetector(bfupSD);
+    beamFlagSD = new BeamFlagSD(BeamFlag1SDName);
+    logicalBeamFlag1->SetSensitiveDetector(beamFlagSD);
+    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
   }
   // end of test
 
@@ -428,25 +429,20 @@ void BeamLineStructure::CreateBeamLine()
   G4double      FlagBackPosZ = mpEntPosZ;
   G4ThreeVector FlagBackPos  = G4ThreeVector(FlagBackPosX,FlagBackPosY,FlagBackPosZ);
 
-  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn(),0.5*FlagT,0.*deg,360.*deg);
-  G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("G4_Be"),"logicalBeamFlag2",0,0,0);
+  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,geo->GetBeJunctionRIn()-150*um,0.5*FlagT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag2",0,0,0);
   logicalBeamFlag2->SetVisAttributes(FlagVisAttr);
 
   //  if ( geo->BeamFlagIsEnabled() ) {
   new G4PVPlacement(strBackRot,FlagBackPos,logicalBeamFlag2,"BeamLineBeamFlag2",fMotherVolume,false,0,true);    
-//  G4String BeamFlag1SDName = geo->GetBeamFlag1SensitiveDetectorName();
-//  printf("Registering BeW SD %s\n",BeamFlag1SDName.data());
-//  BF1SD* bf1SD = new BeWSD(BeamFlag1SDName);
-//  fBeamFlag1Volume->SetSensitiveDetector(bf1SD);
-//  G4SDManager::GetSDMpointer()->AddNewDetector(bf1SD);
+  //G4String BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
+  //  printf("Registering BeW SD %s\n",BeamFlag2SDName.data());
+  //  BeamFlagSD* bfdsSD = new BeamFlagSD(BeamFlag2SDName);
+  logicalBeamFlag2->SetSensitiveDetector(beamFlagSD);
+//  G4SDManager::GetSDMpointer()->AddNewDetector(bfdsSD);
   
     //  }
   // end of test
-
-
-
-
-
 
   // Create long pipe between magnet pipe and Be flange
   G4double bePipeLen = geo->GetBePipeLength();

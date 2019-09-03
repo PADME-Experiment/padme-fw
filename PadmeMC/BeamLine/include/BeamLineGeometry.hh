@@ -42,6 +42,8 @@ public:
 
   G4String fBeWSensitiveDetectorName; 
   G4String fBeamFlag1SensitiveDetectorName; 
+  G4String fBeamFlag2SensitiveDetectorName;   
+  G4String fBeamFlag3SensitiveDetectorName; 
 
   // Magnetic field inside DHSTB002
 
@@ -168,6 +170,8 @@ public:
   // Get name of BeW sensitive detector
   G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
   G4String GetBeamFlag1SensitiveDetectorName() { return fBeamFlag1SensitiveDetectorName; }
+  G4String GetBeamFlag2SensitiveDetectorName() { return fBeamFlag2SensitiveDetectorName; }
+  G4String GetBeamFlag3SensitiveDetectorName() { return fBeamFlag3SensitiveDetectorName; }
 
 private:
 

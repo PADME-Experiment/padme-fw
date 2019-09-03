@@ -36,7 +36,7 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
 
   G4double edep = aStep->GetTotalEnergyDeposit();
-  if (edep==0.) return false;
+  //  if (edep==0.) return false;
 
   BeamFlagHit* newHit = new BeamFlagHit();
 
@@ -45,9 +45,9 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
 
   //  G4cout << "PreStepPoint in BeamFlag " << touchHPre->GetVolume()->GetName()<<std::endl;
-  //	 << " global " << G4BestUnit(worldPosPre,"Length")
-  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-
+//  << " global " << G4BestUnit(worldPosPre,"Length")<< G4endl;
+//  << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+  
   // this way you only see primary particle there is a component coming form background that is killed here.
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
     //if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){

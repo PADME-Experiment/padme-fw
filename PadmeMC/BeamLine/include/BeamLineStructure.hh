@@ -46,6 +46,7 @@ private:
   //G4LogicalVolume* fGlobalLogicalVolume;
   G4LogicalVolume* fBeWindowVolume;
   G4LogicalVolume* fBeamFlag1Volume;
+  G4LogicalVolume* fBeamFlag2Volume;
 
   QuadSetup * fMagneticFieldManager;
   //G4int fBeamLineExists;

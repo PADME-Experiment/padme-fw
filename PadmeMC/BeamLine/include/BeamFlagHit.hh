@@ -27,6 +27,9 @@ public:
 
 public:
   
+  void SetChannelId(G4int c) { fChannelId = c; }
+  G4int GetChannelId() { return fChannelId; }
+
   void SetTime(G4double t) { fTime = t; };
   G4double GetTime() { return fTime; };
 
@@ -66,6 +69,7 @@ public:
 
 private:
 
+  G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
   G4double      fTrackEnergy; //M. Raggi 2/04/2019 added track energy

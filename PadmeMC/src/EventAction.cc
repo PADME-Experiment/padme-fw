@@ -368,16 +368,17 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-
+  
 // M. Raggi metti a posto!!!!
 //  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
 //    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
 //    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
 //  }
-    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //  }
+  G4cout<<"Writing to file UBTF "<<G4endl;
+  fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  //  }
 }
 
 void EventAction::AddECryHits(ECalHitsCollection* hcont)
@@ -646,22 +647,29 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
+      G4int    NFlag  = hit->GetChannelId(); 
+
+      G4int    NHisto =100+10*NFlag;
+      G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
+
  //     // computing angle at the entrance of the target using the directions of the particles:
  //     G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
  //     // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
- //     G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
+      //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
  //
- //     //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
- //
- //     fHistoManager->FillHisto(70,hE);     // All hit energies
- //     fHistoManager->FillHisto(71,htheta); // after the target
- //     fHistoManager->FillHisto(72,hX);     // 
- //     fHistoManager->FillHisto(73,hY);     // 
- //     fHistoManager->FillHisto(74,hTrE);   // At the target entrance
- //     
- //     fHistoManager->FillHisto2(75,hX,hY,1.);   //X vs Y local coordinates 
- //     fHistoManager->FillHisto2(76,hX,hTrE,1.); //X vs Track energy
- //     fHistoManager->FillHisto2(77,hX,htheta,1.); //X vs Track energy
+      //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      if (NFlag<3){
+
+	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
+	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
+	fHistoManager->FillHisto(NHisto+2,hX);     // 
+	fHistoManager->FillHisto(NHisto+3,hY);     // 
+	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
+	//     
+	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
+	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
+	// fHistoManager->FillHisto2(NHisto+7,hX,htheta,1.); //X vs Track energy
+      }
     }
   }//end of loop
   //  XBeW/=NBeW;

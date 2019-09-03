@@ -21,6 +21,7 @@ BeamFlagHit::~BeamFlagHit() {}
 BeamFlagHit::BeamFlagHit(const BeamFlagHit& right)
   : G4VHit()
 {
+  fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;
@@ -31,6 +32,7 @@ BeamFlagHit::BeamFlagHit(const BeamFlagHit& right)
 
 const BeamFlagHit& BeamFlagHit::operator=(const BeamFlagHit& right)
 {
+  fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;

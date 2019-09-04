@@ -25,8 +25,8 @@ BeamLineGeometry::BeamLineGeometry()
   fBeamFlagEnable = true;
   // Set Be window sensitive detector positioned
   fBeWSensitiveDetectorName = "BeWSD";
-  fBeamFlag1SensitiveDetectorName = "BUpFL";
-  fBeamFlag2SensitiveDetectorName = "BDsFL";
+  fBeamFlag1SensitiveDetectorName = "BDSFL";
+  fBeamFlag2SensitiveDetectorName = "BUSFL";
 
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;

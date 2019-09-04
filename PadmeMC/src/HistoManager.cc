@@ -213,6 +213,49 @@ void HistoManager::book()
   if (!histo2[127]) G4cout << "\n can't create histo 127" << G4endl;
 
 
+
+
+
+  //****************************
+  // Beam Flag3 before the target
+  //****************************
+
+  histo[130] = new TH1D("h130","Flag3 energy",500,0.,0.1);
+  if (!histo[130]) G4cout << "\n can't create histo 130" << G4endl; 
+  histo[131] = new TH1D("h131","Flag3 Angle ",500,0.,0.050);
+  if (!histo[131]) G4cout << "\n can't create histo 131" << G4endl;
+  histo[132] = new TH1D("h132","Flag3 X coord ",TarXBins,TarXmin,TarXmax);
+  if (!histo[132]) G4cout << "\n can't create histo 132" << G4endl; 
+  histo[133] = new TH1D("h133","Flag3 Y coord ",TarYBins,TarYmin,TarYmax);
+  if (!histo[133]) G4cout << "\n can't create histo 133" << G4endl; 
+
+  histo[134] = new TH1D("h134","Flag3 Beam energy ",100,460.,560.);
+  if (!histo[134]) G4cout << "\n can't create histo 134" << G4endl;   
+  histo2[135] = new TH2D("h135","Flag3 beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
+  if (!histo2[135]) G4cout << "\n can't create histo 135" << G4endl;
+  histo2[136] = new TH2D("h136","Flag3 XvsE",TarXBins,TarXmin,TarXmax,320,500.,560.);
+  if (!histo2[136]) G4cout << "\n can't create histo 136" << G4endl;
+
+  histo2[137] = new TH2D("h137","Flag3 ThetavsE",TarXBins,TarXmin,TarXmax,200,0,0.100);
+  if (!histo2[137]) G4cout << "\n can't create histo 137" << G4endl;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // BeW study
   histo[70] = new TH1D("h70","BeW energy",500,0.,0.1);
   if (!histo[70]) G4cout << "\n can't create histo 70" << G4endl; 

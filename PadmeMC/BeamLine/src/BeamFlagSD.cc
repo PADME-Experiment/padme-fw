@@ -59,6 +59,7 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag1")  newHit->SetChannelId(1); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag2")  newHit->SetChannelId(2); 
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag3")  newHit->SetChannelId(3); 
     newHit->SetLocalPosition(localPosPre);
     fBeamFlagCollection->insert(newHit);
   }

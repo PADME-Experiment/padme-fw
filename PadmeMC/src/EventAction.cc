@@ -658,7 +658,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
  //
       //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-      if (NFlag<3){
+      if (NFlag<4){
 
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
 	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target

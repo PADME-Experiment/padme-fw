@@ -139,18 +139,10 @@ private:
 
   TH1F * hSignalTmp;
   TH1F * hdxdtTmp;
-
-  TH1F * hSignal[10];
-  TH1F * hSigFinal;
-  TH1F * hSignalSmooth[10];
-
-  TH1F * hdxdt[10];
   TH1F * hdxdtFinal;
-  TH1F * hdxdtSmooth[10];
 
-  TH1F * hDerivRatio[10];
-  TH1F * hDerivRatioSmooth[10];
-
+  TH1F * hSignal[96];
+  TH1F * hRCVoltage[96];
   TH1F * hPedSpectrum[96];
 
   TH1F * hAmpSpectrum[96];
@@ -164,13 +156,8 @@ private:
 
   TH1F * hdxdtMaxTime;
   TH1F * hSigMax;
-  TH1F * hRCVoltage[10];
+  TH1F * hSigFinal;
 
-  TH1F * hTrialSignal;
-  TH1F * hRCProcessedTrialSignal;
-  TH1F * hChargeInt;
-  TH1F * hChargeIntRC;
-  TH1F * hdxdtRMS;
   TH1F * hSat;
 
   TH1F * hSigOv;
@@ -184,7 +171,6 @@ private:
   // calc charge
   Double_t AbsSamRec[1024];
 
-  TList* hListCal; // single board related histograms 
   TList* hListWaveform; //Waveform histograms
   TList* hListAmp; //Amplitude spectra
   TList* hListPed; //Pedestal spectra
@@ -192,7 +178,6 @@ private:
   TList* hListAmpCharge2D; //2D amplitude/charge plots
   TList* hListTmp;  // More general histograms 
 
-  TList* hListCalRC; // single board related histograms 
   TList* hListWaveformRC; //Waveform histograms
   TList* hListAmpRC; //Amplitude spectra
   TList* hListPedRC; //Pedestal spectra

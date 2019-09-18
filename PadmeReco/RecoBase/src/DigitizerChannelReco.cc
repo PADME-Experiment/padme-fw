@@ -16,6 +16,8 @@ int waveformhitmax=96;
 char name[256];
 char newname[256];
 
+TString detname;
+
 void DigitizerChannelReco::PrintConfig(){
   std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
@@ -35,9 +37,12 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
   name += "DIGI";
   H1 = new TH1D(name.c_str(),name.c_str(),1000,0.,1000.);
   name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
+
+  detname=name;//Get detector name in global variable to be used in fileoutname
+
   name += "2";
   H2 = new TH1D(name.c_str(),name.c_str(),990,0.,990.);
-    
+
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
   fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
@@ -86,18 +91,18 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
 
 void DigitizerChannelReco::PrepareDebugHistos(){ //Beth 7/6/19 copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
   
-  static char* fileoutname;
+  TString fileoutname;
   char name[256];
   char newname[256];
 
-  if(fProcessing==0&&fNewPed==0&&fTimeCut==0) fileoutname="RecoAnSingleHitOldPedNoTimeCut.root";
-  if(fProcessing==0&&fNewPed==1&&fTimeCut==0) fileoutname="RecoAnSingleHitNewPedNoTimeCut.root";
+  if(fProcessing==0&&fNewPed==0&&fTimeCut==0) fileoutname=detname+"RecoAnSingleHitOldPedNoTimeCut.root";
+  if(fProcessing==0&&fNewPed==1&&fTimeCut==0) fileoutname=detname+"RecoAnSingleHitNewPedNoTimeCut.root";
 
-  if(fProcessing==0&&fNewPed==0&&fTimeCut==1) fileoutname="RecoAnSingleHitOldPedTimeCut.root";
-  if(fProcessing==0&&fNewPed==1&&fTimeCut==1) fileoutname="RecoAnSingleHitNewPedTimeCut.root";
+  if(fProcessing==0&&fNewPed==0&&fTimeCut==1) fileoutname=detname+"RecoAnSingleHitOldPedTimeCut.root";
+  if(fProcessing==0&&fNewPed==1&&fTimeCut==1) fileoutname=detname+"RecoAnSingleHitNewPedTimeCut.root";
 
-  if(fProcessing==1) fileoutname="RecoAnMultiHit.root";
-  if(fProcessing==2) fileoutname="RecoAnRCProcessing.root";
+  if(fProcessing==1) fileoutname=detname+"RecoAnMultiHit.root";
+  if(fProcessing==2) fileoutname=detname+"RecoAnRCProcessing.root";
 
   std::cout<<"Created "<<fileoutname<<std::endl;
 
@@ -786,7 +791,7 @@ void DigitizerChannelReco::HistoFill(){
       }
     }
     
-    if(waveformhit==0) std::cout<<"parameters are: fProcessing = "<<fProcessing<<" fNewPed = "<<fNewPed<<" fTimeCut = "<<fTimeCut<<std::endl;
+    if(waveformhit==0) std::cout<<"parameters are: Detector = "<<detname<<" fProcessing = "<<fProcessing<<" fNewPed = "<<fNewPed<<" fTimeCut = "<<fTimeCut<<std::endl;
     waveformhit++;//after every hit increase the value of the hit counting variable
     
 }

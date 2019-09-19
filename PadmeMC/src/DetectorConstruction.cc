@@ -306,9 +306,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
   G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
   G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
-  G4ThreeVector cpzPos(0.,0.,geoChamber->GetVCInnerFacePosZ()-0.5*cpzLen);
-  G4LogicalVolume* logicMagneticVolumeCP =
-    new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
+  G4ThreeVector cpzPos(0.,0.,geoChamber->GetVCInnerFacePosZ()-0.5*cpzLen-500.*um);
+
+  G4LogicalVolume* logicMagneticVolumeCP = new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,cpzPos,logicMagneticVolumeCP,"MagneticVolumeCP",logicWorld,false,0,true);
 

@@ -48,18 +48,22 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 //  << " global " << G4BestUnit(worldPosPre,"Length")<< G4endl;
 //  << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
   
+//  G4cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<G4endl;
+
   // this way you only see primary particle there is a component coming form background that is killed here.
-  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
-    //if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+  // if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
     newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
     newHit->SetPosition(worldPosPre);
-
+    
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag1")  newHit->SetChannelId(1); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag2")  newHit->SetChannelId(2); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag3")  newHit->SetChannelId(3); 
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag4")  newHit->SetChannelId(4); 
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag5")  newHit->SetChannelId(5); 
     newHit->SetLocalPosition(localPosPre);
     fBeamFlagCollection->insert(newHit);
   }

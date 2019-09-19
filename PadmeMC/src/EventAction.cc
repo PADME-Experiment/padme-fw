@@ -631,7 +631,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
 {
   double EFlag=0;
   G4int nHits = hcont->entries();
-  std::cout<<" N Beam flag hits "<<nHits<<std::endl;
+  //  std::cout<<" N Beam flag hits "<<nHits<<std::endl;
   for (G4int h=0; h<nHits; h++) {
     BeamFlagHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
@@ -650,7 +650,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       G4int    NFlag  = hit->GetChannelId(); 
 
       G4int    NHisto =100+10*NFlag;
-      G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
+      //      if(NFlag==4)  G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
 
  //     // computing angle at the entrance of the target using the directions of the particles:
  //     G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
@@ -658,7 +658,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
  //
       //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-      if (NFlag<4){
+      if (NFlag<5){
 
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
 	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target

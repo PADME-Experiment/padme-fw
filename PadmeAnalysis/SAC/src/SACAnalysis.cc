@@ -349,7 +349,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
   for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
     {
       TRecoVHit* h = fhitEvent->Hit(j);
-      std::cout<<"Event = "<<fRecoEvent->GetEventNumber()<<" , number of hit = "<<fhitEvent->GetNHits()<<" , channel Id = "<<h->GetChannelId()<<" , energy = "<<h->GetEnergy()<<" , time = "<<h->GetTime()<<std::endl;
+      //std::cout<<"Event = "<<fRecoEvent->GetEventNumber()<<" , number of hit = "<<fhitEvent->GetNHits()<<" , channel Id = "<<h->GetChannelId()<<" , energy = "<<h->GetEnergy()<<" , time = "<<h->GetTime()<<std::endl;
     }
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();

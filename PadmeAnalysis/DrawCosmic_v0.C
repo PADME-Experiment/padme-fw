@@ -18,28 +18,38 @@
 //#include <iterator>
 //#include <vector>
 
-void DrawCosmic()
+void DrawCosmic_v1()
 
 {
 
-TFile *file = new TFile("output/an_t1_cosmic201907.root");
+//TFile *file = new TFile("output/an_cosmiclong.root");//<-con questo crasha
+//TFile *file = new TFile("output/an_t1_cosmic_AmplThrLowAmplThrHigh1.root");//con questo no
+TFile *file = new TFile("output/an_t1_AmplThrLow1AmplThrHigh1_nothres.root");
 TTree *tree = new TTree();
 tree = (TTree*) file->Get("PADME_FlatNT");
 TCanvas *canvas  = new TCanvas ("SAC_Energy", "SAC_Energy", 100, 10, 700, 580);
 TCanvas *canvas2  = new TCanvas ("Time", "Time", 100, 10, 700, 580);
-TH1D *HitTimeDiff = new TH1D("Delta time between hits","Delta time between hits",10,0,10);
+TCanvas *canvas3  = new TCanvas ("NHit", "NHit", 100, 10, 700, 580);
+TCanvas *canvas4  = new TCanvas ("Time diff", "Time diff", 100, 10, 700, 580);
+
+TH1D *HitTime = new TH1D("Hit time","Hit time",200,-300,0);
+TH1D *HitTimeDiff = new TH1D("Delta time between hits","Delta time between hits",400,-20,20);
+TH1D *hNHit = new TH1D("Number of hit per event","Number of hit per event",100,0,100);
 
 TH1D ** H1;
 H1 = new TH1D*[25];
 TH1D ** H2;
 H2 = new TH1D*[25];
+TH1D ** H3;
+H3 = new TH1D*[25];
 
 	for (int g=0;g<25;g++)
 
 	{
 
-	H1[g] = new TH1D(Form("Hit Energy%d with cuts",g),Form("Hit Energy%d with cuts",g),100,0.,300.);
-	H2[g] = new TH1D(Form("Hit Energy%d",g),Form("Hit Energy%d",g),100,0.,300.);
+	H1[g] = new TH1D(Form("Hit Energy%d with cuts",g),Form("Hit Energy%d with cuts",g),100,0.,100.);
+	H2[g] = new TH1D(Form("Hit Energy%d",g),Form("Hit Energy%d",g),100,0.,100.);
+	H3[g] = new TH1D(Form("Hit Energy%d with 2 cuts",g),Form("Hit Energy%d",g),100,0.,100.);
 
 	}
 
@@ -52,158 +62,196 @@ TF1 *f1 = new TF1("f1","landau",15,250);
 Int_t NEvent;
 Int_t NHits;
 
-tree->SetBranchAddress("NTNEvent",&NEvent);
-tree->SetBranchAddress("NTNSAC_Hits",&NHits);
-
 Int_t entries = tree->GetEntries();
+
+//cout<<"Il numero di entries è "<<entries<<endl;
 
 int totalhitnumber=0;
 int count=0;
 
-	/*for (Int_t hitnumber=0; hitnumber<entries; hitnumber++)
+Double_t Hits_Energy[50];
+Double_t Hits_Time[50];
+Double_t Hits_ChannelId_double[50];//<----questa dimensione non va bene, ancora non so su quale variabile
 
-	{
+int Hits_ChannelId[50];
+int column[50],row[50],ElCh[25];
 
-	tree->GetEntry(hitnumber);
-	totalhitnumber += NHits;
+TBranch *b_NTSAC_Hits_Energy;   //!
+TBranch *b_NTSAC_Hits_Time;   //!
+TBranch *b_NTSAC_Hits_ChannelId;   //!
 
-	}
+Double_t firstvalue,lastvalue,time_diff[50];
 
-cout<<"Total number of hits is "<<totalhitnumber<<endl;*/
+tree->SetBranchAddress("NTNEvent",&NEvent);
+tree->SetBranchAddress("NTNSAC_Hits",&NHits);
 
-Double_t Hits_Energy[30];
-Double_t Hits_Time[30];
-Double_t Hits_ChannelId_double[30];//<----questa dimensione non va bene, ancora non so su quale variabile
+tree->SetBranchAddress("NTSAC_Hits_Energy",Hits_Energy,&b_NTSAC_Hits_Energy);
+tree->SetBranchAddress("NTSAC_Hits_Time",Hits_Time,&b_NTSAC_Hits_Time);
+tree->SetBranchAddress("NTSAC_Hits_ChannelId",Hits_ChannelId_double,&b_NTSAC_Hits_ChannelId);
 
-int Hits_ChannelId[30];
-int column[30],ElCh[25];
-
-Double_t firstvalue,lastvalue;
-
-tree->SetBranchAddress("NTSAC_Hits_Energy",&Hits_Energy[NHits]);
-tree->SetBranchAddress("NTSAC_Hits_Time",&Hits_Time[NHits]);
-tree->SetBranchAddress("NTSAC_Hits_ChannelId",&Hits_ChannelId_double[NHits]);
-
-//tree->Print();
-
-//tree->Draw("NTNEvent","","goff");
-//Int_t * NEvent = tree->GetV1();
-/*tree->Draw("NTNSAC_Hits","","goff");
-Int_t * NHits = tree->GetV1();
-tree->Draw("NTSAC_Hits_Energy","","goff");
-Double_t * Energy = tree->GetV1();
-tree->Draw("NTSAC_Hits_Time","","goff");
-Double_t * Time = tree->GetV1();
-tree->Draw("NTSAC_Hits_ChannelId","","goff");
-Double_t * ChannelId = tree->GetV1();*/
-
-//Int_t n = tree->GetSelectedRows();
-
-	/*for (int f=0;f<25;f++)
-
-	{
-
-	Hits_ChannelId[f] = static_cast<int>(Hits_ChannelId_double[f]);
-
-	//int column[30];
-	column[f]=Hits_ChannelId[f]/10;
-	ElCh[f]=Hits_ChannelId[f]/4+Hits_ChannelId[f]%4;
-	cout<<"Electronic channel is "<<ElCh<<endl;
-
-	}*/
-
+//tree->SetBranchAddress("NTSAC_Hits_Energy",Hits_Energy[0]);
+//tree->SetBranchAddress("NTSAC_Hits_Time",Hits_Time[0]);
+//tree->SetBranchAddress("NTSAC_Hits_ChannelId",Hits_ChannelId_double[0]);
+// controllare che ci siano meno di 50 hits e poi non processi 
 
 		for (Int_t i=0; i<entries; i++) //questo loop gira su  eventi, per ogni evento ho più hit!
 
 		{
 
+		int count2=0;
+
+		//cout<<"NHits = "<<NHits<<endl;
+
 		tree->GetEntry(i);
-		//cout<<"Event n. "<<NEvent<<" has "<<NHits<<endl;//<----fai controllare
 
-
-			for (Int_t g=0; g<NHits; g++)
-
+			if (NHits>=2) //first request is having only events with a certain number of hits
+			  //rimuovere il taglio superiore perche' pericoloso
 			{
 
-				if (NHits>=2 && NHits<=5) //first request is having only events with a certain number of hits
+			cout<<"=========================================================================="<<endl;
+			cout<<"		Opening event n. "<<NEvent<<" : it has "<<NHits<<" hits 	 "<<endl;
+			cout<<"=========================================================================="<<endl;
+			cout<<" "<<endl;
+	
+
+				for (Int_t g=0; g<NHits; g++)
 
 				{
+				  //  contare gli hit in tempo
 
 				Hits_ChannelId[g] = static_cast<int>(Hits_ChannelId_double[g]);
 
-				int column[30],row[30],gref,colref,rowref,count2=0;
+				//int column[30],row[30],gref,colref,rowref;
 				Double_t timeref;
 
-				column[g]=Hits_ChannelId[g]/10;//column index is the first
-				row[g]=Hits_ChannelId[g]%10;//row index is the second
-
-				ElCh[g]=Hits_ChannelId[g]/10+Hits_ChannelId[g]%10*5;
-
-				canvas->cd(25-ElCh[g]);
-				H2[ElCh[g]]->Fill(Hits_Energy[g]);
-				//H2[ElCh[g]]->Draw();
-
 				timeref=Hits_Time[0];
-				//cout<<"Time reference is "<<timeref<<endl;
 
-				//colref=column[0];rowref=row[0];
+				column[g]=Hits_ChannelId[g]/10;//column index is the first
+				row[g]   =Hits_ChannelId[g]%10;//row index is the second
+				ElCh[g]  =Hits_ChannelId[g]/10+Hits_ChannelId[g]%10*5;
 
-				//if (g==0){colref=column[0];rowref=row[0];gref=0;}//18:13
-					if (g==0) gref=0;//in this way, you skip hit n.0!
+				cout<<" "<<endl;
+				cout<<"	------> Hit on position "<<Hits_ChannelId[g]<<" with energy "<<Hits_Energy[g]<<endl;
+				cout<<" "<<endl;
 
-					//if (column[g]==colref && (fabs(rowref-row[g])==1))
-					if ((g==0) || ((column[g]==column[gref]) && (fabs(row[gref]-row[g])==1)))
+				//canvas->cd(25-ElCh[g]);
+				H2[ElCh[g]]->Fill(Hits_Energy[g]);
+				HitTime->Fill(Hits_Time[g]);
+
+				hNHit->Fill(NHits);
+
+				if (Hits_Time[g]<-190 && Hits_Time[g]>-170) continue;
+				if (Hits_Energy[g]<5) continue;
+				if (NHits>10) continue;
+
+				H1[ElCh[g]]->Fill(Hits_Energy[g]);
+				hNHit->Fill(NHits);
+
+
+					for (Int_t h=g+1; h<NHits+1; h++)
 
 					{
-					//cout<<"Ciao, sono lo step g = "<<g<<endl;
-					//cout<<"gref "<<gref<<endl;
-					count2++;		
 
-					canvas2->cd();
-					HitTimeDiff->Fill(abs(timeref-Hits_Time[g]));
-					HitTimeDiff->Draw();
+					time_diff[h]=Hits_Time[g]-Hits_Time[h];
 
-					//if ((NHits>=2 && NHits<=5) && (fabs(timeref-Hits_Time[g])<0.5))
-					//if ((fabs(timeref-Hits_Time[g])<0.5))
-
-					//{			
-
-					//cout<<"Event n. "<<NEvent<<" has: "<<g+1<<"° hit "<<" with energy "<<Hits_Energy[g]<<" at time "<<Hits_Time[g]<<" on ch "<<Hits_ChannelId[g]<<" distance between rows "<<fabs(rowref-row[g])<<" electronic channel "<<ElCh[g]<<" distance between columns is "<<fabs(colref-column[g])<<endl;
-
-					cout<<"Event n. "<<NEvent<<" has: "<<g+1<<"° hit "<<" on ch "<<Hits_ChannelId[g]<<" column = "<<column[g]<<" row = "<<row[g]<<" distance between rows "<<fabs(row[gref]-row[g])<<" distance between columns is "<<fabs(column[gref]-column[g])<<endl;
-
-					count++;
-
-					canvas->cd(25-ElCh[g]);
-					//H1[ElCh[g]]->SetLineColor(kRed);
-					H1[ElCh[g]]->Fill(Hits_Energy[g]);
-					H1[ElCh[g]]->Draw("");
-					Int_t firstbin = H1[ElCh[g]]->FindFirstBinAbove(2,1);
-					Int_t lastbin = H1[ElCh[g]]->FindLastBinAbove(2,1);
-					firstvalue = H1[ElCh[g]]->GetBinContent(firstbin);
-					lastvalue = H1[ElCh[g]]->GetBinContent(lastbin);
-					//cout<<"First bin is "<<firstbin<<" and first value is "<<firstvalue<<endl;
-					//H1[ElCh[g]]->Fit("f1","Q","",firstvalue,lastvalue);
-
-					gref=g;
-
-					//row[gref]=row[g];
-					//column[gref]=column[g];//if column[g]==colref, second column becomes reference column
-
+					HitTimeDiff->Fill(time_diff[h]);
+				
 					}
 
-					//else {column[gref]=column[g];row[gref]=row[g];}
-					else {gref=g;}
+				if (time_diff[g]>-1 && time_diff[g]<1) H3[ElCh[g]]->Fill(Hits_Energy[g]);
 
-				}//closes if on hit number
-	
-			//cout<<"Count "<<count2++<<endl;
 
-			}//closes for on hits
+
+						/*if (Hits_Energy[g]!=Hits_Energy[h])
+
+						{
+
+						cout<<"		We compare it with hit on position "<<Hits_ChannelId[h]<<" with energy "<<Hits_Energy[h]<<endl;
+
+						//H2[ElCh[g]]->Draw();
+
+						timeref=Hits_Time[0];
+						//cout<<"Time reference is "<<timeref<<endl;
+
+							//if (Hits_Time>-190 && Hits_Time[h]<-170)
+
+						//						if ((column[g]==column[h]) && (fabs(row[g]-row[h])==1)))//if on verticality
+						//if (column[g]==column[h])//if on verticality
+
+							{
+
+							cout<<"		*°*°*°*°* We have a match, since distance is "<<fabs(row[g]-row[h])<<" *°*°*°*°* "<<endl;
+							//cout<<"gref "<<gref<<endl;
+							count2++;		
+
+							
+							//							HitTimeDiff->Fill(abs(timeref-Hits_Time[g]));
+							if(g>0) HitTime->Fill(Hits_Time[g]);
+							
+
+							//if ((NHits>=2 && NHits<=5) && (fabs(timeref-Hits_Time[g])<0.5))
+
+							count++;
+
+							//canvas->cd(25-ElCh[g]);
+							//H1[ElCh[g]]->SetLineColor(kRed);
+							
+							//H1[ElCh[g]]->Draw("");
+							//H2[ElCh[g]]->Draw("SAME");
+							Int_t firstbin = H1[ElCh[g]]->FindFirstBinAbove(2,1);
+							Int_t lastbin = H1[ElCh[g]]->FindLastBinAbove(2,1);
+							firstvalue = H1[ElCh[g]]->GetBinContent(firstbin);
+							lastvalue = H1[ElCh[g]]->GetBinContent(lastbin);
+							//cout<<"First bin is "<<firstbin<<" and first value is "<<firstvalue<<endl;
+							//H1[ElCh[g]]->Fit("f1","Q","",firstvalue,lastvalue);
+
+							//gref=g;
+
+							//row[gref]=row[g];
+							//column[gref]=column[g];//if column[g]==colref, second column becomes reference column
+
+							}//closes if on verticality/time
+
+						}//closes second for on hits
+
+					}//closes if g!=h*/
+
+
+
+
+				}//closes first for on hits
+
+			cout<<" "<<endl;
+			cout<<"Number of cosmics for the event is "<<count2<<endl;
+			cout<<" "<<endl;
+
+			}//closes if on hit number
 
 		}//closes for on events
 
-cout<<"Number of cosmic rays is "<<count<<endl;
+cout<<"Total number of cosmic rays is "<<count<<endl;
+
+canvas2->cd();
+HitTime->Draw();
+
+canvas3->cd();
+hNHit->Draw();
+
+canvas4->cd();
+HitTimeDiff->Draw();
+
+	for (Int_t e=0;e<25;e++)
+
+	{
+
+	canvas->cd(25-e);
+	H1[e]->Draw("");
+	H2[e]->SetLineColor(kRed);
+	H2[e]->Draw("SAME");
+	H3[e]->SetLineColor(kGreen);
+	H3[e]->Draw("SAME");
+	
+	}
 
 }
 

@@ -971,8 +971,9 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
 
       fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
       fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos
-      fHistoManager->FillHisto(52,hX);  //50 has Tpix Histos
-      fHistoManager->FillHisto(53,hY);  //50 has Tpix Histos
+      fHistoManager->FillHisto(52,hX);    //50 has Tpix Histos
+      fHistoManager->FillHisto(53,hY);    //50 has Tpix Histos
+      fHistoManager->FillHisto(54,hTrE);  //50 has Tpix Histos
 
       fHistoManager->FillHisto2(55,hX,hY,1.); //X vs Y local coordinates 
       fHistoManager->FillHisto2(56,hX,hTrE,1.); //X vs Track energy

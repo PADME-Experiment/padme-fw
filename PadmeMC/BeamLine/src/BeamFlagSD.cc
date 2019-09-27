@@ -51,8 +51,8 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 //  G4cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<G4endl;
 
   // this way you only see primary particle there is a component coming form background that is killed here.
-  // if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
-  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
+  //  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019

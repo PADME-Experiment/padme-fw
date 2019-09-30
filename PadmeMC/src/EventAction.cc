@@ -658,14 +658,12 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
  //
       //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-      if (NFlag<6){
-
+      if (NFlag<7){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
 	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
 	fHistoManager->FillHisto(NHisto+2,hX);     // 
 	fHistoManager->FillHisto(NHisto+3,hY);     // 
 	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
-	//     
 	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
 	// fHistoManager->FillHisto2(NHisto+7,hX,htheta,1.); //X vs Track energy
@@ -962,12 +960,19 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
   for (G4int h=0; h<nHits; h++) {
     TPixHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
+
       G4double hTime = hit->GetTime();
       G4double hE    = hit->GetEnergy();   //deposited energy useless
       G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
       G4double hX    = hit->GetLocalPosX();
       G4double hY    = hit->GetLocalPosY();
-      G4double hChID = hit->GetChannelId();
+      G4int    hChID = hit->GetChannelId();
+
+      G4int iRow = hChID/10;
+      G4int iCol = hChID%10;
+      
+      hX+=iCol*14.10;
+      hY+=iRow*14.10;
 
       fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
       fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos

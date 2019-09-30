@@ -377,6 +377,10 @@ void BeamLineStructure::CreateBeamLine()
   G4LogicalVolume* logicalBeamFlag3 = new G4LogicalVolume(solidBeamFlag3,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag3",0,0,0);
   logicalBeamFlag3->SetVisAttributes(FlagVisAttr);
 
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 5 just before the target M. Raggi 23/09/2019
+  ///////////////////////////////////////////////////////////////////////
+
   G4double      Flag5FrontPosX = 0.;
   G4double      Flag5FrontPosZ = -490.0*mm-Flag3T*0.5;
   G4ThreeVector Flag5FrontPos = G4ThreeVector(Flag5FrontPosX,0.,Flag5FrontPosZ);
@@ -384,7 +388,23 @@ void BeamLineStructure::CreateBeamLine()
   G4Tubs* solidBeamFlag5 = new G4Tubs("solidBeamFlag5",0.,Flag3R,0.5*Flag3T,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag5 = new G4LogicalVolume(solidBeamFlag5,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag5",0,0,0);
   logicalBeamFlag5->SetVisAttributes(FlagVisAttr);
-  
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 6 just before TimePix M. Raggi 30/09/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      Flag6FrontPosX = 746.1; //from TPix positioning
+  G4double      Flag6FrontPosZ = 2250.6*mm-Flag3T*0.5; //from TPix positioning
+  G4ThreeVector Flag6FrontPos = G4ThreeVector(Flag6FrontPosX,0.,Flag6FrontPosZ);
+
+  G4RotationMatrix* rotTPix = new G4RotationMatrix;
+  rotTPix->rotateY(-0.314159); //from chamber geometry
+
+  G4Box* solidBeamFlag6 =  new G4Box("solidBeamFlag6",15*cm,10*cm,0.5*1*mm);
+  G4LogicalVolume* logicalBeamFlag6 = new G4LogicalVolume(solidBeamFlag6,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag6",0,0,0);
+  logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
+
   //  printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
   if ( geo->BeamFlagIsEnabled() ) {
     //   printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
@@ -393,6 +413,9 @@ void BeamLineStructure::CreateBeamLine()
 
     new G4PVPlacement(strFrontRot,Flag5FrontPos,logicalBeamFlag5,"BeamLineBeamFlag5",fMotherVolume,false,0,true);    
     logicalBeamFlag5->SetSensitiveDetector(beamFlagSD);
+
+    new G4PVPlacement(rotTPix,Flag6FrontPos,logicalBeamFlag6,"BeamLineBeamFlag6",fMotherVolume,false,0,true);    
+    logicalBeamFlag6->SetSensitiveDetector(beamFlagSD);
   }
   // end of test
 

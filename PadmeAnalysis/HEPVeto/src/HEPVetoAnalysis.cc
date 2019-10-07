@@ -119,6 +119,8 @@ Bool_t HEPVetoAnalysis::ProcessAnalysis()
   Int_t fNclus = fClColl->GetNElements();
   Int_t seedId;
   Int_t clSize;
+
+  (hSvc->myEvt).NTNHEPVeto_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -126,7 +128,6 @@ Bool_t HEPVetoAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNHEPVeto_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTHEPVeto_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTHEPVeto_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTHEPVeto_Hits_Time[i]=hit->GetTime();
@@ -137,11 +138,12 @@ Bool_t HEPVetoAnalysis::ProcessAnalysis()
 
     //fillClustersFlatNTP  
 
+  (hSvc->myEvt).NTNHEPVeto_Clusters= fClColl->GetNElements();
+
    for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNHEPVeto_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTHEPVeto_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTHEPVeto_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTHEPVeto_Clusters_Time[j]=clu->GetTime();

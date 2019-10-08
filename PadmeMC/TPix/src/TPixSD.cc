@@ -65,7 +65,8 @@ G4bool TPixSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 27/03/2019
     newHit->SetPosition(worldPosPre); 
-    newHit->SetLocalPosition(localPosPost); //M Raggi 26/03/2019
+    //    newHit->SetLocalPosition(localPosPost); //M Raggi 26/03/2019
+    newHit->SetLocalPosition(localPosPre); //M Raggi 30/09/2019 to check
     fTPixCollection->insert(newHit);
   }
   return true;

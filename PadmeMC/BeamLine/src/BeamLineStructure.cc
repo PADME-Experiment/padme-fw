@@ -111,8 +111,11 @@ void BeamLineStructure::CreateBeThinWindow()
   fBeWindowVolume->SetVisAttributes(G4VisAttributes::Invisible);
 
   // Be thin window
-  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
-  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_Be"),"logicalBeWin",0,0,0);
+//  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
+//  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_Be"),"logicalBeWin",0,0,0);
+  
+  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*40*um,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_MYLAR"),"logicalBeWin",0,0,0);
   logicalBeWin->SetVisAttributes(BeVisAttr);
 
   // Support flange for Be thin window

@@ -18,6 +18,9 @@ class PadmePerfUtils {
   // Get the current CPU Usage (jiffies= 1/100th of a second):
   static int getCpu();
 
+  // Get total process run time (jiffies= 1/100th of a second):
+  static int getRunTime();
+
 };
 
 #endif

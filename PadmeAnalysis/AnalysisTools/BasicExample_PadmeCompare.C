@@ -20,7 +20,7 @@
 #include "TRandom.h"
 #include "TGraphErrors.h"
 
-void BasicExample_Padme()
+void BasicExample_PadmeCompare()
 {
 
 

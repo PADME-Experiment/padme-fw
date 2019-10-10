@@ -108,6 +108,8 @@ Bool_t EventSelection::InitHistosSelection()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns_InDeltaPhi";
   hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton3ns_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns1cm_InDeltaPhi";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns1cm_InDeltaPhi_withAngleCut";
@@ -116,13 +118,23 @@ Bool_t EventSelection::InitHistosSelection()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns2cm";
   hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton3ns2cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton3ns2cm_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns3cm";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton3ns3cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton3ns3cm_InDeltaPhi_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns5cm"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_twoPhotonInTime1.5ns";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton1.5ns_InDeltaPhi";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton1.5ns_InDeltaPhi_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton1.5ns1cm_InDeltaPhi";
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -132,7 +144,15 @@ Bool_t EventSelection::InitHistosSelection()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton1.5ns2cm";
   hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton1.5ns2cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton1.5ns2cm_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton1.5ns3cm";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton1.5ns3cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton1.5ns3cm_InDeltaPhi_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton1.5ns5cm"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -181,9 +201,13 @@ Bool_t EventSelection::InitHistosSelection()
   hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
   hname="ECAL_InvariantMass_InDeltaPhi_3ns";
   hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_InvariantMass_InDeltaPhi_3ns_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_InvariantMass_InDeltaPhi_3ns1cm";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_InvariantMass_InDeltaPhi_3ns1cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_InvariantMass_InDeltaPhi_1.5ns_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_InvariantMass_InDeltaPhi_1.5ns";
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -201,6 +225,12 @@ Bool_t EventSelection::InitHistosSelection()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECal_InvariantMassLorentz_3ns2cm_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_3ns2cm_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_3ns3cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_3ns3cm_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
   
   hname="ECal_InvariantMassLorentz_1.5ns1cm";
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -211,6 +241,12 @@ Bool_t EventSelection::InitHistosSelection()
   hname="ECal_InvariantMassLorentz_1.5ns2cm";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECal_InvariantMassLorentz_1.5ns2cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_1.5ns2cm_InDeltaPhi_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_1.5ns3cm_withAngleCut";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECal_InvariantMassLorentz_1.5ns3cm_InDeltaPhi_withAngleCut";
   hSvc->BookHisto(hname, binX, minX, maxX);
   
   
@@ -524,13 +560,19 @@ Bool_t EventSelection::ProcessSelection()
         Bool_t InDeltaPhi = false;
         Double_t distance = sqrt((g1x-g2x)*(g1x-g2x)+(g1y-g2y)*(g1y-g2y));
         if(/*distance >R_1 &&*/ (phig2*phig1<0 && (fabs(phig1-phig2)-3.14)<0.1) || (phig2*phig1>0 && (fabs(phig1+phig2)-3.14)< 0.1)) InDeltaPhi= true;
-        std::cout<< "DPhi " << fabs(phig1-phig2) << " bool "<< InDeltaPhi << std::endl;
+        //std::cout<< "DPhi " << fabs(phig1-phig2) << " bool "<< InDeltaPhi << std::endl;
         
         if(InDeltaPhi){
           hname="ECAL_gravTwoPhoton3ns_InDeltaPhi";
           hSvc->FillHisto(hname,g1E+g2E , 1.);
           hname="ECAL_InvariantMass_InDeltaPhi_3ns";
           hSvc->FillHisto(hname, InvariantMass, 1.);
+          if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
+            hname="ECAL_gravTwoPhoton3ns_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECAL_InvariantMass_InDeltaPhi_3ns_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+          }
         }
          
         if(fabs(XWeighted)<10. && fabs(YWeighted)<10.){
@@ -645,14 +687,36 @@ Bool_t EventSelection::ProcessSelection()
           hname ="ECal_angleBetweenTwoPhotonVSEnergyIn3ns2cm";
           hSvc->FillHisto2(hname, g1E+g2E,  angleBetweenTwoPhoton, 1.);
           if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
-           hname="ECal_InvariantMassLorentz_3ns2cm_withAngleCut";
-           hSvc->FillHisto(hname, SumP.M(), 1.);
+            hname="ECAL_gravTwoPhoton3ns2cm_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_3ns2cm_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            
+            if(InDeltaPhi){
+             hname="ECAL_gravTwoPhoton3ns2cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_3ns2cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            }
           }
         }
         
         if(fabs(XWeighted)<30. && fabs(YWeighted)<30.){
           hname="ECAL_gravTwoPhoton3ns3cm";
           hSvc->FillHisto(hname,g1E+g2E , 1.);
+          if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
+            hname="ECAL_gravTwoPhoton3ns3cm_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_3ns3cm_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            
+            if(InDeltaPhi){
+             hname="ECAL_gravTwoPhoton3ns3cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_3ns3cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            }
+          }
         }
         
         if(fabs(XWeighted)<50. && fabs(YWeighted)<50.){
@@ -714,9 +778,9 @@ Bool_t EventSelection::ProcessSelection()
         Bool_t InInvariantMassRange = false;
         if(InvariantMass>12. && InvariantMass< 20) InInvariantMassRange=true;
         
-        Bool_t InDeltaPhi = false; // DeltaPhi<2.5Deg
+        Bool_t InDeltaPhi = false; 
         Double_t distance = sqrt((g1x-g2x)*(g1x-g2x)+(g1y-g2y)*(g1y-g2y));
-        if(distance >R_1 && fabs(phig1-phig2)<0.04) InDeltaPhi= true;
+        if(/*distance >R_1 &&*/ (phig2*phig1<0 && (fabs(phig1-phig2)-3.14)<0.1) || (phig2*phig1>0 && (fabs(phig1+phig2)-3.14)< 0.1)) InDeltaPhi= true;
         
         
         if(InDeltaPhi){
@@ -724,6 +788,12 @@ Bool_t EventSelection::ProcessSelection()
           hSvc->FillHisto(hname,g1E+g2E , 1.);
           hname="ECAL_InvariantMass_InDeltaPhi_1.5ns";
           hSvc->FillHisto(hname, InvariantMass, 1.);
+          if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
+            hname="ECAL_gravTwoPhoton1.5ns_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECAL_InvariantMass_InDeltaPhi_1.5ns_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+          }
         }
          
         if(fabs(XWeighted)<10. && fabs(YWeighted)<10.){
@@ -830,14 +900,36 @@ Bool_t EventSelection::ProcessSelection()
           hname ="ECal_angleBetweenTwoPhotonVSEnergyIn1.5ns2cm";
           hSvc->FillHisto2(hname, g1E+g2E,  angleBetweenTwoPhoton, 1.);
           if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
-           hname="ECal_InvariantMassLorentz_1.5ns2cm_withAngleCut";
-           hSvc->FillHisto(hname, SumP.M(), 1.);
+            hname="ECAL_gravTwoPhoton1.5ns2cm_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_1.5ns2cm_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            
+            if(InDeltaPhi){
+             hname="ECAL_gravTwoPhoton1.5ns2cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_1.5ns2cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            }
           }
         }
         
         if(fabs(XWeighted)<30. && fabs(YWeighted)<30.){
           hname="ECAL_gravTwoPhoton1.5ns3cm";
           hSvc->FillHisto(hname,g1E+g2E , 1.);
+          if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
+            hname="ECAL_gravTwoPhoton1.5ns3cm_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_1.5ns3cm_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            
+            if(InDeltaPhi){
+             hname="ECAL_gravTwoPhoton1.5ns3cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname,g1E+g2E , 1.);
+            hname="ECal_InvariantMassLorentz_1.5ns3cm_InDeltaPhi_withAngleCut";
+            hSvc->FillHisto(hname, InvariantMass, 1.);
+            }
+          }
         }
         
         if(fabs(XWeighted)<50. && fabs(YWeighted)<50.){

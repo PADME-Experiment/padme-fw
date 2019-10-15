@@ -48,6 +48,9 @@ public:
   
   G4VPhysicalVolume* Construct();
      
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   G4double GetWorldFullLength() {return fWorldLength;}
      
   void SetupDetectors();
@@ -92,6 +95,8 @@ public:
 private:
 
   void DefineMaterials();
+
+  G4int fVerbose; // Verbose level
 
   G4GDMLParser fParser;
 

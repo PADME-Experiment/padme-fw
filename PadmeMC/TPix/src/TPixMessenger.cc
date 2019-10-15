@@ -37,6 +37,12 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
   fSetDistToCornerCmd->SetRange("DTC > 0. && DTC <= 100.");
   fSetDistToCornerCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/TPix/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for TPix code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 TPixMessenger::~TPixMessenger()
@@ -46,6 +52,8 @@ TPixMessenger::~TPixMessenger()
 
   delete fSetNColumnsCmd;
   delete fSetDistToCornerCmd;
+
+  delete fSetVerboseLevelCmd;
 
 }
 
@@ -57,5 +65,8 @@ void TPixMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetDistToCornerCmd )
     fTPixGeometry->SetTPixDistanceToCorner(fSetDistToCornerCmd->GetNewDoubleValue(par));
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fTPixGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

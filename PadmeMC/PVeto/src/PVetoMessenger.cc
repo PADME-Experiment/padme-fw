@@ -12,6 +12,7 @@
 #include "G4UIdirectory.hh"
 #include "G4UIcommand.hh"
 #include "G4UIparameter.hh"
+#include "G4UIcmdWithAnInteger.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithoutParameter.hh"
 
@@ -61,6 +62,12 @@ PVetoMessenger::PVetoMessenger(PVetoDetector* det)
   fSetPVetoFrontFaceZCmd->SetParameter(pifPosZParameter);
   fSetPVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/PVeto/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for PVeto code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 PVetoMessenger::~PVetoMessenger()
@@ -74,6 +81,8 @@ PVetoMessenger::~PVetoMessenger()
 
   delete fSetPVetoInnerFaceXCmd;
   delete fSetPVetoFrontFaceZCmd;
+
+  delete fSetVerboseLevelCmd;
 
 }
 
@@ -105,5 +114,8 @@ void PVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     G4double z; std::istringstream is(par); is >> z;
     fPVetoGeometry->SetPVetoFrontFacePosZ(z*cm);
   }
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fPVetoGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

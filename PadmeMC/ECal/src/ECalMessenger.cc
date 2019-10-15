@@ -108,6 +108,12 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
   fSetECalPanelGapCmd->SetParameter(eptGapParameter);
   fSetECalPanelGapCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/ECal/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for ECal code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 ECalMessenger::~ECalMessenger()
@@ -134,6 +140,8 @@ ECalMessenger::~ECalMessenger()
   delete fEnablePanelCmd;
   delete fSetECalPanelThickCmd;
   delete fSetECalPanelGapCmd;
+
+  delete fSetVerboseLevelCmd;
 
 }
 
@@ -201,5 +209,8 @@ void ECalMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     G4double g; std::istringstream is(par); is >> g;
     fECalGeometry->SetECalPanelGap(g*mm);
   }
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fECalGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

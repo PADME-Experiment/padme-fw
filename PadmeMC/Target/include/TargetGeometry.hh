@@ -34,6 +34,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of Target box
   G4double GetTargetPosX() { return 0.; }
   G4double GetTargetPosY() { return 0.; }
@@ -130,6 +133,8 @@ public:
   void     SetTargetDigiMeV2Q(G4double m) { fTargetDigiMeV2Q = m; }
 
 private:
+
+  G4int fVerbose; // Verbose level
 
   G4double fTargetSizeX;
   G4double fTargetSizeY;

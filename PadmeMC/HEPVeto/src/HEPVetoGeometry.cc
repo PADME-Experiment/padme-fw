@@ -18,6 +18,8 @@ HEPVetoGeometry* HEPVetoGeometry::GetInstance()
 HEPVetoGeometry::HEPVetoGeometry()
 {
 
+  fVerbose = 0; // Do not show debug output
+
   // HEPVeto box includes all the fingers, the T-shaped bars with the square holes for the fingers
   // and the vertical support structure
   fHEPVetoSizeX = 215.0*mm; // Need info from Cesidio

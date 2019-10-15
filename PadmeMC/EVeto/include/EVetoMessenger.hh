@@ -16,6 +16,7 @@ class EVetoDetector;
 class EVetoGeometry;
 class G4UIdirectory;
 class G4UIcommand;
+class G4UIcmdWithAnInteger;
 
 class EVetoMessenger: public G4UImessenger
 {
@@ -38,6 +39,8 @@ private:
 
   G4UIcommand* fSetEVetoInnerFaceXCmd;
   G4UIcommand* fSetEVetoFrontFaceZCmd;
+
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
 
 };
 #endif

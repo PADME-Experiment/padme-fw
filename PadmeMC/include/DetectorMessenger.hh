@@ -10,7 +10,7 @@ class G4UIdirectory;
 class G4UIcmdWithAString;
 class G4UIcmdWithoutParameter;
 class G4UIcmdWithADoubleAndUnit;
-
+class G4UIcmdWithAnInteger;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -51,6 +51,8 @@ private:
 
   G4UIcmdWithoutParameter* fWorldIsAirCmd;
   G4UIcmdWithoutParameter* fWorldIsVacuumCmd;
+
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
 
 };
 

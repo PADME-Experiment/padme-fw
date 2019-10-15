@@ -77,6 +77,8 @@ DetectorConstruction::DetectorConstruction()
 
   fDetectorMessenger = new DetectorMessenger(this);
 
+  fVerbose = 0; // Do not show debug output
+
   fECalDetector      = new ECalDetector(0);
   fTargetDetector    = new TargetDetector(0);
   fSACDetector       = new SACDetector(0);
@@ -178,7 +180,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
     //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
-    printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
+    if (fVerbose)
+      printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
     
     // Set color and material of the Vacuum Chamber shells
     G4int nD = logicWorld->GetNoDaughters();
@@ -194,7 +197,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       if (D->CheckOverlaps()) {
 	printf("DetectorConstruction - WARNING - overlaps found in %s\n",Dlog->GetName().data());
       }
-      printf("Vacuum Chamber %s %s\n",Dlog->GetName().data(),Dlog->GetMaterial()->GetName().data());
+      if (fVerbose)
+	printf("Vacuum Chamber %s %s\n",Dlog->GetName().data(),Dlog->GetMaterial()->GetName().data());
     }
 
   } else {
@@ -253,11 +257,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double magVolHLY = 0.5*(magVolMaxY-magVolMinY);
   G4double magVolHLZ = 0.5*(magVolMaxZ-magVolMinZ);
 
-  printf ("--- Magnetic Volume ---\n");
-  printf ("Min/max coords %f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
-  printf ("Half sides %f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
-  printf ("Position %f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
-  printf ("-----------------------\n");
+  if (fVerbose) {
+    printf ("--- Magnetic Volume ---\n");
+    printf ("Min/max coords %f %f %f %f %f %f\n",magVolMinX,magVolMaxX,magVolMinY,magVolMaxY,magVolMinZ,magVolMaxZ);
+    printf ("Half sides %f %f %f\n",magVolHLX,magVolHLY,magVolHLZ);
+    printf ("Position %f %f %f\n",magVolPosX,magVolPosY,magVolPosZ);
+    printf ("-----------------------\n");
+  }
 
   // Basic box, missing slanted section at end of magnet yoke
   //G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
@@ -315,7 +321,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
     //MagneticFieldSetup* magField = new MagneticFieldSetup();
-    printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
+    if (fVerbose)
+      printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
     logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }
@@ -427,7 +434,7 @@ void DetectorConstruction::DefineMaterials()
 
   // Use NIST database to create all needed materials
   G4NistManager* man = G4NistManager::Instance();
-  man->SetVerbose(1);
+  man->SetVerbose(fVerbose);
 
   // Define materials already in the NIST database
   man->FindOrBuildMaterial("G4_C");                       // Carbon (Chamber)
@@ -708,7 +715,7 @@ G4double DetectorConstruction::GetTargetThickness()
 
 void DetectorConstruction::EnableSubDetector(G4String det)
 {
-  printf("Enabling subdetector %s\n",det.data());
+  if (fVerbose) printf("Enabling subdetector %s\n",det.data());
   if      (det=="ECal")    { fEnableECal    = 1; }
   else if (det=="Target")  { fEnableTarget  = 1; }
   else if (det=="SAC")     { fEnableSAC     = 1; }
@@ -724,7 +731,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
 
 void DetectorConstruction::DisableSubDetector(G4String det)
 {
-  printf("Disabling subdetector %s\n",det.data());
+  if (fVerbose) printf("Disabling subdetector %s\n",det.data());
   if      (det=="ECal")    { fEnableECal    = 0; }
   else if (det=="Target")  { fEnableTarget  = 0; }
   else if (det=="SAC")     { fEnableSAC     = 0; }
@@ -740,17 +747,17 @@ void DetectorConstruction::DisableSubDetector(G4String det)
 
 void DetectorConstruction::EnableStructure(G4String str)
 {
-  printf("Enabling structure %s\n",str.data());
+  if (fVerbose) printf("Enabling structure %s\n",str.data());
   if      (str=="Wall")     { fEnableWall    = 1; }
   else if (str=="Chamber")  { fEnableChamber = 1; }
-  else if (str=="BemaLine") { fEnableBeamLine = 1; } 
+  else if (str=="BeamLine") { fEnableBeamLine = 1; } 
   else if (str=="Magnet")   { fEnableMagnet  = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
-  printf("Disabling structure %s\n",str.data());
+  if (fVerbose) printf("Disabling structure %s\n",str.data());
   if      (str=="Wall")     { fEnableWall    = 0; }
   else if (str=="Chamber")  { fEnableChamber = 0; }
   else if (str=="BeamLine") { fEnableBeamLine = 0; }
@@ -760,37 +767,37 @@ void DetectorConstruction::DisableStructure(G4String str)
 
 void DetectorConstruction::EnableMagneticField()
 {
-  printf("Enabling magnetic field\n");
+  if (fVerbose) printf("Enabling magnetic field\n");
   fEnableMagneticField = 1;
 }
 
 void DetectorConstruction::DisableMagneticField()
 {
-  printf("Disabling magnetic field\n");
+  if (fVerbose) printf("Disabling magnetic field\n");
   fEnableMagneticField = 0;
 }
 
 void DetectorConstruction::MagneticVolumeIsVisible()
 {
-  printf("Magnetic volume is visible\n");
+  if (fVerbose) printf("Magnetic volume is visible\n");
   fMagneticVolumeIsVisible = 1;
 }
 
 void DetectorConstruction::MagneticVolumeIsInvisible()
 {
-  printf("Magnetic volume is invisible\n");
+  if (fVerbose) printf("Magnetic volume is invisible\n");
   fMagneticVolumeIsVisible = 0;
 }
 
 void DetectorConstruction::SetMagFieldValue(G4double v)
 {
-  printf("Setting constant value of magnetic field to %f\n",v);
+  if (fVerbose) printf("Setting constant value of magnetic field to %f\n",v);
   fMagneticFieldManager->SetMagneticFieldValue(v);
 }
 
 void DetectorConstruction::ChamberIsVisible()
 {
-  printf("Vacuum chamber is visible\n");
+  if (fVerbose) printf("Vacuum chamber is visible\n");
   fChamberIsVisible = 1;
 }
 //M. Raggi 07/03/2019
@@ -802,13 +809,13 @@ void DetectorConstruction::BeamLineIsVisible()
 
 void DetectorConstruction::ChamberIsInvisible()
 {
-  printf("Vacuum chamber is invisible\n");
+  if (fVerbose) printf("Vacuum chamber is invisible\n");
   fChamberIsVisible = 0;
 }
 
 void DetectorConstruction::BeamLineIsInvisible()
 {
-  printf("Beam Line is invisible\n");
+  if (fVerbose) printf("Beam Line is invisible\n");
   fBeamLineIsVisible = 0;
 }
 
@@ -820,7 +827,7 @@ void DetectorConstruction::WorldIsAir()
 
 void DetectorConstruction::WorldIsVacuum()
 {
-  printf("World and magnetic volume are filled with vacuum (low pressure air)\n");
+  if (fVerbose) printf("World and magnetic volume are filled with vacuum (low pressure air)\n");
   fWorldIsFilledWithAir = 0;
 }
 

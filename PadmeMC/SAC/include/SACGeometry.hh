@@ -37,6 +37,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of SAC box
   G4double GetSACPosX() { return 0.*cm; }
   G4double GetSACPosY() { return 0.*cm; }
@@ -106,6 +109,8 @@ public:
 private:
 
   // Geometry parameters
+
+  G4int fVerbose; // Verbose level
 
   G4double fCrystalSizeX;
   G4double fCrystalSizeY;

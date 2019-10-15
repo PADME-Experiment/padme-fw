@@ -27,6 +27,7 @@
 #include "ECalDigitizer.hh"
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
+#include "SystemInfo.hh"
 
 extern double NNeutrons;
 extern double Npionc;
@@ -124,7 +125,15 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Periodic printing
   //if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
   if (event_id%fPrintoutFrequency == 0) {
-    G4cout << ">>> Event " << event_id << G4endl;
+    int vmsize;
+    if (event_id == 0) {
+      vmsize = SystemInfo::GetInstance()->store_vmsize();
+    } else {
+      vmsize = SystemInfo::GetInstance()->vmsize();
+    }
+    char now_str[20];
+    SystemInfo::GetInstance()->timefmt_gm(now_str);
+    G4cout << ">>> " << now_str << " - Event " << event_id << " - VmSize " << vmsize << " kB - dVmSize " << SystemInfo::GetInstance()->delta_vmsize() << " kB" << G4endl;
   }
 
   // Digitize this event

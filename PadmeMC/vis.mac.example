@@ -53,6 +53,8 @@
 
 # Detector settings
 
+#/Detector/VerboseLevel 0
+
 #/Detector/EnableSubDetector ECal
 #/Detector/EnableSubDetector Target
 #/Detector/EnableSubDetector SAC
@@ -104,6 +106,7 @@
 #/Detector/Magnet/SetMagnetVisible
 #/Detector/Magnet/SetMagnetInvisible
 
+#/Detector/Target/VerboseLevel 0
 #/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
@@ -112,6 +115,7 @@
 #/Detector/Target/EnableSaveWaveformToDigi
 #/Detector/Target/DisableSaveWaveformToDigi
 
+#/Detector/ECal/VerboseLevel 0
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
 #/Detector/ECal/CrystalMapId 0
@@ -125,6 +129,7 @@
 #/Detector/ECal/PanelThickness 1.5
 #/Detector/ECal/PanelGap 0.1
 
+#/Detector/SAC/VerboseLevel 0
 #/Detector/SAC/NRows 5
 #/Detector/SAC/NCols 5
 #/Detector/SAC/CrystalSize 3. cm
@@ -138,24 +143,28 @@
 #/Detector/LAV/ZLength 20.
 #/Detector/LAV/FrontFaceZ -60.
 
+#/Detector/PVeto/VerboseLevel 0
 #/Detector/PVeto/FrontFaceZ -47.255
 #/Detector/PVeto/InnerFaceX 17.75
 #/Detector/PVeto/NFingers 90
 #/Detector/PVeto/FingerSize 1.
 #/Detector/PVeto/FingerLength 17.8
 
+#/Detector/EVeto/VerboseLevel 0
 #/Detector/EVeto/FrontFaceZ -47.255
 #/Detector/EVeto/InnerFaceX  -17.75
 #/Detector/EVeto/NFingers 96
 #/Detector/EVeto/FingerSize 1.
 #/Detector/EVeto/FingerLength 17.8
 
+#/Detector/HEPVeto/VerboseLevel 0
 #/Detector/HEPVeto/NFingers 16
 #/Detector/HEPVeto/FingerStep 1.1 cm
 #/Detector/HEPVeto/FingerSize 1. cm
 #/Detector/HEPVeto/FingerLength 17.8 cm
 #/Detector/HEPVeto/DistanceToCorner 40. cm
 
+#/Detector/TPix/VerboseLevel 0
 #/Detector/TPix/NColumns 6
 #/Detector/TPix/DistanceToCorner 29.73 cm
 

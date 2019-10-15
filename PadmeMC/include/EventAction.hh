@@ -41,6 +41,9 @@ class EventAction : public G4UserEventAction
 
   SteppingAction * myStepping;
 
+  G4int GetPrintoutfrequency() { return fPrintoutFrequency; }
+  void SetPrintoutfrequency(G4int f) { fPrintoutFrequency = f; }
+
   // M. Raggi 23/06/2018 datacard commands
   void EnableSaveEcal()  { fEnableSaveEcal = 1; }
   void DisableSaveEcal() { fEnableSaveEcal = 0; }
@@ -78,8 +81,12 @@ class EventAction : public G4UserEventAction
   G4double GGMass();
 
   private:
+
   RunAction*    fRunAct;
   HistoManager* fHistoManager;
+
+  G4int fPrintoutFrequency;
+
   ECalGeometry   * Egeom; 
   TargetGeometry * Tgeom;
   BeamParameters * Bpar;

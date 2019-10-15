@@ -6,6 +6,15 @@
 /run/verbose 1
 /tracking/verbose 0
 
+# General run settings
+
+# How often event printout is shown
+#/settings/PrintOutFrequency 100
+
+# Automatically generate random seeds using system time
+# If disabled, user must set environment variables PADME_SEED1 and PADME_SEED2
+#/settings/AutomaticRandomSeed true
+
 # RootIO settings
 
 # Output root file with MC hits

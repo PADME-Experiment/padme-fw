@@ -33,7 +33,11 @@ G4Run* RunAction::GenerateRun()
 
 RunAction::RunAction()
 {
+
   fHistoManager = HistoManager::GetInstance();
+
+  fAutomaticRandomSeed = true;
+
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -44,12 +48,21 @@ RunAction::~RunAction()
 
 void RunAction::BeginOfRunAction(const G4Run* aRun)
 {
+
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   RootIOManager::GetInstance()->NewRun(aRun->GetRunID());
   fHistoManager->book();
 
-  // automatic (time-based) random seeds for each run
-  if ( fAutoSeed ) {
+  long seeds[2];
+  seeds[0] = 0;
+  seeds[1] = 0;
+  time_t systime = time(NULL);
+
+  //if ( fAutoSeed ) {
+  if ( fAutomaticRandomSeed ) {
+
+    // Automatic (time-based) random seeds for each run
+
     //    aRun->SetRandomNumberStore(true);
     //    aRun->SetRandomNumberStoreDir("random/");
     
@@ -57,46 +70,49 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     G4cout << "*** AUTOSEED ON ***" << G4endl;
     G4cout << "*******************" << G4endl;
     
-    long seeds[2];
-    time_t systime = time(NULL);
     seeds[0] = (long) systime;
     seeds[1] = (long) (systime*G4UniformRand());
 
-#ifdef  G4MULTITHREADED
-    G4MTHepRandom::setTheSeeds(seeds);
-    G4MTHepRandom::showEngineStatus();
-#else
-    CLHEP::HepRandom::setTheSeeds(seeds);
-    CLHEP::HepRandom::showEngineStatus();
-#endif
   } else {
+
+    // Use PADME_SEED1 and PADME_SEED2 environment variables to set random number generator seeds
+
     G4cout << "*******************" << G4endl;
     G4cout << "*** AUTOSEED OFF***" << G4endl;
     G4cout << "*******************" << G4endl;
 
-    long seeds[2];
+    char* ps1 = getenv("PADME_SEED1");
+    if (ps1 != NULL) {
+      seeds[0] = (long) atol(ps1);
+    } else {
+      G4cout << "WARNING: unable to extract random seed from PADME_SEED1: using systime" << G4endl;
+      seeds[0] = (long) systime;
+    }
 
-    seeds[0] = atol(getenv("PADME_SEED1"));
-    seeds[1] = atol(getenv("PADME_SEED2"));
-
-    G4cout << "SEEDS:  " << seeds[0] << "\t" << seeds[1] << G4endl;
-
-
-#ifdef  G4MULTITHREADED
-    G4MTHepRandom::setTheSeeds(seeds);
-    G4MTHepRandom::showEngineStatus();
-#else
-    CLHEP::HepRandom::setTheSeeds(seeds);
-    CLHEP::HepRandom::showEngineStatus();
-#endif
-
+    char* ps2 = getenv("PADME_SEED2");
+    if (ps2 != NULL) {
+      seeds[1] = (long) atol(ps2);
+    } else {
+      G4cout << "WARNING: unable to extract random seed from PADME_SEED2: using systime" << G4endl;
+      seeds[1] = (long) (systime*G4UniformRand());
+    }
 
   }
 
+  G4cout << "PadmeMCInfo - RANDOM SEEDS: " << seeds[0] << "\t" << seeds[1] << G4endl;
+
+#ifdef  G4MULTITHREADED
+  G4MTHepRandom::setTheSeeds(seeds);
+  G4MTHepRandom::showEngineStatus();
+#else
+  CLHEP::HepRandom::setTheSeeds(seeds);
+  CLHEP::HepRandom::showEngineStatus();
+#endif
+
   if(IsTurboOn){
-	  G4cout << "*******************" << G4endl;
-	  G4cout << "** TURBO MODE ON **" << G4endl;
-	  G4cout << "*******************" << G4endl;
+    G4cout << "*******************" << G4endl;
+    G4cout << "** TURBO MODE ON **" << G4endl;
+    G4cout << "*******************" << G4endl;
   }
 
   // Show some info about current run on display
@@ -123,6 +139,11 @@ void RunAction::EndOfRunAction(const G4Run* aRun)
   G4double nGamma = theRun->GetNGamma(0);
   G4cout<<"Nevent Run Action "<<nEvt<<" "<<nGamma<<G4endl;
   RootIOManager::GetInstance()->EndRun();
+
+  // Print some summary info
+  G4cout << "PadmeMCInfo - Run Number " << aRun->GetRunID() << G4endl;
+  G4cout << "PadmeMCInfo - Total Events " << aRun->GetNumberOfEvent() << G4endl;
+
   //save histograms
   //
   fHistoManager->PrintStatistic();

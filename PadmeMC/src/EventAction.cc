@@ -42,6 +42,9 @@ EventAction::EventAction(RunAction* run)
   Tgeom = TargetGeometry::GetInstance();
   Bpar  = BeamParameters::GetInstance();
 
+  // Default printout once every 100 events
+  fPrintoutFrequency = 100;
+
   //M. Raggi defining default output settings 
   fEnableSaveEcal = 1;
   fEnableSaveSAC  = 0; 
@@ -119,7 +122,10 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   G4int event_id = evt->GetEventID();
   // Periodic printing
-  if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
+  //if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
+  if (event_id%fPrintoutFrequency == 0) {
+    G4cout << ">>> Event " << event_id << G4endl;
+  }
 
   // Digitize this event
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();

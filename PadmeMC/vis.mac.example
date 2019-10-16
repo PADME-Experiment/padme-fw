@@ -197,9 +197,9 @@
 #/beam/emittance_y 1. mrad
 
 # Beam Line studies: position beam at Be window
-#/beam/position_x 2249.80 mm
+#/beam/position_x 2247.67 mm
 #/beam/position_y 0. cm
-#/beam/position_z -4681.74 mm
+#/beam/position_z -4596.36 mm
 #/beam/direction -1. 0. 1.
 
 # Uboson generator

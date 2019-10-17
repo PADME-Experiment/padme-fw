@@ -109,11 +109,6 @@ void EventAction::BeginOfEventAction(const G4Event*)
   for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
   
-  //Clear completely the event:
-  //G4cout << "BeginOfEventAction:   " << G4endl; 
-  
-  //MyEvent *TheEvent = MyEvent::GetInstance();
-  //TheEvent->GetSimEvent()->ClearEvent();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -156,28 +151,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
 
-  //MyEvent *TheEvent = MyEvent::GetInstance();
-  //MySimEvent *simEvt = TheEvent->GetSimEvent();
-  //MyEventGenerator *genEvt = TheEvent->GetGenEvent();
-  //std::cout << "Before: Number of tracker clusters: " <<  simEvt->GetTrackerClusters()->size() << std::endl;
-
-  //G4cout << "================================================" << G4endl  ;
-  //G4cout << "               Event                            " << G4endl  ;
-  //G4cout << "Number of primaries in that event: "<< TheEvent->GetGenEvent()->getParticles()->size() << G4endl;
-  //std::vector<MyParticle>::iterator it;
-  //it = genEvt->getParticles()->begin();
-  //while (it != genEvt->getParticles()->end()) {
-  //  G4cout << "Particle:  " << it->getType() << G4endl;
-  //  it++;
-  //}
-  //G4cout << "Number of secondaries in that event: "<< simEvt->GetParticles()->size() << G4endl;
-  //it = simEvt->GetParticles()->begin();
-  //while (it != simEvt->GetParticles()->end()) {
-  //  G4cout << "Particle:  " << it->getType() << G4endl;
-  //  it++;
-  //}
-  //G4cout << "================================================" << G4endl  ;
-  
   G4int nHC = 0;
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
   if (LHC) nHC = LHC->GetNumberOfCollections();

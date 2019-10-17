@@ -4,7 +4,6 @@
 #include "G4UserEventAction.hh"
 #include "ECalHit.hh"
 #include "TargetHit.hh"
-#include "TrackerHit.hh"
 #include "HEPVetoHit.hh"
 #include "PVetoHit.hh"
 #include "EVetoHit.hh"
@@ -12,7 +11,6 @@
 #include "LAVHit.hh"
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
-#include "GFiltHit.hh"
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "TargetGeometry.hh"

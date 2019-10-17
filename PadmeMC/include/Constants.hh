@@ -13,7 +13,7 @@ const int   IsMagIronON   = 1;  // 1 CERN magnet
 const int   IsEcalON      = 1;
 const int   IsEcalRoundON = 1;  
 
-const int   IsTrackerON   = 0;   // cilindrical tracker obsolete set to 0
+//const int   IsTrackerON   = 0;   // cilindrical tracker obsolete set to 0
 const int   IsPlanarGEMON = 0;   // 1 planar GEM spectrometer 
 const int   IsPVetoON     = 1;   // 1  Veto inside the magnet Positron side
 const int   IsEleVetoON   = 1;   // Veto inside the magnet Electron side
@@ -56,7 +56,7 @@ const double VacuumDensity = 1.290*VacuumP;  //mg*cm3
 const double MagneticField = 0.55; //0.6 
 
 //Physics list flags
-const int    UseNewPhysList = 1;   // was 0
+//const int    UseNewPhysList = 1;   // was 0
 const int    IsSincrotronON = 0;    //Std=1
 const int    IsNuclearON    = 0;    //Std=1
 const int    NuclearBertini = 1;  //Bertini cascade

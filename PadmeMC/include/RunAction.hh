@@ -49,7 +49,7 @@ public:
 
 public:
 
-  G4Run* GenerateRun();
+  //G4Run* GenerateRun();
   void BeginOfRunAction(const G4Run*);
   void EndOfRunAction(const G4Run*);
 

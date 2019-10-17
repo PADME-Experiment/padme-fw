@@ -8,7 +8,6 @@
 #include "G4UnitsTable.hh"
 #include "Constants.hh"
 #include "DatacardManager.hh"
-//#include "MyEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -336,10 +335,6 @@ void HistoManager::book()
   ntupl->Branch("EVetoECl",       (myEvt.NTEVetoECl),      "NTEVetoECl[100][10]/D");
   ntupl->Branch("EVetoTimeCl",    (myEvt.NTEVetoTimeCl),   "NTEVetoTimeCl[100][10]/D");
 
-
-  //MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
-  //MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();
-  
   if(IsTrackerRecoON==1){
     ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
     ntupl->Branch("NTTrClusX", myEvt.NTTrClusX,"NTTrClusX[1000]/D");
@@ -348,11 +343,8 @@ void HistoManager::book()
     ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
   } 
 
-  //  ntGen = new TTree("genEvt", "genEvent");
-  //  ntGen->Branch("NPrimaries","");   
-  //  ntSim = new TTree("simEvt", "simEvent");
-  //ntSim->Branch("simEvt","MySimEvent",&mySim);
   G4cout << "\n----> Histogram file is opened in " << fileName << G4endl;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

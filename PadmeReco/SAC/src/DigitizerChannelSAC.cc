@@ -12,10 +12,12 @@
 #include <stdlib.h>
 
 void DigitizerChannelSAC::PrintConfig(){
+  int status; 
   std::cout << "Hi I'm the SAC: " << std::endl;
   std::cout << "Thr low  "<< fAmpThresholdLow  << std::endl;
   std::cout << "Time bin "<< fTimeBin  << std::endl;
   std::cout << "Time window per single hit "<< fSignalWidth  << std::endl;
+  //std::cout << "Board status "<< status=GetBoardStatus()  << std::endl;
   for(int i=0;i<32;i++){
     //  std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
     // if(i%5==0) std::cout<<std::endl;
@@ -308,7 +310,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   // if(VMax>fAmpThresholdLow){ // zero suppression on Voltage normalize to energy.
 
 
-  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+  //if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.//original reco
+  if(VMax>fAmpThresholdHigh){
     TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
 
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
@@ -327,7 +330,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     fNPeak=nfound;
     
     if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
-      if(VMax>10 && ElCh>=0){
+      if(VMax>0 && ElCh>=0){//original reco, debug mode
+      //if(VMax>1 && ElCh>=0){
 //	//	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
 	fileOut->cd();
 	sprintf(name,"hSig%d",ElCh);
@@ -388,12 +392,14 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       HitE=VMax;
       fESpec=yp;
       if(ElCh>=0) SAC->Fill(); //fil the tree
-      if(yp>-3*VMin){
+     // if(yp>-3*VMin)//original reco
+      if(1)
+	{
 	Hit->SetTime(fTime);
 	//	Hit->SetEnergy(fCharge);    // need to add hit status 
-	Hit->SetEnergy(yp);    // need to add hit status 
-	//	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
-	//Hit->SetEnergy(yp);               // need to add hit status to avoid saturations
+	//Hit->SetEnergy(VMax);    // need to add hit status 
+	//	Hit->SetEnergy(fEnergy); //original reco
+	Hit->SetEnergy(fCharge);               // this should fill energy histograms with signal amplitude
 	hitArray.push_back(Hit);
       }else{
 	//	fileOut->cd();
@@ -423,7 +429,7 @@ void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArra
   // M. Raggi 20/07/2019 protect the code againts cosmic scintillators in the SAC digitizer
   Int_t Ch = GetChID();
   if(Ch<0) return;
-  Double_t fchPed=CalcPedestal();
+  //  Double_t fchPed=CalcPedestal();
 
   CalcChaTime(hitArray,1000);
   //  IsSaturated(); //check if the signal is saturated //CT
@@ -437,7 +443,7 @@ void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray
   Int_t Ch = GetChID();
   if(Ch<0) return;
 
-  Double_t fchPed=CalcPedestal();
+  //  Double_t fchPed=CalcPedestal();
 
   CalcChaTime(hitArray,1000);
 }

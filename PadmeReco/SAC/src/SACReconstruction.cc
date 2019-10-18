@@ -74,7 +74,7 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACClPos",new TH2F("SACClPos","SACClPos",400,-6,6,400,-6,6));
   AddHisto("SACVoters",new TH2F("SACVoters","SACVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("SACTime",new TH1F("SACTime","SACTime",200,0,400));
+  AddHisto("SACTime",new TH1F("SACTime","SACTime",200,-200,200));
   AddHisto("SACTimeCut",new TH1F("SACTimeCut","SACTimeCut",200,0,400));
   AddHisto("SACClTime",new TH1F("SACClTime","SACClTime",200,0,400));
   AddHisto("SACClTimeCut",new TH1F("SACClTimeCut","SACClTimeCut",200,0,400));

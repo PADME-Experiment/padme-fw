@@ -24,6 +24,7 @@
 #include "TECalMCDigi.hh"
 #include "TH2F.h"
 #include "TH1F.h"
+#include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
 
@@ -42,14 +43,12 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
 
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
   fClDeltaTime            = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaTimeMax", 1.);
-  fClDeltaCellMax         = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaCellMax", 4);
-  fClEnThrForHit          = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForHit", 5.);
+  fClDeltaCellMax         = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaCellMax", 3);
+  fClEnThrForHit          = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForHit", 1.);
   fClEnThrForSeed         = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
-
-
 
   //  fClusters.clear();
 }
@@ -537,8 +536,22 @@ void ECalReconstruction::BuildClusters()
 Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
 {
   Double_t EFraction;
+  Int_t ClusterSize=5;
   //  EFraction[490]=0.95;
-  EFraction=0.95;
+  TF1 * compensate;
+  //  cout<<"dime "<<fClDeltaCellMax<<endl;
+  if(fClDeltaCellMax==2){
+    compensate = new TF1("comp","pol4",0.,1000.);
+    compensate->SetParameters(0.915362,0.000196729,-4.50361e-07,4.58042e-10,-1.70299e-13); // pol4 fit of the MC
+  }else{
+    compensate = new TF1("comp","pol4",0.,1000.);
+    compensate->SetParameters(0.925666,0.000231776,-5.72621e-07,6.22445e-10,-2.44014e-13); // pol4 fit of the MC
+  }
+  //  EFraction=0.95;
+  EFraction = compensate->Eval(ECl);
+  if(ECl>1000.) EFraction=1;
+  if(ECl<30.)   EFraction=1;
+  // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   return EFraction;
 }
 

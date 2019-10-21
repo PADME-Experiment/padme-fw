@@ -110,12 +110,6 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
   CLHEP::HepRandom::showEngineStatus();
 #endif
 
-  if(IsTurboOn){
-    G4cout << "*******************" << G4endl;
-    G4cout << "** TURBO MODE ON **" << G4endl;
-    G4cout << "*******************" << G4endl;
-  }
-
   if ( ((G4VisManager*)G4VisManager::GetConcreteInstance())->GetCurrentScene() ) {
     // Show some info about current run on display
     char cmd[100];

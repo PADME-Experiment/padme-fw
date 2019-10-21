@@ -106,7 +106,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   myStepping->SetPhysProc(0);
 
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
-  for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
+  //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
   
 }
@@ -517,10 +517,10 @@ void EventAction::FindClusters()
       fHistoManager->FillHisto(15,QCl[NClusters]);
     }
     NClusters++;
-    if(NClusters==2 && fabs(TimeCl[0]-TimeCl[1]<2.) ){ 
-     G4double mgg= GGMass();
-     fHistoManager->FillHisto(16,mgg);
-    }
+    //if(NClusters==2 && fabs(TimeCl[0]-TimeCl[1]<2.) ){ 
+    // G4double mgg= GGMass();
+    // fHistoManager->FillHisto(16,mgg);
+    //}
     if(NClusters>19){ 
       G4cout<<"too many clusters \n!!"<<G4endl;
       break;
@@ -983,13 +983,13 @@ G4double EventAction::GetCharge(G4double Energia)
 }
 
 
-G4double EventAction::GGMass()
-{
-  double ECalPosiZ=-4000.; // sbagliato guarda nella geometria
-  if(NClusters!=2)                        return -1;  // Need 2 clusters
-  double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
-  double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);
-  double Massa  = sqrt(EneCl[0]*EneCl[1]*(XDiff2+YDiff2))/(ECalPosiZ);
-  G4cout<<"Massa "<<Massa<<G4endl;
-  return Massa;
-}
+//G4double EventAction::GGMass()
+//{
+//  double ECalPosiZ=-4000.; // sbagliato guarda nella geometria
+//  if(NClusters!=2)                        return -1;  // Need 2 clusters
+//  double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
+//  double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);
+//  double Massa  = sqrt(EneCl[0]*EneCl[1]*(XDiff2+YDiff2))/(ECalPosiZ);
+//  G4cout<<"Massa "<<Massa<<G4endl;
+//  return Massa;
+//}

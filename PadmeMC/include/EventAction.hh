@@ -76,7 +76,7 @@ class EventAction : public G4UserEventAction
   void  AddBeWHits(BeWHitsCollection*); //M. Raggi 26/03/2019
 
   G4double GetCharge(G4double Energia);
-  G4double GGMass();
+  //G4double GGMass();
 
   private:
 

@@ -15,6 +15,20 @@
 # If disabled, user must set environment variables PADME_SEED1 and PADME_SEED2
 #/settings/AutomaticRandomSeed true
 
+# Turbo mode kills low energy particles to speed up rough detector studies
+# ENABLE ONLY IF YOU KNOW WHAT YOU ARE DOING!
+#/settings/TurboModeEnable false
+
+# Set verbose level for TurboMode. If >=10 show all killed particles
+#/settings/TurboMode/Verbose 0
+
+# Turbo mode thresholds for e+,e-,gamma,neutron
+# Particles will be killed if their kinetic energy is below threshold
+#/settings/TurboMode/KillEnergyPositron 10. MeV
+#/settings/TurboMode/KillEnergyElectron 10. MeV
+#/settings/TurboMode/KillEnergyGamma     1. MeV
+#/settings/TurboMode/KillEnergyNeutron  10. MeV
+
 # RootIO settings
 
 # Output root file with MC hits

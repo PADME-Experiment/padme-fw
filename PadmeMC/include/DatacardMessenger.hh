@@ -9,6 +9,7 @@ class G4UIdirectory;
 class G4UIcmdWithAString;
 class G4UIcmdWithAnInteger;
 class G4UIcmdWithABool;
+class G4UIcmdWithADoubleAndUnit;
 
 class DatacardMessenger: public G4UImessenger
 {
@@ -42,6 +43,14 @@ private:
 
   G4UIcmdWithAnInteger* fPrintOutFrequencyCmd;
   G4UIcmdWithABool* fAutomaticRandomSeedCmd;
+
+  G4UIdirectory* fTurboModeDir;
+  G4UIcmdWithABool* fTurboModeCmd;
+  G4UIcmdWithAnInteger* fTurboModeVerboseCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboPositronKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboElectronKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboGammaKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboNeutronKillEnergyCmd;
 
 };
 #endif // DatacardMessenger_h

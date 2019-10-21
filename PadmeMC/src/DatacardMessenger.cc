@@ -6,9 +6,11 @@
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithAnInteger.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
 
 #include "RootIOManager.hh"
 #include "SteppingAction.hh"
+#include "StackingAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
 
@@ -84,6 +86,48 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fAutomaticRandomSeedCmd->SetParameterName("ARS",true);
   fAutomaticRandomSeedCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fTurboModeCmd = new G4UIcmdWithABool("/settings/TurboModeEnable",this);
+  fTurboModeCmd->SetGuidance("Enable (true) or disable (false) turbo mode in StackingAction");
+  fTurboModeCmd->SetParameterName("TM",true);
+  fTurboModeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboModeDir = new G4UIdirectory("/settings/TurboMode");
+  fTurboModeDir->SetGuidance("UI commands to manage general behaviour of program.");
+
+  fTurboModeVerboseCmd = new G4UIcmdWithAnInteger("/settings/TurboMode/Verbose",this);
+  fTurboModeVerboseCmd->SetGuidance("Define TurboMode verbose level.");
+  fTurboModeVerboseCmd->SetParameterName("TMV",false);
+  fTurboModeVerboseCmd->SetRange("TMV >= 0");
+  fTurboModeVerboseCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboPositronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyPositron",this);
+  fTurboPositronKillEnergyCmd->SetGuidance("Set energy threshold to kill positrons in turbo mode");
+  fTurboPositronKillEnergyCmd->SetParameterName("TPKE",false);
+  fTurboPositronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboPositronKillEnergyCmd->SetRange("TPKE > 0.");
+  fTurboPositronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboElectronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyElectron",this);
+  fTurboElectronKillEnergyCmd->SetGuidance("Set energy threshold to kill electrons in turbo mode");
+  fTurboElectronKillEnergyCmd->SetParameterName("TEKE",false);
+  fTurboElectronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboElectronKillEnergyCmd->SetRange("TEKE > 0.");
+  fTurboElectronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboGammaKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyGamma",this);
+  fTurboGammaKillEnergyCmd->SetGuidance("Set energy threshold to kill gammas in turbo mode");
+  fTurboGammaKillEnergyCmd->SetParameterName("TGKE",false);
+  fTurboGammaKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboGammaKillEnergyCmd->SetRange("TGKE > 0.");
+  fTurboGammaKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboNeutronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyNeutron",this);
+  fTurboNeutronKillEnergyCmd->SetGuidance("Set energy threshold to kill neutrons in turbo mode");
+  fTurboNeutronKillEnergyCmd->SetParameterName("TNKE",false);
+  fTurboNeutronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboNeutronKillEnergyCmd->SetRange("TNKE > 0.");
+  fTurboNeutronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
@@ -103,6 +147,14 @@ DatacardMessenger::~DatacardMessenger() {
 
   delete fPrintOutFrequencyCmd;
   delete fAutomaticRandomSeedCmd;
+
+  delete fTurboModeCmd;
+  delete fTurboModeDir;
+  delete fTurboModeVerboseCmd;
+  delete fTurboPositronKillEnergyCmd;
+  delete fTurboElectronKillEnergyCmd;
+  delete fTurboGammaKillEnergyCmd;
+  delete fTurboNeutronKillEnergyCmd;
 
   delete fOutputDir;
   delete fAnalysisDir;
@@ -181,5 +233,29 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
       runAct->DisableAutomaticRandomSeed();
     }
   }
+
+  if (command == fTurboModeCmd) {
+    StackingAction* stkAct = (StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction();
+    if (fTurboModeCmd->GetNewBoolValue(newValue)) {
+      stkAct->EnableTurboMode();
+    } else {
+      stkAct->DisableTurboMode();
+    }
+  }
+
+  if (command == fTurboModeVerboseCmd)
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetTurboModeVerboseLevel(fTurboModeVerboseCmd->GetNewIntValue(newValue));
+
+  if ( command == fTurboPositronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetEpKillEnergy(fTurboPositronKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboElectronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetEmKillEnergy(fTurboElectronKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboGammaKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetGKillEnergy(fTurboGammaKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboNeutronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetNKillEnergy(fTurboNeutronKillEnergyCmd->GetNewDoubleValue(newValue));
 
 }

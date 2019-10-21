@@ -92,7 +92,7 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fTurboModeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fTurboModeDir = new G4UIdirectory("/settings/TurboMode");
-  fTurboModeDir->SetGuidance("UI commands to manage general behaviour of program.");
+  fTurboModeDir->SetGuidance("Commands to define TurboMode behaviour.");
 
   fTurboModeVerboseCmd = new G4UIcmdWithAnInteger("/settings/TurboMode/Verbose",this);
   fTurboModeVerboseCmd->SetGuidance("Define TurboMode verbose level.");
@@ -104,28 +104,28 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fTurboPositronKillEnergyCmd->SetGuidance("Set energy threshold to kill positrons in turbo mode");
   fTurboPositronKillEnergyCmd->SetParameterName("TPKE",false);
   fTurboPositronKillEnergyCmd->SetDefaultUnit("MeV");
-  fTurboPositronKillEnergyCmd->SetRange("TPKE > 0.");
+  fTurboPositronKillEnergyCmd->SetRange("TPKE >= 0.");
   fTurboPositronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fTurboElectronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyElectron",this);
   fTurboElectronKillEnergyCmd->SetGuidance("Set energy threshold to kill electrons in turbo mode");
   fTurboElectronKillEnergyCmd->SetParameterName("TEKE",false);
   fTurboElectronKillEnergyCmd->SetDefaultUnit("MeV");
-  fTurboElectronKillEnergyCmd->SetRange("TEKE > 0.");
+  fTurboElectronKillEnergyCmd->SetRange("TEKE >= 0.");
   fTurboElectronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fTurboGammaKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyGamma",this);
   fTurboGammaKillEnergyCmd->SetGuidance("Set energy threshold to kill gammas in turbo mode");
   fTurboGammaKillEnergyCmd->SetParameterName("TGKE",false);
   fTurboGammaKillEnergyCmd->SetDefaultUnit("MeV");
-  fTurboGammaKillEnergyCmd->SetRange("TGKE > 0.");
+  fTurboGammaKillEnergyCmd->SetRange("TGKE >= 0.");
   fTurboGammaKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fTurboNeutronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyNeutron",this);
   fTurboNeutronKillEnergyCmd->SetGuidance("Set energy threshold to kill neutrons in turbo mode");
   fTurboNeutronKillEnergyCmd->SetParameterName("TNKE",false);
   fTurboNeutronKillEnergyCmd->SetDefaultUnit("MeV");
-  fTurboNeutronKillEnergyCmd->SetRange("TNKE > 0.");
+  fTurboNeutronKillEnergyCmd->SetRange("TNKE >= 0.");
   fTurboNeutronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }

@@ -99,7 +99,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableECal     = 1;
   fEnableTarget   = 1;
   fEnableSAC      = 1;
-  fEnableLAV      = 1;
+  fEnableLAV      = 0;
   fEnablePVeto    = 1;
   fEnableEVeto    = 1;
   fEnableHEPVeto  = 1;
@@ -107,19 +107,17 @@ DetectorConstruction::DetectorConstruction()
   fEnableTPix     = 1;
   fEnableTungsten = 0;
 
-  fEnableWall    = 0;
-  fEnableMagnet  = 1;
+  fEnableWall     = 0;
+  fEnableMagnet   = 1;
+  fEnableChamber  = 1;
+  fEnableBeamLine = 0;
+
+  fMagnetIsVisible   = 1;
+  fChamberIsVisible  = 1;
+  fBeamLineIsVisible = 1;
 
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
-
-  fMagnetIsVisible = 1;
-
-  fEnableChamber = 1;
-  fChamberIsVisible = 1;
-
-  fEnableBeamLine = 1;  //M. Raggi 07/03/2019
-  fBeamLineIsVisible = 1; //M. Raggi 07/03/2019
 
   fWorldIsFilledWithAir = 0;
 
@@ -755,20 +753,20 @@ void DetectorConstruction::DisableSubDetector(G4String det)
 void DetectorConstruction::EnableStructure(G4String str)
 {
   if (fVerbose) printf("Enabling structure %s\n",str.data());
-  if      (str=="Wall")     { fEnableWall    = 1; }
-  else if (str=="Chamber")  { fEnableChamber = 1; }
+  if      (str=="Wall")     { fEnableWall     = 1; }
+  else if (str=="Chamber")  { fEnableChamber  = 1; }
   else if (str=="BeamLine") { fEnableBeamLine = 1; } 
-  else if (str=="Magnet")   { fEnableMagnet  = 1; }
+  else if (str=="Magnet")   { fEnableMagnet   = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }
 
 void DetectorConstruction::DisableStructure(G4String str)
 {
   if (fVerbose) printf("Disabling structure %s\n",str.data());
-  if      (str=="Wall")     { fEnableWall    = 0; }
-  else if (str=="Chamber")  { fEnableChamber = 0; }
+  if      (str=="Wall")     { fEnableWall     = 0; }
+  else if (str=="Chamber")  { fEnableChamber  = 0; }
   else if (str=="BeamLine") { fEnableBeamLine = 0; }
-  else if (str=="Magnet")   { fEnableMagnet  = 0; }
+  else if (str=="Magnet")   { fEnableMagnet   = 0; }
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 

@@ -82,8 +82,6 @@ SACMessenger::SACMessenger(SACDetector* det)
 SACMessenger::~SACMessenger()
 {
 
-  delete fSACDetectorDir;
-
   delete fSetSACNRowsCmd;
   delete fSetSACNColsCmd;
 
@@ -96,6 +94,8 @@ SACMessenger::~SACMessenger()
   delete fSetSACFrontFaceZCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fSACDetectorDir;
 
 }
 

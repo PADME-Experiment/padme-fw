@@ -48,12 +48,12 @@ TPixMessenger::TPixMessenger(TPixDetector* det)
 TPixMessenger::~TPixMessenger()
 {
 
-  delete fTPixDetectorDir;
-
   delete fSetNColumnsCmd;
   delete fSetDistToCornerCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fTPixDetectorDir;
 
 }
 

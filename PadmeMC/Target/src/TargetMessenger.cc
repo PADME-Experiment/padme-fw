@@ -77,8 +77,6 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
 TargetMessenger::~TargetMessenger()
 {
 
-  delete fTargetDetectorDir;
-
   delete fSetTargetSizeCmd;
   delete fSetTargetThicknessCmd;
   delete fSetTargetFrontFaceZCmd;
@@ -89,6 +87,8 @@ TargetMessenger::~TargetMessenger()
   delete fDisableSaveWaveformToDigiCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fTargetDetectorDir;
 
 }
 

@@ -73,8 +73,6 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
 EVetoMessenger::~EVetoMessenger()
 {
 
-  delete fEVetoDetectorDir;
-
   delete fSetEVetoNFingersCmd;
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
@@ -83,6 +81,8 @@ EVetoMessenger::~EVetoMessenger()
   delete fSetEVetoFrontFaceZCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fEVetoDetectorDir;
 
 }
 

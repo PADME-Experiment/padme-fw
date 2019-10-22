@@ -91,7 +91,7 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fTurboModeCmd->SetParameterName("TM",true);
   fTurboModeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fTurboModeDir = new G4UIdirectory("/settings/TurboMode");
+  fTurboModeDir = new G4UIdirectory("/settings/TurboMode/");
   fTurboModeDir->SetGuidance("Commands to define TurboMode behaviour.");
 
   fTurboModeVerboseCmd = new G4UIcmdWithAnInteger("/settings/TurboMode/Verbose",this);
@@ -134,30 +134,27 @@ DatacardMessenger::~DatacardMessenger() {
 
   delete fOutNameCmd;
   delete fHistoNameCmd;
-
   delete fEnableDetectorIOCmd;
   delete fDisableDetectorIOCmd;
+  delete fOutputDir;
 
   delete fDisableSACAnalysisCmd;
   delete fDisableECalAnalysisCmd;
-
   delete fEnableSaveSACCmd;
   delete fEnableSaveVetoCmd;
   delete fEnableSaveEcalCmd;
+  delete fAnalysisDir;
 
-  delete fPrintOutFrequencyCmd;
-  delete fAutomaticRandomSeedCmd;
-
-  delete fTurboModeCmd;
-  delete fTurboModeDir;
   delete fTurboModeVerboseCmd;
   delete fTurboPositronKillEnergyCmd;
   delete fTurboElectronKillEnergyCmd;
   delete fTurboGammaKillEnergyCmd;
   delete fTurboNeutronKillEnergyCmd;
+  delete fTurboModeDir;
 
-  delete fOutputDir;
-  delete fAnalysisDir;
+  delete fTurboModeCmd;
+  delete fPrintOutFrequencyCmd;
+  delete fAutomaticRandomSeedCmd;
   delete fSettingsDir;
 
 }

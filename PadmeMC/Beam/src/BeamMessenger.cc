@@ -227,8 +227,6 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 BeamMessenger::~BeamMessenger()
 {
 
-  delete fBeamGeneratorDir;
-
   delete fSetNPositronsPerBunchCmd;
   delete fEnableNPositronsPerBunchSpreadCmd;
 
@@ -267,6 +265,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
   delete fSetCalibRunRadiusCmd;
+
+  delete fBeamGeneratorDir;
 
 }
 

@@ -119,8 +119,6 @@ ECalMessenger::ECalMessenger(ECalDetector* det)
 ECalMessenger::~ECalMessenger()
 {
 
-  delete fECalDetectorDir;
-
   delete fSetECalNRowsCmd;
   delete fSetECalNColsCmd;
 
@@ -142,6 +140,8 @@ ECalMessenger::~ECalMessenger()
   delete fSetECalPanelGapCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fECalDetectorDir;
 
 }
 

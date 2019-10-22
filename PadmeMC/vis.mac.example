@@ -97,6 +97,9 @@
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
 
+#/Detector/SetMagnetVisible
+#/Detector/SetMagnetInvisible
+
 #/Detector/SetChamberVisible
 #/Detector/SetChamberInvisible
 
@@ -108,17 +111,18 @@
 #/Detector/SetMagneticVolumeInvisible
 
 # Beam line settings
-#/Detector/SetBeamLineInvisible
 #/Detector/EnableStructure BeamLine
 #/Detector/DisableStructure BeamLine
-#/Detector/BeamLine/Be_window true
+#/Detector/SetBeamLineVisible
+#/Detector/SetBeamLineInvisible
+#/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/DHST002_FieldY -1.055 tesla
+#/Detector/BeamLine/EnableQuadrupoles false
+#/Detector/BeamLine/Q1_FieldGrad 5.
+#/Detector/BeamLine/Q2_FieldGrad 5.
 
 #/Detector/WorldIsAir
 #/Detector/WorldIsVacuum
-
-#/Detector/Magnet/SetMagnetVisible
-#/Detector/Magnet/SetMagnetInvisible
 
 #/Detector/Target/VerboseLevel 0
 #/Detector/Target/FrontFaceZ -103. cm

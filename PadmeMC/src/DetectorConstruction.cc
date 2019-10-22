@@ -113,6 +113,8 @@ DetectorConstruction::DetectorConstruction()
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
 
+  fMagnetIsVisible = 1;
+
   fEnableChamber = 1;
   fChamberIsVisible = 1;
 
@@ -341,9 +343,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   // Magnet physical structure
-  if (fEnableMagnet) { 
+  if (fEnableMagnet) {
     //fMagnetStructure->SetMotherVolume(logicMagneticVolume);
     fMagnetStructure->SetMotherVolume(logicWorld);
+    if (fMagnetIsVisible) {
+      fMagnetStructure->SetMagnetVisible();
+    } else {
+      fMagnetStructure->SetMagnetInvisible();
+    }
     fMagnetStructure->CreateGeometry();
   }
 
@@ -795,22 +802,34 @@ void DetectorConstruction::SetMagFieldValue(G4double v)
   fMagneticFieldManager->SetMagneticFieldValue(v);
 }
 
+void DetectorConstruction::MagnetIsVisible()
+{
+  if (fVerbose) printf("Dipole magnet is visible\n");
+  fMagnetIsVisible = 1;
+}
+
+void DetectorConstruction::MagnetIsInvisible()
+{
+  if (fVerbose) printf("Dipole magnet is invisible\n");
+  fMagnetIsVisible = 0;
+}
+
 void DetectorConstruction::ChamberIsVisible()
 {
   if (fVerbose) printf("Vacuum chamber is visible\n");
   fChamberIsVisible = 1;
-}
-//M. Raggi 07/03/2019
-void DetectorConstruction::BeamLineIsVisible()
-{
-  printf("BeamLine is visible\n");
-  fBeamLineIsVisible = 1;
 }
 
 void DetectorConstruction::ChamberIsInvisible()
 {
   if (fVerbose) printf("Vacuum chamber is invisible\n");
   fChamberIsVisible = 0;
+}
+
+void DetectorConstruction::BeamLineIsVisible()
+{
+  printf("Beam Line is visible\n");
+  fBeamLineIsVisible = 1;
 }
 
 void DetectorConstruction::BeamLineIsInvisible()

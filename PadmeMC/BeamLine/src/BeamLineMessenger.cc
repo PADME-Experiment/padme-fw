@@ -27,7 +27,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fBeamLineDir = new G4UIdirectory("/Detector/BeamLine/");
   fBeamLineDir->SetGuidance("UI commands to control BeamLine setup");
 
-  fEnableBeWindowCmd = new G4UIcmdWithABool("/Detector/BeamLine/Be_window",this);
+  fEnableBeWindowCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableBeWindow",this);
   fEnableBeWindowCmd->SetGuidance("Enable (true) or disable (false) positioning of Berillium window.");
   fEnableBeWindowCmd->SetParameterName("BW",true);
   fEnableBeWindowCmd->SetDefaultValue(true);
@@ -39,6 +39,12 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetDHSTB002MagneticFieldYCmd->SetDefaultUnit("tesla");
   fSetDHSTB002MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
   fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
+  fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
+  fEnableQuadrupolesCmd->SetParameterName("QPS",false);
+  fEnableQuadrupolesCmd->SetDefaultValue(false);
+  fEnableQuadrupolesCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q1 quadrupole magnet gradient.
   fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
@@ -59,11 +65,12 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
 BeamLineMessenger::~BeamLineMessenger()
 {
 
-  delete fBeamLineDir;
+  delete fEnableQuadrupolesCmd;
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
   delete fEnableBeWindowCmd;
   delete fSetDHSTB002MagneticFieldYCmd;
+  delete fBeamLineDir;
 
 }
 
@@ -80,6 +87,14 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     fBeamLineGeometry->SetDHSTB002MagneticFieldY(fSetDHSTB002MagneticFieldYCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fEnableQuadrupolesCmd ) {
+    if (fEnableQuadrupolesCmd->GetNewBoolValue(par)) {
+      fBeamLineGeometry->EnableQuadrupoles();
+    } else {
+      fBeamLineGeometry->DisableQuadrupoles();
+    }
+  }
 
   // Set Q1 gradient
   else if ( cmd == fSetQ1_FieldGradCmd )
@@ -102,7 +117,9 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");
 
-  // Q1 and Q2 added now
+  else if ( cmd == fEnableQuadrupolesCmd )
+    cv = fEnableQuadrupolesCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
+
   else if ( cmd == fSetQ1_FieldGradCmd )
    cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");
 

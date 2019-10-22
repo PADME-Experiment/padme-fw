@@ -73,8 +73,6 @@ PVetoMessenger::PVetoMessenger(PVetoDetector* det)
 PVetoMessenger::~PVetoMessenger()
 {
 
-  delete fPVetoDetectorDir;
-
   delete fSetPVetoNFingersCmd;
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
@@ -83,6 +81,8 @@ PVetoMessenger::~PVetoMessenger()
   delete fSetPVetoFrontFaceZCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fPVetoDetectorDir;
 
 }
 

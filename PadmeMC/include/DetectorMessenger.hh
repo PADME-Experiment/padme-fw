@@ -41,6 +41,9 @@ private:
   G4UIcmdWithoutParameter* fMagVolVisibleCmd;
   G4UIcmdWithoutParameter* fMagVolInvisibleCmd;
 
+  G4UIcmdWithoutParameter* fMagnetVisibleCmd;
+  G4UIcmdWithoutParameter* fMagnetInvisibleCmd;
+
   G4UIcmdWithoutParameter* fChamberVisibleCmd;
   G4UIcmdWithoutParameter* fChamberInvisibleCmd;
 

@@ -71,6 +71,9 @@ public:
   void SetMagFieldValue(G4double);
   G4double GetMagFieldValue();
 
+  void MagnetIsVisible();
+  void MagnetIsInvisible();
+
   void ChamberIsVisible();
   void ChamberIsInvisible();
 
@@ -137,6 +140,7 @@ private:
   G4int fEnableMagneticField;
   G4int fMagneticVolumeIsVisible;
 
+  G4int fMagnetIsVisible;
   G4int fChamberIsVisible;
   G4int fBeamLineIsVisible; //M. Raggi 07/03/2019
 

@@ -69,8 +69,6 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
 HEPVetoMessenger::~HEPVetoMessenger()
 {
 
-  delete fHEPVetoDetectorDir;
-
   delete fSetNFingersCmd;
   delete fSetFingerStepCmd;
   delete fSetFingerSizeCmd;
@@ -78,6 +76,8 @@ HEPVetoMessenger::~HEPVetoMessenger()
   delete fSetDistToCornerCmd;
 
   delete fSetVerboseLevelCmd;
+
+  delete fHEPVetoDetectorDir;
 
 }
 

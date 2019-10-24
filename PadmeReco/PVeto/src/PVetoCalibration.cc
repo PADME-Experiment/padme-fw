@@ -26,7 +26,7 @@ void PVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   PadmeVCalibration::Init(cfg, chIdMgr );
   
   fCalibrationFile  = (int)cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 0); 
-  std::cout <<"Calibration File Chosen "<<fCalibrationFile<<std::endl; 
+  std::cout <<"PVeto Calibration File Chosen "<<fCalibrationFile<<std::endl; 
 
   ReadCalibrationConstants();
 

@@ -26,7 +26,7 @@ void HEPVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   PadmeVCalibration::Init(cfg, chIdMgr );
   
   fCalibrationFile  = (int)cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 0); 
-  std::cout <<"Calibration File Chosen "<<fCalibrationFile<<std::endl; 
+  std::cout <<"HEP Veto Calibration File Chosen "<<fCalibrationFile<<std::endl; 
 
   ReadCalibrationConstants();
 
@@ -39,7 +39,7 @@ void HEPVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 	  double channelGain = fCalibCh[chId];
           
 	  //std::cout<<" init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
-          std::cout<<" HEPVetoCalibration::Init calib consts .... j "<<chId<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
+          std::cout<<" HEPVetoCalibration::Init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
 	  
 
 	  if (fEnergyCalibMap->find(chIds[j])!=fEnergyCalibMap->end()) 

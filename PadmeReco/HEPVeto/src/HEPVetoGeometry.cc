@@ -31,11 +31,15 @@ void HEPVetoGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
   if (fLocOxinPadmeFrame!=fHEPVetoInnerFacePosX+0.5*fFingerSizeX)
  {
   std::cout<<" WARNING!!! The HEPVeto X position in PADME frame  may be wrong! "<<std::endl ;
+  std::cout<<" fLocOxinPadmeFrame  "<<fLocOxinPadmeFrame<<"  fHEPVetoInnerFacePosX+0.5*fFingerSizeX "<<fHEPVetoInnerFacePosX+0.5*fFingerSizeX<<std::endl ;
+  
  }
 
   if (fLocOzinPadmeFrame!=fHEPVetoInnerFacePosZ)
  {
   std::cout<<" WARNING!!! The HEPVeto Z position in PADME frame  may be wrong! "<<std::endl ;
+  std::cout<<" fLocOzinPadmeFrame  "<<fLocOzinPadmeFrame<<"  fHEPVetoInnerFacePosZ "<<fHEPVetoInnerFacePosZ<<std::endl ;
+  
  }
 }
 
@@ -46,7 +50,7 @@ TVector3  HEPVetoGeometry::LocalPosition(Int_t chIdInput)
   if (chId > 15)  chId = chId - 16;
   double x = ((chId-fChIdx0))*fStep1ChLocalX + fChIdx0Offset;
   double y = ((chId-fChIdy0))*fStep1ChLocalY + fChIdy0Offset;
-  double z = ((chId-fChIdz0))*fStep1ChLocalZ + fChIdz0Offset;
+  double z = ((-chId+fChIdz0))*fStep1ChLocalZ + fChIdz0Offset;
 
 
   return TVector3(x,y,z);

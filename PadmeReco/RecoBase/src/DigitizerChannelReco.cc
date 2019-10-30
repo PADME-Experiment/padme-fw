@@ -55,7 +55,7 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
 
 
- fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
+ fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",0);
  fPeakSearchWidth     = cfg->GetParOrDefault("RECO","PeakSearchWidth",6);
  fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
  fChargeCut           = cfg->GetParOrDefault("RECO","ChargeCut",0.01);

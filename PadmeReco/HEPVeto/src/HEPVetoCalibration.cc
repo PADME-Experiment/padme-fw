@@ -63,7 +63,7 @@ void HEPVetoCalibration::ReadCalibrationConstants(){
   	double temp;
   	for (int i=0;i<32;i++){
           Calib >> temp >> fCalibCh[i];
-          std::cout <<"FileRow  "<< i<<" Calibration Constant "<<fCalibCh[i]<<std::endl; 
+          std::cout <<"FileRow  "<< i<<" HEPVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
 	}
   Calib.close();
   }

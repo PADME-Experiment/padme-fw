@@ -60,7 +60,7 @@ void PVetoCalibration::ReadCalibrationConstants(){
   	double temp;
   	for (int i=0;i<96;i++){
           Calib >> temp >> fCalibCh[i];
-          std::cout <<"FileRow  "<< i<<" Calibration Constant "<<fCalibCh[i]<<std::endl; 
+          std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
 	}
   Calib.close();
   }

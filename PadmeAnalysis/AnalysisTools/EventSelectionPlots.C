@@ -55,14 +55,14 @@ void EventSelectionPlots(std::string run="")
 
    gStyle->SetOptStat(0);
 
-   //std::string runName = "run_0000000_20190228_131527";
-   std::string runName = "run_0000000_20190721_070421";
+   std::string runName = "run_0000000_20190228_131527";
+   //std::string runName = "run_0000000_20190721_070421";
    if (run!="") runName = run+"_";
    else runName = runName+"_";
 
    //TFile *f1 = TFile::Open(filename);
-   std::string fName = runName+"recoFromRaw.AnalysisOut.root";
-   std::string fNameToOpen = ""+fName;
+   std::string fName = runName+"recoFromRaw.AnalysisOut1.root";
+   std::string fNameToOpen = "../"+fName;
    TFile *f1 = TFile::Open(fNameToOpen.c_str());
    
 

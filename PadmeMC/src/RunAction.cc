@@ -62,6 +62,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     seeds[0] = (long) systime;
     seeds[1] = (long) (systime*G4UniformRand());
 
+    G4cout << "SEEDS:  " << seeds[0] << "\t" << seeds[1] << G4endl;
+
 #ifdef  G4MULTITHREADED
     G4MTHepRandom::setTheSeeds(seeds);
     G4MTHepRandom::showEngineStatus();
@@ -75,12 +77,24 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     G4cout << "*******************" << G4endl;
 
     long seeds[2];
+    seeds[0] = 0;
+    seeds[1] = 0;
+    
+    char* ps1;
+    char* ps2;
+    
+    ps1 = getenv("PADME_SEED1");
+    if (ps1 != NULL) seeds[0] = (long) atol(ps1);
 
-    seeds[0] = atol(getenv("PADME_SEED1"));
-    seeds[1] = atol(getenv("PADME_SEED2"));
-
-    G4cout << "SEEDS:  " << seeds[0] << "\t" << seeds[1] << G4endl;
-
+    ps2 = getenv("PADME_SEED2");
+    if (ps2 != NULL) seeds[1] = (long) atol(ps2);
+    
+    if (seeds[0] == 0 || seeds[1] == 0) 
+      {
+	G4cout << "WARNING: unable to extract seeds from PADME_SEED1 and PADME_SEED2" << G4endl;
+      }
+    G4cout << "SEEDS: " << seeds[0] << "\t" << seeds[1] << G4endl;
+    
 
 #ifdef  G4MULTITHREADED
     G4MTHepRandom::setTheSeeds(seeds);

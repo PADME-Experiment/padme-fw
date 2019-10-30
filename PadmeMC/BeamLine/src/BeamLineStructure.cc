@@ -512,7 +512,8 @@ void BeamLineStructure::CreateBeamLine()
   QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
   G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
   logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
-  new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+  //S.Spagnolo Quadrupole emulation must be disabled to reproduec Beam-line behavious in data 
+  //new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
 
   // Generating quadrupole Q2
   G4double Q1Q2Dist = geo->GetQ1Q2Dist();
@@ -526,6 +527,7 @@ void BeamLineStructure::CreateBeamLine()
   QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
   G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
   logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
-  new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
+  //S.Spagnolo Quadrupole emulation must be disabled to reproduec Beam-line behavious in data 
+  //new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
 
 }

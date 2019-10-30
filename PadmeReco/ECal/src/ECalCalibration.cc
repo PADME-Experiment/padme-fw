@@ -24,9 +24,12 @@ ECalCalibration::~ECalCalibration()
 
 
 void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
+
+  PadmeVCalibration::Init(cfg, chIdMgr );
+
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
-  fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
+  fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",0);
   fCalibVersion = (int)cfg->GetParOrDefault("EnergyCalibration","CalibVersion",3);
   // Energy calibration 
   
@@ -96,6 +99,7 @@ void ECalCalibration::ReadCalibConstant()
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
 {
+  
   static int PRINTED = 0; 
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     if (fUseCalibE > 0){
@@ -121,8 +125,14 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits)
       // Correcting for time offestets in between channels
       fHitT          = Hits[iHit]->GetTime();
       fHitTCorrected = fHitT-fT0Map[std::make_pair(fBID,fChID)];
-      //      std::cout<<"channel ID "<<ich<<" HitT "<<fHitT<<" "<<fHitTCorrected<<std::endl;
+      //std::cout<<" HitT "<<fHitT<<" "<<fHitTCorrected<<std::endl;
       Hits[iHit]->SetTime(fHitTCorrected);
+    }
+    else{
+    fHitT          = Hits[iHit]->GetTime();
+    fHitTCorrected = fHitT-fCommonT0;
+    //std::cout<<" HitT "<<fHitT<<" "<<fHitTCorrected<<std::endl;
+    Hits[iHit]->SetTime(fHitTCorrected);
     }
   } 
 

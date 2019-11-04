@@ -94,16 +94,86 @@ Bool_t EventSelection::InitHistosSelection()
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
+
+  int binX=500;   
+  int minX=-400;
+  int maxX=400;
   
-  int binX=11;   
-  int minX=-0.5;
-  int maxX=10.5;
+  hname="xG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="yG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="xG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="yG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=500;   
+  minX=-0.5;
+  maxX=400;
+  hname="rG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="rG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=200;   
+  minX=-0.5;
+  maxX=550;
+  hname="eG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="eG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="eG1_InFiducialRegion";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="eG2_InFiducialRegion";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=50;   
+  minX=-0.5;
+  maxX=1.5;
+  hname="thetaG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="thetaG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=100;   
+  minX=-3.14;
+  maxX=3.14;
+  hname="phiG1";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="phiG2";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=100;   
+  minX=-50;
+  maxX=50;
+  hname="xCoG";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="yCoG";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="xCoGEnergyCosTheta";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="yCoGEnergyCosTheta";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  
+  binX=3;   
+  minX=-0.5;
+  maxX=2.5;
+  hname="ggEventECAL";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ggInEnergy";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ggInEnergy50MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ggEventFiducialRegionECAL";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ggInFiducialRegionEnergy";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ggInFiducialRegionEnergy50MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  
+  binX=11;   
+  minX=-0.5;
+  maxX=10.5;
 
   hname="NGammaGammaForEvent_TimeRequest"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="NGammaGammaForEvent_TimeRequest_DeltaPhi10Degree"; 
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="NGammaGammaForEvent_TimeRequest_DeltaPhi10Degree_EnergyInterval_InvariantMassInterval"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="NGammaGammaForEvent_TimeRequest_CoG2cm"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -126,8 +196,6 @@ Bool_t EventSelection::InitHistosSelection()
   hname="ECAL_gravTwoPhoton3ns_InDeltaPhi20Degree2Method";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns_InDeltaPhi10Degree2Method";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton3ns_InDeltaPhi10Degree2Method_ThrEnergy";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="ECAL_gravTwoPhoton3ns_InDeltaPhi5Degree2Method";
   hSvc->BookHisto(hname, binX, minX, maxX);
@@ -576,26 +644,135 @@ Bool_t EventSelection::ProcessSelection()
     Double_t EnClECal= ecalclu->GetEnergy()*AbsFactorScale;
     Int_t NGGInTheSameEventTime3ns=0;
     Int_t NGGInTheSameEventDeltaPhi10_3ns=0;
-    Int_t NGGInTheSameEventDeltaPhi10_EnergyInterval_InvariantMassInterval_3ns=0;
     Int_t NGGInTheSameEventCoG2cm3ns=0;
+    
     for(Int_t jecal2=jecal+1; jecal2<NClECal; jecal2++){
       ecalclu2 = fClCollECal->Element(jecal2);
+      pos1 = ecalclu->GetPosition();
+      pos2 = ecalclu2->GetPosition();
+      Double_t XWeighted=0.;
+      Double_t YWeighted=0.;
+      Double_t g1x=ecalclu->GetPosition().X();
+      Double_t g1y=ecalclu->GetPosition().Y();
+      Double_t g2x=ecalclu2->GetPosition().X();
+      Double_t g2y=ecalclu2->GetPosition().Y();
+      Double_t g1E=ecalclu->GetEnergy()*AbsFactorScale;
+      Double_t g2E=ecalclu2->GetEnergy()*AbsFactorScale;
+      XWeighted= (g1x*g1E+g2x*g2E)/(g1E+g2E);
+      YWeighted= (g1y*g1E+g2y*g2E)/(g1E+g2E);
+      
+      
+      Double_t CoG= sqrt(XWeighted*XWeighted+YWeighted*YWeighted);
+      Double_t R_1 = sqrt(g1x*g1x + g1y*g1y /*+ 3470*3470*/);
+      Double_t Px_1 = g1E*g1x/ R_1;
+      Double_t Py_1 = g1E*g1y/ R_1;
+      Double_t Pz_1 = g1E*3470/ R_1;
+      Double_t R_2 = sqrt(g2x*g2x+ g2y*g2y/*+3470*3470*/);
+      Double_t Px_2 = g2E*g2x/ R_2;
+      Double_t Py_2 = g2E*g2y/ R_2;
+      Double_t Pz_2 = g2E*3470/ R_2;
+      
+      Double_t thetag1Measured=atan2(R_1,3470);
+      Double_t thetag2Measured=atan2(R_2,3470);
+      Double_t XWeightedEnergyCosTheta= (g1x*g1E*cos(thetag1Measured)+g2x*g2E*cos(thetag2Measured))/(g1E+g2E);
+      Double_t YWeightedEnergyCosTheta= (g1y*g1E*cos(thetag1Measured)+g2y*g2E*cos(thetag1Measured))/(g1E+g2E);
+
+       
+      TLorentzVector P4g1F,P4g2F,SumP;
+      P4g1F.SetPxPyPzE(Px_1,Py_1,Pz_1, g1E);
+      P4g2F.SetPxPyPzE(Px_2,Py_2,Pz_2,g2E);
+      SumP=P4g1F+P4g2F;
+      Double_t InvariantMass = SumP.M();
+      Double_t angleBetweenTwoPhoton = P4g1F.Angle(P4g2F.Vect());
+      
+      Double_t thetag1 = P4g1F.Theta();
+      Double_t thetag2 = P4g2F.Theta(); 
+      Double_t phig1 = P4g1F.Phi();
+      Double_t phig2 = P4g2F.Phi();
+      
+      
+      hname="xG1";
+      hSvc->FillHisto(hname, g1x , 1.);
+      hname="yG1";
+      hSvc->FillHisto(hname, g1y, 1.);
+      hname="rG1";
+      hSvc->FillHisto(hname, R_1, 1.);
+      hname="xG2";
+      hSvc->FillHisto(hname, g2x, 1.);
+      hname="yG2";
+      hSvc->FillHisto(hname, g2y, 1.);
+      hname="rG2";
+      hSvc->FillHisto(hname, R_2, 1.);
+      hname="eG1";
+      hSvc->FillHisto(hname, g1E, 1.);
+      hname="eG2";
+      hSvc->FillHisto(hname, g2E, 1.);
+      hname="thetaG1";
+      hSvc->FillHisto(hname,thetag1 , 1.);
+      hname="thetaG2";
+      hSvc->FillHisto(hname, thetag2, 1.);
+      hname="phiG1";
+      hSvc->FillHisto(hname,phig1 , 1.);
+      hname="phiG2";
+      hSvc->FillHisto(hname, phig2, 1.);
+      hname="xCoG";
+      hSvc->FillHisto(hname, XWeighted , 1.);
+      hname="yCoG";
+      hSvc->FillHisto(hname, YWeighted, 1.);
+      hname="xCoGEnergyCosTheta";
+      hSvc->FillHisto(hname, XWeightedEnergyCosTheta , 1.);
+      hname="yCoGEnergyCosTheta";
+      hSvc->FillHisto(hname, YWeightedEnergyCosTheta, 1.);
+      
+      Bool_t g1InECAL=false;
+      Bool_t g2InECAL=false;
+      Double_t Radius1=R_1;
+      Double_t Radius2=R_2;
+      if(Radius1>50 && Radius1<300)g1InECAL=true;
+      if(Radius2>50 && Radius2<300)g2InECAL=true;
+
+      if(g1InECAL && g2InECAL){
+        hname="ggEventECAL";
+        hSvc->FillHisto(hname,1.,1.);
+        if(g1E>20 && g2E>20){
+           hname="ggInEnergy";
+           hSvc->FillHisto(hname,1.,1.);
+        }
+        if(g1E>50 && g2E>50){
+          hname="ggInEnergy50MeV";
+          hSvc->FillHisto(hname,1.,1.);
+        }
+
+      }
+
+      Bool_t g1InFiducialRegionECAL=false;
+      Bool_t g2InFiducialRegionECAL=false;
+      if(Radius1>80 && Radius1<270)g1InFiducialRegionECAL=true;
+      if(Radius2>80 && Radius2<270)g2InFiducialRegionECAL=true;
+
+      if(g1InFiducialRegionECAL && g2InFiducialRegionECAL){
+        hname="eG1_InFiducialRegion";
+        hSvc->FillHisto(hname, g1E, 1.);
+        hname="eG2_InFiducialRegion";
+        hSvc->FillHisto(hname, g2E, 1.);
+        hname="ggEventFiducialRegionECAL";
+        hSvc->FillHisto(hname,1.,1.);
+        if(g1E>20 && g2E>20){
+           hname="ggInFiducialRegionEnergy";
+           hSvc->FillHisto(hname,1.,1.);
+         }
+        if(g1E>50 && g2E>50){ 
+           hname="ggInFiducialRegionEnergy50MeV";
+           hSvc->FillHisto(hname,1.,1.);
+        }
+
+      }
+      
+      
       if(fabs(ecalclu->GetTime()-ecalclu2->GetTime())<3.){
         NGGInTheSameEventTime3ns++;
         hname="ECAL_twoPhotonInTime3ns";
         hSvc->FillHisto(hname,(ecalclu->GetEnergy()+ecalclu2->GetEnergy())*AbsFactorScale , 1.);
-        pos1 = ecalclu->GetPosition();
-        pos2 = ecalclu2->GetPosition();
-        Double_t XWeighted=0.;
-        Double_t YWeighted=0.;
-        Double_t g1x=ecalclu->GetPosition().X();
-        Double_t g1y=ecalclu->GetPosition().Y();
-        Double_t g2x=ecalclu2->GetPosition().X();
-        Double_t g2y=ecalclu2->GetPosition().Y();
-        Double_t g1E=ecalclu->GetEnergy()*AbsFactorScale;
-        Double_t g2E=ecalclu2->GetEnergy()*AbsFactorScale;
-        XWeighted= (g1x*g1E+g2x*g2E)/(g1E+g2E);
-        YWeighted= (g1y*g1E+g2y*g2E)/(g1E+g2E);
         
         hname="ECal_xCoG_3ns";
         hSvc->FillHisto(hname,XWeighted , 1.);
@@ -603,45 +780,17 @@ Bool_t EventSelection::ProcessSelection()
         hSvc->FillHisto(hname,YWeighted , 1.);
         hname="ECal_y:xCog_3ns";
         hSvc->FillHisto2(hname, XWeighted, YWeighted, 1.);
-        
-        
-        Double_t CoG= sqrt(XWeighted*XWeighted+YWeighted*YWeighted);
-        Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+3470*3470);
-        Double_t Px_1 = g1E*g1x/ R_1;
-        Double_t Py_1 = g1E*g1y/ R_1;
-        Double_t Pz_1 = g1E*3470/ R_1;
-        Double_t R_2 = sqrt(g2x*g2x+ g2y*g2y+3470*3470);
-        Double_t Px_2 = g2E*g2x/ R_2;
-        Double_t Py_2 = g2E*g2y/ R_2;
-        Double_t Pz_2 = g2E*3470/ R_2;
-         
-        TLorentzVector P4g1F,P4g2F,SumP;
-        P4g1F.SetPxPyPzE(Px_1,Py_1,Pz_1, g1E);
-        P4g2F.SetPxPyPzE(Px_2,Py_2,Pz_2,g2E);
-        SumP=P4g1F+P4g2F;
-        Double_t InvariantMass = SumP.M();
-        Double_t angleBetweenTwoPhoton = P4g1F.Angle(P4g2F.Vect());
+
          
         Double_t ImpactParameter = fabs(ecalclu->GetPosition().Y()-ecalclu->GetPosition().X()*((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X())))/sqrt(1+((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X()))*((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X())));
         hname="ECAL_ImpactParameter_3ns";
         hSvc->FillHisto(hname, ImpactParameter, 1.);
         
-        Double_t thetag1 = P4g1F.Theta();
-        Double_t thetag2 = P4g2F.Theta(); 
-        Double_t phig1 = P4g1F.Phi();
-        Double_t phig2 = P4g2F.Phi();
-        
         Bool_t InInvariantMassRange = false;
-        if(InvariantMass>12. && InvariantMass< 30) InInvariantMassRange=true;
+        if(InvariantMass>12. && InvariantMass< 20) InInvariantMassRange=true;
         
         Bool_t InFiducialRegion=false;
         if((fabs((g1x))>90. || fabs(g1y)>90.) && (fabs((g2x))>90. || fabs(g2y)>90. )) InFiducialRegion=true;
-        
-        Bool_t InEnergy=false;
-        if(g1E>70 && g2E>70) InEnergy=true;
-        
-        Bool_t TotEnergyCut=false;
-        if(g1E+g2E>300 && g1E+g2E<700 ) TotEnergyCut=true;
         
         Bool_t InDeltaPhi = false;
         Double_t distance = sqrt((g1x-g2x)*(g1x-g2x)+(g1y-g2y)*(g1y-g2y));
@@ -655,11 +804,6 @@ Bool_t EventSelection::ProcessSelection()
         if(fabs(dPhi-3.14)<0.35) dPhiIn20Degree=true;
         if(fabs(dPhi-3.14)<0.17) dPhiIn10Degree=true;
         if(fabs(dPhi-3.14)<0.087) dPhiIn5Degree=true;
-        
-        if (TotEnergyCut && InInvariantMassRange && dPhiIn10Degree){
-        NGGInTheSameEventDeltaPhi10_EnergyInterval_InvariantMassInterval_3ns ++;
-        }
-        
         
         if(dPhiIn20Degree){
           HistoInDeltaPhi20DegreeSecondMethod3ns(g1E, g2E, InvariantMass);
@@ -675,12 +819,8 @@ Bool_t EventSelection::ProcessSelection()
           if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
            HistoInDeltaPhi10DegreeSecondMethod3nsDeltaTheta(g1E, g2E, InvariantMass);
            
-          }
-          if(InEnergy){
-           HistoInDeltaPhi10DegreeSecondMethod3nsThrEnergy(g1E, g2E, InvariantMass);
-          }
+         }
         }
-        
         if(dPhiIn5Degree){
           HistoInDeltaPhi5DegreeSecondMethod3ns(g1E, g2E, InvariantMass);
           if(angleBetweenTwoPhoton>0.08 && angleBetweenTwoPhoton<0.12){
@@ -747,18 +887,6 @@ Bool_t EventSelection::ProcessSelection()
       if(fabs(ecalclu->GetTime()-ecalclu2->GetTime())<1.5){
         hname="ECAL_twoPhotonInTime1.5ns";
         hSvc->FillHisto(hname,(ecalclu->GetEnergy()+ecalclu2->GetEnergy())*AbsFactorScale , 1.);
-        Double_t XWeighted=0.;
-        Double_t YWeighted=0.;
-        pos1 = ecalclu->GetPosition();
-        pos2 = ecalclu2->GetPosition();
-        Double_t g1x=ecalclu->GetPosition().X();
-        Double_t g1y=ecalclu->GetPosition().Y();
-        Double_t g2x=ecalclu2->GetPosition().X();
-        Double_t g2y=ecalclu2->GetPosition().Y();
-        Double_t g1E=ecalclu->GetEnergy()*AbsFactorScale;
-        Double_t g2E=ecalclu2->GetEnergy()*AbsFactorScale;
-        XWeighted= (g1x*g1E+g2x*g2E)/(g1E+g2E);
-        YWeighted= (g1y*g1E+g2y*g2E)/(g1E+g2E);
         
         hname="ECal_xCoG_1.5ns";
         hSvc->FillHisto(hname,XWeighted , 1.);
@@ -766,32 +894,10 @@ Bool_t EventSelection::ProcessSelection()
         hSvc->FillHisto(hname,YWeighted , 1.);
         hname="ECal_y:xCog_1.5ns";
         hSvc->FillHisto2(hname, XWeighted, YWeighted, 1.);
-        
-        Double_t CoG= sqrt(XWeighted*XWeighted+YWeighted*YWeighted);
-        Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+3470*3470);
-        Double_t Px_1 = g1E*g1x/ R_1;
-        Double_t Py_1 = g1E*g1y/ R_1;
-        Double_t Pz_1 = g1E*3470/ R_1;
-        Double_t R_2 = sqrt(g2x*g2x+ g2y*g2y+3470*3470);
-        Double_t Px_2 = g2E*g2x/ R_2;
-        Double_t Py_2 = g2E*g2y/ R_2;
-        Double_t Pz_2 = g2E*3470/ R_2;
-         
-        TLorentzVector P4g1F,P4g2F,SumP;
-        P4g1F.SetPxPyPzE(Px_1,Py_1,Pz_1, g1E);
-        P4g2F.SetPxPyPzE(Px_2,Py_2,Pz_2,g2E);
-        SumP=P4g1F+P4g2F;
-        Double_t InvariantMass = SumP.M();
-        Double_t angleBetweenTwoPhoton = P4g1F.Angle(P4g2F.Vect());
          
         Double_t ImpactParameter = fabs(ecalclu->GetPosition().Y()-ecalclu->GetPosition().X()*((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X())))/sqrt(1+((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X()))*((ecalclu2->GetPosition().Y()-ecalclu->GetPosition().Y())/(ecalclu2->GetPosition().X()-ecalclu->GetPosition().X())));
         hname="ECAL_ImpactParameter_1.5ns";
          hSvc->FillHisto(hname, ImpactParameter, 1.);
-         
-        Double_t thetag1 = P4g1F.Theta();
-        Double_t thetag2 = P4g2F.Theta(); 
-        Double_t phig1 = P4g1F.Phi();
-        Double_t phig2 = P4g2F.Phi();
          
         Bool_t InFiducialRegion=false;
         if((fabs((g1x))>90. || fabs(g1y)>90.) && (fabs((g2x))>90. || fabs(g2y)>90. )) InFiducialRegion=true;
@@ -891,12 +997,11 @@ Bool_t EventSelection::ProcessSelection()
   hSvc->FillHisto(hname,NGGInTheSameEventTime3ns , 1.);
   hname="NGammaGammaForEvent_TimeRequest_DeltaPhi10Degree"; 
   hSvc->FillHisto(hname,NGGInTheSameEventDeltaPhi10_3ns , 1.);
-  hname="NGammaGammaForEvent_TimeRequest_DeltaPhi10Degree_EnergyInterval_InvariantMassInterval"; 
-  hSvc->FillHisto(hname,NGGInTheSameEventDeltaPhi10_EnergyInterval_InvariantMassInterval_3ns , 1.);
   hname="NGammaGammaForEvent_TimeRequest_CoG2cm";
   hSvc->FillHisto(hname,NGGInTheSameEventCoG2cm3ns , 1.);
 
   }
+  
    return retCode;
 }
 
@@ -1205,15 +1310,6 @@ void EventSelection::HistoInDeltaPhi5DegreeSecondMethod3nsDeltaTheta(Double_t g1
   hSvc->FillHisto(hname,g1E+g2E , 1.);
   hname="ECAL_InvariantMass_InDeltaPhi5Degree2Method_DeltaTheta_3ns";
   hSvc->FillHisto(hname, InvariantMass, 1.);
-}
-
-void EventSelection::HistoInDeltaPhi10DegreeSecondMethod3nsThrEnergy(Double_t g1E, Double_t g2E, Double_t InvariantMass){
-  std::string hname;
-  HistoSvc* hSvc =  HistoSvc::GetInstance();
-  hname="ECAL_gravTwoPhoton3ns_InDeltaPhi10Degree2Method_ThrEnergy";
-  hSvc->FillHisto(hname,g1E+g2E , 1.);
- // hname="ECAL_InvariantMass_InDeltaPhi10Degree2Method_3ns_ThrEnergy70MeV";
- // hSvc->FillHisto(hname, InvariantMass, 1.);
 }
 
 void EventSelection::HistoDeltaTheta_InDeltaPhi20Interval(Double_t angleBetweenTwoPhoton){

@@ -1,5 +1,6 @@
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "TRecoEvent.hh"
 #include "HistoSvc.hh"
 //#include "TString.hh"
 #include <iostream>
@@ -13,13 +14,15 @@ void CalibrateTimeECal   (double *timeOffset);
 */
 
 GlobalTimeAnalysis::GlobalTimeAnalysis(){
-  ;
+  fInitToComplete=true;
 }
 
 GlobalTimeAnalysis::~GlobalTimeAnalysis(){
   ;
 }
 Bool_t GlobalTimeAnalysis::Init(PadmeAnalysisEvent *event){
+
+  fInitToComplete=true; //some conditions will depend on data/mc or other conditions to be accessed at the first event
   fName = "GlobalTimeAnalysis";
   evt = event;
 
@@ -29,14 +32,9 @@ Bool_t GlobalTimeAnalysis::Init(PadmeAnalysisEvent *event){
   for (Int_t i=0; i<3000; ++i)  ftimeOffsetECal[i]   =0.;
   for (Int_t i=0; i<  50; ++i)  ftimeOffsetSAC[i]    =0.;
 
-  fMC=false;
-  if (evt->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fMC=true;
-  if (!fMC)
-    {
-      ApplyTimeCalibrationForData();
-    }
   
   if (fMode < 2) InitHistos();//active on standard analysis and validation mode 
+
   return true;
 }
 
@@ -85,7 +83,7 @@ Bool_t GlobalTimeAnalysis::InitHistos(){
 }
 
 
-#define ABS(x)  ((x) > 0 ? (x):(-x))
+//#define ABS(x)  ((x) > 0 ? (x):(-x))
 
 Bool_t GlobalTimeAnalysis::Process(){
 
@@ -94,13 +92,29 @@ Bool_t GlobalTimeAnalysis::Process(){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
 ////////Time Calibration
+  //std::cout<<" GetEventStatusBit = "<<evt->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
+  if (evt->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fMC=true;
 
+  fMC=false;
+  //std::cout<<" GetEventStatusBit = "<<evt->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
+  fMC = evt->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
+  if (fInitToComplete)
+    {
+      if (!fMC) ApplyTimeCalibrationForData();
+      fInitToComplete=false;
+    }
+
+
+  //  std::cout<<" in  GlobalTimeAnalysis::Process() fMode="<<fMode<<std::endl;
+  //  if (fMC) std::cout<<"fMC = true"<<std::endl;
+  //  else std::cout<<"fMC = false"<<std::endl;
 //PVeto
   
   for(int ipv = 0;ipv <  evt->PVetoRecoEvent->GetNHits(); ipv++) {
     int    chPV = evt->PVetoRecoEvent->Hit(ipv)->GetChannelId();
     double tPv1 = evt->PVetoRecoEvent->Hit(ipv)->GetTime()-ftimeOffsetPVeto[chPV];
-    double  ePv = evt->PVetoRecoEvent->Hit(ipv)->GetEnergy();    
+    double  ePv = evt->PVetoRecoEvent->Hit(ipv)->GetEnergy();   
+    //std::cout<<" ipv "<<ipv<<"/nVetoHits="<<evt->PVetoRecoEvent->GetNHits()<<" ch/e = "<<chPV<<"/"<<ePv<<std::endl;
     hSvc->FillHisto2("PVeto_PH_vs_chId",chPV,ePv,1);
     
     if(ePv < 30. && (!fMC) ) continue;

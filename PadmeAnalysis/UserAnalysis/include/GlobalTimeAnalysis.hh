@@ -29,6 +29,7 @@ public:
   Bool_t Finalize(){return true;}
 
 private:
+  Bool_t fInitToComplete;
   TString fName;
   int fMode;
   int fVerbosity;

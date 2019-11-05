@@ -155,10 +155,14 @@ Bool_t EventSelection::ProcessAnalysis()
   Double_t xTime, xTimeLinCorr, yTime, xEne, yEne, aEne, aTime;
   Int_t xChId, yChId, aChId;
 
-  /*
-  if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) std::cout<<"input data are simulatetd "<<std::endl;
-  else std::cout<<"input data are NOT simulated "<<std::endl;
-  */
+  Bool_t isMC=false;
+  //std::cout<<"in ProcessAnalysis ... evsel ... "<<fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
+  if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
+    isMC=true;
+    //std::cout<<"input data are simulatetd "<<std::endl;
+  }
+  //else std::cout<<"input data are NOT simulated "<<std::endl;
+  
       
   Double_t eSumECalHits=0.;
   Double_t xEnergy=0;

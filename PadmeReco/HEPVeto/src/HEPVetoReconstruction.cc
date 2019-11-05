@@ -138,7 +138,7 @@ void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent
     //digit Id increases with decreasing z; for recoHits chId increases with increasing z 
     if (chId<16) chId = 15-chId;
     else  chId = 47-chId;
-    Hit->SetChannelId(digi->GetChannelId());
+    Hit->SetChannelId(chId);
     Hit->SetEnergy(digi->GetEnergy());
     Hit->SetTime(digi->GetTime());
     Hit->SetPosition(TVector3(0.,0.,0.)); 

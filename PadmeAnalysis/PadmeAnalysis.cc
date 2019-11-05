@@ -35,6 +35,7 @@
 #include "HEPVetoAnalysis.hh"
 #include "EventSelection.hh"
 #include "UserAnalysis.hh"
+#include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
 
 void usage(char* name){
@@ -360,8 +361,10 @@ int main(Int_t argc, char **argv)
     event->EVetoRecoCl          =fEVetoRecoCl        ;
     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
     UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+    GlobalTimeAnalysis *gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
     UserAn->Init(event);
-
+    gTimeAn->Init(event);
+    
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
    Int_t nPVetoHits  =0;  
@@ -415,6 +418,7 @@ int main(Int_t argc, char **argv)
        hepvetoAn   ->Process();
        evSel       ->Process();
        UserAn      ->Process();
+       gTimeAn     ->Process();
 
        //
        //

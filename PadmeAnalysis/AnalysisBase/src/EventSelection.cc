@@ -15,6 +15,7 @@
 EventSelection::EventSelection()
 {
   fVersion=0;
+  fInitToComplete=true;
   
   fRecoEvent   = NULL;
 
@@ -39,11 +40,11 @@ EventSelection::EventSelection()
   fProcessingMode = 0;
   fVerbose        = 0;
 
-  InitTimePVeto  () ;
-  InitTimeEVeto  () ;
-  InitTimeHEPVeto() ;
-  InitTimeSAC    () ;
-  InitTimeECal   () ;
+  InitTimeCalPVeto  () ;
+  InitTimeCalEVeto  () ;
+  InitTimeCalHEPVeto() ;
+  InitTimeCalSAC    () ;
+  InitTimeCalECal   () ;
 
 }
 EventSelection::EventSelection(Int_t processingMode, Int_t verbosityFlag)
@@ -53,11 +54,13 @@ EventSelection::EventSelection(Int_t processingMode, Int_t verbosityFlag)
   fProcessingMode = processingMode;
   fVerbose        = verbosityFlag;
 
-  InitTimePVeto  () ;
-  InitTimeEVeto  () ;
-  InitTimeHEPVeto() ;
-  InitTimeSAC    () ;
-  InitTimeECal   () ;
+  InitTimeCalPVeto  () ;
+  InitTimeCalEVeto  () ;
+  InitTimeCalHEPVeto() ;
+  InitTimeCalSAC    () ;
+  InitTimeCalECal   () ;
+  fInitToComplete=true;
+
 
 }
 EventSelection::~EventSelection()
@@ -94,13 +97,10 @@ Bool_t EventSelection::Init(TRecoEvent* eventHeader,
   fTarget_RecoBeam  =TargetBeam ;
   fHEPVeto_ClColl   =HEPVetocl ;
 
-  
-  CalibrateTimePVeto  () ;
-  CalibrateTimeEVeto  () ;
-  CalibrateTimeHEPVeto() ;
-  CalibrateTimeSAC    () ;
-  CalibrateTimeECal   () ;
 
+  
+
+  
   return true;
 }
 /*
@@ -170,8 +170,36 @@ Bool_t EventSelection::ProcessValidation()
   return ProcessValidation(fAlgoName);
 }
 */
+void EventSelection::CalibrateTimeAndEnergy()
+{
+
+  Bool_t isMC=false;
+  //std::cout<<"in ProcessAnalysis ... evsel ... "<<fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
+  if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
+    isMC=true;
+    //std::cout<<"input data are simulatetd "<<std::endl;
+  }
+  if (fInitToComplete) {
+    SetCalibTimePVeto  (isMC) ;
+    SetCalibTimeEVeto  (isMC) ;
+    SetCalibTimeHEPVeto(isMC) ;
+    SetCalibTimeSAC    (isMC) ;
+    SetCalibTimeECal   (isMC) ;
+  }
+  fInitToComplete=false;
+
+  ApplyCalibTimePVeto  ();
+  ApplyCalibTimeEVeto  ();
+  ApplyCalibTimeHEPVeto();
+  ApplyCalibTimeSAC    ();
+  ApplyCalibTimeECal   ();
+  return;
+  
+}
 Bool_t EventSelection::ProcessAnalysis()
-{  
+{
+  CalibrateTimeAndEnergy();
+
   if (fVersion==1)
     {
       return ProcessAnalysisSS();
@@ -699,7 +727,7 @@ Bool_t EventSelection::Proc_HEPVeto_vs_PVeto(Bool_t isMC)
 	  xChIdHEPVeto = xCluHEPVeto->GetChannelId();
 	  xTimeHEPVeto = xCluHEPVeto->     GetTime(); 
 	  xEneHEPVeto  = xCluHEPVeto->   GetEnergy();
-	  if(isMC){xTimeHEPVeto -= 8.5+2.64-5.27;} else{xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];}  
+	  //xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];
 	  PosHEP = xCluHEPVeto-> GetPosition()        ; 
 	  //if(fabs(xTime-xTimeHEPVeto-7*0+15*0+1)<2)hSvc->FillHisto2("ECal1Cl_E_vs_HEPVetoChId", xChIdHEPVeto,  xEne);
 	  //if(fabs(xTime-xTimeHEPVeto-7*0+15*0+1)<2)hSvc->FillHisto2("ECal1Cl_E_vs_HEPVetoPosz", PosHEP.z(),  xEne);
@@ -721,7 +749,7 @@ Bool_t EventSelection::Proc_HEPVeto_vs_PVeto(Bool_t isMC)
 		  xChIdHEPVeto1 = xCluHEPVeto1->GetChannelId();
 		  xTimeHEPVeto1 = xCluHEPVeto1->     GetTime(); 
 		  xEneHEPVeto1  = xCluHEPVeto1->   GetEnergy();
-		  if(isMC){xTimeHEPVeto1 -= 8.5+2.64-5.27;} else{xTimeHEPVeto1 -= fTimeOffsetHEPVeto[xChIdHEPVeto1];} 
+		  //xTimeHEPVeto1 -= fTimeOffsetHEPVeto[xChIdHEPVeto1]; 
 
  		  //if(xChIdHEPVeto<16 && xChIdHEPVeto1 << 16)hSvc->FillHisto("HEPVeto2Cl_DeltaTime", xTimeHEPVeto1-xTimeHEPVeto );                 
  		  if(xChIdHEPVeto < 16 && xChIdHEPVeto1 < 16)hSvc->FillHisto("HEPVeto2Cl_DeltaTime", xTimeHEPVeto1-xTimeHEPVeto );                 
@@ -748,14 +776,14 @@ Bool_t EventSelection::Proc_HEPVeto_vs_PVeto(Bool_t isMC)
 	       
 
 		  xChIdPVeto       = xCluPVeto->GetChannelId()   ;
-		  xTimePVeto       = xCluPVeto->     GetTime()   ; if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto]; }
+		  xTimePVeto       = xCluPVeto->     GetTime()   ; //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto]; 
 		  PosPVeto         = xCluPVeto-> GetPosition()   ; 
 		  xEnePVeto        = xCluPVeto->   GetEnergy()   ;
 
                  
-		  if(isMC){hSvc->FillHisto("HEPVeto_T_vs_PVeto",xTimeHEPVeto-xTimePVeto);} else{hSvc->FillHisto("HEPVeto_T_vs_PVeto",xTimeHEPVeto-xTimePVeto + 3); }
+		  if(isMC){hSvc->FillHisto("HEPVeto_T_vs_PVeto",xTimeHEPVeto-xTimePVeto);} else{hSvc->FillHisto("HEPVeto_T_vs_PVeto",xTimeHEPVeto-xTimePVeto); }
 
-		  if((fabs(xTimeHEPVeto-xTimePVeto + 3)<1)&&isMC==0){
+		  if((fabs(xTimeHEPVeto-xTimePVeto)<1)&&isMC==0){
 		    hSvc->FillHisto2("HEPVetoChId_vs_PVetoChId",xChIdPVeto,xChIdHEPVeto);
 
 		    hSvc->FillHisto2("HEPVetoPosZ_vs_PVetoPosZ",PosPVeto.Z(),PosHEP.Z());
@@ -815,7 +843,7 @@ Bool_t EventSelection::Proc_SAChit_vs_PVeto(Bool_t isMC)
       yChId = yHit->GetChannelId()    ;
       if (yHit->GetChannelId()!=21) continue;
 
-      yTime= yHit->GetTime()  ; if(isMC){yTime -= 8.5;} else{yTime -= fTimeOffsetSAC[yChId];}
+      yTime= yHit->GetTime()  ; //yTime -= fTimeOffsetSAC[yChId];
       xEne = yHit->GetEnergy() ; 
 	  
       //Search for PVeto cluster in time          
@@ -826,7 +854,7 @@ Bool_t EventSelection::Proc_SAChit_vs_PVeto(Bool_t isMC)
 	    {
 	       
 	      xChIdPVeto = xCluPVeto->GetChannelId();
-	      xTimePVeto = xCluPVeto->     GetTime();if(isMC){;} else{ xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+	      xTimePVeto = xCluPVeto->     GetTime(); //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 	      //ss modified hSvc->FillHisto("SAC_21_PVeto_DeltaTime",xTime-yTime);
 	      hSvc->FillHisto("SAC_21_PVeto_DeltaTime",xTimePVeto-yTime);
 	      if(fabs(xTimePVeto-yTime)<1)hSvc->FillHisto2("SAC1Hit_E_vs_PVetoChId", xChIdPVeto,  xEne);
@@ -842,7 +870,7 @@ Bool_t EventSelection::Proc_SAChit_vs_PVeto(Bool_t isMC)
 	    {
 	       
 	      xChIdPVeto = xHit->GetChannelId();
-	      xTimePVeto = xHit->     GetTime(); if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+	      xTimePVeto = xHit->     GetTime(); //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 	      //ss modified hSvc->FillHisto("SAC_21_PVeto_DeltaTime_Hit",xTime-yTime);
 	      hSvc->FillHisto("SAC_21_PVeto_DeltaTime_Hit",xTimePVeto-yTime);
 	      if(fabs(xTimePVeto-yTime)<1)hSvc->FillHisto2("SAC1Hit_E_vs_PVetoChId_Hit", xChIdPVeto,  xEne);
@@ -889,17 +917,18 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
   TVector3 PosSAC  ;
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
-  
+
+  //std::cout<<" in proc_"<<std::endl;
   //SAC Cluster 1
   for (int hSAC=0; hSAC<fSAC_ClColl->GetNElements(); ++hSAC)
     {
-      //std::cout<<" cluster n. hSAC = "<<hSAC<<" pointer to collection = "<<(long)fSAC_ClColl<<std::endl;
+      //std::cout<<" cluster n. hSAC = "<<hSAC<<" pointer to collection = "<<(long)fSAC_ClColl<<" out of "<<fSAC_ClColl->GetNElements()<<std::endl;
       xClu = fSAC_ClColl->Element((int)hSAC);
       if (xClu) 
 	{
 	  xChId  = xClu->GetChannelId()        ;
 	  xEne   = xClu->   GetEnergy()        ; 
-	  xTime  = xClu->     GetTime()        ; if(isMC){xTime -= 8.5;} else{ xTime -= fTimeOffsetSAC[xChId];}
+	  xTime  = xClu->     GetTime()        ; //xTime -= fTimeOffsetSAC[xChId];
 	  PosSAC = xClu-> GetPosition()   ;
 	  hSvc->FillHisto("SACCl_E", xEne ); 
 
@@ -915,7 +944,7 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 	      if (xCluSAC1) 
 		{
 		  xChIdSAC1       = xCluSAC1->  GetChannelId() ;
-		  xTimeSAC1       = xCluSAC1->     GetTime()   ; if(isMC){;} else{xTimeSAC1 -= fTimeOffsetSAC[xChIdSAC1];} 
+		  xTimeSAC1       = xCluSAC1->     GetTime()   ; //xTimeSAC1 -= fTimeOffsetSAC[xChIdSAC1];
                 
 		  hSvc->FillHisto("SAC2Cl_DeltaTime",xTime-xTimeSAC1); 
                 
@@ -936,7 +965,7 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdEVeto       = xCluEVeto->GetChannelId()   ;
-		  xTimeEVeto       = xCluEVeto->     GetTime()   ; if(isMC){;} else{xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];}
+		  xTimeEVeto       = xCluEVeto->     GetTime()   ; //xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];
 		  Pos              = xCluEVeto-> GetPosition()   ;
 		  xEneEVeto        = xCluEVeto->   GetEnergy()   ;
                 
@@ -960,15 +989,16 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdPVeto       = xCluPVeto->GetChannelId()   ;
-		  xTimePVeto       = xCluPVeto->     GetTime()   ; if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+		  xTimePVeto       = xCluPVeto->     GetTime()   ; //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 		  Pos              = xCluPVeto-> GetPosition()   ;
 		  xEnePVeto        = xCluPVeto->   GetEnergy()   ;
                 
 		  //xTime = xTime + Double_t(4.0);
-		  hSvc->FillHisto("SAC1Cl_PVeto_DeltaTime",xTime-xTimePVeto-1);
+		  hSvc->FillHisto("SAC1Cl_PVeto_DeltaTime",xTime-xTimePVeto);
 		  Double_t Momentum = VetoMomentum(      Pos.z()    );  hSvc->FillHisto2("VetoMomentum_vs_z",    Pos.z(),     Momentum     );	
-		  if(fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)<1){
+		  if(fabs(xTime-xTimePVeto)<1){
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId"     , xChIdPVeto,         xEne);
+		    //std::cout<<" do we come here "<<std::endl;
 		    hSvc->FillHisto2("PVetoE_vs_PVetoChId"       , xChIdPVeto,    xEnePVeto);
 		    hSvc->FillHisto2("PVetoT_vs_PVetoChId"       , xChIdPVeto,   xTimePVeto);
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoPosz"     ,    Pos.z(),         xEne);
@@ -984,13 +1014,13 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		
 		    if(PosSAC.x()<-0.15) hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_Xm"       , xChIdPVeto,    xEne);
 		  }
-		  else if(   (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)>2)  &&    (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)<3) ){
+		  else if(   (fabs(xTime-xTimePVeto)>2)  &&    (fabs(xTime-xTimePVeto)<3) ){
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_OutOfTime"     , xChIdPVeto,         xEne); 		 
 		  }
-		  else if(   (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)>-3)  &&    (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)<-2)){
+		  else if(   (fabs(xTime-xTimePVeto)>-3)  &&    (fabs(xTime-xTimePVeto)<-2)){
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_OutOfTime"     , xChIdPVeto,         xEne); 		 
 		  }
-		  else if(   (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)>2+1)  &&    (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)<3+1) ){
+		  else if(   (fabs(xTime-xTimePVeto)>2+1)  &&    (fabs(xTime-xTimePVeto)<3+1) ){
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_OutOfTime3"     , xChIdPVeto,         xEne); 
 		    hSvc->FillHisto2("SAC1Cl_E_vs_VetoMomentum_OutOfTime3",     Momentum ,   xEne  );	 
 		    hSvc->FillHisto("SAC1Cl_Plus_VetoMomentum_OutOfTime3",     Momentum +   xEne  );
@@ -999,7 +1029,7 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		    hSvc->FillHisto2("SAC1Cl_X_vs_Z_OutOfTime3"             ,    Pos.z(),      PosSAC.x());
 		    if(PosSAC.x()<-0.15) hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_Xm_OutOfTime3"       , xChIdPVeto,    xEne);	 		 
 		  }
-		  else if(   (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)>-3-1)  &&    (fabs(xTime-xTimePVeto+1.8*0+1.*0-6.7*0-1)<-2-1)){
+		  else if(   (fabs(xTime-xTimePVeto)>-3-1)  &&    (fabs(xTime-xTimePVeto)<-2-1)){
 		    hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_OutOfTime3"     , xChIdPVeto,         xEne); 
 		    hSvc->FillHisto2("SAC1Cl_E_vs_VetoMomentum_OutOfTime3",     Momentum ,   xEne  );	 
 		    hSvc->FillHisto("SAC1Cl_Plus_VetoMomentum_OutOfTime3",     Momentum +   xEne  );
@@ -1024,7 +1054,7 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdPVeto = xCluPVeto->GetChannelId();
-		  xTimePVeto = xCluPVeto->     GetTime(); if(isMC){xTimePVeto -= 8.5+2.64-5.27;} else{xTimePVeto -= fTimeOffsetHEPVeto[xChIdPVeto];}
+		  xTimePVeto = xCluPVeto->     GetTime(); //xTimePVeto -= fTimeOffsetHEPVeto[xChIdPVeto];
 		  PosHEP     =xCluPVeto-> GetPosition()   ; 
                
 
@@ -1071,9 +1101,9 @@ Bool_t EventSelection::Proc_SACclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdPVeto = xHit->GetChannelId();
-		  xTimePVeto = xHit->     GetTime(); if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+		  xTimePVeto = xHit->     GetTime(); //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 		  hSvc->FillHisto("SAC1Cl_PVeto_DeltaTime_Hit",xTime-xTimePVeto);
-		  if(fabs(xTime-xTimePVeto+1.8*0+1.*0)<1)hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_Hit", xChIdPVeto,  xEne);
+		  if(fabs(xTime-xTimePVeto)<1)hSvc->FillHisto2("SAC1Cl_E_vs_PVetoChId_Hit", xChIdPVeto,  xEne);
 		}
 	    }//end of loop on PVeto Hits
 	}
@@ -1127,7 +1157,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 	{
 	  xEne   = xClu->   GetEnergy()        ;
 	  xChId  = xClu->GetChannelId()        ;
-	  xTime  = xClu->     GetTime()        ;if(isMC){xTime -= 6.7;} else{xTime -= fTimeOffsetECal[xChId];}
+	  xTime  = xClu->     GetTime()        ;//xTime -= fTimeOffsetECal[xChId];
 	  Pos    = xClu-> GetPosition()        ; 
 
 	  hSvc->FillHisto("ECalCl_E", xEne );
@@ -1146,9 +1176,9 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 	       
 		  PosPVeto              = xCluPVeto-> GetPosition()   ; 
 		  xChIdPVeto = xCluPVeto->GetChannelId();
-		  xTimePVeto = xCluPVeto->     GetTime(); if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}                
+		  xTimePVeto = xCluPVeto->     GetTime(); //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 		  hSvc->FillHisto("ECal1Cl_PVeto_DeltaTime",xTime-xTimePVeto);
-		  if(fabs(xTime-xTimePVeto-7*0+15*0-1+13)<1) {
+		  if(fabs(xTime-xTimePVeto)<1) {
 		    hSvc->FillHisto2 ("ECal1Cl_E_vs_PVetoChId",xChIdPVeto,xEne);
 		    PVetoInTimePhoton = true ;
 		    Double_t Momentum = VetoMomentum(      PosPVeto.z()    );
@@ -1187,8 +1217,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdPVeto = xCluPVeto->GetChannelId();
-		  xTimePVeto = xCluPVeto->     GetTime(); 
-		  if(isMC){xTimePVeto -= 8.5+2.64-5.27;} else{xTimePVeto -= fTimeOffsetHEPVeto[xChIdPVeto];}                
+		  xTimePVeto = xCluPVeto->     GetTime(); //xTimePVeto -= fTimeOffsetHEPVeto[xChIdPVeto];              
 		  hSvc->FillHisto("ECal1Cl_HEPVeto_DeltaTime",xTime-xTimePVeto);
 		  PosHEP = xCluPVeto-> GetPosition()        ; 
 		  if(fabs(xTime-xTimePVeto-7*0+15*0+1)<2)hSvc->FillHisto2("ECal1Cl_E_vs_HEPVetoChId", xChIdPVeto,  xEne);
@@ -1208,12 +1237,11 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 		{
 	       
 		  xChIdEVeto = xCluEVeto->GetChannelId();
-		  xTimeEVeto = xCluEVeto->     GetTime(); 
-		  if(isMC){xTimeEVeto -= 8.5+2.64-5.27;}else{xTimeEVeto -=fTimeOffsetEVeto[xChIdEVeto];}                
+		  xTimeEVeto = xCluEVeto->     GetTime(); //xTimeEVeto -=fTimeOffsetEVeto[xChIdEVeto];
 		  hSvc->FillHisto("ECal1Cl_EVeto_DeltaTime",xTime-xTimeEVeto);
 		  PosEVeto = xCluEVeto-> GetPosition()        ; 
-		  if(fabs(xTime-xTimeEVeto-7*0+15*0+1*0)<2)hSvc->FillHisto2("ECal1Cl_E_vs_EVetoChId",   xChIdEVeto,  xEne);
-		  if(fabs(xTime-xTimeEVeto-7*0+15*0+1*0)<2)hSvc->FillHisto2("ECal1Cl_E_vs_EVetoPosz", PosEVeto.z(),  xEne);
+		  if(fabs(xTime-xTimeEVeto)<2)hSvc->FillHisto2("ECal1Cl_E_vs_EVetoChId",   xChIdEVeto,  xEne);
+		  if(fabs(xTime-xTimeEVeto)<2)hSvc->FillHisto2("ECal1Cl_E_vs_EVetoPosz", PosEVeto.z(),  xEne);
 		}
 
 	    }      
@@ -1228,7 +1256,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 		{
 		  xEne1  = xClu1->   GetEnergy()        ;
 		  xChId1 = xClu1->GetChannelId()        ;
-		  xTime1 = xClu1->     GetTime()        ; if(isMC){xTime1 -= 6.7;} else{xTime1 -= fTimeOffsetECal[xChId1];}
+		  xTime1 = xClu1->     GetTime()        ; //xTime1 -= fTimeOffsetECal[xChId1];
 		  Pos1   = xClu1-> GetPosition()        ; 
 
             
@@ -1268,7 +1296,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 			{
 	       
 			  xChIdPVeto = xCluPVeto->GetChannelId();
-			  xTimePVeto = xCluPVeto->     GetTime(); if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+			  xTimePVeto = xCluPVeto->     GetTime(); // xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 
 			  if(fabs(xTime-xTimePVeto)<1) PVetoInTime = true ;	
 			  if(xEne>25. && xEne1>25. && fabs(DeltaTime)<1. && fabs(CosDeltaPhi+1)<0.003  )
@@ -1287,7 +1315,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
 			{
 	       
 			  xChIdEVeto = xCluEVeto->GetChannelId();
-			  xTimeEVeto = xCluEVeto->     GetTime(); if(isMC){;} else{xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];}
+			  xTimeEVeto = xCluEVeto->     GetTime(); //xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];
 			  if(fabs(xTime-xTimeEVeto)<1) EVetoInTime = true ;
 			  if(xEne>25. && xEne1>25. && fabs(DeltaTime)<1. && fabs(CosDeltaPhi+1)<0.003  )
 			    hSvc->FillHisto2("ECal2Cl_InvM_vs_DeltaTimeEVeto", xTime-xTimeEVeto, Minv );
@@ -1348,7 +1376,7 @@ Bool_t EventSelection::Proc_ECalclu_vs_all(Bool_t isMC)
             
 		  xChId1 = xClu1->GetChannelId()        ;
 		  xEne1  = xClu1->   GetEnergy()        ;
-		  xTime1 = xClu1->     GetTime()        ; if(isMC){xTime1 -= 8.5;} else{xTime1 -= fTimeOffsetSAC[xChId1];}
+		  xTime1 = xClu1->     GetTime()        ; //xTime1 -= fTimeOffsetSAC[xChId1];
 		  Pos1   = xClu1-> GetPosition()        ; 
 
              
@@ -1449,7 +1477,7 @@ Bool_t EventSelection::Proc_PVetoclu_vs_AllVetos(Bool_t isMC)
 	       
 
 	  xChIdPVeto       = xCluPVeto->GetChannelId()   ;
-	  xTimePVeto       = xCluPVeto->     GetTime()   ; if(isMC){;} else{xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];}
+	  xTimePVeto       = xCluPVeto->     GetTime()   ;  //xTimePVeto -= fTimeOffsetPVeto[xChIdPVeto];
 	  PosPVeto = xCluPVeto-> GetPosition()        ; 
 		 
 	  xEnePVeto        = xCluPVeto->   GetEnergy()   ;
@@ -1478,7 +1506,7 @@ Bool_t EventSelection::Proc_PVetoclu_vs_AllVetos(Bool_t isMC)
 		{
 	       
 		  xChIdEVeto       = xCluEVeto->GetChannelId()   ;
-		  xTimeEVeto       = xCluEVeto->     GetTime()   ; if(isMC){;} else{xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];}
+		  xTimeEVeto       = xCluEVeto->     GetTime()   ; //xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];
 		  PosEVeto         = xCluEVeto-> GetPosition()   ;
 		  xEneEVeto        = xCluEVeto->   GetEnergy()   ;
 
@@ -1505,7 +1533,7 @@ Bool_t EventSelection::Proc_PVetoclu_vs_AllVetos(Bool_t isMC)
 			  {
 			    xChId  = xClu->GetChannelId()        ;
 			    xEne   = xClu->   GetEnergy()        ; 
-			    xTime  = xClu->     GetTime()        ; if(isMC){xTime -= 8.5;} else{ xTime -= fTimeOffsetSAC[xChId];}
+			    xTime  = xClu->     GetTime()        ; //xTime -= fTimeOffsetSAC[xChId];
                                  
 			    hSvc->FillHisto2("SAC_PVeto_EVeto_Msum_vs_DeltaTime",xTimePVeto-xTime, MomentumPVeto+MomentumEVeto+xEne);
 
@@ -1528,7 +1556,7 @@ Bool_t EventSelection::Proc_PVetoclu_vs_AllVetos(Bool_t isMC)
 	      if (xCluPVeto1) 
 		{
 		  xChIdPVeto1       = xCluPVeto1->GetChannelId()   ;
-		  xTimePVeto1       = xCluPVeto1->     GetTime()   ; if(isMC){;} else{xTimePVeto1 -= fTimeOffsetPVeto[xChIdPVeto1];}
+		  xTimePVeto1       = xCluPVeto1->     GetTime()   ; //xTimePVeto1 -= fTimeOffsetPVeto[xChIdPVeto1];
 			 
 		  hSvc->FillHisto("PVeto2Cl_DeltaTime",xTimePVeto-xTimePVeto1);                    
                 
@@ -1546,7 +1574,7 @@ Bool_t EventSelection::Proc_PVetoclu_vs_AllVetos(Bool_t isMC)
 	      if (xCluHEPVeto) 
 		{
 		  xChIdHEPVeto       = xCluHEPVeto->GetChannelId()   ;
-		  xTimeHEPVeto       = xCluHEPVeto->     GetTime()   ; if(isMC){;} else{xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];}
+		  xTimeHEPVeto       = xCluHEPVeto->     GetTime()   ; //xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];
 			 
 		  hSvc->FillHisto("PVeto1Cl_HEPVeto_DeltaTime",xTimePVeto-xTimeHEPVeto);                    
                 
@@ -1604,7 +1632,7 @@ Bool_t EventSelection::Proc_EVetoclu_vs_HEPVeto(Bool_t isMC)
 	{
 	       
 	  xChIdEVeto       = xCluEVeto->GetChannelId()   ;
-	  xTimeEVeto       = xCluEVeto->     GetTime()   ; if(isMC){;} else{xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];}
+	  xTimeEVeto       = xCluEVeto->     GetTime()   ; //xTimeEVeto -= fTimeOffsetEVeto[xChIdEVeto];
 	  PosEVeto         = xCluEVeto-> GetPosition()   ;
 	  xEneEVeto        = xCluEVeto->   GetEnergy()   ;
 
@@ -1620,7 +1648,7 @@ Bool_t EventSelection::Proc_EVetoclu_vs_HEPVeto(Bool_t isMC)
 	      if (xCluEVeto1) 
 		{
 		  xChIdEVeto1       = xCluEVeto1->GetChannelId()   ;
-		  xTimeEVeto1       = xCluEVeto1->     GetTime()   ; if(isMC){;} else{xTimeEVeto1 -= fTimeOffsetEVeto[xChIdEVeto1];}
+		  xTimeEVeto1       = xCluEVeto1->     GetTime()   ; //xTimeEVeto1 -= fTimeOffsetEVeto[xChIdEVeto1];
 			 
 		  hSvc->FillHisto("EVeto2Cl_DeltaTime",xTimeEVeto-xTimeEVeto1);                    
                 
@@ -1638,7 +1666,7 @@ Bool_t EventSelection::Proc_EVetoclu_vs_HEPVeto(Bool_t isMC)
 	      if (xCluHEPVeto) 
 		{
 		  xChIdHEPVeto       = xCluHEPVeto->GetChannelId()   ; 
-		  xTimeHEPVeto       = xCluHEPVeto->     GetTime()   ; if(isMC){;} else{xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];}
+		  xTimeHEPVeto       = xCluHEPVeto->     GetTime()   ; //xTimeHEPVeto -= fTimeOffsetHEPVeto[xChIdHEPVeto];
 			 
 		  hSvc->FillHisto("EVeto1Cl_HEPVeto_DeltaTime",xTimeEVeto-xTimeHEPVeto);                    
                 
@@ -1661,7 +1689,8 @@ Bool_t EventSelection::ProcessAnalysisGC()
     isMC=true;
     //std::cout<<"input data are simulatetd "<<std::endl;
   }
-
+  //std::cout<<"input data are not simulatetd "<<std::endl;
+  
   TRecoVHit*             xHit;
   TRecoVHit*             yHit;
   TRecoVCluster*         xClu;
@@ -1768,24 +1797,23 @@ Bool_t EventSelection::ProcessAnalysisGC()
 
 
   // HEPVeto cluster vs HEPVeto and vs PVeto 
-  return Proc_HEPVeto_vs_PVeto(isMC);
+  Proc_HEPVeto_vs_PVeto(isMC);
 
   // SAC cluster vs SAC and vs all 
-  return Proc_SACclu_vs_all(isMC);
+  Proc_SACclu_vs_all(isMC);
 
   // SAC hit vs PVeto hit and cluster 
-  return Proc_SAChit_vs_PVeto(isMC);
+  Proc_SAChit_vs_PVeto(isMC);
 
   // ECal cluster vs all
-  return Proc_ECalclu_vs_all(isMC);
-
+  Proc_ECalclu_vs_all(isMC);
 
   // PVeto Clusters
-  return Proc_PVetoclu_vs_AllVetos(isMC);
+  Proc_PVetoclu_vs_AllVetos(isMC);
                 
 
   //EVeto
-  return Proc_EVetoclu_vs_HEPVeto(isMC);
+  Proc_EVetoclu_vs_HEPVeto(isMC);
                 
   return true;
 }
@@ -2750,5 +2778,157 @@ Double_t EventSelection::CosDeltaPhiECal(TVector3 V1, TVector3 V2){
   
 
   return  CosDeltaPhi ;
+
+}
+
+void EventSelection::SetCalibTimePVeto  (Bool_t isMC)
+{
+  if (isMC)
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetPVeto[i] = -3.;
+    }
+  else // DATA
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetPVeto[i] = 0.;
+    }
+  
+  return;
+}
+void EventSelection::SetCalibTimeEVeto  (Bool_t isMC)
+{
+  if (isMC)
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetEVeto[i] = 0;
+    }
+  else // DATA
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetEVeto[i] = 0.;
+    }
+  
+  return;
+}
+void EventSelection::SetCalibTimeHEPVeto(Bool_t isMC)
+{
+  if (isMC)
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetHEPVeto[i] = 8.5+2.64-5.27;
+    }
+  else // DATA
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetHEPVeto[i] = 0.;
+    }
+  
+  return;
+}
+void EventSelection::SetCalibTimeSAC    (Bool_t isMC)
+{
+    if (isMC)
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetSAC[i] = 8.5;
+    }
+  else // DATA
+    {
+      for(int i=0;i!=16;i++)fTimeOffsetSAC[i] = 0.;
+    }
+  
+  return;
+}
+void EventSelection::SetCalibTimeECal   (Bool_t isMC)
+{
+  if (isMC)
+    {
+      for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=6.7;
+    }
+  else
+    {
+      for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=22.74*0;
+    }
+}
+
+void EventSelection::ApplyCalibTimePVeto  ()
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fPVeto_ClColl->GetNElements(); ++h)
+    {
+      xClu = fPVeto_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetPVeto[xChId]);
+	}
+    }
+  return;
+}
+void EventSelection::ApplyCalibTimeEVeto  ()
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fEVeto_ClColl->GetNElements(); ++h)
+    {
+      xClu = fEVeto_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetEVeto[xChId]);
+	}
+    }
+  return;
+}
+void EventSelection::ApplyCalibTimeHEPVeto()
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fHEPVeto_ClColl->GetNElements(); ++h)
+    {
+      xClu = fHEPVeto_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetHEPVeto[xChId]);
+	}
+    }
+  return;
+
+}
+void EventSelection::ApplyCalibTimeSAC    ()
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fSAC_ClColl->GetNElements(); ++h)
+    {
+      xClu = fSAC_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetSAC[xChId]);
+	}
+    }
+  return;
+}
+void EventSelection::ApplyCalibTimeECal   ()
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fECal_ClColl->GetNElements(); ++h)
+    {
+      xClu = fECal_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetECal[xChId]);
+	}
+    }
+  return;
 
 }

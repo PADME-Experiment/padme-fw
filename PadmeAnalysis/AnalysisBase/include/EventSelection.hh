@@ -47,16 +47,30 @@ public:
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& distR, double& distPhi, double& b);
   Double_t applyTimePVetoLinCorr(Double_t  xChId, Double_t xTime);
   
-  void InitTimePVeto  () {for(int i=0;i!=16;i++)fTimeOffsetPVeto[i]=0.;}
-  void InitTimeEVeto  () {for(int i=0;i!=16;i++)fTimeOffsetEVeto[i]=0.;}
-  void InitTimeHEPVeto() {for(int i=0;i!=32;i++)fTimeOffsetHEPVeto[i]=0.;}
-  void InitTimeSAC    () {for(int i=0;i!=50;i++)fTimeOffsetSAC[i]=0.;}
-  void InitTimeECal   () {for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=0.;}
-  void CalibrateTimePVeto  () {;}
-  void CalibrateTimeEVeto  () {;}
-  void CalibrateTimeHEPVeto() {;}
-  void CalibrateTimeSAC    () {;}
-  void CalibrateTimeECal   () {for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=22.74*0;}
+  void InitTimeCalPVeto  () {for(int i=0;i!=16;i++)fTimeOffsetPVeto[i]=0.;}
+  void InitTimeCalEVeto  () {for(int i=0;i!=16;i++)fTimeOffsetEVeto[i]=0.;}
+  void InitTimeCalHEPVeto() {for(int i=0;i!=32;i++)fTimeOffsetHEPVeto[i]=0.;}
+  void InitTimeCalSAC    () {for(int i=0;i!=50;i++)fTimeOffsetSAC[i]=0.;}
+  void InitTimeCalECal   () {for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=0.;}
+  void CalibrateTimeAndEnergy();
+  void CalibrateTimePVeto  (Bool_t isMC);
+  void CalibrateTimeEVeto  (Bool_t isMC);
+  void CalibrateTimeHEPVeto(Bool_t isMC);
+  void CalibrateTimeSAC    (Bool_t isMC);
+  void CalibrateTimeECal   (Bool_t isMC);
+
+  void SetCalibTimePVeto  (Bool_t isMC);
+  void SetCalibTimeEVeto  (Bool_t isMC);
+  void SetCalibTimeHEPVeto(Bool_t isMC);
+  void SetCalibTimeSAC    (Bool_t isMC);
+  void SetCalibTimeECal   (Bool_t isMC);
+
+  void ApplyCalibTimePVeto  ();
+  void ApplyCalibTimeEVeto  ();
+  void ApplyCalibTimeHEPVeto();
+  void ApplyCalibTimeSAC    ();
+  void ApplyCalibTimeECal   ();
+  
 
   Double_t InvariantDECal(TVector3 V1, TVector3 V2, Double_t E1, Double_t E2);
   Double_t InvariantMassECal(TVector3 V1, TVector3 V2, Double_t E1, Double_t E2);
@@ -95,6 +109,7 @@ protected:
   Int_t    fVerbose;
   Int_t    fProcessingMode;
 
+  Bool_t fInitToComplete;
 
 
   double fTimeOffsetPVeto[96];  

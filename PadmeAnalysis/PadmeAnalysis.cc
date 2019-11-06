@@ -328,6 +328,7 @@ int main(Int_t argc, char **argv)
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
    EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
+   evSel->SetVersion(2);
    
    evSel->InitHistos();
 

@@ -417,9 +417,9 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
-       evSel       ->Process();
-       UserAn      ->Process();
        gTimeAn     ->Process();
+       evSel       ->Process();
+       //       UserAn      ->Process();
 
        //
        //

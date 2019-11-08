@@ -37,7 +37,7 @@ RunAction::RunAction()
 
   fHistoManager = HistoManager::GetInstance();
 
-  fAutomaticRandomSeed = true;
+  fAutomaticRandomSeed = false;
 
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

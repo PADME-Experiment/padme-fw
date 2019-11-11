@@ -58,18 +58,27 @@ HEPVetoMessenger::HEPVetoMessenger(HEPVetoDetector* det)
   fSetDistToCornerCmd->SetRange("DTC > 0. && DTC <= 100.");
   fSetDistToCornerCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/HEPVeto/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for HEPVeto code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 HEPVetoMessenger::~HEPVetoMessenger()
 {
-
-  delete fHEPVetoDetectorDir;
 
   delete fSetNFingersCmd;
   delete fSetFingerStepCmd;
   delete fSetFingerSizeCmd;
   delete fSetFingerLengthCmd;
   delete fSetDistToCornerCmd;
+
+  delete fSetVerboseLevelCmd;
+
+  delete fHEPVetoDetectorDir;
+
 }
 
 void HEPVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
@@ -88,5 +97,8 @@ void HEPVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetDistToCornerCmd )
     fHEPVetoGeometry->SetHEPVetoDistanceToCorner(fSetDistToCornerCmd->GetNewDoubleValue(par));
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fHEPVetoGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

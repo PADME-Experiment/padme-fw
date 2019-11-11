@@ -18,6 +18,8 @@ PVetoGeometry* PVetoGeometry::GetInstance()
 PVetoGeometry::PVetoGeometry()
 {
 
+  fVerbose = 0; // Do not show debug output
+
   // Inizialize default parameters
   //  fFingerDist0 = 10.309*mm ; // Need drawings!
   //  fFingerPitch = 10.309*mm;  // Need drawings!

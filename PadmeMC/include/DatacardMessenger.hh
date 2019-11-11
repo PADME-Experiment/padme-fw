@@ -7,7 +7,9 @@
 class DatacardManager;
 class G4UIdirectory;
 class G4UIcmdWithAString;
+class G4UIcmdWithAnInteger;
 class G4UIcmdWithABool;
+class G4UIcmdWithADoubleAndUnit;
 
 class DatacardMessenger: public G4UImessenger
 {
@@ -22,6 +24,8 @@ private:
   DatacardManager* fDatacardManager;
 
   G4UIdirectory* fOutputDir;
+  G4UIdirectory* fAnalysisDir;
+  G4UIdirectory* fSettingsDir;
 
   G4UIcmdWithAString* fOutNameCmd;
   G4UIcmdWithAString* fHistoNameCmd;
@@ -36,5 +40,17 @@ private:
   G4UIcmdWithABool* fEnableSaveSACCmd; 
   G4UIcmdWithABool* fEnableSaveVetoCmd;
   G4UIcmdWithABool* fEnableSaveEcalCmd;
+
+  G4UIcmdWithAnInteger* fPrintOutFrequencyCmd;
+  G4UIcmdWithABool* fAutomaticRandomSeedCmd;
+
+  G4UIdirectory* fTurboModeDir;
+  G4UIcmdWithABool* fTurboModeCmd;
+  G4UIcmdWithAnInteger* fTurboModeVerboseCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboPositronKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboElectronKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboGammaKillEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fTurboNeutronKillEnergyCmd;
+
 };
 #endif // DatacardMessenger_h

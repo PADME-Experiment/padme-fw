@@ -13,11 +13,9 @@
 #include "G4UImessenger.hh"
 
 class MagnetStructure;
-class MagnetGeometry;
+//class MagnetGeometry;
 
 class G4UIdirectory;
-class G4UIcommand;
-class G4UIcmdWithoutParameter;
 
 class MagnetMessenger: public G4UImessenger
 {
@@ -31,22 +29,9 @@ public:
 private:
 
   MagnetStructure* fMagnetStructure;
-  MagnetGeometry* fMagnetGeometry;
+  //MagnetGeometry* fMagnetGeometry;
 
-  G4UIdirectory* fMagnetDetectorDir;
-
-  G4UIcmdWithoutParameter* fSetMagnetVisibleCmd;
-  G4UIcmdWithoutParameter* fSetMagnetInvisibleCmd;
-
-  //G4UIcmdWithoutParameter* fEnableMagneticFieldCmd;
-  //G4UIcmdWithoutParameter* fDisableMagneticFieldCmd;
-
-  //G4UIcmdWithoutParameter* fSetMagneticVolumeVisibleCmd;
-  //G4UIcmdWithoutParameter* fSetMagneticVolumeInvisibleCmd;
-
-  //G4UIcommand* fSetVacuumChamberWallThicknessCmd;
-
-  //G4UIcommand* fSetMagneticFieldConstantValueCmd;
+  //G4UIdirectory* fMagnetDetectorDir;
 
 };
 #endif

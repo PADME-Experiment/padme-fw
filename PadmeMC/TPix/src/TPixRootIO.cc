@@ -32,6 +32,8 @@ TPixRootIO::TPixRootIO() : MCVRootIO(G4String("TPix"))
 
   fGeoPars = TPixGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new TTPixMCEvent();
 
@@ -41,7 +43,7 @@ TPixRootIO::TPixRootIO() : MCVRootIO(G4String("TPix"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  G4cout << "TPixRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "TPixRootIO: Initialized" << G4endl;
 
 }
 
@@ -56,10 +58,12 @@ void TPixRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "TPixRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "TPixRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -70,7 +74,7 @@ void TPixRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* tpixInfo = detInfo->AddSubDetectorInfo("TPix");
   tpixInfo->SetGeometryParameters(geoParR);
-  tpixInfo->Print();
+  if (fVerbose) tpixInfo->Print();
 
   // Create branch to hold TPix Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -81,7 +85,7 @@ void TPixRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void TPixRootIO::EndRun()
 {
-  G4cout << "TPixRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "TPixRootIO: Executing End-of-Run procedure" << G4endl;
 }
 
 void TPixRootIO::SaveEvent(const G4Event* eventG4)
@@ -108,8 +112,7 @@ void TPixRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "TPixCollection"){
-	if (fVerbose>=2)
-	  G4cout << "TPixRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "TPixRootIO: Found hits collection " << HCname << G4endl;
 	TPixHitsCollection* tPixHC = (TPixHitsCollection*)(theHC->GetHC(iHC));
 	if(tPixHC) {
 	  G4int n_hit = tPixHC->entries();
@@ -125,7 +128,8 @@ void TPixRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*tPixHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "TPixRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "TPixRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -145,8 +149,7 @@ void TPixRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "TPixDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "TPixRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "TPixRootIO: Found digi collection " << DCname << G4endl;
 	TPixDigiCollection* tPixDC = (TPixDigiCollection*)(theDC->GetDC(iDC));
 	if(tPixDC) {
 	  G4int n_digi = tPixDC->entries();
@@ -159,7 +162,8 @@ void TPixRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetTime((*tPixDC)[i]->GetTime());
 	      e_tot += (*tPixDC)[i]->GetEnergy();
 	    }
-	    //	    G4cout << "TPixRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "TPixRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

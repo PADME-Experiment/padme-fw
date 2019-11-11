@@ -36,6 +36,8 @@ SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
 
   fGeoPars = SACGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new TSACMCEvent();
 
@@ -45,7 +47,7 @@ SACRootIO::SACRootIO() : MCVRootIO(G4String("SAC"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  G4cout << "SACRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "SACRootIO: Initialized" << G4endl;
 
 }
 
@@ -61,10 +63,12 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "SACRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "SACRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -75,7 +79,7 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* sacInfo = detInfo->AddSubDetectorInfo("SAC");
   sacInfo->SetGeometryParameters(geoParR);
-  sacInfo->Print();
+  if (fVerbose) sacInfo->Print();
 
   // Create branch to hold SAC Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -86,7 +90,7 @@ void SACRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void SACRootIO::EndRun()
 {
-  G4cout << "SACRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "SACRootIO: Executing End-of-Run procedure" << G4endl;
 
   // Dump last event to stdout (debug: remove for production)
   //for (Int_t iHit=0; iHit<fEvent->GetNHits(); iHit++) {
@@ -101,8 +105,7 @@ void SACRootIO::EndRun()
 void SACRootIO::SaveEvent(const G4Event* eventG4)
 {
 
-  if (fVerbose>=2)
-    G4cout << "SACRootIO: Preparing event structure" << G4endl;
+  if (fVerbose>=2) G4cout << "SACRootIO: Preparing event structure" << G4endl;
 
   //Save current Object count
   Int_t savedObjNumber = TProcessID::GetObjectCount();
@@ -123,8 +126,7 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "SACCollection"){
-	if (fVerbose>=2)
-	  G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "SACRootIO: Found hits collection " << HCname << G4endl;
 	SACHitsCollection* sacHC = (SACHitsCollection*)(theHC->GetHC(iHC));
 	int n_hit=0;
 	if(sacHC) {
@@ -141,7 +143,8 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*sacHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "SACRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "SACRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -161,8 +164,7 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "SACDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "SACRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "SACRootIO: Found digi collection " << DCname << G4endl;
 	SACDigiCollection* sacDC = (SACDigiCollection*)(theDC->GetDC(iDC));
 	if(sacDC) {
 	  G4int n_digi = sacDC->entries();
@@ -178,7 +180,8 @@ void SACRootIO::SaveEvent(const G4Event* eventG4)
 	      for(G4int j=0; j<digi->GetTHistoNBins(); j++) digi->SetTHistoBin(j,(*sacDC)[i]->GetQHistoBin(j));
 	      e_tot += digi->GetEnergy();
 	    }
-	    G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "SACRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

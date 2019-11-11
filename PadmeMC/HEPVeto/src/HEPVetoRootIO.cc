@@ -32,6 +32,8 @@ HEPVetoRootIO::HEPVetoRootIO() : MCVRootIO(G4String("HEPVeto"))
 
   fGeoPars = HEPVetoGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new THEPVetoMCEvent();
 
@@ -41,7 +43,7 @@ HEPVetoRootIO::HEPVetoRootIO() : MCVRootIO(G4String("HEPVeto"))
   fHitsEnabled = true;
   fDigisEnabled = true;
 
-  G4cout << "HEPVetoRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "HEPVetoRootIO: Initialized" << G4endl;
 
 }
 
@@ -57,10 +59,12 @@ void HEPVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "HEPVetoRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "HEPVetoRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -71,7 +75,7 @@ void HEPVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* hepvetoInfo = detInfo->AddSubDetectorInfo("HEPVeto");
   hepvetoInfo->SetGeometryParameters(geoParR);
-  hepvetoInfo->Print();
+  if (fVerbose) hepvetoInfo->Print();
 
   // Create branch to hold HEPVeto Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -82,7 +86,7 @@ void HEPVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void HEPVetoRootIO::EndRun()
 {
-  G4cout << "HEPVetoRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "HEPVetoRootIO: Executing End-of-Run procedure" << G4endl;
 }
 
 void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
@@ -110,8 +114,7 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "HEPVetoCollection"){
-	if (fVerbose>=2)
-	  G4cout << "HEPVetoRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "HEPVetoRootIO: Found hits collection " << HCname << G4endl;
 	HEPVetoHitsCollection* hepVetoHC = (HEPVetoHitsCollection*)(theHC->GetHC(iHC));
 	if(hepVetoHC) {
 	  G4int n_hit = hepVetoHC->entries();
@@ -127,7 +130,8 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*hepVetoHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "HEPVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "HEPVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -147,8 +151,7 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "HEPVetoDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "HEPVetoRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "HEPVetoRootIO: Found digi collection " << DCname << G4endl;
 	HEPVetoDigiCollection* hepVetoDC = (HEPVetoDigiCollection*)(theDC->GetDC(iDC));
 	if(hepVetoDC) {
 	  G4int n_digi = hepVetoDC->entries();
@@ -161,7 +164,8 @@ void HEPVetoRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetTime((*hepVetoDC)[i]->GetTime());
 	      e_tot += (*hepVetoDC)[i]->GetEnergy();
 	    }
-	    G4cout << "HEPVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "HEPVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

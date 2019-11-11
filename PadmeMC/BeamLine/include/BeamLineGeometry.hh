@@ -43,6 +43,11 @@ public:
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
 
+  // Enable/disable quadrupoles
+  void EnableQuadrupoles() { fQuadrupolesEnable = true; }
+  void DisableQuadrupoles() { fQuadrupolesEnable = false; }
+  G4bool QuadrupolesAreEnabled() { return fQuadrupolesEnable; }
+
   // Magnetic field gradient inside quadrupoles
   void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g*tesla/m; }
   G4double GetQ1MagneticFieldGrad() { return fQ1MagneticFieldGrad; }
@@ -173,8 +178,9 @@ private:
   G4double fDHSTB002MagneticFieldY;
 
   // Gradient of Quadrupoles Magnetic field 
-  G4double fQ1_FieldGrad;  //from data cards
+  //G4double fQ1_FieldGrad;  //from data cards
 
+  G4bool fQuadrupolesEnable;
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
 

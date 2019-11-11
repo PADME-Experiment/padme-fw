@@ -42,5 +42,7 @@ private:
 
   G4UIcmdWithADoubleAndUnit* fSetDistToCornerCmd;
 
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
+
 };
 #endif

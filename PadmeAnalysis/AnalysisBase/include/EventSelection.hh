@@ -13,6 +13,27 @@ class TRecoVObject;
 class TRecoVClusCollection;
 class TTargetRecoBeam;
 
+
+enum preSelCutNumbering
+{
+  ps_cut_all=0,
+  ps_cut_trg=1,
+  ps_cut_POT=2,
+};
+enum selCutNumbering
+{
+  cut_all=0,
+  cut_Presel=1,
+  cut_ge1ECalCl=2,
+};
+enum selPhotonCutNumbering
+{
+  cut_g_all=0,
+  cut_g_Presel=1
+};
+
+
+
 class EventSelection : public TObject
 {
 
@@ -36,6 +57,9 @@ public:
   virtual Bool_t ProcessAnalysis();
   virtual Bool_t ProcessAnalysisSS();
   virtual Bool_t ProcessAnalysisGC();
+
+  Bool_t passPreselection();//{return true;}
+
   Bool_t Proc_HEPVeto_vs_PVeto(Bool_t isMC);
   Bool_t Proc_SACclu_vs_all(Bool_t isMC);
   Bool_t Proc_SAChit_vs_PVeto(Bool_t isMC);
@@ -70,6 +94,7 @@ public:
   void ApplyCalibTimeHEPVeto();
   void ApplyCalibTimeSAC    ();
   void ApplyCalibTimeECal   ();
+  void ApplyCalibTimeEnergyECal   (Bool_t isMC);
   
 
   Double_t InvariantDECal(TVector3 V1, TVector3 V2, Double_t E1, Double_t E2);

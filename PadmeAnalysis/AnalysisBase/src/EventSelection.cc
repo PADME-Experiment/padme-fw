@@ -14,6 +14,7 @@
 
 EventSelection::EventSelection()
 {
+
   fVersion=0;
   fInitToComplete=true;
   
@@ -192,7 +193,7 @@ void EventSelection::CalibrateTimeAndEnergy()
   ApplyCalibTimeEVeto  ();
   ApplyCalibTimeHEPVeto();
   ApplyCalibTimeSAC    ();
-  ApplyCalibTimeECal   ();
+  ApplyCalibTimeEnergyECal   (isMC);
   return;
   
 }
@@ -216,6 +217,9 @@ Bool_t EventSelection::ProcessAnalysisSS()
 {  
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
+  //std::string hprefix = "SS_";
+  std::string hprefix="";
+
 
   Bool_t isMC=false;
   //std::cout<<"in ProcessAnalysis ... evsel ... "<<fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
@@ -223,6 +227,18 @@ Bool_t EventSelection::ProcessAnalysisSS()
     isMC=true;
     //std::cout<<"input data are simulatetd "<<std::endl;
   }
+
+  // Overall bunch normalization
+  hSvc->FillHisto("SelectionCutFlow",float(cut_all));
+ 
+  // apply BTF bunch preselection 
+  if (!passPreselection()) return true;
+  hSvc->FillHisto(hprefix+"SelectionCutFlow",float(cut_Presel));
+
+  // require at least one ECal cluster in the event
+  if (fECal_ClColl->GetNElements()<1) return true;
+  hSvc->FillHisto(hprefix+"SelectionCutFlow",float(cut_ge1ECalCl));
+
 
   TRecoVHit* xHit;
   TRecoVHit* yHit;
@@ -238,103 +254,125 @@ Bool_t EventSelection::ProcessAnalysisSS()
   Double_t eSumECalHits=0.;
   Double_t xEnergy=0;
   std::string hname;
-  if (fPVeto_hitEvent->GetNHits() > 0){
-    for (int hPVeto=0; hPVeto<fPVeto_hitEvent->GetNHits(); ++hPVeto)
-      {
-	xHit = fPVeto_hitEvent->Hit(hPVeto);
-	xTime= xHit->GetTime();
-	xChId= xHit->GetChannelId();
-	xEnergy = xHit->GetEnergy();
-	hname="timePVetoVsCh_Hits";
-	hSvc->FillHisto2(hname, xTime, (float)xChId);
-	hname="timePVetoVsCh_linearCorr_Hits";
-	xTimeLinCorr = applyTimePVetoLinCorr((float)xChId, xTime);
-	hSvc->FillHisto2(hname, xTimeLinCorr, (float)xChId);
-	for (int hECal=0; hECal<fECal_hitEvent->GetNHits(); ++hECal)
-	  {
-	    yHit = fECal_hitEvent->Hit(hECal);
-	    yTime= yHit->GetTime();
-	    yChId= yHit->GetChannelId();
-	    yEne = yHit->GetEnergy();
-	    /*
-	      if (hPVeto==0)
-	      {
-	      eSumECalHits = eSumECalHits+yEne;
-	      hname="ECalEnergyMap_Hits";
-	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
-	      hname="ECalMap_Hits";
-	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
-	      }
-	    */
-	  
-	    hname="timeECalVsPVeto_Hits";
-	    hSvc->FillHisto2(hname, xTime, yTime);
-	  }
-	for (int hSAC=0; hSAC<fSAC_hitEvent->GetNHits(); ++hSAC)
-	  {
-	    yHit = fSAC_hitEvent->Hit(hSAC);
-	    if (yHit->GetChannelId()!=21) continue;
 
-	    yTime= yHit->GetTime();
-	    hname="DtimePVetoVsSAC21_Hits";
-	    hSvc->FillHisto(hname, xTime-30.7-yTime);
-	    hname="DtimePVetoVsSAC21LinCorr_Hits";
-	    hSvc->FillHisto(hname, xTimeLinCorr-yTime);
-	  }
-	for (int cSAC=0; cSAC<fSAC_ClColl->GetNElements(); ++cSAC)
-	  {
-	    yClu = fSAC_ClColl->Element(cSAC);
+  // if (fPVeto_hitEvent->GetNHits() > 0){
+  //   for (int hPVeto=0; hPVeto<fPVeto_hitEvent->GetNHits(); ++hPVeto)
+  //     {
+  // 	xHit = fPVeto_hitEvent->Hit(hPVeto);
+  // 	xTime= xHit->GetTime();
+  // 	xChId= xHit->GetChannelId();
+  // 	xEnergy = xHit->GetEnergy();
+  // 	hname=hprefix+"timePVetoVsCh_Hits";
+  // 	hSvc->FillHisto2(hname, xTime, (float)xChId);
+  // 	//hname=hprefix+"timePVetoVsCh_linearCorr_Hits";
+  // 	//xTimeLinCorr = applyTimePVetoLinCorr((float)xChId, xTime);
+  // 	//hSvc->FillHisto2(hname, xTimeLinCorr, (float)xChId);
+  // 	for (int hECal=0; hECal<fECal_hitEvent->GetNHits(); ++hECal)
+  // 	  {
+  // 	    yHit = fECal_hitEvent->Hit(hECal);
+  // 	    yTime= yHit->GetTime();
+  // 	    yChId= yHit->GetChannelId();
+  // 	    yEne = yHit->GetEnergy();
+  // 	    /*
+  // 	      if (hPVeto==0)
+  // 	      {
+  // 	      eSumECalHits = eSumECalHits+yEne;
+  // 	      hname="ECalEnergyMap_Hits";
+  // 	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
+  // 	      hname="ECalMap_Hits";
+  // 	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
+  // 	      }
+  // 	    */
 	  
-	    if (yClu->GetEnergy()<50.) continue;
-	    if ( fabs(yClu->GetTime()-xTimeLinCorr) > 1. ) continue;
-	  
-	    hname="SACClEVsPVetoHitChId_1ns_linearCorr";
-	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
-	    if (yClu->GetChannelId()!=21) continue;
-	    if(xEnergy < 10.) continue;
-	    if(xEnergy > 50.) continue;
-	    hname="SACClE21VsPVetoHitChId_1ns_linearCorr";
-	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
-	  }
-      }
+  // 	    hname=hprefix+"timeECalVsPVeto_Hits";
+  // 	    hSvc->FillHisto2(hname, xTime, yTime);
+  // 	  }
+  // 	for (int hSAC=0; hSAC<fSAC_hitEvent->GetNHits(); ++hSAC)
+  // 	  {
+  // 	    yHit = fSAC_hitEvent->Hit(hSAC);
+  // 	    if (yHit->GetChannelId()!=21) continue;
 
-    //Cluster Based 
-    for (int hPVeto=0; hPVeto<fPVeto_ClColl->GetNElements(); ++hPVeto)
-      {
-	xClu = fPVeto_ClColl->Element(hPVeto);
-	xTime= xClu->GetTime();
-	xChId= xClu->GetChannelId();
-	for (int hECal=0; hECal<fECal_ClColl->GetNElements(); ++hECal)
-	  {
-	    yClu = fECal_ClColl->Element(hECal);
-	    yTime= yClu->GetTime();
-	    yChId= yClu->GetChannelId();
-	    yEne = yClu->GetEnergy();
+  // 	    yTime= yHit->GetTime();
+  // 	    hname="DtimePVetoVsSAC21_Hits";
+  // 	    hSvc->FillHisto(hname, xTime-30.7-yTime);
+  // 	    hname="DtimePVetoVsSAC21LinCorr_Hits";
+  // 	    hSvc->FillHisto(hname, xTimeLinCorr-yTime);
+  // 	  }
+  // 	for (int cSAC=0; cSAC<fSAC_ClColl->GetNElements(); ++cSAC)
+  // 	  {
+  // 	    yClu = fSAC_ClColl->Element(cSAC);
 	  
-	    hname="timeECalVsPVeto_Clus";
-	    hSvc->FillHisto2(hname, xTime, yTime);
-	    hname="energyECalVsChIdPVeto_Clus_inTime10";
-	    if (fabs(yTime-xTime)<10.) hSvc->FillHisto2(hname, float(xChId), yEne);
+  // 	    if (yClu->GetEnergy()<50.) continue;
+  // 	    if ( fabs(yClu->GetTime()-xTimeLinCorr) > 1. ) continue;
 	  
-	  }
-      }
-  }
+  // 	    hname="SACClEVsPVetoHitChId_1ns_linearCorr";
+  // 	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
+  // 	    if (yClu->GetChannelId()!=21) continue;
+  // 	    if(xEnergy < 10.) continue;
+  // 	    if(xEnergy > 50.) continue;
+  // 	    hname="SACClE21VsPVetoHitChId_1ns_linearCorr";
+  // 	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
+  // 	  }
+  //     }
+
+  //   //Cluster Based 
+  //   for (int hPVeto=0; hPVeto<fPVeto_ClColl->GetNElements(); ++hPVeto)
+  //     {
+  // 	xClu = fPVeto_ClColl->Element(hPVeto);
+  // 	xTime= xClu->GetTime();
+  // 	xChId= xClu->GetChannelId();
+  // 	for (int hECal=0; hECal<fECal_ClColl->GetNElements(); ++hECal)
+  // 	  {
+  // 	    yClu = fECal_ClColl->Element(hECal);
+  // 	    yTime= yClu->GetTime();
+  // 	    yChId= yClu->GetChannelId();
+  // 	    yEne = yClu->GetEnergy();
+	  
+  // 	    hname="timeECalVsPVeto_Clus";
+  // 	    hSvc->FillHisto2(hname, xTime, yTime);
+  // 	    hname="energyECalVsChIdPVeto_Clus_inTime10";
+  // 	    if (fabs(yTime-xTime)<10.) hSvc->FillHisto2(hname, float(xChId), yEne);
+	  
+  // 	  }
+  //     }
+  // }
+  double pigreco = acos(-1.);
 
 
+
+  int icellMaxE=0;
+  double xE = 0;
   //std::cout<<" Going to ECal Hits "<<std::endl;
   for (int hECal=0; hECal<fECal_hitEvent->GetNHits(); ++hECal)
     {
       yHit = fECal_hitEvent->Hit(hECal);
       yEne = yHit->GetEnergy();
+      if (yEne>xE) icellMaxE=hECal;
       yChId= yHit->GetChannelId();
       eSumECalHits = eSumECalHits+yEne;
-      hname="ECalEnergyMap_Hits";
+      hname=hprefix+"ECalEnergyMap_Hits";
       hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
-      hname="ECalMap_Hits";
+      hname=hprefix+"ECalMap_Hits";
       hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
     }
-  hname="energySumECalHits";
+  hname=hprefix+"energySumECalHits";
   hSvc->FillHisto(hname, eSumECalHits);
+
+  double yt;
+  hname = hprefix+"TimeSpreadInECal";
+  std::string hname1 = hprefix+"CellSpreadInECal";
+  double ticellMaxE   = fECal_hitEvent->Hit(icellMaxE)->GetTime();
+  TVector3 xicellMaxE = fECal_hitEvent->Hit(icellMaxE)->GetPosition();
+  TVector3 xh;
+  for (int hECal=0; hECal<fECal_hitEvent->GetNHits(); ++hECal)
+    {
+      yHit = fECal_hitEvent->Hit(hECal);
+      if (hECal==icellMaxE) continue;
+      yt = yHit->GetTime();
+      xh = yHit->GetPosition()-xicellMaxE;
+      hSvc->FillHisto(hname,yt-ticellMaxE);
+      hSvc->FillHisto(hname1,xh.Perp());
+    }
 
   
   int iELead = -1;
@@ -373,6 +411,18 @@ Bool_t EventSelection::ProcessAnalysisSS()
   TVector3 pos1;
   TVector3 pos2;
   double impactPar=0.;
+
+
+  int nclus=fECal_ClColl->GetNElements();
+  hname="SS2g_nclus";
+  hSvc->FillHisto(hname,float(nclus));
+  int nclus50=0;
+  int n2gindt10=0;
+  int n2gindt5=0;
+  int n2gindt2_5=0;
+  int n2gindt1=0;
+  int n2g=0;
+
   
   //std::cout<<" pointer to collection = "<<(long)fECal_ClColl<<std::endl;
   //std::cout<<" Going to ECal Clusters "<<fECal_ClColl->GetNElements()<<std::endl;
@@ -385,12 +435,19 @@ Bool_t EventSelection::ProcessAnalysisSS()
 	  xTime= xClu->GetTime();
 	  xChId= xClu->GetChannelId();
 	  xEne = xClu->GetEnergy();
-	  hname = "ECalClEnergy";
+
+	  hname = hprefix+"ECalClEnergy";
 	  hSvc->FillHisto(hname, xEne);
+
 	  pos1 = xClu->GetPosition();
+	  // Sum of All Cluster Energy 
 	  eSumCl = eSumCl+xEne;
+
 	  if (xEne<50.) continue;
-	  
+	  nclus50 +=1;
+	  hname=hprefix+"GammaSeleCutFlow"; 
+	  hSvc->FillHisto(hname,cut_g_all);
+
 	  if (xEne > eMax)
 	    {
 	      iELead   = hECal;
@@ -398,7 +455,7 @@ Bool_t EventSelection::ProcessAnalysisSS()
 	      tEMax    = xTime;
 	      xChIdEMax = xChId;
 	    }
-	  hname = "TimeSpreadInECalClus";
+	  hname = hprefix+"TimeSpreadInECalClus";
 	  //vector of (indices of) hits in cluster 
 	  hitVInCl = xClu->GetHitVecInClus();
 	  //seed index
@@ -409,6 +466,7 @@ Bool_t EventSelection::ProcessAnalysisSS()
 	      hit = fECal_hitEvent->Hit(hitVInCl[ih]);
 	      hSvc->FillHisto(hname, hit->GetTime()-hitSeed->GetTime());
 	    }
+	  // loop for basic 2gamma search 
 	  for (int clCal=hECal+1; clCal<fECal_ClColl->GetNElements(); ++clCal)
 	    {
 	      //std::cout<<" cluster n. hECal = "<<hECal<<" pointer to collection = "<<(long)fECal_ClColl<<std::endl;
@@ -441,6 +499,71 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		  hSvc->FillHisto2(hname, dt, dR);
 		  hname = "ECal2gsearch_ImpactParVsDt";
 		  hSvc->FillHisto2(hname, dt, impactPar);
+
+
+		  double xcog = (pos1.x()*xEne+pos2.x()*aEne)/aSumCl;
+		  double ycog = (pos1.y()*xEne+pos2.y()*aEne)/aSumCl;
+
+
+		  if (fabs(dt)<10)
+		    {
+		      n2gindt10 +=1;
+		      if (fabs(dt)<5)
+			{
+			  n2gindt5 +=1;
+			  if (fabs(dt)<2.5)
+			    {
+			      n2gindt2_5 +=1;
+			      if (fabs(dt)<1)
+				{
+				  n2gindt1 +=1;
+				}	
+			    }		  
+			}
+		    }
+
+
+		  if (fabs(dt)<10.)
+		    {
+		      hname = "SS2gSumE_passDt";
+		      hSvc->FillHisto(hname, aSumCl);
+
+		      hname = "SS2gDphi_passDt";
+		      hSvc->FillHisto(hname, dPhi*180/pigreco);
+		      hname = "SS2gXcog_passDt";
+		      hSvc->FillHisto(hname, xcog);
+		      hname = "SS2gYcog_passDt";
+		      hSvc->FillHisto(hname, ycog);
+		      if (cos(dPhi)<cos(2.3562))
+			{
+			  hname = "SS2gSumE_passDtDphi";
+			  hSvc->FillHisto(hname, aSumCl);
+
+			  hname = "SS2gDt_passDtDphi";
+			  hSvc->FillHisto(hname, dt);
+			  hname = "SS2gDphi_passDtDphi";
+			  hSvc->FillHisto(hname, dPhi*180/pigreco);
+			  hname = "SS2gXcog_passDtDphi";
+			  hSvc->FillHisto(hname, xcog);
+			  hname = "SS2gYcog_passDtDphi";
+			  hSvc->FillHisto(hname, ycog);
+
+			  if (fabs(xcog)<20. && fabs(ycog)<20.)
+			    {
+			      //hname = "SS2gSumE_passdt1dphi10cog10";
+			      hname = "SS2gSumE_passDtDphiCog";
+			      hSvc->FillHisto(hname, aSumCl);
+
+			      hname = "SS2gDt_passDtDphiCog";
+			      hSvc->FillHisto(hname, dt);
+			      hname = "SS2gDphi_passDtDphiCog";
+			      hSvc->FillHisto(hname, dPhi*180/pigreco);
+			      n2g+=1;
+			    }
+			}
+		    }
+
+		  
 		  if (fabs(aTime-xTime)<3.)
 		    {
 		      if (aSumCl > aSumClIn10Max)
@@ -453,9 +576,9 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		      
 		      double m2inv = xEne*aEne*dR*dR/3000./3000.;
 		      double minv = sqrt(m2inv);
-		      double xcog = (pos1.x()*xEne+pos2.x()*aEne)/aSumCl;
-		      double ycog = (pos1.y()*xEne+pos2.y()*aEne)/aSumCl;
 		      double rcog = sqrt(xcog*xcog+ycog*ycog);
+
+
 
 		      /*
 			std::cout<<"xEne, pos1 "<<xEne<<" "<<pos1.x()<<" "<<pos1.y()<<" "<<pos1.z()<<std::endl; 
@@ -464,24 +587,24 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		      */
 
 
-		      hname = "ECal2gsearchDt3_ImpactParVsMinv";
+		      hname = hprefix+"ECal2gsearchDt3_ImpactParVsMinv";
 		      hSvc->FillHisto2(hname, minv, impactPar);
-		      hname = "ECal2gsearchDt3_ImpactParVsRcog";
+		      hname = hprefix+"ECal2gsearchDt3_ImpactParVsRcog";
 		      hSvc->FillHisto2(hname, rcog, impactPar);
 		      
-		      hname = "ECal2gsearchDt3_ImpactParVsDPhi";
+		      hname =  hprefix+"ECal2gsearchDt3_ImpactParVsDPhi";
 		      hSvc->FillHisto2(hname, dPhi, impactPar);
-		      hname = "ECal2gsearchDt3_ImpactParVsDR";
+		      hname =  hprefix+"ECal2gsearchDt3_ImpactParVsDR";
 		      hSvc->FillHisto2(hname, dR, impactPar);
-		      hname = "ECal2gsearchDt3_ESumVsMinv";
+		      hname =  hprefix+"ECal2gsearchDt3_ESumVsMinv";
 		      hSvc->FillHisto2(hname, minv, aSumCl);
 
 		      //		      if (dPhi>2.8 && fabs(impactPar)<50.)
 		      if (aSumCl>300 && aSumCl<700. && minv>15. && minv<35.) 
 			{
-			  hname = "ECal2gsearchDt3_ESumVsMinv_phibcut";
+			  hname =  hprefix+"ECal2gsearchDt3_ESumVsMinv_phibcut";
 			  hSvc->FillHisto2(hname, minv, aSumCl);
-			  hname = "ECal2gsearchDt3_ImpactParVsDPhi_phibcut";
+			  hname =  hprefix+"ECal2gsearchDt3_ImpactParVsDPhi_phibcut";
 			  hSvc->FillHisto2(hname, dPhi, impactPar);
 			}
 		      
@@ -642,6 +765,47 @@ Bool_t EventSelection::ProcessAnalysisSS()
 
     }
 
+
+  hname="SS2g_nclus50";
+  hSvc->FillHisto(hname,float(nclus50));
+  hname="SS2g_n2gindt10";
+  hSvc->FillHisto(hname,float(n2gindt10));
+  hname="SS2g_n2gindt5";
+  hSvc->FillHisto(hname,float(n2gindt5));
+  hname="SS2g_n2gindt2_5";
+  hSvc->FillHisto(hname,float(n2gindt2_5));
+  hname="SS2g_n2gindt1";
+  hSvc->FillHisto(hname,float(n2gindt1));
+  hname="SS2g_n2g";
+  hSvc->FillHisto(hname,float(n2g));
+
+
+  hname=hprefix+"energySumECalClus";
+  hSvc->FillHisto(hname, eSumECalHits);
+  if (fECal_ClColl->GetNElements()==1)
+    {
+      hname=hprefix+"energySumECalClus_1Cl";
+      hSvc->FillHisto(hname, eSumCl);
+    }
+  else if (fECal_ClColl->GetNElements()==2)
+    {
+      hname=hprefix+"energySumECalClus_2Cl";
+      hSvc->FillHisto(hname, eSumCl);
+    }
+  else if (fECal_ClColl->GetNElements()==3)
+    {
+      hname=hprefix+"energySumECalClus_3Cl";
+      hSvc->FillHisto(hname, eSumCl);
+    }
+  else if (fECal_ClColl->GetNElements()>3)
+    {
+      hname=hprefix+"energySumECalClus_NCl";
+      hSvc->FillHisto(hname, eSumCl);
+    }
+
+  
+
+
   for (int hECal=0; hECal<fECal_ClColl->GetNElements(); ++hECal)
     {
       //std::cout<<" cluster n. hECal = "<<hECal<<" pointer to collection = "<<(long)fECal_ClColl<<std::endl;
@@ -664,8 +828,8 @@ Bool_t EventSelection::ProcessAnalysisSS()
   //  if (iEsLead >-1) 
   //std::cout<<" Gone to ECal Clusters "<<std::endl;
 
-  hname="energySumECalClus";
-  hSvc->FillHisto(hname, eSumCl);
+  //  hname="energySumECalClus";
+  //  hSvc->FillHisto(hname, eSumCl);
   //std::cout<<" Gone1 to ECal Clusters "<<std::endl;
   hname="energyLeadingECalCl";
   hSvc->FillHisto(hname, eMax);
@@ -2306,8 +2470,7 @@ Bool_t EventSelection::InitHistosAnalysis()
       maxY =  30.5;
       hSvc->BookHisto2(hname, nBinX, minX, maxX, nBinY, minY, maxY);
 
-      hname="CountEvents";
- 
+      hname="CountEvents"; 
       hSvc->BookHisto(hname, 10, 0, 10);
 
  
@@ -2344,6 +2507,21 @@ Bool_t EventSelection::InitHistosAnalysis()
     }
   else if (fVersion==1)
    {
+
+     hname ="nPOT";
+     hSvc->BookHisto(hname, 3, -1.5, 1.5);
+     hname="NposInBunch_beam";
+     hSvc->BookHisto(hname, 500, 0., 30000.);
+     hname="GammaSeleCutFlow"; 
+     hSvc->BookHisto(hname, 31, -0.5, 30.5);
+     hname="GammaSeleCutFlow"; 
+     hSvc->BookHisto(hname, 31, -0.5, 30.5);
+     hname="SelectionCutFlow"; 
+     hSvc->BookHisto(hname, 31, -0.5, 30.5);
+     hname="PreSelectCutFlow"; 
+     hSvc->BookHisto(hname, 31, -0.5, 30.5);
+
+
 
      hname="timeECalVsPVeto_Hits";
      int nBinX=  200;
@@ -2391,6 +2569,60 @@ Bool_t EventSelection::InitHistosAnalysis()
      minX =  0.;
      maxX =  1500.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     hname="SS2g_nclus";
+     hSvc->BookHisto(hname, 50, 0.5, 50.5);
+     hname="SS2g_nclus50";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2gindt10";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2gindt5";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2gindt2_5";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2gindt1";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2g";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+
+
+     hname = "SS2gSumE_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gSumE_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gSumE_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     nBinX=  100;
+     minX =  -50;
+     maxX =   50.;
+     hname = "SS2gDt_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gDt_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     nBinX=   720;
+     minX =  -360;
+     maxX =   360.;
+     hname = "SS2gDphi_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gDphi_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gDphi_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     nBinX=  100;
+     minX =  -200;
+     maxX =   200.;
+     hname = "SS2gXcog_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYcog_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXcog_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYcog_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
 
      hname = "ECal2gsearch_ESumDt3";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
@@ -2556,14 +2788,44 @@ Bool_t EventSelection::InitHistosAnalysis()
      maxX =  8000.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname="energySumECalClus";
-     nBinX=  400;
+     nBinX=  600;
      minX =  0.;
-     maxX =  8000.;
+     maxX =  3000.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="energySumECalClus_1Cl";
+     nBinX=  600;
+     minX =  0.;
+     maxX =  3000.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="energySumECalClus_2Cl";
+     nBinX=  600;
+     minX =  0.;
+     maxX =  3000.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="energySumECalClus_3Cl";
+     nBinX=  600;
+     minX =  0.;
+     maxX =  3000.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="energySumECalClus_NCl";
+     nBinX=  600;
+     minX =  0.;
+     maxX =  3000.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname="TimeSpreadInECalClus";
      nBinX=  200;
      minX =  -30.;
      maxX =   30.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="TimeSpreadInECal";
+     nBinX=  200;
+     minX =  -30.;
+     maxX =   30.;
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname="CellSpreadInECal";
+     nBinX=  30;
+     minX =   0.;
+     maxX = 300.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
 
      hname = "DR2gammaIn10";
@@ -2931,4 +3193,53 @@ void EventSelection::ApplyCalibTimeECal   ()
     }
   return;
 
+}
+void EventSelection::ApplyCalibTimeEnergyECal   (Bool_t isMC)
+{
+  TRecoVCluster* xClu;
+  Int_t    xChId;
+  Double_t xTime;
+  for (int h=0; h<fECal_ClColl->GetNElements(); ++h)
+    {
+      xClu = fECal_ClColl->Element((int)h);
+      if (xClu) 
+	{
+	  xChId = xClu->GetChannelId();
+	  xTime = xClu->     GetTime();
+	  xClu  ->SetTime(xTime-fTimeOffsetECal[xChId]);
+	  if (!isMC) xClu  ->SetEnergy(1.084*(xClu->GetEnergy()));
+	}
+    }
+  return;
+
+}
+
+Bool_t EventSelection::passPreselection()
+{
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  
+  Bool_t passed = false;
+  std::string hname="PreSelectCutFlow";
+  hSvc->FillHisto(hname,ps_cut_all);
+
+
+  if (!fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) 
+    {
+      if (!fRecoEvent->GetTriggerMaskBit(TRECOEVENT_TRIGMASKBIT_BEAM)) return passed;
+    }
+  hSvc->FillHisto(hname,ps_cut_trg);
+      
+  std::string hname1 = "NposInBunch_beam";
+  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT());
+  
+  if (fTarget_RecoBeam->getnPOT()<10000.) return passed;
+  hSvc->FillHisto(hname,ps_cut_POT);
+  
+  hname = "nPOT";
+  hSvc->FillHisto(hname,0,float(fTarget_RecoBeam->getnPOT())); 
+
+
+  passed = true;
+  return passed;
 }

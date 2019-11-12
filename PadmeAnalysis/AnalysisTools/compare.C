@@ -35,7 +35,7 @@ void compare(std::string hname, double scalef=-1, TFile* fData=_file0, TFile* fM
   TH1D* hsMC = hMC->Clone();
   hsMC->Scale(scalef);
   double ymaxMC = hsMC->GetMaximum();
-  double ymaxDT = hsMC->GetMaximum();
+  double ymaxDT = hData->GetMaximum();
 
   double ymax = ymaxMC;
   if (ymaxDT>ymax) ymax=ymaxDT;

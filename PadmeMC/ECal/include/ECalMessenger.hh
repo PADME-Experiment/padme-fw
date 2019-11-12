@@ -54,5 +54,7 @@ private:
   G4UIcommand* fSetECalPanelThickCmd;
   G4UIcommand* fSetECalPanelGapCmd;
 
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
+
 };
 #endif

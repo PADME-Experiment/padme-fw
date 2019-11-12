@@ -32,6 +32,8 @@ EVetoRootIO::EVetoRootIO() : MCVRootIO(G4String("EVeto"))
 
   fGeoPars = EVetoGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new TEVetoMCEvent();
 
@@ -41,7 +43,7 @@ EVetoRootIO::EVetoRootIO() : MCVRootIO(G4String("EVeto"))
   fHitsEnabled = true;
   fDigisEnabled = true;
 
-  G4cout << "EVetoRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "EVetoRootIO: Initialized" << G4endl;
 
 }
 
@@ -57,10 +59,12 @@ void EVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "EVetoRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "EVetoRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -71,7 +75,7 @@ void EVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* evetoInfo = detInfo->AddSubDetectorInfo("EVeto");
   evetoInfo->SetGeometryParameters(geoParR);
-  evetoInfo->Print();
+  if (fVerbose) evetoInfo->Print();
 
   // Create branch to hold EVeto Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -82,7 +86,7 @@ void EVetoRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void EVetoRootIO::EndRun()
 {
-  G4cout << "EVetoRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "EVetoRootIO: Executing End-of-Run procedure" << G4endl;
 }
 
 void EVetoRootIO::SaveEvent(const G4Event* eventG4)
@@ -110,8 +114,7 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "EVetoCollection"){
-	if (fVerbose>=2)
-	  G4cout << "EVetoRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "EVetoRootIO: Found hits collection " << HCname << G4endl;
 	EVetoHitsCollection* eVetoHC = (EVetoHitsCollection*)(theHC->GetHC(iHC));
 	if(eVetoHC) {
 	  G4int n_hit = eVetoHC->entries();
@@ -127,7 +130,8 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*eVetoHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "EVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "EVetoRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -147,8 +151,7 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "EVetoDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "EVetoRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "EVetoRootIO: Found digi collection " << DCname << G4endl;
 	EVetoDigiCollection* eVetoDC = (EVetoDigiCollection*)(theDC->GetDC(iDC));
 	if(eVetoDC) {
 	  G4int n_digi = eVetoDC->entries();
@@ -161,7 +164,8 @@ void EVetoRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetTime((*eVetoDC)[i]->GetTime());
 	      e_tot += (*eVetoDC)[i]->GetEnergy();
 	    }
-	    G4cout << "EVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "EVetoRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

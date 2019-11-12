@@ -15,9 +15,7 @@
 //#include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
-//#include "G4BlineTracer.hh"
 
-//#include "MagneticFieldSetup.hh"
 #include "MagnetGeometry.hh"
 //#include "MagnetSD.hh"
 
@@ -26,13 +24,7 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
 {
 
   // Connect to MagnetMessenger to enable datacard configuration
-  fMagnetMessenger = new MagnetMessenger(this);
-
-  // Magnetic field is ON by default
-  //fMagneticField = 1;
-
-  // Magnetic volume is invisible by default
-  //fMagneticVolumeIsVisible = 0;
+  //fMagnetMessenger = new MagnetMessenger(this);
 
   // Magnet is visible by default
   fMagnetIsVisible = true;
@@ -41,7 +33,7 @@ MagnetStructure::MagnetStructure(G4LogicalVolume* motherVolume)
 
 MagnetStructure::~MagnetStructure()
 {
-  delete fMagnetMessenger;
+  //delete fMagnetMessenger;
 }
 
 void MagnetStructure::CreateGeometry()

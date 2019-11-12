@@ -34,6 +34,8 @@ TargetRootIO::TargetRootIO() : MCVRootIO(G4String("Target"))
 
   fGeoPars = TargetGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new TTargetMCEvent();
 
@@ -43,7 +45,7 @@ TargetRootIO::TargetRootIO() : MCVRootIO(G4String("Target"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  G4cout << "TargetRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "TargetRootIO: Initialized" << G4endl;
 
 }
 
@@ -58,10 +60,12 @@ void TargetRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "TargetRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "TargetRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -72,7 +76,7 @@ void TargetRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* targetInfo = detInfo->AddSubDetectorInfo("Target");
   targetInfo->SetGeometryParameters(geoParR);
-  targetInfo->Print();
+  if (fVerbose) targetInfo->Print();
 
   // Create branch to hold Target Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -83,7 +87,7 @@ void TargetRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void TargetRootIO::EndRun()
 {
-  G4cout << "TargetRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "TargetRootIO: Executing End-of-Run procedure" << G4endl;
 }
 
 void TargetRootIO::SaveEvent(const G4Event* eventG4)
@@ -111,8 +115,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "TargetCollection"){
-	if (fVerbose>=2)
-	  G4cout << "TargetRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "TargetRootIO: Found hits collection " << HCname << G4endl;
 	TargetHitsCollection* targetHC = (TargetHitsCollection*)(theHC->GetHC(iHC));
 	if(targetHC) {
 	  G4int n_hit = targetHC->entries();
@@ -128,7 +131,8 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*targetHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    //	    G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "TargetRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -148,8 +152,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "TargetDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "TargetRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "TargetRootIO: Found digi collection " << DCname << G4endl;
 	TargetDigiCollection* targetDC = (TargetDigiCollection*)(theDC->GetDC(iDC));
 	if(targetDC) {
 	  G4int n_digi = targetDC->entries();
@@ -170,7 +173,8 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
 	      }
 	      e_tot += (*targetDC)[i]->GetEnergy();
 	    }
-	    //	    G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "TargetRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

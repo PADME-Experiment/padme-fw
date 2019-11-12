@@ -38,5 +38,7 @@ private:
   G4UIcmdWithAnInteger* fSetNColumnsCmd;
   G4UIcmdWithADoubleAndUnit* fSetDistToCornerCmd;
 
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
+
 };
 #endif

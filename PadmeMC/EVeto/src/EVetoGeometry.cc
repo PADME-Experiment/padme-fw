@@ -20,6 +20,8 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   // fFingerDist0 = 10.309*mm ; // Need drawings!
   // fFingerPitch = 10.309*mm; // Need drawings!
   fFingerPitch = 11.*mm; // Raggi 7/03/2019 construction drawings

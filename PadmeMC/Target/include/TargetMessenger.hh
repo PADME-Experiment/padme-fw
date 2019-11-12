@@ -18,6 +18,7 @@ class G4UIdirectory;
 class G4UIcmdWithADouble;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithoutParameter;
+class G4UIcmdWithAnInteger;
 class G4UIcommand;
 
 class TargetMessenger: public G4UImessenger
@@ -64,6 +65,8 @@ private:
   G4UIcmdWithADouble* fSetTargetDigiNoiseChargeRMSCmd;
   G4UIcmdWithADouble* fSetTargetDigiCCDCmd;
   G4UIcmdWithADouble* fSetTargetDigiMeV2QCmd;
+
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
 
 };
 #endif

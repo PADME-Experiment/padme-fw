@@ -35,6 +35,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of TPix box
   G4double GetTPixPosX() { return fTPixPosX; }
   G4double GetTPixPosY() { return fTPixPosY; }
@@ -84,6 +87,8 @@ public:
 private:
 
   void UpdateDerivedMeasures();
+
+  G4int fVerbose; // Verbose level
 
   G4int    fTPixNRows;
   G4int    fTPixNCols;

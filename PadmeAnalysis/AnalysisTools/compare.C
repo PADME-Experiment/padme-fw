@@ -129,9 +129,11 @@ void compare(std::string hname, double scalef=-1, TFile* fData=_file0, TFile* fM
    h3->SetMarkerStyle(21);
    h3->Draw("ep");       // Draw the ratio plot
    */
+   pad2->SetLogy();
    hratio->SetStats(0);  
-   hratio->SetMaximum(2.);
-   hratio->SetMinimum(0.);
+   hratio->SetMaximum(10.);
+   hratio->SetMinimum(0.1);
+   //hratio->SetMinimum(0.1);
    hratio->SetMarkerStyle(20);
    hratio->SetMarkerSize(0.5);
    hratio->Draw("ep");

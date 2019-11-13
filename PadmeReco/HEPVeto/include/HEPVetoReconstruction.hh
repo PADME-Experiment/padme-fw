@@ -23,6 +23,7 @@ public:
   virtual void AnalyzeEvent(TRawEvent* rawEv);
   virtual void HistoInit();
   // virtual void EndProcessing();
+  void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
 
 };
 #endif

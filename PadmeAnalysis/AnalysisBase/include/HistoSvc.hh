@@ -190,7 +190,8 @@ public:
   TString getOutputFileName(){ return fOutputFileName; }
 
   //  void PrintStatistic();
-
+  void makeFileDir(TString dName);//{fRootOutputFile->mkdir(dName.Data());}
+  
 
 public:
   NTEvent  myEvt;    

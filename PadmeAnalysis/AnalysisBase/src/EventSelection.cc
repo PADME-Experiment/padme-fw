@@ -255,87 +255,6 @@ Bool_t EventSelection::ProcessAnalysisSS()
   Double_t xEnergy=0;
   std::string hname;
 
-  // if (fPVeto_hitEvent->GetNHits() > 0){
-  //   for (int hPVeto=0; hPVeto<fPVeto_hitEvent->GetNHits(); ++hPVeto)
-  //     {
-  // 	xHit = fPVeto_hitEvent->Hit(hPVeto);
-  // 	xTime= xHit->GetTime();
-  // 	xChId= xHit->GetChannelId();
-  // 	xEnergy = xHit->GetEnergy();
-  // 	hname=hprefix+"timePVetoVsCh_Hits";
-  // 	hSvc->FillHisto2(hname, xTime, (float)xChId);
-  // 	//hname=hprefix+"timePVetoVsCh_linearCorr_Hits";
-  // 	//xTimeLinCorr = applyTimePVetoLinCorr((float)xChId, xTime);
-  // 	//hSvc->FillHisto2(hname, xTimeLinCorr, (float)xChId);
-  // 	for (int hECal=0; hECal<fECal_hitEvent->GetNHits(); ++hECal)
-  // 	  {
-  // 	    yHit = fECal_hitEvent->Hit(hECal);
-  // 	    yTime= yHit->GetTime();
-  // 	    yChId= yHit->GetChannelId();
-  // 	    yEne = yHit->GetEnergy();
-  // 	    /*
-  // 	      if (hPVeto==0)
-  // 	      {
-  // 	      eSumECalHits = eSumECalHits+yEne;
-  // 	      hname="ECalEnergyMap_Hits";
-  // 	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
-  // 	      hname="ECalMap_Hits";
-  // 	      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
-  // 	      }
-  // 	    */
-	  
-  // 	    hname=hprefix+"timeECalVsPVeto_Hits";
-  // 	    hSvc->FillHisto2(hname, xTime, yTime);
-  // 	  }
-  // 	for (int hSAC=0; hSAC<fSAC_hitEvent->GetNHits(); ++hSAC)
-  // 	  {
-  // 	    yHit = fSAC_hitEvent->Hit(hSAC);
-  // 	    if (yHit->GetChannelId()!=21) continue;
-
-  // 	    yTime= yHit->GetTime();
-  // 	    hname="DtimePVetoVsSAC21_Hits";
-  // 	    hSvc->FillHisto(hname, xTime-30.7-yTime);
-  // 	    hname="DtimePVetoVsSAC21LinCorr_Hits";
-  // 	    hSvc->FillHisto(hname, xTimeLinCorr-yTime);
-  // 	  }
-  // 	for (int cSAC=0; cSAC<fSAC_ClColl->GetNElements(); ++cSAC)
-  // 	  {
-  // 	    yClu = fSAC_ClColl->Element(cSAC);
-	  
-  // 	    if (yClu->GetEnergy()<50.) continue;
-  // 	    if ( fabs(yClu->GetTime()-xTimeLinCorr) > 1. ) continue;
-	  
-  // 	    hname="SACClEVsPVetoHitChId_1ns_linearCorr";
-  // 	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
-  // 	    if (yClu->GetChannelId()!=21) continue;
-  // 	    if(xEnergy < 10.) continue;
-  // 	    if(xEnergy > 50.) continue;
-  // 	    hname="SACClE21VsPVetoHitChId_1ns_linearCorr";
-  // 	    hSvc->FillHisto2(hname, (float)xChId, yClu->GetEnergy());
-  // 	  }
-  //     }
-
-  //   //Cluster Based 
-  //   for (int hPVeto=0; hPVeto<fPVeto_ClColl->GetNElements(); ++hPVeto)
-  //     {
-  // 	xClu = fPVeto_ClColl->Element(hPVeto);
-  // 	xTime= xClu->GetTime();
-  // 	xChId= xClu->GetChannelId();
-  // 	for (int hECal=0; hECal<fECal_ClColl->GetNElements(); ++hECal)
-  // 	  {
-  // 	    yClu = fECal_ClColl->Element(hECal);
-  // 	    yTime= yClu->GetTime();
-  // 	    yChId= yClu->GetChannelId();
-  // 	    yEne = yClu->GetEnergy();
-	  
-  // 	    hname="timeECalVsPVeto_Clus";
-  // 	    hSvc->FillHisto2(hname, xTime, yTime);
-  // 	    hname="energyECalVsChIdPVeto_Clus_inTime10";
-  // 	    if (fabs(yTime-xTime)<10.) hSvc->FillHisto2(hname, float(xChId), yEne);
-	  
-  // 	  }
-  //     }
-  // }
   double pigreco = acos(-1.);
 
 
@@ -351,9 +270,18 @@ Bool_t EventSelection::ProcessAnalysisSS()
       yChId= yHit->GetChannelId();
       eSumECalHits = eSumECalHits+yEne;
       hname=hprefix+"ECalEnergyMap_Hits";
-      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
-      hname=hprefix+"ECalMap_Hits";
-      hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
+      if (isMC)
+	{
+	  hSvc->FillHisto2(hname, float(int(yChId%100)), float(yChId/100), yEne);
+	  hname=hprefix+"ECalMap_Hits";
+	  hSvc->FillHisto2(hname, float(int(yChId%100)), float(yChId/100));
+	}
+      else
+	{
+	  hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100), yEne);
+	  hname=hprefix+"ECalMap_Hits";
+	  hSvc->FillHisto2(hname, float(int(yChId/100)), float(yChId%100));
+	}
     }
   hname=hprefix+"energySumECalHits";
   hSvc->FillHisto(hname, eSumECalHits);
@@ -422,7 +350,8 @@ Bool_t EventSelection::ProcessAnalysisSS()
   int n2gindt2_5=0;
   int n2gindt1=0;
   int n2g=0;
-
+  int n2gDsume=0;
+  int n2gFR = 0;
   
   //std::cout<<" pointer to collection = "<<(long)fECal_ClColl<<std::endl;
   //std::cout<<" Going to ECal Clusters "<<fECal_ClColl->GetNElements()<<std::endl;
@@ -440,6 +369,12 @@ Bool_t EventSelection::ProcessAnalysisSS()
 	  hSvc->FillHisto(hname, xEne);
 
 	  pos1 = xClu->GetPosition();
+ 	  if (isMC)
+	    {
+	      double tno = pos1.y();
+	      pos1.SetY(pos1.x());
+	      pos1.SetX(tno);
+	    }
 	  // Sum of All Cluster Energy 
 	  eSumCl = eSumCl+xEne;
 
@@ -447,6 +382,9 @@ Bool_t EventSelection::ProcessAnalysisSS()
 	  nclus50 +=1;
 	  hname=hprefix+"GammaSeleCutFlow"; 
 	  hSvc->FillHisto(hname,cut_g_all);
+
+	  hname="SS2g_ClTime";
+	  hSvc->FillHisto(hname, xTime);
 
 	  if (xEne > eMax)
 	    {
@@ -479,6 +417,13 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		  aChId  = aClu->GetChannelId();
 		  aTime  = aClu->GetTime();
 		  pos2   = aClu->GetPosition();
+		  if (isMC)
+		    {
+		      double tno = pos2.y();
+		      pos2.SetY(pos2.x());
+		      pos2.SetX(tno);
+		    }
+
 		  aSumCl = xEne+aEne;	
 	  
 		  if (aSumCl > aSumClMax)
@@ -523,7 +468,7 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		    }
 
 
-		  if (fabs(dt)<10.)
+		  if (fabs(dt)<30.)
 		    {
 		      hname = "SS2gSumE_passDt";
 		      hSvc->FillHisto(hname, aSumCl);
@@ -534,6 +479,30 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		      hSvc->FillHisto(hname, xcog);
 		      hname = "SS2gYcog_passDt";
 		      hSvc->FillHisto(hname, ycog);
+
+
+		      hname = "SS2gE_passDt";
+		      hSvc->FillHisto(hname, xEne, 0.5);
+		      hSvc->FillHisto(hname, aEne, 0.5);
+		      hname = "SS2gX_passDt";
+		      hSvc->FillHisto(hname, pos1.x(), 0.5);
+		      hSvc->FillHisto(hname, pos2.x(), 0.5);
+		      hname = "SS2gY_passDt";
+		      hSvc->FillHisto(hname, pos1.y(), 0.5);
+		      hSvc->FillHisto(hname, pos2.y(), 0.5);
+		      hname = "SS2gXEw_passDt";
+		      hSvc->FillHisto(hname, pos1.x(), xEne);
+		      hSvc->FillHisto(hname, pos2.x(), aEne);
+		      hname = "SS2gYEw_passDt";
+		      hSvc->FillHisto(hname, pos1.y(), xEne);
+		      hSvc->FillHisto(hname, pos2.y(), aEne);
+		      hname = "SS2gXYEw_passDt";
+		      hSvc->FillHisto2(hname, pos1.x(), pos1.y(), xEne);
+		      hSvc->FillHisto2(hname, pos2.x(), pos2.y(), aEne);
+
+
+
+
 		      if (cos(dPhi)<cos(2.3562))
 			{
 			  hname = "SS2gSumE_passDtDphi";
@@ -548,6 +517,26 @@ Bool_t EventSelection::ProcessAnalysisSS()
 			  hname = "SS2gYcog_passDtDphi";
 			  hSvc->FillHisto(hname, ycog);
 
+
+			  hname = "SS2gE_passDtDphi";
+			  hSvc->FillHisto(hname, xEne, 0.5);
+			  hSvc->FillHisto(hname, aEne, 0.5);
+			  hname = "SS2gX_passDtDphi";
+			  hSvc->FillHisto(hname, pos1.x(), 0.5);
+			  hSvc->FillHisto(hname, pos2.x(), 0.5);
+			  hname = "SS2gY_passDtDphi";
+			  hSvc->FillHisto(hname, pos1.y(), 0.5);
+			  hSvc->FillHisto(hname, pos2.y(), 0.5);
+			  hname = "SS2gXEw_passDtDphi";
+			  hSvc->FillHisto(hname, pos1.x(), xEne);
+			  hSvc->FillHisto(hname, pos2.x(), aEne);
+			  hname = "SS2gYEw_passDtDphi";
+			  hSvc->FillHisto(hname, pos1.y(), xEne);
+			  hSvc->FillHisto(hname, pos2.y(), aEne);
+			  hname = "SS2gXYEw_passDtDphi";
+			  hSvc->FillHisto2(hname, pos1.x(), pos1.y(), xEne);
+			  hSvc->FillHisto2(hname, pos2.x(), pos2.y(), aEne);
+			  
 			  if (fabs(xcog)<20. && fabs(ycog)<20.)
 			    {
 			      //hname = "SS2gSumE_passdt1dphi10cog10";
@@ -559,6 +548,104 @@ Bool_t EventSelection::ProcessAnalysisSS()
 			      hname = "SS2gDphi_passDtDphiCog";
 			      hSvc->FillHisto(hname, dPhi*180/pigreco);
 			      n2g+=1;
+
+			      
+			      hname = "SS2gE_passDtDphiCog";
+			      hSvc->FillHisto(hname, xEne, 0.5);
+			      hSvc->FillHisto(hname, aEne, 0.5);
+			      hname = "SS2gX_passDtDphiCog";
+			      hSvc->FillHisto(hname, pos1.x(), 0.5);
+			      hSvc->FillHisto(hname, pos2.x(), 0.5);
+			      hname = "SS2gY_passDtDphiCog";
+			      hSvc->FillHisto(hname, pos1.y(), 0.5);
+			      hSvc->FillHisto(hname, pos2.y(), 0.5);
+			      hname = "SS2gXEw_passDtDphiCog";
+			      hSvc->FillHisto(hname, pos1.x(), xEne);
+			      hSvc->FillHisto(hname, pos2.x(), aEne);
+			      hname = "SS2gYEw_passDtDphiCog";
+			      hSvc->FillHisto(hname, pos1.y(), xEne);
+			      hSvc->FillHisto(hname, pos2.y(), aEne);
+			      hname = "SS2gXYEw_passDtDphiCog";
+			      hSvc->FillHisto2(hname, pos1.x(), pos1.y(), xEne);
+			      hSvc->FillHisto2(hname, pos2.x(), pos2.y(), aEne);
+			      
+			      
+
+			      if (fabs(pos1.x())>100. && fabs(pos2.x())>100. &&  fabs(pos1.y())<200. && fabs(pos2.y())<200.) {
+				n2gFR+=1;
+				hname = "SS2gSumE_passDtDphiCogFR";
+				hSvc->FillHisto(hname, aSumCl);
+				
+				hname = "SS2gDt_passDtDphiCogFR";
+				hSvc->FillHisto(hname, dt);				  
+				hname = "SS2gDphi_passDtDphiCogFR";
+				hSvc->FillHisto(hname, dPhi*180/pigreco);
+				hname = "SS2gXcog_passDtDphiCogFR";
+				hSvc->FillHisto(hname, xcog);
+				hname = "SS2gYcog_passDtDphiCogFR";
+				hSvc->FillHisto(hname, ycog);
+			      
+			      
+				hname = "SS2gE_passDtDphiCogFR";
+				hSvc->FillHisto(hname, xEne, 0.5);
+				hSvc->FillHisto(hname, aEne, 0.5);
+				hname = "SS2gX_passDtDphiCogFR";
+				hSvc->FillHisto(hname, pos1.x(), 0.5);
+				hSvc->FillHisto(hname, pos2.x(), 0.5);
+				hname = "SS2gY_passDtDphiCogFR";
+				hSvc->FillHisto(hname, pos1.y(), 0.5);
+				hSvc->FillHisto(hname, pos2.y(), 0.5);
+				hname = "SS2gXEw_passDtDphiCogFR";
+				hSvc->FillHisto(hname, pos1.x(), xEne);
+				hSvc->FillHisto(hname, pos2.x(), aEne);
+				hname = "SS2gYEw_passDtDphiCogFR";
+				hSvc->FillHisto(hname, pos1.y(), xEne);
+				hSvc->FillHisto(hname, pos2.y(), aEne);
+
+
+
+				if (fabs(aSumCl-490.)<50.)
+				  {
+				    hname = "SS2gSumE_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, aSumCl);
+
+				    hname = "SS2gDt_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, dt);				  
+				    hname = "SS2gDphi_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, dPhi*180/pigreco);
+				    hname = "SS2gXcog_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, xcog);
+				    hname = "SS2gYcog_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, ycog);
+
+
+				    hname = "SS2gE_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, xEne, 0.5);
+				    hSvc->FillHisto(hname, aEne, 0.5);
+				    hname = "SS2gX_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, pos1.x(), 0.5);
+				    hSvc->FillHisto(hname, pos2.x(), 0.5);
+				    hname = "SS2gY_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, pos1.y(), 0.5);
+				    hSvc->FillHisto(hname, pos2.y(), 0.5);
+				    hname = "SS2gXEw_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, pos1.x(), xEne);
+				    hSvc->FillHisto(hname, pos2.x(), aEne);
+				    hname = "SS2gYEw_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, pos1.y(), xEne);
+				    hSvc->FillHisto(hname, pos2.y(), aEne);
+				    hname = "SS2gXYEw_passDtDphiCogDsume";
+				    hSvc->FillHisto2(hname, pos1.x(), pos1.y(), xEne);
+				    hSvc->FillHisto2(hname, pos2.x(), pos2.y(), aEne);
+
+
+				    n2gDsume+=1;
+
+
+				  
+				    
+				  }
+			      }
 			    }
 			}
 		    }
@@ -778,6 +865,8 @@ Bool_t EventSelection::ProcessAnalysisSS()
   hSvc->FillHisto(hname,float(n2gindt1));
   hname="SS2g_n2g";
   hSvc->FillHisto(hname,float(n2g));
+  hname="SS2g_n2gFR";
+  hSvc->FillHisto(hname,float(n2gFR));
 
 
   hname=hprefix+"energySumECalClus";
@@ -2570,6 +2659,7 @@ Bool_t EventSelection::InitHistosAnalysis()
      maxX =  1500.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
 
+
      hname="SS2g_nclus";
      hSvc->BookHisto(hname, 50, 0.5, 50.5);
      hname="SS2g_nclus50";
@@ -2584,8 +2674,17 @@ Bool_t EventSelection::InitHistosAnalysis()
      hSvc->BookHisto(hname, 10, 0.5, 10.5);
      hname="SS2g_n2g";
      hSvc->BookHisto(hname, 10, 0.5, 10.5);
+     hname="SS2g_n2gFR";
+     hSvc->BookHisto(hname, 10, 0.5, 10.5);
+
+     hname="SS2g_ClTime";
+     hSvc->BookHisto(hname, 100, -500, 500);
 
 
+     hname = "SS2gSumE_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gSumE_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gSumE_passDtDphiCog";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gSumE_passDtDphi";
@@ -2593,9 +2692,14 @@ Bool_t EventSelection::InitHistosAnalysis()
      hname = "SS2gSumE_passDt";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
 
+
      nBinX=  100;
      minX =  -50;
      maxX =   50.;
+     hname = "SS2gDt_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gDt_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gDt_passDtDphiCog";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gDt_passDtDphi";
@@ -2604,6 +2708,10 @@ Bool_t EventSelection::InitHistosAnalysis()
      nBinX=   720;
      minX =  -360;
      maxX =   360.;
+     hname = "SS2gDphi_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gDphi_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gDphi_passDtDphiCog";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gDphi_passDtDphi";
@@ -2611,10 +2719,91 @@ Bool_t EventSelection::InitHistosAnalysis()
      hname = "SS2gDphi_passDt";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
 
+     nBinX=   100;
+     minX =    50;
+     maxX =   450.;
+     hname = "SS2gE_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gE_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gE_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gE_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gE_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     nBinX=   50;
+     minX =  -400;
+     maxX =   400.;
+     minY =  -400;
+     maxY =   400.;
+     hname = "SS2gX_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gX_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gX_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gX_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gX_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gY_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gY_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gY_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gY_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gY_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     hname = "SS2gXEw_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXEw_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXEw_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXEw_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXEw_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYEw_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYEw_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYEw_passDtDphiCog";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYEw_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYEw_passDt";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+
+     nBinX=   100;
+     nBinY=   100;
+     hname = "SS2gXYEw_passDtDphiCogDsume";
+     hSvc->BookHisto2(hname, nBinX, minX, maxX, nBinY, minY, maxY);
+     hname = "SS2gXYEw_passDtDphiCog";
+     hSvc->BookHisto2(hname, nBinX, minX, maxX, nBinY, minY, maxY);
+     hname = "SS2gXYEw_passDtDphi";
+     hSvc->BookHisto2(hname, nBinX, minX, maxX, nBinY, minY, maxY);
+     hname = "SS2gXYEw_passDt";
+     hSvc->BookHisto2(hname, nBinX, minX, maxX, nBinY, minY, maxY);
+
+
      nBinX=  100;
      minX =  -200;
      maxX =   200.;
+     hname = "SS2gXcog_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gXcog_passDtDphiCogFR";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gXcog_passDtDphi";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYcog_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, nBinX, minX, maxX);
+     hname = "SS2gYcog_passDtDphiCogFR";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gYcog_passDtDphi";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
@@ -2622,7 +2811,6 @@ Bool_t EventSelection::InitHistosAnalysis()
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname = "SS2gYcog_passDt";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
-
 
      hname = "ECal2gsearch_ESumDt3";
      hSvc->BookHisto(hname, nBinX, minX, maxX);
@@ -2819,8 +3007,8 @@ Bool_t EventSelection::InitHistosAnalysis()
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname="TimeSpreadInECal";
      nBinX=  200;
-     minX =  -30.;
-     maxX =   30.;
+     minX =  -300.;
+     maxX =   300.;
      hSvc->BookHisto(hname, nBinX, minX, maxX);
      hname="CellSpreadInECal";
      nBinX=  30;

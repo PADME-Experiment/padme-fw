@@ -97,11 +97,11 @@ Bool_t SACAnalysis::ProcessDataQuality()
       EHitSum = EHitSum+h->GetEnergy();
       hname = "SAC_HitOccupancyEWeig";
       int chid =  h->GetChannelId();
-      int chidx =  chid/10;
-      int chidy =  chid%10;
-      hSvc->FillHisto2(hname, float(chidx),  float(chidy), h->GetEnergy());	
+      int x =  h->GetPosition().X();
+      int y =  h->GetPosition().Y();
+      hSvc->FillHisto2(hname, float(x),  float(y), h->GetEnergy());	
       hname = "SAC_HitOccupancy";
-      hSvc->FillHisto2(hname, float(chidx),  float(chidy));
+      hSvc->FillHisto2(hname, float(x),  float(y));
     }
     hname = "SAC_SumHitEnergy";
     if (fhitEvent->GetNHits()>0) hSvc->FillHisto(hname, EHitSum);
@@ -144,6 +144,18 @@ Bool_t SACAnalysis::InitHistosValidation()
     hname = "SAC_HitEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
     hname = "SAC_ClusterEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=500;
+    min=0;
+    max=1000;
+    hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+    hSvc->BookHisto(hname,nBin,min, max);
+    nBin=1000;
+    min=0;
+    max=15000;
+    hname = "SAC_HitTotEnergy";
+    hSvc->BookHisto(hname,nBin,min, max);
+    hname = "SAC_ClusterTotEnergy";
     hSvc->BookHisto(hname,nBin,min, max);
     nBin=700;
     min=-300;
@@ -195,6 +207,25 @@ Bool_t SACAnalysis::ProcessAnalysis()
 {
 
   Bool_t retCode = 0;
+
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+
+  TRecoVHit* hit=NULL;
+  TRecoVHit* hitn=NULL;
+  TRecoVCluster* clu=NULL;
+  TRecoVCluster* clun=NULL;
+  std::string hname;
+  Int_t      chId;
+  Double_t energy;
+  Double_t   time;
+  Int_t      chIdn;
+  Double_t energyn;
+  Double_t   timen;
+
+  Int_t fNhits = fhitEvent->GetNHits();
+  Int_t fNclus = fClColl->GetNElements();
+  Int_t seedId;
+  Int_t clSize;
   
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 
@@ -250,6 +281,41 @@ Bool_t SACAnalysis::ProcessAnalysis()
   
   
   // std::cout<<"Out of SAC"<<std::endl;
+
+   //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
+  
+  for (Int_t i=0; i<fNhits; ++i){
+    hit    = fhitEvent->Hit(i);
+    chId   = hit->GetChannelId();
+    energy = hit->GetEnergy();
+    time   = hit->GetTime();
+
+   (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
+   (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
+   (hSvc->myEvt).NTSAC_Hits_Time[i]=hit->GetTime();
+   (hSvc->myEvt).NTSAC_Hits_Xpos[i]=hit->GetPosition().X();
+   (hSvc->myEvt).NTSAC_Hits_Ypos[i]=hit->GetPosition().Y();
+   (hSvc->myEvt).NTSAC_Hits_Zpos[i]=hit->GetPosition().Z();
+  }
+
+    //fillClustersFlatNTP  
+
+  (hSvc->myEvt).NTNSAC_Clusters= fClColl->GetNElements();
+
+  for (Int_t j=0; j<fNclus; ++j){
+     clu    = fClColl->Element(j);
+     seedId = clu->GetChannelId();
+  
+   (hSvc->myEvt).NTSAC_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
+   (hSvc->myEvt).NTSAC_Clusters_Energy[j]=clu->GetEnergy();
+   (hSvc->myEvt).NTSAC_Clusters_Time[j]=clu->GetTime();
+   (hSvc->myEvt).NTSAC_Clusters_Xpos[j]=clu->GetPosition().X();
+   (hSvc->myEvt).NTSAC_Clusters_Ypos[j]=clu->GetPosition().Y();
+   (hSvc->myEvt).NTSAC_Clusters_Zpos[j]=clu->GetPosition().Z();
+  }
+
   return retCode;
 }
 
@@ -265,11 +331,13 @@ Bool_t SACAnalysis::ProcessValidation()
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   TRecoVHit* hit=NULL;
   std::string hname;
+  Double_t ETotHit=0.;
   Int_t fNhits = fhitEvent->GetNHits();
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
-    Int_t ix = hit->GetChannelId()/10;
-    Int_t iy = hit->GetChannelId()%10;
+    Int_t ix = hit->GetPosition().X();
+    Int_t iy = hit->GetPosition().Y();
+    ETotHit += hit->GetEnergy();
     //Int_t ix=position.X();
     //Int_t iy=position.Y();
   
@@ -278,20 +346,40 @@ Bool_t SACAnalysis::ProcessValidation()
 
     
    }
-
+   hname="SAC_HitTotEnergy";
+   hSvcVal->FillHisto(hname, ETotHit, 1.);
 
    TRecoVCluster* clu=NULL;
+   TRecoVCluster* clun=NULL;
    Int_t fNclus = fClColl->GetNElements();
-
-   std::cout<<"NClusters:  " << fNclus << std::endl;
+   Double_t ETotCl=0.;
+   Bool_t Annihilation=true;
    for (Int_t i=0; i<fNclus; ++i){
      clu    = fClColl->Element(i);
-     Int_t ix = clu->GetChannelId()/10;
-     Int_t iy = clu->GetChannelId()%10;
+     Int_t ix = clu->GetPosition().X();
+     Int_t iy = clu->GetPosition().Y();
+     ETotCl += clu->GetEnergy();
      //Int_t ix=position.X();
      //Int_t iy=position.Y();
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
+     Annihilation=true;  
+ 
+     for(int j=0; j< fNclus; j++){
+       clun   = fClColl->Element(j);
+       if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
+       {
+         Annihilation=false;
+	 j=fNclus;
+       }
+     }
+     if(Annihilation){
+       hname="SAC_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest3ns";
+       hSvcVal->FillHisto(hname, clu->GetEnergy());
+     }
    }
+   hname="ECal_HitTotEnergy";
+   hSvcVal->FillHisto(hname, ETotCl, 1.);
+   
    return retCode;
 }

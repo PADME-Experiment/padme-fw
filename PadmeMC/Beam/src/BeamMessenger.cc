@@ -178,6 +178,16 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetThreePhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/3g_file",this);
   fSetThreePhotonDecaysFilenameCmd->SetParameterName("TPF",false);
   fSetThreePhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  
+  fSetNTwoPhotonDecaysPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_2g_per_bunch",this);
+  fSetNTwoPhotonDecaysPerBunchCmd->SetGuidance("Set number of two photon decays in each bunch.");
+  fSetNTwoPhotonDecaysPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNTwoPhotonDecaysPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
+  fSetNTwoPhotonDecaysPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
+  fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
+  fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableCalibRunCmd = new G4UIcmdWithABool("/beam/calibration",this);
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
@@ -217,8 +227,6 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 BeamMessenger::~BeamMessenger()
 {
 
-  delete fBeamGeneratorDir;
-
   delete fSetNPositronsPerBunchCmd;
   delete fEnableNPositronsPerBunchSpreadCmd;
 
@@ -248,12 +256,17 @@ BeamMessenger::~BeamMessenger()
 
   delete fSetNThreePhotonDecaysPerBunchCmd;
   delete fSetThreePhotonDecaysFilenameCmd;
+  
+  delete fSetNTwoPhotonDecaysPerBunchCmd;
+  delete fSetTwoPhotonDecaysFilenameCmd;
 
   delete fEnableCalibRunCmd;
   delete fSetCalibRunEnergyCmd;
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
   delete fSetCalibRunRadiusCmd;
+
+  delete fBeamGeneratorDir;
 
 }
 
@@ -354,6 +367,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetThreePhotonDecaysFilenameCmd )
     fBeamParameters->SetThreePhotonDecaysFilename(par);
+    
+  else if ( cmd == fSetNTwoPhotonDecaysPerBunchCmd )
+    fBeamParameters->SetNTwoPhotonDecaysPerBunch(fSetNTwoPhotonDecaysPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
+    fBeamParameters->SetTwoPhotonDecaysFilename(par);
 
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {
@@ -450,6 +469,12 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetThreePhotonDecaysFilenameCmd )
     cv = fBeamParameters->GetThreePhotonDecaysFilename();
+    
+  else if ( cmd == fSetNTwoPhotonDecaysPerBunchCmd )
+    cv = fSetNTwoPhotonDecaysPerBunchCmd->ConvertToString(fBeamParameters->GetNTwoPhotonDecaysPerBunch());
+
+  else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
+    cv = fBeamParameters->GetTwoPhotonDecaysFilename();  
 
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());

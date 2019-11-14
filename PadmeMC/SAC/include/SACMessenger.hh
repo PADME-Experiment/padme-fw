@@ -45,5 +45,7 @@ private:
 
   G4UIcmdWithADoubleAndUnit* fSetSACFrontFaceZCmd;
 
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
+
 };
 #endif

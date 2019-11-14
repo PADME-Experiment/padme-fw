@@ -1,8 +1,9 @@
 #ifndef _Trigger_H_
 #define _Trigger_H_
 
-#define TRIG_OK 0
+#define TRIG_OK    0
 #define TRIG_ERROR 1
+#define TRIG_UNDEF 2
 
 int trig_init();
 int trig_end();
@@ -29,8 +30,11 @@ int trig_set_correlated_delay(unsigned short int); // 16b correlated trigger del
 int trig_get_timepix_delay(unsigned char*); // 8b timepix shutter delay wrt trigger in clock counts
 int trig_set_timepix_delay(unsigned char); // 8b timepix shutter delay wrt trigger in clock counts
 
-int trig_get_timepix_width(unsigned char*); // 8b timepix shutter width in clock counts
-int trig_set_timepix_width(unsigned char); // 8b timepix shutter width in clock counts
+int trig_get_timepix_width(unsigned char*); // 8b timepix shutter width in 100ns counts
+int trig_set_timepix_width(unsigned char); // 8b timepix shutter width in 100ns counts
+
+int trig_get_trigger0_delay(unsigned char*); // 8b trigger0 distribution delay in clock counts
+int trig_set_trigger0_delay(unsigned char); // 8b trigger0 distribution delay in clock counts
 
 int trig_get_trigger_global_factor(unsigned char,unsigned short int*); // trigger (0-7),16b global demultiplication factor
 int trig_set_trigger_global_factor(unsigned char,unsigned short int); // trigger (0-7),16b global demultiplication factor

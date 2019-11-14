@@ -2,7 +2,6 @@
 #include "G4UImanager.hh"
 
 #include "DetectorConstruction.hh"
-//#include "PhysicsList.hh"
 #include "PrimaryGeneratorAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -16,8 +15,6 @@
 #include "PADME_PHYS.hh"
 
 #include "RootIOManager.hh"
-
-//#include "MyEvent.hh"
 
 #ifdef  G4MULTITHREADED
 #include "G4MTHepRandom.hh"
@@ -80,12 +77,6 @@ int main(int argc,char** argv)
   G4VSteppingVerbose* verbosity = new SteppingVerbose;
   G4VSteppingVerbose::SetInstance(verbosity);
 
-  //  G4String fileNameOut= argv[2];
-  //  G4cout<<"Output File Name "<<fileNameOut<<G4endl;
-
-  //Get the event storage. Should be instantiated before the HISTO!
-  //MyEvent *TheEvent = MyEvent::GetInstance(); //
-
   // Run manager
   G4RunManager * runManager = new G4RunManager;
   
@@ -101,20 +92,10 @@ int main(int argc,char** argv)
   DetectorConstruction* detector = new DetectorConstruction;
   runManager->SetUserInitialization(detector);
 
-  if ( UseNewPhysList == 1) {
-    // Physics list based on "official" physics models
-    // Mainly QGSP_BERT or QGSP_BIC + Optical
-    G4VModularPhysicsList* physicsList = new PADME_PHYS;
-    runManager->SetUserInitialization(physicsList);
-  } else {
-    //Custom made user physics list, old style
-    //G4VUserPhysicsList* physics = new PhysicsList;
-    //runManager->SetUserInitialization(physics);
-    printf("ERROR - PhysicsList is obsolete: use new physics list PADME_PHYS\n");
-    exit(1);
-  }
-  
-
+  // Physics list based on "official" physics models
+  // Mainly QGSP_BERT or QGSP_BIC + Optical
+  G4VModularPhysicsList* physicsList = new PADME_PHYS;
+  runManager->SetUserInitialization(physicsList);
 
   // User Action classes
   G4cout << "MAIN: Constructing the generator action" << G4endl;

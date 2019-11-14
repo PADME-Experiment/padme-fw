@@ -96,7 +96,8 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
 
   //Waveform histograms
-  for(int iCh=0; iCh<25 ; iCh++){
+  //  for(int iCh=0; iCh<25 ; iCh++){
+  for(int iCh=0; iCh<32; iCh++){ //MR After cosmic rays bars have been added to the digitizer july 2019
     char iName[100];
     sprintf(iName,"SACCh%d",iCh);
     AddHisto(iName, new TH1F(iName, iName,  1024,  0, 1024 ));
@@ -153,6 +154,8 @@ TRecoVEvent * SACReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tG
   return fRecoEvent;
 }
 */
+
+/* only for debugging printout 
 void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -173,6 +176,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void SACReconstruction::EndProcessing()
 // {;}
@@ -291,8 +295,10 @@ void SACReconstruction::BuildSimpleSACClusters(){
       if( fabs(cTime[iHit1]-SdTime[NSeeds])<1.5 && cUsed[iHit1]==0 && IsSeedNeig(SdCell[NSeeds],cChID[iHit1])==1){
 	//std::cout<<"is neig "<<iHit1<<std::endl;
 	clusMatrix[NSeeds][NCry]=iHit1;
-	Double_t XCl=(60.-cChID[iHit1]/10*30.);  //verificato con la mappa.
-	Double_t YCl=(-60.+cChID[iHit1]%10*30.); //verificato con la mappa.
+	//Double_t XCl=(60.-cChID[iHit1]/10*30.);  //verificato con la mappa.
+	//Double_t YCl=(-60.+cChID[iHit1]%10*30.); //verificato con la mappa.
+	Double_t XCl=(Hits[iHit1]->GetPosition()).X();
+	Double_t YCl=(Hits[iHit1]->GetPosition()).Y();
 	cUsed[iHit1]=1;
 	ClTime[NSeeds]+=cTime[iHit1];   // questo pesa tutto uguale
 	ClE[NSeeds]+=cEnergy[iHit1];    // questo deve essere calibrato prima.
@@ -323,7 +329,7 @@ void SACReconstruction::BuildSimpleSACClusters(){
     myCl->SetChannelId( SdCell[iCl] );
     myCl->SetEnergy( ClE[iCl]    );
     myCl->SetTime(   ClTime[iCl] );
-    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],0.));
+    myCl->SetPosition(TVector3(ClX[iCl],ClY[iCl],Hits[0]->GetPosition().Z()));
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";

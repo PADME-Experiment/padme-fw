@@ -77,3 +77,7 @@ int PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,int val
 double PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,double val){
   return fConfigParser->HasConfig(group,name)?std::stof(fConfigParser->GetSingleArg(group,name)):val;
 }
+
+std::string PadmeVRecoConfig::GetParOrDefault(std::string group,std::string name,std::string val){
+  return fConfigParser->HasConfig(group,name)?fConfigParser->GetSingleArg(group,name):val;
+}

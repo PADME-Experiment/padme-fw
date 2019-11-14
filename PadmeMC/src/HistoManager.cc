@@ -8,7 +8,6 @@
 #include "G4UnitsTable.hh"
 #include "Constants.hh"
 #include "DatacardManager.hh"
-//#include "MyEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -99,8 +98,8 @@ void HistoManager::book()
   if (!histo2[2]) G4cout << "\n can't create histo 11" << G4endl;  
   histo2[3] = new TH2D("h23", "nCell vs ETotCal",15,-0.5, 14.5,200,0.,100.);
   if (!histo2[3]) G4cout << "\n can't create histo 11" << G4endl;
-  histo2[4] = new TH2D("h24", "nCellCl vs ECluster",ECalNCells*0.5,-0.5, ECalNCells*0.5-0.5,BeamEnergy/2,0.,BeamEnergy);
-  if (!histo2[4]) G4cout << "\n can't create histo 11" << G4endl;
+  //histo2[4] = new TH2D("h24", "nCellCl vs ECluster",ECalNCells*0.5,-0.5, ECalNCells*0.5-0.5,BeamEnergy/2,0.,BeamEnergy);
+  //if (!histo2[4]) G4cout << "\n can't create histo 11" << G4endl;
   histo2[5] = new TH2D("h25", "X Y cluster Pos ",ECalNRow*10,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNRow*10,-ECalSizeY*0.5,ECalSizeY*0.5);
   if (!histo2[5]) G4cout << "\n can't create histo 15" << G4endl;
   histo2[6] = new TH2D("h26", "Energy vs Theta calo ",275,0.,550.,60,0.,12.);
@@ -188,7 +187,24 @@ void HistoManager::book()
 
   histo2[77] = new TH2D("h77","BeW ThetavsE",TarXBins,TarXmin,TarXmax,200,0,0.100);
   if (!histo2[77]) G4cout << "\n can't create histo 77" << G4endl;
-
+  
+  //Study gamma gamma txt
+  histo[78] = new TH1D("h78","PxGamma1",1000,-100,700);
+  if (!histo[78]) G4cout << "\n can't create histo 78" << G4endl;
+  histo[79] = new TH1D("h79","PyGamma1",1000,-100,700);
+  if (!histo[79]) G4cout << "\n can't create histo 79" << G4endl;
+  histo[80] = new TH1D("h80","PzGamma1",1000,-100,700);
+  if (!histo[80]) G4cout << "\n can't create histo 80" << G4endl;
+  histo[81] = new TH1D("h81","PxGamma2",1000,-100,700);
+  if (!histo[81]) G4cout << "\n can't create histo 81" << G4endl;
+  histo[82] = new TH1D("h82","PyGamma2",1000,-100,700);
+  if (!histo[82]) G4cout << "\n can't create histo 82" << G4endl;
+  histo[83] = new TH1D("h83","PzGamma2",1000,-100,700);
+  if (!histo[83]) G4cout << "\n can't create histo 83" << G4endl;
+  histo[84] = new TH1D("h84","RadiusGamma1",200,-100,100);
+  if (!histo[84]) G4cout << "\n can't create histo 84" << G4endl;
+  histo[85] = new TH1D("h85","RadiusGamma2",200,-100,100);
+  if (!histo[85]) G4cout << "\n can't create histo 85" << G4endl;
 
   //Hystogram of generated variables 30-39
   histo2[30] = new TH2D("h30", "Energy vs Theta Gen ",275,0.,550.,60,0.,12.);
@@ -319,23 +335,16 @@ void HistoManager::book()
   ntupl->Branch("EVetoECl",       (myEvt.NTEVetoECl),      "NTEVetoECl[100][10]/D");
   ntupl->Branch("EVetoTimeCl",    (myEvt.NTEVetoTimeCl),   "NTEVetoTimeCl[100][10]/D");
 
+  //if(IsTrackerRecoON==1){
+  //  ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
+  //  ntupl->Branch("NTTrClusX", myEvt.NTTrClusX,"NTTrClusX[1000]/D");
+  //  ntupl->Branch("NTTrClusY", myEvt.NTTrClusY,"NTTrClusY[1000]/D");
+  //  ntupl->Branch("NTTrClusZ", myEvt.NTTrClusZ,"NTTrClusZ[1000]/D");
+  //  ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
+  //} 
 
-  //MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
-  //MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();
-  
-  if(IsTrackerRecoON==1){
-    ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
-    ntupl->Branch("NTTrClusX", myEvt.NTTrClusX,"NTTrClusX[1000]/D");
-    ntupl->Branch("NTTrClusY", myEvt.NTTrClusY,"NTTrClusY[1000]/D");
-    ntupl->Branch("NTTrClusZ", myEvt.NTTrClusZ,"NTTrClusZ[1000]/D");
-    ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
-  } 
-
-  //  ntGen = new TTree("genEvt", "genEvent");
-  //  ntGen->Branch("NPrimaries","");   
-  //  ntSim = new TTree("simEvt", "simEvent");
-  //ntSim->Branch("simEvt","MySimEvent",&mySim);
   G4cout << "\n----> Histogram file is opened in " << fileName << G4endl;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

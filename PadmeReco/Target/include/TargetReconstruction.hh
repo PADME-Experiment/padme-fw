@@ -42,7 +42,8 @@ private:
   static Double_t fitProfile(Double_t *x, Double_t *par);
   TTargetRecoBeam* fTargetRecoBeam;
   vector<TTargetSignalFitParams *> fSignalFitParams;
-  TH1F * hprofile;
+  TH1F * hprofileX;
+  TH1F * hprofileY;
 
   Bool_t fWriteFitParams;
   Bool_t fWriteTargetBeam;

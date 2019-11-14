@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4LogicalVolume.hh"
 
-#include "MagnetMessenger.hh" 
+//#include "MagnetMessenger.hh" 
 
 class MagnetStructure
 {
@@ -24,29 +24,16 @@ public:
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
   void CreateGeometry();
 
-  //G4LogicalVolume* GetMagneticVolume() { return fMagneticVolume; }
-
-  //void EnableMagneticField()  { fMagneticField = 1; }
-  //void DisableMagneticField() { fMagneticField = 0; }
-
-  //void SetMagneticVolumeVisible()   { fMagneticVolumeIsVisible = 1; }
-  //void SetMagneticVolumeInvisible() { fMagneticVolumeIsVisible = 0; }
-
   void SetMagnetVisible()   { fMagnetIsVisible = true;  }
   void SetMagnetInvisible() { fMagnetIsVisible = false; }
 
 private:
 
   G4LogicalVolume* fMotherVolume;
-  //G4LogicalVolume* fMagneticVolume;
 
-  MagnetMessenger* fMagnetMessenger;
+  //MagnetMessenger* fMagnetMessenger;
 
   G4bool fMagnetIsVisible;
-
-  //G4int fMagneticField; // =1 Field ON, =0 Field OFF
-
-  //G4int fMagneticVolumeIsVisible; // =1 Visible, =0 Invisible
 
 };
 

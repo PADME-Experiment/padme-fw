@@ -42,23 +42,32 @@ class HistoManager;
 
 class RunAction : public G4UserRunAction
 {
-  public:
+public:
   //    RunAction(HistoManager*);
-    RunAction();
-   ~RunAction();
+  RunAction();
+  ~RunAction();
 
-  public:
-    G4Run* GenerateRun();
-    void BeginOfRunAction(const G4Run*);
-    void EndOfRunAction(const G4Run*);
+public:
+
+  //G4Run* GenerateRun();
+  void BeginOfRunAction(const G4Run*);
+  void EndOfRunAction(const G4Run*);
+
+  void EnableAutomaticRandomSeed()  { fAutomaticRandomSeed = true;  }
+  void DisableAutomaticRandomSeed() { fAutomaticRandomSeed = false; }
+
 private:
+
   HistoManager* fHistoManager;
   
+  G4bool fAutomaticRandomSeed;
+
   G4double fSumEAbs, fSum2EAbs; //variable for the hystograms
   G4double fSumEGap, fSum2EGap;
   
   G4double fSumLAbs, fSum2LAbs;
   G4double fSumLGap, fSum2LGap;   
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

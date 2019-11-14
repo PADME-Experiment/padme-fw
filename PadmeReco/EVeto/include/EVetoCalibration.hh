@@ -18,10 +18,16 @@ public:
   
   EVetoCalibration();
   ~EVetoCalibration();
-  
+
+  void ReadCalibrationConstants();
+  void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
+
 
 private:
 
+  Double_t fCalibCh   [96];
+  int fCalibrationFile;
+  
 };
 #endif
 

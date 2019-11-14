@@ -6,13 +6,36 @@
 /run/verbose 1
 /tracking/verbose 0
 
+# General run settings
+
+# How often event printout is shown
+#/settings/PrintOutFrequency 100
+
+# Automatically generate random seeds using system time
+# If disabled, user must set environment variables PADME_SEED1 and PADME_SEED2
+#/settings/AutomaticRandomSeed true
+
+# Turbo mode kills low energy particles to speed up rough detector studies
+# ENABLE ONLY IF YOU KNOW WHAT YOU ARE DOING!
+#/settings/TurboModeEnable false
+
+# Set verbose level for TurboMode. If >=10 show all killed particles
+#/settings/TurboMode/Verbose 0
+
+# Turbo mode thresholds for e+,e-,gamma,neutron
+# Particles will be killed if their kinetic energy is below threshold
+#/settings/TurboMode/KillEnergyPositron 10. MeV
+#/settings/TurboMode/KillEnergyElectron 10. MeV
+#/settings/TurboMode/KillEnergyGamma     1. MeV
+#/settings/TurboMode/KillEnergyNeutron  10. MeV
+
 # RootIO settings
 
 # Output root file with MC hits
-#/output/DataFileName mcdata.root
+#/output/DataFileName MCData.root
 
 # Output root file with analysis histograms/ntuple
-#/output/HistoFileName mchisto.root
+#/output/HistoFileName UBTF.root
 
 # Disable/enable SAC/ECal analysis (WARNING! For SAC see command documentation)
 #/analysis/DisableSACAnalysis true
@@ -20,7 +43,7 @@
 
 # Disable/enable saving to Fast analysis Tree U102
 # uses conditions on ECal Energy, SAC energy, Hit in the Veto
-#/analysis/SaveEcal  false
+#/analysis/SaveEcal  true
 #/analysis/SaveSAC   false
 #/analysis/SaveVeto  false
 
@@ -34,15 +57,17 @@
 #/output/EnableDetectorIO TPix:D
 
 # Disable IO for single detectors
-/output/DisableDetectorIO Target
-/output/DisableDetectorIO PVeto
-/output/DisableDetectorIO EVeto
-/output/DisableDetectorIO HEPVeto
-/output/DisableDetectorIO ECal
-/output/DisableDetectorIO SAC
-/output/DisableDetectorIO TPix
+#/output/DisableDetectorIO Target
+#/output/DisableDetectorIO PVeto
+#/output/DisableDetectorIO EVeto
+#/output/DisableDetectorIO HEPVeto
+#/output/DisableDetectorIO ECal
+#/output/DisableDetectorIO SAC
+#/output/DisableDetectorIO TPix
 
 # Detector settings
+
+#/Detector/VerboseLevel 0
 
 #/Detector/EnableSubDetector ECal
 #/Detector/EnableSubDetector Target
@@ -52,11 +77,10 @@
 #/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
 #/Detector/EnableSubDetector TPix
-#/Detector/EnableSubDetector Tungsten
 
-#/Detector/EnableStructure Wall
 #/Detector/EnableStructure Magnet
 #/Detector/EnableStructure Chamber
+#/Detector/EnableStructure BeamLine
 
 #/Detector/DisableSubDetector ECal
 #/Detector/DisableSubDetector Target
@@ -66,14 +90,22 @@
 #/Detector/DisableSubDetector HEPVeto
 #/Detector/DisableSubDetector TDump
 #/Detector/DisableSubDetector TPix
-#/Detector/DisableSubDetector Tungsten
 
-#/Detector/DisableStructure Wall
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
+#/Detector/DisableStructure BeamLine
+
+#/Detector/WorldIsAir
+#/Detector/WorldIsVacuum
+
+#/Detector/SetMagnetVisible
+#/Detector/SetMagnetInvisible
 
 #/Detector/SetChamberVisible
 #/Detector/SetChamberInvisible
+
+#/Detector/SetBeamLineVisible
+#/Detector/SetBeamLineInvisible
 
 #/Detector/EnableMagneticField
 #/Detector/DisableMagneticField
@@ -83,18 +115,13 @@
 #/Detector/SetMagneticVolumeInvisible
 
 # Beam line settings
-#/Detector/SetBeamLineInvisible
-#/Detector/EnableStructure BeamLine
-#/Detector/DisableStructure BeamLine
-#/Detector/BeamLine/Be_window true
+#/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/DHST002_FieldY -1.055 tesla
+#/Detector/BeamLine/EnableQuadrupoles false
+#/Detector/BeamLine/Q1_FieldGrad 5.
+#/Detector/BeamLine/Q2_FieldGrad 5.
 
-#/Detector/WorldIsAir
-#/Detector/WorldIsVacuum
-
-#/Detector/Magnet/SetMagnetVisible
-#/Detector/Magnet/SetMagnetInvisible
-
+#/Detector/Target/VerboseLevel 0
 #/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
@@ -103,6 +130,7 @@
 #/Detector/Target/EnableSaveWaveformToDigi
 #/Detector/Target/DisableSaveWaveformToDigi
 
+#/Detector/ECal/VerboseLevel 0
 #/Detector/ECal/NRows 29
 #/Detector/ECal/NCols 29
 #/Detector/ECal/CrystalMapId 0
@@ -116,6 +144,7 @@
 #/Detector/ECal/PanelThickness 1.5
 #/Detector/ECal/PanelGap 0.1
 
+#/Detector/SAC/VerboseLevel 0
 #/Detector/SAC/NRows 5
 #/Detector/SAC/NCols 5
 #/Detector/SAC/CrystalSize 3. cm
@@ -124,40 +153,34 @@
 #/Detector/SAC/CrystalCoating 100. um
 #/Detector/SAC/FrontFaceZ 300. cm
 
-#/Detector/LAV/InnerRadius 5.1
-#/Detector/LAV/OuterRadius 12.
-#/Detector/LAV/ZLength 20.
-#/Detector/LAV/FrontFaceZ -60.
-
+#/Detector/PVeto/VerboseLevel 0
 #/Detector/PVeto/FrontFaceZ -47.255
 #/Detector/PVeto/InnerFaceX 17.75
 #/Detector/PVeto/NFingers 90
 #/Detector/PVeto/FingerSize 1.
 #/Detector/PVeto/FingerLength 17.8
 
+#/Detector/EVeto/VerboseLevel 0
 #/Detector/EVeto/FrontFaceZ -47.255
 #/Detector/EVeto/InnerFaceX  -17.75
 #/Detector/EVeto/NFingers 96
 #/Detector/EVeto/FingerSize 1.
 #/Detector/EVeto/FingerLength 17.8
 
+#/Detector/HEPVeto/VerboseLevel 0
 #/Detector/HEPVeto/NFingers 16
 #/Detector/HEPVeto/FingerStep 1.1 cm
 #/Detector/HEPVeto/FingerSize 1. cm
 #/Detector/HEPVeto/FingerLength 17.8 cm
 #/Detector/HEPVeto/DistanceToCorner 40. cm
 
+#/Detector/TPix/VerboseLevel 0
 #/Detector/TPix/NColumns 6
 #/Detector/TPix/DistanceToCorner 29.73 cm
 
-#/Detector/TDump/TargetRadius 3.5
-#/Detector/TDump/TargetLength 6.0
-#/Detector/TDump/TargetFrontFaceZ 10.
-#/Detector/TDump/FrontFaceZ -180.
-
 # Beam setup
 
-# Primary positrons setup
+# Primary positrons setup (default PADMEMC configuration)
 #/beam/n_e+_per_bunch 25000
 #/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true
@@ -170,18 +193,29 @@
 #/beam/position_spread_on true
 #/beam/position_x_spread 1. mm
 #/beam/position_y_spread 1. mm
-#/beam/momentum 550. MeV
+#/beam/momentum 545. MeV
 #/beam/momentum_spread_on true
-#/beam/momentum_spread 5.5 MeV
+#/beam/momentum_spread 5.45 MeV
 #/beam/direction 0. 0. 1.
 #/beam/emittance_on true
 #/beam/emittance_x 1. mrad
 #/beam/emittance_y 1. mrad
+#/beam/n_uboson_per_bunch 0
+#/beam/uboson_mass 22. MeV
+#/beam/n_3g_per_bunch 0
+#/beam/3g_file ThreePhotonDecays.list
+#/beam/n_2g_per_bunch 0
+#/beam/2g_file TwoPhotonDecays.list
+#/beam/calibration false
+#/beam/calib_energy 50. MeV
+#/beam/calib_x 14. cm
+#/beam/calib_y 14. cm
+#/beam/calib_radius 1. cm
 
 # Beam Line studies: position beam at Be window
-#/beam/position_x 2249.80 mm
+#/beam/position_x 2247.67 mm
 #/beam/position_y 0. cm
-#/beam/position_z -4681.74 mm
+#/beam/position_z -4596.36 mm
 #/beam/direction -1. 0. 1.
 
 # Uboson generator
@@ -196,8 +230,14 @@
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
 
-# Calibration run setup: single photon pointing to ECal front face
-#/beam/calibration false
+# Example for single two photon events
+#/beam/n_e+_per_bunch 1
+#/beam/n_e+_poisson_on false
+#/beam/n_2g_per_bunch 1
+#/beam/2g_file ee-gg_550MeV-10M.txt
+
+# Calibration run setup: single 50MeV photon pointing to a spot on ECal front face
+#/beam/calibration true
 #/beam/calib_energy 50. MeV
 #/beam/calib_x 14. cm
 #/beam/calib_y 14. cm

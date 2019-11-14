@@ -8,7 +8,6 @@
 #include "G4VProcess.hh"
 #include "G4TrackStatus.hh"
 #include "HistoManager.hh"
-//#include "MyEvent.hh"
 #include "Constants.hh"
 #include "EventAction.hh"
 #include "G4RunManager.hh"
@@ -32,45 +31,10 @@ SteppingAction::SteppingAction()
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void SteppingAction::UserSteppingAction(const G4Step* step)
-{ 
+{
   static int nt=0;
-//  //Devi capire che fare con il monitor e che cosa succede con piu' di un interazione!!!!   |-------|
-  //printf("Stepping\n");
-  // return; // Uncomment to disable MC analysis
+
   G4Track* track = step->GetTrack();
-  //MySimEvent *evt = (MyEvent::GetInstance())->GetSimEvent();  
-  
-//  if(0){
-//    //Storing everything that comes out of the target
-//    if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-//      if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
-//	G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-//	const G4TrackVector * trVec = step->GetSecondary ();
-//	//std::cout << "Number of secondaries produced:  " << trVec->size() << "  Process: " << step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName() << std::endl;
-//	
-//	//      std::vector<G4Track*>::iterator  it;
-//	
-//	for(int i=0;i<trVec->size();i++) {
-//	  G4Track *trk = trVec->at(i);
-//	  //G4cout << "Particle type:  " << trk->GetDefinition()->GetParticleName () << G4endl;
-//	  //Get the info for the secondary:
-//	  
-//	  MyParticle part(trk->GetDefinition()->GetPDGMass ());
-//	  part.setProcess(step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName().data());
-//	  part.setType(trk->GetDefinition()->GetParticleName ().data());
-//	  part.setEnergy(trk->GetTotalEnergy());
-//	  part.calcMomentum(trk->GetMomentumDirection ().x(),
-//			    trk->GetMomentumDirection ().y(),
-//			    trk->GetMomentumDirection ().z());
-//	  part.setPVtx(trk->GetPosition ().x(),
-//		       trk->GetPosition ().y(),
-//		       trk->GetPosition ().z());
-//	  evt->AddParticle(part);
-//	}
-//      }
-//    }
-//  }
-  
 
 //Analyze SAC track
   if (fEnableSACAnalysis) {
@@ -220,38 +184,38 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 //  }
 
 //  Search for gamma leaving the target
-  if(NPrimaries>0){
-    //Cerca il primo gamma in uscita
-    if(track->GetParticleDefinition() == G4Gamma::GammaDefinition()){
-      if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-	if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
-	  if(track->GetCurrentStepNumber()==1 && track->GetParentID()==1){
-	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
-	    //	  G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-	    //	  G4int parent      = track->GetParentID();
-	    //	  G4int TrID        = track->GetTrackID();
-	    //	  G4bool Primo      = step->IsFirstStepInVolume();
-	    GammaE    = track->GetTotalEnergy();
-	    //	  VertexPos = track->GetVertexPosition();
-	    GammaDir  = track->GetVertexMomentumDirection();
-	    G4ThreeVector BeamDir;
-	    BeamDir[0]=0.;
-	    BeamDir[1]=0.;
-	    BeamDir[2]=1.;
-	    ThetaGamma = SetGammaAngle(GammaDir,BeamDir);
-	    if(ThetaGamma<0.015) fHistoManager->FillHisto(18,GammaE);
-	    if(ProcID==1) fHistoManager->FillHisto2(38,ThetaGamma,GammaE);
-	    if(ProcID==2) fHistoManager->FillHisto2(39,ThetaGamma,GammaE);
-	    //  for(int i=0; i<4; i++) P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
-	    //  G4double Mmiss2 = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-	    //  NChild++;
-	    //	    if(ThetaGamma) G4cout<<"Theta Gamma " <<ThetaGamma<<" "<<GammaE<<" "<<BeamPartE<<" "<<GammaE+BeamPartE<<G4endl;
-	    
-	  }
-	}
-      }
-    }
-  }
+//  if(NPrimaries>0){
+//    //Cerca il primo gamma in uscita
+//    if(track->GetParticleDefinition() == G4Gamma::GammaDefinition()){
+//      if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+//	if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
+//	  if(track->GetCurrentStepNumber()==1 && track->GetParentID()==1){
+//	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
+//	    //	  G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+//	    //	  G4int parent      = track->GetParentID();
+//	    //	  G4int TrID        = track->GetTrackID();
+//	    //	  G4bool Primo      = step->IsFirstStepInVolume();
+//	    GammaE    = track->GetTotalEnergy();
+//	    //	  VertexPos = track->GetVertexPosition();
+//	    GammaDir  = track->GetVertexMomentumDirection();
+//	    G4ThreeVector BeamDir;
+//	    BeamDir[0]=0.;
+//	    BeamDir[1]=0.;
+//	    BeamDir[2]=1.;
+//	    ThetaGamma = SetGammaAngle(GammaDir,BeamDir);
+//	    if(ThetaGamma<0.015) fHistoManager->FillHisto(18,GammaE);
+//	    if(ProcID==1) fHistoManager->FillHisto2(38,ThetaGamma,GammaE);
+//	    if(ProcID==2) fHistoManager->FillHisto2(39,ThetaGamma,GammaE);
+//	    //  for(int i=0; i<4; i++) P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
+//	    //  G4double Mmiss2 = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
+//	    //  NChild++;
+//	    //	    if(ThetaGamma) G4cout<<"Theta Gamma " <<ThetaGamma<<" "<<GammaE<<" "<<BeamPartE<<" "<<GammaE+BeamPartE<<G4endl;
+//	    
+//	  }
+//	}
+//      }
+//    }
+//  }
   
 }
 

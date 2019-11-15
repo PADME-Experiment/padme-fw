@@ -341,6 +341,10 @@ Bool_t EventSelection::ProcessAnalysisSS()
   double impactPar=0.;
 
 
+  int nhit=fECal_hitEvent->GetNHits();
+  hname="SS2g_nhits";
+  hSvc->FillHisto(hname,float(nhit));
+
   int nclus=fECal_ClColl->GetNElements();
   hname="SS2g_nclus";
   hSvc->FillHisto(hname,float(nclus));
@@ -367,6 +371,12 @@ Bool_t EventSelection::ProcessAnalysisSS()
 
 	  hname = hprefix+"ECalClEnergy";
 	  hSvc->FillHisto(hname, xEne);
+
+	  int cls = xClu->GetNHitsInClus();
+	  hname = "SS2g_clSize";
+	  hSvc->FillHisto(hname, float(cls));
+	  hname = "SS2g_clSizeVsE";
+	  hSvc->FillHisto2(hname, xEne, float(cls));
 
 	  pos1 = xClu->GetPosition();
  	  if (isMC)
@@ -468,7 +478,7 @@ Bool_t EventSelection::ProcessAnalysisSS()
 		    }
 
 
-		  if (fabs(dt)<30.)
+		  if (fabs(dt)<10.)
 		    {
 		      hname = "SS2gSumE_passDt";
 		      hSvc->FillHisto(hname, aSumCl);
@@ -571,7 +581,8 @@ Bool_t EventSelection::ProcessAnalysisSS()
 			      
 			      
 
-			      if (fabs(pos1.x())>100. && fabs(pos2.x())>100. &&  fabs(pos1.y())<200. && fabs(pos2.y())<200.) {
+			      //			      if (fabs(pos1.y())>120. && fabs(pos2.y())>120.) {
+			      //			      if (fabs(pos1.x())>100. && fabs(pos2.x())>100. &&  fabs(pos1.y())<200. && fabs(pos2.y())<200.) {
 				n2gFR+=1;
 				hname = "SS2gSumE_passDtDphiCogFR";
 				hSvc->FillHisto(hname, aSumCl);
@@ -640,12 +651,14 @@ Bool_t EventSelection::ProcessAnalysisSS()
 
 
 				    n2gDsume+=1;
-
-
-				  
+				    hname="SS2g_ClTime_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname, xTime);
+				    hname = "NposInBunch_beam_passDtDphiCogDsume";
+				    hSvc->FillHisto(hname,fTarget_RecoBeam->getnPOT());
+				 
 				    
 				  }
-			      }
+				//}
 			    }
 			}
 		    }
@@ -2601,6 +2614,9 @@ Bool_t EventSelection::InitHistosAnalysis()
      hSvc->BookHisto(hname, 3, -1.5, 1.5);
      hname="NposInBunch_beam";
      hSvc->BookHisto(hname, 500, 0., 30000.);
+     hname="NposInBunch_beam_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, 500, 0., 30000.);
+
      hname="GammaSeleCutFlow"; 
      hSvc->BookHisto(hname, 31, -0.5, 30.5);
      hname="GammaSeleCutFlow"; 
@@ -2660,6 +2676,12 @@ Bool_t EventSelection::InitHistosAnalysis()
      hSvc->BookHisto(hname, nBinX, minX, maxX);
 
 
+     hname="SS2g_nhits";
+     hSvc->BookHisto(hname, 100, 0., 400.);
+     hname="SS2g_clSize";
+     hSvc->BookHisto(hname, 31, -0.5, 30.5);
+     hname="SS2g_clSizeVsE";
+     hSvc->BookHisto2(hname, 100, 0., 500., 31, -0.5, 30.5);
      hname="SS2g_nclus";
      hSvc->BookHisto(hname, 50, 0.5, 50.5);
      hname="SS2g_nclus50";
@@ -2679,7 +2701,8 @@ Bool_t EventSelection::InitHistosAnalysis()
 
      hname="SS2g_ClTime";
      hSvc->BookHisto(hname, 100, -500, 500);
-
+     hname="SS2g_ClTime_passDtDphiCogDsume";
+     hSvc->BookHisto(hname, 100, -500, 500);
 
      hname = "SS2gSumE_passDtDphiCogDsume";
      hSvc->BookHisto(hname, nBinX, minX, maxX);

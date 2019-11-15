@@ -44,6 +44,11 @@ public:
   G4double GetVCInnerSizeX() { return fVCInnerSizeX; }
   G4double GetVCInnerSizeY() { return fVCInnerSizeY; }
   G4double GetVCInnerFacePosZ() { return fVCInnerFacePosZ; }
+  G4double GetVCOuterFacePosZ() { return fVCOuterFacePosZ; }
+
+  // Position of front face of target cross
+  // Used to create magnetic volume in the cross region
+  G4double GetCrossFrontFacePosZ() { return fCPZPosZ-0.5*fCPZLength; }
 
   // Properties of aluminum|carbon thin window and its flange
 
@@ -90,6 +95,8 @@ public:
   G4double GetJunFlangeRIn() { return GetJunROut(); }
   G4double GetJunFlangeROut() { return fJunFlangeR; }
   G4double GetJunFlangeThick() { return fJunFlangeThick; }
+  G4double GetJunFrontFacePosZ() { return fJunFrontFacePosZ; }
+  G4double GetJunBackFacePosZ() { return fJunBackFacePosZ; }
 
   // Properties of junction pipe between cross and BTF pipes
 
@@ -176,6 +183,7 @@ private:
   G4double fVCInnerSizeX; // Internal size along X of the rectangular section inside the magnet
   G4double fVCInnerSizeY; // Internal size along Y of the rectangular section inside the magnet
   G4double fVCInnerFacePosZ; // Position along Z of the internal face of the rectangular section inside the magnet
+  G4double fVCOuterFacePosZ; // Position along Z of the external face of the rectangular section inside the magnet
 
   // Aluminum|Carbon thin window and aluminum flange
 

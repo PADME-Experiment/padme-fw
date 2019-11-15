@@ -33,6 +33,7 @@ ChamberGeometry::ChamberGeometry()
   fVCInnerSizeX = 435.0*mm; // Internal size along X of the rectangular section inside the magnet
   fVCInnerSizeY = 205.0*mm; // Internal size along Y of the rectangular section inside the magnet
   fVCInnerFacePosZ = -490.0*mm; // Position along Z of the internal face of the rectangular section inside the magnet
+  fVCOuterFacePosZ = -500.001*mm; // Position along Z of the external face of the rectangular section inside the magnet
 
   // Parameters for the aluminum|carbon thin window
 

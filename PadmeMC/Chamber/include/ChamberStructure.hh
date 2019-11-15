@@ -22,7 +22,8 @@ public:
   ~ChamberStructure();
   ChamberStructure(G4LogicalVolume*);
 
-  void SetMotherVolume(G4LogicalVolume* v)   { fMotherVolume = v; }
+  void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
+  void SetCrossMotherVolume(G4LogicalVolume* v) { fCrossMotherVolume = v; }
   void CreateGeometry();
 
   //G4double GetChamberMostExternalX();
@@ -43,6 +44,9 @@ public:
   void SetChamberVisible()   { fChamberIsVisible = 1; }
   void SetChamberInvisible() { fChamberIsVisible = 0; }
 
+  // Define displacement of Cross region along Z due to position of magnetic volume
+  void SetCrossDisplacePosZ(G4double z) { fCrossDisplacePosZ = z; }
+
 private:
 
   G4UnionSolid* CreateVCFacetGlobalSolid();
@@ -58,7 +62,10 @@ private:
   void CreateTPixPortholeCap();
 
   G4LogicalVolume* fMotherVolume;
+  G4LogicalVolume* fCrossMotherVolume;
   G4LogicalVolume* fGlobalLogicalVolume;
+
+  G4double fCrossDisplacePosZ; // Displacement of Cross region along Z due to positioning inside magnetic volume
 
   G4int fChamberExists;
   G4int fChamberIsVisible;

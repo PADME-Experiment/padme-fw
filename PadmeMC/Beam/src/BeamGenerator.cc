@@ -86,10 +86,13 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nUbosonDecays = bpar->GetNUbosonDecaysPerBunch();
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nTwoPhotonDecays = bpar->GetNTwoPhotonDecaysPerBunch();
-  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays;
+  G4int nAxionDecays = 1;//bpar->GetNAxionDecaysPerBunch();
+  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays - nAxionDecays;
+  if(nPositrons<0) nPositrons = 0;
+
   if (nPositrons<0) {
     G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
-    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays << G4endl;
+    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays << nAxionDecays << "   nAxion" <<  G4endl;
     nPositrons = 0;
   }
 
@@ -119,7 +122,20 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     CreateFinalStateThreeGamma();
 
   }
+
+  //*********************
+  //Axion
+  //********************* 
   
+  for(int iggg = 0; iggg < nAxionDecays; iggg++) {
+
+    // Generate primary e+ which will decay to three gammas
+    GeneratePrimaryPositron();
+    
+    // Generate axion final state
+    CreateFinalStateAxion();
+    
+  }
   
   //*********************
   //Two photon events
@@ -519,7 +535,97 @@ void BeamGenerator::CreateFinalStateThreeGamma()
   }
 
 }
+void BeamGenerator::CreateFinalStateAxion()
+{
 
+  static G4int iline = 14;
+
+  // Get file with list of axion kinematics
+  G4String fileAxion = BeamParameters::GetInstance()->GetAxionMass();
+
+  //Random decay point of an axion   
+
+ // Get theta and phi from positron direction (assume beam axis directed along Z)
+  G4double theta_p = atan2(sqrt(fPositron.dir.x()*fPositron.dir.x()+fPositron.dir.y()*fPositron.dir.y()),fPositron.dir.z())*rad;
+  G4double phi_p = atan2(fPositron.dir.y(),fPositron.dir.x())*rad;
+
+
+  // Choose random decay point along e+ path within Target
+  G4double z_decay = (fDetector->GetTargetFrontFaceZ()-fPositron.pos.z())+G4UniformRand()*fDetector->GetTargetThickness();
+  G4double s_decay = z_decay/cos(theta_p);
+  G4double Dx = fPositron.pos.x()+s_decay*sin(theta_p)*cos(phi_p);
+  G4double Dy = fPositron.pos.y()+s_decay*sin(theta_p)*sin(phi_p);
+  G4double Dz = fPositron.pos.z()+z_decay;
+  G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E); 
+
+  G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
+
+  std::ifstream infile;
+  std::string Line = "";
+  infile.open("/home/radoslav/heptools/calchep_3.6.27/TestEvents/events_10MeV.txt");
+
+  G4int il=0;
+  while (!infile.eof() && il <= iline) {
+     getline(infile,Line);
+     il++;
+  }
+  G4cout << "===AXIONS====:   Getting line with index: " << il << G4endl;
+  infile.close();
+
+  if(il == iline+1) {
+    
+    // Decode input line
+    std::istringstream iss(Line);
+    
+    // Skip first three fields in the line
+    
+    G4double dt1,dt2,dt3, dt4, dt5, dt6;
+    
+    iss >> dt1 >> dt2 >> dt3;
+    
+    G4double pg[4]; //Vector to store four-momentum of the gamma
+    iss >> pg[1] >> pg[2] >> pg[3]; 
+    
+    // Loop over the axions
+    G4double p[4]; // Vector to store four-momentum of the axion
+    iss >> p[1] >> p[2] >> p[3]; // Get axion momentum
+    
+    for(G4int k=1; k<=3; k++) { p[k] *= GeV; } // Values are given in GeV
+    for(G4int k=1; k<=3; k++) { pg[k] *= GeV; } // Values are given in GeV
+    std::cout <<"Gamma:" << "momentum"<< pg[1] << " " << pg[2] << " "<< pg[3]<< " " << std::endl; 
+ 
+    pg[0] = sqrt(pg[1]*pg[1]+pg[2]*pg[2]+pg[3]*pg[3]);
+
+    std::cout << "Total energy of Gamma :" << pg[0] << std::endl; // Compute total energy of the axion
+    
+    std::cout <<"Axion: "  << "momentum: " <<  p[1] << "   " << p[2]<<"   " << p[3] << std::endl; // show axion momentum values from CalcHEP file
+    
+    p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]);
+    std::cout << "Total energy of axion:" << p[0] << std::endl; // Compute total energy of the axion
+
+    G4ThreeVector axion_p = G4ThreeVector(p[1],p[2],p[3]);
+    //    G4PrimaryParticle* axion = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("axion"), axion_p.x(),axion_p.y(),axion_p.z(),p[0]);
+
+    G4ThreeVector agamma_p = G4ThreeVector(pg[1],pg[2],pg[3]);
+    G4PrimaryParticle* agamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"), pg[1],pg[2],pg[3],pg[0]);
+    
+    vtx->SetPrimary(agamma);
+    
+  
+  // Add primary vertex to event
+    fEvent->AddPrimaryVertex(vtx);
+  // Skip to next line
+  
+  iline++;
+  
+  } else {
+    G4cout << "BeamGenerator - WARNING - Reached end of axion decays input file" << G4endl;
+  }
+  
+}        
+//  else {
+//  G4cout << "BeamGenerator - WARNING - Reached end of Axion input file" << G4endl;
+// }
 
 
 void BeamGenerator::CreateFinalStateTwoGamma()

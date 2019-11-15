@@ -99,11 +99,18 @@ public:
   G4double GetUbosonMass() { return fUbosonMass; }
   void SetUbosonMass(G4double m) { fUbosonMass = m; }
 
+  G4int GetNAxionDecaysPerBunch()        { return fNAxionDecaysPerBunch; }
+  void  SetNAxionDecaysPerBunch(G4int n) { fNAxionDecaysPerBunch = n;    }
+
+  G4double GetAxionMass() { return fAxionMass; }
+  void SetAxionMass(G4double m) { fAxionMass = m; }
+
   G4int GetNThreePhotonDecaysPerBunch()        { return fNThreePhotonDecaysPerBunch; }
   void SetNThreePhotonDecaysPerBunch(G4int n) { fNThreePhotonDecaysPerBunch = n;    }
 
   G4String GetThreePhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
   void SetThreePhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
+   
   
   G4int GetNTwoPhotonDecaysPerBunch()        { return fNTwoPhotonDecaysPerBunch; }
   void SetNTwoPhotonDecaysPerBunch(G4int n) { fNTwoPhotonDecaysPerBunch = n;    }
@@ -172,6 +179,10 @@ private:
   // Insert two gamma decays
   G4int fNTwoPhotonDecaysPerBunch;
   G4String fTwoPhotonDecaysFilename;
+
+  // Insert Axion decays
+  G4int fNAxionDecaysPerBunch; 
+  G4double fAxionMass; 
 
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)

@@ -345,7 +345,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
     // Subtract cylinders corresponding to vacuum chamber flange and pipe
     G4double flgR = geoChamber->GetJunFlangeROut();
-    G4double flgL = geoChamber->GetJunFlangeThick()-2.*mm; // Apparently the flange thickness is less than 2cm
+    // Apparently the chamber flange thickness is thinner than the 2cm flange on the junction pipe
+    // To be checked on the real chamber
+    G4double flgL = geoChamber->GetJunFlangeThick()-3.*mm;
     G4Tubs* cmvSolid2 = new G4Tubs("CMV2",0.,flgR,0.5*flgL,0.*deg,360.*deg);
     G4double pipR = geoChamber->GetJunROut();
     G4double pipL = geoChamber->GetVCOuterFacePosZ()-geoChamber->GetJunBackFacePosZ()-flgL;

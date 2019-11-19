@@ -39,11 +39,11 @@ Int_t SACReconstruction::FindSeed(Int_t nele, Int_t * Used, Double_t* Ene) {
 Int_t SACReconstruction::IsSeedNeig(Int_t seedID, Int_t cellID) {
   //uses cellID to find neig cells wrt seed of the cluster
   Int_t IsNeig=-1;
-  Int_t SeedRow=seedID/10;
-  Int_t SeedCol=seedID%10;
+  Int_t SeedRow=seedID%10;
+  Int_t SeedCol=seedID/10;
 
-  Int_t CellRow=cellID/10;
-  Int_t CellCol=cellID%10;
+  Int_t CellRow=cellID%10;
+  Int_t CellCol=cellID/10;
   //excludes the seed cell 
   if( abs(SeedRow-CellRow)<=1 && abs(SeedCol-CellCol)<=1) IsNeig=1;
   //  std::cout<<"seedID "<<seedID<<" cellID "<<cellID<<" Is Neig "<<IsNeig<<std::endl;
@@ -392,7 +392,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     Time=Hits[iHit1]->GetTime();
     int ich  = Hits[iHit1]->GetChannelId();
-    int ElCh = ich/10*5 +ich%5;
+    int ElCh = ich/10 +ich%10*5;
     Energy  += Hits[iHit1]->GetEnergy(); //SAC total energy
     ECh[ElCh]+= Hits[iHit1]->GetEnergy(); //SAC total energy
     GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */

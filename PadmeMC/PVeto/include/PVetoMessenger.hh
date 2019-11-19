@@ -16,6 +16,7 @@ class PVetoDetector;
 class PVetoGeometry;
 class G4UIdirectory;
 class G4UIcommand;
+class G4UIcmdWithAnInteger;
 
 class PVetoMessenger: public G4UImessenger
 {
@@ -38,6 +39,8 @@ private:
 
   G4UIcommand* fSetPVetoInnerFaceXCmd;
   G4UIcommand* fSetPVetoFrontFaceZCmd;
+
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
 
 };
 #endif

@@ -13,6 +13,7 @@
 //#include "G4UIparameter.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithoutParameter.hh"
+#include "G4UIcmdWithAnInteger.hh"
 
 #include "TargetDetector.hh"
 #include "TargetGeometry.hh"
@@ -65,12 +66,16 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fDisableSaveWaveformToDigiCmd->SetGuidance("Disable saving of Target digitized waveforms to persistent digis.");
   fDisableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/Target/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for Target code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 TargetMessenger::~TargetMessenger()
 {
-
-  delete fTargetDetectorDir;
 
   delete fSetTargetSizeCmd;
   delete fSetTargetThicknessCmd;
@@ -80,6 +85,10 @@ TargetMessenger::~TargetMessenger()
   delete fDisableFastDigitizationCmd;
   delete fEnableSaveWaveformToDigiCmd;
   delete fDisableSaveWaveformToDigiCmd;
+
+  delete fSetVerboseLevelCmd;
+
+  delete fTargetDetectorDir;
 
 }
 
@@ -102,4 +111,8 @@ void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fEnableSaveWaveformToDigiCmd )  fTargetGeometry->EnableSaveWaveformToDigi();
   if ( cmd == fDisableSaveWaveformToDigiCmd ) fTargetGeometry->DisableSaveWaveformToDigi();
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fTargetGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
+
 }

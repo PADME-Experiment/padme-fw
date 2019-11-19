@@ -37,6 +37,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of ECal box
   G4double GetECalPosX() { return 0.*cm; }
   G4double GetECalPosY() { return 0.*cm; }
@@ -304,6 +307,8 @@ private:
   void SetCrystalMap();
 
   // Geometry parameters
+
+  G4int fVerbose; // Verbose level
 
   G4int fCrystalMapId; // Id of crystal map to use
 

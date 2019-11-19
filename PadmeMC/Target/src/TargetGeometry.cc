@@ -20,6 +20,8 @@ TargetGeometry::TargetGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   fTargetSizeX =   2.*cm;
   fTargetSizeY =   2.*cm;
   fTargetSizeZ = 100.*um;

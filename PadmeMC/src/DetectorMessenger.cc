@@ -5,6 +5,7 @@
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithAnInteger.hh"
 #include "globals.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -59,6 +60,14 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fSetMagFieldValueCmd->SetRange("MFV >= -2. && MFV <= 2.");
   fSetMagFieldValueCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fMagnetVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetMagnetVisible",this);
+  fMagnetVisibleCmd->SetGuidance("Make dipole magnet structure visible.");
+  fMagnetVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fMagnetInvisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetMagnetInvisible",this);
+  fMagnetInvisibleCmd->SetGuidance("Make dipole magnet structure invisible.");
+  fMagnetInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fChamberVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetChamberVisible",this);
   fChamberVisibleCmd->SetGuidance("Make vacuum chamber visible.");
   fChamberVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -85,13 +94,18 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fWorldIsVacuumCmd->SetGuidance("Fill world (and magnetic volume) with vacuum (i.e. low pressure air).");
   fWorldIsVacuumCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for detector code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 DetectorMessenger::~DetectorMessenger()
 {
-  delete fDetectorDir;
   delete fEnableSubDetCmd;
   delete fDisableSubDetCmd;
   delete fEnableStructCmd;
@@ -100,6 +114,8 @@ DetectorMessenger::~DetectorMessenger()
   delete fDisableMagFieldCmd;
   delete fMagVolVisibleCmd;
   delete fMagVolInvisibleCmd;
+  delete fMagnetVisibleCmd;
+  delete fMagnetInvisibleCmd;
   delete fSetMagFieldValueCmd;
   delete fChamberVisibleCmd;
   delete fChamberInvisibleCmd;
@@ -107,6 +123,8 @@ DetectorMessenger::~DetectorMessenger()
   delete fBeamLineInvisibleCmd; //M. Raggi 07/03/2019
   delete fWorldIsAirCmd;
   delete fWorldIsVacuumCmd;
+  delete fSetVerboseLevelCmd;
+  delete fDetectorDir;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -129,15 +147,20 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
   if ( command == fSetMagFieldValueCmd )
     fDetector->SetMagFieldValue(fSetMagFieldValueCmd->GetNewDoubleValue(newValue));
 
+  if( command == fMagnetVisibleCmd )   fDetector->MagnetIsVisible();
+  if( command == fMagnetInvisibleCmd ) fDetector->MagnetIsInvisible();
+
   if( command == fChamberVisibleCmd )   fDetector->ChamberIsVisible();
   if( command == fChamberInvisibleCmd ) fDetector->ChamberIsInvisible();
 
   if( command == fBeamLineVisibleCmd )   fDetector->BeamLineIsVisible(); //M. Raggi 07/03/2019
   if( command == fBeamLineInvisibleCmd ) fDetector->BeamLineIsInvisible(); //M. Raggi 07/03/2019
 
-
   if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
   if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();
+
+  if ( command == fSetVerboseLevelCmd )
+    fDetector->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(newValue));
 
 }
 

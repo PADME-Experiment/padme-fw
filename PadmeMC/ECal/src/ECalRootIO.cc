@@ -34,6 +34,8 @@ ECalRootIO::ECalRootIO() : MCVRootIO(G4String("ECal"))
 
   fGeoPars = ECalGeometry::GetInstance();
 
+  fVerbose = fGeoPars->GetVerboseLevel();
+
   // Create event object
   fEvent = new TECalMCEvent();
 
@@ -43,7 +45,7 @@ ECalRootIO::ECalRootIO() : MCVRootIO(G4String("ECal"))
   fHitsEnabled = false;
   fDigisEnabled = true;
 
-  G4cout << "ECalRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "ECalRootIO: Initialized" << G4endl;
 
 }
 
@@ -58,10 +60,12 @@ void ECalRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
   fRunNumber = nRun;
 
-  G4cout << "ECalRootIO: Initializing I/O for run " << fRunNumber;
-  if (fHitsEnabled)  G4cout << " - save hits";
-  if (fDigisEnabled) G4cout << " - save digis";
-  G4cout << G4endl;
+  if (fVerbose) {
+    G4cout << "ECalRootIO: Initializing I/O for run " << fRunNumber;
+    if (fHitsEnabled)  G4cout << " - save hits";
+    if (fDigisEnabled) G4cout << " - save digis";
+    G4cout << G4endl;
+  }
 
   // Fill detector info section of run structure
   std::vector<TString> geoParR;
@@ -72,7 +76,7 @@ void ECalRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   }
   TSubDetectorInfo* ecalInfo = detInfo->AddSubDetectorInfo("ECal");
   ecalInfo->SetGeometryParameters(geoParR);
-  ecalInfo->Print();
+  if (fVerbose) ecalInfo->Print();
 
   // Create branch to hold ECal Hits and Digis for this run
   fEventTree = RootIOManager::GetInstance()->GetEventTree();
@@ -83,7 +87,7 @@ void ECalRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void ECalRootIO::EndRun()
 {
-  G4cout << "ECalRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "ECalRootIO: Executing End-of-Run procedure" << G4endl;
 }
 
 void ECalRootIO::SaveEvent(const G4Event* eventG4)
@@ -110,8 +114,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "ECalCollection"){
-	if (fVerbose>=2)
-	  G4cout << "ECalRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "ECalRootIO: Found hits collection " << HCname << G4endl;
 	ECalHitsCollection* eCalHC = (ECalHitsCollection*)(theHC->GetHC(iHC));
 	if(eCalHC) {
 	  G4int n_hit = eCalHC->entries();
@@ -127,7 +130,8 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*eCalHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    G4cout << "ECalRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "ECalRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -147,8 +151,7 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
       if (DCname == "ECalDigiCollection"){
-	if (fVerbose>=2)
-	  G4cout << "ECalRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "ECalRootIO: Found digi collection " << DCname << G4endl;
 	ECalDigiCollection* eCalDC = (ECalDigiCollection*)(theDC->GetDC(iDC));
 	if(eCalDC) {
 	  G4int n_digi = eCalDC->entries();
@@ -162,7 +165,8 @@ void ECalRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetSignal((*eCalDC)[i]->GetSignal());
 	      e_tot += (*eCalDC)[i]->GetEnergy();
 	    }
-	    G4cout << "ECalRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2)
+	      G4cout << "ECalRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

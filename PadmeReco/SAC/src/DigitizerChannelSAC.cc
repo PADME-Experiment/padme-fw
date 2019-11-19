@@ -170,7 +170,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   for(UShort_t s=0;s<iMax;s++){
     //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //original pedestal not ok or 2019 data
     //M. Raggi 20/07/2019 computes the pedestals on the basis of 8 samples need to check is changing time offsets
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg80)/4096*1000.; 
+    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg80)/4096*1000.; //in mV 
   }
   H1->SetContent(AbsSamRec);
   char name[50];
@@ -191,6 +191,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //  std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
   if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+  //if(VMax>fAmpThresholdHigh){//CTVMax
     TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
     Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
@@ -226,11 +227,13 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       fCalibEnergy = fCharge/pCMeV*fCalibCh[ElCh]; //calibrated energy of the hit
 
       TRecoVHit *Hit = new TRecoVHit();
-      if(yp>-3*VMin){
+      if(yp>-2*VMin){
+      //if(yp>-1*VMin){//CTVMin
+      //if(1){
 	Hit->SetTime(fTime);
-	//	Hit->SetEnergy(fCharge);    // need to add hit status 
+	//Hit->SetEnergy(fCharge);    // need to add hit status 
 	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
-	//Hit->SetEnergy(yp);               // need to add hit status to avoid saturations
+	//Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
       }else{
 //	fileOut->cd();

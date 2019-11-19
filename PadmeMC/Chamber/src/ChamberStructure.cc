@@ -68,7 +68,7 @@ void ChamberStructure::CreateGeometry()
     // Create porthole caps for both section of the chamber
     CreatePortholeCaps();
 
-    // Create cap for large porthole iin front of TimePix
+    // Create cap for large porthole in front of TimePix
     // Includes round cap with thin Mylar window
     CreateTPixPortholeCap();
 
@@ -511,9 +511,12 @@ void ChamberStructure::CreateTPixPortholeCap()
   G4Box* solidWindB = new G4Box("WindB",0.5*windW,windR,0.5*flangeT);
   G4ThreeVector posWindB  = G4ThreeVector(0.,0.,windT);
 
+  // The 140um displacement of the circular sections of the aluminum thin window are needed
+  // to guarantee visualization. If visualization is not needed, the displacement can be removed
+  // to improve precision
   G4Tubs* solidWindT = new G4Tubs("WindT",0.,windR,0.5*flangeT,0.*deg,360.*deg);
-  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW-0.1*mm,0.,windT);
-  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW+0.1*mm,0.,windT);
+  G4ThreeVector posWindT1 = G4ThreeVector(-0.5*windW+140.*um,0.,windT);
+  G4ThreeVector posWindT2 = G4ThreeVector(+0.5*windW-140.*um,0.,windT);
 
   G4SubtractionSolid* solidPHF2 = new G4SubtractionSolid("TPPHFlg2",  solidPHF1,solidWindB,0,posWindB);
   G4SubtractionSolid* solidPHF3 = new G4SubtractionSolid("TPPHFlg3",  solidPHF2,solidWindT,0,posWindT1);

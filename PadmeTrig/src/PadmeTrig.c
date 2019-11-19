@@ -214,6 +214,16 @@ void timespec_diff(const struct timespec *start, const struct timespec *stop,
     return;
 }
 
+void show_register(unsigned char reg)
+{
+  unsigned char mask[4];
+  if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+}
+
 int main(int argc, char *argv[]) {
 
   pid_t pid;
@@ -446,12 +456,22 @@ int main(int argc, char *argv[]) {
 
   // Show registers before configuring board
   for (reg=0x00;reg<0x10;reg++) {
-    if ( trig_get_register(reg,mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    //if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    //  printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    //  proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    //}
+    //printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    show_register(reg);
   }
+  show_register(0x1D);
+
+  // Show firmware version
+  unsigned int fw_ver;
+  if ( trig_get_fw_version(&fw_ver) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading firmware version. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Firmware version: 0x%04x (%d)\n",fw_ver,fw_ver);
 
   // Program Trigger module with current configuration
 
@@ -508,7 +528,7 @@ int main(int argc, char *argv[]) {
   }
   printf("Timepix shutter width: 0x%02x %u\n",val1,val1);
   if ( trig_set_timepix_width(Config->timepix_shutter_width) != TRIG_OK ) {
-    printf("PadmeTrig *** ERROR *** Problem while reading timepix width. Exiting.\n");
+    printf("PadmeTrig *** ERROR *** Problem while setting timepix width. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }
   if ( trig_get_timepix_width(&val1) != TRIG_OK ) {
@@ -517,11 +537,28 @@ int main(int argc, char *argv[]) {
   }
   printf("Timepix shutter width: 0x%02x %u\n",val1,val1);
 
+  // Trigger 0 distribution delay
+  if ( trig_get_trigger0_delay(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading trigger 0 distribution delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Trigger 0 delay: 0x%02x %u\n",val1,val1);
+  if ( trig_set_trigger0_delay(Config->trigger0_delay) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while setting trigger 0 distribution delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  if ( trig_get_trigger0_delay(&val1) != TRIG_OK ) {
+    printf("PadmeTrig *** ERROR *** Problem while reading trigger 0 distribution delay. Exiting.\n");
+    proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+  }
+  printf("Trigger 0 delay: 0x%02x %u\n",val1,val1);
+
   for (trig = 0; trig<8; trig++) {
 
     unsigned short int tsg,tsa;
     switch(trig){
-      case 0: tsg = Config->trig0_scale_global; tsa = Config->trig0_scale_autopass; break;
+      //case 0: tsg = Config->trig0_scale_global; tsa = Config->trig0_scale_autopass; break;
+      case 0:                                   tsa = Config->trig0_scale_autopass; break;
       case 1: tsg = Config->trig1_scale_global; tsa = Config->trig1_scale_autopass; break;
       case 2: tsg = Config->trig2_scale_global; tsa = Config->trig2_scale_autopass; break;
       case 3: tsg = Config->trig3_scale_global; tsa = Config->trig3_scale_autopass; break;
@@ -532,20 +569,22 @@ int main(int argc, char *argv[]) {
       default: printf("WHAT?\n");
     }
 
-    if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    if (trig != 0) {
+      if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
+	printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
+	proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+      }
+      printf("Trigger 0x%02x global downscale factor old: 0x%04x %u\n",trig,val2,val2);
+      if ( trig_set_trigger_global_factor(trig,tsg) != TRIG_OK ) {
+	printf("PadmeTrig *** ERROR *** Problem while setting trigger 0x%02x global factor. Exiting.\n",trig);
+	proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+      }
+      if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
+	printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
+	proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+      }
+      printf("Trigger 0x%02x global downscale factor new: 0x%04x %u\n",trig,val2,val2);
     }
-    printf("Trigger 0x%02x global downscale factor old: 0x%04x %u\n",trig,val2,val2);
-    if ( trig_set_trigger_global_factor(trig,tsg) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while setting trigger 0x%02x global factor. Exiting.\n",trig);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    if ( trig_get_trigger_global_factor(trig,&val2) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x global factor. Exiting.\n",trig);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    printf("Trigger 0x%02x global downscale factor new: 0x%04x %u\n",trig,val2,val2);
 
     if ( trig_get_trigger_autopass_factor(trig,&val2) != TRIG_OK ) {
       printf("PadmeTrig *** ERROR *** Problem while reading trigger 0x%02x autopass factor. Exiting.\n",trig);
@@ -604,12 +643,14 @@ int main(int argc, char *argv[]) {
 
   // Show registers after initializing board
   for (reg=0x00;reg<0x10;reg++) {
-    if ( trig_get_register(reg,mask) != TRIG_OK ) {
-      printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
-      proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
-    }
-    printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    //if ( trig_get_register(reg,mask) != TRIG_OK ) {
+    //  printf("PadmeTrig *** ERROR *** Problem while readying register 0x%02x. Exiting.\n",reg);
+    //  proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
+    //}
+    //printf("Current register 0x%02x: 0x%02x%02x%02x%02x\n",reg,mask[0],mask[1],mask[2],mask[3]);
+    show_register(reg);
   }
+  show_register(0x1D);
 
   // If using STREAM output, open stream now to avoid DAQ locking
   if ( strcmp(Config->output_mode,"STREAM")==0 ) {

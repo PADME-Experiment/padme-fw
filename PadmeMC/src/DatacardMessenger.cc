@@ -4,11 +4,15 @@
 #include "G4RunManager.hh"
 #include "G4UIdirectory.hh"
 #include "G4UIcmdWithAString.hh"
+#include "G4UIcmdWithAnInteger.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
 
 #include "RootIOManager.hh"
 #include "SteppingAction.hh"
-#include "EventAction.hh" //M. Raggi
+#include "StackingAction.hh"
+#include "RunAction.hh"
+#include "EventAction.hh"
 
 DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardManager(datacardMng)
 {
@@ -16,8 +20,11 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fOutputDir = new G4UIdirectory("/output/");
   fOutputDir->SetGuidance("UI commands to manage data output.");
 
-  fOutputDir = new G4UIdirectory("/analysis/");
-  fOutputDir->SetGuidance("UI commands to manage MC-based analysis.");
+  fAnalysisDir = new G4UIdirectory("/analysis/");
+  fAnalysisDir->SetGuidance("UI commands to manage MC-based analysis.");
+
+  fSettingsDir = new G4UIdirectory("/settings/");
+  fSettingsDir->SetGuidance("UI commands to manage general behaviour of program.");
 
   fOutNameCmd = new G4UIcmdWithAString("/output/DataFileName",this);
   fOutNameCmd->SetGuidance("Define name to use for hits/digis output file.");
@@ -68,81 +75,184 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fEnableSaveSACCmd->SetParameterName("SSA",true);
   fEnableSaveSACCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fPrintOutFrequencyCmd = new G4UIcmdWithAnInteger("/settings/PrintOutFrequency",this);
+  fPrintOutFrequencyCmd->SetGuidance("Set after how many events some info printout is shown");
+  fPrintOutFrequencyCmd->SetParameterName("POF",false);
+  fPrintOutFrequencyCmd->SetRange("POF > 0");
+  fPrintOutFrequencyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fAutomaticRandomSeedCmd = new G4UIcmdWithABool("/settings/AutomaticRandomSeed",this);
+  fAutomaticRandomSeedCmd->SetGuidance("Enable (true) or disable (false) automatic generation of random seeds");
+  fAutomaticRandomSeedCmd->SetParameterName("ARS",true);
+  fAutomaticRandomSeedCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboModeCmd = new G4UIcmdWithABool("/settings/TurboModeEnable",this);
+  fTurboModeCmd->SetGuidance("Enable (true) or disable (false) turbo mode in StackingAction");
+  fTurboModeCmd->SetParameterName("TM",true);
+  fTurboModeCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboModeDir = new G4UIdirectory("/settings/TurboMode/");
+  fTurboModeDir->SetGuidance("Commands to define TurboMode behaviour.");
+
+  fTurboModeVerboseCmd = new G4UIcmdWithAnInteger("/settings/TurboMode/Verbose",this);
+  fTurboModeVerboseCmd->SetGuidance("Define TurboMode verbose level.");
+  fTurboModeVerboseCmd->SetParameterName("TMV",false);
+  fTurboModeVerboseCmd->SetRange("TMV >= 0");
+  fTurboModeVerboseCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboPositronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyPositron",this);
+  fTurboPositronKillEnergyCmd->SetGuidance("Set energy threshold to kill positrons in turbo mode");
+  fTurboPositronKillEnergyCmd->SetParameterName("TPKE",false);
+  fTurboPositronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboPositronKillEnergyCmd->SetRange("TPKE >= 0.");
+  fTurboPositronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboElectronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyElectron",this);
+  fTurboElectronKillEnergyCmd->SetGuidance("Set energy threshold to kill electrons in turbo mode");
+  fTurboElectronKillEnergyCmd->SetParameterName("TEKE",false);
+  fTurboElectronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboElectronKillEnergyCmd->SetRange("TEKE >= 0.");
+  fTurboElectronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboGammaKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyGamma",this);
+  fTurboGammaKillEnergyCmd->SetGuidance("Set energy threshold to kill gammas in turbo mode");
+  fTurboGammaKillEnergyCmd->SetParameterName("TGKE",false);
+  fTurboGammaKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboGammaKillEnergyCmd->SetRange("TGKE >= 0.");
+  fTurboGammaKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fTurboNeutronKillEnergyCmd = new G4UIcmdWithADoubleAndUnit("/settings/TurboMode/KillEnergyNeutron",this);
+  fTurboNeutronKillEnergyCmd->SetGuidance("Set energy threshold to kill neutrons in turbo mode");
+  fTurboNeutronKillEnergyCmd->SetParameterName("TNKE",false);
+  fTurboNeutronKillEnergyCmd->SetDefaultUnit("MeV");
+  fTurboNeutronKillEnergyCmd->SetRange("TNKE >= 0.");
+  fTurboNeutronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
 
-    delete fOutNameCmd;
-    delete fHistoNameCmd;
+  delete fOutNameCmd;
+  delete fHistoNameCmd;
+  delete fEnableDetectorIOCmd;
+  delete fDisableDetectorIOCmd;
+  delete fOutputDir;
 
-    delete fEnableDetectorIOCmd;
-    delete fDisableDetectorIOCmd;
+  delete fDisableSACAnalysisCmd;
+  delete fDisableECalAnalysisCmd;
+  delete fEnableSaveSACCmd;
+  delete fEnableSaveVetoCmd;
+  delete fEnableSaveEcalCmd;
+  delete fAnalysisDir;
 
-    delete fDisableSACAnalysisCmd;
-    delete fDisableECalAnalysisCmd;
+  delete fTurboModeVerboseCmd;
+  delete fTurboPositronKillEnergyCmd;
+  delete fTurboElectronKillEnergyCmd;
+  delete fTurboGammaKillEnergyCmd;
+  delete fTurboNeutronKillEnergyCmd;
+  delete fTurboModeDir;
 
-    delete fEnableSaveSACCmd;
-    delete fEnableSaveVetoCmd;
-    delete fEnableSaveEcalCmd;
+  delete fTurboModeCmd;
+  delete fPrintOutFrequencyCmd;
+  delete fAutomaticRandomSeedCmd;
+  delete fSettingsDir;
+
 }
 
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
 
-    G4cout << command->GetCommandName() << " " << newValue << G4endl;
+  G4cout << command->GetCommandName() << " " << newValue << G4endl;
 
-    if (command == fOutNameCmd)   fDatacardManager->SetOutputFileName(newValue);
-    if (command == fHistoNameCmd) fDatacardManager->SetHistoFileName(newValue);
+  if (command == fOutNameCmd)   fDatacardManager->SetOutputFileName(newValue);
+  if (command == fHistoNameCmd) fDatacardManager->SetHistoFileName(newValue);
 
-    if (command == fEnableDetectorIOCmd) RootIOManager::GetInstance()->EnableSubDetectorIO(newValue);
-    if (command == fDisableDetectorIOCmd) RootIOManager::GetInstance()->DisableSubDetectorIO(newValue);
+  if (command == fEnableDetectorIOCmd) RootIOManager::GetInstance()->EnableSubDetectorIO(newValue);
+  if (command == fDisableDetectorIOCmd) RootIOManager::GetInstance()->DisableSubDetectorIO(newValue);
 
-    if (command == fDisableSACAnalysisCmd) {
-      SteppingAction* stepAct = (SteppingAction*)G4RunManager::GetRunManager()->GetUserSteppingAction();
-      if (fDisableSACAnalysisCmd->GetNewBoolValue(newValue)) {
-	stepAct->DisableSACAnalysis();
-      } else {
-	stepAct->EnableSACAnalysis();
-      }
+  if (command == fDisableSACAnalysisCmd) {
+    SteppingAction* stepAct = (SteppingAction*)G4RunManager::GetRunManager()->GetUserSteppingAction();
+    if (fDisableSACAnalysisCmd->GetNewBoolValue(newValue)) {
+      stepAct->DisableSACAnalysis();
+    } else {
+      stepAct->EnableSACAnalysis();
     }
+  }
 
-    if (command == fDisableECalAnalysisCmd) {
-      SteppingAction* stepAct = (SteppingAction*)G4RunManager::GetRunManager()->GetUserSteppingAction();
-      if (fDisableECalAnalysisCmd->GetNewBoolValue(newValue)) {
-	stepAct->DisableECalAnalysis();
-      } else {
-	stepAct->EnableECalAnalysis();
-      }
+  if (command == fDisableECalAnalysisCmd) {
+    SteppingAction* stepAct = (SteppingAction*)G4RunManager::GetRunManager()->GetUserSteppingAction();
+    if (fDisableECalAnalysisCmd->GetNewBoolValue(newValue)) {
+      stepAct->DisableECalAnalysis();
+    } else {
+      stepAct->EnableECalAnalysis();
     }
+  }
 
-
-    //M. Raggi 23/06/2018
-    if (command == fEnableSaveEcalCmd) {
-      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
-      if (fEnableSaveEcalCmd->GetNewBoolValue(newValue)) {
-	evtAct->EnableSaveEcal();
-      } else {
-	evtAct->DisableSaveEcal();
-      }
+  //M. Raggi 23/06/2018
+  if (command == fEnableSaveEcalCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    if (fEnableSaveEcalCmd->GetNewBoolValue(newValue)) {
+      evtAct->EnableSaveEcal();
+    } else {
+      evtAct->DisableSaveEcal();
     }
+  }
 
-    if (command == fEnableSaveSACCmd) {
-      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
-      if (fEnableSaveSACCmd->GetNewBoolValue(newValue)) {
-	evtAct->EnableSaveSAC();
-      } else {
-	evtAct->DisableSaveSAC();
-      }
+  if (command == fEnableSaveSACCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    if (fEnableSaveSACCmd->GetNewBoolValue(newValue)) {
+      evtAct->EnableSaveSAC();
+    } else {
+      evtAct->DisableSaveSAC();
     }
+  }
 
-    if (command == fEnableSaveVetoCmd) {
-      EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
-      if (fEnableSaveVetoCmd->GetNewBoolValue(newValue)) {
-	//	G4cout<<"Enable "<<G4endl;
-	evtAct->EnableSaveVeto();
-      } else {
-	evtAct->DisableSaveVeto();
-	//	G4cout<<"Disable "<<G4endl;
-      }
+  if (command == fEnableSaveVetoCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    if (fEnableSaveVetoCmd->GetNewBoolValue(newValue)) {
+      //	G4cout<<"Enable "<<G4endl;
+      evtAct->EnableSaveVeto();
+    } else {
+      evtAct->DisableSaveVeto();
+      //	G4cout<<"Disable "<<G4endl;
     }
+  }
+
+  if (command == fPrintOutFrequencyCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    evtAct->SetPrintoutfrequency(fPrintOutFrequencyCmd->GetNewIntValue(newValue));
+  }
+
+  if (command == fAutomaticRandomSeedCmd) {
+    RunAction* runAct = (RunAction*)G4RunManager::GetRunManager()->GetUserRunAction();
+    if (fEnableSaveVetoCmd->GetNewBoolValue(newValue)) {
+      runAct->EnableAutomaticRandomSeed();
+    } else {
+      runAct->DisableAutomaticRandomSeed();
+    }
+  }
+
+  if (command == fTurboModeCmd) {
+    StackingAction* stkAct = (StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction();
+    if (fTurboModeCmd->GetNewBoolValue(newValue)) {
+      stkAct->EnableTurboMode();
+    } else {
+      stkAct->DisableTurboMode();
+    }
+  }
+
+  if (command == fTurboModeVerboseCmd)
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetTurboModeVerboseLevel(fTurboModeVerboseCmd->GetNewIntValue(newValue));
+
+  if ( command == fTurboPositronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetEpKillEnergy(fTurboPositronKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboElectronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetEmKillEnergy(fTurboElectronKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboGammaKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetGKillEnergy(fTurboGammaKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if ( command == fTurboNeutronKillEnergyCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetNKillEnergy(fTurboNeutronKillEnergyCmd->GetNewDoubleValue(newValue));
 
 }

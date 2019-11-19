@@ -1,0 +1,5 @@
+# Makefile
+
+NAME := Target
+
+include ../config/subdirs_mac.gmk

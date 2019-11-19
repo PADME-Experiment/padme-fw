@@ -20,6 +20,8 @@ TPixGeometry::TPixGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   fTPixNRows = 2;
   fTPixNCols = 6;
 

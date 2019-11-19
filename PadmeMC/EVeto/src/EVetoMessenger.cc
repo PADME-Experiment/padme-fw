@@ -13,6 +13,7 @@
 #include "G4UIparameter.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithoutParameter.hh"
+#include "G4UIcmdWithAnInteger.hh"
 
 #include "EVetoDetector.hh"
 #include "EVetoGeometry.hh"
@@ -61,12 +62,16 @@ EVetoMessenger::EVetoMessenger(EVetoDetector* det)
   fSetEVetoFrontFaceZCmd->SetParameter(pifPosZParameter);
   fSetEVetoFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/EVeto/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for EVeto code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 EVetoMessenger::~EVetoMessenger()
 {
-
-  delete fEVetoDetectorDir;
 
   delete fSetEVetoNFingersCmd;
   delete fSetFingerSizeCmd;
@@ -74,6 +79,10 @@ EVetoMessenger::~EVetoMessenger()
 
   delete fSetEVetoInnerFaceXCmd;
   delete fSetEVetoFrontFaceZCmd;
+
+  delete fSetVerboseLevelCmd;
+
+  delete fEVetoDetectorDir;
 
 }
 
@@ -105,5 +114,8 @@ void EVetoMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     G4double z; std::istringstream is(par); is >> z;
     fEVetoGeometry->SetEVetoFrontFacePosZ(z*cm);
   }
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fEVetoGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

@@ -31,6 +31,11 @@ TargetDigi::TargetDigi(const TargetDigi& right)
   fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fDNumber = right.fDNumber;
+  fChargeT = right.fChargeT;
+  fCharge = right.fCharge;
+  fWaveformRaw = right.fWaveformRaw;
+  fWaveform = right.fWaveform;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -40,6 +45,11 @@ const TargetDigi& TargetDigi::operator=(const TargetDigi& right)
   fChannelId = right.fChannelId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fDNumber = right.fDNumber;
+  fChargeT = right.fChargeT;
+  fCharge = right.fCharge;
+  fWaveformRaw = right.fWaveformRaw;
+  fWaveform = right.fWaveform;
   return *this;
 }
 
@@ -71,9 +81,11 @@ void TargetDigi::Draw()
 
 void TargetDigi::Print()
 {
-  G4cout << "- channel: " << fChannelId
+  G4cout << "Target Digi - channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")
          << " energy: " << G4BestUnit(fEnergy,"Energy")
+	 << " charge: " << fCharge
+	 << " multi: " << fDNumber 
 	 << G4endl;
 }
 

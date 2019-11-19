@@ -42,7 +42,9 @@
 //
 // 0x05 RW TimePix3 shutter delay and width
 //         [7:0] TimePix3 shutter delay from trig out in clock counts (def: 0x02 = 2 = 25ns)
-//         [15:8] TimePix3 shutter window width in clock cycles (def: 0x16 = 22 = 275ns)
+//         [15:8] TimePix3 shutter window width in 100ns counts (def: 0x64 = 100 = 10us)
+//         [23:16] Reserved
+//         [31:24] Trigger 0 (BTF trigger) distribution delay in clock counts (def: 0x7E = 126 = 1.575us)
 //
 // 0x06 RW trigger 0 (BTF trigger) start of pre-veto wrt start of previous trigger
 //         [31:0] pre-veto width in clock cycles (def: 0x001829ef = 1583599 = 19.794988ms
@@ -51,8 +53,8 @@
 // 0x07 RW trigger 0 (BTF trigger) pre-veto timeout if next BTF trigger does not arrive
 //         [31:0] pre-veto timeout in clock cycles (def: 0x04c4b3ff = 79999999 = 1s)
 //
-// 0x08 RW trigger 0 (BTF trigger) global demultiplication factor and autopass demultiplication factor
-//         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
+// 0x08 RW trigger 0 (BTF trigger) autopass demultiplication factor (WARNING: no global demultiplication!)
+//                                                  [31:16] autopass demultiplication (def: 0, autopass off)
 // 0x09 RW trigger 1 global demultiplication factor and autopass demultiplication factor
 //         [15:0] global demultiplication (def: 1), [31:16] autopass demultiplication (def: 0, autopass off)
 // 0x0a RW trigger 2 global demultiplication factor and autopass demultiplication factor
@@ -76,6 +78,8 @@
 //
 // 0x19 RO busy register
 //      [3:0] busy_in (3:0), [4] CPU busy
+//
+// 0x1D RO firmware version
 
 // === Trigger data format (64bit) ===
 // [39:0]  timestamp in clock cycles, resets in 13744s = 3h49m
@@ -390,6 +394,15 @@ int trig_stop_run()
   return trig_set_register(0x00,fullmask);
 }
 
+int trig_get_fw_version(unsigned int* fw_version)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x1D,fullmask);
+  if (rc == TRIG_OK) *fw_version = fullmask[0]*(1<<24)+fullmask[1]*(1<<16)+fullmask[2]*(1<<8)+fullmask[3];
+  return rc;
+}
+
 int trig_get_trigbusymask(unsigned char* mask)
 {
   // WARNING this function is obsolete and will be removed
@@ -510,6 +523,7 @@ int trig_set_timepix_delay(unsigned char delay)
 {
   int rc;
   unsigned char fullmask[4];
+  if (delay == 0) { printf("WARNING - trig_set_timepix_delay - delay set to 0: timepix shutter will start ~25us after the BTF trigger. Are you sure?\n"); }
   rc = trig_get_register(0x05,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old timepix delay with new one
@@ -537,9 +551,30 @@ int trig_set_timepix_width(unsigned char width)
   return trig_set_register(0x05,fullmask);
 }
 
+int trig_get_trigger0_delay(unsigned char* delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc == TRIG_OK) delay[0] = fullmask[0];
+  return rc;
+}
+
+int trig_set_trigger0_delay(unsigned char delay)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x05,fullmask);
+  if (rc != TRIG_OK) return rc;
+  // Replace old trigger0 delay with new one
+  fullmask[0] = delay;
+  return trig_set_register(0x05,fullmask);
+}
+
 int trig_get_trigger_global_factor(unsigned char trigger,unsigned short int* factor)
 {
   int rc;
+  if (trigger == 0) return TRIG_UNDEF; // Global factor is not used for trigger 0 (BTF)
   unsigned char fullmask[4];
   unsigned char reg = 0x08 + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);
@@ -550,6 +585,7 @@ int trig_get_trigger_global_factor(unsigned char trigger,unsigned short int* fac
 int trig_set_trigger_global_factor(unsigned char trigger,unsigned short int factor)
 {
   int rc;
+  if (trigger == 0) return TRIG_UNDEF; // Global factor is not used for trigger 0 (BTF)
   unsigned char fullmask[4];
   unsigned char reg = 0x08 + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);

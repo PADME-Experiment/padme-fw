@@ -15,6 +15,7 @@
 //#include "DigitizerChannelSAC.hh"
 #include "PadmeReconstruction.hh"
 #include "HEPVetoCalibration.hh"
+#include "HEPVetoGeometry.hh"
 #include "HEPVetoSimpleClusterization.hh"
 #include "TH2F.h"
 
@@ -30,6 +31,7 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
   fClusterization = new HEPVetoSimpleClusterization();
   //fChannelReco = new DigitizerChannelSAC();
   fTriggerProcessor = new PadmeVTrigger();
+  fGeometry = new HEPVetoGeometry();
 }
 
 
@@ -100,6 +102,8 @@ TRecoVEvent * HEPVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event
   return fRecoEvent;
 }
 */
+
+/* for debugging only 
 void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
@@ -114,9 +118,34 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
     digi->Print();
   }
 }
+*/
 
 // void HEPVetoReconstruction::EndProcessing()
 // {;}
+
+
+void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  fHits.clear();
+  Int_t chId=0;
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    TRecoVHit *Hit = new TRecoVHit();
+    chId = digi->GetChannelId();
+    //digit Id increases with decreasing z; for recoHits chId increases with increasing z 
+    if (chId<16) chId = 15-chId;
+    else  chId = 47-chId;
+    Hit->SetChannelId(chId);
+    Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    fHits.push_back(Hit);
+  }
+}
+
 
 void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 

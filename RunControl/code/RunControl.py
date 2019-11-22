@@ -44,7 +44,7 @@ def main(argv):
     elif useGUI:
 
         print "Sorry: RunControl GUI is currently not available. Please use --no-gui option to start the text version."
-        //app = RunControlGUI()
+        #app = RunControlGUI()
 
     else:
 

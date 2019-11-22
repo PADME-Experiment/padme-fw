@@ -12,6 +12,8 @@ re_board = re.compile("^\s*board\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+)
 re_node = re.compile("^\s*node\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 re_link = re.compile("^\s*link\s+(\d+):(\d+):(\d+):(\d+)\s+(-*\d+)\s+(\d+-\d+-\d+)\s+(\d+:\d+:\d+)\s*$")
 re_run_type = re.compile("^\s*run_type\s+(\d+)\s+(\S+)\s+(\S.*)$")
+re_proc_type = re.compile("^\s*proc_type\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S.*)$")
+re_file_type = re.compile("^\s*file_type\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S.*)$")
 
 max_datetime = "2049-12-31 23:59:59"
 
@@ -217,11 +219,11 @@ def main():
 
             (run_type_id,run_type,run_text) = m.group(1,2,3)
             run_type_id = int(run_type_id)
-            c.execute("""SELECT id,description FROM run_type WHERE short_name=%s""",(run_type,))
+            c.execute("""SELECT id,description FROM run_type WHERE type=%s""",(run_type,))
             res =  c.fetchone()
             if (res == None):
                 print "Adding run type",run_type,"with id",run_type_id,"and description",run_text
-                c.execute("""INSERT INTO run_type(id,short_name,description) VALUES(%s,%s,%s)""",(run_type_id,run_type,run_text))
+                c.execute("""INSERT INTO run_type(id,type,description) VALUES(%s,%s,%s)""",(run_type_id,run_type,run_text))
             else:
                 (old_id,old_text) = res
                 old_id = int(old_id)
@@ -233,6 +235,58 @@ def main():
                     print "\tOld:",old_text
                     print "\tNew:",run_text
                     c.execute("""UPDATE run_type SET description=%s WHERE id=%s""",(run_text,run_type_id))
+
+        # Check process types
+        m = re_proc_type.search(l)
+        if (m):
+
+            (proc_type_id,proc_type,proc_exec,proc_text) = m.group(1,2,3,4)
+            proc_type_id = int(proc_type_id)
+            c.execute("""SELECT id,executable,description FROM process_type WHERE type=%s""",(proc_type,))
+            res =  c.fetchone()
+            if (res == None):
+                print "Adding process type",proc_type,"with id",proc_type_id,"executable",proc_exec,"and description",proc_text
+                c.execute("""INSERT INTO process_type(id,type,executable,description) VALUES(%s,%s,%s,%s)""",(proc_type_id,proc_type,proc_exec,proc_text))
+            else:
+                (old_id,old_exec,old_text) = res
+                old_id = int(old_id)
+                if (proc_type_id != old_id):
+                    print "ERROR - Process type",proc_type,"already exists with id",old_id,"!=",proc_type_id
+                    exit(1)
+                if (proc_exec != old_exec):
+                    print "ERROR - Process type",proc_type,"already exists with executable",old_exec,"!=",proc_exec
+                    exit(1)
+                if (proc_text != old_text):
+                    print "WARNING - Updating process type",proc_type,"description"
+                    print "\tOld:",old_text
+                    print "\tNew:",proc_text
+                    c.execute("""UPDATE process_type SET description=%s WHERE id=%s""",(proc_text,proc_type_id))
+
+        # Check file types
+        m = re_file_type.search(l)
+        if (m):
+
+            (file_type_id,file_type,file_prod,file_text) = m.group(1,2,3,4)
+            file_type_id = int(file_type_id)
+            c.execute("""SELECT id,producer,description FROM file_type WHERE type=%s""",(file_type,))
+            res =  c.fetchone()
+            if (res == None):
+                print "Adding file type",file_type,"with id",file_type_id,"producer",file_prod,"and description",file_text
+                c.execute("""INSERT INTO file_type(id,type,producer,description) VALUES(%s,%s,%s,%s)""",(file_type_id,file_type,file_prod,file_text))
+            else:
+                (old_id,old_prod,old_text) = res
+                old_id = int(old_id)
+                if (file_type_id != old_id):
+                    print "ERROR - File type",file_type,"already exists with id",old_id,"!=",file_type_id
+                    exit(1)
+                if (file_prod != old_prod):
+                    print "ERROR - File type",file_type,"already exists with producer",old_prod,"!=",file_prod
+                    exit(1)
+                if (file_text != old_text):
+                    print "WARNING - Updating file type",file_type,"description"
+                    print "\tOld:",old_text
+                    print "\tNew:",file_text
+                    c.execute("""UPDATE file_type SET description=%s WHERE id=%s""",(file_text,file_type_id))
 
     # Commit and close connection to DB
     conn.commit()

@@ -96,3 +96,16 @@ run_type 3 CALIBRATION Calibration run
 run_type 4 RANDOM      Random triggers run
 run_type 5 OTHER       Run of a type which was not forseen
 run_type 6 FAKE        Run will use PadmeDAQ in FAKE mode (experts only!)
+
+# List of process types
+proc_type 0 ADCDAQ  PadmeDAQ    Configure an ADC board, collect its data, format them, and send them to ZEROSUP
+proc_type 1 ZEROSUP PadmeDAQ    Receive data from ADCDAQ, apply zero suppression, and send them to MERGER
+proc_type 2 TRIGGER PadmeTrig   Configure the Trigger board, collect its data, format them, and send them to MERGER
+proc_type 3 MERGER  PadmeMerger Receive data from TRIGGER and ZEROSUP, synchronize and merge them into a full event, and distribute it to LEVEL1
+proc_type 4 LEVEL1  PadmeLevel1 Receive full events from MERGER, apply level1 selection, save them to RAWDATA file in ROOT format
+
+# List of file types
+file_type 0 RAWDATA  PadmeLevel1 Full raw events in ROOT format.
+file_type 1 DAQDATA  PadmeDAQ    Data from a single ADC board in DAQ Event format.
+file_type 2 TRIGDATA PadmeTrig   Data from the Trigger board in Trigger Event format.
+file_type 3 EVTDATA  PadmeMerger Data from the Merger in Full Event format.

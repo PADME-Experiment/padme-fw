@@ -33,9 +33,20 @@ void produceSelectionPlots(TFile* fData=_file0, TFile* fMC=_file1)
   xmax =  999;
   compare("SS2g_clSize",                    -1, xmin, xmax, xtitle, fData, fMC);
 
+  xtitle = "Number of positrons/bunch";
+  xmin = 0.;
+  xmax = 30000.;
+  compare("NposInBunch_beam",                1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "Number of positrons/bunch - SR";
+  xmin = 0.;
+  xmax = 30000.;
+  compare("NposInBunch_beam_passDtDphiCogDsume",  -1, xmin, xmax, xtitle, fData, fMC);
+
+
+  
   //return;
 
-  xtitle = "E(#gamma_{1}+E(#gamma_{2}) [MeV]";
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV]";
   xmin = 0.;
   xmax = 1200.;
   compare("SS2gSumE_passDt",                    -1, xmin, xmax, xtitle, fData, fMC);
@@ -46,6 +57,25 @@ void produceSelectionPlots(TFile* fData=_file0, TFile* fMC=_file1)
   //compare("SS2gSumE_passDtDphiCogDsume",        0.38, 400., 600, xtitle, fData, fMC);
   //compare("SS2gSumE_passDtDphiCogDsume",        0.2144, 400., 600, xtitle, fData, fMC);
 
+  xtitle = "R(#gamma_{1,2}) [mm]";
+  xmin = -999;
+  xmax =  999;
+  compare("SS2gR_passDt",                    -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gR_passDtDphi",                -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gR_passDtDphiCog",             -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gR_passDtDphiCogFR",           -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gR_passDtDphiCogDsume",        -1, xmin, xmax, xtitle, fData, fMC);
+  //compare("SS2gSumE_passDtDphiCogDsume",        0.38, 400., 600, xtitle, fData, fMC);
+  //compare("SS2gSumE_passDtDphiCogDsume",        0.2144, 400., 600, xtitle, fData, fMC);
+  
+  xtitle = "#phi(#gamma_{1,2}) [rad]";
+  xmin = -999;
+  xmax =  999;
+  compare("SS2gPhi_passDt",                    -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gPhi_passDtDphi",                -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gPhi_passDtDphiCog",             -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gPhi_passDtDphiCogFR",           -1, xmin, xmax, xtitle, fData, fMC);
+  compare("SS2gPhi_passDtDphiCogDsume",        -1, xmin, xmax, xtitle, fData, fMC);
 
 
   xtitle = "#Deltat [ns]";

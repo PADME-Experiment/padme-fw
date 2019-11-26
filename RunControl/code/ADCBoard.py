@@ -172,10 +172,6 @@ class ADCBoard:
                 print l
         f.close()
 
-    #def set_board_id(self,b_id):
-    #
-    #    self.board_id = b_id
-
     def format_config_daq(self):
 
         cfgstring = ""
@@ -303,10 +299,13 @@ class ADCBoard:
     def create_proc_daq(self):
 
         # Create DAQ process in DB
-        self.proc_daq_id = self.db.create_daq_process("DAQ",self.run_number,self.get_link_id())
+        self.proc_daq_id = self.db.create_daq_process(self.run_number,self.node_id)
         if self.proc_daq_id == -1:
             print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
             return "error"
+
+        # Add info about optical link
+        self.db.add_daq_process_optical_link(self.proc_daq_id,self.node_id,self.conet2_link,self.conet2_slot)
 
         self.db.add_cfg_para_daq(self.proc_daq_id,"daq_dir",            self.daq_dir)
         self.db.add_cfg_para_daq(self.proc_daq_id,"ssh_id_file",        self.ssh_id_file)
@@ -363,7 +362,7 @@ class ADCBoard:
     def create_proc_zsup(self):
 
         # Create ZSUP process in DB
-        self.proc_zsup_id = self.db.create_daq_process("ZSUP",self.run_number,self.get_link_id())
+        self.proc_zsup_id = self.db.create_zsup_process(self.run_number,self.node_id)
         if self.proc_zsup_id == -1:
             print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
             return "error"
@@ -409,11 +408,11 @@ class ADCBoard:
 
         return "ok"
 
-    def get_link_id(self):
-
-        # Convert PadmeDAQ link description to link id from DB
-        if (self.node_id == -1 or self.conet2_link == -1 or self.conet2_slot == -1): return -1
-        return self.db.get_link_id(self.node_id,self.conet2_link/8,self.conet2_link%8,self.conet2_slot)
+    #def get_link_id(self):
+    #
+    #    # Convert PadmeDAQ link description to link id from DB
+    #    if (self.node_id == -1 or self.conet2_link == -1 or self.conet2_slot == -1): return -1
+    #    return self.db.get_link_id(self.node_id,self.conet2_link/8,self.conet2_link%8,self.conet2_slot)
 
     def start_daq(self):
 
@@ -445,10 +444,18 @@ class ADCBoard:
             print "ADCBoard::start_daq - ERROR: Execution failed: %s",e
             return 0                
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_start(self.proc_daq_id)
+
         # Return process id
         return self.process_daq.pid
 
     def stop_daq(self):
+
+        # Tag stop process in DB
+        if self.run_number:
+            self.db.set_process_time_stop(self.proc_daq_id)
 
         # Wait up to 5 seconds for DAQ to stop of its own (on quit file or on time elapsed)
         for i in range(10):
@@ -523,10 +530,18 @@ class ADCBoard:
             print "ADCBoard::start_zsup - ERROR: Execution failed: %s",e
             return 0                
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_start(self.proc_zsup_id)
+
         # Return process id
         return self.process_zsup.pid
 
     def stop_zsup(self):
+
+        # Tag stop process in DB
+        if self.run_number:
+            self.db.set_process_time_stop(self.proc_zsup_id)
 
         # Wait up to 5 seconds for ZSUP to stop
         for i in range(10):

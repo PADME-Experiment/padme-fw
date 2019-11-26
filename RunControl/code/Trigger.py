@@ -319,10 +319,18 @@ class Trigger:
             print "Trigger::start_trig - ERROR: Execution failed: %s",e
             return 0
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_start(self.process_id)
+
         # Return process id
         return self.process.pid
 
     def stop_trig(self):
+
+        # Tag stop process in DB
+        if self.run_number:
+            self.db.set_process_time_stop(self.process_id)
 
         # Wait up to 5 seconds for DAQ to stop of its own (on quit file or on time elapsed)
         for i in range(10):

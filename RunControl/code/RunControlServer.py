@@ -618,7 +618,6 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         elif (ans=="client_close"):
             return "client_close"
         else:
-            #self.write_log("run_number - invalid option %s received"%ans)
             print "run_number - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
@@ -645,7 +644,6 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "error"
             self.send_answer(newrun_type)
         else:
-            #self.write_log("run_type - invalid option %s received"%ans)
             print "run_type - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
@@ -687,12 +685,12 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 return "error"
 
             print "Creating Run %d strucure in DB"%self.run.run_number
-            if self.run.create_run() == "error":
+            if self.run.create_run_in_db() == "error":
                 print "ERROR - Cannot create Run in the DB"
                 return "error"
 
             # Save time when run initialization starts
-            self.db.set_run_time_init(self.run.run_number,self.now_str())
+            self.db.set_run_time_init(self.run.run_number)
 
         # Create directory to host log files
         print "Creating log directory %s"%self.run.log_dir
@@ -833,14 +831,16 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 if (all_boards_ready):
 
                     print "All boards completed initialization: DAQ run can be started"
-                    if (self.run.run_number): self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
+                    if (self.run.run_number):
+                        self.db.set_run_status(self.run.run_number,1) # Status 1: run correctly initialized
                     self.send_answer("init_ready")
                     return "initialized"
 
                 else:
 
                     print "*** ERROR *** One or more boards failed the initialization. Cannot start run"
-                    if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                    if (self.run.run_number):
+                        self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                     self.send_answer("init_fail")
                     return "initfail"
 
@@ -848,7 +848,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             n_try += 1
             if (n_try>=60):
                 print "*** ERROR *** One or more boards did not initialize within 30sec. Cannot start run"
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,5) # Status 5: run with problems at initialization
                 self.send_answer("init_timeout")
                 return "initfail"
             time.sleep(0.5)
@@ -864,7 +865,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
 
         # Update run status in DB
         if (self.run.run_number):
-            self.db.set_run_time_start(self.run.run_number,self.now_str())
+            self.db.set_run_time_start(self.run.run_number)
             self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         self.send_answer("run_started")
@@ -881,7 +882,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.run_comment_end = ans
 
         print "Stopping run"
-        if (self.run.run_number): self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
+        if (self.run.run_number):
+            self.db.set_run_status(self.run.run_number,3) # Status 3: run stopped normally
 
         return self.terminate_run()
 
@@ -890,14 +892,15 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.run_comment_end = "Run aborted"
 
         print "Aborting run"
-        if (self.run.run_number): self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
+        if (self.run.run_number):
+            self.db.set_run_status(self.run.run_number,4) # Status 4: run aborted
 
         return self.terminate_run()
 
     def terminate_run(self):
 
         if (self.run.run_number):
-            self.db.set_run_time_stop(self.run.run_number,self.now_str())
+            self.db.set_run_time_stop(self.run.run_number)
             self.db.set_run_comment_end(self.run.run_number,self.run.run_comment_end)
 
         ## Create "stop the run" tag file
@@ -916,7 +919,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 terminate_ok = False
                 self.send_answer("adc %d daq_terminate_error"%adc.board_id)
                 print "ADC board %02d - WARNING: problems while terminating DAQ"%adc.board_id
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Run stop_zsup procedure for each ADC board
         for adc in (self.run.adcboard_list):
@@ -927,7 +931,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 terminate_ok = False
                 self.send_answer("adc %d zsup_terminate_error"%adc.board_id)
                 print "ADC board %02d - WARNING: problems while terminating ZSUP"%adc.board_id
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # If this is a real run, get final info from merger before stopping it
         if (self.run.run_number):
@@ -942,7 +947,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             terminate_ok = False
             self.send_answer("trigger terminate_error")
             print "WARNING: problems while terminating Trigger"
-            if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+            if (self.run.run_number):
+                self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Run stop_merger procedure
         if self.run.merger.stop_merger():
@@ -952,7 +958,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             terminate_ok = False
             self.send_answer("merger terminate_error")
             print "WARNING: problems while terminating Merger"
-            if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+            if (self.run.run_number):
+                self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Run stop_level1 procedures
         for lvl1 in self.run.level1_list:
@@ -963,7 +970,8 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 terminate_ok = False
                 self.send_answer("level1 %d terminate_error"%lvl1.level1_id)
                 print "Level1 %02d - WARNING: problems while terminating"%lvl1.level1_id
-                if (self.run.run_number): self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
+                if (self.run.run_number):
+                    self.db.set_run_status(self.run.run_number,6) # Status 6: run ended with errors
 
         # Clean up run directory
         self.run.clean_up()

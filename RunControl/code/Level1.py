@@ -17,6 +17,8 @@ class Level1:
         # Define id file for passwordless ssh command execution
         self.ssh_id_file = "%s/.ssh/id_rsa_daq"%os.getenv('HOME',"~")
 
+        self.db = PadmeDB()
+
         self.set_default_config()
 
     def set_default_config(self):
@@ -82,7 +84,7 @@ class Level1:
 
     def create_level1(self):
 
-        self.process_id = self.db.create_level1_process(self.run_number,self.node_id,self.level1_id)
+        self.process_id = self.db.create_level1_process(self.run_number,self.node_id)
         if self.process_id == -1: return "error"
 
         self.db.add_cfg_para_level1(self.process_id,"daq_dir",      self.daq_dir)
@@ -94,7 +96,7 @@ class Level1:
 
         self.db.add_cfg_para_level1(self.process_id,"node_id",      repr(self.node_id))
         self.db.add_cfg_para_level1(self.process_id,"node_ip",      self.node_ip)
-                                                         
+
         self.db.add_cfg_para_level1(self.process_id,"config_file",  self.config_file)
         self.db.add_cfg_para_level1(self.process_id,"log_file",     self.log_file)
 
@@ -131,10 +133,18 @@ class Level1:
             print "Level1::start_level1 - ERROR: Execution failed: %s",e
             return 0
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_start(self.process_id)
+
         # Return process id
         return self.process.pid
 
     def stop_level1(self):
+
+        # Tag stop process in DB
+        if self.run_number:
+            self.db.set_process_time_stop(self.process_id)
 
         # Wait up to 5 seconds for Level1 to stop
         for i in range(5):

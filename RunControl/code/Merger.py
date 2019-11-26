@@ -124,10 +124,18 @@ class Merger:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
             return 0                
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_start(self.process_id)
+
         # Return process id
         return self.process.pid
 
     def stop_merger(self):
+
+        # Tag stop process in DB
+        if self.run_number:
+            self.db.set_process_time_stop(self.process_id)
 
         # Wait up to 60 seconds for Merger to stop
         for i in range(60):
@@ -147,4 +155,5 @@ class Merger:
         if self.process.poll() != None:
             self.process.wait()
             self.log_handle.close()
+
         return 0

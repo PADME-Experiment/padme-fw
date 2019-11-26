@@ -70,10 +70,7 @@ class Run:
 
         #print "--- Changing run"
 
-        #if (self.run_number == 0):
-        #    self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
-        #else:
-        #    self.run_name = "run_%d"%self.run_number
+        # Define run name using run number and start time
         self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
 
         # Write run name to current_run file for monitoring
@@ -319,11 +316,11 @@ class Run:
 
         return cfgstring
 
-    def create_run(self):
+    def create_run_in_db(self):
 
         # Create run in DB and save its configuration parameters
 
-        self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
+        self.db.create_run(self.run_number,self.run_name,self.run_user,self.run_type,self.run_comment_start)
 
         self.db.add_cfg_para_run(self.run_number,"user_account",       self.user_account)
         self.db.add_cfg_para_run(self.run_number,"daq_dir",            self.daq_dir)
@@ -376,7 +373,6 @@ class Run:
         self.db.add_cfg_para_run(self.run_number,"rawdata_head",       self.rawdata_head)
 
         self.db.add_cfg_para_run(self.run_number,"trigger_node",       self.trigger_node)
-        #self.db.add_cfg_para_run(self.run_number,"trigger_mask",       self.trigger_mask)
 
         if self.merger_node:
             self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)

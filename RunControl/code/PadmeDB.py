@@ -73,7 +73,7 @@ class PadmeDB:
         else:
             return maxrun
 
-    def create_run(self,run_nr,run_type,run_user,run_comment):
+    def create_run(self,run_nr,run_name,run_user,run_type,run_comment):
 
         self.check_db()
         c = self.conn.cursor()
@@ -89,7 +89,7 @@ class PadmeDB:
 
         # Create run
         try:
-            c.execute("""INSERT INTO run (number,run_type_id,status,total_events,user) VALUES (%s,%s,%s,%s,%s)""",(run_nr,run_type_id,0,0,run_user))
+            c.execute("""INSERT INTO run (number,name,user,run_type_id,status) VALUES (%s,%s,%s,%s,%s)""",(run_nr,run_name,run_user,run_type_id,0))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -142,37 +142,17 @@ class PadmeDB:
 
         return process_id
 
-    def create_daq_process(self,mode,run_number,link_id):
-
-        self.check_db()
-        c = self.conn.cursor()
-
-        # Check if link id exists and get node
-        node_id = None
-        c.execute("""SELECT node_id FROM optical_link WHERE id = %s""",(link_id,))
-        if c.rowcount == 0:
-            print "PadmeDB::create_daq_process - WARNING - Unknown optical_link id: %d\n"%link_id
-        else:
-            (node_id,) = c.fetchone()
+   def create_daq_process(self,run_number,node_id):
 
         # Create process in database
-        process_id = -1
-        if mode == "DAQ":
-            process_id = self.create_process(run_number,"ADCDAQ",node_id)
-        elif mode == "ZSUP":
-            process_id = self.create_process(run_number,"ZEROSUP",node_id)
-        else:
-            print "PADMEDB::create_daq_process - ERROR - Unknown DAQ process mode %s"%mode
-            return -1
+        process_id = self.create_process(run_number,"ADCDAQ",node_id)
 
-        if (mode == "DAQ") and (process_id != -1):
-            # Create association between process and optical link for ADCDAQ processes
-            try:
-                c.execute("""INSERT INTO daq_link (process_id,optical_link_id) VALUES (%s,%s)""",(process_id,link_id))
-            except MySQLdb.Error as e:
-                print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+        return process_id
+        
+    def create_zsup_process(self,run_number,node_id):
 
-        self.conn.commit()
+        # Create process in database
+        process_id = self.create_process(run_number,"ZEROSUP",node_id)
 
         return process_id
         
@@ -190,12 +170,23 @@ class PadmeDB:
 
         return process_id
         
-    def create_level1_process(self,run_number,node_id,number):
+    def create_level1_process(self,run_number,node_id):
 
         # Create process in database
         process_id = self.create_process(run_number,"LEVEL1",node_id)
 
         return process_id
+
+    def add_daq_process_optical_link(self,proc_id,node_id,conet2_link,conet2_slot):
+
+        link_id = self.get_link_id(node_id,conet2_link/8,conet2_link%8,conet2_slot)
+        if link_id == -1:
+            print "PadmeDB::add_daq_process_optical_link - WARNING - Cannot get link for (process,node,link,slot)=(%d,%d,%d,%d)"%(proc_id,node_id,conet2_link,conet2_slot)
+        else:
+            try:
+                c.execute("""INSERT INTO daq_link (process_id,optical_link_id) VALUES (%s,%s)""",(proc_id,link_id))
+            except MySQLdb.Error as e:
+                print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
 
     def set_run_status(self,run_nr,status):
 
@@ -207,32 +198,52 @@ class PadmeDB:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def set_run_time_init(self,run_nr,time_init):
+    def set_run_time_init(self,run_nr):
 
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE run SET time_init = %s WHERE number = %s""",(time_init,run_nr))
+            c.execute("""UPDATE run SET time_init = %s WHERE number = %s""",(self.now_str(),run_nr))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def set_run_time_start(self,run_nr,time_start):
+    def set_run_time_start(self,run_nr):
 
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(time_start,run_nr))
+            c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(self.now_str(),run_nr))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def set_run_time_stop(self,run_nr,time_stop):
+    def set_run_time_stop(self,run_nr):
 
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
+            c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(self.now_str(),run_nr))
+        except MySQLdb.Error as e:
+            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+        self.conn.commit()
+
+    def set_process_time_start(self,proc_id):
+
+        self.check_db()
+        c = self.conn.cursor()
+        try:
+            c.execute("""UPDATE process SET time_start = %s WHERE id = %s""",(self.now_str(),proc_id))
+        except MySQLdb.Error as e:
+            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+        self.conn.commit()
+
+    def set_process_time_stop(self,proc_id):
+
+        self.check_db()
+        c = self.conn.cursor()
+        try:
+            c.execute("""UPDATE process SET time_stop = %s WHERE id = %s""",(self.now_str(),proc_id))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -302,9 +313,6 @@ class PadmeDB:
         self.conn.commit()
 
         return para_id
-
-    def now_str(self):
-        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())
 
     def get_node_id(self,node):
 
@@ -417,8 +425,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
 
-        c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",
-                  (node_id,controller_id,channel_id,slot_id))
+        c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",(node_id,controller_id,channel_id,slot_id))
         ret = c.fetchone()
         if ret != None: (link_id,) = ret
 
@@ -443,3 +450,6 @@ class PadmeDB:
         self.conn.commit()
 
         return (tot_evts,tot_size)
+
+    def now_str(self):
+        return time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime())

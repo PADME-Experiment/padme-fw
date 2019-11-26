@@ -37,13 +37,13 @@ int reset_config()
 
   strcpy(Config->config_file,"");
 
-  strcpy(Config->quit_file,"run/quit");
   strcpy(Config->start_file,"run/start");
-  strcpy(Config->initok_file,"run/initok.b00"); // InitOK file for default board 0
-  strcpy(Config->initfail_file,"run/initfail.b00"); // InitFail file for default board 0
-  strcpy(Config->lock_file,"run/lock.b00"); // Lock file for default board 0
+  strcpy(Config->quit_file,"run/quit");
+  strcpy(Config->initok_file,"run/initok.trigger");
+  strcpy(Config->initfail_file,"run/initfail.trigger");
+  strcpy(Config->lock_file,"run/lock.trigger");
 
-  Config->run_number = 0; // Dummy run (no DB access)
+  Config->run_number = 0; // Dummy run
 
   Config->trigger_mask = 0x01; // Only BTF trigger active
 
@@ -539,7 +539,7 @@ int print_config(){
 
   printf("output_mode\t\t%s\t\toutput mode (FILE or STREAM)\n",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {
-    printf("output_stream\t\t%s\tname of virtual file used as output stream\n",Config->output_stream);
+    printf("output_stream\t\t'%s'\tname of virtual file used as output stream\n",Config->output_stream);
   } else {
     printf("data_dir\t\t'%s'\t\tdirectory where output files will be stored\n",Config->data_dir);
     printf("data_file\t\t'%s'\ttemplate name for data files: <date/time> string will be appended\n",Config->data_file);
@@ -565,61 +565,105 @@ int print_config(){
 
 }
 
-/*
 // Save configuration parameters to DB
 int save_config()
 {
 
-  int i;
-  char line[2048];
+  //int i;
+  //char line[2048];
 
-  db_add_cfg_para(Config->process_id,"config_file",Config->config_file);
 
-  db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
-  db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  //db_add_cfg_para(Config->process_id,"config_file",Config->config_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"config_file",Config->config_file);
 
-  db_add_cfg_para(Config->process_id,"initok_file",Config->initok_file);
-  db_add_cfg_para(Config->process_id,"initfail_file",Config->initfail_file);
-  db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
+  //db_add_cfg_para(Config->process_id,"start_file",Config->start_file);
+  //db_add_cfg_para(Config->process_id,"quit_file",Config->quit_file);
+  //db_add_cfg_para(Config->process_id,"initok_file",Config->initok_file);
+  //db_add_cfg_para(Config->process_id,"initfail_file",Config->initfail_file);
+  //db_add_cfg_para(Config->process_id,"lock_file",Config->lock_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"start_file",Config->start_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"quit_file",Config->quit_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"initok_file",Config->initok_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"initfail_file",Config->initfail_file);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"lock_file",Config->lock_file);
 
-  sprintf(line,"%d",Config->run_number);
-  db_add_cfg_para(Config->process_id,"run_number",line);
+  //sprintf(line,"%d",Config->run_number);
+  //db_add_cfg_para(Config->process_id,"run_number",line);
+  //printf("DBINFO - add_proc_config_para %d %s %d\n",Config->process_id,"run_number",Config->run_number);
 
-  db_add_cfg_para(Config->process_id,"output_mode",Config->output_mode);
+  printf("DBINFO - add_proc_config_para %d %s 0x%02x\n",Config->process_id,"trigger_mask",Config->trigger_mask);
+  printf("DBINFO - add_proc_config_para %d %s 0x%02x\n",Config->process_id,"busy_mask",Config->busy_mask);
+
+  printf("DBINFO - add_proc_config_para %d %s 0x%02x\n",Config->process_id,"timepix_shutter_delay",Config->timepix_shutter_delay);
+  printf("DBINFO - add_proc_config_para %d %s 0x%02x\n",Config->process_id,"timepix_shutter_width",Config->timepix_shutter_width);
+
+  printf("DBINFO - add_proc_config_para %d %s 0x%02x\n",Config->process_id,"trigger0_delay",Config->trigger0_delay);
+
+  printf("DBINFO - add_proc_config_para %d %s 0x%04x\n",Config->process_id,"correlated_trigger_delay",Config->correlated_trigger_delay);
+
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig1_scale_global",Config->trig1_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig2_scale_global",Config->trig2_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig3_scale_global",Config->trig3_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig4_scale_global",Config->trig4_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig5_scale_global",Config->trig5_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig6_scale_global",Config->trig6_scale_global);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig7_scale_global",Config->trig7_scale_global);
+
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig0_scale_autopass",Config->trig0_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig1_scale_autopass",Config->trig1_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig2_scale_autopass",Config->trig2_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig3_scale_autopass",Config->trig3_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig4_scale_autopass",Config->trig4_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig5_scale_autopass",Config->trig5_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig6_scale_autopass",Config->trig6_scale_autopass);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"trig7_scale_autopass",Config->trig7_scale_autopass);
+
+  //db_add_cfg_para(Config->process_id,"output_mode",Config->output_mode);
+  printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"output_mode",Config->output_mode);
   if (strcmp(Config->output_mode,"STREAM")==0) {
-    db_add_cfg_para(Config->process_id,"output_stream",Config->output_stream);
+    //db_add_cfg_para(Config->process_id,"output_stream",Config->output_stream);
+    printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"output_stream",Config->output_stream);
   } else {
-    db_add_cfg_para(Config->process_id,"data_dir",Config->data_dir);
-    db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
+    //db_add_cfg_para(Config->process_id,"data_dir",Config->data_dir);
+    //db_add_cfg_para(Config->process_id,"data_file",Config->data_file);
+    printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"data_dir",Config->data_dir);
+    printf("DBINFO - add_proc_config_para %d %s %s\n",Config->process_id,"data_file",Config->data_file);
   }
 
-  sprintf(line,"%d",Config->node_id);
-  db_add_cfg_para(Config->process_id,"node_id",line);
+  //sprintf(line,"%d",Config->node_id);
+  //db_add_cfg_para(Config->process_id,"node_id",line);
+  //printf("DBINFO - add_proc_config_para %d %s %d\n",Config->process_id,"node_id",Config->node_id);
 
-  sprintf(line,"%d",Config->total_daq_time);
-  db_add_cfg_para(Config->process_id,"total_daq_time",line);
+  //sprintf(line,"%d",Config->total_daq_time);
+  //db_add_cfg_para(Config->process_id,"total_daq_time",line);
+  printf("DBINFO - add_proc_config_para %d %s %d\n",Config->process_id,"total_daq_time",Config->total_daq_time);
 
-  sprintf(line,"%u",Config->daq_loop_delay);
-  db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
+  //sprintf(line,"%u",Config->daq_loop_delay);
+  //db_add_cfg_para(Config->process_id,"daq_loop_delay",line);
+  printf("DBINFO - add_proc_config_para %d %s %d\n",Config->process_id,"daq_loop_delay",Config->daq_loop_delay);
 
   // In STREAM mode the output file never changes
   if (strcmp(Config->output_mode,"FILE")==0) {
 
-    sprintf(line,"%u",Config->file_max_duration);
-    db_add_cfg_para(Config->process_id,"file_max_duration",line);
+    //sprintf(line,"%u",Config->file_max_duration);
+    //db_add_cfg_para(Config->process_id,"file_max_duration",line);
+    printf("DBINFO - add_proc_config_para %d %s %d\n",Config->process_id,"file_max_duration",Config->file_max_duration);
 
-    sprintf(line,"%lu",Config->file_max_size);
-    db_add_cfg_para(Config->process_id,"file_max_size",line);
+    //sprintf(line,"%lu",Config->file_max_size);
+    //db_add_cfg_para(Config->process_id,"file_max_size",line);
+    printf("DBINFO - add_proc_config_para %d %s %lu\n",Config->process_id,"file_max_size",Config->file_max_size);
 
-    sprintf(line,"%u",Config->file_max_events);
-    db_add_cfg_para(Config->process_id,"file_max_events",line);
+    //sprintf(line,"%u",Config->file_max_events);
+    //db_add_cfg_para(Config->process_id,"file_max_events",line);
+    printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"file_max_events",Config->file_max_events);
 
   }
+
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"debug_scale",Config->debug_scale);
 
   return 0;
 
 }
-*/
 
 int end_config()
 {

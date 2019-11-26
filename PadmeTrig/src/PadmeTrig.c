@@ -171,31 +171,32 @@ int create_initfail_file()
 void proc_finalize(int error,int rmv_lock,int create_file,int update_db,int status)
 {
   if (create_file) create_initfail_file();
-  if (update_db && Config->run_number) {
+  //if (update_db && Config->run_number) {
     if (status == DB_STATUS_IDLE) {
-      printf("- Setting process status to IDLE (%d) in DB\n",DB_STATUS_IDLE);
+      printf("- Setting process status to IDLE (%d)\n",DB_STATUS_IDLE);
     } else if (status == DB_STATUS_INITIALIZING) {
-      printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
+      printf("- Setting process status to INITIALIZING (%d)\n",DB_STATUS_INITIALIZING);
     } else if (status == DB_STATUS_INIT_FAIL) {
-      printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
+      printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
     } else if (status == DB_STATUS_INITIALIZED) {
-      printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+      printf("- Setting process status to INITIALIZED (%d)\n",DB_STATUS_INITIALIZED);
     } else if (status == DB_STATUS_ABORTED) {
-      printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
+      printf("- Setting process status to ABORTED (%d)\n",DB_STATUS_ABORTED);
     } else if (status == DB_STATUS_RUNNING) {
-      printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+      printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
     } else if (status == DB_STATUS_RUN_FAIL) {
-      printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
+      printf("- Setting process status to RUN_FAIL (%d)\n",DB_STATUS_RUN_FAIL);
     } else if (status == DB_STATUS_FINISHED) {
-      printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+      printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
     } else if (status == DB_STATUS_CLOSE_FAIL) {
-      printf("- Setting process status to CLOSE_FAIL (%d) in DB\n",DB_STATUS_CLOSE_FAIL);
+      printf("- Setting process status to CLOSE_FAIL (%d)\n",DB_STATUS_CLOSE_FAIL);
     } else {
-      printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
+      printf("- Setting process status to UNKNOWN (%d)\n",DB_STATUS_UNKNOWN);
       status = DB_STATUS_UNKNOWN;
     }
-    db_process_set_status(Config->process_id,status);
-  }
+    //db_process_set_status(Config->process_id,status);
+    printf("DBINFO - process_set_status %d %d\n",Config->process_id,status);
+  //}
   if (rmv_lock) remove_lock();
   if (error) exit(1);
   exit(0);
@@ -228,8 +229,8 @@ int main(int argc, char *argv[]) {
 
   pid_t pid;
   int c;
-  int rc;
-  unsigned char mask[4];
+  //int rc;
+  //unsigned char mask[4];
   unsigned char val1;
   unsigned short int val2;
   //unsigned int val4;
@@ -286,15 +287,10 @@ int main(int argc, char *argv[]) {
 
   unsigned int i,p;
 
-  int trigger = -1; // Used to blindly set a trigger mask when -t option is specified
+  //int trigger = -1; // Used to blindly set a trigger mask when -t option is specified
 
   // Use line buffering for stdout
   setlinebuf(stdout);
-
-  // Show welcome message
-  printf("===========================================\n");
-  printf("=== Welcome to the PADME Trigger system ===\n");
-  printf("===========================================\n");
 
   // Initialize run configuration
   if ( init_config() ) {
@@ -318,21 +314,22 @@ int main(int argc, char *argv[]) {
 	  exit(1);
 	}
         break;
-      case 't':
-	trigger = atoi(optarg);
-	break;
+      //case 't':
+      //  trigger = atoi(optarg);
+      //  break;
       case 'h':
-	fprintf(stdout,"\nPadmeTrig [-c cfg_file] [-t mask] [-h]\n\n");
+	//fprintf(stdout,"\nPadmeTrig [-c cfg_file] [-t mask] [-h]\n\n");
+	fprintf(stdout,"\nPadmeTrig [-c cfg_file] [-h]\n\n");
 	fprintf(stdout,"  -c: use file 'cfg_file' to set configuration parameters for this process\n");
 	fprintf(stdout,"     If no file is specified, use default settings\n");
-	fprintf(stdout,"  -t: set trigger mask and exit (default mask: 0x00)\n");
+	//fprintf(stdout,"  -t: set trigger mask and exit (default mask: 0x00)\n");
 	fprintf(stdout,"  -h: show this help message and exit\n\n");
 	exit(0);
       case '?':
         if (optopt == 'c')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-	else if (optopt == 't')
-	  trigger = 0;
+	//else if (optopt == 't')
+	//  trigger = 0;
         else if (isprint (optopt))
           fprintf (stderr, "Unknown option '-%c'.\n", optopt);
         else
@@ -342,6 +339,12 @@ int main(int argc, char *argv[]) {
         abort ();
       }
 
+  // Show welcome message
+  printf("===========================================\n");
+  printf("=== Welcome to the PADME Trigger system ===\n");
+  printf("===========================================\n");
+
+  /*
   // If a trigger mask was explicitily specified, just set it and exit
   if (trigger != -1) {
 
@@ -377,65 +380,71 @@ int main(int argc, char *argv[]) {
     exit(0);
 
   }
+  */
 
   // Show configuration
   print_config();
+
+  // Save configuration to DB
+  save_config();
 
   // Check if another PadmeTrig program is running
   printf("\n=== Verifying that no other PadmeTrig instances are running ===\n");
   pid = create_lock();
   if (pid > 0) {
     printf("*** ERROR *** Another PadmeTrig is running with PID %d. Exiting.\n",pid);
-    proc_finalize(1,0,1,0,0);
+    proc_finalize(1,0,1,0,DB_STATUS_INIT_FAIL);
   } else if (pid < 0) {
     printf("*** ERROR *** Problems while creating lock file '%s'. Exiting.\n",Config->lock_file);
-    proc_finalize(1,0,1,0,0);
+    proc_finalize(1,0,1,0,DB_STATUS_INIT_FAIL);
   }
 
-  if ( Config->run_number ) {
-
-    // Connect to DB
-    if ( db_init() != DB_OK ) {
-      printf("*** ERROR *** Unable to initialize DB connection. Exiting.\n");
-      proc_finalize(1,1,1,0,0);
-    }
-
-    // Verify if run number is valid
-    rc = db_run_check(Config->run_number);
-    if ( rc != 1 ) {
-      if ( rc < 0 ) {
-	printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
-      } else if ( rc == 0 ) {
-	printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
-      }
-      proc_finalize(1,1,1,0,0);
-    }
-
-    // Verify if process id is valid
-    rc = db_process_check(Config->process_id);
-    if ( rc < 0 ) {
-      printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
-      proc_finalize(1,1,1,0,0);
-    } else if ( rc == 0 ) {
-      printf("ERROR: process id %d does not exist in DB\n",Config->process_id);
-      proc_finalize(1,1,1,0,0);
-    } else if ( rc > 1 ) {
-      printf("ERROR: multiple copies of process id %d found in DB\n",Config->process_id);
-      proc_finalize(1,1,1,0,0);
-    }
-    int status = db_process_get_status(Config->process_id);
-    if (status!=DB_STATUS_IDLE) {
-      printf("ERROR: process id %d is not in IDLE (%d) status (status=%d)\n",Config->process_id,DB_STATUS_IDLE,status);
-      proc_finalize(1,1,1,0,0);
-    }
-
-  }
+  //if ( Config->run_number ) {
+  //
+  //  // Connect to DB
+  //  if ( db_init() != DB_OK ) {
+  //    printf("*** ERROR *** Unable to initialize DB connection. Exiting.\n");
+  //    proc_finalize(1,1,1,0,0);
+  //  }
+  //
+  //  // Verify if run number is valid
+  //  rc = db_run_check(Config->run_number);
+  //  if ( rc != 1 ) {
+  //    if ( rc < 0 ) {
+  //	printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
+  //    } else if ( rc == 0 ) {
+  //	printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
+  //    }
+  //    proc_finalize(1,1,1,0,0);
+  //  }
+  //
+  //  // Verify if process id is valid
+  //  rc = db_process_check(Config->process_id);
+  //  if ( rc < 0 ) {
+  //    printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
+  //    proc_finalize(1,1,1,0,0);
+  //  } else if ( rc == 0 ) {
+  //    printf("ERROR: process id %d does not exist in DB\n",Config->process_id);
+  //    proc_finalize(1,1,1,0,0);
+  //  } else if ( rc > 1 ) {
+  //    printf("ERROR: multiple copies of process id %d found in DB\n",Config->process_id);
+  //    proc_finalize(1,1,1,0,0);
+  //  }
+  //  int status = db_process_get_status(Config->process_id);
+  //  if (status!=DB_STATUS_IDLE) {
+  //    printf("ERROR: process id %d is not in IDLE (%d) status (status=%d)\n",Config->process_id,DB_STATUS_IDLE,status);
+  //    proc_finalize(1,1,1,0,0);
+  //  }
+  //
+  //}
 
   // Update process status
-  if (Config->run_number) {
-    printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
-    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
-  }
+  //if (Config->run_number) {
+  //  printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
+  //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
+  //}
+  printf("- Setting process status to INITIALIZING (%d)\n",DB_STATUS_INITIALIZING);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
 
   // Allocate output event buffer (max among file header, trigger event, file tail)
   maxPEvtSize = 16; // Header 12, Event 12, Tail 16
@@ -668,10 +677,12 @@ int main(int argc, char *argv[]) {
 
   // Initialization is now finished: create InitOK file to tell RunControl we are ready.
   printf("- Trigger board initialized: waiting for start_file '%s'\n",Config->start_file);
-  if (Config->run_number) {
-    printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
-    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
-  }
+  //if (Config->run_number) {
+  //  printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+  //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
+  //}
+  printf("- Setting process status to INITIALIZED (%d)\n",DB_STATUS_INITIALIZED);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZED);
   if ( create_initok_file() ) {
     printf("PadmeTrig *** ERROR *** Problem while creating InitOK file. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -702,21 +713,29 @@ int main(int argc, char *argv[]) {
   printf("%s - Starting trigger generation\n",format_time(t_daqstart));
   //old_sys_time = t_daqstart;
   
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
-    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) {
-      printf("PadmeTrig *** ERROR *** Unable to open process in DB. Exiting.\n");
-      proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
-    }
-  }
+  //if ( Config->run_number ) {
+  //  // Tell DB that the process has started
+  //  printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+  //  db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
+  //  if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) {
+  //    printf("PadmeTrig *** ERROR *** Unable to open process in DB. Exiting.\n");
+  //    proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
+  //  }
+  //}
+  printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUNNING);
+  printf("DBINFO - process_set_time_start %d %s\n",Config->process_id,format_time(t_daqstart));
 
   // Zero counters
   totalReadSize = 0;
   totalReadEvents = 0;
   totalWriteSize = 0;
   totalWriteEvents = 0;
+
+  // Initialize file counters
+  fileTOpen[fileIndex] = t_daqstart;
+  fileSize[fileIndex] = 0;
+  fileEvents[fileIndex] = 0;
 
   // When using FILE output, only open file when DAQ has started
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
@@ -737,12 +756,10 @@ int main(int argc, char *argv[]) {
       proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
 
-  }
+    printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+    printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
-  // Initialize file counters
-  fileTOpen[fileIndex] = t_daqstart;
-  fileSize[fileIndex] = 0;
-  fileEvents[fileIndex] = 0;
+  }
  
   /*
   // Start counting output files
@@ -921,6 +938,9 @@ int main(int argc, char *argv[]) {
 	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
 	       (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	       fileEvents[fileIndex],fileSize[fileIndex]);
+	printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
+	printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
+	printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
 
 	// Update file counter
 	fileIndex++;
@@ -943,6 +963,9 @@ int main(int argc, char *argv[]) {
 	  fileTOpen[fileIndex] = t_now;
 	  fileSize[fileIndex] = 0;
 	  fileEvents[fileIndex] = 0;
+
+	  printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+	  printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
 	  // Write header to file
 	  fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
@@ -1008,11 +1031,17 @@ int main(int argc, char *argv[]) {
     };
     if ( strcmp(Config->output_mode,"FILE")==0 ) {
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
-	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     format_time(fileTClose[fileIndex]),pathName[fileIndex],
+	     (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
+      printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(t_now));
+      printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
+      printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
-	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     format_time(fileTClose[fileIndex]),pathName[fileIndex],
+	     (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
     }
 
@@ -1050,14 +1079,20 @@ int main(int argc, char *argv[]) {
   }
 
   // Tell DB that the process has ended
-  if ( Config->run_number ) {
-    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) {
-      printf("*** ERROR *** Problem while closing process in DB. Exiting.\n");
-      proc_finalize(1,1,0,0,0);
-    }
-    printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
-    db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
-  }
+  //if ( Config->run_number ) {
+  //  if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) {
+  //    printf("*** ERROR *** Problem while closing process in DB. Exiting.\n");
+  //    proc_finalize(1,1,0,0,0);
+  //  }
+  //  printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
+  //  db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
+  //}
+  printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+  printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
+  printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+  printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
+  printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
 
   // Give some final report
   evtReadPerSec = 0.;
@@ -1078,7 +1113,7 @@ int main(int argc, char *argv[]) {
   printf("Total number of events written: %u - %6.2f events/s\n",totalWriteEvents,evtWritePerSec);
   printf("Total size of data written: %lu B - %6.2f KB/s\n",totalWriteSize,sizeWritePerSec);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    printf("=== Files created =======================================\n");
+    printf("=== %2d files created =====================================\n",fileIndex);
     for(i=0;i<fileIndex;i++) {
       printf("'%s' %u %lu",fileName[i],fileEvents[i],fileSize[i]);
       printf(" %s",format_time(fileTOpen[i])); // Optimizer effect! :)

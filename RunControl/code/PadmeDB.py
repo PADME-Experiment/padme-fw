@@ -228,22 +228,22 @@ class PadmeDB:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def set_process_time_start(self,proc_id):
+    def set_process_time_create(self,proc_id):
 
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE process SET time_start = %s WHERE id = %s""",(self.now_str(),proc_id))
+            c.execute("""UPDATE process SET time_create = %s WHERE id = %s""",(self.now_str(),proc_id))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def set_process_time_stop(self,proc_id):
+    def set_process_time_end(self,proc_id):
 
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE process SET time_stop = %s WHERE id = %s""",(self.now_str(),proc_id))
+            c.execute("""UPDATE process SET time_end = %s WHERE id = %s""",(self.now_str(),proc_id))
         except MySQLdb.Error as e:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()

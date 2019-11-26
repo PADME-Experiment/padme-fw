@@ -31,8 +31,9 @@ class Trigger:
         self.executable = os.getenv('PADME',".")+"/PadmeTrig/PadmeTrig.exe"
 
         self.run_number = 0
+        self.process_id = -1
 
-        self.process_mode = "DAQ"
+        #self.process_mode = "DAQ"
 
         self.config_file = "unset"
 
@@ -43,6 +44,9 @@ class Trigger:
 
         self.output_mode = "STREAM"
         self.output_stream = "unset"
+
+        self.data_dir = "unset"
+        self.data_file = "trig"
 
         self.start_file = "unset"
         self.quit_file = "unset"
@@ -56,7 +60,7 @@ class Trigger:
         self.busy_mask = int('0x10',0)
 
         # BTF trigger settings (get all triggers, no autopass)
-        self.trig0_scale_global = 1
+        #self.trig0_scale_global = 1
         self.trig0_scale_autopass = 0
 
         # External triggers settings (get all triggers, no autopass)
@@ -76,11 +80,21 @@ class Trigger:
         self.trig6_scale_autopass = 1
         self.trig7_scale_global = 1
         self.trig7_scale_autopass = 1
+
+        # Delay for trigger 0 (BTF)
+        self.trigger0_delay = int('0x7e',0)
+
+        # Delay of correlated trigger wrt trigger 0
         self.correlated_trigger_delay = int('0x01f4 ',0)
 
         # Default timepix settings
         self.timepix_shutter_delay = int('0x02',0)
         self.timepix_shutter_width = int('0xff',0)
+
+        # Default file parameters
+        self.file_max_duration = 3600
+        self.file_max_size     = 1024*1024*1024
+        self.file_max_events   = 1000*1000
 
         # Default DAQ control parameters
         self.daq_loop_delay = 10000
@@ -125,6 +139,7 @@ class Trigger:
                 elif (p_name == "trig6_scale_autopass"):     self.trig6_scale_autopass = int(p_value,0)
                 elif (p_name == "trig7_scale_global"):       self.trig7_scale_global = int(p_value,0)
                 elif (p_name == "trig7_scale_autopass"):     self.trig7_scale_autopass = int(p_value,0)
+                elif (p_name == "trigger0_delay"):           self.trigger0_delay = int(p_value,0)
                 elif (p_name == "correlated_trigger_delay"): self.correlated_trigger_delay = int(p_value,0)
                 elif (p_name == "timepix_shutter_delay"):    self.timepix_shutter_delay = int(p_value,0)
                 elif (p_name == "timepix_shutter_width"):    self.timepix_shutter_width = int(p_value,0)
@@ -147,7 +162,7 @@ class Trigger:
         cfgstring += "quit_file\t\t\t%s\n"%self.quit_file
 
         cfgstring += "run_number\t\t\t%d\n"%self.run_number
-        cfgstring += "process_mode\t\t\t%s\n"%self.process_mode
+        #cfgstring += "process_mode\t\t\t%s\n"%self.process_mode
         if (self.run_number): cfgstring += "process_id\t\t\t%d\n"%self.process_id
 
         cfgstring += "node_id\t\t\t\t%d\n"%self.node_id
@@ -160,7 +175,14 @@ class Trigger:
         cfgstring += "initfail_file\t\t\t%s\n"%self.initfail_file
 
         cfgstring += "output_mode\t\t\t%s\n"%self.output_mode
-        cfgstring += "output_stream\t\t\t%s\n"%self.output_stream
+        if self.output_mode == "STREAM":
+            cfgstring += "output_stream\t\t\t%s\n"%self.output_stream
+        elif self.output_mode == "FILE":
+            cfgstring += "data_dir\t\t\t%s\n"%self.data_dir
+            cfgstring += "data_file\t\t\t%s\n"%self.data_file
+            cfgstring += "file_max_duration\t\t%d\n"%self.file_max_duration
+            cfgstring += "file_max_size\t\t\t%d\n"%self.file_max_size
+            cfgstring += "file_max_events\t\t%d\n"%self.file_max_events
 
         cfgstring += "total_daq_time\t\t\t%d\n"%self.total_daq_time
 
@@ -170,10 +192,12 @@ class Trigger:
         cfgstring += "trigger_mask\t\t\t0x%02x\n"%self.trigger_mask
         cfgstring += "busy_mask\t\t\t0x%02x\n"%self.busy_mask
 
+        cfgstring += "trigger0_delay\t0x%02x\n"%self.trigger0_delay
+
         cfgstring += "correlated_trigger_delay\t0x%04x\n"%self.correlated_trigger_delay
 
         if (self.trigger_mask & 0x01):
-            cfgstring += "trig0_scale_global\t\t%d\n"%self.trig0_scale_global
+            #cfgstring += "trig0_scale_global\t\t%d\n"%self.trig0_scale_global
             cfgstring += "trig0_scale_autopass\t\t%d\n"%self.trig0_scale_autopass
 
         if (self.trigger_mask & 0x02):
@@ -208,6 +232,7 @@ class Trigger:
         cfgstring += "timepix_shutter_width\t\t0x%02x\n"%self.timepix_shutter_width
 
         cfgstring += "daq_loop_delay\t\t\t%d\n"%self.daq_loop_delay
+
         cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         return cfgstring
@@ -230,8 +255,8 @@ class Trigger:
     
         # Create Trigger process in DB
         self.process_id = self.db.create_trigger_process(self.run_number,self.node_id)
-        if self.proc_daq_id == -1:
-            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
+        if self.process_id == -1:
+            print "Trigger::create_trigger - ERROR: unable to create new Trigger process in DB"
             return "error"
 
         self.db.add_cfg_para_trigger(self.process_id,"daq_dir",            self.daq_dir)
@@ -240,10 +265,10 @@ class Trigger:
         self.db.add_cfg_para_trigger(self.process_id,"start_file",         self.start_file)
         self.db.add_cfg_para_trigger(self.process_id,"quit_file",          self.quit_file)
 
-        self.db.add_cfg_para_trigger(self.process_id,"run_number",         repr(self.run_number))
-        self.db.add_cfg_para_trigger(self.process_id,"process_mode",       self.process_mode)
+        #self.db.add_cfg_para_trigger(self.process_id,"run_number",         repr(self.run_number))
+        #self.db.add_cfg_para_trigger(self.process_id,"process_mode",       self.process_mode)
 
-        self.db.add_cfg_para_trigger(self.process_id,"node_id",            repr(self.node_id))
+        #self.db.add_cfg_para_trigger(self.process_id,"node_id",            repr(self.node_id))
         self.db.add_cfg_para_trigger(self.process_id,"node_ip",            self.node_ip)
                                                          
         self.db.add_cfg_para_trigger(self.process_id,"config_file",        self.config_file)
@@ -251,49 +276,66 @@ class Trigger:
         self.db.add_cfg_para_trigger(self.process_id,"lock_file",          self.lock_file)
         self.db.add_cfg_para_trigger(self.process_id,"initok_file",        self.initok_file)
         self.db.add_cfg_para_trigger(self.process_id,"initfail_file",      self.initfail_file)
-                                                                        
-        self.db.add_cfg_para_trigger(self.process_id,"output_mode",        self.output_mode)
-        self.db.add_cfg_para_trigger(self.process_id,"output_stream",      self.output_stream)
 
-        self.db.add_cfg_para_trigger(self.process_id,"total_daq_time",     repr(self.total_daq_time))
+        self.db.add_cfg_para_trigger(self.process_id,"output_mode", self.output_mode)
+        if self.output_mode == "STREAM":
+            self.db.add_cfg_para_trigger(self.process_id,"output_stream", self.output_stream)
+        elif self.output_mode == "FILE":
+            self.db.add_cfg_para_trigger(self.process_id,"data_dir",  self.data_dir)
+            self.db.add_cfg_para_trigger(self.process_id,"data_file", self.data_file)
+            self.db.add_cfg_para_trigger(self.process_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_trigger(self.process_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_trigger(self.process_id,"file_max_events",   self.file_max_events)
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_addr",       self.trigger_addr)
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_port",       repr(self.trigger_port))
+        self.db.add_cfg_para_trigger(self.process_id,"total_daq_time", repr(self.total_daq_time))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask",       "%#02x"%self.trigger_mask)
-        self.db.add_cfg_para_trigger(self.process_id,"busy_mask",          "%#02x"%self.busy_mask)
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_addr", self.trigger_addr)
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_port", repr(self.trigger_port))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_global",   repr(self.trig0_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_autopass", repr(self.trig0_scale_autopass))
+        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask", "%#02x"%self.trigger_mask)
+        self.db.add_cfg_para_trigger(self.process_id,"busy_mask",    "%#02x"%self.busy_mask)
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_global",   repr(self.trig1_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_autopass", repr(self.trig1_scale_autopass))
+        self.db.add_cfg_para_trigger(self.process_id,"trigger0_delay", "%#02x"%self.trigger0_delay)
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_global",   repr(self.trig2_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_autopass", repr(self.trig2_scale_autopass))
+        self.db.add_cfg_para_trigger(self.process_id,"correlated_trigger_delay", "%#04x"%self.correlated_trigger_delay)
+        if (self.trigger_mask & 0x01):
+            #self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_global", repr(self.trig0_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_autopass", repr(self.trig0_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_global",   repr(self.trig3_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_autopass", repr(self.trig3_scale_autopass))
+        if (self.trigger_mask & 0x02):
+            self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_global", repr(self.trig1_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_autopass", repr(self.trig1_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_global",   repr(self.trig4_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_autopass", repr(self.trig4_scale_autopass))
+        if (self.trigger_mask & 0x04):
+            self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_global", repr(self.trig2_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_autopass", repr(self.trig2_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_global",   repr(self.trig5_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_autopass", repr(self.trig5_scale_autopass))
+        if (self.trigger_mask & 0x08):
+            self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_global", repr(self.trig3_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_autopass", repr(self.trig3_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_global",   repr(self.trig6_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_autopass", repr(self.trig6_scale_autopass))
+        if (self.trigger_mask & 0x10):
+            self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_global", repr(self.trig4_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_autopass", repr(self.trig4_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_global",   repr(self.trig7_scale_global))
-        self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_autopass", repr(self.trig7_scale_autopass))
+        if (self.trigger_mask & 0x20):
+            self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_global", repr(self.trig5_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_autopass", repr(self.trig5_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"correlated_trigger_delay","%#04x"%self.correlated_trigger_delay)
+        if (self.trigger_mask & 0x40):
+            self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_global", repr(self.trig6_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_autopass", repr(self.trig6_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_delay",   "%#02x"%self.timepix_shutter_delay)
-        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_width",   "%#02x"%self.timepix_shutter_width)
+        if (self.trigger_mask & 0x80):
+            self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_global", repr(self.trig7_scale_global))
+            self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_autopass", repr(self.trig7_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"daq_loop_delay",     repr(self.daq_loop_delay))
-        self.db.add_cfg_para_trigger(self.process_id,"debug_scale",        repr(self.debug_scale))
+        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_delay", "%#02x"%self.timepix_shutter_delay)
+        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_width", "%#02x"%self.timepix_shutter_width)
+
+        self.db.add_cfg_para_trigger(self.process_id,"daq_loop_delay", repr(self.daq_loop_delay))
+
+        self.db.add_cfg_para_trigger(self.process_id,"debug_scale", repr(self.debug_scale))
 
         return "ok"
 
@@ -305,7 +347,7 @@ class Trigger:
         if self.node_id != 0:
             command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
-        print "- Start Trigger process"
+        print "- Starting Trigger process"
         print command
         print "  Log written to %s"%self.log_file
 
@@ -320,31 +362,25 @@ class Trigger:
             return 0
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_start(self.process_id)
+        if self.run_number: self.db.set_process_time_create(self.process_id)
 
         # Return process id
         return self.process.pid
 
     def stop_trig(self):
 
-        # Tag stop process in DB
-        if self.run_number:
-            self.db.set_process_time_stop(self.process_id)
-
         # Wait up to 5 seconds for DAQ to stop of its own (on quit file or on time elapsed)
         for i in range(10):
-
             if self.process.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.process_id)
+                return True
             time.sleep(0.5)
 
-        # Process did not stop: try sending and interrupt
+        # Process did not stop on its own: try sending and interrupt
+        print "Trigger::stop_trig - WARNING: Trigger process did not stop on its own. Sending interrupt"
         if self.node_id == 0:
             # If process is on local host, just send a kill signal
             command = "kill %d"%self.process.pid
@@ -352,25 +388,26 @@ class Trigger:
             # If it is on a remote host, use ssh to send kill command.
             # PID on remote host is recovered from the lock file
             command = "ssh -i %s %s '( kill `cat %s` )'"%(self.ssh_id_file,self.node_ip,self.lock_file)
-        print command
-        os.system(command)
+            print command
+            os.system(command)
 
         # Wait up to 5 seconds for DAQ to stop on interrupt
         for i in range(10):
-
             if self.process.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.process_id)
+                return True
             time.sleep(0.5)
 
         # Process did not stop smoothly: terminate it
+        print "Trigger::stop_trig - WARNING: Trigger process did not stop on interrupt. Terminating it"
         self.process.terminate()
         time.sleep(1)
         if self.process.poll() != None:
             self.process.wait()
             self.log_handle.close()
-        return 0
+
+        if self.run_number: self.db.set_process_time_end(self.process_id)
+        return False

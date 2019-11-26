@@ -29,12 +29,12 @@ class Merger:
         self.executable = os.getenv('PADME',".")+"/Level1/PadmeMerger.exe"
 
         self.run_number = 0
+        self.process_id = -1
 
         self.config_file = "undefined"
-
         self.log_file = "undefined"
 
-        self.output_mode = "STREAM"
+        #self.output_mode = "STREAM"
 
         self.input_list = "undefined"
         self.output_list = "undefined"
@@ -55,7 +55,7 @@ class Merger:
         cfgstring += "config_file\t\t%s\n"%self.config_file
         cfgstring += "log_file\t\t%s\n"%self.log_file
 
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
+        #cfgstring += "output_mode\t\t%s\n"%self.output_mode
 
         cfgstring += "input_list\t\t%s\n"%self.input_list
         cfgstring += "output_list\t\t%s\n"%self.output_list
@@ -79,21 +79,23 @@ class Merger:
     def create_merger(self):
 
         self.process_id = self.db.create_merger_process(self.run_number,self.node_id)
-        if self.process_id == -1: return "error"
+        if self.process_id == -1:
+            print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
+            return "error"
 
         self.db.add_cfg_para_merger(self.process_id,"daq_dir",    self.daq_dir)
         self.db.add_cfg_para_merger(self.process_id,"ssh_id_file",self.ssh_id_file)
         self.db.add_cfg_para_merger(self.process_id,"executable", self.executable)
 
-        self.db.add_cfg_para_merger(self.process_id,"run_number", repr(self.run_number))
+        #self.db.add_cfg_para_merger(self.process_id,"run_number", repr(self.run_number))
 
-        self.db.add_cfg_para_merger(self.process_id,"node_id",    repr(self.node_id))
+        #self.db.add_cfg_para_merger(self.process_id,"node_id",    repr(self.node_id))
         self.db.add_cfg_para_merger(self.process_id,"node_ip",    self.node_ip)
                                                          
         self.db.add_cfg_para_merger(self.process_id,"config_file",self.config_file)
         self.db.add_cfg_para_merger(self.process_id,"log_file",   self.log_file)
 
-        self.db.add_cfg_para_merger(self.process_id,"output_mode",self.output_mode)
+        #self.db.add_cfg_para_merger(self.process_id,"output_mode",self.output_mode)
 
         self.db.add_cfg_para_merger(self.process_id,"input_list", self.input_list)
         self.db.add_cfg_para_merger(self.process_id,"output_list",self.output_list)
@@ -104,13 +106,11 @@ class Merger:
 
         command = "%s -r %d -i %s -o %s"%(self.executable,self.run_number,self.input_list,self.output_list)
 
-        # Check if Merger runs on a remote node (node_id 0 is localhost)
+        # If Merger process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-
-            # Start Merger on remote node using passwordless ssh connection
             command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
-        print "- Starting Merger"
+        print "- Starting Merger process"
         print command
         print "  Log written to %s"%self.log_file
 
@@ -125,35 +125,30 @@ class Merger:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_start(self.process_id)
+        if self.run_number: self.db.set_process_time_create(self.process_id)
 
         # Return process id
         return self.process.pid
 
     def stop_merger(self):
 
-        # Tag stop process in DB
-        if self.run_number:
-            self.db.set_process_time_stop(self.process_id)
-
         # Wait up to 60 seconds for Merger to stop
         for i in range(60):
-
             if self.process.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.process_id)
+                return True
             time.sleep(1)
 
-        # Process did not stop smoothly: stop it
+        # Process did not stop smoothly: terminate it
+        print "Merger::stop_merger - WARNING: Merger process did not stop on its own. Terminating it"
         self.process.terminate()
         time.sleep(1)
         if self.process.poll() != None:
             self.process.wait()
             self.log_handle.close()
 
-        return 0
+        if self.run_number: self.db.set_process_time_end(self.process_id)
+        return False

@@ -35,24 +35,33 @@ class ADCBoard:
         self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ.exe"
 
         self.run_number = 0
+        self.process_id = -1
 
         self.process_mode = "DAQ"
 
         self.config_file_daq = "unset"
         self.log_file_daq = "unset"
         self.lock_file_daq = "unset"
-        self.output_stream_daq = "unset"
         self.initok_file_daq = "unset"
         self.initfail_file_daq = "unset"
+
+        self.output_mode_daq = "STREAM"
+        self.output_stream_daq = "unset"
+        self.data_dir_daq = "unset"
+        self.data_file_daq = "daq"
 
         self.config_file_zsup = "unset"
         self.log_file_zsup = "unset"
         self.lock_file_zsup = "unset"
-        self.output_mode = "STREAM"
-        self.input_stream_zsup = "unset"
-        self.output_stream_zsup = "unset"
         self.initok_file_zsup = "unset"
         self.initfail_file_zsup = "unset"
+
+        self.input_stream_zsup = "unset"
+
+        self.output_mode = "STREAM"
+        self.output_stream_zsup = "unset"
+        self.data_dir_zsup = "unset"
+        self.data_file_zsup = "zsup"
 
         self.start_file = "unset"
         self.quit_file = "unset"
@@ -77,13 +86,6 @@ class ADCBoard:
         self.auto_threshold = int('0x0400',0)
         self.auto_duration = 150
 
-        # Default DAQ control parameters
-        self.daq_loop_delay = 100000
-        self.debug_scale = 100
-        self.file_max_duration = 900
-        self.file_max_size = 1024*1024*1024
-        self.file_max_events = 100000
-
         # Default zero suppression settings
         self.zero_suppression = 0
 
@@ -97,6 +99,15 @@ class ADCBoard:
         self.zs2_minrms = 4.6
         self.zs2_minrms_ch = []
         for ch in range(32): self.zs2_minrms_ch.append(self.zs2_minrms)
+
+        # Default file parameters
+        self.file_max_duration = 3600
+        self.file_max_size     = 1024*1024*1024
+        self.file_max_events   = 1000*1000
+
+        # Default DAQ control parameters
+        self.daq_loop_delay = 10000
+        self.debug_scale = 100
 
     def read_setup(self,setup):
 
@@ -197,8 +208,15 @@ class ADCBoard:
         cfgstring += "initok_file\t\t%s\n"%self.initok_file_daq
         cfgstring += "initfail_file\t\t%s\n"%self.initfail_file_daq
 
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
-        cfgstring += "output_stream\t\t%s\n"%self.output_stream_daq
+        cfgstring += "output_mode\t\t\t%s\n"%self.output_mode_daq
+        if self.output_mode_daq == "STREAM":
+            cfgstring += "output_stream\t\t\t%s\n"%self.output_stream_daq
+        elif self.output_mode_daq == "FILE":
+            cfgstring += "data_dir\t\t\t%s\n"%self.data_dir_daq
+            cfgstring += "data_file\t\t\t%s\n"%self.data_file_daq
+            cfgstring += "file_max_duration\t\t%d\n"%self.file_max_duration
+            cfgstring += "file_max_size\t\t\t%d\n"%self.file_max_size
+            cfgstring += "file_max_events\t\t%d\n"%self.file_max_events
 
         cfgstring += "total_daq_time\t\t%d\n"%self.total_daq_time
 
@@ -220,11 +238,12 @@ class ADCBoard:
         cfgstring += "drs4corr_enable\t\t%d\n"%self.drs4corr_enable
         cfgstring += "drs4_sampfreq\t\t%d\n"%self.drs4_sampfreq
 
-        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
-        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
-
         cfgstring += "auto_threshold\t\t%#04x\n"%self.auto_threshold
         cfgstring += "auto_duration\t\t%d\n"%self.auto_duration
+
+        cfgstring += "daq_loop_delay\t\t%d\n"%self.daq_loop_delay
+
+        cfgstring += "debug_scale\t\t\t%d\n"%self.debug_scale
 
         return cfgstring
 
@@ -242,8 +261,8 @@ class ADCBoard:
 
         cfgstring += "node_id\t\t\t%d\n"%self.node_id
         cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
-        cfgstring += "conet2_link\t\t%d\n"%self.conet2_link
-        cfgstring += "conet2_slot\t\t%d\n"%self.conet2_slot
+        #cfgstring += "conet2_link\t\t%d\n"%self.conet2_link
+        #cfgstring += "conet2_slot\t\t%d\n"%self.conet2_slot
 
         cfgstring += "config_file\t\t%s\n"%self.config_file_zsup
         cfgstring += "log_file\t\t%s\n"%self.log_file_zsup
@@ -251,8 +270,16 @@ class ADCBoard:
         cfgstring += "initok_file\t\t%s\n"%self.initok_file_zsup
         cfgstring += "initfail_file\t\t%s\n"%self.initfail_file_zsup
 
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
-        cfgstring += "output_stream\t\t%s\n"%self.output_stream_zsup
+        cfgstring += "output_mode\t\t\t%s\n"%self.output_mode_zsup
+        if self.output_mode_zsup == "STREAM":
+            cfgstring += "output_stream\t\t\t%s\n"%self.output_stream_zsup
+        elif self.output_mode_zsup == "FILE":
+            cfgstring += "data_dir\t\t\t%s\n"%self.data_dir_zsup
+            cfgstring += "data_file\t\t\t%s\n"%self.data_file_zsup
+            cfgstring += "file_max_duration\t\t%d\n"%self.file_max_duration
+            cfgstring += "file_max_size\t\t\t%d\n"%self.file_max_size
+            cfgstring += "file_max_events\t\t%d\n"%self.file_max_events
+
         cfgstring += "input_stream\t\t%s\n"%self.input_stream_zsup
 
         cfgstring += "zero_suppression\t%d\n"%self.zero_suppression
@@ -301,7 +328,7 @@ class ADCBoard:
         # Create DAQ process in DB
         self.proc_daq_id = self.db.create_daq_process(self.run_number,self.node_id)
         if self.proc_daq_id == -1:
-            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ proces in DB"
+            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ process in DB"
             return "error"
 
         # Add info about optical link
@@ -328,9 +355,16 @@ class ADCBoard:
         self.db.add_cfg_para_daq(self.proc_daq_id,"initok_file",        self.initok_file_daq)
         self.db.add_cfg_para_daq(self.proc_daq_id,"initfail_file",      self.initfail_file_daq)
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"output_mode",        self.output_mode)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"output_stream",      self.output_stream_daq)
-                                                                        
+        self.db.add_cfg_para_daq(self.proc_daq_id,"output_mode",        self.output_mode_daq)
+        if self.output_mode_daq == "STREAM":
+            self.db.add_cfg_para_daq(self.proc_daq_id,"output_stream",      self.output_stream_daq)
+        elif self.output_mode_daq == "FILE":
+            self.db.add_cfg_para_trigger(self.proc_daq_id,"data_dir",  self.data_dir_daq)
+            self.db.add_cfg_para_trigger(self.proc_daq_id,"data_file", self.data_file_daq)
+            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_events",   self.file_max_events)
+                            
         self.db.add_cfg_para_daq(self.proc_daq_id,"total_daq_time",     repr(self.total_daq_time))
                                                                         
         self.db.add_cfg_para_daq(self.proc_daq_id,"startdaq_mode",      repr(self.startdaq_mode))
@@ -351,11 +385,12 @@ class ADCBoard:
         self.db.add_cfg_para_daq(self.proc_daq_id,"drs4corr_enable",    repr(self.drs4corr_enable))
         self.db.add_cfg_para_daq(self.proc_daq_id,"drs4_sampfreq",      repr(self.drs4_sampfreq))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"debug_scale",        repr(self.debug_scale))
-
         self.db.add_cfg_para_daq(self.proc_daq_id,"auto_threshold",     "%#04x"%self.auto_threshold)
         self.db.add_cfg_para_daq(self.proc_daq_id,"auto_duration",      repr(self.auto_duration))
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
+
+        self.db.add_cfg_para_daq(self.proc_daq_id,"debug_scale",        repr(self.debug_scale))
 
         return "ok"
 
@@ -377,8 +412,6 @@ class ADCBoard:
 
         self.db.add_cfg_para_daq(self.proc_zsup_id,"node_id",            repr(self.node_id))
         self.db.add_cfg_para_daq(self.proc_zsup_id,"node_ip",            self.node_ip)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"conet2_link",        repr(self.conet2_link))
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"conet2_slot",        repr(self.conet2_slot))
 
         self.db.add_cfg_para_daq(self.proc_zsup_id,"config_file",        self.config_file_zsup)
         self.db.add_cfg_para_daq(self.proc_zsup_id,"log_file",           self.log_file_zsup)
@@ -386,9 +419,17 @@ class ADCBoard:
         self.db.add_cfg_para_daq(self.proc_zsup_id,"initok_file",        self.initok_file_zsup)
         self.db.add_cfg_para_daq(self.proc_zsup_id,"initfail_file",      self.initfail_file_zsup)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_mode",        self.output_mode)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_stream",      self.output_stream_zsup)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"input_stream",       self.input_stream_zsup)
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_mode",        self.output_mode_zsup)
+        if self.output_mode_zsup == "STREAM":
+            self.db.add_cfg_para_daq(self.proc_zsup_id,"output_stream", self.output_stream_zsup)
+        elif self.output_mode_zsup == "FILE":
+            self.db.add_cfg_para_trigger(self.proc_zsup_id,"data_dir",          self.data_dir_zsup)
+            self.db.add_cfg_para_trigger(self.proc_zsup_id,"data_file",         self.data_file_zsup)
+            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_events",   self.file_max_events)
+
+        self.db.add_cfg_para_daq(self.proc_zsup_id,"input_stream", self.input_stream_zsup)
 
         self.db.add_cfg_para_daq(self.proc_zsup_id,"zero_suppression",   repr(self.zero_suppression))
         if (self.zero_suppression%100 == 1):
@@ -430,46 +471,32 @@ class ADCBoard:
         self.log_handle_daq = open(self.log_file_daq,"w")
 
         # Start DAQ process
-        #try:
-        #    self.process_daq = subprocess.Popen([self.executable,"-c",self.config_file_daq],stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
-        #except OSError as e:
-        #    print "ADCBoard - ERROR: DAQ Execution failed: %s",e
-        #    return 0
-
-        # Start DAQ process
         try:
-            #self.process_daq = subprocess.Popen(command.split(),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
             self.process_daq = subprocess.Popen(shlex.split(command),stdout=self.log_handle_daq,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "ADCBoard::start_daq - ERROR: Execution failed: %s",e
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_start(self.proc_daq_id)
+        if self.run_number: self.db.set_process_time_create(self.proc_daq_id)
 
         # Return process id
         return self.process_daq.pid
 
     def stop_daq(self):
 
-        # Tag stop process in DB
-        if self.run_number:
-            self.db.set_process_time_stop(self.proc_daq_id)
-
         # Wait up to 5 seconds for DAQ to stop of its own (on quit file or on time elapsed)
         for i in range(10):
-
             if self.process_daq.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+                return True
             time.sleep(0.5)
 
         # Process did not stop: try sending and interrupt
+        print "ADCBoard::stop_daq- WARNING: DAQ process did not stop on its own. Sending interrupt"
         if self.node_id == 0:
             # If process is on local host, just send a kill signal
             command = "kill %d"%self.process_daq.pid
@@ -482,23 +509,23 @@ class ADCBoard:
 
         # Wait up to 5 seconds for DAQ to stop on interrupt
         for i in range(10):
-
             if self.process_daq.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+                return True
             time.sleep(0.5)
 
         # Process did not stop smoothly: terminate it
+        print "ADCBoard::stop_daq - WARNING: DAQ process did not stop on interrupt. Terminating it"
         self.process_daq.terminate()
         time.sleep(1)
         if self.process_daq.poll() != None:
             self.process_daq.wait()
             self.log_handle_daq.close()
-        return 0
+        if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+        return False
 
     def start_zsup(self):
 
@@ -516,23 +543,14 @@ class ADCBoard:
         self.log_handle_zsup = open(self.log_file_zsup,"w")
 
         # Start ZSUP process
-        #try:
-        #    self.process_zsup = subprocess.Popen([self.executable,"-c",self.config_file_zsup],stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
-        #except OSError as e:
-        #    print "ADCBoard - ERROR: ZSUP execution failed: %s",e
-        #    return 0
-
-        # Start ZSUP process
         try:
-            #self.process_zsup = subprocess.Popen(command.split(),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
             self.process_zsup = subprocess.Popen(shlex.split(command),stdout=self.log_handle_zsup,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "ADCBoard::start_zsup - ERROR: Execution failed: %s",e
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_start(self.proc_zsup_id)
+        if self.run_number: self.db.set_process_time_create(self.proc_zsup_id)
 
         # Return process id
         return self.process_zsup.pid
@@ -540,25 +558,23 @@ class ADCBoard:
     def stop_zsup(self):
 
         # Tag stop process in DB
-        if self.run_number:
-            self.db.set_process_time_stop(self.proc_zsup_id)
 
         # Wait up to 5 seconds for ZSUP to stop
         for i in range(10):
-
             if self.process_zsup.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process_zsup.wait()
                 self.log_handle_zsup.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.proc_zsup_id)
+                return True
             time.sleep(0.5)
 
         # Process did not stop smoothly: terminate it
+        print "ADCBoard::stop_zsup - WARNING: ZSUP process did not stop on interrupt. Terminating it"
         self.process_zsup.terminate()
         time.sleep(1)
         if self.process_zsup.poll() != None:
             self.process_zsup.wait()
             self.log_handle_zsup.close()
-        return 0
+        if self.run_number: self.db.set_process_time_end(self.proc_zsup_id)
+        return False

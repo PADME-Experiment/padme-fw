@@ -29,13 +29,12 @@ class Level1:
         self.executable = os.getenv('PADME',".")+"/Level1/PadmeLevel1.exe"
 
         self.run_number = 0
+        self.process_id = -1
 
         self.max_events = 10000
 
         self.config_file = "unset"
         self.log_file = "unset"
-
-        self.output_mode = "STREAM"
 
         self.input_stream = "unset"
         self.output_dir = "unset"
@@ -57,8 +56,6 @@ class Level1:
 
         cfgstring += "config_file\t\t%s\n"%self.config_file
         cfgstring += "log_file\t\t%s\n"%self.log_file
-
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
 
         cfgstring += "input_stream\t\t%s\n"%self.input_stream
         cfgstring += "output_dir\t\t%s\n"%self.output_dir
@@ -85,22 +82,22 @@ class Level1:
     def create_level1(self):
 
         self.process_id = self.db.create_level1_process(self.run_number,self.node_id)
-        if self.process_id == -1: return "error"
+        if self.process_id == -1:
+            print "Level1::create_level1 - ERROR: unable to create new Level1 process in DB"
+            return "error"
 
         self.db.add_cfg_para_level1(self.process_id,"daq_dir",      self.daq_dir)
         self.db.add_cfg_para_level1(self.process_id,"ssh_id_file",  self.ssh_id_file)
         self.db.add_cfg_para_level1(self.process_id,"executable",   self.executable)
 
-        self.db.add_cfg_para_level1(self.process_id,"run_number",   repr(self.run_number))
+        #self.db.add_cfg_para_level1(self.process_id,"run_number",   repr(self.run_number))
         self.db.add_cfg_para_level1(self.process_id,"level1_id",    repr(self.level1_id))
 
-        self.db.add_cfg_para_level1(self.process_id,"node_id",      repr(self.node_id))
+        #self.db.add_cfg_para_level1(self.process_id,"node_id",      repr(self.node_id))
         self.db.add_cfg_para_level1(self.process_id,"node_ip",      self.node_ip)
 
         self.db.add_cfg_para_level1(self.process_id,"config_file",  self.config_file)
         self.db.add_cfg_para_level1(self.process_id,"log_file",     self.log_file)
-
-        self.db.add_cfg_para_level1(self.process_id,"output_mode",  self.output_mode)
 
         self.db.add_cfg_para_level1(self.process_id,"input_stream", self.input_stream)
         self.db.add_cfg_para_level1(self.process_id,"output_dir",   self.output_dir)
@@ -127,15 +124,13 @@ class Level1:
 
         # Start Level1 process
         try:
-            #self.process = subprocess.Popen(command.split(),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
             self.process = subprocess.Popen(shlex.split(command),stdout=self.log_handle,stderr=subprocess.STDOUT,bufsize=1)
         except OSError as e:
             print "Level1::start_level1 - ERROR: Execution failed: %s",e
             return 0
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_start(self.process_id)
+        if self.run_number: self.db.set_process_time_create(self.process_id)
 
         # Return process id
         return self.process.pid
@@ -143,25 +138,24 @@ class Level1:
     def stop_level1(self):
 
         # Tag stop process in DB
-        if self.run_number:
-            self.db.set_process_time_stop(self.process_id)
 
         # Wait up to 5 seconds for Level1 to stop
         for i in range(5):
-
             if self.process.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                return 1
-
+                if self.run_number: self.db.set_process_time_end(self.process_id)
+                retur True
             time.sleep(1)
 
         # Process did not stop smoothly: stop it
+        print "Level1::stop_level1 - WARNING: Level1 process did not stop on its own. Terminating it"
         self.process.terminate()
         time.sleep(1)
         if self.process.poll() != None:
             self.process.wait()
             self.log_handle.close()
-        return 0
+
+        if self.run_number: self.db.set_process_time_end(self.process_id)
+        return False

@@ -9,6 +9,7 @@
 #include "TRandom.h"
 #include "TLegend.h"
 #include "TStyle.h"
+#include "TRatioPlot.h"
 
 #define NPOINTS 1024
 #define BinsPerNs 1024./400
@@ -62,7 +63,9 @@ void SignalToyMC(){
   TCanvas *cTimeDiffUnProc = new TCanvas("cTimeDiffUnProc","cTimeDiffUnProc",0,0,800,600);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak of raw data
   TCanvas *cTimeDiffProc = new TCanvas("cTimeDiffProc","cTimeDiffProc",0,0,800,600);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak after RRC processing
   TCanvas *cArrivalTimeSpec = new TCanvas("cArrivalTimeSpec","cArrivalTimeSpec",0,0,800,600);//Spectrum of difference in arrival times (and reconstructed times) of consecutive hits
-
+  TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,600);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
+  TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,600);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
+  
   TH1F *hTimeDiffUnProc = new TH1F("tdiffunproc","tdiffunproc",1024,0,50);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak (raw data)
   TH1F *hTimeDiffProc = new TH1F("tdiffproc","tdiffproc",1024,0,50);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak (RRC Processing)
   TH1F *hArrivalTimeSpec = new TH1F("ArrivalTimeSpec","ArrivalTimeSpec",100,0,400);//Spectrum of difference in arrival times of consecutive hits
@@ -74,7 +77,8 @@ void SignalToyMC(){
   TGraph *gsumProc = new TGraph();
   
   TH1D *hRaw = new TH1D("hRaw","hRaw", 1024,0.,1024.);//Signal before digital processing
-  TH1D *hTSpecReco = new TH1D("hTSpecReco","hTSpecReco", 1024,0.,1024.);//Signal after digital processing (will have markers of TSpectrum-found peaks)
+  TH1D *hTSpecRecoUnProc = new TH1D("hTSpecRecoUnProc","hTSpecRecoUnProc", 1024,0.,1024.);//Signal after TSpectrum (will have markers of TSpectrum-found peaks)
+  TH1D *hTSpecRecoProc = new TH1D("hTSpecRecoProc","hTSpecRecoProc", 1024,0.,1024.);//Signal after TSpectrum && digital processing (will have markers of TSpectrum-found peaks)
 
   int currentsighalfpos;
   int finalsighalfpos;
@@ -161,8 +165,8 @@ void SignalToyMC(){
 
     if(nhits==0) continue;
 
-    tUnProcRecoBins=CalcChaTime(sigfinal,1, hTSpecReco, hRaw, cTSpectrum, TotalTSpecUnProcNo);
-    if(fProcessing==2)    tProcRecoBins=CalcChaTime(sigfinal,2, hTSpecReco, hRaw, cTSpectrum, TotalTSpecProcNo);
+    tUnProcRecoBins=CalcChaTime(sigfinal,1, hTSpecRecoUnProc, hRaw, cTSpectrum, TotalTSpecUnProcNo);
+    if(fProcessing==2)    tProcRecoBins=CalcChaTime(sigfinal,2, hTSpecRecoProc, hRaw, cTSpectrum, TotalTSpecProcNo);
     if(eventnumber%100==0)    std::cout<<"eventnumber "<<eventnumber<<" nhits = "<<nhits<<" tUnProcRecoBins.size() "<<tUnProcRecoBins.size()<<" tProcRecoBins.size() = "<<tProcRecoBins.size()<<std::endl;
     
     std::sort(arrivaltimebins.begin(),arrivaltimebins.end());//sort arrivaltimebins into time order to then plot the difference in time of hit arrivals
@@ -187,7 +191,6 @@ void SignalToyMC(){
     
   }
   cToy->cd();
-
   gfinal->Draw("same");
   std::cout<<"gfinal entries "<<gfinal->GetListOfGraphs()->GetEntries()<<std::endl;
   std::cout<<"gfinal drawn"<<std::endl;
@@ -199,26 +202,24 @@ void SignalToyMC(){
   hTimeDiffProc->Draw();
   std::cout<<"hTimeDiffProc drawn"<<std::endl;
 
-  cArrivalTimeSpec->cd();
-  hRecoTimeSpecProc->SetLineColor(kRed);
-  //  hRecoTimeSpecProc->Draw();
-  // std::cout<<"hRecoTimeSpecProc drawn"<<std::endl;
-
   double ymax=hRecoTimeSpecUnProc->GetMaximum();
   if(hRecoTimeSpecProc->GetMaximum()>ymax) ymax=hRecoTimeSpecProc->GetMaximum();
   if(hArrivalTimeSpec->GetMaximum()>ymax)  ymax=hArrivalTimeSpec->GetMaximum();
 
+  cArrivalTimeSpec->cd();
   hArrivalTimeSpec->Draw();
   hArrivalTimeSpec->SetMaximum(1.1*ymax);
   std::cout<<"hArrivalTimeSpec drawn"<<std::endl;
    
   hRecoTimeSpecUnProc->SetLineColor(kBlack);
+  hRecoTimeSpecUnProc->Draw("same");
+  std::cout<<"hRecoTimeSpecUnProc drawn"<<std::endl;
+
   if(hRecoTimeSpecProc->GetEntries()!=0){
+    hRecoTimeSpecProc->SetLineColor(kRed);
     hRecoTimeSpecProc->Draw("same");
     std::cout<<"hRecoTimeSpecProc drawn"<<std::endl;
   }
-  hRecoTimeSpecUnProc->Draw("same");
-  std::cout<<"hRecoTimeSpecUnProc drawn"<<std::endl;
 
   TLegend* legend = new TLegend(0.7,0.5,0.98,0.75);
   gStyle->SetLegendTextSize(0.03);
@@ -229,9 +230,23 @@ void SignalToyMC(){
     legend->AddEntry(hRecoTimeSpecProc,"TSpectrum reconstructed time");
     legend->AddEntry((TObject*)0,"(RRC processed data)","");
   }
-
   
   legend->Draw("same");
+
+  TRatioPlot *EfficiencyRatioUnProc = new TRatioPlot(hRecoTimeSpecUnProc,hArrivalTimeSpec);
+  cRatioUnProc->cd();
+  EfficiencyRatioUnProc->GetUpperPad()->cd();
+  hArrivalTimeSpec->Draw();
+  hRecoTimeSpecUnProc->Draw("same");
+  cRatioUnProc->cd();
+  EfficiencyRatioUnProc->Draw();
+
+  TRatioPlot *EfficiencyRatioProc = new TRatioPlot(hRecoTimeSpecProc,hArrivalTimeSpec);
+  cRatioProc->cd();
+  EfficiencyRatioProc->Draw();
+  EfficiencyRatioProc->GetUpperPad()->cd();
+  hArrivalTimeSpec->Draw();
+  hRecoTimeSpecProc->Draw("same");
   
   std::cout<<"Total generated hits = "<<TotalToyNo<<" Total TSpectrum reconstructed hits no processing = "<<TotalTSpecUnProcNo<<" Total TSpectrum reconstructed hits with processing = "<<TotalTSpecProcNo<<std::endl;
   

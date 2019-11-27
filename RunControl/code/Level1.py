@@ -86,24 +86,24 @@ class Level1:
             print "Level1::create_level1 - ERROR: unable to create new Level1 process in DB"
             return "error"
 
-        self.db.add_cfg_para_level1(self.process_id,"daq_dir",      self.daq_dir)
-        self.db.add_cfg_para_level1(self.process_id,"ssh_id_file",  self.ssh_id_file)
-        self.db.add_cfg_para_level1(self.process_id,"executable",   self.executable)
+        self.db.add_cfg_para_proc(self.process_id,"daq_dir",      self.daq_dir)
+        self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",  self.ssh_id_file)
+        self.db.add_cfg_para_proc(self.process_id,"executable",   self.executable)
 
-        #self.db.add_cfg_para_level1(self.process_id,"run_number",   repr(self.run_number))
-        self.db.add_cfg_para_level1(self.process_id,"level1_id",    repr(self.level1_id))
+        #self.db.add_cfg_para_proc(self.process_id,"run_number",   repr(self.run_number))
+        self.db.add_cfg_para_proc(self.process_id,"level1_id",    repr(self.level1_id))
 
-        #self.db.add_cfg_para_level1(self.process_id,"node_id",      repr(self.node_id))
-        self.db.add_cfg_para_level1(self.process_id,"node_ip",      self.node_ip)
+        #self.db.add_cfg_para_proc(self.process_id,"node_id",      repr(self.node_id))
+        self.db.add_cfg_para_proc(self.process_id,"node_ip",      self.node_ip)
 
-        self.db.add_cfg_para_level1(self.process_id,"config_file",  self.config_file)
-        self.db.add_cfg_para_level1(self.process_id,"log_file",     self.log_file)
+        self.db.add_cfg_para_proc(self.process_id,"config_file",  self.config_file)
+        self.db.add_cfg_para_proc(self.process_id,"log_file",     self.log_file)
 
-        self.db.add_cfg_para_level1(self.process_id,"input_stream", self.input_stream)
-        self.db.add_cfg_para_level1(self.process_id,"output_dir",   self.output_dir)
-        self.db.add_cfg_para_level1(self.process_id,"output_header",self.output_header)
+        self.db.add_cfg_para_proc(self.process_id,"input_stream", self.input_stream)
+        self.db.add_cfg_para_proc(self.process_id,"output_dir",   self.output_dir)
+        self.db.add_cfg_para_proc(self.process_id,"output_header",self.output_header)
 
-        self.db.add_cfg_para_level1(self.process_id,"max_events",   repr(self.max_events))
+        self.db.add_cfg_para_proc(self.process_id,"max_events",   repr(self.max_events))
 
         return "ok"
 

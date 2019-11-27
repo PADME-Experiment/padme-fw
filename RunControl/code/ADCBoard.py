@@ -334,63 +334,63 @@ class ADCBoard:
         # Add info about optical link
         self.db.add_daq_process_optical_link(self.proc_daq_id,self.node_id,self.conet2_link,self.conet2_slot)
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_dir",            self.daq_dir)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"ssh_id_file",        self.ssh_id_file)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"executable",         self.executable)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"start_file",         self.start_file)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"quit_file",          self.quit_file)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"executable",         self.executable)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"start_file",         self.start_file)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"quit_file",          self.quit_file)
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"run_number",         repr(self.run_number))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"board_id",           repr(self.board_id))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"process_mode",       self.process_mode)
+        #self.db.add_cfg_para_proc(self.proc_daq_id,"run_number",         repr(self.run_number))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"board_id",           repr(self.board_id))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"process_mode",       self.process_mode)
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"node_id",            repr(self.node_id))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"node_ip",            self.node_ip)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"conet2_link",        repr(self.conet2_link))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"conet2_slot",        repr(self.conet2_slot))
+        #self.db.add_cfg_para_proc(self.proc_daq_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"node_ip",            self.node_ip)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"conet2_link",        repr(self.conet2_link))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"conet2_slot",        repr(self.conet2_slot))
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"config_file",        self.config_file_daq)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"log_file",           self.log_file_daq)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"lock_file",          self.lock_file_daq)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"initok_file",        self.initok_file_daq)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"initfail_file",      self.initfail_file_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"config_file",        self.config_file_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"log_file",           self.log_file_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"lock_file",          self.lock_file_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"initok_file",        self.initok_file_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"initfail_file",      self.initfail_file_daq)
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"output_mode",        self.output_mode_daq)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"output_mode",        self.output_mode_daq)
         if self.output_mode_daq == "STREAM":
-            self.db.add_cfg_para_daq(self.proc_daq_id,"output_stream",      self.output_stream_daq)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"output_stream",      self.output_stream_daq)
         elif self.output_mode_daq == "FILE":
-            self.db.add_cfg_para_trigger(self.proc_daq_id,"data_dir",  self.data_dir_daq)
-            self.db.add_cfg_para_trigger(self.proc_daq_id,"data_file", self.data_file_daq)
-            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_duration", self.file_max_duration)
-            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_size",     self.file_max_size)
-            self.db.add_cfg_para_trigger(self.proc_daq_id,"file_max_events",   self.file_max_events)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"data_dir",  self.data_dir_daq)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"data_file", self.data_file_daq)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_proc(self.proc_daq_id,"file_max_events",   self.file_max_events)
                             
-        self.db.add_cfg_para_daq(self.proc_daq_id,"total_daq_time",     repr(self.total_daq_time))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"total_daq_time",     repr(self.total_daq_time))
                                                                         
-        self.db.add_cfg_para_daq(self.proc_daq_id,"startdaq_mode",      repr(self.startdaq_mode))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"trigger_mode",       repr(self.trigger_mode))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"trigger_iolevel",    self.trigger_iolevel)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"startdaq_mode",      repr(self.startdaq_mode))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"trigger_mode",       repr(self.trigger_mode))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"trigger_iolevel",    self.trigger_iolevel)
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"group_enable_mask",  "%#1x"%self.group_enable_mask)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"channel_enable_mask","%#08x"%self.channel_enable_mask)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"group_enable_mask",  "%#1x"%self.group_enable_mask)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"channel_enable_mask","%#08x"%self.channel_enable_mask)
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"offset_global",      "%#04x"%self.proc_daq_id)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"offset_global",      "%#04x"%self.proc_daq_id)
         for ch in range(32):
             if (self.offset_ch[ch] != self.offset_global):
-                self.db.add_cfg_para_daq(self.proc_daq_id,"offset_ch",  "%d %#04x"%(ch,self.offset_ch[ch]))
+                self.db.add_cfg_para_proc(self.proc_daq_id,"offset_ch",  "%d %#04x"%(ch,self.offset_ch[ch]))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"post_trigger_size",  repr(self.post_trigger_size))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"max_num_events_blt", repr(self.max_num_events_blt))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"post_trigger_size",  repr(self.post_trigger_size))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"max_num_events_blt", repr(self.max_num_events_blt))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"drs4corr_enable",    repr(self.drs4corr_enable))
-        self.db.add_cfg_para_daq(self.proc_daq_id,"drs4_sampfreq",      repr(self.drs4_sampfreq))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"drs4corr_enable",    repr(self.drs4corr_enable))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"drs4_sampfreq",      repr(self.drs4_sampfreq))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"auto_threshold",     "%#04x"%self.auto_threshold)
-        self.db.add_cfg_para_daq(self.proc_daq_id,"auto_duration",      repr(self.auto_duration))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"auto_threshold",     "%#04x"%self.auto_threshold)
+        self.db.add_cfg_para_proc(self.proc_daq_id,"auto_duration",      repr(self.auto_duration))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"daq_loop_delay",     repr(self.daq_loop_delay))
 
-        self.db.add_cfg_para_daq(self.proc_daq_id,"debug_scale",        repr(self.debug_scale))
+        self.db.add_cfg_para_proc(self.proc_daq_id,"debug_scale",        repr(self.debug_scale))
 
         return "ok"
 
@@ -402,50 +402,50 @@ class ADCBoard:
             print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
             return "error"
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"daq_dir",            self.daq_dir)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"ssh_id_file",        self.ssh_id_file)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"executable",         self.executable)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"executable",         self.executable)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"run_number",         repr(self.run_number))
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"board_id",           repr(self.board_id))
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"process_mode",       "ZSUP")
+        #self.db.add_cfg_para_proc(self.proc_zsup_id,"run_number",         repr(self.run_number))
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"board_id",           repr(self.board_id))
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"process_mode",       "ZSUP")
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"node_id",            repr(self.node_id))
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"node_ip",            self.node_ip)
+        #self.db.add_cfg_para_proc(self.proc_zsup_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"node_ip",            self.node_ip)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"config_file",        self.config_file_zsup)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"log_file",           self.log_file_zsup)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"lock_file",          self.lock_file_zsup)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"initok_file",        self.initok_file_zsup)
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"initfail_file",      self.initfail_file_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"config_file",        self.config_file_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"log_file",           self.log_file_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"lock_file",          self.lock_file_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"initok_file",        self.initok_file_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"initfail_file",      self.initfail_file_zsup)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"output_mode",        self.output_mode_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"output_mode",        self.output_mode_zsup)
         if self.output_mode_zsup == "STREAM":
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"output_stream", self.output_stream_zsup)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"output_stream", self.output_stream_zsup)
         elif self.output_mode_zsup == "FILE":
-            self.db.add_cfg_para_trigger(self.proc_zsup_id,"data_dir",          self.data_dir_zsup)
-            self.db.add_cfg_para_trigger(self.proc_zsup_id,"data_file",         self.data_file_zsup)
-            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_duration", self.file_max_duration)
-            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_size",     self.file_max_size)
-            self.db.add_cfg_para_trigger(self.proc_zsup_id,"file_max_events",   self.file_max_events)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"data_dir",          self.data_dir_zsup)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"data_file",         self.data_file_zsup)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"file_max_events",   self.file_max_events)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"input_stream", self.input_stream_zsup)
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"input_stream", self.input_stream_zsup)
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"zero_suppression",   repr(self.zero_suppression))
+        self.db.add_cfg_para_proc(self.proc_zsup_id,"zero_suppression",   repr(self.zero_suppression))
         if (self.zero_suppression%100 == 1):
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_head",       repr(self.zs1_head))
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_tail",       repr(self.zs1_tail))
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nsigma",     repr(self.zs1_nsigma))
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_nabovethr",  repr(self.zs1_nabovethr))
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs1_badrmsthr",  repr(self.zs1_badrmsthr))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs1_head",       repr(self.zs1_head))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs1_tail",       repr(self.zs1_tail))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs1_nsigma",     repr(self.zs1_nsigma))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs1_nabovethr",  repr(self.zs1_nabovethr))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs1_badrmsthr",  repr(self.zs1_badrmsthr))
         elif (self.zero_suppression%100 == 2):
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_tail",       repr(self.zs2_tail))
-            self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms",     repr(self.zs2_minrms))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs2_tail",       repr(self.zs2_tail))
+            self.db.add_cfg_para_proc(self.proc_zsup_id,"zs2_minrms",     repr(self.zs2_minrms))
             for ch in range(32):
                 if (self.zs2_minrms_ch[ch] != self.zs2_minrms):
-                    self.db.add_cfg_para_daq(self.proc_zsup_id,"zs2_minrms_ch",  "%d %d"%(ch,self.zs2_minrms_ch[ch]))
+                    self.db.add_cfg_para_proc(self.proc_zsup_id,"zs2_minrms_ch","%d %d"%(ch,self.zs2_minrms_ch[ch]))
 
-        self.db.add_cfg_para_daq(self.proc_zsup_id,"debug_scale",        repr(self.debug_scale))
+        self.db.add_cfg_para_procself.proc_zsup_id,"debug_scale",        repr(self.debug_scale))
 
         return "ok"
 

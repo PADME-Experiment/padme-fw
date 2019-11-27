@@ -259,83 +259,84 @@ class Trigger:
             print "Trigger::create_trigger - ERROR: unable to create new Trigger process in DB"
             return "error"
 
-        self.db.add_cfg_para_trigger(self.process_id,"daq_dir",            self.daq_dir)
-        self.db.add_cfg_para_trigger(self.process_id,"ssh_id_file",        self.ssh_id_file)
-        self.db.add_cfg_para_trigger(self.process_id,"executable",         self.executable)
-        self.db.add_cfg_para_trigger(self.process_id,"start_file",         self.start_file)
-        self.db.add_cfg_para_trigger(self.process_id,"quit_file",          self.quit_file)
+        self.db.add_cfg_para_proc(self.process_id,"daq_dir",            self.daq_dir)
+        self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",        self.ssh_id_file)
+        self.db.add_cfg_para_proc(self.process_id,"executable",         self.executable)
+        self.db.add_cfg_para_proc(self.process_id,"start_file",         self.start_file)
+        self.db.add_cfg_para_proc(self.process_id,"quit_file",          self.quit_file)
 
-        #self.db.add_cfg_para_trigger(self.process_id,"run_number",         repr(self.run_number))
-        #self.db.add_cfg_para_trigger(self.process_id,"process_mode",       self.process_mode)
+        #self.db.add_cfg_para_proc(self.process_id,"run_number",         repr(self.run_number))
+        #self.db.add_cfg_para_proc(self.process_id,"process_mode",       self.process_mode)
 
-        #self.db.add_cfg_para_trigger(self.process_id,"node_id",            repr(self.node_id))
-        self.db.add_cfg_para_trigger(self.process_id,"node_ip",            self.node_ip)
+        #self.db.add_cfg_para_proc(self.process_id,"node_id",            repr(self.node_id))
+        self.db.add_cfg_para_proc(self.process_id,"node_ip",            self.node_ip)
                                                          
-        self.db.add_cfg_para_trigger(self.process_id,"config_file",        self.config_file)
-        self.db.add_cfg_para_trigger(self.process_id,"log_file",           self.log_file)
-        self.db.add_cfg_para_trigger(self.process_id,"lock_file",          self.lock_file)
-        self.db.add_cfg_para_trigger(self.process_id,"initok_file",        self.initok_file)
-        self.db.add_cfg_para_trigger(self.process_id,"initfail_file",      self.initfail_file)
+        self.db.add_cfg_para_proc(self.process_id,"config_file",        self.config_file)
+        self.db.add_cfg_para_proc(self.process_id,"log_file",           self.log_file)
+        self.db.add_cfg_para_proc(self.process_id,"lock_file",          self.lock_file)
+        self.db.add_cfg_para_proc(self.process_id,"initok_file",        self.initok_file)
+        self.db.add_cfg_para_proc(self.process_id,"initfail_file",      self.initfail_file)
 
-        self.db.add_cfg_para_trigger(self.process_id,"output_mode", self.output_mode)
+        self.db.add_cfg_para_proc(self.process_id,"output_mode", self.output_mode)
         if self.output_mode == "STREAM":
-            self.db.add_cfg_para_trigger(self.process_id,"output_stream", self.output_stream)
+            self.db.add_cfg_para_proc(self.process_id,"output_stream", self.output_stream)
         elif self.output_mode == "FILE":
-            self.db.add_cfg_para_trigger(self.process_id,"data_dir",  self.data_dir)
-            self.db.add_cfg_para_trigger(self.process_id,"data_file", self.data_file)
-            self.db.add_cfg_para_trigger(self.process_id,"file_max_duration", self.file_max_duration)
-            self.db.add_cfg_para_trigger(self.process_id,"file_max_size",     self.file_max_size)
-            self.db.add_cfg_para_trigger(self.process_id,"file_max_events",   self.file_max_events)
+            self.db.add_cfg_para_proc(self.process_id,"data_dir",  self.data_dir)
+            self.db.add_cfg_para_proc(self.process_id,"data_file", self.data_file)
+            self.db.add_cfg_para_proc(self.process_id,"file_max_duration", self.file_max_duration)
+            self.db.add_cfg_para_proc(self.process_id,"file_max_size",     self.file_max_size)
+            self.db.add_cfg_para_proc(self.process_id,"file_max_events",   self.file_max_events)
 
-        self.db.add_cfg_para_trigger(self.process_id,"total_daq_time", repr(self.total_daq_time))
+        self.db.add_cfg_para_proc(self.process_id,"total_daq_time", repr(self.total_daq_time))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_addr", self.trigger_addr)
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_port", repr(self.trigger_port))
+        self.db.add_cfg_para_proc(self.process_id,"trigger_addr", self.trigger_addr)
+        self.db.add_cfg_para_proc(self.process_id,"trigger_port", repr(self.trigger_port))
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger_mask", "%#02x"%self.trigger_mask)
-        self.db.add_cfg_para_trigger(self.process_id,"busy_mask",    "%#02x"%self.busy_mask)
+        self.db.add_cfg_para_proc(self.process_id,"trigger_mask", "%#02x"%self.trigger_mask)
+        self.db.add_cfg_para_proc(self.process_id,"busy_mask",    "%#02x"%self.busy_mask)
 
-        self.db.add_cfg_para_trigger(self.process_id,"trigger0_delay", "%#02x"%self.trigger0_delay)
+        self.db.add_cfg_para_proc(self.process_id,"trigger0_delay", "%#02x"%self.trigger0_delay)
 
-        self.db.add_cfg_para_trigger(self.process_id,"correlated_trigger_delay", "%#04x"%self.correlated_trigger_delay)
+        self.db.add_cfg_para_proc(self.process_id,"correlated_trigger_delay", "%#04x"%self.correlated_trigger_delay)
+
         if (self.trigger_mask & 0x01):
-            #self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_global", repr(self.trig0_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig0_scale_autopass", repr(self.trig0_scale_autopass))
+            #self.db.add_cfg_para_proc(self.process_id,"trig0_scale_global", repr(self.trig0_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig0_scale_autopass", repr(self.trig0_scale_autopass))
 
         if (self.trigger_mask & 0x02):
-            self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_global", repr(self.trig1_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig1_scale_autopass", repr(self.trig1_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig1_scale_global", repr(self.trig1_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig1_scale_autopass", repr(self.trig1_scale_autopass))
 
         if (self.trigger_mask & 0x04):
-            self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_global", repr(self.trig2_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig2_scale_autopass", repr(self.trig2_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig2_scale_global", repr(self.trig2_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig2_scale_autopass", repr(self.trig2_scale_autopass))
 
         if (self.trigger_mask & 0x08):
-            self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_global", repr(self.trig3_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig3_scale_autopass", repr(self.trig3_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig3_scale_global", repr(self.trig3_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig3_scale_autopass", repr(self.trig3_scale_autopass))
 
         if (self.trigger_mask & 0x10):
-            self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_global", repr(self.trig4_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig4_scale_autopass", repr(self.trig4_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig4_scale_global", repr(self.trig4_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig4_scale_autopass", repr(self.trig4_scale_autopass))
 
         if (self.trigger_mask & 0x20):
-            self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_global", repr(self.trig5_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig5_scale_autopass", repr(self.trig5_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig5_scale_global", repr(self.trig5_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig5_scale_autopass", repr(self.trig5_scale_autopass))
 
         if (self.trigger_mask & 0x40):
-            self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_global", repr(self.trig6_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig6_scale_autopass", repr(self.trig6_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig6_scale_global", repr(self.trig6_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig6_scale_autopass", repr(self.trig6_scale_autopass))
 
         if (self.trigger_mask & 0x80):
-            self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_global", repr(self.trig7_scale_global))
-            self.db.add_cfg_para_trigger(self.process_id,"trig7_scale_autopass", repr(self.trig7_scale_autopass))
+            self.db.add_cfg_para_proc(self.process_id,"trig7_scale_global", repr(self.trig7_scale_global))
+            self.db.add_cfg_para_proc(self.process_id,"trig7_scale_autopass", repr(self.trig7_scale_autopass))
 
-        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_delay", "%#02x"%self.timepix_shutter_delay)
-        self.db.add_cfg_para_trigger(self.process_id,"timepix_shutter_width", "%#02x"%self.timepix_shutter_width)
+        self.db.add_cfg_para_proc(self.process_id,"timepix_shutter_delay", "%#02x"%self.timepix_shutter_delay)
+        self.db.add_cfg_para_proc(self.process_id,"timepix_shutter_width", "%#02x"%self.timepix_shutter_width)
 
-        self.db.add_cfg_para_trigger(self.process_id,"daq_loop_delay", repr(self.daq_loop_delay))
+        self.db.add_cfg_para_proc(self.process_id,"daq_loop_delay", repr(self.daq_loop_delay))
 
-        self.db.add_cfg_para_trigger(self.process_id,"debug_scale", repr(self.debug_scale))
+        self.db.add_cfg_para_proc(self.process_id,"debug_scale", repr(self.debug_scale))
 
         return "ok"
 

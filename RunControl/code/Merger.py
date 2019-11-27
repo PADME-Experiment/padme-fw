@@ -83,22 +83,22 @@ class Merger:
             print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
             return "error"
 
-        self.db.add_cfg_para_merger(self.process_id,"daq_dir",    self.daq_dir)
-        self.db.add_cfg_para_merger(self.process_id,"ssh_id_file",self.ssh_id_file)
-        self.db.add_cfg_para_merger(self.process_id,"executable", self.executable)
+        self.db.add_cfg_para_proc(self.process_id,"daq_dir",    self.daq_dir)
+        self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",self.ssh_id_file)
+        self.db.add_cfg_para_proc(self.process_id,"executable", self.executable)
 
-        #self.db.add_cfg_para_merger(self.process_id,"run_number", repr(self.run_number))
+        #self.db.add_cfg_para_proc(self.process_id,"run_number", repr(self.run_number))
 
-        #self.db.add_cfg_para_merger(self.process_id,"node_id",    repr(self.node_id))
-        self.db.add_cfg_para_merger(self.process_id,"node_ip",    self.node_ip)
+        #self.db.add_cfg_para_proc(self.process_id,"node_id",    repr(self.node_id))
+        self.db.add_cfg_para_proc(self.process_id,"node_ip",    self.node_ip)
                                                          
-        self.db.add_cfg_para_merger(self.process_id,"config_file",self.config_file)
-        self.db.add_cfg_para_merger(self.process_id,"log_file",   self.log_file)
+        self.db.add_cfg_para_proc(self.process_id,"config_file",self.config_file)
+        self.db.add_cfg_para_proc(self.process_id,"log_file",   self.log_file)
 
-        #self.db.add_cfg_para_merger(self.process_id,"output_mode",self.output_mode)
+        #self.db.add_cfg_para_proc(self.process_id,"output_mode",self.output_mode)
 
-        self.db.add_cfg_para_merger(self.process_id,"input_list", self.input_list)
-        self.db.add_cfg_para_merger(self.process_id,"output_list",self.output_list)
+        self.db.add_cfg_para_proc(self.process_id,"input_list", self.input_list)
+        self.db.add_cfg_para_proc(self.process_id,"output_list",self.output_list)
 
         return "ok"
 

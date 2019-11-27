@@ -62,7 +62,7 @@ private:
   Int_t SetOutFile();
 
   Configuration* fConfig;
-  DBService* fDB;
+  //DBService* fDB;
 
   UInt_t  fOutEventsTotal;
   ULong_t fOutSizeTotal;

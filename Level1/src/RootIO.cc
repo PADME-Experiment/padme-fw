@@ -9,7 +9,6 @@ RootIO::RootIO()
 {
 
   // Create TFile handle
-  //fTFileHandle = new TFile();
   fTFileHandle = 0;
 
   // Create TRawEvent object
@@ -19,8 +18,8 @@ RootIO::RootIO()
   fConfig = Configuration::GetInstance();
 
   // Connect to DB service
-  fDB = 0;
-  if (fConfig->RunNumber()) fDB = DBService::GetInstance();
+  //fDB = 0;
+  //if (fConfig->RunNumber()) fDB = DBService::GetInstance();
 
 }
 
@@ -34,7 +33,7 @@ RootIO::~RootIO()
 int RootIO::Init()
 {
 
-  fOutFileDBId = 0;
+  //fOutFileDBId = 0;
   fOutFileIndex = 0;
   fOutFileEvents = 0;
   fOutEventsTotal = 0;
@@ -103,13 +102,15 @@ Int_t RootIO::OpenOutFile()
   fOutFileEvents = 0;
 
   // Register file in DB
-  if (fDB) {
-    int rc = fDB->OpenRawFile(fOutFileDBId,fConfig->MergerId(),fOutFile.Data(),fOutFileIndex);
-    if (rc != DBSERVICE_OK) {
-      printf("RootIO::OpenOutFile - ERROR while updating DB\n");
-      return ROOTIO_ERROR;
-    }
-  }
+  //if (fDB) {
+  //  int rc = fDB->OpenRawFile(fOutFileDBId,fConfig->MergerId(),fOutFile.Data(),fOutFileIndex);
+  //  if (rc != DBSERVICE_OK) {
+  //    printf("RootIO::OpenOutFile - ERROR while updating DB\n");
+  //    return ROOTIO_ERROR;
+  //  }
+  //}
+  printf("DBINFO - file_create %s %s %d %d %d\n",fOutFile.Data(),"RAWDATA",3,fConfig->ProcessId(),fOutFileIndex);
+  printf("DBINFO - file_set_time_open %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
 
   return ROOTIO_OK;
 
@@ -135,13 +136,16 @@ Int_t RootIO::CloseOutFile()
   delete fTFileHandle; // This takes also care of deleting the TTree
 
   // Update DB with file close information
-  if (fDB) {
-    int rc = fDB->CloseRawFile(fOutFileDBId,fOutFileEvents,fOutFileSize);
-    if (rc != DBSERVICE_OK) {
-      printf("RootIO::CloseOutFile - ERROR while updating DB\n");
-      return ROOTIO_ERROR;
-    }
-  }
+  //if (fDB) {
+  //  int rc = fDB->CloseRawFile(fOutFileDBId,fOutFileEvents,fOutFileSize);
+  //  if (rc != DBSERVICE_OK) {
+  //    printf("RootIO::CloseOutFile - ERROR while updating DB\n");
+  //    return ROOTIO_ERROR;
+  //  }
+  //}
+  printf("DBINFO - file_set_time_close %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
+  printf("DBINFO - file_set_n_events %s %u\n",fOutFile.Data(),fOutFileEvents);
+  printf("DBINFO - file_set_size %s %lu\n",fOutFile.Data(),fOutFileSize);
 
   return ROOTIO_OK;
 }

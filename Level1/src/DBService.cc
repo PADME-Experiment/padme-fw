@@ -319,7 +319,7 @@ int DBService::SetMergerTime(std::string sel, int merger_id)
 
   } else {
 
-    printf("DBService::SetMergerTime ERROR - unknown time tpe '%s' requested for merger id %d\n",
+    printf("DBService::SetMergerTime ERROR - unknown time type '%s' requested for merger id %d\n",
 	   sel.c_str(),merger_id);
     return DBSERVICE_ERROR;
 

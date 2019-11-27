@@ -573,9 +573,11 @@ int ZSUP_readdata ()
   //printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
   //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
   printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
-  printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
   printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
   printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+  }
 
   // Give some final report
   evtReadPerSec = 0.;

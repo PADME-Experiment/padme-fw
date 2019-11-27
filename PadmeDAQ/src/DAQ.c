@@ -31,83 +31,6 @@ int Handle; // Handle for V1742 digitizer
 extern int InBurst;
 extern int BreakSignal;
 
-//int InBurst; // =0 DAQ not running, >0 DAQ running
-
-//int BreakSignal = 0; // If >0 an interrupt was received and DAQ should exit
-
-// Function to handle interrupts
-//void termination_handler (int signum)
-//{
-//  if (InBurst > 0) {
-//
-//    // If DAQ is running, don't stop abruptly
-//    // Just tell the main to exit when DAQ allows it
-//    printf ("\n### Interrupt Received while in burst mode - Signal: %d\n", signum);
-//    printf ("--- Waiting for DAQ to terminate gracefully... \n");
-//    if (signum!=0) {
-//      BreakSignal = signum;
-//    } else {
-//      BreakSignal = -1;
-//    }
-//    // Ignore additional interrupts
-//    signal (SIGINT,  SIG_IGN);
-//    signal (SIGHUP,  SIG_IGN);
-//    signal (SIGTERM, SIG_IGN);
-//    signal (SIGFPE,  SIG_DFL);
-//
-//  } else {
-//
-//    printf ("\n### Interrupt Received in idle mode - Signal: %d\n", signum);
-//    printf ("--- Terminating DAQ program... \n");
-//    signal (SIGINT,  SIG_DFL); // Reset interrupt handler
-//    signal (SIGHUP,  SIG_DFL);
-//    signal (SIGTERM, SIG_DFL);
-//    signal (SIGFPE,  SIG_DFL);
-//    DAQ_close ();
-//    //remove_lock(); // will leave dangling lock file
-//    printf("= Hope you enjoyed the ride. Bye!\n");
-//    exit(0);
-//
-//  }
-//}
-
-// Set interrupt handling functions
-//void set_signal_handlers()
-//{
-//  printf ("Trap signals:");
-//  signal (SIGINT, termination_handler);
-//  printf (" SIGINT %d", SIGINT);
-//  signal (SIGHUP, termination_handler);
-//  printf (" SIGHUP %d", SIGHUP);
-//  signal (SIGTERM, termination_handler);
-//  printf (" SIGTERM %d", SIGTERM);
-//  //signal (SIGUSR2, termination_handler); // do we need this?
-//  //printf (" %d", SIGUSR2);
-//  signal (SIGFPE, termination_handler);
-//  printf (" SIGFPE %d", SIGFPE);
-//  printf ("\n");
-//}
-
-//// Return file name given the file open time. Return 0 if OK, <>0 error
-//int generate_filename(char* name, const time_t time) {
-//  struct tm* t = localtime(&time);
-//  sprintf(name,"%s_%.4d_%.2d_%.2d_%.2d_%.2d_%.2d",
-//	  Config->data_file,
-//	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-//	  t->tm_hour,      t->tm_min,   t->tm_sec);
-//  return 0;
-//}
-
-//// Write time (in secs) to a string with standard formatting
-//char* format_time(const time_t time) {
-//  static char tform[20];
-//  struct tm* t = localtime(&time);
-//  sprintf(tform,"%.4d/%.2d/%.2d %.2d:%.2d:%.2d",
-//	  1900+t->tm_year, 1+t->tm_mon, t->tm_mday,
-//	  t->tm_hour,      t->tm_min,   t->tm_sec);
-//  return tform;
-//}
-
 // Get LinkNum (link address of port on A3818 boards)
 int get_LinkNum()
 {
@@ -180,11 +103,12 @@ int DAQ_connect ()
 
   // Get board serial number and save it to DB
   Config->board_sn = boardInfo.SerialNumber;
-  if ( Config->run_number ) {
-    char outstr[2048];
-    sprintf(outstr,"%d",Config->board_sn);
-    db_add_cfg_para(Config->process_id,"board_sn",outstr);
-  }
+  //if ( Config->run_number ) {
+  //  char outstr[2048];
+  //  sprintf(outstr,"%d",Config->board_sn);
+  //  db_add_cfg_para(Config->process_id,"board_sn",outstr);
+  //}
+  printf("DBINFO - add_proc_cfg_para %d %s %d\n",Config->process_id,"board_sn",Config->board_sn);
 
   return 0;
 
@@ -784,10 +708,12 @@ int DAQ_readdata ()
 
   // DAQ is now ready to start. Create InitOK file and set status to INITIALIZED
   if ( create_initok_file() ) return 1;
-  if (Config->run_number) {
-    printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
-    db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
-  }
+  //if (Config->run_number) {
+  //  printf("- Setting process status to INITIALIZED (%d) in DB\n",DB_STATUS_INITIALIZED);
+  //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
+  //}
+  printf("- Setting process status to INITIALIZED (%d)\n",DB_STATUS_INITIALIZED);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZED);
 
   if (Config->startdaq_mode == 0) {
 
@@ -826,12 +752,15 @@ int DAQ_readdata ()
   time(&t_daqstart);
   printf("%s - Acquisition started\n",format_time(t_daqstart));
   
-  if ( Config->run_number ) {
-    // Tell DB that the process has started
-    printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
-    db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
-    if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  // Tell DB that the process has started
+  //  printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
+  //  db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
+  //  if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
+  //}
+  printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUNNING);
+  printf("DBINFO - process_set_time_start %d %s\n",Config->process_id,format_time(t_daqstart));
 
   // Zero counters
   totalReadSize = 0;
@@ -849,16 +778,16 @@ int DAQ_readdata ()
     generate_filename(tmpName,t_daqstart);
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
-    if ( Config->run_number ) {
-      rc = db_file_check(fileName[fileIndex]);
-      if ( rc < 0 ) {
-	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
-	return 2;
-      } else if ( rc == 1 ) {
-	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
-	return 2;
-      }
-    }
+    //if ( Config->run_number ) {
+    //  rc = db_file_check(fileName[fileIndex]);
+    //  if ( rc < 0 ) {
+    //	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+    //	return 2;
+    //  } else if ( rc == 1 ) {
+    //	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+    //	return 2;
+    //  }
+    //}
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
     strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -906,8 +835,12 @@ int DAQ_readdata ()
   fileEvents[fileIndex] = 0;
 
   // Register file in the DB
-  if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
-    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+  //if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
+  //  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+  //}
+  if ( strcmp(Config->output_mode,"FILE")==0 ) {
+    printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+    printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
   }
 
   // Write header to file
@@ -1143,7 +1076,8 @@ int DAQ_readdata ()
 		 fTailSize,writeSize);
 	  return 2; // As this is an error while writing data to output file, no point in sending file tail
 	}
-	fileSize[fileIndex] += fTailSize;
+	fileSize[fileIndex] += writeSize;
+	totalWriteSize += writeSize;
 
 	// Close old output file and show some info about counters
 	if (close(fileHandle) == -1) {
@@ -1156,9 +1090,12 @@ int DAQ_readdata ()
 	       fileEvents[fileIndex],fileSize[fileIndex]);
 
 	// Close file in DB
-	if ( Config->run_number ) {
-	  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-	}
+	//if ( Config->run_number ) {
+	//  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
+	//}
+	printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
+	printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+	printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
 
 	// Update file counter
 	fileIndex++;
@@ -1169,16 +1106,16 @@ int DAQ_readdata ()
 	  generate_filename(tmpName,t_now);
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
-	  if ( Config->run_number ) {
-	    rc = db_file_check(fileName[fileIndex]);
-	    if ( rc < 0 ) {
-	      printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
-	      return 2;
-	    } else if ( rc == 1 ) {
-	      printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
-	      return 2;
-	    }
-	  }
+	  //if ( Config->run_number ) {
+	  //  rc = db_file_check(fileName[fileIndex]);
+	  //  if ( rc < 0 ) {
+	  //    printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
+	  //    return 2;
+	  //  } else if ( rc == 1 ) {
+	  //    printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
+	  //    return 2;
+	  //  }
+	  //}
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
 	  strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -1193,9 +1130,11 @@ int DAQ_readdata ()
 	  fileEvents[fileIndex] = 0;
 
 	  // Register file in the DB
-	  if ( Config->run_number ) {
-	    if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-	  }
+	  //if ( Config->run_number ) {
+	  //  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
+	  //}
+	  printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+	  printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
 	  // Write header to file
 	  fHeadSize = create_file_head(fileIndex,Config->run_number,Config->board_id,Config->board_sn,fileTOpen[fileIndex],(void *)outEvtBuffer);
@@ -1205,7 +1144,8 @@ int DAQ_readdata ()
 		   fHeadSize,writeSize);
 	    return 2; // As this is an error while writing data to output file, no point in sending file tail
 	  }
-	  fileSize[fileIndex] += fHeadSize;
+	  fileSize[fileIndex] += writeSize;
+	  totalWriteSize += writeSize;
 
 	} else {
 
@@ -1230,6 +1170,9 @@ int DAQ_readdata ()
 
   }
 
+  // Get time when processing ends
+  time(&t_now);
+
   // Tell user what stopped DAQ
   if ( adcError ) printf("=== Stopping DAQ on ADC access or data handling ERROR ===\n");
   if ( BreakSignal ) printf("=== Stopping DAQ on interrupt %d ===\n",BreakSignal);
@@ -1253,7 +1196,8 @@ int DAQ_readdata ()
 	     fTailSize,writeSize);
       return 2;
     }
-    fileSize[fileIndex] += fTailSize;
+    fileSize[fileIndex] += writeSize;
+    totalWriteSize += writeSize;
 
     // Close output file and show some info about counters
     if (close(fileHandle) == -1) {
@@ -1262,14 +1206,17 @@ int DAQ_readdata ()
     };
     if ( strcmp(Config->output_mode,"FILE")==0 ) {
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
-	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     format_time(fileTClose[fileIndex]),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-      if ( Config->run_number ) {
-	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-      }
+      //if ( Config->run_number ) {
+      //	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
+      //}
+      printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
+      printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+      printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
-	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
+	     format_time(fileTClose[fileIndex]),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
     }
 
@@ -1313,10 +1260,16 @@ int DAQ_readdata ()
   free(outEvtBuffer);
 
   // Tell DB that the process has ended
-  if ( Config->run_number ) {
-    //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
-    if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
-  }
+  //if ( Config->run_number ) {
+  //  //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
+  //  if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
+  //}
+  printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
+  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+  printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
+  printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+  printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
+  printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
 
   // Give some final report
   evtReadPerSec = 0.;
@@ -1337,7 +1290,7 @@ int DAQ_readdata ()
   printf("Total number of events written: %u - %6.2f events/s\n",totalWriteEvents,evtWritePerSec);
   printf("Total size of data written: %lu B - %6.2f KB/s\n",totalWriteSize,sizeWritePerSec);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    printf("=== Files created =======================================\n");
+    printf("=== %2d Files created =======================================\n",fileIndex);
     for(i=0;i<fileIndex;i++) {
       printf("'%s' %u %lu",fileName[i],fileEvents[i],fileSize[i]);
       printf(" %s",format_time(fileTOpen[i])); // Optimizer effect! :)

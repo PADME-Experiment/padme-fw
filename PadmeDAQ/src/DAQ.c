@@ -1264,8 +1264,8 @@ int DAQ_readdata ()
   //  //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
   //  if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
   //}
-  printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+  //printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
   printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
   printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
   printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);

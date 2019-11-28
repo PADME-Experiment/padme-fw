@@ -225,7 +225,7 @@ int ZSUP_readdata ()
   //  sprintf(outstr,"%u",board_sn);
   //  db_add_cfg_para(Config->process_id,"board_sn",outstr);
   //}
-  printf("DBINFO - add_proc_cfg_para %d %s %u\n",Config->process_id,"board_sn",board_sn);
+  printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"board_sn",board_sn);
 
   // Fourth line: start of file time tag
   unsigned int start_time;

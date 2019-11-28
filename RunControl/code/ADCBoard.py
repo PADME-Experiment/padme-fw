@@ -616,7 +616,8 @@ class ADCBoard:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number: self.db.set_process_time_create(self.proc_daq_id)
+        if self.run_number:
+            self.db.set_process_time_create(self.proc_daq_id,self.db.now_str())
 
         # Return process id
         return self.process_daq.pid
@@ -629,7 +630,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+                if self.run_number:
+                    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -651,7 +653,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+                if self.run_number:
+                    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -662,7 +665,7 @@ class ADCBoard:
         if self.process_daq.poll() != None:
             self.process_daq.wait()
             self.log_handle_daq.close()
-        if self.run_number: self.db.set_process_time_end(self.proc_daq_id)
+        if self.run_number: self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
         return False
 
     def start_zsup(self):
@@ -688,7 +691,8 @@ class ADCBoard:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number: self.db.set_process_time_create(self.proc_zsup_id)
+        if self.run_number:
+            self.db.set_process_time_create(self.proc_zsup_id,self.db.now_str())
 
         # Return process id
         return self.process_zsup.pid
@@ -703,7 +707,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_zsup.wait()
                 self.log_handle_zsup.close()
-                if self.run_number: self.db.set_process_time_end(self.proc_zsup_id)
+                if self.run_number:
+                    self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -714,5 +719,6 @@ class ADCBoard:
         if self.process_zsup.poll() != None:
             self.process_zsup.wait()
             self.log_handle_zsup.close()
-        if self.run_number: self.db.set_process_time_end(self.proc_zsup_id)
+        if self.run_number:
+            self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
         return False

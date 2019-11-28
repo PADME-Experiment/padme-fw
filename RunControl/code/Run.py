@@ -64,11 +64,34 @@ class Run:
         # Do not define a default setup
         self.setup = ""
 
+        # Run final status defaults to 3 (stopped normally)
+        self.final_status = 3
+
         self.set_default_config()
 
     def change_run(self):
 
         #print "--- Changing run"
+
+        # If this is a real run, create it in the DB
+        if (self.run_number):
+
+            # Check if requested run number was not used before
+            # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
+            run_is_in_db = self.db.is_run_in_db(self.run_number)
+            if (run_is_in_db):
+                print "Run::change_run - ERROR - Run %d is already in the DB: cannot use it again"%self.run_number
+                print "Please check if someone else is using this RunControl before retrying"
+                #self.send_answer("error_init")
+                return False
+
+            print "Creating Run %d structure in DB"%self.run.run_number
+            if self.create_run_in_db() == "error":
+                print "Run::change_run - ERROR - Cannot create Run in the DB"
+                return False
+
+            # Save time when run initialization starts
+            self.db.set_run_time_init(self.run_number,self.db.now_str())
 
         # Define run name using run number and start time
         self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
@@ -113,6 +136,8 @@ class Run:
         # Configure Level1 processes for this run
         for level1 in self.level1_list:
             self.runconfig_level1(level1)
+
+        return True
 
     def next_merger_node(self):
 
@@ -397,7 +422,7 @@ class Run:
         # Create run in DB
         self.db.create_run(self.run_number,self.run_name,self.run_type)
         self.db.set_run_user(self.run_number,self.run_user)
-        self.db.set_run_comment_start(self.run_number,self.run_comment_start)
+        self.db.set_run_comment_start(self.run_number,self.db.now_str(),self.run_comment_start)
 
         # Add all configuration parameters
         for cfg in self.config_list():
@@ -973,6 +998,11 @@ class Run:
             print command
             os.system(command)
 
+        # Update run status in DB
+        if (self.run_number):
+            self.db.set_run_time_start(self.run_number,self.db.now_str())
+            self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
+
     def stop(self):
 
         # Disable triggers
@@ -998,6 +1028,12 @@ class Run:
 
         # Write run name to last_run file for monitoring
         with open(self.last_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
+
+        # Finalize run in DB
+        if (self.run_number):
+            self.db.set_run_status(self.run_number,self.final_status)
+            self.db.set_run_time_stop(self.run_number,self.db.now_str())
+            self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
 
     def clean_up(self):
 

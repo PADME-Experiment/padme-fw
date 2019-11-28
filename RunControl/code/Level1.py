@@ -165,7 +165,8 @@ class Level1:
             return 0
 
         # Tag start of process in DB
-        if self.run_number: self.db.set_process_time_create(self.process_id)
+        if self.run_number:
+            self.db.set_process_time_create(self.process_id,self.db.now_str())
 
         # Return process id
         return self.process.pid
@@ -180,7 +181,8 @@ class Level1:
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                if self.run_number: self.db.set_process_time_end(self.process_id)
+                if self.run_number:
+                    self.db.set_process_time_end(self.process_id,self.db.now_str())
                 retur True
             time.sleep(1)
 
@@ -192,5 +194,6 @@ class Level1:
             self.process.wait()
             self.log_handle.close()
 
-        if self.run_number: self.db.set_process_time_end(self.process_id)
+        if self.run_number:
+            self.db.set_process_time_end(self.process_id,self.db.now_str())
         return False

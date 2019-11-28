@@ -40,30 +40,61 @@ class Level1:
         self.output_dir = "unset"
         self.output_header = "unset"
 
+    def config_list(self):
+
+        cfg_list = []
+
+        cfg_list.append(["daq_dir",        self.daq_dir])
+        cfg_list.append(["ssh_id_file",    self.ssh_id_file])
+        cfg_list.append(["executable",     self.executable])
+
+        cfg_list.append(["run_number",     str(self.run_number)])
+        cfg_list.append(["level1_id",      str(self.level1_id)])
+        if (self.run_number):
+            cfg_list.append(["process_id", str(self.process_id)])
+
+        cfg_list.append(["node_id",        str(self.node_id)])
+        cfg_list.append(["node_ip",        self.node_ip])
+
+        cfg_list.append(["config_file",    self.config_file])
+        cfg_list.append(["log_file",       self.log_file])
+
+        cfg_list.append(["input_stream",   self.input_stream])
+        cfg_list.append(["output_dir",     self.output_dir])
+        cfg_list.append(["output_header",  self.output_header])
+
+        cfg_list.append(["max_events",     str(self.max_events)])
+
+        return cfg_list
+
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        cfgstring += "executable\t\t%s\n"%self.executable
-
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        cfgstring += "level1_id\t\t%d\n"%self.level1_id
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
-
-        cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
-
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-
-        cfgstring += "input_stream\t\t%s\n"%self.input_stream
-        cfgstring += "output_dir\t\t%s\n"%self.output_dir
-        cfgstring += "output_header\t\t%s\n"%self.output_header
-
-        cfgstring += "max_events\t\t%d\n"%self.max_events
-
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%cfg
         return cfgstring
+
+        #cfgstring = ""
+        #cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
+        #cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
+        #cfgstring += "executable\t\t%s\n"%self.executable
+        #
+        #cfgstring += "run_number\t\t%d\n"%self.run_number
+        #cfgstring += "level1_id\t\t%d\n"%self.level1_id
+        #if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
+        #
+        #cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        #cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        #
+        #cfgstring += "config_file\t\t%s\n"%self.config_file
+        #cfgstring += "log_file\t\t%s\n"%self.log_file
+        #
+        #cfgstring += "input_stream\t\t%s\n"%self.input_stream
+        #cfgstring += "output_dir\t\t%s\n"%self.output_dir
+        #cfgstring += "output_header\t\t%s\n"%self.output_header
+        #
+        #cfgstring += "max_events\t\t%d\n"%self.max_events
+        #
+        #return cfgstring
 
     def write_config(self):
 
@@ -86,24 +117,28 @@ class Level1:
             print "Level1::create_level1 - ERROR: unable to create new Level1 process in DB"
             return "error"
 
-        self.db.add_cfg_para_proc(self.process_id,"daq_dir",      self.daq_dir)
-        self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",  self.ssh_id_file)
-        self.db.add_cfg_para_proc(self.process_id,"executable",   self.executable)
+        # Add all configuration parameters
+        for cfg in self.config_list():
+            self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
 
-        #self.db.add_cfg_para_proc(self.process_id,"run_number",   repr(self.run_number))
-        self.db.add_cfg_para_proc(self.process_id,"level1_id",    repr(self.level1_id))
-
-        #self.db.add_cfg_para_proc(self.process_id,"node_id",      repr(self.node_id))
-        self.db.add_cfg_para_proc(self.process_id,"node_ip",      self.node_ip)
-
-        self.db.add_cfg_para_proc(self.process_id,"config_file",  self.config_file)
-        self.db.add_cfg_para_proc(self.process_id,"log_file",     self.log_file)
-
-        self.db.add_cfg_para_proc(self.process_id,"input_stream", self.input_stream)
-        self.db.add_cfg_para_proc(self.process_id,"output_dir",   self.output_dir)
-        self.db.add_cfg_para_proc(self.process_id,"output_header",self.output_header)
-
-        self.db.add_cfg_para_proc(self.process_id,"max_events",   repr(self.max_events))
+        #self.db.add_cfg_para_proc(self.process_id,"daq_dir",      self.daq_dir)
+        #self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",  self.ssh_id_file)
+        #self.db.add_cfg_para_proc(self.process_id,"executable",   self.executable)
+        #
+        ##self.db.add_cfg_para_proc(self.process_id,"run_number",   repr(self.run_number))
+        #self.db.add_cfg_para_proc(self.process_id,"level1_id",    repr(self.level1_id))
+        #
+        ##self.db.add_cfg_para_proc(self.process_id,"node_id",      repr(self.node_id))
+        #self.db.add_cfg_para_proc(self.process_id,"node_ip",      self.node_ip)
+        #
+        #self.db.add_cfg_para_proc(self.process_id,"config_file",  self.config_file)
+        #self.db.add_cfg_para_proc(self.process_id,"log_file",     self.log_file)
+        #
+        #self.db.add_cfg_para_proc(self.process_id,"input_stream", self.input_stream)
+        #self.db.add_cfg_para_proc(self.process_id,"output_dir",   self.output_dir)
+        #self.db.add_cfg_para_proc(self.process_id,"output_header",self.output_header)
+        #
+        #self.db.add_cfg_para_proc(self.process_id,"max_events",   repr(self.max_events))
 
         return "ok"
 

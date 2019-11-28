@@ -39,28 +39,57 @@ class Merger:
         self.input_list = "undefined"
         self.output_list = "undefined"
 
+    def config_list(self):
+
+        cfg_list = []
+
+        cfg_list.append(["daq_dir",         self.daq_dir])
+        cfg_list.append(["ssh_id_file",     self.ssh_id_file])
+        cfg_list.append(["executable",      self.executable])
+
+        cfg_list.append(["run_number",      str(self.run_number)])
+        if (self.run_number):
+            cfg_list.append(["process_id",  str(self.process_id)])
+
+        cfg_list.append(["node_id",         str(self.node_id)])
+        cfg_list.append(["node_ip",         self.node_ip])
+
+        cfg_list.append(["config_file",     self.config_file])
+        cfg_list.append(["log_file",        self.log_file])
+
+        #cfg_list.append(["output_mode",     self.output_mode])
+
+        cfg_list.append(["input_list",      self.input_list])
+        cfg_list.append(["output_list",     self.output_list])
+
+        return cfg_list
+
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        cfgstring += "executable\t\t%s\n"%self.executable
-
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
-
-        cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
-
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-
-        #cfgstring += "output_mode\t\t%s\n"%self.output_mode
-
-        cfgstring += "input_list\t\t%s\n"%self.input_list
-        cfgstring += "output_list\t\t%s\n"%self.output_list
-
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%cfg
         return cfgstring
+
+        #cfgstring = ""
+        #cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
+        #cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
+        #cfgstring += "executable\t\t%s\n"%self.executable
+        #
+        #cfgstring += "run_number\t\t%d\n"%self.run_number
+        #if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
+        #
+        #cfgstring += "node_id\t\t\t%d\n"%self.node_id
+        #cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
+        #
+        #cfgstring += "config_file\t\t%s\n"%self.config_file
+        #cfgstring += "log_file\t\t%s\n"%self.log_file
+        #
+        ##cfgstring += "output_mode\t\t%s\n"%self.output_mode
+        #
+        #cfgstring += "input_list\t\t%s\n"%self.input_list
+        #cfgstring += "output_list\t\t%s\n"%self.output_list
+        #
+        #return cfgstring
 
     def write_config(self):
 
@@ -83,22 +112,26 @@ class Merger:
             print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
             return "error"
 
-        self.db.add_cfg_para_proc(self.process_id,"daq_dir",    self.daq_dir)
-        self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",self.ssh_id_file)
-        self.db.add_cfg_para_proc(self.process_id,"executable", self.executable)
+        # Add all configuration parameters
+        for cfg in self.config_list():
+            self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
 
-        #self.db.add_cfg_para_proc(self.process_id,"run_number", repr(self.run_number))
-
-        #self.db.add_cfg_para_proc(self.process_id,"node_id",    repr(self.node_id))
-        self.db.add_cfg_para_proc(self.process_id,"node_ip",    self.node_ip)
-                                                         
-        self.db.add_cfg_para_proc(self.process_id,"config_file",self.config_file)
-        self.db.add_cfg_para_proc(self.process_id,"log_file",   self.log_file)
-
-        #self.db.add_cfg_para_proc(self.process_id,"output_mode",self.output_mode)
-
-        self.db.add_cfg_para_proc(self.process_id,"input_list", self.input_list)
-        self.db.add_cfg_para_proc(self.process_id,"output_list",self.output_list)
+        #self.db.add_cfg_para_proc(self.process_id,"daq_dir",    self.daq_dir)
+        #self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",self.ssh_id_file)
+        #self.db.add_cfg_para_proc(self.process_id,"executable", self.executable)
+        #
+        ##self.db.add_cfg_para_proc(self.process_id,"run_number", repr(self.run_number))
+        #
+        ##self.db.add_cfg_para_proc(self.process_id,"node_id",    repr(self.node_id))
+        #self.db.add_cfg_para_proc(self.process_id,"node_ip",    self.node_ip)
+        #                                                 
+        #self.db.add_cfg_para_proc(self.process_id,"config_file",self.config_file)
+        #self.db.add_cfg_para_proc(self.process_id,"log_file",   self.log_file)
+        #
+        ##self.db.add_cfg_para_proc(self.process_id,"output_mode",self.output_mode)
+        #
+        #self.db.add_cfg_para_proc(self.process_id,"input_list", self.input_list)
+        #self.db.add_cfg_para_proc(self.process_id,"output_list",self.output_list)
 
         return "ok"
 

@@ -34,6 +34,7 @@ public:
   //void BuildECalIslandClusters();
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
+  virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
@@ -48,7 +49,8 @@ private:
   Double_t fClEnThrForHit;
   Double_t fClEnThrForSeed;
   Int_t NNoHits;
-  Int_t fClusterTimeAlgo; 
+  Int_t fClusterTimeAlgo;
+  Int_t fMultihitForMC;
 
   //Clusters vectors
   std::vector<double> ClE;
@@ -66,7 +68,7 @@ private:
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
   double EvTotE;
-
+  TF1 *fEnergyCompensation;
 
   //  vector<TRecoVCluster *> fClusters;
 

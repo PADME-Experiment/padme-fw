@@ -2,6 +2,7 @@
 #include "PadmeStyle.h"
 #include "PadmeLabels.h"
 
+#include "compareSideBySide.C"
 #include "compare.C"
 
 
@@ -16,6 +17,54 @@ void produceSelectionPlots(TFile* fData=_file0, TFile* fMC=_file1)
     gROOT->LoadMacro("PadmeStyle.C");
   #endif
 
+
+    
+  compareSideBySide("SS2gEvsR_passDt", fData, fMC);
+  compareSideBySide("SS2gEvsR_passDtDphi", fData, fMC);
+  compareSideBySide("SS2gEvsR_passDtDphiCog", fData, fMC);
+  compareSideBySide("SS2gEvsR_passDtDphiCogFR", fData, fMC);
+  compareSideBySide("SS2gEvsR_passDtDphiCogDsume", fData, fMC);   
+
+  compareSideBySide("SS2gEvsR_sClu_FRphi0", fData, fMC);
+  compareSideBySide("SS2gEvsR_sClu_FRphi45", fData, fMC);
+  compareSideBySide("SS2gEvsR_sClu_FRphi90", fData, fMC);
+  compareSideBySide("SS2gEvsR_sClu_FRphi135", fData, fMC);
+  compareSideBySide("SS2gEvsR_sClu_FRphi180", fData, fMC);   
+  compareSideBySide("SS2gEvsR_sClu_FRphi225", fData, fMC);   
+  compareSideBySide("SS2gEvsR_sClu_FRphi270", fData, fMC);   
+  compareSideBySide("SS2gEvsR_sClu_FRphi315", fData, fMC);   
+
+
+  compareSideBySide("SS2gXY_inSR", fData, fMC);
+  compareSideBySide("SS2gEwXY_inSR", fData, fMC);
+  compareSideBySide("SS2gDtVsSumE_inSR", fData, fMC);
+  compareSideBySide("SS2gDphiVsSumE_inSR", fData, fMC);
+  compareSideBySide("SS2gXcogVsSumE_inSR", fData, fMC);
+  compareSideBySide("SS2gYcogVsSumE_inSR", fData, fMC);
+  compareSideBySide("SS2gEVsE_inSR", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDt", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDtDphi", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDtDphiCog", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDtDphiCog", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDtDphiCogFR", fData, fMC);
+  compareSideBySide("SS2gEVsE_passDtDphiCogDsume", fData, fMC);
+
+
+  compareSideBySide("SS2gXYEw_passDt", fData, fMC);
+  compareSideBySide("SS2gXYEw_passDtDphi", fData, fMC);
+  compareSideBySide("SS2gXYEw_passDtDphiCog", fData, fMC);
+  compareSideBySide("SS2gXYEw_passDtDphiCogFR", fData, fMC);
+  compareSideBySide("SS2gXYEw_passDtDphiCogDsume", fData, fMC);
+
+  compareSideBySide("SS2gXY_passDt", fData, fMC);
+  compareSideBySide("SS2gXY_passDtDphi", fData, fMC);
+  compareSideBySide("SS2gXY_passDtDphiCog", fData, fMC);
+  compareSideBySide("SS2gXY_passDtDphiCogFR", fData, fMC);
+  compareSideBySide("SS2gXY_passDtDphiCogDsume", fData, fMC);
+
+  
+  //return;
+
   SetPadmeStyle();
 
 
@@ -23,6 +72,7 @@ void produceSelectionPlots(TFile* fData=_file0, TFile* fMC=_file1)
   double xmin=-999;
   double xmax= 999;
 
+  
 
   xtitle = "Number of ECal hits";
   xmin = 0.;
@@ -54,6 +104,30 @@ void produceSelectionPlots(TFile* fData=_file0, TFile* fMC=_file1)
   compare("SS2gSumE_passDtDphiCog",             -1, xmin, xmax, xtitle, fData, fMC);
   compare("SS2gSumE_passDtDphiCogFR",           -1, xmin, xmax, xtitle, fData, fMC);
   compare("SS2gSumE_passDtDphiCogDsume",        -1, 400, 600, xtitle, fData, fMC);
+  compare("SS2gSumE_inSR_Dt10Dphi160",          -1, xmin, xmax, xtitle, fData, fMC);
+
+
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (phi=0)";
+  compare("SS2gSumE_passDtDphiCogFR0",           -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (phi=45)";
+  compare("SS2gSumE_passDtDphiCogFR45",           -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (phi=90)";
+  compare("SS2gSumE_passDtDphiCogFR90",           -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (phi=135)";
+  compare("SS2gSumE_passDtDphiCogFR135",           -1, xmin, xmax, xtitle, fData, fMC);
+ 
+  xmin = 180.;
+  xmax = 700.;
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (Dt<10)";
+  compare("SS2gSumE_inSR_Dt10", -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (Dt<10, Cog<30)";
+  compare("SS2gSumE_inSR_Dt10Cog30", -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (Dt<10, Dphi>160)";
+  compare("SS2gSumE_inSR_Dt10Dphi160", -1, xmin, xmax, xtitle, fData, fMC);
+  xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV] (Dphi>160, Cog<30)";
+  compare("SS2gSumE_inSR_Dphi160Cog30", -1, xmin, xmax, xtitle, fData, fMC);
+
+
   //compare("SS2gSumE_passDtDphiCogDsume",        0.38, 400., 600, xtitle, fData, fMC);
   //compare("SS2gSumE_passDtDphiCogDsume",        0.2144, 400., 600, xtitle, fData, fMC);
 

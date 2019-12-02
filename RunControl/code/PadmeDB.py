@@ -392,7 +392,7 @@ class PadmeDB:
 
         # Create file and get its id
         try:
-            c.execute("""INSERT INTO file (name,file_type_id,version,process_id,part,status) VALUES (%s,%s,%s,%s,%s,%s)""",(file_name,file_type_id,fmt_version,proc_id,file_index,0))
+            c.execute("""INSERT INTO file (name,file_type_id,version,process_id,part,status) VALUES (%s,%s,%s,%s,%s,%s)""",(os.path.basename(file_name),file_type_id,fmt_version,proc_id,file_index,0))
         except MySQLdb.Error as e:
             print "PadmeDB::create_file - MySQL Error:%d:%s"%(e.args[0],e.args[1])
             return -1
@@ -407,7 +407,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE file SET time_open = %s WHERE name = %s""",(time_open,file_name))
+            c.execute("""UPDATE file SET time_open = %s WHERE name = %s""",(time_open,os.path.basename(file_name)))
         except MySQLdb.Error as e:
             print "PadmeDB::set_file_time_open - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -417,7 +417,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE file SET time_close = %s WHERE name = %s""",(time_close,file_name))
+            c.execute("""UPDATE file SET time_close = %s WHERE name = %s""",(time_close,os.path.basename(file_name)))
         except MySQLdb.Error as e:
             print "PadmeDB::set_file_time_close - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -427,7 +427,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE file SET n_events = %s WHERE name = %s""",(n_events,file_name))
+            c.execute("""UPDATE file SET n_events = %s WHERE name = %s""",(n_events,os.path.basename(file_name)))
         except MySQLdb.Error as e:
             print "PadmeDB::set_file_n_events - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -437,7 +437,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE file SET size = %s WHERE name = %s""",(size,file_name))
+            c.execute("""UPDATE file SET size = %s WHERE name = %s""",(size,os.path.basename(file_name)))
         except MySQLdb.Error as e:
             print "PadmeDB::set_file_size - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -447,7 +447,7 @@ class PadmeDB:
         self.check_db()
         c = self.conn.cursor()
         try:
-            c.execute("""UPDATE file SET adler32 = %s WHERE name = %s""",(adler32,file_name))
+            c.execute("""UPDATE file SET adler32 = %s WHERE name = %s""",(adler32,os.path.basename(file_name)))
         except MySQLdb.Error as e:
             print "PadmeDB::set_file_adler32 - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
@@ -614,66 +614,80 @@ class PadmeDB:
 
         return link_id
 
-    def get_merger_final_info(self,merger_proc_id):
-
-        # Return final events and size info from merger
-
-        tot_evts = -1
-        tot_size = -1
-        
-        self.check_db()
-        c = self.conn.cursor()
-
-        c.execute("""SELECT total_events,total_size FROM process WHERE id=%s""",(merger_proc_id,))
-        ret = c.fetchone()
-        if ret != None: (tot_evts,tot_size) = ret
-
-        self.conn.commit()
-
-        return (tot_evts,tot_size)
+    #def get_merger_final_info(self,merger_proc_id):
+    #
+    #    # Return final events and size info from merger
+    #
+    #    tot_evts = -1
+    #    tot_size = -1
+    #    
+    #    self.check_db()
+    #    c = self.conn.cursor()
+    #
+    #    c.execute("""SELECT total_events,total_size FROM process WHERE id=%s""",(merger_proc_id,))
+    #    ret = c.fetchone()
+    #    if ret != None: (tot_evts,tot_size) = ret
+    #
+    #    self.conn.commit()
+    #
+    #    return (tot_evts,tot_size)
 
     def init_dbinfo_regexp(self):
 
         # All DBINFO lines start with "DBINFO - <date> <time> - ", e.g. "DBINFO - 2019/10/08 12:32:44 - "
+        dbinfo_head = "^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+"
 
         # file_create <file_name> <file_type> <format_version> <process_id> <file_index>
-        self.re_file_create = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
+        #self.re_file_create = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
+        self.re_file_create = re.compile("%sfile_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$"%dbinfo_head)
 
         # file_set_time_open <file_name> <date> <time>
-        self.re_file_set_time_open = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+        #self.re_file_set_time_open = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+        self.re_file_set_time_open = re.compile("%sfile_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # file_set_time_close <file_name> <date> <time>
-        self.re_file_set_time_close = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+        #self.re_file_set_time_close = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+        self.re_file_set_time_close = re.compile("%sfile_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # file_set_n_events <file_name> <n_events>
-        self.re_file_set_n_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_n_events\s+(\S+)\s+(\d+)\s*$")
+        #self.re_file_set_n_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_n_events\s+(\S+)\s+(\d+)\s*$")
+        self.re_file_set_n_events = re.compile("%sfile_set_n_events\s+(\S+)\s+(\d+)\s*$"%dbinfo_head)
 
         # file_set_size <file_name> <size>
-        self.re_file_set_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_size\s+(\S+)\s+(\d+)\s*$")
+        #self.re_file_set_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_size\s+(\S+)\s+(\d+)\s*$")
+        self.re_file_set_size = re.compile("%sfile_set_size\s+(\S+)\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_status <status>
-        self.re_process_set_status = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_status\s+(\d+)\s*$")
+        #self.re_process_set_status = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_status\s+(\d+)\s*$")
+        self.re_process_set_status = re.compile("%sprocess_set_status\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_time_start <date> <time>
-        self.re_process_set_time_start = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_start\s+(\S+)\s+(\S+)\s*$")
+        #self.re_process_set_time_start = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_start\s+(\S+)\s+(\S+)\s*$")
+        self.re_process_set_time_start = re.compile("%sprocess_set_time_start\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # process_set_time_stop <date> <time>
-        self.re_process_set_time_stop = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_stop\s+(\S+)\s+(\S+)\s*$")
+        #self.re_process_set_time_stop = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_stop\s+(\S+)\s+(\S+)\s*$")
+        self.re_process_set_time_stop = re.compile("%sprocess_set_time_stop\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # process_set_total_events <total_events>
-        self.re_process_set_total_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_events\s+(\d+)\s*$")
+        #self.re_process_set_total_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_events\s+(\d+)\s*$")
+        self.re_process_set_total_events = re.compile("%sprocess_set_total_events\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_total_size <total_size>
-        self.re_process_set_total_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_size\s+(\d+)\s*$")
+        #self.re_process_set_total_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_size\s+(\d+)\s*$")
+        self.re_process_set_total_size = re.compile("%sprocess_set_total_size\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_n_files <n_files>
-        self.re_process_set_n_files = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_n_files\s+(\d+)\s*$")
+        #self.re_process_set_n_files = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_n_files\s+(\d+)\s*$")
+        self.re_process_set_n_files = re.compile("%s^process_set_n_files\s+(\d+)\s*$"%dbinfo_head)
 
         # add_proc_config_para <parameter_name> <parameter_value>
-        self.re_add_proc_config_para = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_config_para\s+(\S+)\s+(\S.*)$")
+        #self.re_add_proc_config_para = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_config_para\s+(\S+)\s+(\S.*)$")
+        self.re_add_proc_config_para = re.compile("%sadd_proc_config_para\s+(\S+)\s+(\S.*)$"%dbinfo_head)
 
         # add_proc_log_entry <type> <level> <text>
-        self.re_add_proc_log_entry = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$")
+        #self.re_add_proc_log_entry = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$")
+        self.re_add_proc_log_entry = re.compile("%sadd_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$"%dbinfo_head)
 
     def manage_dbinfo_entry(self,proc_id,dbinfo_line):
 

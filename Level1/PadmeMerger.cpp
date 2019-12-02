@@ -154,9 +154,21 @@ int main(int argc, char* argv[])
       }
   }
 
-  // Check if input file list was defined
-  if (cfg->InputStreamList().compare("")==0) {
+  // Check if input and output file lists were defined and are accessible
+  if ( cfg->InputStreamList().compare("") == 0 ) {
     printf("ERROR no input file list defined. Aborting\n");
+    exit(1);
+  }
+  if ( access( cfg->InputStreamList().c_str(), F_OK ) != 0 ) {
+    printf("ERROR input file list %s is not accessible. Aborting\n",cfg->InputStreamList().c_str());
+    exit(1);
+  }
+  if ( cfg->OutputStreamList().compare("") == 0 ) {
+    printf("ERROR no output file list defined. Aborting\n");
+    exit(1);
+  }
+  if ( access( cfg->OutputStreamList().c_str(), F_OK ) != 0 ) {
+    printf("ERROR output file list %s is not accessible. Aborting\n",cfg->OutputStreamList().c_str());
     exit(1);
   }
 
@@ -324,8 +336,10 @@ int main(int argc, char* argv[])
   //  }
   //
   //}
-  printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
-  printf("DBINFO - process_set_time_start %d %s\n",cfg->ProcessId(),cfg->FormatTime(time_start));
+  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
+  //printf("DBINFO - process_set_time_start %d %s\n",cfg->ProcessId(),cfg->FormatTime(time_start));
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
   unsigned int CurrentOutputStream = 0; // First event will be sent to first output stream
 
@@ -783,10 +797,14 @@ int main(int argc, char* argv[])
   //  //}
   //
   //}
-  printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_FINISHED);
-  printf("DBINFO - process_set_time_stop %d %s\n",cfg->ProcessId(),cfg->FormatTime(time_last));
-  printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),NumberOfEvents);
-  printf("DBINFO - process_set_total_size %d %llu\n",cfg->ProcessId(),total_output_size);
+  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_FINISHED);
+  //printf("DBINFO - process_set_time_stop %d %s\n",cfg->ProcessId(),cfg->FormatTime(time_last));
+  //printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),NumberOfEvents);
+  //printf("DBINFO - process_set_total_size %d %llu\n",cfg->ProcessId(),total_output_size);
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
+  printf("DBINFO - %s - process_set_time_stop %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_last));
+  printf("DBINFO - %s - process_set_total_events %d\n",cfg->FormatTime(time(0)),NumberOfEvents);
+  printf("DBINFO - %s - process_set_total_size %llu\n",cfg->FormatTime(time(0)),total_output_size);
 
   // Show exit time
   printf("=== PadmeMerger exiting on %s UTC ===\n",cfg->FormatTime(time(0)));

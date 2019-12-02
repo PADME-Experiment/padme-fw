@@ -989,6 +989,15 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
                 if (self.run.run_number):
                     self.db.set_run_status(self.run.run_number,self.db.DB_RUN_STATUS_END_ERROR)
 
+        # Parse all log files looking for DBINFO lines
+        self.run.trigger.parse_log()
+        for adc in (self.run.adcboard_list):
+            adc.parse_log_daq()
+            adc.parse_log_zsup()
+        self.run.merger.parse_log()
+        for lvl1 in self.run.level1_list:
+            lvl1.parse_log()
+
         # Clean up run directory
         self.run.clean_up()
 

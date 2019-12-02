@@ -19,6 +19,8 @@ class Merger:
 
         self.db = PadmeDB()
 
+        self.re_dbinfo_line = re.compile("^\s*DBINFO\s.*$")
+
         self.set_default_config()
 
     def set_default_config(self):
@@ -188,3 +190,14 @@ class Merger:
         if self.run_number:
             self.db.set_process_time_end(self.process_id,self.db.now_str())
         return False
+
+    def parse_log(self):
+
+        # Look for DBINFO lines in log file and send them to DBINFO line processor
+        if os.path.exists(self.log_file) and os.path.isfile(self.log_file):
+            with open(self.log_file,"r") as log:
+                for line in log:
+                    if self.re_dbinfo_line.match(line):
+                        self.db.manage_dbinfo_entry(self.process_id,line)
+        else:
+            print "Merger::parse_log - WARNING: Merger log file %s not found"%self.log_file

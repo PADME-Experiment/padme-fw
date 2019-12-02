@@ -177,8 +177,10 @@ int main(int argc, char* argv[])
   //printf("=== PadmeLevel1 starting on %s UTC ===\n",format_time(time_start));
   printf("=== PadmeLevel1 starting on %s UTC ===\n",cfg->FormatTime(time_start));
 
-  printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
-  printf("DBINFO - process_set_time_start %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_start));
+  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
+  //printf("DBINFO - process_set_time_start %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_start));
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %d\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
   // Define counters for input stream size and number of events
   unsigned long int input_size = 0;
@@ -600,14 +602,19 @@ int main(int argc, char* argv[])
   printf("Events written: %u (%6.1f events/sec)\n",root->GetTotalEvents(),evtpsec);
   printf("Bytes written: %llu (%10.1f bytes/sec)\n",root->GetTotalSize(),bytepsec);
 
-  printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_FINISHED);
-  printf("DBINFO - process_set_time_stop %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_stop));
-  printf("DBINFO - process_set_n_files %d %d\n",cfg->ProcessId(),root->GetTotalFiles());
-  printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),root->GetTotalEvents());
-  printf("DBINFO - process_set_total_size %d %ld\n",cfg->ProcessId(),root->GetTotalSize());
+  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_FINISHED);
+  //printf("DBINFO - process_set_time_stop %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_stop));
+  //printf("DBINFO - process_set_n_files %d %d\n",cfg->ProcessId(),root->GetTotalFiles());
+  //printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),root->GetTotalEvents());
+  //printf("DBINFO - process_set_total_size %d %ld\n",cfg->ProcessId(),root->GetTotalSize());
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
+  printf("DBINFO - %s - process_set_time_stop %d\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_stop));
+  printf("DBINFO - %s - process_set_n_files %d\n",cfg->FormatTime(time(0)),root->GetTotalFiles());
+  printf("DBINFO - %s - process_set_total_events %d\n",cfg->FormatTime(time(0)),root->GetTotalEvents());
+  printf("DBINFO - %s - process_set_total_size %ld\n",cfg->FormatTime(time(0)),root->GetTotalSize());
 
   // Show exit time
-  printf("=== PadmeMerger exiting on %s UTC ===\n",cfg->FormatTime(time(0)));
+  printf("=== PadmeLevel1 exiting on %s UTC ===\n",cfg->FormatTime(time(0)));
 
   exit(0);
 

@@ -109,8 +109,10 @@ Int_t RootIO::OpenOutFile()
   //    return ROOTIO_ERROR;
   //  }
   //}
-  printf("DBINFO - file_create %s %s %d %d %d\n",fOutFile.Data(),"RAWDATA",3,fConfig->ProcessId(),fOutFileIndex);
-  printf("DBINFO - file_set_time_open %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
+  //printf("DBINFO - file_create %s %s %d %d %d\n",fOutFile.Data(),"RAWDATA",3,fConfig->ProcessId(),fOutFileIndex);
+  //printf("DBINFO - file_set_time_open %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
+  printf("DBINFO - %s - file_create %s %s %d %d\n",fConfig->FormatTime(time(0)),fOutFile.Data(),"RAWDATA",3,fOutFileIndex);
+  printf("DBINFO - %s - file_set_time_open %s %s\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fConfig->FormatTime(time(0)));
 
   return ROOTIO_OK;
 
@@ -143,9 +145,12 @@ Int_t RootIO::CloseOutFile()
   //    return ROOTIO_ERROR;
   //  }
   //}
-  printf("DBINFO - file_set_time_close %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
-  printf("DBINFO - file_set_n_events %s %u\n",fOutFile.Data(),fOutFileEvents);
-  printf("DBINFO - file_set_size %s %lu\n",fOutFile.Data(),fOutFileSize);
+  //printf("DBINFO - file_set_time_close %s %s\n",fOutFile.Data(),fConfig->FormatTime(time(0)));
+  //printf("DBINFO - file_set_n_events %s %u\n",fOutFile.Data(),fOutFileEvents);
+  //printf("DBINFO - file_set_size %s %lu\n",fOutFile.Data(),fOutFileSize);
+  printf("DBINFO - %s - file_set_time_close %s %s\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fConfig->FormatTime(time(0)));
+  printf("DBINFO - %s - file_set_n_events %s %u\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fOutFileEvents);
+  printf("DBINFO - %s - file_set_size %s %lu\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fOutFileSize);
 
   return ROOTIO_OK;
 }

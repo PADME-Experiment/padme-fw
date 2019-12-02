@@ -23,6 +23,8 @@ class ADCBoard:
 
         self.status = "idle"
 
+        self.re_dbinfo_line = re.compile("^\s*DBINFO\s.*$")
+
         self.set_default_config()
 
     def set_default_config(self):
@@ -722,3 +724,25 @@ class ADCBoard:
         if self.run_number:
             self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
         return False
+
+    def parse_log_daq(self):
+
+        # Look for DBINFO lines in log file and send them to DBINFO line processor
+        if os.path.exists(self.log_file_daq) and os.path.isfile(self.log_file_daq):
+            with open(self.log_file_daq,"r") as log:
+                for line in log:
+                    if self.re_dbinfo_line.match(line):
+                        self.db.manage_dbinfo_entry(self.proc_daq_id,line)
+        else:
+            print "ADCBoard::parse_log_daq - WARNING: DAQ log file %s not found"%self.log_file_daq
+
+    def parse_log_zsup(self):
+
+        # Look for DBINFO lines in log file and send them to DBINFO line processor
+        if os.path.exists(self.log_file_zsup) and os.path.isfile(self.log_file_zsup):
+            with open(self.log_file_zsup,"r") as log:
+                for line in log:
+                    if self.re_dbinfo_line.match(line):
+                        self.db.manage_dbinfo_entry(self.proc_zsup_id,line)
+        else:
+            print "ADCBoard::parse_log_zsup - WARNING: ZSUP log file %s not found"%self.log_file_zsup

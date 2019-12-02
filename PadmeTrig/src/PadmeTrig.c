@@ -195,7 +195,8 @@ void proc_finalize(int error,int rmv_lock,int create_file,int update_db,int stat
       status = DB_STATUS_UNKNOWN;
     }
     //db_process_set_status(Config->process_id,status);
-    printf("DBINFO - process_set_status %d %d\n",Config->process_id,status);
+    //printf("DBINFO - process_set_status %d %d\n",Config->process_id,status);
+    printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),status);
   //}
   if (rmv_lock) remove_lock();
   if (error) exit(1);
@@ -386,7 +387,7 @@ int main(int argc, char *argv[]) {
   print_config();
 
   // Save configuration to DB
-  save_config();
+  //save_config();
 
   // Check if another PadmeTrig program is running
   printf("\n=== Verifying that no other PadmeTrig instances are running ===\n");
@@ -444,7 +445,8 @@ int main(int argc, char *argv[]) {
   //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
   //}
   printf("- Setting process status to INITIALIZING (%d)\n",DB_STATUS_INITIALIZING);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
+  printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INITIALIZING);
 
   // Allocate output event buffer (max among file header, trigger event, file tail)
   maxPEvtSize = 16; // Header 12, Event 12, Tail 16
@@ -682,7 +684,8 @@ int main(int argc, char *argv[]) {
   //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZED);
   //}
   printf("- Setting process status to INITIALIZED (%d)\n",DB_STATUS_INITIALIZED);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZED);
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZED);
+  printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INITIALIZED);
   if ( create_initok_file() ) {
     printf("PadmeTrig *** ERROR *** Problem while creating InitOK file. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
@@ -723,8 +726,10 @@ int main(int argc, char *argv[]) {
   //  }
   //}
   printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUNNING);
-  printf("DBINFO - process_set_time_start %d %s\n",Config->process_id,format_time(t_daqstart));
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUNNING);
+  //printf("DBINFO - process_set_time_start %d %s\n",Config->process_id,format_time(t_daqstart));
+  printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %s\n",format_time(time(0)),format_time(t_daqstart));
 
   // Zero counters
   totalReadSize = 0;
@@ -756,8 +761,10 @@ int main(int argc, char *argv[]) {
       proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
     }
 
-    printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
-    printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
+    //printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+    //printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
+    printf("DBINFO - %s - file_create %s %s %d %d\n",format_time(time(0)),fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,fileIndex);
+    printf("DBINFO - %s - file_set_time_open %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
   }
  
@@ -938,9 +945,12 @@ int main(int argc, char *argv[]) {
 	       format_time(fileTClose[fileIndex]),pathName[fileIndex],
 	       (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	       fileEvents[fileIndex],fileSize[fileIndex]);
-	printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
-	printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
-	printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+	//printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
+	//printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
+	//printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+	printf("DBINFO - %s - file_set_time_close %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTClose[fileIndex]));
+	printf("DBINFO - %s - file_set_n_events %s %u\n",format_time(time(0)),fileName[fileIndex],fileEvents[fileIndex]);
+	printf("DBINFO - %s - file_set_size %s %lu\n",format_time(time(0)),fileName[fileIndex],fileSize[fileIndex]);
 
 	// Update file counter
 	fileIndex++;
@@ -964,8 +974,10 @@ int main(int argc, char *argv[]) {
 	  fileSize[fileIndex] = 0;
 	  fileEvents[fileIndex] = 0;
 
-	  printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
-	  printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
+	  //printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
+	  //printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
+	  printf("DBINFO - %s - file_create %s %s %d %d\n",format_time(time(0)),fileName[fileIndex],"TRIGDATA",PEVT_CURRENT_VERSION,fileIndex);
+	  printf("DBINFO - %s - file_set_time_open %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
 	  // Write header to file
 	  fHeadSize = create_file_head(fileIndex,Config->run_number,fileTOpen[fileIndex],(void *)outEvtBuffer);
@@ -1034,9 +1046,12 @@ int main(int argc, char *argv[]) {
 	     format_time(fileTClose[fileIndex]),pathName[fileIndex],
 	     (int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-      printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(t_now));
-      printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
-      printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+      //printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(t_now));
+      //printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
+      //printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
+      printf("DBINFO - %s - file_set_time_close %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(t_now));
+      printf("DBINFO - %s - file_set_n_events %s %u\n",format_time(time(0)),fileName[fileIndex],fileEvents[fileIndex]);
+      printf("DBINFO - %s - file_set_size %s %lu\n",format_time(time(0)),fileName[fileIndex],fileSize[fileIndex]);
 
     } else {
       printf("%s - Closed output stream '%s' after %d secs with %u events and size %lu bytes\n",
@@ -1088,12 +1103,17 @@ int main(int argc, char *argv[]) {
   //  db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
   //}
   printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
-  printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
-  printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
-  printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+  //printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
+  //printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
+  //printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
+  printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_FINISHED);
+  printf("DBINFO - %s - process_set_time_stop %s\n",format_time(time(0)),format_time(t_daqstop));
+  printf("DBINFO - %s - process_set_total_events %d\n",format_time(time(0)),totalWriteEvents);
+  printf("DBINFO - %s - process_set_total_size %ld\n",format_time(time(0)),totalWriteSize);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+    //printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+    printf("DBINFO - %s - process_set_n_files %d\n",format_time(time(0)),fileIndex);
   }
   // Give some final report
   evtReadPerSec = 0.;

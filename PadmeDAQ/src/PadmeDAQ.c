@@ -155,7 +155,8 @@ int main(int argc, char*argv[])
   //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
   //}
   printf("- Setting process status to INITIALIZING (%d)\n",DB_STATUS_INITIALIZING);
-  printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
+  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
+  printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INITIALIZING);
 
   // Check current running mode (DAQ, ZSUP, FAKE)
 
@@ -180,7 +181,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
       //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     }
@@ -195,7 +197,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
       //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     }
@@ -210,7 +213,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
       //}
       printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_FINISHED);
     } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
       create_initfail_file();
@@ -219,7 +223,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
       //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 2 ) {
@@ -229,7 +234,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
       //}
       printf("- Setting process status to RUN_FAIL (%d)\n",DB_STATUS_RUN_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUN_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 3 ) {
@@ -239,7 +245,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
       //}
       printf("- Setting process status to ABORTED (%d)\n",DB_STATUS_ABORTED);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_ABORTED);
     } else {
       printf("=== DAQ reported unknown return code %d ===\n",rc);
       //if (Config->run_number) {
@@ -247,7 +254,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
       //}
       printf("- Setting process status to UNKNOWN (%d)\n",DB_STATUS_UNKNOWN);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_UNKNOWN);
     }
 
     // Final reset of the digitizer
@@ -259,7 +267,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_CLOSE_FAIL);
       //}
       printf("- Setting process status to CLOSE_FAIL (%d)\n",DB_STATUS_CLOSE_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_CLOSE_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_CLOSE_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_CLOSE_FAIL);
       remove_lock();
       exit(1);
     }
@@ -312,7 +321,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
       //}
       printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_FINISHED);
     } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing ZSUP process. Exiting.\n");
       create_initfail_file();
@@ -321,7 +331,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
       //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 2 ) {
@@ -331,7 +342,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
       //}
       printf("- Setting process status to RUN_FAIL (%d)\n",DB_STATUS_RUN_FAIL);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUN_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 3 ) {
@@ -341,7 +353,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
       //}
       printf("- Setting process status to ABORTED (%d)\n",DB_STATUS_ABORTED);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_ABORTED);
     } else {
       printf("=== ZSUP reported unknown return code %d ===\n",rc);
       //if (Config->run_number) {
@@ -349,7 +362,8 @@ int main(int argc, char*argv[])
       //	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
       //}
       printf("- Setting process status to UNKNOWN (%d)\n",DB_STATUS_UNKNOWN);
-      printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
+      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
+      printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_UNKNOWN);
     }
 
   }

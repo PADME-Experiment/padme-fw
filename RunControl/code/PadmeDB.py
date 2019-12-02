@@ -23,43 +23,8 @@ class PadmeDB:
         self.DB_RUN_STATUS_END_ERROR   = 6
         self.DB_RUN_STATUS_UNKNOWN     = 7
 
-        # Create regexp used to decode DBINFO lines
-
-        # file_create <file_name> <file_type> <format_version> <process_id> <file_index>
-        self.re_file_create = re.compile("^\s*DBINFO\s+-\s+file_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s+(\d+)\s*$")
-
-        # file_set_time_open <file_name> <date> <time>
-        self.re_file_set_time_open = re.compile("^\s*DBINFO\s+-\s+file_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
-
-        # file_set_time_close <file_name> <date> <time>
-        self.re_file_set_time_close = re.compile("^\s*DBINFO\s+-\s+file_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
-
-        # file_set_n_events <file_name> <n_events>
-        self.re_file_set_n_events = re.compile("^\s*DBINFO\s+-\s+file_set_n_events\s+(\S+)\s+(\d+)\s*$")
-
-        # file_set_size <file_name> <size>
-        self.re_file_set_size = re.compile("^\s*DBINFO\s+-\s+file_set_size\s+(\S+)\s+(\d+)\s*$")
-
-        # process_set_status <process_id> <status>
-        self.re_process_set_status = re.compile("^\s*DBINFO\s+-\s+process_set_status\s+(\d+)\s+(\d+)\s*$")
-
-        # process_set_time_start <process_id> <date> <time>
-        self.re_process_set_time_start = re.compile("^\s*DBINFO\s+-\s+process_set_time_start\s+(\d+)\s+(\S+)\s+(\S+)\s*$")
-
-        # process_set_time_stop <process_id> <date> <time>
-        self.re_process_set_time_stop = re.compile("^\s*DBINFO\s+-\s+process_set_time_stop\s+(\d+)\s+(\S+)\s+(\S+)\s*$")
-
-        # process_set_total_events <process_id> <total_events>
-        self.re_process_set_total_events = re.compile("^\s*DBINFO\s+-\s+process_set_total_events\s+(\d+)\s+(\d+)\s*$")
-
-        # process_set_total_size <process_id> <total_size>
-        self.re_process_set_total_size = re.compile("^\s*DBINFO\s+-\s+process_set_total_size\s+(\d+)\s+(\d+)\s*$")
-
-        # process_set_n_files <process_id> <n_files>
-        self.re_process_set_n_files = re.compile("^\s*DBINFO\s+-\s+process_set_n_files\s+(\d+)\s+(\d+)\s*$")
-
-        # add_proc_config_para <process_id> <parameter_name> <parameter_value>
-        self.re_add_proc_config_para = re.compile("^\s*DBINFO\s+-\s+add_proc_config_para\s+(\d+)\s+(\S+)\s+(\S.*)$")
+        # Create regexps used to decode DBINFO lines
+        self.init_dbinfo_regexp()
 
         self.conn = None
 
@@ -195,7 +160,7 @@ class PadmeDB:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
-    def add_run_comment(self,run_nr,comm_type,comm_level,comm_time,comment):
+    def add_run_log_entry(self,run_nr,comm_type,comm_level,comm_time,comment):
 
         # Add log comment to run
         self.check_db()
@@ -210,12 +175,12 @@ class PadmeDB:
     def set_run_comment_start(self,run_nr,comm_time,comment):
 
         # Add start-of-run comment to run
-        self.add_run_comment(run_nr,"SOR",0,comm_time,comment)
+        self.add_run_log_entry(run_nr,"SOR",0,comm_time,comment)
 
     def set_run_comment_end(self,run_nr,comm_time,comment):
 
         # Add end-of-run comment to run
-        self.add_run_comment(run_nr,"EOR",0,comm_time,comment)
+        self.add_run_log_entry(run_nr,"EOR",0,comm_time,comment)
 
     def set_run_total_events(self,run_nr,total_events):
 
@@ -314,6 +279,18 @@ class PadmeDB:
                 c.execute("""INSERT INTO daq_link (process_id,optical_link_id) VALUES (%s,%s)""",(proc_id,link_id))
             except MySQLdb.Error as e:
                 print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+
+    def add_proc_log_entry(self,proc_id,comm_type,comm_level,comm_time,comment):
+
+        # Add log comment to run
+        self.check_db()
+        c = self.conn.cursor()
+        try:
+            c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",
+                      (run_nr,comm_type,comm_level,comm_time,comment))
+        except MySQLdb.Error as e:
+            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+        self.conn.commit()
 
     def set_process_status(self,proc_id,status):
 
@@ -655,98 +632,167 @@ class PadmeDB:
 
         return (tot_evts,tot_size)
 
-    def manage_dbinfo_entry(self,dbinfo_line):
+    def init_dbinfo_regexp(self):
+
+        # All DBINFO lines start with "DBINFO - <date> <time> - ", e.g. "DBINFO - 2019/10/08 12:32:44 - "
+
+        # file_create <file_name> <file_type> <format_version> <process_id> <file_index>
+        self.re_file_create = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
+
+        # file_set_time_open <file_name> <date> <time>
+        self.re_file_set_time_open = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+
+        # file_set_time_close <file_name> <date> <time>
+        self.re_file_set_time_close = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
+
+        # file_set_n_events <file_name> <n_events>
+        self.re_file_set_n_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_n_events\s+(\S+)\s+(\d+)\s*$")
+
+        # file_set_size <file_name> <size>
+        self.re_file_set_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_size\s+(\S+)\s+(\d+)\s*$")
+
+        # process_set_status <status>
+        self.re_process_set_status = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_status\s+(\d+)\s*$")
+
+        # process_set_time_start <date> <time>
+        self.re_process_set_time_start = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_start\s+(\S+)\s+(\S+)\s*$")
+
+        # process_set_time_stop <date> <time>
+        self.re_process_set_time_stop = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_stop\s+(\S+)\s+(\S+)\s*$")
+
+        # process_set_total_events <total_events>
+        self.re_process_set_total_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_events\s+(\d+)\s*$")
+
+        # process_set_total_size <total_size>
+        self.re_process_set_total_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_size\s+(\d+)\s*$")
+
+        # process_set_n_files <n_files>
+        self.re_process_set_n_files = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_n_files\s+(\d+)\s*$")
+
+        # add_proc_config_para <parameter_name> <parameter_value>
+        self.re_add_proc_config_para = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_config_para\s+(\S+)\s+(\S.*)$")
+
+        # add_proc_log_entry <type> <level> <text>
+        self.re_add_proc_log_entry = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$")
+
+    def manage_dbinfo_entry(self,proc_id,dbinfo_line):
 
         m = self.re_file_create.match(dbinfo_line)
         if m:
-            file_name      = m.group(1)
-            file_type      = m.group(2)
-            format_version = int(m.group(3))
-            process_id     = int(m.group(4))
-            file_index     = int(m.group(5))
-            self.create_file(file_name,file_type,format_version,process_id,file_index)
+            dbinfo_date    = m.group(1)
+            dbinfo_time    = m.group(2)
+            file_name      = m.group(3)
+            file_type      = m.group(4)
+            format_version = int(m.group(5))
+            file_index     = int(m.group(6))
+            self.create_file(file_name,file_type,format_version,proc_id,file_index)
             return True
 
         m = self.re_file_set_time_open.match(dbinfo_line)
         if m:
-            file_name = m.group(1)
-            open_date = m.group(2)
-            open_time = m.group(3)
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            file_name   = m.group(3)
+            open_date   = m.group(4)
+            open_time   = m.group(5)
             self.set_file_time_open(file_name,"%s %s"%(open_date,open_time))
             return True
 
         m = self.re_file_set_time_close.match(dbinfo_line)
         if m:
-            file_name  = m.group(1)
-            close_date = m.group(2)
-            close_time = m.group(3)
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            file_name   = m.group(3)
+            close_date  = m.group(4)
+            close_time  = m.group(5)
             self.set_file_time_close(file_name,"%s %s"%(close_date,close_time))
             return True
 
         m = self.re_file_set_n_events.match(dbinfo_line)
         if m:
-            file_name = m.group(1)
-            n_events  = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            file_name   = m.group(3)
+            n_events    = int(m.group(4))
             self.set_file_n_events(file_name,n_events)
             return True
 
         m = self.re_file_set_size.match(dbinfo_line)
         if m:
-            file_name = m.group(1)
-            size      = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            file_name   = m.group(3)
+            size        = int(m.group(4))
             self.set_file_size(file_name,size)
             return True
 
         m = self.re_process_set_status.match(dbinfo_line)
         if m:
-            proc_id = int(m.group(1))
-            status  = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            status      = int(m.group(3))
             self.set_process_status(proc_id,status)
             return True
 
         m = self.re_process_set_time_start.match(dbinfo_line)
         if m:
-            proc_id    = int(m.group(1))
-            start_date = m.group(2)
-            start_time = m.group(3)
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            start_date  = m.group(3)
+            start_time  = m.group(4)
             self.set_process_time_start(proc_id,"%s %s"%(start_date,start_time))
             return True
 
         m = self.re_process_set_time_stop.match(dbinfo_line)
         if m:
-            proc_id   = int(m.group(1))
-            stop_date = m.group(2)
-            stop_time = m.group(3)
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            stop_date   = m.group(3)
+            stop_time   = m.group(4)
             self.set_process_time_stop(proc_id,"%s %s"%(stop_date,stop_time))
             return True
 
         m = self.re_process_set_total_events.match(dbinfo_line)
         if m:
-            proc_id    = int(m.group(1))
-            tot_events = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            tot_events  = int(m.group(3))
             self.set_process_total_events(proc_id,tot_events)
             return True
 
         m = self.re_process_set_total_size.match(dbinfo_line)
         if m:
-            proc_id  = int(m.group(1))
-            tot_size = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            tot_size    = int(m.group(3))
             self.set_process_total_size(proc_id,tot_size)
             return True
 
         m = self.re_process_set_n_files.match(dbinfo_line)
         if m:
-            proc_id = int(m.group(1))
-            n_files = int(m.group(2))
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            n_files     = int(m.group(3))
             self.set_process_n_files(proc_id,n_files)
             return True
 
         m = self.re_add_proc_config_para.match(dbinfo_line)
         if m:
-            proc_id    = int(m.group(1))
-            para_name  = m.group(2)
-            para_value = m.group(3)
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            para_name   = m.group(3)
+            para_value  = m.group(4)
             self.add_cfg_para_proc(proc_id,para_name,para_val)
+            return True
+
+        m = self.re_add_proc_log_entry.match(dbinfo_line)
+        if m:
+            dbinfo_date = m.group(1)
+            dbinfo_time = m.group(2)
+            log_type    = m.group(3)
+            log_level   = int(m.group(4))
+            log_text    = m.group(5)
+            self.add_proc_log_entry(proc_id,log_type,log_level,"%s %s"%(dbinfo_date,dbinfo_time),log_text)
             return True
 
         print "PadmeDB::manage_dbinfo_entry- WARNING - DBINFO line has unknown format\n%s"%dbinfo_line

@@ -49,8 +49,8 @@ int reset_config()
 
   Config->busy_mask = 0x10; // Only CPU busy active
 
-  // Set timepix shutter delay to 0 (no need for it as the BTF trigger is tuned for the timepix)
-  Config->timepix_shutter_delay = 0x00;
+  // Set timepix shutter delay to 2 (25ns) (WARNING: do not set it to 0 as delay will become 25us!)
+  Config->timepix_shutter_delay = 0x02;
 
   // Leave timepix shutter width to its default value (0x64 = 10us)
   Config->timepix_shutter_width = 0x64;

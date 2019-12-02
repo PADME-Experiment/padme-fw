@@ -773,18 +773,32 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
   return;// NGoodClus;
 }
+
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
+  if (tEvent==NULL) return;
+  fHits.clear();
+
   if (fMultihitForMC==1) {
-    // if ideal multihit reconstruction is requested, use the generic implementation in PadmeVReconstruction
-    PadmeVReconstruction::ConvertMCDigitsToRecoHits(tEvent,tMCEvent);
+    // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
+    // MC to reco hits
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      int i1 = digi->GetChannelId()/100;
+      int i2 = digi->GetChannelId()%100;
+      TRecoVHit *Hit = new TRecoVHit();
+      // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
+      int chIdN = i2*100+i1;
+      Hit->SetChannelId(chIdN);
+      Hit->SetPosition(TVector3(0.,0.,0.)); 
+      Hit->SetEnergy(digi->GetEnergy());
+      Hit->SetTime(digi->GetTime());
+      fHits.push_back(Hit);
+    }
     return;
   }
 
   // emulating single hit reconstruction 
-  if (tEvent==NULL) return;
-  fHits.clear();
-
   if (fMultihitForMC == -2) {
     // special correction to compensate for different bunch length on data and MC
     for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {

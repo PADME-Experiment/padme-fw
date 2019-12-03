@@ -136,6 +136,35 @@ TRecoVEvent * ECalReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* t
 */
 
 
+void ECalReconstruction::ProcessEvent(TRawEvent* rawEv){
+
+  // use trigger info
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  if(fChannelCalibration) ((ECalCalibration*)fChannelCalibration)->PerformCalibration(GetRecoHits(),rawEv);
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
+  // from Hits to Clusters
+  ClearClusters();
+  BuildClusters();
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
+
+}
+
+
+
 bool ECalReconstruction::TriggerToBeSkipped()
 {
   if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;

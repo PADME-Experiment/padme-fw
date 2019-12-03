@@ -22,7 +22,7 @@
 int main(int argc, char* argv[])
 {
 
-  int rc; // DB library return code
+  //int rc; // DB library return code
 
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
   //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
   //printf("DBINFO - process_set_time_start %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_start));
   printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
-  printf("DBINFO - %s - process_set_time_start %d\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
+  printf("DBINFO - %s - process_set_time_start %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
   // Define counters for input stream size and number of events
   unsigned long int input_size = 0;
@@ -608,10 +608,10 @@ int main(int argc, char* argv[])
   //printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),root->GetTotalEvents());
   //printf("DBINFO - process_set_total_size %d %ld\n",cfg->ProcessId(),root->GetTotalSize());
   printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
-  printf("DBINFO - %s - process_set_time_stop %d\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_stop));
+  printf("DBINFO - %s - process_set_time_stop %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_stop));
   printf("DBINFO - %s - process_set_n_files %d\n",cfg->FormatTime(time(0)),root->GetTotalFiles());
   printf("DBINFO - %s - process_set_total_events %d\n",cfg->FormatTime(time(0)),root->GetTotalEvents());
-  printf("DBINFO - %s - process_set_total_size %ld\n",cfg->FormatTime(time(0)),root->GetTotalSize());
+  printf("DBINFO - %s - process_set_total_size %lld\n",cfg->FormatTime(time(0)),root->GetTotalSize());
 
   // Show exit time
   printf("=== PadmeLevel1 exiting on %s UTC ===\n",cfg->FormatTime(time(0)));

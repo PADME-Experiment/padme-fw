@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string>
+#include <vector>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -60,6 +61,7 @@ private:
   Int_t ChangeOutFile();
   Int_t CloseOutFile();
   Int_t SetOutFile();
+  unsigned long int GetAdler32(TString);
 
   Configuration* fConfig;
   //DBService* fDB;
@@ -74,6 +76,8 @@ private:
   UInt_t  fOutFileEvents;
   ULong_t fOutFileSize;
   UInt_t  fNMaxEvtsPerOutFile;
+
+  std::vector<TString> fOutFileList;
 
   TFile* fTFileHandle;
   TTree* fTTreeMain;

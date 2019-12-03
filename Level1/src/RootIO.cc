@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include "zlib.h"
 
 #include "DBService.hh"
 #include "Configuration.hh"
@@ -16,6 +17,9 @@ RootIO::RootIO()
 
   // Connect to configuration class
   fConfig = Configuration::GetInstance();
+
+  // Reset vector with list of files
+  fOutFileList.clear();
 
   // Connect to DB service
   //fDB = 0;
@@ -61,6 +65,14 @@ int RootIO::Exit()
   printf("RootIO::Exit - Total events written: %u\n",fOutEventsTotal);
   printf("RootIO::Exit - Total output size:    %lu\n",fOutSizeTotal);
 
+  // Compute ADLER32 checksum of all produced files
+  TString outfile;
+  std::vector<TString>::iterator i;
+  for (i = fOutFileList.begin(); i != fOutFileList.end(); i++) {
+    outfile = *i;
+    printf("DBINFO - %s - file_set_adler32 %s %.8lx\n",fConfig->FormatTime(time(0)),outfile.Data(),GetAdler32(*i));
+  }
+
   return ROOTIO_OK;
 }
 
@@ -84,6 +96,9 @@ Int_t RootIO::OpenOutFile()
     printf("RootIO::OpenOutFile - ERROR: file %s already exists\n",fOutFile.Data());
     return ROOTIO_ERROR;
   }
+
+  // Add new output file to list
+  fOutFileList.push_back(fOutFile);
 
   printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
   fTFileHandle = TFile::Open(fOutFile,"NEW","PADME Merged Raw Events");
@@ -323,3 +338,19 @@ int RootIO::FillRawEvent(int run_number,
   return ROOTIO_OK;
 
 }
+
+ unsigned long int RootIO::GetAdler32(TString file)
+ {
+
+   const int BUFFER_SIZE = 65536;
+   Bytef buffer[BUFFER_SIZE];
+
+   size_t bytesRead = 0;
+   FILE* f = fopen(file.Data(),"rb");
+   unsigned long int adler = adler32(0L,Z_NULL,0);
+   while((bytesRead = fread(buffer,1,BUFFER_SIZE,f)) > 0) adler = adler32(adler,buffer,bytesRead);
+   fclose(f);
+
+   return adler;
+
+ }

@@ -35,6 +35,10 @@ HistoSvc::~HistoSvc()
   if ( fRootOutputFile ) delete fRootOutputFile;
 }
 
+void HistoSvc::makeFileDir(TString dName)
+{
+  fRootOutputFile->mkdir(dName.Data());
+}
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void HistoSvc::BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup)
 {

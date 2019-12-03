@@ -71,12 +71,16 @@ SACMessenger::SACMessenger(SACDetector* det)
   fSetSACFrontFaceZCmd->SetRange("Z > 100. && Z <= 1000.");
   fSetSACFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/SAC/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for SAC code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 SACMessenger::~SACMessenger()
 {
-
-  delete fSACDetectorDir;
 
   delete fSetSACNRowsCmd;
   delete fSetSACNColsCmd;
@@ -88,6 +92,10 @@ SACMessenger::~SACMessenger()
   delete fSetCrystalCoatingCmd;
 
   delete fSetSACFrontFaceZCmd;
+
+  delete fSetVerboseLevelCmd;
+
+  delete fSACDetectorDir;
 
 }
 
@@ -113,5 +121,8 @@ void SACMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetSACFrontFaceZCmd )
     fSACGeometry->SetSACFrontFacePosZ(fSetSACFrontFaceZCmd->GetNewDoubleValue(par));
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fSACGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

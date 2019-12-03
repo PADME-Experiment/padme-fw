@@ -34,6 +34,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of PVeto box
   G4double GetPVetoPosX() { return fPVetoInnerFacePosX+0.5*GetPVetoSizeX(); }
   G4double GetPVetoPosY() { return 0.*cm; }
@@ -98,6 +101,8 @@ public:
   G4String GetPVetoSensitiveDetectorName() { return fPVetoSensitiveDetectorName; }
 
 private:
+
+  G4int fVerbose; // Verbose level
 
   G4double fFingerDist0; // Distance of center of first finger from front face (in Z) of PVeto box
   G4double fFingerPitch; // Distance along Z between centers of two adjacent fingers

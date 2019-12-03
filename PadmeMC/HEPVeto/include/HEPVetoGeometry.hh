@@ -35,6 +35,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of HEPVeto box
   G4double GetHEPVetoPosX() { return fHEPVetoPosX; }
   G4double GetHEPVetoPosY() { return fHEPVetoPosY; }
@@ -101,6 +104,8 @@ public:
 private:
 
   void UpdateDerivedMeasures();
+
+  G4int fVerbose; // Verbose level
 
   // Number of fingers in HEPVeto
   G4int fHEPVetoNFingers;

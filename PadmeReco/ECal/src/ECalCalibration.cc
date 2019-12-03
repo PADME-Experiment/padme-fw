@@ -30,6 +30,9 @@ ECalCalibration::~ECalCalibration()
 
 
 void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
+
+  PadmeVCalibration::Init(cfg, chIdMgr );
+  
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
@@ -43,6 +46,20 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 
     fMuonDepositedEnergy=17.5;
     fGlobEnScale=15;
+
+    /*
+  fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",0);
+  fCalibVersion = (int)cfg->GetParOrDefault("EnergyCalibration","CalibVersion",3);
+  // Energy calibration 
+  
+  if(fUseCalibE) {
+    char fname[256];
+    sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
+    ECalib.open(fname);
+  }
+  // if(fUseCalibE==1) ECalib.open("config/Calibration/ECalCalibConst.txt");
+  // if(fUseCalibE==2) ECalib.open("config/Calibration/equalization_constants2.dat");
+  */
   
     if(fCalibVersion=="0") { // calib file from event time
 
@@ -172,6 +189,12 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEve
       fHitTCorrected = fHitT-fT0Map[std::make_pair(fBID,fChID)];
       std::cout<<" HitT "<<fHitT<<" "<<fHitTCorrected<<std::endl;
       Hits[iHit]->SetTime(fHitTCorrected);
+    }
+    else{
+    fHitT          = Hits[iHit]->GetTime();
+    fHitTCorrected = fHitT-fCommonT0;
+    //std::cout<<" HitT "<<fHitT<<" "<<fHitTCorrected<<std::endl;
+    Hits[iHit]->SetTime(fHitTCorrected);
     }
   } 
 

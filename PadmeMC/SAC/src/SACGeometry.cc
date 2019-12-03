@@ -20,6 +20,8 @@ SACGeometry::SACGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   fCrystalSizeX =  3.*cm;
   fCrystalSizeY =  3.*cm;
   fCrystalSizeZ = 14.*cm;

@@ -77,6 +77,8 @@
 //
 // 0x19 RO busy register
 //      [3:0] busy_in (3:0), [4] CPU busy
+//
+// 0x1D RO firmware version
 
 // === Trigger data format (64bit) ===
 // [39:0]  timestamp in clock cycles, resets in 13744s = 3h49m
@@ -381,6 +383,15 @@ int trig_stop_run()
   return trig_set_register(0x00,fullmask);
 }
 
+int trig_get_fw_version(unsigned int* fw_version)
+{
+  int rc;
+  unsigned char fullmask[4];
+  rc = trig_get_register(0x1D,fullmask);
+  if (rc == TRIG_OK) *fw_version = fullmask[0]*(1<<24)+fullmask[1]*(1<<16)+fullmask[2]*(1<<8)+fullmask[3];
+  return rc;
+}
+
 int trig_get_trigbusymask(unsigned char* mask)
 {
   // WARNING this function is obsolete and will be removed
@@ -501,6 +512,7 @@ int trig_set_timepix_delay(unsigned char delay)
 {
   int rc;
   unsigned char fullmask[4];
+  if (delay == 0) { printf("WARNING - trig_set_timepix_delay - delay set to 0: timepix shutter will start ~25us after the BTF trigger. Are you sure?\n"); }
   rc = trig_get_register(0x05,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old timepix delay with new one

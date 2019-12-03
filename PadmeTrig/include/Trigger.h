@@ -13,6 +13,8 @@ int trig_get_temperature(float*); // temperature
 int trig_start_run();
 int trig_stop_run();
 
+int trig_get_fw_version(unsigned int*); // 32b firmware version
+
 int trig_get_trigbusymask(unsigned char*); // 32b register 0x02: obsolete do not use
 
 int trig_get_trigmask(unsigned char*); // 8b trigger mask

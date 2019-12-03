@@ -585,7 +585,7 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   Int_t ClusterSize=5;
   //  EFraction[490]=0.95;
   //  cout<<"dime "<<fClDeltaCellMax<<endl;
-  std::cout << "in compensate missing e" << std::endl;
+  //std::cout << "in compensate missing e" << std::endl;
   if(fEnergyCompensation==NULL){
     fEnergyCompensation = new TF1("comp","pol4",0.,1000.);
     if(fClDeltaCellMax==2){
@@ -596,7 +596,7 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   }
   //  EFraction=0.95;
   EFraction = fEnergyCompensation->Eval(ECl);
-  std::cout << "fraction " << EFraction << std::endl;
+  //std::cout << "fraction " << EFraction << std::endl;
   if(ECl>1000.) EFraction=1;
   if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;

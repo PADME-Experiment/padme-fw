@@ -836,8 +836,8 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     }
   }
  
-  
 
+  // come here if fMultihitForMC==0 (sigle hit reco) or >=2 (2= multihit with threshold at 20 MeV for next to first hits in a crystal)
   int idarray[50][50];
   for (Int_t j=0; j<50; ++j) {
       for (Int_t i=0; i<50; ++i) idarray[i][j]=0;
@@ -845,13 +845,12 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 
   std::vector<double> digiEne;
   std::vector<double> digiTime;
-  
-
   std::vector<TimeEnergy> hitArrayInCrystal;
   hitArrayInCrystal.clear();
 
   //ss//std::cout<<"Start new event conversion here ................................................................................"<<std::endl;
   int ndigi=0;
+  
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
     TMCVDigi* digi = tEvent->Digi(i);
@@ -889,6 +888,25 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     Hit->SetPosition(TVector3(0.,0.,0.)); 
 
     std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
+
+    if (fMultihitForMC == 2)
+      {
+	Hit->SetEnergy(hitArrayInCrystal[0].digiEnergy);
+	Hit->SetTime(hitArrayInCrystal[0].digiTime);
+	fHits.push_back(Hit);
+	for (Int_t dincr=1; dincr<3; ++dincr)
+	  {
+	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue; 
+	    TRecoVHit *Hit1 = new TRecoVHit();
+	    Hit1->SetChannelId(chIdN);
+	    Hit1->SetPosition(TVector3(0.,0.,0.));
+	    Hit1->SetEnergy(hitArrayInCrystal[dincr].digiEnergy);
+	    Hit1->SetTime(hitArrayInCrystal[dincr].digiTime);
+	    fHits.push_back(Hit1);
+	  }
+	continue;
+      }
+    
     double energy=hitArrayInCrystal[0].digiEnergy;
     double ehit = 0;
     double ehitmax = energy;

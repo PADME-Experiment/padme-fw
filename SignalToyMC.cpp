@@ -10,9 +10,11 @@
 #include "TLegend.h"
 #include "TStyle.h"
 #include "TRatioPlot.h"
+#include "TLine.h"
 
 #define NPOINTS 1024
-#define BinsPerNs 1024./400
+#define NsPerBin 400./1024.
+#define BinsPerNs 1024./400.
 
 char name[256];
 
@@ -68,12 +70,13 @@ void SignalToyMC(){
   TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,600);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
   TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,600);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
   //  TCanvas *cAmpRatio = new TCanvas("cAmpRatio","cAmpRatio",0,0,800,600);//Ratio of generated amplitude to RRC processed amplitude
- 
+
+  Double_t TimeSpecEnds =400*NsPerBin;//largest time difference (in ns) to be shown in time spectra
   // TH1F *hTimeDiffUnProc = new TH1F("tdiffunproc","tdiffunproc",1024,0,50);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak (raw data)
   // TH1F *hTimeDiffProc = new TH1F("tdiffproc","tdiffproc",1024,0,50);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak (RRC Processing)
-  TH1F *hArrivalTimeSpec = new TH1F("ArrivalTimeSpec","ArrivalTimeSpec",100,0,400);//Spectrum of difference in arrival times of consecutive hits
-  TH1F *hRecoTimeSpecProc = new TH1F("RecoTimeSpecProc","RecoTimeSpecProc",100,0,400);//Spectrum of difference in reconstructed times of consecutive hits (RRC Processing)
-  TH1F *hRecoTimeSpecUnProc = new TH1F("RecoTimeSpecUnProc","RecoTimeSpecUnProc",100,0,400);//Spectrum of difference in reconstructed times of consecutive hits (raw data)
+  TH1F *hArrivalTimeSpec = new TH1F("ArrivalTimeSpec","ArrivalTimeSpec",100,0,TimeSpecEnds);//Spectrum of difference in arrival times of consecutive hits (ns)
+  TH1F *hRecoTimeSpecProc = new TH1F("RecoTimeSpecProc","RecoTimeSpecProc",100,0,TimeSpecEnds);//Spectrum of difference in reconstructed times of consecutive hits (RRC Processing) (ns)
+  TH1F *hRecoTimeSpecUnProc = new TH1F("RecoTimeSpecUnProc","RecoTimeSpecUnProc",100,0,TimeSpecEnds);//Spectrum of difference in reconstructed times of consecutive hits (raw data) (ns)
   //  TH1F *hAmpRatio = new TH1F("AmpRatio","AmpRatio",10,3.5,4.5);
   
   TMultiGraph *gfinal = new TMultiGraph(); 
@@ -85,7 +88,7 @@ void SignalToyMC(){
   TH1D *hTSpecRecoUnProc = new TH1D("hTSpecRecoUnProc","hTSpecRecoUnProc", 1024,0.,1024.);//Signal after TSpectrum (will have markers of TSpectrum-found peaks)
   TH1D *hTSpecRecoProc = new TH1D("hTSpecRecoProc","hTSpecRecoProc", 1024,0.,1024.);//Signal after TSpectrum && digital processing (will have markers of TSpectrum-found peaks)
 
-  TCanvas *canvasarr[10];
+  /*  TCanvas *canvasarr[10];
   TMultiGraph *gfinalinvestigate[10]; 
   TGraph *gsuminvestigate[10];
   TGraph *gsumProcinvestigate[10];
@@ -97,7 +100,7 @@ void SignalToyMC(){
     gfinalinvestigate[i] = new TMultiGraph();
     gsuminvestigate[i] = new TGraph();
     gsumProcinvestigate[i] = new TGraph();
-  }
+    }*/
   
   int currentsighalfpos;
   int finalsighalfpos;
@@ -144,7 +147,7 @@ void SignalToyMC(){
       arrivaltimens.push_back(gRandom->Uniform(80,280));
       //else if (i==1) arrivaltimens.push_back(arrivaltimens[0]+100);
       arrivaltimebins.push_back(int(arrivaltimens[i]*BinsPerNs));
-      //      std::cout<<"eventnumber "<<eventnumber<<" hit number = "<<i<<" arrivaltimens[i] "<<arrivaltimens[i]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" AmpScale "<<AmpScale<<std::endl;
+      // std::cout<<"eventnumber "<<eventnumber<<" hit number = "<<i<<" arrivaltimens[i] "<<arrivaltimens[i]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" AmpScale "<<AmpScale<<std::endl;
       sigmaxposition.push_back(arrivaltimebins[i]+7*BinsPerNs);//the position of the signal maximum is the arrival time + the 7ns risetime
       for(int j=0;j<NPOINTS;j++){
 	if(i==0&&j<arrivaltimebins[i]) {//before the arrival of the first hit, the signal is 0
@@ -179,7 +182,7 @@ void SignalToyMC(){
     
     if(nhits==0)    for(int j=0;j<NPOINTS;j++){
 	gsum->SetPoint(j,tbins[j],0);
-	gsuminvestigate[canvascounter]->SetPoint(j,tbins[j],0);
+	//	gsuminvestigate[canvascounter]->SetPoint(j,tbins[j],0);
       }
     if(eventnumber==eventtot-1){
       for(int i=0;i<nhits;i++){
@@ -225,11 +228,14 @@ void SignalToyMC(){
     }
     std::sort(tUnProcRecoBins.begin(),tUnProcRecoBins.end());
     for(int i=0;i<nhits-1;i++)    {
+      Double_t timediffbin = (arrivaltimebins[i+1]-arrivaltimebins[i]);
+      Double_t timediffns  = timediffbin*NsPerBin;//(1.*BinsPerNs);
       //      hTimeDiffUnProc->Fill(tUnProcRecoBins[i]-arrivaltimebins[i]);
-      hArrivalTimeSpec->Fill(arrivaltimebins[i+1]-arrivaltimebins[i]);
+      hArrivalTimeSpec->Fill(timediffns);
+      //  std::cout<<"eventnumber "<<eventnumber<<" i "<<i<<" arrivaltimebins[i+1] "<<arrivaltimebins[i+1]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" BinsPerNs "<<BinsPerNs<<" arrivaltimebins[i+1]-arrivaltimebins[i] "<<arrivaltimebins[i+1]-arrivaltimebins[i]<<" arrivaltimebins[i+1]-arrivaltimebins[i]/BinsPerNs "<<(arrivaltimebins[i+1]-arrivaltimebins[i])/(1.*BinsPerNs)<<std::endl;
     }
     
-    for(int i=0;i<(tUnProcRecoBins.size()-1);i++) hRecoTimeSpecUnProc->Fill(tUnProcRecoBins[i+1]-tUnProcRecoBins[i]);
+    for(int i=0;i<(tUnProcRecoBins.size()-1);i++) hRecoTimeSpecUnProc->Fill((tUnProcRecoBins[i+1]-tUnProcRecoBins[i])*NsPerBin);//(1.*BinsPerNs));
       
     
     if(tProcRecoBins.size()==0) {
@@ -242,13 +248,13 @@ void SignalToyMC(){
     bool smalltdiff=0;//is there a RRC reconstructed hit in this event where the time difference between this hit and the next<5ns?
     for(int i=0;i<(tProcRecoBins.size()-1);i++)    {
       //      hTimeDiffProc->Fill(tProcRecoBins[i]-arrivaltimebins[i]);
-      hRecoTimeSpecProc->Fill(tProcRecoBins[i+1]-tProcRecoBins[i]);
+      hRecoTimeSpecProc->Fill((tProcRecoBins[i+1]-tProcRecoBins[i])*NsPerBin);///(1.*BinsPerNs));
       if(tProcRecoBins[i+1]-tProcRecoBins[i]<5){
 	//	std::cout<<"eventnumber "<<eventnumber<<" i "<<i<<" tProcRecoBins[i+1] "<<tProcRecoBins[i+1]<<" tProcRecoBins[i] "<<tProcRecoBins[i]<<std::endl;
 	smalltdiff=1;
 	checkcounter++;
       }
-    }
+    }/*
     if(smalltdiff==1&&canvascounter<10){
       for(int i=0;i<nhits;i++){
 	TGraph *gsiginvestigate = new TGraph();//graph of signals from individial hits in an event
@@ -273,7 +279,7 @@ void SignalToyMC(){
       //      gfinalinvestigate[canvascounter]=gfinal;
       gfinalinvestigate[canvascounter]->Draw("same");
       canvascounter++;
-    }
+      }*/
   }
   cToy->cd();
   gfinal->Draw("same");
@@ -294,6 +300,7 @@ void SignalToyMC(){
   cArrivalTimeSpec->cd();
   hArrivalTimeSpec->Draw();
   hArrivalTimeSpec->SetMaximum(1.1*ymax);
+  hArrivalTimeSpec->GetXaxis()->SetTitle("#Delta T_{hits} (ns)");
   std::cout<<"hArrivalTimeSpec drawn"<<std::endl;
    
   hRecoTimeSpecUnProc->SetLineColor(kBlack);
@@ -324,13 +331,19 @@ void SignalToyMC(){
   EfficiencyRatioUnProc->GetUpperPad()->cd();
   hArrivalTimeSpec->Draw("AH");
   hRecoTimeSpecUnProc->Draw("same");
-    
+  EfficiencyRatioUnProc->GetLowerPad()->cd();
+  TLine *line = new TLine(0,0.95,TimeSpecEnds,0.95);
+  line->SetLineColor(kRed);
+  line->Draw("same");
+  
   TRatioPlot *EfficiencyRatioProc = new TRatioPlot(hRecoTimeSpecProc,hArrivalTimeSpec);
   cRatioProc->cd();
   EfficiencyRatioProc->Draw();
   EfficiencyRatioProc->GetUpperPad()->cd();
   hArrivalTimeSpec->Draw("AH");
   hRecoTimeSpecProc->Draw("same");
+  EfficiencyRatioProc->GetLowerPad()->cd();
+  line->Draw("same");
   
   std::cout<<"Total generated hits = "<<TotalToyNo<<" Total TSpectrum reconstructed hits no processing = "<<TotalTSpecUnProcNo<<" Total TSpectrum reconstructed hits with processing = "<<TotalTSpecProcNo<<std::endl;
   std::cout<<"checkcounter "<<checkcounter<<std::endl;

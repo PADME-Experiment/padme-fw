@@ -85,12 +85,6 @@ int ZSUP_readdata ()
   InBurst = 1;
   set_signal_handlers();
 
-  // If this is a real run save configuration to DB
-  //if ( Config->run_number ) {
-  //  if ( db_init() != DB_OK ) return 1;
-  //  save_config();
-  //}
-
   // Allocate buffers to hold input and output event structures (same max size)
 
   maxPEvtSize = (PEVT_HEADER_LEN + 4*(PEVT_GRPHEAD_LEN + 512 + PEVT_GRPTTT_LEN) + 32*512)*4;
@@ -127,16 +121,6 @@ int ZSUP_readdata ()
     generate_filename(tmpName,t_daqstart);
     fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
     strcpy(fileName[fileIndex],tmpName);
-    //if ( Config->run_number ) {
-    //  rc = db_file_check(fileName[fileIndex]);
-    //  if ( rc < 0 ) {
-    //	printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
-    //	return 2;
-    //  } else if ( rc == 1 ) {
-    //	printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
-    //	return 2;
-    //  }
-    //}
     pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
     strcpy(pathName[fileIndex],Config->data_dir);
     strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -173,7 +157,6 @@ int ZSUP_readdata ()
   // Create initok file to tell RunControl that we are ready
   if ( create_initok_file() ) return 1;
   printf("- Setting process status to INITIALIZED (%d)\n",DB_STATUS_INITIALIZED);
-  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZED);
   printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INITIALIZED);
 
   // Read file header (4 words) from input stream
@@ -221,12 +204,6 @@ int ZSUP_readdata ()
   }
 
   // Save board serial number to DB for this process
-  //if ( Config->run_number ) {
-  //  char outstr[2048];
-  //  sprintf(outstr,"%u",board_sn);
-  //  db_add_cfg_para(Config->process_id,"board_sn",outstr);
-  //}
-  //printf("DBINFO - add_proc_config_para %d %s %u\n",Config->process_id,"board_sn",board_sn);
   printf("DBINFO - %s - add_proc_config_para %s %u\n",format_time(time(0)),"board_sn",board_sn);
 
   // Fourth line: start of file time tag
@@ -239,14 +216,8 @@ int ZSUP_readdata ()
   time(&t_daqstart);
   printf("%s - Zero suppression started\n",format_time(t_daqstart));
 
-  //if ( Config->run_number ) {
-  //  // Tell DB that the process has started
-  //  printf("- Setting process status to RUNNING (%d) in DB\n",DB_STATUS_RUNNING);
-  //  db_process_set_status(Config->process_id,DB_STATUS_RUNNING);
-  //  if ( db_process_open(Config->process_id,t_daqstart) != DB_OK ) return 2;
-  //}
+  // Tell DB that the process has started
   printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
-  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUNNING);
   printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUNNING);
 
   // Register the output file in the DB and send it the header
@@ -256,12 +227,7 @@ int ZSUP_readdata ()
   fileEvents[fileIndex] = 0;
 
   // Register file in the DB
-  //if ( Config->run_number && strcmp(Config->output_mode,"FILE")==0 ) {
-  //  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-  //}
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    //printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
-    //printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
     printf("DBINFO - %s - file_create %s %s %d %d\n",format_time(time(0)),fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,fileIndex);
     printf("DBINFO - %s - file_set_time_open %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTOpen[fileIndex]));
   }
@@ -432,12 +398,6 @@ int ZSUP_readdata ()
 	       fileEvents[fileIndex],fileSize[fileIndex]);
 
 	// Close file in DB
-	//if ( Config->run_number ) {
-	//  if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-	//}
-	//printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
-	//printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
-	//printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
 	printf("DBINFO - %s - file_set_time_close %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTClose[fileIndex]));
 	printf("DBINFO - %s - file_set_size %s %lu\n",format_time(time(0)),fileName[fileIndex],fileSize[fileIndex]);
 	printf("DBINFO - %s - file_set_n_events %s %u\n",format_time(time(0)),fileName[fileIndex],fileEvents[fileIndex]);
@@ -451,16 +411,6 @@ int ZSUP_readdata ()
 	  generate_filename(tmpName,t_now);
 	  fileName[fileIndex] = (char*)malloc(strlen(tmpName)+1);
 	  strcpy(fileName[fileIndex],tmpName);
-	  //if ( Config->run_number ) {
-	  //  rc = db_file_check(fileName[fileIndex]);
-	  //  if ( rc < 0 ) {
-	  //    printf("ERROR: DB check for file %s returned an error\n",fileName[fileIndex]);
-	  //    return 2;
-	  //  } else if ( rc == 1 ) {
-	  //    printf("ERROR: file %s already exists in the DB\n",fileName[fileIndex]);
-	  //    return 2;
-	  //  }
-	  //}
 	  pathName[fileIndex] = (char*)malloc(strlen(Config->data_dir)+strlen(fileName[fileIndex])+1);
 	  strcpy(pathName[fileIndex],Config->data_dir);
 	  strcat(pathName[fileIndex],fileName[fileIndex]);
@@ -475,11 +425,6 @@ int ZSUP_readdata ()
 	  fileEvents[fileIndex] = 0;
 
 	  // Register file in the DB
-	  //if ( Config->run_number ) {
-	  //  if ( db_file_open(fileName[fileIndex],PEVT_CURRENT_VERSION,fileTOpen[fileIndex],Config->process_id,fileIndex) != DB_OK ) return 2;
-	  //}
-	  //printf("DBINFO - file_create %s %s %d %d %d\n",fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,Config->process_id,fileIndex);
-	  //printf("DBINFO - file_set_time_open %s %s\n",fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 	  printf("DBINFO - %s - file_create %s %s %d %d\n",format_time(time(0)),fileName[fileIndex],"DAQDATA",PEVT_CURRENT_VERSION,fileIndex);
 	  printf("DBINFO - %s - file_set_time_open %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTOpen[fileIndex]));
 
@@ -550,12 +495,6 @@ int ZSUP_readdata ()
       printf("%s - Closed output file '%s' after %d secs with %u events and size %lu bytes\n",
 	     format_time(t_now),pathName[fileIndex],(int)(fileTClose[fileIndex]-fileTOpen[fileIndex]),
 	     fileEvents[fileIndex],fileSize[fileIndex]);
-      //if ( Config->run_number ) {
-      //	if ( db_file_close(fileName[fileIndex],fileTClose[fileIndex],fileSize[fileIndex],fileEvents[fileIndex]) != DB_OK ) return 2;
-      //}
-      //printf("DBINFO - file_set_time_close %s %s\n",fileName[fileIndex],format_time(fileTClose[fileIndex]));
-      //printf("DBINFO - file_set_size %s %lu\n",fileName[fileIndex],fileSize[fileIndex]);
-      //printf("DBINFO - file_set_n_events %s %u\n",fileName[fileIndex],fileEvents[fileIndex]);
       printf("DBINFO - %s - file_set_time_close %s %s\n",format_time(time(0)),fileName[fileIndex],format_time(fileTClose[fileIndex]));
       printf("DBINFO - %s - file_set_size %s %lu\n",format_time(time(0)),fileName[fileIndex],fileSize[fileIndex]);
       printf("DBINFO - %s - file_set_n_events %s %u\n",format_time(time(0)),fileName[fileIndex],fileEvents[fileIndex]);
@@ -579,20 +518,10 @@ int ZSUP_readdata ()
   printf("- Deallocated I/O event buffer\n");
 
   // Tell DB that the process has ended
-  //if ( Config->run_number ) {
-  //  //if ( db_process_close(Config->process_id,t_daqstop) != DB_OK ) return 2;
-  //  if ( db_process_close(Config->process_id,t_daqstop,totalWriteSize,totalWriteEvents) != DB_OK ) return 2;
-  //}
-  //printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
-  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
-  //printf("DBINFO - process_set_time_stop %d %s\n",Config->process_id,format_time(t_daqstop));
-  //printf("DBINFO - process_set_total_events %d %d\n",Config->process_id,totalWriteEvents);
-  //printf("DBINFO - process_set_total_size %d %ld\n",Config->process_id,totalWriteSize);
   printf("DBINFO - %s - process_set_time_stop %d %s\n",format_time(time(0)),format_time(t_daqstop));
   printf("DBINFO - %s - process_set_total_events %d %d\n",format_time(time(0)),totalWriteEvents);
   printf("DBINFO - %s - process_set_total_size %d %ld\n",format_time(time(0)),totalWriteSize);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    //printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
     printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
   }
 
@@ -623,11 +552,6 @@ int ZSUP_readdata ()
     }
   }
   printf("=========================================================\n");
-
-  // Close DB file
-  //if ( Config->run_number ) {
-  //  if ( db_end() != DB_OK ) return 2;
-  //}
 
   // Free space allocated for file names
   for(i=0;i<fileIndex;i++) free(fileName[i]);

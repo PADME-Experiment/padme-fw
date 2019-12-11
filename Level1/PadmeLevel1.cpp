@@ -9,16 +9,6 @@
 #include "RootIO.hh"
 #include "EventTags.hh"
 
-//char* format_time(const time_t time)
-//{
-//  stati char tform[20];
-//  struct tm* t = gmtime(t);
-//  sprintf(tform,"%04d/%02d/%02d %02d:%02d:%02d",
-//	  1900+t->tm_year,1+t->tm_mon,t->tm_mday,
-//	  t->tm_hour,t->tm_min,t->tm_sec);
-//  return tform;
-//}
-
 int main(int argc, char* argv[])
 {
 
@@ -39,7 +29,6 @@ int main(int argc, char* argv[])
 
   // Get default parameters from configurator
   int runnr = cfg->RunNumber();
-  int process_id = cfg->ProcessId();
   unsigned int nevts = cfg->NEventsPerFile();
   unsigned int verbose = cfg->Verbose();
   std::string rawhead = cfg->RawFileHeader();
@@ -47,7 +36,7 @@ int main(int argc, char* argv[])
 
   // Parse options
   int c;
-  while ((c = getopt (argc, argv, "n:r:I:i:o:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "n:r:i:o:v:h")) != -1) {
     switch (c)
       {
       case 'r':
@@ -66,22 +55,6 @@ int main(int argc, char* argv[])
         fprintf(stdout,"Filtering files from run %d\n",runnr);
 	cfg->SetRunNumber(runnr);
         break;
-      case 'I':
-	if (process_id != cfg->ProcessId()) {
-	  fprintf (stderr, "Error while processing option '-I'. Multiple ids specified.\n");
-          exit(1);
-      	}
-	if (sscanf(optarg,"%d",&process_id) != 1) {
-          fprintf (stderr, "Error while processing option '-I'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
-        }
-        if (process_id<0) {
-          fprintf (stderr, "Error while processing option '-I'. Process id set to %d (must be >=0).\n", process_id);
-          exit(1);
-        }
-        fprintf(stdout,"Level1 process id is %d\n",process_id);
-      	cfg->SetProcessId(process_id);
-	break;
       case 'n':
         if ( sscanf(optarg,"%u",&nevts) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
@@ -109,11 +82,10 @@ int main(int argc, char* argv[])
 	cfg->SetVerbose(verbose);
         break;
       case 'h':
-        fprintf(stdout,"\nPadmeLevel1 -i input_stream [-o rawfile_head] [-r run_number] [-I process_id] [-n events] [-v level] [-h]\n\n");
+        fprintf(stdout,"\nPadmeLevel1 -i input_stream [-o rawfile_head] [-r run_number] [-n events] [-v level] [-h]\n\n");
         fprintf(stdout,"  -i: define input stream FIFO file\n");
         fprintf(stdout,"  -o: define rawdata output files header. Includes path. (default: %s)\n",cfg->RawFileHeader().c_str());
         fprintf(stdout,"  -r: define run number being processes (default: %d)\n",cfg->RunNumber());
-        fprintf(stdout,"  -I: define DB id of this Level1 process assigned by RunControl (default: %d)\n",cfg->ProcessId());
         fprintf(stdout,"  -n: define max number of events per output file (0=no limit, default: %u)\n",cfg->NEventsPerFile());
         fprintf(stdout,"  -v: define verbose level (default: %u)\n",cfg->Verbose());
         fprintf(stdout,"  -h: show this help message and exit\n\n");
@@ -123,7 +95,7 @@ int main(int argc, char* argv[])
           // verbose with no argument: increas verbose level by 1
           cfg->SetVerbose(cfg->Verbose()+1);
           break;
-        } else if (optopt == 'r' || optopt == 'I' || optopt == 'i' || optopt == 'o' || optopt == 'n')
+        } else if (optopt == 'r' || optopt == 'i' || optopt == 'o' || optopt == 'n')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -140,24 +112,6 @@ int main(int argc, char* argv[])
     printf("ERROR no input stream defined with -i. Aborting\n");
     exit(1);
   }
-
-  // If this is an official run, connect to DB and get id of merger process
-  //// N.B. merger id is needed to assign root files in DB
-  //if (cfg->RunNumber()) {
-  //
-  //  // Get handle to DB
-  //  DBService* db = DBService::GetInstance();
-  //
-  //  // Get id of merger for future DB accesses
-  //  int merger_id = 0;
-  //  rc = db->GetMergerId(merger_id,cfg->RunNumber());
-  //  if (rc != DBSERVICE_OK) {
-  //    printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
-  //    exit(1);
-  //  }
-  //  cfg->SetMergerId(merger_id);
-  //
-  //}
 
   // Connect to root services
   RootIO* root = new RootIO();
@@ -177,8 +131,6 @@ int main(int argc, char* argv[])
   //printf("=== PadmeLevel1 starting on %s UTC ===\n",format_time(time_start));
   printf("=== PadmeLevel1 starting on %s UTC ===\n",cfg->FormatTime(time_start));
 
-  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_RUNNING);
-  //printf("DBINFO - process_set_time_start %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_start));
   printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
   printf("DBINFO - %s - process_set_time_start %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
@@ -602,11 +554,6 @@ int main(int argc, char* argv[])
   printf("Events written: %u (%6.1f events/sec)\n",root->GetTotalEvents(),evtpsec);
   printf("Bytes written: %llu (%10.1f bytes/sec)\n",root->GetTotalSize(),bytepsec);
 
-  //printf("DBINFO - process_set_status %d %d\n",cfg->ProcessId(),DB_STATUS_FINISHED);
-  //printf("DBINFO - process_set_time_stop %d %d\n",cfg->ProcessId(),cfg->FormatTime(time_stop));
-  //printf("DBINFO - process_set_n_files %d %d\n",cfg->ProcessId(),root->GetTotalFiles());
-  //printf("DBINFO - process_set_total_events %d %d\n",cfg->ProcessId(),root->GetTotalEvents());
-  //printf("DBINFO - process_set_total_size %d %ld\n",cfg->ProcessId(),root->GetTotalSize());
   printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
   printf("DBINFO - %s - process_set_time_stop %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_stop));
   printf("DBINFO - %s - process_set_n_files %d\n",cfg->FormatTime(time(0)),root->GetTotalFiles());

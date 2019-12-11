@@ -101,61 +101,9 @@ int main(int argc, char*argv[])
     exit(1);
   }
 
-  //if ( Config->run_number ) {
-  //
-  //  // Connect to DB
-  //  if ( db_init() != DB_OK ) {
-  //    printf("*** ERROR *** Unable to initialize DB connection. Exiting.\n");
-  //    create_initfail_file();
-  //    remove_lock();
-  //    exit(1);
-  //  }
-  //
-  //  // Verify if run number is valid
-  //  rc = db_run_check(Config->run_number);
-  //  if ( rc != 1 ) {
-  //    if ( rc < 0 ) {
-  //	printf("ERROR: DB check for run number %d returned an error\n",Config->run_number);
-  //    } else if ( rc == 0 ) {
-  //	printf("ERROR: run number %d does not exist in the DB\n",Config->run_number);
-  //    }
-  //    create_initfail_file();
-  //    remove_lock();
-  //    exit(1);
-  //  }
-  //
-  //  // Verify if process id is valid
-  //  rc = db_process_check(Config->process_id);
-  //  if ( rc != 1 ) {
-  //    if ( rc < 0 ) {
-  //	printf("ERROR: DB check for process id %d returned an error\n",Config->process_id);
-  //    } else if ( rc == 0 ) {
-  //	printf("ERROR: process id %d does not exist in the DB\n",Config->process_id);
-  //    }
-  //    create_initfail_file();
-  //    remove_lock();
-  //    exit(1);
-  //  }
-  //  int status = db_process_get_status(Config->process_id);
-  //  if (status!=DB_STATUS_IDLE) {
-  //    printf("ERROR: process id %d is not in IDLE (%d) status (status=%d)\n",Config->process_id,DB_STATUS_IDLE,status);
-  //    create_initfail_file();
-  //    remove_lock();
-  //    exit(1);
-  //  }
-  //
-  //  // Save the process configuration to DB -> Now done by RunControl
-  //  //save_config();
-  //
-  //}
 
   // Update process status
-  //if (Config->run_number) {
-  //  printf("- Setting process status to INITIALIZING (%d) in DB\n",DB_STATUS_INITIALIZING);
-  //  db_process_set_status(Config->process_id,DB_STATUS_INITIALIZING);
-  //}
   printf("- Setting process status to INITIALIZING (%d)\n",DB_STATUS_INITIALIZING);
-  //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INITIALIZING);
   printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INITIALIZING);
 
   // Check current running mode (DAQ, ZSUP, FAKE)
@@ -176,12 +124,7 @@ int main(int argc, char*argv[])
     if ( DAQ_connect() ) {
       printf("*** ERROR *** Problem while connecting to V1742 digitizer. Exiting.\n");
       create_initfail_file();
-      //if (Config->run_number) {
-      //	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
-      //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
@@ -192,12 +135,7 @@ int main(int argc, char*argv[])
     if ( DAQ_init() ) {
       printf("*** ERROR *** Problem while initializing V1742 digitizer. Exiting.\n");
       create_initfail_file();
-      //if (Config->run_number) {
-      //	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
-      //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
@@ -208,53 +146,28 @@ int main(int argc, char*argv[])
     rc = DAQ_readdata();
     if ( rc == 0 ) {
       printf("=== Run finished ===\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
-      //	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
-      //}
       printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_FINISHED);
     } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing DAQ process. Exiting.\n");
       create_initfail_file();
-      //if (Config->run_number) {
-      //	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
-      //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 2 ) {
       printf("*** ERROR *** Data acquistion ended with an error. Please check log file for details. Exiting.\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
-      //}
       printf("- Setting process status to RUN_FAIL (%d)\n",DB_STATUS_RUN_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUN_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 3 ) {
       printf("=== Run aborted before starting DAQ ===\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
-      //	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
-      //}
       printf("- Setting process status to ABORTED (%d)\n",DB_STATUS_ABORTED);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_ABORTED);
     } else {
       printf("=== DAQ reported unknown return code %d ===\n",rc);
-      //if (Config->run_number) {
-      //	printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
-      //	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
-      //}
       printf("- Setting process status to UNKNOWN (%d)\n",DB_STATUS_UNKNOWN);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_UNKNOWN);
     }
 
@@ -262,12 +175,7 @@ int main(int argc, char*argv[])
     printf("\n=== Reset digitizer and close connection ===\n");
     if ( DAQ_close() ) {
       printf("*** ERROR *** Final reset of digitizer ended with an error. Exiting.\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to CLOSE_FAIL (%d) in DB\n",DB_STATUS_CLOSE_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_CLOSE_FAIL);
-      //}
       printf("- Setting process status to CLOSE_FAIL (%d)\n",DB_STATUS_CLOSE_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_CLOSE_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_CLOSE_FAIL);
       remove_lock();
       exit(1);
@@ -316,66 +224,32 @@ int main(int argc, char*argv[])
     rc = ZSUP_readdata();
     if ( rc == 0 ) {
       printf("\n=== ZSUP process ended ===\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to FINISHED (%d) in DB\n",DB_STATUS_FINISHED);
-      //	db_process_set_status(Config->process_id,DB_STATUS_FINISHED);
-      //}
       printf("- Setting process status to FINISHED (%d)\n",DB_STATUS_FINISHED);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_FINISHED);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_FINISHED);
     } else if ( rc == 1 ) {
       printf("*** ERROR *** Problem while initializing ZSUP process. Exiting.\n");
       create_initfail_file();
-      //if (Config->run_number) {
-      //	printf("- Setting process status to INIT_FAIL (%d) in DB\n",DB_STATUS_INIT_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_INIT_FAIL);
-      //}
       printf("- Setting process status to INIT_FAIL (%d)\n",DB_STATUS_INIT_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_INIT_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_INIT_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 2 ) {
       printf("*** ERROR *** Zero suppression ended with an error. Please check log file for details. Exiting.\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to RUN_FAIL (%d) in DB\n",DB_STATUS_RUN_FAIL);
-      //	db_process_set_status(Config->process_id,DB_STATUS_RUN_FAIL);
-      //}
       printf("- Setting process status to RUN_FAIL (%d)\n",DB_STATUS_RUN_FAIL);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_RUN_FAIL);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUN_FAIL);
       remove_lock();
       exit(1);
     } else if ( rc == 3 ) {
       printf("=== Run aborted before starting ZSUP ===\n");
-      //if (Config->run_number) {
-      //	printf("- Setting process status to ABORTED (%d) in DB\n",DB_STATUS_ABORTED);
-      //	db_process_set_status(Config->process_id,DB_STATUS_ABORTED);
-      //}
       printf("- Setting process status to ABORTED (%d)\n",DB_STATUS_ABORTED);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_ABORTED);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_ABORTED);
     } else {
       printf("=== ZSUP reported unknown return code %d ===\n",rc);
-      //if (Config->run_number) {
-      //	printf("- Setting process status to UNKNOWN (%d) in DB\n",DB_STATUS_UNKNOWN);
-      //	db_process_set_status(Config->process_id,DB_STATUS_UNKNOWN);
-      //}
       printf("- Setting process status to UNKNOWN (%d)\n",DB_STATUS_UNKNOWN);
-      //printf("DBINFO - process_set_status %d %d\n",Config->process_id,DB_STATUS_UNKNOWN);
       printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_UNKNOWN);
     }
 
   }
-
-  // Close DB connection
-  //if ( Config->run_number ) {
-  //  if ( db_end() != DB_OK ) {
-  //    printf("*** ERROR *** DB close procedure ended with an error. Please check log file for details. Exiting.\n");
-  //    remove_lock();
-  //    exit(1);
-  //  }
-  //}
 
   // Remove lock file
   remove_lock();

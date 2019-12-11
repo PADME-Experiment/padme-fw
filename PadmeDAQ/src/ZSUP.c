@@ -70,7 +70,6 @@ int ZSUP_readdata ()
   unsigned int fileEvents[MAX_N_OUTPUT_FILES];
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
-  int rc;
 
   // File to handle DAQ interaction with GUI
   //FILE* iokf; // InitOK file
@@ -518,9 +517,9 @@ int ZSUP_readdata ()
   printf("- Deallocated I/O event buffer\n");
 
   // Tell DB that the process has ended
-  printf("DBINFO - %s - process_set_time_stop %d %s\n",format_time(time(0)),format_time(t_daqstop));
-  printf("DBINFO - %s - process_set_total_events %d %d\n",format_time(time(0)),totalWriteEvents);
-  printf("DBINFO - %s - process_set_total_size %d %ld\n",format_time(time(0)),totalWriteSize);
+  printf("DBINFO - %s - process_set_time_stop %s\n",format_time(time(0)),format_time(t_daqstop));
+  printf("DBINFO - %s - process_set_total_events %d\n",format_time(time(0)),totalWriteEvents);
+  printf("DBINFO - %s - process_set_total_size %ld\n",format_time(time(0)),totalWriteSize);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
   }

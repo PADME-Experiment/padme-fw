@@ -621,7 +621,6 @@ int DAQ_readdata ()
   time_t fileTOpen[MAX_N_OUTPUT_FILES];
   time_t fileTClose[MAX_N_OUTPUT_FILES];
   int fileHandle = 0;
-  int rc;
 
   // Flag to end run on ADC read error
   int adcError;

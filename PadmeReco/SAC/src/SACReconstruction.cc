@@ -504,4 +504,26 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 }
 
 
+void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  fHits.clear();
+
+  // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    int i1 = digi->GetChannelId()/10;
+    int i2 = digi->GetChannelId()%10;
+    TRecoVHit *Hit = new TRecoVHit();
+    // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
+    int chIdN = i2*10+i1;
+    Hit->SetChannelId(chIdN);
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    fHits.push_back(Hit);
+  }
+  return;
+}
 

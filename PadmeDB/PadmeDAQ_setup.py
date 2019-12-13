@@ -2,6 +2,7 @@
 
 import os
 import re
+import time
 import MySQLdb
 
 # Define regular expressions used in file parsing
@@ -178,23 +179,24 @@ def main():
                 # Link does not exist: create it in the DB
                 print "Creating optical link for node",node_id,"controller",controller_id,"channel",channel_id,"slot",slot_id
                 c.execute("""INSERT INTO optical_link(node_id,controller_id,channel_id,slot_id) VALUES(%s,%s,%s,%s)""",(node_id,controller_id,channel_id,slot_id))
-                c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",(node_id,controller_id,channel_id,slot_id))
-                (optical_link_id,) = c.fetchone()
+                #c.execute("""SELECT id FROM optical_link WHERE node_id=%s AND controller_id=%s AND channel_id=%s AND slot_id=%s""",(node_id,controller_id,channel_id,slot_id))
+                #(optical_link_id,) = c.fetchone()
+                optical_link_id = c.lastrowid
             else:
                 (optical_link_id,) = res
 
             # Check if board is already connected to another link
             board_on_other_link = 0
-            if (board_id != -1):
-                c.execute("""SELECT id FROM l_board_optical_link WHERE board_id=%s AND time_start<=%s AND time_stop>%s""",(board_id,f_datetime,f_datetime))
-                if (c.rowcount != 0):
-                    (old_link_id,) = c.fetchone()
-                    c.execute("""SELECT node_id,controller_id,channel_id,slot_id FROM optical_link WHERE id=%s""",(old_link_id,))
-                    (old_node_id,old_controller_id,old_channel_id,old_slot_id) = c.fetchone()
-                    if (old_node_id != node_id or old_controller_id != controller_id or old_channel_id != channel_id or old_slot_id != slot_id):
-                        print "WARNING - Cannot connect board %d to link %d:%d:%d:%d"%(board_id,node_id,controller_id,channel_id,slot_id)
-                        print "          Board already connected to link %d:%d:%d:%d"%(old_node_id,old_controller_id,old_channel_id,old_slot_id)
-                        board_on_other_link = 1
+            #if (board_id != -1):
+            #    c.execute("""SELECT id FROM l_board_optical_link WHERE board_id=%s AND time_start<=%s AND time_stop>%s""",(board_id,f_datetime,f_datetime))
+            #    if (c.rowcount != 0):
+            #        (old_link_id,) = c.fetchone()
+            #        c.execute("""SELECT node_id,controller_id,channel_id,slot_id FROM optical_link WHERE id=%s""",(old_link_id,))
+            #        (old_node_id,old_controller_id,old_channel_id,old_slot_id) = c.fetchone()
+            #        if (old_node_id != node_id or old_controller_id != controller_id or old_channel_id != channel_id or old_slot_id != slot_id):
+            #            print "WARNING - Cannot connect board %d to link %d:%d:%d:%d"%(board_id,node_id,controller_id,channel_id,slot_id)
+            #            print "          Board already connected to link %d:%d:%d:%d"%(old_node_id,old_controller_id,old_channel_id,old_slot_id)
+            #            board_on_other_link = 1
 
             # Check if board connected to link changed
             if (not board_on_other_link):
@@ -288,8 +290,32 @@ def main():
                     print "\tNew:",file_text
                     c.execute("""UPDATE file_type SET description=%s WHERE id=%s""",(file_text,file_type_id))
 
-    # Commit and close connection to DB
+    # Check that board-link connections are consistent after update
+    print "=== Current optical link configuration ==="
+    print "Link    S/N"
+    links = []
+    c.execute("""SELECT optical_link_id,board_id FROM l_board_optical_link WHERE time_stop>%s""",(time.strftime("%Y-%m-%d %H:%M:%S",time.gmtime()),))
+    links = c.fetchall()
+    for l1 in links:
+
+        (link_id,board_id) = l1
+        c.execute("""SELECT node_id,controller_id,channel_id,slot_id FROM optical_link WHERE id=%s""",(link_id,))
+        (node_id,controller_id,channel_id,slot_id) = c.fetchone()
+        c.execute("""SELECT serial_number FROM board WHERE id=%s""",(board_id,))
+        board_sn = c.fetchone()[0]
+        print "%s:%s:%s:%s %3s"%(node_id,controller_id,channel_id,slot_id,board_sn)
+
+        for l2 in links:
+            if l1 == l2: continue
+            if l1[0] == l2[0]:
+                print "WARNING: link %s is used twice:"%link_id,l1,l2
+            if l1[1] == l2[1]:
+                print "WARNING: board %s is used twice:"%board_id,l1,l2
+
+    # Commit all changes
     conn.commit()
+
+    # Close connection to DB
     conn.close()
       
 # Execution starts here

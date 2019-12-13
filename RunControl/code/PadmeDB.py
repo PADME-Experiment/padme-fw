@@ -119,6 +119,16 @@ class PadmeDB:
             print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
+    def set_run_time_create(self,run_nr,time_create):
+
+        self.check_db()
+        c = self.conn.cursor()
+        try:
+            c.execute("""UPDATE run SET time_create = %s WHERE number = %s""",(time_create,run_nr))
+        except MySQLdb.Error as e:
+            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+        self.conn.commit()
+
     def set_run_time_init(self,run_nr,time_init):
 
         self.check_db()

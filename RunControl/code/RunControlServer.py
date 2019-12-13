@@ -676,26 +676,6 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
             self.send_answer("error_init")
             return "error"
 
-        ## Create run structure in the DB
-        #if (self.run.run_number):
-        #
-        #    # Check if requested run number was not used before
-        #    # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
-        #    run_is_in_db = self.db.is_run_in_db(self.run.run_number)
-        #    if (run_is_in_db):
-        #        print "ERROR - Run %d is already in the DB: cannot use it again"%self.run.run_number
-        #        print "Please check if someone else is using this RunControl before retrying"
-        #        self.send_answer("error_init")
-        #        return "error"
-        #
-        #    print "Creating Run %d structure in DB"%self.run.run_number
-        #    if self.run.create_run_in_db() == "error":
-        #        print "ERROR - Cannot create Run in the DB"
-        #        return "error"
-        #
-        #    # Save time when run initialization starts
-        #    self.db.set_run_time_init(self.run.run_number,self.db.now_str())
-
         # Create directory to host log files
         print "Creating log directory %s"%self.run.log_dir
         self.run.create_log_dir()
@@ -862,6 +842,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         # All subsystems initialized: ready to start the run
         print "RunControl - All subsystems initialized: DAQ run can be started"
         if (self.run.run_number):
+            self.db.set_run_time_init(self.run.run_number,self.db.now_str())
             self.db.set_run_status(self.run.run_number,self.db.DB_RUN_STATUS_INITIALIZED)
         self.send_answer("init_ready")
         return "initialized"

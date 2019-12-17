@@ -69,29 +69,8 @@ class Merger:
     def format_config(self):
 
         cfgstring = ""
-        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%cfg
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%(cfg[0],cfg[1])
         return cfgstring
-
-        #cfgstring = ""
-        #cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
-        #cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        #cfgstring += "executable\t\t%s\n"%self.executable
-        #
-        #cfgstring += "run_number\t\t%d\n"%self.run_number
-        #if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
-        #
-        #cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        #cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
-        #
-        #cfgstring += "config_file\t\t%s\n"%self.config_file
-        #cfgstring += "log_file\t\t%s\n"%self.log_file
-        #
-        ##cfgstring += "output_mode\t\t%s\n"%self.output_mode
-        #
-        #cfgstring += "input_list\t\t%s\n"%self.input_list
-        #cfgstring += "output_list\t\t%s\n"%self.output_list
-        #
-        #return cfgstring
 
     def write_config(self):
 
@@ -117,23 +96,6 @@ class Merger:
         # Add all configuration parameters
         for cfg in self.config_list():
             self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
-
-        #self.db.add_cfg_para_proc(self.process_id,"daq_dir",    self.daq_dir)
-        #self.db.add_cfg_para_proc(self.process_id,"ssh_id_file",self.ssh_id_file)
-        #self.db.add_cfg_para_proc(self.process_id,"executable", self.executable)
-        #
-        ##self.db.add_cfg_para_proc(self.process_id,"run_number", repr(self.run_number))
-        #
-        ##self.db.add_cfg_para_proc(self.process_id,"node_id",    repr(self.node_id))
-        #self.db.add_cfg_para_proc(self.process_id,"node_ip",    self.node_ip)
-        #                                                 
-        #self.db.add_cfg_para_proc(self.process_id,"config_file",self.config_file)
-        #self.db.add_cfg_para_proc(self.process_id,"log_file",   self.log_file)
-        #
-        ##self.db.add_cfg_para_proc(self.process_id,"output_mode",self.output_mode)
-        #
-        #self.db.add_cfg_para_proc(self.process_id,"input_list", self.input_list)
-        #self.db.add_cfg_para_proc(self.process_id,"output_list",self.output_list)
 
         return "ok"
 

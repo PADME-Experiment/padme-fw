@@ -106,7 +106,7 @@ class PadmeDB:
         try:
             c.execute("""INSERT INTO run (number,name,run_type_id,status) VALUES (%s,%s,%s,%s)""",(run_nr,run_name,run_type_id,status))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::create_run - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_status(self,run_nr,status):
@@ -116,7 +116,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET status = %s WHERE number = %s""",(status,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_status - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_time_create(self,run_nr,time_create):
@@ -126,7 +126,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET time_create = %s WHERE number = %s""",(time_create,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_time_create - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_time_init(self,run_nr,time_init):
@@ -136,7 +136,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET time_init = %s WHERE number = %s""",(time_init,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_time_init - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_time_start(self,run_nr,time_start):
@@ -146,7 +146,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET time_start = %s WHERE number = %s""",(time_start,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_time_start - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_time_stop(self,run_nr,time_stop):
@@ -156,7 +156,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET time_stop = %s WHERE number = %s""",(time_stop,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_time_stop - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_user(self,run_nr,user):
@@ -167,7 +167,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET user = %s WHERE number = %s""",(user,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_user - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def add_run_log_entry(self,run_nr,comm_type,comm_level,comm_time,comment):
@@ -179,7 +179,7 @@ class PadmeDB:
             c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",
                       (run_nr,comm_type,comm_level,comm_time,comment))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_log_entry - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_run_comment_start(self,run_nr,comm_time,comment):
@@ -200,7 +200,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE run SET total_events = %s WHERE number = %s""",(total_events,run_nr))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_run_total_events - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def create_process(self,run_number,proc_type,node_id):
@@ -223,9 +223,9 @@ class PadmeDB:
 
         # Create process and get its id
         try:
-            c.execute("""INSERT INTO process (run_number,proc_type_id,status) VALUES (%s,%s,%s)""",(run_number,proc_type_id,0))
+            c.execute("""INSERT INTO process (run_number,process_type_id,status) VALUES (%s,%s,%s)""",(run_number,proc_type_id,0))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::create_process - MySQL Error:%d:%s"%(e.args[0],e.args[1])
             return -1
         process_id = c.lastrowid
 
@@ -238,7 +238,7 @@ class PadmeDB:
                 try:
                     c.execute("""UPDATE process SET node_id = %s WHERE id = %s""",(node_id,process_id))
                 except MySQLdb.Error as e:
-                    print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+                    print "PadmeDB::create_process - MySQL Error:%d:%s"%(e.args[0],e.args[1])
 
         self.conn.commit()
 
@@ -281,6 +281,10 @@ class PadmeDB:
 
     def add_daq_process_optical_link(self,proc_id,node_id,conet2_link,conet2_slot):
 
+        # Add optical link to DAQ process
+        self.check_db()
+        c = self.conn.cursor()
+
         link_id = self.get_link_id(node_id,conet2_link/8,conet2_link%8,conet2_slot)
         if link_id == -1:
             print "PadmeDB::add_daq_process_optical_link - WARNING - Cannot get link for (process,node,link,slot)=(%d,%d,%d,%d)"%(proc_id,node_id,conet2_link,conet2_slot)
@@ -288,7 +292,7 @@ class PadmeDB:
             try:
                 c.execute("""INSERT INTO daq_link (process_id,optical_link_id) VALUES (%s,%s)""",(proc_id,link_id))
             except MySQLdb.Error as e:
-                print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+                print "PadmeDB::add_daq_process_optical_link - MySQL Error:%d:%s"%(e.args[0],e.args[1])
 
     def add_proc_log_entry(self,proc_id,comm_type,comm_level,comm_time,comment):
 
@@ -299,7 +303,7 @@ class PadmeDB:
             c.execute("""INSERT INTO log_entry (run_number,type,level,time,text) VALUES (%s,%s,%s,%s,%s)""",
                       (run_nr,comm_type,comm_level,comm_time,comment))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::add_proc_log_entry - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_status(self,proc_id,status):
@@ -309,7 +313,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET status = %s WHERE id = %s""",(status,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_status - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_time_create(self,proc_id,time_create):
@@ -319,7 +323,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET time_create = %s WHERE id = %s""",(time_create,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_time_create - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_time_end(self,proc_id,time_end):
@@ -329,7 +333,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET time_end = %s WHERE id = %s""",(time_end,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_time_end - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_time_start(self,proc_id,time_start):
@@ -339,7 +343,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET time_start = %s WHERE id = %s""",(time_start,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_time_start - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_time_stop(self,proc_id,time_stop):
@@ -349,7 +353,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET time_stop = %s WHERE id = %s""",(time_stop,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_time_stop - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_total_events(self,proc_id,events):
@@ -359,7 +363,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET total_events = %s WHERE id = %s""",(events,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_total_events - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_total_size(self,proc_id,size):
@@ -369,7 +373,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET total_size = %s WHERE id = %s""",(size,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_total_size - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def set_process_n_files(self,proc_id,n_files):
@@ -379,7 +383,7 @@ class PadmeDB:
         try:
             c.execute("""UPDATE process SET n_files = %s WHERE id = %s""",(n_files,proc_id))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::set_process_n_files - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def create_file(self,file_name,file_type,fmt_version,proc_id,file_index):
@@ -471,7 +475,7 @@ class PadmeDB:
             c.execute("""INSERT INTO run_config_para (run_number,config_para_name_id,value) VALUES (%s,%s,%s)""",
                       (run_nr,para_id,para_val))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::add_cfg_para_run - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def add_cfg_para_proc(self,proc_id,para_name,para_value):
@@ -483,7 +487,7 @@ class PadmeDB:
             c.execute("""INSERT INTO proc_config_para (process_id,config_para_name_id,value) VALUES (%s,%s,%s)""",
                       (proc_id,para_id,para_value))
         except MySQLdb.Error as e:
-            print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+            print "PadmeDB::add_cfg_para_proc - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
     def get_para_id(self,para_name):
@@ -498,7 +502,7 @@ class PadmeDB:
                 c.execute("""INSERT INTO config_para_name (name) VALUES (%s)""",(para_name,))
                 para_id = c.lastrowid
             except MySQLdb.Error as e:
-                print "MySQL Error:%d:%s"%(e.args[0],e.args[1])
+                print "PadmeDB::get_para_id - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         else:
             (para_id,) = res
         self.conn.commit()
@@ -624,79 +628,48 @@ class PadmeDB:
 
         return link_id
 
-    #def get_merger_final_info(self,merger_proc_id):
-    #
-    #    # Return final events and size info from merger
-    #
-    #    tot_evts = -1
-    #    tot_size = -1
-    #    
-    #    self.check_db()
-    #    c = self.conn.cursor()
-    #
-    #    c.execute("""SELECT total_events,total_size FROM process WHERE id=%s""",(merger_proc_id,))
-    #    ret = c.fetchone()
-    #    if ret != None: (tot_evts,tot_size) = ret
-    #
-    #    self.conn.commit()
-    #
-    #    return (tot_evts,tot_size)
-
     def init_dbinfo_regexp(self):
 
         # All DBINFO lines start with "DBINFO - <date> <time> - ", e.g. "DBINFO - 2019/10/08 12:32:44 - "
         dbinfo_head = "^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+"
 
         # file_create <file_name> <file_type> <format_version> <process_id> <file_index>
-        #self.re_file_create = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$")
         self.re_file_create = re.compile("%sfile_create\s+(\S+)\s+(\S+)\s+(\d+)\s+(\d+)\s*$"%dbinfo_head)
 
         # file_set_time_open <file_name> <date> <time>
-        #self.re_file_set_time_open = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
         self.re_file_set_time_open = re.compile("%sfile_set_time_open\s+(\S+)\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # file_set_time_close <file_name> <date> <time>
-        #self.re_file_set_time_close = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
         self.re_file_set_time_close = re.compile("%sfile_set_time_close\s+(\S+)\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # file_set_n_events <file_name> <n_events>
-        #self.re_file_set_n_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_n_events\s+(\S+)\s+(\d+)\s*$")
         self.re_file_set_n_events = re.compile("%sfile_set_n_events\s+(\S+)\s+(\d+)\s*$"%dbinfo_head)
 
         # file_set_size <file_name> <size>
-        #self.re_file_set_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+file_set_size\s+(\S+)\s+(\d+)\s*$")
         self.re_file_set_size = re.compile("%sfile_set_size\s+(\S+)\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_status <status>
-        #self.re_process_set_status = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_status\s+(\d+)\s*$")
         self.re_process_set_status = re.compile("%sprocess_set_status\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_time_start <date> <time>
-        #self.re_process_set_time_start = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_start\s+(\S+)\s+(\S+)\s*$")
         self.re_process_set_time_start = re.compile("%sprocess_set_time_start\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # process_set_time_stop <date> <time>
-        #self.re_process_set_time_stop = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_time_stop\s+(\S+)\s+(\S+)\s*$")
         self.re_process_set_time_stop = re.compile("%sprocess_set_time_stop\s+(\S+)\s+(\S+)\s*$"%dbinfo_head)
 
         # process_set_total_events <total_events>
-        #self.re_process_set_total_events = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_events\s+(\d+)\s*$")
         self.re_process_set_total_events = re.compile("%sprocess_set_total_events\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_total_size <total_size>
-        #self.re_process_set_total_size = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_total_size\s+(\d+)\s*$")
         self.re_process_set_total_size = re.compile("%sprocess_set_total_size\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_n_files <n_files>
-        #self.re_process_set_n_files = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+process_set_n_files\s+(\d+)\s*$")
         self.re_process_set_n_files = re.compile("%s^process_set_n_files\s+(\d+)\s*$"%dbinfo_head)
 
         # add_proc_config_para <parameter_name> <parameter_value>
-        #self.re_add_proc_config_para = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_config_para\s+(\S+)\s+(\S.*)$")
         self.re_add_proc_config_para = re.compile("%sadd_proc_config_para\s+(\S+)\s+(\S.*)$"%dbinfo_head)
 
         # add_proc_log_entry <type> <level> <text>
-        #self.re_add_proc_log_entry = re.compile("^\s*DBINFO\s+-\s+(\S+)\s+(\S+)\s+-\s+add_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$")
         self.re_add_proc_log_entry = re.compile("%sadd_proc_log_entry\s+(\S+)\s+(\d+)\s+(\S.*)$"%dbinfo_head)
 
     def manage_dbinfo_entry(self,proc_id,dbinfo_line):
@@ -806,7 +779,7 @@ class PadmeDB:
             dbinfo_time = m.group(2)
             para_name   = m.group(3)
             para_value  = m.group(4)
-            self.add_cfg_para_proc(proc_id,para_name,para_val)
+            self.add_cfg_para_proc(proc_id,para_name,para_value)
             return True
 
         m = self.re_add_proc_log_entry.match(dbinfo_line)

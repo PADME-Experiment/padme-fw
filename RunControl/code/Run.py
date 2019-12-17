@@ -71,21 +71,14 @@ class Run:
 
     def change_run(self):
 
-        # If this is a real run, create it in the DB
+        # Check if requested run number was not used before
+        # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
         if (self.run_number):
-
-            # Check if requested run number was not used before
-            # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
             run_is_in_db = self.db.is_run_in_db(self.run_number)
             if (run_is_in_db):
                 print "Run::change_run - ERROR - Run %d is already in the DB: cannot use it again"%self.run_number
                 print "Please check if someone else is using this RunControl before retrying"
                 #self.send_answer("error_init")
-                return False
-
-            print "Creating Run %d structure in DB"%self.run.run_number
-            if self.create_run_in_db() == "error":
-                print "Run::change_run - ERROR - Cannot create Run in the DB"
                 return False
 
         # Define run name using run number and start time
@@ -96,22 +89,17 @@ class Run:
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
-        self.config_dir = self.run_dir+"/cfg"
-        #self.config_file = "run_%d.cfg"%self.run_number
-        #self.config_file_head = "run_%d"%self.run_number
+        self.config_dir = "%s/cfg"%self.run_dir
         self.config_file = "%s.cfg"%self.run_name
         self.config_file_head = self.run_name
 
-        self.log_dir = self.run_dir+"/log"
-        #self.log_file_head = "run_%d"%self.run_number
+        self.log_dir = "%s/log"%self.run_dir
         self.log_file_head = self.run_name
 
-        self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
-        #self.stream_head = "run_%d"%self.run_number
+        self.stream_dir = "%s/local/streams/%s"%(self.daq_dir,self.run_name)
         self.stream_head = self.run_name
 
         self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
-        #self.rawdata_head = "run_%d"%self.run_number
         self.rawdata_head = self.run_name
 
         # Make sure Merger runs on a different node after each run
@@ -131,6 +119,13 @@ class Run:
         # Configure Level1 processes for this run
         for level1 in self.level1_list:
             self.runconfig_level1(level1)
+
+        # If this is a real run, create it in the DB
+        if (self.run_number):
+            print "Creating Run %d structure in DB"%self.run_number
+            if self.create_run_in_db() == "error":
+                print "Run::change_run - ERROR - Cannot create Run in the DB"
+                return False
 
         return True
 
@@ -174,10 +169,10 @@ class Run:
         self.level1_list = []
 
         self.run_number = 0
-        self.run_name = "run_0_%s"%time.strftime("%Y%m%d_%H%M%S",time.gmtime())
+        self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
         self.run_type = "TEST"
         self.run_user = "PADME crew"
-        self.run_comment_start = "Generic run"
+        self.run_comment_start = "Generic start of run"
         self.run_comment_end = "Generic end of run"
 
         self.run_dir = "%s/runs/%s"%(self.daq_dir,self.run_name)
@@ -192,8 +187,10 @@ class Run:
         self.stream_dir = "%s/local/streams/%s"%(self.daq_dir,self.run_name)
         self.stream_head = self.run_name
 
+        self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
+        self.rawdata_head = self.run_name
+
         self.trigger_node = "localhost"
-        #self.trigger_mask = "111111"
 
         self.merger_node = "localhost"
         self.merger_node_list = []
@@ -323,7 +320,7 @@ class Run:
         cfg_list.append(["trigger_node",    self.trigger_node])
 
         if self.merger_node:
-            cfg_list.append(["merger_node", self.merger_node)]
+            cfg_list.append(["merger_node", self.merger_node])
 
         if self.merger_node_list:
             cfg_list.append(["merger_node_list"," ".join(self.merger_node_list)])
@@ -338,7 +335,7 @@ class Run:
     def format_config(self):
 
         cfgstring = ""
-        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%cfg
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%(cfg[0],cfg[1])
         return cfgstring
 
     def create_run_in_db(self):

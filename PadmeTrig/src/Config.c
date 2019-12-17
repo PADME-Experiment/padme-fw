@@ -565,6 +565,7 @@ int print_config(){
 
 }
 
+/*
 // Save configuration parameters to DB
 int save_config()
 {
@@ -664,6 +665,7 @@ int save_config()
   return 0;
 
 }
+*/
 
 int end_config()
 {

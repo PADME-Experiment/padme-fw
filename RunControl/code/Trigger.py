@@ -193,12 +193,12 @@ class Trigger:
         cfg_list.append(["trigger_addr",              self.trigger_addr])
         cfg_list.append(["trigger_port",              str(self.trigger_port)])
 
-        cfg_list.append(["trigger_mask",              "%#02x"%self.trigger_mask])
-        cfg_list.append(["busy_mask",                 "%#02x"%self.busy_mask])
+        cfg_list.append(["trigger_mask",              "%#2.2x"%self.trigger_mask])
+        cfg_list.append(["busy_mask",                 "%#2.2x"%self.busy_mask])
 
-        cfg_list.append(["trigger0_delay",            "%#02x"%self.trigger0_delay])
+        cfg_list.append(["trigger0_delay",            "%#2.2x"%self.trigger0_delay])
 
-        cfg_list.append(["correlated_trigger_delay",  "%#04x"%self.correlated_trigger_delay])
+        cfg_list.append(["correlated_trigger_delay",  "%#4.4x"%self.correlated_trigger_delay])
 
         if (self.trigger_mask & 0x01):
             #cfg_list.append(["trig0_scale_global",    str(self.trig0_scale_global)])
@@ -232,8 +232,8 @@ class Trigger:
             cfg_list.append(["trig7_scale_global",    str(self.trig7_scale_global)])
             cfg_list.append(["trig7_scale_autopass",  str(self.trig7_scale_autopass)])
 
-        cfg_list.append(["timepix_shutter_delay",     "%#02x"%self.timepix_shutter_delay])
-        cfg_list.append(["timepix_shutter_width",     "%#02x"%self.timepix_shutter_width])
+        cfg_list.append(["timepix_shutter_delay",     "%#2.2x"%self.timepix_shutter_delay])
+        cfg_list.append(["timepix_shutter_width",     "%#2.2x"%self.timepix_shutter_width])
 
         cfg_list.append(["daq_loop_delay",            str(self.daq_loop_delay)])
 

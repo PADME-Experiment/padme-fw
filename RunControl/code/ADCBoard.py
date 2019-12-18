@@ -228,13 +228,13 @@ class ADCBoard:
         cfg_list.append(["trigger_mode",         str(self.trigger_mode)])
         cfg_list.append(["trigger_iolevel",      self.trigger_iolevel])
 
-        cfg_list.append(["group_enable_mask",    "%#1x"%self.group_enable_mask])
-        cfg_list.append(["channel_enable_mask",  "%#08x"%self.channel_enable_mask])
+        cfg_list.append(["group_enable_mask",    "%#1.1x"%self.group_enable_mask])
+        cfg_list.append(["channel_enable_mask",  "%#8.8x"%self.channel_enable_mask])
 
-        cfg_list.append(["offset_global",        "%#04x"%self.offset_global])
+        cfg_list.append(["offset_global",        "%#4.4x"%self.offset_global])
         for ch in range(32):
             if (self.offset_ch[ch] != self.offset_global):
-                cfg_list.append(["offset_ch",    "%2d %#04x"%(ch,self.offset_ch[ch])])
+                cfg_list.append(["offset_ch",    "%2d %#4.4x"%(ch,self.offset_ch[ch])])
 
         cfg_list.append(["post_trigger_size",    str(self.post_trigger_size)])
         cfg_list.append(["max_num_events_blt",   str(self.max_num_events_blt)])
@@ -242,7 +242,7 @@ class ADCBoard:
         cfg_list.append(["drs4corr_enable",      str(self.drs4corr_enable)])
         cfg_list.append(["drs4_sampfreq",        str(self.drs4_sampfreq)])
 
-        cfg_list.append(["auto_threshold",       "%#04x"%self.auto_threshold])
+        cfg_list.append(["auto_threshold",       "%#4.4x"%self.auto_threshold])
         cfg_list.append(["auto_duration",        str(self.auto_duration)])
 
         cfg_list.append(["daq_loop_delay",       str(self.daq_loop_delay)])

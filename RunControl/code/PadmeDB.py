@@ -664,7 +664,7 @@ class PadmeDB:
         self.re_process_set_total_size = re.compile("%sprocess_set_total_size\s+(\d+)\s*$"%dbinfo_head)
 
         # process_set_n_files <n_files>
-        self.re_process_set_n_files = re.compile("%s^process_set_n_files\s+(\d+)\s*$"%dbinfo_head)
+        self.re_process_set_n_files = re.compile("%sprocess_set_n_files\s+(\d+)\s*$"%dbinfo_head)
 
         # add_proc_config_para <parameter_name> <parameter_value>
         self.re_add_proc_config_para = re.compile("%sadd_proc_config_para\s+(\S+)\s+(\S.*)$"%dbinfo_head)
@@ -792,7 +792,7 @@ class PadmeDB:
             self.add_proc_log_entry(proc_id,log_type,log_level,"%s %s"%(dbinfo_date,dbinfo_time),log_text)
             return True
 
-        print "PadmeDB::manage_dbinfo_entry- WARNING - DBINFO line has unknown format\n%s"%dbinfo_line
+        print "PadmeDB::manage_dbinfo_entry - WARNING - DBINFO line has unknown format\n%s"%dbinfo_line
         return False
 
     def now_str(self):

@@ -37,7 +37,8 @@ class ADCBoard:
         self.executable = os.getenv('PADME',".")+"/PadmeDAQ/PadmeDAQ.exe"
 
         self.run_number = 0
-        self.process_id = -1
+        self.proc_daq_id = -1
+        self.proc_zsup_id = -1
 
         self.process_mode = "DAQ"
 
@@ -198,8 +199,8 @@ class ADCBoard:
         cfg_list.append(["run_number",           str(self.run_number)])
         cfg_list.append(["board_id",             str(self.board_id)])
         cfg_list.append(["process_mode",         self.process_mode])
-        if (self.run_number):
-            cfg_list.append(["process_id",       str(self.proc_daq_id)])
+        #if (self.run_number):
+        #    cfg_list.append(["process_id",       str(self.proc_daq_id)])
 
         cfg_list.append(["node_id",              str(self.node_id)])
         cfg_list.append(["node_ip",              self.node_ip])
@@ -262,8 +263,8 @@ class ADCBoard:
         cfg_list.append(["run_number",               str(self.run_number)])
         cfg_list.append(["board_id",                 str(self.board_id)])
         cfg_list.append(["process_mode",             "ZSUP"])
-        if (self.run_number):
-            cfg_list.append(["process_id",           str(self.proc_zsup_id)])
+        #if (self.run_number):
+        #    cfg_list.append(["process_id",           str(self.proc_zsup_id)])
 
         cfg_list.append(["node_id",                  str(self.node_id)])
         cfg_list.append(["node_ip",                  self.node_ip])

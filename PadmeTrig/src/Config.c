@@ -33,7 +33,7 @@ int init_config()
 int reset_config()
 {
 
-  Config->process_id = 0;
+  //Config->process_id = 0;
 
   strcpy(Config->config_file,"");
 
@@ -192,14 +192,15 @@ int read_config(char *cfgfile)
       //printf("Parameter <%s> Value <%s>\n",param,value);
 
       // Interpret parameter
-      if ( strcmp(param,"process_id")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->process_id = v;
-	  printf("Parameter %s set to %d\n",param,v);
-	} else {
-	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
-	}
-      } else if ( strcmp(param,"start_file")==0 ) {
+      //if ( strcmp(param,"process_id")==0 ) {
+      //	if ( sscanf(value,"%d",&v) ) {
+      //	  Config->process_id = v;
+      //	  printf("Parameter %s set to %d\n",param,v);
+      //	} else {
+      //	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+      //	}
+      //} else if ( strcmp(param,"start_file")==0 ) {
+      if ( strcmp(param,"start_file")==0 ) {
 	if ( strlen(value)<MAX_FILE_LEN ) {
 	  strcpy(Config->start_file,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
@@ -497,7 +498,7 @@ int read_config(char *cfgfile)
 int print_config(){
 
   printf("\n=== Configuration parameters for this run ===\n");
-  printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
+  //printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
 
   printf("start_file\t\t'%s'\tname of start file. DAQ will start when this file is created\n",Config->start_file);

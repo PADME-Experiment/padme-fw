@@ -218,6 +218,7 @@ int ZSUP_readdata ()
   // Tell DB that the process has started
   printf("- Setting process status to RUNNING (%d)\n",DB_STATUS_RUNNING);
   printf("DBINFO - %s - process_set_status %d\n",format_time(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %s\n",format_time(time(0)),format_time(t_daqstart));
 
   // Register the output file in the DB and send it the header
 
@@ -521,7 +522,7 @@ int ZSUP_readdata ()
   printf("DBINFO - %s - process_set_total_events %d\n",format_time(time(0)),totalWriteEvents);
   printf("DBINFO - %s - process_set_total_size %ld\n",format_time(time(0)),totalWriteSize);
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
-    printf("DBINFO - process_set_n_files %d %d\n",Config->process_id,fileIndex);
+    printf("DBINFO - %s - process_set_n_files %d\n",format_time(time(0)),fileIndex);
   }
 
   // Give some final report

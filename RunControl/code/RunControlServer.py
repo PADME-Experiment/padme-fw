@@ -979,6 +979,9 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         for lvl1 in self.run.level1_list:
             lvl1.parse_log()
 
+        # Update total number of events for run
+        self.db.set_run_total_events(self.run.run_number,self.db.compute_run_total_events(self.run.run_number))
+
         # Clean up run directory
         self.run.clean_up()
 

@@ -166,8 +166,8 @@ class Trigger:
 
         cfg_list.append(["run_number",                str(self.run_number)])
         #cfg_list.append(["process_mode",              self.process_mode])
-        if (self.run_number):
-            cfg_list.append(["process_id",            str(self.process_id)])
+        #if (self.run_number):
+        #    cfg_list.append(["process_id",            str(self.process_id)])
 
         cfg_list.append(["node_id",                   str(self.node_id)])
         cfg_list.append(["node_ip",                   self.node_ip])
@@ -298,7 +298,8 @@ class Trigger:
             return 0
 
         # Tag start of process in DB
-        if self.run_number: self.db.set_process_time_create(self.process_id,self.db.now_str())
+        if self.run_number:
+            self.db.set_process_time_create(self.process_id,self.db.now_str())
 
         # Return process id
         return self.process.pid
@@ -328,7 +329,7 @@ class Trigger:
             print command
             os.system(command)
 
-        # Wait up to 5 seconds for DAQ to stop on interrupt
+        # Wait up to 5 seconds for Trigger process to stop on interrupt
         for i in range(10):
             if self.process.poll() != None:
                 # Process exited: clean up defunct process and close log file

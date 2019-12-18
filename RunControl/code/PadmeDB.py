@@ -109,6 +109,22 @@ class PadmeDB:
             print "PadmeDB::create_run - MySQL Error:%d:%s"%(e.args[0],e.args[1])
         self.conn.commit()
 
+    def get_run_number(self,run_name):
+
+        self.check_db()
+        c = self.conn.cursor()
+
+        # Get run_number
+        c.execute("""SELECT number FROM run WHERE name = %s""",(run_name,))
+        if (c.rowcount == 0):
+            print "PadmeDB::get_run_number - WARNING - Could not find run with name %s"%run_name
+            return -1
+        res = c.fetchone()
+        (run_number,) = res
+        self.conn.commit()
+
+        return run_number
+
     def set_run_status(self,run_nr,status):
 
         self.check_db()
@@ -191,6 +207,30 @@ class PadmeDB:
 
         # Add end-of-run comment to run
         self.add_run_log_entry(run_nr,"EOR",0,comm_time,comment)
+
+    def compute_run_total_events(self,run_nr):
+
+        # Compute total number of events written by all Level1 processes of run
+
+        total_events = 0
+
+        self.check_db()
+        c = self.conn.cursor()
+        c.execute("""
+SELECT p.total_events FROM process p
+    INNER JOIN run r           ON r.number = p.run_number
+    INNER JOIN process_type pt ON pt.id = p.process_type_id
+WHERE r.number = %s and pt.type = %s
+        """,(run_nr,"LEVEL1"))
+        resall = c.fetchall()
+        if resall:
+            for res in resall:
+                if res[0]:
+                    total_events += res[0]
+
+        self.conn.commit()
+
+        return total_events
 
     def set_run_total_events(self,run_nr,total_events):
 

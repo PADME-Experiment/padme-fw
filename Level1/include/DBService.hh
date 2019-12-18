@@ -1,15 +1,15 @@
 #ifndef DBService_H
 #define DBService_H
 
-#include <vector>
-#include <string>
-#include <mysql/mysql.h>
+//#include <vector>
+//#include <string>
+//#include <mysql/mysql.h>
 
-// Return codes for DB service calls
-#define DBSERVICE_OK           0
-#define DBSERVICE_ERROR        1
-#define DBSERVICE_SQLERROR     2
-#define DBSERVICE_CONNECTERROR 3
+//// Return codes for DB service calls
+//#define DBSERVICE_OK           0
+//#define DBSERVICE_ERROR        1
+//#define DBSERVICE_SQLERROR     2
+//#define DBSERVICE_CONNECTERROR 3
 
 // Definition of process status values in DB
 #define DB_STATUS_IDLE         0
@@ -22,7 +22,7 @@
 #define DB_STATUS_FINISHED     7
 #define DB_STATUS_CLOSE_FAIL   8
 #define DB_STATUS_UNKNOWN      9
-
+/*
 class DBService
 {
 
@@ -65,4 +65,5 @@ private:
   MYSQL* fDBHandle;
 
 };
+*/
 #endif

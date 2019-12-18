@@ -11,13 +11,15 @@
 #include "TFile.h"
 #include "TList.h"
 #include "TH1D.h"
+#include "TH1F.h"
+#include "TH2F.h"
 #include "TTree.h"
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
 class DigitizerChannelECal : public ChannelVReco {
 public:
-  DigitizerChannelECal(){;};
+  DigitizerChannelECal(){fCountEvent=0; fCountEventControl=0;};
   ~DigitizerChannelECal();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
@@ -35,6 +37,8 @@ public:
   void PrintConfig();
 
   void ResetPedestal();
+  
+  void PeakMultiHit(UShort_t iDer, std::vector<TRecoVHit *> &hitArray);
 
   Bool_t pedestalsFromFirstSamples() {return (fPedestalMode==0);}
   Bool_t pedestalsFromAutoTrgEvents(){return (fPedestalMode==1);}
@@ -44,12 +48,16 @@ public:
   Double_t CalcPedestal();
   Double_t CalcCharge(UShort_t);
   Double_t CalcChargeSin(UShort_t); //single hit pedestal M. Raggi 22/01/2019
+  Double_t CalcChargeSin(UShort_t,std::vector<Double_t> input);
   Double_t CalcTime(UShort_t);
   Double_t CalcTimeSing(UShort_t);
   Double_t CalcTimeOver(UShort_t);
   Double_t PeakSearch();
 
   void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
+  void DrawMeanWave(UShort_t iDer,Double_t& SeconEnergy,Double_t& SecondTime,Double_t& ThirdEnergy,Double_t& ThirdTime, Bool_t& SecondHit, Bool_t& ThirdHit);
+  void MakeDifferenceWaveformTeplate(std::vector<Double_t> input,Int_t MaxBin, std::vector<Double_t>& tempWave, std::vector<Double_t>& output, Bool_t& OutRMS);
+  Double_t MakeDerivativeAndTakeMaxTime(Int_t iDer, Int_t nsmooth, std::vector<Double_t> wave);
   //Standard hits corrections
   Double_t ScaleToFullInt(UShort_t);    // Scale the integral of the signal independetly of the start time. 
   Bool_t   IsSaturated();   // Check if the signal is saturated
@@ -91,6 +99,7 @@ private:
   Short_t fIMax;
   Double_t fPed;
   Double_t fCharge;
+  Double_t fAmplitude;
   // Double_t fChargeSin;
   Double_t fTime;
   Double_t fTimeSin;
@@ -106,6 +115,8 @@ private:
   Double_t fAvg200;
   Double_t fTrig;
   Double_t fVMax;
+  Double_t fDiffTimeWave; 
+  Double_t fEnergySecondHit;
 
   Int_t fNSat;
   Int_t fCountsLastSat;
@@ -192,10 +203,28 @@ private:
   TH1F * hSignal;
   TH1F * hSat;
   TH1F * hDiff;
+  TH1F * hSignalShifted;
 
   TH1F * hSigOv;
   TH1F * hSigOvSm;
   TH1F * hdxdtSigOvSm;
+  
+  TH1F *hAmplitude;
+  TH1F *hDiffSignal;
+  TH1F *hTemplate; 
+  TH1F *hCharge;
+  TH2F *hAmplitudeVSCharge;
+  TH1F *hDiffWavetemplate;
+  TH1F *hChargeSecondHit;
+  TH1F *hEnergySecondHit;
+  TH1F *hCharge3Hit;
+  TH1F *hEnergy3Hit;
+  TH1F *hECALsecondHitE;
+  TH1F *hDiffTimeHitWaveform;
+
+  TH1F *hECALfirsthitEnergyCorrected;
+  TH1F *hECALsecondhitEnergyCorrected;
+  TH1F *hECALthirdhitEnergyCorrected;
 
 
 
@@ -216,6 +245,9 @@ private:
   Double_t AbsSamRec[1024];
   Double_t AbsSamRec200[1024];
   Double_t AbsSamRecHyb[1024];
+  
+  Double_t fTemplate[1001];
+  Bool_t fFirstHit;
 
   //Temporary histo pointers
   TH1D* histo;
@@ -231,6 +263,9 @@ private:
   TList* hListEv;  // More general histograms 
   TList* hListTmp;  // More general histograms 
   TTree* ECal;
+  
+  Int_t fCountEvent;
+  Int_t fCountEventControl;
   
 };
 #endif

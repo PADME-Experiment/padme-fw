@@ -6,6 +6,10 @@
 #include "TSpectrum.h"
 #include "TRandom.h"
 
+#include <vector>
+#include <numeric>
+#include <functional>
+
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
@@ -38,7 +42,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 {
 // Setting flags for running modes.
   fGlobalMode = gOptions;
-
+  
   
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
   fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
@@ -69,7 +73,6 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
   fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.30e-9);
 
-
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
   if (!pedestalsFromFirstSamples()) SetAnalogOffSets();  //M. Raggi: 21/01/2019 read fixed anaolg values from files
@@ -78,6 +81,18 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
     PrepareDebugHistos(); //debugging mode histos
   }
+  Int_t i=0;
+  ifstream myfile;
+  myfile.open ("template.txt");;
+  if (myfile.is_open()){
+   while (!myfile.eof()) {
+   myfile >> fTemplate[i];
+  if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
+   //std::cout<< Template[i] << std::endl;
+   i++;
+   }
+  }
+  
 }
 
 void DigitizerChannelECal::PrepareTmpHistos(){
@@ -85,6 +100,8 @@ void DigitizerChannelECal::PrepareTmpHistos(){
   if(!fUseOverSample){
     hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
     hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+    hListTmp->Add(hSignalShifted = new TH1F("hSignalShifted","hSignalShifted",1000,0.,1000.));
+    hListTmp->Add(hDiffSignal = new TH1F("hDiffSignal","hDiffSignal",1000,0.,1000.));
     hListTmp->Add(hSat    = new TH1F("hSat","hSat",1000,0.,1000.));
   }
   // over sampled histograms
@@ -94,6 +111,7 @@ void DigitizerChannelECal::PrepareTmpHistos(){
     hListTmp->Add(hSigOvSm     = new TH1F("hSigOvSm","hSigOvSm",nbinx,0.,nbinx/4));
     hListTmp->Add(hdxdtSigOvSm = new TH1F("hdxdtSigOvSm","hdxdtSigOvSm",nbinx,0.,nbinx/4));
   }
+
 }
 
 void DigitizerChannelECal::PrepareDebugHistos(){
@@ -114,6 +132,8 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   ECal->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
   ECal->Branch("IsSat",&IsSat);
   ECal->Branch("VMax",&fVMax);
+  // ECal->Branch("DiffTimeWave", &fDiffTimeWave);
+  //ECal->Branch("EnergySecondHit",&fEnergySecondHit);
 
   hPedCalo = new TH1D*[32];
   hAvgCalo = new TH1D*[32];
@@ -129,6 +149,24 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
   hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
   hListCal->Add(hTIntCorr= new TH1F("hTIntCorr","hTIntCorr",500,0.,1.));
+  
+  // histo control charge
+  hListCal->Add(hAmplitude= new TH1F("hAmplitude","hAmplitude",1000,0.,500.)); 
+  hListCal->Add(hCharge= new TH1F("hCharge","hCharge",1500,-500.,1000.));  
+  hListCal->Add(hAmplitudeVSCharge= new TH2F("hAmplitudeVSCharge","hAmplitudeVSCharge",1000,0.,500.,1500,-500.,1000.)); 
+  hListCal->Add(hDiffWavetemplate = new TH1F("hDiffWavetemplate", "hDiffWavetemplate", 500, -100,200));
+  hListCal->Add(hChargeSecondHit = new TH1F("hChargeSecondHit", "hChargeSecondHit", 1500, -100, 1500));
+  hListCal->Add(hEnergySecondHit = new TH1F("hEnergySecondHit", "hEnergySecondHit", 1500, -100, 1500));
+  hListCal->Add(hCharge3Hit = new TH1F("hCharge3Hit", "hCharge3Hit", 1500, -100, 1500));
+  hListCal->Add(hEnergy3Hit = new TH1F("hEnergy3Hit", "hEnergy3Hit", 1500, -100, 1500));
+  hListCal->Add(hECALsecondHitE      = new TH1F("ECAsecondLHitE","ECALsecondHitE",550,0,550));
+  hListCal->Add(hDiffTimeHitWaveform = new TH1F("DiffTimeHitWaveform","DiffTimeHitWaveform",550,-500,500));
+  hListCal->Add(hECALfirsthitEnergyCorrected = new TH1F("hECALfirsthitEnergyCorrected","hECALfirsthitEnergyCorrected",1500,-100,1550));
+  hListCal->Add(hECALsecondhitEnergyCorrected = new TH1F("hECALsecondhitEnergyCorrected","hECALsecondhitEnergyCorrected",1500,-100,1550));
+  hListCal->Add(hECALthirdhitEnergyCorrected = new TH1F("hECALthirdhitEnergyCorrected","hECALthirdhitEnergyCorrected",1500,-100,1550));
+
+  //histo ECAL template
+  hListCal->Add(hTemplate= new TH1F("hTemplate","hTemplate",1000,0.,1000.));
   
   for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
@@ -450,8 +488,10 @@ Double_t DigitizerChannelECal::CalcTimeOver(UShort_t iDer) {
 
 // first approximation timing algorithm to be optimized  M. Raggi
 Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
-  Int_t ll;
-
+  // std::cout<<"CalcTimeSing.....................................n Event "<< fCountEventControl <<std::endl;
+ fCountEventControl++;
+ Int_t ll;
+ fAmplitude=0.;
   static Double_t dxdt[1001];
   static Double_t Temp[1001];
   static Double_t Temp1[1001];
@@ -517,6 +557,7 @@ Double_t DigitizerChannelECal::CalcTimeSing(UShort_t iDer) {
   Int_t MaxBin = histo->GetMaximumBin();
   Int_t Max    = histo->GetMaximum();
   fTimeSin = (Double_t)MaxBin*fTimeBin; 
+  fAmplitude = histo1->GetBinContent(MaxBin);
   
   //  if(Max>30) 
   //  std::cout<<Ch<<" "<<BID<<" Max "<<Max<<" M bin "<<MaxBin<<" ftime "<<fTimeSin<<" "<<fCharge/15.<<std::endl;
@@ -671,14 +712,26 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
       HitE200 /= QIntCorr; 
     }
   }
-  //Filling hit structure
+  //Filling hit structure;
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
-  if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
+  fFirstHit = true;
+  //if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
+  
+  //if(fEnergy< 550){
+    //std::cout<<"Single hit in the event" << std::endl;
+    //DrawMeanWave(10);
+  //}
+  if(fGlobalMode->GetGlobalDebugMode()) {  
+  hCharge->Fill(fCharge);
+  hAmplitude->Fill(fAmplitude);
+  hAmplitudeVSCharge->Fill(fAmplitude, fCharge);
+ }
   // std::cout << "Hit charge:  " << fCharge << "  Time: " <<HitT << "Hit array size "<< hitArray.size()<<std::endl; 
 }
+
 
 
 //M. Raggi: 21/01/2018 
@@ -730,15 +783,73 @@ void DigitizerChannelECal::SetAnalogOffSets(){
 }
 
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
-  std::cout<<"************************ RUNNING ECAL MULTI HIT RECONSTRUCTION *****************"<<std::endl;   
-  std::cout<<"************************  V1 M. Raggi 16/05/2019               *****************"<<std::endl;   
+  fFirstHit=false;
+  ReconstructSingleHit(hitArray);
+  // std::cout<<"in reconstruct , first hit "<< fFirstHit << std::endl;
+  // std::cout<<"ok 1 hit "<< fFirstHit<< std::endl;
+  Double_t energySecondHit=0.;
+  Double_t energyFirstHit=0.;
+  if(fFirstHit){
+    Bool_t SecondHit=false;
+    Bool_t ThirdHit=false;
+    Double_t SecondEnergy=0.;
+    Double_t SecondTime=0.;
+    Double_t ThirdEnergy=0.;
+    Double_t ThirdTime=0.;
+    DrawMeanWave(10, SecondEnergy, SecondTime, ThirdEnergy, ThirdTime, SecondHit, ThirdHit);
+    std::cout<< "firsthit "<< fFirstHit <<"second Energy " << SecondEnergy <<" bool " << SecondHit << " third energy " << ThirdEnergy << " bool " << ThirdHit << std::endl; 
+    if(SecondHit && SecondEnergy>0.){
+      // std::cout<<"In Reconstruct, second hit " << SecondHit << std::endl;
+      if(fIntCorrection){ 
+        Double_t QIntCorr = CorrectIntegrationTime(SecondTime,1000.);
+        SecondEnergy /= QIntCorr; 
+      }
+      unsigned int nHitsBefore = hitArray.size()-1; 
+      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
+      energyFirstHit=EnergyHitBefore-SecondEnergy;
+      std::cout<<"in SecondHit , energy first hit " << energyFirstHit << std::endl; 
+      hitArray.at(nHitsBefore)->SetEnergy(energyFirstHit);
+      std::cout<<"In reconstruct multi hit ..secondhitenergy " << SecondEnergy << std::endl;
+      
+      if(fGlobalMode->GetGlobalDebugMode()) {  
+	fDiffTimeWave=hitArray.at(nHitsBefore)->GetTime()-SecondTime; 
+	fEnergySecondHit=SecondEnergy;
+	hECALsecondHitE->Fill(SecondEnergy);
+	hDiffTimeHitWaveform->Fill(fDiffTimeWave);
+	ECal->Fill();
+      }
 
-  Double_t IsZeroSup = ZSupHit(5.,1000.);
-  IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  //  if(IsSaturated()) return;  //remove is a test
-  if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
-  fTrig = GetTrigMask();
-
+      TRecoVHit *Hit = new TRecoVHit();
+      Hit->SetTime(SecondTime);
+      Hit->SetEnergy(SecondEnergy);
+      hitArray.push_back(Hit);
+      if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
+    }
+    if(ThirdHit && ThirdEnergy>0.){
+      if(fIntCorrection){ 
+        Double_t QIntCorr = CorrectIntegrationTime(ThirdTime,1000.);
+        ThirdEnergy /= QIntCorr; 
+      }
+      unsigned int nHitsBefore = hitArray.size()-1;
+      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
+      energySecondHit=EnergyHitBefore-ThirdEnergy;
+      if(energySecondHit<20){
+	hitArray.erase(nHitsBefore);
+	SecondHit=false;
+      }
+      else{
+	std::cout<<"in ThirdHit , energy second hit " << energySecondHit << std::endl; 
+	hitArray.at(nHitsBefore)->SetEnergy(energySecondHit);
+      }
+      TRecoVHit *Hit1 = new TRecoVHit();
+      Hit1->SetTime(ThirdTime);
+      Hit1->SetEnergy(ThirdEnergy);
+      hitArray.push_back(Hit1);
+    }
+    hECALfirsthitEnergyCorrected->Fill(energyFirstHit);
+    if(SecondHit) hECALsecondhitEnergyCorrected->Fill(energySecondHit);
+    if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy);
+  }
 }
 
 void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){
@@ -752,6 +863,7 @@ void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   // if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
 
   if(fMultihit) {
+    //std::cout<<"multi hit reconstruction " << std::endl;
     ReconstructMultiHit(hitArray);
   } else {
     ReconstructSingleHit(hitArray);
@@ -942,4 +1054,421 @@ Double_t DigitizerChannelECal::PeakSearch(){
   }
   return 0.;
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
+}
+
+
+void DigitizerChannelECal::PeakMultiHit(UShort_t iDer, std::vector<TRecoVHit *> &hitArray){
+  
+
+   Int_t ll;
+  //H1 = new TH1D("h1","h1",1000,0.,1000.);
+  static Double_t dxdt[1001];
+  static Double_t Temp[1001];
+  static Double_t Temp1[1001];
+
+  if(fUsePulseProcessing ) {
+    static Double_t DPP[1001];
+    
+    static Double_t AbsSamRec[1024];
+    static Double_t AbsSamRecDP[1024];
+
+
+    for(UShort_t s=0;s < 1000 ;s++){
+      AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096.*1000.; //in mV positivo
+      //std::cout<< s << "     "  << fSamples[s]  <<" V "<< AbsSamRec[s]  <<std::endl;
+    }
+
+    
+
+    for(UShort_t s=1000;s<1024;s++){
+      AbsSamRec[s] = 0;
+    }
+    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,999 ,fTimeBin*1e-9);
+  }
+     
+  // H1->Reset();
+
+  //  if (fUsePulseProcessing) {
+  //DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,iMax-1 ,fTimeBin*1e-9);
+
+
+
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
+  }else{
+    histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
+  }
+  
+  Int_t nsmooth=20;
+  // Smooth the signal by averaging nsmooth samples 
+  //  for(ll=1;ll<1001;ll++){
+  for(ll=nsmooth/2;ll<1001;ll++){
+    if(ll>nsmooth/2){
+      Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
+      Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
+    }else{
+      Temp[ll]=0;
+      Temp1[ll]=0;
+    }
+    histo1->SetBinContent(ll,Temp1[ll]);
+    
+    // compute raw derivative subracting samples
+    if(ll>iDer+nsmooth/2 && ll<1000){ 
+      dxdt[ll]=-(Temp[ll]-Temp[ll-iDer]);
+    }else{
+      dxdt[ll]=0;
+    }
+    histo->SetBinContent(ll,dxdt[ll]);
+    //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
+  }
+  histo->SetBinContent(ll,dxdt[ll]);
+
+     Int_t Ch   = GetElChID();
+     Int_t BID  = GetBdID();
+  
+  
+  Int_t MaxBin = histo->GetMaximumBin();
+  Int_t Max    = histo->GetMaximum();
+  double Time =0.;
+  fCharge = 0.;
+  static TSpectrum SpectrumProcessor(5);
+  Double_t peak_thr  = fAmpThresholdLow /Max;
+  std::cout<< "peack thr .... "<<peak_thr << std::endl;
+  static Int_t NIntSamp= fSignalWidth/fTimeBin; 
+  //static Int_t NIntSamp= 20; 
+  TSpectrum *s = &SpectrumProcessor;
+  Int_t nfound = s->Search(histo,30,"",0.25);  // find peak on derivative spectrum
+  for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
+      Double_t xp = (s->GetPositionX())[ll];
+      Double_t yp = (s->GetPositionY())[ll];
+      std::cout<<" Total peaks  "<<nfound<<"  peak  "<<ll<<"  xp "<<xp<<" yp "<<yp<<std::endl;
+      //fCharge=yp;
+      if(yp<30 -(histo->GetBinContent(5)))continue;
+      Time=xp*fTimeBin;
+      fCharge=CalcChargeSin(Time);
+    
+      fTrig = GetTrigMask();
+  
+  if(fGlobalMode->GetGlobalDebugMode()){  
+    hdxdtMax->Fill(Max);
+    hdxdtRMS->Fill(TMath::RMS(1000,&dxdt[0]));
+    if(Max>100) hTimeCut->Fill(fTimeSin);
+    hTime->Fill(fTimeSin);
+  }
+ 
+  if(fGlobalMode->GetGlobalDebugMode()){
+    Double_t rnd=((double) rand() / (RAND_MAX));
+    if(rnd<0.2){ 
+      //      hListEv ->Write();
+      if(fSaveAnalog) hListTmp->Write();
+    }
+  }
+  
+       
+      TRecoVHit *Hit = new TRecoVHit();  
+      Hit->SetTime(Time);
+      Hit->SetEnergy(fCharge);
+      //Hit->SetEnergy(fEnergy);
+      hitArray.push_back(Hit);
+      std::cout << "Hit charge:  " << float(fCharge) << "  Time: " << Time <<" Ch  "<<Ch<<"  BID  "<<BID<< std::endl;
+}
+      //H1->Reset();
+      histo->Reset();
+      histo1->Reset();
+      if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
+  return;
+}
+
+
+void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Double_t& SecondTime,Double_t& ThirdEnergy,Double_t& ThirdTime, Bool_t& SecondHit, Bool_t& ThirdHit) {
+ 
+  //std::cout<<"DrawMeanWave....................................Event N. " << fCountEvent <<std::endl;
+
+ Int_t ll;
+ fAmplitude=0.;
+ static Double_t dxdt[1001];
+ static Double_t dxdt1[1001];
+  static Double_t Temp[1001];
+  static Double_t Temp1[1001];
+  std::vector<Double_t> TempWave;
+  std::vector<Double_t> Wave;
+    
+  
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    //histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
+    histo1->SetTitle(Form("hSignal_%d", GetElChID() ));
+    histo2  = (TH1D*)  hListTmp->FindObject("hDiffSignal");
+    histo2->SetTitle(Form("hDiffSignal_%d", GetElChID() )); 
+    histo3 =  (TH1D*)  hListTmp->FindObject("hSignalShifted");
+    histo3->SetTitle(Form("hSignalShifted_%d", GetElChID() ));
+  }else{
+    //histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
+    histo1->SetTitle(Form("hSignal_%d", GetElChID() ));
+    histo2  = (TH1D*)  hListTmp->FindObject("hDiffSignal");
+    histo2->SetTitle(Form("hDiffSignal_%d", GetElChID() )); 
+    histo3 =  (TH1D*)  hListTmp->FindObject("hSignalShifted");
+    histo3->SetTitle(Form("hSignalShifted_%d", GetElChID() ));
+  }
+  Int_t nsmooth=20;
+  for(int i=0; i<1500; i++)Wave.push_back(0);
+  // Smooth the signal by averaging nsmooth samples 
+  //  for(ll=1;ll<1001;ll++){
+  for(ll=nsmooth/2;ll<1001;ll++){
+    if(ll>nsmooth/2){
+      Temp[ll] =TMath::Mean(nsmooth,&fSamples[ll-nsmooth/2]); // averaging over ±nsmooth/2 samples 
+      Temp1[ll]=(-1.*Temp[ll]+fAvg200)/4096*1000.;  // transform in postive mV using first Istart samples for pedestal
+    }else{
+      Temp[ll]=0;
+      Temp1[ll]=0;
+    }
+    Wave.at(ll)=Temp1[ll];
+   if(fGlobalMode->GetGlobalDebugMode()) histo1->SetBinContent(ll,Temp1[ll]);
+    // compute raw derivative subracting samples
+    if(ll>iDer+nsmooth/2 && ll<900){ 
+      dxdt[ll]=-(Temp[ll]-Temp[ll-iDer]);
+      //dxdt1[ll]=-(Temp1[ll]-Temp1[ll-iDer]);
+    }else{
+      dxdt[ll]=0;
+      dxdt[ll]=0;
+    }
+   if(fGlobalMode->GetGlobalDebugMode()) histo->SetBinContent(ll,dxdt[ll]);
+  }
+
+    // compute raw derivative subracting samples
+   Int_t MaxBin=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, Wave);
+   /*
+  Int_t MaxBin1 = 0;
+  Double_t maxdxdt=0.;
+  for(int ll=0;ll<1001;ll++){
+    if(dxdt[ll]>maxdxdt){
+      MaxBin1=ll;
+      maxdxdt=dxdt[ll];
+    }
+  }
+  std::cout<<" MaxBin  "<< MaxBin1 << std::endl;*/
+  
+  fTimeSin = (Double_t)MaxBin*fTimeBin; 
+  //fAmplitude = histo1->GetBinContent(MaxBin);
+  fAmplitude = Temp1[MaxBin];
+  std::vector<Double_t> DiffVec;
+  Bool_t OutRMS; 
+  MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);
+  std::cout<<"In drawmean , outRMS " << OutRMS << std::endl;
+  /* ////////// to save the template
+  ofstream myfile;
+  myfile.open ("template.txt");
+  for(ll=0;ll<1001;ll++){
+    if(ll>200){
+      Double_t hContent=histo1->GetBinContent(MaxBin-220+ll)/hIntegral; //max bin at 200
+      Double_t hLastContent=fTemplate[ll];
+      Double_t hWaveform=(hLastContent*fCountEvent+hContent)/(fCountEvent+1);
+      fTemplate[ll]=hWaveform;
+      histo2->SetBinContent(ll,hWaveform);
+      myfile<<hWaveform<<std::endl;
+      if(hWaveform>fTemplate[ll-1])saveMaxPos=ll; 
+    }
+   else fTemplate[ll]=0.;
+  }
+  myfile.close();*/
+  
+  /* 
+  Int_t saveMaxPos=-1;
+  Double_t maxValue=0.;
+  Double_t maxValueWave=0.;
+  for(int i=0; i<1001; i++){
+    if(fTemplate[i]>maxValue){
+      saveMaxPos=i;
+      maxValue=fTemplate[i];
+    }
+    if(Temp1[i]>maxValueWave){
+      maxValueWave=Temp1[i];
+    }
+  }
+  
+  //std::cout<< "MaxBin derivate " << MaxBin << " max template "<< maxValue << " max wave " << maxValueWave << std::endl;
+  
+  //Double_t NormFactor=fAmplitude/maxValue;
+  Double_t NormFactor=maxValueWave/maxValue;
+  std::cout << "NormFactor " << NormFactor << std::endl;
+  for(int ll=0;ll<1001;ll++){
+   if(ll-20<1001){
+    TempWave[ll+MaxBin-20]=fTemplate[ll];
+    //if(TempWave[ll]>3000)TempWave[ll]=0.;
+    histo3->SetBinContent(ll, TempWave[ll]*NormFactor);
+    //std::cout <<"I'm filling the shifted&Normalized template with: " <<  TempWave[ll] << std::endl;
+    histo2->SetBinContent(ll,Temp1[ll]-TempWave[ll]*NormFactor);
+    if(ll>400)hDiffWavetemplate->Fill(Temp1[ll]-TempWave[ll]*NormFactor);
+   }
+  }
+  */
+  if(fGlobalMode->GetGlobalDebugMode()){
+    for(int ll=0;ll<1001;ll++){
+      histo3->SetBinContent(ll, TempWave.at(ll));     
+      histo2->SetBinContent(ll,Temp1[ll]-TempWave.at(ll));
+      if(ll>400)hDiffWavetemplate->Fill(Temp1[ll]-TempWave.at(ll));
+    }
+  } 
+  if(OutRMS){
+    // std::cout<<"Second Hit with good difference signal template .........................................................2" <<std::endl;
+    Double_t chargeSeconHit=CalcChargeSin(250, DiffVec);
+    if(fGlobalMode->GetGlobalDebugMode()) hChargeSecondHit->Fill(chargeSeconHit);
+    Double_t EnergySecondHit= chargeSeconHit/15.; //going from pC to MeV using 15pC/MeV 
+    if(EnergySecondHit<0. ) std::cout <<"energy second hit less than zerooooooo " << EnergySecondHit <<" elchid "<< GetElChID() << std::endl;
+    if(fGlobalMode->GetGlobalDebugMode()) hEnergySecondHit->Fill(EnergySecondHit);
+    if(EnergySecondHit>20.){
+    Double_t TimeSecondHit=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec);
+    SecondEnergy=EnergySecondHit;
+    std::cout<<"In Draw.....SeconhHitEnergy " << SecondEnergy << std::endl;
+    SecondTime=TimeSecondHit;
+    SecondHit=true;
+    std::vector<Double_t> DiffVec_SecondHit;
+    Bool_t OutRMS_SecondHit; 
+    MakeDifferenceWaveformTeplate(DiffVec, TimeSecondHit,TempWave, DiffVec_SecondHit, OutRMS_SecondHit);
+    if(OutRMS_SecondHit){
+    Double_t charge3Hit=CalcChargeSin(250, DiffVec_SecondHit);
+    if(fGlobalMode->GetGlobalDebugMode()) hCharge3Hit->Fill(charge3Hit);
+    Double_t Energy3Hit= charge3Hit/15.; //going from pC to MeV using 15pC/MeV 
+    if(fGlobalMode->GetGlobalDebugMode()) hEnergy3Hit->Fill(Energy3Hit);
+     if(Energy3Hit>20.){
+       Double_t Time3Hit=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec_SecondHit);
+       ThirdEnergy=Energy3Hit;
+       ThirdTime=Time3Hit;
+       ThirdHit=true;
+     }
+    }
+    /*TRecoVHit *Hit = new TRecoVHit();
+    Hit->SetTime(TimeSecondHit);
+    Hit->SetEnergy(EnergySecondHit);
+    hitArray.push_back(Hit);*/
+    }
+  }
+  
+  fCountEvent++;
+  
+  if(fGlobalMode->GetGlobalDebugMode()){
+    if(fSaveAnalog) hListTmp->Write();
+  
+  histo->Reset();
+  histo1->Reset();
+  histo2->Reset();
+  histo3->Reset();
+  ECal->Fill();
+  }
+
+}
+
+
+
+void DigitizerChannelECal::MakeDifferenceWaveformTeplate(std::vector<Double_t> input, Int_t MaxBin,std::vector<Double_t>& TempWave,  std::vector<Double_t>& output, Bool_t& OutRMS){
+  // std::cout<<"i'm in makedifference " << std::endl;
+  OutRMS=false;
+  Int_t saveMaxPos=-1;
+  Double_t ThrDiff=7*1.15;//2.18 is the RMSsigma of Diff distribution 
+  //Double_t ThrDiff=7*2.18;//2.18 is the RMS of Diff distribution in [-20,20]
+  // Double_t TempWave[1501]={0.};
+  Double_t maxValue=0.;
+  Double_t maxValueWave=0.;
+  for(int i=0; i<1001; i++){
+    if(fTemplate[i]>maxValue){
+      saveMaxPos=i;
+      maxValue=fTemplate[i];
+    }
+    if(i> MaxBin-20 && i<MaxBin+20){
+      if(input[i]>maxValueWave){
+        maxValueWave=input[i];
+      }
+    }  
+  }
+  
+  //std::cout<< "MaxBin derivate " << MaxBin << " max template "<< maxValue << " max wave " << maxValueWave << std::endl;
+  
+  // Double_t NormFactor=input[MaxBin]/maxValue;
+   Double_t NormFactor=maxValueWave/maxValue;
+  //std::cout << "NormFactor " << NormFactor << std::endl;
+  Double_t DiffSignal=0.;
+  for(int i=0; i<2000; i++){
+    TempWave.push_back(0);
+    output.push_back(0);
+  }
+  
+  for(int ll=0;ll<1001;ll++){
+   if(ll-MaxBin+20<1001){
+     TempWave.at(ll+MaxBin-20)=fTemplate[ll]*NormFactor;
+    //if(TempWave[ll]>3000)TempWave[ll]=0.;
+    //histo3->SetBinContent(ll, TempWave[ll]*NormFactor);
+     if(ll<input.size()){
+       DiffSignal=input.at(ll)-TempWave.at(ll);
+      //if(ll>400)hDiffWavetemplate->Fill(Temp1[ll]-TempWave[ll]*NormFactor);
+     }
+     else DiffSignal=0.;
+     output.at(ll)=DiffSignal;
+     //std::cout<<"diff in draw " << DiffSignal << std::endl;
+    if(fabs(DiffSignal>ThrDiff))OutRMS=true;
+   }
+   }
+
+ return;
+}
+
+
+
+Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart, std::vector<Double_t> wave) {
+  
+  //  Short_t begin = iStart;  //to become iStart
+  Short_t end   = 1000;
+
+  Double_t Charge200=0;
+  Double_t Charge=0;
+
+  //  std::cout<<"Pedestal modes in charge "<<pedestalsFromFirstSamples()<<" "<< hybridPedestals()<<std::endl;
+  if (pedestalsFromFirstSamples() || hybridPedestals() || fGlobalMode->GetGlobalDebugMode()!=0){
+     for(Short_t s=0;s<end;s++){
+      if(s>iStart && s<1000 && wave.at(s)>-100) {
+	       Charge200 += 1*wave.at(s)*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+      }
+    }
+    
+    if(pedestalsFromFirstSamples()) Charge = Charge200; 
+  }
+  fCharge=Charge;
+  return fCharge;
+  
+}
+
+Double_t DigitizerChannelECal::MakeDerivativeAndTakeMaxTime(Int_t iDer, Int_t nsmooth, std::vector<Double_t> wave){
+    
+    Double_t dxdt[1001];
+    Double_t dxdt1[1001];
+    Double_t tempWaveDer[1001]={0.};
+    Int_t ConversionFactor=4096/1000;
+    for(int ll=0;ll<1001;ll++){
+     if(ll< wave.size())tempWaveDer[ll]=-wave.at(ll)*ConversionFactor+fAvg200;
+     else tempWaveDer[ll]=0.;
+    }
+
+  for(int ll=0;ll<1001;ll++){ 
+     if(ll>iDer+nsmooth/2 && ll<900){ 
+       dxdt1[ll]=(wave.at(ll)-wave.at(ll-iDer));
+       dxdt[ll]=-(tempWaveDer[ll]-tempWaveDer[ll-iDer]);
+      }else{
+        dxdt[ll]=0;
+    }
+  // histo->SetBinContent(ll,dxdt[ll]);
+  }
+
+  
+  
+  Int_t MaxBin = 0;
+  Double_t maxdxdt=0.;
+  for(int ll=0;ll<1001;ll++){
+    if(dxdt[ll]>maxdxdt){
+      MaxBin=ll;
+      maxdxdt=dxdt[ll];
+    }
+  }
+ return MaxBin;
 }

@@ -41,6 +41,14 @@ struct by_time
 	}
 };
 
+struct by_energy 
+{
+    bool operator()(TimeEnergy const &a,TimeEnergy const &b) const noexcept    
+	{
+	    return a.digiEnergy < b.digiEnergy;
+	}
+};
+
 
 
 ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
@@ -116,6 +124,10 @@ void ECalReconstruction::HistoInit(){
   AddHisto("Etot",     new TH1F("Etot","Etot",1200,-1000.,5000.));
   AddHisto("Esum-2",     new TH1F("Esum-2","Esum-2",1000,0.,1000.));  
   AddHisto("Esum-2G",     new TH1F("Esum-2G","Esum-2G",1000,0.,1000.));
+
+  //histo to debug data multi hit
+  AddHisto("ECALsecondHitE",new TH1F("ECAsecondLHitE","ECALsecondHitE",550,0,550));
+  AddHisto("DiffTimeHitWaveform",new TH1F("DiffTimeHitWaveform","DiffTimeHitWaveform",550,-500,500));
 
 }
 
@@ -828,7 +840,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
   }
 
   // emulating single hit reconstruction 
-  if (fMultihitForMC == -2) {
+  if (fMultihitForMC == -2 || fMultihitForMC== 4  || fMultihitForMC== 7 ) {
     // special correction to compensate for different bunch length on data and MC
     for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       TMCVDigi* digi = tEvent->Digi(i);
@@ -887,16 +899,24 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     Hit->SetChannelId(chIdN);
     Hit->SetPosition(TVector3(0.,0.,0.)); 
 
-    std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
+    if(fMultihitForMC==5  || fMultihitForMC== 7) std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_energy());
+    else std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
 
-    if (fMultihitForMC == 2)
+    if (fMultihitForMC == 2  || fMultihitForMC== 4)
       {
 	Hit->SetEnergy(hitArrayInCrystal[0].digiEnergy);
 	Hit->SetTime(hitArrayInCrystal[0].digiTime);
 	fHits.push_back(Hit);
-	for (Int_t dincr=1; dincr<3; ++dincr)
+	if(hitArrayInCrystal.size()<4){
+	for (Int_t dincr=1; dincr<hitArrayInCrystal.size(); ++dincr)
 	  {
-	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue; 
+	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue;
+            if(dincr==1){ 
+	      GetHisto("ECALsecondHitE")->Fill(hitArrayInCrystal[dincr].digiEnergy);
+	      Double_t DiffTimeWave=hitArrayInCrystal[dincr].digiTime-hitArrayInCrystal[0].digiTime;
+	      GetHisto("DiffTimeHitWaveform")->Fill(DiffTimeWave);
+	      // if(DiffTimewave<0) std::cout<<"Negative difference.................... hitArrayInCr.size " << hitArrayInCrystal.size() << " contatore " << dincr
+	    }
 	    TRecoVHit *Hit1 = new TRecoVHit();
 	    Hit1->SetChannelId(chIdN);
 	    Hit1->SetPosition(TVector3(0.,0.,0.));
@@ -904,6 +924,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 	    Hit1->SetTime(hitArrayInCrystal[dincr].digiTime);
 	    fHits.push_back(Hit1);
 	  }
+	}
 	continue;
       }
     

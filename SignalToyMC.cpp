@@ -34,6 +34,17 @@ void u_expo(Double_t *t, Double_t *uin){//creates array of 1024 points of linear
   }
 }
 
+void u_scint(Double_t *t, Double_t *uin){//creates array of 10000 points of exponentially faling signal *after* time = offset with decay constant tau=20e-9s. This exponential doesn't have a non-zero rise time
+//Time is in ns!
+  float tau=20;//ns
+  float risetime = 7.;//ns
+  for(int i=0;i<NPOINTS;i++) {
+    // Step function at 10 ns -> 1V 
+    uin[i] =-1*exp(-(t[i]/risetime))+exp(-(t[i]/tau));
+    //      std::cout<<"i " <<i<<" t "<<t[i]<<" uin "<<uin[i]<<std::endl;
+  }
+}
+
 void u_gauss(Double_t *t, Double_t *uin){//creates array of 1024 points of a gaussian signal
   double sigma = 0.7;
   float mu = 20.;
@@ -62,14 +73,14 @@ void SignalToyMC(){
   Int_t lambda=3;//mean number of hits per event
   Int_t fProcessing=2;
     
-  TCanvas *cToy = new TCanvas("cToy","cToy",0,0,800,600);
-  TCanvas *cTSpectrum = new TCanvas("cTSpectrum","cTSpectrum",0,0,800,600);//TSpectrum results
-  // TCanvas *cTimeDiffUnProc = new TCanvas("cTimeDiffUnProc","cTimeDiffUnProc",0,0,800,600);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak of raw data
-  // TCanvas *cTimeDiffProc = new TCanvas("cTimeDiffProc","cTimeDiffProc",0,0,800,600);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak after RRC processing
-  TCanvas *cArrivalTimeSpec = new TCanvas("cArrivalTimeSpec","cArrivalTimeSpec",0,0,800,600);//Spectrum of difference in arrival times (and reconstructed times) of consecutive hits
-  TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,600);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
-  TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,600);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
-  //  TCanvas *cAmpRatio = new TCanvas("cAmpRatio","cAmpRatio",0,0,800,600);//Ratio of generated amplitude to RRC processed amplitude
+  TCanvas *cToy = new TCanvas("cToy","cToy",0,0,800,800);
+  TCanvas *cTSpectrum = new TCanvas("cTSpectrum","cTSpectrum",0,0,800,800);//TSpectrum results
+  // TCanvas *cTimeDiffUnProc = new TCanvas("cTimeDiffUnProc","cTimeDiffUnProc",0,0,800,800);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak of raw data
+  // TCanvas *cTimeDiffProc = new TCanvas("cTimeDiffProc","cTimeDiffProc",0,0,800,800);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak after RRC processing
+  TCanvas *cArrivalTimeSpec = new TCanvas("cArrivalTimeSpec","cArrivalTimeSpec",0,0,800,800);//Spectrum of difference in arrival times (and reconstructed times) of consecutive hits
+  TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,800);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
+  TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,800);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
+  //  TCanvas *cAmpRatio = new TCanvas("cAmpRatio","cAmpRatio",0,0,800,800);//Ratio of generated amplitude to RRC processed amplitude
 
   Double_t TimeSpecEnds =400*NsPerBin;//largest time difference (in ns) to be shown in time spectra
   // TH1F *hTimeDiffUnProc = new TH1F("tdiffunproc","tdiffunproc",1024,0,50);//Difference in time between arrival of ToyMC created signal and TSpectrum reconstructed peak (raw data)
@@ -88,22 +99,23 @@ void SignalToyMC(){
   TH1D *hTSpecRecoUnProc = new TH1D("hTSpecRecoUnProc","hTSpecRecoUnProc", 1024,0.,1024.);//Signal after TSpectrum (will have markers of TSpectrum-found peaks)
   TH1D *hTSpecRecoProc = new TH1D("hTSpecRecoProc","hTSpecRecoProc", 1024,0.,1024.);//Signal after TSpectrum && digital processing (will have markers of TSpectrum-found peaks)
 
-  /*  TCanvas *canvasarr[10];
+  TCanvas *canvasarr[10];
   TMultiGraph *gfinalinvestigate[10]; 
   TGraph *gsuminvestigate[10];
   TGraph *gsumProcinvestigate[10];
  
   for(int i=0;i<10;i++){
     sprintf(name, "cToy%d", i);
-    canvasarr[i]=new TCanvas(name,name,0,0,800,600);
+    canvasarr[i]=new TCanvas(name,name,0,0,800,800);
     sprintf(name, "ginv%d", i);
     gfinalinvestigate[i] = new TMultiGraph();
     gsuminvestigate[i] = new TGraph();
     gsumProcinvestigate[i] = new TGraph();
-    }*/
+    }
   
   int currentsighalfpos;
   int finalsighalfpos;
+  int zerohiteventnumber=0;
 
   Int_t TotalToyNo=0;//total number of hits in all event found by TSpectrum
   Int_t TotalTSpecUnProcNo=0;//total number of hits in all event found by TSpectrum **without** RRC Processing
@@ -119,8 +131,11 @@ void SignalToyMC(){
   for(int eventnumber =0;eventnumber<eventtot;eventnumber++){
     
     Int_t nhits=gRandom->Poisson(lambda);//number of hits follows a Poisson distribution with lambda hits per event window on average
-    if(nhits!=0)   u_expo(twindow,singlesignal);
+    //    std::cout<<"nhits "<<nhits<<std::endl;
+    //if(nhits!=0)   u_expo(twindow,singlesignal);
     //if(nhits!=0 ) u_gauss(twindow,singlesignal);
+    if(nhits!=0 ) u_scint(twindow,singlesignal);
+    
     vector<Double_t> arrivaltimens;//time of arrival of signal in ns
     vector<Int_t>    arrivaltimebins;
     //     arrivaltimens.push_back(gRandom->Uniform(50));//gRandom->Uniform(400));//initial signal can arrive at any point in the digitizer window
@@ -147,7 +162,7 @@ void SignalToyMC(){
       arrivaltimens.push_back(gRandom->Uniform(80,280));
       //else if (i==1) arrivaltimens.push_back(arrivaltimens[0]+100);
       arrivaltimebins.push_back(int(arrivaltimens[i]*BinsPerNs));
-      // std::cout<<"eventnumber "<<eventnumber<<" hit number = "<<i<<" arrivaltimens[i] "<<arrivaltimens[i]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" AmpScale "<<AmpScale<<std::endl;
+      //      std::cout<<"eventnumber "<<eventnumber<<" hit number = "<<i<<" arrivaltimens[i] "<<arrivaltimens[i]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" AmpScale "<<AmpScale<<std::endl;
       sigmaxposition.push_back(arrivaltimebins[i]+7*BinsPerNs);//the position of the signal maximum is the arrival time + the 7ns risetime
       for(int j=0;j<NPOINTS;j++){
 	if(i==0&&j<arrivaltimebins[i]) {//before the arrival of the first hit, the signal is 0
@@ -177,12 +192,19 @@ void SignalToyMC(){
       currentsigmax.push_back(currentsig[sigmaxposition[i]]);
       finalsigmax.push_back(sigfinal[sigmaxposition[i]]);
     }
+
+    if(nhits==0){
+      zerohiteventnumber++;
+      continue;
+    }
+    
     DigitalProcessingRRC(sigfinal.data(),sigProc,1024,0.4);
     
     
     if(nhits==0)    for(int j=0;j<NPOINTS;j++){
+	std::cout<<"nhits=0 but setting points"<<std::endl;
 	gsum->SetPoint(j,tbins[j],0);
-	//	gsuminvestigate[canvascounter]->SetPoint(j,tbins[j],0);
+	gsuminvestigate[canvascounter]->SetPoint(j,tbins[j],0);
       }
     if(eventnumber==eventtot-1){
       for(int i=0;i<nhits;i++){
@@ -205,7 +227,6 @@ void SignalToyMC(){
       }
     }
   
-    if(nhits==0)     continue;      
     //    cAmpRatio->cd();
     //    hAmpRatio->Draw();
     
@@ -234,10 +255,21 @@ void SignalToyMC(){
       hArrivalTimeSpec->Fill(timediffns);
       //  std::cout<<"eventnumber "<<eventnumber<<" i "<<i<<" arrivaltimebins[i+1] "<<arrivaltimebins[i+1]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" BinsPerNs "<<BinsPerNs<<" arrivaltimebins[i+1]-arrivaltimebins[i] "<<arrivaltimebins[i+1]-arrivaltimebins[i]<<" arrivaltimebins[i+1]-arrivaltimebins[i]/BinsPerNs "<<(arrivaltimebins[i+1]-arrivaltimebins[i])/(1.*BinsPerNs)<<std::endl;
     }
-    
-    for(int i=0;i<(tUnProcRecoBins.size()-1);i++) hRecoTimeSpecUnProc->Fill((tUnProcRecoBins[i+1]-tUnProcRecoBins[i])*NsPerBin);//(1.*BinsPerNs));
-      
-    
+
+    bool overestimating=0;//is there a RRC reconstructed hit in this event where the time difference between this hit and the next<5ns?
+    for(int i=0;i<(tUnProcRecoBins.size()-1);i++) {
+      if(tUnProcRecoBins.size()>nhits){
+	if(canvascounter<10){
+	  if(i<nhits-1)	std::cout<<"eventnumber "<<eventnumber<<" nhits "<<nhits<<" tUnProcRecoBins.size() "<<tUnProcRecoBins.size()<<" i "<<i<<" arrivaltimebins[i+1] "<<arrivaltimebins[i+1]<<" tUnProcRecoBins[i+1] "<<tUnProcRecoBins[i+1]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" tUnProcRecoBins[i] "<<tUnProcRecoBins[i]<<std::endl;
+	  else if(i==nhits-1)	std::cout<<"eventnumber "<<eventnumber<<" nhits "<<nhits<<" tUnProcRecoBins.size() "<<tUnProcRecoBins.size()<<" i "<<i<<" arrivaltimebins[i+1] n/a"<<" tUnProcRecoBins[i+1] "<<tUnProcRecoBins[i+1]<<" arrivaltimebins[i] "<<arrivaltimebins[i]<<" tUnProcRecoBins[i] "<<tUnProcRecoBins[i]<<std::endl;
+	  else	std::cout<<"eventnumber "<<eventnumber<<" nhits "<<nhits<<" tUnProcRecoBins.size() "<<tUnProcRecoBins.size()<<" i "<<i<<" arrivaltimebins[i+1] n/a "<<" tUnProcRecoBins[i+1] "<<tUnProcRecoBins[i+1]<<" arrivaltimebins[i] n/a"<<" tUnProcRecoBins[i] "<<tUnProcRecoBins[i]<<std::endl;
+	}
+	overestimating=1;
+	checkcounter++;
+      }
+      hRecoTimeSpecUnProc->Fill((tUnProcRecoBins[i+1]-tUnProcRecoBins[i])*NsPerBin);//(1.*BinsPerNs));
+    }
+
     if(tProcRecoBins.size()==0) {
       std::cout<<"eventnumber "<<eventnumber<<" tProcRecoBins.size()=0. Continuing."<<std::endl;
       continue;
@@ -245,17 +277,12 @@ void SignalToyMC(){
     //after previous loop so that if UnProcRecoBins is filled but ProcRecoBins is not, the UnProc histograms are still filled
     std::sort(tProcRecoBins.begin(),tProcRecoBins.end());
     
-    bool smalltdiff=0;//is there a RRC reconstructed hit in this event where the time difference between this hit and the next<5ns?
     for(int i=0;i<(tProcRecoBins.size()-1);i++)    {
       //      hTimeDiffProc->Fill(tProcRecoBins[i]-arrivaltimebins[i]);
       hRecoTimeSpecProc->Fill((tProcRecoBins[i+1]-tProcRecoBins[i])*NsPerBin);///(1.*BinsPerNs));
-      if(tProcRecoBins[i+1]-tProcRecoBins[i]<5){
-	//	std::cout<<"eventnumber "<<eventnumber<<" i "<<i<<" tProcRecoBins[i+1] "<<tProcRecoBins[i+1]<<" tProcRecoBins[i] "<<tProcRecoBins[i]<<std::endl;
-	smalltdiff=1;
-	checkcounter++;
-      }
-    }/*
-    if(smalltdiff==1&&canvascounter<10){
+    }
+    
+    if(overestimating==1&&canvascounter<10){
       for(int i=0;i<nhits;i++){
 	TGraph *gsiginvestigate = new TGraph();//graph of signals from individial hits in an event
 	TGraph *gProcinvestigate = new TGraph();//graph of signals from individial hits in an event after processing
@@ -274,12 +301,12 @@ void SignalToyMC(){
 	gProcinvestigate->SetLineColor(kGreen);
 	gfinalinvestigate[canvascounter]->Add(gProcinvestigate,"l");
       }
-   
       canvasarr[canvascounter]->cd();
       //      gfinalinvestigate[canvascounter]=gfinal;
       gfinalinvestigate[canvascounter]->Draw("same");
       canvascounter++;
-      }*/
+      //return;
+    }
   }
   cToy->cd();
   gfinal->Draw("same");
@@ -345,7 +372,7 @@ void SignalToyMC(){
   EfficiencyRatioProc->GetLowerPad()->cd();
   line->Draw("same");
   
-  std::cout<<"Total generated hits = "<<TotalToyNo<<" Total TSpectrum reconstructed hits no processing = "<<TotalTSpecUnProcNo<<" Total TSpectrum reconstructed hits with processing = "<<TotalTSpecProcNo<<std::endl;
+  std::cout<<"Total generated hits = "<<TotalToyNo<<" Total TSpectrum reconstructed hits no processing = "<<TotalTSpecUnProcNo<<" Total TSpectrum reconstructed hits with processing = "<<TotalTSpecProcNo<<" Number of events skipped for having 0 hits created = "<<zerohiteventnumber<<std::endl;
   std::cout<<"checkcounter "<<checkcounter<<std::endl;
   }
 
@@ -425,7 +452,6 @@ void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int npoints, Double_t ti
   // Double_t R2=100.; //ohms
   // Double_t C=0.015e-9; //nF
 
-
   //simulating RRC circuit. Circuit diagram in presentation from Beth 19/06/2019 
   //approximating voltage output to:
   //dQ/dt=(uin(t)/R2)-((R1+R2)/CR1R2)*Q(t)
@@ -446,7 +472,7 @@ void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int npoints, Double_t ti
 
   integr=0;
   ic[0]= uin[0]/R2;
-
+  
   for(int i=1;i<npoints;i++) {
     integr+=ic[i-1]*bin_width; //integr = intgrated charge = charge of this bin + charge of previous bin + bin before...
     ic[i]= uin[i]/R2 - ((R1+R2)/(C*R1*R2))* integr; //ic = current through capacitor = dQ/dt

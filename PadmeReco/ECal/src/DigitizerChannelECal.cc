@@ -161,6 +161,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hEnergy3Hit = new TH1F("hEnergy3Hit", "hEnergy3Hit", 1500, -100, 1500));
   hListCal->Add(hECALsecondHitE      = new TH1F("ECAsecondLHitE","ECALsecondHitE",550,0,550));
   hListCal->Add(hDiffTimeHitWaveform = new TH1F("DiffTimeHitWaveform","DiffTimeHitWaveform",550,-500,500));
+ hListCal->Add(hECALfirsthitEnergy = new TH1F("hECALfirsthitEnergy","hECALfirsthitEnergy",1500,-100,1500));
   hListCal->Add(hECALfirsthitEnergyCorrected = new TH1F("hECALfirsthitEnergyCorrected","hECALfirsthitEnergyCorrected",1500,-100,1550));
   hListCal->Add(hECALsecondhitEnergyCorrected = new TH1F("hECALsecondhitEnergyCorrected","hECALsecondhitEnergyCorrected",1500,-100,1550));
   hListCal->Add(hECALthirdhitEnergyCorrected = new TH1F("hECALthirdhitEnergyCorrected","hECALthirdhitEnergyCorrected",1500,-100,1550));
@@ -807,15 +808,16 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
       unsigned int nHitsBefore = hitArray.size()-1; 
       Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
       energyFirstHit=EnergyHitBefore-SecondEnergy;
-      std::cout<<"in SecondHit , energy first hit " << energyFirstHit << std::endl; 
+      if(fabs(EnergyHitBefore)<0.1)std::cout<<"FIRTS HIT with energy 0 !!!!!!!" << std::endl;
+      std::cout<<"In reconstruct multi hit ..in SecondHit , energy first hit corrected " << energyFirstHit <<" secondhitenergy " << SecondEnergy<<  std::endl; 
       hitArray.at(nHitsBefore)->SetEnergy(energyFirstHit);
-      std::cout<<"In reconstruct multi hit ..secondhitenergy " << SecondEnergy << std::endl;
       
       if(fGlobalMode->GetGlobalDebugMode()) {  
 	fDiffTimeWave=hitArray.at(nHitsBefore)->GetTime()-SecondTime; 
 	fEnergySecondHit=SecondEnergy;
 	hECALsecondHitE->Fill(SecondEnergy);
 	hDiffTimeHitWaveform->Fill(fDiffTimeWave);
+	hECALfirsthitEnergy->Fill(EnergyHitBefore);
 	ECal->Fill();
       }
 
@@ -823,6 +825,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
       Hit->SetTime(SecondTime);
       Hit->SetEnergy(SecondEnergy);
       hitArray.push_back(Hit);
+   std::cout<<"ADD HIT " << std::endl;
       if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
     }
     if(ThirdHit && ThirdEnergy>0.){
@@ -833,24 +836,29 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
       unsigned int nHitsBefore = hitArray.size()-1;
       Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
       energySecondHit=EnergyHitBefore-ThirdEnergy;
-      if(energySecondHit<20){
-	hitArray.erase(nHitsBefore);
-	SecondHit=false;
-      }
-      else{
-	std::cout<<"in ThirdHit , energy second hit " << energySecondHit << std::endl; 
-	hitArray.at(nHitsBefore)->SetEnergy(energySecondHit);
-      }
+      if(fabs(EnergyHitBefore)<0.1)std::cout<<"SECOND HIT with energy 0 !!!!!!!" << std::endl;
+      std::cout<<"In reconstruct multi hit ..in ThirdHit , energy second hit "<< SecondEnergy <<" corrected " << energySecondHit <<" thirdhitenergy " << ThirdEnergy<<  std::endl;
+      // if(energySecondHit<20){
+      //	hitArray.erase(nHitsBefore);
+      //	SecondHit=false;
+      //}
+      // else{
+      //	std::cout<<"in ThirdHit , energy second hit " << energySecondHit << std::endl; 
+      hitArray.at(nHitsBefore)->SetEnergy(energySecondHit);
       TRecoVHit *Hit1 = new TRecoVHit();
       Hit1->SetTime(ThirdTime);
       Hit1->SetEnergy(ThirdEnergy);
       hitArray.push_back(Hit1);
+   std::cout<<"ADD HIT " << std::endl;
     }
-    hECALfirsthitEnergyCorrected->Fill(energyFirstHit);
-    if(SecondHit) hECALsecondhitEnergyCorrected->Fill(energySecondHit);
-    if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy);
-  }
+    if(fGlobalMode->GetGlobalDebugMode()) {
+      hECALfirsthitEnergyCorrected->Fill(energyFirstHit);
+      if(SecondHit) hECALsecondhitEnergyCorrected->Fill(energySecondHit);
+      if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy); 
+    }  
+  } 
 }
+
 
 void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   fTrigMask = GetTrigMask();
@@ -1197,7 +1205,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
     
   
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
-    //histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
     histo1->SetTitle(Form("hSignal_%d", GetElChID() ));
     histo2  = (TH1D*)  hListTmp->FindObject("hDiffSignal");
@@ -1205,7 +1213,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
     histo3 =  (TH1D*)  hListTmp->FindObject("hSignalShifted");
     histo3->SetTitle(Form("hSignalShifted_%d", GetElChID() ));
   }else{
-    //histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
+    histo   = (TH1D*)  hListTmp->FindObject("hdxdt");
     histo1  = (TH1D*)  hListTmp->FindObject("hSignal");
     histo1->SetTitle(Form("hSignal_%d", GetElChID() ));
     histo2  = (TH1D*)  hListTmp->FindObject("hDiffSignal");
@@ -1257,7 +1265,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
   std::vector<Double_t> DiffVec;
   Bool_t OutRMS; 
   MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);
-  std::cout<<"In drawmean , outRMS " << OutRMS << std::endl;
+  //std::cout<<"In drawmean , outRMS " << OutRMS << std::endl;
   /* ////////// to save the template
   ofstream myfile;
   myfile.open ("template.txt");
@@ -1317,7 +1325,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
     Double_t chargeSeconHit=CalcChargeSin(250, DiffVec);
     if(fGlobalMode->GetGlobalDebugMode()) hChargeSecondHit->Fill(chargeSeconHit);
     Double_t EnergySecondHit= chargeSeconHit/15.; //going from pC to MeV using 15pC/MeV 
-    if(EnergySecondHit<0. ) std::cout <<"energy second hit less than zerooooooo " << EnergySecondHit <<" elchid "<< GetElChID() << std::endl;
+    //if(EnergySecondHit<0. ) std::cout <<"energy second hit less than zerooooooo " << EnergySecondHit <<" elchid "<< GetElChID() << std::endl;
     if(fGlobalMode->GetGlobalDebugMode()) hEnergySecondHit->Fill(EnergySecondHit);
     if(EnergySecondHit>20.){
     Double_t TimeSecondHit=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec);

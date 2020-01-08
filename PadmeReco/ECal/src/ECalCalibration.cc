@@ -37,7 +37,6 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
   fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","0");
-  std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
 
 

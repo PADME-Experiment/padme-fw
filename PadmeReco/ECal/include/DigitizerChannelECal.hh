@@ -204,6 +204,8 @@ private:
   TH1F * hSat;
   TH1F * hDiff;
   TH1F * hSignalShifted;
+  TH1F * hSignalShifted2;
+  TH1F * hSignalShifted3;
 
   TH1F * hSigOv;
   TH1F * hSigOvSm;
@@ -255,6 +257,8 @@ private:
   TH1D* histo1;
   TH1D* histo2;
   TH1D* histo3;
+  TH1D* histo4;
+  TH1D* histo5;
   TH1D* histoSat;
 
   TH1D* histoOv;

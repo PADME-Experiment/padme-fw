@@ -815,6 +815,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   return;// NGoodClus;
 }
 
+
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
@@ -840,7 +841,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
   }
 
   // emulating single hit reconstruction 
-  if (fMultihitForMC == -2 || fMultihitForMC== 4  || fMultihitForMC== 7 ) {
+  if (fMultihitForMC == -2 || fMultihitForMC== 4  || fMultihitForMC== 7) {
     // special correction to compensate for different bunch length on data and MC
     for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       TMCVDigi* digi = tEvent->Digi(i);
@@ -902,21 +903,16 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     if(fMultihitForMC==5  || fMultihitForMC== 7) std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_energy());
     else std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
 
-    if (fMultihitForMC == 2  || fMultihitForMC== 4)
+    if (fMultihitForMC == 2 || fMultihitForMC== 4)
       {
 	Hit->SetEnergy(hitArrayInCrystal[0].digiEnergy);
 	Hit->SetTime(hitArrayInCrystal[0].digiTime);
 	fHits.push_back(Hit);
-	if(hitArrayInCrystal.size()<4){
-	for (Int_t dincr=1; dincr<hitArrayInCrystal.size(); ++dincr)
+	Double_t lenght=hitArrayInCrystal.size();
+	if(lenght>3)lenght=3;
+	for (Int_t dincr=1; dincr<lenght; ++dincr)
 	  {
-	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue;
-            if(dincr==1){ 
-	      GetHisto("ECALsecondHitE")->Fill(hitArrayInCrystal[dincr].digiEnergy);
-	      Double_t DiffTimeWave=hitArrayInCrystal[dincr].digiTime-hitArrayInCrystal[0].digiTime;
-	      GetHisto("DiffTimeHitWaveform")->Fill(DiffTimeWave);
-	      // if(DiffTimewave<0) std::cout<<"Negative difference.................... hitArrayInCr.size " << hitArrayInCrystal.size() << " contatore " << dincr
-	    }
+	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue; 
 	    TRecoVHit *Hit1 = new TRecoVHit();
 	    Hit1->SetChannelId(chIdN);
 	    Hit1->SetPosition(TVector3(0.,0.,0.));
@@ -924,7 +920,6 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 	    Hit1->SetTime(hitArrayInCrystal[dincr].digiTime);
 	    fHits.push_back(Hit1);
 	  }
-	}
 	continue;
       }
     

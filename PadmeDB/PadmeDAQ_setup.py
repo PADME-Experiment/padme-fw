@@ -418,7 +418,7 @@ def main():
     links.sort()
 
     print "=== Current optical link configuration ==="
-    print "Link      S/N   Detector:Index"
+    print "Link     bid  S/N  dbd  Detector:Index"
     for l in links:
         c.execute("""SELECT node_id,controller_id,channel_id,slot_id FROM optical_link WHERE id=%s""",(l,))
         (node_id,controller_id,channel_id,slot_id) = c.fetchone()
@@ -427,12 +427,12 @@ def main():
             if l1[0] == l:
                 c.execute("""SELECT serial_number FROM board WHERE id=%s""",(l1[1],))
                 (board_sn,) = c.fetchone()
-                print "  %3s"%board_sn,
+                print "  %2d  %3s"%(l1[1],board_sn),
         for l2 in det_links:
             if l2[0] == l:
                 c.execute("""SELECT detector,idx FROM det_board WHERE id=%s""",(l2[1],))
                 (detector,index) = c.fetchone()
-                print "  %s:%s"%(detector,index),
+                print "  %2d  %s:%s"%(l2[1],detector,index),
         print
 
 

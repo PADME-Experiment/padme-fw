@@ -17,10 +17,10 @@
 
 #include "FAKE.h"
 
-#define TIME_TAG_LEN     20
-#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
+//#define TIME_TAG_LEN     20
+//#define MAX_FILENAME_LEN MAX_DATA_FILE_LEN+TIME_TAG_LEN
 
-#define MAX_N_OUTPUT_FILES 10240
+//#define MAX_N_OUTPUT_FILES 10240
 
 extern int InBurst;
 extern int BreakSignal;

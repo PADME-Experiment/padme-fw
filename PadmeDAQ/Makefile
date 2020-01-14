@@ -26,7 +26,8 @@ CFLAGS	=	-fPIC -DLINUX -O2 -g -Wall -I$(IDIR)
 #CFLAGS	=	-DLINUX -O0 -g -Wall -I$(IDIR)
 
 #LIBS	=	-lCAENDigitizer -lsqlite3
-LIBS	=	-lCAENDigitizer -L/usr/lib64/mysql -lmysqlclient -lm
+#LIBS	=	-lCAENDigitizer -L/usr/lib64/mysql -lmysqlclient -lm
+LIBS	=	-lCAENDigitizer -lm
 
 #########################################################################
 

@@ -36,7 +36,7 @@ int reset_config()
 
   int ch;
 
-  Config->process_id = 0;
+  //Config->process_id = 0;
 
   strcpy(Config->process_mode,"DAQ"); // Work in DAQ mode
 
@@ -220,14 +220,15 @@ int read_config(char *cfgfile)
       //printf("Parameter <%s> Value <%s>\n",param,value);
 
       // Interpret parameter
-      if ( strcmp(param,"process_id")==0 ) {
-	if ( sscanf(value,"%d",&v) ) {
-	  Config->process_id = v;
-	  printf("Parameter %s set to %d\n",param,v);
-	} else {
-	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
-	}
-      } else if ( strcmp(param,"process_mode")==0 ) {
+      //if ( strcmp(param,"process_id")==0 ) {
+      //	if ( sscanf(value,"%d",&v) ) {
+      //	  Config->process_id = v;
+      //	  printf("Parameter %s set to %d\n",param,v);
+      //	} else {
+      //	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
+      //	}
+      //} else if ( strcmp(param,"process_mode")==0 ) {
+      if ( strcmp(param,"process_mode")==0 ) {
 	if ( strcmp(value,"DAQ")==0 || strcmp(value,"ZSUP")==0 || strcmp(value,"FAKE")==0) {
 	  strcpy(Config->process_mode,value);
 	  printf("Parameter %s set to '%s'\n",param,value);
@@ -640,7 +641,7 @@ int print_config(){
   int i;
 
   printf("\n=== Configuration parameters for this run ===\n");
-  printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
+  //printf("process_id\t\t%d\t\tDB id for this process\n",Config->process_id);
   printf("process_mode\t\t'%s'\t\tfunctioning mode for this PadmeDAQ process (DAQ, ZSUP, or FAKE)\n",Config->process_mode);
   printf("config_file\t\t'%s'\tname of configuration file (can be empty)\n",Config->config_file);
 
@@ -730,6 +731,7 @@ int print_config(){
 
 }
 
+/*
 // Save configuration parameters to DB
 int save_config()
 {
@@ -891,6 +893,7 @@ int save_config()
   return 0;
 
 }
+*/
 
 int end_config()
 {

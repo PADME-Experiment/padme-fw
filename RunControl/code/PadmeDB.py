@@ -34,6 +34,7 @@ class PadmeDB:
 
     def connect_db(self):
 
+        print "PadmeDB:connect_db - INFO - connecting to host %s port %d user %s db %s"%(self.DB_HOST,self.DB_PORT,self.DB_USER,self.DB_NAME)
         self.close_db()
 
         try:
@@ -43,7 +44,7 @@ class PadmeDB:
                                         passwd = self.DB_PASSWD,
                                         db     = self.DB_NAME)
         except:
-            print "*** PadmeDB ERROR *** Unable to connect to DB. Exception: %s"%sys.exc_info()[0]
+            print "PadmeDB:connect_db - ERROR - Unable to connect to DB. Exception: %s"%sys.exc_info()[0]
             sys.exit(2)
 
     def close_db(self):
@@ -58,8 +59,10 @@ class PadmeDB:
             try:
                 self.conn.ping()
             except:
+                print "PadmeDB:check_db - WARNING - ping failed"
                 self.connect_db()
         else:
+            print "PadmeDB:check_db - WARNING - connection is closed"
             self.connect_db()
 
     def is_run_in_db(self,run_nr):

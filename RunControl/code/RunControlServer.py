@@ -605,50 +605,71 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
 
     def new_run(self):
 
-        # Retrieve run number - next=next run from DB, dummy=dummy run (i.e. run nr=0)
-        # Return run number used (0 for dummy run) or "error" for invalid answer
-        newrun_number = 0
-        self.send_answer("run_number")
-        ans = self.get_command()
-        if (ans=="next"):
-            newrun_number = self.db.get_last_run_in_db()+1
-        elif (ans=="dummy"):
-            newrun_number = 0
-        elif (ans == "error"):
-            print "run_number - client returned error"
-            return "error"
-        elif (ans=="client_close"):
-            return "client_close"
-        else:
-            print "run_number - invalid option %s received"%ans
-            self.send_answer("error")
-            return "error"
-        self.send_answer(str(newrun_number))
+        ## Retrieve run number - next=next run from DB, dummy=dummy run (i.e. run nr=0)
+        ## Return run number used (0 for dummy run) or "error" for invalid answer
+        #newrun_number = 0
+        #self.send_answer("run_number")
+        #ans = self.get_command()
+        #if (ans=="next"):
+        #    newrun_number = self.db.get_last_run_in_db()+1
+        #elif (ans=="dummy"):
+        #    newrun_number = 0
+        #elif (ans == "error"):
+        #    print "run_number - client returned error"
+        #    return "error"
+        #elif (ans=="client_close"):
+        #    return "client_close"
+        #else:
+        #    print "run_number - invalid option %s received"%ans
+        #    self.send_answer("error")
+        #    return "error"
+        #self.send_answer(str(newrun_number))
 
-        # Retrieve run type. Accept only from list of known runs
+        # Report current setup
+        self.send_answer("setup %s"%self.run.setup)
+
+        # Assign number to new run using first free number in DB
+        newrun_number = self.db.get_last_run_in_db()+1
+
+        # Retrieve run type. Accept only from list of known run types
         # Return run type used or "error" for invalid answer
+        self.send_answer("run_types %s"%",".join(self.run_type_list))
         newrun_type = ""
-        self.send_answer("run_type")
+        #self.send_answer("run_type")
         ans = self.get_command()
         if (ans == "error"):
             print "run_type - client returned error"
             return "error"
         elif (ans=="client_close"):
             return "client_close"
-        newrun_type = None
-        for rtype in self.run_type_list:
-            if (ans == rtype): newrun_type = ans
-        if (newrun_type):
-            # Verify that FAKE runs are not stored in the DB
-            if (newrun_type == "FAKE" and newrun_number != 0):
-                print "run_type - attempt to store FAKE run in DB: this is not allowed"
-                self.send_answer("error")
-                return "error"
+        elif ans in self.run_type_list:
+            newrun_type = ans
+            if newrun_type == "FAKE":
+                print "run_type - *** FAKE run requested: setting run number to 0 ***"
+                newrun_number = 0
             self.send_answer(newrun_type)
         else:
             print "run_type - invalid option %s received"%ans
             self.send_answer("error")
             return "error"
+
+        #newrun_type = None
+        #for rtype in self.run_type_list:
+        #    if (ans == rtype): newrun_type = ans
+        #if (newrun_type):
+        #    # Verify that FAKE runs are not stored in the DB
+        #    if (newrun_type == "FAKE" and newrun_number != 0):
+        #        print "run_type - attempt to store FAKE run in DB: this is not allowed"
+        #        self.send_answer("error")
+        #        return "error"
+        #    self.send_answer(newrun_type)
+        #else:
+        #    print "run_type - invalid option %s received"%ans
+        #    self.send_answer("error")
+        #    return "error"
+
+        # Now we can send back the assigned run number
+        self.send_answer("run_number %d"%newrun_number)
 
         newrun_user = ""
         self.send_answer("shift_crew")
@@ -673,7 +694,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.run_user = newrun_user
         self.run.run_comment_start = newrun_comment
         if not self.run.change_run():
-            self.send_answer("error_init")
+            self.send_answer("init_error")
             return "error"
 
         # Create directory to host log files
@@ -689,7 +710,7 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         self.run.create_merger_output_list()
 
         # Start run initialization procedure
-        self.send_answer("start_init")
+        self.send_answer("init_start")
 
         ## Create level1 output rawdata directories
         self.run.create_level1_output_dirs()

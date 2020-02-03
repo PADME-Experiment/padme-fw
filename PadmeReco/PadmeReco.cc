@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include "TFile.h"
 #include "TChain.h"
@@ -38,6 +39,9 @@ void sighandler(int sig){
 
     exit(0);
 }
+
+
+int run_name(std::string lin, std::string& name);
 
 int main(Int_t argc, char **argv)
 {
@@ -116,23 +120,44 @@ int main(Int_t argc, char **argv)
       return 0;
     }
 
+    std::vector<string> file_names;
     TObjArray InputFileNameList;
     if(stat(Form(InputListFileName.Data()), &filestat) == 0) { //-l option used
-        std::ifstream InputList(InputListFileName.Data());
-        while(InputFileName.ReadLine(InputList) && iFile < NFiles){
-//            if(stat(Form(InputFileName.Data()), &filestat) == 0)
-          InputFileNameList.Add(new TObjString(InputFileName.Data()));
-          iFile++;
-        }
-    } else if(InputFileName.CompareTo("")) //-i option used
-//        if(stat(Form(InputFileName.Data()), &filestat) == 0)
+      std::ifstream InputList(InputListFileName.Data());
+      while(InputFileName.ReadLine(InputList) && iFile < NFiles){
+	//if(stat(Form(InputFileName.Data()), &filestat) == 0)
+	/*std::cout<<"InputFileName "<<InputFileName.Data()<<" <====================="<<std::endl;
+	std::string name_ = "";
+	run_name(InputFileName.Data(),name_);
+	std::cout<<name_<<std::endl;
+	if( std::find(file_names.begin(),file_names.end(),name_) == file_names.end() ){
+	  file_names.push_back(name_);
+	}
+	*/
+	InputFileNameList.Add(new TObjString(InputFileName.Data()));
+	iFile++;
+      }
+    } else if(InputFileName.CompareTo("")) { //-i option used
+      //        if(stat(Form(InputFileName.Data()), &filestat) == 0)
+      /*std::cout<<"InputFileName "<<InputFileName.Data()<<" <====================="<<std::endl;
+      std::string name_ = "";
+      run_name(InputFileName.Data(),name_);
+      std::cout<<name_<<std::endl;
+      if( std::find(file_names.begin(),file_names.end(),name_) == file_names.end() ){
+	file_names.push_back(name_);
+      }
+      */
       InputFileNameList.Add(new TObjString(InputFileName.Data()));
+    }
 
     if(InputFileNameList.GetEntries() == 0) {
         perror(Form("No Input File"));
         exit(1);
     }
 
+    for(unsigned int ij=0;ij<file_names.size();++ij){
+      std::cout<<file_names[ij]<<std::endl;
+    }
     ////// init here memory allocated and cpu time
     int mem = 0;
     double cpu = 0.;
@@ -276,3 +301,17 @@ int main(Int_t argc, char **argv)
     }
 
 }
+
+
+
+
+int run_name(std::string lin, std::string& name){
+
+  std::size_t begin = lin.find_last_of("/\\");
+
+  name = lin.substr(begin+5,23);
+
+  return 0;
+}
+
+

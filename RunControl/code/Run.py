@@ -64,16 +64,24 @@ class Run:
         # Do not define a default setup
         self.setup = ""
 
+        # Run final status defaults to 3 (stopped normally)
+        self.final_status = 3
+
         self.set_default_config()
 
     def change_run(self):
 
-        #print "--- Changing run"
+        # Check if requested run number was not used before
+        # Saves the day if more than one RunControl program is running at the same time (DON'T DO THAT!!!)
+        if (self.run_number):
+            run_is_in_db = self.db.is_run_in_db(self.run_number)
+            if (run_is_in_db):
+                print "Run::change_run - ERROR - Run %d is already in the DB: cannot use it again"%self.run_number
+                print "Please check if someone else is using this RunControl before retrying"
+                #self.send_answer("error_init")
+                return False
 
-        #if (self.run_number == 0):
-        #    self.run_name = "run_0_"+time.strftime("%Y%m%d_%H%M%S",time.gmtime())
-        #else:
-        #    self.run_name = "run_%d"%self.run_number
+        # Define run name using run number and start time
         self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
 
         # Write run name to current_run file for monitoring
@@ -81,22 +89,17 @@ class Run:
 
         self.run_dir = self.daq_dir+"/runs/"+self.run_name
 
-        self.config_dir = self.run_dir+"/cfg"
-        #self.config_file = "run_%d.cfg"%self.run_number
-        #self.config_file_head = "run_%d"%self.run_number
+        self.config_dir = "%s/cfg"%self.run_dir
         self.config_file = "%s.cfg"%self.run_name
         self.config_file_head = self.run_name
 
-        self.log_dir = self.run_dir+"/log"
-        #self.log_file_head = "run_%d"%self.run_number
+        self.log_dir = "%s/log"%self.run_dir
         self.log_file_head = self.run_name
 
-        self.stream_dir = self.daq_dir+"/local/streams/"+self.run_name
-        #self.stream_head = "run_%d"%self.run_number
+        self.stream_dir = "%s/local/streams/%s"%(self.daq_dir,self.run_name)
         self.stream_head = self.run_name
 
         self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
-        #self.rawdata_head = "run_%d"%self.run_number
         self.rawdata_head = self.run_name
 
         # Make sure Merger runs on a different node after each run
@@ -116,6 +119,15 @@ class Run:
         # Configure Level1 processes for this run
         for level1 in self.level1_list:
             self.runconfig_level1(level1)
+
+        # If this is a real run, create it in the DB
+        if (self.run_number):
+            print "Creating Run %d structure in DB"%self.run_number
+            if self.create_run_in_db() == "error":
+                print "Run::change_run - ERROR - Cannot create Run in the DB"
+                return False
+
+        return True
 
     def next_merger_node(self):
 
@@ -157,10 +169,10 @@ class Run:
         self.level1_list = []
 
         self.run_number = 0
-        self.run_name = "run_0_%s"%time.strftime("%Y%m%d_%H%M%S",time.gmtime())
+        self.run_name = "run_%7.7d_%s"%(self.run_number,time.strftime("%Y%m%d_%H%M%S",time.gmtime()))
         self.run_type = "TEST"
         self.run_user = "PADME crew"
-        self.run_comment_start = "Generic run"
+        self.run_comment_start = "Generic start of run"
         self.run_comment_end = "Generic end of run"
 
         self.run_dir = "%s/runs/%s"%(self.daq_dir,self.run_name)
@@ -175,8 +187,10 @@ class Run:
         self.stream_dir = "%s/local/streams/%s"%(self.daq_dir,self.run_name)
         self.stream_head = self.run_name
 
+        self.rawdata_dir = "%s/%s"%(self.rawdata_root_dir,self.run_name)
+        self.rawdata_head = self.run_name
+
         self.trigger_node = "localhost"
-        #self.trigger_mask = "111111"
 
         self.merger_node = "localhost"
         self.merger_node_list = []
@@ -244,150 +258,97 @@ class Run:
 
         return "ok"
 
+    def config_list(self):
+
+        cfg_list = []
+
+        cfg_list.append(["user_account",      self.user_account])
+        cfg_list.append(["daq_dir",           self.daq_dir])
+        cfg_list.append(["base_port_number",  self.base_port_number])
+        cfg_list.append(["ssh_id_file",       self.ssh_id_file])
+
+        cfg_list.append(["daq_executable",    self.daq_executable])
+        cfg_list.append(["trigger_executable",self.trigger_executable])
+        cfg_list.append(["merger_executable", self.merger_executable])
+        cfg_list.append(["level1_executable", self.level1_executable])
+
+        cfg_list.append(["start_file",        self.start_file])
+        cfg_list.append(["quit_file",         self.quit_file])
+        cfg_list.append(["trig_start_file",   self.trig_start_file])
+        cfg_list.append(["trig_stop_file",    self.trig_stop_file])
+        cfg_list.append(["initok_file_head",  self.initok_file_head])
+        cfg_list.append(["initfail_file_head",self.initfail_file_head])
+        cfg_list.append(["lock_file_head",    self.lock_file_head])
+        cfg_list.append(["rawdata_dir",       self.rawdata_dir])
+
+        cfg_list.append(["run_number",        str(self.run_number)])
+        cfg_list.append(["run_name",          self.run_name])
+        cfg_list.append(["run_dir",           self.run_dir])
+        cfg_list.append(["run_type",          self.run_type])
+        cfg_list.append(["run_user",          self.run_user])
+        cfg_list.append(["run_comment_start", self.run_comment_start])
+        cfg_list.append(["setup",             self.setup])
+
+        s_board_list = ""
+        for b in self.boardid_list:
+            if (s_board_list):
+                s_board_list += " %d"%b
+            else:
+                s_board_list = "%d"%b
+        cfg_list.append(["board_list",s_board_list])
+
+        for b in self.boardid_list:
+            for link in self.board_link_list:
+                (board,host,port,node) = link
+                if b == int(board):
+                    board_link = "%s %s %s %s"%(board,host,port,node)
+                    cfg_list.append(["board_link","%s %s %s %s"%(board,host,port,node)])
+
+        cfg_list.append(["config_dir",      self.config_dir])
+        cfg_list.append(["config_file",     self.config_file])
+        cfg_list.append(["config_file_head",self.config_file_head])
+
+        cfg_list.append(["log_dir",         self.log_dir])
+        cfg_list.append(["log_file_head",   self.log_file_head])
+
+        cfg_list.append(["stream_dir",      self.stream_dir])
+        cfg_list.append(["stream_head",     self.stream_head])
+
+        cfg_list.append(["rawdata_dir",     self.rawdata_dir])
+        cfg_list.append(["rawdata_head",    self.rawdata_head])
+
+        cfg_list.append(["trigger_node",    self.trigger_node])
+
+        if self.merger_node:
+            cfg_list.append(["merger_node", self.merger_node])
+
+        if self.merger_node_list:
+            cfg_list.append(["merger_node_list"," ".join(self.merger_node_list)])
+
+        cfg_list.append(["level1_nproc",    str(self.level1_nproc)])
+        cfg_list.append(["level1_maxevt",   str(self.level1_maxevt)])
+
+        cfg_list.append(["total_daq_time",  str(self.total_daq_time)])
+
+        return cfg_list
+
     def format_config(self):
 
         cfgstring = ""
-
-        cfgstring += "user_account\t\t%s\n"%self.user_account
-        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
-        cfgstring += "base_port_number\t\t%s\n"%self.base_port_number
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-
-        cfgstring += "daq_executable\t\t%s\n"%self.daq_executable
-        cfgstring += "trigger_executable\t%s\n"%self.trigger_executable
-        cfgstring += "merger_executable\t%s\n"%self.merger_executable
-        cfgstring += "level1_executable\t%s\n"%self.level1_executable
-
-        cfgstring += "start_file\t\t%s\n"%self.start_file
-        cfgstring += "quit_file\t\t%s\n"%self.quit_file
-        cfgstring += "trig_start_file\t\t%s\n"%self.trig_start_file
-        cfgstring += "trig_stop_file\t\t%s\n"%self.trig_stop_file
-        cfgstring += "initok_file_head\t%s\n"%self.initok_file_head
-        cfgstring += "initfail_file_head\t%s\n"%self.initfail_file_head
-        cfgstring += "lock_file_head\t\t%s\n"%self.lock_file_head
-        cfgstring += "rawdata_dir\t\t%s\n"%self.rawdata_dir
-
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        cfgstring += "run_name\t\t%s\n"%self.run_name
-        cfgstring += "run_dir\t\t\t%s\n"%self.run_dir
-        cfgstring += "run_type\t\t%s\n"%self.run_type
-        cfgstring += "run_user\t\t%s\n"%self.run_user
-        cfgstring += "run_comment_start\t%s\n"%self.run_comment_start
-        cfgstring += "setup\t\t\t%s\n"%self.setup
-
-        s_board_list = ""
-        for b in self.boardid_list:
-            if (s_board_list):
-                s_board_list += " %d"%b
-            else:
-                s_board_list = "%d"%b
-        cfgstring += "board_list\t\t%s\n"%s_board_list
-
-        for b in self.boardid_list:
-            for link in self.board_link_list:
-                (board,host,port,node) = link
-                if b == int(board):
-                    board_link = "%s %s %s %s"%(board,host,port,node)
-                    cfgstring += "board_link\t\t%s\n"%board_link
-
-        cfgstring += "config_dir\t\t%s\n"%self.config_dir
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "config_file_head\t%s\n"%self.config_file_head
-
-        cfgstring += "log_dir\t\t\t%s\n"%self.log_dir
-        cfgstring += "log_file_head\t\t%s\n"%self.log_file_head
-
-        cfgstring += "stream_dir\t\t%s\n"%self.stream_dir
-        cfgstring += "stream_head\t\t%s\n"%self.stream_head
-
-        cfgstring += "rawdata_dir\t\t%s\n"%self.rawdata_dir
-        cfgstring += "rawdata_head\t\t%s\n"%self.rawdata_head
-
-        cfgstring += "trigger_node\t\t%s\n"%self.trigger_node
-        #cfgstring += "trigger_mask\t\t%s\n"%self.trigger_mask
-
-        if self.merger_node:
-            cfgstring += "merger_node\t\t%s\n"%self.merger_node
-
-        if self.merger_node_list:
-            cfgstring += "merger_node_list\t\t%s\n"%" ".join(self.merger_node_list)
-
-        cfgstring += "level1_nproc\t\t%d\n"%self.level1_nproc
-        cfgstring += "level1_maxevt\t\t%d\n"%self.level1_maxevt
-
-        cfgstring += "total_daq_time\t\t"+str(self.total_daq_time)+"\n"
-
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%(cfg[0],cfg[1])
         return cfgstring
 
-    def create_run(self):
+    def create_run_in_db(self):
 
-        # Create run in DB and save its configuration parameters
+        # Create run in DB
+        self.db.create_run(self.run_number,self.run_name,self.run_type)
+        self.db.set_run_time_create(self.run_number,self.db.now_str())
+        self.db.set_run_user(self.run_number,self.run_user)
+        self.db.set_run_comment_start(self.run_number,self.db.now_str(),self.run_comment_start)
 
-        self.db.create_run(self.run_number,self.run_type,self.run_user,self.run_comment_start)
-
-        self.db.add_cfg_para_run(self.run_number,"user_account",       self.user_account)
-        self.db.add_cfg_para_run(self.run_number,"daq_dir",            self.daq_dir)
-        self.db.add_cfg_para_run(self.run_number,"base_port_number",   self.base_port_number)
-        self.db.add_cfg_para_run(self.run_number,"ssh_id_file",        self.ssh_id_file)
-
-        self.db.add_cfg_para_run(self.run_number,"daq_executable",     self.daq_executable)
-        self.db.add_cfg_para_run(self.run_number,"trigger_executable", self.trigger_executable)
-        self.db.add_cfg_para_run(self.run_number,"merger_executable",  self.merger_executable)
-        self.db.add_cfg_para_run(self.run_number,"level1_executable",  self.level1_executable)
-
-        self.db.add_cfg_para_run(self.run_number,"start_file",         self.start_file)
-        self.db.add_cfg_para_run(self.run_number,"quit_file",          self.quit_file)
-        self.db.add_cfg_para_run(self.run_number,"trig_start_file",    self.trig_start_file)
-        self.db.add_cfg_para_run(self.run_number,"trig_stop_file",     self.trig_stop_file)
-        self.db.add_cfg_para_run(self.run_number,"initok_file_head",   self.initok_file_head)
-        self.db.add_cfg_para_run(self.run_number,"initfail_file_head", self.initfail_file_head)
-        self.db.add_cfg_para_run(self.run_number,"lock_file_head",     self.lock_file_head)
-
-        self.db.add_cfg_para_run(self.run_number,"run_name",self.run_name)
-        self.db.add_cfg_para_run(self.run_number,"run_dir",self.run_dir)
-        self.db.add_cfg_para_run(self.run_number,"setup",self.setup)
-
-        s_board_list = ""
-        for b in self.boardid_list:
-            if (s_board_list):
-                s_board_list += " %d"%b
-            else:
-                s_board_list = "%d"%b
-        self.db.add_cfg_para_run(self.run_number,"board_list",s_board_list)
-
-        for b in self.boardid_list:
-            for link in self.board_link_list:
-                (board,host,port,node) = link
-                if b == int(board):
-                    board_link = "%s %s %s %s"%(board,host,port,node)
-                    self.db.add_cfg_para_run(self.run_number,"board_link",board_link)
-
-        self.db.add_cfg_para_run(self.run_number,"config_dir",         self.config_dir)
-        self.db.add_cfg_para_run(self.run_number,"config_file",        self.config_file)
-        self.db.add_cfg_para_run(self.run_number,"config_file_head",   self.config_file_head)
-
-        self.db.add_cfg_para_run(self.run_number,"log_dir",            self.log_dir)
-        self.db.add_cfg_para_run(self.run_number,"log_file_head",      self.log_file_head)
-
-        self.db.add_cfg_para_run(self.run_number,"stream_dir",         self.stream_dir)
-        self.db.add_cfg_para_run(self.run_number,"stream_head",        self.stream_head)
-
-        self.db.add_cfg_para_run(self.run_number,"rawdata_dir",        self.rawdata_dir)
-        self.db.add_cfg_para_run(self.run_number,"rawdata_head",       self.rawdata_head)
-
-        self.db.add_cfg_para_run(self.run_number,"trigger_node",       self.trigger_node)
-        #self.db.add_cfg_para_run(self.run_number,"trigger_mask",       self.trigger_mask)
-
-        if self.merger_node:
-            self.db.add_cfg_para_run(self.run_number,"merger_node",    self.merger_node)
-
-        if self.merger_node_list:
-            self.db.add_cfg_para_run(self.run_number,"merger_node_list",    " ".join(self.merger_node_list))
-
-        self.db.add_cfg_para_run(self.run_number,"level1_nproc",       str(self.level1_nproc))
-        self.db.add_cfg_para_run(self.run_number,"level1_maxevt",      str(self.level1_maxevt))
-
-        self.db.add_cfg_para_run(self.run_number,"total_daq_time",     self.total_daq_time)
+        # Add all configuration parameters
+        for cfg in self.config_list():
+            self.db.add_cfg_para_run(self.run_number,cfg[0],cfg[1])
 
         # Create board structures in DB
         for adc in (self.adcboard_list):
@@ -896,6 +857,11 @@ class Run:
             print command
             os.system(command)
 
+        # Update run status in DB
+        if (self.run_number):
+            self.db.set_run_time_start(self.run_number,self.db.now_str())
+            self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
+
     def stop(self):
 
         # Disable triggers
@@ -921,6 +887,12 @@ class Run:
 
         # Write run name to last_run file for monitoring
         with open(self.last_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
+
+        # Finalize run in DB
+        if (self.run_number):
+            self.db.set_run_status(self.run_number,self.final_status)
+            self.db.set_run_time_stop(self.run_number,self.db.now_str())
+            self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
 
     def clean_up(self):
 

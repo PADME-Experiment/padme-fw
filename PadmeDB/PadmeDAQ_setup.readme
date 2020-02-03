@@ -19,6 +19,8 @@ $ systemctl start mariadb
 
 $ mysql_secure_installation
 
+Confirm all default choices (remove anonymous user, etc.)
+
 If you do not need external connectivity (e.g. from a web server) to this server,
 or it was already configured, you can skip to point 4.
 
@@ -45,8 +47,13 @@ mysql> CREATE DATABASE PadmeDAQ;
 mysql> CREATE USER 'padme'@'localhost' IDENTIFIED BY '<db_padme_pw>';
 mysql> CREATE USER 'padme'@'127.0.0.1' IDENTIFIED BY '<db_padme_pw>';
 mysql> CREATE USER 'padme'@'%.lnf.infn.it' IDENTIFIED BY '<db_padme_pw>';
+mysql> CREATE USER 'padme'@'192.168.60.%' IDENTIFIED BY '<db_padme_pw>';
+mysql> CREATE USER 'padme'@'192.168.62.%' IDENTIFIED BY '<db_padme_pw>';
 mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'localhost';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'127.0.0.1';
 mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'%.lnf.infn.it';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'192.168.60.%';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'192.168.62.%';
 mysql> exit
 
 8) Reconnect to MySQL as "padme" user (using <db_padme_pw>) and create the
@@ -62,3 +69,25 @@ insert all board-related information in the database:
 $ ./PadmeDAQ_setup.py
 
 10) The PadmeDAQ database is now ready to accept data!
+
+Additional access configuration
+===============================
+
+The PADME DAQ system access to the database must be configured in the .padme-dbaccess.sh
+file in the daq home directory.
+
+The file must contain the following lines:
+
+export PADME_DB_NAME=PadmeDAQ
+export PADME_DB_HOST=<host>
+export PADME_DB_PORT=<port>
+export PADME_DB_USER=padme
+export PADME_DB_PASSWD=<db_padme_pw>
+
+where <host> and <port> point to the newly configured database server.
+If the server runs on the same host as the RunControl, then <host> is localhost
+and <port> is 5501.
+
+Users can also connect to the server using the command
+
+mysql --host=$PADME_DB_HOST --port=$PADME_DB_PORT --user=$PADME_DB_USER --password=$PADME_DB_PASSWD $PADME_DB_NAME

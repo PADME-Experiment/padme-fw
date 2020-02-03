@@ -2,13 +2,17 @@
 // History:
 //
 // Created by Stefania Spagnolo (stefania.spagnolo@le.infn.it) 2019-03-14
-//
+// Modified by Gabriele Piperno (gabriele.piperno@roma1.infn.it) 2019-10-10
 // --------------------------------------------------------------
 #ifndef ECalCalibration_H
 #define ECalCalibration_H
 
 #include "PadmeVCalibration.hh"
+#include "ECalCalibHandler.hh"
+class TRawEvent;
+
 #include <vector>
+#include <string>
 
 
 class ECalCalibration : public PadmeVCalibration
@@ -20,9 +24,20 @@ public:
   ~ECalCalibration();
   void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
   void ReadCalibConstant();
-  void PerformCalibration(std::vector<TRecoVHit *> &hitArray);
+  void PerformCalibration(std::vector<TRecoVHit *> &hitArray,TRawEvent* rawEv);
+  int SearchCalibFile();
+  void SetEventTime(TTimeStamp ET){fEvTime = ET;}
+  TTimeStamp GetEventTime(){return fEvTime;}
+
 
 private:
+
+  ECalCalibHandler* fCalibHandler;
+
+  TTimeStamp fEvTime;
+
+  std::string fCalibList;
+
   Int_t     fUseCalibE;
   Int_t     fUseCalibT;
 
@@ -37,7 +52,7 @@ private:
   double fHitTCorrected;
 
   double fCalibConst;
-  int fCalibVersion;
+  std::string fCalibVersion;
   double fBID;
   double fChID;
 

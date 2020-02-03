@@ -32,7 +32,7 @@ CPPFLAGS =  $(ROOTCFLAGS) -I$(IDIR) -I$(PADMEROOTDIR)/include -I/usr/include
 DEPEND = $(CXX) -MM
 
 # Define parameters for link command (-lrt is needed for old Scientific Linux 6 linker)
-LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -L/usr/lib64/mysql -lmysqlclient -lrt
+LIBS	= -L$(PADMEROOTDIR)/lib -lPadmeRoot -L/usr/lib64/mysql -lmysqlclient -lrt -lz
 LDFLAGS = -O4 $(ROOTLDFLAGS) $(LIBS) $(ROOTLIBS)
 
 # Get list of files to process

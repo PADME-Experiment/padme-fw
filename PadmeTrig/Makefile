@@ -25,7 +25,8 @@ CFLAGS	=	-fPIC -DLINUX -O2 -g -Wall -I$(IDIR)
 #CC	=	g++
 #CFLAGS	=	-DLINUX -O0 -g -Wall -I$(IDIR)
 
-LIBS	=	-L/usr/lib64/mysql -lmysqlclient -lm -lrt
+#LIBS	=	-L/usr/lib64/mysql -lmysqlclient -lm -lrt
+LIBS	=	-lm -lrt
 
 #########################################################################
 

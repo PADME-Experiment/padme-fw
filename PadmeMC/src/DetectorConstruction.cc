@@ -118,6 +118,7 @@ DetectorConstruction::DetectorConstruction()
 
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
+  fCrossMagneticVolume = "internal";
 
   fWorldIsFilledWithAir = 0;
 
@@ -224,20 +225,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fBeamLineStructure->CreateGeometry();
   }
 
-  // Vacuum chamber structure
-  if (fEnableChamber) {
-    fChamberStructure->EnableChamber();
-  } else {
-    fChamberStructure->DisableChamber();
-  }
-  if (fChamberIsVisible) {
-    fChamberStructure->SetChamberVisible();
-  } else {
-    fChamberStructure->SetChamberInvisible();
-  }
-  fChamberStructure->SetMotherVolume(logicWorld);
-  fChamberStructure->CreateGeometry();
-
   // Create magnetic volume inside vacuum chamber
 
   G4double magVolMinX = -0.5*geoChamber->GetVCInnerSizeX()+1.*um;
@@ -289,9 +276,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4ThreeVector magVolPos = G4ThreeVector(0.,0.,0.);
   //new G4PVPlacement(magVolRot,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
-  // Compromise to save goat and cabbages
-  // Some fine adjustments to improve volume matching after rotation
+  // Compromise solution
+
+  // Create the initial standard box sothat E/PVeto will not require displacement/rotation
   G4Box* solidMagVol1 = new G4Box("MagVol1",magVolHLX,magVolHLY,magVolHLZ);
+
+  // Add the triangular shape in the forward region
+  // Some fine adjustments to improve volume matching after rotation
   std::vector<G4TwoVector> magVolShape(4);
   magVolShape[0] = G4TwoVector(magVolMaxX-30.*um, magVolMaxZ-20.*um);
   magVolShape[1] = G4TwoVector(551.0*mm,          magVolMaxZ-20.*um);
@@ -301,22 +292,81 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4RotationMatrix* magVol2Rot = new G4RotationMatrix;
   magVol2Rot->rotateX(-90.*deg);
   G4ThreeVector magVol2Pos = G4ThreeVector(0.,0.,-magVolPosZ);
-  G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol1,solidMagVol2,magVol2Rot,magVol2Pos);
+  G4UnionSolid* solidMagVol3 = new G4UnionSolid("MagneticVolume",solidMagVol1,solidMagVol2,magVol2Rot,magVol2Pos);
+
+  // Add cylinder at entrance hole up to end of vacuum chamber flange
+  G4double ehRIn = geoChamber->GetCPZRIn();
+  G4double ehLen = geoChamber->GetVCInnerFacePosZ()-geoChamber->GetJunBackFacePosZ();
+  G4Tubs* solidMagVol4 = new G4Tubs("CPZ",0.,ehRIn-1.*um,0.5*ehLen,0.*deg,360.*deg);
+  G4ThreeVector magVol4Pos = G4ThreeVector(0.,0.,0.5*(geoChamber->GetVCInnerFacePosZ()+geoChamber->GetJunBackFacePosZ())-magVolPosZ+1.*um);
+  G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol3,solidMagVol4,0,magVol4Pos);
+
   G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
   new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
-  // Create magnetic volume inside beam entrance pipe
+  // Magnetic volume in the target cross region and its position
+  G4LogicalVolume* logicMagneticVolumeCross;
+  G4ThreeVector positionMagneticVolumeCross;
 
-  G4double cpzRIn = geoChamber->GetCPZRIn();
-  //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
-  G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
-  G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
-  G4ThreeVector cpzPos(0.,0.,geoChamber->GetVCInnerFacePosZ()-0.5*cpzLen);
-  G4LogicalVolume* logicMagneticVolumeCP =
-    new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCP",0,0,0);
-  if (! fMagneticVolumeIsVisible) logicMagneticVolumeCP->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,cpzPos,logicMagneticVolumeCP,"MagneticVolumeCP",logicWorld,false,0,true);
+  if ( fCrossMagneticVolume == "internal" ) {
+
+    // Create magnetic volume inside beam entrance pipe
+
+    G4double cpzRIn = geoChamber->GetCPZRIn();
+    //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+    //G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
+    G4double cpzLen = geoChamber->GetJunBackFacePosZ()-geoChamber->GetCPZPosZ()-5.*mm; // Length is set to not include the instrumented section of the target
+    G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
+
+    //positionMagneticVolumeCross = G4ThreeVector(0.,0.,geoChamber->GetVCOuterFacePosZ()-0.5*cpzLen);
+    positionMagneticVolumeCross = G4ThreeVector(0.,0.,geoChamber->GetJunBackFacePosZ()-0.5*cpzLen-1.*um);
+    logicMagneticVolumeCross =
+      new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCross",0,0,0);
+
+  } else {
+
+    // Create a box with XY section matching that of the volume inside the vacuum chamber
+    // and position it to include the whole Cross region
+
+    G4double cmvMinX = magVolMinX;
+    G4double cmvMinY = magVolMinY;
+    G4double cmvMinZ = geoChamber->GetCrossFrontFacePosZ();
+
+    G4double cmvMaxX = magVolMaxX;
+    G4double cmvMaxY = magVolMaxY;
+    G4double cmvMaxZ = geoChamber->GetVCOuterFacePosZ();
+
+    G4double cmvHLX = 0.5*(cmvMaxX-cmvMinX);
+    G4double cmvHLY = 0.5*(cmvMaxY-cmvMinY);
+    G4double cmvHLZ = 0.5*(cmvMaxZ-cmvMinZ);
+
+    G4Box* cmvSolid1 = new G4Box("CMV1",cmvHLX,cmvHLY,cmvHLZ);
+
+    // Subtract cylinders corresponding to vacuum chamber flange and pipe
+    G4double flgR = geoChamber->GetJunFlangeROut();
+    // Apparently the chamber flange thickness is thinner than the 2cm flange on the junction pipe
+    // To be checked on the real chamber
+    G4double flgL = geoChamber->GetJunFlangeThick()-3.*mm;
+    G4Tubs* cmvSolid2 = new G4Tubs("CMV2",0.,flgR,0.5*flgL,0.*deg,360.*deg);
+    G4double pipR = geoChamber->GetJunROut();
+    G4double pipL = geoChamber->GetVCOuterFacePosZ()-geoChamber->GetJunBackFacePosZ()-flgL;
+    G4Tubs* cmvSolid3 = new G4Tubs("CMV3",0.,pipR,0.5*pipL,0.*deg,360.*deg);
+
+    G4SubtractionSolid* cmvSolid4 = new G4SubtractionSolid("CMV4",cmvSolid1,cmvSolid2,0,G4ThreeVector(0.,0.,cmvHLZ-pipL-0.5*flgL));
+    G4SubtractionSolid* cmvSolid5 = new G4SubtractionSolid("CMV5",cmvSolid4,cmvSolid3,0,G4ThreeVector(0.,0.,cmvHLZ-0.5*pipL));
+    
+    G4double cmvPosX = 0.5*(cmvMaxX+cmvMinX);
+    G4double cmvPosY = 0.5*(cmvMaxY+cmvMinY);
+    G4double cmvPosZ = 0.5*(cmvMaxZ+cmvMinZ);
+    positionMagneticVolumeCross = G4ThreeVector(cmvPosX,cmvPosY,cmvPosZ);
+    logicMagneticVolumeCross = new G4LogicalVolume(cmvSolid5,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCross",0,0,0);
+
+  }
+
+  if (! fMagneticVolumeIsVisible)
+    logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::Invisible);
+  new G4PVPlacement(0,positionMagneticVolumeCross,logicMagneticVolumeCross,"MagneticVolumeCross",logicWorld,false,0,true);
 
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
@@ -324,15 +374,36 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     if (fVerbose)
       printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
-    logicMagneticVolumeCP->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
+    logicMagneticVolumeCross->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
   }
 
-  // Tungsten target dump
-  if (fEnableTungsten) {
-    fTungstenDetector->SetMotherVolume(logicMagneticVolumeCP);
-    fTungstenDetector->SetTungstenDisplacePosZ(cpzPos.z()); // Take into account magnetic volume displacement
-    fTungstenDetector->CreateGeometry();
+  // Vacuum chamber structure
+  if (fEnableChamber) {
+    fChamberStructure->EnableChamber();
+  } else {
+    fChamberStructure->DisableChamber();
   }
+  if (fChamberIsVisible) {
+    fChamberStructure->SetChamberVisible();
+  } else {
+    fChamberStructure->SetChamberInvisible();
+  }
+  fChamberStructure->SetMotherVolume(logicWorld);
+  if ( fCrossMagneticVolume == "internal" ) {
+    fChamberStructure->SetCrossMotherVolume(logicWorld);
+    fChamberStructure->SetCrossDisplacePosZ(0.);
+  } else {
+    fChamberStructure->SetCrossMotherVolume(logicMagneticVolumeCross);
+    fChamberStructure->SetCrossDisplacePosZ(positionMagneticVolumeCross.z());
+  }
+  fChamberStructure->CreateGeometry();
+
+  //// Tungsten target dump
+  //if (fEnableTungsten) {
+  //  fTungstenDetector->SetMotherVolume(logicMagneticVolumeCP);
+  //  fTungstenDetector->SetTungstenDisplacePosZ(cpzPos.z()); // Take into account magnetic volume displacement
+  //  fTungstenDetector->CreateGeometry();
+  //}
 
   // Concrete wall at large Z
   if (fEnableWall) {
@@ -354,14 +425,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Target
   if (fEnableTarget) {
-
-    // Should target be included in the magnetic volume, do not forget to take into account its displacement
-    //fTargetDetector->SetMotherVolume(logicMagneticVolumeCP);
-    //fTargetDetector->SetTargetDisplacePosZ(cpzPos.z());
-
-    fTargetDetector->SetMotherVolume(logicWorld);
-    fTargetDetector->SetTargetDisplacePosZ(0.);
-
+    if ( fCrossMagneticVolume == "internal" ) {
+      fTargetDetector->SetMotherVolume(logicWorld);
+      fTargetDetector->SetTargetDisplacePosZ(0.);
+    } else {
+      fTargetDetector->SetMotherVolume(logicMagneticVolumeCross);
+      fTargetDetector->SetTargetDisplacePosZ(positionMagneticVolumeCross.z());
+    }
     fTargetDetector->CreateGeometry();
   }
 
@@ -792,6 +862,12 @@ void DetectorConstruction::MagneticVolumeIsInvisible()
 {
   if (fVerbose) printf("Magnetic volume is invisible\n");
   fMagneticVolumeIsVisible = 0;
+}
+
+void DetectorConstruction::SetCrossMagneticVolume(G4String str)
+{
+  if (fVerbose) printf("Magnetic volume in the Cross region is %s\n",str.data());
+  fCrossMagneticVolume = str;
 }
 
 void DetectorConstruction::SetMagFieldValue(G4double v)

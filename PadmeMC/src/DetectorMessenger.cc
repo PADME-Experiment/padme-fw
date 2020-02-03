@@ -45,6 +45,15 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fDisableMagFieldCmd->SetGuidance("Disable magnetic field in simulation.");
   fDisableMagFieldCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fCrossMagVolCmd = new G4UIcmdWithAString("/Detector/CrossMagneticVolume",this);
+  fCrossMagVolCmd->SetGuidance("Define magnetic volume to be used in the Cross (Target) zone.");
+  fCrossMagVolCmd->SetGuidance("Possible choices are:");
+  fCrossMagVolCmd->SetGuidance("internal     magnetic field only inside the beam pipe (old style).");
+  fCrossMagVolCmd->SetGuidance("external     the full cross region is included in the magnetic field.");
+  fCrossMagVolCmd->SetParameterName("CMV",false);
+  fCrossMagVolCmd->SetCandidates("internal external");
+  fCrossMagVolCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fMagVolVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetMagneticVolumeVisible",this);
   fMagVolVisibleCmd->SetGuidance("Make magnetic volume visible.");
   fMagVolVisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -112,6 +121,7 @@ DetectorMessenger::~DetectorMessenger()
   delete fDisableStructCmd;
   delete fEnableMagFieldCmd;
   delete fDisableMagFieldCmd;
+  delete fCrossMagVolCmd;
   delete fMagVolVisibleCmd;
   delete fMagVolInvisibleCmd;
   delete fMagnetVisibleCmd;
@@ -140,6 +150,8 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if( command == fEnableMagFieldCmd )  fDetector->EnableMagneticField();
   if( command == fDisableMagFieldCmd ) fDetector->DisableMagneticField();
+
+  if ( command == fCrossMagVolCmd ) fDetector->SetCrossMagneticVolume(newValue);
 
   if( command == fMagVolVisibleCmd )   fDetector->MagneticVolumeIsVisible();
   if( command == fMagVolInvisibleCmd ) fDetector->MagneticVolumeIsInvisible();

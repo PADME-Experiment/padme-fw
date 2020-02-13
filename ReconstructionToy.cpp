@@ -11,7 +11,7 @@
 
 #define NPOINTS 1024
 #define BinsPerNs 1024./400.
-#define NoEventsToPrint 1
+#define NoEventsToPrint 10
 
 char name[256];
 Int_t fProcessing = 2;
@@ -22,7 +22,7 @@ TGraph *GraphFilling(Int_t x[],Double_t y[]);
 
 void GraphDrawing(TGraph *graph[], TGraph *procgraph[], Int_t NoEvents);
 
-Double_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo, std::vector<Double_t> *Time);
+Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo, std::vector<Double_t> *Time);
 
 int main(Int_t argc, char **argv){
   TFile *file = TFile::Open("GeneratedSignals.root","update");
@@ -33,8 +33,6 @@ int main(Int_t argc, char **argv){
   
   TTree *readtree;
   file->GetObject("SigTree",readtree);
-
-  TTree *writetree = new TTree("RecoTree","Generated Signal Tree");
   
   Int_t TotEvents=readtree->GetEntries();
   
@@ -59,17 +57,15 @@ int main(Int_t argc, char **argv){
   std::vector<Double_t> *tProcRecoBins= new std::vector<Double_t>; //Reconstructed hit times from TSpectrum on raw data
   std::vector<Double_t> *tUnProcRecoBins =new std::vector<Double_t>; //Reconstructed hit times from TSpectrum on RRC processed data
 
-  Int_t NoRecoUnProc=0;
-  Int_t NoRecoProc=0;
+  Int_t NoRecoUnProc=0;//Number of hits reconstructed by TSpectrum without digital processing
+  Int_t NoRecoProc=0;//Number of hits reconstructed by TSpectrum from digitally processed signals
   
   //create new branch for reconstructed time
   TBranch *BTRecoUnProc=readtree->Branch("TRecoUnProc","vector<Double_t>",&tUnProcRecoBins);
   TBranch *BTRecoProc  =readtree->Branch("TRecoProc","vector<Double_t>",&tProcRecoBins);
   TBranch *BNoRecoUnProc=readtree->Branch("NoRecoUnProc",&NoRecoUnProc,"NoRecoUnProc/I");
   TBranch *BNoRecoProc=readtree->Branch("NoRecoProc",&NoRecoProc,"NoRecoProc/I");
-
-    
-  writetree->Print();
+  
   readtree->Print();
   std::cout<<TotEvents<<std::endl;
 
@@ -106,28 +102,28 @@ int main(Int_t argc, char **argv){
     tProcRecoBins->clear();
     tUnProcRecoBins->clear();
 
-    NoRecoUnProc = CalcChaTime(sigfinal,1, hTSpecRecoUnProc, hRaw, cTSpectrum, TotalTSpecUnProcNo,eventno,tUnProcRecoBins);
+    NoRecoUnProc = 10;//CalcChaTime(sigfinal,1, hTSpecRecoUnProc, hRaw, cTSpectrum, TotalTSpecUnProcNo,eventno,tUnProcRecoBins);
     std::sort(tUnProcRecoBins->begin(),tUnProcRecoBins->end());
     
     if(fProcessing==2){
-      NoRecoProc = CalcChaTime(sigfinal,2, hTSpecRecoProc, hRaw, cTSpectrum, TotalTSpecProcNo,eventno,tProcRecoBins);
+      NoRecoProc = 5;//CalcChaTime(sigfinal,2, hTSpecRecoProc, hRaw, cTSpectrum, TotalTSpecProcNo,eventno,tProcRecoBins);
       std::sort(tProcRecoBins->begin(),tProcRecoBins->end());
     }
 
-    if(fProcessing==1&&eventno<100) std::cout<<"Event "<<eventno<<"\t"<<HitsPerEvent<<"\t"<<NoRecoUnProc<<std::endl;
-    if(fProcessing==2&&eventno<100) std::cout<<"Event "<<eventno<<"\t"<<HitsPerEvent<<"\t"<<NoRecoUnProc<<"\t"<<NoRecoProc<<std::endl;
+    if(fProcessing==1&&eventno%100==0) std::cout<<"Event "<<eventno<<" HitsPerEvent "<<HitsPerEvent<<" NoRecoUnProc "<<NoRecoUnProc<<std::endl;
+    if(fProcessing==2&&eventno%100==0) std::cout<<"Event "<<eventno<<" HitsPerEvent "<<HitsPerEvent<<" NoRecoUnProc "<<NoRecoUnProc<<" NoRecoProc "<<NoRecoProc<<std::endl;
 
-    BTRecoUnProc->Fill();
-    BTRecoProc->Fill();
     BNoRecoUnProc->Fill();
     BNoRecoProc->Fill();
+    BTRecoUnProc->Fill();
+    BTRecoProc->Fill();
   }
   
   cFinal->Print("TSpectrumResults.pdf]");//closes the file
   GraphDrawing(grapharr,procgrapharr,NoEventsToPrint);
   readtree->Write();
   
-   delete file;
+  delete file;
 }
 
 void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int npoints, Double_t timebin) { //Beth, implemented from Venelin's idea 06/2019
@@ -181,7 +177,7 @@ void GraphDrawing(TGraph *graph[], TGraph *procgraph[], Int_t NoEvents){
 }
 
 //std::vector<Double_t> *CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo){
-Double_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo, std::vector<Double_t> *Time){
+Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo, std::vector<Double_t> *Time){
   hTSpec->Reset();
   hPreTSpec->Reset();
 
@@ -206,18 +202,30 @@ Double_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D*
 
   //  std::cout<<"fProcessing = "<<fProcessing<<std::endl;
   
-  if(fProcessing==1)       hTSpec->SetContent(AbsSamRec); //+ve mV
-  if(fProcessing==2){
-    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,1024-1 ,fTimeBin);
+  if(fProcessing==1){
     for(int i=0;i<1000;i++){
-      hTSpec->SetBinContent(i,AbsSamRecDP[i]);
+      hTSpec->SetBinContent(i,AbsSamRec[i]);
     }
-    for(int i=1000;i<1025;i++){
+    for(int i=1000;i<1024;i++){
       hTSpec->SetBinContent(i,0);
     }
   }
-  
-  hPreTSpec->SetContent(AbsSamRec);
+  if(fProcessing==2){
+    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,1024,fTimeBin);
+    for(int i=0;i<1000;i++){
+      hTSpec->SetBinContent(i,AbsSamRecDP[i]);
+    }
+    for(int i=1000;i<1024;i++){
+      hTSpec->SetBinContent(i,0);
+    }
+  }
+  for(int i=0;i<1000;i++){
+    hPreTSpec->SetBinContent(i,AbsSamRec[i]);
+  }
+  for(int i=1000;i<1025;i++){
+    hPreTSpec->SetBinContent(i,0);
+  }
+    //  hPreTSpec->SetContent(AbsSamRec);
   //cTSpec->cd();
   Double_t VMax = hTSpec->GetMaximum(); //mV
   Double_t VMin = hTSpec->GetMinimum(); //mV
@@ -232,7 +240,7 @@ Double_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D*
   
   if(fProcessing==1)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",0.1);
   if(fProcessing==2)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",0.1);     
-  //  std::cout<<"TSpectrum finds "<<nfound<<" peaks"<<std::endl;
+  //std::cout<<"TSpectrum finds "<<nfound<<" peaks"<<std::endl;
 
   if(EventNo<NoEventsToPrint){
     if (fProcessing==1)  sprintf(name,"cTSpectrum%d",EventNo);
@@ -248,8 +256,11 @@ Double_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D*
     TSpecNo++;
     Double_t xp = (s->GetPositionX())[ll];
     Double_t yp = (s->GetPositionY())[ll];
-    //std::cout<<"TSpectrum peak "<<ll<<" xp "<<xp<<" yp "<<yp<<std::endl;
+    //    std::cout<<"TSpectrum peak "<<ll<<" xp "<<xp<<" yp "<<yp<<std::endl;
     Time->push_back(xp);
   }
-  return Time->size();
+
+  //  std::cout<<"nfound "<<nfound<<" Time->size() "<<Time->size()<<std::endl;
+  
+  return Int_t(Time->size());
 }

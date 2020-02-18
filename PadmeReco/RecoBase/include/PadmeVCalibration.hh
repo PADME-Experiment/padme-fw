@@ -22,7 +22,7 @@ public:
   double GetCommonT0MC(){return fCommonT0MC;}
   double GetCommonEnergyScale(){return fCommonEnergyScale;}
   void SetCommonT0(double x)   {fCommonT0=x;}
-  void SetCommonT0MC(double x) {fCommonT0=x;}
+  void SetCommonT0MC(double x) {fCommonT0MC=x;}
   void SetCommonEnergyScale(double x){fCommonEnergyScale=x;}
 
 

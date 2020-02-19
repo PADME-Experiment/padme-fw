@@ -27,6 +27,9 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
+#include "TRandom2.h"
+#include <time.h>
+#include <stdlib.h>
 
 struct TimeEnergy 
 {
@@ -54,6 +57,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fGeometry = new ECalGeometry(); 
   //fTriggerProcessor = new PadmeVTrigger(); // this is done for all detectors in the constructor of PadmeVReconstruction
   fChannelCalibration = new ECalCalibration();
+  r = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
   
   fEnergyCompensation = NULL;
   
@@ -66,6 +71,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
+  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeteriorateEnergyResolution", 0);
 
   //  fClusters.clear();
 }
@@ -763,6 +769,12 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
     // Correct the cluster energy for missing energy
     if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
+    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+      Double_t sigma=EnergyResolution(ClE[iCl]);
+      Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
+      //std::cout << DetEnergy << std::endl;
+      ClE[iCl]=DetEnergy+ClE[iCl];
+    }
     tmpHitsInCl.clear();
     TRecoVCluster* myCl = new TRecoVCluster();
     myCl->SetChannelId( SdCell[iCl] );
@@ -815,6 +827,8 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       TMCVDigi* digi = tEvent->Digi(i);
       int i1 = digi->GetChannelId()/100;
       int i2 = digi->GetChannelId()%100;
+      Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
+      if (BrokenSU)continue;
       TRecoVHit *Hit = new TRecoVHit();
       // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
       int chIdN = i2*100+i1;
@@ -858,7 +872,8 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     int i1 = digi->GetChannelId()/100;
     int i2 = digi->GetChannelId()%100;
     if (idarray[i1][i2]==1) continue;
-
+    Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
+    if (BrokenSU)continue;
     TRecoVHit *Hit = new TRecoVHit();
     hitArrayInCrystal.clear();
     ndigi=1;
@@ -952,4 +967,29 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     Hit->SetTime(thitemax);
     fHits.push_back(Hit);
   }
+}
+
+
+
+
+Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
+  Bool_t BrSU=false;
+  if(x==16 && y==25)   BrSU=true;
+  if(x==18 && y==10)  BrSU=true;
+  if(x==22 && y==8 )  BrSU=true;
+  if(x==18 && y==4 )  BrSU=true;
+  return BrSU;                                                                                                                                                  
+
+}
+
+
+
+
+Double_t ECalReconstruction::EnergyResolution(Double_t energy){
+  Double_t a=0.02;
+  Double_t b=0.00003;
+  Double_t c=0.012;
+  Double_t E=energy/1000.;
+  Double_t RelativeResolution=sqrt((a/sqrt(E))*(a/sqrt(E))+(b/E)*(b/E)+c*c);
+  return RelativeResolution*energy; 
 }

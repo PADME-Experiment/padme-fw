@@ -181,7 +181,8 @@ bool ECalReconstruction::TriggerToBeSkipped()
 
 void ECalReconstruction::BuildHits(TRawEvent* rawEv)
 {
-
+  //// This method differ from  PadmeVReconstruction::BuildHits(TRawEvent* rawEv) only because it attach board and elementID to the DigitizerChannelEcal ====>>> if ChannelVReco woudl store bd and element id, this assignemnt might be don in the base reco class. 
+  
   ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
 

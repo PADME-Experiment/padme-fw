@@ -379,11 +379,14 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);
 	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); 
+ 	fChannelReco->SetChID(ChID); 
+        fChannelReco->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
-	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->SetChannelId(ChID);
 	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
 	  if(fTriggerProcessor)
 	    Hits[iHit]->SetTime(

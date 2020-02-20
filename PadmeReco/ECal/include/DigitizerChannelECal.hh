@@ -63,8 +63,8 @@ public:
 
   void SetAbsSignals();
   
-  Int_t GetChID(){return fChID;};
-  void  SetChID(Int_t ChID){fChID=ChID;};
+  //  Int_t GetChID(){return fChID;};
+  //  void  SetChID(Int_t ChID){fChID=ChID;};
 
   Int_t GetElChID(){return fElChID;};
   void  SetElChID(Int_t ChID){fElChID=ChID;};
@@ -72,8 +72,8 @@ public:
   Int_t GetBdID(){return fBdID;};
   void  SetBdID(Int_t BdID){fBdID=BdID;};
 
-  Int_t GetTrigMask(){return fTrigMask;};
-  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
+  //  Int_t GetTrigMask(){return fTrigMask;};
+  //  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
 
   void SetAnalogOffSets();
   void SaveBDPed(Int_t BID);
@@ -97,10 +97,10 @@ private:
   Double_t fTimeOv;
   UShort_t fNPedSamples;
 
-  Int_t fChID;
+  //  Int_t fChID;
   Int_t fElChID;
   Int_t fBdID;
-  Int_t fTrigMask;
+  //  Int_t fTrigMask;
   Double_t fRMS1000;
   Double_t fRMS200;
   Double_t fAvg200;

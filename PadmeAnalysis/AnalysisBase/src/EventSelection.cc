@@ -1377,8 +1377,8 @@ Bool_t EventSelection::InitHistosAnalysis()
       hSvc->BookHisto(hname, 3000, 0, 3000);
 
       hname="ECal2Cl_InvM_5MeV";
-      nBinX=  750;
-      minX =  0.;
+      nBinX=  750; 
+     minX =  0.;
       hSvc->BookHisto(hname, nBinX, minX, 50);
 
       hname="ECal2Cl_InvM_100MeV";
@@ -2847,7 +2847,7 @@ Bool_t EventSelection::ProcessAnalysisIO()
     }
   }
 
-  Double_t ShiftPVetoSac;
+  /* Double_t ShiftPVetoSac;
   Double_t ShiftECalSac;
   Double_t ShiftECalPVeto;
   Double_t ShiftECalEVeto;
@@ -2862,7 +2862,7 @@ Bool_t EventSelection::ProcessAnalysisIO()
      ShiftECalSac=0;
      ShiftECalPVeto=0;
      ShiftECalEVeto=1;
-  }
+     }*/
 
   TVector3 pos1;
   TVector3 pos2;

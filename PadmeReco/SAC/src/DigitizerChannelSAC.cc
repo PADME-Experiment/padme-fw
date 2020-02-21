@@ -267,6 +267,7 @@ void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArra
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   // M. Raggi 20/07/2019 protect the code againts cosmic scintillators in the SAC digitizer
   Int_t Ch = GetChID();
+  //std::cout<<" SAC chID = "<<Ch<<std::endl;
   if(Ch<0) return;
 
   Double_t fchPed=CalcPedestal();

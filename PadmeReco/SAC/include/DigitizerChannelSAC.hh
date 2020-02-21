@@ -40,11 +40,11 @@ public:
   Double_t CalcPosition(UShort_t);
   Double_t ReadPedFile();
   
-  Int_t GetChID(){return fChID;};
-  void  SetChID(Int_t ChID){fChID=ChID;};
+  // Int_t GetChID(){return fChID;};
+  // void  SetChID(Int_t ChID){fChID=ChID;};
 
-  Int_t GetTrigMask(){return fTrigMask;};
-  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
+  // Int_t GetTrigMask(){return fTrigMask;};
+  // void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
 
   void SetAbsSignals();
   void SetAnalogOffSets();
@@ -63,8 +63,8 @@ private:
 
   Double_t fTime;
   UShort_t fNPedSamples;
-  Int_t fChID;
-  Int_t fTrigMask;
+  //  Int_t fChID;
+  //  Int_t fTrigMask;
 
   Double_t fSigAvg[50];
   TH1D *H1;

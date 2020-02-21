@@ -8,6 +8,7 @@
 #define ECalReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "TRandom2.h"
 
 class TRecoVCluster;
 
@@ -40,6 +41,8 @@ public:
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
+  Bool_t SimulateBrokenSU(Int_t x ,Int_t y);
+  Double_t EnergyResolution(Double_t energy);
 
 private:
   Int_t fClusterizationAlgo;
@@ -51,6 +54,9 @@ private:
   Int_t NNoHits;
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
+  Int_t fDeteriorateEnergyResolution;
+
+  TRandom2 *r;
 
   //Clusters vectors
   std::vector<double> ClE;

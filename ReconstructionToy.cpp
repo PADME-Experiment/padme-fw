@@ -25,15 +25,23 @@ void GraphDrawing(TGraph *graph[], TGraph *procgraph[], Int_t NoEvents);
 Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hPreTSpec, TCanvas* cTSpec[NoEventsToPrint], Int_t& TSpecNo, Int_t EventNo, std::vector<Double_t> *Time);
 
 int main(Int_t argc, char **argv){
-  TFile *file = TFile::Open("GeneratedSignals.root","update");
-  if (!file) {
+  TFile *readfile = TFile::Open("GeneratedSignals.root","update");
+  if (!readfile) {
     std::cout<<"No file named GeneratedSignals.root found"<<std::endl;
     return 0;
   }
   
-  TTree *readtree;
-  file->GetObject("SigTree",readtree);
-  
+  TTree *readtree = (TTree*)readfile->Get("SigTree");
+  //readfile->GetObject("SigTree",readtree);
+
+  TFile *writefile = TFile::Open("ReconstructedSignals.root","recreate");
+  if (!writefile) {
+    std::cout<<"No file named ReconstructedSignals.root found"<<std::endl;
+    return 0;
+  }
+
+  TTree *writetree = new TTree("RecoTree","Reconstructed Signal Tree");
+ 
   Int_t TotEvents=readtree->GetEntries();
   
   Double_t sigfinal[1024];//Final signal - what the DAQ would register, so the sum of all individual hits
@@ -59,12 +67,18 @@ int main(Int_t argc, char **argv){
 
   Int_t NoRecoUnProc=0;//Number of hits reconstructed by TSpectrum without digital processing
   Int_t NoRecoProc=0;//Number of hits reconstructed by TSpectrum from digitally processed signals
+
+  //TBranch *b = readtree->GetBranch("TRecoUnProc");
+  //readtree->GetListOfBranches()->Remove(b);
+  // TLeaf* l= readtree->GetLeaf("TRecoUnProc");
+  // readtree->GetListOfLeaves()->Remove((TObject *)l);
+  // readtree->Write();
   
   //create new branch for reconstructed time
-  TBranch *BTRecoUnProc=readtree->Branch("TRecoUnProc","vector<Double_t>",&tUnProcRecoBins);
-  TBranch *BTRecoProc  =readtree->Branch("TRecoProc","vector<Double_t>",&tProcRecoBins);
-  TBranch *BNoRecoUnProc=readtree->Branch("NoRecoUnProc",&NoRecoUnProc,"NoRecoUnProc/I");
-  TBranch *BNoRecoProc=readtree->Branch("NoRecoProc",&NoRecoProc,"NoRecoProc/I");
+  writetree->Branch("TRecoUnProc","vector<Double_t>",&tUnProcRecoBins);
+  writetree->Branch("TRecoProc","vector<Double_t>",&tProcRecoBins);
+  writetree->Branch("NoRecoUnProc",&NoRecoUnProc,"NoRecoUnProc/I");
+  writetree->Branch("NoRecoProc",&NoRecoProc,"NoRecoProc/I");
   
   readtree->Print();
   std::cout<<TotEvents<<std::endl;
@@ -77,9 +91,8 @@ int main(Int_t argc, char **argv){
   TH1D *hTSpecRecoProc = new TH1D("hTSpecRecoProc","hTSpecRecoProc", 1024,0.,1024.);//Signal after TSpectrum && digital processing (will have markers of TSpectrum-found peaks)
 
   TCanvas *cTSpectrum[NoEventsToPrint];
-  TCanvas *cArrivalTimeSpec = new TCanvas("cArrivalTimeSpec","cArrivalTimeSpec",0,0,800,800);//Spectrum of difference in arrival times (and reconstructed times) of consecutive hits
-  TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,800);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
-  TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,800);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
+  // TCanvas *cRatioUnProc = new TCanvas("cRatioUnProc","cRatioUnProc",0,0,800,800);//Ratio of reconstructed hit time differences to ToyMC created hit time differences
+  // TCanvas *cRatioProc = new TCanvas("cRatioProc","cRatioProc",0,0,800,800);//Ratio of reconstructed hit time differences from RRC Processed signals to ToyMC created hit time differences
  
   TGraph  *grapharr[NoEventsToPrint];
   TGraph  *procgrapharr[NoEventsToPrint];
@@ -102,28 +115,29 @@ int main(Int_t argc, char **argv){
     tProcRecoBins->clear();
     tUnProcRecoBins->clear();
 
-    NoRecoUnProc = 10;//CalcChaTime(sigfinal,1, hTSpecRecoUnProc, hRaw, cTSpectrum, TotalTSpecUnProcNo,eventno,tUnProcRecoBins);
+    NoRecoUnProc = CalcChaTime(sigfinal,1, hTSpecRecoUnProc, hRaw, cTSpectrum, TotalTSpecUnProcNo,eventno,tUnProcRecoBins);
     std::sort(tUnProcRecoBins->begin(),tUnProcRecoBins->end());
     
     if(fProcessing==2){
-      NoRecoProc = 5;//CalcChaTime(sigfinal,2, hTSpecRecoProc, hRaw, cTSpectrum, TotalTSpecProcNo,eventno,tProcRecoBins);
+      NoRecoProc = CalcChaTime(sigfinal,2, hTSpecRecoProc, hRaw, cTSpectrum, TotalTSpecProcNo,eventno,tProcRecoBins);
       std::sort(tProcRecoBins->begin(),tProcRecoBins->end());
     }
 
     if(fProcessing==1&&eventno%100==0) std::cout<<"Event "<<eventno<<" HitsPerEvent "<<HitsPerEvent<<" NoRecoUnProc "<<NoRecoUnProc<<std::endl;
     if(fProcessing==2&&eventno%100==0) std::cout<<"Event "<<eventno<<" HitsPerEvent "<<HitsPerEvent<<" NoRecoUnProc "<<NoRecoUnProc<<" NoRecoProc "<<NoRecoProc<<std::endl;
 
-    BNoRecoUnProc->Fill();
-    BNoRecoProc->Fill();
-    BTRecoUnProc->Fill();
-    BTRecoProc->Fill();
+    writetree->Fill();
+    
   }
   
   cFinal->Print("TSpectrumResults.pdf]");//closes the file
   GraphDrawing(grapharr,procgrapharr,NoEventsToPrint);
-  readtree->Write();
+
+  writetree->Print();
+  writetree->Write(nullptr,TObject::kOverwrite);
   
-  delete file;
+  delete readfile;
+  delete writefile;
 }
 
 void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int npoints, Double_t timebin) { //Beth, implemented from Venelin's idea 06/2019
@@ -181,8 +195,14 @@ Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hP
   hTSpec->Reset();
   hPreTSpec->Reset();
 
-  Double_t fPeakSearchWidth=0.;
-  if(fProcessing==1)  fPeakSearchWidth=0.3*BinsPerNs;
+  Double_t SigTau;//decay time of signal in ns
+  Double_t fPeakSearchWidth;
+  Double_t ThresholdFraction=1./10;
+  /*if(fProcessing==1){
+    SigTau=20;
+    fPeakSearchWidth=SigTau*log(1./ThresholdFraction)*BinsPerNs;//fixes sigma so that TSpectrum won't reconstruct one hit as being more than one
+    }*/
+  fPeakSearchWidth=0.3*BinsPerNs;
   if(fProcessing==2)  fPeakSearchWidth=13;
   Double_t fAmpThresholdLow=10;
   Double_t fTimeBin=0.4;
@@ -202,28 +222,25 @@ Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hP
 
   //  std::cout<<"fProcessing = "<<fProcessing<<std::endl;
   
-  if(fProcessing==1){
+  /*if(fProcessing==1){
     for(int i=0;i<1000;i++){
       hTSpec->SetBinContent(i,AbsSamRec[i]);
     }
     for(int i=1000;i<1024;i++){
       hTSpec->SetBinContent(i,0);
     }
-  }
+    }*/
   if(fProcessing==2){
     DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,1024,fTimeBin);
-    for(int i=0;i<1000;i++){
-      hTSpec->SetBinContent(i,AbsSamRecDP[i]);
-    }
-    for(int i=1000;i<1024;i++){
-      hTSpec->SetBinContent(i,0);
-    }
   }
   for(int i=0;i<1000;i++){
-    hPreTSpec->SetBinContent(i,AbsSamRec[i]);
+    if(i<1000) hTSpec->SetBinContent(i,AbsSamRec[i]);
+    else hTSpec->SetBinContent(i,0);
   }
-  for(int i=1000;i<1025;i++){
-    hPreTSpec->SetBinContent(i,0);
+  
+  for(int i=0;i<1025;i++){
+    if(i<1000) hPreTSpec->SetBinContent(i,AbsSamRec[i]);
+    else hPreTSpec->SetBinContent(i,0);
   }
     //  hPreTSpec->SetContent(AbsSamRec);
   //cTSpec->cd();
@@ -238,8 +255,8 @@ Int_t CalcChaTime(Double_t fSamples[], Int_t fProcessing, TH1D* hTSpec, TH1D* hP
 
   //  Double_t peak_thr  = fAmpThresholdLow /VMax; //minimum peak height allowed - peaks with amplitude less than threshold*highest_peak are discarded. 0<threshold<1
   
-  if(fProcessing==1)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",0.1);
-  if(fProcessing==2)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",0.1);     
+  if(fProcessing==1)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",ThresholdFraction);
+  if(fProcessing==2)  nfound = s->Search(hTSpec,fPeakSearchWidth,"nobackground, nodraw",ThresholdFraction);     
   //std::cout<<"TSpectrum finds "<<nfound<<" peaks"<<std::endl;
 
   if(EventNo<NoEventsToPrint){

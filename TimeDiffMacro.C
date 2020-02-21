@@ -18,16 +18,24 @@ char name[256];
 Int_t fProcessing = 2;
  
 void TimeDiffMacro(){
-  TFile *file = TFile::Open("GeneratedSignals.root","read");
-  if (!file) {
+  TFile *truthfile = TFile::Open("GeneratedSignals.root","read");
+  if (!truthfile) {
     std::cout<<"No file named GeneratedSignals.root found"<<std::endl;
     return;
   }
    
-  TTree *readtree;
-  file->GetObject("SigTree",readtree);
-   
-  Long64_t TotEvents=readtree->GetEntries();
+  TTree *tree;
+  truthfile->GetObject("SigTree",tree);
+ 
+  TFile *recofile = TFile::Open("ReconstructedSignals.root","read");
+  if (!recofile) {
+    std::cout<<"No file named ReconstructedSignals.root found"<<std::endl;
+    return;
+  }
+
+  tree->AddFriend("RecoTree",recofile);
+  
+  Long64_t TotEvents=tree->GetEntries();
   // std::cout<<"TotEvents: "<<TotEvents<<std::endl;
   // Int_t EventNumbers;//Index of event
   Int_t HitsPerEvent;//Number of hits per event
@@ -38,13 +46,13 @@ void TimeDiffMacro(){
   std::vector<Double_t> *tProcRecoBins=new std::vector<Double_t>; //Reconstructed hit times from TSpectrum on raw data
   std::vector<Double_t> *tUnProcRecoBins=new std::vector<Double_t>; //Reconstructed hit times from TSpectrum on RRC processed data
  
-  //  readtree->SetBranchAddress("EventNo",&EventNumbers);
-  readtree->SetBranchAddress("HitsPerEvent",&HitsPerEvent);  
-  readtree->SetBranchAddress("HitTimes",&HitTimes);
-  readtree->SetBranchAddress("TRecoUnProc",&tUnProcRecoBins);
-  readtree->SetBranchAddress("TRecoProc",&tProcRecoBins);
-  readtree->SetBranchAddress("NoRecoUnProc",&NoUnProcReco);
-  readtree->SetBranchAddress("NoRecoProc",&NoProcReco);
+  //  tree->SetBranchAddress("EventNo",&EventNumbers);
+  tree->SetBranchAddress("HitsPerEvent",&HitsPerEvent);  
+  tree->SetBranchAddress("HitTimes",&HitTimes);
+  tree->SetBranchAddress("TRecoUnProc",&tUnProcRecoBins);
+  tree->SetBranchAddress("TRecoProc",&tProcRecoBins);
+  tree->SetBranchAddress("NoRecoUnProc",&NoUnProcReco);
+  tree->SetBranchAddress("NoRecoProc",&NoProcReco);
   
   std::vector<Int_t> HitArrIndex;//Holds the index in HitTimes of the first hit of each event
  
@@ -63,16 +71,17 @@ void TimeDiffMacro(){
   TH1F *hRecoTimeSpecUnProc = new TH1F("RecoTimeSpecUnProc","RecoTimeSpecUnProc",100,0,TimeSpecEnds);//Spectrum of difference in reconstructed times of consecutive hits (raw data) (ns)
 
   for(Long64_t EventIndex=0;EventIndex<TotEvents;EventIndex++){
-    readtree->GetEntry(EventIndex);
+    tree->GetEntry(EventIndex);
     if(EventIndex%100==0) std::cout<<"EventNo "<<EventIndex<<", ToyHits "<<HitsPerEvent<<", UnProcRecoHits "<<NoUnProcReco<<", ProcRecoHits "<<NoProcReco<<std::endl;
     for(Int_t ii=0;ii<HitsPerEvent-1;ii++){
       hArrivalTimeSpec->Fill((HitTimes->at(ii+1)-HitTimes->at(ii))*NsPerBin);
     }
     for(Int_t ii=0;ii<NoUnProcReco-1;++ii){
-      std::cout<<"hippos"<<std::endl;
+      //      std::cout<<"hippos"<<std::endl;
       hRecoTimeSpecUnProc->Fill((tUnProcRecoBins->at(ii+1)-tUnProcRecoBins->at(ii))*NsPerBin);
     }
     for(Int_t ii=0;ii<NoProcReco-1;++ii){
+      //std::cout<<"rabbits "<<NoProcReco<<" squirrels "<<tProcRecoBins->size()<<std::endl;//-tProcRecoBins->at(ii))<<std::endl;
       hRecoTimeSpecProc->Fill((tProcRecoBins->at(ii+1)-tProcRecoBins->at(ii))*NsPerBin);
     }
   }

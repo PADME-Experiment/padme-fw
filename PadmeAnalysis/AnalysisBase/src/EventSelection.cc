@@ -2847,23 +2847,23 @@ Bool_t EventSelection::ProcessAnalysisIO()
     }
   }
 
-  /* Double_t ShiftPVetoSac;
+  Double_t ShiftPVetoSac;
   Double_t ShiftECalSac;
   Double_t ShiftECalPVeto;
   Double_t ShiftECalEVeto;
   if(isMC){
-     ShiftPVetoSac=-9;
-     ShiftECalSac=-2;
-     ShiftECalPVeto=8;
-     ShiftECalEVeto=1;
+    ShiftPVetoSac=0;
+    ShiftECalSac=0;
+    ShiftECalPVeto=0;
+    ShiftECalEVeto=0;
   }
- else{
-     ShiftPVetoSac=0;
-     ShiftECalSac=0;
-     ShiftECalPVeto=0;
-     ShiftECalEVeto=1;
-     }*/
-
+  else{
+    ShiftPVetoSac=0;
+    ShiftECalSac=0;
+    ShiftECalPVeto=0;
+    ShiftECalEVeto=1;
+  }
+  
   TVector3 pos1;
   TVector3 pos2;
   double dPhi = -999.;
@@ -3228,7 +3228,7 @@ Bool_t EventSelection::ProcessAnalysisIO()
       SACclu=fSAC_ClColl->Element(jsac);
       Double_t cluTime=SACclu->GetTime();
       if(fabs(ClTECal-cluTime-ShiftECalSac)<2. && SACclu->GetEnergy()>50){
-	  CoincidenceSAC=false;
+	CoincidenceSAC=false;
       }
     }
    if(CoincidencePVeto){

@@ -147,7 +147,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     TObjArray* runBranches = runChain->GetListOfBranches();
     std::cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << std::endl;
     TPadmeRun* run = new TPadmeRun();
-    for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
+    //for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
+    int ib = runBranches->GetEntries();
+    for(Int_t iBranch = 0; iBranch < ib; iBranch++){
       TString branchName = ((TBranch*)(*runBranches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
       std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
@@ -171,7 +173,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	// Pass detector info to corresponding Parameters class for decoding
 	TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
 	if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
-    
+
       }
     }
   }

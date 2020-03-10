@@ -38,8 +38,8 @@ public:
   G4int GetVerboseLevel() { return fVerbose; }
 
   // Position of center of Target box
-  G4double GetTargetPosX() { return 0.; }
-  G4double GetTargetPosY() { return 0.; }
+  G4double GetTargetPosX() { return fTargetDisplacementX; }
+  G4double GetTargetPosY() { return fTargetDisplacementY; }
   G4double GetTargetPosZ() { return fTargetFrontFacePosZ+fTargetSizeZ*0.5; }
 
   // Size of Target box
@@ -158,6 +158,9 @@ private:
   G4double fTSupportHoleL; // Length of hole side
   G4double fTSupportHoleD; // Distance from L1 to center of hole
   G4double fTSupportThick; // Thickness of T-shaped support
+
+  G4double fTargetDisplacementX; // Target displacement along X axis wrt beam line
+  G4double fTargetDisplacementY; // Target displacement along Y axis wrt beam line
 
   G4double fTargetFrontFacePosZ; // Position along Z axis of Target front face
 

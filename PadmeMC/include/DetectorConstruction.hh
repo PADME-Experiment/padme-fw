@@ -65,6 +65,8 @@ public:
   void EnableMagneticField();
   void DisableMagneticField();
 
+  void SetCrossMagneticVolume(G4String);
+
   void MagneticVolumeIsVisible();
   void MagneticVolumeIsInvisible();
 
@@ -139,6 +141,8 @@ private:
 
   G4int fEnableMagneticField;
   G4int fMagneticVolumeIsVisible;
+
+  G4String fCrossMagneticVolume;
 
   G4int fMagnetIsVisible;
   G4int fChamberIsVisible;

@@ -111,6 +111,9 @@
 #/Detector/DisableMagneticField
 #/Detector/SetMagneticFieldValue 0.4542 tesla
 
+#/Detector/CrossMagneticVolume internal
+#/Detector/CrossMagneticVolume external
+
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 

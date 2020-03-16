@@ -25,6 +25,7 @@ public:
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
+  virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   //  virtual void ProcessEvent(TRawEvent*);
   virtual void BuildClusters();
   void BuildSimpleSACClusters();

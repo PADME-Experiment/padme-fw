@@ -38,6 +38,8 @@ private:
   G4UIcmdWithoutParameter* fEnableMagFieldCmd;
   G4UIcmdWithoutParameter* fDisableMagFieldCmd;
 
+  G4UIcmdWithAString* fCrossMagVolCmd;
+
   G4UIcmdWithoutParameter* fMagVolVisibleCmd;
   G4UIcmdWithoutParameter* fMagVolInvisibleCmd;
 

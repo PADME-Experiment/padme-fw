@@ -28,27 +28,19 @@
 #define F_GETPIPE_SZ 1032
 #define PIPESIZE_MB  16
 
-void fmt_time(char buf[20],time_t* t)
-{
-  struct tm* tgm = gmtime(t);
-  sprintf(buf,"%04d-%02d-%02d %02d:%02d:%02d",1900+tgm->tm_year,tgm->tm_mon+1,tgm->tm_mday,tgm->tm_hour,tgm->tm_min,tgm->tm_sec);
-}
-
 int main(int argc, char* argv[])
 {
 
-  int rc; // DB library retrun code
+  //int rc; // DB library return code
 
-  time_t time_start, time_stop, time_first, time_last;
-  char t_fmt[20]; // Formatted time string "YYYY-MM-DD hh:mm:ss"
+  //time_t time_start, time_stop, time_first, time_last;
+  time_t time_start, time_first, time_last;
+  //char t_fmt[20]; // Formatted time string "YYYY-MM-DD hh:mm:ss"
 
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
   setbuf(stderr,NULL);
 
-  time(&time_start); fmt_time(t_fmt,&time_start);
-  printf("=== PadmeMerger starting on %s UTC ===\n",t_fmt);
-  
   // Make sure we are on a sane machine (int: 32bits, long int: 64bits)
   if (sizeof(int) < 4 || sizeof(long int) < 8) {
     printf("*** ERROR *** On this machine int is %lu bytes and long int is %lu bytes. Aborting.\n",sizeof(int),sizeof(long int));
@@ -62,8 +54,6 @@ int main(int argc, char* argv[])
   int run_number = cfg->RunNumber();
   std::string input_stream_list = cfg->InputStreamList();
   std::string output_stream_list = cfg->OutputStreamList();
-  //std::string raw_file_header = cfg->RawFileHeader();
-  //unsigned int n_events_per_file = cfg->NEventsPerFile();
   unsigned int verbose = cfg->Verbose();
 
   // Parse options
@@ -130,28 +120,26 @@ int main(int argc, char* argv[])
       }
   }
 
-  // Check if input file list was defined
-  if (cfg->InputStreamList().compare("")==0) {
+  // Check if input and output file lists were defined and are accessible
+  if ( cfg->InputStreamList().compare("") == 0 ) {
     printf("ERROR no input file list defined. Aborting\n");
     exit(1);
   }
-
-  // If this is an official run, connect to DB and get id of merger
-  if (cfg->RunNumber()) {
-
-    // Get handle to DB
-    DBService* db = DBService::GetInstance();
-
-    // Get id of merger for future DB accesses
-    int merger_id = 0;
-    rc = db->GetMergerId(merger_id,cfg->RunNumber());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
-      exit(1);
-    }
-    cfg->SetMergerId(merger_id);
-
+  if ( access( cfg->InputStreamList().c_str(), F_OK ) != 0 ) {
+    printf("ERROR input file list %s is not accessible. Aborting\n",cfg->InputStreamList().c_str());
+    exit(1);
   }
+  if ( cfg->OutputStreamList().compare("") == 0 ) {
+    printf("ERROR no output file list defined. Aborting\n");
+    exit(1);
+  }
+  if ( access( cfg->OutputStreamList().c_str(), F_OK ) != 0 ) {
+    printf("ERROR output file list %s is not accessible. Aborting\n",cfg->OutputStreamList().c_str());
+    exit(1);
+  }
+
+  time(&time_start);
+  printf("=== PadmeMerger starting on %s UTC ===\n",cfg->FormatTime(time_start));
 
   ADCBoard* board;
   std::vector<ADCBoard*> boards;
@@ -274,27 +262,8 @@ int main(int argc, char* argv[])
   list.close();
   printf("- Using a total of %u output Level1 streams\n",NOutputStreams);
 
-  // Everything is set: tell DB merger has started
-  if (cfg->RunNumber()) {
-
-    // Get handle to DB
-    DBService* db = DBService::GetInstance();
-
-    // Update merger status
-    rc = db->SetMergerStatus(2,cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR setting merger status in DB. Aborting\n");
-      exit(1);
-    }
-
-    // Update merger start time
-    rc = db->SetMergerTime("START",cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR setting merger start time in DB. Aborting\n");
-      exit(1);
-    }
-
-  }
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
   unsigned int CurrentOutputStream = 0; // First event will be sent to first output stream
 
@@ -614,9 +583,6 @@ int main(int argc, char* argv[])
       }
     }
 
-    //clock_gettime(CLOCK_REALTIME,&sys_time);
-    //printf("After output   %ld.%09ld\n",sys_time.tv_sec,sys_time.tv_nsec);
-
     // Update counters for this stream
     output_stream_nevents[CurrentOutputStream]++;
 
@@ -724,38 +690,13 @@ int main(int argc, char* argv[])
   }
   printf("Total         Events %7u Data %11.1f MiB Rates %6.1f evt/s %7.3f MiB/s\n",NumberOfEvents,size_mib,event_rate,data_rate);
 
-  // If input was from a real run, update DB
-  if (cfg->RunNumber()) {
-
-    // Get handle to DB
-    DBService* db = DBService::GetInstance();
-
-    // Update merger status
-    rc = db->SetMergerStatus(3,cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR setting merger status in DB. Aborting\n");
-      exit(1);
-    }
-
-    // Update merger stop time
-    rc = db->SetMergerTime("STOP",cfg->MergerId());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR setting merger stop time in DB. Aborting\n");
-      exit(1);
-    }
-
-    // Update DB with final counters (files created, events written, data written)
-    //rc = db->UpdateMergerInfo(root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-    //if (rc != DBSERVICE_OK) {
-    //  printf("ERROR updating DB with number of files (n=%u) number of events (n=%u) and output size (size=%lu) for merger id %d. Aborting\n",root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-    //  exit(1);
-    //}
-
-  }
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
+  printf("DBINFO - %s - process_set_time_stop %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_last));
+  printf("DBINFO - %s - process_set_total_events %d\n",cfg->FormatTime(time(0)),NumberOfEvents);
+  printf("DBINFO - %s - process_set_total_size %llu\n",cfg->FormatTime(time(0)),total_output_size);
 
   // Show exit time
-  time(&time_stop); fmt_time(t_fmt,&time_stop);
-  printf("=== PadmeMerger exiting on %s UTC ===\n",t_fmt);
+  printf("=== PadmeMerger exiting on %s UTC ===\n",cfg->FormatTime(time(0)));
 
   exit(0);
 }

@@ -45,9 +45,14 @@ TargetGeometry::TargetGeometry()
   fTSupportHoleD = 2.0*cm; // Distance from L1 to center of squared hole
   fTSupportThick = 1.6*mm; // Thickness of T-shaped support
 
+  // Assume target at exact center of cross. Jan 2020 survey (X:-1.3mm, Y:0.41mm, 1mm approximation)
+  fTargetDisplacementX = -1.*mm;
+  fTargetDisplacementY = 0.*mm;
+
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
-  //  fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
-  fTargetFrontFacePosZ = -103.*cm; // Relative to center of magnet after construction M. Raggi 10/10/2018
+  //fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
+  //fTargetFrontFacePosZ = -103.*cm; // Relative to center of magnet after construction M. Raggi 10/10/2018
+  fTargetFrontFacePosZ = -1028.*mm; // Relative to center of magnet. Jan 2020 survey (-1027.68mm, 1mm approximation)
 
   fTargetFastDigitization = true; // Use fast digitization
 

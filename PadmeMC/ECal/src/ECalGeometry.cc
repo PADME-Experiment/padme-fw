@@ -452,6 +452,14 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   hash.push_back(buffer.str());
   buffer.str("");
 
+  buffer << "fECalDisplacementX " << fECalDisplacementX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalDisplacementY " << fECalDisplacementY;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
   buffer << "fECalFrontFacePosZ " << fECalFrontFacePosZ;
   hash.push_back(buffer.str());
   buffer.str("");

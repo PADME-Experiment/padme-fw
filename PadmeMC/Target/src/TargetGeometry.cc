@@ -46,7 +46,8 @@ TargetGeometry::TargetGeometry()
   fTSupportThick = 1.6*mm; // Thickness of T-shaped support
 
   // Assume target at exact center of cross. Jan 2020 survey (X:-1.3mm, Y:0.41mm, 1mm approximation)
-  fTargetDisplacementX = -1.*mm;
+  //fTargetDisplacementX = -1.*mm;
+  fTargetDisplacementX = 0.*mm; // Waiting for PadmeReco fix
   fTargetDisplacementY = 0.*mm;
 
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
@@ -118,6 +119,14 @@ std::vector<G4String> TargetGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fTargetSizeZ " << fTargetSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDisplacementX " << fTargetDisplacementX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDisplacementY " << fTargetDisplacementY;
   hash.push_back(buffer.str());
   buffer.str("");
 

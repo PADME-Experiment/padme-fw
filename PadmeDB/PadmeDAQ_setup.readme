@@ -1,8 +1,11 @@
 PADME uses the MySQL database system to store DAQ related information.
 These are the instructions to install and configure this system on a CentOS 7 node.
 
-Make sure you know what are the default passwords for the "root" and "padme" MySQL accounts.
-Here they are referred to as <db_root_pw> and <db_padme_pw>.
+Make sure you know what are the default passwords for the "root", "padme" and "padmeRUN"
+MySQL accounts.
+Here they are referred to as <db_root_pw>, <db_padme_pw> and <db_padmeRUN_pw>.
+N.B. user "padme" has ALL privileges to the PadmeDAQ database while user "padmeRUN"
+has only SELECT privileges.
 
 1) Login as root to install and configure the open source version of MySQL, MariaDB:
 
@@ -47,13 +50,19 @@ mysql> CREATE DATABASE PadmeDAQ;
 mysql> CREATE USER 'padme'@'localhost' IDENTIFIED BY '<db_padme_pw>';
 mysql> CREATE USER 'padme'@'127.0.0.1' IDENTIFIED BY '<db_padme_pw>';
 mysql> CREATE USER 'padme'@'%.lnf.infn.it' IDENTIFIED BY '<db_padme_pw>';
-mysql> CREATE USER 'padme'@'192.168.60.%' IDENTIFIED BY '<db_padme_pw>';
-mysql> CREATE USER 'padme'@'192.168.62.%' IDENTIFIED BY '<db_padme_pw>';
+mysql> CREATE USER 'padme'@'192.168.%' IDENTIFIED BY '<db_padme_pw>';
 mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'localhost';
 mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'127.0.0.1';
 mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'%.lnf.infn.it';
-mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'192.168.60.%';
-mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'192.168.62.%';
+mysql> GRANT ALL ON PadmeDAQ.* TO 'padme'@'192.168.%';
+mysql> CREATE USER 'padmeRUN'@'localhost' IDENTIFIED BY '<db_padmeRUN_pw>';
+mysql> CREATE USER 'padmeRUN'@'127.0.0.1' IDENTIFIED BY '<db_padmeRUN_pw>';
+mysql> CREATE USER 'padmeRUN'@'%.lnf.infn.it' IDENTIFIED BY '<db_padmeRUN_pw>';
+mysql> CREATE USER 'padmeRUN'@'192.168.%' IDENTIFIED BY '<db_padmeRUN_pw>';
+mysql> GRANT SELECT ON PadmeDAQ.* TO 'padmeRUN'@'localhost';
+mysql> GRANT SELECT ON PadmeDAQ.* TO 'padmeRUN'@'127.0.0.1';
+mysql> GRANT SELECT ON PadmeDAQ.* TO 'padmeRUN'@'%.lnf.infn.it';
+mysql> GRANT SELECT ON PadmeDAQ.* TO 'padmeRUN'@'192.168.%';
 mysql> exit
 
 8) Reconnect to MySQL as "padme" user (using <db_padme_pw>) and create the

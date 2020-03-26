@@ -147,19 +147,20 @@ void TargetDigitizer::Digitize()
       G4double hPosPreX= (*targetHC)[i]->GetLocalPosX();
       G4double hPosPreY= (*targetHC)[i]->GetLocalPosY();
       G4double hPosPreZ= (*targetHC)[i]->GetPosZ(); 
-      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX();
-      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY();
+      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX()- fTargetGeometry->GetTargetPosX();
+      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY()- fTargetGeometry->GetTargetPosY();
       G4double hPosPostZ=  (*targetHC)[i]->GetGlobalPosPostZ(); //local pos is in magnetic volume
-
       // mapping hit channel      
       G4int hVChannel = PosToChannel(hPosPreX); // X coordinate on front face (or hit beg)
       G4int hHChannel = PosToChannel(hPosPostY); // Y coordinate on back face (or hit end)
       // checking potential signal sharing 
       G4int hVChannelPost = PosToChannel(hPosPostX); // X coordinate on back face
       G4int hHChannelPre = PosToChannel(hPosPreY); // Y coordinate on front face
+      //std::cout << "    hVChannel " << hVChannel << " hVChannelPost "<< hVChannelPost << std::endl; 
       
       G4double hTime    = (*targetHC)[i]->GetTime();
       G4double hEnergy  = (*targetHC)[i]->GetEnergy();
+      //std::cout<< "G4Energy " << hEnergy << std::endl;
       G4double hTrack = hPosPostZ-hPosPreZ; // z dir
 
      
@@ -193,7 +194,6 @@ void TargetDigitizer::Digitize()
       }
       
       (*targetHC)[i]->SetHitVal(hitval);
-      
       // signal only if hit contained in both channels (X Y faces) 
       if(hitval==2){
 	

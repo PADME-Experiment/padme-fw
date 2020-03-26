@@ -47,6 +47,7 @@ TargetGeometry::TargetGeometry()
 
   // Assume target at exact center of cross. Jan 2020 survey (X:-1.3mm, Y:0.41mm, 1mm approximation)
   fTargetDisplacementX = -1.*mm;
+  //  fTargetDisplacementX = 0.*mm;
   fTargetDisplacementY = 0.*mm;
 
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet

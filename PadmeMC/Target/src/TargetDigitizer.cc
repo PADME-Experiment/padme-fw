@@ -147,8 +147,12 @@ void TargetDigitizer::Digitize()
       G4double hPosPreX= (*targetHC)[i]->GetLocalPosX();
       G4double hPosPreY= (*targetHC)[i]->GetLocalPosY();
       G4double hPosPreZ= (*targetHC)[i]->GetPosZ(); 
-      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX();
-      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY();
+
+      //G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX();
+      //G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY();
+      // Take into account possible XY shifts of Target position
+      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX()- fTargetGeometry->GetTargetPosX();
+      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY()- fTargetGeometry->GetTargetPosY();
       G4double hPosPostZ=  (*targetHC)[i]->GetGlobalPosPostZ(); //local pos is in magnetic volume
 
       // mapping hit channel      

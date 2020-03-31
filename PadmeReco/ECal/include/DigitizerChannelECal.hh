@@ -77,6 +77,9 @@ public:
   Int_t GetBadInd(){return fBadInd;};
   void  SetBadInd(Int_t BadInd){fBadInd=BadInd;};
 
+  // Is called when a misaligment is found
+  Double_t Fix2019BrokenChip(Int_t BadIndFlag);
+
   //  Int_t GetTrigMask(){return fTrigMask;};
   //  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
 

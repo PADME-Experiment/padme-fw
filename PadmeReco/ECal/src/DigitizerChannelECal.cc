@@ -630,12 +630,27 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
   //  std::cout<<"Zsupp "<<fZeroSuppression<<std::endl;
+  //**********************************************************
+  // Always perform zero suppression if is not a pedestal reco
+  //**********************************************************
   Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
-  //  Double_t IsZeroSup = ZSupHit(5,1000.);
-  // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
-  // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  
-  if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
+  if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; 
+
+  //***********************************************
+  // Fix a broken chip in digitizer 8 durign 2019 run
+  //***********************************************
+  Int_t Ch     = GetElChID();
+  Int_t BID    = GetBdID();
+  if(BID==8 && Ch>=16 && Ch<=23){
+    if(GetBadInd()>0){
+      //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<vDerdt.size()<<std::endl;
+      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
+      Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
+    }
+  }
+  //**************************************************************************************
+  // Get the trigger and compute the pedestal with different time offsets for phyiscs and cosmics
+  //**************************************************************************************
   fTrig = GetTrigMask();
 
   if(fUseOverSample){
@@ -944,20 +959,20 @@ Double_t DigitizerChannelECal::PeakSearch(){
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
 }
 
-//Double_t DigitizerChannelECal::Fix2019BrokenChip(Int_t Flag){
-//  Int_t Board = Flag/100000;
-//  Int_t Chip  = (Flag%100000)/10000;
-//  Int_t FirstC = Flag-100000*Board-10000*Chip;
-//  Int_t NSamp=1024;
-//
-//  //  std::vector<double> TempSamp;
-//  Double_t TempSamp[1024];
-//
-//  std::cout<<"*********Flag******************"<<std::endl; 
-//  std::cout<<"Flag "<<Flag<<std::endl; 
-//  std::cout<<"Board "<<Board<<" Chip "<<Chip<<" first Capacitor "<<FirstC<<std::endl; 
-//  std::cout<<"*********END******************"<<std::endl; 
-//  std::cout<<""<<std::endl; 
+Double_t DigitizerChannelECal::Fix2019BrokenChip(Int_t Flag){
+  Int_t Board = Flag/100000;
+  Int_t Chip  = (Flag%100000)/10000;
+  Int_t FirstC = Flag-100000*Board-10000*Chip;
+  Int_t NSamp=1024;
+
+  //  std::vector<double> TempSamp;
+  Double_t TempSamp[1024];
+
+  std::cout<<"*********Flag******************"<<std::endl; 
+  std::cout<<"Flag "<<Flag<<std::endl; 
+  std::cout<<"Board "<<Board<<" Chip "<<Chip<<" first Capacitor "<<FirstC<<std::endl; 
+  std::cout<<"*********END******************"<<std::endl; 
+  std::cout<<""<<std::endl; 
 //
 //  Int_t ii = vFixBoard8.size();
 //  Int_t jj = vFixedBoard8.size();
@@ -974,30 +989,30 @@ Double_t DigitizerChannelECal::PeakSearch(){
 //    vFixedAnBoard8.push_back(hs);
 //  }
 //  
-//  for(Int_t kk=0;kk<1024;kk++){ 
-//     //    std::cout<<"First "<<FirstC<<" k "<<kk<<std::endl;
-//    //    std::cout<<"Sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
-//    //    std::cout<<FirstC<<" Filling "<<(kk+FirstC)%1024<<" with sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
-//    if(fSaveAnalog) vFixBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
-//    if((kk+FirstC)%1024<512){ 
-//      TempSamp[(kk+FirstC)%1024]=fSamples[kk]+70.;
-//      if(fSaveAnalog)  vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]+70.);
-//    }else{
-//      if(fSaveAnalog) vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
-//      TempSamp[(kk+FirstC)%1024]=fSamples[kk];
-//    }
-//  }
+  for(Int_t kk=0;kk<1024;kk++){ 
+    //     //    std::cout<<"First "<<FirstC<<" k "<<kk<<std::endl;
+    //    //    std::cout<<"Sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
+    //    //    std::cout<<FirstC<<" Filling "<<(kk+FirstC)%1024<<" with sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
+    //    if(fSaveAnalog) vFixBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
+    if((kk+FirstC)%1024<512){ 
+      TempSamp[(kk+FirstC)%1024]=fSamples[kk]+70.;
+      //      if(fSaveAnalog)  vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]+70.);
+    }else{
+      //      if(fSaveAnalog) vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
+      TempSamp[(kk+FirstC)%1024]=fSamples[kk];
+    }
+  }
 //  
-////  for(Int_t kk=0;kk<1024;kk++){ 
+//    for(Int_t kk=0;kk<1024;kk++){ 
 ////    TempSamp.push_back(vFixedBoard8.at(ii)->GetBinContent(kk));
 ////    //    //    std::cout<<kk<<" Samp "<<TempSamp.at(kk)<<std::endl;
 ////  }
 //
-//  for(Int_t kk=0;kk<1024;kk++) {
-//    if(fSaveAnalog) vFixedAnBoard8.at(ii)->SetBinContent(kk,TempSamp[(kk+FirstC)%1024]); // put back the fSample Vector
-//    fSamples[kk]=TempSamp[(kk+FirstC)%1024];
-//  }
-//  //  for(Int_t kk=0;kk<1024;kk++) 
+    for(Int_t kk=0;kk<1024;kk++) {
+      //    if(fSaveAnalog) vFixedAnBoard8.at(ii)->SetBinContent(kk,TempSamp[(kk+FirstC)%1024]); // put back the fSample Vector
+      fSamples[kk]=TempSamp[(kk+FirstC)%1024];
+    }
+    //  //  for(Int_t kk=0;kk<1024;kk++) 
 //
 //  if(fSaveAnalog && fGlobalMode->GetGlobalDebugMode()){
 //    //    std::cout<<"Writing analog fix "<<vFixBoard8.size()-1<<std::endl;
@@ -1009,5 +1024,5 @@ Double_t DigitizerChannelECal::PeakSearch(){
 //    h1->Delete(); 
 //    hs->Delete();   
 //  }
-//  return 1;                                                                  
-//}
+  return 1;                                                                  
+}

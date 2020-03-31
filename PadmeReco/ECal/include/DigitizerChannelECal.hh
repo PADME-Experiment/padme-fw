@@ -72,6 +72,11 @@ public:
   Int_t GetBdID(){return fBdID;};
   void  SetBdID(Int_t BdID){fBdID=BdID;};
 
+  // Is set by ECalReconstruction when a chip misalignement is found
+  //MR 26/03/2020
+  Int_t GetBadInd(){return fBadInd;};
+  void  SetBadInd(Int_t BadInd){fBadInd=BadInd;};
+
   //  Int_t GetTrigMask(){return fTrigMask;};
   //  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
 
@@ -100,6 +105,7 @@ private:
   //  Int_t fChID;
   Int_t fElChID;
   Int_t fBdID;
+  Int_t fBadInd; //MR 26/03/2020
   //  Int_t fTrigMask;
   Double_t fRMS1000;
   Double_t fRMS200;

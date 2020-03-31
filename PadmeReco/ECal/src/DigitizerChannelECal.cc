@@ -943,3 +943,71 @@ Double_t DigitizerChannelECal::PeakSearch(){
   return 0.;
   //  std::cout<<"changing histogram "<<npeaks<<std::endl;
 }
+
+//Double_t DigitizerChannelECal::Fix2019BrokenChip(Int_t Flag){
+//  Int_t Board = Flag/100000;
+//  Int_t Chip  = (Flag%100000)/10000;
+//  Int_t FirstC = Flag-100000*Board-10000*Chip;
+//  Int_t NSamp=1024;
+//
+//  //  std::vector<double> TempSamp;
+//  Double_t TempSamp[1024];
+//
+//  std::cout<<"*********Flag******************"<<std::endl; 
+//  std::cout<<"Flag "<<Flag<<std::endl; 
+//  std::cout<<"Board "<<Board<<" Chip "<<Chip<<" first Capacitor "<<FirstC<<std::endl; 
+//  std::cout<<"*********END******************"<<std::endl; 
+//  std::cout<<""<<std::endl; 
+//
+//  Int_t ii = vFixBoard8.size();
+//  Int_t jj = vFixedBoard8.size();
+//  TH1D* h;    
+//  TH1D* h1; 
+//  TH1D* hs; 
+//  //If Debug mode with save analog is issued save debug histograms
+//  if(fSaveAnalog &&  fGlobalMode->GetGlobalDebugMode()){
+//    h  = new TH1D(Form("hFixAn%d",ii),Form("hFixAn%d",ii),NSamp,0.,NSamp);
+//    h1 = new TH1D(Form("hFixedAn%d",ii),Form("hFixedAn%d",ii),NSamp,0.,NSamp);
+//    hs = new TH1D(Form("hFixedfSam%d",ii),Form("hFixedfSam%d",ii),NSamp,0.,NSamp);
+//    vFixBoard8.push_back(h);
+//    vFixedBoard8.push_back(h1);
+//    vFixedAnBoard8.push_back(hs);
+//  }
+//  
+//  for(Int_t kk=0;kk<1024;kk++){ 
+//     //    std::cout<<"First "<<FirstC<<" k "<<kk<<std::endl;
+//    //    std::cout<<"Sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
+//    //    std::cout<<FirstC<<" Filling "<<(kk+FirstC)%1024<<" with sample "<<fSamples[kk]<<" k "<<kk<<std::endl;
+//    if(fSaveAnalog) vFixBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
+//    if((kk+FirstC)%1024<512){ 
+//      TempSamp[(kk+FirstC)%1024]=fSamples[kk]+70.;
+//      if(fSaveAnalog)  vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]+70.);
+//    }else{
+//      if(fSaveAnalog) vFixedBoard8.at(ii)->SetBinContent((kk+FirstC)%1024,fSamples[kk]);
+//      TempSamp[(kk+FirstC)%1024]=fSamples[kk];
+//    }
+//  }
+//  
+////  for(Int_t kk=0;kk<1024;kk++){ 
+////    TempSamp.push_back(vFixedBoard8.at(ii)->GetBinContent(kk));
+////    //    //    std::cout<<kk<<" Samp "<<TempSamp.at(kk)<<std::endl;
+////  }
+//
+//  for(Int_t kk=0;kk<1024;kk++) {
+//    if(fSaveAnalog) vFixedAnBoard8.at(ii)->SetBinContent(kk,TempSamp[(kk+FirstC)%1024]); // put back the fSample Vector
+//    fSamples[kk]=TempSamp[(kk+FirstC)%1024];
+//  }
+//  //  for(Int_t kk=0;kk<1024;kk++) 
+//
+//  if(fSaveAnalog && fGlobalMode->GetGlobalDebugMode()){
+//    //    std::cout<<"Writing analog fix "<<vFixBoard8.size()-1<<std::endl;
+//    if(fSaveAnalog) vFixBoard8.at(vFixBoard8.size()-1)->Write();
+//    if(fSaveAnalog) vFixedBoard8.at(vFixedBoard8.size()-1)->Write();
+//    if(fSaveAnalog) vFixedAnBoard8.at(vFixedAnBoard8.size()-1)->Write();
+//    // delete histos to avoid Memory Leaks    
+//    h->Delete(); 
+//    h1->Delete(); 
+//    hs->Delete();   
+//  }
+//  return 1;                                                                  
+//}

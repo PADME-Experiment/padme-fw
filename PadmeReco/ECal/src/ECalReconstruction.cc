@@ -76,6 +76,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   //  fClusters.clear();
 }
 void ECalReconstruction::HistoInit(){
+
+  AddHisto("ECalDeltaStartIndex",new TH1F("ECalDeltaStartIndex","ECalDeltaStartIndex",2000,-1000.,1000.));
+  AddHisto("ECalStartIndex",new TH1F("ECalStartIndex","ECalStartIndex",1000,-0.,1000.));
   AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
   AddHisto("ECalOccupancyOffTime",new TH2F("ECalOccupancyOffTime","ECalOccupancyOffTime",31,0,31,31,0,31));
   AddHisto("ECalEvent",new TH2F("ECalEvent","ECalEvent",31,0,31,31,0,31));
@@ -194,7 +197,32 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
-    //std::cout<<"iBdID "<<iBdID<<std::endl;
+
+    //************************************************************
+    // Retrieving Start index cell for debug propose MR 26/03/2020
+    //************************************************************
+    UShort_t StartCell[4];
+    Double_t DeltaStartCell=-1;
+    Double_t DeltaStartCellMax=0;
+    Double_t MaxGroup=0;
+    Double_t BadIndFlag=0;
+    for(Int_t iGroup =0;iGroup<ADC->GetNADCTriggers();iGroup++){
+      TADCTrigger* trg = ADC->ADCTrigger(iGroup);   
+      StartCell[iGroup] = trg->GetStartIndexCell(); 
+      GetHisto("ECalStartIndex")->Fill(StartCell[iGroup]);
+      if(iBdID==8){ 
+	DeltaStartCell = StartCell[0]-StartCell[iGroup];
+	if(DeltaStartCell>DeltaStartCellMax) {
+	  DeltaStartCellMax=DeltaStartCell;
+	  MaxGroup=iGroup;
+	}
+	//	std::cout<<"iBdID "<<iBdID<<" "<<iGroup<<" "<<" StartCell "<<StartCell[iGroup]<<" DeltaStatCell "<<DeltaStartCell<<std::endl;
+	GetHisto("ECalDeltaStartIndex")->Fill(DeltaStartCell);
+
+	if(DeltaStartCell>50) BadIndFlag=100000*iBdID+10000*iGroup+StartCell[iGroup];
+      }
+    }
+
     if(GetConfig()->BoardIsMine( iBdID )) {
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
@@ -208,6 +236,7 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
  	((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
  	((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
  	((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
+ 	((DigitizerChannelECal*)fChannelReco)->SetBadInd(BadIndFlag); //MR 26/03/2020
 	/*
 	if (ChID<0)std::cout<<"Why chId<0 ???? ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich<<" ... ADC channel = "<<(Int_t)chn->GetChannelNumber()<<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" ADB board n. "<<iBdID<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
 	else std::cout<<"ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich

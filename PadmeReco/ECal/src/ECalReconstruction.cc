@@ -705,6 +705,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
       break;
     }
+    // Minimum energy of the hit >1 moved from Digitizer M. Raggi 30/03/2020
+    if(Hits[iHit1]->GetEnergy()<1.) continue;
     // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();

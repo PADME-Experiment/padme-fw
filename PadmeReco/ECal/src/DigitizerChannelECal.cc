@@ -644,7 +644,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(BID==8 && Ch>=16 && Ch<=23){
     if(GetBadInd()>0){
       //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<vDerdt.size()<<std::endl;
-      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
+      //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
       Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
     }
   }
@@ -652,6 +652,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // Get the trigger and compute the pedestal with different time offsets for phyiscs and cosmics
   //**************************************************************************************
   fTrig = GetTrigMask();
+  if(GetTrigMask()!=2) fAvg200  = TMath::Mean(250,&fSamples[0]);
+  if(GetTrigMask()==2) fAvg200  = TMath::Mean(40,&fSamples[0]);
+  
+  //**************************************************************************************
+  // Compute hit time 
+  //**************************************************************************************
 
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
@@ -661,29 +667,41 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     HitT = CalcTimeSing(10);
   } 
 
+  //**************************************************************************************
+  // Get the trigger and compute the charge with different time offsets for phyiscs and cosmics
+  //**************************************************************************************
+
   if(GetTrigMask()!=2) CalcChargeSin(250);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
-  if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
-  // M. Raggi going to energy with Nominal Calibration
-  Double_t fEnergy= fCharge/15.; //going from pC to MeV using 15pC/MeV
-  // std::cout <<"At the the digi levevl Hit charge:  " << fCharge << "  Time: " << fEnergy <<" HitE200 "<<HitE200<<std::endl; 
-  if (fEnergy < 1. && !fGlobalMode->IsPedestalMode()) return; //cut at 1 MeV nominal
 
+  //**************************************************************************************
+  // Going to energy with Nominal Calibration 15pC/MeV
+  //**************************************************************************************
+  Double_t fEnergy= fCharge/15.;
+
+  //***************************************
+  // cut at 1 MeV nominal needs calibration
+  //***************************************
+  //  if (fEnergy < 1. && !fGlobalMode->IsPedestalMode()) return; 
+  if (fEnergy < -5. && !fGlobalMode->IsPedestalMode()){
+    std::cout<<"Negative energy found "<<fEnergy<<" BDID "<<BID<<" CHid "<<Ch<<std::endl;
+  }
+
+  //****************************************
+  //Perform corrections if is not a pedestal
+  //****************************************
   if(!fGlobalMode->IsPedestalMode()){
-    //correct for saturation effects integrated charge M. Raggi 23/05/2019
-    // do it before extrapolating to full integral
+    if(IsSaturated()) IsSat=1; 
+    //correct integrated charge for saturation before extrapolating to full integral  M. Raggi 23/05/2019    
     if(IsSat && fSaturatioCorrection) {
       Double_t ESatCorr = CorrectSaturation();
       fEnergy += ESatCorr; 
-      HitE200 += ESatCorr;     
     }
-    
     //correct for non integrated charge M. Raggi 15/05/2019
     if(fIntCorrection){ 
       Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
       if(fGlobalMode->GetGlobalDebugMode()) hTIntCorr->Fill(QIntCorr); ///HISTO FILL
       fEnergy /= QIntCorr; 
-      HitE200 /= QIntCorr; 
     }
   }
   //Filling hit structure
@@ -691,7 +709,8 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetTime(HitT);
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
-  if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
+  HitE200=fEnergy;
+  if(fGlobalMode->GetGlobalDebugMode()|| fGlobalMode->IsPedestalMode()) ECal->Fill();
   // std::cout << "Hit charge:  " << fCharge << "  Time: " <<HitT << "Hit array size "<< hitArray.size()<<std::endl; 
 }
 
@@ -968,11 +987,11 @@ Double_t DigitizerChannelECal::Fix2019BrokenChip(Int_t Flag){
   //  std::vector<double> TempSamp;
   Double_t TempSamp[1024];
 
-  std::cout<<"*********Flag******************"<<std::endl; 
-  std::cout<<"Flag "<<Flag<<std::endl; 
-  std::cout<<"Board "<<Board<<" Chip "<<Chip<<" first Capacitor "<<FirstC<<std::endl; 
-  std::cout<<"*********END******************"<<std::endl; 
-  std::cout<<""<<std::endl; 
+//  std::cout<<"*********Flag******************"<<std::endl; 
+//  std::cout<<"Flag "<<Flag<<std::endl; 
+//  std::cout<<"Board "<<Board<<" Chip "<<Chip<<" first Capacitor "<<FirstC<<std::endl; 
+//  std::cout<<"*********END******************"<<std::endl; 
+//  std::cout<<""<<std::endl; 
 //
 //  Int_t ii = vFixBoard8.size();
 //  Int_t jj = vFixedBoard8.size();
@@ -1002,27 +1021,23 @@ Double_t DigitizerChannelECal::Fix2019BrokenChip(Int_t Flag){
       TempSamp[(kk+FirstC)%1024]=fSamples[kk];
     }
   }
-//  
-//    for(Int_t kk=0;kk<1024;kk++){ 
-////    TempSamp.push_back(vFixedBoard8.at(ii)->GetBinContent(kk));
-////    //    //    std::cout<<kk<<" Samp "<<TempSamp.at(kk)<<std::endl;
-////  }
-//
-    for(Int_t kk=0;kk<1024;kk++) {
-      //    if(fSaveAnalog) vFixedAnBoard8.at(ii)->SetBinContent(kk,TempSamp[(kk+FirstC)%1024]); // put back the fSample Vector
-      fSamples[kk]=TempSamp[(kk+FirstC)%1024];
-    }
-    //  //  for(Int_t kk=0;kk<1024;kk++) 
-//
-//  if(fSaveAnalog && fGlobalMode->GetGlobalDebugMode()){
-//    //    std::cout<<"Writing analog fix "<<vFixBoard8.size()-1<<std::endl;
-//    if(fSaveAnalog) vFixBoard8.at(vFixBoard8.size()-1)->Write();
-//    if(fSaveAnalog) vFixedBoard8.at(vFixedBoard8.size()-1)->Write();
-//    if(fSaveAnalog) vFixedAnBoard8.at(vFixedAnBoard8.size()-1)->Write();
-//    // delete histos to avoid Memory Leaks    
-//    h->Delete(); 
-//    h1->Delete(); 
-//    hs->Delete();   
-//  }
+
+  for(Int_t kk=0;kk<1024;kk++) {
+    //    if(fSaveAnalog) vFixedAnBoard8.at(ii)->SetBinContent(kk,TempSamp[(kk+FirstC)%1024]); // put back the fSample Vector
+    fSamples[kk]=TempSamp[(kk+FirstC)%1024];
+  }
+  //  //  for(Int_t kk=0;kk<1024;kk++) 
+  //
+  //  if(fSaveAnalog && fGlobalMode->GetGlobalDebugMode()){
+  //    //    std::cout<<"Writing analog fix "<<vFixBoard8.size()-1<<std::endl;
+  //    if(fSaveAnalog) vFixBoard8.at(vFixBoard8.size()-1)->Write();
+  //    if(fSaveAnalog) vFixedBoard8.at(vFixedBoard8.size()-1)->Write();
+  //    if(fSaveAnalog) vFixedAnBoard8.at(vFixedAnBoard8.size()-1)->Write();
+  //    // delete histos to avoid Memory Leaks    
+  //    h->Delete(); 
+  //    h1->Delete(); 
+  //    hs->Delete();   
+  //  }
+  //  delete[] TempSamp;
   return 1;                                                                  
 }

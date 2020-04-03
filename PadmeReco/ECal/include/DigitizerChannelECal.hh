@@ -259,6 +259,8 @@ private:
   TH1F *hCharge;
   TH2F *hAmplitudeVSCharge;
   TH1F *hDiffWavetemplate;
+  TH1F *hChargeFirstHit;
+  TH1F *hEnergyFirstHit;
   TH1F *hChargeSecondHit;
   TH1F *hEnergySecondHit;
   TH1F *hCharge3Hit;

@@ -151,6 +151,8 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hCharge= new TH1F("hCharge","hCharge",1500,-500.,1000.));  
   hListCal->Add(hAmplitudeVSCharge= new TH2F("hAmplitudeVSCharge","hAmplitudeVSCharge",1000,0.,500.,1500,-500.,1000.)); 
   hListCal->Add(hDiffWavetemplate = new TH1F("hDiffWavetemplate", "hDiffWavetemplate", 500, -100,200));
+  hListCal->Add(hChargeFirstHit = new TH1F("hChargeFirstHit", "hChargeFirstHit", 1500, -100, 1500));
+  hListCal->Add(hEnergyFirstHit = new TH1F("hEnergyFirstHit", "hEnergyFirstHit", 1500, -100, 1500));
   hListCal->Add(hChargeSecondHit = new TH1F("hChargeSecondHit", "hChargeSecondHit", 1500, -100, 1500));
   hListCal->Add(hEnergySecondHit = new TH1F("hEnergySecondHit", "hEnergySecondHit", 1500, -100, 1500));
   hListCal->Add(hCharge3Hit = new TH1F("hCharge3Hit", "hCharge3Hit", 1500, -100, 1500));
@@ -1185,7 +1187,14 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
   fAmplitude = Temp1[MaxBin];
   std::vector<Double_t> DiffVec;
   Bool_t OutRMS; 
-  MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);
+  MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);    
+  Double_t chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  Double_t energyFirstHitFromTemplate= chargeFirstHitFromTemplate/15.;
+  std::cout<<"energyFirstHitFromTemplate "<< energyFirstHitFromTemplate << std::endl;
+  if(fGlobalMode->GetGlobalDebugMode()) {
+      hChargeFirstHit->Fill(chargeFirstHitFromTemplate);
+      hEnergyFirstHit->Fill(energyFirstHitFromTemplate);
+    }
   //std::cout<<"In drawmean , outRMS " << OutRMS << std::endl;
   /* ////////// to save the template
   ofstream myfile;
@@ -1246,26 +1255,51 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
   Double_t maxValDerivativeDiffForSecondHit=0.;
   Double_t TimeSecondHit=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec, maxValDerivativeDiffForSecondHit);
   //std::cout<<"finished to filling histos " << std::endl;
-  if(maxValDerivativeDiffForSecondHit>30.){
-  //if(OutRMS){
-    std::cout<<"Second Hit with good difference signal template .........................................................2" <<std::endl;
-    Double_t chargeSeconHit=CalcChargeSin(250, DiffVec);
-    if(fGlobalMode->GetGlobalDebugMode()) hChargeSecondHit->Fill(chargeSeconHit);
-    Double_t EnergySecondHit= chargeSeconHit/15.; //going from pC to MeV using 15pC/MeV 
-    //if(EnergySecondHit<0. ) std::cout <<"energy second hit less than zerooooooo " << EnergySecondHit <<" elchid "<< GetElChID() << std::endl;
-    if(fGlobalMode->GetGlobalDebugMode()) hEnergySecondHit->Fill(EnergySecondHit);
+  if(maxValDerivativeDiffForSecondHit>30.){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+    //if(OutRMS){
+    //io comment 3/04 Double_t chargeSeconHit=CalcChargeSin(250, DiffVec);
     // io comment 2/04 .. if(EnergySecondHit>20.){
-   
-   
-    SecondEnergy=EnergySecondHit;
+    //SecondEnergy=EnergySecondHit;
     std::cout<<"In Draw.....SeconhHitEnergy " << SecondEnergy << std::endl;
-    SecondTime=TimeSecondHit;
+    //SecondTime=TimeSecondHit;
     SecondHit=true;
     std::vector<Double_t> DiffVec_SecondHit;
     Bool_t OutRMS_SecondHit;    
     TempWave.clear(); 
     MakeDifferenceWaveformTeplate(DiffVec, TimeSecondHit,TempWave, DiffVec_SecondHit, OutRMS_SecondHit);
-    if(fGlobalMode->GetGlobalDebugMode()) {for(int ll=0; ll<TempWave.size();ll++) histo4->SetBinContent(ll, TempWave.at(ll));}
+    Double_t chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
+    Double_t energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
+    SecondEnergy=energySecondHitFromTemplate;
+    SecondTime=TimeSecondHit;
+    std::cout<<"energySecondHitFromTemplate "<< energySecondHitFromTemplate << std::endl;
+    if(fGlobalMode->GetGlobalDebugMode()) {
+      for(int ll=0; ll<TempWave.size();ll++) histo4->SetBinContent(ll, TempWave.at(ll));
+      hChargeSecondHit->Fill(chargeSecondHitFromTemplate);
+      hEnergySecondHit->Fill(energySecondHitFromTemplate);
+    }
+
+    Double_t maxValDerivativeDiffForThirdHit=0.;
+    Double_t TimeThirdHit=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec_SecondHit, maxValDerivativeDiffForThirdHit);
+    //std::cout<<"finished to filling histos " << std::endl;
+    if(maxValDerivativeDiffForThirdHit>30.){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+      std::cout<<"In Draw.....ThirdHitEnergy " << SecondEnergy << std::endl;
+      ThirdHit=true;
+      std::vector<Double_t> DiffVec_ThirdHit;
+      Bool_t OutRMS_ThirdHit;    
+      TempWave.clear(); 
+      MakeDifferenceWaveformTeplate(DiffVec_SecondHit, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
+      Double_t chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      Double_t energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
+      ThirdEnergy=energyThirdHitFromTemplate;
+      ThirdTime=TimeThirdHit;
+      std::cout<<"energyThirdHitFromTemplate "<< energyThirdHitFromTemplate << std::endl;
+      if(fGlobalMode->GetGlobalDebugMode()) {
+	for(int ll=0; ll<TempWave.size();ll++) histo5->SetBinContent(ll, TempWave.at(ll));
+	hCharge3Hit->Fill(chargeThirdHitFromTemplate);
+	hEnergy3Hit->Fill(energyThirdHitFromTemplate);
+      }
+    }
+    /*  io comment 3/04
     if(OutRMS_SecondHit){
     Double_t charge3Hit=CalcChargeSin(250, DiffVec_SecondHit);
     if(fGlobalMode->GetGlobalDebugMode()) hCharge3Hit->Fill(charge3Hit);
@@ -1279,7 +1313,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
        ThirdTime=Time3Hit;
        ThirdHit=true;
        // io comment 2/04 }
-    }
+       }    end io comment 3/04*/
     /*TRecoVHit *Hit = new TRecoVHit();
     Hit->SetTime(TimeSecondHit);
     Hit->SetEnergy(EnergySecondHit);
@@ -1289,7 +1323,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer,Double_t& SecondEnergy,Dou
   
   fCountEvent++;
   
-  if(fGlobalMode->GetGlobalDebugMode() && fAmplitude>30.){
+  if(fGlobalMode->GetGlobalDebugMode() && fAmplitude>30. && ThirdHit){
     if(fSaveAnalog) hListTmp->Write();
   
   histo->Reset();

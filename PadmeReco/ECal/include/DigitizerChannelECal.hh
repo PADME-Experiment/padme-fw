@@ -95,7 +95,7 @@ public:
   Double_t CalcChargeSin(UShort_t,std::vector<Double_t> input);
   void DrawMeanWave(UShort_t iDerr,Double_t& SeconEnergy,Double_t& SecondTime,Double_t& ThirdEnergy,Double_t& ThirdTime, Bool_t& SecondHit, Bool_t& ThirdHit);
   void MakeDifferenceWaveformTeplate(std::vector<Double_t> input,Int_t MaxBin, std::vector<Double_t>& tempWave, std::vector<Double_t>& output, Bool_t& OutRMS);
-  Double_t MakeDerivativeAndTakeMaxTime(Int_t iDer, Int_t nsmooth, std::vector<Double_t> wave);
+  Double_t MakeDerivativeAndTakeMaxTime(Int_t iDer, Int_t nsmooth, std::vector<Double_t> wave, Double_t& maxValDerivative);
 
 private:
   //What do we operate

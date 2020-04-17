@@ -38,10 +38,10 @@ private:
   int fMode;
   int fVerbosity;
   Bool_t fUsed;
-  PadmeAnalysisEvent *evt;
   std::string fName;    
 
 protected:
+  PadmeAnalysisEvent *evt;
   Bool_t fResult;
 
 };

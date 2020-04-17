@@ -16,7 +16,7 @@ Bool_t UserTemplateAnalyser::InitHistos(){
 
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   hSvcVal->makeFileDir(GetName());
-  hSvcVal->BookHisto(this->GetName()+"_MyHisto",10,0.0,10.0);
+  hSvcVal->BookHisto(this->GetName()+"_PVeto_NHits",100,0.0,100.0);
 
   
   return true;
@@ -24,7 +24,11 @@ Bool_t UserTemplateAnalyser::InitHistos(){
 
 
 Bool_t UserTemplateAnalyser::Process(){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
 
+  if(evt->PVetoRecoEvent) 
+    hSvc->FillHisto(this->GetName()+"_PVeto_NHits",evt->PVetoRecoEvent->GetNHits());
+  
   fResult = true;
   return fResult;
 }

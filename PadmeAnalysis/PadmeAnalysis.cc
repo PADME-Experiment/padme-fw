@@ -496,7 +496,7 @@ int main(Int_t argc, char **argv)
 	 (*it)->Process();
 	 // And stop with the analysis chain if something went wrong with the previous analysers
 	 // Can also be used for data validation
-	 std::cout << "Analyser " << (*it)->GetName() << " finished with code: " << ((*it)->GetResult()?"Success":"Failure") << std::endl;
+	 // std::cout << "Analyser " << (*it)->GetName() << " finished with code: " << ((*it)->GetResult()?"Success":"Failure") << std::endl;
 	 if( ! (*it)->GetResult() ) break;  
     }
 

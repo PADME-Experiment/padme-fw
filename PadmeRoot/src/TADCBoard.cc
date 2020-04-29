@@ -53,6 +53,41 @@ void TADCBoard::Clear(Option_t* option)
 
 }
 
+void TADCBoard::SetGroupError(UChar_t g)
+{
+  // Set error bit (high 4 bits of fGroupMask) for group g
+  if (g<4) {
+    fGroupMask |= (1 << (g+4));
+  } else {
+    printf("ERROR - TADCBoard::SetGroupError - Invalid group: %u\n",g);
+  }
+}
+
+void TADCBoard::ResetGroupError(UChar_t g)
+{
+  // Reset error bit (high 4 bits of fGroupMask) for group g
+  if (g<4) {
+    fGroupMask &= ~(1 << (g+4));
+  } else {
+    printf("ERROR - TADCBoard::ResetGroupError - Invalid group: %u\n",g);
+  }
+}
+
+Bool_t TADCBoard::GetGroupError(UChar_t g)
+{
+  // Return boolean with error bit (high 4 bits of fGroupMask) for group g
+  if (g<4) {
+    if ( fGroupMask & (1 << (g+4)) ) {
+	return true;
+      } else {
+	return false;
+      }
+  } else {
+    printf("ERROR - TADCBoard::GetGroupError - Invalid group: %u\n",g);
+    return false;
+  }
+}
+
 TADCChannel* TADCBoard::AddADCChannel()
 {
   if (fNADCChannels<TADCBOARD_NCHANNELS) {

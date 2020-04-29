@@ -38,8 +38,17 @@ class TADCBoard : public TObject
   void     SetBoardStatus(UChar_t v)        { fBoardStatus = v; }
   UInt_t   GetBoardStatus()                 { return fBoardStatus; }
 
-  void     SetGroupMask(UChar_t v)          { fGroupMask = v; }
-  UChar_t  GetGroupMask()                   { return fGroupMask; }
+  // Handle Group mask (low 4 bits of fGroupMask)
+  void     SetGroupMask(UChar_t v)          { fGroupMask = (fGroupMask & 0xf0) | (v & 0x0f); }
+  UChar_t  GetGroupMask()                   { return (fGroupMask & 0x0f); }
+
+  // Handle Group error bit mask (high 4 bits of fGroupMask)
+  void     SetGroupErrorMask(UChar_t v)     { fGroupMask = (fGroupMask & 0x0f) | ((v & 0x0f) << 4); }
+  UChar_t  GetGroupErrorMask()              { return ((fGroupMask & 0xf0) >> 4);
+  // Set/Reset/Get specific Group error bit (0=OK,1=Error)
+  void     SetGroupError(UChar_t);
+  void     ResetGroupError(UChar_t);
+  Bool_t   GetGroupError(UChar_t);
 
   void     SetEventCounter(UInt_t v)        { fEventCounter = v; }
   UInt_t   GetEventCounter()                { return fEventCounter; }

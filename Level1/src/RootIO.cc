@@ -6,6 +6,8 @@
 #include "Configuration.hh"
 #include "RootIO.hh"
 
+#define ROOTIO_SIC_DIFFERENCE_MAX 5
+
 RootIO::RootIO()
 {
 
@@ -251,6 +253,9 @@ int RootIO::FillRawEvent(int run_number,
       if ( channelmask & ( 0xff << (t*8) ) ) groupmask |= (0x1 << t);
     }
 
+    // Save StartIndexCell for all active groups (assume 4 groups)
+    UShort_t sic[ADCEVENT_NTRIGGERS] = { 1024,1024,1024,1024 };
+
     // Save triggers information for this board
     for(unsigned int t=0; t<ADCEVENT_NTRIGGERS; t++) {
       //if ( boards[b]->Event()->GetGroupMask() & (0x1 << t) ) {
@@ -260,6 +265,7 @@ int RootIO::FillRawEvent(int run_number,
 	//printf("TRawEvent board %d trigger %d created with address %ld\n",b,t,(long)tTrig);
 	tTrig->SetGroupNumber   (t);
 	tTrig->SetStartIndexCell(boards[b]->Event()->GetTriggerStartIndexCell(t));
+	sic[t] = boards[b]->Event()->GetTriggerStartIndexCell(t);
 	tTrig->SetFrequency     (boards[b]->Event()->GetTriggerFrequency(t));
 	tTrig->SetTriggerSignal (boards[b]->Event()->GetTriggerHasSignal(t));
 	tTrig->SetTriggerTimeTag(boards[b]->Event()->GetTriggerTimeTag(t));
@@ -277,6 +283,23 @@ int RootIO::FillRawEvent(int run_number,
 	    }
 	  }
 	}
+      }
+    }
+
+    // Analyze StartTriggerCells to find anomalous situations
+    for (UChar_t i = 0; i<ADCEVENT_NTRIGGERS; i++) {
+      if ( groupmask & (0x1 << i) ) {
+	UChar_t noff = 0;
+	for (UChar_t j = 0; j<ADCEVENT_NTRIGGERS; j++) {
+	  if ( ( j != i ) && (groupmask & (0x1 << j)) ) {
+	    // Compute difference from the two SICs taking into account round robin effect
+	    UShort_t d1 = abs(sic[i]-sic[j]);
+	    UShort_d d2 = abs(d1-ADCEVENT_NSAMPLES);
+	    if ( std::min(d1,d2) > ROOTIO_SIC_DIFFERENCE_MAX ) noff++;
+	  }
+	}
+	// If 2 or 3 other groups have different SIC then set ERROR for this group
+	if (noff > 1) tBoard->SetGroupError(i);
       }
     }
 

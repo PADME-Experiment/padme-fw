@@ -15,6 +15,7 @@
 #include "G4SubtractionSolid.hh"
 
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 
 #include "G4Element.hh"
 #include "G4Material.hh"
@@ -24,6 +25,7 @@
 
 #include "TargetGeometry.hh"
 #include "TargetSD.hh"
+#include "TargetDigitizer.hh"
 
 TargetDetector::TargetDetector(G4LogicalVolume* motherVolume):fMotherVolume(motherVolume)
 {
@@ -84,10 +86,17 @@ void TargetDetector::CreateGeometry()
   G4ThreeVector tsPosition = G4ThreeVector(geo->GetTSupportPosX(),0.,geo->GetTSupportPosZ());
   new G4PVPlacement(0,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
 
+  // Create digitizer for Target
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String targetDName = geo->GetTargetDigitizerName();
+  printf("Registering Target Digitizer %s\n",targetDName.data());
+  TargetDigitizer* targetD = new TargetDigitizer(targetDName);
+  theDM->AddNewModule(targetD);
+
   // The whole target is a sensitive detector
   // Digitization will take care of mapping hits to readout strips
   G4String targetSDName = geo->GetTargetSensitiveDetectorName();
-  printf("Registering Target SD %s\n",targetSDName.data());
+  printf("Registering Target Sensitive Detector %s\n",targetSDName.data());
   TargetSD* targetSD = new TargetSD(targetSDName);
   fTargetVolume->SetSensitiveDetector(targetSD);
   G4SDManager::GetSDMpointer()->AddNewDetector(targetSD);

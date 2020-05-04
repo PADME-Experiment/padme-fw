@@ -97,6 +97,9 @@ public:
   void DisableReduceWaveform() { fTargetReduceWaveform = false; }
   G4bool ReduceWaveformIsEnabled() { return fTargetReduceWaveform; }
 
+  // Get name of Target digitizer
+  G4String GetTargetDigitizerName() { return fTargetDigitizerName; }
+
   // Get name of Target sensitive detector
   G4String GetTargetSensitiveDetectorName() { return fTargetSensitiveDetectorName; }
   
@@ -192,6 +195,7 @@ private:
   G4double fTargetDigiNoiseChargeRMS; // Fluctuation of noise charge for FastDigi
   G4double fTargetDigiMeV2Q;  // MeV to charge conversion factor for calibration of FastDigi
 
+  G4String fTargetDigitizerName;
   G4String fTargetSensitiveDetectorName;
 
 };

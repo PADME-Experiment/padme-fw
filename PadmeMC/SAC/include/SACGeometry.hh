@@ -103,6 +103,9 @@ public:
   G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
   G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
 
+  // Get name of SAC digitizer
+  G4String GetSACDigitizerName() { return fSACDigitizerName; }
+
   // Get name of SAC sensitive detector
   G4String GetSACSensitiveDetectorName() { return fSACSensitiveDetectorName; }
 
@@ -139,6 +142,7 @@ private:
 
   // Other parameteres
 
+  G4String fSACDigitizerName;
   G4String fSACSensitiveDetectorName;
 
 };

@@ -59,6 +59,7 @@ TargetGeometry::TargetGeometry()
 
   fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
 
+  fTargetDigitizerName = "TargetDigitizer";
   fTargetSensitiveDetectorName = "TargetSD";
   
   fTargetPitch = 1*mm;

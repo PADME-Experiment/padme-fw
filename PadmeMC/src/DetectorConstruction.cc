@@ -165,7 +165,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // World Volume
   //------------------------------
 
-
   G4VPhysicalVolume* physicWorld = 0;
   G4LogicalVolume* logicWorld = 0;
 
@@ -820,6 +819,21 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else { printf("WARNING: request to disable unknown subdetector %s\n",det.data()); }
 }
 
+G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
+{
+  if ( ( (det=="ECal")     && (fEnableECal     == 1) ) ||
+       ( (det=="Target")   && (fEnableTarget   == 1) ) ||
+       ( (det=="SAC")      && (fEnableSAC      == 1) ) ||
+       ( (det=="LAV")      && (fEnableLAV      == 1) ) ||
+       ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
+       ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
+       ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||
+       ( (det=="TDump")    && (fEnableTDump    == 1) ) ||
+       ( (det=="TPix")     && (fEnableTPix     == 1) ) ||
+       ( (det=="Tungsten") && (fEnableTungsten == 1) )
+     ) { return true; } else { return false; }
+}
+
 void DetectorConstruction::EnableStructure(G4String str)
 {
   if (fVerbose) printf("Enabling structure %s\n",str.data());
@@ -840,6 +854,16 @@ void DetectorConstruction::DisableStructure(G4String str)
   else { printf("WARNING: request to disable unknown structure %s\n",str.data()); }
 }
 
+G4bool DetectorConstruction::IsStructureEnabled(G4String str)
+{
+  if (
+      ( (str=="Wall")     && (fEnableWall     == 1) ) ||
+      ( (str=="Chamber")  && (fEnableChamber  == 1) ) ||
+      ( (str=="BeamLine") && (fEnableBeamLine == 1) ) ||
+      ( (str=="Magnet")   && (fEnableMagnet   == 1) )
+     ) { return true; } else { return false; }
+}
+
 void DetectorConstruction::EnableMagneticField()
 {
   if (fVerbose) printf("Enabling magnetic field\n");
@@ -850,6 +874,11 @@ void DetectorConstruction::DisableMagneticField()
 {
   if (fVerbose) printf("Disabling magnetic field\n");
   fEnableMagneticField = 0;
+}
+
+G4bool DetectorConstruction::IsMagneticFieldEnabled()
+{
+  if ( fEnableMagneticField == 1 ) { return true; } else { return false; }
 }
 
 void DetectorConstruction::MagneticVolumeIsVisible()

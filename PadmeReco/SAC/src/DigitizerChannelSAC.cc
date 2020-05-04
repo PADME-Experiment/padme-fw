@@ -151,9 +151,9 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
     //  hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
     hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
-    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),250,0.,500.); // in mV
+    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
     //  h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
-    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),250,0,500); //CT
+    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),200,0,200); //CT
     hListCal->Add(hPedCalo[kk]);
     //    hListCal->Add(hAvgCalo[kk]);
     hListCal->Add(hPedMean[kk]);
@@ -248,7 +248,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   static Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
-  Int_t ElCh = fCh/10*5 +fCh%5;
+  Int_t ElCh = fCh/10 +fCh%10*5;
 
   if(ElCh<0) return -1;
   //  std::cout<<fCh<<" ElCh "<<ElCh<<std::endl;
@@ -256,10 +256,11 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   Double_t fRMS40  = TMath::RMS(80,&fSamples[0]);
 
   //  std::cout<<"fTrigMask" <<fTrigMask<<std::endl;
-  if(fTrigMask!=2) return -1.;  //tengo solo cosmici
+  //  if(fTrigMask!=2) return -1.;  //tengo solo cosmici
   //  std::cout<<"fTrigMask dopo " <<fTrigMask<<std::endl;
 
-  fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
+  //fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
+  fAvg80 = TMath::Mean(&fSamples[600],&fSamples[800]); 
 
 
   char name[50];
@@ -310,8 +311,10 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   // if(VMax>fAmpThresholdLow){ // zero suppression on Voltage normalize to energy.
 
 
-  //if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.//original reco
-  if(VMax>fAmpThresholdHigh){
+  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.//original reco
+
+  //  H1->Write();
+  //if(VMax>fAmpThresholdHigh){
     TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
 
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
@@ -327,42 +330,10 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
         Float_t *ypeaks = s->GetPositionY();
 
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
-    fNPeak=nfound;
-    
-    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
-      if(VMax>0 && ElCh>=0){//original reco, debug mode
-      //if(VMax>1 && ElCh>=0){
-//	//	std::cout<<ElCh<<" VMax "<<VMax<<std::endl;
-	fileOut->cd();
-	sprintf(name,"hSig%d",ElCh);
-	histo=(TH1D*) hListCal->FindObject(name);
-	histo->SetContent(AbsSamRec);
-	//	histo->Write(); histo->Reset();
-	sprintf(name,"hVMax%d",ElCh);
-	histo=(TH1D*) hListCal->FindObject(name);
-	histo->Fill(VMax);//CT hVMax contains histogram maximum
-      }
-//      //CT trying to fill hQCh
-//      
-//      Int_t Ch   = GetElChID();
-      if(ElCh>=0){
-	char name[50];
-	sprintf(name,"hQCh%d",ElCh);
-	histo =(TH1D*) hListCal->FindObject(name);
-	//      std::cout<<"ElCh "<<ElCh<<
-	//	if(140<xpeaks[0]*fTimeBin && xpeaks[0]<160) 
-	histo->Fill(ypeaks[0]);//CT hQCh contains TSpectrum max
-	//      
-	sprintf(name,"hTime");
-	histo =(TH1D*) hListCal->FindObject(name);
-	histo->Fill(xpeaks[0]*fTimeBin);
-      }
-    }
-    
-   
+    fNPeak=nfound;   
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
-
+      Charge = 0.;
 // ROOT 6 version
 //      Double_t xp   = xpeaks[ll];
 //      Double_t yp   = ypeaks[ll];
@@ -377,10 +348,9 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       Int_t bin    = H1->GetXaxis()->FindBin(xp);
       if(bin<1000){
 	for (Int_t ii=bin-NIntSamp;ii<bin+NIntSamp;ii++) {
-	  //	  if(H1->GetBinContent(ii)>0.003) 
-	  fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;  //charge in pC
+	  if(H1->GetBinContent(ii)>5)  fCharge += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;  //charge in pC
           Charge  += H1->GetBinContent(ii)*1e-3/fImpedance*fTimeBin*1e-9/1E-12;
-	  //	  std::cout<<"Charge is "<<fCharge<<" "<<ElCh<<std::endl;
+	  //	  std::cout<<"Charge is "<<fCharge<<" "<<Charge<<std::endl;
 	}
 	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
@@ -392,14 +362,13 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       HitE=VMax;
       fESpec=yp;
       if(ElCh>=0) SAC->Fill(); //fil the tree
-     // if(yp>-3*VMin)//original reco
-      if(1)
+      if(yp>-3*VMin)//original reco
+      //if(1)
 	{
 	Hit->SetTime(fTime);
-	//	Hit->SetEnergy(fCharge);    // need to add hit status 
+	//Hit->SetEnergy(fCharge);    // need to add hit status 
 	//Hit->SetEnergy(VMax);    // need to add hit status 
-	//	Hit->SetEnergy(fEnergy); //original reco
-	Hit->SetEnergy(fCharge);               // this should fill energy histograms with signal amplitude
+	Hit->SetEnergy(fEnergy);               // this should fill energy histograms with signal amplitude
 	hitArray.push_back(Hit);
       }else{
 	//	fileOut->cd();
@@ -409,6 +378,43 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       }  
       //      std::cout<<ll<<" "<<xp<<" yp "<<ypeaks[ll]<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }
+
+
+    //    std::cout<<ElCh<<" VMax "<<VMax<<std::endl;    
+    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
+      if(VMax>0 && ElCh>=0){//original reco, debug mode
+	//if(VMax>1 && ElCh>=0){
+	
+	fileOut->cd();
+	sprintf(name,"hSig%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	histo->SetContent(AbsSamRec);
+	//	histo->Write(); histo->Reset();
+	sprintf(name,"hVMax%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	//	histo->Fill(VMax);//CT hVMax contains histogram maximum
+	histo->Fill(Charge);//CT hVMax contains histogram maximum
+      }
+      //      //CT trying to fill hQCh
+      //      
+      //      Int_t Ch   = GetElChID();
+      if(ElCh>=0){
+	char name[50];
+	sprintf(name,"hQCh%d",ElCh);
+	histo =(TH1D*) hListCal->FindObject(name);
+	//      std::cout<<"ElCh "<<ElCh<<
+	//	if(140<xpeaks[0]*fTimeBin && xpeaks[0]<160) 
+	histo->Fill(fCharge);//CT hQCh contains TSpectrum max
+	//      
+	sprintf(name,"hTime");
+	histo =(TH1D*) hListCal->FindObject(name);
+	histo->Fill(xpeaks[0]*fTimeBin);
+
+      }
+
+    }
+
+
     //    std::cout<<"end ch"<<std::endl;
     H1->Reset();
   }

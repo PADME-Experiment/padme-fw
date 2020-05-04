@@ -45,9 +45,9 @@ TargetGeometry::TargetGeometry()
   fTSupportHoleD = 2.0*cm; // Distance from L1 to center of squared hole
   fTSupportThick = 1.6*mm; // Thickness of T-shaped support
 
-  // Assume target at exact center of cross. Jan 2020 survey (X:-1.3mm, Y:0.41mm, 1mm approximation)
-  //fTargetDisplacementX = -1.*mm;
-  fTargetDisplacementX = 0.*mm; // Waiting for PadmeReco fix
+  // Assume target at exact center. Cross position from Jan 2020 survey: (X:-1.3mm, Y:0.41mm), 1mm approximation
+  // Can be modified with datacards
+  fTargetDisplacementX = 0.*mm;
   fTargetDisplacementY = 0.*mm;
 
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet

@@ -83,7 +83,7 @@ void TargetDetector::CreateGeometry()
 
   G4LogicalVolume* logicTargetSupport = new G4LogicalVolume(solidTargetSupport,G4Material::GetMaterial("PCB"),"TargetSupport",0,0,0);
   logicTargetSupport->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
-  G4ThreeVector tsPosition = G4ThreeVector(geo->GetTSupportPosX(),0.,geo->GetTSupportPosZ());
+  G4ThreeVector tsPosition = G4ThreeVector(geo->GetTSupportPosX(),geo->GetTSupportPosY(),geo->GetTSupportPosZ());
   new G4PVPlacement(0,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
 
   // Create digitizer for Target

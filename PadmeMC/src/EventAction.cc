@@ -143,7 +143,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fFirstEvent) {
 
     // Show info about available digitizers
-    printf("=== Registered Digitizers ===");
+    printf("=== Registered Digitizers ===\n");
     //theDM->List();
     G4int ndm = theDM->GetDCtable()->entries();
     for(G4int i=0; i<ndm; i++) {

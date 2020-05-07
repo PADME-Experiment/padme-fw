@@ -18,6 +18,8 @@
 #include "HEPVetoGeometry.hh"
 #include "HEPVetoSimpleClusterization.hh"
 #include "TH2F.h"
+#include "TRandom2.h"
+#include <time.h>
 
 
 
@@ -127,6 +129,8 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
   fHits.clear();
   Int_t chId=0;
   // MC to reco hits
@@ -139,7 +143,10 @@ void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent
     if (chId<16) chId = 15-chId;
     else  chId = 47-chId;
     Hit->SetChannelId(chId);
-    Hit->SetEnergy(digi->GetEnergy());
+    Double_t sigma = 0.4;
+    Double_t Noise=random->Gaus(0.,sigma); 
+    Hit->SetEnergy(digi->GetEnergy()+Noise);
+    //Hit->SetEnergy(digi->GetEnergy());
     Hit->SetTime(digi->GetTime());
     Hit->SetPosition(TVector3(0.,0.,0.)); 
     fHits.push_back(Hit);

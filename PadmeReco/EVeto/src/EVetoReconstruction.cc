@@ -18,6 +18,8 @@
 
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TRandom2.h"
+#include <time.h>
 
 
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
@@ -118,6 +120,30 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void EVetoReconstruction::EndProcessing()
 // {;}
+
+
+void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    TRecoVHit *Hit = new TRecoVHit();
+    Hit->SetChannelId(digi->GetChannelId());
+    Double_t sigma = 0.4;
+    Double_t Noise=random->Gaus(0.,sigma); 
+    Hit->SetEnergy(digi->GetEnergy()+Noise);
+    //Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    fHits.push_back(Hit);
+  }
+}
+
 void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   float charges[96];
   for(int i=0;i<96;i++) charges[i] = -1.;

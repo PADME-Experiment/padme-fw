@@ -8,6 +8,7 @@
 #define EVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "TRandom2.h"
 
 class EVetoReconstruction : public PadmeVReconstruction
 {
@@ -23,6 +24,8 @@ public:
   // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
+  void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
+  TRandom2 *random;
 
 };
 #endif

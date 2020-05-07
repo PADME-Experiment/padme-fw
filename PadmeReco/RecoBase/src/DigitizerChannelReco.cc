@@ -62,6 +62,7 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
  fDPParameterR1       = cfg->GetParOrDefault("RECO","fDPParameterR1",650.);
  fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
  fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.030e-9);
+ fmVtoMeV  = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
 
 
 
@@ -330,7 +331,9 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
 
       TRecoVHit *Hit = new TRecoVHit();  
       Hit->SetTime(Time);
-      Hit->SetEnergy(fAmpli);
+      Double_t fEnergy=fAmpli/fmVtoMeV; //conversion factor from Veto tuning
+      //Hit->SetEnergy(fAmpli);
+      Hit->SetEnergy(fEnergy);
       hitArray.push_back(Hit);
     }
     //    delete s;

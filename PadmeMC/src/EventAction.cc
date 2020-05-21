@@ -19,7 +19,9 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
 
+//#include "G4RunManager.hh"
 #include "G4DigiManager.hh"
+
 #include "TargetDigitizer.hh"
 #include "PVetoDigitizer.hh"
 #include "EVetoDigitizer.hh"
@@ -27,6 +29,15 @@
 #include "ECalDigitizer.hh"
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
+
+#include "TargetGeometry.hh"
+#include "PVetoGeometry.hh"
+#include "EVetoGeometry.hh"
+#include "HEPVetoGeometry.hh"
+#include "ECalGeometry.hh"
+#include "SACGeometry.hh"
+#include "TPixGeometry.hh"
+
 #include "SystemInfo.hh"
 
 extern double NNeutrons;
@@ -37,6 +48,16 @@ extern double Npionc;
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
 {
+
+  fFirstEvent = true;
+
+  fTargetDigitizer  = NULL;
+  fPVetoDigitizer   = NULL;
+  fEvetoDigitizer   = NULL;
+  fHEPVetoDigitizer = NULL;
+  fECalDigitizer    = NULL;
+  fSACDigitizer     = NULL;
+  fTPixDigitizer    = NULL;
 
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
@@ -49,24 +70,8 @@ EventAction::EventAction(RunAction* run)
   //M. Raggi defining default output settings 
   fEnableSaveEcal = 1;
   fEnableSaveSAC  = 0; 
-  fEnableSaveVeto = 0; 
+  fEnableSaveVeto = 0;
 
-  // Create and register digitizer modules for all detectors
-  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
-  theDM->AddNewModule(targetDM);
-  PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
-  theDM->AddNewModule(pVetoDM);
-  EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
-  theDM->AddNewModule(eVetoDM);
-  HEPVetoDigitizer* hepVetoDM = new HEPVetoDigitizer("HEPVetoDigitizer");
-  theDM->AddNewModule(hepVetoDM);
-  ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
-  theDM->AddNewModule(eCalDM);
-  SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
-  theDM->AddNewModule(sacDM);
-  TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
-  theDM->AddNewModule(tPixDM);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -131,22 +136,43 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     G4cout << ">>> " << now_str << " - Event " << event_id << " - VmSize " << vmsize << " kB - dVmSize " << SystemInfo::GetInstance()->delta_vmsize() << " kB" << G4endl;
   }
 
-  // Digitize this event
+  // Digitization
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  TargetDigitizer* targetDM = (TargetDigitizer*)theDM->FindDigitizerModule("TargetDigitizer");
-  targetDM->Digitize();
-  PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
-  pVetoDM->Digitize();
-  EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");
-  eVetoDM->Digitize();
-  HEPVetoDigitizer* hepVetoDM = (HEPVetoDigitizer*)theDM->FindDigitizerModule("HEPVetoDigitizer");
-  hepVetoDM->Digitize();
-  ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
-  eCalDM->Digitize();
-  SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
-  sacDM->Digitize();
-  TPixDigitizer* tPixDM = (TPixDigitizer*)theDM->FindDigitizerModule("TPixDigitizer");
-  tPixDM->Digitize();
+
+  // This cannot be done in the creator as digitizers are defined during detector construction
+  if (fFirstEvent) {
+
+    // Show info about available digitizers
+    printf("=== Registered Digitizers ===\n");
+    //theDM->List();
+    G4int ndm = theDM->GetDCtable()->entries();
+    for(G4int i=0; i<ndm; i++) {
+      G4String dmn = theDM->GetDCtable()->GetDMname(i);
+      G4String dcn = theDM->GetDCtable()->GetDCname(i);
+      G4cout << i << " DM " << dmn << " DC " << dcn << G4endl;
+    }
+
+    // Get pointers to digitizers
+    fTargetDigitizer  = (TargetDigitizer*)theDM->FindDigitizerModule(TargetGeometry::GetInstance()->GetTargetDigitizerName());
+    fPVetoDigitizer   = (PVetoDigitizer*)theDM->FindDigitizerModule(PVetoGeometry::GetInstance()->GetPVetoDigitizerName());
+    fEvetoDigitizer   = (EVetoDigitizer*)theDM->FindDigitizerModule(EVetoGeometry::GetInstance()->GetEVetoDigitizerName());
+    fHEPVetoDigitizer = (HEPVetoDigitizer*)theDM->FindDigitizerModule(HEPVetoGeometry::GetInstance()->GetHEPVetoDigitizerName());
+    fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
+    fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
+    fTPixDigitizer    = (TPixDigitizer*)theDM->FindDigitizerModule(TPixGeometry::GetInstance()->GetTPixDigitizerName());
+
+    fFirstEvent = false;
+
+  }
+
+  // Digitize existing detectors
+  if (fTargetDigitizer)  fTargetDigitizer->Digitize();
+  if (fPVetoDigitizer)   fPVetoDigitizer->Digitize();
+  if (fEvetoDigitizer)   fEvetoDigitizer->Digitize();
+  if (fHEPVetoDigitizer) fHEPVetoDigitizer->Digitize();
+  if (fECalDigitizer)    fECalDigitizer->Digitize();
+  if (fSACDigitizer)     fSACDigitizer->Digitize();
+  if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -507,7 +533,7 @@ void EventAction::FindClusters()
     //    printf("Th Cl %f\n",ThCl[NClusters]);
 
     G4double ProcID = myStepping->GetPhysProc();    
-    printf("PROCID %f\n",ProcID);
+    //printf("PROCID %f\n",ProcID);
     if(ProcID==1) fHistoManager->FillHisto2(8,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==1
     if(ProcID==2) fHistoManager->FillHisto2(9,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==2
     if (NClusters==0 && EneCl[NClusters]>5.) {

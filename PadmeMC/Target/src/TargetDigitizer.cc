@@ -36,7 +36,7 @@ TargetDigitizer::TargetDigitizer(G4String name)
 {
   collectionName.push_back(digiCollectionName);
   fTargetGeometry = TargetGeometry::GetInstance();
-  std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
+  //std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
 }
 
 TargetDigitizer::~TargetDigitizer()
@@ -72,7 +72,6 @@ void TargetDigitizer::Digitize()
 
   G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
   G4double fThreshold=fTargetGeometry->GetTargetDigiThreshold();
-
 
   for (G4int i=0; i < nChannels; i++) {
     dChannel.push_back(i);
@@ -126,7 +125,6 @@ void TargetDigitizer::Digitize()
  //   for (G4int j=0; j< nhires; j++)
  //     dTimeTraceCCD[i][j] = 0.;	
  // }
-
   
   TargetDigiCollection* targetDigiCollection = new TargetDigiCollection("TargetDigitizer",digiCollectionName);
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();

@@ -68,7 +68,6 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   InitLibraries();
   Init(NEvt,Seed);
 
-
 }
 void PadmeReconstruction::InitRunningModeFlags()
 {
@@ -129,6 +128,12 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
+}
+
+void PadmeReconstruction::HistoInit()
+{
+  AddHisto("EventTrigger",new TH1F("EventTrigger","Event Trigger",8,-0.5,7.5));
+  AddHisto("EventTriggerWord",new TH1F("EventTriggerWord","Event Trigger word",256,-0.5,255.5));
 }
 
 void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
@@ -299,6 +304,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   // Initialize reconstruction for each subdetector
   InitDetectorsInfo();
 
+  // Initialize global histograms
+  HistoInit();
+
 }
 
 Bool_t PadmeReconstruction::NextEvent()
@@ -381,6 +389,10 @@ Bool_t PadmeReconstruction::NextEvent()
       std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
 		<< " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
     }
+
+    // Process event to extract global information
+    ProcessEvent(fRawEvent);
+
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
       fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
@@ -395,6 +407,15 @@ Bool_t PadmeReconstruction::NextEvent()
 
 }
 
+void PadmeReconstruction::ProcessEvent(TRawEvent* rawEv)
+{
+  UInt_t trigMask = rawEv->GetEventTrigMask();
+  GetHisto("EventTriggerWord")->Fill(trigMask);
+  for(UInt_t i=0; i<8; i++){
+    if (trigMask & (1 << i)) GetHisto("EventTrigger")->Fill(i);
+  }
+}
+
 void PadmeReconstruction::EndProcessing(){
 
   // Reconstruct individual detectors (but check if they exist, first!)
@@ -403,7 +424,7 @@ void PadmeReconstruction::EndProcessing(){
     fRecoLibrary[iLib]->EndProcessing();
   }
   fHistoFile->cd("/");
-
+  HistoExit();
 
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EvaluateROSettings();

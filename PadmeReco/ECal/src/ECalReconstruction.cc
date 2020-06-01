@@ -73,6 +73,18 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
   fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeteriorateEnergyResolution", 0);
 
+  Int_t i=0;
+  ifstream myfile;
+  myfile.open ("newtemplate.txt");;
+  if (myfile.is_open()){
+   while (!myfile.eof()) {
+   myfile >> fTemplate[i];
+   //if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
+   //std::cout<< Template[i] << std::endl;
+   i++;
+   }
+  }
+
   //  fClusters.clear();
 }
 void ECalReconstruction::HistoInit(){
@@ -821,6 +833,66 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
   if (tEvent==NULL) return;
   fHits.clear();
 
+ int idarray[50][50];
+  for (Int_t j=0; j<50; ++j) {
+      for (Int_t i=0; i<50; ++i) idarray[i][j]=0;
+  }
+  std::vector<double> totalWaveform;
+  std::vector<double> digiEne;
+  std::vector<double> digiTime;
+  std::vector<TimeEnergy> hitArrayInCrystal;
+  hitArrayInCrystal.clear();
+
+  //ss//std::cout<<"Start new event conversion here ................................................................................"<<std::endl;
+  int ndigi=0;
+  
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    int i1 = digi->GetChannelId()/100;
+    int i2 = digi->GetChannelId()%100;
+    if (idarray[i1][i2]==1) continue;
+    Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
+    if (BrokenSU)continue;
+   
+    hitArrayInCrystal.clear();
+    ndigi=1;
+    hitArrayInCrystal.push_back(TimeEnergy());
+    hitArrayInCrystal.back().digiTime = digi->GetTime();
+    hitArrayInCrystal.back().digiEnergy = digi->GetEnergy();
+      
+    int chIdN = i2*100+i1;
+    //ss//std::cout<<"Hit in a new crystal   ......... id = "<<chIdN<<"  ... it was "<<digi->GetChannelId()<<std::endl;
+    //double time = digi->GetTime();
+    //double energy = digi->GetEnergy();
+    for (Int_t j=i+1; j<tEvent->GetNDigi(); ++j) {
+	TMCVDigi* digj = tEvent->Digi(j);
+	int j1 = digj->GetChannelId()/100;
+	int j2 = digj->GetChannelId()%100;
+	if (j1!=i1) continue;
+	if (j2!=i2) continue;
+	ndigi+=1;
+	hitArrayInCrystal.push_back(TimeEnergy());
+	hitArrayInCrystal.back().digiTime = digj->GetTime();
+	hitArrayInCrystal.back().digiEnergy = digj->GetEnergy();
+    }
+    idarray[i1][i2]=1;
+    //Hit->SetChannelId(chIdN);
+    //Hit->SetPosition(TVector3(0.,0.,0.)); 
+
+    std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
+
+    // trasformare i digi/channel in waveform
+    std::vector<double> tempVec;
+
+    //capovolgere per renderla conforme ai dati
+
+  }
+
+
+
+
+/*
   if (fMultihitForMC==1) {
     // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
     // MC to reco hits
@@ -956,18 +1028,18 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       }
     }
 
-    /*
-    if (multiHit)  
-    if (singleHit_firstTime) tmin 
-    if (singleHit_timeEmax)  tEmaxIdeal
-    if (singleHit_timeEmaxWFcorr) thitemax
-    */
+    
+    //if (multiHit)  
+    //if (singleHit_firstTime) tmin 
+    //if (singleHit_timeEmax)  tEmaxIdeal
+    //if (singleHit_timeEmaxWFcorr) thitemax
+    
 
     //ss//std::cout<<"RecoHit in the crystal   ......... id = "<<chIdN<<" tmin, tEMaxIdeal, thitemax = "<<tmin<<" "<<tEMaxIdeal<<" "<<thitemax<<"         energy = "<<energy<<std::endl;
     Hit->SetEnergy(energy);
     Hit->SetTime(thitemax);
     fHits.push_back(Hit);
-  }
+  }*/
 }
 
 

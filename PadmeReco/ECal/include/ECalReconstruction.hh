@@ -56,6 +56,8 @@ private:
   Int_t fMultihitForMC;
   Int_t fDeteriorateEnergyResolution;
 
+  Double_t fTemplate[5001];
+
   TRandom2 *r;
 
   //Clusters vectors

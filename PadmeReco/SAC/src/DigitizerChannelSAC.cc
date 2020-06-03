@@ -260,20 +260,20 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //  std::cout<<"fTrigMask dopo " <<fTrigMask<<std::endl;
 
   //fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
-  fAvg80 = TMath::Mean(&fSamples[600],&fSamples[800]); 
+  fAvg80 = TMath::Mean(&fSamples[600],&fSamples[800]); //cosmic pedestal!
 
 
   char name[50];
   if(ElCh>=0){
     sprintf(name,"hPedCalo%d",ElCh);
     histo=(TH1D*) hListCal->FindObject(name);
-    histo->Fill(fAvg200);
+    histo->Fill(fAvg80);
   }
   for(UShort_t s=0;s<iMax;s++){
 
     //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //in mV positivi MR 
 //07
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
+    //AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
 
     //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //original pedestal not ok or 2019 data
     //M. Raggi 20/07/2019 computes the pedestals on the basis of 8 samples need to check is changing time offsets
@@ -367,8 +367,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	{
 	Hit->SetTime(fTime);
 	//Hit->SetEnergy(fCharge);    // need to add hit status 
-	//Hit->SetEnergy(VMax);    // need to add hit status 
-	Hit->SetEnergy(fEnergy);               // this should fill energy histograms with signal amplitude
+	Hit->SetEnergy(VMax);    // need to add hit status 
+	//Hit->SetEnergy(fEnergy);               // this should fill energy histograms with signal amplitude
 	hitArray.push_back(Hit);
       }else{
 	//	fileOut->cd();

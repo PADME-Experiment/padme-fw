@@ -55,10 +55,16 @@ private:
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
   Int_t fDeteriorateEnergyResolution;
+  Int_t fReproductSACbunchStructure;
 
   Double_t fTemplate[5001];
+  Double_t fmaxValuemyTemplate;
 
   TRandom2 *r;
+  
+  TH1F *hSAC_HitTime;
+  TH1F *hCumulative;
+  Double_t fComulativeMax;
 
   //Clusters vectors
   std::vector<double> ClE;

@@ -167,10 +167,10 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hDiffTimeFirstSecondHit = new TH1F("DiffTimeFirstSecondHit","DiffTimeFirstSecondHit",1000,-500,500));
   hListCal->Add(hDiffTimeFirstThirdHit = new TH1F("DiffTimeFirstThirdHit","DiffTimeFirstThirdHit",1000,-500,500));
   hListCal->Add(hDiffTimeSecondThirdHit = new TH1F("DiffTimeSecondThirdHit","DiffTimeSecondThirdHit",1000,-500,500));
-  hListCal->Add(hECALfirsthitEnergy = new TH1F("hECALfirsthitEnergy_SH","hECALfirsthitEnergy_SH",1500,-100,1500));
-  hListCal->Add(hECALfirsthitEnergyCorrected = new TH1F("hECALfirsthitEnergyCorrected","hECALfirsthitEnergyCorrected",1500,-10,1550));
-  hListCal->Add(hECALsecondhitEnergyCorrected = new TH1F("hECALsecondhitEnergyCorrected","hECALsecondhitEnergyCorrected",1500,-10,1550));
-  hListCal->Add(hECALthirdhitEnergyCorrected = new TH1F("hECALthirdhitEnergyCorrected","hECALthirdhitEnergyCorrected",1500,-10,1550));
+  hListCal->Add(hECALfirsthitEnergy = new TH1F("hECALfirsthitEnergy_SH","hECALfirsthitEnergy_SH",3500,-100,3500));
+  hListCal->Add(hECALfirsthitEnergyCorrected = new TH1F("hECALfirsthitEnergyCorrected","hECALfirsthitEnergyCorrected",3500,-10,3500));
+  hListCal->Add(hECALsecondhitEnergyCorrected = new TH1F("hECALsecondhitEnergyCorrected","hECALsecondhitEnergyCorrected",3500,-10,3500));
+  hListCal->Add(hECALthirdhitEnergyCorrected = new TH1F("hECALthirdhitEnergyCorrected","hECALthirdhitEnergyCorrected",3500,-10,3500));
   hListCal->Add(hAmplitudeVSEnergyTemplate= new TH2F("hAmplitudeVSEnergyTemplate","hAmplitudeVSEnergyTemplate",600,0.,600.,400,0.,500.));
   hListCal->Add(hECALsecondhitEnergy_Saved = new TH1F("hECALsecondhitEnergyCorrected_saved","hECALsecondhitEnergyCorrected_saved",1500,-10,1550));
   hListCal->Add(hECALthirdhitEnergy_Saved = new TH1F("hECALthirdhitEnergyCorrected_saved","hECALthirdhitEnergyCorrected_saved",1500,-10,1550));
@@ -285,6 +285,7 @@ void DigitizerChannelECal::ResetPedestal() {
 // Compute zero suppression: returns 1 if the events has to be suppressed
 Double_t DigitizerChannelECal::ZSupHit(Float_t Thr, UShort_t NAvg) {
   fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
+  //std::cout<<"fRMS1000 " << fRMS1000<<std::endl;
   Double_t ZSupHit=-1;
 
   if(fRMS1000>Thr){
@@ -690,12 +691,10 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
-  //  std::cout<<"Zsupp "<<fZeroSuppression<<std::endl;
-  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
+  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);   //io 8/06 to try
   //  Double_t IsZeroSup = ZSupHit(5,1000.);
   // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
-  
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
  //***********************************************
   // Fix a broken chip in digitizer 8 durign 2019 run
@@ -705,13 +704,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(BID==8 && Ch>=16 && Ch<=23){
     if(GetBadInd()>0){
       //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<vDerdt.size()<<std::endl;
-      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
+       std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
       Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
     }
   }
 
   fTrig = GetTrigMask();
-
   if(fUseOverSample){
     //    std::cout<<" over sampled "<<std::endl;
     HitT = CalcTimeOver(40);
@@ -719,7 +717,6 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     //    std::cout<<" NON over sampled "<<std::endl;
     HitT = CalcTimeSing(10);
   } 
-
   if(GetTrigMask()!=2) CalcChargeSin(HitT-10);  //Physics in ECAL starts ~250 ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
@@ -731,12 +728,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(!fGlobalMode->IsPedestalMode()){
     //correct for saturation effects integrated charge M. Raggi 23/05/2019
     // do it before extrapolating to full integral
+    //if(IsSat)return;  //io 15/06
     if(IsSat && fSaturatioCorrection) {
       Double_t ESatCorr = CorrectSaturation();
       fEnergy += ESatCorr; 
       HitE200 += ESatCorr;     
     }
-    
     //correct for non integrated charge M. Raggi 15/05/2019
     if(fIntCorrection){ 
       Double_t QIntCorr = CorrectIntegrationTime(HitT,1000.);
@@ -751,15 +748,16 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);}
   /*if(fEnergy<350)*/ if(IsSat==0)fFirstHit = true;
+  std::cout<<"IsSat " << IsSat << std::endl;
   if(IsSat==1)fSaturatedHit=true;
   //std::cout<<"i'm compiled the single hit reconstruction "<< fFirstHit << std::endl;
+  std::cout << "favg200 " << fAvg200 << std::endl;
   if(fGlobalMode->GetGlobalDebugMode()) {
     ECal->Fill();
     // hCharge->Fill(fCharge);
     // hAmplitude->Fill(fAmplitude);
     // hAmplitudeVSCharge->Fill(fAmplitude, fCharge);
   }
-  // std::cout << "Hit charge:  " << fCharge << "  Time: " <<HitT << "Hit array size "<< hitArray.size()<<std::endl; 
 }
 
 
@@ -826,8 +824,9 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   fFirstHit=false;
   fSaturatedHit=false;
+  std::cout<<"multi hit " << std::endl;
   ReconstructSingleHit(hitArray);
-  //std::cout<<"ok 1 hit "<< fFirstHit<< std::endl;
+  std::cout<<"ok 1 hit "<< fFirstHit<< std::endl;
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
   if(fFirstHit){
@@ -842,7 +841,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     Bool_t saveSecondHit=false;
     DrawMeanWave(10, FirstEnergy, FirstTime, SecondEnergy, SecondTime, ThirdEnergy, ThirdTime, SecondHit, ThirdHit);
     //std::cout<<"SecondHit Bool " << SecondHit << "First Time " << FirstTime << " second Time " << SecondTime << std::endl;
-    //std::cout<< "firsthit "<< fFirstHit <<"second Energy " << SecondEnergy <<" bool " << SecondHit << " third energy " << ThirdEnergy << " bool " << ThirdHit << std::endl; 
+    std::cout<< "firsthit "<< fFirstHit <<"second Energy " << SecondEnergy <<" bool " << SecondHit << " third energy " << ThirdEnergy << " bool " << ThirdHit << std::endl; 
     if(fGlobalMode->GetGlobalDebugMode()) {  
       if(SecondHit)hDiffTimeFirstSecondHit->Fill(FirstTime-SecondTime);
       if(ThirdHit)hDiffTimeFirstThirdHit->Fill(FirstTime-ThirdTime);
@@ -1755,7 +1754,6 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   for(int i=0; i<5000; i++)Wave.push_back(0);
   // Smooth the signal by averaging nsmooth samples 
   //  for(ll=1;ll<1001;ll++){
-  
   
   for(ll=nsmooth/2;ll<1001;ll++){
     if(ll>nsmooth/2){

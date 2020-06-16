@@ -55,11 +55,13 @@ private:
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
   Int_t fDeteriorateEnergyResolution;
+  Int_t fDeteriorateHitEnResolution;
+  Int_t fDeteriorateHitTimeResolution;
   Int_t fReproductSACbunchStructure;
 
   Double_t fTemplate[5001];
   Double_t fmaxValuemyTemplate;
-
+  Int_t fIsMC;
   TRandom2 *r;
   
   TH1F *hSAC_HitTime;

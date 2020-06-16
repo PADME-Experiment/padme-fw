@@ -21,6 +21,14 @@ class RunAction;
 class HistoManager;
 class SteppingAction;
 
+class TargetDigitizer;
+class PVetoDigitizer;
+class EVetoDigitizer;
+class HEPVetoDigitizer;
+class ECalDigitizer;
+class SACDigitizer;
+class TPixDigitizer;
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class EventAction : public G4UserEventAction
@@ -88,6 +96,17 @@ class EventAction : public G4UserEventAction
   ECalGeometry   * Egeom; 
   TargetGeometry * Tgeom;
   BeamParameters * Bpar;
+
+  G4bool fFirstEvent;
+
+  // Pointers to digitizers
+  TargetDigitizer*  fTargetDigitizer;
+  PVetoDigitizer*   fPVetoDigitizer;
+  EVetoDigitizer*   fEvetoDigitizer;
+  HEPVetoDigitizer* fHEPVetoDigitizer;
+  ECalDigitizer*    fECalDigitizer;
+  SACDigitizer*     fSACDigitizer;
+  TPixDigitizer*    fTPixDigitizer;
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

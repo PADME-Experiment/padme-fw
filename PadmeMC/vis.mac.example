@@ -128,6 +128,8 @@
 #/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
+#/Detector/Target/DisplacementX 0. mm
+#/Detector/Target/DisplacementY 0. mm
 #/Detector/Target/EnableFastDigitization
 #/Detector/Target/DisableFastDigitization
 #/Detector/Target/EnableSaveWaveformToDigi

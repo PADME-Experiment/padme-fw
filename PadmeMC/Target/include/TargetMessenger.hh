@@ -39,6 +39,9 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetTargetFrontFaceZCmd;
   G4UIcmdWithADoubleAndUnit* fSetTargetSizeCmd;
   G4UIcmdWithADoubleAndUnit* fSetTargetThicknessCmd;
+
+  G4UIcmdWithADoubleAndUnit* fSetTargetDisplacementXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetTargetDisplacementYCmd;
   
   G4UIcmdWithADoubleAndUnit* fSetTargetPitchCmd;
   G4UIcmdWithADoubleAndUnit* fSetTargetStripSizeCmd;

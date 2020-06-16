@@ -75,6 +75,7 @@ HEPVetoGeometry::HEPVetoGeometry()
   // These values will be modified by main program according to actual chamber measures
   fHEPVetoChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
+  fHEPVetoDigitizerName = "HEPVetoDigitizer";
   fHEPVetoSensitiveDetectorName = "HEPVetoSD";
 
   UpdateDerivedMeasures();

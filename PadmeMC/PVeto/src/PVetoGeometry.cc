@@ -52,6 +52,7 @@ PVetoGeometry::PVetoGeometry()
   //  fPVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
   fPVetoFrontFacePosZ = -472.55*mm; // Start 56.45mm from inner face of vacuum chamber (wrong but real position M. Raggi)
 
+  fPVetoDigitizerName = "PVetoDigitizer";
   fPVetoSensitiveDetectorName = "PVetoSD";
 
 }

@@ -48,6 +48,20 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fSetTargetFrontFaceZCmd->SetRange("PosZ >= -100. && PosZ <= -56."); // Upper limit is close to back face of vacuum chamber
   fSetTargetFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetTargetDisplacementXCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/DisplacementX",this);
+  fSetTargetDisplacementXCmd->SetGuidance("Set Target displacement along X.");
+  fSetTargetDisplacementXCmd->SetParameterName("DisX",false);
+  fSetTargetDisplacementXCmd->SetDefaultUnit("mm");
+  fSetTargetDisplacementXCmd->SetRange("DisX >= -300. && DisX <= 300.");
+  fSetTargetDisplacementXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTargetDisplacementYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/DisplacementY",this);
+  fSetTargetDisplacementYCmd->SetGuidance("Set Target displacement along Y.");
+  fSetTargetDisplacementYCmd->SetParameterName("DisY",false);
+  fSetTargetDisplacementYCmd->SetDefaultUnit("mm");
+  fSetTargetDisplacementYCmd->SetRange("DisY >= -50. && DisY <= 50.");
+  fSetTargetDisplacementYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableFastDigitizationCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableFastDigitization",this);
   fEnableFastDigitizationCmd->SetGuidance("Enable fast digitization for Target.");
   fEnableFastDigitizationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -81,6 +95,9 @@ TargetMessenger::~TargetMessenger()
   delete fSetTargetThicknessCmd;
   delete fSetTargetFrontFaceZCmd;
 
+  delete fSetTargetDisplacementXCmd;
+  delete fSetTargetDisplacementYCmd;
+
   delete fEnableFastDigitizationCmd;
   delete fDisableFastDigitizationCmd;
   delete fEnableSaveWaveformToDigiCmd;
@@ -105,6 +122,12 @@ void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   if ( cmd == fSetTargetFrontFaceZCmd )
     fTargetGeometry->SetTargetFrontFacePosZ(fSetTargetFrontFaceZCmd->GetNewDoubleValue(par));
+
+  if ( cmd == fSetTargetDisplacementXCmd )
+    fTargetGeometry->SetTargetDisplacementX(fSetTargetDisplacementXCmd->GetNewDoubleValue(par));
+
+  if ( cmd == fSetTargetDisplacementYCmd )
+    fTargetGeometry->SetTargetDisplacementY(fSetTargetDisplacementYCmd->GetNewDoubleValue(par));
 
   if ( cmd == fEnableFastDigitizationCmd )  fTargetGeometry->EnableFastDigitization();
   if ( cmd == fDisableFastDigitizationCmd ) fTargetGeometry->DisableFastDigitization();

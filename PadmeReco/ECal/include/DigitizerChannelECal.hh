@@ -173,6 +173,13 @@ private:
   Double_t fDPParameterR2      ;
   Double_t fDPParameterC       ;
 
+  //for MH io
+  Double_t fEnThrToDefineHit;
+  Double_t fEnThrToDefineHit_sat;
+  Double_t fDTimeForHitInSameCh;
+  Double_t fVThrToDefineHit;
+  Double_t fVThrToDefineHit_sat;
+
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;
   //  std::map < std::pair<int,int>,double> fCalibMap;   //moved into ECalCalibration class M. Raggi 19/04/2019

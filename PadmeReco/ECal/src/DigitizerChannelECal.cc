@@ -70,6 +70,13 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
   fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.30e-9);
 
+  //MH parameters
+  fEnThrToDefineHit  = cfg->GetParOrDefault("RECO","EnThrToDefineTheExistenceOf2ndOr3dhHits",2.);
+  fEnThrToDefineHit_sat  = cfg->GetParOrDefault("RECO","EnThrToDefineTheExistenceOf2ndOr3dhHits_saturatedWave",2.);
+  fVThrToDefineHit  = cfg->GetParOrDefault("RECO","VoltageThrToDefineTheExistenceOf2ndOr3dhHits",5.);
+  fVThrToDefineHit_sat  = cfg->GetParOrDefault("RECO","VoltageThrToDefineTheExistenceOf2ndOr3dhHits_saturatedWave",50.);
+  fDTimeForHitInSameCh  = cfg->GetParOrDefault("RECO","DTimeForHitInSameCh",25.);
+
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
 
@@ -80,8 +87,10 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
     PrepareDebugHistos(); //debugging mode histos
   }
 
+  //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
   Int_t i=0;
   ifstream myfile;
+  for(int i=0; i<5000; i++) fTemplate[i]=0.;
   myfile.open ("newtemplate.txt");;
   if (myfile.is_open()){
    while (!myfile.eof()) {
@@ -743,15 +752,12 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     }
   }
   //Filling hit structure
-  /* if(IsSat==0)*/{ TRecoVHit *Hit = new TRecoVHit();
+  TRecoVHit *Hit = new TRecoVHit();
   Hit->SetTime(HitT);
   Hit->SetEnergy(fEnergy);
-  hitArray.push_back(Hit);}
-  /*if(fEnergy<350)*/ if(IsSat==0)fFirstHit = true;
-  std::cout<<"IsSat " << IsSat << std::endl;
+  hitArray.push_back(Hit);
+  fFirstHit = true;
   if(IsSat==1)fSaturatedHit=true;
-  //std::cout<<"i'm compiled the single hit reconstruction "<< fFirstHit << std::endl;
-  std::cout << "favg200 " << fAvg200 << std::endl;
   if(fGlobalMode->GetGlobalDebugMode()) {
     ECal->Fill();
     // hCharge->Fill(fCharge);
@@ -824,12 +830,15 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   fFirstHit=false;
   fSaturatedHit=false;
-  std::cout<<"multi hit " << std::endl;
+  //std::cout<<"multi hit " << std::endl;
+ 
+ //to establish if there is saturated waveform or if the wave is ZSup
   ReconstructSingleHit(hitArray);
-  std::cout<<"ok 1 hit "<< fFirstHit<< std::endl;
+  if(!fFirstHit) return;
+  //there is a single hit reconstructed and saved; if there is a second (third) hit I redefine this reconstructed hit 
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
-  if(fFirstHit){
+  if(!fSaturatedHit){
     Bool_t SecondHit=false;
     Bool_t ThirdHit=false;
     Double_t FirstEnergy=0.;
@@ -841,13 +850,13 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     Bool_t saveSecondHit=false;
     DrawMeanWave(10, FirstEnergy, FirstTime, SecondEnergy, SecondTime, ThirdEnergy, ThirdTime, SecondHit, ThirdHit);
     //std::cout<<"SecondHit Bool " << SecondHit << "First Time " << FirstTime << " second Time " << SecondTime << std::endl;
-    std::cout<< "firsthit "<< fFirstHit <<"second Energy " << SecondEnergy <<" bool " << SecondHit << " third energy " << ThirdEnergy << " bool " << ThirdHit << std::endl; 
+    //std::cout<< "firsthit "<< fFirstHit <<"second Energy " << SecondEnergy <<" bool " << SecondHit << " third energy " << ThirdEnergy << " bool " << ThirdHit << std::endl; 
     if(fGlobalMode->GetGlobalDebugMode()) {  
       if(SecondHit)hDiffTimeFirstSecondHit->Fill(FirstTime-SecondTime);
       if(ThirdHit)hDiffTimeFirstThirdHit->Fill(FirstTime-ThirdTime);
       if(SecondHit && ThirdHit)hDiffTimeSecondThirdHit->Fill(SecondTime-ThirdTime);
     }
-    if(SecondHit && FirstEnergy>0. ){
+    if(SecondHit && FirstEnergy>0.001 ){
       if(SecondEnergy>2){
         saveSecondHit=true;
         std::cout<<"I'm saving the second hit " << std::endl;
@@ -866,7 +875,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
         }
       }
     }
-    if(ThirdHit && FirstEnergy>0.){
+    if(ThirdHit && FirstEnergy>0.001){
       if(ThirdEnergy>2){
         std::cout<<"I'm saving the third hit " << std::endl;
         if(!saveSecondHit){
@@ -957,7 +966,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     
   } 
   
-  if(fSaturatedHit){
+  else if(fSaturatedHit){
     Bool_t SecondHit=false;
     Bool_t ThirdHit=false;
     Double_t FirstEnergy=0.;
@@ -972,7 +981,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     if(fGlobalMode->GetGlobalDebugMode()) {  
       if(SecondHit)hDiffTimeFirstSecondHit->Fill(FirstTime-SecondTime);
     }
-    if(SecondHit && FirstEnergy>0. ){
+    if(SecondHit && FirstEnergy>0.001 ){
       if(SecondEnergy>2){
         saveSecondHit=true;
         std::cout<<"I'm saving the second hit " << std::endl;
@@ -987,6 +996,25 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
         Hit->SetEnergy(SecondEnergy);
         hitArray.push_back(Hit);
 	if(fGlobalMode->GetGlobalDebugMode()) hECALsecondhitEnergy_Saved->Fill(SecondEnergy);
+      }
+    }
+    if(ThirdHit && FirstEnergy>0.001){
+      if(ThirdEnergy>2){
+        std::cout<<"I'm saving the third hit " << std::endl;
+        if(!saveSecondHit){
+          unsigned int nHitsBefore = hitArray.size()-1; 
+	  if(fGlobalMode->GetGlobalDebugMode()) {  
+	    hECALfirsthitEnergy->Fill(hitArray.at(nHitsBefore)->GetEnergy());
+          }
+          hitArray.at(nHitsBefore)->SetEnergy(FirstEnergy);
+          hitArray.at(nHitsBefore)->SetTime(FirstTime);
+         
+        }
+        TRecoVHit *Hit = new TRecoVHit();
+        Hit->SetTime(ThirdTime);
+        Hit->SetEnergy(ThirdEnergy);
+        hitArray.push_back(Hit);
+	if(fGlobalMode->GetGlobalDebugMode()) hECALthirdhitEnergy_Saved->Fill(ThirdEnergy);
       }
     }
   }
@@ -1209,10 +1237,10 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
 
  Int_t ll;
  fAmplitude=0.;
- static Double_t dxdt[1001];
- static Double_t dxdt1[1001];
-  static Double_t Temp[1001];
-  static Double_t Temp1[1001];
+ Double_t dxdt[1001];
+ Double_t dxdt1[1001];
+ Double_t Temp[1001];
+ Double_t Temp1[1001];
   std::vector<Double_t> TempWave;
   std::vector<Double_t> Wave;
   Double_t chargeFirstHitFromTemplate=0.;
@@ -1308,14 +1336,15 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
   // fAmplitude = Temp1[MaxBin];
   std::vector<Double_t> DiffVec;
   Bool_t OutRMS; 
+  //MakeDifferenceWaveformTeplate functionalities: take the maximum of the waveform close (20ns) to the time of maximum derivative; Shift the template so that its maximum,VTemplateMax, falls in the bin where the waveform height is vmax
   MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);    
   chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
   energyFirstHitFromTemplate= chargeFirstHitFromTemplate/15.;
   if(fGlobalMode->GetGlobalDebugMode()) hAmplitudeVSEnergyTemplate->Fill(energyFirstHitFromTemplate, fAmplitude);
   Int_t maxWave1= GetMaximumPosition(Wave);
   if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_First->Fill(energyFirstHitFromTemplate, MaxBin-maxWave1);
-  Double_t TimeFirstHit=MaxBin*fTimeBin;
-  FirstTime=TimeFirstHit;
+  //Double_t TimeFirstHit=MaxBin*fTimeBin;
+  FirstTime=fTimeSin;
   //std::cout<<"energyFirstHitFromTemplate "<< energyFirstHitFromTemplate << std::endl;
   if(fGlobalMode->GetGlobalDebugMode()) {
       hChargeFirstHit->Fill(chargeFirstHitFromTemplate);
@@ -1382,14 +1411,14 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
   Double_t SecondBinMax=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec, maxValDerivativeDiffForSecondHit);
   Double_t TimeSecondHit= SecondBinMax*fTimeBin;  
 //std::cout<<"finished to filling histos " << std::endl;
-  Double_t DiffFirstSecondHit= TimeFirstHit-TimeSecondHit;
-  if(maxValDerivativeDiffForSecondHit>5.&& fabs(DiffFirstSecondHit)>25.){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+  Double_t DiffFirstSecondHit= fTimeSin-TimeSecondHit;
+  if(maxValDerivativeDiffForSecondHit>fVThrToDefineHit && fabs(DiffFirstSecondHit)>fDTimeForHitInSameCh){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
     //if(OutRMS){
     //io comment 3/04 Double_t chargeSeconHit=CalcChargeSin(250, DiffVec);
     // io comment 2/04 .. if(EnergySecondHit>20.){
     //SecondEnergy=EnergySecondHit;
     //std::cout<<"In Draw.....SeconhHitEnergy " << SecondEnergy << std::endl;
-    if(fGlobalMode->GetGlobalDebugMode()) hDiffFirstHitSeconHitTime->Fill(TimeFirstHit-TimeSecondHit);
+    if(fGlobalMode->GetGlobalDebugMode()) hDiffFirstHitSeconHitTime->Fill(fTimeSin-TimeSecondHit);
     //SecondTime=TimeSecondHit;
     std::vector<Double_t> DiffVec_SecondHit;
     Bool_t OutRMS_SecondHit;    
@@ -1397,11 +1426,11 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
     MakeDifferenceWaveformTeplate(DiffVec,SecondBinMax ,TempWave, DiffVec_SecondHit, OutRMS_SecondHit);
     chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
-    if(energySecondHitFromTemplate)SecondHit=true;
-    if(SecondHit)std::cout << "ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
+    if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
+    if(SecondHit)std::cout << "ftimesin " << fTimeSin << "Time First Hit " << fTimeSin << " second Time " << TimeSecondHit << std::endl;
     Int_t maxWave2= GetMaximumPosition(DiffVec);
     if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Second->Fill(energySecondHitFromTemplate, SecondBinMax-maxWave2);
-    if(SecondHit && TimeFirstHit> TimeSecondHit){
+    if(SecondHit && fTimeSin> TimeSecondHit){
       enCorrection12 =  CalcChargeSin(MaxBin, TempWave)/15.;
     }
     else enCorrection12=0.;
@@ -1417,10 +1446,10 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
     Double_t maxValDerivativeDiffForThirdHit=0.;
     Double_t ThirdBinMax=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec_SecondHit, maxValDerivativeDiffForThirdHit);
     Double_t TimeThirdHit=  ThirdBinMax*fTimeBin;  
-    Double_t DiffFirstThirdHit= TimeFirstHit-TimeThirdHit;
+    Double_t DiffFirstThirdHit= fTimeSin-TimeThirdHit;
     Double_t DiffSecondThirdHit= TimeSecondHit-TimeThirdHit;
   //std::cout<<"finished to filling histos " << std::endl;
-    if(maxValDerivativeDiffForThirdHit>5.&&  fabs(DiffFirstThirdHit)>25. &&  fabs(DiffSecondThirdHit)>25. ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+    if(maxValDerivativeDiffForThirdHit>fVThrToDefineHit &&  fabs(DiffFirstThirdHit)>fDTimeForHitInSameCh &&  fabs(DiffSecondThirdHit)>fDTimeForHitInSameCh ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
       //std::cout<<"In Draw.....ThirdHitEnergy " << SecondEnergy << std::endl;
       std::vector<Double_t> DiffVec_ThirdHit;
       Bool_t OutRMS_ThirdHit;    
@@ -1428,10 +1457,10 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
       MakeDifferenceWaveformTeplate(DiffVec_SecondHit, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
       chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
-      if(energyThirdHitFromTemplate> 2. )  ThirdHit=true; 
+      if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(DiffVec_SecondHit);
       if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Third->Fill(energyThirdHitFromTemplate, ThirdBinMax-maxWave3);
-      if(ThirdHit && TimeFirstHit> TimeThirdHit){
+      if(ThirdHit && fTimeSin> TimeThirdHit){
 	enCorrection13 =  CalcChargeSin(MaxBin, TempWave)/15.;
       }
       else enCorrection13=0.;
@@ -1521,7 +1550,7 @@ void DigitizerChannelECal::MakeDifferenceWaveformTeplate(std::vector<Double_t> i
     }  
   }
   
-  std::cout<< "make difference....MaxBin derivate " << MaxBin << " max template "<< maxValue << " max wave " << maxValueWave << std::endl;
+  //std::cout<< "make difference....MaxBin derivate " << MaxBin << " max template "<< maxValue << " max wave " << maxValueWave << std::endl;
   
   // Double_t NormFactor=input[MaxBin]/maxValue;
    Double_t NormFactor=maxValueWave/maxValue;
@@ -1535,17 +1564,12 @@ void DigitizerChannelECal::MakeDifferenceWaveformTeplate(std::vector<Double_t> i
  
   for(int ll=0;ll<5000;ll++){
    if(ll+MaxBin-20>= 0 && ll+MaxBin-20<5000){
-     //std::cout << "ll " << ll << "  position tempwave " << ll+MaxBin-20 << std::endl;
      TempWave.at(ll+MaxBin-20)=fTemplate[ll]*NormFactor;
-    //if(TempWave[ll]>3000)TempWave[ll]=0.;
-    //histo3->SetBinContent(ll, TempWave[ll]*NormFactor);
      if(ll<input.size()){
        DiffSignal=input.at(ll)-TempWave.at(ll);
-      //if(ll>400)hDiffWavetemplate->Fill(Temp1[ll]-TempWave[ll]*NormFactor);
      }
      else DiffSignal=0.;
      output.at(ll)=DiffSignal;
-     //std::cout<<"diff in draw " << DiffSignal << std::endl;
     if(fabs(DiffSignal>ThrDiff))OutRMS=true;
    }
    }
@@ -1702,14 +1726,14 @@ Int_t DigitizerChannelECal::GetMaximumPosition(std::vector<Double_t> wave){
 
 void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstEnergy, Double_t& FirstTime, Double_t& SecondEnergy,Double_t& SecondTime,Double_t& ThirdEnergy,Double_t& ThirdTime, Bool_t& SecondHit, Bool_t& ThirdHit) {
  
-  //std::cout<<"DrawMeanWave....................................Event N. " << fCountEvent <<std::endl;
+  //std::cout<<"DrawMeanSaturatedWave....................................Event N. " << fCountEvent <<std::endl;
 
  Int_t ll;
  fAmplitude=0.;
- static Double_t dxdt[1001];
- static Double_t dxdt1[1001];
-  static Double_t Temp[1001];
-  static Double_t Temp1[1001];
+ Double_t dxdt[1001];
+ Double_t dxdt1[1001];
+ Double_t Temp[1001];
+  Double_t Temp1[1001];
   std::vector<Double_t> TempWave;
   std::vector<Double_t> Wave;
   Double_t chargeFirstHitFromTemplate=0.;
@@ -1871,8 +1895,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   Double_t TimeSecondHit= SecondBinMax*fTimeBin;  
   //std::cout<<"DiffVec at maxDerivative2 " << maxValDerivativeDiffForSecondHit << " from vec " << DiffVec.at(SecondBinMax) << " second bin max" << SecondBinMax << std::endl;
   Double_t DiffFirstSecondHit= TimeFirstHit-TimeSecondHit;
-  std::cout << "maxValDerivativeDiffForSecondHit " << maxValDerivativeDiffForSecondHit << " diff time 12 " << DiffFirstSecondHit << " first time " << TimeFirstHit << " secondTime " << TimeSecondHit <<std::endl;
-  if(maxValDerivativeDiffForSecondHit>50.&& fabs(DiffFirstSecondHit)>25.){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+  //std::cout << "maxValDerivativeDiffForSecondHit " << maxValDerivativeDiffForSecondHit << " diff time 12 " << DiffFirstSecondHit << " first time " << TimeFirstHit << " secondTime " << TimeSecondHit <<std::endl;
+  if(maxValDerivativeDiffForSecondHit>fVThrToDefineHit_sat && fabs(DiffFirstSecondHit)>fDTimeForHitInSameCh){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
     if(fGlobalMode->GetGlobalDebugMode()) hDiffFirstHitSeconHitTime->Fill(TimeFirstHit-TimeSecondHit);
     std::vector<Double_t> DiffVec_SecondHit;
     Bool_t OutRMS_SecondHit;    
@@ -1883,7 +1907,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     //  TimeSecondHit=maxBin2;    //io comment 12/05
     chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
-    if(energySecondHitFromTemplate)SecondHit=true;
+    if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
     if(SecondHit)std::cout << "ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
     Int_t maxWave2= GetMaximumPosition(DiffVec);
     if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Second->Fill(energySecondHitFromTemplate, SecondBinMax-maxWave2);
@@ -1903,16 +1927,14 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     for(int i=0; i< DiffVec_SecondHit.size(); i++){
       if(i>SecondBinMax-25 ) DiffVec_SecondHit.at(i)=0.;
       if(i>fFirstSat-25) DiffVec_SecondHit.at(i)=0.;
-      }
-  //std::cout<<"finished to filling histos " << std::endl; 
+    } 
     Double_t maxValDerivativeDiffForThirdHit=0.;
     Double_t ThirdBinMax=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec_SecondHit, maxValDerivativeDiffForThirdHit);
     Double_t TimeThirdHit=  ThirdBinMax*fTimeBin;  
     Double_t DiffFirstThirdHit= TimeFirstHit-TimeThirdHit;
     Double_t DiffSecondThirdHit= TimeSecondHit-TimeThirdHit;
-    //std::cout<<"finished to filling histos " << std::endl;
-    std::cout << "maxValDerivativeDiffForThirdHit " << maxValDerivativeDiffForThirdHit << " diff time 13 " << DiffFirstThirdHit << " -23 " << DiffSecondThirdHit << " secondTime " << TimeSecondHit << " third time " << TimeThirdHit <<std::endl;
-    if(maxValDerivativeDiffForThirdHit>50.&&  fabs(DiffFirstThirdHit)>25. &&  fabs(DiffSecondThirdHit)>25. ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
+    //std::cout << "maxValDerivativeDiffForThirdHit " << maxValDerivativeDiffForThirdHit << " diff time 13 " << DiffFirstThirdHit << " -23 " << DiffSecondThirdHit << " secondTime " << TimeSecondHit << " third time " << TimeThirdHit <<std::endl;
+    if(maxValDerivativeDiffForThirdHit> fVThrToDefineHit_sat &&  fabs(DiffFirstThirdHit)>fDTimeForHitInSameCh &&  fabs(DiffSecondThirdHit)>fDTimeForHitInSameCh ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
       //std::cout<<"In Draw.....ThirdHitEnergy " << SecondEnergy << std::endl;
       std::vector<Double_t> DiffVec_ThirdHit;
       Bool_t OutRMS_ThirdHit;    
@@ -1920,7 +1942,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
       MakeDifferenceWaveformTeplate(DiffVec_SecondHit, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
       chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
-      if(energyThirdHitFromTemplate> 2. )  ThirdHit=true; 
+      if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(DiffVec_SecondHit);
       if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Third->Fill(energyThirdHitFromTemplate, ThirdBinMax-maxWave3);
       if(ThirdHit && TimeFirstHit> TimeThirdHit){
@@ -1961,13 +1983,13 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     if(dxdt[i]>maxRelativeValue){maxRelativeValue=dxdt[i];MaxRelativeDerivative=i;}
   }
   MaxBin=positionFirstSat;
-  std::cout<<"fFirstSat " << fFirstSat << " my position " << positionFirstSat << std::endl;
+  //std::cout<<"fFirstSat " << fFirstSat << " my position " << positionFirstSat << std::endl;
   Double_t MaxRelativeDerivative2=positionSecondSat;
   Double_t maxRelativeValue2=0;
   for(int i=(positionSecondSat-5); i< (positionSecondSat); i++){
     if(dxdt[i]>maxRelativeValue2){maxRelativeValue2=dxdt[i];MaxRelativeDerivative2=i;}
   }
-  std::cout<<"maxrelative 1 " << MaxRelativeDerivative << " max relative2 " << MaxRelativeDerivative2 <<std::endl;
+  // std::cout<<"maxrelative 1 " << MaxRelativeDerivative << " max relative2 " << MaxRelativeDerivative2 <<std::endl;
   if(myNSat<40){
     MakeDifferenceSaturatedWaveformTeplate(Wave,myNSat, MaxRelativeDerivative ,TempWave, DiffVec, OutRMS,maxWave ); 
     MaxBin=MaxRelativeDerivative;  
@@ -2010,7 +2032,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   Double_t DiffFirstSecondHit= TimeFirstHit-TimeSecondHit; 
  chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave2);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
-    if(energySecondHitFromTemplate)SecondHit=true;
+    if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
     if(SecondHit)std::cout << "ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
     enCorrection12 =  CalcChargeSin(positionSecondSat, TempWave)/15.;
     SecondTime=TimeSecondHit;
@@ -2030,17 +2052,15 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     Double_t TimeThirdHit=  ThirdBinMax*fTimeBin;  
     Double_t DiffFirstThirdHit= TimeFirstHit-TimeThirdHit;
     Double_t DiffSecondThirdHit= TimeSecondHit-TimeThirdHit;
-    //std::cout<<"finished to filling histos " << std::endl;
-    std::cout<<"third bin value " << maxValDerivativeDiffForThirdHit <<" waveNoSat at third time " << waveNoSaturated.at(TimeThirdHit) <<" wave at third time " << Wave.at(TimeThirdHit) << " diff13 time " << DiffFirstThirdHit << " diff23 time " << DiffSecondThirdHit << std::endl;
-    if(maxValDerivativeDiffForThirdHit>50.&&  fabs(DiffFirstThirdHit)>25. &&  fabs(DiffSecondThirdHit)>25. ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
-      //std::cout<<"In Draw.....ThirdHitEnergy " << SecondEnergy << std::endl;
+    //std::cout<<"third bin value " << maxValDerivativeDiffForThirdHit <<" waveNoSat at third time " << waveNoSaturated.at(TimeThirdHit) <<" wave at third time " << Wave.at(TimeThirdHit) << " diff13 time " << DiffFirstThirdHit << " diff23 time " << DiffSecondThirdHit << std::endl;
+    if(maxValDerivativeDiffForThirdHit> fVThrToDefineHit_sat &&  fabs(DiffFirstThirdHit)>fDTimeForHitInSameCh &&  fabs(DiffSecondThirdHit)>fDTimeForHitInSameCh ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
       std::vector<Double_t> DiffVec_ThirdHit;
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
       MakeDifferenceWaveformTeplate(/*waveNoSaturated*/Wave, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
       chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
-      if(energyThirdHitFromTemplate> 2. )  ThirdHit=true; 
+      if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(waveNoSaturated);
       if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Third->Fill(energyThirdHitFromTemplate, ThirdBinMax-maxWave3);
       if(ThirdHit && TimeFirstHit> TimeThirdHit){

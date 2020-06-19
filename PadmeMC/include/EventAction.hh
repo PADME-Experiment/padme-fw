@@ -12,7 +12,6 @@
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
-#include "GFiltHit.hh"
 
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"

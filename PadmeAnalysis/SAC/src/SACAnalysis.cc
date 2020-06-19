@@ -283,6 +283,8 @@ Bool_t SACAnalysis::ProcessAnalysis()
   // std::cout<<"Out of SAC"<<std::endl;
 
    //fillHitsFlatNTP
+
+  (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
   
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
@@ -290,7 +292,6 @@ Bool_t SACAnalysis::ProcessAnalysis()
     energy = hit->GetEnergy();
     time   = hit->GetTime();
 
-   (hSvc->myEvt).NTNSAC_Hits=fhitEvent->GetNHits();
    (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
    (hSvc->myEvt).NTSAC_Hits_Time[i]=hit->GetTime();
@@ -301,11 +302,12 @@ Bool_t SACAnalysis::ProcessAnalysis()
 
     //fillClustersFlatNTP  
 
+  (hSvc->myEvt).NTNSAC_Clusters= fClColl->GetNElements();
+
   for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
      seedId = clu->GetChannelId();
   
-   (hSvc->myEvt).NTNSAC_Clusters= fClColl->GetNElements();
    (hSvc->myEvt).NTSAC_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTSAC_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTSAC_Clusters_Time[j]=clu->GetTime();
@@ -361,12 +363,14 @@ Bool_t SACAnalysis::ProcessValidation()
      //Int_t iy=position.Y();
      hname = "SAC_ClusterMap";
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
-     
+     Annihilation=true;  
+ 
      for(int j=0; j< fNclus; j++){
        clun   = fClColl->Element(j);
        if(fabs(clu->GetTime() - clun->GetTime())<3.&& j!=i)
        {
-         Annihilation=false; 
+         Annihilation=false;
+	 j=fNclus;
        }
      }
      if(Annihilation){

@@ -4,7 +4,6 @@
 #include "G4UserEventAction.hh"
 #include "ECalHit.hh"
 #include "TargetHit.hh"
-#include "TrackerHit.hh"
 #include "HEPVetoHit.hh"
 #include "PVetoHit.hh"
 #include "EVetoHit.hh"
@@ -14,6 +13,7 @@
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
 #include "GFiltHit.hh"
+
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "TargetGeometry.hh"
@@ -23,6 +23,14 @@ class G4Event;
 class RunAction;
 class HistoManager;
 class SteppingAction;
+
+class TargetDigitizer;
+class PVetoDigitizer;
+class EVetoDigitizer;
+class HEPVetoDigitizer;
+class ECalDigitizer;
+class SACDigitizer;
+class TPixDigitizer;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -41,6 +49,9 @@ class EventAction : public G4UserEventAction
   void  AddCalHitsStep(G4double ,G4double , G4int , G4double , G4double);
 
   SteppingAction * myStepping;
+
+  G4int GetPrintoutfrequency() { return fPrintoutFrequency; }
+  void SetPrintoutfrequency(G4int f) { fPrintoutFrequency = f; }
 
   // M. Raggi 23/06/2018 datacard commands
   void EnableSaveEcal()  { fEnableSaveEcal = 1; }
@@ -77,14 +88,29 @@ class EventAction : public G4UserEventAction
   void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
 
   G4double GetCharge(G4double Energia);
-  G4double GGMass();
+  //G4double GGMass();
 
   private:
+
   RunAction*    fRunAct;
   HistoManager* fHistoManager;
+
+  G4int fPrintoutFrequency;
+
   ECalGeometry   * Egeom; 
   TargetGeometry * Tgeom;
   BeamParameters * Bpar;
+
+  G4bool fFirstEvent;
+
+  // Pointers to digitizers
+  TargetDigitizer*  fTargetDigitizer;
+  PVetoDigitizer*   fPVetoDigitizer;
+  EVetoDigitizer*   fEvetoDigitizer;
+  HEPVetoDigitizer* fHEPVetoDigitizer;
+  ECalDigitizer*    fECalDigitizer;
+  SACDigitizer*     fSACDigitizer;
+  TPixDigitizer*    fTPixDigitizer;
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include "zlib.h"
 
 #include "DBService.hh"
 #include "Configuration.hh"
@@ -9,7 +10,6 @@ RootIO::RootIO()
 {
 
   // Create TFile handle
-  //fTFileHandle = new TFile();
   fTFileHandle = 0;
 
   // Create TRawEvent object
@@ -18,9 +18,12 @@ RootIO::RootIO()
   // Connect to configuration class
   fConfig = Configuration::GetInstance();
 
+  // Reset vector with list of files
+  fOutFileList.clear();
+
   // Connect to DB service
-  fDB = 0;
-  if (fConfig->RunNumber()) fDB = DBService::GetInstance();
+  //fDB = 0;
+  //if (fConfig->RunNumber()) fDB = DBService::GetInstance();
 
 }
 
@@ -34,7 +37,7 @@ RootIO::~RootIO()
 int RootIO::Init()
 {
 
-  fOutFileDBId = 0;
+  //fOutFileDBId = 0;
   fOutFileIndex = 0;
   fOutFileEvents = 0;
   fOutEventsTotal = 0;
@@ -62,6 +65,16 @@ int RootIO::Exit()
   printf("RootIO::Exit - Total events written: %u\n",fOutEventsTotal);
   printf("RootIO::Exit - Total output size:    %lu\n",fOutSizeTotal);
 
+  /* Currently disabled as very time consuming
+  // Compute ADLER32 checksum of all produced files
+  TString outfile;
+  std::vector<TString>::iterator i;
+  for (i = fOutFileList.begin(); i != fOutFileList.end(); i++) {
+    outfile = *i;
+    printf("DBINFO - %s - file_set_adler32 %s %.8lx\n",fConfig->FormatTime(time(0)),outfile.Data(),GetAdler32(outfile));
+  }
+  */
+
   return ROOTIO_OK;
 }
 
@@ -86,6 +99,9 @@ Int_t RootIO::OpenOutFile()
     return ROOTIO_ERROR;
   }
 
+  // Add new output file to list
+  fOutFileList.push_back(fOutFile);
+
   printf("RootIO::OpenOutFile - Opening output file %s\n",fOutFile.Data());
   fTFileHandle = TFile::Open(fOutFile,"NEW","PADME Merged Raw Events");
   if ( (!fTFileHandle) || fTFileHandle->IsZombie() ) {
@@ -102,14 +118,8 @@ Int_t RootIO::OpenOutFile()
   // Reset event counter for this file
   fOutFileEvents = 0;
 
-  // Register file in DB
-  if (fDB) {
-    int rc = fDB->OpenRawFile(fOutFileDBId,fConfig->MergerId(),fOutFile.Data(),fOutFileIndex);
-    if (rc != DBSERVICE_OK) {
-      printf("RootIO::OpenOutFile - ERROR while updating DB\n");
-      return ROOTIO_ERROR;
-    }
-  }
+  printf("DBINFO - %s - file_create %s %s %d %d\n",fConfig->FormatTime(time(0)),fOutFile.Data(),"RAWDATA",3,fOutFileIndex);
+  printf("DBINFO - %s - file_set_time_open %s %s\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fConfig->FormatTime(time(0)));
 
   return ROOTIO_OK;
 
@@ -131,24 +141,18 @@ Int_t RootIO::CloseOutFile()
   fOutSizeTotal += fOutFileSize;
 
   // Delete file handle for this file
-  //delete fTTreeMain;
   delete fTFileHandle; // This takes also care of deleting the TTree
 
   // Update DB with file close information
-  if (fDB) {
-    int rc = fDB->CloseRawFile(fOutFileDBId,fOutFileEvents,fOutFileSize);
-    if (rc != DBSERVICE_OK) {
-      printf("RootIO::CloseOutFile - ERROR while updating DB\n");
-      return ROOTIO_ERROR;
-    }
-  }
+  printf("DBINFO - %s - file_set_time_close %s %s\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fConfig->FormatTime(time(0)));
+  printf("DBINFO - %s - file_set_n_events %s %u\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fOutFileEvents);
+  printf("DBINFO - %s - file_set_size %s %lu\n",fConfig->FormatTime(time(0)),fOutFile.Data(),fOutFileSize);
 
   return ROOTIO_OK;
 }
 
 Int_t RootIO::SetOutFile()
 {
-  //fOutFile.Form("%s_%03d.root",fOutFileTemplate.Data(),fOutFileIndex);
   fOutFile.Form("%s_%03d.root",fConfig->RawFileHeader().c_str(),fOutFileIndex);
   return ROOTIO_OK;
 }
@@ -314,3 +318,19 @@ int RootIO::FillRawEvent(int run_number,
   return ROOTIO_OK;
 
 }
+
+ unsigned long int RootIO::GetAdler32(TString file)
+ {
+
+   const int BUFFER_SIZE = 65536;
+   Bytef buffer[BUFFER_SIZE];
+
+   size_t bytesRead = 0;
+   FILE* f = fopen(file.Data(),"rb");
+   unsigned long int adler = adler32(0L,Z_NULL,0);
+   while((bytesRead = fread(buffer,1,BUFFER_SIZE,f)) > 0) adler = adler32(adler,buffer,bytesRead);
+   fclose(f);
+
+   return adler;
+
+ }

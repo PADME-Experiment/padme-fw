@@ -259,13 +259,14 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
     fAvg200  = TMath::Mean(iStart,&fSamples[0]);
     fRMS200  = TMath::RMS(iStart,&fSamples[0]);
     Zsup  = fRMS1000;  
-    fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
+
     for(Short_t s=0;s<end;s++){
       AbsSamRec200[s] = (Double_t) (-1.*fSamples[s]+fAvg200)/4096*1000.; //in mV positivi using first Istart samples
       if(s>iStart && s<1000) {
 	Charge200 += 1*AbsSamRec200[s]*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
       }
     }
+    fVMax = TMath::MaxElement(1000,&AbsSamRec200[0]);
     //    Double_t ZeromV=TMath::Mean(iStart,&AbsSamRec200[0]);
     //if(abs(ZeromV)>0.0001 )  std::cout<<"BAD PEDESTAL!!! "<<ZeromV<<std::endl;
     if(pedestalsFromFirstSamples()) Charge = Charge200; 

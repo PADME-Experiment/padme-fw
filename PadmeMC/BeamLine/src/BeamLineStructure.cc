@@ -70,17 +70,16 @@ void BeamLineStructure::CreateGeometry()
   CreateDHSTB002Magnet();
 
   // Create Quadrupole magnets
-  CreateQuadMagnets();
+  //CreateQuadMagnets();
 
   // Create DHSTB002 inner pipe
   CreateBeamLine();
 
 }
 
-void BeamLineStructure::CreateQuadMagnets()
-{
-}
-
+//void BeamLineStructure::CreateQuadMagnets()
+//{
+//}
 
 void BeamLineStructure::CreateBeThinWindow()
 {
@@ -613,54 +612,57 @@ void BeamLineStructure::CreateBeamLine()
     logicalBeamFlag4->SetSensitiveDetector(beamFlagSD);
   }
 
+  if ( geo->QuadrupolesAreEnabled() ) {
 
-  ///////////////////////////////////////////////////////
-  // Creates the pair of quadrupoles located before the 
-  // entrance of DHSTB002
-  ///////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////
+    // Creates the pair of quadrupoles located before the 
+    // entrance of DHSTB002
+    ///////////////////////////////////////////////////////
+    
+    G4double Q1BGradient    = geo->GetQ1MagneticFieldGrad();
+    G4double Q2BGradient    = geo->GetQ2MagneticFieldGrad();
 
-  G4double Q1BGradient    = geo->GetQ1MagneticFieldGrad();
-  G4double Q2BGradient    = geo->GetQ2MagneticFieldGrad();
+    G4ThreeVector BOrigin = G4ThreeVector(0.,0.,0.);
+    G4RotationMatrix* Q1Rot = new G4RotationMatrix;
+    Q1Rot->rotateY(magnetAngle);
+    Q1Rot->rotateZ(45*deg);
 
-  G4ThreeVector BOrigin = G4ThreeVector(0.,0.,0.);
-  G4RotationMatrix* Q1Rot = new G4RotationMatrix;
-  Q1Rot->rotateY(magnetAngle);
-  Q1Rot->rotateZ(45*deg);
+    G4RotationMatrix* Q2Rot = new G4RotationMatrix;
+    Q2Rot->rotateY(magnetAngle);
+    Q2Rot->rotateZ(-45*deg);
 
-  G4RotationMatrix* Q2Rot = new G4RotationMatrix;
-  Q2Rot->rotateY(magnetAngle);
-  Q2Rot->rotateZ(-45*deg);
+    // Generating quadrupole box
+    G4double QuadMagSizeX = geo->GetQuadMagSizeX();
+    G4double QuadMagSizeY = geo->GetQuadMagSizeY();
+    G4double QuadMagSizeZ = geo->GetQuadMagSizeZ();
+    G4Box*   solidQuadMagField = new G4Box("solidQuadMagField",0.5*QuadMagSizeX,0.5*QuadMagSizeY,0.5*QuadMagSizeZ);
 
-  // Generating quadrupole box
-  G4double QuadMagSizeX = geo->GetQuadMagSizeX();
-  G4double QuadMagSizeY = geo->GetQuadMagSizeY();
-  G4double QuadMagSizeZ = geo->GetQuadMagSizeZ();
-  G4Box*   solidQuadMagField = new G4Box("solidQuadMagField",0.5*QuadMagSizeX,0.5*QuadMagSizeY,0.5*QuadMagSizeZ);
+    // Generating quadrupole Q1
+    G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
+    G4double Q1PosY = beJunMgPosY; 
+    G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
+    G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
-  // Generating quadrupole Q1
-  G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
-  G4double Q1PosY = beJunMgPosY; 
-  G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
-  G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
+    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
+    QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
+    G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
+    logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
+    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
 
-  printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
-  QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
-  G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
-  logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
-  //  new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+    // Generating quadrupole Q2
+    G4double Q1Q2Dist = geo->GetQ1Q2Dist();
 
-  // Generating quadrupole Q2
-  G4double Q1Q2Dist = geo->GetQ1Q2Dist();
+    G4double Q2PosX   = beJunMgPosX+379*sin(magnetAngle)*mm+Q1Q2Dist*sin(magnetAngle); 
+    G4double Q2PosY   = beJunMgPosY; 
+    G4double Q2PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q1Q2Dist*cos(magnetAngle);  
+    G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
 
-  G4double Q2PosX   = beJunMgPosX+379*sin(magnetAngle)*mm+Q1Q2Dist*sin(magnetAngle); 
-  G4double Q2PosY   = beJunMgPosY; 
-  G4double Q2PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q1Q2Dist*cos(magnetAngle);  
-  G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
+    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
+    QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
+    G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
+    logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
+    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
 
-  printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
-  QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
-  G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
-  logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
-  //  new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
+  }
 
 }

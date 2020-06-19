@@ -4,6 +4,7 @@ import socket
 import sys
 import os
 import readline
+import re
 
 # Enable line editing for raw_input()
 readline.parse_and_bind('tab: complete')
@@ -111,25 +112,41 @@ class RunControlText:
         self.send_command("new_run")
 
         ans = self.get_answer()
-        if (ans != "run_number"):
-            print "new_run - protocol error: expected run_number, received %s"%ans
+        res = re.match("^setup (.*)$",ans)
+        if res:
+            print "Current setup is %s"%res.group(1)
+        else:
+            print "new_run - protocol error: expected setup, received %s"%ans
             return "error"
 
-        message = raw_input("Run number (next or dummy): ")
-        if (message != 'next' and message != 'dummy'):
-            print "new_run - invalid input %s - Expected next or dummy"%message
-            self.send_command("error")
-            return "error"
-        print "Sending %s"%message
-        self.send_command(message)
+        #ans = self.get_answer()
+        #if (ans != "run_number"):
+        #    print "new_run - protocol error: expected run_number, received %s"%ans
+        #    return "error"
+        #
+        #message = raw_input("Run number (next or dummy): ")
+        #if (message != 'next' and message != 'dummy'):
+        #    print "new_run - invalid input %s - Expected next or dummy"%message
+        #    self.send_command("error")
+        #    return "error"
+        #print "Sending %s"%message
+        #self.send_command(message)
+        #
+        #ans = self.get_answer()
+        #print "new_run - new run will have number %s"%ans
 
         ans = self.get_answer()
-        print "new_run - new run will have number %s"%ans
-
-        ans = self.get_answer()
-        if (ans != "run_type"):
-            print "new_run - protocol error: expected run_type, received %s"%ans
+        res = re.match("^run_types (.*)$",ans)
+        if res:
+            print "Available run types: %s"%res.group(1)
+        else:
+            print "new_run - protocol error: expected run_types, received %s"%ans
             return "error"
+
+        #ans = self.get_answer()
+        #if (ans != "run_type"):
+        #    print "new_run - protocol error: expected run_type, received %s"%ans
+        #    return "error"
 
         message = raw_input("Run type: ")
         #message = raw_input("Run type (TEST, DAQ, COSMIC): ")
@@ -144,13 +161,24 @@ class RunControlText:
         if (ans == "error"):
             print "new_run - run_type command returned error"
             return "error"
-        print "new_run - new run will have type %s"%ans
+        print "New run will be of type %s"%ans
+        if ans == "FAKE":
+            print "*** WARNING *** You selected run type FAKE: run number will be set to 0 and it will not be stored in the DB"
+            #message = raw_input("Are you SURE (Y/N)? ")
+            #if message != 'Y': return "error"
+ 
+        ans = self.get_answer()
+        res = re.match("^run_number (\d+)$",ans)
+        if res:
+            print "New run will have run number %s"%res.group(1)
+        else:
+            print "new_run - protocol error: expected run_number, received %s"%ans
+            return "error"
 
         ans = self.get_answer()
         if (ans != "shift_crew"):
             print "new_run - protocol error: expected shift_crew, received %s"%ans
             return "error"
-
         message = raw_input("Shift crew: ")
         print "Sending %s"%message
         self.send_command(message)
@@ -159,17 +187,18 @@ class RunControlText:
         if (ans != "run_comment"):
             print "new_run - protocol error: expected run_comment, received %s"%ans
             return "error"
-
         message = raw_input("Start of run comment: ")
         print "Sending %s"%message
         self.send_command(message)
 
         ans = self.get_answer()
-        if (ans == "error_init"):
+        if (ans == "init_start"):
+            print "New run initialization start"
+        elif (ans == "init_error"):
             print "new_run - an error occourred while starting initialization"
             return "error"
-        elif (ans != "start_init"):
-            print "new_run - protocol error: expected start_init or error_init, received %s"%ans
+        else:
+            print "new_run - protocol error: expected init_start or init_error, received %s"%ans
             return "error"
 
         # Handle initialization procedure

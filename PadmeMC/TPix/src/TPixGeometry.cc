@@ -20,6 +20,8 @@ TPixGeometry::TPixGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   fTPixNRows = 2;
   fTPixNCols = 6;
 
@@ -52,6 +54,7 @@ TPixGeometry::TPixGeometry()
   // These values will be modified by main program according to actual chamber measures
   fTPixChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
+  fTPixDigitizerName = "TPixDigitizer";
   fTPixSensitiveDetectorName = "TPixSD";
 
   UpdateDerivedMeasures();

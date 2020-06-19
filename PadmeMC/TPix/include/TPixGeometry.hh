@@ -35,6 +35,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of TPix box
   G4double GetTPixPosX() { return fTPixPosX; }
   G4double GetTPixPosY() { return fTPixPosY; }
@@ -78,12 +81,17 @@ public:
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetTPixChamberWallCorner(G4ThreeVector);
 
+  // Get name of TPix digitizer
+  G4String GetTPixDigitizerName() { return fTPixDigitizerName; }
+
   // Get name of TPix sensitive detector
   G4String GetTPixSensitiveDetectorName() { return fTPixSensitiveDetectorName; }
 
 private:
 
   void UpdateDerivedMeasures();
+
+  G4int fVerbose; // Verbose level
 
   G4int    fTPixNRows;
   G4int    fTPixNCols;
@@ -115,6 +123,7 @@ private:
 
   G4double fTPixSupportThickness; // Thickness of HEPVeto support structure
 
+  G4String fTPixDigitizerName;
   G4String fTPixSensitiveDetectorName;
 
 };

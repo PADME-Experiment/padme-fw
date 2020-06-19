@@ -37,9 +37,12 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of ECal box
-  G4double GetECalPosX() { return 0.*cm; }
-  G4double GetECalPosY() { return 0.*cm; }
+  G4double GetECalPosX() { return fECalDisplacementX; }
+  G4double GetECalPosY() { return fECalDisplacementY; }
   G4double GetECalPosZ() { return fECalFrontFacePosZ+GetECalSizeZ()*0.5; }
 
   // Size of ECal box
@@ -152,8 +155,8 @@ public:
   G4bool ECalPanelIsEnabled() { return fECalPanelEnable; }
 
   // Position of Nomex panel
-  G4double GetECalPanelPosX() { return 0.*cm; }
-  G4double GetECalPanelPosY() { return 0.*cm; }
+  G4double GetECalPanelPosX() { return fECalDisplacementX; }
+  G4double GetECalPanelPosY() { return fECalDisplacementY; }
   G4double GetECalPanelPosZ() { return fECalFrontFacePosZ-fECalPanelGap-0.5*fECalPanelThickness; }
 
   // Dimensions of Nomex panel
@@ -296,6 +299,9 @@ public:
   G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
   G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
 
+  // Get name of ECal digitizer
+  G4String GetECalDigitizerName() { return fECalDigitizerName; }
+
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
 
@@ -304,6 +310,8 @@ private:
   void SetCrystalMap();
 
   // Geometry parameters
+
+  G4int fVerbose; // Verbose level
 
   G4int fCrystalMapId; // Id of crystal map to use
 
@@ -323,6 +331,9 @@ private:
   G4double fCrystalCoating; // Thickness of coating around crystals
 
   G4double fTedlarThickness;  // Thickness of Tedlar slips
+
+  G4double fECalDisplacementX; // ECal displacement along X axis wrt beam line
+  G4double fECalDisplacementY; // ECal displacement along Y axis wrt beam line
 
   G4double fECalFrontFacePosZ; // Position along Z axis of ECal front face
 
@@ -364,6 +375,7 @@ private:
 
   // Other parameteres
 
+  G4String fECalDigitizerName;
   G4String fECalSensitiveDetectorName;
 
 };

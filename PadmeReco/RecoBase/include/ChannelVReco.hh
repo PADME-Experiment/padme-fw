@@ -17,5 +17,17 @@ public:
   virtual void Init(PadmeVRecoConfig *cfg) = 0;
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg) = 0;
 
+
+  Int_t GetChID(){return fChID;};
+  void  SetChID(Int_t ChID){fChID=ChID;};
+  Int_t GetTrigMask(){return fTrigMask;};
+  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
+
+  
+protected:
+  Int_t fChID;
+  Int_t fTrigMask;
+
+  
 };
 #endif

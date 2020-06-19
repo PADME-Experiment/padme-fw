@@ -53,3 +53,40 @@ int PadmePerfUtils::getCpu() {
     }   
     return 0;
 }
+
+int PadmePerfUtils::getRunTime() {
+
+  // Get current time in ticks-since-boot
+  FILE *procuptime;
+  int sec, ssec;
+  procuptime = fopen("/proc/uptime", "r");
+  fscanf(procuptime, "%d.%ds", &sec, &ssec);
+  fclose(procuptime);
+  int sinceboot = sec*100+ssec;
+
+  // Get process start time in ticks-since-boot
+  pid_t pid = getpid();
+  std::ostringstream procstream;
+  procstream << "/proc/" << pid << "/stat";
+  std::ifstream memfile(procstream.str().c_str());
+
+  int nblancks=0;
+  unsigned int start_time;
+
+  char line[256];
+  while ((memfile >> line)) {
+
+    nblancks++;
+    if (nblancks==21) {
+
+      memfile >> line;
+      std::istringstream istream(line);
+      istream >> start_time;
+
+      // Return total process run time in ticks
+      return sinceboot-start_time;
+
+    }
+  }   
+  return 0;
+}

@@ -2,7 +2,7 @@
 
 NAME := PadmeAnalysis
 
-SUBDIRS :=  ECal EVeto Target PVeto HEPVeto SAC  
+SUBDIRS :=  ECal EVeto Target PVeto HEPVeto SAC UserAnalysis 
 ALLTARGETDIRS := $(SUBDIRS) AnalysisBase
 
 

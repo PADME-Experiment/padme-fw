@@ -20,6 +20,8 @@ EVetoGeometry::EVetoGeometry()
 
   // Inizialize default parameters
 
+  fVerbose = 0; // Do not show debug output
+
   // fFingerDist0 = 10.309*mm ; // Need drawings!
   // fFingerPitch = 10.309*mm; // Need drawings!
   fFingerPitch = 11.*mm; // Raggi 7/03/2019 construction drawings
@@ -52,6 +54,8 @@ EVetoGeometry::EVetoGeometry()
 
   //  fEVetoFrontFacePosZ = -483.55*mm; // Start 6.45mm from inner face of vacuum chamber (final position to be decided)
   fEVetoFrontFacePosZ = -472.55*mm; // Start 17.45mm from inner face of vacuum chamber (wrong but real position M. Raggi 07/03/2019)
+
+  fEVetoDigitizerName = "EVetoDigitizer";
   fEVetoSensitiveDetectorName = "EVetoSD";
 
 }

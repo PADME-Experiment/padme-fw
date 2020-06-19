@@ -48,6 +48,9 @@ public:
   
   G4VPhysicalVolume* Construct();
      
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   G4double GetWorldFullLength() {return fWorldLength;}
      
   void SetupDetectors();
@@ -55,18 +58,26 @@ public:
 
   void EnableSubDetector(G4String);
   void DisableSubDetector(G4String);
+  G4bool IsSubDetectorEnabled(G4String);
 
   void EnableStructure(G4String);
   void DisableStructure(G4String);
+  G4bool IsStructureEnabled(G4String);
 
   void EnableMagneticField();
   void DisableMagneticField();
+  G4bool IsMagneticFieldEnabled();
+
+  void SetCrossMagneticVolume(G4String);
 
   void MagneticVolumeIsVisible();
   void MagneticVolumeIsInvisible();
 
   void SetMagFieldValue(G4double);
   G4double GetMagFieldValue();
+
+  void MagnetIsVisible();
+  void MagnetIsInvisible();
 
   void ChamberIsVisible();
   void ChamberIsInvisible();
@@ -92,6 +103,8 @@ public:
 private:
 
   void DefineMaterials();
+
+  G4int fVerbose; // Verbose level
 
   G4GDMLParser fParser;
 
@@ -132,6 +145,9 @@ private:
   G4int fEnableMagneticField;
   G4int fMagneticVolumeIsVisible;
 
+  G4String fCrossMagneticVolume;
+
+  G4int fMagnetIsVisible;
   G4int fChamberIsVisible;
   G4int fBeamLineIsVisible; //M. Raggi 07/03/2019
 

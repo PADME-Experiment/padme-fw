@@ -46,6 +46,7 @@ private:
   G4UIcmdWithABool* fEnableBeamFlagCmd;
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
   
+  G4UIcmdWithABool* fEnableQuadrupolesCmd;
   G4UIcmdWithADouble* fSetQ1_FieldGradCmd;
   G4UIcmdWithADouble* fSetQ2_FieldGradCmd;
 

@@ -24,16 +24,21 @@ BeamLineGeometry::BeamLineGeometry()
   fBeWindowEnable = true;
   fBeamFlagEnable = true;
   // Set Be window sensitive detector positioned
+  // Define name of Be window sensitive detector
+
   fBeWSensitiveDetectorName = "BeWSD";
   fBeamFlag1SensitiveDetectorName = "BDSFL";
   fBeamFlag2SensitiveDetectorName = "BUSFL";
 
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
+
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
-  fQ1MagneticFieldGrad  =  5*tesla/m;
-  fQ2MagneticFieldGrad  =  5*tesla/m;
-  printf("***************************** tesla %f m %f \n ",tesla,m);
+  fQuadrupolesEnable = false;
+  fQ1MagneticFieldGrad =  5.*tesla/m;
+  fQ2MagneticFieldGrad =  5.*tesla/m;
+  //printf("***************************** tesla %f m %f \n ",tesla,m);
+
   // Radius of BeamPipe center
   fDHSTB002CenterRadius = 1723.*mm;
 

@@ -13,6 +13,7 @@
 //#include "G4UIparameter.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithoutParameter.hh"
+#include "G4UIcmdWithAnInteger.hh"
 
 #include "TargetDetector.hh"
 #include "TargetGeometry.hh"
@@ -47,6 +48,20 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fSetTargetFrontFaceZCmd->SetRange("PosZ >= -100. && PosZ <= -56."); // Upper limit is close to back face of vacuum chamber
   fSetTargetFrontFaceZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetTargetDisplacementXCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/DisplacementX",this);
+  fSetTargetDisplacementXCmd->SetGuidance("Set Target displacement along X.");
+  fSetTargetDisplacementXCmd->SetParameterName("DisX",false);
+  fSetTargetDisplacementXCmd->SetDefaultUnit("mm");
+  fSetTargetDisplacementXCmd->SetRange("DisX >= -300. && DisX <= 300.");
+  fSetTargetDisplacementXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetTargetDisplacementYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/Target/DisplacementY",this);
+  fSetTargetDisplacementYCmd->SetGuidance("Set Target displacement along Y.");
+  fSetTargetDisplacementYCmd->SetParameterName("DisY",false);
+  fSetTargetDisplacementYCmd->SetDefaultUnit("mm");
+  fSetTargetDisplacementYCmd->SetRange("DisY >= -50. && DisY <= 50.");
+  fSetTargetDisplacementYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableFastDigitizationCmd = new G4UIcmdWithoutParameter("/Detector/Target/EnableFastDigitization",this);
   fEnableFastDigitizationCmd->SetGuidance("Enable fast digitization for Target.");
   fEnableFastDigitizationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -65,21 +80,32 @@ TargetMessenger::TargetMessenger(TargetDetector* det)
   fDisableSaveWaveformToDigiCmd->SetGuidance("Disable saving of Target digitized waveforms to persistent digis.");
   fDisableSaveWaveformToDigiCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/Target/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for Target code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 TargetMessenger::~TargetMessenger()
 {
 
-  delete fTargetDetectorDir;
-
   delete fSetTargetSizeCmd;
   delete fSetTargetThicknessCmd;
   delete fSetTargetFrontFaceZCmd;
+
+  delete fSetTargetDisplacementXCmd;
+  delete fSetTargetDisplacementYCmd;
 
   delete fEnableFastDigitizationCmd;
   delete fDisableFastDigitizationCmd;
   delete fEnableSaveWaveformToDigiCmd;
   delete fDisableSaveWaveformToDigiCmd;
+
+  delete fSetVerboseLevelCmd;
+
+  delete fTargetDetectorDir;
 
 }
 
@@ -97,9 +123,19 @@ void TargetMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   if ( cmd == fSetTargetFrontFaceZCmd )
     fTargetGeometry->SetTargetFrontFacePosZ(fSetTargetFrontFaceZCmd->GetNewDoubleValue(par));
 
+  if ( cmd == fSetTargetDisplacementXCmd )
+    fTargetGeometry->SetTargetDisplacementX(fSetTargetDisplacementXCmd->GetNewDoubleValue(par));
+
+  if ( cmd == fSetTargetDisplacementYCmd )
+    fTargetGeometry->SetTargetDisplacementY(fSetTargetDisplacementYCmd->GetNewDoubleValue(par));
+
   if ( cmd == fEnableFastDigitizationCmd )  fTargetGeometry->EnableFastDigitization();
   if ( cmd == fDisableFastDigitizationCmd ) fTargetGeometry->DisableFastDigitization();
 
   if ( cmd == fEnableSaveWaveformToDigiCmd )  fTargetGeometry->EnableSaveWaveformToDigi();
   if ( cmd == fDisableSaveWaveformToDigiCmd ) fTargetGeometry->DisableSaveWaveformToDigi();
+ 
+  if ( cmd == fSetVerboseLevelCmd )
+    fTargetGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
+
 }

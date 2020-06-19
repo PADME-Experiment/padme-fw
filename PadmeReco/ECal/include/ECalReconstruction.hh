@@ -8,6 +8,7 @@
 #define ECalReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "TRandom2.h"
 
 class TRecoVCluster;
 
@@ -24,7 +25,7 @@ public:
   // virtual void Init(PadmeVReconstruction*);
   // void Init(PadmeVReconstruction* MainReco);
   //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  //  virtual void ProcessEvent(TRawEvent*);
+  void ProcessEvent(TRawEvent*);
   void BuildHits(TRawEvent* rawEv);
   Double_t CompensateMissingE(Double_t ECl,Int_t ClSeed); //M. Raggi 21/05/2019
   virtual void BuildClusters();
@@ -34,11 +35,14 @@ public:
   //void BuildECalIslandClusters();
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
+  virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
   Int_t IsSeedNeig(Int_t seedID, Int_t cellID);
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
+  Bool_t SimulateBrokenSU(Int_t x ,Int_t y);
+  Double_t EnergyResolution(Double_t energy);
 
 private:
   Int_t fClusterizationAlgo;
@@ -48,7 +52,11 @@ private:
   Double_t fClEnThrForHit;
   Double_t fClEnThrForSeed;
   Int_t NNoHits;
-  Int_t fClusterTimeAlgo; 
+  Int_t fClusterTimeAlgo;
+  Int_t fMultihitForMC;
+  Int_t fDeteriorateEnergyResolution;
+  Int_t fIsMC;
+  TRandom2 *r;
 
   //Clusters vectors
   std::vector<double> ClE;
@@ -66,7 +74,7 @@ private:
   //  std::vector<double> TTotECAL;
   //  std::vector<double> QTotECAL;
   double EvTotE;
-
+  TF1 *fEnergyCompensation;
 
   //  vector<TRecoVCluster *> fClusters;
 

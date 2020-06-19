@@ -8,7 +8,6 @@
 #include "G4UnitsTable.hh"
 #include "Constants.hh"
 #include "DatacardManager.hh"
-//#include "MyEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -99,8 +98,8 @@ void HistoManager::book()
   if (!histo2[2]) G4cout << "\n can't create histo 11" << G4endl;  
   histo2[3] = new TH2D("h23", "nCell vs ETotCal",15,-0.5, 14.5,200,0.,100.);
   if (!histo2[3]) G4cout << "\n can't create histo 11" << G4endl;
-  histo2[4] = new TH2D("h24", "nCellCl vs ECluster",ECalNCells*0.5,-0.5, ECalNCells*0.5-0.5,BeamEnergy/2,0.,BeamEnergy);
-  if (!histo2[4]) G4cout << "\n can't create histo 11" << G4endl;
+  //histo2[4] = new TH2D("h24", "nCellCl vs ECluster",ECalNCells*0.5,-0.5, ECalNCells*0.5-0.5,BeamEnergy/2,0.,BeamEnergy);
+  //if (!histo2[4]) G4cout << "\n can't create histo 11" << G4endl;
   histo2[5] = new TH2D("h25", "X Y cluster Pos ",ECalNRow*10,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNRow*10,-ECalSizeY*0.5,ECalSizeY*0.5);
   if (!histo2[5]) G4cout << "\n can't create histo 15" << G4endl;
   histo2[6] = new TH2D("h26", "Energy vs Theta calo ",275,0.,550.,60,0.,12.);
@@ -489,23 +488,16 @@ void HistoManager::book()
   ntupl->Branch("EVetoECl",       (myEvt.NTEVetoECl),      "NTEVetoECl[100][10]/D");
   ntupl->Branch("EVetoTimeCl",    (myEvt.NTEVetoTimeCl),   "NTEVetoTimeCl[100][10]/D");
 
+  //if(IsTrackerRecoON==1){
+  //  ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
+  //  ntupl->Branch("NTTrClusX", myEvt.NTTrClusX,"NTTrClusX[1000]/D");
+  //  ntupl->Branch("NTTrClusY", myEvt.NTTrClusY,"NTTrClusY[1000]/D");
+  //  ntupl->Branch("NTTrClusZ", myEvt.NTTrClusZ,"NTTrClusZ[1000]/D");
+  //  ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
+  //} 
 
-  //MySimEvent *mySim = (MyEvent::GetInstance())->GetSimEvent();
-  //MyEventGenerator *myGen = (MyEvent::GetInstance())->GetGenEvent();
-  
-  if(IsTrackerRecoON==1){
-    ntupl->Branch("NTNTrClus", &(myEvt.NTNTrClus),"NTNTrClus/I");
-    ntupl->Branch("NTTrClusX", myEvt.NTTrClusX,"NTTrClusX[1000]/D");
-    ntupl->Branch("NTTrClusY", myEvt.NTTrClusY,"NTTrClusY[1000]/D");
-    ntupl->Branch("NTTrClusZ", myEvt.NTTrClusZ,"NTTrClusZ[1000]/D");
-    ntupl->Branch("NTTrClusLayer", myEvt.NTTrClusLayer,"NTTrClusLayer[1000]/I");
-  } 
-
-  //  ntGen = new TTree("genEvt", "genEvent");
-  //  ntGen->Branch("NPrimaries","");   
-  //  ntSim = new TTree("simEvt", "simEvent");
-  //ntSim->Branch("simEvt","MySimEvent",&mySim);
   G4cout << "\n----> Histogram file is opened in " << fileName << G4endl;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

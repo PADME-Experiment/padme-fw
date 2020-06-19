@@ -34,6 +34,9 @@ protected:
 
 public:
 
+  void SetVerboseLevel(G4int v) { fVerbose = v; }
+  G4int GetVerboseLevel() { return fVerbose; }
+
   // Position of center of EVeto box
   G4double GetEVetoPosX() { return fEVetoInnerFacePosX-0.5*GetEVetoSizeX(); }
   G4double GetEVetoPosY() { return 0.*cm; }
@@ -94,10 +97,15 @@ public:
   // Set position along Z of EVeto front face
   void SetEVetoFrontFacePosZ(G4double z) { fEVetoFrontFacePosZ = z; }
 
+  // Get name of EVeto digitizer
+  G4String GetEVetoDigitizerName() { return fEVetoDigitizerName; }
+
   // Get name of EVeto sensitive detector
   G4String GetEVetoSensitiveDetectorName() { return fEVetoSensitiveDetectorName; }
 
 private:
+
+  G4int fVerbose; // Verbose level
 
   G4double fFingerDist0; // Distance of center of first finger from front face (in Z) of PVeto box
   G4double fFingerPitch; // Distance along Z between centers of two adjacent fingers
@@ -122,6 +130,7 @@ private:
   G4double fEVetoInnerFacePosX; // Position along X axis of EVeto inner face (i.e. inner face of support)
   G4double fEVetoFrontFacePosZ; // Position along Z axis of EVeto front face (i.e. front face of support)
 
+  G4String fEVetoDigitizerName;
   G4String fEVetoSensitiveDetectorName;
 
 };

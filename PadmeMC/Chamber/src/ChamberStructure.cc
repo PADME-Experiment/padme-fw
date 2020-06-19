@@ -39,6 +39,8 @@ ChamberStructure::ChamberStructure(G4LogicalVolume* motherVolume)
 {
   fChamberExists = 1;    // If =0 the physical structure of the chamber is not created
   fChamberIsVisible = 1; // If =0 all chamber structures are invisible (debug only)
+
+  fCrossDisplacePosZ = 0.; // Displacement of Cross region due to positioning inside magnetic volume
 }
 
 ChamberStructure::~ChamberStructure()
@@ -206,7 +208,7 @@ void ChamberStructure::CreateTargetPipes()
   G4SubtractionSolid* solidCP3 = new G4SubtractionSolid("VCCP3",solidCP2,solidCPXi,rotCPX,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalCP = new G4LogicalVolume(solidCP3,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"VCCP",0,0,0);
   logicalCP->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,cpzPosZ),logicalCP,"CrossPipeSteel",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,cpzPosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalCP,"CrossPipeSteel",fCrossMotherVolume,false,0,true);
 
   // Create flanges for crossed pipe
 
@@ -217,9 +219,9 @@ void ChamberStructure::CreateTargetPipes()
   G4LogicalVolume* logicalFlangeZ = new G4LogicalVolume(solidFlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlangeZ",0,0,0);
   logicalFlangeZ->SetVisAttributes(steelVisAttr);
   G4double flangez0PosZ = cpzPosZ-0.5*cpzLen+0.5*flangezThick;
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ),logicalFlangeZ,"CPZFlange",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,0,true);
   G4double flangez1PosZ = cpzPosZ+0.5*cpzLen-0.5*flangezThick;
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez1PosZ),logicalFlangeZ,"CPZFlange",fMotherVolume,false,1,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,1,true);
 
   G4double flangexRIn = geo->GetCPXFlangeRIn();
   G4double flangexROut = geo->GetCPXFlangeROut();
@@ -229,10 +231,10 @@ void ChamberStructure::CreateTargetPipes()
   logicalFlangeX->SetVisAttributes(steelVisAttr);
   G4double flangex0PosX = -0.5*cpxLen+0.5*flangexThick;
   G4double flangex0PosZ = cpzPosZ;
-  new G4PVPlacement(rotCPX,G4ThreeVector(flangex0PosX,0.,flangex0PosZ),logicalFlangeX,"CPXFlange",fMotherVolume,false,0,true);
+  new G4PVPlacement(rotCPX,G4ThreeVector(flangex0PosX,0.,flangex0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeX,"CPXFlange",fCrossMotherVolume,false,0,true);
   G4double flangex1PosX = +0.5*cpxLen-0.5*flangexThick;
   G4double flangex1PosZ = cpzPosZ;
-  new G4PVPlacement(rotCPX,G4ThreeVector(flangex1PosX,0.,flangex1PosZ),logicalFlangeX,"CPXFlange",fMotherVolume,false,1,true);
+  new G4PVPlacement(rotCPX,G4ThreeVector(flangex1PosX,0.,flangex1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeX,"CPXFlange",fCrossMotherVolume,false,1,true);
 
 }
 
@@ -254,7 +256,7 @@ void ChamberStructure::CreateJunctionPipe()
   G4Tubs* solidJun = new G4Tubs("JunPipe",junRIn,junROut,0.5*junLen,0.*deg,360.*deg);
   G4LogicalVolume* logicalJun = new G4LogicalVolume(solidJun,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunPipe",0,0,0);
   logicalJun->SetVisAttributes(steelVisAttr);
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,junPosZ),logicalJun,"JunctionPipe",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,junPosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalJun,"JunctionPipe",fCrossMotherVolume,false,0,true);
 
   printf("Junction pipe RIn %.1fmm Rout %.1fmm Zlen %.3fmm Zpos %.3fmm\n",junRIn/mm,junROut/mm,junLen/mm,junPosZ/mm);
 
@@ -266,9 +268,9 @@ void ChamberStructure::CreateJunctionPipe()
   G4LogicalVolume* logicalFlange = new G4LogicalVolume(solidFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlange",0,0,0);
   logicalFlange->SetVisAttributes(steelVisAttr);
   G4double flange0PosZ = junPosZ-0.5*junLen+0.5*flangeThick;
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,flange0PosZ),logicalFlange,"JunctionBFlange",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,flange0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlange,"JunctionBFlange",fCrossMotherVolume,false,0,true);
   G4double flange1PosZ = junPosZ+0.5*junLen-0.5*flangeThick;
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,flange1PosZ),logicalFlange,"JunctionFFlange",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,flange1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlange,"JunctionFFlange",fCrossMotherVolume,false,0,true);
 
 }
 

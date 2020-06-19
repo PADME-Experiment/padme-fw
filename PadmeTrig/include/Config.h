@@ -16,8 +16,8 @@
 
 typedef struct config_s {
 
-  // Process id in PadmeDAQ DB
-  int process_id;
+  //// Process id in PadmeDAQ DB
+  //int process_id;
 
   // File used to read configuration
   char config_file[MAX_FILE_LEN];

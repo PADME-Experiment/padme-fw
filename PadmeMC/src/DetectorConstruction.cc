@@ -452,10 +452,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   // TPix
+  //  G4cout<<"Ciaooooooooo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "<<geoChamber->GetVCBackFaceAngle()<<G4endl;
   if (fEnableTPix) {
     fTPixDetector->SetMotherVolume(logicWorld);
     // Position of TPix depends on shape of vacuum chamber
     geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
+
     geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
     fTPixDetector->CreateGeometry();
   }

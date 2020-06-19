@@ -11,6 +11,8 @@
 #include "LAVHit.hh"
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
+#include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
+
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "TargetGeometry.hh"
@@ -80,8 +82,9 @@ class EventAction : public G4UserEventAction
 
   void  AddSACHits(SACHitsCollection*);
   void  AddLAVHits(LAVHitsCollection*);
-  void  AddTPixHits(TPixHitsCollection*); //M. Raggi 26/03/2019
-  void  AddBeWHits(BeWHitsCollection*); //M. Raggi 26/03/2019
+  void  AddTPixHits(TPixHitsCollection*);         //M. Raggi 26/03/2019
+  void  AddBeWHits(BeWHitsCollection*);           //M. Raggi 26/03/2019
+  void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
 
   G4double GetCharge(G4double Energia);
   //G4double GGMass();
@@ -115,7 +118,7 @@ class EventAction : public G4UserEventAction
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 
   G4double ClPosX,ClPosY;
   G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
-  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget,NBeW;
+  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget,NBeW,NBeamFlag;
   G4int CalNPart;
 
    G4double Etrack[100];    //For spectrometer reco
@@ -135,6 +138,11 @@ class EventAction : public G4UserEventAction
    G4double TBeW;
    G4double YBeW;
    G4double XBeW;
+
+   G4double EBeamFlag;
+   G4double TBeamFlag;
+   G4double YBeamFlag;
+   G4double XBeamFlag;
 
    G4double ETotHEPVeto[100];
    G4int    HEPVetoTrackCh[100];

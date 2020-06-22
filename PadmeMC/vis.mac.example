@@ -119,6 +119,7 @@
 
 # Beam line settings
 #/Detector/BeamLine/EnableBeWindow true
+#/Detector/BeamLine/EnableMylarWindow true
 #/Detector/BeamLine/DHST002_FieldY -1.055 tesla
 #/Detector/BeamLine/EnableQuadrupoles false
 #/Detector/BeamLine/Q1_FieldGrad 5.

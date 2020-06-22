@@ -33,6 +33,13 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableBeWindowCmd->SetDefaultValue(true);
   fEnableBeWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //New Mylar window command line 
+  fEnableMylarWindowCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableMylarWindow",this);
+  fEnableMylarWindowCmd->SetGuidance("Enable (true) or disable (false) positioning of Mylar window.");
+  fEnableMylarWindowCmd->SetParameterName("MW",true);
+  fEnableMylarWindowCmd->SetDefaultValue(true);
+  fEnableMylarWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/DHST002_FieldY",this);
   fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set vertical component of magnetic field inside DHST002.");
   fSetDHSTB002MagneticFieldYCmd->SetParameterName("DFY",false);

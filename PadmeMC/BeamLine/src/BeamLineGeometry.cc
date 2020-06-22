@@ -22,6 +22,7 @@ BeamLineGeometry::BeamLineGeometry()
 
   // By default the Be window is positioned
   fBeWindowEnable = true;
+  fMylarWindowEnable = true;
 
   // Define name of Be window sensitive detector
   fBeWSensitiveDetectorName = "BeWSD";

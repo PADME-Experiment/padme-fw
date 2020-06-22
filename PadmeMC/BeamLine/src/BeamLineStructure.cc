@@ -39,6 +39,7 @@
 
 #include "G4SDManager.hh" // 29/04/2019 M. Raggi
 #include "BeWSD.hh"       // 29/04/2019 M. Raggi
+#include "MylarWSD.hh"    // 18/06/2020 M. Raggi
 
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
 #include "QuadSetup.hh" // M. Raggi 10/04/2019
@@ -64,6 +65,7 @@ void BeamLineStructure::CreateGeometry()
 
   // Create the thin window membrane in front of ECal with its flange
   CreateBeThinWindow();
+  CreateMylarThinWindow();
 
   // Create DHSTB002 magnet
   CreateDHSTB002Magnet();
@@ -72,13 +74,73 @@ void BeamLineStructure::CreateGeometry()
   //CreateQuadMagnets();
 
   // Create DHSTB002 inner pipe
-  CreateBeamLine();
+  CreateBeamLine(); //beam line 2019
+  CreateBeamLine2020(); //beam line 2020
+  // if() 
 
 }
 
 //void BeamLineStructure::CreateQuadMagnets()
 //{
 //}
+
+void BeamLineStructure::CreateMylarThinWindow()
+{
+  ///////////////////////////////////////////////////////
+  // Thin Mylar 140um window mounted before DHSTB002
+  // and pipes in the upstream region
+  ///////////////////////////////////////////////////////
+  
+  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
+  
+  G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
+  G4VisAttributes MylarVisAttr = G4VisAttributes(G4Colour::Blue());
+  if(!fBeamLineIsVisible){
+    MylarVisAttr = G4VisAttributes::Invisible;
+    steelVisAttr = G4VisAttributes::Invisible;
+  }
+  
+  // Create Mylar thin window and its support flange
+
+  G4double mylarWinR = geo->GetMylarWindowRadius();
+  G4double mylarWinT = geo->GetMylarWindowThick();
+  G4double mylarWinFlgR = geo->GetMylarWindowFlangeRadius();
+  G4double mylarWinFlgT = geo->GetMylarWindowFlangeThick();
+
+  // Top volume containing Mylar window and its flange
+  G4Tubs* solidMylarWinVolume = new G4Tubs("solidMylarWinVolume",0.,mylarWinFlgR,0.5*mylarWinFlgT,0.*deg,360.*deg);
+  fMylarWindowVolume = new G4LogicalVolume(solidMylarWinVolume,G4Material::GetMaterial("Vacuum"),"logicalMylarWinVolume",0,0,0);
+  fMylarWindowVolume->SetVisAttributes(G4VisAttributes::Invisible);
+
+  // Mylar thin window
+  G4Tubs* solidMylarWin = new G4Tubs("solidMylarWin",0.,mylarWinR,0.5*mylarWinT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalMylarWin = new G4LogicalVolume(solidMylarWin,G4Material::GetMaterial("G4_Mylar"),"logicalMylarWin",0,0,0);
+  logicalMylarWin->SetVisAttributes(MylarVisAttr);
+
+  // Support flange for Mylar thin window
+  G4Tubs* solidMylarWinFlange = new G4Tubs("solidMylarWinFlange",mylarWinR,mylarWinFlgR,0.5*mylarWinFlgT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalMylarWinFlange = new G4LogicalVolume(solidMylarWinFlange,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalMylarWinFlange",0,0,0);
+  logicalMylarWinFlange->SetVisAttributes(steelVisAttr);
+
+  // Position Mylar window and its flange inside top volume
+  // Shift Mylar window so that its entry face is at center of support flange
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMylarWinFlange,"BeamLineMylarWinFlange",fMylarWindowVolume,false,0,true);
+  if ( geo->MylarWindowIsEnabled() ) {
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*mylarWinT),logicalMylarWin,"BeamLineMylarWindow",fMylarWindowVolume,false,0,true);
+    
+    // The Mylar window is a sensitive detector
+    G4String MylarWSDName = geo->GetMylarWSensitiveDetectorName();
+    printf("Registering MylarW SD %s\n",MylarWSDName.data());
+    MylarWSD* mylarWSD = new MylarWSD(MylarWSDName);
+    fMylarWindowVolume->SetSensitiveDetector(mylarWSD);
+    G4SDManager::GetSDMpointer()->AddNewDetector(mylarWSD);
+  }
+}
+
+void BeamLineStructure::CreateBeamLine2020()
+{
+  
+}
 
 void BeamLineStructure::CreateBeThinWindow()
 {

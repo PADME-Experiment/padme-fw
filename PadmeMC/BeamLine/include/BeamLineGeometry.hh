@@ -36,7 +36,12 @@ public:
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
 
+  void EnableMylarWindow() { fMylarWindowEnable = true; }
+  void DisableMylarWindow() { fMylarWindowEnable = false; }
+  G4bool MylarWindowIsEnabled() { return fMylarWindowEnable; }
+
   G4String fBeWSensitiveDetectorName; 
+  G4String fMylarWSensitiveDetectorName; 
 
   // Magnetic field inside DHSTB002
 
@@ -152,6 +157,12 @@ public:
   G4double GetBeWindowFlangeRadius() { return fBeWindowFlangeRadius; }
   G4double GetBeWindowFlangeThick() { return fBeWindowFlangeThick; }
 
+  // Properties of Mylar thin window and its support flange
+  G4double GetMylarWindowRadius() { return fMylarWindowRadius; }
+  G4double GetMylarWindowThick() { return fMylarWindowThick; }
+  G4double GetMylarWindowFlangeRadius() { return fMylarWindowFlangeRadius; }
+  G4double GetMylarWindowFlangeThick() { return fMylarWindowFlangeThick; }
+
   // Properties of the quadrupoles
   G4double  GetQuadBoxSizeX(){return fQuadBoxSizeX;}
   G4double  GetQuadBoxSizeY(){return fQuadBoxSizeY;}
@@ -167,12 +178,14 @@ public:
 
   // Get name of BeW sensitive detector
   G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
+  G4String GetMylarWSensitiveDetectorName() { return fMylarWSensitiveDetectorName; }
 
 private:
 
   //  Berillium thin window and stainless still flange
 
   G4bool fBeWindowEnable;
+  G4bool fMylarWindowEnable;
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
@@ -299,6 +312,13 @@ private:
   G4double fBeWindowThick;
   G4double fBeWindowFlangeRadius;
   G4double fBeWindowFlangeThick;
+
+  // Properties of Be thin window and its support flange
+
+  G4double fMylarWindowRadius;
+  G4double fMylarWindowThick;
+  G4double fMylarWindowFlangeRadius;
+  G4double fMylarWindowFlangeThick;
 
   // Properties of the quadrupoles
   G4double  fQuadBoxSizeX;  

@@ -38,13 +38,18 @@ public:
 private:
 
   void CreateBeThinWindow();
+  void CreateMylarThinWindow(); //Raggi 06/2020
+
   void CreateBeamLine();
+  void CreateBeamLine2020();  //Raggi 06/2020
+
   void CreateDHSTB002Magnet();
   void CreateQuadMagnets();
 
   G4LogicalVolume* fMotherVolume;
   //G4LogicalVolume* fGlobalLogicalVolume;
   G4LogicalVolume* fBeWindowVolume;
+  G4LogicalVolume* fMylarWindowVolume;
 
   QuadSetup * fMagneticFieldManager;
   //G4int fBeamLineExists;

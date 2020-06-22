@@ -24,8 +24,9 @@ BeamLineGeometry::BeamLineGeometry()
   fBeWindowEnable = true;
   fMylarWindowEnable = true;
 
-  // Define name of Be window sensitive detector
+  // Define name of Be and Mylar window sensitive detectors
   fBeWSensitiveDetectorName = "BeWSD";
+  fBeWSensitiveDetectorName = "MylarWSD";
 
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
@@ -157,6 +158,14 @@ BeamLineGeometry::BeamLineGeometry()
   fBeWindowThick = 250.*um;
   fBeWindowFlangeRadius = 0.5*113.5*mm;
   fBeWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
+
+  
+  // Properties of Mylar thin window and its support flange Raggi 06/2020
+  //verifica con foggetta tutte le misure
+  fMylarWindowRadius = 30.5*mm;
+  fMylarWindowThick = 140.*um; 
+  fMylarWindowFlangeRadius = 0.5*113.5*mm;
+  fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 
   // Geometry of the quadrupoles 
 

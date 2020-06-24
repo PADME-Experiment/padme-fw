@@ -76,6 +76,7 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
   delete fEnableBeWindowCmd;
+  delete fEnableMylarWindowCmd;
   delete fSetDHSTB002MagneticFieldYCmd;
   delete fBeamLineDir;
 
@@ -83,6 +84,14 @@ BeamLineMessenger::~BeamLineMessenger()
 
 void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
+  
+  if ( cmd == fEnableMylarWindowCmd ) {
+    if (fEnableMylarWindowCmd->GetNewBoolValue(par)) {
+      fBeamLineGeometry->EnableMylarWindow();
+    } else {
+      fBeamLineGeometry->DisableMylarWindow();
+    }
+  }
 
   if ( cmd == fEnableBeWindowCmd ) {
     if (fEnableBeWindowCmd->GetNewBoolValue(par)) {
@@ -120,6 +129,9 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   if ( cmd == fEnableBeWindowCmd )
     cv = fEnableBeWindowCmd->ConvertToString(fBeamLineGeometry->BeWindowIsEnabled());
+
+  else if ( cmd == fEnableMylarWindowCmd )
+    cv = fEnableMylarWindowCmd->ConvertToString(fBeamLineGeometry->MylarWindowIsEnabled());
 
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");

@@ -44,6 +44,7 @@ private:
 
   G4UIcmdWithABool* fEnableBeWindowCmd;
   G4UIcmdWithABool* fEnableMylarWindowCmd;
+  G4UIcmdWithABool* fEnableBeamFlagCmd;
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
   
   G4UIcmdWithABool* fEnableQuadrupolesCmd;

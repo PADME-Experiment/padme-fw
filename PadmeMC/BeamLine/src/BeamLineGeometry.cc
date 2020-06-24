@@ -26,8 +26,12 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Define name of Be and Mylar window sensitive detectors
   fBeWSensitiveDetectorName = "BeWSD";
-  fBeWSensitiveDetectorName = "MylarWSD";
-
+  fMylarWSensitiveDetectorName = "MylarWSD";
+  fBeamFlagEnable = true;
+  // Set Be window sensitive detector positioned
+  // Define name of Be window sensitive detector
+  fBeamFlag1SensitiveDetectorName = "BDSFL";
+  fBeamFlag2SensitiveDetectorName = "BUSFL";
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
 

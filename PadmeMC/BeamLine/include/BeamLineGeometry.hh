@@ -40,8 +40,16 @@ public:
   void DisableMylarWindow() { fMylarWindowEnable = false; }
   G4bool MylarWindowIsEnabled() { return fMylarWindowEnable; }
 
+  void EnableBeamFlag()  { fBeamFlagEnable = true; }
+  void DisableBeamFlag() { fBeamFlagEnable = false; }
+  G4bool BeamFlagIsEnabled() { return fBeamFlagEnable; } // M. Raggi 28/08/2019
+
   G4String fBeWSensitiveDetectorName; 
   G4String fMylarWSensitiveDetectorName; 
+
+  G4String fBeamFlag1SensitiveDetectorName; 
+  G4String fBeamFlag2SensitiveDetectorName;   
+  G4String fBeamFlag3SensitiveDetectorName; 
 
   // Magnetic field inside DHSTB002
 
@@ -179,6 +187,9 @@ public:
   // Get name of BeW sensitive detector
   G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
   G4String GetMylarWSensitiveDetectorName() { return fMylarWSensitiveDetectorName; }
+  G4String GetBeamFlag1SensitiveDetectorName() { return fBeamFlag1SensitiveDetectorName; }
+  G4String GetBeamFlag2SensitiveDetectorName() { return fBeamFlag2SensitiveDetectorName; }
+  G4String GetBeamFlag3SensitiveDetectorName() { return fBeamFlag3SensitiveDetectorName; }
 
 private:
 
@@ -186,6 +197,7 @@ private:
 
   G4bool fBeWindowEnable;
   G4bool fMylarWindowEnable;
+  G4bool fBeamFlagEnable;
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;

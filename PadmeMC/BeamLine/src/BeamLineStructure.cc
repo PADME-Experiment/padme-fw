@@ -63,22 +63,24 @@ BeamLineStructure::~BeamLineStructure()
 
 void BeamLineStructure::CreateGeometry()
 {
-
+  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   // Create the thin window membrane in front of ECal with its flange
-  CreateBeThinWindow();
-  CreateMylarThinWindow();
+  G4double fLineSetup = geo->GetBeamLineSetup();
 
-  // Create DHSTB002 magnet
-  CreateDHSTB002Magnet();
-
-  // Create Quadrupole magnets
-  //CreateQuadMagnets();
-
-  // Create DHSTB002 inner pipe
-  CreateBeamLine(); //beam line 2019
-  //  CreateBeamLine2020(); //beam line 2020
-  // if() 
-
+  if(fLineSetup==0.){
+    G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
+    CreateBeThinWindow();   // Create BeWindow
+    CreateDHSTB002Magnet(); // Create DHSTB002 magnet
+    //CreateQuadMagnets();  // Create Quadrupole magnets
+    CreateBeamLine();       // Create Beam line 2019
+  }
+  if(fLineSetup==1.){
+    G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
+    CreateMylarThinWindow();
+    CreateDHSTB002Magnet();
+    //CreateQuadMagnets();
+    //    CreateBeamLine2020(); //beam line 2019
+  }
 }
 
 //void BeamLineStructure::CreateQuadMagnets()
@@ -115,7 +117,7 @@ void BeamLineStructure::CreateMylarThinWindow()
 
   // Mylar thin window
   G4Tubs* solidMylarWin = new G4Tubs("solidMylarWin",0.,mylarWinR,0.5*mylarWinT,0.*deg,360.*deg);
-  G4LogicalVolume* logicalMylarWin = new G4LogicalVolume(solidMylarWin,G4Material::GetMaterial("G4_Mylar"),"logicalMylarWin",0,0,0);
+  G4LogicalVolume* logicalMylarWin = new G4LogicalVolume(solidMylarWin,G4Material::GetMaterial("G4_MYLAR"),"logicalMylarWin",0,0,0);
   logicalMylarWin->SetVisAttributes(MylarVisAttr);
 
   // Support flange for Mylar thin window
@@ -126,7 +128,8 @@ void BeamLineStructure::CreateMylarThinWindow()
   // Position Mylar window and its flange inside top volume
   // Shift Mylar window so that its entry face is at center of support flange
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMylarWinFlange,"BeamLineMylarWinFlange",fMylarWindowVolume,false,0,true);
-  if ( geo->MylarWindowIsEnabled() ) {
+
+  if( geo->MylarWindowIsEnabled() ) {
     new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*mylarWinT),logicalMylarWin,"BeamLineMylarWindow",fMylarWindowVolume,false,0,true);
     
     // The Mylar window is a sensitive detector
@@ -636,7 +639,6 @@ void BeamLineStructure::CreateBeamLine()
   new G4PVPlacement(beJunBeRot,beJunBePos,logicalBeJunction,"BeamLineBeWinJunction",fMotherVolume,false,0,true);
 
   // Position Be windows with relative support flange
-
   G4double beWinFlgT = geo->GetBeWindowFlangeThick();
   G4double beWinFlgPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*beWinFlgT)*sin(magnetAngle);
   G4double beWinFlgPosY = mpEntPosY;
@@ -644,6 +646,7 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector beWinFlgPos = G4ThreeVector(beWinFlgPosX,beWinFlgPosY,beWinFlgPosZ);
   G4RotationMatrix* beWinFlgRot = new G4RotationMatrix;
   beWinFlgRot->rotateY(magnetAngle);
+  printf("BeamLine - Be window exit face center CRASH  is at \n");
   new G4PVPlacement(beWinFlgRot,beWinFlgPos,fBeWindowVolume,"BeamLineBeWinVolume",fMotherVolume,false,0,true);
 
   printf("BeamLine - Be window entry face center is at (%.2f,%.2f,%.2f) mm\n",beWinFlgPosX,beWinFlgPosY,beWinFlgPosZ);
@@ -654,30 +657,30 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector beWin2FlgPos = G4ThreeVector(beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
   new G4PVPlacement(beWinFlgRot,beWin2FlgPos,fBeWindowVolume,"BeamLineExitBeWinVolume",fMotherVolume,false,0,true);
 
-  printf("BeamLine - Be window exit face center is at (%.2f,%.2f,%.2f) mm\n",beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
+  //  printf("BeamLine - Be window exit face center is at (%.2f,%.2f,%.2f) mm\n",beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
 
-  if ( geo->MylarWindowIsEnabled() ) {
-    // Position Mylar window with relative support flange M. Raggi 06/2020 muovila in bealine 2020
-    
-    G4double MylarWinFlgT = geo->GetMylarWindowFlangeThick();
-    G4double MylarWinFlgPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*sin(magnetAngle);
-    G4double MylarWinFlgPosY = mpEntPosY;
-    G4double MylarWinFlgPosZ = mpEntPosZ-(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*cos(magnetAngle);
-    G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
-    G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
-    MylarWinFlgRot->rotateY(magnetAngle);
-    new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
-    
-    printf("BeamLine - Mylar window entry face center is at (%.2f,%.2f,%.2f) mm\n",MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
-    
-    G4double MylarWin2FlgPosX = mpEntPosX-(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*sin(magnetAngle);
-    G4double MylarWin2FlgPosY = mpEntPosY;
-    G4double MylarWin2FlgPosZ = mpEntPosZ+(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*cos(magnetAngle);
-    G4ThreeVector MylarWin2FlgPos = G4ThreeVector(MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
-    new G4PVPlacement(MylarWinFlgRot,MylarWin2FlgPos,fMylarWindowVolume,"BeamLineExitMylarWinVolume",fMotherVolume,false,0,true);
-    
-    printf("BeamLine - Mylar window exit face center is at (%.2f,%.2f,%.2f) mm\n",MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
-  }
+//  if ( geo->MylarWindowIsEnabled() ) {
+//    // Position Mylar window with relative support flange M. Raggi 06/2020 muovila in bealine 2020
+//    
+//    G4double MylarWinFlgT = geo->GetMylarWindowFlangeThick();
+//    G4double MylarWinFlgPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*sin(magnetAngle);
+//    G4double MylarWinFlgPosY = mpEntPosY;
+//    G4double MylarWinFlgPosZ = mpEntPosZ-(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*cos(magnetAngle);
+//    G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
+//    G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
+//    MylarWinFlgRot->rotateY(magnetAngle);
+//    new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
+//    
+//    printf("BeamLine - Mylar window entry face center is at (%.2f,%.2f,%.2f) mm\n",MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
+//    
+//    G4double MylarWin2FlgPosX = mpEntPosX-(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*sin(magnetAngle);
+//    G4double MylarWin2FlgPosY = mpEntPosY;
+//    G4double MylarWin2FlgPosZ = mpEntPosZ+(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*cos(magnetAngle);
+//    G4ThreeVector MylarWin2FlgPos = G4ThreeVector(MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
+//    new G4PVPlacement(MylarWinFlgRot,MylarWin2FlgPos,fMylarWindowVolume,"BeamLineExitMylarWinVolume",fMotherVolume,false,0,true);
+//    
+//    printf("BeamLine - Mylar window exit face center is at (%.2f,%.2f,%.2f) mm\n",MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
+//  }
   ////////////////////////////////////////////////////////////////////////
   // Beam Flag to monitor beam in different locations M. Raggi 06/09/2019
   // Flag 4 on the strait DHSTB002 exit section

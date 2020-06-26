@@ -51,5 +51,7 @@ private:
   G4UIcmdWithADouble* fSetQ1_FieldGradCmd;
   G4UIcmdWithADouble* fSetQ2_FieldGradCmd;
 
+  G4UIcmdWithADouble* fBeamLineSetupCmd;
+
 };
 #endif

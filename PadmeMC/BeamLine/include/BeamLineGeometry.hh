@@ -68,6 +68,10 @@ public:
   void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g*tesla/m; }
   G4double GetQ2MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
 
+  //setup line configuration M. Raggi 06/2020
+  void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
+  G4double GetBeamLineSetup() { return fBeamLineSetup; }
+
   // Dimensions of DHSTB002 magnet yoke
 
   G4double GetDHSTB002CenterRadius() { return fDHSTB002CenterRadius; }
@@ -208,6 +212,7 @@ private:
   G4bool fQuadrupolesEnable;
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
+  G4double fBeamLineSetup;
 
   // Radius of magnet at center of beam line
   G4double fDHSTB002CenterRadius;

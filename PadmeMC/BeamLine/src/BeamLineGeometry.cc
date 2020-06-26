@@ -39,7 +39,9 @@ BeamLineGeometry::BeamLineGeometry()
   fQuadrupolesEnable = false;
   fQ1MagneticFieldGrad =  5.*tesla/m;
   fQ2MagneticFieldGrad =  5.*tesla/m;
+  fBeamLineSetup=0;  //M. Raggi 06/2020
   //printf("***************************** tesla %f m %f \n ",tesla,m);
+  printf("******Beam Line Geometry *********************** %f \n",fBeamLineSetup);
 
   // Radius of BeamPipe center
   fDHSTB002CenterRadius = 1723.*mm;
@@ -167,7 +169,7 @@ BeamLineGeometry::BeamLineGeometry()
   // Properties of Mylar thin window and its support flange Raggi 06/2020
   //verifica con foggetta tutte le misure
   fMylarWindowRadius = 30.5*mm;
-  fMylarWindowThick = 140.*um; 
+  fMylarWindowThick = 140.*mm;  //FIIIXXXXXXXXXXXXXXXXXXXXXXXXXX 
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 

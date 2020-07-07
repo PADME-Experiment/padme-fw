@@ -466,6 +466,33 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetCalibRunRadiusCmd )
     fBeamParameters->SetCalibRunRadius(fSetCalibRunRadiusCmd->GetNewDoubleValue(par));
 
+  
+  else if (cmd == fEnableIllumRunCmd            ) {
+    if (fEnableIllumRunCmd            ->GetNewBoolValue(par)){
+      fBeamParameters->IlluminationRunEnable();
+    } else {
+      fBeamParameters->IlluminationRunDisable();
+    }
+  }
+    
+  else if (cmd == fEnableIllumRandomEnergyCmd   ) {
+    if (fEnableIllumRandomEnergyCmd   ->GetNewDoubleValue(par)){
+      fBeamParameters->IlluminationRandomEnergyEnable();
+    } else {
+      fBeamParameters->IlluminationRandomEnergyDisable();
+    }
+  }
+  else if (cmd == fSetIllumRunEnergyCmd         ) fBeamParameters->SetIllumRunEnergy     (fSetIllumRunEnergyCmd         ->GetNewDoubleValue(par));
+  else if (cmd == fSetIllumMinEnergyCmd         ) fBeamParameters->SetIllumRunMinEnergy  (fSetIllumMinEnergyCmd         ->GetNewDoubleValue(par));
+  else if (cmd == fSetIllumMaxEnergyCmd         ) fBeamParameters->SetIllumRunMaxEnergy  (fSetIllumMaxEnergyCmd         ->GetNewDoubleValue(par));
+  else if (cmd == fSetIllumMinRadiusCmd         ) fBeamParameters->SetIllumRunMinRadius  (fSetIllumMinRadiusCmd         ->GetNewDoubleValue(par));
+  else if (cmd == fSetIllumMaxRadiusCmd         ) fBeamParameters->SetIllumRunMaxRadius  (fSetIllumMaxRadiusCmd         ->GetNewDoubleValue(par));
+  else if (cmd == fSetNIllumPartPerBunchCmd     ) fBeamParameters->SetNIllumPartPerBunch (fSetNIllumPartPerBunchCmd     ->GetNewIntValue(par));
+
+
+
+  
+
 }
 
 G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
@@ -562,6 +589,16 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetCalibRunRadiusCmd )
     cv = fSetCalibRunRadiusCmd->ConvertToString(fBeamParameters->GetCalibRunRadius());
+
+
+  else if (cmd == fSetIllumRunEnergyCmd         ) cv = fSetIllumRunEnergyCmd    ->ConvertToString( fBeamParameters->GetIllumRunEnergy     ());
+  else if (cmd == fSetIllumMinEnergyCmd         ) cv = fSetIllumMinEnergyCmd    ->ConvertToString( fBeamParameters->GetIllumRunMinEnergy  ());
+  else if (cmd == fSetIllumMaxEnergyCmd         ) cv = fSetIllumMaxEnergyCmd    ->ConvertToString( fBeamParameters->GetIllumRunMaxEnergy  ());
+  else if (cmd == fSetIllumMinRadiusCmd         ) cv = fSetIllumMinRadiusCmd    ->ConvertToString( fBeamParameters->GetIllumRunMinRadius  ());
+  else if (cmd == fSetIllumMaxRadiusCmd         ) cv = fSetIllumMaxRadiusCmd    ->ConvertToString( fBeamParameters->GetIllumRunMaxRadius  ());
+  else if (cmd == fSetNIllumPartPerBunchCmd     ) cv = fSetNIllumPartPerBunchCmd->ConvertToString( fBeamParameters->GetNIllumPartPerBunch ());
+
+  
 
   return cv;
 

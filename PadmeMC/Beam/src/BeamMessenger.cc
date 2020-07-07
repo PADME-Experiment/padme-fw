@@ -222,6 +222,67 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetCalibRunRadiusCmd->SetRange("R >= 0. && R <= 30.");
   fSetCalibRunRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+
+  fEnableIllumRunCmd         = new G4UIcmdWithABool("/beam/illumination",this);
+  fEnableIllumRunCmd->SetGuidance("Enable (true) or disable (false) illumination beam, i.e. given number of photons with fixed/random energy an random position in the ECal.");
+  fEnableIllumRunCmd->SetParameterName("IR",false);
+  fEnableIllumRunCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
+  fEnableIllumRandomEnergyCmd= new G4UIcmdWithABool("/beam/illum_random_e",this);
+  fEnableIllumRandomEnergyCmd->SetGuidance("Enable (true) or disable (false) random energy of the illumination beam");
+  fEnableIllumRandomEnergyCmd->SetParameterName("IRRE",false);
+  fEnableIllumRandomEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
+  fSetIllumRunEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumRunEnergyCmd -> SetGuidance("Set run energy of illumination gamma.");
+  fSetIllumRunEnergyCmd -> SetParameterName("IlGE",false);
+  fSetIllumRunEnergyCmd -> SetDefaultUnit("MeV");
+  fSetIllumRunEnergyCmd -> SetRange("IlGE > 0. && IlGE <= 1000.");
+  fSetIllumRunEnergyCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
+  
+  fSetIllumMinEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMinEnergyCmd -> SetGuidance("Set miminal energy of illumination gamma.");
+  fSetIllumMinEnergyCmd -> SetParameterName("IlGEmin",false);
+  fSetIllumMinEnergyCmd -> SetDefaultUnit("MeV");
+  fSetIllumMinEnergyCmd -> SetRange("IlGEmin > 0. && IlGEmin <= 1000.");
+  fSetIllumMinEnergyCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
+  fSetIllumMaxEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMaxEnergyCmd -> SetGuidance("Set maximal energy of illumination gamma.");
+  fSetIllumMaxEnergyCmd -> SetParameterName("IlGEmax",false);
+  fSetIllumMaxEnergyCmd -> SetDefaultUnit("MeV");
+  fSetIllumMaxEnergyCmd -> SetRange("IlGEmax > 0. && IlGEmax <= 1000.");
+  fSetIllumMaxEnergyCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
+  fSetIllumMinRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMinRadiusCmd -> SetGuidance("Set minimal radius of the impact point of the gamma(s) in the ECal ");
+  fSetIllumMinRadiusCmd -> SetParameterName("IlRmin",false);
+  fSetIllumMinRadiusCmd -> SetDefaultUnit("cm");
+  fSetIllumMinRadiusCmd -> SetRange("IlRmin >= 0. && IlRmin <= 30.");
+  fSetIllumMinRadiusCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
+  
+  fSetIllumMaxRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMaxRadiusCmd -> SetGuidance("Set maximal radius of the impact point of the gamma(s) in the ECal ");
+  fSetIllumMaxRadiusCmd -> SetParameterName("IlRmax",false);
+  fSetIllumMaxRadiusCmd -> SetDefaultUnit("cm");
+  fSetIllumMaxRadiusCmd -> SetRange("IlRmax >= 0. && IlRmax <= 30.");
+  fSetIllumMaxRadiusCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
+  fSetNIllumPartPerBunchCmd  = new G4UIcmdWithAnInteger("/beam/n_illum_part_per_bunch",this);;   
+  fSetNIllumPartPerBunchCmd->SetGuidance("Set number of illumination particles in each bunch.");
+  fSetNIllumPartPerBunchCmd->SetParameterName("IlNP",false);
+  fSetNIllumPartPerBunchCmd->SetRange("IlNP >= 0 && IlNP <= 10");
+  fSetNIllumPartPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 BeamMessenger::~BeamMessenger()
@@ -265,6 +326,17 @@ BeamMessenger::~BeamMessenger()
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
   delete fSetCalibRunRadiusCmd;
+
+  delete fEnableIllumRunCmd;	  
+  delete fEnableIllumRandomEnergyCmd; 
+  delete fSetIllumRunEnergyCmd;	  
+  delete fSetIllumMinEnergyCmd;	  
+  delete fSetIllumMaxEnergyCmd;	  
+  delete fSetIllumMinRadiusCmd;	  
+  delete fSetIllumMaxRadiusCmd;	  
+  delete fSetNIllumPartPerBunchCmd;   
+
+  
 
   delete fBeamGeneratorDir;
 

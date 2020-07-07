@@ -127,6 +127,32 @@ public:
   G4double GetCalibRunRadius()  { return fCalibRunRadius; }
   void SetCalibRunRadius(G4double r)  { fCalibRunRadius  = r; }
 
+  void IlluminationRunEnable() {fIlluminationRun = true;}
+  void IlluminationRunDisable() {fIlluminationRun = false;}
+
+  void IlluminationRandomEnergyEnable(){fIllumRandomEnergy = true;}
+  void IlluminationRandomEnergyDisable(){fIllumRandomEnergy = false;}
+
+  G4double GetIllumRunEnergy(){return fIllumRunEnergy;}
+  void SetIllumRunEnergy(G4double x){fIllumRunEnergy = x;}
+
+  G4double GetIllumRunMinEnergy(){return fIllumRunMinEnergy;}
+  void SetIllumRunMinEnergy(G4double x){fIllumRunMinEnergy = x;}
+
+  G4double GetIllumRunMaxEnergy(){return fIllumRunMaxEnergy;}
+  void SetIllumRunMaxEnergy(G4double x){fIllumRunMaxEnergy = x;}
+
+  G4double GetIllumRunMinRadius(){return fIllumRunMinRadius;}
+  void SetIllumRunMinRadius(G4double x){fIllumRunMinRadius = x;}
+
+  G4double GetIllumRunMaxRadius(){return fIllumRunMaxRadius;}
+  void SetIllumRunMaxRadius(G4double x){fIllumRunMaxRadius = x;}
+
+  G4int GetNIllumPartPerBunch()        { return fNIllumPartPerBunch; }
+  void SetNIllumPartPerBunch(G4int n) { fNIllumPartPerBunch  = n;    }
+
+  
+
 private:
 
   // Average number of positrons in each bunch
@@ -180,6 +206,21 @@ private:
   G4double fCalibRunCenterX; // X of center of cirlce 
   G4double fCalibRunCenterY; // Y of center of circle
   G4double fCalibRunRadius;  // Radius of circle
+
+  //Illumination run
+  //Fixed number of particles with random/fixed energies at random position in the ECal
+  G4bool fIlluminationRun;
+  G4bool fIllumRandomEnergy; //Random or fixed energy
+  //If fixed
+  G4double fIllumRunEnergy;
+  //If random
+  G4double fIllumRunMinEnergy;
+  G4double fIllumRunMaxEnergy;
+
+  G4double fIllumRunMinRadius; //Min Radius at ECal
+  G4double fIllumRunMaxRadius; //Max Radius at ECal
+  G4int  fNIllumPartPerBunch; //Number of particles per bunch
+
 
 };
 #endif

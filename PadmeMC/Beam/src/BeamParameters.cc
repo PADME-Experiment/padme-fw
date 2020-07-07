@@ -69,6 +69,16 @@ BeamParameters::BeamParameters()
   fCalibRunCenterY = 14.*cm;
   fCalibRunRadius  =  1.*cm;
 
+  //Initialize illumination run parameters
+  fIlluminationRun = false;
+  fIllumRandomEnergy = false;
+  fIllumRunEnergy = 50.*MeV;
+  fIllumRunMinEnergy = 50.*MeV;
+  fIllumRunMaxEnergy = 300.*MeV;
+  fIllumRunMinRadius = 14.*cm;
+  fIllumRunMinRadius = 25.*cm;
+  fNIllumPartPerBunch = 1;
+
 }
 
 BeamParameters::~BeamParameters()

@@ -80,5 +80,19 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterYCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunRadiusCmd;
 
+  
+  G4UIcmdWithABool* fEnableIllumRunCmd;
+  G4UIcmdWithABool* fEnableRandomEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fSetIllumRunEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fSetIllumMinEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fSetIllumMaxEnergyCmd;
+  G4UIcmdWithADoubleAndUnit* fSetIllumMinRadiusCmd;
+  G4UIcmdWithADoubleAndUnit* fSetIllumMaxRadiusCmd;
+  G4UIcmdWithAnInteger* fSetNIllumPartPerBunchCmd;
+
+
+
+
+  
 };
 #endif

@@ -476,7 +476,7 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   }
     
   else if (cmd == fEnableIllumRandomEnergyCmd   ) {
-    if (fEnableIllumRandomEnergyCmd   ->GetNewDoubleValue(par)){
+    if (fEnableIllumRandomEnergyCmd   ->GetNewBoolValue(par)){
       fBeamParameters->IlluminationRandomEnergyEnable();
     } else {
       fBeamParameters->IlluminationRandomEnergyDisable();

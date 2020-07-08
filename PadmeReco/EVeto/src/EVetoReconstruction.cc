@@ -37,10 +37,12 @@ void EVetoReconstruction::HistoInit(){
   AddHisto("EVetoOccupancy",new TH1F("EVetoOccupancy","EVeto Occupancy",100,0.0,100.0));
   AddHisto("EVetoEnergy",new TH1F("EVetoEnergy","EVeto Energy",1200,0.0,12.0));
   AddHisto("EVetoEnergyClean",new TH1F("EVetoEnergyClean","EVeto Energy",2000,0.0,.4));
-  AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,0.0,400.0));
+  //AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,0.0,400.0));
+  AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,-150.0,250.0));
   AddHisto("EVetoTimeVsChannelID",new TH2F("EVetoTimeVsChannelID","EVeto Time vs Ch. ID",100,0,100,100,0.0,400.0));
   AddHisto("EVetoHitTimeDifference",new TH1F("EVetoHitTimeDifference","Difference in time",400,-100.,100.));
-  AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,0.0,400.0, 400,0.0,400.0));
+  //AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,0.0,400.0, 400,0.0,400.0));
+  AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,-150.0,250.0, 400,-150.0,250.0));
 
   char name[256];
 

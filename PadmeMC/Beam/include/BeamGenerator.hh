@@ -68,6 +68,7 @@ private:
   void CreateFinalStateThreeGamma();
   void CreateFinalStateTwoGamma();
   void GenerateCalibrationGamma();
+  void GenerateIlluminationParticle();
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );
 

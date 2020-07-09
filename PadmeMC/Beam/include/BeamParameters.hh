@@ -129,9 +129,11 @@ public:
 
   void IlluminationRunEnable() {fIlluminationRun = true;}
   void IlluminationRunDisable() {fIlluminationRun = false;}
+  G4bool  IlluminationRun(){return fIlluminationRun;}
 
   void IlluminationRandomEnergyEnable(){fIllumRandomEnergy = true;}
   void IlluminationRandomEnergyDisable(){fIllumRandomEnergy = false;}
+  G4bool IlluminationRandomEnergy() {return fIllumRandomEnergy;}
 
   G4double GetIllumRunEnergy(){return fIllumRunEnergy;}
   void SetIllumRunEnergy(G4double x){fIllumRunEnergy = x;}

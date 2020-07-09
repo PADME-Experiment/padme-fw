@@ -76,6 +76,15 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     return;
   }
 
+  if (bpar->IlluminationRun()) {
+    G4int nTotIllum = bpar->GetNIllumPartPerBunch();
+    bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
+    for(int iIllum = 0; iIllum < nTotIllum; iIllum++) {
+      GenerateIlluminationParticle();
+    }
+    return;
+  }
+  
   // Main positron beam origin is set to 1 um before the front face of the Target
   //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
 
@@ -655,6 +664,58 @@ void BeamGenerator::GenerateCalibrationGamma()
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);
 
+}
+
+void BeamGenerator::GenerateIlluminationParticle() {
+  BeamParameters* bpar = BeamParameters::GetInstance();
+  
+  // Create primary vertex at center of back face of target with t=0.
+  G4double vT = 0.*ns;
+  G4double vX = 0.*cm;
+  G4double vY = 0.*cm;
+  G4double vZ = bpar->GetBeamCenterPosZ();
+  G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(vX,vY,vZ),vT);
+
+  G4double E = bpar->GetIllumRunEnergy();
+  
+  if (bpar->IlluminationRandomEnergy()) {
+    G4double minE = bpar->GetIllumRunMinEnergy();
+    G4double maxE = bpar->GetIllumRunMaxEnergy();
+    //Please note that the energy is uniform!
+    //This is not true for the real events... 
+    E = minE + G4UniformRand()*(maxE - minE);
+  }
+  
+  G4double minR = bpar->GetIllumRunMinRadius();
+  G4double maxR = bpar->GetIllumRunMaxRadius();
+
+  G4double minR2 = minR*minR;
+  G4double maxR2 = maxR*maxR;
+  
+  G4double pZ = fDetector->GetECalFrontFaceZ();
+  G4double pX = 0.; //EcalFrontFaceX = 0?
+  G4double pY = 0.; //EcalFrontFaceX = 0?
+  G4double pR2 = 0.;
+  do {
+    pX = maxR * G4UniformRand();
+    pY = maxR * G4UniformRand();
+    
+    pR2 = pX * pX + pY * pY;
+  } while (pR2 < minR2 || pR2 > maxR2);
+
+
+
+  
+
+  G4ThreeVector vp = G4ThreeVector(pX-vX,pY-vY,pZ-vZ).unit();
+  
+  G4PrimaryParticle* particle = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
+						      E*vp.x(),E*vp.y(),E*vp.z(),E);
+						      
+  vtx->SetPrimary(particle);
+  fEvent->AddPrimaryVertex(vtx);
+
+  return;
 }
 
 G4double BeamGenerator::GetGammaAngle(G4ThreeVector gammaDir,G4ThreeVector beamDir)

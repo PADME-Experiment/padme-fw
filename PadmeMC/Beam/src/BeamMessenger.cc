@@ -235,7 +235,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fEnableIllumRandomEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   
-  fSetIllumRunEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumRunEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_energy",this);
   fSetIllumRunEnergyCmd -> SetGuidance("Set run energy of illumination gamma.");
   fSetIllumRunEnergyCmd -> SetParameterName("IlGE",false);
   fSetIllumRunEnergyCmd -> SetDefaultUnit("MeV");
@@ -244,7 +244,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 
 
   
-  fSetIllumMinEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMinEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_min_energy",this);
   fSetIllumMinEnergyCmd -> SetGuidance("Set miminal energy of illumination gamma.");
   fSetIllumMinEnergyCmd -> SetParameterName("IlGEmin",false);
   fSetIllumMinEnergyCmd -> SetDefaultUnit("MeV");
@@ -252,7 +252,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetIllumMinEnergyCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
 
   
-  fSetIllumMaxEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMaxEnergyCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_max_energy",this);
   fSetIllumMaxEnergyCmd -> SetGuidance("Set maximal energy of illumination gamma.");
   fSetIllumMaxEnergyCmd -> SetParameterName("IlGEmax",false);
   fSetIllumMaxEnergyCmd -> SetDefaultUnit("MeV");
@@ -260,7 +260,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetIllumMaxEnergyCmd -> AvailableForStates(G4State_PreInit,G4State_Idle);
 
   
-  fSetIllumMinRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMinRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_min_radius",this);
   fSetIllumMinRadiusCmd -> SetGuidance("Set minimal radius of the impact point of the gamma(s) in the ECal ");
   fSetIllumMinRadiusCmd -> SetParameterName("IlRmin",false);
   fSetIllumMinRadiusCmd -> SetDefaultUnit("cm");
@@ -269,7 +269,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 
 
   
-  fSetIllumMaxRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_",this);
+  fSetIllumMaxRadiusCmd      = new G4UIcmdWithADoubleAndUnit("/beam/illum_max_radius",this);
   fSetIllumMaxRadiusCmd -> SetGuidance("Set maximal radius of the impact point of the gamma(s) in the ECal ");
   fSetIllumMaxRadiusCmd -> SetParameterName("IlRmax",false);
   fSetIllumMaxRadiusCmd -> SetDefaultUnit("cm");

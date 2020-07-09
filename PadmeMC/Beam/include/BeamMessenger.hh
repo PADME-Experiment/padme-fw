@@ -89,7 +89,8 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetIllumMinRadiusCmd;      	  
   G4UIcmdWithADoubleAndUnit* fSetIllumMaxRadiusCmd;        	  
   G4UIcmdWithAnInteger*      fSetNIllumPartPerBunchCmd;       
-
+  G4UIcmdWithAnInteger*      fSetIllumRunEnergyModel;
+  G4UIcmdWithAnInteger*      fSetIllumRunRadiusModel;
 
 
 

@@ -154,6 +154,13 @@ public:
   void SetNIllumPartPerBunch(G4int n) { fNIllumPartPerBunch  = n;    }
 
   
+  G4int GetIllumRunEnergyModel(){return fIllumRunEnergyModel;}
+  void SetIllumRunEnergyModel(G4int x){fIllumRunEnergyModel = x;}
+
+  G4int GetIllumRunRadiusModel(){return fIllumRunRadiusModel;}
+  void SetIllumRunRadiusModel(G4int x){fIllumRunRadiusModel = x;}
+
+  
 
 private:
 
@@ -222,7 +229,8 @@ private:
   G4double fIllumRunMinRadius; //Min Radius at ECal
   G4double fIllumRunMaxRadius; //Max Radius at ECal
   G4int  fNIllumPartPerBunch; //Number of particles per bunch
-
+  G4int fIllumRunEnergyModel; //Distribution model for the energy
+  G4int fIllumRunRadiusModel; //Distribution model for the radius
 
 };
 #endif

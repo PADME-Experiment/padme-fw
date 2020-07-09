@@ -257,7 +257,10 @@
 #/beam/illum_min_radius 12. cm
 #/beam/illum_max_radius 25. cm
 #/beam/n_illum_part_per_bunch 2
-
+#Illumination model for energy: 0 - constant; 1 - uniform
+#/beam/illum_e_model  1
+#Model for the position: 0 - surface uniform A/R; 1 - surface uniform; 2 - radius uniform
+#/beam/illum_r_model 0
 
 # Create detectors and initialize run
 /run/initialize

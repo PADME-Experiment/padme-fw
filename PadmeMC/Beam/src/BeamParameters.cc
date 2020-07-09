@@ -73,10 +73,13 @@ BeamParameters::BeamParameters()
   fIlluminationRun = false;
   fIllumRandomEnergy = false;
   fIllumRunEnergy = 50.*MeV;
+  fIllumRunEnergyModel = 1;
+  
   fIllumRunMinEnergy = 50.*MeV;
   fIllumRunMaxEnergy = 300.*MeV;
   fIllumRunMinRadius = 14.*cm;
   fIllumRunMinRadius = 25.*cm;
+  fIllumRunRadiusModel = 1;
   fNIllumPartPerBunch = 1;
 
 }

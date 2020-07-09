@@ -283,6 +283,20 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetNIllumPartPerBunchCmd->SetRange("IlNP >= 0 && IlNP <= 10");
   fSetNIllumPartPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetIllumRunEnergyModel  = new G4UIcmdWithAnInteger("/beam/illum_e_model",this);;   
+  fSetIllumRunEnergyModel->SetGuidance("Model for the energy distribution of the particles");
+  fSetIllumRunEnergyModel->SetParameterName("IlEM",false);
+  fSetIllumRunEnergyModel->SetRange("IlEM >= 0 && IlEM <= 10");
+  fSetIllumRunEnergyModel->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
+  fSetIllumRunRadiusModel  = new G4UIcmdWithAnInteger("/beam/illum_r_model",this);;   
+  fSetIllumRunRadiusModel->SetGuidance("Model for the radius distribution of the particles");
+  fSetIllumRunRadiusModel->SetParameterName("IlRM",false);
+  fSetIllumRunRadiusModel->SetRange("IlRM >= 0 && IlRM <= 10");
+  fSetIllumRunRadiusModel->AvailableForStates(G4State_PreInit,G4State_Idle);
+ 
+  
 }
 
 BeamMessenger::~BeamMessenger()
@@ -335,8 +349,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetIllumMinRadiusCmd;	  
   delete fSetIllumMaxRadiusCmd;	  
   delete fSetNIllumPartPerBunchCmd;   
-
-  
+  delete fSetIllumRunEnergyModel;
+  delete fSetIllumRunRadiusModel;
 
   delete fBeamGeneratorDir;
 
@@ -488,6 +502,8 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if (cmd == fSetIllumMinRadiusCmd         ) fBeamParameters->SetIllumRunMinRadius  (fSetIllumMinRadiusCmd         ->GetNewDoubleValue(par));
   else if (cmd == fSetIllumMaxRadiusCmd         ) fBeamParameters->SetIllumRunMaxRadius  (fSetIllumMaxRadiusCmd         ->GetNewDoubleValue(par));
   else if (cmd == fSetNIllumPartPerBunchCmd     ) fBeamParameters->SetNIllumPartPerBunch (fSetNIllumPartPerBunchCmd     ->GetNewIntValue(par));
+  else if (cmd == fSetIllumRunEnergyModel     ) fBeamParameters->SetNIllumPartPerBunch (fSetIllumRunEnergyModel     ->GetNewIntValue(par));
+  else if (cmd == fSetIllumRunRadiusModel     ) fBeamParameters->SetNIllumPartPerBunch (fSetIllumRunRadiusModel     ->GetNewIntValue(par));
 
 
 
@@ -597,6 +613,8 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if (cmd == fSetIllumMinRadiusCmd         ) cv = fSetIllumMinRadiusCmd    ->ConvertToString( fBeamParameters->GetIllumRunMinRadius  ());
   else if (cmd == fSetIllumMaxRadiusCmd         ) cv = fSetIllumMaxRadiusCmd    ->ConvertToString( fBeamParameters->GetIllumRunMaxRadius  ());
   else if (cmd == fSetNIllumPartPerBunchCmd     ) cv = fSetNIllumPartPerBunchCmd->ConvertToString( fBeamParameters->GetNIllumPartPerBunch ());
+  else if (cmd == fSetIllumRunEnergyModel     ) cv = fSetIllumRunEnergyModel->ConvertToString( fBeamParameters->GetNIllumPartPerBunch ());
+  else if (cmd == fSetIllumRunRadiusModel     ) cv = fSetIllumRunRadiusModel->ConvertToString( fBeamParameters->GetNIllumPartPerBunch ());
 
   
 

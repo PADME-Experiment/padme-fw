@@ -682,8 +682,18 @@ void BeamGenerator::GenerateIlluminationParticle() {
     G4double minE = bpar->GetIllumRunMinEnergy();
     G4double maxE = bpar->GetIllumRunMaxEnergy();
     //Please note that the energy is uniform!
-    //This is not true for the real events... 
-    E = minE + G4UniformRand()*(maxE - minE);
+    //This is not true for the real events...
+    switch (bpar->GetIllumRunEnergyModel()) {
+    case 0: //Constant energy
+       E = bpar->GetIllumRunEnergy();
+      break;
+    case 1: //Uniform energy within an interval
+      E = minE + G4UniformRand()*(maxE - minE);
+      break;
+      
+    default:
+      break;
+    }
   }
   
   G4double minR = bpar->GetIllumRunMinRadius();
@@ -691,43 +701,48 @@ void BeamGenerator::GenerateIlluminationParticle() {
 
   G4double minR2 = minR*minR;
   G4double maxR2 = maxR*maxR;
+  G4double R2ratio = minR2/maxR2;
   
   G4double pZ = fDetector->GetECalFrontFaceZ();
   G4double pX = 0.; //EcalFrontFaceX = 0?
   G4double pY = 0.; //EcalFrontFaceX = 0?
   G4double pR2 = 0.;
   G4double pR = 0.;
-  
-  // First method - uniform in a square and acceptance/rejection.
-  do {
-    pX = maxR * G4UniformRand();
-    pY = maxR * G4UniformRand();
+
+  G4double th = 0.;
+
+  switch (bpar->GetIllumRunRadiusModel()) {
     
-    pR2 = pX * pX + pY * pY;
-  } while (pR2 < minR2 || pR2 > maxR2); //Efficiency = 0.785 *(1. - minR2/maxR2); usually > 50%
+  case 0:  // First method - uniform in a square and acceptance/rejection.
+    do {
+      pX = maxR * G4UniformRand();
+      pY = maxR * G4UniformRand();
+      pR2 = pX * pX + pY * pY;
+    } while (pR2 < minR2 || pR2 > maxR2); //Efficiency = 0.785 *(1. - minR2/maxR2); usually > 50%
+    break;
+    
+  case 1:    // Again uniform on the front surface
+    th = 2.*pi*G4UniformRand();
+    pR = maxR*sqrt(R2ratio + G4UniformRand() *(1. - R2ratio));
+    pX = pR*cos(th);
+    pY = pR*sin(th);
+    break;
 
-  if (0) {
-  //Second option
-  //Note, this is not uniform on the plane! The surface density goes as 1/R
-  G4double th = 2.*pi*G4UniformRand();
-  pR = minR + G4UniformRand()*(maxR - minR); //Other distributions also possible
+  case 2:    //Note, this is not uniform on the plane! The surface density goes as 1/R
+    th = 2.*pi*G4UniformRand();
+    pR = minR + G4UniformRand()*(maxR - minR); //Other distributions also possible
+    pX = pR*cos(th);
+    pY = pR*sin(th);
+    break;
 
-  //Third option:
-  // Again uniform on the front surface
-  do {
-    pR = maxR*sqrt(G4UniformRand());
-  } while (pR < minR);
-
-
-  pX = pR*cos(th);
-  pY = pR*sin(th);
-  
+  default:
+    G4cout << "Unknown illumination  radius model" << G4endl;
+    break; 
   }
 
   G4ThreeVector vp = G4ThreeVector(pX-vX,pY-vY,pZ-vZ).unit();
   
-  G4PrimaryParticle* particle = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
-						      E*vp.x(),E*vp.y(),E*vp.z(),E);
+  G4PrimaryParticle* particle = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"), E*vp.x(),E*vp.y(),E*vp.z(),E);
 						      
   vtx->SetPrimary(particle);
   fEvent->AddPrimaryVertex(vtx);

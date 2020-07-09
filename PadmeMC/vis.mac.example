@@ -248,6 +248,17 @@
 #/beam/calib_y 14. cm
 #/beam/calib_radius 1. cm
 
+# Illumination run setup: two photons with random energy in the ECal
+#/beam/illumination true
+#/beam/illum_random_e true
+#/beam/illum_energy 50. MeV
+#/beam/illum_min_energy 50. MeV
+#/beam/illum_max_energy 350. MeV
+#/beam/illum_min_radius 12. cm
+#/beam/illum_max_radius 25. cm
+#/beam/n_illum_part_per_bunch 2
+
+
 # Create detectors and initialize run
 /run/initialize
 

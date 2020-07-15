@@ -19,6 +19,9 @@ CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
 
+CPPFLAGS     += $(shell mysql_config --cflags)
+LDFLAGS      += $(shell mysql_config --libs)
+
 #LDFLAGS      += -L$(NA62MCSOURCE)/Persistency/lib -lNA62Persistency \
 #                -L$(NA62MCSOURCE)/$(NAME)/Persistency/lib -l$(NAME)Persistency
 

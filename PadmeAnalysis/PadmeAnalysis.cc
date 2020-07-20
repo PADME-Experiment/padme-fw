@@ -141,7 +141,7 @@ int main(Int_t argc, char **argv)
 	nv++;
 	fVerbose = (Int_t)TString(optarg).Atoi();
 	break;
-      case 'm':
+      case 'm': //DataQuality
 	nval++;
 	fProcessingMode = (Int_t)TString(optarg).Atoi();
 	break;

@@ -259,8 +259,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //  if(fTrigMask!=2) return -1.;  //tengo solo cosmici
   //  std::cout<<"fTrigMask dopo " <<fTrigMask<<std::endl;
 
-  //fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
-  fAvg80 = TMath::Mean(&fSamples[600],&fSamples[800]); //cosmic pedestal!
+  fAvg80 = TMath::Mean(80,&fSamples[0]); // check the number of samples used depending on trigger offsets.
+  //fAvg80 = TMath::Mean(&fSamples[600],&fSamples[800]); //cosmic pedestal!
 
 
   char name[50];
@@ -367,8 +367,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	{
 	Hit->SetTime(fTime);
 	//Hit->SetEnergy(fCharge);    // need to add hit status 
-	Hit->SetEnergy(VMax);    // need to add hit status 
-	//Hit->SetEnergy(fEnergy);               // this should fill energy histograms with signal amplitude
+	//Hit->SetEnergy(VMax);    // need to add hit status 
+	Hit->SetEnergy(fEnergy);               // this should fill energy histograms with signal amplitude
 	hitArray.push_back(Hit);
       }else{
 	//	fileOut->cd();

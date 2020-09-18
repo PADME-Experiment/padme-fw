@@ -304,6 +304,15 @@ private:
   TH1F *hNsat_TwoRecognise;
   TH2F *hTemplateVsMaxVSEnergy;
   TH2F *hTemplateVMaxVSEnergy_;
+  TH2F *hDiffRMSVSEnergyTemplate;
+  TH1F *hDiffWavetemplate_0_10;
+ TH1F *hDiffWavetemplate_10_30;
+ TH1F *hDiffWavetemplate_30_50;
+ TH1F *hDiffWavetemplate_50_100;
+ TH1F *hDiffWavetemplate_100_150;
+ TH1F *hDiffWavetemplate_150_200;
+ TH1F *hDiffWavetemplate_200_250;
+ TH1F *hDiffWavetemplate_250_300;
 
   TH1F *hECALfirsthitEnergyCorrected;
   TH1F *hECALsecondhitEnergyCorrected;
@@ -319,6 +328,7 @@ private:
   TH1D* histo4;
   TH1D* histo5;
   Int_t fCountEvent;
+  Int_t fCountSavedEvent;
   Int_t fCountEventControl;
 
   Double_t fAmplitude;

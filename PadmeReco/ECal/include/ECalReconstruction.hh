@@ -36,6 +36,7 @@ public:
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
   virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
+  virtual void ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
@@ -65,6 +66,8 @@ private:
   TH1F *hSAC_HitTime;
   TH1F *hCumulative;
   Double_t fComulativeMax;
+  Double_t fTimeMin;
+  Double_t fTimeMax;
 
   //Clusters vectors
   std::vector<double> ClE;

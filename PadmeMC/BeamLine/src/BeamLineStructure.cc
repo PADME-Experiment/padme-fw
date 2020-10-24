@@ -39,6 +39,7 @@
 
 #include "G4SDManager.hh" // 29/04/2019 M. Raggi
 #include "BeWSD.hh"       // 29/04/2019 M. Raggi
+#include "BeamFlagSD.hh"       // 29/08/2019 M. Raggi
 
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
 #include "QuadSetup.hh" // M. Raggi 10/04/2019
@@ -111,6 +112,9 @@ void BeamLineStructure::CreateBeThinWindow()
   // Be thin window
   G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_Be"),"logicalBeWin",0,0,0);
+  
+//  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*40*um,0.*deg,360.*deg);
+//  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_MYLAR"),"logicalBeWin",0,0,0);
   logicalBeWin->SetVisAttributes(BeVisAttr);
 
   // Support flange for Be thin window
@@ -121,9 +125,10 @@ void BeamLineStructure::CreateBeThinWindow()
   // Position Be window and its flange inside top volume
   // Shift Be window so that its entry face is at center of support flange
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeWinFlange,"BeamLineBeWinFlange",fBeWindowVolume,false,0,true);
+
+
   if ( geo->BeWindowIsEnabled() ) {
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*beWinT),logicalBeWin,"BeamLineBeWindow",fBeWindowVolume,false,0,true);
-    
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*beWinT),logicalBeWin,"BeamLineBeWindow",fBeWindowVolume,false,0,true);    
     // The Be window is a sensitive detector
     G4String BeWSDName = geo->GetBeWSensitiveDetectorName();
     printf("Registering BeW SD %s\n",BeWSDName.data());
@@ -131,7 +136,7 @@ void BeamLineStructure::CreateBeThinWindow()
     fBeWindowVolume->SetSensitiveDetector(beWSD);
     G4SDManager::GetSDMpointer()->AddNewDetector(beWSD);
   }
-  
+
 }
 
 void BeamLineStructure::CreateDHSTB002Magnet()
@@ -213,8 +218,10 @@ void BeamLineStructure::CreateBeamLine()
 
   // Create all pipes along the beam line from the Be window to the Target junction
 
+  BeamFlagSD* beamFlagSD;
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
+  G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
   // Angular span of the DHSTB002 magnet (45 deg)
@@ -328,6 +335,92 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector strFrontPos = G4ThreeVector(strFrontPosX,0.,strFrontPosZ);
   new G4PVPlacement(strFrontRot,strFrontPos,logicalStraightPipe,"DHSTB002FlangeFront",fMotherVolume,false,0,true);
 
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
+  // Flag 2 after the DHSTB002 output pipe
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double FlagR = geo->GetBeWindowRadius()-15*um; //Use the same of the BeW
+  G4double FlagT = geo->GetBeWindowThick();  //Use the same of the BeW
+
+  G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX();
+  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2;
+  G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
+
+  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR,0.5*FlagT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag2",0,0,0);
+  logicalBeamFlag2->SetVisAttributes(FlagVisAttr);
+  
+  if ( geo->BeamFlagIsEnabled() ) {
+    //   printf("Registering Flag2 %b\n",geo->BeamFlagIsEnabled());
+    new G4PVPlacement(strFrontRot,FlagFrontPos,logicalBeamFlag2,"BeamLineBeamFlag2",fMotherVolume,false,0,true);    
+    G4String BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
+    printf("Registering Flag2 SD %s\n",BeamFlag2SDName.data());
+    beamFlagSD = new BeamFlagSD(BeamFlag2SDName);
+    logicalBeamFlag2->SetSensitiveDetector(beamFlagSD);
+    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
+  }
+  // end of test
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
+  // Flag 3 just before the target
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double Flag3R = 44.5*mm; // 99mm diameter
+  G4double Flag3T = 50*um;  //Use the same of the BeW
+
+  G4double      Flag3FrontPosX = 0.;
+  G4double      Flag3FrontPosZ = -1039*mm;
+  G4ThreeVector Flag3FrontPos = G4ThreeVector(Flag3FrontPosX,0.,Flag3FrontPosZ);
+
+  G4Tubs* solidBeamFlag3 = new G4Tubs("solidBeamFlag3",0.,Flag3R,0.5*Flag3T,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag3 = new G4LogicalVolume(solidBeamFlag3,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag3",0,0,0);
+  logicalBeamFlag3->SetVisAttributes(FlagVisAttr);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 5 just before the target M. Raggi 23/09/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      Flag5FrontPosX = 0.;
+  G4double      Flag5FrontPosZ = -490.0*mm-Flag3T*0.5;
+  G4ThreeVector Flag5FrontPos = G4ThreeVector(Flag5FrontPosX,0.,Flag5FrontPosZ);
+
+  G4Tubs* solidBeamFlag5 = new G4Tubs("solidBeamFlag5",0.,Flag3R,0.5*Flag3T,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag5 = new G4LogicalVolume(solidBeamFlag5,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag5",0,0,0);
+  logicalBeamFlag5->SetVisAttributes(FlagVisAttr);
+
+
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 6 just before TimePix M. Raggi 30/09/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      Flag6FrontPosX = 746.1; //from TPix positioning
+  G4double      Flag6FrontPosZ = 2250.6*mm-Flag3T*0.5; //from TPix positioning
+  G4ThreeVector Flag6FrontPos = G4ThreeVector(Flag6FrontPosX,0.,Flag6FrontPosZ);
+
+  G4RotationMatrix* rotTPix = new G4RotationMatrix;
+  rotTPix->rotateY(-0.314159); //from chamber geometry
+
+  G4Box* solidBeamFlag6 =  new G4Box("solidBeamFlag6",15*cm,10*cm,0.5*1*mm);
+  G4LogicalVolume* logicalBeamFlag6 = new G4LogicalVolume(solidBeamFlag6,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag6",0,0,0);
+  logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
+
+  //  printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
+  if ( geo->BeamFlagIsEnabled() ) {
+    //   printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
+    new G4PVPlacement(strFrontRot,Flag3FrontPos,logicalBeamFlag3,"BeamLineBeamFlag3",fMotherVolume,false,0,true);    
+    logicalBeamFlag3->SetSensitiveDetector(beamFlagSD);
+
+    new G4PVPlacement(strFrontRot,Flag5FrontPos,logicalBeamFlag5,"BeamLineBeamFlag5",fMotherVolume,false,0,true);    
+    logicalBeamFlag5->SetSensitiveDetector(beamFlagSD);
+
+    new G4PVPlacement(rotTPix,Flag6FrontPos,logicalBeamFlag6,"BeamLineBeamFlag6",fMotherVolume,false,0,true);    
+    logicalBeamFlag6->SetSensitiveDetector(beamFlagSD);
+  }
+  // end of test
+
   // Position back straight section
   G4double strBackPosX = geo->GetMagPipeStraightBackPosX();
   G4double strBackPosZ = geo->GetMagPipeStraightBackPosZ();
@@ -387,6 +480,29 @@ void BeamLineStructure::CreateBeamLine()
   G4RotationMatrix* beJunMgRot = new G4RotationMatrix;
   beJunMgRot->rotateY(magnetAngle);
   new G4PVPlacement(beJunMgRot,beJunMgPos,logicalBeJunction,"BeamLineMagnetJunction",fMotherVolume,false,0,true);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      FlagBackPosX = mpEntPosX;
+  G4double      FlagBackPosY = mpEntPosY;
+  G4double      FlagBackPosZ = mpEntPosZ;
+  G4ThreeVector FlagBackPos  = G4ThreeVector(FlagBackPosX,FlagBackPosY,FlagBackPosZ);
+
+  G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn()-150*um,0.5*FlagT,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag1",0,0,0);
+  logicalBeamFlag1->SetVisAttributes(FlagVisAttr);
+
+  if ( geo->BeamFlagIsEnabled() ) {
+    new G4PVPlacement(strBackRot,FlagBackPos,logicalBeamFlag1,"BeamLineBeamFlag1",fMotherVolume,false,0,true);    
+    //G4String BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
+    //  printf("Registering BeW SD %s\n",BeamFlag2SDName.data());
+    //  BeamFlagSD* bfdsSD = new BeamFlagSD(BeamFlag2SDName);
+    logicalBeamFlag1->SetSensitiveDetector(beamFlagSD);
+    //  G4SDManager::GetSDMpointer()->AddNewDetector(bfdsSD);
+  }
+  // end of test
 
   // Create long pipe between magnet pipe and Be flange
   G4double bePipeLen = geo->GetBePipeLength();
@@ -477,6 +593,24 @@ void BeamLineStructure::CreateBeamLine()
   new G4PVPlacement(beWinFlgRot,beWin2FlgPos,fBeWindowVolume,"BeamLineExitBeWinVolume",fMotherVolume,false,0,true);
 
   printf("BeamLine - Be window exit face center is at (%.2f,%.2f,%.2f) mm\n",beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Beam Flag to monitor beam in different locations M. Raggi 06/09/2019
+  // Flag 4 on the strait DHSTB002 exit section
+  ///////////////////////////////////////////////////////////////////////
+
+  G4double      Flag4FrontPosX = mpEntPosX-(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*sin(magnetAngle);; 
+  G4double      Flag4FrontPosZ = mpEntPosZ+(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*cos(magnetAngle);
+  G4ThreeVector Flag4FrontPos  = G4ThreeVector(Flag4FrontPosX,beWin2FlgPosY,Flag4FrontPosZ);
+
+  G4Tubs* solidBeamFlag4 = new G4Tubs("solidBeamFlag4",0.,30.*mm,0.1*mm,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag4 = new G4LogicalVolume(solidBeamFlag4,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag4",0,0,0);
+  logicalBeamFlag4->SetVisAttributes(FlagVisAttr);
+  
+  if ( geo->BeamFlagIsEnabled() ) {
+    new G4PVPlacement(strSideRot,Flag4FrontPos,logicalBeamFlag4,"BeamLineBeamFlag4",fMotherVolume,false,0,true);    
+    logicalBeamFlag4->SetSensitiveDetector(beamFlagSD);
+  }
 
   if ( geo->QuadrupolesAreEnabled() ) {
 

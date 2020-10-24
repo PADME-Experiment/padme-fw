@@ -58,12 +58,15 @@ public:
 
   void EnableSubDetector(G4String);
   void DisableSubDetector(G4String);
+  G4bool IsSubDetectorEnabled(G4String);
 
   void EnableStructure(G4String);
   void DisableStructure(G4String);
+  G4bool IsStructureEnabled(G4String);
 
   void EnableMagneticField();
   void DisableMagneticField();
+  G4bool IsMagneticFieldEnabled();
 
   void SetCrossMagneticVolume(G4String);
 

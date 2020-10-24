@@ -97,6 +97,9 @@ public:
   // Set position along Z of PVeto front face
   void SetPVetoFrontFacePosZ(G4double z) { fPVetoFrontFacePosZ = z; }
 
+  // Get name of PVeto digitizer
+  G4String GetPVetoDigitizerName() { return fPVetoDigitizerName; }
+
   // Get name of PVeto sensitive detector
   G4String GetPVetoSensitiveDetectorName() { return fPVetoSensitiveDetectorName; }
 
@@ -127,6 +130,7 @@ private:
   G4double fPVetoInnerFacePosX; // Position along X axis of PVeto inner face (i.e. inner face of support)
   G4double fPVetoFrontFacePosZ; // Position along Z axis of PVeto front face (i.e. front face of support)
 
+  G4String fPVetoDigitizerName;
   G4String fPVetoSensitiveDetectorName;
 
 };

@@ -50,6 +50,7 @@ SACGeometry::SACGeometry()
   fDigiPMTTransitTime = 9.1*ns; // Hamamatsu R13478 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
+  fSACDigitizerName = "SACDigitizer";
   fSACSensitiveDetectorName = "SACSD";
 
 }

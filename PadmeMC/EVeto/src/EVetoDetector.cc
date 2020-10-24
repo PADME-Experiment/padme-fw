@@ -13,11 +13,13 @@
 #include "G4Box.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
 #include "EVetoGeometry.hh"
 #include "EVetoSD.hh"
+#include "EVetoDigitizer.hh"
 
 EVetoDetector::EVetoDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -71,14 +73,6 @@ void EVetoDetector::CreateGeometry()
 
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_POLYSTYRENE"),"EVetoFingerLogic",0,0,0);
   fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
- 
-  // Make finger a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String eVetoSDName = geo->GetEVetoSensitiveDetectorName();
-  printf("Registering EVeto SD %s\n",eVetoSDName.data());
-  EVetoSD* eVetoSD = new EVetoSD(eVetoSDName);
-  sdMan->AddNewDetector(eVetoSD);
-  fFingerVolume->SetSensitiveDetector(eVetoSD);
 
   // Get number of fingers and position them
   G4int nFingers = geo->GetEVetoNFingers();
@@ -102,5 +96,20 @@ void EVetoDetector::CreateGeometry()
 
   G4ThreeVector suppDPos = G4ThreeVector(geo->GetSupportDPosX(),geo->GetSupportDPosY(),geo->GetSupportDPosZ());
   new G4PVPlacement(0,suppDPos,logicSupport,"EVetoSupportD",fEVetoVolume,false,0,true);
+ 
+  // Create digitizer for EVeto
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String evetoDName = geo->GetEVetoDigitizerName();
+  printf("Registering EVeto Digitizer %s\n",evetoDName.data());
+  EVetoDigitizer* evetoD = new EVetoDigitizer(evetoDName);
+  theDM->AddNewModule(evetoD);
+
+  // Make finger a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String eVetoSDName = geo->GetEVetoSensitiveDetectorName();
+  printf("Registering EVeto Sensitive Detector %s\n",eVetoSDName.data());
+  EVetoSD* eVetoSD = new EVetoSD(eVetoSDName);
+  sdMan->AddNewDetector(eVetoSD);
+  fFingerVolume->SetSensitiveDetector(eVetoSD);
 
 }

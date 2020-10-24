@@ -55,7 +55,7 @@ private:
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
   Int_t fDeteriorateEnergyResolution;
-
+  Int_t fIsMC;
   TRandom2 *r;
 
   //Clusters vectors

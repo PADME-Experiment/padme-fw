@@ -770,7 +770,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
     // Correct the cluster energy for missing energy
     if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
-    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+    if(fIsMC && fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
       Double_t sigma=EnergyResolution(ClE[iCl]);
       Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
       //std::cout << DetEnergy << std::endl;
@@ -818,6 +818,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
+  fIsMC=true;
   if (tEvent==NULL) return;
   fHits.clear();
 

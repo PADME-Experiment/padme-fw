@@ -12,12 +12,14 @@
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
 #include "SACMessenger.hh"
 #include "SACGeometry.hh"
 #include "SACSD.hh"
+#include "SACDigitizer.hh"
 
 SACDetector::SACDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -67,14 +69,6 @@ void SACDetector::CreateGeometry()
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("PbF2"),"SACCry",0,0,0);
   fCrystalVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 
-  // Make crystal a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String sacSDName = geo->GetSACSensitiveDetectorName();
-  printf("Registering SAC SD %s\n",sacSDName.data());
-  SACSD* sacSD = new SACSD(sacSDName);
-  sdMan->AddNewDetector(sacSD);
-  fCrystalVolume->SetSensitiveDetector(sacSD);
-
   // Create SAC cell (PbF2 crystal+coating)
   G4double cellSizeX = geo->GetCellSizeX();
   G4double cellSizeY = geo->GetCellSizeY();
@@ -99,5 +93,20 @@ void SACDetector::CreateGeometry()
       }
     }
   }
+
+  // Create digitizer for SAC
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String sacDName = geo->GetSACDigitizerName();
+  printf("Registering SAC Digitizer %s\n",sacDName.data());
+  SACDigitizer* sacD = new SACDigitizer(sacDName);
+  theDM->AddNewModule(sacD);
+
+  // Make crystal a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String sacSDName = geo->GetSACSensitiveDetectorName();
+  printf("Registering SAC SD %s\n",sacSDName.data());
+  SACSD* sacSD = new SACSD(sacSDName);
+  sdMan->AddNewDetector(sacSD);
+  fCrystalVolume->SetSensitiveDetector(sacSD);
 
 }

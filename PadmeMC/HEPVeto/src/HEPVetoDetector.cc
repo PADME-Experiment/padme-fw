@@ -12,12 +12,14 @@
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 #include "G4SubtractionSolid.hh"
 
 #include "HEPVetoGeometry.hh"
 #include "HEPVetoSD.hh"
+#include "HEPVetoDigitizer.hh"
 
 HEPVetoDetector::HEPVetoDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -79,14 +81,6 @@ void HEPVetoDetector::CreateGeometry()
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_POLYSTYRENE"),"HEPVetoFingerLogic",0,0,0);
   fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
-  // Make finger a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String hepVetoSDName = geo->GetHEPVetoSensitiveDetectorName();
-  printf("Registering HEPVeto SD %s\n",hepVetoSDName.data());
-  HEPVetoSD* hepVetoSD = new HEPVetoSD(hepVetoSDName);
-  sdMan->AddNewDetector(hepVetoSD);
-  fFingerVolume->SetSensitiveDetector(hepVetoSD);
-
   // Get number of fingers and position them
   G4int nFingers = geo->GetHEPVetoNFingers();
   // Added rotation accordig to positron veto M. Raggi 23/06/2018 Check with drawing!
@@ -97,5 +91,20 @@ void HEPVetoDetector::CreateGeometry()
     //  new G4PVPlacement(0,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,false);
     new G4PVPlacement(rotFinger,posFinger,fFingerVolume,"HEPVetoFinger",fHEPVetoVolume,false,fin,true);
   }
-  
+
+  // Create digitizer for HEPVeto
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String hepvetoDName = geo->GetHEPVetoDigitizerName();
+  printf("Registering HEPVeto Digitizer %s\n",hepvetoDName.data());
+  HEPVetoDigitizer* hepvetoD = new HEPVetoDigitizer(hepvetoDName);
+  theDM->AddNewModule(hepvetoD);
+
+  // Make finger a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String hepVetoSDName = geo->GetHEPVetoSensitiveDetectorName();
+  printf("Registering HEPVeto Sensitive Detector %s\n",hepVetoSDName.data());
+  HEPVetoSD* hepVetoSD = new HEPVetoSD(hepVetoSDName);
+  sdMan->AddNewDetector(hepVetoSD);
+  fFingerVolume->SetSensitiveDetector(hepVetoSD);
+
 }

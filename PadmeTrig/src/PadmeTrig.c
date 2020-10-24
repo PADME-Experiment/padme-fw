@@ -277,12 +277,19 @@ int main(int argc, char *argv[]) {
   unsigned long int old_time = 0;
   //time_t sys_time, old_sys_time;
   struct timespec clock_time, old_clock_time,clock_diff;
+  unsigned long int trig_stat[256];
+  unsigned long int trig_stat_old[256];
+  unsigned long int trig_cnts[8];
+  unsigned long int trig_diff[8];
 
   // Various timer variables
   time_t t_daqstart, t_daqstop, t_daqtotal;
   time_t t_now;
 
-  unsigned int i,p;
+  unsigned int i,j,p;
+
+  // Reset trigger statistics
+  for (i=0;i<256;i++) { trig_stat[i] = 0; trig_stat_old[i] = 0; }
 
   // Use line buffering for stdout
   setlinebuf(stdout);
@@ -758,12 +765,16 @@ int main(int argc, char *argv[]) {
 	proc_finalize(1,1,0,1,DB_STATUS_RUN_FAIL);
       }
 
+      // Get trigger mask for statistics
+      memcpy(&word,buff,8);
+      trig_stat[(unsigned char)((word & 0x0000FF0000000000) >> 40)]++;
+
       // Write trigger info to stdout once every Config->debug_scale triggers
       if (totalWriteEvents%Config->debug_scale == 0) {
 
 	//time(&sys_time);
 	clock_gettime(CLOCK_REALTIME,&clock_time);
-	memcpy(&word,buff,8);
+	//memcpy(&word,buff,8);
 	/* Trigger data packet changed with latest firmware release
 	trig_time  =                (word & 0x000000FFFFFFFFFF);
 	trig_map   = (unsigned int)((word & 0x00003F0000000000) >> 40);
@@ -777,17 +788,38 @@ int main(int argc, char *argv[]) {
 	if (totalWriteEvents == 0) {
 	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
 	} else {
+
 	  float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz: get time interval in ms
 	  //int sys_dt = sys_time-old_sys_time;
 	  //printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
 	  timespec_diff(&old_clock_time,&clock_time,&clock_diff);
 	  int dclock_ms = clock_diff.tv_sec*1000+clock_diff.tv_nsec/1000000;
 	  int dclock_us = (clock_diff.tv_nsec%1000000)/1000;
+
 	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %11.3fms %7d.%3.3dms\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,dclock_ms,dclock_us);
+
+	  for (j=0;j<8;j++) { trig_cnts[j] = 0; trig_diff[j] = 0; }
+	  for (i=0;i<256;i++) {
+	    if (trig_stat[i]) {
+	      for (j=0;j<8;j++) {
+		if (i & (1 << j)) {
+		  trig_cnts[j] += trig_stat[i];
+		  trig_diff[j] += (trig_stat[i]-trig_stat_old[i]);
+		}
+	      }
+	    }
+	  }
+	  printf("- Trig count ");
+	  for (j=0;j<8;j++) {
+	    printf("0x%2x:%ld(%fHz) ",j,trig_cnts[j],1000.*trig_diff[j]/dt);
+	  }
+	  printf("\n");
+
 	}
 	old_time = trig_time;
 	//old_sys_time = sys_time;
 	old_clock_time = clock_time;
+	for (i=0;i<256;i++) { trig_stat_old[i] = trig_stat[i]; }
       }
 	  
       // Update file counters

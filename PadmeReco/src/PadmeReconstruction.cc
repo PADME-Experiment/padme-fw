@@ -393,9 +393,14 @@ Bool_t PadmeReconstruction::NextEvent()
     // Process event to extract global information
     ProcessEvent(fRawEvent);
 
-    // Reconstruct individual detectors (but check if they exist, first!)
-    for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-      fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
+
+//    // Insert Trigger choice for the monitor MR 18/09/2020
+//    In monitor mode just shows the Physics trigger
+    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawEvent->GetEventTrigMask()==1) ){
+      // Reconstruct individual detectors (but check if they exist, first!)
+      for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+       fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
+      }
     }
 
     fNProcessedEventsInTotal++;

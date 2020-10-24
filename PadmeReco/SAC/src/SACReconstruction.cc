@@ -73,13 +73,15 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACClPos",new TH2F("SACClPos","SACClPos",400,-6,6,400,-6,6));
   AddHisto("SACVoters",new TH2F("SACVoters","SACVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("SACTime",new TH1F("SACTime","SACTime",200,0,400));
+  //AddHisto("SACTime",new TH1F("SACTime","SACTime",200,0,400));
+  AddHisto("SACTime",new TH1F("SACTime","SACTime",2000,-200,800));
   AddHisto("SACTimeCut",new TH1F("SACTimeCut","SACTimeCut",200,0,400));
   AddHisto("SACClTime",new TH1F("SACClTime","SACClTime",200,0,400));
   AddHisto("SACClTimeCut",new TH1F("SACClTimeCut","SACClTimeCut",200,0,400));
   AddHisto("SACETot",new TH1F("SACETot","SACETot",500,0,2500));
   AddHisto("SACQTot",new TH1F("SACQTot","SACQTot",500,0,2500));
-  AddHisto("SACNPart",new TH1F("SACNPart","SACNPart",200,0,200));
+  //AddHisto("SACNPart",new TH1F("SACNPart","SACNPart",200,0,200));
+  AddHisto("SACNPart",new TH1F("SACNPart","SACNPart",50,0,50000));
   AddHisto("SACNClus",new TH1F("SACNClus","SACNClus",200,0,200));
 
   AddHisto("SACDropHitE",new TH1F("SACDropHitE","SACDropHitE",500,0,50));
@@ -95,6 +97,16 @@ void SACReconstruction::HistoInit(){
   AddHisto("SACClSeedEn",new TH1F("SACClSeedEn","SACClSeedEn",550,0,550));
 
   AddHisto("SACNeig",new TH1F("SACNeig","SACNeig",9,-4.5,4.5));
+
+  AddHisto("SACVMax11",new TH1F("SACVMax11","SACVMax11",500,0,2500));
+  AddHisto("SACVMax21",new TH1F("SACVMax21","SACVMax21",500,0,2500));
+  AddHisto("SACVMax31",new TH1F("SACVMax31","SACVMax31",500,0,2500));
+  AddHisto("SACVMax12",new TH1F("SACVMax12","SACVMax12",500,0,2500));
+  AddHisto("SACVMax22",new TH1F("SACVMax22","SACVMax22",500,0,2500));
+  AddHisto("SACVMax32",new TH1F("SACVMax32","SACVMax32",500,0,2500));
+  AddHisto("SACVMax13",new TH1F("SACVMax13","SACVMax13",500,0,2500));
+  AddHisto("SACVMax23",new TH1F("SACVMax23","SACVMax23",500,0,2500));
+  AddHisto("SACVMax33",new TH1F("SACVMax33","SACVMax33",500,0,2500));
 
   //Waveform histograms
   //  for(int iCh=0; iCh<25 ; iCh++){
@@ -410,6 +422,17 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     //    std::cout<<"Energy "<<Hits[iHit1]->GetEnergy()<<" Time "<<Time<<" ich "<<ich<<std::endl;
     //    votes[(Int_t)Time]++;
     // ESums[(Int_t)Time]+=Hits[iHit1]->GetEnergy();
+
+   if (ich==11)GetHisto("SACVMax11")->Fill(Hits[iHit1]->GetEnergy());//CT
+   if (ich==21)GetHisto("SACVMax21")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==31)GetHisto("SACVMax31")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==12)GetHisto("SACVMax12")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==22)GetHisto("SACVMax22")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==32)GetHisto("SACVMax32")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==13)GetHisto("SACVMax13")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==23)GetHisto("SACVMax23")->Fill(Hits[iHit1]->GetEnergy());
+   if (ich==33)GetHisto("SACVMax33")->Fill(Hits[iHit1]->GetEnergy());
+
   }
   GetHisto("SACQTot") -> Fill(Energy);
   for(int hh=0;hh<1000;hh++){
@@ -438,6 +461,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   //  std::cout<<"Builing clusters"<<std::endl;
   int NClusters = GetClusters().size();//SACBuildClusters(rawEv);
   //std::cout<<"Built clusters - size "<<NClusters<<std::endl;
+  SACNPart= (NClusters-10.48)*1000;  //24Sept2020
   GetHisto("SACNPart")->Fill(SACNPart);
   GetHisto("SACNClus")->Fill(NClusters);
   GetHisto("SACETot") ->Fill(EvTotE);

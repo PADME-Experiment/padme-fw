@@ -158,12 +158,11 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   GetHisto("HEPVetoMultiplicity")->Fill(Hits.size());
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if( Hits[iHit1]->GetTime() > 10.) {
+    //if( Hits[iHit1]->GetTime() > 10.) {
       //Real hit
-        GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
-    
-    GetHisto("HEPVetoTime")->Fill(Hits[iHit1]->GetTime());
-    }
+      GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+      GetHisto("HEPVetoTime")->Fill(Hits[iHit1]->GetTime());
+    //}
   }
 
   PadmeReconstruction* MainReco = (PadmeReconstruction*  ) fMainReco;

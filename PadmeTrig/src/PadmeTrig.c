@@ -811,7 +811,9 @@ int main(int argc, char *argv[]) {
 	  }
 	  printf("- Trig count ");
 	  for (j=0;j<8;j++) {
-	    printf("0x%2x:%ld(%fHz) ",j,trig_cnts[j],1000.*trig_diff[j]/dt);
+	    if (trig_cnts[j]) {
+	      printf("%d:%ld(%.2fHz) ",j,trig_cnts[j],1000.*trig_diff[j]/dt);
+	    }
 	  }
 	  printf("\n");
 

@@ -342,14 +342,18 @@ class Run:
 
         # Create run in DB
         self.db.create_run(self.run_number,self.run_name,self.run_type)
-        self.db.set_run_time_create(self.run_number,self.db.now_str())
-        self.db.set_run_user(self.run_number,self.run_user)
-        self.db.set_run_comment_start(self.run_number,self.db.now_str(),self.run_comment_start)
+        #self.db.set_run_time_create(self.run_number,self.db.now_str())
+        #self.db.set_run_user(self.run_number,self.run_user)
+        #self.db.set_run_comment_start(self.run_number,self.db.now_str(),self.run_comment_start)
+        print "DBINFO - %s - set_run_time_create %d"%(self.db.now_str(),self.run_number)
+        print "DBINFO - %s - set_run_user %d %s"%(self.db.now_str(),self.run_number,self.run_user)
+        print "DBINFO - %s - set_run_comment_start %d %s"%(self.db.now_str(),self.run_number,self.run_comment_start)
 
         # Add all configuration parameters
         for cfg in self.config_list():
-            self.db.add_cfg_para_run(self.run_number,cfg[0],cfg[1])
-
+            #self.db.add_cfg_para_run(self.run_number,cfg[0],cfg[1])
+            print "DBINFO - %s - add_cfg_para_run %d %s %s"%(self.db.now_str(),self.run_number,cfg[0],cfg[1])
+            
         # Create board structures in DB
         for adc in (self.adcboard_list):
             if adc.create_proc_daq() == "error":
@@ -859,8 +863,10 @@ class Run:
 
         # Update run status in DB
         if (self.run_number):
-            self.db.set_run_time_start(self.run_number,self.db.now_str())
-            self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
+            #self.db.set_run_time_start(self.run_number,self.db.now_str())
+            #self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
+            print "DBINFO - %s - set_run_time_start %d"%(self.db.now_str(),self.run_number)
+            print "DBINFO - %s - set_run_status %d %d"%(self.db.now_str(),self.run_number,self.db.DB_RUN_STATUS_RUNNING)
 
     def stop(self):
 
@@ -890,9 +896,12 @@ class Run:
 
         # Finalize run in DB
         if (self.run_number):
-            self.db.set_run_status(self.run_number,self.final_status)
-            self.db.set_run_time_stop(self.run_number,self.db.now_str())
-            self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
+            #self.db.set_run_status(self.run_number,self.final_status)
+            #self.db.set_run_time_stop(self.run_number,self.db.now_str())
+            #self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
+            print "DBINFO - %s - set_run_time_stop %d"%(self.db.now_str(),self.run_number)
+            print "DBINFO - %s - set_run_status %d %d"%(self.db.now_str(),self.run_number,self.final_status)
+            print "DBINFO - %s - set_run_comment_end %d %s"%(self.db.now_str(),self.run_number,self.run_comment_end)
 
     def clean_up(self):
 

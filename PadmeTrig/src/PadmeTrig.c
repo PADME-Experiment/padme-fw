@@ -1056,7 +1056,7 @@ int main(int argc, char *argv[]) {
   }
   for (j=0;j<8;j++) {
     if (trig_cnts[j]) {
-      printf(" %u(%u,%.2fHz)",j,trig_cnts[j],1000.*trig_cnts[j]/t_daqtotal);
+      printf(" %u(%u,%.2fHz)",j,trig_cnts[j],1.*trig_cnts[j]/t_daqtotal);
     }
   }
   printf("\n");

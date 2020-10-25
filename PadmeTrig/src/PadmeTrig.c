@@ -277,10 +277,10 @@ int main(int argc, char *argv[]) {
   unsigned long int old_time = 0;
   //time_t sys_time, old_sys_time;
   struct timespec clock_time, old_clock_time,clock_diff;
-  unsigned long int trig_stat[256];
-  unsigned long int trig_stat_old[256];
-  unsigned long int trig_cnts[8];
-  unsigned long int trig_diff[8];
+  unsigned int trig_stat[256];
+  unsigned int trig_stat_old[256];
+  unsigned int trig_cnts[8];
+  unsigned int trig_diff[8];
 
   // Various timer variables
   time_t t_daqstart, t_daqstop, t_daqtotal;
@@ -796,7 +796,9 @@ int main(int argc, char *argv[]) {
 	  int dclock_ms = clock_diff.tv_sec*1000+clock_diff.tv_nsec/1000000;
 	  int dclock_us = (clock_diff.tv_nsec%1000000)/1000;
 
-	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %11.3fms %7d.%3.3dms\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,dclock_ms,dclock_us);
+	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %11.3fms %7d.%3.3dms",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,dclock_ms,dclock_us);
+	  if (dt > 0.) { printf(" %.2fHz",1000.*Config->debug_scale/dt); } else { printf(" 0.00Hz"); }
+	  printf("\n");
 
 	  for (j=0;j<8;j++) { trig_cnts[j] = 0; trig_diff[j] = 0; }
 	  for (i=0;i<256;i++) {
@@ -809,10 +811,14 @@ int main(int argc, char *argv[]) {
 	      }
 	    }
 	  }
-	  printf("- Trig count ");
+	  printf("- TrigMsk");
 	  for (j=0;j<8;j++) {
 	    if (trig_cnts[j]) {
-	      printf("%d:%ld(%.2fHz) ",j,trig_cnts[j],1000.*trig_diff[j]/dt);
+	      if (dt > 0.) {
+		printf(" %u(%u,%u,%.2fHz)",j,trig_cnts[j],trig_diff[j],1000.*trig_diff[j]/dt);
+	      } else {
+		printf(" %u(%u,%u,0.00Hz)",j,trig_cnts[j],trig_diff[j]);
+	      }
 	    }
 	  }
 	  printf("\n");
@@ -1038,6 +1044,23 @@ int main(int argc, char *argv[]) {
   printf("Total size of data acquired: %lu B - %6.2f KB/s\n",totalReadSize,sizeReadPerSec);
   printf("Total number of events written: %u - %6.2f events/s\n",totalWriteEvents,evtWritePerSec);
   printf("Total size of data written: %lu B - %6.2f KB/s\n",totalWriteSize,sizeWritePerSec);
+
+  printf("Trigger mask statistics:");
+  for (j=0;j<8;j++) { trig_cnts[j] = 0; }
+  for (i=0;i<256;i++) {
+    if (trig_stat[i]) {
+      for (j=0;j<8;j++) {
+	if (i & (1 << j)) trig_cnts[j] += trig_stat[i];
+      }
+    }
+  }
+  for (j=0;j<8;j++) {
+    if (trig_cnts[j]) {
+      printf(" %u(%u,%.2fHz)",j,trig_cnts[j],1000.*trig_cnts[j]/t_daqtotal);
+    }
+  }
+  printf("\n");
+
   if ( strcmp(Config->output_mode,"FILE")==0 ) {
     printf("=== %2d files created =====================================\n",fileIndex);
     for(i=0;i<fileIndex;i++) {

@@ -818,7 +818,7 @@ int main(int argc, char *argv[]) {
 	      }
 	    }
 	  }
-	  printf("- TrigMsk %lu",clock_time.tv_sec);
+	  printf("- TrigMsk %ld",clock_time.tv_sec);
 	  for (j=0;j<8;j++) {
 	    if (trig_cnts[j]) {
 	      if (dt > 0.) {

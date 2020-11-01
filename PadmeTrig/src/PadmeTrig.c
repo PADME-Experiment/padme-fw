@@ -274,6 +274,7 @@ int main(int argc, char *argv[]) {
   unsigned long int word;
   unsigned long int trig_time;
   unsigned char trig_map,trig_count,trig_fifo,trig_auto;
+  unsigned long int diff_time;
   unsigned long int old_time = 0;
   //time_t sys_time, old_sys_time;
   struct timespec clock_time, old_clock_time,clock_diff;
@@ -789,7 +790,13 @@ int main(int argc, char *argv[]) {
 	  printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto);
 	} else {
 
-	  float dt = (trig_time-old_time)/80.0E3; // Trigger clock is 80.0MHz: get time interval in ms
+	  if (old_time <= trig_time) {
+	    diff_time = trig_time-old_time;
+	  } else {
+	    // Take into account Trigger Board clock 40-bits rollover
+	    diff_time = (trig_time+0xFFFFFFFFFF)-old_time;
+	  }
+	  float dt = diff_time/80.0E3; // Trigger clock is 80.0MHz: get time interval in ms
 	  //int sys_dt = sys_time-old_sys_time;
 	  //printf("- Trigger %9u %#018lx %13lu %#04x %4u %1x %1x %fms %ds\n",totalWriteEvents,word,trig_time,trig_map,trig_count,trig_fifo,trig_auto,dt,sys_dt);
 	  timespec_diff(&old_clock_time,&clock_time,&clock_diff);

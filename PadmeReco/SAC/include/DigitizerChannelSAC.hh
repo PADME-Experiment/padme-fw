@@ -9,6 +9,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TTree.h"
 
 //ADC board 27, Ch0-25
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
@@ -24,6 +25,10 @@ public:
   virtual void Init(PadmeVRecoConfig *cfg){return;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
+  virtual void PrepareDebugHistos();
+  virtual void SaveDebugHistos();
+
+  void SetGlobalRunningMode(GlobalRecoConfigOptions* o){fGlobalMode = o;}
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
@@ -36,6 +41,8 @@ public:
 
   Short_t  GetMaximum(){return fMax;};
   Double_t GetPedestal(){return fPed;};
+
+  Double_t ZSupHit(Float_t thr,UShort_t NAvg);
 
   Double_t CalcPosition(UShort_t);
   Double_t ReadPedFile();
@@ -67,7 +74,6 @@ private:
   //  Int_t fTrigMask;
 
   Double_t fSigAvg[50];
-  TH1D *H1;
 
   //Configuration variables
   Int_t fSignalWidth;
@@ -75,6 +81,16 @@ private:
   Int_t fPostSamples;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
+
+  //  Int_t fChID;
+  Int_t fElChID;
+  Int_t fBdID;
+  //  Int_t fTrigMask;
+  Double_t fRMS1000;
+  Double_t fRMS200;
+  Double_t fAvg200;
+  Double_t fTrig;
+  Double_t fVMax;
   
   Int_t fMinAmplitude;
 
@@ -90,27 +106,61 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
+  Double_t fZeroSuppression;
+  Bool_t fSaveAnalog;
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
 
 
-//  // Robaccia da levare
-//  TFile *fileOut;
+  // Debug histogram structure
+  TFile * fileOut;
   TH1D ** hPedCalo;
-//  TH1D ** hPedMean;
-//  TH1D ** hVMax;
-//  TH1D ** hQCh;
-//  TH1D ** hChTime;
-//  TH1D *  hVPeak;
-//  TH1D *  hMean;
-//  TH1D *  hCharge;
-//  TH1D *  hTime;
-//
-//
+  TH1D ** hAvgCalo;
+  TH1D ** hPedMean;
+  TH1D ** hVMax;
+  TH1D ** h200QCh;
+  TH1D ** hQCh;
+
+  TH1D *  hVPeak;
+  TH1D *  hMean;
+  TH1D *  hAvg;
+  TH1D *  h200Q;
+  TH1D *  hQ;
+
+  TH1F * hdxdt;
+  TH1F * hdxdtMax;
+  TH1F * hdxdtRMS;
+  TH1F * hTime;
+  TH1F * hTIntCorr;
+  TH1F * hTimeCut;
+  TH1F * hTimeOv;
+  TH1F * hSignal;
+  TH1F * hSat;
+  TH1F * hDiff;
+
+  TH1F * hSigOv;
+  TH1F * hSigOvSm;
+  TH1F * hdxdtSigOvSm;
+
+  TH1D *  H1;
+  TH1D *  H2;
+  //  Int_t m;
+  Double_t Zsup;
+  Double_t HitE;
+  Double_t HitE200;
+  Double_t HitEHyb;
+  Double_t HitT;
+  Int_t ElCh;
+  Int_t Row;
+  Int_t Col;
+  Int_t IsSat;
+
   TList* hListCal;  
-  TH1D* histo;
+  TH1D* histo; 
+  TList* hListEv;  // More general histograms 
+  TTree* SAC;
   
   //SAC variables 
   Double_t fCh        [25];

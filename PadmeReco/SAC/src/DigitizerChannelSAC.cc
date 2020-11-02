@@ -20,12 +20,22 @@ void DigitizerChannelSAC::PrintConfig(){
     std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
     // if(i%5==0) std::cout<<std::endl;
   }
+
+ if(fGlobalMode->GetGlobalDebugMode()!=0){
+   std::cout<<"General Config Flags SAC Digi***************** "<<std::endl;
+   //std::cout<<"fIsPed          "<<fGlobalMode->IsPedestalMode()<< std::endl;
+   std::cout<<"fIsReco         "<<fGlobalMode->IsRecoMode()<< std::endl;
+   //std::cout<<"fIsMonitor      "<<fGlobalMode->IsMonitorMode()<< std::endl;
+   //std::cout<<"fIsCosmic       "<<fGlobalMode->IsCosmicsMode()<< std::endl;
+   std::cout<<"fIsDebug  SAC  "<<fGlobalMode->GetGlobalDebugMode()<< std::endl;
+  }
+
 }
 
 
-void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
+void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConfig *cfg){
 
-  fGlobalMode = gMode;
+  fGlobalMode = gOptions;
   H1 = new TH1D("h1","h1",1000,0.,1000.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
@@ -52,6 +62,8 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+
+  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
   
   //Set a default Adc channel pedestals;
   for(int kk=0;kk<32;kk++){
@@ -60,6 +72,66 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   SetAnalogOffSets(); //M. Raggi: 19/10/2018  read anaolg offsets values from file
   PrintConfig();
+}
+
+void DigitizerChannelSAC::PrepareDebugHistos(){
+  fileOut    = new TFile("SACAn.root", "RECREATE");
+  hListCal   = new TList();  
+  hListEv    = new TList();  
+  SAC = new TTree("SAC","SAC");
+
+  SAC->Branch("ElCh",&ElCh);
+  SAC->Branch("Row",&Row);
+  SAC->Branch("Col",&Col);
+  SAC->Branch("Zsup",&Zsup);
+  SAC->Branch("Avg200",&fAvg200);
+  SAC->Branch("HitE",&HitE);
+  SAC->Branch("HitEHyb",&HitEHyb);
+  SAC->Branch("Hit200E",&HitE200);
+  SAC->Branch("HitT",&HitT);
+  SAC->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
+  SAC->Branch("IsSat",&IsSat);
+  SAC->Branch("VMax",&fVMax);
+
+  hPedCalo = new TH1D*[32];
+  hAvgCalo = new TH1D*[32];
+  hPedMean = new TH1D*[32];
+  hVMax    = new TH1D*[32];
+  h200QCh  = new TH1D*[32]; //CT
+  hQCh     = new TH1D*[32]; //CT
+
+  //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
+  hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
+  hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
+  hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
+  hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
+  hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
+  hListCal->Add(hTIntCorr= new TH1F("hTIntCorr","hTIntCorr",500,0.,1.));
+  
+  for(int kk=0;kk<32;kk++){
+    hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
+    hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
+    hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
+    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
+    h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
+    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400); //CT
+    hListCal->Add(hPedCalo[kk]);
+    hListCal->Add(hAvgCalo[kk]);
+    hListCal->Add(hPedMean[kk]);
+    hListCal->Add(hVMax[kk]);
+    hListCal->Add(h200QCh[kk]); //CT
+    hListCal->Add(hQCh[kk]); //CT
+  }
+
+}
+
+void DigitizerChannelSAC::SaveDebugHistos(){
+  fileOut->cd();
+  if(fSaveAnalog) hListCal->Write(); //use it in monitor mode only  
+  SAC->Write();
+  // fileOut->Write();
+  //  hListCal->ls();
+  fileOut->Close();
 }
 
 //M. Raggi: 19/10/2018
@@ -135,6 +207,20 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   return fPed;
 }
 
+// Compute zero suppression: returns 1 if the events has to be suppressed
+Double_t DigitizerChannelSAC::ZSupHit(Float_t Thr, UShort_t NAvg) {
+  fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
+  Double_t ZSupHit=-1;
+
+  if(fRMS1000>Thr){
+    ZSupHit=0;
+  }else{
+    ZSupHit=1;
+    //    std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
+  }
+  //  std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
+  return ZSupHit;
+}
 
 Double_t DigitizerChannelSAC::CalcCharge(UShort_t fCh) {  //not used
   // can include a better algorithm to compute hit charge
@@ -232,9 +318,10 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       //if(1){
 	Hit->SetTime(fTime);
 	//Hit->SetEnergy(fCharge);    // need to add hit status 
-	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
-	//Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
+	//Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
+	Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
+        if(fGlobalMode->GetGlobalDebugMode()) SAC->Fill();
       }else{
 //	fileOut->cd();
 //	H1->Write();
@@ -259,9 +346,14 @@ Double_t DigitizerChannelSAC::CalcPosition(UShort_t fCh) {
 void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   // M. Raggi 20/07/2019 protect the code againts cosmic scintillators in the SAC digitizer
   Int_t Ch = GetChID();
+  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   if(Ch<0) return;
   Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
+
+  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals
+  fTrig = GetTrigMask();
+
 }
 
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){

@@ -180,7 +180,55 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 */
 
 // void SACReconstruction::EndProcessing()
-// {;}
+// {;}s
+
+void SACReconstruction::BuildHits(TRawEvent* rawEv)
+{
+  
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  
+  ((DigitizerChannelSAC*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  
+  TADCBoard* ADC;
+  
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelSAC*)fChannelReco)->SetChID(ChID);
+	// 	((DigitizerChannelSAC*)fChannelReco)->SetElChID(ElChID);
+	// 	((DigitizerChannelSAC*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
+}
+
 
 //  Last revised by M. Raggi 16/11/2018 
 void SACReconstruction::BuildClusters()
@@ -522,7 +570,7 @@ void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tM
     int i1 = digi->GetChannelId()/10;
     int i2 = digi->GetChannelId()%10;
     TRecoVHit *Hit = new TRecoVHit();
-    // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
+    // @reconstruction level, the SAC ChIds are XXYY, while in MC they are YYXX 
     int chIdN = i2*10+i1;
     Hit->SetChannelId(chIdN);
     Hit->SetPosition(TVector3(0.,0.,0.)); 

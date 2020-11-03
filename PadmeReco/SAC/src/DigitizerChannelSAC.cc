@@ -72,6 +72,39 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConf
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   SetAnalogOffSets(); //M. Raggi: 19/10/2018  read anaolg offsets values from file
   PrintConfig();
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){
+    PrepareDebugHistos(); //debugging mode histos
+  }else{
+    PrepareTmpHistos();  //Temp histos
+  }
+
+}
+
+//M. Raggi: 19/10/2018
+void DigitizerChannelSAC::SetAnalogOffSets(){
+  std::ifstream PrevPed; //reading prevoius pedestal from file written by drawped32
+  char fname[50];
+  Int_t NBD=27;
+  sprintf(fname,"config/BDPed/PedBD%d.ped",NBD);
+  PrevPed.open(fname);
+  if(PrevPed.is_open()){
+    double temp;
+    for(int i=0;i<25;i++){
+      PrevPed >> temp >> fPedCh[i] >> temp>> temp >> fCalibCh[i];//reads channel number and discards it
+      //      std::cout <<"PEDCH "<<i<<" "<<fPedCh[i]<<std::endl;      
+    }
+  }
+  else{ 
+    std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
+  } 
+
+}
+
+void DigitizerChannelSAC::PrepareTmpHistos(){
+  hListTmp    = new TList();  
+  hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  hListTmp->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
 }
 
 void DigitizerChannelSAC::PrepareDebugHistos(){
@@ -132,26 +165,6 @@ void DigitizerChannelSAC::SaveDebugHistos(){
   // fileOut->Write();
   //  hListCal->ls();
   fileOut->Close();
-}
-
-//M. Raggi: 19/10/2018
-void DigitizerChannelSAC::SetAnalogOffSets(){
-  std::ifstream PrevPed; //reading prevoius pedestal from file written by drawped32
-  char fname[50];
-  Int_t NBD=27;
-  sprintf(fname,"config/BDPed/PedBD%d.ped",NBD);
-  PrevPed.open(fname);
-  if(PrevPed.is_open()){
-    double temp;
-    for(int i=0;i<25;i++){
-      PrevPed >> temp >> fPedCh[i] >> temp>> temp >> fCalibCh[i];//reads channel number and discards it
-      //      std::cout <<"PEDCH "<<i<<" "<<fPedCh[i]<<std::endl;      
-    }
-  }
-  else{ 
-    std::cout << "No previous data available for board "<<NBD<<" resorting to default pedestal (3800)"<<std::endl;
-  } 
-
 }
 
 //void DigitizerChannelSAC::SetAbsSignals(){

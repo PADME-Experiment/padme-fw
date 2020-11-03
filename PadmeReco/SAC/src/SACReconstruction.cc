@@ -182,7 +182,7 @@ void SACReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // void SACReconstruction::EndProcessing()
 // {;}s
 
-void SACReconstruction::BuildHits(TRawEvent* rawEv)
+/*void SACReconstruction::BuildHits(TRawEvent* rawEv)
 {
   
   ClearHits();
@@ -227,7 +227,7 @@ void SACReconstruction::BuildHits(TRawEvent* rawEv)
       //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
     }
   }    
-}
+}*/
 
 
 //  Last revised by M. Raggi 16/11/2018 

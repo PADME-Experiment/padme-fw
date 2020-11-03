@@ -24,7 +24,7 @@ public:
   // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   // virtual void EndProcessing();
   //void ProcessEvent(TRawEvent*);
-  void BuildHits(TRawEvent* rawEv);
+  //void BuildHits(TRawEvent* rawEv);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);

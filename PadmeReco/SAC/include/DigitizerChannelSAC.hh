@@ -26,6 +26,7 @@ public:
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
   virtual void PrepareDebugHistos();
+  virtual void PrepareTmpHistos();
   virtual void SaveDebugHistos();
 
   void SetGlobalRunningMode(GlobalRecoConfigOptions* o){fGlobalMode = o;}
@@ -160,6 +161,7 @@ private:
   TList* hListCal;  
   TH1D* histo; 
   TList* hListEv;  // More general histograms 
+  TList* hListTmp;  // More general histograms 
   TTree* SAC;
   
   //SAC variables 

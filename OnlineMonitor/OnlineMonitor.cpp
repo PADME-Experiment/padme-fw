@@ -12,6 +12,7 @@
 
 #include "TRawEvent.hh"
 
+#include "Configure.hh"
 #include "ECalMonitor.hh"
 
 int main(int argc, char* argv[])
@@ -25,6 +26,9 @@ int main(int argc, char* argv[])
   TString outputFileName;
   TObjArray inputFileNameList;
   struct stat filestat;
+  
+  // Connect to configuration handler
+  Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
   while ((c = getopt (argc, argv, "i:l:o:n:v:h")) != -1) {
@@ -84,6 +88,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"\nReadTest [-i input root file] [-l list of input files] [-v verbosity] [-h]\n\n");
         fprintf(stdout,"  -i: define an input file in root format\n");
         fprintf(stdout,"  -l: define a list of input files\n");
+        fprintf(stdout,"  -o: define name of PadmeMonitor output file\n");
         fprintf(stdout,"  -n: define number of events to read from input file (0: all events)\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");

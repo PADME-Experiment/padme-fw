@@ -14,6 +14,7 @@
 
 #include "Configuration.hh"
 #include "ECalMonitor.hh"
+#include "TargetMonitor.hh"
 
 int main(int argc, char* argv[])
 {
@@ -82,7 +83,6 @@ int main(int argc, char* argv[])
           fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
           exit(1);
         }
-        fprintf(stdout,"Set verbose level to %d\n",verbose);
         break;
       case 'h':
         fprintf(stdout,"\nReadTest [-i input root file] [-l list of input files] [-v verbosity] [-h]\n\n");
@@ -95,8 +95,8 @@ int main(int argc, char* argv[])
         exit(0);
       case '?':
         if (optopt == 'v') {
-          // verbose with no argument: just enable at minimal level
-          verbose = 1;
+          // verbose with no argument: increase verbose level by 1
+          verbose++;
           break;
         } else if (optopt == 'i' || optopt == 'l' || optopt == 'o')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -109,6 +109,10 @@ int main(int argc, char* argv[])
         abort();
       }
   }
+
+  // Set general verbose level
+  if (verbose>0) fprintf(stdout,"Set verbose level to %d\n",verbose);
+  cfg->SetVerbose(verbose);
 
   if ( inputFileNameList.GetEntries() == 0 ) {
     perror(Form("ERROR No Input File specified"));
@@ -151,6 +155,7 @@ int main(int argc, char* argv[])
 
   // Initialize anlyses
   ECalMonitor* ecal_mon = new ECalMonitor();
+  TargetMonitor* target_mon = new TargetMonitor();
 
   for(Int_t iev=0;iev<ntoread;iev++){
 
@@ -178,6 +183,7 @@ int main(int argc, char* argv[])
 
     // Call "start of event" procedures for all detectors
     ecal_mon->StartOfEvent();
+    target_mon->StartOfEvent();
 
     // Only accept BTF events
     //if ( (rawEv->GetEventTrigMask() & (1 << 0)) == 0 ) continue;
@@ -214,6 +220,7 @@ int main(int argc, char* argv[])
 	      // SAC + Cosmics pads
 	    } else if (boardId == 28) {
 	      // Target
+	      target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	    }
 	  }
 	}
@@ -226,13 +233,16 @@ int main(int argc, char* argv[])
 
     // Call "end of event" procedures for all detectors
     ecal_mon->EndOfEvent();
+    target_mon->EndOfEvent();
 
   } // End loop over events
 
   ecal_mon->Finalize();
+  target_mon->Finalize();
 
   delete rawEv;
   delete ecal_mon;
+  delete target_mon;
 
   exit(0);
 

@@ -63,7 +63,8 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConf
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
 
-  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 15/05/2019  
+  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0);
+  fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.); //M. Raggi: 07/06/2019  
   
   //Set a default Adc channel pedestals;
   for(int kk=0;kk<32;kk++){
@@ -139,7 +140,7 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
   hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
   hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
-  hListCal->Add(hTIntCorr= new TH1F("hTIntCorr","hTIntCorr",500,0.,1.));
+  hListCal->Add(hZSup= new TH1F("hZSup","hZSup",3,-0.5,2.5));
   
   for(int kk=0;kk<32;kk++){
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
@@ -229,9 +230,9 @@ Double_t DigitizerChannelSAC::ZSupHit(Float_t Thr, UShort_t NAvg) {
     ZSupHit=0;
   }else{
     ZSupHit=1;
-    //    std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
+    //   std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
   }
-  //  std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
+  //std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
   return ZSupHit;
 }
 
@@ -289,7 +290,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //  Charge = (VMax*2*pow(10,-9))/(2*50); // in pC, CT
   //  std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
-  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy.
+  if(VMax>fAmpThresholdHigh && VMax>-2*VMin){ // zero suppression on Voltage normalize to energy, su ogni waveform è già una zsupp
   //if(VMax>fAmpThresholdHigh){//CTVMax
     TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
@@ -331,8 +332,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       //if(1){
 	Hit->SetTime(fTime);
 	//Hit->SetEnergy(fCharge);    // need to add hit status 
-	//Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
-	Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
+	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
+	//Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
         if(fGlobalMode->GetGlobalDebugMode()) SAC->Fill();
       }else{
@@ -374,6 +375,13 @@ void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray
   Int_t Ch = GetChID();
   //std::cout<<" SAC chID = "<<Ch<<std::endl;
   if(Ch<0) return;
+
+  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);
+
+  hZSup->Fill(IsZeroSup);
+
+  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals
+  //fTrig = GetTrigMask();
 
   Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
@@ -429,4 +437,9 @@ DigitizerChannelSAC::~DigitizerChannelSAC(){
 //    hTime->Write();
 //
 //  }
+
+    if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){
+    SaveDebugHistos();
+  }
+
 };

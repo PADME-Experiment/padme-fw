@@ -12,7 +12,7 @@
 
 #include "TRawEvent.hh"
 
-#include "Configure.hh"
+#include "Configuration.hh"
 #include "ECalMonitor.hh"
 
 int main(int argc, char* argv[])
@@ -143,6 +143,12 @@ int main(int argc, char* argv[])
     printf("Reading first %d events\n",ntoread);
   }
 
+  // Set and create output file
+  if (! outputFileName.IsNull()) cfg->SetOutputFile(outputFileName);
+  FILE* outf = fopen(cfg->GetOutputFile(),"w");
+  fprintf(outf,"# OnlineMonitor - %s\n",cfg->FormatTime(time(0)));
+  fclose(outf);
+
   // Initialize anlyses
   ECalMonitor* ecal_mon = new ECalMonitor();
 
@@ -153,20 +159,31 @@ int main(int argc, char* argv[])
     inputChain->GetEntry(iev);
     //printf("Event %d read\n",iev);
 
-    // Show event header when in verbose mode
-    if (verbose>0) {
+    // Show event header when in verbose mode or once in a while
+    if ( (cfg->Verbose()>0) || (iev%cfg->DebugScale() == 0) ) {
       TTimeStamp tts = rawEv->GetEventAbsTime();
-      printf("N %7d Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask %08x EvtStatus %08x Boards %2d MissBoard %08x\n",
+      printf("%7d Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
 	     iev,rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
-	     rawEv->GetEventRunTime(),rawEv->GetEventTrigMask(),rawEv->GetEventStatus(),
-	     rawEv->GetNADCBoards(),rawEv->GetMissingADCBoards());
+	     rawEv->GetEventRunTime(),(rawEv->GetEventTrigMask() & 0xff),(rawEv->GetEventStatus() & 0xffff),
+	     rawEv->GetNADCBoards(),(rawEv->GetMissingADCBoards() & 0xffff));
     }
+
+    // Save event information
+    cfg->SetRunNumber(rawEv->GetRunNumber());
+    cfg->SetEventNumber(rawEv->GetEventNumber());
+    cfg->SetEventAbsTime(rawEv->GetEventAbsTime());
+    cfg->SetEventRunTime(rawEv->GetEventRunTime());
+    cfg->SetEventTrigMask(rawEv->GetEventTrigMask());
+    cfg->SetEventStatus(rawEv->GetEventStatus());
+
+    // Call "start of event" procedures for all detectors
+    ecal_mon->StartOfEvent();
 
     // Only accept BTF events
     //if ( (rawEv->GetEventTrigMask() & (1 << 0)) == 0 ) continue;
 
     // Only accept cosmics events
-    if ( (rawEv->GetEventTrigMask() & (1 << 1)) == 0 ) continue;
+    //if ( (rawEv->GetEventTrigMask() & (1 << 1)) == 0 ) continue;
 
     // Loop over boards
     UChar_t nBoards = rawEv->GetNADCBoards();
@@ -206,7 +223,10 @@ int main(int argc, char* argv[])
 
     // Clear event
     rawEv->Clear("C");
-    
+
+    // Call "end of event" procedures for all detectors
+    ecal_mon->EndOfEvent();
+
   } // End loop over events
 
   ecal_mon->Finalize();

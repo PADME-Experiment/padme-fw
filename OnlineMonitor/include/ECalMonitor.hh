@@ -1,7 +1,9 @@
 #ifndef ECalMonitor_H
 #define ECalMonitor_H
 
-#include "Rtypes.h"
+#include "TFile.h"
+
+class Configuration;
 
 class ECalMonitor
 {
@@ -13,11 +15,13 @@ public:
 
   void Initialize();
   void Finalize();
-  void EventStart();
-  void EventEnd();
+  void StartOfEvent();
+  void EndOfEvent();
   void Analyze(UChar_t,UChar_t,Short_t*);
 
 private:
+
+  Configuration* fConfig;
 
   UInt_t   fECal_count[29][29];
   Double_t fECal_signal[29][29];

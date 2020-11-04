@@ -5,9 +5,9 @@ Configuration* Configuration::fInstance = 0;
 Configuration::Configuration()
 {
   // Set default configuration parameters
-  fRunNumber = 0;
   fVerbose = 0;
   fDebugScale = 100;
+  fOutputFile = "OnlineMonitor.txt";
 }
 
 Configuration::~Configuration()

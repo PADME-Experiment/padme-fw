@@ -27,6 +27,8 @@ int main(int argc, char* argv[])
   TString outputFileName;
   TObjArray inputFileNameList;
   struct stat filestat;
+
+  struct timespec now;
   
   // Connect to configuration handler
   Configuration* cfg = Configuration::GetInstance();
@@ -114,6 +116,7 @@ int main(int argc, char* argv[])
   if (verbose>0) fprintf(stdout,"Set verbose level to %d\n",verbose);
   cfg->SetVerbose(verbose);
 
+  // Check if at least one input file was specified
   if ( inputFileNameList.GetEntries() == 0 ) {
     perror(Form("ERROR No Input File specified"));
     exit(1);
@@ -156,6 +159,13 @@ int main(int argc, char* argv[])
   // Initialize anlyses
   ECalMonitor* ecal_mon = new ECalMonitor();
   TargetMonitor* target_mon = new TargetMonitor();
+
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("clock gettime");
+    exit(EXIT_FAILURE);
+  }
+  TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
+  printf("=== OnlineMonitor starting on %s\n",cfg->FormatTime(now.tv_sec));
 
   for(Int_t iev=0;iev<ntoread;iev++){
 
@@ -239,6 +249,19 @@ int main(int argc, char* argv[])
 
   ecal_mon->Finalize();
   target_mon->Finalize();
+
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("clock gettime");
+    exit(EXIT_FAILURE);
+  }
+  TTimeStamp t_end = TTimeStamp(now.tv_sec,now.tv_nsec);
+  printf("=== OnlineMonitor ending on %s\n",cfg->FormatTime(now.tv_sec));
+
+  Double_t t_start_f = 1.*t_start.GetSec()+1.E-9*t_start.GetNanoSec();
+  Double_t t_end_f = 1.*t_end.GetSec()+1.E-9*t_end.GetNanoSec();
+  Double_t t_run_f = t_end_f-t_start_f;
+  printf("Total run time %.3fs\n",t_run_f);
+  if (t_run_f>0.) printf("Event processing time %.3fms/evt\n",1000.*t_run_f/ntoread);
 
   delete rawEv;
   delete ecal_mon;

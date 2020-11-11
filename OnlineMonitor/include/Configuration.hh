@@ -4,6 +4,8 @@
 #include "TFile.h"
 #include "TTimeStamp.h"
 
+#define CONFIGURATION_N_STREAMS_MAX 5
+
 class Configuration
 {
 
@@ -29,7 +31,7 @@ public:
   UInt_t DebugScale() { return fDebugScale; }
 
   void SetOutputFile(TString f) { fOutputFile = f; }
-  TString GetOutputFile() { return fOutputFile; }
+  TString OutputFile() { return fOutputFile; }
 
   void SetRunNumber(Int_t r) { fRunNumber = r; }
   Int_t GetRunNumber() { return fRunNumber; }
@@ -48,6 +50,20 @@ public:
 
   void SetEventStatus(UInt_t s) { fEventStatus = s; }
   UInt_t GetEventStatus() { return fEventStatus; }
+
+  void SetNumberOfStreams(UInt_t n) { fNumberOfStreams = n; }
+  UChar_t NumberOfStreams() { return fNumberOfStreams; }
+  UChar_t NumberOfStreamsMax() { return CONFIGURATION_N_STREAMS_MAX; }
+
+  void SetDataDirectory(TString f) { fDataDirectory = f; }
+  TString DataDirectory() { return fDataDirectory; }
+
+  void SetRunName(TString f) { fRunName = f; }
+  TString RunName() { return fRunName; }
+
+  void EnableFollowMode() { fFollowMode = true; }
+  void DisableFollowMode() { fFollowMode = false; }
+  Bool_t FollowMode() { return fFollowMode; }
 
   char* FormatTime(const time_t);
 
@@ -69,6 +85,18 @@ private:
   ULong64_t fEventRunTime;
   UInt_t fEventTrigMask;
   UInt_t fEventStatus;
+
+  // Number of streams to use
+  UChar_t fNumberOfStreams;
+
+  // Directory where all rawdata files are stored
+  TString fDataDirectory;
+
+  // Run name, e.g. run_0030571_20201028_194712
+  TString fRunName;
+
+  // Follow mode enabled/disabled
+  Bool_t fFollowMode;
 
 };
 #endif

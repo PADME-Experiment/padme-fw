@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 
   // Set and create output file
   if (! outputFileName.IsNull()) cfg->SetOutputFile(outputFileName);
-  FILE* outf = fopen(cfg->GetOutputFile(),"w");
+  FILE* outf = fopen(cfg->OutputFile(),"w");
   fprintf(outf,"# OnlineMonitor - %s\n",cfg->FormatTime(time(0)));
   fclose(outf);
 

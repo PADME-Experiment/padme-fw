@@ -65,7 +65,7 @@ void ECalMonitor::Finalize()
 
   }
 
-  FILE* outf = fopen(fConfig->GetOutputFile(),"a");
+  FILE* outf = fopen(fConfig->OutputFile(),"a");
 
   fprintf(outf,"\n");
 

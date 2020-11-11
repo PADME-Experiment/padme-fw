@@ -65,6 +65,9 @@ public:
   void DisableFollowMode() { fFollowMode = false; }
   Bool_t FollowMode() { return fFollowMode; }
 
+  void SetStopFile(TString f) { fStopFile = f; }
+  TString StopFile() { return fStopFile; }
+
   char* FormatTime(const time_t);
 
 private:
@@ -97,6 +100,9 @@ private:
 
   // Follow mode enabled/disabled
   Bool_t fFollowMode;
+
+  // Name of file to check if program should stop when in follow mode
+  TString fStopFile;
 
 };
 #endif

@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
   TString dataDirectory = "";
   TString runName = "";
   TString outputFileName = "";
+  TString stopFileName = "";
   UInt_t nStreams = 0;
   UInt_t verbose = 0;
   UInt_t nEventsToProcess = 0;
@@ -32,7 +33,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt (argc, argv, "R:D:s:o:n:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "R:D:S:o:n:v:s:fh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -44,15 +45,16 @@ int main(int argc, char* argv[])
       case 'o':
         outputFileName = optarg;
 	break;
-      case 's':
+      case 'S':
         if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
-          fprintf (stderr, "Error while processing option '-s'. Wrong parameter '%s'.\n", optarg);
+          fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
           exit(1);
         }
         if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
-          fprintf (stderr, "Error while processing option '-s'. Required %d streams (must be 1<=s<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
+          fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
           exit(1);
         }
+        break;
       case 'n':
         if ( sscanf(optarg,"%d",&nEventsToProcess) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
@@ -63,6 +65,12 @@ int main(int argc, char* argv[])
           exit(1);
         }
         break;
+      case 'f':
+	cfg->EnableFollowMode();
+	break;
+      case 's':
+        stopFileName = optarg;
+	break;
       case 'v':
         if ( sscanf(optarg,"%d",&verbose) != 1 ) {
           fprintf (stderr, "Error while processing option '-v'. Wrong parameter '%s'.\n", optarg);
@@ -74,12 +82,14 @@ int main(int argc, char* argv[])
         }
         break;
       case 'h':
-        fprintf(stdout,"\nReadTest -R run_name [-d top rawdata path] [-s streams] [-v verbosity] [-h]\n\n");
+        fprintf(stdout,"\nReadTest -R run_name [-D top rawdata path] [-S streams] [-o output file] [-f] [-s stop file] [-n events] [-v verbose] [-h]\n\n");
         fprintf(stdout,"  -R: define name of run to process\n");
         fprintf(stdout,"  -D: define path to top rawdata directory\n");
-        fprintf(stdout,"  -s: define number of streams to use (1 to %u) path to top rawdata directory\n",cfg->NumberOfStreamsMax());
+        fprintf(stdout,"  -S: define number of streams to use (1 to %u) path to top rawdata directory\n",cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -o: define name of PadmeMonitor output file\n");
         fprintf(stdout,"  -n: define number of events to process (0: all events)\n");
+        fprintf(stdout,"  -f: enable FOLLOW mode\n");
+        fprintf(stdout,"  -s: define name of control file to stop program when in FOLLOW mode\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
@@ -88,7 +98,7 @@ int main(int argc, char* argv[])
           // verbose with no argument: increase verbose level by 1
           verbose++;
           break;
-        } else if (optopt == 'R' || optopt == 'D' || optopt == 's' || optopt == 'o')
+        } else if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -104,9 +114,11 @@ int main(int argc, char* argv[])
   if (! runName.IsNull()) cfg->SetRunName(runName);
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
+  if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
   fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Number of streams: '%u'\n",cfg->NumberOfStreams());
+  fprintf(stdout,"- Stop file: '%s'\n",cfg->StopFile().Data());
 
   // Set number of events to process
   if (nEventsToProcess) {
@@ -149,7 +161,7 @@ int main(int argc, char* argv[])
     }
 
     // Show event header when in verbose mode or once in a while
-    if ( (cfg->Verbose() > 0) || (IH->EventNumber()%cfg->DebugScale() == 0) ) {
+    if ( (cfg->Verbose() > 1) || (IH->EventNumber()%cfg->DebugScale() == 0) ) {
       TTimeStamp tts = rawEv->GetEventAbsTime();
       printf("%7u Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
 	     IH->EventNumber(),rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
@@ -187,6 +199,7 @@ int main(int argc, char* argv[])
   Double_t t_end_f = 1.*t_end.GetSec()+1.E-9*t_end.GetNanoSec();
   Double_t t_run_f = t_end_f-t_start_f;
   printf("- Total run time %.3fs\n",t_run_f);
+  printf("- Total processed events %d\n",IH->EventsRead());
   if (t_run_f>0.) printf("- Event processing time %.3fms/evt\n",1000.*t_run_f/IH->EventsRead());
 
   delete IH;

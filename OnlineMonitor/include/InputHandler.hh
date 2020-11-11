@@ -47,5 +47,8 @@ private:
   // Number of current stream
   UChar_t fCurrentStream;
 
+  // Number of seconds to sleep between checks for new events
+  UInt_t fSleepPeriod;
+
 };
 #endif

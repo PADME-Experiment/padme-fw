@@ -5,7 +5,7 @@
 
 #include "Configuration.hh"
 
-class TChain;
+class TFile;
 class TRawEvent;
 
 class InputHandler
@@ -30,14 +30,18 @@ private:
   // Connection to configuration class
   Configuration* fConfig;
 
+  TRawEvent* ReadNextEvent();
+  UInt_t WaitForFileToGrow();
   TString FormatFilename(UChar_t,UInt_t);
   Int_t FileExists(TString);
 
-  // Each stream uses a different TChain and a different TRawEvent
-  TChain* fTChain[CONFIGURATION_N_STREAMS_MAX];
-  UInt_t fCurrentFileInChain[CONFIGURATION_N_STREAMS_MAX];
-  UInt_t fCurrentEventInChain[CONFIGURATION_N_STREAMS_MAX];
-  UInt_t fTotalEventsInChain[CONFIGURATION_N_STREAMS_MAX];
+  // Each stream uses a different TFile and a different TRawEvent
+  TFile* fTFile[CONFIGURATION_N_STREAMS_MAX];
+  TTree* fTTree[CONFIGURATION_N_STREAMS_MAX];
+  UInt_t fTotalEventsInFile[CONFIGURATION_N_STREAMS_MAX];
+  UInt_t fCurrentEventInFile[CONFIGURATION_N_STREAMS_MAX];
+  UInt_t fCurrentFileInStream[CONFIGURATION_N_STREAMS_MAX];
+  Bool_t fCurrentFileIsOpen[CONFIGURATION_N_STREAMS_MAX];
 
   TRawEvent* fTRawEvent[CONFIGURATION_N_STREAMS_MAX];
 
@@ -49,6 +53,9 @@ private:
 
   // Number of seconds to sleep between checks for new events
   UInt_t fSleepPeriod;
+
+  // Time interval after which WaitForFileToGrow returns
+  Double_t fWaitTimeout;
 
 };
 #endif

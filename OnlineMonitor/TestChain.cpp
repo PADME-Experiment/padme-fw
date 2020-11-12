@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
     // Show event header when in verbose mode or once in a while
     if ( (cfg->Verbose() > 1) || (IH->EventNumber()%cfg->DebugScale() == 0) ) {
       TTimeStamp tts = rawEv->GetEventAbsTime();
-      printf("%7u Run %7d Event %7d Time %8d-%06d.%09d RunTime %12llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
+      printf("%7u Run %7d Event %7d Time %8d-%06d.%09d RunTime %13llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
 	     IH->EventNumber(),rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
 	     rawEv->GetEventRunTime(),(rawEv->GetEventTrigMask() & 0xff),(rawEv->GetEventStatus() & 0xffff),
 	     rawEv->GetNADCBoards(),(rawEv->GetMissingADCBoards() & 0xffff));

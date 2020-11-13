@@ -12,6 +12,7 @@ Configuration::Configuration()
   fDataDirectory = ".";
   fRunName = "";
   fFollowMode = false;
+  fResumeMode = false;
   fStopFile = "OnlineMonitor.stop";
 }
 

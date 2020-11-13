@@ -71,6 +71,8 @@ clean:
 cleanall:
 	@echo Cleaning all...
 	rm -f $(ODIR)/*.o
+	rm -f $(DDIR)/*.ccd
+	rm -f *.d
 	rm -f *.exe
 
 try:

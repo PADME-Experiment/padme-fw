@@ -5,6 +5,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TError.h"
 
 #include "Configuration.hh"
 #include "TRawEvent.hh"
@@ -18,10 +19,14 @@ InputHandler::InputHandler()
   fConfig = Configuration::GetInstance();
 
   // Number of seconds to sleep between checks for new events
-  fSleepPeriod = 1;
+  fSleepPeriod = 5;
 
   // Time interval after which WaitForFileToGrow returns
   fWaitTimeout = 60.;
+
+  // Disable WARNING reporting from ROOT
+  // Can be set to kPrint, kInfo, kWarning, kError, kBreak, kSysError, kFatal
+  gErrorIgnoreLevel = kError; // Will only report kError, kBreak, kSysError, kFatal
 
 }
 
@@ -35,47 +40,46 @@ InputHandler::~InputHandler()
 Int_t InputHandler::Initialize()
 {
 
-  printf("Initializing\n");
+  if (fConfig->Verbose()) printf("InputHandler::Initialize - Start initialization\n");
 
   // Initialize global event counter
   fEventsRead = 0;
 
+  // Check if we are resuming monitor
+  if (fConfig->FollowMode() && fConfig->ResumeMode()) {
+    Int_t rc = Resume();
+    if (rc == -1) {
+      printf("InputHandler::Initialize - ERROR - Cannot resume monitoring\n");
+      return -1;
+    }
+  } else {
+    for(UChar_t stream=0; stream<fConfig->NumberOfStreams(); stream++) {
+      fCurrentFileInStream[stream] = 0;
+    }
+  }
+
   // Initialize streams
-  for(UChar_t i=0; i<fConfig->NumberOfStreams(); i++) {
+  for(UChar_t stream=0; stream<fConfig->NumberOfStreams(); stream++) {
 
-    if (fConfig->Verbose()) printf("InputHandler - Initialize stream %d\n",i);
+    if (fConfig->Verbose()) printf("InputHandler::Initialize - Initialize stream %d\n",stream);
 
-    fTRawEvent[i] = new TRawEvent();
+    // Create TRawEvent structure for this stream
+    fTRawEvent[stream] = new TRawEvent();
 
-    fCurrentFileInStream[i] = 0;
-    fCurrentEventInFile[i] = 0;
-
-    // Open first file of stream and check if it still open
-    TString streamFilename = FormatFilename(i,fCurrentFileInStream[i]);
-    if (fConfig->Verbose()) printf("InputHandler - Filename %s\n",streamFilename.Data());
-    if (! FileExists(streamFilename)) {
-      printf("ERROR - InputHandler - File %s does not exist\n",streamFilename.Data());
-      return 1;
+    // Open first file in stream
+    Int_t rc = OpenFileInStream(stream,fCurrentFileInStream[stream]);
+    if (rc == -1) {
+      printf("InputHandler::Initialize - ERROR -Cannot initialize stream %d\n",stream);
+      return -1;
     }
-    fTFile[i] = new TFile(streamFilename,"READ");
-    // If in FOLLOW mode, check if file is currently been written to
-    if (fConfig->FollowMode()) {
-      if (fTFile[i]->TestBit(TFile::kRecovered)) {
-	fCurrentFileIsOpen[i] = true;
-      } else {
-	fCurrentFileIsOpen[i] = false;
-      }
+    if (rc == 1) {
+      printf("InputHandler::Initialize - WARNING - Run ended while initializing stream %d\n",stream);
+      return -1;
     }
-
-    gDirectory->GetObject("RawEvents",fTTree[i]);
-    fTTree[i]->SetBranchAddress("RawEvent",&fTRawEvent[i]);
-
-    fTotalEventsInFile[i] = fTTree[i]->GetEntries();
-    if (fConfig->Verbose()) printf("InputHandler - Total events %d\n",fTotalEventsInFile[i]);
 
   }
 
-  // Always start with stream 0
+  // Always start to read from stream 0
   fCurrentStream = fConfig->NumberOfStreams()-1;
 
   return 0;
@@ -98,7 +102,7 @@ TRawEvent* InputHandler::NextEvent()
 	if (rc == 1) return ReadNextEvent(); // New events have appeared: read the next
 	if (rc == 2) {
 	  // Open file did not grow and was not finalized for a long time: problem!
-	  printf("InputHandler - WARNING - No new events for a long time: exiting\n");
+	  printf("InputHandler::NextEvent - WARNING - No new events for a long time: exiting\n");
 	  return 0;
 	}
       }
@@ -106,49 +110,29 @@ TRawEvent* InputHandler::NextEvent()
       // File has been finalized and we read all events: close it
       delete fTFile[fCurrentStream];
 
-      // Wait for next file to appear while checking if run has ended
+      // Wait for next file to appear
       UInt_t nextFileInStream = fCurrentFileInStream[fCurrentStream] + 1;
-      TString streamFilename = FormatFilename(fCurrentStream,nextFileInStream);
-      time_t start_time = time(0);
-      while (! FileExists(streamFilename)) {
-	if (FileExists(fConfig->StopFile())) {
-	  // Run has ended: we can gracefully exit
-	  if (fConfig->Verbose()) printf("InputHandler - Stop file %s found\n",fConfig->StopFile().Data());
-	  return 0;
-	}
-	if (difftime(time(0),start_time) > fWaitTimeout) {
-	  // No new file appeared for a long time: problem!
-	  printf("InputHandler - WARNING - New file '%s' did not appear for a long time: exiting.\n",streamFilename.Data());
-	  return 0;
-	}
-	sleep(fSleepPeriod);
+      Int_t rc = OpenFileInStream(fCurrentStream,nextFileInStream);
+      if (rc == -1) {
+	printf("InputHandler::NextEvent - WARNING - Cannot open next file for stream %d: exiting.\n",fCurrentStream);
+	return 0;
+      }
+      if (rc == 1) {
+	if (fConfig->Verbose()) printf("InputHandler::NextEvent - End of run while reading stream %d: exiting.\n",fCurrentStream);
+	return 0;
       }
 
-      // Next file is there: open it and start reading
-      fCurrentFileInStream[fCurrentStream] = nextFileInStream;
-      fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
-      if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
-	fCurrentFileIsOpen[fCurrentStream] = true;
-      } else {
-	fCurrentFileIsOpen[fCurrentStream] = false;
-      }
-      gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
-      fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
-      if (fConfig->Verbose()) printf("InputHandler - Filename %s\n",streamFilename.Data());
-      fTotalEventsInFile[fCurrentStream] = fTTree[fCurrentStream]->GetEntries();
-      fCurrentEventInFile[fCurrentStream] = 0;
-
-      // Check if file is still empty and wait for new events
+      // If new file is still empty, wait for events
       if (fTotalEventsInFile[fCurrentStream] == 0) {
 	UInt_t rc = WaitForFileToGrow();
 	if (rc == 0) {
 	  // File was finalized with 0 events: weird.
-	  printf("InputHandler - WARNING - File opened and then close with 0 events: exiting\n");
+	  printf("InputHandler::NextEvent - WARNING - File opened and then close with 0 events: exiting\n");
 	  return 0;
 	}
 	if (rc == 2) {
 	  // Open file did not grow and was not finalized for a long time: problem!
-	  printf("InputHandler - WARNING - No new events for a long time: exiting\n");
+	  printf("InputHandler::NextEvent - WARNING - No new events for a long time: exiting\n");
 	  return 0;
 	}
       }
@@ -157,19 +141,12 @@ TRawEvent* InputHandler::NextEvent()
 
       // Not in FOLLOW mode: close old file (delete) then look for next file and exit if none is found
       delete fTFile[fCurrentStream];
-      fCurrentFileInStream[fCurrentStream]++;
-      TString streamFilename = FormatFilename(fCurrentStream,fCurrentFileInStream[fCurrentStream]);
-      if (! FileExists(streamFilename)) {
-	if (fConfig->Verbose()) printf("InputHandler - Reached end of stream %d\n",fCurrentStream);
+      UInt_t nextFileInStream = fCurrentFileInStream[fCurrentStream] + 1;
+      Int_t rc = OpenFileInStream(fCurrentStream,nextFileInStream);
+      if (rc == -1) {
+	if (fConfig->Verbose()) printf("InputHandler::NextEvent - reached end of stream %d: exiting.\n",fCurrentStream);
 	return 0;
       }
-      fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
-      gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
-      fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
-      if (fConfig->Verbose()) printf("InputHandler - Filename %s\n",streamFilename.Data());
-      fTotalEventsInFile[fCurrentStream] = fTTree[fCurrentStream]->GetEntries();
-      if (fConfig->Verbose()) printf("InputHandler - Total events %d\n",fTotalEventsInFile[fCurrentStream]);
-      fCurrentEventInFile[fCurrentStream] = 0;
 
     }
 
@@ -187,7 +164,7 @@ TRawEvent* InputHandler::ReadNextEvent()
   return fTRawEvent[fCurrentStream];
 }
 
-UInt_t InputHandler::WaitForFileToGrow()
+Int_t InputHandler::WaitForFileToGrow()
 {
   time_t start_time = time(0);
   while(true) {
@@ -195,18 +172,112 @@ UInt_t InputHandler::WaitForFileToGrow()
     delete fTFile[fCurrentStream];
     TString streamFilename = FormatFilename(fCurrentStream,fCurrentFileInStream[fCurrentStream]);
     fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
-    if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
-      fCurrentFileIsOpen[fCurrentStream] = true;
+    if (fTFile[fCurrentStream]->IsZombie()) {
+      if (difftime(time(0),start_time) > fWaitTimeout) return 2; // 2: file did not grow for a long time
+      sleep(fSleepPeriod); // File is currently a zombie: sleep and retry in a while
     } else {
-      fCurrentFileIsOpen[fCurrentStream] = false;
+      if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
+	fCurrentFileIsOpen[fCurrentStream] = true;
+      } else {
+	fCurrentFileIsOpen[fCurrentStream] = false;
+      }
+      gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
+      fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
+      UInt_t totEvents = fTTree[fCurrentStream]->GetEntries();
+      if (totEvents > fTotalEventsInFile[fCurrentStream]) {
+	fTotalEventsInFile[fCurrentStream] = totEvents;
+	return 1; // 1: file has grown
+      }
+      if (! fCurrentFileIsOpen[fCurrentStream]) return 0; // 0: file did not grow but was finalized
+      if (difftime(time(0),start_time) > fWaitTimeout) return 2; // 2: file did not grow for a long time
+      sleep(fSleepPeriod); // File did not grow and was not finalized: sleep and retry
     }
-    gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
-    fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
-    UInt_t totEvents = fTTree[fCurrentStream]->GetEntries();
-    if (totEvents > fTotalEventsInFile[fCurrentStream]) return 1; // 1: file has grown
-    if (! fCurrentFileIsOpen[fCurrentStream]) return 0; // 0: file did not grow but was finalized
-    if (difftime(time(0),start_time) > fWaitTimeout) return 2; // 2: file did not grow for a long time
-    sleep(fSleepPeriod); // File has not grown and was not finalized: sleep and retry
+  }
+}
+
+Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
+{
+
+  time_t start_time;
+
+  // Get full filename
+  TString streamFilename = FormatFilename(stream,filenr);
+
+  // Wait for file to appear
+  start_time = time(0);
+  while(true) {
+    if (FileExists(streamFilename)) break;
+    if (! fConfig->FollowMode()) return -1; // In NORMAL mode this means we are at end of stream
+    if (FileExists(fConfig->StopFile())) {
+      // Run has ended: we can gracefully exit
+      if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+      return 1;
+    }
+    if (difftime(time(0),start_time) > fWaitTimeout) {
+      // New file did not appear after a long time: problem!
+      printf("InputHandler::OpenFileInStream - WARNING - New file '%s' not created for a long time: exiting.\n",streamFilename.Data());
+      return -1;
+    }
+    sleep(fSleepPeriod); // File is still empty: sleep and retry
+  }
+  if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Filename %s\n",streamFilename.Data());
+
+  // Wait for file to be written to
+  start_time = time(0);
+  while(true) {
+    fTFile[stream] = new TFile(streamFilename,"READ");
+    if (! fTFile[stream]->IsZombie()) break;
+    delete fTFile[stream];
+    if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
+    if (FileExists(fConfig->StopFile())) {
+      // Run has ended: we can gracefully exit
+      if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+      return 1;
+    }
+    if (difftime(time(0),start_time) > fWaitTimeout) {
+      // New file stays empty for a long time: problem!
+      printf("InputHandler::OpenFileInStream - WARNING - New file '%s' created but not filled for a long time: exiting.\n",streamFilename.Data());
+      return -1;
+    }
+    sleep(fSleepPeriod); // File is still empty: sleep and retry
+  }
+
+  // File is ready to be read
+  fCurrentFileInStream[stream] = filenr;
+
+  // Check if file is currently been written to
+  if (fTFile[stream]->TestBit(TFile::kRecovered)) {
+    fCurrentFileIsOpen[stream] = true;
+  } else {
+    fCurrentFileIsOpen[stream] = false;
+  }
+  
+  // Recover Tree to read events
+  gDirectory->GetObject("RawEvents",fTTree[stream]);
+  fTTree[stream]->SetBranchAddress("RawEvent",&fTRawEvent[stream]);
+
+  // Get file information
+  fTotalEventsInFile[stream] = fTTree[stream]->GetEntries();
+  if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Events in file: %d\n",fTotalEventsInFile[stream]);
+
+  // Initialize event counter for this file
+  fCurrentEventInFile[stream] = 0;
+
+  return 0;
+
+}
+
+Int_t InputHandler::Resume()
+{
+  // Set all streams to last currently available file
+  UInt_t filenr = 0;
+  while (true) {
+    for(UChar_t stream=0; stream<fConfig->NumberOfStreams(); stream++) {
+      TString streamFilename = FormatFilename(stream,filenr);
+      if (! FileExists(streamFilename)) return 0; // Stop as soon as one stream file is not found
+      fCurrentFileInStream[stream] = filenr;
+    }
+    filenr++;
   }
 }
 
@@ -219,9 +290,9 @@ TString InputHandler::FormatFilename(UChar_t stream,UInt_t filenr)
 			 stream,filenr);
 }
 
-Int_t InputHandler::FileExists(TString fileName)
+Bool_t InputHandler::FileExists(TString fileName)
 {
   struct stat filestat;
-  if ( stat(Form(fileName.Data()),&filestat) == 0 ) return 1;
-  return 0;
+  if ( stat(Form(fileName.Data()),&filestat) == 0 ) return true;
+  return false;
 }

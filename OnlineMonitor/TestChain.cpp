@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt (argc, argv, "R:D:S:o:n:v:s:fh")) != -1) {
+  while ((c = getopt (argc, argv, "R:D:S:o:n:v:s:frh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -68,6 +68,9 @@ int main(int argc, char* argv[])
       case 'f':
 	cfg->EnableFollowMode();
 	break;
+      case 'r':
+	cfg->EnableResumeMode();
+	break;
       case 's':
         stopFileName = optarg;
 	break;
@@ -89,6 +92,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -o: define name of PadmeMonitor output file\n");
         fprintf(stdout,"  -n: define number of events to process (0: all events)\n");
         fprintf(stdout,"  -f: enable FOLLOW mode\n");
+        fprintf(stdout,"  -r: enable RESUME mode\n");
         fprintf(stdout,"  -s: define name of control file to stop program when in FOLLOW mode\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
@@ -118,7 +122,11 @@ int main(int argc, char* argv[])
   fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Number of streams: '%u'\n",cfg->NumberOfStreams());
-  fprintf(stdout,"- Stop file: '%s'\n",cfg->StopFile().Data());
+  if (cfg->FollowMode()) {
+    fprintf(stdout,"- Follow mode enabled\n");
+    if (cfg->ResumeMode()) fprintf(stdout,"- Resume mode enabled\n");
+    fprintf(stdout,"- Stop file: '%s'\n",cfg->StopFile().Data());
+  }
 
   // Set number of events to process
   if (nEventsToProcess) {

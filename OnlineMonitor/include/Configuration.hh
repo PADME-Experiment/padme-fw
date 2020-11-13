@@ -65,6 +65,10 @@ public:
   void DisableFollowMode() { fFollowMode = false; }
   Bool_t FollowMode() { return fFollowMode; }
 
+  void EnableResumeMode() { fResumeMode = true; }
+  void DisableResumeMode() { fResumeMode = false; }
+  Bool_t ResumeMode() { return fResumeMode; }
+
   void SetStopFile(TString f) { fStopFile = f; }
   TString StopFile() { return fStopFile; }
 
@@ -100,6 +104,9 @@ private:
 
   // Follow mode enabled/disabled
   Bool_t fFollowMode;
+
+  // Resume mode enabled/disabled
+  Bool_t fResumeMode;
 
   // Name of file to check if program should stop when in follow mode
   TString fStopFile;

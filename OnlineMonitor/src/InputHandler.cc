@@ -99,7 +99,10 @@ TRawEvent* InputHandler::NextEvent()
       // First handle files which are being written to
       if (fCurrentFileIsOpen[fCurrentStream]) {
 	UInt_t rc = WaitForFileToGrow();
-	if (rc == 1) return ReadNextEvent(); // New events have appeared: read the next
+	if (rc == 1) {
+	  if (fConfig->Verbose()) printf("InputHandler::NextEvent - Events in file now: %d\n",fTotalEventsInFile[fCurrentStream]);
+	  return ReadNextEvent(); // New events have appeared: read the next
+	}
 	if (rc == 2) {
 	  // Open file did not grow and was not finalized for a long time: problem!
 	  printf("InputHandler::NextEvent - WARNING - No new events for a long time: exiting\n");

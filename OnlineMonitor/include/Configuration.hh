@@ -27,8 +27,8 @@ public:
   void SetVerbose(UInt_t v) { fVerbose = v; }
   UInt_t Verbose() { return fVerbose; }
 
-  void SetDebugScale(UInt_t v) { fDebugScale = v; }
-  UInt_t DebugScale() { return fDebugScale; }
+  void SetDebugScale(Int_t v) { fDebugScale = v; }
+  Int_t DebugScale() { return fDebugScale; }
 
   void SetOutputFile(TString f) { fOutputFile = f; }
   TString OutputFile() { return fOutputFile; }
@@ -80,7 +80,7 @@ private:
   UInt_t fVerbose;
 
   // Events interval between debug printouts
-  UInt_t fDebugScale;
+  Int_t fDebugScale;
 
   // Name (including possible path) of output file in PadmeMOnitor format
   TString fOutputFile;

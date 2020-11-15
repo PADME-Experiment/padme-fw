@@ -24,7 +24,8 @@ int main(int argc, char* argv[])
   TString dataDirectory = "";
   TString runName = "";
   TString outputFileName = "OnlineMonitor.txt";
-  TString stopFileName = "";
+  TString configFileName = "OnlineMonitor.cfg";
+  TString stopFileName = "OnlineMonitor.stop";
   UInt_t nStreams = 0;
   UInt_t verbose = 0;
   UInt_t nEventsToProcess = 0;
@@ -36,7 +37,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:n:v:s:d:frh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:S:o:n:v:s:d:c:frh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -84,6 +85,9 @@ int main(int argc, char* argv[])
       case 'r':
 	cfg->EnableResumeMode();
 	break;
+      case 'c':
+        configFileName = optarg;
+	break;
       case 's':
         stopFileName = optarg;
 	break;
@@ -107,6 +111,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -f: enable FOLLOW mode\n");
         fprintf(stdout,"  -r: enable RESUME mode\n");
         fprintf(stdout,"  -s: define name of control file to stop program when in FOLLOW mode\n");
+        fprintf(stdout,"  -c: define name of configuration file\n");
         fprintf(stdout,"  -v: define verbose level\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);

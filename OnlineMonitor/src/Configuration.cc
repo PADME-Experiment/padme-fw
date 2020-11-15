@@ -8,12 +8,13 @@ Configuration::Configuration()
   fVerbose = 0;
   fDebugScale = 100;
   fOutputFile = "OnlineMonitor.txt";
+  fConfigFile = "OnlineMonitor.cfg";
+  fStopFile = "OnlineMonitor.stop";
   fNumberOfStreams = 1;
   fDataDirectory = ".";
   fRunName = "";
   fFollowMode = false;
   fResumeMode = false;
-  fStopFile = "OnlineMonitor.stop";
 }
 
 Configuration::~Configuration()

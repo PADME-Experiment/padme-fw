@@ -72,6 +72,9 @@ public:
   void SetStopFile(TString f) { fStopFile = f; }
   TString StopFile() { return fStopFile; }
 
+  void SetConfigFile(TString f) { fConfigFile = f; }
+  TString ConfigFile() { return fConfigFile; }
+
   char* FormatTime(const time_t);
 
 private:
@@ -84,6 +87,9 @@ private:
 
   // Name (including possible path) of output file in PadmeMOnitor format
   TString fOutputFile;
+
+  // Name (including possible path) of configuration file for monitor analysis
+  TString fConfigFile;
 
   // Event information
   Int_t fRunNumber;

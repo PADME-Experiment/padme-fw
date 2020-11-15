@@ -3,6 +3,8 @@
 
 #include "TFile.h"
 
+#include "utlConfigParser.hh"
+
 class Configuration;
 
 class ECalMonitor
@@ -10,7 +12,7 @@ class ECalMonitor
 
 public:
 
-  ECalMonitor();
+  ECalMonitor(utl::ConfigParser*);
   ~ECalMonitor();
 
   void Initialize();
@@ -22,6 +24,8 @@ public:
 private:
 
   Configuration* fConfig;
+
+  utl::ConfigParser* fConfigParser;
 
   UInt_t   fECal_count[29][29];
   Double_t fECal_signal[29][29];

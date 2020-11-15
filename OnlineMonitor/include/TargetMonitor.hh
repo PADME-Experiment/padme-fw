@@ -3,6 +3,8 @@
 
 #include "TFile.h"
 
+#include "utlConfigParser.hh"
+
 class Configuration;
 
 class TargetMonitor
@@ -10,7 +12,7 @@ class TargetMonitor
 
 public:
 
-  TargetMonitor();
+  TargetMonitor(utl::ConfigParser*);
   ~TargetMonitor();
 
   void Initialize();
@@ -22,6 +24,8 @@ public:
 private:
 
   Configuration* fConfig;
+
+  utl::ConfigParser* fConfigParser;
 
 };
 #endif

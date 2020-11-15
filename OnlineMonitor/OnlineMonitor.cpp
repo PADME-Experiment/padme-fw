@@ -16,6 +16,8 @@
 #include "ECalMonitor.hh"
 #include "TargetMonitor.hh"
 
+#include "utlConfigParser.hh"
+
 int main(int argc, char* argv[])
 {
   
@@ -136,6 +138,7 @@ int main(int argc, char* argv[])
   if (! runName.IsNull()) cfg->SetRunName(runName);
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
+  if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
   if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
   fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
@@ -146,6 +149,7 @@ int main(int argc, char* argv[])
     if (cfg->ResumeMode()) fprintf(stdout,"- Resume mode enabled\n");
     fprintf(stdout,"- Stop file: '%s'\n",cfg->StopFile().Data());
   }
+  fprintf(stdout,"- Configuration file: '%s'\n",cfg->ConfigFile().Data());
   if (cfg->DebugScale() == 0) {
     fprintf(stdout,"- Debug printout is OFF\n");
   } else {
@@ -177,9 +181,13 @@ int main(int argc, char* argv[])
     exit(EXIT_FAILURE);
   }
 
+  // Create configuration file parser
+  utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
+  configParser->Print();
+
   // Initialize anlyses
-  ECalMonitor* ecal_mon = new ECalMonitor();
-  TargetMonitor* target_mon = new TargetMonitor();
+  ECalMonitor* ecal_mon = new ECalMonitor(configParser);
+  TargetMonitor* target_mon = new TargetMonitor(configParser);
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");

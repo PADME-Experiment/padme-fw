@@ -5,16 +5,17 @@ Configuration* Configuration::fInstance = 0;
 Configuration::Configuration()
 {
   // Set default configuration parameters
-  fVerbose = 0;
-  fDebugScale = 100;
-  fOutputFile = "OnlineMonitor.txt";
-  fConfigFile = "OnlineMonitor.cfg";
-  fStopFile = "OnlineMonitor.stop";
-  fNumberOfStreams = 1;
-  fDataDirectory = ".";
   fRunName = "";
+  fDataDirectory = ".";
+  fOutputDirectory = "watchdir";
+  fTmpDirectory = "tmp";
+  fConfigFile = "config/OnlineMonitor.cfg";
+  fStopFile = "run/OnlineMonitor.stop";
+  fNumberOfStreams = 1;
   fFollowMode = false;
   fResumeMode = false;
+  fDebugScale = 100;
+  fVerbose = 0;
 }
 
 Configuration::~Configuration()

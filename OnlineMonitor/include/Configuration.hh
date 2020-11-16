@@ -24,14 +24,16 @@ protected:
 
 public:
 
-  void SetVerbose(UInt_t v) { fVerbose = v; }
-  UInt_t Verbose() { return fVerbose; }
+  void SetVerbose(Int_t v) { fVerbose = v; }
+  Int_t Verbose() { return fVerbose; }
 
   void SetDebugScale(Int_t v) { fDebugScale = v; }
   Int_t DebugScale() { return fDebugScale; }
 
-  void SetOutputFile(TString f) { fOutputFile = f; }
-  TString OutputFile() { return fOutputFile; }
+  void SetOutputDirectory(TString d) { fOutputDirectory = d; }
+  TString OutputDirectory() { return fOutputDirectory; }
+
+  TString TmpDirectory() { return fTmpDirectory; }
 
   void SetRunNumber(Int_t r) { fRunNumber = r; }
   Int_t GetRunNumber() { return fRunNumber; }
@@ -80,13 +82,16 @@ public:
 private:
 
   // Verbose level
-  UInt_t fVerbose;
+  Int_t fVerbose;
 
   // Events interval between debug printouts
   Int_t fDebugScale;
 
-  // Name (including possible path) of output file in PadmeMOnitor format
-  TString fOutputFile;
+  // PademMonitor directory where output files will be copied to
+  TString fOutputDirectory;
+
+  // Temporary directory where output files are written before being moved to final output directory
+  TString fTmpDirectory;
 
   // Name (including possible path) of configuration file for monitor analysis
   TString fConfigFile;

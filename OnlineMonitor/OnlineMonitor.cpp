@@ -23,13 +23,12 @@ int main(int argc, char* argv[])
   
   int c;
 
-  TString dataDirectory = "";
   TString runName = "";
-  TString outputFileName = "OnlineMonitor.txt";
-  TString configFileName = "config/OnlineMonitor.cfg";
-  TString stopFileName = "run/OnlineMonitor.stop";
+  TString dataDirectory = "";
+  TString outputDirectory = "";
+  TString configFileName = "";
+  TString stopFileName = "";
   UInt_t nStreams = 0;
-  UInt_t verbose = 0;
   UInt_t nEventsToProcess = 0;
   Int_t debugScale = -1;
 
@@ -39,7 +38,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:n:v:s:d:c:frh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:S:o:n:s:d:c:frvh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -49,7 +48,7 @@ int main(int argc, char* argv[])
 	dataDirectory = optarg;
 	break;
       case 'o':
-        outputFileName = optarg;
+        outputDirectory = optarg;
 	break;
       case 'S':
         if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
@@ -94,35 +93,25 @@ int main(int argc, char* argv[])
         stopFileName = optarg;
 	break;
       case 'v':
-        if ( sscanf(optarg,"%d",&verbose) != 1 ) {
-          fprintf (stderr, "Error while processing option '-v'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
-        }
-        if (verbose<0) {
-          fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
-          exit(1);
-        }
+	cfg->SetVerbose(cfg->Verbose()+1);
         break;
       case 'h':
-        fprintf(stdout,"\nOnlineMonitor -R run_name [-D top rawdata path] [-S streams] [-o output file] [-f] [-s stop file] [-n events] [-v verbose] [-h]\n\n");
+        fprintf(stdout,"\nOnlineMonitor -R run_name [-D datadir] [-S streams] [-o outdir] [-f] [-r] [-s stopfile] [-c configfile] [-n events] [-d debug] [-v] [-h]\n\n");
         fprintf(stdout,"  -R: define name of run to process\n");
-        fprintf(stdout,"  -D: define path to top rawdata directory\n");
-        fprintf(stdout,"  -S: define number of streams to use (1 to %u) path to top rawdata directory\n",cfg->NumberOfStreamsMax());
-        fprintf(stdout,"  -o: define name of PadmeMonitor output file\n");
-        fprintf(stdout,"  -n: define number of events to process (0: all events)\n");
-        fprintf(stdout,"  -f: enable FOLLOW mode\n");
-        fprintf(stdout,"  -r: enable RESUME mode\n");
-        fprintf(stdout,"  -s: define name of control file to stop program when in FOLLOW mode\n");
-        fprintf(stdout,"  -c: define name of configuration file\n");
-        fprintf(stdout,"  -v: define verbose level\n");
+        fprintf(stdout,"  -D: define path to top rawdata directory [default: '%s']\n",cfg->DataDirectory().Data());
+        fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
+        fprintf(stdout,"  -o: define directory where PadmeMonitor files will be written [default: '%s']\n",cfg->OutputDirectory().Data());
+        fprintf(stdout,"  -n: define number of events to process [default: 0 (all events)]\n");
+        fprintf(stdout,"  -f: enable FOLLOW mode [default: disabled]\n");
+        fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
+        fprintf(stdout,"  -s: define name of control file to stop program [default: '%s']\n",cfg->StopFile().Data());
+        fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
+        fprintf(stdout,"  -d: define frequency of debug printout [default: %u]\n",cfg->DebugScale());
+        fprintf(stdout,"  -v: increase verbose level (can be repeated)\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
       case '?':
-        if (optopt == 'v') {
-          // verbose with no argument: increase verbose level by 1
-          verbose++;
-          break;
-        } else if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o')
+	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o' || optopt == 'c' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -134,16 +123,26 @@ int main(int argc, char* argv[])
       }
   }
 
-  // Save configuration parameters for input handler
-  if (! runName.IsNull()) cfg->SetRunName(runName);
+  // Check if run name was defined
+  if (runName.IsNull()) {
+    fprintf (stderr,"ERROR - No run name defined with -R option.\n");
+    exit(1);
+  }
+  cfg->SetRunName(runName);
+
+  // Save configuration parameters for this run
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
+  if (! outputDirectory.IsNull()) cfg->SetOutputDirectory(outputDirectory);
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
   if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
+
+  // Show settings for this run
   fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
-  fprintf(stdout,"- Number of streams: '%u'\n",cfg->NumberOfStreams());
+  fprintf(stdout,"- Output PadmeMonitor directory: '%s'\n",cfg->OutputDirectory().Data());
+  fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   if (cfg->FollowMode()) {
     fprintf(stdout,"- Follow mode enabled\n");
     if (cfg->ResumeMode()) fprintf(stdout,"- Resume mode enabled\n");
@@ -155,24 +154,12 @@ int main(int argc, char* argv[])
   } else {
     fprintf(stdout,"- Debug printout every %d events\n",cfg->DebugScale());
   }
-
-  // Set number of events to process
   if (nEventsToProcess) {
     fprintf(stdout,"- Process first %u events in stream(s)\n",nEventsToProcess);
   } else {
     fprintf(stdout,"- Process all events in stream(s)\n");
   }
-
-  // Set and create output file
-  if (! outputFileName.IsNull()) cfg->SetOutputFile(outputFileName);
-  fprintf(stdout,"- Output PadmeMonitor file: '%s'\n",cfg->OutputFile().Data());
-  FILE* outf = fopen(cfg->OutputFile(),"w");
-  fprintf(outf,"# OnlineMonitor - %s\n",cfg->FormatTime(time(0)));
-  fclose(outf);
-
-  // Set general verbose level
-  if (verbose>0) fprintf(stdout,"- Verbose level: %u\n",verbose);
-  cfg->SetVerbose(verbose);
+  if (cfg->Verbose()) fprintf(stdout,"- Verbose level: %u\n",cfg->Verbose());
 
   // Create input handler
   InputHandler* IH = new InputHandler();
@@ -183,7 +170,7 @@ int main(int argc, char* argv[])
 
   // Create configuration file parser
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
-  if (cfg->Verbose()>0) configParser->Print();
+  if (cfg->Verbose()>1) configParser->Print();
 
   // Configure ECal analyzer
   Bool_t analyzeECal = true;

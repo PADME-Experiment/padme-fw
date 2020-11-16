@@ -22,7 +22,7 @@ InputHandler::InputHandler()
   fSleepPeriod = 5;
 
   // Time interval after which WaitForFileToGrow returns
-  fWaitTimeout = 60.;
+  fWaitTimeout = 120.;
 
   // Disable WARNING reporting from ROOT
   // Can be set to kPrint, kInfo, kWarning, kError, kBreak, kSysError, kFatal
@@ -97,6 +97,7 @@ TRawEvent* InputHandler::NextEvent()
     // Time to check if stop file has appeared
     if (FileExists(fConfig->StopFile())) {
       if (fConfig->Verbose()) printf("InputHandler::NextEvent - Stop file '%s' found: exiting\n",fConfig->StopFile().Data());
+      if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
       return 0;
     }
 
@@ -218,6 +219,7 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit
       if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+      if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
       return 1;
     }
     if (difftime(time(0),start_time) > fWaitTimeout) {
@@ -239,6 +241,7 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit
       if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+      if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
       return 1;
     }
     if (difftime(time(0),start_time) > fWaitTimeout) {

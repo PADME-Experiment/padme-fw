@@ -86,7 +86,6 @@ void ECalMonitor::EndOfEvent()
 {
   if (fIsCosmics && fCosmicsEventCount >= 100) {
 
-    printf("New output file\n");
     // Write current cosmics map
     TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
     TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";

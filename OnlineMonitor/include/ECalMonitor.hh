@@ -2,6 +2,7 @@
 #define ECalMonitor_H
 
 #include "TFile.h"
+#include "TString.h"
 
 #include "utlConfigParser.hh"
 
@@ -12,7 +13,7 @@ class ECalMonitor
 
 public:
 
-  ECalMonitor(utl::ConfigParser*);
+  ECalMonitor(TString);
   ~ECalMonitor();
 
   void Initialize();

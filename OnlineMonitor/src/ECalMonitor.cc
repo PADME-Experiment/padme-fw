@@ -6,14 +6,15 @@
 
 #include "TMath.h"
 
-ECalMonitor::ECalMonitor(utl::ConfigParser* cfgParser)
+ECalMonitor::ECalMonitor(TString cfgFile)
 {
 
   // Connect to configuration class
   fConfig = Configuration::GetInstance();
 
   // Connect to analysis configuration parser
-  fConfigParser = cfgParser;
+  fConfigParser = new utl::ConfigParser((const std::string)cfgFile);
+  if (fConfig->Verbose()>0) fConfigParser->Print();
 
   // Initialize all counters
   Initialize();

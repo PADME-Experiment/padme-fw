@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
   TString dataDirectory = "";
   TString runName = "";
   TString outputFileName = "OnlineMonitor.txt";
-  TString configFileName = "OnlineMonitor.cfg";
-  TString stopFileName = "OnlineMonitor.stop";
+  TString configFileName = "config/OnlineMonitor.cfg";
+  TString stopFileName = "run/OnlineMonitor.stop";
   UInt_t nStreams = 0;
   UInt_t verbose = 0;
   UInt_t nEventsToProcess = 0;
@@ -183,11 +183,35 @@ int main(int argc, char* argv[])
 
   // Create configuration file parser
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
-  configParser->Print();
+  if (cfg->Verbose()>0) configParser->Print();
 
-  // Initialize anlyses
-  ECalMonitor* ecal_mon = new ECalMonitor(configParser);
-  TargetMonitor* target_mon = new TargetMonitor(configParser);
+  // Configure ECal analyzer
+  Bool_t analyzeECal = true;
+  ECalMonitor* ecal_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","ECal") && (std::stoi(configParser->GetSingleArg("ANALYZE","ECal")) == 0) ) analyzeECal = false;
+  if (analyzeECal) {
+    TString configFileECal;
+    if (configParser->HasConfig("CONFIGFILE","ECal")) {
+      configFileECal = configParser->GetSingleArg("CONFIGFILE","ECal");
+    } else {
+      configFileECal = "config/ECal.cfg";
+    }
+    ecal_mon = new ECalMonitor(configFileECal);
+  }
+
+  // Configure Target analyzer
+  Bool_t analyzeTarget = true;
+  TargetMonitor* target_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","Target") && (std::stoi(configParser->GetSingleArg("ANALYZE","Target")) == 0) ) analyzeTarget = false;
+  if (analyzeTarget) {
+    TString configFileTarget;
+    if (configParser->HasConfig("CONFIGFILE","Target")) {
+      configFileTarget = configParser->GetSingleArg("CONFIGFILE","Target");
+    } else {
+      configFileTarget = "config/Target.cfg";
+    }
+    target_mon = new TargetMonitor(configFileTarget);
+  }
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -222,8 +246,8 @@ int main(int argc, char* argv[])
     cfg->SetEventStatus(rawEv->GetEventStatus());
 
     // Call "start of event" procedures for all detectors
-    ecal_mon->StartOfEvent();
-    target_mon->StartOfEvent();
+    if (analyzeECal)   ecal_mon->StartOfEvent();
+    if (analyzeTarget) target_mon->StartOfEvent();
 
     // Loop over boards
     UChar_t nBoards = rawEv->GetNADCBoards();
@@ -243,7 +267,7 @@ int main(int argc, char* argv[])
 	if (activeMsk & (1 << chNr)) {
 	  if (acceptMsk & (1 << chNr)) {
 	    if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	      ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	      if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	    } else if (boardId >= 10 && boardId <= 12) {
 	      // PVeto
 	    } else if (boardId == 13) {
@@ -254,7 +278,7 @@ int main(int argc, char* argv[])
 	      // SAC + Cosmics pads
 	    } else if (boardId == 28) {
 	      // Target
-	      target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	      if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	    }
 	  }
 	}
@@ -266,8 +290,8 @@ int main(int argc, char* argv[])
     rawEv->Clear("C");
 
     // Call "end of event" procedures for all detectors
-    ecal_mon->EndOfEvent();
-    target_mon->EndOfEvent();
+    if (analyzeECal) ecal_mon->EndOfEvent();
+    if (analyzeTarget) target_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -278,8 +302,8 @@ int main(int argc, char* argv[])
   } // End loop over events
 
   // Finalize all detectors
-  ecal_mon->Finalize();
-  target_mon->Finalize();
+  if (analyzeECal) ecal_mon->Finalize();
+  if (analyzeTarget) target_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");

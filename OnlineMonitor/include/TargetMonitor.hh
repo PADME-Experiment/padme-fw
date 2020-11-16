@@ -2,6 +2,7 @@
 #define TargetMonitor_H
 
 #include "TFile.h"
+#include "TString.h"
 
 #include "utlConfigParser.hh"
 
@@ -12,7 +13,7 @@ class TargetMonitor
 
 public:
 
-  TargetMonitor(utl::ConfigParser*);
+  TargetMonitor(TString);
   ~TargetMonitor();
 
   void Initialize();

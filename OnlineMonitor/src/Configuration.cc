@@ -31,7 +31,7 @@ char* Configuration::FormatTime(const time_t tt)
 {
   static char tform[20];
   struct tm* t = gmtime(&tt);
-  sprintf(tform,"%04d/%02d/%02d %02d:%02d:%02d",
+  sprintf(tform,"%04d/%02d/%02d %02d:%02d:%02d UTC",
 	  1900+t->tm_year,1+t->tm_mon,t->tm_mday,
 	  t->tm_hour,t->tm_min,t->tm_sec);
   return tform;

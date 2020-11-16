@@ -62,22 +62,70 @@ void ECalMonitor::Initialize()
   // Reset global counters
   for (UChar_t x=0; x<29; x++) {
     for (UChar_t y=0; y<29; y++) {
-      fECal_count[x][y] = 0;
-      fECal_signal[x][y] = 0.;
+      //fECal_count[x][y] = 0;
+      //fECal_signal[x][y] = 0.;
+      fECal_cosmics[x][y] = 0.;
     }
   }
+  fCosmicsEventCount = 0;
 
 }
 
 void ECalMonitor::StartOfEvent()
-{;}
+{
+  // Check if event is cosmics
+  if (fConfig->GetEventTrigMask() & 0x02) {
+    fCosmicsEventCount++;
+    fIsCosmics = true;
+  } else {
+    fIsCosmics = false;
+  }
+}
 
 void ECalMonitor::EndOfEvent()
-{;}
+{
+  if (fIsCosmics && fCosmicsEventCount >= 100) {
+
+    printf("New output file\n");
+    // Write current cosmics map
+    TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
+    TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
+    FILE* outf = fopen(ftname.Data(),"a");
+    fprintf(outf,"PLOTID ECalMon_cosmics\n");
+    fprintf(outf,"PLOTTYPE heatmap\n");
+    fprintf(outf,"PLOTNAME ECal Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+    fprintf(outf,"CHANNELS 29 29\n");
+    fprintf(outf,"RANGE_X 0 29\n");
+    fprintf(outf,"RANGE_Y 0 29\n");
+    fprintf(outf,"TITLE_X X\n");
+    fprintf(outf,"TITLE_Y Y\n");
+    fprintf(outf,"DATA [");
+    for(UChar_t y = 0;y<29;y++) {
+      if (y>0) fprintf(outf,",");
+      fprintf(outf,"[");
+      for(UChar_t x = 0;x<29;x++) {
+	if (x>0) fprintf(outf,",");
+	fprintf(outf,"%d",fECal_cosmics[x][28-y]);
+      }
+      fprintf(outf,"]");
+    }
+    fprintf(outf,"]\n");
+    fclose(outf);
+    if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+    // Reset cosmics map and counter
+    for (UChar_t x=0; x<29; x++) {
+      for (UChar_t y=0; y<29; y++) {
+	fECal_cosmics[x][y] = 0.;
+      }
+    }
+    fCosmicsEventCount = 0;
+  }
+
+}
 
 void ECalMonitor::Finalize()
 {
-
+  /*
   if (fConfig->Verbose()>1) {
 
     // Show ECal occupation
@@ -101,7 +149,9 @@ void ECalMonitor::Finalize()
     }
 
   }
+  */
 
+  /*
   TString ftname = fConfig->TmpDirectory()+"/ECAL.txt";
   TString ffname = fConfig->OutputDirectory()+"/ECAL.txt";
   FILE* outf = fopen(ftname.Data(),"a");
@@ -156,7 +206,7 @@ void ECalMonitor::Finalize()
 
   // Move file to its final position
   if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
-
+  */
 }
 
 void ECalMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
@@ -167,8 +217,9 @@ void ECalMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   } else {
     UChar_t x = fECal_map[board][channel]/100;
     UChar_t y = fECal_map[board][channel]%100;
-    fECal_count[x][y]++;
-    fECal_signal[x][y] += TMath::RMS(994,samples);
+    //fECal_count[x][y]++;
+    //fECal_signal[x][y] += TMath::RMS(994,samples);
+    if (fIsCosmics) fECal_cosmics[x][y]++;
   }
 
 }

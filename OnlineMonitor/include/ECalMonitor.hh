@@ -28,8 +28,13 @@ private:
 
   utl::ConfigParser* fConfigParser;
 
-  UInt_t   fECal_count[29][29];
-  Double_t fECal_signal[29][29];
+  Bool_t fIsCosmics;
+
+  UInt_t   fECal_cosmics[29][29];
+  //UInt_t   fECal_count[29][29];
+  //Double_t fECal_signal[29][29];
+
+  UInt_t fCosmicsEventCount;
 
   // Map from [board][channel] to position as yyxx
   Short_t fECal_map[29][32] = {{0}};

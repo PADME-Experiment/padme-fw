@@ -24,6 +24,8 @@ public:
 
 private:
 
+  Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
+
   Configuration* fConfig;
 
   utl::ConfigParser* fConfigParser;

@@ -104,7 +104,7 @@ void ECalMonitor::EndOfEvent()
       fprintf(outf,"[");
       for(UChar_t x = 0;x<29;x++) {
 	if (x>0) fprintf(outf,",");
-	fprintf(outf,"%d",fECal_cosmics[x][28-y]);
+	fprintf(outf,"%d",fECal_cosmics[x][y]);
       }
       fprintf(outf,"]");
     }
@@ -221,4 +221,9 @@ void ECalMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
     if (fIsCosmics) fECal_cosmics[x][y]++;
   }
 
+}
+
+Double_t ECalMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
+{
+  return 0.;
 }

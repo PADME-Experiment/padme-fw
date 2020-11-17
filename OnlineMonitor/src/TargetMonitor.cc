@@ -28,10 +28,13 @@ TargetMonitor::~TargetMonitor()
 
 void TargetMonitor::Initialize()
 {
+
   // Get Target map from configuration file
   if (fConfigParser->HasConfig("ADC","ADC28")) {
     std::vector<std::string> bMap = fConfigParser->GetConfig("ADC","ADC28");
     for (unsigned int ic = 0; ic < bMap.size(); ic++) fTarget_map[ic] = std::stoi(bMap[ic]);
+  } else {
+    printf("TargetMonitor::Initialize - WARNING - No channel map provided: using default map\n");
   }
 
   // ADC parameters
@@ -40,7 +43,8 @@ void TargetMonitor::Initialize()
   fImpedance  = 50.;      // ADC input impedance in Ohm (50 Ohm)
 
   // Get running parameters from configuration file
-  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
+  fUseAbsSignal = true;
+  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):200;
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):700;
 
@@ -108,6 +112,29 @@ void TargetMonitor::EndOfEvent()
     }
     fprintf(outf,"]]\n");
 
+    // Waveforms
+    for(UInt_t i=0; i<32; i++) {
+
+      fprintf(outf,"\n");
+
+      fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
+      fprintf(outf,"PLOTTYPE histo1d\n");
+      fprintf(outf,"PLOTNAME Target Waveform Channel %d - Run %d Evt %d - %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(time(0)));
+      fprintf(outf,"CHANNELS 1024\n");
+      fprintf(outf,"RANGE_X -0.5 1023.5\n");
+      fprintf(outf,"RANGE_Y 0. 4096.\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"DATA [[");
+      for(UInt_t s = 0; s<1024; s++) {
+	if (s>0) fprintf(outf,",");
+	fprintf(outf,"%d",fWaveform[i][s]);
+      }
+      fprintf(outf,"]]\n");
+
+    }
+
+
     fclose(outf);
     if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
 
@@ -125,6 +152,8 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   // Do not analyze off-beam events
   if (! fIsBeam) return;
   fStrip_charge[fTarget_map[channel]-1] += GetChannelCharge(board,channel,samples);
+  // Save waveforms of last event
+  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i];
 }
 
 Double_t TargetMonitor::GetChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)
@@ -133,10 +162,13 @@ Double_t TargetMonitor::GetChannelCharge(UChar_t board,UChar_t channel,Short_t* 
   Int_t sum_sig = 0;
   Int_t sum_ped = 0;
   for(UInt_t s = 0; s<fSignalSamplesEnd; s++) {
-    if (s>=fSignalSamplesStart) sum_sig += samples[s];
-    if (s<fPedestalSamples)     sum_ped += samples[s];
+    Short_t ss = samples[s];
+    if (fUseAbsSignal && ss < 2048) ss = 4096-ss;
+    if (s>=fSignalSamplesStart) sum_sig += ss;
+    if (s<fPedestalSamples)     sum_ped += ss;
   }
-  Double_t hCharge = 1.*(fSignalSamplesEnd-fSignalSamplesStart)/fPedestalSamples*sum_ped-1.*sum_sig;
-  hCharge *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Charge in pC
+  //Double_t hCharge = (Double_t)sum_sig-(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)*(Double_t)sum_ped/(Double_t)fPedestalSamples;
+  Double_t hCharge = 1.*sum_sig-1.*(fSignalSamplesEnd-fSignalSamplesStart)*sum_ped/fPedestalSamples;
+  hCharge *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
   return hCharge;
 }

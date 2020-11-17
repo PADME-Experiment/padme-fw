@@ -30,18 +30,20 @@ void ECalMonitor::Initialize()
 {
 
   // Get ECal map from configuration file
-  std::vector<Short_t> boards;
   if(fConfigParser->HasConfig("ADC","ID")){
     std::vector<std::string> bIDs = fConfigParser->GetConfig("ADC","ID");
-    for(unsigned int ib = 0; ib < bIDs.size(); ib++) boards.push_back(std::stoi(bIDs[ib]));
-  }
-  for (unsigned int ib = 0;ib < boards.size();ib++) {
-    int bID = boards[ib];
-    std::string parName = "ADC"+std::to_string(bID);
-    if (fConfigParser->HasConfig("ADC",parName )) {
-      std::vector<std::string> bMap = fConfigParser->GetConfig("ADC",parName);
-      for (unsigned int ic = 0; ic < bMap.size(); ic++) fECal_map[bID][ic] = std::stoi(bMap[ic]);
+    for(unsigned int ib = 0; ib < bIDs.size(); ib++) {
+      std::string parName = "ADC"+bIDs[ib];
+      if (fConfigParser->HasConfig("ADC",parName )) {
+	std::vector<std::string> bMap = fConfigParser->GetConfig("ADC",parName);
+	unsigned int bID = std::stoi(bIDs[ib]);
+	for (unsigned int ic = 0; ic < bMap.size(); ic++) fECal_map[bID][ic] = std::stoi(bMap[ic]);
+      } else {
+	printf("ECalMonitor::Initialize - WARNING - No channel list for board %s in config file: using that from default channel map\n",parName.c_str());
+      }
     }
+  } else {
+    printf("ECalMonitor::Initialize - WARNING - No board list in config file: using default channel map\n");
   }
   if (fConfig->Verbose() > 1) {
     printf("--- ECal readout map ---\n");

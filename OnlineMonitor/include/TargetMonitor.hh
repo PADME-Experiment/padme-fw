@@ -36,12 +36,16 @@ private:
   Double_t fVoltageBin; // Volt per count (1V = 4096 counts)
   Double_t fTimeBin; // Time per sample in ns (1 Msps)
   Double_t fImpedance; // ADC input impedance in Ohm (50 Ohm)
+  Bool_t fUseAbsSignal; // Enable (s<2048 -> s=4096-s) technique to get positive signal
   UInt_t fPedestalSamples; // Number of samples to use for pedestals
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
 
-  // Map from [board][channel] to position as yyxx
-  Short_t fTarget_map[32] = {{0}};
+  // Map from [channel] to position X (1-16) and Y (17-32)
+  Short_t fTarget_map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };
+
+  // Array to store waveforms for a whole event
+  Short_t fWaveform[32][1024] = {{0}};
 
   // Counters
   UInt_t fEventCounter = 0;

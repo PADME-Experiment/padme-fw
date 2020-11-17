@@ -35,10 +35,10 @@ void ECalMonitor::Initialize()
     std::vector<std::string> bIDs = fConfigParser->GetConfig("ADC","ID");
     for(unsigned int ib = 0; ib < bIDs.size(); ib++) boards.push_back(std::stoi(bIDs[ib]));
   }
-  for (unsigned int ib = 0;ib < boards.size();ib++){
+  for (unsigned int ib = 0;ib < boards.size();ib++) {
     int bID = boards[ib];
     std::string parName = "ADC"+std::to_string(bID);
-    if(fConfigParser->HasConfig("ADC",parName )){
+    if (fConfigParser->HasConfig("ADC",parName )) {
       std::vector<std::string> bMap = fConfigParser->GetConfig("ADC",parName);
       for (unsigned int ic = 0; ic < bMap.size(); ic++) fECal_map[bID][ic] = std::stoi(bMap[ic]);
     }
@@ -86,10 +86,13 @@ void ECalMonitor::EndOfEvent()
 {
   if (fIsCosmics && fCosmicsEventCount >= 100) {
 
+    if (fConfig->Verbose()>0) printf("ECalMonitor::EndOfEvent - Writing output files\n");
+
     // Write current cosmics map
     TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
     TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
     FILE* outf = fopen(ftname.Data(),"a");
+
     fprintf(outf,"PLOTID ECalMon_cosmics\n");
     fprintf(outf,"PLOTTYPE heatmap\n");
     fprintf(outf,"PLOTNAME ECal Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
@@ -104,13 +107,15 @@ void ECalMonitor::EndOfEvent()
       fprintf(outf,"[");
       for(UChar_t x = 0;x<29;x++) {
 	if (x>0) fprintf(outf,",");
-	fprintf(outf,"%d",fECal_cosmics[x][y]);
+	fprintf(outf,"%.3f",fECal_cosmics[x][y]);
       }
       fprintf(outf,"]");
     }
     fprintf(outf,"]\n");
+
     fclose(outf);
     if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+
     // Reset cosmics map and counter
     for (UChar_t x=0; x<29; x++) {
       for (UChar_t y=0; y<29; y++) {
@@ -218,12 +223,21 @@ void ECalMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
     UChar_t y = fECal_map[board][channel]%100;
     //fECal_count[x][y]++;
     //fECal_signal[x][y] += TMath::RMS(994,samples);
-    if (fIsCosmics) fECal_cosmics[x][y]++;
+    if (fIsCosmics) fECal_cosmics[x][y] += GetChannelEnergy(board,channel,samples);
+    //if (fIsCosmics) fECal_cosmics[x][y] += 1.;
   }
 
 }
 
 Double_t ECalMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
 {
-  return 0.;
+  // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
+  Int_t sum = 0;
+  Int_t sum_ped = 0;
+  for(UInt_t s = 0; s<994; s++) {
+    sum += samples[s];
+    if (s<100) sum_ped += samples[s];
+  }
+  Double_t tot = 9.94*sum_ped-1.*sum;
+  return tot;
 }

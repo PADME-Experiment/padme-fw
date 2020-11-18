@@ -100,7 +100,7 @@ void TargetMonitor::EndOfEvent()
     fprintf(outf,"DATA [[");
     for(UChar_t i = 0;i<16;i++) {
       if (i>0) fprintf(outf,",");
-      fprintf(outf,"%.3f",fStrip_charge[i]);
+      fprintf(outf,"%.3f",fStrip_charge[i]/500);
     }
     fprintf(outf,"]]\n");
 
@@ -117,7 +117,7 @@ void TargetMonitor::EndOfEvent()
     fprintf(outf,"DATA [[");
     for(UChar_t i = 16;i<32;i++) {
       if (i>16) fprintf(outf,",");
-      fprintf(outf,"%.3f",fStrip_charge[i]);
+      fprintf(outf,"%.3f",fStrip_charge[i]/500);
     }
     fprintf(outf,"]]\n");
 

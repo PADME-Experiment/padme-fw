@@ -43,10 +43,19 @@ void TargetMonitor::Initialize()
   fImpedance  = 50.;      // ADC input impedance in Ohm (50 Ohm)
 
   // Get running parameters from configuration file
-  fUseAbsSignal = true;
+  fUseAbsSignal = false;
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):200;
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):700;
+  if (fConfig->Verbose()>0) {
+    printf("TargetMonitor::Initialize - Number of samples in pedestal: %d\n",fPedestalSamples);
+    printf("TargetMonitor::Initialize - Signal samples interval: %d - %d\n",fSignalSamplesStart,fSignalSamplesEnd);
+    if (fUseAbsSignal) {
+      printf("TargetMonitor::Initialize - Absolute conversion of signal samples is ENABLED\n");
+    } else {
+      printf("TargetMonitor::Initialize - Absolute conversion of signal samples is DISABLED\n");
+    }
+  }
 
   // Reset counters
   fEventCounter = 0;
@@ -158,24 +167,25 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
 {
   // Do not analyze off-beam events
   if (! fIsBeam) return;
-  fStrip_charge[fTarget_map[channel]-1] += GetChannelCharge(board,channel,samples);
-  // Save waveforms of last event. Center at 2048 to improve histogram visibility
-  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-2048;
+  ComputeChannelCharge(board,channel,samples);
+  fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
+  // Save waveforms of last event. Center on pedestal to improve visibility
+  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
 }
 
-Double_t TargetMonitor::GetChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)
+void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)
 {
   // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
   Int_t sum_sig = 0;
   Int_t sum_ped = 0;
   for(UInt_t s = 0; s<fSignalSamplesEnd; s++) {
     Short_t ss = samples[s];
-    if (fUseAbsSignal && ss < 2048) ss = 4096-ss;
+    if (s<fPedestalSamples) sum_ped += ss; // For pedestals we use the unmodified counts
+    if (fUseAbsSignal && ss < 2048) ss = 4096-ss; // Make all counts positive
     if (s>=fSignalSamplesStart) sum_sig += ss;
-    if (s<fPedestalSamples)     sum_ped += ss;
   }
-  //Double_t hCharge = (Double_t)sum_sig-(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)*(Double_t)sum_ped/(Double_t)fPedestalSamples;
-  Double_t hCharge = 1.*sum_sig-1.*(fSignalSamplesEnd-fSignalSamplesStart)*sum_ped/fPedestalSamples;
-  hCharge *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
-  return hCharge;
+  // Compute pedestal
+  fPedestal[channel] = (Double_t)sum_ped/(Double_t)fPedestalSamples; // Compute pedestal for this channel
+  fCharge[channel] = (Double_t)sum_sig-(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)*fPedestal[channel]; // Subtract pedestal from signal
+  fCharge[channel] *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
 }

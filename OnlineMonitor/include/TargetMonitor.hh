@@ -24,7 +24,8 @@ public:
 
 private:
 
-  Double_t GetChannelCharge(UChar_t,UChar_t,Short_t*);
+  // Estimate total charge of channel from samples
+  void ComputeChannelCharge(UChar_t,UChar_t,Short_t*);
 
   Configuration* fConfig;
 
@@ -44,7 +45,9 @@ private:
   // Map from [channel] to position X (1-16) and Y (17-32)
   Short_t fTarget_map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };
 
-  // Array to store waveforms for a whole event
+  // Array to store waveforms, charge and pedestals for a whole event
+  Double_t fCharge[32];
+  Double_t fPedestal[32];
   Short_t fWaveform[32][1024] = {{0}};
 
   // Counters

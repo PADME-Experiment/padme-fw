@@ -118,13 +118,20 @@ void TargetMonitor::EndOfEvent()
       fprintf(outf,"\n");
 
       fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
-      fprintf(outf,"PLOTTYPE histo1d\n");
       fprintf(outf,"PLOTNAME Target Waveform Channel %d - Run %d Evt %d - %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(time(0)));
+      //fprintf(outf,"PLOTTYPE line\n");
+      //fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"PLOTTYPE histo1d\n");
       fprintf(outf,"CHANNELS 1024\n");
       fprintf(outf,"RANGE_X -0.5 1023.5\n");
-      fprintf(outf,"RANGE_Y 0. 4096.\n");
       fprintf(outf,"TITLE_X Sample\n");
       fprintf(outf,"TITLE_Y Counts\n");
+      //fprintf(outf,"DATA [");
+      //for(UInt_t s = 0; s<1024; s++) {
+      //	if (s>0) fprintf(outf,",");
+      //	fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
+      //}
+      //fprintf(outf,"]\n");
       fprintf(outf,"DATA [[");
       for(UInt_t s = 0; s<1024; s++) {
 	if (s>0) fprintf(outf,",");
@@ -152,8 +159,8 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   // Do not analyze off-beam events
   if (! fIsBeam) return;
   fStrip_charge[fTarget_map[channel]-1] += GetChannelCharge(board,channel,samples);
-  // Save waveforms of last event
-  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i];
+  // Save waveforms of last event. Center at 2048 to improve histogram visibility
+  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-2048;
 }
 
 Double_t TargetMonitor::GetChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)

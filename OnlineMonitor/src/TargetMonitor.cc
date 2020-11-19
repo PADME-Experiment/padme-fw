@@ -127,7 +127,7 @@ void TargetMonitor::EndOfEvent()
       fprintf(outf,"\n");
 
       fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
-      fprintf(outf,"PLOTNAME Target Waveform Channel %d - Run %d Evt %d - %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(time(0)));
+      fprintf(outf,"PLOTNAME Target ch%2.2d - R/E %d/%d - %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
       //fprintf(outf,"PLOTTYPE line\n");
       //fprintf(outf,"MODE [ \"lines\" ]\n");
       fprintf(outf,"PLOTTYPE histo1d\n");

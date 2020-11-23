@@ -15,6 +15,7 @@
 #include "InputHandler.hh"
 #include "ECalMonitor.hh"
 #include "TargetMonitor.hh"
+#include "TriggerMonitor.hh"
 
 #include "utlConfigParser.hh"
 
@@ -172,17 +173,23 @@ int main(int argc, char* argv[])
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
   if (cfg->Verbose()>1) configParser->Print();
 
+  // Configure Trigger analyzer
+  Bool_t analyzeTrigger = true;
+  TriggerMonitor* trigger_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","Trigger") && (std::stoi(configParser->GetSingleArg("ANALYZE","Trigger")) == 0) ) analyzeTrigger = false;
+  if (analyzeTrigger) {
+    TString configFileTrigger = "config/Target.cfg";
+    if (configParser->HasConfig("CONFIGFILE","Trigger")) configFileTrigger = configParser->GetSingleArg("CONFIGFILE","Trigger");
+    trigger_mon = new TriggerMonitor(configFileTrigger);
+  }
+
   // Configure ECal analyzer
   Bool_t analyzeECal = true;
   ECalMonitor* ecal_mon = 0;
   if ( configParser->HasConfig("ANALYZE","ECal") && (std::stoi(configParser->GetSingleArg("ANALYZE","ECal")) == 0) ) analyzeECal = false;
   if (analyzeECal) {
-    TString configFileECal;
-    if (configParser->HasConfig("CONFIGFILE","ECal")) {
-      configFileECal = configParser->GetSingleArg("CONFIGFILE","ECal");
-    } else {
-      configFileECal = "config/ECal.cfg";
-    }
+    TString configFileECal = "config/ECal.cfg";
+    if (configParser->HasConfig("CONFIGFILE","ECal")) configFileECal = configParser->GetSingleArg("CONFIGFILE","ECal");
     ecal_mon = new ECalMonitor(configFileECal);
   }
 
@@ -191,12 +198,8 @@ int main(int argc, char* argv[])
   TargetMonitor* target_mon = 0;
   if ( configParser->HasConfig("ANALYZE","Target") && (std::stoi(configParser->GetSingleArg("ANALYZE","Target")) == 0) ) analyzeTarget = false;
   if (analyzeTarget) {
-    TString configFileTarget;
-    if (configParser->HasConfig("CONFIGFILE","Target")) {
-      configFileTarget = configParser->GetSingleArg("CONFIGFILE","Target");
-    } else {
-      configFileTarget = "config/Target.cfg";
-    }
+    TString configFileTarget = "config/Target.cfg";
+    if (configParser->HasConfig("CONFIGFILE","Target")) configFileTarget = configParser->GetSingleArg("CONFIGFILE","Target");
     target_mon = new TargetMonitor(configFileTarget);
   }
 
@@ -233,6 +236,7 @@ int main(int argc, char* argv[])
     cfg->SetEventStatus(rawEv->GetEventStatus());
 
     // Call "start of event" procedures for all detectors
+    if (analyzeTrigger) target_mon->StartOfEvent();
     if (analyzeECal)   ecal_mon->StartOfEvent();
     if (analyzeTarget) target_mon->StartOfEvent();
 
@@ -246,6 +250,23 @@ int main(int argc, char* argv[])
       UInt_t activeMsk = adcB->GetActiveChannelMask();
       UInt_t acceptMsk = adcB->GetAcceptedChannelMask();
       UChar_t nChn = adcB->GetNADCChannels();
+      UChar_t nTrg = adcB->GetNADCTriggers();
+
+      // Loop over trigger groups and compute trigger times
+      Double_t trigTime[4] = { 0. };
+      if (analyzeTrigger) {
+	for(UChar_t t=0;t<nTrg;t++){
+	  TADCTrigger* trg = adcB->ADCTrigger(t);
+	  UChar_t trNr = trg->GetGroupNumber();
+	  trigger_mon->Analyze(boardId,trNr,trg->GetSamplesArray());
+	  trigTime[trNr] = trigger_mon->GetTriggerTime();
+	}
+      }
+      if (cfg->Verbose() > 1) {
+	printf("- Run %d Event %d Board %2d Trigger times",cfg->GetRunNumber(),cfg->GetEventNumber(),boardId);
+	for(UChar_t t=0;t<4;t++) printf("%6.1f",trigTime[t]);
+	printf("\n");
+      }
 
       // Loop over channels
       for(UChar_t c=0;c<nChn;c++){
@@ -277,6 +298,7 @@ int main(int argc, char* argv[])
     rawEv->Clear("C");
 
     // Call "end of event" procedures for all detectors
+    if (analyzeTrigger) trigger_mon->EndOfEvent();
     if (analyzeECal) ecal_mon->EndOfEvent();
     if (analyzeTarget) target_mon->EndOfEvent();
 
@@ -289,6 +311,7 @@ int main(int argc, char* argv[])
   } // End loop over events
 
   // Finalize all detectors
+  if (analyzeTrigger) trigger_mon->Finalize();
   if (analyzeECal) ecal_mon->Finalize();
   if (analyzeTarget) target_mon->Finalize();
 

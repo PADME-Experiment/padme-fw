@@ -1,6 +1,8 @@
 #ifndef TargetMonitor_H
 #define TargetMonitor_H
 
+#define TARGETMONITOR_TIMELINE_SIZE 1000
+
 #include "TFile.h"
 #include "TString.h"
 
@@ -27,6 +29,9 @@ private:
   // Estimate total charge of channel from samples
   void ComputeChannelCharge(UChar_t,UChar_t,Short_t*);
 
+  // Estimate number of positrons on target for this event
+  void ComputePoTs();
+
   Configuration* fConfig;
 
   utl::ConfigParser* fConfigParser;
@@ -37,6 +42,7 @@ private:
   Double_t fVoltageBin; // Volt per count (1V = 4096 counts)
   Double_t fTimeBin; // Time per sample in ns (1 Msps)
   Double_t fImpedance; // ADC input impedance in Ohm (50 Ohm)
+  Double_t fChargeToPoTs; // Charge to PoTs conversion factor
   Bool_t fUseAbsSignal; // Enable (s<2048 -> s=4096-s) technique to get positive signal
   UInt_t fPedestalSamples; // Number of samples to use for pedestals
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
@@ -54,6 +60,13 @@ private:
   // Counters
   UInt_t fEventCounter = 0;
   Double_t fStrip_charge[32]; // Strip 1-32 to index 0-31
+
+  // Number of positrons on target for current event
+  Double_t fEventPoTs;
+  Double_t fEventPoTsTotal;
+  Double_t fTL_EventPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average values of PoTs in last 500 events
+  UInt_t   fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0}; // Event time of last event in average
+  UInt_t   fTL_Current = 0; // Store current position in timeline (round-robin)
 
 };
 #endif

@@ -42,6 +42,10 @@ void TargetMonitor::Initialize()
   fTimeBin    = 1.;       // Time per sample in ns (1 Msps)
   fImpedance  = 50.;      // ADC input impedance in Ohm (50 Ohm)
 
+  // Charge to PoTs conversion parameter
+  // 1.60217662e-7: electron charge; 12: nominal CCD in um; 36: total number of strips
+  fChargeToPoTs = 1./(1.60217662e-7*12.*36.);
+
   // Get running parameters from configuration file. Use some default if not found
   fUseAbsSignal = false;
   fEventOutputScale = fConfigParser->HasConfig("RECO","EventScale")?std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputScale")):500;
@@ -61,7 +65,7 @@ void TargetMonitor::Initialize()
   // Reset counters
   fEventCounter = 0;
   for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
-
+  fEventPoTsTotal = 0.;
 }
 
 void TargetMonitor::StartOfEvent()
@@ -80,10 +84,22 @@ void TargetMonitor::EndOfEvent()
   // Do not analyze off-beam events
   if (! fIsBeam) return;
 
+  // Compute number of positrons on target for this event
+  ComputePoTs();
+
+  // Add this event's Pots to total
+  fEventPoTsTotal += fEventPoTs;
+
   // If we read enough events, dump PadmeMonitor file
   if (fEventCounter == fEventOutputScale) {
 
     if (fConfig->Verbose()>0) printf("TargetMonitor::EndOfEvent - Writing output files\n");
+
+    // Update timeline
+    fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fEventOutputScale;
+    fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
+    fTL_Current++;
+    if (fTL_Current == TARGETMONITOR_TIMELINE_SIZE) fTL_Current = 0;
 
     // Write Target histograms
     TString ftname = fConfig->TmpDirectory()+"/TargetMon_Charge.txt";
@@ -153,6 +169,25 @@ void TargetMonitor::EndOfEvent()
 
     }
 
+    fprintf(outf,"\n");
+
+    // PoTs timeline
+    fprintf(outf,"PLOTID TargetMon_PoTs_TL\n");
+    fprintf(outf,"PLOTNAME Target PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+    fprintf(outf,"PLOTTYPE timeline\n");
+    fprintf(outf,"TIME_FORMAT fine\n");
+    fprintf(outf,"TITLE_X Time\n");
+    fprintf(outf,"TITLE_Y Pots (average)\n");
+    //fprintf(outf,"RANGE_Y 0. 100.\n");
+    fprintf(outf,"MODE [ \"lines\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+    //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
+    fprintf(outf,"DATA [ [");
+    for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
+      UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
+      if (fTL_Time[ii] != 0) fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+    }
+    fprintf(outf,"] ]\n");
 
     fclose(outf);
     if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
@@ -173,7 +208,8 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   ComputeChannelCharge(board,channel,samples);
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
   // Save waveforms of last event. Center on pedestal to improve visibility
-  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
+  //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
+  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i];
 }
 
 void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)
@@ -191,4 +227,19 @@ void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* 
   fPedestal[channel] = (Double_t)sum_ped/(Double_t)fPedestalSamples; // Compute pedestal for this channel
   fCharge[channel] = (Double_t)sum_sig-(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)*fPedestal[channel]; // Subtract pedestal from signal
   fCharge[channel] *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
+}
+
+void TargetMonitor::ComputePoTs()
+{
+  Double_t chargeX = 0.;
+  Double_t chargeY = 0.;
+  fEventPoTs = 0.;
+  for (UChar_t i=0;i<32;i++) {
+    if (i<16) {
+      chargeX += fStrip_charge[i];
+    } else {
+      chargeY += fStrip_charge[i];
+    }
+  }
+  fEventPoTs = fChargeToPoTs*(chargeX+chargeY)/2.;
 }

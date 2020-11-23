@@ -42,8 +42,9 @@ void TargetMonitor::Initialize()
   fTimeBin    = 1.;       // Time per sample in ns (1 Msps)
   fImpedance  = 50.;      // ADC input impedance in Ohm (50 Ohm)
 
-  // Get running parameters from configuration file
+  // Get running parameters from configuration file. Use some default if not found
   fUseAbsSignal = false;
+  fEventOutputScale = fConfigParser->HasConfig("RECO","EventScale")?std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputScale")):500;
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):200;
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):700;
@@ -79,8 +80,8 @@ void TargetMonitor::EndOfEvent()
   // Do not analyze off-beam events
   if (! fIsBeam) return;
 
-  // If we read 500 events, dump PadmeMonitor file
-  if (fEventCounter == 500) {
+  // If we read enough events, dump PadmeMonitor file
+  if (fEventCounter == fEventOutputScale) {
 
     if (fConfig->Verbose()>0) printf("TargetMonitor::EndOfEvent - Writing output files\n");
 
@@ -100,7 +101,8 @@ void TargetMonitor::EndOfEvent()
     fprintf(outf,"DATA [[");
     for(UChar_t i = 0;i<16;i++) {
       if (i>0) fprintf(outf,",");
-      fprintf(outf,"%.3f",fStrip_charge[i]/500);
+      // Show average per-event charge for this strip
+      fprintf(outf,"%.3f",fStrip_charge[i]/fEventOutputScale);
     }
     fprintf(outf,"]]\n");
 
@@ -117,7 +119,8 @@ void TargetMonitor::EndOfEvent()
     fprintf(outf,"DATA [[");
     for(UChar_t i = 16;i<32;i++) {
       if (i>16) fprintf(outf,",");
-      fprintf(outf,"%.3f",fStrip_charge[i]/500);
+      // Show average per-event charge for this strip
+      fprintf(outf,"%.3f",fStrip_charge[i]/fEventOutputScale);
     }
     fprintf(outf,"]]\n");
 
@@ -127,7 +130,7 @@ void TargetMonitor::EndOfEvent()
       fprintf(outf,"\n");
 
       fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
-      fprintf(outf,"PLOTNAME Target ch%2.2d - R/E %d/%d - %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+      fprintf(outf,"PLOTNAME Target ch%2.2d %d/%d %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
       //fprintf(outf,"PLOTTYPE line\n");
       //fprintf(outf,"MODE [ \"lines\" ]\n");
       fprintf(outf,"PLOTTYPE histo1d\n");
@@ -170,7 +173,7 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   ComputeChannelCharge(board,channel,samples);
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
   // Save waveforms of last event. Center on pedestal to improve visibility
-  if (fEventCounter == 500) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
+  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
 }
 
 void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)

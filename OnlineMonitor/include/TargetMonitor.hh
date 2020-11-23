@@ -41,6 +41,7 @@ private:
   UInt_t fPedestalSamples; // Number of samples to use for pedestals
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
+  UInt_t fEventOutputScale; // Number of (beam) events between outputs
 
   // Map from [channel] to position X (1-16) and Y (17-32)
   Short_t fTarget_map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };

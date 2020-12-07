@@ -6,6 +6,7 @@
 #include "TTree.h"
 #include "TString.h"
 #include "TError.h"
+#include "TSystem.h"
 
 #include "Configuration.hh"
 #include "TRawEvent.hh"
@@ -303,6 +304,10 @@ TString InputHandler::FormatFilename(UChar_t stream,UInt_t filenr)
 Bool_t InputHandler::FileExists(TString fileName)
 {
   struct stat filestat;
-  if ( stat(Form(fileName.Data()),&filestat) == 0 ) return true;
+  if (fileName.BeginsWith("root:")) {
+    if (! gSystem->AccessPathName(fileName.Data())) return true;
+  } else {
+    if ( stat(Form(fileName.Data()),&filestat) == 0 ) return true;
+  }
   return false;
 }

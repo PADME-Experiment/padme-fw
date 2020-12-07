@@ -47,11 +47,22 @@ void TargetMonitor::Initialize()
   fChargeToPoTs = 1./(1.60217662e-7*12.*36.);
 
   // Get running parameters from configuration file. Use some default if not found
-  fUseAbsSignal = false;
   fEventOutputScale = fConfigParser->HasConfig("RECO","EventScale")?std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputScale")):500;
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):200;
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):700;
+  fUseAbsSignal = false;
+  if ( fConfigParser->HasConfig("RECO","UseAbsSignal") ) {
+    int use = std::stoi(fConfigParser->GetSingleArg("RECO","UseAbsSignal"));
+    if (use == 1) {
+      fUseAbsSignal = true;
+    } else if (use == 0) {
+      fUseAbsSignal = false;
+    } else {
+      printf("TargetMonitor::Initialize - ERROR - UseAbsSignal set to %d\n",use);
+      exit(EXIT_FAILURE);
+    }
+  }
   if (fConfig->Verbose()>0) {
     printf("TargetMonitor::Initialize - Number of samples in pedestal: %d\n",fPedestalSamples);
     printf("TargetMonitor::Initialize - Signal samples interval: %d - %d\n",fSignalSamplesStart,fSignalSamplesEnd);
@@ -146,30 +157,23 @@ void TargetMonitor::EndOfEvent()
       fprintf(outf,"\n");
 
       fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
+      fprintf(outf,"PLOTTYPE scatter\n");
       fprintf(outf,"PLOTNAME Target ch%2.2d %d/%d %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
-      //fprintf(outf,"PLOTTYPE line\n");
-      //fprintf(outf,"MODE [ \"lines\" ]\n");
-      fprintf(outf,"PLOTTYPE histo1d\n");
-      fprintf(outf,"CHANNELS 1024\n");
-      fprintf(outf,"RANGE_X -0.5 1023.5\n");
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
       fprintf(outf,"TITLE_X Sample\n");
       fprintf(outf,"TITLE_Y Counts\n");
-      //fprintf(outf,"DATA [");
-      //for(UInt_t s = 0; s<1024; s++) {
-      //	if (s>0) fprintf(outf,",");
-      //	fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
-      //}
-      //fprintf(outf,"]\n");
-      fprintf(outf,"DATA [[");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      Bool_t first = true;
       for(UInt_t s = 0; s<1024; s++) {
-	if (s>0) fprintf(outf,",");
-	fprintf(outf,"%d",fWaveform[i][s]);
+	if (first) { first = false; } else { fprintf(outf,","); }
+	fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
       }
-      fprintf(outf,"]]\n");
+      fprintf(outf,"] ]\n\n");
 
     }
-
-    fprintf(outf,"\n");
 
     // PoTs timeline
     fprintf(outf,"PLOTID TargetMon_PoTs_TL\n");
@@ -183,9 +187,13 @@ void TargetMonitor::EndOfEvent()
     fprintf(outf,"COLOR [ \"ff0000\" ]\n");
     //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
     fprintf(outf,"DATA [ [");
+    Bool_t first = true;
     for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
       UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
-      if (fTL_Time[ii] != 0) fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+      if (fTL_Time[ii] != 0) {
+	if (first) { first = false; } else { fprintf(outf,",");	}
+	fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+      }
     }
     fprintf(outf,"] ]\n");
 
@@ -209,7 +217,13 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
   // Save waveforms of last event. Center on pedestal to improve visibility
   //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
-  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i];
+  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) {
+      if (fUseAbsSignal && samples[i] < 2048) {
+	fWaveform[channel][i] = 4096-samples[i];
+      } else {
+	fWaveform[channel][i] = samples[i];
+      }
+    }
 }
 
 void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)

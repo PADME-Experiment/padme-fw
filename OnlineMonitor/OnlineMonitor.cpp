@@ -262,7 +262,7 @@ int main(int argc, char* argv[])
 	  trigTime[trNr] = trigger_mon->GetTriggerTime();
 	}
       }
-      if (cfg->Verbose() > 1) {
+      if (cfg->Verbose() > 2) {
 	printf("- Run %d Event %d Board %2d Trigger times",cfg->GetRunNumber(),cfg->GetEventNumber(),boardId);
 	for(UChar_t t=0;t<4;t++) printf("%6.1f",trigTime[t]);
 	printf("\n");

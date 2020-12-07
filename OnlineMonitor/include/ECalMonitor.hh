@@ -6,6 +6,8 @@
 
 #include "utlConfigParser.hh"
 
+#define ECALMON_COSMWF_MAX 10
+
 class Configuration;
 
 class ECalMonitor
@@ -26,17 +28,30 @@ private:
 
   Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
 
+  void ResetECalMap(Double_t map[29][29]);
+
   Configuration* fConfig;
+
+  // Board/Channel map of calibration constants for cosmics
+  Double_t   fECal_CosmClb[29][32];
 
   utl::ConfigParser* fConfigParser;
 
   Bool_t fIsCosmics;
 
-  Double_t   fECal_cosmics[29][29];
+  Double_t   fECal_CosmSum[29][29]; // 100 events map
+  Double_t   fECal_CosmEvt[29][29]; // Last event map
   //UInt_t   fECal_count[29][29];
   //Double_t fECal_signal[29][29];
 
   UInt_t fCosmicsEventCount;
+  UInt_t fCosmicsOutputRate;
+
+  // Cosmics waveforms
+  UInt_t fNCosmWF;
+  UChar_t fCosmWFX[ECALMON_COSMWF_MAX];
+  UChar_t fCosmWFY[ECALMON_COSMWF_MAX];
+  Short_t fCosmWF[ECALMON_COSMWF_MAX][1024];
 
   // Map from [board][channel] to position as yyxx
   Short_t fECal_map[29][32] = {

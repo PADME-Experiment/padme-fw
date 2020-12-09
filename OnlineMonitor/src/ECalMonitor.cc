@@ -84,7 +84,7 @@ void ECalMonitor::Initialize()
   float calib;
   FILE* cf = fopen(calibFile.Data(),"r");
   while(fscanf(cf,"%d %d %d %d %f\n",&x,&y,&b,&c,&calib) != EOF) {
-    if (fConfig->Verbose() > 1) printf("Board %d Channel %d Calibration %f\n",b,c,calib);
+    if (fConfig->Verbose() > 2) printf("Board %d Channel %d Calibration %f\n",b,c,calib);
     fECal_CosmClb[b][c] = calib;
   }
   fclose(cf);
@@ -149,22 +149,22 @@ void ECalMonitor::EndOfEvent()
 	fprintf(outf,"PLOTID ECalMon_cosmevt\n");
 	fprintf(outf,"PLOTTYPE heatmap\n");
 	fprintf(outf,"PLOTNAME ECal Cosmics - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-      fprintf(outf,"CHANNELS 29 29\n");
-      fprintf(outf,"RANGE_X 0 29\n");
-      fprintf(outf,"RANGE_Y 0 29\n");
-      fprintf(outf,"TITLE_X X\n");
-      fprintf(outf,"TITLE_Y Y\n");
-      fprintf(outf,"DATA [");
-      for(UChar_t y = 0;y<29;y++) {
-	if (y>0) fprintf(outf,",");
-	fprintf(outf,"[");
-	for(UChar_t x = 0;x<29;x++) {
-	  if (x>0) fprintf(outf,",");
-	  fprintf(outf,"%.3f",fECal_CosmEvt[x][y]);
+	fprintf(outf,"CHANNELS 29 29\n");
+	fprintf(outf,"RANGE_X 0 29\n");
+	fprintf(outf,"RANGE_Y 0 29\n");
+	fprintf(outf,"TITLE_X X\n");
+	fprintf(outf,"TITLE_Y Y\n");
+	fprintf(outf,"DATA [");
+	for(UChar_t y = 0;y<29;y++) {
+	  if (y>0) fprintf(outf,",");
+	  fprintf(outf,"[");
+	  for(UChar_t x = 0;x<29;x++) {
+	    if (x>0) fprintf(outf,",");
+	    fprintf(outf,"%.3f",fECal_CosmEvt[x][y]);
+	  }
+	  fprintf(outf,"]");
 	}
-	fprintf(outf,"]");
-      }
-      fprintf(outf,"]\n");
+	fprintf(outf,"]\n");
 
       }
       

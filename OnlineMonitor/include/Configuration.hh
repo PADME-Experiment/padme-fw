@@ -53,6 +53,15 @@ public:
   void SetEventStatus(UInt_t s) { fEventStatus = s; }
   UInt_t GetEventStatus() { return fEventStatus; }
 
+  void SetBoardActiveMask(UInt_t m) { fBoardActiveMask = m; }
+  UInt_t GetBoardActiveMask() { return fBoardActiveMask; }
+
+  void SetBoardAcceptMask(UInt_t m) { fBoardAcceptMask = m; }
+  UInt_t GetBoardAcceptMask() { return fBoardAcceptMask; }
+
+  void SetBoardTriggerTime(UChar_t n,Double_t t) { fBoardTriggerTime[n] = t; }
+  Double_t GetBoardTriggerTime(UChar_t n) { return fBoardTriggerTime[n]; }
+
   void SetNumberOfStreams(UInt_t n) { fNumberOfStreams = n; }
   UChar_t NumberOfStreams() { return fNumberOfStreams; }
   UChar_t NumberOfStreamsMax() { return CONFIGURATION_N_STREAMS_MAX; }
@@ -103,6 +112,11 @@ private:
   ULong64_t fEventRunTime;
   UInt_t fEventTrigMask;
   UInt_t fEventStatus;
+
+  // Board information
+  UInt_t fBoardActiveMask;
+  UInt_t fBoardAcceptMask;
+  Double_t fBoardTriggerTime[4];
 
   // Number of streams to use
   UChar_t fNumberOfStreams;

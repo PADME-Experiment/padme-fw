@@ -14,6 +14,7 @@
 #include "Configuration.hh"
 #include "InputHandler.hh"
 #include "ECalMonitor.hh"
+#include "SACMonitor.hh"
 #include "TargetMonitor.hh"
 #include "TriggerMonitor.hh"
 
@@ -193,6 +194,16 @@ int main(int argc, char* argv[])
     ecal_mon = new ECalMonitor(configFileECal);
   }
 
+  // Configure SAC analyzer
+  Bool_t analyzeSAC = true;
+  SACMonitor* sac_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","SAC") && (std::stoi(configParser->GetSingleArg("ANALYZE","SAC")) == 0) ) analyzeSAC = false;
+  if (analyzeSAC) {
+    TString configFileSAC = "config/SAC.cfg";
+    if (configParser->HasConfig("CONFIGFILE","SAC")) configFileSAC = configParser->GetSingleArg("CONFIGFILE","SAC");
+    sac_mon = new SACMonitor(configFileSAC);
+  }
+
   // Configure Target analyzer
   Bool_t analyzeTarget = true;
   TargetMonitor* target_mon = 0;
@@ -236,8 +247,9 @@ int main(int argc, char* argv[])
     cfg->SetEventStatus(rawEv->GetEventStatus());
 
     // Call "start of event" procedures for all detectors
-    if (analyzeTrigger) target_mon->StartOfEvent();
+    if (analyzeTrigger) trigger_mon->StartOfEvent();
     if (analyzeECal)   ecal_mon->StartOfEvent();
+    if (analyzeSAC)    sac_mon->StartOfEvent();
     if (analyzeTarget) target_mon->StartOfEvent();
 
     // Loop over boards
@@ -252,19 +264,23 @@ int main(int argc, char* argv[])
       UChar_t nChn = adcB->GetNADCChannels();
       UChar_t nTrg = adcB->GetNADCTriggers();
 
+      // Save board information
+      cfg->SetBoardActiveMask(activeMsk);
+      cfg->SetBoardAcceptMask(acceptMsk);
+
       // Loop over trigger groups and compute trigger times
-      Double_t trigTime[4] = { 0. };
+      for(UChar_t t = 0; t<4; t++) cfg->SetBoardTriggerTime(t,0.);
       if (analyzeTrigger) {
 	for(UChar_t t=0;t<nTrg;t++){
 	  TADCTrigger* trg = adcB->ADCTrigger(t);
 	  UChar_t trNr = trg->GetGroupNumber();
 	  trigger_mon->Analyze(boardId,trNr,trg->GetSamplesArray());
-	  trigTime[trNr] = trigger_mon->GetTriggerTime();
+	  cfg->SetBoardTriggerTime(trNr,trigger_mon->GetTriggerTime());
 	}
       }
       if (cfg->Verbose() > 2) {
 	printf("- Run %d Event %d Board %2d Trigger times",cfg->GetRunNumber(),cfg->GetEventNumber(),boardId);
-	for(UChar_t t=0;t<4;t++) printf("%6.1f",trigTime[t]);
+	for(UChar_t t=0;t<4;t++) printf("%6.1f",cfg->GetBoardTriggerTime(t));
 	printf("\n");
       }
 
@@ -273,22 +289,23 @@ int main(int argc, char* argv[])
 	TADCChannel* chn = adcB->ADCChannel(c);
 	UChar_t chNr = chn->GetChannelNumber();
 	if (activeMsk & (1 << chNr)) {
-	  if (acceptMsk & (1 << chNr)) {
-	    if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	      if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
-	    } else if (boardId >= 10 && boardId <= 12) {
-	      // PVeto
-	    } else if (boardId == 13) {
-	      // HEPVeto
-	    } else if (boardId >= 24 && boardId <= 26) {
-	      // EVeto
-	    } else if (boardId == 27) {
-	      // SAC + Cosmics pads
-	    } else if (boardId == 28) {
-	      // Target
-	      if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
-	    }
+	  if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
+	    // ECal
+	    if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	  } else if (boardId >= 10 && boardId <= 12) {
+	    // PVeto
+	  } else if (boardId == 13) {
+	    // HEPVeto
+	  } else if (boardId >= 24 && boardId <= 26) {
+	    // EVeto
+	  } else if (boardId == 27) {
+	    // SAC + Cosmics pads
+	    if (analyzeSAC) sac_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	  } else if (boardId == 28) {
+	    // Target
+	    if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  }
+	  //}
 	}
       }
 
@@ -299,8 +316,9 @@ int main(int argc, char* argv[])
 
     // Call "end of event" procedures for all detectors
     if (analyzeTrigger) trigger_mon->EndOfEvent();
-    if (analyzeECal) ecal_mon->EndOfEvent();
     if (analyzeTarget) target_mon->EndOfEvent();
+    if (analyzeECal) ecal_mon->EndOfEvent();
+    if (analyzeSAC) sac_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -312,8 +330,9 @@ int main(int argc, char* argv[])
 
   // Finalize all detectors
   if (analyzeTrigger) trigger_mon->Finalize();
-  if (analyzeECal) ecal_mon->Finalize();
   if (analyzeTarget) target_mon->Finalize();
+  if (analyzeECal) ecal_mon->Finalize();
+  if (analyzeSAC) sac_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -331,8 +350,10 @@ int main(int argc, char* argv[])
   if (t_run_f>0.) printf("- Event processing rate %.2f evt/s\n",IH->EventsRead()/t_run_f);
 
   delete IH;
-  delete ecal_mon;
+  delete trigger_mon;
   delete target_mon;
+  delete ecal_mon;
+  delete sac_mon;
 
   exit(0);
 

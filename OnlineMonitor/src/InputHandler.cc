@@ -64,6 +64,9 @@ Int_t InputHandler::Initialize()
 
     if (fConfig->Verbose()) printf("InputHandler::Initialize - Initialize stream %d\n",stream);
 
+    // Create TFile structure for this stream
+    //fTFile[stream] = new TFile();
+
     // Create TRawEvent structure for this stream
     fTRawEvent[stream] = new TRawEvent();
 
@@ -120,6 +123,7 @@ TRawEvent* InputHandler::NextEvent()
 
       // File has been finalized and we read all events: close it
       delete fTFile[fCurrentStream];
+      //fTFile[fCurrentStream]->Close();
 
       // Wait for next file to appear
       UInt_t nextFileInStream = fCurrentFileInStream[fCurrentStream] + 1;
@@ -152,6 +156,7 @@ TRawEvent* InputHandler::NextEvent()
 
       // Not in FOLLOW mode: close old file then look for next file and exit if none is found
       delete fTFile[fCurrentStream];
+      //fTFile[fCurrentStream]->Close();
       UInt_t nextFileInStream = fCurrentFileInStream[fCurrentStream] + 1;
       Int_t rc = OpenFileInStream(fCurrentStream,nextFileInStream);
       if (rc == -1) {
@@ -181,8 +186,11 @@ Int_t InputHandler::WaitForFileToGrow()
   while(true) {
     // Close and reopen file
     delete fTFile[fCurrentStream];
+    //fTFile[fCurrentStream]->Close();
     TString streamFilename = FormatFilename(fCurrentStream,fCurrentFileInStream[fCurrentStream]);
-    fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
+    //fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
+    //fTFile[fCurrentStream]->Open(streamFilename,"READ");
+    fTFile[fCurrentStream] = TFile::Open(streamFilename.Data(),"READ");
     if (! fTFile[fCurrentStream]->IsZombie()) {
       if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
 	fCurrentFileIsOpen[fCurrentStream] = true;
@@ -235,9 +243,12 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
   // Wait for file to be written to
   start_time = time(0);
   while(true) {
-    fTFile[stream] = new TFile(streamFilename,"READ");
+    //fTFile[stream] = new TFile(streamFilename,"READ");
+    //fTFile[stream]->Open(streamFilename,"READ");
+    fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
     if (! fTFile[stream]->IsZombie()) break;
     delete fTFile[stream];
+    //fTFile[stream]->Close();
     if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit
@@ -303,11 +314,39 @@ TString InputHandler::FormatFilename(UChar_t stream,UInt_t filenr)
 
 Bool_t InputHandler::FileExists(TString fileName)
 {
-  struct stat filestat;
+
+  if (fConfig->Verbose() > 2) printf("InputHandler::FileExists - Testing file %s\n",fileName.Data());
+
+  Bool_t exists = true;
   if (fileName.BeginsWith("root:")) {
-    if (! gSystem->AccessPathName(fileName.Data())) return true;
+
+    // Remote file: try to open it and check if this succeeds
+    //if (! gSystem->AccessPathName(fileName.Data())) return true;
+    gErrorIgnoreLevel = kBreak; // Do not report "open file" errors
+    TFile* testTF = TFile::Open(fileName.Data(),"READ");
+    if (testTF == 0) {
+      exists = false;
+    } else {
+      delete testTF;
+    }
+    gErrorIgnoreLevel = kError; // Go back to standard error-reporting behaviour
+
   } else {
-    if ( stat(Form(fileName.Data()),&filestat) == 0 ) return true;
+
+    // Local file: use standard 'stat' call
+    struct stat filestat;
+    if ( stat(Form(fileName.Data()),&filestat) != 0 ) exists = false;
+
   }
-  return false;
+
+  if (fConfig->Verbose() > 2) {
+    if (exists) {
+      printf("InputHandler::FileExists - File %s exists\n",fileName.Data());
+    } else {
+      printf("InputHandler::FileExists - File %s does not exist\n",fileName.Data());
+    }
+  }
+
+  return exists;
+
 }

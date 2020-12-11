@@ -25,6 +25,17 @@ SACMonitor::SACMonitor(TString cfgFile)
 SACMonitor::~SACMonitor()
 {
   if (fConfigParser) { delete fConfigParser; fConfigParser = 0; }
+
+  // Delete histograms
+  for(UInt_t x=0; x<5; x++) {
+    for(UInt_t y=0; y<5; y++) {
+      if (fHPedestal[x][y]) { delete fHPedestal[x][y]; fHPedestal[x][y] = 0; }
+      if (fHPedRMS[x][y]) { delete fHPedRMS[x][y]; fHPedRMS[x][y] = 0; }
+      if (fHPedestalOB[x][y]) { delete fHPedestal[x][y]; fHPedestal[x][y] = 0; }
+      if (fHPedRMSOB[x][y]) { delete fHPedRMS[x][y]; fHPedRMS[x][y] = 0; }
+    }
+  }
+
 }
 
 void SACMonitor::Initialize()
@@ -63,8 +74,38 @@ void SACMonitor::Initialize()
     printf("\n");
   }
 
+  // Get beam output rate from config file
+  fBeamOutputRate = 500;
+  if ( fConfigParser->HasConfig("RECO","BeamOutputRate") ) {
+    try {
+      fBeamOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate"));
+    } catch (...) {
+      printf("SACMonitor::Initialize - WARNING - 'BeamOutputRate' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","BeamOutputRate").c_str(),fBeamOutputRate);
+    }
+  }
+
+  // Get off-beam output rate from config file
+  fOffBeamOutputRate = 500;
+  if ( fConfigParser->HasConfig("RECO","OffBeamOutputRate") ) {
+    try {
+      fOffBeamOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate"));
+    } catch (...) {
+      printf("SACMonitor::Initialize - WARNING - 'OffBeamOutputRate' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","OffBeamOutputRate").c_str(),fOffBeamOutputRate);
+    }
+  }
+
   // Get cosmics output rate from config file
-  fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):100;
+  fCosmicsOutputRate = 100;
+  if ( fConfigParser->HasConfig("RECO","CosmicsOutputRate") ) {
+    try {
+      fCosmicsOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate"));
+    } catch (...) {
+      printf("SACMonitor::Initialize - WARNING - 'CosmicsOutputRate' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","CosmicsOutputRate").c_str(),fCosmicsOutputRate);
+    }
+  }
+
+  // Set number of samples to use to compute pedestals
+  fPedestalSamples = 100;
 
 /*
   // Get calibration constants from file
@@ -92,34 +133,229 @@ void SACMonitor::Initialize()
   fclose(cf);
 */
 
+  // Create histograms
+  TString hname;
+  for(UInt_t x=0; x<5; x++) {
+    for(UInt_t y=0; y<5; y++) {
+      // On-beam histograms
+      hname.Form("SAC_Ped_%d%d",y,x);
+      fHPedestal[x][y] = new TH1D(hname.Data(),hname.Data(),200,3650.,3850.);
+      hname.Form("SAC_PedRMS_%d%d",y,x);
+      fHPedRMS[x][y] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
+      // Off-beam histograms
+      hname.Form("SAC_PedOB_%d%d",y,x);
+      fHPedestalOB[x][y] = new TH1D(hname.Data(),hname.Data(),200,3650.,3850.);
+      hname.Form("SAC_PedRMSOB_%d%d",y,x);
+      fHPedRMSOB[x][y] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
+    }
+  }
+ 
   // Reset global counters
   ResetSACMap(fSAC_CosmEvt);
   ResetSACMap(fSAC_CosmSum);
   ResetSACWaveforms(fCosmWF);
+  ResetSACWaveforms(fBeamWF);
+  ResetSACWaveforms(fOffBeamWF);
+  fBeamEventCount = 0;
+  fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
 
 }
 
 void SACMonitor::StartOfEvent()
 {
-  // Check if event is cosmics
+
+  // Check if event was triggered by BTF beam
+  if (fConfig->GetEventTrigMask() & 0x01) {
+    fIsBeam = true;
+  } else {
+    fIsBeam = false;
+  }
+
+  // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
   } else {
     fIsCosmics = false;
   }
-  
+ 
+  // Check if event was an off-beam trigger
+  if (fConfig->GetEventTrigMask() & 0x80) {
+    fIsOffBeam = true;
+  } else {
+    fIsOffBeam = false;
+  }
+ 
 }
 
 void SACMonitor::EndOfEvent()
 {
+
+  if (fIsBeam) {
+
+    if (fBeamEventCount % fBeamOutputRate == 0) {
+
+      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing beam output files\n");
+
+      // Write beam-related monitor file
+      TString ftname = fConfig->TmpDirectory()+"/SACMon_Beam.txt";
+      TString ffname = fConfig->OutputDirectory()+"/SACMon_Beam.txt";
+      FILE* outf = fopen(ftname.Data(),"a");
+
+      // Show waveforms and pedstal maps
+      for (UInt_t x = 0; x < 5; x++) {
+	for (UInt_t y = 0; y < 5; y++) {
+
+	  fprintf(outf,"PLOTID SACMon_beamwf_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE scatter\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"RANGE_X 0 1024\n");
+	  //fprintf(outf,"RANGE_Y 0 4096\n");
+	  fprintf(outf,"TITLE_X Sample\n");
+	  fprintf(outf,"TITLE_Y Counts\n");
+	  fprintf(outf,"MODE [ \"lines\" ]\n");
+	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+	  fprintf(outf,"DATA [ [");
+	  Bool_t first = true;
+	  for(UInt_t j = 0; j<1024; j++) {
+	    if (first) { first = false; } else { fprintf(outf,","); }
+	    fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	  fprintf(outf,"PLOTID SACMon_beamped_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE histo1d\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
+	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
+	  fprintf(outf,"TITLE_X Counts\n");
+	  fprintf(outf,"DATA [ [");
+	  for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
+	    if (b>1) fprintf(outf,",");
+	    fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	  fprintf(outf,"PLOTID SACMon_beampedrms_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE histo1d\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
+	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
+	  fprintf(outf,"TITLE_X Counts\n");
+	  fprintf(outf,"DATA [ [");
+	  for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
+	    if (b>1) fprintf(outf,",");
+	    fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	}
+      }
+ 
+      // Close monitor file
+      fclose(outf);
+      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+
+      // Reset histograms
+      ResetSACMap(fHPedestal);
+      ResetSACMap(fHPedRMS);
+
+      // Reset beam waveforms
+      ResetSACWaveforms(fBeamWF);
+
+    }
+
+    // Count beam event
+    fBeamEventCount++;
+
+  } // End of beam output
+
+  if (fIsOffBeam) {
+
+    if (fOffBeamEventCount % fOffBeamOutputRate == 0) {
+
+      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing off-beam output files\n");
+
+      // Write beam-related monitor file
+      TString ftname = fConfig->TmpDirectory()+"/SACMon_OffBeam.txt";
+      TString ffname = fConfig->OutputDirectory()+"/SACMon_OffBeam.txt";
+      FILE* outf = fopen(ftname.Data(),"a");
+
+      // Show waveforms and pedstal maps
+      for (UInt_t x = 0; x < 5; x++) {
+	for (UInt_t y = 0; y < 5; y++) {
+
+	  fprintf(outf,"PLOTID SACMon_offbeamwf_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE scatter\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"RANGE_X 0 1024\n");
+	  //fprintf(outf,"RANGE_Y 0 4096\n");
+	  fprintf(outf,"TITLE_X Sample\n");
+	  fprintf(outf,"TITLE_Y Counts\n");
+	  fprintf(outf,"MODE [ \"lines\" ]\n");
+	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+	  fprintf(outf,"DATA [ [");
+	  Bool_t first = true;
+	  for(UInt_t j = 0; j<1024; j++) {
+	    if (first) { first = false; } else { fprintf(outf,","); }
+	    fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	  fprintf(outf,"PLOTID SACMon_offbeamped_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE histo1d\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
+	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
+	  fprintf(outf,"TITLE_X Counts\n");
+	  fprintf(outf,"DATA [ [");
+	  for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
+	    if (b>1) fprintf(outf,",");
+	    fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	  fprintf(outf,"PLOTID SACMon_offbeampedrms_%d%d\n",y,x);
+	  fprintf(outf,"PLOTTYPE histo1d\n");
+	  fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+	  fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
+	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
+	  fprintf(outf,"TITLE_X Counts\n");
+	  fprintf(outf,"DATA [ [");
+	  for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
+	    if (b>1) fprintf(outf,",");
+	    fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
+	  }
+	  fprintf(outf,"] ]\n\n");
+
+	}
+      }
+ 
+      // Close monitor file
+      fclose(outf);
+      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+
+      // Reset histograms
+      ResetSACMap(fHPedestalOB);
+      ResetSACMap(fHPedRMSOB);
+
+      // Reset beam waveforms
+      ResetSACWaveforms(fOffBeamWF);
+
+    }
+
+    // Count off-beam event
+    fOffBeamEventCount++;
+
+  } // End of off-beam output
+
   if (fIsCosmics) {
 
     if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
 
-      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing output files\n");
+      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing cosmics output files\n");
 
-      // Write current cosmics map
+      // Write cosmics-related monitor file
       TString ftname = fConfig->TmpDirectory()+"/SACMon_Cosmics.txt";
       TString ffname = fConfig->OutputDirectory()+"/SACMon_Cosmics.txt";
       FILE* outf = fopen(ftname.Data(),"a");
@@ -198,12 +434,14 @@ void SACMonitor::EndOfEvent()
     // Count cosmics event
     fCosmicsEventCount++;
 
-  }
+  } // End of cosmics output
 
 }
 
 void SACMonitor::Finalize()
 {
+  printf("SACMonitor::Finalize - Total number of beam events: %d\n",fBeamEventCount);
+  printf("SACMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
   printf("SACMonitor::Finalize - Total number of cosmics events: %d\n",fCosmicsEventCount);
 }
 
@@ -222,34 +460,52 @@ void SACMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   }
 
   // Get x,y coordinates from channel map
-  UChar_t x = fSAC_map[channel]/10;
-  UChar_t y = fSAC_map[channel]%10;
+  UChar_t x = fSAC_map[channel]%10;
+  UChar_t y = fSAC_map[channel]/10;
+
+  // Compute pedestal and RMS for this channel
+  ComputeChannelPedestal(board,channel,samples);
+  if (fIsBeam) {
+    fHPedestal[x][y]->Fill(fChannelPedestal);
+    fHPedRMS[x][y]->Fill(fChannelPedRMS);
+  }
+  if (fIsOffBeam) {
+    fHPedestalOB[x][y]->Fill(fChannelPedestal);
+    fHPedRMSOB[x][y]->Fill(fChannelPedRMS);
+  }
+
+  // Get energy in this channel
+  ComputeChannelEnergy(board,channel,samples);
+
+  // Find peaks in this channel
+  FindChannelPeaks(board,channel,samples);
+
+  // Save beam related information
+  if (fIsBeam) {
+    // Save waveform once every few events
+    //if (fBeamEventCount % fBeamOutputRate == 0) {
+    if (fNPeaks > 10) {
+      for(UInt_t i = 0; i<1024; i++) fBeamWF[x][y][i] = samples[i];
+    }
+  }
 
   // Save cosmics related information
   if (fIsCosmics) {
 
     // Save energy in cosmics map
-    Double_t chEnergy = GetChannelEnergy(board,channel,samples);
-    fSAC_CosmSum[x][y] += chEnergy;
+    fSAC_CosmSum[x][y] += fChannelEnergy;
 
-    // Find peaks
-    GetChannelPeaks(board,channel,samples);
-
-    //// Save waveform and event map once every few events
-    //if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
-    //  fSAC_CosmEvt[x][y] = chEnergy;
-    //  for(UInt_t i = 0; i<1024; i++) fCosmWF[x][y][i] = samples[i];
-    //}
-    // Only save channels with peaks
-    if (fNPeaks) {
-      printf("Found %d peaks\n",fNPeaks);
+    // Save waveform and event map once every few events
+    if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
+      fSAC_CosmEvt[x][y] = fChannelEnergy;
       for(UInt_t i = 0; i<1024; i++) fCosmWF[x][y][i] = samples[i];
     }
+
   }
 
 }
 
-Double_t SACMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
+void SACMonitor::ComputeChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
 {
   // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
   Int_t sum = 0;
@@ -258,38 +514,68 @@ Double_t SACMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* sam
     sum += samples[s];
     if (s<100) sum_ped += samples[s];
   }
-  Double_t tot = 9.94*sum_ped-1.*sum;
+  fChannelEnergy = 9.94*(Double_t)sum_ped-(Double_t)sum;
   // Convert to pC (check formula)
   //tot = tot/(4096.*50.)*(1.E-9/1.E-12);
-  tot *= 4.8828E-3;
-  return tot;
+  fChannelEnergy *= 4.8828E-3;
 }
 
-void SACMonitor::GetChannelPeaks(UChar_t board,UChar_t channel,Short_t* samples)
+void SACMonitor::ComputeChannelPedestal(UChar_t board,UChar_t channel,Short_t* samples)
+{
+  // Get pedestal value and RMS from first 100 samples
+  Int_t sum = 0;
+  Int_t sum2 = 0;
+  for(UInt_t s = 0; s<fPedestalSamples; s++) {
+    sum += samples[s];
+    sum2 += samples[s]*samples[s];
+  }
+  fChannelPedestal = (Double_t)sum/(Double_t)fPedestalSamples;
+  fChannelPedRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*fChannelPedestal)/(Double_t)(fPedestalSamples-1) );
+}
+
+void SACMonitor::FindChannelPeaks(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   fNPeaks = 0;
 
-  // Get pedestal value and RMS from first 100 samples
-  Int_t sum = 0;
-  Int_t sum2 = 0;
-  for(UInt_t s = 0; s<100; s++) {
-    sum += samples[s];
-    sum2 += samples[s]*samples[2];
-  }
-  Double_t ped = (Double_t)sum/100.;
-  Double_t ped_rms = sqrt( ((Double_t)sum2 - (Double_t)sum*ped)/99. );
+  //// Get pedestal value and RMS from first 100 samples
+  //Int_t sum = 0;
+  //Int_t sum2 = 0;
+  //for(UInt_t s = 0; s<100; s++) {
+  //  sum += samples[s];
+  //  sum2 += samples[s]*samples[s];
+  //}
+  //Double_t ped = (Double_t)sum/100.;
+  //Double_t ped_rms = sqrt( ((Double_t)sum2 - (Double_t)sum*ped)/99. );
 
-  // Count samples (above the 100th) with value < pedestal - 5.*RMS
-  Double_t threshold = ped - 5.*ped_rms;
+  //// Count samples (above the 100th) with value < pedestal - 5.*RMS
+  //Double_t threshold = ped - 5.*ped_rms;
+  //for(UInt_t s = 100; s<994; s++) {
+  //  if ((Double_t)samples[s] < threshold) {
+  //    if (fNPeaks < SACMONITOR_PEAKS_MAX) fPeakTime[fNPeaks] = (Double_t)s;
+  //    fNPeaks++;
+  //  }
+  //}
+
+  // Count peaks defined as consecutive samples with value < pedestal - 10*RMS
+  Double_t sample;
+  Double_t threshold = fChannelPedestal - 5.*fChannelPedRMS;
+  Bool_t onPeak = false;
   for(UInt_t s = 100; s<994; s++) {
-    if ((Double_t)samples[s] < threshold) {
-      if (fNPeaks < SACMONITOR_PEAKS_MAX) fPeakTime[fNPeaks] = (Double_t)s;
-      fNPeaks++;
+    sample = (Double_t)samples[s];
+    if (onPeak) {
+      if (sample > threshold) onPeak = false;
+    } else {
+      if (sample <= threshold) {
+	onPeak = true;
+	fPeakTime[fNPeaks] = (Double_t)s;
+	fNPeaks++;
+      }
     }
   }
 
-  if (fNPeaks) printf("SACMonitor::GetChannelPeaks - Event %d Channel %d NPeaks %d\n",fConfig->GetEventNumber(),channel,fNPeaks);
+  if ( (fNPeaks > 0) && (fConfig->Verbose() > 2) )
+    printf("SACMonitor::FindChannelPeaks - Event %d Channel %d NPeaks %d - Ped %f RMS %f Thr %f\n",fConfig->GetEventNumber(),channel,fNPeaks,fChannelPedestal,fChannelPedRMS,threshold);
 
 }
 
@@ -303,9 +589,19 @@ void SACMonitor::ResetSACMap(Double_t map[5][5])
   }
 }
 
+void SACMonitor::ResetSACMap(TH1D* map[5][5])
+{
+  // Reset all histograms
+  for (UChar_t x=0; x<5; x++) {
+    for (UChar_t y=0; y<5; y++) {
+      map[x][y]->Reset();
+    }
+  }
+}
+
 void SACMonitor::ResetSACWaveforms(Short_t map[5][5][1024])
 {
-  // Set all crystals to 0
+  // Set all samples to 0
   for (UChar_t x=0; x<5; x++) {
     for (UChar_t y=0; y<5; y++) {
       for (UShort_t s=0; s<1024; s++) {
@@ -314,3 +610,4 @@ void SACMonitor::ResetSACWaveforms(Short_t map[5][5][1024])
     }
   }
 }
+

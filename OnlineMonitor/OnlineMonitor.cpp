@@ -55,31 +55,31 @@ int main(int argc, char* argv[])
       case 'S':
         if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
           fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
           fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         break;
       case 'n':
         if ( sscanf(optarg,"%d",&nEventsToProcess) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         if (nEventsToProcess<0) {
           fprintf (stderr, "Error while processing option '-n'. Required %d events (must be >=0).\n", nEventsToProcess);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         break;
       case 'd':
         if ( sscanf(optarg,"%d",&debugScale) != 1 ) {
           fprintf (stderr, "Error while processing option '-d'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         if (debugScale<0) {
           fprintf (stderr, "Error while processing option '-d': required %d, must be >=0.\n", debugScale);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         break;
       case 'f':
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -d: define frequency of debug printout [default: %u]\n",cfg->DebugScale());
         fprintf(stdout,"  -v: increase verbose level (can be repeated)\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
-        exit(0);
+        exit(EXIT_SUCCESS);
       case '?':
 	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o' || optopt == 'c' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
         else
           fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
-        exit(1);
+        exit(EXIT_FAILURE);
       default:
         abort();
       }
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
   // Check if run name was defined
   if (runName.IsNull()) {
     fprintf (stderr,"ERROR - No run name defined with -R option.\n");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
   cfg->SetRunName(runName);
 
@@ -163,13 +163,6 @@ int main(int argc, char* argv[])
   }
   if (cfg->Verbose()) fprintf(stdout,"- Verbose level: %u\n",cfg->Verbose());
 
-  // Create input handler
-  InputHandler* IH = new InputHandler();
-  if (IH->Initialize()) {
-    perror("- ERROR while initializing InputHandler");
-    exit(EXIT_FAILURE);
-  }
-
   // Create configuration file parser
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
   if (cfg->Verbose()>1) configParser->Print();
@@ -182,6 +175,16 @@ int main(int argc, char* argv[])
     TString configFileTrigger = "config/Target.cfg";
     if (configParser->HasConfig("CONFIGFILE","Trigger")) configFileTrigger = configParser->GetSingleArg("CONFIGFILE","Trigger");
     trigger_mon = new TriggerMonitor(configFileTrigger);
+  }
+
+  // Configure Target analyzer
+  Bool_t analyzeTarget = true;
+  TargetMonitor* target_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","Target") && (std::stoi(configParser->GetSingleArg("ANALYZE","Target")) == 0) ) analyzeTarget = false;
+  if (analyzeTarget) {
+    TString configFileTarget = "config/Target.cfg";
+    if (configParser->HasConfig("CONFIGFILE","Target")) configFileTarget = configParser->GetSingleArg("CONFIGFILE","Target");
+    target_mon = new TargetMonitor(configFileTarget);
   }
 
   // Configure ECal analyzer
@@ -204,14 +207,13 @@ int main(int argc, char* argv[])
     sac_mon = new SACMonitor(configFileSAC);
   }
 
-  // Configure Target analyzer
-  Bool_t analyzeTarget = true;
-  TargetMonitor* target_mon = 0;
-  if ( configParser->HasConfig("ANALYZE","Target") && (std::stoi(configParser->GetSingleArg("ANALYZE","Target")) == 0) ) analyzeTarget = false;
-  if (analyzeTarget) {
-    TString configFileTarget = "config/Target.cfg";
-    if (configParser->HasConfig("CONFIGFILE","Target")) configFileTarget = configParser->GetSingleArg("CONFIGFILE","Target");
-    target_mon = new TargetMonitor(configFileTarget);
+  // N.B. InputHandler must be created AFTER all detectors have been initialized to avoid clashes on histogram booking
+
+  // Create input handler
+  InputHandler* IH = new InputHandler();
+  if (IH->Initialize()) {
+    perror("- ERROR while initializing InputHandler");
+    exit(EXIT_FAILURE);
   }
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
@@ -355,6 +357,6 @@ int main(int argc, char* argv[])
   delete ecal_mon;
   delete sac_mon;
 
-  exit(0);
+  exit(EXIT_SUCCESS);
 
 }

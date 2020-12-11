@@ -28,6 +28,8 @@ private:
   // Estimate total charge of channel from samples
   void ComputeTriggerTime(UChar_t,UChar_t,Short_t*);
 
+  void ResetWaveforms(Short_t map[4][1024]);
+
   Configuration* fConfig;
 
   utl::ConfigParser* fConfigParser;
@@ -35,13 +37,16 @@ private:
   // Reconstruction parameters
   Double_t fVoltageBin; // Volt per count (1V = 4096 counts)
   Double_t fImpedance; // ADC input impedance in Ohm (50 Ohm)
-  UInt_t fEventOutputScale; // Number of events between outputs
+  UInt_t fEventOutputRate; // Number of events between outputs
 
-  // Array to store waveforms, charge and pedestals for a whole event
-  Short_t fWaveform[1024] = {0};
+  // Array to store waveforms of four groups in an event
+  Short_t fEventWF[4][1024];
 
   // Counters
-  UInt_t fEventCounter = 0;
+  UInt_t fEventCounter;
+
+  // Board to show on monitor
+  UInt_t fBoardToShow;
 
   // Trigger time (in bin units) of last processed trigger
   Double_t fTriggerTime;

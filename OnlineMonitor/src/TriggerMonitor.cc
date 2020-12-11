@@ -33,13 +33,28 @@ void TriggerMonitor::Initialize()
   fVoltageBin = 1./4096.; // Volt per count (1V = 4096 counts)
   fImpedance  = 50.;      // ADC input impedance in Ohm (50 Ohm)
 
-  // Get running parameters from configuration file. Use some default if not found
-  fEventOutputScale = fConfigParser->HasConfig("RECO","EventScale")?std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputScale")):500;
-  if (fConfig->Verbose()>0) {
-    printf("TriggerMonitor::Initialize - Event output scale: %d\n",fEventOutputScale);
+  // Get event output rate from config file
+  fEventOutputRate = 500;
+  if ( fConfigParser->HasConfig("RECO","EventOutputRate") ) {
+    try {
+      fEventOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputRate"));
+    } catch (...) {
+      printf("TriggerMonitor::Initialize - WARNING - 'EventOutputRate' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","EventOutputRate").c_str(),fEventOutputRate);
+    }
+  }
+
+  // Get board to show on monitor page
+  fBoardToShow = 27;
+  if ( fConfigParser->HasConfig("RECO","BoardToShow") ) {
+    try {
+      fBoardToShow = std::stoi(fConfigParser->GetSingleArg("RECO","BoardToShow"));
+    } catch (...) {
+      printf("TriggerMonitor::Initialize - WARNING - 'BoardToShow' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","BoardToShow").c_str(),fBoardToShow);
+    }
   }
 
   // Reset counters
+  ResetWaveforms(fEventWF);
   fEventCounter = 0;
 
 }
@@ -49,9 +64,9 @@ void TriggerMonitor::StartOfEvent()
 
 void TriggerMonitor::EndOfEvent()
 {
-  /*
+
   // If we read enough events, dump PadmeMonitor file
-  if (fEventCounter == fEventOutputScale) {
+  if (fEventCounter % fEventOutputRate == 0) {
 
     if (fConfig->Verbose()>0) printf("TriggerMonitor::EndOfEvent - Writing output files\n");
 
@@ -60,13 +75,33 @@ void TriggerMonitor::EndOfEvent()
     TString ffname = fConfig->OutputDirectory()+"/TriggerMon_Timing.txt";
     FILE* outf = fopen(ftname.Data(),"a");
 
+    // Show waveforms
+    for (UInt_t g = 0; g < 4; g++) {
+      fprintf(outf,"PLOTID TriggerMon_evtwf_%d\n",g);
+      fprintf(outf,"PLOTTYPE scatter\n");
+      fprintf(outf,"PLOTNAME Trigger Waveform - Board %d Group %d - Run %d Event %d - %s\n",fBoardToShow,g,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      Bool_t first = true;
+      for(UInt_t j = 0; j<1024; j++) {
+	if (first) { first = false; } else { fprintf(outf,","); }
+	fprintf(outf,"[%d,%d]",j,fEventWF[g][j]);
+      }
+      fprintf(outf,"] ]\n\n");
+    }
+
     fclose(outf);
     if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
 
-    // Reset counters
-    fEventCounter = 0;
   }
-  */
+
+  fEventCounter++;
+
 }
 
 void TriggerMonitor::Finalize()
@@ -74,7 +109,15 @@ void TriggerMonitor::Finalize()
 
 void TriggerMonitor::Analyze(UChar_t board,UChar_t group,Short_t* samples)
 {
+
+  // Compute trigger time for this group
   ComputeTriggerTime(board,group,samples);
+
+  // Save waveforms once every few events
+  if ( (fEventCounter % fEventOutputRate == 0) && (board == fBoardToShow) ) {
+    for(UInt_t i = 0; i<1024; i++) fEventWF[group][i] = samples[i];
+  }
+
 }
 
 void TriggerMonitor::ComputeTriggerTime(UChar_t board,UChar_t group,Short_t* samples)
@@ -132,4 +175,14 @@ void TriggerMonitor::ComputeTriggerTime(UChar_t board,UChar_t group,Short_t* sam
     }
   }
   */
+}
+
+void TriggerMonitor::ResetWaveforms(Short_t map[4][1024])
+{
+  // Set all samples to 0
+  for (UChar_t g=0; g<4; g++) {
+    for (UShort_t s=0; s<1024; s++) {
+      map[g][s] = 0;
+    }
+  }
 }

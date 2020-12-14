@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <memory>
 
 #include "TFile.h"
 #include "TTree.h"
@@ -321,14 +322,9 @@ Bool_t InputHandler::FileExists(TString fileName)
   if (fileName.BeginsWith("root:")) {
 
     // Remote file: try to open it and check if this succeeds
-    //if (! gSystem->AccessPathName(fileName.Data())) return true;
     gErrorIgnoreLevel = kBreak; // Do not report "open file" errors
-    TFile* testTF = TFile::Open(fileName.Data(),"READ");
-    if (testTF == 0) {
-      exists = false;
-    } else {
-      delete testTF;
-    }
+    std::unique_ptr<TFile> testTF(TFile::Open(fileName.Data(),"READ"));
+    if (testTF == 0) exists = false;
     gErrorIgnoreLevel = kError; // Go back to standard error-reporting behaviour
 
   } else {

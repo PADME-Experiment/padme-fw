@@ -322,10 +322,11 @@ Bool_t InputHandler::FileExists(TString fileName)
   if (fileName.BeginsWith("root:")) {
 
     // Remote file: try to open it and check if this succeeds
+    Int_t oldErrorIgnoreLevel = gErrorIgnoreLevel;
     gErrorIgnoreLevel = kBreak; // Do not report "open file" errors
     std::unique_ptr<TFile> testTF(TFile::Open(fileName.Data(),"READ"));
     if (testTF == 0) exists = false;
-    gErrorIgnoreLevel = kError; // Go back to standard error-reporting behaviour
+    gErrorIgnoreLevel = oldErrorIgnoreLevel; // Go back to previous error-reporting behaviour
 
   } else {
 

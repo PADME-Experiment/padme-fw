@@ -30,6 +30,9 @@ public:
   void SetDebugScale(Int_t v) { fDebugScale = v; }
   Int_t DebugScale() { return fDebugScale; }
 
+  void SetEventsPerFile(UInt_t n) { fEventsPerFile = n; }
+  UInt_t EventsPerFile() { return fEventsPerFile; }
+
   void SetOutputDirectory(TString d) { fOutputDirectory = d; }
   TString OutputDirectory() { return fOutputDirectory; }
 
@@ -96,10 +99,13 @@ private:
   // Events interval between debug printouts
   Int_t fDebugScale;
 
-  // PademMonitor directory where output files will be copied to
+  // Maximum number of events to write to a RawFile
+  UInt_t fEventsPerFile;
+
+  // Directory where output files (either PadmeMonitor or RawFile) will be copied to
   TString fOutputDirectory;
 
-  // Temporary directory where output files are written before being moved to final output directory
+  // Temporary directory where PadmeMonitor output files are written before being moved to final output directory
   TString fTmpDirectory;
 
   // Name (including possible path) of configuration file for monitor analysis

@@ -6,7 +6,8 @@ Configuration::Configuration()
 {
   // Set default configuration parameters
   fRunName = "";
-  fDataDirectory = ".";
+  fEventsPerFile = 1000;
+  fDataDirectory = "rawdata";
   fOutputDirectory = "watchdir";
   fTmpDirectory = "tmp";
   fConfigFile = "config/OnlineMonitor.cfg";

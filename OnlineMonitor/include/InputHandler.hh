@@ -1,11 +1,10 @@
 #ifndef InputHandler_H
 #define InputHandler_H
 
-//#include "TChain.h"
-
-#include "Configuration.hh"
+class Configuration;
 
 class TFile;
+class TTree;
 class TRawEvent;
 
 class InputHandler

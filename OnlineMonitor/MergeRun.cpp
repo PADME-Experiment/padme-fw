@@ -178,7 +178,10 @@ int main(int argc, char* argv[])
     }
 
     // Write current event to output file
-    OH->WriteEvent(rawEv);
+    if (OH->WriteEvent(rawEv)) {
+      perror("- ERROR while writing output file");
+      exit(EXIT_FAILURE);
+    }
 
     // Clear event
     rawEv->Clear("C");

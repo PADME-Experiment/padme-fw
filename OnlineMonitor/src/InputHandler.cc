@@ -91,6 +91,12 @@ Int_t InputHandler::Initialize()
 
 }
 
+Int_t InputHandler::Finalize()
+{
+  if (fConfig->Verbose()) printf("InputHandler::Finalize - Finalizing.\n");
+  return 0;
+}
+
 TRawEvent* InputHandler::NextEvent()
 {
 

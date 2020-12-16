@@ -143,14 +143,15 @@ Int_t OutputHandler::CloseOutFile()
   return 0;
 }
 
-Int_t OutputHandler::WriteEvent(TRawEvent* rawEv)
+//Int_t OutputHandler::WriteEvent(TRawEvent* rawEv)
+Int_t OutputHandler::WriteEvent()
 {
 
-  // Empty output event structure
-  fTRawEvent->Clear("C");
+  //// Empty output event structure
+  //fTRawEvent->Clear("C");
 
-  // Copy input event to output event (may apply zero suppression)
-  CopyTRawEvent(fTRawEvent,rawEv);
+  //// Copy input event to output event (may apply zero suppression)
+  //CopyTRawEvent(fTRawEvent,rawEv);
 
   // Write current event to file
   fTTreeMain->Fill();
@@ -164,6 +165,7 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv)
 
 }
 
+/*
 void OutputHandler::CopyTRawEvent(TRawEvent* outEv, TRawEvent* inEv)
 {
 
@@ -241,6 +243,7 @@ void OutputHandler::CopyTRawEvent(TRawEvent* outEv, TRawEvent* inEv)
   }
 
 }
+*/
 
 TString OutputHandler::FormatFilename(UInt_t filenr)
 {

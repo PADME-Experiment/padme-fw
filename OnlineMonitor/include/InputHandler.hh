@@ -17,7 +17,8 @@ public:
 
 public:
 
-  Int_t Initialize(); // Returns <>0 if an error occours during initialization
+  Int_t Initialize();
+  Int_t Finalize();
 
   TRawEvent* NextEvent();
 

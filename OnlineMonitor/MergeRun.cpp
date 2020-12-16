@@ -8,6 +8,7 @@
 #include "Configuration.hh"
 #include "InputHandler.hh"
 #include "OutputHandler.hh"
+#include "EventCopier.hh"
 
 int main(int argc, char* argv[])
 {
@@ -139,6 +140,13 @@ int main(int argc, char* argv[])
   }
   if (cfg->Verbose()) fprintf(stdout,"- Verbose level: %u\n",cfg->Verbose());
 
+  // Create event copier
+  EventCopier* EC = new EventCopier();
+  if (EC->Initialize()) {
+    perror("- ERROR while initializing EventCopier");
+    exit(EXIT_FAILURE);
+  }
+
   // Create output handler
   OutputHandler* OH = new OutputHandler();
   if (OH->Initialize()) {
@@ -177,8 +185,15 @@ int main(int argc, char* argv[])
 	     rawEv->GetNADCBoards(),(rawEv->GetMissingADCBoards() & 0xffff));
     }
 
+    // Copy current input event to output event structure
+    if (EC->CopyEvent(OH->GetRawEvent(),rawEv)) {
+      perror("- ERROR while copying input event to output event");
+      exit(EXIT_FAILURE);
+    }
+
     // Write current event to output file
-    if (OH->WriteEvent(rawEv)) {
+    //if (OH->WriteEvent(rawEv)) {
+    if (OH->WriteEvent()) {
       perror("- ERROR while writing output file");
       exit(EXIT_FAILURE);
     }
@@ -194,8 +209,14 @@ int main(int argc, char* argv[])
 
   } // End loop over events
 
-  // Finalize output
+  // Finalize event copier
+  EC->Finalize();
+
+  // Finalize output handler
   OH->Finalize();
+
+  // Finalize input handler
+  IH->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -223,6 +244,7 @@ int main(int argc, char* argv[])
 
   delete IH;
   delete OH;
+  delete EC;
 
   exit(EXIT_SUCCESS);
 

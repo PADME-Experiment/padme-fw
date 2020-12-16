@@ -20,7 +20,8 @@ public:
   Int_t Initialize();
   Int_t Finalize();
 
-  Int_t WriteEvent(TRawEvent*);
+  //Int_t WriteEvent(TRawEvent*);
+  Int_t WriteEvent();
   TRawEvent* GetRawEvent() { return fTRawEvent; }
 
   UInt_t GetTotalOutFiles() { return fOutFileIndex+1; }
@@ -36,7 +37,7 @@ private:
   Bool_t FileExists(TString);
 
   TString FormatFilename(UInt_t);
-  void CopyTRawEvent(TRawEvent*, TRawEvent*);
+  //void CopyTRawEvent(TRawEvent*, TRawEvent*);
 
   // Connection to configuration class
   Configuration* fConfig;

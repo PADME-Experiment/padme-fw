@@ -46,8 +46,17 @@ void TargetMonitor::Initialize()
   // 1.60217662e-7: electron charge; 12: nominal CCD in um; 36: total number of strips
   fChargeToPoTs = 1./(1.60217662e-7*12.*36.);
 
+  // Get beam output rate from config file
+  fBeamOutputRate = 500;
+  if ( fConfigParser->HasConfig("RECO","BeamOutputRate") ) {
+    try {
+      fBeamOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate"));
+    } catch (...) {
+      printf("TargetMonitor::Initialize - WARNING - 'BeamOutputRate' parameter has non-integer value '%s': using default %d\n",fConfigParser->GetSingleArg("RECO","BeamOutputRate").c_str(),fBeamOutputRate);
+    }
+  }
+
   // Get running parameters from configuration file. Use some default if not found
-  fEventOutputScale = fConfigParser->HasConfig("RECO","EventScale")?std::stoi(fConfigParser->GetSingleArg("RECO","EventOutputScale")):500;
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):200;
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):700;
@@ -74,16 +83,16 @@ void TargetMonitor::Initialize()
   }
 
   // Reset counters
-  fEventCounter = 0;
-  for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+  fBeamEventCount = 0;
   fEventPoTsTotal = 0.;
+  fRunPoTsTotal = 0.;
+  for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
 }
 
 void TargetMonitor::StartOfEvent()
 {
   // Check if event is a beam event
   if (fConfig->GetEventTrigMask() & 0x01) {
-    fEventCounter++;
     fIsBeam = true;
   } else {
     fIsBeam = false;
@@ -98,116 +107,37 @@ void TargetMonitor::EndOfEvent()
   // Compute number of positrons on target for this event
   ComputePoTs();
 
-  // Add this event's Pots to total
+  // Add this event's Pots to totals
   fEventPoTsTotal += fEventPoTs;
+  fRunPoTsTotal += fEventPoTs;
 
   // If we read enough events, dump PadmeMonitor file
-  if (fEventCounter == fEventOutputScale) {
+  if (fBeamEventCount % fBeamOutputRate == 0) {
 
-    if (fConfig->Verbose()>0) printf("TargetMonitor::EndOfEvent - Writing output files\n");
-
-    // Update timeline
-    fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fEventOutputScale;
+    // Update timelines
+    fTL_RunPoTs[fTL_Current] = fRunPoTsTotal;
+    fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fBeamOutputRate;
     fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
     fTL_Current++;
     if (fTL_Current == TARGETMONITOR_TIMELINE_SIZE) fTL_Current = 0;
 
-    // Write Target histograms
-    TString ftname = fConfig->TmpDirectory()+"/TargetMon_Charge.txt";
-    TString ffname = fConfig->OutputDirectory()+"/TargetMon_Charge.txt";
-    FILE* outf = fopen(ftname.Data(),"a");
-
-    // X Profile
-    fprintf(outf,"PLOTID TargetMon_ProfileX\n");
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME Target Profile X - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-    fprintf(outf,"CHANNELS 16\n");
-    fprintf(outf,"RANGE_X -7.5 8.5\n");
-    fprintf(outf,"TITLE_X X[mm]\n");
-    fprintf(outf,"TITLE_Y pC/strip\n");
-    fprintf(outf,"DATA [[");
-    for(UChar_t i = 0;i<16;i++) {
-      if (i>0) fprintf(outf,",");
-      // Show average per-event charge for this strip
-      fprintf(outf,"%.3f",fStrip_charge[i]/fEventOutputScale);
-    }
-    fprintf(outf,"]]\n");
-
-    fprintf(outf,"\n");
-
-    // Y Profile
-    fprintf(outf,"PLOTID TargetMon_ProfileY\n");
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME Target Profile Y - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-    fprintf(outf,"CHANNELS 16\n");
-    fprintf(outf,"RANGE_X -7.5 8.5\n");
-    fprintf(outf,"TITLE_X Y[mm]\n");
-    fprintf(outf,"TITLE_Y pC/strip\n");
-    fprintf(outf,"DATA [[");
-    for(UChar_t i = 16;i<32;i++) {
-      if (i>16) fprintf(outf,",");
-      // Show average per-event charge for this strip
-      fprintf(outf,"%.3f",fStrip_charge[i]/fEventOutputScale);
-    }
-    fprintf(outf,"]]\n");
-
-    // Waveforms
-    for(UInt_t i=0; i<32; i++) {
-
-      fprintf(outf,"\n");
-
-      fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
-      fprintf(outf,"PLOTTYPE scatter\n");
-      fprintf(outf,"PLOTNAME Target ch%2.2d %d/%d %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
-      fprintf(outf,"RANGE_X 0 1024\n");
-      //fprintf(outf,"RANGE_Y 0 4096\n");
-      fprintf(outf,"TITLE_X Sample\n");
-      fprintf(outf,"TITLE_Y Counts\n");
-      fprintf(outf,"MODE [ \"lines\" ]\n");
-      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-      fprintf(outf,"DATA [ [");
-      Bool_t first = true;
-      for(UInt_t s = 0; s<1024; s++) {
-	if (first) { first = false; } else { fprintf(outf,","); }
-	fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
-      }
-      fprintf(outf,"] ]\n\n");
-
-    }
-
-    // PoTs timeline
-    fprintf(outf,"PLOTID TargetMon_PoTs_TL\n");
-    fprintf(outf,"PLOTNAME Target PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
-    fprintf(outf,"PLOTTYPE timeline\n");
-    fprintf(outf,"TIME_FORMAT fine\n");
-    fprintf(outf,"TITLE_X Time\n");
-    fprintf(outf,"TITLE_Y Pots (average)\n");
-    //fprintf(outf,"RANGE_Y 0. 100.\n");
-    fprintf(outf,"MODE [ \"lines\" ]\n");
-    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-    //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
-    fprintf(outf,"DATA [ [");
-    Bool_t first = true;
-    for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
-      UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
-      if (fTL_Time[ii] != 0) {
-	if (first) { first = false; } else { fprintf(outf,",");	}
-	fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
-      }
-    }
-    fprintf(outf,"] ]\n");
-
-    fclose(outf);
-    if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+    OutputBeam();
 
     // Reset counters
-    fEventCounter = 0;
+    fEventPoTsTotal = 0.;
     for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+
   }
+
+  // Count beam event
+  fBeamEventCount++;
 }
 
 void TargetMonitor::Finalize()
-{;}
+{
+  printf("TargetMonitor::Finalize - Total number of beam events: %d\n",fBeamEventCount);
+  printf("TargetMonitor::Finalize - Total PoTs: %.0f\n",fRunPoTsTotal);
+}
 
 void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
 {
@@ -217,13 +147,15 @@ void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
   // Save waveforms of last event. Center on pedestal to improve visibility
   //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
-  if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) {
+  if (fBeamEventCount % fBeamOutputRate == 0) {
+    for(UInt_t i=0;i<1024;i++) {
       if (fUseAbsSignal && samples[i] < 2048) {
 	fWaveform[channel][i] = 4096-samples[i];
       } else {
 	fWaveform[channel][i] = samples[i];
       }
     }
+  }
 }
 
 void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* samples)
@@ -256,4 +188,128 @@ void TargetMonitor::ComputePoTs()
     }
   }
   fEventPoTs = fChargeToPoTs*(chargeX+chargeY)/2.;
+}
+
+Int_t TargetMonitor::OutputBeam()
+{
+
+  Bool_t first;
+
+  if (fConfig->Verbose()>0) printf("TargetMonitor::OutputBeam - Writing beam output files\n");
+
+  // Write Target histograms
+  TString ftname = fConfig->TmpDirectory()+"/TargetMon_Charge.txt";
+  TString ffname = fConfig->OutputDirectory()+"/TargetMon_Charge.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // X Profile
+  fprintf(outf,"PLOTID TargetMon_ProfileX\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME Target Profile X - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 16\n");
+  fprintf(outf,"RANGE_X -7.5 8.5\n");
+  fprintf(outf,"TITLE_X X[mm]\n");
+  fprintf(outf,"TITLE_Y pC/strip\n");
+  fprintf(outf,"DATA [[");
+  for(UChar_t i = 0;i<16;i++) {
+    if (i>0) fprintf(outf,",");
+    // Show average per-event charge for this strip
+    fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
+  }
+  fprintf(outf,"]]\n");
+
+  fprintf(outf,"\n");
+
+  // Y Profile
+  fprintf(outf,"PLOTID TargetMon_ProfileY\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME Target Profile Y - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 16\n");
+  fprintf(outf,"RANGE_X -7.5 8.5\n");
+  fprintf(outf,"TITLE_X Y[mm]\n");
+  fprintf(outf,"TITLE_Y pC/strip\n");
+  fprintf(outf,"DATA [[");
+  for(UChar_t i = 16;i<32;i++) {
+    if (i>16) fprintf(outf,",");
+    // Show average per-event charge for this strip
+    fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
+  }
+  fprintf(outf,"]]\n");
+
+  // Waveforms
+  for(UInt_t i=0; i<32; i++) {
+
+    fprintf(outf,"\n");
+
+    fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
+    fprintf(outf,"PLOTTYPE scatter\n");
+    fprintf(outf,"PLOTNAME Target ch%2.2d %d/%d %s\n",i,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+    fprintf(outf,"RANGE_X 0 1024\n");
+    //fprintf(outf,"RANGE_Y 0 4096\n");
+    fprintf(outf,"TITLE_X Sample\n");
+    fprintf(outf,"TITLE_Y Counts\n");
+    fprintf(outf,"MODE [ \"lines\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+    fprintf(outf,"DATA [ [");
+    Bool_t first = true;
+    for(UInt_t s = 0; s<1024; s++) {
+      if (first) { first = false; } else { fprintf(outf,","); }
+      fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
+    }
+    fprintf(outf,"] ]\n\n");
+
+  }
+
+  // PoTs timeline
+  fprintf(outf,"PLOTID TargetMon_PoTs_TL\n");
+  fprintf(outf,"PLOTNAME Target PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"TIME_FORMAT fine\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Pots (average)\n");
+  //fprintf(outf,"RANGE_Y 0. 100.\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
+  fprintf(outf,"DATA [ [");
+  first = true;
+  for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
+    UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
+    if (fTL_Time[ii] != 0) {
+      if (first) { first = false; } else { fprintf(outf,",");	}
+      fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Total Run PoTs timeline
+  fprintf(outf,"PLOTID TargetMon_RunPoTs_TL\n");
+  fprintf(outf,"PLOTNAME Target Total PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"TIME_FORMAT fine\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Pots\n");
+  //fprintf(outf,"RANGE_Y 0. 100.\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
+  fprintf(outf,"DATA [ [");
+  first = true;
+  for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
+    UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
+    if (fTL_Time[ii] != 0) {
+      if (first) { first = false; } else { fprintf(outf,",");	}
+      fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_RunPoTs[ii]);
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("TargetMonitor::OutputBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
 }

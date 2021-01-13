@@ -32,6 +32,8 @@ private:
   // Estimate number of positrons on target for this event
   void ComputePoTs();
 
+  Int_t OutputBeam();
+
   Configuration* fConfig;
 
   utl::ConfigParser* fConfigParser;
@@ -47,7 +49,7 @@ private:
   UInt_t fPedestalSamples; // Number of samples to use for pedestals
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
-  UInt_t fEventOutputScale; // Number of (beam) events between outputs
+  UInt_t fBeamOutputRate; // Number of beam events between outputs
 
   // Map from [channel] to position X (1-16) and Y (17-32)
   Short_t fTarget_map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };
@@ -58,12 +60,14 @@ private:
   Short_t fWaveform[32][1024] = {{0}};
 
   // Counters
-  UInt_t fEventCounter = 0;
-  Double_t fStrip_charge[32]; // Strip 1-32 to index 0-31
+  UInt_t fBeamEventCount = 0;
+  Double_t fStrip_charge[32]; // Strips 1-32 are mapped to index 0-31
 
-  // Number of positrons on target for current event
-  Double_t fEventPoTs;
-  Double_t fEventPoTsTotal;
+  Double_t fEventPoTs; // Number of positrons on target for current event
+  Double_t fEventPoTsTotal; // Number of PoTs for last 500 events
+  Double_t fRunPoTsTotal; // Total number of PoTs for this run
+
+  Double_t fTL_RunPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Total PoTs in this run
   Double_t fTL_EventPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average values of PoTs in last 500 events
   UInt_t   fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0}; // Event time of last event in average
   UInt_t   fTL_Current = 0; // Store current position in timeline (round-robin)

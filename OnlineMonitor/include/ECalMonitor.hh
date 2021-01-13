@@ -28,6 +28,8 @@ private:
 
   Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
 
+  Int_t OutputCosmics();
+
   void ResetECalMap(Double_t map[29][29]);
 
   Configuration* fConfig;

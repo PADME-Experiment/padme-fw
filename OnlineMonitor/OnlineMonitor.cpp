@@ -3,12 +3,6 @@
 #include <stdio.h>
 #include <vector>
 
-#include "TFile.h"
-#include "TChain.h"
-#include "TTree.h"
-#include "TBranch.h"
-#include "TObjArray.h"
-
 #include "TRawEvent.hh"
 
 #include "Configuration.hh"
@@ -250,9 +244,9 @@ int main(int argc, char* argv[])
 
     // Call "start of event" procedures for all detectors
     if (analyzeTrigger) trigger_mon->StartOfEvent();
-    if (analyzeECal)   ecal_mon->StartOfEvent();
-    if (analyzeSAC)    sac_mon->StartOfEvent();
-    if (analyzeTarget) target_mon->StartOfEvent();
+    if (analyzeTarget)  target_mon->StartOfEvent();
+    if (analyzeECal)    ecal_mon->StartOfEvent();
+    if (analyzeSAC)     sac_mon->StartOfEvent();
 
     // Loop over boards
     UChar_t nBoards = rawEv->GetNADCBoards();
@@ -307,7 +301,6 @@ int main(int argc, char* argv[])
 	    // Target
 	    if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  }
-	  //}
 	}
       }
 
@@ -318,9 +311,9 @@ int main(int argc, char* argv[])
 
     // Call "end of event" procedures for all detectors
     if (analyzeTrigger) trigger_mon->EndOfEvent();
-    if (analyzeTarget) target_mon->EndOfEvent();
-    if (analyzeECal) ecal_mon->EndOfEvent();
-    if (analyzeSAC) sac_mon->EndOfEvent();
+    if (analyzeTarget)  target_mon->EndOfEvent();
+    if (analyzeECal)    ecal_mon->EndOfEvent();
+    if (analyzeSAC)     sac_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -332,9 +325,9 @@ int main(int argc, char* argv[])
 
   // Finalize all detectors
   if (analyzeTrigger) trigger_mon->Finalize();
-  if (analyzeTarget) target_mon->Finalize();
-  if (analyzeECal) ecal_mon->Finalize();
-  if (analyzeSAC) sac_mon->Finalize();
+  if (analyzeTarget)  target_mon->Finalize();
+  if (analyzeECal)    ecal_mon->Finalize();
+  if (analyzeSAC)     sac_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");

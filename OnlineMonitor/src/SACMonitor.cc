@@ -195,68 +195,10 @@ void SACMonitor::EndOfEvent()
 
     if (fBeamEventCount % fBeamOutputRate == 0) {
 
-      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing beam output files\n");
+      // Write beam data to output PadmeMonitor file
+      OutputBeam();
 
-      // Write beam-related monitor file
-      TString ftname = fConfig->TmpDirectory()+"/SACMon_Beam.txt";
-      TString ffname = fConfig->OutputDirectory()+"/SACMon_Beam.txt";
-      FILE* outf = fopen(ftname.Data(),"a");
-
-      // Show waveforms and pedstal maps
-      for (UInt_t x = 0; x < 5; x++) {
-	for (UInt_t y = 0; y < 5; y++) {
-
-	  fprintf(outf,"PLOTID SACMon_beamwf_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE scatter\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"RANGE_X 0 1024\n");
-	  //fprintf(outf,"RANGE_Y 0 4096\n");
-	  fprintf(outf,"TITLE_X Sample\n");
-	  fprintf(outf,"TITLE_Y Counts\n");
-	  fprintf(outf,"MODE [ \"lines\" ]\n");
-	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-	  fprintf(outf,"DATA [ [");
-	  Bool_t first = true;
-	  for(UInt_t j = 0; j<1024; j++) {
-	    if (first) { first = false; } else { fprintf(outf,","); }
-	    fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	  fprintf(outf,"PLOTID SACMon_beamped_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE histo1d\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
-	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
-	  fprintf(outf,"TITLE_X Counts\n");
-	  fprintf(outf,"DATA [ [");
-	  for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
-	    if (b>1) fprintf(outf,",");
-	    fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	  fprintf(outf,"PLOTID SACMon_beampedrms_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE histo1d\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
-	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
-	  fprintf(outf,"TITLE_X Counts\n");
-	  fprintf(outf,"DATA [ [");
-	  for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
-	    if (b>1) fprintf(outf,",");
-	    fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	}
-      }
- 
-      // Close monitor file
-      fclose(outf);
-      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
-
-      // Reset histograms
+      // Reset beam histograms
       ResetSACMap(fHPedestal);
       ResetSACMap(fHPedRMS);
 
@@ -274,72 +216,14 @@ void SACMonitor::EndOfEvent()
 
     if (fOffBeamEventCount % fOffBeamOutputRate == 0) {
 
-      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing off-beam output files\n");
+      // Write off-beam data to output PadmeMonitor file
+      OutputOffBeam();
 
-      // Write beam-related monitor file
-      TString ftname = fConfig->TmpDirectory()+"/SACMon_OffBeam.txt";
-      TString ffname = fConfig->OutputDirectory()+"/SACMon_OffBeam.txt";
-      FILE* outf = fopen(ftname.Data(),"a");
-
-      // Show waveforms and pedstal maps
-      for (UInt_t x = 0; x < 5; x++) {
-	for (UInt_t y = 0; y < 5; y++) {
-
-	  fprintf(outf,"PLOTID SACMon_offbeamwf_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE scatter\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"RANGE_X 0 1024\n");
-	  //fprintf(outf,"RANGE_Y 0 4096\n");
-	  fprintf(outf,"TITLE_X Sample\n");
-	  fprintf(outf,"TITLE_Y Counts\n");
-	  fprintf(outf,"MODE [ \"lines\" ]\n");
-	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-	  fprintf(outf,"DATA [ [");
-	  Bool_t first = true;
-	  for(UInt_t j = 0; j<1024; j++) {
-	    if (first) { first = false; } else { fprintf(outf,","); }
-	    fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	  fprintf(outf,"PLOTID SACMon_offbeamped_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE histo1d\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
-	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
-	  fprintf(outf,"TITLE_X Counts\n");
-	  fprintf(outf,"DATA [ [");
-	  for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
-	    if (b>1) fprintf(outf,",");
-	    fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	  fprintf(outf,"PLOTID SACMon_offbeampedrms_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE histo1d\n");
-	  fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
-	  fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
-	  fprintf(outf,"TITLE_X Counts\n");
-	  fprintf(outf,"DATA [ [");
-	  for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
-	    if (b>1) fprintf(outf,",");
-	    fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
-	  }
-	  fprintf(outf,"] ]\n\n");
-
-	}
-      }
- 
-      // Close monitor file
-      fclose(outf);
-      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
-
-      // Reset histograms
+      // Reset off-beam histograms
       ResetSACMap(fHPedestalOB);
       ResetSACMap(fHPedRMSOB);
 
-      // Reset beam waveforms
+      // Reset off-beam waveforms
       ResetSACWaveforms(fOffBeamWF);
 
     }
@@ -353,82 +237,16 @@ void SACMonitor::EndOfEvent()
 
     if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
 
-      if (fConfig->Verbose()>0) printf("SACMonitor::EndOfEvent - Writing cosmics output files\n");
+     // Write cosmcis data to output PadmeMonitor file
+      OutputCosmics();
 
-      // Write cosmics-related monitor file
-      TString ftname = fConfig->TmpDirectory()+"/SACMon_Cosmics.txt";
-      TString ffname = fConfig->OutputDirectory()+"/SACMon_Cosmics.txt";
-      FILE* outf = fopen(ftname.Data(),"a");
-
-      // Show waveforms and event map
-      for (UInt_t x = 0; x < 5; x++) {
-	for (UInt_t y = 0; y < 5; y++) {
-	  fprintf(outf,"PLOTID SACMon_cosmwf_%d%d\n",y,x);
-	  fprintf(outf,"PLOTTYPE scatter\n");
-	  fprintf(outf,"PLOTNAME SAC Cosmics Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"RANGE_X 0 1024\n");
-	  //fprintf(outf,"RANGE_Y 0 4096\n");
-	  fprintf(outf,"TITLE_X Sample\n");
-	  fprintf(outf,"TITLE_Y Counts\n");
-	  fprintf(outf,"MODE [ \"lines\" ]\n");
-	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-	  fprintf(outf,"DATA [ [");
-	  Bool_t first = true;
-	  for(UInt_t j = 0; j<1024; j++) {
-	    if (first) { first = false; } else { fprintf(outf,","); }
-	    fprintf(outf,"[%d,%d]",j,fCosmWF[x][y][j]);
-	  }
-	  fprintf(outf,"] ]\n\n");
-	}
-      }
-      
-      fprintf(outf,"PLOTID SACMon_cosmevt\n");
-      fprintf(outf,"PLOTTYPE heatmap\n");
-      fprintf(outf,"PLOTNAME SAC Cosmics - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-      fprintf(outf,"CHANNELS 5 5\n");
-      fprintf(outf,"RANGE_X 0 5\n");
-      fprintf(outf,"RANGE_Y 0 5\n");
-      fprintf(outf,"TITLE_X X\n");
-      fprintf(outf,"TITLE_Y Y\n");
-      fprintf(outf,"DATA [");
-      for(UChar_t y = 0;y<5;y++) {
-	if (y>0) fprintf(outf,",");
-	fprintf(outf,"[");
-	for(UChar_t x = 0;x<5;x++) {
-	  if (x>0) fprintf(outf,",");
-	  fprintf(outf,"%.3f",fSAC_CosmEvt[x][y]);
-	}
-	fprintf(outf,"]");
-      }
-      fprintf(outf,"]\n");
-
-      fprintf(outf,"PLOTID SACMon_cosmics\n");
-      fprintf(outf,"PLOTTYPE heatmap\n");
-      fprintf(outf,"PLOTNAME SAC Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-      fprintf(outf,"CHANNELS 5 5\n");
-      fprintf(outf,"RANGE_X 0 5\n");
-      fprintf(outf,"RANGE_Y 0 5\n");
-      fprintf(outf,"TITLE_X X\n");
-      fprintf(outf,"TITLE_Y Y\n");
-      fprintf(outf,"DATA [");
-      for(UChar_t y = 0;y<5;y++) {
-	if (y>0) fprintf(outf,",");
-	fprintf(outf,"[");
-	for(UChar_t x = 0;x<5;x++) {
-	  if (x>0) fprintf(outf,",");
-	  fprintf(outf,"%.3f",fSAC_CosmSum[x][y]);
-	}
-	fprintf(outf,"]");
-      }
-      fprintf(outf,"]\n");
-
-      fclose(outf);
-      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
-
-      // Reset cosmics maps and waveforms
+      // Reset cosmics maps
       ResetSACMap(fSAC_CosmEvt);
       ResetSACMap(fSAC_CosmSum);
+
+      // Reset cosmics waveforms
       ResetSACWaveforms(fCosmWF);
+
     }
 
     // Count cosmics event
@@ -611,3 +429,221 @@ void SACMonitor::ResetSACWaveforms(Short_t map[5][5][1024])
   }
 }
 
+Int_t SACMonitor::OutputBeam()
+{
+  if (fConfig->Verbose()>0) printf("SACMonitor::OutputBeam - Writing beam output files\n");
+
+  // Write beam-related monitor file
+  TString ftname = fConfig->TmpDirectory()+"/SACMon_Beam.txt";
+  TString ffname = fConfig->OutputDirectory()+"/SACMon_Beam.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // Show waveforms and pedstal maps
+  for (UInt_t x = 0; x < 5; x++) {
+    for (UInt_t y = 0; y < 5; y++) {
+
+      fprintf(outf,"PLOTID SACMon_beamwf_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE scatter\n");
+      fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      for(UInt_t j = 0; j<1024; j++) {
+	if (j>0) { fprintf(outf,","); }
+	fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
+      }
+      fprintf(outf,"] ]\n\n");
+
+      fprintf(outf,"PLOTID SACMon_beamped_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE histo1d\n");
+      fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
+      fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
+      fprintf(outf,"TITLE_X Counts\n");
+      fprintf(outf,"DATA [ [");
+      for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
+	if (b>1) fprintf(outf,",");
+	fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
+      }
+      fprintf(outf,"] ]\n\n");
+
+      fprintf(outf,"PLOTID SACMon_beampedrms_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE histo1d\n");
+      fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
+      fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
+      fprintf(outf,"TITLE_X Counts\n");
+      fprintf(outf,"DATA [ [");
+      for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
+	if (b>1) fprintf(outf,",");
+	fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
+      }
+      fprintf(outf,"] ]\n\n");
+
+    }
+  }
+ 
+  // Close monitor file and move it to watchdir
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("SACMonitor::OutputBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
+}
+
+Int_t SACMonitor::OutputOffBeam()
+{
+
+  if (fConfig->Verbose()>0) printf("SACMonitor::OutputOffBeam - Writing off-beam output files\n");
+
+  // Write beam-related monitor file
+  TString ftname = fConfig->TmpDirectory()+"/SACMon_OffBeam.txt";
+  TString ffname = fConfig->OutputDirectory()+"/SACMon_OffBeam.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // Show waveforms and pedstal maps
+  for (UInt_t x = 0; x < 5; x++) {
+    for (UInt_t y = 0; y < 5; y++) {
+
+      fprintf(outf,"PLOTID SACMon_offbeamwf_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE scatter\n");
+      fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      for(UInt_t j = 0; j<1024; j++) {
+	if (j>0) { fprintf(outf,","); }
+	fprintf(outf,"[%d,%d]",j,fBeamWF[x][y][j]);
+      }
+      fprintf(outf,"] ]\n\n");
+
+      fprintf(outf,"PLOTID SACMon_offbeamped_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE histo1d\n");
+      fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
+      fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
+      fprintf(outf,"TITLE_X Counts\n");
+      fprintf(outf,"DATA [ [");
+      for(Int_t b = 1; b <= fHPedestal[x][y]->GetNbinsX(); b++) {
+	if (b>1) fprintf(outf,",");
+	fprintf(outf,"%.0f",fHPedestal[x][y]->GetBinContent(b));
+      }
+      fprintf(outf,"] ]\n\n");
+
+      fprintf(outf,"PLOTID SACMon_offbeampedrms_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE histo1d\n");
+      fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
+      fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
+      fprintf(outf,"TITLE_X Counts\n");
+      fprintf(outf,"DATA [ [");
+      for(Int_t b = 1; b <= fHPedRMS[x][y]->GetNbinsX(); b++) {
+	if (b>1) fprintf(outf,",");
+	fprintf(outf,"%.0f",fHPedRMS[x][y]->GetBinContent(b));
+      }
+      fprintf(outf,"] ]\n\n");
+
+    }
+  }
+ 
+  // Close monitor file
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("SACMonitor::OutputOffBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
+}
+
+Int_t SACMonitor::OutputCosmics()
+{
+  if (fConfig->Verbose()>0) printf("SACMonitor::OutputCosmics - Writing cosmics output files\n");
+
+  // Write cosmics-related monitor file
+  TString ftname = fConfig->TmpDirectory()+"/SACMon_Cosmics.txt";
+  TString ffname = fConfig->OutputDirectory()+"/SACMon_Cosmics.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // Show waveforms and event map
+  for (UInt_t x = 0; x < 5; x++) {
+    for (UInt_t y = 0; y < 5; y++) {
+      fprintf(outf,"PLOTID SACMon_cosmwf_%d%d\n",y,x);
+      fprintf(outf,"PLOTTYPE scatter\n");
+      fprintf(outf,"PLOTNAME SAC Cosmics Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      for(UInt_t j = 0; j<1024; j++) {
+	if (j>0) { fprintf(outf,","); }
+	fprintf(outf,"[%d,%d]",j,fCosmWF[x][y][j]);
+      }
+      fprintf(outf,"] ]\n\n");
+    }
+  }
+      
+  fprintf(outf,"PLOTID SACMon_cosmevt\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Cosmics - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 5 5\n");
+  fprintf(outf,"RANGE_X 0 5\n");
+  fprintf(outf,"RANGE_Y 0 5\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<5;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<5;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fSAC_CosmEvt[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
+  fprintf(outf,"PLOTID SACMon_cosmics\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 5 5\n");
+  fprintf(outf,"RANGE_X 0 5\n");
+  fprintf(outf,"RANGE_Y 0 5\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<5;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<5;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fSAC_CosmSum[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("SACMonitor::OutputCosmics - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
+}

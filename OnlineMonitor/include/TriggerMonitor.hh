@@ -25,10 +25,12 @@ public:
 
 private:
 
-  // Estimate total charge of channel from samples
+  // Estimate trigger time from set of samples
   void ComputeTriggerTime(UChar_t,UChar_t,Short_t*);
 
   void ResetWaveforms(Short_t map[4][1024]);
+
+  Int_t OutputData();
 
   Configuration* fConfig;
 

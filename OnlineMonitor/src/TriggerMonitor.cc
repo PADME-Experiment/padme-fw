@@ -67,37 +67,7 @@ void TriggerMonitor::EndOfEvent()
 
   // If we read enough events, dump PadmeMonitor file
   if (fEventCounter % fEventOutputRate == 0) {
-
-    if (fConfig->Verbose()>0) printf("TriggerMonitor::EndOfEvent - Writing output files\n");
-
-    // Write Target histograms
-    TString ftname = fConfig->TmpDirectory()+"/TriggerMon_Timing.txt";
-    TString ffname = fConfig->OutputDirectory()+"/TriggerMon_Timing.txt";
-    FILE* outf = fopen(ftname.Data(),"a");
-
-    // Show waveforms
-    for (UInt_t g = 0; g < 4; g++) {
-      fprintf(outf,"PLOTID TriggerMon_evtwf_%d\n",g);
-      fprintf(outf,"PLOTTYPE scatter\n");
-      fprintf(outf,"PLOTNAME Trigger Waveform - Board %d Group %d - Run %d Event %d - %s\n",fBoardToShow,g,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-      fprintf(outf,"RANGE_X 0 1024\n");
-      //fprintf(outf,"RANGE_Y 0 4096\n");
-      fprintf(outf,"TITLE_X Sample\n");
-      fprintf(outf,"TITLE_Y Counts\n");
-      fprintf(outf,"MODE [ \"lines\" ]\n");
-      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-      fprintf(outf,"DATA [ [");
-      Bool_t first = true;
-      for(UInt_t j = 0; j<1024; j++) {
-	if (first) { first = false; } else { fprintf(outf,","); }
-	fprintf(outf,"[%d,%d]",j,fEventWF[g][j]);
-      }
-      fprintf(outf,"] ]\n\n");
-    }
-
-    fclose(outf);
-    if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
-
+    OutputData();
   }
 
   fEventCounter++;
@@ -105,7 +75,10 @@ void TriggerMonitor::EndOfEvent()
 }
 
 void TriggerMonitor::Finalize()
-{;}
+{
+  printf("TriggerMonitor::Finalize - Total number of events: %d\n",fEventCounter);
+
+}
 
 void TriggerMonitor::Analyze(UChar_t board,UChar_t group,Short_t* samples)
 {
@@ -185,4 +158,43 @@ void TriggerMonitor::ResetWaveforms(Short_t map[4][1024])
       map[g][s] = 0;
     }
   }
+}
+
+Int_t TriggerMonitor::OutputData()
+{
+  if (fConfig->Verbose()>0) printf("TriggerMonitor::OutputData - Writing output files\n");
+
+  // Write Target histograms
+  TString ftname = fConfig->TmpDirectory()+"/TriggerMon_Timing.txt";
+  TString ffname = fConfig->OutputDirectory()+"/TriggerMon_Timing.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // Show waveforms
+  for (UInt_t g = 0; g < 4; g++) {
+    fprintf(outf,"PLOTID TriggerMon_evtwf_%d\n",g);
+    fprintf(outf,"PLOTTYPE scatter\n");
+    fprintf(outf,"PLOTNAME Trigger Waveform - Board %d Group %d - Run %d Event %d - %s\n",fBoardToShow,g,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"RANGE_X 0 1024\n");
+    //fprintf(outf,"RANGE_Y 0 4096\n");
+    fprintf(outf,"TITLE_X Sample\n");
+    fprintf(outf,"TITLE_Y Counts\n");
+    fprintf(outf,"MODE [ \"lines\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+    fprintf(outf,"DATA [ [");
+    Bool_t first = true;
+    for(UInt_t j = 0; j<1024; j++) {
+      if (first) { first = false; } else { fprintf(outf,","); }
+      fprintf(outf,"[%d,%d]",j,fEventWF[g][j]);
+    }
+    fprintf(outf,"] ]\n\n");
+  }
+
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("TriggerMonitor::OutputData - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
 }

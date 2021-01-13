@@ -114,86 +114,12 @@ void ECalMonitor::EndOfEvent()
 
     if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
 
-      if (fConfig->Verbose()>0) printf("ECalMonitor::EndOfEvent - Writing output files\n");
-
-      // Write current cosmics map
-      TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
-      TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
-      FILE* outf = fopen(ftname.Data(),"a");
-
-      // Show waveforms and event map only if at least one channel is active
-      if (fNCosmWF>0) {
-	for (UInt_t i = 0; i < ECALMON_COSMWF_MAX; i++) {
-	  fprintf(outf,"PLOTID ECalMon_cosmwf_%2.2d\n",i);
-	  fprintf(outf,"PLOTTYPE scatter\n");
-	  fprintf(outf,"PLOTNAME ECal Cosmics Waveform X %d Y %d - Run %d Event %d - %s\n",fCosmWFX[i],fCosmWFY[i],fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	  fprintf(outf,"RANGE_X 0 1024\n");
-	  //fprintf(outf,"RANGE_Y 0 4096\n");
-	  fprintf(outf,"TITLE_X Sample\n");
-	  fprintf(outf,"TITLE_Y Counts\n");
-	  fprintf(outf,"MODE [ \"lines\" ]\n");
-	  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-	  fprintf(outf,"DATA [ [");
-	  if (i<fNCosmWF) {
-	    Bool_t first = true;
-	    for(UInt_t j = 0; j<1024; j++) {
-	      if (first) { first = false; } else { fprintf(outf,","); }
-	      fprintf(outf,"[%d,%d]",j,fCosmWF[i][j]);
-	    }
-	  } else {
-	    fprintf(outf,"[0,0],[1023,0]");
-	  }
-	  fprintf(outf,"] ]\n\n");
-	}
-      
-	fprintf(outf,"PLOTID ECalMon_cosmevt\n");
-	fprintf(outf,"PLOTTYPE heatmap\n");
-	fprintf(outf,"PLOTNAME ECal Cosmics - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-	fprintf(outf,"CHANNELS 29 29\n");
-	fprintf(outf,"RANGE_X 0 29\n");
-	fprintf(outf,"RANGE_Y 0 29\n");
-	fprintf(outf,"TITLE_X X\n");
-	fprintf(outf,"TITLE_Y Y\n");
-	fprintf(outf,"DATA [");
-	for(UChar_t y = 0;y<29;y++) {
-	  if (y>0) fprintf(outf,",");
-	  fprintf(outf,"[");
-	  for(UChar_t x = 0;x<29;x++) {
-	    if (x>0) fprintf(outf,",");
-	    fprintf(outf,"%.3f",fECal_CosmEvt[x][y]);
-	  }
-	  fprintf(outf,"]");
-	}
-	fprintf(outf,"]\n");
-
-      }
-      
-      fprintf(outf,"PLOTID ECalMon_cosmics\n");
-      fprintf(outf,"PLOTTYPE heatmap\n");
-      fprintf(outf,"PLOTNAME ECal Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-      fprintf(outf,"CHANNELS 29 29\n");
-      fprintf(outf,"RANGE_X 0 29\n");
-      fprintf(outf,"RANGE_Y 0 29\n");
-      fprintf(outf,"TITLE_X X\n");
-      fprintf(outf,"TITLE_Y Y\n");
-      fprintf(outf,"DATA [");
-      for(UChar_t y = 0;y<29;y++) {
-	if (y>0) fprintf(outf,",");
-	fprintf(outf,"[");
-	for(UChar_t x = 0;x<29;x++) {
-	  if (x>0) fprintf(outf,",");
-	  fprintf(outf,"%.3f",fECal_CosmSum[x][y]);
-	}
-	fprintf(outf,"]");
-      }
-      fprintf(outf,"]\n");
-      
-      fclose(outf);
-      if ( std::rename(ftname,ffname) != 0 ) perror("Error renaming file");
+      OutputCosmics();
 
       // Reset cosmics maps
       ResetECalMap(fECal_CosmEvt);
       ResetECalMap(fECal_CosmSum);
+
     }
 
     // Count cosmics event
@@ -366,4 +292,89 @@ void ECalMonitor::ResetECalMap(Double_t map[29][29])
       }
     }
   }
+}
+
+Int_t ECalMonitor::OutputCosmics()
+{
+
+  if (fConfig->Verbose()>0) printf("ECalMonitor::OutputCosmics - Writing cosmics output files\n");
+
+  // Write current cosmics map
+  TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
+  FILE* outf = fopen(ftname.Data(),"a");
+
+  // Show waveforms and event map only if at least one channel is active
+  if (fNCosmWF>0) {
+    for (UInt_t i = 0; i < ECALMON_COSMWF_MAX; i++) {
+      fprintf(outf,"PLOTID ECalMon_cosmwf_%2.2d\n",i);
+      fprintf(outf,"PLOTTYPE scatter\n");
+      fprintf(outf,"PLOTNAME ECal Cosmics Waveform X %d Y %d - Run %d Event %d - %s\n",fCosmWFX[i],fCosmWFY[i],fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"RANGE_X 0 1024\n");
+      //fprintf(outf,"RANGE_Y 0 4096\n");
+      fprintf(outf,"TITLE_X Sample\n");
+      fprintf(outf,"TITLE_Y Counts\n");
+      fprintf(outf,"MODE [ \"lines\" ]\n");
+      fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+      fprintf(outf,"DATA [ [");
+      if (i<fNCosmWF) {
+	for(UInt_t j = 0; j<1024; j++) {
+	  if (j>0) { fprintf(outf,","); }
+	  fprintf(outf,"[%d,%d]",j,fCosmWF[i][j]);
+	}
+      } else {
+	fprintf(outf,"[0,0],[1023,0]");
+      }
+      fprintf(outf,"] ]\n\n");
+    }
+      
+    fprintf(outf,"PLOTID ECalMon_cosmevt\n");
+    fprintf(outf,"PLOTTYPE heatmap\n");
+    fprintf(outf,"PLOTNAME ECal Cosmics - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS 29 29\n");
+    fprintf(outf,"RANGE_X 0 29\n");
+    fprintf(outf,"RANGE_Y 0 29\n");
+    fprintf(outf,"TITLE_X X\n");
+    fprintf(outf,"TITLE_Y Y\n");
+    fprintf(outf,"DATA [");
+    for(UChar_t y = 0;y<29;y++) {
+      if (y>0) fprintf(outf,",");
+      fprintf(outf,"[");
+      for(UChar_t x = 0;x<29;x++) {
+	if (x>0) fprintf(outf,",");
+	fprintf(outf,"%.3f",fECal_CosmEvt[x][y]);
+      }
+      fprintf(outf,"]");
+    }
+    fprintf(outf,"]\n");
+
+  }
+      
+  fprintf(outf,"PLOTID ECalMon_cosmics\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ECal Cosmics - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 29 29\n");
+  fprintf(outf,"RANGE_X 0 29\n");
+  fprintf(outf,"RANGE_Y 0 29\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<29;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<29;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fECal_CosmSum[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+      
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ECalMonitor::OutputCosmics - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
 }

@@ -31,6 +31,10 @@ private:
   void ComputeChannelPedestal(UChar_t,UChar_t,Short_t*);
   void FindChannelPeaks(UChar_t,UChar_t,Short_t*);
 
+  Int_t OutputBeam();
+  Int_t OutputOffBeam();
+  Int_t OutputCosmics();
+
   void ResetSACMap(Double_t map[5][5]);
   void ResetSACMap(TH1D* map[5][5]);
   void ResetSACWaveforms(Short_t map[5][5][1024]);

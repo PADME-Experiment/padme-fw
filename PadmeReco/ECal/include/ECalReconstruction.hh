@@ -45,6 +45,8 @@ public:
   Bool_t SimulateBrokenSU(Int_t x ,Int_t y);
   Double_t EnergyResolution(Double_t energy);
 
+  Double_t compute_rms(Short_t* samples);
+
 private:
   Int_t fClusterizationAlgo;
   Int_t fCompensateMissingE;

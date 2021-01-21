@@ -1,4 +1,4 @@
-// Written By M. Raggi 6/12/2018
+  // Written By M. Raggi 6/12/2018
 #include "DigitizerChannelECal.hh"
 #include "TMath.h"
 #include "TCanvas.h"
@@ -107,7 +107,7 @@ void DigitizerChannelECal::PrepareTmpHistos(){
   if(!fUseOverSample){
     hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
     hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
- hListTmp->Add(hSignalShifted = new TH1F("hSignalShifted","hSignalShifted",1000,0.,1000.));
+    hListTmp->Add(hSignalShifted = new TH1F("hSignalShifted","hSignalShifted",1000,0.,1000.));
     hListTmp->Add(hSignalShifted2 = new TH1F("hSignalShifted2","hSignalShifted2",1000,0.,1000.));
     hListTmp->Add(hSignalShifted3 = new TH1F("hSignalShifted3","hSignalShifted3",1000,0.,1000.));
     hListTmp->Add(hDiffSignal = new TH1F("hDiffSignal","hDiffSignal",1000,0.,1000.));
@@ -207,6 +207,7 @@ void DigitizerChannelECal::PrepareDebugHistos(){
   hListCal->Add(hTemplateVsMaxVSEnergy= new TH2F("hTemplateVsMaxVSEnergy","hTemplateVsMaxVSEnergy",2000,0.,2000.,2000,0.,2000.));
   hListCal->Add(hTemplateVMaxVSEnergy_= new TH2F("hTemplateVMaxVSEnergy_","hTemplateVMaxVSEnergy_",2000,0.,5000.,2000,0.,2000.));
   hListCal->Add(hDiffRMSVSEnergyTemplate= new TH2F("hDiffRMSVSEnergyTemplate","hDiffRMSVSEnergyTemplate",1000,0.,1000.,400,-200.,200.));
+  hListCal->Add(hZSupFromSw= new TH1F("ZSupFromSw","ZSupFromSw",3,-0.5,2.5));
 
 
   for(int kk=0;kk<32;kk++){
@@ -307,7 +308,7 @@ Double_t DigitizerChannelECal::ZSupHit(Float_t Thr, UShort_t NAvg) {
   fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
   //std::cout<<"fRMS1000 " << fRMS1000<<std::endl;
   Double_t ZSupHit=-1;
-
+  
   if(fRMS1000>Thr){
     ZSupHit=0;
   }else{
@@ -315,6 +316,23 @@ Double_t DigitizerChannelECal::ZSupHit(Float_t Thr, UShort_t NAvg) {
     //    std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
   }
   //  std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
+  
+  /*
+  //Hardware implementation
+  ZSupHit=-1;
+   Double_t tot=0;
+  Double_t tot2=0;
+  Int_t nSamples=994;
+  for(int i=0; i<nSamples; i++){
+    tot+=fSamples[i];
+    tot2+=fSamples[i]*fSamples[i];
+  }
+  Double_t Dev=sqrt((tot2-(tot*tot/nSamples))/(nSamples-1));
+  std::cout<<"----------------------------------------------ZSupHit values , RMS: " << fRMS1000 << " stdDev " << Dev << " ";
+  if (Dev<Thr)ZSupHit=1;
+  else ZSupHit=0;
+  std::cout << "ZSup flag " << ZSupHit << std::endl;
+  */
   return ZSupHit;
 }
 
@@ -712,10 +730,12 @@ Double_t DigitizerChannelECal::CalcTime(UShort_t iMax) {
 
 void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   IsSat=0;
+  //  Double_t IsZeroSup = ZSupHit(fZeroSuppression,994.);   //io 8/06 to try
   Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);   //io 8/06 to try
   //  Double_t IsZeroSup = ZSupHit(5,1000.);
   // if(fZeroSuppression>0) IsZeroSup = ZSupHit(fZeroSuppression,1000.);
   // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
+  if(fGlobalMode->GetGlobalDebugMode()) hZSupFromSw->Fill(IsZeroSup);
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
  //***********************************************
   // Fix a broken chip in digitizer 8 durign 2019 run
@@ -832,7 +852,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   std::cout<<"************************ RUNNING ECAL MULTI HIT RECONSTRUCTION *****************"<<std::endl;   
   std::cout<<"************************  V1 M. Raggi 16/05/2019               *****************"<<std::endl;   
 
-  Double_t IsZeroSup = ZSupHit(5.,1000.);
+  Double_t IsZeroSup =Z SupHit(5.,1000.);
   IsSaturated(); //check if the event is saturated M. Raggi 03/2019
   //  if(IsSaturated()) return;  //remove is a test
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals

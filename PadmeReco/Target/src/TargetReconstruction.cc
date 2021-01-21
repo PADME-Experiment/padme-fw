@@ -664,8 +664,9 @@ void TargetReconstruction::ReconstructBeam(){
     //std::cout<<" hit energy to nPOT "<<Hits[iHit1]->GetEnergy()<<std::endl;
   }
 
-  
-  float BeamMultiplicity = (fabs(Qx)+fabs(Qy))/2.;
+  //float BeamMultiplicity = (fabs(Qx)+fabs(Qy))/2.;    //comment for low spot of the beam->y saturation of target 
+  float BeamMultiplicity = (Qx+Qy)/2.;    //new calcultation for september '20 data taking  (in config file I put also common noise subtraction 0 and hvsign 0)
+  //float BeamMultiplicity = fabs(Qx);    //July calculation f nPOT
   double nominalCCD = 12.;//in micron 
   double chargeToNPOT = 1./1.60217662e-7/nominalCCD/36.;
   BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;

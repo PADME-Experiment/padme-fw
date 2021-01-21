@@ -320,6 +320,8 @@ private:
   TH1F *hECALfirsthitEnergy;
   TH1F *hECALsecondhitEnergy_Saved;
   TH1F *hECALthirdhitEnergy_Saved;
+
+  TH1F *hZSupFromSw;
   
   Double_t fTemplate[5001];
   Bool_t fFirstHit;

@@ -659,28 +659,6 @@ void BeamLineStructure::CreateBeamLine()
 
   //  printf("BeamLine - Be window exit face center is at (%.2f,%.2f,%.2f) mm\n",beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
 
-//  if ( geo->MylarWindowIsEnabled() ) {
-//    // Position Mylar window with relative support flange M. Raggi 06/2020 muovila in bealine 2020
-//    
-//    G4double MylarWinFlgT = geo->GetMylarWindowFlangeThick();
-//    G4double MylarWinFlgPosX = mpEntPosX+(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*sin(magnetAngle);
-//    G4double MylarWinFlgPosY = mpEntPosY;
-//    G4double MylarWinFlgPosZ = mpEntPosZ-(beJunLen+bePipeLen+beJunLen+0.5*MylarWinFlgT)*cos(magnetAngle);
-//    G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
-//    G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
-//    MylarWinFlgRot->rotateY(magnetAngle);
-//    new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
-//    
-//    printf("BeamLine - Mylar window entry face center is at (%.2f,%.2f,%.2f) mm\n",MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
-//    
-//    G4double MylarWin2FlgPosX = mpEntPosX-(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*sin(magnetAngle);
-//    G4double MylarWin2FlgPosY = mpEntPosY;
-//    G4double MylarWin2FlgPosZ = mpEntPosZ+(-800*cm+strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*MylarWinFlgT)*cos(magnetAngle);
-//    G4ThreeVector MylarWin2FlgPos = G4ThreeVector(MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
-//    new G4PVPlacement(MylarWinFlgRot,MylarWin2FlgPos,fMylarWindowVolume,"BeamLineExitMylarWinVolume",fMotherVolume,false,0,true);
-//    
-//    printf("BeamLine - Mylar window exit face center is at (%.2f,%.2f,%.2f) mm\n",MylarWin2FlgPosX,MylarWin2FlgPosY,MylarWin2FlgPosZ);
-//  }
   ////////////////////////////////////////////////////////////////////////
   // Beam Flag to monitor beam in different locations M. Raggi 06/09/2019
   // Flag 4 on the strait DHSTB002 exit section

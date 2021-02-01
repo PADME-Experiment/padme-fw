@@ -8,6 +8,9 @@
 #include "Configuration.hh"
 #include "InputHandler.hh"
 #include "ECalMonitor.hh"
+#include "EVetoMonitor.hh"
+#include "PVetoMonitor.hh"
+#include "HEPVetoMonitor.hh"
 #include "SACMonitor.hh"
 #include "TargetMonitor.hh"
 #include "TriggerMonitor.hh"
@@ -201,6 +204,36 @@ int main(int argc, char* argv[])
     sac_mon = new SACMonitor(configFileSAC);
   }
 
+  // Configure PVeto analyzer
+  Bool_t analyzePVeto = true;
+  PVetoMonitor* pveto_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","PVeto") && (std::stoi(configParser->GetSingleArg("ANALYZE","PVeto")) == 0) ) analyzePVeto = false;
+  if (analyzePVeto) {
+    TString configFilePVeto = "config/PVeto.cfg";
+    if (configParser->HasConfig("CONFIGFILE","PVeto")) configFilePVeto = configParser->GetSingleArg("CONFIGFILE","PVeto");
+    pveto_mon = new PVetoMonitor(configFilePVeto);
+  }
+
+  // Configure EVeto analyzer
+  Bool_t analyzeEVeto = true;
+  EVetoMonitor* eveto_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","EVeto") && (std::stoi(configParser->GetSingleArg("ANALYZE","EVeto")) == 0) ) analyzeEVeto = false;
+  if (analyzeEVeto) {
+    TString configFileEVeto = "config/EVeto.cfg";
+    if (configParser->HasConfig("CONFIGFILE","EVeto")) configFileEVeto = configParser->GetSingleArg("CONFIGFILE","EVeto");
+    eveto_mon = new EVetoMonitor(configFileEVeto);
+  }
+
+  // Configure HEPVeto analyzer
+  Bool_t analyzeHEPVeto = true;
+  HEPVetoMonitor* hepveto_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","HEPVeto") && (std::stoi(configParser->GetSingleArg("ANALYZE","HEPVeto")) == 0) ) analyzeHEPVeto = false;
+  if (analyzeHEPVeto) {
+    TString configFileHEPVeto = "config/HEPVeto.cfg";
+    if (configParser->HasConfig("CONFIGFILE","HEPVeto")) configFileHEPVeto = configParser->GetSingleArg("CONFIGFILE","HEPVeto");
+    hepveto_mon = new HEPVetoMonitor(configFileHEPVeto);
+  }
+
   // N.B. InputHandler must be created AFTER all detectors have been initialized to avoid clashes on histogram booking
 
   // Create input handler
@@ -247,6 +280,9 @@ int main(int argc, char* argv[])
     if (analyzeTarget)  target_mon->StartOfEvent();
     if (analyzeECal)    ecal_mon->StartOfEvent();
     if (analyzeSAC)     sac_mon->StartOfEvent();
+    if (analyzePVeto)   pveto_mon->StartOfEvent();
+    if (analyzeEVeto)   eveto_mon->StartOfEvent();
+    if (analyzeHEPVeto) hepveto_mon->StartOfEvent();
 
     // Loop over boards
     UChar_t nBoards = rawEv->GetNADCBoards();
@@ -290,10 +326,13 @@ int main(int argc, char* argv[])
 	    if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  } else if (boardId >= 10 && boardId <= 12) {
 	    // PVeto
+	    if (analyzePVeto) pveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  } else if (boardId == 13) {
 	    // HEPVeto
+	    if (analyzeHEPVeto) hepveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  } else if (boardId >= 24 && boardId <= 26) {
 	    // EVeto
+	    if (analyzeEVeto) eveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
 	  } else if (boardId == 27) {
 	    // SAC + Cosmics pads
 	    if (analyzeSAC) sac_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
@@ -314,6 +353,9 @@ int main(int argc, char* argv[])
     if (analyzeTarget)  target_mon->EndOfEvent();
     if (analyzeECal)    ecal_mon->EndOfEvent();
     if (analyzeSAC)     sac_mon->EndOfEvent();
+    if (analyzePVeto)   pveto_mon->EndOfEvent();
+    if (analyzeEVeto)   eveto_mon->EndOfEvent();
+    if (analyzeHEPVeto) hepveto_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -328,6 +370,9 @@ int main(int argc, char* argv[])
   if (analyzeTarget)  target_mon->Finalize();
   if (analyzeECal)    ecal_mon->Finalize();
   if (analyzeSAC)     sac_mon->Finalize();
+  if (analyzePVeto)   pveto_mon->Finalize();
+  if (analyzeEVeto)   eveto_mon->Finalize();
+  if (analyzeHEPVeto) hepveto_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -349,6 +394,7 @@ int main(int argc, char* argv[])
   delete target_mon;
   delete ecal_mon;
   delete sac_mon;
+  delete pveto_mon;
 
   exit(EXIT_SUCCESS);
 

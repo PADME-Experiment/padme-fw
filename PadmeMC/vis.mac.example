@@ -117,7 +117,8 @@
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
-# Beam line settings
+# Beam line settings 0=2019 setup 1=2020 setup
+#/Detector/BeamLine/Setup 1.   
 #/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/EnableMylarWindow true
 #/Detector/BeamLine/DHST002_FieldY -1.055 tesla

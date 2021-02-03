@@ -19,7 +19,9 @@
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
 
+//#include "G4RunManager.hh"
 #include "G4DigiManager.hh"
+
 #include "TargetDigitizer.hh"
 #include "PVetoDigitizer.hh"
 #include "EVetoDigitizer.hh"
@@ -27,6 +29,15 @@
 #include "ECalDigitizer.hh"
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
+
+#include "TargetGeometry.hh"
+#include "PVetoGeometry.hh"
+#include "EVetoGeometry.hh"
+#include "HEPVetoGeometry.hh"
+#include "ECalGeometry.hh"
+#include "SACGeometry.hh"
+#include "TPixGeometry.hh"
+
 #include "SystemInfo.hh"
 
 extern double NNeutrons;
@@ -37,6 +48,16 @@ extern double Npionc;
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
 {
+
+  fFirstEvent = true;
+
+  fTargetDigitizer  = NULL;
+  fPVetoDigitizer   = NULL;
+  fEvetoDigitizer   = NULL;
+  fHEPVetoDigitizer = NULL;
+  fECalDigitizer    = NULL;
+  fSACDigitizer     = NULL;
+  fTPixDigitizer    = NULL;
 
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
@@ -49,24 +70,8 @@ EventAction::EventAction(RunAction* run)
   //M. Raggi defining default output settings 
   fEnableSaveEcal = 1;
   fEnableSaveSAC  = 0; 
-  fEnableSaveVeto = 0; 
+  fEnableSaveVeto = 0;
 
-  // Create and register digitizer modules for all detectors
-  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  TargetDigitizer* targetDM = new TargetDigitizer("TargetDigitizer");
-  theDM->AddNewModule(targetDM);
-  PVetoDigitizer* pVetoDM = new PVetoDigitizer("PVetoDigitizer");
-  theDM->AddNewModule(pVetoDM);
-  EVetoDigitizer* eVetoDM = new EVetoDigitizer("EVetoDigitizer");
-  theDM->AddNewModule(eVetoDM);
-  HEPVetoDigitizer* hepVetoDM = new HEPVetoDigitizer("HEPVetoDigitizer");
-  theDM->AddNewModule(hepVetoDM);
-  ECalDigitizer* eCalDM = new ECalDigitizer("ECalDigitizer");
-  theDM->AddNewModule(eCalDM);
-  SACDigitizer* sacDM = new SACDigitizer("SACDigitizer");
-  theDM->AddNewModule(sacDM);
-  TPixDigitizer* tPixDM = new TPixDigitizer("TPixDigitizer");
-  theDM->AddNewModule(tPixDM);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -131,22 +136,43 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     G4cout << ">>> " << now_str << " - Event " << event_id << " - VmSize " << vmsize << " kB - dVmSize " << SystemInfo::GetInstance()->delta_vmsize() << " kB" << G4endl;
   }
 
-  // Digitize this event
+  // Digitization
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  TargetDigitizer* targetDM = (TargetDigitizer*)theDM->FindDigitizerModule("TargetDigitizer");
-  targetDM->Digitize();
-  PVetoDigitizer* pVetoDM = (PVetoDigitizer*)theDM->FindDigitizerModule("PVetoDigitizer");
-  pVetoDM->Digitize();
-  EVetoDigitizer* eVetoDM = (EVetoDigitizer*)theDM->FindDigitizerModule("EVetoDigitizer");
-  eVetoDM->Digitize();
-  HEPVetoDigitizer* hepVetoDM = (HEPVetoDigitizer*)theDM->FindDigitizerModule("HEPVetoDigitizer");
-  hepVetoDM->Digitize();
-  ECalDigitizer* eCalDM = (ECalDigitizer*)theDM->FindDigitizerModule("ECalDigitizer");
-  eCalDM->Digitize();
-  SACDigitizer* sacDM = (SACDigitizer*)theDM->FindDigitizerModule("SACDigitizer");
-  sacDM->Digitize();
-  TPixDigitizer* tPixDM = (TPixDigitizer*)theDM->FindDigitizerModule("TPixDigitizer");
-  tPixDM->Digitize();
+
+  // This cannot be done in the creator as digitizers are defined during detector construction
+  if (fFirstEvent) {
+
+    // Show info about available digitizers
+    printf("=== Registered Digitizers ===\n");
+    //theDM->List();
+    G4int ndm = theDM->GetDCtable()->entries();
+    for(G4int i=0; i<ndm; i++) {
+      G4String dmn = theDM->GetDCtable()->GetDMname(i);
+      G4String dcn = theDM->GetDCtable()->GetDCname(i);
+      G4cout << i << " DM " << dmn << " DC " << dcn << G4endl;
+    }
+
+    // Get pointers to digitizers
+    fTargetDigitizer  = (TargetDigitizer*)theDM->FindDigitizerModule(TargetGeometry::GetInstance()->GetTargetDigitizerName());
+    fPVetoDigitizer   = (PVetoDigitizer*)theDM->FindDigitizerModule(PVetoGeometry::GetInstance()->GetPVetoDigitizerName());
+    fEvetoDigitizer   = (EVetoDigitizer*)theDM->FindDigitizerModule(EVetoGeometry::GetInstance()->GetEVetoDigitizerName());
+    fHEPVetoDigitizer = (HEPVetoDigitizer*)theDM->FindDigitizerModule(HEPVetoGeometry::GetInstance()->GetHEPVetoDigitizerName());
+    fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
+    fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
+    fTPixDigitizer    = (TPixDigitizer*)theDM->FindDigitizerModule(TPixGeometry::GetInstance()->GetTPixDigitizerName());
+
+    fFirstEvent = false;
+
+  }
+
+  // Digitize existing detectors
+  if (fTargetDigitizer)  fTargetDigitizer->Digitize();
+  if (fPVetoDigitizer)   fPVetoDigitizer->Digitize();
+  if (fEvetoDigitizer)   fEvetoDigitizer->Digitize();
+  if (fHEPVetoDigitizer) fHEPVetoDigitizer->Digitize();
+  if (fECalDigitizer)    fECalDigitizer->Digitize();
+  if (fSACDigitizer)     fSACDigitizer->Digitize();
+  if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -176,6 +202,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
       AddBeWHits((BeWHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
+      AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   //int Ncells=0;
@@ -354,16 +382,17 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //    if(ETotCal>EMinSaveNT || fHistoManager->myEvt.NTNTrClus>4) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-
-
-  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
-    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-  }else{
-    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
-  }
+  
+// M. Raggi metti a posto!!!!
+//  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
 //    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-    //  }
+//  }else{
+//    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
+//  }
+  G4cout<<"Writing to file UBTF "<<G4endl;
+  fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+  //  }
 }
 
 void EventAction::AddECryHits(ECalHitsCollection* hcont)
@@ -507,7 +536,7 @@ void EventAction::FindClusters()
     //    printf("Th Cl %f\n",ThCl[NClusters]);
 
     G4double ProcID = myStepping->GetPhysProc();    
-    printf("PROCID %f\n",ProcID);
+    //printf("PROCID %f\n",ProcID);
     if(ProcID==1) fHistoManager->FillHisto2(8,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==1
     if(ProcID==2) fHistoManager->FillHisto2(9,EneCl[NClusters],ThCl[NClusters],1.); //Nclus==2
     if (NClusters==0 && EneCl[NClusters]>5.) {
@@ -611,24 +640,53 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
   YBeW/=NBeW;
 }
 
+// Reading info from Beam Flags M. Raggi 29/08/2019
+void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout module
+{
+  double EFlag=0;
+  G4int nHits = hcont->entries();
+  //  std::cout<<" N Beam flag hits "<<nHits<<std::endl;
+  for (G4int h=0; h<nHits; h++) {
+    BeamFlagHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      EFlag += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
+      //     if (hit->GetTime()<TBeW) TBeW  = hit->GetTime();
+      XBeamFlag += hit->GetX();
+      YBeamFlag += hit->GetY();
+      NBeamFlag++;
+ //
+ //     // Beam structure control histogras M. Raggi 2/04/2019
+      G4double hTime  = hit->GetTime();
+      G4double hE     = hit->GetEnergy();        // deposited energy
+      G4double hTrE   = hit->GetTrackEnergy();   // track energy
+      G4double hX     = hit->GetLocalPosX();
+      G4double hY     = hit->GetLocalPosY();
+      G4int    NFlag  = hit->GetChannelId(); 
 
+      G4int    NHisto =100+10*NFlag;
+      //      if(NFlag==4)  G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ //     // computing angle at the entrance of the target using the directions of the particles:
+ //     G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
+ //     // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
+      //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
+ //
+      //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      if (NFlag<7){
+	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
+	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
+	fHistoManager->FillHisto(NHisto+2,hX);     // 
+	fHistoManager->FillHisto(NHisto+3,hY);     // 
+	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
+	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
+	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
+	// fHistoManager->FillHisto2(NHisto+7,hX,htheta,1.); //X vs Track energy
+      }
+    }
+  }//end of loop
+  //  XBeW/=NBeW;
+  //  YBeW/=NBeW;
+}
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
@@ -916,17 +974,25 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
   for (G4int h=0; h<nHits; h++) {
     TPixHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
+
       G4double hTime = hit->GetTime();
       G4double hE    = hit->GetEnergy();   //deposited energy useless
       G4double hTrE  = hit->GetTrackEnergy();   //deposited energy useless
       G4double hX    = hit->GetLocalPosX();
       G4double hY    = hit->GetLocalPosY();
-      G4double hChID = hit->GetChannelId();
+      G4int    hChID = hit->GetChannelId();
+
+      G4int iRow = hChID/10;
+      G4int iCol = hChID%10;
+      
+      hX+=iCol*14.10;
+      hY+=iRow*14.10;
 
       fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
       fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos
-      fHistoManager->FillHisto(52,hX);  //50 has Tpix Histos
-      fHistoManager->FillHisto(53,hY);  //50 has Tpix Histos
+      fHistoManager->FillHisto(52,hX);    //50 has Tpix Histos
+      fHistoManager->FillHisto(53,hY);    //50 has Tpix Histos
+      fHistoManager->FillHisto(54,hTrE);  //50 has Tpix Histos
 
       fHistoManager->FillHisto2(55,hX,hY,1.); //X vs Y local coordinates 
       fHistoManager->FillHisto2(56,hX,hTrE,1.); //X vs Track energy
@@ -982,10 +1048,9 @@ G4double EventAction::GetCharge(G4double Energia)
   return Charge;
 }
 
-
 //G4double EventAction::GGMass()
 //{
-//  double ECalPosiZ=-4000.; // sbagliato guarda nella geometria
+//  double ECalPosiZ=-3470.; // sbagliato guarda nella geometria
 //  if(NClusters!=2)                        return -1;  // Need 2 clusters
 //  double XDiff2 = (XCl[0]-XCl[1])*(XCl[0]-XCl[1]);
 //  double YDiff2 = (YCl[0]-YCl[1])*(YCl[0]-YCl[1]);

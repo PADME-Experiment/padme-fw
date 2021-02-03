@@ -37,10 +37,15 @@ ECalGeometry::ECalGeometry()
 
   fCrystalCoating = 115.*um;
 
+  // Small displacement along X/Y from Jan 2020 survey
+  fECalDisplacementX = 3.13*mm;
+  fECalDisplacementY = 3.86*mm;
+
   // Back surface of thin window flange is at 2323mm
   //fECalFrontFacePosZ = 2330.*mm; // From center of magnet yoke, i.e. 3.33m to target
-  //  fECalFrontFacePosZ = 2340.*mm; // From center of magnet yoke, i.e. 3.34m to target
-  fECalFrontFacePosZ = 2440.*mm; // From center of magnet yoke, i.e. 3.44m to target includes calibration system M.Raggi 10/10/2018
+  //fECalFrontFacePosZ = 2340.*mm; // From center of magnet yoke, i.e. 3.34m to target
+  //fECalFrontFacePosZ = 2440.*mm; // From center of magnet yoke, i.e. 3.44m to target includes calibration system M.Raggi 10/10/2018
+  fECalFrontFacePosZ = 2435.51*mm; // From center of magnet yoke, from Jan 2020 survey (2550.51 - 230/2)
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 
@@ -90,6 +95,7 @@ ECalGeometry::ECalGeometry()
   fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
+  fECalDigitizerName = "ECalDigitizer";
   fECalSensitiveDetectorName = "ECalSD";
 
 }
@@ -444,6 +450,14 @@ std::vector<G4String> ECalGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fECalNCols " << fECalNCols;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalDisplacementX " << fECalDisplacementX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fECalDisplacementY " << fECalDisplacementY;
   hash.push_back(buffer.str());
   buffer.str("");
 

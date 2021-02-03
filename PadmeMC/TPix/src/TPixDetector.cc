@@ -12,11 +12,13 @@
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
 #include "TPixGeometry.hh"
 #include "TPixSD.hh"
+#include "TPixDigitizer.hh"
 
 TPixDetector::TPixDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -65,14 +67,6 @@ void TPixDetector::CreateGeometry()
   fChipVolume  = new G4LogicalVolume(solidChip,G4Material::GetMaterial("G4_Si"),"TPixChipLogic",0,0,0);
   fChipVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
-  // Make chip a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String tpixSDName = geo->GetTPixSensitiveDetectorName();
-  printf("Registering TPix SD %s\n",tpixSDName.data());
-  TPixSD* tpixSD = new TPixSD(tpixSDName);
-  sdMan->AddNewDetector(tpixSD);
-  fChipVolume->SetSensitiveDetector(tpixSD);
-
   // Get number of fingers and position them
   for (G4int row=0;row<geo->GetTPixNRows();row++){
     for (G4int col=0;col<geo->GetTPixNCols();col++){
@@ -85,6 +79,21 @@ void TPixDetector::CreateGeometry()
       new G4PVPlacement(0,posChip,fChipVolume,"TPixChip",fTPixVolume,false,idx,false);
     }
   }
+
+  // Create digitizer for TPix
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String tpixDName = geo->GetTPixDigitizerName();
+  printf("Registering TPix Digitizer %s\n",tpixDName.data());
+  TPixDigitizer* tpixD = new TPixDigitizer(tpixDName);
+  theDM->AddNewModule(tpixD);
+
+  // Make chip a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String tpixSDName = geo->GetTPixSensitiveDetectorName();
+  printf("Registering TPix Sensitive Detector %s\n",tpixSDName.data());
+  TPixSD* tpixSD = new TPixSD(tpixSDName);
+  sdMan->AddNewDetector(tpixSD);
+  fChipVolume->SetSensitiveDetector(tpixSD);
 
 }
 /*

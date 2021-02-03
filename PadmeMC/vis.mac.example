@@ -111,6 +111,9 @@
 #/Detector/DisableMagneticField
 #/Detector/SetMagneticFieldValue 0.4542 tesla
 
+#/Detector/CrossMagneticVolume internal
+#/Detector/CrossMagneticVolume external
+
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
@@ -125,6 +128,8 @@
 #/Detector/Target/FrontFaceZ -103. cm
 #/Detector/Target/Size 2. cm
 #/Detector/Target/Thickness 100. um
+#/Detector/Target/DisplacementX 0. mm
+#/Detector/Target/DisplacementY 0. mm
 #/Detector/Target/EnableFastDigitization
 #/Detector/Target/DisableFastDigitization
 #/Detector/Target/EnableSaveWaveformToDigi

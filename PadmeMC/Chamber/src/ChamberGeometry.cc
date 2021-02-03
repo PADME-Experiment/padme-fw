@@ -33,6 +33,7 @@ ChamberGeometry::ChamberGeometry()
   fVCInnerSizeX = 435.0*mm; // Internal size along X of the rectangular section inside the magnet
   fVCInnerSizeY = 205.0*mm; // Internal size along Y of the rectangular section inside the magnet
   fVCInnerFacePosZ = -490.0*mm; // Position along Z of the internal face of the rectangular section inside the magnet
+  fVCOuterFacePosZ = -500.001*mm; // Position along Z of the external face of the rectangular section inside the magnet
 
   // Parameters for the aluminum|carbon thin window
 
@@ -54,7 +55,8 @@ ChamberGeometry::ChamberGeometry()
   //fCPZLength = 29.*cm;
   fCPZLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - El 2019-04-12
   //fCPZPosZ = -1.*m;
-  fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
+  //fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
+  fCPZPosZ = -1028.*mm; // Jan 2020 survey (-1027.68mm, 1mm approximation)
   fCPZFlangeR = 76.*mm;
   fCPZFlangeThick = 20.*mm;
 
@@ -63,7 +65,8 @@ ChamberGeometry::ChamberGeometry()
   //fCPXLength = 25.*cm;
   fCPXLength = 270.*mm; // Adjusted to Pfeiffer Cross Piece DN 100 CF - EL 2019-04-12
   //fCPXPosZ = -1.*m;
-  fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
+  //fCPXPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
+  fCPXPosZ = -1028.*mm; // Jan 2020 survey (-1027.68mm, 1mm approximation)
   fCPXFlangeR = 76.*mm;
   fCPXFlangeThick = 20.*mm;
 

@@ -45,14 +45,21 @@ TargetGeometry::TargetGeometry()
   fTSupportHoleD = 2.0*cm; // Distance from L1 to center of squared hole
   fTSupportThick = 1.6*mm; // Thickness of T-shaped support
 
+  // Assume target at exact center. Cross position from Jan 2020 survey: (X:-1.3mm, Y:0.41mm), 1mm approximation
+  // Can be modified with datacards
+  fTargetDisplacementX = 0.*mm;
+  fTargetDisplacementY = 0.*mm;
+
   //fTargetFrontFacePosZ = -70.*cm; // Relative to center of magnet
-  //  fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
-  fTargetFrontFacePosZ = -103.*cm; // Relative to center of magnet after construction M. Raggi 10/10/2018
+  //fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
+  //fTargetFrontFacePosZ = -103.*cm; // Relative to center of magnet after construction M. Raggi 10/10/2018
+  fTargetFrontFacePosZ = -1028.*mm; // Relative to center of magnet. Jan 2020 survey (-1027.68mm, 1mm approximation)
 
   fTargetFastDigitization = true; // Use fast digitization
 
   fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
 
+  fTargetDigitizerName = "TargetDigitizer";
   fTargetSensitiveDetectorName = "TargetSD";
   
   fTargetPitch = 1*mm;
@@ -113,6 +120,14 @@ std::vector<G4String> TargetGeometry::GetHashTable()
   buffer.str("");
 
   buffer << "fTargetSizeZ " << fTargetSizeZ;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDisplacementX " << fTargetDisplacementX;
+  hash.push_back(buffer.str());
+  buffer.str("");
+
+  buffer << "fTargetDisplacementY " << fTargetDisplacementY;
   hash.push_back(buffer.str());
   buffer.str("");
 

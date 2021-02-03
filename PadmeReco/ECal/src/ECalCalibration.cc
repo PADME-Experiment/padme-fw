@@ -37,6 +37,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
   fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","0");
+  std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
 
 
@@ -75,8 +76,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
     } else if(fCalibVersion!="0") { // same calib file for all the events
       
       char fname[256];
-      //sprintf(fname,"config/Calibration/ECalEnergyCalibration_%d.dat",fCalibVersion);
-      sprintf(fname,"config/Calibration/%s",fCalibVersion.c_str());
+      //      sprintf(fname,"config/Calibration/%s",fCalibVersion.c_str());
+      sprintf(fname,"config/Calibration/ECalEnergyCalibration_%s.dat",fCalibVersion.c_str());
       ECalib.open(fname);
       std::cout<<"Using a USER SELECTED energy calibration file for ECal: "
 	       <<fname<<std::endl;

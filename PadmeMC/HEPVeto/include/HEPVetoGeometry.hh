@@ -90,6 +90,9 @@ public:
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetHEPVetoChamberWallCorner(G4ThreeVector);
 
+  // Get name of HEPVeto digitizer
+  G4String GetHEPVetoDigitizerName() { return fHEPVetoDigitizerName; }
+
   // Get name of HEPVeto sensitive detector
   G4String GetHEPVetoSensitiveDetectorName() { return fHEPVetoSensitiveDetectorName; }
 
@@ -152,6 +155,7 @@ private:
   //G4double fHEPVetoSupportThickness; // Thickness of HEPVeto support structure
   G4double fHEPVetoChamberWallThickness; // Thickness of vacuum chamber wall
 
+  G4String fHEPVetoDigitizerName;
   G4String fHEPVetoSensitiveDetectorName;
 
 };

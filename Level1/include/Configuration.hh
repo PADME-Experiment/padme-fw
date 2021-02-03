@@ -39,8 +39,8 @@ public:
   void SetNEventsPerFile(unsigned int n) { fNEventsPerFile = n; }
   unsigned int NEventsPerFile() { return fNEventsPerFile; }
 
-  void SetMergerId(int i) { fMergerId = i; }
-  int MergerId() { return fMergerId; }
+  void SetProcessId(int i) { fProcessId = i; }
+  int ProcessId() { return fProcessId; }
 
   void SetVerbose(unsigned int v) { fVerbose = v; }
   unsigned int Verbose() { return fVerbose; }
@@ -48,11 +48,13 @@ public:
   void SetDebugScale(unsigned int v) { fDebugScale = v; }
   unsigned int DebugScale() { return fDebugScale; }
 
+  char* FormatTime(const time_t);
+
 private:
 
   int fRunNumber;
 
-  int fMergerId;
+  int fProcessId;
 
   std::string fInputStream;
 

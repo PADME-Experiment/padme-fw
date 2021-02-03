@@ -56,18 +56,21 @@ public:
   virtual Bool_t Process();
   virtual Bool_t ProcessAnalysis();
   virtual Bool_t ProcessAnalysisSS();
-  virtual Bool_t ProcessAnalysisGC();
+  virtual Bool_t ProcessAnalysisIO();
+  virtual Bool_t InitHistosIO();
+  //virtual Bool_t ProcessAnalysisGC();
 
   Bool_t passPreselection();//{return true;}
-
+/*
   Bool_t Proc_HEPVeto_vs_PVeto(Bool_t isMC);
   Bool_t Proc_SACclu_vs_all(Bool_t isMC);
   Bool_t Proc_SAChit_vs_PVeto(Bool_t isMC);
   Bool_t Proc_ECalclu_vs_all(Bool_t isMC);
   Bool_t Proc_PVetoclu_vs_AllVetos(Bool_t isMC);
   Bool_t Proc_EVetoclu_vs_HEPVeto(Bool_t isMC);
-  
+*/
   Bool_t phiSymmetricalInECal(int xChId, int aChId, double& distR, double& distPhi);
+  Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& distPhi);
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2, double& distR, double& distPhi, double& b);
   Double_t applyTimePVetoLinCorr(Double_t  xChId, Double_t xTime);
   
@@ -77,11 +80,11 @@ public:
   void InitTimeCalSAC    () {for(int i=0;i!=50;i++)fTimeOffsetSAC[i]=0.;}
   void InitTimeCalECal   () {for(int i=0;i!=3000;i++)fTimeOffsetECal[i]=0.;}
   void CalibrateTimeAndEnergy();
-  void CalibrateTimePVeto  (Bool_t isMC);
+  /*void CalibrateTimePVeto  (Bool_t isMC);
   void CalibrateTimeEVeto  (Bool_t isMC);
   void CalibrateTimeHEPVeto(Bool_t isMC);
   void CalibrateTimeSAC    (Bool_t isMC);
-  void CalibrateTimeECal   (Bool_t isMC);
+  void CalibrateTimeECal   (Bool_t isMC);*/
 
   void SetCalibTimePVeto  (Bool_t isMC);
   void SetCalibTimeEVeto  (Bool_t isMC);
@@ -110,6 +113,34 @@ public:
   void   SetVersion(Int_t fv);
   Int_t  GetVersion(){return fVersion;}
 
+  void HistoInDeltaPhi3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn1cmCoG3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass,Double_t XWeighted,Double_t YWeighted,Double_t angleBetweenTwoPhoton,Double_t phig1,Double_t phig2,Double_t thetag1,Double_t thetag2,Double_t g1x,Double_t g2x,Double_t g1y,Double_t g2y, Double_t CoG);
+  void HistoIn1cmCoG3nsDeltaPhi(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn1cmCoG3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass, Bool_t InDeltaPhi);
+  void HistoIn1cmCoG3nsInFiducialRegion(Double_t g1E, Double_t g2E, Double_t InvariantMass, Double_t CoG);
+  void HistoIn1cmCoG3nsInvariantMassRange(Double_t g1E, Double_t g2E,Double_t g1x, Double_t g2x, Double_t g1y, Double_t g2y, Double_t thetag1, Double_t thetag2, Double_t phig1, Double_t phig2);
+  void HistoIn2cmCoG3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass, Double_t angleBetweenTwoPhoton);
+  void HistoIn2cmCoG3nsDeltaThetaDeltaPhi(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn2cmCoG3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn3cmCoG3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn3cmCoG3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn3cmCoG3nsDeltaThetaDeltaPhi(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoIn5cmCoG3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  
+  void HistoInDeltaPhi20DegreeSecondMethod3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi10DegreeSecondMethod3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi10DegreeSecondMethod3nsThrEnergy(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi5DegreeSecondMethod3ns(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi20DegreeSecondMethod3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi10DegreeSecondMethod3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  void HistoInDeltaPhi5DegreeSecondMethod3nsDeltaTheta(Double_t g1E, Double_t g2E, Double_t InvariantMass);
+  
+  void HistoDeltaTheta_InDeltaPhi20Interval(Double_t angleBetweenTwoPhoton);
+  void HistoDeltaPhi_InDeltaThetaInterval(Double_t dphi);
+
+  Double_t CalculateMomentumPositron(Double_t z,Double_t x);
+  Bool_t InGoodRegionECal(Int_t x, Int_t y);
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;

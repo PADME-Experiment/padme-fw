@@ -66,7 +66,8 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
 }
 
 void SACReconstruction::HistoInit(){
-  AddHisto("SACOccupancy",new TH2F("SACOccupancy","SACOccupancy",5,0,5,5,0,5));
+  //AddHisto("SACOccupancy",new TH2F("SACOccupancy","SACOccupancy",5,0,5,5,0,5));
+  AddHisto("SACOccupancy",new TH2F("SACOccupancy","SACOccupancy",5,-75,75,5,-75,75));
   AddHisto("SACOccupancy_last",new TH2F("SACOccupancy_last","SACOccupancy_last",5,0,5,5,0,5));
   //  AddHisto("SACCharge",new TH2F("SACCharge","SACCharge",5,0,5,5,0,5));
   AddHisto("SACClPos",new TH2F("SACClPos","SACClPos",400,-6,6,400,-6,6));
@@ -393,9 +394,14 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     Time=Hits[iHit1]->GetTime();
     int ich  = Hits[iHit1]->GetChannelId();
     int ElCh = ich/10 +ich%10*5;
+    int XposHits;
+    int YposHits;
+    XposHits=Hits[iHit1]->GetPosition().X();
+    YposHits=Hits[iHit1]->GetPosition().Y();
+    GetHisto("SACOccupancy") -> Fill(XposHits,YposHits);
     Energy  += Hits[iHit1]->GetEnergy(); //SAC total energy
     ECh[ElCh]+= Hits[iHit1]->GetEnergy(); //SAC total energy
-    GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
+    //GetHisto("SACOccupancy") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     GetHisto("SACOccupancy_last") -> Fill(4.5-(ich/10),0.5+ich%10); /* inserted 4.5- to swap PG */
     //GetHisto("SACOccupancy") -> Fill(ich/10-2,ich%10+2);
     //GetHisto("SACOccupancy") -> Fill(-(ich%5-4),ich/5);
@@ -504,4 +510,26 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 }
 
 
+void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  fHits.clear();
+
+  // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    int i1 = digi->GetChannelId()/10;
+    int i2 = digi->GetChannelId()%10;
+    TRecoVHit *Hit = new TRecoVHit();
+    // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
+    int chIdN = i2*10+i1;
+    Hit->SetChannelId(chIdN);
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    fHits.push_back(Hit);
+  }
+  return;
+}
 

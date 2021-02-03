@@ -12,7 +12,7 @@
 int main(int argc, char* argv[])
 {
 
-  int rc; // DB library return code
+  //int rc; // DB library return code
 
   // Set standard output/error in unbuffered mode
   setbuf(stdout,NULL);
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
           fprintf (stderr, "Error while processing option '-r'. Run number set to %d (must be >=0).\n", runnr);
           exit(1);
         }
-        fprintf(stdout,"Merging files from run %d\n",runnr);
+        fprintf(stdout,"Filtering files from run %d\n",runnr);
 	cfg->SetRunNumber(runnr);
         break;
       case 'n':
@@ -113,24 +113,6 @@ int main(int argc, char* argv[])
     exit(1);
   }
 
-  // If this is an official run, connect to DB and get id of merger process
-  // N.B. merger id is needed to assign root files in DB
-  if (cfg->RunNumber()) {
-  
-    // Get handle to DB
-    DBService* db = DBService::GetInstance();
-  
-    // Get id of merger for future DB accesses
-    int merger_id = 0;
-    rc = db->GetMergerId(merger_id,cfg->RunNumber());
-    if (rc != DBSERVICE_OK) {
-      printf("ERROR retrieving from DB id of merger process for run %d. Aborting\n",cfg->RunNumber());
-      exit(1);
-    }
-    cfg->SetMergerId(merger_id);
-  
-  }
-
   // Connect to root services
   RootIO* root = new RootIO();
   if ( root->Init() != ROOTIO_OK ) {
@@ -146,6 +128,11 @@ int main(int argc, char* argv[])
   // We are now ready to process data: get start time
   time_t time_start;
   time(&time_start);
+  //printf("=== PadmeLevel1 starting on %s UTC ===\n",format_time(time_start));
+  printf("=== PadmeLevel1 starting on %s UTC ===\n",cfg->FormatTime(time_start));
+
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_RUNNING);
+  printf("DBINFO - %s - process_set_time_start %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_start));
 
   // Define counters for input stream size and number of events
   unsigned long int input_size = 0;
@@ -567,34 +554,14 @@ int main(int argc, char* argv[])
   printf("Events written: %u (%6.1f events/sec)\n",root->GetTotalEvents(),evtpsec);
   printf("Bytes written: %llu (%10.1f bytes/sec)\n",root->GetTotalSize(),bytepsec);
 
-  //// If input was from a real run, update DB
-  //if (cfg->RunNumber()) {
-  //
-  //  // Get handle to DB
-  //  DBService* db = DBService::GetInstance();
-  //
-  //  // Update merger status
-  //  rc = db->SetMergerStatus(3,cfg->MergerId());
-  //  if (rc != DBSERVICE_OK) {
-  //    printf("ERROR setting merger status in DB. Aborting\n");
-  //    exit(1);
-  //  }
-  //
-  //  // Update merger stop time
-  //  rc = db->SetMergerTime("STOP",cfg->MergerId());
-  //  if (rc != DBSERVICE_OK) {
-  //    printf("ERROR setting merger stop time in DB. Aborting\n");
-  //    exit(1);
-  //  }
-  //  
-  //  // Update DB with final counters (files created, events written, data written)
-  //  rc = db->UpdateMergerInfo(root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-  //  if (rc != DBSERVICE_OK) {
-  //    printf("ERROR updating DB with number of files (n=%u) number of events (n=%u) and output size (size=%llu) for merger id %d. Aborting\n",root->GetTotalFiles(),root->GetTotalEvents(),root->GetTotalSize(),cfg->MergerId());
-  //    exit(1);
-  //  }
-  //
-  //}
+  printf("DBINFO - %s - process_set_status %d\n",cfg->FormatTime(time(0)),DB_STATUS_FINISHED);
+  printf("DBINFO - %s - process_set_time_stop %s\n",cfg->FormatTime(time(0)),cfg->FormatTime(time_stop));
+  printf("DBINFO - %s - process_set_n_files %d\n",cfg->FormatTime(time(0)),root->GetTotalFiles());
+  printf("DBINFO - %s - process_set_total_events %d\n",cfg->FormatTime(time(0)),root->GetTotalEvents());
+  printf("DBINFO - %s - process_set_total_size %lld\n",cfg->FormatTime(time(0)),root->GetTotalSize());
+
+  // Show exit time
+  printf("=== PadmeLevel1 exiting on %s UTC ===\n",cfg->FormatTime(time(0)));
 
   exit(0);
 

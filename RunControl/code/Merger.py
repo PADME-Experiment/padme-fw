@@ -19,6 +19,8 @@ class Merger:
 
         self.db = PadmeDB()
 
+        self.re_dbinfo_line = re.compile("^\s*DBINFO\s.*$")
+
         self.set_default_config()
 
     def set_default_config(self):
@@ -29,37 +31,45 @@ class Merger:
         self.executable = os.getenv('PADME',".")+"/Level1/PadmeMerger.exe"
 
         self.run_number = 0
+        self.process_id = -1
 
         self.config_file = "undefined"
-
         self.log_file = "undefined"
 
-        self.output_mode = "STREAM"
+        #self.output_mode = "STREAM"
 
         self.input_list = "undefined"
         self.output_list = "undefined"
 
+    def config_list(self):
+
+        cfg_list = []
+
+        cfg_list.append(["daq_dir",         self.daq_dir])
+        cfg_list.append(["ssh_id_file",     self.ssh_id_file])
+        cfg_list.append(["executable",      self.executable])
+
+        cfg_list.append(["run_number",      str(self.run_number)])
+        if (self.run_number):
+            cfg_list.append(["process_id",  str(self.process_id)])
+
+        cfg_list.append(["node_id",         str(self.node_id)])
+        cfg_list.append(["node_ip",         self.node_ip])
+
+        cfg_list.append(["config_file",     self.config_file])
+        cfg_list.append(["log_file",        self.log_file])
+
+        #cfg_list.append(["output_mode",     self.output_mode])
+
+        cfg_list.append(["input_list",      self.input_list])
+        cfg_list.append(["output_list",     self.output_list])
+
+        return cfg_list
+
     def format_config(self):
 
         cfgstring = ""
-        cfgstring += "daq_dir\t\t\t%s\n"%self.daq_dir
-        cfgstring += "ssh_id_file\t\t%s\n"%self.ssh_id_file
-        cfgstring += "executable\t\t%s\n"%self.executable
-
-        cfgstring += "run_number\t\t%d\n"%self.run_number
-        if (self.run_number): cfgstring += "process_id\t\t%d\n"%self.process_id
-
-        cfgstring += "node_id\t\t\t%d\n"%self.node_id
-        cfgstring += "node_ip\t\t\t%s\n"%self.node_ip
-
-        cfgstring += "config_file\t\t%s\n"%self.config_file
-        cfgstring += "log_file\t\t%s\n"%self.log_file
-
-        cfgstring += "output_mode\t\t%s\n"%self.output_mode
-
-        cfgstring += "input_list\t\t%s\n"%self.input_list
-        cfgstring += "output_list\t\t%s\n"%self.output_list
-
+        for cfg in self.config_list(): cfgstring += "%-30s %s\n"%(cfg[0],cfg[1])
         return cfgstring
 
     def write_config(self):
@@ -79,24 +89,13 @@ class Merger:
     def create_merger(self):
 
         self.process_id = self.db.create_merger_process(self.run_number,self.node_id)
-        if self.process_id == -1: return "error"
+        if self.process_id == -1:
+            print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
+            return "error"
 
-        self.db.add_cfg_para_merger(self.process_id,"daq_dir",    self.daq_dir)
-        self.db.add_cfg_para_merger(self.process_id,"ssh_id_file",self.ssh_id_file)
-        self.db.add_cfg_para_merger(self.process_id,"executable", self.executable)
-
-        self.db.add_cfg_para_merger(self.process_id,"run_number", repr(self.run_number))
-
-        self.db.add_cfg_para_merger(self.process_id,"node_id",    repr(self.node_id))
-        self.db.add_cfg_para_merger(self.process_id,"node_ip",    self.node_ip)
-                                                         
-        self.db.add_cfg_para_merger(self.process_id,"config_file",self.config_file)
-        self.db.add_cfg_para_merger(self.process_id,"log_file",   self.log_file)
-
-        self.db.add_cfg_para_merger(self.process_id,"output_mode",self.output_mode)
-
-        self.db.add_cfg_para_merger(self.process_id,"input_list", self.input_list)
-        self.db.add_cfg_para_merger(self.process_id,"output_list",self.output_list)
+        # Add all configuration parameters
+        for cfg in self.config_list():
+            self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
 
         return "ok"
 
@@ -104,13 +103,11 @@ class Merger:
 
         command = "%s -r %d -i %s -o %s"%(self.executable,self.run_number,self.input_list,self.output_list)
 
-        # Check if Merger runs on a remote node (node_id 0 is localhost)
+        # If Merger process runs on a remote node then start it using passwordless ssh connection
         if self.node_id != 0:
-
-            # Start Merger on remote node using passwordless ssh connection
             command = "ssh -i %s %s '( %s )'"%(self.ssh_id_file,self.node_ip,command)
 
-        print "- Starting Merger"
+        print "- Starting Merger process"
         print command
         print "  Log written to %s"%self.log_file
 
@@ -124,6 +121,10 @@ class Merger:
             print "Merger::start_merger - ERROR: Execution failed: %s",e
             return 0                
 
+        # Tag start of process in DB
+        if self.run_number:
+            self.db.set_process_time_create(self.process_id,self.db.now_str())
+
         # Return process id
         return self.process.pid
 
@@ -131,20 +132,34 @@ class Merger:
 
         # Wait up to 60 seconds for Merger to stop
         for i in range(60):
-
             if self.process.poll() != None:
-
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                return 1
-
+                if self.run_number:
+                    self.db.set_process_time_end(self.process_id,self.db.now_str())
+                return True
             time.sleep(1)
 
-        # Process did not stop smoothly: stop it
+        # Process did not stop smoothly: terminate it
+        print "Merger::stop_merger - WARNING: Merger process did not stop on its own. Terminating it"
         self.process.terminate()
         time.sleep(1)
         if self.process.poll() != None:
             self.process.wait()
             self.log_handle.close()
-        return 0
+
+        if self.run_number:
+            self.db.set_process_time_end(self.process_id,self.db.now_str())
+        return False
+
+    def parse_log(self):
+
+        # Look for DBINFO lines in log file and send them to DBINFO line processor
+        if os.path.exists(self.log_file) and os.path.isfile(self.log_file):
+            with open(self.log_file,"r") as log:
+                for line in log:
+                    if self.re_dbinfo_line.match(line):
+                        self.db.manage_dbinfo_entry(self.process_id,line)
+        else:
+            print "Merger::parse_log - WARNING: Merger log file %s not found"%self.log_file

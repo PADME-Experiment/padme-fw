@@ -72,7 +72,9 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
-  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeteriorateEnergyResolution", 0);
+  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
+  fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 0);
+  fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 0);
   fReproductSACbunchStructure = (Int_t)fConfig->GetParOrDefault("RECO", "BunchStructureSAC_runJuly", 0);
     if(fReproductSACbunchStructure){
       TFile *file1 =new TFile("TimeDistribution3.root");
@@ -867,8 +869,9 @@ void ECalReconstruction::BuildSimpleECalClusters()
 }
 
 void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
-  std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
-   Int_t i=0;
+  //std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
+  //fIsMC = true;
+  Int_t i=0;
   ifstream myfile;
   myfile.open ("newtemplate.txt");;
   if (myfile.is_open()){
@@ -1208,6 +1211,8 @@ if(fReproductSACbunchStructure){
       int i2 = digi->GetChannelId()%100;
       Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
       if (BrokenSU)continue;
+      // effective threshold cutting noisy wf in 2019 data 
+      if(digi->GetEnergy()<1.5)continue;
       TRecoVHit *Hit = new TRecoVHit();
       // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
       int chIdN = i2*100+i1;
@@ -1336,15 +1341,25 @@ if(fReproductSACbunchStructure){
 	  }
       }
     }
-
-    /*
-    if (multiHit)  
-    if (singleHit_firstTime) tmin 
-    if (singleHit_timeEmax)  tEmaxIdeal
-    if (singleHit_timeEmaxWFcorr) thitemax
-    */
-
-    //ss//std::cout<<"RecoHit in the crystal   ......... id = "<<chIdN<<" tmin, tEMaxIdeal, thitemax = "<<tmin<<" "<<tEMaxIdeal<<" "<<thitemax<<"         energy = "<<energy<<std::endl;
+    
+    if(fDeteriorateHitEnResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
+      Double_t sigma=3.3;
+      //Double_t sigma = 2.82072e-01 + 1.21666e-02*energy+ 3.52981e-05*energy*energy;
+      //      Double_t sigma = 2.69546e-01 + 2.01763e-02*energy+ 3.38787e-05*energy*energy;
+      //Double_t sigma = 2.52898e-01 + 3.07955e-02*energy+ 3.04943e-05*energy*energy;
+      //Double_t sigma = 2.32421e-01+ 4.39133e-02*energy+ 2.13789e-05*energy*energy;
+      //if(energy<200)sigma=3.3; // MeV
+      //else sigma=50.;  // MeV
+      Double_t DetEn=r->Gaus(0.,sigma); 
+      energy+=DetEn;
+    }
+    if(fDeteriorateHitTimeResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
+      Double_t sigma =0.8; //=1.4;  // MeV- from Single positron run; 0.8 from gg signal
+      Double_t DetTime=r->Gaus(0.,sigma); 
+      thitemax+=DetTime;
+    }
+    
+    if (energy<0.) continue;
     Hit->SetEnergy(energy);
     Hit->SetTime(thitemax);
     fHits.push_back(Hit);

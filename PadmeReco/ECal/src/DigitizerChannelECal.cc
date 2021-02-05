@@ -789,7 +789,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
   fFirstHit = true;
-  std::cout<<"In single hit recon fFirstHit: " << fFirstHit <<" isSat "<< IsSat<< std::endl;
+  //std::cout<<"In single hit recon fFirstHit: " << fFirstHit <<" isSat "<< IsSat<< std::endl;
   if(IsSat==1)fSaturatedHit=true;
   if(fGlobalMode->GetGlobalDebugMode()) {
     ECal->Fill();
@@ -869,11 +869,12 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   ReconstructSingleHit(hitArray);
   if(!fFirstHit) return;
   //there is a single hit reconstructed and saved; if there is a second (third) hit I redefine this reconstructed hit 
-  std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
+  if (fGlobalMode->GetGlobalDebugMode())
+    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
   if(!fSaturatedHit){
-    std::cout<< "I'm in not saturated reconstruction " << std::endl;
+    //std::cout<< "I'm in not saturated reconstruction " << std::endl;
     Bool_t SecondHit=false;
     Bool_t ThirdHit=false;
     Double_t FirstEnergy=0.;
@@ -930,75 +931,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 	  hECALthirdhitEnergy_Saved->Fill(ThirdEnergy);
         }
       }
-    }
-    /* io comment 06/04
-    if(SecondHit && SecondEnergy>0.){
-      // std::cout<<"In Reconstruct, second hit " << SecondHit << std::endl;
-      if(fIntCorrection){ 
-        Double_t QIntCorr = CorrectIntegrationTime(SecondTime,1000.);
-        SecondEnergy /= QIntCorr; 
-      }
-      unsigned int nHitsBefore = hitArray.size()-1; 
-      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
-      Double_t TimeHitBefore=hitArray.at(nHitsBefore)->GetTime();
-      if(TimeHitBefore>SecondTime){
-	energyFirstHit-= energyFirstHit*exp(-(SecondTime-TimeHitBefore)/300);
-      }
-      else  energyFirstHit=EnergyHitBefore-SecondEnergy;
-      if(EnergyHitBefore<0.1)std::cout<<"FIRTS HIT with energy 0 !!!!!!!" << std::endl;
-      std::cout<<"In reconstruct multi hit ..in SecondHit , energy first hit corrected " << energyFirstHit <<" secondhitenergy " << SecondEnergy<<  std::endl; 
-      hitArray.at(nHitsBefore)->SetEnergy(energyFirstHit);
-      
-      if(fGlobalMode->GetGlobalDebugMode()) {  
-	fDiffTimeWave=hitArray.at(nHitsBefore)->GetTime()-SecondTime; 
-	fEnergySecondHit=SecondEnergy;
-	hECALsecondHitE->Fill(SecondEnergy);
-	hDiffTimeHitWaveform->Fill(fDiffTimeWave);
-   	hECALfirsthitEnergy->Fill(EnergyHitBefore);
-	ECal->Fill();
-      }
-
-      TRecoVHit *Hit = new TRecoVHit();
-      Hit->SetTime(SecondTime);
-      Hit->SetEnergy(SecondEnergy);
-      hitArray.push_back(Hit);
-   std::cout<<"ADDED HIT " << std::endl;
-      if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
-    }
-    if(ThirdHit && ThirdEnergy>0.){
-      if(fIntCorrection){ 
-        Double_t QIntCorr = CorrectIntegrationTime(ThirdTime,1000.);
-        ThirdEnergy /= QIntCorr; 
-      }
-      unsigned int nHitsBefore = hitArray.size()-1;
-      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
-      Double_t TimeHitBefore=hitArray.at(nHitsBefore)->GetTime();
-      if(TimeHitBefore>ThirdTime){
-	energySecondHit-= energySecondHit*exp(-(ThirdTime-TimeHitBefore)/300);
-      }
-      else energySecondHit=EnergyHitBefore-ThirdEnergy;
-      if(EnergyHitBefore<0.1)std::cout<<"SECOND HIT with energy 0 !!!!!!!" << std::endl;
-      std::cout<<"In reconstruct multi hit ..in ThirdHit , energy second hit "<< SecondEnergy <<" corrected " << energySecondHit <<" thirdhitenergy " << ThirdEnergy<<  std::endl;
-      // if(energySecondHit<20){
-      //	hitArray.erase(nHitsBefore);
-      //	SecondHit=false;
-      //}
-      // else{
-      //	std::cout<<"in ThirdHit , energy second hit " << energySecondHit << std::endl; 
-      hitArray.at(nHitsBefore)->SetEnergy(energySecondHit);
-      TRecoVHit *Hit1 = new TRecoVHit();
-      Hit1->SetTime(ThirdTime);
-      Hit1->SetEnergy(ThirdEnergy);
-      hitArray.push_back(Hit1);
-   std::cout<<"ADD HIT " << std::endl;
-    }
-    if(fGlobalMode->GetGlobalDebugMode()) {
-      hECALfirsthitEnergyCorrected->Fill(energyFirstHit);
-      if(SecondHit) hECALsecondhitEnergyCorrected->Fill(energySecondHit);
-      if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy); 
-    }  
-    end io comment 06/04*/
-    
+    }    
   } 
   
   else if(fSaturatedHit){

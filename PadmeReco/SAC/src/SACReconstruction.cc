@@ -63,6 +63,8 @@ SACReconstruction::SACReconstruction(TFile* HistoFile, TString ConfigFileName)
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new SACGeometry();
   fClusterizationAlgo     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterizationAlgo", 1);
+  fSACDigiTimeWindow      = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 4.);
+
 }
 
 void SACReconstruction::HistoInit(){
@@ -508,22 +510,49 @@ void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tM
 
   if (tEvent==NULL) return;
   fHits.clear();
-
-  // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
     TMCVDigi* digi = tEvent->Digi(i);
     int i1 = digi->GetChannelId()/10;
     int i2 = digi->GetChannelId()%10;
-    TRecoVHit *Hit = new TRecoVHit();
     // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
     int chIdN = i2*10+i1;
-    Hit->SetChannelId(chIdN);
-    Hit->SetPosition(TVector3(0.,0.,0.)); 
-    Hit->SetEnergy(digi->GetEnergy());
-    Hit->SetTime(digi->GetTime());
-    fHits.push_back(Hit);
+    Double_t digiT  = digi->GetTime();
+    Double_t digiE  = digi->GetEnergy();
+    Bool_t toBeMerged = false;
+    // merge digits in the same channel closer in time than a configurable parameter (fSACDigiTimeWindow){
+    if (fSACDigiTimeWindow > 0) {
+      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+	{
+	  if (fHits[ih]->GetChannelId() != chIdN) continue;
+	  if (fabs(fHits[ih]->GetTime()-digiT)<fSACDigiTimeWindow)
+	    {
+	      toBeMerged = true;
+	      // this digit must be merged with a previously defined recoHit
+	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
+	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
+	    }
+	}
+    }
+    if (!toBeMerged)
+      {
+	TRecoVHit *Hit = new TRecoVHit();
+	Hit->SetChannelId(chIdN);
+	Hit->SetEnergy   (digiE);
+	Hit->SetTime     (digiT*digiE);
+	Hit->SetPosition (TVector3(0.,0.,0.)); 
+	fHits.push_back(Hit);
+      }
   }
+  // last loop to correct the time 
+  TRecoVHit *Hit;
+  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+    {
+      Hit = fHits[ih];
+      Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
+    }
+    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
   return;
+
 }
 

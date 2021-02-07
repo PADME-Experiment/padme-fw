@@ -27,7 +27,6 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
-#include "TRandom2.h"
 #include <time.h>
 #include <stdlib.h>
 #include <bitset>

@@ -8,6 +8,7 @@
 #define HEPVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "TRandom2.h"
 
 class HEPVetoReconstruction : public PadmeVReconstruction
 {
@@ -24,6 +25,7 @@ public:
   virtual void HistoInit();
   // virtual void EndProcessing();
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
+  TRandom2 *random;
 
 };
 #endif

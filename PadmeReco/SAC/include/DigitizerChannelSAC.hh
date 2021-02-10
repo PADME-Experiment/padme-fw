@@ -123,6 +123,7 @@ private:
   TH1D ** hVMax;
   TH1D ** h200QCh;
   TH1D ** hQCh;
+  TH1D ** hRMSCh;
 
   TH1D *  hVPeak;
   TH1D *  hMean;
@@ -132,7 +133,7 @@ private:
 
   TH1F * hdxdt;
   TH1F * hdxdtMax;
-  TH1F * hdxdtRMS;
+  TH1F * hRMS;
   TH1F * hTime;
   TH1F * hZSup;
   TH1F * hTimeCut;

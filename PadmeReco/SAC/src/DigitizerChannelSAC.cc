@@ -133,13 +133,14 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
   hVMax    = new TH1D*[32];
   h200QCh  = new TH1D*[32]; //CT
   hQCh     = new TH1D*[32]; //CT
+  hRMSCh     = new TH1D*[32]; //CT
 
   //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
   hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
   hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
   hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
   hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
-  hListCal->Add(hdxdtRMS= new TH1F("hdxdtRMS","hdxdtRMS",1000,0.,200.));
+  hListCal->Add(hRMS= new TH1F("hRMS","hRMS",1000,0.,200.));
   hListCal->Add(hZSup= new TH1F("hZSup","hZSup",3,-0.5,2.5));
   
   for(int kk=0;kk<32;kk++){
@@ -149,12 +150,14 @@ void DigitizerChannelSAC::PrepareDebugHistos(){
     hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
     h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400); //CT
     hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400); //CT
+    hRMSCh[kk]     = new TH1D(Form("hRMSCh%d",kk),Form("hRMSCh%d",kk),600,0,300); //CT
     hListCal->Add(hPedCalo[kk]);
     hListCal->Add(hAvgCalo[kk]);
     hListCal->Add(hPedMean[kk]);
     hListCal->Add(hVMax[kk]);
     hListCal->Add(h200QCh[kk]); //CT
     hListCal->Add(hQCh[kk]); //CT
+    hListCal->Add(hRMSCh[kk]);
   }
 
 }
@@ -224,7 +227,9 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
 // Compute zero suppression: returns 1 if the events has to be suppressed
 Double_t DigitizerChannelSAC::ZSupHit(Float_t Thr, UShort_t NAvg) {
   fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
+  hRMS->Fill(fRMS1000);
   Double_t ZSupHit=-1;
+  //std::cout<<"RMS = "<<fRMS1000<<std::endl;
 
   if(fRMS1000>Thr){
     ZSupHit=0;
@@ -251,6 +256,7 @@ Double_t DigitizerChannelSAC::CalcTime(UShort_t iMax, UShort_t fCh) {
 Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax) {
   fTime   = 0.;
   fCharge = 0.;
+
   static TSpectrum SpectrumProcessor(50);// = new TSpectrum(20);
 
   Int_t NImage=0;
@@ -301,11 +307,13 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //    Double_t *xpeaks = s->GetPositionX();
     //    Double_t *ypeaks = s->GetPositionY();
     // ROOT 5 version
-    //    Float_t *xpeaks = s->GetPositionX();
-    //    Float_t *ypeaks = s->GetPositionY();
+    Float_t *xpeaks = s->GetPositionX();
+    Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
+      fRMS1000  = 0;
+
 // ROOT 6 version
 //      Double_t xp   = xpeaks[ll];
 //      Double_t yp   = ypeaks[ll];
@@ -323,6 +331,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	}
 	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
+
+      fRMS1000  = TMath::RMS(1000,&fSamples[0]);
       fEnergy = fCharge/pCMeV; //this is really the energy
       fCalibEnergy = fCharge/pCMeV*fCalibCh[ElCh]; //calibrated energy of the hit
 
@@ -345,6 +355,48 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       //      std::cout<<ll<<" "<<xp<<" yp "<<ypeaks[ll]<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }
     //    std::cout<<"end ch"<<std::endl;
+
+    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){
+      if(VMax>0 && ElCh>=0){//original reco, debug mode DEBUG MODE CLARA BEFORE 18/06/20
+      //if(yp>-3*VMin){
+	//if(VMax>1 && ElCh>=0){
+	
+	fileOut->cd();
+	sprintf(name,"hSig%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	histo->SetContent(AbsSamRec);
+	//	histo->Write(); histo->Reset();
+	sprintf(name,"hVMax%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	//	histo->Fill(VMax);//CT hVMax contains histogram maximum
+	histo->Fill(VMax);//CT hVMax contains histogram maximum
+      }
+      //      //CT trying to fill hQCh
+      //      
+      //      Int_t Ch   = GetElChID();
+      if(ElCh>=0){
+	char name[50];
+
+	sprintf(name,"hQCh%d",ElCh);
+	histo =(TH1D*) hListCal->FindObject(name);
+	histo->Fill(fCharge);//CT hQCh contains TSpectrum max
+
+	sprintf(name,"hRMSCh%d",ElCh);
+	histo =(TH1D*) hListCal->FindObject(name);
+	histo->Fill(fRMS1000);//CT hQCh contains TSpectrum max
+  
+	sprintf(name,"hTime");
+	histo =(TH1D*) hListCal->FindObject(name);
+	histo->Fill(xpeaks[0]*fTimeBin);
+
+	sprintf(name,"hAvgCalo%d",ElCh);
+	histo=(TH1D*) hListCal->FindObject(name);
+	histo->Fill(fAvg80);//CT hAvgCalo contains histogram maximum
+
+      }
+
+    }
+
     H1->Reset();
   }
   return fTime = fTime*fTimeBin;
@@ -365,7 +417,7 @@ void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArra
   Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
 
-  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals
+  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals, se commento niente zsup
   fTrig = GetTrigMask();
 
 }
@@ -380,7 +432,7 @@ void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray
 
   hZSup->Fill(IsZeroSup);
 
-  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals
+  if(IsZeroSup==1) return; //perform zero suppression unless you are doing pedestals, se commento niente zsup
   //fTrig = GetTrigMask();
 
   Double_t fchPed=CalcPedestal();

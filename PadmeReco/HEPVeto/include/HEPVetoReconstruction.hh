@@ -27,5 +27,7 @@ public:
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   TRandom2 *random;
 
+  Double_t fSigmaNoiseForMC;
+  Double_t fHEPVetoDigiTimeWindow;
 };
 #endif

@@ -157,7 +157,7 @@ void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent
       for (unsigned int ih=0; ih<fHits.size(); ++ih)
 	{
 	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()-digiT)<fHEPVetoDigiTimeWindow)
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fHEPVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
 	      // this digit must be merged with a previously defined recoHit

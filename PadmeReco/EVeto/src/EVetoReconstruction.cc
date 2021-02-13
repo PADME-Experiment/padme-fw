@@ -149,7 +149,7 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
       for (unsigned int ih=0; ih<fHits.size(); ++ih)
 	{
 	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()-digiT)<fEVetoDigiTimeWindow)
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fEVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
 	      // this digit must be merged with a previously defined recoHit

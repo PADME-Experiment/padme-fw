@@ -722,9 +722,9 @@ void ECalReconstruction::BuildSimpleECalClusters()
   Int_t cCellUsed[NTotCh]={0};
 
 
-  ofstream myHitFile;
-  myHitFile.open ("hitFeatures.txt",std::ofstream::app);
-  myHitFile <<"A new event here  " <<std::endl; 
+  //ofstream myHitFile;
+  //myHitFile.open ("hitFeatures.txt",std::ofstream::app);
+  //myHitFile <<"A new event here  " <<std::endl; 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
@@ -732,7 +732,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     }
 
     // debugging 
-    myHitFile <<"Energy " <<  Hits[iHit1]->GetEnergy() << " time " << Hits[iHit1]->GetTime() << " channel " << Hits[iHit1]->GetChannelId()<<std::endl;
+    //myHitFile <<"Energy " <<  Hits[iHit1]->GetEnergy() << " time " << Hits[iHit1]->GetTime() << " channel " << Hits[iHit1]->GetChannelId()<<std::endl;
     // end debugging 
 
     // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
@@ -746,7 +746,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
     //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
   }
-  myHitFile.close();
+  //myHitFile.close();
 
 
   Int_t iMax=0;

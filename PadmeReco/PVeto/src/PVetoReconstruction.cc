@@ -108,6 +108,7 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
   if (tEvent==NULL) return;
   fHits.clear();
   // MC to reco hits
+  //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
     TMCVDigi* digi = tEvent->Digi(i);
     //TRecoVHit *Hit = new TRecoVHit(digi);
@@ -115,18 +116,22 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
     Int_t    digiCh = digi->GetChannelId();
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
+    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+
     Bool_t toBeMerged = false;
     // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
     if (fPVetoDigiTimeWindow > 0) {
       for (unsigned int ih=0; ih<fHits.size(); ++ih)
 	{
 	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()-digiT)<fPVetoDigiTimeWindow)
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
 	      // this digit must be merged with a previously defined recoHit
+	      //std::cout<<" -- merging with hit in ch "<<fHits[ih]->GetChannelId()<<" at time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" diffT = "<<fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<<std::endl;
 	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
 	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
+	      //std::cout<<" -- updated  Ch "<<fHits[ih]->GetChannelId()<<" time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" so far "<<std::endl;
 	    }
 	}
     }
@@ -138,6 +143,7 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	Hit->SetTime     (digiT*digiE);
 	Hit->SetPosition (TVector3(0.,0.,0.)); 
 	fHits.push_back(Hit);
+	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
       }
   }
   // last loop to correct the time 

@@ -71,7 +71,7 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
-  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
+  //fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
   fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 0);
   fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 0);
   fReproductSACbunchStructure = (Int_t)fConfig->GetParOrDefault("RECO", "BunchStructureSAC_runJuly", 0);
@@ -722,11 +722,19 @@ void ECalReconstruction::BuildSimpleECalClusters()
   Int_t cCellUsed[NTotCh]={0};
 
 
+  ofstream myHitFile;
+  myHitFile.open ("hitFeatures.txt",std::ofstream::app);
+  myHitFile <<"A new event here  " <<std::endl; 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
       break;
     }
+
+    // debugging 
+    myHitFile <<"Energy " <<  Hits[iHit1]->GetEnergy() << " time " << Hits[iHit1]->GetTime() << " channel " << Hits[iHit1]->GetChannelId()<<std::endl;
+    // end debugging 
+
     // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();
@@ -738,6 +746,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
     //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
   }
+  myHitFile.close();
+
 
   Int_t iMax=0;
   Int_t HitUsed=0;
@@ -821,12 +831,12 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
     // Correct the cluster energy for missing energy
     if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
-    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
-      Double_t sigma=EnergyResolution(ClE[iCl]);
-      Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
-      //std::cout << DetEnergy << std::endl;
-      ClE[iCl]=DetEnergy+ClE[iCl];
-    }
+    // if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+    //   Double_t sigma=EnergyResolution(ClE[iCl]);
+    //   Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
+    //   //std::cout << DetEnergy << std::endl;
+    //   ClE[iCl]=DetEnergy+ClE[iCl];
+    // }
     tmpHitsInCl.clear();
     TRecoVCluster* myCl = new TRecoVCluster();
     myCl->SetChannelId( SdCell[iCl] );

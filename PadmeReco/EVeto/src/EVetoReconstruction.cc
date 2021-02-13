@@ -140,8 +140,6 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 
     Int_t    digiCh = digi->GetChannelId();
     //digit Id increases with decreasing z; for recoHits chId increases with increasing z 
-    if (digiCh<16) digiCh = 15-digiCh;
-    else  digiCh = 47-digiCh;
 
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();

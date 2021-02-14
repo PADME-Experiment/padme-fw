@@ -12,12 +12,14 @@
 #include <stdlib.h>
 
 void DigitizerChannelECal::PrintConfig(){
+  std::cout <<"**************************** DigitizerChannelECal config {*********************"<<std::endl;
   std::cout << "Hi I'm the ECal: " << std::endl;
   std::cout << "Signal width: "   << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl; 
   std::cout << "fPedestalMode:   " << fPedestalMode <<std::endl;
   std::cout << "fUseOverSample: " << fUseOverSample << std::endl;  
   std::cout << "fMultiHit: " << fMultihit << std::endl;
+  std::cout <<"**************************** DigitizerChannelECal config }*********************"<<std::endl;
 
 //  Int_t NBD=8;
 //  for(int i=0;i<32;i++){
@@ -91,7 +93,8 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   Int_t i=0;
   ifstream myfile;
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
-  myfile.open ("newtemplate.txt");;
+  std::string templateFileName = "newtemplate.txt";
+  myfile.open (templateFileName.c_str());;
   if (myfile.is_open()){
    while (!myfile.eof()) {
    myfile >> fTemplate[i];
@@ -100,6 +103,14 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
    i++;
    }
   }
+  else 
+    {
+      std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
+      std::cerr<<"DigitizerChannelECal - Template file requested is not found ---- terminate here "<<std::endl;
+      exit(1);
+    }
+  
+
 }
 
 void DigitizerChannelECal::PrepareTmpHistos(){
@@ -863,7 +874,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   fFirstHit=false;
   fSaturatedHit=false;
-  //std::cout<<"multi hit " << std::endl;
+  //std::cout<<"multi hit reconstruction ... " << std::endl;
  
  //to establish if there is saturated waveform or if the wave is ZSup
   ReconstructSingleHit(hitArray);

@@ -90,26 +90,34 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   }
   fCountSavedEvent=0;
   //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
-  Int_t i=0;
-  ifstream myfile;
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
-  std::string templateFileName = "newtemplate.txt";
-  myfile.open (templateFileName.c_str());;
-  if (myfile.is_open()){
-   while (!myfile.eof()) {
-   myfile >> fTemplate[i];
-  if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
-   //std::cout<< Template[i] << std::endl;
-   i++;
-   }
-  }
-  else 
-    {
-      std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
-      std::cerr<<"DigitizerChannelECal - Template file requested is not found ---- terminate here "<<std::endl;
-      exit(1);
+  if (fMultihit) {
+    ifstream myfile;
+    std::string templateFileName = "./config/BGOwaveformTemplate.txt";
+    std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
+    myfile.open (templateFileName.c_str());;
+    Int_t i=0;
+    Double_t readValue=0.;
+    if (myfile.is_open()){
+      std::cout<<"DigitizerChannelECal: file <"<<templateFileName<<"> open"<<std::endl;
+      while (!myfile.eof()) {
+	myfile >> readValue;
+	if (i<5000) {
+	  fTemplate[i]=readValue;
+	  if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
+	  //std::cout<< " Filling template ... "<<i<<" "<< fTemplate[i] << std::endl;
+	  i++;
+	}
+      }
+      std::cout<<"DigitizerChannelECal: "<<i<<" lines read from file "<<templateFileName<<std::endl;
     }
-  
+    else 
+      {
+	std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
+	std::cerr<<"DigitizerChannelECal - Template file requested is not found ---- terminate here "<<std::endl;
+	exit(1);
+      }
+  }
 
 }
 

@@ -10,6 +10,7 @@
 #include "TargetCalibration.hh"
 #include "TargetGeometry.hh"
 #include "TTargetRecoBeam.hh"
+#include "PadmeReconstruction.hh"
 
 #include "TTargetMCEvent.hh"
 #include "TTargetMCHit.hh"
@@ -545,7 +546,15 @@ Double_t TargetReconstruction::fitProfile(Double_t *x, Double_t *par) {
 
 void TargetReconstruction::ReconstructBeam(){
 
-  bool RunII = fRunIInPOTcalc; 
+  bool RunII = fRunIInPOTcalc;
+  Bool_t isMC = ((PadmeReconstruction*)GetMainReco())->IsSimulated();
+  if (isMC)
+    {
+      RunII=false;
+      //std::cout<<" simulated data => RunII = "<<RunII<<std::endl;
+    }
+  //else std::cout<<" RunII = "<<RunII<<std::endl;
+  
   //  std::cout<<"In TARGETRECONSTRUCTION " << std::endl;
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //std::cout<<"In TARGETRECONSTRUCTION hits recovered " << std::endl;

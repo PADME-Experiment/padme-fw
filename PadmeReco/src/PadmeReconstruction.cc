@@ -592,3 +592,9 @@ UInt_t PadmeReconstruction::GetTriggerMask()
   printf("PadmeReconstruction::GetTriggerMask() - Unknown input chain");
   return 0;
 }
+Bool_t PadmeReconstruction::IsSimulated()
+{
+  Bool_t isMC = false;
+  if (fMCChain || ( fRecoChain && fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED) ) ) isMC=true;
+  return isMC;
+}

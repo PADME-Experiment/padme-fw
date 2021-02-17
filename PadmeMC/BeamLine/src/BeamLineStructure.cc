@@ -141,9 +141,94 @@ void BeamLineStructure::CreateMylarThinWindow()
   }
 }
 
+// M. Raggi 02.2021
 void BeamLineStructure::CreateBeamLine2020()
 {
-  
+  BeamFlagSD* beamFlagSD;
+  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
+  G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
+  G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+
+  //Gettining intial positions
+  G4double mpEntPosX = geo->GetMagPipeEnterPosX();
+  G4double mpEntPosY = geo->GetMagPipeEnterPosY();
+  G4double mpEntPosZ = geo->GetMagPipeEnterPosZ();
+  G4double beJunLen  = geo->GetBeJunctionLength();
+  G4double bePipeLen = geo->GetBePipeLength();
+  G4double magnetAngle = geo->GetDHSTB002AngularSpan();
+
+// Create long pipe between DHSTB002 magnet and BTF Walls
+  G4double WallPipeLen  = geo->GetBePipeLength();
+  G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
+  G4double WallPipeROut = geo->Get2020PipeOuterRadius();
+
+  // Add flange on front (upstream) side
+  //G4Tubs* solidBePipeFlgFnt = new G4Tubs("solidBePipeFlgFnt",0.,bePipeFlgFntR,0.5*bePipeFlgFntT,0.*deg,360.*deg);
+  //G4UnionSolid* solidBePipeFull2 = new G4UnionSolid("solidBePipeFull2",solidBePipeFull1,solidBePipeFlgFnt,0,G4ThreeVector(0.,0.,-0.5*bePipeLen+0.5*bePipeFlgFntT));
+
+  // Add flange on back (downstream) side
+  //G4Tubs* solidBePipeFlgBck = new G4Tubs("solidBePipeFlgBck",0.,bePipeFlgBckR,0.5*bePipeFlgBckT,0.*deg,360.*deg);
+  //G4UnionSolid* solidBePipeFull = new G4UnionSolid("solidBePipeFull",solidBePipeFull2,solidBePipeFlgBck,0,G4ThreeVector(0.,0.,0.5*bePipeLen-0.5*bePipeFlgBckT));
+
+  // Create solid pipe From DHSTB002 entrance and BTF Wall
+  G4Tubs* solidWallPipeFull1 = new G4Tubs("solidWallPipeFull1",0.,WallPipeROut,0.5*WallPipeLen,0.*deg,360.*deg);
+
+  // Carve hole inside pipe (add usual small tolerance)
+  G4Tubs* solidWallPipeHole = new G4Tubs("solidWallPipeHole",0.,WallPipeRIn,0.5*WallPipeLen+10.*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidWallPipe = new G4SubtractionSolid("solidWallPipe",solidWallPipeFull1,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
+
+  // Create Wall Pipe logical volume
+  G4LogicalVolume* logicalWallPipe = new G4LogicalVolume(solidWallPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalWallPipe",0,0,0);
+  logicalWallPipe->SetVisAttributes(steelVisAttr);
+
+  // Position long pipe in between DHSTB002 and BTF wall
+  G4double WallPipePosX = mpEntPosX+(0.5*WallPipeLen)*sin(magnetAngle);
+  G4double WallPipePosY = mpEntPosY;
+  G4double WallPipePosZ = mpEntPosZ-(0.5*WallPipeLen)*cos(magnetAngle);
+  G4ThreeVector WallPipePos = G4ThreeVector(WallPipePosX,WallPipePosY,WallPipePosZ);
+  G4RotationMatrix* WallPipeRot = new G4RotationMatrix;
+  WallPipeRot->rotateY(magnetAngle);
+  new G4PVPlacement(WallPipeRot,WallPipePos,logicalWallPipe,"BeamLineWallPipe",fMotherVolume,false,0,true);
+
+  // Create solid pipe From DHSTB002 entrance and BTF Wall
+  G4double InWallPipeLen  = geo->GetWallThickness();
+  G4Tubs* solidInWallPipeFull1 = new G4Tubs("solidInWallPipeFull1",0.,WallPipeROut,0.5*InWallPipeLen,0.*deg,360.*deg);
+
+  // Carve hole inside pipe (add usual small tolerance)
+  G4Tubs* solidInWallPipeHole = new G4Tubs("solidInWallPipeHole",0.,WallPipeRIn,0.5*InWallPipeLen+10.*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidInWallPipe = new G4SubtractionSolid("solidInWallPipe",solidInWallPipeFull1,solidInWallPipeHole,0,G4ThreeVector(0.,0.,0.));
+
+  // Create Wall Pipe logical volume
+  G4LogicalVolume* logicalInWallPipe = new G4LogicalVolume(solidInWallPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalInWallPipe",0,0,0);
+  // logicalInWallPipe->SetVisAttributes(steelVisAttr);
+
+  // Position long pipe in between DHSTB002 and BTF wall
+  G4double InWallPipePosX = mpEntPosX+(WallPipeLen+0.5*InWallPipeLen)*sin(magnetAngle);
+  G4double InWallPipePosY = mpEntPosY;
+  G4double InWallPipePosZ = mpEntPosZ-(WallPipeLen+0.5*InWallPipeLen)*cos(magnetAngle);
+  G4ThreeVector InWallPipePos = G4ThreeVector(InWallPipePosX,InWallPipePosY,InWallPipePosZ);
+  new G4PVPlacement(WallPipeRot,InWallPipePos,logicalInWallPipe,"BeamLineInWallPipe",fMotherVolume,false,0,true);
+
+  // Create solid pipe From WALL to Mylar Window Into Linac
+  G4double InLinacPipeLen  = geo->GetWallMylarWinDistance();
+  G4Tubs* solidInLinacPipeFull1 = new G4Tubs("solidInLinacPipeFull1",0.,WallPipeROut,0.5*InLinacPipeLen,0.*deg,360.*deg);
+
+  // Carve hole inside pipe (add usual small tolerance)
+  G4Tubs* solidInLinacPipeHole = new G4Tubs("solidInLinacPipeHole",0.,WallPipeRIn,0.5*InLinacPipeLen+10.*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidInLinacPipe = new G4SubtractionSolid("solidInLinacPipe",solidInLinacPipeFull1,solidInLinacPipeHole,0,G4ThreeVector(0.,0.,0.));
+
+  // Create Wall Pipe logical volume
+  G4LogicalVolume* logicalInLinacPipe = new G4LogicalVolume(solidInLinacPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalInLinacPipe",0,0,0);
+  //logicalInLinacPipe->SetVisAttributes(steelVisAttr);
+
+  // Position long pipe in between Wall and Mylar window
+  G4double InLinacPipePosX = mpEntPosX+(WallPipeLen+InWallPipeLen+0.5*InLinacPipeLen)*sin(magnetAngle);
+  G4double InLinacPipePosY = mpEntPosY;
+  G4double InLinacPipePosZ = mpEntPosZ-(WallPipeLen+InWallPipeLen+0.5*InLinacPipeLen)*cos(magnetAngle);
+  G4ThreeVector InLinacPipePos = G4ThreeVector(InLinacPipePosX,InLinacPipePosY,InLinacPipePosZ);
+  new G4PVPlacement(WallPipeRot,InLinacPipePos,logicalInLinacPipe,"BeamLineInLinacPipe",fMotherVolume,false,0,true);
+
 }
 
 void BeamLineStructure::CreateBeThinWindow()

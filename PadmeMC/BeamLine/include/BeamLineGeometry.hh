@@ -195,6 +195,18 @@ public:
   G4String GetBeamFlag2SensitiveDetectorName() { return fBeamFlag2SensitiveDetectorName; }
   G4String GetBeamFlag3SensitiveDetectorName() { return fBeamFlag3SensitiveDetectorName; }
 
+
+
+  // BEAM line 2020 geometry parameters M. Raggi 02.2021 
+  G4double GetDHSTB002WallDistance() { return fDHSTB002WallDistance;}
+  G4double Get2020PipeOuterRadius()  { return f2020PipeOuterRadius; }
+  G4double Get2020PipeInnerRadius()  { return f2020PipeInnerRadius; }
+
+  G4double GetWallThickness() { return fWallThickness; }
+  G4double GetWallHoleRadius(){ return fWallHoleRadius;}
+  G4double GetWallMylarWinDistance(){ return fWallMylarWinDistance;}
+
+
 private:
 
   //  Berillium thin window and stainless still flange
@@ -348,6 +360,20 @@ private:
 
   G4double fQ2DistFromDHSTB002;
   G4double fQ1Q2Dist;  //center to center
+
+  //
+  // BEAM line 2020 geometry parameters M. Raggi 02.2021 
+  //
+
+  G4double fWallThickness; 
+  G4double fWallHoleRadius;
+  G4double fWallMylarWinDistance;
+
+  G4double fDHSTB002WallDistance;
+  G4double f2020PipeOuterRadius; 
+  G4double f2020PipeInnerRadius; 
+
+
 };
 
 #endif

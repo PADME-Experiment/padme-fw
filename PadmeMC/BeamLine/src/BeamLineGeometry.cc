@@ -19,7 +19,6 @@ BeamLineGeometry* BeamLineGeometry::GetInstance()
 
 BeamLineGeometry::BeamLineGeometry()
 {
-
   // By default the Be window is positioned
   fBeWindowEnable = true;
   fMylarWindowEnable = true;
@@ -187,6 +186,19 @@ BeamLineGeometry::BeamLineGeometry()
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
   fQ2DistFromDHSTB002 = 379.*mm; 
   fQ1Q2Dist = 900.*mm; //center to center
+
+
+ //
+  // BEAM line 2020 geometry parameters M. Raggi 02.2021 
+  //
+
+  fWallThickness        =  251.4*cm; //check 
+  fWallHoleRadius       =   10.0*cm;    //check
+  fWallMylarWinDistance =  226.0*cm;
+
+  fDHSTB002WallDistance =  380.5*cm; //check
+  f2020PipeOuterRadius  =    3.0*cm; //check
+  f2020PipeInnerRadius  =    2.8*cm; //check
 
 }
 

@@ -168,7 +168,7 @@ BeamLineGeometry::BeamLineGeometry()
   // Properties of Mylar thin window and its support flange Raggi 06/2020
   //verifica con foggetta tutte le misure
   fMylarWindowRadius = 30.5*mm;
-  fMylarWindowThick = 140.*mm;  //FIIIXXXXXXXXXXXXXXXXXXXXXXXXXX 
+  fMylarWindowThick =  0.140*mm;  //FIIIXXXXXXXXXXXXXXXXXXXXXXXXXX 
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 
@@ -192,9 +192,9 @@ BeamLineGeometry::BeamLineGeometry()
   // BEAM line 2020 geometry parameters M. Raggi 02.2021 
   //
 
-  fWallThickness        =  251.4*cm; //check 
-  fWallHoleRadius       =   10.0*cm;    //check
-  fWallMylarWinDistance =  226.0*cm;
+  fWallThickness        =  251.4*cm;   //check 
+  fWallHoleRadius       =   10.0*cm;   //check
+  fWallMylarWinDistance =  297.0*cm;   //Check 
 
   fDHSTB002WallDistance =  380.5*cm; //check
   f2020PipeOuterRadius  =    3.0*cm; //check

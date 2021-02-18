@@ -143,17 +143,14 @@ void BeamLineStructure::CreateMylarThinWindow()
 // written by M. Raggi 02.2021
 void BeamLineStructure::CreateBeamLine2020()
 {
-  printf("MALEDETTO ::");
-  printf("MALEDETTO ::");
-  printf("MALEDETTO ::");
-  printf("MALEDETTO ::");
-  G4cout<<"######### maledetto ###############"<<G4endl;
-
+  //  G4cout<<"######### maledetto ###############"<<G4endl;
 
   BeamFlagSD* beamFlagSD;
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
+  G4VisAttributes DentroilMuroVisAttr   = G4VisAttributes(G4Color::Red()); // Beam Flags
+
   if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
 
   //Gettining intial positions
@@ -165,7 +162,8 @@ void BeamLineStructure::CreateBeamLine2020()
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();
 
 // Create long pipe between DHSTB002 magnet and BTF Walls
-  G4double WallPipeLen  = geo->GetBePipeLength();
+//  G4double WallPipeLen  = geo->GetBePipeLength();
+  G4double WallPipeLen  = geo->GetDHSTB002WallDistance();
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double WallPipeROut = geo->Get2020PipeOuterRadius();
 
@@ -207,7 +205,7 @@ void BeamLineStructure::CreateBeamLine2020()
 
   // Create Wall Pipe logical volume
   G4LogicalVolume* logicalInWallPipe = new G4LogicalVolume(solidInWallPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalInWallPipe",0,0,0);
-  // logicalInWallPipe->SetVisAttributes(steelVisAttr);
+  logicalInWallPipe->SetVisAttributes(DentroilMuroVisAttr);
 
   // Position long pipe in between DHSTB002 and BTF wall
   G4double InWallPipePosX = mpEntPosX+(WallPipeLen+0.5*InWallPipeLen)*sin(magnetAngle);
@@ -237,14 +235,17 @@ void BeamLineStructure::CreateBeamLine2020()
 
   G4double LinacWallThick  = geo->GetWallThickness();
   G4double WallHoleRadius  = geo->GetWallHoleRadius();
-  printf("MALEDETTO :: %f",LinacWallThick);
 
-  G4VSolid* solidLinacWallFull = new G4Box("solidLinacWallFull",1.5*m,1.5*m,LinacWallThick*0.5);
-  G4Tubs* solidLinacWallHole = new G4Tubs("solidLinacWallHole",0.,WallPipeROut*2.5,0.5*LinacWallThick+100.*um,0.*deg,360.*deg);
-  G4SubtractionSolid* solidLinacWall = new G4SubtractionSolid("solidLinacWall",solidLinacWallFull,solidLinacWallHole,0,G4ThreeVector(0.,0.,0.));
+  G4VSolid* solidLinacWallFull = new G4Box("solidLinacWallFull",LinacWallThick*0.5,2*m,2*m);
+  G4Tubs* solidLinacWallHole = new G4Tubs("solidLinacWallHole",0.,WallPipeROut*2.5,0.5*LinacWallThick*1.5+100.*um,0.*deg,360.*deg);
+  //  printf("MALEDETTIIIIIIIII %f",mpEntPosZ-293.-(InWallPipePosZ-1.*m);
+  G4SubtractionSolid* solidLinacWall = new G4SubtractionSolid("solidLinacWall",solidLinacWallFull,solidLinacWallHole,WallPipeRot,G4ThreeVector(0,0.,mpEntPosZ-(+LinacWallThick*0.5+293.*cm)-(InWallPipePosZ)));
   G4LogicalVolume* logicLinacWall = new G4LogicalVolume(solidLinacWall,G4Material::GetMaterial("G4_CONCRETE"),"logicLinacWall", 0, 0, 0);
-  G4ThreeVector LinacWallPos = G4ThreeVector(InWallPipePosX,InWallPipePosY,InWallPipePosZ);
-  new G4PVPlacement(WallPipeRot,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
+  //  G4ThreeVector LinacWallPos = G4ThreeVector(InWallPipePosX,InWallPipePosY,InWallPipePosZ);
+  G4ThreeVector LinacWallPos = G4ThreeVector(293*cm + mpEntPosX+LinacWallThick*0.5,0.,InWallPipePosZ);
+  //  new G4PVPlacement(,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
+  new G4PVPlacement(0,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
+
 
   // Position Mylar window with relative support flange
   G4double MylarWinFlgT    = geo->GetMylarWindowFlangeThick();

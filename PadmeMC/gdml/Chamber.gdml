@@ -22,7 +22,7 @@
     </materials>
 
     <solids>
-        <box lunit="m" name="world_solid" x="12.0" y="12.0" z="12.0" />
+        <box lunit="m" name="world_solid" x="25.0" y="10.0" z="25.0" />
     </solids>
 
     <structure>

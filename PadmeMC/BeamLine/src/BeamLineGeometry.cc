@@ -192,13 +192,15 @@ BeamLineGeometry::BeamLineGeometry()
   // BEAM line 2020 geometry parameters M. Raggi 02.2021 
   //
 
-  fWallThickness        =  251.4*cm;   //check 
+  fWallThickness        =  150.0*cm;   //check
+  fWallPipeLen          =  251.4*cm;   //check
   fWallHoleRadius       =   10.0*cm;   //check
   fWallMylarWinDistance =  297.0*cm;   //Check 
+  fDHSTB002WallDistance =  380.5*cm;   //check
 
-  fDHSTB002WallDistance =  380.5*cm; //check
-  f2020PipeOuterRadius  =    3.0*cm; //check
-  f2020PipeInnerRadius  =    2.8*cm; //check
+  //  DN 63 pipes specs  diametro interno 66 esterno 70
+  f2020PipeOuterRadius  =    3.5*cm; // Using DN specs
+  f2020PipeInnerRadius  =    3.3*cm; // Using DN specs
 
 }
 

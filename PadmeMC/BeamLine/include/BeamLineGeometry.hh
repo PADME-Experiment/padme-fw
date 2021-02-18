@@ -203,6 +203,7 @@ public:
   G4double Get2020PipeInnerRadius()  { return f2020PipeInnerRadius; }
 
   G4double GetWallThickness() { return fWallThickness; }
+  G4double GetWallPipeLen()   { return fWallPipeLen; }
   G4double GetWallHoleRadius(){ return fWallHoleRadius;}
   G4double GetWallMylarWinDistance(){ return fWallMylarWinDistance;}
 
@@ -365,7 +366,9 @@ private:
   // BEAM line 2020 geometry parameters M. Raggi 02.2021 
   //
 
-  G4double fWallThickness; 
+  G4double fWallThickness;
+  G4double fWallPipeLen;
+ 
   G4double fWallHoleRadius;
   G4double fWallMylarWinDistance;
 

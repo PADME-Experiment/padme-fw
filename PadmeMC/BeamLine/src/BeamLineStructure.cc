@@ -130,8 +130,7 @@ void BeamLineStructure::CreateMylarThinWindow()
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalMylarWinFlange,"BeamLineMylarWinFlange",fMylarWindowVolume,false,0,true);
 
   if( geo->MylarWindowIsEnabled() ) {
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*mylarWinT),logicalMylarWin,"BeamLineMylarWindow",fMylarWindowVolume,false,0,true);
-    
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*mylarWinT),logicalMylarWin,"BeamLineMylarWindow",fMylarWindowVolume,false,0,true);    
     // The Mylar window is a sensitive detector
     G4String MylarWSDName = geo->GetMylarWSensitiveDetectorName();
     printf("Registering MylarW SD %s\n",MylarWSDName.data());
@@ -141,9 +140,16 @@ void BeamLineStructure::CreateMylarThinWindow()
   }
 }
 
-// M. Raggi 02.2021
+// written by M. Raggi 02.2021
 void BeamLineStructure::CreateBeamLine2020()
 {
+  printf("MALEDETTO ::");
+  printf("MALEDETTO ::");
+  printf("MALEDETTO ::");
+  printf("MALEDETTO ::");
+  G4cout<<"######### maledetto ###############"<<G4endl;
+
+
   BeamFlagSD* beamFlagSD;
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
@@ -192,7 +198,7 @@ void BeamLineStructure::CreateBeamLine2020()
   new G4PVPlacement(WallPipeRot,WallPipePos,logicalWallPipe,"BeamLineWallPipe",fMotherVolume,false,0,true);
 
   // Create solid pipe From DHSTB002 entrance and BTF Wall
-  G4double InWallPipeLen  = geo->GetWallThickness();
+  G4double InWallPipeLen  = geo->GetWallPipeLen();
   G4Tubs* solidInWallPipeFull1 = new G4Tubs("solidInWallPipeFull1",0.,WallPipeROut,0.5*InWallPipeLen,0.*deg,360.*deg);
 
   // Carve hole inside pipe (add usual small tolerance)
@@ -229,6 +235,27 @@ void BeamLineStructure::CreateBeamLine2020()
   G4ThreeVector InLinacPipePos = G4ThreeVector(InLinacPipePosX,InLinacPipePosY,InLinacPipePosZ);
   new G4PVPlacement(WallPipeRot,InLinacPipePos,logicalInLinacPipe,"BeamLineInLinacPipe",fMotherVolume,false,0,true);
 
+  G4double LinacWallThick  = geo->GetWallThickness();
+  G4double WallHoleRadius  = geo->GetWallHoleRadius();
+  printf("MALEDETTO :: %f",LinacWallThick);
+
+  G4VSolid* solidLinacWallFull = new G4Box("solidLinacWallFull",1.5*m,1.5*m,LinacWallThick*0.5);
+  G4Tubs* solidLinacWallHole = new G4Tubs("solidLinacWallHole",0.,WallPipeROut*2.5,0.5*LinacWallThick+100.*um,0.*deg,360.*deg);
+  G4SubtractionSolid* solidLinacWall = new G4SubtractionSolid("solidLinacWall",solidLinacWallFull,solidLinacWallHole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicLinacWall = new G4LogicalVolume(solidLinacWall,G4Material::GetMaterial("G4_CONCRETE"),"logicLinacWall", 0, 0, 0);
+  G4ThreeVector LinacWallPos = G4ThreeVector(InWallPipePosX,InWallPipePosY,InWallPipePosZ);
+  new G4PVPlacement(WallPipeRot,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
+
+  // Position Mylar window with relative support flange
+  G4double MylarWinFlgT    = geo->GetMylarWindowFlangeThick();
+  G4double MylarWinFlgPosX = mpEntPosX+(WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT)*sin(magnetAngle);
+  G4double MylarWinFlgPosY = mpEntPosY;
+  G4double MylarWinFlgPosZ = mpEntPosZ-(WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT)*cos(magnetAngle);
+  G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
+  G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
+  MylarWinFlgRot->rotateY(magnetAngle);
+  printf("BeamLine - Mylar window exit face center CRASH  is at \n");
+  new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
 }
 
 void BeamLineStructure::CreateBeThinWindow()

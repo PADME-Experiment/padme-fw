@@ -36,7 +36,7 @@ TargetDigitizer::TargetDigitizer(G4String name)
 {
   collectionName.push_back(digiCollectionName);
   fTargetGeometry = TargetGeometry::GetInstance();
-  std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
+  //std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
 }
 
 TargetDigitizer::~TargetDigitizer()
@@ -72,7 +72,6 @@ void TargetDigitizer::Digitize()
 
   G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
   G4double fThreshold=fTargetGeometry->GetTargetDigiThreshold();
-
 
   for (G4int i=0; i < nChannels; i++) {
     dChannel.push_back(i);
@@ -126,7 +125,6 @@ void TargetDigitizer::Digitize()
  //   for (G4int j=0; j< nhires; j++)
  //     dTimeTraceCCD[i][j] = 0.;	
  // }
-
   
   TargetDigiCollection* targetDigiCollection = new TargetDigiCollection("TargetDigitizer",digiCollectionName);
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
@@ -147,8 +145,12 @@ void TargetDigitizer::Digitize()
       G4double hPosPreX= (*targetHC)[i]->GetLocalPosX();
       G4double hPosPreY= (*targetHC)[i]->GetLocalPosY();
       G4double hPosPreZ= (*targetHC)[i]->GetPosZ(); 
-      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX();
-      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY();
+
+      //G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX();
+      //G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY();
+      // Take into account possible XY shifts of Target position
+      G4double hPosPostX=  (*targetHC)[i]->GetLocalPosPostX()- fTargetGeometry->GetTargetPosX();
+      G4double hPosPostY=  (*targetHC)[i]->GetLocalPosPostY()- fTargetGeometry->GetTargetPosY();
       G4double hPosPostZ=  (*targetHC)[i]->GetGlobalPosPostZ(); //local pos is in magnetic volume
 
       // mapping hit channel      

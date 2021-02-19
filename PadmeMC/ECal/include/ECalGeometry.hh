@@ -299,6 +299,9 @@ public:
   G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
   G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
 
+  // Get name of ECal digitizer
+  G4String GetECalDigitizerName() { return fECalDigitizerName; }
+
   // Get name of ECal sensitive detector
   G4String GetECalSensitiveDetectorName() { return fECalSensitiveDetectorName; }
 
@@ -372,6 +375,7 @@ private:
 
   // Other parameteres
 
+  G4String fECalDigitizerName;
   G4String fECalSensitiveDetectorName;
 
 };

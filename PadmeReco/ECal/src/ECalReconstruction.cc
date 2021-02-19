@@ -89,7 +89,8 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  //AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",400,-150,250));
   AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
   AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
   AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));
@@ -770,7 +771,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
     // Correct the cluster energy for missing energy
     if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
-    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+    if(fIsMC && fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
       Double_t sigma=EnergyResolution(ClE[iCl]);
       Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
       //std::cout << DetEnergy << std::endl;
@@ -818,6 +819,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
 
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
+  fIsMC=true;
   if (tEvent==NULL) return;
   fHits.clear();
 

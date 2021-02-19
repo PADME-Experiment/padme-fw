@@ -232,8 +232,8 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       //if(1){
 	Hit->SetTime(fTime);
 	//Hit->SetEnergy(fCharge);    // need to add hit status 
-	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
-	//Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
+	//Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
+	Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
       }else{
 //	fileOut->cd();

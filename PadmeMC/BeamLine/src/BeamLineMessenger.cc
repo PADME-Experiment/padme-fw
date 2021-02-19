@@ -33,6 +33,12 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableBeWindowCmd->SetDefaultValue(true);
   fEnableBeWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableBeamFlagCmd = new G4UIcmdWithABool("/Detector/BeamLine/BeamFlag",this);
+  fEnableBeamFlagCmd->SetGuidance("Enable (true) or disable (false) positioning of beam monitors flags.");
+  fEnableBeamFlagCmd->SetParameterName("BF",true);
+  fEnableBeamFlagCmd->SetDefaultValue(true);
+  fEnableBeamFlagCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/DHST002_FieldY",this);
   fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set vertical component of magnetic field inside DHST002.");
   fSetDHSTB002MagneticFieldYCmd->SetParameterName("DFY",false);
@@ -69,6 +75,7 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
   delete fEnableBeWindowCmd;
+  delete fEnableBeamFlagCmd;
   delete fSetDHSTB002MagneticFieldYCmd;
   delete fBeamLineDir;
 
@@ -85,6 +92,14 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     }
   }
 
+  else if ( cmd == fEnableBeamFlagCmd ) {
+    if (fEnableBeamFlagCmd->GetNewBoolValue(par)) {
+      fBeamLineGeometry->EnableBeamFlag();
+    } else {
+      fBeamLineGeometry->DisableBeamFlag();
+    }
+  }
+  
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     fBeamLineGeometry->SetDHSTB002MagneticFieldY(fSetDHSTB002MagneticFieldYCmd->GetNewDoubleValue(par));
 
@@ -113,6 +128,9 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   if ( cmd == fEnableBeWindowCmd )
     cv = fEnableBeWindowCmd->ConvertToString(fBeamLineGeometry->BeWindowIsEnabled());
+
+  else if ( cmd == fEnableBeamFlagCmd )
+    cv = fEnableBeamFlagCmd->ConvertToString(fBeamLineGeometry->BeamFlagIsEnabled());
 
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");

@@ -97,6 +97,9 @@ public:
   // Set position along Z of EVeto front face
   void SetEVetoFrontFacePosZ(G4double z) { fEVetoFrontFacePosZ = z; }
 
+  // Get name of EVeto digitizer
+  G4String GetEVetoDigitizerName() { return fEVetoDigitizerName; }
+
   // Get name of EVeto sensitive detector
   G4String GetEVetoSensitiveDetectorName() { return fEVetoSensitiveDetectorName; }
 
@@ -127,6 +130,7 @@ private:
   G4double fEVetoInnerFacePosX; // Position along X axis of EVeto inner face (i.e. inner face of support)
   G4double fEVetoFrontFacePosZ; // Position along Z axis of EVeto front face (i.e. front face of support)
 
+  G4String fEVetoDigitizerName;
   G4String fEVetoSensitiveDetectorName;
 
 };

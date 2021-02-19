@@ -71,7 +71,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at t=0.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXCmd->SetRange("X >= -5000. && X <= 5000.");
+  fSetBeamCenterPosXCmd->SetRange("X >= -10000. && X <= 10000.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);

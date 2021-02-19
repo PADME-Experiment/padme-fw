@@ -177,8 +177,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicWorld = physicWorld->GetLogicalVolume(); // Recover logical world volume
     
     // Set world characteristics
-    // logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
+    //    logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     if (fVerbose)
       printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
@@ -208,7 +208,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
     if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    // logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
 
   }

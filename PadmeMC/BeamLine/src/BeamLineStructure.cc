@@ -255,7 +255,7 @@ void BeamLineStructure::CreateBeamLine2020()
   G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
   G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
   MylarWinFlgRot->rotateY(magnetAngle);
-  printf("BeamLine - Mylar window exit face center CRASH  is at \n");
+  printf("BeamLine - Mylar window exit face center CRASH  is at %f %f\n",MylarWinFlgPosX,MylarWinFlgPosZ);
   new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
 }
 

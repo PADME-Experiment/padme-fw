@@ -124,7 +124,7 @@ void HistoManager::book()
   double MaxE= 560.;
   int BinE= (int)(MaxE-MinE);
 
-  // TimePix study
+  // h50 Series TimePix study
   histo[50] = new TH1D("h50","Tpix energy",500,0.,1.);
   if (!histo[50]) G4cout << "\n can't create histo 18" << G4endl; 
   histo[51] = new TH1D("h51","TPix Time ",500,0.,500.);
@@ -159,7 +159,7 @@ void HistoManager::book()
 
 
 
-  // Target study
+  // h60 series Target study
   histo[60] = new TH1D("h60","Target energy",500,0.,0.1);
   if (!histo[60]) G4cout << "\n can't create histo 60" << G4endl; 
   histo[61] = new TH1D("h61","Target Angle ",500,0.,0.050);

@@ -52,20 +52,19 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
   AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
   AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
-  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-100.,100.));
+  //AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-100.,100.));
+  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-40.,40.));
   AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",100,0.0,100.0));
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
 
   AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",2000,0.0,40.0));
   AddHisto("PVetoEnergyClean",new TH1F("PVetoEnergyClean","PVeto Energy",2000,0.0,.4));
-  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
+  //AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
+  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",400,-150.0,250.0));
 
   AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,-200.0,200.0) );
   AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,-200.0,200.0, 400,-200.0,200.0));
-
- 
-
 
   char name[256];
 
@@ -198,13 +197,19 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
 
 
+    //for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
+    //  (  (TH2F *) GetHisto("PVetoTimeVsPVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
+    //  //      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+    //	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+    //	//      }
+    //}        
     for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
-      
-      (  (TH2F *) GetHisto("PVetoTimeVsPVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
-      //      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+      ((TH2F *)GetHisto("PVetoTimeVsPVetoTime"))->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
+      if( Hits[iHit1]->GetChannelId() > 20 && Hits[iHit1]->GetChannelId() < 70
+	  && Hits[iHit2]->GetChannelId() > 20 && Hits[iHit2]->GetChannelId() < 70 ) {
 	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-	//      }
-    }        
+      }
+    }
 
     GetHisto("PVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
     int chid = Hits[iHit1]->GetChannelId();

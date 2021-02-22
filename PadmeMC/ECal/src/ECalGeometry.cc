@@ -95,6 +95,7 @@ ECalGeometry::ECalGeometry()
   fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
+  fECalDigitizerName = "ECalDigitizer";
   fECalSensitiveDetectorName = "ECalSD";
 
 }

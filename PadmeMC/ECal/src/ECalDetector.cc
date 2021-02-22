@@ -14,12 +14,14 @@
 #include "G4Tubs.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
 #include "ECalMessenger.hh"
 #include "ECalGeometry.hh"
 #include "ECalSD.hh"
+#include "ECalDigitizer.hh"
 
 ECalDetector::ECalDetector(G4LogicalVolume* motherVolume)
 {
@@ -79,14 +81,6 @@ void ECalDetector::CreateGeometry()
   fCrystalVolume  = new G4LogicalVolume(solidCry,G4Material::GetMaterial("G4_BGO"),"ECalCry",0, 0, 0);
   //fCrystalVolume->SetVisAttributes(G4VisAttributes::G4VisAttributes(G4Colour::Magenta()));
   fCrystalVolume->SetVisAttributes(G4VisAttributes(crystalColour));
-
-  // Make crystal a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String ecalSDName = geo->GetECalSensitiveDetectorName();
-  printf("Registering ECal SD %s\n",ecalSDName.data());
-  ECalSD* ecalSD = new ECalSD(ecalSDName);
-  sdMan->AddNewDetector(ecalSD);
-  fCrystalVolume->SetSensitiveDetector(ecalSD);
 
   // Create ECal cell (BGO crystal+coating)
   G4double cellSizeX = geo->GetCellSizeX();
@@ -414,5 +408,20 @@ void ECalDetector::CreateGeometry()
   } else {
     printf("ECal support is disabled\n");
   }
+
+  // Create digitizer for ECal
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String ecalDName = geo->GetECalDigitizerName();
+  printf("Registering ECal Digitizer %s\n",ecalDName.data());
+  ECalDigitizer* ecalD = new ECalDigitizer(ecalDName);
+  theDM->AddNewModule(ecalD);
+
+  // Make crystal a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String ecalSDName = geo->GetECalSensitiveDetectorName();
+  printf("Registering ECal SD %s\n",ecalSDName.data());
+  ECalSD* ecalSD = new ECalSD(ecalSDName);
+  sdMan->AddNewDetector(ecalSD);
+  fCrystalVolume->SetSensitiveDetector(ecalSD);
 
 }

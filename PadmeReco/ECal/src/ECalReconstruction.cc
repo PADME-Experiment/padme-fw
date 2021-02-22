@@ -99,7 +99,8 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  //AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",400,-150,250));
   AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
   AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
   AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));

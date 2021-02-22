@@ -58,13 +58,15 @@ G4bool TPixSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
 
   // Saving only hits exiting the TPix not correct if you want to study clustering
-  if(aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary){
+  //  if(aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary){
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
     newHit->SetChannelId(touchHPre->GetCopyNumber());
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy( aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 27/03/2019
     newHit->SetPosition(worldPosPre); 
-    newHit->SetLocalPosition(localPosPost); //M Raggi 26/03/2019
+    //    newHit->SetLocalPosition(localPosPost); //M Raggi 26/03/2019
+    newHit->SetLocalPosition(localPosPre); //M Raggi 30/09/2019 to check
     fTPixCollection->insert(newHit);
   }
   return true;

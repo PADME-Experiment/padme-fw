@@ -61,7 +61,8 @@ void TargetReconstruction::HistoInit(){
   hprofileY = new TH1F("hprofileY","hprofileY",16,16.5,32.5); /// center of the target is in the mddle of strip with chId 9 
 
   // histos to be saved 
-  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          ));
+  //AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  500,   0., 50000.          )); //Change17Sept2020
+  AddHisto("TargetBeamMultiplicity", new TH1F("TargetBeamMultiplicity" ,"Target Beam Multiplicity" ,  600,   -10000., 50000.          ));
   AddHisto("TargetProfileX"        , new TH1F("TargetProfileX"         ,"Target profile X"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileY"        , new TH1F("TargetProfileY"         ,"Target profile Y"         ,   16, -7.5, 8.5             ));
   AddHisto("TargetProfileLastX"    , new TH1F("TargetProfileLastX"     ,"Target last profile X"    ,   16, -7.5, 8.5             ));
@@ -416,18 +417,21 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
 
   ((TH2F *)GetHisto("TargetBeamSpot"))->Fill(getRecoBeam()->getX(),getRecoBeam()->getY());
+  //if(getRecoBeam()->getnPOT()>3000) (GetHisto("TargetBeamMultiplicity" ))->Fill(getRecoBeam()->getnPOT());//change17Sept2020
   (GetHisto("TargetBeamMultiplicity" ))->Fill(getRecoBeam()->getnPOT());
 
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     if(iHit1<16){
-     (GetHisto("TargetProfileX"    ))->Fill         (Hits[iHit1]->GetChannelId()-8,Hits[iHit1]->GetEnergy());
-     (GetHisto("TargetProfileLastX"))->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy());	    
+     if(Hits[iHit1]->GetEnergy()>0)(GetHisto("TargetProfileX"    ))->Fill         (Hits[iHit1]->GetChannelId()-8,Hits[iHit1]->GetEnergy());//energy cut from 20sept2020
+     //(GetHisto("TargetProfileLastX"))->SetBinContent(Hits[iHit1]->GetChannelId()+1,Hits[iHit1]->GetEnergy());        //change20Sept2020
+     (GetHisto("TargetProfileLastX"))->SetBinContent(Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetEnergy());
      sprintf(iName,"TargetQCh%d",iHit1);
      (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy());
     }
     else{
-     (GetHisto("TargetProfileY"    ))->Fill         (Hits[iHit1]->GetChannelId()-16-8,Hits[iHit1]->GetEnergy());
-     (GetHisto("TargetProfileLastY"))->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy());   
+     if(Hits[iHit1]->GetEnergy()>0)(GetHisto("TargetProfileY"    ))->Fill         (Hits[iHit1]->GetChannelId()-16-8,Hits[iHit1]->GetEnergy());//energy cut from 20sept2020
+     //(GetHisto("TargetProfileLastY"))->SetBinContent(Hits[iHit1]->GetChannelId()-16+1,Hits[iHit1]->GetEnergy()); //change20Sept2020
+     (GetHisto("TargetProfileLastY"))->SetBinContent(Hits[iHit1]->GetChannelId()-16,Hits[iHit1]->GetEnergy());
      sprintf(iName,"TargetQCh%d",iHit1);
      (GetHisto(iName))->Fill(Hits[iHit1]->GetEnergy()); 
     }
@@ -479,11 +483,15 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 	 }//End 1-st loop over sampling
 
          adc_pedestal[ch]=0;
-         for(UShort_t s=0;s<200;s++){// 2-nd loop over sampling to calculate event by event pedestal                    
-              adc_pedestal[ch] += adc_count[s][ch]/200 ;
+         //for(UShort_t s=0;s<200;s++){// 2-nd loop over sampling to calculate event by event pedestal
+         for(UShort_t s=0;s<120;s++){// 2-nd loop over sampling to calculate event by event pedestal
+              //adc_pedestal[ch] += adc_count[s][ch]/200 ;
+              adc_pedestal[ch] += adc_count[s][ch]/120 ;
 	 }//End 2-nd loop over sampling
          charge[ch]=0;
-         for(UShort_t s=200;s<700;s++){// 3-rd loop over sampling to remohttp://l0padme3:9090/monitorve event by event pedestal and fill waveform  
+         //for(UShort_t s=200;s<700;s++){// 3-rd loop over sampling to remohttp://l0padme3:9090/monitorve event by event pedestal and fill waveform  //Change17Sept2020
+         for(UShort_t s= 0;s<1024;s++){// 3-rd loop over sampling to remohttp://l0padme3:9090/monitorve event by event pedestal and fill waveform
+
              adc_count[s][ch] = adc_count[s][ch] - adc_pedestal[ch];
              float adc = float(adc_count[s][ch])/4096;  //Volts      
              sprintf(iName,"TargetCh%d",ch);
@@ -491,7 +499,8 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
              sprintf(iName,"TargetLastCh%d",ch);
              (GetHisto(iName))->SetBinContent(s+1,     adc);
              (GetHisto(iName))->SetBinError  (s+1,  1/4096);
-             charge[ch] += adc;
+             //charge[ch] += adc;  //Change17Sept2020
+              if(s>200&&s<700) charge[ch] += adc;
 	 }//End 3-rd loop over sampling
          charge[ch] = charge[ch]/50*1E-9/1E-12/1000/1.75; //1pC/1000???
          
@@ -514,12 +523,15 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 	 }//End 1-st loop over sampling
 
          adc_pedestal[ch]=0;
-         for(UShort_t s=0;s<200;s++){// 2-nd loop over sampling to calculate event by event pedestal                    
-              adc_pedestal[ch] += adc_count[s][ch]/200 ;
+         //for(UShort_t s=0;s<200;s++){// 2-nd loop over sampling to calculate event by event pedestal
+         for(UShort_t s=0;s<120;s++){// 2-nd loop over sampling to calculate event by event pedestal
+              //adc_pedestal[ch] += adc_count[s][ch]/200 ;
+              adc_pedestal[ch] += adc_count[s][ch]/120 ;
 	 }//End 2-nd loop over sampling
          
          //charge[ch]=0;
-         for(UShort_t s=200;s<700;s++){// 3-rd loop over sampling to remove event by event pedestal and fill waveform  
+         //for(UShort_t s=200;s<700;s++){// 3-rd loop over sampling to remove event by event pedestal and fill waveform //Change17Sept2020
+         for(UShort_t s=0;s<1024;s++){// 3-rd loop over sampling to remove event by event pedestal and fill waveform
              adc_count[s][ch] = adc_count[s][ch] - adc_pedestal[ch];
              float adc = float(adc_count[s][ch])/4096;        
              sprintf(iName,"TargetNOCNSCh%d",ch);
@@ -527,7 +539,8 @@ void TargetReconstruction::AnalyzeEvent(TRawEvent* rawEv){
              sprintf(iName,"TargetNOCNSLastCh%d",ch);
              (GetHisto(iName))->SetBinContent(s+1,     adc);
              (GetHisto(iName))->SetBinError  (s+1,  1/4096);
-             charge[ch] += adc;
+             //charge[ch] += adc; //Change17Sept2020
+             if(s>200&&s<700) charge[ch] += adc;
 	 }//End 3-rd loop over sampling
          //charge[ch] = charge[ch]/50*1E-9/1E-12/1000/1.75; //1pC/1000???
         
@@ -765,7 +778,6 @@ void TargetReconstruction::ReconstructBeam(){
 
   
   
- 
 }
 
 

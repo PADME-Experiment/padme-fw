@@ -66,6 +66,9 @@ private:
   void InitLibraries();
   void InitRunningModeFlags();
 
+  void HistoInit();
+  void ProcessEvent(TRawEvent*);
+
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 
   TObjArray* fInputFileNameList;

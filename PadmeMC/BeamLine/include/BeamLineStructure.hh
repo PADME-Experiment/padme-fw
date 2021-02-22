@@ -10,9 +10,11 @@
 
 #include "globals.hh"
 #include "G4ThreeVector.hh"
+#include "G4RotationMatrix.hh"
 
 class G4LogicalVolume;
 class G4UnionSolid;
+//class G4RotationMatrix;
 class QuadSetup;
 class BeamLineMessenger;
 
@@ -44,7 +46,8 @@ private:
   void CreateBeamLine2020();  //Raggi 06/2020
 
   void CreateDHSTB002Magnet();
-  void CreateQuadMagnets();
+  //  void CreateQuadMagnets();
+  G4LogicalVolume* CreateQuadMagnets(G4double , G4double , G4double ,G4ThreeVector , G4RotationMatrix*);
 
   G4LogicalVolume* fMotherVolume;
   //G4LogicalVolume* fGlobalLogicalVolume;

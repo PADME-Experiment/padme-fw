@@ -36,7 +36,7 @@ BeamLineGeometry::BeamLineGeometry()
 
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
   fQuadrupolesEnable = false;
-  fQ1MagneticFieldGrad =  5.*tesla/m;
+  fQ1MagneticFieldGrad =  -5.*tesla/m;
   fQ2MagneticFieldGrad =  5.*tesla/m;
   fBeamLineSetup=0;  //M. Raggi 06/2020
   //printf("***************************** tesla %f m %f \n ",tesla,m);

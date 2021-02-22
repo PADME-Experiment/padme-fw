@@ -57,7 +57,7 @@ QuadrupoleMagField::~QuadrupoleMagField()
 }
 
 //  Allow displaced origin and rotation 
-//  Extensions by BjÃ¶rn Riese (GSI)
+//  Extensions by Bjorn Riese (GSI)
 
 void QuadrupoleMagField::GetFieldValue( const G4double y[7],
 					  G4double B[3]  ) const  

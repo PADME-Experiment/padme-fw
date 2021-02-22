@@ -1,5 +1,5 @@
 // BeamLineStructure.cc
-// --------------------------------------------------------------
+// ---------------------------o-----------------------------------
 // History:
 //
 // Created by Mauro Raggi (mauro.raggi@roma1.infn.it) 2019-03-10
@@ -43,7 +43,7 @@
 #include "BeamFlagSD.hh"       // 29/08/2019 M. Raggi
 
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
-#include "QuadSetup.hh" // M. Raggi 10/04/2019
+#include "QuadSetup.hh"           // M. Raggi 10/04/2019
 
 //#include "G4MagneticField.hh"
 
@@ -83,9 +83,21 @@ void BeamLineStructure::CreateGeometry()
   }
 }
 
-//void BeamLineStructure::CreateQuadMagnets()
-//{
-//}
+///////////////////////////////////////////////////////
+// Creates a quadrupole
+// 
+///////////////////////////////////////////////////////
+ 
+G4LogicalVolume* BeamLineStructure::CreateQuadMagnets(G4double Grad, G4double Length, G4double Radius, G4ThreeVector Pos, G4RotationMatrix* Rot)
+{
+  G4Tubs* solidQuadMagField = new G4Tubs("solidQuadMagField",0.,Radius,0.5*Length,0.*deg,360.*deg);  
+  printf("Creating Q1 quadrupole with gradient %f %f %f %f\n",Grad*m/tesla,Pos.x(),Pos.y(),Pos.z());
+
+  QuadSetup* QFieldManager = new QuadSetup(Grad,Pos,Rot);
+  G4LogicalVolume* logicQMagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
+  logicQMagField->SetFieldManager(QFieldManager->GetLocalFieldManager(),true);
+  return logicQMagField;
+}
 
 void BeamLineStructure::CreateMylarThinWindow()
 {
@@ -143,7 +155,6 @@ void BeamLineStructure::CreateMylarThinWindow()
 // written by M. Raggi 02.2021
 void BeamLineStructure::CreateBeamLine2020()
 {
-  //  G4cout<<"######### maledetto ###############"<<G4endl;
 
   BeamFlagSD* beamFlagSD;
   BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
@@ -257,7 +268,85 @@ void BeamLineStructure::CreateBeamLine2020()
   MylarWinFlgRot->rotateY(magnetAngle);
   printf("BeamLine - Mylar window exit face center CRASH  is at %f %f\n",MylarWinFlgPosX,MylarWinFlgPosZ);
   new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
-}
+
+
+  //***********************************************
+  // Setup quadrupoles pairs along the beam line
+  //***********************************************
+  if ( geo->QuadrupolesAreEnabled() ) {
+    G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
+
+    // Setting up Q1 quadrupole near DHSTB002
+    G4double Q1BGradient    = geo -> GetQ1MagneticFieldGrad();
+    G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
+    G4double Q1Leng         = geo -> GetQuadMagSizeZ();             // get the 2019 values
+
+    G4RotationMatrix* Q1Rot = new G4RotationMatrix;
+    Q1Rot->rotateY(magnetAngle);
+    Q1Rot->rotateZ(45*deg);
+
+    // Position junction close to the magnet entrance
+    G4double beJunMgPosX = mpEntPosX+0.5*beJunLen*sin(magnetAngle);
+    G4double beJunMgPosY = mpEntPosY;
+    G4double beJunMgPosZ = mpEntPosZ-0.5*beJunLen*cos(magnetAngle);
+    
+    // Generating quadrupole Q1
+    G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
+    G4double Q1PosY = beJunMgPosY; 
+    G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
+    G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
+
+    G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
+    logicQ1Quad->SetName("logicQ1Quad");
+    logicQ1Quad->SetVisAttributes(QuadVisAttr);
+
+    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q1Quad",fMotherVolume,false,0,true);
+
+    G4double Q1Q2Dist = geo->GetQ1Q2Dist();
+
+    G4double Q2PosX   = Q1PosX+Q1Q2Dist*sin(magnetAngle); 
+    G4double Q2PosY   = Q1PosY; 
+    G4double Q2PosZ   = Q1PosZ-Q1Q2Dist*cos(magnetAngle);  
+    G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
+
+    G4RotationMatrix* Q2Rot = new G4RotationMatrix;
+    Q2Rot->rotateY(magnetAngle);
+    Q2Rot->rotateZ(-45*deg);
+
+    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
+    logicQ2Quad->SetVisAttributes(QuadVisAttr);
+    logicQ2Quad->SetName("logicQ2Quad");
+    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
+
+    // Leave the geometry unchanged for the second pair of quads
+
+    G4double OffsetwrtWallPipe = 1260*mm/2; // preliminary drawings
+    G4double Q3PosX   = InWallPipePosX + (InWallPipeLen*0.5+OffsetwrtWallPipe)*sin(magnetAngle); 
+    G4double Q3PosY   = InWallPipePosY; //Q3PosY; 
+    G4double Q3PosZ   = InWallPipePosZ - (InWallPipeLen*0.5+OffsetwrtWallPipe)*cos(magnetAngle);  
+    G4ThreeVector Q3Pos = G4ThreeVector(Q3PosX,Q3PosY,Q3PosZ);
+
+    G4RotationMatrix* Q3Rot = Q1Rot; //da veirficare
+    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q3Pos,Q3Rot);
+    logicQ3Quad->SetVisAttributes(QuadVisAttr);
+    logicQ3Quad->SetName("logicQ3Quad");
+    new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
+
+    G4double Q4PosX   = Q3PosX+Q1Q2Dist*sin(magnetAngle); 
+    G4double Q4PosY   = Q3PosY; 
+    G4double Q4PosZ   = Q3PosZ-Q1Q2Dist*cos(magnetAngle);  
+    G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
+
+    G4RotationMatrix* Q4Rot = Q2Rot; //da veirficare
+    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q4Pos,Q4Rot);
+    logicQ4Quad->SetVisAttributes(QuadVisAttr);
+    logicQ4Quad->SetName("logicQ4Quad");
+    new G4PVPlacement(Q4Rot,Q4Pos,logicQ4Quad,"Q4Quad",fMotherVolume,false,0,true);
+
+  }
+
+
+} //END OF 2020 BeamLine
 
 void BeamLineStructure::CreateBeThinWindow()
 {
@@ -970,25 +1059,6 @@ void BeamLineStructure::CreateBeamLine()
   G4ThreeVector beWin2FlgPos = G4ThreeVector(beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
   new G4PVPlacement(beWinFlgRot,beWin2FlgPos,fBeWindowVolume,"BeamLineExitBeWinVolume",fMotherVolume,false,0,true);
 
-  //  printf("BeamLine - Be window exit face center is at (%.2f,%.2f,%.2f) mm\n",beWin2FlgPosX,beWin2FlgPosY,beWin2FlgPosZ);
-
-//  ////////////////////////////////////////////////////////////////////////
-//  // Beam Flag to monitor beam in different locations M. Raggi 06/09/2019
-//  // Flag 4 on the strait DHSTB002 exit section
-//  ///////////////////////////////////////////////////////////////////////
-//
-//  G4double      Flag4FrontPosX = mpEntPosX-(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*sin(magnetAngle);; 
-//  G4double      Flag4FrontPosZ = mpEntPosZ+(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*cos(magnetAngle);
-//  G4ThreeVector Flag4FrontPos  = G4ThreeVector(Flag4FrontPosX,beWin2FlgPosY,Flag4FrontPosZ);
-//
-//  G4Tubs* solidBeamFlag4 = new G4Tubs("solidBeamFlag4",0.,30.*mm,0.1*mm,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalBeamFlag4 = new G4LogicalVolume(solidBeamFlag4,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag4",0,0,0);
-//  logicalBeamFlag4->SetVisAttributes(FlagVisAttr);
-//  
-//  if ( geo->BeamFlagIsEnabled() ) {
-//    new G4PVPlacement(strSideRot,Flag4FrontPos,logicalBeamFlag4,"BeamLineBeamFlag4",fMotherVolume,false,0,true);    
-//    logicalBeamFlag4->SetSensitiveDetector(beamFlagSD);
-//  }
 
   if ( geo->QuadrupolesAreEnabled() ) {
     

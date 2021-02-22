@@ -34,6 +34,8 @@
 #include "EVetoAnalysis.hh"
 #include "HEPVetoAnalysis.hh"
 #include "EventSelection.hh"
+#include "AnnihilationSelection.hh"
+#include "TagAndProbeSelection.hh"
 #include "UserAnalysis.hh"
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
@@ -95,14 +97,15 @@ int main(Int_t argc, char **argv)
   Int_t fVerbose=0;
   Int_t fProcessingMode=0;
   Int_t fntuple=0;
+  Int_t fTargetOutPosition=0; // if one: target out the beam line
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
   TString ConfFileName("config/PadmeReconstruction.conf");
 
   Int_t n_options_read = 0;
-  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0;
-  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t:")) != -1) {
+  Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0, nT=0;
+  while ((opt = getopt(argc, argv, "b:B:c:h:i:l:n:o:s:v:m:t:T:")) != -1) {
       n_options_read++;
       switch (opt) {
       case 'b':
@@ -148,6 +151,11 @@ int main(Int_t argc, char **argv)
       case 't':
 	nt++;
 	fntuple = (Int_t)TString(optarg).Atoi();
+	break;
+      case 'T':
+	nT++;
+	fTargetOutPosition = (Int_t)TString(optarg).Atoi();
+	break;
       default:
       break;
 	usage(argv[0]);
@@ -327,11 +335,16 @@ int main(Int_t argc, char **argv)
    algoList.push_back(evetoAn);
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
-   EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
+   //EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
+
+   AnnihilationSelection* AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+   TagAndProbeSelection* TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
    //   evSel->SetVersion(2);
-   evSel->SetVersion(1);
+   //evSel->SetVersion(1);
    
-   evSel->InitHistos();
+   //evSel->InitHistos();
+   AnnSel->InitHistos();
+   TagandProbeSel->InitHistos();
 
    sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
    ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
@@ -339,13 +352,23 @@ int main(Int_t argc, char **argv)
    pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
    evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
    hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
-   evSel->Init(fRecoEvent, 
-	       fECalRecoEvent,    fECalRecoCl, 
-	       fPVetoRecoEvent,   fPVetoRecoCl, 
-	       fEVetoRecoEvent,   fEVetoRecoCl, 
-	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
-	       fSACRecoEvent,     fSACRecoCl, 
-	       fTargetRecoEvent,  fTargetRecoBeam );
+//evSel->Init(fRecoEvent, 
+//	       fECalRecoEvent,    fECalRecoCl, 
+//	       fPVetoRecoEvent,   fPVetoRecoCl, 
+//	       fEVetoRecoEvent,   fEVetoRecoCl, 
+//	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
+//	       fSACRecoEvent,     fSACRecoCl, 
+//	       fTargetRecoEvent,  fTargetRecoBeam );
+  
+   AnnSel->Init(fRecoEvent, 
+		fECalRecoEvent,    fECalRecoCl, 
+		fSACRecoEvent,     fSACRecoCl, 
+		fTargetRecoEvent,  fTargetRecoBeam);
+   TagandProbeSel->Init(fRecoEvent, 
+		fECalRecoEvent,    fECalRecoCl, 
+		fSACRecoEvent,     fSACRecoCl, 
+		fTargetRecoEvent,  fTargetRecoBeam );
+
    
     PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
 
@@ -410,18 +433,25 @@ int main(Int_t argc, char **argv)
        }
        //
       
+       Bool_t isMC = false;
+       if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
+	 isMC=true;
+	 //std::cout<<"input data are simulatetd "<<std::endl;
+       }
 
        //
        targetAn    ->Process();
        ecalAn      ->Process();
+       ecalAn      ->EnergyCalibration(isMC);
        sacAn       ->Process();
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
        //       gTimeAn     ->Process();
-       evSel       ->Process();
+       //evSel       ->Process();
        //       UserAn      ->Process();
-
+       AnnSel->Process(isMC);
+       TagandProbeSel->Process(isMC);
        //
        //
        hSvc->FillNtuple();
@@ -446,7 +476,8 @@ int main(Int_t argc, char **argv)
    delete pvetoAn;
    delete evetoAn;
    delete hepvetoAn;
-
+   delete AnnSel;
+   delete TagandProbeSel;
    return 0;
    
 }

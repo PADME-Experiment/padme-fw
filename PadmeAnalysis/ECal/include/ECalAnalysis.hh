@@ -23,6 +23,7 @@ public:
   Bool_t InitHistosAnalysis();
   Bool_t InitHistosValidation();
   Bool_t Finalize(){return true;}
+  void EnergyCalibration(Bool_t isMC);
 
 
 private:

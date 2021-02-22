@@ -66,6 +66,8 @@ private:
   Double_t fVoltageBin;
   Double_t fImpedance;
   Double_t fAmpli;
+  Double_t fmVtoMeV;
+  Double_t fEnergy;
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;

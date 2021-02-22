@@ -55,6 +55,7 @@ public:
   ULong64_t GetRunClock();
   UInt_t GetEventStatus();
   UInt_t GetTriggerMask();
+  Bool_t IsSimulated();
 
 private:
 

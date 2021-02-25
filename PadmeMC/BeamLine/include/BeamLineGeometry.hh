@@ -68,6 +68,12 @@ public:
   void SetQ2MagneticFieldGrad(G4double g) { fQ2MagneticFieldGrad = g*tesla/m; }
   G4double GetQ2MagneticFieldGrad() { return fQ2MagneticFieldGrad; }
 
+  void SetQ3MagneticFieldGrad(G4double g) { fQ3MagneticFieldGrad = g*tesla/m; }
+  G4double GetQ3MagneticFieldGrad() { return fQ3MagneticFieldGrad; }
+
+  void SetQ4MagneticFieldGrad(G4double g) { fQ4MagneticFieldGrad = g*tesla/m; }
+  G4double GetQ4MagneticFieldGrad() { return fQ4MagneticFieldGrad; }
+
   //setup line configuration M. Raggi 06/2020
   void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
   G4double GetBeamLineSetup() { return fBeamLineSetup; }
@@ -225,6 +231,9 @@ private:
   G4bool fQuadrupolesEnable;
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
+  G4double fQ3MagneticFieldGrad;
+  G4double fQ4MagneticFieldGrad;
+
   G4double fBeamLineSetup;
 
   // Radius of magnet at center of beam line

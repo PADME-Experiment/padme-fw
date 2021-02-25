@@ -70,15 +70,29 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
   fSetQ1_FieldGradCmd->SetGuidance("Set gradient of the Q1 quadrupole in T/m");
   fSetQ1_FieldGradCmd->SetParameterName("Q1GF",false);
-  fSetQ1_FieldGradCmd->SetRange("Q1GF > 0. && Q1GF < 15.");
+  fSetQ1_FieldGradCmd->SetRange("Q1GF > -15. && Q1GF < 15.");
   fSetQ1_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q2 quadrupole magnet gradient.
   fSetQ2_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q2_FieldGrad",this);
-  fSetQ2_FieldGradCmd->SetGuidance("Set gradient of the Q1 quadrupole in T/m");
+  fSetQ2_FieldGradCmd->SetGuidance("Set gradient of the Q2 quadrupole in T/m");
   fSetQ2_FieldGradCmd->SetParameterName("Q2GF",false);
-  fSetQ2_FieldGradCmd->SetRange("Q2GF > 0. && Q2GF < 15.");
+  fSetQ2_FieldGradCmd->SetRange("Q2GF > -15. && Q2GF < 15.");
   fSetQ2_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //data card for Q3 quadrupole magnet gradient.
+  fSetQ3_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q3_FieldGrad",this);
+  fSetQ3_FieldGradCmd->SetGuidance("Set gradient of the Q3 quadrupole in T/m");
+  fSetQ3_FieldGradCmd->SetParameterName("Q3GF",false);
+  fSetQ3_FieldGradCmd->SetRange("Q3GF > 0. && Q3GF < 15.");
+  fSetQ3_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //data card for Q4 quadrupole magnet gradient.
+  fSetQ4_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q4_FieldGrad",this);
+  fSetQ4_FieldGradCmd->SetGuidance("Set gradient of the Q4 quadrupole in T/m");
+  fSetQ4_FieldGradCmd->SetParameterName("Q4GF",false);
+  fSetQ4_FieldGradCmd->SetRange("Q4GF > 0. && Q4GF < 15.");
+  fSetQ4_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -88,6 +102,9 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fEnableQuadrupolesCmd;
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
+  delete fSetQ3_FieldGradCmd; 
+  delete fSetQ4_FieldGradCmd; 
+
   delete fEnableBeWindowCmd;
   delete fEnableMylarWindowCmd;
   delete fEnableBeamFlagCmd;
@@ -142,9 +159,18 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetQ1_FieldGradCmd )
     fBeamLineGeometry->SetQ1MagneticFieldGrad(fSetQ1_FieldGradCmd->GetNewDoubleValue(par));
 
-  // Set Q1 gradient
+  // Set Q2 gradient
   else if ( cmd == fSetQ2_FieldGradCmd )
     fBeamLineGeometry->SetQ2MagneticFieldGrad(fSetQ2_FieldGradCmd->GetNewDoubleValue(par));
+
+
+  // Set Q3 gradient
+  else if ( cmd == fSetQ3_FieldGradCmd )
+    fBeamLineGeometry->SetQ3MagneticFieldGrad(fSetQ3_FieldGradCmd->GetNewDoubleValue(par));
+
+  // Set Q4 gradient
+  else if ( cmd == fSetQ4_FieldGradCmd )
+    fBeamLineGeometry->SetQ4MagneticFieldGrad(fSetQ4_FieldGradCmd->GetNewDoubleValue(par));
 
 }
 
@@ -176,6 +202,12 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetQ2_FieldGradCmd )
    cv = fSetQ2_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ2MagneticFieldGrad(),"tesla/m");
+
+  else if ( cmd == fSetQ3_FieldGradCmd )
+   cv = fSetQ3_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ3MagneticFieldGrad(),"tesla/m");
+
+  else if ( cmd == fSetQ2_FieldGradCmd )
+   cv = fSetQ4_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ4MagneticFieldGrad(),"tesla/m");
 
   return cv;
 

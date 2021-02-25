@@ -276,6 +276,10 @@ void BeamLineStructure::CreateBeamLine2020()
 
     // Setting up Q1 quadrupole near DHSTB002
     G4double Q1BGradient    = geo -> GetQ1MagneticFieldGrad();
+    G4double Q2BGradient    = geo -> GetQ2MagneticFieldGrad();
+    G4double Q3BGradient    = geo -> GetQ3MagneticFieldGrad();
+    G4double Q4BGradient    = geo -> GetQ4MagneticFieldGrad();
+
     G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
     G4double Q1Leng         = geo -> GetQuadMagSizeZ();             // get the 2019 values
 

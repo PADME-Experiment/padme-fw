@@ -356,7 +356,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   for(int i=0;i<NClusters;i++){	
     //    G4cout<<"DDD CALO"<<EneCl[i]<<" "<<NTQCl[i]<<G4endl;
-    if(i>19) break;              
+    if(i>39) break;              
     fHistoManager->myEvt.NTECluster[i]  = EneCl[i];
     fHistoManager->myEvt.NTQCluster[i]  = QCl[i];
     fHistoManager->myEvt.NTXCluster[i]  = XCl[i];   
@@ -549,7 +549,7 @@ void EventAction::FindClusters()
     // G4double mgg= GGMass();
     // fHistoManager->FillHisto(16,mgg);
     //}
-    if(NClusters>19){ 
+    if(NClusters>39){ 
       G4cout<<"too many clusters \n!!"<<G4endl;
       break;
     }
@@ -957,7 +957,7 @@ void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
 void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y)
 {
   //  static G4int SACTracks  = 0;
-  if(CalNPart < 19){
+  if(CalNPart < 39){
     CalE[CalNPart]    = E;
     CalTime[CalNPart] = T;
     CalPType[CalNPart]= Ptype;

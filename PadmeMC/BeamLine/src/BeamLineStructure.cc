@@ -71,21 +71,19 @@ void BeamLineStructure::CreateGeometry()
     G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
     CreateBeThinWindow();   // Create BeWindow
     CreateDHSTB002Magnet(); // Create DHSTB002 magnet
-    //CreateQuadMagnets();  // Create Quadrupole magnets
     CreateBeamLine();       // Create Beam line 2019
   }
   if(fLineSetup==1.){
     G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
     CreateMylarThinWindow();
     CreateDHSTB002Magnet();
-    //CreateQuadMagnets();
     CreateBeamLine2020(); //beam line 2020
   }
 }
 
 ///////////////////////////////////////////////////////
-// Creates a quadrupole
-// 
+// Creates a quadrupole  K>0 Defocus on X   Focus On Y
+//                       K<0 Focus   on X Defocus On Y
 ///////////////////////////////////////////////////////
  
 G4LogicalVolume* BeamLineStructure::CreateQuadMagnets(G4double Grad, G4double Length, G4double Radius, G4ThreeVector Pos, G4RotationMatrix* Rot)
@@ -283,19 +281,20 @@ void BeamLineStructure::CreateBeamLine2020()
 
     G4RotationMatrix* Q1Rot = new G4RotationMatrix;
     Q1Rot->rotateY(magnetAngle);
-    Q1Rot->rotateZ(45*deg);
+    //    Q1Rot->rotateZ(45*deg);
 
     // Position junction close to the magnet entrance
     G4double beJunMgPosX = mpEntPosX+0.5*beJunLen*sin(magnetAngle);
     G4double beJunMgPosY = mpEntPosY;
     G4double beJunMgPosZ = mpEntPosZ-0.5*beJunLen*cos(magnetAngle);
     
-    // Generating quadrupole Q1
+    // Generating quadrupole Q1 
     G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
     G4double Q1PosY = beJunMgPosY; 
     G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
     G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
+    // Positive gradient focus on Y
     G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
     logicQ1Quad->SetName("logicQ1Quad");
     logicQ1Quad->SetVisAttributes(QuadVisAttr);
@@ -311,9 +310,10 @@ void BeamLineStructure::CreateBeamLine2020()
 
     G4RotationMatrix* Q2Rot = new G4RotationMatrix;
     Q2Rot->rotateY(magnetAngle);
-    Q2Rot->rotateZ(-45*deg);
+    //    Q2Rot->rotateZ(-45*deg);
 
-    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
+    // Negative gradient focus on X
+    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q1BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
     logicQ2Quad->SetVisAttributes(QuadVisAttr);
     logicQ2Quad->SetName("logicQ2Quad");
     new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
@@ -327,6 +327,11 @@ void BeamLineStructure::CreateBeamLine2020()
     G4ThreeVector Q3Pos = G4ThreeVector(Q3PosX,Q3PosY,Q3PosZ);
 
     G4RotationMatrix* Q3Rot = Q1Rot; //da veirficare
+    // Positive gradient focus on Y if you don't rotate it for negative particles
+    // https://en.wikipedia.org/wiki/Quadrupole_magnet
+    // We will use different signs of K to change from X to Y focusing wihout rotating
+    // 45 deg rotation is not needed because it's only for the coils but the magnetic field is already ok 
+
     G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q3Pos,Q3Rot);
     logicQ3Quad->SetVisAttributes(QuadVisAttr);
     logicQ3Quad->SetName("logicQ3Quad");

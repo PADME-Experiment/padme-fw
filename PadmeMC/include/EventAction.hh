@@ -185,11 +185,11 @@ class EventAction : public G4UserEventAction
    G4double SACCh[100];
 
   //Particles properties entering ECAL form stepping action
-   G4double CalE[20];
-   G4double CalTime[20];
-   G4int    CalPType[20];
-   G4double CalX[20];   
-   G4double CalY[20];
+   G4double CalE[40];
+   G4double CalTime[40];
+   G4int    CalPType[40];
+   G4double CalX[40];   
+   G4double CalY[40];
    G4double NCalPart;
 
    G4double ETotLAV[100];
@@ -200,14 +200,14 @@ class EventAction : public G4UserEventAction
    G4double LAVX[100];   
    G4double LAVY[100];
 
-   G4double EneCl[20];
-   G4double QCl[20];
-   G4double TimeCl[20];
-   G4double XCl[20];      //For the Ntuple
-   G4double YCl[20];      //For the Ntuple
-   G4double ThCl[20];     //For the Ntuple
-   G4double MM2[20];      //For the Ntuple
-   G4double NCellsCl[20]; //For the Ntuple
+   G4double EneCl[40];
+   G4double QCl[40];
+   G4double TimeCl[40];
+   G4double XCl[40];      //For the Ntuple
+   G4double YCl[40];      //For the Ntuple
+   G4double ThCl[40];     //For the Ntuple
+   G4double MM2[40];      //For the Ntuple
+   G4double NCellsCl[40]; //For the Ntuple
 
    G4double ETotCry[1000];
    G4double QTotCry[1000];

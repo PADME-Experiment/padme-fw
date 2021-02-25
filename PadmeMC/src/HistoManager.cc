@@ -72,7 +72,7 @@ void HistoManager::book()
   if (!histo[9]) G4cout << "\n can't create histo 9" << G4endl;  
   histo[10] = new TH1D("h10", "MMiss2 50MeV<ECl<400MeV Rad>3", 475,-50.,900.);
   if (!histo[10]) G4cout << "\n can't create histo 10" << G4endl;  
-  histo[11] = new TH1D("h11", "NClusters", 30,-0.5,29.5);
+  histo[11] = new TH1D("h11", "NClusters", 40,-0.5,39.5);
   if (!histo[11]) G4cout << "\n can't create histo 9" << G4endl;  
   histo[12] = new TH1D("h12", "XCoord", 400,-10.,10.);
   if (!histo[12]) G4cout << "\n can't create histo 9" << G4endl;  

@@ -719,8 +719,6 @@ void ECalReconstruction::BuildSimpleECalClusters()
   Int_t cChID[Hits.size()]={0};
   Int_t cUsed[Hits.size()]={0};
   Int_t cCellUsed[NTotCh]={0};
-
-
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
@@ -736,8 +734,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
     }
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
     //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
-  }
-
+  } 
+ 
   Int_t iMax=0;
   Int_t HitUsed=0;
   Int_t clusMatrix[NMaxCl][NMaxHitsInCl]={0};

@@ -4,6 +4,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TVector3.h"
+#include "TH1D.h"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -33,10 +34,23 @@ public:
   void FillGeneralHisto(std::string sufix);
   void FillRadiusRangeHisto(std::string sufix);
   void FillTimeRangeHisto(std::string sufix);
+  void FillTimeRangeCoGHisto(std::string sufix);
   void CheckNumberHitsOnCh(Int_t chSeed1, Int_t chSeed2, Int_t& countHit1, Int_t& countHit2);
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2,  double& distPhi);
   Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC);
-  
+  Double_t ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t plusSys);
+  Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t plusSys);
+  void FillWeightedHisto_R1inFR(std::string sufix);
+  void FillWeightedHisto_R1R2inFR(std::string sufix);
+
+  Double_t ReturnAccettanceEffective_g1g2FR(Double_t radius);
+  Double_t ReturnAccettanceEffective_g1FR(Double_t radius);
+  void FillWeightedAccEffHisto_R1inFR(std::string sufix);
+  void FillAccEffHisto_R1inFR(std::string sufix);
+  void FillWeightedAccEffHisto_R1R2inFR(std::string sufix);
+  void FillAccEffHisto_R1R2inFR(std::string sufix);
+
+  void fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR);
 
 protected:
   TRecoEvent*           fRecoEvent;
@@ -101,6 +115,20 @@ private:
   Double_t ftimerange5max;
 
   Double_t fdistanceTarget;
+
+  Double_t fEffInnerRRange_r1inFR[8];
+  Double_t fEffOuterRRange_r1inFR[8];
+  Double_t fEffInnerRRange_r1r2inFR[8];
+  Double_t fEffOuterRRange_r1r2inFR[8];
+  
+  Double_t fEffUpperSysInnerRRange_r1inFR[8];
+  Double_t fEffUpperSysOuterRRange_r1inFR[8];
+  Double_t fEffUpperSysInnerRRange_r1r2inFR[8];
+  Double_t fEffUpperSysOuterRRange_r1r2inFR[8];
+  
+  TH1D *hAccEffFromCalchep_g1g2FR;
+  TH1D *hAccEffFromCalchep_g1FR;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -385,9 +385,9 @@ int main(Int_t argc, char **argv)
     event->PVetoRecoCl          =fPVetoRecoCl        ;
     event->EVetoRecoCl          =fEVetoRecoCl        ;
     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
-    UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+    //UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
     GlobalTimeAnalysis *gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
-    UserAn->Init(event);
+    //UserAn->Init(event);
     gTimeAn->Init(event);
     
    Int_t nTargetHits =0;

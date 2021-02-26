@@ -45,6 +45,8 @@ public:
   void FillHistoTagAndProbe_PhiRegionsRadiusRegionsTag(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
   void FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
   void FillHistoTagAndProbe_PhiRadiusProbeDistribution(Double_t phi ,Double_t radius,Double_t phi2 ,Double_t radius2, std::string sufix );
+  void FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsTag(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
+  void FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsProbe(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
 
 protected:
   TRecoEvent*           fRecoEvent;

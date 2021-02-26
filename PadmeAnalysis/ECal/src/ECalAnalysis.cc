@@ -47,6 +47,8 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
   max=250;
   hname = "ECal_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
+  hname = "ECal_NHitsInClus";
+  hSvcVal->BookHisto(hname, nBin, min, max);
   nBin=500;
   min=0.;
   max=1000;
@@ -54,7 +56,7 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
   hSvcVal->BookHisto(hname, nBin, min, max);
   nBin=5000;
   min=0.;
-  max=10000;
+  max=20000;
   hname="ECal_EClTot";
   hSvcVal->BookHisto(hname, nBin, min, max);
   return true;

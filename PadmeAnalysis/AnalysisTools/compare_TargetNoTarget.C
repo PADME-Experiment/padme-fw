@@ -27,7 +27,7 @@ using namespace std;
 
 void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-999, double xmax=999, 
 	       std::string xtitle="E(#gamma_{1})+E(#gamma_{2}) [MeV]", 
-				 TFile* fData, TFile* fMC, Int_t lastSet,  double minInt, double maxInt)
+			    TFile* fData, TFile* fMC, Int_t lastSet,  double minInt, double maxInt,std::string hnameFile)
 {
   //  TFile* fData = _file0;
   //  TFile* fMC   = _file1;
@@ -316,7 +316,9 @@ void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-99
    t->Draw();
    Int_t gg=MakeDifference(hData, hsMC, minInt, maxInt);
    std::fstream fs;
-   fs.open("ggCount_30547.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+   //fs.open("ggCount_30547.txt", std::fstream::in | std::fstream::out | std::fstream::app);
+   fs.open(hnameFile.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
+
    fs<<hname.c_str() << "                " << gg << std::endl;
    fs.close();
    

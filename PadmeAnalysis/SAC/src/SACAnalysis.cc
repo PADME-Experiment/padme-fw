@@ -28,7 +28,24 @@ SACAnalysis::~SACAnalysis()
 }
 Bool_t SACAnalysis::InitHistosAnalysis()
 {
-    return true;
+  HistoSvc* hSvc =  HistoSvc::GetInstance();    
+  std::string hname;
+  int nBin;
+  Double_t min, max;
+
+  nBin=600;
+  min=-300;
+  max=300;
+  hname="SAC_HitTime";
+  hSvc->BookHisto(hname, nBin, min, max);
+  hname="SAC_ClusterTime";
+  hSvc->BookHisto(hname, nBin, min, max);
+  nBin=101;
+  min=-0.5;
+  max=100.5;
+  hname="SAC_NCluster";
+  hSvc->BookHisto(hname, nBin, min, max);
+  return true;
 }
 
 Bool_t SACAnalysis::InitHistosDataQuality()
@@ -83,8 +100,6 @@ Bool_t SACAnalysis::ProcessDataQuality()
     std::cout<<"In SACAnalysis::ProcessDataQuality"<<std::endl;
     
 
-    Int_t fNhits = fhitEvent->GetNHits();
-
     std::string hname;
 
     Double_t EHitSum = 0.;
@@ -96,7 +111,6 @@ Bool_t SACAnalysis::ProcessDataQuality()
       hSvc->FillHisto(hname, h->GetEnergy());
       EHitSum = EHitSum+h->GetEnergy();
       hname = "SAC_HitOccupancyEWeig";
-      int chid =  h->GetChannelId();
       int x =  h->GetPosition().X();
       int y =  h->GetPosition().Y();
       hSvc->FillHisto2(hname, float(x),  float(y), h->GetEnergy());	
@@ -209,47 +223,31 @@ Bool_t SACAnalysis::ProcessAnalysis()
   Bool_t retCode = 0;
 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
 
   TRecoVHit* hit=NULL;
-  TRecoVHit* hitn=NULL;
   TRecoVCluster* clu=NULL;
-  TRecoVCluster* clun=NULL;
-  std::string hname;
   Int_t      chId;
-  Double_t energy;
-  Double_t   time;
-  Int_t      chIdn;
-  Double_t energyn;
-  Double_t   timen;
+  
 
   Int_t fNhits = fhitEvent->GetNHits();
   Int_t fNclus = fClColl->GetNElements();
-  Int_t seedId;
-  Int_t clSize;
   
-  // HistoSvc* hSvc =  HistoSvc::GetInstance();
-
-  // Int_t fNhits = fhitEvent->GetNHits();
-  // std::string hname;
-
-  // hname = "SAC_NHits";
-  // hSvc->FillHisto(hname,fhitEvent->GetNHits());
   
-  // for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
-  //   {
-  //     TRecoVHit* h = fhitEvent->Hit(j);
-  //     std::cout<<"SAChits "<<j<<" "<<h->GetChannelId()<<" "<<h->GetEnergy()<<" "<<h->GetTime()<<std::endl;
-  //   }
+  for (Int_t j=0; j<fhitEvent->GetNHits(); ++j)
+    {
+      TRecoVHit* h = fhitEvent->Hit(j);
+      hname = "SAC_HitTime";
+      hSvc->FillHisto(hname,h->GetTime());
+    }
 
-  
-  // TRecoVClusCollection* clColl = fClColl;fhitEvent->getClusCollection();
-  // std::cout<<" from the SACRecoEvent N elements:  "<<clColl->GetNElements()<< std::endl;
-  // hname = "SAC_NClusters";
-  // hSvc->FillHisto(hname,clColl->GetNElements());
-  // for (Int_t j=0; j<clColl->GetNElements(); ++j)
-  //   {
-  //     Int_t clSize =  (clColl->Element(j)->GetHitVecInClus()).size();
-      
+  hname="SAC_NCluster";
+  hSvc->FillHisto(hname,fNclus);
+   for (Int_t j=0; j<fClColl->GetNElements(); ++j)
+     {
+       hname = "SAC_ClusterTime";
+       hSvc->FillHisto(hname,fClColl->Element(j)->GetTime());
+     }    
   //     std::cout<<"... in the tree ... SAC_Cluster "<<j<<"  chId/energy/time " << clColl->Element(j)->GetChannelId() <<" "<<clColl->Element(j)->GetEnergy() <<" "<<clColl->Element(j)->GetTime() << std::endl;
   //     std::cout <<"the index of the seed hits is " << clColl->Element(j)->GetSeed()<< std::endl;
   //     std::cout <<"the number of hit belonging to this cluster is " << clColl->Element(j)->GetNHitsInClus() << std::endl;
@@ -289,8 +287,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
   for (Int_t i=0; i<fNhits; ++i){
     hit    = fhitEvent->Hit(i);
     chId   = hit->GetChannelId();
-    energy = hit->GetEnergy();
-    time   = hit->GetTime();
+    
 
    (hSvc->myEvt).NTSAC_Hits_ChannelId[i]=(Double_t)chId;
    (hSvc->myEvt).NTSAC_Hits_Energy[i]=hit->GetEnergy();
@@ -306,8 +303,7 @@ Bool_t SACAnalysis::ProcessAnalysis()
 
   for (Int_t j=0; j<fNclus; ++j){
      clu    = fClColl->Element(j);
-     seedId = clu->GetChannelId();
-  
+       
    (hSvc->myEvt).NTSAC_Clusters_ChannelId[j]=Double_t(clu->GetChannelId());
    (hSvc->myEvt).NTSAC_Clusters_Energy[j]=clu->GetEnergy();
    (hSvc->myEvt).NTSAC_Clusters_Time[j]=clu->GetTime();

@@ -75,9 +75,9 @@ void BeamLineStructure::CreateGeometry()
   }
   if(fLineSetup==1.){
     G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
-    CreateMylarThinWindow();
+    CreateMylarThinWindow(); // Create BeWindow
     CreateDHSTB002Magnet();
-    CreateBeamLine2020(); //beam line 2020
+    CreateBeamLine2020();    //beam line 2020
   }
 }
 
@@ -247,7 +247,7 @@ void BeamLineStructure::CreateBeamLine2020()
 
   G4VSolid* solidLinacWallFull = new G4Box("solidLinacWallFull",LinacWallThick*0.5,2*m,2*m);
   G4Tubs* solidLinacWallHole = new G4Tubs("solidLinacWallHole",0.,WallPipeROut*2.5,0.5*LinacWallThick*1.5+100.*um,0.*deg,360.*deg);
-  //  printf("MALEDETTIIIIIIIII %f",mpEntPosZ-293.-(InWallPipePosZ-1.*m);
+
   G4SubtractionSolid* solidLinacWall = new G4SubtractionSolid("solidLinacWall",solidLinacWallFull,solidLinacWallHole,WallPipeRot,G4ThreeVector(0,0.,mpEntPosZ-(+LinacWallThick*0.5+293.*cm)-(InWallPipePosZ)));
   G4LogicalVolume* logicLinacWall = new G4LogicalVolume(solidLinacWall,G4Material::GetMaterial("G4_CONCRETE"),"logicLinacWall", 0, 0, 0);
   //  G4ThreeVector LinacWallPos = G4ThreeVector(InWallPipePosX,InWallPipePosY,InWallPipePosZ);
@@ -317,7 +317,7 @@ void BeamLineStructure::CreateBeamLine2020()
     //    Q2Rot->rotateZ(-45*deg);
 
     // Negative gradient focus on X
-    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q1BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
+    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q2BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
     logicQ2Quad->SetVisAttributes(QuadVisAttr);
     logicQ2Quad->SetName("logicQ2Quad");
     new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
@@ -336,7 +336,7 @@ void BeamLineStructure::CreateBeamLine2020()
     // We will use different signs of K to change from X to Y focusing wihout rotating
     // 45 deg rotation is not needed because it's only for the coils but the magnetic field is already ok 
 
-    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q3Pos,Q3Rot);
+    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q3BGradient,Q1Leng,Q1Radius,Q3Pos,Q3Rot);
     logicQ3Quad->SetVisAttributes(QuadVisAttr);
     logicQ3Quad->SetName("logicQ3Quad");
     new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
@@ -347,7 +347,7 @@ void BeamLineStructure::CreateBeamLine2020()
     G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
 
     G4RotationMatrix* Q4Rot = Q2Rot; //da veirficare
-    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q4Pos,Q4Rot);
+    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(-Q4BGradient,Q1Leng,Q1Radius,Q4Pos,Q4Rot);
     logicQ4Quad->SetVisAttributes(QuadVisAttr);
     logicQ4Quad->SetName("logicQ4Quad");
     new G4PVPlacement(Q4Rot,Q4Pos,logicQ4Quad,"Q4Quad",fMotherVolume,false,0,true);
@@ -750,7 +750,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
 
   //  printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
-  if ( geo->BeamFlagIsEnabled() ) {
+  if (geo->BeamFlagIsEnabled() ) {
 //    //   printf("Registering Flag3 %b\n",geo->BeamFlagIsEnabled());
 //    new G4PVPlacement(strFrontRot,Flag3FrontPos,logicalBeamFlag3,"BeamLineBeamFlag3",fMotherVolume,false,0,true);    
 //    logicalBeamFlag3->SetSensitiveDetector(beamFlagSD);
@@ -890,35 +890,6 @@ void BeamLineStructure::CreateBeamLine()
   strFrontRot->rotateY(strFrontRotY);
   G4ThreeVector strFrontPos = G4ThreeVector(strFrontPosX,0.,strFrontPosZ);
 ///  new G4PVPlacement(strFrontRot,strFrontPos,logicalStraightPipe,"DHSTB002FlangeFront",fMotherVolume,false,0,true);
-
-//  ////////////////////////////////////////////////////////////////////////
-//  // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
-//  // Flag 2 after the DHSTB002 output pipe
-//  ///////////////////////////////////////////////////////////////////////
-//
-//  G4double FlagR = geo->GetBeWindowRadius()-15*um; //Use the same of the BeW
-//  G4double FlagT = geo->GetBeWindowThick();  //Use the same of the BeW
-//
-//  G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX();
-//  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2;
-//  G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
-//
-//  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR,0.5*FlagT,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag2",0,0,0);
-//  logicalBeamFlag2->SetVisAttributes(FlagVisAttr);
-//  
-//  if ( geo->BeamFlagIsEnabled() ) {
-//    //   printf("Registering Flag2 %b\n",geo->BeamFlagIsEnabled());
-//    new G4PVPlacement(strFrontRot,FlagFrontPos,logicalBeamFlag2,"BeamLineBeamFlag2",fMotherVolume,false,0,true);    
-//    G4String BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
-//    printf("Registering Flag2 SD %s\n",BeamFlag2SDName.data());
-//    beamFlagSD = new BeamFlagSD(BeamFlag2SDName);
-//    logicalBeamFlag2->SetSensitiveDetector(beamFlagSD);
-//    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
-//  }
-//  // end of test
-//
-
 
 //  // Position back straight section
   G4double strBackPosX = geo->GetMagPipeStraightBackPosX();
@@ -1071,10 +1042,10 @@ void BeamLineStructure::CreateBeamLine()
 
   if ( geo->QuadrupolesAreEnabled() ) {
     
-    ///////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////
     // Creates the pair of quadrupoles located before the 
-    // entrance of DHSTB002
-    ///////////////////////////////////////////////////////
+    // entrance of DHSTB002  NEED to USE 2020 quadrupoles version
+    /////////////////////////////////////////////////////////////
     
     G4double Q1BGradient    = geo->GetQ1MagneticFieldGrad();
     G4double Q2BGradient    = geo->GetQ2MagneticFieldGrad();
@@ -1082,29 +1053,36 @@ void BeamLineStructure::CreateBeamLine()
     G4ThreeVector BOrigin = G4ThreeVector(0.,0.,0.);
     G4RotationMatrix* Q1Rot = new G4RotationMatrix;
     Q1Rot->rotateY(magnetAngle);
-    Q1Rot->rotateZ(45*deg);
+    //    Q1Rot->rotateZ(45*deg);
 
     G4RotationMatrix* Q2Rot = new G4RotationMatrix;
     Q2Rot->rotateY(magnetAngle);
-    Q2Rot->rotateZ(-45*deg);
+    //    Q2Rot->rotateZ(-45*deg);
 
-    // Generating quadrupole box
-    G4double QuadMagSizeX = geo->GetQuadMagSizeX();
-    G4double QuadMagSizeY = geo->GetQuadMagSizeY();
-    G4double QuadMagSizeZ = geo->GetQuadMagSizeZ();
-    G4Box*   solidQuadMagField = new G4Box("solidQuadMagField",0.5*QuadMagSizeX,0.5*QuadMagSizeY,0.5*QuadMagSizeZ);
-
+//    // Generating quadrupole box
+//    G4double QuadMagSizeX = geo->GetQuadMagSizeX();
+//    G4double QuadMagSizeY = geo->GetQuadMagSizeY();
+//    G4double QuadMagSizeZ = geo->GetQuadMagSizeZ();
+//    G4Box*   solidQuadMagField = new G4Box("solidQuadMagField",0.5*QuadMagSizeX,0.5*QuadMagSizeY,0.5*QuadMagSizeZ);
+    G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
+    G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
+    G4double Q1Leng         = geo -> GetQuadMagSizeZ();             //
     // Generating quadrupole Q1
     G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
     G4double Q1PosY = beJunMgPosY; 
     G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
     G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
-    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
-    QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
-    G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
-    logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
-    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+//    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
+//    QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
+//    G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
+//    logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
+//    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+
+    G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
+    logicQ1Quad->SetVisAttributes(QuadVisAttr);
+    logicQ1Quad->SetName("logicQ1Quad");
+    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q2Quad",fMotherVolume,false,0,true);
 
     // Generating quadrupole Q2
     G4double Q1Q2Dist = geo->GetQ1Q2Dist();
@@ -1114,11 +1092,17 @@ void BeamLineStructure::CreateBeamLine()
     G4double Q2PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q1Q2Dist*cos(magnetAngle);  
     G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
 
-    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
-    QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
-    G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
-    logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
-    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
+    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q2BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
+    logicQ2Quad->SetVisAttributes(QuadVisAttr);
+    logicQ2Quad->SetName("logicQ2Quad");
+    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
+
+
+//    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
+//    QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
+//    G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
+//    logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
+//    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
 
   }
 

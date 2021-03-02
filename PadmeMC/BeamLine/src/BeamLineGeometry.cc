@@ -185,11 +185,13 @@ BeamLineGeometry::BeamLineGeometry()
 	       
   fQuadMagSizeX = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
   fQuadMagSizeY = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
-  fQuadMagSizeZ = 200.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
+
+  fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
-  fQ2DistFromDHSTB002 = 379.*mm; 
-  fQ1Q2Dist = 900.*mm; //center to center
+  fQ1DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQ1Q2Dist = 900.*mm; //center to center quads in BTF Checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQ3Q4Dist = 1100.*mm; //center to center quads in LINAC checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
 
   //

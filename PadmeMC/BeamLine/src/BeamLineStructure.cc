@@ -265,6 +265,7 @@ void BeamLineStructure::CreateBeamLine2020()
   G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
   MylarWinFlgRot->rotateY(magnetAngle);
   printf("BeamLine - Mylar window exit face center CRASH  is at %f %f\n",MylarWinFlgPosX,MylarWinFlgPosZ);
+  printf("BeamLine - DHSTB002 exit %f %f\n",mpEntPosX,mpEntPosZ);
   new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
 
 
@@ -292,10 +293,11 @@ void BeamLineStructure::CreateBeamLine2020()
     G4double beJunMgPosY = mpEntPosY;
     G4double beJunMgPosZ = mpEntPosZ-0.5*beJunLen*cos(magnetAngle);
     
-    // Generating quadrupole Q1 
-    G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
+    // Generating quadrupole Q1
+    G4double Q1DistFromDHSTB002=geo->GetQ1DistFromDHSTB002();
+    G4double Q1PosX = beJunMgPosX+Q1DistFromDHSTB002*sin(magnetAngle)*mm; 
     G4double Q1PosY = beJunMgPosY; 
-    G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
+    G4double Q1PosZ = beJunMgPosZ-Q1DistFromDHSTB002*cos(magnetAngle)*mm; ; 
     G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
     // Positive gradient focus on Y
@@ -324,7 +326,7 @@ void BeamLineStructure::CreateBeamLine2020()
 
     // Leave the geometry unchanged for the second pair of quads
 
-    G4double OffsetwrtWallPipe = 1260*mm/2; // preliminary drawings
+    G4double OffsetwrtWallPipe = 440*mm; // Checked on drawings M. Raggi 02/03/2021
     G4double Q3PosX   = InWallPipePosX + (InWallPipeLen*0.5+OffsetwrtWallPipe)*sin(magnetAngle); 
     G4double Q3PosY   = InWallPipePosY; //Q3PosY; 
     G4double Q3PosZ   = InWallPipePosZ - (InWallPipeLen*0.5+OffsetwrtWallPipe)*cos(magnetAngle);  
@@ -341,9 +343,11 @@ void BeamLineStructure::CreateBeamLine2020()
     logicQ3Quad->SetName("logicQ3Quad");
     new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
 
-    G4double Q4PosX   = Q3PosX+Q1Q2Dist*sin(magnetAngle); 
+    G4double Q3Q4Dist = geo->GetQ3Q4Dist();
+
+    G4double Q4PosX   = Q3PosX+Q3Q4Dist*sin(magnetAngle); 
     G4double Q4PosY   = Q3PosY; 
-    G4double Q4PosZ   = Q3PosZ-Q1Q2Dist*cos(magnetAngle);  
+    G4double Q4PosZ   = Q3PosZ-Q3Q4Dist*cos(magnetAngle);  
     G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
 
     G4RotationMatrix* Q4Rot = Q2Rot; //da veirficare
@@ -764,6 +768,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
 
 }
 
+// Create the 2019 beam line configuration revised M. Raggi 03/2021
 void BeamLineStructure::CreateBeamLine()
 {
 
@@ -1043,8 +1048,8 @@ void BeamLineStructure::CreateBeamLine()
   if ( geo->QuadrupolesAreEnabled() ) {
     
     /////////////////////////////////////////////////////////////
-    // Creates the pair of quadrupoles located before the 
-    // entrance of DHSTB002  NEED to USE 2020 quadrupoles version
+    // Creates the pair of quadrupoles located in BTF before the 
+    // entrance of DHSTB002  
     /////////////////////////////////////////////////////////////
     
     G4double Q1BGradient    = geo->GetQ1MagneticFieldGrad();
@@ -1059,11 +1064,6 @@ void BeamLineStructure::CreateBeamLine()
     Q2Rot->rotateY(magnetAngle);
     //    Q2Rot->rotateZ(-45*deg);
 
-//    // Generating quadrupole box
-//    G4double QuadMagSizeX = geo->GetQuadMagSizeX();
-//    G4double QuadMagSizeY = geo->GetQuadMagSizeY();
-//    G4double QuadMagSizeZ = geo->GetQuadMagSizeZ();
-//    G4Box*   solidQuadMagField = new G4Box("solidQuadMagField",0.5*QuadMagSizeX,0.5*QuadMagSizeY,0.5*QuadMagSizeZ);
     G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
     G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
     G4double Q1Leng         = geo -> GetQuadMagSizeZ();             //
@@ -1073,11 +1073,7 @@ void BeamLineStructure::CreateBeamLine()
     G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
     G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
-//    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
-//    QuadSetup* Q1FieldManager = new QuadSetup(Q1BGradient,Q1Pos,Q1Rot);
-//    G4LogicalVolume* logicQ1MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
-//    logicQ1MagField->SetFieldManager(Q1FieldManager->GetLocalFieldManager(),true);
-//    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1MagField,"Q1",fMotherVolume,false,0,true);
+    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
 
     G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
     logicQ1Quad->SetVisAttributes(QuadVisAttr);
@@ -1096,13 +1092,7 @@ void BeamLineStructure::CreateBeamLine()
     logicQ2Quad->SetVisAttributes(QuadVisAttr);
     logicQ2Quad->SetName("logicQ2Quad");
     new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
-
-
-//    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
-//    QuadSetup* Q2FieldManager = new QuadSetup(Q2BGradient,Q2Pos,Q2Rot);
-//    G4LogicalVolume* logicQ2MagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ2MagField",0,0,0);
-//    logicQ2MagField->SetFieldManager(Q2FieldManager->GetLocalFieldManager(),true);
-//    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2MagField,"Q2",fMotherVolume,false,0,true);
+    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
 
   }
 

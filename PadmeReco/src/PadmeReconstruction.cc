@@ -101,37 +101,37 @@ void PadmeReconstruction::InitLibraries()
   // Declare detectors with required configuration file
   if (fConfig->GetParOrDefault("RECOALGORITHMS","EVeto",1)) {
     TString configEVeto = fConfig->GetParOrDefault("RECOCONFIG","EVeto","config/EVeto.cfg");
-    std::cout<<"Enabling EVeto   with configuration file "<<configEVeto<<std::endl;
+    std::cout<<"=== Enabling EVeto with configuration file "<<configEVeto<<std::endl;
     fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,configEVeto));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","PVeto",1)) {
     TString configPVeto = fConfig->GetParOrDefault("RECOCONFIG","PVeto","config/PVeto.cfg");
-    std::cout<<"Enabling PVeto   with configuration file "<<configPVeto<<std::endl;
+    std::cout<<"=== Enabling PVeto with configuration file "<<configPVeto<<std::endl;
     fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,configPVeto));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","ECal",1)) {
     TString configECal = fConfig->GetParOrDefault("RECOCONFIG","ECal","config/ECal.cfg");
-    std::cout<<"Enabling ECal    with configuration file "<<configECal<<std::endl;
+    std::cout<<"=== Enabling ECal with configuration file "<<configECal<<std::endl;
     fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,configECal));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","SAC",1)) {
     TString configSAC = fConfig->GetParOrDefault("RECOCONFIG","SAC","config/SAC.cfg");
-    std::cout<<"Enabling SAC     with configuration file "<<configSAC<<std::endl;
+    std::cout<<"=== Enabling SAC with configuration file "<<configSAC<<std::endl;
     fRecoLibrary.push_back(new SACReconstruction(fHistoFile,configSAC));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","TPix",0)) {
     TString configTPix = fConfig->GetParOrDefault("RECOCONFIG","TPix","config/TPix.cfg");
-    std::cout<<"Enabling TPix    with configuration file "<<configTPix<<std::endl;
+    std::cout<<"=== Enabling TPix with configuration file "<<configTPix<<std::endl;
     fRecoLibrary.push_back(new TPixReconstruction(fHistoFile,configTPix));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","Target",1)) {
     TString configTarget = fConfig->GetParOrDefault("RECOCONFIG","Target","config/Target.cfg");
-    std::cout<<"Enabling Target  with configuration file "<<configTarget<<std::endl;
+    std::cout<<"=== Enabling Target with configuration file "<<configTarget<<std::endl;
     fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,configTarget));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","HEPVeto",1)) {
     TString configHEPVeto = fConfig->GetParOrDefault("RECOCONFIG","HEPVeto","config/HEPVeto.cfg");
-    std::cout<<"Enabling HEPVeto with configuration file "<<configHEPVeto<<std::endl;
+    std::cout<<"=== Enabling HEPVeto with configuration file "<<configHEPVeto<<std::endl;
     fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,configHEPVeto));
   }
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;

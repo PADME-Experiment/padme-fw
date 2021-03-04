@@ -116,7 +116,7 @@ Bool_t EventSelection::InitHistos()
   if (fProcessingMode==1)
     {
       //return 0;//
-      return InitHistosAnalysis();
+      return InitHistosIO();
     }
   else if (fProcessingMode==2)
     {
@@ -127,7 +127,7 @@ Bool_t EventSelection::InitHistos()
       std::cout<<"Error:: fProcessingModel = "<<fProcessingMode<<" out of range "<<std::endl;
       return true;
     }
-  return InitHistosAnalysis();
+  return InitHistosIO();
   // TO DO move here from HistSvc ;
 }
 /*
@@ -193,7 +193,7 @@ void EventSelection::CalibrateTimeAndEnergy()
   ApplyCalibTimeEVeto  ();
   ApplyCalibTimeHEPVeto();
   ApplyCalibTimeSAC    ();*/
-  ApplyCalibTimeEnergyECal   (isMC);
+  // ApplyCalibTimeEnergyECal   (isMC); done in ECALAnalysis for energy 
   return;
   
 }
@@ -203,7 +203,7 @@ Bool_t EventSelection::ProcessAnalysis()
 
   if (fVersion==1)
     {
-      return ProcessAnalysisSS();
+      return ProcessAnalysisIO();
     }
  /* else if (fVersion==2)
     {
@@ -2702,14 +2702,15 @@ Bool_t EventSelection::passPreselection()
   hSvc->FillHisto(hname,ps_cut_trg);
    
   std::string hname1 = "NposInBunch_beam";
-  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT());
+  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*1.78);
   //std::cout<<"preselection...Pot control" << std::endl;
   //if (fTarget_RecoBeam->getnPOT()<12000. && fTarget_RecoBeam->getnPOT()>3500.) return passed;
   //if (fTarget_RecoBeam->getnPOT()<10000.) return passed;
   hSvc->FillHisto(hname,ps_cut_POT);
-  
+  if (fTarget_RecoBeam->getnPOT()<-9999) return passed;
+
   hname = "nPOT";
-  hSvc->FillHisto(hname,0,float(fTarget_RecoBeam->getnPOT())); 
+  hSvc->FillHisto(hname,0,float(fTarget_RecoBeam->getnPOT()*1.78)); 
 
   //std::cout<<"passed ok " << std::endl;
   passed = true;
@@ -2734,7 +2735,7 @@ Bool_t EventSelection::ProcessAnalysisIO()
   isMC=false;
  
   // apply BTF bunch preselection 
-  // if (!passPreselection()) return true;
+  if (!passPreselection()) return true;
 
 
 

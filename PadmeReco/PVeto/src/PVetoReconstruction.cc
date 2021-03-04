@@ -31,6 +31,15 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   //fChannelCalibration  = new PadmeVCalibration();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new PVetoGeometry();
+
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+
+
+  // configurable parameters 
+  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
+  fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+
 }
 
 PVetoReconstruction::~PVetoReconstruction()
@@ -43,20 +52,19 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
   AddHisto("nchannels", new TH1F("nchannels","Number of channels",100,0.0,100.0));
   AddHisto("ntriggers", new TH1F("ntriggers","Number of trigger channels",100,0.0,100.0));
-  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-100.,100.));
+  //AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-100.,100.));
+  AddHisto("HitTimeDifference",new TH1F("HitTimeDifference","Difference in time",400,-40.,40.));
   AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",100,0.0,100.0));
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
 
   AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",2000,0.0,40.0));
   AddHisto("PVetoEnergyClean",new TH1F("PVetoEnergyClean","PVeto Energy",2000,0.0,.4));
-  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
+  //AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
+  AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",400,-150.0,250.0));
 
   AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,-200.0,200.0) );
   AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,-200.0,200.0, 400,-200.0,200.0));
-
- 
-
 
   char name[256];
 
@@ -94,7 +102,65 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 }
 */
 
+void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) 
+{
+  if (tEvent==NULL) return;
+  fHits.clear();
+  // MC to reco hits
+  //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
 
+    Int_t    digiCh = digi->GetChannelId();
+    Double_t digiT  = digi->GetTime();
+    Double_t digiE  = digi->GetEnergy();
+    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+
+    Bool_t toBeMerged = false;
+    // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+    if (fPVetoDigiTimeWindow > 0) {
+      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+	{
+	  if (fHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
+	    {
+	      toBeMerged = true;
+	      // this digit must be merged with a previously defined recoHit
+	      //std::cout<<" -- merging with hit in ch "<<fHits[ih]->GetChannelId()<<" at time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" diffT = "<<fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<<std::endl;
+	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
+	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
+	      //std::cout<<" -- updated  Ch "<<fHits[ih]->GetChannelId()<<" time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" so far "<<std::endl;
+	    }
+	}
+    }
+    if (!toBeMerged)
+      {
+	TRecoVHit *Hit = new TRecoVHit();
+	Hit->SetChannelId(digiCh);
+	Hit->SetEnergy   (digiE);
+	Hit->SetTime     (digiT*digiE);
+	Hit->SetPosition (TVector3(0.,0.,0.)); 
+	fHits.push_back(Hit);
+	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
+      }
+  }
+  // last loop to correct the time 
+  TRecoVHit *Hit;
+  Double_t Noise=0.;
+  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+    {
+      Hit = fHits[ih];
+      Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
+
+      if (fSigmaNoiseForMC >0.0001) {
+	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+	Hit->SetEnergy(Hit->GetEnergy()+Noise);
+      }
+    }
+    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+  return;
+}
 
 
 void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
@@ -131,13 +197,19 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
 
 
+    //for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
+    //  (  (TH2F *) GetHisto("PVetoTimeVsPVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
+    //  //      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+    //	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+    //	//      }
+    //}        
     for(unsigned int iHit2 = iHit1+1; iHit2 < Hits.size();++iHit2) {
-      
-      (  (TH2F *) GetHisto("PVetoTimeVsPVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
-      //      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+      ((TH2F *)GetHisto("PVetoTimeVsPVetoTime"))->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
+      if( Hits[iHit1]->GetChannelId() > 20 && Hits[iHit1]->GetChannelId() < 70
+	  && Hits[iHit2]->GetChannelId() > 20 && Hits[iHit2]->GetChannelId() < 70 ) {
 	GetHisto("HitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-	//      }
-    }        
+      }
+    }
 
     GetHisto("PVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
     int chid = Hits[iHit1]->GetChannelId();

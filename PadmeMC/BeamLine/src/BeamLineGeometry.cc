@@ -37,11 +37,6 @@ BeamLineGeometry::BeamLineGeometry()
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
   fQuadrupolesEnable = false;
 
-  fQ1MagneticFieldGrad =  5.*tesla/m;
-  fQ2MagneticFieldGrad =  5.*tesla/m;
-  fQ3MagneticFieldGrad =  5.*tesla/m;
-  fQ4MagneticFieldGrad =  5.*tesla/m;
-
   fBeamLineSetup=0;  //M. Raggi 06/2020
   //printf("***************************** tesla %f m %f \n ",tesla,m);
   printf("******Beam Line Geometry *********************** %f \n",fBeamLineSetup);
@@ -176,25 +171,23 @@ BeamLineGeometry::BeamLineGeometry()
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 
-  // Geometry of the quadrupoles 
-
-  fQuadBoxSizeX = 348.*mm; // M. Raggi From L. Foggetta Drawings 11/04/2019
-  fQuadBoxSizeY = 348.*mm; // guess L. Foggetta Drawings are 2 dimentional 11/04/2019
-  fQuadBoxSizeZ = 186.*mm; // M. Raggi From L. Foggetta Drawings 11/04/2019
-  // There is a inner square hole of unknown size with the coils insideit 
-	       
-  fQuadMagSizeX = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
-  fQuadMagSizeY = 50.*mm; // M. Raggi From P. Valente data sheet  08/04/2019
-
   fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
+  ///********M.R. ***********
+  //         PADME-- DHSTB002 -- Q4 --- Q3 --|  |-- Q2----Q1-----MyW
+  ///
+  //         Quadrupoles Gradient = 8.372E-2 * I + 2.3767E-2
+
+  fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from Di giulio report 07/2020
+  fQ2MagneticFieldGrad =  2.510*tesla/m;
+  fQ3MagneticFieldGrad =  3.833*tesla/m;
+  fQ4MagneticFieldGrad =  3.925*tesla/m;
+
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
-  fQ1DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
-  fQ1Q2Dist = 900.*mm; //center to center quads in BTF Checked on drawing M. Raggi and E. Leonardi 02/03/2021
-  fQ3Q4Dist = 1100.*mm; //center to center quads in LINAC checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQ4DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQ1Q2Dist = 1100.*mm; //center to center quads in LINAC Checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQ3Q4Dist =  900.*mm; //center to center quads in BTF checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
-
-  //
   // BEAM line 2020 geometry parameters M. Raggi 02.2021   
   fWallThickness        =  141.5*cm;   //check
   fWallPipeLen          =  251.4*cm;   //check

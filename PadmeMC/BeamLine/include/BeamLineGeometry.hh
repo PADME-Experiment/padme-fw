@@ -190,7 +190,7 @@ public:
   G4double GetQuadMagSizeY(){return fQuadMagSizeY;}
   G4double GetQuadMagSizeZ(){return fQuadMagSizeZ;}
 
-  G4double GetQ1DistFromDHSTB002(){return fQ1DistFromDHSTB002;} 
+  G4double GetQ4DistFromDHSTB002(){return fQ4DistFromDHSTB002;} 
   G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
   G4double GetQ3Q4Dist(){return fQ3Q4Dist;} 
 
@@ -374,9 +374,9 @@ private:
   // BEAM line 2020 geometry parameters M. Raggi 02.2021 
   //
 
-  G4double fQ1DistFromDHSTB002;
-  G4double fQ1Q2Dist;  //center to center in BTF
-  G4double fQ3Q4Dist;  //center to center in Linac
+  G4double fQ4DistFromDHSTB002;
+  G4double fQ1Q2Dist;  //center to center in Linac
+  G4double fQ3Q4Dist;  //center to center in BTF 
 
 
   G4double fWallThickness;

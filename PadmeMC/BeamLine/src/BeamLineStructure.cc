@@ -275,87 +275,84 @@ void BeamLineStructure::CreateBeamLine2020()
   if ( geo->QuadrupolesAreEnabled() ) {
     G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
 
-    // Setting up Q1 quadrupole near DHSTB002
-    G4double Q1BGradient    = geo -> GetQ1MagneticFieldGrad();
-    G4double Q2BGradient    = geo -> GetQ2MagneticFieldGrad();
-    G4double Q3BGradient    = geo -> GetQ3MagneticFieldGrad();
-    G4double Q4BGradient    = geo -> GetQ4MagneticFieldGrad();
-
-    G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
-    G4double Q1Leng         = geo -> GetQuadMagSizeZ();             // get the 2019 values
-
-    G4RotationMatrix* Q1Rot = new G4RotationMatrix;
-    Q1Rot->rotateY(magnetAngle);
-    //    Q1Rot->rotateZ(45*deg);
+    G4double Q4Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
+    G4double Q4Leng         = geo -> GetQuadMagSizeZ();             // get the 2019 values
+    G4RotationMatrix* Q4Rot = new G4RotationMatrix;
+    Q4Rot->rotateY(magnetAngle);
 
     // Position junction close to the magnet entrance
     G4double beJunMgPosX = mpEntPosX+0.5*beJunLen*sin(magnetAngle);
     G4double beJunMgPosY = mpEntPosY;
     G4double beJunMgPosZ = mpEntPosZ-0.5*beJunLen*cos(magnetAngle);
-    
-    // Generating quadrupole Q1
-    G4double Q1DistFromDHSTB002=geo->GetQ1DistFromDHSTB002();
-    G4double Q1PosX = beJunMgPosX+Q1DistFromDHSTB002*sin(magnetAngle)*mm; 
-    G4double Q1PosY = beJunMgPosY; 
-    G4double Q1PosZ = beJunMgPosZ-Q1DistFromDHSTB002*cos(magnetAngle)*mm; ; 
-    G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
 
-    // Positive gradient focus on Y
-    G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
-    logicQ1Quad->SetName("logicQ1Quad");
-    logicQ1Quad->SetVisAttributes(QuadVisAttr);
+    G4double Q1BGradient    = geo -> GetQ1MagneticFieldGrad();
+    G4double Q2BGradient    = geo -> GetQ2MagneticFieldGrad();
+    G4double Q3BGradient    = geo -> GetQ3MagneticFieldGrad();
+    G4double Q4BGradient    = geo -> GetQ4MagneticFieldGrad();
 
-    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q1Quad",fMotherVolume,false,0,true);
+    // Setting up Q4 quadrupole near DHSTB002    
+    G4double Q4DistFromDHSTB002=geo->GetQ4DistFromDHSTB002();
+    G4double Q4PosX = beJunMgPosX+Q4DistFromDHSTB002*sin(magnetAngle)*mm; 
+    G4double Q4PosY = beJunMgPosY; 
+    G4double Q4PosZ = beJunMgPosZ-Q4DistFromDHSTB002*cos(magnetAngle)*mm; ; 
+    G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
 
-    G4double Q1Q2Dist = geo->GetQ1Q2Dist();
+    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(-Q4BGradient,Q4Leng,Q4Radius,Q4Pos,Q4Rot);
+    logicQ4Quad->SetName("logicQ4Quad");
+    logicQ4Quad->SetVisAttributes(QuadVisAttr);
+    new G4PVPlacement(Q4Rot,Q4Pos,logicQ4Quad,"Q4Quad",fMotherVolume,false,0,true);
+    printf("Creating Q4 quadrupole with gradient %f ",Q4BGradient*m/tesla);
 
-    G4double Q2PosX   = Q1PosX+Q1Q2Dist*sin(magnetAngle); 
-    G4double Q2PosY   = Q1PosY; 
-    G4double Q2PosZ   = Q1PosZ-Q1Q2Dist*cos(magnetAngle);  
-    G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
-
-    G4RotationMatrix* Q2Rot = new G4RotationMatrix;
-    Q2Rot->rotateY(magnetAngle);
-    //    Q2Rot->rotateZ(-45*deg);
-
-    // Negative gradient focus on X
-    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q2BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
-    logicQ2Quad->SetVisAttributes(QuadVisAttr);
-    logicQ2Quad->SetName("logicQ2Quad");
-    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
-
-    // Leave the geometry unchanged for the second pair of quads
-
-    G4double OffsetwrtWallPipe = 440*mm; // Checked on drawings M. Raggi 02/03/2021
-    G4double Q3PosX   = InWallPipePosX + (InWallPipeLen*0.5+OffsetwrtWallPipe)*sin(magnetAngle); 
-    G4double Q3PosY   = InWallPipePosY; //Q3PosY; 
-    G4double Q3PosZ   = InWallPipePosZ - (InWallPipeLen*0.5+OffsetwrtWallPipe)*cos(magnetAngle);  
+    // Q3 quadrupole first after BTF wall
+    G4double Q3Q4Dist = geo->GetQ3Q4Dist();
+    G4double Q3PosX   = Q4PosX+Q3Q4Dist*sin(magnetAngle); 
+    G4double Q3PosY   = Q4PosY; 
+    G4double Q3PosZ   = Q4PosZ-Q3Q4Dist*cos(magnetAngle);  
     G4ThreeVector Q3Pos = G4ThreeVector(Q3PosX,Q3PosY,Q3PosZ);
 
-    G4RotationMatrix* Q3Rot = Q1Rot; //da veirficare
+    G4RotationMatrix* Q3Rot = new G4RotationMatrix;
+    Q3Rot->rotateY(magnetAngle);
+
+    // Negative gradient focus on X
+    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q3BGradient,Q4Leng,Q4Radius,Q3Pos,Q3Rot);
+    logicQ3Quad->SetVisAttributes(QuadVisAttr);
+    logicQ3Quad->SetName("logicQ3Quad");
+    new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
+    printf("Creating Q3 quadrupole with gradient %f ",Q3BGradient*m/tesla);
+
+    // Q2 quadrupole second one in LINAC side
+    G4double OffsetwrtWallPipe = 440*mm; // Checked on drawings M. Raggi 02/03/2021
+    G4double Q2PosX   = InWallPipePosX + (InWallPipeLen*0.5+OffsetwrtWallPipe)*sin(magnetAngle); 
+    G4double Q2PosY   = InWallPipePosY; //Q3PosY; 
+    G4double Q2PosZ   = InWallPipePosZ - (InWallPipeLen*0.5+OffsetwrtWallPipe)*cos(magnetAngle); 
+ 
+    G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
+    G4RotationMatrix* Q2Rot = Q4Rot; //da veirficare
     // Positive gradient focus on Y if you don't rotate it for negative particles
     // https://en.wikipedia.org/wiki/Quadrupole_magnet
     // We will use different signs of K to change from X to Y focusing wihout rotating
     // 45 deg rotation is not needed because it's only for the coils but the magnetic field is already ok 
 
-    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q3BGradient,Q1Leng,Q1Radius,Q3Pos,Q3Rot);
-    logicQ3Quad->SetVisAttributes(QuadVisAttr);
-    logicQ3Quad->SetName("logicQ3Quad");
-    new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
+    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q2BGradient,Q4Leng,Q4Radius,Q2Pos,Q2Rot);
+    logicQ2Quad->SetVisAttributes(QuadVisAttr);
+    logicQ2Quad->SetName("logicQ2Quad");
+    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
+    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
 
-    G4double Q3Q4Dist = geo->GetQ3Q4Dist();
+    // First quarupole seen from Linac side
+    G4double Q1Q2Dist = geo->GetQ1Q2Dist();
+    G4double Q1PosX   = Q2PosX+Q1Q2Dist*sin(magnetAngle); 
+    G4double Q1PosY   = Q2PosY; 
+    G4double Q1PosZ   = Q2PosZ-Q1Q2Dist*cos(magnetAngle);  
 
-    G4double Q4PosX   = Q3PosX+Q3Q4Dist*sin(magnetAngle); 
-    G4double Q4PosY   = Q3PosY; 
-    G4double Q4PosZ   = Q3PosZ-Q3Q4Dist*cos(magnetAngle);  
-    G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
+    G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
+    G4RotationMatrix* Q1Rot = Q2Rot; //da veirficare
 
-    G4RotationMatrix* Q4Rot = Q2Rot; //da veirficare
-    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(-Q4BGradient,Q1Leng,Q1Radius,Q4Pos,Q4Rot);
-    logicQ4Quad->SetVisAttributes(QuadVisAttr);
-    logicQ4Quad->SetName("logicQ4Quad");
-    new G4PVPlacement(Q4Rot,Q4Pos,logicQ4Quad,"Q4Quad",fMotherVolume,false,0,true);
-
+    G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q4Leng,Q4Radius,Q1Pos,Q1Rot);
+    logicQ1Quad->SetVisAttributes(QuadVisAttr);
+    logicQ1Quad->SetName("logicQ1Quad");
+    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q1Quad",fMotherVolume,false,0,true);
+    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
   }
 
 
@@ -1051,49 +1048,44 @@ void BeamLineStructure::CreateBeamLine()
     // Creates the pair of quadrupoles located in BTF before the 
     // entrance of DHSTB002  
     /////////////////////////////////////////////////////////////
-    
-    G4double Q1BGradient    = geo->GetQ1MagneticFieldGrad();
-    G4double Q2BGradient    = geo->GetQ2MagneticFieldGrad();
+    G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());    
+    //    G4ThreeVector BOrigin = G4ThreeVector(0.,0.,0.);
 
-    G4ThreeVector BOrigin = G4ThreeVector(0.,0.,0.);
-    G4RotationMatrix* Q1Rot = new G4RotationMatrix;
-    Q1Rot->rotateY(magnetAngle);
-    //    Q1Rot->rotateZ(45*deg);
+    G4double Q4BGradient    = geo->GetQ4MagneticFieldGrad();
+    G4RotationMatrix* Q4Rot = new G4RotationMatrix;
+    Q4Rot->rotateY(magnetAngle);
 
-    G4RotationMatrix* Q2Rot = new G4RotationMatrix;
-    Q2Rot->rotateY(magnetAngle);
-    //    Q2Rot->rotateZ(-45*deg);
+    G4double Q4Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
+    G4double Q4Leng         = geo -> GetQuadMagSizeZ();             //
+ 
+   // Generating quadrupole Q4
+    G4double Q4PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
+    G4double Q4PosY = beJunMgPosY; 
+    G4double Q4PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
+    G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
 
-    G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
-    G4double Q1Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
-    G4double Q1Leng         = geo -> GetQuadMagSizeZ();             //
-    // Generating quadrupole Q1
-    G4double Q1PosX = beJunMgPosX+379*sin(magnetAngle)*mm; 
-    G4double Q1PosY = beJunMgPosY; 
-    G4double Q1PosZ = beJunMgPosZ-379*cos(magnetAngle)*mm; ; 
-    G4ThreeVector Q1Pos = G4ThreeVector(Q1PosX,Q1PosY,Q1PosZ);
+    G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(Q4BGradient,Q4Leng,Q4Radius,Q4Pos,Q4Rot);
+    logicQ4Quad->SetVisAttributes(QuadVisAttr);
+    logicQ4Quad->SetName("logicQ4Quad");
+    new G4PVPlacement(Q4Rot,Q4Pos,logicQ4Quad,"Q4Quad",fMotherVolume,false,0,true);
+    printf("Creating Q4 quadrupole with gradient %f ",Q4BGradient*m/tesla);
 
-    printf("Creating Q1 quadrupole with gradient %f ",Q1BGradient*m/tesla);
+    // Generating quadrupole Q3 
+    G4double Q3BGradient    = geo->GetQ3MagneticFieldGrad();
+    G4RotationMatrix* Q3Rot = new G4RotationMatrix;
+    Q3Rot->rotateY(magnetAngle);
+    G4double Q3Q4Dist = geo->GetQ3Q4Dist();
 
-    G4LogicalVolume* logicQ1Quad = CreateQuadMagnets(Q1BGradient,Q1Leng,Q1Radius,Q1Pos,Q1Rot);
-    logicQ1Quad->SetVisAttributes(QuadVisAttr);
-    logicQ1Quad->SetName("logicQ1Quad");
-    new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q2Quad",fMotherVolume,false,0,true);
+    G4double Q3PosX   = beJunMgPosX+379*sin(magnetAngle)*mm+Q3Q4Dist*sin(magnetAngle); 
+    G4double Q3PosY   = beJunMgPosY; 
+    G4double Q3PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q3Q4Dist*cos(magnetAngle);  
+    G4ThreeVector Q3Pos = G4ThreeVector(Q3PosX,Q3PosY,Q3PosZ);
 
-    // Generating quadrupole Q2
-    G4double Q1Q2Dist = geo->GetQ1Q2Dist();
-
-    G4double Q2PosX   = beJunMgPosX+379*sin(magnetAngle)*mm+Q1Q2Dist*sin(magnetAngle); 
-    G4double Q2PosY   = beJunMgPosY; 
-    G4double Q2PosZ   = beJunMgPosZ-379*cos(magnetAngle)*mm-Q1Q2Dist*cos(magnetAngle);  
-    G4ThreeVector Q2Pos = G4ThreeVector(Q2PosX,Q2PosY,Q2PosZ);
-
-    G4LogicalVolume* logicQ2Quad = CreateQuadMagnets(-Q2BGradient,Q1Leng,Q1Radius,Q2Pos,Q2Rot);
-    logicQ2Quad->SetVisAttributes(QuadVisAttr);
-    logicQ2Quad->SetName("logicQ2Quad");
-    new G4PVPlacement(Q2Rot,Q2Pos,logicQ2Quad,"Q2Quad",fMotherVolume,false,0,true);
-    printf("Creating Q2 quadrupole with gradient %f ",Q2BGradient*m/tesla);
-
+    G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(-Q3BGradient,Q4Leng,Q4Radius,Q3Pos,Q3Rot);
+    logicQ3Quad->SetVisAttributes(QuadVisAttr);
+    logicQ3Quad->SetName("logicQ3Quad");
+    new G4PVPlacement(Q3Rot,Q3Pos,logicQ3Quad,"Q3Quad",fMotherVolume,false,0,true);
+    printf("Creating Q3 quadrupole with gradient %f ",Q3BGradient*m/tesla);
   }
 
 }

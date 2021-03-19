@@ -71,26 +71,27 @@ Bool_t ECalAnalysis::InitHistosValidation()
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   std::string hname;
   int nBin, min, max;
-  nBin=200;
-  min=150;
-  max=350;
+  nBin=100;
+  min=0;
+  max=200;
   hname="ECal_NHits";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  min=40;
-  max=200;
+  nBin=50;
+  min=0;
+  max=50;
   hname="ECal_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=500;
+  nBin=300;
   min=0;
-  max=500;
+  max=600;
   hname = "ECal_HitEnergy";
   hSvcVal->BookHisto(hname,nBin,min, max);
   hname = "ECal_ClusterEnergy";
   hSvcVal->BookHisto(hname,nBin,min, max);
-  nBin=500;
+  nBin=350;
   min=0;
-  max=1000;
-  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
+  max=700;
+  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest5ns";
   hSvcVal->BookHisto(hname,nBin,min, max);
   nBin=1000;
   min=0;
@@ -106,16 +107,16 @@ Bool_t ECalAnalysis::InitHistosValidation()
   hSvcVal->BookHisto(hname,nBin, min, max);
   hname = "ECal_ClusterTime";
   hSvcVal->BookHisto(hname,nBin, min, max);
-  nBin=30;
-  min=0;
-  max=30;
+  nBin=200;
+  min=-300;
+  max=300;
   hname = "ECal_HitMap";
   hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
   hname = "ECal_ClusterMap";
   hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
-  nBin=300;
-  min=-1;
-  max=30;
+  nBin=500;
+  min=-300;
+  max=300;
   hname="ECal_HitXPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterXPos";
@@ -124,9 +125,9 @@ Bool_t ECalAnalysis::InitHistosValidation()
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterYPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=300;
-  min=-1;
-  max=30;
+  nBin=3;
+  min=2545;
+  max=2565;
   hname="ECal_HitZPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterZPos";
@@ -388,9 +389,9 @@ Bool_t ECalAnalysis::ProcessValidation()
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
      for(int j=i+1; j< fNclus; j++){
        clun   = fClColl->Element(j);
-       if(fabs(clu->GetTime() - clun->GetTime())<3.)
+       if(fabs(clu->GetTime() - clun->GetTime())<5.)
        {
-          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
+          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest5ns";
           hSvcVal->FillHisto(hname, clu->GetEnergy()+clun->GetEnergy());
        }
      }

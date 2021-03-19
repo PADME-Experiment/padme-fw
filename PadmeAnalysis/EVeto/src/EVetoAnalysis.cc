@@ -26,6 +26,72 @@ Bool_t EVetoAnalysis::InitHistosAnalysis()
 {
     return true;
 }
+
+
+
+Bool_t EVetoAnalysis::InitHistosValidation()
+{
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  std::string hname;
+  int nBin, min, max;
+  nBin=60;
+  min=0;
+  max=60;
+  hname="EVeto_NHits";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="EVeto_NCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=50;
+  min=0.;
+  max=50;
+  hname = "EVeto_HitEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  hname = "EVeto_ClusterEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  nBin=800;
+  min=-400;
+  max=400;
+  hname = "EVeto_HitTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  hname = "EVeto_ClusterTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  nBin=3;
+  min=-191.5;
+  max=-193.5;
+  hname="EVeto_HitXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="EVeto_ClusterXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=3;
+  min=-1.5;
+  max=1.5;
+  hname="EVeto_HitYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="EVeto_ClusterYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=200;
+  min=-500;
+  max=700;
+  hname="EVeto_HitZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="EVeto_ClusterZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=100;
+  min=0;
+  max=100;
+  hname="EVeto_HitChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="EVeto_ClusterSeedChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=15;
+  min=0;
+  max=15;
+  hname="EVeto_NHitInCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  
+  return true;
+}
+
 Bool_t EVetoAnalysis::InitHistosDataQuality()
 {
 

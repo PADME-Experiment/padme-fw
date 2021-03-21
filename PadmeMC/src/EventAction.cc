@@ -201,6 +201,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
       AddBeWHits((BeWHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "MylarWCollection") {        //M. Raggi 15/03/2021
+      AddMylarWHits((MylarWHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
       AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
     }
@@ -599,6 +601,45 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
   YTarget/=NTarget;
 }
 
+
+void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout module
+{
+ G4int nHits = hcont->entries();
+  for (G4int h=0; h<nHits; h++) {
+    MylarWHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      EMylarW += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
+      if (hit->GetTime()<TMylarW) TMylarW  = hit->GetTime();
+      XMylarW += hit->GetX();
+      YMylarW += hit->GetY();
+      NMylarW++;
+
+      // Mylaram structure control histogras M. Raggi 2/04/2019
+      G4double hTime  = hit->GetTime();
+      G4double hE     = hit->GetEnergy();        // deposited energy
+      G4double hTrE   = hit->GetTrackEnergy();   // track energy
+      G4double hX     = hit->GetLocalPosX();
+      G4double hY     = hit->GetLocalPosY();
+      // computing angle at the entrance of the target using the directions of the particles:
+      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
+      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
+      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
+
+      //      G4cout<<"Mylar angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+
+      fHistoManager->FillHisto(90,hE);     // All hit energies
+      fHistoManager->FillHisto(91,htheta); // after the target
+      fHistoManager->FillHisto(92,hX);     // 
+      fHistoManager->FillHisto(93,hY);     // 
+      fHistoManager->FillHisto(94,hTrE);   // At the target entrance
+      
+      fHistoManager->FillHisto2(95,hX,hY,1.);   //X vs Y local coordinates 
+      fHistoManager->FillHisto2(96,hX,hTrE,1.); //X vs Track energy
+      fHistoManager->FillHisto2(97,hX,htheta,1.); //X vs Track energy
+    }
+  }//end of loop
+}
+
 void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
 {
   G4int nHits = hcont->entries();
@@ -671,7 +712,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
  //
       //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-      if (NFlag<7){
+      if (NFlag<8){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
 	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
 	fHistoManager->FillHisto(NHisto+2,hX);     // 

@@ -12,6 +12,9 @@
 #include "G4ThreeVector.hh"
 #include "G4RotationMatrix.hh"
 
+#include "BeamLineGeometry.hh"
+#include "BeamFlagSD.hh"  
+
 class G4LogicalVolume;
 class G4UnionSolid;
 //class G4RotationMatrix;
@@ -59,6 +62,11 @@ private:
   //G4int fBeamLineExists;
   G4int fBeamLineIsVisible; 
   BeamLineMessenger* fBeamLineMessenger;
+
+  //
+  G4String BeamFlag2SDName;
+  BeamLineGeometry* geo;
+  BeamFlagSD* beamFlagSD;
 
 };
 

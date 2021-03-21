@@ -44,7 +44,7 @@ G4bool MylarWSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
 
-  //  G4cout << "PreStepPoint in MylarW " << touchHPre->GetVolume()->GetName()<<std::endl;
+  //G4cout << "PreStepPoint in MylarW " << touchHPre->GetVolume()->GetName()<<std::endl;
   //	 << " global " << G4MylarstUnit(worldPosPre,"Length")
   //	 << " local " << G4MylarstUnit(localPosPre,"Length") << G4endl;
 

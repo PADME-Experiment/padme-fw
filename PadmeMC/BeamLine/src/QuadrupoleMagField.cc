@@ -75,7 +75,8 @@ void QuadrupoleMagField::GetFieldValue( const G4double y[7],
   
   G4ThreeVector B_local = G4ThreeVector(
 					fGradient * r_local.y(),
-					fGradient * r_local.x(),
+					//fGradient * r_local.x(),
+					fGradient * r_local.z(), //bad fix M. Raggi 03/2021
 					0);
   
   G4ThreeVector B_global = G4ThreeVector(
@@ -86,10 +87,11 @@ void QuadrupoleMagField::GetFieldValue( const G4double y[7],
   B[0] = B_global.x() ;
   B[1] = B_global.y() ;
   B[2] = B_global.z() ;
-//  printf("B value %f %f %f \n",B[0]/tesla,B[1]/tesla,B[2]/tesla);
-//  printf("XYZ global value %f %f %f \n",r_global.x(),r_global.y(),r_global.z());
-//  printf("XYZ local value %f %f %f \n",r_local.x(),r_local.y(),r_local.z());
-//  printf("orig value %f %f %f \n",fOrigin.x(),fOrigin.y(),fOrigin.z());
-//  printf("YYY value %f %f %f \n",y[0],y[1],y[2]);
-//  printf("fGradient Tesla/m %f \n",fGradient*m/tesla);
+
+//  printf("B value           x: %f y: %f z: %f \n",B[0]/tesla,B[1]/tesla,B[2]/tesla);
+//  printf("XYZ global value  x:%f  y: %f z: %f \n",r_global.x(),r_global.y(),r_global.z());
+//  printf("XYZ local value   %f %f %f \n",r_local.x(),r_local.y(),r_local.z());
+  //  printf("orig value        %f %f %f \n",fOrigin.x(),fOrigin.y(),fOrigin.z());
+  //  printf("YYY value         %f %f %f \n",y[0],y[1],y[2]);
+  //  printf("fGradient Tesla/m %f \n",fGradient*m/tesla);
 }

@@ -167,7 +167,7 @@ BeamLineGeometry::BeamLineGeometry()
   // Properties of Mylar thin window and its support flange Raggi 06/2020
   //verifica con foggetta tutte le misure
   fMylarWindowRadius = 30.5*mm;
-  fMylarWindowThick =  0.140*mm;  //FIIIXXXXXXXXXXXXXXXXXXXXXXXXXX 
+  fMylarWindowThick =  0.125*mm;  //Checked wiht BTF report M. Raggi 03.21
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 

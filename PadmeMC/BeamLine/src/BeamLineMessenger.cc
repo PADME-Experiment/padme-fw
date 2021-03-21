@@ -84,14 +84,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetQ3_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q3_FieldGrad",this);
   fSetQ3_FieldGradCmd->SetGuidance("Set gradient of the Q3 quadrupole in T/m");
   fSetQ3_FieldGradCmd->SetParameterName("Q3GF",false);
-  fSetQ3_FieldGradCmd->SetRange("Q3GF > 0. && Q3GF < 15.");
+  fSetQ3_FieldGradCmd->SetRange("Q3GF > -15. && Q3GF < 15.");
   fSetQ3_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q4 quadrupole magnet gradient.
   fSetQ4_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q4_FieldGrad",this);
   fSetQ4_FieldGradCmd->SetGuidance("Set gradient of the Q4 quadrupole in T/m");
   fSetQ4_FieldGradCmd->SetParameterName("Q4GF",false);
-  fSetQ4_FieldGradCmd->SetRange("Q4GF > 0. && Q4GF < 15.");
+  fSetQ4_FieldGradCmd->SetRange("Q4GF > -15. && Q4GF < 15.");
   fSetQ4_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }

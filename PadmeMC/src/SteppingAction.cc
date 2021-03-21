@@ -36,6 +36,70 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   G4Track* track = step->GetTrack();
 
+  
+//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Q1Quad") {
+//
+//      G4cout <<"Q1 pre "<<step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q1 post "<<step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q1Quad") {
+//
+//      G4cout <<"Q1 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q1 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      //      G4cout<<"BX = "<<3.*step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition().y()<<G4endl;
+//      //G4cout<<"BY = "<<3.*step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition().x()<<G4endl;
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+//
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q2Quad") {
+//
+//      G4cout <<"Q2 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q2 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q3Quad") {
+//
+//      G4cout <<"Q3 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q3 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //      G4cout <<"Q3 post world"<<" "<<step->GetPostStepPoint()->GetPosition()<<G4endl;
+//
+//    }
+//  }
+//
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q4Quad") {
+//
+//      G4cout <<"Q4 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q4 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //      G4cout <<"Q4 post world"<<" "<<step->GetPostStepPoint()->GetPosition()<<G4endl;
+//    }
+//  }
+
+
+
+
 //Analyze SAC track
   if (fEnableSACAnalysis) {
     if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){

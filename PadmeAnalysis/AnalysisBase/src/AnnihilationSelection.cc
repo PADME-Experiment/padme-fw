@@ -16,6 +16,21 @@
 #include "TFile.h"
 
 
+struct IdEnergy 
+{
+    double clIdPosition;
+    double clEnergy;
+};
+struct by_energy 
+{
+    bool operator()(IdEnergy const &a,IdEnergy const &b) const noexcept    
+	{
+	    return a.clEnergy > b.clEnergy;
+	}
+};
+
+
+
 AnnihilationSelection::AnnihilationSelection()
 {
   
@@ -60,6 +75,8 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   fTarget_RecoBeam  =TargetBeam ;
 
   fdistanceTarget=3470;
+
+  fcountEvent=0;
   
   //time range 
   ftimerange1min=-150;
@@ -89,7 +106,11 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   //}
   //eff extracted 23/02/2021 with a cut on the custer time, rejected cluster in [-150, -110] becouse high energy spread
   
-  fillEffVector("provaggEfficiencyFromDiff_TagFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt");
+  //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_run_0030601_20201110_050805.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_run_0030601_20201110_050805.txt");
+  //fillEffVector("provaggEfficiencyFromDiff_TagFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt");
+  //fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRange.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange.txt");
+  //fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation.txt");
+  fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173.txt");
   
   //Double_t tmpfUpperSysInnerRRange_r1inFR[8]={ 0.0773673, 0.0396053, 0.0052547,  0.0246471,  0.00474522, 0.00500453, 0.0224981, 0.0310803};
   //Double_t tmpfUpperSysOuterRRange_r1inFR[8]={0.0176767, 0.0618193, 0.102187,  0.0246704, 0.0829614, 0.0851759 , 0.0822724 , 0.107262 };
@@ -106,15 +127,29 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
 
   //eff extracted 23/02/2021 with a cut on the custer time, rejected cluster in [-150, -110] becouse high energy spread
  
-  
+  bool useAccsmeared=true;
+  if(useAccsmeared){
+    //this from calchep truth + calchep smeared
+    //TFile *fAcc_g1g2inFR =new TFile("AccEff_450MeV_inFR106_258.root");
+    //TFile *fAcc_g1inFR =new TFile("AccEff_g1inFR_450MeV_inFR106_258.root"); //most energetic photon in FR
+    ////TFile *fAcc_g1g2inFR =new TFile("AccEff_430MeV_inFR106_258.root");
+    ////TFile *fAcc_g1inFR =new TFile("AccEff_g1inFR_430MeV_inFR106_258.root"); //most energetic photon in FR
+    //hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("DivideTheta_ecalFR");
+    //hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("th1s_1inFR");
 
+    TFile *fAcc_g1g2inFR =new TFile("AccEffective_g1g2inFR_struth_calchep430MeV_FR115.8_258.root");
+    TFile *fAcc_g1inFR =new TFile("AccEffective_g1inFR_struth_calchep430MeV_FR115.8_258.root");
+    hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
+    hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
+  }
+  else{
+    //this calchep truth + calchep reco
+    TFile *fAcc_g1g2inFR =new TFile("AccEffective_g1g2inFR_recotruth_calchep450MeV.root");
+    TFile *fAcc_g1inFR =new TFile("AccEffective_g1inFR_recotruth_calchep450MeV.root"); //most energetic photon in FR
+    hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
+    hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
+  }
 
-  TFile *fAcc_g1g2inFR =new TFile("AccEff_450MeV_inFR106_258.root");
-  TFile *fAcc_g1inFR =new TFile("AccEff_g1inFR_450MeV_inFR106_258.root"); //most energetic photon in FR
-  //TFile *fAcc_g1g2inFR =new TFile("AccEff_430MeV_inFR106_258.root");
-  //TFile *fAcc_g1inFR =new TFile("AccEff_g1inFR_430MeV_inFR106_258.root"); //most energetic photon in FR
-  hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("DivideTheta_ecalFR");
-  hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("th1s_1inFR");
 
   return true;
 }
@@ -127,18 +162,27 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 
   if (!passPreselection(fNoTargetBool, isMC)) return true;
 
-  Double_t EBeam=0.;
-  if(isMC)EBeam=450.0;
-  else EBeam=430.;
-  //else EBeam=450.;
- 
   Bool_t retCode = 0;
   TRecoVCluster* ecalclu=NULL;
   TRecoVCluster* ecalclu2=NULL;
   Int_t NClECal = fECal_ClColl->GetNElements();
 
+  fIdCl_SortByEnergy.clear();
+  SortCluster_byEnergy();
+  
+  Double_t EBeam=0.;
+  if(isMC)EBeam=450.0;
+  else EBeam=430.;
+  //else EBeam=450.;
+  
+  if( NClECal != fIdCl_SortByEnergy.size()){
+    std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!         error on sorted energy        !!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+    return true;
+  }
+
   for (Int_t jecal=0; jecal<NClECal; ++jecal){
-    ecalclu          = fECal_ClColl->Element(jecal);
+    //ecalclu          = fECal_ClColl->Element(jecal);
+    ecalclu          = fECal_ClColl->Element(fIdCl_SortByEnergy.at(jecal));
     Int_t NGGInTheSameEventTime10ns=0;
     Int_t NGGInTheSameEventTime10ns20DeltaPhiDeltaThetaEThr90UnderPeack=0;
             
@@ -148,7 +192,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
     hname="Annihilation_ECalClusterEnergy";
     hSvc->FillHisto(hname, fg1E, 1.);
     fg1t    =ecalclu->GetTime();
-    if(fg1t<-110) continue;//high energy spread in data October 2020
+    if(fg1t<-110) continue;//high energy spread in data October 2020  
     fR_1    = sqrt(fg1x*fg1x+ fg1y*fg1y+fdistanceTarget*fdistanceTarget);
     fg1Recal=sqrt(fg1x*fg1x+fg1y*fg1y);
     fPx_1   = fg1E*fg1x/ fR_1;
@@ -164,15 +208,16 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
     P4eBeam.SetPxPyPzE(0,0,PzBeam, EBeam);
     Int_t g1seedChId=fECal_hitEvent->Hit(ecalclu->GetSeed())->GetChannelId();//hit(ecalclu->GetSeed())->GetChannelId();
     for(Int_t jecal2=jecal+1; jecal2<NClECal; jecal2++){                ///starting second cluster loop
-      ecalclu2 = fECal_ClColl->Element(jecal2);
+      //ecalclu2 = fECal_ClColl->Element(jecal2);
+      ecalclu2 = fECal_ClColl->Element(fIdCl_SortByEnergy.at(jecal2));
       fpos1 = ecalclu->GetPosition();
       fpos2 = ecalclu2->GetPosition();
       fg2x        =ecalclu2->GetPosition().X();
       fg2y        =ecalclu2->GetPosition().Y();
-      fg2t        =ecalclu2->GetTime();
-      if(fg2t<-110) continue;//high energy spread in data October 2020
-      fg2Recal    =sqrt(fg2x*fg2x+fg2y*fg2y);
       fg2E        =ecalclu2->GetEnergy();
+      fg2t        =ecalclu2->GetTime();
+      if(fg2t<-110) continue;//high energy spread in data October 2020  
+      fg2Recal    =sqrt(fg2x*fg2x+fg2y*fg2y);
       fXWeighted  =0.;
       fYWeighted  =0.;
       fXWeighted= (fg1x*fg1E+fg2x*fg2E)/(fg1E+fg2E);
@@ -197,14 +242,17 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       Bool_t firstGInFR_def=false;
       Bool_t secondGInFR_def=false;
       //new FR extracted by TagAndProbe studies
-      if(fg1Recal>106 && fg1Recal<258 )  firstGInFR_def=true;
-      if(fg2Recal>106 && fg2Recal<258)  secondGInFR_def=true;
+      //if(fg1Recal>106 && fg1Recal<258 )  firstGInFR_def=true;
+      //if(fg2Recal>106 && fg2Recal<258)  secondGInFR_def=true;
 
+      if(fg1Recal>115.8 && fg1Recal<258 )  firstGInFR_def=true;
+      if(fg2Recal>115.8 && fg2Recal<258)  secondGInFR_def=true;
+     
       //old FR , not symmetrical ...see tag and probe studies
       //if(fg1Recal>92 && fg1Recal<258 )  firstGInFR_def=true;
       //if(fg2Recal>92 && fg2Recal<258)  secondGInFR_def=true;
 
-      if(!firstGInFR_def)continue;       
+      //if(!firstGInFR_def)continue;       
       Bool_t InEnergy=false;
       if(fg1E>90 && fg2E>90 && fg1E<400 && fg2E<400) InEnergy=true;
       Bool_t TotEnergyCut=false;
@@ -220,52 +268,70 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       if(fangleBetweenTwoPhoton>0.08 && fangleBetweenTwoPhoton < 0.12) InThetaAngle=true;
 
       std::string sufix="";
-      FillGeneralHisto("_g1inFRDTime10");
+      if(firstGInFR_def){
+	FillGeneralHisto("_g1inFRDTime10");
+	if(secondGInFR_def)FillGeneralHisto("_g1g2inFRDTime10");
+	FillWeightedHisto_R1inFR("_g1inFRDTime10");
+	if(secondGInFR_def)FillWeightedHisto_R1R2inFR("_g1g2inFRDTime10");
+	FillAccEffHisto_R1inFR("_g1inFRDTime10");
+	FillWeightedAccEffHisto_R1inFR("_g1inFRDTime10");
+	if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
+	if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
 
-      if(dPhiIn20Degree){
-	sufix="_g1inFRin20Deg";
-	FillGeneralHisto(sufix);
-	if(InThetaAngle) {
-	  if(TotEnergyCut){FillGeneralHisto("_g1inFRin20DegThetaCutUnderPeak");}
-	  if(InEnergy){FillGeneralHisto("_g1inFRin20DegThetaCutEThr");}
-	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin20DegThetaCutUnderPeakEThr");}
-	}      
-      }
+	if(dPhiIn20Degree){
+	  sufix="_g1inFRin20Deg";
+	  FillGeneralHisto(sufix);
+	  if(InThetaAngle) {
+	    if(TotEnergyCut){FillGeneralHisto("_g1inFRin20DegThetaCutUnderPeak");}
+	    if(InEnergy){FillGeneralHisto("_g1inFRin20DegThetaCutEThr");}
+	    if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin20DegThetaCutUnderPeakEThr");}
+	  }      
+	}
       
-      if(secondGInFR_def && dPhiIn20Degree && InThetaAngle){
-	FillGeneralHisto("_g1g2inFRin20DegThetaCut");
-	if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin20DegThetaCutUnderPeakEThr");}
-      }
+	if(secondGInFR_def && dPhiIn20Degree && InThetaAngle){
+	  FillGeneralHisto("_g1g2inFRin20DegThetaCut");
+	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin20DegThetaCutUnderPeakEThr");}
+	}
       
        
-      if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
-	Int_t countHit1_5CoG=0;
-	Int_t countHit2_5CoG=0;
-	CheckNumberHitsOnCh(g1seedChId, g2seedChId, countHit1_5CoG, countHit2_5CoG);
-	hname="ECAL_nHitOnChannel_5CoG";
-	hSvc->FillHisto(hname, countHit1_5CoG, 1.);
-	hSvc->FillHisto(hname, countHit2_5CoG, 1.);
-	FillGeneralHisto("_g1inFRin5Cog");
-	FillWeightedHisto_R1inFR("_g1inFRin5Cog");
-	if(secondGInFR_def)FillWeightedHisto_R1R2inFR("_g1g2inFRin5Cog");
-	FillAccEffHisto_R1inFR("_g1inFRin5Cog");
-	FillWeightedAccEffHisto_R1inFR("_g1inFRin5Cog");
-	if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
-	if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
+	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
+	  Int_t countHit1_5CoG=0;
+	  Int_t countHit2_5CoG=0;
+	  CheckNumberHitsOnCh(g1seedChId, g2seedChId, countHit1_5CoG, countHit2_5CoG);
+	  hname="ECAL_nHitOnChannel_5CoG";
+	  hSvc->FillHisto(hname, countHit1_5CoG, 1.);
+	  hSvc->FillHisto(hname, countHit2_5CoG, 1.);
+	  FillGeneralHisto("_g1inFRin5Cog");
+	  FillWeightedHisto_R1inFR("_g1inFRin5Cog");
+	  if(secondGInFR_def)FillWeightedHisto_R1R2inFR("_g1g2inFRin5Cog");
+	  FillAccEffHisto_R1inFR("_g1inFRin5Cog");
+	  FillWeightedAccEffHisto_R1inFR("_g1inFRin5Cog");
+	  if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
+	  if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
 
-	if(TotEnergyCut){FillGeneralHisto("_g1inFRin5CogUnderPeak");}
-	if(InEnergy){FillGeneralHisto("_g1inFRin5CogEThr");}
-	if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin5CogUnderPeakEThr");}
-	if(InEnergy){
-	  FillRadiusRangeHisto("_g1inFRin5CogEThr");
-	  FillTimeRangeHisto("_g1inFRin5CogEThr");
-	  FillTimeRangeCoGHisto("_g1inFRin5CogEThr");
+	  if(TotEnergyCut){FillGeneralHisto("_g1inFRin5CogUnderPeak");}
+	  if(InEnergy){FillGeneralHisto("_g1inFRin5CogEThr");}
+	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin5CogUnderPeakEThr");}
+	  if(InEnergy){
+	    FillRadiusRangeHisto("_g1inFRin5CogEThr");
+	    FillTimeRangeHisto("_g1inFRin5CogEThr");
+	    FillTimeRangeCoGHisto("_g1inFRin5CogEThr");
+	  }
+	}
+	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50. && secondGInFR_def ){
+	  FillGeneralHisto("_g1g2inFRin5Cog");
+	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin5CogUnderPeakEThr");}
 	}
       }
-      if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50. && secondGInFR_def ){
-	FillGeneralHisto("_g1g2inFRin5Cog");
-	if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin5CogUnderPeakEThr");}
+      //second photon in FR
+      if(secondGInFR_def){
+	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
+	  FillGeneralHisto("_g2inFRin5Cog");
+	  FillWeightedHisto_R2inFR("_g2inFRin5Cog");
+	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g2inFRin5CogUnderPeakEThr");}
+	}
       }
+
 
       hname="NGammaGammaForEvent_TimeRequest"; 
       hSvc->FillHisto(hname,NGGInTheSameEventTime10ns , 1.);
@@ -274,6 +340,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
   
     }
   }
+
   return true;
 }
 
@@ -291,6 +358,17 @@ void AnnihilationSelection::FillWeightedHisto_R1inFR(std::string sufix){
   effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
   effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+}
+
+void AnnihilationSelection::FillWeightedHisto_R2inFR(std::string sufix){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  Bool_t plusSystematic=false;
+  Double_t effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  Double_t effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  Double_t effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffR2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
 }
 
@@ -424,9 +502,13 @@ void AnnihilationSelection::FillGeneralHisto(std::string sufix){
   hname="ECAL_RggVsEgg_10ns"+sufix;
   hSvc->FillHisto2(hname,fg1Recal, fg1E);
   hSvc->FillHisto2(hname,fg2Recal, fg2E);
+  hname="ECAL_R2ggVsR1gg_10ns"+sufix;
+  hSvc->FillHisto2(hname,fg1Recal,fg2Recal);
   hname="ECAL_tggVsEgg_10ns"+sufix;
   hSvc->FillHisto2(hname,fg1t, fg1E);
   hSvc->FillHisto2(hname,fg2t, fg2E);
+  hname="ECAL_Energy1vsEnergy2"+sufix;
+  hSvc->FillHisto2(hname, fg1E, fg2E);
   hname="ECAL_Phi2vsPhi1"+sufix;
   hSvc->FillHisto2(hname,fphig1,fphig2);
   hname="ECAL_Theta2vsTheta1"+sufix;
@@ -596,7 +678,7 @@ Bool_t AnnihilationSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2,  do
    targetConst=1; 
   std::string hname1 = "AnnMet_NposInBunch_beam";
   hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
-  if (!isTargetOut && fTarget_RecoBeam->getnPOT()<-9999) return passed;
+  if (!isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
   //std::cout<<"tagetnPOT "<<fTarget_RecoBeam->getnPOT() << " and isTargetOutBool " << isTargetOut<< std::endl;
   if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;
   
@@ -610,44 +692,74 @@ Bool_t AnnihilationSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2,  do
 
 Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t PlusSystematic)
 {
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+   std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
   //if(radius>106. && radius<182)inner=true;
   //if(radius>=182. && radius<258)outer=true;
   //if(radius<182. )inner=true;
   //if(radius>=182.)outer=true;
-  if(radius<170. )inner=true;
-  if(radius>=170.)outer=true;
-  int phiSlice=phi/45.;
+  //if(radius<170. )inner=true;
+  //if(radius>=170.)outer=true;
+  if(radius<173. )inner=true;
+  if(radius>=173.)outer=true;
+  Double_t phiDeg=phi*360./(2*TMath::Pi());
+  if(phiDeg<0.)phiDeg=360+phiDeg;
+  int phiSlice=phiDeg/45.;
   Double_t eff;
   if(PlusSystematic){
     if(inner)eff=fEffUpperSysInnerRRange_r1inFR[phiSlice];
     else if(outer)eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
   }
   else{
-    if(inner)eff=fEffInnerRRange_r1inFR[phiSlice];
-    else if(outer)eff=fEffOuterRRange_r1inFR[phiSlice];
+    if(inner){
+      eff=fEffInnerRRange_r1inFR[phiSlice];
+      hname="ECAL_R1inFR_EfficiencyVSPhi_InnerRadius";
+      hSvc->FillHisto2(hname, phiDeg, eff);
+    }
+    else if(outer){
+      eff=fEffOuterRRange_r1inFR[phiSlice];
+      hname="ECAL_R1inFR_EfficiencyVSPhi_OutRadius";
+      hSvc->FillHisto2(hname, phiDeg, eff);
+    }
   }
+
+
   return eff;
 }
 
 Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t PlusSystematic)
 {
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
   //if(radius>106. && radius<182.)inner=true;
   //if(radius>=182. && radius<258.)outer=true;
-  if(radius>106. && radius<170.)inner=true;
-  if(radius>=170 && radius<258.)outer=true;
-  int phiSlice=phi/45.;
+  //if(radius>106. && radius<170.)inner=true;
+  //if(radius>=170 && radius<258.)outer=true;
+  if(radius>115.8 && radius<173.)inner=true;
+  if(radius>=173 && radius<258.)outer=true;
+  Double_t phiDeg=phi*360/(2*TMath::Pi());
+  if(phiDeg<0.)phiDeg=360+phiDeg;
+  int phiSlice=phiDeg/45.;
   Double_t eff;
   if(PlusSystematic){
     if(inner)eff=fEffUpperSysInnerRRange_r1r2inFR[phiSlice];
     else if(outer)eff=fEffUpperSysOuterRRange_r1r2inFR[phiSlice];
   }
   else{
-    if(inner)eff=fEffInnerRRange_r1r2inFR[phiSlice];
-    else if(outer)eff=fEffOuterRRange_r1r2inFR[phiSlice];
+    if(inner){
+      eff=fEffInnerRRange_r1r2inFR[phiSlice];
+      hname="ECAL_R1R2inFR_EfficiencyVSPhi_InnerRadius";
+      hSvc->FillHisto2(hname, phiDeg, eff);
+    }
+    else if(outer){
+      eff=fEffOuterRRange_r1r2inFR[phiSlice];
+      hname="ECAL_R1R2inFR_EfficiencyVSPhi_OutRadius";
+      hSvc->FillHisto2(hname, phiDeg, eff);
+    }
   }
 
   return eff;
@@ -655,20 +767,31 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double
 
 Double_t AnnihilationSelection::ReturnAccettanceEffective_g1g2FR(Double_t radius)
 {
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
   Double_t theta=atan2(radius, fdistanceTarget);
   Double_t bin=hAccEffFromCalchep_g1g2FR->FindBin(theta);
   Double_t acc=hAccEffFromCalchep_g1g2FR->GetBinContent(bin);
+  hname="ECAL_AcceptanceEffective_r1r2inFR";
+  hSvc->FillHisto(hname,acc,1. );
+  hname="ECAL_AcceptanceEffectiveVStheta1_r1r2inFR";
+  hSvc->FillHisto2(hname,theta,acc,1. );
   return acc;
 }
 
 Double_t AnnihilationSelection::ReturnAccettanceEffective_g1FR(Double_t radius)
 {
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
   Double_t theta=atan2(radius, fdistanceTarget);
   Double_t bin=hAccEffFromCalchep_g1FR->FindBin(theta);
   Double_t acc=hAccEffFromCalchep_g1FR->GetBinContent(bin);
+  hname="ECAL_AcceptanceEffective_r1inFR";
+  hSvc->FillHisto(hname,acc,1. );
+  hname="ECAL_AcceptanceEffectiveVStheta1_r1inFR";
+  hSvc->FillHisto2(hname,theta,acc,1. );
   return acc;
 }
-
 
 
 void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR){
@@ -726,7 +849,7 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
     fEffUpperSysOuterRRange_r1r2inFR[i]=fEffUpperSysOuterRRange_r1r2inFR[i] + fEffOuterRRange_r1r2inFR[i];
     fEffUpperSysInnerRRange_r1inFR[i]  =fEffUpperSysInnerRRange_r1inFR[i]   + fEffInnerRRange_r1inFR[i];
     fEffUpperSysInnerRRange_r1r2inFR[i]=fEffUpperSysInnerRRange_r1r2inFR[i] + fEffInnerRRange_r1r2inFR[i];
-
+    /*    
     if(fEffOuterRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
     if(fEffOuterRRange_r1r2inFR[i]>1.) fEffOuterRRange_r1r2inFR[i]=1.;
     if(fEffInnerRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
@@ -735,7 +858,7 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
     if(fEffUpperSysOuterRRange_r1r2inFR[i]>1.)fEffUpperSysOuterRRange_r1r2inFR[i]=1.;
     if(fEffUpperSysInnerRRange_r1inFR[i]  >1.)fEffUpperSysInnerRRange_r1inFR[i]  =1.;
     if(fEffUpperSysInnerRRange_r1r2inFR[i]>1.)fEffUpperSysInnerRRange_r1r2inFR[i]=1.;
-
+    */
   }
 
 }
@@ -761,8 +884,11 @@ Bool_t AnnihilationSelection::InitHistos()
   hname = "AnnMet_nPOT";
   hSvc->BookHisto(hname, 3, -1.5, 1.5);
 
+
+
   std::vector<std::string> sufix;
   sufix.push_back("_g1inFRDTime10");
+  sufix.push_back("_g1g2inFRDTime10");
   sufix.push_back("_g1inFRin20Deg");
   sufix.push_back("_g1inFRin20DegThetaCutUnderPeak");
   sufix.push_back("_g1inFRin20DegThetaCutEThr");
@@ -775,10 +901,12 @@ Bool_t AnnihilationSelection::InitHistos()
   sufix.push_back("_g1inFRin5CogUnderPeakEThr");
   sufix.push_back("_g1g2inFRin5Cog");
   sufix.push_back("_g1g2inFRin5CogUnderPeakEThr");
+  sufix.push_back("_g2inFRin5Cog");
+  sufix.push_back("_g2inFRin5CogUnderPeakEThr");
   for(int i=0; i<sufix.size(); i++){
-    binX=500;
+    binX=250;
     minX=0.;
-    maxX=2000.;
+    maxX=1000.;
     hname="ECAL_gravTwoPhoton10ns" + sufix.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     binX=350;
@@ -817,9 +945,9 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_Phig2_10ns"+sufix.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    binX=300;
-    minX=-0.05;
-    maxX=0.5;
+    binX=400;
+    minX=0.;
+    maxX=0.1;
     hname="ECAL_Thetag1_10ns"+sufix.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_Thetag2_10ns"+sufix.at(i);
@@ -858,6 +986,11 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
     hname="ECAL_YggVsEgg_10ns"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    binX=350;
+    minX=0.;
+    maxX=350.;
+    hname="ECAL_R2ggVsR1gg_10ns"+sufix.at(i);
+    hSvc->BookHisto2(hname, binX, minX, maxX, binX, minX, maxX);
     binX=200;
     minX=0.;
     maxX=300.;
@@ -889,7 +1022,8 @@ Bool_t AnnihilationSelection::InitHistos()
     maxX=800.;
     hname="ECAL_ThetavsEnergy"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
-    binY=200;
+    hname="ECAL_Energy1vsEnergy2"+sufix.at(i);
+    hSvc->BookHisto2(hname, binX, minX, maxX, binX, minX, maxX);
     minY=-4;
     maxY=4;
     hname="ECAL_PhivsEnergy"+sufix.at(i);
@@ -906,6 +1040,7 @@ Bool_t AnnihilationSelection::InitHistos()
 
   //eff weighted hitograms
   std::vector<std::string> sufixW;
+  sufixW.push_back("_g1inFRDTime10");
   sufixW.push_back("_g1inFRin5Cog");
   for(int i=0; i<sufixW.size(); i++){
     binX=500;
@@ -923,7 +1058,18 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     
   }
+  std::vector<std::string> sufixW1;
+  sufixW1.push_back("_g2inFRin5Cog");
+  for(int i=0; i<sufixW1.size(); i++){
+    binX=500;
+    minX=0.;
+    maxX=2000.;
+    hname="ECAL_gravTwoPhoton10ns_WEffR2inFR" + sufixW1.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);   
+  }
+
   std::vector<std::string> sufixW2;
+  sufixW2.push_back("_g1g2inFRDTime10");
   sufixW2.push_back("_g1g2inFRin5Cog");
   for(int i=0; i<sufixW2.size(); i++){
     binX=500;
@@ -941,6 +1087,39 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
   }
 
+  binX=50;
+  minX=0.;
+  maxX=1.5;
+  hname="ECAL_AcceptanceEffective_r1inFR";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_AcceptanceEffective_r1r2inFR";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  binX=100;
+  minX=0.;
+  maxX=0.15;
+  binY=50;
+  minY=0.;
+  maxY=1.5;
+  hname="ECAL_AcceptanceEffectiveVStheta1_r1inFR";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+  hname="ECAL_AcceptanceEffectiveVStheta1_r1r2inFR";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+
+  binX=370;
+  minX=-10;
+  maxX=360;
+  binY=50;
+  minY=0.;
+  maxY=1.5;
+  hname="ECAL_R1inFR_EfficiencyVSPhi_InnerRadius";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+  hname="ECAL_R1inFR_EfficiencyVSPhi_OutRadius";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+  hname="ECAL_R1R2inFR_EfficiencyVSPhi_InnerRadius";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+  hname="ECAL_R1R2inFR_EfficiencyVSPhi_OutRadius";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+  
   binX=500;
   minX=0.;
   maxX=2000.;
@@ -1010,7 +1189,32 @@ Bool_t AnnihilationSelection::InitHistos()
   hname="NGammaGammaForEvent_10ns20DegreeDeltaThetaEthr90UnderPeack"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
 
+
   return true;
 }
+
+
+
+void AnnihilationSelection::SortCluster_byEnergy(){
+
+ TRecoVCluster* ecalclu=NULL;
+ Int_t NClECal = fECal_ClColl->GetNElements();
+ Double_t maxEne=-9999;
+
+ std::vector<IdEnergy> clStruct;
+ for (Int_t jecal=0; jecal<NClECal; ++jecal){
+   ecalclu          = fECal_ClColl->Element(jecal);
+   clStruct.push_back(IdEnergy());
+   clStruct.back().clIdPosition = jecal;
+   clStruct.back().clEnergy = ecalclu->GetEnergy();
+  }
+
+ std::sort(clStruct.begin(), clStruct.end(), by_energy());
+ for(int i=0; i< clStruct.size(); i++){
+   fIdCl_SortByEnergy.push_back(clStruct[i].clIdPosition);
+ }
+
+}
+
 
 

@@ -55,6 +55,7 @@ public:
   ULong64_t GetRunClock();
   UInt_t GetEventStatus();
   UInt_t GetTriggerMask();
+  Bool_t IsSimulated();
 
 private:
 
@@ -64,6 +65,9 @@ private:
   void InitDetectorsInfo();
   void InitLibraries();
   void InitRunningModeFlags();
+
+  void HistoInit();
+  void ProcessEvent(TRawEvent*);
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 

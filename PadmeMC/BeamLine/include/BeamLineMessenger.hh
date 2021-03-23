@@ -43,6 +43,7 @@ private:
   G4UIdirectory* fBeamLineDir;
 
   G4UIcmdWithABool* fEnableBeWindowCmd;
+  G4UIcmdWithABool* fEnableBeamFlagCmd;
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
   
   G4UIcmdWithABool* fEnableQuadrupolesCmd;

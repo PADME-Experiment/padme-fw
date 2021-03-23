@@ -13,11 +13,13 @@
 #include "G4Box.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4SDManager.hh"
+#include "G4DigiManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
 
 #include "PVetoGeometry.hh"
 #include "PVetoSD.hh"
+#include "PVetoDigitizer.hh"
 
 PVetoDetector::PVetoDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -73,14 +75,6 @@ void PVetoDetector::CreateGeometry()
   fFingerVolume  = new G4LogicalVolume(solidFinger,G4Material::GetMaterial("G4_POLYSTYRENE"),"PVetoFingerLogic",0,0,0);
   fFingerVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
 
-  // Make finger a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String pVetoSDName = geo->GetPVetoSensitiveDetectorName();
-  printf("Registering PVeto SD %s\n",pVetoSDName.data());
-  PVetoSD* pVetoSD = new PVetoSD(pVetoSDName);
-  sdMan->AddNewDetector(pVetoSD);
-  fFingerVolume->SetSensitiveDetector(pVetoSD);
-
   // Get number of fingers and position them
   G4int nFingers = geo->GetPVetoNFingers();
   G4RotationMatrix* rotFinger = new G4RotationMatrix();
@@ -103,5 +97,20 @@ void PVetoDetector::CreateGeometry()
 
   G4ThreeVector suppDPos = G4ThreeVector(geo->GetSupportDPosX(),geo->GetSupportDPosY(),geo->GetSupportDPosZ());
   new G4PVPlacement(0,suppDPos,logicSupport,"PVetoSupportD",fPVetoVolume,false,0,true);
+
+  // Create digitizer for PVeto
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String pvetoDName = geo->GetPVetoDigitizerName();
+  printf("Registering PVeto Digitizer %s\n",pvetoDName.data());
+  PVetoDigitizer* pvetoD = new PVetoDigitizer(pvetoDName);
+  theDM->AddNewModule(pvetoD);
+
+  // Make finger a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String pVetoSDName = geo->GetPVetoSensitiveDetectorName();
+  printf("Registering PVeto Sensitive Detector %s\n",pVetoSDName.data());
+  PVetoSD* pVetoSD = new PVetoSD(pVetoSDName);
+  sdMan->AddNewDetector(pVetoSD);
+  fFingerVolume->SetSensitiveDetector(pVetoSD);
 
 }

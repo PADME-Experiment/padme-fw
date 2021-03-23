@@ -73,7 +73,7 @@ void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-99
       double nPOTMC = hMCN->GetBinContent(2);
       scalef = nPOTdata/nPOTMC;
       std::cout<<"Target nPOT: " <<nPOTdata <<" noTarget nPOT " <<nPOTMC << " scale factor " << scalef << std::endl;
-      Bool_t normUsingDTime=true;
+      Bool_t normUsingDTime=false;
       if(normUsingDTime){
 	TH1D * DTime = (TH1D*)fData->Get("ECAL_Dtgg_10ns_g1g2inFRin20DegThetaCut");
 	Double_t bin1_5=DTime->FindBin(-10);
@@ -91,6 +91,17 @@ void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-99
 	Double_t IntegralLeft10=DTime10->Integral(bin1_10,bin2_10);
 	Double_t IntegralRight10=DTime10->Integral(bin3_10,bin4_10);
 	scalef=IntegralLeft5/IntegralLeft10;
+      }
+      Bool_t normUsingGGBkg=true;
+      if(normUsingGGBkg){
+	Double_t bin1_5=hData->FindBin(0);
+	Double_t bin2_5=hData->FindBin(200);
+	Double_t IntegralRight5=hData->Integral(bin1_5,bin2_5);
+      
+	Double_t bin1_10=hMC->FindBin(0);
+	Double_t bin2_10=hMC->FindBin(200);
+	Double_t IntegralRight10=hMC->Integral(bin1_10,bin2_10);
+	scalef=IntegralRight5/IntegralRight10;
       }
 
     }
@@ -323,16 +334,10 @@ void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-99
    fs.close();
    
   c->SaveAs(("outpng/"+hname+".png").c_str());
-  c->Print("pdfFile/AnalysisHisto_targetnotarget.pdf(");
-  //  c->Print("AnalysisHisto5k.pdf(");
-   if(lastSet==1) c->Print("pdfFile/AnalysisHisto_targetnotarget.pdf)");
+  c->Print(("pdfFile/AnalysisHisto_targetnotarget"+hnameFile+".pdf(").c_str());
+  if(lastSet==1) c->Print(("pdfFile/AnalysisHisto_targetnotarget"+hnameFile+".pdf)")-c_str());
  
-   //c->SaveAs("myPlot.png");
-   //c->SaveAs("myPlot.eps");
-   //return;
-
-   
-   delete pad1;
+  delete pad1;
    delete pad2;
    delete cData;
    delete cMC;

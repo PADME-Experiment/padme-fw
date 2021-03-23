@@ -54,6 +54,7 @@ TPixGeometry::TPixGeometry()
   // These values will be modified by main program according to actual chamber measures
   fTPixChamberWallCorner = G4ThreeVector(0.,0.,0.);
 
+  fTPixDigitizerName = "TPixDigitizer";
   fTPixSensitiveDetectorName = "TPixSD";
 
   UpdateDerivedMeasures();

@@ -39,6 +39,7 @@
 #include "UserAnalysis.hh"
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "CalchepTruthStudies.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -321,7 +322,8 @@ int main(Int_t argc, char **argv)
    //int histoOutput
    //hSvc->book(fProcessingMode);
    hSvc->book(fProcessingMode, fntuple);
-
+   Bool_t boolCalchep=false;
+   Bool_t boolAnnTandP=true;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -336,15 +338,23 @@ int main(Int_t argc, char **argv)
    HEPVetoAnalysis* hepvetoAn  = new HEPVetoAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(hepvetoAn);
    //EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
-
-   AnnihilationSelection* AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
-   TagAndProbeSelection* TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+   AnnihilationSelection* AnnSel = 0;
+   TagAndProbeSelection*  TagandProbeSel =0;
+   CalchepTruthStudies* CalchepTruth=0;
+    if(boolAnnTandP){
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     TagandProbeSel= new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+   }
+    if(boolCalchep)CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
    //   evSel->SetVersion(2);
    //evSel->SetVersion(1);
    
    //evSel->InitHistos();
-   AnnSel->InitHistos();
-   TagandProbeSel->InitHistos();
+   if(boolAnnTandP){
+     AnnSel->InitHistos();
+     TagandProbeSel->InitHistos();
+   }
+   if(boolCalchep) CalchepTruth->InitHistos();
 
    sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
    ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
@@ -359,15 +369,18 @@ int main(Int_t argc, char **argv)
 //	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
 //	       fSACRecoEvent,     fSACRecoCl, 
 //	       fTargetRecoEvent,  fTargetRecoBeam );
-  
-   AnnSel->Init(fRecoEvent, 
+   if(boolAnnTandP){
+     AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam);
-   TagandProbeSel->Init(fRecoEvent, 
+     TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam );
+   }
+   if(boolCalchep) CalchepTruth->Init(fRecoEvent, 
+		      fECalRecoEvent,    fECalRecoCl);
 
    
     PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
@@ -450,8 +463,11 @@ int main(Int_t argc, char **argv)
        //       gTimeAn     ->Process();
        //evSel       ->Process();
        //       UserAn      ->Process();
-       AnnSel->Process(isMC);
-       TagandProbeSel->Process(isMC);
+       if(boolAnnTandP){
+	 AnnSel->Process(isMC);
+	 TagandProbeSel->Process(isMC);
+       }
+       if(boolCalchep)  CalchepTruth->Process();
        //
        //
        hSvc->FillNtuple();
@@ -478,6 +494,7 @@ int main(Int_t argc, char **argv)
    delete hepvetoAn;
    delete AnnSel;
    delete TagandProbeSel;
+   delete CalchepTruth;
    return 0;
    
 }

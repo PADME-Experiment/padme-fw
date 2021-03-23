@@ -12,12 +12,14 @@
 #include <stdlib.h>
 
 void DigitizerChannelECal::PrintConfig(){
+  std::cout <<"**************************** DigitizerChannelECal config {*********************"<<std::endl;
   std::cout << "Hi I'm the ECal: " << std::endl;
   std::cout << "Signal width: "   << fSignalWidth << " samples" << std::endl;
   std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl; 
   std::cout << "fPedestalMode:   " << fPedestalMode <<std::endl;
   std::cout << "fUseOverSample: " << fUseOverSample << std::endl;  
   std::cout << "fMultiHit: " << fMultihit << std::endl;
+  std::cout <<"**************************** DigitizerChannelECal config }*********************"<<std::endl;
 
 //  Int_t NBD=8;
 //  for(int i=0;i<32;i++){
@@ -88,18 +90,35 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   }
   fCountSavedEvent=0;
   //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
-  Int_t i=0;
-  ifstream myfile;
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
-  myfile.open ("newtemplate.txt");;
-  if (myfile.is_open()){
-   while (!myfile.eof()) {
-   myfile >> fTemplate[i];
-  if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
-   //std::cout<< Template[i] << std::endl;
-   i++;
-   }
+  if (fMultihit) {
+    ifstream myfile;
+    std::string templateFileName = "./config/BGOwaveformTemplate.txt";
+    std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
+    myfile.open (templateFileName.c_str());;
+    Int_t i=0;
+    Double_t readValue=0.;
+    if (myfile.is_open()){
+      std::cout<<"DigitizerChannelECal: file <"<<templateFileName<<"> open"<<std::endl;
+      while (!myfile.eof()) {
+	myfile >> readValue;
+	if (i<5000) {
+	  fTemplate[i]=readValue;
+	  if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
+	  //std::cout<< " Filling template ... "<<i<<" "<< fTemplate[i] << std::endl;
+	  i++;
+	}
+      }
+      std::cout<<"DigitizerChannelECal: "<<i<<" lines read from file "<<templateFileName<<std::endl;
+    }
+    else 
+      {
+	std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
+	std::cerr<<"DigitizerChannelECal - Template file requested is not found ---- terminate here "<<std::endl;
+	exit(1);
+      }
   }
+
 }
 
 void DigitizerChannelECal::PrepareTmpHistos(){
@@ -789,7 +808,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   Hit->SetEnergy(fEnergy);
   hitArray.push_back(Hit);
   fFirstHit = true;
-  std::cout<<"In single hit recon fFirstHit: " << fFirstHit <<" isSat "<< IsSat<< std::endl;
+  //std::cout<<"In single hit recon fFirstHit: " << fFirstHit <<" isSat "<< IsSat<< std::endl;
   if(IsSat==1)fSaturatedHit=true;
   if(fGlobalMode->GetGlobalDebugMode()) {
     ECal->Fill();
@@ -863,17 +882,18 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
   fFirstHit=false;
   fSaturatedHit=false;
-  //std::cout<<"multi hit " << std::endl;
+  //std::cout<<"multi hit reconstruction ... " << std::endl;
  
  //to establish if there is saturated waveform or if the wave is ZSup
   ReconstructSingleHit(hitArray);
   if(!fFirstHit) return;
   //there is a single hit reconstructed and saved; if there is a second (third) hit I redefine this reconstructed hit 
-  std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
+  if (fGlobalMode->GetGlobalDebugMode())
+    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
   if(!fSaturatedHit){
-    std::cout<< "I'm in not saturated reconstruction " << std::endl;
+    //std::cout<< "I'm in not saturated reconstruction " << std::endl;
     Bool_t SecondHit=false;
     Bool_t ThirdHit=false;
     Double_t FirstEnergy=0.;
@@ -894,7 +914,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     if(SecondHit && FirstEnergy>0.001 ){
       if(SecondEnergy>2){
         saveSecondHit=true;
-        std::cout<<"I'm saving the second hit " << std::endl;
+        //std::cout<<"I'm saving the second hit " << std::endl;
         unsigned int nHitsBefore = hitArray.size()-1;
 	if(fGlobalMode->GetGlobalDebugMode()) {  
 	  hECALfirsthitEnergy->Fill(hitArray.at(nHitsBefore)->GetEnergy());
@@ -912,7 +932,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     }
     if(ThirdHit && FirstEnergy>0.001){
       if(ThirdEnergy>2){
-        std::cout<<"I'm saving the third hit " << std::endl;
+        //std::cout<<"I'm saving the third hit " << std::endl;
         if(!saveSecondHit){
           unsigned int nHitsBefore = hitArray.size()-1; 
            if(fGlobalMode->GetGlobalDebugMode()) {  
@@ -930,75 +950,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 	  hECALthirdhitEnergy_Saved->Fill(ThirdEnergy);
         }
       }
-    }
-    /* io comment 06/04
-    if(SecondHit && SecondEnergy>0.){
-      // std::cout<<"In Reconstruct, second hit " << SecondHit << std::endl;
-      if(fIntCorrection){ 
-        Double_t QIntCorr = CorrectIntegrationTime(SecondTime,1000.);
-        SecondEnergy /= QIntCorr; 
-      }
-      unsigned int nHitsBefore = hitArray.size()-1; 
-      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
-      Double_t TimeHitBefore=hitArray.at(nHitsBefore)->GetTime();
-      if(TimeHitBefore>SecondTime){
-	energyFirstHit-= energyFirstHit*exp(-(SecondTime-TimeHitBefore)/300);
-      }
-      else  energyFirstHit=EnergyHitBefore-SecondEnergy;
-      if(EnergyHitBefore<0.1)std::cout<<"FIRTS HIT with energy 0 !!!!!!!" << std::endl;
-      std::cout<<"In reconstruct multi hit ..in SecondHit , energy first hit corrected " << energyFirstHit <<" secondhitenergy " << SecondEnergy<<  std::endl; 
-      hitArray.at(nHitsBefore)->SetEnergy(energyFirstHit);
-      
-      if(fGlobalMode->GetGlobalDebugMode()) {  
-	fDiffTimeWave=hitArray.at(nHitsBefore)->GetTime()-SecondTime; 
-	fEnergySecondHit=SecondEnergy;
-	hECALsecondHitE->Fill(SecondEnergy);
-	hDiffTimeHitWaveform->Fill(fDiffTimeWave);
-   	hECALfirsthitEnergy->Fill(EnergyHitBefore);
-	ECal->Fill();
-      }
-
-      TRecoVHit *Hit = new TRecoVHit();
-      Hit->SetTime(SecondTime);
-      Hit->SetEnergy(SecondEnergy);
-      hitArray.push_back(Hit);
-   std::cout<<"ADDED HIT " << std::endl;
-      if(fGlobalMode->GetGlobalDebugMode()) ECal->Fill();
-    }
-    if(ThirdHit && ThirdEnergy>0.){
-      if(fIntCorrection){ 
-        Double_t QIntCorr = CorrectIntegrationTime(ThirdTime,1000.);
-        ThirdEnergy /= QIntCorr; 
-      }
-      unsigned int nHitsBefore = hitArray.size()-1;
-      Double_t EnergyHitBefore=hitArray.at(nHitsBefore)->GetEnergy();
-      Double_t TimeHitBefore=hitArray.at(nHitsBefore)->GetTime();
-      if(TimeHitBefore>ThirdTime){
-	energySecondHit-= energySecondHit*exp(-(ThirdTime-TimeHitBefore)/300);
-      }
-      else energySecondHit=EnergyHitBefore-ThirdEnergy;
-      if(EnergyHitBefore<0.1)std::cout<<"SECOND HIT with energy 0 !!!!!!!" << std::endl;
-      std::cout<<"In reconstruct multi hit ..in ThirdHit , energy second hit "<< SecondEnergy <<" corrected " << energySecondHit <<" thirdhitenergy " << ThirdEnergy<<  std::endl;
-      // if(energySecondHit<20){
-      //	hitArray.erase(nHitsBefore);
-      //	SecondHit=false;
-      //}
-      // else{
-      //	std::cout<<"in ThirdHit , energy second hit " << energySecondHit << std::endl; 
-      hitArray.at(nHitsBefore)->SetEnergy(energySecondHit);
-      TRecoVHit *Hit1 = new TRecoVHit();
-      Hit1->SetTime(ThirdTime);
-      Hit1->SetEnergy(ThirdEnergy);
-      hitArray.push_back(Hit1);
-   std::cout<<"ADD HIT " << std::endl;
-    }
-    if(fGlobalMode->GetGlobalDebugMode()) {
-      hECALfirsthitEnergyCorrected->Fill(energyFirstHit);
-      if(SecondHit) hECALsecondhitEnergyCorrected->Fill(energySecondHit);
-      if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy); 
-    }  
-    end io comment 06/04*/
-    
+    }    
   } 
   
   else if(fSaturatedHit){
@@ -1019,7 +971,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     if(SecondHit && FirstEnergy>0.001 ){
       if(SecondEnergy>2){
         saveSecondHit=true;
-        std::cout<<"I'm saving the second hit " << std::endl;
+        //std::cout<<"I'm saving the second hit " << std::endl;
         unsigned int nHitsBefore = hitArray.size()-1;
          if(fGlobalMode->GetGlobalDebugMode()) {  
    	      hECALfirsthitEnergy->Fill(hitArray.at(nHitsBefore)->GetEnergy());
@@ -1035,7 +987,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
     }
     if(ThirdHit && FirstEnergy>0.001){
       if(ThirdEnergy>2){
-        std::cout<<"I'm saving the third hit " << std::endl;
+        //std::cout<<"I'm saving the third hit " << std::endl;
         if(!saveSecondHit){
           unsigned int nHitsBefore = hitArray.size()-1; 
 	  if(fGlobalMode->GetGlobalDebugMode()) {  
@@ -1478,7 +1430,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
     chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
-    if(SecondHit)std::cout << "DrawMeanWave.....ftimesin " << fTimeSin << "Time First Hit " << fTimeSin << " second Time " << TimeSecondHit << std::endl;
+    //if(SecondHit)std::cout << "DrawMeanWave.....ftimesin " << fTimeSin << "Time First Hit " << fTimeSin << " second Time " << TimeSecondHit << std::endl;
     Int_t maxWave2= GetMaximumPosition(DiffVec);
     if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Second->Fill(energySecondHitFromTemplate, SecondBinMax-maxWave2);
     if(SecondHit && fTimeSin> TimeSecondHit){
@@ -1551,11 +1503,11 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
   FirstEnergy=energyFirstHitFromTemplate-enCorrection12-enCorrection13;
   SecondEnergy=energySecondHitFromTemplate-enCorrection23;
   ThirdEnergy=energyThirdHitFromTemplate;
-  if(SecondHit){
-  std::cout<<"DrawMeanWave...energy 1 template " << energyFirstHitFromTemplate << " correction12 " << enCorrection12 << " correction 13 " << enCorrection13 << " final energy " << FirstEnergy << std::endl;
-  std::cout<< "DrawMeanWave...energy 2 template " << energySecondHitFromTemplate << " correction23 " << enCorrection23 << " final energy " << SecondEnergy << std::endl; 
-  if(ThirdHit)std::cout<<"DrawMeanWave...energy 3 template " << energyThirdHitFromTemplate << std::endl;
-  }
+  //  if(SecondHit){
+  //    std::cout<<"DrawMeanWave...energy 1 template " << energyFirstHitFromTemplate << " correction12 " << enCorrection12 << " correction 13 " << enCorrection13 << " final energy " << FirstEnergy << std::endl;
+  //    std::cout<< "DrawMeanWave...energy 2 template " << energySecondHitFromTemplate << " correction23 " << enCorrection23 << " final energy " << SecondEnergy << std::endl; 
+    //if(ThirdHit) std::cout<<"DrawMeanWave...energy 3 template " << energyThirdHitFromTemplate << std::endl;
+  //  }
   if(fGlobalMode->GetGlobalDebugMode()){
       if(SecondHit)hECALfirsthitEnergyCorrected->Fill(FirstEnergy);
       if(SecondHit) hECALsecondhitEnergyCorrected->Fill(SecondEnergy);
@@ -1886,7 +1838,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     }
   }
   fCountEvent++;
-  std::cout<<"DrawMeanSaturatedWave...Second saturated hit " << secondHitSaturated << std::endl;
+  //std::cout<<"DrawMeanSaturatedWave...Second saturated hit " << secondHitSaturated << std::endl;
   //if(positionSecondSat>0. || fabs(fmyNSat-myNSat)>1.)std::cout<<"First saturated at " << positionFirstSat << " dev. first: " << fFirstSat <<" for " << myNSat << " ( previous count " << fmyNSat <<  ")  second position " << positionSecondSat <<" for "<< myNSatSecond  << "---ev" << fCountEvent << std::endl;
   // std::cout<<"MaxWave "<< maxWave<< " myNSat " <<fmyNSat<< std::endl;
   //IO comment 1/05 Int_t MaxBin=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, Wave, maxValDerivativeWaveform);
@@ -1943,11 +1895,11 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   Double_t maxValDerivativeDiffForSecondHit=0.;
   Double_t SecondBinMax=MakeDerivativeAndTakeMaxTime(iDer,nsmooth, DiffVec, maxValDerivativeDiffForSecondHit);
   Double_t TimeSecondHit= SecondBinMax*fTimeBin;  
-  std::cout <<"DrawMeanSaturatedWave... DiffVec at maxDerivative2 " << maxValDerivativeDiffForSecondHit << " from vec " << DiffVec.at(SecondBinMax) << " second bin max" << SecondBinMax << std::endl;
+  //std::cout <<"DrawMeanSaturatedWave... DiffVec at maxDerivative2 " << maxValDerivativeDiffForSecondHit << " from vec " << DiffVec.at(SecondBinMax) << " second bin max" << SecondBinMax << std::endl;
   Double_t DiffFirstSecondHit= TimeFirstHit-TimeSecondHit;
   //std::cout << "maxValDerivativeDiffForSecondHit " << maxValDerivativeDiffForSecondHit << " diff time 12 " << DiffFirstSecondHit << " first time " << TimeFirstHit << " secondTime " << TimeSecondHit <<std::endl;
   if(maxValDerivativeDiffForSecondHit>fVThrToDefineHit_sat && fabs(DiffFirstSecondHit)>fDTimeForHitInSameCh){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
-    std::cout<<"DrawMeanSaturatedWave...second hit passed "<<std::endl;
+    //std::cout<<"DrawMeanSaturatedWave...second hit passed "<<std::endl;
     if(fGlobalMode->GetGlobalDebugMode()) hDiffFirstHitSeconHitTime->Fill(TimeFirstHit-TimeSecondHit);
     std::vector<Double_t> DiffVec_SecondHit;
     Bool_t OutRMS_SecondHit;    
@@ -1959,7 +1911,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
-    if(SecondHit)std::cout << "DrawMeanSaturatedWave..ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
+    //if(SecondHit)std::cout << "DrawMeanSaturatedWave..ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
     Int_t maxWave2= GetMaximumPosition(DiffVec);
     if(fGlobalMode->GetGlobalDebugMode()) hDMaxDerivativeMaxWaveVSEnergy_Second->Fill(energySecondHitFromTemplate, SecondBinMax-maxWave2);
     if(SecondHit && TimeFirstHit> TimeSecondHit){
@@ -1987,7 +1939,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     //std::cout << "maxValDerivativeDiffForThirdHit " << maxValDerivativeDiffForThirdHit << " diff time 13 " << DiffFirstThirdHit << " -23 " << DiffSecondThirdHit << " secondTime " << TimeSecondHit << " third time " << TimeThirdHit <<std::endl;
     if(maxValDerivativeDiffForThirdHit> fVThrToDefineHit_sat &&  fabs(DiffFirstThirdHit)>fDTimeForHitInSameCh &&  fabs(DiffSecondThirdHit)>fDTimeForHitInSameCh ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
       //std::cout<<"In Draw.....ThirdHitEnergy " << SecondEnergy << std::endl;
-      std::cout<<"DrawMeanSaturatedWave...third hit passed " << std::endl;
+      //std::cout<<"DrawMeanSaturatedWave...third hit passed " << std::endl;
       std::vector<Double_t> DiffVec_ThirdHit;
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
@@ -2035,7 +1987,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     if(dxdt[i]>maxRelativeValue){maxRelativeValue=dxdt[i];MaxRelativeDerivative=i;}
   }
   MaxBin=positionFirstSat;
-  std::cout<<"DrawMean2SaturatedWave..fFirstSat " << fFirstSat << " my position " << positionFirstSat <<" maxRelative "<< MaxRelativeDerivative<<" myNSat " << myNSat << std::endl;
+  //std::cout<<"DrawMean2SaturatedWave..fFirstSat " << fFirstSat << " my position " << positionFirstSat <<" maxRelative "<< MaxRelativeDerivative<<" myNSat " << myNSat << std::endl;
   // for(int jj=fFirstSat-40; jj<fFirstSat+25; jj++)std::cout << "Wave at " << jj << " value: " << Wave.at(jj) << std::endl;
   Double_t MaxRelativeDerivative2=positionSecondSat;
   Double_t maxRelativeValue2=0;
@@ -2046,7 +1998,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   if(myNSat<40){
     MakeDifferenceSaturatedWaveformTeplate(Wave,myNSat, MaxRelativeDerivative ,TempWave, DiffVec, OutRMS,maxWave ); 
     MaxBin=MaxRelativeDerivative;
-    std::cout<<"DrawMean2SaturatedWave..I'm passing the max time: " << MaxRelativeDerivative << std::endl;
+    //std::cout<<"DrawMean2SaturatedWave..I'm passing the max time: " << MaxRelativeDerivative << std::endl;
   } 
   else {MakeDifferenceSaturatedWaveformTeplate(Wave,myNSat, fFirstSat ,TempWave, DiffVec, OutRMS,maxWave );
     MaxBin=fFirstSat;   
@@ -2087,7 +2039,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
  chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave2);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
-    if(SecondHit)std::cout << "DrawMean2SaturatedWave...ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
+    //if(SecondHit)std::cout << "DrawMean2SaturatedWave...ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
     enCorrection12 =  CalcChargeSin(positionSecondSat, TempWave)/15.;
     SecondTime=TimeSecondHit;
     //<<"energySecondHitFromTemplate "<< energySecondHitFromTemplate << std::endl;
@@ -2108,7 +2060,7 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     Double_t DiffSecondThirdHit= TimeSecondHit-TimeThirdHit;
     //std::cout<<"third bin value " << maxValDerivativeDiffForThirdHit <<" waveNoSat at third time " << waveNoSaturated.at(TimeThirdHit) <<" wave at third time " << Wave.at(TimeThirdHit) << " diff13 time " << DiffFirstThirdHit << " diff23 time " << DiffSecondThirdHit << std::endl;
     if(maxValDerivativeDiffForThirdHit> fVThrToDefineHit_sat &&  fabs(DiffFirstThirdHit)>fDTimeForHitInSameCh &&  fabs(DiffSecondThirdHit)>fDTimeForHitInSameCh ){   //I'm cutting on the value of the waveform at the maximumderivative time of diffvec
-      std::cout<<"DrawMeanSaturatedWave...third hit passed " << std::endl;
+      //std::cout<<"DrawMeanSaturatedWave...third hit passed " << std::endl;
       std::vector<Double_t> DiffVec_ThirdHit;
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
@@ -2368,7 +2320,7 @@ void DigitizerChannelECal::FindDoubleHitSaturatedAngularCoefficient(std::vector<
      if(fabs(angularCoeff)>3*sigma){
        timeOut.push_back(i);
        AngCoeffOut.push_back(angularCoeff);
-       std::cout<<"I'm out at time " << i << " while the first sat is " << fFirstSat << " my angular coefficient is " << angularCoeff << " constant " << Const << std::endl;
+       //std::cout<<"I'm out at time " << i << " while the first sat is " << fFirstSat << " my angular coefficient is " << angularCoeff << " constant " << Const << std::endl;
      }
    }
  }
@@ -2384,7 +2336,7 @@ void DigitizerChannelECal::FindDoubleHitSaturatedAngularCoefficient(std::vector<
      if(AngCoeffOut.at(i)*AngCoeffOut.at(i+1)<0 && fabs(timeOut.at(i)-timeOut.at(i+1))<5 && timeOut.at(i)>fFirstSat && (AngCoeffOut.at(i)*AngCoeffOut.at(i-1))>0 && (AngCoeffOut.at(i+2)*AngCoeffOut.at(i+1))>0 && fabs(timeOut.at(i)-timeOut.at(i-1))<3 && fabs(timeOut.at(i+2)-timeOut.at(i+1))<3 &&  timeOut.at(i)<timeOut.at(timeOut.size()-1)-DeltaLast ){ 
        changePendence=true;
        separatingTime.push_back(i);
-       std::cout<<"starTime " << i << std::endl;
+       //std::cout<<"starTime " << i << std::endl;
      }
    }
  }
@@ -2397,7 +2349,7 @@ void DigitizerChannelECal::FindDoubleHitSaturatedAngularCoefficient(std::vector<
        else if((timeOut.at(j)-timeOut.at(j+1))<3 && timeOut.at(j)>=timeOut.at(separatingTime.at(0)+1)  && timeOut.at(j)<=timeOut.at(separatingTime.at(0)+1)+8  && (AngCoeffOut.at(j)*AngCoeffOut.at(j+1))>0)right++;
      }
    }
- std::cout<<"left " << left << " right " << right << std::endl;
+ //std::cout<<"left " << left << " right " << right << std::endl;
  // if(left+right>3){
  if(left>1 || right>1){
    Double_t oldNSat=myNSat;
@@ -2405,7 +2357,7 @@ void DigitizerChannelECal::FindDoubleHitSaturatedAngularCoefficient(std::vector<
    positionSecondSat=timeOut.at(separatingTime.at(0)+1);
    myNSatSecond=oldNSat-myNSat-(timeOut.at(separatingTime.at(0)+1)-timeOut.at(separatingTime.at(0)));
    if(myNSatSecond>10 && myNSat>10) secondHitSaturated=true;
-   std::cout<<" .........I've find  a second saturated bin??...at i "<< AngCoeffOut.at(separatingTime.at(0))<<" ( time " << timeOut.at(separatingTime.at(0))<<" )  at i+1 " << AngCoeffOut.at(separatingTime.at(0)+1) <<" (time " <<timeOut.at(separatingTime.at(0)+1) << " myNSat " << myNSat << " MynSatSecond "<<myNSatSecond <<" so the boolean is " << secondHitSaturated << std::endl;
+   //std::cout<<" .........I've find  a second saturated bin??...at i "<< AngCoeffOut.at(separatingTime.at(0))<<" ( time " << timeOut.at(separatingTime.at(0))<<" )  at i+1 " << AngCoeffOut.at(separatingTime.at(0)+1) <<" (time " <<timeOut.at(separatingTime.at(0)+1) << " myNSat " << myNSat << " MynSatSecond "<<myNSatSecond <<" so the boolean is " << secondHitSaturated << std::endl;
 
    }
  return;
@@ -2413,8 +2365,8 @@ void DigitizerChannelECal::FindDoubleHitSaturatedAngularCoefficient(std::vector<
 
 
 void DigitizerChannelECal::MakeDifferenceSaturatedWaveformTeplate(std::vector<Double_t> input,Int_t DeltaSat, Int_t MaxBin,std::vector<Double_t>& TempWave,std::vector<Double_t>& output, Bool_t& OutRMS, Double_t maxWave){
-  std::cout<<"i'm in makedifferenceSaturated....deltasat " << std::endl;
-  std::cout<<"the max time that i see is " << MaxBin << std::endl;
+  //std::cout<<"i'm in makedifferenceSaturated....deltasat " << std::endl;
+  //std::cout<<"the max time that i see is " << MaxBin << std::endl;
   OutRMS=false;
   Int_t saveMaxPos=-1;
   Double_t ThrDiff=7*1.95;//1.95 come from a fit on the difference between the waveform and the template distribution. 

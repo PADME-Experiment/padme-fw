@@ -81,6 +81,9 @@ public:
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetTPixChamberWallCorner(G4ThreeVector);
 
+  // Get name of TPix digitizer
+  G4String GetTPixDigitizerName() { return fTPixDigitizerName; }
+
   // Get name of TPix sensitive detector
   G4String GetTPixSensitiveDetectorName() { return fTPixSensitiveDetectorName; }
 
@@ -120,6 +123,7 @@ private:
 
   G4double fTPixSupportThickness; // Thickness of HEPVeto support structure
 
+  G4String fTPixDigitizerName;
   G4String fTPixSensitiveDetectorName;
 
 };

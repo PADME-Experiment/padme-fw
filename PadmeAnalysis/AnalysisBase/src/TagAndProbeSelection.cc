@@ -69,7 +69,8 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
   if (!passPreselection(fNoTargetBool, isMC)) return true;
 
   Double_t EBeam=0.;
-  if(isMC)EBeam=450.0;
+  //if(isMC)EBeam=450.0;
+  if(isMC)EBeam=430.0;
   else EBeam=420.;
 
   Bool_t retCode = 0;
@@ -144,8 +145,8 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
       hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
       //std::cout<<"TaginFR" << std::endl;
     }
-    if(g1Recal>115. && g1Recal < 257.){
-      hname="ECal_DeltaEnergyFuncAllCl_inFR115_257";
+    if(g1Recal>115.8 && g1Recal < 258.){
+      hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_258";
       hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
       //std::cout<<"TaginFR" << std::endl;
     }
@@ -156,8 +157,8 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
 	hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR106_258";
 	hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
       }
-      if(g1Recal>115. && g1Recal < 257.){
-	hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR115_257";
+      if(g1Recal>115.8 && g1Recal < 258.){
+	hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR115.8_258";
 	hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
       }
     }
@@ -168,10 +169,11 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
     if(g1E>90.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "EThr90MeV");
     if(g1Recal>106. && g1Recal < 258.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "_inFR106_258");
     if(g1Recal>106. && g1Recal < 258. && g1E>90.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "EThr90MeV_inFR106_258");
-    if(g1Recal>115. && g1Recal < 257.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "_inFR115_257");
-    if(g1Recal>115. && g1Recal < 257. && g1E>90.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "EThr90MeV_inFR115_257");
+    if(g1Recal>115.8 && g1Recal < 258.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "_inFR115.8_258");
+    if(g1Recal>115.8 && g1Recal < 258. && g1E>90.)FillHistoTagAndProbe_PhiRegionsTag(DeltaEnergyFunction, phi1, "EThr90MeV_inFR115.8_258");
     FillHistoTagAndProbe_PhiRegionsRadiusRegionsTag(DeltaEnergyFunction,phi1 , g1Recal, "" );
     FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsTag(DeltaEnergyFunction,phi1 , g1Recal, "_Rmid170" );
+    FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsTag(DeltaEnergyFunction,phi1 , g1Recal, "_Rmid173" );
     //    if(g1E< 90. ) continue; // {std::cout << " tag doesn't pass energy selection " << std::endl; continue; } //but this modify the bkg spectrum.......
     int probeCountIn25fr=0;
     //if(fabs(DeltaEnergyFunction)>=100.) std::cout<<"tag doesn't pass DeltaFunction selection " << std::endl;
@@ -316,7 +318,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
 	hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
       }
 
-    if(g1Recal>115 && g1Recal<257 && g2Recal>115 && g2Recal<257 && dPhiIn25Degree) FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnergyFunction2,phi1,"_inFR115_257");	
+    if(g1Recal>115.8 && g1Recal<258 && g2Recal>115.8 && g2Recal<258 && dPhiIn25Degree) FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnergyFunction2,phi1,"_inFR115.8_258");	
 
     hname="ECAL_XCoGAllCl_InTagAndProbe";
     hSvc->FillHisto(hname,XWeighted, 1. );
@@ -336,8 +338,8 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
       FillHistoTagAndProbe(DeltaEnergyFunction2,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
 
-    if(g1Recal>115 && g1Recal<257 && g2Recal>115 && g2Recal<257){
-      sufix="_inFR115_257";
+    if(g1Recal>115.8 && g1Recal<258 && g2Recal>115.8 && g2Recal<258){
+      sufix="_inFR115.8_258";
       FillHistoTagAndProbe(DeltaEnergyFunction2,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
     //int sTag;
@@ -361,7 +363,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
 	probeCountIn25fr++;
 
       }
-    if(g1Recal>115 && g1Recal<257 && g2Recal>115 && g2Recal<257 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnergyFunction2,phi1,"_inFR115_257");
+    if(g1Recal>115.8 && g1Recal<258 && g2Recal>115.8 && g2Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnergyFunction2,phi1,"_inFR115.8_258");
 
     if(dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnergyFunction2, g1Recal, g2Recal, "");
     if(dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnergyFunction2, g1Recal, "");
@@ -377,12 +379,12 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
       sufix="_TAGinFR106_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
-    if(g1Recal>115 && g1Recal<257 && g2Recal>115 && g2Recal<257){
-      sufix="_inFR115_257_ExpEg2UsingE1";
+    if(g1Recal>115.8 && g1Recal<258 && g2Recal>115.8 && g2Recal<258){
+      sufix="_inFR115.8_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
-    if(g1Recal>115 && g1Recal<257){
-      sufix="_TAGinFR115_257_ExpEg2UsingE1";
+    if(g1Recal>115.8 && g1Recal<258){
+      sufix="_TAGinFR115.8_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
     if(dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_ExpEg2UsingE1");
@@ -392,10 +394,10 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
     if(dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, "_ExpEg2UsingE1");
     if(g2Recal>106 && g2Recal<258 && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, "_inFR106_258_ExpEg2UsingE1");
 
-    if(g1Recal>115 && g1Recal<257 && g2Recal>115 && g2Recal<257 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_inFR115_257_ExpEg2UsingE1");
-    if(g1Recal>115 && g1Recal<257 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_TAGinFR115_257_ExpEg2UsingE1");
+    if(g1Recal>115.8 && g1Recal<258 && g2Recal>115.8 && g2Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_inFR115.8_258_ExpEg2UsingE1");
+    if(g1Recal>115.8 && g1Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_TAGinFR115.8_258_ExpEg2UsingE1");
       
-    if(g2Recal>115 && g2Recal<257 && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, "_inFR115_257_ExpEg2UsingE1");
+    //    if(g2Recal>115.8 && g2Recal<258 && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, "_inFR115.8_258_ExpEg2UsingE1");
 
     if(dPhiIn25Degree)FillHistoTagAndProbe_PhiProbeForTagPhiRegions(phi1 , phi2, "" );
     FillHistoTagAndProbe_DeltaPhiForTagPhiRegions(phi1 , deltaphi, "" );
@@ -404,9 +406,13 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
     if(dPhiIn25Degree)FillHistoTagAndProbe_PhiRadiusProbeDistribution(phi1 ,g1Recal,phi2 ,g2Recal, "" );
 
     if(dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_ExpEg2UsingE1" );
-    if(g2Recal>106 && g2Recal<255 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_inFR106_258_ExpEg2UsingE1" );
+    if(g2Recal>106 && g2Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_inFR106_258_ExpEg2UsingE1" );
     if(dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_Rmid170_ExpEg2UsingE1" );
-    if(g2Recal>106 && g2Recal<255 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_Rmid170_inFR106_258_ExpEg2UsingE1" );
+    if(g2Recal>106 && g2Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_Rmid170_inFR106_258_ExpEg2UsingE1" );
+
+
+    if(dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_Rmid173_ExpEg2UsingE1" );
+    if(g2Recal>115.8 && g2Recal<258 && dPhiIn25Degree)FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsProbe(DeltaEnGamma12, phi1 , g1Recal, "_Rmid173_inFR115.8_258_ExpEg2UsingE1" );
 
     if(fabs(XWeighted)<50. && fabs(YWeighted)<50.&& g1E>90 && g2E>90 && g1E<400 && g2E<400 && fabs(g1t-g2t)<10.){
       hname="ECAL_10ns5CoGEThr_TagAndProbeMethod";
@@ -468,7 +474,7 @@ Bool_t TagAndProbeSelection::passPreselection(Bool_t isTargetOut, Bool_t isMC)
   targetConst=1; 
   std::string hname1 = "TagAndProbe_NposInBunch_beam";
   hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
-  if (!isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
+  if (!isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
   
   if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;
   
@@ -570,9 +576,9 @@ Bool_t TagAndProbeSelection::InitHistos()
   hSvc->BookHisto(hname, binY, minY, maxY);
   hname="ECal_DeltaEnergyFuncAllCl_inFR106_258_noMatchedProbe";
   hSvc->BookHisto(hname, binY, minY, maxY);
-  hname="ECal_DeltaEnergyFuncAllCl_inFR115_257";
+  hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_258";
   hSvc->BookHisto(hname, binY, minY, maxY);
-  hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR115_257";
+  hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR115.8_258";
   hSvc->BookHisto(hname, binY, minY, maxY);
   hname="ECal_DeltaEnergyFuncAllCl_inProbeLoop_inFR106_258";
   hSvc->BookHisto(hname, binY, minY, maxY);
@@ -593,14 +599,16 @@ Bool_t TagAndProbeSelection::InitHistos()
   sufix.push_back("");
   // sufix.push_back("_inFR92_258");
   sufix.push_back("_inFR106_258");
-  sufix.push_back("_inFR115_257");
+  sufix.push_back("_inFR115.8_258");
   sufix.push_back("EThr90MeV");
   sufix.push_back("EThr90MeV_inFR106_258");
-  sufix.push_back("EThr90MeV_inFR115_257");
+  sufix.push_back("EThr90MeV_inFR115.8_258");
   sufix.push_back("_tagInnerR");
   sufix.push_back("_tagOuterR");
   sufix.push_back("_tagInnerR_Rmid170");
   sufix.push_back("_tagOuterR_Rmid170");
+  sufix.push_back("_tag115.8_173R_Rmid173");
+  sufix.push_back("_tag173_258R_Rmid173");
   sufix.push_back("_inFR106_258_noMatchedProbe");
   for(int i=0; i<sufix.size(); i++){
     if(i<3){
@@ -749,8 +757,8 @@ Bool_t TagAndProbeSelection::InitHistos()
   sufix1.push_back("_ExpEg2UsingE1");
   sufix1.push_back("_inFR106_258_ExpEg2UsingE1");
   sufix1.push_back("_TAGinFR106_258_ExpEg2UsingE1");
-  sufix1.push_back("_inFR115_257_ExpEg2UsingE1");
-  sufix1.push_back("_TAGinFR115_257_ExpEg2UsingE1");
+  sufix1.push_back("_inFR115.8_258_ExpEg2UsingE1");
+  sufix1.push_back("_TAGinFR115.8_258_ExpEg2UsingE1");
   sufix1.push_back("_tagInnerR_ExpEg2UsingE1");
   sufix1.push_back("_tagInnerR_inFR106_258_ExpEg2UsingE1");
   sufix1.push_back("_tagOuterR_ExpEg2UsingE1");
@@ -760,6 +768,11 @@ Bool_t TagAndProbeSelection::InitHistos()
   sufix1.push_back("_tagInnerR_Rmid170_inFR106_258_ExpEg2UsingE1");
   sufix1.push_back("_tagOuterR_Rmid170_ExpEg2UsingE1");
   sufix1.push_back("_tagOuterR_Rmid170_inFR106_258_ExpEg2UsingE1");
+
+  sufix1.push_back("_tag115.8_173R_Rmid173_ExpEg2UsingE1");
+  sufix1.push_back("_tag115.8_173R_Rmid173_inFR115.8_258_ExpEg2UsingE1");
+  sufix1.push_back("_tag173_258R_Rmid173_ExpEg2UsingE1");
+  sufix1.push_back("_tag173_258R_Rmid173_inFR115.8_258_ExpEg2UsingE1");
 
 
   for(int i=0; i<sufix1.size(); i++){
@@ -1252,6 +1265,93 @@ void TagAndProbeSelection::FillHistoTagAndProbe_PhiRegionsNewRadiusRegionsTag(Do
 }
 
 
+void TagAndProbeSelection::FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsTag(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix ){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  if(phi>=0. && phi<45.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From0To45_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From0To45_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=45. && phi<90.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From45To90_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From45To90_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=90. && phi<135.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From90To135_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From90To135_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=135. && phi<180.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From135To180_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From135To180_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=180. && phi<225.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From180To225_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From180To225_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=225. && phi<270.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From225To270_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From225To270_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=270. && phi<315){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From270To315_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=170 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From270To315_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=315. && phi<360.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_TagDeltaEnergyFunc_From315To360_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_TagDeltaEnergyFunc_From315To360_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+
+}
+
+
 
 
 void TagAndProbeSelection::FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix ){
@@ -1334,6 +1434,93 @@ void TagAndProbeSelection::FillHistoTagAndProbe_PhiRegionsRadiusRegionsProbe(Dou
     }
     else if(radius>=182 && radius<258){
       hname="ECal_ProbeDeltaEnergyFunc2_TagFrom315To360_tagOuterR"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+
+}
+
+
+void TagAndProbeSelection::FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsProbe(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix ){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  if(phi>=0. && phi<45.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom0To45_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom0To45_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=45. && phi<90.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom45To90_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom45To90_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=90. && phi<135.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom90To135_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom90To135_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=135. && phi<180.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom135To180_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom135To180_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=180. && phi<225.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom180To225_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom180To225_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=225. && phi<270.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom225To270_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom225To270_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=270. && phi<315){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom270To315_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom270To315_tag173_258R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+  }
+  else if(phi>=315. && phi<360.){
+    if(radius>115.8 && radius<173){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom315To360_tag115.8_173R"+sufix;
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    else if(radius>=173 && radius<258){
+      hname="ECal_ProbeDeltaEnergyFunc2_TagFrom315To360_tag173_258R"+sufix;
       hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
     }
   }

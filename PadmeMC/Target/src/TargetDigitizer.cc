@@ -36,7 +36,7 @@ TargetDigitizer::TargetDigitizer(G4String name)
 {
   collectionName.push_back(digiCollectionName);
   fTargetGeometry = TargetGeometry::GetInstance();
-  std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
+  //std::cout<<"--------------------------------I'm in digitizerTarget" << std::endl;
 }
 
 TargetDigitizer::~TargetDigitizer()
@@ -73,7 +73,6 @@ void TargetDigitizer::Digitize()
   G4int nChannels=fTargetGeometry->GetTargetDigiNChannels();
   G4double fThreshold=fTargetGeometry->GetTargetDigiThreshold();
 
-
   for (G4int i=0; i < nChannels; i++) {
     dChannel.push_back(i);
     dEnergy.push_back(0.);
@@ -106,27 +105,29 @@ void TargetDigitizer::Digitize()
   G4int ele=1;
   G4int hole=0;
  
-  
- // for (G4int i=0;i<nChannels;i++){
- //   
- //   sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
- //   sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
- //   sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
- //   //sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
- //   //    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
- //   dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
- //   //    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
- //   //    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
- //   dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
- //   dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
- //   //dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
- //   //    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
- //   
- //   dTimeTraceCCD[i]= new G4double[nhires];
- //   for (G4int j=0; j< nhires; j++)
- //     dTimeTraceCCD[i][j] = 0.;	
- // }
 
+  if (!fFastDigi)
+    {
+      for (G4int i=0;i<nChannels;i++){
+	
+	sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
+	sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
+	sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
+	//sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
+	//    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
+	dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
+	//    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
+	//    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
+	dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
+	dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
+	//dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
+	//    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
+	
+	dTimeTraceCCD[i]= new G4double[nhires];
+	for (G4int j=0; j< nhires; j++)
+	  dTimeTraceCCD[i][j] = 0.;	
+      }
+    }
   
   TargetDigiCollection* targetDigiCollection = new TargetDigiCollection("TargetDigitizer",digiCollectionName);
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
@@ -358,19 +359,22 @@ void TargetDigitizer::Digitize()
 	targetDigiCollection->insert(digi);
       }
 
-      /*      if(dNumber[i]){
-	//// root file for debugging traces
-	dTraceHCCD[dChannel[i]]->Write();
-	dTraceNHCCD[dChannel[i]]->Write();
-	dTraceVHCCD[dChannel[i]]->Write();
-	dTraceV1HCCD[dChannel[i]]->Write();
-	////dTraceVHCCD1[dChannel[i]]->Write();
+      if (!fFastDigi) {
+	if(dNumber[i]){
+	  //// root file for debugging traces
+	  dTraceHCCD[dChannel[i]]->Write();
+	  dTraceNHCCD[dChannel[i]]->Write();
+	  dTraceVHCCD[dChannel[i]]->Write();
+	  // dTraceV1HCCD[dChannel[i]]->Write();
+	  ////dTraceVHCCD1[dChannel[i]]->Write();
+	  
+	}
+	delete  dTraceHCCD[dChannel[i]];
+	delete  dTraceNHCCD[dChannel[i]];
+	delete  dTraceVHCCD[dChannel[i]];
       }
-      */
+      
        
-      delete  dTraceHCCD[dChannel[i]];
-      delete  dTraceNHCCD[dChannel[i]];
-      delete  dTraceVHCCD[dChannel[i]];
       
       dTTCCD.clear();
       dTTCCD1.clear();

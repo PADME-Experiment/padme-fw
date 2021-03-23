@@ -5,6 +5,8 @@
 #include "TString.h"
 #include "TVector3.h"
 #include "TH1D.h"
+#include "TFile.h"
+#include <fstream>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -30,6 +32,7 @@ public:
 
   virtual Bool_t InitHistos();
   virtual Bool_t Process(Bool_t isMC);
+  void SortCluster_byEnergy();
 
   void FillGeneralHisto(std::string sufix);
   void FillRadiusRangeHisto(std::string sufix);
@@ -41,6 +44,7 @@ public:
   Double_t ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t plusSys);
   Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t plusSys);
   void FillWeightedHisto_R1inFR(std::string sufix);
+  void FillWeightedHisto_R2inFR(std::string sufix);
   void FillWeightedHisto_R1R2inFR(std::string sufix);
 
   Double_t ReturnAccettanceEffective_g1g2FR(Double_t radius);
@@ -52,6 +56,7 @@ public:
 
   void fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR);
 
+ 
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
@@ -101,6 +106,7 @@ private:
   Double_t fDeltaPhi             ;
   Double_t fthetag2              ;
   Double_t fphig1 ;
+
   Double_t fphig2 ;
 
   Double_t ftimerange1min;
@@ -116,6 +122,7 @@ private:
 
   Double_t fdistanceTarget;
 
+  Int_t fcountEvent;
   Double_t fEffInnerRRange_r1inFR[8];
   Double_t fEffOuterRRange_r1inFR[8];
   Double_t fEffInnerRRange_r1r2inFR[8];
@@ -128,6 +135,10 @@ private:
   
   TH1D *hAccEffFromCalchep_g1g2FR;
   TH1D *hAccEffFromCalchep_g1FR;
+
+  std::vector<int> fIdCl_SortByEnergy;
+
+
 
 };
 

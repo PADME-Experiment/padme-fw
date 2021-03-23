@@ -29,22 +29,39 @@ void produceSelectionPlots_TargetNoTarget()
   //  TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns.root"); 
   ///TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_SSReco.root"); 
 
-  TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030201_20200721_224335_all_newWheight.root"); //15k pot/bunch
-  TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030202_20200722_010224_all_newWheight.root"); 
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030201_20200721_224335_all_newWheight.root"); //15k pot/bunch
+  //TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030202_20200722_010224_all_newWheight.root"); 
+
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030547_20201017_122906_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_accEffFromReco_SSReco.root"); 
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030547_20201017_122906_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_accEffFromReco_SSReco.root");
+  //TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_accEffFromReco.root"); 
+
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030631_20201117_052838_newEfffromthisrun.root"); 
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030631_20201117_052838_Efffrom30457.root"); 
+  //TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_effFrom30631run_accEffFromReco.root"); 
+
+
+  //TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030547_20201017_122906_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_accSmeared_sortedByEne_SSReco.root"); 
+  //TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_effFrom30631run_accsmeared_sortedByEne.root"); 
+
+TFile *fT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/Analysisrun_0030547_20201017_122906_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation_accSmeared_sortedByEne_SSReco1.root"); 
+  TFile *fnoT =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AnalysisBkgRuns_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_effFrom30547run_accSmeared_sortedByEne1.root"); 
+
 
   std::string xtitle;
   double xmin=-999;
   double xmax= 999;
   
   std::fstream fs;
-  std::string filetitle="ggCount_30202_newWheight.txt";
-  // std::string filetitle="ggCount_30547_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation.txt";
+  //std::string filetitle="ggCount_30202_newWheight.txt";
+  std::string filetitle="ggCount_30547_NewVersion_cunOnTime110dueToHighSpread_newRmiddle170_CutOnPOT_newWeightAnnihilation.txt";
+  //std::string filetitle="ggCount_30631_NewVersion_newRmiddle170_CutOnPOT_newWeight30631.txt";
   fs.open(filetitle.c_str(), std::fstream::in | std::fstream::out | std::fstream::app);
   //fs.open("ggCount_30547.txt", std::fstream::in | std::fstream::out | std::fstream::app);
   time_t now=time(0);
   char* dt =ctime(&now);
   //fs << "name          15k      ..."<<dt << std::endl;
-  fs << "name          28k      ..."<<dt << std::endl;
+  fs << "name          28k      ...acceptance effective using CalchepReco, efficiency extarcted using run 30547, sorted in energy, normalisation Bkg for each spectrum "<<dt << std::endl;
   fs.close();
 
   xtitle = "E(#gamma_{1})+E(#gamma_{2}) [MeV]";

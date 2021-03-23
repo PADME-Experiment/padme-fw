@@ -57,7 +57,10 @@ private:
   Int_t NNoHits;
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
-  Int_t fDeteriorateEnergyResolution;
+  //Int_t fDeteriorateEnergyResolution;
+  Int_t fDeteriorateHitEnResolution;
+  Int_t fDeteriorateHitTimeResolution;
+
   Int_t fReproductSACbunchStructure;
 
   Double_t fTemplate[5001];

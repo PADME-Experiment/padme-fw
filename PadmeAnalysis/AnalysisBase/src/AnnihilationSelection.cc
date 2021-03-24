@@ -110,7 +110,7 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   //fillEffVector("provaggEfficiencyFromDiff_TagFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt");
   //fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRange.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange.txt");
   //fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation.txt");
-  fillEffVector("provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173.txt");
+  fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173.txt");
   
   //Double_t tmpfUpperSysInnerRRange_r1inFR[8]={ 0.0773673, 0.0396053, 0.0052547,  0.0246471,  0.00474522, 0.00500453, 0.0224981, 0.0310803};
   //Double_t tmpfUpperSysOuterRRange_r1inFR[8]={0.0176767, 0.0618193, 0.102187,  0.0246704, 0.0829614, 0.0851759 , 0.0822724 , 0.107262 };
@@ -137,15 +137,15 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
     //hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("DivideTheta_ecalFR");
     //hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("th1s_1inFR");
 
-    TFile *fAcc_g1g2inFR =new TFile("AccEffective_g1g2inFR_struth_calchep430MeV_FR115.8_258.root");
-    TFile *fAcc_g1inFR =new TFile("AccEffective_g1inFR_struth_calchep430MeV_FR115.8_258.root");
+    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1g2inFR_struth_calchep430MeV_FR115.8_258.root");
+    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1inFR_struth_calchep430MeV_FR115.8_258.root");
     hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
     hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
   }
   else{
     //this calchep truth + calchep reco
-    TFile *fAcc_g1g2inFR =new TFile("AccEffective_g1g2inFR_recotruth_calchep450MeV.root");
-    TFile *fAcc_g1inFR =new TFile("AccEffective_g1inFR_recotruth_calchep450MeV.root"); //most energetic photon in FR
+    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1g2inFR_recotruth_calchep450MeV.root");
+    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1inFR_recotruth_calchep450MeV.root"); //most energetic photon in FR
     hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
     hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
   }

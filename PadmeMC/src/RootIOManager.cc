@@ -18,6 +18,7 @@
 #include "HEPVetoRootIO.hh"
 #include "SACRootIO.hh"
 #include "TPixRootIO.hh"
+#include "MCTruthRootIO.hh"
 //#include "LAVRootIO.hh"
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
@@ -75,6 +76,7 @@ RootIOManager::RootIOManager()
   fRootIOList.push_back(new HEPVetoRootIO);
   fRootIOList.push_back(new SACRootIO);
   fRootIOList.push_back(new TPixRootIO);
+  fRootIOList.push_back(new MCTruthRootIO);
   //fRootIOList.push_back(new LAVRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);

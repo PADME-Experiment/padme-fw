@@ -39,8 +39,13 @@ public:
   MCTruthVertex* AddVertex(G4String,G4ThreeVector,G4double);
   MCTruthVertex* Vertex(G4int);
 
+  void Enable() { fEnabled = true; }
+  void Disable() { fEnabled = false; }
+  G4bool IsEnabled() { return fEnabled; }
+
 private:
 
+  G4bool fEnabled;
   G4double fEventWeight;
   std::vector<MCTruthVertex*> fVertex;
 

@@ -86,26 +86,28 @@ void MCTruthRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->Clear();
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
-  fEvent->SetEventWeight(fManager->GetEventWeight());
-  for(G4int v=0; v<fManager->GetNVertices(); v++) {
-    MCTruthVertex* vtx = fManager->Vertex(v);
-    TMCVertex* tvtx = fEvent->AddVertex();
-    tvtx->SetProcess(vtx->GetProcess());
-    tvtx->SetPosition(TVector3(vtx->GetPosX(),vtx->GetPosY(),vtx->GetPosZ()));
-    tvtx->SetTime(vtx->GetTime());
-    for(G4int p=0; p<vtx->GetNParticlesIn(); p++) {
-      MCTruthParticle* part = vtx->ParticleIn(p);
-      TMCParticle* tpart = tvtx->AddParticleIn();
-      tpart->SetPDGCode(part->GetPDGCode());
-      tpart->SetEnergy(part->GetEnergy());
-      tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
-    }
-    for(G4int p=0; p<vtx->GetNParticlesOut(); p++) {
-      MCTruthParticle* part = vtx->ParticleOut(p);
-      TMCParticle* tpart = tvtx->AddParticleOut();
-      tpart->SetPDGCode(part->GetPDGCode());
-      tpart->SetEnergy(part->GetEnergy());
-      tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
+  if (fManager->IsEnabled()) {
+    fEvent->SetEventWeight(fManager->GetEventWeight());
+    for(G4int v=0; v<fManager->GetNVertices(); v++) {
+      MCTruthVertex* vtx = fManager->Vertex(v);
+      TMCVertex* tvtx = fEvent->AddVertex();
+      tvtx->SetProcess(vtx->GetProcess());
+      tvtx->SetPosition(TVector3(vtx->GetPosX(),vtx->GetPosY(),vtx->GetPosZ()));
+      tvtx->SetTime(vtx->GetTime());
+      for(G4int p=0; p<vtx->GetNParticlesIn(); p++) {
+	MCTruthParticle* part = vtx->ParticleIn(p);
+	TMCParticle* tpart = tvtx->AddParticleIn();
+	tpart->SetPDGCode(part->GetPDGCode());
+	tpart->SetEnergy(part->GetEnergy());
+	tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
+      }
+      for(G4int p=0; p<vtx->GetNParticlesOut(); p++) {
+	MCTruthParticle* part = vtx->ParticleOut(p);
+	TMCParticle* tpart = tvtx->AddParticleOut();
+	tpart->SetPDGCode(part->GetPDGCode());
+	tpart->SetEnergy(part->GetEnergy());
+	tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
+      }
     }
   }
 

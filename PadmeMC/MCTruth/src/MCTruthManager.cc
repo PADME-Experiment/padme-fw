@@ -13,6 +13,7 @@ MCTruthManager* MCTruthManager::fInstance = 0;
 
 MCTruthManager::MCTruthManager()
 {
+  fEnabled = true;
   Clear();
 }
 

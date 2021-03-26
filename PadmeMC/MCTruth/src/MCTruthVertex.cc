@@ -7,8 +7,6 @@
 
 #include "MCTruthVertex.hh"
 
-#include "MCTruthParticle.hh"
-
 MCTruthVertex::MCTruthVertex()
 {
   Clear();

@@ -22,6 +22,7 @@
 #include "BeamMessenger.hh"
 #include "HistoManager.hh"
 #include "DetectorConstruction.hh"
+#include "MCTruthManager.hh"
 
 BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
  :fDetector(myDC)
@@ -44,6 +45,9 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
   fHistoManager = HistoManager::GetInstance();
+
+  // Connect to MCTruth manager
+  fMCTruthMgr = MCTruthManager::GetInstance();
 
 }
 
@@ -402,6 +406,14 @@ void BeamGenerator::CreateFinalStateUboson()
 
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);
+
+  // Store Uboson event in MCTruth
+  if (fMCTruthMgr->IsEnabled()) {
+    MCTruthVertex* tvtx = fMCTruthMgr->AddVertex("UBosonGamma",G4ThreeVector(Dx,Dy,Dz),Dt);
+    tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+    tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("geantino")->GetPDGEncoding(),Up[0],G4ThreeVector(Up[1],Up[2],Up[3]));
+    tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),gp[0],G4ThreeVector(gp[1],gp[2],gp[3]));
+  }
   
 }
 
@@ -455,6 +467,13 @@ void BeamGenerator::CreateFinalStateThreeGamma()
     // Create primary vertex at decay point
     G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
 
+    // Store vertex and primary positron in MCTruth
+    MCTruthVertex* tvtx;
+    if (fMCTruthMgr->IsEnabled()) {
+      tvtx = fMCTruthMgr->AddVertex("ThreeGamma",G4ThreeVector(Dx,Dy,Dz),Dt);
+      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+    }
+
     //G4cout << "BeamGenerator 3Gamma - Positron Theta " << theta << " Phi " << phi
     //	   << " Vertex " << G4ThreeVector(Dx,Dy,Dz) << " Time " << Dt << G4endl;
 
@@ -490,6 +509,11 @@ void BeamGenerator::CreateFinalStateThreeGamma()
       G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
 						       gamma_p.x(),gamma_p.y(),gamma_p.z(),p[0]);
       vtx->SetPrimary(gamma);
+
+      // Store gamma in MCTruth
+      if (fMCTruthMgr->IsEnabled()) {
+	tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),p[0],gamma_p);
+      }
 
       //sum[0] += gamma_p.x();
       //sum[1] += gamma_p.y();
@@ -559,6 +583,13 @@ void BeamGenerator::CreateFinalStateTwoGamma()
     // Create primary vertex at decay point
     G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
     
+    // Store vertex and primary positron in MCTruth
+    MCTruthVertex* tvtx;
+    if (fMCTruthMgr->IsEnabled()) {
+      tvtx = fMCTruthMgr->AddVertex("TwoGamma",G4ThreeVector(Dx,Dy,Dz),Dt);
+      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+    }
+
     // Decode input line
     std::istringstream iss(Line);
 
@@ -597,6 +628,11 @@ void BeamGenerator::CreateFinalStateTwoGamma()
       G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
 						       gamma_p.x(),gamma_p.y(),gamma_p.z(),p[0]);
       vtx->SetPrimary(gamma);
+
+      // Store gamma in MCTruth
+      if (fMCTruthMgr->IsEnabled()) {
+	tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),p[0],gamma_p);
+      }
 
     }
 

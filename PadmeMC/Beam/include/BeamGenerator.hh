@@ -20,6 +20,7 @@ class G4Event;
 class BeamMessenger;
 class HistoManager;
 class DetectorConstruction;
+class MCTruthManager;
 
 struct BeamPrimaryPositron
 {
@@ -77,6 +78,8 @@ private:
   G4Event* fEvent;
   
   DetectorConstruction* fDetector;
+
+  MCTruthManager* fMCTruthMgr;
 
   BeamMessenger* fBeamMessenger;
   HistoManager* fHistoManager;

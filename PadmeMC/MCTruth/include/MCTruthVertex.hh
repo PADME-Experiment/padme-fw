@@ -11,7 +11,7 @@
 #include "globals.hh"
 #include "G4ThreeVector.hh"
 
-class MCTruthParticle;
+#include "MCTruthParticle.hh"
 
 class MCTruthVertex
 {

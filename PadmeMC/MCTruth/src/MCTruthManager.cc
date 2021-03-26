@@ -7,8 +7,6 @@
 
 #include "MCTruthManager.hh"
 
-#include "MCTruthVertex.hh"
-
 MCTruthManager* MCTruthManager::fInstance = 0;
 
 MCTruthManager::MCTruthManager()

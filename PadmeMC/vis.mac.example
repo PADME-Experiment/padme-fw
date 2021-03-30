@@ -194,7 +194,7 @@
 #/beam/ubunch_time_delay 350. ps
 #/beam/position_x 0. cm
 #/beam/position_y 0. cm
-#/beam/position_z -103. cm
+#/beam/position_z -1028.001 mm
 #/beam/position_spread_on true
 #/beam/position_x_spread 1. mm
 #/beam/position_y_spread 1. mm
@@ -222,6 +222,15 @@
 #/beam/position_y 0. cm
 #/beam/position_z -4596.36 mm
 #/beam/direction -1. 0. 1.
+
+# Define beam parameters at target
+# This is used for special generations (Uboson, two/three gamma) when beam origin is not in front of Target
+#/beam/at_target_z -1028.001 mm
+#/beam/at_target_x_spread 0.8 mm
+#/beam/at_target_y_spread 1.3 mm
+#/beam/at_target_emittance_x 1. mrad
+#/beam/at_target_emittance_y 1. mrad
+#/beam/at_target_path_length 0. cm
 
 # Uboson generator
 #/beam/n_e+_per_bunch 1

@@ -31,7 +31,7 @@ BeamParameters::BeamParameters()
   // Position and spread of beam at Target front face (use default Target position: can be changed)
   fBeamCenterPosX = 0.*cm;
   fBeamCenterPosY = 0.*cm;
-  fBeamCenterPosZ = -103.*cm;
+  fBeamCenterPosZ = -1028.001*mm; // 1um before actual Target front face
 
   fBeamCenterPosApplySpread = true;
   fBeamCenterPosXSpread = 1.*mm;
@@ -68,6 +68,14 @@ BeamParameters::BeamParameters()
   fCalibRunCenterX = 14.*cm;
   fCalibRunCenterY = 14.*cm;
   fCalibRunRadius  =  1.*cm;
+
+  // Beam parameters at Target
+  fBeamTargetPosZ = -1028.001*mm; // 1um before actual Target front face
+  fBeamTargetSigmaX = 0.8*mm; // Need distribution
+  fBeamTargetSigmaY = 1.3*mm; // Need distribution
+  fBeamTargetEmittanceX = 1.*mrad; // Need distribution
+  fBeamTargetEmittanceY = 1.*mrad; // Need distribution
+  fBeamTargetPathLength = 0.*cm; // MUST be modified for BeamLine settings
 
 }
 

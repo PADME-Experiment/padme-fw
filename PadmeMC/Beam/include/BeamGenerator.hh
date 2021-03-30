@@ -65,6 +65,7 @@ public:
 private:
 
   void GeneratePrimaryPositron();
+  void GenerateTargetPositron();
   void CreateFinalStateUboson();
   void CreateFinalStateThreeGamma();
   void CreateFinalStateTwoGamma();

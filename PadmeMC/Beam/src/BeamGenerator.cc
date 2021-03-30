@@ -44,6 +44,8 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);
+
+  // Connect to Histogram manager
   fHistoManager = HistoManager::GetInstance();
 
   // Connect to MCTruth manager
@@ -103,8 +105,9 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   for(int ib = 0; ib < nUbosonDecays; ib++) {
 
-    // Generate primary e+ which will decay to Uboson+gamma
-    GeneratePrimaryPositron();
+    // Generate primary e+ in front of Target which will decay to Uboson+gamma
+    //GeneratePrimaryPositron();
+    GenerateTargetPositron();
 
     // Generate Uboson+gamma final state
     CreateFinalStateUboson();
@@ -116,8 +119,9 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //*********************
   for(int iggg = 0; iggg < nThreePhotonDecays; iggg++) {
 
-    // Generate primary e+ which will decay to three gammas
-    GeneratePrimaryPositron();
+    // Generate primary e+ in front of Target which will decay to three gamma
+    //GeneratePrimaryPositron();
+    GenerateTargetPositron();
 
     // Generate gamma+gamma+gamma final state
     CreateFinalStateThreeGamma();
@@ -130,14 +134,15 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //*********************
   for(int iggg = 0; iggg < nTwoPhotonDecays; iggg++) {
 
-    // Generate primary e+ which will decay to two gammas
-    GeneratePrimaryPositron();
+    // Generate primary e+ in front of Target which will decay to two gamma
+    //GeneratePrimaryPositron();
+    GenerateTargetPositron();
 
     // Generate gamma+gamma final state
     CreateFinalStateTwoGamma();
 
   }
-  
+
   //******************************************************
   //General BG generator particles on the target per event 
   //******************************************************
@@ -233,7 +238,7 @@ void BeamGenerator::GeneratePrimaryPositron()
 
     // Theta is gaussian with sigma from a phi-based combination of emittance along X and Y
     G4double sigma_theta = bpar->GetBeamEmittanceX()*cos(phi)+bpar->GetBeamEmittanceX()*sin(phi);
-    G4double theta = G4RandGauss::shoot(0,sigma_theta);
+    G4double theta = G4RandGauss::shoot(0.,sigma_theta);
 
     // Compute particle direction assuming beam is directed along Z (default direction)
     G4double pX = sin(theta)*cos(phi);
@@ -264,6 +269,49 @@ void BeamGenerator::GeneratePrimaryPositron()
 			      fPositron.P*fPositron.dir.y(),
 			      fPositron.P*fPositron.dir.z());
   //  G4cout << "BeamGenerator - Positron momentum vector " << fPositron.p << G4endl;
+
+}
+
+void BeamGenerator::GenerateTargetPositron()
+{
+
+  // Generate a standard positron so that timing and energy are correct
+  GeneratePrimaryPositron();
+
+  BeamParameters* bpar = BeamParameters::GetInstance();
+
+  // If the beam is generated at Target front face, do nothing
+  if (bpar->GetBeamTargetPathLength() == 0.) return;
+
+  // Correct energy for mylar window crossing (to be implemented)
+
+  // Position positron in front of Target (need distribution)
+  G4double sigmaX = bpar->GetBeamTargetSigmaX();
+  G4double sigmaY = bpar->GetBeamTargetSigmaY();
+  G4double x = G4RandGauss::shoot(0.,sigmaX);
+  G4double y = G4RandGauss::shoot(0.,sigmaY);
+  G4double z = bpar->GetBeamTargetPosZ();  
+  fPositron.pos = G4ThreeVector(x,y,z);
+
+  // Define direction (need emittance distribution)
+  G4double emitX = bpar->GetBeamTargetEmittanceX();
+  G4double emitY = bpar->GetBeamTargetEmittanceY();
+  G4double phi = twopi*G4UniformRand();
+  G4double sigmaTheta = emitX*cos(phi)+emitY*sin(phi);
+  G4double theta = G4RandGauss::shoot(0.,sigmaTheta);
+
+  // Compute direction vector
+  G4double pX = sin(theta)*cos(phi);
+  G4double pY = sin(theta)*sin(phi);
+  G4double pZ = cos(theta);
+  fPositron.dir = G4ThreeVector(pX,pY,pZ).unit();
+
+  // Define momentum vector
+  fPositron.P = sqrt(fPositron.E*fPositron.E-fPositron.m*fPositron.m);
+  fPositron.p = G4ThreeVector(fPositron.P*pX,fPositron.P*pY,fPositron.P*pZ);
+
+  // Correct positron time for path length from beam origin to Target
+  fPositron.t = fPositron.t+bpar->GetBeamTargetPathLength()/(c_light*fPositron.P/fPositron.E);
 
 }
 

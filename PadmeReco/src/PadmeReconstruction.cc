@@ -6,6 +6,10 @@
 #include "TMCEvent.hh"
 #include "TRecoEvent.hh"
 
+#include "TMCTruthEvent.hh"
+#include "TMCVertex.hh"
+#include "TMCParticle.hh"
+
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
 #include "TPVetoMCEvent.hh"
@@ -40,6 +44,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
 
   // Input event structures will be allocated if corresponding branch exists
   fMCEvent        = 0;
+  fMCTruthEvent   = 0;
   fTargetMCEvent  = 0;
   fEVetoMCEvent   = 0;
   fPVetoMCEvent   = 0;
@@ -226,6 +231,10 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="TPix") {
 	fTPixMCEvent = new TTPixMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
+      } else if (branchName=="MCTruth") {
+	printf("PadmeReconstruction - Found MCTruth branch\n");
+	fMCTruthEvent = new TMCTruthEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
 
     }
@@ -340,6 +349,21 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
       }
     }
+
+    // Show MCTruth information (example)
+    //printf("MCTruthEvent - Run %d Event %d Weight %8.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
+    //for(Int_t i=0;i<fMCTruthEvent->GetNVertices();i++) {
+    //  TMCVertex* vtx = fMCTruthEvent->Vertex(i);
+    //  printf("\tVertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",i,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
+    //  for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
+    //	TMCParticle* p = vtx->ParticleIn(j);
+    //	printf("\t\tParticle In %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+    //  }
+    //  for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
+    //	TMCParticle* p = vtx->ParticleOut(j);
+    //	printf("\t\tParticle Out %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+    //  }
+    //}
 
     fNProcessedEventsInTotal++;
     return true;

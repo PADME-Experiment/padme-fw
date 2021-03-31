@@ -14,6 +14,8 @@ class TRawEvent;
 class TMCEvent;
 class TRecoEvent;
 
+class TMCTruthEvent;
+
 class TTargetMCEvent;
 class TEVetoMCEvent;
 class TPVetoMCEvent;
@@ -84,6 +86,8 @@ private:
 
   TMCEvent* fMCEvent;
 
+  TMCTruthEvent* fMCTruthEvent;
+
   TTargetMCEvent*  fTargetMCEvent;
   TEVetoMCEvent*   fEVetoMCEvent;
   TPVetoMCEvent*   fPVetoMCEvent;
@@ -91,7 +95,6 @@ private:
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
-
 
   TRecoEvent*        fRecoEvent;
   TTargetRecoEvent*  fTargetRecoEvent;

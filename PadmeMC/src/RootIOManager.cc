@@ -240,7 +240,7 @@ void RootIOManager::NewRun(G4int nRun)
   while (iRootIO!=endRootIO) {
     //G4cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << G4endl;
     if ((*iRootIO)->GetEnabled()) {
-      //G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
+      G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
       (*iRootIO)->NewRun(nRun,fFile,detInfo);
       //(*iRootIO)->NewRun(nRun,fFile);
     }

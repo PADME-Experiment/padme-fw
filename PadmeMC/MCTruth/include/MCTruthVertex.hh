@@ -23,8 +23,6 @@ public:
 
 public:
 
-  void Clear();
-
   void SetProcess(G4String t) { fProcess = t; }
   G4String GetProcess() { return fProcess; }
 
@@ -46,6 +44,8 @@ public:
   MCTruthParticle* ParticleOut(G4int);
 
 private:
+
+  void Clear();
   
   G4String      fProcess;
   G4ThreeVector fPosition;

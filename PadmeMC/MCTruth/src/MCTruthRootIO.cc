@@ -11,6 +11,7 @@
 
 #include "G4Event.hh"
 #include "G4UnitsTable.hh"
+#include "G4SystemOfUnits.hh"
 
 #include "RootIOManager.hh"
 
@@ -86,7 +87,9 @@ void MCTruthRootIO::SaveEvent(const G4Event* eventG4)
   fEvent->Clear();
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
+  //printf("MCTruthRootIO - Run %d Event %d\n",fEvent->GetRunNumber(),fEvent->GetEventNumber());
   if (fManager->IsEnabled()) {
+    //printf("MCTruthRootIO - Checking MCTruthManager\n");
     fEvent->SetEventWeight(fManager->GetEventWeight());
     for(G4int v=0; v<fManager->GetNVertices(); v++) {
       MCTruthVertex* vtx = fManager->Vertex(v);
@@ -94,12 +97,14 @@ void MCTruthRootIO::SaveEvent(const G4Event* eventG4)
       tvtx->SetProcess(vtx->GetProcess());
       tvtx->SetPosition(TVector3(vtx->GetPosX(),vtx->GetPosY(),vtx->GetPosZ()));
       tvtx->SetTime(vtx->GetTime());
+      //G4cout << "MCTruthRootIO - Vertex " << tvtx->GetProcess() << " Time " << tvtx->GetTime() << " Position " << vtx->GetPosition() << G4endl;
       for(G4int p=0; p<vtx->GetNParticlesIn(); p++) {
 	MCTruthParticle* part = vtx->ParticleIn(p);
 	TMCParticle* tpart = tvtx->AddParticleIn();
 	tpart->SetPDGCode(part->GetPDGCode());
 	tpart->SetEnergy(part->GetEnergy());
 	tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
+	//G4cout << "MCTruthRootIO - Particle In " << tpart->GetPDGCode() << " Energy " << tpart->GetEnergy() << " Momentum " << part->GetMomentum() << G4endl;
       }
       for(G4int p=0; p<vtx->GetNParticlesOut(); p++) {
 	MCTruthParticle* part = vtx->ParticleOut(p);
@@ -107,6 +112,7 @@ void MCTruthRootIO::SaveEvent(const G4Event* eventG4)
 	tpart->SetPDGCode(part->GetPDGCode());
 	tpart->SetEnergy(part->GetEnergy());
 	tpart->SetMomentum(TVector3(part->GetMomX(),part->GetMomY(),part->GetMomZ()));
+	//G4cout << "MCTruthRootIO - Particle Out " << tpart->GetPDGCode() << " Energy " << tpart->GetEnergy() << " Momentum " << part->GetMomentum() << G4endl;
       }
     }
   }

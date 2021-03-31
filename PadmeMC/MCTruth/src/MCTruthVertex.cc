@@ -7,9 +7,12 @@
 
 #include "MCTruthVertex.hh"
 
+#include "G4SystemOfUnits.hh"
+
 MCTruthVertex::MCTruthVertex()
 {
   Clear();
+  printf("MCTruth Null Vertex\n");
 }
 
 MCTruthVertex::MCTruthVertex(G4String process, G4ThreeVector position, G4double time)
@@ -18,6 +21,7 @@ MCTruthVertex::MCTruthVertex(G4String process, G4ThreeVector position, G4double 
   fProcess = process;
   fPosition = position;
   fTime = time;
+  //G4cout << "MCTruthVertex " << fProcess << " " << fTime << " " << fPosition << G4endl;
 }
 
 MCTruthVertex::~MCTruthVertex()
@@ -30,12 +34,8 @@ void MCTruthVertex::Clear()
   fProcess = "";
   fPosition = G4ThreeVector(0.,0.,0.);
   fTime = 0.;
-  for(std::vector<MCTruthParticle*>::iterator it = fParticleIn.begin(); it != fParticleIn.end(); ++it) {
-    if (*it) delete *it;
-  }
-  for(std::vector<MCTruthParticle*>::iterator it = fParticleOut.begin(); it != fParticleOut.end(); ++it) {
-    if (*it) delete *it;
-  }
+  fParticleIn.clear();
+  fParticleOut.clear();
 }
 
 MCTruthParticle* MCTruthVertex::AddParticleIn(G4int pdgCode,G4double energy, G4ThreeVector momentum)

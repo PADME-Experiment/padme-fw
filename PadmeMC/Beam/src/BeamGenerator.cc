@@ -65,6 +65,9 @@ BeamGenerator::~BeamGenerator()
 void BeamGenerator::GenerateBeam(G4Event* anEvent)
 { 
 
+  // Reset MCTruth event
+  if (MCTruthManager::GetInstance()->IsEnabled()) MCTruthManager::GetInstance()->Clear();
+
   fEvent = anEvent;
 
   BeamParameters* bpar = BeamParameters::GetInstance();
@@ -321,6 +324,7 @@ void BeamGenerator::CreateFinalStateUboson()
 
   // Get mass of the Uboson
   G4double ubosonM = BeamParameters::GetInstance()->GetUbosonMass();
+  //G4cout << "BeamGenerator - Uboson mass " << ubosonM/MeV << " MeV" << G4endl;
 
   //Define the process: X->Uboson+gamma
 

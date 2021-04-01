@@ -100,7 +100,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 5.");
+  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 10.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
@@ -108,7 +108,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 5.");
+  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 10.");
   fSetBeamCenterPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamMomentumCmd = new G4UIcmdWithADoubleAndUnit("/beam/momentum",this);

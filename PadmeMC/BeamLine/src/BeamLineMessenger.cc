@@ -60,6 +60,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetDHSTB002MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
   fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //Windows Thicknerss
+  fSetWindowThicknessCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/WindowThickness",this);
+  fSetWindowThicknessCmd->SetGuidance("Thickness of Mylar or BeW");
+  fSetWindowThicknessCmd->SetParameterName("DFY",false);
+  fSetWindowThicknessCmd->SetDefaultUnit("mm");
+  fSetWindowThicknessCmd->SetRange("DFY >=0. && DFY < 1.");
+  fSetWindowThicknessCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
   fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
   fEnableQuadrupolesCmd->SetParameterName("QPS",false);
@@ -109,6 +117,7 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fEnableMylarWindowCmd;
   delete fEnableBeamFlagCmd;
   delete fSetDHSTB002MagneticFieldYCmd;
+  delete fSetWindowThicknessCmd;
   delete fBeamLineDir;
   delete fBeamLineSetupCmd;
 
@@ -143,6 +152,9 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     fBeamLineGeometry->SetDHSTB002MagneticFieldY(fSetDHSTB002MagneticFieldYCmd->GetNewDoubleValue(par));
+  //window Thickness MR 29/03/2021
+  else if ( cmd == fSetWindowThicknessCmd )
+    fBeamLineGeometry->SetWindowThickness(fSetWindowThicknessCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fBeamLineSetupCmd )
     fBeamLineGeometry->SetBeamLineSetup(fBeamLineSetupCmd->GetNewDoubleValue(par));

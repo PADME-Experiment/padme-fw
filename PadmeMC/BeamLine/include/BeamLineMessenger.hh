@@ -46,6 +46,7 @@ private:
   G4UIcmdWithABool* fEnableMylarWindowCmd;
   G4UIcmdWithABool* fEnableBeamFlagCmd;
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetWindowThicknessCmd;  //MR 29/03/2021
   
   G4UIcmdWithABool* fEnableQuadrupolesCmd;
   G4UIcmdWithADouble* fSetQ1_FieldGradCmd;

@@ -52,9 +52,12 @@ public:
   G4String fBeamFlag3SensitiveDetectorName; 
 
   // Magnetic field inside DHSTB002
-
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
+
+  // Mylar or BeWthickness
+  void SetWindowThickness(G4double f) { fWindowThickness = f; }
+  G4double GetWindowThickness() { return fWindowThickness;}
 
   // Enable/disable quadrupoles
   void EnableQuadrupoles() { fQuadrupolesEnable = true; }
@@ -225,6 +228,7 @@ private:
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
+  G4double fWindowThickness;
 
   // Gradient of Quadrupoles Magnetic field 
   //G4double fQ1_FieldGrad;  //from data cards

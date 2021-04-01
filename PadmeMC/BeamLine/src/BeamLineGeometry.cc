@@ -168,6 +168,7 @@ BeamLineGeometry::BeamLineGeometry()
   //verifica con foggetta tutte le misure
   fMylarWindowRadius = 30.5*mm;
   fMylarWindowThick =  0.125*mm;  //Checked wiht BTF report M. Raggi 03.21
+  fWindowThickness  =  0.125*mm;  //Checked wiht BTF report M. Raggi 03.21
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
 
@@ -180,6 +181,13 @@ BeamLineGeometry::BeamLineGeometry()
 
   fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from Di giulio report 07/2020
   fQ2MagneticFieldGrad =  2.510*tesla/m;
+
+//  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
+//  fQ2MagneticFieldGrad =  2.710*tesla/m;
+
+//  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm
+//  fQ2MagneticFieldGrad =  2.910*tesla/m;
+  
   fQ3MagneticFieldGrad =  3.833*tesla/m;
   fQ4MagneticFieldGrad =  3.925*tesla/m;
 

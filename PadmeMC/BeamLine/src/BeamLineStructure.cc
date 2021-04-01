@@ -56,6 +56,7 @@ BeamLineStructure::BeamLineStructure(G4LogicalVolume* motherVolume)
 
 BeamLineStructure::~BeamLineStructure()
 {
+  delete fBeamLineMessenger;
 }
 
 void BeamLineStructure::CreateGeometry()
@@ -115,7 +116,8 @@ void BeamLineStructure::CreateMylarThinWindow()
   // Create Mylar thin window and its support flange
 
   G4double mylarWinR = geo->GetMylarWindowRadius();
-  G4double mylarWinT = geo->GetMylarWindowThick();
+  //  G4double mylarWinT = geo->GetMylarWindowThick();  //from the geometry
+  G4double mylarWinT = geo->GetWindowThickness();  //from the new data card M. Raggi 29/03/2021
   G4double mylarWinFlgR = geo->GetMylarWindowFlangeRadius();
   G4double mylarWinFlgT = geo->GetMylarWindowFlangeThick();
 
@@ -142,7 +144,7 @@ void BeamLineStructure::CreateMylarThinWindow()
     new G4PVPlacement(0,G4ThreeVector(0.,0.,0.5*mylarWinT),logicalMylarWin,"BeamLineMylarWindow",fMylarWindowVolume,false,0,true);    
     // The Mylar window is a sensitive detector
     G4String MylarWSDName = geo->GetMylarWSensitiveDetectorName();
-    printf("Registering MylarW SD %s\n",MylarWSDName.data());
+    printf("Registering MylarW SD %s with Thickness %f\n",MylarWSDName.data(),mylarWinT);
     MylarWSD* mylarWSD = new MylarWSD(MylarWSDName);
     fMylarWindowVolume->SetSensitiveDetector(mylarWSD);
     G4SDManager::GetSDMpointer()->AddNewDetector(mylarWSD);

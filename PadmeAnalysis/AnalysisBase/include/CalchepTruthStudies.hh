@@ -37,6 +37,11 @@ public:
   void FillComparisonHisto(double R1, double E1,double R2, double E2,double R1reco, double E1reco,double R2reco, double E2reco, std::string sufix);
   void FillHistoNCl3(double R1, double E1,double R2, double E2,double R3, double E3, std::string sufix);
   void getCalchepTruth();
+  void extractEfficiency(Double_t rg1T, Double_t eg1T,Double_t phig1, Double_t rg2T, Double_t eg2T,Double_t phig2);
+  void FillGeneralHistoEff(Double_t rg1, Double_t eg1, Double_t rg2, Double_t eg2, std::string sufix);
+  void FillPhiRHistograms(Double_t rg1, Double_t eg1, Double_t phig1, std::string sufix);
+  void FillPhiRHistograms_noFR(Double_t rg1, Double_t eg1, Double_t phig1, std::string sufix);
+  void FillPhiRVariablesHistograms_noFR(Double_t rg1, Double_t phig1, std::string sufix);
 
 protected:
   TRecoEvent*           fRecoEvent;

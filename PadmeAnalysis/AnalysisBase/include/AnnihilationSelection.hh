@@ -7,6 +7,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 #include <fstream>
+#include "AnnihilationSelectionDataMCMethod.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -43,9 +44,13 @@ public:
   Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC);
   Double_t ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t plusSys);
   Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t plusSys);
+  Double_t ReturnEfficiencyTruthR1inFR(Double_t radius, Double_t phi);
+  Double_t ReturnEfficiencyTruthR1R2inFR(Double_t radius, Double_t phi);
   void FillWeightedHisto_R1inFR(std::string sufix);
+  void FillWeightedTruthHisto_R1inFR(std::string sufix);
   void FillWeightedHisto_R2inFR(std::string sufix);
   void FillWeightedHisto_R1R2inFR(std::string sufix);
+  void FillWeightedTruthHisto_R1R2inFR(std::string sufix);
 
   Double_t ReturnAccettanceEffective_g1g2FR(Double_t radius);
   Double_t ReturnAccettanceEffective_g1FR(Double_t radius);
@@ -55,6 +60,7 @@ public:
   void FillAccEffHisto_R1R2inFR(std::string sufix);
 
   void fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR);
+  void fillEffVectorTruth();
 
  
 protected:
@@ -66,6 +72,8 @@ protected:
   TRecoVClusCollection* fECal_ClColl      ;
   TRecoVClusCollection* fSAC_ClColl       ;
   TTargetRecoBeam*      fTarget_RecoBeam  ;
+
+  AnnihilationSelectionDataMCMethod* fDataMCMethod ;
 
 
   // fVerbose = 0 (minimal printout),  = 1 (info mode),  = 2 (debug quality)...
@@ -127,6 +135,11 @@ private:
   Double_t fEffOuterRRange_r1inFR[8];
   Double_t fEffInnerRRange_r1r2inFR[8];
   Double_t fEffOuterRRange_r1r2inFR[8];
+
+  Double_t fEffInnerRRangeFromTruth_r1inFR[8];	
+  Double_t fEffOuterRRangeFromTruth_r1inFR[8];	
+  Double_t fEffInnerRRangeFromTruth_r1r2inFR[8];
+  Double_t fEffOuterRRangeFromTruth_r1r2inFR[8];
   
   Double_t fEffUpperSysInnerRRange_r1inFR[8];
   Double_t fEffUpperSysOuterRRange_r1inFR[8];

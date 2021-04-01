@@ -322,7 +322,8 @@ int main(Int_t argc, char **argv)
    //int histoOutput
    //hSvc->book(fProcessingMode);
    hSvc->book(fProcessingMode, fntuple);
-   Bool_t boolCalchep=false;
+   Bool_t boolCalchep=true;
+   Bool_t boolAnnTagProbe=true;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -370,23 +371,24 @@ int main(Int_t argc, char **argv)
      AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
      TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
      if(boolCalchep)CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
-     AnnSel->InitHistos();
-     TagandProbeSel->InitHistos();
      if(boolCalchep) CalchepTruth->InitHistos();
-
-     AnnSel->Init(fRecoEvent, 
+       if(boolAnnTagProbe){
+       AnnSel->InitHistos();
+       TagandProbeSel->InitHistos();
+   }
+     if(boolAnnTagProbe){
+       AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam);
-     TagandProbeSel->Init(fRecoEvent, 
+       TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam );
+     }
      if(boolCalchep) CalchepTruth->Init(fRecoEvent, 
 					fECalRecoEvent,    fECalRecoCl);
    }
-  
-
    
     PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
      event->RecoEvent            =fRecoEvent          ;
@@ -406,8 +408,8 @@ int main(Int_t argc, char **argv)
      //UserAn->InitHistos();
      //gTimeAn->InitHistos();
 
-     UserAn->Init(event);
-     gTimeAn->Init(event);
+     //UserAn->Init(event);
+     //gTimeAn->Init(event);
     
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -468,9 +470,11 @@ int main(Int_t argc, char **argv)
        hepvetoAn   ->Process();
        //evSel       ->Process();
       
-       if(fProcessingMode==0){  
-	 AnnSel->Process(isMC);
-	 TagandProbeSel->Process(isMC);
+       if(fProcessingMode==0){ 
+	 if(boolAnnTagProbe){ 
+	   AnnSel->Process(isMC);
+	   TagandProbeSel->Process(isMC);
+	 }
 	 if(boolCalchep)  CalchepTruth->Process();
 	 //       UserAn      ->Process();
 	 //       gTimeAn     ->Process();

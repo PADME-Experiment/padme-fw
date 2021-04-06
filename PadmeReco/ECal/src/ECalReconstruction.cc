@@ -876,7 +876,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   return;// NGoodClus;
 }
 
-void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) { // use the waveform conversion
   //std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
   //fIsMC = true;
   Int_t i=0;
@@ -1044,7 +1044,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
 	}
 	Double_t tempEnergy=Charge200/15.;
 	//std::cout<<"max from template " << maxTempVec1 << " energy form calculation " << tempEnergy << std::endl;
-	GetHisto("DEnergy_digiTemplate")->Fill(energy_-tempEnergy);
+	GetHisto("DEnergy_digiTemplate")->Fill(tempEnergy-energy_);
       }
       /////////////////////////////////////////////////////////////////
 
@@ -1052,7 +1052,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
       Double_t meanNoise=-0.3492;
       //Double_t sigmaNoise=1.95; //from data all template
       Double_t sigmaNoise=-0.0168351+0.137532*energy_-0.000460502*energy_*energy_+5.00259e-07*energy_*energy_*energy_;   //from data rms function
-      for(int i=0; i<1024; i++){
+      for(int i=time_-30; i<1024; i++){
 	Double_t noise=r->Gaus(meanNoise, sigmaNoise);
 	//	wave_forDigitiser[i]+=noise;
 	tempVec.at(i)+=noise;

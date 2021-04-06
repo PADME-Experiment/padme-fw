@@ -132,7 +132,11 @@ Bool_t CalchepTruthStudies::InitHistos()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="CalchepVar_Phi2_g1inFR_AlongX";
   hSvc->BookHisto(hname, binX, minX, maxX);
-
+  binX=720;
+  minX=-360;
+  maxX=360;
+  hname="CalchepVar_MAP_g1inFR";
+  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX);
 
   binX=500;
   minX=0.;
@@ -518,13 +522,17 @@ void CalchepTruthStudies::getCalchepTruth(){
 
   FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar");
 
-  Double_t g1phi=TMath::ATan2(p1[1], p1[0])*360/TMath::Pi();
-  Double_t g2phi=TMath::ATan2(p2[1], p2[0])*360/TMath::Pi();
+  Double_t g1phi=TMath::ATan2(p1[1], p1[0])*360/2/TMath::Pi();
+  Double_t g2phi=TMath::ATan2(p2[1], p2[0])*360/2/TMath::Pi();
+  Double_t x1= g1Recal*cos(g1phi);
+  Double_t y1= g1Recal*sin(g1phi);
+  Double_t x2= g2Recal*cos(g2phi);
+  Double_t y2= g2Recal*sin(g2phi);
   TLorentzVector P4g1F, P4g2F;
   P4g1F.SetPxPyPzE(p1[0],p1[1],p1[2],g1E);
   P4g2F.SetPxPyPzE(p2[0],p2[1],p2[2],g2E);
-  Double_t g1phiL = P4g1F.Phi();
-  Double_t g2phiL = P4g2F.Phi();
+  Double_t g1phiL = P4g1F.Phi()*360/(2*TMath::Pi());
+  Double_t g2phiL = P4g2F.Phi()*360/(2*TMath::Pi());
   if(g1phi<0.)g1phi=360+g1phi;
   if(g2phi<0.)g2phi=360+g2phi;
   if(g1phiL<0.)g1phiL=360+g1phiL;
@@ -539,6 +547,9 @@ void CalchepTruthStudies::getCalchepTruth(){
     hSvc->FillHisto(hname, g1phi, 1.);
     hname="CalchepVar_Phi2Lorentz_g1inFR";
     hSvc->FillHisto(hname, g2phi, 1.);
+    hname="CalchepVar_MAP_g1inFR";
+    hSvc->FillHisto2(hname, x1, y1, 1.);
+    hSvc->FillHisto2(hname, x2, y2, 1.);
     if(fabs(g1phi-90)<45 || fabs(g1phi-270)<45){
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_AlongY");
       hname="CalchepVar_Phi1_g1inFR_AlongY";
@@ -564,8 +575,8 @@ void CalchepTruthStudies::getCalchepTruth(){
   }
 
   FillCalchepSmearedHisto(g1Recal,g2Recal);
-  if(g1phi<0.)g1phi=360+g1phi;
-  if(g2phi<0.)g2phi=360+g2phi;
+  //if(g1phi<0.)g1phi=360+g1phi;
+  //if(g2phi<0.)g2phi=360+g2phi;
   extractEfficiency(g1Recal, g1E,g1phi,g2Recal,g2E,g2phi);
 
   TRecoVCluster* ecalclu=NULL;
@@ -578,16 +589,18 @@ void CalchepTruthStudies::getCalchepTruth(){
   Double_t cl1x = ecalclu->GetPosition().X();
   Double_t cl1y = ecalclu->GetPosition().Y();
   Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/TMath::Pi();
-    
+  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/2/TMath::Pi();
+  if(phi1<0.)phi1=360+phi1;
+
   if(fECal_ClColl->GetNElements()==2){
     ecalclu2          = fECal_ClColl->Element(fIdCl_SortByEnergy.at(1));
     Double_t cl2E = ecalclu2->GetEnergy();
     Double_t cl2x = ecalclu2->GetPosition().X();
     Double_t cl2y = ecalclu2->GetPosition().Y();
     Double_t cl2r=sqrt(cl2x*cl2x+cl2y*cl2y);
-    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/TMath::Pi();
-     
+    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/2/TMath::Pi();
+    if(phi2<0.)phi2=360+phi2;
+
     FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2");
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl2");
     FillComparisonHisto(g1Recal, g1E,g2Recal,g2E,cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2");
@@ -618,15 +631,15 @@ void CalchepTruthStudies::getCalchepTruth(){
     Double_t cl2x = ecalclu2->GetPosition().X();
     Double_t cl2y = ecalclu2->GetPosition().Y();
     Double_t cl2r=sqrt(cl2x*cl2x+cl2y*cl2y);
-    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/TMath::Pi();
-    
+    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/2/TMath::Pi();
+    if(phi2<0.)phi2=360+phi2;
     ecalclu3          = fECal_ClColl->Element(fIdCl_SortByEnergy.at(2));
     Double_t cl3E = ecalclu3->GetEnergy();
     Double_t cl3x = ecalclu3->GetPosition().X();
     Double_t cl3y = ecalclu3->GetPosition().Y();
     Double_t cl3r=sqrt(cl3x*cl3x+cl3y*cl3y);
-    Double_t phi3=TMath::ATan2(cl3y, cl3x)*360/TMath::Pi();
-    
+    Double_t phi3=TMath::ATan2(cl3y, cl3x)*360/2/TMath::Pi();
+    if(phi3<0.)phi3=360+phi3;
     //+ comparison g1 truth g1 reco, g2 truth g2 reco if cl1 in FR e.g.
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl3");
     FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl3");
@@ -793,7 +806,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
 
-  if(rg1T>115.8 && rg1T<258){
+  if(rg1T>115.8 && rg1T<258.){
     hname="CalchepTruth_g1TruthinFR_RecoNCl";
     hSvc->FillHisto(hname, fECal_ClColl->GetNElements(), 1.);
     FillPhiRHistograms(rg1T, eg1T,phig1, "truthg1_g1inFR");
@@ -806,7 +819,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
     FillPhiRVariablesHistograms_noFR(rg2T,phig2, "truthg1g2_g1inFR");
 
     FillGeneralHistoEff(rg1T, eg1T,rg2T, eg2T,"truthFR_Truthg1inFR");
-    if(rg2T>115.8 && rg2T<258){
+    if(rg2T>115.8 && rg2T<258.){
       FillPhiRHistograms(rg1T, eg1T,phig1, "truthg1_g1g2inFR");
       FillPhiRHistograms(rg2T, eg2T,phig2, "truthg2_g1g2inFR");
 
@@ -837,15 +850,15 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/TMath::Pi();
-      if(phi1<0.)phi1=360+phi1;
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
       ecalclu2      = fECal_ClColl->Element(fIdCl_SortByEnergy.at(1));
       Double_t cl2E = ecalclu2->GetEnergy();
       Double_t cl2x = ecalclu2->GetPosition().X();
       Double_t cl2y = ecalclu2->GetPosition().Y();
       Double_t cl2r=sqrt(cl2x*cl2x+cl2y*cl2y);
-      Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/TMath::Pi();
-      if(phi2<0.)phi2=360+phi2;
+      Double_t phi2=TMath::ATan2(cl2y, cl2x)*360./2./TMath::Pi();
+      if(phi2<0.)phi2=360.+phi2;
 
       if(cl1r>115.8 && cl1r<258.){
 	FillPhiRHistograms(cl1r, cl1E, phi1,  "truthFR_recog1_g1inFR");
@@ -876,15 +889,15 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
     Double_t cl1x = ecalclu->GetPosition().X();
     Double_t cl1y = ecalclu->GetPosition().Y();
     Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-    Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/TMath::Pi();
-    if(phi1<0.)phi1=360+phi1;
+    Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+    if(phi1<0.)phi1=360.+phi1;
     ecalclu2      = fECal_ClColl->Element(fIdCl_SortByEnergy.at(1));
     Double_t cl2E = ecalclu2->GetEnergy();
     Double_t cl2x = ecalclu2->GetPosition().X();
     Double_t cl2y = ecalclu2->GetPosition().Y();
     Double_t cl2r=sqrt(cl2x*cl2x+cl2y*cl2y);
-    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360/TMath::Pi();
-    if(phi2<0.)phi2=360+phi2;
+    Double_t phi2=TMath::ATan2(cl2y, cl2x)*360./2./TMath::Pi();
+    if(phi2<0.)phi2=360.+phi2;
 
     if(cl1r>115.8 && cl1r<258.){
       FillPhiRHistograms(cl1r, cl1E, phi1,  "recog1_g1inFR");
@@ -935,7 +948,7 @@ void CalchepTruthStudies::FillGeneralHistoEff(Double_t rg1, Double_t eg1, Double
 //  Double_t cl1x = ecalclu->GetPosition().X();
 //  Double_t cl1y = ecalclu->GetPosition().Y();
 //  Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-//  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/TMath::Pi();
+//  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/2/TMath::Pi();
 //
 //  hname="CalchepComparison_R1reco_1cl"+sufix;
 //  hSvc->FillHisto(hname, cl1r, 1.);

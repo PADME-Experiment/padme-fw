@@ -1514,8 +1514,8 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
       if(ThirdHit) hECALthirdhitEnergyCorrected->Fill(ThirdEnergy); 
   }
  fCountEvent++;
- //if(fGlobalMode->GetGlobalDebugMode() && fAmplitude>30. && SecondHit/* && ThirdHit*/){
- /* if(fSaveAnalog) hListTmp->Write();
+ if(fGlobalMode->GetGlobalDebugMode() && fAmplitude>30. && SecondHit /*&& ThirdHit*/){
+  if(fSaveAnalog) hListTmp->Write();
     fCountSavedEvent++;
     histo->Reset();
     histo1->Reset();
@@ -1524,7 +1524,7 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
     histo4->Reset();
     histo5->Reset();
     ECal->Fill();
-  }*/
+  }
 
 }
 

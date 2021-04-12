@@ -308,8 +308,8 @@ void BeamLineStructure::CreateBeamLine2020()
   G4LogicalVolume* logicalSLTB4 = new G4LogicalVolume(solidSLTB4,G4Material::GetMaterial("G4_W"),"logicalSLTB4",0,0,0);
   logicalSLTB4->SetVisAttributes(steelVisAttr);
 
-  //  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
-  //  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
+  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
 
   //***********************************************
   // Setup quadrupoles pairs along the beam line

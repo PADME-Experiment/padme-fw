@@ -216,24 +216,24 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
 
-  // Killing particle in the LINAC region
-
-  //Killing in the collimators
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"){
-      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-      track->SetTrackStatus(fStopAndKill);
-    }
-  }
-
-  //Killing in the walls and beamlines
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
-       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
-      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-      track->SetTrackStatus(fStopAndKill);
-    }
-  }
+//  // Killing particle in the LINAC region
+//
+//  //Killing in the collimators
+//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"){
+//      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+//      track->SetTrackStatus(fStopAndKill);
+//    }
+//  }
+//
+//  //Killing in the walls and beamlines
+//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
+//       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
+//      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+//      track->SetTrackStatus(fStopAndKill);
+//    }
+//  }
   
 //  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
 //    if(track->GetVolume()->GetName()=="SAC") {

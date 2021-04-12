@@ -52,9 +52,9 @@ void HistoManager::book()
     return;
   }
   
-  histo[1] = new TH1D("h1", "EtotCrys", 1100, 0., 11000*CLHEP::MeV);
+  histo[1] = new TH1D("h1", "EtotCrys", 500, 0., 5000*CLHEP::MeV);
   if (!histo[1]) G4cout << "\n can't create histo 1" << G4endl;
-  histo[2] = new TH1D("h2", "EBeam", 900, 0., 900*CLHEP::MeV);
+  histo[2] = new TH1D("h2", "EBeam", 600, 0., 600*CLHEP::MeV);
   if (!histo[2]) G4cout << "\n can't create histo 2" << G4endl;
   histo[3] = new TH1D("h3", "TBeam", 100, 0., 100.);
   if (!histo[3]) G4cout << "\n can't create histo 3" << G4endl;

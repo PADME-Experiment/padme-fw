@@ -49,7 +49,6 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002ExitPosZ = -1635.00*mm; // From CAD drawings 12/04
 
   // Dimensions of DHSTB002 magnet
-
   // Angular span of the magnet
   fDHSTB002AngularSpan = 45.*deg;
 
@@ -109,7 +108,6 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeFlangePosZ = 0.5*fMagPipeStraightLength-0.5*fMagPipeFlangeThick;
 
   // Positions and rotations of straight sections
-
   fMagPipeStraightFrontPosX = 0.;
   fMagPipeStraightFrontPosZ = fDHSTB002ExitPosZ+0.5*fMagPipeStraightLength;
   fMagPipeStraightFrontRotY = 0.*deg;
@@ -162,7 +160,6 @@ BeamLineGeometry::BeamLineGeometry()
   fBeWindowThick = 250.*um;
   fBeWindowFlangeRadius = 0.5*113.5*mm;
   fBeWindowFlangeThick = 36.*mm; // was 17.5*mm (?)
-
   
   // Properties of Mylar thin window and its support flange Raggi 06/2020
   //verifica con foggetta tutte le misure
@@ -179,17 +176,26 @@ BeamLineGeometry::BeamLineGeometry()
   ///
   //         Quadrupoles Gradient = 8.372E-2 * I + 2.3767E-2
 
-  fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from Di giulio report 07/2020
+  fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from L FOggetta e-mail 31/03/2021
   fQ2MagneticFieldGrad =  2.510*tesla/m;
+  fQ3MagneticFieldGrad =  3.666*tesla/m; // was 3.833*tesla/m; in July Run
+  fQ4MagneticFieldGrad =  3.925*tesla/m;
 
+  ////////////////////////////////////////////////////////////////////////
+  // Collimators after mylar sltb4(LR) <-- sltb3(UPDW)  <-- Mylar 
+  ///////////////////////////////////////////////////////////////////////
+  // November 2020 tune L. Foggetta
+  //TB4R   26.16 TB4L   22.30          TB3 Up 26.06      TB3 Down 23.32	
+  //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
+  //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
+  fSLTB4Aperture= 4. *mm;
+  fSLTB3Aperture= 3.1*mm;
+  
 //  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.710*tesla/m;
-
 //  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.910*tesla/m;
   
-  fQ3MagneticFieldGrad =  3.833*tesla/m;
-  fQ4MagneticFieldGrad =  3.925*tesla/m;
 
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
   fQ4DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021

@@ -80,7 +80,7 @@ void BeamLineStructure::CreateGeometry()
     G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
     CreateMylarThinWindow(); // Create mylar Window
     CreateDHSTB002Magnet();
-    CreateBeamLine2020();    //beam line 2020
+    CreateBeamLine2020();    // Beam line 2020
   }
 }
 
@@ -253,7 +253,6 @@ void BeamLineStructure::CreateBeamLine2020()
   //  new G4PVPlacement(,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
   new G4PVPlacement(0,LinacWallPos,logicLinacWall,"LinacWall",fMotherVolume,false,0,true);
 
-
   // Position Mylar window with relative support flange
   G4double MylarWinFlgT    = geo->GetMylarWindowFlangeThick();
   G4double MylarWinFlgPosX = mpEntPosX+(WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT)*sin(magnetAngle);
@@ -266,6 +265,52 @@ void BeamLineStructure::CreateBeamLine2020()
   printf("BeamLine - DHSTB002 exit %f %f\n",mpEntPosX,mpEntPosZ);
   new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
 
+  ////////////////////////////////////////////////////////////////////////
+  // Collimators after mylar sltb4(LR) sltb3(UPDW)  Mylar 
+  ///////////////////////////////////////////////////////////////////////
+  // November 2020 tune L. Foggetta
+  //TB4R   26.16 TB4L   22.30          TB3 Up 26.06  TB3 Down 23.32	
+  //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024 TB3D_M   26.39    	
+  //TB4Ape  2.28    +    1.71 = 4mm    TB4Ape  0     +         3.07 = 3.07 mm
+
+  std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
+  std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
+
+  G4double SLTBThickness = 30.0*mm;
+  
+  G4double SLTB3ToMylar = 309.24*mm;
+  G4double SLTB3Aperture = geo->GetSLTB3Aperture();
+  G4double SLTB3PosX = MylarWinFlgPosX-(SLTB3ToMylar+SLTBThickness*0.5)*sin(magnetAngle);
+  G4double SLTB3PosY = MylarWinFlgPosY;							 
+  G4double SLTB3PosZ = MylarWinFlgPosZ+(SLTB3ToMylar+SLTBThickness*0.5)*cos(magnetAngle);
+
+  G4double SLTB4ToMylar = 519.24*mm;
+  G4double SLTB4Aperture = geo->GetSLTB4Aperture();
+
+  G4double SLTB4PosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*0.5)*sin(magnetAngle);
+  G4double SLTB4PosY = MylarWinFlgPosY;							 
+  G4double SLTB4PosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness*0.5)*cos(magnetAngle);
+
+  G4ThreeVector SLTB4Pos = G4ThreeVector(SLTB4PosX,SLTB4PosY,SLTB4PosZ);    
+  G4ThreeVector SLTB3Pos = G4ThreeVector(SLTB3PosX,SLTB3PosY,SLTB3PosZ);    
+    
+  G4Tubs* solidSLTB3Full = new G4Tubs("solidSLTB3Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
+  //  G4VSolid* solidSLTB3Hole = new G4Box("solidSLTB3Hole",SLTB3Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
+  G4VSolid* solidSLTB3Hole =new G4Box("solidSLTB3Hole",WallPipeRIn-0.1*mm,SLTB3Aperture*0.5,SLTBThickness+2*mm);
+  G4SubtractionSolid* solidSLTB3 = new G4SubtractionSolid("solidSLTB3",solidSLTB3Full,solidSLTB3Hole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume*  logicalSLTB3 = new G4LogicalVolume(solidSLTB3,G4Material::GetMaterial("G4_W"),"logicalSLTB3",0,0,0);
+  logicalSLTB3->SetVisAttributes(steelVisAttr);
+
+  G4Tubs* solidSLTB4Full = new G4Tubs("solidSLTB4Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
+  //  G4VSolid* solidSLTB4Hole = new G4Box("solidSLTB4Hole",WallPipeRIn-0.05*mm,SLTB4Aperture*0.5,SLTBThickness+2*mm);
+  G4VSolid* solidSLTB4Hole = new G4Box("solidSLTB4Hole",SLTB4Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
+  G4SubtractionSolid* solidSLTB4 = new G4SubtractionSolid("solidSLTB4",solidSLTB4Full,solidSLTB4Hole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalSLTB4 = new G4LogicalVolume(solidSLTB4,G4Material::GetMaterial("G4_W"),"logicalSLTB4",0,0,0);
+  logicalSLTB4->SetVisAttributes(steelVisAttr);
+
+  //  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
+  //  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+
   //***********************************************
   // Setup quadrupoles pairs along the beam line
   //***********************************************
@@ -276,8 +321,7 @@ void BeamLineStructure::CreateBeamLine2020()
     geo -> SetQ4MagneticFieldGrad(0.);
   }
 
-  if ( geo->QuadrupolesAreEnabled() ) {
-    
+  if ( geo->QuadrupolesAreEnabled() ) {    
     G4VisAttributes QuadVisAttr  = G4VisAttributes(G4Colour::Green());
     
     G4double Q4Radius       = geo -> Get2020PipeInnerRadius()-0.1*mm; // get the 2019 values
@@ -407,29 +451,6 @@ void BeamLineStructure::CreateBeamLine2020()
     new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q1Quad",fMotherVolume,false,0,true);
     printf("Placing Q1 quadrupole with gradient %f \n",Q1BGradient*m/tesla);
 
-
-//    ///////////////TEST q0 cancellami!!!
-//
-//
-//    //Q0 quadrupole fist of the 2020 beam line
-//    G4double Q0PosX   = 0.; 
-//    G4double Q0PosY   = 0.; 
-//    G4double Q0PosZ   = -400.*cm;
-//    
-//    G4ThreeVector Q0Pos = G4ThreeVector(Q0PosX,Q0PosY,Q0PosZ);
-////    G4RotationMatrix* Q0Rot= new G4RotationMatrix; //da veirficare
-////    Q0Rot->rotateY(0.);
-//
-//    G4LogicalVolume* logicQ0Quad = CreateQuadMagnets(Q1BGradient,Q4Leng,Q4Radius,Q0Pos,Q0Rot);
-//    logicQ0Quad->SetVisAttributes(QuadVisAttr);
-//    logicQ0Quad->SetName("logicQ0Quad");
-//    new G4PVPlacement(Q0Rot,Q0Pos,logicQ0Quad,"Q0Quad",fMotherVolume,false,0,true);
-//    printf("Placing Q0 quadrupole with gradient %f \n",Q1BGradient*m/tesla);
-
-
-
-    
-    
     ////////////////////////////////////////////////////////////////////////
     // Flag 7
     ///////////////////////////////////////////////////////////////////////
@@ -719,7 +740,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   G4ThreeVector strSidePos = G4ThreeVector(strSidePosX,0.,strSidePosZ);
   new G4PVPlacement(strSideRot,strSidePos,logicalStraightPipe,"DHSTB002FlangeSide",fMotherVolume,false,0,true);
 
-  G4double FlagR = geo->GetBeWindowRadius()-0.1*mm; //Use the same of the BeW
+  G4double FlagR = geo->GetBeWindowRadius()-0.2*mm; //Use the same of the BeW
   G4double FlagT = geo->GetBeWindowThick();  //Use the same of the BeW
 
   ////////////////////////////////////////////////////////////////////////
@@ -729,10 +750,10 @@ void BeamLineStructure::CreateDHSTB002Magnet()
 
   G4double      FlagBackPosX = mpEntPosX;
   G4double      FlagBackPosY = mpEntPosY;
-  G4double      FlagBackPosZ = mpEntPosZ;
+  G4double      FlagBackPosZ = mpEntPosZ-2*mm;
   G4ThreeVector FlagBackPos  = G4ThreeVector(FlagBackPosX,FlagBackPosY,FlagBackPosZ);
 
-  G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn()-150*um,0.5*FlagT,0.*deg,360.*deg);
+  G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn()-4*mm,0.5*FlagT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag1",0,0,0);
   logicalBeamFlag1->SetVisAttributes(FlagVisAttr);
 
@@ -742,10 +763,10 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   ///////////////////////////////////////////////////////////////////////
   
   G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX();
-  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2;
+  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2+2*mm;
   G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
   
-  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR,0.5*FlagT,0.*deg,360.*deg);
+  G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR-4*mm,0.5*FlagT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag2",0,0,0);
   logicalBeamFlag2->SetVisAttributes(FlagVisAttr);
   

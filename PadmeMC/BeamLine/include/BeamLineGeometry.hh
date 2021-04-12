@@ -1,3 +1,4 @@
+
 // BeamLineGeometry.hh
 // --------------------------------------------------------------
 // History:
@@ -76,6 +77,13 @@ public:
 
   void SetQ4MagneticFieldGrad(G4double g) { fQ4MagneticFieldGrad = g*tesla/m; }
   G4double GetQ4MagneticFieldGrad() { return fQ4MagneticFieldGrad; }
+
+  //Aperture of the collimators
+  void SetSLTB3Aperture(G4double g) { fSLTB3Aperture = g; }
+  G4double GetSLTB3Aperture() { return fSLTB3Aperture; }
+
+  void SetSLTB4Aperture(G4double g) { fSLTB4Aperture = g; }
+  G4double GetSLTB4Aperture() { return fSLTB4Aperture; }
 
   //setup line configuration M. Raggi 06/2020
   void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
@@ -197,15 +205,12 @@ public:
   G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
   G4double GetQ3Q4Dist(){return fQ3Q4Dist;} 
 
-
   // Get name of BeW sensitive detector
   G4String GetBeWSensitiveDetectorName() { return fBeWSensitiveDetectorName; }
   G4String GetMylarWSensitiveDetectorName() { return fMylarWSensitiveDetectorName; }
   G4String GetBeamFlag1SensitiveDetectorName() { return fBeamFlag1SensitiveDetectorName; }
   G4String GetBeamFlag2SensitiveDetectorName() { return fBeamFlag2SensitiveDetectorName; }
   G4String GetBeamFlag3SensitiveDetectorName() { return fBeamFlag3SensitiveDetectorName; }
-
-
 
   // BEAM line 2020 geometry parameters M. Raggi 02.2021 
   G4double GetDHSTB002WallDistance() { return fDHSTB002WallDistance;}
@@ -238,6 +243,10 @@ private:
   G4double fQ2MagneticFieldGrad;
   G4double fQ3MagneticFieldGrad;
   G4double fQ4MagneticFieldGrad;
+
+
+  G4double fSLTB4Aperture;
+  G4double fSLTB3Aperture;
 
   G4double fBeamLineSetup;
 
@@ -381,7 +390,6 @@ private:
   G4double fQ4DistFromDHSTB002;
   G4double fQ1Q2Dist;  //center to center in Linac
   G4double fQ3Q4Dist;  //center to center in BTF 
-
 
   G4double fWallThickness;
   G4double fWallPipeLen;

@@ -1,0 +1,51 @@
+/control/verbose 1
+/run/verbose 1
+/tracking/verbose 0
+
+/Detector/EnableStructure BeamLine
+/Detector/BeamLine/Setup 1.
+
+/Detector/SetMagneticFieldValue 0.3583 tesla
+/Detector/BeamLine/DHST002_FieldY -0.8325 tesla
+
+/Detector/BeamLine/EnableQuadrupoles true
+/Detector/BeamLine/EnableMylarWindow true
+#/Detector/BeamLine/WindowThickness 0.125 mm
+
+#/Detector/BeamLine/SLTB3Aperture 3
+#/Detector/BeamLine/SLTB4Aperture 3
+
+#/Detector/BeamLine/Q1_FieldGrad  2.810*tesla/m
+#/Detector/BeamLine/Q2_FieldGrad  2.510*tesla/m
+#/Detector/BeamLine/Q3_FieldGrad  3.666*tesla/m
+#/Detector/BeamLine/Q4_FieldGrad  3.925*tesla/m
+
+/beam/n_e+_per_bunch 32000
+/beam/bunch_time_length 270. ns
+/beam/momentum 430. MeV
+
+/beam/position_spread_on true
+/beam/position_x_spread 1. mm
+/beam/position_y_spread 1. mm
+
+/beam/momentum_spread_on true
+/beam/momentum_spread 0.645 MeV
+
+/beam/emittance_on true
+/beam/emittance_x 1. mrad
+/beam/emittance_y 1. mrad
+
+/beam/position_x  7232.1 mm
+/beam/position_y 0. cm
+/beam/position_z -9580.76 mm
+/beam/direction -1. 0. 1.
+
+/run/initialize
+/run/beamOn 20
+
+
+
+
+
+
+

@@ -762,8 +762,8 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   // Flag 2 after the DHSTB002 output pipe
   ///////////////////////////////////////////////////////////////////////
   
-  G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX();
-  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2+2*mm;
+  G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX()               +2*mm*sin(strFrontRotY);
+  G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2+2*mm*cos(strFrontRotY);
   G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
   
   G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR-4*mm,0.5*FlagT,0.*deg,360.*deg);

@@ -68,6 +68,22 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetWindowThicknessCmd->SetRange("DFY >=0. && DFY < 1.");
   fSetWindowThicknessCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //SLTB3 aperture
+  fSetSLTB3Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB3Aperture",this);
+  fSetSLTB3Cmd->SetGuidance("");
+  fSetSLTB3Cmd->SetParameterName("DFY",false);
+  fSetSLTB3Cmd->SetDefaultUnit("mm");
+  fSetSLTB3Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB3Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //SLTB4 aperture
+  fSetSLTB4Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB4Aperture",this);
+  fSetSLTB4Cmd->SetGuidance("");
+  fSetSLTB4Cmd->SetParameterName("DFY",false);
+  fSetSLTB4Cmd->SetDefaultUnit("mm");
+  fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB4Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
   fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
   fEnableQuadrupolesCmd->SetParameterName("QPS",false);
@@ -175,7 +191,6 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetQ2_FieldGradCmd )
     fBeamLineGeometry->SetQ2MagneticFieldGrad(fSetQ2_FieldGradCmd->GetNewDoubleValue(par));
 
-
   // Set Q3 gradient
   else if ( cmd == fSetQ3_FieldGradCmd )
     fBeamLineGeometry->SetQ3MagneticFieldGrad(fSetQ3_FieldGradCmd->GetNewDoubleValue(par));
@@ -183,6 +198,14 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   // Set Q4 gradient
   else if ( cmd == fSetQ4_FieldGradCmd )
     fBeamLineGeometry->SetQ4MagneticFieldGrad(fSetQ4_FieldGradCmd->GetNewDoubleValue(par));
+
+  // Set SLTB3 gradient
+  else if ( cmd == fSetSLTB3Cmd )
+    fBeamLineGeometry->SetSLTB3Aperture(fSetSLTB3Cmd->GetNewDoubleValue(par));
+
+  // Set SLTB4 gradient
+  else if ( cmd == fSetSLTB4Cmd )
+    fBeamLineGeometry->SetSLTB4Aperture(fSetSLTB4Cmd->GetNewDoubleValue(par));
 
 }
 

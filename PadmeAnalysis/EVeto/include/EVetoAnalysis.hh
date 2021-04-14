@@ -19,6 +19,7 @@ public:
 
   Bool_t Finalize(){return true;}
   Bool_t InitHistosAnalysis();
+  Bool_t InitHistosValidation();
   Bool_t InitHistosDataQuality();
   Bool_t ProcessAnalysis();
   Bool_t ProcessDataQuality();

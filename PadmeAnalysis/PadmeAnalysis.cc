@@ -337,14 +337,10 @@ int main(Int_t argc, char **argv)
    algoList.push_back(hepvetoAn);
    //EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
 
-   AnnihilationSelection* AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
-   TagAndProbeSelection* TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
    //   evSel->SetVersion(2);
    //evSel->SetVersion(1);
    
    //evSel->InitHistos();
-   AnnSel->InitHistos();
-   TagandProbeSel->InitHistos();
 
    sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
    ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
@@ -359,36 +355,52 @@ int main(Int_t argc, char **argv)
 //	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
 //	       fSACRecoEvent,     fSACRecoCl, 
 //	       fTargetRecoEvent,  fTargetRecoBeam );
-  
-   AnnSel->Init(fRecoEvent, 
+   AnnihilationSelection* AnnSel=0;
+   TagAndProbeSelection* TagandProbeSel=0 ;
+   PadmeAnalysisEvent *event=0;
+   UserAnalysis *UserAn=0;
+   GlobalTimeAnalysis *gTimeAn=0;
+   if(fProcessingMode==0){  
+     event = new PadmeAnalysisEvent();
+     UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+     gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
+
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     
+     AnnSel->InitHistos();
+     TagandProbeSel->InitHistos();
+
+     AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam);
-   TagandProbeSel->Init(fRecoEvent, 
+     TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam );
-
    
-    PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
+     event->RecoEvent            =fRecoEvent          ;
+     event->TargetRecoEvent      =fTargetRecoEvent    ;
+     event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+     event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+     event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+     event->ECalRecoEvent        =fECalRecoEvent      ;
+     event->SACRecoEvent         =fSACRecoEvent       ;
+     event->TargetRecoBeam       =fTargetRecoBeam     ;
+     event->SACRecoCl            =fSACRecoCl          ;
+     event->ECalRecoCl           =fECalRecoCl         ;
+     event->PVetoRecoCl          =fPVetoRecoCl        ;
+     event->EVetoRecoCl          =fEVetoRecoCl        ;
+     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+     
+     //UserAn->InitHistos();
+     //gTimeAn->InitHistos();
 
-    event->RecoEvent            =fRecoEvent          ;
-    event->TargetRecoEvent      =fTargetRecoEvent    ;
-    event->EVetoRecoEvent       =fEVetoRecoEvent     ;
-    event->PVetoRecoEvent       =fPVetoRecoEvent     ;
-    event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
-    event->ECalRecoEvent        =fECalRecoEvent      ;
-    event->SACRecoEvent         =fSACRecoEvent       ;
-    event->TargetRecoBeam       =fTargetRecoBeam     ;
-    event->SACRecoCl            =fSACRecoCl          ;
-    event->ECalRecoCl           =fECalRecoCl         ;
-    event->PVetoRecoCl          =fPVetoRecoCl        ;
-    event->EVetoRecoCl          =fEVetoRecoCl        ;
-    event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
-    UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
-    GlobalTimeAnalysis *gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
-    UserAn->Init(event);
-    gTimeAn->Init(event);
+     UserAn->Init(event);
+     gTimeAn->Init(event);
+
+   }
     
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -447,11 +459,14 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
-       //       gTimeAn     ->Process();
        //evSel       ->Process();
-       //       UserAn      ->Process();
-       AnnSel->Process(isMC);
-       TagandProbeSel->Process(isMC);
+       
+       if(fProcessingMode==0){  
+	 AnnSel->Process(isMC);
+	 TagandProbeSel->Process(isMC);
+	 //       UserAn      ->Process();
+	 //       gTimeAn     ->Process();
+       }
        //
        //
        hSvc->FillNtuple();
@@ -470,14 +485,16 @@ int main(Int_t argc, char **argv)
    hSvc->save();
 
    // cleanup 
-   delete sacAn;
-   delete ecalAn;
-   delete targetAn;
-   delete pvetoAn;
-   delete evetoAn;
-   delete hepvetoAn;
-   delete AnnSel;
-   delete TagandProbeSel;
+   if(sacAn)    delete sacAn;
+   if(ecalAn)   delete ecalAn;		
+   if(targetAn) delete targetAn;		
+   if(pvetoAn)  delete pvetoAn;		
+   if(evetoAn)  delete evetoAn;		
+   if(hepvetoAn)delete hepvetoAn;	
+   if(AnnSel)   delete AnnSel;		
+   if(TagandProbeSel)delete TagandProbeSel;	
+   if(UserAn)   delete UserAn;		
+   if(gTimeAn)  delete gTimeAn;          
    return 0;
    
 }

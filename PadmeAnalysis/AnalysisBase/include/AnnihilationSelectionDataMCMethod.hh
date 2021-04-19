@@ -54,6 +54,8 @@ private:
   Double_t fEffInnerRRange_r1r2inFR[8];
   Double_t fEffOuterRRange_r1r2inFR[8];
 
+  Int_t fdata;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

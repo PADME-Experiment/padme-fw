@@ -335,7 +335,7 @@ void compare_TargetNoTarget(std::string hname, double scalef=-1, double xmin=-99
    
   c->SaveAs(("outpng/"+hname+".png").c_str());
   c->Print(("pdfFile/AnalysisHisto_targetnotarget"+hnameFile+".pdf(").c_str());
-  if(lastSet==1) c->Print(("pdfFile/AnalysisHisto_targetnotarget"+hnameFile+".pdf)")-c_str());
+  if(lastSet==1) c->Print(("pdfFile/AnalysisHisto_targetnotarget"+hnameFile+".pdf)").c_str());
  
   delete pad1;
    delete pad2;

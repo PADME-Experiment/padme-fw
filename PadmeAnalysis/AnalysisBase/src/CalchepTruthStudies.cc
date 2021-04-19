@@ -66,9 +66,34 @@ Bool_t CalchepTruthStudies::Init(TRecoEvent* eventHeader,
   //fdistanceTarget=3511; //from fit on HitG4 z MPV posistion
   fdistanceTarget=3513; //from fit on HitG4 z MPV but target position given by the same sw used to simulate ... 
   fdistanceTarget=1030+2513; //from fit on HitG4 z mean but target position given by the same sw used to simulate ... 
-
+  fFRmin=115.82;
+  fFRmid=172.83;
+  fFRmax=258.0;
   fcountEvent=0;
 
+
+  Double_t tmpradiusRangeMin[3]={fFRmin, fFRmid, fFRmin};
+  Double_t tmpradiusRangeMax[3]={fFRmid, fFRmax, fFRmax};
+  Double_t tmpphiRange[9]={0., 45., 90., 135., 180., 225., 270., 315., 360.};      
+  for(int i=0; i<9; i++){
+    if(i<3){
+      radiusRangeMin[i]=tmpradiusRangeMin[i];
+      radiusRangeMax[i]=tmpradiusRangeMax[i];
+    }
+    phiRange[i]=tmpphiRange[i];
+  }
+  for(int i=0; i<3; i++){
+    for(int j=0;j<8; j++){
+      nTruth[i][j]=0;
+      nCluster_ifTruthOutRin[i][j]=0;
+      nCluster_ifTruthOutRout[i][j]=0;
+      nClusterOutRin_ifTruth[i][j]=0;
+      nClusterOutRout_ifTruth[i][j]=0;
+      nCluster_ifTRuth[i][j]=0;
+      nCluster[i][j]=0;
+      nCluster_ifnoTruth[i][j]=0;      
+    }
+  }
 
   fCalchep450.open("ee-gg_450MeV_NoPipe.txt");
   fCalchep430.open("ee-gg_430MeV_NoPipe.txt");
@@ -248,14 +273,6 @@ Bool_t CalchepTruthStudies::InitHistos()
     binX=250;
     minX=0.;
     maxX=500;  
-    hname="CalchepComparison_R1_"+sufix3.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="CalchepComparison_E1_"+sufix3.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="CalchepComparison_R2_"+sufix3.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="CalchepComparison_E2_"+sufix3.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="CalchepComparison_R3_"+sufix3.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="CalchepComparison_E3_"+sufix3.at(i);
@@ -343,6 +360,8 @@ Bool_t CalchepTruthStudies::InitHistos()
   sufixE1.push_back("recog1_g1g2inFR");
   sufixE1.push_back("recog2_g1g2inFR");
   sufixE1.push_back("recog1g2_g1g2inFR");
+  sufixE1.push_back("truthFR_recoAll");
+  sufixE1.push_back("recoAll");
   for(int i=0; i<sufixE1.size(); i++){
     binX=500;
     minX=0.;
@@ -514,31 +533,42 @@ void CalchepTruthStudies::getCalchepTruth(){
     g1E=g2E;
     g2E=etmp;
   }
+  else{
+    p1[0]=-p1[0];
+    p1[1]=-p1[1];
+    p1[2]=-p1[2];
+    p2[0]=-p2[0];
+    p2[1]=-p2[1];
+    p2[2]=-p2[2];
+  }
   Double_t PTransverse1 = sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
   Double_t PTransverse2 = sqrt(p2[0]*p2[0]+p2[1]*p2[1]);
   Double_t shiftEcal=sqrt(3.13*3.13+3.86*3.86);
   Double_t g1Recal=PTransverse1*fdistanceTarget/fabs(p1[2]);
   Double_t g2Recal=PTransverse2*fdistanceTarget/fabs(p2[2]);
+  //Double_t g1Recal=atan2(PTransverse1,fabs(p1[2]))*fdistanceTarget;
+  //Double_t g2Recal=atan2(PTransverse2,fabs(p2[2]))*fdistanceTarget;
 
   FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar");
 
-  Double_t g1phi=TMath::ATan2(p1[1], p1[0])*360/2/TMath::Pi();
-  Double_t g2phi=TMath::ATan2(p2[1], p2[0])*360/2/TMath::Pi();
+  Double_t g1phi=TMath::ATan2(p1[1], p1[0])*360./2./TMath::Pi();
+  Double_t g2phi=TMath::ATan2(p2[1], p2[0])*360./2./TMath::Pi();
   Double_t x1= g1Recal*cos(g1phi);
   Double_t y1= g1Recal*sin(g1phi);
   Double_t x2= g2Recal*cos(g2phi);
   Double_t y2= g2Recal*sin(g2phi);
+  //std::cout<<"g1, atan2 " << TMath::ATan2(p1[1], p1[0]) << " in deg " << g1phi << std::endl;
   TLorentzVector P4g1F, P4g2F;
   P4g1F.SetPxPyPzE(p1[0],p1[1],p1[2],g1E);
   P4g2F.SetPxPyPzE(p2[0],p2[1],p2[2],g2E);
-  Double_t g1phiL = P4g1F.Phi()*360/(2*TMath::Pi());
-  Double_t g2phiL = P4g2F.Phi()*360/(2*TMath::Pi());
-  if(g1phi<0.)g1phi=360+g1phi;
+  Double_t g1phiL = P4g1F.Phi()*360./(2.*TMath::Pi());
+  Double_t g2phiL = P4g2F.Phi()*360./(2.*TMath::Pi());
+  if(g1phi<0.){g1phi=360+g1phi;  }//std::cout<<"g1<0, so after correction " <<  g1phi << std::endl;}
   if(g2phi<0.)g2phi=360+g2phi;
   if(g1phiL<0.)g1phiL=360+g1phiL;
   if(g2phiL<0.)g2phiL=360+g2phiL;
 
-  if(g1Recal>115.8 && g1Recal<258){
+  if(g1Recal>fFRmin && g1Recal<258){
     hname="CalchepVar_Phi1_g1inFR";
     hSvc->FillHisto(hname, g1phi, 1.);
     hname="CalchepVar_Phi2_g1inFR";
@@ -556,7 +586,7 @@ void CalchepTruthStudies::getCalchepTruth(){
       hSvc->FillHisto(hname, g1phi, 1.);
       hname="CalchepVar_Phi2_g1inFR_AlongY";
       hSvc->FillHisto(hname, g2phi, 1.);
-      if(g2Recal>115.8 && g2Recal<258)FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR_AlongY");
+      if(g2Recal>fFRmin && g2Recal<258)FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR_AlongY");
     }
     else {
       hname="CalchepVar_Phi1_g1inFR_AlongX";
@@ -564,12 +594,12 @@ void CalchepTruthStudies::getCalchepTruth(){
       hname="CalchepVar_Phi2_g1inFR_AlongX";
       hSvc->FillHisto(hname, g2phi, 1.);
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_AlongX");
-      if(g2Recal>115.8 && g2Recal<258)FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR_AlongX");
+      if(g2Recal>fFRmin && g2Recal<258)FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR_AlongX");
     }
 
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR");
     if(fabs(g1phi)<45. || fabs(g1phi-180)< 45. ) FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_PhiCut");
-    if(g2Recal>115.8 && g2Recal<258){
+    if(g2Recal>fFRmin && g2Recal<258){
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR");
     }
   }
@@ -578,6 +608,7 @@ void CalchepTruthStudies::getCalchepTruth(){
   //if(g1phi<0.)g1phi=360+g1phi;
   //if(g2phi<0.)g2phi=360+g2phi;
   extractEfficiency(g1Recal, g1E,g1phi,g2Recal,g2E,g2phi);
+  CountersExtraction(g1Recal, g1phi, g2Recal, g2phi);
 
   TRecoVCluster* ecalclu=NULL;
   TRecoVCluster* ecalclu2=NULL;
@@ -589,7 +620,7 @@ void CalchepTruthStudies::getCalchepTruth(){
   Double_t cl1x = ecalclu->GetPosition().X();
   Double_t cl1y = ecalclu->GetPosition().Y();
   Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360/2/TMath::Pi();
+  Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
   if(phi1<0.)phi1=360+phi1;
 
   if(fECal_ClColl->GetNElements()==2){
@@ -605,7 +636,7 @@ void CalchepTruthStudies::getCalchepTruth(){
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl2");
     FillComparisonHisto(g1Recal, g1E,g2Recal,g2E,cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2");
 
-    if(cl1r>115.8 && cl1r<258){
+    if(cl1r>fFRmin && cl1r<258){
       FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2_g1inFR");
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl2_g1inFR");
       FillComparisonHisto(g1Recal, g1E,g2Recal,g2E,cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2_g1inFR");
@@ -616,7 +647,7 @@ void CalchepTruthStudies::getCalchepTruth(){
 	FillComparisonHisto(g1Recal, g1E,g2Recal,g2E,cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2_g1inFR_PhiCut");
       }
     }
-    if(cl1r>115.8 && cl1r<258 && cl2r>115.8 && cl2r<258){
+    if(cl1r>fFRmin && cl1r<258 && cl2r>fFRmin && cl2r<258){
       FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2_g1g2inFR");
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl2_g1g2inFR");
       FillComparisonHisto(g1Recal, g1E,g2Recal,g2E,cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl2_g1g2inFR");
@@ -644,7 +675,7 @@ void CalchepTruthStudies::getCalchepTruth(){
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl3");
     FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl3");
     FillHistoNCl3(cl1r, cl1E,cl2r, cl2E,cl3r, cl3E, "CalchepSim_Ncl3");
-    if(cl1r>115.8 && cl1r<258){
+    if(cl1r>fFRmin && cl1r<258){
       FillHistoNCl3(cl1r, cl1E,cl2r, cl2E,cl3r, cl3E, "CalchepSim_Ncl3_g1inFR");
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_Ncl3_g1inFR");
       FillGeneralHisto(cl1r, cl1E,cl2r,cl2E, "CalchepSim_Ncl3_g1inFR");
@@ -688,13 +719,13 @@ void CalchepTruthStudies::FillCalchepSmearedHisto(double R1, double R2){
   Double_t sTh1=g1Th+dTh1;
   Double_t sTh2=g2Th+dTh2;
   std::string sufix;
-  if(R1>115.8 && R1<258){
+  if(R1>fFRmin && R1<258){
     sufix="CalchepVar_AccEff_g1inFR";
     hname="CalchepComparison_Th1_"+sufix;
     hSvc->FillHisto(hname, g1Th,1.);
     hname="CalchepComparison_Th2_"+sufix;
     hSvc->FillHisto(hname, g2Th,1.);
-   if(R2>115.8 && R2<258){
+   if(R2>fFRmin && R2<258){
       sufix="CalchepVar_AccEff_g1g2inFR";
       hname="CalchepComparison_Th1_"+sufix;
       hSvc->FillHisto(hname, g1Th,1.);
@@ -704,13 +735,13 @@ void CalchepTruthStudies::FillCalchepSmearedHisto(double R1, double R2){
   }
   Double_t sR1=tan(sTh1)*fdistanceTarget;
   Double_t sR2=tan(sTh2)*fdistanceTarget;
-  if(sR1>115.8 && sR1<258){
+  if(sR1>fFRmin && sR1<258){
     sufix="CalchepVar_AccEff_g1inFR";
     hname="CalchepComparison_sTh1_"+sufix;
     hSvc->FillHisto(hname, sTh1,1.);
     hname="CalchepComparison_sTh2_"+sufix;
     hSvc->FillHisto(hname, sTh2,1.);
-    if(sR2>115.8 && sR2<258){
+    if(sR2>fFRmin && sR2<258){
       sufix="CalchepVar_AccEff_g1g2inFR";
       hname="CalchepComparison_sTh1_"+sufix;
       hSvc->FillHisto(hname, sTh1,1.);
@@ -806,7 +837,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
 
-  if(rg1T>115.8 && rg1T<258.){
+  if(rg1T>fFRmin && rg1T<fFRmax){
     hname="CalchepTruth_g1TruthinFR_RecoNCl";
     hSvc->FillHisto(hname, fECal_ClColl->GetNElements(), 1.);
     FillPhiRHistograms(rg1T, eg1T,phig1, "truthg1_g1inFR");
@@ -817,9 +848,9 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
 
     FillPhiRVariablesHistograms_noFR(rg1T,phig1, "truthg1g2_g1inFR");//i remember you that g1 is in FR for the preliminary selection
     FillPhiRVariablesHistograms_noFR(rg2T,phig2, "truthg1g2_g1inFR");
-
+    
     FillGeneralHistoEff(rg1T, eg1T,rg2T, eg2T,"truthFR_Truthg1inFR");
-    if(rg2T>115.8 && rg2T<258.){
+    if(rg2T>fFRmin && rg2T<fFRmax){
       FillPhiRHistograms(rg1T, eg1T,phig1, "truthg1_g1g2inFR");
       FillPhiRHistograms(rg2T, eg2T,phig2, "truthg2_g1g2inFR");
 
@@ -860,7 +891,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
       Double_t phi2=TMath::ATan2(cl2y, cl2x)*360./2./TMath::Pi();
       if(phi2<0.)phi2=360.+phi2;
 
-      if(cl1r>115.8 && cl1r<258.){
+      if(cl1r>fFRmin && cl1r<fFRmax){
 	FillPhiRHistograms(cl1r, cl1E, phi1,  "truthFR_recog1_g1inFR");
 	FillPhiRHistograms_noFR(cl2r, cl2E, phi2,  "truthFR_recog2_g1inFR");
 
@@ -868,7 +899,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
 	FillPhiRHistograms_noFR(cl2r, cl2E, phi2,  "truthFR_recog1g2_g1inFR");
 
 	FillGeneralHistoEff(cl1r,cl1E,cl2r, cl2E,"truthFR_Recog1inFR");
-	if(cl2r>115.8 && cl2r<258.){
+	if(cl2r>fFRmin && cl2r<fFRmax){
 	  FillPhiRHistograms(cl1r, cl1E, phi1,  "truthFR_recog1_g1g2inFR");
 	  FillPhiRHistograms(cl2r, cl2E, phi2,  "truthFR_recog2_g1g2inFR");
 
@@ -879,7 +910,30 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
 	}
       }
     }//end of if nCl>1
+    TRecoVCluster* ecalclu =NULL;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1E = ecalclu->GetEnergy();
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      FillPhiRHistograms(cl1r, cl1E, phi1, "truthFR_recoAll");
+    }//end pf loop on all clusters
   }//end of truth in fr
+
+  TRecoVCluster* ecalclu =NULL;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1E = ecalclu->GetEnergy();
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      FillPhiRHistograms(cl1r, cl1E, phi1, "recoAll");
+    }//end pf loop on all clusters
 
   if(fECal_ClColl->GetNElements()>1){
     TRecoVCluster* ecalclu =NULL;
@@ -899,7 +953,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
     Double_t phi2=TMath::ATan2(cl2y, cl2x)*360./2./TMath::Pi();
     if(phi2<0.)phi2=360.+phi2;
 
-    if(cl1r>115.8 && cl1r<258.){
+    if(cl1r>fFRmin && cl1r<fFRmax){
       FillPhiRHistograms(cl1r, cl1E, phi1,  "recog1_g1inFR");
       FillPhiRHistograms_noFR(cl2r, cl2E, phi2,  "recog2_g1inFR");
 
@@ -907,7 +961,7 @@ void CalchepTruthStudies::extractEfficiency(Double_t rg1T, Double_t eg1T,Double_
       FillPhiRHistograms_noFR(cl2r, cl2E, phi2,  "recog1g2_g1inFR");
 
       FillGeneralHistoEff(cl1r,cl1E,cl2r, cl2E,"Recog1inFR");
-      if(cl2r>115.8 && cl2r<258.){
+      if(cl2r>fFRmin && cl2r<fFRmax){
 	FillPhiRHistograms(cl1r, cl1E, phi1,  "recog1_g1g2inFR");
 	FillPhiRHistograms(cl2r, cl2E, phi2,  "recog2_g1g2inFR");
 
@@ -961,85 +1015,85 @@ void CalchepTruthStudies::FillGeneralHistoEff(Double_t rg1, Double_t eg1, Double
 
 void CalchepTruthStudies::FillPhiRHistograms(Double_t radius, Double_t energy, Double_t phi, std::string sufix){
  
-  //mid= 173mm   from calchep truth
+  //mid= 172.83mm   from calchep truth
  HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
   if(phi>=0. && phi<45.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From0To45_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From0To45_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=45. && phi<90.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From45To90_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From45To90_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=90. && phi<135.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From90To135_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From90To135_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=135. && phi<180.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From135To180_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From135To180_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=180. && phi<225.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From180To225_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From180To225_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=225. && phi<270.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From225To270_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From225To270_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
-  else if(phi>=270. && phi<315){
-    if(radius>115.8 && radius<173){
+  else if(phi>=270. && phi<315.){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From270To315_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From270To315_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=315. && phi<360.){
-    if(radius>115.8 && radius<173){
+    if(radius>fFRmin && radius<fFRmid){
       hname="CalchepComparison_From315To360_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173 && radius<258){
+    else if(radius>=fFRmid && radius<fFRmax){
       hname="CalchepComparison_From315To360_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
@@ -1052,85 +1106,85 @@ void CalchepTruthStudies::FillPhiRHistograms(Double_t radius, Double_t energy, D
 
 void CalchepTruthStudies::FillPhiRHistograms_noFR(Double_t radius, Double_t energy, Double_t phi, std::string sufix){
  
-  //mid= 173mm   from calchep truth
+  //mid= 172.83mm   from calchep truth
  HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
   if(phi>=0. && phi<45.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From0To45_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From0To45_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=45. && phi<90.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From45To90_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From45To90_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=90. && phi<135.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From90To135_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From90To135_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=135. && phi<180.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From135To180_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From135To180_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=180. && phi<225.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From180To225_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From180To225_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=225. && phi<270.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From225To270_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From225To270_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
-  else if(phi>=270. && phi<315){
-    if( radius<173){
+  else if(phi>=270. && phi<315.){
+    if( radius<fFRmid){
       hname="CalchepComparison_From270To315_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From270To315_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
   }
   else if(phi>=315. && phi<360.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_From315To360_tagInnerR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_From315To360_tagOuterR"+sufix;
       hSvc->FillHisto(hname,energy, 1. );
     }
@@ -1145,17 +1199,17 @@ void CalchepTruthStudies::FillPhiRHistograms_noFR(Double_t radius, Double_t ener
 
 void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Double_t phi, std::string sufix){
  
-  //mid= 173mm   from calchep truth
+  //mid= 172.83mm   from calchep truth
  HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
   if(phi>=0. && phi<45.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom0To45_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom0To45_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom0To45_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom0To45_tagOuterR"+sufix;
@@ -1163,13 +1217,13 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=45. && phi<90.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom45To90_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom45To90_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom45To90_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom45To90_tagOuterR"+sufix;
@@ -1177,13 +1231,13 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=90. && phi<135.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom90To135_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom90To135_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom90To135_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom90To135_tagOuterR"+sufix;
@@ -1191,13 +1245,13 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=135. && phi<180.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom135To180_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom135To180_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom135To180_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom135To180_tagOuterR"+sufix;
@@ -1205,13 +1259,13 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=180. && phi<225.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom180To225_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom180To225_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom180To225_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom180To225_tagOuterR"+sufix;
@@ -1219,27 +1273,27 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=225. && phi<270.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom225To270_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom225To270_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom225To270_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom225To270_tagOuterR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
   }
-  else if(phi>=270. && phi<315){
-    if( radius<173){
+  else if(phi>=270. && phi<315.){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom270To315_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom270To315_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom270To315_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom270To315_tagOuterR"+sufix;
@@ -1247,13 +1301,13 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
   else if(phi>=315. && phi<360.){
-    if( radius<173){
+    if( radius<fFRmid){
       hname="CalchepComparison_RFrom315To360_tagInnerR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom315To360_tagInnerR"+sufix;
       hSvc->FillHisto(hname,phi, 1. );
     }
-    else if(radius>=173){
+    else if(radius>=fFRmid){
       hname="CalchepComparison_RFrom315To360_tagOuterR"+sufix;
       hSvc->FillHisto(hname,radius, 1. );
       hname="CalchepComparison_PhiFrom315To360_tagOuterR"+sufix;
@@ -1261,5 +1315,241 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
     }
   }
 
+
+}
+
+
+void CalchepTruthStudies::CountersExtraction(Double_t rg1T,Double_t phig1, Double_t rg2T, Double_t phig2){ 
+
+    for(int p=0; p<8; p++){
+      if(phig1>=phiRange[p] && phig1<phiRange[p+1]){
+	countsRminRmid(rg1T,phig1, p);
+	//countsRminRmid(rg2T,phig2, p);
+	countsRmidRmax(rg1T,phig1, p);
+	//countsRmidRmax(rg2T,phig2, p);
+	countsRminRmax(rg1T,phig1, p);
+	//countsRminRmax(rg2T,phig2, p);
+      }//end of phi1 range looop
+      if(phig2>=phiRange[p] && phig2<phiRange[p+1]){
+	countsRminRmid(rg2T,phig2, p);
+	countsRmidRmax(rg2T,phig2, p);
+	countsRminRmax(rg2T,phig2, p);
+      }//end of phi2 range looop
+      countsReco(p);
+    }//end of phi loop
+
+
+}
+
+
+void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
+  TRecoVCluster* ecalclu =NULL;
+  if(rg1T>fFRmin && rg1T< fFRmid){
+    nTruth[0][p]++;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTRuth[0][p]++;
+      if(cl1r<=fFRmin)nClusterOutRin_ifTruth[0][p]++;
+      if(cl1r>=fFRmid)nClusterOutRout_ifTruth[0][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRin[0][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T>=fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRout[0][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin || rg1T>=fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifnoTruth[0][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+ 
+
+}
+
+
+
+void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
+  TRecoVCluster* ecalclu =NULL;
+  if(rg1T>=fFRmid && rg1T<fFRmax){
+    nTruth[1][p]++;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTRuth[1][p]++;
+      if(cl1r<fFRmid)nClusterOutRin_ifTruth[1][p]++;
+      if(cl1r>=fFRmax)nClusterOutRout_ifTruth[1][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRin[1][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRout[1][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<fFRmid || rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifnoTruth[1][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+}
+
+
+void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
+  TRecoVCluster* ecalclu =NULL;
+  if(rg1T>fFRmin && rg1T<fFRmax){
+    nTruth[2][p]++;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(phi1>=phiRange[p] && phi1 < phiRange[p+1]){
+      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTRuth[2][p]++;
+      if(cl1r<=fFRmin)nClusterOutRin_ifTruth[2][p]++;
+      if(cl1r>=fFRmax)nClusterOutRout_ifTruth[2][p]++;
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRin[2][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRout[2][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin || rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifnoTruth[2][p]++;
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+}
+
+
+void CalchepTruthStudies::countsReco(int p){
+  TRecoVCluster* ecalclu =NULL;
+
+  for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+    ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+    Double_t cl1x = ecalclu->GetPosition().X();
+    Double_t cl1y = ecalclu->GetPosition().Y();
+    Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+    Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+    if(phi1<0.)phi1=360.+phi1;
+    if(phi1>=phiRange[p] && phi1 < phiRange[p+1]){
+      if(cl1r>fFRmin && cl1r<fFRmid)nCluster[0][p]++;
+      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster[1][p]++;
+      if(cl1r>fFRmin && cl1r<fFRmax)nCluster[2][p]++;
+    }//end of phi cluster request
+  }//end of cluster loop
+  
+}
+
+
+void CalchepTruthStudies::Terminate(){
+  std::cout<<"calchep truth succesfully terminated" <<std::endl;
+  printCounters();
+  
+}
+
+
+
+
+void CalchepTruthStudies::printCounters(){
+  //radiusRangeMin[3]={fFRmin, fFRmid, fFRmin};
+  //radiusRangeMax[3]={fFRmid, fFRmax, fFRmax};
+  //phiRange[9]={0., 45., 90., 135., 170., 225., 270., 315., 360.};      
+  //nTruth[3][8]={0};
+  //nCluster_ifTruthOutRin[3][8]={0};
+  //nCluster_ifTruthOutRout[3][8]={0};
+  //nClusterOutRin_ifTruth[3][8]={0};
+  //nClusterOutRout_ifTruth[3][8]={0};
+  //nCluster_ifTRuth[3][8]={0};
+  //nCluster[3][8]={0};
+  //nCluster_ifnoTruth[3][8]={0};  
+
+  std::cout<<"--------range--------- [ " << radiusRangeMin[0] << " , " << radiusRangeMax[0] << " ]" << std::endl;
+  std::cout<<"phi in [  ,  ] ,   nTruth    , nCluster_ifTruthOutRin,   nCluster_ifTruthOutRout,   nClusterOutRin_ifTruth,   nClusterOutRout_ifTruth,   nCluster_ifTRuth, nCluster,     nCluster_ifnoTrut"<<std::endl;
+  for(int i=0; i<8; i++){
+    std::cout << "[" << phiRange[i] << ","<<phiRange[i+1]<< "] " << nTruth[0][i] << " " << nCluster_ifTruthOutRin[0][i]<< " " << nCluster_ifTruthOutRout[0][i]<< " " << nClusterOutRin_ifTruth[0][i]<< " " << nClusterOutRout_ifTruth[0][i]<< " " << nCluster_ifTRuth[0][i]<< " "<< nCluster[0][i]<< " " <<nCluster_ifnoTruth[0][i] << std::endl; 
+  }
+
+  std::cout<<"--------range--------- [ " << radiusRangeMin[1] << " , " << radiusRangeMax[1] << " ]" << std::endl;
+  std::cout<<"phi in [  ,  ] ,   nTruth    , nCluster_ifTruthOutRin,   nCluster_ifTruthOutRout,   nClusterOutRin_ifTruth,   nClusterOutRout_ifTruth,   nCluster_ifTRuth, nCluster,     nCluster_ifnoTrut"<<std::endl;
+    for(int i=0; i<8; i++){
+    std::cout << "[" << phiRange[i] << ","<<phiRange[i+1]<< "] " << nTruth[1][i] << " " << nCluster_ifTruthOutRin[1][i]<< " " << nCluster_ifTruthOutRout[1][i]<< " " << nClusterOutRin_ifTruth[1][i]<< " " << nClusterOutRout_ifTruth[1][i]<< " " << nCluster_ifTRuth[1][i]<< " "<< nCluster[1][i]<< " " <<nCluster_ifnoTruth[1][i] << std::endl; 
+  }
+
+  std::cout<<"--------range--------- [ " << radiusRangeMin[2] << " , " << radiusRangeMax[2] << " ]" << std::endl;
+  std::cout<<"phi in [  ,  ] ,   nTruth    , nCluster_ifTruthOutRin,   nCluster_ifTruthOutRout,   nClusterOutRin_ifTruth,   nClusterOutRout_ifTruth,   nCluster_ifTRuth, nCluster,     nCluster_ifnoTrut"<<std::endl;
+    for(int i=0; i<8; i++){
+    std::cout << "[" << phiRange[i] << ","<<phiRange[i+1]<< "] " << nTruth[2][i] << " " << nCluster_ifTruthOutRin[2][i]<< " " << nCluster_ifTruthOutRout[2][i]<< " " << nClusterOutRin_ifTruth[2][i]<< " " << nClusterOutRout_ifTruth[2][i]<< " " << nCluster_ifTRuth[2][i]<< " "<< nCluster[2][i]<< " " <<nCluster_ifnoTruth[2][i] << std::endl; 
+  }
 
 }

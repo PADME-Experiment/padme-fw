@@ -47,8 +47,8 @@ Bool_t AnnihilationSelectionDataMCMethod::Process(Double_t E1,Double_t phi1, Dou
   fR2=R2;	 
   fphi2=phi2;
   
-  Int_t data=checkIfItIsDataOrMC(phi1, phi2);  //data==1 so data otherwise MC
-  if(data)FillHistoData();
+  fdata=checkIfItIsDataOrMC(phi1, phi2);  //data==1 so data otherwise MC
+  if(fdata)FillHistoData();
   else FillHistoMC();
 
   return true;
@@ -56,9 +56,9 @@ Bool_t AnnihilationSelectionDataMCMethod::Process(Double_t E1,Double_t phi1, Dou
 
 Int_t AnnihilationSelectionDataMCMethod::checkIfItIsDataOrMC(Double_t phi1,Double_t phi2){
   Int_t data=0;
-  Double_t phiDeg1=phi1*360./(2*TMath::Pi());
+  Double_t phiDeg1=phi1*360./(2.*TMath::Pi());
   if(phiDeg1<0.)phiDeg1=360+phiDeg1;
-  Double_t phiDeg2=phi2*360./(2*TMath::Pi());
+  Double_t phiDeg2=phi2*360./(2.*TMath::Pi());
   if(phiDeg2<0.)phiDeg2=360+phiDeg2;
 
   if(fabs(phiDeg1-90)<45 || fabs(phiDeg1-270)<45)data=1;
@@ -111,11 +111,28 @@ void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1inFR(std::string suf
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
   
-  Double_t effg1=ReturnEfficiencyR1R2inFR(fR1,fphi1);
+  //Double_t effg1=ReturnEfficiencyR1R2inFR(fR1,fphi1);
+  Double_t effg1=ReturnEfficiencyR1inFR(fR1,fphi1);
   Double_t effg2=ReturnEfficiencyR1inFR(fR2,fphi2);
   Double_t effScaleFactor=(1./effg1)*(1./effg2);
   hname="MethodDataMC_WEffR1inFR"+sufix;
   hSvc->FillHisto(hname,(fE1+fE2) ,effScaleFactor );
+  Double_t phiDeg1=fphi1*360/(2*TMath::Pi());
+  if(phiDeg1<0.)phiDeg1=360+phiDeg1;
+  Double_t phiDeg2=fphi2*360/(2*TMath::Pi());
+  if(phiDeg2<0.)phiDeg2=360+phiDeg2;
+  if(fdata){
+    hname="MethodDataMC_datasample_g1inFR_Effg1vsPhig1";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_datasample_g1inFR_Effg2vsPhig2";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
+  else {
+    hname="MethodDataMC_mcsample_g1inFR_Effg1vsPhig1";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_mcsample_g1inFR_Effg2vsPhig2";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
 
 }
 
@@ -123,11 +140,28 @@ void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1inFR(std::string suf
 void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1R2inFR(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  Double_t effg1=ReturnEfficiencyR1R2inFR(fR1,fphi1);
+  //Double_t effg1=ReturnEfficiencyR1R2inFR(fR1,fphi1);
+  Double_t effg1=ReturnEfficiencyR1inFR(fR1,fphi1);
   Double_t effg2=ReturnEfficiencyR1R2inFR(fR2,fphi2);
   Double_t effScaleFactor=(1./effg1)*(1./effg2);
   hname="MethodDataMC_WEffR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fE1+fE2) ,effScaleFactor );
+  Double_t phiDeg1=fphi1*360/(2*TMath::Pi());
+  if(phiDeg1<0.)phiDeg1=360+phiDeg1;
+  Double_t phiDeg2=fphi2*360/(2*TMath::Pi());
+  if(phiDeg2<0.)phiDeg2=360+phiDeg2;
+  if(fdata){
+    hname="MethodDataMC_datasample_g1g2inFR_Effg1vsPhig1";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_datasample_g1g2inFR_Effg2vsPhig2";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
+  else {
+    hname="MethodDataMC_mcsample_g1g2inFR_Effg1vsPhig1";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_mcsample_g1g2inFR_Effg2vsPhig2";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
  
 }
 
@@ -135,12 +169,29 @@ void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1inFR_MC(std::string 
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
   
-  Double_t effg1=ReturnEfficiencyR1R2inFR_MC(fR1,fphi1);
+  //Double_t effg1=ReturnEfficiencyR1R2inFR_MC(fR1,fphi1);
+  Double_t effg1=ReturnEfficiencyR1inFR_MC(fR1,fphi1);
   Double_t effg2=ReturnEfficiencyR1inFR_MC(fR2,fphi2);
   //Double_t effScaleFactor=(1./effg1)*(1./effg2);
   Double_t effScaleFactor=effg1*effg2;
   hname="MethodDataMC_WEffR1inFRDataPlus90"+sufix;
   hSvc->FillHisto(hname,(fE1+fE2) ,effScaleFactor );
+  Double_t phiDeg1=fphi1*360/(2*TMath::Pi());
+  if(phiDeg1<0.)phiDeg1=360+phiDeg1;
+  Double_t phiDeg2=fphi2*360/(2*TMath::Pi());
+  if(phiDeg2<0.)phiDeg2=360+phiDeg2;
+  if(fdata){
+    hname="MethodDataMC_datasample_g1inFR_Effg1vsPhig1_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_datasample_g1inFR_Effg2vsPhig2_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
+  else {
+    hname="MethodDataMC_mcsample_g1inFR_Effg1vsPhig1_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_mcsample_g1inFR_Effg2vsPhig2_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
 
 }
 
@@ -148,12 +199,29 @@ void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1inFR_MC(std::string 
 void AnnihilationSelectionDataMCMethod::FillWeightedHisto_R1R2inFR_MC(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  Double_t effg1=ReturnEfficiencyR1R2inFR_MC(fR1,fphi1);
+  //Double_t effg1=ReturnEfficiencyR1R2inFR_MC(fR1,fphi1);
+  Double_t effg1=ReturnEfficiencyR1inFR_MC(fR1,fphi1);
   Double_t effg2=ReturnEfficiencyR1R2inFR_MC(fR2,fphi2);
   //Double_t effScaleFactor=(1./effg1)*(1./effg2);
   Double_t effScaleFactor=effg1*effg2;
   hname="MethodDataMC_WEffR1R2inFRDataPlus90"+sufix;
   hSvc->FillHisto(hname,(fE1+fE2) ,effScaleFactor );
+  Double_t phiDeg1=fphi1*360/(2*TMath::Pi());
+  if(phiDeg1<0.)phiDeg1=360+phiDeg1;
+  Double_t phiDeg2=fphi2*360/(2*TMath::Pi());
+  if(phiDeg2<0.)phiDeg2=360+phiDeg2;
+  if(fdata){
+    hname="MethodDataMC_datasample_g1g2inFR_Effg1vsPhig1_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_datasample_g1g2inFR_Effg2vsPhig2_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
+  else {
+    hname="MethodDataMC_mcsample_g1g2inFR_Effg1vsPhig1_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg1, effg1, 1.);
+    hname="MethodDataMC_mcsample_g1g2inFR_Effg2vsPhig2_datamcMethod";
+    hSvc->FillHisto2(hname,phiDeg2, effg2, 1.);
+  }
  
 }
 
@@ -214,7 +282,7 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1inFR_MC(Double_t r
   int phiSliceMC=phiDeg/45.;
   int phiSliceD=phiDeg/45.+2;
   if(phiSliceD>7){
-    phiSliceD=phiSliceD-7;
+    phiSliceD=phiSliceD-8;
   }
   Double_t eff;
  
@@ -224,6 +292,11 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1inFR_MC(Double_t r
   else if(outer){
     eff=fEffOuterRRange_r1inFR[phiSliceD]/fEffOuterRRange_r1inFR[phiSliceMC];
   }
+  //std::cout<<"..............................." << std::endl;
+  //std::cout<<"Photon phi " << phiDeg << " phiSliceMC " <<phiSliceMC << " phiSliceData " << phiSliceD << std::endl;
+  //std::cout<<"inner bool " << inner << " outer bool " << outer << " radius "<< radius << std::endl;
+  //if(inner)std::cout<<"inner, eff data " << fEffInnerRRange_r1inFR[phiSliceD] << " eff MC " <<  fEffInnerRRange_r1inFR[phiSliceMC] << " ratio " << eff << std::endl;
+  //else std::cout<<"outer, eff data " << fEffOuterRRange_r1inFR[phiSliceD] << " eff MC " <<  fEffOuterRRange_r1inFR[phiSliceMC] << " ratio " << eff << std::endl;
 
   return eff;
 }
@@ -240,7 +313,7 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1R2inFR_MC(Double_t
   int phiSliceMC=phiDeg/45.;
   int phiSliceD=phiDeg/45.+2;
   if(phiSliceD>7){
-    phiSliceD=phiSliceD-7;
+    phiSliceD=phiSliceD-8;
   }
   Double_t eff;
   if(inner){
@@ -304,7 +377,48 @@ Bool_t AnnihilationSelectionDataMCMethod::InitHistos(){
    hname="MethodDataMC_WEffR1R2inFRDataPlus90"+sufixW1.at(i);
    hSvc->BookHisto(hname, binX, minX, maxX);
    }
-  return true;
+
+ binX=100;
+ minX=-10;
+ maxX=370.;
+ binY=500;
+ minY=0.;
+ maxY=2;
+ hname="MethodDataMC_datasample_g1inFR_Effg1vsPhig1";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1inFR_Effg2vsPhig2";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1inFR_Effg1vsPhig1";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1inFR_Effg2vsPhig2";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1g2inFR_Effg1vsPhig1";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1g2inFR_Effg2vsPhig2";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1g2inFR_Effg1vsPhig1";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1g2inFR_Effg2vsPhig2";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    
+ hname="MethodDataMC_datasample_g1inFR_Effg1vsPhig1_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1inFR_Effg2vsPhig2_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1inFR_Effg1vsPhig1_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1inFR_Effg2vsPhig2_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1g2inFR_Effg1vsPhig1_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_datasample_g1g2inFR_Effg2vsPhig2_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1g2inFR_Effg1vsPhig1_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+ hname="MethodDataMC_mcsample_g1g2inFR_Effg2vsPhig2_datamcMethod";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+
+ return true;
 }
 
 

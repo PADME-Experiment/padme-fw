@@ -23,7 +23,7 @@ class AnnihilationSelection : public TObject
 
 public:
   AnnihilationSelection();
-  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt );
+  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t dataMCmethod );
   ~AnnihilationSelection();
   virtual Bool_t Init(TRecoEvent* eventHeader, 
 		      TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
@@ -81,6 +81,7 @@ protected:
   Int_t    fVerbose;
   Int_t    fProcessingMode;
   Bool_t   fNoTargetBool;
+  Bool_t   fdataMCmethod;
 
   Bool_t fInitToComplete;  
 
@@ -129,6 +130,9 @@ private:
   Double_t ftimerange5max;
 
   Double_t fdistanceTarget;
+  Double_t fFRmin;
+  Double_t fFRmid;
+  Double_t fFRmax;
 
   Int_t fcountEvent;
   Double_t fEffInnerRRange_r1inFR[8];

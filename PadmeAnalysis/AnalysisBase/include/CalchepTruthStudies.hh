@@ -43,6 +43,15 @@ public:
   void FillPhiRHistograms_noFR(Double_t rg1, Double_t eg1, Double_t phig1, std::string sufix);
   void FillPhiRVariablesHistograms_noFR(Double_t rg1, Double_t phig1, std::string sufix);
 
+  void CountersExtraction(Double_t rg1T,Double_t phig1, Double_t rg2T, Double_t phig2);
+  void countsRminRmid(Double_t radius,Double_t phi, int p);
+  void countsRmidRmax(Double_t radius,Double_t phi, int p);
+  void countsRminRmax(Double_t radius,Double_t phi, int p);
+  void countsReco(int p);
+
+  void Terminate();
+  void printCounters();
+
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
@@ -58,6 +67,9 @@ protected:
 
 private:
   Double_t fdistanceTarget;
+  Double_t fFRmin;
+  Double_t fFRmid;
+  Double_t fFRmax;
 
   Int_t fcountEvent;
   std::vector<int> fIdCl_SortByEnergy;
@@ -67,6 +79,21 @@ private:
 
   TRandom2 * fr;
   Double_t fSigmaDTheta;
+
+  //matrix of counters, 3->three main ranges in radius; 8->8 phi slice
+  int nTruth[3][8];
+  int nCluster_ifTruthOutRin[3][8];
+  int nCluster_ifTruthOutRout[3][8];
+  int nClusterOutRin_ifTruth[3][8];
+  int nClusterOutRout_ifTruth[3][8];
+  int nCluster_ifTRuth[3][8];
+  int nCluster[3][8];
+  int nCluster_ifnoTruth[3][8];      
+
+  Double_t radiusRangeMin[3];
+  Double_t radiusRangeMax[3];
+  Double_t phiRange[9];      
+
 
 };
 

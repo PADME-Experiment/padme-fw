@@ -324,6 +324,7 @@ int main(Int_t argc, char **argv)
    hSvc->book(fProcessingMode, fntuple);
    Bool_t boolCalchep=true;
    Bool_t boolAnnTagProbe=true;
+   Bool_t boolDataMCmethod=false;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -368,7 +369,7 @@ int main(Int_t argc, char **argv)
      UserAn = new UserAnalysis(fProcessingMode, fVerbose);
      gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
 
-     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition, boolDataMCmethod);
      TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
      if(boolCalchep)CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
      if(boolCalchep) CalchepTruth->InitHistos();
@@ -462,8 +463,8 @@ int main(Int_t argc, char **argv)
 
        //
        targetAn    ->Process();
-       ecalAn      ->Process();
        ecalAn      ->EnergyCalibration(isMC);
+       ecalAn      ->Process();
        sacAn       ->Process();
        pvetoAn     ->Process();
        evetoAn     ->Process();
@@ -492,7 +493,7 @@ int main(Int_t argc, char **argv)
    evetoAn  ->Finalize();
    hepvetoAn->Finalize();
    */
-
+   if(fProcessingMode==0 && boolCalchep)  CalchepTruth->Terminate();
    /// end of job..........
    hSvc->save();
 

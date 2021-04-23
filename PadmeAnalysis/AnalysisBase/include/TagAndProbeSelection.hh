@@ -70,6 +70,9 @@ protected:
   Bool_t fInitToComplete;  
 
   Double_t fdistanceTarget;
+  Double_t fFRmin;
+  Double_t fFRmid;
+  Double_t fFRmax;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

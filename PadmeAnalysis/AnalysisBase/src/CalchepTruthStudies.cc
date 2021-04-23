@@ -1321,29 +1321,31 @@ void CalchepTruthStudies::FillPhiRVariablesHistograms_noFR(Double_t radius, Doub
 
 void CalchepTruthStudies::CountersExtraction(Double_t rg1T,Double_t phig1, Double_t rg2T, Double_t phig2){ 
 
-    for(int p=0; p<8; p++){
-      if(phig1>=phiRange[p] && phig1<phiRange[p+1]){
-	countsRminRmid(rg1T,phig1, p);
-	//countsRminRmid(rg2T,phig2, p);
-	countsRmidRmax(rg1T,phig1, p);
-	//countsRmidRmax(rg2T,phig2, p);
-	countsRminRmax(rg1T,phig1, p);
-	//countsRminRmax(rg2T,phig2, p);
-      }//end of phi1 range looop
-      if(phig2>=phiRange[p] && phig2<phiRange[p+1]){
-	countsRminRmid(rg2T,phig2, p);
-	countsRmidRmax(rg2T,phig2, p);
-	countsRminRmax(rg2T,phig2, p);
-      }//end of phi2 range looop
-      countsReco(p);
-    }//end of phi loop
-
+  for(int p=0; p<8; p++){
+    if(phig1>=phiRange[p] && phig1<phiRange[p+1]){
+      countsRminRmid(rg1T,phig1, p);
+      //countsRminRmid(rg2T,phig2, p);
+      countsRmidRmax(rg1T,phig1, p);
+      //countsRmidRmax(rg2T,phig2, p);
+      countsRminRmax(rg1T,phig1, p);
+      //countsRminRmax(rg2T,phig2, p);
+    }//end of phi1 range looop
+    if(phig2>=phiRange[p] && phig2<phiRange[p+1]){
+      countsRminRmid(rg2T,phig2, p);
+      countsRmidRmax(rg2T,phig2, p);
+      countsRminRmax(rg2T,phig2, p);
+    }//end of phi2 range looop
+  
+    countsReco(p);
+  }//end of phi loop
+  
 
 }
 
 
 void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
   TRecoVCluster* ecalclu =NULL;
+  
   if(rg1T>fFRmin && rg1T< fFRmid){
     nTruth[0][p]++;
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
@@ -1351,110 +1353,29 @@ void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTRuth[0][p]++;
-      if(cl1r<=fFRmin)nClusterOutRin_ifTruth[0][p]++;
-      if(cl1r>=fFRmid)nClusterOutRout_ifTruth[0][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T<=fFRmin){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRin[0][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T>=fFRmid){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRout[0][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T<=fFRmin || rg1T>=fFRmid){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifnoTruth[0][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
- 
-
-}
-
-
-
-void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
-  TRecoVCluster* ecalclu =NULL;
-  if(rg1T>=fFRmid && rg1T<fFRmax){
-    nTruth[1][p]++;
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTRuth[1][p]++;
-      if(cl1r<fFRmid)nClusterOutRin_ifTruth[1][p]++;
-      if(cl1r>=fFRmax)nClusterOutRout_ifTruth[1][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T<fFRmid){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRin[1][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T>=fFRmax){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRout[1][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-  if(rg1T<fFRmid || rg1T>=fFRmax){
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifnoTruth[1][p]++;
-    }//end of cluster loop
-  } // gamma1 in radius range end of if
-
-}
-
-
-void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
-  TRecoVCluster* ecalclu =NULL;
-  if(rg1T>fFRmin && rg1T<fFRmax){
-    nTruth[2][p]++;
-    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
-      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
-      Double_t cl1x = ecalclu->GetPosition().X();
-      Double_t cl1y = ecalclu->GetPosition().Y();
-      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
       Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
       if(phi1<0.)phi1=360.+phi1;
-      if(phi1>=phiRange[p] && phi1 < phiRange[p+1]){
-      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTRuth[2][p]++;
-      if(cl1r<=fFRmin)nClusterOutRin_ifTruth[2][p]++;
-      if(cl1r>=fFRmax)nClusterOutRout_ifTruth[2][p]++;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTRuth[0][p]++;
+	  if(cl1r<=fFRmin)nClusterOutRin_ifTruth[0][p]++;
+	  if(cl1r>=fFRmid)nClusterOutRout_ifTruth[0][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTRuth[0][p]++;
+	    if(cl1r<=fFRmin)nClusterOutRin_ifTruth[0][p]++;
+	    if(cl1r>=fFRmid)nClusterOutRout_ifTruth[0][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTRuth[0][p]++;
+	  if(cl1r<=fFRmin)nClusterOutRin_ifTruth[0][p]++;
+	  if(cl1r>=fFRmid)nClusterOutRout_ifTruth[0][p]++;
+	}
       }
     }//end of cluster loop
   } // gamma1 in radius range end of if
@@ -1465,7 +1386,270 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRin[2][p]++;
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRin[0][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRin[0][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRin[0][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T>=fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	 if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRout[0][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRout[0][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifTruthOutRout[0][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin || rg1T>=fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifnoTruth[0][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifnoTruth[0][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmid)nCluster_ifnoTruth[0][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+ 
+
+}
+
+
+
+void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
+  TRecoVCluster* ecalclu =NULL;
+ 
+  //std::cout<<"p index " << p << " minCl " << indexMinCl << " max " << indexMaxCl << std::endl;
+
+  if(rg1T>=fFRmid && rg1T<fFRmax){
+    nTruth[1][p]++;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	 if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTRuth[1][p]++;
+	 if(cl1r<fFRmid)nClusterOutRin_ifTruth[1][p]++;
+	 if(cl1r>=fFRmax)nClusterOutRout_ifTruth[1][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTRuth[1][p]++;
+	   if(cl1r<fFRmid)nClusterOutRin_ifTruth[1][p]++;
+	   if(cl1r>=fFRmax)nClusterOutRout_ifTruth[1][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTRuth[1][p]++;
+	  if(cl1r<fFRmid)nClusterOutRin_ifTruth[1][p]++;
+	  if(cl1r>=fFRmax)nClusterOutRout_ifTruth[1][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<fFRmid){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	 if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRin[1][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRin[1][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRin[1][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+      
+  if(rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	 if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRout[1][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRout[1][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifTruthOutRout[1][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+  
+  if(rg1T<fFRmid || rg1T>=fFRmax){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	 if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifnoTruth[1][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifnoTruth[1][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>=fFRmid && cl1r<fFRmax)nCluster_ifnoTruth[1][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+}
+
+
+void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
+  TRecoVCluster* ecalclu =NULL;
+ 
+  if(rg1T>fFRmin && rg1T<fFRmax){
+    nTruth[2][p]++;
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTRuth[2][p]++;
+	  if(cl1r<=fFRmin)nClusterOutRin_ifTruth[2][p]++;
+	  if(cl1r>=fFRmax)nClusterOutRout_ifTruth[2][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTRuth[2][p]++;
+	    if(cl1r<=fFRmin)nClusterOutRin_ifTruth[2][p]++;
+	    if(cl1r>=fFRmax)nClusterOutRout_ifTruth[2][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTRuth[2][p]++;
+	  if(cl1r<=fFRmin)nClusterOutRin_ifTruth[2][p]++;
+	  if(cl1r>=fFRmax)nClusterOutRout_ifTruth[2][p]++;
+	}
+      }
+    }//end of cluster loop
+  } // gamma1 in radius range end of if
+
+  if(rg1T<=fFRmin){
+    for(int i=0; i< fECal_ClColl->GetNElements(); i++){
+      ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      Double_t cl1x = ecalclu->GetPosition().X();
+      Double_t cl1y = ecalclu->GetPosition().Y();
+      Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRin[2][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRin[2][p]++;
+	  }
+	}
+      else{
+	 if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	   if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRin[2][p]++;
+	 }
+      }
     }//end of cluster loop
   } // gamma1 in radius range end of if
 
@@ -1475,7 +1659,24 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRout[2][p]++;
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRout[2][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	    if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRout[2][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifTruthOutRout[2][p]++;
+	}
+      }
     }//end of cluster loop
   } // gamma1 in radius range end of if
 
@@ -1485,7 +1686,24 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
-      if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifnoTruth[2][p]++;
+      Double_t phi1=TMath::ATan2(cl1y, cl1x)*360./2./TMath::Pi();
+      if(phi1<0.)phi1=360.+phi1;
+      if(p==0){
+	if(phi1>=315. || phi1< 90.){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifnoTruth[2][p]++;
+	}
+      }
+      else if(p==7)
+	{
+	  if(phi1>=270. || phi1< 45.){
+	   if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifnoTruth[2][p]++;
+	  }
+	}
+      else{
+	if(fabs(phi1+45.)>=phiRange[p] && fabs(phi1-45.) < phiRange[p+1]){
+	  if(cl1r>fFRmin && cl1r<fFRmax)nCluster_ifnoTruth[2][p]++;
+	}
+      }
     }//end of cluster loop
   } // gamma1 in radius range end of if
 

@@ -50,6 +50,7 @@ public:
   void FillWeightedTruthHisto_R1inFR(std::string sufix);
   void FillWeightedHisto_R2inFR(std::string sufix);
   void FillWeightedHisto_R1R2inFR(std::string sufix);
+  void FillWeightedHisto_R1R2inFR2approach(std::string sufix);
   void FillWeightedTruthHisto_R1R2inFR(std::string sufix);
 
   Double_t ReturnAccettanceEffective_g1g2FR(Double_t radius);

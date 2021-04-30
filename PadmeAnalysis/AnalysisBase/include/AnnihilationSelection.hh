@@ -7,6 +7,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 #include <fstream>
+#include "TRandom2.h"
 #include "AnnihilationSelectionDataMCMethod.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -42,8 +43,8 @@ public:
   void CheckNumberHitsOnCh(Int_t chSeed1, Int_t chSeed2, Int_t& countHit1, Int_t& countHit2);
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2,  double& distPhi);
   Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC);
-  Double_t ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t plusSys);
-  Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t plusSys);
+  Double_t ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Int_t plusSys);
+  Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Int_t plusSys);
   Double_t ReturnEfficiencyTruthR1inFR(Double_t radius, Double_t phi);
   Double_t ReturnEfficiencyTruthR1R2inFR(Double_t radius, Double_t phi);
   void FillWeightedHisto_R1inFR(std::string sufix);
@@ -150,13 +151,18 @@ private:
   Double_t fEffUpperSysOuterRRange_r1inFR[8];
   Double_t fEffUpperSysInnerRRange_r1r2inFR[8];
   Double_t fEffUpperSysOuterRRange_r1r2inFR[8];
+
+  Double_t fEffLowerSysInnerRRange_r1inFR[8];
+  Double_t fEffLowerSysOuterRRange_r1inFR[8];
+  Double_t fEffLowerSysInnerRRange_r1r2inFR[8];
+  Double_t fEffLowerSysOuterRRange_r1r2inFR[8];
   
   TH1D *hAccEffFromCalchep_g1g2FR;
   TH1D *hAccEffFromCalchep_g1FR;
 
   std::vector<int> fIdCl_SortByEnergy;
 
-
+  TRandom2 * fr;
 
 };
 

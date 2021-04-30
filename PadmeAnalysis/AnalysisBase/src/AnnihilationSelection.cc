@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include "TFile.h"
+#include <time.h>
 
 
 struct IdEnergy 
@@ -116,11 +117,11 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
     //fillEffVector("provaggEfficiencyFromDiff_TagFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt");
     
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173.txt");
-  fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173_randomDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173_randomDiedSU.txt");
+  //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173_randomDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173_randomDiedSU.txt");
 
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt");
 
-  //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_diffBkgNorm_fr1158_2580_run_0030624_20201115_101219.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_diffBkgNorm_fr1158_2580_run_0030624_20201115_101219.txt"); 
+  fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins.txt");
   
   fillEffVectorTruth();
   //Double_t tmpfUpperSysInnerRRange_r1inFR[8]={ 0.0773673, 0.0396053, 0.0052547,  0.0246471,  0.00474522, 0.00500453, 0.0224981, 0.0310803};
@@ -162,6 +163,9 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   }
   
   if(fdataMCmethod)fDataMCMethod->Init(fEffInnerRRange_r1inFR, fEffOuterRRange_r1inFR, fEffInnerRRange_r1r2inFR, fEffOuterRRange_r1r2inFR);
+
+  fr=new TRandom2();
+  gRandom->SetSeed(time(NULL));
 
   return true;
 }
@@ -370,19 +374,41 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 void AnnihilationSelection::FillWeightedHisto_R1inFR(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  Bool_t plusSystematic=false;
+  //PlusSystematic=0 -> eff w/o sys; =1 with upper sys; =-1 with lower sys; =2 random upper sys; =-2 random lower sys
+  Int_t plusSystematic=0;
   //Double_t effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
   Double_t effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-  plusSystematic=true;
-  //effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
+  
+  plusSystematic=1;
   effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
   effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
   effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
 }
 
@@ -401,19 +427,43 @@ void AnnihilationSelection::FillWeightedHisto_R2inFR(std::string sufix){
 void AnnihilationSelection::FillWeightedHisto_R1R2inFR(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  Bool_t  plusSystematic=false;
+  Int_t  plusSystematic=0;
   //Double_t effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
   Double_t effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-  plusSystematic=true;
+  plusSystematic=1;
   //effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
   effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
   effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
   effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-1;
+  //effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=2;
+  //effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-2;
+  //effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
 }
 
@@ -421,13 +471,39 @@ void AnnihilationSelection::FillWeightedHisto_R1R2inFR(std::string sufix){
 void AnnihilationSelection::FillWeightedHisto_R1R2inFR2approach(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  Bool_t  plusSystematic=false;
+  Int_t  plusSystematic=0;
   //Double_t effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
   Double_t Acc=ReturnAccettanceEffective_g1g2FR(fg1Recal);
   Double_t effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
   hname="ECAL_gravTwoPhoton10ns_W2ndApproachR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+
+  plusSystematic=1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+  plusSystematic=-1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+  plusSystematic=2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+  plusSystematic=-2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
  
 }
@@ -759,7 +835,7 @@ Bool_t AnnihilationSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2,  do
   return passed;
 }
 
-Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Bool_t PlusSystematic)
+Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t phi, Int_t PlusSystematic)
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
    std::string hname;
@@ -777,11 +853,9 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSlice=phiDeg/45.;
   Double_t eff;
-  if(PlusSystematic){
-    if(inner)eff=fEffUpperSysInnerRRange_r1inFR[phiSlice];
-    else if(outer)eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
-  }
-  else{
+
+  //PlusSystematic=0 -> eff w/o sys; =1 with upper sys; =-1 with lower sys; =2 random upper sys; =-2 random lower sys
+  if(PlusSystematic==0){
     if(inner){
       eff=fEffInnerRRange_r1inFR[phiSlice];
       hname="ECAL_R1inFR_EfficiencyVSPhi_InnerRadius";
@@ -794,6 +868,43 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t
     }
   }
 
+  if(PlusSystematic==1){
+    if(inner)eff=fEffUpperSysInnerRRange_r1inFR[phiSlice];
+    else if(outer)eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
+  }
+  if(PlusSystematic==-1){
+    if(inner)eff=fEffLowerSysInnerRRange_r1inFR[phiSlice];
+    else if(outer)eff=fEffLowerSysOuterRRange_r1inFR[phiSlice];
+  }
+  if(PlusSystematic==2){
+    if(inner){
+      Double_t sigma=fEffUpperSysInnerRRange_r1inFR[phiSlice]-fEffInnerRRange_r1inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffInnerRRange_r1inFR[phiSlice]+randomSys;
+    }
+    else if(outer){
+      eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
+      Double_t sigma=fEffUpperSysOuterRRange_r1inFR[phiSlice]-fEffOuterRRange_r1inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffOuterRRange_r1inFR[phiSlice]+randomSys;
+    }
+  }
+  if(PlusSystematic==-2){
+    if(inner){
+      Double_t sigma=fEffInnerRRange_r1inFR[phiSlice]-fEffLowerSysInnerRRange_r1inFR[phiSlice];
+      // std::cout<<"eff " << fEffInnerRRange_r1inFR[phiSlice] << " effLow " << fEffLowerSysInnerRRange_r1inFR[phiSlice] << std::endl;
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      //std::cout<<"sigma " << sigma << " randomSys "<<randomSys << " eff " << fEffInnerRRange_r1inFR[phiSlice]-randomSys << std::endl;
+      eff=fEffInnerRRange_r1inFR[phiSlice]-randomSys;
+    }
+    else if(outer){
+      eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
+      Double_t sigma=fEffOuterRRange_r1inFR[phiSlice]-fEffLowerSysOuterRRange_r1inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      //std::cout<<"sigma " << sigma << " randomSys "<<randomSys  << " eff " << fEffOuterRRange_r1inFR[phiSlice]-randomSys << std::endl;
+      eff=fEffOuterRRange_r1inFR[phiSlice]-randomSys;
+    }
+  }
 
   return eff;
 }
@@ -821,7 +932,7 @@ Double_t AnnihilationSelection::ReturnEfficiencyTruthR1inFR(Double_t radius, Dou
 
 
 
-Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Bool_t PlusSystematic)
+Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Int_t PlusSystematic)
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
@@ -837,11 +948,8 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSlice=phiDeg/45.;
   Double_t eff;
-  if(PlusSystematic){
-    if(inner)eff=fEffUpperSysInnerRRange_r1r2inFR[phiSlice];
-    else if(outer)eff=fEffUpperSysOuterRRange_r1r2inFR[phiSlice];
-  }
-  else{
+  //PlusSystematic=0 -> eff w/o sys; =1 with upper sys; =-1 with lower sys; =2 random upper sys; =-2 random lower sys
+  if(PlusSystematic==0){
     if(inner){
       eff=fEffInnerRRange_r1r2inFR[phiSlice];
       hname="ECAL_R1R2inFR_EfficiencyVSPhi_InnerRadius";
@@ -851,6 +959,38 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double
       eff=fEffOuterRRange_r1r2inFR[phiSlice];
       hname="ECAL_R1R2inFR_EfficiencyVSPhi_OutRadius";
       hSvc->FillHisto2(hname, phiDeg, eff);
+    }
+  }
+  if(PlusSystematic==1){
+    if(inner)eff=fEffUpperSysInnerRRange_r1r2inFR[phiSlice];
+    else if(outer)eff=fEffUpperSysOuterRRange_r1r2inFR[phiSlice];
+  }
+  if(PlusSystematic==-1){
+    if(inner)eff=fEffLowerSysInnerRRange_r1r2inFR[phiSlice];
+    else if(outer)eff=fEffLowerSysOuterRRange_r1r2inFR[phiSlice];
+  }
+  if(PlusSystematic==2){
+    if(inner){
+      Double_t sigma=fEffUpperSysInnerRRange_r1r2inFR[phiSlice]-fEffInnerRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffInnerRRange_r1r2inFR[phiSlice]+randomSys;
+    }
+    else if(outer){
+      Double_t sigma=fEffUpperSysOuterRRange_r1r2inFR[phiSlice]-fEffOuterRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffOuterRRange_r1r2inFR[phiSlice]+randomSys;
+    }
+  }
+  if(PlusSystematic==-2){
+    if(inner){
+      Double_t sigma=fEffInnerRRange_r1r2inFR[phiSlice]-fEffLowerSysInnerRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffInnerRRange_r1r2inFR[phiSlice]-randomSys;
+    }
+    else if(outer){
+      Double_t sigma=fEffOuterRRange_r1r2inFR[phiSlice]-fEffLowerSysOuterRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fabs(fr->Gaus(0., sigma));
+      eff=fEffOuterRRange_r1r2inFR[phiSlice]-randomSys;
     }
   }
 
@@ -935,6 +1075,15 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
 	        fEffUpperSysOuterRRange_r1inFR[0]>>fEffUpperSysInnerRRange_r1inFR[0]>>fEffUpperSysOuterRRange_r1inFR[1]>>fEffUpperSysInnerRRange_r1inFR[1]>>fEffUpperSysOuterRRange_r1inFR[2]>>fEffUpperSysInnerRRange_r1inFR[2]>>fEffUpperSysOuterRRange_r1inFR[3]>>fEffUpperSysInnerRRange_r1inFR[3]>>fEffUpperSysOuterRRange_r1inFR[4]>>fEffUpperSysInnerRRange_r1inFR[4]>>fEffUpperSysOuterRRange_r1inFR[5]>>fEffUpperSysInnerRRange_r1inFR[5]>>fEffUpperSysOuterRRange_r1inFR[6]>>fEffUpperSysInnerRRange_r1inFR[6]>>fEffUpperSysOuterRRange_r1inFR[7]>>fEffUpperSysInnerRRange_r1inFR[7]>>
 	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys "<<fEffUpperSysOuterRRange_r1inFR[0]<< std::endl;
       }
+      if(line.find("errEffSysLower")!=std::string::npos){
+      	//std::getline( tagfr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fEffLowerSysOuterRRange_r1inFR[0]>>fEffLowerSysInnerRRange_r1inFR[0]>>fEffLowerSysOuterRRange_r1inFR[1]>>fEffLowerSysInnerRRange_r1inFR[1]>>fEffLowerSysOuterRRange_r1inFR[2]>>fEffLowerSysInnerRRange_r1inFR[2]>>fEffLowerSysOuterRRange_r1inFR[3]>>fEffLowerSysInnerRRange_r1inFR[3]>>fEffLowerSysOuterRRange_r1inFR[4]>>fEffLowerSysInnerRRange_r1inFR[4]>>fEffLowerSysOuterRRange_r1inFR[5]>>fEffLowerSysInnerRRange_r1inFR[5]>>fEffLowerSysOuterRRange_r1inFR[6]>>fEffLowerSysInnerRRange_r1inFR[6]>>fEffLowerSysOuterRRange_r1inFR[7]>>fEffLowerSysInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys Low "<<fEffLowerSysOuterRRange_r1inFR[0]<< std::endl;
+      }
+      //errEffSysLower
     }//end while cycle
 
 
@@ -956,16 +1105,28 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
 	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
 	        fEffUpperSysOuterRRange_r1r2inFR[0]>>fEffUpperSysInnerRRange_r1r2inFR[0]>>fEffUpperSysOuterRRange_r1r2inFR[1]>>fEffUpperSysInnerRRange_r1r2inFR[1]>>fEffUpperSysOuterRRange_r1r2inFR[2]>>fEffUpperSysInnerRRange_r1r2inFR[2]>>fEffUpperSysOuterRRange_r1r2inFR[3]>>fEffUpperSysInnerRRange_r1r2inFR[3]>>fEffUpperSysOuterRRange_r1r2inFR[4]>>fEffUpperSysInnerRRange_r1r2inFR[4]>>fEffUpperSysOuterRRange_r1r2inFR[5]>>fEffUpperSysInnerRRange_r1r2inFR[5]>>fEffUpperSysOuterRRange_r1r2inFR[6]>>fEffUpperSysInnerRRange_r1r2inFR[6]>>fEffUpperSysOuterRRange_r1r2inFR[7]>>fEffUpperSysInnerRRange_r1r2inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sys"<<fEffUpperSysOuterRRange_r1r2inFR[0]<< std::endl;
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sys "<<fEffUpperSysOuterRRange_r1r2inFR[0]<< std::endl;
+      }
+      if(line.find("errEffSysLower")!=std::string::npos){
+      	//std::getline( tagprobefr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fEffLowerSysOuterRRange_r1r2inFR[0]>>fEffLowerSysInnerRRange_r1r2inFR[0]>>fEffLowerSysOuterRRange_r1r2inFR[1]>>fEffLowerSysInnerRRange_r1r2inFR[1]>>fEffLowerSysOuterRRange_r1r2inFR[2]>>fEffLowerSysInnerRRange_r1r2inFR[2]>>fEffLowerSysOuterRRange_r1r2inFR[3]>>fEffLowerSysInnerRRange_r1r2inFR[3]>>fEffLowerSysOuterRRange_r1r2inFR[4]>>fEffLowerSysInnerRRange_r1r2inFR[4]>>fEffLowerSysOuterRRange_r1r2inFR[5]>>fEffLowerSysInnerRRange_r1r2inFR[5]>>fEffLowerSysOuterRRange_r1r2inFR[6]>>fEffLowerSysInnerRRange_r1r2inFR[6]>>fEffLowerSysOuterRRange_r1r2inFR[7]>>fEffLowerSysInnerRRange_r1r2inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
       }
     }//end while cycle
-  /*
+  
   for(int i=0; i<8; i++){
     fEffUpperSysOuterRRange_r1inFR[i]  =fEffUpperSysOuterRRange_r1inFR[i]   + fEffOuterRRange_r1inFR[i];
     fEffUpperSysOuterRRange_r1r2inFR[i]=fEffUpperSysOuterRRange_r1r2inFR[i] + fEffOuterRRange_r1r2inFR[i];
     fEffUpperSysInnerRRange_r1inFR[i]  =fEffUpperSysInnerRRange_r1inFR[i]   + fEffInnerRRange_r1inFR[i];
     fEffUpperSysInnerRRange_r1r2inFR[i]=fEffUpperSysInnerRRange_r1r2inFR[i] + fEffInnerRRange_r1r2inFR[i];
-        
+    fEffLowerSysOuterRRange_r1inFR[i]  =fEffOuterRRange_r1inFR[i]  -fEffLowerSysOuterRRange_r1inFR[i]   ;
+    fEffLowerSysOuterRRange_r1r2inFR[i]=fEffOuterRRange_r1r2inFR[i]-fEffLowerSysOuterRRange_r1r2inFR[i] ;
+    fEffLowerSysInnerRRange_r1inFR[i]  =fEffInnerRRange_r1inFR[i]  -fEffLowerSysInnerRRange_r1inFR[i]   ;
+    fEffLowerSysInnerRRange_r1r2inFR[i]=fEffInnerRRange_r1r2inFR[i]-fEffLowerSysInnerRRange_r1r2inFR[i] ;
+    /*  
     if(fEffOuterRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
     if(fEffOuterRRange_r1r2inFR[i]>1.) fEffOuterRRange_r1r2inFR[i]=1.;
     if(fEffInnerRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
@@ -974,8 +1135,8 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
     if(fEffUpperSysOuterRRange_r1r2inFR[i]>1.)fEffUpperSysOuterRRange_r1r2inFR[i]=1.;
     if(fEffUpperSysInnerRRange_r1inFR[i]  >1.)fEffUpperSysInnerRRange_r1inFR[i]  =1.;
     if(fEffUpperSysInnerRRange_r1r2inFR[i]>1.)fEffUpperSysInnerRRange_r1r2inFR[i]=1.;
-    
-    }*/
+    */
+    }
 
 }
 
@@ -1199,6 +1360,12 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1inFR" + sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1inFR" + sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1inFR" + sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1inFR" + sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccR1inFR"+sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccEffR1inFR"+sufixW.at(i);
@@ -1228,6 +1395,12 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1R2inFR" + sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccEffR1R2inFR"+sufixW2.at(i);
@@ -1235,6 +1408,14 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_gravTwoPhoton10ns_WAccEffPlusSysR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
   }
 

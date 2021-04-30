@@ -544,10 +544,10 @@ void CalchepTruthStudies::getCalchepTruth(){
   Double_t PTransverse1 = sqrt(p1[0]*p1[0]+p1[1]*p1[1]);
   Double_t PTransverse2 = sqrt(p2[0]*p2[0]+p2[1]*p2[1]);
   Double_t shiftEcal=sqrt(3.13*3.13+3.86*3.86);
-  Double_t g1Recal=PTransverse1*fdistanceTarget/fabs(p1[2]);
-  Double_t g2Recal=PTransverse2*fdistanceTarget/fabs(p2[2]);
-  //Double_t g1Recal=atan2(PTransverse1,fabs(p1[2]))*fdistanceTarget;
-  //Double_t g2Recal=atan2(PTransverse2,fabs(p2[2]))*fdistanceTarget;
+  //Double_t g1Recal=PTransverse1*fdistanceTarget/fabs(p1[2]);
+  //Double_t g2Recal=PTransverse2*fdistanceTarget/fabs(p2[2]);
+  Double_t g1Recal=PTransverse1*fdistanceTarget/p1[2];
+  Double_t g2Recal=PTransverse2*fdistanceTarget/p2[2];
 
   FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar");
 

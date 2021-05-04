@@ -1,4 +1,7 @@
 #include "Riostream.h"
+#include<iostream>
+#include<string>
+#include<fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -39,6 +42,7 @@
 #include "UserAnalysis.hh"
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "temp_corr.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -82,6 +86,8 @@ TChain* BuildChain(TString treeName, TObjArray fInputFileNameList){
 
 int main(Int_t argc, char **argv)
 {
+
+  long utc_time;
 
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
@@ -348,6 +354,13 @@ int main(Int_t argc, char **argv)
    pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
    evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
    hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+
+
+   // initialize temp corr
+   int iret=InitTemps();
+   if(iret==0) std::cout<<" --- initialized Temp correction --"<< std::endl;
+
+
 //evSel->Init(fRecoEvent, 
 //	       fECalRecoEvent,    fECalRecoCl, 
 //	       fPVetoRecoEvent,   fPVetoRecoCl, 
@@ -419,6 +432,18 @@ int main(Int_t argc, char **argv)
 	 std::cout<<"----------------------------------------------------Run/Event n. = "<<fRecoEvent->GetRunNumber()<<" "<<fRecoEvent->GetEventNumber()<<std::endl;
        }
        
+       TTimeStamp timevent=fRecoEvent->GetEventTime();
+       utc_time=timevent.GetSec();
+        
+       // read here temp at event time
+       float temp_event=GetTemp(utc_time);
+       float temp_corr=GetEventTempCorr();
+       if ( (fVerbose>0 && (i%10==0)) || (i%1000==0) ){
+	 std::cout<< "-------------------  event utc = "<<utc_time<<std::endl;
+	 std::cout<< "-------------------  event temp = "<<temp_event<<std::endl;
+	 std::cout<<" -------------------  event temp corr = "<<temp_corr<<std::endl;
+       }
+
        if (fECalRecoEvent)   nECalHits   = fECalRecoEvent->GetNHits();
        if (fTargetRecoEvent) nTargetHits = fTargetRecoEvent->GetNHits(); 
        if (fPVetoRecoEvent)  nPVetoHits  = fPVetoRecoEvent->GetNHits();

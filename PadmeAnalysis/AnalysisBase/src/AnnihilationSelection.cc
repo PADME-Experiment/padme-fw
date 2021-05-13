@@ -49,10 +49,11 @@ AnnihilationSelection::AnnihilationSelection()
   fVerbose        = 0;
 
   fDataMCMethod=NULL;
+  fMCscaleF=NULL;
 
  
 }
-AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBool, Bool_t dataMCmethod)
+AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBool, Bool_t dataMCmethod, Bool_t scaleFMethod)
 {
   fRecoEvent      = NULL;
   fVerbose        = verbosityFlag;
@@ -60,6 +61,8 @@ AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosi
   fdataMCmethod   = dataMCmethod;
   fInitToComplete =true;
   fDataMCMethod=new AnnihilationSelectionDataMCMethod();
+  fScaleFMethod=scaleFMethod;
+  fMCscaleF=new ScaleFactorMethod();
 
 }
 AnnihilationSelection::~AnnihilationSelection()
@@ -69,7 +72,7 @@ AnnihilationSelection::~AnnihilationSelection()
 Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader, 
 				   TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
 				   TRecoVObject* SACev, TRecoVClusCollection* SACcl,
-				   TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam){
+				   TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam, Bool_t isMC){
   fRecoEvent = eventHeader;
   fECal_hitEvent      =ECALev   ;
   fSAC_hitEvent       =SACev    ;
@@ -121,8 +124,10 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
 
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt");
 
-  fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins.txt");
-  
+  fillEffVectorData("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt");
+  fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt");
+  fillEffVector(isMC);
+
   fillEffVectorTruth();
   //Double_t tmpfUpperSysInnerRRange_r1inFR[8]={ 0.0773673, 0.0396053, 0.0052547,  0.0246471,  0.00474522, 0.00500453, 0.0224981, 0.0310803};
   //Double_t tmpfUpperSysOuterRRange_r1inFR[8]={0.0176767, 0.0618193, 0.102187,  0.0246704, 0.0829614, 0.0851759 , 0.0822724 , 0.107262 };
@@ -163,6 +168,7 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   }
   
   if(fdataMCmethod)fDataMCMethod->Init(fEffInnerRRange_r1inFR, fEffOuterRRange_r1inFR, fEffInnerRRange_r1r2inFR, fEffOuterRRange_r1r2inFR);
+  if(fScaleFMethod)fMCscaleF->Init(fDataEffInnerRRange_r1inFR, fDataEffOuterRRange_r1inFR, fDataEffInnerRRange_r1r2inFR, fDataEffOuterRRange_r1r2inFR, fMCEffInnerRRange_r1inFR, fMCEffOuterRRange_r1inFR, fMCEffInnerRRange_r1r2inFR, fMCEffOuterRRange_r1r2inFR);
 
   fr=new TRandom2();
   gRandom->SetSeed(time(NULL));
@@ -316,6 +322,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
 
 	  if(fdataMCmethod)fDataMCMethod->Process(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
+	  if(fScaleFMethod)fMCscaleF->Process(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
 
 	  Int_t countHit1_5CoG=0;
 	  Int_t countHit2_5CoG=0;
@@ -374,7 +381,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 void AnnihilationSelection::FillWeightedHisto_R1inFR(std::string sufix){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-  //PlusSystematic=0 -> eff w/o sys; =1 with upper sys; =-1 with lower sys; =2 random upper sys; =-2 random lower sys
+  //PlusSystematic=0 -> eff w/o sys; =1 with upper sys; =-1 with lower sys; =2 random upper sys; =-2 random lower sys; =3 apply the statistic error
   Int_t plusSystematic=0;
   //Double_t effg1=ReturnEfficiencyR1R2inFR(fg1Recal,fphig1,plusSystematic);
   Double_t effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
@@ -410,6 +417,51 @@ void AnnihilationSelection::FillWeightedHisto_R1inFR(std::string sufix){
   effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event with a random estraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-2;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=2;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event w/o a random estraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-1;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=1;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+
+  plusSystematic=3;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
 }
 
 void AnnihilationSelection::FillWeightedHisto_R2inFR(std::string sufix){
@@ -465,6 +517,50 @@ void AnnihilationSelection::FillWeightedHisto_R1R2inFR(std::string sufix){
   effScaleFactor=(1./effg1)*(1./effg2);
   hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event with a random estraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-2;
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=2;
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event w/o a random estraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-1;
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=1;
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+
+  plusSystematic=3;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1R2inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2);
+  hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
 }
 
 
@@ -504,6 +600,49 @@ void AnnihilationSelection::FillWeightedHisto_R1R2inFR2approach(std::string sufi
   effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
   effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
   hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event with a random estraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-2;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-2;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=2;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  //now i'll weight the event w/o random extraction but if the first is weighted with the lowerSys, the secon one should be weighted with a random in the opposite side (UpSys)
+  //let's start with the first weighted with upSys
+  plusSystematic=1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=-1;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=-1;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  plusSystematic=1;
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondR1R2inFR"+sufix;
+  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
+
+  plusSystematic=3;
+  effg1=ReturnEfficiencyR1inFR(fg1Recal,fphig1,plusSystematic);
+  effg2=ReturnEfficiencyR1inFR(fg2Recal,fphig2,plusSystematic);
+  effScaleFactor=(1./effg1)*(1./effg2)*(1./Acc);
+  hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusStatisticErrorR1R2inFR"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
  
 }
@@ -658,9 +797,9 @@ void AnnihilationSelection::FillGeneralHisto(std::string sufix){
   hSvc->FillHisto2(hname,fphig1,fphig2);
   hname="ECAL_Theta2vsTheta1"+sufix;
   hSvc->FillHisto2(hname,fthetag1,fthetag2);
-  hname="ECAL_ThetavsEnergy"+sufix;
-  hSvc->FillHisto2(hname,fg1E, fthetag1);
-  hSvc->FillHisto2(hname,fg2E, fthetag2);
+  hname="ECAL_EnergyvsTheta"+sufix;
+  hSvc->FillHisto2(hname, fthetag1,fg1E);
+  hSvc->FillHisto2(hname, fthetag2,fg2E);
   hname="ECAL_PhivsEnergy"+sufix;
   hSvc->FillHisto2(hname,fg1E, fphig1);
   hSvc->FillHisto2(hname,fg2E, fphig2);
@@ -892,17 +1031,30 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1inFR(Double_t radius, Double_t
   if(PlusSystematic==-2){
     if(inner){
       Double_t sigma=fEffInnerRRange_r1inFR[phiSlice]-fEffLowerSysInnerRRange_r1inFR[phiSlice];
-      // std::cout<<"eff " << fEffInnerRRange_r1inFR[phiSlice] << " effLow " << fEffLowerSysInnerRRange_r1inFR[phiSlice] << std::endl;
+      //std::cout<<"eff " << fEffInnerRRange_r1inFR[phiSlice] << " effLow " << fEffLowerSysInnerRRange_r1inFR[phiSlice] << std::endl;
       Double_t randomSys=fabs(fr->Gaus(0., sigma));
       //std::cout<<"sigma " << sigma << " randomSys "<<randomSys << " eff " << fEffInnerRRange_r1inFR[phiSlice]-randomSys << std::endl;
       eff=fEffInnerRRange_r1inFR[phiSlice]-randomSys;
     }
     else if(outer){
-      eff=fEffUpperSysOuterRRange_r1inFR[phiSlice];
       Double_t sigma=fEffOuterRRange_r1inFR[phiSlice]-fEffLowerSysOuterRRange_r1inFR[phiSlice];
       Double_t randomSys=fabs(fr->Gaus(0., sigma));
       //std::cout<<"sigma " << sigma << " randomSys "<<randomSys  << " eff " << fEffOuterRRange_r1inFR[phiSlice]-randomSys << std::endl;
       eff=fEffOuterRRange_r1inFR[phiSlice]-randomSys;
+    }
+  }
+
+
+  if(PlusSystematic==3){
+    if(inner){
+      Double_t sigma=ferrEffInnerRRange_r1inFR[phiSlice];
+      Double_t randomSys=fr->Gaus(0., sigma);
+      eff=fEffInnerRRange_r1inFR[phiSlice]+randomSys;
+    }
+    else if(outer){
+      Double_t sigma=ferrEffOuterRRange_r1inFR[phiSlice];
+      Double_t randomSys=fr->Gaus(0., sigma);
+      eff=fEffOuterRRange_r1inFR[phiSlice]+randomSys;
     }
   }
 
@@ -994,6 +1146,21 @@ Double_t AnnihilationSelection::ReturnEfficiencyR1R2inFR(Double_t radius, Double
     }
   }
 
+
+  if(PlusSystematic==3){
+    if(inner){
+      Double_t sigma=ferrEffInnerRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fr->Gaus(0., sigma);
+      eff=fEffInnerRRange_r1r2inFR[phiSlice]+randomSys;
+    }
+    else if(outer){
+      Double_t sigma=ferrEffOuterRRange_r1r2inFR[phiSlice];
+      Double_t randomSys=fr->Gaus(0., sigma);
+      eff=fEffOuterRRange_r1r2inFR[phiSlice]+randomSys;
+    }
+  }
+
+
   return eff;
 }
 
@@ -1050,8 +1217,7 @@ Double_t AnnihilationSelection::ReturnAccettanceEffective_g1FR(Double_t radius)
 }
 
 
-void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR){
-
+void AnnihilationSelection::fillEffVectorData(std::string fnameTagFR, std::string fnameTagProbeFR){
 
   std::ifstream tagfr(fnameTagFR.c_str());
   std::string line;
@@ -1063,25 +1229,31 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
       	std::getline( tagfr, line);
 	std::istringstream eff(line);
 	if(eff>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
-	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffOuterRRange_r1inFR[0]>>fEffInnerRRange_r1inFR[0]>>fEffOuterRRange_r1inFR[1]>>fEffInnerRRange_r1inFR[1]>>fEffOuterRRange_r1inFR[2]>>fEffInnerRRange_r1inFR[2]>>fEffOuterRRange_r1inFR[3]>>fEffInnerRRange_r1inFR[3]>>fEffOuterRRange_r1inFR[4]>>fEffInnerRRange_r1inFR[4]>>fEffOuterRRange_r1inFR[5]>>fEffInnerRRange_r1inFR[5]>>fEffOuterRRange_r1inFR[6]>>fEffInnerRRange_r1inFR[6]>>fEffOuterRRange_r1inFR[7]>>fEffInnerRRange_r1inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr "<<fEffOuterRRange_r1inFR[0]<< std::endl;
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        fDataEffOuterRRange_r1inFR[0]>>fDataEffInnerRRange_r1inFR[0]>>fDataEffOuterRRange_r1inFR[1]>>fDataEffInnerRRange_r1inFR[1]>>fDataEffOuterRRange_r1inFR[2]>>fDataEffInnerRRange_r1inFR[2]>>fDataEffOuterRRange_r1inFR[3]>>fDataEffInnerRRange_r1inFR[3]>>fDataEffOuterRRange_r1inFR[4]>>fDataEffInnerRRange_r1inFR[4]>>fDataEffOuterRRange_r1inFR[5]>>fDataEffInnerRRange_r1inFR[5]>>fDataEffOuterRRange_r1inFR[6]>>fDataEffInnerRRange_r1inFR[6]>>fDataEffOuterRRange_r1inFR[7]>>fDataEffInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr "<<fDataEffOuterRRange_r1inFR[0]<< std::endl;
+	std::getline( tagfr, line);
+	std::istringstream stat(line);
+	if(stat>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        ferrDataEffOuterRRange_r1inFR[0]>>ferrDataEffInnerRRange_r1inFR[0]>>ferrDataEffOuterRRange_r1inFR[1]>>ferrDataEffInnerRRange_r1inFR[1]>>ferrDataEffOuterRRange_r1inFR[2]>>ferrDataEffInnerRRange_r1inFR[2]>>ferrDataEffOuterRRange_r1inFR[3]>>ferrDataEffInnerRRange_r1inFR[3]>>ferrDataEffOuterRRange_r1inFR[4]>>ferrDataEffInnerRRange_r1inFR[4]>>ferrDataEffOuterRRange_r1inFR[5]>>ferrDataEffInnerRRange_r1inFR[5]>>ferrDataEffOuterRRange_r1inFR[6]>>ferrDataEffInnerRRange_r1inFR[6]>>ferrDataEffOuterRRange_r1inFR[7]>>ferrDataEffInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr err "<<ferrDataEffOuterRRange_r1inFR[0]<< std::endl;
       }
       if(line.find("errEffSysUpper")!=std::string::npos){
       	//std::getline( tagfr, line);
 	std::istringstream effSysSup(line);
 	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffUpperSysOuterRRange_r1inFR[0]>>fEffUpperSysInnerRRange_r1inFR[0]>>fEffUpperSysOuterRRange_r1inFR[1]>>fEffUpperSysInnerRRange_r1inFR[1]>>fEffUpperSysOuterRRange_r1inFR[2]>>fEffUpperSysInnerRRange_r1inFR[2]>>fEffUpperSysOuterRRange_r1inFR[3]>>fEffUpperSysInnerRRange_r1inFR[3]>>fEffUpperSysOuterRRange_r1inFR[4]>>fEffUpperSysInnerRRange_r1inFR[4]>>fEffUpperSysOuterRRange_r1inFR[5]>>fEffUpperSysInnerRRange_r1inFR[5]>>fEffUpperSysOuterRRange_r1inFR[6]>>fEffUpperSysInnerRRange_r1inFR[6]>>fEffUpperSysOuterRRange_r1inFR[7]>>fEffUpperSysInnerRRange_r1inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys "<<fEffUpperSysOuterRRange_r1inFR[0]<< std::endl;
+	        fDataEffUpperSysOuterRRange_r1inFR[0]>>fDataEffUpperSysInnerRRange_r1inFR[0]>>fDataEffUpperSysOuterRRange_r1inFR[1]>>fDataEffUpperSysInnerRRange_r1inFR[1]>>fDataEffUpperSysOuterRRange_r1inFR[2]>>fDataEffUpperSysInnerRRange_r1inFR[2]>>fDataEffUpperSysOuterRRange_r1inFR[3]>>fDataEffUpperSysInnerRRange_r1inFR[3]>>fDataEffUpperSysOuterRRange_r1inFR[4]>>fDataEffUpperSysInnerRRange_r1inFR[4]>>fDataEffUpperSysOuterRRange_r1inFR[5]>>fDataEffUpperSysInnerRRange_r1inFR[5]>>fDataEffUpperSysOuterRRange_r1inFR[6]>>fDataEffUpperSysInnerRRange_r1inFR[6]>>fDataEffUpperSysOuterRRange_r1inFR[7]>>fDataEffUpperSysInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys "<<fDataEffUpperSysOuterRRange_r1inFR[0]<< std::endl;
       }
       if(line.find("errEffSysLower")!=std::string::npos){
       	//std::getline( tagfr, line);
 	std::istringstream effSysSup(line);
 	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffLowerSysOuterRRange_r1inFR[0]>>fEffLowerSysInnerRRange_r1inFR[0]>>fEffLowerSysOuterRRange_r1inFR[1]>>fEffLowerSysInnerRRange_r1inFR[1]>>fEffLowerSysOuterRRange_r1inFR[2]>>fEffLowerSysInnerRRange_r1inFR[2]>>fEffLowerSysOuterRRange_r1inFR[3]>>fEffLowerSysInnerRRange_r1inFR[3]>>fEffLowerSysOuterRRange_r1inFR[4]>>fEffLowerSysInnerRRange_r1inFR[4]>>fEffLowerSysOuterRRange_r1inFR[5]>>fEffLowerSysInnerRRange_r1inFR[5]>>fEffLowerSysOuterRRange_r1inFR[6]>>fEffLowerSysInnerRRange_r1inFR[6]>>fEffLowerSysOuterRRange_r1inFR[7]>>fEffLowerSysInnerRRange_r1inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys Low "<<fEffLowerSysOuterRRange_r1inFR[0]<< std::endl;
+	        fDataEffLowerSysOuterRRange_r1inFR[0]>>fDataEffLowerSysInnerRRange_r1inFR[0]>>fDataEffLowerSysOuterRRange_r1inFR[1]>>fDataEffLowerSysInnerRRange_r1inFR[1]>>fDataEffLowerSysOuterRRange_r1inFR[2]>>fDataEffLowerSysInnerRRange_r1inFR[2]>>fDataEffLowerSysOuterRRange_r1inFR[3]>>fDataEffLowerSysInnerRRange_r1inFR[3]>>fDataEffLowerSysOuterRRange_r1inFR[4]>>fDataEffLowerSysInnerRRange_r1inFR[4]>>fDataEffLowerSysOuterRRange_r1inFR[5]>>fDataEffLowerSysInnerRRange_r1inFR[5]>>fDataEffLowerSysOuterRRange_r1inFR[6]>>fDataEffLowerSysInnerRRange_r1inFR[6]>>fDataEffLowerSysOuterRRange_r1inFR[7]>>fDataEffLowerSysInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys Low "<<fDataEffLowerSysOuterRRange_r1inFR[0]<< std::endl;
       }
       //errEffSysLower
     }//end while cycle
@@ -1096,36 +1268,41 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
 	std::istringstream eff(line);
 	if(eff>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffOuterRRange_r1r2inFR[0]>>fEffInnerRRange_r1r2inFR[0]>>fEffOuterRRange_r1r2inFR[1]>>fEffInnerRRange_r1r2inFR[1]>>fEffOuterRRange_r1r2inFR[2]>>fEffInnerRRange_r1r2inFR[2]>>fEffOuterRRange_r1r2inFR[3]>>fEffInnerRRange_r1r2inFR[3]>>fEffOuterRRange_r1r2inFR[4]>>fEffInnerRRange_r1r2inFR[4]>>fEffOuterRRange_r1r2inFR[5]>>fEffInnerRRange_r1r2inFR[5]>>fEffOuterRRange_r1r2inFR[6]>>fEffInnerRRange_r1r2inFR[6]>>fEffOuterRRange_r1r2inFR[7]>>fEffInnerRRange_r1r2inFR[7]>>
-		tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr "<<fEffOuterRRange_r1r2inFR[0]<< std::endl;
+	        fDataEffOuterRRange_r1r2inFR[0]>>fDataEffInnerRRange_r1r2inFR[0]>>fDataEffOuterRRange_r1r2inFR[1]>>fDataEffInnerRRange_r1r2inFR[1]>>fDataEffOuterRRange_r1r2inFR[2]>>fDataEffInnerRRange_r1r2inFR[2]>>fDataEffOuterRRange_r1r2inFR[3]>>fDataEffInnerRRange_r1r2inFR[3]>>fDataEffOuterRRange_r1r2inFR[4]>>fDataEffInnerRRange_r1r2inFR[4]>>fDataEffOuterRRange_r1r2inFR[5]>>fDataEffInnerRRange_r1r2inFR[5]>>fDataEffOuterRRange_r1r2inFR[6]>>fDataEffInnerRRange_r1r2inFR[6]>>fDataEffOuterRRange_r1r2inFR[7]>>fDataEffInnerRRange_r1r2inFR[7]>>
+		tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr "<<fDataEffOuterRRange_r1r2inFR[0]<< std::endl;
+	std::getline( tagprobefr, line);
+	std::istringstream stat(line);
+	if(stat>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        ferrDataEffOuterRRange_r1r2inFR[0]>>ferrDataEffInnerRRange_r1r2inFR[0]>>ferrDataEffOuterRRange_r1r2inFR[1]>>ferrDataEffInnerRRange_r1r2inFR[1]>>ferrDataEffOuterRRange_r1r2inFR[2]>>ferrDataEffInnerRRange_r1r2inFR[2]>>ferrDataEffOuterRRange_r1r2inFR[3]>>ferrDataEffInnerRRange_r1r2inFR[3]>>ferrDataEffOuterRRange_r1r2inFR[4]>>ferrDataEffInnerRRange_r1r2inFR[4]>>ferrDataEffOuterRRange_r1r2inFR[5]>>ferrDataEffInnerRRange_r1r2inFR[5]>>ferrDataEffOuterRRange_r1r2inFR[6]>>ferrDataEffInnerRRange_r1r2inFR[6]>>ferrDataEffOuterRRange_r1r2inFR[7]>>ferrDataEffInnerRRange_r1r2inFR[7]>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr err "<<ferrDataEffOuterRRange_r1r2inFR[0]<< std::endl;
       }
       if(line.find("errEffSysUpper")!=std::string::npos){
       	//std::getline( tagprobefr, line);
 	std::istringstream effSysSup(line);
 	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffUpperSysOuterRRange_r1r2inFR[0]>>fEffUpperSysInnerRRange_r1r2inFR[0]>>fEffUpperSysOuterRRange_r1r2inFR[1]>>fEffUpperSysInnerRRange_r1r2inFR[1]>>fEffUpperSysOuterRRange_r1r2inFR[2]>>fEffUpperSysInnerRRange_r1r2inFR[2]>>fEffUpperSysOuterRRange_r1r2inFR[3]>>fEffUpperSysInnerRRange_r1r2inFR[3]>>fEffUpperSysOuterRRange_r1r2inFR[4]>>fEffUpperSysInnerRRange_r1r2inFR[4]>>fEffUpperSysOuterRRange_r1r2inFR[5]>>fEffUpperSysInnerRRange_r1r2inFR[5]>>fEffUpperSysOuterRRange_r1r2inFR[6]>>fEffUpperSysInnerRRange_r1r2inFR[6]>>fEffUpperSysOuterRRange_r1r2inFR[7]>>fEffUpperSysInnerRRange_r1r2inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sys "<<fEffUpperSysOuterRRange_r1r2inFR[0]<< std::endl;
+	        fDataEffUpperSysOuterRRange_r1r2inFR[0]>>fDataEffUpperSysInnerRRange_r1r2inFR[0]>>fDataEffUpperSysOuterRRange_r1r2inFR[1]>>fDataEffUpperSysInnerRRange_r1r2inFR[1]>>fDataEffUpperSysOuterRRange_r1r2inFR[2]>>fDataEffUpperSysInnerRRange_r1r2inFR[2]>>fDataEffUpperSysOuterRRange_r1r2inFR[3]>>fDataEffUpperSysInnerRRange_r1r2inFR[3]>>fDataEffUpperSysOuterRRange_r1r2inFR[4]>>fDataEffUpperSysInnerRRange_r1r2inFR[4]>>fDataEffUpperSysOuterRRange_r1r2inFR[5]>>fDataEffUpperSysInnerRRange_r1r2inFR[5]>>fDataEffUpperSysOuterRRange_r1r2inFR[6]>>fDataEffUpperSysInnerRRange_r1r2inFR[6]>>fDataEffUpperSysOuterRRange_r1r2inFR[7]>>fDataEffUpperSysInnerRRange_r1r2inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sys "<<fDataEffUpperSysOuterRRange_r1r2inFR[0]<< std::endl;
       }
       if(line.find("errEffSysLower")!=std::string::npos){
       	//std::getline( tagprobefr, line);
 	std::istringstream effSysSup(line);
 	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
 	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
-	        fEffLowerSysOuterRRange_r1r2inFR[0]>>fEffLowerSysInnerRRange_r1r2inFR[0]>>fEffLowerSysOuterRRange_r1r2inFR[1]>>fEffLowerSysInnerRRange_r1r2inFR[1]>>fEffLowerSysOuterRRange_r1r2inFR[2]>>fEffLowerSysInnerRRange_r1r2inFR[2]>>fEffLowerSysOuterRRange_r1r2inFR[3]>>fEffLowerSysInnerRRange_r1r2inFR[3]>>fEffLowerSysOuterRRange_r1r2inFR[4]>>fEffLowerSysInnerRRange_r1r2inFR[4]>>fEffLowerSysOuterRRange_r1r2inFR[5]>>fEffLowerSysInnerRRange_r1r2inFR[5]>>fEffLowerSysOuterRRange_r1r2inFR[6]>>fEffLowerSysInnerRRange_r1r2inFR[6]>>fEffLowerSysOuterRRange_r1r2inFR[7]>>fEffLowerSysInnerRRange_r1r2inFR[7]>>
-	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
+	        fDataEffLowerSysOuterRRange_r1r2inFR[0]>>fDataEffLowerSysInnerRRange_r1r2inFR[0]>>fDataEffLowerSysOuterRRange_r1r2inFR[1]>>fDataEffLowerSysInnerRRange_r1r2inFR[1]>>fDataEffLowerSysOuterRRange_r1r2inFR[2]>>fDataEffLowerSysInnerRRange_r1r2inFR[2]>>fDataEffLowerSysOuterRRange_r1r2inFR[3]>>fDataEffLowerSysInnerRRange_r1r2inFR[3]>>fDataEffLowerSysOuterRRange_r1r2inFR[4]>>fDataEffLowerSysInnerRRange_r1r2inFR[4]>>fDataEffLowerSysOuterRRange_r1r2inFR[5]>>fDataEffLowerSysInnerRRange_r1r2inFR[5]>>fDataEffLowerSysOuterRRange_r1r2inFR[6]>>fDataEffLowerSysInnerRRange_r1r2inFR[6]>>fDataEffLowerSysOuterRRange_r1r2inFR[7]>>fDataEffLowerSysInnerRRange_r1r2inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fDataEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
       }
     }//end while cycle
   
   for(int i=0; i<8; i++){
-    fEffUpperSysOuterRRange_r1inFR[i]  =fEffUpperSysOuterRRange_r1inFR[i]   + fEffOuterRRange_r1inFR[i];
-    fEffUpperSysOuterRRange_r1r2inFR[i]=fEffUpperSysOuterRRange_r1r2inFR[i] + fEffOuterRRange_r1r2inFR[i];
-    fEffUpperSysInnerRRange_r1inFR[i]  =fEffUpperSysInnerRRange_r1inFR[i]   + fEffInnerRRange_r1inFR[i];
-    fEffUpperSysInnerRRange_r1r2inFR[i]=fEffUpperSysInnerRRange_r1r2inFR[i] + fEffInnerRRange_r1r2inFR[i];
-    fEffLowerSysOuterRRange_r1inFR[i]  =fEffOuterRRange_r1inFR[i]  -fEffLowerSysOuterRRange_r1inFR[i]   ;
-    fEffLowerSysOuterRRange_r1r2inFR[i]=fEffOuterRRange_r1r2inFR[i]-fEffLowerSysOuterRRange_r1r2inFR[i] ;
-    fEffLowerSysInnerRRange_r1inFR[i]  =fEffInnerRRange_r1inFR[i]  -fEffLowerSysInnerRRange_r1inFR[i]   ;
-    fEffLowerSysInnerRRange_r1r2inFR[i]=fEffInnerRRange_r1r2inFR[i]-fEffLowerSysInnerRRange_r1r2inFR[i] ;
+    fDataEffUpperSysOuterRRange_r1inFR[i]  =fDataEffUpperSysOuterRRange_r1inFR[i]   + fDataEffOuterRRange_r1inFR[i];
+    fDataEffUpperSysOuterRRange_r1r2inFR[i]=fDataEffUpperSysOuterRRange_r1r2inFR[i] + fDataEffOuterRRange_r1r2inFR[i];
+    fDataEffUpperSysInnerRRange_r1inFR[i]  =fDataEffUpperSysInnerRRange_r1inFR[i]   + fDataEffInnerRRange_r1inFR[i];
+    fDataEffUpperSysInnerRRange_r1r2inFR[i]=fDataEffUpperSysInnerRRange_r1r2inFR[i] + fDataEffInnerRRange_r1r2inFR[i];
+    fDataEffLowerSysOuterRRange_r1inFR[i]  =fDataEffOuterRRange_r1inFR[i]  -fDataEffLowerSysOuterRRange_r1inFR[i]   ;
+    fDataEffLowerSysOuterRRange_r1r2inFR[i]=fDataEffOuterRRange_r1r2inFR[i]-fDataEffLowerSysOuterRRange_r1r2inFR[i] ;
+    fDataEffLowerSysInnerRRange_r1inFR[i]  =fDataEffInnerRRange_r1inFR[i]  -fDataEffLowerSysInnerRRange_r1inFR[i]   ;
+    fDataEffLowerSysInnerRRange_r1r2inFR[i]=fDataEffInnerRRange_r1r2inFR[i]-fDataEffLowerSysInnerRRange_r1r2inFR[i] ;
     /*  
     if(fEffOuterRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
     if(fEffOuterRRange_r1r2inFR[i]>1.) fEffOuterRRange_r1r2inFR[i]=1.;
@@ -1137,6 +1314,170 @@ void AnnihilationSelection::fillEffVector(std::string fnameTagFR, std::string fn
     if(fEffUpperSysInnerRRange_r1r2inFR[i]>1.)fEffUpperSysInnerRRange_r1r2inFR[i]=1.;
     */
     }
+
+}
+
+
+void AnnihilationSelection::fillEffVectorMC(std::string fnameTagFR, std::string fnameTagProbeFR){
+
+  std::ifstream tagfr(fnameTagFR.c_str());
+  std::string line;
+  std::string tmp;
+  while( std::getline( tagfr, line ))
+    {
+      std::istringstream iss(line);
+      if(line.find("3sigma")!=std::string::npos){
+      	std::getline( tagfr, line);
+	std::istringstream eff(line);
+	if(eff>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        fMCEffOuterRRange_r1inFR[0]>>fMCEffInnerRRange_r1inFR[0]>>fMCEffOuterRRange_r1inFR[1]>>fMCEffInnerRRange_r1inFR[1]>>fMCEffOuterRRange_r1inFR[2]>>fMCEffInnerRRange_r1inFR[2]>>fMCEffOuterRRange_r1inFR[3]>>fMCEffInnerRRange_r1inFR[3]>>fMCEffOuterRRange_r1inFR[4]>>fMCEffInnerRRange_r1inFR[4]>>fMCEffOuterRRange_r1inFR[5]>>fMCEffInnerRRange_r1inFR[5]>>fMCEffOuterRRange_r1inFR[6]>>fMCEffInnerRRange_r1inFR[6]>>fMCEffOuterRRange_r1inFR[7]>>fMCEffInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr "<<fMCEffOuterRRange_r1inFR[0]<< std::endl;
+	std::getline( tagfr, line);
+	std::istringstream sist(line);
+	if(sist>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        ferrMCEffOuterRRange_r1inFR[0]>>ferrMCEffInnerRRange_r1inFR[0]>>ferrMCEffOuterRRange_r1inFR[1]>>ferrMCEffInnerRRange_r1inFR[1]>>ferrMCEffOuterRRange_r1inFR[2]>>ferrMCEffInnerRRange_r1inFR[2]>>ferrMCEffOuterRRange_r1inFR[3]>>ferrMCEffInnerRRange_r1inFR[3]>>ferrMCEffOuterRRange_r1inFR[4]>>ferrMCEffInnerRRange_r1inFR[4]>>ferrMCEffOuterRRange_r1inFR[5]>>ferrMCEffInnerRRange_r1inFR[5]>>ferrMCEffOuterRRange_r1inFR[6]>>ferrMCEffInnerRRange_r1inFR[6]>>ferrMCEffOuterRRange_r1inFR[7]>>ferrMCEffInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr err "<<ferrMCEffOuterRRange_r1inFR[0]<< std::endl;
+      }
+      if(line.find("errEffSysUpper")!=std::string::npos){
+      	//std::getline( tagfr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fMCEffUpperSysOuterRRange_r1inFR[0]>>fMCEffUpperSysInnerRRange_r1inFR[0]>>fMCEffUpperSysOuterRRange_r1inFR[1]>>fMCEffUpperSysInnerRRange_r1inFR[1]>>fMCEffUpperSysOuterRRange_r1inFR[2]>>fMCEffUpperSysInnerRRange_r1inFR[2]>>fMCEffUpperSysOuterRRange_r1inFR[3]>>fMCEffUpperSysInnerRRange_r1inFR[3]>>fMCEffUpperSysOuterRRange_r1inFR[4]>>fMCEffUpperSysInnerRRange_r1inFR[4]>>fMCEffUpperSysOuterRRange_r1inFR[5]>>fMCEffUpperSysInnerRRange_r1inFR[5]>>fMCEffUpperSysOuterRRange_r1inFR[6]>>fMCEffUpperSysInnerRRange_r1inFR[6]>>fMCEffUpperSysOuterRRange_r1inFR[7]>>fMCEffUpperSysInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys "<<fMCEffUpperSysOuterRRange_r1inFR[0]<< std::endl;
+      }
+      if(line.find("errEffSysLower")!=std::string::npos){
+      	//std::getline( tagfr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fMCEffLowerSysOuterRRange_r1inFR[0]>>fMCEffLowerSysInnerRRange_r1inFR[0]>>fMCEffLowerSysOuterRRange_r1inFR[1]>>fMCEffLowerSysInnerRRange_r1inFR[1]>>fMCEffLowerSysOuterRRange_r1inFR[2]>>fMCEffLowerSysInnerRRange_r1inFR[2]>>fMCEffLowerSysOuterRRange_r1inFR[3]>>fMCEffLowerSysInnerRRange_r1inFR[3]>>fMCEffLowerSysOuterRRange_r1inFR[4]>>fMCEffLowerSysInnerRRange_r1inFR[4]>>fMCEffLowerSysOuterRRange_r1inFR[5]>>fMCEffLowerSysInnerRRange_r1inFR[5]>>fMCEffLowerSysOuterRRange_r1inFR[6]>>fMCEffLowerSysInnerRRange_r1inFR[6]>>fMCEffLowerSysOuterRRange_r1inFR[7]>>fMCEffLowerSysInnerRRange_r1inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag fr sys Low "<<fMCEffLowerSysOuterRRange_r1inFR[0]<< std::endl;
+      }
+      //errEffSysLower
+    }//end while cycle
+
+
+  std::ifstream tagprobefr(fnameTagProbeFR.c_str());
+  while( std::getline( tagprobefr, line ))
+    {
+      std::istringstream iss(line);
+      if(line.find("3sigma")!=std::string::npos){
+      	std::getline( tagprobefr, line);
+	std::istringstream eff(line);
+	if(eff>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fMCEffOuterRRange_r1r2inFR[0]>>fMCEffInnerRRange_r1r2inFR[0]>>fMCEffOuterRRange_r1r2inFR[1]>>fMCEffInnerRRange_r1r2inFR[1]>>fMCEffOuterRRange_r1r2inFR[2]>>fMCEffInnerRRange_r1r2inFR[2]>>fMCEffOuterRRange_r1r2inFR[3]>>fMCEffInnerRRange_r1r2inFR[3]>>fMCEffOuterRRange_r1r2inFR[4]>>fMCEffInnerRRange_r1r2inFR[4]>>fMCEffOuterRRange_r1r2inFR[5]>>fMCEffInnerRRange_r1r2inFR[5]>>fMCEffOuterRRange_r1r2inFR[6]>>fMCEffInnerRRange_r1r2inFR[6]>>fMCEffOuterRRange_r1r2inFR[7]>>fMCEffInnerRRange_r1r2inFR[7]>>
+		tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr "<<fMCEffOuterRRange_r1r2inFR[0]<< std::endl;
+	std::getline( tagprobefr, line);
+	std::istringstream sist(line);
+	if(sist>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        ferrMCEffOuterRRange_r1r2inFR[0]>>ferrMCEffInnerRRange_r1r2inFR[0]>>ferrMCEffOuterRRange_r1r2inFR[1]>>ferrMCEffInnerRRange_r1r2inFR[1]>>ferrMCEffOuterRRange_r1r2inFR[2]>>ferrMCEffInnerRRange_r1r2inFR[2]>>ferrMCEffOuterRRange_r1r2inFR[3]>>ferrMCEffInnerRRange_r1r2inFR[3]>>ferrMCEffOuterRRange_r1r2inFR[4]>>ferrMCEffInnerRRange_r1r2inFR[4]>>ferrMCEffOuterRRange_r1r2inFR[5]>>ferrMCEffInnerRRange_r1r2inFR[5]>>ferrMCEffOuterRRange_r1r2inFR[6]>>ferrMCEffInnerRRange_r1r2inFR[6]>>ferrMCEffOuterRRange_r1r2inFR[7]>>ferrMCEffInnerRRange_r1r2inFR[7]>>
+		tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr err "<<ferrMCEffOuterRRange_r1r2inFR[0]<< std::endl;
+      }
+      if(line.find("errEffSysUpper")!=std::string::npos){
+      	//std::getline( tagprobefr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fMCEffUpperSysOuterRRange_r1r2inFR[0]>>fMCEffUpperSysInnerRRange_r1r2inFR[0]>>fMCEffUpperSysOuterRRange_r1r2inFR[1]>>fMCEffUpperSysInnerRRange_r1r2inFR[1]>>fMCEffUpperSysOuterRRange_r1r2inFR[2]>>fMCEffUpperSysInnerRRange_r1r2inFR[2]>>fMCEffUpperSysOuterRRange_r1r2inFR[3]>>fMCEffUpperSysInnerRRange_r1r2inFR[3]>>fMCEffUpperSysOuterRRange_r1r2inFR[4]>>fMCEffUpperSysInnerRRange_r1r2inFR[4]>>fMCEffUpperSysOuterRRange_r1r2inFR[5]>>fMCEffUpperSysInnerRRange_r1r2inFR[5]>>fMCEffUpperSysOuterRRange_r1r2inFR[6]>>fMCEffUpperSysInnerRRange_r1r2inFR[6]>>fMCEffUpperSysOuterRRange_r1r2inFR[7]>>fMCEffUpperSysInnerRRange_r1r2inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sys "<<fMCEffUpperSysOuterRRange_r1r2inFR[0]<< std::endl;
+      }
+      if(line.find("errEffSysLower")!=std::string::npos){
+      	//std::getline( tagprobefr, line);
+	std::istringstream effSysSup(line);
+	if(effSysSup>>tmp>>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >> 
+	        tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>tmp >>
+	        fMCEffLowerSysOuterRRange_r1r2inFR[0]>>fMCEffLowerSysInnerRRange_r1r2inFR[0]>>fMCEffLowerSysOuterRRange_r1r2inFR[1]>>fMCEffLowerSysInnerRRange_r1r2inFR[1]>>fMCEffLowerSysOuterRRange_r1r2inFR[2]>>fMCEffLowerSysInnerRRange_r1r2inFR[2]>>fMCEffLowerSysOuterRRange_r1r2inFR[3]>>fMCEffLowerSysInnerRRange_r1r2inFR[3]>>fMCEffLowerSysOuterRRange_r1r2inFR[4]>>fMCEffLowerSysInnerRRange_r1r2inFR[4]>>fMCEffLowerSysOuterRRange_r1r2inFR[5]>>fMCEffLowerSysInnerRRange_r1r2inFR[5]>>fMCEffLowerSysOuterRRange_r1r2inFR[6]>>fMCEffLowerSysInnerRRange_r1r2inFR[6]>>fMCEffLowerSysOuterRRange_r1r2inFR[7]>>fMCEffLowerSysInnerRRange_r1r2inFR[7]>>
+	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fMCEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
+      }
+    }//end while cycle
+  
+  for(int i=0; i<8; i++){
+    fMCEffUpperSysOuterRRange_r1inFR[i]  =fMCEffUpperSysOuterRRange_r1inFR[i]   + fMCEffOuterRRange_r1inFR[i];
+    fMCEffUpperSysOuterRRange_r1r2inFR[i]=fMCEffUpperSysOuterRRange_r1r2inFR[i] + fMCEffOuterRRange_r1r2inFR[i];
+    fMCEffUpperSysInnerRRange_r1inFR[i]  =fMCEffUpperSysInnerRRange_r1inFR[i]   + fMCEffInnerRRange_r1inFR[i];
+    fMCEffUpperSysInnerRRange_r1r2inFR[i]=fMCEffUpperSysInnerRRange_r1r2inFR[i] + fMCEffInnerRRange_r1r2inFR[i];
+    fMCEffLowerSysOuterRRange_r1inFR[i]  =fMCEffOuterRRange_r1inFR[i]  -fMCEffLowerSysOuterRRange_r1inFR[i]   ;
+    fMCEffLowerSysOuterRRange_r1r2inFR[i]=fMCEffOuterRRange_r1r2inFR[i]-fMCEffLowerSysOuterRRange_r1r2inFR[i] ;
+    fMCEffLowerSysInnerRRange_r1inFR[i]  =fMCEffInnerRRange_r1inFR[i]  -fMCEffLowerSysInnerRRange_r1inFR[i]   ;
+    fMCEffLowerSysInnerRRange_r1r2inFR[i]=fMCEffInnerRRange_r1r2inFR[i]-fMCEffLowerSysInnerRRange_r1r2inFR[i] ;
+    /*  
+    if(fEffOuterRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
+    if(fEffOuterRRange_r1r2inFR[i]>1.) fEffOuterRRange_r1r2inFR[i]=1.;
+    if(fEffInnerRRange_r1inFR[i]>1.) fEffOuterRRange_r1inFR[i]=1.;
+    if(fEffInnerRRange_r1r2inFR[i]>1.) fEffOuterRRange_r1r2inFR[i]=1.;
+    if(fEffUpperSysOuterRRange_r1inFR[i]  >1.)fEffUpperSysOuterRRange_r1inFR[i]  =1.;
+    if(fEffUpperSysOuterRRange_r1r2inFR[i]>1.)fEffUpperSysOuterRRange_r1r2inFR[i]=1.;
+    if(fEffUpperSysInnerRRange_r1inFR[i]  >1.)fEffUpperSysInnerRRange_r1inFR[i]  =1.;
+    if(fEffUpperSysInnerRRange_r1r2inFR[i]>1.)fEffUpperSysInnerRRange_r1r2inFR[i]=1.;
+    */
+    }
+
+}
+
+void AnnihilationSelection::fillEffVector(Bool_t isMC){
+
+  if(isMC ||( fScaleFMethod && fNoTargetBool)){//in the analysis i would use the efficiency T&P extracted from MC sample. Due to the fact that MC has not backgroud, if i would study the scale factor analysis I should weight the bkg with MC eff
+    for(int i=0; i<8; i++){
+      fEffInnerRRange_r1inFR[i]	               =fMCEffInnerRRange_r1inFR[i];	               
+      fEffOuterRRange_r1inFR[i]	               =fMCEffOuterRRange_r1inFR[i];	              
+      fEffInnerRRange_r1r2inFR[i]              =fMCEffInnerRRange_r1r2inFR[i];	         	       
+      fEffOuterRRange_r1r2inFR[i]              =fMCEffOuterRRange_r1r2inFR[i];	
+
+      ferrEffInnerRRange_r1inFR[i]	       =ferrMCEffInnerRRange_r1inFR[i];	               
+      ferrEffOuterRRange_r1inFR[i]	       =ferrMCEffOuterRRange_r1inFR[i];	              
+      ferrEffInnerRRange_r1r2inFR[i]           =ferrMCEffInnerRRange_r1r2inFR[i];	         	       
+      ferrEffOuterRRange_r1r2inFR[i]           =ferrMCEffOuterRRange_r1r2inFR[i];	            	       
+                                    	     
+      fEffInnerRRangeFromTruth_r1inFR[i]       =fMCEffInnerRRangeFromTruth_r1inFR[i];    
+      fEffOuterRRangeFromTruth_r1inFR[i]       =fMCEffOuterRRangeFromTruth_r1inFR[i];     
+      fEffInnerRRangeFromTruth_r1r2inFR[i]     =fMCEffInnerRRangeFromTruth_r1r2inFR[i]; 
+      fEffOuterRRangeFromTruth_r1r2inFR[i]     =fMCEffOuterRRangeFromTruth_r1r2inFR[i];    
+                                    	     
+      fEffUpperSysInnerRRange_r1inFR[i]        =fMCEffUpperSysInnerRRange_r1inFR[i];        
+      fEffUpperSysOuterRRange_r1inFR[i]        =fMCEffUpperSysOuterRRange_r1inFR[i];        
+      fEffUpperSysInnerRRange_r1r2inFR[i]      =fMCEffUpperSysInnerRRange_r1r2inFR[i];        
+      fEffUpperSysOuterRRange_r1r2inFR[i]      =fMCEffUpperSysOuterRRange_r1r2inFR[i];        
+                                    	     
+      fEffLowerSysInnerRRange_r1inFR[i]        =fMCEffLowerSysInnerRRange_r1inFR[i];              
+      fEffLowerSysOuterRRange_r1inFR[i]        =fMCEffLowerSysOuterRRange_r1inFR[i];              
+      fEffLowerSysInnerRRange_r1r2inFR[i]      =fMCEffLowerSysInnerRRange_r1r2inFR[i];           
+      fEffLowerSysOuterRRange_r1r2inFR[i]      =fMCEffLowerSysOuterRRange_r1r2inFR[i];            
+    }
+  }
+  else{//in the analysis i would use the efficiency T&P extracted from data sample
+   for(int i=0; i<8; i++){
+      fEffInnerRRange_r1inFR[i]	               =fDataEffInnerRRange_r1inFR[i];	               
+      fEffOuterRRange_r1inFR[i]	               =fDataEffOuterRRange_r1inFR[i];	              
+      fEffInnerRRange_r1r2inFR[i]              =fDataEffInnerRRange_r1r2inFR[i];	         	       
+      fEffOuterRRange_r1r2inFR[i]              =fDataEffOuterRRange_r1r2inFR[i];
+
+      ferrEffInnerRRange_r1inFR[i]	       =ferrDataEffInnerRRange_r1inFR[i];	               
+      ferrEffOuterRRange_r1inFR[i]	       =ferrDataEffOuterRRange_r1inFR[i];	              
+      ferrEffInnerRRange_r1r2inFR[i]           =ferrDataEffInnerRRange_r1r2inFR[i];	         	       
+      ferrEffOuterRRange_r1r2inFR[i]           =ferrDataEffOuterRRange_r1r2inFR[i];	            	       
+                                    	     	
+      fEffInnerRRangeFromTruth_r1inFR[i]       =fDataEffInnerRRangeFromTruth_r1inFR[i];    
+      fEffOuterRRangeFromTruth_r1inFR[i]       =fDataEffOuterRRangeFromTruth_r1inFR[i];     
+      fEffInnerRRangeFromTruth_r1r2inFR[i]     =fDataEffInnerRRangeFromTruth_r1r2inFR[i]; 
+      fEffOuterRRangeFromTruth_r1r2inFR[i]     =fDataEffOuterRRangeFromTruth_r1r2inFR[i];    
+                                    	     	
+      fEffUpperSysInnerRRange_r1inFR[i]        =fDataEffUpperSysInnerRRange_r1inFR[i];        
+      fEffUpperSysOuterRRange_r1inFR[i]        =fDataEffUpperSysOuterRRange_r1inFR[i];        
+      fEffUpperSysInnerRRange_r1r2inFR[i]      =fDataEffUpperSysInnerRRange_r1r2inFR[i];        
+      fEffUpperSysOuterRRange_r1r2inFR[i]      =fDataEffUpperSysOuterRRange_r1r2inFR[i];        
+                                    	     
+      fEffLowerSysInnerRRange_r1inFR[i]        =fDataEffLowerSysInnerRRange_r1inFR[i];              
+      fEffLowerSysOuterRRange_r1inFR[i]        =fDataEffLowerSysOuterRRange_r1inFR[i];              
+      fEffLowerSysInnerRRange_r1r2inFR[i]      =fDataEffLowerSysInnerRRange_r1r2inFR[i];           
+      fEffLowerSysOuterRRange_r1r2inFR[i]      =fDataEffLowerSysOuterRRange_r1r2inFR[i];            
+
+    }
+  }
 
 }
 
@@ -1327,11 +1668,17 @@ Bool_t AnnihilationSelection::InitHistos()
     maxY=0.1;
     hname="ECAL_Theta2vsTheta1"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+    binX=200;
+    minX=0.01;
+    maxX=0.1;
+    binY=600;
+    minY=0.;
+    maxY=800.;
+    hname="ECAL_EnergyvsTheta"+sufix.at(i);
+    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
     binX=600;
     minX=0.;
     maxX=800.;
-    hname="ECAL_ThetavsEnergy"+sufix.at(i);
-    hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
     hname="ECAL_Energy1vsEnergy2"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binX, minX, maxX);
     minY=-4;
@@ -1358,6 +1705,8 @@ Bool_t AnnihilationSelection::InitHistos()
     maxX=2000.;
     hname="ECAL_gravTwoPhoton10ns_WEffR1inFR" + sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1inFR" + sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1inFR" + sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1inFR" + sufixW.at(i);
@@ -1365,6 +1714,14 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1inFR" + sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1inFR" + sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1inFR"+sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1inFR"+sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1inFR"+sufixW.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1inFR"+sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccR1inFR"+sufixW.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
@@ -1393,6 +1750,8 @@ Bool_t AnnihilationSelection::InitHistos()
     maxX=2000.;
     hname="ECAL_gravTwoPhoton10ns_WEffR1R2inFR" + sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1R2inFR" + sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1R2inFR" + sufixW2.at(i);
@@ -1400,6 +1759,14 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1R2inFR" + sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WAccR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
@@ -1409,6 +1776,8 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysR1R2inFR"+sufixW2.at(i);
@@ -1416,6 +1785,14 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysRandomR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
   }
 
@@ -1543,6 +1920,7 @@ Bool_t AnnihilationSelection::InitHistos()
   hSvc->BookHisto(hname, binX, minX, maxX);
 
   if(fdataMCmethod)fDataMCMethod->InitHistos();
+  if(fScaleFMethod)fMCscaleF->InitHistos();
 
   return true;
 }

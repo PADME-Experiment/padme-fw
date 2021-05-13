@@ -316,6 +316,11 @@ int main(Int_t argc, char **argv)
    }
 
 
+   Bool_t isMC = false;
+   if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
+     isMC=true;
+     //std::cout<<"input data are simulatetd "<<std::endl;
+   }
 
    //////////// You come here if a Chain with >=0 events has been found 
    Int_t jevent = 0;
@@ -326,6 +331,7 @@ int main(Int_t argc, char **argv)
    Bool_t boolCalchep=false;
    Bool_t boolAnnTagProbe=true;
    Bool_t boolDataMCmethod=false;
+   Bool_t boolScaleFMethod=false;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -366,13 +372,13 @@ int main(Int_t argc, char **argv)
    GlobalTimeAnalysis *gTimeAn=0;
    CalchepTruthStudies* CalchepTruth=0;
    CalchepTruthStudies_TPComparison* CalchepTruthTP=0;
-
+   
    if(fProcessingMode==0){  
      //event = new PadmeAnalysisEvent();
      UserAn = new UserAnalysis(fProcessingMode, fVerbose);
      gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
 
-     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition, boolDataMCmethod);
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition, boolDataMCmethod, boolScaleFMethod);
      TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
      if(boolCalchep){
        CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
@@ -390,7 +396,7 @@ int main(Int_t argc, char **argv)
        AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
-		fTargetRecoEvent,  fTargetRecoBeam);
+		    fTargetRecoEvent,  fTargetRecoBeam, isMC);
        TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
@@ -464,12 +470,6 @@ int main(Int_t argc, char **argv)
 	 if (fSACRecoEvent)    fSACRecoEvent->Print();
        }
        //
-      
-       Bool_t isMC = false;
-       if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
-	 isMC=true;
-	 //std::cout<<"input data are simulatetd "<<std::endl;
-       }
 
        //
        targetAn    ->Process();

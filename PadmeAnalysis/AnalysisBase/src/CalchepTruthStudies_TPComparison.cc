@@ -71,12 +71,19 @@ Bool_t CalchepTruthStudies_TPComparison::Init(TRecoEvent* eventHeader,
   fFRmax=258.0;
   fcountEvent=0;
 
-  fminPhiTag=45;
-  fmaxPhiTag=90;
-  fminPhiTagTruth=45;
-  fmaxPhiTagTruth=90;
-  fminPhiProbeTruth=225;
-  fmaxPhiProbeTruth=270;
+  //fminPhiTag=45;
+  //fmaxPhiTag=90;
+  //fminPhiTagTruth=45;
+  //fmaxPhiTagTruth=90;
+  //fminPhiProbeTruth=225;
+  //fmaxPhiProbeTruth=270;
+
+  fminPhiTag=225;
+  fmaxPhiTag=270;
+  fminPhiTagTruth=225;
+  fmaxPhiTagTruth=270;
+  fminPhiProbeTruth=45;
+  fmaxPhiProbeTruth=90;
 
 
   Double_t tmpradiusRangeMin[2]={fFRmin, fFRmid};

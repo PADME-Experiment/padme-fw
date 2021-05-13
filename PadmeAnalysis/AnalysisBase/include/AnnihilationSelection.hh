@@ -9,6 +9,7 @@
 #include <fstream>
 #include "TRandom2.h"
 #include "AnnihilationSelectionDataMCMethod.hh"
+#include "ScaleFactorMethod.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -24,12 +25,12 @@ class AnnihilationSelection : public TObject
 
 public:
   AnnihilationSelection();
-  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t dataMCmethod );
+  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t dataMCmethod, Bool_t scaleFMethod);
   ~AnnihilationSelection();
   virtual Bool_t Init(TRecoEvent* eventHeader, 
 		      TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
 		      TRecoVObject* SACev, TRecoVClusCollection* SACcl,
-		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam);
+		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam, Bool_t isMC);
   virtual Bool_t Finalize(){return true;}
 
   virtual Bool_t InitHistos();
@@ -61,7 +62,9 @@ public:
   void FillWeightedAccEffHisto_R1R2inFR(std::string sufix);
   void FillAccEffHisto_R1R2inFR(std::string sufix);
 
-  void fillEffVector(std::string fnameTagFR, std::string fnameTagProbeFR);
+  void fillEffVector(Bool_t isMC);
+  void fillEffVectorData(std::string fnameTagFR, std::string fnameTagProbeFR);
+  void fillEffVectorMC(std::string fnameTagFR, std::string fnameTagProbeFR);
   void fillEffVectorTruth();
 
  
@@ -76,6 +79,7 @@ protected:
   TTargetRecoBeam*      fTarget_RecoBeam  ;
 
   AnnihilationSelectionDataMCMethod* fDataMCMethod ;
+  ScaleFactorMethod* fMCscaleF ;
 
 
   // fVerbose = 0 (minimal printout),  = 1 (info mode),  = 2 (debug quality)...
@@ -84,6 +88,7 @@ protected:
   Int_t    fProcessingMode;
   Bool_t   fNoTargetBool;
   Bool_t   fdataMCmethod;
+  Bool_t fScaleFMethod;
 
   Bool_t fInitToComplete;  
 
@@ -137,25 +142,82 @@ private:
   Double_t fFRmax;
 
   Int_t fcountEvent;
-  Double_t fEffInnerRRange_r1inFR[8];
-  Double_t fEffOuterRRange_r1inFR[8];
-  Double_t fEffInnerRRange_r1r2inFR[8];
+  Double_t fEffInnerRRange_r1inFR[8];	        
+  Double_t fEffOuterRRange_r1inFR[8];	       
+  Double_t fEffInnerRRange_r1r2inFR[8];	       
   Double_t fEffOuterRRange_r1r2inFR[8];
 
-  Double_t fEffInnerRRangeFromTruth_r1inFR[8];	
-  Double_t fEffOuterRRangeFromTruth_r1inFR[8];	
+  Double_t ferrEffInnerRRange_r1inFR[8];	        
+  Double_t ferrEffOuterRRange_r1inFR[8];	       
+  Double_t ferrEffInnerRRange_r1r2inFR[8];	       
+  Double_t ferrEffOuterRRange_r1r2inFR[8];	       
+	                                       
+  Double_t fEffInnerRRangeFromTruth_r1inFR[8]; 	
+  Double_t fEffOuterRRangeFromTruth_r1inFR[8]; 	
   Double_t fEffInnerRRangeFromTruth_r1r2inFR[8];
   Double_t fEffOuterRRangeFromTruth_r1r2inFR[8];
-  
-  Double_t fEffUpperSysInnerRRange_r1inFR[8];
-  Double_t fEffUpperSysOuterRRange_r1inFR[8];
+  	                                       
+  Double_t fEffUpperSysInnerRRange_r1inFR[8];  
+  Double_t fEffUpperSysOuterRRange_r1inFR[8];  
   Double_t fEffUpperSysInnerRRange_r1r2inFR[8];
   Double_t fEffUpperSysOuterRRange_r1r2inFR[8];
-
-  Double_t fEffLowerSysInnerRRange_r1inFR[8];
-  Double_t fEffLowerSysOuterRRange_r1inFR[8];
+	                                       
+  Double_t fEffLowerSysInnerRRange_r1inFR[8];  
+  Double_t fEffLowerSysOuterRRange_r1inFR[8];  
   Double_t fEffLowerSysInnerRRange_r1r2inFR[8];
   Double_t fEffLowerSysOuterRRange_r1r2inFR[8];
+
+
+  Double_t fDataEffInnerRRange_r1inFR[8];
+  Double_t fDataEffOuterRRange_r1inFR[8];
+  Double_t fDataEffInnerRRange_r1r2inFR[8];
+  Double_t fDataEffOuterRRange_r1r2inFR[8];
+
+  Double_t ferrDataEffInnerRRange_r1inFR[8];
+  Double_t ferrDataEffOuterRRange_r1inFR[8];
+  Double_t ferrDataEffInnerRRange_r1r2inFR[8];
+  Double_t ferrDataEffOuterRRange_r1r2inFR[8];
+	    
+  Double_t fDataEffInnerRRangeFromTruth_r1inFR[8];	
+  Double_t fDataEffOuterRRangeFromTruth_r1inFR[8];	
+  Double_t fDataEffInnerRRangeFromTruth_r1r2inFR[8];
+  Double_t fDataEffOuterRRangeFromTruth_r1r2inFR[8];
+  	    
+  Double_t fDataEffUpperSysInnerRRange_r1inFR[8];
+  Double_t fDataEffUpperSysOuterRRange_r1inFR[8];
+  Double_t fDataEffUpperSysInnerRRange_r1r2inFR[8];
+  Double_t fDataEffUpperSysOuterRRange_r1r2inFR[8];
+	    
+  Double_t fDataEffLowerSysInnerRRange_r1inFR[8];
+  Double_t fDataEffLowerSysOuterRRange_r1inFR[8];
+  Double_t fDataEffLowerSysInnerRRange_r1r2inFR[8];
+  Double_t fDataEffLowerSysOuterRRange_r1r2inFR[8];
+
+
+  Double_t fMCEffInnerRRange_r1inFR[8];
+  Double_t fMCEffOuterRRange_r1inFR[8];
+  Double_t fMCEffInnerRRange_r1r2inFR[8];
+  Double_t fMCEffOuterRRange_r1r2inFR[8];
+
+  Double_t ferrMCEffInnerRRange_r1inFR[8];
+  Double_t ferrMCEffOuterRRange_r1inFR[8];
+  Double_t ferrMCEffInnerRRange_r1r2inFR[8];
+  Double_t ferrMCEffOuterRRange_r1r2inFR[8];
+	    
+  Double_t fMCEffInnerRRangeFromTruth_r1inFR[8];	
+  Double_t fMCEffOuterRRangeFromTruth_r1inFR[8];	
+  Double_t fMCEffInnerRRangeFromTruth_r1r2inFR[8];
+  Double_t fMCEffOuterRRangeFromTruth_r1r2inFR[8];
+  	    
+  Double_t fMCEffUpperSysInnerRRange_r1inFR[8];
+  Double_t fMCEffUpperSysOuterRRange_r1inFR[8];
+  Double_t fMCEffUpperSysInnerRRange_r1r2inFR[8];
+  Double_t fMCEffUpperSysOuterRRange_r1r2inFR[8];
+	    
+  Double_t fMCEffLowerSysInnerRRange_r1inFR[8];
+  Double_t fMCEffLowerSysOuterRRange_r1inFR[8];
+  Double_t fMCEffLowerSysInnerRRange_r1r2inFR[8];
+  Double_t fMCEffLowerSysOuterRRange_r1r2inFR[8];
   
   TH1D *hAccEffFromCalchep_g1g2FR;
   TH1D *hAccEffFromCalchep_g1FR;

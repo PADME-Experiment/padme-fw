@@ -2,25 +2,21 @@
 
 NAME := PadmeAnalysis
 
-#SUBDIRS :=  ECal EVeto Target PVeto HEPVeto SAC UserAnalysis 
 SUBDIRS :=  UserAnalysis 
-ALLTARGETDIRS := $(SUBDIRS) AnalysisBase
+ALLTARGETDIRS := $(SUBDIRS)
 
 STATIC := -static
 
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
-CPPFLAGS += -IAnalysisBase/include -g
 
 include ./config/global.gmk
 
 # Define libraries used for the creation of the final executable
-LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Analysis$(STATIC),$(SUBDIRS)))
-LIBS += -LAnalysisBase/lib -lAnalysisBase$(STATIC)
+LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix $(STATIC),$(SUBDIRS)))
+LIBS += -Llib -lPadmeAnalysis$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
-#LIBS += -L/usr/lib64/mysql -lmysqlclient
-
 
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)
 
@@ -37,8 +33,6 @@ try:
 	@echo $(LDFLAGS)
 	@echo LIBS
 	@echo $(LIBS)
-	@echo EXTRALIBS
-	@echo $(EXTRALIBS)
 	@echo CXXFLAGS
 	@echo $(CXXFLAGS)
 	@echo LD_LIBRARY_PATH

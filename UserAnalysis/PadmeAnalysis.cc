@@ -12,13 +12,10 @@
 #include "TTree.h"
 #include "TObjArray.h"
 #include "TGraph.h"
-//#include "PadmeReconstruction.hh"
-//#include "PadmeVReconstruction.hh"
 
 #include <signal.h>
 #include <fcntl.h>
 
-//#include "RecoRootIOManager.hh"
 #include "TRecoEvent.hh"
 #include "TTargetRecoEvent.hh"
 #include "TTargetRecoBeam.hh"
@@ -30,11 +27,13 @@
 #include "TRecoVHit.hh"
 
 #include "HistoSvc.hh"
-#include "UserAnalysis.hh"
 #include "temp_corr.hh"
+#include "utlConfigParser.hh"
+
+#include "UserAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-t ntuple]" 
+  std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i <input file>] [-l <input file list>] [-n #MaxEvents] [-o <output file>] [-s Seed] [-c <config file>] [-v verbose] [-t ntuple]" 
 	    << std::endl;
 }
 
@@ -187,15 +186,31 @@ int main(Int_t argc, char **argv)
     }
     std::cout<<"Number of files to be processed "<<iFile<<" Number of files skipped "<<nSkippedFiles<<std::endl;
 
-
   HistoSvc* hSvc = HistoSvc::GetInstance();
   hSvc->setOutputFileName(OutputFileName);
-
   
+  // Create configuration file parser
+  utl::ConfigParser* cfgParser = new utl::ConfigParser((const std::string)ConfFileName.Data());
+  if (fVerbose) cfgParser->Print();
 
-  //Accssing input file initialization
-  //TFile fileIn(InputFileName);
-  //   TTree* theTree = nullptr;
+  // Define trigger pattern
+  unsigned int trigMask = 0x00ff; // Default: enable all triggers
+  if (cfgParser->HasConfig("GENERAL","Triggers")) {
+    trigMask = 0x0000; // Start with empty trigger mask
+    for (auto trig : cfgParser->GetConfig("GENERAL","Triggers")) {
+      if (fVerbose) printf("Enabling trigger %s\n",trig.c_str());
+      if (trig.compare("ALL") == 0) {
+	trigMask = 0x00ff; // Enable all triggers
+	break; // No need to check further
+      }
+      if (trig.compare("BEAM") == 0)         trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_BEAM);
+      if (trig.compare("COSMICS") == 0)      trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_COSMICS);
+      if (trig.compare("DUALTIMER") == 0)    trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_DUALTIMER);
+      if (trig.compare("UNCORRELATED") == 0) trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_UNCORRELATED);
+      if (trig.compare("CORRELATED") == 0)   trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_CORRELATED);
+    }
+  }
+  if (fVerbose) printf("Accepted trigger mask: 0x%2.2x\n",trigMask);
 
   // Create pointers to recontructed event branches
   TRecoEvent*                     fRecoEvent            =0;
@@ -309,30 +324,25 @@ int main(Int_t argc, char **argv)
    //hSvc->book(fProcessingMode);
    hSvc->book(fProcessingMode,fntuple);
 
-   PadmeAnalysisEvent *event=0;
-   UserAnalysis *UserAn=0;
-   if(fProcessingMode==0){  
-     event = new PadmeAnalysisEvent();
-     UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+   PadmeAnalysisEvent* event = new PadmeAnalysisEvent();
+   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
 
-     event->RecoEvent            =fRecoEvent          ;
-     event->TargetRecoEvent      =fTargetRecoEvent    ;
-     event->EVetoRecoEvent       =fEVetoRecoEvent     ;
-     event->PVetoRecoEvent       =fPVetoRecoEvent     ;
-     event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
-     event->ECalRecoEvent        =fECalRecoEvent      ;
-     event->SACRecoEvent         =fSACRecoEvent       ;
-     event->TargetRecoBeam       =fTargetRecoBeam     ;
-     event->SACRecoCl            =fSACRecoCl          ;
-     event->ECalRecoCl           =fECalRecoCl         ;
-     event->PVetoRecoCl          =fPVetoRecoCl        ;
-     event->EVetoRecoCl          =fEVetoRecoCl        ;
-     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
-     
-     UserAn->Init(event);
+   event->RecoEvent            =fRecoEvent          ;
+   event->TargetRecoEvent      =fTargetRecoEvent    ;
+   event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+   event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+   event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+   event->ECalRecoEvent        =fECalRecoEvent      ;
+   event->SACRecoEvent         =fSACRecoEvent       ;
+   event->TargetRecoBeam       =fTargetRecoBeam     ;
+   event->SACRecoCl            =fSACRecoCl          ;
+   event->ECalRecoCl           =fECalRecoCl         ;
+   event->PVetoRecoCl          =fPVetoRecoCl        ;
+   event->EVetoRecoCl          =fEVetoRecoCl        ;
+   event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+   
+   UserAn->Init(event);
 
-   }
-    
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
    Int_t nPVetoHits  =0;  
@@ -343,7 +353,14 @@ int main(Int_t argc, char **argv)
    if (NEvt >0 && NEvt<nevents) nevents=NEvt;
    for (Int_t i=0; i<nevents; ++i)
      {
+
        jevent = fRecoChain->GetEntry(i);   
+
+       // Check if event should be analyzed
+       //printf("Event %d trigger mask: 0x%2.2x\n",i,fRecoEvent->GetTriggerMask());
+       if ( !(fRecoEvent->GetTriggerMask() & trigMask) ) continue;
+       //printf("Event %d accepted\n",i);
+
        if ( (fVerbose>0 && (i%10==0)) || (i%1000==0) ){
 	 std::cout<<"--------------------------------------------------------- jevent = "<<i<<"/"<<nevents<<" -- size of the event "<< jevent<<std::endl;
 	 std::cout<<"----------------------------------------------------Run/Event n. = "<<fRecoEvent->GetRunNumber()<<" "<<fRecoEvent->GetEventNumber()<<std::endl;
@@ -393,16 +410,12 @@ int main(Int_t argc, char **argv)
 	 //std::cout<<"input data are simulatetd "<<std::endl;
        }
 
-       //
-       
-       if(fProcessingMode==0){  
-	 UserAn      ->Process();
-       }
+       UserAn->Process();
 
        hSvc->FillNtuple();
      }
    
-   //UserAn    ->Finalize();
+   UserAn->Finalize();
 
    /// end of job..........
    hSvc->save();

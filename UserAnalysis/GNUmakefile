@@ -47,8 +47,10 @@ $(ALLTARGETDIRS):
 cleanbin:
 	@rm -f PadmeAnalysis
 
-cleanall: clean cleanbin
-	@$(MAKE) TARGET=clean makesub
+#cleanall: clean cleanbin
+#	@$(MAKE) TARGET=clean makesub
+
+cleanall: cleansub clean cleanbin
 
 makesub: GNUmakefile $(ALLTARGETDIRS)
 

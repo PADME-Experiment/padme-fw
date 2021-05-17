@@ -41,8 +41,7 @@ void sighandler(int sig){
     std::cerr << std::endl << "********************************************************************************" << std::endl;
     std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
-    HistoSvc* hSvc = HistoSvc::GetInstance();
-    hSvc->save();
+    HistoSvc::GetInstance()->Finalize();
 
     std::cerr << "... Histogram file Done" << std::endl;
     std::cerr << std::endl << "********************************************************************************" << std::endl;
@@ -96,98 +95,100 @@ int main(Int_t argc, char **argv)
   Int_t n_options_read = 0;
   Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0, nT=0;
   while ((opt = getopt(argc, argv, "b:B:c:hi:l:n:o:s:v:t:")) != -1) {
-      n_options_read++;
-      switch (opt) {
-      case 'b':
-      case 'B':
-	nb++;
-	NFiles = TString(optarg).Atoi();
-	break;
-      case 'c':
-	nc++;
-	ConfFileName = TString(optarg);
-	break;
-      case 'h':
-	usage(argv[0]);
-	return 0;
-      case 'i':
-	ni++;
-	InputFileName = TString(optarg);
-	break;
-      case 'l':
-	nl++;
-	InputListFileName = TString(optarg);
-	break;
-      case 'n':
-	nn++;
-	NEvt = TString(optarg).Atoi();
-	break;
-      case 'o':
-	no++;
-	OutputFileName = TString(optarg);
-	break;
-      case 's':
-       	ns++;
-       	//Seed = (UInt_t)TString(optarg).Atoi();
-      	break;
-      case 'v':
-	nv++;
-	fVerbose = (Int_t)TString(optarg).Atoi();
-	break;
-      case 't':
-	nt++;
-	fntuple = (Int_t)TString(optarg).Atoi();
-	break;
-      default:
-	break;
-	usage(argv[0]);
-	return 0;
-      }
-    }
-
-    // Sanity checks on the input
-    if (!n_options_read || NEvt<0 || NFiles<=0) {
+    n_options_read++;
+    switch (opt) {
+    case 'b':
+    case 'B':
+      nb++;
+      NFiles = TString(optarg).Atoi();
+      break;
+    case 'c':
+      nc++;
+      ConfFileName = TString(optarg);
+      break;
+    case 'h':
+      usage(argv[0]);
+      return 0;
+    case 'i':
+      ni++;
+      InputFileName = TString(optarg);
+      break;
+    case 'l':
+      nl++;
+      InputListFileName = TString(optarg);
+      break;
+    case 'n':
+      nn++;
+      NEvt = TString(optarg).Atoi();
+      break;
+    case 'o':
+      no++;
+      OutputFileName = TString(optarg);
+      break;
+    case 's':
+      ns++;
+      //Seed = (UInt_t)TString(optarg).Atoi();
+      break;
+    case 'v':
+      nv++;
+      fVerbose = (Int_t)TString(optarg).Atoi();
+      break;
+    case 't':
+      nt++;
+      fntuple = (Int_t)TString(optarg).Atoi();
+      break;
+    default:
+      break;
       usage(argv[0]);
       return 0;
     }
-    if (nb>1 || nc>1 || ni>1 || nl>1 || nn>1 || no>1 || ns>0) {
-      std::cerr << "[PadmeReco] Multiple arguments of the same type are not allowed" << std::endl;
-      return 0;
-    }
+  }
 
-    // Protection against potentially incorrect output filenames
-    struct stat buffer;
-    if (!OutputFileName.EndsWith(".root") && !stat(OutputFileName.Data(), &buffer)) {
-      std::cout << " [PadmeReco] Output file exists and is not *.root: potentially a destructive call" << std::endl;
-      return 0;
-    }
+  // Sanity checks on the input
+  if (!n_options_read || NEvt<0 || NFiles<=0) {
+    usage(argv[0]);
+    return 0;
+  }
+  if (nb>1 || nc>1 || ni>1 || nl>1 || nn>1 || no>1 || ns>0) {
+    std::cerr << "[PadmeReco] Multiple arguments of the same type are not allowed" << std::endl;
+    return 0;
+  }
 
-    Int_t nSkippedFiles=0;
-    TObjArray InputFileNameList;
-    if(stat(Form(InputListFileName.Data()), &filestat) == 0) { //-l option used
-        std::ifstream InputList(InputListFileName.Data());
-        while(InputFileName.ReadLine(InputList) && iFile < NFiles){
-	  if (InputFileName.BeginsWith(CommentedLine)) 
-	    { 
-	      nSkippedFiles++;
-	      continue;
-	    }
-//            if(stat(Form(InputFileName.Data()), &filestat) == 0)
-          InputFileNameList.Add(new TObjString(InputFileName.Data()));
-          iFile++;
-        }
-    } else if(InputFileName.CompareTo("")) //-i option used
-//        if(stat(Form(InputFileName.Data()), &filestat) == 0)
+  // Protection against potentially incorrect output filenames
+  struct stat buffer;
+  if (!OutputFileName.EndsWith(".root") && !stat(OutputFileName.Data(), &buffer)) {
+    std::cout << " [PadmeReco] Output file exists and is not *.root: potentially a destructive call" << std::endl;
+    return 0;
+  }
+
+  Int_t nSkippedFiles=0;
+  TObjArray InputFileNameList;
+  if(stat(Form(InputListFileName.Data()), &filestat) == 0) { //-l option used
+    std::ifstream InputList(InputListFileName.Data());
+    while(InputFileName.ReadLine(InputList) && iFile < NFiles){
+      if (InputFileName.BeginsWith(CommentedLine)) 
+	{ 
+	  nSkippedFiles++;
+	  continue;
+	}
+      //            if(stat(Form(InputFileName.Data()), &filestat) == 0)
       InputFileNameList.Add(new TObjString(InputFileName.Data()));
-
-    if(InputFileNameList.GetEntries() == 0) {
-        perror(Form("No Input File"));
-        exit(1);
+      iFile++;
     }
-    std::cout<<"Number of files to be processed "<<iFile<<" Number of files skipped "<<nSkippedFiles<<std::endl;
+  } else if(InputFileName.CompareTo("")) //-i option used
+    //        if(stat(Form(InputFileName.Data()), &filestat) == 0)
+    InputFileNameList.Add(new TObjString(InputFileName.Data()));
+  
+  if(InputFileNameList.GetEntries() == 0) {
+    perror(Form("No Input File"));
+    exit(1);
+  }
+  std::cout<<"Number of files to be processed "<<iFile<<" Number of files skipped "<<nSkippedFiles<<std::endl;
 
+  // Initialize histogram service
   HistoSvc* hSvc = HistoSvc::GetInstance();
-  hSvc->setOutputFileName(OutputFileName);
+  //hSvc->setOutputFileName(OutputFileName);
+  hSvc->Initialize(OutputFileName);
   
   // Create configuration file parser
   utl::ConfigParser* cfgParser = new utl::ConfigParser((const std::string)ConfFileName.Data());
@@ -311,8 +312,6 @@ int main(Int_t argc, char **argv)
 
    }
 
-
-
    //////////// You come here if a Chain with >=0 events has been found 
    Int_t jevent = 0;
    
@@ -322,7 +321,7 @@ int main(Int_t argc, char **argv)
 
    //int histoOutput
    //hSvc->book(fProcessingMode);
-   hSvc->book(fProcessingMode,fntuple);
+   //hSvc->book(fProcessingMode,fntuple);
 
    PadmeAnalysisEvent* event = new PadmeAnalysisEvent();
    UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
@@ -411,17 +410,15 @@ int main(Int_t argc, char **argv)
        }
 
        UserAn->Process();
+       //hSvc->FillNtuple();
 
-       hSvc->FillNtuple();
      }
    
-   UserAn->Finalize();
+     UserAn->Finalize();
+     hSvc->Finalize();
 
-   /// end of job..........
-   hSvc->save();
+     delete UserAn;
+     delete hSvc;
 
-   // cleanup 
-   if(UserAn)   delete UserAn;		
-   return 0;
-   
+   return 0;   
 }

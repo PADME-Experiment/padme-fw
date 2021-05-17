@@ -23,6 +23,7 @@
 
    //for flat Ntuple
   struct NTEvent{
+
   int NTNPVeto_Hits;
   int NTNPVeto_Clusters;
   int NTNEVeto_Hits;
@@ -128,9 +129,9 @@
   double NTTargetBeam_XTime       ;
   double NTTargetBeam_XTimeErr    ;
   	                         
-  double NTTargetBeam_Y           ;
+  double NTTargetBeam_Y          ;
   double NTTargetBeam_YErr	 ;
-  double NTTargetBeam_YW		 ;
+  double NTTargetBeam_YW	 ;
   double NTTargetBeam_YWErr	 ;
   double NTTargetBeam_Yfit	 ;
   double NTTargetBeam_YfitErr	 ;
@@ -139,12 +140,11 @@
   double NTTargetBeam_YChi2	 ;
   double NTTargetBeam_YNdof	 ;
   double NTTargetBeam_YCharge	 ;
-  double NTTargetBeam_YChargeErr	 ;
+  double NTTargetBeam_YChargeErr ;
   double NTTargetBeam_YTime	 ;
   double NTTargetBeam_YTimeErr	 ;
   double NTTargetBeam_NPOT	 ;
   double NTTargetBeam_NPOTErr	 ;
-
 
   };
 
@@ -163,47 +163,57 @@ class HistoSvc
 {
 
 protected:
+
   HistoSvc();
+
 public:
+
   ~HistoSvc();
   static HistoSvc* GetInstance();
+
 private:
+
   static HistoSvc* fInstance;
+
 public:
-  //void book();
-  //void book(Int_t validation);
-  void book(Int_t validation, Int_t ntuple); //for FlatNTP
-  void save();
+
+  Bool_t Initialize(TString);
+  Bool_t Finalize();
+
+  //void book(Int_t validation, Int_t ntuple); //for FlatNTP
+  //void save();
 
   void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
   void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
   void FillHisto (std::string name, Double_t bin, Double_t weight = 1.0);
   void FillHisto2(std::string name, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
-  void Normalize (std::string name, Double_t fac);    
+  //void Normalize (std::string name, Double_t fac);    
 
-  //  void FillHisto (Int_t id, Double_t bin, Double_t weight = 1.0);
-  //  void FillHisto2(Int_t id, Double_t bin, Double_t ybin, Double_t weight = 1.0);
-  //  void Normalize (Int_t id, Double_t fac);    
+  // List-based interface
+  Bool_t CreateList(std::string);
+  void BookHistoList(std::string, TString, Int_t, Double_t, Double_t);
+  void BookHisto2List(std::string, TString, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
+  void FillHistoList(std::string, TString, Double_t, Double_t);
+  void FillHisto2List(std::string, TString, Double_t, Double_t, Double_t);
 
-  //void FillNtuple(NTEvent* Evt);
+  void BookNtuple();
   void FillNtuple();
 
-  void    setOutputFileName(TString s){ fOutputFileName=s; }
-  TString getOutputFileName(){ return fOutputFileName; }
-
-  //  void PrintStatistic();
-  void makeFileDir(TString dName);//{fRootOutputFile->mkdir(dName.Data());}
-  
+  //void    setOutputFileName(TString s){ fOutputFileName=s; }
+  TString GetOutputFileName(){ return fOutputFileName; }
 
 public:
+
   NTEvent  myEvt;    
+
 private:
     
   TString fOutputFileName;
-  TFile*   fRootOutputFile;
-  std::map<std::string, TH1D*>    fHisto1DMap;            
-  std::map<std::string, TH2D*>    fHisto2DMap;            
-  TTree*   ntupl;    
+  TFile* fRootOutputFile;
+  //std::map<std::string, TH1D*> fHisto1DMap;            
+  //std::map<std::string, TH2D*> fHisto2DMap;            
+  std::map<std::string, TList*> fListMap;
+  TTree* ntupl;    
 
 };
 

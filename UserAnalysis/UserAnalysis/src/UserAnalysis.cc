@@ -26,13 +26,18 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
 
 Bool_t UserAnalysis::InitHistos(){
 
-  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
 
-  //  hSvcVal->BookHisto(hname, nBin, min, max);
-  
-  hSvcVal->BookHisto("Trigger Mask", 256, 0., 256.);
-  hSvcVal->BookHisto("Triggers", 8, 0., 8.);
-  //hSvcVal->BookHisto2("PVetoPos_vs_ECalE", 100,0.0,100,400,0.0, 400);
+  // This will go to the top directory in the output file
+  hSvc->BookHistoList("TOP","TestTOP",10,0.,10.);
+
+  // No list defined: this will go the EXTRA directory in the output file
+  hSvc->BookHisto("Test",10,0.,10.);
+
+  hSvc->CreateList("MyHistos");
+  hSvc->BookHistoList("MyHistos","Trigger Mask",256,0.,256.);
+  hSvc->BookHistoList("MyHistos","Triggers",8,0.,8.);
+  hSvc->BookHisto2List("MyHistos","Test2D",10,0.,10.,10,0.,10.);
 
   return true;
 }
@@ -44,8 +49,10 @@ Bool_t UserAnalysis::Process(){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   //  std::cout << fEvent->PVetoRecoEvent->GetNHits() << std::endl;
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
-  hSvc->FillHisto("Trigger Mask",trigMask,1.);
-  for (int i=0;i<8;i++) { if (trigMask & (1 << i)) hSvc->FillHisto("Triggers",i,1.); }
+  //hSvc->FillHisto("Trigger Mask",trigMask,1.);
+  //for (int i=0;i<8;i++) { if (trigMask & (1 << i)) hSvc->FillHisto("Triggers",i,1.); }
+  hSvc->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
+  for (int i=0;i<8;i++) { if (trigMask & (1 << i)) hSvc->FillHistoList("MyHistos","Triggers",i,1.); }
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();

@@ -148,12 +148,12 @@
 
   };
 
-
 class TFile;
 class TTree;
 class TH1D;
 class TH2D;
 class TString;
+class PadmeAnalysisEvent;
 
 const Int_t MaxHisto = 40;
 
@@ -180,8 +180,8 @@ public:
   Bool_t Initialize(TString);
   Bool_t Finalize();
 
-  //void book(Int_t validation, Int_t ntuple); //for FlatNTP
-  //void save();
+  void BookNtuple();
+  void FillNtuple(PadmeAnalysisEvent*);
 
   void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
   void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
@@ -196,24 +196,18 @@ public:
   void FillHistoList(std::string, TString, Double_t, Double_t);
   void FillHisto2List(std::string, TString, Double_t, Double_t, Double_t);
 
-  void BookNtuple();
-  void FillNtuple();
-
-  //void    setOutputFileName(TString s){ fOutputFileName=s; }
   TString GetOutputFileName(){ return fOutputFileName; }
 
 public:
 
-  NTEvent  myEvt;    
+  NTEvent myEvt;
 
 private:
     
   TString fOutputFileName;
   TFile* fRootOutputFile;
-  //std::map<std::string, TH1D*> fHisto1DMap;            
-  //std::map<std::string, TH2D*> fHisto2DMap;            
   std::map<std::string, TList*> fListMap;
-  TTree* ntupl;    
+  TTree* fNtuple;    
 
 };
 

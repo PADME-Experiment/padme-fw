@@ -86,7 +86,7 @@ int main(Int_t argc, char **argv)
   TString InputListFileName("InputListFile.txt");
   Int_t fVerbose=0;
   Int_t fProcessingMode=0;
-  Int_t fntuple=0;
+  Bool_t doNtuple = false;
   Int_t iFile = 0, NFiles = 100000, NEvt = 0;
   //UInt_t Seed = 4357;
   struct stat filestat;
@@ -94,7 +94,7 @@ int main(Int_t argc, char **argv)
 
   Int_t n_options_read = 0;
   Int_t nb=0, nc=0, ni=0, nl=0, nn=0, no=0, ns=0, nv=0, nval=0, nt=0, nT=0;
-  while ((opt = getopt(argc, argv, "b:B:c:hi:l:n:o:s:v:t:")) != -1) {
+  while ((opt = getopt(argc, argv, "b:B:c:i:l:n:o:s:v:th")) != -1) {
     n_options_read++;
     switch (opt) {
     case 'b':
@@ -135,7 +135,7 @@ int main(Int_t argc, char **argv)
       break;
     case 't':
       nt++;
-      fntuple = (Int_t)TString(optarg).Atoi();
+      doNtuple = true;
       break;
     default:
       break;
@@ -187,7 +187,6 @@ int main(Int_t argc, char **argv)
 
   // Initialize histogram service
   HistoSvc* hSvc = HistoSvc::GetInstance();
-  //hSvc->setOutputFileName(OutputFileName);
   hSvc->Initialize(OutputFileName);
   
   // Create configuration file parser
@@ -213,7 +212,7 @@ int main(Int_t argc, char **argv)
   }
   if (fVerbose) printf("Accepted trigger mask: 0x%2.2x\n",trigMask);
 
-  // Create pointers to recontructed event branches
+  // Create pointers to reconstructed event branches
   TRecoEvent*                     fRecoEvent            =0;
   TTargetRecoEvent*               fTargetRecoEvent      =0;
   TEVetoRecoEvent*                fEVetoRecoEvent       =0;
@@ -236,28 +235,24 @@ int main(Int_t argc, char **argv)
    //fileIn.GetObject("Events",theTree);
 
    Int_t nevents = 0;
-   if (fRecoChain) 
-     {
-       std::cout<<"Tree found"<<std::endl; 
-       nevents = fRecoChain->GetEntries();
-       std::cout<<"Tree has "<<nevents<<" events ...... "<<std::endl; 
-       if (nevents<=0) 
-	 {
-	   std::cout<<"No events found in the tree ... exiting "<<std::endl;
-	   //fileIn.Close();
-	   return(1);
-	 }
-     }
-   else 
-     {
-       std::cout<<"Chain not found"<<std::endl; 
-       std::cout<<"No tree in the input file(s)  ... exiting "<<std::endl;
+   if (fRecoChain) {
+     std::cout<<"Tree found"<<std::endl; 
+     nevents = fRecoChain->GetEntries();
+     std::cout<<"Tree has "<<nevents<<" events ...... "<<std::endl; 
+     if (nevents<=0) {
+       std::cout<<"No events found in the tree ... exiting "<<std::endl;
        //fileIn.Close();
        return(1);
      }
+   } else {
+     std::cout<<"Chain not found"<<std::endl; 
+     std::cout<<"No tree in the input file(s)  ... exiting "<<std::endl;
+     //fileIn.Close();
+     return(1);
+   }
    TObjArray* branches = fRecoChain->GetListOfBranches();
-   std::cout << "Found Tree " << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nevents << " entries" << std::endl;
-   for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+   std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nevents << " entries" << std::endl;
+   for (Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++) {
 
       TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
       TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
@@ -287,9 +282,9 @@ int main(Int_t argc, char **argv)
       } else if (branchName=="SAC_Hits") {
 	fSACRecoEvent = new TSACRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
-	//      } else if (branchName=="TPix") {
-	//	fTPixRecoEvent = new TTPixRecoEvent();
-	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      //} else if (branchName=="TPix") {
+      //  fTPixRecoEvent = new TTPixRecoEvent();
+      //  fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
       } else if (branchName=="TargetBeam") {
 	fTargetRecoBeam = new TTargetRecoBeam();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoBeam);
@@ -319,13 +314,8 @@ int main(Int_t argc, char **argv)
    int iret=InitTemps();
    if(iret==0) std::cout<<" --- initialized Temp correction --"<< std::endl;
 
-   //int histoOutput
-   //hSvc->book(fProcessingMode);
-   //hSvc->book(fProcessingMode,fntuple);
-
+   // Initialize input event structure
    PadmeAnalysisEvent* event = new PadmeAnalysisEvent();
-   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
-
    event->RecoEvent            =fRecoEvent          ;
    event->TargetRecoEvent      =fTargetRecoEvent    ;
    event->EVetoRecoEvent       =fEVetoRecoEvent     ;
@@ -340,6 +330,9 @@ int main(Int_t argc, char **argv)
    event->EVetoRecoCl          =fEVetoRecoCl        ;
    event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
    
+   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
+
+   if (doNtuple) hSvc->BookNtuple();
    UserAn->Init(event);
 
    Int_t nTargetHits =0;
@@ -409,8 +402,8 @@ int main(Int_t argc, char **argv)
 	 //std::cout<<"input data are simulatetd "<<std::endl;
        }
 
+       if (doNtuple) hSvc->FillNtuple(event);
        UserAn->Process();
-       //hSvc->FillNtuple();
 
      }
    

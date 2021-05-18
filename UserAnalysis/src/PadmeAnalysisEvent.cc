@@ -16,19 +16,4 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   EVetoRecoCl          =0;
   HEPVetoRecoCl        =0;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

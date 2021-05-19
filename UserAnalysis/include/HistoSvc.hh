@@ -183,18 +183,18 @@ public:
   void BookNtuple();
   void FillNtuple(PadmeAnalysisEvent*);
 
-  void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
-  void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
+  TH1D* BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
+  TH2D* BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
   void FillHisto (std::string name, Double_t bin, Double_t weight = 1.0);
   void FillHisto2(std::string name, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
   //void Normalize (std::string name, Double_t fac);    
 
   // List-based interface
   Bool_t CreateList(std::string);
-  void BookHistoList(std::string, TString, Int_t, Double_t, Double_t);
-  void BookHisto2List(std::string, TString, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
-  void FillHistoList(std::string, TString, Double_t, Double_t);
-  void FillHisto2List(std::string, TString, Double_t, Double_t, Double_t);
+  TH1D* BookHistoList(std::string, std::string, Int_t, Double_t, Double_t);
+  TH2D* BookHisto2List(std::string, std::string, Int_t, Double_t, Double_t, Int_t, Double_t, Double_t);
+  void FillHistoList(std::string, std::string, Double_t, Double_t);
+  void FillHisto2List(std::string, std::string, Double_t, Double_t, Double_t);
 
   TString GetOutputFileName(){ return fOutputFileName; }
 
@@ -206,7 +206,7 @@ private:
     
   TString fOutputFileName;
   TFile* fRootOutputFile;
-  std::map<std::string, TList*> fListMap;
+  std::map<std::string, std::map<std::string,TObject*>> fListMap;
   TTree* fNtuple;    
 
 };

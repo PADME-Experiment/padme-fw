@@ -29,21 +29,7 @@ HistoSvc::HistoSvc()
 
 HistoSvc::~HistoSvc()
 {
-
-  printf("Deleting HistoSvc\n");
-
   if ( fRootOutputFile ) delete fRootOutputFile;
-
-  std::map<std::string, TList*>::iterator it;
-  for (it = fListMap.begin(); it != fListMap.end(); it++) {
-    if (it->second) {
-      printf("Deleting TList %s\n",it->first.c_str());
-      delete it->second;
-    } else {
-      printf("TList %s is empty\n",it->first.c_str());
-    }
-  }
-
 }
 
 Bool_t HistoSvc::Initialize(TString outputFileName)
@@ -67,35 +53,23 @@ Bool_t HistoSvc::Initialize(TString outputFileName)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-void HistoSvc::BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup)
-{
-  BookHistoList("EXTRA",name,nx,xlow,xup);
-  //TH1D* hT1y = new TH1D(name.c_str(), name.c_str(), nx, xlow, xup);
-  //fHisto1DMap[name]=hT1y;
-  return;
-}
-void HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup)
-{
-  BookHisto2List("EXTRA",name,nx,xlow,xup,ny,ylow,yup);
-  //TH2D* hT1y = new TH2D(name.c_str(), name.c_str(), nx, xlow, xup, ny, ylow, yup);
-  //fHisto2DMap[name]=hT1y;
-  return;
-}
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 Bool_t HistoSvc::Finalize()
 {
 
-  std::map<std::string, TList*>::iterator it;
+  std::map<std::string, std::map<std::string,TObject*>>::iterator it;
   for (it = fListMap.begin(); it != fListMap.end(); it++) {
-    printf("TList %s has %d histograms\n",it->first.c_str(),it->second->GetEntries());
+    printf("List %s has %lu histograms\n",it->first.c_str(),it->second.size());
+    std::map<std::string,TObject*>::iterator jt;
+    for (jt = it->second.begin(); jt != it->second.end(); jt++) {
+      printf("- %s\n",jt->first.c_str());
+    }
   }
 
   if (fRootOutputFile) {
     fRootOutputFile->Write();
     fRootOutputFile->Close();
-    printf("\n----> Histogram Tree is saved \n");
+    printf("\n---> Histogram file closed with size %lld\n",fRootOutputFile->GetSize());
   }
 
   return true;
@@ -103,23 +77,20 @@ Bool_t HistoSvc::Finalize()
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+TH1D* HistoSvc::BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup)
+{
+  return BookHistoList("EXTRA",name,nx,xlow,xup);
+}
+TH2D* HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup)
+{
+  return BookHisto2List("EXTRA",name,nx,xlow,xup,ny,ylow,yup);
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void HistoSvc::FillHisto(std::string hname, Double_t xbin, Double_t weight)
 {
   FillHistoList("EXTRA",hname,xbin,weight);
-  //if (fHisto1DMap.find(hname)==fHisto1DMap.end()) {
-  //  std::cout << "---> warning from HistoSvc::FillHisto() : histo " << hname
-  //	      << " does not exist. (xbin=" << xbin << " weight=" << weight << ")"
-  //	      << std::endl;
-  //  return;
-  //}
-  //if (fHisto1DMap[hname]) {
-  //  fHisto1DMap[hname]->Fill(xbin, weight);
-  //} else {
-  //  std::cout << "---> warning from HistoSvc::FillHisto() : histo " << hname
-  //	      << " found in the map with a NULL pointer "
-  //	      << std::endl;
-  //}
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -127,19 +98,6 @@ void HistoSvc::FillHisto(std::string hname, Double_t xbin, Double_t weight)
 void HistoSvc::FillHisto2(std::string hname, Double_t xbin, Double_t ybin, Double_t weight)
 {
   FillHisto2List("EXTRA",hname,xbin,ybin,weight);
-  //if (fHisto2DMap.find(hname)==fHisto2DMap.end()) {
-  //  std::cout << "---> warning from HistoSvc::FillHisto() : histo2D " << hname
-  //	       << " does not exist. (xbin=" << xbin << " ybin=" << ybin <<" weight=" << weight << ")"
-  //	       << std::endl;
-  //  return;
-  //}
-  //if (fHisto2DMap[hname]) {
-  //  fHisto2DMap[hname]->Fill(xbin, ybin, weight);
-  //} else {
-  //  std::cout << "---> warning from HistoSvc::FillHisto() : histo " << hname
-  //	       << " found in the map with a NULL pointer "
-  //	       << std::endl;
-  //}
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -188,23 +146,15 @@ void HistoSvc::FillHisto2(std::string hname, Double_t xbin, Double_t ybin, Doubl
 Bool_t HistoSvc::CreateList(std::string listname)
 {
 
-  // First check if list was already defined
-  //std::map<std::string, TList*>::iterator it;
-  //for (it = fListMap.begin(); it != fListMap.end(); it++) {
-  //  if (it->first == listname) {
-  //    printf("HistoSvc::CreateList - ERROR - List %s already defined\n",listname.c_str());
-  //    return false;
-  //  }
-  //}
-  if (fListMap[listname]) {
+  if (fListMap.find(listname) != fListMap.end()) {
     printf("HistoSvc::CreateList - ERROR - List %s already defined\n",listname.c_str());
     return false;
   }
 
-  printf("Creating TList %s\n",listname.c_str());
-  fListMap[listname] = new TList;
+  printf("Creating list %s\n",listname.c_str());
+  fListMap[listname].clear();
 
-  // For each TList create a corresponding directory in the output file
+  // For each list create a corresponding directory in the output file
   if (listname.compare("TOP") != 0 && fRootOutputFile) {
     fRootOutputFile->cd("/");
     fRootOutputFile->mkdir(listname.c_str());
@@ -214,60 +164,63 @@ Bool_t HistoSvc::CreateList(std::string listname)
 
 }
 
-void HistoSvc::BookHistoList (std::string listname, TString histname, Int_t nx, Double_t xlow, Double_t xup)
+TH1D* HistoSvc::BookHistoList (std::string listname, std::string hname, Int_t nx, Double_t xlow, Double_t xup)
 {
-  if (fListMap[listname]) {
+  TH1D* h = 0;
+  if (fListMap.find(listname) != fListMap.end()) {
     if (fRootOutputFile) {
       fRootOutputFile->cd("/");
       if (listname.compare("TOP")!=0) fRootOutputFile->cd(listname.c_str());
     }
-    fListMap[listname]->Add(new TH1D(histname, histname, nx, xlow, xup));
+    h = new TH1D(hname.c_str(), hname.c_str(), nx, xlow, xup);
+    fListMap[listname][hname] = (TObject*)h;
   } else {
-    printf("HistoSvc::BookHistoList - ERROR - TList %s does not exist\n",listname.c_str());
+    printf("HistoSvc::BookHistoList - ERROR - list %s does not exist\n",listname.c_str());
   }
-  return;
+  return h;
 }
 
-void HistoSvc::BookHisto2List (std::string listname, TString histname, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup)
+TH2D* HistoSvc::BookHisto2List (std::string listname, std::string hname, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup)
 {
-  if (fListMap[listname]) {
+  TH2D* h = 0;
+  if (fListMap.find(listname) != fListMap.end()) {
     if (fRootOutputFile) {
       fRootOutputFile->cd("/");
       if (listname.compare("TOP")!=0) fRootOutputFile->cd(listname.c_str());
     }
-    fListMap[listname.c_str()]->Add(new TH2D(histname, histname, nx, xlow, xup, ny, ylow, yup));
+    h = new TH2D(hname.c_str(), hname.c_str(), nx, xlow, xup, ny, ylow, yup);
+    fListMap[listname][hname] = (TObject*)h;
   } else {
-    printf("HistoSvc::BookHisto2List - ERROR - TList %s does not exist\n",listname.c_str());
+    printf("HistoSvc::BookHisto2List - ERROR - list %s does not exist\n",listname.c_str());
   }
-  return;
+  return h;
 }
 
-
-void HistoSvc::FillHistoList(std::string listname, TString hname, Double_t xbin, Double_t weight=1.0)
+void HistoSvc::FillHistoList(std::string listname, std::string hname, Double_t xbin, Double_t weight=1.0)
 {
-  if (fListMap[listname]) {
-    TH1D* h = (TH1D*)fListMap[listname]->FindObject(hname);
+  if (fListMap.find(listname) != fListMap.end()) {
+    TH1D* h = (TH1D*)fListMap[listname][hname];
     if (h) {
       h->Fill(xbin,weight);
     } else {
-      printf("HistoSvc::FillHistoList - ERROR - TH1D '%s' not found in TList %s\n",hname.Data(),listname.c_str());
+      printf("HistoSvc::FillHistoList - ERROR - TH1D '%s' not found in list %s\n",hname.c_str(),listname.c_str());
     }
   } else {
-    printf("HistoSvc::FillHistoList - ERROR - TList %s does not exist\n",listname.c_str());
+    printf("HistoSvc::FillHistoList - ERROR - list %s does not exist\n",listname.c_str());
   }
 }
 
-void HistoSvc::FillHisto2List(std::string listname, TString hname, Double_t xbin, Double_t ybin, Double_t weight=1.0)
+void HistoSvc::FillHisto2List(std::string listname, std::string hname, Double_t xbin, Double_t ybin, Double_t weight=1.0)
 {
-  if (fListMap[listname]) {
-    TH2D* h = (TH2D*)fListMap[listname]->FindObject(hname);
+  if (fListMap.find(listname) != fListMap.end()) {
+    TH2D* h = (TH2D*)fListMap[listname][hname];
     if (h) {
       h->Fill(xbin,ybin,weight);
     } else {
-      printf("HistoSvc::FillHisto2List - ERROR - TH2D '%s' not found in TList %s\n",hname.Data(),listname.c_str());
+      printf("HistoSvc::FillHisto2List - ERROR - TH2D '%s' not found in list %s\n",hname.c_str(),listname.c_str());
     }
   } else {
-    printf("HistoSvc::FillHisto2List - ERROR - TList %s does not exist\n",listname.c_str());
+    printf("HistoSvc::FillHisto2List - ERROR - list %s does not exist\n",listname.c_str());
   }
 }
 
@@ -401,7 +354,7 @@ void HistoSvc::BookNtuple()
   fNtuple->Branch("NTSAC_Clusters_Ypos",       &(myEvt.NTSAC_Clusters_Ypos),        "NTSAC_Clusters_Ypos[NTNSAC_Clusters]/D");
   fNtuple->Branch("NTSAC_Clusters_Zpos",       &(myEvt.NTSAC_Clusters_Zpos),        "NTSAC_Clusters_Zpos[NTNSAC_Clusters]/D");
  
-  printf("\n----> Flat ntuple created\n");
+  printf("\n---> Flat ntuple created\n");
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

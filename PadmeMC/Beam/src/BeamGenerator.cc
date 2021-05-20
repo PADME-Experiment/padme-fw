@@ -86,6 +86,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nUbosonDecays = bpar->GetNUbosonDecaysPerBunch();
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nTwoPhotonDecays = bpar->GetNTwoPhotonDecaysPerBunch();
+  G4int nBhaBha          = bpar->GetNTwoPhotonDecaysPerBunch(); //MR 20/05/2021
   G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays;
   if (nPositrons<0) {
     G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
@@ -117,7 +118,6 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
     // Generate gamma+gamma+gamma final state
     CreateFinalStateThreeGamma();
-
   }
   
   
@@ -131,9 +131,22 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
     // Generate gamma+gamma final state
     CreateFinalStateTwoGamma();
-
   }
-  
+
+
+  //***********************************************
+  // Generate BhaBha scattering  M. Raggi 20/05/2021
+  //************************************************
+  for(int iee = 0; iee < nBhaBha; iee++) {
+
+    // Generate primary e+ which will decay to two gammas
+    GeneratePrimaryPositron();
+
+    // Generate gamma+gamma final state
+    CreateFinalStateBhaBha();
+  }
+
+
   //******************************************************
   //General BG generator particles on the target per event 
   //******************************************************
@@ -611,6 +624,118 @@ void BeamGenerator::CreateFinalStateTwoGamma()
   }
 
 }
+//****************************************************
+// Generate BhaBha events M. Raggi 20/05/2021
+//****************************************************
+void BeamGenerator::CreateFinalStateBhaBha()
+{
+  static G4int iline = 0;
+  static const G4double me = 0.000511; //electron mass in GeV
+  // Get file with list of two-gamma events kinematics
+  G4String fileBhaBha = BeamParameters::GetInstance()->GetBhaBhaFilename();
+
+  std::ifstream infile;
+  std::string Line = "";
+  infile.open(fileBhaBha.data());
+
+  G4int il=0;
+  while (!infile.eof() && il <= iline) {
+     getline(infile,Line);
+     il++;
+  }
+  infile.close();
+
+  // If we did not reach EOF, generate 2 photons
+  if (il == iline + 1) {
+ 
+    G4double theta = atan2(sqrt(fPositron.dir.x()*fPositron.dir.x()+fPositron.dir.y()*fPositron.dir.y()),fPositron.dir.z())*rad;
+    G4double phi = atan2(fPositron.dir.y(),fPositron.dir.x())*rad;
+
+    // Choose random decay point along e+ path within Target
+    G4double z_decay = (fDetector->GetTargetFrontFaceZ()-fPositron.pos.z())+G4UniformRand()*fDetector->GetTargetThickness();
+    G4double s_decay = z_decay/cos(theta);
+    //G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
+    //G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
+    G4double Dx = G4RandGauss::shoot(0,2.5);
+    G4double Dy = G4RandGauss::shoot(0,2.5);
+    G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness();
+    G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
+
+    // Create primary vertex at decay point
+    G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
+    
+    // Decode input line
+    std::istringstream iss(Line);
+
+    // Skip first three fields in the line
+    G4int it;
+    G4double dt1,dt2;
+    iss >> it >> dt1 >> dt2;
+
+    // Loop over the Electron and positrons
+    G4double p[4]; // Vector to store four-momentum of the gamma
+    for(G4int j=0; j<2; j++) {
+      iss >> p[1] >> p[2] >> p[3]; // Get gamma momentum
+      for(G4int k=1; k<=3; k++) { p[k] *= -GeV; } // Values are given in GeV, opposite direction   ????BHO????
+      if(j==0){
+        fHistoManager->FillHisto(78,p[1]);
+        fHistoManager->FillHisto(79,p[2]);
+        fHistoManager->FillHisto(80,p[3]);
+        fHistoManager->FillHisto(84,(p[2]/p[3])*300);
+        //std::cout<<"Positron radius " << (p[2]/p[3])*300 << std::endl;
+      }
+      else{
+        fHistoManager->FillHisto(81,p[1]);
+        fHistoManager->FillHisto(82,p[2]);
+        fHistoManager->FillHisto(83,p[3]);
+        fHistoManager->FillHisto(85,(p[2]/p[3])*300);
+        //std::cout<<"Electrob radius " << (p[2]/p[3])*300 << std::endl;
+      }
+      p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]+me*me); // Compute total energy of the positron and electron
+     
+      // Rotate gamma momentum along the direction of the primary positron
+      G4ThreeVector lepton_p = G4ThreeVector(p[1],p[2],p[3]);
+      //gamma_p.rotateUz(fPositron.dir);
+     
+      // Create gamma primary particle with generated four-momentum
+      G4PrimaryParticle* lepton; 
+      if(j==0) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("positron"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      if(j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("electron"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      vtx->SetPrimary(lepton);
+    }
+
+    // Add primary vertex to event
+    fEvent->AddPrimaryVertex(vtx);
+
+    // Skip to next line
+    iline++;
+
+  } else {
+    G4cout << "BeamGenerator - WARNING - Reached end of two-gamma decays input file" << G4endl;
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

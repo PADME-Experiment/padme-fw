@@ -213,6 +213,8 @@
 #/beam/3g_file ThreePhotonDecays.list
 #/beam/n_2g_per_bunch 0
 #/beam/2g_file TwoPhotonDecays.list
+#/beam/n_BhaBha_per_bunch 0
+#/beam/BhaBha_file BhaBhaTChan.list
 #/beam/calibration false
 #/beam/calib_energy 50. MeV
 #/beam/calib_x 14. cm

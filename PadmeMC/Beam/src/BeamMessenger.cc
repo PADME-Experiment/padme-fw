@@ -188,6 +188,16 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
   fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  // Settings for BhaBha M. Raggi 20/05/2021
+  fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
+  fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
+  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNBhaBhaPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
+  fSetNBhaBhaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBhaBhaFilenameCmd = new G4UIcmdWithAString("/beam/BhaBha_file",this);
+  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
+  fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableCalibRunCmd = new G4UIcmdWithABool("/beam/calibration",this);
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");

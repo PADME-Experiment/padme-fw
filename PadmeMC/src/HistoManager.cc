@@ -138,7 +138,7 @@ void HistoManager::book()
 
   histo2[55] = new TH2D("h55","TPix beam spot",TPiXBins,TPixXmin,TPixXmax,TPiYBins,TPixYmin,TPixYmax);
   if (!histo2[55]) G4cout << "\n can't create histo 55" << G4endl;
-  histo2[56] = new TH2D("h56","TPix X vs E",TPiXBins,TPixXmin,TPixXmax,160,400.,560.);
+  histo2[56] = new TH2D("h56","TPix X vs E",TPiXBins,TPixXmin,TPixXmax,BinE,MinE,MaxE);
   if (!histo2[56]) G4cout << "\n can't create histo 56" << G4endl;
 
   double TarXmin = -15.;

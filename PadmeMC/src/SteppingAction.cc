@@ -149,7 +149,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   static G4String prevProc="";
 
   //Cerca il primario
-  if(bpar->GetNPositronsPerBunch()==1){
+  //  if(bpar->GetNPositronsPerBunch()==1){
+  if(bpar->GetNPositronsPerBunch()<50){
     if(track->GetTrackID()==1){ //primary particle
       if(track->GetParticleDefinition() == G4Positron::PositronDefinition()){
 	if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){ 
@@ -188,17 +189,20 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
 	    G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 	    //	    if(lastProc!="Transportation" && lastProc!="eIoni" && ProcID==-1){
-	    if(lastProc!="Transportation" && lastProc!="eIoni" && ProcID==-1){
+	    if(lastProc!="Transportation" && ProcID==-1){
 	      //	  G4cout<<lastProc<<G4endl;
 	      if(lastProc=="eBrem"){
 		ProcID=1.;
+		//		track->SetTrackStatus(fStopAndKill);
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else if(lastProc=="annihil"){
 		ProcID=2.;
+		//	       	track->SetTrackStatus(fStopAndKill);
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else if(lastProc=="eIoni"){
 		ProcID=3.;
-		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
+		//		track->SetTrackStatus(fStopAndKill);
+		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else{
 		ProcID=-1.;
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
@@ -218,22 +222,22 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
 //  // Killing particle in the LINAC region
 //
-//  //Killing in the collimators
-//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"){
-//      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-//      track->SetTrackStatus(fStopAndKill);
-//    }
-//  }
-//
-//  //Killing in the walls and beamlines
-//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
-//       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
-//      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-//      track->SetTrackStatus(fStopAndKill);
-//    }
-//  }
+  //Killing in the collimators
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"){
+      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      track->SetTrackStatus(fStopAndKill);
+    }
+  }
+
+  //Killing in the walls and beamlines
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
+       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
+      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      track->SetTrackStatus(fStopAndKill);
+    }
+  }
   
 //  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
 //    if(track->GetVolume()->GetName()=="SAC") {

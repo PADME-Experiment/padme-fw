@@ -384,6 +384,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
     fBeamParameters->SetTwoPhotonDecaysFilename(par);
 
+  else if ( cmd == fSetNBhaBhaPerBunchCmd )
+    fBeamParameters->SetNBhaBhaPerBunch(fSetNBhaBhaPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBhaBhaFilenameCmd )
+    fBeamParameters->SetBhaBhaFilename(par);
+
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {
       fBeamParameters->CalibrationRunEnable();

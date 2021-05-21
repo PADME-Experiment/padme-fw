@@ -83,14 +83,15 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   if (bpar->NPositronsPerBunchApplySpread()) {
     nTotPositrons = G4Poisson(nTotPositrons);
   }
+
   G4int nUbosonDecays = bpar->GetNUbosonDecaysPerBunch();
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nTwoPhotonDecays = bpar->GetNTwoPhotonDecaysPerBunch();
-  G4int nBhaBha          = bpar->GetNTwoPhotonDecaysPerBunch(); //MR 20/05/2021
-  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays;
+  G4int nBhaBha          = bpar->GetNBhaBhaPerBunch(); //MR 20/05/2021
+  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays-nBhaBha;
   if (nPositrons<0) {
     G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
-    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays << G4endl;
+    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays <<" NBhaBha "<<nBhaBha<<G4endl;
     nPositrons = 0;
   }
 
@@ -133,16 +134,17 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     CreateFinalStateTwoGamma();
   }
 
-
   //***********************************************
   // Generate BhaBha scattering  M. Raggi 20/05/2021
   //************************************************
-  for(int iee = 0; iee < nBhaBha; iee++) {
+  G4cout<<"NBhaBha "<<nBhaBha<<" "<< nTwoPhotonDecays<<G4endl;
+  //  G4cout<<"NBhaBha "<<nTwoPhoton<<G4endl;
+  //  G4cout<<"NBhaBha "<<nBhaBha<<G4endl;
 
-    // Generate primary e+ which will decay to two gammas
+  for(int iee = 0; iee<nBhaBha; iee++) {
+    // Generate primary e+ which will generate ee pairs
     GeneratePrimaryPositron();
-
-    // Generate gamma+gamma final state
+    // Generate e+ e- final state
     CreateFinalStateBhaBha();
   }
 
@@ -633,11 +635,16 @@ void BeamGenerator::CreateFinalStateBhaBha()
   static const G4double me = 0.000511; //electron mass in GeV
   // Get file with list of two-gamma events kinematics
   G4String fileBhaBha = BeamParameters::GetInstance()->GetBhaBhaFilename();
+  std::cout<<" Ciao BhaBha scattering **************************************** "<<fileBhaBha<<std::endl;
+
 
   std::ifstream infile;
   std::string Line = "";
   infile.open(fileBhaBha.data());
-
+  if(!infile) {
+    std::cout<<" No BhaBha files "<<std::endl;
+    exit(1);
+  }
   G4int il=0;
   while (!infile.eof() && il <= iline) {
      getline(infile,Line);

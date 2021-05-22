@@ -88,11 +88,12 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nThreePhotonDecays = bpar->GetNThreePhotonDecaysPerBunch();
   G4int nTwoPhotonDecays = bpar->GetNTwoPhotonDecaysPerBunch();
   G4int nBhaBha          = bpar->GetNBhaBhaPerBunch(); //MR 20/05/2021
-  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays-nBhaBha;
+  G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays - nBhaBha;
   if (nPositrons<0) {
     G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
-    G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays <<" NBhaBha "<<nBhaBha<<G4endl;
+    G4cout << "- Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays <<" NBhaBha "<<nBhaBha<<G4endl;
     nPositrons = 0;
+    exit(1);
   }
 
   //********************
@@ -100,36 +101,28 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //********************
 
   for(int ib = 0; ib < nUbosonDecays; ib++) {
-
     // Generate primary e+ which will decay to Uboson+gamma
     GeneratePrimaryPositron();
-
     // Generate Uboson+gamma final state
     CreateFinalStateUboson();
-	
   }
   
   //*********************
   //Three photon events
   //*********************
   for(int iggg = 0; iggg < nThreePhotonDecays; iggg++) {
-
     // Generate primary e+ which will decay to three gammas
     GeneratePrimaryPositron();
-
     // Generate gamma+gamma+gamma final state
     CreateFinalStateThreeGamma();
   }
-  
   
   //*********************
   //Two photon events
   //*********************
   for(int iggg = 0; iggg < nTwoPhotonDecays; iggg++) {
-
     // Generate primary e+ which will decay to two gammas
     GeneratePrimaryPositron();
-
     // Generate gamma+gamma final state
     CreateFinalStateTwoGamma();
   }
@@ -137,17 +130,14 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   //***********************************************
   // Generate BhaBha scattering  M. Raggi 20/05/2021
   //************************************************
-  G4cout<<"NBhaBha "<<nBhaBha<<" "<< nTwoPhotonDecays<<G4endl;
-  //  G4cout<<"NBhaBha "<<nTwoPhoton<<G4endl;
-  //  G4cout<<"NBhaBha "<<nBhaBha<<G4endl;
-
+  //  std::cout<<" calling BhaBha generator" <<nBhaBha<<std::endl;
   for(int iee = 0; iee<nBhaBha; iee++) {
+    // std::cout<<" calling BhaBha generator" <<std::endl;
     // Generate primary e+ which will generate ee pairs
     GeneratePrimaryPositron();
     // Generate e+ e- final state
     CreateFinalStateBhaBha();
   }
-
 
   //******************************************************
   //General BG generator particles on the target per event 
@@ -635,8 +625,7 @@ void BeamGenerator::CreateFinalStateBhaBha()
   static const G4double me = 0.000511; //electron mass in GeV
   // Get file with list of two-gamma events kinematics
   G4String fileBhaBha = BeamParameters::GetInstance()->GetBhaBhaFilename();
-  std::cout<<" Ciao BhaBha scattering **************************************** "<<fileBhaBha<<std::endl;
-
+  std::cout<<" entering BhaBha generator" <<std::endl;
 
   std::ifstream infile;
   std::string Line = "";
@@ -683,7 +672,8 @@ void BeamGenerator::CreateFinalStateBhaBha()
     G4double p[4]; // Vector to store four-momentum of the gamma
     for(G4int j=0; j<2; j++) {
       iss >> p[1] >> p[2] >> p[3]; // Get gamma momentum
-      for(G4int k=1; k<=3; k++) { p[k] *= -GeV; } // Values are given in GeV, opposite direction   ????BHO????
+      //      for(G4int k=1; k<=3; k++) { p[k] *= -GeV; } // Values are given in GeV, opposite direction   ????BHO????
+      for(G4int k=1; k<=3; k++) { p[k] *= GeV; } // Values are given in GeV, opposite direction   ????BHO????
       if(j==0){
         fHistoManager->FillHisto(78,p[1]);
         fHistoManager->FillHisto(79,p[2]);
@@ -706,45 +696,20 @@ void BeamGenerator::CreateFinalStateBhaBha()
      
       // Create gamma primary particle with generated four-momentum
       G4PrimaryParticle* lepton; 
-      if(j==0) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("positron"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
-      if(j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("electron"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      if(j==0) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      if(j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      std::cout<<" lepton  px "<<lepton_p.x()<<" py "<<lepton_p.y()<<" pz "<<lepton_p.z()<<std::endl;
       vtx->SetPrimary(lepton);
     }
 
     // Add primary vertex to event
     fEvent->AddPrimaryVertex(vtx);
-
     // Skip to next line
     iline++;
-
   } else {
     G4cout << "BeamGenerator - WARNING - Reached end of two-gamma decays input file" << G4endl;
   }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void BeamGenerator::GenerateCalibrationGamma()

@@ -16,10 +16,42 @@ ECalAnalysis::ECalAnalysis(Int_t processingMode, Int_t verbosityFlag): Validatio
 {
   fAlgoName = "ECal";
   InitHistos();
+  InitHistosSelfCalibration();
   return;
 }
 ECalAnalysis::~ECalAnalysis()
 {
+}
+
+Bool_t ECalAnalysis::InitHistosSelfCalibration(){
+  fOfflineServerDB = OfflineServer::GetInstance();
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  hSvcVal->BookHisto2(Form("ECal_SC_DrVsDt"), 800, -400,400, 200, 0, 600.);
+  hSvcVal->BookHisto2(Form("ECal_SC_EVsT"), 800, -400,400, 200, 0, 600.);
+  hSvcVal->BookHisto2(Form("ECal_SC_DE1VsDE2"), 800, -400,400, 800, -400, 400.);
+  hSvcVal->BookHisto2(Form("ECal_SC_EExpVsE"), 800, 0,400, 400, 0, 400.);
+  for (int q=0; q<6; q++){
+    hSvcVal->BookHisto2(Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);
+  }
+  fCalibTree = hSvcVal->BookNtuple("ECal_SC_Tree");
+  fCalibTree->Branch("RunID", &(fCalibTreeStruct.RunID), "RunID/I");
+  fCalibTree->Branch("EventID", &(fCalibTreeStruct.EventID), "EventID/I");
+  fCalibTree->Branch("EventTime", &(fCalibTreeStruct.EventTime), "EventTime/l");
+  fCalibTree->Branch("Sqrts", &(fCalibTreeStruct.Sqrts), "Sqrts/D");
+  fCalibTree->Branch("Temp", &(fCalibTreeStruct.Temp), "Temp/D");
+  fCalibTree->Branch("BunchLength", &(fCalibTreeStruct.BunchLength), "Temp/D");
+  fCalibTree->Branch("BeamStart", &(fCalibTreeStruct.BeamStart), "Temp/D");
+  fCalibTree->Branch("RunTime", &(fCalibTreeStruct.RunTime), "Temp/D");
+  fCalibTree->Branch("RunPOT", &(fCalibTreeStruct.RunPOT), "Temp/D");
+  fCalibTree->Branch("TargX", &(fCalibTreeStruct.TargX), "TargX/D");
+  fCalibTree->Branch("TargY", &(fCalibTreeStruct.TargY), "TargY/D");
+  fCalibTree->Branch("TClus", &(fCalibTreeStruct.TClus), "TClus[2]/D");
+  fCalibTree->Branch("EClus", &(fCalibTreeStruct.EClus), "EClus[2]/D");
+  fCalibTree->Branch("XClus", &(fCalibTreeStruct.XClus), "XClus[2]/D");
+  fCalibTree->Branch("YClus", &(fCalibTreeStruct.YClus), "YClus[2]/D");
+  fCalibTree->Branch("EExp", &(fCalibTreeStruct.EExp), "EExp[2]/D");
+
+  return kTRUE;
 }
 
 Bool_t ECalAnalysis::InitHistosAnalysis()
@@ -345,6 +377,154 @@ Bool_t ECalAnalysis::ProcessAnalysis()
    return retCode;
 }
 
+Bool_t ECalAnalysis::SelfCalibration(TRecoEvent* recoEvent){
+  int runID = recoEvent->GetRunNumber();
+  int eventID = recoEvent->GetEventNumber();
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance(); // should be a private var
+  double beamEnergy = fOfflineServerDB->getDHSTB01Energy(runID); // read from a db at least run-dependent
+  double tempAvg = fOfflineServerDB->getAvgTemp(runID);
+
+  const double me = 0.511;
+  double sqrts = sqrt(2.*me*me + 2.*beamEnergy*me);
+  double bg = beamEnergy/sqrts; // beta
+  double gam = sqrt(bg*bg+1.);
+  double beta = bg/gam;
+  double xTarg;
+  const ULong64_t startRunSep2020 = 1600256773;// first event of the first time 
+  ULong64_t eventTime = static_cast<long int>(recoEvent->GetEventTime().GetSec());//fOfflineServerDB->getRunTime(runID)-startRunSep2020;
+
+  ULong64_t deventTime = eventTime - startRunSep2020;
+
+  // rough for x
+  if (deventTime < 1380000) xTarg = 3.2  ; // -> should be from db
+  else if (deventTime < 2500000) xTarg = 1.6  ; // -> should be from db
+  else if (deventTime < 6200000) xTarg = 2.6  ; // -> should be from db
+  else  xTarg = 4.0  ; 
+  // even more rough for y
+  const double yTarg = 1; // -> should be from db
+  const double zTarg = -1030; // should be -1028 from the survey, right?
+  TVector3 rTarg(xTarg,yTarg,zTarg);
+ 
+  const double zOff = -422; //[mm] = zClu[which is 2555 now and not 2550.51 which should be from the survey] - 230./2. + 6.5*X0, X0=11.2 mm
+  const double energyMin = 20; //MeV
+  const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
+  const double maxTimeDistance = 5; // ns
+  const double minGGDistance = 30; // mm
+  
+  //  std::cout << "beam pars " << fTargetRecoBeam->getXCfit() << " " << fTargetRecoBeam->getYCfit() << std::endl; //HOW TO USE THEM??
+
+  const double deCutCenterX = -40; // MeV
+  const double deCutRadiusX = 150.; // MeV
+  const double deCutCenterY = 0; // MeV
+  const double deCutRadiusY = 40; // MeV
+
+  const double pi=3.14159265358979;
+
+  TRecoVCluster* tempClu[2];
+  TVector3 cluPos[2];
+  double cluTime[2];
+  double cluEnergy[2];
+
+  fCalibTreeStruct.RunID = runID;
+  fCalibTreeStruct.EventID = eventID;
+  fCalibTreeStruct.EventTime = eventTime;
+  fCalibTreeStruct.Sqrts = sqrts;
+  fCalibTreeStruct.Temp = tempAvg;
+
+  fCalibTreeStruct.TargX = xTarg;
+  fCalibTreeStruct.TargY = yTarg;
+  fCalibTreeStruct.BunchLength = fOfflineServerDB->getBunchLength(runID);
+  fCalibTreeStruct.BeamStart = fOfflineServerDB->getBeamStart(runID);
+  fCalibTreeStruct.RunTime = fOfflineServerDB->getRunTime(runID);
+  fCalibTreeStruct.RunPOT = fOfflineServerDB->getRunPOT(runID);
+
+  for (int h1=0; h1<fClColl->GetNElements(); ++h1) {
+    tempClu[0] = fClColl->Element((int)h1);
+
+    cluEnergy[0] = tempClu[0]->GetEnergy();
+    if (cluEnergy[0] < energyMin) continue; // require a minimum energy
+
+    cluTime[0] = tempClu[0]->GetTime();
+    if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
+
+    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),tempClu[0]->GetPosition().Z()+zOff);
+
+    int isPaired = -1; // look for a gamma-gamma event, with loose conditions
+
+    for (int h2=h1+1; h2<fClColl->GetNElements(); ++h2) {
+      tempClu[1] = fClColl->Element((int)h2);
+
+      cluEnergy[1] = tempClu[1]->GetEnergy();
+      if (cluEnergy[1] < energyMin) continue; // require a minimum energy
+
+      cluTime[1] = tempClu[1]->GetTime();
+      if (cluTime[1] < timeSafeMin) continue;
+
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),tempClu[1]->GetPosition().Z()+zOff);
+      
+      double dt = cluTime[0]-cluTime[1];
+      double dr = (cluPos[0]-cluPos[1]).Mag();
+      
+      hSvcVal->FillHisto2(Form("ECal_SC_DrVsDt"), dt, dr, 1.);
+
+      if (fabs(dt) < maxTimeDistance && dr > minGGDistance) {
+	if (isPaired == -1) isPaired = h2;
+	else { // more than 1 cluster found connected -> reject the event
+	  isPaired = -1;
+	  break;
+	}
+      }
+    } // inner cluster loop
+
+    if (isPaired != -1) { // fill plots
+      cluEnergy[0] = tempClu[0]->GetEnergy();//*tempCorr;
+      tempClu[1] = fClColl->Element((int)isPaired);
+      cluEnergy[1] = tempClu[1]->GetEnergy();//*tempCorr;
+      cluTime[1] = tempClu[1]->GetTime();
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),tempClu[1]->GetPosition().Z()+zOff); 
+
+      hSvcVal->FillHisto2(Form("ECal_SC_EVsT"), cluTime[0], cluEnergy[0], 1.);
+      hSvcVal->FillHisto2(Form("ECal_SC_EVsT"), cluTime[1], cluEnergy[1], 1.);
+      double pg[2];
+      for (int i = 0; i<2; i++){
+	double cluDist = (cluPos[i]-rTarg).Mag();
+	double cosq = (cluPos[i].Z() - rTarg.Z())/cluDist; //will have to correct Z of each cluster for its average cluster depth
+	pg[i] = 0.5*sqrts/sqrt(1.-cosq*cosq + gam*gam*cosq*cosq - 2.*bg*gam*cosq + bg*bg);
+      }      
+      hSvcVal->FillHisto2(Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
+      
+
+
+      double elli = 
+	(cluEnergy[0]-pg[0]-deCutCenterX)*(cluEnergy[0]-pg[0]-deCutCenterX)/(deCutRadiusX*deCutRadiusX) +
+	(cluEnergy[1]-pg[1]-deCutCenterY)*(cluEnergy[1]-pg[1]-deCutCenterY)/(deCutRadiusY*deCutRadiusY);
+      if (elli < 2) { // looser cut because of the temperature effect
+	for (int i=0; i<2; i++) {
+	  fCalibTreeStruct.TClus[i] = cluTime[i];
+	  fCalibTreeStruct.EClus[i] = cluEnergy[i];
+	  fCalibTreeStruct.XClus[i] = cluPos[i].X();
+	  fCalibTreeStruct.YClus[i] = cluPos[i].Y();
+	  fCalibTreeStruct.EExp[i] = pg[i];
+
+	  hSvcVal->FillHisto2(Form("ECal_SC_EExpVsE"), cluEnergy[i], pg[i],1.);
+	  double phi = cluPos[i].Phi();
+	  if (phi < 0) phi += 2*pi;
+	  int q = (phi*3./pi+0.5);
+	  if (q > 5) q = 0;
+	  hSvcVal->FillHisto2(Form("ECal_SC_EExpVsE_q%d",q), cluEnergy[i], pg[i],1.);
+	}
+
+//	std::cout << " E vs Exp h1=" << h1 << " " << cluEnergy[0] << " " << pg[0] << " h2=" << isPaired << " " << cluEnergy[1] << " " << pg[1] << std::endl;
+//	std::cout << " CLUPOS0=(" << cluPos[0].X() << "," << cluPos[0].Y() << "," << cluPos[0].Z() << ") CLUPOS1=("<<cluPos[1].X() << "," << cluPos[1].Y() << ","<<cluPos[1].Z()<<")"<< " EexpTot="<< pg[0]+pg[1] << " EclTot="<<cluEnergy[0]+cluEnergy[1] << std::endl;
+
+	hSvcVal->FillNtuple("ECal_SC_Tree");
+
+      }
+    }
+
+  } // cluster loop
+  return kTRUE;
+}
 
 Bool_t ECalAnalysis::ProcessValidation()
 {  

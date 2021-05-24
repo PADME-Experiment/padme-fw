@@ -24,6 +24,7 @@ HistoSvc::HistoSvc()
   // histograms
   fHisto1DMap.clear();
   fHisto2DMap.clear();
+  fTTreeMap.clear();
   // ntuple
   ntupl = 0;
 }
@@ -55,6 +56,43 @@ void HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xu
 }
 
 
+
+TTree* HistoSvc::BookNtuple(std::string s){
+  if (!fRootOutputFile) fRootOutputFile = new TFile(fOutputFileName,"RECREATE"); // if it was not created, create the output file
+  if (!fRootOutputFile) {
+    std::cout << " HistoSvc::BookNtuple :"<<" problem creating the ROOT TFile "<< std::endl;
+    return 0;
+  }
+  std::cout << " HistoSvc::BookNtuple :"<<" output ROOT TFile "<<fOutputFileName<<" created"<< std::endl;
+
+  // create a tree, the user will define the structure
+  TTree* localTree = new TTree(s.c_str(), Form("%s_Event",s.c_str()));
+  if (fTTreeMap.find(s)==fTTreeMap.end()) {
+    fTTreeMap[s]=localTree;
+    return localTree;
+  }
+  else {
+    std::cout << "---> warning from HistoSvc::BookNtuple(std:string s) : tree with name " << s
+	      << " already exists."
+	      << std::endl;
+    return 0;
+  }
+}
+
+void HistoSvc::FillNtuple(std::string s){
+  if (fTTreeMap.find(s)==fTTreeMap.end()) {
+    std::cout << "---> warning from HistoSvc::FillNtuple(std:string s) : tree with name " << s
+	      << " does not exist."
+	      << std::endl;
+    return;
+  }
+  if  (fTTreeMap[s]) {fTTreeMap[s]->Fill(); }
+  else {
+    std::cout << "---> warning from HistoSvc::FillNtuple() : ttree with name " << s
+	      << " found in the map with a NULL pointer "
+	      << std::endl;
+  }
+}
 
 //void HistoSvc::book(Int_t validation)
 void HistoSvc::book(Int_t validation, Int_t ntuple) //flatNTP

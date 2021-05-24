@@ -177,8 +177,10 @@ public:
 
   void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
   void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
+  TTree* BookNtuple(std::string s); // return the pointer, the user will specify the structure
   void FillHisto (std::string name, Double_t bin, Double_t weight = 1.0);
   void FillHisto2(std::string name, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
+  void FillNtuple(std::string name);
   void Normalize (std::string name, Double_t fac);    
 
   //  void FillHisto (Int_t id, Double_t bin, Double_t weight = 1.0);
@@ -197,12 +199,14 @@ public:
 
 public:
   NTEvent  myEvt;    
+
 private:
     
   TString fOutputFileName;
   TFile*   fRootOutputFile;
   std::map<std::string, TH1D*>    fHisto1DMap;            
   std::map<std::string, TH2D*>    fHisto2DMap;            
+  std::map<std::string, TTree*>    fTTreeMap;            
   TTree*   ntupl;    
 
 };

@@ -28,6 +28,7 @@
 
 #include "HistoSvc.hh"
 #include "temp_corr.hh"
+#include "TempCorr.hh"
 #include "utlConfigParser.hh"
 
 #include "UserAnalysis.hh"
@@ -153,7 +154,7 @@ int main(Int_t argc, char **argv)
   printf("---> Initializing histogram service\n");
   HistoSvc* hSvc = HistoSvc::GetInstance();
   hSvc->Initialize(OutputFileName);
-  
+
   // Create configuration file parser
   utl::ConfigParser* cfgParser = new utl::ConfigParser((const std::string)ConfFileName.Data());
   if (fVerbose) cfgParser->Print();
@@ -266,16 +267,18 @@ int main(Int_t argc, char **argv)
   //////////// You come here if a Chain with >=0 events has been found 
   Int_t jevent = 0;
   
-  // initialize temp corr
-  printf("---> Initializing temperature corrections\n");
-  Bool_t TempCorr = true;
-  if(InitTemps() == 0) {
+  // Initialize temperature correction service
+  printf("---> Initializing temperature correction service\n");
+  TempCorr* TempCorr = TempCorr::GetInstance();
+  Bool_t tCorrOK = true;
+  if (TempCorr->Initialize() == 0) {
     printf("<--- Temperature corrections initialized\n");
   } else {
     printf("!--- Error while initializing temperature corrections\n");
-    TempCorr = false;
+    tCorrOK = false;
   }
-  
+  InitTemps(); // Old system
+
   // Book flat ntuple if required
   if (doNtuple) hSvc->BookNtuple();
   
@@ -319,12 +322,13 @@ int main(Int_t argc, char **argv)
     // Debug printout
     if ( (i%1000==0) || (fVerbose>0 && (i%100==0)) || (fVerbose>1) ){
       std::cout<<"---> Event = "<<i<<"/"<<nevents<<" - Size "<< jevent << " Run " << fRecoEvent->GetRunNumber() <<" Event "<<fRecoEvent->GetEventNumber()<<std::endl;
-      if (TempCorr) {
+      if (tCorrOK) {
 	TTimeStamp timevent=fRecoEvent->GetEventTime();
 	utc_time=timevent.GetSec();
 	float temp_event=GetTemp(utc_time);
 	float temp_corr=GetEventTempCorr();
-	std::cout<< "     Temperature corrections - UTC "<<utc_time<< " - Temperature "<<temp_event<<" - Correction "<<temp_corr<<std::endl;
+	//std::cout<< "     Temperature corrections - UTC "<<utc_time<< " - Temperature "<<temp_event<<" - Correction "<<temp_corr<<std::endl;
+	printf("     Time %ld Old Temp %f Old Corr %f New Temp %f New Corr %f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent),TempCorr->GetTempCorr(timevent));
       }
       if (fECalRecoEvent)    nECalHits   = fECalRecoEvent->GetNHits();
       if (fTargetRecoEvent)  nTargetHits = fTargetRecoEvent->GetNHits(); 

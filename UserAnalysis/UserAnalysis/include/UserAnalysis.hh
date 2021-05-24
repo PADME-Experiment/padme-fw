@@ -8,8 +8,7 @@ class UserAnalysis {
 
 public:
 
-  UserAnalysis();
-  UserAnalysis(TString, Int_t);
+  UserAnalysis(TString c = "config/UserAnalysis.conf", Int_t v = 0);
   ~UserAnalysis();
 
   Bool_t InitHistos();

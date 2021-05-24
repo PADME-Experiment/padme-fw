@@ -2,17 +2,13 @@
 
 #include "UserAnalysis.hh"
 #include "HistoSvc.hh"
-
-UserAnalysis::UserAnalysis()
-{
-  fVerbose = 0;
-  fCfgParser = new utl::ConfigParser((const std::string)"config/UserAnalysis.conf");
-}
+#include "TempCorr.hh"
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
+  printf("---> Configuration file %s\n",cfgFile.Data());
+  if (verbose) printf("---> Verbose level %d\n",verbose);
   fVerbose = verbose;
-  printf("Config file %s\n",cfgFile.Data());
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 }
 

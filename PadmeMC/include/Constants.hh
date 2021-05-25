@@ -250,7 +250,7 @@ const double CellsE   = 1.;     //in MeV
 //const double MagCoilPosY = 0.;
 //const double MagCoilPosZ = 20.;	//in cm;
 
-const int MaxTracks = 100; //to be less than 50 check in EVENT ACTION histoManager.cc HistoManager.hh
+const int MaxTracks = 200; //to be less than 50 check in EVENT ACTION histoManager.cc HistoManager.hh
 //const int MaxTrHits = 500;
 
 //  Beam Dump wall Dimension	     

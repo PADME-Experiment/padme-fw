@@ -36,34 +36,34 @@ struct NTEvent{
   //Simulated event variables
 
   //Calorimeter variables:
-  double NTECluster[20];
-  double NTQCluster[20];
-  double NTXCluster[20];
-  double NTYCluster[20];
-  double NTThCluster[20];
-  double NTM2Cluster[20];
-  double NTTCluster[20];
-  double NTNClusCells[20];
+  double NTECluster[300];
+  double NTQCluster[300];
+  double NTXCluster[300];
+  double NTYCluster[300];
+  double NTThCluster[300];
+  double NTM2Cluster[300];
+  double NTTCluster[300];
+  double NTNClusCells[300];
 
   double NTECell[1000];
   double NTQCell[1000];
   double NTTCell[1000];
 
   //NTLAV variables
-  double  NTCalPartE[20];
-  double  NTCalPartT[20];
-  int     NTCalPartPType[20];
-  double  NTCalPartX[20];
-  double  NTCalPartY[20];
+  double  NTCalPartE[300];
+  double  NTCalPartT[300];
+  int     NTCalPartPType[300];
+  double  NTCalPartX[300];
+  double  NTCalPartY[300];
   int     NTNCal;
 
   //Tracker variables
-  double NTETracker[100];
-  double NTTrackerLay[100];
-  double NTTrackerTime[100];
-  double NTTrackerZ[100];
-  double NTTrackerX[100];
-  double NTTrackerY[100];
+  double NTETracker[300];
+  double NTTrackerLay[300];
+  double NTTrackerTime[300];
+  double NTTrackerZ[300];
+  double NTTrackerX[300];
+  double NTTrackerY[300];
 
   double NTETarget;
   double NTTTarget;
@@ -79,23 +79,23 @@ struct NTEvent{
   int     NTTrClusLayer[1000];
 
   //HEPVeto variables
-  double  NTHEPVetoTrkEne[100];
-  int  NTHEPVetoTrkFinger[100];
-  double NTHEPVetoTrkTime[100];
-  double NTHEPVetoFingerE[100];
-  double NTHEPVetoX[100];
-  double NTHEPVetoY[100];
+  double  NTHEPVetoTrkEne[300];
+  int  NTHEPVetoTrkFinger[300];
+  double NTHEPVetoTrkTime[300];
+  double NTHEPVetoFingerE[300];
+  double NTHEPVetoX[300];
+  double NTHEPVetoY[300];
   double NTHEPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
   double NTHEPVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTHEPVetoClIndex[NPVetoBars];
 
   //PVeto variables
-  double NTPVetoTrkEne[100];
-  int    NTPVetoTrkFinger[100];
-  double NTPVetoTrkTime[100];
-  double NTPVetoFingerE[100];
-  double NTPVetoX[100];
-  double NTPVetoY[100];
+  double NTPVetoTrkEne[300];
+  int    NTPVetoTrkFinger[300];
+  double NTPVetoTrkTime[300];
+  double NTPVetoFingerE[300];
+  double NTPVetoX[300];
+  double NTPVetoY[300];
   double NTPVetoBarEnergy[NPVetoBars];
   double NTPVetoBarTime[NPVetoBars];
   double NTPVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
@@ -104,31 +104,31 @@ struct NTEvent{
 
 
   //EVeto variables
-  double NTEVetoTrkEne[100];
-  int    NTEVetoTrkFinger[100];
-  double NTEVetoTrkTime[100];
-  double NTEVetoFingerE[100];
-  double NTEVetoX[100];
-  double NTEVetoY[100];
+  double NTEVetoTrkEne[300];
+  int    NTEVetoTrkFinger[300];
+  double NTEVetoTrkTime[300];
+  double NTEVetoFingerE[300];
+  double NTEVetoX[300];
+  double NTEVetoY[300];
   double NTEVetoTimeCl[NPVetoBars][NPVetoMaxNCl];
   double NTEVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTEVetoClIndex[NPVetoBars];
 
   //NTSAC variables
-  double  NTSACE[100];
-  double  NTSACT[100];
-  double  NTSACPType[100];
-  double  NTSACX[100];
-  double  NTSACY[100];
-  int     NTSACCh[100];
+  double  NTSACE[300];
+  double  NTSACT[300];
+  double  NTSACPType[300];
+  double  NTSACX[300];
+  double  NTSACY[300];
+  int     NTSACCh[300];
   int     NTSACNHit;
 
   //NTLAV variables
-  double  NTLAVE[100];
-  double  NTLAVT[100];
-  double  NTLAVPType[100];
-  double  NTLAVX[100];
-  double  NTLAVY[100];
+  double  NTLAVE[300];
+  double  NTLAVT[300];
+  double  NTLAVPType[300];
+  double  NTLAVX[300];
+  double  NTLAVY[300];
   int     NTLAVNHit;
 
 

@@ -69,7 +69,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Special calibration run
   if ( bpar->CalibrationRun() ) {
-    // Origin of calibration beam is on back face of Target
+   // Origin of calibration beam is on back face of Target
     //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     GenerateCalibrationGamma();
@@ -625,7 +625,7 @@ void BeamGenerator::CreateFinalStateBhaBha()
   static const G4double me = 0.000511; //electron mass in GeV
   // Get file with list of two-gamma events kinematics
   G4String fileBhaBha = BeamParameters::GetInstance()->GetBhaBhaFilename();
-  std::cout<<" entering BhaBha generator" <<std::endl;
+  //  std::cout<<" entering BhaBha generator" <<std::endl;
 
   std::ifstream infile;
   std::string Line = "";
@@ -694,11 +694,11 @@ void BeamGenerator::CreateFinalStateBhaBha()
       G4ThreeVector lepton_p = G4ThreeVector(p[1],p[2],p[3]);
       //gamma_p.rotateUz(fPositron.dir);
      
-      // Create gamma primary particle with generated four-momentum
+      // Create e+ and e- paricle with generated four-momentum  j=1 positron j=0 electron keep an eye on the CalchHep particle order
       G4PrimaryParticle* lepton; 
-      if(j==0) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
-      if(j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
-      std::cout<<" lepton  px "<<lepton_p.x()<<" py "<<lepton_p.y()<<" pz "<<lepton_p.z()<<std::endl;
+      if(j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      if(j==0) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),lepton_p.x(),lepton_p.y(),lepton_p.z(),p[0]);
+      //      std::cout<<" lepton  px "<<lepton_p.x()<<" py "<<lepton_p.y()<<" pz "<<lepton_p.z()<<std::endl;
       vtx->SetPrimary(lepton);
     }
 

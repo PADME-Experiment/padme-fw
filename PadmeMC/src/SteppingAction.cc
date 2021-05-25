@@ -147,7 +147,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   static G4String lastProc="";
   static G4String prevProc="";
-
+  
   //Cerca il primario
   //  if(bpar->GetNPositronsPerBunch()==1){
   if(bpar->GetNPositronsPerBunch()<50){
@@ -159,15 +159,12 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	  if(lastProc == "annihil" ||lastProc == "eBrem") {
 	    nt++;
 	  }
-
-	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
-	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target" && nt>1) {
-	    G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
-		   << "  ----  > " 
-		   << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
-	    G4cout << " Getting the momentum:   " << track->GetMomentum() 
-		   << "     "   << prevProc << "      " << lastProc << G4endl;
-	  }
+	  //	    G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
+	  //		   << "  ----  > " 
+	  //		   << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
+	  //	    G4cout << " Getting the momentum:   " << track->GetMomentum() 
+	  //		   << "     "   << prevProc << "      " << lastProc << G4endl;
+	  ///	}
 	  //Be somewhere
 	  // G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
 	  // 	 << "  ----> " 
@@ -178,7 +175,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	    nt = 0;
 	    
 	  }
-
+	  
 	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
 	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() != "Target") {
 	    // G4cout << " Getting the momentum:   " << track->GetMomentum() << G4endl;

@@ -7,13 +7,6 @@
 #define TEMPCORR_TIMERESOLUTION 60
 #define TEMPCORR_TEMPRESOLUTION 0.01
 
-// Define some simple structures
-typedef struct {
-  Long_t tstamp;
-  Int_t nch;
-  Float_t temp_r;
-} ECal_TempCorr;
-
 class TempCorr
 {
 
@@ -43,6 +36,9 @@ public:
   Double_t GetTempCorr(TTimeStamp,Int_t);
   Double_t GetTempCorr(TTimeStamp,Int_t,Int_t);
 
+  Int_t GetChannelCode(Int_t chan) { return fChanCodeList[chan]; }
+  Int_t GetChannelNumber(Int_t code) { return fChanNumber[code]; }
+
 private:
 
   Int_t GetTimeIndex(TTimeStamp);
@@ -52,13 +48,12 @@ private:
 
   TString fTemperatureFileName;
 
-  Long_t      fTimeRef;
-  Double_t    fTempRef;
+  Long_t   fTimeRef;
+  Double_t fTempRef;
 
-  ECal_TempCorr fECalTR;
-
-  Int_t  fEntries;
-  Int_t fChanList[TEMPCORR_NCHANNELS] = {106,211};
+  Int_t fEntries;
+  Int_t fChanCodeList[TEMPCORR_NCHANNELS] = {106,211};
+  std::map<Int_t,Int_t> fChanNumber;
   Int_t fChanMap[29][29];
   std::vector<std::vector<Short_t>> fTempMap;
 

@@ -1,5 +1,7 @@
-#include <stdio.h>      /* printf, scanf, puts, NULL */
-#include <stdlib.h>     /* srand, rand */
+#include <sys/stat.h>
+#include <iostream>
+#include <fstream>
+#include <regex>
 #include "TFile.h"
 #include "TTree.h"
 
@@ -17,9 +19,13 @@ TempCorr::TempCorr()
   fTimeRef = 0; // Will store first time in temperature file
   fTempRef = 36.195; // Reference temperature to compute energy corrections
   fVerbose = 0;
-  fTemperatureFileName = "ECAL_TR_tree.root";
+  fTemperatureFileName = "config/ECal_Temperature.dat";
+
+  // Populate channel id conversion map according to sensor id list
+  for (Int_t i=0; i<TEMPCORR_NCHANNELS; i++) fChanNumber[fChanCodeList[i]] = i;
+
   // Initialize channel map, i.e. assign a sensor to each channel
-  // X grows from left to right, Y grows from bottom to top
+  // ECal is seen from the back: X grows from left to right, Y grows from bottom to top
   Int_t chanMap[29*29] = {
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,01,01,01,01,01,01,01,01,01,01,01,01,01,01,
     00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,01,01,01,01,01,01,01,01,01,01,01,01,01,01,
@@ -74,62 +80,87 @@ Int_t TempCorr::Initialize()
 
   printf("---> Reading temperature values from file %s\n",fTemperatureFileName.Data());
 
-  // Open the file containing the tree.
-  auto myFile_r = TFile::Open(fTemperatureFileName);
-  if (!myFile_r || myFile_r->IsZombie()) return 1;
-
-  TTree *f1 = (TTree*)myFile_r->Get("T_R");
-  f1->SetBranchAddress("ecalT_r",&fECalTR);
-
   fTempMap.clear();
+
+  std::string line;
+  std::smatch match;
+  auto const retime = std::regex("^\\s*(\\d+)");
+  auto const retemp = std::regex("(\\d+)\\s+([\\-\\.\\d]+)");
+
   Int_t lastTime = 0;
-  //Long_t oldT = 0;
-  fEntries = (Int_t)f1->GetEntries();
-  for (Int_t i=0;i<fEntries;i++) {
 
-    f1->GetEntry(i);
-    //printf("%12ld %12ld %3d %f\n",fECalTR.tstamp,fECalTR.tstamp-oldT,fECalTR.nch,fECalTR.temp_r);
-    //oldT = fECalTR.tstamp;
+  // Check if temperature file exists
+  struct stat buffer;   
+  if (stat (fTemperatureFileName.Data(),&buffer) != 0) {
+    printf("TempCorr::Initialize - ERROR - File %s does not exist\n",fTemperatureFileName.Data());
+    return 1;
+  }
 
-    if (i==0) {
-      fTimeRef = fECalTR.tstamp;
+  std::ifstream tempfile(fTemperatureFileName.Data());
+  fEntries = 0;
+  Short_t templist[TEMPCORR_NCHANNELS] = {0,0};
+  while (std::getline(tempfile,line)) {
+
+    // Skip comments and empty lines
+    if (!regex_search(line,match,retime)) continue;
+
+    // Extract temperature data from input line
+    Long_t temptime = std::atoi(match[1].str().c_str());
+    line = match.suffix();
+    while (regex_search(line,match,retemp)) {
+      Int_t chan = std::atoi(match[1].str().c_str());
+      // Need to add 0.5 to avoid weird floating point rounding
+      Short_t temp = Short_t(std::atof(match[2].str().c_str())/TEMPCORR_TEMPRESOLUTION+0.5);
+      if (fChanNumber.find(chan) == fChanNumber.end()) {
+	printf("TempCorr::Initialize - WARNING - Undefined channel %d found at time %ld\n",chan,temptime);
+      } else {
+	templist[fChanNumber[chan]] = temp;
+      }
+      line = match.suffix();
+    }
+    //std::cout << temptime << " " << templist[0] << " " << templist[1] << std::endl;
+
+    // Store data into temperature map
+    if (fEntries==0) {
+      // Use first line as reference time
+      fTimeRef = temptime;
+      //printf("0");
       fTempMap.push_back({});
-      //printf("%8d",0);
       for (Int_t c = 0; c<TEMPCORR_NCHANNELS; c++) {
-	fTempMap[0].push_back(Short_t(fECalTR.temp_r/TEMPCORR_TEMPRESOLUTION));
-	//printf(" %4d",fTempMap[0][c]);
+	fTempMap[0].push_back(templist[c]);
+	//printf(" %d",templist[c]);
       }
       //printf("\n");
+      fEntries++;
       continue;
     }
-    Int_t thisTime = (fECalTR.tstamp-fTimeRef)/TEMPCORR_TIMERESOLUTION;
+    Int_t thisTime = (temptime-fTimeRef)/TEMPCORR_TIMERESOLUTION;
     if (thisTime > lastTime) {
+      // If temperature is not read for a while, reuse last reading
       if (thisTime > lastTime+1) {
 	for(Int_t t = lastTime+1; t<thisTime; t++) {
+	  //printf("%d",t);
 	  fTempMap.push_back({});
-	  //printf("%8d",t);
 	  for (Int_t c = 0; c<TEMPCORR_NCHANNELS; c++) {
+	    //printf(" %d",fTempMap[lastTime][c]);
 	    fTempMap[t].push_back(fTempMap[lastTime][c]);
-	    //printf(" %4d",fTempMap[t][c]);
 	  }
 	  //printf("\n");
 	}
       }
+      //printf("%d",thisTime);
       fTempMap.push_back({});
-      //printf("%8d",thisTime);
       for (Int_t c = 0; c<TEMPCORR_NCHANNELS; c++) {
-	fTempMap[thisTime].push_back(Short_t(fECalTR.temp_r/TEMPCORR_TEMPRESOLUTION));
-	//printf(" %4d",fTempMap[thisTime][c]);
+	//printf(" %d",templist[c]);
+	fTempMap[thisTime].push_back(templist[c]);
       }
       //printf("\n");
+
       lastTime = thisTime;
     }
-    if(fVerbose && i<10) {
-      printf(" i=%d tstamp=%ld ch=%d temp=%f\n",i,fECalTR.tstamp,fECalTR.nch,fECalTR.temp_r);
-    }
+    fEntries++;
+
   }
-  myFile_r->Close();
-  printf("---> Number of temperature values read = %d\n",fEntries);
 
   /*
   // Dump temperature map
@@ -141,6 +172,7 @@ Int_t TempCorr::Initialize()
     printf("\n");
   }
   */
+
   return 0;
 }
 
@@ -183,4 +215,3 @@ Int_t TempCorr::GetTimeIndex(TTimeStamp t)
 {
   return (t.GetSec()-fTimeRef)/TEMPCORR_TIMERESOLUTION;
 }
-

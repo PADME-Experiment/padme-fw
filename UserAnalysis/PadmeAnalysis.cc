@@ -271,7 +271,13 @@ int main(Int_t argc, char **argv)
   printf("---> Initializing temperature correction service\n");
   TempCorr* TempCorr = TempCorr::GetInstance();
   Bool_t tCorrOK = true;
-  if (TempCorr->Initialize() == 0) {
+  Int_t rc;
+  if (cfgParser->HasConfig("ECAL","Temp_File")) {
+    rc = TempCorr->Initialize(TString(cfgParser->GetSingleArg("ECAL","Temp_File")));
+  } else {
+    rc = TempCorr->Initialize();
+  }
+  if (rc == 0) {
     printf("<--- Temperature corrections initialized\n");
   } else {
     printf("!--- Error while initializing temperature corrections\n");
@@ -328,7 +334,7 @@ int main(Int_t argc, char **argv)
 	float temp_event=GetTemp(utc_time);
 	float temp_corr=GetEventTempCorr();
 	//std::cout<< "     Temperature corrections - UTC "<<utc_time<< " - Temperature "<<temp_event<<" - Correction "<<temp_corr<<std::endl;
-	printf("     Time %ld Old Temp %f Old Corr %f New Temp %f New Corr %f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent),TempCorr->GetTempCorr(timevent));
+	printf("     Time %ld Old Temp %5.2f Old Corr %7.5f New Temp %6.4f %6.4f New Corr %7.5f %7.5f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
       }
       if (fECalRecoEvent)    nECalHits   = fECalRecoEvent->GetNHits();
       if (fTargetRecoEvent)  nTargetHits = fTargetRecoEvent->GetNHits(); 

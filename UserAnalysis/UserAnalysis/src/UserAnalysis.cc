@@ -1,5 +1,8 @@
 #include <iostream>
 
+#include <TGraph.h>
+#include <TGraphErrors.h>
+
 #include "UserAnalysis.hh"
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
@@ -80,5 +83,15 @@ Bool_t UserAnalysis::Process(){
 
 Bool_t UserAnalysis::Finalize()
 {
+  // TGraph example
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  Double_t x[5] = {1.,2.,3.,4.,5.};
+  Double_t xe[5] = {.1,.1,.2,.2,.3};
+  Double_t y[5] = {2.,4.,6.,8.,10.};
+  Double_t ye[5] = {.1,.1,.2,.2,.3};
+  TGraph* g = new TGraph(5,x,y);
+  hSvc->SaveTGraphList("MyHistos","TestTGraph",g);
+  TGraphErrors* ge = new TGraphErrors(5,x,y,xe,ye);
+  hSvc->SaveTGraphList("MyHistos","TestTGraphErrors",ge);
   return true;
 }

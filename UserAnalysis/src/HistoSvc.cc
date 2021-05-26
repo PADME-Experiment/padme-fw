@@ -4,6 +4,11 @@
 #include <TH2D.h>
 #include <TFile.h>
 #include <TTree.h>
+#include <TGraph.h>
+#include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
+#include <TGraphBentErrors.h>
+#include <TGraphPolar.h>
 
 #include "HistoSvc.hh"
 
@@ -294,5 +299,72 @@ void HistoSvc::FillNtupleList(std::string listname, std::string hname)
     }
   } else {
     printf("HistoSvc::FillNtupleList - ERROR - list '%s' does not exist\n",listname.c_str());
+  }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+void HistoSvc::SaveTGraph(std::string name,TGraph* g)
+{
+  SaveTGraphList("STD",name,g);
+}
+
+void HistoSvc::SaveTGraph(std::string name,TGraphErrors* g)
+{
+  SaveTGraphList("STD",name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraph(std::string name,TGraphAsymmErrors* g)
+{
+  SaveTGraphList("STD",name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraph(std::string name,TGraphBentErrors* g)
+{
+  SaveTGraphList("STD",name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraph(std::string name,TGraphPolar* g)
+{
+  SaveTGraphList("STD",name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraphErrors* g)
+{
+  SaveTGraphList(listname,name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraphAsymmErrors* g)
+{
+  SaveTGraphList(listname,name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraphBentErrors* g)
+{
+  SaveTGraphList(listname,name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraphPolar* g)
+{
+  SaveTGraphList(listname,name,(TGraph*)g);
+}
+
+void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraph* g)
+{
+  if (fListMap.find(listname) != fListMap.end()) {
+    if (fListMap[listname].find(name) == fListMap[listname].end()) {
+      fListMap[listname][name] = (TObject*)g;
+      if (fRootOutputFile) {
+	fRootOutputFile->cd("/");
+	if (listname.compare("TOP")!=0) fRootOutputFile->cd(listname.c_str());
+	g->SetName(name.c_str());
+	g->SetTitle(name.c_str());
+	g->Write();
+      }
+    } else {
+      printf("HistoSvc::SaveTGraphList - ERROR - an object named '%s' already exists in list %s\n",name.c_str(),listname.c_str());
+    }
+  } else {
+    printf("HistoSvc::SaveTGraphList - ERROR - list '%s' does not exist\n",listname.c_str());
   }
 }

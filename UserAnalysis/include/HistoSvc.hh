@@ -5,6 +5,11 @@
 
 class TFile;
 class TTree;
+class TGraph;
+class TGraphErrors;
+class TGraphAsymmErrors;
+class TGraphBentErrors;
+class TGraphPolar;
 class TH1D;
 class TH2D;
 class TString;
@@ -52,6 +57,18 @@ public:
   void FillHisto2List(std::string, std::string, Double_t, Double_t, Double_t weight = 1.0);
   void FillNtupleList(std::string, std::string);
 
+  // Allow saving user's TGraphs to output file
+  void SaveTGraph(std::string,TGraph*);
+  void SaveTGraph(std::string,TGraphErrors*);
+  void SaveTGraph(std::string,TGraphAsymmErrors*);
+  void SaveTGraph(std::string,TGraphBentErrors*);
+  void SaveTGraph(std::string,TGraphPolar*);
+  void SaveTGraphList(std::string,std::string,TGraph*);
+  void SaveTGraphList(std::string,std::string,TGraphErrors*);
+  void SaveTGraphList(std::string,std::string,TGraphAsymmErrors*);
+  void SaveTGraphList(std::string,std::string,TGraphBentErrors*);
+  void SaveTGraphList(std::string,std::string,TGraphPolar*);
+  
 private:
 
   Int_t fVerbose;

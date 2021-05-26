@@ -27,6 +27,7 @@
 #include "TRecoVHit.hh"
 
 #include "HistoSvc.hh"
+#include "StdNtuple.hh"
 #include "temp_corr.hh"
 #include "TempCorr.hh"
 #include "utlConfigParser.hh"
@@ -72,7 +73,7 @@ TChain* BuildChain(TString treeName, TObjArray fInputFileNameList){
 int main(Int_t argc, char **argv)
 {
 
-  long utc_time;
+  //long utc_time;
 
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
@@ -147,12 +148,15 @@ int main(Int_t argc, char **argv)
     usage(argv[0]);
     exit(EXIT_FAILURE);
   }
-  printf("Number of files to be processed: %d\n",NInputFiles);
-  if (NSkippedFiles) printf("Number of files skipped: %d\n",NSkippedFiles);
+  if (fVerbose) {
+    printf("Number of files to be processed: %d\n",NInputFiles);
+    if (NSkippedFiles) printf("Number of files skipped: %d\n",NSkippedFiles);
+  }
 
   // Initialize histogram service
-  printf("---> Initializing histogram service\n");
+  if (fVerbose) printf("---> Initializing histogram service\n");
   HistoSvc* hSvc = HistoSvc::GetInstance();
+  hSvc->SetVerbose(fVerbose);
   hSvc->Initialize(OutputFileName);
 
   // Create configuration file parser
@@ -202,7 +206,7 @@ int main(Int_t argc, char **argv)
   if (fRecoChain) {
     nevents = fRecoChain->GetEntries();
     if (nevents<=0) {
-      std::cout<<"No events found in the tree ... exiting "<<std::endl;
+      printf("---> Tree %s contains no events ... exiting\n",recoTreeName.Data());
       exit(EXIT_FAILURE);
     }
   } else {
@@ -210,13 +214,13 @@ int main(Int_t argc, char **argv)
     exit(EXIT_FAILURE);
   }
   TObjArray* branches = fRecoChain->GetListOfBranches();
-  printf("---> Tree '%s' found in input chain with %d branches and %d events\n",recoTreeName.Data(),branches->GetEntries(),nevents);
+  if (fVerbose) printf("---> Tree '%s' found in input chain with %d branches and %d events\n",recoTreeName.Data(),branches->GetEntries(),nevents);
   for (Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++) {
     
     TBranch* branch = (TBranch*)(*branches)[iBranch];
     TString branchName = branch->GetName();
     TClass* branchObjectClass = TClass::GetClass(branch->GetClassName());
-    printf("     Branch %-16s containing objects of class %-22s with size %6lld\n",branchName.Data(),branchObjectClass->GetName(),branch->GetTotalSize());
+    if (fVerbose>1) printf("     Branch %-16s containing objects of class %-22s with size %6lld\n",branchName.Data(),branchObjectClass->GetName(),branch->GetTotalSize());
     
     if (branchName=="RecoEvent") {
       fRecoEvent = new TRecoEvent();
@@ -268,8 +272,9 @@ int main(Int_t argc, char **argv)
   Int_t jevent = 0;
   
   // Initialize temperature correction service
-  printf("---> Initializing temperature correction service\n");
+  if (fVerbose) printf("---> Initializing temperature correction service\n");
   TempCorr* TempCorr = TempCorr::GetInstance();
+  TempCorr->SetVerbose(fVerbose);
   Bool_t tCorrOK = true;
   Int_t rc;
   if (cfgParser->HasConfig("ECAL","Temp_File")) {
@@ -278,15 +283,19 @@ int main(Int_t argc, char **argv)
     rc = TempCorr->Initialize();
   }
   if (rc == 0) {
-    printf("<--- Temperature corrections initialized\n");
+    if (fVerbose) printf("<--- Temperature corrections initialized\n");
   } else {
     printf("!--- Error while initializing temperature corrections\n");
     tCorrOK = false;
   }
-  InitTemps(); // Old system
+  //InitTemps(); // Old system
 
   // Book flat ntuple if required
-  if (doNtuple) hSvc->BookNtuple();
+  StdNtuple* stdNtuple = 0;
+  if (doNtuple) {
+    if (fVerbose) printf("---> Initializing standard ntuple\n");
+    stdNtuple = new StdNtuple();
+  }
   
   // Initialize input event structure
   PadmeAnalysisEvent* event = new PadmeAnalysisEvent();
@@ -304,7 +313,7 @@ int main(Int_t argc, char **argv)
   event->EVetoRecoCl      = fEVetoRecoCl     ;
   event->HEPVetoRecoCl    = fHEPVetoRecoCl   ;
   
-  printf("---> Initializing user analysis\n");
+  if (fVerbose) printf("---> Initializing user analysis\n");
   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
   UserAn->Init(event);
   
@@ -326,15 +335,15 @@ int main(Int_t argc, char **argv)
     //printf("Event %d accepted\n",i);
     
     // Debug printout
-    if ( (i%1000==0) || (fVerbose>0 && (i%100==0)) || (fVerbose>1) ){
+    if ( (fVerbose>0 && (i%1000==0)) || (fVerbose>1 && (i%100==0)) || (fVerbose>2) ){
       std::cout<<"---> Event = "<<i<<"/"<<nevents<<" - Size "<< jevent << " Run " << fRecoEvent->GetRunNumber() <<" Event "<<fRecoEvent->GetEventNumber()<<std::endl;
       if (tCorrOK) {
 	TTimeStamp timevent=fRecoEvent->GetEventTime();
-	utc_time=timevent.GetSec();
-	float temp_event=GetTemp(utc_time);
-	float temp_corr=GetEventTempCorr();
-	//std::cout<< "     Temperature corrections - UTC "<<utc_time<< " - Temperature "<<temp_event<<" - Correction "<<temp_corr<<std::endl;
-	printf("     Time %ld Old Temp %5.2f Old Corr %7.5f New Temp %6.4f %6.4f New Corr %7.5f %7.5f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
+	//utc_time=timevent.GetSec();
+	//float temp_event=GetTemp(utc_time);
+	//float temp_corr=GetEventTempCorr();
+	//printf("     Time %ld Old Temp %5.2f Old Corr %7.5f New Temp %6.4f %6.4f New Corr %7.5f %7.5f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
+	printf("     Time %ld Temp %6.4f %6.4f Corr %7.5f %7.5f\n",timevent.GetSec(),TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
       }
       if (fECalRecoEvent)    nECalHits   = fECalRecoEvent->GetNHits();
       if (fTargetRecoEvent)  nTargetHits = fTargetRecoEvent->GetNHits(); 
@@ -350,7 +359,7 @@ int main(Int_t argc, char **argv)
 	       <<" SAC "<<nSACHits<<std::endl;
       std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
     }
-    if (fVerbose>2) {
+    if (fVerbose>3) {
       if (fTargetRecoEvent)  fTargetRecoEvent->Print();
       if (fECalRecoEvent)    fECalRecoEvent->Print();
       if (fPVetoRecoEvent)   fPVetoRecoEvent->Print();
@@ -359,18 +368,14 @@ int main(Int_t argc, char **argv)
       if (fSACRecoEvent)     fSACRecoEvent->Print();
     }
     
-    //Bool_t isMC = false;
-    //if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) isMC=true;
-    //if (isMC) printf("---> Analyzing simulated data");
-    
-    if (doNtuple) hSvc->FillNtuple(event);
+    if (doNtuple) stdNtuple->Fill(event);
     UserAn->Process();
     
   }
   
-  printf("---> Finalizing user analysis\n");
+  if (fVerbose) printf("---> Finalizing user analysis\n");
   UserAn->Finalize();
-  printf("---> Finalizing histogram service\n");
+  if (fVerbose) printf("---> Finalizing histogram service\n");
   hSvc->Finalize();
   
   delete UserAn;

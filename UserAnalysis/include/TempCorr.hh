@@ -28,6 +28,8 @@ public:
   Int_t Initialize();
   Int_t Initialize(TString);
 
+  void SetVerbose(Int_t v){ fVerbose = v; }
+
   Double_t GetTemp(TTimeStamp);
   Double_t GetTemp(TTimeStamp,Int_t);
   Double_t GetTemp(TTimeStamp,Int_t,Int_t);

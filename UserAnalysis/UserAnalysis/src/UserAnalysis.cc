@@ -6,9 +6,11 @@
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
-  printf("---> Configuration file %s\n",cfgFile.Data());
-  if (verbose) printf("---> Verbose level %d\n",verbose);
   fVerbose = verbose;
+  if (fVerbose) {
+    printf("---> Configuration file %s\n",cfgFile.Data());
+    printf("---> Verbose level %d\n",fVerbose);
+  }
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 }
 

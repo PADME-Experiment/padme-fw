@@ -18,7 +18,7 @@ public:
 
 private:
 
-  int fVerbose;
+  Int_t fVerbose;
 
   PadmeAnalysisEvent* fEvent;
 

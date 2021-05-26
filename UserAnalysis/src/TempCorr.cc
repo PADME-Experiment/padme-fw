@@ -15,10 +15,10 @@ TempCorr* TempCorr::GetInstance()
 }
 
 TempCorr::TempCorr()
+  :fVerbose(0)
 {
   fTimeRef = 0; // Will store first time in temperature file
   fTempRef = 36.195; // Reference temperature to compute energy corrections
-  fVerbose = 0;
   fTemperatureFileName = "config/ECal_Temperature.dat";
 
   // Populate channel id conversion map according to sensor id list
@@ -78,7 +78,7 @@ Int_t TempCorr::Initialize(TString filename)
 Int_t TempCorr::Initialize()
 {
 
-  printf("---> Reading temperature values from file %s\n",fTemperatureFileName.Data());
+  if (fVerbose) printf("---> Reading temperature values from file %s\n",fTemperatureFileName.Data());
 
   fTempMap.clear();
 
@@ -162,16 +162,16 @@ Int_t TempCorr::Initialize()
 
   }
 
-  /*
-  // Dump temperature map
-  for (UInt_t i=0; i<fTempMap.size(); i++) {
-    printf("%d",i);
-    for (UInt_t j=0; j<fTempMap[i].size(); j++) {
-      printf(" %d=%d",j,fTempMap[i][j]);
+  if(fVerbose>3) {
+    // Dump temperature map
+    for (UInt_t i=0; i<fTempMap.size(); i++) {
+      printf("%d",i);
+      for (UInt_t j=0; j<fTempMap[i].size(); j++) {
+	printf(" %d=%d",j,fTempMap[i][j]);
+      }
+      printf("\n");
     }
-    printf("\n");
   }
-  */
 
   return 0;
 }

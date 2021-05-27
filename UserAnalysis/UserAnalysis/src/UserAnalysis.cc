@@ -1,18 +1,19 @@
 #include <iostream>
 
+#include <TGraph.h>
+#include <TGraphErrors.h>
+
 #include "UserAnalysis.hh"
 #include "HistoSvc.hh"
-
-UserAnalysis::UserAnalysis()
-{
-  fVerbose = 0;
-  fCfgParser = new utl::ConfigParser((const std::string)"config/UserAnalysis.conf");
-}
+#include "TempCorr.hh"
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
   fVerbose = verbose;
-  printf("Config file %s\n",cfgFile.Data());
+  if (fVerbose) {
+    printf("---> Configuration file %s\n",cfgFile.Data());
+    printf("---> Verbose level %d\n",fVerbose);
+  }
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 }
 
@@ -82,5 +83,15 @@ Bool_t UserAnalysis::Process(){
 
 Bool_t UserAnalysis::Finalize()
 {
+  // TGraph example
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  Double_t x[5] = {1.,2.,3.,4.,5.};
+  Double_t xe[5] = {.1,.1,.2,.2,.3};
+  Double_t y[5] = {2.,4.,6.,8.,10.};
+  Double_t ye[5] = {.1,.1,.2,.2,.3};
+  TGraph* g = new TGraph(5,x,y);
+  hSvc->SaveTGraphList("MyHistos","TestTGraph",g);
+  TGraphErrors* ge = new TGraphErrors(5,x,y,xe,ye);
+  hSvc->SaveTGraphList("MyHistos","TestTGraphErrors",ge);
   return true;
 }

@@ -27,6 +27,7 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
+
 #include <time.h>
 #include <stdlib.h>
 #include <bitset>
@@ -209,11 +210,9 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 }
 
-
-
 bool ECalReconstruction::TriggerToBeSkipped()
 {
-  if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
   if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
   if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
   return false; 

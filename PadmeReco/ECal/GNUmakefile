@@ -2,4 +2,4 @@
 
 NAME := ECal
 
-include ../config/global.gmk
+include ../mkconfig/global.gmk

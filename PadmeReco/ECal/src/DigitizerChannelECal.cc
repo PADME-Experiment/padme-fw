@@ -783,7 +783,8 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     //    std::cout<<" NON over sampled "<<std::endl;
     HitT = CalcTimeSing(10);
   } 
-  if(GetTrigMask()!=2) CalcChargeSin(250); // io comment 22/06 (HitT-10);  //Physics in ECAL starts ~250 ns
+  //if(GetTrigMask()!=2) CalcChargeSin(250); // io comment 22/06 (HitT-10);  //Physics in ECAL starts ~250 ns
+  if(GetTrigMask()!=2) CalcChargeSin(100); // 2020 Runs start earlier than 250ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   // M. Raggi going to energy with Nominal Calibration

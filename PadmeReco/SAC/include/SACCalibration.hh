@@ -25,7 +25,7 @@ public:
 private:
 
   Double_t fCalibCh   [25];
-  int fCalibrationFile;
+  TString fCalibrationFile;
   //std::map<int, double>* fChannelGainMap;
 
 

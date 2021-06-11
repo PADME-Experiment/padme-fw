@@ -54,6 +54,10 @@ private:
   Double_t fEffInnerRRange_r1r2inFR[8];
   Double_t fEffOuterRRange_r1r2inFR[8];
 
+  Double_t fFRmin;
+  Double_t fFRmid;
+  Double_t fFRmax;
+
   Int_t fdata;
 
 };

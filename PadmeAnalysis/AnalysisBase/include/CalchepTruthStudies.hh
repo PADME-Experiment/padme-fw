@@ -80,6 +80,7 @@ private:
   TRandom2 * fr;
   Double_t fSigmaDTheta;
 
+  Bool_t energyCut;
   //matrix of counters, 3->three main ranges in radius; 8->8 phi slice
   int nTruth[3][8];
   int nCluster_ifTruthOutRin[3][8];

@@ -70,6 +70,7 @@ Bool_t CalchepTruthStudies::Init(TRecoEvent* eventHeader,
   fFRmid=172.83;
   fFRmax=258.0;
   fcountEvent=0;
+  energyCut=true;
 
 
   Double_t tmpradiusRangeMin[3]={fFRmin, fFRmid, fFRmin};
@@ -1350,6 +1351,7 @@ void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
     nTruth[0][p]++;
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1383,6 +1385,7 @@ void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<=fFRmin){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1410,6 +1413,7 @@ void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
   if(rg1T>=fFRmid){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1437,6 +1441,7 @@ void CalchepTruthStudies::countsRminRmid(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<=fFRmin || rg1T>=fFRmid){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1475,6 +1480,7 @@ void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
     nTruth[1][p]++;
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1508,6 +1514,7 @@ void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<fFRmid){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1535,6 +1542,7 @@ void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T>=fFRmax){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1562,6 +1570,7 @@ void CalchepTruthStudies::countsRmidRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<fFRmid || rg1T>=fFRmax){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1596,6 +1605,7 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
     nTruth[2][p]++;
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1629,6 +1639,7 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<=fFRmin){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1656,6 +1667,7 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T>=fFRmax){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1683,6 +1695,7 @@ void CalchepTruthStudies::countsRminRmax(Double_t rg1T,Double_t phig1, int p){
   if(rg1T<=fFRmin || rg1T>=fFRmax){
     for(int i=0; i< fECal_ClColl->GetNElements(); i++){
       ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+      if(energyCut && ecalclu->GetEnergy()<90. ) return;
       Double_t cl1x = ecalclu->GetPosition().X();
       Double_t cl1y = ecalclu->GetPosition().Y();
       Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);
@@ -1715,6 +1728,7 @@ void CalchepTruthStudies::countsReco(int p){
 
   for(int i=0; i< fECal_ClColl->GetNElements(); i++){
     ecalclu       = fECal_ClColl->Element(fIdCl_SortByEnergy.at(i));
+    if(energyCut && ecalclu->GetEnergy()<90. ) return;
     Double_t cl1x = ecalclu->GetPosition().X();
     Double_t cl1y = ecalclu->GetPosition().Y();
     Double_t cl1r=sqrt(cl1x*cl1x+cl1y*cl1y);

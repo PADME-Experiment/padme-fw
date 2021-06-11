@@ -10,6 +10,7 @@
 #include "TRandom2.h"
 #include "AnnihilationSelectionDataMCMethod.hh"
 #include "ScaleFactorMethod.hh"
+#include "CalchepTruthStudies_ggPileup.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -30,11 +31,13 @@ public:
   virtual Bool_t Init(TRecoEvent* eventHeader, 
 		      TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
 		      TRecoVObject* SACev, TRecoVClusCollection* SACcl,
-		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam, Bool_t isMC);
+		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam);
   virtual Bool_t Finalize(){return true;}
 
   virtual Bool_t InitHistos();
   virtual Bool_t Process(Bool_t isMC);
+  void selectEffSample();
+
   void SortCluster_byEnergy();
 
   void FillGeneralHisto(std::string sufix);
@@ -67,6 +70,8 @@ public:
   void fillEffVectorMC(std::string fnameTagFR, std::string fnameTagProbeFR);
   void fillEffVectorTruth();
 
+  void CorrectEff(Double_t (&Inner)[8], Double_t (&Outer)[8], Double_t (&sysUpIn)[8],Double_t (&sysLowIn)[8], Double_t (&sysUpOut)[8],Double_t (&sysLowOut)[8]);
+  void printCounters();
  
 protected:
   TRecoEvent*           fRecoEvent;
@@ -80,6 +85,7 @@ protected:
 
   AnnihilationSelectionDataMCMethod* fDataMCMethod ;
   ScaleFactorMethod* fMCscaleF ;
+  CalchepTruthStudies_ggPileup* fscaleFacCalchepPileup;
 
 
   // fVerbose = 0 (minimal printout),  = 1 (info mode),  = 2 (debug quality)...
@@ -88,7 +94,9 @@ protected:
   Int_t    fProcessingMode;
   Bool_t   fNoTargetBool;
   Bool_t   fdataMCmethod;
-  Bool_t fScaleFMethod;
+  Bool_t   fScaleFMethod;
+  Bool_t   fsFacCalchepPileup;
+  Bool_t   fCorrectEfficiencyForTruth;
 
   Bool_t fInitToComplete;  
 
@@ -142,6 +150,32 @@ private:
   Double_t fFRmax;
 
   Int_t fcountEvent;
+  Int_t fcountg1InFR;
+  Int_t fcountg1InFRE90;
+  Int_t fcountg1InFR_g2;
+  Int_t fcountg1InFRE90_g2;
+  Int_t fcountg1InFR_g2E90;
+  Int_t fcountg1InFR_g2InFR;
+  Int_t fcountg1InFRE90_g2InFR;
+  Int_t fcountDTime10;
+  Int_t fcountDTime10g1InFR;
+  Int_t fcountDTime10g1InFR5CoGX;
+  Int_t fcountDTime10g1InFR5CoGY;
+  Int_t fcountDTime10g1InFR5CoG;
+  Int_t fcountDTime10g1InFR5CoGE90MeV;
+  Int_t fcountDTime10g1InFR5CoGE90MeV400MeV;
+  Int_t fcountDTime10g1InFR5CoGE90MeVOnBoth;
+  Int_t fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth;
+  Int_t fcountDTime10g1g2InFR;
+  Int_t fcountDTime10g1g2InFR5CoGX;
+  Int_t fcountDTime10g1g2InFR5CoGY;
+  Int_t fcountDTime10g1g2InFR5CoG;
+  Int_t fcountDTime10g1g2InFR5CoGE90MeV;
+  Int_t fcountDTime10g1g2InFR5CoGE90MeV400MeV;
+  Int_t fcountDTime10g1g2InFR5CoGE90MeVOnBoth;
+  Int_t fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth;
+
+
   Double_t fEffInnerRRange_r1inFR[8];	        
   Double_t fEffOuterRRange_r1inFR[8];	       
   Double_t fEffInnerRRange_r1r2inFR[8];	       

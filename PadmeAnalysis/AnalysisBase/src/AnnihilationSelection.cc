@@ -50,8 +50,8 @@ AnnihilationSelection::AnnihilationSelection()
 
   fDataMCMethod=NULL;
   fMCscaleF=NULL;
-
- 
+  fscaleFacCalchepPileup=NULL;
+  
 }
 AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBool, Bool_t dataMCmethod, Bool_t scaleFMethod)
 {
@@ -63,6 +63,9 @@ AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosi
   fDataMCMethod=new AnnihilationSelectionDataMCMethod();
   fScaleFMethod=scaleFMethod;
   fMCscaleF=new ScaleFactorMethod();
+  
+  fsFacCalchepPileup=true;
+  fscaleFacCalchepPileup= new CalchepTruthStudies_ggPileup();
 
 }
 AnnihilationSelection::~AnnihilationSelection()
@@ -72,7 +75,7 @@ AnnihilationSelection::~AnnihilationSelection()
 Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader, 
 				   TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
 				   TRecoVObject* SACev, TRecoVClusCollection* SACcl,
-				   TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam, Bool_t isMC){
+				   TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam){
   fRecoEvent = eventHeader;
   fECal_hitEvent      =ECALev   ;
   fSAC_hitEvent       =SACev    ;
@@ -87,7 +90,33 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   fFRmid=172.83;
   fFRmax=258.0;
 
+  fCorrectEfficiencyForTruth=true;
+
   fcountEvent=0;
+  fcountg1InFR=0;
+  fcountg1InFRE90=0;
+  fcountg1InFR_g2=0;
+  fcountg1InFRE90_g2=0;
+  fcountg1InFR_g2E90=0;
+  fcountg1InFR_g2InFR=0;
+  fcountg1InFRE90_g2InFR=0;
+  fcountDTime10=0;
+  fcountDTime10g1InFR=0;
+  fcountDTime10g1InFR5CoGX=0;
+  fcountDTime10g1InFR5CoGY=0;
+  fcountDTime10g1InFR5CoG=0;
+  fcountDTime10g1InFR5CoGE90MeV=0;
+  fcountDTime10g1InFR5CoGE90MeV400MeV=0;
+  fcountDTime10g1InFR5CoGE90MeVOnBoth=0;
+  fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth=0;
+  fcountDTime10g1g2InFR=0;
+  fcountDTime10g1g2InFR5CoGX=0;
+  fcountDTime10g1g2InFR5CoGY=0;
+  fcountDTime10g1g2InFR5CoG=0;
+  fcountDTime10g1g2InFR5CoGE90MeV=0;
+  fcountDTime10g1g2InFR5CoGE90MeV400MeV=0;
+  fcountDTime10g1g2InFR5CoGE90MeVOnBoth=0;
+  fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth=0;  
   
   //time range 
   ftimerange1min=-150;
@@ -120,14 +149,18 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
     //fillEffVector("provaggEfficiencyFromDiff_TagFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt", "provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30547_RejectM150M110_newRMid170.txt");
     
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173.txt");
-  //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173_randomDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173_randomDiedSU.txt");
+  
 
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt");
 
   fillEffVectorData("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt");
-  fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt");
-  fillEffVector(isMC);
-
+  //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt");
+  //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_25kPileupAnnihilation_FixRangeFR115.8_250RMid173_noDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_25kPileupAnnihilation_FixRange_FR115.8_250RMid173_noDiedSU.txt");
+  //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173_randomDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173_randomDiedSU.txt");
+  //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MCCalchep25kPileup_FR1158_25800.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MCCalchep25kPileup_FR1158_25800.txt");
+  //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MCCalchep25kPileup_randomDied_FR1158_25800_normalisationm300m50.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MCCalchep25kPileup_randomDied_FR1158_25800_normalisationm300m50.txt");
+  fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_randomDied_FR1158_25800_normalisationm250m100DifOthP.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_randomDied_FR1158_25800_normalisationm250m100DifOthP.txt");
+  
   fillEffVectorTruth();
   //Double_t tmpfUpperSysInnerRRange_r1inFR[8]={ 0.0773673, 0.0396053, 0.0052547,  0.0246471,  0.00474522, 0.00500453, 0.0224981, 0.0310803};
   //Double_t tmpfUpperSysOuterRRange_r1inFR[8]={0.0176767, 0.0618193, 0.102187,  0.0246704, 0.0829614, 0.0851759 , 0.0822724 , 0.107262 };
@@ -167,8 +200,9 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
     hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
   }
   
-  if(fdataMCmethod)fDataMCMethod->Init(fEffInnerRRange_r1inFR, fEffOuterRRange_r1inFR, fEffInnerRRange_r1r2inFR, fEffOuterRRange_r1r2inFR);
+  if(fdataMCmethod)fDataMCMethod->Init(fMCEffInnerRRange_r1inFR, fMCEffOuterRRange_r1inFR, fMCEffInnerRRange_r1r2inFR, fMCEffOuterRRange_r1r2inFR);
   if(fScaleFMethod)fMCscaleF->Init(fDataEffInnerRRange_r1inFR, fDataEffOuterRRange_r1inFR, fDataEffInnerRRange_r1r2inFR, fDataEffOuterRRange_r1r2inFR, fMCEffInnerRRange_r1inFR, fMCEffOuterRRange_r1inFR, fMCEffInnerRRange_r1r2inFR, fMCEffOuterRRange_r1r2inFR);
+  if(fsFacCalchepPileup)fscaleFacCalchepPileup->Init(fDataEffInnerRRange_r1inFR, fDataEffOuterRRange_r1inFR, fDataEffInnerRRange_r1r2inFR, fDataEffOuterRRange_r1r2inFR, fMCEffInnerRRange_r1inFR, fMCEffOuterRRange_r1inFR, fMCEffInnerRRange_r1r2inFR, fMCEffOuterRRange_r1r2inFR);
 
   fr=new TRandom2();
   gRandom->SetSeed(time(NULL));
@@ -177,12 +211,19 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
 }
 
 
+void AnnihilationSelection::selectEffSample(){
+  Bool_t myisMC=fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
+  fillEffVector(myisMC);
+}
+
 Bool_t AnnihilationSelection::Process(Bool_t isMC)
 {
+  if(fsFacCalchepPileup)fscaleFacCalchepPileup->GetTruthEvent();
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
-
+  //std::cout  << "in Annihilation process isMC bool " << isMC << "from reco event "<< fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED) << std::endl;
   if (!passPreselection(fNoTargetBool, isMC)) return true;
+  fcountEvent++;  
 
   Bool_t retCode = 0;
   TRecoVCluster* ecalclu=NULL;
@@ -200,6 +241,19 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
   if( NClECal != fIdCl_SortByEnergy.size()){
     std::cout<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!         error on sorted energy        !!!!!!!!!!!!!!!!!!!!!!" << std::endl;
     return true;
+  }
+
+  //to study eff of CoG cut: from calchep truth w/o pilup, if nC>1 and r1 in FR + energies> thr -> this should be an annihilation event
+  if(NClECal>1){
+    ecalclu          = fECal_ClColl->Element(fIdCl_SortByEnergy.at(0));//most energetic->g1
+    ecalclu2         = fECal_ClColl->Element(fIdCl_SortByEnergy.at(1));//g2
+    Double_t r1=sqrt(ecalclu->GetPosition().X()*ecalclu->GetPosition().X()+ecalclu->GetPosition().Y()*ecalclu->GetPosition().Y());
+    if(r1>fFRmin && r1<fFRmax){
+      if(ecalclu->GetEnergy()>50. && ecalclu2->GetEnergy()>50.){
+	 hname="Annihilation_NClAtLeast2g1inFREThr50";
+	 hSvc->FillHisto(hname, ecalclu->GetEnergy()+ecalclu2->GetEnergy(), 1.);
+      }
+    }
   }
 
   for (Int_t jecal=0; jecal<NClECal; ++jecal){
@@ -222,12 +276,17 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
     fPz_1   = fg1E*fdistanceTarget/ fR_1;
     TLorentzVector P4g1F, P4eTarget, P4eBeam;
     P4g1F.SetPxPyPzE(fPx_1,fPy_1,fPz_1, fg1E);
+    fphig1 =TMath::ATan2(fg1y, fg1x);// P4g1F.Phi();
     //fthetag1 = P4g1F.Theta();
     fthetag1=atan(fg1Recal/fdistanceTarget);
     Double_t me=0.511;
     Double_t PzBeam=sqrt(EBeam*EBeam-me*me);
     P4eTarget.SetPxPyPzE(0,0,0, me);
     P4eBeam.SetPxPyPzE(0,0,PzBeam, EBeam);
+    Bool_t firstGInFR_def=false;
+    if(fg1Recal>fFRmin && fg1Recal<fFRmax )  firstGInFR_def=true;
+    if(firstGInFR_def)fcountg1InFR++;
+    if(firstGInFR_def && fg1E>90.)fcountg1InFRE90++;
     Int_t g1seedChId=fECal_hitEvent->Hit(ecalclu->GetSeed())->GetChannelId();//hit(ecalclu->GetSeed())->GetChannelId();
     for(Int_t jecal2=jecal+1; jecal2<NClECal; jecal2++){                ///starting second cluster loop
       //ecalclu2 = fECal_ClColl->Element(jecal2);
@@ -255,24 +314,19 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       fangleBetweenTwoPhoton = P4g1F.Angle(P4g2F.Vect());
       //fthetag2               = P4g2F.Theta();
       fthetag2=atan(fg2Recal/fdistanceTarget);
-      fphig1 = P4g1F.Phi();
-      fphig2 = P4g2F.Phi();
+      fphig2 =TMath::ATan2(fg2y, fg2x);// P4g2F.Phi();
+      if(firstGInFR_def)fcountg1InFR_g2++;
+      if(firstGInFR_def && fg1E>90.)fcountg1InFRE90_g2++;
+      if(firstGInFR_def && fg2E>90.)fcountg1InFR_g2E90++;
+      
+      Bool_t secondGInFR_def=false;
+      if(fg2Recal>fFRmin && fg2Recal<fFRmax)  secondGInFR_def=true;
+      if(firstGInFR_def && secondGInFR_def)fcountg1InFR_g2InFR++;
+      if(firstGInFR_def && fg1E>90. && secondGInFR_def)fcountg1InFRE90_g2InFR++;
 
       if(fabs(fg1t-fg2t)>10.)continue;                      //two clsuter in time 10 ns
       NGGInTheSameEventTime10ns++;
-
-      Bool_t firstGInFR_def=false;
-      Bool_t secondGInFR_def=false;
-      //new FRed by TagAndProbe studies
-      //if(fg1Recal>106 && fg1Recal<258 )  firstGInFR_def=true;
-      //if(fg2Recal>106 && fg2Recal<258)  secondGInFR_def=true;
-
-      if(fg1Recal>fFRmin && fg1Recal<fFRmax )  firstGInFR_def=true;
-      if(fg2Recal>fFRmin && fg2Recal<fFRmax)  secondGInFR_def=true;
-     
-      //old FR , not symmetrical ...see tag and probe studies
-      //if(fg1Recal>92 && fg1Recal<258 )  firstGInFR_def=true;
-      //if(fg2Recal>92 && fg2Recal<258)  secondGInFR_def=true;
+      fcountDTime10++;
 
       //if(!firstGInFR_def)continue;       
       Bool_t InEnergy=false;
@@ -291,6 +345,9 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 
       std::string sufix="";
       if(firstGInFR_def){
+	fcountDTime10g1InFR++;
+	if(secondGInFR_def)fcountDTime10g1g2InFR++;
+
 	FillGeneralHisto("_g1inFRDTime10");
 	if(secondGInFR_def)FillGeneralHisto("_g1g2inFRDTime10");
 	FillWeightedHisto_R1inFR("_g1inFRDTime10");
@@ -318,11 +375,61 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin20DegThetaCutUnderPeakEThr");}
 	}
       
-       
+       	if(fabs(fXWeighted)<40. && fabs(fYWeighted)<40.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<42. && fabs(fYWeighted)<42.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<44. && fabs(fYWeighted)<44.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<46. && fabs(fYWeighted)<46.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<48. && fabs(fYWeighted)<48.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<52. && fabs(fYWeighted)<52.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<54. && fabs(fYWeighted)<54.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<56. && fabs(fYWeighted)<56.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+	if(fabs(fXWeighted)<58. && fabs(fYWeighted)<58.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+
+	if(fabs(fXWeighted)<60. && fabs(fYWeighted)<60.){
+	  hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
+
+
+	if(fabs(fXWeighted)<50.)fcountDTime10g1InFR5CoGX++;
+	if(fabs(fYWeighted)<50.)fcountDTime10g1InFR5CoGY++;
+	if(fabs(fXWeighted)<50. && secondGInFR_def)fcountDTime10g1g2InFR5CoGX++;
+	if(fabs(fYWeighted)<50. && secondGInFR_def)fcountDTime10g1g2InFR5CoGY++;
+
 	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
+	  fcountDTime10g1InFR5CoG++;
+	  if(secondGInFR_def)fcountDTime10g1g2InFR5CoG++;
 
 	  if(fdataMCmethod)fDataMCMethod->Process(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
 	  if(fScaleFMethod)fMCscaleF->Process(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
+	  if(fsFacCalchepPileup)fscaleFacCalchepPileup->GetReco(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
 
 	  Int_t countHit1_5CoG=0;
 	  Int_t countHit2_5CoG=0;
@@ -351,7 +458,26 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 	    FillTimeRangeHisto("_g1inFRin5CogEThr");
 	    FillTimeRangeCoGHisto("_g1inFRin5CogEThr");
 	  }
+
+	  if(fg1E>90.){
+	    fcountDTime10g1InFR5CoGE90MeV++;
+	    if(fg1E<400.)fcountDTime10g1InFR5CoGE90MeV400MeV++;
+	  }
+	  if(fg1E>90. && fg2E>90.){
+	    fcountDTime10g1InFR5CoGE90MeVOnBoth++;
+	    if(fg1E<400. && fg2E<400.)fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth++;
+	  }
+	  if(fg1E>90. && secondGInFR_def){
+	    fcountDTime10g1g2InFR5CoGE90MeV++;
+	    if(fg1E<400.)fcountDTime10g1g2InFR5CoGE90MeV400MeV++;
+	  }
+	  if(fg1E>90. && fg2E>90. && secondGInFR_def){
+	    fcountDTime10g1g2InFR5CoGE90MeVOnBoth++;
+	    if(fg1E<400. && fg2E<400.)fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth++;
+	  }
+
 	}
+
 	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50. && secondGInFR_def ){
 	  FillGeneralHisto("_g1g2inFRin5Cog");
 	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin5CogUnderPeakEThr");}
@@ -1258,6 +1384,9 @@ void AnnihilationSelection::fillEffVectorData(std::string fnameTagFR, std::strin
       //errEffSysLower
     }//end while cycle
 
+  if(fCorrectEfficiencyForTruth)CorrectEff(fDataEffInnerRRange_r1inFR, fDataEffOuterRRange_r1inFR , fDataEffUpperSysInnerRRange_r1inFR ,fDataEffLowerSysInnerRRange_r1inFR, fDataEffUpperSysOuterRRange_r1inFR,fDataEffInnerRRange_r1inFR);
+  std::cout<<"after truth correction inner0" << fDataEffInnerRRange_r1inFR[0]<< std::endl;
+
 
   std::ifstream tagprobefr(fnameTagProbeFR.c_str());
   while( std::getline( tagprobefr, line ))
@@ -1293,6 +1422,9 @@ void AnnihilationSelection::fillEffVectorData(std::string fnameTagFR, std::strin
 	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fDataEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
       }
     }//end while cycle
+
+  if(fCorrectEfficiencyForTruth)CorrectEff(fDataEffInnerRRange_r1r2inFR, fDataEffOuterRRange_r1r2inFR , fDataEffUpperSysInnerRRange_r1r2inFR ,fDataEffLowerSysInnerRRange_r1r2inFR, fDataEffUpperSysOuterRRange_r1r2inFR,fDataEffInnerRRange_r1r2inFR);
+  std::cout<<"r1r2 after truth correction " << fDataEffInnerRRange_r1r2inFR[0]<< std::endl;
   
   for(int i=0; i<8; i++){
     fDataEffUpperSysOuterRRange_r1inFR[i]  =fDataEffUpperSysOuterRRange_r1inFR[i]   + fDataEffOuterRRange_r1inFR[i];
@@ -1359,6 +1491,8 @@ void AnnihilationSelection::fillEffVectorMC(std::string fnameTagFR, std::string 
       //errEffSysLower
     }//end while cycle
 
+  if(fCorrectEfficiencyForTruth)CorrectEff(fMCEffInnerRRange_r1inFR, fMCEffOuterRRange_r1inFR , fMCEffUpperSysInnerRRange_r1inFR ,fMCEffLowerSysInnerRRange_r1inFR, fMCEffUpperSysOuterRRange_r1inFR,fMCEffInnerRRange_r1inFR);
+  std::cout<<"MC after truth correction " << fMCEffInnerRRange_r1inFR[0]<< std::endl;
 
   std::ifstream tagprobefr(fnameTagProbeFR.c_str());
   while( std::getline( tagprobefr, line ))
@@ -1395,6 +1529,9 @@ void AnnihilationSelection::fillEffVectorMC(std::string fnameTagFR, std::string 
 	   tmp >>tmp >>tmp >>tmp >>tmp >>tmp )std::cout<<"outer range tag probe fr sysLow "<<fMCEffLowerSysOuterRRange_r1r2inFR[0]<< std::endl;
       }
     }//end while cycle
+
+  if(fCorrectEfficiencyForTruth)CorrectEff(fMCEffInnerRRange_r1r2inFR, fMCEffOuterRRange_r1r2inFR , fMCEffUpperSysInnerRRange_r1r2inFR ,fMCEffLowerSysInnerRRange_r1r2inFR, fMCEffUpperSysOuterRRange_r1r2inFR,fMCEffInnerRRange_r1r2inFR);
+  std::cout<<"MC after truth correction r1r2 " << fMCEffInnerRRange_r1r2inFR[0]<< std::endl;
   
   for(int i=0; i<8; i++){
     fMCEffUpperSysOuterRRange_r1inFR[i]  =fMCEffUpperSysOuterRRange_r1inFR[i]   + fMCEffOuterRRange_r1inFR[i];
@@ -1422,6 +1559,7 @@ void AnnihilationSelection::fillEffVectorMC(std::string fnameTagFR, std::string 
 void AnnihilationSelection::fillEffVector(Bool_t isMC){
 
   if(isMC ||( fScaleFMethod && fNoTargetBool)){//in the analysis i would use the efficiency T&P extracted from MC sample. Due to the fact that MC has not backgroud, if i would study the scale factor analysis I should weight the bkg with MC eff
+    std::cout<<"NOTE: I'm using the MC efficiencies----------" << std::endl;
     for(int i=0; i<8; i++){
       fEffInnerRRange_r1inFR[i]	               =fMCEffInnerRRange_r1inFR[i];	               
       fEffOuterRRange_r1inFR[i]	               =fMCEffOuterRRange_r1inFR[i];	              
@@ -1450,7 +1588,8 @@ void AnnihilationSelection::fillEffVector(Bool_t isMC){
     }
   }
   else{//in the analysis i would use the efficiency T&P extracted from data sample
-   for(int i=0; i<8; i++){
+    std::cout<<"NOTE: I'm using the data efficiencies----------" << std::endl;
+    for(int i=0; i<8; i++){
       fEffInnerRRange_r1inFR[i]	               =fDataEffInnerRRange_r1inFR[i];	               
       fEffOuterRRange_r1inFR[i]	               =fDataEffOuterRRange_r1inFR[i];	              
       fEffInnerRRange_r1r2inFR[i]              =fDataEffInnerRRange_r1r2inFR[i];	         	       
@@ -1694,6 +1833,32 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_YCogvsXCog"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
   }
+  
+  binX=500;
+  minX=0.;
+  maxX=2000.;
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="Annihilation_NClAtLeast2g1inFREThr50";
+  hSvc->BookHisto(hname, binX, minX, maxX);
 
   //eff weighted hitograms
   std::vector<std::string> sufixW;
@@ -1921,6 +2086,7 @@ Bool_t AnnihilationSelection::InitHistos()
 
   if(fdataMCmethod)fDataMCMethod->InitHistos();
   if(fScaleFMethod)fMCscaleF->InitHistos();
+  if(fsFacCalchepPileup)fscaleFacCalchepPileup->InitHistos();
 
   return true;
 }
@@ -1949,4 +2115,63 @@ void AnnihilationSelection::SortCluster_byEnergy(){
 }
 
 
+
+void AnnihilationSelection::CorrectEff(Double_t (&Inner)[8], Double_t (&Outer)[8], Double_t (&sysUpIn)[8],Double_t (&sysLowIn)[8], Double_t (&sysUpOut)[8],Double_t (&sysLowOut)[8]){
+  //i'm using the correction factor extracted from EffTruth/EffReco of calchep no died crystals. usual TP selection
+  //Double_t correctionVecInner[8]={1.01163726064154, 1.01381153337342, 1.01035993138096, 0.99720825699279, 1.02454579025111, 1.00924031342547, 1.01202785185185,1.00666262750399};
+  //Double_t correctionVecOuter[8]={1.02403962844488, 1.00911518815546, 1.01235272323083, 1.00684984021632, 1.01184012443577, 1.01493262701661, 1.01074456974749, 0.99795367224734};
+
+  //i'm using the correction factor extracted from EffTruth/EffReco of calchep no died crystals. usual TP selection + EThr 90MeV on nCluster in TruthEff
+  Double_t correctionVecInner[8]={0.990157195391025,1.00136156848396,0.99517977722772,0.98836650117909,1.00615357142857,0.98880659778414,0.99570363295880,0.99577457901958};
+  Double_t correctionVecOuter[8]={1.00927536160217, 1.00860645566441,1.00426175219024,0.99984002994759,1.01097562848297,1.0042923768997	,1.00582515207945,0.997208670736262};
+
+  std::cout<<"inner0 in correctEff " << Inner[0] << std::endl;
+  for(int i=0; i<8; i++){
+    std::cout<<"Eff before correction inner " << Inner[i] <<" correction " << correctionVecInner[i] << " outer " << Outer[i] << " correction " << correctionVecOuter[i] << std::endl;
+    Inner[i]=Inner[i]*correctionVecInner[i];
+    sysUpIn[i]=sysUpIn[i]*correctionVecInner[i];
+    sysLowIn[i]=sysLowIn[i]*correctionVecInner[i];
+
+    Outer[i]=Outer[i]*correctionVecOuter[i];
+    sysUpOut[i] =sysUpOut[i]*correctionVecOuter[i];
+    sysLowOut[i]=sysLowOut[i]*correctionVecOuter[i];
+    std::cout<<"Eff after correction inner " << Inner[i] << " outer " << Outer[i] << std::endl;
+  }
+
+
+}
+
+
+
+void  AnnihilationSelection::printCounters(){
+  std::cout<<"Annihilation selection counters" << std::endl;
+  std::cout<<"fcountEvent			          "<< fcountEvent<< std::endl;	
+
+  std::cout<<"fcountEvent                                 " <<  fcountEvent                                  << std::endl;
+  std::cout<<"fcountg1InFR                                " <<  fcountg1InFR                                 << std::endl;
+  std::cout<<"fcountg1InFRE90                             " <<  fcountg1InFRE90                              << std::endl;
+  std::cout<<"fcountg1InFR_g2                             " <<  fcountg1InFR_g2                              << std::endl;
+  std::cout<<"fcountg1InFRE90_g2                          " <<  fcountg1InFRE90_g2                           << std::endl;
+  std::cout<<"fcountg1InFR_g2E90                          " <<  fcountg1InFR_g2E90                           << std::endl;
+  std::cout<<"fcountg1InFR_g2InFR                         " <<  fcountg1InFR_g2InFR                          << std::endl;
+  std::cout<<"fcountg1InFRE90_g2InFR                      " <<  fcountg1InFRE90_g2InFR                       << std::endl;
+  std::cout<<"fcountDTime10                               " <<  fcountDTime10                                << std::endl;
+  std::cout<<"fcountDTime10g1InFR                         " <<  fcountDTime10g1InFR                          << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGX                    " <<  fcountDTime10g1InFR5CoGX                     << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGY                    " <<  fcountDTime10g1InFR5CoGY                     << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoG                     " <<  fcountDTime10g1InFR5CoG                      << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGE90MeV               " <<  fcountDTime10g1InFR5CoGE90MeV                << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGE90MeV400MeV         " <<  fcountDTime10g1InFR5CoGE90MeV400MeV          << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGE90MeVOnBoth         " <<  fcountDTime10g1InFR5CoGE90MeVOnBoth          << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth   " <<  fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth    << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR                       " <<  fcountDTime10g1g2InFR                        << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGX                  " <<  fcountDTime10g1g2InFR5CoGX                   << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGY                  " <<  fcountDTime10g1g2InFR5CoGY                   << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoG                   " <<  fcountDTime10g1g2InFR5CoG                    << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGE90MeV             " <<  fcountDTime10g1g2InFR5CoGE90MeV              << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGE90MeV400MeV       " <<  fcountDTime10g1g2InFR5CoGE90MeV400MeV        << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGE90MeVOnBoth       " <<  fcountDTime10g1g2InFR5CoGE90MeVOnBoth        << std::endl;
+  std::cout<<"fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth " <<  fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth  << std::endl;
+
+}
 

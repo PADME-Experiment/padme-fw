@@ -315,13 +315,6 @@ int main(Int_t argc, char **argv)
 
    }
 
-
-   Bool_t isMC = false;
-   if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
-     isMC=true;
-     //std::cout<<"input data are simulatetd "<<std::endl;
-   }
-
    //////////// You come here if a Chain with >=0 events has been found 
    Int_t jevent = 0;
    
@@ -396,7 +389,7 @@ int main(Int_t argc, char **argv)
        AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
-		    fTargetRecoEvent,  fTargetRecoBeam, isMC);
+		    fTargetRecoEvent,  fTargetRecoBeam);
        TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
@@ -435,6 +428,7 @@ int main(Int_t argc, char **argv)
    Int_t nHEPVetoHits=0;
    Int_t nSACHits    =0;
 
+
    if (NEvt >0 && NEvt<nevents) nevents=NEvt;
    for (Int_t i=0; i<nevents; ++i)
      {
@@ -470,7 +464,16 @@ int main(Int_t argc, char **argv)
 	 if (fSACRecoEvent)    fSACRecoEvent->Print();
        }
        //
-
+       Bool_t isMC = false;
+       if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
+	 isMC=true;
+	 //std::cout<<"PadmeAnalysis main------input data are simulatetd "<<std::endl;
+       }
+       if(i==0 && fProcessingMode==0){ 
+	 if(boolAnnTagProbe){ 
+	   AnnSel->selectEffSample();
+	 }
+       }
        //
        targetAn    ->Process();
        ecalAn      ->EnergyCalibration(isMC);
@@ -507,6 +510,7 @@ int main(Int_t argc, char **argv)
    hepvetoAn->Finalize();
    */
    if(fProcessingMode==0 && boolCalchep){  CalchepTruth->Terminate(); CalchepTruthTP->Terminate();}
+   if(fProcessingMode==0 && boolAnnTagProbe) AnnSel->printCounters();
    /// end of job..........
    hSvc->save();
 

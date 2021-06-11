@@ -27,13 +27,17 @@ AnnihilationSelectionDataMCMethod::~AnnihilationSelectionDataMCMethod()
 
 Bool_t AnnihilationSelectionDataMCMethod::Init( Double_t EffInnerRRange_r1inFR[8], Double_t EffOuterRRange_r1inFR[8], Double_t EffInnerRRange_r1r2inFR[8], Double_t EffOuterRRange_r1r2inFR[8]){
   
-   for(int i=0; i<8; i++){
-     fEffInnerRRange_r1inFR[i]  =EffInnerRRange_r1inFR  [i];
-     fEffOuterRRange_r1inFR[i]  =EffOuterRRange_r1inFR  [i];
-     fEffInnerRRange_r1r2inFR[i]=EffInnerRRange_r1r2inFR[i];
-     fEffOuterRRange_r1r2inFR[i]=EffOuterRRange_r1r2inFR[i];
-     // std::cout<<"In DatMcMethod " << fEffInnerRRange_r1inFR[i] << std::endl;
+  for(int i=0; i<8; i++){
+    fEffInnerRRange_r1inFR[i]  =EffInnerRRange_r1inFR  [i];
+    fEffOuterRRange_r1inFR[i]  =EffOuterRRange_r1inFR  [i];
+    fEffInnerRRange_r1r2inFR[i]=EffInnerRRange_r1r2inFR[i];
+    fEffOuterRRange_r1r2inFR[i]=EffOuterRRange_r1r2inFR[i];
+    //std::cout<<"In DatMcMethod " << fEffInnerRRange_r1inFR[i] << std::endl;
   }
+
+  fFRmin=115.82;
+  fFRmid=172.83;
+  fFRmax=258.0;
 
   return true;
 }
@@ -72,11 +76,11 @@ void AnnihilationSelectionDataMCMethod::FillHistoData(){
 
   hname="MethodDataMC_Data";
   hSvc->FillHisto(hname, fE1+fE2, 1.);
-  if(fR1>115.8 && fR1< 258.){
+  if(fR1>fFRmin && fR1< fFRmax){
     hname="MethodDataMC_Datag1inFR";
     hSvc->FillHisto(hname, fE1+fE2, 1.);
     FillWeightedHisto_R1inFR("DataSample");
-    if(fR2>115.8 && fR2< 258.){
+    if(fR2>fFRmin && fR2< fFRmax){
       FillWeightedHisto_R1R2inFR("DataSample");
         hname="MethodDataMC_Datag1g2inFR";
 	hSvc->FillHisto(hname, fE1+fE2, 1.);
@@ -91,13 +95,13 @@ void AnnihilationSelectionDataMCMethod::FillHistoMC(){
 
   hname="MethodDataMC_MC";
   hSvc->FillHisto(hname, fE1+fE2, 1.);
-  if(fR1>115.8 && fR1< 258.){
+  if(fR1>fFRmin && fR1< fFRmax){
     hname="MethodDataMC_MCg1inFR";
     hSvc->FillHisto(hname, fE1+fE2, 1.);
     FillWeightedHisto_R1inFR("MCSample_usualW");
-    if(fR2>115.8 && fR2< 258.)FillWeightedHisto_R1R2inFR("MCSample_usualW");
+    if(fR2>fFRmin && fR2< fFRmax)FillWeightedHisto_R1R2inFR("MCSample_usualW");
     FillWeightedHisto_R1inFR_MC("MCSample_DataMCW");
-    if(fR2>115.8 && fR2< 258.){
+    if(fR2>fFRmin && fR2< fFRmax){
       FillWeightedHisto_R1R2inFR_MC("MCSample_DataMCW");
       hname="MethodDataMC_MCg1g2inFR";
       hSvc->FillHisto(hname, fE1+fE2, 1.);
@@ -231,8 +235,8 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1inFR(Double_t radi
    std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
-  if(radius<173. )inner=true;
-  if(radius>=173.)outer=true;
+  if(radius<fFRmid )inner=true;
+  if(radius>=fFRmid)outer=true;
   Double_t phiDeg=phi*360./(2*TMath::Pi());
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSlice=phiDeg/45.;
@@ -253,8 +257,8 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1R2inFR(Double_t ra
   std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
-  if(radius>115.8 && radius<173.)inner=true;
-  if(radius>=173 && radius<258.)outer=true;
+  if(radius>fFRmin && radius<fFRmid)inner=true;
+  if(radius>=fFRmid && radius<fFRmax)outer=true;
   Double_t phiDeg=phi*360/(2*TMath::Pi());
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSlice=phiDeg/45.;
@@ -275,8 +279,8 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1inFR_MC(Double_t r
    std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
-  if(radius<173. )inner=true;
-  if(radius>=173.)outer=true;
+  if(radius<fFRmid )inner=true;
+  if(radius>=fFRmid)outer=true;
   Double_t phiDeg=phi*360./(2*TMath::Pi());
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSliceMC=phiDeg/45.;
@@ -306,8 +310,8 @@ Double_t AnnihilationSelectionDataMCMethod::ReturnEfficiencyR1R2inFR_MC(Double_t
   std::string hname;
   Bool_t inner=false;
   Bool_t outer=false;
-  if(radius>115.8 && radius<173.)inner=true;
-  if(radius>=173 && radius<258.)outer=true;
+  if(radius>fFRmin && radius<fFRmid)inner=true;
+  if(radius>=fFRmid && radius<fFRmax)outer=true;
   Double_t phiDeg=phi*360/(2*TMath::Pi());
   if(phiDeg<0.)phiDeg=360+phiDeg;
   int phiSliceMC=phiDeg/45.;

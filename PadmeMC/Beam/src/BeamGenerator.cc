@@ -621,6 +621,7 @@ void BeamGenerator::CreateFinalStateTwoGamma()
 //****************************************************
 void BeamGenerator::CreateFinalStateBhaBha()
 {
+  BeamParameters* bpar = BeamParameters::GetInstance();
   static G4int iline = 0;
   static const G4double me = 0.000511; //electron mass in GeV
   // Get file with list of two-gamma events kinematics
@@ -652,16 +653,14 @@ void BeamGenerator::CreateFinalStateBhaBha()
     G4double s_decay = z_decay/cos(theta);
     G4double Dx=0;
     G4double Dy=0;
-    G4double Dz=0;
-    G4double Dt=0;
+    G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness(); // why not exponential
+    G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
 
     if ( bpar->BeamCenterPosApplySpread() ) { //exclude the position spread using data cards. MR 21/06/2021
       //G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
       //G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
-      Dx = G4RandGauss::shoot(0,2.5);   //uses a 2.5 mm beam spot size fixed
-      Dy = G4RandGauss::shoot(0,2.5);
-      Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness(); // why not exponential
-      Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
+      Dx = G4RandGauss::shoot(0,bpar->GetBeamCenterPosXSpread());  
+      Dy = G4RandGauss::shoot(0,bpar->GetBeamCenterPosYSpread());
     }
 
     // Create primary vertex at decay point

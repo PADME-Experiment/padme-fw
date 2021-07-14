@@ -1,20 +1,18 @@
 #include "Riostream.h"
-#include<iostream>
-#include<string>
-#include<fstream>
+#include <iostream>
+#include <string>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
 
 #include "TFile.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
-#include "TGraph.h"
-
-#include <signal.h>
-#include <fcntl.h>
 
 #include "TRecoEvent.hh"
 #include "TTargetRecoEvent.hh"
@@ -24,18 +22,17 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
-#include "TRecoVHit.hh"
+//#include "TRecoVHit.hh"
 
 #include "HistoSvc.hh"
 #include "StdNtuple.hh"
 #include "temp_corr.hh"
 #include "TempCorr.hh"
 #include "utlConfigParser.hh"
-
 #include "UserAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-i <input file>] [-l <input file list>] [-n #MaxEvents] [-o <output file>] [-c <config file>] [-v] [-t] [-h]" 
+  std::cout << "Usage: "<< name << " [-i <input file>] [-l <input file list>] [-n #MaxEvents] [-o <output file>] [-c <config file>] [-t] [-v] [-h]" 
 	    << std::endl;
 }
 
@@ -173,11 +170,11 @@ int main(Int_t argc, char **argv)
 	trigMask = 0x00ff; // Enable all triggers
 	break; // No need to check further
       }
-      if (trig.compare("BEAM") == 0)         trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_BEAM);
-      if (trig.compare("COSMICS") == 0)      trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_COSMICS);
-      if (trig.compare("DUALTIMER") == 0)    trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_DUALTIMER);
-      if (trig.compare("UNCORRELATED") == 0) trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_UNCORRELATED);
-      if (trig.compare("CORRELATED") == 0)   trigMask |= (1 << TRECOEVENT_TRIGMASKBIT_CORRELATED);
+      if (trig.compare("BEAM") == 0)         trigMask |= (1U << TRECOEVENT_TRIGMASKBIT_BEAM);
+      if (trig.compare("COSMICS") == 0)      trigMask |= (1U << TRECOEVENT_TRIGMASKBIT_COSMICS);
+      if (trig.compare("DUALTIMER") == 0)    trigMask |= (1U << TRECOEVENT_TRIGMASKBIT_DUALTIMER);
+      if (trig.compare("UNCORRELATED") == 0) trigMask |= (1U << TRECOEVENT_TRIGMASKBIT_UNCORRELATED);
+      if (trig.compare("CORRELATED") == 0)   trigMask |= (1U << TRECOEVENT_TRIGMASKBIT_CORRELATED);
     }
   }
   if (fVerbose) printf("Accepted trigger mask: 0x%2.2x\n",trigMask);
@@ -324,6 +321,8 @@ int main(Int_t argc, char **argv)
   Int_t nHEPVetoHits=0;
   Int_t nSACHits    =0;
   
+  UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
+
   if (NEvt >0 && NEvt<nevents) nevents=NEvt;
   for (Int_t i=0; i<nevents; ++i) {
     
@@ -331,8 +330,9 @@ int main(Int_t argc, char **argv)
     
     // Check if event should be analyzed
     //printf("Event %d trigger mask: 0x%2.2x\n",i,fRecoEvent->GetTriggerMask());
-    if ( !(fRecoEvent->GetTriggerMask() & trigMask) ) continue;
+    if ( !(fRecoEvent->GetEventStatus() & mcEvent) && !(fRecoEvent->GetTriggerMask() & trigMask) ) continue;
     //printf("Event %d accepted\n",i);
+    //printf("DEBUG 0x%02x %d\n",fRecoEvent->GetTriggerMask(),fECalRecoEvent->GetNHits());
     
     // Debug printout
     if ( (fVerbose>0 && (i%1000==0)) || (fVerbose>1 && (i%100==0)) || (fVerbose>2) ){

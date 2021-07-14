@@ -12,7 +12,7 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
 
-CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADMEROOT)/include -g -std=c++11
+CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADME)/UserAnalysis/Analyzers/include -I$(PADMEROOT)/include -g -std=c++11
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)

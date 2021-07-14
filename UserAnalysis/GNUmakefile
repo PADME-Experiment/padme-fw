@@ -2,7 +2,7 @@
 
 NAME := PadmeAnalysis
 
-SUBDIRS :=  UserAnalysis 
+SUBDIRS :=  UserAnalysis Analyzers
 ALLTARGETDIRS := $(SUBDIRS)
 
 STATIC := -static

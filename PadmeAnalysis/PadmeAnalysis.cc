@@ -41,6 +41,7 @@
 #include "PadmeAnalysisEvent.hh"
 #include "CalchepTruthStudies.hh"
 #include "CalchepTruthStudies_TPComparison.hh"
+#include "SinglePosRun.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -325,6 +326,7 @@ int main(Int_t argc, char **argv)
    Bool_t boolAnnTagProbe=true;
    Bool_t boolDataMCmethod=false;
    Bool_t boolScaleFMethod=false;
+   Bool_t SPAnalysis=false;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -365,6 +367,7 @@ int main(Int_t argc, char **argv)
    GlobalTimeAnalysis *gTimeAn=0;
    CalchepTruthStudies* CalchepTruth=0;
    CalchepTruthStudies_TPComparison* CalchepTruthTP=0;
+   SinglePosRun* SPAn=0;
    
    if(fProcessingMode==0){  
      //event = new PadmeAnalysisEvent();
@@ -377,6 +380,7 @@ int main(Int_t argc, char **argv)
        CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
        CalchepTruthTP = new CalchepTruthStudies_TPComparison(fProcessingMode, fVerbose);
      }
+     if(SPAnalysis)SPAn= new SinglePosRun();
      if(boolCalchep) {
        CalchepTruth->InitHistos();
        CalchepTruthTP->InitHistos();
@@ -385,6 +389,8 @@ int main(Int_t argc, char **argv)
        AnnSel->InitHistos();
        TagandProbeSel->InitHistos();
        }
+       if(SPAnalysis)SPAn->InitHistos();
+
      if(boolAnnTagProbe){
        AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
@@ -399,6 +405,7 @@ int main(Int_t argc, char **argv)
        CalchepTruth->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl);
        CalchepTruthTP->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl);
      }
+     if(SPAnalysis)SPAn->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl);
    }
     PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
      event->RecoEvent            =fRecoEvent          ;
@@ -427,7 +434,6 @@ int main(Int_t argc, char **argv)
    Int_t nEVetoHits  =0;
    Int_t nHEPVetoHits=0;
    Int_t nSACHits    =0;
-
 
    if (NEvt >0 && NEvt<nevents) nevents=NEvt;
    for (Int_t i=0; i<nevents; ++i)
@@ -476,8 +482,8 @@ int main(Int_t argc, char **argv)
        }
        //
        targetAn    ->Process();
-       ecalAn      ->EnergyCalibration(isMC);
-       ecalAn      ->Process();
+       ecalAn      ->EnergyCalibration(isMC, SPAnalysis);
+       if(!SPAnalysis)ecalAn      ->Process();
        sacAn       ->Process();
        pvetoAn     ->Process();
        evetoAn     ->Process();
@@ -493,6 +499,7 @@ int main(Int_t argc, char **argv)
 	   CalchepTruth->Process();
 	   CalchepTruthTP->Process();
 	 }
+	 if(SPAnalysis)SPAn->Process();
 	 //       UserAn      ->Process();
 	 //       gTimeAn     ->Process();
        }
@@ -526,7 +533,8 @@ int main(Int_t argc, char **argv)
    if(CalchepTruth)delete CalchepTruth;	
    if(CalchepTruthTP)delete CalchepTruthTP;	
    if(UserAn)   delete UserAn;		
-   if(gTimeAn)  delete gTimeAn;          
+   if(gTimeAn)  delete gTimeAn; 
+   if(SPAnalysis)delete SPAn;         
    return 0;
    
 }

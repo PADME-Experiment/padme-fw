@@ -189,6 +189,8 @@ Bool_t CalchepTruthStudies::InitHistos()
   sufix.push_back("CalchepVar_g1g2inFR_AlongY");
   sufix.push_back("CalchepVar_g1inFR_AlongX");
   sufix.push_back("CalchepVar_g1g2inFR_AlongX");
+  sufix.push_back("CalchepVar_g1inFR_Along45");
+  sufix.push_back("CalchepVar_g1inFR_Along135");
 
   for(int i=0; i<sufix.size(); i++){ 
     hname="CalchepComparison_R1_"+sufix.at(i);
@@ -596,6 +598,13 @@ void CalchepTruthStudies::getCalchepTruth(){
       hSvc->FillHisto(hname, g2phi, 1.);
       FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_AlongX");
       if(g2Recal>fFRmin && g2Recal<258)FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1g2inFR_AlongX");
+    }
+
+    if(fabs(g1phi-45)<45 || fabs(g1phi-225)<45){//for data
+      FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_Along45");
+    }
+    else {
+      FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR_Along135");
     }
 
     FillGeneralHisto(g1Recal, g1E,g2Recal,g2E, "CalchepVar_g1inFR");

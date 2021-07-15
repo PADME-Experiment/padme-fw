@@ -261,7 +261,8 @@ void CalchepTruthStudies_ggPileup::getCalchepTruth(){
   if(fg2phi<0.) fg2phi=360+fg2phi;
   
   if(fg1Recal>fFRmin && fg1Recal<fFRmax ){
-    if(fabs(fg1phi-90)<45 || fabs(fg1phi-270)<45){
+    //    if(fabs(fg1phi-90)<45 || fabs(fg1phi-270)<45){
+    if(fabs(fg1phi-135)<45 || fabs(fg1phi-315)<45){
       hname="MethodCalchepPileup_TruthDataSample";
       hSvc->FillHisto(hname,(fg1E+fg2E),1.);
     }
@@ -395,7 +396,8 @@ void CalchepTruthStudies_ggPileup::checkScaleFactorsMethod(){
 
 Int_t CalchepTruthStudies_ggPileup::checkIfItIsDataOrMC(Double_t phi1,Double_t phi2){
   Int_t data=0;
-  if(fabs(phi1-90)<45 || fabs(phi1-270)<45)data=1;
+  //if(fabs(phi1-90)<45 || fabs(phi1-270)<45)data=1;
+  if(fabs(phi1-135)<45 || fabs(phi1-315)<45)data=1;
   return data;
 
 }

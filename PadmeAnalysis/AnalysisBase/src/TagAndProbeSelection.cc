@@ -206,6 +206,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
       if(g1E< 90. )continue;
       if(fabs(DeltaEnergyFunction)>100.)continue;
       //if(fabs(DeltaEnergyFunction)>25.)continue;  // test 8/04/2021 to try to have a probe for a good tag (to delete the tail)
+      //if(fabs(DeltaEnergyFunction)>30.)continue;  // test 15/06/2021 to try to have a probe for a good tag (to delete the tail)understand the TP bias
       ecalclu2 = fECal_ClColl->Element(jecal2);
       TVector3 _pos2 = ecalclu2->GetPosition();
       Double_t _g2x=ecalclu2->GetPosition().X();
@@ -229,12 +230,12 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
       //double mychi2=(DeltaEnGamma12*DeltaEnGamma12)/(sqrt(2)*15)/(sqrt(2)*15);   //I'm considering both the photon with 15 MeV of resolution
       double mychi2=(DeltaEnGamma12*DeltaEnGamma12 + DeltaEnergyFunction2*DeltaEnergyFunction2)/(sqrt(2)*15)/(sqrt(2)*15);   //I'm considering both the photon with 15 MeV of resolution + the fact that also that photon is should follow the correlation
       //std::cout << "I passed the selection for probe and, Cl2 energy " << _g2E << " using function " << EnergyFunc2 << " difference " << DeltaEnergyFunction2 << " expected using cl1 diff " << DeltaEnGamma12 << " mychi2 " << mychi2 << std::endl; 
-      //if(jecal2==jecal)continue;
       if(fabs(g1t-_g2t)>7.)continue; //{std::cout << " this not pass probe time request  " << std::endl; continue;}
       if(_g2E< 90. )continue; // {std::cout << " this not pass probe energy request  " << std::endl; continue;}
       //if(fabs(DeltaEnergyFunction2)>50.)continue;//new entry, to avoid the combinatorial background; 24-11-2020
       if(fabs(DeltaEnergyFunction2)>100.)continue; //{std::cout << " this not pass probe deltaEnFunc request  " << std::endl; continue;}
       //std::cout<<"after the selection ....myChi2        " << mychi2 << " compared with minimum " << minChi << std::endl;
+     
       hname="ECAL_myChi2";
       hSvc->FillHisto(hname, mychi2, 1.);
       hname="ECAL_myChi2vsDEnExpProbe";

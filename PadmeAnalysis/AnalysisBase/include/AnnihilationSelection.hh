@@ -51,12 +51,16 @@ public:
   Double_t ReturnEfficiencyR1R2inFR(Double_t radius, Double_t phi, Int_t plusSys);
   Double_t ReturnEfficiencyTruthR1inFR(Double_t radius, Double_t phi);
   Double_t ReturnEfficiencyTruthR1R2inFR(Double_t radius, Double_t phi);
+  Double_t ReturnIpoteticalEventEfficiencyR1inFR(Double_t phi);
+  Double_t ReturnEfficiencyRooFitEThr90R1inFR(Double_t radius, Double_t phi);
+  Double_t ReturnEfficiencyRooFitR1inFR(Double_t radius, Double_t phi);
   void FillWeightedHisto_R1inFR(std::string sufix);
   void FillWeightedTruthHisto_R1inFR(std::string sufix);
   void FillWeightedHisto_R2inFR(std::string sufix);
   void FillWeightedHisto_R1R2inFR(std::string sufix);
   void FillWeightedHisto_R1R2inFR2approach(std::string sufix);
   void FillWeightedTruthHisto_R1R2inFR(std::string sufix);
+  void FillWeightedHistoRooFit_R1inFR(std::string sufix);
 
   Double_t ReturnAccettanceEffective_g1g2FR(Double_t radius);
   Double_t ReturnAccettanceEffective_g1FR(Double_t radius);
@@ -69,9 +73,14 @@ public:
   void fillEffVectorData(std::string fnameTagFR, std::string fnameTagProbeFR);
   void fillEffVectorMC(std::string fnameTagFR, std::string fnameTagProbeFR);
   void fillEffVectorTruth();
+  void fillEffVectorRooFit();
+
+  void FillWeightedHistoAsAFunctionOfPhi(Double_t effScaleFactor,std::string sufix2);
 
   void CorrectEff(Double_t (&Inner)[8], Double_t (&Outer)[8], Double_t (&sysUpIn)[8],Double_t (&sysLowIn)[8], Double_t (&sysUpOut)[8],Double_t (&sysLowOut)[8]);
   void printCounters();
+
+  Bool_t passAnnPreSelection(Double_t clE, Double_t clTheta);
  
 protected:
   TRecoEvent*           fRecoEvent;
@@ -150,30 +159,20 @@ private:
   Double_t fFRmax;
 
   Int_t fcountEvent;
-  Int_t fcountg1InFR;
-  Int_t fcountg1InFRE90;
-  Int_t fcountg1InFR_g2;
-  Int_t fcountg1InFRE90_g2;
-  Int_t fcountg1InFR_g2E90;
-  Int_t fcountg1InFR_g2InFR;
-  Int_t fcountg1InFRE90_g2InFR;
   Int_t fcountDTime10;
+  Int_t fcountDTime10g1EThr;
+  Int_t fcountDTime10g2EThr;
   Int_t fcountDTime10g1InFR;
-  Int_t fcountDTime10g1InFR5CoGX;
-  Int_t fcountDTime10g1InFR5CoGY;
+  Int_t fcountDTime10g1InFRg1Ethr;
+  Int_t fcountDTime10g1InFRg2Ethr;
   Int_t fcountDTime10g1InFR5CoG;
-  Int_t fcountDTime10g1InFR5CoGE90MeV;
-  Int_t fcountDTime10g1InFR5CoGE90MeV400MeV;
-  Int_t fcountDTime10g1InFR5CoGE90MeVOnBoth;
-  Int_t fcountDTime10g1InFR5CoGE90MeV400MeVOnBoth;
-  Int_t fcountDTime10g1g2InFR;
-  Int_t fcountDTime10g1g2InFR5CoGX;
-  Int_t fcountDTime10g1g2InFR5CoGY;
+  Int_t fcountDTime10g1InFR5CoGg1EThr;
+  Int_t fcountDTime10g1InFR5CoGg2EThr;
   Int_t fcountDTime10g1g2InFR5CoG;
-  Int_t fcountDTime10g1g2InFR5CoGE90MeV;
-  Int_t fcountDTime10g1g2InFR5CoGE90MeV400MeV;
-  Int_t fcountDTime10g1g2InFR5CoGE90MeVOnBoth;
-  Int_t fcountDTime10g1g2InFR5CoGE90MeV400MeVOnBoth;
+  Int_t fcountDTime10g1g2InFR5CoGg1EThr;
+  Int_t fcountDTime10g1g2InFR5CoGg2EThr;
+
+  Bool_t fPreSelectionAnnihilation;
 
 
   Double_t fEffInnerRRange_r1inFR[8];	        
@@ -253,6 +252,13 @@ private:
   Double_t fMCEffLowerSysInnerRRange_r1r2inFR[8];
   Double_t fMCEffLowerSysOuterRRange_r1r2inFR[8];
   
+
+  Double_t fEffInnerRooFit_r1inFR[8];      
+  Double_t fEffOuterRooFit_r1inFR[8];      
+  Double_t fEffInnerRooFitEThr90_r1inFR[8];
+  Double_t fEffOuterRooFitEThr90_r1inFR[8];
+
+
   TH1D *hAccEffFromCalchep_g1g2FR;
   TH1D *hAccEffFromCalchep_g1FR;
 

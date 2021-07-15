@@ -63,6 +63,24 @@ Bool_t ECalAnalysis::InitHistosAnalysis()
   max=20000;
   hname="ECal_EClTot";
   hSvcVal->BookHisto(hname, nBin, min, max);
+
+
+  nBin=1000;
+  min=-200;
+  max=200;
+  hname="ECal_HitInClusterXw";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitInClusterYw";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitInClusterXvar";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitInClusterYvar";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitInClusterXcurt";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="ECal_HitInClusterYcurt";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+
   return true;
 }
 
@@ -167,6 +185,8 @@ Bool_t ECalAnalysis::ProcessAnalysis()
   Int_t seedId;
   Int_t clSize;
 
+  std::vector<Int_t> hitVInCl;
+
      //fillHitsFlatNTP
 
   (hSvc->myEvt).NTNECal_Hits=fhitEvent->GetNHits();
@@ -227,8 +247,53 @@ Bool_t ECalAnalysis::ProcessAnalysis()
      clSize = clu->GetNHitsInClus();
      hname = "ECal_NHitsInClus";
      hSvc->FillHisto(hname, clSize,1.);
-   
+
+    TRecoVHit* hitSeed;
+    hitSeed =  fhitEvent->Hit(clu->GetSeed());
+    Double_t sumEincl=0;
+    Double_t xW=0;
+    Double_t yW=0;
+    Double_t x2W=0;
+    Double_t y2W=0;
+    Double_t x3W=0;
+    Double_t y3W=0;
+    hitVInCl = (clu->GetHitVecInClus());
+    for (int ih=0; ih< (clu->GetNHitsInClus()); ++ih)
+      {
+	if(hitVInCl[ih]==clu->GetSeed())continue;
+	Double_t hitEn=fhitEvent->Hit(hitVInCl[ih])->GetEnergy();
+	Double_t hitX=(fhitEvent->Hit(hitVInCl[ih]))->GetPosition().X();
+	Double_t hitY=(fhitEvent->Hit(hitVInCl[ih]))->GetPosition().Y();
+	Double_t hitXseed=(fhitEvent->Hit(clu->GetSeed()))->GetPosition().X();
+	Double_t hitYseed=(fhitEvent->Hit(clu->GetSeed()))->GetPosition().Y();
+	sumEincl+=hitEn;
+	xW+=(hitX-hitXseed)*hitEn;
+	yW+=(hitX-hitXseed)*hitEn;
+	x2W+=(hitX-hitXseed)*(hitX-hitXseed)*hitEn;
+	y2W+=(hitX-hitXseed)*(hitX-hitXseed)*hitEn;
+	x3W+=(hitX-hitXseed)*(hitX-hitXseed)*(hitX-hitXseed)*hitEn;
+	y3W+=(hitX-hitXseed)*(hitX-hitXseed)*(hitX-hitXseed)*hitEn;
+      }
+    Double_t xWeig=xW/sumEincl;
+    Double_t yWeig=yW/sumEincl;
+    Double_t xvar=sqrt(x2W/sumEincl);
+    Double_t yvar=sqrt(y2W/sumEincl);
+    Double_t xCurt=pow(x3W/sumEincl, 0.33333333);
+    Double_t yCurt=pow(y3W/sumEincl, 0.33333333);
+    hname="ECal_HitInClusterXw";
+    hSvc->FillHisto(hname, xWeig, 1.);
+    hname="ECal_HitInClusterYw";
+    hSvc->FillHisto(hname, yWeig, 1.);
+    hname="ECal_HitInClusterXvar";
+    hSvc->FillHisto(hname, xvar, 1.);
+    hname="ECal_HitInClusterYvar";
+    hSvc->FillHisto(hname, yvar, 1.);
+    hname="ECal_HitInClusterXcurt";
+    hSvc->FillHisto(hname, xCurt, 1.);
+    hname="ECal_HitInClusterYcurt";
+    hSvc->FillHisto(hname, yCurt, 1.);
    }
+   
    hname="ECal_EClTot";
    hSvc->FillHisto(hname, eTotCl, 1.);
 
@@ -407,7 +472,7 @@ Bool_t ECalAnalysis::ProcessValidation()
 
 
 
-void ECalAnalysis::EnergyCalibration(Bool_t isMC)
+void ECalAnalysis::EnergyCalibration(Bool_t isMC , Bool_t SPAnalysis)
 {
   TRecoVHit* hit;
   Int_t fNhits =fhitEvent->GetNHits();
@@ -417,7 +482,11 @@ void ECalAnalysis::EnergyCalibration(Bool_t isMC)
   for (Int_t i=0; i<fNhits; ++i){
     hit = fhitEvent->Hit(i);
     if(hit){
-      if (!isMC) hit  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(hit->GetEnergy()));
+      if (!isMC)
+	{
+	  if (SPAnalysis) hit  ->SetEnergy(constantForDataJuly19*(hit->GetEnergy()));
+	  else hit  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(hit->GetEnergy())); 
+	}
     }
   }
   
@@ -427,7 +496,10 @@ void ECalAnalysis::EnergyCalibration(Bool_t isMC)
       xClu = fClColl->Element((int)h);
       if (xClu) 
 	{
-	  if (!isMC) xClu  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(xClu->GetEnergy()));
+	  if (!isMC){
+	    if (SPAnalysis) xClu  ->SetEnergy(constantForDataJuly19*(xClu->GetEnergy()));
+	    else xClu  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(xClu->GetEnergy()));
+	  }
 	}
     }
   return;

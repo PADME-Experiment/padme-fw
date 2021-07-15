@@ -876,7 +876,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   return;// NGoodClus;
 }
 
-void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) { // use the waveform conversion
+void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) { // use the waveform conversion
   //std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
   //fIsMC = true;
   Int_t i=0;
@@ -1182,7 +1182,7 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 
 
 
-void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
   fHits.clear();
@@ -1356,6 +1356,7 @@ if(fReproductSACbunchStructure){
       }
     }
     
+    if (energy<1.5) continue;  // to simulate zSup
     if(fDeteriorateHitEnResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
       Double_t sigma=3.3;
       //Double_t sigma = 2.82072e-01 + 1.21666e-02*energy+ 3.52981e-05*energy*energy;
@@ -1368,7 +1369,8 @@ if(fReproductSACbunchStructure){
       energy+=DetEn;
     }
     if(fDeteriorateHitTimeResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
-      Double_t sigma =0.8; //=1.4;  // MeV- from Single positron run; 0.8 from gg signal
+      //Double_t sigma =0.8; //=1.4;  // MeV- from Single positron run; 0.8 from gg signal
+      Double_t sigma =2.8; //=2.8;  //difference between hits time with eTotHit=1SP
       Double_t DetTime=r->Gaus(0.,sigma); 
       thitemax+=DetTime;
     }

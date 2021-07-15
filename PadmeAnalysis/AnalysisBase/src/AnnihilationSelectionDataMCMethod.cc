@@ -65,7 +65,8 @@ Int_t AnnihilationSelectionDataMCMethod::checkIfItIsDataOrMC(Double_t phi1,Doubl
   Double_t phiDeg2=phi2*360./(2.*TMath::Pi());
   if(phiDeg2<0.)phiDeg2=360+phiDeg2;
 
-  if(fabs(phiDeg1-90)<45 || fabs(phiDeg1-270)<45)data=1;
+  //if(fabs(phiDeg1-90)<45 || fabs(phiDeg1-270)<45)data=1;
+  if(fabs(phiDeg1-135.)<45. || fabs(phiDeg1-315.)<45.)data=1;  //for data exercise
   return data;
 
 }

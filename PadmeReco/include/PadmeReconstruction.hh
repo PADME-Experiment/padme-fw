@@ -14,7 +14,8 @@ class TRawEvent;
 class TMCEvent;
 class TRecoEvent;
 
-class TMCTruthEvent;
+//class TMCTruthEvent;
+#include "TMCTruthEvent.hh"
 
 class TTargetMCEvent;
 class TEVetoMCEvent;
@@ -58,6 +59,8 @@ public:
   UInt_t GetEventStatus();
   UInt_t GetTriggerMask();
   Bool_t IsSimulated();
+
+  TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
 private:
 

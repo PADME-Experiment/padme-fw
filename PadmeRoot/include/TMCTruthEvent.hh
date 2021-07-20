@@ -33,6 +33,8 @@ public:
   TMCVertex* AddVertex();                    // Append a new (empty) vertex to array
   TMCVertex* Vertex(Int_t);                  // Return pointer to vertex at given index in array
 
+  void Print(Option_t* = "") const; // Print MCTruth info to stdout
+
   void Clear(Option_t* = ""); // Clear vertices array
 
 private:

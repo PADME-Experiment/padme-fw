@@ -31,4 +31,6 @@ void TMCParticle::Clear(Option_t* option)
 }
 
 void TMCParticle::Print(Option_t* option) const
-{;}
+{
+  printf("PDGCode %5d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",fPDGCode,fE,fPx,fPy,fPz);
+}

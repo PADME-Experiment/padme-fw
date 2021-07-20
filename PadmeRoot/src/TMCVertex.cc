@@ -65,6 +65,15 @@ TMCParticle* TMCVertex::ParticleOut(Int_t iPar)
 
 void TMCVertex::Print(Option_t* option) const
 {
-  if (fPartIn)  fPartIn->Print(option);
-  if (fPartOut) fPartOut->Print(option);
+  printf("Process %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",fProcess.Data(),fTime,fPosition.X(),fPosition.Y(),fPosition.Z(),fNPartIn,fNPartOut);
+  if (fPartIn)
+    for (Int_t i=0; i<fNPartIn; i++) {
+      printf("\tParticle IN  %2d ",i);
+      ((TMCParticle*)fPartIn->At(i))->Print(option);
+    }
+  if (fPartOut)
+    for (Int_t i=0; i<fNPartOut; i++) {
+      printf("\tParticle OUT %2d ",i);
+      ((TMCParticle*)fPartOut->At(i))->Print(option);
+    }
 }

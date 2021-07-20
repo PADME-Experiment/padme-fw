@@ -354,20 +354,8 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
 
-    // Show MCTruth information (example)
-    //printf("MCTruthEvent - Run %d Event %d Weight %8.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
-    //for(Int_t i=0;i<fMCTruthEvent->GetNVertices();i++) {
-    //  TMCVertex* vtx = fMCTruthEvent->Vertex(i);
-    //  printf("\tVertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",i,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
-    //  for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
-    //	TMCParticle* p = vtx->ParticleIn(j);
-    //	printf("\t\tParticle In %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
-    //  }
-    //  for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
-    //	TMCParticle* p = vtx->ParticleOut(j);
-    //	printf("\t\tParticle Out %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
-    //  }
-    //}
+    // Show MCTruth information (debug)
+    //if (fMCTruthEvent) fMCTruthEvent->Print();
 
     fNProcessedEventsInTotal++;
     return true;
@@ -401,20 +389,8 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
 
-    // Show MCTruth information (example)
-    //printf("MCTruthEvent - Run %d Event %d Weight %8.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
-    //for(Int_t i=0;i<fMCTruthEvent->GetNVertices();i++) {
-    //  TMCVertex* vtx = fMCTruthEvent->Vertex(i);
-    //  printf("\tVertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",i,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
-    //  for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
-    //	TMCParticle* p = vtx->ParticleIn(j);
-    //	printf("\t\tParticle In %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
-    //  }
-    //  for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
-    //	TMCParticle* p = vtx->ParticleOut(j);
-    //	printf("\t\tParticle Out %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
-    //  }
-    //}
+    // Show MCTruth information (debug)
+    //if (fMCTruthEvent) fMCTruthEvent->Print();
 
     ++fNProcessedEventsInTotal;
     //std::cout<<" fNProcessedEventsInTotal = "<<fNProcessedEventsInTotal<<std::endl;

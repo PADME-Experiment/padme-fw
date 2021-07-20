@@ -40,3 +40,13 @@ TMCVertex* TMCTruthEvent::Vertex(Int_t iVtx)
 {
   return (TMCVertex*)fVertex->At(iVtx);
 }
+
+void TMCTruthEvent::Print(Option_t* option) const
+{
+  printf("MCTruthEvent - Run %d Event %d Weight %8.3f Vertices %d\n",fRunNumber,fEventNumber,fEventWeight,fNVertex);
+  if (fVertex)
+    for(Int_t i=0; i<fNVertex; i++) {
+      printf("\tVertex %2d ",i);
+      ((TMCVertex*)fVertex->At(i))->Print(option);
+    }
+}

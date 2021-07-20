@@ -38,7 +38,7 @@ public:
   TMCParticle* AddParticleOut();                 // Append a new (empty) outgoing particle
   TMCParticle* ParticleOut(Int_t);               // Return pointer to outgoing particle at given index in array
 
-  void Print(Option_t* option="") const; // Print vertex to output
+  void Print(Option_t* = "") const; // Print vertex to output
 
   void Clear(Option_t* = ""); // Clear particle arrays
 

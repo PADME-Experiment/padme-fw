@@ -22,7 +22,7 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
-//#include "TRecoVHit.hh"
+#include "TMCTruthEvent.hh"
 
 #include "HistoSvc.hh"
 #include "StdNtuple.hh"
@@ -193,6 +193,7 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection* fPVetoRecoCl      =0;
   TRecoVClusCollection* fEVetoRecoCl      =0;
   TRecoVClusCollection* fHEPVetoRecoCl    =0;
+  TMCTruthEvent*        fMCTruthEvent     =0;
 
   TTree::SetMaxTreeSize(190000000000);
 
@@ -261,6 +262,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="HEPVeto_Clusters") {
       fHEPVetoRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoCl);
+    } else if (branchName=="MCTruth") {
+      fMCTruthEvent = new TMCTruthEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
     }
     
   }
@@ -309,7 +313,8 @@ int main(Int_t argc, char **argv)
   event->PVetoRecoCl      = fPVetoRecoCl     ;
   event->EVetoRecoCl      = fEVetoRecoCl     ;
   event->HEPVetoRecoCl    = fHEPVetoRecoCl   ;
-  
+  event->MCTruthEvent     = fMCTruthEvent    ;
+
   if (fVerbose) printf("---> Initializing user analysis\n");
   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
   UserAn->Init(event);
@@ -337,7 +342,7 @@ int main(Int_t argc, char **argv)
     // Debug printout
     if ( (fVerbose>0 && (i%1000==0)) || (fVerbose>1 && (i%100==0)) || (fVerbose>2) ){
       std::cout<<"---> Event = "<<i<<"/"<<nevents<<" - Size "<< jevent << " Run " << fRecoEvent->GetRunNumber() <<" Event "<<fRecoEvent->GetEventNumber()<<std::endl;
-      if (tCorrOK) {
+      if (!(fRecoEvent->GetEventStatus() & mcEvent) && tCorrOK) { // Show ECal tempereature corrections only for real data
 	TTimeStamp timevent=fRecoEvent->GetEventTime();
 	//utc_time=timevent.GetSec();
 	//float temp_event=GetTemp(utc_time);
@@ -358,6 +363,25 @@ int main(Int_t argc, char **argv)
 	       <<" HEPVeto "<<nHEPVetoHits
 	       <<" SAC "<<nSACHits<<std::endl;
       std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
+
+      // Show MCTruth information (example)
+      if (fMCTruthEvent) {
+	printf("     MCTruthEvent - Run %d Event %d Weight %5.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
+	for(Int_t ii=0;ii<fMCTruthEvent->GetNVertices();ii++) {
+	  TMCVertex* vtx = fMCTruthEvent->Vertex(ii);
+	  printf("       Vertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",ii,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
+	  for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
+	    TMCParticle* p = vtx->ParticleIn(j);
+	    printf("         Particle In  %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+	  }
+	  for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
+	    TMCParticle* p = vtx->ParticleOut(j);
+	    printf("         Particle Out %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+	  }
+	}
+      }
+
+
     }
     if (fVerbose>3) {
       if (fTargetRecoEvent)  fTargetRecoEvent->Print();

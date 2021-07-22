@@ -13,6 +13,7 @@
 #include "StackingAction.hh"
 #include "RunAction.hh"
 #include "EventAction.hh"
+#include "MCTruthManager.hh"
 
 DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardManager(datacardMng)
 {
@@ -128,6 +129,11 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fTurboNeutronKillEnergyCmd->SetRange("TNKE >= 0.");
   fTurboNeutronKillEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableMCTruthCmd = new G4UIcmdWithABool("/settings/EnableMCTruth",this);
+  fEnableMCTruthCmd->SetGuidance("Enable (true) or disable (false) MCTruth generation");
+  fEnableMCTruthCmd->SetParameterName("EMCT",true);
+  fEnableMCTruthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
@@ -157,6 +163,7 @@ DatacardMessenger::~DatacardMessenger() {
   delete fAutomaticRandomSeedCmd;
   delete fSettingsDir;
 
+  delete fEnableMCTruthCmd;
 }
 
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
@@ -254,5 +261,14 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
 
   if ( command == fTurboNeutronKillEnergyCmd )
     ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetNKillEnergy(fTurboNeutronKillEnergyCmd->GetNewDoubleValue(newValue));
+
+  if (command == fEnableMCTruthCmd) {
+    MCTruthManager* mctMgr = MCTruthManager::GetInstance();
+    if (fEnableMCTruthCmd->GetNewBoolValue(newValue)) {
+      mctMgr->Enable();
+    } else {
+      mctMgr->Disable();
+    }
+  }
 
 }

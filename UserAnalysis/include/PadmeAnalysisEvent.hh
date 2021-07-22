@@ -10,6 +10,7 @@
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
+#include "TMCTruthEvent.hh"
 
 class PadmeAnalysisEvent{
 public:
@@ -30,6 +31,7 @@ public:
   TRecoVClusCollection* PVetoRecoCl     ;
   TRecoVClusCollection* EVetoRecoCl     ;
   TRecoVClusCollection* HEPVetoRecoCl   ;
+  TMCTruthEvent*        MCTruthEvent    ;
 
 };
 #endif

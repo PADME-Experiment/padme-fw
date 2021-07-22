@@ -6,6 +6,10 @@
 #include "TMCEvent.hh"
 #include "TRecoEvent.hh"
 
+#include "TMCTruthEvent.hh"
+#include "TMCVertex.hh"
+#include "TMCParticle.hh"
+
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
 #include "TPVetoMCEvent.hh"
@@ -40,6 +44,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
 
   // Input event structures will be allocated if corresponding branch exists
   fMCEvent        = 0;
+  fMCTruthEvent   = 0;
   fTargetMCEvent  = 0;
   fEVetoMCEvent   = 0;
   fPVetoMCEvent   = 0;
@@ -255,6 +260,10 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="TPix") {
 	fTPixMCEvent = new TTPixMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
+      } else if (branchName=="MCTruth") {
+	printf("PadmeReconstruction - Found MCTruth branch\n");
+	fMCTruthEvent = new TMCTruthEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
 
     }
@@ -306,6 +315,10 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      } else if (branchName=="MCTruth") {
+	printf("PadmeReconstruction - Found MCTruth branch\n");
+	fMCTruthEvent = new TMCTruthEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
 
     }
@@ -370,6 +383,9 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
 
+    // Show MCTruth information (debug)
+    //if (fMCTruthEvent) fMCTruthEvent->Print();
+
     fNProcessedEventsInTotal++;
     return true;
 
@@ -402,12 +418,14 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
 
+    // Show MCTruth information (debug)
+    //if (fMCTruthEvent) fMCTruthEvent->Print();
+
     ++fNProcessedEventsInTotal;
     //std::cout<<" fNProcessedEventsInTotal = "<<fNProcessedEventsInTotal<<std::endl;
     return true;
     
   }
-
   
   if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 

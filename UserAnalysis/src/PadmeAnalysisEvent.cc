@@ -15,5 +15,6 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   PVetoRecoCl          =0;
   EVetoRecoCl          =0;
   HEPVetoRecoCl        =0;
+  MCTruthEvent         =0;
 
 }

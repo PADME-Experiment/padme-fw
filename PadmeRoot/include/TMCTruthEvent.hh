@@ -10,7 +10,7 @@
 #include "TObject.h"
 #include "TClonesArray.h"
 
-class TMCVertex;
+#include "TMCVertex.hh"
 
 class TMCTruthEvent : public TObject
 {

@@ -7,8 +7,6 @@
 
 #include "TMCTruthEvent.hh"
 
-#include "TMCVertex.hh"
-
 ClassImp(TMCTruthEvent)
 
 TMCTruthEvent::TMCTruthEvent()

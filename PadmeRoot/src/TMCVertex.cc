@@ -7,8 +7,6 @@
 
 #include "TMCVertex.hh"
 
-#include "TMCParticle.hh"
-
 ClassImp(TMCVertex)
 
 TMCVertex::TMCVertex()

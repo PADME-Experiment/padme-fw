@@ -12,7 +12,7 @@
 #include "TVector3.h"
 #include "TString.h"
 
-class TMCParticle;
+#include "TMCParticle.hh"
 
 class TMCVertex : public TObject
 {

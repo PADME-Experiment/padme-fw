@@ -2,4 +2,4 @@
 
 NAME := TPix
 
-include ../config/global.gmk
+include ../mkconfig/global.gmk

@@ -13,27 +13,6 @@ class TRecoVObject;
 class TRecoVClusCollection;
 class TTargetRecoBeam;
 
-
-enum preSelCutNumbering
-{
-  ps_cut_all=0,
-  ps_cut_trg=1,
-  ps_cut_POT=2,
-};
-enum selCutNumbering
-{
-  cut_all=0,
-  cut_Presel=1,
-  cut_ge1ECalCl=2,
-};
-enum selPhotonCutNumbering
-{
-  cut_g_all=0,
-  cut_g_Presel=1
-};
-
-
-
 class DarkPhoton : public TObject
 {
 
@@ -51,11 +30,11 @@ public:
   virtual Bool_t Finalize(){return true;}
 
   virtual Bool_t InitHistos();
-  virtual Bool_t ProcessDarkPhoton();
+  virtual Bool_t ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bool_t makeClSelection ,std::vector<int> selCl);
   Double_t CalculateMomentumPositron(Double_t z,Double_t x);
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2,  double& distPhi);
    
-  Bool_t passPreselection();//{return true;}
+  Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC, Bool_t externalPass);
   Double_t MissingMass(TVector3 V, Double_t E);
 
 protected:
@@ -81,6 +60,11 @@ protected:
   Int_t    fProcessingMode;
 
   Bool_t fInitToComplete;
+  Double_t fdistanceTarget;//from calchep g4hits studies
+  Double_t fFRmin;
+  Double_t fFRmid;
+  Double_t fFRmax;
+  Double_t fEBeam;
 
 
 };

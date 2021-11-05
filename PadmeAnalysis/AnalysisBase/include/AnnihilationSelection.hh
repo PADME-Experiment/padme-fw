@@ -26,7 +26,7 @@ class AnnihilationSelection : public TObject
 
 public:
   AnnihilationSelection();
-  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t dataMCmethod, Bool_t scaleFMethod);
+  AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t dataMCmethod, Bool_t scaleFMethod, Bool_t externalPass);
   ~AnnihilationSelection();
   virtual Bool_t Init(TRecoEvent* eventHeader, 
 		      TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
@@ -34,8 +34,8 @@ public:
 		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam);
   virtual Bool_t Finalize(){return true;}
 
-  virtual Bool_t InitHistos();
-  virtual Bool_t Process(Bool_t isMC);
+  virtual Bool_t InitHistos(Bool_t allAnnPlot);
+  virtual Bool_t Process(Bool_t isMC,  Bool_t makeClSelection, std::vector<int> selCl, Bool_t allAnnPlot);
   void selectEffSample();
 
   void SortCluster_byEnergy();
@@ -81,6 +81,7 @@ public:
   void printCounters();
 
   Bool_t passAnnPreSelection(Double_t clE, Double_t clTheta);
+  void FillCoGAsAFunctionOfPhi(std::string sufix);
  
 protected:
   TRecoEvent*           fRecoEvent;
@@ -106,6 +107,7 @@ protected:
   Bool_t   fScaleFMethod;
   Bool_t   fsFacCalchepPileup;
   Bool_t   fCorrectEfficiencyForTruth;
+  Bool_t   fexternalPass;
 
   Bool_t fInitToComplete;  
 

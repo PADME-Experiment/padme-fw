@@ -50,6 +50,12 @@ DarkPhoton::DarkPhoton(Int_t processingMode, Int_t verbosityFlag)
   fProcessingMode = processingMode;
   fVerbose        = verbosityFlag;
 
+  fdistanceTarget=1030+2513;//from calchep g4hits studies
+  fFRmin=115.82;
+  fFRmid=172.83;
+  fFRmax=258.0;
+  fEBeam=430;
+
  
 }
 DarkPhoton::~DarkPhoton()
@@ -91,7 +97,7 @@ Bool_t DarkPhoton::Init(TRecoEvent* eventHeader,
 
 
 Double_t DarkPhoton::MissingMass(TVector3 V, Double_t E){
-  double PositronE  = 490 + 0.511;
+  double PositronE  = fEBeam + 0.511;
   double PositronPz = sqrt(PositronE*PositronE-0.511*0.511);
   TLorentzVector Positron (0,0,PositronPz,PositronE);
   TLorentzVector Electron (0,0,         0,    0.511);
@@ -108,60 +114,36 @@ Double_t DarkPhoton::MissingMass(TVector3 V, Double_t E){
 }
 
 
-Bool_t DarkPhoton::passPreselection()
+Bool_t DarkPhoton::passPreselection(Bool_t isTargetOut, Bool_t isMC, Bool_t externalPass)
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
-
-  
+   std::string hname;
   Bool_t passed = false;
-  std::string hname="PreSelectCutFlow";
-  hSvc->FillHisto(hname,ps_cut_all);
 
   if (!fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) 
     {
-      // std::cout<<"in passPreselection, event status bit  "<< fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<< std::endl;
       if (!fRecoEvent->GetTriggerMaskBit(TRECOEVENT_TRIGMASKBIT_BEAM)) return passed;
     }
-  hSvc->FillHisto(hname,ps_cut_trg);
-  //std::cout<<"reco ev " <<fRecoEvent->GetEventNumber() << std::endl;
-  // if( fTarget_RecoBeam->getnPOT()>3000 && fTarget_RecoBeam->getnPOT()<6000) std::cout << "event      " <<fRecoEvent->GetEventNumber() <<  "       po/bunch      " <<  fTarget_RecoBeam->getnPOT() << std::endl;
  
-  // if(fRecoEvent->GetEventNumber()<290000 || fRecoEvent->GetEventNumber()>375000)return passed;
-  Double_t targetConst=1.78; //to use olny if the run is taken from September 2020 !!!!
-  //Double_t targetConst=1; 
-  std::string hname1 = "NposInBunch_beam";
-  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
-  //std::cout<<"preselection...Pot control" << std::endl;
-  //if (fTarget_RecoBeam->getnPOT()<12000. && fTarget_RecoBeam->getnPOT()>3500.) return passed;
-  if (fTarget_RecoBeam->getnPOT()<-9999) return passed;
-  hSvc->FillHisto(hname,ps_cut_POT);
-  //if (fSAC_ClColl->GetNElements()>15) return passed;
-  /* if(fSAC_ClColl->GetNElements()<2){
-     std::cout << "I'm in sacClu rejection loop " <<std::endl;
-     hname = "EventNumberRejectedBySAC";
-     hSvc->FillHisto(hname1,fRecoEvent->GetEventNumber());
-     if(fSAC_ClColl->GetNElements()>0.001){
-     hname = "EventNumberRejectedBySAC_not0";
-     hSvc->FillHisto(hname1,fRecoEvent->GetEventNumber());
-     }
-     return passed;
-     }*/
-  //std::cout<<"eventNumber " << fRecoEvent->GetEventNumber() << " in SAC " << fSAC_ClColl->GetNElements() << " in target " << fTarget_RecoBeam->getnPOT() << std::endl;
+  Double_t targetConst=1.78; //to use olny if the run is taken from September 2020 !!!! -> corrected in develop
+  //if(isMC) targetConst=1; 
+   targetConst=1; 
+
+  if (!externalPass && !isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
+  //std::cout<<"tagetnPOT "<<fTarget_RecoBeam->getnPOT() << " and isTargetOutBool " << isTargetOut<< std::endl;
+  if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;  
   //if(fRecoEvent->GetEventNumber()>270000) return passed;
 
-  hname = "nPOT";
+  std::string hname1 = "DP_NposInBunch_beam";
+  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
+  hname = "DP_nPOT";
   hSvc->FillHisto(hname,0,float(fTarget_RecoBeam->getnPOT()*targetConst)); 
-  //if(fSAC_ClColl->GetNElements() > 10. ) return passed;
-  //std::cout<<"passed ok " << std::endl;
-  
   passed = true;
   return passed;
 }
 
 
-
-
-Bool_t DarkPhoton::ProcessDarkPhoton()
+Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bool_t makeClSelection ,std::vector<int> selCl )
 {
   
   HistoSvc* hSvc =  HistoSvc::GetInstance();
@@ -175,7 +157,7 @@ Bool_t DarkPhoton::ProcessDarkPhoton()
   }
  
   // apply BTF bunch preselection 
-  //if (!passPreselection()) return true;
+  if (!passPreselection(isTargetOut, isMC, externalPass)) return true;
 
   //std::cout<<"Time " << fRecoEvent->GetEventTime().GetNanoSec() << std::endl;
 
@@ -213,33 +195,32 @@ Bool_t DarkPhoton::ProcessDarkPhoton()
   for (Int_t jecal=0; jecal<NClECal; ++jecal){
     ecalclu          = fECal_ClColl->Element(jecal);
     Double_t ClTECal = ecalclu->GetTime();
-    Double_t distanceTarget=3470;
-    //Double_t distanceTarget=3577;
     Double_t g1x=ecalclu->GetPosition().X();
     Double_t g1y=ecalclu->GetPosition().Y();
+    if(makeClSelection && selCl.at(jecal)<10)continue;
     Double_t g1E=ecalclu->GetEnergy();
-    Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+distanceTarget*distanceTarget);
+    Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+fdistanceTarget*fdistanceTarget);
     Double_t Px_1 = g1E*g1x/ R_1;
     Double_t Py_1 = g1E*g1y/ R_1;
-    Double_t Pz_1 = g1E*distanceTarget/ R_1;
+    Double_t Pz_1 = g1E*fdistanceTarget/ R_1;
     TLorentzVector P4g1F, P4eTarget, P4eBeam;
     P4g1F.SetPxPyPzE(Px_1,Py_1,Pz_1, g1E);
-    Double_t EBeam=450.0;
     Double_t me=0.511;
-    Double_t PzBeam=sqrt(EBeam*EBeam-me*me);
+    Double_t PzBeam=sqrt(fEBeam*fEBeam-me*me);
     P4eTarget.SetPxPyPzE(0,0,0, me);
-    P4eBeam.SetPxPyPzE(0,0,PzBeam, EBeam);
+    P4eBeam.SetPxPyPzE(0,0,PzBeam, fEBeam);
     Double_t MissingMass=(P4eTarget+P4eBeam-P4g1F)*(P4eTarget+P4eBeam-P4g1F);
 
     Bool_t PassEneThr=false;
-    if(g1E>50){
+    if(g1E>90){
       PassEneThr=true;
-      hname="MissingMass_AllECALclu_ThrEne50MeV";
+      hname="MissingMass_AllECALclu_ThrEne90MeV";
       hSvc->FillHisto(hname,MissingMass , 1.);
     }
     Bool_t NoInTime10=true;
     Bool_t NoInTime20=true;
-    for(Int_t jecal2=jecal+1; jecal2<NClECal; jecal2++){                ///starting second cluster loop
+    for(Int_t jecal2=0; jecal2<NClECal; jecal2++){                ///starting second cluster loop
+      if(jecal==jecal2) continue;
       ecalclu2 = fECal_ClColl->Element(jecal2);
       if(fabs(ecalclu->GetTime()-ecalclu2->GetTime())<20.){
 	NoInTime20=false;
@@ -251,26 +232,7 @@ Bool_t DarkPhoton::ProcessDarkPhoton()
     }
 
     if(NoInTime20 && PassEneThr){
-      hname="MissingMass_NoClInTime20ns_ThrEne50MeV";
-      hSvc->FillHisto(hname,MissingMass, 1.);
-      Bool_t CoincidencePVeto=true;
-      for(int jpveto=0; jpveto<NClPVeto; jpveto++){
-	PVetoclu=fPVeto_ClColl->Element(jpveto);
-	Double_t cluTime=PVetoclu->GetTime();
-	Double_t cluZpos=PVetoclu->GetPosition().Z();
-	Double_t cluXpos=PVetoclu->GetPosition().X();
-	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<2.){
-	  Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
-	  if(fabs(momentumPositron+g1E-490)<50){
-	    CoincidencePVeto=false;
-	  }
-	}
-      }
-    }//end of nointime20
-
-
-    if(NoInTime10 && PassEneThr){
-      hname="MissingMass_NoClInTime10ns_ThrEne50MeV";
+      hname="MissingMass_NoClInTime20ns_ThrEne90MeV";
       hSvc->FillHisto(hname,MissingMass, 1.);
       Bool_t CoincidencePVeto=true;
       Bool_t CoincidenceSAC=true;
@@ -281,7 +243,44 @@ Bool_t DarkPhoton::ProcessDarkPhoton()
 	Double_t cluXpos=PVetoclu->GetPosition().X();
 	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<2.){
 	  Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
-	  if(fabs(momentumPositron+g1E-490)<50){
+	  if(fabs(momentumPositron+g1E-fEBeam)<50){
+	    CoincidencePVeto=false;
+	  }
+	}
+      }
+      for(int jsac=0; jsac<NClSAC; jsac++){
+	SACclu=fSAC_ClColl->Element(jsac);
+	Double_t cluTime=SACclu->GetTime();
+	if(fabs(ClTECal-cluTime-ShiftECalSac)<2. && SACclu->GetEnergy()>50){
+	  CoincidenceSAC=false;
+	}
+	// }
+      }
+      if(CoincidencePVeto){
+	hname="MissingMass_NoClInTime20ns_ThrEne90MeV_NoCoincidencePVeto";
+	hSvc->FillHisto(hname,MissingMass, 1.);
+	if(CoincidenceSAC){
+	  hname="MissingMass_NoClInTime20ns_ThrEne90MeV_NoCoincidencePVeto_NoCoincidenceSAC";
+	  hSvc->FillHisto(hname,MissingMass, 1.);
+	}
+      }
+
+    }//end of nointime20
+
+
+    if(NoInTime10 && PassEneThr){
+      hname="MissingMass_NoClInTime10ns_ThrEne90MeV";
+      hSvc->FillHisto(hname,MissingMass, 1.);
+      Bool_t CoincidencePVeto=true;
+      Bool_t CoincidenceSAC=true;
+      for(int jpveto=0; jpveto<NClPVeto; jpveto++){
+	PVetoclu=fPVeto_ClColl->Element(jpveto);
+	Double_t cluTime=PVetoclu->GetTime();
+	Double_t cluZpos=PVetoclu->GetPosition().Z();
+	Double_t cluXpos=PVetoclu->GetPosition().X();
+	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<2.){
+	  Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
+	  if(fabs(momentumPositron+g1E-fEBeam)<50){
 	    CoincidencePVeto=false;
 	  }
 	}
@@ -296,10 +295,10 @@ Bool_t DarkPhoton::ProcessDarkPhoton()
 	// }
       }
       if(CoincidencePVeto){
-	hname="MissingMass_NoClInTime10ns_ThrEne50MeV_NoCoincidencePVeto";
+	hname="MissingMass_NoClInTime10ns_ThrEne90MeV_NoCoincidencePVeto";
 	hSvc->FillHisto(hname,MissingMass, 1.);
 	if(CoincidenceSAC){
-	  hname="MissingMass_NoClInTime10ns_ThrEne50MeV_NoCoincidencePVeto_NoCoincidenceSAC";
+	  hname="MissingMass_NoClInTime10ns_ThrEne90MeV_NoCoincidencePVeto_NoCoincidenceSAC";
 	  hSvc->FillHisto(hname,MissingMass, 1.);
 	}
       }
@@ -351,27 +350,32 @@ Bool_t DarkPhoton::InitHistos()
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
- 
+  
+  hname="DP_NposInBunch_beam";
+  hSvc->BookHisto(hname, 500, 0., 40000.);
+  hname = "DP_nPOT";
+  hSvc->BookHisto(hname, 3, -1.5, 1.5);
+
   int binX=500;   
   Double_t minX=-200.5;
   Double_t maxX=600.5;  
   hname="MissingMass_AllECALclu";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_AllECALclu_ThrEne50MeV";
+  hname="MissingMass_AllECALclu_ThrEne90MeV";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime20ns_ThrEne50MeV";
+  hname="MissingMass_NoClInTime20ns_ThrEne90MeV";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime10ns_ThrEne50MeV";
+  hname="MissingMass_NoClInTime10ns_ThrEne90MeV";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="SAC_evSel_SinglePhotonAnnihilationEnergy_TimeCoincidenceRequest2ns";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime20ns_ThrEne50MeV_NoCoincidencePVeto";
+  hname="MissingMass_NoClInTime20ns_ThrEne90MeV_NoCoincidencePVeto";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime20ns_ThrEne50MeV_NoCoincidencePVeto_NoCoincidenceSAC";
+  hname="MissingMass_NoClInTime20ns_ThrEne90MeV_NoCoincidencePVeto_NoCoincidenceSAC";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime10ns_ThrEne50MeV_NoCoincidencePVeto";
+  hname="MissingMass_NoClInTime10ns_ThrEne90MeV_NoCoincidencePVeto";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_NoClInTime10ns_ThrEne50MeV_NoCoincidencePVeto_NoCoincidenceSAC";
+  hname="MissingMass_NoClInTime10ns_ThrEne90MeV_NoCoincidencePVeto_NoCoincidenceSAC";
   hSvc->BookHisto(hname, binX, minX, maxX);
   binX=200;   
   minX=-200.5;

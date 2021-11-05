@@ -42,6 +42,7 @@
 #include "CalchepTruthStudies.hh"
 #include "CalchepTruthStudies_TPComparison.hh"
 #include "SinglePosRun.hh"
+#include "DarkPhoton.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -327,6 +328,12 @@ int main(Int_t argc, char **argv)
    Bool_t boolDataMCmethod=false;
    Bool_t boolScaleFMethod=false;
    Bool_t SPAnalysis=false;
+   Bool_t DPanalysis=true;
+
+   Bool_t nPOTselection=true;
+   Bool_t makeClSelection=true;
+
+   Bool_t allAnnPlot=false;
    std::vector<ValidationBase*> algoList;
    SACAnalysis*         sacAn  = new SACAnalysis(fProcessingMode, fVerbose);
    algoList.push_back(sacAn);
@@ -368,29 +375,36 @@ int main(Int_t argc, char **argv)
    CalchepTruthStudies* CalchepTruth=0;
    CalchepTruthStudies_TPComparison* CalchepTruthTP=0;
    SinglePosRun* SPAn=0;
-   
+   DarkPhoton* darkPh=0;
+
    if(fProcessingMode==0){  
      //event = new PadmeAnalysisEvent();
      UserAn = new UserAnalysis(fProcessingMode, fVerbose);
      gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
 
-     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition, boolDataMCmethod, boolScaleFMethod);
-     TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition, boolDataMCmethod, boolScaleFMethod,nPOTselection);
+     TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition,nPOTselection );
      if(boolCalchep){
        CalchepTruth = new CalchepTruthStudies(fProcessingMode, fVerbose);
        CalchepTruthTP = new CalchepTruthStudies_TPComparison(fProcessingMode, fVerbose);
      }
      if(SPAnalysis)SPAn= new SinglePosRun();
+     if(DPanalysis)darkPh= new DarkPhoton(fProcessingMode, fVerbose);
+
+
+       //init histos
      if(boolCalchep) {
        CalchepTruth->InitHistos();
        CalchepTruthTP->InitHistos();
      }
        if(boolAnnTagProbe){
-       AnnSel->InitHistos();
-       TagandProbeSel->InitHistos();
+       AnnSel->InitHistos(allAnnPlot);
+       TagandProbeSel->InitHistos(allAnnPlot);
        }
        if(SPAnalysis)SPAn->InitHistos();
+       if(DPanalysis)darkPh->InitHistos();
 
+       //init object
      if(boolAnnTagProbe){
        AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
@@ -406,7 +420,14 @@ int main(Int_t argc, char **argv)
        CalchepTruthTP->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl);
      }
      if(SPAnalysis)SPAn->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl);
+     if(DPanalysis)darkPh->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl,
+				fPVetoRecoEvent,   fPVetoRecoCl,
+				fEVetoRecoEvent,   fEVetoRecoCl,
+				fHEPVetoRecoEvent,   fHEPVetoRecoCl,
+				fSACRecoEvent,     fSACRecoCl,
+				fTargetRecoEvent,  fTargetRecoBeam);
    }
+
     PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
      event->RecoEvent            =fRecoEvent          ;
      event->TargetRecoEvent      =fTargetRecoEvent    ;
@@ -434,7 +455,6 @@ int main(Int_t argc, char **argv)
    Int_t nEVetoHits  =0;
    Int_t nHEPVetoHits=0;
    Int_t nSACHits    =0;
-
    if (NEvt >0 && NEvt<nevents) nevents=NEvt;
    for (Int_t i=0; i<nevents; ++i)
      {
@@ -482,7 +502,13 @@ int main(Int_t argc, char **argv)
        }
        //
        targetAn    ->Process();
+       Bool_t passEv=targetAn->PassEvent();
+       if(!fTargetOutPosition && nPOTselection && (!passEv)) continue;
+
+       ecalAn      ->ShiftPositions(fRecoEvent->GetRunNumber(), isMC);
        ecalAn      ->EnergyCalibration(isMC, SPAnalysis);
+       vector<int> selCl=ecalAn->passClCut();
+
        if(!SPAnalysis)ecalAn      ->Process();
        sacAn       ->Process();
        pvetoAn     ->Process();
@@ -492,14 +518,15 @@ int main(Int_t argc, char **argv)
       
        if(fProcessingMode==0){ 
 	 if(boolAnnTagProbe){ 
-	   AnnSel->Process(isMC);
-	   TagandProbeSel->Process(isMC);
+	   AnnSel->Process(isMC,makeClSelection, selCl, allAnnPlot);
+	   TagandProbeSel->Process(isMC,makeClSelection, selCl, allAnnPlot);
 	 }
 	 if(boolCalchep)  {
 	   CalchepTruth->Process();
 	   CalchepTruthTP->Process();
 	 }
 	 if(SPAnalysis)SPAn->Process();
+	 if(DPanalysis)darkPh->ProcessDarkPhoton(fTargetOutPosition , nPOTselection, makeClSelection, selCl);
 	 //       UserAn      ->Process();
 	 //       gTimeAn     ->Process();
        }
@@ -507,7 +534,6 @@ int main(Int_t argc, char **argv)
        //
        hSvc->FillNtuple();
      }
-   
    ecalAn   ->Finalize();
    targetAn ->Finalize();
    /*
@@ -534,7 +560,8 @@ int main(Int_t argc, char **argv)
    if(CalchepTruthTP)delete CalchepTruthTP;	
    if(UserAn)   delete UserAn;		
    if(gTimeAn)  delete gTimeAn; 
-   if(SPAnalysis)delete SPAn;         
+   if(SPAnalysis)delete SPAn;
+   if(DPanalysis)delete darkPh;
    return 0;
    
 }

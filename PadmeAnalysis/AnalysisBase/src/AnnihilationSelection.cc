@@ -53,7 +53,7 @@ AnnihilationSelection::AnnihilationSelection()
   fscaleFacCalchepPileup=NULL;
   
 }
-AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBool, Bool_t dataMCmethod, Bool_t scaleFMethod)
+AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBool, Bool_t dataMCmethod, Bool_t scaleFMethod, Bool_t externalPass)
 {
   fRecoEvent      = NULL;
   fVerbose        = verbosityFlag;
@@ -66,6 +66,8 @@ AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosi
   
   fsFacCalchepPileup=true;
   fscaleFacCalchepPileup= new CalchepTruthStudies_ggPileup();
+
+  fexternalPass=externalPass;
 
 }
 AnnihilationSelection::~AnnihilationSelection()
@@ -142,7 +144,7 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
 
   //fillEffVector("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_30617_FR1158_25800_otherBkgForProblemPoins.txt");
 
-  fillEffVectorData("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt");
+  fillEffVectorData("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/data/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/data/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_AllRuns_FR1158_25800_otherBkgForProblemPoins_234sigma.txt");
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MC_FR1158_25800_otherBkgForProblemPoins.txt");
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_25kPileupAnnihilation_FixRangeFR115.8_250RMid173_noDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_25kPileupAnnihilation_FixRange_FR115.8_250RMid173_noDiedSU.txt");
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_IdealAnnihilation_FixRangeFR115.8_250RMid173_randomDiedSU.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_IdealAnnihilation_FixRange_FR115.8_250RMid173_randomDiedSU.txt");
@@ -153,7 +155,7 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_1Annihilation_FixRangeFR115.8_250RMid173_randomDiedSU_DETagAndProbe30.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_1Annihilation_FixRange_FR115.8_250RMid173_randomDiedSU_DETagAndProbe30.txt");
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_1Annihilation_FixRangeFR115.8_250RMid173_randomDiedSU_DET30_ProbeEThr90.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_1Annihilation_FixRange_FR115.8_250RMid173_randomDiedSU_DET30_ProbeEThr90.txt");
   //fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagFR_MC_1Annihilation_FixRangeFR115.8_250RMid173_dataDiedSU2.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/provaggEfficiencyFromDiff_TagAndProbeFR_MC_1Annihilation_FixRange_FR115.8_250RMid173_dataDiedSU2.txt");
-fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_3Died_FR1158_25800_normalisationm250m100DifOthP.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_3Died_FR1158_25800_normalisationm250m100DifOthP.txt");
+fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/data/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_3Died_FR1158_25800_normalisationm250m100DifOthP.txt", "/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/data/runsAnalysis/txtFileEff/provaggEfficiencyFromDiff_TagAndProbeFR_sigmaStudies_MCCalchep25kPileup_bkgMCNoTargetNoBeamLine_3Died_FR1158_25800_normalisationm250m100DifOthP.txt");
   
   fillEffVectorTruth();
   fillEffVectorRooFit();
@@ -182,15 +184,15 @@ fillEffVectorMC("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Anal
     //hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("DivideTheta_ecalFR");
     //hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("th1s_1inFR");
 
-    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1g2inFR_struth_calchep430MeV_FR115.8_258.root");
-    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1inFR_struth_calchep430MeV_FR115.8_258.root");
+    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/EffectiveAcceptance/AccEffective_g1g2inFR_struth_calchep430MeV_FR115.8_258.root");
+    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/EffectiveAcceptance/AccEffective_g1inFR_struth_calchep430MeV_FR115.8_258.root");
     hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
     hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
   }
   else{
     //this calchep truth + calchep reco
-    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1g2inFR_recotruth_calchep450MeV.root");
-    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/AccEffective_g1inFR_recotruth_calchep450MeV.root"); //most energetic photon in FR
+    TFile *fAcc_g1g2inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/EffectiveAcceptance/AccEffective_g1g2inFR_recotruth_calchep450MeV.root");
+    TFile *fAcc_g1inFR =new TFile("/nfs/kloe/einstein3/padme/isabella/PresaDatiFrascati072020/Analysis/TagAndProbe/newAnalysis/EffectiveAcceptance/AccEffective_g1inFR_recotruth_calchep450MeV.root"); //most energetic photon in FR
     hAccEffFromCalchep_g1g2FR = (TH1D*)fAcc_g1g2inFR->Get("divide_g1g2inFR");
     hAccEffFromCalchep_g1FR = (TH1D*)fAcc_g1inFR->Get("divide_g1inFR");
   }
@@ -211,7 +213,7 @@ void AnnihilationSelection::selectEffSample(){
   fillEffVector(myisMC);
 }
 
-Bool_t AnnihilationSelection::Process(Bool_t isMC)
+Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::vector<int> selCl, Bool_t allAnnPlot)
 {
   if(fsFacCalchepPileup)fscaleFacCalchepPileup->GetTruthEvent();
   HistoSvc* hSvc =  HistoSvc::GetInstance();
@@ -244,7 +246,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
     ecalclu2         = fECal_ClColl->Element(fIdCl_SortByEnergy.at(1));//g2
     Double_t r1=sqrt(ecalclu->GetPosition().X()*ecalclu->GetPosition().X()+ecalclu->GetPosition().Y()*ecalclu->GetPosition().Y());
     if(r1>fFRmin && r1<fFRmax){
-      if(ecalclu->GetEnergy()>50. && ecalclu2->GetEnergy()>50.){
+      if(allAnnPlot && ecalclu->GetEnergy()>50. && ecalclu2->GetEnergy()>50.){
 	 hname="Annihilation_NClAtLeast2g1inFREThr50";
 	 hSvc->FillHisto(hname, ecalclu->GetEnergy()+ecalclu2->GetEnergy(), 1.);
       }
@@ -264,6 +266,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
     hSvc->FillHisto(hname, fg1E, 1.);
     fg1t    =ecalclu->GetTime();
     if(fg1t<-110) continue;//high energy spread in data October 2020  
+    if(makeClSelection && selCl.at(fIdCl_SortByEnergy.at(jecal))<10)continue;
     fR_1    = sqrt(fg1x*fg1x+ fg1y*fg1y+fdistanceTarget*fdistanceTarget);
     fg1Recal=sqrt(fg1x*fg1x+fg1y*fg1y);
     fPx_1   = fg1E*fg1x/ fR_1;
@@ -292,6 +295,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       fg2E        =ecalclu2->GetEnergy();
       fg2t        =ecalclu2->GetTime();
       if(fg2t<-110) continue;//high energy spread in data October 2020  
+      if(makeClSelection && selCl.at(fIdCl_SortByEnergy.at(jecal2))<10)continue;
       fg2Recal    =sqrt(fg2x*fg2x+fg2y*fg2y);
       fXWeighted  =0.;
       fYWeighted  =0.;
@@ -316,17 +320,23 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       if(fabs(fg1t-fg2t)>10.)continue;                      //two clsuter in time 10 ns
       NGGInTheSameEventTime10ns++;
       fcountDTime10++;
-      hname="ECAL_gravTwoPhoton10ns";
-      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+      if(allAnnPlot){
+	hname="ECAL_gravTwoPhoton10ns";
+	hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+      }
       if(fg1E>90.){
 	fcountDTime10g1EThr++;
-	hname="ECAL_gravTwoPhoton10nsg1EThr";
-	hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	if(allAnnPlot){
+	  hname="ECAL_gravTwoPhoton10nsg1EThr";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
       }
       if(fg2E>90.) {
 	fcountDTime10g2EThr++;
-	hname="ECAL_gravTwoPhoton10nsg2EThr";
-	hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	if(allAnnPlot){
+	  hname="ECAL_gravTwoPhoton10nsg2EThr";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
       }
       //if(!firstGInFR_def)continue;       
       Bool_t InEnergy=false;
@@ -346,33 +356,40 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
       std::string sufix="";
       if(firstGInFR_def){
 	fcountDTime10g1InFR++;
-	hname="ECAL_gravTwoPhoton10nsg1InFR";
-	hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	if(allAnnPlot){
+	  hname="ECAL_gravTwoPhoton10nsg1InFR";
+	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	}
 	if(fg1E>90){
 	  fcountDTime10g1InFRg1Ethr++;
-	  hname="ECAL_gravTwoPhoton10nsg1InFRg1Ethr";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  if(allAnnPlot){
+	    hname="ECAL_gravTwoPhoton10nsg1InFRg1Ethr";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
 	}
 	if(fg2E>90){
 	  fcountDTime10g1InFRg2Ethr++;
-	  hname="ECAL_gravTwoPhoton10nsg1InFRg2Ethr";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  if(allAnnPlot){
+	    hname="ECAL_gravTwoPhoton10nsg1InFRg2Ethr";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
 	}
 	FillGeneralHisto("_g1inFRDTime10");
-	if(secondGInFR_def)FillGeneralHisto("_g1g2inFRDTime10");
+	FillCoGAsAFunctionOfPhi("_g1inFRDTime10");
 	FillWeightedHisto_R1inFR("_g1inFRDTime10");
 	FillWeightedHistoRooFit_R1inFR("_g1inFRDTime10");
 
-	if(secondGInFR_def){
+	if(allAnnPlot) if(secondGInFR_def)FillGeneralHisto("_g1g2inFRDTime10");
+	if(allAnnPlot && secondGInFR_def){
 	  FillWeightedHisto_R1R2inFR("_g1g2inFRDTime10");
 	  FillWeightedHisto_R1R2inFR2approach("_g1g2inFRDTime10");
 	}
-	FillAccEffHisto_R1inFR("_g1inFRDTime10");
-	FillWeightedAccEffHisto_R1inFR("_g1inFRDTime10");
-	if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
-	if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
+	if(allAnnPlot) FillAccEffHisto_R1inFR("_g1inFRDTime10");
+	if(allAnnPlot) FillWeightedAccEffHisto_R1inFR("_g1inFRDTime10");
+	if(allAnnPlot & secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
+	if(allAnnPlot & secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRDTime10");
 
-	if(dPhiIn20Degree){
+	if(allAnnPlot && dPhiIn20Degree){
 	  sufix="_g1inFRin20Deg";
 	  FillGeneralHisto(sufix);
 	  if(InThetaAngle) {
@@ -381,82 +398,95 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 	    if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin20DegThetaCutUnderPeakEThr");}
 	  }      
 	}
-      
-	if(secondGInFR_def && dPhiIn20Degree && InThetaAngle){
+	
+	if(allAnnPlot && secondGInFR_def && dPhiIn20Degree && InThetaAngle){
 	  FillGeneralHisto("_g1g2inFRin20DegThetaCut");
-	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin20DegThetaCutUnderPeakEThr");}
+	  if(TotEnergyCut && InEnergy )FillGeneralHisto("_g1g2inFRin20DegThetaCutUnderPeakEThr");
 	}
-      
-       	if(fabs(fXWeighted)<40. && fabs(fYWeighted)<40.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<42. && fabs(fYWeighted)<42.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<44. && fabs(fYWeighted)<44.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<46. && fabs(fYWeighted)<46.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<48. && fabs(fYWeighted)<48.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<52. && fabs(fYWeighted)<52.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<54. && fabs(fYWeighted)<54.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<56. && fabs(fYWeighted)<56.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-	if(fabs(fXWeighted)<58. && fabs(fYWeighted)<58.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
-	}
-
-	if(fabs(fXWeighted)<60. && fabs(fYWeighted)<60.){
-	  hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+  
+	if(allAnnPlot){
+	  if(fabs(fXWeighted)<40. && fabs(fYWeighted)<40.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<42. && fabs(fYWeighted)<42.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<44. && fabs(fYWeighted)<44.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<46. && fabs(fYWeighted)<46.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<48. && fabs(fYWeighted)<48.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<52. && fabs(fYWeighted)<52.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<54. && fabs(fYWeighted)<54.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<56. && fabs(fYWeighted)<56.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
+	  if(fabs(fXWeighted)<58. && fabs(fYWeighted)<58.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  } 
+	  if(fabs(fXWeighted)<60. && fabs(fYWeighted)<60.){
+	    hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
 	}
 
 
 	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
 	  fcountDTime10g1InFR5CoG++;
-	  hname="ECAL_gravTwoPhoton10nsg1InFR5CoG";
-	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  if(allAnnPlot){
+	    hname="ECAL_gravTwoPhoton10nsg1InFR5CoG";
+	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	  }
 	  if(fg1E>90){
 	    fcountDTime10g1InFR5CoGg1EThr++;
-	    hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg1EThr";
-	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    if(allAnnPlot){
+	      hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg1EThr";
+	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    }
 	  }
 	  if(fg2E>90){
 	    fcountDTime10g1InFR5CoGg2EThr++;
-	    hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg2EThr";
-	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    if(allAnnPlot){
+	      hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg2EThr";
+	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    }
 	  }
 	  if(secondGInFR_def){
 	    fcountDTime10g1g2InFR5CoG++;
-	    hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoG";
-	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    if(allAnnPlot){
+	      hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoG";
+	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	    }
 	    if(fg1E>90){
 	      fcountDTime10g1g2InFR5CoGg1EThr++;
-	      hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg1EThr";
-	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	      if(allAnnPlot){
+		hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg1EThr";
+		hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	      }
 	    }
 	    if(fg2E>90){
 	      fcountDTime10g1g2InFR5CoGg2EThr++;
-	      hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg2EThr";
-	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	      if(allAnnPlot){
+		hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg2EThr";
+		hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+	      }
 	    }
 	  }
 	  if(fdataMCmethod)fDataMCMethod->Process(fg1E, fphig1, fg1Recal , fg2E , fphig2, fg2Recal);
@@ -469,51 +499,50 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC)
 	  hname="ECAL_nHitOnChannel_5CoG";
 	  hSvc->FillHisto(hname, countHit1_5CoG, 1.);
 	  hSvc->FillHisto(hname, countHit2_5CoG, 1.);
-	  FillGeneralHisto("_g1inFRin5Cog");
-	  FillWeightedHisto_R1inFR("_g1inFRin5Cog");
-	  FillWeightedHistoRooFit_R1inFR("_g1inFRin5Cog");
+	  if(allAnnPlot){
+	    FillGeneralHisto("_g1inFRin5Cog");
+	    FillWeightedHisto_R1inFR("_g1inFRin5Cog");
+	    FillWeightedHistoRooFit_R1inFR("_g1inFRin5Cog");
+	    if(secondGInFR_def)FillWeightedHisto_R1R2inFR("_g1g2inFRin5Cog");
+	    FillWeightedTruthHisto_R1inFR("_g1inFRin5Cog");
+	    if(secondGInFR_def){
+	      FillWeightedTruthHisto_R1R2inFR("_g1g2inFRin5Cog");
+	      FillWeightedHisto_R1R2inFR2approach("_g1g2inFRin5Cog");
+	    }
+	    FillAccEffHisto_R1inFR("_g1inFRin5Cog");
+	    FillWeightedAccEffHisto_R1inFR("_g1inFRin5Cog");
+	    if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
+	    if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
 
-	  if(secondGInFR_def)FillWeightedHisto_R1R2inFR("_g1g2inFRin5Cog");
-	  FillWeightedTruthHisto_R1inFR("_g1inFRin5Cog");
-	  if(secondGInFR_def){
-	    FillWeightedTruthHisto_R1R2inFR("_g1g2inFRin5Cog");
-	    FillWeightedHisto_R1R2inFR2approach("_g1g2inFRin5Cog");
+	    if(TotEnergyCut){FillGeneralHisto("_g1inFRin5CogUnderPeak");}
+	    if(InEnergy){FillGeneralHisto("_g1inFRin5CogEThr");}
+	    if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin5CogUnderPeakEThr");}
+	    if(InEnergy){
+	      FillRadiusRangeHisto("_g1inFRin5CogEThr");
+	      FillTimeRangeHisto("_g1inFRin5CogEThr");
+	      FillTimeRangeCoGHisto("_g1inFRin5CogEThr");
+	    }
+	    
+	    if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50. && secondGInFR_def ){
+	      FillGeneralHisto("_g1g2inFRin5Cog");
+	      if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin5CogUnderPeakEThr");}
+	    }
+	  
+	    //second photon in FR
+	    if(secondGInFR_def){
+	      if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
+		FillGeneralHisto("_g2inFRin5Cog");
+		FillWeightedHisto_R2inFR("_g2inFRin5Cog");
+		if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g2inFRin5CogUnderPeakEThr");}
+	      }
+	    }
 	  }
-	  FillAccEffHisto_R1inFR("_g1inFRin5Cog");
-	  FillWeightedAccEffHisto_R1inFR("_g1inFRin5Cog");
-	  if(secondGInFR_def)FillAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
-	  if(secondGInFR_def)FillWeightedAccEffHisto_R1R2inFR("_g1g2inFRin5Cog");
-
-	  if(TotEnergyCut){FillGeneralHisto("_g1inFRin5CogUnderPeak");}
-	  if(InEnergy){FillGeneralHisto("_g1inFRin5CogEThr");}
-	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1inFRin5CogUnderPeakEThr");}
-	  if(InEnergy){
-	    FillRadiusRangeHisto("_g1inFRin5CogEThr");
-	    FillTimeRangeHisto("_g1inFRin5CogEThr");
-	    FillTimeRangeCoGHisto("_g1inFRin5CogEThr");
-	  }
-	}
-
-	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50. && secondGInFR_def ){
-	  FillGeneralHisto("_g1g2inFRin5Cog");
-	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g1g2inFRin5CogUnderPeakEThr");}
 	}
       }
-      //second photon in FR
-      if(secondGInFR_def){
-	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
-	  FillGeneralHisto("_g2inFRin5Cog");
-	  FillWeightedHisto_R2inFR("_g2inFRin5Cog");
-	  if(TotEnergyCut && InEnergy ){FillGeneralHisto("_g2inFRin5CogUnderPeakEThr");}
-	}
-      }
-
-
       hname="NGammaGammaForEvent_TimeRequest"; 
       hSvc->FillHisto(hname,NGGInTheSameEventTime10ns , 1.);
       hname="NGammaGammaForEvent_10ns20DegreeDeltaThetaEthr90UnderPeack"; 
       hSvc->FillHisto(hname,NGGInTheSameEventTime10ns20DeltaPhiDeltaThetaEThr90UnderPeack, 1.);
-  
     }
   }
 
@@ -533,8 +562,8 @@ void AnnihilationSelection::FillWeightedHistoRooFit_R1inFR(std::string sufix){
   effg1=ReturnEfficiencyRooFitEThr90R1inFR(fg1Recal,fphig1);
   effg2=ReturnEfficiencyRooFitEThr90R1inFR(fg2Recal,fphig2);
   effScaleFactor=(1./effg1)*(1./effg2);
-  sufix2=sufix+"_RooFitEThr";
-  FillWeightedHistoAsAFunctionOfPhi(effScaleFactor,sufix2);
+  //sufix2=sufix+"_RooFitEThr";
+  //FillWeightedHistoAsAFunctionOfPhi(effScaleFactor,sufix2);
 
 }
 
@@ -1086,25 +1115,86 @@ void AnnihilationSelection::FillWeightedHistoAsAFunctionOfPhi(Double_t effScaleF
   std::string hname;
   Double_t phiDeg=fphig1*360./(2*TMath::Pi());
   if(phiDeg<0.)phiDeg=360+phiDeg;
+
+  Double_t phiDeg2=fphig2*360./(2*TMath::Pi());
+  if(phiDeg2<0.)phiDeg2=360+phiDeg2;
+  Double_t phi1Pred=phiDeg+180;
+  if(phi1Pred>360.) phi1Pred=phi1Pred-360;
+  Double_t dphi=phi1Pred-phiDeg2;
+
   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-  hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,(fg1t-fg2t) ,effScaleFactor );
+  hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,dphi ,effScaleFactor );
   if(phiDeg>=0. && phiDeg<45.)    { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in0_45"+sufix;     hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor ); 
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in0_45"+sufix;     hSvc->FillHisto(hname,(fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in0_45"+sufix;     hSvc->FillHisto(hname,dphi ,effScaleFactor );}
   else if(phiDeg>=45. && phiDeg<90.)   { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in45_90"+sufix;    hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in45_90"+sufix;     hSvc->FillHisto(hname, (fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in45_90"+sufix;     hSvc->FillHisto(hname, dphi ,effScaleFactor );}
   else if(phiDeg>=90. && phiDeg<135.)  { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in90_135"+sufix;   hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in90_135"+sufix;   hSvc->FillHisto(hname, (fg1t-fg2t)  ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in90_135"+sufix;   hSvc->FillHisto(hname, dphi  ,effScaleFactor );}
   else if(phiDeg>=135. && phiDeg<180.) { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in135_180"+sufix;  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in135_180"+sufix;  hSvc->FillHisto(hname, (fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in135_180"+sufix;  hSvc->FillHisto(hname, dphi ,effScaleFactor );}
   else if(phiDeg>=180. && phiDeg<225.) { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in180_225"+sufix;  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in180_225"+sufix;  hSvc->FillHisto(hname,(fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in180_225"+sufix;  hSvc->FillHisto(hname,dphi ,effScaleFactor );}
   else if(phiDeg>=225. && phiDeg<270.) { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in225_270"+sufix;  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in225_270"+sufix;  hSvc->FillHisto(hname,(fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in225_270"+sufix;  hSvc->FillHisto(hname,dphi ,effScaleFactor );}
   else if(phiDeg>=270. && phiDeg<315.) { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in270_315"+sufix;  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in270_315"+sufix;  hSvc->FillHisto(hname, (fg1t-fg2t)  ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in270_315"+sufix;  hSvc->FillHisto(hname, dphi  ,effScaleFactor );}
   else if(phiDeg>=315. && phiDeg<360.) { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in315_360"+sufix;  hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in315_360"+sufix;  hSvc->FillHisto(hname,(fg1t-fg2t) ,effScaleFactor );}
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in315_360"+sufix;  hSvc->FillHisto(hname,dphi ,effScaleFactor );}
 }
+
+
+void AnnihilationSelection::FillCoGAsAFunctionOfPhi(std::string sufix){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  Double_t phiDeg=fphig1*360./(2*TMath::Pi());
+  if(phiDeg<0.)phiDeg=360+phiDeg;
+  //fXWeighted
+  
+  hname="ECAL_gravTwoPhoton10ns_XCoG_total"+sufix;     hSvc->FillHisto(hname,fXWeighted  );
+  hname="ECAL_gravTwoPhoton10ns_YCoG_total"+sufix;     hSvc->FillHisto(hname,fYWeighted  );
+  hname="ECAL_gravTwoPhoton10ns_CoGmap_total"+sufix;     hSvc->FillHisto2(hname,fXWeighted,fYWeighted  );
+  if(phiDeg>=0. && phiDeg<45.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in0_45"+sufix;     hSvc->FillHisto(hname,fXWeighted  ); 
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in0_45"+sufix;     hSvc->FillHisto(hname,fYWeighted  ); 
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in0_45"+sufix;     hSvc->FillHisto2(hname,fXWeighted,fYWeighted  );
+  }
+  else if(phiDeg>=45. && phiDeg<90.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in45_90"+sufix;    hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in45_90"+sufix;    hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in45_90"+sufix;     hSvc->FillHisto2(hname, fXWeighted,fYWeighted  );
+  }
+  else if(phiDeg>=90. && phiDeg<135.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in90_135"+sufix;   hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in90_135"+sufix;   hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in90_135"+sufix;   hSvc->FillHisto2(hname, fXWeighted,fYWeighted   );
+  }
+  else if(phiDeg>=135. && phiDeg<180.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in135_180"+sufix;  hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in135_180"+sufix;  hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in135_180"+sufix;  hSvc->FillHisto2(hname, fXWeighted,fYWeighted  );
+  }
+  else if(phiDeg>=180. && phiDeg<225.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in180_225"+sufix;  hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in180_225"+sufix;  hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in180_225"+sufix;  hSvc->FillHisto2(hname,fXWeighted,fYWeighted  );
+  }
+  else if(phiDeg>=225. && phiDeg<270.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in225_270"+sufix;  hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in225_270"+sufix;  hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in225_270"+sufix;  hSvc->FillHisto2(hname,fXWeighted,fYWeighted  );
+  }
+  else if(phiDeg>=270. && phiDeg<315.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in270_315"+sufix;  hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in270_315"+sufix;  hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in270_315"+sufix;  hSvc->FillHisto2(hname, fXWeighted,fYWeighted   );
+  }
+  else if(phiDeg>=315. && phiDeg<360.){ 
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in315_360"+sufix;  hSvc->FillHisto(hname,fXWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in315_360"+sufix;  hSvc->FillHisto(hname,fYWeighted  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in315_360"+sufix;  hSvc->FillHisto2(hname,fXWeighted,fYWeighted  );
+  }
+}
+
 
 void AnnihilationSelection::CheckNumberHitsOnCh(Int_t chSeed1, Int_t chSeed2, Int_t& countHit1, Int_t& countHit2){
   TRecoVHit* hit=NULL;
@@ -1155,14 +1245,14 @@ Bool_t AnnihilationSelection::phiSymmetricalInECal(TVector3 P1, TVector3 P2,  do
   Double_t targetConst=1.78; //to use olny if the run is taken from September 2020 !!!! -> corrected in develop
   //if(isMC) targetConst=1; 
    targetConst=1; 
-  std::string hname1 = "AnnMet_NposInBunch_beam";
-  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
-  if (!isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
+
+  if (!fexternalPass && !isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
   //std::cout<<"tagetnPOT "<<fTarget_RecoBeam->getnPOT() << " and isTargetOutBool " << isTargetOut<< std::endl;
-  if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;
-  
+  if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;  
   //if(fRecoEvent->GetEventNumber()>270000) return passed;
 
+  std::string hname1 = "AnnMet_NposInBunch_beam";
+  hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
   hname = "AnnMet_nPOT";
   hSvc->FillHisto(hname,0,float(fTarget_RecoBeam->getnPOT()*targetConst)); 
   passed = true;
@@ -1796,7 +1886,7 @@ void AnnihilationSelection::fillEffVectorRooFit(){
 }
 
 
-Bool_t AnnihilationSelection::InitHistos()
+Bool_t AnnihilationSelection::InitHistos(Bool_t allAnnPlot)
 {
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
@@ -1819,21 +1909,23 @@ Bool_t AnnihilationSelection::InitHistos()
 
   std::vector<std::string> sufix;
   sufix.push_back("_g1inFRDTime10");
-  sufix.push_back("_g1g2inFRDTime10");
-  sufix.push_back("_g1inFRin20Deg");
-  sufix.push_back("_g1inFRin20DegThetaCutUnderPeak");
-  sufix.push_back("_g1inFRin20DegThetaCutEThr");
-  sufix.push_back("_g1inFRin20DegThetaCutUnderPeakEThr");
-  sufix.push_back("_g1g2inFRin20DegThetaCut");
-  sufix.push_back("_g1g2inFRin20DegThetaCutUnderPeakEThr");
-  sufix.push_back("_g1inFRin5Cog");
-  sufix.push_back("_g1inFRin5CogUnderPeak");
-  sufix.push_back("_g1inFRin5CogEThr");
-  sufix.push_back("_g1inFRin5CogUnderPeakEThr");
-  sufix.push_back("_g1g2inFRin5Cog");
-  sufix.push_back("_g1g2inFRin5CogUnderPeakEThr");
-  sufix.push_back("_g2inFRin5Cog");
-  sufix.push_back("_g2inFRin5CogUnderPeakEThr");
+  if(allAnnPlot){
+    sufix.push_back("_g1g2inFRDTime10");
+    sufix.push_back("_g1inFRin20Deg");
+    sufix.push_back("_g1inFRin20DegThetaCutUnderPeak");
+    sufix.push_back("_g1inFRin20DegThetaCutEThr");
+    sufix.push_back("_g1inFRin20DegThetaCutUnderPeakEThr");
+    sufix.push_back("_g1g2inFRin20DegThetaCut");
+    sufix.push_back("_g1g2inFRin20DegThetaCutUnderPeakEThr");
+    sufix.push_back("_g1inFRin5Cog");
+    sufix.push_back("_g1inFRin5CogUnderPeak");
+    sufix.push_back("_g1inFRin5CogEThr");
+    sufix.push_back("_g1inFRin5CogUnderPeakEThr");
+    sufix.push_back("_g1g2inFRin5Cog");
+    sufix.push_back("_g1g2inFRin5CogUnderPeakEThr");
+    sufix.push_back("_g2inFRin5Cog");
+    sufix.push_back("_g2inFRin5CogUnderPeakEThr");
+  }
   for(int i=0; i<sufix.size(); i++){
     binX=500;
     minX=0.;
@@ -1974,37 +2066,38 @@ Bool_t AnnihilationSelection::InitHistos()
     hname="ECAL_YCogvsXCog"+sufix.at(i);
     hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
   }
-  
-  binX=500;
-  minX=0.;
-  maxX=2000.;
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="Annihilation_NClAtLeast2g1inFREThr50";
-  hSvc->BookHisto(hname, binX, minX, maxX);
+  if(allAnnPlot){
+    binX=500;
+    minX=0.;
+    maxX=2000.;
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin4Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_2Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_4Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_6Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin4_8Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_2Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_4Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_6Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin5_8Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10ns_g1inFRin6Cog";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="Annihilation_NClAtLeast2g1inFREThr50";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+  }
 
   //eff weighted hitograms
   std::vector<std::string> sufixW;
   sufixW.push_back("_g1inFRDTime10");
-  sufixW.push_back("_g1inFRin5Cog");
+   if(allAnnPlot)sufixW.push_back("_g1inFRin5Cog");
   for(int i=0; i<sufixW.size(); i++){
     binX=500;
     minX=0.;
@@ -2039,144 +2132,151 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     
   }
-  std::vector<std::string> sufixW1;
-  sufixW1.push_back("_g2inFRin5Cog");
-  for(int i=0; i<sufixW1.size(); i++){
-    binX=500;
-    minX=0.;
-    maxX=2000.;
-    hname="ECAL_gravTwoPhoton10ns_WEffR2inFR" + sufixW1.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);   
+ if(allAnnPlot){
+   std::vector<std::string> sufixW1;
+   sufixW1.push_back("_g2inFRin5Cog");
+   for(int i=0; i<sufixW1.size(); i++){
+     binX=500;
+     minX=0.;
+     maxX=2000.;
+     hname="ECAL_gravTwoPhoton10ns_WEffR2inFR" + sufixW1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);   
+   }
+   std::vector<std::string> sufixW2;
+   sufixW2.push_back("_g1g2inFRDTime10");
+   sufixW2.push_back("_g1g2inFRin5Cog");
+   for(int i=0; i<sufixW2.size(); i++){
+     binX=500;
+     minX=0.;
+     maxX=2000.;
+     hname="ECAL_gravTwoPhoton10ns_WEffR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WAccR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WAccEffR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_WAccEffPlusSysR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+   }
+   std::vector<std::string> sufixT;
+   sufixT.push_back("_g1inFRin5Cog");
+   for(int i=0; i<sufixT.size(); i++){
+     binX=500;
+     minX=0.;
+     maxX=2000.;
+     hname="ECAL_gravTwoPhoton10ns_WEffTruthR1inFR"+sufixT.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
   }
+   std::vector<std::string> sufixT2;
+   sufixT2.push_back("_g1g2inFRin5Cog");
+   for(int i=0; i<sufixT2.size(); i++){
+     binX=500;
+     minX=0.;
+     maxX=2000.;
+     hname="ECAL_gravTwoPhoton10ns_WEffTruthR1R2inFR"+sufixT2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+   }
+   
 
-  std::vector<std::string> sufixW2;
-  sufixW2.push_back("_g1g2inFRDTime10");
-  sufixW2.push_back("_g1g2inFRin5Cog");
-  for(int i=0; i<sufixW2.size(); i++){
-    binX=500;
-    minX=0.;
-    maxX=2000.;
-    hname="ECAL_gravTwoPhoton10ns_WEffR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusSysR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusSysRandomR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysRandomR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WEffPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WAccR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WAccEffR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_WAccEffPlusSysR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusStatisticErrorR1R2inFR" + sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusSysRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondRandomR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusUpSysFirstLowSysSecondR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10ns_W2ndApproachPlusLowSysFirstUpSysSecondR1R2inFR"+sufixW2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-  }
+   binX=50;
+   minX=0.;
+   maxX=1.5;
+   hname="ECAL_AcceptanceEffective_r1inFR";
+   hSvc->BookHisto(hname, binX, minX, maxX);
+   hname="ECAL_AcceptanceEffective_r1r2inFR";
+   hSvc->BookHisto(hname, binX, minX, maxX);
+   binX=100;
+   minX=0.;
+   maxX=0.15;
+   binY=50;
+   minY=0.;
+   maxY=1.5;
+   hname="ECAL_AcceptanceEffectiveVStheta1_r1inFR";
+   hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+   hname="ECAL_AcceptanceEffectiveVStheta1_r1r2inFR";
+   hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
 
-  std::vector<std::string> sufixT;
-  sufixT.push_back("_g1inFRin5Cog");
-  for(int i=0; i<sufixT.size(); i++){
-    binX=500;
-    minX=0.;
-    maxX=2000.;
-    hname="ECAL_gravTwoPhoton10ns_WEffTruthR1inFR"+sufixT.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-  }
+   binX=370;
+   minX=-10;
+   maxX=360;
+   binY=50;
+   minY=0.;
+   maxY=1.5;
+   hname="ECAL_R1R2inFR_EfficiencyVSPhi_InnerRadius";
+   hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+   hname="ECAL_R1R2inFR_EfficiencyVSPhi_OutRadius";
+   hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+ }   //end of  if(allAnnPlot)
+ binX=370;
+ minX=-10;
+ maxX=360;
+ binY=50;
+ minY=0.;
+ maxY=1.5;
+ hname="ECAL_R1inFR_EfficiencyVSPhi_InnerRadius";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
+ hname="ECAL_R1inFR_EfficiencyVSPhi_OutRadius";
+ hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
 
-  std::vector<std::string> sufixT2;
-  sufixT2.push_back("_g1g2inFRin5Cog");
-  for(int i=0; i<sufixT2.size(); i++){
-    binX=500;
-    minX=0.;
-    maxX=2000.;
-    hname="ECAL_gravTwoPhoton10ns_WEffTruthR1R2inFR"+sufixT2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-  }
-
-
-  binX=50;
-  minX=0.;
-  maxX=1.5;
-  hname="ECAL_AcceptanceEffective_r1inFR";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_AcceptanceEffective_r1r2inFR";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  binX=100;
-  minX=0.;
-  maxX=0.15;
-  binY=50;
-  minY=0.;
-  maxY=1.5;
-  hname="ECAL_AcceptanceEffectiveVStheta1_r1inFR";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-  hname="ECAL_AcceptanceEffectiveVStheta1_r1r2inFR";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-
-  binX=370;
-  minX=-10;
-  maxX=360;
-  binY=50;
-  minY=0.;
-  maxY=1.5;
-  hname="ECAL_R1inFR_EfficiencyVSPhi_InnerRadius";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-  hname="ECAL_R1inFR_EfficiencyVSPhi_OutRadius";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-  hname="ECAL_R1R2inFR_EfficiencyVSPhi_InnerRadius";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-  hname="ECAL_R1R2inFR_EfficiencyVSPhi_OutRadius";
-  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY );
-
-  std::vector<std::string> sufixP;
-  sufixP.push_back("_g1inFRDTime10_NoWeight");
-  sufixP.push_back("_g1inFRDTime10");
-  sufixP.push_back("_g1inFRDTime10_RooFit"); 
-  sufixP.push_back("_g1inFRDTime10_RooFitEThr");
-  sufixP.push_back("_g1inFRin5Cog_NoWeight");
-  sufixP.push_back("_g1inFRin5Cog");
-  sufixP.push_back("_g1inFRin5Cog_RooFit");
-  sufixP.push_back("_g1inFRin5Cog_RooFitEThr");
-  for(int i=0; i<sufixP.size(); i++){
-    binX=500;
-    minX=0.;
-    maxX=2000.;
-    hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_total"+sufixP.at(i); 
-    hSvc->BookHisto(hname, binX, minX, maxX);  
-    hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in0_45"+sufixP.at(i); 
-    hSvc->BookHisto(hname, binX, minX, maxX);  
-    hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in45_90"+sufixP.at(i); 
-    hSvc->BookHisto(hname, binX, minX, maxX); 
+ std::vector<std::string> sufixP;
+ sufixP.push_back("_g1inFRDTime10_NoWeight");
+ sufixP.push_back("_g1inFRDTime10");
+ sufixP.push_back("_g1inFRDTime10_RooFit"); 
+ if(allAnnPlot){
+   sufixP.push_back("_g1inFRDTime10_RooFitEThr");
+   sufixP.push_back("_g1inFRin5Cog_NoWeight");
+   sufixP.push_back("_g1inFRin5Cog");
+   sufixP.push_back("_g1inFRin5Cog_RooFit");
+   sufixP.push_back("_g1inFRin5Cog_RooFitEThr");
+ }
+ for(int i=0; i<sufixP.size(); i++){
+   binX=500;
+   minX=0.;
+   maxX=2000.;
+   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_total"+sufixP.at(i); 
+   hSvc->BookHisto(hname, binX, minX, maxX);  
+   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in0_45"+sufixP.at(i); 
+   hSvc->BookHisto(hname, binX, minX, maxX);  
+   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in45_90"+sufixP.at(i); 
+   hSvc->BookHisto(hname, binX, minX, maxX); 
     hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in90_135"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX); 
     hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in135_180"+sufixP.at(i);
@@ -2189,90 +2289,86 @@ Bool_t AnnihilationSelection::InitHistos()
     hSvc->BookHisto(hname, binX, minX, maxX);
     hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in315_360"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    binX=100;
-    minX=-12.;
-    maxX=12.;
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_total"+sufixP.at(i); 
+    binX=120;
+    minX=-30.;
+    maxX=30.;
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_total"+sufixP.at(i); 
     hSvc->BookHisto(hname, binX, minX, maxX);  
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in0_45"+sufixP.at(i); 
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in0_45"+sufixP.at(i); 
     hSvc->BookHisto(hname, binX, minX, maxX);  
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in45_90"+sufixP.at(i); 
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in45_90"+sufixP.at(i); 
     hSvc->BookHisto(hname, binX, minX, maxX); 
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in90_135"+sufixP.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in90_135"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX); 
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in135_180"+sufixP.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in135_180"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in180_225"+sufixP.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in180_225"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in225_270"+sufixP.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in225_270"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in270_315"+sufixP.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in270_315"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_gravTwoPhoton10nsDTime_WEffR1inFR_g1in315_360"+sufixP.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-  }
-
-
-  
-  binX=500;
-  minX=0.;
-  maxX=2000.;
-  std::vector<std::string> sufix1;
-  sufix1.push_back("_g1inFRin5CogEThr");
-  for(int i=0; i<sufix1.size(); i++){
-    hname="ECAL_g1RadiusRange90_260_twoPhotonInTime10ns" +sufix1.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_g1RadiusRange110_240_twoPhotonInTime10ns"+sufix1.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_g1RadiusRange130_220_twoPhotonInTime10ns"+sufix1.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_g1RadiusRange150_200_twoPhotonInTime10ns"+sufix1.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_g1RadiusRange134_216_twoPhotonInTime10ns"+sufix1.at(i);
+    hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in315_360"+sufixP.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
   }
 
 
-  std::vector<std::string> sufix2;
-  sufix2.push_back("_g1inFRin5CogEThr");
-  for(int i=0; i<sufix2.size(); i++){
-    hname="ECAL_1TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_2TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_3TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_4TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_5TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    binX=400;
-    minX=-60;
-    maxX=60.;
-    hname="ECAL_1TimeRange_XCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_2TimeRange_XCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_3TimeRange_XCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_4TimeRange_XCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_5TimeRange_XCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_1TimeRange_YCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_2TimeRange_YCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_3TimeRange_YCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_4TimeRange_YCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-    hname="ECAL_5TimeRange_YCoGInTime10ns"+sufix2.at(i);
-    hSvc->BookHisto(hname, binX, minX, maxX);
-
-
-  }
-
+ if(allAnnPlot){
+   binX=500;
+   minX=0.;
+   maxX=2000.;
+   std::vector<std::string> sufix1;
+   sufix1.push_back("_g1inFRin5CogEThr");
+   for(int i=0; i<sufix1.size(); i++){
+     hname="ECAL_g1RadiusRange90_260_twoPhotonInTime10ns" +sufix1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_g1RadiusRange110_240_twoPhotonInTime10ns"+sufix1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_g1RadiusRange130_220_twoPhotonInTime10ns"+sufix1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_g1RadiusRange150_200_twoPhotonInTime10ns"+sufix1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_g1RadiusRange134_216_twoPhotonInTime10ns"+sufix1.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+   }
+   std::vector<std::string> sufix2;
+   sufix2.push_back("_g1inFRin5CogEThr");
+   for(int i=0; i<sufix2.size(); i++){
+     hname="ECAL_1TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_2TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_3TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_4TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_5TimeRange_twoPhotonInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     binX=400;
+     minX=-60;
+     maxX=60.;
+     hname="ECAL_1TimeRange_XCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_2TimeRange_XCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_3TimeRange_XCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_4TimeRange_XCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_5TimeRange_XCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_1TimeRange_YCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_2TimeRange_YCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_3TimeRange_YCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_4TimeRange_YCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+     hname="ECAL_5TimeRange_YCoGInTime10ns"+sufix2.at(i);
+     hSvc->BookHisto(hname, binX, minX, maxX);
+   }
+ }
   binX=6;
   minX=0.5;
   maxX=5.5;
@@ -2283,34 +2379,70 @@ Bool_t AnnihilationSelection::InitHistos()
   hname="NGammaGammaForEvent_10ns20DegreeDeltaThetaEthr90UnderPeack"; 
   hSvc->BookHisto(hname, binX, minX, maxX);
 
+  if(allAnnPlot){
+    binX=250;
+    minX=0.;
+    maxX=1000.;
+    hname="ECAL_gravTwoPhoton10ns"; 
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg2EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFR";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFRg1Ethr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFRg2Ethr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFR5CoG";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg1EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg2EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoG";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg1EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg2EThr";
+    hSvc->BookHisto(hname, binX, minX, maxX);
+  }
 
-  binX=250;
-  minX=0.;
-  maxX=1000.;
-  hname="ECAL_gravTwoPhoton10ns"; 
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg2EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFR";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFRg1Ethr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFRg2Ethr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFR5CoG";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg1EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg2EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoG";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg1EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg2EThr";
-  hSvc->BookHisto(hname, binX, minX, maxX);
+
+
+  std::vector<std::string> sufixC;
+  sufixC.push_back("_g1inFRDTime10");
+  for(int i=0; i<sufixC.size(); i++){
+    hname="ECAL_gravTwoPhoton10ns_XCoG_total"+sufixC.at(i);          hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_total"+sufixC.at(i);          hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_total"+sufixC.at(i);        hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  ); 
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  ); 
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in0_45"+sufixC.at(i);     hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in45_90"+sufixC.at(i);      hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in45_90"+sufixC.at(i);      hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in45_90"+sufixC.at(i);    hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in90_135"+sufixC.at(i);     hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in90_135"+sufixC.at(i);     hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in90_135"+sufixC.at(i);   hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in135_180"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in135_180"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in135_180"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in180_225"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in180_225"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in180_225"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in225_270"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in225_270"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in225_270"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in270_315"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in270_315"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in270_315"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in315_360"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in315_360"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in315_360"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+
+  }
 
   if(fdataMCmethod)fDataMCMethod->InitHistos();
   if(fScaleFMethod)fMCscaleF->InitHistos();
@@ -2397,4 +2529,6 @@ void  AnnihilationSelection::printCounters(){
   std::cout<<"fcountDTime10g1g2InFR5CoGg2EThr "<<fcountDTime10g1g2InFR5CoGg2EThr  << std::endl;	
 
 }
+
+
 

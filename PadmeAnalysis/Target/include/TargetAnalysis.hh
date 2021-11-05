@@ -2,6 +2,7 @@
 #define TargetAnalysis_h 1
 
 #include "ValidationBase.hh"
+#include <map>
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -26,7 +27,7 @@ public:
   Bool_t ProcessDataQuality();
   Bool_t Finalize();
   
-  
+  Bool_t PassEvent();
   
 private:
   TTargetRecoBeam* fRecoBeam;
@@ -40,6 +41,9 @@ private:
   Double_t nPOTErrgoodXY_job;
   Double_t nPOTbadXorY_job;
   Double_t nPOTErrbadXorY_job;
+
+  std::map<Int_t, Double_t> fnPOTmean;
+  std::map<Int_t, Double_t> fnPOTsigma;
 
 };
 

@@ -16,6 +16,9 @@ ECalAnalysis::ECalAnalysis(Int_t processingMode, Int_t verbosityFlag): Validatio
 {
   fAlgoName = "ECal";
   InitHistos();
+  UploadClShift();
+  fxECalSurvey = 3.13;
+  fyECalSurvey = 3.86;
   return;
 }
 ECalAnalysis::~ECalAnalysis()
@@ -504,4 +507,299 @@ void ECalAnalysis::EnergyCalibration(Bool_t isMC , Bool_t SPAnalysis)
     }
   return;
 
+}
+
+
+
+
+void ECalAnalysis::UploadClShift(){
+
+  fXBeamOnECalPlanePerRun.insert({30369,1.861}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30369,0.655});  // my COGy after ECal survey position 
+  
+  fXBeamOnECalPlanePerRun.insert({30386,3.641}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30386,0.28});  // my COGy after ECal survey position   
+
+  fXBeamOnECalPlanePerRun.insert({30547,1.2124}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30547,-0.46});  // my COGy after ECal survey position 
+
+  fXBeamOnECalPlanePerRun.insert({30553,1.0357}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30553,0.99});  // my COGy after ECal survey position   
+
+  fXBeamOnECalPlanePerRun.insert({30563,0.69}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30563,0.0});  // my COGy after ECal survey position
+   
+  fXBeamOnECalPlanePerRun.insert({30617,4.075}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30617,0.1157});  // my COGy after ECal survey position 
+
+  fXBeamOnECalPlanePerRun.insert({30624,5.007}); // my COGx after ECal survey position 
+  fYBeamOnECalPlanePerRun.insert({30624,0.0});  // my COGy after ECal survey position 
+
+  
+
+}
+
+
+
+
+void ECalAnalysis::ShiftPositions(int RunN, Bool_t isMC){
+
+  TRecoVHit* hit;
+  for (Int_t i=0; i<fhitEvent->GetNHits(); ++i){
+    hit = fhitEvent->Hit(i);
+    if(hit){
+      if (!isMC)
+	{
+	  Double_t x =fxECalSurvey + hit->GetPosition().X();
+	  Double_t y =fyECalSurvey + hit->GetPosition().Y();
+	  Double_t z =               hit->GetPosition().Z();
+	  if (fXBeamOnECalPlanePerRun.find(RunN)==fXBeamOnECalPlanePerRun.end()){
+	      std::cout << "---> warning from correctClPosition : RunN " << RunN << " CoG shift not founded " << std::endl;
+	  }
+	  else{
+	      Double_t xoff = fXBeamOnECalPlanePerRun[RunN];
+	      Double_t yoff = fYBeamOnECalPlanePerRun[RunN];
+	      Double_t xL = x - xoff;
+	      Double_t yL = y - yoff;
+	      TVector3 position(xL, yL, z);
+	      hit->SetPosition(position);
+	  }
+	}
+    }
+  }
+  
+  TRecoVCluster* xClu;
+  for (int h=0; h<fClColl->GetNElements(); ++h)
+    {
+      xClu = fClColl->Element((int)h);
+      if (xClu) 
+	{
+	  if (!isMC){
+	    Double_t x =fxECalSurvey + xClu->GetPosition().X();
+	    Double_t y =fyECalSurvey + xClu->GetPosition().Y();
+	    Double_t z =               xClu->GetPosition().Z();
+	    //std::cout<<"cluster "<< h <<" before shifting x " << xClu->GetPosition().X() << " ecal shift " << fxECalSurvey << " cog " << fXBeamOnECalPlanePerRun[RunN] << " -> " <<fxECalSurvey+xClu->GetPosition().X()-fXBeamOnECalPlanePerRun[RunN] << std::endl; 
+	    if (fXBeamOnECalPlanePerRun.find(RunN)==fXBeamOnECalPlanePerRun.end()){
+	      std::cout << "---> warning from correctClPosition : RunN " << RunN << " CoG shift not founded " << std::endl;
+	    }
+	    else{
+	      Double_t xoff = fXBeamOnECalPlanePerRun[RunN];
+	      Double_t yoff = fYBeamOnECalPlanePerRun[RunN];
+	      Double_t xL = x - xoff;
+	      Double_t yL = y - yoff;
+	      TVector3 position(xL, yL, z);
+	      xClu->SetPosition(position);
+	      // std::cout<<"after shifting x " << xClu->GetPosition().X()  << " y " << xClu->GetPosition().Y() << std::endl; 
+	    }
+	   
+	  }
+	}
+    }
+  return;
+
+
+}
+
+
+
+std::vector<int> ECalAnalysis::passClCut(){
+
+  std::vector<int> ClPassedCut;
+
+  Double_t  distClosestClInT, distClosestClOutT, ELCl, EsLClInT, EsLClOutT, dist, xp, yp;
+  Int_t iCloseInT, iCloseOutT;
+  Double_t distFromSeed;
+  TRecoVHit* ahit;
+  std::vector<Int_t> hitV;
+
+  Int_t passedCut = 0;
+  TRecoVCluster* xClu;
+  TRecoVCluster* xClu2;
+  for (int h=0; h<fClColl->GetNElements(); ++h){
+      xClu = fClColl->Element((int)h);
+      hitV = (xClu->GetHitVecInClus());
+      ClPassedCut.push_back(passedCut);
+      if (xClu->GetTime()<-110.) continue; 
+       ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 1
+
+      Double_t  ClusterXDistFromSeed=xClu->GetPosition().X() - (fhitEvent->Hit(xClu->GetSeed()))->GetPosition().X();
+      Double_t  ClusterYDistFromSeed=xClu->GetPosition().Y() - (fhitEvent->Hit(xClu->GetSeed()))->GetPosition().Y();
+      distFromSeed = sqrt(ClusterXDistFromSeed*ClusterXDistFromSeed   +  ClusterYDistFromSeed*ClusterYDistFromSeed);
+      if(distFromSeed > 20.) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 2
+
+
+      //if (ClusterE->at(ic)<90.) continue;
+      //fClPassedCut.at(ic) = fClPassedCut.at(ic) + 1; 
+
+      //if (ClusterE->at(ic)>500.) continue;
+      //fClPassedCut.at(ic) = fClPassedCut.at(ic) + 1; 
+
+      Double_t hitE=0.;
+      Double_t hitX=0.;
+      Double_t hitY=0.;
+      Double_t hitT=0.;
+
+      Double_t xC=0.;
+      Double_t yC=0.;
+      Double_t tC=0.;
+      
+      Double_t sumE =0.;
+      Double_t xSres=0.;
+      Double_t ySres=0.;
+      Double_t xSres2=0.;
+      Double_t ySres2=0.;
+      Double_t xSres3=0.;
+      Double_t ySres3=0.;
+      Double_t tSres  = 0.;
+      Double_t tSres2 = 0.;
+      Double_t covS = 0.;
+      Double_t clFarX = -100.;
+      Double_t clFarY = -100.;
+      Double_t distX = 0.;
+      Double_t distY = 0.;
+      Double_t xres; 
+      Double_t yres; 
+      Double_t tres; 
+      for (int i=0; i< xClu->GetNHitsInClus(); ++i){
+	ahit =  fhitEvent->Hit(hitV[i]);;
+	hitE = 	ahit->GetEnergy();
+	hitT = 	ahit->GetTime();
+	hitX = ahit->GetPosition().X();
+	hitY = ahit->GetPosition().Y();
+	sumE = sumE + hitE;
+	// x,y,t centroid
+	xC = xC + hitX*hitE; 
+	yC = yC + hitY*hitE; 
+	tC = tC + hitT*hitE;
+
+	xres = hitX-xClu->GetPosition().X();
+	yres = hitY-xClu->GetPosition().Y();
+	tres = hitT-xClu->GetTime();
+	
+	//residuals x,y,t
+	xSres += (xres*hitE);
+	ySres += (yres*hitE);
+	tSres += (tres*hitE);
+	//residuals^2 x,y,t
+	xSres2 = xSres2 + xres * xres * hitE;
+	ySres2 = ySres2 + yres * yres * hitE;
+	tSres2 = tSres2 + tres * tres * hitE;
+	covS   = covS   + xres * yres * hitE;
+	
+	//residuals^3 x,y,t
+	xSres3 = xSres3 + xres * xres * xres * hitE;
+	ySres3 = ySres3 + yres * yres * yres * hitE;
+	//if (clE>90.) std::cout<<" xres, xres * xres * xres * hitE, hitE, xSres3 "<<xres<<" "<<xres * xres * xres * hitE<<" "<<hitE<<" "<<xSres3<<std::endl;
+	
+	//dist from seed
+	distX = fabs(hitX -  (fhitEvent->Hit(xClu->GetSeed()))->GetPosition().X());
+	if (distX>clFarX) clFarX = distX;
+	distY = fabs(hitY -  (fhitEvent->Hit(xClu->GetSeed()))->GetPosition().Y());
+	if (distY>clFarY) clFarY = distY;	
+      }
+  
+      xC = xC / sumE;
+      yC = yC / sumE;
+      tC = tC / sumE;
+      xSres = xSres/ sumE;
+      ySres = ySres/ sumE;
+      tSres = tSres/ sumE;
+      xSres2 = xSres2/ sumE;
+      ySres2 = ySres2/ sumE;
+      tSres2 = tSres2/ sumE;
+
+      Double_t xRMS = sqrt(xSres2);
+      Double_t yRMS = sqrt(ySres2);
+      Double_t tRMS = sqrt(tSres2);
+      Double_t lcc = covS/sumE;
+      lcc = lcc/xRMS/yRMS;
+
+
+      if (xClu->GetNHitsInClus()>2 && xRMS<1.) continue; 
+      if (xRMS<1.) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 3
+
+      if (xClu->GetNHitsInClus()>2 && yRMS<1.) continue; 
+      if (yRMS<1.) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 4
+
+      if (xClu->GetNHitsInClus()==1) continue;
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 5
+
+      if (xClu->GetNHitsInClus()>2 && clFarX<1.) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 6
+
+      if (xClu->GetNHitsInClus()>2 && clFarY<1.) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 7
+
+      if (fabs(lcc)>0.99) continue; 
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 8
+      
+      if (tRMS>3.) continue;
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 9
+
+      
+      distClosestClInT=999999.;
+      ELCl     = 999999.;
+      EsLClInT = 999999.;
+      distClosestClOutT=999999.;
+      EsLClOutT = 999999.;
+      iCloseInT = -1;
+      iCloseOutT = -1;
+      
+      for(Int_t i=1; i<fClColl->GetNElements(); ++i)
+	{
+	  if (i==h) continue;
+	  xClu2 = fClColl->Element((int)i);
+	  dist = sqrt( (xClu2->GetPosition().X() - xClu->GetPosition().X())*(xClu2->GetPosition().X() - xClu->GetPosition().X())+(xClu2->GetPosition().Y() - xClu->GetPosition().Y())*(xClu2->GetPosition().Y() - xClu->GetPosition().Y()) ); 
+
+	  if (fabs(xClu->GetTime()-xClu2->GetTime())<10.)
+	    {
+	      if ( dist < distClosestClInT )
+		{
+		  distClosestClInT = dist;
+		  iCloseInT = i;
+		}
+	    }
+	  else
+	    {
+	      if ( dist < distClosestClOutT )
+		{
+		  distClosestClOutT = dist;
+		  iCloseOutT = i;
+		}
+	    }
+	}/*
+      ELCl      = xClu->GetEnergy();
+      if (iCloseInT > ic) {
+	if ( iCloseInT>-1) 
+	  {
+	    EsLClInT = ClusterE->at(iCloseInT);
+	    if (ClusterE->at(ic) <  ClusterE->at(iCloseInT))  {EsLClInT  = ClusterE->at(ic);ELCl     = ClusterE->at(iCloseInT);}
+	    iFill ("hClQ_distClosestClInT", distClosestClInT);
+	    iFill2d("hClQ_distClosestClInTVsEsL", EsLClInT, distClosestClInT);
+	    iFill2d("hClQ_distClosestClInTVsSumE", EsLClInT+ELCl, distClosestClInT);
+	  }
+      }
+      if (iCloseOutT > ic) {
+	if ( iCloseOutT>-1) 
+	  {      
+	    EsLClOutT = ClusterE->at(iCloseOutT);
+	    if (ClusterE->at(ic) <  ClusterE->at(iCloseOutT)) {EsLClOutT = ClusterE->at(ic);ELCl     = ClusterE->at(iCloseOutT);}
+	    iFill ("hClQ_distClosestClOutT", distClosestClOutT);
+	    iFill2d("hClQ_distClosestClOutTVsEsL", EsLClOutT, distClosestClOutT);
+	    iFill2d("hClQ_distClosestClOutTVsSumE", EsLClOutT+ELCl, distClosestClOutT);
+	  }
+      }
+	 */
+      if (distClosestClInT < 200.) continue;  
+      ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 10
+            
+    }
+
+
+  //std::cout<<"Ncluster " << (int)(fClColl->GetNElements()) << " vector size " << ClPassedCut.size() << std::endl;
+
+    return ClPassedCut;
 }

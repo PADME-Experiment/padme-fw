@@ -76,7 +76,8 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 0);
   fReproductSACbunchStructure = (Int_t)fConfig->GetParOrDefault("RECO", "BunchStructureSAC_runJuly", 0);
     if(fReproductSACbunchStructure){
-      TFile *file1 =new TFile("TimeDistribution3.root");
+      //TFile *file1 =new TFile("TimeDistribution3.root");  //test for the strange time distribution observed in data took with 5K POT/bunch in July20200
+      TFile *file1 =new TFile("TimeDistribution.root");    //bunch distribution golden run July2019
       hSAC_HitTime = (TH1F*)file1->Get("SAC_HitTime");
       // hSAC_HitTime->GetXaxis()->SetRange(-100,50);
       //hCumulative = new TH1F(); 
@@ -938,12 +939,14 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       /*double xc = r->Rndm();
 	double ydc = digiTime+(xc-0.5);
 	double ys = fComulativeMax*(ydc-minTime)/width;*/
-      double ys = fComulativeMax*(digiTime-13.5)/263.5;
+      //double ys = fComulativeMax*(digiTime-13.5)/263.5;
+      //double ys = fComulativeMax*(digiTime-300)/150;
+      double ys = fComulativeMax*(digiTime-minTime)/width;
       Int_t isbin = hCumulative->FindFirstBinAbove(ys);
       double xs = hCumulative->GetBinCenter(isbin);
       if( xs <-45. )std::cout<<"old time " << digiTime<<" ys " << ys << " isbin " << isbin << " new Time " << xs << std::endl;
-      digi->SetTime(xs+shiftTime);
-      GetHisto("ECALHitTimeDistribution_bunch")->Fill(xs+shiftTime);
+      digi->SetTime(xs+350);
+      GetHisto("ECALHitTimeDistribution_bunch")->Fill(digi->GetTime());
     }
   }
 
@@ -1052,8 +1055,14 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       Double_t meanNoise=-0.3492;
       //Double_t sigmaNoise=1.95; //from data all template
       Double_t sigmaNoise=-0.0168351+0.137532*energy_-0.000460502*energy_*energy_+5.00259e-07*energy_*energy_*energy_;   //from data rms function
-      for(int i=time_-30; i<1024; i++){
+      /*for(int i=time_-30; i<1024; i++){ // test no noise
 	Double_t noise=r->Gaus(meanNoise, sigmaNoise);
+	//	wave_forDigitiser[i]+=noise;
+	tempVec.at(i)+=noise;
+	}*/
+      for(int i=time_-30; i<1024; i++){ // test noise IO 19/07/21
+	sigmaNoise=0.62;//sqrt(tempVec.at(i)); //0.62 from mean of RMS at different energies of diff wave-template
+	Double_t noise=r->Gaus(0, sigmaNoise);
 	//	wave_forDigitiser[i]+=noise;
 	tempVec.at(i)+=noise;
       }
@@ -1356,7 +1365,7 @@ if(fReproductSACbunchStructure){
       }
     }
     
-    if (energy<1.5) continue;  // to simulate zSup
+    //if (energy<1.5) continue;  // to simulate zSup
     if(fDeteriorateHitEnResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
       Double_t sigma=3.3;
       //Double_t sigma = 2.82072e-01 + 1.21666e-02*energy+ 3.52981e-05*energy*energy;

@@ -4,6 +4,7 @@
 #include "TObject.h"
 #include "TString.h"
 #include "TVector3.h"
+#include <vector>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -19,7 +20,7 @@ class TagAndProbeSelection : public TObject
 
 public:
   TagAndProbeSelection();
-  TagAndProbeSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt );
+  TagAndProbeSelection(Int_t processingMode, Int_t verbosityFlag, Bool_t NoTargetBoolt, Bool_t externalPass );
   ~TagAndProbeSelection();
   virtual Bool_t Init(TRecoEvent* eventHeader, 
 		      TRecoVObject* ECALev, TRecoVClusCollection* ECALcl,
@@ -27,8 +28,8 @@ public:
 		      TRecoVObject* TARGETev, TTargetRecoBeam* TargetBeam);
   virtual Bool_t Finalize(){return true;}
 
-  virtual Bool_t InitHistos();
-  virtual Bool_t Process(Bool_t isMC);
+  virtual Bool_t InitHistos(Bool_t allAnnPlot);
+  virtual Bool_t Process(Bool_t isMC, Bool_t makeClSelection, std::vector<int> selCl, Bool_t allAnnPlot);
 
   Bool_t phiSymmetricalInECal(TVector3 P1, TVector3 P2,  double& distPhi);
   Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC);
@@ -50,6 +51,9 @@ public:
   void FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsTag(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
   void FillHistoTagAndProbe_PhiRegionsCalchep430RadiusRegionsProbe(Double_t DeltaEnergyFunction, Double_t phi ,Double_t radius, std::string sufix );
 
+  void FillMM2AsAFunctionOfPhi(Double_t mm2, Double_t phi ,Double_t radius, std::string sufix );
+
+
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
@@ -66,6 +70,7 @@ protected:
   Int_t    fVerbose;
   Int_t    fProcessingMode;
   Bool_t   fNoTargetBool;
+  Bool_t   fexternalPass;
 
   Bool_t fInitToComplete;  
 
@@ -73,6 +78,8 @@ protected:
   Double_t fFRmin;
   Double_t fFRmid;
   Double_t fFRmax;
+
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

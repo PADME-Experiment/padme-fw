@@ -56,6 +56,27 @@ Bool_t TargetAnalysis::Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTarg
   fRecoEvent = EventHeader;
   fhitEvent = ev;
   fRecoBeam = b;
+
+ 
+ 
+
+  fnPOTmean.insert({30369,26993. });
+  fnPOTmean.insert({30386,19057. });  
+  fnPOTmean.insert({30547,31480. });
+  fnPOTmean.insert({30553,35729. });
+  fnPOTmean.insert({30563,26785. }); 
+  fnPOTmean.insert({30617,27380. });
+  fnPOTmean.insert({30624,29515. }); 
+
+  fnPOTsigma.insert({30369,1738.  });
+  fnPOTsigma.insert({30386,1385.  });  
+  fnPOTsigma.insert({30547,1402.  }); 
+  fnPOTsigma.insert({30553,1314.  });  
+  fnPOTsigma.insert({30563,1231.  }); 
+  fnPOTsigma.insert({30617,1496.  }); 
+  fnPOTsigma.insert({30624,2070.  });  
+
+
   return retCode;
 }
 
@@ -70,6 +91,21 @@ Bool_t TargetAnalysis::InitHistosAnalysis()
    hSvc->BookHisto(hname, 19, 0.5, 19.5);
    hname = "TargetBeam_nPOT";
    hSvc->BookHisto(hname, 100, 0., 30000.);
+
+   hname="TargetBeamNpot";
+   hSvc->BookHisto(hname, 10000, 0., 80000.);
+   hname="TargetNpot";
+   hSvc->BookHisto(hname, 3, -1.5, 1.5);
+   hname="TargetBeamNpot_afterCleaning";
+   hSvc->BookHisto(hname, 10000, 0., 80000.);
+   hname="TargetNpot_afterCleaning";
+   hSvc->BookHisto(hname, 3, -1.5, 1.5);
+   hname="TargetBeamNpot_afterCleaningWithCalibCG";
+   hSvc->BookHisto(hname, 10000, 0., 80000.);
+   hname="TargetNpot_afterCleaningWithCalibCG";
+   hSvc->BookHisto(hname, 3, -1.5, 1.5);
+
+
    return true;
 }
 Bool_t TargetAnalysis::InitHistosValidation()
@@ -749,3 +785,50 @@ Bool_t TargetAnalysis::Finalize()
   return retCode;
 }
   
+
+Bool_t TargetAnalysis::PassEvent()
+{
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  Bool_t passEvent=false;
+  if (!fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) 
+    {
+      if (!fRecoEvent->GetTriggerMaskBit(TRECOEVENT_TRIGMASKBIT_BEAM)) return passEvent;
+    }
+
+  Int_t RunN=fRecoEvent->GetRunNumber();
+  Double_t mean  = fnPOTmean[RunN];
+  Double_t sigma = fnPOTsigma[RunN];
+  
+  Double_t npot=fRecoBeam->getnPOT();
+
+
+  hname="TargetBeamNpot";
+  hSvc->FillHisto(hname,npot,1.);
+  hname="TargetNpot";
+  hSvc->FillHisto(hname,0,(float)npot);
+
+  Double_t minNpot=mean-5*sigma;
+  Double_t maxNpot=mean+5*sigma;
+
+  if(mean==0 && sigma ==0){
+    std::cout<<"WARNING------ this run has not saved nPOT mean and sigma ---- nPOT selection not good " << std::endl;
+    minNpot=13000;
+    maxNpot=40000;
+  }
+  if(npot> minNpot && npot< maxNpot)passEvent=true;
+  //std::cout<<"runN " << RunN << " mean " << mean << " sigma " << sigma << " npot " << npot << " boolPass " << passEvent << std::endl;
+  if(passEvent){
+    hname="TargetBeamNpot_afterCleaning";
+    hSvc->FillHisto(hname,npot,1.);
+    hname="TargetNpot_afterCleaning";
+    hSvc->FillHisto(hname,0,(float)npot);
+
+    hname="TargetBeamNpot_afterCleaningWithCalibCG";
+    Double_t nPotCal=72000./72240.*npot+2000;
+    hSvc->FillHisto(hname,nPotCal,1.);
+    hname="TargetNpot_afterCleaningWithCalibCG";
+    hSvc->FillHisto(hname,0,(float)nPotCal);
+  }
+  return passEvent;
+}

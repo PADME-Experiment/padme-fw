@@ -513,7 +513,8 @@ void ECalAnalysis::EnergyCalibration(Bool_t isMC , Bool_t SPAnalysis)
 
 
 void ECalAnalysis::UploadClShift(){
-
+  //from Selector
+  /*
   fXBeamOnECalPlanePerRun.insert({30369,1.861}); // my COGx after ECal survey position 
   fYBeamOnECalPlanePerRun.insert({30369,0.655});  // my COGy after ECal survey position 
   
@@ -534,6 +535,31 @@ void ECalAnalysis::UploadClShift(){
 
   fXBeamOnECalPlanePerRun.insert({30624,5.007}); // my COGx after ECal survey position 
   fYBeamOnECalPlanePerRun.insert({30624,0.0});  // my COGy after ECal survey position 
+  */
+
+  //from parameters.dat
+  
+  fXBeamOnECalPlanePerRun.insert({30369,1.94603}); 
+  fYBeamOnECalPlanePerRun.insert({30369,1.13799}); 
+  
+  fXBeamOnECalPlanePerRun.insert({30386,3.59759}); 
+  fYBeamOnECalPlanePerRun.insert({30386,1.36553});  
+
+  fXBeamOnECalPlanePerRun.insert({30547, 1.06341});
+  fYBeamOnECalPlanePerRun.insert({30547,0.152757}); 
+
+  fXBeamOnECalPlanePerRun.insert({30553, -0.110995});
+  fYBeamOnECalPlanePerRun.insert({30553,1.72303});  
+
+  fXBeamOnECalPlanePerRun.insert({30563,0.856649}); 
+  fYBeamOnECalPlanePerRun.insert({30563, 0.667697});  
+   
+  fXBeamOnECalPlanePerRun.insert({30617, 4.075});
+  fYBeamOnECalPlanePerRun.insert({30617, 0.1157}); 
+
+  fXBeamOnECalPlanePerRun.insert({30624,5.61558}); 
+  fYBeamOnECalPlanePerRun.insert({30624,0.784524});  
+  
 
 }
 

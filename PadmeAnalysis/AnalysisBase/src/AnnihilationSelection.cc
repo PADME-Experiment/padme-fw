@@ -231,8 +231,8 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
   SortCluster_byEnergy();
   
   Double_t EBeam=0.;
-  if(isMC)EBeam=450.0;
-  else EBeam=430.;
+  if(isMC)EBeam=430.0;
+  else EBeam=420.;
   //else EBeam=450.;
   
   if( NClECal != fIdCl_SortByEnergy.size()){

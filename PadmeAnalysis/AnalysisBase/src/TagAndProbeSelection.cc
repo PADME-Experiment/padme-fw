@@ -505,7 +505,10 @@ Bool_t TagAndProbeSelection::InitHistos(Bool_t allPlot)
     hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV";
     hSvc->BookHisto(hname, binY, minY, maxY);
   }
-  
+
+  binY=800;
+  minY=-400.;
+  maxY=400.;
   hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_258";
   hSvc->BookHisto(hname, binY, minY, maxY);
   if(allPlot){

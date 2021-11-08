@@ -502,8 +502,7 @@ int main(Int_t argc, char **argv)
        }
        //
        targetAn    ->Process();
-       Bool_t passEv=targetAn->PassEvent();
-       if(!fTargetOutPosition && nPOTselection && (!passEv)) continue;
+       if(fTargetOutPosition==0 && nPOTselection && !(targetAn->PassEvent()))continue;
 
        ecalAn      ->ShiftPositions(fRecoEvent->GetRunNumber(), isMC);
        ecalAn      ->EnergyCalibration(isMC, SPAnalysis);

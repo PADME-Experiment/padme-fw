@@ -2414,32 +2414,37 @@ Bool_t AnnihilationSelection::InitHistos(Bool_t allAnnPlot)
   std::vector<std::string> sufixC;
   sufixC.push_back("_g1inFRDTime10");
   for(int i=0; i<sufixC.size(); i++){
+    binX=400;
+    minX=-300.;
+    maxX=300.;
     hname="ECAL_gravTwoPhoton10ns_XCoG_total"+sufixC.at(i);          hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_total"+sufixC.at(i);          hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_total"+sufixC.at(i);        hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  ); 
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  ); 
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in0_45"+sufixC.at(i);     hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_XCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  );     
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in45_90"+sufixC.at(i);      hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in45_90"+sufixC.at(i);      hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in45_90"+sufixC.at(i);    hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in90_135"+sufixC.at(i);     hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in90_135"+sufixC.at(i);     hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in90_135"+sufixC.at(i);   hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in135_180"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in135_180"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in135_180"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in180_225"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in180_225"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in180_225"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in225_270"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in225_270"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in225_270"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in270_315"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in270_315"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
-    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in270_315"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
     hname="ECAL_gravTwoPhoton10ns_XCoG_g1in315_360"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+
+    hname="ECAL_gravTwoPhoton10ns_YCoG_total"+sufixC.at(i);          hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in0_45"+sufixC.at(i);       hSvc->BookHisto(hname,binX, minX, maxX  ); 
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in45_90"+sufixC.at(i);      hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in90_135"+sufixC.at(i);     hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in135_180"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in180_225"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in225_270"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_YCoG_g1in270_315"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
     hname="ECAL_gravTwoPhoton10ns_YCoG_g1in315_360"+sufixC.at(i);    hSvc->BookHisto(hname,binX, minX, maxX  );
+
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_total"+sufixC.at(i);        hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in0_45"+sufixC.at(i);     hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );    
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in45_90"+sufixC.at(i);    hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in90_135"+sufixC.at(i);   hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in135_180"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in180_225"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in225_270"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
+    hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in270_315"+sufixC.at(i);  hSvc->BookHisto2(hname, binX, minX, maxX,binX, minX, maxX   );
     hname="ECAL_gravTwoPhoton10ns_CoGmap_g1in315_360"+sufixC.at(i);  hSvc->BookHisto2(hname,binX, minX, maxX,binX, minX, maxX  );
 
   }

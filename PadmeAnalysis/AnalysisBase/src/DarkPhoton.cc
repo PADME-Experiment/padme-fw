@@ -200,6 +200,7 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     if(makeClSelection && selCl.at(jecal)<10)continue;
     Double_t g1E=ecalclu->GetEnergy();
     Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+fdistanceTarget*fdistanceTarget);
+    Double_t R1ecal = sqrt(g1x*g1x+ g1y*g1y);
     Double_t Px_1 = g1E*g1x/ R_1;
     Double_t Py_1 = g1E*g1y/ R_1;
     Double_t Pz_1 = g1E*fdistanceTarget/ R_1;
@@ -211,10 +212,21 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     P4eBeam.SetPxPyPzE(0,0,PzBeam, fEBeam);
     Double_t MissingMass=(P4eTarget+P4eBeam-P4g1F)*(P4eTarget+P4eBeam-P4g1F);
 
-    Bool_t PassEneThr=false;
+    hname="MissingMass_AllECALclu";
+    hSvc->FillHisto(hname,MissingMass , 1.);
+    /*Bool_t PassEneThr=false;
     if(g1E>90){
       PassEneThr=true;
       hname="MissingMass_AllECALclu_ThrEne90MeV";
+      hSvc->FillHisto(hname,MissingMass , 1.);
+      }*/
+    if(R1ecal<fFRmin || R1ecal>fFRmax) continue;
+    hname="MissingMass_AllECALcluinFR";
+    hSvc->FillHisto(hname,MissingMass , 1.);
+    Bool_t PassEneThr=false;
+    if(g1E>90){
+      PassEneThr=true;
+      hname="MissingMass_AllECALcluinFR_ThrEne90MeV";
       hSvc->FillHisto(hname,MissingMass , 1.);
     }
     Bool_t NoInTime10=true;
@@ -361,7 +373,9 @@ Bool_t DarkPhoton::InitHistos()
   Double_t maxX=600.5;  
   hname="MissingMass_AllECALclu";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  hname="MissingMass_AllECALclu_ThrEne90MeV";
+  hname="MissingMass_AllECALcluinFR";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_AllECALcluinFR_ThrEne90MeV";
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_NoClInTime20ns_ThrEne90MeV";
   hSvc->BookHisto(hname, binX, minX, maxX);

@@ -535,8 +535,6 @@ void ECalAnalysis::UploadClShift(){
   fXBeamOnECalPlanePerRun.insert({30624,5.007}); // my COGx after ECal survey position 
   fYBeamOnECalPlanePerRun.insert({30624,0.0});  // my COGy after ECal survey position 
 
-  
-
 }
 
 
@@ -554,7 +552,12 @@ void ECalAnalysis::ShiftPositions(int RunN, Bool_t isMC){
 	  Double_t y =fyECalSurvey + hit->GetPosition().Y();
 	  Double_t z =               hit->GetPosition().Z();
 	  if (fXBeamOnECalPlanePerRun.find(RunN)==fXBeamOnECalPlanePerRun.end()){
-	      std::cout << "---> warning from correctClPosition : RunN " << RunN << " CoG shift not founded " << std::endl;
+	    Double_t xoff = 0.;
+	    Double_t yoff = 0.;
+	    Double_t xL = x - xoff;
+	    Double_t yL = y - yoff;
+	    TVector3 position(xL, yL, z);
+	    hit->SetPosition(position);
 	  }
 	  else{
 	      Double_t xoff = fXBeamOnECalPlanePerRun[RunN];
@@ -580,7 +583,12 @@ void ECalAnalysis::ShiftPositions(int RunN, Bool_t isMC){
 	    Double_t z =               xClu->GetPosition().Z();
 	    //std::cout<<"cluster "<< h <<" before shifting x " << xClu->GetPosition().X() << " ecal shift " << fxECalSurvey << " cog " << fXBeamOnECalPlanePerRun[RunN] << " -> " <<fxECalSurvey+xClu->GetPosition().X()-fXBeamOnECalPlanePerRun[RunN] << std::endl; 
 	    if (fXBeamOnECalPlanePerRun.find(RunN)==fXBeamOnECalPlanePerRun.end()){
-	      std::cout << "---> warning from correctClPosition : RunN " << RunN << " CoG shift not founded " << std::endl;
+	      Double_t xoff = 0.;
+	      Double_t yoff = 0.;
+	      Double_t xL = x - xoff;
+	      Double_t yL = y - yoff;
+	      TVector3 position(xL, yL, z);
+	      xClu->SetPosition(position);
 	    }
 	    else{
 	      Double_t xoff = fXBeamOnECalPlanePerRun[RunN];

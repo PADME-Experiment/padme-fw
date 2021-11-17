@@ -328,7 +328,7 @@ int main(Int_t argc, char **argv)
    Bool_t boolDataMCmethod=false;
    Bool_t boolScaleFMethod=false;
    Bool_t SPAnalysis=false;
-   Bool_t DPanalysis=true;
+   Bool_t DPanalysis=false;
 
    Bool_t nPOTselection=true;
    Bool_t makeClSelection=true;

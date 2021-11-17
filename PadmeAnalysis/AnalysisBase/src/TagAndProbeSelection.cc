@@ -109,7 +109,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC, Bool_t makeClSelection, std::v
     hSvc->FillHisto(hname, g1E, 1.);
     Int_t g1seedChId=fECal_hitEvent->Hit(ecalclu->GetSeed())->GetChannelId();//hit(ecalclu->GetSeed())->GetChannelId();
     Double_t g1t=ecalclu->GetTime();
-    if(g1t<-110) continue;//high energy spread in data October 2020
+    //if(g1t<-110) continue;//high energy spread in data October 2020
     Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+fdistanceTarget*fdistanceTarget);
     Double_t g1Recal=sqrt(g1x*g1x+g1y*g1y);
     Double_t Px_1 = g1E*g1x/ R_1;
@@ -206,7 +206,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC, Bool_t makeClSelection, std::v
       Double_t _g2y=ecalclu2->GetPosition().Y();
       Double_t _g2E=ecalclu2->GetEnergy();
       Double_t _g2t=ecalclu2->GetTime();
-      if(_g2t<-110) continue;//high energy spread in data October 2020
+      //if(_g2t<-110) continue;//high energy spread in data October 2020
       Double_t _R_2 = sqrt(_g2x*_g2x+ _g2y*_g2y+fdistanceTarget*fdistanceTarget);
       Double_t _Px_2 = _g2E*_g2x/ _R_2;
       Double_t _Py_2 = _g2E*_g2y/ _R_2;
@@ -332,7 +332,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC, Bool_t makeClSelection, std::v
     sufix="_ExpEg2UsingE1";
     if(allPlot)FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
   
-    if(allPlot && g1Recal>fFRmin && g1Recal<fFRmax && g2Recal>fFRmin && g2Recal<fFRmax){
+    if(g1Recal>fFRmin && g1Recal<fFRmax && g2Recal>fFRmin && g2Recal<fFRmax){
       sufix="_inFR115.8_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
@@ -702,9 +702,9 @@ Bool_t TagAndProbeSelection::InitHistos(Bool_t allPlot)
   }
 
   std::vector<std::string> sufix1 ;
+  sufix1.push_back("_inFR115.8_258_ExpEg2UsingE1");
   if(allPlot){
     sufix1.push_back("_ExpEg2UsingE1");
-    sufix1.push_back("_inFR115.8_258_ExpEg2UsingE1");
     sufix1.push_back("_TAGinFR115.8_258_ExpEg2UsingE1");
   }
   sufix1.push_back("_tag115.8_173R_Rmid173_ExpEg2UsingE1");
@@ -716,38 +716,40 @@ Bool_t TagAndProbeSelection::InitHistos(Bool_t allPlot)
     binY=800;
     minY=-400.;
     maxY=400.;
-    if(allPlot && i<3){
+    if(i==0){
       hname="ECal_DeltaEnergyFunc2_in25Deg"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in25Deg_ethr90MeV"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in30Deg"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in30Deg_ethr90MeV"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in35Deg"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in35Deg_ethr90MeV"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in40Deg"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in40Deg_ethr90MeV"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in45Deg"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in45Deg_ethr90MeV"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in50Deg"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in50Deg_ethr90MeV"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in70Deg"+sufix1.at(i);
-      hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in70Deg_ethr90MeV"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
       hname="ECal_DeltaEnergyFunc2_in90Deg"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
-      hname="ECal_DeltaEnergyFunc2_in90Deg_ethr90MeV"+sufix1.at(i);
+    }
+    if((allPlot && i<3) && i>0){
+      hname="ECal_DeltaEnergyFunc2_in25Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in30Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in35Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in40Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in45Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in50Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in70Deg"+sufix1.at(i);
+      hSvc->BookHisto(hname, binY, minY, maxY);
+      hname="ECal_DeltaEnergyFunc2_in90Deg"+sufix1.at(i);
       hSvc->BookHisto(hname, binY, minY, maxY);
     }
     //if(i==2) continue;
@@ -924,68 +926,36 @@ void TagAndProbeSelection::FillHistoTagAndProbe(Double_t DeltaEnergyFunction2, D
   if(dPhiIn25Degree){
     hname="ECal_DeltaEnergyFunc2_in25Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in25Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
   if(dPhiIn30Degree){
     hname="ECal_DeltaEnergyFunc2_in30Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in30Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
   if(dPhiIn35Degree){
     hname="ECal_DeltaEnergyFunc2_in35Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in35Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
   if(dPhiIn40Degree){
     hname="ECal_DeltaEnergyFunc2_in40Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in40Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
   if(dPhiIn45Degree){
     hname="ECal_DeltaEnergyFunc2_in45Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in45Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
   if(dPhiIn50Degree){
     hname="ECal_DeltaEnergyFunc2_in50Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in50Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
 
   if(dPhiIn70Degree){
     hname="ECal_DeltaEnergyFunc2_in70Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in70Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
 
   if(dPhiIn90Degree){
     hname="ECal_DeltaEnergyFunc2_in90Deg"+sufix;
     hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    if(g2E>90.){
-      hname="ECal_DeltaEnergyFunc2_in90Deg_ethr90MeV"+sufix;
-      hSvc->FillHisto(hname,DeltaEnergyFunction2, 1. );
-    }
   }
 
 }

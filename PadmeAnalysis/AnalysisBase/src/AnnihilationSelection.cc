@@ -64,7 +64,7 @@ AnnihilationSelection::AnnihilationSelection(Int_t processingMode, Int_t verbosi
   fScaleFMethod=scaleFMethod;
   fMCscaleF=new ScaleFactorMethod();
   
-  fsFacCalchepPileup=true;
+  fsFacCalchepPileup=false;
   fscaleFacCalchepPileup= new CalchepTruthStudies_ggPileup();
 
   fexternalPass=externalPass;
@@ -265,7 +265,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
     hname="Annihilation_ECalClusterEnergy";
     hSvc->FillHisto(hname, fg1E, 1.);
     fg1t    =ecalclu->GetTime();
-    if(fg1t<-110) continue;//high energy spread in data October 2020  
+    //if(fg1t<-110) continue;//high energy spread in data October 2020  
     if(makeClSelection && selCl.at(fIdCl_SortByEnergy.at(jecal))<10)continue;
     fR_1    = sqrt(fg1x*fg1x+ fg1y*fg1y+fdistanceTarget*fdistanceTarget);
     fg1Recal=sqrt(fg1x*fg1x+fg1y*fg1y);
@@ -294,7 +294,7 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
       fg2y        =ecalclu2->GetPosition().Y();
       fg2E        =ecalclu2->GetEnergy();
       fg2t        =ecalclu2->GetTime();
-      if(fg2t<-110) continue;//high energy spread in data October 2020  
+      //if(fg2t<-110) continue;//high energy spread in data October 2020  
       if(makeClSelection && selCl.at(fIdCl_SortByEnergy.at(jecal2))<10)continue;
       fg2Recal    =sqrt(fg2x*fg2x+fg2y*fg2y);
       fXWeighted  =0.;
@@ -937,6 +937,8 @@ void AnnihilationSelection::FillGeneralHisto(std::string sufix){
   std::string hname;
   hname="ECAL_gravTwoPhoton10ns"+sufix;
   hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
+  hname="ECAL_gravTwoPhoton10nsTrend"+sufix;
+  hSvc->FillHisto2(hname,fg1t, (fg1E+fg2E) , 1.);
   hname="ECAL_Xgg_10ns"+sufix;
   hSvc->FillHisto(hname,fg1x, 1.);
   hSvc->FillHisto(hname,fg2x, 1.);
@@ -1932,6 +1934,8 @@ Bool_t AnnihilationSelection::InitHistos(Bool_t allAnnPlot)
     maxX=2000.;
     hname="ECAL_gravTwoPhoton10ns" + sufix.at(i);
     hSvc->BookHisto(hname, binX, minX, maxX);
+    hname="ECAL_gravTwoPhoton10nsTrend" + sufix.at(i);
+    hSvc->BookHisto2(hname,400, -200, 200, binX, minX, maxX);
     binX=350;
     minX=-300.;
     maxX=350.;

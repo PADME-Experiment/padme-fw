@@ -653,7 +653,7 @@ std::vector<int> ECalAnalysis::passClCut(){
       xClu = fClColl->Element((int)h);
       hitV = (xClu->GetHitVecInClus());
       ClPassedCut.push_back(passedCut);
-      if (xClu->GetTime()<-110.) continue; 
+      //if (xClu->GetTime()<-110.) continue; 
        ClPassedCut.at(h) = ClPassedCut.at(h) + 1; // 1
 
       Double_t  ClusterXDistFromSeed=xClu->GetPosition().X() - (fhitEvent->Hit(xClu->GetSeed()))->GetPosition().X();

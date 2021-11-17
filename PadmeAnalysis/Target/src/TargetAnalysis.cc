@@ -58,7 +58,7 @@ Bool_t TargetAnalysis::Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTarg
   fRecoBeam = b;
 
  
- 
+  /*repro February 2021
 
   fnPOTmean.insert({30369,26993. });
   fnPOTmean.insert({30386,19057. });  
@@ -75,6 +75,24 @@ Bool_t TargetAnalysis::Init(TRecoEvent* EventHeader, TTargetRecoEvent* ev, TTarg
   fnPOTsigma.insert({30563,1231.  }); 
   fnPOTsigma.insert({30617,1496.  }); 
   fnPOTsigma.insert({30624,2070.  });  
+
+*/
+  //repro November 2021
+  fnPOTmean.insert({30369,28851. });
+  fnPOTmean.insert({30386,20887. });  
+  fnPOTmean.insert({30547,33405. });
+  fnPOTmean.insert({30553,37630. });
+  fnPOTmean.insert({30563,28680. }); 
+  fnPOTmean.insert({30617,29269. });
+  fnPOTmean.insert({30624,31867. }); 
+
+  fnPOTsigma.insert({30369,1561.  });
+  fnPOTsigma.insert({30386,1235.  });  
+  fnPOTsigma.insert({30547,1371.  }); 
+  fnPOTsigma.insert({30553,1247.  });  
+  fnPOTsigma.insert({30563,1126.  }); 
+  fnPOTsigma.insert({30617,1284.  }); 
+  fnPOTsigma.insert({30624,1566.  });  
 
 
   return retCode;

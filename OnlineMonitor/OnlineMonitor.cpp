@@ -14,6 +14,7 @@
 #include "SACMonitor.hh"
 #include "TargetMonitor.hh"
 #include "TriggerMonitor.hh"
+#include "ADCMonitor.hh"
 
 #include "utlConfigParser.hh"
 
@@ -164,6 +165,16 @@ int main(int argc, char* argv[])
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
   if (cfg->Verbose()>1) configParser->Print();
 
+  // Configure ADC analyzer
+  Bool_t analyzeADC = true;
+  ADCMonitor* adc_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","ADC") && (std::stoi(configParser->GetSingleArg("ANALYZE","ADC")) == 0) ) analyzeADC = false;
+  if (analyzeADC) {
+    TString configFileADC = "config/ADC.cfg";
+    if (configParser->HasConfig("CONFIGFILE","ADC")) configFileADC = configParser->GetSingleArg("CONFIGFILE","ADC");
+    adc_mon = new ADCMonitor(configFileADC);
+  }
+
   // Configure Trigger analyzer
   Bool_t analyzeTrigger = true;
   TriggerMonitor* trigger_mon = 0;
@@ -277,6 +288,7 @@ int main(int argc, char* argv[])
 
     // Call "start of event" procedures for all detectors
     if (analyzeTrigger) trigger_mon->StartOfEvent();
+    if (analyzeADC)     adc_mon->StartOfEvent();
     if (analyzeTarget)  target_mon->StartOfEvent();
     if (analyzeECal)    ecal_mon->StartOfEvent();
     if (analyzeSAC)     sac_mon->StartOfEvent();
@@ -321,24 +333,19 @@ int main(int argc, char* argv[])
 	TADCChannel* chn = adcB->ADCChannel(c);
 	UChar_t chNr = chn->GetChannelNumber();
 	if (activeMsk & (1 << chNr)) {
+	  if (analyzeADC) adc_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // ADC
 	  if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	    // ECal
-	    if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // ECal
 	  } else if (boardId >= 10 && boardId <= 12) {
-	    // PVeto
-	    if (analyzePVeto) pveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzePVeto) pveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // PVeto
 	  } else if (boardId == 13) {
-	    // HEPVeto
-	    if (analyzeHEPVeto) hepveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzeHEPVeto) hepveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // HEPVeto
 	  } else if (boardId >= 24 && boardId <= 26) {
-	    // EVeto
-	    if (analyzeEVeto) eveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzeEVeto) eveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // EVeto
 	  } else if (boardId == 27) {
-	    // SAC + Cosmics pads
-	    if (analyzeSAC) sac_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzeSAC) sac_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // SAC + Cosmics pads
 	  } else if (boardId == 28) {
-	    // Target
-	    if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray());
+	    if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // Target
 	  }
 	}
       }
@@ -350,6 +357,7 @@ int main(int argc, char* argv[])
 
     // Call "end of event" procedures for all detectors
     if (analyzeTrigger) trigger_mon->EndOfEvent();
+    if (analyzeADC)     adc_mon->EndOfEvent();
     if (analyzeTarget)  target_mon->EndOfEvent();
     if (analyzeECal)    ecal_mon->EndOfEvent();
     if (analyzeSAC)     sac_mon->EndOfEvent();
@@ -367,6 +375,7 @@ int main(int argc, char* argv[])
 
   // Finalize all detectors
   if (analyzeTrigger) trigger_mon->Finalize();
+  if (analyzeADC)     adc_mon->Finalize();
   if (analyzeTarget)  target_mon->Finalize();
   if (analyzeECal)    ecal_mon->Finalize();
   if (analyzeSAC)     sac_mon->Finalize();
@@ -389,12 +398,16 @@ int main(int argc, char* argv[])
   if (IH->EventsRead()>0) printf("- Event processing time %.3f ms/evt\n",1000.*t_run_f/IH->EventsRead());
   if (t_run_f>0.) printf("- Event processing rate %.2f evt/s\n",IH->EventsRead()/t_run_f);
 
+  // Final cleanup
   delete IH;
-  delete trigger_mon;
-  delete target_mon;
-  delete ecal_mon;
-  delete sac_mon;
-  delete pveto_mon;
+  if (trigger_mon) delete trigger_mon;
+  if (adc_mon)     delete adc_mon;
+  if (target_mon)  delete target_mon;
+  if (ecal_mon)    delete ecal_mon;
+  if (sac_mon)     delete sac_mon;
+  if (pveto_mon)   delete pveto_mon;
+  if (eveto_mon)   delete eveto_mon;
+  if (hepveto_mon) delete hepveto_mon;
 
   exit(EXIT_SUCCESS);
 

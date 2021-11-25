@@ -35,6 +35,9 @@ SACMonitor::~SACMonitor()
       if (fHPedRMSOB[x][y]) { delete fHPedRMS[x][y]; fHPedRMS[x][y] = 0; }
     }
   }
+  if (fHPedestal2) delete fHPedestal2;
+  if (fHPedRMS2) delete fHPedRMS2;
+  if (fHSigRMS2OB) delete fHSigRMS2OB;
 
 }
 
@@ -149,13 +152,21 @@ void SACMonitor::Initialize()
       fHPedRMSOB[x][y] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
     }
   }
+  fHPedestal2 = new TH2D("SAC_Pedestals","SAC_Pedestals",50,0.,50.,200,3650.,3850.);
+  fHPedRMS2 = new TH2D("SAC_PedRMS","SAC_PedRMS",50,0.,50.,100,0.,100.);
+  fHSigRMS2OB = new TH2D("SAC_SigRMSOB","SAC_SigRMSOB",50,0.,50.,100,0.,100.);
  
   // Reset global counters
   ResetSACMap(fSAC_CosmEvt);
   ResetSACMap(fSAC_CosmSum);
+  ResetSACMap(fSAC_BeamEvt);
+  ResetSACMap(fSAC_BeamSum);
   ResetSACWaveforms(fCosmWF);
   ResetSACWaveforms(fBeamWF);
   ResetSACWaveforms(fOffBeamWF);
+  fHPedestal2->Reset();
+  fHPedRMS2->Reset();
+  fHSigRMS2OB->Reset();
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
@@ -202,8 +213,16 @@ void SACMonitor::EndOfEvent()
       ResetSACMap(fHPedestal);
       ResetSACMap(fHPedRMS);
 
+      // Reset beam maps
+      ResetSACMap(fSAC_BeamEvt);
+      ResetSACMap(fSAC_BeamSum);
+
       // Reset beam waveforms
       ResetSACWaveforms(fBeamWF);
+
+      // Reset 2D histograms
+      fHPedestal2->Reset();
+      fHPedRMS2->Reset();
 
     }
 
@@ -225,6 +244,9 @@ void SACMonitor::EndOfEvent()
 
       // Reset off-beam waveforms
       ResetSACWaveforms(fOffBeamWF);
+
+      // Reset 2D histograms
+      fHSigRMS2OB->Reset();
 
     }
 
@@ -278,18 +300,31 @@ void SACMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
   }
 
   // Get x,y coordinates from channel map
-  UChar_t x = fSAC_map[channel]%10;
-  UChar_t y = fSAC_map[channel]/10;
+  UChar_t x = fSAC_map[channel]/10;
+  UChar_t y = fSAC_map[channel]%10;
 
   // Compute pedestal and RMS for this channel
   ComputeChannelPedestal(board,channel,samples);
   if (fIsBeam) {
     fHPedestal[x][y]->Fill(fChannelPedestal);
     fHPedRMS[x][y]->Fill(fChannelPedRMS);
+    fHPedestal2->Fill(fSAC_map[channel],fChannelPedestal);
+    fHPedRMS2->Fill(fSAC_map[channel],fChannelPedRMS);
+    // Save waveform of noisy channels
+    if (fChannelPedRMS>10.) {
+      for(UInt_t i = 0; i<1024; i++) fBeamWF[x][y][i] = samples[i];
+    }
   }
   if (fIsOffBeam) {
     fHPedestalOB[x][y]->Fill(fChannelPedestal);
     fHPedRMSOB[x][y]->Fill(fChannelPedRMS);
+  }
+
+  // Compute full signal RMS for off-beam events
+  if (fIsOffBeam) {
+    ComputeChannelRMS(board,channel,samples);
+    //printf("Off-Beam RMS is %8.2f\n",fChannelRMS);
+    fHSigRMS2OB->Fill(fSAC_map[channel],fChannelRMS);
   }
 
   // Get energy in this channel
@@ -300,11 +335,16 @@ void SACMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
 
   // Save beam related information
   if (fIsBeam) {
+
+    // Save energy in beam map
+    fSAC_BeamSum[x][y] += fChannelEnergy;
+
     // Save waveform once every few events
-    //if (fBeamEventCount % fBeamOutputRate == 0) {
-    if (fNPeaks > 10) {
-      for(UInt_t i = 0; i<1024; i++) fBeamWF[x][y][i] = samples[i];
+    if (fBeamEventCount % fBeamOutputRate == 0) {
+      fSAC_BeamEvt[x][y]= fChannelEnergy;
+      //for(UInt_t i = 0; i<1024; i++) fBeamWF[x][y][i] = samples[i];
     }
+
   }
 
   // Save cosmics related information
@@ -351,6 +391,20 @@ void SACMonitor::ComputeChannelPedestal(UChar_t board,UChar_t channel,Short_t* s
   fChannelPedRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*fChannelPedestal)/(Double_t)(fPedestalSamples-1) );
 }
 
+void SACMonitor::ComputeChannelRMS(UChar_t board,UChar_t channel,Short_t* samples)
+{
+  // Get full channel RMS from first 994 samples
+  Long64_t sum = 0;
+  Long64_t sum2 = 0;
+  for(UInt_t s = 0; s<994; s++) {
+    sum += samples[s];
+    sum2 += samples[s]*samples[s];
+  }
+  Double_t avg = (Double_t)sum/994.;
+  fChannelRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*avg)/993. );
+  //printf("ComputeChannelRMS - sum,sum2,avg,fChannelRMS = %lld %lld %8.2f %8.2f\n",sum,sum2,avg,fChannelRMS);
+}
+
 void SACMonitor::FindChannelPeaks(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
@@ -375,7 +429,7 @@ void SACMonitor::FindChannelPeaks(UChar_t board,UChar_t channel,Short_t* samples
   //  }
   //}
 
-  // Count peaks defined as consecutive samples with value < pedestal - 10*RMS
+  // Count peaks defined as consecutive samples with value < pedestal - 5*RMS
   Double_t sample;
   Double_t threshold = fChannelPedestal - 5.*fChannelPedRMS;
   Bool_t onPeak = false;
@@ -486,7 +540,88 @@ Int_t SACMonitor::OutputBeam()
 
     }
   }
- 
+       
+  fprintf(outf,"PLOTID SACMon_beamevt\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Beam - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 5 5\n");
+  fprintf(outf,"RANGE_X 0 5\n");
+  fprintf(outf,"RANGE_Y 0 5\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<5;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<5;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fSAC_BeamEvt[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
+  fprintf(outf,"PLOTID SACMon_beam\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Beam - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 5 5\n");
+  fprintf(outf,"RANGE_X 0 5\n");
+  fprintf(outf,"RANGE_Y 0 5\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<5;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<5;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fSAC_BeamSum[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
+  fprintf(outf,"PLOTID SACMon_beamped\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Beam Pedestals - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 50 200\n");
+  fprintf(outf,"RANGE_X 0 50\n");
+  fprintf(outf,"RANGE_Y 3650 3850\n");
+  //fprintf(outf,"RANGE_Y 0 200\n");
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"DATA [");
+  for(Int_t b = 1; b <= fHPedestal2->GetNbinsY(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t p = 1; p <= fHPedestal2->GetNbinsX(); p++) {
+      if (p>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHPedestal2->GetBinContent(p,b));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
+  fprintf(outf,"PLOTID SACMon_beampedrms\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 50 100\n");
+  fprintf(outf,"RANGE_X 0 50\n");
+  fprintf(outf,"RANGE_Y 0 100\n");
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y RMS\n");
+  fprintf(outf,"DATA [");
+  for(Int_t b = 1; b <= fHPedRMS2->GetNbinsY(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t p = 1; p <= fHPedRMS2->GetNbinsX(); p++) {
+      if (p>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHPedRMS2->GetBinContent(p,b));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
   // Close monitor file and move it to watchdir
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -514,7 +649,7 @@ Int_t SACMonitor::OutputOffBeam()
 
       fprintf(outf,"PLOTID SACMon_offbeamwf_%d%d\n",y,x);
       fprintf(outf,"PLOTTYPE scatter\n");
-      fprintf(outf,"PLOTNAME SAC Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"PLOTNAME SAC Off-Beam Waveform X %d Y %d - Run %d Event %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
       fprintf(outf,"RANGE_X 0 1024\n");
       //fprintf(outf,"RANGE_Y 0 4096\n");
       fprintf(outf,"TITLE_X Sample\n");
@@ -530,7 +665,7 @@ Int_t SACMonitor::OutputOffBeam()
 
       fprintf(outf,"PLOTID SACMon_offbeamped_%d%d\n",y,x);
       fprintf(outf,"PLOTTYPE histo1d\n");
-      fprintf(outf,"PLOTNAME SAC Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"PLOTNAME SAC Off-Beam Pedestals X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
       fprintf(outf,"CHANNELS %d\n",fHPedestal[x][y]->GetNbinsX());
       fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[x][y]->GetXaxis()->GetXmin(),fHPedestal[x][y]->GetXaxis()->GetXmax());
       fprintf(outf,"TITLE_X Counts\n");
@@ -543,7 +678,7 @@ Int_t SACMonitor::OutputOffBeam()
 
       fprintf(outf,"PLOTID SACMon_offbeampedrms_%d%d\n",y,x);
       fprintf(outf,"PLOTTYPE histo1d\n");
-      fprintf(outf,"PLOTNAME SAC Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+      fprintf(outf,"PLOTNAME SAC Off-Beam Pedestals RMS X %d Y %d - Run %d - %s\n",x,y,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
       fprintf(outf,"CHANNELS %d\n",fHPedRMS[x][y]->GetNbinsX());
       fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[x][y]->GetXaxis()->GetXmin(),fHPedRMS[x][y]->GetXaxis()->GetXmax());
       fprintf(outf,"TITLE_X Counts\n");
@@ -557,6 +692,26 @@ Int_t SACMonitor::OutputOffBeam()
     }
   }
  
+  fprintf(outf,"PLOTID SACMon_offbeamrms\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME SAC Off-Beam RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS 50 100\n");
+  fprintf(outf,"RANGE_X 0 50\n");
+  fprintf(outf,"RANGE_Y 0 100\n");
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y RMS\n");
+  fprintf(outf,"DATA [");
+  for(Int_t b = 1; b <= fHSigRMS2OB->GetNbinsY(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t p = 1; p <= fHSigRMS2OB->GetNbinsX(); p++) {
+      if (p>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHSigRMS2OB->GetBinContent(p,b));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+
   // Close monitor file
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

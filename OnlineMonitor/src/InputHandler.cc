@@ -250,9 +250,9 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
   // Wait for file to be written to
   start_time = time(0);
   while(true) {
-    //fTFile[stream] = new TFile(streamFilename,"READ");
+    fTFile[stream] = new TFile(streamFilename,"READ");
     //fTFile[stream]->Open(streamFilename,"READ");
-    fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
+    //fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
     if (! fTFile[stream]->IsZombie()) break;
     delete fTFile[stream];
     //fTFile[stream]->Close();

@@ -18,6 +18,8 @@
 
 #include "TH1F.h"
 #include "TH2F.h"
+//#include "TRandom2.h"
+#include <time.h>
 
 
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
@@ -30,6 +32,13 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fClusterization = new EVetoSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new EVetoGeometry();
+
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+
+  // configurable parameters 
+  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
+  fEVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
 }
 
 void EVetoReconstruction::HistoInit(){
@@ -37,10 +46,12 @@ void EVetoReconstruction::HistoInit(){
   AddHisto("EVetoOccupancy",new TH1F("EVetoOccupancy","EVeto Occupancy",100,0.0,100.0));
   AddHisto("EVetoEnergy",new TH1F("EVetoEnergy","EVeto Energy",1200,0.0,12.0));
   AddHisto("EVetoEnergyClean",new TH1F("EVetoEnergyClean","EVeto Energy",2000,0.0,.4));
-  AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,0.0,400.0));
+  //AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,0.0,400.0));
+  AddHisto("EVetoTime",new TH1F("EVetoTime","EVeto Time",400,-150.0,250.0));
   AddHisto("EVetoTimeVsChannelID",new TH2F("EVetoTimeVsChannelID","EVeto Time vs Ch. ID",100,0,100,100,0.0,400.0));
   AddHisto("EVetoHitTimeDifference",new TH1F("EVetoHitTimeDifference","Difference in time",400,-100.,100.));
-  AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,0.0,400.0, 400,0.0,400.0));
+  //AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,0.0,400.0, 400,0.0,400.0));
+  AddHisto("EVetoTimeVsEVetoTime",new TH2F("EVetoTimeVsEVetoTime","EVeto Time vs EVetoTime",400,-150.0,250.0, 400,-150.0,250.0));
 
   char name[256];
 
@@ -118,6 +129,85 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 
 // void EVetoReconstruction::EndProcessing()
 // {;}
+
+
+void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+
+  if (tEvent==NULL) return;
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+
+    Int_t    digiCh = digi->GetChannelId();
+    //digit Id increases with decreasing z; for recoHits chId increases with increasing z 
+
+    Double_t digiT  = digi->GetTime();
+    Double_t digiE  = digi->GetEnergy();
+    Bool_t toBeMerged = false;
+    // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+    if (fEVetoDigiTimeWindow > 0) {
+      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+	{
+	  if (fHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fEVetoDigiTimeWindow)
+	    {
+	      toBeMerged = true;
+	      // this digit must be merged with a previously defined recoHit
+	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
+	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
+	    }
+	}
+    }
+    if (!toBeMerged)
+      {
+	TRecoVHit *Hit = new TRecoVHit();
+	Hit->SetChannelId(digiCh);
+	Hit->SetEnergy   (digiE);
+	Hit->SetTime     (digiT*digiE);
+	Hit->SetPosition (TVector3(0.,0.,0.)); 
+	fHits.push_back(Hit);
+      }
+  }
+  // last loop to correct the time 
+  TRecoVHit *Hit;
+  Double_t Noise=0.;
+  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+    {
+      Hit = fHits[ih];
+      Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
+
+      if (fSigmaNoiseForMC >0.0001) {
+	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+	Hit->SetEnergy(Hit->GetEnergy()+Noise);
+      }
+    }
+    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+  return;
+
+  /*
+  if (tEvent==NULL) return;
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+  fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    TRecoVHit *Hit = new TRecoVHit();
+    Hit->SetChannelId(digi->GetChannelId());
+    Double_t sigma = 0.4;
+    Double_t Noise=random->Gaus(0.,sigma); 
+    Hit->SetEnergy(digi->GetEnergy()+Noise);
+    //Hit->SetEnergy(digi->GetEnergy());
+    Hit->SetTime(digi->GetTime());
+    Hit->SetPosition(TVector3(0.,0.,0.)); 
+    fHits.push_back(Hit);
+  }
+  */
+}
+
 void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   float charges[96];
   for(int i=0;i<96;i++) charges[i] = -1.;

@@ -16,9 +16,7 @@
 #include "RecoVRootIO.hh"
 #include <list>
 
-
 class TRecoEvent;
-
 
 class RecoRootIOManager
 {
@@ -78,7 +76,8 @@ private:
   TFile*   fFile;
   TTree*   fEventTree; //Tree to hold all events in one run
   TBranch* fEventBranch;
-  TRecoEvent*  fEvent;
+
+  TRecoEvent* fEvent;
 
   PadmeReconstruction *fReco;
   utl::ConfigParser *fConfigParser;

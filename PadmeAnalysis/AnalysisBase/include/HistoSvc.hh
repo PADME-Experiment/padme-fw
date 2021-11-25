@@ -2,6 +2,7 @@
 #define HistoSvc_h 1
 
 #include <map>
+
 //#include "globals.hh"
        	       	       
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -152,6 +153,7 @@ class TFile;
 class TTree;
 class TH1D;
 class TH2D;
+class TString;
 
 const Int_t MaxHisto = 40;
 

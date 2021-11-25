@@ -18,6 +18,8 @@
 #include "HEPVetoGeometry.hh"
 #include "HEPVetoSimpleClusterization.hh"
 #include "TH2F.h"
+//#include "TRandom2.h"
+#include <time.h>
 
 
 
@@ -32,6 +34,15 @@ HEPVetoReconstruction::HEPVetoReconstruction(TFile* HistoFile, TString ConfigFil
   //fChannelReco = new DigitizerChannelSAC();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new HEPVetoGeometry();
+
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+
+  // configurable parameters 
+  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
+  fHEPVetoDigiTimeWindow   = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+
+  
 }
 
 
@@ -128,6 +139,65 @@ void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent
 
   if (tEvent==NULL) return;
   fHits.clear();
+  // MC to reco hits
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+
+    Int_t    digiCh = digi->GetChannelId();
+    //digit Id increases with decreasing z; for recoHits chId increases with increasing z 
+    if (digiCh<16) digiCh = 15-digiCh;
+    else  digiCh = 47-digiCh;
+
+    Double_t digiT  = digi->GetTime();
+    Double_t digiE  = digi->GetEnergy();
+    Bool_t toBeMerged = false;
+    // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+    if (fHEPVetoDigiTimeWindow > 0) {
+      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+	{
+	  if (fHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fHEPVetoDigiTimeWindow)
+	    {
+	      toBeMerged = true;
+	      // this digit must be merged with a previously defined recoHit
+	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
+	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
+	    }
+	}
+    }
+    if (!toBeMerged)
+      {
+	TRecoVHit *Hit = new TRecoVHit();
+	Hit->SetChannelId(digiCh);
+	Hit->SetEnergy   (digiE);
+	Hit->SetTime     (digiT*digiE);
+	Hit->SetPosition (TVector3(0.,0.,0.)); 
+	fHits.push_back(Hit);
+      }
+  }
+  // last loop to correct the time 
+  TRecoVHit *Hit;
+  Double_t Noise=0.;
+  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+    {
+      Hit = fHits[ih];
+      Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
+
+      if (fSigmaNoiseForMC >0.0001) {
+	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+	Hit->SetEnergy(Hit->GetEnergy()+Noise);
+      }
+    }
+    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+  return;
+
+
+  /*
+  if (tEvent==NULL) return;
+  random = new TRandom2();    
+  gRandom->SetSeed(time(NULL));
+  fHits.clear();
   Int_t chId=0;
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -139,11 +209,16 @@ void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent
     if (chId<16) chId = 15-chId;
     else  chId = 47-chId;
     Hit->SetChannelId(chId);
-    Hit->SetEnergy(digi->GetEnergy());
+    Double_t sigma = 0.4;
+    Double_t Noise=random->Gaus(0.,sigma); 
+    Hit->SetEnergy(digi->GetEnergy()+Noise);
+    //Hit->SetEnergy(digi->GetEnergy());
     Hit->SetTime(digi->GetTime());
     Hit->SetPosition(TVector3(0.,0.,0.)); 
     fHits.push_back(Hit);
   }
+  */
+
 }
 
 
@@ -158,12 +233,11 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   GetHisto("HEPVetoMultiplicity")->Fill(Hits.size());
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    if( Hits[iHit1]->GetTime() > 10.) {
+    //if( Hits[iHit1]->GetTime() > 10.) {
       //Real hit
-        GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
-    
-    GetHisto("HEPVetoTime")->Fill(Hits[iHit1]->GetTime());
-    }
+      GetHisto("HEPVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+      GetHisto("HEPVetoTime")->Fill(Hits[iHit1]->GetTime());
+    //}
   }
 
   PadmeReconstruction* MainReco = (PadmeReconstruction*  ) fMainReco;

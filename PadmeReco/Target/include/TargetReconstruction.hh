@@ -47,6 +47,7 @@ private:
 
   Bool_t fWriteFitParams;
   Bool_t fWriteTargetBeam;
+  Int_t  fRunIInPOTcalc;
 };
 #endif
 

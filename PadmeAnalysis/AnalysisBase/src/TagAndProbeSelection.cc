@@ -151,6 +151,19 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC, Bool_t makeClSelection, std::v
       hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_258";
       hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
     }
+    
+
+
+    if(g1Recal>fFRmin && g1Recal < fFRmid){
+      hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_173";
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+    if(g1Recal>=fFRmid && g1Recal < fFRmax){
+      hname="ECal_DeltaEnergyFuncAllCl_inFR173_258";
+      hSvc->FillHisto(hname,DeltaEnergyFunction, 1. );
+    }
+
+
 
     if(allPlot && g1E>90.){
       hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV";
@@ -328,18 +341,27 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC, Bool_t makeClSelection, std::v
     if(allPlot && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnergyFunction2, g1Recal, g2Recal, "");
     if(allPlot && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnergyFunction2, g1Recal, "");
 
-
     sufix="_ExpEg2UsingE1";
     if(allPlot)FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
-  
-    if(g1Recal>fFRmin && g1Recal<fFRmax && g2Recal>fFRmin && g2Recal<fFRmax){
+   
+    if(allPlot && g1Recal>fFRmin && g1Recal<fFRmax && g2Recal>fFRmin && g2Recal<fFRmax){
       sufix="_inFR115.8_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
-    if(allPlot && g1Recal>fFRmin && g1Recal<fFRmax){
+    if(g1Recal>fFRmin && g1Recal<fFRmax){
       sufix="_TAGinFR115.8_258_ExpEg2UsingE1";
       FillHistoTagAndProbe(DeltaEnGamma12,g2E, dPhiIn25Degree, dPhiIn30Degree, dPhiIn35Degree,  dPhiIn40Degree, dPhiIn45Degree, dPhiIn50Degree, dPhiIn70Degree, dPhiIn90Degree,sufix );
     }
+
+
+
+
+    if(g1Recal>fFRmin && g1Recal<fFRmid && dPhiIn25Degree ){hname="ECal_DeltaEnergyFunc2_in25Deg_TAGinFR115.8_173_ExpEg2UsingE1"; hSvc->FillHisto(hname,DeltaEnGamma12,1.);}
+    if(g1Recal>=fFRmid && g1Recal<fFRmax && dPhiIn25Degree ){hname="ECal_DeltaEnergyFunc2_in25Deg_TAGinFR173_258_ExpEg2UsingE1"; hSvc->FillHisto(hname,DeltaEnGamma12,1.);}
+
+
+
+
     if(allPlot && dPhiIn25Degree) FillHistoTagAndProbe_PhiRegionsProbe(DeltaEnGamma12,phi1,"_ExpEg2UsingE1");
     if(allPlot && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, g2Recal, "_ExpEg2UsingE1");
     if(allPlot && dPhiIn25Degree) FillHistoTagAndProbe_RadiusRegionsProbe(DeltaEnGamma12, g1Recal, "_ExpEg2UsingE1");
@@ -511,6 +533,15 @@ Bool_t TagAndProbeSelection::InitHistos(Bool_t allPlot)
   maxY=400.;
   hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_258";
   hSvc->BookHisto(hname, binY, minY, maxY);
+  hname="ECal_DeltaEnergyFuncAllCl_inFR115.8_173";
+  hSvc->BookHisto(hname, binY, minY, maxY);
+  hname="ECal_DeltaEnergyFuncAllCl_inFR173_258";
+  hSvc->BookHisto(hname, binY, minY, maxY);
+  hname="ECal_DeltaEnergyFunc2_in25Deg_TAGinFR115.8_173_ExpEg2UsingE1";
+  hSvc->BookHisto(hname, binY, minY, maxY);
+  hname="ECal_DeltaEnergyFunc2_in25Deg_TAGinFR173_258_ExpEg2UsingE1";
+  hSvc->BookHisto(hname, binY, minY, maxY);
+
   if(allPlot){
     hname="ECal_DeltaEnergyFuncAllCl_ethr90MeV_inFR115.8_258";
     hSvc->BookHisto(hname, binY, minY, maxY);
@@ -702,11 +733,12 @@ Bool_t TagAndProbeSelection::InitHistos(Bool_t allPlot)
   }
 
   std::vector<std::string> sufix1 ;
-  sufix1.push_back("_inFR115.8_258_ExpEg2UsingE1");
+
   if(allPlot){
     sufix1.push_back("_ExpEg2UsingE1");
-    sufix1.push_back("_TAGinFR115.8_258_ExpEg2UsingE1");
+    sufix1.push_back("_inFR115.8_258_ExpEg2UsingE1");    
   }
+  sufix1.push_back("_TAGinFR115.8_258_ExpEg2UsingE1");
   sufix1.push_back("_tag115.8_173R_Rmid173_ExpEg2UsingE1");
   if(allPlot) sufix1.push_back("_tag115.8_173R_Rmid173_inFR115.8_258_ExpEg2UsingE1");
   sufix1.push_back("_tag173_258R_Rmid173_ExpEg2UsingE1");

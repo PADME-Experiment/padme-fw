@@ -51,8 +51,8 @@ while true; do
 	    echo "  Input rawdata directory: $inputDir"
 
 	    # Start OnlineMonitor for new run
-	    echo "> nohup ./OnlineMonitor -f -R $lastrun -D $inputDir -c $configFile -o $watchDir -s $stopFile >$logFile 2>$errFile </dev/zero &"
-	    nohup ./OnlineMonitor -f -R $lastrun -D $inputDir -c $configFile -o $watchDir -s $stopFile >$logFile 2>$errFile </dev/zero &
+	    echo "> stdbuf -oL nohup ./OnlineMonitor -f -R $lastrun -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
+	    stdbuf -oL nohup ./OnlineMonitor -f -R $lastrun -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
 
 	    # Save name of last run
 	    lastrun_save=$lastrun

@@ -36,6 +36,7 @@ private:
   Int_t OutputBeam();
   Int_t OutputOffBeam();
   Int_t OutputCosmics();
+  Int_t OutputRandom();
 
   void ResetSACMap(Double_t map[5][5]);
   void ResetSACMap(TH1D* map[5][5]);
@@ -51,6 +52,7 @@ private:
   Bool_t fIsCosmics;
   Bool_t fIsBeam;
   Bool_t fIsOffBeam;
+  Bool_t fIsRandom;
 
   Double_t fSAC_CosmSum[5][5]; // 100 events map
   Double_t fSAC_CosmEvt[5][5]; // Last event map
@@ -64,6 +66,8 @@ private:
   UInt_t fOffBeamOutputRate;
   UInt_t fCosmicsEventCount;
   UInt_t fCosmicsOutputRate;
+  UInt_t fRandomEventCount;
+  UInt_t fRandomOutputRate;
 
   // Pedestal and RMS of current channel
   UInt_t fPedestalSamples;
@@ -86,6 +90,8 @@ private:
   // Histograms
   TH1D* fHPedestal[5][5];
   TH1D* fHPedRMS[5][5];
+  TH1D* fHNPeak[5][5];
+  TH1D* fHTPeak[5][5];
   TH1D* fHPedestalOB[5][5];
   TH1D* fHPedRMSOB[5][5];
   TH2D* fHPedestal2;

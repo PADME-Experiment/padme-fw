@@ -93,7 +93,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
   if (fMultihit) {
-    ifstream myfile;
+    std::ifstream myfile;
     //std::string templateFileName = "./config/BGOwaveformTemplate.txt";
     //std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
     //myfile.open (templateFileName.c_str());;

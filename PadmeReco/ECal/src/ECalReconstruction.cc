@@ -1068,7 +1068,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
     Double_t sigmaPed=21.66;
     Double_t fAvg200=r->Gaus(meanPed, sigmaPed); // pedestal
     std::vector<double> waveLikeData;
-    Short_t wave_forDigitiser[1024]={0.};
+    Short_t wave_forDigitiser[1024]={0};
     Bool_t saturated=false;
     for(int i=0; i<1025; i++)waveLikeData.push_back(0);
     for(int ll=0;ll<1024;ll++){

@@ -18,6 +18,8 @@
 #include "RecoRootIOManager.hh"
 #include "PadmePerfUtils.hh"
 
+#include <TObjString.h>
+
 
 PadmeReconstruction* PadmeReco; 
                               

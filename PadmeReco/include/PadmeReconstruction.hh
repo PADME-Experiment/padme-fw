@@ -1,6 +1,9 @@
 #ifndef PadmeReconstruction_H
 #define PadmeReconstruction_H
 
+
+#include"ADCCellCalibSums.hh"
+
 #include "TFile.h"
 #include "TChain.h"
 #include "TTree.h"
@@ -107,7 +110,8 @@ private:
   TECalRecoEvent*    fECalRecoEvent;
   TSACRecoEvent*     fSACRecoEvent;
   TTPixRecoEvent*    fTPixRecoEvent;
-  
+
+  ADCCellCalibSums* fADCCellCalibSums;
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

@@ -31,3 +31,5 @@ then
 #else
 #    echo "WARNING - File ${HOME}/.padme-dbaccess.sh not found: no DB access"
 fi
+
+export PYTHONPATH=$PYTHONPATH:$PADMEROOT/python

@@ -21,26 +21,28 @@ typedef union{
   uint32_t all;
 }trigger_mask_t;
 typedef struct{
+  uint64_t        event_run_time    ;
   int32_t         run_number        ;
   uint32_t        event_number      ;
-  uint64_t        event_run_time    ;
   trigger_mask_t  event_trig_mask   ;
   uint32_t        event_status      ;
   uint32_t        missing_adc_boards;
   uint8_t         n_adc_boards      ;
 }event_info_t;
 typedef struct{
-  uint8_t  board_id;
-  uint32_t board_sn;
-  uint16_t lvds_pattern;
-  uint8_t  status;
-  uint32_t board_status;
-  uint8_t  group_mask;
   uint32_t event_counter;
   uint32_t event_timetag;
-  uint8_t  supp_algrtm;
   uint32_t active_channel_mask;
   uint32_t accepted_channel_mask;
+  uint32_t board_status;
+  uint32_t board_sn;
+  uint16_t lvds_pattern;
+  uint8_t  board_id;
+  uint8_t  status;
+  uint8_t  group_mask;
+  uint8_t  supp_algrtm;
+  uint8_t  n_adc_triggers;
+  uint8_t  n_adc_channels;
 }board_info;
 
 class PadmeRaw{
@@ -79,8 +81,6 @@ extern "C" {
   void       PadmeRaw_GotoEvent       (PadmeRaw* ptr, uint32_t evtptr){ptr->GotoEvent(evtptr);}
   int        PadmeRaw_GetNADCBoards   (PadmeRaw* ptr){return ptr->fEvent->GetNADCBoards();}
   TADCBoard* PadmeRaw_GetADCBoard     (PadmeRaw* ptr, uint8_t board){return ptr->fEvent->ADCBoard(board);}
-  int        ADCBoard_GetNADCChannels (TADCBoard* ptr){return ptr->GetNADCChannels();}
-  int        ADCBoard_GetNADCTriggers (TADCBoard* ptr){return ptr->GetNADCTriggers();}
   uint16_t*  ADCBoard_GetADCChannel   (TADCBoard* ptr, uint8_t chan){return (uint16_t*)ptr->ADCChannel(chan)->GetSamplesArray();}
   uint16_t*  ADCBoard_GetADCTrigger   (TADCBoard* ptr, uint8_t trig){return (uint16_t*)ptr->ADCTrigger(trig)->GetSamplesArray();}
 
@@ -109,6 +109,8 @@ extern "C" {
     brd_info.supp_algrtm           = ptr->Get0SuppAlgrtm        ();
     brd_info.active_channel_mask   = ptr->GetActiveChannelMask  ();
     brd_info.accepted_channel_mask = ptr->GetAcceptedChannelMask();
+    brd_info.n_adc_channels        =  ptr->GetNADCChannels      ();
+    brd_info.n_adc_triggers        =  ptr->GetNADCTriggers      ();
     return brd_info;
   }
 }

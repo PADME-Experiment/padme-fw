@@ -17,25 +17,27 @@ class InfoBase(ctypes.Structure):
 class BoardInfo(InfoBase):
     _pack_ = 1
     _fields_ = [
-            ('board_id'              , ctypes.c_uint8 ),
-            ('board_sn'              , ctypes.c_uint32),
-            ('lvds_pattern'          , ctypes.c_uint16),
-            ('status'                , ctypes.c_uint8 ),
-            ('board_status'          , ctypes.c_uint32),
-            ('group_mask'            , ctypes.c_uint8 ),
             ('event_counter'         , ctypes.c_uint32),
             ('event_timetag'         , ctypes.c_uint32),
-            ('supp_algrtm'           , ctypes.c_uint8 ),
             ('active_channel_mask'   , ctypes.c_uint32),
             ('accepted_channel_mask' , ctypes.c_uint32),
+            ('board_status'          , ctypes.c_uint32),
+            ('board_sn'              , ctypes.c_uint32),
+            ('lvds_pattern'          , ctypes.c_uint16),
+            ('board_id'              , ctypes.c_uint8 ),
+            ('status'                , ctypes.c_uint8 ),
+            ('group_mask'            , ctypes.c_uint8 ),
+            ('supp_algrtm'           , ctypes.c_uint8 ),
+            ('n_adc_triggers'        , ctypes.c_uint8 ),
+            ('n_adc_channels'        , ctypes.c_uint8 ),
             ]
 
 class EventInfo(InfoBase):
     _pack_ = 1
     _fields_ = [
+            ('event_run_time'    , ctypes.c_uint64   ),
             ('run_number'        , ctypes.c_int32    ),
             ('event_number'      , ctypes.c_uint32   ),
-            ('event_run_time'    , ctypes.c_uint64   ),
             ('trigger_btf'       , ctypes.c_uint32, 1),
             ('trigger_cosmic'    , ctypes.c_uint32, 1),
             ('trigger_unused1'   , ctypes.c_uint32, 1),
@@ -71,73 +73,91 @@ _LIB.ADCBoard_GetADCChannel.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint
 _LIB.ADCBoard_GetADCTrigger.argtypes = ctypes.c_void_p, ctypes.c_uint8
 _LIB.ADCBoard_GetADCTrigger.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
 
-_LIB.ADCBoard_GetNADCChannels.argtypes = ctypes.c_void_p,
-_LIB.ADCBoard_GetNADCTriggers.argtypes = ctypes.c_void_p,
-
 _LIB.ADCBoard_GetBoardInfo.argtypes = ctypes.c_void_p,
 _LIB.ADCBoard_GetBoardInfo.restype  = BoardInfo
 
 class ADCBoard:
     def __init__(self, ptr: ctypes.c_void_p):
-        self.ptr = ptr
-        self.info = _LIB.ADCBoard_GetBoardInfo(self.ptr)
-        self.nchannels = _LIB.ADCBoard_GetNADCChannels(self.ptr)
-        self.ntriggers = _LIB.ADCBoard_GetNADCTriggers(self.ptr)
+        self.__ptr = ptr
+        self._info = _LIB.ADCBoard_GetBoardInfo(self.__ptr)
+        self._channels = {}
+        self._triggers = {}
+        chan = 0
+        for ofs in range(32):
+            if self._info.active_channel_mask & (1<<ofs):
+                self._channels.update(
+                        {ofs: _LIB.ADCBoard_GetADCChannel(self.__ptr, chan)})
+                chan += 1
+        trig = 0
+        for ofs in range(4):
+            if self._info.group_mask & (1<<ofs):
+                self._triggers.update(
+                        {ofs: _LIB.ADCBoard_GetADCTrigger(self.__ptr, trig)})
+                trig += 1
     def get_channel(self, chan: int):
-        if 0 <= chan < self.nchannels:
-            return _LIB.ADCBoard_GetADCChannel(self.ptr, chan)
-        else:
-            raise ValueError(f'chan {chan} is out of channel range [0; {self.nchannels})')
+        return self._channels[chan]
     def get_trigger(self, trig: int):
-        if 0 <= trig < self.ntriggers:
-            return _LIB.ADCBoard_GetADCTrigger(self.ptr, trig)
-        else:
-            raise ValueError(f'trig {trig} is out of trigger range [0; {self.ntriggers})')
-    def get_board_info(self):
-        return self.info
-    def __getitem__(self, chan):
-        return self.get_channel(chan)
+        return self._triggers[trig]
+    @property
+    def channels(self):
+        return self._channels
+    @property
+    def triggers(self):
+        return self._triggers
+    @property
+    def info(self):
+        return self._info
 
 class PadmeEvent:
     def __init__(self, boards, info):
-        self.boards = boards
-        self.info = info
+        self._boards = boards
+        self._info = info
     def __getitem__(self, brd):
-        return self.boards[brd]
+        return self._boards[brd]
     def get_board(self, brd):
-        return self.boards[brd]
+        return self._boards[brd]
     def get_board_by_id(self, brd_id):
-        for b in self.boards:
+        for b in self._boards:
             if b.get_board_info().board_id == brd_id:
                 return b
         return None
     def get_board_by_sn(self, brd_sn):
-        for b in self.boards:
+        for b in self._boards:
             if b.get_board_info().board_sn == brd_sn:
                 return b
         return None
+    @property
+    def info(self):
+        return self._info
+    @property
+    def boards(self):
+        return self._boards
 
 
 class PadmeRawIterator:
     def __init__(self, parent):
-        self.parent = parent
-        self.eventptr = 0
+        self._parent = parent
+        self._eventptr = 0
     def __next__(self):
-        if self.eventptr < self.parent.n_events:
-            ret = self.parent.get_event(self.eventptr)
-            self.eventptr += 1
+        if self._eventptr < self._parent.n_events:
+            ret = self._parent.get_event(self._eventptr)
+            self._eventptr += 1
             return ret
         else:
             raise StopIteration
 
 class PadmeRaw:
     def __init__(self, root_file: str):
-        self.ptr = _LIB.PadmeRaw_new(root_file.encode())
-        self.n_events = _LIB.PadmeRaw_GetNEvents(self.ptr)
+        self._ptr = _LIB.PadmeRaw_new(root_file.encode())
+        self.n_events = _LIB.PadmeRaw_GetNEvents(self._ptr)
     def __del__(self):
-        _LIB.PadmeRaw_del(self.ptr)
+        _LIB.PadmeRaw_del(self._ptr)
     def __len__(self):
         return self.n_events
+    def __enter__(self):
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
     def __getitem__(self, key):
         if isinstance(key, slice):
             start, stop, step = key.start, key.stop, key.step
@@ -156,18 +176,20 @@ class PadmeRaw:
         return PadmeRawIterator(self)
     def get_event(self, event):
         if 0 <= event < self.n_events:
-            _LIB.PadmeRaw_GotoEvent(self.ptr, event)
-            evt_info = _LIB.PadmeRaw_GetEventInfo(self.ptr)
-            nbrds = _LIB.PadmeRaw_GetNADCBoards(self.ptr)
-            boards =  [ADCBoard(_LIB.PadmeRaw_GetADCBoard(self.ptr, brd)) for brd in range(nbrds)]
+            _LIB.PadmeRaw_GotoEvent(self._ptr, event)
+            evt_info = _LIB.PadmeRaw_GetEventInfo(self._ptr)
+            nbrds = _LIB.PadmeRaw_GetNADCBoards(self._ptr)
+            boards =  [ADCBoard(_LIB.PadmeRaw_GetADCBoard(self._ptr, brd)) for brd in range(nbrds)]
             return PadmeEvent(boards, evt_info)
         else:
             raise IndexError("event idex out of range")
 
 
 if __name__ == '__main__':
-    raw = PadmeRaw('/data/daq_0030355/run_0030355_20200917_113409_lvl1_00_000.root')
-    for r in raw[:20]:
-        trg = r[12].get_channel(10)
-        plt.plot(trg)
-    plt.show()
+    import matplotlib.pyplot as plt
+    with PadmeRaw('/data/daq_0030355/run_0030355_20200917_113409_lvl1_00_000.root') as raw:
+        for evt in raw[:100]:
+            samp = evt.get_board(12).get_channel(20)
+            samp_norm = (samp-samp[:200].mean())/4.096
+            plt.plot(samp_norm)
+        plt.show()

@@ -7,7 +7,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 class InfoBase(ctypes.Structure):
-    def __repr__(self):
+    def __str__(self):
         ret_list = list()
         for fname, ftype, *_ in self._fields_:
             val = getattr(self, fname)
@@ -118,7 +118,9 @@ class ADCSamplingChannel:
     @property
     def array(self): return self._array
     def __getitem__(self, samp): return self._array[samp]
+    def __array__(self): return self._array
     def __iter__(self): return iter(self._array)
+    def __len__(self): return len(self._array)
     def __mul__(self, val): return self._array * val
     def __sub__(self, val): return self._array - val
     def __add__(self, val): return self._array + val
@@ -127,14 +129,22 @@ class ADCSamplingChannel:
     def __rsub__(self, val): return val - self._array
     def __radd__(self, val): return val + self._array
     def __rtruediv__(self, val): return val / self._array
+    def __imul__(self, val): self._array = self._array * val; return self
+    def __isub__(self, val): self._array = self._array - val; return self
+    def __iadd__(self, val): self._array = self._array + val; return self
+    def __itruediv__(self, val): self._array = self._array / val; return self
     def __str__(self):
         return f'{type(self).__name__}({self._info},{self._array})'
 
 class ADCChannel(ADCSamplingChannel):
-    def __init__(self, ptr: ctypes.c_void_p):
+    def __init__(self, ptr: ctypes.c_void_p, trig_info):
         self.__ptr = ptr
+        self._trig_info = trig_info
         self._info = _LIB.ADCChannel_GetInfo(self.__ptr)
         self._array = _LIB.ADCChannel_GetArray(self.__ptr)
+    @property
+    def trig_info(self):
+        return self._trig_info
 
 class ADCTrigger(ADCSamplingChannel):
     def __init__(self, ptr: ctypes.c_void_p):
@@ -148,25 +158,32 @@ class ADCBoard:
         self._info = _LIB.ADCBoard_GetBoardInfo(self.__ptr)
         self._channels = {}
         self._triggers = {}
-        chan = 0
-        for ofs in range(32):
-            if self._info.active_channel_mask & (1<<ofs):
-                chan_ptr = _LIB.ADCBoard_GetADCChannel(self.__ptr, chan)
-                self._channels.update({ofs: ADCChannel(chan_ptr)})
-                chan += 1
         trig = 0
         for ofs in range(4):
             if self._info.group_mask & (1<<ofs):
                 trig_ptr = _LIB.ADCBoard_GetADCTrigger(self.__ptr, trig)
                 self._triggers.update({ofs: ADCTrigger(trig_ptr)})
                 trig += 1
+        chan = 0
+        for ofs in range(32):
+            if self._info.active_channel_mask & (1<<ofs):
+                chan_ptr = _LIB.ADCBoard_GetADCChannel(self.__ptr, chan)
+                trig_info = self._triggers[ofs//8].info
+                self._channels.update({ofs: ADCChannel(chan_ptr, trig_info)})
+                chan += 1
     def __str__(self):
         return f'{type(self).__name__}({self._info})'
     @property
     def channels(self):
         return self._channels
     @property
+    def c(self):
+        return self._channels
+    @property
     def triggers(self):
+        return self._triggers
+    @property
+    def t(self):
         return self._triggers
     @property
     def info(self):

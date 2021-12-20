@@ -37,6 +37,9 @@ public:
   Bool_t passPreselection(Bool_t isTargetOut, Bool_t isMC, Bool_t externalPass);
   Double_t MissingMass(TVector3 V, Double_t E);
 
+  Bool_t passAnnPreSelection(Double_t clE, Double_t clTheta);
+  Double_t extractEff(Double_t R, Double_t phi);
+
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
@@ -65,6 +68,8 @@ protected:
   Double_t fFRmid;
   Double_t fFRmax;
   Double_t fEBeam;
+
+  Bool_t   fPreSelectionAnnihilation;
 
 
 };

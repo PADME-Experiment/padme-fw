@@ -877,7 +877,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   return;// NGoodClus;
 }
 
-void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) { // use the waveform conversion
+void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) { // use the waveform conversion
   //std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
   //fIsMC = true;
   Int_t i=0;
@@ -1191,7 +1191,7 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 
 
 
-void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
   fHits.clear();

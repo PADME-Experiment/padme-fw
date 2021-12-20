@@ -111,46 +111,61 @@ _LIB.ADCTrigger_GetInfo.restype = TriggerInfo
 
 
 class ADCSamplingChannel:
-    def get_samples(self):
+    def __init__(self, *args, **kwargs):
+        self._parent_brd = kwargs['parent']
+    @property
+    def parent_brd(self): return self._parent_brd
+    def __getitem__(self, samp): return self.array[samp]
+    def __array__(self): return self.array
+    def __iter__(self): return iter(self.array)
+    def __len__(self): return len(self.array)
+    def __mul__(self, val): return self.array * val
+    def __sub__(self, val): return self.array - val
+    def __add__(self, val): return self.array + val
+    def __truediv__(self, val): return self.array / val
+    def __rmul__(self, val): return val * self.array
+    def __rsub__(self, val): return val - self.array
+    def __radd__(self, val): return val + self.array
+    def __rtruediv__(self, val): return val / self.array
+    def __str__(self):
+        return f'{type(self).__name__}({self._info},{self.array})'
+class ADCChannel(ADCSamplingChannel):
+    def __init__(self, ptr: ctypes.c_void_p, trig, **kwargs):
+        super().__init__(self, **kwargs)
+        self.__ptr = ptr
+        self._trig = trig
+        self._info = None
+        self._array = None
+    @property
+    def info(self):
+        if self._info is None:
+            self._info = _LIB.ADCChannel_GetInfo(self.__ptr)
+        return self._info
+    @property
+    def array(self):
+        if self._array is None:
+            self._array = _LIB.ADCChannel_GetArray(self.__ptr)
         return self._array
     @property
-    def info(self): return self._info
-    @property
-    def array(self): return self._array
-    def __getitem__(self, samp): return self._array[samp]
-    def __array__(self): return self._array
-    def __iter__(self): return iter(self._array)
-    def __len__(self): return len(self._array)
-    def __mul__(self, val): return self._array * val
-    def __sub__(self, val): return self._array - val
-    def __add__(self, val): return self._array + val
-    def __truediv__(self, val): return self._array / val
-    def __rmul__(self, val): return val * self._array
-    def __rsub__(self, val): return val - self._array
-    def __radd__(self, val): return val + self._array
-    def __rtruediv__(self, val): return val / self._array
-    def __imul__(self, val): self._array = self._array * val; return self
-    def __isub__(self, val): self._array = self._array - val; return self
-    def __iadd__(self, val): self._array = self._array + val; return self
-    def __itruediv__(self, val): self._array = self._array / val; return self
-    def __str__(self):
-        return f'{type(self).__name__}({self._info},{self._array})'
-
-class ADCChannel(ADCSamplingChannel):
-    def __init__(self, ptr: ctypes.c_void_p, trig_info):
-        self.__ptr = ptr
-        self._trig_info = trig_info
-        self._info = _LIB.ADCChannel_GetInfo(self.__ptr)
-        self._array = _LIB.ADCChannel_GetArray(self.__ptr)
-    @property
-    def trig_info(self):
-        return self._trig_info
+    def trigger(self):
+        return self._trig
 
 class ADCTrigger(ADCSamplingChannel):
-    def __init__(self, ptr: ctypes.c_void_p):
+    def __init__(self, ptr: ctypes.c_void_p, **kwargs):
+        super().__init__(self, **kwargs)
         self.__ptr = ptr
-        self._info = _LIB.ADCTrigger_GetInfo(self.__ptr)
-        self._array = _LIB.ADCTrigger_GetArray(self.__ptr)
+        self._info = None
+        self._array = None
+    @property
+    def info(self):
+        if self._info is None:
+            self._info = _LIB.ADCTrigger_GetInfo(self.__ptr)
+        return self._info
+    @property
+    def array(self):
+        if self._array is None:
+            self._array = _LIB.ADCTrigger_GetArray(self.__ptr)
+        return self._array
 
 class ADCBoard:
     def __init__(self, ptr: ctypes.c_void_p):
@@ -162,32 +177,27 @@ class ADCBoard:
         for ofs in range(4):
             if self._info.group_mask & (1<<ofs):
                 trig_ptr = _LIB.ADCBoard_GetADCTrigger(self.__ptr, trig)
-                self._triggers.update({ofs: ADCTrigger(trig_ptr)})
+                self._triggers.update({ofs: ADCTrigger(trig_ptr, parent=self)})
                 trig += 1
         chan = 0
         for ofs in range(32):
             if self._info.active_channel_mask & (1<<ofs):
                 chan_ptr = _LIB.ADCBoard_GetADCChannel(self.__ptr, chan)
-                trig_info = self._triggers[ofs//8].info
-                self._channels.update({ofs: ADCChannel(chan_ptr, trig_info)})
+                trig = self._triggers[ofs//8]
+                self._channels.update({ofs: ADCChannel(chan_ptr, trig, parent=self)})
                 chan += 1
     def __str__(self):
         return f'{type(self).__name__}({self._info})'
     @property
-    def channels(self):
-        return self._channels
+    def chan_map(self): return self._channels
     @property
-    def c(self):
-        return self._channels
+    def trig_map(self): return self._triggers
     @property
-    def triggers(self):
-        return self._triggers
+    def chan_list(self): return list(self._channels.values())
     @property
-    def t(self):
-        return self._triggers
+    def trig_list(self): return list(self._triggers.values())
     @property
-    def info(self):
-        return self._info
+    def info(self): return self._info
 
 class PadmeEvent:
     def __init__(self, boards, info):
@@ -211,7 +221,7 @@ class PadmeEvent:
     def info(self):
         return self._info
     @property
-    def boards(self):
+    def board_list(self):
         return self._boards
 
 class PadmeRawIterator:
@@ -267,8 +277,8 @@ class PadmeRaw:
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     with PadmeRaw('/data/daq_0030355/run_0030355_20200917_113409_lvl1_00_000.root') as raw:
-        for evt in raw[:100]:
-            samp = evt.boards[12].channels[20]
+        for evt in raw[:20]:
+            samp = evt.board_list[12].chan_map[20]
             samp_norm = (samp-samp[:200].mean())/4.096
             plt.plot(samp_norm)
         plt.show()

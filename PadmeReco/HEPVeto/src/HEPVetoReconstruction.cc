@@ -64,9 +64,9 @@ void HEPVetoReconstruction::HistoInit(){
   
 
 
-  AddHisto("TimeDiffPVetoSAC" , new TH1F("TimeDiffPVetoSAC", "TimeDiffPVetoSAC",2000, -1000, 1000));
-  AddHisto("TimeDiffHEPVetoSAC" , new TH1F("TimeDiffHEPVetoSAC", "TimeDiffHEPVetoSAC",2000, -1000, 1000));
-  AddHisto("TimeDiffECalPVeto" , new TH1F("TimeDiffECalPVeto", "TimeDiffECalPVeto",2000, -1000, 1000));
+  AddHisto("TimeDiffPVetoSAC" , new TH1F("TimeDiffPVetoSAC", "TimeDiffPVetoSAC",2000, -200, 200));
+  AddHisto("TimeDiffHEPVetoSAC" , new TH1F("TimeDiffHEPVetoSAC", "TimeDiffHEPVetoSAC",2000, -200, 200));
+  AddHisto("TimeDiffECalPVeto" , new TH1F("TimeDiffECalPVeto", "TimeDiffECalPVeto",2000, -200, 200));
   AddHisto("TimeDiffECalECal" , new TH1F("TimeDiffECalECal", "TimeDiffECalECal",2000, -200, 200));
   AddHisto("TimeDiffSACSAC" , new TH1F("TimeDiffSACSAC", "TimeDiffSACSAC",2000, -100, 100));
   AddHisto("ECalTimeVsECalTime",new TH2F("ECalTimeVsECalTime","ECalTimeVsECalTime",

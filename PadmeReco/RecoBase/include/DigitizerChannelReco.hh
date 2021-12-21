@@ -23,6 +23,7 @@ public:
 
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit (std::vector<TRecoVHit *> &hitArray);
+  void ReconstructMultiHitSignalDeconvolution(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
 
   Short_t CalcMaximum();
@@ -53,7 +54,11 @@ private:
   Int_t fPostSamples;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
-  
+  std::vector<double> fDeconvMultiplierRe;
+  std::vector<double> fDeconvMultiplierIm;
+  float fDeconvThreshold_mV;
+  float fDeconvIntegralAmplitudeRatio;
+
   Int_t fMinAmplitude;
 
   TH1D *H1;
@@ -72,7 +77,7 @@ private:
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
 
-  Bool_t fMultihit;
+  int fMultihit;
   Bool_t fUseAbsSignals;
 
   //mode variables

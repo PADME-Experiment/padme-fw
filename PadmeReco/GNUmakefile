@@ -18,7 +18,7 @@ CPPFLAGS += -IRecoBase/include -g
 include ./mkconfig/global.gmk
 
 # Define libraries used for the creation of the final executable
-LIBS += -Llib -lPadmeReco$(STATIC) 
+LIBS += -Llib -lPadmeReco$(STATIC) -lgsl -lgslcblas
 LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Reco$(STATIC),$(SUBDIRS)))
 #LIBS += -LService/lib -lService$(STATIC)
 LIBS += -LRecoBase/lib -lRecoBase$(STATIC)

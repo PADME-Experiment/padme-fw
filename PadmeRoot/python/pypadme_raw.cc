@@ -99,51 +99,43 @@ extern "C" {
   int16_t*     ADCChannel_GetArray      (TADCChannel* ptr){return ptr->GetSamplesArray();}
   int16_t*     ADCTrigger_GetArray      (TADCTrigger* ptr){return ptr->GetSamplesArray();}
 
-  channel_info_t ADCChannel_GetInfo    (TADCChannel* ptr){
-    channel_info_t chan_info;
-    chan_info.channel_number = ptr->GetChannelNumber();
-    chan_info.n_samples      = ptr->GetNSamples();
-    return chan_info;
+  void ADCChannel_GetInfo    (TADCChannel* ptr, channel_info_t* chan_info){
+    chan_info->channel_number = ptr->GetChannelNumber();
+    chan_info->n_samples      = ptr->GetNSamples();
   }
 
-  trigger_info_t  ADCTrigger_GetInfo    (TADCTrigger* ptr){
-    trigger_info_t trig_info;
-    trig_info.group_number      = ptr->GetGroupNumber();
-    trig_info.start_index_cell  = ptr->GetStartIndexCell();
-    trig_info.frequency         = ptr->GetFrequency();
-    trig_info.trigger_signal    = ptr->GetTriggerSignal();
-    trig_info.trigger_time_tag  = ptr->GetTriggerTimeTag();
-    trig_info.n_samples         = ptr->GetNSamples();
-    return trig_info;
+  void ADCTrigger_GetInfo    (TADCTrigger* ptr, trigger_info_t* trig_info){
+    trig_info->group_number      = ptr->GetGroupNumber();
+    trig_info->start_index_cell  = ptr->GetStartIndexCell();
+    trig_info->frequency         = ptr->GetFrequency();
+    trig_info->trigger_signal    = ptr->GetTriggerSignal();
+    trig_info->trigger_time_tag  = ptr->GetTriggerTimeTag();
+    trig_info->n_samples         = ptr->GetNSamples();
   }
 
-  event_info_t PadmeRaw_GetEventInfo(PadmeRaw* ptr){
-    event_info_t evt_info;
-    evt_info.run_number            = ptr->fEvent->GetRunNumber        ();
-    evt_info.event_number          = ptr->fEvent->GetEventNumber      ();
-    evt_info.event_run_time        = ptr->fEvent->GetEventRunTime     ();
-    evt_info.event_trig_mask.all   = ptr->fEvent->GetEventTrigMask    ();
-    evt_info.event_status          = ptr->fEvent->GetEventStatus      ();
-    evt_info.missing_adc_boards    = ptr->fEvent->GetMissingADCBoards ();
-    evt_info.n_adc_boards          = ptr->fEvent->GetNADCBoards       ();
-    return evt_info;
+  void PadmeRaw_GetEventInfo(PadmeRaw* ptr, event_info_t* evt_info){
+    evt_info->run_number            = ptr->fEvent->GetRunNumber        ();
+    evt_info->event_number          = ptr->fEvent->GetEventNumber      ();
+    evt_info->event_run_time        = ptr->fEvent->GetEventRunTime     ();
+    evt_info->event_trig_mask.all   = ptr->fEvent->GetEventTrigMask    ();
+    evt_info->event_status          = ptr->fEvent->GetEventStatus      ();
+    evt_info->missing_adc_boards    = ptr->fEvent->GetMissingADCBoards ();
+    evt_info->n_adc_boards          = ptr->fEvent->GetNADCBoards       ();
   }
 
-  board_info_t ADCBoard_GetBoardInfo(TADCBoard* ptr){
-    board_info_t brd_info;
-    brd_info.board_id              = ptr->GetBoardId            ();
-    brd_info.board_sn              = ptr->GetBoardSN            ();
-    brd_info.lvds_pattern          = ptr->GetLVDSPattern        ();
-    brd_info.status                = ptr->GetStatus             ();
-    brd_info.board_status          = ptr->GetBoardStatus        ();
-    brd_info.group_mask            = ptr->GetGroupMask          ();
-    brd_info.event_counter         = ptr->GetEventCounter       ();
-    brd_info.event_timetag         = ptr->GetEventTimeTag       ();
-    brd_info.supp_algrtm           = ptr->Get0SuppAlgrtm        ();
-    brd_info.active_channel_mask   = ptr->GetActiveChannelMask  ();
-    brd_info.accepted_channel_mask = ptr->GetAcceptedChannelMask();
-    brd_info.n_adc_channels        =  ptr->GetNADCChannels      ();
-    brd_info.n_adc_triggers        =  ptr->GetNADCTriggers      ();
-    return brd_info;
+  void ADCBoard_GetBoardInfo(TADCBoard* ptr, board_info_t* brd_info){
+    brd_info->board_id              = ptr->GetBoardId            ();
+    brd_info->board_sn              = ptr->GetBoardSN            ();
+    brd_info->lvds_pattern          = ptr->GetLVDSPattern        ();
+    brd_info->status                = ptr->GetStatus             ();
+    brd_info->board_status          = ptr->GetBoardStatus        ();
+    brd_info->group_mask            = ptr->GetGroupMask          ();
+    brd_info->event_counter         = ptr->GetEventCounter       ();
+    brd_info->event_timetag         = ptr->GetEventTimeTag       ();
+    brd_info->supp_algrtm           = ptr->Get0SuppAlgrtm        ();
+    brd_info->active_channel_mask   = ptr->GetActiveChannelMask  ();
+    brd_info->accepted_channel_mask = ptr->GetAcceptedChannelMask();
+    brd_info->n_adc_channels        = ptr->GetNADCChannels       ();
+    brd_info->n_adc_triggers        = ptr->GetNADCTriggers       ();
   }
 }

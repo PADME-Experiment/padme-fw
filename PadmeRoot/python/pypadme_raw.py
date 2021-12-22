@@ -77,8 +77,8 @@ _LIB.PadmeRaw_new.restype = ctypes.c_void_p
 _LIB.PadmeRaw_new.argtype = ctypes.c_char_p
 _LIB.PadmeRaw_del.argtypes = ctypes.c_void_p,
 
-_LIB.PadmeRaw_GetEventInfo.argtypes = ctypes.c_void_p,
-_LIB.PadmeRaw_GetEventInfo.restype  = EventInfo
+_LIB.PadmeRaw_GetEventInfo.argtypes = ctypes.c_void_p, ctypes.POINTER(EventInfo)
+#_LIB.PadmeRaw_GetEventInfo.restype  = 
 
 _LIB.PadmeRaw_GetNEvents.argtypes = ctypes.c_void_p,
 _LIB.PadmeRaw_GotoEvent.argtypes = ctypes.c_void_p, ctypes.c_uint32
@@ -87,8 +87,8 @@ _LIB.PadmeRaw_GetNADCBoards.argtypes = ctypes.c_void_p,
 _LIB.PadmeRaw_GetADCBoard.argtypes = ctypes.c_void_p, ctypes.c_uint8
 _LIB.PadmeRaw_GetADCBoard.restype = ctypes.c_void_p
 
-_LIB.ADCBoard_GetBoardInfo.argtypes = ctypes.c_void_p,
-_LIB.ADCBoard_GetBoardInfo.restype  = BoardInfo
+_LIB.ADCBoard_GetBoardInfo.argtypes = ctypes.c_void_p, ctypes.POINTER(BoardInfo)
+#_LIB.ADCBoard_GetBoardInfo.restype  = 
 
 _LIB.ADCBoard_GetADCChannel.argtypes = ctypes.c_void_p, ctypes.c_uint8
 _LIB.ADCBoard_GetADCChannel.restype = ctypes.c_void_p
@@ -102,11 +102,11 @@ _LIB.ADCChannel_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16,
 _LIB.ADCTrigger_GetArray.argtypes = ctypes.c_void_p,
 _LIB.ADCTrigger_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
 
-_LIB.ADCChannel_GetInfo.argtypes = ctypes.c_void_p,
-_LIB.ADCChannel_GetInfo.restype = ChannelInfo
+_LIB.ADCChannel_GetInfo.argtypes = ctypes.c_void_p, ctypes.POINTER(ChannelInfo)
+#_LIB.ADCChannel_GetInfo.restype = 
 
-_LIB.ADCTrigger_GetInfo.argtypes = ctypes.c_void_p,
-_LIB.ADCTrigger_GetInfo.restype = TriggerInfo
+_LIB.ADCTrigger_GetInfo.argtypes = ctypes.c_void_p, ctypes.POINTER(TriggerInfo)
+#_LIB.ADCTrigger_GetInfo.restype = 
 
 
 
@@ -139,7 +139,8 @@ class ADCChannel(ADCSamplingChannel):
     @property
     def info(self):
         if self._info is None:
-            self._info = _LIB.ADCChannel_GetInfo(self.__ptr)
+            self._info = ChannelInfo()
+            _LIB.ADCChannel_GetInfo(self.__ptr, ctyeps.byref(self._info))
         return self._info
     @property
     def array(self):
@@ -159,7 +160,8 @@ class ADCTrigger(ADCSamplingChannel):
     @property
     def info(self):
         if self._info is None:
-            self._info = _LIB.ADCTrigger_GetInfo(self.__ptr)
+            self._info = TriggerInfo()
+            _LIB.ADCTrigger_GetInfo(self.__ptr, ctypes.byref(self._info))
         return self._info
     @property
     def array(self):
@@ -170,7 +172,8 @@ class ADCTrigger(ADCSamplingChannel):
 class ADCBoard:
     def __init__(self, ptr: ctypes.c_void_p):
         self.__ptr = ptr
-        self._info = _LIB.ADCBoard_GetBoardInfo(self.__ptr)
+        self._info = BoardInfo()
+        _LIB.ADCBoard_GetBoardInfo(self.__ptr, ctypes.byref(self._info))
         self._channels = {}
         self._triggers = {}
         trig = 0
@@ -267,7 +270,8 @@ class PadmeRaw:
     def get_event(self, event):
         if 0 <= event < self.n_events:
             _LIB.PadmeRaw_GotoEvent(self._ptr, event)
-            evt_info = _LIB.PadmeRaw_GetEventInfo(self._ptr)
+            evt_info = EventInfo()
+            _LIB.PadmeRaw_GetEventInfo(self._ptr, ctypes.byref(evt_info))
             nbrds = _LIB.PadmeRaw_GetNADCBoards(self._ptr)
             boards =  [ADCBoard(_LIB.PadmeRaw_GetADCBoard(self._ptr, brd)) for brd in range(nbrds)]
             return PadmeEvent(boards, evt_info)

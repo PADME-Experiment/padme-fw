@@ -54,7 +54,7 @@ DarkPhoton::DarkPhoton(Int_t processingMode, Int_t verbosityFlag)
   fFRmin=115.82;
   fFRmid=172.83;
   fFRmax=258.0;
-  fEBeam=430;
+  fEBeam=420;
 
   fPreSelectionAnnihilation=false;
 
@@ -118,21 +118,17 @@ Bool_t DarkPhoton::passPreselection(Bool_t isTargetOut, Bool_t isMC, Bool_t exte
   HistoSvc* hSvc =  HistoSvc::GetInstance();
    std::string hname;
   Bool_t passed = false;
-  std::cout<<"ok1"<< std::endl;
   if (!fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) 
     {
       if (!fRecoEvent->GetTriggerMaskBit(TRECOEVENT_TRIGMASKBIT_BEAM)) return passed;
     }
-  std::cout<<"ok2" << std::endl;
   Double_t targetConst=1.78; //to use olny if the run is taken from September 2020 !!!! -> corrected in develop
   //if(isMC) targetConst=1; 
    targetConst=1; 
   if (!externalPass && !isMC && !isTargetOut && fTarget_RecoBeam->getnPOT()<13000) return passed;
-  std::cout<<"ok3" << std::endl;
   //std::cout<<"tagetnPOT "<<fTarget_RecoBeam->getnPOT() << " and isTargetOutBool " << isTargetOut<< std::endl;
   if (isTargetOut && fSAC_ClColl->GetNElements()>15) return passed;  
   //if(fRecoEvent->GetEventNumber()>270000) return passed;
-  std::cout<<"ok4" << std::endl;
   std::string hname1 = "DP_NposInBunch_beam";
   hSvc->FillHisto(hname1,fTarget_RecoBeam->getnPOT()*targetConst);
   hname = "DP_nPOT";
@@ -152,6 +148,7 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
   //std::cout<<"in ProcessAnalysis ... evsel ... "<<fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<std::endl;
   if (fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
     isMC=true;
+    fEBeam=430.;
     //std::cout<<"input data are simulatetd "<<std::endl;
   }
  

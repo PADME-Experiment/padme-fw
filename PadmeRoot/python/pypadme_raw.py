@@ -96,11 +96,12 @@ _LIB.ADCBoard_GetADCChannel.restype = ctypes.c_void_p
 _LIB.ADCBoard_GetADCTrigger.argtypes = ctypes.c_void_p, ctypes.c_uint8
 _LIB.ADCBoard_GetADCTrigger.restype = ctypes.c_void_p
 
-_LIB.ADCChannel_GetArray.argtypes = ctypes.c_void_p,
-_LIB.ADCChannel_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
 
-_LIB.ADCTrigger_GetArray.argtypes = ctypes.c_void_p,
-_LIB.ADCTrigger_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
+_LIB.ADCChannel_GetArray.argtypes = ctypes.c_void_p, ctypes.c_void_p
+#_LIB.ADCChannel_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
+
+_LIB.ADCTrigger_GetArray.argtypes = ctypes.c_void_p, ctypes.c_void_p
+#_LIB.ADCTrigger_GetArray.restype = numpy.ctypeslib.ndpointer(dtype=numpy.uint16, shape=1024, ndim=1, flags='C_CONTIGUOUS')
 
 _LIB.ADCChannel_GetInfo.argtypes = ctypes.c_void_p, ctypes.POINTER(ChannelInfo)
 #_LIB.ADCChannel_GetInfo.restype = 
@@ -140,12 +141,13 @@ class ADCChannel(ADCSamplingChannel):
     def info(self):
         if self._info is None:
             self._info = ChannelInfo()
-            _LIB.ADCChannel_GetInfo(self.__ptr, ctyeps.byref(self._info))
+            _LIB.ADCChannel_GetInfo(self.__ptr, ctypes.byref(self._info))
         return self._info
     @property
     def array(self):
         if self._array is None:
-            self._array = _LIB.ADCChannel_GetArray(self.__ptr)
+            self._array = numpy.empty(self.info.n_samples, dtype=numpy.float32)
+            _LIB.ADCChannel_GetArray(self.__ptr, self._array.__array_interface__['data'][0])
         return self._array
     @property
     def trigger(self):
@@ -166,7 +168,8 @@ class ADCTrigger(ADCSamplingChannel):
     @property
     def array(self):
         if self._array is None:
-            self._array = _LIB.ADCTrigger_GetArray(self.__ptr)
+            self._array = numpy.empty(self.info.n_samples, dtype=numpy.float32)
+            _LIB.ADCTrigger_GetArray(self.__ptr, self._array.__array_interface__['data'][0])
         return self._array
 
 class ADCBoard:
@@ -284,5 +287,5 @@ if __name__ == '__main__':
         for evt in raw[:20]:
             samp = evt.board_list[12].chan_map[20]
             samp_norm = (samp-samp[:200].mean())/4.096
-            plt.plot(samp_norm)
+            plt.plot(samp)
         plt.show()

@@ -96,15 +96,26 @@ extern "C" {
   TADCBoard*   PadmeRaw_GetADCBoard     (PadmeRaw* ptr, uint8_t board){return ptr->fEvent->ADCBoard(board);}
   TADCChannel* ADCBoard_GetADCChannel   (TADCBoard* ptr, uint8_t chan){return ptr->ADCChannel(chan);}
   TADCTrigger* ADCBoard_GetADCTrigger   (TADCBoard* ptr, uint8_t trig){return ptr->ADCTrigger(trig);}
-  int16_t*     ADCChannel_GetArray      (TADCChannel* ptr){return ptr->GetSamplesArray();}
-  int16_t*     ADCTrigger_GetArray      (TADCTrigger* ptr){return ptr->GetSamplesArray();}
 
-  void ADCChannel_GetInfo    (TADCChannel* ptr, channel_info_t* chan_info){
+  void ADCChannel_GetArray(TADCChannel* ptr, float arr[]){
+    auto samp = ptr->GetSamplesArray();
+    for(int i=0;i<ptr->GetNSamples();i++){
+      arr[i]=samp[i];
+    }
+  }
+  void ADCTrigger_GetArray(TADCTrigger* ptr, float arr[]){
+    auto samp = ptr->GetSamplesArray();
+    for(int i=0;i<ptr->GetNSamples();i++){
+      arr[i]=samp[i];
+    }
+  }
+
+  void ADCChannel_GetInfo(TADCChannel* ptr, channel_info_t* chan_info){
     chan_info->channel_number = ptr->GetChannelNumber();
     chan_info->n_samples      = ptr->GetNSamples();
   }
 
-  void ADCTrigger_GetInfo    (TADCTrigger* ptr, trigger_info_t* trig_info){
+  void ADCTrigger_GetInfo(TADCTrigger* ptr, trigger_info_t* trig_info){
     trig_info->group_number      = ptr->GetGroupNumber();
     trig_info->start_index_cell  = ptr->GetStartIndexCell();
     trig_info->frequency         = ptr->GetFrequency();

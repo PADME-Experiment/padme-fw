@@ -24,6 +24,7 @@ void DigitizerChannelSAC::PrintConfig(){
 
 
 void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
+  ChannelVReco::Init(gMode, cfg);
 
   fGlobalMode = gMode;
   H1 = new TH1D("h1","h1",1000,0.,1000.);
@@ -34,25 +35,8 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
     hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),600,3700.,3900);
     hListCal->Add(hPedCalo[kk]);
   }
-  
-  fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
-  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
-  fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
 
-  fSignalWidth    = cfg->GetParOrDefault("RECO","SignalWindow",1024);  //defined per single hit M. Raggi 9/11/2018
-  fPedOffset      = cfg->GetParOrDefault("RECO","PedestalOffset",100);
-  
-  fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
-  fPostSamples    = cfg->GetParOrDefault("RECO","SignalPostSamples",1024);
-  fPedMaxNSamples = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",100);  
 
-  fMinAmplitude    = cfg->GetParOrDefault("RECO","MinAmplitude",10);
-  fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
-  fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
-
-  fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
-  fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
-  
   //Set a default Adc channel pedestals;
   for(int kk=0;kk<32;kk++){
     fPedCh[kk] = 3800;

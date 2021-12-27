@@ -65,22 +65,10 @@ void DigitizerChannelTarget::PrintConfig(){
 void DigitizerChannelTarget::Init(GlobalRecoConfigOptions* gMode,
 				  PadmeVRecoConfig *cfg)
 {
+  ChannelVReco::Init(gMode, cfg);
 
   fGlobalMode = gMode;
-    
-  fTimeBin           = cfg->GetParOrDefault( "ADC","TimeBin"                ,      1.);
-  fVoltageBin        = cfg->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
-  fImpedance         = cfg->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
-  fSignalWidth       = cfg->GetParOrDefault("RECO","SignalWindow"           ,    1024);
-  fPedOffset         = cfg->GetParOrDefault("RECO","PedestalOffset"         ,     100); 
-  fPreSamples        = cfg->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
-  fPostSamples       = cfg->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
-  fPedMaxNSamples    = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);  
-  fMinAmplitude      = cfg->GetParOrDefault("RECO","MinAmplitude"           ,      10);
-  fAmpThresholdLow   = cfg->GetParOrDefault("RECO","AmplThrLow"             ,     10.);
-  fAmpThresholdHigh  = cfg->GetParOrDefault("RECO","AmplThrHigh"            ,     20.);
-  fMultihit          = cfg->GetParOrDefault("RECO","Multihit"               ,       0);
-  fUseAbsSignals     = cfg->GetParOrDefault("RECO","UseAbsSignals"          ,       0);
+
   /* 
   fCCD               = cfg->GetParOrDefault("RECO","CCD"                    ,      12);
   fAverageGain       = cfg->GetParOrDefault("RECO","AverageGain"            ,    1300);

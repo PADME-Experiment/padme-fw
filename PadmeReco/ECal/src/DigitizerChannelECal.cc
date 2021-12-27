@@ -39,28 +39,16 @@ void DigitizerChannelECal::PrintConfig(){
 void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 				PadmeVRecoConfig *cfg)
 {
+  ChannelVReco::Init(gOptions, cfg);
 // Setting flags for running modes.
   fGlobalMode = gOptions;
 
   
-  fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
-  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
-  fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
 
-  fSignalWidth    = cfg->GetParOrDefault("RECO","SignalWindow",1024);
-  fPedOffset      = cfg->GetParOrDefault("RECO","PedestalOffset",100);
   
-  fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
-  fPostSamples    = cfg->GetParOrDefault("RECO","SignalPostSamples",1024);
-  fPedMaxNSamples = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",100);  
   fPedestalMode   = cfg->GetParOrDefault("RECO","PedestalMode",0);  
 
-  fMinAmplitude    = cfg->GetParOrDefault("RECO","MinAmplitude",10);
-  fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
-  fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
-  fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
-  fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
   fUseOverSample  = cfg->GetParOrDefault("RECO","UseOverSample",0); //M. Raggi: 03/05/2019  
   fIntCorrection  = cfg->GetParOrDefault("RECO","UseIntegralCorrection",0); //M. Raggi: 15/05/2019  
   fSaturatioCorrection = cfg->GetParOrDefault("RECO","UseSaturationCorrection",0); //M. Raggi: 15/05/2019  
@@ -1016,6 +1004,10 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
 
 
 void DigitizerChannelECal::Reconstruct(std::vector<TRecoVHit *> &hitArray){
+  if(fMultihit==2){
+    ReconstructMultiHitSignalDeconvolution(hitArray);
+    return;
+  }
   fTrigMask = GetTrigMask();
   if(fUseAbsSignals) {
     SetAbsSignals();

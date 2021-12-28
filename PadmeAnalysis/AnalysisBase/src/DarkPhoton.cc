@@ -171,15 +171,24 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
   Double_t ShiftECalSac;
   Double_t ShiftECalPVeto;
   Double_t ShiftECalEVeto;
+  Double_t shiftMomentumECalPVeto;
+  Double_t ShiftSacPVeto;
+  Double_t shiftMomentumsacPVeto;
   if(isMC){
     ShiftECalSac=0;
     ShiftECalPVeto=0;
     ShiftECalEVeto=0;
+    shiftMomentumECalPVeto=0.;
+    ShiftSacPVeto=0.;
+    shiftMomentumsacPVeto=0.;
   }
   else{
-    ShiftECalSac=0;
-    ShiftECalPVeto=0;
+    ShiftECalSac=3.2-3.11;
+    ShiftECalPVeto=3.6-3.3;
     ShiftECalEVeto=1;
+    shiftMomentumECalPVeto=79;
+    ShiftSacPVeto=0.;
+    shiftMomentumsacPVeto=7.3;
   }
 
   Int_t NClECal = fECal_ClColl->GetNElements();
@@ -261,17 +270,44 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
 	Double_t cluTime=PVetoclu->GetTime();
 	Double_t cluZpos=PVetoclu->GetPosition().Z();
 	Double_t cluXpos=PVetoclu->GetPosition().X();
-	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<2.){
+	hname="MissingMass_DTimeEcalPVeto_NoClInTime20ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(ClTECal-cluTime-ShiftECalPVeto), 1.);
+	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<4.){
 	  Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
-	  if(fabs(momentumPositron+g1E-fEBeam)<50){
+	  hname="MissingMass_EPositronEPhotonMinusEBeam_NoClInTime20ns_ThrEne90MeV";
+	  hSvc->FillHisto(hname,(momentumPositron+g1E-fEBeam-shiftMomentumECalPVeto) , 1.);
+	  if(fabs(momentumPositron+g1E-fEBeam-shiftMomentumECalPVeto)<50){
 	    CoincidencePVeto=false;
 	  }
 	}
       }
       for(int jsac=0; jsac<NClSAC; jsac++){
 	SACclu=fSAC_ClColl->Element(jsac);
+	for(int jpveto=0; jpveto<NClPVeto; jpveto++){
+	  PVetoclu=fPVeto_ClColl->Element(jpveto);
+	  Double_t cluTime=PVetoclu->GetTime();
+	  Double_t cluZpos=PVetoclu->GetPosition().Z();
+	  Double_t cluXpos=PVetoclu->GetPosition().X();
+	  hname="MissingMass_DTimeSACPVeto";
+	  hSvc->FillHisto(hname,(SACclu->GetTime()-cluTime-ShiftSacPVeto), 1.);
+	  if(fabs(SACclu->GetTime()-cluTime-ShiftSacPVeto)<1.){
+	    Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
+	    hname="MissingMass_EPositronEPhotonSACMinusEBeam";
+	    hSvc->FillHisto(hname,(momentumPositron+SACclu->GetEnergy()-fEBeam-shiftMomentumsacPVeto) , 1.);
+	    
+	  }
+	}
+
 	Double_t cluTime=SACclu->GetTime();
-	if(fabs(ClTECal-cluTime-ShiftECalSac)<2. && SACclu->GetEnergy()>50){
+	hname="MissingMass_DTimeEcalSAC_NoClInTime20ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(ClTECal-cluTime-ShiftECalSac), 1.);
+	hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime20ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(SACclu->GetEnergy() +g1E-fEBeam) , 1.);
+	if(SACclu->GetEnergy()>50.){
+	  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime20ns_ThrEne90MeVSacEneThr50";
+	  hSvc->FillHisto(hname,(SACclu->GetEnergy() +g1E-fEBeam) , 1.);
+	}
+	if(fabs(ClTECal-cluTime-ShiftECalSac)<6. && SACclu->GetEnergy()>50){
 	  CoincidenceSAC=false;
 	}
 	// }
@@ -297,28 +333,63 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
       hSvc->FillHisto(hname,MissingMass, 1.);
       hname="MissingMass_NoClInTime10ns_ThrEne90MeVW";
       hSvc->FillHisto(hname,MissingMass, eff);
-      hname="MissingMass_EvsTheta_10nsEThr90";
-      hSvc->FillHisto2(hname, thetag1, g1E );
       Bool_t CoincidencePVeto=true;
       Bool_t CoincidenceSAC=true;
+      Bool_t BremSac_PVeto=false;
       for(int jpveto=0; jpveto<NClPVeto; jpveto++){
 	PVetoclu=fPVeto_ClColl->Element(jpveto);
 	Double_t cluTime=PVetoclu->GetTime();
 	Double_t cluZpos=PVetoclu->GetPosition().Z();
 	Double_t cluXpos=PVetoclu->GetPosition().X();
-	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<2.){
+	hname="MissingMass_DTimeEcalPVeto_NoClInTime10ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(ClTECal-cluTime-ShiftECalPVeto), 1.);
+	if(fabs(ClTECal-cluTime-ShiftECalPVeto)<9.){
 	  Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
-	  if(fabs(momentumPositron+g1E-fEBeam)<50){
+	  hname="MissingMass_EPositronEPhotonMinusEBeam_NoClInTime10ns_ThrEne90MeV";
+	  hSvc->FillHisto(hname,(momentumPositron+g1E-fEBeam-shiftMomentumECalPVeto) , 1.);
+	  if(fabs(momentumPositron+g1E-fEBeam-shiftMomentumECalPVeto)<50){
 	    CoincidencePVeto=false;
 	  }
 	}
-      }
- 
+      }//end of PVeto 
       for(int jsac=0; jsac<NClSAC; jsac++){
 	SACclu=fSAC_ClColl->Element(jsac);
 	Double_t cluTime=SACclu->GetTime();
-	if(fabs(ClTECal-cluTime-ShiftECalSac)<2. && SACclu->GetEnergy()>50){
-	  CoincidenceSAC=false;
+	hname="MissingMass_DTimeEcalSAC_NoClInTime10ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(ClTECal-cluTime-ShiftECalSac), 1.);
+	hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeV";
+	hSvc->FillHisto(hname,(SACclu->GetEnergy() +g1E-fEBeam) , 1.);
+	if(SACclu->GetEnergy()>50.){
+	  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeVSacEneThr50";
+	  hSvc->FillHisto(hname,(SACclu->GetEnergy() +g1E-fEBeam) , 1.);
+	  hname="MissingMass_DTimevsESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeVSacEneThr50";
+	  hSvc->FillHisto2(hname,(SACclu->GetEnergy() +g1E-fEBeam), (ClTECal-cluTime-ShiftECalSac), 1.);
+	}
+	if(fabs(ClTECal-cluTime-ShiftECalSac)<14. && SACclu->GetEnergy()>50){
+	  for(int jpveto=0; jpveto<NClPVeto; jpveto++){
+	    PVetoclu=fPVeto_ClColl->Element(jpveto);
+	    Double_t cluTimeP=PVetoclu->GetTime();
+	    Double_t cluZpos=PVetoclu->GetPosition().Z();
+	    Double_t cluXpos=PVetoclu->GetPosition().X();
+	    hname="MissingMass_DTimeSACPVeto_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50";
+	    hSvc->FillHisto(hname,(cluTime-cluTimeP-ShiftSacPVeto), 1.);
+	    if(fabs(cluTime-cluTimeP-ShiftSacPVeto)<4.){
+	      Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
+	      hname="MissingMass_EPositronEPhotonSACMinusEBeam_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50";
+	      hSvc->FillHisto(hname,(momentumPositron+SACclu->GetEnergy()-fEBeam-shiftMomentumsacPVeto) , 1.);
+	      if(fabs(momentumPositron+SACclu->GetEnergy()-fEBeam-shiftMomentumsacPVeto)<40.){
+		BremSac_PVeto=true;
+	      } 
+	    }
+	  }// end of SAC-PVeto brem check
+	  if(!BremSac_PVeto) {
+	    CoincidenceSAC=false;
+	    hname="MissingMass_DTimeEcalSAC_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50_noBremSACPVeto";
+	    hSvc->FillHisto(hname,(ClTECal-cluTime-ShiftECalSac), 1.);
+	    hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50_noBremSACPVeto";
+	    hSvc->FillHisto(hname,(SACclu->GetEnergy() +g1E-fEBeam) , 1.);
+
+	  }
 	}
 	// }
       }
@@ -335,7 +406,9 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
 	}
       }
 
-    }//end of noinTime10
+    }//end of nointime10
+
+
 
   }
 
@@ -479,7 +552,60 @@ Bool_t DarkPhoton::InitHistos()
   maxX=200.5;  
   hname="ECAL_MissingMassAnnihilation_10ns5CoGUnderPeakEThr90";
   hSvc->BookHisto(hname, binX, minX, maxX);
-  
+
+
+  binX=100;   
+  minX=-50;
+  maxX=50;
+  hname="MissingMass_DTimeEcalPVeto_NoClInTime20ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_DTimeEcalSAC_NoClInTime20ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_DTimeSACPVeto";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
+  binX=200;   
+  minX=-200;
+  maxX=200;
+  hname="MissingMass_EPositronEPhotonMinusEBeam_NoClInTime20ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime20ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime20ns_ThrEne90MeVSacEneThr50";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_EPositronEPhotonSACMinusEBeam";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
+
+  binX=100;   
+  minX=-50;
+  maxX=50;
+  hname="MissingMass_DTimeEcalPVeto_NoClInTime10ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_DTimeEcalSAC_NoClInTime10ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_DTimeSACPVeto_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_DTimeEcalSAC_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50_noBremSACPVeto";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
+  binX=200;   
+  minX=-200;
+  maxX=200;
+  hname="MissingMass_EPositronEPhotonMinusEBeam_NoClInTime10ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeVSacEneThr50";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_EPositronEPhotonSACMinusEBeam_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_ESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50_noBremSACPVeto";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
+  hname="MissingMass_DTimevsESacEEcalMinusEBeam_NoClInTime10ns_ThrEne90MeVSacEneThr50";
+  hSvc->BookHisto2(hname, binX, minX, maxX, 100, -50, 50);
+
   return true;
 }
 

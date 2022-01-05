@@ -40,6 +40,10 @@ public:
   Bool_t passAnnPreSelection(Double_t clE, Double_t clTheta);
   Double_t extractEff(Double_t R, Double_t phi);
 
+  void checkAMassBelonging(Double_t MMiss, Bool_t (&boolMass)[7]);
+  void FillAMassRange(Bool_t MRange[7], Double_t var1, Double_t var2, std::string hPartialName);
+  void FillAMassRangeSimple(Bool_t MRange[7], Double_t var1, std::string hPartialName);
+
 protected:
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
@@ -71,7 +75,8 @@ protected:
 
   Bool_t   fPreSelectionAnnihilation;
 
-
+  Double_t fminArange[7];
+  Double_t fmaxArange[7];
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

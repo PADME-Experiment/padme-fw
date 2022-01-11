@@ -288,12 +288,14 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
       Bool_t BremSac_PVeto=false;
       Bool_t forEffEcalPveto=false;
       Bool_t forEffEcalPveto2=false;
+      Double_t dTimeMinEcalPVeto=9999999999999;
       for(int jpveto=0; jpveto<NClPVeto; jpveto++){
     	PVetoclu=fPVeto_ClColl->Element(jpveto);
     	Double_t cluTime=PVetoclu->GetTime();
     	Double_t cluZpos=PVetoclu->GetPosition().Z();
     	Double_t cluXpos=PVetoclu->GetPosition().X();
 	Double_t DT= ClTECal-cluTime-ShiftECalPVeto;
+	if(DT<dTimeMinEcalPVeto)dTimeMinEcalPVeto=DT;
 	Double_t DTshifted=ClTEcalShifted-cluTime-ShiftECalPVeto;
     	hname="MissingMass_DTimeEcalPVeto_NoClInTime4ns_ThrEne90MeV";
     	hSvc->FillHisto(hname, DT, 1.);
@@ -306,6 +308,10 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     	  hSvc->FillHisto(hname,DE , 1.);
 	  hname="MissingMass_EcalPVetoBrem__NoClInTime4ns_ThrEne90MeV_DTcalPVeto9ns";
 	  hSvc->FillHisto2(hname, PVetoclu->GetChannelId(), g1E,1.);
+	  if(fabs(DT)<1.){
+	    hname="MissingMass_EcalPVetoBrem__NoClInTime4ns_ThrEne90MeV_DTcalPVeto1ns";
+	    hSvc->FillHisto2(hname, PVetoclu->GetChannelId(), g1E,1.);
+	  }
 	  hname="MissingMass_EcalPVetoBremMom__NoClInTime4ns_ThrEne90MeV_DTcalPVeto9ns";
 	  hSvc->FillHisto2(hname,momentumPositron , g1E,1.);
 	  if(DE>40. && DE<120.){
@@ -325,13 +331,16 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
       }//end of PVeto
       if(forEffEcalPveto) FillAMassRangeSimple(AmassRange, 1, "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_BremEcalPVetoTag");
       if(forEffEcalPveto2)FillAMassRangeSimple(AmassRange, 1, "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_BremEcalPVetoTagAfterShift");
-
+      hname="MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_DTimeEcalPVetoMin";
+      hSvc->FillHisto(hname, dTimeMinEcalPVeto, 1.);
       if(CoincidencePVeto)FillAMassRangeSimple(AmassRange, 1, "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_NoBremEcalPveto");
       Bool_t forEffEcalSAC=false;
+      Double_t dTimeMinEcalSAC=999999999;
       for(int jsac=0; jsac<NClSAC; jsac++){
 	SACclu=fSAC_ClColl->Element(jsac);
 	Double_t cluTime=SACclu->GetTime();
 	Double_t DTecalsac = ClTECal-cluTime-ShiftECalSac;
+	if(DTecalsac< dTimeMinEcalSAC) dTimeMinEcalSAC=DTecalsac;
 	Double_t DTecalsacShifted = ClTEcalShifted-cluTime-ShiftECalSac;
 	Double_t DEecalsac = SACclu->GetEnergy() +g1E-fEBeam;
 	if(SACclu->GetEnergy()>50.){
@@ -349,6 +358,10 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
 	    hname="MissingMass_DTimevsDEEcalSac_NoClInTime4ns_ThrEne90MeVSacEneThr50_EcalBremRejected";
 	    hSvc->FillHisto2(hname,DEecalsac, DTecalsac, 1.);
 	  }
+	}
+	if(CoincidencePVeto && SACclu->GetEnergy()>50 ){
+	  hname="MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_NoBremEcalPVeto_SacEThr50_DTimeEcalSACMin";
+	  hSvc->FillHisto(hname, dTimeMinEcalSAC, 1.);
 	}
 	if(fabs(DTecalsac)<14. && SACclu->GetEnergy()>50 && CoincidencePVeto){
 	  for(int jpveto=0; jpveto<NClPVeto; jpveto++){
@@ -412,6 +425,39 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     }// end no cluster in 4ns and EgEcal>90
 
   }// end of ecal cluster loop
+
+
+  //I'd like to see bremsstrahlung correlation in ecal-pveto, thus I'm looking on good samples
+
+
+  for (Int_t jecal=0; jecal<NClECal; ++jecal){
+    if(jecal>5) continue;
+    ecalclu          = fECal_ClColl->Element(jecal);
+    if(makeClSelection && selCl.at(jecal)<10)continue;
+    for(int jpveto=0; jpveto<NClPVeto; jpveto++){
+      PVetoclu=fPVeto_ClColl->Element(jpveto);
+      int chID=PVetoclu->GetChannelId();
+      if(chID>70) continue;
+      Double_t cluTime=PVetoclu->GetTime();
+      Double_t cluZpos=PVetoclu->GetPosition().Z();
+      Double_t cluXpos=PVetoclu->GetPosition().X();
+      Double_t DT= ecalclu->GetTime()-cluTime-ShiftECalPVeto;
+      Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
+      Double_t DE= momentumPositron+ecalclu->GetEnergy()-fEBeam-shiftMomentumECalPVeto;
+      if(ecalclu->GetEnergy()>90.){
+	hname="MissingMass_ForEcalBrem_DTimevsDEEcalPVeto_CleanerSample_EthrEcal90MeV";
+	hSvc->FillHisto2(hname,DE, DT , 1.);
+      }
+      if(fabs(DT)<1){
+	hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns";
+	hSvc->FillHisto2(hname, chID, ecalclu->GetEnergy());
+	if(ecalclu->GetEnergy()>90.){
+	  hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns_EthrEcal90MeV";
+	  hSvc->FillHisto2(hname, chID, ecalclu->GetEnergy());
+        }
+      }
+    }
+  }
   return retCode;
 }
 
@@ -595,6 +641,11 @@ Bool_t DarkPhoton::InitHistos()
   hname="MissingMass_DTimeEcalSAC_NoClInTime4ns_ThrEne90MeV_ECALSACTimeCoincidence14_EThrSAC50_EcalBremRejected_noBremSACPVeto";
   hSvc->BookHisto(hname, binX, minX, maxX);
 
+  hname="MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_DTimeEcalPVetoMin";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname="MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_NoBremEcalPVeto_SacEThr50_DTimeEcalSACMin";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
   binX=500;
   minX=-500;
   maxX=700;
@@ -621,6 +672,8 @@ Bool_t DarkPhoton::InitHistos()
   hSvc->BookHisto2(hname, binX, minX, maxX1, binX, minX, maxX);
 
 
+  hname="MissingMass_EcalPVetoBrem__NoClInTime4ns_ThrEne90MeV_DTcalPVeto1ns";
+  hSvc->BookHisto2(hname, 100, -0.5, 99.5, 200 ,  0, 500);
   hname="MissingMass_EcalPVetoBrem__NoClInTime4ns_ThrEne90MeV_DTcalPVeto9ns";
   hSvc->BookHisto2(hname, 100, -0.5, 99.5, 200 ,  0, 500);
   hname="MissingMass_EcalPVetoBremMom__NoClInTime4ns_ThrEne90MeV_DTcalPVeto9ns";
@@ -667,6 +720,13 @@ Bool_t DarkPhoton::InitHistos()
     hname1=hPartialName2+mass[i];
     hSvc->BookHisto(hname1, binX, minX, maxX);
   }
+
+  hname="MissingMass_ForEcalBrem_DTimevsDEEcalPVeto_CleanerSample_EthrEcal90MeV";
+  hSvc->BookHisto2(hname, 500, -500, 700, 500 ,  -500, 500);
+  hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns";
+  hSvc->BookHisto2(hname, 80, -0.5, 79.5, 200 ,  0, 500);
+  hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns_EthrEcal90MeV";
+  hSvc->BookHisto2(hname, 80, -0.5, 79.5, 200 ,  0, 500);
 
   return true;
 }

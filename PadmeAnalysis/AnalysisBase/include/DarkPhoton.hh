@@ -41,8 +41,12 @@ public:
   Double_t extractEff(Double_t R, Double_t phi);
 
   void checkAMassBelonging(Double_t MMiss, Bool_t (&boolMass)[7]);
+  void checkAEnergyBelonging(Double_t ene, Bool_t (&boolene)[7]);
+  void checkADeltaEnergyBelonging(Double_t ene, Double_t R, Bool_t boolene [7], Double_t (&dE)[7], Bool_t (&boolDene)[7]);
   void FillAMassRange(Bool_t MRange[7], Double_t var1, Double_t var2, std::string hPartialName);
   void FillAMassRangeSimple(Bool_t MRange[7], Double_t var1, std::string hPartialName);
+  void FillAMassRangeSimple(Bool_t MRange[7], Double_t var1[7], std::string hPartialName);
+  void checkBrem(Double_t E, Double_t t, Bool_t boolDEne[7],std::string hPartialName);
 
 protected:
   TRecoEvent*           fRecoEvent;
@@ -77,6 +81,12 @@ protected:
 
   Double_t fminArange[7];
   Double_t fmaxArange[7];
+
+  Double_t fminE[7];
+  Double_t fmaxE[7];
+
+  Double_t fFitC[7]; //from expo fit on ProfileX UBoson EvsR
+  Double_t fFitSlope[7];
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

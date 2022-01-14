@@ -60,12 +60,27 @@ DarkPhoton::DarkPhoton(Int_t processingMode, Int_t verbosityFlag)
 
   Double_t meanA[7] ={5.45591e+00,2.41556e+01,5.53455e+01, 9.86662e+01, 1.54738e+02, 2.23622e+02, 2.98974e+02};
   Double_t sigmaA[7]={1.73744e+01,1.70744e+01, 1.61503e+01, 1.44383e+01, 1.27064e+01, 9.77353e+00, 4.81163e+00};
+  Double_t minE[7]={120., 110., 100., 90., 80., 60., 40. };
+  Double_t maxE[7]={310., 300., 280., 240., 200., 160., 100.};
+
+  Double_t FitC    [7]={6.35, 6.30, 6.22, 6.10, 5.92, 5.65, 5.17}; //from expo fit on ProfileX UBoson EvsR
+  Double_t FitSlope[7]={-5.73e-03, -5.72e-03, -5.71e-03, -5.70e-03, -5.73e-03, -5.71e-03 };
+
   fminArange[7]={0.};
   fmaxArange[7]={0.};
   for(int i=0; i<7; i++){
     fminArange[i]=meanA[i]-2*sigmaA[i];
     fmaxArange[i]=meanA[i]+2*sigmaA[i];
+
+    fminE[i]=minE[i];
+    fmaxE[i]=maxE[i];
+
+    fFitC    [i]=FitC    [i];
+    fFitSlope[i]=FitSlope[i];
   }
+
+
+  
 
 
 }
@@ -229,8 +244,12 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     Double_t g1y=ecalclu->GetPosition().Y();
     if(makeClSelection && selCl.at(jecal)<10)continue;
     Double_t g1E=ecalclu->GetEnergy();
+    hname = "MissingMass_E_AllECALclu";
+    hSvc->FillHisto(hname, g1E, 1.);
     Double_t R_1 = sqrt(g1x*g1x+ g1y*g1y+fdistanceTarget*fdistanceTarget);
     Double_t R1ecal = sqrt(g1x*g1x+ g1y*g1y);
+    hname = "MissingMass_EvsR_AllECALclu";
+    hSvc->FillHisto2(hname, R1ecal, g1E, 1.);
     Double_t Px_1 = g1E*g1x/ R_1;
     Double_t Py_1 = g1E*g1y/ R_1;
     Double_t Pz_1 = g1E*fdistanceTarget/ R_1;
@@ -245,13 +264,22 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     Double_t MissingMass=(P4eTarget+P4eBeam-P4g1F)*(P4eTarget+P4eBeam-P4g1F);
 
     Bool_t AmassRange[7];
+    Bool_t AEneRange[7];
+    Bool_t ADEneRange[7];
+    Double_t dEA[7];
     checkAMassBelonging(MissingMass, AmassRange);
+    checkAEnergyBelonging(g1E, AEneRange);
+    checkADeltaEnergyBelonging(g1E,R1ecal, AEneRange, dEA, ADEneRange);
     //for(int i=0; i< 7; i++) std::cout<<" massVecPos " << i << " bool " << AmassRange[i] << std::endl;
     Double_t phig1 =TMath::ATan2(g1y, g1x);
     //Double_t eff=1./extractEff(R1ecal, phig1);
     hname="MissingMass_AllECALclu";
     hSvc->FillHisto(hname,MissingMass , 1.);
     if(R1ecal<fFRmin || R1ecal>fFRmax) continue;
+    hname = "MissingMass_E_AllECALcluinFR";
+    hSvc->FillHisto(hname, g1E, 1.);
+    hname = "MissingMass_EvsR_AllECALcluinFR";
+    hSvc->FillHisto2(hname, R1ecal, g1E, 1.);
     hname="MissingMass_AllECALcluinFR";
     hSvc->FillHisto(hname,MissingMass , 1.);
     hname="MissingMass_EcalEvsEcalR";
@@ -260,6 +288,10 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     Bool_t NoInTime4=true;
     if(g1E>90){
       PassEneThr=true;
+      hname = "MissingMass_E_AllECALcluinFR_ThrEne90MeV";
+      hSvc->FillHisto(hname, g1E, 1.);
+      hname = "MissingMass_EvsR_AllECALcluinFR_ThrEne90MeV";
+      hSvc->FillHisto2(hname, R1ecal, g1E, 1.);
       hname="MissingMass_AllECALcluinFR_ThrEne90MeV";
       hSvc->FillHisto(hname,MissingMass , 1.);
       hname="MissingMass_EcalEvsEcalR_ThrEne90MeV";
@@ -284,6 +316,10 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
       hname="MissingMass_NoClInTime4ns_ThrEne90MeV";
       hSvc->FillHisto(hname,MissingMass, 1.);
       FillAMassRangeSimple(AmassRange, 1, "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns");
+      FillAMassRangeSimple(AEneRange, MissingMass , "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange");
+      FillAMassRangeSimple(AEneRange, dEA , "MissingMass_DEneFromFitEvsR_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange");
+      FillAMassRangeSimple(ADEneRange, MissingMass , "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange_InDECorrelation");
+      checkBrem(g1E,ClTECal ,ADEneRange,"MissingMass_Brem_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange_InDECorrelation");
       Bool_t CoincidencePVeto=true;
       Bool_t CoincidenceSAC=true;
       Bool_t BremSac_PVeto=false;
@@ -590,6 +626,61 @@ void DarkPhoton::checkAMassBelonging(Double_t MMiss, Bool_t (&boolMass)[7]){
 
 }
 
+void DarkPhoton::checkAEnergyBelonging(Double_t Energy, Bool_t (&boolEne)[7]){
+  for(int i=0; i<7; i++){
+    if(Energy>fminE[i] && Energy<fmaxE[i]) boolEne[i]=true;
+    else boolEne[i]=false;
+    //std::cout<<"mmiss " << MMiss << " minRange " << fminArange[i] << " maxRange " << fmaxArange[i] << " bool " << boolMass[i] << std::endl;
+  }
+
+}
+
+void DarkPhoton::checkADeltaEnergyBelonging(Double_t E, Double_t R,Bool_t boolEne[7],Double_t (&dEne)[7], Bool_t (&booldEne)[7]){
+  for(int i=0; i<7; i++){
+    if(!boolEne[i])continue; //I wont to compare the DeltaE only in case of the photon energy is in the energy range hypothesis for that mass
+    Double_t eneFunc= exp(fFitC[i]+fFitSlope[i]*R);
+    Double_t dEnergy= E-eneFunc;
+    dEne[i]=dEnergy;
+    if(fabs(dEnergy)<30. ) booldEne[i]=true;
+    else booldEne[i]=false;
+    //std::cout<<"mmiss " << MMiss << " minRange " << fminArange[i] << " maxRange " << fmaxArange[i] << " bool " << boolMass[i] << std::endl;
+  }
+
+}
+
+
+void DarkPhoton::checkBrem(Double_t E, Double_t t, Bool_t boolDEne[7],std::string hPartialName){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+  std::string mass[7]={"2.5", "5", "7.5", "10", "12.5", "15", "17.5"};
+
+  Double_t ShiftECalPVeto=3.6-3.3;
+  Double_t shiftMomentumECalPVeto=0;
+
+  TRecoVCluster* PVetoclu=NULL;
+  Int_t NClPVeto = fPVeto_ClColl->GetNElements();
+
+  for(int i=0; i<7; i++){
+    if(!boolDEne[i])continue; 
+    for(int jpveto=0; jpveto<NClPVeto; jpveto++){
+    	PVetoclu=fPVeto_ClColl->Element(jpveto);
+    	Double_t cluTime=PVetoclu->GetTime();
+    	Double_t cluZpos=PVetoclu->GetPosition().Z();
+    	Double_t cluXpos=PVetoclu->GetPosition().X();
+	Double_t DT= t-cluTime-ShiftECalPVeto;
+	Double_t momentumPositron=CalculateMomentumPositron(cluZpos,cluXpos);
+	Double_t DE= momentumPositron+E-fEBeam-shiftMomentumECalPVeto;
+	if(fabs(DT)<5. && fabs(DE)<50.){
+	  hname=hPartialName+mass[i];
+	  hSvc->FillHisto2(hname, PVetoclu->GetChannelId(), E, 1.);
+	}
+    }
+
+  }
+
+}
+
+
 void DarkPhoton::FillAMassRangeSimple(Bool_t MRange[7], Double_t var1, std::string hPartialName){
   HistoSvc* hSvc =  HistoSvc::GetInstance();
   std::string hname;
@@ -599,6 +690,21 @@ void DarkPhoton::FillAMassRangeSimple(Bool_t MRange[7], Double_t var1, std::stri
     if(MRange[i]==true){
       hname=hPartialName+mass[i];
       hSvc->FillHisto(hname, var1, 1.);
+    }
+  }
+
+}
+
+
+void DarkPhoton::FillAMassRangeSimple(Bool_t MRange[7], Double_t var1[7], std::string hPartialName){
+  HistoSvc* hSvc =  HistoSvc::GetInstance();
+  std::string hname;
+
+  std::string mass[7]={"2.5", "5", "7.5", "10", "12.5", "15", "17.5"};
+  for(int i=0; i<7; i++){
+    if(MRange[i]==true){
+      hname=hPartialName+mass[i];
+      hSvc->FillHisto(hname, var1[i], 1.);
     }
   }
 
@@ -662,9 +768,34 @@ Bool_t DarkPhoton::InitHistos()
   hname="MissingMass_AllEcalTimeShifted";
   hSvc->BookHisto(hname, 100, -200, 200);
 
-  int binX=200;
-  Double_t minX=-200;
-  Double_t maxX=600;
+
+  int binX=700;
+  Double_t minX=0.;
+  Double_t maxX=700;
+
+  hname = "MissingMass_E_AllECALclu";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname = "MissingMass_E_AllECALcluinFR";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+  hname = "MissingMass_E_AllECALcluinFR_ThrEne90MeV";
+  hSvc->BookHisto(hname, binX, minX, maxX);
+
+  binX=300;
+  minX=30;
+  maxX=350;
+  int binY=700;
+  double minY=0;
+  double maxY=700;
+  hname = "MissingMass_EvsR_AllECALclu";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+  hname = "MissingMass_EvsR_AllECALcluinFR";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+  hname = "MissingMass_EvsR_AllECALcluinFR_ThrEne90MeV";
+  hSvc->BookHisto2(hname, binX, minX, maxX, binY, minY, maxY);
+
+  binX=200;
+  minX=-200;
+  maxX=600;
 
   hname="MissingMass_EvsTheta_10nsEThr90";
   hSvc->BookHisto2(hname, 100, 0.1,0.2, 400, 0, 500);
@@ -684,6 +815,28 @@ Bool_t DarkPhoton::InitHistos()
   hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_NoClInTime4ns_ThrEne90MeV_NoCoincidencePVeto_NoCoincidenceSAC";
   hSvc->BookHisto(hname, binX, minX, maxX);
+
+  std::string mass[7]={"2.5", "5", "7.5", "10", "12.5", "15", "17.5"};
+  
+  std::string hPName = "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange";
+  std::string hPName1 = "MissingMass_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange_InDECorrelation";
+  for(int i=0; i<7; i++){
+    hname=hPName+mass[i];
+    hSvc->BookHisto(hname, binX, minX, maxX);
+    hname=hPName1+mass[i];
+    hSvc->BookHisto(hname, binX, minX, maxX);
+  }
+
+
+
+  hPName="MissingMass_DEneFromFitEvsR_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange";
+  for(int i=0; i<7; i++){
+    binX=200;
+    minX=-500;
+    maxX=500;
+    hname=hPName+mass[i];
+    hSvc->BookHisto(hname, binX, minX, maxX);
+  }
 
   binX=200;
   minX=-200.5;
@@ -757,8 +910,6 @@ Bool_t DarkPhoton::InitHistos()
   hSvc->BookHisto2(hname, 100, -0.5, 99.5, 200 ,  0, 500);
 
 
-
-  std::string mass[7]={"2.5", "5", "7.5", "10", "12.5", "15", "17.5"};
   std::string hPartialName = "MissingMass_AllECALcluinFR_ThrEne90MeV_DTimeEcalEcal";
   std::string hname1;
   binX=1000;
@@ -799,12 +950,21 @@ Bool_t DarkPhoton::InitHistos()
     hSvc->BookHisto(hname1, binX, minX, maxX);
   }
 
+
+  hPartialName1 ="MissingMass_Brem_AllECALcluinFR_ThrEne90MeV_NoPhotonin4ns_InEnergeRange_InDECorrelation";
+  for(int i=0; i<7; i++){
+    hname=hPartialName1+mass[i];
+    hSvc->BookHisto2(hname,  100, -0.5, 99.5, 200 ,  0, 500);
+  }
+
+
+
   hname="MissingMass_ForEcalBrem_DTimevsDEEcalPVeto_CleanerSample_EthrEcal90MeV";
   hSvc->BookHisto2(hname, 500, -500, 700, 500 ,  -500, 500);
   hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns";
-  hSvc->BookHisto2(hname, 80, -0.5, 79.5, 200 ,  0, 500);
+  hSvc->BookHisto2(hname, 100, -0.5, 99.5, 200 ,  0, 500);
   hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns_EthrEcal90MeV";
-  hSvc->BookHisto2(hname, 80, -0.5, 79.5, 200 ,  0, 500);
+  hSvc->BookHisto2(hname,100, -0.5, 99.5 , 200 ,  0, 500);
   hname="MissingMass_ForEcalBrem_CleanerSample_dT1ns_EthrEcal90MeVinFR";
   hSvc->BookHisto2(hname,100, -0.5, 99.5 , 200 ,  0, 500);
   hname="MissingMass_ForEcalBrem_CleanerSample_dT5ns";
@@ -832,17 +992,17 @@ Bool_t DarkPhoton::InitHistos()
   minX=-500;
   maxX=500;
   hname="MissingMass_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns";
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns_EthrEcal90MeV";
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns_EthrEcal90MeVinFR";
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_Tshifted_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns";
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_Tshifted_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns_EthrEcal90MeV";
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
   hname="MissingMass_Tshifted_DEnergy_CleanerSample_dT1nsIn20-70_dT1ns_EthrEcal90MeVinFR";	
-  hSvc->BookHisto(hname1, binX, minX, maxX);
+  hSvc->BookHisto(hname, binX, minX, maxX);
 
 
   return true;

@@ -1124,8 +1124,11 @@ void AnnihilationSelection::FillWeightedHistoAsAFunctionOfPhi(Double_t effScaleF
   if(phi1Pred>360.) phi1Pred=phi1Pred-360;
   Double_t dphi=phi1Pred-phiDeg2;
 
+  if(fabs(dphi)>180.)dphi=TMath::Sign(1., dphi)*(360-fabs(dphi)); //IO 11/01/2022
+
   hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
   hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,dphi ,effScaleFactor );
+  hname="ECAL_gravTwoPhoton10nsLargeDPhi_WEffR1inFR_total"+sufix;     hSvc->FillHisto(hname,dphi ,effScaleFactor );
   if(phiDeg>=0. && phiDeg<45.)    { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in0_45"+sufix;     hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor ); 
     hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in0_45"+sufix;     hSvc->FillHisto(hname,dphi ,effScaleFactor );}
   else if(phiDeg>=45. && phiDeg<90.)   { hname="ECAL_gravTwoPhoton10ns_WEffR1inFR_g1in45_90"+sufix;    hSvc->FillHisto(hname,(fg1E+fg2E) ,effScaleFactor );
@@ -2298,6 +2301,8 @@ Bool_t AnnihilationSelection::InitHistos(Bool_t allAnnPlot)
     maxX=30.;
     hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_total"+sufixP.at(i); 
     hSvc->BookHisto(hname, binX, minX, maxX);  
+    hname="ECAL_gravTwoPhoton10nsLargeDPhi_WEffR1inFR_total"+sufixP.at(i); 
+    hSvc->BookHisto(hname, 800, -400, 400); 
     hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in0_45"+sufixP.at(i); 
     hSvc->BookHisto(hname, binX, minX, maxX);  
     hname="ECAL_gravTwoPhoton10nsDPhi_WEffR1inFR_g1in45_90"+sufixP.at(i); 

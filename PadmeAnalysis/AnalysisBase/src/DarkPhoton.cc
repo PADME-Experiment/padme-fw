@@ -263,9 +263,9 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
     if(fPreSelectionAnnihilation && passAnnPreSelection(g1E, thetag1)) continue;
     Double_t MissingMass=(P4eTarget+P4eBeam-P4g1F)*(P4eTarget+P4eBeam-P4g1F);
 
-    Bool_t AmassRange[7];
-    Bool_t AEneRange[7];
-    Bool_t ADEneRange[7];
+    Bool_t AmassRange[7]={0.};
+    Bool_t AEneRange[7]={0.};
+    Bool_t ADEneRange[7]={0.};
     Double_t dEA[7];
     checkAMassBelonging(MissingMass, AmassRange);
     checkAEnergyBelonging(g1E, AEneRange);
@@ -461,9 +461,9 @@ Bool_t DarkPhoton::ProcessDarkPhoton(Bool_t isTargetOut, Bool_t externalPass, Bo
       }
     }// end no cluster in 4ns and EgEcal>90
 
+    //for efficiency A' energy cut
+  
   }// end of ecal cluster loop
-
-
 
 
   //I'd like to see bremsstrahlung correlation in ecal-pveto, thus I'm looking on good samples
@@ -630,20 +630,21 @@ void DarkPhoton::checkAEnergyBelonging(Double_t Energy, Bool_t (&boolEne)[7]){
   for(int i=0; i<7; i++){
     if(Energy>fminE[i] && Energy<fmaxE[i]) boolEne[i]=true;
     else boolEne[i]=false;
-    //std::cout<<"mmiss " << MMiss << " minRange " << fminArange[i] << " maxRange " << fmaxArange[i] << " bool " << boolMass[i] << std::endl;
+    //std::cout<<"ene " << Energy << " minRange " << fminE[i] << " maxRange " << fmaxE[i] << " boolEne " << boolEne[i] << std::endl;
   }
 
 }
 
 void DarkPhoton::checkADeltaEnergyBelonging(Double_t E, Double_t R,Bool_t boolEne[7],Double_t (&dEne)[7], Bool_t (&booldEne)[7]){
   for(int i=0; i<7; i++){
-    if(!boolEne[i])continue; //I wont to compare the DeltaE only in case of the photon energy is in the energy range hypothesis for that mass
+    //std::cout<<"boolEne" << boolEne[i] << " booldEne " << booldEne[i] << std::endl;
+    if(boolEne[i]==0)continue; //I wont to compare the DeltaE only in case of the photon energy is in the energy range hypothesis for that mass
     Double_t eneFunc= exp(fFitC[i]+fFitSlope[i]*R);
     Double_t dEnergy= E-eneFunc;
     dEne[i]=dEnergy;
     if(fabs(dEnergy)<30. ) booldEne[i]=true;
     else booldEne[i]=false;
-    //std::cout<<"mmiss " << MMiss << " minRange " << fminArange[i] << " maxRange " << fmaxArange[i] << " bool " << boolMass[i] << std::endl;
+    //std::cout<<"dEnergy " << dEnergy <<  " boolDE " << booldEne[i] << std::endl;
   }
 
 }

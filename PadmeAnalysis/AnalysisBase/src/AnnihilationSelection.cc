@@ -97,18 +97,14 @@ Bool_t AnnihilationSelection::Init(TRecoEvent* eventHeader,
 
   fcountEvent=0;
   fcountDTime10=0;
-  fcountDTime10g1EThr=0;
-  fcountDTime10g2EThr=0;
   fcountDTime10g1InFR=0;
-  fcountDTime10g1InFRg1Ethr=0;
-  fcountDTime10g1InFRg2Ethr=0;
-  fcountDTime10g1InFR5CoG=0;
-  fcountDTime10g1InFR5CoGg1EThr=0;
-  fcountDTime10g1InFR5CoGg2EThr=0;
-  fcountDTime10g1g2InFR5CoG=0;
-  fcountDTime10g1g2InFR5CoGg1EThr=0;
-  fcountDTime10g1g2InFR5CoGg2EThr=0;
-  
+  fcountDTime10g1InFR5CoGX=0;
+  fcountDTime10g1InFR5CoGXY=0;
+  fcountDTime10g1InFR5CoGXYEgCut=0;
+  fcountDTime10g1InFR5CoGXYEgCutESumCut=0;
+  fcountDTime10g1InFR5CoGXYEgCutESumCutg2inFR=0;
+
+    
   //time range 
   ftimerange1min=-150;
   ftimerange1max=-90;
@@ -325,14 +321,12 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
 	hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
       }
       if(fg1E>90.){
-	fcountDTime10g1EThr++;
 	if(allAnnPlot){
 	  hname="ECAL_gravTwoPhoton10nsg1EThr";
 	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	}
       }
       if(fg2E>90.) {
-	fcountDTime10g2EThr++;
 	if(allAnnPlot){
 	  hname="ECAL_gravTwoPhoton10nsg2EThr";
 	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
@@ -361,14 +355,12 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
 	  hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	}
 	if(fg1E>90){
-	  fcountDTime10g1InFRg1Ethr++;
 	  if(allAnnPlot){
 	    hname="ECAL_gravTwoPhoton10nsg1InFRg1Ethr";
 	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	  }
 	}
 	if(fg2E>90){
-	  fcountDTime10g1InFRg2Ethr++;
 	  if(allAnnPlot){
 	    hname="ECAL_gravTwoPhoton10nsg1InFRg2Ethr";
 	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
@@ -447,42 +439,49 @@ Bool_t AnnihilationSelection::Process(Bool_t isMC,Bool_t makeClSelection ,std::v
 	  }
 	}
 
+	if(fabs(fXWeighted)<50.){
+	  fcountDTime10g1InFR5CoGX++;
+	  if( fabs(fYWeighted)<50.){
+	    fcountDTime10g1InFR5CoGXY++;
+	    if(InEnergy){
+	      fcountDTime10g1InFR5CoGXYEgCut++;
+	      if(TotEnergyCut){
+		fcountDTime10g1InFR5CoGXYEgCutESumCut++;
+		if(secondGInFR_def)fcountDTime10g1InFR5CoGXYEgCutESumCutg2inFR++;
+	      }
+	    }
+	  }
+	}
 
 	if(fabs(fXWeighted)<50. && fabs(fYWeighted)<50.){
-	  fcountDTime10g1InFR5CoG++;
 	  if(allAnnPlot){
 	    hname="ECAL_gravTwoPhoton10nsg1InFR5CoG";
 	    hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	  }
 	  if(fg1E>90){
-	    fcountDTime10g1InFR5CoGg1EThr++;
 	    if(allAnnPlot){
 	      hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg1EThr";
 	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	    }
 	  }
 	  if(fg2E>90){
-	    fcountDTime10g1InFR5CoGg2EThr++;
 	    if(allAnnPlot){
 	      hname="ECAL_gravTwoPhoton10nsg1InFR5CoGg2EThr";
 	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	    }
 	  }
 	  if(secondGInFR_def){
-	    fcountDTime10g1g2InFR5CoG++;
 	    if(allAnnPlot){
 	      hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoG";
 	      hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	    }
 	    if(fg1E>90){
-	      fcountDTime10g1g2InFR5CoGg1EThr++;
 	      if(allAnnPlot){
 		hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg1EThr";
 		hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
 	      }
 	    }
 	    if(fg2E>90){
-	      fcountDTime10g1g2InFR5CoGg2EThr++;
 	      if(allAnnPlot){
 		hname="ECAL_gravTwoPhoton10nsg1g2InFR5CoGg2EThr";
 		hSvc->FillHisto(hname,(fg1E+fg2E) , 1.);
@@ -2528,19 +2527,14 @@ Bool_t AnnihilationSelection::passAnnPreSelection(Double_t clE, Double_t clTheta
 
 void  AnnihilationSelection::printCounters(){
   std::cout<<"Annihilation selection counters" << std::endl;
-  std::cout<<"fcountEvent "<< fcountEvent          << std::endl;
-  std::cout<<"fcountDTime10 "<<fcountDTime10                    << std::endl;
-  std::cout<<"fcountDTime10g1EThr "<<fcountDTime10g1EThr              << std::endl;
-  std::cout<<"fcountDTime10g2EThr "<<fcountDTime10g2EThr              << std::endl;
-  std::cout<<"fcountDTime10g1InFR "<<fcountDTime10g1InFR              << std::endl;
-  std::cout<<"fcountDTime10g1InFRg1Ethr "<<fcountDTime10g1InFRg1Ethr        << std::endl;
-  std::cout<<"fcountDTime10g1InFRg2Ethr "<<fcountDTime10g1InFRg2Ethr        << std::endl;
-  std::cout<<"fcountDTime10g1InFR5CoG "<<fcountDTime10g1InFR5CoG          << std::endl;
-  std::cout<<"fcountDTime10g1InFR5CoGg1EThr "<<fcountDTime10g1InFR5CoGg1EThr    << std::endl;
-  std::cout<<"fcountDTime10g1InFR5CoGg2EThr "<<fcountDTime10g1InFR5CoGg2EThr    << std::endl;
-  std::cout<<"fcountDTime10g1g2InFR5CoG "<<fcountDTime10g1g2InFR5CoG        << std::endl;
-  std::cout<<"fcountDTime10g1g2InFR5CoGg1EThr "<<fcountDTime10g1g2InFR5CoGg1EThr  << std::endl;
-  std::cout<<"fcountDTime10g1g2InFR5CoGg2EThr "<<fcountDTime10g1g2InFR5CoGg2EThr  << std::endl;	
+  std::cout<<"fcountEvent                                 "<< fcountEvent          << std::endl;
+  std::cout<<"fcountDTime10                               "<<fcountDTime10                    << std::endl;
+  std::cout<<"fcountDTime10g1InFR                         "<<fcountDTime10g1InFR              << std::endl;
+  std::cout<<"fcountDTime10g1InFR5CoGX                    "<<fcountDTime10g1InFR5CoGX                    <<std::endl;;
+  std::cout<<"fcountDTime10g1InFR5CoGXY                   "<<fcountDTime10g1InFR5CoGXY                   <<std::endl;;
+  std::cout<<"fcountDTime10g1InFR5CoGXYEgCut              "<<fcountDTime10g1InFR5CoGXYEgCut              <<std::endl;;
+  std::cout<<"fcountDTime10g1InFR5CoGXYEgCutESumCut       "<<fcountDTime10g1InFR5CoGXYEgCutESumCut       <<std::endl;;
+  std::cout<<"fcountDTime10g1InFR5CoGXYEgCutESumCutg2inFR "<<fcountDTime10g1InFR5CoGXYEgCutESumCutg2inFR <<std::endl;;
 
 }
 

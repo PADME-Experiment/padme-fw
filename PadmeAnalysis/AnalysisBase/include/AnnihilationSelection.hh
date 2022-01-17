@@ -162,17 +162,12 @@ private:
 
   Int_t fcountEvent;
   Int_t fcountDTime10;
-  Int_t fcountDTime10g1EThr;
-  Int_t fcountDTime10g2EThr;
   Int_t fcountDTime10g1InFR;
-  Int_t fcountDTime10g1InFRg1Ethr;
-  Int_t fcountDTime10g1InFRg2Ethr;
-  Int_t fcountDTime10g1InFR5CoG;
-  Int_t fcountDTime10g1InFR5CoGg1EThr;
-  Int_t fcountDTime10g1InFR5CoGg2EThr;
-  Int_t fcountDTime10g1g2InFR5CoG;
-  Int_t fcountDTime10g1g2InFR5CoGg1EThr;
-  Int_t fcountDTime10g1g2InFR5CoGg2EThr;
+  Int_t fcountDTime10g1InFR5CoGX;
+  Int_t fcountDTime10g1InFR5CoGXY;
+  Int_t fcountDTime10g1InFR5CoGXYEgCut;
+  Int_t fcountDTime10g1InFR5CoGXYEgCutESumCut;
+  Int_t fcountDTime10g1InFR5CoGXYEgCutESumCutg2inFR;
 
   Bool_t fPreSelectionAnnihilation;
 

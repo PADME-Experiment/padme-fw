@@ -389,7 +389,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
 //  }
-  G4cout<<"Writing to file UBTF "<<G4endl;
+  //G4cout<<"Writing to file UBTF "<<G4endl;
   fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //  }

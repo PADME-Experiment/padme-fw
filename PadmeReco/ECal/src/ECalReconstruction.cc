@@ -1160,7 +1160,9 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
 
 Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   Bool_t BrSU=false;
+  //data RunI broke 4 cry
   //if(x==16 && y==25)  BrSU=true;
+  //data RunII broke 3 cry
   if(x==18 && y==10)  BrSU=true;
   if(x==22 && y==8 )  BrSU=true;
   if(x==18 && y==4 )  BrSU=true;

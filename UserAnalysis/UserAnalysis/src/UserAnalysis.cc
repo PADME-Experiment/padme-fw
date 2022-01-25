@@ -5,6 +5,8 @@
 
 #include "UserAnalysis.hh"
 #include "NPoTAnalysis.hh"
+#include "IsGGAnalysis.hh" //MR
+#include "Is3GAnalysis.hh" //MR
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -19,11 +21,15 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
+  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fNPoTAnalysis;
+  delete fIsGGAnalysis;
+  //  delete fIs3GAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
@@ -31,6 +37,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   fEvent = event;
   InitHistos();
   fNPoTAnalysis->Init(fEvent);
+  fIsGGAnalysis->Init(fEvent);
+  //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
 
@@ -41,7 +49,6 @@ Bool_t UserAnalysis::InitHistos(){
 
   // No list defined: this will go the EXTRA directory in the output file
   fHS->BookHisto("Test",10,0.,10.);
-
   fHS->CreateList("MyHistos");
   fHS->BookHistoList("MyHistos","Trigger Mask",256,0.,256.);
   fHS->BookHistoList("MyHistos","Triggers",8,0.,8.);
@@ -58,9 +65,11 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
-
   fNPoTAnalysis->Process();
-  fHS->FillHistoList("MyHistos","NPoTs",fNPoTAnalysis->GetNPoT(),1.);
+  //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
+  fIsGGAnalysis->Process();
+  //  fIs3GAnalysis->Process();
+  //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
@@ -95,15 +104,17 @@ Bool_t UserAnalysis::Finalize()
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
 
   fNPoTAnalysis->Finalize();
+  fIsGGAnalysis->Finalize();
+  //  fIs3GAnalysis->Finalize();
 
-  // TGraph example
-  Double_t x[5] = {1.,2.,3.,4.,5.};
-  Double_t xe[5] = {.1,.1,.2,.2,.3};
-  Double_t y[5] = {2.,4.,6.,8.,10.};
-  Double_t ye[5] = {.1,.1,.2,.2,.3};
-  TGraph* g = new TGraph(5,x,y);
-  fHS->SaveTGraphList("MyHistos","TestTGraph",g);
-  TGraphErrors* ge = new TGraphErrors(5,x,y,xe,ye);
-  fHS->SaveTGraphList("MyHistos","TestTGraphErrors",ge);
+//  // TGraph example
+//  Double_t x[5] = {1.,2.,3.,4.,5.};
+//  Double_t xe[5] = {.1,.1,.2,.2,.3};
+//  Double_t y[5] = {2.,4.,6.,8.,10.};
+//  Double_t ye[5] = {.1,.1,.2,.2,.3};
+//  TGraph* g = new TGraph(5,x,y);
+//  fHS->SaveTGraphList("MyHistos","TestTGraph",g);
+//  TGraphErrors* ge = new TGraphErrors(5,x,y,xe,ye);
+//  fHS->SaveTGraphList("MyHistos","TestTGraphErrors",ge);
   return true;
 }

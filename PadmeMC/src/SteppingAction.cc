@@ -12,6 +12,7 @@
 #include "EventAction.hh"
 #include "G4RunManager.hh"
 #include "HistoManager.hh"
+#include "MCTruthManager.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -26,12 +27,66 @@ SteppingAction::SteppingAction()
   fEnableSACAnalysis = 0;
   fEnableECalAnalysis = 0;
   fHistoManager = HistoManager::GetInstance();
+  fMCTruthManager = MCTruthManager::GetInstance();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void SteppingAction::UserSteppingAction(const G4Step* step)
 {
+
+  // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
+  if (fMCTruthManager->IsEnabled()) {
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") {
+      G4Track* track = step->GetTrack();
+      G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+      // Enable for some debug printout
+      //if (proc != "Transportation") {
+      //	G4cout << "Vertex in Target with process " << proc << " at " << step->GetPostStepPoint()->GetPosition() << G4endl;
+      //	printf("\tIn\t%s\tE = %.3f MeV\n",track->GetDefinition()->GetParticleName().data(),step->GetPreStepPoint()->GetTotalEnergy()/MeV);
+      //	printf("\tOut\t%s\tE = %.3f MeV\n",track->GetDefinition()->GetParticleName().data(),step->GetPostStepPoint()->GetTotalEnergy()/MeV);
+      //	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+      //	size_t nSec = (*sec).size();
+      //	for(size_t i = 0; i < nSec; i++) {
+      //	    printf("\tOut\t%s\tE = %.3f MeV\n",(*sec)[i]->GetDefinition()->GetParticleName().data(),(*sec)[i]->GetTotalEnergy()/MeV);
+      //	}
+      //	if ( ((proc == "eBrem") || (proc == "eIoni")) && (nSec != 1) )
+      //	  printf("WARNING eBrem or eIoni with %d secondaries\n",nSec);
+      //	if ( (proc == "annihil") && (nSec != 2) )
+      //	  printf("WARNING annihil with %d secondaries\n",nSec);
+      //	if ( (proc != "eBrem") && (proc != "eIoni") && (proc != "annihil" && (proc != "msc")) )
+      //	  printf("INFO found process %s\n",proc.data());
+      //}
+      if ( (proc == "eBrem") || (proc == "eIoni") ) {
+	//const G4TrackVector* sec = step->GetSecondary();
+	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+	size_t nSec = (*sec).size();
+	if (nSec>0) {
+	  MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
+	  tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
+	  tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
+	  for(size_t i = 0; i < nSec; i++) {
+	    tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+	  }
+	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
+	}
+      }
+      if (proc == "annihil") {
+	//const G4TrackVector* sec = step->GetSecondary();
+	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+	size_t nSec = (*sec).size();
+	if (nSec>0) {
+	  MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
+	  tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
+	  for(size_t i = 0; i < nSec; i++) {
+	    tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+	  }
+	  if (nSec!=2) printf("WARNING annihil with %d secondaries",nSec);
+	}
+      }
+    }
+  }
+
   static int nt=0;
 
   G4Track* track = step->GetTrack();

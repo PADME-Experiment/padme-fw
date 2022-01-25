@@ -23,7 +23,7 @@ private:
 
   Bool_t InitHistos();
 
-  TRandom3* fRndm;
+  //  TRandom3* fRndm;
 
   Int_t fVerbose;
 
@@ -34,6 +34,17 @@ private:
   HistoSvc* fHS;
 
   Double_t fNPoT;
+  Double_t fXPos;
+  Double_t fYPos;
+
+  std::vector<double> vNPoT;
+  std::vector<double> vNEvt;
+  Int_t Neve;
+  Double_t TotPoT;
+  Double_t TotPoTPhys;
+  Double_t TotPoTNoPhys;
+  Double_t TotPoTOver30K;
+  Double_t TotPoTOver5K;
 
 };
 #endif

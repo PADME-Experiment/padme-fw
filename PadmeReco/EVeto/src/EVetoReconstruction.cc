@@ -15,30 +15,82 @@
 #include "EVetoCalibration.hh"
 #include "EVetoSimpleClusterization.hh"
 #include "EVetoGeometry.hh"
+#include "EVetoSimpleClusterization.hh"
+#include "ADCChannelVReco.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
-//#include "TRandom2.h"
-#include <time.h>
-
+#include "TDirectory.h"
 
 EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "EVeto", ConfigFileName)
 {
-  //fRecoEvent = new TRecoEVetoEvent();
-  //ParseConfFile(ConfigFileName);
   fChannelReco = new DigitizerChannelReco();
   fChannelCalibration = new EVetoCalibration();
   fClusterization = new EVetoSimpleClusterization();
+  //fChannelCalibration  = new PadmeVCalibration();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new EVetoGeometry();
 
   random = new TRandom2();    
   gRandom->SetSeed(time(NULL));
 
+
   // configurable parameters 
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fEVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+
+}
+
+EVetoReconstruction::~EVetoReconstruction()
+{;}
+
+
+void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  //  std::cout<<"Event no "<<rawEv->GetEventNumber()<<std::endl;
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelReco*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelReco*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+  
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+ 	TADCChannel* chn = ADC->ADCChannel(ich);
+ 	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+	
+ 	//New M. Raggi
+  	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+  	Int_t ElChID = chn->GetChannelNumber();
+ 	//Store info for the digitizer class
+  	((DigitizerChannelReco*)fChannelReco)->SetChID(ChID);
+  	((DigitizerChannelReco*)fChannelReco)->SetElChID(ElChID);
+  	((DigitizerChannelReco*)fChannelReco)->SetBdID(iBdID);
+ 	
+ 	unsigned int nHitsBefore = Hits.size();
+ 	fChannelReco->Reconstruct(Hits);
+ 	unsigned int nHitsAfter = Hits.size();
+ 	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+ 	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+ 	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+ 	  if(fTriggerProcessor)
+ 	    Hits[iHit]->SetTime(
+ 				Hits[iHit]->GetTime() - 
+ 				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+ 				);
+ 	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::en dl;
+    }
+  }    
 }
 
 void EVetoReconstruction::HistoInit(){
@@ -68,10 +120,6 @@ void EVetoReconstruction::HistoInit(){
 
 
 }
-
-
-EVetoReconstruction::~EVetoReconstruction()
-{;}
 
 // void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 // {

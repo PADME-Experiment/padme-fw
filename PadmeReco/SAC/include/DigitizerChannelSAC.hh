@@ -9,6 +9,7 @@
 #include "TH1D.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TTree.h"
 
 //ADC board 27, Ch0-25
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
@@ -24,6 +25,12 @@ public:
   virtual void Init(PadmeVRecoConfig *cfg){return;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
+  virtual void PrepareDebugHistos();//CT
+  virtual void PrepareTmpHistos();//CT
+  virtual void SaveDebugHistos();//CT
+
+  void SetGlobalRunningMode(GlobalRecoConfigOptions* o){fGlobalMode = o;}//CT
+
   void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
   void ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
@@ -36,6 +43,8 @@ public:
 
   Short_t  GetMaximum(){return fMax;};
   Double_t GetPedestal(){return fPed;};
+
+  Double_t ZSupHit(Float_t thr,UShort_t NAvg);//CT
 
   Double_t CalcPosition(UShort_t);
   Double_t ReadPedFile();
@@ -67,7 +76,6 @@ private:
   //  Int_t fTrigMask;
 
   Double_t fSigAvg[50];
-  TH1D *H1;
 
   //Configuration variables
   Int_t fSignalWidth;
@@ -75,6 +83,16 @@ private:
   Int_t fPostSamples;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
+
+  //  Int_t fChID;//CT, from here...
+  Int_t fElChID;
+  Int_t fBdID;
+  //  Int_t fTrigMask;
+  Double_t fRMS1000;
+  Double_t fRMS200;
+  Double_t fAvg200;
+  Double_t fTrig;
+  Double_t fVMax;//CT, ... to here
   
   Int_t fMinAmplitude;
 
@@ -90,6 +108,8 @@ private:
 
   Bool_t fMultihit;
   Bool_t fUseAbsSignals;
+  Double_t fZeroSuppression;//CT
+  Bool_t fSaveAnalog;//CT
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
@@ -98,21 +118,59 @@ private:
 
 //  // Robaccia da levare
 //  TFile *fileOut;
+// Debug histogram structure
+  TFile * fileOut;
   TH1D ** hPedCalo;
-//  TH1D ** hPedMean;
-//  TH1D ** hVMax;
-//  TH1D ** hQCh;
-//  TH1D ** hChTime;
-//  TH1D *  hVPeak;
-//  TH1D *  hMean;
-//  TH1D *  hCharge;
-//  TH1D *  hTime;
-//
-//
-  TList* hListCal;  
-  TH1D* histo;
+
+  TH1D ** hAvgCalo;//CT, from here...
+  TH1D ** hPedMean;
+  TH1D ** hVMax;
+  TH1D ** h200QCh;
+  TH1D ** hQCh;
+  TH1D ** hRMSCh;
+
+  TH1D *  hVPeak;
+  TH1D *  hMean;
+  TH1D *  hAvg;
+  TH1D *  h200Q;
+  TH1D *  hQ;
+
+  TH1F * hdxdt;
+  TH1F * hdxdtMax;
+  TH1F * hRMS;
+  TH1F * hTime;
+  TH1F * hZSup;
+  TH1F * hTimeCut;
+  TH1F * hTimeOv;
+  TH1F * hSignal;
+  TH1F * hSat;
+  TH1F * hDiff;
+
+  TH1F * hSigOv;
+  TH1F * hSigOvSm;
+  TH1F * hdxdtSigOvSm;
+
+  TH1D *  H1;
+  TH1D *  H2;
+  //  Int_t m;
+  Double_t Zsup;
+  Double_t HitE;
+  Double_t HitE200;
+  Double_t HitEHyb;
+  Double_t HitT;
+  Int_t ElCh;
+  Int_t Row;
+  Int_t Col;
+  Int_t IsSat;//CT, ... to here
+
+  TList* hListCal;
   
-  //SAC variables 
+  //SAC variables
+  TH1D* histo;//CT
+  TList* hListEv;//CT
+  TList* hListTmp;//CT
+  TTree* SAC;//CT
+
   Double_t fCh        [25];
   Double_t fCry       [25];//fCrystal mapping
   Double_t fMeasure   [25];//fCrystal position in mm

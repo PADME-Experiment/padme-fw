@@ -20,12 +20,23 @@ void DigitizerChannelSAC::PrintConfig(){
     std::cout<<"Ped "<<i<<" "<<fPedCh[i]<<" "<<std::endl;
     // if(i%5==0) std::cout<<std::endl;
   }
+
+  if(fGlobalMode->GetGlobalDebugMode()!=0){//CT, from here...
+    std::cout<<"General Config Flags SAC Digi***************** "<<std::endl;
+    //std::cout<<"fIsPed          "<<fGlobalMode->IsPedestalMode()<< std::endl;
+    std::cout<<"fIsReco         "<<fGlobalMode->IsRecoMode()<< std::endl;
+    //std::cout<<"fIsMonitor      "<<fGlobalMode->IsMonitorMode()<< std::endl;
+    //std::cout<<"fIsCosmic       "<<fGlobalMode->IsCosmicsMode()<< std::endl;
+    std::cout<<"fIsDebug  SAC  "<<fGlobalMode->GetGlobalDebugMode()<< std::endl;
+   }//CT, ... to here
+
 }
 
 
-void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig *cfg){
+void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gOptions, PadmeVRecoConfig *cfg){
 
-  fGlobalMode = gMode;
+  //fGlobalMode = gMode;
+  fGlobalMode = gOptions; //CT
   H1 = new TH1D("h1","h1",1000,0.,1000.);
   hListCal    = new TList();  // needs to be simplified
   hPedCalo = new TH1D*[32];
@@ -52,6 +63,9 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
 
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0);
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
+
+  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0);//CT
+  fZeroSuppression= cfg->GetParOrDefault("RECO","UseZeroSuppression",5.);//CT 
   
   //Set a default Adc channel pedestals;
   for(int kk=0;kk<32;kk++){
@@ -60,6 +74,12 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   SetAnalogOffSets(); //M. Raggi: 19/10/2018  read anaolg offsets values from file
   PrintConfig();
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode()){ //CT
+    PrepareDebugHistos(); //debugging mode histos  //CT
+  }else{ //CT
+    PrepareTmpHistos();  //Temp histos  //CT
+  }
+
 }
 
 //M. Raggi: 19/10/2018
@@ -81,6 +101,80 @@ void DigitizerChannelSAC::SetAnalogOffSets(){
   } 
 
 }
+
+void DigitizerChannelSAC::PrepareTmpHistos(){ //CT from here...
+  hListTmp    = new TList();  
+  hListTmp->Add(hdxdt   = new TH1F("hdxdt","hdxdt",1000,0.,1000.));
+  hListTmp->Add(hSignal = new TH1F("hSignal","hSignal",1000,0.,1000.));
+  hListTmp->Add(hSigOv  = new TH1F("hSigOv","hSigOv",4000,0.,1000.));
+}
+
+void DigitizerChannelSAC::PrepareDebugHistos(){
+  fileOut    = new TFile("SACAn.root", "RECREATE");
+  hListCal   = new TList();  
+  hListEv    = new TList();  
+  SAC = new TTree("SAC","SAC");
+
+  SAC->Branch("ElCh",&ElCh);
+  SAC->Branch("Row",&Row);
+  SAC->Branch("Col",&Col);
+  SAC->Branch("Zsup",&Zsup);
+  SAC->Branch("Avg200",&fAvg200);
+  SAC->Branch("HitE",&HitE);
+  SAC->Branch("HitEHyb",&HitEHyb);
+  SAC->Branch("Hit200E",&HitE200);
+  SAC->Branch("HitT",&HitT);
+  SAC->Branch("Trig",&fTrig); // 0 reco 1 ped 2 cosmic
+  SAC->Branch("IsSat",&IsSat);
+  SAC->Branch("VMax",&fVMax);
+
+  hPedCalo = new TH1D*[32];
+  hAvgCalo = new TH1D*[32];
+  hPedMean = new TH1D*[32];
+  hVMax    = new TH1D*[32];
+  h200QCh  = new TH1D*[32]; //CT
+  hQCh     = new TH1D*[32]; //CT
+  hRMSCh     = new TH1D*[32]; //CT
+
+  //  hListTmp->Add(hDiff    = new TH1F("hDiff","hDiff",4000,0.,1000.));
+  hListCal->Add(hTime= new TH1F("hTime","hTime",1000,0.,1000.));
+  hListCal->Add(hTimeCut= new TH1F("hTimeCut","hTimeCut",1000,0.,1000.));
+  hListCal->Add(hTimeOv= new TH1F("hTimeOv","hTimeOv",1000,0.,1000.));
+  hListCal->Add(hdxdtMax= new TH1F("hdxdtMax","hdxdtMax",1600,-200.,3000.));
+  hListCal->Add(hRMS= new TH1F("hRMS","hRMS",1000,0.,200.));
+  hListCal->Add(hZSup= new TH1F("hZSup","hZSup",3,-0.5,2.5));
+  
+  for(int kk=0;kk<32;kk++){
+    hPedCalo[kk] = new TH1D(Form("hPedCalo%d",kk),Form("hPedCalo%d",kk),1200,3300.,3900);
+    hAvgCalo[kk] = new TH1D(Form("hAvgCalo%d",kk),Form("hAvgCalo%d",kk),1200,3300.,3900);
+    hPedMean[kk] = new TH1D(Form("hSig%d",kk),Form("hSig%d",kk),1000,0.,1000.);
+    hVMax[kk]    = new TH1D(Form("hVMax%d",kk),Form("hVMax%d",kk),1000,0.,1000.); // in mV
+    h200QCh[kk]  = new TH1D(Form("h200QCh%d",kk),Form("h200QCh%d",kk),600,-200,400);
+    hQCh[kk]     = new TH1D(Form("hQCh%d",kk),Form("hQCh%d",kk),600,-200,400);
+    hRMSCh[kk]     = new TH1D(Form("hRMSCh%d",kk),Form("hRMSCh%d",kk),600,0,300);
+    hListCal->Add(hPedCalo[kk]);
+    hListCal->Add(hAvgCalo[kk]);
+    hListCal->Add(hPedMean[kk]);
+    hListCal->Add(hVMax[kk]);
+    hListCal->Add(h200QCh[kk]); 
+    hListCal->Add(hQCh[kk]); 
+    hListCal->Add(hRMSCh[kk]);
+  }
+
+}
+
+void DigitizerChannelSAC::SaveDebugHistos(){
+  fileOut->cd();
+  if(fSaveAnalog) hListCal->Write(); //use it in monitor mode only  
+  SAC->Write();
+  // fileOut->Write();
+  //  hListCal->ls();
+  fileOut->Close();
+} //CT ... to here
+
+ //void DigitizerChannelSAC::SetAbsSignals(){
+ //  for(UShort_t i = 0;i<fNSamples;i++){
+ //    if (fSamples[i] < 2048) {
 
 //void DigitizerChannelSAC::SetAbsSignals(){
 //  for(UShort_t i = 0;i<fNSamples;i++){
@@ -135,6 +229,22 @@ Double_t DigitizerChannelSAC::CalcPedestal() {
   return fPed;
 }
 
+// Compute zero suppression: returns 1 if the events has to be suppressed //CT from here...
+Double_t DigitizerChannelSAC::ZSupHit(Float_t Thr, UShort_t NAvg) {
+  fRMS1000  = TMath::RMS(NAvg,&fSamples[0]);
+  hRMS->Fill(fRMS1000);
+  Double_t ZSupHit=-1;
+  //std::cout<<"RMS = "<<fRMS1000<<std::endl;
+
+  if(fRMS1000>Thr){
+    ZSupHit=0;
+  }else{
+    ZSupHit=1;
+    //   std::cout<<"compute zero supp "<<rms1000<<" Zsup "<<ZSupHit<<std::endl;
+  }
+  //std::cout<<"compute zero supp "<<fRMS1000<<" Thr "<<Thr<<" Zsup "<<ZSupHit<<std::endl;
+  return ZSupHit;
+} //CT ... to here
 
 Double_t DigitizerChannelSAC::CalcCharge(UShort_t fCh) {  //not used
   // can include a better algorithm to compute hit charge
@@ -162,6 +272,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   //M. Raggi 19/10/2018
   static const Int_t npeaks =50;
   static Double_t AbsSamRec[1024];
+  static Double_t AbsSamCorr[1024];//CT
 
   Int_t fCh  = GetChID();
   Int_t ElCh = fCh/10 +fCh%10*5;
@@ -171,6 +282,9 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fPedCh[ElCh])/4096*1000.; //original pedestal not ok or 2019 data
     //M. Raggi 20/07/2019 computes the pedestals on the basis of 8 samples need to check is changing time offsets
     AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg80)/4096*1000.; //in mV 
+    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg80)/4096*1000.; //CT
+    AbsSamCorr[s] = (Double_t) AbsSamRec[s]/2.5; //CT
+
   }
   H1->SetContent(AbsSamRec);
   char name[50];
@@ -201,11 +315,12 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     //    Double_t *xpeaks = s->GetPositionX();
     //    Double_t *ypeaks = s->GetPositionY();
     // ROOT 5 version
-    //    Float_t *xpeaks = s->GetPositionX();
-    //    Float_t *ypeaks = s->GetPositionY();
+    Float_t *xpeaks = s->GetPositionX();
+    Float_t *ypeaks = s->GetPositionY();
     //    std::cout<<"found Npeaks "<<nfound<<""<<std::endl;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
       fCharge = 0.;
+      fRMS1000  = 0;
 // ROOT 6 version
 //      Double_t xp   = xpeaks[ll];
 //      Double_t yp   = ypeaks[ll];
@@ -223,6 +338,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	}
 	//std::cout<<nfound<<" "<<ll<<" Digi Charge  "<<fCharge<<" Time "<<fTime<<" yp "<<yp<<" xp "<<xp<<" EMeV "<<fCharge/pCMeV<<std::endl;
       }
+      fRMS1000  = TMath::RMS(1000,&fSamples[0]);//CT
       fEnergy = fCharge/pCMeV; //this is really the energy
       fCalibEnergy = fCharge/pCMeV*fCalibCh[ElCh]; //calibrated energy of the hit
 
@@ -235,6 +351,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
 	Hit->SetEnergy(fEnergy); //here, if you need, you can change the variable you need (at this point you can only use one)
 	//Hit->SetEnergy(VMax);               // need to add hit status to avoid saturations
 	hitArray.push_back(Hit);
+        if(fGlobalMode->GetGlobalDebugMode()) SAC->Fill();//CT
       }else{
 //	fileOut->cd();
 //	H1->Write();
@@ -244,6 +361,49 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
       //      std::cout<<ll<<" "<<xp<<" yp "<<ypeaks[ll]<<" Ch "<<fCh<<" VMax "<<VMax<<" thr "<<peak_thr<<" "<<fAmpThresholdLow<<std::endl;
     }
     //    std::cout<<"end ch"<<std::endl;
+
+    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsCosmicsMode()){ //CT, from here...
+      if(VMax>0 && ElCh>=0){//original reco, debug mode DEBUG MODE CLARA BEFORE 18/06/20
+      //if(yp>-3*VMin){
+       //if(VMax>1 && ElCh>=0){
+       
+       fileOut->cd();
+       sprintf(name,"hSig%d",ElCh);
+       histo=(TH1D*) hListCal->FindObject(name);
+       //histo->SetContent(AbsSamRec);
+        histo->SetContent(AbsSamCorr);
+       //      histo->Write(); histo->Reset();
+       sprintf(name,"hVMax%d",ElCh);
+       histo=(TH1D*) hListCal->FindObject(name);
+       //      histo->Fill(VMax);//CT hVMax contains histogram maximum
+       histo->Fill(VMax);//CT hVMax contains histogram maximum
+      }
+      //      //CT trying to fill hQCh
+      //      
+      //      Int_t Ch   = GetElChID();
+      if(ElCh>=0){
+       char name[50];
+
+       sprintf(name,"hQCh%d",ElCh);
+       histo =(TH1D*) hListCal->FindObject(name);
+       histo->Fill(fCharge);//CT hQCh contains TSpectrum max
+
+       sprintf(name,"hRMSCh%d",ElCh);
+       histo =(TH1D*) hListCal->FindObject(name);
+       histo->Fill(fRMS1000);//CT hQCh contains TSpectrum max
+  
+       sprintf(name,"hTime");
+       histo =(TH1D*) hListCal->FindObject(name);
+       histo->Fill(xpeaks[0]*fTimeBin);
+
+       sprintf(name,"hAvgCalo%d",ElCh);
+       histo=(TH1D*) hListCal->FindObject(name);
+       histo->Fill(fAvg80);//CT hAvgCalo contains histogram maximum
+
+      }
+
+    }//CT, ... to here
+
     H1->Reset();
   }
   return fTime = fTime*fTimeBin;
@@ -259,9 +419,13 @@ Double_t DigitizerChannelSAC::CalcPosition(UShort_t fCh) {
 void DigitizerChannelSAC::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
   // M. Raggi 20/07/2019 protect the code againts cosmic scintillators in the SAC digitizer
   Int_t Ch = GetChID();
+  Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);//CT
   if(Ch<0) return;
   Double_t fchPed=CalcPedestal();
   CalcChaTime(hitArray,1000);
+
+  if(IsZeroSup==1) return; //CT
+  fTrig = GetTrigMask();//CT
 }
 
 void DigitizerChannelSAC::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){
@@ -324,4 +488,9 @@ DigitizerChannelSAC::~DigitizerChannelSAC(){
 //    hTime->Write();
 //
 //  }
+
+   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode()){//CT
+   SaveDebugHistos();//CT
+
+   }
 };

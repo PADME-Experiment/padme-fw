@@ -346,7 +346,6 @@ void BeamLineStructure::CreateBeamLine2020()
     G4double Q4PosZ = beJunMgPosZ-Q4DistFromDHSTB002*cos(magnetAngle); 
     G4ThreeVector Q4Pos = G4ThreeVector(Q4PosX,Q4PosY,Q4PosZ);
 
-    //    Q4BGradient*=2; //REMOVE
     G4LogicalVolume* logicQ4Quad = CreateQuadMagnets(-Q4BGradient,Q4Leng,Q4Radius,Q4Pos,Q4Rot);
     logicQ4Quad->SetName("logicQ4Quad");
     logicQ4Quad->SetVisAttributes(QuadVisAttr);
@@ -455,10 +454,16 @@ void BeamLineStructure::CreateBeamLine2020()
     // Flag 7
     ///////////////////////////////////////////////////////////////////////
     ////  In between the Mylar and Q1 quads   MyW--Fl7--Q1----FL6-----Q2
+    ///   Moved after the SLTB4 to monitor beam energy spread M. Raggi 18/01/2022
     
-    G4double Flag7FrontPosX   = Q2PosX+(Q1Q2Dist+Q4Leng*1.1)*sin(magnetAngle); 
-    G4double Flag7FrontPosY   = Q2PosY; 
-    G4double Flag7FrontPosZ   = Q2PosZ-(Q1Q2Dist+Q4Leng*1.1)*cos(magnetAngle);  
+//    G4double Flag7FrontPosX   = Q2PosX+(Q1Q2Dist+Q4Leng*1.1)*sin(magnetAngle); 
+//    G4double Flag7FrontPosY   = Q2PosY; 
+//    G4double Flag7FrontPosZ   = Q2PosZ-(Q1Q2Dist+Q4Leng*1.1)*cos(magnetAngle);  
+
+    G4double Flag7FrontPosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness+2*mm)*sin(magnetAngle);
+    G4double Flag7FrontPosY = MylarWinFlgPosY;							 
+    G4double Flag7FrontPosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness+2*mm)*cos(magnetAngle);
+  
     G4ThreeVector Flag7FrontPos = G4ThreeVector(Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);    
   
     G4Tubs* solidBeamFlag7 = new G4Tubs("solidBeamFlag7",0.,Q4Radius-0.1*mm,0.1*mm,0.*deg,360.*deg);
@@ -505,8 +510,8 @@ void BeamLineStructure::CreateBeThinWindow()
   G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_Be"),"logicalBeWin",0,0,0);
   
-//  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*40*um,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_MYLAR"),"logicalBeWin",0,0,0);
+  //  G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*40*um,0.*deg,360.*deg);
+  //  G4LogicalVolume* logicalBeWin = new G4LogicalVolume(solidBeWin,G4Material::GetMaterial("G4_MYLAR"),"logicalBeWin",0,0,0);
   logicalBeWin->SetVisAttributes(BeVisAttr);
 
   // Support flange for Be thin window

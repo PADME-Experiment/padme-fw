@@ -62,7 +62,7 @@ void HistoManager::book()
   if (!histo[4]) G4cout << "\n can't create histo 4" << G4endl;  
   histo[5] = new TH1D("h5", "beam angle",200,-0.01,0.01);
   if (!histo[5]) G4cout << "\n can't create histo 5" << G4endl;  
-  histo[6] = new TH1D("h6", "NPrimary", 1000,0.,30000.);
+  histo[6] = new TH1D("h6", "NPrimary", 2000,0.,40000.);
   if (!histo[6]) G4cout << "\n can't create histo 6" << G4endl;  
   histo[7] = new TH1D("h7", "ECluster",1100,0.,1100.);
   if (!histo[7]) G4cout << "\n can't create histo 7" << G4endl;  

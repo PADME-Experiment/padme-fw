@@ -26,7 +26,7 @@
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
-  //  fChannelReco = new DigitizerChannelReco();
+  //fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
   fClusterization = new PVetoSimpleClusterization();

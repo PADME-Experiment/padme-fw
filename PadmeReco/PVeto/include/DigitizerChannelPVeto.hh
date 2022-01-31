@@ -4,6 +4,7 @@
 #include "TObject.h"
 #include "TVector3.h"
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TFile.h"
 #include "TList.h"
 
@@ -13,6 +14,7 @@ typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
 class DigitizerChannelPVeto : public ChannelVReco {
 public:
+
   DigitizerChannelPVeto(){;};
   virtual ~DigitizerChannelPVeto();
 
@@ -27,17 +29,54 @@ public:
 
   Short_t CalcMaximum();
   Double_t CalcPedestal();
-  Double_t CalcCharge(UShort_t);
-  Double_t CalcTime(UShort_t);
+  //  Double_t CalcCharge(UShort_t);
+  //  Double_t CalcTime(UShort_t);
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
-
+  Double_t CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
   void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
 
   void SetAbsSignals();
+
+  // Debugging the reco
+  virtual void PrepareDebugHistos();
+  virtual void SaveDebugHistos();
   
 private:
   //What do we operate
+  TFile * fileOut;
+  Bool_t fSaveAnalog;
+  TList* hListPVeto; // single board related histograms 
+
+  //Single Hit
+  TH1F * hdxdtMax;      
+  TH1F * hVMax;         
+  TH2F * hVmaxvsDxdtMax;
+  TH1F * hVmaxOvDxdt;
+  TH1F * hEnergy;
+
+  TH1F * hOrdxdtMax;      
+  TH1F * hOrVMax;         
+  TH2F * hOrVmaxvsDxdtMax;
+  TH1F * hOrVmaxOvDxdt;
+  TH1F * hOrEnergy;
+
+  TH1F * hVMaxOrig;         
+
+  //Multi Hit
+  TH1F * hMHdxdtMax;      
+  TH1F * hMHVMax;         
+  TH2F * hMHVmaxvsDxdtMax;
+  TH1F * hMHVmaxOvDxdt;
+  TH1F * hMHEnergy;
+  TH1F * hNhitDx;
+  TH1F * hNhitSig;
+  TH1F * hDeltaT;
+  TH1F * hDeltaV;
+  TH1F * hDeltaN;
+  TH2F * hDeltaNvsN;
+  TH1F * hTHits; 
+
   UShort_t fNSamples;
   Short_t *fSamples;
   Short_t fMax;
@@ -57,8 +96,17 @@ private:
   Int_t fMinAmplitude;
 
   TH1D *H1;
+  TH1D *hSig;
+  TH1D *htmp;
   TH1D *hdxdt;
+
+  TH1F *hNhitOrig; 
   
+  TH1F *hSigV;
+  TH1F *hSigE;
+
+  TH1F *hDxV;
+  TH1F *hDxE;
 
   Double_t fSignalThreshold;
   Double_t fSignalPercentage;
@@ -67,6 +115,8 @@ private:
   Double_t fVoltageBin;
   Double_t fImpedance;
   Double_t fAmpli;
+  Double_t fEnergy;
+  Double_t fmVtoMeV;
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;

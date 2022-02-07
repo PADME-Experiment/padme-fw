@@ -899,6 +899,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
   }
   //std::cout << " max template " << fmaxValuemyTemplate << std::end;
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
  int idarray[50][50];
@@ -1180,6 +1181,7 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
 if(fReproductSACbunchStructure){

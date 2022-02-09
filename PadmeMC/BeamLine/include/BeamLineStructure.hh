@@ -47,8 +47,10 @@ private:
 
   void CreateBeamLine();
   void CreateBeamLine2020();  //Raggi 06/2020
+  void CreateBeamLine2022();  //Raggi 02/2022
 
   void CreateDHSTB002Magnet();
+  void CreateDHSTB001Magnet(); //Raggi 01/02/2022
   //  void CreateQuadMagnets();
   G4LogicalVolume* CreateQuadMagnets(G4double , G4double , G4double ,G4ThreeVector , G4RotationMatrix*);
 

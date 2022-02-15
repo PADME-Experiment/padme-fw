@@ -41,7 +41,33 @@ public:
   // Debugging the reco
   virtual void PrepareDebugHistos();
   virtual void SaveDebugHistos();
+
+  //get ChID From Beth Digi
+  Int_t EventCounter=-1;//is increased before each event is processed, so the first event will have EventCounter=0
+  Int_t fRawEvNo;
+  Int_t fChID;
+  Int_t fElChID;
+  Int_t fBdID;
+  Int_t fTrigMask;
   
+  Int_t GetChID(){return fChID;};
+  void  SetChID(Int_t ChID){fChID=ChID;};
+  
+  Int_t GetElChID(){return fElChID;};
+  void  SetElChID(Int_t ChID){fElChID=ChID;};
+  
+  Int_t GetBdID(){return fBdID;};
+  void  SetBdID(Int_t BdID){fBdID=BdID;};
+
+  Int_t GetTrigMask(){return fTrigMask;};
+  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
+
+  Int_t GetEventNumber(){return fRawEvNo;};
+  void  SetEventNumber(Int_t RawEvNo){
+    fRawEvNo=RawEvNo;
+    EventCounter++;
+  };
+
 private:
   //What do we operate
   TFile * fileOut;
@@ -52,6 +78,7 @@ private:
   TH1F * hdxdtMax;      
   TH1F * hVMax;         
   TH2F * hVmaxvsDxdtMax;
+  TH2F * hVMOvDxdtvsNHits;
   TH1F * hVmaxOvDxdt;
   TH1F * hEnergy;
 

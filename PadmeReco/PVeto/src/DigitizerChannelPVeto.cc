@@ -28,10 +28,12 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   std::string name;
   name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
   name += "DIGI";
-  hSig    = new TH1D("hSig","hSig",985,0.,985.);
-  H1      = new TH1D("H1","H1",985,0.,985.);
-  hdxdt   = new TH1D("hdxdt","hdxdt",1000,0.,1000.);
-  htmp    = new TH1D("htmp","htmp",985,0.,985.);
+  fIMax=985; //last sample used in the analog signal, due to digitizer noise 
+  hSig    = new TH1D("hSig","hSig",fIMax,0.,fIMax);
+  H1      = new TH1D("H1","H1",fIMax,0.,fIMax);
+  //  hdxdt   = new TH1D("hdxdt","hdxdt",1000,0.,1000.);
+  hdxdt   = new TH1D("hdxdt","hdxdt",fIMax,0.,fIMax);
+  htmp    = new TH1D("htmp","htmp",fIMax,0.,fIMax);
   htmp->SetLineColor(1);
 
   fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
@@ -122,8 +124,9 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
   static TSpectrum SpectrumProcessor(npeaks);// = new TSpectrum(20);
   double Time   = 0.;
   fCharge = 0.;
+  Int_t ChID=GetElChID(); // MR TODAY MISSING CH ID 
+  //  std::cout<<"CH ID"<<ChID<<std::endl;
 
-  iMax=985;
   //currently looking for peaks with TSpectrum to obtain multi hit times
   static Double_t AbsSamRec[1024];
   static Double_t AbsSamRecDP[1024];
@@ -146,9 +149,10 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
   // check this number hard coded!!!!
   Int_t iDer=15;
   // compute derivative
-  for(Int_t ll=0;ll<iMax+1;ll++){
+  for(Int_t ll=0;ll<iMax;ll++){
     if(ll>=iDer){ 
-      dxdt[ll]=(AbsSamRec[ll]-AbsSamRec[ll-iDer]);
+      if(AbsSamRec[ll]-AbsSamRec[ll-iDer] >0) dxdt[ll]=(AbsSamRec[ll]-AbsSamRec[ll-iDer]);
+      if(AbsSamRec[ll]-AbsSamRec[ll-iDer] <0) dxdt[ll]=0.;
     }else{
       dxdt[ll]=0;
     }
@@ -161,13 +165,6 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
   
   //  std::cout<<"Get Maximum     "<<VMax<<"   Get dxdt    "<<dmax<<std::endl;
   //if (VMax>fAmpThresholdHigh) std::cout<<VMax<<" VMax "<<std::endl;
-  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-    hVMax->Fill(VMax);
-    hdxdtMax->Fill(dmax);
-    hVmaxvsDxdtMax->Fill(VMax,dmax);
-    hVmaxOvDxdt->Fill(VMax/dmax);
-    hEnergy->Fill(dmax/20.); // what is this number??
-  }
   std::vector<Float_t> xp;
   std::vector<Float_t> yp;
 
@@ -180,7 +177,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
   
   if(VMax>fAmpThresholdHigh){
     TSpectrum *s1 = &SpectrumProcessor;// new TSpectrum(2*npeaks);  //npeaks max number of peaks
-    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed. BUG??? 
+    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed.
     Int_t nfound = s1->Search(hSig,fPeakSearchWidth,"",peak_thr);     
     if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog) hNhitSig ->Fill(nfound);
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
@@ -198,7 +195,12 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
     Double_t MinDxDt=15.;  //be careful depends on how big is iDer
     Double_t PeakSearchDerWdt = 5.; //from
     TSpectrum *s = &SpectrumProcessor;
-    Double_t Der_peak_thr  = 6/dmax;
+    Double_t Der_peak_thr  = 0.2;
+//    Double_t source[895];
+//    for(Int_t i = 0; i <895; i++) source[i]=hSig->GetBinContent(i+1);
+//    s->SmoothMarkov(source,985,3);
+//    for (Int_t i=0; i<895; i++) hSig->SetBinContent(i+1,source[i]);
+
     Int_t nfoundd = s->Search(htmp,PeakSearchDerWdt,"",Der_peak_thr);
     if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
       hNhitDx   ->Fill(nfoundd);
@@ -236,10 +238,19 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
       //Hit->SetEnergy(fAmpli);
       Hit->SetEnergy(fEnergy);
       hitArray.push_back(Hit);
+      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
+	hVMax->Fill(VMax);
+	hdxdtMax->Fill(dmax);
+	hVmaxvsDxdtMax->Fill(VMax,dmax);
+	hVMOvDxdtvsNHits->Fill(nfound,VMax/dmax); //il canale??
+	hVmaxOvDxdt->Fill(VMax/dmax);
+	hEnergy->Fill(dmax/20.); // what is this number??
+      }
+      
     }
     if( (nfoundd-nfound)>0 ){
-//      hSig->Write();
-//      htmp->Write();
+      hSig->Write();
+      htmp->Write();
     }
     //    delete s;
   }
@@ -276,17 +287,7 @@ Double_t DigitizerChannelPVeto::CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArr
     H1->SetContent(AbsSamRec);
   }
 
-  // for(UShort_t s = 0;s<256;s++) {
-  //   AbsSamRecRebin[s]=0;
-  //   for(int i = 0;i<4;i++) {
-  //     AbsSamRecRebin[s]+=AbsSamRecDP[4*s + i];
-  //   }
-  // }
-
-  
-  //  H1->Rebin(4);
-
-  Double_t VMax = H1->GetMaximum();
+   Double_t VMax = H1->GetMaximum();
   Double_t VMin = H1->GetMinimum();
   hOrVMax->Fill(VMax);
   //   std::cout<<"Get Maximum     "<<VMax<<"   Get Minimum    "<<VMin<<std::endl;
@@ -332,12 +333,13 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){
   hListPVeto->Add(hDeltaN     = new TH1F("hDeltaN","hDeltaN",25,-12.5,12.5));
   hListPVeto->Add(hDeltaNvsN= new TH2F("hDeltaNvsN","hDeltaNvsN",25,-0.5,24.5,25,-12.5,12.5)); 
 
-  hListPVeto->Add(hDeltaT     = new TH1F("hDeltaT","hDeltaT",25,-12.5,12.5));
+  hListPVeto->Add(hDeltaT     = new TH1F("hDeltaT","hDeltaT",150,-24.5,24.5));
   hListPVeto->Add(hDeltaV     = new TH1F("hDeltaV","hDeltaV",250,-125,125));
   //Single HIT
   hListPVeto->Add(hdxdtMax      = new TH1F("hdxdtMax","hdxdtMax",1000,0.,1000.));
   hListPVeto->Add(hVMax         = new TH1F("hVMax","hVMax",1000,0.,1000.));
-  hListPVeto->Add(hVmaxvsDxdtMax= new TH2F("hVmaxvsDxdtMax","hVmaxvsDxdtMax",1000,0.,1000.,1000,0.,1000.)); 
+  hListPVeto->Add(hVmaxvsDxdtMax= new TH2F("hVmaxvsDxdtMax","hVmaxvsDxdtMax",1000,0.,1000.,1000,0.,1000.));
+  hListPVeto->Add(hVMOvDxdtvsNHits = new TH2F("hVMOvDxdtvsNHits","hVMOvDxdtvsNHits",20,-0.5,19.5,250,0.,5.)); 
   hListPVeto->Add(hVmaxOvDxdt   = new TH1F("hVmaxOvDxdt","hVmaxOvDxdt",500,0.,5.));
   hListPVeto->Add(hEnergy       = new TH1F("hEnergy","hEnergy",500,0.,5.));
 
@@ -366,30 +368,6 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
   fileOut->Close();
 }
 
-//void DigitizerChannelPVeto::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray){
-////  //  Double_t IsZeroSup = ZSupHit(5.,1000.);
-////  //  CalcCharge(fIMax);
-////  //if (fCharge < .01) return;
-////  // come back to a Veto setup
-//
-////  if (fCharge < fChargeCut) return;
-////  //  double time = CalcTime(fIMax);
-////  // if (fTime < 20.) return;
-////  
-////  TRecoVHit *Hit = new TRecoVHit();
-////  Hit->SetTime(time);
-////  // M. Raggi going to charge
-////  // Double_t fEnergy= fCharge*1000./15; //going from nC to MeV using 15pC/MeV
-////  // Hit->SetEnergy(fCharge);
-////  // come back to a Veto setup
-////  Hit->SetEnergy(fCharge);
-////  hitArray.push_back(Hit);
-//  return;
-////  // std::cout << "Hit charge:  " << fCharge << "  Time: " << fTime << std::endl;
-//  
-//}
-
-//void DigitizerChannelPVeto::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArray){  //using TSpectrum
 void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitArray){  //using TSpectrum
   if( fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //usa the parameter signal window
@@ -397,33 +375,12 @@ void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitArray){  //
     Double_t ped=CalcPedestal();  // takes the starting sample from data cards
     //std::cout<<"Pedestal    "<<ped<<std::endl;
     //ped=3650;
-    CalcChaTime(hitArray,1000,ped);
+    CalcChaTime(hitArray,fIMax,ped); //seaching up to fIMax only
     //  CalcChaTimeOrig(hitArray,1000,ped);
   }else{
     // Georgie pulse processing code goes here
     
   }
 }
-
-
-//void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitArray){
-//
-////  if(fZeroSuppression > 1 ) {
-////    if (ZSupHit(fZeroSuppression,1000.) < 0) return;   //execute zero suppression in channels
-////  }
-//
-//  if(fMultihit) {
-//    ReconstructMultiHit(hitArray);
-//  } else {
-//    //    CalcMaximum();
-//    //    std::cout<<" fIMax =  "<<fIMax << " Amplitude   " << fPed - fMax <<std::endl;
-//    CalcPedestal();
-//    //    if(fPed - fMax < fMinAmplitude ) return; //altro taglio da capire fatto in che unita'? conteggi?
-//    ReconstructSingleHit(hitArray);
-//  }
-//  // std::cout << "Maximum: " << fMax << "  at position: "<< fIMax << std::endl;
-//  // std::cout << "Pedestal: " << fPed << "  from: " << fNPedSamples << " samples"<< std::endl;
-//}
-
 
 

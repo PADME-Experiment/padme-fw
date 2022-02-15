@@ -170,12 +170,59 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
       GetHisto("PVetoOccupancyLast")->Fill(Hits[iHit1]->GetChannelId());
     }
-  }  
+  }   
+}// END OF ANALYSE EVENT
 
-  
-  
-  
-  
+
+void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  //  std::cout<<"Event no "<<rawEv->GetEventNumber()<<std::endl;
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
 }
+
+
+
+
 
 

@@ -1,7 +1,7 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
+// Created by M. Raggi and B. Long  (emanuele.leonardi@roma1.infn.it) 14-02-22
 //
 // --------------------------------------------------------------
 #include "Riostream.h"
@@ -39,7 +39,6 @@ PVetoReconstruction::~PVetoReconstruction()
 {;}
 
 
-
 void PVetoReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
   AddHisto("ADCs",new TH1F("ADCs","ADC ID",100,0.0,100.));
@@ -49,16 +48,12 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",100,0.0,100.0));
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
-
   AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",2000,0.0,40.0));
   AddHisto("PVetoEnergyClean",new TH1F("PVetoEnergyClean","PVeto Energy",2000,0.0,.4));
   AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
 
   AddHisto("PVetoTimeVsChannelID",new TH2F("PVetoTimeVsChannelID","PVeto Time vs Ch. ID",100,0,100,100,-200.0,200.0) );
   AddHisto("PVetoTimeVsPVetoTime",new TH2F("PVetoTimeVsPVetoTime","PVeto Time vs PVetoTime",400,-200.0,200.0, 400,-200.0,200.0));
-
- 
-
 
   char name[256];
 

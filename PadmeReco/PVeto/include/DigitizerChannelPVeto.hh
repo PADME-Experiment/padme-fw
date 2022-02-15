@@ -23,11 +23,11 @@ public:
   virtual void Init(PadmeVRecoConfig *cfg){return ;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
-  void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
-  void ReconstructMultiHit (std::vector<TRecoVHit *> &hitArray);
+  //  void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
+  //  void ReconstructMultiHit (std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
 
-  Short_t CalcMaximum();
+  //  Short_t CalcMaximum();
   Double_t CalcPedestal();
   //  Double_t CalcCharge(UShort_t);
   //  Double_t CalcTime(UShort_t);
@@ -36,7 +36,7 @@ public:
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
   void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
 
-  void SetAbsSignals();
+  //  void SetAbsSignals();
 
   // Debugging the reco
   virtual void PrepareDebugHistos();

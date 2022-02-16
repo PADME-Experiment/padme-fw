@@ -984,7 +984,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4double strHoleSizeX = geo->GetMagPipeHoleSizeX();
   G4double strHoleSizeY = geo->GetMagPipeHoleSizeY();
   G4double strHoleSizeZ = geo->GetMagPipeStraightLength()+10.*um;
-  G4double strFlangeR = geo->GetMagPipeFlangeRadius();
+  G4double strFlangeR   = geo->GetMagPipeFlangeRadius();
   G4double strFlangeThick = geo->GetMagPipeFlangeThick();
 
   G4double strPipeSizeX = geo->GetMagPipeSizeX();
@@ -1074,8 +1074,8 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4double magvolMaxR = geo->GetMagVolMaxRadius();
   G4Tubs* solidMagVol = new G4Tubs("solidMagVol",magvolMinR,magvolMaxR,0.5*magvolSizeY,0.*deg,magnetAngle);
   G4LogicalVolume* logicalMagVol = new G4LogicalVolume(solidMagVol,G4Material::GetMaterial("Vacuum"),"logicalMagVol",0,0,0);
-  //  logicalMagVol->SetVisAttributes(G4VisAttributes::InVisible);
-  logicalMagVol->SetVisAttributes(MagFieldVisAtt);
+  logicalMagVol->SetVisAttributes(G4VisAttributes::Invisible);
+  //  logicalMagVol->SetVisAttributes(MagFieldVisAtt);
 
   // Create another volume externally adjacent to magnetic volume: used for cuts
   G4double extvolSizeY = geo->GetMagVolSizeY();
@@ -1095,11 +1095,6 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   new G4PVPlacement(rotDHSTB01,posMagVol,logicalMagVol,"DHSTB001MagneticVolume",fMotherVolume,false,0,true);
   //
   // *****************END OF MAGNET CREATION
-  //
-  // Get position of entrance point to the magnet pipe section ????
-//  G4double mpEntPosX = geo->GetMagPipeEnterPosX();
-//  G4double mpEntPosY = geo->GetMagPipeEnterPosY();
-//  G4double mpEntPosZ = geo->GetMagPipeEnterPosZ();
 
   G4double magBPBSizeY = geo->GetMagPipeSizeY();
   G4double magBPBMinR = geo->GetMagPipeMinRadius();
@@ -1125,29 +1120,47 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   logicalBeamPipe->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeamPipe,"DHSTB001BeamPipe",logicalMagVol,false,0,true);
 
-  //
-// G4double strSideRotY = geo->GetMagPipeStraightSideRotY();
-// G4RotationMatrix* strSideRot = new G4RotationMatrix;
-// strSideRot->rotateY(strSideRotY);
-//
-// // Position back straight section
-// G4double strBackPosX = geo->GetMagPipeStraightBackPosX();
-// G4double strBackPosZ = geo->GetMagPipeStraightBackPosZ();
-// G4double strBackRotY = geo->GetMagPipeStraightBackRotY();
-// G4RotationMatrix* strBackRot = new G4RotationMatrix;
-// strBackRot->rotateY(strBackRotY);
-// G4ThreeVector strBackPos = G4ThreeVector(strBackPosX,0.,strBackPosZ);
-// new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
-//
-// // Position side straight section
-// G4double strSidePosX = geo->GetMagPipeStraightSidePosX();
-// G4double strSidePosZ = geo->GetMagPipeStraightSidePosZ();
-///  G4double strSideRotY = geo->GetMagPipeStraightSideRotY();
-///  G4RotationMatrix* strSideRot = new G4RotationMatrix;
-///  strSideRot->rotateY(strSideRotY);
-// G4ThreeVector strSidePos = G4ThreeVector(strSidePosX,0.,strSidePosZ);
-// new G4PVPlacement(strSideRot,strSidePos,logicalStraightPipe,"DHSTB002FlangeSide",fMotherVolume,false,0,true);
-}// End of CreateDHSTB001 
+
+
+
+
+
+
+
+  //CANCELLA DOPO
+  G4Box* solidTryFull = new G4Box("solidTryFull",0.5*strPipeSizeX,0.5*strPipeSizeY,0.5*strPipeSizeZ);
+  //  G4Box* solidStrHole = new G4Box("solidStrHole",0.5*strHoleSizeX,0.5*strHoleSizeY,0.5*strHoleSizeZ);
+  //  G4Tubs* solidStrFlange = new G4Tubs("solidStrFlange",0.,strFlangeR,0.5*strFlangeThick,0.*deg,360.*deg);
+  G4LogicalVolume* logicalTryPipe = new G4LogicalVolume(solidTryFull,G4Material::GetMaterial("Vacuum"),"logicalTryPipe",0,0,0);
+  logicalTryPipe->SetVisAttributes(steelVisAttr);
+  //CANCELLA FINO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //Positioning of the straigth back section and it's flange
+  G4double strBackPosX = EndFrontFlange.x()+holeCenterR*sin(yokeAngle)+0.5*strPipeSizeZ*mm;
+  G4double strBackPosZ = EndFrontFlange.z()-holeCenterR*(1-cos(yokeAngle));
+
+  G4ThreeVector strBackPos = G4ThreeVector(strBackPosX,0.,strBackPosZ);
+  G4RotationMatrix* strBackRot = new G4RotationMatrix;
+  strBackRot->rotateY(-90*deg);
+  //  new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
+  new G4PVPlacement(strBackRot,strBackPos,logicalTryPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
+  //  printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX+strPipeSizeZ*mm,strBackPosZ+strFlangeR/2*mm);
+  printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX,strBackPosZ);
+  //  G4cout<<"DHSTB001FlangeBack exit: X="<< strBackPosX+0.5*strPipeSizeZ<<" Z="<<strBackPosZ<<G4endl;
+}// End of Create DHSTB001 
 
 
 // Create the 2019 beam line configuration revised M. Raggi 03/2021

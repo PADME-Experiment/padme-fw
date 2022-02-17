@@ -32,7 +32,7 @@ public:
   //  Double_t CalcCharge(UShort_t);
   //  Double_t CalcTime(UShort_t);
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
-  Double_t CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
+  //  Double_t CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
   void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
 

@@ -57,7 +57,6 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0); //if MultiHit=1, Peaks finding with TSpectrum
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
 
-
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fPeakSearchWidth     = cfg->GetParOrDefault("RECO","PeakSearchWidth",6);
   fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
@@ -66,7 +65,6 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
   fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.030e-9);
   fmVtoMeV             = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
-
   
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
@@ -120,7 +118,7 @@ Double_t DigitizerChannelPVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {
 }
 
 Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax, UShort_t ped) {
-  Int_t npeaks = 25;
+  Int_t npeaks = 20;
   static TSpectrum SpectrumProcessor(npeaks);// = new TSpectrum(20);
   double Time   = 0.;
   fCharge = 0.;
@@ -196,10 +194,11 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
     Double_t PeakSearchDerWdt = 5.; //from
     TSpectrum *s = &SpectrumProcessor;
     Double_t Der_peak_thr  = 0.2;
-//    Double_t source[895];
-//    for(Int_t i = 0; i <895; i++) source[i]=hSig->GetBinContent(i+1);
-//    s->SmoothMarkov(source,985,3);
-//    for (Int_t i=0; i<895; i++) hSig->SetBinContent(i+1,source[i]);
+    //    Double_t source[895];
+    Float_t source[986];
+    for(Int_t i = 0; i <986; i++) source[i]=htmp->GetBinContent(i+1);
+    s->SmoothMarkov(source,985,2);
+    for (Int_t i=0; i<986; i++) htmp->SetBinContent(i+1,source[i]);
 
     Int_t nfoundd = s->Search(htmp,PeakSearchDerWdt,"",Der_peak_thr);
     if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
@@ -248,79 +247,17 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitArray,U
       }
       
     }
-    if( (nfoundd-nfound)>0 ){
-      hSig->Write();
-      htmp->Write();
-    }
+    hSig->Write();
+    htmp->Write();
+//    if( (nfoundd-nfound)>0 ){
+//      hSig->Write();
+//      htmp->Write();
+//    }
     //    delete s;
   }
   return Time;
 }
 
-
-Double_t DigitizerChannelPVeto::CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArray,UShort_t iMax, UShort_t ped) {
-  Int_t npeaks = 10;
-  static TSpectrum SpectrumProcessor(20);// = new TSpectrum(20);
-  double Time   = 0.;
-  fCharge = 0.;
-
-  //currently looking for peaks with TSpectrum to obtain multi hit times
-  //Int_t npeaks =25;
-  static Double_t AbsSamRec[1024];
-  static Double_t AbsSamRecDP[1024];
-
-
-  for(UShort_t s=0;s<iMax;s++){
-    AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+ped)/4096.*1000.; //in mV positivo
-    //std::cout<< s << "     "  << fSamples[s]  <<" V "<< AbsSamRec[s]  <<std::endl;
-  }
-  for(UShort_t s=iMax;s<1024;s++){
-    AbsSamRec[s] = 0;
-  }
-
-  // H1->Reset();
-
-  if (fUsePulseProcessing) {
-    //    DigitalProcessingRRC(AbsSamRec,AbsSamRecDP,iMax-1 ,fTimeBin*1e-9);
-    //    H1->SetContent(AbsSamRecDP);
-  } else {
-    H1->SetContent(AbsSamRec);
-  }
-
-   Double_t VMax = H1->GetMaximum();
-  Double_t VMin = H1->GetMinimum();
-  hOrVMax->Fill(VMax);
-  //   std::cout<<"Get Maximum     "<<VMax<<"   Get Minimum    "<<VMin<<std::endl;
-  
-  //if (VMax>fAmpThresholdHigh) std::cout<<VMax<<" VMax "<<std::endl;
-
-  //  fMinAmplitude
-  if(VMax>fAmpThresholdHigh){
-    TSpectrum *s = &SpectrumProcessor;// new TSpectrum(2*npeaks);  //npeaks max number of peaks
-    Double_t peak_thr  = fAmpThresholdLow /VMax; //minimum peak height allowed. 
-    Int_t nfound = s->Search(H1,fPeakSearchWidth,"",peak_thr);     
-    hNhitOrig ->Fill(nfound);
-    for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-      fCharge = 0.;
-      Double_t xp = (s->GetPositionX())[ll];
-      Double_t yp = (s->GetPositionY())[ll];
-      fAmpli=yp;
-      Time=xp*fTimeBin;
-      Int_t bin    = H1->GetXaxis()->FindBin(xp);
-
-      hOrEnergy->Fill(fAmpli);
-//      TRecoVHit *Hit = new TRecoVHit();  
-//      Hit->SetTime(Time);
-//      Hit->SetEnergy(fAmpli);
-//      hitArray.push_back(Hit);
-    }
-    //    delete s;
-  }
-
-  Time = Time*fTimeBin;
-  return Time;
-
-}
 
 void DigitizerChannelPVeto::PrepareDebugHistos(){
   fileOut    = new TFile("PVetoAn.root", "RECREATE");

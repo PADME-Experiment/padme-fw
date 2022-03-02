@@ -31,7 +31,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
-  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 50000");
+  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 500000");
   fSetNPositronsPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableNPositronsPerBunchSpreadCmd = new G4UIcmdWithABool("/beam/n_e+_poisson_on",this);

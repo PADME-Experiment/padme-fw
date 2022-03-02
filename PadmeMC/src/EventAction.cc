@@ -578,11 +578,15 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
       G4bool IsPrimary = hit->IsPrimary(); //identify primary positrons
-      // computing angle at the entrance of the target using the directions of the particles:
-      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
-      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
 
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
       //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
       if(IsPrimary){
 	fHistoManager->FillHisto(60,hE);     // All hit energies
@@ -593,7 +597,7 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
 	
 	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-	fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+	fHistoManager->FillHisto2(67,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop
@@ -621,11 +625,14 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
       // computing angle at the entrance of the target using the directions of the particles:
-      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
-      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
-
-      //      G4cout<<"Mylar angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
 
       fHistoManager->FillHisto(90,hE);     // All hit energies
       fHistoManager->FillHisto(91,htheta); // after the target
@@ -635,7 +642,7 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
       
       fHistoManager->FillHisto2(95,hX,hY,1.);   //X vs Y local coordinates 
       fHistoManager->FillHisto2(96,hX,hTrE,1.); //X vs Track energy
-      fHistoManager->FillHisto2(97,hX,htheta,1.); //X vs Track energy
+      fHistoManager->FillHisto2(97,hX,hthetaX,1.); //X vs ThetaX
     }
   }//end of loop
 }
@@ -658,12 +665,15 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
-      // computing angle at the entrance of the target using the directions of the particles:
-      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
-      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
 
-      //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
 
       fHistoManager->FillHisto(70,hE);     // All hit energies
       fHistoManager->FillHisto(71,htheta); // after the target
@@ -673,7 +683,7 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
       
       fHistoManager->FillHisto2(75,hX,hY,1.);   //X vs Y local coordinates 
       fHistoManager->FillHisto2(76,hX,hTrE,1.); //X vs Track energy
-      fHistoManager->FillHisto2(77,hX,htheta,1.); //X vs Track energy
+      fHistoManager->FillHisto2(77,hX,hthetaX,1.); //X vs Track energy
     }
   }//end of loop
   XBeW/=NBeW;
@@ -705,22 +715,25 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
 
       G4int    NHisto =100+10*NFlag;
       //      if(NFlag==4)  G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
 
- //     // computing angle at the entrance of the target using the directions of the particles:
- //     G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
- //     // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
- //
-      //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
       if (NFlag<8){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
-	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
+	fHistoManager->FillHisto(NHisto+1,htheta); // after the target
 	fHistoManager->FillHisto(NHisto+2,hX);     // 
 	fHistoManager->FillHisto(NHisto+3,hY);     // 
 	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
 	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
-	// fHistoManager->FillHisto2(NHisto+7,hX,htheta,1.); //X vs Track energy
+	fHistoManager->FillHisto2(NHisto+7,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop

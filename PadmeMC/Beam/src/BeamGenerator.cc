@@ -161,7 +161,8 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     fHistoManager->FillHisto(3,fPositron.t);
     fHistoManager->FillHisto(4,fPositron.t);
     fHistoManager->FillHisto(5,GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.)));
-    //    G4cout<<"ddd "<<GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.))<<G4endl;
+    // G4cout<<"ddd "<<GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.))<<G4endl;
+    //    G4cout<<"Beam position "<<G4ThreeVector(fPositron.pos.x(),fPositron.pos.y(),fPositron.pos.z())<<G4endl;
     // Add primary vertex to event
     fEvent->AddPrimaryVertex(vtx);
   }
@@ -220,7 +221,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     part_pos = beam_pos;
   }
   fPositron.pos = part_pos;
-  //G4cout << "BeamGenerator - Beam postion " << beam_pos << " Positron position " << fPositron.pos << G4endl;
+  //  G4cout << "BeamGenerator - Beam postion " << beam_pos << " Positron position " << fPositron.pos << G4endl;
   
   // Add emittance around direction of beam axis
   G4ThreeVector part_dir;

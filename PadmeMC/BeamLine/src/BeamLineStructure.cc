@@ -299,7 +299,6 @@ void BeamLineStructure::CreateBeamLine2020()
   //TB2R_M 26.6 TB2L_M 28.29 	       
   //TB2Ape  1.71 = 1.71mm    
 
-
   std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
   std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
   G4double SLTBThickness = 30.0*mm;
@@ -314,9 +313,6 @@ void BeamLineStructure::CreateBeamLine2020()
 
   logicalCollSupport->SetVisAttributes(CollVisAttr);
   //  logicalSupport->SetName("logicCollSupport");
-
-
-
   
   G4double SLTB3ToMylar = 309.24*mm;
   G4double SLTB3Aperture = geo->GetSLTB3Aperture();
@@ -1126,6 +1122,50 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   strBackRot->rotateY(-90*deg);
   new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
   printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX+0.5*strPipeSizeZ,strBackPosZ);
+
+  //***********************************************************
+  // START POSITIONING SLTB2           MR 01/03/2022
+  //***********************************************************
+  //  G4double SLTB2ToMylar = 519.24*mm;
+  G4double SLTBThickness = 30.0*mm;
+  G4double SLTB2Aperture = geo->GetSLTB4Aperture();  //creare data card for sltb2
+  G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
+  G4double SLTB2PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+100*mm; 
+  G4double SLTB2PosY = 0; //MylarWinFlgPosY;							 
+  //  G4double SLTB2PosZ = strBackPosZ-40*mm*(1-cos(yokeAngle))+SLTBThickness*0.5*(1-cos(yokeAngle));
+  G4double SLTB2PosZ = strBackPosZ;//-40*mm*(1-cos(yokeAngle))+SLTBThickness*0.5*(1-cos(yokeAngle));
+  //  G4double SLTB2PosZ = strBackPosZ-0.5*mm*strPipeSizeZ*(1-cos(yokeAngle))+SLTBThickness*0.5*(1-cos(yokeAngle));
+
+  G4ThreeVector SLTB2Pos = G4ThreeVector(SLTB2PosX,SLTB2PosY,SLTB2PosZ);    
+  
+  G4Tubs* solidSLTB2Full = new G4Tubs("solidSLTB2Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
+  //  G4VSolid* solidSLTB4Hole = new G4Box("solidSLTB4Hole",WallPipeRIn-0.05*mm,SLTB4Aperture*0.5,SLTBThickness+2*mm);
+  G4VSolid* solidSLTB2Hole = new G4Box("solidSLTB2Hole",SLTB2Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
+  G4SubtractionSolid* solidSLTB2 = new G4SubtractionSolid("solidSLTB2",solidSLTB2Full,solidSLTB2Hole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicalSLTB2 = new G4LogicalVolume(solidSLTB2,G4Material::GetMaterial("G4_W"),"logicalSLTB2",0,0,0);
+  logicalSLTB2->SetVisAttributes(steelVisAttr);
+
+  // positioning supports 
+  //  new G4PVPlacement(MylarWinFlgRot,SLTB2Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true); //rotation matrix    
+  // positioning collimators
+  new G4PVPlacement(strBackRot,SLTB2Pos,logicalSLTB2,"BeamSLTB2",fMotherVolume,false,0,true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }// End of Create DHSTB001 
 
 

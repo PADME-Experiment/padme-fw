@@ -294,10 +294,10 @@ void BeamLineStructure::CreateBeamLine2020()
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024 TB3D_M   26.39    	
   //TB4Ape  2.28    +    1.71 = 4mm    TB4Ape  0     +         3.07 = 3.07 mm
 
-  // November 2020 tune L. Foggetta
+  // P. Valente to be checked with Luca
   //TB2R        TB2L   22.30           
   //TB2R_M 26.6 TB2L_M 28.29 	       
-  //TB2Ape  2.28    +    1.71 = 4mm    
+  //TB2Ape  1.71 = 1.71mm    
 
 
   std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
@@ -505,9 +505,9 @@ void BeamLineStructure::CreateBeamLine2020()
 //    G4double Flag7FrontPosY   = Q2PosY; 
 //    G4double Flag7FrontPosZ   = Q2PosZ-(Q1Q2Dist+Q4Leng*1.1)*cos(magnetAngle);  
 
-    G4double Flag7FrontPosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness+2*mm)*sin(magnetAngle);
+    G4double Flag7FrontPosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*sin(magnetAngle);
     G4double Flag7FrontPosY = MylarWinFlgPosY;							 
-    G4double Flag7FrontPosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness+2*mm)*cos(magnetAngle);
+    G4double Flag7FrontPosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*cos(magnetAngle);
   
     G4ThreeVector Flag7FrontPos = G4ThreeVector(Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);    
   
@@ -538,9 +538,6 @@ void BeamLineStructure::CreateBeamLine2020()
   logicalDHSTB001_Pipe->SetVisAttributes(steelVisAttr);
 
   // Position long pipe in between DHSTB002 and BTF wall
-//  G4double DHSTB001_PipePosX = mpEntPosX+(0.5*DHSTB001_PipeLen)*sin(magnetAngle);
-//  G4double DHSTB001_PipePosY = mpEntPosY;
-//  G4double DHSTB001_PipePosZ = mpEntPosZ-(0.5*DHSTB001_PipeLen)*cos(magnetAngle);
   G4ThreeVector DHSTB001_PipePos = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen/2+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen/2+strFlangeThick)*mm*cos(magnetAngle));
   //  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(DHSTB001_PipePosX,DHSTB001_PipePosY,DHSTB001_PipePosZ);
   G4RotationMatrix* DHSTB001_PipeRot = new G4RotationMatrix;
@@ -1120,34 +1117,6 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   logicalBeamPipe->SetVisAttributes(steelVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),logicalBeamPipe,"DHSTB001BeamPipe",logicalMagVol,false,0,true);
 
-
-
-
-
-
-
-
-  //CANCELLA DOPO
-  G4Box* solidTryFull = new G4Box("solidTryFull",0.5*strPipeSizeX,0.5*strPipeSizeY,0.5*strPipeSizeZ);
-  //  G4Box* solidStrHole = new G4Box("solidStrHole",0.5*strHoleSizeX,0.5*strHoleSizeY,0.5*strHoleSizeZ);
-  //  G4Tubs* solidStrFlange = new G4Tubs("solidStrFlange",0.,strFlangeR,0.5*strFlangeThick,0.*deg,360.*deg);
-  G4LogicalVolume* logicalTryPipe = new G4LogicalVolume(solidTryFull,G4Material::GetMaterial("Vacuum"),"logicalTryPipe",0,0,0);
-  logicalTryPipe->SetVisAttributes(steelVisAttr);
-  //CANCELLA FINO
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   //Positioning of the straigth back section and it's flange
   G4double strBackPosX = EndFrontFlange.x()+holeCenterR*sin(yokeAngle)+0.5*strPipeSizeZ*mm;
   G4double strBackPosZ = EndFrontFlange.z()-holeCenterR*(1-cos(yokeAngle));
@@ -1155,11 +1124,8 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4ThreeVector strBackPos = G4ThreeVector(strBackPosX,0.,strBackPosZ);
   G4RotationMatrix* strBackRot = new G4RotationMatrix;
   strBackRot->rotateY(-90*deg);
-  //  new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
-  new G4PVPlacement(strBackRot,strBackPos,logicalTryPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
-  //  printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX+strPipeSizeZ*mm,strBackPosZ+strFlangeR/2*mm);
-  printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX,strBackPosZ);
-  //  G4cout<<"DHSTB001FlangeBack exit: X="<< strBackPosX+0.5*strPipeSizeZ<<" Z="<<strBackPosZ<<G4endl;
+  new G4PVPlacement(strBackRot,strBackPos,logicalStraightPipe,"DHSTB001FlangeBack",fMotherVolume,false,0,true);
+  printf("DHSTB001FlangeBack exit: X=  %f Z= %f\n",strBackPosX+0.5*strPipeSizeZ,strBackPosZ);
 }// End of Create DHSTB001 
 
 

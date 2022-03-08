@@ -53,12 +53,19 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableBeamFlagCmd->SetDefaultValue(true);
   fEnableBeamFlagCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/DHST002_FieldY",this);
-  fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set vertical component of magnetic field inside DHST002.");
+  fSetDHSTB002MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/DHSTB002_FieldY",this);
+  fSetDHSTB002MagneticFieldYCmd->SetGuidance("Set vertical component of magnetic field inside DHSTB002.");
   fSetDHSTB002MagneticFieldYCmd->SetParameterName("DFY",false);
   fSetDHSTB002MagneticFieldYCmd->SetDefaultUnit("tesla");
   fSetDHSTB002MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
   fSetDHSTB002MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetDHSTB001MagneticFieldYCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/DHSTB001_FieldY",this);
+  fSetDHSTB001MagneticFieldYCmd->SetGuidance("Set vertical component of magnetic field inside DHSTB001.");
+  fSetDHSTB001MagneticFieldYCmd->SetParameterName("DFY",false);
+  fSetDHSTB001MagneticFieldYCmd->SetDefaultUnit("tesla");
+  fSetDHSTB001MagneticFieldYCmd->SetRange("DFY > -10. && DFY < 10.");
+  fSetDHSTB001MagneticFieldYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //Windows Thicknerss
   fSetWindowThicknessCmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/WindowThickness",this);
@@ -67,6 +74,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetWindowThicknessCmd->SetDefaultUnit("mm");
   fSetWindowThicknessCmd->SetRange("DFY >=0. && DFY < 1.");
   fSetWindowThicknessCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //SLTB2 aperture  MR 02/03/2022
+  fSetSLTB2Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB2Aperture",this);
+  fSetSLTB2Cmd->SetGuidance("");
+  fSetSLTB2Cmd->SetParameterName("DFY",false);
+  fSetSLTB2Cmd->SetDefaultUnit("mm");
+  fSetSLTB2Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB2Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //SLTB3 aperture
   fSetSLTB3Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB3Aperture",this);
@@ -165,6 +180,8 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
       fBeamLineGeometry->DisableBeamFlag();
     }
   }
+  else if ( cmd == fSetDHSTB001MagneticFieldYCmd )
+    fBeamLineGeometry->SetDHSTB001MagneticFieldY(fSetDHSTB001MagneticFieldYCmd->GetNewDoubleValue(par));
   
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     fBeamLineGeometry->SetDHSTB002MagneticFieldY(fSetDHSTB002MagneticFieldYCmd->GetNewDoubleValue(par));
@@ -199,11 +216,15 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetQ4_FieldGradCmd )
     fBeamLineGeometry->SetQ4MagneticFieldGrad(fSetQ4_FieldGradCmd->GetNewDoubleValue(par));
 
-  // Set SLTB3 gradient
+  // Set SLTB2 Aperture
+  else if ( cmd == fSetSLTB2Cmd )
+    fBeamLineGeometry->SetSLTB2Aperture(fSetSLTB2Cmd->GetNewDoubleValue(par));
+
+  // Set SLTB3 Aperture
   else if ( cmd == fSetSLTB3Cmd )
     fBeamLineGeometry->SetSLTB3Aperture(fSetSLTB3Cmd->GetNewDoubleValue(par));
 
-  // Set SLTB4 gradient
+  // Set SLTB4 Aperture
   else if ( cmd == fSetSLTB4Cmd )
     fBeamLineGeometry->SetSLTB4Aperture(fSetSLTB4Cmd->GetNewDoubleValue(par));
 

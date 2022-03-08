@@ -971,7 +971,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
 // Create the straight section of the beam pipe (with its flange)
 // and position it at entrance and exits of magnet section of the beam line
 
-  // Angular span of the DHSTB002 magnet (45 deg)
+  // Angular span of the DHSTB001 identical to DHSTB001 magnet (45 deg)
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();
 
   G4double strHoleSizeX = geo->GetMagPipeHoleSizeX();
@@ -1055,8 +1055,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4RotationMatrix* rotDHSTB01 = new G4RotationMatrix;
   rotDHSTB01->rotateX(90.*deg); 
   rotDHSTB01->rotateZ(225.*deg+geo->GetDHSTB002AngularSpan());
-  //  G4ThreeVector posDHSTB01 = G4ThreeVector(9.150*m,0.,-9.150*m);
-  //  G4ThreeVector strFrontPos = G4ThreeVector(7232.1*mm+(strPipeSizeZ/2)*mm*sin(magnetAngle),0.,-9580.76*mm-(strPipeSizeZ/2)*mm*cos(magnetAngle));
+
   G4ThreeVector EndFrontFlange = G4ThreeVector(strFrontPos.x()*mm+strPipeSizeZ/2*mm*sin(magnetAngle),0.,strFrontPos.z()*mm-strPipeSizeZ/2*mm*cos(magnetAngle));
   G4ThreeVector posDHSTB01 = G4ThreeVector(EndFrontFlange.x()+holeCenterR*mm*sin(magnetAngle),0.,EndFrontFlange.z()+holeCenterR*mm*cos(magnetAngle));
   new G4PVPlacement(rotDHSTB01,posDHSTB01,logicalDHSTB001,"DHSTB001",fMotherVolume,false,0,true);
@@ -1077,7 +1076,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4Tubs* solidExtVol = new G4Tubs("solidExtVol",extvolMinR,extvolMaxR,0.5*extvolSizeY,0.*deg,magnetAngle);
 
   // Add a constant magnetic field to the magnetic volume
-  G4ThreeVector fieldV(0.,geo->GetDHSTB002MagneticFieldY(),0.);
+  G4ThreeVector fieldV(0.,geo->GetDHSTB001MagneticFieldY(),0.);
   G4MagneticField* magField = new G4UniformMagField(fieldV);
   G4FieldManager* localFieldManager = new G4FieldManager(magField);
   logicalMagVol->SetFieldManager(localFieldManager,true);
@@ -1144,27 +1143,11 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4SubtractionSolid* solidSLTB2 = new G4SubtractionSolid("solidSLTB2",solidSLTB2Full,solidSLTB2Hole,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalSLTB2 = new G4LogicalVolume(solidSLTB2,G4Material::GetMaterial("G4_W"),"logicalSLTB2",0,0,0);
   logicalSLTB2->SetVisAttributes(steelVisAttr);
-
+  
   // positioning supports 
   //  new G4PVPlacement(MylarWinFlgRot,SLTB2Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true); //rotation matrix    
   // positioning collimators
   new G4PVPlacement(strBackRot,SLTB2Pos,logicalSLTB2,"BeamSLTB2",fMotherVolume,false,0,true);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }// End of Create DHSTB001 
 

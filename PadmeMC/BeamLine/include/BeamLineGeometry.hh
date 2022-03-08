@@ -56,6 +56,10 @@ public:
   void SetDHSTB002MagneticFieldY(G4double f) { fDHSTB002MagneticFieldY = f; }
   G4double GetDHSTB002MagneticFieldY() { return fDHSTB002MagneticFieldY; }
 
+  // Magnetic field inside DHSTB002
+  void SetDHSTB001MagneticFieldY(G4double f) { fDHSTB001MagneticFieldY = f; }
+  G4double GetDHSTB001MagneticFieldY() { return fDHSTB001MagneticFieldY; }
+
   // Mylar or BeWthickness
   void SetWindowThickness(G4double f) { fWindowThickness = f; }
   G4double GetWindowThickness() { return fWindowThickness;}
@@ -77,6 +81,11 @@ public:
 
   void SetQ4MagneticFieldGrad(G4double g) { fQ4MagneticFieldGrad = g*tesla/m; }
   G4double GetQ4MagneticFieldGrad() { return fQ4MagneticFieldGrad; }
+
+
+  //Aperture of the collimators
+  void SetSLTB2Aperture(G4double g) { fSLTB2Aperture = g; }
+  G4double GetSLTB2Aperture() { return fSLTB2Aperture; }
 
   //Aperture of the collimators
   void SetSLTB3Aperture(G4double g) { fSLTB3Aperture = g; }
@@ -233,6 +242,7 @@ private:
 
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
+  G4double fDHSTB001MagneticFieldY;
   G4double fWindowThickness;
 
   // Gradient of Quadrupoles Magnetic field 
@@ -247,6 +257,7 @@ private:
 
   G4double fSLTB4Aperture;
   G4double fSLTB3Aperture;
+  G4double fSLTB2Aperture;
 
   G4double fBeamLineSetup;
 

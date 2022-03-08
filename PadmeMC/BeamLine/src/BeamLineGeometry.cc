@@ -34,6 +34,7 @@ BeamLineGeometry::BeamLineGeometry()
   fBeamFlag2SensitiveDetectorName = "BUSFL";
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
+  fDHSTB001MagneticFieldY = -1.055*tesla;
 
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
   fQuadrupolesEnable = false;
@@ -191,7 +192,8 @@ BeamLineGeometry::BeamLineGeometry()
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
   fSLTB4Aperture= 4. *mm;
   fSLTB3Aperture= 3.1*mm;
-  
+  fSLTB2Aperture= 1.7*mm;
+
 //  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.710*tesla/m;
 //  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm

@@ -7,6 +7,7 @@
 #include "TH2D.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TGraph.h"
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
@@ -19,28 +20,29 @@ public:
   virtual ~DigitizerChannelPVeto();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
-  virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
+  virtual void Reconstruct(std::vector<TRecoVHit *> &hitVec);
   virtual void Init(PadmeVRecoConfig *cfg){return ;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
-  //  void ReconstructSingleHit(std::vector<TRecoVHit *> &hitArray);
-  //  void ReconstructMultiHit (std::vector<TRecoVHit *> &hitArray);
   void PrintConfig();
 
-  //  Short_t CalcMaximum();
   Double_t CalcPedestal();
-  //  Double_t CalcCharge(UShort_t);
-  //  Double_t CalcTime(UShort_t);
-  Double_t CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
-  //  Double_t CalcChaTimeOrig(std::vector<TRecoVHit *> &hitArray,UShort_t,UShort_t);
-  Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
-  void DigitalProcessingRRC(Double_t *uin, Double_t *uout,int NPOINTS, Double_t timebin);
+  Double_t CalcChaTimeMauro(std::vector<TRecoVHit *> &hitVec,UShort_t,UShort_t);
+  Double_t CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec);
 
-  //  void SetAbsSignals();
+  Double_t SetPVetoChaGain();
+  Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
+
+  void SetAbsSignals(Double_t ped);
+  void AnalogPlotting(); //Beth 23/2/22: method to plot analog signals
+  void HitPlots(std::vector<TRecoVHit *> &hitVec);
+  Double_t TailHeight(Int_t DeltaT);
 
   // Debugging the reco
-  virtual void PrepareDebugHistos();
-  virtual void SaveDebugHistos();
+  virtual void PrepareDebugHistosMauro();
+  virtual void PrepareDebugHistosBeth();
+  virtual void SaveDebugHistosMauro();
+  virtual void SaveDebugHistosBeth();
 
   //get ChID From Beth Digi
   Int_t EventCounter=-1;//is increased before each event is processed, so the first event will have EventCounter=0
@@ -49,7 +51,10 @@ public:
   Int_t fElChID;
   Int_t fBdID;
   Int_t fTrigMask;
-  
+  Double_t fRMS1000;
+  Int_t fNFoundPerChannel[96]={0};  //Beth 23/2/22: for some reason GetChID() is sometimes 91???
+
+
   Int_t GetChID(){return fChID;};
   void  SetChID(Int_t ChID){fChID=ChID;};
   
@@ -72,9 +77,71 @@ private:
   //What do we operate
   TFile * fileOut;
   Bool_t fSaveAnalog;
+  Int_t fTotalAnalogs;
+  Int_t fAnalogsPrinted;
   TList* hListPVeto; // single board related histograms 
 
-  //Single Hit
+  TString detectorname;
+
+  std::vector<Double_t>   tDerivHitVec          ;
+  std::vector<Double_t>   tDerivSortHitVec      ;
+  std::vector<Double_t>   tDerivDiffHitVec      ;
+
+  std::vector<Double_t>   vRawHitVec	        ;
+  std::vector<Double_t>   vRawSortHitVec        ;
+  std::vector<Double_t>   vRawCorrectHitVec     ;
+
+  std::vector<Double_t>   vTSpecYPHitVec        ;
+  std::vector<Double_t>   vTSpecYPSortHitVec    ;
+  std::vector<Double_t>   vRawGetMaxHitVec      ;//Should be replaced by single variable (not vector)
+  std::vector<Double_t>   vRawGetMaxSortHitVec  ;//Should be replaced by single variable (not vector)
+  std::vector<Double_t>   vDerivGetMaxHitVec    ;//Should be replaced by single variable (not vector)
+  std::vector<Double_t>   vDerivGetMaxSortHitVec;//Should be replaced by single variable (not vector)
+  
+  //Beth 18/2/22: My histograms
+  
+  std::vector<TH1F*> hRaw;//Raw+TSpectrum
+  std::vector<TH1F*> hDeriv;//Deriv+TSpectrum
+
+  TH1F * hNoEventsReconstructed    ;
+  TH1F * hNoHitsDeriv              ;
+  TH1F * hRawV                     ;
+  TH1F * hRawVCorrect              ;
+  TH1F * hRawVCorrectChannels20to70;
+  TH1F * hRawVOneHit               ;
+  TH1F * hRawVMultiHit             ;
+  TH1F * hRawVMultiHitCorrect      ;
+  TH1F * hDerivV                   ;
+  TH1F * hOccupancy                ;
+  TH1F * hDerivVOneHit             ;
+  TH1F * hMinTimeDiffDeriv         ;
+  TH1F * hVRatio                   ;
+  TH1F * hNZSupEvents              ;
+  TH1F * hNoiseRMSAvg              ;
+  TH1F * hYTSpecYMaxDiff           ;
+  TH1F * hYMaxRawYTSpecRatio       ;
+  TH1F * hYMaxDerivYTSpecRatio     ;
+
+  TH1F *  hRawVPerChannel[96];//
+  TH1F *  hRawVCorrectPerChannel[96];//
+  TH1F *  hRawVOneHitPerChannel[96];//
+  TH1F *  hNoHitsDerivPerChannel[96];
+  TH1F *  hDerivVPerChannel[96];
+  TH1F *  hDerivVOneHitPerChannel[96];
+  TH1F *  hNoiseRMSPerChannel[96];
+
+  TH2F  * hAmpDiffVsUncorrectAmp;
+  TH2F  * hAmpDiffVsUncorrectAmpChannels20to70;
+  TH2F  * hAmpDiffVsUncorrectAmpNotFirstHit;
+  TH2F  * hCorrectedAmpVsUncorrectAmp;
+  TH2F  * hCorrectedAmpVsUncorrectAmpChannels20to70;
+  TH2F  * hCorrectedAmpVsUncorrectAmpNotFirstHit;
+  TH2F  * hYMaxRawYTSpecRatioVsYMax;
+
+  TGraph* gUnAbsSigs;
+  std::vector<TGraph*> gUnAbsSigGraphs;
+
+   //Single Hit
   TH1F * hdxdtMax;      
   TH1F * hVMax;         
   TH2F * hVmaxvsDxdtMax;
@@ -104,28 +171,28 @@ private:
   TH2F * hDeltaNvsN;
   TH1F * hTHits; 
 
+  char name[256];
+
   UShort_t fNSamples;
   Short_t *fSamples;
-  Short_t fMax;
-  Short_t fIMax;
+  Double_t fEqualSamples[1024];//Beth 22/2/22: container for equalised voltage in mV
+
+  Short_t fIMax=985; //last sample used in the analog signal, due to digitizer noise 
   Double_t fPed;
   Double_t fCharge;
   Double_t fTime;
   UShort_t fNPedSamples;
 
   //Configuration variables
-  Int_t fSignalWidth;
-  Int_t fPreSamples;
-  Int_t fPostSamples;
-  Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
-  
-  Int_t fMinAmplitude;
+  Int_t fDerivPoints;
 
-  TH1D *H1;
+  TH1D *  HTSpec = new TH1D("tspec","tspec",1000,0.,1000.);
   TH1D *hSig;
-  TH1D *htmp;
-  TH1D *hdxdt;
+  
+  //Mauro histograms
+  TH1D *  hdxdt   = new TH1D("hdxdt","hdxdt",fIMax,0.,fIMax);
+  TH1D *  htmp    = new TH1D("htmp","htmp",fIMax,0.,fIMax);
 
   TH1F *hNhitOrig; 
   
@@ -134,13 +201,8 @@ private:
 
   TH1F *hDxV;
   TH1F *hDxE;
-
-  Double_t fSignalThreshold;
-  Double_t fSignalPercentage;
   
   Double_t fTimeBin;
-  Double_t fVoltageBin;
-  Double_t fImpedance;
   Double_t fAmpli;
   Double_t fEnergy;
   Double_t fmVtoMeV;
@@ -148,8 +210,7 @@ private:
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
 
-  Bool_t fMultihit;
-  Bool_t fUseAbsSignals;
+  Bool_t fChannelEqualisation; //Beth 23/2/22
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
@@ -158,12 +219,7 @@ private:
   Int_t fUsePulseProcessing ;
   Int_t fPeakSearchWidth    ;
   Double_t fZeroSuppression    ;
-  Double_t fChargeCut          ;
-  Double_t fDPParameterR1      ;
-  Double_t fDPParameterR2      ;
-  Double_t fDPParameterC       ;
-  
-  Short_t  GetMaximum(){return fMax;};
+
   Double_t GetPedestal(){return fPed;};
 
 

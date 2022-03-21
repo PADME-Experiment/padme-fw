@@ -33,7 +33,7 @@
 
 #include "G4OpticalPhysics.hh"
 
-#include "G4DataQuestionaire.hh"
+//#include "G4DataQuestionaire.hh"
 
 #if G4MAJORVERSION >= 10 
 
@@ -61,7 +61,7 @@
 
 PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
 {
-  G4DataQuestionaire it(photon);
+  // G4DataQuestionaire it(photon);
   G4cout << "<<< Geant4 Physics List simulation engine: PADME_PHYS"<<G4endl;
   G4cout <<G4endl;
   

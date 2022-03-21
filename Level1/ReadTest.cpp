@@ -9,6 +9,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 
 #include "TRawEvent.hh"
 

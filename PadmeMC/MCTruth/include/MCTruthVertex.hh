@@ -8,6 +8,7 @@
 #ifndef MCTruthVertex_h
 #define MCTruthVertex_h 1
 
+#include <vector>
 #include "globals.hh"
 #include "G4ThreeVector.hh"
 

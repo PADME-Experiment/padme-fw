@@ -91,6 +91,27 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 }
 */
 
+void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. Removed both calibration and clusterisation since calibration (gain equalisation) will be done directly in digitizer and clusterisation will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    //    AnalyzeEvent(rawEv);
+  }
+
+}
+
 void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
   float charges[96];
@@ -176,7 +197,6 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
 void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
 {
-  //  std::cout<<"Event no "<<rawEv->GetEventNumber()<<std::endl;
   ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   ((DigitizerChannelPVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
@@ -196,7 +216,8 @@ void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
 
 	//New M. Raggi
  	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
- 	Int_t ElChID = chn->GetChannelNumber();
+	//	std::cout<<"Event no "<<rawEv->GetEventNumber()<<" ChID "<<ChID<<std::endl; 
+	Int_t ElChID = chn->GetChannelNumber();
 	//Store info for the digitizer class
  	((DigitizerChannelPVeto*)fChannelReco)->SetChID(ChID);
  	((DigitizerChannelPVeto*)fChannelReco)->SetElChID(ElChID);
@@ -221,6 +242,16 @@ void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
   }    
 }
 
+/*void PVetoReconstruction::EndProcessing(){ 
+  // to be called from the derived classes
+  cout << "Entering EndProcessing for " << this->GetName() << endl;
+
+  if(!fHistoFile) return;
+  HistoExit();
+
+  ((DigitizerChannelPVeto*)fChannelReco)->SaveDebugHistosBeth();
+
+}*/
 
 
 

@@ -20,6 +20,9 @@ public:
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   void BuildHits(TRawEvent* rawEv); //Get the CH_ID MR 
+  virtual void ProcessEvent(TRawEvent* rawEv); //Get the CH_ID MR 
+  //  virtual void EndProcessing(); 
+
 private:
   
 

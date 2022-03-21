@@ -113,6 +113,7 @@ private:
   TH1F * hRawVMultiHitCorrect      ;
   TH1F * hDerivV                   ;
   TH1F * hOccupancy                ;
+  TH1F * hOccupancyOneHit          ;
   TH1F * hDerivVOneHit             ;
   TH1F * hMinTimeDiffDeriv         ;
   TH1F * hVRatio                   ;

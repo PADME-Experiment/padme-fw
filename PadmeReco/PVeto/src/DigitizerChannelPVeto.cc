@@ -399,6 +399,7 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
   
   hNoEventsReconstructed     = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
   hOccupancy                 = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
+  hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
   hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
   hRawV                      = new TH1F("RawV","RawV",400,0,400);
   hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
@@ -531,6 +532,8 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     hNoEventsReconstructed->Write();
     hOccupancy->Scale(1./hNoEventsReconstructed->GetEntries());
     hOccupancy->Write();
+    hOccupancyOneHit->Scale(1./hNoEventsReconstructed->GetEntries());
+    hOccupancyOneHit->Write();
     hNoHitsDeriv->Write();
     hRawV->Write();
     hDerivV->Write();
@@ -657,6 +660,8 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   //  std::cout<<"Event "<<EventCounter<<" Ch "<<GetChID()<<" hitVec.size() "<<hitVec.size()<<" fNFoundPerChannel "<<fNFoundPerChannel[GetChID()]<<std::endl;
   hNoHitsDeriv->Fill(fNFoundPerChannel[GetChID()]);
   hNoHitsDerivPerChannel[GetChID()]->Fill(fNFoundPerChannel[GetChID()]);
+
+  if(vRawCorrectHitVec.size()==1) hOccupancyOneHit->Fill(GetChID());
 
   double hitV=0;
   double AmpDiff=0;

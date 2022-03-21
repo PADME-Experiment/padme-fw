@@ -1,0 +1,112 @@
+# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+SOFLAGS       = -shared
+MFLAGS        = -w
+
+ROOTCONFIG   := root-config
+ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
+ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
+ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
+ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
+
+CPPFLAGS     += -Iinclude -I$(PADMEANALYSIS)/include -I$(PADMEROOT)/include -g
+#CPPFLAGS     += -I$(PADMEANALYSIS)/Service/include
+CPPFLAGS     += -I$(PADMEANALYSIS)/AnalysisBase/include
+CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
+CPPFLAGS     += -I$(ROOTINCDIR)
+LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
+
+#LDFLAGS      += -L$(NA62MCSOURCE)/Persistency/lib -lNA62Persistency \
+#                -L$(NA62MCSOURCE)/$(NAME)/Persistency/lib -l$(NAME)Persistency
+
+TMP          := tmp
+LIB          := lib
+
+#------------------------------------------------------------------------------
+
+includes := $(wildcard include/*.hh)
+sources := $(wildcard src/*.cc)
+objects := $(patsubst src/%.cc,$(TMP)/%.o,$(sources))
+dependencies := $(patsubst src/%.cc,$(TMP)/%.d,$(sources))
+
+#------------------------------------------------------------------------------
+
+LIBNAME := ""
+ifeq ($(NAME),PadmeAnalysis)
+	LIBNAME := $(NAME)
+endif
+ifeq ($(NAME),EventDisplay)
+	LIBNAME := $(NAME)
+endif
+ifeq ($(NAME),Service)
+	LIBNAME := $(NAME)
+endif
+ifeq ($(NAME),AnalysisBase)
+	LIBNAME := $(NAME)
+endif
+ifeq ($(LIBNAME),"")
+	LIBNAME:= $(NAME)Analysis
+endif
+
+# .PHONY targets are executed regardless of time-stamp of any file of
+# same name.
+.PHONY: all obj clean includes
+
+all: dirs 
+
+dirs:
+	@mkdir -p $(LIB)
+	@mkdir -p $(TMP)
+
+lib: $(LIB)/lib$(LIBNAME)-static.a $(LIB)/lib$(LIBNAME).so
+
+$(LIB)/lib$(LIBNAME)-static.a: $(TMP)/obj.last
+	@echo Creating/replacing object files in $@ ...
+	@rm -f $@
+	ar r $@ $(TMP)/*.o
+	@ranlib $@
+
+$(LIB)/lib$(LIBNAME).so: $(TMP)/obj.last
+	@echo Creating/replacing object files in $@ ...
+	@mkdir -p $(LIB)
+	@rm -f $@
+	$(LD) $(SOFLAGS) -o $@ $(TMP)/*.o
+
+obj: $(TMP)/obj.last
+
+# Touch the versioning file
+$(TMP)/obj.last: $(objects)
+	@touch $@
+
+clean:
+	@echo "Cleaning $(NAME) ..."
+	@rm -rf $(objects) $(dependencies) $(TMP) $(LIB) $(NAME)Dict.*
+
+#$(NAME)Dict.cc: $(dicincludes) $(NAME)LinkDef.hh
+#	@echo "Generating dictionary $@..."
+#	@rootcint -f $@ -c $(CPPFLAGS) $^
+#
+#$(TMP)/$(NAME)Dict.o: $(NAME)Dict.cc
+#	@echo "Compiling $^ ..."
+#	@$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+###
+
+$(TMP)/%.o: src/%.cc
+	@echo "Compiling $< ..."
+	@$(CXX) $(CXXFLAGS) -c -o $(TMP)/$(*F).o src/$*.cc
+
+$(TMP)/%.d: src/%.cc
+	@echo Making dependency for file $< ...
+	@if [ ! -d $(TMP) ] ; then mkdir -p $(TMP)  ;fi
+	@set -e; \
+	g++ -M $(CPPFLAGS) -w $< |\
+	sed 's|$*\.o|$(TMP)/& $@|' >$@;\
+	[ -s $@ ] || rm -f $@
+
+ifneq ($(dependencies),)
+-include $(dependencies)
+endif

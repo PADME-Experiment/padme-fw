@@ -93,10 +93,10 @@ private:
 
   std::vector<Double_t>   vTSpecYPHitVec        ;
   std::vector<Double_t>   vTSpecYPSortHitVec    ;
-  std::vector<Double_t>   vRawGetMaxHitVec      ;//Should be replaced by single variable (not vector)
-  std::vector<Double_t>   vRawGetMaxSortHitVec  ;//Should be replaced by single variable (not vector)
-  std::vector<Double_t>   vDerivGetMaxHitVec    ;//Should be replaced by single variable (not vector)
-  std::vector<Double_t>   vDerivGetMaxSortHitVec;//Should be replaced by single variable (not vector)
+
+  Double_t RawGetMax      ;
+  Double_t RawRise        ;//Value of raw signal at point where TSpectrum finds peak. This will always be on the rising edge of the signal
+  Double_t DerivGetMax    ;
   
   //Beth 18/2/22: My histograms
   
@@ -121,6 +121,7 @@ private:
   TH1F * hNoiseRMSAvg              ;
   TH1F * hYTSpecYMaxDiff           ;
   TH1F * hYMaxRawYTSpecRatio       ;
+  TH1F * hYRiseYTSpecRatio         ;
   TH1F * hYMaxDerivYTSpecRatio     ;
 
   TH1F *  hRawVPerChannel[96];//

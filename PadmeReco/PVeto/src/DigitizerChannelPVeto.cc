@@ -247,25 +247,14 @@ Double_t DigitizerChannelPVeto::CalcChaTimeMauro(std::vector<TRecoVHit *> &hitVe
 
 Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
 
-  //move these back to the end, and make the Max vectors into static variables, since you only need one per channel because it's only used on single hits 
-  tDerivHitVec          .clear();
-  tDerivSortHitVec      .clear();
-  tDerivDiffHitVec      .clear();
-  vRawHitVec	        .clear();
-  vRawSortHitVec        .clear();
-  vRawCorrectHitVec     .clear();
-  vTSpecYPHitVec        .clear();
-  vTSpecYPSortHitVec    .clear();
-  vRawGetMaxHitVec      .clear();
-  vRawGetMaxSortHitVec  .clear();
-  vDerivGetMaxHitVec    .clear();
-  vDerivGetMaxSortHitVec.clear();
-
- int nfound=0;
+  RawGetMax=0;
+  DerivGetMax=0;
+  
+  int nfound=0;
   Int_t npeaks = 20;//maximum possible number of peaks
   static TSpectrum SpectrumProcessor(npeaks);
   double Time   = 0.;
-
+  
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //Int_t npeaks =25;
   static Double_t AbsSamRec[1024];
@@ -324,8 +313,9 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
       Time=xp*fTimeBin;
       tDerivHitVec.push_back(Time);
       if(nfound == 1){
-	vRawGetMaxHitVec.push_back(*std::max_element(AbsSamRec, AbsSamRec + fIMax));
-	vDerivGetMaxHitVec.push_back(*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax));
+	RawRise = rawAmp;
+	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
+	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }
     }//end of nfound loop
   }//closes if(VMax>thr)
@@ -362,10 +352,6 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
 
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
-     if(index.size()==1){
-      vRawGetMaxSortHitVec.push_back(vRawGetMaxHitVec[index[ii]]);
-      vDerivGetMaxSortHitVec.push_back(vDerivGetMaxHitVec[index[ii]]);
-     }
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
     tailcorrection = TailHeight(DeltaTSortSamples);
@@ -414,6 +400,7 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
   hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
   hNoiseRMSAvg               = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
   hYMaxRawYTSpecRatio        = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
+  hYRiseYTSpecRatio          = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
   hYMaxDerivYTSpecRatio      = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
 
@@ -554,6 +541,7 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     hNoiseRMSAvg->Write();
 
     hYMaxRawYTSpecRatio->Write();
+    hYRiseYTSpecRatio->Write();
     hYMaxDerivYTSpecRatio->Write();
     hYMaxRawYTSpecRatioVsYMax->Write();
 
@@ -624,6 +612,16 @@ void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
     // Giorgi pulse processing code goes here
   }
   AnalogPlotting(); //plot analog signals
+
+  tDerivHitVec          .clear();
+  tDerivSortHitVec      .clear();
+  tDerivDiffHitVec      .clear();
+  vRawHitVec	        .clear();
+  vRawSortHitVec        .clear();
+  vRawCorrectHitVec     .clear();
+  vTSpecYPHitVec        .clear();
+  vTSpecYPSortHitVec    .clear();
+  
 }
 
 void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
@@ -639,7 +637,7 @@ void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
 void DigitizerChannelPVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
-    //    if(vDerivGetMaxHitVec.size()==1&&(vDerivGetMaxHitVec[0]/vTSpecYPHitVec[0]>1.05)){
+    if(vRawCorrectHitVec.size()==1&&vTSpecYPHitVec[0]<20){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -652,7 +650,7 @@ void DigitizerChannelPVeto::AnalogPlotting(){
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
       fAnalogsPrinted++;
-      // }  
+    }  
   }
 }
 
@@ -694,18 +692,19 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     }
     //events with exactly one hit
     if(vRawCorrectHitVec.size()==1){
-      hRawVOneHit->Fill(vRawGetMaxSortHitVec[myiHit]);
-      hRawVOneHitPerChannel[GetChID()]->Fill(vRawGetMaxSortHitVec[myiHit]);
+      hRawVOneHit->Fill(RawGetMax);
+      hRawVOneHitPerChannel[GetChID()]->Fill(RawGetMax);
       hDerivVOneHit->Fill(vTSpecYPSortHitVec[myiHit]);
       hDerivVOneHitPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
 
       //hYMaxVsYTSpecSingleHits->Fill(vRawSortHitVec[myiHit],vTSpecYPSortHitVec[myiHit]);
 
       //ratio between derivative peak amplitude as found by TSpectrum and maximum amplitude of raw signal for single hit events
-      hYMaxRawYTSpecRatio->Fill(vRawGetMaxSortHitVec[myiHit]/vTSpecYPSortHitVec[myiHit]);
-      hYMaxDerivYTSpecRatio->Fill(vDerivGetMaxSortHitVec[myiHit]/vTSpecYPSortHitVec[myiHit]);
+      hYMaxRawYTSpecRatio->Fill(RawGetMax/vTSpecYPSortHitVec[myiHit]);
+      hYRiseYTSpecRatio->Fill(RawRise/vTSpecYPSortHitVec[myiHit]);
+      hYMaxDerivYTSpecRatio->Fill(DerivGetMax/vTSpecYPSortHitVec[myiHit]);
 
-      hYMaxRawYTSpecRatioVsYMax->Fill(vRawGetMaxSortHitVec[myiHit],vRawGetMaxSortHitVec[myiHit]/vTSpecYPSortHitVec[myiHit]);
+      hYMaxRawYTSpecRatioVsYMax->Fill(RawGetMax,RawGetMax/vTSpecYPSortHitVec[myiHit]);
     }
 
     //hits after the first

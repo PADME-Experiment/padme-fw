@@ -50,6 +50,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
   fPeakSearchWidth     = cfg->GetParOrDefault("RECO","PeakSearchWidth",5);
   fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
+  fDerivAmpToEnergy    = cfg->GetParOrDefault("RECO","DerivAmpToEnergy",0.046);
   fmVtoMeV             = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
   
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
@@ -395,6 +396,8 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
   hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
   hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
   hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
+  hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
+  hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
   hMinTimeDiffDeriv          = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,100);
   hVRatio                    = new TH1F("VRatio","VRatio",50,0,5);  
   hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
@@ -524,6 +527,9 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     hNoHitsDeriv->Write();
     hRawV->Write();
     hDerivV->Write();
+    hHitEnergy->Write();
+    hHitEnergySingleHit->Write();
+
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
@@ -673,6 +679,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     //    hRawVPerChannel[GetChID()]->Fill(vRawSortHitVec[myiHit]);
     hDerivV->Fill(vTSpecYPSortHitVec[myiHit]);
     hDerivVPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
+    hHitEnergy->Fill(vTSpecYPSortHitVec[myiHit]*fDerivAmpToEnergy);
 
     //corrected amplitude
     //    hRawVCorrect->Fill(hitV);//hitV);
@@ -696,7 +703,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
       hRawVOneHitPerChannel[GetChID()]->Fill(RawGetMax);
       hDerivVOneHit->Fill(vTSpecYPSortHitVec[myiHit]);
       hDerivVOneHitPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
-
+      hHitEnergySingleHit->Fill(vTSpecYPSortHitVec[myiHit]*fDerivAmpToEnergy);
       //hYMaxVsYTSpecSingleHits->Fill(vRawSortHitVec[myiHit],vTSpecYPSortHitVec[myiHit]);
 
       //ratio between derivative peak amplitude as found by TSpectrum and maximum amplitude of raw signal for single hit events

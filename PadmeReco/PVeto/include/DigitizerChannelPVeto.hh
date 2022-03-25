@@ -123,6 +123,8 @@ private:
   TH1F * hYMaxRawYTSpecRatio       ;
   TH1F * hYRiseYTSpecRatio         ;
   TH1F * hYMaxDerivYTSpecRatio     ;
+  TH1F * hHitEnergy                ;
+  TH1F * hHitEnergySingleHit       ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//
@@ -221,7 +223,7 @@ private:
   Int_t fUsePulseProcessing ;
   Int_t fPeakSearchWidth    ;
   Double_t fZeroSuppression    ;
-
+  Double_t fDerivAmpToEnergy;
   Double_t GetPedestal(){return fPed;};
 
 

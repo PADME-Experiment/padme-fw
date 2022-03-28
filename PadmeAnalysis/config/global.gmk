@@ -55,7 +55,7 @@ endif
 # same name.
 .PHONY: all obj clean includes
 
-all: dirs lib
+all: dirs 
 
 dirs:
 	@mkdir -p $(LIB)

@@ -37,6 +37,7 @@ public:
   void AnalogPlotting(); //Beth 23/2/22: method to plot analog signals
   void HitPlots(std::vector<TRecoVHit *> &hitVec);
   Double_t TailHeight(Int_t DeltaT);
+  Double_t TailHeightDerivative(Int_t DeltaT);
 
   // Debugging the reco
   virtual void PrepareDebugHistosMauro();
@@ -93,6 +94,7 @@ private:
 
   std::vector<Double_t>   vTSpecYPHitVec        ;
   std::vector<Double_t>   vTSpecYPSortHitVec    ;
+  std::vector<Double_t>   vTSpecYPCorrectHitVec ;
 
   Double_t RawGetMax      ;
   Double_t RawRise        ;//Value of raw signal at point where TSpectrum finds peak. This will always be on the rising edge of the signal
@@ -112,9 +114,10 @@ private:
   TH1F * hRawVMultiHit             ;
   TH1F * hRawVMultiHitCorrect      ;
   TH1F * hDerivV                   ;
+  TH1F * hDerivVOneHit             ;
+  TH1F * hDerivVCorrect            ;
   TH1F * hOccupancy                ;
   TH1F * hOccupancyOneHit          ;
-  TH1F * hDerivVOneHit             ;
   TH1F * hMinTimeDiffDeriv         ;
   TH1F * hVRatio                   ;
   TH1F * hNZSupEvents              ;
@@ -125,6 +128,7 @@ private:
   TH1F * hYMaxDerivYTSpecRatio     ;
   TH1F * hHitEnergy                ;
   TH1F * hHitEnergySingleHit       ;
+  TH1F * hHitTime                  ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//
@@ -132,6 +136,7 @@ private:
   TH1F *  hNoHitsDerivPerChannel[96];
   TH1F *  hDerivVPerChannel[96];
   TH1F *  hDerivVOneHitPerChannel[96];
+  TH1F *  hDerivVCorrectPerChannel[96];//
   TH1F *  hNoiseRMSPerChannel[96];
 
   TH2F  * hAmpDiffVsUncorrectAmp;

@@ -340,7 +340,7 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
     return -100;
   }
   
-  Double_t hitV;//includes tail correction
+  //  Double_t hitV;//includes tail correction
   double tailcorrection=0;
   double DeltaTSortSamples=0;
  
@@ -355,15 +355,21 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
-    tailcorrection = TailHeight(DeltaTSortSamples);
+    //    tailcorrection = TailHeight(DeltaTSortSamples);
+    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
 
-    if(ii==0) vRawCorrectHitVec.push_back(vRawSortHitVec[ii]);//for the first hit, there's no tail correction because there's not tail from a previous hit
-	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction
-    fAmpli=vRawCorrectHitVec[ii];
+    /*    if(ii==0) vRawCorrectHitVec.push_back(vRawSortHitVec[ii]);//for the first hit, there's no tail correction because there's not tail from a previous hit
+	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction*/
+
+    if(ii==0)    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[index[ii]]);
+    else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction
+
+    //    fAmpli=vTSpecYPCorrectHitVec[ii];
     
     Hit = new TRecoVHit();  
-    Hit->SetTime(0);//tDerivSortHitVec[ii]);//commented because of sorting problem
-    fEnergy=fAmpli/fmVtoMeV;
+    Hit->SetTime(tDerivSortHitVec[ii]);//commented because of sorting problem
+    //    fEnergy=fAmpli*fDerivAmpToEnergy;
+    fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     //    std::cout<<ii<<" "<<fAmpli<<" "<<vRawCorrectHitVec[ii]<<std::endl;
     Hit->SetEnergy(fEnergy);
     hitVec.push_back(Hit);
@@ -390,12 +396,14 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
   hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
   hRawV                      = new TH1F("RawV","RawV",400,0,400);
   hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
-  hRawVCorrectChannels20to70  = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
+  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
+  hDerivV                    = new TH1F("DerivV","DerivV",400,0,400);
   hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
+  hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
+  hHitTime                   = new TH1F("HitTime","HitTime",800,0,800);
   hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
   hMinTimeDiffDeriv          = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,100);
@@ -440,6 +448,9 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
 
     sprintf(name, "DerivVOneHitChannel%d",ii);
     hDerivVOneHitPerChannel[ii] = new TH1F(name,name,400,0,400);
+
+    sprintf(name, "DerivVCorrectChannel%d",ii);
+    hDerivVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
 
     sprintf(name,"hNoiseRMSPerChannel%d",ii);
     hNoiseRMSPerChannel[ii] = new TH1F(name,name,20,0,10);
@@ -529,11 +540,13 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     hDerivV->Write();
     hHitEnergy->Write();
     hHitEnergySingleHit->Write();
+    hHitTime->Write();
 
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
     hDerivVOneHit->Write();
+    hDerivVCorrect->Write();
     hAmpDiffVsUncorrectAmp->Write();
     hAmpDiffVsUncorrectAmpChannels20to70->Write();
     hAmpDiffVsUncorrectAmpNotFirstHit->Write();
@@ -574,6 +587,10 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     fileOut->mkdir("DerivVOneHitChannel");  
     fileOut->cd("DerivVOneHitChannel");  
     for(int ii=0;ii<96;ii++) hDerivVOneHitPerChannel[ii]->Write();
+
+    fileOut->mkdir("DerivVCorrectChannel");  
+    fileOut->cd("DerivVCorrectChannel");  
+    for(int ii=0;ii<96;ii++) hDerivVCorrectPerChannel[ii]->Write();
 
     fileOut->mkdir("DerivVChannel");  
     fileOut->cd("DerivVChannel");  
@@ -627,7 +644,7 @@ void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   vRawCorrectHitVec     .clear();
   vTSpecYPHitVec        .clear();
   vTSpecYPSortHitVec    .clear();
-  
+  vTSpecYPCorrectHitVec .clear();
 }
 
 void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
@@ -667,38 +684,36 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
   if(vRawCorrectHitVec.size()==1) hOccupancyOneHit->Fill(GetChID());
 
-  double hitV=0;
+  //  double hitV=0;
   double AmpDiff=0;
   //  std::cout<<"Tot "<<vRawCorrectHitVec.size()<<std::endl;
-  for(UInt_t myiHit=0;myiHit<vRawCorrectHitVec.size();myiHit++){
+  for(UInt_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
     hOccupancy->Fill(GetChID());
-    hitV=hitVec[myiHit]->GetEnergy()*fmVtoMeV;//because fEnergy=fAmpli/fmVtoMeV;
+    hHitTime->Fill(tDerivSortHitVec[myiHit]);
 
     //uncorrected amplitude
-    //    hRawV->Fill(vRawHitVec[myiHit]);
-    //    hRawVPerChannel[GetChID()]->Fill(vRawSortHitVec[myiHit]);
     hDerivV->Fill(vTSpecYPSortHitVec[myiHit]);
     hDerivVPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
-    hHitEnergy->Fill(vTSpecYPSortHitVec[myiHit]*fDerivAmpToEnergy);
+    hHitEnergy->Fill(vTSpecYPCorrectHitVec[myiHit]*fDerivAmpToEnergy);
 
     //corrected amplitude
-    //    hRawVCorrect->Fill(hitV);//hitV);
-    //    hRawVCorrectPerChannel[GetChID()]->Fill(hitV);
-    AmpDiff=vRawSortHitVec[myiHit]-hitV;
-    hAmpDiffVsUncorrectAmp->Fill(vRawSortHitVec[myiHit],AmpDiff);
-    hCorrectedAmpVsUncorrectAmp->Fill(vRawSortHitVec[myiHit],hitV);
+    hDerivVCorrect->Fill(vTSpecYPCorrectHitVec[myiHit]);//hitV);
+    hDerivVCorrectPerChannel[GetChID()]->Fill(vTSpecYPCorrectHitVec[myiHit]);
+    //    AmpDiff=vTSpecYPSortHitVec[myiHit]-hitV;
+    //hAmpDiffVsUncorrectAmp->Fill(vTSpecYPSortHitVec[myiHit],AmpDiff);
+    //    hCorrectedAmpVsUncorrectAmp->Fill(vTSpecYPSortHitVec[myiHit],hitV);
 
     // hYTSpecYMaxDiff->Fill(vTSpecYPSortHitVec[myiHit]-vRawSortHitVec[myiHit]);
     //    hYMaxVsYTSpecAllHits->Fill(vRawSortHitVec[myiHit],vTSpecYPSortHitVec[myiHit]);
 
     //corrected amplitude for "good" channels
     if(GetChID()>=20 &&GetChID()<=70){
-      hRawVCorrectChannels20to70->Fill(hitV);
-      hAmpDiffVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],AmpDiff);
-      hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],hitV);
+      //      hRawVCorrectChannels20to70->Fill(hitV);
+      //      hAmpDiffVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],AmpDiff);
+      //hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],hitV);
     }
     //events with exactly one hit
-    if(vRawCorrectHitVec.size()==1){
+    if(fNFoundPerChannel[GetChID()]==1){
       hRawVOneHit->Fill(RawGetMax);
       hRawVOneHitPerChannel[GetChID()]->Fill(RawGetMax);
       hDerivVOneHit->Fill(vTSpecYPSortHitVec[myiHit]);
@@ -717,7 +732,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     //hits after the first
     if(myiHit>1){
       hAmpDiffVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],AmpDiff);
-      hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],hitV);
+      //      hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],hitV);
     }
   }
   
@@ -981,3 +996,303 @@ Double_t DigitizerChannelPVeto::TailHeight(Int_t DeltaT){//DeltaT in samples. Re
   return HeightFrac;
 
 }
+
+Double_t DigitizerChannelPVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
+  Double_t HeightFrac=0;
+  Double_t Frac[152];
+  Frac[0]   =  1; 
+  Frac[1]   =  0.997254     ;
+  Frac[2]   =  0.980119     ;
+  Frac[3]   =  0.964593     ;
+  Frac[4]   =  0.941908     ;
+  Frac[5]   =  0.866346     ;
+  Frac[6]   =  0.786271     ;
+  Frac[7]   =  0.744847     ;
+  Frac[8]   =  0.681817     ;
+  Frac[9]   =  0.605922     ;
+  Frac[10]  =  0.52764      ;
+  Frac[11]  =  0.45165      ;
+  Frac[12]  =  0.372615     ;
+  Frac[13]  =  0.297546     ;
+  Frac[14]  =  0.223813     ;
+  Frac[15]  =  0.156913     ;
+  Frac[16]  =  0.0931688    ;
+  Frac[17]  =  0.0337405    ;
+  Frac[18]  = -0.0213706    ;
+  Frac[19]  = -0.0669654    ;
+  Frac[20]  = -0.109943     ;
+  Frac[21]  = -0.152183     ;
+  Frac[22]  = -0.181495     ;
+  Frac[23]  = -0.206573     ;
+  Frac[24]  = -0.224541     ;
+  Frac[25]  = -0.249835     ;
+  Frac[26]  = -0.264263     ;
+  Frac[27]  = -0.274342     ;
+  Frac[28]  = -0.288237     ;
+  Frac[29]  = -0.296333     ;
+  Frac[30]  = -0.302538     ;
+  Frac[31]  = -0.307553     ;
+  Frac[32]  = -0.308717     ;
+  Frac[33]  = -0.311267     ;
+  Frac[34]  = -0.310586     ;
+  Frac[35]  = -0.309731     ;
+  Frac[36]  = -0.30875      ;
+  Frac[37]  = -0.306781     ;
+  Frac[38]  = -0.305272     ;
+  Frac[39]  = -0.300329     ;
+  Frac[40]  = -0.293151     ;
+  Frac[41]  = -0.290462     ;
+  Frac[42]  = -0.284854     ;
+  Frac[43]  = -0.2765	    ;
+  Frac[44]  = -0.270725     ;
+  Frac[45]  = -0.264902     ;
+  Frac[46]  = -0.260046     ;
+  Frac[47]  = -0.254269     ;
+  Frac[48]  = -0.249207     ;
+  Frac[49]  = -0.248261     ;
+  Frac[50]  = -0.243831     ;
+  Frac[51]  = -0.235288     ;
+  Frac[52]  = -0.234772     ;
+  Frac[53]  = -0.229418     ;
+  Frac[54]  = -0.229754     ;
+  Frac[55]  = -0.224102     ;
+  Frac[56]  = -0.224207     ;
+  Frac[57]  = -0.225017     ;
+  Frac[58]  = -0.22231      ;
+  Frac[59]  = -0.221657     ;
+  Frac[60]  = -0.222108     ;
+  Frac[61]  = -0.219502     ;
+  Frac[62]  = -0.219925     ;
+  Frac[63]  = -0.217694     ;
+  Frac[64]  = -0.215415     ;
+  Frac[65]  = -0.215071     ;
+  Frac[66]  = -0.214287     ;
+  Frac[67]  = -0.209114     ;
+  Frac[68]  = -0.20973      ;
+  Frac[69]  = -0.209181     ;
+  Frac[70]  = -0.208435     ;
+  Frac[71]  = -0.203314     ;
+  Frac[72]  = -0.201796     ;
+  Frac[73]  = -0.201014     ;
+  Frac[74]  = -0.198875     ;
+  Frac[75]  = -0.193166     ;
+  Frac[76]  = -0.191475     ;
+  Frac[77]  = -0.18906      ;
+  Frac[78]  = -0.187891     ;
+  Frac[79]  = -0.181985     ;
+  Frac[80]  = -0.179791     ;
+  Frac[81]  = -0.175351     ;
+  Frac[82]  = -0.175295     ;
+  Frac[83]  = -0.170323     ;
+  Frac[84]  = -0.167377     ;
+  Frac[85]  = -0.161963     ;
+  Frac[86]  = -0.160955     ;
+  Frac[87]  = -0.153541     ;
+  Frac[88]  = -0.150095     ;
+  Frac[89]  = -0.145247     ;
+  Frac[90]  = -0.142584     ;
+  Frac[91]  = -0.139147     ;
+  Frac[92]  = -0.138427     ;
+  Frac[93]  = -0.133732     ;
+  Frac[94]  = -0.132274     ;
+  Frac[95]  = -0.124256     ;
+  Frac[96]  = -0.126357     ;
+  Frac[97]  = -0.122266     ;
+  Frac[98]  = -0.121186     ;
+  Frac[99]  = -0.117688     ;
+  Frac[100] = -0.118717     ;
+  Frac[101] = -0.115563     ;
+  Frac[102] = -0.114932     ;
+  Frac[103] = -0.110287     ;
+  Frac[104] = -0.110468     ;
+  Frac[105] = -0.110157     ;
+  Frac[106] = -0.109457     ;
+  Frac[107] = -0.104666     ;
+  Frac[108] = -0.103959     ;
+  Frac[109] = -0.101067     ;
+  Frac[110] = -0.100501     ;
+  Frac[111] = -0.0948209    ;
+  Frac[112] = -0.0958058    ;
+  Frac[113] = -0.0907429    ;
+  Frac[114] = -0.089684     ;
+  Frac[115] = -0.0848281    ;
+  Frac[116] = -0.0835924    ;
+  Frac[117] = -0.0827835    ;
+  Frac[118] = -0.0837584    ;
+  Frac[119] = -0.0792539    ;
+  Frac[120] = -0.0766105    ;
+  Frac[121] = -0.0717581    ;
+  Frac[122] = -0.0702401    ;
+  Frac[123] = -0.0697511    ;
+  Frac[124] = -0.0690636    ;
+  Frac[125] = -0.0695008    ;
+  Frac[126] = -0.0668789    ;
+  Frac[127] = -0.0606407    ;
+  Frac[128] = -0.0609923    ;
+  Frac[129] = -0.0611206    ;
+  Frac[130] = -0.0628294    ;
+  Frac[131] = -0.0592398    ;
+  Frac[132] = -0.0566166    ;
+  Frac[133] = -0.0545669    ;
+  Frac[134] = -0.0523624    ;
+  Frac[135] = -0.0509565    ;
+  Frac[136] = -0.0531841    ;
+  Frac[137] = -0.0513809    ;
+  Frac[138] = -0.0483326    ;
+  Frac[139] = -0.0459102    ;
+  Frac[140] = -0.0454662    ;
+  Frac[141] = -0.0467786    ;
+  Frac[142] = -0.0479043    ;
+  Frac[143] = -0.0452532    ;
+  Frac[144] = -0.0421873    ;
+  Frac[145] = -0.0399463    ;
+  Frac[146] = -0.0420936    ;
+  Frac[147] = -0.0393451    ;
+  Frac[148] = -0.043388     ;
+  Frac[149] = -0.0408676    ;
+  Frac[150] = -0.0420922    ;
+  Frac[151] = -0.037542     ;
+  Frac[152] = -0.0409631    ;
+  Frac[153]  =  -0.0391775 ;
+  Frac[154]  =  -0.0418197 ;
+  Frac[155]  =  -0.0390806 ;  
+  Frac[156]  =    -0.0408229 ;
+  Frac[157]  =    -0.0381236 ;
+  Frac[158]  =    -0.0404099 ;
+  Frac[159]  =    -0.0388342 ;
+  Frac[160]  =    -0.0418864 ;
+  Frac[161]  =    -0.0362089 ;
+  Frac[162]  =    -0.0397867 ;
+  Frac[163]  =    -0.0341513 ;
+  Frac[164]  =    -0.0373749 ;
+  Frac[165]  =    -0.0334771 ;
+  Frac[166]  =    -0.0361808 ;
+  Frac[167]  =    -0.0307574 ;
+  Frac[168]  =    -0.034892  ;
+  Frac[169]  =    -0.0308241 ;
+  Frac[170]  =    -0.0323418 ;
+  Frac[171]  =    -0.0277144 ;
+  Frac[172]  =    -0.0294595 ;
+  Frac[173]  =    -0.0294106 ;
+  Frac[174]  =    -0.0305658 ;
+  Frac[175]  =    -0.0245063 ;
+  Frac[176]  =    -0.029801  ;
+  Frac[177]  =    -0.0273992 ;
+  Frac[178]  =    -0.0278916 ;
+  Frac[179]  =    -0.0278331 ;
+  Frac[180]  =    -0.0325746 ;
+  Frac[181]  =    -0.0302618 ;
+  Frac[182]  =    -0.0326252 ;
+  Frac[183]  =    -0.0287132 ;
+  Frac[184]  =    -0.0303228 ;
+  Frac[185]  =    -0.0280644 ;
+  Frac[186]  =    -0.0317901 ;
+  Frac[187]  =    -0.0298637 ;
+  Frac[188]  =    -0.0304833 ;
+  Frac[189]  =    -0.0262541 ;
+  Frac[190]  =    -0.0300384 ;
+  Frac[191]  =    -0.0278753 ;
+  Frac[192]  =    -0.0277963 ;
+  Frac[193]  =    -0.0274074 ;
+  Frac[194]  =    -0.0247811 ;
+  Frac[195]  =    -0.0221116 ;
+  Frac[196]  =    -0.0229999 ;
+  Frac[197]  =    -0.0198742 ;
+  Frac[198]  =    -0.020908  ;
+  Frac[199]  =    -0.0194822 ;
+  Frac[200]  =    -0.0205471 ;
+  Frac[201]  =    -0.015884  ;
+  Frac[202]  =    -0.0185419 ;
+  Frac[203]  =    -0.0142732 ;
+  Frac[204]  =    -0.0185146 ;
+  Frac[205]  =    -0.0142009 ;
+  Frac[206]  =    -0.0135252 ;
+  Frac[207]  =    -0.0106508 ;
+  Frac[208]  =    -0.00973468;
+  Frac[209]  =    -0.0101464 ;
+  Frac[210]  =    -0.00836321;
+  Frac[211]  =    -0.00826306;
+  Frac[212]  =    -0.00947927;
+  Frac[213]  =    -0.00749842;
+  Frac[214]  =    -0.00702742;
+  Frac[215]  =    -0.00558369;
+  Frac[216]  =    -0.00793642;
+  Frac[217]  =    -0.00540675;
+  Frac[218]  =    -0.00414951;
+  Frac[219]  =    -0.00336889;
+  Frac[220]  =    -0.00553797;
+  Frac[221]  =    -0.00389439;
+  Frac[222]  =    -0.00497594;
+  Frac[223]  =    -0.00729843;
+  Frac[224]  =    -0.00641133;
+  Frac[225]  =    -0.00677281;
+  Frac[226]  =    -0.00458745;
+  Frac[227]  =    -0.00302479;
+  Frac[228]  =    -0.00393472;
+  Frac[229]  =    -0.00628557;
+  Frac[230]  =    -0.00620519;
+  Frac[231]  =    -0.00488894;
+  Frac[232]  =    -0.0061514 ;
+  Frac[233]  =    -0.00773842;
+  Frac[234]  =    -0.00627602;
+  Frac[235]  =    -0.0044926 ;
+  Frac[236]  =    -0.0059019 ;
+  Frac[237]  =    -0.00607805;
+  Frac[238] =     -0.00315486;
+  Frac[239] =     -0.00809495;
+  Frac[240] =     -0.00581927;
+  Frac[241] =     -0.00692714;
+  Frac[242] =     -0.0083298 ;
+  Frac[243] =     -0.00686902;
+  Frac[244] =     -0.00649547;
+  Frac[245] =     -0.00638095;
+  Frac[246] =     -0.00716051;
+  Frac[247] =     -0.00640555;
+  Frac[248] =     -0.00820994;
+  Frac[249] =     -0.00831537;
+  Frac[250] =     -0.00961994;
+  Frac[251] =     -0.00790926;
+  Frac[252] =     -0.00652269;
+  Frac[253] =     -0.00774797;
+  Frac[254] =     -0.00572676;
+  Frac[255] =     -0.00605236;
+  Frac[256] =     -0.0057508 ;
+  Frac[257] =     -0.00453228;
+  Frac[258] =     -0.0069553 ;
+  Frac[259] =     -0.00519885;
+  Frac[260] =     -0.00603265;
+  Frac[261] =     -0.00523939;
+  Frac[262] =     -0.00299523;
+  Frac[263] =     -0.00096314;
+  Frac[264] =     -0.00405634;
+  Frac[265] =     -0.00369099;
+  Frac[266] =     -0.00506103;
+  Frac[267] =     -0.00441765;
+  Frac[268] =     -0.00514607;
+  Frac[269] =     -0.00259789;
+  Frac[270] =     -0.00653257;
+  Frac[271] =     -0.00386856;
+  Frac[272] =     -0.00312448;
+  Frac[273] =     -0.00145314;
+  Frac[274] =     -0.00241513;
+  Frac[275] =     -0.00087400;
+  Frac[276] =     0.000892302;
+  Frac[277] =     -0.00249199;
+  Frac[278] =     -0.00282059;
+  Frac[279] =     0.00117736 ;
+  Frac[280] =     0.0012085  ;
+  Frac[281] =     0.00132184 ;
+  Frac[282] =     -0.00119959;
+  Frac[283] =     0.00144912 ;
+  Frac[284] =     0.000605838;
+  Frac[285] =     -1.06317e-0;
+  Frac[286] =     -0.00142336;
+  Frac[287] =     -0.00288644;
+  Frac[288] =     -0.00378898;
+  Frac[289] =     -0.00194118;
+
+  if(DeltaT<290)  HeightFrac = Frac[DeltaT];
+  else HeightFrac=0;						     
+  return HeightFrac;						     
+ 									     
+ }                                                                        

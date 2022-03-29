@@ -1,4 +1,4 @@
-#include "DigitizerChannelPVeto.hh"
+#include "DigitizerChannelEVeto.hh"
 #include "TObject.h"
 #include "TVector3.h"
 #include "TSpectrum.h"
@@ -11,19 +11,18 @@
 #include <iostream>
 #include <stdlib.h>
 
-void DigitizerChannelPVeto::PrintConfig(){
+void DigitizerChannelEVeto::PrintConfig(){
   //  std::cout << "Signal width: " << fSignalWidth << " samples" << std::endl;
   //  std::cout << "fUseAbsSignals: " << fUseAbsSignals << std::endl;  
 }
 
-DigitizerChannelPVeto::~DigitizerChannelPVeto(){
+DigitizerChannelEVeto::~DigitizerChannelEVeto(){
   if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode() || fSaveAnalog){
-     if(fBethorMauro==1) SaveDebugHistosMauro();
-     else               SaveDebugHistosBeth();
+    SaveDebugHistos();
   }
 }
 
-void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
+void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
   detectorname=cfg->GetName();
   fGlobalMode = gMode;
   fAnalogsPrinted=0;
@@ -40,7 +39,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
-  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
+  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
 
@@ -50,22 +49,21 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
   fDerivAmpToEnergy    = cfg->GetParOrDefault("RECO","DerivAmpToEnergy",0.046);
   fmVtoMeV             = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
-  fBethorMauro         = cfg->GetParOrDefault("RECO","BethorMauro",0);
+  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
-  std::cout << cfg->GetName() << "***I'M THE NEW PVETO DIGITIZER*" <<  std::endl;
+  std::cout << cfg->GetName() << "***I'M THE NEW EVETO DIGITIZER*" <<  std::endl;
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   PrintConfig();
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-    if(fBethorMauro==1) PrepareDebugHistosMauro(); //debugging mode histos
-    else               PrepareDebugHistosBeth(); //debugging mode histos
+    PrepareDebugHistos(); //debugging mode histos
   }
 
 }
 
-Double_t DigitizerChannelPVeto::CalcPedestal() {  //get NSamples from data card
+Double_t DigitizerChannelEVeto::CalcPedestal() {  //get NSamples from data card
   fPed = 0.;
   fNPedSamples = 0;
   // average of first fPedMaxNSamples
@@ -79,7 +77,7 @@ Double_t DigitizerChannelPVeto::CalcPedestal() {  //get NSamples from data card
   return fPed;
 }
 
-Double_t DigitizerChannelPVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1000, Thr by default is fZeroSuppression = 5. This parameter isn't in the config file, probably it should be?
+Double_t DigitizerChannelEVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1000, Thr by default is fZeroSuppression = 5. This parameter isn't in the config file, probably it should be?
   fRMS1000 = TMath::RMS(NAvg,&fSamples[0]);
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
     hNoiseRMSAvg->AddBinContent(GetChID()+1,fRMS1000);
@@ -99,152 +97,7 @@ Double_t DigitizerChannelPVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1
   return ZSupHit;
 }
 
-Double_t DigitizerChannelPVeto::CalcChaTimeMauro(std::vector<TRecoVHit *> &hitVec,UShort_t iMax, UShort_t ped) {
-  Int_t npeaks = 20;
-  static TSpectrum SpectrumProcessor(npeaks);// = new TSpectrum(20);
-  double Time   = 0.;
-  fCharge = 0.;
-  //  Int_t ChID=GetElChID(); // MR TODAY MISSING CH ID //Beth 18/2/22: commented as not used
-  //  std::cout<<"CH ID"<<ChID<<std::endl;
-
-  //currently looking for peaks with TSpectrum to obtain multi hit times
-  static Double_t AbsSamRec[1024];
-  //  static Double_t AbsSamRecDP[1024]; //Beth 18/22/22: not used
-
-  //Check if they are needed or not and the real dimension
-  Double_t  dxdt[1024];
-
-  //  Double_t  SigCounts[1024]; //Beth 18/22/22: not used
-  //Double_t  SigmV[1024]; //Beth 18/22/22: not used
-
-  for(UShort_t s=0;s<=iMax;s++){
-    AbsSamRec[s] = (Double_t) (fEqualSamples[s]);
-    //std::cout<< s << "     "  << fSamples[s]  <<" V "<< AbsSamRec[s]  <<std::endl;
-  }
-  for(UShort_t s=iMax+1;s<1024;s++){
-    AbsSamRec[s] = 0;
-  }
-
-  hSig->SetContent(AbsSamRec);
-  
-  // check this number hard coded!!!!
-  Int_t iDer=15;
-  // compute derivative
-  for(Int_t ll=0;ll<iMax;ll++){
-    if(ll>=iDer){ 
-      if(AbsSamRec[ll]-AbsSamRec[ll-iDer] >0) dxdt[ll]=(AbsSamRec[ll]-AbsSamRec[ll-iDer]);
-      if(AbsSamRec[ll]-AbsSamRec[ll-iDer] <0) dxdt[ll]=0.;
-    }else{
-      dxdt[ll]=0;
-    }
-    htmp->SetBinContent(ll,dxdt[ll]);
-    //    std::cout<<ll<<" sam "<<Temp[ll]<<" "<<Temp1[ll]<<" "<<dxdt[ll]<<std::endl;
-  }
-
-  Double_t dmax = htmp->GetMaximum();  //Max of the derivative
-  Double_t VMax = hSig->GetMaximum();
-
-  //  std::cout<<"Get Maximum     "<<VMax<<"   Get dxdt    "<<dmax<<std::endl;
-  //if (VMax>fAmpThresholdHigh) std::cout<<VMax<<" VMax "<<std::endl;
-  std::vector<Float_t> xp;
-  std::vector<Float_t> yp;
-
-  std::vector<Float_t> x1p;
-  std::vector<Float_t> y1p;
-
-  //****************************************************
-  //*  start searching for the paeaks in the RAW signals
-  //****************************************************
-
-  if(VMax>fAmpThresholdHigh){
-    TSpectrum *s1 = &SpectrumProcessor;// new TSpectrum(2*npeaks);  //npeaks max number of peaks
-    Double_t peak_thr  = fAmpThresholdLow/VMax; //minimum peak height allowed.
-    Int_t nfound = s1->Search(hSig,fPeakSearchWidth,"",peak_thr);     
-    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog) hNhitSig ->Fill(nfound);
-    for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-      Double_t t1xp = (s1->GetPositionX())[ll];
-      Double_t t1yp = (s1->GetPositionY())[ll];
-      x1p.push_back(t1xp);
-      y1p.push_back(t1yp);
-      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog) hSigV->Fill(t1yp);
-    }
-    
-
-  //****************************************************
-  //*  start searching for paeaks in the DERIVATIVE 
-  //****************************************************
-    //    Double_t MinDxDt=15.;  //be careful depends on how big is iDer //Beth 18/2/22: commented because currently not used
-
-    Double_t PeakSearchDerWdt = 5.; //from
-    TSpectrum *s = &SpectrumProcessor;
-    Double_t Der_peak_thr  = 0.2;
-    //    Double_t source[895];
-    Float_t source[986];
-    for(Int_t i = 0; i <986; i++) source[i]=htmp->GetBinContent(i+1);
-    //    s->SmoothMarkov(source,985,2);
-    for (Int_t i=0; i<986; i++) htmp->SetBinContent(i+1,source[i]);
-
-
-
-    Int_t nfoundd = s->Search(htmp,PeakSearchDerWdt,"",Der_peak_thr);
-    if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-      hNhitDx   ->Fill(nfoundd);
-      hDeltaN   ->Fill(nfoundd-nfound);
-      hDeltaNvsN->Fill(nfoundd,nfoundd-nfound);
-    }
-    for(Int_t ll=0;ll<nfoundd;ll++){ //peak loop per channel
-      fCharge = 0.;
-      Double_t txp = (s->GetPositionX())[ll];
-      Double_t typ = (s->GetPositionY())[ll];
-      xp.push_back(txp);
-      yp.push_back(typ);
-      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog) hDxV->Fill(typ);
-
-      Time=xp[ll]*fTimeBin;    // this is too naive can we do better?
-      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-	if(nfound==nfoundd) hDeltaT->Fill(xp[ll]-x1p[ll]);
-	if(nfound==nfoundd) hDeltaV->Fill(yp[ll]-y1p[ll]);
-      }
-      //      std::cout<<"xp "<<xp[ll]<<" xp1 "<<x1p[ll]<<std::endl;
-      //      Int_t bin = hSig->GetXaxis()->FindBin(xp);
-      //      fAmpli = FindY(bin);
-      fAmpli = hSig->GetBinContent(xp[ll]);  // sbagliato perche' c'e' l'offset con derivata
-      //      fEnergy = fAmpli/fmVtoMeV;       // sbagliato perche' puo dipendere 
-      fEnergy = yp[ll]/27.;       // sbagliato perche' puo dipendere dal canale
-      //      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-      //      hMHVMax->Fill(VMax);
-      //      hMHdxdtMax->Fill(yp[ll]);
-      //      hVmaxvsDxdtMax->Fill(VMax,dmax);
-      //      hVmaxOvDxdt->Fill(VMax/dmax);
-      //      hMHEnergy->Fill(yp[ll]/27.);
-      // }
-      TRecoVHit *Hit = new TRecoVHit();  
-      Hit->SetTime(Time);
-      //Hit->SetEnergy(fAmpli);
-      Hit->SetEnergy(fEnergy);
-      hitVec.push_back(Hit);
-      if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
-	hVMax->Fill(VMax);
-	hdxdtMax->Fill(dmax);
-	hVmaxvsDxdtMax->Fill(VMax,dmax);
-	hVMOvDxdtvsNHits->Fill(nfound,VMax/dmax); //il canale??
-	hVmaxOvDxdt->Fill(VMax/dmax);
-	hEnergy->Fill(dmax/20.); // what is this number??
-      }
-      
-    }
-    //    hSig->Write();
-    //htmp->Write();
-//    if( (nfoundd-nfound)>0 ){
-//      hSig->Write();
-//      htmp->Write();
-//    }
-    //    delete s;
-  }
-  return Time;
-}
-
-Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
+Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
 
   RawGetMax=0;
   DerivGetMax=0;
@@ -355,7 +208,7 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
     //    tailcorrection = TailHeight(DeltaTSortSamples);
-    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
+    //    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
 
     /*    if(ii==0) vRawCorrectHitVec.push_back(vRawSortHitVec[ii]);//for the first hit, there's no tail correction because there's not tail from a previous hit
 	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction*/
@@ -381,11 +234,11 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
   return Time;
 }
 
-void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied from 190917padme-fw, in turn copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
+void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 190917padme-fw, in turn copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
   TString fileoutname;
 
   if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
-  else if(detectorname=="PVeto") fileoutname="PVetoRecoAnDeriv.root";
+  else if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
 
   fileOut    = new TFile(fileoutname, "RECREATE");
   
@@ -457,72 +310,7 @@ void DigitizerChannelPVeto::PrepareDebugHistosBeth(){ //Beth 20/10/21 copied fro
   }
 }
 
- void DigitizerChannelPVeto::PrepareDebugHistosMauro(){
-//   fileOut    = new TFile("PVetoAn.root", "RECREATE");
-
-//   hListPVeto = new TList();  
-
-//   hListPVeto->Add(hNhitDx      = new TH1F("hNhitDx","hNhitDx",25,-0.5,24.5));
-//   hListPVeto->Add(hNhitSig     = new TH1F("hNhitSig","hNhitSig",25,-0.5,24.5));
-
-//   hListPVeto->Add(hDeltaN     = new TH1F("hDeltaN","hDeltaN",25,-12.5,12.5));
-//   hListPVeto->Add(hDeltaNvsN= new TH2F("hDeltaNvsN","hDeltaNvsN",25,-0.5,24.5,25,-12.5,12.5)); 
-
-//   hListPVeto->Add(hDeltaT     = new TH1F("hDeltaT","hDeltaT",150,-24.5,24.5));
-//   hListPVeto->Add(hDeltaV     = new TH1F("hDeltaV","hDeltaV",250,-125,125));
-//   //Single HIT
-//   hListPVeto->Add(hdxdtMax      = new TH1F("hdxdtMax","hdxdtMax",1000,0.,1000.));
-//   hListPVeto->Add(hVMax         = new TH1F("hVMax","hVMax",1000,0.,1000.));
-//   hListPVeto->Add(hVmaxvsDxdtMax= new TH2F("hVmaxvsDxdtMax","hVmaxvsDxdtMax",1000,0.,1000.,1000,0.,1000.));
-//   hListPVeto->Add(hVMOvDxdtvsNHits = new TH2F("hVMOvDxdtvsNHits","hVMOvDxdtvsNHits",20,-0.5,19.5,250,0.,5.)); 
-//   hListPVeto->Add(hVmaxOvDxdt   = new TH1F("hVmaxOvDxdt","hVmaxOvDxdt",500,0.,5.));
-//   hListPVeto->Add(hEnergy       = new TH1F("hEnergy","hEnergy",500,0.,5.));
-
-//   //Derivative hits
-//   hListPVeto->Add(hDxV = new TH1F("hDxV","hDxV",1000,0.,1000.));
-//   hListPVeto->Add(hDxE = new TH1F("hDxE","hDxE",500,0.,10.));
-
-//   //Signal hits
-//   hListPVeto->Add(hSigV = new TH1F("hSigV","hSigV",1000,0.,1000.));
-//   hListPVeto->Add(hSigE = new TH1F("hSigE","hSigE",500,0.,10.));
-
-//   //Time distributions of hit times
-//   hListPVeto->Add(hTHits = new TH1F("hTHits","hTHits",400,-300.,500.));
-  
-//   //MULTI HIT
-// //  hListPVeto->Add(hMHdxdtMax      = new TH1F("hMHdxdtMax","hMHdxdtMax",1000,0.,1000.));
-// //  hListPVeto->Add(hMHVMax         = new TH1F("hMHVMax","hMHVMax",1000,0.,1000.));
-// //  hListPVeto->Add(hMHVmaxvsDxdtMax= new TH2F("hMHVmaxvsDxdtMax","hMHVmaxvsDxdtMax",1000,0.,1000.,1000,0.,1000.)); 
-// //  hListPVeto->Add(hMHVmaxOvDxdt   = new TH1F("hMHVmaxOvDxdt","hMHVmaxOvDxdt",500,0.,5.));
-// //  hListPVeto->Add(hMHEnergy       = new TH1F("hMHEnergy","hMHEnergy",500,0.,5.));
-
-// //Beth's histos to prevent seg faults, not written to file
-//   hNoiseRMSAvg               = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
-//   hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
-//   for(int ii=0;ii<96;ii++){
-//     sprintf(name, "RawVChannel%d",ii);
-//     hRawVPerChannel[ii] = new TH1F(name,name,400,0,400);
-    
-//     sprintf(name, "RawVOneHitChannel%d",ii);
-//     hRawVOneHitPerChannel[ii] = new TH1F(name,name,400,0,400);
-
-//     sprintf(name, "RawVCorrectChannel%d",ii);
-//     hRawVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
-    
-//     sprintf(name,"hNoiseRMSPerChannel%d",ii);
-//     hNoiseRMSPerChannel[ii] = new TH1F(name,name,20,0,10);
-//   }
-}
-
-void DigitizerChannelPVeto::SaveDebugHistosMauro(){
-  fileOut->cd();
-  std::cout<<"fSaveAnalog "<<fSaveAnalog<<std::endl;
-  if(fGlobalMode->IsPedestalMode() || fGlobalMode->GetGlobalDebugMode() || fSaveAnalog)
-    hListPVeto->Write(); //use it in monitor mode only  
-  fileOut->Close();
-}
-
-void DigitizerChannelPVeto::SaveDebugHistosBeth(){
+void DigitizerChannelEVeto::SaveDebugHistos(){
   if(fileOut!=0) std::cout<<"not zero "<<fileOut<<std::endl;
   fileOut->cd();
   
@@ -617,18 +405,16 @@ void DigitizerChannelPVeto::SaveDebugHistosBeth(){
     }
 }
 
-void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
+void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
   if(GetChID()==0) hNoEventsReconstructed->Fill(1);
-  if(GetChID()>89) return;//Beth 10/3/22: There are only 90 PVeto channels but in PVeto.cfg 96 channels are still listed
+  if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
-    Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in PVeto.cfg but defaults to 5.
+    Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
     if(IsZeroSup) return;
     Double_t ped=CalcPedestal();  // takes the starting sample from data cards
     SetAbsSignals(ped);//Beth 21/2/22: moved from before zero suppression to after. Turns samples into positive mV and performs channel equalisation
     hSig->SetContent(fEqualSamples);
-
-    if(fBethorMauro==1) CalcChaTimeMauro(hitVec,fIMax,ped); //seaching up to fIMax only
-    else               CalcChaTimeBeth(hitVec);
+    CalcChaTime(hitVec);
   }
   else{
     // Giorgi pulse processing code goes here
@@ -646,9 +432,9 @@ void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   vTSpecYPCorrectHitVec .clear();
 }
 
-void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
+void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
-  if(fChannelEqualisation)  ScaleFactor=SetPVetoChaGain();   
+  //  if(fChannelEqualisation)  ScaleFactor=SetEVetoChaGain();   
   //fNSamples is 1024 but I can't find where it's set
   for(UShort_t i = 0;i<fNSamples;i++){
     fEqualSamples[i] = (ped-fSamples[i])/4096.*1000.; //convert fSamples to positive mV
@@ -656,7 +442,7 @@ void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
   }
 }
 
-void DigitizerChannelPVeto::AnalogPlotting(){
+void DigitizerChannelEVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fAnalogPrint==1){//vRawCorrectHitVec.size()==1&&vTSpecYPHitVec[0]<20){
@@ -676,7 +462,7 @@ void DigitizerChannelPVeto::AnalogPlotting(){
   }
 }
 
-void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
+void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   //  std::cout<<"Event "<<EventCounter<<" Ch "<<GetChID()<<" hitVec.size() "<<hitVec.size()<<" fNFoundPerChannel "<<fNFoundPerChannel[GetChID()]<<std::endl;
   hNoHitsDeriv->Fill(fNFoundPerChannel[GetChID()]);
   hNoHitsDerivPerChannel[GetChID()]->Fill(fNFoundPerChannel[GetChID()]);
@@ -737,103 +523,103 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   
 }
 
-Double_t DigitizerChannelPVeto::SetPVetoChaGain(){
+Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
   Double_t ScaleFactor = 1;
   //  std::cout<<"Setting cha gain"<<std::endl;
-  if(GetChID()==0) 	 ScaleFactor = 1.20007;
-  if(GetChID()==1) 	 ScaleFactor = 1.20517;
-  if(GetChID()==2) 	 ScaleFactor = 1.34357;
-  if(GetChID()==3) 	 ScaleFactor = 1.30759;
-  if(GetChID()==4) 	 ScaleFactor = 1.26678;
-  if(GetChID()==5) 	 ScaleFactor = 2.31421;
-  if(GetChID()==6) 	 ScaleFactor = 1.1933 ;
-  if(GetChID()==7) 	 ScaleFactor = 1.42206;
-  if(GetChID()==8) 	 ScaleFactor = 1.36612;
-  if(GetChID()==9) 	 ScaleFactor = 1.36997;
-  if(GetChID()==10)	 ScaleFactor = 1.52649;
-  if(GetChID()==11)	 ScaleFactor = 1.36823;
-  if(GetChID()==12)	 ScaleFactor = 1.43113;
-  if(GetChID()==13)	 ScaleFactor = 1.36435;
-  if(GetChID()==14)	 ScaleFactor = 1.43819;
-  if(GetChID()==15)	 ScaleFactor = 1.30947;
-  if(GetChID()==16)	 ScaleFactor = 1.05575;
-  if(GetChID()==17)	 ScaleFactor = 1.04161;
-  if(GetChID()==18)	 ScaleFactor = 0.95391;
-  if(GetChID()==19)	 ScaleFactor = 0.90890;
-  if(GetChID()==20)	 ScaleFactor = 0.95665;
-  if(GetChID()==21)	 ScaleFactor = 0.91797;
-  if(GetChID()==22)	 ScaleFactor = 0.918981;
-  if(GetChID()==23)      ScaleFactor = 0.884638;
-  if(GetChID()==24)	 ScaleFactor = 0.86368;
-  if(GetChID()==25)	 ScaleFactor = 0.87166;
-  if(GetChID()==26)	 ScaleFactor = 1.13524;
-  if(GetChID()==27)	 ScaleFactor = 0.89272;
-  if(GetChID()==28)	 ScaleFactor = 1.07496;
-  if(GetChID()==29)	 ScaleFactor = 1.17894;
-  if(GetChID()==30)	 ScaleFactor = 0.91751;
-  if(GetChID()==31)	 ScaleFactor = 0.80332;
-  if(GetChID()==32)	 ScaleFactor = 1.17808;
-  if(GetChID()==33)	 ScaleFactor = 0.82741;
-  if(GetChID()==34)	 ScaleFactor = 0.92725;
-  if(GetChID()==35)	 ScaleFactor = 0.91137;
-  if(GetChID()==36)	 ScaleFactor = 0.87394;
-  if(GetChID()==37)	 ScaleFactor = 1.00689;
-  if(GetChID()==38)	 ScaleFactor = 1.08942;
-  if(GetChID()==39)	 ScaleFactor = 1.08354;
-  if(GetChID()==40)	 ScaleFactor = 1.06285;
-  if(GetChID()==41)	 ScaleFactor = 1.03217;
-  if(GetChID()==42)	 ScaleFactor = 0.90686;
-  if(GetChID()==43)	 ScaleFactor = 0.87261;
-  if(GetChID()==44)	 ScaleFactor = 1.05954;
-  if(GetChID()==45)	 ScaleFactor = 0.99362;
-  if(GetChID()==46)	 ScaleFactor = 1.18334;
-  if(GetChID()==47)	 ScaleFactor = 1.14441;
-  if(GetChID()==48)	 ScaleFactor = 1.0729 ;
-  if(GetChID()==49)	 ScaleFactor = 1.03824;
-  if(GetChID()==50)	 ScaleFactor = 1.21671;
-  if(GetChID()==51)	 ScaleFactor = 0.84024;
-  if(GetChID()==52)	 ScaleFactor = 0.91855;
-  if(GetChID()==53)	 ScaleFactor = 1.10666;
-  if(GetChID()==54)	 ScaleFactor = 1.03583;
-  if(GetChID()==55)	 ScaleFactor = 0.82296;
-  if(GetChID()==56)	 ScaleFactor = 0.91125;
-  if(GetChID()==57)	 ScaleFactor = 0.96735;
-  if(GetChID()==58)	 ScaleFactor = 1.75645;
-  if(GetChID()==59)	 ScaleFactor = 1.00093;
-  if(GetChID()==60)	 ScaleFactor = 1.39221;
-  if(GetChID()==61)	 ScaleFactor = 0.85481;
-  if(GetChID()==62)	 ScaleFactor = 1.08227;
-  if(GetChID()==63)	 ScaleFactor = 0.96390;
-  if(GetChID()==64)	 ScaleFactor = 1.01518;
-  if(GetChID()==65)	 ScaleFactor = 0.99412;
-  if(GetChID()==66)	 ScaleFactor = 1.07244;
-  if(GetChID()==67)	 ScaleFactor = 0.96944;
-  if(GetChID()==68)	 ScaleFactor = 1.03648;
-  if(GetChID()==69)	 ScaleFactor = 1.03518;
-  if(GetChID()==70)	 ScaleFactor = 1.14892;
-  if(GetChID()==71)	 ScaleFactor = 1.16687;
-  if(GetChID()==72)	 ScaleFactor = 1.01364;
-  if(GetChID()==73)	 ScaleFactor = 0.91313;
-  if(GetChID()==74)	 ScaleFactor = 1.04913;
-  if(GetChID()==75)	 ScaleFactor = 0.92306;
-  if(GetChID()==76)	 ScaleFactor = 0.96247;
-  if(GetChID()==77)	 ScaleFactor = 0.81604;
-  if(GetChID()==78)	 ScaleFactor = 0.93498;
-  if(GetChID()==79)	 ScaleFactor = 1.44282;
-  if(GetChID()==80)	 ScaleFactor = 1.13769;
-  if(GetChID()==81)	 ScaleFactor = 1.50241;
-  if(GetChID()==82)	 ScaleFactor = 1.22141;
-  if(GetChID()==83)	 ScaleFactor = 1.19654;
-  if(GetChID()==84)	 ScaleFactor = 1.19121;
-  if(GetChID()==85)	 ScaleFactor = 2.05119;
-  if(GetChID()==86)	 ScaleFactor = 1.38753;
-  if(GetChID()==87)	 ScaleFactor = 1.16416;
-  if(GetChID()==88)	 ScaleFactor = 1.14429;
-  if(GetChID()==89)	 ScaleFactor = 1.10903;
+  if(GetChID()==0) 	 ScaleFactor = 1;
+  if(GetChID()==1) 	 ScaleFactor = 1;
+  if(GetChID()==2) 	 ScaleFactor = 1;
+  if(GetChID()==3) 	 ScaleFactor = 1;
+  if(GetChID()==4) 	 ScaleFactor = 1;
+  if(GetChID()==5) 	 ScaleFactor = 1;
+  if(GetChID()==6) 	 ScaleFactor = 1;
+  if(GetChID()==7) 	 ScaleFactor = 1;
+  if(GetChID()==8) 	 ScaleFactor = 1;
+  if(GetChID()==9) 	 ScaleFactor = 1;
+  if(GetChID()==10)	 ScaleFactor = 1;
+  if(GetChID()==11)	 ScaleFactor = 1;
+  if(GetChID()==12)	 ScaleFactor = 1;
+  if(GetChID()==13)	 ScaleFactor = 1;
+  if(GetChID()==14)	 ScaleFactor = 1;
+  if(GetChID()==15)	 ScaleFactor = 1;
+  if(GetChID()==16)	 ScaleFactor = 1;
+  if(GetChID()==17)	 ScaleFactor = 1;
+  if(GetChID()==18)	 ScaleFactor = 1;
+  if(GetChID()==19)	 ScaleFactor = 1;
+  if(GetChID()==20)	 ScaleFactor = 1;
+  if(GetChID()==21)	 ScaleFactor = 1;
+  if(GetChID()==22)	 ScaleFactor = 11;
+  if(GetChID()==23)      ScaleFactor = 18;
+  if(GetChID()==24)	 ScaleFactor = 1;
+  if(GetChID()==25)	 ScaleFactor = 1;
+  if(GetChID()==26)	 ScaleFactor = 1;
+  if(GetChID()==27)	 ScaleFactor = 1;
+  if(GetChID()==28)	 ScaleFactor = 1;
+  if(GetChID()==29)	 ScaleFactor = 1;
+  if(GetChID()==30)	 ScaleFactor = 1;
+  if(GetChID()==31)	 ScaleFactor = 1;
+  if(GetChID()==32)	 ScaleFactor = 1;
+  if(GetChID()==33)	 ScaleFactor = 1;
+  if(GetChID()==34)	 ScaleFactor = 1;
+  if(GetChID()==35)	 ScaleFactor = 1;
+  if(GetChID()==36)	 ScaleFactor = 1;
+  if(GetChID()==37)	 ScaleFactor = 1;
+  if(GetChID()==38)	 ScaleFactor = 1;
+  if(GetChID()==39)	 ScaleFactor = 1;
+  if(GetChID()==40)	 ScaleFactor = 1;
+  if(GetChID()==41)	 ScaleFactor = 1;
+  if(GetChID()==42)	 ScaleFactor = 1;
+  if(GetChID()==43)	 ScaleFactor = 1;
+  if(GetChID()==44)	 ScaleFactor = 1;
+  if(GetChID()==45)	 ScaleFactor = 1;
+  if(GetChID()==46)	 ScaleFactor = 1;
+  if(GetChID()==47)	 ScaleFactor = 1;
+  if(GetChID()==48)	 ScaleFactor = 1;
+  if(GetChID()==49)	 ScaleFactor = 1;
+  if(GetChID()==50)	 ScaleFactor = 1;
+  if(GetChID()==51)	 ScaleFactor = 1;
+  if(GetChID()==52)	 ScaleFactor = 1;
+  if(GetChID()==53)	 ScaleFactor = 1;
+  if(GetChID()==54)	 ScaleFactor = 1;
+  if(GetChID()==55)	 ScaleFactor = 1;
+  if(GetChID()==56)	 ScaleFactor = 1;
+  if(GetChID()==57)	 ScaleFactor = 1;
+  if(GetChID()==58)	 ScaleFactor = 1;
+  if(GetChID()==59)	 ScaleFactor = 1;
+  if(GetChID()==60)	 ScaleFactor = 1;
+  if(GetChID()==61)	 ScaleFactor = 1;
+  if(GetChID()==62)	 ScaleFactor = 1;
+  if(GetChID()==63)	 ScaleFactor = 1;
+  if(GetChID()==64)	 ScaleFactor = 1;
+  if(GetChID()==65)	 ScaleFactor = 1;
+  if(GetChID()==66)	 ScaleFactor = 1;
+  if(GetChID()==67)	 ScaleFactor = 1;
+  if(GetChID()==68)	 ScaleFactor = 1;
+  if(GetChID()==69)	 ScaleFactor = 1;
+  if(GetChID()==70)	 ScaleFactor = 1;
+  if(GetChID()==71)	 ScaleFactor = 1;
+  if(GetChID()==72)	 ScaleFactor = 1;
+  if(GetChID()==73)	 ScaleFactor = 1;
+  if(GetChID()==74)	 ScaleFactor = 1;
+  if(GetChID()==75)	 ScaleFactor = 1;
+  if(GetChID()==76)	 ScaleFactor = 1;
+  if(GetChID()==77)	 ScaleFactor = 1;
+  if(GetChID()==78)	 ScaleFactor = 1;
+  if(GetChID()==79)	 ScaleFactor = 1;
+  if(GetChID()==80)	 ScaleFactor = 1;
+  if(GetChID()==81)	 ScaleFactor = 1;
+  if(GetChID()==82)	 ScaleFactor = 1;
+  if(GetChID()==83)	 ScaleFactor = 1;
+  if(GetChID()==84)	 ScaleFactor = 1;
+  if(GetChID()==85)	 ScaleFactor = 1;
+  if(GetChID()==86)	 ScaleFactor = 1;
+  if(GetChID()==87)	 ScaleFactor = 1;
+  if(GetChID()==88)	 ScaleFactor = 1;
+  if(GetChID()==89)	 ScaleFactor = 1;
   return ScaleFactor;
 }
 
-Double_t DigitizerChannelPVeto::TailHeight(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
+Double_t DigitizerChannelEVeto::TailHeight(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
   Double_t HeightFrac=0;
   Double_t Frac[152];
   Frac[0]= -0.980571   ; 
@@ -996,7 +782,7 @@ Double_t DigitizerChannelPVeto::TailHeight(Int_t DeltaT){//DeltaT in samples. Re
 
 }
 
-Double_t DigitizerChannelPVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
+Double_t DigitizerChannelEVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
   Double_t HeightFrac=0;
   Double_t Frac[152];
   Frac[0]   =  1; 

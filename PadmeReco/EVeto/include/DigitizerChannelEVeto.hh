@@ -13,11 +13,11 @@ typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
-class DigitizerChannelPVeto : public ChannelVReco {
+class DigitizerChannelEVeto : public ChannelVReco {
 public:
 
-  DigitizerChannelPVeto(){;};
-  virtual ~DigitizerChannelPVeto();
+  DigitizerChannelEVeto(){;};
+  virtual ~DigitizerChannelEVeto();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitVec);
@@ -27,10 +27,9 @@ public:
   void PrintConfig();
 
   Double_t CalcPedestal();
-  Double_t CalcChaTimeMauro(std::vector<TRecoVHit *> &hitVec,UShort_t,UShort_t);
-  Double_t CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec);
+  Double_t CalcChaTime(std::vector<TRecoVHit *> &hitVec);
 
-  Double_t SetPVetoChaGain();
+  Double_t SetEVetoChaGain();
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
 
   void SetAbsSignals(Double_t ped);
@@ -40,10 +39,8 @@ public:
   Double_t TailHeightDerivative(Int_t DeltaT);
 
   // Debugging the reco
-  virtual void PrepareDebugHistosMauro();
-  virtual void PrepareDebugHistosBeth();
-  virtual void SaveDebugHistosMauro();
-  virtual void SaveDebugHistosBeth();
+  virtual void PrepareDebugHistos();
+  virtual void SaveDebugHistos();
 
   //get ChID From Beth Digi
   Int_t EventCounter=-1;//is increased before each event is processed, so the first event will have EventCounter=0
@@ -80,7 +77,7 @@ private:
   Bool_t fSaveAnalog;
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
-  TList* hListPVeto; // single board related histograms 
+  TList* hListEVeto; // single board related histograms 
 
   TString detectorname;
 
@@ -101,7 +98,7 @@ private:
   Double_t DerivGetMax    ;
 
   Bool_t fAnalogPrint;
-  Bool_t fBethorMauro;
+  
   //Beth 18/2/22: My histograms
   
   std::vector<TH1F*> hRaw;//Raw+TSpectrum

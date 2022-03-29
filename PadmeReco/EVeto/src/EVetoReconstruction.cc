@@ -11,7 +11,8 @@
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
 #include "TEVetoMCDigi.hh"
-#include "DigitizerChannelReco.hh"
+//#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelEVeto.hh"
 #include "EVetoCalibration.hh"
 #include "EVetoSimpleClusterization.hh"
 #include "EVetoGeometry.hh"
@@ -25,12 +26,17 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
-  fChannelReco = new DigitizerChannelReco();
+//  fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelEVeto();
   fChannelCalibration = new EVetoCalibration();
   fClusterization = new EVetoSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new EVetoGeometry();
 }
+
+EVetoReconstruction::~EVetoReconstruction()
+{;}
+
 
 void EVetoReconstruction::HistoInit(){
 
@@ -58,9 +64,6 @@ void EVetoReconstruction::HistoInit(){
 
 }
 
-
-EVetoReconstruction::~EVetoReconstruction()
-{;}
 
 // void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
 // {
@@ -115,6 +118,27 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
   }
 }
 */
+
+void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. Removed both calibration and clusterisation since calibration (gain equalisation) will be done directly in digitizer and clusterisation will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    //    AnalyzeEvent(rawEv);
+  }
+
+}
 
 // void EVetoReconstruction::EndProcessing()
 // {;}
@@ -172,4 +196,51 @@ void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   }
 
 
+}
+
+void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelEVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelEVeto*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+	//	std::cout<<"Event no "<<rawEv->GetEventNumber()<<" ChID "<<ChID<<std::endl; 
+	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
 }

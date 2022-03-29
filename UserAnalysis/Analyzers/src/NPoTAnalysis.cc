@@ -34,9 +34,11 @@ Bool_t NPoTAnalysis::InitHistos(){
   fHS->BookHistoList("NPoTAnalysis","NPoTNoPhys",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","NPoTPhys",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","NPoTPhys5K",600,-1000.,59000.);
+  fHS->BookHistoList("NPoTAnalysis","NPoTIsa",600,-1000.,59000.);
 
   fHS->BookHistoList("NPoTAnalysis","XPos",200,-25.,25.);
   fHS->BookHistoList("NPoTAnalysis","YPos",200,-25.,25.);
+
   return true;
 }
 
@@ -63,6 +65,10 @@ Bool_t NPoTAnalysis::Process(){
       TotPoTOver5K += fNPoT;
       fHS->FillHistoList("NPoTAnalysis","XPos",fXPos);
       fHS->FillHistoList("NPoTAnalysis","YPos",fYPos);
+    }
+    // the actual value is 5 sigma need to check and move 
+    if(fNPoT>20E3 && fNPoT<32E3) {
+      fHS->FillHistoList("NPoTAnalysis","NPoTIsa",fNPoT);
     }
     if(fNPoT>30E3) TotPoTOver30K += fNPoT;
   }  

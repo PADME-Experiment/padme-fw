@@ -71,7 +71,6 @@ int main(Int_t argc, char **argv)
 {
 
   //long utc_time;
-
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
   signal(SIGTERM,sighandler);
@@ -198,7 +197,10 @@ int main(Int_t argc, char **argv)
   TTree::SetMaxTreeSize(190000000000);
 
   TString recoTreeName = "Events";
+  cout<<"Building chain "<<endl;
+  //  if(InputFileNameList.size()>200) cout<<"List too big!!!" <<endl;
   TChain* fRecoChain = BuildChain(recoTreeName,InputFileNameList);
+  cout<<"chain  Built "<<endl;
 
   Int_t nevents = 0;
   if (fRecoChain) {

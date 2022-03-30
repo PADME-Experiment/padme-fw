@@ -208,24 +208,19 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
     //    tailcorrection = TailHeight(DeltaTSortSamples);
-    //    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
-
-    /*    if(ii==0) vRawCorrectHitVec.push_back(vRawSortHitVec[ii]);//for the first hit, there's no tail correction because there's not tail from a previous hit
-	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction*/
+    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
 
     if(ii==0)    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[index[ii]]);
     else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction
 
-    //    fAmpli=vTSpecYPCorrectHitVec[ii];
-    
-    Hit = new TRecoVHit();  
-    Hit->SetTime(tDerivSortHitVec[ii]);//commented because of sorting problem
-    //    fEnergy=fAmpli*fDerivAmpToEnergy;
+    Hit = new TRecoVHit();
+  
+    Hit->SetTime(tDerivSortHitVec[ii]);
+
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
-    //    std::cout<<ii<<" "<<fAmpli<<" "<<vRawCorrectHitVec[ii]<<std::endl;
     Hit->SetEnergy(fEnergy);
+
     hitVec.push_back(Hit);
-    //    std::cout<<"hitVec.size() "<<hitVec.size()<<std::endl;
 
   }//end loop over hits
 
@@ -434,7 +429,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
 
 void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
-  //  if(fChannelEqualisation)  ScaleFactor=SetEVetoChaGain();   
+  if(fChannelEqualisation)  ScaleFactor=SetEVetoChaGain();   
   //fNSamples is 1024 but I can't find where it's set
   for(UShort_t i = 0;i<fNSamples;i++){
     fEqualSamples[i] = (ped-fSamples[i])/4096.*1000.; //convert fSamples to positive mV
@@ -526,96 +521,92 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
   Double_t ScaleFactor = 1;
   //  std::cout<<"Setting cha gain"<<std::endl;
-  if(GetChID()==0) 	 ScaleFactor = 1;
-  if(GetChID()==1) 	 ScaleFactor = 1;
-  if(GetChID()==2) 	 ScaleFactor = 1;
-  if(GetChID()==3) 	 ScaleFactor = 1;
-  if(GetChID()==4) 	 ScaleFactor = 1;
-  if(GetChID()==5) 	 ScaleFactor = 1;
-  if(GetChID()==6) 	 ScaleFactor = 1;
-  if(GetChID()==7) 	 ScaleFactor = 1;
-  if(GetChID()==8) 	 ScaleFactor = 1;
-  if(GetChID()==9) 	 ScaleFactor = 1;
-  if(GetChID()==10)	 ScaleFactor = 1;
-  if(GetChID()==11)	 ScaleFactor = 1;
-  if(GetChID()==12)	 ScaleFactor = 1;
-  if(GetChID()==13)	 ScaleFactor = 1;
-  if(GetChID()==14)	 ScaleFactor = 1;
-  if(GetChID()==15)	 ScaleFactor = 1;
-  if(GetChID()==16)	 ScaleFactor = 1;
-  if(GetChID()==17)	 ScaleFactor = 1;
-  if(GetChID()==18)	 ScaleFactor = 1;
-  if(GetChID()==19)	 ScaleFactor = 1;
-  if(GetChID()==20)	 ScaleFactor = 1;
-  if(GetChID()==21)	 ScaleFactor = 1;
-  if(GetChID()==22)	 ScaleFactor = 11;
-  if(GetChID()==23)      ScaleFactor = 18;
-  if(GetChID()==24)	 ScaleFactor = 1;
-  if(GetChID()==25)	 ScaleFactor = 1;
-  if(GetChID()==26)	 ScaleFactor = 1;
-  if(GetChID()==27)	 ScaleFactor = 1;
-  if(GetChID()==28)	 ScaleFactor = 1;
-  if(GetChID()==29)	 ScaleFactor = 1;
-  if(GetChID()==30)	 ScaleFactor = 1;
-  if(GetChID()==31)	 ScaleFactor = 1;
-  if(GetChID()==32)	 ScaleFactor = 1;
-  if(GetChID()==33)	 ScaleFactor = 1;
-  if(GetChID()==34)	 ScaleFactor = 1;
-  if(GetChID()==35)	 ScaleFactor = 1;
-  if(GetChID()==36)	 ScaleFactor = 1;
-  if(GetChID()==37)	 ScaleFactor = 1;
-  if(GetChID()==38)	 ScaleFactor = 1;
-  if(GetChID()==39)	 ScaleFactor = 1;
-  if(GetChID()==40)	 ScaleFactor = 1;
-  if(GetChID()==41)	 ScaleFactor = 1;
-  if(GetChID()==42)	 ScaleFactor = 1;
-  if(GetChID()==43)	 ScaleFactor = 1;
-  if(GetChID()==44)	 ScaleFactor = 1;
-  if(GetChID()==45)	 ScaleFactor = 1;
-  if(GetChID()==46)	 ScaleFactor = 1;
-  if(GetChID()==47)	 ScaleFactor = 1;
-  if(GetChID()==48)	 ScaleFactor = 1;
-  if(GetChID()==49)	 ScaleFactor = 1;
-  if(GetChID()==50)	 ScaleFactor = 1;
-  if(GetChID()==51)	 ScaleFactor = 1;
-  if(GetChID()==52)	 ScaleFactor = 1;
-  if(GetChID()==53)	 ScaleFactor = 1;
-  if(GetChID()==54)	 ScaleFactor = 1;
-  if(GetChID()==55)	 ScaleFactor = 1;
-  if(GetChID()==56)	 ScaleFactor = 1;
-  if(GetChID()==57)	 ScaleFactor = 1;
-  if(GetChID()==58)	 ScaleFactor = 1;
-  if(GetChID()==59)	 ScaleFactor = 1;
-  if(GetChID()==60)	 ScaleFactor = 1;
-  if(GetChID()==61)	 ScaleFactor = 1;
-  if(GetChID()==62)	 ScaleFactor = 1;
-  if(GetChID()==63)	 ScaleFactor = 1;
-  if(GetChID()==64)	 ScaleFactor = 1;
-  if(GetChID()==65)	 ScaleFactor = 1;
-  if(GetChID()==66)	 ScaleFactor = 1;
-  if(GetChID()==67)	 ScaleFactor = 1;
-  if(GetChID()==68)	 ScaleFactor = 1;
-  if(GetChID()==69)	 ScaleFactor = 1;
-  if(GetChID()==70)	 ScaleFactor = 1;
-  if(GetChID()==71)	 ScaleFactor = 1;
-  if(GetChID()==72)	 ScaleFactor = 1;
-  if(GetChID()==73)	 ScaleFactor = 1;
-  if(GetChID()==74)	 ScaleFactor = 1;
-  if(GetChID()==75)	 ScaleFactor = 1;
-  if(GetChID()==76)	 ScaleFactor = 1;
-  if(GetChID()==77)	 ScaleFactor = 1;
-  if(GetChID()==78)	 ScaleFactor = 1;
-  if(GetChID()==79)	 ScaleFactor = 1;
-  if(GetChID()==80)	 ScaleFactor = 1;
-  if(GetChID()==81)	 ScaleFactor = 1;
-  if(GetChID()==82)	 ScaleFactor = 1;
-  if(GetChID()==83)	 ScaleFactor = 1;
-  if(GetChID()==84)	 ScaleFactor = 1;
-  if(GetChID()==85)	 ScaleFactor = 1;
-  if(GetChID()==86)	 ScaleFactor = 1;
-  if(GetChID()==87)	 ScaleFactor = 1;
-  if(GetChID()==88)	 ScaleFactor = 1;
-  if(GetChID()==89)	 ScaleFactor = 1;
+  if(GetChID()==0) 	 ScaleFactor = 1.14579 ;
+  if(GetChID()==1) 	 ScaleFactor = 1.13981 ;
+  if(GetChID()==2) 	 ScaleFactor = 1.1624  ;
+  if(GetChID()==3) 	 ScaleFactor = 1.0199  ;
+  if(GetChID()==4) 	 ScaleFactor = 1.03848 ;
+  if(GetChID()==5) 	 ScaleFactor = 1.31815 ;
+  if(GetChID()==6) 	 ScaleFactor = 1.59532 ;
+  if(GetChID()==7) 	 ScaleFactor = 1.26717 ;
+  if(GetChID()==8) 	 ScaleFactor = 1.17466 ;
+  if(GetChID()==9) 	 ScaleFactor = 1.59172 ;
+  if(GetChID()==10)	 ScaleFactor = 1.41543 ;
+  if(GetChID()==11)	 ScaleFactor = 1.59211 ;
+  if(GetChID()==12)	 ScaleFactor = 1.24053 ;
+  if(GetChID()==13)	 ScaleFactor = 1.59605 ;
+  if(GetChID()==14)	 ScaleFactor = 1.41128 ;
+  if(GetChID()==15)	 ScaleFactor = 1.66592 ;
+  if(GetChID()==16)	 ScaleFactor = 1.66667 ;
+  if(GetChID()==17)	 ScaleFactor = 1.59268 ;
+  if(GetChID()==18)	 ScaleFactor = 0.968462;
+  if(GetChID()==19)	 ScaleFactor = 0.913226;
+  if(GetChID()==20)	 ScaleFactor = 1.19737 ;
+  if(GetChID()==21)	 ScaleFactor = 1.14329 ;
+  if(GetChID()==22)	 ScaleFactor = 1.63259 ;
+  if(GetChID()==23)      ScaleFactor = 1.00445 ;
+  if(GetChID()==24)	 ScaleFactor = 0.90624 ;
+  if(GetChID()==25)	 ScaleFactor = 1.10906 ;
+  if(GetChID()==26)	 ScaleFactor = 0.910591;
+  if(GetChID()==27)	 ScaleFactor = 0.93724 ;
+  if(GetChID()==28)	 ScaleFactor = 0.908172;
+  if(GetChID()==29)	 ScaleFactor = 0.930454;
+  if(GetChID()==30)	 ScaleFactor = 0.898969;
+  if(GetChID()==31)	 ScaleFactor = 0.854727;
+  if(GetChID()==32)	 ScaleFactor = 0.887678;
+  if(GetChID()==33)	 ScaleFactor = 0.816444;
+  if(GetChID()==34)	 ScaleFactor = 0.893628;
+  if(GetChID()==35)	 ScaleFactor = 1.12612 ;
+  if(GetChID()==36)	 ScaleFactor = 1.06171 ;
+  if(GetChID()==37)	 ScaleFactor = 1.05226 ;
+  if(GetChID()==38)	 ScaleFactor = 0.961816;
+  if(GetChID()==39)	 ScaleFactor = 0.854641;
+  if(GetChID()==40)	 ScaleFactor = 1.04747 ;
+  if(GetChID()==41)	 ScaleFactor = 1.0973  ;
+  if(GetChID()==42)	 ScaleFactor = 0.898218;
+  if(GetChID()==43)	 ScaleFactor = 1.08689 ;
+  if(GetChID()==44)	 ScaleFactor = 1.12929 ;
+  if(GetChID()==45)	 ScaleFactor = 1.08844 ;
+  if(GetChID()==46)	 ScaleFactor = 1.18264 ;
+  if(GetChID()==47)	 ScaleFactor = 0.974706;
+  if(GetChID()==48)	 ScaleFactor = 0.936744;
+  if(GetChID()==49)	 ScaleFactor = 0.892796;
+  if(GetChID()==50)	 ScaleFactor = 0.90297 ;
+  if(GetChID()==51)	 ScaleFactor = 1.18523 ;
+  if(GetChID()==56)	 ScaleFactor = 0.973889;
+  if(GetChID()==57)	 ScaleFactor = 0.994545;
+  if(GetChID()==58)	 ScaleFactor = 1.28083 ;
+  if(GetChID()==59)	 ScaleFactor = 0.977371;
+  if(GetChID()==60)	 ScaleFactor = 1.32175 ;
+  if(GetChID()==61)	 ScaleFactor = 1.16763 ;
+  if(GetChID()==62)	 ScaleFactor = 1.00344 ;
+  if(GetChID()==63)	 ScaleFactor = 0.74402 ;
+  if(GetChID()==64)	 ScaleFactor = 1.47513 ;
+  if(GetChID()==65)	 ScaleFactor = 0.954032;
+  if(GetChID()==66)	 ScaleFactor = 0.771184;
+  if(GetChID()==67)	 ScaleFactor = 1.05539 ;
+  if(GetChID()==68)	 ScaleFactor = 1.09955 ;
+  if(GetChID()==69)	 ScaleFactor = 0.83747 ;
+  if(GetChID()==70)	 ScaleFactor = 1.08944 ;
+  if(GetChID()==71)	 ScaleFactor = 0.829015;
+  if(GetChID()==72)	 ScaleFactor = 0.898273;
+  if(GetChID()==73)	 ScaleFactor = 0.885728;
+  if(GetChID()==74)	 ScaleFactor = 1.01983 ;
+  if(GetChID()==75)	 ScaleFactor = 0.909889;
+  if(GetChID()==76)	 ScaleFactor = 1.06069 ;
+  if(GetChID()==77)	 ScaleFactor = 0.74599 ;
+  if(GetChID()==78)	 ScaleFactor = 0.92206 ;
+  if(GetChID()==79)	 ScaleFactor = 0.869043;
+  if(GetChID()==80)	 ScaleFactor = 0.936432;
+  if(GetChID()==81)	 ScaleFactor = 1.04356 ;
+  if(GetChID()==82)	 ScaleFactor = 0.954175;
+  if(GetChID()==83)	 ScaleFactor = 1.02682 ;
+  if(GetChID()==84)	 ScaleFactor = 0.898411;
+  if(GetChID()==85)	 ScaleFactor = 0.940743;
+  if(GetChID()==86)	 ScaleFactor = 0.92174 ;
+  if(GetChID()==87)	 ScaleFactor = 1.08519 ;
+  if(GetChID()==88)	 ScaleFactor = 0.728288;
+  if(GetChID()==89)	 ScaleFactor = 0.285807;
   return ScaleFactor;
 }
 

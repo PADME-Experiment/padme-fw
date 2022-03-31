@@ -1,17 +1,17 @@
-#ifndef MCThruth_h
-#define MCThruth_h 1
+#ifndef MCTruth_h
+#define MCTruth_h 1
 
 #include <TRandom3.h>
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
 
-class MCThruth {
+class MCTruth {
 
 public:
 
-  MCThruth(TString c = "config/UserAnalysis.conf", Int_t v = 0);
-  ~MCThruth();
+  MCTruth(TString c = "config/UserAnalysis.conf", Int_t v = 0);
+  ~MCTruth();
 
   Bool_t Init(PadmeAnalysisEvent*);
   Bool_t Process();

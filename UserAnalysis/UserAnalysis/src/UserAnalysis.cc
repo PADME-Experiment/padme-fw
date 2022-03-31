@@ -5,7 +5,7 @@
 #include "NPoTAnalysis.hh" //MR
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
-#include "MCThruth.hh"     //MR
+#include "MCTruth.hh"     //MR
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -21,7 +21,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fMCThruth     = new MCThruth(cfgFile,fVerbose);
+  fMCTruth     = new MCTruth(cfgFile,fVerbose);
   fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
@@ -30,14 +30,14 @@ UserAnalysis::~UserAnalysis(){
   delete fNPoTAnalysis;
   delete fIsGGAnalysis;
   delete fIs3GAnalysis;
-  delete fMCThruth;
+  delete fMCTruth;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  if(fEvent->MCTruthEvent) fMCThruth->Init(fEvent);
+  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
   fIs3GAnalysis->Init(fEvent);
@@ -63,7 +63,7 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
-  if(fEvent->MCTruthEvent) fMCThruth->Process(); //MR 04/22
+  if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   fNPoTAnalysis->Process();
   fIsGGAnalysis->Process();
   fIs3GAnalysis->Process();   
@@ -73,7 +73,7 @@ Bool_t UserAnalysis::Process(){
 Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-  if(fEvent->MCTruthEvent) fMCThruth->Finalize();
+  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
   fIsGGAnalysis->Finalize();
   fIs3GAnalysis->Finalize();

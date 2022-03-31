@@ -1,13 +1,13 @@
 // Written by M. Raggi   28/03/2022 
 // Last modified by M. Raggi 30/02/2022
-#include "MCThruth.hh"
+#include "MCTruth.hh"
 
-MCThruth::MCThruth(TString cfgFile, Int_t verbose)
+MCTruth::MCTruth(TString cfgFile, Int_t verbose)
 {
   //  Neve=0;
   fVerbose = verbose;
   if (fVerbose) {
-    printf("---> Creating MCThruth\n");
+    printf("---> Creating MCTruth\n");
     printf("     Configuration file %s\n",cfgFile.Data());
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
@@ -15,20 +15,20 @@ MCThruth::MCThruth(TString cfgFile, Int_t verbose)
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 }
 
-MCThruth::~MCThruth(){
+MCTruth::~MCTruth(){
   delete fCfgParser;
   //  delete fRndm;
 }
 
-Bool_t MCThruth::Init(PadmeAnalysisEvent* event){
-  if (fVerbose) printf("---> Initializing MCThruth\n");
+Bool_t MCTruth::Init(PadmeAnalysisEvent* event){
+  if (fVerbose) printf("---> Initializing MCTruth\n");
   fEvent = event;
   InitHistos();
   return true;
 }
 
-Bool_t MCThruth::InitHistos(){
-  // MCThruth directory will contain all histograms related to this analysis
+Bool_t MCTruth::InitHistos(){
+  // MCTruth directory will contain all histograms related to this analysis
   // Histograms for MCTruth information
   fHS->CreateList("MCTruth");
   fHS->BookHistoList("MCTruth","Vertices",250,0.,500.); // Number of vertices in event
@@ -55,7 +55,7 @@ Bool_t MCThruth::InitHistos(){
   return true;
 }
 
-Bool_t MCThruth::Process(){
+Bool_t MCTruth::Process(){
   //Check if is MC or data
   Bool_t isMC = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
@@ -153,10 +153,10 @@ Bool_t MCThruth::Process(){
   return true;
 }
 
-Bool_t MCThruth::Finalize()
+Bool_t MCTruth::Finalize()
 {
-  std::cout<<"End of MC Thruth        = "<<std::endl;
-  if (fVerbose) printf("---> Finalizing MCThruth\n");
+  std::cout<<"End of MC Truth        = "<<std::endl;
+  if (fVerbose) printf("---> Finalizing MCTruth\n");
   return true;
 }
 

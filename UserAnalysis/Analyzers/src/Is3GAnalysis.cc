@@ -90,7 +90,7 @@ Bool_t Is3GAnalysis::Process(){
   static const Double_t MinECluster=50.;
   static const Double_t TMin=-170.;
   static const Double_t TMax= 130.;
-  static const Double_t TWin= 5.;
+  static const Double_t TWin= 4.;
   static const Double_t ClRadMin= 100.;
   static const Double_t ClRadMax= 250.;
   static const Double_t COGMax  = 40.;
@@ -160,7 +160,9 @@ Bool_t Is3GAnalysis::Process(){
 	fHS->FillHistoList("GGGAnalysis","ECalClEnergy3g",EGoodCluster[kk]+EGoodCluster[jj]+EGoodCluster[ll],1);
 	
 	//	if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj]-TGoodCluster[ll])<TWin) ) continue;
-	if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin && fabs(TGoodCluster[kk]-TGoodCluster[ll])<TWin) ) continue;
+	if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin && 
+	      fabs(TGoodCluster[kk]-TGoodCluster[ll]) && 
+	      fabs(TGoodCluster[jj]-TGoodCluster[ll])<TWin )) continue;
 	fHS->FillHistoList("GGGAnalysis","ECalClEnergy3g_Intime",EGoodCluster[kk]+EGoodCluster[jj]+EGoodCluster[ll],1);
 	fHS->FillHistoList("GGGAnalysis","TCluDiff3g_Intime",TGoodCluster[kk]-TGoodCluster[jj],1);
 	fHS->FillHistoList("GGGAnalysis","TCluDiff3g_Intime",TGoodCluster[kk]-TGoodCluster[ll],1);

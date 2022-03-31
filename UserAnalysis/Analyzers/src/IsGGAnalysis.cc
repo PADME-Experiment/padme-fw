@@ -114,10 +114,10 @@ Bool_t IsGGAnalysis::Process(){
   static const Double_t MinECluster=50.;
   static const Double_t TMin=-170.;
   static const Double_t TMax= 130.;
-  static const Double_t TWin= 6.;
+  static const Double_t TWin= 4.;
   static const Double_t ClRadMin= 100.;
   static const Double_t ClRadMax= 250.;
-  static const Double_t COGMax  = 40.;
+  static const Double_t COGMax  = 45.;
   static const Double_t GlobalEScale = 1.11398; //needs to be run dependendent
 
 
@@ -256,9 +256,7 @@ Bool_t IsGGAnalysis::Process(){
       fHS->FillHisto2List("GGAnalysis","Chi2vsETot",chi2,ETotPair[ll],1.);
       fHS->FillHisto2List("GGAnalysis","EnvsTime",(TClusterPair[0]+TClusterPair[1])/2,ETotPair[ll],1.);
       fHS->FillHisto2List("GGAnalysis","EpairvsZv_allCuts",Zv,ETotPair[ll],1.);
-
       if(ETotPair[ll]>380.) fHS->FillHistoList("GGAnalysis","ZVertex_allCut",Zv,1);
-
       //      if(Zv < -2500.)  fHS->FillHistoList("GGAnalysis","ECalClEnergy2g_Intime_BestPair_ZV",ETotPair[ll],1); 
     }
   }

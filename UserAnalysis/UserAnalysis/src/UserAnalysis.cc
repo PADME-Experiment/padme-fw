@@ -73,8 +73,10 @@ Bool_t UserAnalysis::Process(){
 
 
   //Cut on physics trigger Data Only
-  if( !(trigMask & (1 << 0)) && !isMC) fECalCalib->SetEScale();
-  if( !(trigMask & (1 << 0)) && !isMC) fECalCalib->CorrectESlope();
+  //  if( !(trigMask & (1 << 0)) && !isMC) 
+  fECalCalib->SetEScale();
+    //  if( !(trigMask & (1 << 0)) && !isMC) 
+  //  fECalCalib->CorrectESlope();
   if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   fNPoTAnalysis->Process();
   fIsGGAnalysis->Process();

@@ -126,15 +126,18 @@ Bool_t IsGGAnalysis::Process(){
     //    std::cout<<"input data are simulatetd "<<std::endl;
   }
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
+  Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
 
   //Cut on physics trigger Data Only
   if( !(trigMask & (1 << 0)) && isMC==false) return false;
 
   //Calo-Calo checks
   Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
-  if(NClusters<2) return false;
+
+  //  if(NClusters<2) return false;
   ETotECal=0;
   for(int ical = 0;ical < NClusters; ical++) {
+    if(NEvent==5) cout<<"GG Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     //    if(!isMC) eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
     double tECal    =  fEvent->ECalRecoCl->Element(ical)->GetTime();

@@ -89,7 +89,7 @@ Double_t ECalCalib::SetEScale(){
   EScale=fGlobalEScale; //if nothing available
   
   fNRun   = fEvent->RecoEvent->GetRunNumber()-30000.;
-  //  Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
+  Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
   
   // Retrieve Run dependent energy scale and Energy vs time slope
   
@@ -102,6 +102,11 @@ Double_t ECalCalib::SetEScale(){
   Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
   //  cout<<"NClus "<<NClusters<<endl;
       
+  if(NEvent==5) {
+    for(int ical = 0;ical < NClusters; ical++) {
+      cout<<"Non calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
+    }
+  }
   if(NClusters>1 && NClusters<4 && 
      fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
     double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
@@ -113,6 +118,7 @@ Double_t ECalCalib::SetEScale(){
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
     fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    if(NEvent==5) cout<<"calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<" EScale "<<EScale<<" "<<endl;
   }
   
   if(NClusters>1 && NClusters<4 &&

@@ -31,19 +31,20 @@ Bool_t IsGGAnalysis::Init(PadmeAnalysisEvent* event){
 Bool_t IsGGAnalysis::InitHistos(){
   // IsGGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
-
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
-
-  fHS->BookHistoList("GGAnalysis","ECalClEnergy",500,0.,500.);
   fHS->BookHistoList("GGAnalysis","ECalClTime",500,-250.,250.);
   fHS->BookHistoList("GGAnalysis","ClusterRadius",200,0.,400.);
   fHS->BookHistoList("GGAnalysis","TClTimeDiff2g",100,25.,25.);
   fHS->BookHistoList("GGAnalysis","NClusters_AfterPresel",25,-0.5,24.5);
-  fHS->BookHistoList("GGAnalysis","EClusters_AfterPresel",300,0.,600.);
 
   Double_t hEMax=800;
   Double_t hEBins=800;
   // Energy Histos
+  fHS->BookHistoList("GGAnalysis","ECalClEnergy"                     ,hEBins,0.,hEMax);
+  fHS->BookHistoList("GGAnalysis","EClusters_AfterPresel"            ,hEBins,0.,hEMax);
+  fHS->BookHistoList("GGAnalysis","EG1_final"                        ,hEBins,0.,hEMax);
+  fHS->BookHistoList("GGAnalysis","EG2_final"                        ,hEBins,0.,hEMax);
+
   fHS->BookHistoList("GGAnalysis","ETotECal"                         ,hEBins,0.,hEMax);
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g"                   ,hEBins,0.,hEMax);
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g_Intime"            ,hEBins,0.,hEMax);  
@@ -51,19 +52,17 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g_Intime_COG_Dist"   ,hEBins,0.,hEMax);
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g_Intime_BestPair_ZV",hEBins,0.,hEMax); 
   fHS->BookHistoList("GGAnalysis","ClEOutofTime"                     ,hEBins,0.,hEMax);   
-
   //quandrants NGG distribution
   fHS->BookHistoList("GGAnalysis","EGG_topLeft" ,hEBins,0.,hEMax);  
   fHS->BookHistoList("GGAnalysis","EGG_topRight",hEBins,0.,hEMax);  
   fHS->BookHistoList("GGAnalysis","EGG_botLeft" ,hEBins,0.,hEMax);  
   fHS->BookHistoList("GGAnalysis","EGG_botRight",hEBins,0.,hEMax);
+  fHS->BookHisto2List("GGAnalysis","EnvsTime",100,-200.,200.,125,0.,500.);
 
   fHS->BookHistoList("GGAnalysis","NPairs",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime",200,20.,20.);  
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG",200,20.,20.);  
   
-  fHS->BookHistoList("GGAnalysis","EG1_final",500,0.,500.);  
-  fHS->BookHistoList("GGAnalysis","EG2_final",500,0.,500.);  
   fHS->BookHistoList("GGAnalysis","COG_X",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","COG_Y",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","ClClDist",300,0.,600.);   
@@ -118,9 +117,8 @@ Bool_t IsGGAnalysis::Process(){
   static const Double_t ClRadMin= 100.;
   static const Double_t ClRadMax= 250.;
   static const Double_t COGMax  = 45.;
-  static const Double_t GlobalEScale = 1.11398; //needs to be run dependendent
 
-
+    
   //Check if is MC or data
   Bool_t isMC = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
@@ -138,7 +136,7 @@ Bool_t IsGGAnalysis::Process(){
   ETotECal=0;
   for(int ical = 0;ical < NClusters; ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    if(!isMC) eECal*=GlobalEScale;  //Data ECal energy Need the reco to be calibrated
+    //    if(!isMC) eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
     double tECal    =  fEvent->ECalRecoCl->Element(ical)->GetTime();
     TVector3 pos1   =  fEvent->ECalRecoCl->Element(ical)->GetPosition();
     double ClRadius = sqrt(pos1.X()*pos1.X()+pos1.Y()*pos1.Y());
@@ -186,7 +184,7 @@ Bool_t IsGGAnalysis::Process(){
 
       if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin) ) continue;
       // have a look at the out of time Events to cross check 
-      if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<4.) ) fHS->FillHistoList("GGAnalysis","ClEOutofTime",EGoodCluster[kk]+EGoodCluster[jj],1);
+      if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin) ) fHS->FillHistoList("GGAnalysis","ClEOutofTime",EGoodCluster[kk]+EGoodCluster[jj],1);
       fHS->FillHistoList("GGAnalysis","ECalClEnergy2g_Intime",EGoodCluster[kk]+EGoodCluster[jj],1);
       fHS->FillHistoList("GGAnalysis","TCluDiff2g_Intime",TGoodCluster[kk]-TGoodCluster[jj],1);
       fHS->FillHisto2List("GGAnalysis","EnvsTimeDiff_2g",TGoodCluster[kk]-TGoodCluster[jj],EGoodCluster[kk]+EGoodCluster[jj],1);
@@ -254,9 +252,12 @@ Bool_t IsGGAnalysis::Process(){
       fHS->FillHistoList("GGAnalysis","EG1_final",EClusterPair[0],1);
       fHS->FillHistoList("GGAnalysis","EG2_final",EClusterPair[1],1);
       fHS->FillHisto2List("GGAnalysis","Chi2vsETot",chi2,ETotPair[ll],1.);
-      fHS->FillHisto2List("GGAnalysis","EnvsTime",(TClusterPair[0]+TClusterPair[1])/2,ETotPair[ll],1.);
+
       fHS->FillHisto2List("GGAnalysis","EpairvsZv_allCuts",Zv,ETotPair[ll],1.);
-      if(ETotPair[ll]>380.) fHS->FillHistoList("GGAnalysis","ZVertex_allCut",Zv,1);
+      if(ETotPair[ll]>400.){ 
+	fHS->FillHistoList("GGAnalysis","ZVertex_allCut",Zv,1);
+	fHS->FillHisto2List("GGAnalysis","EnvsTime",(TClusterPair[0]+TClusterPair[1])/2,ETotPair[ll],1.);
+      }
       //      if(Zv < -2500.)  fHS->FillHistoList("GGAnalysis","ECalClEnergy2g_Intime_BestPair_ZV",ETotPair[ll],1); 
     }
   }

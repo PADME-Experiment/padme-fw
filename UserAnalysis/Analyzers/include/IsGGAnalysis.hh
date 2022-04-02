@@ -36,5 +36,6 @@ private:
   HistoSvc* fHS;
   Int_t NGG;
   Double_t ETotECal;
+
 };
 #endif

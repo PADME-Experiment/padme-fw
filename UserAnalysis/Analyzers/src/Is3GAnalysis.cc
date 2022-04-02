@@ -94,7 +94,6 @@ Bool_t Is3GAnalysis::Process(){
   static const Double_t ClRadMin= 100.;
   static const Double_t ClRadMax= 250.;
   static const Double_t COGMax  = 40.;
-  static const Double_t GlobalEScale = 1.11398; //needs to be run dependendent
   //Check if is MC or data
   Bool_t isMC = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
@@ -116,7 +115,6 @@ Bool_t Is3GAnalysis::Process(){
     double tECal    =  fEvent->ECalRecoCl->Element(ical)->GetTime();
     TVector3 pos1   =  fEvent->ECalRecoCl->Element(ical)->GetPosition();
     double ClRadius = sqrt(pos1.X()*pos1.X()+pos1.Y()*pos1.Y());
-    if(!isMC) eECal*=GlobalEScale;  //Data ECal energy Need the reco to be calibrated
     ETotECal+=eECal;
     fHS->FillHistoList("GGGAnalysis","ETotECal",ETotECal,1);
     

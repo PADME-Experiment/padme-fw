@@ -2,6 +2,7 @@
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include "UserAnalysis.hh"
+#include "ECalCalib.hh"
 #include "NPoTAnalysis.hh" //MR
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
@@ -19,6 +20,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fECalCalib = new ECalCalib(cfgFile,fVerbose);
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fMCTruth     = new MCTruth(cfgFile,fVerbose);
@@ -27,6 +29,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
+  delete fECalCalib;
   delete fNPoTAnalysis;
   delete fIsGGAnalysis;
   delete fIs3GAnalysis;
@@ -37,6 +40,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
+  fECalCalib->Init(fEvent);
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
@@ -60,9 +64,17 @@ Bool_t UserAnalysis::InitHistos(){
 #define ABS(x)  ((x) > 0 ? (x):(-x))
 
 Bool_t UserAnalysis::Process(){
+  Bool_t isMC = false;
+  if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) isMC=true;
+   
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+
+
+  //Cut on physics trigger Data Only
+  if( !(trigMask & (1 << 0)) && !isMC) fECalCalib->SetEScale();
+  if( !(trigMask & (1 << 0)) && !isMC) fECalCalib->CorrectESlope();
   if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   fNPoTAnalysis->Process();
   fIsGGAnalysis->Process();

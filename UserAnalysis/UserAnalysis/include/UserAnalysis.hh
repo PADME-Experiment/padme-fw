@@ -6,6 +6,7 @@
 
 class HistoSvc;
 class NPoTAnalysis;
+class ECalCalib;
 class IsGGAnalysis;
 class Is3GAnalysis;
 class MCTruth;
@@ -37,6 +38,6 @@ private:
   IsGGAnalysis* fIsGGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
   MCTruth* fMCTruth;
-
+  ECalCalib* fECalCalib;
 };
 #endif

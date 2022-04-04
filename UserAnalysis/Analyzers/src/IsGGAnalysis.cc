@@ -57,7 +57,7 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","EGG_topRight",hEBins,0.,hEMax);  
   fHS->BookHistoList("GGAnalysis","EGG_botLeft" ,hEBins,0.,hEMax);  
   fHS->BookHistoList("GGAnalysis","EGG_botRight",hEBins,0.,hEMax);
-  fHS->BookHisto2List("GGAnalysis","EnvsTime",100,-200.,200.,125,0.,500.);
+
 
   fHS->BookHistoList("GGAnalysis","NPairs",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime",200,20.,20.);  
@@ -71,9 +71,12 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","ZVertex_allCut",500,-5000.,0.);   
   fHS->BookHistoList("GGAnalysis","ClClDist_COG",300,0.,600.);   
   fHS->BookHistoList("GGAnalysis","ECalClTime_GG",500,-250.,250.);
- 
-  fHS->BookHisto2List("GGAnalysis","EnvsTimeDiff",600,-150.,150.,125,0.,500.);
-  fHS->BookHisto2List("GGAnalysis","EnvsTime",100,-150.,150.,125,0.,500.);
+
+  fHS->BookHisto2List("GGAnalysis","EnvsTheta",100,0.,0.1,250,0.,500.); 
+  fHS->BookHisto2List("GGAnalysis","EnvsTimeDiff",400,-200.,200.,125,0.,500.);
+  fHS->BookHisto2List("GGAnalysis","EnvsTime",200,-200.,200.,125,0.,500.);
+  fHS->BookHisto2List("GGAnalysis","EnvsTimeScaled",200,-200.,200.,240,0.,1.2);
+
   fHS->BookHisto2List("GGAnalysis","EnvsTimeDiff_2g",300,-150.,150.,125,0.,500.);
   fHS->BookHisto2List("GGAnalysis","COG_Map",300,-150.,150.,300,-150.,150.);
   fHS->BookHisto2List("GGAnalysis","Chi2vsETot",100,0.,20.,125,0.,500.);
@@ -158,7 +161,6 @@ Bool_t IsGGAnalysis::Process(){
 //    if(tECal>TMax && isMC==false) continue;
 //    if(tECal<TMin && isMC==false) continue;
 
-
     //Cut on cluster radius Min and Max
     if(ClRadius<ClRadMin) continue;
     if(ClRadius>ClRadMax) continue;
@@ -166,7 +168,7 @@ Bool_t IsGGAnalysis::Process(){
     EGoodCluster.push_back(eECal);
     TGoodCluster.push_back(tECal);
     PosXGoodCluster.push_back(pos1.X());
-    PosYGoodCluster.push_back(pos1.Y()+3.185); //correct for vertical ECal displacement
+    PosYGoodCluster.push_back(pos1.Y());
     fHS->FillHistoList("GGAnalysis","EClusters_AfterPresel",eECal,1.);
   }
 
@@ -242,6 +244,8 @@ Bool_t IsGGAnalysis::Process(){
   fHS->FillHistoList("GGAnalysis","NPairs",NPairs,1);
   fHS->FillHistoList("GGAnalysis","NClusters_final",NClusters);
   fHS->FillHistoList("GGAnalysis","NGoodClusters_final",NGoodClusters);
+  Double_t Angle0=sqrt(PosXGoodCluster[0]*PosXGoodCluster[0]+PosYGoodCluster[0]*PosYGoodCluster[0])/3550.;
+  fHS->FillHisto2List("GGAnalysis","EnvsTheta",Angle0,EClusterPair[0],1.);
 
   double chi2 = 0;
   for(Int_t ll=0;ll<NPairs;ll++){
@@ -257,9 +261,11 @@ Bool_t IsGGAnalysis::Process(){
       fHS->FillHisto2List("GGAnalysis","Chi2vsETot",chi2,ETotPair[ll],1.);
 
       fHS->FillHisto2List("GGAnalysis","EpairvsZv_allCuts",Zv,ETotPair[ll],1.);
+      //Use only after general scale calibration
       if(ETotPair[ll]>400.){ 
 	fHS->FillHistoList("GGAnalysis","ZVertex_allCut",Zv,1);
 	fHS->FillHisto2List("GGAnalysis","EnvsTime",(TClusterPair[0]+TClusterPair[1])/2,ETotPair[ll],1.);
+	fHS->FillHisto2List("GGAnalysis","EnvsTimeScaled",(TClusterPair[0]+TClusterPair[1])/2,ETotPair[ll]/430,1.);
       }
       //      if(Zv < -2500.)  fHS->FillHistoList("GGAnalysis","ECalClEnergy2g_Intime_BestPair_ZV",ETotPair[ll],1); 
     }

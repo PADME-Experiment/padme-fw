@@ -739,6 +739,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
 Double_t DigitizerChannelPVeto::SetPVetoChaGain(){
   Double_t ScaleFactor = 1;
+  //normalised to gaussian mean = 35 using run 650
   //  std::cout<<"Setting cha gain"<<std::endl;
   if(GetChID()==0) 	 ScaleFactor = 1.20007;
   if(GetChID()==1) 	 ScaleFactor = 1.20517;

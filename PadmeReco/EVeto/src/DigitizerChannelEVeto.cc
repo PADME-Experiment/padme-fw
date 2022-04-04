@@ -42,6 +42,7 @@ void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
+  fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -193,7 +194,7 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   }
   
   //  Double_t hitV;//includes tail correction
-  double tailcorrection=0;
+  double tailfraction=0;
   double DeltaTSortSamples=0;
  
   for (UShort_t ii = 0 ; ii != index.size() ; ii++) {
@@ -207,11 +208,10 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
-    //    tailcorrection = TailHeight(DeltaTSortSamples);
-    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
+    if(fTailCorrection) tailfraction = TailHeightDerivative(DeltaTSortSamples);
 
     if(ii==0)    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[index[ii]]);
-    else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction
+    else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailfraction); //for all hits after the first, apply the tail correction
 
     Hit = new TRecoVHit();
   
@@ -247,9 +247,9 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                    = new TH1F("DerivV","DerivV",400,0,400);
+  hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
   hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
-  hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
+  hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
   hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
   hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
@@ -520,6 +520,7 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
 Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
   Double_t ScaleFactor = 1;
+  //normalised to gaussian mean = 35 using run 665
   //  std::cout<<"Setting cha gain"<<std::endl;
   if(GetChID()==0) 	 ScaleFactor = 1.14579 ;
   if(GetChID()==1) 	 ScaleFactor = 1.13981 ;
@@ -608,169 +609,6 @@ Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
   if(GetChID()==88)	 ScaleFactor = 0.728288;
   if(GetChID()==89)	 ScaleFactor = 0.285807;
   return ScaleFactor;
-}
-
-Double_t DigitizerChannelEVeto::TailHeight(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
-  Double_t HeightFrac=0;
-  Double_t Frac[152];
-  Frac[0]= -0.980571   ; 
-  Frac[1]= -0.981553   ;
-  Frac[2]= -0.980736   ;
-  Frac[3]= -0.97778    ;
-  Frac[4]= -0.971722   ;
-  Frac[5]= -0.964676   ;
-  Frac[6]= -0.956346   ;
-  Frac[7]= -0.947524   ;
-  Frac[8]= -0.936815   ;
-  Frac[9]= -0.925396   ;
-  Frac[10]=-0.913626   ;
-  Frac[11]=-0.902825   ;
-  Frac[12]=-0.889087   ;
-  Frac[13]=-0.875895   ;
-  Frac[14]=-0.862712   ;
-  Frac[15]=-0.8499     ;
-  Frac[16]=-0.83571    ;
-  Frac[17]=-0.820816   ;
-  Frac[18]=-0.807027   ;
-  Frac[19]=-0.793632   ;
-  Frac[20]=-0.778125   ;
-  Frac[21]=-0.763295   ;
-  Frac[22]=-0.749179   ;
-  Frac[23]=-0.736244   ;
-  Frac[24]=-0.72276    ;
-  Frac[25]=-0.70841    ;
-  Frac[26]=-0.695512   ;
-  Frac[27]=-0.683497   ;
-  Frac[28]=-0.671098   ;
-  Frac[29]=-0.658029   ;
-  Frac[30]=-0.645816   ;
-  Frac[31]=-0.635959   ;
-  Frac[32]=-0.625102   ;
-  Frac[33]=-0.614064   ;
-  Frac[34]=-0.603985   ;
-  Frac[35]=-0.594267   ;
-  Frac[36]=-0.584422   ;
-  Frac[37]=-0.573764   ;
-  Frac[38]=-0.564061   ;
-  Frac[39]=-0.55551    ;
-  Frac[40]=-0.546319   ;
-  Frac[41]=-0.535383   ;
-  Frac[42]=-0.526042   ;
-  Frac[43]=-0.517341   ;
-  Frac[44]=-0.507091   ;
-  Frac[45]=-0.49763    ;
-  Frac[46]=-0.488771   ;
-  Frac[47]=-0.480027   ;
-  Frac[48]=-0.470536   ;
-  Frac[49]=-0.460673   ;
-  Frac[50]=-0.452545   ;
-  Frac[51]=-0.443358   ;
-  Frac[52]= -0.434426  ;
-  Frac[53]= -0.425019  ;
-  Frac[54]= -0.416526  ;
-  Frac[55]= -0.40837   ;
-  Frac[56]= -0.398906  ;
-  Frac[57]= -0.388772  ;
-  Frac[58]= -0.381358  ;
-  Frac[59]= -0.372678  ;
-  Frac[60]= -0.363733  ;
-  Frac[61]= -0.354299  ;
-  Frac[62]= -0.345341  ;
-  Frac[63]= -0.337202  ;
-  Frac[64]= -0.32762   ;
-  Frac[65]= -0.317911  ;
-  Frac[66]= -0.309973  ;
-  Frac[67]= -0.302964  ;
-  Frac[68]= -0.294315  ;
-  Frac[69]= -0.285437  ;
-  Frac[70]= -0.278386  ;
-  Frac[71]= -0.271311  ;
-  Frac[72]= -0.264793  ;
-  Frac[73]= -0.256882  ;
-  Frac[74]= -0.250253  ;
-  Frac[75]= -0.244707  ;
-  Frac[76]= -0.237993  ;
-  Frac[77]= -0.231874  ;
-  Frac[78]= -0.226499  ;
-  Frac[79]= -0.221193  ;
-  Frac[80]= -0.215178  ;
-  Frac[81]= -0.209712  ;
-  Frac[82]= -0.204143  ;
-  Frac[83]= -0.198955  ;
-  Frac[84]= -0.194389  ;
-  Frac[85]= -0.188292  ;
-  Frac[86]= -0.183074  ;
-  Frac[87]= -0.178442  ;
-  Frac[88]= -0.173292  ;
-  Frac[89]= -0.166721  ;
-  Frac[90]= -0.162393  ;
-  Frac[91]= -0.15742   ;
-  Frac[92]= -0.152343  ;
-  Frac[93]= -0.147001  ;
-  Frac[94]= -0.142241  ;
-  Frac[95]= -0.137595  ;
-  Frac[96]= -0.133313  ;
-  Frac[97]= -0.128435  ;
-  Frac[98]= -0.124631  ;
-  Frac[99]= -0.121106  ;
-  Frac[100]= -0.116854 ;
-  Frac[101]= -0.112579 ;
-  Frac[102]= -0.109927 ;
-  Frac[103]= -0.107044 ;
-  Frac[104]= -0.103422 ;
-  Frac[105]= -0.0997127;
-  Frac[106]= -0.0967979;
-  Frac[107]= -0.094159 ;
-  Frac[108]= -0.0911629;
-  Frac[109]= -0.0879251;
-  Frac[110]= -0.0850502 ;
-  Frac[111]= -0.0825226;
-  Frac[112]= -0.079926 ;
-  Frac[113]= -0.0767524;
-  Frac[114]= -0.0745703;
-  Frac[115]= -0.0722342;
-  Frac[116]= -0.0694902;
-  Frac[117]= -0.0661824;
-  Frac[118]= -0.0644465;
-  Frac[119]= -0.0624207;
-  Frac[120]= -0.0603031;
-  Frac[121]= -0.0573222;
-  Frac[122]= -0.0552809;
-  Frac[123]= -0.0533513;
-  Frac[124]= -0.0513799;
-  Frac[125]= -0.0488961;
-  Frac[126]= -0.0473815;
-  Frac[127]= -0.0456104;
-  Frac[128]= -0.0440546;
-  Frac[129]= -0.0414905;
-  Frac[130]= -0.0400789;
-  Frac[131]= -0.0383941;
-  Frac[132]= -0.0363219;
-  Frac[133]= -0.0342883;
-  Frac[134]= -0.0328866;
-  Frac[135]= -0.0312922;
-  Frac[136]= -0.029854 ;
-  Frac[137]= -0.0274867;
-  Frac[138]= -0.0255809;
-  Frac[139]= -0.0241595;
-  Frac[140]= -0.0217186;
-  Frac[141]= -0.0202501;
-  Frac[142]= -0.0183742;
-  Frac[143]= -0.0168845;
-  Frac[144]= -0.0142908;
-  Frac[145]= -0.0126114;
-  Frac[146]= -0.0110446;
-  Frac[147]= -0.0093668;
-  Frac[148]= -0.0068487;
-  Frac[149]= -0.0049751;
-  Frac[150]= -0.0037547;
-  Frac[151]= -0.0024154;
-  Frac[152]= -0.0003822;
-
-  if(DeltaT<153)  HeightFrac = -1*Frac[DeltaT];//The fractions of heights in this method are for a negative signal, in the rest of the reco positive signals are used, so signal height fraction needs to be multiplied by -1.
-  else HeightFrac=0;
-  return HeightFrac;
-
 }
 
 Double_t DigitizerChannelEVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak

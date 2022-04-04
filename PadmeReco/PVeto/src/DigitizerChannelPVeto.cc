@@ -43,6 +43,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
+  fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -340,7 +341,7 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
   }
   
   //  Double_t hitV;//includes tail correction
-  double tailcorrection=0;
+  double tailfraction=0;
   double DeltaTSortSamples=0;
  
   for (UShort_t ii = 0 ; ii != index.size() ; ii++) {
@@ -354,14 +355,14 @@ Double_t DigitizerChannelPVeto::CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
 
     DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
-    //    tailcorrection = TailHeight(DeltaTSortSamples);
-    tailcorrection = TailHeightDerivative(DeltaTSortSamples);
+    //    tailfraction = TailHeight(DeltaTSortSamples);
+    if(fTailCorrection) tailfraction = TailHeightDerivative(DeltaTSortSamples);
 
     /*    if(ii==0) vRawCorrectHitVec.push_back(vRawSortHitVec[ii]);//for the first hit, there's no tail correction because there's not tail from a previous hit
-	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction*/
+	  else    vRawCorrectHitVec.push_back(vRawSortHitVec[ii]-vRawCorrectHitVec[ii-1]*tailfraction); //for all hits after the first, apply the tail correction*/
 
     if(ii==0)    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[index[ii]]);
-    else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailcorrection); //for all hits after the first, apply the tail correction
+    else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailfraction); //for all hits after the first, apply the tail correction
 
     //    fAmpli=vTSpecYPCorrectHitVec[ii];
     

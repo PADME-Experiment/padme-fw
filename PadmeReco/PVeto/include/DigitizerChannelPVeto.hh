@@ -222,6 +222,7 @@ private:
   Double_t fAmpThresholdHigh;
 
   Bool_t fChannelEqualisation; //Beth 23/2/22
+  Bool_t fTailCorrection; //Beth 4/4/22
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;

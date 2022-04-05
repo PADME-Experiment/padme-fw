@@ -19,7 +19,8 @@ export PADMEANALYSIS=${PADME}/PadmeAnalysis
 export PADMEROOT=${PADME}/PadmeRoot
 
 # Add PadmeRoot to LD_LIBRARY_PATH (also remove previous definitions)
-#export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
+export LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"
 clean_ld_library_path=`echo $LD_LIBRARY_PATH | tr ":" "\n" | grep -v PadmeRoot | paste -sd ":"`
 export LD_LIBRARY_PATH="${clean_ld_library_path}:${PADMEROOT}/lib"
 unset clean_ld_library_path

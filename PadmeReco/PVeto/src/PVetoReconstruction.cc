@@ -2,7 +2,7 @@
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
-//
+// Modified by Beth Long 2022-04-07 
 // --------------------------------------------------------------
 #include "Riostream.h"
 
@@ -13,6 +13,7 @@
 #include "TPVetoMCDigi.hh"
 #include "TPVetoRecoEvent.hh"
 #include "DigitizerChannelReco.hh"
+#include "DigitizerChannelPVeto.hh"
 #include "PVetoCalibration.hh"
 #include "PVetoGeometry.hh"
 #include "PVetoSimpleClusterization.hh"
@@ -25,7 +26,8 @@
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
-  fChannelReco = new DigitizerChannelReco();
+//  fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
   fClusterization = new PVetoSimpleClusterization();
   //fChannelCalibration  = new PadmeVCalibration();
@@ -164,6 +166,35 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 }
 
 
+void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+  
+  // from Hits to Clusters
+  ClearClusters();
+  BuildClusters();
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
+
+}
+
+
 void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
   float charges[96];
@@ -250,11 +281,54 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
       GetHisto("PVetoOccupancyLast")->Fill(Hits[iHit1]->GetChannelId());
     }
   }  
-
-  
-  
-  
-  
+ 
 }
 
+
+void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+	//	std::cout<<"Event no "<<rawEv->GetEventNumber()<<" ChID "<<ChID<<std::endl; 
+	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
+}
 

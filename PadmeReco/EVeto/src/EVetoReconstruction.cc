@@ -2,7 +2,7 @@
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
-//
+// Modified by Beth Long 2022-04-07 
 // --------------------------------------------------------------
 #include "Riostream.h"
 
@@ -11,7 +11,8 @@
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
 #include "TEVetoMCDigi.hh"
-#include "DigitizerChannelReco.hh"
+//#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelEVeto.hh"
 #include "EVetoCalibration.hh"
 #include "EVetoSimpleClusterization.hh"
 #include "EVetoGeometry.hh"
@@ -27,7 +28,8 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 {
   //fRecoEvent = new TRecoEVetoEvent();
   //ParseConfFile(ConfigFileName);
-  fChannelReco = new DigitizerChannelReco();
+//  fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelEVeto();
   fChannelCalibration = new EVetoCalibration();
   fClusterization = new EVetoSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
@@ -131,6 +133,93 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 // {;}
 
 
+void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+  
+  // from Hits to Clusters
+  ClearClusters();
+  BuildClusters();
+  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
+
+}
+
+// void EVetoReconstruction::EndProcessing()
+// {;}
+void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
+  float charges[96];
+  for(int i=0;i<96;i++) charges[i] = -1.;
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
+    //    if(Hits[iHit1]->GetTime() < 10.) continue;
+
+    
+    GetHisto("EVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
+    GetHisto("EVetoTime")->Fill(Hits[iHit1]->GetTime());
+    GetHisto("EVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
+    ((TH2F *) GetHisto("EVetoTimeVsChannelID"))->Fill(Hits[iHit1]->GetChannelId(), Hits[iHit1]->GetTime());
+    
+    
+
+  }    
+
+  char name[256];
+  
+  int ih1,ih2;
+
+  for(int i = 1; i < 95; i++) {
+    if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
+      sprintf(name, "EVetoCharge-%d", i);
+      GetHisto(name)->Fill(charges[i]);
+      GetHisto("EVetoEnergyClean") -> Fill(charges[i] );
+
+    }
+  }
+  
+
+  
+  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
+    for(unsigned int iHit2 = 0; iHit2 < Hits.size();++iHit2) {
+
+      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
+	(  (TH2F *) GetHisto("EVetoTimeVsEVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
+	GetHisto("EVetoHitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+      }
+
+
+      if(Hits[iHit1]->GetChannelId() + 1 ==  Hits[iHit2]->GetChannelId()   ) {
+
+	sprintf(name, "EVetoDTch%dch%d", Hits[iHit1]->GetChannelId() ,Hits[iHit1]->GetChannelId()+1);
+	//	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
+	  GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+	  //	}
+      }
+    }
+  }
+
+
+}
+
+
 void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
@@ -209,58 +298,49 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
   */
 }
 
-void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
-  float charges[96];
-  for(int i=0;i<96;i++) charges[i] = -1.;
-
+void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
-    //    if(Hits[iHit1]->GetTime() < 10.) continue;
+  ((DigitizerChannelEVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelEVeto*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
 
-    
-    GetHisto("EVetoOccupancy")->Fill(Hits[iHit1]->GetChannelId());
-    GetHisto("EVetoTime")->Fill(Hits[iHit1]->GetTime());
-    GetHisto("EVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
-    ((TH2F *) GetHisto("EVetoTimeVsChannelID"))->Fill(Hits[iHit1]->GetChannelId(), Hits[iHit1]->GetTime());
-    
-    
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
 
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+	//	std::cout<<"Event no "<<rawEv->GetEventNumber()<<" ChID "<<ChID<<std::endl; 
+	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelEVeto*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
   }    
-
-  char name[256];
-  
-  int ih1,ih2;
-
-  for(int i = 1; i < 95; i++) {
-    if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
-      sprintf(name, "EVetoCharge-%d", i);
-      GetHisto(name)->Fill(charges[i]);
-      GetHisto("EVetoEnergyClean") -> Fill(charges[i] );
-
-    }
-  }
-  
-
-  
-  for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
-    for(unsigned int iHit2 = 0; iHit2 < Hits.size();++iHit2) {
-
-      if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {
-	(  (TH2F *) GetHisto("EVetoTimeVsEVetoTime"))  ->Fill(Hits[iHit1]->GetTime(),Hits[iHit2]->GetTime());
-	GetHisto("EVetoHitTimeDifference")->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-      }
-
-
-      if(Hits[iHit1]->GetChannelId() + 1 ==  Hits[iHit2]->GetChannelId()   ) {
-
-	sprintf(name, "EVetoDTch%dch%d", Hits[iHit1]->GetChannelId() ,Hits[iHit1]->GetChannelId()+1);
-	//	if(Hits[iHit1]->GetTime() > 20. && Hits[iHit2]->GetTime() > 20.) {	  
-	  GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
-	  //	}
-      }
-    }
-  }
-
-
 }

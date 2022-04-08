@@ -13,6 +13,17 @@ Is3GAnalysis::Is3GAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+
+  // Standard cuts list
+  MinECluster=50.;
+  TMin=-170.;
+  TMax= 130.;
+  TWin= 4.;
+  ClRadMin= 100.;
+  ClRadMax= 250.;
+  COGMax  = 45.;
+  DistMax = 150.;
+
 }
 
 Is3GAnalysis::~Is3GAnalysis(){
@@ -68,32 +79,6 @@ Bool_t Is3GAnalysis::InitHistos(){
 
 Bool_t Is3GAnalysis::Process(){
 
-  std::vector<double> EClusterPair;
-  std::vector<double> TClusterPair;
-  std::vector<double> PosXClusterPair;
-  std::vector<double> PosYClusterPair;
-
-  std::vector<double> Ei;
-  std::vector<double> PosX;
-  std::vector<double> PosY;
-
-  std::vector<double> EGoodCluster;
-  std::vector<double> TGoodCluster;
-  std::vector<double> PosXGoodCluster;
-  std::vector<double> PosYGoodCluster;
-
-  std::vector<double> ETotPair;  
-  std::vector<double> TDiffPair; 
-  std::vector<double> ETotTris;    
-  
-  // Standard cuts list
-  static const Double_t MinECluster=50.;
-  static const Double_t TMin=-170.;
-  static const Double_t TMax= 130.;
-  static const Double_t TWin= 4.;
-  static const Double_t ClRadMin= 100.;
-  static const Double_t ClRadMax= 250.;
-  static const Double_t COGMax  = 40.;
   //Check if is MC or data
   Bool_t isMC = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
@@ -125,11 +110,7 @@ Bool_t Is3GAnalysis::Process(){
     fHS->FillHistoList("GGGAnalysis","ClusterRadius",ClRadius,1);
     
     //Data cut on cluster energy Need the reco to be calibrated
-    if(!isMC && eECal<MinECluster) continue; 
-
-//    //Cut on cluster Time Data only
-//    if(tECal>TMax && isMC==false) continue;
-//    if(tECal<TMin && isMC==false) continue;
+    if(eECal<MinECluster) continue; 
 
     //Cut on cluster radius Min and Max
     if(ClRadius<ClRadMin) continue;
@@ -142,7 +123,7 @@ Bool_t Is3GAnalysis::Process(){
   }
 
 //  //cut at at least two clusters
-  if(EGoodCluster.size()!=3) return false;
+  if(EGoodCluster.size()<3) return false;
   fHS->FillHistoList("GGGAnalysis","NClusters_AfterPresel",NClusters,1);
 
 // Search for in time cluster pairs 
@@ -150,8 +131,8 @@ Bool_t Is3GAnalysis::Process(){
   Int_t NPairs = 0;
 
   //BUG on dimensions of the arrays
-  for(Int_t kk=0;kk<NGoodClusters;kk++){
-    for(Int_t jj=kk+1;jj<NGoodClusters;jj++){
+  for(Int_t kk=0;kk<NGoodClusters-2;kk++){
+    for(Int_t jj=kk+1;jj<NGoodClusters-1;jj++){
       for(Int_t ll=jj+1;ll<NGoodClusters;ll++){	
 	fHS->FillHistoList("GGGAnalysis","TClTimeDiff3g",TGoodCluster[kk]-TGoodCluster[jj],1.);
 	fHS->FillHistoList("GGGAnalysis","TClTimeDiff3g",TGoodCluster[kk]-TGoodCluster[ll],1.);

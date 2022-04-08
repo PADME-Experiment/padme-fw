@@ -69,16 +69,19 @@ Bool_t UserAnalysis::Process(){
    
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
-  for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+  for (int i=0;i<8;i++) { 
+    if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); 
+  }
   //Cut on physics trigger Data Only
-  //  if( !(trigMask & (1 << 0)) && !isMC) 
+  if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
+
+  //  if( trigMask & (1 << 0) && !isMC){
   fECalCalib->Process();
   fECalCalib->SetEScale();
-    //  if( !(trigMask & (1 << 0)) && !isMC) 
   fECalCalib->CorrectESlope();
-  fECalCalib->FixPosition();
+  fECalCalib->FixPosition(); //need to change values into the structure.
+    //  }
 
-  if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   fNPoTAnalysis->Process();
   fIsGGAnalysis->Process();
   fIs3GAnalysis->Process();   

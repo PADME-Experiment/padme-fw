@@ -16,17 +16,19 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 
-
   // Standard cuts list
   MinECluster=50.;
   TMin=-170.;
   TMax= 130.;
   TWin= 4.;
-  ClRadMin= 100.;
-  ClRadMax= 250.;
-  COGMax  = 45.;
-  DistMax = 150.;
+//  ClRadMin= 100.;
+//  ClRadMax= 250.;
 
+  ClRadMin= 90.;
+  ClRadMax= 270.;
+  
+  COGMax  = 30.;
+  DistMax = 150.;
 }
 
 IsGGAnalysis::~IsGGAnalysis(){
@@ -60,7 +62,6 @@ Bool_t IsGGAnalysis::InitHistos(){
 
   fHS->BookHisto2List("GGAnalysis","E1vsE2_BadVtx",hEBins/2,0.,hEMax/2,hEBins/2,0.,hEMax/2);
 
-
   fHS->BookHistoList("GGAnalysis","ETotECal"                         ,hEBins,0.,hEMax);
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g"                   ,hEBins,0.,hEMax);
   fHS->BookHistoList("GGAnalysis","ECalClEnergy2g_Intime"            ,hEBins,0.,hEMax);  
@@ -82,13 +83,16 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","COG_X",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","COG_Y",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","ClClDist",300,0.,600.);   
-
-  fHS->BookHistoList("GGAnalysis","ZVertex",500,-5000.,0.);
-  fHS->BookHistoList("GGAnalysis","ZVertex_COG",500,-5000.,0.);
-  fHS->BookHistoList("GGAnalysis","ZVertex_COG_Dist",500,-5000.,0.);
-  fHS->BookHistoList("GGAnalysis","ZVertex_allCut",500,-5000.,0.);   
-  fHS->BookHistoList("GGAnalysis","ZVertex_EnnvsTheta",500,-5000.,0.);   
-  fHS->BookHistoList("GGAnalysis","ZVertex_EPair",500,-5000.,0.);   
+  
+  Int_t NBinZ=400;
+  Double_t MinZ=-4000.;
+  fHS->BookHistoList("GGAnalysis","ZVertex"           ,NBinZ,MinZ,0.);
+  fHS->BookHistoList("GGAnalysis","ZVertex_COG"       ,NBinZ,MinZ,0.);
+  fHS->BookHistoList("GGAnalysis","ZVertex_COG_Dist"  ,NBinZ,MinZ,0.);
+  fHS->BookHistoList("GGAnalysis","ZVertex_allCut"    ,NBinZ,MinZ,0.);   
+  fHS->BookHistoList("GGAnalysis","ZVertex_EnnvsTheta",NBinZ,MinZ,0.);   
+  fHS->BookHistoList("GGAnalysis","ZVertex_EnnvsTheta_displaced",NBinZ,MinZ,0.);   
+  fHS->BookHistoList("GGAnalysis","ZVertex_EPair",     NBinZ,MinZ,0.);   
   
   fHS->BookHistoList("GGAnalysis","ClClDist_COG",300,0.,600.);   
   fHS->BookHistoList("GGAnalysis","ECalClTime_GG",500,-250.,250.);
@@ -284,10 +288,20 @@ Bool_t IsGGAnalysis::Process(){
 	fHS->FillHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",PosXGoodCluster[kk],PosYGoodCluster[kk],EGoodCluster[kk]);
 	fHS->FillHisto2List("GGAnalysis","E1vsE2_BadVtx",EGoodCluster[jj],EGoodCluster[kk]);
       }
+
+      Double_t Angle         = sqrt(PosXGoodCluster[jj]*PosXGoodCluster[jj]+PosYGoodCluster[jj]*PosYGoodCluster[jj])/fabs(Zv);
+      Double_t Angle1        = sqrt(PosXGoodCluster[kk]*PosXGoodCluster[kk]+PosYGoodCluster[kk]*PosYGoodCluster[kk])/fabs(Zv);
+      //      cout<<"Angle "<<Angle<<" Angle1 "<<Angle1<<endl;
+      bool G1Check_Displaced = CheckThetaAngle(EGoodCluster[jj],Angle);
+      bool G2Check_Displaced = CheckThetaAngle(EGoodCluster[kk],Angle1);
+      
+      if(G1Check_Displaced && G2Check_Displaced & abs(EGoodCluster[kk]+EGoodCluster[jj]-430.)/14<3){ 
+      	fHS->FillHistoList("GGAnalysis","ZVertex_EnnvsTheta_displaced",Zv,1);
+      }
+      
       NPairs++;      
     }
   }
-
   //**************************
   // Cut on at least good pair
   //**************************
@@ -312,12 +326,12 @@ Bool_t IsGGAnalysis::Process(){
 
       fHS->FillHisto2List("GGAnalysis","EpairvsZv_allCuts",PairVertex[ll],EPair,1.);
       //Use only after general scale calibration
-      if(EPair>400.){ 
+      if(abs(EPair-430.)/14<3){ 
 	fHS->FillHistoList("GGAnalysis","ZVertex_EPair",PairVertex[ll],1);
 	fHS->FillHisto2List("GGAnalysis","EnvsTime",TimePair,EPair,1.);
 	fHS->FillHisto2List("GGAnalysis","EnvsTimeScaled",TimePair,EPair/430,1.);
 	//lloking for bad events
-	if(Zv>-2800.){
+	if(Zv>-2500.){
 	  fHS->FillHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",PosXGoodCluster[PairGClIndex1[ll]],PosYGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex1[ll]]);
 	}
       }

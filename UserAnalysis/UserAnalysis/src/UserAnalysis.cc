@@ -76,11 +76,12 @@ Bool_t UserAnalysis::Process(){
   if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
 
   //  if( trigMask & (1 << 0) && !isMC){
-  fECalCalib->Process();
-  fECalCalib->SetEScale();
-  fECalCalib->CorrectESlope();
-  fECalCalib->FixPosition(); //need to change values into the structure.
-    //  }
+  if(!isMC){
+    fECalCalib->Process();
+    fECalCalib->SetEScale();
+    fECalCalib->CorrectESlope();
+    fECalCalib->FixPosition(); //need to change values into the structure.
+  }
 
   fNPoTAnalysis->Process();
   fIsGGAnalysis->Process();

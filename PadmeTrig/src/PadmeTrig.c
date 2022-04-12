@@ -366,8 +366,8 @@ int main(int argc, char *argv[]) {
   printf("- Allocated output event buffer with size %d\n",maxPEvtSize);
 
   // Connect to Trigger board
-  printf("\n=== Connect to Trigger board ===\n");
-  if ( trig_init() != TRIG_OK ) {
+  printf("\n=== Connect to Trigger board at address %s port %u ===\n",Config->trigger_addr,Config->trigger_port);
+  if ( trig_init(Config->trigger_addr,Config->trigger_port) != TRIG_OK ) {
     printf("PadmeTrig *** ERROR *** Problem while connecting to Trigger board. Exiting.\n");
     proc_finalize(1,1,1,1,DB_STATUS_INIT_FAIL);
   }

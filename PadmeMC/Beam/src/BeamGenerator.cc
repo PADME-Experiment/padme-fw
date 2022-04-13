@@ -101,6 +101,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     G4cout << "    - Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays << G4endl;
     nPositrons = 0;
   }
+  G4double decayLength = bpar->GetDecayLength();
 
   //********************
   //U Boson generator MC
@@ -130,8 +131,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     CreateFinalStateThreeGamma();
 
   }
-  
-  
+    
   //*********************
   //Two photon events
   //*********************
@@ -142,7 +142,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     GenerateTargetPositron();
 
     // Generate gamma+gamma final state
-    CreateFinalStateTwoGamma();
+    CreateFinalStateTwoGamma(decayLength);
 
   }
 
@@ -289,10 +289,8 @@ void BeamGenerator::GenerateTargetPositron()
   // Correct energy for mylar window crossing (to be implemented)
 
   // Position positron in front of Target (need distribution)
-  G4double sigmaX = bpar->GetBeamTargetSigmaX();
-  G4double sigmaY = bpar->GetBeamTargetSigmaY();
-  G4double x = G4RandGauss::shoot(0.,sigmaX);
-  G4double y = G4RandGauss::shoot(0.,sigmaY);
+  G4double x = G4RandGauss::shoot(0.,bpar->GetBeamTargetPosXSpread());
+  G4double y = G4RandGauss::shoot(0.,bpar->GetBeamTargetPosYSpread());
   G4double z = bpar->GetBeamTargetPosZ();  
   fPositron.pos = G4ThreeVector(x,y,z);
 
@@ -596,9 +594,7 @@ void BeamGenerator::CreateFinalStateThreeGamma()
 
 }
 
-
-
-void BeamGenerator::CreateFinalStateTwoGamma()
+void BeamGenerator::CreateFinalStateTwoGamma(G4double decayLength)
 {
   static G4int iline = 0;
 
@@ -625,22 +621,40 @@ void BeamGenerator::CreateFinalStateTwoGamma()
     // Choose random decay point along e+ path within Target
     G4double z_decay = (fDetector->GetTargetFrontFaceZ()-fPositron.pos.z())+G4UniformRand()*fDetector->GetTargetThickness();
     G4double s_decay = z_decay/cos(theta);
-    //G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
-    //G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
-    G4double Dx = G4RandGauss::shoot(0,2.5);
-    G4double Dy = G4RandGauss::shoot(0,2.5);
-    G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness();
+    G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
+    G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
+    G4double Dz = fPositron.pos.z()+z_decay;
+    //G4double Dx = G4RandGauss::shoot(0,2.5);
+    //G4double Dy = G4RandGauss::shoot(0,2.5);
+    //G4double Dz = fDetector->GetTargetFrontFaceZ()+G4UniformRand()*fDetector->GetTargetThickness();
     G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
+
+    // Create annihilation vertex in MCTruth
+    MCTruthVertex* tvtx;
+    if (fMCTruthMgr->IsEnabled()) {
+      if (decayLength == 0.) {
+	tvtx = fMCTruthMgr->AddVertex("TwoGamma",G4ThreeVector(Dx,Dy,Dz),Dt);
+      } else {
+	tvtx = fMCTruthMgr->AddVertex("TwoGammaAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
+      }
+      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+    }
+
+    if (decayLength > 0.) {
+      // Displace vertex according to decay length defined by user
+      G4double dispS = G4RandExponential::shoot(decayLength);
+      Dx += dispS*sin(theta)*cos(phi);
+      Dy += dispS*sin(theta)*sin(phi);
+      Dz += dispS*cos(theta);
+      Dt += dispS/c_light; // Apporoximation: need to be corrected for particle mass and beam energy
+    }
 
     // Create primary vertex at decay point
     G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
     
-    // Store vertex and primary positron in MCTruth
-    MCTruthVertex* tvtx;
-    if (fMCTruthMgr->IsEnabled()) {
-      tvtx = fMCTruthMgr->AddVertex("TwoGamma",G4ThreeVector(Dx,Dy,Dz),Dt);
-      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
-    }
+    // If decay vertex is displaced, store it in MCTruth
+    if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
+      tvtx = fMCTruthMgr->AddVertex("TwoGammaDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
 
     // Decode input line
     std::istringstream iss(Line);
@@ -655,26 +669,25 @@ void BeamGenerator::CreateFinalStateTwoGamma()
     for(G4int j=0; j<2; j++) {
 
       iss >> p[1] >> p[2] >> p[3]; // Get gamma momentum
-      for(G4int k=1; k<=3; k++) { p[k] *= -GeV; } // Values are given in GeV, opposite direction
-      if(j==0){
+      for(G4int k=1; k<=3; k++) { p[k] *= GeV; } // Values are given in GeV
+      if (j==0) {
         fHistoManager->FillHisto(78,p[1]);
         fHistoManager->FillHisto(79,p[2]);
         fHistoManager->FillHisto(80,p[3]);
-        fHistoManager->FillHisto(84,(p[2]/p[3])*300);
+        //fHistoManager->FillHisto(84,(p[2]/p[3])*300);
         //std::cout<<"Gamma1 radius " << (p[2]/p[3])*300 << std::endl;
-      }
-      else{
+      } else {
         fHistoManager->FillHisto(81,p[1]);
         fHistoManager->FillHisto(82,p[2]);
         fHistoManager->FillHisto(83,p[3]);
-        fHistoManager->FillHisto(85,(p[2]/p[3])*300);
+        //fHistoManager->FillHisto(85,(p[2]/p[3])*300);
         //std::cout<<"Gamma2 radius " << (p[2]/p[3])*300 << std::endl;
       }
       p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]); // Compute total energy of the gamma
      
       // Rotate gamma momentum along the direction of the primary positron
       G4ThreeVector gamma_p = G4ThreeVector(p[1],p[2],p[3]);
-      //gamma_p.rotateUz(fPositron.dir);
+      gamma_p.rotateUz(fPositron.dir);
      
       // Create gamma primary particle with generated four-momentum
       G4PrimaryParticle* gamma = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),
@@ -682,9 +695,8 @@ void BeamGenerator::CreateFinalStateTwoGamma()
       vtx->SetPrimary(gamma);
 
       // Store gamma in MCTruth
-      if (fMCTruthMgr->IsEnabled()) {
+      if (fMCTruthMgr->IsEnabled())
 	tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),p[0],gamma_p);
-      }
 
     }
 
@@ -699,9 +711,6 @@ void BeamGenerator::CreateFinalStateTwoGamma()
   }
 
 }
-
-
-
 
 void BeamGenerator::GenerateCalibrationGamma()
 {

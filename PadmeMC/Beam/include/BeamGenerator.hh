@@ -68,7 +68,7 @@ private:
   void GenerateTargetPositron();
   void CreateFinalStateUboson();
   void CreateFinalStateThreeGamma();
-  void CreateFinalStateTwoGamma();
+  void CreateFinalStateTwoGamma(G4double);
   void GenerateCalibrationGamma();
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );

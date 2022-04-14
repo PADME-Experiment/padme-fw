@@ -34,6 +34,9 @@ Bool_t FirstDataLook::InitHistos(){
   }
   */
 
+  hSvcVal->BookHisto(this->GetName()+"_PVeto_vs_Pvetos", 300, -50.0, 50.0);
+  hSvcVal->BookHisto(this->GetName()+"_PVeto_vs_Pveto", 300, -50.0, 50.0);
+
   return true;
 }
 
@@ -60,7 +63,6 @@ Bool_t FirstDataLook::Process(){
       //}
     }
       
-
     // callibration PVeto channels vs single SAC channel -> 5ns peak near the mean value
     //std::cout << "channels?" << evt->SACRecoEvent->GetNHits() << std::endl;
     for(int ih = 0;ih<evt->PVetoRecoEvent->GetNHits(); ih++) {
@@ -76,21 +78,17 @@ Bool_t FirstDataLook::Process(){
         }
       }
     }
-
-    /*
-    for (int ihs = 0; ihs < evt->SACRecoEvent->GetNHits(); ihs++) {
-        if (evt->SACRecoEvent->Hit(ihs)->GetChannelId() == 22) {//33
-      for (int ip=0; ip<evt->PVetoRecoEvent->GetNHits(); ip++) {
-        for (int pch =1; pch<91; pch++) {
-          if (pch == evt->PVetoRecoEvent->Hit(ip)->GetChannelId()) {  
-            hSvc->FillHisto(this->GetName()+"_SACE_vs_Pch"+std::to_string(pch), evt->SACRecoEvent->Hit(ihs)->GetEnergy());
-            //hSvc->FillHisto(this->GetName()+"_SACE_vs_Pch"+std::to_string(pch), evt->SACRecoEvent->Hit(ihs)->GetEnergy() + evt->PVetoRecoEvent->Hit(ip)->GetEnergy());
-          }
+    // PVeto channels time offset
+    for (int pvf = 0; pvf < evt-> PVetoRecoEvent->GetNHits(); pvf++) {
+      for (int pvs = 0; pvs < evt-> PVetoRecoEvent->GetNHits(); pvs++) {
+        if (evt->PVetoRecoEvent->Hit(pvf)->GetChannelId() == 55 && evt->PVetoRecoEvent->Hit(pvs)->GetChannelId() == 56) {
+          hSvc->FillHisto(this->GetName()+"_PVeto_vs_Pveto", evt->PVetoRecoEvent->Hit(pvf)->GetTime() - evt->PVetoRecoEvent->Hit(pvs)->GetTime());
+        }
+        if (evt->PVetoRecoEvent->Hit(pvf)->GetChannelId() - evt->PVetoRecoEvent->Hit(pvs)->GetChannelId() == 1) {
+          hSvc->FillHisto(this->GetName()+"_PVeto_vs_Pvetos", evt->PVetoRecoEvent->Hit(pvf)->GetTime() - evt->PVetoRecoEvent->Hit(pvs)->GetTime());
         }
       }
     }
-    }
-    */
 
   }
 

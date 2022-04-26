@@ -41,6 +41,7 @@ void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
 
+  fCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
 
@@ -157,7 +158,7 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     nfound = spec->Search(HTSpec,fPeakSearchWidth,"",peak_thr);     
     fAnalogPrint=0;
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-      //      fCharge = 0.;
+
       xp = (spec->GetPositionX())[ll];
       yp = (spec->GetPositionY())[ll];
       rawAmp = AbsSamRec[int(xp+0.5)];
@@ -242,11 +243,7 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
   hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
   hRawV                      = new TH1F("RawV","RawV",400,0,400);
-  hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
-  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
-  hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
-  hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
   hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
   hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
   hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
@@ -287,9 +284,6 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
     sprintf(name, "RawVOneHitChannel%d",ii);
     hRawVOneHitPerChannel[ii] = new TH1F(name,name,400,0,400);
 
-    sprintf(name, "RawVCorrectChannel%d",ii);
-    hRawVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
-    
     sprintf(name, "DerivVChannel%d",ii);
     hDerivVPerChannel[ii] = new TH1F(name,name,400,0,400);
 
@@ -324,8 +318,6 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hHitEnergySingleHit->Write();
     hHitTime->Write();
 
-    hRawVCorrect->Write();
-    hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
     hDerivVOneHit->Write();
     hDerivVCorrect->Write();
@@ -346,10 +338,6 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hYMaxDerivYTSpecRatio->Write();
     hYMaxRawYTSpecRatioVsYMax->Write();
 
-    // hYTSpecYMaxDiff->Write();
-    // hYMaxVsYTSpecAllHits->Write();
-    // hYMaxVsYTSpecSingleHits->Write();
-
     fileOut->mkdir("NoHitDerivChannel");  
     fileOut->cd("NoHitDerivChannel");  
     for(int ii=0;ii<96;ii++) hNoHitsDerivPerChannel[ii]->Write();
@@ -361,10 +349,6 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     fileOut->mkdir("RawVChannel");  
     fileOut->cd("RawVChannel");  
     for(int ii=0;ii<96;ii++) hRawVPerChannel[ii]->Write();
-
-    fileOut->mkdir("RawVCorrectChannel");  
-    fileOut->cd("RawVCorrectChannel");  
-    for(int ii=0;ii<96;ii++) hRawVCorrectPerChannel[ii]->Write();
 
     fileOut->mkdir("DerivVOneHitChannel");  
     fileOut->cd("DerivVOneHitChannel");  
@@ -421,7 +405,6 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   tDerivDiffHitVec      .clear();
   vRawHitVec	        .clear();
   vRawSortHitVec        .clear();
-  vRawCorrectHitVec     .clear();
   vTSpecYPHitVec        .clear();
   vTSpecYPSortHitVec    .clear();
   vTSpecYPCorrectHitVec .clear();
@@ -429,7 +412,9 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
 
 void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
-  if(fChannelEqualisation)  ScaleFactor=SetEVetoChaGain();   
+  if(fChannelEqualisation&&GetChID()<90&&(GetChID()<52||GetChID()>55))  ScaleFactor=SetEVetoChaGain();   
+  //  std::cout<<"EVeto "<<GetChID()<<" ScaleFactor "<<ScaleFactor<<std::endl;
+
   //fNSamples is 1024 but I can't find where it's set
   for(UShort_t i = 0;i<fNSamples;i++){
     fEqualSamples[i] = (ped-fSamples[i])/4096.*1000.; //convert fSamples to positive mV
@@ -440,7 +425,7 @@ void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
 void DigitizerChannelEVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
-    if(fAnalogPrint==1){//vRawCorrectHitVec.size()==1&&vTSpecYPHitVec[0]<20){
+    if(fAnalogPrint==1){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -462,10 +447,7 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   hNoHitsDeriv->Fill(fNFoundPerChannel[GetChID()]);
   hNoHitsDerivPerChannel[GetChID()]->Fill(fNFoundPerChannel[GetChID()]);
 
-  if(vRawCorrectHitVec.size()==1) hOccupancyOneHit->Fill(GetChID());
-
   double AmpDiff=0;
-  //  std::cout<<"Tot "<<vRawCorrectHitVec.size()<<std::endl;
   for(UInt_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
     hOccupancy->Fill(GetChID());
     hHitTime->Fill(tDerivSortHitVec[myiHit]);
@@ -487,7 +469,6 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
     //corrected amplitude for "good" channels
     if(GetChID()>=20 &&GetChID()<=70){
-      //      hRawVCorrectChannels20to70->Fill(hitV);
       hAmpDiffVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
     }
@@ -498,7 +479,6 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
       hDerivVOneHit->Fill(vTSpecYPSortHitVec[myiHit]);
       hDerivVOneHitPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
       hHitEnergySingleHit->Fill(vTSpecYPSortHitVec[myiHit]*fDerivAmpToEnergy);
-      //hYMaxVsYTSpecSingleHits->Fill(vRawSortHitVec[myiHit],vTSpecYPSortHitVec[myiHit]);
 
       //ratio between derivative peak amplitude as found by TSpectrum and maximum amplitude of raw signal for single hit events
       hYMaxRawYTSpecRatio->Fill(RawGetMax/vTSpecYPSortHitVec[myiHit]);
@@ -518,96 +498,32 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 }
 
 Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
-  Double_t ScaleFactor = 1;
-  //normalised to gaussian mean = 35 using run 665
-  //  std::cout<<"Setting cha gain"<<std::endl;
-  if(GetChID()==0) 	 ScaleFactor = 1.14579 ;
-  if(GetChID()==1) 	 ScaleFactor = 1.13981 ;
-  if(GetChID()==2) 	 ScaleFactor = 1.1624  ;
-  if(GetChID()==3) 	 ScaleFactor = 1.0199  ;
-  if(GetChID()==4) 	 ScaleFactor = 1.03848 ;
-  if(GetChID()==5) 	 ScaleFactor = 1.31815 ;
-  if(GetChID()==6) 	 ScaleFactor = 1.59532 ;
-  if(GetChID()==7) 	 ScaleFactor = 1.26717 ;
-  if(GetChID()==8) 	 ScaleFactor = 1.17466 ;
-  if(GetChID()==9) 	 ScaleFactor = 1.59172 ;
-  if(GetChID()==10)	 ScaleFactor = 1.41543 ;
-  if(GetChID()==11)	 ScaleFactor = 1.59211 ;
-  if(GetChID()==12)	 ScaleFactor = 1.24053 ;
-  if(GetChID()==13)	 ScaleFactor = 1.59605 ;
-  if(GetChID()==14)	 ScaleFactor = 1.41128 ;
-  if(GetChID()==15)	 ScaleFactor = 1.66592 ;
-  if(GetChID()==16)	 ScaleFactor = 1.66667 ;
-  if(GetChID()==17)	 ScaleFactor = 1.59268 ;
-  if(GetChID()==18)	 ScaleFactor = 0.968462;
-  if(GetChID()==19)	 ScaleFactor = 0.913226;
-  if(GetChID()==20)	 ScaleFactor = 1.19737 ;
-  if(GetChID()==21)	 ScaleFactor = 1.14329 ;
-  if(GetChID()==22)	 ScaleFactor = 1.63259 ;
-  if(GetChID()==23)      ScaleFactor = 1.00445 ;
-  if(GetChID()==24)	 ScaleFactor = 0.90624 ;
-  if(GetChID()==25)	 ScaleFactor = 1.10906 ;
-  if(GetChID()==26)	 ScaleFactor = 0.910591;
-  if(GetChID()==27)	 ScaleFactor = 0.93724 ;
-  if(GetChID()==28)	 ScaleFactor = 0.908172;
-  if(GetChID()==29)	 ScaleFactor = 0.930454;
-  if(GetChID()==30)	 ScaleFactor = 0.898969;
-  if(GetChID()==31)	 ScaleFactor = 0.854727;
-  if(GetChID()==32)	 ScaleFactor = 0.887678;
-  if(GetChID()==33)	 ScaleFactor = 0.816444;
-  if(GetChID()==34)	 ScaleFactor = 0.893628;
-  if(GetChID()==35)	 ScaleFactor = 1.12612 ;
-  if(GetChID()==36)	 ScaleFactor = 1.06171 ;
-  if(GetChID()==37)	 ScaleFactor = 1.05226 ;
-  if(GetChID()==38)	 ScaleFactor = 0.961816;
-  if(GetChID()==39)	 ScaleFactor = 0.854641;
-  if(GetChID()==40)	 ScaleFactor = 1.04747 ;
-  if(GetChID()==41)	 ScaleFactor = 1.0973  ;
-  if(GetChID()==42)	 ScaleFactor = 0.898218;
-  if(GetChID()==43)	 ScaleFactor = 1.08689 ;
-  if(GetChID()==44)	 ScaleFactor = 1.12929 ;
-  if(GetChID()==45)	 ScaleFactor = 1.08844 ;
-  if(GetChID()==46)	 ScaleFactor = 1.18264 ;
-  if(GetChID()==47)	 ScaleFactor = 0.974706;
-  if(GetChID()==48)	 ScaleFactor = 0.936744;
-  if(GetChID()==49)	 ScaleFactor = 0.892796;
-  if(GetChID()==50)	 ScaleFactor = 0.90297 ;
-  if(GetChID()==51)	 ScaleFactor = 1.18523 ;
-  if(GetChID()==56)	 ScaleFactor = 0.973889;
-  if(GetChID()==57)	 ScaleFactor = 0.994545;
-  if(GetChID()==58)	 ScaleFactor = 1.28083 ;
-  if(GetChID()==59)	 ScaleFactor = 0.977371;
-  if(GetChID()==60)	 ScaleFactor = 1.32175 ;
-  if(GetChID()==61)	 ScaleFactor = 1.16763 ;
-  if(GetChID()==62)	 ScaleFactor = 1.00344 ;
-  if(GetChID()==63)	 ScaleFactor = 0.74402 ;
-  if(GetChID()==64)	 ScaleFactor = 1.47513 ;
-  if(GetChID()==65)	 ScaleFactor = 0.954032;
-  if(GetChID()==66)	 ScaleFactor = 0.771184;
-  if(GetChID()==67)	 ScaleFactor = 1.05539 ;
-  if(GetChID()==68)	 ScaleFactor = 1.09955 ;
-  if(GetChID()==69)	 ScaleFactor = 0.83747 ;
-  if(GetChID()==70)	 ScaleFactor = 1.08944 ;
-  if(GetChID()==71)	 ScaleFactor = 0.829015;
-  if(GetChID()==72)	 ScaleFactor = 0.898273;
-  if(GetChID()==73)	 ScaleFactor = 0.885728;
-  if(GetChID()==74)	 ScaleFactor = 1.01983 ;
-  if(GetChID()==75)	 ScaleFactor = 0.909889;
-  if(GetChID()==76)	 ScaleFactor = 1.06069 ;
-  if(GetChID()==77)	 ScaleFactor = 0.74599 ;
-  if(GetChID()==78)	 ScaleFactor = 0.92206 ;
-  if(GetChID()==79)	 ScaleFactor = 0.869043;
-  if(GetChID()==80)	 ScaleFactor = 0.936432;
-  if(GetChID()==81)	 ScaleFactor = 1.04356 ;
-  if(GetChID()==82)	 ScaleFactor = 0.954175;
-  if(GetChID()==83)	 ScaleFactor = 1.02682 ;
-  if(GetChID()==84)	 ScaleFactor = 0.898411;
-  if(GetChID()==85)	 ScaleFactor = 0.940743;
-  if(GetChID()==86)	 ScaleFactor = 0.92174 ;
-  if(GetChID()==87)	 ScaleFactor = 1.08519 ;
-  if(GetChID()==88)	 ScaleFactor = 0.728288;
-  if(GetChID()==89)	 ScaleFactor = 0.285807;
-  return ScaleFactor;
+
+  std::ifstream Calib;
+  char fname[100];
+  //Int_t Calibration=0;
+//Beth 8/4/22: To make the name of the calibration file clearer, I named the version I use for the digitizer of 2020 signals (which uses the derivative of the signal) "PVeto_EnergyCalibration_DerivativeDigitizer2020.txt"
+  if(fCalibrationFile<2)    sprintf(fname,"config/Calibration/EVeto_EnergyCalibration_%d.txt", fCalibrationFile);
+
+  else if(fCalibrationFile==2)    sprintf(fname,"config/Calibration/EVeto_EnergyCalibration_%s.txt","DerivativeDigitizer2020");
+
+  std::ifstream myFile(fname);
+
+  Calib.open(fname);
+  if (Calib.is_open()){
+  	double temp;
+  	for (int i=0;i<96;i++){
+          Calib >> temp >> fCalibCh[i];
+	  //          std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
+	}
+  Calib.close();
+  }
+  else{ 
+  	std::cout<<"No previous data available, resorting to default calibration constant (1)"<<std::endl;
+  }
+
+  return fCalibCh[GetChID()];
+
 }
 
 Double_t DigitizerChannelEVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak

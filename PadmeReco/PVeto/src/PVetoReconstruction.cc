@@ -12,7 +12,7 @@
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
 #include "TPVetoRecoEvent.hh"
-#include "DigitizerChannelReco.hh"
+//#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelPVeto.hh"
 #include "PVetoCalibration.hh"
 #include "PVetoGeometry.hh"
@@ -46,8 +46,6 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
 
 PVetoReconstruction::~PVetoReconstruction()
 {;}
-
-
 
 void PVetoReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
@@ -84,25 +82,6 @@ void PVetoReconstruction::HistoInit(){
   //  AddHisto("PVetoDTch1ch2",new TH1F("PVetoDTch1ch2","Difference in time",100,-10.,10.));
 
 }
-
-
-/* only for debugging 
-void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
-{
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
-  TPVetoMCEvent* tPVetoEvent = (TPVetoMCEvent*)tEvent;
-  std::cout << "--- PVetoReconstruction --- run/event/#hits/#digi " << tPVetoEvent->GetRunNumber() << " " << tPVetoEvent->GetEventNumber() << " " << tPVetoEvent->GetNHits() << " " << tPVetoEvent->GetNDigi() << std::endl;
-  for (Int_t iH=0; iH<tPVetoEvent->GetNHits(); iH++) {
-    TPVetoMCHit* hit = (TPVetoMCHit*)tPVetoEvent->Hit(iH);
-    hit->Print();
-  }
-  for (Int_t iD=0; iD<tPVetoEvent->GetNDigi(); iD++) {
-    TPVetoMCDigi* digi = (TPVetoMCDigi*)tPVetoEvent->Digi(iD);
-    digi->Print();
-  }
-
-}
-*/
 
 void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) 
 {
@@ -181,11 +160,11 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied 
   BuildHits(rawEv);
 
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
-  
+  //    std::cout<<"about to clusterise pveto"<<std::endl;
   // from Hits to Clusters
   ClearClusters();
   BuildClusters();
-  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+  //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
   //Processing is over, let's analyze what's here, if foreseen
   if(fGlobalRecoConfigOptions->IsMonitorMode()) {
@@ -332,3 +311,11 @@ void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
   }    
 }
 
+
+bool PVetoReconstruction::TriggerToBeSkipped()
+{
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
+  return false; 
+}

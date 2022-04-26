@@ -41,6 +41,7 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   // configurable parameters 
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fEVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+
 }
 
 void EVetoReconstruction::HistoInit(){
@@ -75,67 +76,10 @@ void EVetoReconstruction::HistoInit(){
 EVetoReconstruction::~EVetoReconstruction()
 {;}
 
-// void EVetoReconstruction::Init(PadmeVReconstruction* MainReco)
-// {
-
-//   //common part for all the subdetectors
-//   PadmeVReconstruction::Init(MainReco);
-
-// }
-
-// // Read EVeto reconstruction parameters from a configuration file
-// void EVetoReconstruction::ParseConfFile(TString ConfFileName) {
-
-//   std::ifstream confFile(ConfFileName.Data());
-//   if (!confFile.is_open()) {
-//     perror(ConfFileName);
-//     exit(1);
-//   }
-
-//   TString Line;
-//   while (Line.ReadLine(confFile)) {
-//     if (Line.BeginsWith("#")) continue;
-//   }
-//   confFile.close();
-// }
-
-/*
-TRecoVEvent * EVetoReconstruction::ProcessEvent(TDetectorVEvent* tEvent, Event* tGenEvent)
-{
-  //common part for all the subdetectors 
-  PadmeVReconstruction::ProcessEvent(tEvent, tGenEvent);
-
-  TEVetoEvent* tEVetoEvent = (TEVetoEvent*)tEvent;
-  const TClonesArray& Digis = (*(tEVetoEvent->GetHits()));
-  return fRecoEvent;
-}
-*/
-
-/* this was just for debugging via printout 
-void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
-{
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
-
-  TEVetoMCEvent* tEVetoEvent = (TEVetoMCEvent*)tEvent;
-  std::cout << "--- EVetoReconstruction --- run/event/#hits/#digi " << tEVetoEvent->GetRunNumber() << " " << tEVetoEvent->GetEventNumber() << " " << tEVetoEvent->GetNHits() << " " << tEVetoEvent->GetNDigi() << std::endl;
-  for (Int_t iH=0; iH<tEVetoEvent->GetNHits(); iH++) {
-    TEVetoMCHit* hit = (TEVetoMCHit*)tEVetoEvent->Hit(iH);
-    hit->Print();
-  }
-  for (Int_t iD=0; iD<tEVetoEvent->GetNDigi(); iD++) {
-    TEVetoMCDigi* digi = (TEVetoMCDigi*)tEVetoEvent->Digi(iD);
-    digi->Print();
-  }
-}
-*/
-
-// void EVetoReconstruction::EndProcessing()
-// {;}
-
 
 void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
 
-  //  std::cout<<"!?><using pveto process event"<<std::endl;
+  //  std::cout<<"!?><using eveto process event"<<std::endl;
 
   // use trigger info 
   if(fTriggerProcessor) {
@@ -148,11 +92,11 @@ void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied 
   BuildHits(rawEv);
 
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
-  
+  //  std::cout<<"about to clusterise eveto"<<std::endl;
   // from Hits to Clusters
   ClearClusters();
   BuildClusters();
-  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+  //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
   //Processing is over, let's analyze what's here, if foreseen
   if(fGlobalRecoConfigOptions->IsMonitorMode()) {
@@ -343,4 +287,12 @@ void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
       //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
     }
   }    
+}
+
+bool EVetoReconstruction::TriggerToBeSkipped()
+{
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
+  return false; 
 }

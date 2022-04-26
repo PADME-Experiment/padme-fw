@@ -27,6 +27,7 @@ public:
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   void BuildHits(TRawEvent* rawEv); //Get the CH_ID MR 
   virtual void ProcessEvent(TRawEvent* rawEv); //Get the CH_ID MR 
+  bool TriggerToBeSkipped();
 
   TRandom2 *random;
   

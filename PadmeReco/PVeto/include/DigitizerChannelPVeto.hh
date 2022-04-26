@@ -1,4 +1,5 @@
 #include "ChannelVReco.hh"
+#include "PVetoCalibration.hh"
 #include "GlobalRecoConfigOptions.hh"
 #include "utlConfigParser.hh"
 #include "TObject.h"
@@ -22,13 +23,12 @@ public:
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitVec);
   virtual void Init(PadmeVRecoConfig *cfg){return ;}
-  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
+  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);//, PVetoCalibration *calib);
 
   void PrintConfig();
 
   Double_t CalcPedestal();
-  Double_t CalcChaTimeMauro(std::vector<TRecoVHit *> &hitVec,UShort_t,UShort_t);
-  Double_t CalcChaTimeBeth(std::vector<TRecoVHit *> &hitVec);
+  Double_t CalcChaTime(std::vector<TRecoVHit *> &hitVec);
 
   Double_t SetPVetoChaGain();
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
@@ -40,12 +40,11 @@ public:
   Double_t TailHeightDerivative(Int_t DeltaT);
 
   // Debugging the reco
-  virtual void PrepareDebugHistosMauro();
-  virtual void PrepareDebugHistosBeth();
-  virtual void SaveDebugHistosMauro();
-  virtual void SaveDebugHistosBeth();
+  virtual void PrepareDebugHistos();
+  virtual void SaveDebugHistos();
 
   //get ChID From Beth Digi
+
   Int_t EventCounter=-1;//is increased before each event is processed, so the first event will have EventCounter=0
   Int_t fRawEvNo;
   Int_t fChID;
@@ -80,6 +79,10 @@ private:
   Bool_t fSaveAnalog;
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
+
+  PVetoCalibration *fChannelCalibration;
+  int fCalibrationFile;
+
   TList* hListPVeto; // single board related histograms 
 
   TString detectorname;
@@ -101,7 +104,6 @@ private:
   Double_t DerivGetMax    ;
 
   Bool_t fAnalogPrint;
-  Bool_t fBethorMauro;
   //Beth 18/2/22: My histograms
   
   std::vector<TH1F*> hRaw;//Raw+TSpectrum
@@ -151,6 +153,9 @@ private:
 
   TGraph* gUnAbsSigs;
   std::vector<TGraph*> gUnAbsSigGraphs;
+
+  Double_t fCalibCh   [96]; 
+  //  std::map<int,double> *fEnergyCalibMap;
 
    //Single Hit
   TH1F * hdxdtMax;      

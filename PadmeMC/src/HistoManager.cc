@@ -265,7 +265,7 @@ void HistoManager::book()
   histo2[146] = new TH2D("h146","Flag4 XvsE",TarXBins,TarXmin,TarXmax,200,300.,500.);
   if (!histo2[146]) G4cout << "\n can't create histo 146" << G4endl;
 
-  histo2[147] = new TH2D("h147","Flag4 ThetavsE",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
+  histo2[147] = new TH2D("h147","Flag4 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[147]) G4cout << "\n can't create histo 147" << G4endl;
 
   //*****************************************
@@ -288,7 +288,7 @@ void HistoManager::book()
   histo2[156] = new TH2D("h156","Flag5 XvsE",TarXBins,BigFlagsXmin,BigFlagsXmax,200,300.,500.);
   if (!histo2[156]) G4cout << "\n can't create histo 156" << G4endl;
 
-  histo2[157] = new TH2D("h157","Flag5 ThetavsE",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
+  histo2[157] = new TH2D("h157","Flag5 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[157]) G4cout << "\n can't create histo 157" << G4endl;
 
   //*****************************************
@@ -311,7 +311,7 @@ void HistoManager::book()
   histo2[166] = new TH2D("h166","Flag6 XvsE",TarXBins,TarXmin,TarXmax,200,300.,500.);
   if (!histo2[166]) G4cout << "\n can't create histo 166" << G4endl;
 
-  histo2[167] = new TH2D("h167","Flag6 ThetavsE",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
+  histo2[167] = new TH2D("h167","Flag6 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[167]) G4cout << "\n can't create histo 167" << G4endl;
 
   //*****************************************
@@ -334,7 +334,7 @@ void HistoManager::book()
   histo2[176] = new TH2D("h176","Flag7 XvsE",TarXBins,TarXmin,TarXmax,400,410.,450.);
   if (!histo2[176]) G4cout << "\n can't create histo 176" << G4endl;
 
-  histo2[177] = new TH2D("h177","Flag7 ThetavsE",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
+  histo2[177] = new TH2D("h177","Flag7 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[177]) G4cout << "\n can't create histo 177" << G4endl;
 
   // BeW study

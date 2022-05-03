@@ -724,6 +724,10 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       G4double htheta = asin(PT/PTOT);
       G4double hthetaX = asin(PX/PTOT);
 
+      if(NFlag==7 || NFlag==4 || NFlag==1){
+	//	std::cout<<"Theta x"<<hthetaX<<std::endl;
+	hthetaX += 0.785398;
+      }
       //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
       if (NFlag<8){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies

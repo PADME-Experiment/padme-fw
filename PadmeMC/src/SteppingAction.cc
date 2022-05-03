@@ -17,7 +17,6 @@
 
 SteppingAction::SteppingAction()
 { 
-
   fEventAction = (EventAction*) G4RunManager::GetRunManager()->GetUserEventAction(); 
   fSACEnergyThr=5*MeV;
   bpar = BeamParameters::GetInstance();
@@ -36,7 +35,6 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   G4Track* track = step->GetTrack();
 
-  
 //  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
 //    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Q1Quad") {
 //
@@ -217,18 +215,17 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
 
-//  // Killing particle in the LINAC region
-//
-  //Killing in the collimators
+  //*************************************
+  // Killing particle in the LINAC region
+  //*************************************
   if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"){
+    //Killing in the collimators
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"||
+       step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB2"){
       //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
       track->SetTrackStatus(fStopAndKill);
     }
-  }
-
-  //Killing in the walls and beamlines
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    //Killing in the walls and beamlines
     if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
        || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
       //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
@@ -236,7 +233,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
   
-//  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
+  //  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
 //    if(track->GetVolume()->GetName()=="SAC") {
 //      track->SetTrackStatus(fStopAndKill);
 //    }

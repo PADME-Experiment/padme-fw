@@ -113,7 +113,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
   //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
-  
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

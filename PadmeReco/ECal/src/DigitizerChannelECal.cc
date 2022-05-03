@@ -78,6 +78,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   fVThrToDefineHit  = cfg->GetParOrDefault("RECO","VoltageThrToDefineTheExistenceOf2ndOr3dhHits",5.);
   fVThrToDefineHit_sat  = cfg->GetParOrDefault("RECO","VoltageThrToDefineTheExistenceOf2ndOr3dhHits_saturatedWave",50.);
   fDTimeForHitInSameCh  = cfg->GetParOrDefault("RECO","DTimeForHitInSameCh",25.);
+  fMHTemplateFile = cfg->GetParOrDefault("RECO","MHTemplateFile","config/BGOwaveformTemplate.txt");
 
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
@@ -92,14 +93,17 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
   if (fMultihit) {
-    ifstream myfile;
-    std::string templateFileName = "./config/BGOwaveformTemplate.txt";
-    std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
-    myfile.open (templateFileName.c_str());;
+    std::ifstream myfile;
+    //std::string templateFileName = "./config/BGOwaveformTemplate.txt";
+    //std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
+    //myfile.open (templateFileName.c_str());;
+    std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<fMHTemplateFile<<"> "<<std::endl;
+    myfile.open (fMHTemplateFile.Data());;
     Int_t i=0;
     Double_t readValue=0.;
     if (myfile.is_open()){
-      std::cout<<"DigitizerChannelECal: file <"<<templateFileName<<"> open"<<std::endl;
+      //std::cout<<"DigitizerChannelECal: file <"<<templateFileName<<"> open"<<std::endl;
+      std::cout<<"DigitizerChannelECal: file <"<<fMHTemplateFile<<"> open"<<std::endl;
       while (!myfile.eof()) {
 	myfile >> readValue;
 	if (i<5000) {
@@ -109,11 +113,13 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
 	  i++;
 	}
       }
-      std::cout<<"DigitizerChannelECal: "<<i<<" lines read from file "<<templateFileName<<std::endl;
+      //std::cout<<"DigitizerChannelECal: "<<i<<" lines read from file "<<templateFileName<<std::endl;
+      std::cout<<"DigitizerChannelECal: "<<i<<" lines read from file "<<fMHTemplateFile<<std::endl;
     }
     else 
       {
-	std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
+	//std::cout<<"DigitizerChannelECal - Template file requested <"<<templateFileName<<"> is not found ---- terminate here "<<std::endl;
+	std::cout<<"DigitizerChannelECal - Template file requested <"<<fMHTemplateFile<<"> is not found ---- terminate here "<<std::endl;
 	std::cerr<<"DigitizerChannelECal - Template file requested is not found ---- terminate here "<<std::endl;
 	exit(1);
       }
@@ -777,7 +783,8 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     //    std::cout<<" NON over sampled "<<std::endl;
     HitT = CalcTimeSing(10);
   } 
-  if(GetTrigMask()!=2) CalcChargeSin(250); // io comment 22/06 (HitT-10);  //Physics in ECAL starts ~250 ns
+  //if(GetTrigMask()!=2) CalcChargeSin(250); // io comment 22/06 (HitT-10);  //Physics in ECAL starts ~250 ns
+  if(GetTrigMask()!=2) CalcChargeSin(100); // 2020 Runs start earlier than 250ns
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   // M. Raggi going to energy with Nominal Calibration

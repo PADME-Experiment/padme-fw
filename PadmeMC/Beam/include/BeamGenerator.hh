@@ -20,6 +20,7 @@ class G4Event;
 class BeamMessenger;
 class HistoManager;
 class DetectorConstruction;
+class MCTruthManager;
 
 struct BeamPrimaryPositron
 {
@@ -64,6 +65,7 @@ public:
 private:
 
   void GeneratePrimaryPositron();
+  void GenerateTargetPositron();
   void CreateFinalStateUboson();
   void CreateFinalStateThreeGamma();
   void CreateFinalStateTwoGamma();
@@ -79,6 +81,8 @@ private:
   G4Event* fEvent;
   
   DetectorConstruction* fDetector;
+
+  MCTruthManager* fMCTruthMgr;
 
   BeamMessenger* fBeamMessenger;
   HistoManager* fHistoManager;

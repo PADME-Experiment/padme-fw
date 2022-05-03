@@ -179,6 +179,7 @@ private:
   Double_t fDTimeForHitInSameCh;
   Double_t fVThrToDefineHit;
   Double_t fVThrToDefineHit_sat;
+  TString  fMHTemplateFile;
 
   Double_t fPedCh[32];//Adc channel pedestals
   std::map < std::pair<int,int>,double> fPedMap;

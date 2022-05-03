@@ -27,6 +27,7 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
+
 #include <time.h>
 #include <stdlib.h>
 #include <bitset>
@@ -209,11 +210,9 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 }
 
-
-
 bool ECalReconstruction::TriggerToBeSkipped()
 {
-  if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
   if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
   if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
   return false; 
@@ -900,6 +899,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
   }
   //std::cout << " max template " << fmaxValuemyTemplate << std::end;
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
  int idarray[50][50];
@@ -1069,7 +1069,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
     Double_t sigmaPed=21.66;
     Double_t fAvg200=r->Gaus(meanPed, sigmaPed); // pedestal
     std::vector<double> waveLikeData;
-    Short_t wave_forDigitiser[1024]={0.};
+    Short_t wave_forDigitiser[1024]={0};
     Bool_t saturated=false;
     for(int i=0; i<1025; i++)waveLikeData.push_back(0);
     for(int ll=0;ll<1024;ll++){
@@ -1181,6 +1181,7 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
 if(fReproductSACbunchStructure){

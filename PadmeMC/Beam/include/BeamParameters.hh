@@ -134,6 +134,24 @@ public:
   G4double GetCalibRunRadius()  { return fCalibRunRadius; }
   void SetCalibRunRadius(G4double r)  { fCalibRunRadius  = r; }
 
+  G4double GetBeamTargetPosZ() { return fBeamTargetPosZ; }
+  void SetBeamTargetPosZ(G4double v) { fBeamTargetPosZ = v; }
+
+  G4double GetBeamTargetSigmaX() { return fBeamTargetSigmaX; }
+  void SetBeamTargetSigmaX(G4double v) { fBeamTargetSigmaX = v; }
+
+  G4double GetBeamTargetSigmaY() { return fBeamTargetSigmaY; }
+  void SetBeamTargetSigmaY(G4double v) { fBeamTargetSigmaY = v; }
+
+  G4double GetBeamTargetEmittanceX() { return fBeamTargetEmittanceX; }
+  void SetBeamTargetEmittanceX(G4double v) { fBeamTargetEmittanceX = v; }
+
+  G4double GetBeamTargetEmittanceY() { return fBeamTargetEmittanceY; }
+  void SetBeamTargetEmittanceY(G4double v) { fBeamTargetEmittanceY = v; }
+
+  G4double GetBeamTargetPathLength() { return fBeamTargetPathLength; }
+  void SetBeamTargetPathLength(G4double v) { fBeamTargetPathLength = v; }
+
 private:
 
   // Average number of positrons in each bunch
@@ -191,6 +209,14 @@ private:
   G4double fCalibRunCenterX; // X of center of cirlce 
   G4double fCalibRunCenterY; // Y of center of circle
   G4double fCalibRunRadius;  // Radius of circle
+
+  // Beam distribution at target
+  G4double fBeamTargetPosZ; // Z position (1um in front of target)
+  G4double fBeamTargetSigmaX; // Sigma of X coordinate
+  G4double fBeamTargetSigmaY; // Sigma of Y coordinate
+  G4double fBeamTargetEmittanceX; // Emittance X component
+  G4double fBeamTargetEmittanceY; // Emittance Y component
+  G4double fBeamTargetPathLength; // Length of path from beam origin to target
 
 };
 #endif

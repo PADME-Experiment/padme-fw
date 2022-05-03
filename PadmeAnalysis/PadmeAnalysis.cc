@@ -1,4 +1,7 @@
 #include "Riostream.h"
+#include<iostream>
+#include<string>
+#include<fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -25,6 +28,7 @@
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
+#include "TMCTruthEvent.hh"
 
 #include "HistoSvc.hh"
 #include "SACAnalysis.hh"
@@ -39,6 +43,7 @@
 #include "UserAnalysis.hh"
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "temp_corr.hh"
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -82,6 +87,8 @@ TChain* BuildChain(TString treeName, TObjArray fInputFileNameList){
 
 int main(Int_t argc, char **argv)
 {
+
+  long utc_time;
 
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
@@ -228,6 +235,7 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection*           fPVetoRecoCl          =0;
   TRecoVClusCollection*           fEVetoRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
+  TMCTruthEvent*                  fMCTruthEvent         =0;
 
    TTree::SetMaxTreeSize(190000000000);
 
@@ -309,11 +317,12 @@ int main(Int_t argc, char **argv)
       } else if (branchName=="HEPVeto_Clusters") {
 	fHEPVetoRecoCl = new TRecoVClusCollection();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoCl);
+      } else if (branchName=="MCTruth") {
+	fMCTruthEvent = new TMCTruthEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
 
    }
-
-
 
    //////////// You come here if a Chain with >=0 events has been found 
    Int_t jevent = 0;
@@ -337,14 +346,10 @@ int main(Int_t argc, char **argv)
    algoList.push_back(hepvetoAn);
    //EventSelection*      evSel  = new EventSelection(fProcessingMode, fVerbose);
 
-   AnnihilationSelection* AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
-   TagAndProbeSelection* TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
    //   evSel->SetVersion(2);
    //evSel->SetVersion(1);
    
    //evSel->InitHistos();
-   AnnSel->InitHistos();
-   TagandProbeSel->InitHistos();
 
    sacAn      ->Init(fRecoEvent, fSACRecoEvent,     fSACRecoCl            );
    ecalAn     ->Init(fRecoEvent, fECalRecoEvent,    fECalRecoCl           );
@@ -352,6 +357,13 @@ int main(Int_t argc, char **argv)
    pvetoAn    ->Init(fRecoEvent, fPVetoRecoEvent,   fPVetoRecoCl          );
    evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
    hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
+
+
+   // initialize temp corr
+   int iret=InitTemps();
+   if(iret==0) std::cout<<" --- initialized Temp correction --"<< std::endl;
+
+
 //evSel->Init(fRecoEvent, 
 //	       fECalRecoEvent,    fECalRecoCl, 
 //	       fPVetoRecoEvent,   fPVetoRecoCl, 
@@ -359,36 +371,53 @@ int main(Int_t argc, char **argv)
 //	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
 //	       fSACRecoEvent,     fSACRecoCl, 
 //	       fTargetRecoEvent,  fTargetRecoBeam );
-  
-   AnnSel->Init(fRecoEvent, 
+   AnnihilationSelection* AnnSel=0;
+   TagAndProbeSelection* TagandProbeSel=0 ;
+   PadmeAnalysisEvent *event=0;
+   UserAnalysis *UserAn=0;
+   GlobalTimeAnalysis *gTimeAn=0;
+   if(fProcessingMode==0){  
+     event = new PadmeAnalysisEvent();
+     UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+     gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
+
+     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+     
+     AnnSel->InitHistos();
+     TagandProbeSel->InitHistos();
+
+     AnnSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam);
-   TagandProbeSel->Init(fRecoEvent, 
+     TagandProbeSel->Init(fRecoEvent, 
 		fECalRecoEvent,    fECalRecoCl, 
 		fSACRecoEvent,     fSACRecoCl, 
 		fTargetRecoEvent,  fTargetRecoBeam );
-
    
-    PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
+     event->RecoEvent            =fRecoEvent          ;
+     event->TargetRecoEvent      =fTargetRecoEvent    ;
+     event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+     event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+     event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+     event->ECalRecoEvent        =fECalRecoEvent      ;
+     event->SACRecoEvent         =fSACRecoEvent       ;
+     event->TargetRecoBeam       =fTargetRecoBeam     ;
+     event->SACRecoCl            =fSACRecoCl          ;
+     event->ECalRecoCl           =fECalRecoCl         ;
+     event->PVetoRecoCl          =fPVetoRecoCl        ;
+     event->EVetoRecoCl          =fEVetoRecoCl        ;
+     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+     event->MCTruthEvent         =fMCTruthEvent       ;
+     
+     //UserAn->InitHistos();
+     //gTimeAn->InitHistos();
 
-    event->RecoEvent            =fRecoEvent          ;
-    event->TargetRecoEvent      =fTargetRecoEvent    ;
-    event->EVetoRecoEvent       =fEVetoRecoEvent     ;
-    event->PVetoRecoEvent       =fPVetoRecoEvent     ;
-    event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
-    event->ECalRecoEvent        =fECalRecoEvent      ;
-    event->SACRecoEvent         =fSACRecoEvent       ;
-    event->TargetRecoBeam       =fTargetRecoBeam     ;
-    event->SACRecoCl            =fSACRecoCl          ;
-    event->ECalRecoCl           =fECalRecoCl         ;
-    event->PVetoRecoCl          =fPVetoRecoCl        ;
-    event->EVetoRecoCl          =fEVetoRecoCl        ;
-    event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
-    UserAnalysis *UserAn = new UserAnalysis(fProcessingMode, fVerbose);
-    GlobalTimeAnalysis *gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
-    UserAn->Init(event);
-    gTimeAn->Init(event);
+     UserAn->Init(event);
+     gTimeAn->Init(event);
+
+   }
     
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -407,6 +436,35 @@ int main(Int_t argc, char **argv)
 	 std::cout<<"----------------------------------------------------Run/Event n. = "<<fRecoEvent->GetRunNumber()<<" "<<fRecoEvent->GetEventNumber()<<std::endl;
        }
        
+       //// Show MCTruth information (example)
+       //if (fMCTruthEvent) {
+       //	 printf("MCTruthEvent - Run %d Event %d Weight %8.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
+       //	 for(Int_t ii=0;ii<fMCTruthEvent->GetNVertices();ii++) {
+       //	   TMCVertex* vtx = fMCTruthEvent->Vertex(ii);
+       //	   printf("\tVertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",ii,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
+       //	   for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
+       //	     TMCParticle* p = vtx->ParticleIn(j);
+       //	     printf("\t\tParticle In %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+       //	   }
+       //	   for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
+       //	     TMCParticle* p = vtx->ParticleOut(j);
+       //	     printf("\t\tParticle Out %d PDGCode %d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+       //	   }
+       //	 }
+       //}
+
+       TTimeStamp timevent=fRecoEvent->GetEventTime();
+       utc_time=timevent.GetSec();
+        
+       // read here temp at event time
+       float temp_event=GetTemp(utc_time);
+       float temp_corr=GetEventTempCorr();
+       if ( (fVerbose>0 && (i%10==0)) || (i%1000==0) ){
+	 std::cout<< "-------------------  event utc = "<<utc_time<<std::endl;
+	 std::cout<< "-------------------  event temp = "<<temp_event<<std::endl;
+	 std::cout<<" -------------------  event temp corr = "<<temp_corr<<std::endl;
+       }
+
        if (fECalRecoEvent)   nECalHits   = fECalRecoEvent->GetNHits();
        if (fTargetRecoEvent) nTargetHits = fTargetRecoEvent->GetNHits(); 
        if (fPVetoRecoEvent)  nPVetoHits  = fPVetoRecoEvent->GetNHits();
@@ -447,11 +505,14 @@ int main(Int_t argc, char **argv)
        pvetoAn     ->Process();
        evetoAn     ->Process();
        hepvetoAn   ->Process();
-       //       gTimeAn     ->Process();
        //evSel       ->Process();
-       //       UserAn      ->Process();
-       AnnSel->Process(isMC);
-       TagandProbeSel->Process(isMC);
+       
+       if(fProcessingMode==0){  
+	 AnnSel->Process(isMC);
+	 TagandProbeSel->Process(isMC);
+	 //       UserAn      ->Process();
+	 //       gTimeAn     ->Process();
+       }
        //
        //
        hSvc->FillNtuple();
@@ -470,14 +531,16 @@ int main(Int_t argc, char **argv)
    hSvc->save();
 
    // cleanup 
-   delete sacAn;
-   delete ecalAn;
-   delete targetAn;
-   delete pvetoAn;
-   delete evetoAn;
-   delete hepvetoAn;
-   delete AnnSel;
-   delete TagandProbeSel;
+   if(sacAn)    delete sacAn;
+   if(ecalAn)   delete ecalAn;		
+   if(targetAn) delete targetAn;		
+   if(pvetoAn)  delete pvetoAn;		
+   if(evetoAn)  delete evetoAn;		
+   if(hepvetoAn)delete hepvetoAn;	
+   if(AnnSel)   delete AnnSel;		
+   if(TagandProbeSel)delete TagandProbeSel;	
+   if(UserAn)   delete UserAn;		
+   if(gTimeAn)  delete gTimeAn;          
    return 0;
    
 }

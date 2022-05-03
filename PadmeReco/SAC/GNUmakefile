@@ -2,4 +2,4 @@
 
 NAME := SAC
 
-include ../config/global.gmk
+include ../mkconfig/global.gmk

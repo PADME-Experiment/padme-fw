@@ -83,5 +83,12 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterYCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunRadiusCmd;
 
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetPosZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetSigmaXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetSigmaYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetEmittanceXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetEmittanceYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetPathLengthCmd;  
+
 };
 #endif

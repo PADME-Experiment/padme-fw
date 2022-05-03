@@ -46,29 +46,13 @@ public:
 
   G4double GetUbosonMass() { return BeamParameters::GetInstance()->GetUbosonMass(); }
 
-  //void CalibrationRunEnable()  { fCalibrationRun = true; }
-  //void CalibrationRunDisable() { fCalibrationRun = false; }
-  //G4bool CalibrationRun() { return fCalibrationRun; }
-  //
-  //G4double GetCalibRunEnergy() { return fCalibRunEnergy; }
-  //void SetCalibRunEnergy(G4double e) { fCalibRunEnergy  = e; }
-  //
-  //G4double GetCalibRunCenterX() { return fCalibRunCenterX; }
-  //void SetCalibRunCenterX(G4double x) { fCalibRunCenterX = x; }
-  //
-  //G4double GetCalibRunCenterY() { return fCalibRunCenterY; }
-  //void SetCalibRunCenterY(G4double y) { fCalibRunCenterY = y; }
-  //
-  //G4double GetCalibRunRadius()  { return fCalibRunRadius; }
-  //void SetCalibRunRadius(G4double r)  { fCalibRunRadius  = r; }
-
 private:
 
   void GeneratePrimaryPositron();
   void GenerateTargetPositron();
   void CreateFinalStateUboson();
-  void CreateFinalStateThreeGamma();
-  void CreateFinalStateTwoGamma();
+  void CreateFinalStateThreeGamma(G4double);
+  void CreateFinalStateTwoGamma(G4double);
   void GenerateCalibrationGamma();
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );
@@ -86,14 +70,6 @@ private:
   HistoManager* fHistoManager;
 
   BeamPrimaryPositron fPositron;
-
-  // In calibration mode we shoot gamma of fixed energy from
-  // the center of the Target to a circle on the ECal surface (flat distribution)
-  //G4bool   fCalibrationRun;
-  //G4double fCalibRunEnergy;  // Energy of the photon
-  //G4double fCalibRunCenterX; // X of center of cirlce 
-  //G4double fCalibRunCenterY; // Y of center of circle
-  //G4double fCalibRunRadius;  // Radius of circle
 
 };
 #endif

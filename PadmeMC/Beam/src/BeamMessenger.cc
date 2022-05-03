@@ -190,7 +190,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
-  fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in TwoGamma events).");
+  fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
   fSetDecayLengthCmd->SetParameterName("DL",false);
   fSetDecayLengthCmd->SetDefaultUnit("mm");
   fSetDecayLengthCmd->SetRange("DL >= 0.");

@@ -37,6 +37,10 @@ typedef struct config_s {
   // File to use for locking (".<PID>" will be appended)
   char lock_file[MAX_FILE_LEN];
 
+  // IP address and port of trigger board
+  char trigger_addr[16];
+  unsigned short int trigger_port;
+
   // Run number
   int run_number;
 

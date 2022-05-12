@@ -45,9 +45,11 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
-  fCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
+  fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
+  fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
+  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",1);
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -216,8 +218,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     else    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[ii]-vTSpecYPCorrectHitVec[ii-1]*tailfraction); //for all hits after the first, apply the tail correction
 
     Hit = new TRecoVHit();
-  
-    Hit->SetTime(tDerivSortHitVec[ii]);
+    //    std::cout<<SetPVetoT0()<<std::endl;
+    Hit->SetTime(tDerivSortHitVec[ii]-SetPVetoT0());
 
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);
@@ -446,7 +448,7 @@ void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
 void DigitizerChannelPVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
-    if(fSaveAnalog==1&&GetChID()>75&&GetChID()<80){
+    if(fSaveAnalog==1){//&&GetChID()>75&&GetChID()<80){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -525,30 +527,68 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
 Double_t DigitizerChannelPVeto::SetPVetoChaGain(){
 
-  std::ifstream Calib;
+  std::ifstream EnergyCalib;
   char fname[100];
-  //Int_t Calibration=0;
 //Beth 8/4/22: To make the name of the calibration file clearer, I named the version I use for the digitizer of 2020 signals (which uses the derivative of the signal) "PVeto_EnergyCalibration_DerivativeDigitizer2020.txt"
-  if(fCalibrationFile<2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%d.txt", fCalibrationFile);
+  if(fEnergyCalibrationFile<2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%d.txt", fEnergyCalibrationFile);
 
-  else if(fCalibrationFile==2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%s.txt","DerivativeDigitizer2020");
+  else if(fEnergyCalibrationFile==2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%s.txt","DerivativeDigitizer2020");
 
   std::ifstream myFile(fname);
-
-  Calib.open(fname);
-  if (Calib.is_open()){
+  
+  EnergyCalib.open(fname);
+  if (EnergyCalib.is_open()){
   	double temp;
   	for (int i=0;i<96;i++){
-          Calib >> temp >> fCalibCh[i];
-	  //          std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
+          EnergyCalib >> temp >> fEnergyCalibCh[i];
+	  //          std::cout <<"FileRow  "<< i<<" PVeto EnergyCalibration Constant "<<fEnergyCalibCh[i]<<std::endl; 
 	}
-  Calib.close();
+  EnergyCalib.close();
   }
   else{ 
-  	std::cout<<"No previous data available, resorting to default calibration constant (1)"<<std::endl;
+  	std::cout<<"No previous data available for PVeto, resorting to default calibration constant (1)"<<std::endl;
   }
 
-  return fCalibCh[GetChID()];
+  return fEnergyCalibCh[GetChID()];
+
+}
+
+Double_t DigitizerChannelPVeto::SetPVetoT0(){
+
+  std::ifstream PVetoTimeCalib;
+  char fname[100];
+  //Int_t Calibration=0;
+  
+  if(fTimeCorrection==1&&fTimeCalibrationFile==1){
+    sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
+  
+    std::ifstream myFile(fname);
+    
+    PVetoTimeCalib.open(fname);
+    if (PVetoTimeCalib.is_open()){
+      double temp;
+      for (int i=0;i<96;i++){
+	PVetoTimeCalib >> temp >> fTimeCalibCh[i];
+	//std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+      }
+      PVetoTimeCalib.close();
+    }
+    else{ 
+      std::cout<<"No previous data available for PVeto, resorting to default calibration constant (0)"<<std::endl;
+      for (int i=0;i<96;i++){
+	fTimeCalibCh[i]=0;
+      }
+      
+    }
+  }
+  else{
+    if(fTimeCorrection==1)    std::cout<<"Unknown PVeto time calibration file, resorting to default calibration constant (0)"<<std::endl;
+    for (int i=0;i<96;i++){
+      fTimeCalibCh[i]=0;
+    }
+
+  }
+  return fTimeCalibCh[GetChID()];
 
 }
 

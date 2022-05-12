@@ -42,6 +42,7 @@ private:
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitVec);
 
   Double_t SetEVetoChaGain();
+  Double_t SetEVetoT0();
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
 
   void SetAbsSignals(Double_t ped);
@@ -75,8 +76,8 @@ private:
   Bool_t fSaveAnalog;
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
-  int fCalibrationFile;
-
+  int fEnergyCalibrationFile;
+  int fTimeCalibrationFile;
   TString detectorname;
 
   std::vector<Double_t>   tDerivHitVec          ;
@@ -96,7 +97,8 @@ private:
 
   Bool_t fAnalogPrint;
   
-  Double_t fCalibCh   [96]; 
+  Double_t fEnergyCalibCh[96]; 
+  Double_t fTimeCalibCh[96]; 
 
   char name[256];
 
@@ -127,6 +129,7 @@ private:
 
   Bool_t fChannelEqualisation; //Beth 23/2/22
   Bool_t fTailCorrection; //Beth 4/4/22
+  Bool_t fTimeCorrection; //Beth 28/4/22
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;

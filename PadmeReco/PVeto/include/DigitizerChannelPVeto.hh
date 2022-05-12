@@ -31,6 +31,7 @@ public:
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitVec);
 
   Double_t SetPVetoChaGain();
+  Double_t SetPVetoT0();
   Double_t ZSupHit(Float_t thr,UShort_t NAvg);  //M. Raggi 30/10/2018
 
   void SetAbsSignals(Double_t ped);
@@ -80,8 +81,9 @@ private:
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
 
-  PVetoCalibration *fChannelCalibration;
-  int fCalibrationFile;
+  //  PVetoCalibration *fChannelCalibration;
+  int fEnergyCalibrationFile;
+  int fTimeCalibrationFile;
 
   TList* hListPVeto; // single board related histograms 
 
@@ -154,8 +156,8 @@ private:
   TGraph* gUnAbsSigs;
   std::vector<TGraph*> gUnAbsSigGraphs;
 
-  Double_t fCalibCh   [96]; 
-  //  std::map<int,double> *fEnergyCalibMap;
+  Double_t fEnergyCalibCh[96]; 
+  Double_t fTimeCalibCh[96]; 
 
    //Single Hit
   TH1F * hdxdtMax;      
@@ -228,6 +230,7 @@ private:
 
   Bool_t fChannelEqualisation; //Beth 23/2/22
   Bool_t fTailCorrection; //Beth 4/4/22
+  Bool_t fTimeCorrection; //Beth 28/4/22
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;

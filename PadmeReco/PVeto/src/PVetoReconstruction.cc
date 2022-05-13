@@ -322,7 +322,11 @@ void PVetoReconstruction::BuildClusters()
   std::vector<Cluster*> vPVetoClusters;
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
-  
+  std::vector<TRecoVCluster *> &myClusters = GetClusters();
+  myClusters.clear();
+
+  TRecoVCluster* myCl;
+
   for(int iHit=0;iHit<Hits.size();iHit++){
     PVetoClusterHit.Clear();
     //	std::cout<<"ChID "<<PVetoClusterHit.GetChannelId()<<" time "<<PVetoClusterHit.GetTime()<<std::endl;
@@ -333,10 +337,10 @@ void PVetoReconstruction::BuildClusters()
     PVetoClusterHitVec.push_back(PVetoClusterHit);
     //	std::cout<<"Making the Cluster Hits ChID "<<PVetoClusterHit.GetChannelId()<<" time "<<PVetoClusterHit.GetTime()<<std::endl;
   }
-
+  std::cout<<"Pveto hit size "<< PVetoClusterHitVec.size()<<std::endl;
   vPVetoClusters.clear();
   PVetoClusStruc.Clear();//contains a structure for vectors of clusters for each event
-  PVetoClusterHitVec.clear();
+  // PVetoClusterHitVec.clear();
 
   for(Int_t iPHit=0;iPHit<PVetoClusterHitVec.size();iPHit++){
     //      std::cout<<"Reading Cluster Hits ChID "<<PVetoClusterHitVec[iPHit].GetChannelId()<<" time "<<PVetoClusterHitVec[iPHit].GetTime()<<std::endl;
@@ -345,13 +349,13 @@ void PVetoReconstruction::BuildClusters()
       PVetoClusStruc.AddHit(PVetoClusterHitVec[iPHit],iPHit);
     }
   }
+
+
   PVetoClusStruc.HitSort();//sort hits in time
   PVetoClusStruc.Clusterise();//clusterise hits
   PVetoClusStruc.MergeClusters();//merge adjacent, in time clusters
   vPVetoClusters = PVetoClusStruc.GetClusters();//vector of clusters
 
-  std::vector<TRecoVCluster *> myClusters;
-  TRecoVCluster* myCl;
   for(int iPClus=0;iPClus<vPVetoClusters.size();iPClus++){
     myCl = new TRecoVCluster();
 
@@ -368,7 +372,7 @@ void PVetoReconstruction::BuildClusters()
     clT = vPVetoClusters[iPClus]->GetAverageTime();
     clSize = vPVetoClusters[iPClus]->GetNHits();
     TVector3 clPos = fGeometry->LocalPosition(chID);
-
+    std::vector<Int_t> clHitIndices = vPVetoClusters[iPClus]->GetHitIndex();
 
 
     myCl->SetChannelId   ( chID );
@@ -376,12 +380,13 @@ void PVetoReconstruction::BuildClusters()
     myCl->SetTime        ( clT );
     myCl->SetPosition    ( clPos );
     myCl->SetNHitsInClus ( clSize );
-    /*     myCl->SetSeed        ( iSeed );
+    myCl->SetHitVecInClus( clHitIndices );
+    //     myCl->SetSeed        ( iSeed );
 
-    myCl->SetHitVecInClus( clHitIndices );*/
+    myClusters.push_back(myCl);
   }
-  
-  }
+  //  std::cout<<"size "<<myClusters.size()<<std::endl;
+}
 
 bool PVetoReconstruction::TriggerToBeSkipped()
 {

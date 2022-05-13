@@ -21,13 +21,14 @@ int Cluster::InsertHit(PVetoClusterHits hit, int ihit){
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
   }
-  hitIndex[nhits]=ihit;
+  //  hitIndex[nhits]=ihit;
+  hitIndex.push_back(ihit);
   if(hit.GetChannelId()<mostUpstreamChannel) mostUpstreamChannel=hit.GetChannelId();
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
   if(hit.GetTime()>latehittime) latehittime=hit.GetTime();
   averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
-  //  energy += hit.GetEnergy();
+  energy += hit.GetEnergy();
   nhits++;
 }
 
@@ -42,14 +43,15 @@ int Cluster::AddCluster(Cluster* newcluster){
     goodreturn=-1;
   }
   for(int ii=0;ii<NMax;ii++){
-    hitIndex[nhits+ii]=newcluster->GetHitIndex()[ii];
+    //    hitIndex[nhits+ii]=newcluster->GetHitIndex()[ii];
+    hitIndex.push_back(newcluster->GetHitIndex()[ii]);
   }
   if(newcluster->GetMostUpstreamChannel()<mostUpstreamChannel) mostUpstreamChannel=newcluster->GetMostUpstreamChannel();
   if(newcluster->GetMostDownstreamChannel()>mostDownstreamChannel) mostDownstreamChannel=newcluster->GetMostDownstreamChannel();
   if(newcluster->GetEarlyHitTime()<earlyhittime) earlyhittime = newcluster->GetEarlyHitTime();
   if(newcluster->GetLateHitTime()>latehittime) latehittime = newcluster->GetLateHitTime();
   averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
-  //  energy+=newcluster->GetEnergy();
+  energy+=newcluster->GetEnergy();
   nhits=NMax;
 
   return goodreturn;
@@ -97,7 +99,7 @@ void ClusterStructure::Clusterise(){
 void ClusterStructure::MergeClusters(){
    Int_t noCompact = 0;
   while(noCompact==0) {
-    //    std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
+    //std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;
     int ii = 0;
     while(ii+1< ClusVec.size()){
@@ -113,7 +115,7 @@ void ClusterStructure::MergeClusters(){
 	int jDown = ClusVec.at(jj)->GetMostDownstreamChannel();
 	double jAvgT = ClusVec.at(jj)->GetAverageTime();
 	//	std::cout<<"jj "<<jj<<" jUp "<<jUp<<" jDown "<<jDown<<" jAvgT "<<jAvgT<<std::endl;
-	if(std::abs(iAvgT-jAvgT)<ClusterDeltaT&&(std::abs(iUp-jDown==1)||std::abs(jUp-iDown==1))){
+	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(std::fabs(iUp-jDown==1)||std::fabs(jUp-iDown==1))){
 	  int goodorbad = ClusVec.at(ii)->AddCluster(ClusVec.at(jj));//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
 	  //std::cout<<"gonna erase "<<jj<<std::endl;
  	  //if(jj==1) std::cout<<"TAKE NOTICE OF ME!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
@@ -151,7 +153,7 @@ void ClusterStructure::MergeClusters(){
   // 	int jDown = (*jj)->GetMostDownstreamChannel();
   // 	double jAvgT = (*jj)->GetAverageTime();
   // 	std::cout<<"jj "<<indexjj<<" jUp "<<jUp<<" jDown "<<jDown<<" jAvgT "<<jAvgT<<" size "<<ClusVec.size()<<std::endl;
-  // 	if(std::abs(iAvgT-jAvgT)<ClusterDeltaT&&(iUp-jDown==1||jUp-iDown==1)){
+  // 	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(iUp-jDown==1||jUp-iDown==1)){
   // 	  int goodorbad = (*ii)->AddCluster(*jj);//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
   // 	  std::cout<<"gonna erase ii"<<indexii<<" jj "<<indexjj<<std::endl;
   // 	  //	  if(jj==1) std::cout<<"IT HAPPENS HERE!!!!!!!!!"<<std::endl;

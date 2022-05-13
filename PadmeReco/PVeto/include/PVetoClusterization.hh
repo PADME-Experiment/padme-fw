@@ -11,7 +11,8 @@ public:
   ~Cluster(){};
 
   int InsertHit(PVetoClusterHits hit, int ihit);
-  int* GetHitIndex(){return hitIndex;}
+  //  int* GetHitIndex(){return hitIndex;}
+  std::vector<int> GetHitIndex(){return hitIndex;}
   int GetMostUpstreamChannel(){return mostUpstreamChannel;}
   int GetMostDownstreamChannel(){return mostDownstreamChannel;}
   double GetAverageTime(){return averagetime;}
@@ -23,7 +24,8 @@ public:
   double GetEnergy(){return energy;}
   
   private:
-  int hitIndex[MAXHIT];
+  std::vector<int> hitIndex;
+  //  int hitIndex[MAXHIT];
   int mostUpstreamChannel;
   int mostDownstreamChannel;
   double averagetime;

@@ -655,8 +655,9 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   //  EFraction=0.95;
   EFraction = fEnergyCompensation->Eval(ECl);
   //std::cout << "fraction " << EFraction << std::endl;
-  if(ECl>1000.) EFraction=1;
-  if(ECl<30.)   EFraction=1;
+  //if(ECl>1000.) EFraction=1;
+  if(ECl>1000.) EFraction=0.96;
+  //if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   // delete fEnergyCompensation;
   return EFraction;

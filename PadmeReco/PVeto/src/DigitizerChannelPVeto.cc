@@ -222,8 +222,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     Hit->SetTime(tDerivSortHitVec[ii]-SetPVetoT0());
 
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
-    Hit->SetEnergy(fEnergy);
-
+    Hit->SetEnergy(fEnergy);  
     hitVec.push_back(Hit);
 
   }//end loop over hits
@@ -594,7 +593,9 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
 
 Double_t DigitizerChannelPVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
   Double_t HeightFrac=0;
-  Double_t Frac[152];
+  Double_t Frac[300];
+  int maxdeltat=290;
+
   Frac[0]   =  1; 
   Frac[1]   =  0.997254     ;
   Frac[2]   =  0.980119     ;
@@ -886,7 +887,7 @@ Double_t DigitizerChannelPVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in s
   Frac[288] =     -0.00378898;
   Frac[289] =     -0.00194118;
 
-  if(DeltaT<290)  HeightFrac = Frac[DeltaT];
+  if(DeltaT<maxdeltat)  HeightFrac = Frac[DeltaT];
   else HeightFrac=0;						     
   return HeightFrac;						     
  									     

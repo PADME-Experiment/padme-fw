@@ -39,7 +39,6 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   random = new TRandom2();    
   gRandom->SetSeed(time(NULL));
 
-
   // configurable parameters 
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
@@ -328,6 +327,7 @@ void PVetoReconstruction::BuildClusters()
   TRecoVCluster* myCl;
 
   for(int iHit=0;iHit<Hits.size();iHit++){
+    //    if(Hits[iHit]->GetEnergy()<0) std::cout<<Hits[iHit]->GetEnergy()<<std::endl;
     PVetoClusterHit.Clear();
     //	std::cout<<"ChID "<<PVetoClusterHit.GetChannelId()<<" time "<<PVetoClusterHit.GetTime()<<std::endl;
     PVetoClusterHit.SetEnergy(Hits[iHit]->GetEnergy());
@@ -337,17 +337,17 @@ void PVetoReconstruction::BuildClusters()
     PVetoClusterHitVec.push_back(PVetoClusterHit);
     //	std::cout<<"Making the Cluster Hits ChID "<<PVetoClusterHit.GetChannelId()<<" time "<<PVetoClusterHit.GetTime()<<std::endl;
   }
-  std::cout<<"Pveto hit size "<< PVetoClusterHitVec.size()<<std::endl;
+  //  std::cout<<"Pveto hit size "<< PVetoClusterHitVec.size()<<std::endl;
   vPVetoClusters.clear();
   PVetoClusStruc.Clear();//contains a structure for vectors of clusters for each event
   // PVetoClusterHitVec.clear();
 
   for(Int_t iPHit=0;iPHit<PVetoClusterHitVec.size();iPHit++){
     //      std::cout<<"Reading Cluster Hits ChID "<<PVetoClusterHitVec[iPHit].GetChannelId()<<" time "<<PVetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    if(PVetoClusterHitVec[iPHit].GetEnergy()>0.5){
+    //   if(PVetoClusterHitVec[iPHit].GetEnergy()>0.5){
       nhitpass++;
       PVetoClusStruc.AddHit(PVetoClusterHitVec[iPHit],iPHit);
-    }
+      //}
   }
 
 
@@ -374,6 +374,11 @@ void PVetoReconstruction::BuildClusters()
     TVector3 clPos = fGeometry->LocalPosition(chID);
     std::vector<Int_t> clHitIndices = vPVetoClusters[iPClus]->GetHitIndex();
 
+    if(clE>100){
+      for(int ii=0;ii<clSize;ii++){
+	std::cout<<"clE "<<clE<<" ii "<<ii<<" hit "<<clHitIndices[ii]<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+      }
+    }
 
     myCl->SetChannelId   ( chID );
     myCl->SetEnergy      ( clE );

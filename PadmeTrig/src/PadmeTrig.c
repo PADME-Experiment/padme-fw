@@ -794,7 +794,7 @@ int main(int argc, char *argv[]) {
 	    diff_time = trig_time-old_time;
 	  } else {
 	    // Take into account Trigger Board clock 40-bits rollover
-	    diff_time = (trig_time+0xFFFFFFFFFF)-old_time;
+	    diff_time = (trig_time+0x10000000000)-old_time;
 	  }
 	  float dt = diff_time/80.0E3; // Trigger clock is 80.0MHz: get time interval in ms
 	  //int sys_dt = sys_time-old_sys_time;

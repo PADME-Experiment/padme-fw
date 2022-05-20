@@ -52,6 +52,8 @@ private:
   std::vector<double> QTotSAC;
   double EvTotE;
 
+  Double_t fSACDigiTimeWindow;
+
 
   //  vector<TRecoVCluster *> fClusters;
 

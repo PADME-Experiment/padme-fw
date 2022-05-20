@@ -27,6 +27,73 @@ Bool_t HEPVetoAnalysis::InitHistosAnalysis()
 
     return true;
 }
+
+
+Bool_t HEPVetoAnalysis::InitHistosValidation()
+{
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  std::string hname;
+  int nBin, min, max;
+  nBin=100;
+  min=0;
+  max=150;
+  hname="HEPVeto_NHits";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="HEPVeto_NCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=50;
+  min=0.;
+  max=50;
+  hname = "HEPVeto_HitEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  hname = "HEPVeto_ClusterEnergy";
+  hSvcVal->BookHisto(hname,nBin,min, max);
+  nBin=800;
+  min=-400;
+  max=400;
+  hname = "HEPVeto_HitTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  hname = "HEPVeto_ClusterTime";
+  hSvcVal->BookHisto(hname,nBin, min, max);
+  nBin=20;
+  min=780;
+  max=960;
+  hname="HEPVeto_HitXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="HEPVeto_ClusterXPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=3;
+  min=-1.5;
+  max=1.5;
+  hname="HEPVeto_HitYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="HEPVeto_ClusterYPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=20;
+  min=2070;
+  max=2120;
+  hname="HEPVeto_HitZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="HEPVeto_ClusterZPos";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=33;
+  min=0;
+  max=33;
+  hname="HEPVeto_HitChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  hname="HEPVeto_ClusterSeedChannelId";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=15;
+  min=0;
+  max=15;
+  hname="HEPVeto_NHitInCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  
+  return true;
+}
+
+
+
 Bool_t HEPVetoAnalysis::InitHistosDataQuality()
 {
 

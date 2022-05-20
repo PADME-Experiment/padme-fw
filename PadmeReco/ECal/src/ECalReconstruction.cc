@@ -27,9 +27,10 @@
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
-#include "TRandom2.h"
+
 #include <time.h>
 #include <stdlib.h>
+#include <bitset>
 
 struct TimeEnergy 
 {
@@ -71,9 +72,19 @@ ECalReconstruction::ECalReconstruction(TFile* HistoFile, TString ConfigFileName)
   fCompensateMissingE     = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
   std::cout<<"ECAL Clusterization ALGO = "<<fClusterizationAlgo<<std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
-  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeteriorateEnergyResolution", 0);
-
-  //  fClusters.clear();
+  //fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
+  fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 0);
+  fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 0);
+  fReproductSACbunchStructure = (Int_t)fConfig->GetParOrDefault("RECO", "BunchStructureSAC_runJuly", 0);
+    if(fReproductSACbunchStructure){
+      TFile *file1 =new TFile("TimeDistribution3.root");
+      hSAC_HitTime = (TH1F*)file1->Get("SAC_HitTime");
+      // hSAC_HitTime->GetXaxis()->SetRange(-100,50);
+      //hCumulative = new TH1F(); 
+      hCumulative= (TH1F*)hSAC_HitTime->GetCumulative();
+      fComulativeMax = hCumulative->GetMaximum();
+    }
+    //  fClusters.clear();
 }
 void ECalReconstruction::HistoInit(){
   AddHisto("ECalOccupancy",new TH2F("ECalOccupancy","ECalOccupancy",31,0,31,31,0,31));
@@ -89,7 +100,8 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALCellPos",new TH2F("ECALCellPos","ECALCellPos",30,0,30,30,0,30));
   //  AddHisto("ECALVoters",new TH2F("ECALVoters","ECALVoters",1000,0.,1000.,26,-0.5,25.5));
 
-  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  //AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",2000,-200,800));
+  AddHisto("ECALTime",new TH1F("ECALTime","ECALTime",400,-150,250));
   AddHisto("ECALTimeCut",new TH1F("ECALTimeCut","ECALTimeCut",500,0,800));
   AddHisto("ECALClTime",new TH1F("ECALClTime","ECALClTime",500,-200,800));
   AddHisto("ECALClTimeCut",new TH1F("ECALClTimeCut","ECALClTimeCut",500,-200,800));
@@ -111,6 +123,34 @@ void ECalReconstruction::HistoInit(){
   AddHisto("ECALClSeedEn",new TH1F("ECALClSeedEn","ECALClSeedEn",550,0,550));
   AddHisto("ECALNeig",new TH1F("ECALNeig","ECALNeig",9,-4.5,4.5));
 
+  //histograms to debug mc wave IO
+  AddHisto("nDigiForCh",new TH1F("nDigiForCh","nDigiForCh",20,0,20));
+  AddHisto("nDigiForCh_1RecoHit", new TH1F("nDigiForCh_1RecoHi","nDigiForCh_1RecoHi",11, -0.5, 10.5));
+  AddHisto("DEnergy_digiTemplate", new TH1F("DEnergy_digiTemplate","DEnergy_digiTemplate",400, -200, 200));
+  AddHisto("DEnergy_1RecoHit", new TH1F("DEnergy_1RecoHit","DEnergy_1RecoHit",400, -200, 200));
+  AddHisto("DEnergy_1RecoHit1ndigi", new TH1F("DEnergy_1RecoHit1ndigi","DEnergy_1RecoHit1ndigi",400, -200, 200));
+
+  AddHisto("DEnergy_1RecoSaturatedHit", new TH1F("DEnergy_1RecoSaturatedHit","DEnergy_1RecoSaturatedHit",400, -200, 200));
+  AddHisto("DEnergy_1RecoSaturatedHit1ndigi", new TH1F("DEnergy_1RecoSaturatedHit1ndigi","DEnergy_1RecoSaturatedHit1ndigi",400, -200, 200));
+  AddHisto("DEnergy_1RecoNoSaturatedHit", new TH1F("DEnergy_1RecoNoSaturatedHit","DEnergy_1RecoNoSaturatedHit",400, -200, 200));
+  AddHisto("DEnergy_1RecoNoSaturatedHit1ndigi", new TH1F("DEnergy_1RecoNoSaturatedHit1ndigi","DEnergy_1RecoNoSaturatedHit1ndigi",400, -200, 200));
+
+  AddHisto("DTime_1RecoSaturatedHit", new TH1F("DTime_1RecoSaturatedHit","DTime_1RecoSaturatedHit",400, -200, 200));
+  AddHisto("DTime_1RecoSaturatedHit1ndigi", new TH1F("DTime_1RecoSaturatedHit1ndigi","DTime_1RecoSaturatedHit1ndigi",400, -200, 200));
+  AddHisto("DTime_1RecoNoSaturatedHit", new TH1F("DTime_1RecoNoSaturatedHit","DTime_1RecoNoSaturatedHit",400, -200, 200));
+  AddHisto("DTime_1RecoNoSaturatedHit1ndigi", new TH1F("DTime_1RecoNoSaturatedHit1ndigi","DTime_1RecoNoSaturatedHit1ndigi",400, -200, 200));
+
+  AddHisto("DTime_1RecoHit", new TH1F("DTime_1RecoHit","DTime_1RecoHit",400, -200, 200));
+  AddHisto("DTime_1RecoHit1ndigi", new TH1F("DTime_1RecoHit1ndigi","DTime_1RecoHit1ndigi",400, -200, 200));
+  // AddHisto("DEnergy_1RecoSaturatedHit", new TH1F("DEnergy_1RecoSaturatedHit","DEnergy_1RecoSaturatedHit",400, -1000, 1000));
+  //AddHisto("DTime_1RecoSaturatedHit", new TH1F("DTime_1RecoSaturatedHit","DTime_1RecoSaturatedHit",400, -200, 200));
+
+ AddHisto("CorrNoNoiseAllInitialFromCalculation_1RecoHit_nosat_VMaxvsEnergy", new TH2F( "CorrNoNoiseAllInitialFromCalculation_1RecoHit_nosat_VMaxvsEnergy", "CorrNoNoiseAllInitialFromCalculation_1RecoHit_nosat_VMaxvsEnergy", 1000, 0., 1000.,1000.,0.,1000.));
+
+ AddHisto("ECALHitTimeDistribution",new TH1F("ECALHitTimeDistribution","ECALHitTimeDistribution",700,-200,500));
+ AddHisto("ECALHitTimeDistribution_bunch",new TH1F("ECALHitTimeDistribution_bunch","ECALHitTimeDistribution_bunch",700,-200,500));
+
+
   // new histograms from Venelin
   AddHisto("ECALCellPos",new TH2F("ECALCellPos0cut","ECALCellPos0cut",30,0,30,30,0,30));
   AddHisto("ECALTDiffCos",new TH1F("ECALTDiffCos","ECALTDiffCos",200,-20,20));
@@ -122,6 +162,7 @@ void ECalReconstruction::HistoInit(){
   AddHisto("Etot",     new TH1F("Etot","Etot",1200,-1000.,5000.));
   AddHisto("Esum-2",     new TH1F("Esum-2","Esum-2",1000,0.,1000.));  
   AddHisto("Esum-2G",     new TH1F("Esum-2G","Esum-2G",1000,0.,1000.));
+  AddHisto("ZSupFlag",     new TH1F("ZSupFlag","ZSupFlag",11,-0.5,10.5));
 
 }
 
@@ -169,11 +210,9 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEv){
 
 }
 
-
-
 bool ECalReconstruction::TriggerToBeSkipped()
 {
-  if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
   if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
   if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
   return false; 
@@ -195,10 +234,22 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
     //std::cout<<"iBdID "<<iBdID<<std::endl;
+    unsigned int acm;
+    acm= ADC->GetAcceptedChannelMask();
+    //printf("--------------------------------------------Mask %x \n", acm);
     if(GetConfig()->BoardIsMine( iBdID )) {
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);
+	Int_t nch = chn->GetChannelNumber();
+	Double_t zsup=1;
+	if((acm & (1<<nch))>0){zsup=0; /*std::cout<<"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++accepted hit " << (acm & (1<<ich)) << std::endl;*/ }
+	std::bitset<32> x(acm);
+	std::bitset<32> y((1<<nch));
+	GetHisto("ZSupFlag")->Fill(zsup);
+       	//std::cout<<"........................................................accepted channel mask " << (acm & (1<<ich)) << " x " << x << " y " << y  << " channel " << nch<< std::endl;
+	//Double_t rms = compute_rms(chn->GetSamplesArray());
+	//std::cout<<" from compute_rms " << rms <<std::endl;
 	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
 
 	//New M. Raggi
@@ -214,7 +265,7 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
 		      <<" ... idBD/idCH = "<<(Int_t)ADC->GetBoardId()<<"/"<<(Int_t)chn->GetChannelNumber()
 		      <<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
 	*/
-	
+
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();
@@ -671,11 +722,19 @@ void ECalReconstruction::BuildSimpleECalClusters()
   Int_t cCellUsed[NTotCh]={0};
 
 
+  //ofstream myHitFile;
+  //myHitFile.open ("hitFeatures.txt",std::ofstream::app);
+  //myHitFile <<"A new event here  " <<std::endl; 
   for(unsigned int iHit1 =  0; iHit1 < Hits.size(); ++iHit1) {
     if (iHit1==3000) {
       std::cout<<"ECalReconstruction::BuildSimpleECalClusters--- WARNING: Too small buffers w.r.t. n. of hits in the event --- stip here"<<std::endl;
       break;
     }
+
+    // debugging 
+    //myHitFile <<"Energy " <<  Hits[iHit1]->GetEnergy() << " time " << Hits[iHit1]->GetTime() << " channel " << Hits[iHit1]->GetChannelId()<<std::endl;
+    // end debugging 
+
     // std::cout<<"IOOOO entra nel loop " <<iHit1<<std::endl;
     cUsed[iHit1]  = 0;
     cTime[iHit1]  = Hits[iHit1]->GetTime();
@@ -687,6 +746,8 @@ void ECalReconstruction::BuildSimpleECalClusters()
     cChID[iHit1]  = Hits[iHit1]->GetChannelId();
     //    std::cout<<iHit1<<" time in reco " <<cTime[iHit1]<<" chID "<<cChID[iHit1]<<" Ech "<<cEnergy[iHit1]<<std::endl;
   }
+  //myHitFile.close();
+
 
   Int_t iMax=0;
   Int_t HitUsed=0;
@@ -770,12 +831,12 @@ void ECalReconstruction::BuildSimpleECalClusters()
   for (Int_t iCl=0; iCl<NSeeds; ++iCl){
     // Correct the cluster energy for missing energy
     if(fCompensateMissingE) ClE[iCl]=ClE[iCl]/CompensateMissingE(ClE[iCl],ClSeed[iCl]);
-    if(fIsMC && fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
-      Double_t sigma=EnergyResolution(ClE[iCl]);
-      Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
-      //std::cout << DetEnergy << std::endl;
-      ClE[iCl]=DetEnergy+ClE[iCl];
-    }
+    // if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+    //   Double_t sigma=EnergyResolution(ClE[iCl]);
+    //   Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
+    //   //std::cout << DetEnergy << std::endl;
+    //   ClE[iCl]=DetEnergy+ClE[iCl];
+    // }
     tmpHitsInCl.clear();
     TRecoVCluster* myCl = new TRecoVCluster();
     myCl->SetChannelId( SdCell[iCl] );
@@ -816,11 +877,341 @@ void ECalReconstruction::BuildSimpleECalClusters()
   return;// NGoodClus;
 }
 
+void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+  //std::cout<<"In convert MC digits to reco hits ..... " << std::endl;
+  //fIsMC = true;
+  Int_t i=0;
+  ifstream myfile;
+  myfile.open ("newtemplate.txt");;
+  if (myfile.is_open()){
+   while (!myfile.eof()) {
+   myfile >> fTemplate[i];
+   //if(fGlobalMode->GetGlobalDebugMode()) hTemplate->SetBinContent(i,fTemplate[i]);
+   // std::cout<< fTemplate[i] << std::endl;
+   i++;
+   }
+  }
+  fmaxValuemyTemplate=0.;
+  for(int i=0; i<1001; i++){
+    if(fTemplate[i]>fmaxValuemyTemplate){
+     fmaxValuemyTemplate =fTemplate[i];
+    }  
+  }
+  //std::cout << " max template " << fmaxValuemyTemplate << std::end;
+  if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
+  fHits.clear();
+
+ int idarray[50][50];
+  for (Int_t j=0; j<50; ++j) {
+      for (Int_t i=0; i<50; ++i) idarray[i][j]=0;
+  }
+
+  Double_t TimeShift=300.;
+  if(!fReproductSACbunchStructure){
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      Double_t oldTime=digi->GetTime();
+      digi->SetTime(oldTime+TimeShift);
+    }
+  }
+
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    GetHisto("ECALHitTimeDistribution")->Fill((tEvent->Digi(i))->GetTime());
+  }
+
+ if(fReproductSACbunchStructure){
+   Double_t shiftTime=350;
+    Double_t minTime=999;
+    Double_t maxTime=-999;
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      Double_t digiTime=digi->GetTime();
+      if(digiTime<minTime)minTime=digiTime;
+      if(digiTime>maxTime)maxTime=digiTime;
+    }
+    Double_t width= maxTime-minTime;   
+    std::cout<<"bunch length " << width << std::endl;
+  
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      //Double_t digiTime=TMath::Nint(digi->GetTime());
+      Double_t digiTime=digi->GetTime();
+      /*double xc = r->Rndm();
+	double ydc = digiTime+(xc-0.5);
+	double ys = fComulativeMax*(ydc-minTime)/width;*/
+      double ys = fComulativeMax*(digiTime-13.5)/263.5;
+      Int_t isbin = hCumulative->FindFirstBinAbove(ys);
+      double xs = hCumulative->GetBinCenter(isbin);
+      if( xs <-45. )std::cout<<"old time " << digiTime<<" ys " << ys << " isbin " << isbin << " new Time " << xs << std::endl;
+      digi->SetTime(xs+shiftTime);
+      GetHisto("ECALHitTimeDistribution_bunch")->Fill(xs+shiftTime);
+    }
+  }
+
+  std::vector<double> totalWaveform;
+  std::vector<double> digiEne;
+  std::vector<double> digiTime;
+  std::vector<TimeEnergy> hitArrayInCrystal;
+  hitArrayInCrystal.clear();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+
+  //std::cout<<"Start new event conversion here ................................................................................"<<std::endl;
+  int ndigi=0;
+  
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+    TMCVDigi* digi = tEvent->Digi(i);
+    //TRecoVHit *Hit = new TRecoVHit(digi);
+    int i1 = digi->GetChannelId()/100;
+    int i2 = digi->GetChannelId()%100;
+    if (idarray[i1][i2]==1) continue;
+    Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
+    if (BrokenSU)continue;
+    //std::cout<<"first loop , ev " << i<<" x " << i1 << " y " << i2 << " chID_first " <<  digi->GetChannelId()<< " at time " << digi->GetTime()<<" with energy " << digi->GetEnergy() << std::endl;
+    hitArrayInCrystal.clear();
+    ndigi=1;
+    hitArrayInCrystal.push_back(TimeEnergy());
+    hitArrayInCrystal.back().digiTime = digi->GetTime();
+    hitArrayInCrystal.back().digiEnergy = digi->GetEnergy();
+      
+    int chIdN = i2*100+i1;
+    //ss//std::cout<<"Hit in a new crystal   ......... id = "<<chIdN<<"  ... it was "<<digi->GetChannelId()<<std::endl;
+    //double time = digi->GetTime();
+    //double energy = digi->GetEnergy();
+    for (Int_t j=i+1; j<tEvent->GetNDigi(); ++j) {
+	TMCVDigi* digj = tEvent->Digi(j);
+	int j1 = digj->GetChannelId()/100;
+	int j2 = digj->GetChannelId()%100;
+	//	std::cout<<"second loop , ev " << j<<" x " << j1 << " y " << j2 << " chID_first " <<  digj->GetChannelId() << std::endl;
+	if (j1!=i1) continue;
+	if (j2!=i2) continue;
+	//std::cout<<" after continue " << std::endl;
+	ndigi+=1;
+	hitArrayInCrystal.push_back(TimeEnergy());
+	hitArrayInCrystal.back().digiTime = digj->GetTime();
+	hitArrayInCrystal.back().digiEnergy = digj->GetEnergy();
+    }
+    idarray[i1][i2]=1;
+    GetHisto("nDigiForCh")->Fill(ndigi);
+    //std::cout<<"after second loop " << ndigi << std::endl;
+    //Hit->SetChannelId(chIdN);
+    //Hit->SetPosition(TVector3(0.,0.,0.)); 
+
+    std::sort(hitArrayInCrystal.begin(), hitArrayInCrystal.end(), by_time());
+    //std::cout<<"in crystal " << chIdN << " there are " << hitArrayInCrystal.size() << std::endl;
+    // trasformare i digi/channel in waveform
+    std::vector<double> tempVec;
+    std::vector<double> wave;
+    // Double_t p0=1.097;   //from data
+    // Double_t p1=3.207;
+    Double_t p0=4.60172e-13;    //from MC all energy integrates up to 5k ns
+    Double_t p1=3.21025;
+    //Double_t p0=9.1623e-13;    //from MC, all energy in time window, integration up to 1024 ns
+    //Double_t p1=3.42867; //i'd use the function depending on time
+    Double_t vMaxMC=0.; 
+    for(int i=0; i< 1024; i++)wave.push_back(0);
+    for(int j=0; j<hitArrayInCrystal.size(); j++){
+      Double_t energy_= hitArrayInCrystal[j].digiEnergy;
+      Double_t time_ = hitArrayInCrystal[j].digiTime;
+      //Double_t p1=3.22416+0.000550996*time_-1.14974e-06*time_*time_+3.04737e-09*time_*time_*time_;
+      vMaxMC=p0+energy_*p1;
+      GetHisto("CorrNoNoiseAllInitialFromCalculation_1RecoHit_nosat_VMaxvsEnergy")->Fill(energy_, vMaxMC);
+      //std::cout << "for single waveform....time " << time_ << " energy "<< energy_ << " vmax " << vMaxMC << " vmaxVal " << fmaxValuemyTemplate <<std::endl;
+      tempVec.clear();
+      for(int i=0; i<5001; i++){
+	tempVec.push_back(0);
+      }
+      for(int ll=0;ll<5000;ll++){
+	if(ll+time_-20>= 0 && ll+time_<5000){
+	  tempVec.at(ll+time_-20)=fTemplate[ll]*vMaxMC/fmaxValuemyTemplate;
+	}
+	//	std::cout<<"ll " <<ll <<" tempVec " << tempVec.at(ll) << " ftemplate " << fTemplate[ll]  << std::endl;
+      }
+      /////////////////////////////////////////////////////////////////
+      {	 //let's see the correlation vmxVSenergy
+	std::vector<double> tempVec1;
+	Double_t maxTempVec1=0.;
+	for(int i=0; i<1024; i++){
+	  tempVec1.push_back(tempVec.at(i));
+	  if(maxTempVec1<tempVec1.at(i))maxTempVec1=tempVec1.at(i);
+	}
+	//extract the charge
+	Double_t Charge200=0.;
+	Double_t fImpedance=50.;
+	Int_t fTimeBin=1.;
+	for(Short_t s=0;s<tempVec1.size();s++){
+	  if( tempVec1.at(s)>-100) {
+	    Charge200 += 1*tempVec1.at(s)*1e-3/fImpedance*fTimeBin*1e-9/1E-12; 
+	  }
+	}
+	Double_t tempEnergy=Charge200/15.;
+	//std::cout<<"max from template " << maxTempVec1 << " energy form calculation " << tempEnergy << std::endl;
+	GetHisto("DEnergy_digiTemplate")->Fill(energy_-tempEnergy);
+      }
+      /////////////////////////////////////////////////////////////////
+
+      //introduce noise in waveform
+      Double_t meanNoise=-0.3492;
+      //Double_t sigmaNoise=1.95; //from data all template
+      Double_t sigmaNoise=-0.0168351+0.137532*energy_-0.000460502*energy_*energy_+5.00259e-07*energy_*energy_*energy_;   //from data rms function
+      for(int i=0; i<1024; i++){
+	Double_t noise=r->Gaus(meanNoise, sigmaNoise);
+	//	wave_forDigitiser[i]+=noise;
+	tempVec.at(i)+=noise;
+      }
+      
+      for(int h=0; h<1024; h++)wave.at(h)+=tempVec.at(h);
+    }
+
+    //pedestals
+    Int_t ConversionFactor=4096/1000;
+    Double_t meanPed=3776;
+    Double_t sigmaPed=21.66;
+    Double_t fAvg200=r->Gaus(meanPed, sigmaPed); // pedestal
+    std::vector<double> waveLikeData;
+    Short_t wave_forDigitiser[1024]={0};
+    Bool_t saturated=false;
+    for(int i=0; i<1025; i++)waveLikeData.push_back(0);
+    for(int ll=0;ll<1024;ll++){
+      //if(ll< wave.size() && wave.at(ll)>900)wave.at(ll)=900;
+      if(ll< wave.size())waveLikeData.at(ll)=-wave.at(ll)*ConversionFactor+fAvg200;
+      else waveLikeData.at(ll)=0.;
+      if(waveLikeData.at(ll)<15) {
+	Double_t noiseSat=r->Gaus(0.,2.077);   // sigma from difference of maxWave-iwave in saturated range (DATA)
+	waveLikeData.at(ll)=15.+noiseSat;
+	saturated=true;
+      }
+      // if(wave.at(ll)> 890) std::cout <<"wave close to the saturation " << waveLikeData.at(ll) << std::endl;
+      //std::cout<<" in convert " << ll <<  " wave " << waveLikeData.at(ll) << " while starting point " << wave.at(ll) << std::endl;
+      wave_forDigitiser[ll]= waveLikeData.at(ll);
+      //std::cout<<"ll "<< ll << " wave for digitiser " <<  wave.at(ll) << std::endl;
+    }
+    //    for(int i=1000; i<1024; i++) wave_forDigitiser[i]=fAvg200;
+   
+    ////////// start the reconstruction with digitiser
+    std::cout<<"start the reconstruction process---------------------------------------------------" << std::endl;
+    fChannelReco->SetDigis(1024, wave_forDigitiser);
+    ((DigitizerChannelECal*)fChannelReco)->SetChID(chIdN);
+    //std::cout<<"I've setted chId "<< ((DigitizerChannelECal*)fChannelReco)->GetChID() <<std::endl;
+    unsigned int nHitsBefore = Hits.size();
+    fChannelReco->Reconstruct(Hits);
+    unsigned int nHitsAfter = Hits.size();
+    //if (ChID==1625) std::cout<<" n. of hits in chid 1625 = "<<nHitsAfter-nHitsBefore<<std::endl;
+    for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+      Hits[iHit]->SetChannelId(chIdN);
+    }
+    std::cout<<"end the reconstruction process---------------------------------------------------nHits: "<< nHitsAfter-nHitsBefore << std::endl;
+    if(nHitsAfter-nHitsBefore==1){
+       double energy=hitArrayInCrystal[0].digiEnergy;
+       double ehitmax = energy;
+       double thitemax = hitArrayInCrystal[0].digiTime;
+       if (ndigi>1){
+	 for (unsigned int i2 =  1; i2 < hitArrayInCrystal.size(); ++i2)
+	   {
+	     energy+=hitArrayInCrystal[i2].digiEnergy;
+	     if (hitArrayInCrystal[i2].digiEnergy>ehitmax){
+	       ehitmax = hitArrayInCrystal[i2].digiEnergy;
+	       thitemax = hitArrayInCrystal[i2].digiTime;
+	     }
+	   }
+       }
+       //std::cout<<"from hitArrayInCrystals : energy tot: " << energy << " at time " << thitemax<< std::endl;
+       //std::cout<<"RecoHitDigitiser energy " << Hits.at(nHitsAfter-1)->GetEnergy() << " at time " <<  Hits.at(nHitsAfter-1)->GetTime() << std::endl;
+       GetHisto("DEnergy_1RecoHit")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+       GetHisto("DTime_1RecoHit")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+       if(saturated){
+	 GetHisto("DEnergy_1RecoSaturatedHit")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+	 GetHisto("DTime_1RecoSaturatedHit")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+       }
+       else{
+	 GetHisto("DEnergy_1RecoNoSaturatedHit")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+	 GetHisto("DTime_1RecoNoSaturatedHit")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+       }
+       if(ndigi==1){
+	 GetHisto("DEnergy_1RecoHit1ndigi")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+	 GetHisto("DTime_1RecoHit1ndigi")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+	 if(saturated){
+	   GetHisto("DEnergy_1RecoSaturatedHit1ndigi")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+	   GetHisto("DTime_1RecoSaturatedHit1ndigi")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+	 }
+	 else{
+	   GetHisto("DEnergy_1RecoNoSaturatedHit1ndigi")->Fill(energy-Hits.at(nHitsAfter-1)->GetEnergy());
+	   GetHisto("DTime_1RecoNoSaturatedHit1ndigi")->Fill(thitemax-Hits.at(nHitsAfter-1)->GetTime());
+	 }
+       }
+
+    }
+    //std::cout<<"fAvg200 from simulation " << fAvg200 << std::endl;
+    //std::cout<<"-----------------------------------------------------------------------------------end reconstruction " << std::endl;
+
+  }
+
+}
+
+
+
+
+Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
+  Bool_t BrSU=false;
+  if(x==16 && y==25)   BrSU=true;
+  if(x==18 && y==10)  BrSU=true;
+  if(x==22 && y==8 )  BrSU=true;
+  if(x==18 && y==4 )  BrSU=true;
+  return BrSU;                                                                                                                                                  
+
+}
+
+
+
+
+Double_t ECalReconstruction::EnergyResolution(Double_t energy){
+  Double_t a=0.02;
+  Double_t b=0.00003;
+  Double_t c=0.012;
+  Double_t E=energy/1000.;
+  Double_t RelativeResolution=sqrt((a/sqrt(E))*(a/sqrt(E))+(b/E)*(b/E)+c*c);
+  return RelativeResolution*energy; 
+}
+
+
+
+
+
+
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
-  fIsMC=true;
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
+
+if(fReproductSACbunchStructure){
+    Double_t minTime=999;
+    Double_t maxTime=-999;
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      Double_t digiTime=digi->GetTime();
+      if(digiTime<minTime)minTime=digiTime;
+      if(digiTime>maxTime)maxTime=digiTime;
+    }
+    Double_t width= maxTime-minTime;   
+    //std::cout<<"bunch length " << width << std::endl;
+  
+    for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i);
+      //Double_t digiTime=TMath::Nint(digi->GetTime());
+      Double_t digiTime=digi->GetTime();
+      /*double xc = r->Rndm();
+	double ydc = digiTime+(xc-0.5);
+	double ys = fComulativeMax*(ydc-minTime)/width;*/
+      //      double ys = fComulativeMax*(digiTime-13)/163;
+      double ys = fComulativeMax*(digiTime-26)/278.5;
+      Int_t isbin = hCumulative->FindFirstBinAbove(ys);
+      double xs = hCumulative->GetBinCenter(isbin);
+      if( xs <-45. )std::cout<<"old time " << digiTime<<" ys " << ys << " isbin " << isbin << " new Time " << xs << std::endl;
+      digi->SetTime(xs);
+      GetHisto("ECALHitTimeDistribution_bunch")->Fill(xs);
+    }
+  }
 
   if (fMultihitForMC==1) {
     // if ideal multihit reconstruction is requested, convert each digit into a RecoHit 
@@ -831,6 +1222,8 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       int i2 = digi->GetChannelId()%100;
       Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
       if (BrokenSU)continue;
+      // effective threshold cutting noisy wf in 2019 data 
+      if(digi->GetEnergy()<1.5)continue;
       TRecoVHit *Hit = new TRecoVHit();
       // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX 
       int chIdN = i2*100+i1;
@@ -839,6 +1232,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       Hit->SetEnergy(digi->GetEnergy());
       Hit->SetTime(digi->GetTime());
       fHits.push_back(Hit);
+      GetHisto("ECALHitTimeDistribution")->Fill(digi->GetTime());
     }
     return;
   }
@@ -851,7 +1245,6 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       digi->SetTime(0.52*(digi->GetTime()));
     }
   }
- 
 
   // come here if fMultihitForMC==0 (sigle hit reco) or >=2 (2= multihit with threshold at 20 MeV for next to first hits in a crystal)
   int idarray[50][50];
@@ -911,7 +1304,9 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 	Hit->SetEnergy(hitArrayInCrystal[0].digiEnergy);
 	Hit->SetTime(hitArrayInCrystal[0].digiTime);
 	fHits.push_back(Hit);
-	for (Int_t dincr=1; dincr<3; ++dincr)
+       	int maxLoop=3;
+	if(hitArrayInCrystal.size()<3)maxLoop=hitArrayInCrystal.size();
+	for (Int_t dincr=1; dincr<maxLoop; ++dincr)
 	  {
 	    if (hitArrayInCrystal[dincr].digiEnergy < 20.) continue; 
 	    TRecoVHit *Hit1 = new TRecoVHit();
@@ -919,6 +1314,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 	    Hit1->SetPosition(TVector3(0.,0.,0.));
 	    Hit1->SetEnergy(hitArrayInCrystal[dincr].digiEnergy);
 	    Hit1->SetTime(hitArrayInCrystal[dincr].digiTime);
+	    GetHisto("ECALHitTimeDistribution")->Fill(hitArrayInCrystal[dincr].digiTime);
 	    fHits.push_back(Hit1);
 	  }
 	continue;
@@ -956,15 +1352,25 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 	  }
       }
     }
-
-    /*
-    if (multiHit)  
-    if (singleHit_firstTime) tmin 
-    if (singleHit_timeEmax)  tEmaxIdeal
-    if (singleHit_timeEmaxWFcorr) thitemax
-    */
-
-    //ss//std::cout<<"RecoHit in the crystal   ......... id = "<<chIdN<<" tmin, tEMaxIdeal, thitemax = "<<tmin<<" "<<tEMaxIdeal<<" "<<thitemax<<"         energy = "<<energy<<std::endl;
+    
+    if(fDeteriorateHitEnResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
+      Double_t sigma=3.3;
+      //Double_t sigma = 2.82072e-01 + 1.21666e-02*energy+ 3.52981e-05*energy*energy;
+      //      Double_t sigma = 2.69546e-01 + 2.01763e-02*energy+ 3.38787e-05*energy*energy;
+      //Double_t sigma = 2.52898e-01 + 3.07955e-02*energy+ 3.04943e-05*energy*energy;
+      //Double_t sigma = 2.32421e-01+ 4.39133e-02*energy+ 2.13789e-05*energy*energy;
+      //if(energy<200)sigma=3.3; // MeV
+      //else sigma=50.;  // MeV
+      Double_t DetEn=r->Gaus(0.,sigma); 
+      energy+=DetEn;
+    }
+    if(fDeteriorateHitTimeResolution){//MC Resolution 0.1, data resolution 1.2 (gg events)
+      Double_t sigma =0.8; //=1.4;  // MeV- from Single positron run; 0.8 from gg signal
+      Double_t DetTime=r->Gaus(0.,sigma); 
+      thitemax+=DetTime;
+    }
+    
+    if (energy<0.) continue;
     Hit->SetEnergy(energy);
     Hit->SetTime(thitemax);
     fHits.push_back(Hit);
@@ -972,26 +1378,15 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 }
 
 
-
-
-Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
-  Bool_t BrSU=false;
-  if(x==16 && y==25)   BrSU=true;
-  if(x==18 && y==10)  BrSU=true;
-  if(x==22 && y==8 )  BrSU=true;
-  if(x==18 && y==4 )  BrSU=true;
-  return BrSU;                                                                                                                                                  
-
-}
-
-
-
-
-Double_t ECalReconstruction::EnergyResolution(Double_t energy){
-  Double_t a=0.02;
-  Double_t b=0.00003;
-  Double_t c=0.012;
-  Double_t E=energy/1000.;
-  Double_t RelativeResolution=sqrt((a/sqrt(E))*(a/sqrt(E))+(b/E)*(b/E)+c*c);
-  return RelativeResolution*energy; 
+Double_t ECalReconstruction::compute_rms(Short_t* samples) {
+  Double_t sum = 0.;
+  Double_t sum2 = 0.;
+  for (UInt_t i = 0; i<994; i++) {
+    //printf(" %d",samples[i]);
+    Double_t s = (Double_t)samples[i];
+    sum += s;
+    sum2 += s*s;
+  }
+  //printf("\n");
+  return sqrt((sum2-sum*sum/994.)/993.);
 }

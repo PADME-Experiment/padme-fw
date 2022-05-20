@@ -12,7 +12,6 @@
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
-
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
   // Create run and event objects
@@ -40,7 +39,6 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeRecoIOConfiguration");
-
 
   // Add subdetectors persistency managers
   if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
@@ -168,7 +166,6 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
     fEventTree->SetDirectory(fFile->GetDirectory("/"));
     
-
     // Create branch to hold the run content info
     fEventBranch = fEventTree->Branch("RecoEvent", &fEvent, fBufSize);
     fEventBranch->SetAutoDelete(kFALSE);
@@ -186,9 +183,11 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       iRootIO++;
     }
 
+    // If present, replicate MCTruth info to output file
+    if (fReco->GetMCTruthEvent()) 
+      fEventTree->Branch("MCTruth",fReco->GetMCTruthEvent());
 
   }
-
 
 }
 
@@ -216,9 +215,8 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
+
 }
-
-
 
 void RecoRootIOManager::SaveEvent(){
   

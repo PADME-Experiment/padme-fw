@@ -17,6 +17,7 @@ include $(G4INSTALL)/config/architecture.gmk
 
 CPPFLAGS += -I$(G4INCLUDE) \
             -I$(PADMEMC)/include \
+	    -I$(PADMEMC)/MCTruth/include \
             -I$(PADMEROOT)/include \
             -fPIC \
             $(ROOTCFLAGS) \

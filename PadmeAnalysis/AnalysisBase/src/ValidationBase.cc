@@ -227,6 +227,7 @@ Bool_t ValidationBase::ProcessValidation(TString name)
      seed   = clu->GetSeed();
      seedId = clu->GetChannelId();
      seedE  = clu->GetEnergy();
+     position=clu->GetPosition();   //MR BUG FOUND
      //std::cout<<"Process Validation cluster-> Energy: " << seedE << std::endl;
      eTotCl+=seedE;
      seedT  = clu->GetTime();

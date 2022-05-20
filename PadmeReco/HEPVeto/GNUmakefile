@@ -2,4 +2,4 @@
 
 NAME := HEPVeto
 
-include ../config/global.gmk
+include ../mkconfig/global.gmk

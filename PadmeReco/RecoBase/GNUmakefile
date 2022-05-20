@@ -2,4 +2,4 @@
 
 NAME := RecoBase
 
-include ../config/global.gmk
+include ../mkconfig/global.gmk

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   std::vector<UInt_t> boards;
 
   // Parse options
-  while ((c = getopt (argc, argv, "i:l:o:n:e:b:v:h")) != -1) {
+  while ((c = getopt (argc, argv, "i:l:o:n:e:b:vh")) != -1) {
     switch (c)
       {
       case 'i':
@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
           exit(1);
         }
 	events.push_back(event);
+        fprintf(stdout,"Added event %d to list\n",event);
         break;
       case 'b':
         if ( sscanf(optarg,"%d",&board) != 1 ) {
@@ -102,17 +103,10 @@ int main(int argc, char* argv[])
           exit(1);
         }
 	boards.push_back(board);
+        fprintf(stdout,"Added board %d to list\n",board);
         break;
       case 'v':
-        if ( sscanf(optarg,"%d",&verbose) != 1 ) {
-          fprintf (stderr, "Error while processing option '-v'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
-        }
-        if (verbose<0) {
-          fprintf (stderr, "Error while processing option '-v'. Verbose level set to %d (must be >=0).\n", verbose);
-          exit(1);
-        }
-        fprintf(stdout,"Set verbose level to %d\n",verbose);
+	verbose++;
         break;
       case 'h':
         fprintf(stdout,"\nReadTest [-i <file>] [-l <list>] [-o <file>] [-n <n>] [-e <event>] [-b <board>] [-v <level>] [-h]\n\n");
@@ -122,15 +116,11 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -n: total number of events to read from input file (default: 0 i.e. all events)\n");
         fprintf(stdout,"  -e: add event to list of events to read (if not specified: all events are read)\n");
         fprintf(stdout,"  -b: add board to list of boards to show (if not specified: all boards are shown)\n");
-        fprintf(stdout,"  -v: define verbose level\n");
+        fprintf(stdout,"  -v: enable verbose output (repeat for more output)\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(0);
       case '?':
-        if (optopt == 'v') {
-          // verbose with no argument: just enable at minimal level
-          verbose = 1;
-          break;
-        } else if (optopt == 'i' || optopt == 'l' || optopt == 'o')
+	if (optopt == 'i' || optopt == 'l' || optopt == 'o' || optopt == 'n' || optopt == 'e' || optopt == 'b')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -146,6 +136,8 @@ int main(int argc, char* argv[])
     fprintf(stderr,"ERROR - Input file list is empty\n");
     exit(1);
   }
+
+  if (verbose) fprintf(stdout,"Set verbose level to %d\n",verbose);
 
   // Create chain of input files
   fprintf(stdout,"=== === === Chain of input files === === ===\n");
@@ -257,9 +249,9 @@ int main(int argc, char* argv[])
       // Loop over channels
       for(UChar_t c=0;c<nChn;c++){
 	TADCChannel* chn = adcB->ADCChannel(c);
-	if (verbose>2) {
-	  printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
-	}
+	//if (verbose>2) {
+	//  printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
+	//}
 	TString hName = Form("C%02d",chn->GetChannelNumber());
 	h = GetHisto(hName,hList);
 	h->Reset();

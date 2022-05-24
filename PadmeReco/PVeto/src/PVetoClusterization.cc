@@ -6,6 +6,7 @@
 #include <algorithm>
 
 Cluster::Cluster(){
+  //  std::cout<<"I cluster"<<std::endl;
   nhits=0;
   mostUpstreamChannel=100;
   mostDownstreamChannel=-1;
@@ -21,8 +22,10 @@ int Cluster::InsertHit(PVetoClusterHits hit, int ihit){
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
   }
+  //  std::cout<<"I insert hits"<<std::endl;
   //  hitIndex[nhits]=ihit;
   hitIndex.push_back(ihit);
+  if(nhits>0||ihit>0||hitIndex.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
   if(hit.GetChannelId()<mostUpstreamChannel) mostUpstreamChannel=hit.GetChannelId();
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
@@ -70,9 +73,10 @@ void ClusterStructure::Clear(){
   ClusVec.clear();
   HitVec.clear();//legit???
   HitIndexVec.clear();
-  }
+}
 
 void ClusterStructure::Clusterise(){
+  //  std::cout<<"cljst "<<HitVec.size()<<std::endl;
   for (int ii=0; ii <HitVec.size(); ++ii ) {
     bool UsedHit = 0;
     //    std::cout<<"clusvec size "<<ClusVec.size()<<std::endl;
@@ -97,7 +101,7 @@ void ClusterStructure::Clusterise(){
 
 
 void ClusterStructure::MergeClusters(){
-   Int_t noCompact = 0;
+  Int_t noCompact = 0;
   while(noCompact==0) {
     //std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;
@@ -173,9 +177,9 @@ void ClusterStructure::MergeClusters(){
 }
 
 void ClusterStructure::HitSort(){
-
+  //  std::cout<<"sorting"<<std::endl;
   std::vector<PVetoClusterHits> HitVecCopy;
-
+ 
   for(int ii=0;ii<HitVec.size();ii++){
     HitVecCopy.push_back(HitVec.at(ii));
     // std::cout<<"HitVec[ii] Ch "<<HitVec[ii]->GetChannelId()<<" time "<<HitVec[ii]->GetTime()<<std::endl;

@@ -12,7 +12,10 @@ public:
 
   int InsertHit(PVetoClusterHits hit, int ihit);
   //  int* GetHitIndex(){return hitIndex;}
-  std::vector<int> GetHitIndex(){return hitIndex;}
+  std::vector<int> GetHitIndex(){
+    //    if(hitIndex.size()>30)for(int ii;ii<hitIndex.size();ii++) std::cout<<"Getting index "<<ii<<" "<<hitIndex[ii]<<std::endl;
+    return hitIndex;
+  }
   int GetMostUpstreamChannel(){return mostUpstreamChannel;}
   int GetMostDownstreamChannel(){return mostDownstreamChannel;}
   double GetAverageTime(){return averagetime;}

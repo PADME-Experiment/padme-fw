@@ -303,6 +303,7 @@ void EVetoReconstruction::BuildClusters()
   myClusters.clear();
 
   TRecoVCluster* myCl;
+  EVetoClusterHitVec.clear();
 
   for(int iHit=0;iHit<Hits.size();iHit++){
     //    if(Hits[iHit]->GetEnergy()<0) std::cout<<Hits[iHit]->GetEnergy()<<std::endl;
@@ -318,7 +319,6 @@ void EVetoReconstruction::BuildClusters()
   //  std::cout<<"Eveto hit size "<< EVetoClusterHitVec.size()<<std::endl;
   vEVetoClusters.clear();
   EVetoClusStruc.Clear();//contains a structure for vectors of clusters for each event
-  // EVetoClusterHitVec.clear();
 
   for(Int_t iPHit=0;iPHit<EVetoClusterHitVec.size();iPHit++){
     //      std::cout<<"Reading Cluster Hits ChID "<<EVetoClusterHitVec[iPHit].GetChannelId()<<" time "<<EVetoClusterHitVec[iPHit].GetTime()<<std::endl;
@@ -354,7 +354,7 @@ void EVetoReconstruction::BuildClusters()
 
     if(clE>100){
       for(int ii=0;ii<clSize;ii++){
-	std::cout<<"clE "<<clE<<" ii "<<ii<<" hit "<<clHitIndices[ii]<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+	std::cout<<"EVeto clE "<<clE<<" ii "<<ii<<" hit "<<clHitIndices[ii]<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
       }
     }
 

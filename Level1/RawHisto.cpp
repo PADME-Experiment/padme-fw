@@ -109,15 +109,16 @@ int main(int argc, char* argv[])
 	verbose++;
         break;
       case 'h':
-        fprintf(stdout,"\nReadTest [-i <file>] [-l <list>] [-o <file>] [-n <n>] [-e <event>] [-b <board>] [-v <level>] [-h]\n\n");
-        fprintf(stdout,"  -i: add a file to list of input files (can be used many times)\n");
-        fprintf(stdout,"  -l: text file with list of input files (one per line)\n");
-        fprintf(stdout,"  -o: define the output file\n");
+        fprintf(stdout,"\nRawHisto [-i <file>] [-l <list>] [-o <file>] [-n <n>] [-e <event>] [-b <board>] [-v <level>] [-h]\n\n");
+        fprintf(stdout,"  -i: add a file to list of input files (can be repeated)\n");
+        fprintf(stdout,"  -l: text file with list of input files (one file per line)\n");
+        fprintf(stdout,"  -o: define the output file (default: %s\n",outputFileName.Data());
         fprintf(stdout,"  -n: total number of events to read from input file (default: 0 i.e. all events)\n");
-        fprintf(stdout,"  -e: add event to list of events to read (if not specified: all events are read)\n");
-        fprintf(stdout,"  -b: add board to list of boards to show (if not specified: all boards are shown)\n");
+        fprintf(stdout,"  -e: add event to list of events to save to output file (can be repeated)\n");
+        fprintf(stdout,"  -b: add board to list of boards to save to output file (can be repeated)\n");
         fprintf(stdout,"  -v: enable verbose output (repeat for more output)\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
+        fprintf(stdout,"  N.B. if no -e/-b options are specified, then all events/boards will be saved to the output file\n\n");
         exit(0);
       case '?':
 	if (optopt == 'i' || optopt == 'l' || optopt == 'o' || optopt == 'n' || optopt == 'e' || optopt == 'b')

@@ -26,7 +26,7 @@ public:
   virtual void AnalyzeEvent(TRawEvent* evt);
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   void BuildHits(TRawEvent* rawEv); //Get the CH_ID MR 
-  void BuildClusters();
+  void BuildClusters(TRawEvent* rawEv);
   void Clusterise();
   void MergeClusters();
   virtual void ProcessEvent(TRawEvent* rawEv); //Get the CH_ID MR 

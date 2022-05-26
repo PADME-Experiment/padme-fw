@@ -70,6 +70,13 @@ Bool_t FirstDataLook::Process(){
         //if (evt->SACRecoEvent->Hit(ihs)->GetChannelId() == 22 && evt->PVetoRecoEvent->Hit(ih)->GetChannelId() == 15) {
         if (evt->SACRecoEvent->Hit(ihs)->GetChannelId() == 22) {//33
           //hSvc->FillHisto(this->GetName()+"_SAC_chs", evt->SACRecoEvent->Hit(ih)->GetChannelId());
+
+          double p_en = evt->PVetoRecoEvent->Hit(ih)->GetEnergy();
+          double s_en = evt->SACRecoEvent->Hit(ihs)->GetEnergy();
+          if (s_en < 100.) { // energy cut
+            continue;
+          }
+
           for (int pch = 1; pch<91; pch++) {
             if (pch == evt->PVetoRecoEvent->Hit(ih)->GetChannelId()) {  
               hSvc->FillHisto(this->GetName()+"_SAC22_vs_PVETO_"+std::to_string(pch), evt->SACRecoEvent->Hit(ihs)->GetTime() - evt->PVetoRecoEvent->Hit(ih)->GetTime());

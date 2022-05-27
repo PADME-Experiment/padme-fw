@@ -5,7 +5,7 @@
 #include <iostream>
 #include <algorithm>
 
-Cluster::Cluster(){
+PVetoCluster::PVetoCluster(){
   //  std::cout<<"I cluster"<<std::endl;
   nhits=0;
   mostUpstreamChannel=100;
@@ -17,7 +17,7 @@ Cluster::Cluster(){
 }
 
 
-int Cluster::InsertHit(PVetoClusterHits hit, int ihit){
+int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
   if(nhits>MAXHIT-1){
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
@@ -25,7 +25,7 @@ int Cluster::InsertHit(PVetoClusterHits hit, int ihit){
   //  std::cout<<"I insert hits"<<std::endl;
   //  hitIndex[nhits]=ihit;
   hitIndex.push_back(ihit);
-  if(nhits>0||ihit>0||hitIndex.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
+  //  if(nhits>0||ihit>0||hitIndex.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
   if(hit.GetChannelId()<mostUpstreamChannel) mostUpstreamChannel=hit.GetChannelId();
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
@@ -35,7 +35,7 @@ int Cluster::InsertHit(PVetoClusterHits hit, int ihit){
   nhits++;
 }
 
-int Cluster::AddCluster(Cluster* newcluster){
+int PVetoCluster::AddCluster(PVetoCluster* newcluster){
 
   int NMax=newcluster->GetNHits()+nhits;
   //  std::cout<<nhits<<" "<<newcluster->GetNHits()<<" "<<NMax<<std::endl;
@@ -61,21 +61,21 @@ int Cluster::AddCluster(Cluster* newcluster){
 }
 
 
-ClusterStructure::ClusterStructure(){
-  //  std::cout<<"Initialising ClusterStructure"<<std::endl;
+PVetoClusterStructure::PVetoClusterStructure(){
+  //  std::cout<<"Initialising PVetoClusterStructure"<<std::endl;
   HitVec.clear();
   ClusVec.clear();
   HitIndexVec.clear();
 }
 
-void ClusterStructure::Clear(){
-  //  std::cout<<"Clearing ClusterStructure"<<std::endl;
+void PVetoClusterStructure::Clear(){
+  //  std::cout<<"Clearing PVetoClusterStructure"<<std::endl;
   ClusVec.clear();
   HitVec.clear();//legit???
   HitIndexVec.clear();
 }
 
-void ClusterStructure::Clusterise(){
+void PVetoClusterStructure::Clusterise(){
   //  std::cout<<"cljst "<<HitVec.size()<<std::endl;
   for (int ii=0; ii <HitVec.size(); ++ii ) {
     bool UsedHit = 0;
@@ -92,18 +92,19 @@ void ClusterStructure::Clusterise(){
       }	
     }//end cluster loop
     if(!UsedHit) {
-      Cluster* NewCluster = new Cluster();
-      NewCluster->InsertHit(HitVec.at(ii), HitIndexVec.at(ii));
-      ClusVec.push_back(NewCluster);
+      PVetoCluster* NewPVetoCluster = new PVetoCluster();
+      NewPVetoCluster->InsertHit(HitVec.at(ii), HitIndexVec.at(ii));
+      ClusVec.push_back(NewPVetoCluster); 
     }
   }//end hit loop
 }
 
 
-void ClusterStructure::MergeClusters(){
+void PVetoClusterStructure::MergeClusters(){
   Int_t noCompact = 0;
+  //std::cout<<"Merging"<<std::endl;
   while(noCompact==0) {
-    //std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
+    //  std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;
     int ii = 0;
     while(ii+1< ClusVec.size()){
@@ -142,7 +143,7 @@ void ClusterStructure::MergeClusters(){
   //   std::cout<<"ClusVec.size() "<<ClusVec.size()<<std::endl;
   //   noCompact = 1;
   //   int indexii=0;
-  //   for(std::vector<Cluster*>::iterator ii = ClusVec.begin(); ii+1!= ClusVec.end();){
+  //   for(std::vector<PVetoCluster*>::iterator ii = ClusVec.begin(); ii+1!= ClusVec.end();){
   //     indexii++;
   //     std::cout<<"ii "<<indexii<<" size "<<ClusVec.size()<<" nocompact "<<noCompact<<std::endl;//typeid(ii).name()<<std::endl;
   //     //qualche volta anche se ClusVec.size()!=0, ClusVec.at(ClusVec.begin()+ii)->GetNhits() fa segmentation violation. Non lo fa sempre e non riesco a capire quando/perche'
@@ -151,14 +152,14 @@ void ClusterStructure::MergeClusters(){
   //     int iDown = (*ii)->GetMostDownstreamChannel();
   //     double iAvgT = (*ii)->GetAverageTime();
   //     int indexjj=0;
-  //     for(std::vector<Cluster*>::iterator jj = ii+1; jj!=ClusVec.end();){
+  //     for(std::vector<PVetoCluster*>::iterator jj = ii+1; jj!=ClusVec.end();){
   // 	indexjj++;
   // 	int jUp = (*jj)->GetMostUpstreamChannel();
   // 	int jDown = (*jj)->GetMostDownstreamChannel();
   // 	double jAvgT = (*jj)->GetAverageTime();
   // 	std::cout<<"jj "<<indexjj<<" jUp "<<jUp<<" jDown "<<jDown<<" jAvgT "<<jAvgT<<" size "<<ClusVec.size()<<std::endl;
-  // 	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(iUp-jDown==1||jUp-iDown==1)){
-  // 	  int goodorbad = (*ii)->AddCluster(*jj);//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
+  // 	if(std::fabs(iAvgT-jAvgT)<PVetoClusterDeltaT&&(iUp-jDown==1||jUp-iDown==1)){
+  // 	  int goodorbad = (*ii)->AddPVetoCluster(*jj);//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
   // 	  std::cout<<"gonna erase ii"<<indexii<<" jj "<<indexjj<<std::endl;
   // 	  //	  if(jj==1) std::cout<<"IT HAPPENS HERE!!!!!!!!!"<<std::endl;
   // 	  jj=ClusVec.erase(jj);//cluster jj has already been used so get rid of it, and move all other clusters down in the vector
@@ -176,7 +177,7 @@ void ClusterStructure::MergeClusters(){
   //  }
 }
 
-void ClusterStructure::HitSort(){
+void PVetoClusterStructure::HitSort(){
   //  std::cout<<"sorting"<<std::endl;
   std::vector<PVetoClusterHits> HitVecCopy;
  

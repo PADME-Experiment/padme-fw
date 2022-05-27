@@ -5,10 +5,10 @@
 #include "PVetoClusterHits.hh"
 #include <iostream>
 
-class Cluster{
+class PVetoCluster{
 public:
-  Cluster();
-  ~Cluster(){};
+  PVetoCluster();
+  ~PVetoCluster(){};
 
   int InsertHit(PVetoClusterHits hit, int ihit);
   //  int* GetHitIndex(){return hitIndex;}
@@ -22,7 +22,7 @@ public:
   double GetEarlyHitTime(){return earlyhittime;}
   double GetLateHitTime(){return latehittime;}
   int GetNHits(){return nhits;}
-  int AddCluster(Cluster* cluster);
+  int AddCluster(PVetoCluster* cluster);
   void Print(){std::cout<<"Most Upstream "<<mostUpstreamChannel<<" Most Downstream "<<mostDownstreamChannel<<" average time "<<averagetime<<std::endl;}
   double GetEnergy(){return energy;}
   
@@ -39,11 +39,11 @@ public:
   
 };
 
-class ClusterStructure{
+class PVetoClusterStructure{
   
 public:
-  ClusterStructure();
-  ~ClusterStructure(){};
+  PVetoClusterStructure();
+  ~PVetoClusterStructure(){};
 
   void Clear();
   
@@ -58,15 +58,15 @@ public:
 
   void MergeClusters();
 
-  std::vector<Cluster*> GetClusters(){return ClusVec;}
+  std::vector<PVetoCluster*> GetClusters(){return ClusVec;}
   std::vector<PVetoClusterHits> GetHitVec(){return HitVec;}
   
 private:
   std::vector<PVetoClusterHits> HitVec;
-  std::vector<Cluster*> ClusVec;
+  std::vector<PVetoCluster*> ClusVec;
   std::vector<int> HitIndexVec;
   double ClusterDeltaT=1.5;//maximum time difference between hits in the same cluster
 };
-
+ 
 #endif
 

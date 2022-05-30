@@ -14,6 +14,7 @@ PVetoCluster::PVetoCluster(){
   earlyhittime=1e9;
   latehittime=-1e9;
   energy = 0;
+  hitIndexVector.clear();
 }
 
 
@@ -24,8 +25,8 @@ int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
   }
   //  std::cout<<"I insert hits"<<std::endl;
   //  hitIndex[nhits]=ihit;
-  hitIndex.push_back(ihit);
-  //  if(nhits>0||ihit>0||hitIndex.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
+  hitIndexVector.push_back(ihit);
+  //  if(nhits>0||ihit>0||hitIndexVector.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
   if(hit.GetChannelId()<mostUpstreamChannel) mostUpstreamChannel=hit.GetChannelId();
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
@@ -46,8 +47,8 @@ int PVetoCluster::AddCluster(PVetoCluster* newcluster){
     goodreturn=-1;
   }
   for(int ii=0;ii<NMax;ii++){
-    //    hitIndex[nhits+ii]=newcluster->GetHitIndex()[ii];
-    hitIndex.push_back(newcluster->GetHitIndex()[ii]);
+    //    hitIndexVector[nhits+ii]=newcluster->GetHitIndex()[ii];
+    hitIndexVector.push_back(1);//newcluster->GetHitIndex()[ii]);
   }
   if(newcluster->GetMostUpstreamChannel()<mostUpstreamChannel) mostUpstreamChannel=newcluster->GetMostUpstreamChannel();
   if(newcluster->GetMostDownstreamChannel()>mostDownstreamChannel) mostDownstreamChannel=newcluster->GetMostDownstreamChannel();
@@ -102,15 +103,12 @@ void PVetoClusterStructure::Clusterise(){
 
 void PVetoClusterStructure::MergeClusters(){
   Int_t noCompact = 0;
-  //std::cout<<"Merging"<<std::endl;
+  std::cout<<"Merging"<<std::endl;
   while(noCompact==0) {
     //  std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;
     int ii = 0;
     while(ii+1< ClusVec.size()){
-      //std::cout<<"ii "<<ii<<" size "<<ClusVec.size()<<" "<<typeid(ClusVec.at(ii)).name()<<std::endl;
-      //qualche volta anche se ClusVec.size()!=0, ClusVec.at(ii)->GetNhits() fa segmentation violation. Non lo fa sempre e non riesco a capire quando/perche'
-      //std::cout<<"ii "<<ii<<" Nhits "<<ClusVec.at(ii)->GetNHits()<<std::endl;
       int iUp = ClusVec.at(ii)->GetMostUpstreamChannel();
       int iDown = ClusVec.at(ii)->GetMostDownstreamChannel();
       double iAvgT = ClusVec.at(ii)->GetAverageTime();
@@ -119,62 +117,20 @@ void PVetoClusterStructure::MergeClusters(){
 	int jUp = ClusVec.at(jj)->GetMostUpstreamChannel();
 	int jDown = ClusVec.at(jj)->GetMostDownstreamChannel();
 	double jAvgT = ClusVec.at(jj)->GetAverageTime();
-	//	std::cout<<"jj "<<jj<<" jUp "<<jUp<<" jDown "<<jDown<<" jAvgT "<<jAvgT<<std::endl;
 	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(std::fabs(iUp-jDown==1)||std::fabs(jUp-iDown==1))){
 	  int goodorbad = ClusVec.at(ii)->AddCluster(ClusVec.at(jj));//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
-	  //std::cout<<"gonna erase "<<jj<<std::endl;
- 	  //if(jj==1) std::cout<<"TAKE NOTICE OF ME!!!!!!!!!!!!!!!!!!!!!!!!!!"<<std::endl;
 	  if(jj<ClusVec.size()-1) ClusVec.erase(ClusVec.begin()+jj);//cluster jj has already been used so get rid of it, and move all other clusters down in the vector
 	  if(jj==ClusVec.size()-1) ClusVec.pop_back();//
 	  noCompact = 0;
 	  for(int kk = 0;kk<ClusVec.size();kk++){
-	    //    std::cout<<kk<<" upstream "<<ClusVec.at(kk)->GetMostUpstreamChannel()<<" downstream "<<ClusVec.at(kk)->GetMostDownstreamChannel()<<" avgT "<<ClusVec.at(kk)->GetAverageTime()<<std::endl;
-
 	  }
-	  //	  std::cout<<goodorbad<<std::endl;
+
 	}//end if(clusterise?)
 	else	++jj;
       }
       ++ii;
     }
   }
-  // Int_t noCompact = 0;
-  // while(noCompact==0) {
-  //   std::cout<<"ClusVec.size() "<<ClusVec.size()<<std::endl;
-  //   noCompact = 1;
-  //   int indexii=0;
-  //   for(std::vector<PVetoCluster*>::iterator ii = ClusVec.begin(); ii+1!= ClusVec.end();){
-  //     indexii++;
-  //     std::cout<<"ii "<<indexii<<" size "<<ClusVec.size()<<" nocompact "<<noCompact<<std::endl;//typeid(ii).name()<<std::endl;
-  //     //qualche volta anche se ClusVec.size()!=0, ClusVec.at(ClusVec.begin()+ii)->GetNhits() fa segmentation violation. Non lo fa sempre e non riesco a capire quando/perche'
-  //     std::cout<<"ii "<<indexii<<" Nhits "<<(*ii)->GetNHits()<<std::endl;
-  //     int iUp = (*ii)->GetMostUpstreamChannel();
-  //     int iDown = (*ii)->GetMostDownstreamChannel();
-  //     double iAvgT = (*ii)->GetAverageTime();
-  //     int indexjj=0;
-  //     for(std::vector<PVetoCluster*>::iterator jj = ii+1; jj!=ClusVec.end();){
-  // 	indexjj++;
-  // 	int jUp = (*jj)->GetMostUpstreamChannel();
-  // 	int jDown = (*jj)->GetMostDownstreamChannel();
-  // 	double jAvgT = (*jj)->GetAverageTime();
-  // 	std::cout<<"jj "<<indexjj<<" jUp "<<jUp<<" jDown "<<jDown<<" jAvgT "<<jAvgT<<" size "<<ClusVec.size()<<std::endl;
-  // 	if(std::fabs(iAvgT-jAvgT)<PVetoClusterDeltaT&&(iUp-jDown==1||jUp-iDown==1)){
-  // 	  int goodorbad = (*ii)->AddPVetoCluster(*jj);//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
-  // 	  std::cout<<"gonna erase ii"<<indexii<<" jj "<<indexjj<<std::endl;
-  // 	  //	  if(jj==1) std::cout<<"IT HAPPENS HERE!!!!!!!!!"<<std::endl;
-  // 	  jj=ClusVec.erase(jj);//cluster jj has already been used so get rid of it, and move all other clusters down in the vector
-  // 	  noCompact = 0;
-  // 	  std::cout<<goodorbad<<" size "<<ClusVec.size()<<" noCompact "<<noCompact<<std::endl;
-  // 	}//end if(clusterise?)
-  // 	else{
-  // 	++jj;
-  // 	std::cout<<"else size "<<ClusVec.size()<<" noCompact "<<noCompact<<std::endl;	
-  // 	}
-  //     }//end jj loop
-  //     ii++;
-  //     std::cout<<"ii increase "<<ClusVec.size()<<" noCompact "<<noCompact<<std::endl;	
-  //   }
-  //  }
 }
 
 void PVetoClusterStructure::HitSort(){

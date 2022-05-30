@@ -370,7 +370,6 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
   fClusStruc.HitSort();//sort hits in time
   fClusStruc.Clusterise();//clusterise hits
-  //std::cout<<PVetoClusStruc<<std::endl;
   fClusStruc.MergeClusters();//merge adjacent, in time clusters
   vPVetoClusters = fClusStruc.GetClusters();//vector of clusters
   std::vector<Int_t> clHitIndices;
@@ -402,15 +401,17 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
     clHitIndices = vPVetoClusters[iPClus]->GetHitIndex();
 
-    /*    if(clE>100){
+    //    if(clE>100){
       for(int ii=0;ii<clSize;ii++){
-	std::cout<<"rawEvNo "<<rawEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
-	std::cout<<" ii "<<ii<<std::endl;
-	std::cout<<" no. hits "<<clHitIndices.size()<<std::endl;
-	std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
-	std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+	if(clHitIndices[ii]>250){
+	  std::cout<<"rawEvNo "<<rawEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
+	  std::cout<<" ii "<<ii<<std::endl;
+	  std::cout<<" no. hits "<<clHitIndices.size()<<std::endl;
+	  std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
+	  std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+	}
       }
-      }*/
+      //}
 
     myCl->SetChannelId   ( chID );
     myCl->SetEnergy      ( clE );

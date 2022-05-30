@@ -38,7 +38,7 @@ int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
 
 int PVetoCluster::AddCluster(PVetoCluster* newcluster){
 
-  int NMax=newcluster->GetNHits()+nhits;
+  int NMax=newcluster->GetNHits();
   //  std::cout<<nhits<<" "<<newcluster->GetNHits()<<" "<<NMax<<std::endl;
   int goodreturn=1;
   if(newcluster->GetNHits()+nhits>MAXHIT){
@@ -47,8 +47,7 @@ int PVetoCluster::AddCluster(PVetoCluster* newcluster){
     goodreturn=-1;
   }
   for(int ii=0;ii<NMax;ii++){
-    //    hitIndexVector[nhits+ii]=newcluster->GetHitIndex()[ii];
-    hitIndexVector.push_back(1);//newcluster->GetHitIndex()[ii]);
+    hitIndexVector.push_back(newcluster->GetHitIndex()[ii]);
   }
   if(newcluster->GetMostUpstreamChannel()<mostUpstreamChannel) mostUpstreamChannel=newcluster->GetMostUpstreamChannel();
   if(newcluster->GetMostDownstreamChannel()>mostDownstreamChannel) mostDownstreamChannel=newcluster->GetMostDownstreamChannel();
@@ -56,8 +55,7 @@ int PVetoCluster::AddCluster(PVetoCluster* newcluster){
   if(newcluster->GetLateHitTime()>latehittime) latehittime = newcluster->GetLateHitTime();
   averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
   energy+=newcluster->GetEnergy();
-  nhits=NMax;
-
+  nhits+=NMax;
   return goodreturn;
 }
 
@@ -103,7 +101,7 @@ void PVetoClusterStructure::Clusterise(){
 
 void PVetoClusterStructure::MergeClusters(){
   Int_t noCompact = 0;
-  std::cout<<"Merging"<<std::endl;
+  //  std::cout<<"Merging"<<std::endl;
   while(noCompact==0) {
     //  std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;

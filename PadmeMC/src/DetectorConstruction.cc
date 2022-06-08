@@ -29,6 +29,13 @@
 #include "HEPVetoGeometry.hh"
 #include "TDumpGeometry.hh"
 #include "TPixGeometry.hh"
+#include "SACGeometry.hh"
+#include "LAVGeometry.hh"
+#include "TungstenGeometry.hh"
+#include "MagnetGeometry.hh"
+#include "ChamberGeometry.hh"
+#include "BeamLineGeometry.hh"
+#include "HallGeometry.hh"
 
 #include "MagnetGeometry.hh"
 #include "ChamberGeometry.hh"
@@ -95,6 +102,8 @@ DetectorConstruction::DetectorConstruction()
   fHallStructure     = new HallStructure(0);
 
   fMagneticFieldManager = new MagneticFieldSetup();
+
+  fDetectorSetup  = 1; // Default is 2019 configuration
 
   fEnableECal     = 1;
   fEnableTarget   = 1;
@@ -753,6 +762,31 @@ void DetectorConstruction::SetTargetMaterial(G4String materialName)
   } else {
     G4cout << "\n----> WARNING: attempt to use unknown material " << materialName << " for Target" << G4endl;
   }
+}
+
+void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
+{
+
+  fDetectorSetup = detectorSetup;
+
+  // Here we can enable/disable detectors according to the general detector setup
+
+  // Pass setup information to each detector/structure
+  ECalGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  TargetGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  SACGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  LAVGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  PVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  EVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  HEPVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  TDumpGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  TPixGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  TungstenGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  MagnetGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  ChamberGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  BeamLineGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  HallGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

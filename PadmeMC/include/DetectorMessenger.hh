@@ -32,6 +32,8 @@ private:
   G4UIcmdWithAString* fEnableSubDetCmd;
   G4UIcmdWithAString* fDisableSubDetCmd;
 
+  G4UIcmdWithAnInteger* fDetectorSetupCmd;
+
   G4UIcmdWithAString* fEnableStructCmd;
   G4UIcmdWithAString* fDisableStructCmd;
 

@@ -18,6 +18,8 @@ TDumpGeometry* TDumpGeometry::GetInstance()
 TDumpGeometry::TDumpGeometry()
 {
 
+  fDetectorSetup = 1; // Default to 2019 setup
+
   // Inizialize default parameters
 
   fTDumpGap = 0.1*mm;

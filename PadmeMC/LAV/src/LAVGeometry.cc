@@ -20,6 +20,8 @@ LAVGeometry::LAVGeometry()
 
   // Inizialize default parameters
 
+  fDetectorSetup = 1; // Default to 2019 setup
+
   fLAVInnerRadius = 5.1*cm;
   fLAVOuterRadius = 12.*cm;
   fLAVZLength = 2.*cm;

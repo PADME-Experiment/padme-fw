@@ -32,6 +32,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   void EnableBeWindow() { fBeWindowEnable = true; }
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
@@ -179,6 +182,8 @@ public:
   G4String GetBeamFlag3SensitiveDetectorName() { return fBeamFlag3SensitiveDetectorName; }
 
 private:
+
+  G4int fDetectorSetup;
 
   //  Berillium thin window and stainless still flange
 

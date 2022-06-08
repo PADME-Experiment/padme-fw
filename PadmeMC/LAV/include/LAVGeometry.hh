@@ -31,6 +31,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of LAV tubs
   G4double GetLAVPosX() { return 0.; }
   G4double GetLAVPosY() { return 0.; }
@@ -51,6 +54,8 @@ public:
   G4String GetLAVSensitiveDetectorName() { return fLAVSensitiveDetectorName; }
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fLAVInnerRadius;
   G4double fLAVOuterRadius;

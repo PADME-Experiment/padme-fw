@@ -30,6 +30,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Size of gap between concrete blocks of Hall walls
   G4double GetBlockGap() { return fBlockGap; };
 
@@ -47,6 +50,8 @@ public:
   G4double GetBlockPosZ(G4int);
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fBlockGap;
   G4double fBlockNominalSide;

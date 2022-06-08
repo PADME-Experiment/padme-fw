@@ -53,6 +53,9 @@ public:
 
   G4double GetWorldFullLength() {return fWorldLength;}
      
+  void SetDetectorSetup(G4int);
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   void SetupDetectors();
   //void SetMaxStep(G4double);
 
@@ -107,6 +110,8 @@ private:
   G4int fVerbose; // Verbose level
 
   G4GDMLParser fParser;
+
+  G4int fDetectorSetup;
 
   ECalDetector*     fECalDetector;
   TargetDetector*   fTargetDetector;

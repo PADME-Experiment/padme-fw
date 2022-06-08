@@ -40,6 +40,10 @@
 #pragma link C++ class TECalMCDigi+;
 #pragma link C++ class TECalMCEvent+;
 
+#pragma link C++ class TETagMCHit+;
+#pragma link C++ class TETagMCDigi+;
+#pragma link C++ class TETagMCEvent+;
+
 #pragma link C++ class TSACMCHit+;
 #pragma link C++ class TSACMCDigi+;
 #pragma link C++ class TSACMCEvent+;

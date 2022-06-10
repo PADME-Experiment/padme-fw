@@ -5,6 +5,8 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
+#include "ECalCalib.hh"
+#include "MCTruth.hh"
 
 class IsGGAnalysis {
 
@@ -18,27 +20,39 @@ public:
   Bool_t Finalize();
 
   double GetETotECal(){return ETotECal;};
-
   
 private:
   Bool_t InitHistos();
 
   Bool_t CheckThetaAngle(double Ei, double Thetai);
-  double GetCOG(std::vector<double> Ei,std::vector<double> Posi);
+  double CompCOG(std::vector<double> Ei,std::vector<double> Posi);
   double GetVertex(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
+  double ComputeInvariantMass(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
+
+  Bool_t IsMCGG(double Ei,double Ej);
 
   Int_t fVerbose;
+  Bool_t fisMC = false; 
+  Double_t fBeamE;
 
   PadmeAnalysisEvent* fEvent;
+  TMCVertex* mcVtx;
 
   utl::ConfigParser* fCfgParser;
 
+  //Connect external class
   HistoSvc* fHS;
+  ECalCalib* fECalCalib;
+  MCTruth* fMCTruth;
+
   Int_t NGG;
+  Int_t NGG_MC;
+
   Double_t ETotECal;
 
   // GG standard Cuts
   Double_t MinECluster ;
+  Double_t MaxECluster ;
   Double_t TMin        ;
   Double_t TMax        ;
   Double_t TWin        ;
@@ -56,6 +70,7 @@ private:
   std::vector<double> PosXGoodCluster;
   std::vector<double> PosYGoodCluster;
   std::vector<double> AngleGoodCluster;
+  std::vector<int>    IsGGGoodCluster;
 
   std::vector<int> PairGClIndex1;  //index1 of the paired crystal in the good cluster structure  
   std::vector<int> PairGClIndex2;  //index2 of the paired crystal in the good cluster structure  

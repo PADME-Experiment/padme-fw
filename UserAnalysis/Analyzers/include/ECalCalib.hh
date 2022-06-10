@@ -8,21 +8,30 @@
 
 class ECalCalib {
 
+protected:
+ECalCalib(TString c = "config/UserAnalysis.conf", Int_t v = 0);
+
 public:
 
-  ECalCalib(TString c = "config/UserAnalysis.conf", Int_t v = 0);
   ~ECalCalib();
+  static ECalCalib* GetInstance();
 
-  Bool_t Init(PadmeAnalysisEvent*);
-  Bool_t Process();
+
+  Bool_t Init();
+  Bool_t Process(PadmeAnalysisEvent*);
   Bool_t Finalize();
 
   Double_t SetEScale();
   Double_t FixPosition();
   Double_t CorrectESlope();
 
-private:
+  Double_t GetBeamEnergy(){return fBeamEnergy;};
+  Double_t GetCOGX(){return fCOGX;};
+  Double_t GetCOGY(){return fCOGY;};
 
+
+private:
+  static ECalCalib* fInstance;
   Bool_t InitHistos();
 
   //  TRandom3* fRndm;
@@ -41,6 +50,10 @@ private:
   Int_t fCurrentRun;     
   Int_t fCurrentRunIndex;
 
+  // variable to be returned on request
+  Double_t fBeamEnergy;
+  Double_t fCOGX;
+  Double_t fCOGY;
 
   Bool_t   fisMC=false;
   Double_t fGlobalEScale = 1.11398; //used if no RUN dependent value is found
@@ -56,7 +69,5 @@ private:
 
   std::vector<double> vCOGX;
   std::vector<double> vCOGY;
-
-
 };
 #endif

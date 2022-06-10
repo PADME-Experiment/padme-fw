@@ -1,6 +1,14 @@
 // Written by M. Raggi 1/04/2022
 #include "ECalCalib.hh"
 
+//Added the Finstance to allow to use the information in all the enalyzers
+ECalCalib* ECalCalib::fInstance = 0;
+ECalCalib* ECalCalib::GetInstance()
+{
+  if ( fInstance == 0 ) { fInstance = new ECalCalib(); }
+  return fInstance;
+}
+
 ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
 {
   fVerbose = verbose;
@@ -14,7 +22,6 @@ ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
   fNRun=0;	     
   fCurrentRun=-1.;     
   fCurrentRunIndex=-1.;
-
 }
 
 ECalCalib::~ECalCalib(){
@@ -22,11 +29,9 @@ ECalCalib::~ECalCalib(){
   //  delete fRndm;
 }
 
-Bool_t ECalCalib::Init(PadmeAnalysisEvent* event){
+Bool_t ECalCalib::Init(){
   if (fVerbose) printf("---> Initializing ECalCalib\n");
-  fEvent = event;
-  InitHistos();
-  if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
+  InitHistos(); 
   int NRun;
   double EBeam;
   double EAvgRun;
@@ -34,6 +39,8 @@ Bool_t ECalCalib::Init(PadmeAnalysisEvent* event){
   double E0;
   double COGX;
   double COGY;
+  double NPoT;
+  double NPoTRes;
 
   // read calibration file data
   ifstream InFile("ParamECal.txt");
@@ -41,7 +48,7 @@ Bool_t ECalCalib::Init(PadmeAnalysisEvent* event){
     cout<<"Cannot open ECal calibration File!!!";
   }else{
     while(!InFile.eof()){
-      InFile>>NRun>>EBeam>>EAvgRun>>E0>>SlopeRun>>COGX>>COGY;
+      InFile>>NRun>>EBeam>>EAvgRun>>E0>>SlopeRun>>COGX>>COGY>>NPoT>>NPoTRes;
       vNRun.push_back(NRun);
       vEBeam.push_back(EBeam);
       vEAvgRun.push_back(EAvgRun);
@@ -49,7 +56,7 @@ Bool_t ECalCalib::Init(PadmeAnalysisEvent* event){
       vSlopeRun.push_back(SlopeRun);
       vCOGX.push_back(COGX);
       vCOGY.push_back(COGY);
-      cout<<"NRun "<<NRun<<" EAvgRun "<<EAvgRun<<" SlopeRun "<<SlopeRun<<" "<<COGX<<" "<<COGY<<endl;
+      cout<<"NRun "<<NRun<<" EBeam "<<EBeam<<" EAvgRun "<<EAvgRun<<" SlopeRun "<<SlopeRun<<" "<<COGX<<" "<<COGY<<" "<<NPoT<<" "<<NPoTRes<<endl;
     }
   }
   InFile.close();
@@ -66,7 +73,9 @@ Bool_t ECalCalib::InitHistos(){
   return true;
 }
 
-Bool_t ECalCalib::Process(){
+Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
+  fEvent = event;
+  if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
   //  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
   fNRun      = fEvent->RecoEvent->GetRunNumber(); //Occhio che 30000 vale solo per il 2022
@@ -78,6 +87,10 @@ Bool_t ECalCalib::Process(){
       //      cout<<ll<< "Process NRUN "<<fNRun<<" CurrentRun "<<fCurrentRun<<endl;
       if(vNRun[ll]==fNRun){ 
 	fCurrentRunIndex=ll; //retrieve the current run index
+	fBeamEnergy = vEBeam[ll];
+	fCOGX       = vCOGX[ll];
+        fCOGY       = vCOGY[ll];
+	cout<<ll<< "Process NRUN "<<fNRun<<" CurrentRun "<<fCurrentRun<<" "<<fCOGX<<" "<<fCOGY<<endl;
 	break;
       }
     }
@@ -87,7 +100,7 @@ Bool_t ECalCalib::Process(){
   return true;
 }
 
-// doest this fix what Geometrical of COG postion?
+// does this fix what Geometrical of COG postion?
 Double_t ECalCalib::FixPosition(){
   if(fisMC) return -1;
   Double_t X,X_CORR;

@@ -23,7 +23,6 @@ Is3GAnalysis::Is3GAnalysis(TString cfgFile, Int_t verbose)
   ClRadMax= 250.;
   COGMax  = 45.;
   DistMax = 150.;
-
 }
 
 Is3GAnalysis::~Is3GAnalysis(){
@@ -64,6 +63,7 @@ Bool_t Is3GAnalysis::InitHistos(){
   fHS->BookHisto2List("GGGAnalysis","EnvsTime",100,-150.,150.,125,0.,500.);
   fHS->BookHistoList("GGGAnalysis","NPairs",25,-0.5,24.5);
   fHS->BookHistoList("GGGAnalysis","TCluDiff3g_Intime",200,20.,20.);  
+  fHS->BookHistoList("GGGAnalysis","TCluDiff3g_Intime_COG",200,20.,20.);  
 
   fHS->BookHistoList("GGGAnalysis","COG_X",300,-150.,150.);   
   fHS->BookHistoList("GGGAnalysis","COG_Y",300,-150.,150.);   
@@ -101,8 +101,7 @@ Bool_t Is3GAnalysis::Process(){
     TVector3 pos1   =  fEvent->ECalRecoCl->Element(ical)->GetPosition();
     double ClRadius = sqrt(pos1.X()*pos1.X()+pos1.Y()*pos1.Y());
     ETotECal+=eECal;
-    fHS->FillHistoList("GGGAnalysis","ETotECal",ETotECal,1);
-    
+    fHS->FillHistoList("GGGAnalysis","ETotECal",ETotECal,1);    
     fHS->FillHistoList("GGGAnalysis","NClusters",NClusters,1);
     fHS->FillHistoList("GGGAnalysis","ECalClEnergy",eECal,1);
     fHS->FillHistoList("GGGAnalysis","ECalClTime",tECal,1);
@@ -140,7 +139,7 @@ Bool_t Is3GAnalysis::Process(){
 	
 	//	if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj]-TGoodCluster[ll])<TWin) ) continue;
 	if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin && 
-	      fabs(TGoodCluster[kk]-TGoodCluster[ll]) && 
+	      fabs(TGoodCluster[kk]-TGoodCluster[ll])<TWin && 
 	      fabs(TGoodCluster[jj]-TGoodCluster[ll])<TWin )) continue;
 	fHS->FillHistoList("GGGAnalysis","ECalClEnergy3g_Intime",EGoodCluster[kk]+EGoodCluster[jj]+EGoodCluster[ll],1);
 	fHS->FillHistoList("GGGAnalysis","TCluDiff3g_Intime",TGoodCluster[kk]-TGoodCluster[jj],1);
@@ -160,12 +159,8 @@ Bool_t Is3GAnalysis::Process(){
 	fHS->FillHistoList("GGGAnalysis","ClClDist",Dist_jk,1);
 	fHS->FillHistoList("GGGAnalysis","ClClDist",Dist_kl,1);
   
-	//Cut on pair COG
-	if(isMC){
-	  if(abs(COGX+3.88) > COGMax || abs(COGY+3.)>COGMax) continue; //Problems in MC rilasso il CUT
-	}else{ //COG in data is fine
-	  if(abs(COGX) > COGMax || abs(COGY)>COGMax) continue; 
-	}
+	if(sqrt(COGY*COGY+COGX*COGX)>COGMax) continue; 
+
 	//      EClusterPair.push_back(EGoodCluster[kk]);
 	//      TClusterPair.push_back(TGoodCluster[kk]);
 	//      PosXClusterPair.push_back(PosXGoodCluster[kk]);      
@@ -179,6 +174,7 @@ Bool_t Is3GAnalysis::Process(){
 	NPairs++;
 	ETotPair.push_back(EGoodCluster[kk]+EGoodCluster[jj]+EGoodCluster[ll]);
 	fHS->FillHistoList("GGGAnalysis","ECalClEnergy3g_Intime_COG",EGoodCluster[kk]+EGoodCluster[jj]+EGoodCluster[ll],1);
+	fHS->FillHistoList("GGGAnalysis","ECalClEnergy3g_Intime_COG",TGoodCluster[kk]-TGoodCluster[jj],1);
 	//	TDiffPair.push_back(TGoodCluster[kk]+TGoodCluster[jj]+TGoodCluster[jj]);
 	//clear vectors
 	Ei.clear();
@@ -224,7 +220,7 @@ Bool_t Is3GAnalysis::Finalize()
 {
  // TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
  // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
-  std::cout<<"TotGG        = "<<N3G<<std::endl;
+  std::cout<<"Tot 3G  = "<<N3G<<std::endl;
   if (fVerbose) printf("---> Finalizing IsGGAnalysis\n");
   return true;
 }

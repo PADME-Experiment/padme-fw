@@ -20,10 +20,13 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fECalCalib = new ECalCalib(cfgFile,fVerbose);
+  fECalCalib    = ECalCalib::GetInstance();
+  //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
+  fMCTruth      = MCTruth::GetInstance();
+
+  //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fMCTruth     = new MCTruth(cfgFile,fVerbose);
   fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
@@ -40,7 +43,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  fECalCalib->Init(fEvent);
+  fECalCalib->Init();
+
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
@@ -64,26 +68,30 @@ Bool_t UserAnalysis::InitHistos(){
 #define ABS(x)  ((x) > 0 ? (x):(-x))
 
 Bool_t UserAnalysis::Process(){
-  Bool_t isMC = false;
+  Bool_t isMC     = false;
+  Bool_t IsNPotOk = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) isMC=true;
-   
+
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { 
     if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); 
   }
-  //Cut on physics trigger Data Only
-  if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
 
-  //  if( trigMask & (1 << 0) && !isMC){
+  //Cut on physics trigger Data Only ??
+  if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
+  IsNPotOk=fNPoTAnalysis->Process();
+  if(!IsNPotOk && !isMC) return true; //Drops events with strange NPoT from target
+  fECalCalib->Process(fEvent); 
+
+  //  cout<<"User Analysis NPOT "<<fNPoTAnalysis->GetNPoT()<<endl;
+
   if(!isMC){
-    fECalCalib->Process();
     fECalCalib->SetEScale();
     fECalCalib->CorrectESlope();
-    fECalCalib->FixPosition(); //need to change values into the structure.
+    //    fECalCalib->FixPosition(); //need to change values into the structure.
   }
-
-  fNPoTAnalysis->Process();
+  
   fIsGGAnalysis->Process();
   fIs3GAnalysis->Process();   
   return true;
@@ -96,7 +104,7 @@ Bool_t UserAnalysis::Finalize()
   fNPoTAnalysis->Finalize();
   fIsGGAnalysis->Finalize();
   fIs3GAnalysis->Finalize();
-
+  
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

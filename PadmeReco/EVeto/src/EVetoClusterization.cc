@@ -5,7 +5,7 @@
 #include <iostream>
 #include <algorithm>
 
-Cluster::Cluster(){
+EVetoCluster::EVetoCluster(){
   nhits=0;
   mostUpstreamChannel=100;
   mostDownstreamChannel=-1;
@@ -16,7 +16,7 @@ Cluster::Cluster(){
 }
 
 
-int Cluster::InsertHit(EVetoClusterHits hit, int ihit){
+int EVetoCluster::InsertHit(EVetoClusterHits hit, int ihit){
   if(nhits>MAXHIT-1){
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
@@ -32,7 +32,7 @@ int Cluster::InsertHit(EVetoClusterHits hit, int ihit){
   nhits++;
 }
 
-int Cluster::AddCluster(Cluster* newcluster){
+int EVetoCluster::AddCluster(EVetoCluster* newcluster){
 
   int NMax=newcluster->GetNHits()+nhits;
   //  std::cout<<nhits<<" "<<newcluster->GetNHits()<<" "<<NMax<<std::endl;
@@ -58,21 +58,21 @@ int Cluster::AddCluster(Cluster* newcluster){
 }
 
 
-ClusterStructure::ClusterStructure(){
+EVetoClusterStructure::EVetoClusterStructure(){
   //  std::cout<<"Initialising ClusterStructure"<<std::endl;
   HitVec.clear();
   ClusVec.clear();
   HitIndexVec.clear();
 }
 
-void ClusterStructure::Clear(){
+void EVetoClusterStructure::Clear(){
   //  std::cout<<"Clearing ClusterStructure"<<std::endl;
   ClusVec.clear();
   HitVec.clear();//legit???
   HitIndexVec.clear();
   }
 
-void ClusterStructure::Clusterise(){
+void EVetoClusterStructure::Clusterise(){
   for (int ii=0; ii <HitVec.size(); ++ii ) {
     bool UsedHit = 0;
     //    std::cout<<"clusvec size "<<ClusVec.size()<<std::endl;
@@ -88,7 +88,7 @@ void ClusterStructure::Clusterise(){
       }	
     }//end cluster loop
     if(!UsedHit) {
-      Cluster* NewCluster = new Cluster();
+      EVetoCluster* NewCluster = new EVetoCluster();
       NewCluster->InsertHit(HitVec.at(ii), HitIndexVec.at(ii));
       ClusVec.push_back(NewCluster);
     }
@@ -96,7 +96,7 @@ void ClusterStructure::Clusterise(){
 }
 
 
-void ClusterStructure::MergeClusters(){
+void EVetoClusterStructure::MergeClusters(){
    Int_t noCompact = 0;
   while(noCompact==0) {
     //std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
@@ -172,7 +172,7 @@ void ClusterStructure::MergeClusters(){
   //  }
 }
 
-void ClusterStructure::HitSort(){
+void EVetoClusterStructure::HitSort(){
 
   std::vector<EVetoClusterHits> HitVecCopy;
 

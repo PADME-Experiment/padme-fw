@@ -63,7 +63,7 @@ private:
   std::vector<PVetoClusterHits> HitVec;
   std::vector<PVetoCluster*> ClusVec;
   std::vector<int> HitIndexVec;
-  double ClusterDeltaT=1.5;//maximum time difference between hits in the same cluster
+  double ClusterDeltaT=4;//1.5;//maximum time difference between hits in the same cluster
 };
  
 #endif

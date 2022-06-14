@@ -293,10 +293,10 @@ void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
 void EVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 {
   EVetoClusterHits EVetoClusterHit;// = new ClusterHits();
-  ClusterStructure EVetoClusStruc;//contains a structure for vectors of clusters for each event
+  EVetoClusterStructure EVetoClusStruc;//contains a structure for vectors of clusters for each event
   std::vector<EVetoClusterHits> EVetoClusterHitVec;//Contains all the EVetoHits to be clusterised per event
   Int_t nhitpass=0;
-  std::vector<Cluster*> vEVetoClusters;
+  std::vector<EVetoCluster*> vEVetoClusters;
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   std::vector<TRecoVCluster *> &myClusters = GetClusters();

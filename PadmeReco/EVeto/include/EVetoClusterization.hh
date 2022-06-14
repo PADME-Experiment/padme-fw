@@ -5,10 +5,10 @@
 #include "EVetoClusterHits.hh"
 #include <iostream>
 
-class Cluster{
+class EVetoCluster{
 public:
-  Cluster();
-  ~Cluster(){};
+  EVetoCluster();
+  ~EVetoCluster(){};
 
   int InsertHit(EVetoClusterHits hit, int ihit);
   //  int* GetHitIndex(){return hitIndex;}
@@ -19,7 +19,7 @@ public:
   double GetEarlyHitTime(){return earlyhittime;}
   double GetLateHitTime(){return latehittime;}
   int GetNHits(){return nhits;}
-  int AddCluster(Cluster* cluster);
+  int AddCluster(EVetoCluster* cluster);
   void Print(){std::cout<<"Most Upstream "<<mostUpstreamChannel<<" Most Downstream "<<mostDownstreamChannel<<" average time "<<averagetime<<std::endl;}
   double GetEnergy(){return energy;}
   
@@ -36,15 +36,16 @@ public:
   
 };
 
-class ClusterStructure{
+class EVetoClusterStructure{
   
 public:
-  ClusterStructure();
-  ~ClusterStructure(){};
+  EVetoClusterStructure();
+  ~EVetoClusterStructure(){};
 
   void Clear();
   
   void AddHit(EVetoClusterHits MyHit, int hitindex){    
+
     HitIndexVec.push_back(hitindex);
     HitVec.push_back(MyHit);
   }
@@ -55,12 +56,12 @@ public:
 
   void MergeClusters();
 
-  std::vector<Cluster*> GetClusters(){return ClusVec;}
+  std::vector<EVetoCluster*> GetClusters(){return ClusVec;}
   std::vector<EVetoClusterHits> GetHitVec(){return HitVec;}
   
 private:
   std::vector<EVetoClusterHits> HitVec;
-  std::vector<Cluster*> ClusVec;
+  std::vector<EVetoCluster*> ClusVec;
   std::vector<int> HitIndexVec;
   double ClusterDeltaT=1.5;//maximum time difference between hits in the same cluster
 };

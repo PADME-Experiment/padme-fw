@@ -31,7 +31,12 @@ int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
   if(hit.GetTime()>latehittime) latehittime=hit.GetTime();
+
+  double oldenergy = energy;
+  double newenergy = hit.GetEnergy();
+
   averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
+  // averagetime = (oldenergy*nhits*averagetime+hit.GetTime()*newenergy)/((nhits+1)*(oldenergy+newenergy));//energy-weighting for time
   energy += hit.GetEnergy();
   nhits++;
 }
@@ -53,7 +58,12 @@ int PVetoCluster::AddCluster(PVetoCluster* newcluster){
   if(newcluster->GetMostDownstreamChannel()>mostDownstreamChannel) mostDownstreamChannel=newcluster->GetMostDownstreamChannel();
   if(newcluster->GetEarlyHitTime()<earlyhittime) earlyhittime = newcluster->GetEarlyHitTime();
   if(newcluster->GetLateHitTime()>latehittime) latehittime = newcluster->GetLateHitTime();
+
+  double oldenergy = energy;
+  double newenergy = newcluster->GetEnergy();
+
   averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
+  //  averagetime=(oldenergy*nhits*averagetime+newcluster->GetNHits()*newenergy*newcluster->GetAverageTime())/((nhits+newcluster->GetNHits())*(oldenergy+newenergy));;//energy-weighting for time
   energy+=newcluster->GetEnergy();
   nhits+=NMax;
   return goodreturn;
@@ -151,7 +161,7 @@ void PVetoClusterStructure::HitSort(){
 	 return (HitVec[a].GetTime() < HitVec[b].GetTime());
 	 }
        );
-  
+
   for (int ii = 0 ; ii != index.size() ; ++ii) {
     HitVec[ii]=(HitVecCopy[index[ii]]);
     //    std::cout<<"     HitVec[ii] Ch "<<HitVec[ii].GetChannelId()<<" time "<<HitVec[ii].GetTime();//<<std::endl;

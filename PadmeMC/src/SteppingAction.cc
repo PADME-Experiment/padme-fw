@@ -8,7 +8,6 @@
 #include "G4VProcess.hh"
 #include "G4TrackStatus.hh"
 #include "HistoManager.hh"
-#include "Constants.hh"
 #include "EventAction.hh"
 #include "G4RunManager.hh"
 #include "HistoManager.hh"
@@ -287,66 +286,6 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
       track->SetTrackStatus(fStopAndKill);
     }
   }
-  
-  //  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
-//    if(track->GetVolume()->GetName()=="SAC") {
-//      track->SetTrackStatus(fStopAndKill);
-//    }
-//  }
-//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Tracker") {
-//      if(track->GetParticleDefinition()==G4Positron::PositronDefinition()||track->GetParticleDefinition()==G4Electron::ElectronDefinition()){
-//	if(track->GetParticleDefinition()->GetPDGCharge()==1.){ 
-//	  //  G4cout<<<<" " <<track->GetTrackID()<<G4endl;
-//	  PositronE = track->GetTotalEnergy();					    
-//          G4ThreeVector PositronDir = track->GetDynamicParticle()->GetMomentumDirection();  
-//	  G4cout<<PositronE<<" e+ "<<PositronDir<<G4endl;                                      
-//	  track->SetTrackStatus(fStopAndKill); 	       
-//	}
-//	else if(track->GetParticleDefinition()->GetPDGCharge()==-1.){
-//	  //	  G4cout<<"electron "<<track->GetTotalEnergy()<<" " <<track->GetTrackID()<<G4endl;  
-//	  ElectronE = track->GetTotalEnergy();					    
-//	  G4ThreeVector ElectronDir = track->GetDynamicParticle()->GetMomentumDirection();  
-//	  G4cout<<ElectronE<<" e- "<<ElectronDir<<G4endl;                                      
-//	  track->SetTrackStatus(fStopAndKill);
-//	}
-//      }
-//    }
-//  }
-
-//  Search for gamma leaving the target
-//  if(NPrimaries>0){
-//    //Cerca il primo gamma in uscita
-//    if(track->GetParticleDefinition() == G4Gamma::GammaDefinition()){
-//      if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-//	if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
-//	  if(track->GetCurrentStepNumber()==1 && track->GetParentID()==1){
-//	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
-//	    //	  G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-//	    //	  G4int parent      = track->GetParentID();
-//	    //	  G4int TrID        = track->GetTrackID();
-//	    //	  G4bool Primo      = step->IsFirstStepInVolume();
-//	    GammaE    = track->GetTotalEnergy();
-//	    //	  VertexPos = track->GetVertexPosition();
-//	    GammaDir  = track->GetVertexMomentumDirection();
-//	    G4ThreeVector BeamDir;
-//	    BeamDir[0]=0.;
-//	    BeamDir[1]=0.;
-//	    BeamDir[2]=1.;
-//	    ThetaGamma = SetGammaAngle(GammaDir,BeamDir);
-//	    if(ThetaGamma<0.015) fHistoManager->FillHisto(18,GammaE);
-//	    if(ProcID==1) fHistoManager->FillHisto2(38,ThetaGamma,GammaE);
-//	    if(ProcID==2) fHistoManager->FillHisto2(39,ThetaGamma,GammaE);
-//	    //  for(int i=0; i<4; i++) P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
-//	    //  G4double Mmiss2 = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-//	    //  NChild++;
-//	    //	    if(ThetaGamma) G4cout<<"Theta Gamma " <<ThetaGamma<<" "<<GammaE<<" "<<BeamPartE<<" "<<GammaE+BeamPartE<<G4endl;
-//	    
-//	  }
-//	}
-//      }
-//    }
-//  }
   
 }
 

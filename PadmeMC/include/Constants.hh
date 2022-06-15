@@ -19,7 +19,6 @@
 //const int   IsEleVetoON   = 1;   // Veto inside the magnet Electron side
 //const int   IsEVetoON     = 1;   // Veto for High Momentum positron
 //const int   IsSACON       = 1;  //Small angle gamma veto.
-//const int   IsLAVON       = 0;  //LARGE angle gamma veto.
 
 //const int   IsMonitorON   = 0;  //first station for P measurement
 //const int   IsTargetON    = 0;  // is off if dump is On
@@ -148,11 +147,6 @@ const double CellsE   = 1.;     //in MeV
 //const double SACX      = 12; // 6x6 crystals 2x2 cm each
 //const double SACY      = 12;
 //const double SACLength = 10;
-
-//LAV geometry
-//const double LAVInnRad = 4.0; 
-//const double LAVOutRad = 10.;
-//const double LAVLength = 20; // in cm 
 
 //  High Energy Positron Veto outside the magnet dimension
 //const double EVetoPosiX = 0.;	//in cm

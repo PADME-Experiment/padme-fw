@@ -1,5 +1,3 @@
-#include "Constants.hh" 
-
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
 

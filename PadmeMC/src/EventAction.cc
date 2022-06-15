@@ -96,7 +96,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
 
   SACTracks  = 0;
   CalNPart   = 0;
-  LAVTracks  = 0;
+  ETagTracks  = 0;
   NHEPVetoTracks = 0;
   NPVetoTracks = 0;
   NEVetoTracks = 0;
@@ -195,8 +195,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
-    } else if (HCname == "LAVCollection") {
-      AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "ETagCollection") {
+      AddETagHits((ETagHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
@@ -250,7 +250,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.NTNPVetoTracks   = NPVetoTracks;
   fHistoManager->myEvt.NTNEVetoTracks   = NEVetoTracks;
   fHistoManager->myEvt.NTSACNHit        = SACTracks;
-  fHistoManager->myEvt.NTLAVNHit        = LAVTracks;
+  fHistoManager->myEvt.NTETagNHit        = ETagTracks;
   fHistoManager->myEvt.NTNTarget        = NTarget;
 
   fHistoManager->myEvt.NTEtot     = ETotCal;
@@ -278,7 +278,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   for(int i=0;i<CalNPart;i++){
     if(i>19) break;
-    //    G4cout<<"NLAV Tr "<<LAVTracks<<" "<< LAVEtrack[i]<<" "<<LAVTrackTime[i]<<G4endl;
+    //G4cout<<"NETag Tr "<<ETagTracks<<" "<< ETagEtrack[i]<<" "<<ETagTrackTime[i]<<G4endl;
     fHistoManager->myEvt.NTCalPartE[i]     =  CalE[i];
     fHistoManager->myEvt.NTCalPartT[i]     =  CalTime[i];
     fHistoManager->myEvt.NTCalPartPType[i] =  CalPType[i];
@@ -286,14 +286,16 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
   }
   
-  for(int i=0;i<LAVTracks;i++){
-    if(i>100) break;
-
-    fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
-    fHistoManager->myEvt.NTLAVT    [i] = LAVTrackTime[i];
-    fHistoManager->myEvt.NTLAVPType[i] = LAVPType[i];
-    fHistoManager->myEvt.NTLAVX    [i] =LAVX[i]; 
-    fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
+  for(int i=0;i<ETagTracks;i++){
+    if(i>150) break;
+    //    G4cout<<"CC LastID "<<ETagNBar[i]<<G4endl;
+    fHistoManager->myEvt.NTETagBar  [i] = ETagNBar[i];
+    fHistoManager->myEvt.NTETagE    [i] = ETagEtrack[i];
+    fHistoManager->myEvt.NTETagT    [i] = ETagTrackTime[i];
+    fHistoManager->myEvt.NTETagPType[i] = ETagPType[i];
+    fHistoManager->myEvt.NTETagX    [i] = ETagX[i]; 
+    fHistoManager->myEvt.NTETagY    [i] = ETagY[i];
+    //    G4cout<<"CC LasåtID dopo "<<fHistoManager->myEvt.NTETagBar[i]<<G4endl;
   }
   
   for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
@@ -1060,30 +1062,31 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
  
 }
 
-void EventAction::AddLAVHits(LAVHitsCollection* hcont)
+void EventAction::AddETagHits(ETagHitsCollection* hcont)
 {
   G4int LastID=-1;
   G4int nHits = hcont->entries();			
   for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotLAV[jj]=0.0;										     
-    LAVTrackTime[jj]=0.0;										     
-    LAVEtrack[jj]=0.0;
-    LAVPType[jj]=0.0;
+    ETotETag[jj]=0.0;										     
+    ETagTrackTime[jj]=0.0;										     
+    ETagEtrack[jj]=0.0;
+    ETagPType[jj]=0.0;
   }							
   for (G4int h=0; h<nHits; h++) {
-    LAVHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    ETagHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && LAVTracks < MaxTracks) {
-	//	ETotLAV[hit->GetLAVNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
-	//    	  LAVTrackCh[LAVTracks] = hit->GetLAVNb();
-	LAVEtrack[LAVTracks]    = hit->GetETrack();
-	LAVTrackTime[LAVTracks] = hit->GetTime();
-	LAVPType[LAVTracks]     = hit->GetPType();
-	LAVX[LAVTracks]         = hit->GetX();
-	LAVY[LAVTracks]         = hit->GetY();
-	G4cout<<"CC Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<G4endl;
-	//	G4cout<<"CC LastID "<<LastID<<" "<<LAVY[LAVTracks]<<G4endl;
-	LAVTracks++;
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && ETagTracks < MaxTracks) {
+	//	ETotETag[hit->GetETagNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
+	ETagNBar[ETagTracks]      = hit->GetETagNb();
+	ETagEtrack[ETagTracks]    = hit->GetETrack();
+	ETagTrackTime[ETagTracks] = hit->GetTime();
+	ETagPType[ETagTracks]     = hit->GetPType();
+	ETagX[ETagTracks]         = hit->GetX();
+	ETagY[ETagTracks]         = hit->GetY();
+	//	G4cout<<"ETAG Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<" PType "<<hit->GetPType()<<G4endl;
+	//	G4cout<<"CC LastID "<<LastID<<" "<<ETagY[ETagTracks]<<G4endl;
+	//	G4cout<<"ETagNBar "<<ETagNBar[ETagTracks]<<" "<<ETagY[ETagTracks]<<G4endl;
+	ETagTracks++;
       }
       LastID = hit->GetTrackID();
     }

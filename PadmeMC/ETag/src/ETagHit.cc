@@ -1,30 +1,30 @@
-// LAVHit.cc
+// ETagHit.cc
 // --------------------------------------------------------------
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
 // --------------------------------------------------------------
 
-#include "LAVHit.hh"
+#include "ETagHit.hh"
 #include "G4UnitsTable.hh"
 #include "G4VVisManager.hh"
 #include "G4Circle.hh"
 #include "G4Colour.hh"
 #include "G4VisAttributes.hh"
 
-G4Allocator<LAVHit> LAVHitAllocator;
+G4Allocator<ETagHit> ETagHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-LAVHit::LAVHit() {}
+ETagHit::ETagHit() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-LAVHit::~LAVHit() {}
+ETagHit::~ETagHit() {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-LAVHit::LAVHit(const LAVHit& right)
+ETagHit::ETagHit(const ETagHit& right)
   : G4VHit()
 {
   fTrackType = right.fTrackType;
@@ -37,7 +37,7 @@ LAVHit::LAVHit(const LAVHit& right)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-const LAVHit& LAVHit::operator=(const LAVHit& right)
+const ETagHit& ETagHit::operator=(const ETagHit& right)
 {
   fTrackType = right.fTrackType;
   fChannelId = right.fChannelId;
@@ -50,14 +50,14 @@ const LAVHit& LAVHit::operator=(const LAVHit& right)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-G4int LAVHit::operator==(const LAVHit& right) const
+G4int ETagHit::operator==(const ETagHit& right) const
 {
   return (this==&right) ? 1 : 0;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void LAVHit::Draw()
+void ETagHit::Draw()
 {
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
   if(pVVisManager)
@@ -74,7 +74,7 @@ void LAVHit::Draw()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-void LAVHit::Print()
+void ETagHit::Print()
 {
   G4cout << "- channel: " << fChannelId
 	 << " time: " << G4BestUnit(fTime,"Time")

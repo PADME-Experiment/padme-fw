@@ -160,7 +160,7 @@ void ChamberStructure::CreateECalCarbonThinWindow()
   //G4double ewz1 = efFBackZ+(ewr1-ewC);
   G4double ewth1 = asin(ewR/ewr1);
 
-  // Create flange around thin window
+ // Create flange around thin window
   G4Tubs* solidEWFlange = new G4Tubs("EWFlange",ewFRIn,ewFROut,0.5*ewFThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalEWFlange = new G4LogicalVolume(solidEWFlange,G4Material::GetMaterial("G4_Al"), "ChamberECalWindowFlange",0,0,0);
   logicalEWFlange->SetVisAttributes(alVisAttr);

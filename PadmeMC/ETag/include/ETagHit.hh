@@ -1,12 +1,12 @@
-// LAVHit.hh
+// ETagHit.hh
 // --------------------------------------------------------------
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
 // --------------------------------------------------------------
 
-#ifndef LAVHit_h
-#define LAVHit_h 1
+#ifndef ETagHit_h
+#define ETagHit_h 1
 
 #include "G4VHit.hh"
 #include "G4THitsCollection.hh"
@@ -15,15 +15,15 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-class LAVHit : public G4VHit
+class ETagHit : public G4VHit
 {
 public:
 
-  LAVHit();
-  ~LAVHit();
-  LAVHit(const LAVHit&);
-  const LAVHit& operator=(const LAVHit&);
-  G4int operator==(const LAVHit&) const;
+  ETagHit();
+  ~ETagHit();
+  ETagHit(const ETagHit&);
+  const ETagHit& operator=(const ETagHit&);
+  G4int operator==(const ETagHit&) const;
 
   inline void* operator new(size_t);
   inline void  operator delete(void*);
@@ -55,8 +55,8 @@ public:
   G4double GetLocalPosZ() { return fLocalPosition.z(); };
  
   // Kept for backward compatibility: will be removed
-  void SetLAVNb(G4int cry) { fChannelId = cry; };
-  G4int GetLAVNb() { return fChannelId; };
+  void SetETagNb(G4int cry) { fChannelId = cry; };
+  G4int GetETagNb() { return fChannelId; };
 
   void SetPType(G4int typ) { fTrackType = typ; };
   G4int GetPType() { return fTrackType; };
@@ -91,24 +91,24 @@ private:
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-typedef G4THitsCollection<LAVHit> LAVHitsCollection;
+typedef G4THitsCollection<ETagHit> ETagHitsCollection;
 
-extern G4Allocator<LAVHit> LAVHitAllocator;
+extern G4Allocator<ETagHit> ETagHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void* LAVHit::operator new(size_t)
+inline void* ETagHit::operator new(size_t)
 {
   void *aHit;
-  aHit = (void *) LAVHitAllocator.MallocSingle();
+  aHit = (void *) ETagHitAllocator.MallocSingle();
   return aHit;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-inline void LAVHit::operator delete(void *aHit)
+inline void ETagHit::operator delete(void *aHit)
 {
-  LAVHitAllocator.FreeSingle((LAVHit*) aHit);
+  ETagHitAllocator.FreeSingle((ETagHit*) aHit);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

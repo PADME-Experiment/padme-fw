@@ -49,7 +49,7 @@ struct NTEvent{
   double NTQCell[1000];
   double NTTCell[1000];
 
-  //NTLAV variables
+  //NTETag variables
   double  NTCalPartE[300];
   double  NTCalPartT[300];
   int     NTCalPartPType[300];
@@ -123,13 +123,14 @@ struct NTEvent{
   int     NTSACCh[300];
   int     NTSACNHit;
 
-  //NTLAV variables
-  double  NTLAVE[300];
-  double  NTLAVT[300];
-  double  NTLAVPType[300];
-  double  NTLAVX[300];
-  double  NTLAVY[300];
-  int     NTLAVNHit;
+  //NTETag variables
+  int  NTETagBar[300];
+  double  NTETagE[300];
+  double  NTETagT[300];
+  double  NTETagPType[300];
+  double  NTETagX[300];
+  double  NTETagY[300];
+  int     NTETagNHit;
 
 
 

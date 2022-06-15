@@ -461,12 +461,13 @@ void HistoManager::book()
   ntupl->Branch("YSAC", (myEvt.NTSACY), "YSAC[NSAC]/D");
   ntupl->Branch("SACCh", (myEvt.NTSACCh), "SACCh[NSAC]/I");
 
-//  ntupl->Branch("NLAV", &(myEvt.NTLAVNHit), "NLAV/I");
-//  ntupl->Branch("ELAV", (myEvt.NTLAVE), "ELAV[100]/D");
-//  ntupl->Branch("TLAV", (myEvt.NTLAVT), "TLAV[100]/D");
-//  ntupl->Branch("PTypeLAV", (myEvt.NTLAVPType), "PTypeLAV[100]/D");
-//  ntupl->Branch("XLAV", (myEvt.NTLAVX), "XLAV[100]/D");
-//  ntupl->Branch("YLAV", (myEvt.NTLAVY), "YLAV[100]/D");
+  ntupl->Branch("NETag", &(myEvt.NTETagNHit), "NETag/I");
+  ntupl->Branch("NBAR", (myEvt.NTETagBar),"ETagBar[200]/I");
+  ntupl->Branch("EETag", (myEvt.NTETagE), "EETag[200]/D");
+  ntupl->Branch("TETag", (myEvt.NTETagT), "TETag[200]/D");
+  ntupl->Branch("PTypeETag", (myEvt.NTETagPType), "PTypeETag[200]/D");
+  ntupl->Branch("XETag", (myEvt.NTETagX), "XETag[200]/D");
+  ntupl->Branch("YETag", (myEvt.NTETagY), "YETag[200]/D");
   
   ntupl->Branch("EPartCal",     (myEvt.NTCalPartE),     "CalE[20]/D");
   ntupl->Branch("TPartCal",     (myEvt.NTCalPartT),     "CalT[20]/D");

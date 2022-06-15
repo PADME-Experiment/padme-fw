@@ -798,8 +798,8 @@ void BeamGenerator::CreateFinalStateBhaBha()
       vtx->SetPrimary(lepton);
 
       if (fMCTruthMgr->IsEnabled()) {
-        if(j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),p[0],gamma_p);
-        if(j==0) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),p[0],gamma_p);
+        if(j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),p[0],lepton_p);
+        if(j==0) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),p[0],lepton_p);
       }
     }
 

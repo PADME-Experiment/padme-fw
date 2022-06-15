@@ -8,7 +8,7 @@
 #include "PVetoHit.hh"
 #include "EVetoHit.hh"
 #include "SACHit.hh"
-#include "LAVHit.hh"
+#include "ETagHit.hh"
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
 #include "MylarWHit.hh"  //M. Raggi 15/03/2021
@@ -31,6 +31,7 @@ class HEPVetoDigitizer;
 class ECalDigitizer;
 class SACDigitizer;
 class TPixDigitizer;
+class ETagDigitizer;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -82,7 +83,7 @@ class EventAction : public G4UserEventAction
   void  AddEVetoHits(EVetoHitsCollection*);
 
   void  AddSACHits(SACHitsCollection*);
-  void  AddLAVHits(LAVHitsCollection*);
+  void  AddETagHits(ETagHitsCollection*);
   void  AddTPixHits(TPixHitsCollection*);         //M. Raggi 26/03/2019
   void  AddBeWHits(BeWHitsCollection*);           //M. Raggi 26/03/2019
   void  AddMylarWHits(MylarWHitsCollection*);        //M. Raggi 15/03/2021
@@ -120,7 +121,7 @@ class EventAction : public G4UserEventAction
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 
   G4double ClPosX,ClPosY;
   G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
-  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget,NBeW,NBeamFlag,NMylarW;
+  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,ETagTracks,NTarget,NBeW,NBeamFlag,NMylarW;
   G4int CalNPart;
 
    G4double Etrack[300];    //For spectrometer reco
@@ -199,13 +200,13 @@ class EventAction : public G4UserEventAction
    G4double CalY[300];
    G4double NCalPart;
 
-   G4double ETotLAV[300];
-   G4double LAVTrackCh[300];
-   G4double LAVPType[300];
-   G4double LAVEtrack [300];
-   G4double LAVTrackTime[300];
-   G4double LAVX[300];   
-   G4double LAVY[300];
+   G4double ETotETag[300];
+   G4int ETagNBar[300];
+   G4double ETagPType[300];
+   G4double ETagEtrack [300];
+   G4double ETagTrackTime[300];
+   G4double ETagX[300];   
+   G4double ETagY[300];
 
    G4double EneCl[300];
    G4double QCl[300];

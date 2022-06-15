@@ -32,6 +32,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
@@ -68,7 +71,9 @@ public:
 private:
 
   G4int fVerbose; // Verbose level
-  
+
+  G4int fDetectorSetup;
+
   G4double fETagSizeX;
   G4double fETagSizeY;
   G4double fETagSizeZ;

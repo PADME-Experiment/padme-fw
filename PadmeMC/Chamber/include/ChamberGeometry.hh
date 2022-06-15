@@ -32,6 +32,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Info on the back face of the chamber
   // Needed to correctly position exit hole, HEPVeto and TimePix
   G4double GetVCBackFacePosZ() { return fVCBackFacePosZ; }
@@ -173,6 +176,8 @@ public:
   //G4double GetTPPHStopThick() { return fTPPHStopThick; }
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window
   G4double fVCBackFaceAngle; // Angle of TPix/HEPVeto face of chamber

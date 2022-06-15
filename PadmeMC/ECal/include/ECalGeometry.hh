@@ -40,6 +40,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of ECal box
   G4double GetECalPosX() { return fECalDisplacementX; }
   G4double GetECalPosY() { return fECalDisplacementY; }
@@ -312,6 +315,8 @@ private:
   // Geometry parameters
 
   G4int fVerbose; // Verbose level
+
+  G4int fDetectorSetup;
 
   G4int fCrystalMapId; // Id of crystal map to use
 

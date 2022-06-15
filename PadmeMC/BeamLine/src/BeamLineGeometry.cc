@@ -20,6 +20,9 @@ BeamLineGeometry* BeamLineGeometry::GetInstance()
 
 BeamLineGeometry::BeamLineGeometry()
 {
+
+  fDetectorSetup = 1; // Default to 2019 setup
+
   // By default the Be window is positioned
   fBeWindowEnable = true;
   fMylarWindowEnable = true;

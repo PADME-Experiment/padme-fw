@@ -22,6 +22,8 @@ TPixGeometry::TPixGeometry()
 
   fVerbose = 0; // Do not show debug output
 
+  fDetectorSetup = 1; // Default to 2019 setup
+
   fTPixNRows = 2;
   fTPixNCols = 6;
 

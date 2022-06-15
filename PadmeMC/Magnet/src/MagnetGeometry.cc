@@ -20,6 +20,8 @@ MagnetGeometry::MagnetGeometry()
 
   // Inizialize default parameters
 
+  fDetectorSetup = 1; // Default to 2019 setup
+
   fMagnetGap = 0.1*mm;
 
   fYokeSizeZ      = 100.0*cm;

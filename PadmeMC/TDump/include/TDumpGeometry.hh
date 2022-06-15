@@ -31,6 +31,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of TDump
   G4double GetTDumpPosX() { return 0.*cm; }
   G4double GetTDumpPosY() { return 0.*cm; }
@@ -77,6 +80,8 @@ public:
   G4String GetTDumpSensitiveDetectorName() { return fTDumpSensitiveDetectorName; }
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fTDumpGap;
 

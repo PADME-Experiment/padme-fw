@@ -18,6 +18,11 @@ ETagGeometry* ETagGeometry::GetInstance()
 
 ETagGeometry::ETagGeometry()
 {
+
+  fVerbose = 0; // Do not show debug output
+
+  fDetectorSetup = 1; // Default to 2019 setup
+
   // ETag number of rows of bars
   fETagNBars=15;
   

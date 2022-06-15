@@ -96,7 +96,7 @@ DetectorConstruction::DetectorConstruction()
 
   fMagneticFieldManager = new MagneticFieldSetup();
 
-  fDetectorSetup  = 1; // Default is 2019 configuration
+  fDetectorSetup  = 10; // Default is 2019 configuration
 
   fEnableECal     = 1;
   fEnableTarget   = 1;
@@ -170,6 +170,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   G4VPhysicalVolume* physicWorld = 0;
   G4LogicalVolume* logicWorld = 0;
+
+  if (fDetectorSetup == 10) {
+    printf("=== Detector Setup 10 = Year 2019 ===\n");
+  } else if (fDetectorSetup == 20) {
+    printf("=== Detector Setup 20 = Year 2020 ===\n");
+  } else if (fDetectorSetup == 30) {
+    printf("=== Detector Setup 30 = Year 2021 ===\n");
+  } else if (fDetectorSetup == 40) {
+    printf("=== Detector Setup 40 = Year 2022 ===\n");
+  } else {
+    printf("=== WARNING!!! Unknown Detector Setup %d ===\n",fDetectorSetup);
+  }
 
   if (fEnableChamber) {
 
@@ -455,13 +467,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   // TPix
-  //  G4cout<<"Ciaooooooooo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! "<<geoChamber->GetVCBackFaceAngle()<<G4endl;
   if (fEnableTPix) {
     fTPixDetector->SetMotherVolume(logicWorld);
-    // Position of TPix depends on shape of vacuum chamber
-    geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
-
-    geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
+    if (fDetectorSetup < 40) {
+      // Position of TPix depends on shape of vacuum chamber
+      geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
+      geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
+    }
     fTPixDetector->CreateGeometry();
   }
 
@@ -769,6 +781,13 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   fDetectorSetup = detectorSetup;
 
   // Here we can enable/disable detectors according to the general detector setup
+  if (fDetectorSetup < 40) {
+    fEnableSAC  = 1;
+    fEnableETag = 0;
+  } else {
+    fEnableSAC  = 0;
+    fEnableETag = 1;
+  }
 
   // Pass setup information to each detector/structure
   ECalGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);

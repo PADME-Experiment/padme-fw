@@ -22,7 +22,7 @@ ECalGeometry::ECalGeometry()
 
   fVerbose = 0; // Do not show debug output
 
-  fDetectorSetup = 1; // Default to 2019 setup
+  fDetectorSetup = 10; // Default to 2019 setup
 
   fECalSizeX = 690.*mm; // Same as front panel
   fECalSizeY = 690.*mm; // Same as pront panel

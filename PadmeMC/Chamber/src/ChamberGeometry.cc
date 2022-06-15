@@ -20,7 +20,7 @@ ChamberGeometry* ChamberGeometry::GetInstance()
 ChamberGeometry::ChamberGeometry()
 {
 
-  fDetectorSetup = 1; // Default to 2019 setup
+  fDetectorSetup = 10; // Default to 2019 setup
 
   // Some basic chamber quantities from Cesidio's CAD drawings
 

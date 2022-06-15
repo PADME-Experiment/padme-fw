@@ -20,7 +20,7 @@ TDumpGeometry::TDumpGeometry()
 
   // Inizialize default parameters
 
-  fDetectorSetup = 1; // Default to 2019 setup
+  fDetectorSetup = 10; // Default to 2019 setup
 
   fTDumpGap = 0.1*mm;
 

@@ -22,7 +22,7 @@ SACGeometry::SACGeometry()
 
   fVerbose = 0; // Do not show debug output
 
-  fDetectorSetup = 1; // Default to 2019 setup
+  fDetectorSetup = 10; // Default to 2019 setup
 
   fCrystalSizeX =  3.*cm;
   fCrystalSizeY =  3.*cm;

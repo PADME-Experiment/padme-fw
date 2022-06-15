@@ -48,6 +48,10 @@
 #pragma link C++ class TTPixMCDigi+;
 #pragma link C++ class TTPixMCEvent+;
 
+#pragma link C++ class TMCTruthEvent+;
+#pragma link C++ class TMCParticle+;
+#pragma link C++ class TMCVertex+;
+
 #pragma link C++ class TRecoEvent+;
 #pragma link C++ class TRecoVObject+;
 #pragma link C++ class TRecoVHit+;

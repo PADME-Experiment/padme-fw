@@ -111,6 +111,9 @@ public:
   G4String GetTwoPhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
   void SetTwoPhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
 
+  G4double GetDecayLength() { return fDecayLength; }
+  void SetDecayLength(G4double d) { fDecayLength = d; }
+
   void CalibrationRunEnable()  { fCalibrationRun = true; }
   void CalibrationRunDisable() { fCalibrationRun = false; }
   G4bool CalibrationRun() { return fCalibrationRun; }
@@ -126,6 +129,24 @@ public:
 
   G4double GetCalibRunRadius()  { return fCalibRunRadius; }
   void SetCalibRunRadius(G4double r)  { fCalibRunRadius  = r; }
+
+  G4double GetBeamTargetPosZ() { return fBeamTargetPosZ; }
+  void SetBeamTargetPosZ(G4double v) { fBeamTargetPosZ = v; }
+
+  G4double GetBeamTargetPosXSpread() { return fBeamTargetPosXSpread; }
+  void SetBeamTargetPosXSpread(G4double v) { fBeamTargetPosXSpread = v; }
+
+  G4double GetBeamTargetPosYSpread() { return fBeamTargetPosYSpread; }
+  void SetBeamTargetPosYSpread(G4double v) { fBeamTargetPosYSpread = v; }
+
+  G4double GetBeamTargetEmittanceX() { return fBeamTargetEmittanceX; }
+  void SetBeamTargetEmittanceX(G4double v) { fBeamTargetEmittanceX = v; }
+
+  G4double GetBeamTargetEmittanceY() { return fBeamTargetEmittanceY; }
+  void SetBeamTargetEmittanceY(G4double v) { fBeamTargetEmittanceY = v; }
+
+  G4double GetBeamTargetPathLength() { return fBeamTargetPathLength; }
+  void SetBeamTargetPathLength(G4double v) { fBeamTargetPathLength = v; }
 
 private:
 
@@ -173,6 +194,9 @@ private:
   G4int fNTwoPhotonDecaysPerBunch;
   G4String fTwoPhotonDecaysFilename;
 
+  // Displaced vertex decay length (only used in TwoGamma generation)
+  G4double fDecayLength;
+
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)
   G4bool   fCalibrationRun;
@@ -180,6 +204,14 @@ private:
   G4double fCalibRunCenterX; // X of center of cirlce 
   G4double fCalibRunCenterY; // Y of center of circle
   G4double fCalibRunRadius;  // Radius of circle
+
+  // Beam distribution at target
+  G4double fBeamTargetPosZ; // Z position (1um in front of target)
+  G4double fBeamTargetPosXSpread; // Sigma of X coordinate
+  G4double fBeamTargetPosYSpread; // Sigma of Y coordinate
+  G4double fBeamTargetEmittanceX; // Emittance X component
+  G4double fBeamTargetEmittanceY; // Emittance Y component
+  G4double fBeamTargetPathLength; // Length of path from beam origin to target
 
 };
 #endif

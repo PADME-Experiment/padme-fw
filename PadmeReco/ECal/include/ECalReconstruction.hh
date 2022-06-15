@@ -36,6 +36,7 @@ public:
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
   virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
+  virtual void ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   Int_t FindSeed(Int_t nele, Int_t * Used, Double_t* Ene);
@@ -43,6 +44,8 @@ public:
   //  vector<TRecoVCluster *> &getClusters(){return fClusters;}
   Bool_t SimulateBrokenSU(Int_t x ,Int_t y);
   Double_t EnergyResolution(Double_t energy);
+
+  Double_t compute_rms(Short_t* samples);
 
 private:
   Int_t fClusterizationAlgo;
@@ -54,9 +57,22 @@ private:
   Int_t NNoHits;
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
-  Int_t fDeteriorateEnergyResolution;
-  Int_t fIsMC;
+  //Int_t fDeteriorateEnergyResolution;
+  Int_t fDeteriorateHitEnResolution;
+  Int_t fDeteriorateHitTimeResolution;
+
+  Int_t fReproductSACbunchStructure;
+
+  Double_t fTemplate[5001];
+  Double_t fmaxValuemyTemplate;
+
   TRandom2 *r;
+  
+  TH1F *hSAC_HitTime;
+  TH1F *hCumulative;
+  Double_t fComulativeMax;
+  Double_t fTimeMin;
+  Double_t fTimeMax;
 
   //Clusters vectors
   std::vector<double> ClE;

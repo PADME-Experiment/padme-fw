@@ -25,7 +25,7 @@ void SACCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 
   PadmeVCalibration::Init(cfg, chIdMgr );
   
-  fCalibrationFile  = (int)cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 0); 
+  fCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", "config/Calibration/SAC_EnergyCalibration.txt");
   std::cout <<"Calibration File Chosen "<<fCalibrationFile<<std::endl; 
 
   ReadCalibrationConstants();
@@ -53,8 +53,9 @@ void SACCalibration::ReadCalibrationConstants(){
   char fname[50];
   //Int_t Calibration=0;
 
-  sprintf(fname,"config/Calibration/SAC_EnergyCalibration_%d.txt", fCalibrationFile);
-  Calib.open(fname);
+  //sprintf(fname,"config/Calibration/SAC_EnergyCalibration_%d.txt", fCalibrationFile);
+  //Calib.open(fname);
+  Calib.open(fCalibrationFile.Data());
   if (Calib.is_open()){
   	double temp;
   	for (int i=0;i<25;i++){

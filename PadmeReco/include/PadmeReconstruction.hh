@@ -14,6 +14,9 @@ class TRawEvent;
 class TMCEvent;
 class TRecoEvent;
 
+//class TMCTruthEvent;
+#include "TMCTruthEvent.hh"
+
 class TTargetMCEvent;
 class TEVetoMCEvent;
 class TPVetoMCEvent;
@@ -55,6 +58,9 @@ public:
   ULong64_t GetRunClock();
   UInt_t GetEventStatus();
   UInt_t GetTriggerMask();
+  Bool_t IsSimulated();
+
+  TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
 private:
 
@@ -83,6 +89,8 @@ private:
 
   TMCEvent* fMCEvent;
 
+  TMCTruthEvent* fMCTruthEvent;
+
   TTargetMCEvent*  fTargetMCEvent;
   TEVetoMCEvent*   fEVetoMCEvent;
   TPVetoMCEvent*   fPVetoMCEvent;
@@ -90,7 +98,6 @@ private:
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
-
 
   TRecoEvent*        fRecoEvent;
   TTargetRecoEvent*  fTargetRecoEvent;

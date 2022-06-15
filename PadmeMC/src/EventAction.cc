@@ -113,7 +113,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
   //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
-  
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -389,7 +389,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
 //  }
-  G4cout<<"Writing to file UBTF "<<G4endl;
+  //G4cout<<"Writing to file UBTF "<<G4endl;
   fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //  }

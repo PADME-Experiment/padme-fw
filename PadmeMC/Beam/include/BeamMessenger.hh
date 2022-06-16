@@ -77,6 +77,8 @@ private:
   G4UIcmdWithAnInteger* fSetNBhaBhaPerBunchCmd;
   G4UIcmdWithAString* fSetBhaBhaFilenameCmd;
 
+  G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
+
   G4UIcmdWithABool* fEnableCalibRunCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunEnergyCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterXCmd;
@@ -84,8 +86,8 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetCalibRunRadiusCmd;
 
   G4UIcmdWithADoubleAndUnit* fSetBeamTargetPosZCmd;
-  G4UIcmdWithADoubleAndUnit* fSetBeamTargetSigmaXCmd;
-  G4UIcmdWithADoubleAndUnit* fSetBeamTargetSigmaYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetPosXSpreadCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamTargetPosYSpreadCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamTargetEmittanceXCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamTargetEmittanceYCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamTargetPathLengthCmd;  

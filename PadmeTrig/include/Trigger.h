@@ -5,7 +5,8 @@
 #define TRIG_ERROR 1
 #define TRIG_UNDEF 2
 
-int trig_init();
+//int trig_init();
+int trig_init(char*, unsigned short int);
 int trig_end();
 int trig_get_data(void*,unsigned int*); // buffer,length
 int trig_get_temperature(float*); // temperature

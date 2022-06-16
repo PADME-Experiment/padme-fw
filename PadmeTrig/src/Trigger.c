@@ -9,8 +9,8 @@
 #include "Trigger.h"
 
 #define MSG_SIZE 4096
-#define SERVER_PORT 7
-#define SERVER_ADDRESS "192.168.60.100"
+//#define SERVER_PORT 7
+//#define SERVER_ADDRESS "192.168.60.100"
 
 #define TRIG_CMD_READ 0x00
 #define TRIG_CMD_WRITE 0x01
@@ -92,7 +92,7 @@
 
 int Trig_SockFD = 0;
 
-int trig_init()
+int trig_init(char* trigger_addr, unsigned short int trigger_port)
 {
 
   struct sockaddr_in serv_addr;
@@ -105,10 +105,12 @@ int trig_init()
  
   // Set protocol and port
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(SERVER_PORT);
+  //serv_addr.sin_port = htons(SERVER_PORT);
+  serv_addr.sin_port = htons(trigger_port);
      
   // Convert IPv4 and IPv6 addresses from text to binary form
-  if ( inet_pton(AF_INET,SERVER_ADDRESS,&serv_addr.sin_addr) <= 0 ) {
+  //if ( inet_pton(AF_INET,SERVER_ADDRESS,&serv_addr.sin_addr) <= 0 ) {
+  if ( inet_pton(AF_INET,trigger_addr,&serv_addr.sin_addr) <= 0 ) {
     perror("Error converting address");
     return TRIG_ERROR;
   }

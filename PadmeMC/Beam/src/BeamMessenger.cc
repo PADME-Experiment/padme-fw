@@ -199,6 +199,13 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
   fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
+  fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
+  fSetDecayLengthCmd->SetParameterName("DL",false);
+  fSetDecayLengthCmd->SetDefaultUnit("mm");
+  fSetDecayLengthCmd->SetRange("DL >= 0.");
+  fSetDecayLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableCalibRunCmd = new G4UIcmdWithABool("/beam/calibration",this);
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
   fEnableCalibRunCmd->SetParameterName("CR",false);
@@ -239,19 +246,19 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamTargetPosZCmd->SetRange("TZ >= 500. && TZ <= 2000.");
   fSetBeamTargetPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamTargetSigmaXCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_x_spread",this);
-  fSetBeamTargetSigmaXCmd->SetGuidance("Set X position spread at Target.");
-  fSetBeamTargetSigmaXCmd->SetParameterName("TSX",false);
-  fSetBeamTargetSigmaXCmd->SetDefaultUnit("mm");
-  fSetBeamTargetSigmaXCmd->SetRange("TSX >= 0. && TSX <= 100.");
-  fSetBeamTargetSigmaXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetBeamTargetPosXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_x_spread",this);
+  fSetBeamTargetPosXSpreadCmd->SetGuidance("Set X position spread at Target.");
+  fSetBeamTargetPosXSpreadCmd->SetParameterName("TSX",false);
+  fSetBeamTargetPosXSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamTargetPosXSpreadCmd->SetRange("TSX >= 0. && TSX <= 100.");
+  fSetBeamTargetPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
-  fSetBeamTargetSigmaYCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_y_spread",this);
-  fSetBeamTargetSigmaYCmd->SetGuidance("Set Y position spread at Target.");
-  fSetBeamTargetSigmaYCmd->SetParameterName("TSY",false);
-  fSetBeamTargetSigmaYCmd->SetDefaultUnit("mm");
-  fSetBeamTargetSigmaYCmd->SetRange("TSY >= 0. && TSY <= 100.");
-  fSetBeamTargetSigmaYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  fSetBeamTargetPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_y_spread",this);
+  fSetBeamTargetPosYSpreadCmd->SetGuidance("Set Y position spread at Target.");
+  fSetBeamTargetPosYSpreadCmd->SetParameterName("TSY",false);
+  fSetBeamTargetPosYSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamTargetPosYSpreadCmd->SetRange("TSY >= 0. && TSY <= 100.");
+  fSetBeamTargetPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamTargetPathLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_path_length",this);
   fSetBeamTargetPathLengthCmd->SetGuidance("Set length of path from beam origin to Target.");
@@ -312,6 +319,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetNTwoPhotonDecaysPerBunchCmd;
   delete fSetTwoPhotonDecaysFilenameCmd;
 
+  delete fSetDecayLengthCmd;
+
   delete fEnableCalibRunCmd;
   delete fSetCalibRunEnergyCmd;
   delete fSetCalibRunCenterXCmd;
@@ -319,8 +328,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetCalibRunRadiusCmd;
 
   delete fSetBeamTargetPosZCmd;
-  delete fSetBeamTargetSigmaXCmd;
-  delete fSetBeamTargetSigmaYCmd;
+  delete fSetBeamTargetPosXSpreadCmd;
+  delete fSetBeamTargetPosYSpreadCmd;
   delete fSetBeamTargetEmittanceXCmd;
   delete fSetBeamTargetEmittanceYCmd;
   delete fSetBeamTargetPathLengthCmd;
@@ -439,6 +448,9 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBhaBhaFilenameCmd )
     fBeamParameters->SetBhaBhaFilename(par);
 
+  else if ( cmd == fSetDecayLengthCmd )
+    fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));
+
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {
       fBeamParameters->CalibrationRunEnable();
@@ -462,11 +474,11 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBeamTargetPosZCmd )
     fBeamParameters->SetBeamTargetPosZ(fSetBeamTargetPosZCmd->GetNewDoubleValue(par));
 
-  else if ( cmd == fSetBeamTargetSigmaXCmd )
-    fBeamParameters->SetBeamTargetSigmaX(fSetBeamTargetSigmaXCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamTargetPosXSpreadCmd )
+    fBeamParameters->SetBeamTargetPosXSpread(fSetBeamTargetPosXSpreadCmd->GetNewDoubleValue(par));
 
-  else if ( cmd == fSetBeamTargetSigmaYCmd )
-    fBeamParameters->SetBeamTargetSigmaY(fSetBeamTargetSigmaYCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamTargetPosYSpreadCmd )
+    fBeamParameters->SetBeamTargetPosYSpread(fSetBeamTargetPosYSpreadCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fSetBeamTargetEmittanceXCmd )
     fBeamParameters->SetBeamTargetEmittanceX(fSetBeamTargetEmittanceXCmd->GetNewDoubleValue(par));
@@ -559,6 +571,9 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
     cv = fBeamParameters->GetTwoPhotonDecaysFilename();  
 
+  else if ( cmd == fSetDecayLengthCmd )
+    cv = fSetDecayLengthCmd->ConvertToString(fBeamParameters->GetDecayLength(),"mm");
+
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
 
@@ -577,11 +592,11 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetBeamTargetPosZCmd )
     cv = fSetBeamTargetPosZCmd->ConvertToString(fBeamParameters->GetBeamTargetPosZ());
 
-  else if ( cmd == fSetBeamTargetSigmaXCmd )
-    cv = fSetBeamTargetSigmaXCmd->ConvertToString(fBeamParameters->GetBeamTargetSigmaX());
+  else if ( cmd == fSetBeamTargetPosXSpreadCmd )
+    cv = fSetBeamTargetPosXSpreadCmd->ConvertToString(fBeamParameters->GetBeamTargetPosXSpread());
 
-  else if ( cmd == fSetBeamTargetSigmaYCmd )
-    cv = fSetBeamTargetSigmaYCmd->ConvertToString(fBeamParameters->GetBeamTargetSigmaY());
+  else if ( cmd == fSetBeamTargetPosYSpreadCmd )
+    cv = fSetBeamTargetPosYSpreadCmd->ConvertToString(fBeamParameters->GetBeamTargetPosYSpread());
 
   else if ( cmd == fSetBeamTargetEmittanceXCmd )
     cv = fSetBeamTargetEmittanceXCmd->ConvertToString(fBeamParameters->GetBeamTargetEmittanceX());

@@ -47,6 +47,7 @@ ETagGeometry::ETagGeometry()
 
   fETagFrontFacePosZ = 2380.*mm; // Relative to center of magnet
   
+  fETagDigitizerName = "ETagDigitizer";
   fETagSensitiveDetectorName = "ETagSD";
 }
 

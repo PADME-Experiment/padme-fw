@@ -62,15 +62,15 @@ void ETagReconstruction::HistoInit(){
 
   char name[256];
 
-  for (int i=0; i<95; i++) { 
-    sprintf(name, "ETagDTch%dch%d",i,i+1);
-    AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
-  }
-  
-  for (int i=0; i<96; i++) { 
-    sprintf(name, "ETagCharge-%d",i);
-    AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
-  }
+//  for (int i=0; i<95; i++) { 
+//    sprintf(name, "ETagDTch%dch%d",i,i+1);
+//    AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
+//  }
+//  
+//  for (int i=0; i<96; i++) { 
+//    sprintf(name, "ETagCharge-%d",i);
+//    AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
+//  }
 
   //  AddHisto("ETagDTch1ch2",new TH1F("ETagDTch1ch2","Difference in time",100,-10.,10.));
 
@@ -110,13 +110,14 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     Int_t    digiCh = digi->GetChannelId();
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
-    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+
 
     // merge digits in the same channel closer in time than a configurable parameter (fETagDigiTimeWindow){
     Bool_t toBeMerged = false;
     if (fETagDigiTimeWindow > 0) {
       for (unsigned int ih=0; ih<fHits.size(); ++ih) {
 	if (fHits[ih]->GetChannelId() != digiCh) continue;
+	//	std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<" "<<fHits[ih]->GetChannelId()<<std::endl;
 	if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fETagDigiTimeWindow) {
 	  toBeMerged = true; // this digit must be merged with a previously defined recoHit
 	  fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
@@ -125,6 +126,7 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       }
     }
     if (!toBeMerged) {
+      std::cout<<"Pushing Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
       TRecoVHit* Hit = new TRecoVHit();
       Hit->SetChannelId(digiCh);
       Hit->SetEnergy   (digiE);
@@ -134,17 +136,16 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
     }
 
   }
-
   // last loop to correct the time 
   TRecoVHit* Hit;
   Double_t Noise=0.;
   for (unsigned int ih=0; ih<fHits.size(); ++ih) {
     Hit = fHits[ih];
     Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-    if (fSigmaNoiseForMC > 0.0001) {
-      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
-      Hit->SetEnergy(Hit->GetEnergy()+Noise);
-    }
+//    if (fSigmaNoiseForMC > 0.0001) {
+//      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+//      Hit->SetEnergy(Hit->GetEnergy()+Noise);
+//    }
   }
   // end of merge digits in the same channel closer in time than a configurable parameter (fETagDigiTimeWindow){
 

@@ -15,9 +15,12 @@
 #include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4VisAttributes.hh"
+#include "G4DigiManager.hh"
 #include "G4SubtractionSolid.hh"
+
 #include "ETagGeometry.hh"
 #include "ETagSD.hh"
+#include "ETagDigitizer.hh"
 
 ETagDetector::ETagDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -131,13 +134,12 @@ void ETagDetector::CreateGeometry()
     BarIndex++;
   }
   
-//  // Create digitizer for ETag
-//  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-//  G4String ETagDName = geo->GetPVetoDigitizerName();
-//  printf("Registering ETag Digitizer %s\n",ETagDName.data());
-//  ETagDigitizer* ETagD = new PVetoDigitizer(ETagDName);
-//  theDM->AddNewModule(ETagD);
-
+  // Create digitizer for ETag
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String ETagDName = geo->GetETagDigitizerName();
+  printf("Registering ETag Digitizer %s\n",ETagDName.data());
+  ETagDigitizer* ETagD = new ETagDigitizer(ETagDName);
+  theDM->AddNewModule(ETagD);
 
   // Make whole ETag a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();

@@ -65,6 +65,9 @@ public:
   // Set position along Z of ETag front face
   void SetETagFrontFacePosZ(G4double z) { fETagFrontFacePosZ = z; }
   
+  // Get name of ETag digitizer
+  G4String GetETagDigitizerName() { return fETagDigitizerName; }
+
   // Get name of ETag sensitive detector
   G4String GetETagSensitiveDetectorName() { return fETagSensitiveDetectorName; }
 
@@ -94,6 +97,7 @@ private:
 
   G4double fETagFrontFacePosZ; // Position along Z axis of ETag front face
   G4String fETagSensitiveDetectorName;
+  G4String fETagDigitizerName;
 
 };
 

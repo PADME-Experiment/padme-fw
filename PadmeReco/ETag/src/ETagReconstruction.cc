@@ -126,7 +126,7 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       }
     }
     if (!toBeMerged) {
-      std::cout<<"Pushing Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+      //      std::cout<<"Pushing Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
       TRecoVHit* Hit = new TRecoVHit();
       Hit->SetChannelId(digiCh);
       Hit->SetEnergy   (digiE);

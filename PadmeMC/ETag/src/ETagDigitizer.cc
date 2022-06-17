@@ -99,9 +99,9 @@ void ETagDigitizer::Digitize()
 	digi->SetLocalPosition(hLocPos*hEnergy);
 	digi->SetNHits(1);
 	digis[hChannel].push_back(digi);
-	std::cout << "Size of ETagDigi:   " << sizeof(ETagDigi ) 
-	 	  << "  Size of unsigned short:  "    << sizeof(unsigned short)
-	 	  << std::endl; 
+	//	std::cout << "Size of ETagDigi:   " << sizeof(ETagDigi ) 
+	//	 	  << "  Size of unsigned short:  "    << sizeof(unsigned short)
+	//	 	  << std::endl; 
 	
       }           
     }
@@ -126,26 +126,23 @@ void ETagDigitizer::Digitize()
       if (etot > 0.1 ) nch++;
     }
     
-    std::cout << "Number of channels fired: " << nch << "  NDigis:  "<<  eTagDigiCollection->GetSize() << std::endl;
+    //    std::cout << "Number of channels fired: " << nch << "  NDigis:  "<<  eTagDigiCollection->GetSize() << std::endl;
     
-
-
-
-  //   // Create digis if energy is not zero
-  //   for (G4int i=0;i<100;i++) {
-  //     if (dEnergy[i] > 0.) {
-  // 	ETagDigi* digi = new ETagDigi();
-  // 	digi->SetChannelId(i);
-  // 	digi->SetTime(dTime[i]);
-  // 	digi->SetTimeSpread(0.);
-  // 	digi->SetEnergy(dEnergy[i]);
-  // 	digi->SetPosition(G4ThreeVector(0.,0.,0.));
-  // 	digi->SetLocalPosition(G4ThreeVector(0.,0.,0.));
-  // 	eTagDigiCollection->insert(digi);
-  // 	digi->Print();
-  //     }
-  //   }
-  
+    // Create digis if energy is not zero
+    for (G4int i=0;i<100;i++) {
+      if (dEnergy[i] > 0.) {
+	ETagDigi* digi = new ETagDigi();
+   	digi->SetChannelId(i);
+   	digi->SetTime(dTime[i]);
+   	digi->SetTimeSpread(0.);
+   	digi->SetEnergy(dEnergy[i]);
+   	digi->SetPosition(G4ThreeVector(0.,0.,0.));
+   	digi->SetLocalPosition(G4ThreeVector(0.,0.,0.));
+   	eTagDigiCollection->insert(digi);
+   	digi->Print();
+      }
+    }
+    
   }
 
   StoreDigiCollection(eTagDigiCollection);

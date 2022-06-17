@@ -27,7 +27,7 @@ ETagReconstruction::ETagReconstruction(TFile* HistoFile, TString ConfigFileName)
 {
 
   fChannelReco = new DigitizerChannelReco();
-  fChannelCalibration = new ETagCalibration();
+  //  fChannelCalibration = new ETagCalibration();
   //fClusterization = new ETagSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new ETagGeometry();

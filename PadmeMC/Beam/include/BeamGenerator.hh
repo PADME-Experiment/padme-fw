@@ -53,7 +53,7 @@ private:
   void CreateFinalStateUboson();
   void CreateFinalStateThreeGamma(G4double);
   void CreateFinalStateTwoGamma(G4double);
-  void CreateFinalStateBhaBha();
+  void CreateFinalStateBhaBha(G4double);
   void GenerateCalibrationGamma();
 
 

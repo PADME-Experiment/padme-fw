@@ -11,12 +11,20 @@
 #include "TBranch.h"
 #include "TObjArray.h"
 #include "TH1S.h"
+#include "TProfile.h"
 
 #include "TRawEvent.hh"
 
 TH1S* GetHisto(TString name, TObjArray histos) {
   for (Int_t iH = 0; iH < histos.GetEntries(); iH++) {
     if ( ((TH1S*)histos.At(iH))->GetName() == name ) return (TH1S*)histos.At(iH);
+  }
+  return 0;
+}
+
+TProfile* GetProfile(TString name, TObjArray histos) {
+  for (Int_t iH = 0; iH < histos.GetEntries(); iH++) {
+    if ( ((TProfile*)histos.At(iH))->GetName() == name ) return (TProfile*)histos.At(iH);
   }
   return 0;
 }
@@ -173,6 +181,16 @@ int main(int argc, char* argv[])
     hList.Add(h);
   }
 
+  // Create summary profile histograms with means and RMS (32 boards)
+  TObjArray hpList(0);
+  TProfile* hp;
+  for(UChar_t b=0;b<32;b++){
+    hp = new TProfile(Form("B%02dM",b),Form("Board %d Mean",b),32,-0.5,31.5,-100.,4195.);
+    hpList.Add(hp);
+    hp = new TProfile(Form("B%02dR",b),Form("Board %d RMS",b),32,-0.5,31.5,-100.,4195.);
+    hpList.Add(hp);
+  }
+
   // Create output file for histograms
   TFile* histoFile = new TFile(outputFileName,"RECREATE");
   if(!histoFile) {
@@ -258,7 +276,23 @@ int main(int argc, char* argv[])
 	h->Reset();
 	h->SetTitle(Form("Run %d Event %d Board %d Channel %d",
 			 runNumber,evtNumber,brdId,chn->GetChannelNumber()));
-	for(UShort_t s=0;s<chn->GetNSamples();s++) h->Fill(s,chn->GetSample(s));
+	Double_t sx = 0.;
+	Double_t sx2 = 0.;
+	for(UShort_t s=0;s<chn->GetNSamples();s++) {
+	  h->Fill(s,chn->GetSample(s));
+	  if (s<994) {
+	    Double_t x = chn->GetSample(s);
+	    sx += x;
+	    sx2 += x*x;
+	  }
+	}
+	// Save mean and RMS for this channel to board profile
+	Double_t mean = sx/994.;
+	hp = GetProfile(Form("B%02dM",brdId),hpList);
+	hp->Fill(c,mean,1.);
+	Double_t rms = std::sqrt((sx2-994.*mean*mean)/993.);
+	hp = GetProfile(Form("B%02dR",brdId),hpList);
+	hp->Fill(c,rms,1.);
       }
       
       // Write board histograms to file
@@ -270,6 +304,14 @@ int main(int argc, char* argv[])
     rawEv->Clear("C");
     
   } // End loop over events
+
+  // Create summary directory for this event in output file
+  TString smrDir = "Summary";
+  histoFile->mkdir(smrDir);
+  histoFile->cd(smrDir);
+
+  // Save summary profile histograms to output file
+  hpList.Write();
 
   // Save and close output file
   printf("Closing output file\n");

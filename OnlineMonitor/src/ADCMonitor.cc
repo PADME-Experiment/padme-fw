@@ -334,24 +334,17 @@ Int_t ADCMonitor::OutputOffBeam()
   fprintf(outf,"]\n");
  
   fprintf(outf,"PLOTID ADCMon_offbeamsic\n");
-  fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ADC Off-Beam Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d %d\n",fHGroupSICOB->GetNbinsX(),fHGroupSICOB->GetNbinsY());
-  fprintf(outf,"RANGE_X %f %f\n",fHGroupSICOB->GetXaxis()->GetXmin(),fHGroupSICOB->GetXaxis()->GetXmax());
-  fprintf(outf,"RANGE_Y %f %f\n",fHGroupSICOB->GetYaxis()->GetXmin(),fHGroupSICOB->GetYaxis()->GetXmax());
-  fprintf(outf,"TITLE_X Group\n");
-  fprintf(outf,"TITLE_Y SIC\n");
-  fprintf(outf,"DATA [");
-  for(Int_t y = 1; y <= fHGroupSICOB->GetNbinsY(); y++) {
-    if (y>1) fprintf(outf,",");
-    fprintf(outf,"[");
-    for(Int_t x = 1; x <= fHGroupSICOB->GetNbinsX(); x++) {
-      if (x>1) fprintf(outf,",");
-      fprintf(outf,"%.0f",fHGroupSICOB->GetBinContent(x,y));
-    }
-    fprintf(outf,"]");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME Off-beam Events ADC Group SIC Errors - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHGroupSICOB->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHGroupSICOB->GetXaxis()->GetXmin(),fHGroupSICOB->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"DATA [ [");
+  for(Int_t b = 1; b <= fHGroupSICOB->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHGroupSICOB->GetBinContent(b,2));
   }
-  fprintf(outf,"]\n");
+  fprintf(outf,"] ]\n\n");
 
   // Close monitor file
   fclose(outf);
@@ -413,32 +406,9 @@ Int_t ADCMonitor::OutputRandom()
   }
   fprintf(outf,"]\n");
  
-  //fprintf(outf,"PLOTID ADCMon_randomsic\n");
-  //fprintf(outf,"PLOTTYPE heatmap\n");
-  //fprintf(outf,"PLOTNAME ADC Random Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  ////fprintf(outf,"CHANNELS %d 2\n",ADCMONITOR_NBOARDS*4);
-  ////fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
-  ////fprintf(outf,"RANGE_Y 0 2\n");
-  //fprintf(outf,"CHANNELS %d %d\n",fHGroupSICRM->GetNbinsX(),fHGroupSICRM->GetNbinsY());
-  //fprintf(outf,"RANGE_X %f %f\n",fHGroupSICRM->GetXaxis()->GetXmin(),fHGroupSICRM->GetXaxis()->GetXmax());
-  //fprintf(outf,"RANGE_Y %f %f\n",fHGroupSICRM->GetYaxis()->GetXmin(),fHGroupSICRM->GetYaxis()->GetXmax());
-  //fprintf(outf,"TITLE_X Group\n");
-  //fprintf(outf,"TITLE_Y SIC\n");
-  //fprintf(outf,"DATA [");
-  //for(Int_t y = 1; y <= fHGroupSICRM->GetNbinsY(); y++) {
-  //  if (y>1) fprintf(outf,",");
-  //  fprintf(outf,"[");
-  //  for(Int_t x = 1; x <= fHGroupSICRM->GetNbinsX(); x++) {
-  //    if (x>1) fprintf(outf,",");
-  //    fprintf(outf,"%.0f",fHGroupSICRM->GetBinContent(x,y));
-  //  }
-  //  fprintf(outf,"]");
-  //}
-  //fprintf(outf,"]\n");
-
   fprintf(outf,"PLOTID ADCMon_randomsic\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME ADC Random Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"PLOTNAME Random Events ADC Group SIC Errors - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
   fprintf(outf,"CHANNELS %d\n",fHGroupSICRM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHGroupSICRM->GetXaxis()->GetXmin(),fHGroupSICRM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X Counts\n");

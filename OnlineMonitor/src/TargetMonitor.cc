@@ -139,7 +139,10 @@ void TargetMonitor::Finalize()
   printf("TargetMonitor::Finalize - Total PoTs: %.0f\n",fRunPoTsTotal);
 }
 
-void TargetMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
+void TargetMonitor::Analyze(UChar_t board)
+{;}
+
+void TargetMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
   // Do not analyze off-beam events
   if (! fIsBeam) return;

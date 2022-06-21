@@ -313,18 +313,24 @@ int main(int argc, char* argv[])
       cfg->SetBoardAcceptMask(acceptMsk);
 
       // Loop over trigger groups and compute trigger times
-      for(UChar_t t = 0; t<4; t++) cfg->SetBoardTriggerTime(t,0.);
+      for(UChar_t t = 0; t<4; t++) {
+	cfg->SetBoardTriggerTime(t,0.);
+	cfg->SetBoardGroupSIC(t,0);
+      }
       if (analyzeTrigger) {
 	for(UChar_t t=0;t<nTrg;t++){
 	  TADCTrigger* trg = adcB->ADCTrigger(t);
 	  UChar_t trNr = trg->GetGroupNumber();
-	  trigger_mon->Analyze(boardId,trNr,trg->GetSamplesArray());
+	  cfg->SetBoardGroupSIC(trNr,trg->GetStartIndexCell());
+	  trigger_mon->AnalyzeChannel(boardId,trNr,trg->GetSamplesArray());
 	  cfg->SetBoardTriggerTime(trNr,trigger_mon->GetTriggerTime());
 	}
       }
       if (cfg->Verbose() > 2) {
 	printf("- Run %d Event %d Board %2d Trigger times",cfg->GetRunNumber(),cfg->GetEventNumber(),boardId);
-	for(UChar_t t=0;t<4;t++) printf("%6.1f",cfg->GetBoardTriggerTime(t));
+	for(UChar_t t=0;t<4;t++) printf(" %6.1f",cfg->GetBoardTriggerTime(t));
+	printf(" Group SICs");
+	for(UChar_t t=0;t<4;t++) printf(" %4d",cfg->GetBoardGroupSIC(t));
 	printf("\n");
       }
 
@@ -333,21 +339,37 @@ int main(int argc, char* argv[])
 	TADCChannel* chn = adcB->ADCChannel(c);
 	UChar_t chNr = chn->GetChannelNumber();
 	if (activeMsk & (1 << chNr)) {
-	  if (analyzeADC) adc_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // ADC
+	  if (analyzeADC) adc_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // ADC
 	  if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	    if (analyzeECal) ecal_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // ECal
+	    if (analyzeECal) ecal_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // ECal
 	  } else if (boardId >= 10 && boardId <= 12) {
-	    if (analyzePVeto) pveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // PVeto
+	    if (analyzePVeto) pveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // PVeto
 	  } else if (boardId == 13) {
-	    if (analyzeHEPVeto) hepveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // HEPVeto
+	    if (analyzeHEPVeto) hepveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // HEPVeto
 	  } else if (boardId >= 24 && boardId <= 26) {
-	    if (analyzeEVeto) eveto_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // EVeto
+	    if (analyzeEVeto) eveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // EVeto
 	  } else if (boardId == 27) {
-	    if (analyzeSAC) sac_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // SAC + Cosmics pads
+	    if (analyzeSAC) sac_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // SAC + Cosmics pads
 	  } else if (boardId == 28) {
-	    if (analyzeTarget) target_mon->Analyze(boardId,chNr,chn->GetSamplesArray()); // Target
+	    if (analyzeTarget) target_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // Target
 	  }
 	}
+      }
+
+      // Analyze global board quantities
+      if (analyzeADC) adc_mon->Analyze(boardId); // ADC
+      if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
+	if (analyzeECal) ecal_mon->Analyze(boardId); // ECal
+      } else if (boardId >= 10 && boardId <= 12) {
+	if (analyzePVeto) pveto_mon->Analyze(boardId); // PVeto
+      } else if (boardId == 13) {
+	if (analyzeHEPVeto) hepveto_mon->Analyze(boardId); // HEPVeto
+      } else if (boardId >= 24 && boardId <= 26) {
+	if (analyzeEVeto) eveto_mon->Analyze(boardId); // EVeto
+      } else if (boardId == 27) {
+	if (analyzeSAC) sac_mon->Analyze(boardId); // SAC + Cosmics pads
+      } else if (boardId == 28) {
+	if (analyzeTarget) target_mon->Analyze(boardId); // Target
       }
 
     }

@@ -27,6 +27,8 @@ ADCMonitor::~ADCMonitor()
   // Delete histograms
   if (fHChanRMSOB) delete fHChanRMSOB;
   if (fHChanRMSRM) delete fHChanRMSRM;
+  if (fHGroupSICOB) delete fHGroupSICOB;
+  if (fHGroupSICRM) delete fHGroupSICRM;
 
 }
 
@@ -93,7 +95,9 @@ void ADCMonitor::Initialize()
   // Create histograms
   fHChanRMSOB = new TH2D("ADC_ChanRMSOB","ADC_ChanRMSOB",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
   fHChanRMSRM = new TH2D("ADC_ChanRMSRM","ADC_ChanRMSRM",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
- 
+  fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+  fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+
   // Reset global counters
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
@@ -103,6 +107,8 @@ void ADCMonitor::Initialize()
   // Reset histograms
   fHChanRMSOB->Reset();
   fHChanRMSRM->Reset();
+  fHGroupSICOB->Reset();
+  fHGroupSICRM->Reset();
 
 }
 
@@ -215,7 +221,35 @@ void ADCMonitor::Finalize()
   printf("ADCMonitor::Finalize - Total number of random events:   %d\n",fRandomEventCount);
 }
 
-void ADCMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
+void ADCMonitor::Analyze(UChar_t board)
+{
+
+  if (fADC_map[board] == 0) return; // Only analyze enabled boards
+
+  // Check if each SIC is compatible with the other three
+  for(UChar_t t=0;t<4;t++){
+    UShort_t address = board*4+t;
+    UChar_t nok = 0;
+    for(UChar_t tt=0;tt<4;tt++){
+      if (tt==t) continue;
+      UShort_t diff = abs(fConfig->GetBoardGroupSIC(t)-fConfig->GetBoardGroupSIC(tt));
+      if ( (diff < 20) || (1024-diff < 20) ) nok++; // Keep rollover into account
+    }
+    if (nok==0) {
+      //printf("Board %d SIC:",board);
+      //for(UChar_t tt=0;tt<4;tt++) printf(" %d",fConfig->GetBoardGroupSIC(tt));
+      //printf("\n");
+      if (fIsOffBeam) fHGroupSICOB->Fill(address,1);
+      if (fIsRandom) fHGroupSICRM->Fill(address,1);
+    } else {
+      if (fIsOffBeam) fHGroupSICOB->Fill(address,0);
+      if (fIsRandom) fHGroupSICRM->Fill(address,0);
+    }
+  }
+
+}
+
+void ADCMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   if (fADC_map[board] == 0) return; // Only analyze enabled boards
@@ -293,6 +327,26 @@ Int_t ADCMonitor::OutputOffBeam()
     fprintf(outf,"]");
   }
   fprintf(outf,"]\n");
+ 
+  fprintf(outf,"PLOTID ADCMon_offbeamsic\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ADC Off-Beam Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d 100\n",ADCMONITOR_NBOARDS*4);
+  fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
+  fprintf(outf,"RANGE_Y 0 2\n");
+  fprintf(outf,"TITLE_X Group\n");
+  fprintf(outf,"TITLE_Y SIC\n");
+  fprintf(outf,"DATA [");
+  for(Int_t y = 1; y <= fHGroupSICOB->GetNbinsY(); y++) {
+    if (y>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t x = 1; x <= fHGroupSICOB->GetNbinsX(); x++) {
+      if (x>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHGroupSICOB->GetBinContent(x,y));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
 
   // Close monitor file
   fclose(outf);
@@ -349,6 +403,26 @@ Int_t ADCMonitor::OutputRandom()
     for(Int_t x = 1; x <= fHChanRMSRM->GetNbinsX(); x++) {
       if (x>1) fprintf(outf,",");
       fprintf(outf,"%.0f",fHChanRMSRM->GetBinContent(x,y));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
+ 
+  fprintf(outf,"PLOTID ADCMon_randomsic\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ADC Random Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d 100\n",ADCMONITOR_NBOARDS*4);
+  fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
+  fprintf(outf,"RANGE_Y 0 2\n");
+  fprintf(outf,"TITLE_X Group\n");
+  fprintf(outf,"TITLE_Y SIC\n");
+  fprintf(outf,"DATA [");
+  for(Int_t y = 1; y <= fHGroupSICRM->GetNbinsY(); y++) {
+    if (y>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t x = 1; x <= fHGroupSICRM->GetNbinsX(); x++) {
+      if (x>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHGroupSICRM->GetBinContent(x,y));
     }
     fprintf(outf,"]");
   }

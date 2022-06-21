@@ -80,7 +80,10 @@ void TriggerMonitor::Finalize()
 
 }
 
-void TriggerMonitor::Analyze(UChar_t board,UChar_t group,Short_t* samples)
+void TriggerMonitor::Analyze(UChar_t board)
+{;}
+
+void TriggerMonitor::AnalyzeChannel(UChar_t board,UChar_t group,Short_t* samples)
 {
 
   // Compute trigger time for this group

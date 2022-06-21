@@ -216,7 +216,10 @@ void ECalMonitor::Finalize()
   */
 }
 
-void ECalMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
+void ECalMonitor::Analyze(UChar_t board)
+{;}
+
+void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   if ( fECal_map[board][channel] == -1 ) {

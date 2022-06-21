@@ -65,6 +65,9 @@ public:
   void SetBoardTriggerTime(UChar_t n,Double_t t) { fBoardTriggerTime[n] = t; }
   Double_t GetBoardTriggerTime(UChar_t n) { return fBoardTriggerTime[n]; }
 
+  void SetBoardGroupSIC(UChar_t n,UShort_t s) { fBoardGroupSIC[n] = s; }
+  UShort_t GetBoardGroupSIC(UChar_t n) { return fBoardGroupSIC[n]; }
+
   void SetNumberOfStreams(UInt_t n) { fNumberOfStreams = n; }
   UChar_t NumberOfStreams() { return fNumberOfStreams; }
   UChar_t NumberOfStreamsMax() { return CONFIGURATION_N_STREAMS_MAX; }
@@ -123,6 +126,7 @@ private:
   UInt_t fBoardActiveMask;
   UInt_t fBoardAcceptMask;
   Double_t fBoardTriggerTime[4];
+  UShort_t fBoardGroupSIC[4];
 
   // Number of streams to use
   UChar_t fNumberOfStreams;

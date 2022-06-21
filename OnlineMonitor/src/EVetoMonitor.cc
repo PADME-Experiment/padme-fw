@@ -201,7 +201,10 @@ void EVetoMonitor::Finalize()
   printf("EVetoMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
 }
 
-void EVetoMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
+void EVetoMonitor::Analyze(UChar_t board)
+{;}
+
+void EVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   if (board < 24 || board > 26) {

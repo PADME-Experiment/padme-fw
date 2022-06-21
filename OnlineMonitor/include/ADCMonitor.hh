@@ -24,7 +24,8 @@ public:
   void Finalize();
   void StartOfEvent();
   void EndOfEvent();
-  void Analyze(UChar_t,UChar_t,Short_t*);
+  void Analyze(UChar_t);
+  void AnalyzeChannel(UChar_t,UChar_t,Short_t*);
 
 private:
 
@@ -57,8 +58,10 @@ private:
   Double_t fChannelRMS;
 
   // Histograms
-  TH2D* fHChanRMSOB;
-  TH2D* fHChanRMSRM;
+  TH2D* fHChanRMSOB; // Channel RMS off-beam
+  TH2D* fHChanRMSRM; // Channel RMS random event
+  TH2D* fHGroupSICOB; // Group SIC off-beam
+  TH2D* fHGroupSICRM; // Group SIC random event
 
   // Map of ADC to analyze (all 0 by default)
   Short_t fADC_map[ADCMONITOR_NBOARDS] = { };

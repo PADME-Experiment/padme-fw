@@ -203,7 +203,10 @@ void PVetoMonitor::Finalize()
   printf("PVetoMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
 }
 
-void PVetoMonitor::Analyze(UChar_t board,UChar_t channel,Short_t* samples)
+void PVetoMonitor::Analyze(UChar_t board)
+{;}
+
+void PVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   if (board < 10 || board > 12) {

@@ -95,8 +95,10 @@ void ADCMonitor::Initialize()
   // Create histograms
   fHChanRMSOB = new TH2D("ADC_ChanRMSOB","ADC_ChanRMSOB",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
   fHChanRMSRM = new TH2D("ADC_ChanRMSRM","ADC_ChanRMSRM",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
-  fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
-  fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+  //fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+  //fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+  fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",10*ADCMONITOR_NBOARDS,0.,10.*ADCMONITOR_NBOARDS,2,0.,2.);
+  fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",10*ADCMONITOR_NBOARDS,0.,10.*ADCMONITOR_NBOARDS,2,0.,2.);
 
   // Reset global counters
   fBeamEventCount = 0;
@@ -228,7 +230,8 @@ void ADCMonitor::Analyze(UChar_t board)
 
   // Check if each SIC is compatible with the other three
   for(UChar_t t=0;t<4;t++){
-    UShort_t address = board*4+t;
+    //UShort_t address = board*4+t;
+    UShort_t address = board*10+t;
     UChar_t nok = 0;
     for(UChar_t tt=0;tt<4;tt++){
       if (tt==t) continue;

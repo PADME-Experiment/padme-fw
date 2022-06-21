@@ -331,9 +331,9 @@ Int_t ADCMonitor::OutputOffBeam()
   fprintf(outf,"PLOTID ADCMon_offbeamsic\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
   fprintf(outf,"PLOTNAME ADC Off-Beam Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d 100\n",ADCMONITOR_NBOARDS*4);
-  fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
-  fprintf(outf,"RANGE_Y 0 2\n");
+  fprintf(outf,"CHANNELS %d %d\n",fHGroupSICOB->GetNbinsX(),fHGroupSICOB->GetNbinsY());
+  fprintf(outf,"RANGE_X %f %f\n",fHGroupSICOB->GetXaxis()->GetXmin(),fHGroupSICOB->GetXaxis()->GetXmax());
+  fprintf(outf,"RANGE_Y %f %f\n",fHGroupSICOB->GetYaxis()->GetXmin(),fHGroupSICOB->GetYaxis()->GetXmax());
   fprintf(outf,"TITLE_X Group\n");
   fprintf(outf,"TITLE_Y SIC\n");
   fprintf(outf,"DATA [");
@@ -411,9 +411,12 @@ Int_t ADCMonitor::OutputRandom()
   fprintf(outf,"PLOTID ADCMon_randomsic\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
   fprintf(outf,"PLOTNAME ADC Random Group SIC - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d 100\n",ADCMONITOR_NBOARDS*4);
-  fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
-  fprintf(outf,"RANGE_Y 0 2\n");
+  //fprintf(outf,"CHANNELS %d 2\n",ADCMONITOR_NBOARDS*4);
+  //fprintf(outf,"RANGE_X 0 %d\n",ADCMONITOR_NBOARDS*4);
+  //fprintf(outf,"RANGE_Y 0 2\n");
+  fprintf(outf,"CHANNELS %d %d\n",fHGroupSICRM->GetNbinsX(),fHGroupSICRM->GetNbinsY());
+  fprintf(outf,"RANGE_X %f %f\n",fHGroupSICRM->GetXaxis()->GetXmin(),fHGroupSICRM->GetXaxis()->GetXmax());
+  fprintf(outf,"RANGE_Y %f %f\n",fHGroupSICRM->GetYaxis()->GetXmin(),fHGroupSICRM->GetYaxis()->GetXmax());
   fprintf(outf,"TITLE_X Group\n");
   fprintf(outf,"TITLE_Y SIC\n");
   fprintf(outf,"DATA [");

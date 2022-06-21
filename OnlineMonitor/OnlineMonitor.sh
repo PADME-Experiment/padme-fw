@@ -4,7 +4,7 @@
 pause=10
 
 # Current year
-year="2021"
+year=$( date +"%Y" )
 
 # Main configuration file
 configFile="config/OnlineMonitor.cfg"

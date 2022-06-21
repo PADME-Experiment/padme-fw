@@ -655,8 +655,9 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   //  EFraction=0.95;
   EFraction = fEnergyCompensation->Eval(ECl);
   //std::cout << "fraction " << EFraction << std::endl;
-  if(ECl>1000.) EFraction=1;
-  if(ECl<30.)   EFraction=1;
+  //if(ECl>1000.) EFraction=1;
+  if(ECl>1000.) EFraction=0.96;
+  //if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   // delete fEnergyCompensation;
   return EFraction;
@@ -899,6 +900,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
   }
   //std::cout << " max template " << fmaxValuemyTemplate << std::end;
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
  int idarray[50][50];
@@ -1068,7 +1070,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
     Double_t sigmaPed=21.66;
     Double_t fAvg200=r->Gaus(meanPed, sigmaPed); // pedestal
     std::vector<double> waveLikeData;
-    Short_t wave_forDigitiser[1024]={0.};
+    Short_t wave_forDigitiser[1024]={0};
     Bool_t saturated=false;
     for(int i=0; i<1025; i++)waveLikeData.push_back(0);
     for(int ll=0;ll<1024;ll++){
@@ -1180,6 +1182,7 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
 if(fReproductSACbunchStructure){

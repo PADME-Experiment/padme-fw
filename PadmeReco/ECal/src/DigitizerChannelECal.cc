@@ -93,7 +93,7 @@ void DigitizerChannelECal::Init(GlobalRecoConfigOptions *gOptions,
   //take the template from the external file for MH reconstruction (the template is extended up to 5k ns using an exponential)
   for(int i=0; i<5000; i++) fTemplate[i]=0.;
   if (fMultihit) {
-    ifstream myfile;
+    std::ifstream myfile;
     //std::string templateFileName = "./config/BGOwaveformTemplate.txt";
     //std::cout<<"DigitizerChannelECal: reading BGO waveform template from file <"<<templateFileName<<"> "<<std::endl;
     //myfile.open (templateFileName.c_str());;
@@ -379,8 +379,8 @@ Double_t DigitizerChannelECal::CalcChargeSin(UShort_t iStart) {
 //    Ch   = GetElChID();
 //    BID  = GetBdID();      
     
-    //fAvg200  = TMath::Mean(iStart,&fSamples[0]);
-    fAvg200  = TMath::Mean(200,&fSamples[0]);   // io 23/06
+    fAvg200  = TMath::Mean(iStart,&fSamples[0]);
+    //fAvg200  = TMath::Mean(200,&fSamples[0]);   // io 23/06
     fRMS200  = TMath::RMS(iStart,&fSamples[0]);
     Zsup  = fRMS1000;  
 
@@ -762,7 +762,8 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   // IsSaturated(); //check if the event is saturated M. Raggi 03/2019
   if(fGlobalMode->GetGlobalDebugMode()) hZSupFromSw->Fill(IsZeroSup);
   if(IsZeroSup==1 && !fGlobalMode->IsPedestalMode()) return; //perform zero suppression unless you are doing pedestals
- //***********************************************
+  /*
+  //***********************************************
   // Fix a broken chip in digitizer 8 durign 2019 run
   //***********************************************
   Int_t Ch     = GetElChID();
@@ -774,6 +775,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
       Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
     }
   }
+  */
 
   fTrig = GetTrigMask();
   if(fUseOverSample){
@@ -784,7 +786,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
     HitT = CalcTimeSing(10);
   } 
   //if(GetTrigMask()!=2) CalcChargeSin(250); // io comment 22/06 (HitT-10);  //Physics in ECAL starts ~250 ns
-  if(GetTrigMask()!=2) CalcChargeSin(100); // 2020 Runs start earlier than 250ns
+  if(GetTrigMask()!=2) CalcChargeSin(80); // 2020 Runs start earlier than 250ns EL-MR 2021-06-11
   if(GetTrigMask()==2) CalcChargeSin(40);   //Cosmics in ECal start  ~40 ns
   if(IsSaturated()) IsSat=1; //check if the event is saturated M. Raggi 03/2019
   // M. Raggi going to energy with Nominal Calibration
@@ -1335,7 +1337,8 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
   Bool_t OutRMS; 
   //MakeDifferenceWaveformTeplate functionalities: take the maximum of the waveform close (20ns) to the time of maximum derivative; Shift the template so that its maximum,VTemplateMax, falls in the bin where the waveform height is vmax
   MakeDifferenceWaveformTeplate(Wave, MaxBin,TempWave, DiffVec, OutRMS);    
-  chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  //chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  chargeFirstHitFromTemplate= CalcChargeSin(80, TempWave);
   energyFirstHitFromTemplate= chargeFirstHitFromTemplate/15.;
   if(fGlobalMode->GetGlobalDebugMode()) hAmplitudeVSEnergyTemplate->Fill(energyFirstHitFromTemplate, fAmplitude);
   if(fGlobalMode->GetGlobalDebugMode()){
@@ -1434,7 +1437,8 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
     Bool_t OutRMS_SecondHit;    
     TempWave.clear(); 
     MakeDifferenceWaveformTeplate(DiffVec,SecondBinMax ,TempWave, DiffVec_SecondHit, OutRMS_SecondHit);
-    chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
+    //chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
+    chargeSecondHitFromTemplate= CalcChargeSin(80, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
     //if(SecondHit)std::cout << "DrawMeanWave.....ftimesin " << fTimeSin << "Time First Hit " << fTimeSin << " second Time " << TimeSecondHit << std::endl;
@@ -1465,7 +1469,8 @@ void DigitizerChannelECal::DrawMeanWave(UShort_t iDer, Double_t& FirstEnergy, Do
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
       MakeDifferenceWaveformTeplate(DiffVec_SecondHit, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
-      chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      //chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      chargeThirdHitFromTemplate= CalcChargeSin(80, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
       if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(DiffVec_SecondHit);
@@ -1583,7 +1588,8 @@ void DigitizerChannelECal::MakeDifferenceWaveformTeplate(std::vector<Double_t> i
    }
    }
   if(fGlobalMode->GetGlobalDebugMode()){
-    Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    //Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    Double_t tempEnergy= CalcChargeSin(80, TempWave)/15.;
     hTemplateVMaxVSEnergy_->Fill(tempEnergy, maxValueWave);
   }
  return;
@@ -1872,7 +1878,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   else{TempWave.clear(); MakeDifferenceSaturatedWaveformTeplate(Wave, fFirstSat ,TempWave, DiffVec, OutRMS,maxWave ); }
   // MaxBin= MakeDerivativeAndTakeMaxTime(iDer,nsmooth, TempWave, maxValDerivativeWaveform);   // io comment 12/05
   //MaxBin=fFirstSat;  //io comment 21/05
-  chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  //chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  chargeFirstHitFromTemplate= CalcChargeSin(80, TempWave);
   energyFirstHitFromTemplate= chargeFirstHitFromTemplate/15.;
   if(fGlobalMode->GetGlobalDebugMode()) hAmplitudeVSEnergyTemplate->Fill(energyFirstHitFromTemplate, fAmplitude);
   Int_t maxWave1= GetMaximumPosition(Wave);
@@ -1915,7 +1922,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
     else  MakeDifferenceWaveformTeplate(DiffVec,SecondBinMax ,TempWave, DiffVec_SecondHit, OutRMS_SecondHit);
     Double_t maxBin2= MakeDerivativeAndTakeMaxTime(iDer,nsmooth, TempWave, maxValDerivativeDiffForSecondHit);
     //  TimeSecondHit=maxBin2;    //io comment 12/05
-    chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
+    //chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave);
+    chargeSecondHitFromTemplate= CalcChargeSin(80, TempWave);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
     //if(SecondHit)std::cout << "DrawMeanSaturatedWave..ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
@@ -1951,7 +1959,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
       MakeDifferenceWaveformTeplate(DiffVec_SecondHit, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
-      chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      //chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      chargeThirdHitFromTemplate= CalcChargeSin(80, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
       if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(DiffVec_SecondHit);
@@ -2014,7 +2023,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   //for(int i=200; i<1000; i++) std::cout<<"Pos " <<i <<" Waveform "<< Wave.at(i) << " temp1 " <<Temp1[i] << " template " <<TempWave.at(i) << " DiffVec " << " value " << DiffVec.at(i) << std::endl;
 
   Double_t MaxBinDerivative= MakeDerivativeAndTakeMaxTime(iDer,nsmooth, TempWave, maxValDerivativeWaveform);
-  chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  //chargeFirstHitFromTemplate= CalcChargeSin(250, TempWave);
+  chargeFirstHitFromTemplate= CalcChargeSin(80, TempWave);
   energyFirstHitFromTemplate= chargeFirstHitFromTemplate/15.;
   if(fGlobalMode->GetGlobalDebugMode()) hAmplitudeVSEnergyTemplate->Fill(energyFirstHitFromTemplate, fAmplitude);
   Int_t maxWave1= GetMaximumPosition(Wave);
@@ -2043,7 +2053,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
   Double_t TimeSecondHit= positionSecondSat*fTimeBin; 
   // Double_t TimeSecondHit= MakeDerivativeAndTakeMaxTime(iDer,nsmooth, TempWave2, maxValDerivativeWaveform2);   //io comment 12/05
   Double_t DiffFirstSecondHit= TimeFirstHit-TimeSecondHit; 
- chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave2);
+  //chargeSecondHitFromTemplate= CalcChargeSin(250, TempWave2);
+  chargeSecondHitFromTemplate= CalcChargeSin(80, TempWave2);
     energySecondHitFromTemplate= chargeSecondHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV 
     if(energySecondHitFromTemplate>fEnThrToDefineHit)SecondHit=true;
     //if(SecondHit)std::cout << "DrawMean2SaturatedWave...ftimesin " << fTimeSin << "Time First Hit " << TimeFirstHit << " second Time " << TimeSecondHit << std::endl;
@@ -2072,7 +2083,8 @@ void DigitizerChannelECal::DrawMeanSaturatedWave(UShort_t iDer, Double_t& FirstE
       Bool_t OutRMS_ThirdHit;    
       TempWave.clear(); 
       MakeDifferenceWaveformTeplate(/*waveNoSaturated*/Wave, TimeThirdHit,TempWave, DiffVec_ThirdHit, OutRMS_ThirdHit);
-      chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      //chargeThirdHitFromTemplate= CalcChargeSin(250, TempWave);
+      chargeThirdHitFromTemplate= CalcChargeSin(80, TempWave);
       energyThirdHitFromTemplate= chargeThirdHitFromTemplate/15.; //going from pC to MeV using 15pC/MeV
       if(energyThirdHitFromTemplate> fEnThrToDefineHit )  ThirdHit=true; 
       Int_t maxWave3= GetMaximumPosition(waveNoSaturated);
@@ -2207,7 +2219,8 @@ void DigitizerChannelECal::MakeDifferenceSaturatedWaveformTeplate(std::vector<Do
    }
    }
   if(fGlobalMode->GetGlobalDebugMode()){
-    Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    //Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    Double_t tempEnergy= CalcChargeSin(80, TempWave)/15.;
     hTemplateVMaxVSEnergy_->Fill(tempEnergy, NormFactor*maxValue);
   }
  return;
@@ -2458,7 +2471,8 @@ void DigitizerChannelECal::MakeDifferenceSaturatedWaveformTeplate(std::vector<Do
    }
    }
   if(fGlobalMode->GetGlobalDebugMode()){
-    Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    //Double_t tempEnergy= CalcChargeSin(250, TempWave)/15.;
+    Double_t tempEnergy= CalcChargeSin(80, TempWave)/15.;
     hTemplateVMaxVSEnergy_->Fill(tempEnergy, NormFactor*maxValue);
   }
  return;

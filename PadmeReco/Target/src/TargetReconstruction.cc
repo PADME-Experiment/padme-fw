@@ -168,6 +168,7 @@ void TargetReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 {
   //PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   for (Int_t ich=0; ich<32; ++ich) {
@@ -615,7 +616,8 @@ void TargetReconstruction::ReconstructBeam(){
   if(RunII) BeamMultiplicity =   (Qy- Hits[31]->GetEnergy())/2  * 75000 / 15000  ;//run II subtract central strip
   double nominalCCD = 12.;//in micron 
   double chargeToNPOT = 1./1.60217662e-7/nominalCCD/36.;
-  BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;
+  //BeamMultiplicity =  BeamMultiplicity * chargeToNPOT;
+  BeamMultiplicity =  BeamMultiplicity * chargeToNPOT * 72000/72240 + 2000; // From Oliva thesis fit.
   float ErrBeamMultiplicity=sqrt(BeamMultiplicity);
   fTargetRecoBeam->setPOT(BeamMultiplicity, ErrBeamMultiplicity);
   //std::cout<<" nPOT set to "<<BeamMultiplicity<<std::endl;
@@ -776,8 +778,8 @@ void TargetReconstruction::ReconstructBeam(){
 
 */
 
-  
-  
+  if (fitFcn) delete fitFcn;
+ 
 }
 
 

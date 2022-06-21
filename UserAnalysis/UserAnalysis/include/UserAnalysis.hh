@@ -6,6 +6,8 @@
 
 class HistoSvc;
 class NPoTAnalysis;
+class IsGGAnalysis;
+class Is3GAnalysis;
 
 class UserAnalysis {
 
@@ -31,6 +33,8 @@ private:
   HistoSvc* fHS;
 
   NPoTAnalysis* fNPoTAnalysis;
+  IsGGAnalysis* fIsGGAnalysis;
+  Is3GAnalysis* fIs3GAnalysis;
 
 };
 #endif

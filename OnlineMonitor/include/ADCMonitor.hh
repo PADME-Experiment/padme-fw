@@ -29,7 +29,7 @@ public:
 
 private:
 
-  void ComputeChannelRMS(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelMeanRMS(UChar_t,UChar_t,Short_t*);
 
   Int_t OutputBeam();
   Int_t OutputOffBeam();
@@ -54,10 +54,13 @@ private:
   UInt_t fRandomEventCount;
   UInt_t fRandomOutputRate;
 
-  // RMS of current channel
+  // Mean and RMS of current channel
+  Double_t fChannelMean;
   Double_t fChannelRMS;
 
   // Histograms
+  TH2D* fHChanMeanOB; // Channel mean off-beam
+  TH2D* fHChanMeanRM; // Channel mean random event
   TH2D* fHChanRMSOB; // Channel RMS off-beam
   TH2D* fHChanRMSRM; // Channel RMS random event
   TH2D* fHGroupSICOB; // Group SIC off-beam

@@ -25,8 +25,10 @@ ADCMonitor::~ADCMonitor()
   if (fConfigParser) { delete fConfigParser; fConfigParser = 0; }
 
   // Delete histograms
-  if (fHChanRMSOB) delete fHChanRMSOB;
-  if (fHChanRMSRM) delete fHChanRMSRM;
+  if (fHChanMeanOB) delete fHChanMeanOB;
+  if (fHChanMeanRM) delete fHChanMeanRM;
+  if (fHChanRMSOB)  delete fHChanRMSOB;
+  if (fHChanRMSRM)  delete fHChanRMSRM;
   if (fHGroupSICOB) delete fHGroupSICOB;
   if (fHGroupSICRM) delete fHGroupSICRM;
 
@@ -93,10 +95,10 @@ void ADCMonitor::Initialize()
   }
 
   // Create histograms
-  fHChanRMSOB = new TH2D("ADC_ChanRMSOB","ADC_ChanRMSOB",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
-  fHChanRMSRM = new TH2D("ADC_ChanRMSRM","ADC_ChanRMSRM",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
-  //fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
-  //fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",4*ADCMONITOR_NBOARDS,0.,4.*ADCMONITOR_NBOARDS,2,0.,2.);
+  fHChanMeanOB = new TH2D("ADC_ChanMeanOB","ADC_ChanMeanOB",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,4096.);
+  fHChanMeanRM = new TH2D("ADC_ChanMeanRM","ADC_ChanMeanRM",32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,4096.);
+  fHChanRMSOB  = new TH2D("ADC_ChanRMSOB", "ADC_ChanRMSOB", 32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
+  fHChanRMSRM  = new TH2D("ADC_ChanRMSRM", "ADC_ChanRMSRM", 32*ADCMONITOR_NBOARDS,0.,32.*ADCMONITOR_NBOARDS,100,0.,100.);
   fHGroupSICOB = new TH2D("ADC_GroupSICOB","ADC_GroupSICOB",10*ADCMONITOR_NBOARDS,0.,10.*ADCMONITOR_NBOARDS,2,0.,2.);
   fHGroupSICRM = new TH2D("ADC_GroupSICRM","ADC_GroupSICRM",10*ADCMONITOR_NBOARDS,0.,10.*ADCMONITOR_NBOARDS,2,0.,2.);
 
@@ -107,6 +109,8 @@ void ADCMonitor::Initialize()
   fRandomEventCount = 0;
 
   // Reset histograms
+  fHChanMeanOB->Reset();
+  fHChanMeanRM->Reset();
   fHChanRMSOB->Reset();
   fHChanRMSRM->Reset();
   fHGroupSICOB->Reset();
@@ -172,6 +176,7 @@ void ADCMonitor::EndOfEvent()
       OutputOffBeam();
 
       // Reset histograms
+      fHChanMeanOB->Reset();
       fHChanRMSOB->Reset();
       fHGroupSICOB->Reset();
 
@@ -204,6 +209,7 @@ void ADCMonitor::EndOfEvent()
       OutputRandom();
 
       // Reset histograms
+      fHChanMeanRM->Reset();
       fHChanRMSRM->Reset();
       fHGroupSICRM->Reset();
 
@@ -262,24 +268,30 @@ void ADCMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 
   // Compute full signal RMS for off-beam and random events
   if (fIsOffBeam || fIsRandom) {
-    ComputeChannelRMS(board,channel,samples);
-    if (fIsOffBeam) fHChanRMSOB->Fill(address,fChannelRMS);
-    if (fIsRandom) fHChanRMSRM->Fill(address,fChannelRMS);
+    ComputeChannelMeanRMS(board,channel,samples);
+    if (fIsOffBeam) {
+      fHChanMeanOB->Fill(address,fChannelMean);
+      fHChanRMSOB->Fill(address,fChannelRMS);
+    }
+    if (fIsRandom) {
+      fHChanMeanRM->Fill(address,fChannelMean);
+      fHChanRMSRM->Fill(address,fChannelRMS);
+    }
   }
 
 }
 
-void ADCMonitor::ComputeChannelRMS(UChar_t board,UChar_t channel,Short_t* samples)
+void ADCMonitor::ComputeChannelMeanRMS(UChar_t board,UChar_t channel,Short_t* samples)
 {
-  // Get full channel RMS from first 994 samples
+  // Get channel mean and RMS from first 994 samples
   Long64_t sum = 0;
   Long64_t sum2 = 0;
   for(UInt_t s = 0; s<994; s++) {
     sum += samples[s];
     sum2 += samples[s]*samples[s];
   }
-  Double_t avg = (Double_t)sum/994.;
-  fChannelRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*avg)/993. );
+  fChannelMean = (Double_t)sum/994.;
+  fChannelRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*fChannelMean)/993. );
 }
 
 Int_t ADCMonitor::OutputBeam()
@@ -312,6 +324,26 @@ Int_t ADCMonitor::OutputOffBeam()
   TString ftname = fConfig->TmpDirectory()+"/ADCMon_OffBeam.txt";
   TString ffname = fConfig->OutputDirectory()+"/ADCMon_OffBeam.txt";
   FILE* outf = fopen(ftname.Data(),"a");
+ 
+  fprintf(outf,"PLOTID ADCMon_offbeammean\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ADC Off-Beam Mean - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d %d\n",fHChanMeanOB->GetNbinsX(),fHChanMeanOB->GetNbinsY());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHChanMeanOB->GetXaxis()->GetXmin(),fHChanMeanOB->GetXaxis()->GetXmax());
+  fprintf(outf,"RANGE_Y %.3f %.3f\n",fHChanMeanOB->GetYaxis()->GetXmin(),fHChanMeanOB->GetYaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y Mean\n");
+  fprintf(outf,"DATA [");
+  for(Int_t y = 1; y <= fHChanMeanOB->GetNbinsY(); y++) {
+    if (y>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t x = 1; x <= fHChanMeanOB->GetNbinsX(); x++) {
+      if (x>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHChanMeanOB->GetBinContent(x,y));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
  
   fprintf(outf,"PLOTID ADCMon_offbeamrms\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
@@ -385,6 +417,26 @@ Int_t ADCMonitor::OutputRandom()
   TString ftname = fConfig->TmpDirectory()+"/ADCMon_Random.txt";
   TString ffname = fConfig->OutputDirectory()+"/ADCMon_Random.txt";
   FILE* outf = fopen(ftname.Data(),"a");
+ 
+  fprintf(outf,"PLOTID ADCMon_randommean\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ADC Random Mean - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d %d\n",fHChanMeanRM->GetNbinsX(),fHChanMeanRM->GetNbinsY());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHChanMeanRM->GetXaxis()->GetXmin(),fHChanMeanRM->GetXaxis()->GetXmax());
+  fprintf(outf,"RANGE_Y %.3f %.3f\n",fHChanMeanRM->GetYaxis()->GetXmin(),fHChanMeanRM->GetYaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y Mean\n");
+  fprintf(outf,"DATA [");
+  for(Int_t y = 1; y <= fHChanMeanRM->GetNbinsY(); y++) {
+    if (y>1) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(Int_t x = 1; x <= fHChanMeanRM->GetNbinsX(); x++) {
+      if (x>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",fHChanMeanRM->GetBinContent(x,y));
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n");
  
   fprintf(outf,"PLOTID ADCMon_randomrms\n");
   fprintf(outf,"PLOTTYPE heatmap\n");

@@ -15,7 +15,7 @@
 #include "DigitizerChannelReco.hh"
 #include "ETagCalibration.hh"
 #include "ETagGeometry.hh"
-//#include "ETagSimpleClusterization.hh"
+#include "ETagSimpleClusterization.hh"
 #include "ADCChannelVReco.hh"
 
 #include "TH1F.h"
@@ -28,7 +28,7 @@ ETagReconstruction::ETagReconstruction(TFile* HistoFile, TString ConfigFileName)
 
   fChannelReco = new DigitizerChannelReco();
   //  fChannelCalibration = new ETagCalibration();
-  //fClusterization = new ETagSimpleClusterization();
+  fClusterization = new ETagSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new ETagGeometry();
 
@@ -224,3 +224,21 @@ void ETagReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 }
 
 
+void ETagReconstruction::BuildClusters()
+{
+
+  
+  vector<TRecoVCluster *> &myClusters  = GetClusters();
+  for(unsigned int iCl = 0;iCl < myClusters.size();iCl++){
+    delete myClusters[iCl];
+  }
+  myClusters.clear();
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  if(Hits.size()==0){
+    return;
+  }
+  //  std::cout<<"Mi chiamo Etag e sono il nuovo detector "<<std::endl;
+  if (fClusterization) fClusterization->Reconstruct(Hits, myClusters);
+  
+}

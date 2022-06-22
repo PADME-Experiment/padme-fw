@@ -68,6 +68,16 @@ void StdNtuple::Book()
   fNtuple->Branch("NTPVeto_Hits_Xpos",     &(fMyEvt.NTPVeto_Hits_Xpos),     "NTPVeto_Hits_Xpos[NTNPVeto_Hits]/D");
   fNtuple->Branch("NTPVeto_Hits_Ypos",     &(fMyEvt.NTPVeto_Hits_Ypos),     "NTPVeto_Hits_Ypos[NTNPVeto_Hits]/D");
   fNtuple->Branch("NTPVeto_Hits_Zpos",     &(fMyEvt.NTPVeto_Hits_Zpos),     "NTPVeto_Hits_Zpos[NTNPVeto_Hits]/D");
+  //M.R. 06/22
+  fNtuple->Branch("NTETag_Hits",          &(fMyEvt.NTNETag_Hits),         "NTNETag_Hits/I");
+  fNtuple->Branch("NTETag_Hits_ChannelId",&(fMyEvt.NTETag_Hits_ChannelId),"NTETag_Hits_ChannelId[NTNPVeto_Hits]/I");
+  fNtuple->Branch("NTETag_Hits_Energy",   &(fMyEvt.NTETag_Hits_Energy),   "NTETag_Hits_Energy[NTNPVeto_Hits]/D");
+  fNtuple->Branch("NTETag_Hits_Time",     &(fMyEvt.NTETag_Hits_Time),     "NTETag_Hits_Time[NTNPVeto_Hits]/D");
+  fNtuple->Branch("NTETag_Hits_Xpos",     &(fMyEvt.NTETag_Hits_Xpos),     "NTETag_Hits_Xpos[NTNPVeto_Hits]/D");
+  fNtuple->Branch("NTETag_Hits_Ypos",     &(fMyEvt.NTETag_Hits_Ypos),     "NTETag_Hits_Ypos[NTNPVeto_Hits]/D");
+  fNtuple->Branch("NTETag_Hits_Zpos",     &(fMyEvt.NTETag_Hits_Zpos),     "NTETag_Hits_Zpos[NTNPVeto_Hits]/D");
+
+
 
   fNtuple->Branch("NTNPVeto_Clusters",         &(fMyEvt.NTNPVeto_Clusters),         "NTNPVeto_Clusters/I");
   fNtuple->Branch("NTPVeto_Clusters_ChannelId",&(fMyEvt.NTPVeto_Clusters_ChannelId),"NTPVeto_Clusters_ChannelId[NTNPVeto_Clusters]/I");

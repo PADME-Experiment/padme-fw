@@ -1,7 +1,7 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2022-06-16
+// Created by Mauro Raggi (mauro.raggi@roma1.infn.it) 2022-06-16
 //
 // --------------------------------------------------------------
 #include "Riostream.h"
@@ -14,6 +14,13 @@ ETagGeometry::ETagGeometry()
   : PadmeVGeometry()
 {
   std::cout<<"ETagGeometry being created ............"<<std::endl ;
+//  fBarSizeX         = (double)cfg->GetParOrDefault("GEOMETRY","BarSizeX",10. );
+//  fBarSizeY         = (double)cfg->GetParOrDefault("GEOMETRY","BarSizeY",178.);
+//  fBarSizeZ         = (double)cfg->GetParOrDefault("GEOMETRY","BarSizeZ",10. );
+//  fETagInnerFacePosX  = (double)cfg->GetParOrDefault("GEOMETRY","ETagInnerFacePosX",3000.);
+//  fETagInnerFacePosZ  = (double)cfg->GetParOrDefault("GEOMETRY","ETagInnerFacePosZ",3000.);
+
+
 }
 
 void ETagGeometry::Init(PadmeVRecoConfig* cfg, RecoVChannelID* chIdMgr)

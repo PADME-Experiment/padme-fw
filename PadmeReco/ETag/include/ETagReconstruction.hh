@@ -9,7 +9,7 @@
 
 #include "PadmeVReconstruction.hh"
 #include "TRandom2.h"
-
+class ETagSimpleClusterization;
 
 class ETagReconstruction : public PadmeVReconstruction
 {
@@ -22,12 +22,14 @@ public:
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent*);
   void ConvertMCDigitsToRecoHits(TMCVEvent*,TMCEvent*);
+  void BuildClusters();
 
 private:
 
   TRandom2* random;
   Double_t fSigmaNoiseForMC;
   Double_t fETagDigiTimeWindow;
+  ETagSimpleClusterization *fClusterization;
 
 };
 #endif

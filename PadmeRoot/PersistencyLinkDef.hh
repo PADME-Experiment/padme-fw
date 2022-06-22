@@ -62,6 +62,7 @@
 #pragma link C++ class TRecoVClusCollection+;
 #pragma link C++ class TRecoVCluster+;
 #pragma link C++ class TETagRecoEvent+;
+
 #pragma link C++ class TPVetoRecoEvent+;
 #pragma link C++ class TEVetoRecoEvent+;
 #pragma link C++ class THEPVetoRecoEvent+;
@@ -71,10 +72,12 @@
 #pragma link C++ class TTargetRecoBeam+;
 #pragma link C++ class TTargetSignalFitParams+;
 #pragma link C++ class TTargetFitEvent+;
+
 #pragma link C++ class TSACClusCollection+;
 #pragma link C++ class TECalClusCollection+;
 #pragma link C++ class TPVetoClusCollection+;
 #pragma link C++ class TEVetoClusCollection+;
+#pragma link C++ class TETagClusCollection+;
 #pragma link C++ class THEPVetoClusCollection+;
 
 

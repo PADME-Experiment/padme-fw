@@ -123,6 +123,10 @@ Bool_t IsGGAnalysis::Process(){
   //Cut on physics trigger Data Only
   if( !(trigMask & (1 << 0)) && isMC==false) return false;
 
+
+  //ETag Checks
+  Int_t NETagClusters =fEvent->ETagRecoCl->GetNElements();
+  std::cout<<"NETag clusters "<<NETagClusters<<std::endl;
   //Calo-Calo checks
   Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
   ETotECal=0;

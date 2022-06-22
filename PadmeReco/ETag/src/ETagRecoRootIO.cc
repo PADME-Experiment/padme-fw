@@ -3,7 +3,7 @@
 
 #include "TETagRecoEvent.hh"
 #include "ETagReconstruction.hh"
-//#include "TETagClusCollection.hh"
+#include "TETagClusCollection.hh"
 
 #include "TString.h"
 #include "TVector3.h"
@@ -16,7 +16,7 @@ ETagRecoRootIO::ETagRecoRootIO()
   : RecoVRootIO(TString("ETag"))
 {
   fEvent = new TETagRecoEvent();
-  //fClusColl = new TETagClusCollection();
+  fClusColl = new TETagClusCollection();
 
   TTree::SetBranchStyle(fBranchStyle);
 

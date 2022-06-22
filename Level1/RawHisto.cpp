@@ -215,8 +215,12 @@ int main(int argc, char* argv[])
     }
 
     // Create directory for this event in output file
-    TString evtDir = Form("%d/",evtNumber);
+    TString evtDir = Form("E%d/",evtNumber);
     histoFile->mkdir(evtDir);
+
+    // Check if this event is a BTF event
+    Bool_t isBTFEvent = false;
+    if (rawEv->GetEventTrigMask() & 0x01) isBTFEvent = true;
 
     // Show event header
     if (verbose>0) {
@@ -235,7 +239,7 @@ int main(int argc, char* argv[])
       if ( (boards.size() > 0) && (std::count(boards.begin(),boards.end(),brdId) == 0) ) continue;
 
       // Create subdirectory for this board in output file
-      TString brdDir = Form("%d/%d/",evtNumber,brdId);
+      TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
       histoFile->mkdir(brdDir);
       histoFile->cd(brdDir);
 
@@ -286,13 +290,15 @@ int main(int argc, char* argv[])
 	    sx2 += x*x;
 	  }
 	}
-	// Save mean and RMS for this channel to board profile
-	Double_t mean = sx/994.;
-	hp = GetProfile(Form("B%02dM",brdId),hpList);
-	hp->Fill(c,mean,1.);
-	Double_t rms = std::sqrt((sx2-994.*mean*mean)/993.);
-	hp = GetProfile(Form("B%02dR",brdId),hpList);
-	hp->Fill(c,rms,1.);
+	// Save mean and RMS for this channel to board profile only if this is not a physics event
+	if (! isBTFEvent) {
+	  Double_t mean = sx/994.;
+	  hp = GetProfile(Form("B%02dM",brdId),hpList);
+	  hp->Fill(c,mean,1.);
+	  Double_t rms = std::sqrt((sx2-994.*mean*mean)/993.);
+	  hp = GetProfile(Form("B%02dR",brdId),hpList);
+	  hp->Fill(c,rms,1.);
+	}
       }
       
       // Write board histograms to file

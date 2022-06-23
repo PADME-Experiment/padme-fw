@@ -10,7 +10,7 @@ public:
   PVetoCluster();
   ~PVetoCluster(){};
 
-  int InsertHit(PVetoClusterHits hit, int ihit);
+  int InsertHit(PVetoClusterHits hit, int ihit, double seedtime);
   std::vector<int> GetHitIndex(){
     return hitIndexVector;
   }
@@ -33,6 +33,9 @@ public:
   double earlyhittime;
   double latehittime;
   double energy;
+  double seedtime;
+  double seedch;
+  double seedenergy;
   int nhits;
   
 };
@@ -63,7 +66,7 @@ private:
   std::vector<PVetoClusterHits> HitVec;
   std::vector<PVetoCluster*> ClusVec;
   std::vector<int> HitIndexVec;
-  double ClusterDeltaT=4;//1.5;//maximum time difference between hits in the same cluster
+  double ClusterDeltaT=2;//maximum time difference between hits in the same cluster, as of May 2022 with Beth's digitizer the resolution of PVeto wrt SAC is 0.4 ns
 };
  
 #endif

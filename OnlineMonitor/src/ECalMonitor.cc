@@ -216,7 +216,7 @@ void ECalMonitor::Finalize()
   */
 }
 
-void ECalMonitor::Analyze(UChar_t board)
+void ECalMonitor::AnalyzeBoard(UChar_t board)
 {;}
 
 void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)

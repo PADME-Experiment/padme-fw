@@ -24,7 +24,7 @@ public:
   void Finalize();
   void StartOfEvent();
   void EndOfEvent();
-  void Analyze(UChar_t);
+  void AnalyzeBoard(UChar_t);
   void AnalyzeChannel(UChar_t,UChar_t,Short_t*);
 
 private:

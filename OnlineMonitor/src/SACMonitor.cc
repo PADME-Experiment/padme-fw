@@ -316,7 +316,7 @@ void SACMonitor::Finalize()
   printf("SACMonitor::Finalize - Total number of random events: %d\n",fRandomEventCount);
 }
 
-void SACMonitor::Analyze(UChar_t board)
+void SACMonitor::AnalyzeBoard(UChar_t board)
 {;}
 
 void SACMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)

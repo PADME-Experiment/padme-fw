@@ -8,6 +8,7 @@
 #include "Configuration.hh"
 #include "InputHandler.hh"
 #include "ECalMonitor.hh"
+#include "ETagMonitor.hh"
 #include "EVetoMonitor.hh"
 #include "PVetoMonitor.hh"
 #include "HEPVetoMonitor.hh"
@@ -205,6 +206,16 @@ int main(int argc, char* argv[])
     ecal_mon = new ECalMonitor(configFileECal);
   }
 
+  // Configure ETag analyzer
+  Bool_t analyzeETag = true;
+  ETagMonitor* etag_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","ETag") && (std::stoi(configParser->GetSingleArg("ANALYZE","ETag")) == 0) ) analyzeETag = false;
+  if (analyzeETag) {
+    TString configFileETag = "config/ETag.cfg";
+    if (configParser->HasConfig("CONFIGFILE","ETag")) configFileETag = configParser->GetSingleArg("CONFIGFILE","ETag");
+    etag_mon = new ETagMonitor(configFileETag);
+  }
+
   // Configure SAC analyzer
   Bool_t analyzeSAC = true;
   SACMonitor* sac_mon = 0;
@@ -291,6 +302,7 @@ int main(int argc, char* argv[])
     if (analyzeADC)     adc_mon->StartOfEvent();
     if (analyzeTarget)  target_mon->StartOfEvent();
     if (analyzeECal)    ecal_mon->StartOfEvent();
+    if (analyzeETag)    etag_mon->StartOfEvent();
     if (analyzeSAC)     sac_mon->StartOfEvent();
     if (analyzePVeto)   pveto_mon->StartOfEvent();
     if (analyzeEVeto)   eveto_mon->StartOfEvent();
@@ -322,7 +334,7 @@ int main(int argc, char* argv[])
 	  TADCTrigger* trg = adcB->ADCTrigger(t);
 	  UChar_t trNr = trg->GetGroupNumber();
 	  cfg->SetBoardGroupSIC(trNr,trg->GetStartIndexCell());
-	  trigger_mon->AnalyzeChannel(boardId,trNr,trg->GetSamplesArray());
+	  trigger_mon->AnalyzeGroup(boardId,trNr,trg->GetSamplesArray());
 	  cfg->SetBoardTriggerTime(trNr,trigger_mon->GetTriggerTime());
 	}
       }
@@ -339,38 +351,49 @@ int main(int argc, char* argv[])
 	TADCChannel* chn = adcB->ADCChannel(c);
 	UChar_t chNr = chn->GetChannelNumber();
 	if (activeMsk & (1 << chNr)) {
-	  if (analyzeADC) adc_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // ADC
-	  if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	    if (analyzeECal) ecal_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // ECal
-	  } else if (boardId >= 10 && boardId <= 12) {
-	    if (analyzePVeto) pveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // PVeto
-	  } else if (boardId == 13) {
-	    if (analyzeHEPVeto) hepveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // HEPVeto
-	  } else if (boardId >= 24 && boardId <= 26) {
-	    if (analyzeEVeto) eveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // EVeto
-	  } else if (boardId == 27) {
-	    if (analyzeSAC) sac_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // SAC + Cosmics pads
-	  } else if (boardId == 28) {
-	    if (analyzeTarget) target_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray()); // Target
-	  }
+	  // ADC
+	  if (analyzeADC) adc_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // ECal
+	  if ( analyzeECal && ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) )
+	    ecal_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // ETag
+	  if ( analyzeETag && ( boardId == 10 || boardId == 11 || boardId == 24 || boardId == 25 ) )
+	    etag_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // PVeto
+	  if ( analyzePVeto && boardId >= 10 && boardId <= 12 )
+	    pveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // HEPVeto
+	  if ( analyzeHEPVeto && boardId == 13 )
+	    hepveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // EVeto
+	  if ( analyzeEVeto && boardId >= 24 && boardId <= 26 )
+	    eveto_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // SAC
+	  if ( analyzeSAC && boardId == 27 )
+	    sac_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+	  // Target
+	  if ( analyzeTarget && boardId == 28 )
+	    target_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
 	}
       }
 
       // Analyze global board quantities
-      if (analyzeADC) adc_mon->Analyze(boardId); // ADC
-      if ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) {
-	if (analyzeECal) ecal_mon->Analyze(boardId); // ECal
-      } else if (boardId >= 10 && boardId <= 12) {
-	if (analyzePVeto) pveto_mon->Analyze(boardId); // PVeto
-      } else if (boardId == 13) {
-	if (analyzeHEPVeto) hepveto_mon->Analyze(boardId); // HEPVeto
-      } else if (boardId >= 24 && boardId <= 26) {
-	if (analyzeEVeto) eveto_mon->Analyze(boardId); // EVeto
-      } else if (boardId == 27) {
-	if (analyzeSAC) sac_mon->Analyze(boardId); // SAC + Cosmics pads
-      } else if (boardId == 28) {
-	if (analyzeTarget) target_mon->Analyze(boardId); // Target
-      }
+      //ADC
+      if (analyzeADC) adc_mon->AnalyzeBoard(boardId);
+      // ECal
+      if ( analyzeECal    && ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) ) ecal_mon->AnalyzeBoard(boardId);
+      // ETag
+      if ( analyzeETag    && ( boardId == 10 || boardId == 11 || boardId == 24 || boardId == 25 ) ) etag_mon->AnalyzeBoard(boardId);
+      // PVeto
+      if ( analyzePVeto   && boardId >= 10 && boardId <= 12 ) pveto_mon->AnalyzeBoard(boardId);
+      // HEPVeto
+      if ( analyzeHEPVeto && boardId == 13) hepveto_mon->AnalyzeBoard(boardId);
+      // EVeto
+      if ( analyzeEVeto   && boardId >= 24 && boardId <= 26) eveto_mon->AnalyzeBoard(boardId);
+      // SAC
+      if ( analyzeSAC     && boardId == 27) sac_mon->AnalyzeBoard(boardId);
+      // Target
+      if ( analyzeTarget  && boardId == 28) target_mon->AnalyzeBoard(boardId);
 
     }
 
@@ -382,6 +405,7 @@ int main(int argc, char* argv[])
     if (analyzeADC)     adc_mon->EndOfEvent();
     if (analyzeTarget)  target_mon->EndOfEvent();
     if (analyzeECal)    ecal_mon->EndOfEvent();
+    if (analyzeETag)    etag_mon->EndOfEvent();
     if (analyzeSAC)     sac_mon->EndOfEvent();
     if (analyzePVeto)   pveto_mon->EndOfEvent();
     if (analyzeEVeto)   eveto_mon->EndOfEvent();
@@ -400,6 +424,7 @@ int main(int argc, char* argv[])
   if (analyzeADC)     adc_mon->Finalize();
   if (analyzeTarget)  target_mon->Finalize();
   if (analyzeECal)    ecal_mon->Finalize();
+  if (analyzeETag)    etag_mon->Finalize();
   if (analyzeSAC)     sac_mon->Finalize();
   if (analyzePVeto)   pveto_mon->Finalize();
   if (analyzeEVeto)   eveto_mon->Finalize();
@@ -426,6 +451,7 @@ int main(int argc, char* argv[])
   if (adc_mon)     delete adc_mon;
   if (target_mon)  delete target_mon;
   if (ecal_mon)    delete ecal_mon;
+  if (etag_mon)    delete etag_mon;
   if (sac_mon)     delete sac_mon;
   if (pveto_mon)   delete pveto_mon;
   if (eveto_mon)   delete eveto_mon;

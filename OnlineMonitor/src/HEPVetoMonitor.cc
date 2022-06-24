@@ -201,7 +201,7 @@ void HEPVetoMonitor::Finalize()
   printf("HEPVetoMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
 }
 
-void HEPVetoMonitor::Analyze(UChar_t board)
+void HEPVetoMonitor::AnalyzeBoard(UChar_t board)
 {;}
 
 void HEPVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)

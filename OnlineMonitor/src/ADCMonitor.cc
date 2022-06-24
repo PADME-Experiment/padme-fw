@@ -231,7 +231,7 @@ void ADCMonitor::Finalize()
   printf("ADCMonitor::Finalize - Total number of random events:   %d\n",fRandomEventCount);
 }
 
-void ADCMonitor::Analyze(UChar_t board)
+void ADCMonitor::AnalyzeBoard(UChar_t board)
 {
 
   if (fADC_map[board] == 0) return; // Only analyze enabled boards

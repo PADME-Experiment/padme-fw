@@ -31,7 +31,6 @@ private:
 
   void ComputeChannelEnergy(UChar_t,UChar_t,Short_t*);
   void ComputeChannelPedestal(UChar_t,UChar_t,Short_t*);
-  void ComputeChannelRMS(UChar_t,UChar_t,Short_t*);
   void FindChannelPeaks(UChar_t,UChar_t,Short_t*);
 
   Int_t OutputBeam();
@@ -89,15 +88,8 @@ private:
   Short_t fOffBeamWF[5][5][1024];
 
   // Histograms
-  TH1D* fHPedestal[5][5];
-  TH1D* fHPedRMS[5][5];
   TH1D* fHNPeak[5][5];
   TH1D* fHTPeak[5][5];
-  TH1D* fHPedestalOB[5][5];
-  TH1D* fHPedRMSOB[5][5];
-  TH2D* fHPedestal2;
-  TH2D* fHPedRMS2;
-  TH2D* fHSigRMS2OB;
 
   // Map from Board27/[channel] to position as yx
   Short_t fSAC_map[32] = { 00,10,20,30,40,01,11,21,31,41,02,12,22,32,42,03,13,23,33,43,04,14,24,34,44,-1,-1,-1,-1,-1,-1,-1 };

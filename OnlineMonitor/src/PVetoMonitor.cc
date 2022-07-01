@@ -28,11 +28,7 @@ PVetoMonitor::~PVetoMonitor()
 
   // Delete histograms
   for(UInt_t f=0; f<PVETO_FINGERS; f++) {
-    if (fHPedestal[f]) { delete fHPedestal[f]; fHPedestal[f] = 0; }
-    if (fHPedRMS[f]) { delete fHPedRMS[f]; fHPedRMS[f] = 0; }
     if (fHNPeaks[f]) { delete fHNPeaks[f]; fHNPeaks[f] = 0; }
-    if (fHPedestalOB[f]) { delete fHPedestalOB[f]; fHPedestalOB[f] = 0; }
-    if (fHPedRMSOB[f]) { delete fHPedRMSOB[f]; fHPedRMSOB[f] = 0; }
     if (fHNPeaksOB[f]) { delete fHNPeaksOB[f]; fHNPeaksOB[f] = 0; }
   }
 
@@ -104,19 +100,9 @@ void PVetoMonitor::Initialize()
   TString hname;
   for(UInt_t f=0; f<PVETO_FINGERS; f++) {
     // On-beam histograms
-    hname.Form("PVeto_Ped_%2.2d",f);
-    //fHPedestal[f] = new TH1D(hname.Data(),hname.Data(),200,3650.,3850.);
-    fHPedestal[f] = new TH1D(hname.Data(),hname.Data(),200,3000.,4000.);
-    hname.Form("PVeto_PedRMS_%2.2d",f);
-    fHPedRMS[f] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
     hname.Form("PVeto_NPeaks_%2.2d",f);
     fHNPeaks[f] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
     // Off-beam histograms
-    hname.Form("PVeto_PedOB_%2.2d",f);
-    //fHPedestalOB[f] = new TH1D(hname.Data(),hname.Data(),200,3650.,3850.);
-    fHPedestalOB[f] = new TH1D(hname.Data(),hname.Data(),200,3000.,4000.);
-    hname.Form("PVeto_PedRMSOB_%2.2d",f);
-    fHPedRMSOB[f] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
     hname.Form("PVeto_NPeaksOB_%2.2d",f);
     fHNPeaksOB[f] = new TH1D(hname.Data(),hname.Data(),100,0.,100.);
   }
@@ -159,9 +145,7 @@ void PVetoMonitor::EndOfEvent()
       OutputBeam();
 
       // Reset beam histograms
-      ResetPVetoMap(fHPedestal);
-      ResetPVetoMap(fHPedRMS);
-      ResetPVetoMap(fHNPeaks);
+     ResetPVetoMap(fHNPeaks);
 
       // Reset beam waveforms
       ResetPVetoWaveforms(fBeamWF);
@@ -181,8 +165,6 @@ void PVetoMonitor::EndOfEvent()
       OutputOffBeam();
 
       // Reset off-beam histograms
-      ResetPVetoMap(fHPedestalOB);
-      ResetPVetoMap(fHPedRMSOB);
       ResetPVetoMap(fHNPeaksOB);
 
       // Reset off-beam waveforms
@@ -210,10 +192,10 @@ void PVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples
 {
 
   if (board < 10 || board > 12) {
-    printf("PVetoMonitor::Analyze - WARNING - board %d does not belong to PVeto\n",board);
+    printf("PVetoMonitor::AnalyzeChannel - WARNING - board %d does not belong to PVeto\n",board);
     return;
   } else if (fPVeto_map[board-10][channel] == -1) {
-    printf("PVetoMonitor::Analyze - WARNING - board %d channel %d is disabled in the PVeto map\n",board,channel);
+    printf("PVetoMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the PVeto map\n",board,channel);
     return;
   }
 
@@ -222,14 +204,6 @@ void PVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples
 
   // Compute pedestal and RMS for this channel
   ComputeChannelPedestal(board,channel,samples);
-  if (fIsBeam) {
-    fHPedestal[f]->Fill(fChannelPedestal);
-    fHPedRMS[f]->Fill(fChannelPedRMS);
-  }
-  if (fIsOffBeam) {
-    fHPedestalOB[f]->Fill(fChannelPedestal);
-    fHPedRMSOB[f]->Fill(fChannelPedRMS);
-  }
 
   // Get energy in this channel
   ComputeChannelEnergy(board,channel,samples);
@@ -261,19 +235,6 @@ void PVetoMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples
 
 void PVetoMonitor::ComputeChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
 {
-  /*
-  // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
-  Int_t sum = 0;
-  Int_t sum_ped = 0;
-  for(UInt_t s = 0; s<994; s++) {
-    sum += samples[s];
-    if (s<100) sum_ped += samples[s];
-  }
-  fChannelEnergy = 9.94*(Double_t)sum_ped-(Double_t)sum;
-  // Convert to pC (check formula)
-  //tot = tot/(4096.*50.)*(1.E-9/1.E-12);
-  fChannelEnergy *= 4.8828E-3;
-  */
   fChannelEnergy = 0.;
 }
 
@@ -371,32 +332,6 @@ Int_t PVetoMonitor::OutputBeam()
     }
     fprintf(outf,"] ]\n\n");
 
-    fprintf(outf,"PLOTID PVetoMon_beamped_%2.2d\n",f);
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME PVeto Beam Pedestals F %2.2d - Run %d - %s\n",f,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-    fprintf(outf,"CHANNELS %d\n",fHPedestal[f]->GetNbinsX());
-    fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestal[f]->GetXaxis()->GetXmin(),fHPedestal[f]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"DATA [ [");
-    for(Int_t b = 1; b <= fHPedestal[f]->GetNbinsX(); b++) {
-      if (b>1) fprintf(outf,",");
-      fprintf(outf,"%.0f",fHPedestal[f]->GetBinContent(b));
-    }
-    fprintf(outf,"] ]\n\n");
-
-    fprintf(outf,"PLOTID PVetoMon_beampedrms_%2.2d\n",f);
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME PVeto Beam Pedestals RMS F %2.2d - Run %d - %s\n",f,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-    fprintf(outf,"CHANNELS %d\n",fHPedRMS[f]->GetNbinsX());
-    fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMS[f]->GetXaxis()->GetXmin(),fHPedRMS[f]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"DATA [ [");
-    for(Int_t b = 1; b <= fHPedRMS[f]->GetNbinsX(); b++) {
-      if (b>1) fprintf(outf,",");
-      fprintf(outf,"%.0f",fHPedRMS[f]->GetBinContent(b));
-    }
-    fprintf(outf,"] ]\n\n");
-
     fprintf(outf,"PLOTID PVetoMon_beamnpeaks_%2.2d\n",f);
     fprintf(outf,"PLOTTYPE histo1d\n");
     fprintf(outf,"PLOTNAME PVeto Beam NPeaks F %2.2d - Run %d - %s\n",f,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
@@ -449,32 +384,6 @@ Int_t PVetoMonitor::OutputOffBeam()
     for(UInt_t j = 0; j<1024; j++) {
       if (j>0) { fprintf(outf,","); }
       fprintf(outf,"[%d,%d]",j,fOffBeamWF[f][j]);
-    }
-    fprintf(outf,"] ]\n\n");
-
-    fprintf(outf,"PLOTID PVetoMon_offbeamped_%2.2d\n",f);
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME PVeto Off-Beam Pedestals F %2.2d - Run %d - %s\n",f,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-    fprintf(outf,"CHANNELS %d\n",fHPedestalOB[f]->GetNbinsX());
-    fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedestalOB[f]->GetXaxis()->GetXmin(),fHPedestalOB[f]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"DATA [ [");
-    for(Int_t b = 1; b <= fHPedestalOB[f]->GetNbinsX(); b++) {
-      if (b>1) fprintf(outf,",");
-      fprintf(outf,"%.0f",fHPedestalOB[f]->GetBinContent(b));
-    }
-    fprintf(outf,"] ]\n\n");
-
-    fprintf(outf,"PLOTID PVetoMon_offbeampedrms_%2.2d\n",f);
-    fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME PVeto Off-Beam Pedestals RMS F %2.2d - Run %d - %s\n",f,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-    fprintf(outf,"CHANNELS %d\n",fHPedRMSOB[f]->GetNbinsX());
-    fprintf(outf,"RANGE_X %.3f %.3f\n",fHPedRMSOB[f]->GetXaxis()->GetXmin(),fHPedRMSOB[f]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"DATA [ [");
-    for(Int_t b = 1; b <= fHPedRMSOB[f]->GetNbinsX(); b++) {
-      if (b>1) fprintf(outf,",");
-      fprintf(outf,"%.0f",fHPedRMSOB[f]->GetBinContent(b));
     }
     fprintf(outf,"] ]\n\n");
 

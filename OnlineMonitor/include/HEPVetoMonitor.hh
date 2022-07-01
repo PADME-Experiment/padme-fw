@@ -67,15 +67,11 @@ private:
   UInt_t fNPeaks;
   Double_t fPeakTime[HEPVETOMONITOR_PEAKS_MAX];
 
-  // SAC waveforms
+  // HEPVeto waveforms
   Short_t fBeamWF[HEPVETO_FINGERS][1024];
   Short_t fOffBeamWF[HEPVETO_FINGERS][1024];
 
   // Histograms
-  TH1D* fHPedestal[HEPVETO_FINGERS];
-  TH1D* fHPedRMS[HEPVETO_FINGERS];
-  TH1D* fHPedestalOB[HEPVETO_FINGERS];
-  TH1D* fHPedRMSOB[HEPVETO_FINGERS];
   TH1D* fHNPeaks[HEPVETO_FINGERS];
   TH1D* fHNPeaksOB[HEPVETO_FINGERS];
 

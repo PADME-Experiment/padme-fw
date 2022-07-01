@@ -30,6 +30,7 @@ public:
 private:
 
   void ComputeChannelMeanRMS(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelPedestal(UChar_t,UChar_t,Short_t*);
 
   Int_t OutputBeam();
   Int_t OutputOffBeam();
@@ -58,13 +59,40 @@ private:
   Double_t fChannelMean;
   Double_t fChannelRMS;
 
+  // Pedestal and pedestal RMS of current channel
+  Double_t fPedestal;
+  Double_t fPedRMS;
+
   // Histograms
-  TH2D* fHChanMeanOB; // Channel mean off-beam
-  TH2D* fHChanMeanRM; // Channel mean random event
-  TH2D* fHChanRMSOB; // Channel RMS off-beam
-  TH2D* fHChanRMSRM; // Channel RMS random event
-  TH2D* fHGroupSICOB; // Group SIC off-beam
-  TH2D* fHGroupSICRM; // Group SIC random event
+
+  TH2D* fHChanMeanOB; // Channel mean of off-beam events
+  TH2D* fHChanMeanRM; // Channel mean of random events
+
+  TH2D* fHChanRMSOB; // Channel RMS of off-beam events
+  TH2D* fHChanRMSRM; // Channel RMS of random events
+
+  TH2D* fHGroupSICOB; // Group SIC errors of off-beam events
+  TH2D* fHGroupSICRM; // Group SIC errors of random events
+
+  TH2D* fHPedestalBM; // Channel pedestal of beam events
+  TH2D* fHPedestalCS; // Channel pedestal of cosmics events
+  TH2D* fHPedestalOB; // Channel pedestal of off-beam events
+  TH2D* fHPedestalRM; // Channel pedestal of random events
+
+  TH2D* fHPedRMSBM; // Channel pedestal RMS of beam events
+  TH2D* fHPedRMSCS; // Channel pedestal RMS of cosmics events
+  TH2D* fHPedRMSOB; // Channel pedestal RMS of off-beam events
+  TH2D* fHPedRMSRM; // Channel pedestal RMS of random events
+
+  TH1D* fHChPedestal[ADCMONITOR_NBOARDS][32]; // Channel pedestal of beam events
+  TH1D* fHChPedRMS[ADCMONITOR_NBOARDS][32]; // Channel pedestal RMS of beam events
+
+  // Number of samples to use for pedestal for each board
+  UShort_t fPedestalSamples[ADCMONITOR_NBOARDS];
+
+  // Counters for Mean and pedestals of random events (needed to compute ratio)
+  Double_t fCountMeanRM[ADCMONITOR_NBOARDS*32];
+  Double_t fCountPedRM[ADCMONITOR_NBOARDS*32];
 
   // Map of ADC to analyze (all 0 by default)
   Short_t fADC_map[ADCMONITOR_NBOARDS] = { };

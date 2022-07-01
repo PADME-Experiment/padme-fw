@@ -68,6 +68,9 @@ void ETagMonitor::Initialize()
   fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):100;
   fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):100;
 
+  // Set number of samples to use to compute pedestals
+  fPedestalSamples = 100;
+
   // Reset global counters
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
@@ -184,27 +187,50 @@ void ETagMonitor::AnalyzeBoard(UChar_t board)
 void ETagMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
-  if ( fETag_map[board][channel] == -1 ) {
-    printf("WARNING - ETag board %d channel %d is disabled in the map\n",board,channel);
+  // Check if board/channel belongs to ETag
+  if ( board != 10 && board != 11 && board != 24 && board != 25 ) {
+    printf("ETagMonitor::AnalyzeChannel - WARNING - board %d does not belong to ETag\n",board);
+    return;
+  } else if ( fETag_map[board][channel] == -1 ) {
+    printf("ETagMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ETag map\n",board,channel);
     return;
   }
 
+  // Get SiPM channel id from channel map as llsc (level/side/channel)
+  Short_t ch = fETag_map[board][channel];
+  UChar_t level = ch/100;
+  UChar_t side = (ch%100)/10;
+  UChar_t sipmch = ch%1000;
+
 }
 
-Double_t ETagMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
+void ETagMonitor::ComputeChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
 {
   // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
   Int_t sum = 0;
   Int_t sum_ped = 0;
   for(UInt_t s = 0; s<994; s++) {
     sum += samples[s];
-    if (s<100) sum_ped += samples[s];
+    if (s<fPedestalSamples) sum_ped += samples[s];
   }
-  Double_t tot = 9.94*sum_ped-1.*sum;
+  Double_t tot = ((Double_t)994/(Double_t)fPedestalSamples)*sum_ped-1.*sum;
   // Convert to pC
   //tot = tot/(4096.*50.)*(1.E-9/1.E-12);
   tot *= 4.8828E-3;
-  return tot;
+  fChannelEnergy = tot;
+}
+
+void ETagMonitor::ComputeChannelPedestal(UChar_t board,UChar_t channel,Short_t* samples)
+{
+  // Get pedestal value and RMS from first 100 samples
+  Int_t sum = 0;
+  ULong_t sum2 = 0;
+  for(UInt_t s = 0; s<fPedestalSamples; s++) {
+    sum += samples[s];
+    sum2 += samples[s]*samples[s];
+  }
+  fChannelPedestal = (Double_t)sum/(Double_t)fPedestalSamples;
+  fChannelPedRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*fChannelPedestal)/(Double_t)(fPedestalSamples-1) );
 }
 
 Int_t ETagMonitor::OutputBeam()

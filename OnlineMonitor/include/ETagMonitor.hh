@@ -27,7 +27,9 @@ public:
 
 private:
 
-  Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelEnergy(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelPedestal(UChar_t,UChar_t,Short_t*);
+  void FindChannelPeaks(UChar_t,UChar_t,Short_t*);
 
   Int_t OutputBeam();
   Int_t OutputOffBeam();
@@ -51,6 +53,14 @@ private:
   UInt_t fOffBeamEventCount;
   UInt_t fCosmicsEventCount;
   UInt_t fRandomEventCount;
+
+  // Pedestal and RMS of current channel
+  UShort_t fPedestalSamples;
+  Double_t fChannelPedestal;
+  Double_t fChannelPedRMS;
+
+  // Energy of current channel
+  Double_t fChannelEnergy;
 
   // Map from [board][channel] to position as llsc (level/side/channel)
   Short_t fETag_map[29][32] = {

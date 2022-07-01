@@ -72,10 +72,6 @@ private:
   Short_t fOffBeamWF[EVETO_FINGERS][1024];
 
   // Histograms
-  TH1D* fHPedestal[EVETO_FINGERS];
-  TH1D* fHPedRMS[EVETO_FINGERS];
-  TH1D* fHPedestalOB[EVETO_FINGERS];
-  TH1D* fHPedRMSOB[EVETO_FINGERS];
   TH1D* fHNPeaks[EVETO_FINGERS];
   TH1D* fHNPeaksOB[EVETO_FINGERS];
 

@@ -82,6 +82,10 @@ public:
   void DisableFollowMode() { fFollowMode = false; }
   Bool_t FollowMode() { return fFollowMode; }
 
+  void EnableIgnoreDisabledChannels() { fIgnoreDisabledChannels = true; }
+  void DisableIgnoreDisabledChannels() { fIgnoreDisabledChannels = false; }
+  Bool_t IgnoreDisabledChannels() { return fIgnoreDisabledChannels; }
+
   void EnableResumeMode() { fResumeMode = true; }
   void DisableResumeMode() { fResumeMode = false; }
   Bool_t ResumeMode() { return fResumeMode; }
@@ -142,6 +146,9 @@ private:
 
   // Resume mode enabled/disabled
   Bool_t fResumeMode;
+
+  // Ignore disabled channels
+  Bool_t fIgnoreDisabledChannels;
 
   // Name of file to check if program should stop when in follow mode
   TString fStopFile;

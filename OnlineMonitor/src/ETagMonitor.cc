@@ -192,7 +192,7 @@ void ETagMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
     printf("ETagMonitor::AnalyzeChannel - WARNING - board %d does not belong to ETag\n",board);
     return;
   } else if ( fETag_map[board][channel] == -1 ) {
-    printf("ETagMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ETag map\n",board,channel);
+    if (! fConfig->IgnoreDisabledChannels()) printf("ETagMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ETag map\n",board,channel);
     return;
   }
 

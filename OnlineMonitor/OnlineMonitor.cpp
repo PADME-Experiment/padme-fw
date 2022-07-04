@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:n:s:d:c:frvh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:S:o:n:s:d:c:frvIh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -81,6 +81,9 @@ int main(int argc, char* argv[])
           exit(EXIT_FAILURE);
         }
         break;
+      case 'I':
+	cfg->EnableIgnoreDisabledChannels();
+	break;
       case 'f':
 	cfg->EnableFollowMode();
 	break;
@@ -105,6 +108,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -n: define number of events to process [default: 0 (all events)]\n");
         fprintf(stdout,"  -f: enable FOLLOW mode [default: disabled]\n");
         fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
+        fprintf(stdout,"  -I: ignore disabled channels in detector boards [default: do not ignore]\n");
         fprintf(stdout,"  -s: define name of control file to stop program [default: '%s']\n",cfg->StopFile().Data());
         fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
         fprintf(stdout,"  -d: define frequency of debug printout [default: %u]\n",cfg->DebugScale());

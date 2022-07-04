@@ -223,7 +223,7 @@ void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
   if ( fECal_map[board][channel] == -1 ) {
-    printf("WARNING - ECal board %d channel %d is disabled in the map\n",board,channel);
+    if (! fConfig->IgnoreDisabledChannels()) printf("ECalMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ECal map\n",board,channel);
     return;
   }
 

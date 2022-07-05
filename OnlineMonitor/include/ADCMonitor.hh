@@ -8,7 +8,7 @@
 
 #include "utlConfigParser.hh"
 
-#define ADCMONITOR_NBOARDS 29
+#define ADCMONITOR_NBOARDS 32
 
 class Configuration;
 

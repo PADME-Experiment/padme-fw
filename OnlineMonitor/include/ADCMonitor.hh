@@ -63,6 +63,12 @@ private:
   Double_t fPedestal;
   Double_t fPedRMS;
 
+  // Flags to choose which pedestals to show
+  Bool_t fShowPedBeam;
+  Bool_t fShowPedOffBeam;
+  Bool_t fShowPedCosmics;
+  Bool_t fShowPedRandom;
+
   // Histograms
 
   TH2D* fHChanMeanOB; // Channel mean of off-beam events

@@ -120,6 +120,36 @@ void ADCMonitor::Initialize()
     fPedestalSamples[b] = 100;
   }
 
+  // Choose which pedstals to show (Beam, Off-beam, Cosmics, Random)
+  fShowPedBeam    = true;
+  fShowPedOffBeam = false;
+  fShowPedCosmics = false;
+  fShowPedRandom  = false;
+  if ( fConfigParser->HasConfig("RECO","ShowPedestals") ) {
+    std::string showPed = fConfigParser->GetSingleArg("RECO","ShowPedestals");
+    if (showPed.compare("Beam") == 0) {
+      fShowPedBeam    = true;
+      fShowPedOffBeam = false;
+      fShowPedCosmics = false;
+      fShowPedRandom  = false;
+    } else if (showPed.compare("Off-Beam") == 0) {
+      fShowPedBeam    = false;
+      fShowPedOffBeam = true;
+      fShowPedCosmics = false;
+      fShowPedRandom  = false;
+    } else if (showPed.compare("Cosmics") == 0) {
+      fShowPedBeam    = false;
+      fShowPedOffBeam = false;
+      fShowPedCosmics = true;
+      fShowPedRandom  = false;
+    } else if (showPed.compare("Random") == 0) {
+      fShowPedBeam    = false;
+      fShowPedOffBeam = false;
+      fShowPedCosmics = false;
+      fShowPedRandom  = true;
+    }
+  }
+  
 
   // Create histograms
 
@@ -239,10 +269,12 @@ void ADCMonitor::EndOfEvent()
       // Reset histograms
       fHPedestalBM->Reset();
       fHPedRMSBM->Reset();
-      for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
-	for(UChar_t c=0; c<32; c++) {
-	  fHChPedestal[b][c]->Reset();
-	  fHChPedRMS[b][c]->Reset();
+      if (fShowPedBeam) {
+	for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+	  for(UChar_t c=0; c<32; c++) {
+	    fHChPedestal[b][c]->Reset();
+	    fHChPedRMS[b][c]->Reset();
+	  }
 	}
       }
 
@@ -266,6 +298,14 @@ void ADCMonitor::EndOfEvent()
       fHGroupSICOB->Reset();
       fHPedestalOB->Reset();
       fHPedRMSOB->Reset();
+      if (fShowPedOffBeam) {
+	for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+	  for(UChar_t c=0; c<32; c++) {
+	    fHChPedestal[b][c]->Reset();
+	    fHChPedRMS[b][c]->Reset();
+	  }
+	}
+      }
 
     }
 
@@ -284,6 +324,14 @@ void ADCMonitor::EndOfEvent()
       // Reset histograms
       fHPedestalCS->Reset();
       fHPedRMSCS->Reset();
+      if (fShowPedCosmics) {
+	for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+	  for(UChar_t c=0; c<32; c++) {
+	    fHChPedestal[b][c]->Reset();
+	    fHChPedRMS[b][c]->Reset();
+	  }
+	}
+      }
 
     }
 
@@ -305,6 +353,14 @@ void ADCMonitor::EndOfEvent()
       fHGroupSICRM->Reset();
       fHPedestalRM->Reset();
       fHPedRMSRM->Reset();
+      if (fShowPedRandom) {
+	for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+	  for(UChar_t c=0; c<32; c++) {
+	    fHChPedestal[b][c]->Reset();
+	    fHChPedRMS[b][c]->Reset();
+	  }
+	}
+      }
 
       // Clean mean and ped counters
       for(UInt_t i=0; i<ADCMONITOR_NBOARDS*32; i++) {
@@ -384,21 +440,35 @@ void ADCMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
   if (fIsBeam) {
     fHPedestalBM->Fill(address,fPedestal);
     fHPedRMSBM->Fill(address,fPedRMS);
-    fHChPedestal[board][channel]->Fill(fPedestal);
-    fHChPedRMS[board][channel]->Fill(fPedRMS);
+    if (fShowPedBeam) {
+      fHChPedestal[board][channel]->Fill(fPedestal);
+      fHChPedRMS[board][channel]->Fill(fPedRMS);
+    }
   }
   if (fIsCosmics) {
     fHPedestalCS->Fill(address,fPedestal);
     fHPedRMSCS->Fill(address,fPedRMS);
+    if (fShowPedCosmics) {
+      fHChPedestal[board][channel]->Fill(fPedestal);
+      fHChPedRMS[board][channel]->Fill(fPedRMS);
+    }
   }
   if (fIsOffBeam) {
     fHPedestalOB->Fill(address,fPedestal);
     fHPedRMSOB->Fill(address,fPedRMS);
+    if (fShowPedOffBeam) {
+      fHChPedestal[board][channel]->Fill(fPedestal);
+      fHChPedRMS[board][channel]->Fill(fPedRMS);
+    }
   }
   if (fIsRandom) {
     fHPedestalRM->Fill(address,fPedestal);
     fHPedRMSRM->Fill(address,fPedRMS);
     fCountPedRM[address] += fPedestal;
+    if (fShowPedRandom) {
+      fHChPedestal[board][channel]->Fill(fPedestal);
+      fHChPedRMS[board][channel]->Fill(fPedRMS);
+    }
   }
 
 }
@@ -479,38 +549,40 @@ Int_t ADCMonitor::OutputBeam()
   }
   fprintf(outf,"]\n\n");
 
-  for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
-    for(UChar_t c=0; c<32; c++) {
+  if (fShowPedBeam) {
 
-      fprintf(outf,"PLOTID ADCMon_beamchpedestal_%2.2d_%2.2d\n",b,c);
-      fprintf(outf,"PLOTTYPE histo1d\n");
-      // fprintf(outf,"PLOTNAME ADC Beam Pedestal B %2.2d C %2.2d - Run %d - %s\n",b,c,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-      fprintf(outf,"PLOTNAME Ped B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
-      fprintf(outf,"CHANNELS %d\n",fHChPedestal[b][c]->GetNbinsX());
-      fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedestal[b][c]->GetXaxis()->GetXmin(),fHChPedestal[b][c]->GetXaxis()->GetXmax());
-      fprintf(outf,"TITLE_X Counts\n");
-      fprintf(outf,"DATA [ [");
-      for(Int_t i = 1; i <= fHChPedestal[b][c]->GetNbinsX(); i++) {
-	if (i>1) fprintf(outf,",");
-	fprintf(outf,"%.0f",fHChPedestal[b][c]->GetBinContent(i));
+    for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+      for(UChar_t c=0; c<32; c++) {
+
+	fprintf(outf,"PLOTID ADCMon_chpedestal_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME BM Ped B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedestal[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedestal[b][c]->GetXaxis()->GetXmin(),fHChPedestal[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedestal[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedestal[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+	fprintf(outf,"PLOTID ADCMon_chpedrms_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME BM RMS B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedRMS[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedRMS[b][c]->GetXaxis()->GetXmin(),fHChPedRMS[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedRMS[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedRMS[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
       }
-      fprintf(outf,"] ]\n\n");
-
-      fprintf(outf,"PLOTID ADCMon_beamchpedrms_%2.2d_%2.2d\n",b,c);
-      fprintf(outf,"PLOTTYPE histo1d\n");
-      //fprintf(outf,"PLOTNAME ADC Beam Pedestal RMS B %2.2d C %2.2d - Run %d - %s\n",b,c,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-      fprintf(outf,"PLOTNAME RMS B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
-      fprintf(outf,"CHANNELS %d\n",fHChPedRMS[b][c]->GetNbinsX());
-      fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedRMS[b][c]->GetXaxis()->GetXmin(),fHChPedRMS[b][c]->GetXaxis()->GetXmax());
-      fprintf(outf,"TITLE_X Counts\n");
-      fprintf(outf,"DATA [ [");
-      for(Int_t i = 1; i <= fHChPedRMS[b][c]->GetNbinsX(); i++) {
-	if (i>1) fprintf(outf,",");
-	fprintf(outf,"%.0f",fHChPedRMS[b][c]->GetBinContent(i));
-      }
-      fprintf(outf,"] ]\n\n");
-
     }
+
   }
 
   // Close monitor file and move it to watchdir
@@ -627,6 +699,42 @@ Int_t ADCMonitor::OutputOffBeam()
   }
   fprintf(outf,"] ]\n\n");
 
+  if (fShowPedOffBeam) {
+
+    for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+      for(UChar_t c=0; c<32; c++) {
+
+	fprintf(outf,"PLOTID ADCMon_chpedestal_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME OB Ped B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedestal[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedestal[b][c]->GetXaxis()->GetXmin(),fHChPedestal[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedestal[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedestal[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+	fprintf(outf,"PLOTID ADCMon_chpedrms_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME OB RMS B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedRMS[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedRMS[b][c]->GetXaxis()->GetXmin(),fHChPedRMS[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedRMS[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedRMS[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+      }
+    }
+
+  }
+
   // Close monitor file
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -686,6 +794,42 @@ Int_t ADCMonitor::OutputCosmics()
     fprintf(outf,"]");
   }
   fprintf(outf,"]\n\n");
+
+  if (fShowPedCosmics) {
+
+    for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+      for(UChar_t c=0; c<32; c++) {
+
+	fprintf(outf,"PLOTID ADCMon_chpedestal_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME CS Ped B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedestal[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedestal[b][c]->GetXaxis()->GetXmin(),fHChPedestal[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedestal[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedestal[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+	fprintf(outf,"PLOTID ADCMon_chpedrms_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME CS RMS B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedRMS[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedRMS[b][c]->GetXaxis()->GetXmin(),fHChPedRMS[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedRMS[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedRMS[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+      }
+    }
+
+  }
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -820,6 +964,42 @@ Int_t ADCMonitor::OutputRandom()
     fprintf(outf,"%.0f",fHGroupSICRM->GetBinContent(b,2));
   }
   fprintf(outf,"] ]\n\n");
+
+  if (fShowPedRandom) {
+
+    for(UChar_t b=0; b<ADCMONITOR_NBOARDS; b++) {
+      for(UChar_t c=0; c<32; c++) {
+
+	fprintf(outf,"PLOTID ADCMon_chpedestal_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME RM Ped B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedestal[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedestal[b][c]->GetXaxis()->GetXmin(),fHChPedestal[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedestal[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedestal[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+	fprintf(outf,"PLOTID ADCMon_chpedrms_%2.2d_%2.2d\n",b,c);
+	fprintf(outf,"PLOTTYPE histo1d\n");
+	fprintf(outf,"PLOTNAME RM RMS B%2.2d C%2.2d R%d\n",b,c,fConfig->GetRunNumber());
+	fprintf(outf,"CHANNELS %d\n",fHChPedRMS[b][c]->GetNbinsX());
+	fprintf(outf,"RANGE_X %.3f %.3f\n",fHChPedRMS[b][c]->GetXaxis()->GetXmin(),fHChPedRMS[b][c]->GetXaxis()->GetXmax());
+	fprintf(outf,"TITLE_X Counts\n");
+	fprintf(outf,"DATA [ [");
+	for(Int_t i = 1; i <= fHChPedRMS[b][c]->GetNbinsX(); i++) {
+	  if (i>1) fprintf(outf,",");
+	  fprintf(outf,"%.0f",fHChPedRMS[b][c]->GetBinContent(i));
+	}
+	fprintf(outf,"] ]\n\n");
+
+      }
+    }
+
+  }
 
   // Close monitor file
   fclose(outf);

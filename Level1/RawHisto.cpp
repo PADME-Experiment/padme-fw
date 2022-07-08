@@ -218,9 +218,18 @@ int main(int argc, char* argv[])
     TString evtDir = Form("E%d/",evtNumber);
     histoFile->mkdir(evtDir);
 
-    // Check if this event is a BTF event
+    // Get event trigger mask
+    UInt_t trigMask = rawEv->GetEventTrigMask();
+
+    // Check event type accoding to trigger mask
     Bool_t isBTFEvent = false;
-    if (rawEv->GetEventTrigMask() & 0x01) isBTFEvent = true;
+    Bool_t isCosmicsEvent = false;
+    Bool_t isOffBeamEvent = false;
+    Bool_t isRandomEvent = false;
+    if (trigMask & 0x01) isBTFEvent = true;
+    if (trigMask & 0x02) isCosmicsEvent = true;
+    if (trigMask & 0x20) isOffBeamEvent = true;
+    if (trigMask & 0x40) isRandomEvent = true;
 
     // Show event header
     if (verbose>0) {
@@ -264,8 +273,8 @@ int main(int argc, char* argv[])
 	TString hName = Form("T%d",trg->GetGroupNumber());
 	h = GetHisto(hName,hList);
 	h->Reset();
-	h->SetTitle(Form("Run %d Event %d Board %d Trigger %d",
-			 runNumber,evtNumber,brdId,trg->GetGroupNumber()));
+	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d TrigGroup %d",
+			 runNumber,evtNumber,trigMask,brdId,trg->GetGroupNumber()));
 	for(UShort_t s=0;s<trg->GetNSamples();s++) h->Fill(s,trg->GetSample(s));
       }
 
@@ -278,8 +287,8 @@ int main(int argc, char* argv[])
 	TString hName = Form("C%02d",chn->GetChannelNumber());
 	h = GetHisto(hName,hList);
 	h->Reset();
-	h->SetTitle(Form("Run %d Event %d Board %d Channel %d",
-			 runNumber,evtNumber,brdId,chn->GetChannelNumber()));
+	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d Channel %d",
+			 runNumber,evtNumber,trigMask,brdId,chn->GetChannelNumber()));
 	Double_t sx = 0.;
 	Double_t sx2 = 0.;
 	for(UShort_t s=0;s<chn->GetNSamples();s++) {
@@ -290,8 +299,8 @@ int main(int argc, char* argv[])
 	    sx2 += x*x;
 	  }
 	}
-	// Save mean and RMS for this channel to board profile only if this is not a physics event
-	if (! isBTFEvent) {
+	// Save mean and RMS for this channel to board profile only if this is not a physics event (Random or Off-Beam)
+	if (isRandomEvent || isOffBeamEvent) {
 	  Double_t mean = sx/994.;
 	  hp = GetProfile(Form("B%02dM",brdId),hpList);
 	  hp->Fill(c,mean,1.);

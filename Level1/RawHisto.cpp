@@ -325,8 +325,16 @@ int main(int argc, char* argv[])
   histoFile->mkdir(smrDir);
   histoFile->cd(smrDir);
 
-  // Save summary profile histograms to output file
-  hpList.Write();
+  // Select non-empty profiles
+  TObjArray hpListOut(0);
+  TIter iObj(&hpList);
+  while (TObject* obj = iObj()) {
+    if ( ((TProfile*)obj)->GetEntries() != 0. ) hpListOut.Add(obj);
+  }
+
+  // Save non-empty summary profile histograms to output file
+  //hpList.Write();
+  hpListOut.Write();
 
   // Save and close output file
   printf("Closing output file\n");

@@ -248,9 +248,9 @@ int main(int argc, char* argv[])
       if ( (boards.size() > 0) && (std::count(boards.begin(),boards.end(),brdId) == 0) ) continue;
 
       // Create subdirectory for this board in output file
-      TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
-      histoFile->mkdir(brdDir);
-      histoFile->cd(brdDir);
+      //TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
+      //histoFile->mkdir(brdDir);
+      //histoFile->cd(brdDir);
 
       // Show board info
       TADCBoard* adcB = rawEv->ADCBoard(b);
@@ -260,6 +260,14 @@ int main(int argc, char* argv[])
 	printf("\tBoard %2u Board Id %2u Board SN %3u LVDS 0x%04x Status 0x%03x GMsk 0x%1x EvtCnt %7u Time %10u ActMsk 0x%08x AccMsk 0x%08x #Trg %u #Chn %2u\n",
 	       b,adcB->GetBoardId(),adcB->GetBoardSN(),adcB->GetLVDSPattern(),adcB->GetBoardStatus(),adcB->GetGroupMask(),adcB->GetEventCounter(),
 	       adcB->GetEventTimeTag(),adcB->GetActiveChannelMask(),adcB->GetAcceptedChannelMask(),nTrg,nChn);
+      }
+
+      // Reset all histograms
+      TIter iObj1(&hList);
+      while (TObject* obj = iObj1()) {
+	((TH1S*)obj)->Reset();
+	((TH1S*)obj)->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d",
+				    runNumber,evtNumber,trigMask,brdId));
       }
 
       // Loop over triggers
@@ -272,7 +280,7 @@ int main(int argc, char* argv[])
 	}
 	TString hName = Form("T%d",trg->GetGroupNumber());
 	h = GetHisto(hName,hList);
-	h->Reset();
+	//h->Reset();
 	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d TrigGroup %d",
 			 runNumber,evtNumber,trigMask,brdId,trg->GetGroupNumber()));
 	for(UShort_t s=0;s<trg->GetNSamples();s++) h->Fill(s,trg->GetSample(s));
@@ -280,13 +288,14 @@ int main(int argc, char* argv[])
 
       // Loop over channels
       for(UChar_t c=0;c<nChn;c++){
+
 	TADCChannel* chn = adcB->ADCChannel(c);
 	//if (verbose>2) {
 	//  printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
 	//}
 	TString hName = Form("C%02d",chn->GetChannelNumber());
 	h = GetHisto(hName,hList);
-	h->Reset();
+	//h->Reset();
 	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d Channel %d",
 			 runNumber,evtNumber,trigMask,brdId,chn->GetChannelNumber()));
 	Double_t sx = 0.;
@@ -299,19 +308,33 @@ int main(int argc, char* argv[])
 	    sx2 += x*x;
 	  }
 	}
+
 	// Save mean and RMS for this channel to board profile only if this is not a physics event (Random or Off-Beam)
 	if (isRandomEvent || isOffBeamEvent) {
 	  Double_t mean = sx/994.;
 	  hp = GetProfile(Form("B%02dM",brdId),hpList);
-	  hp->Fill(c,mean,1.);
+	  hp->Fill(chn->GetChannelNumber(),mean,1.);
 	  Double_t rms = std::sqrt((sx2-994.*mean*mean)/993.);
 	  hp = GetProfile(Form("B%02dR",brdId),hpList);
-	  hp->Fill(c,rms,1.);
+	  hp->Fill(chn->GetChannelNumber(),rms,1.);
 	}
       }
       
-      // Write board histograms to file
-      hList.Write();
+      // Write non-empty board histograms to file
+      //hList.Write();
+      TObjArray hListOut(0);
+      TIter iObj2(&hList);
+      while (TObject* obj = iObj2()) {
+      	if ( ((TH1S*)obj)->GetEntries() != 0. ) hListOut.Add(obj);
+      }
+      //hListOut.Write();
+      // If any data are present, create subdirectory for this board in output file and write data there
+      if (hListOut.GetEntries()) {
+	TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
+	histoFile->mkdir(brdDir);
+	histoFile->cd(brdDir);
+	hListOut.Write();
+      }
 
     } // End loop over boards
 

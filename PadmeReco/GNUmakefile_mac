@@ -16,7 +16,7 @@ CPPFLAGS += -IRecoBase/include -g -std=c++11 $(ROOTLIBS) $(ROOTCFLAGS)
 
 all: allobjs alllibs bin
 
-include ./config/global_mac.gmk
+include ./mkconfig/global_mac.gmk
 
 # Define libraries used for the creation of the final executable
 LIBS += -Llib -lPadmeReco$(STATIC) 

@@ -2,7 +2,7 @@
 
 NAME := RecoBase
 
-include ../config/subdirs_mac.gmk
+include ../mkconfig/subdirs_mac.gmk
 
 SOFLAGS = -shared
 SOFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS) -L$(PADMEROOT)/lib -lPadmeRoot

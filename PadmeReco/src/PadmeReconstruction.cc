@@ -41,7 +41,8 @@
 #include <TObjString.h>
 
 PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString ConfFileName, TFile* OutputFile, Int_t NEvt, UInt_t Seed) :
-  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile)
+  PadmeVReconstruction(OutputFile,"Padme",ConfFileName),fInputFileNameList(InputFileNameList), fHistoFile(OutputFile),
+ fADCCellCalibSums(nullptr)
 {
 
   // Input event structures will be allocated if corresponding branch exists
@@ -83,19 +84,32 @@ void PadmeReconstruction::InitRunningModeFlags()
   Int_t flagP = fConfig->GetParOrDefault("RUNNINGMODE", "Pedestals"     ,0);
   Int_t flagM = fConfig->GetParOrDefault("RUNNINGMODE", "Monitor"       ,0);
   Int_t flagD = fConfig->GetParOrDefault("RUNNINGMODE", "Debug"         ,1);
+  std::string genAdcCellCalibFileName = fConfig->GetParOrDefault("RUNNINGMODE", "GenADCCellCalib", "");
+  std::string AdcCellCalibDataFileName = fConfig->GetParOrDefault("RUNNINGMODE", "ADCCellCalibData", "");
   fGlobalRecoConfigOptions = new GlobalRecoConfigOptions();
   fGlobalRecoConfigOptions->SetRunningMode(flagR, flagP, flagC, flagM, flagD);
+  if(genAdcCellCalibFileName.size()>0){
+    fADCCellCalibSums = new ADCCellCalibSums(genAdcCellCalibFileName);
+  }
+  if(AdcCellCalibDataFileName.size()>0){
+    fADCCellCalibData = std::make_shared<ADCCellCalibData>(AdcCellCalibDataFileName);
+  }
+  if(fConfig->GetParOrDefault("RUNNINGMODE", "FillADCCellCalibHists", 0)){
+    fADCCellCalibHist = std::make_shared<ADCCellCalibHistograms>("ADCCellCalibHists");
+  }
   std::cout<<"Global debug set to            = "<<fGlobalRecoConfigOptions->GetGlobalDebugMode()<<std::endl;
   std::cout<<"Global running mode RECO       = "<<fGlobalRecoConfigOptions->IsRecoMode()<<std::endl;
   std::cout<<"Global running mode COSMICS    = "<<fGlobalRecoConfigOptions->IsCosmicsMode()<<std::endl;
   std::cout<<"Global running mode PEDESTALS  = "<<fGlobalRecoConfigOptions->IsPedestalMode()<<std::endl;
   std::cout<<"Global running mode MONITOR    = "<<fGlobalRecoConfigOptions->IsMonitorMode()<<std::endl;
+  std::cout<<"Global running mode GenerateADCCellCalibSums = "<<(genAdcCellCalibFileName.size()>0)<<std::endl;
 
   return;
 }
 
 PadmeReconstruction::~PadmeReconstruction()
 {
+  if(fADCCellCalibSums) delete fADCCellCalibSums;
   for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
     delete fRecoLibrary[iLib];
   }
@@ -463,6 +477,8 @@ Bool_t PadmeReconstruction::NextEvent()
 
 void PadmeReconstruction::ProcessEvent(TRawEvent* rawEv)
 {
+  //std::cout<<" PadmeReconstruction::ProcessEvent"<<std::endl;
+  if(fADCCellCalibSums)fADCCellCalibSums->Process(rawEv);
   UInt_t trigMask = rawEv->GetEventTrigMask();
   GetHisto("EventTriggerWord")->Fill(trigMask);
   for(UInt_t i=0; i<8; i++){
@@ -471,7 +487,8 @@ void PadmeReconstruction::ProcessEvent(TRawEvent* rawEv)
 }
 
 void PadmeReconstruction::EndProcessing(){
-
+  if(fADCCellCalibSums)fADCCellCalibSums->WriteFile();
+  if(fADCCellCalibHist)fADCCellCalibHist->WriteHistograms(fHistoFile);
   // Reconstruct individual detectors (but check if they exist, first!)
   for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
     fHistoFile->cd("/");

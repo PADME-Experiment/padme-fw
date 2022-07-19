@@ -12,6 +12,8 @@
 //#include "Debug.h" 
 
 //PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile), fRecoEvent(0)
+std::shared_ptr<ADCCellCalibData> PadmeVReconstruction::fADCCellCalibData;
+std::shared_ptr<ADCCellCalibHistograms> PadmeVReconstruction::fADCCellCalibHist;
 PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile)
 {
   /*
@@ -40,7 +42,8 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
   fWriteClusters = true;
   fWriteHits     = (Bool_t)fConfig->GetParOrDefault("Output", "Hits"          , 1 );
   fWriteClusters = (Bool_t)fConfig->GetParOrDefault("Output", "Clusters"      , 1 );
-  
+  fMakeADCCellCalib = fConfig->GetParOrDefault("RECO", "ADCCellCalib", 1);
+
   //  InitChannelID(fConfig);
 
   //----------- Parse config file for common parameters ----------//
@@ -376,6 +379,15 @@ void PadmeVReconstruction::BuildHits(TRawEvent* rawEv){
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
     ADC = rawEv->ADCBoard(iBoard);
     if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      if(fADCCellCalibHist.use_count()){
+        fADCCellCalibHist->FillHistograms(ADC, &fName[0], false);
+      }
+      if(fMakeADCCellCalib && fADCCellCalibData.use_count()){
+        fADCCellCalibData->CalibrateADC(ADC);
+      }
+      if(fADCCellCalibHist.use_count()){
+        fADCCellCalibHist->FillHistograms(ADC, &fName[0], true);
+      }
       //Loop over the channels and perform reco
       for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 	TADCChannel* chn = ADC->ADCChannel(ich);

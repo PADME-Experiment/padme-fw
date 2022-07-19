@@ -22,6 +22,8 @@
 #include "PadmeVRecoConfig.hh"
 #include "RecoVChannelID.hh"
 #include "PadmeVCalibration.hh"
+#include"ADCCellCalibData.hh"
+#include"ADCCellCalibHistograms.hh"
 
 #include "TH1.h"
 #include <vector>
@@ -142,8 +144,12 @@ protected:
   PadmeVTrigger *fTriggerProcessor;
   PadmeVGeometry *fGeometry;
 
+  static std::shared_ptr<ADCCellCalibData> fADCCellCalibData;
+  static std::shared_ptr<ADCCellCalibHistograms> fADCCellCalibHist;
+
   Bool_t fWriteHits;
   Bool_t fWriteClusters;
+  bool fMakeADCCellCalib;
 
   GlobalRecoConfigOptions* fGlobalRecoConfigOptions;
   /*

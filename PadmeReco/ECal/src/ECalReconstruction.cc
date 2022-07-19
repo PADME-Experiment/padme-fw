@@ -716,12 +716,16 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
 
   //fill the vector with hits informations  
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
-  Int_t cCellUsed[NTotCh]={0};
+  Double_t cTime[3000];
+  Double_t cEnergy[3000];
+  Int_t cChID[3000];
+  Int_t cUsed[3000];
+  Int_t cCellUsed[NTotCh];
 
+  if (Hits.size() > 3000) {
+    std::cout << "ECalReconstruction::BuildSimpleEcalClusters --- ERROR: Too many hits in the ECal (> 3000) ! Returning witout clustering..." << std::endl;
+    return;
+  }
 
   //ofstream myHitFile;
   //myHitFile.open ("hitFeatures.txt",std::ofstream::app);

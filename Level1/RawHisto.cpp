@@ -214,12 +214,12 @@ int main(int argc, char* argv[])
       break;
     }
 
-    // Create directory for this event in output file
-    TString evtDir = Form("E%d/",evtNumber);
-    histoFile->mkdir(evtDir);
-
     // Get event trigger mask
     UInt_t trigMask = rawEv->GetEventTrigMask();
+
+    // Create directory for this event in output file
+    TString evtDir = Form("E%d_%02x/",evtNumber,trigMask);
+    histoFile->mkdir(evtDir);
 
     // Check event type accoding to trigger mask
     Bool_t isBTFEvent = false;
@@ -246,11 +246,6 @@ int main(int argc, char* argv[])
       // Check if this board was selected
       Int_t brdId = rawEv->ADCBoard(b)->GetBoardId();
       if ( (boards.size() > 0) && (std::count(boards.begin(),boards.end(),brdId) == 0) ) continue;
-
-      // Create subdirectory for this board in output file
-      //TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
-      //histoFile->mkdir(brdDir);
-      //histoFile->cd(brdDir);
 
       // Show board info
       TADCBoard* adcB = rawEv->ADCBoard(b);
@@ -327,10 +322,9 @@ int main(int argc, char* argv[])
       while (TObject* obj = iObj2()) {
       	if ( ((TH1S*)obj)->GetEntries() != 0. ) hListOut.Add(obj);
       }
-      //hListOut.Write();
       // If any data are present, create subdirectory for this board in output file and write data there
       if (hListOut.GetEntries()) {
-	TString brdDir = Form("E%d/B%d/",evtNumber,brdId);
+	TString brdDir = Form("%sB%d/",evtDir.Data(),brdId);
 	histoFile->mkdir(brdDir);
 	histoFile->cd(brdDir);
 	hListOut.Write();

@@ -9,7 +9,7 @@
 
 #include "PadmeVGeometry.hh"
 
-#define ETAG_NUMBER_OF_CHANNELS 48
+#define ETAG_NUMBER_OF_CHANNELS 120
 
 class ETagGeometry : public PadmeVGeometry
 {

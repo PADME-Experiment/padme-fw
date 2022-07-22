@@ -22,6 +22,7 @@ public:
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent*);
   void ConvertMCDigitsToRecoHits(TMCVEvent*,TMCEvent*);
+  void BuildHits(TRawEvent* rawEv);
   void BuildClusters();
 
 private:

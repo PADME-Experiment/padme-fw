@@ -12,7 +12,8 @@
 #include "TETagMCHit.hh"
 #include "TETagMCDigi.hh"
 #include "TETagRecoEvent.hh"
-#include "DigitizerChannelReco.hh"
+//#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelETag.hh"
 #include "ETagCalibration.hh"
 #include "ETagGeometry.hh"
 #include "ETagSimpleClusterization.hh"
@@ -26,7 +27,8 @@ ETagReconstruction::ETagReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "ETag", ConfigFileName)
 {
 
-  fChannelReco = new DigitizerChannelReco();
+  //fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelETag();
   //  fChannelCalibration = new ETagCalibration();
   fClusterization = new ETagSimpleClusterization();
   fTriggerProcessor = new PadmeVTrigger();
@@ -62,17 +64,17 @@ void ETagReconstruction::HistoInit(){
 
   char name[256];
 
-//  for (int i=0; i<95; i++) { 
-//    sprintf(name, "ETagDTch%dch%d",i,i+1);
-//    AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
-//  }
-//  
-//  for (int i=0; i<96; i++) { 
-//    sprintf(name, "ETagCharge-%d",i);
-//    AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
-//  }
+  //for (int i=0; i<95; i++) { 
+  //  sprintf(name, "ETagDTch%dch%d",i,i+1);
+  //  AddHisto(name, new TH1F(name,"Difference in time",100,-25.,25.));
+  //}
+  //
+  //for (int i=0; i<96; i++) { 
+  //  sprintf(name, "ETagCharge-%d",i);
+  //  AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
+  //}
 
-  //  AddHisto("ETagDTch1ch2",new TH1F("ETagDTch1ch2","Difference in time",100,-10.,10.));
+  //AddHisto("ETagDTch1ch2",new TH1F("ETagDTch1ch2","Difference in time",100,-10.,10.));
 
 }
 
@@ -154,8 +156,8 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 
 void ETagReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
-  float charges[ETAG_NUMBER_OF_CHANNELS];
-  for(int i=0;i<ETAG_NUMBER_OF_CHANNELS;i++) charges[i] = -1.;
+  //float charges[ETAG_NUMBER_OF_CHANNELS];
+  //for(int i=0;i<ETAG_NUMBER_OF_CHANNELS;i++) charges[i] = -1.;
 
   vector<TRecoVHit *> &Hits  = GetRecoHits();
 
@@ -194,25 +196,25 @@ void ETagReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     GetHisto("ETagEnergy")->Fill(Hits[iHit1]->GetEnergy());
     int chid = Hits[iHit1]->GetChannelId();
     
-    charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
+    //charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
     
   }
   
   char name[256];
 
-  for(int i = 1; i < ETAG_NUMBER_OF_CHANNELS-1; i++) {
-    if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
-      sprintf(name, "ETagCharge-%d", i);
-      GetHisto(name)->Fill(charges[i]);
-      GetHisto("ETagEnergyClean") -> Fill(charges[i] );
-    }
-  }
+  //for(int i = 1; i < ETAG_NUMBER_OF_CHANNELS-1; i++) {
+  //  if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      
+  //    sprintf(name, "ETagCharge-%d", i);
+  //    //GetHisto(name)->Fill(charges[i]);
+  //    GetHisto("ETagEnergyClean") -> Fill(charges[i] );
+  //  }
+  //}
   
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {
     for(unsigned int iHit2 = 0; iHit2 < Hits.size();++iHit2) {
       if(Hits[iHit1]->GetChannelId()+1 == Hits[iHit2]->GetChannelId()) {
-	sprintf(name,"ETagDTch%dch%d",Hits[iHit1]->GetChannelId(),Hits[iHit1]->GetChannelId()+1);
-	GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
+	sprintf(name,"ETagDTch%dch%d",Hits[iHit1]->GetChannelId(),Hits[iHit2]->GetChannelId());
+	//GetHisto(name)->Fill(Hits[iHit1]->GetTime() - Hits[iHit2]->GetTime());
       }
     }
   }
@@ -220,7 +222,6 @@ void ETagReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   if(GetHisto("ETagOccupancyLast")->GetEntries())
     for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1)
       GetHisto("ETagOccupancyLast")->Fill(Hits[iHit1]->GetChannelId());
-  
 }
 
 
@@ -241,4 +242,51 @@ void ETagReconstruction::BuildClusters()
   //  std::cout<<"Mi chiamo Etag e sono il nuovo detector "<<std::endl;
   if (fClusterization) fClusterization->Reconstruct(Hits, myClusters);
   
+}
+
+void ETagReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  //  std::cout<<"Event no "<<rawEv->GetEventNumber()<<std::endl;
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelETag*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelETag*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform reco
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+ 	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelETag*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelETag*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelETag*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
+				);
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
 }

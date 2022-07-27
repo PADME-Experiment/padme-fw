@@ -9,7 +9,8 @@
 
 #include "PadmeVReconstruction.hh"
 #include "TRandom2.h"
-class ETagSimpleClusterization;
+#include "ETagSimpleClusterization.hh"
+// class ETagSimpleClusterization;
 
 class ETagReconstruction : public PadmeVReconstruction
 {
@@ -20,6 +21,7 @@ public:
   ~ETagReconstruction();
   // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
   virtual void HistoInit();
+  void HistoExit();
   virtual void AnalyzeEvent(TRawEvent*);
   void ConvertMCDigitsToRecoHits(TMCVEvent*,TMCEvent*);
   void BuildHits(TRawEvent* rawEv);

@@ -7,6 +7,7 @@
 #include "NPoTAnalysis.hh"
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
+#include "ETagAnalysis.hh" //AF
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -22,6 +23,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
@@ -29,6 +31,7 @@ UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fNPoTAnalysis;
   delete fIsGGAnalysis;
+  delete fETagAnalysis;
   //  delete fIs3GAnalysis;
 }
 
@@ -38,6 +41,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   InitHistos();
   fNPoTAnalysis->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
+  fETagAnalysis->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -74,6 +78,7 @@ Bool_t UserAnalysis::Process(){
   fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fIsGGAnalysis->Process();
+  fETagAnalysis->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
 
@@ -136,6 +141,7 @@ Bool_t UserAnalysis::Finalize()
 
   fNPoTAnalysis->Finalize();
   fIsGGAnalysis->Finalize();
+  fETagAnalysis->Finalize();
   //  fIs3GAnalysis->Finalize();
 
 //  // TGraph example

@@ -3,7 +3,7 @@ CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared
+SOFLAGS       = -shared $(ROOTLDFLAGS) $(ROOTLIBS) -L$(PADMEROOT)/lib -lPadmeRoot -L$(PADME)/UserAnalysis/lib -lPadmeAnalysis -L$(PADMERECO)/lib -lPadmeReco -L$(PADMERECO)/RecoBase/lib -lRecoBase -L$(PADME)/UserAnalysis/Analyzers/lib -lAnalyzers
 MFLAGS        = -w
 
 ROOTCONFIG   := root-config
@@ -12,16 +12,10 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
 
-CPPFLAGS     += -Iinclude -I$(PADMEANALYSIS)/include -I$(PADMEROOT)/include -g -std=c++14 $(shell root-config --libs --cflags)
-#CPPFLAGS     += -I$(PADMEANALYSIS)/Service/include
-CPPFLAGS     += -I$(PADMEANALYSIS)/AnalysisBase/include
+CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADME)/UserAnalysis/Analyzers/include -I$(PADMEROOT)/include -g -std=c++14 $(ROOTLIBS) $(ROOTCFLAGS)
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
-SOFLAGS			 += $(ROOTLDFLAGS) $(ROOTLIBS) -L$(PADMEROOT)/lib -lPadmeRoot -L$(PADMERECO)/RecoBase/lib -lRecoBase
-
-#LDFLAGS      += -L$(NA62MCSOURCE)/Persistency/lib -lNA62Persistency \
-#                -L$(NA62MCSOURCE)/$(NAME)/Persistency/lib -l$(NAME)Persistency
 
 TMP          := tmp
 LIB          := lib
@@ -35,28 +29,13 @@ dependencies := $(patsubst src/%.cc,$(TMP)/%.d,$(sources))
 
 #------------------------------------------------------------------------------
 
-LIBNAME := ""
-ifeq ($(NAME),PadmeAnalysis)
-	LIBNAME := $(NAME)
-endif
-ifeq ($(NAME),EventDisplay)
-	LIBNAME := $(NAME)
-endif
-ifeq ($(NAME),Service)
-	LIBNAME := $(NAME)
-endif
-ifeq ($(NAME),AnalysisBase)
-	LIBNAME := $(NAME)
-endif
-ifeq ($(LIBNAME),"")
-	LIBNAME:= $(NAME)Analysis
-endif
+LIBNAME := $(NAME)
 
 # .PHONY targets are executed regardless of time-stamp of any file of
 # same name.
 .PHONY: all obj clean includes
 
-#all: dirs lib
+all: dirs lib
 
 dirs:
 	@mkdir -p $(LIB)
@@ -86,17 +65,7 @@ clean:
 	@echo "Cleaning $(NAME) ..."
 	@rm -rf $(objects) $(dependencies) $(TMP) $(LIB) $(NAME)Dict.*
 
-#$(NAME)Dict.cc: $(dicincludes) $(NAME)LinkDef.hh
-#	@echo "Generating dictionary $@..."
-#	@rootcint -f $@ -c $(CPPFLAGS) $^
-#
-#$(TMP)/$(NAME)Dict.o: $(NAME)Dict.cc
-#	@echo "Compiling $^ ..."
-#	@$(CXX) $(CXXFLAGS) -c -o $@ $^
-
 ###
-
-objs: $(objects)
 
 $(TMP)/%.o: src/%.cc
 	@echo "Compiling $< ..."
@@ -110,7 +79,6 @@ $(TMP)/%.d: src/%.cc
 	sed 's|$*\.o|$(TMP)/& $@|' >$@;\
 	[ -s $@ ] || rm -f $@
 
-#Don't create dependencies when we're cleaning, for instance
-ifeq (0, $(words $(findstring $(MAKECMDGOALS), "clean")))
-	-include $(DEPFILES)
+ifneq ($(dependencies),)
+-include $(dependencies)
 endif

@@ -8,6 +8,7 @@ class HistoSvc;
 class NPoTAnalysis;
 class IsGGAnalysis;
 class Is3GAnalysis;
+class ETagAnalysis;
 
 class UserAnalysis {
 
@@ -35,6 +36,7 @@ private:
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
+  ETagAnalysis* fETagAnalysis;
 
 };
 #endif

@@ -16,7 +16,6 @@
 #include "DigitizerChannelETag.hh"
 #include "ETagCalibration.hh"
 #include "ETagGeometry.hh"
-#include "ETagSimpleClusterization.hh"
 #include "ADCChannelVReco.hh"
 
 #include "TH1F.h"
@@ -31,6 +30,7 @@ ETagReconstruction::ETagReconstruction(TFile* HistoFile, TString ConfigFileName)
   fChannelReco = new DigitizerChannelETag();
   //  fChannelCalibration = new ETagCalibration();
   fClusterization = new ETagSimpleClusterization();
+  fClusterization->HistoInit();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new ETagGeometry();
 
@@ -45,6 +45,28 @@ ETagReconstruction::ETagReconstruction(TFile* HistoFile, TString ConfigFileName)
 
 ETagReconstruction::~ETagReconstruction()
 {;}
+
+void ETagReconstruction::HistoExit(){
+ 
+  cout << "Entering HistoExit for " << this->GetName() << endl;
+  
+  if(fHistoFile == 0) 
+    return;
+
+  fClusterization->HistoExit();
+
+  fHistoFile->cd();
+  TDirectory *dir =  (TDirectory *)fHistoFile->Get(this->GetName().Data());
+  dir->cd();
+  
+  map<string, TH1*>::iterator itr;
+  for(itr = fHistoMap.begin(); itr != fHistoMap.end(); itr++)
+    {
+      TH1* histo = itr->second;
+      histo->Write();
+      delete histo;
+    }
+}
 
 void ETagReconstruction::HistoInit(){
   AddHisto("nboards", new TH1F("nboards","Number of boards",100,0.0,100.0));
@@ -239,7 +261,7 @@ void ETagReconstruction::BuildClusters()
   if(Hits.size()==0){
     return;
   }
-  //  std::cout<<"Mi chiamo Etag e sono il nuovo detector "<<std::endl;
+
   if (fClusterization) fClusterization->Reconstruct(Hits, myClusters);
   
 }
@@ -286,7 +308,7 @@ void ETagReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 t
 	}
       }
     } else {
-      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+      // std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
     }
   }    
 }

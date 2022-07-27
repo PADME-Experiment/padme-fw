@@ -39,7 +39,7 @@ void DigitizerChannelETag::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
   fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
   fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
-  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to ETagRecoAn.root
+  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",10); //Beth 23/2/22: total number of analog signals to write to ETagRecoAn.root
 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",0);
@@ -146,8 +146,8 @@ Double_t DigitizerChannelETag::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//c
     fAmpThresholdLow=12;
     }*/
   //  else{
-    fAmpThresholdHigh=8;
-    fAmpThresholdLow=8;
+    fAmpThresholdHigh=6;
+    fAmpThresholdLow=6;
     //}
       tDerivHitVec.clear();
       vRawHitVec.clear();
@@ -175,7 +175,8 @@ Double_t DigitizerChannelETag::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//c
 	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }
-      if(Time<50||Time>350) fAnalogPrint=1;
+      //if(Time<50||Time>350) 
+      fAnalogPrint=0; // enable to produce waveforms
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -412,9 +413,9 @@ void DigitizerChannelETag::SaveDebugHistos(){
     }
 }
 
-void DigitizerChannelETag::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
-  if(GetChID()==0) hNoEventsReconstructed->Fill(1);
-  //if(GetChID()>60) return;//Beth 10/3/22: There are only 90 ETag channels but in ETag.cfg 96 channels are still listed
+void DigitizerChannelETag::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum 
+  // if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  // if(GetChID()>60) return;//Beth 10/3/22: There are only 90 ETag channels but in ETag.cfg 96 channels are still listed
   tDerivHitVec          .clear();
   tDerivSortHitVec      .clear();
   tDerivDiffHitVec      .clear();
@@ -451,7 +452,7 @@ void DigitizerChannelETag::SetAbsSignals(Double_t ped){
 
 void DigitizerChannelETag::AnalogPlotting(){
   //plot analog signals
-  if(fAnalogsPrinted<fTotalAnalogs){
+  // if(fAnalogsPrinted<fTotalAnalogs){
     if(fAnalogPrint==1){//vRawCorrectHitVec.size()==1&&vTSpecYPHitVec[0]<20){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
@@ -466,7 +467,7 @@ void DigitizerChannelETag::AnalogPlotting(){
 
       fAnalogsPrinted++;
     }  
-  }
+  // }
 }
 
 void DigitizerChannelETag::HitPlots(std::vector<TRecoVHit *> &hitVec){
@@ -511,6 +512,9 @@ void DigitizerChannelETag::HitPlots(std::vector<TRecoVHit *> &hitVec){
       //hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],hitV);
     }
     //events with exactly one hit
+    hRawV->Fill(RawGetMax);
+    hRawVPerChannel[GetChID()]->Fill(RawGetMax);
+
     if(fNFoundPerChannel[GetChID()]==1){
       hRawVOneHit->Fill(RawGetMax);
       hRawVOneHitPerChannel[GetChID()]->Fill(RawGetMax);

@@ -126,7 +126,7 @@ Bool_t IsGGAnalysis::Process(){
 
   //ETag Checks
   Int_t NETagClusters =fEvent->ETagRecoCl->GetNElements();
-  std::cout<<"NETag clusters "<<NETagClusters<<std::endl;
+  //std::cout<<"NETag clusters "<<NETagClusters<<std::endl;
   //Calo-Calo checks
   Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
   ETotECal=0;

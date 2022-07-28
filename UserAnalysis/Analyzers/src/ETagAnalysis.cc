@@ -38,16 +38,30 @@ Bool_t ETagAnalysis::InitHistos(){
   fHS->BookHistoList("ETagAnalysis","XPos",200,-25.,25.);
   fHS->BookHistoList("ETagAnalysis","YPos",200,-25.,25.);
 
+  fHS->BookHisto2List("ETagAnalysis","Occupancy2D", 2, 0., 2., 4*15, 0., 4*15.);
+
   fHS->BookHistoList("ETagAnalysis","LeftRightTimeDiff",200,-25.,25.);
   fHS->BookHistoList("ETagAnalysis","LeftRightTimeSum",200,-500.,0.);
+  fHS->BookHistoList("ETagAnalysis","LeftRightTrueTimeDiff",200,-25.,25.);
+  fHS->BookHistoList("ETagAnalysis","LeftRightTrueTimeSum",200,-500.,0.);
+  //fHS->BookHistoList("ETagAnalysis","LeftRightTimeSumTrueTime",200,-500.,0.);
   fHS->BookHistoList("ETagAnalysis","LeftECalTimeDiff",200,-50.,50.);
   fHS->BookHistoList("ETagAnalysis","RightECalTimeDiff",200,-50.,50.);
   fHS->BookHistoList("ETagAnalysis","LeftECalTimeDiffECalEnergyCut",200,-50.,50.);
   fHS->BookHistoList("ETagAnalysis","RightECalTimeDiffECalEnergyCut",200,-50.,50.);
+  fHS->BookHistoList("ETagAnalysis","LeftETagTime",200,-300.,0.);
+  fHS->BookHistoList("ETagAnalysis","RightETagTime",200,-300.,0.);
+	
   return true;
 }
 
 Bool_t ETagAnalysis::Process(){
+
+	auto nHits = fEvent->ETagRecoEvent->GetNHits();
+	for (auto i = 0; i < nHits; i++) { 
+		auto ID = fEvent->ETagRecoEvent->Hit(i)->GetChannelId();
+		fHS->FillHisto2List("ETagAnalysis", "Occupancy2D", PosMap[ID].first, PosMap[ID].second);
+	}
 
   fNPoT = fEvent->TargetRecoBeam->getnPOT();
   fXPos = fEvent->TargetRecoBeam->getX();
@@ -65,7 +79,10 @@ Bool_t ETagAnalysis::Process(){
   if( (trigMask & (1 << 0)) ) {
 
     std::vector<float> leftClusterTimes, rightClusterTimes;
-    Int_t NClusters =fEvent->ETagRecoCl->GetNElements();
+    std::vector<float> leftClusterTrueTimes, rightClusterTrueTimes;
+    std::vector<float> leftClusterChns, rightClusterChns;
+	std::vector<float> leftClusterMatched, rightClusterMatched;
+    Int_t NClustersETag =fEvent->ETagRecoCl->GetNElements();
 
     Int_t NClustersECAL = fEvent->ECalRecoCl->GetNElements();
     float totE = 0.;
@@ -74,42 +91,88 @@ Bool_t ETagAnalysis::Process(){
       ECALtimes.push_back(fEvent->ECalRecoCl->Element(icl)->GetTime());
       totE += fEvent->ECalRecoCl->Element(icl)->GetEnergy();
     }
-    for(int icl = 0; icl < NClusters; icl++) {
-      if (fEvent->ETagRecoCl->Element(icl)->GetChannelId() < 0) {
-        leftClusterTimes.push_back(fEvent->ETagRecoCl->Element(icl)->GetTime());
-      }
-      else {
-        rightClusterTimes.push_back(fEvent->ETagRecoCl->Element(icl)->GetTime());
-      }
-    }
-    for (auto timeL : leftClusterTimes) {
+	float x_ecal = -1000.0;
+	float y_ecal = -1000.0;
+	if (NClustersECAL == 1) {
+		TVector3 pos1 =  fEvent->ECalRecoCl->Element(0)->GetPosition();
+		x_ecal = pos1.X(); // mm
+		y_ecal = pos1.Y(); // mm
+	}
+    for (int iecal = 0; iecal < NClustersECAL; iecal++) {
+		TVector3 pos1 =  fEvent->ECalRecoCl->Element(iecal)->GetPosition();
+		x_ecal = pos1.X(); // mm
+		y_ecal = pos1.Y(); // mm
+	    for(int icl = 0; icl < NClustersETag; icl++) {
+		float y = -300 + 40/2 + 40 * abs(fEvent->ETagRecoCl->Element(icl)->GetChannelId());
+		bool matched = false;
+		if (abs(y - y_ecal) < 20) 
+			matched = true;
+	      if (fEvent->ETagRecoCl->Element(icl)->GetChannelId() < 0) {
+		//if (NClustersECAL == 1 && abs(totE) > 250 && abs(totE) < 330) {
+			float tLeft = fEvent->ETagRecoCl->Element(icl)->GetTime() - 20.0;
+			float conversionFactor = pow(10, 9) / 1000; // m/s --> mm/ns
+			float tTrueLeft = tLeft - (-300 - x_ecal) * 1.5 / (3 * pow(10, 8) / conversionFactor); // ns
+			leftClusterTimes.push_back(tLeft);
+			leftClusterTrueTimes.push_back(tTrueLeft);
+			leftClusterMatched.push_back(matched);
+			leftClusterChns.push_back(fEvent->ETagRecoCl->Element(icl)->GetChannelId());
+		//}
+	      }
+	      else {
+			float tRight = fEvent->ETagRecoCl->Element(icl)->GetTime() - 20.0;
+			float conversionFactor = pow(10, 9) / 1000; // m/s --> mm/ns
+			float tTrueRight = tRight - (300 - x_ecal) * 1.5 / (3 * pow(10, 8) / conversionFactor); // ns
+			rightClusterTimes.push_back(tRight);
+			rightClusterTrueTimes.push_back(tTrueRight);
+			rightClusterMatched.push_back(matched);
+			rightClusterChns.push_back(fEvent->ETagRecoCl->Element(icl)->GetChannelId());
+	      }
+	    }
+	}
+    for (auto i = 0; i < leftClusterTimes.size(); i++) {
+	auto timeL = leftClusterTimes[i];
+	fHS->FillHistoList("ETagAnalysis", "LeftETagTime", timeL);
       for (auto timeE : ECALtimes) {
-        fHS->FillHistoList("ETagAnalysis", "LeftECalTimeDiff", timeL - timeE);
-        if (totE > 250 && totE < 350)
-          fHS->FillHistoList("ETagAnalysis", "LeftECalTimeDiffECalEnergyCut", timeL - timeE);
+			if (leftClusterMatched[i]) {
+		      fHS->FillHistoList("ETagAnalysis", "LeftECalTimeDiff", timeL - timeE);
+			      fHS->FillHistoList("ETagAnalysis", "LeftECalTimeDiffECalEnergyCut", timeL - timeE);
+			}
       }
     }
-    for (auto timeR : rightClusterTimes) {
+    for (auto i = 0; i < rightClusterTimes.size(); i++) {
+	auto timeR = rightClusterTimes[i];
+	fHS->FillHistoList("ETagAnalysis", "RightETagTime", timeR);
       for (auto timeE : ECALtimes) {
         fHS->FillHistoList("ETagAnalysis", "RightECalTimeDiff", timeR - timeE);
-        if (totE > 250 && totE < 350)
           fHS->FillHistoList("ETagAnalysis", "RightECalTimeDiffECalEnergyCut", timeR - timeE);
       }
     }
     // if (NClusters == 2 && leftClusterTimes.size() == rightClusterTimes.size()) {
-      for (auto timeL : leftClusterTimes) {
-        for (auto timeR: rightClusterTimes) {
-          fHS->FillHistoList("ETagAnalysis", "LeftRightTimeDiff", timeL - timeR);
-          fHS->FillHistoList("ETagAnalysis", "LeftRightTimeSum", timeL + timeR);
+     for (auto i = 0; i < leftClusterTimes.size(); i++) {
+	for (auto j = 0; j < rightClusterTimes.size(); j++) {
+	     //if (NClusters == 2 && leftClusterTimes.size() == rightClusterTimes.size()) {
+	     //if (NClustersECAL == 1) {
+		if (abs(leftClusterChns[i]) < 50 && abs(rightClusterChns[j]) < 50)  {
+			if (abs(leftClusterChns[i]) == abs(rightClusterChns[j])) {
+				fHS->FillHistoList("ETagAnalysis", "LeftRightTimeDiff", leftClusterTimes[i] - rightClusterTimes[j]);
+				fHS->FillHistoList("ETagAnalysis", "LeftRightTimeSum", leftClusterTimes[i] + rightClusterTimes[j]);
+				if (leftClusterMatched[i]) {
+					fHS->FillHistoList("ETagAnalysis", "LeftRightTrueTimeDiff", leftClusterTrueTimes[i] - rightClusterTrueTimes[j]);
+					fHS->FillHistoList("ETagAnalysis", "LeftRightTrueTimeSum", leftClusterTrueTimes[i] + rightClusterTrueTimes[j]);
+				}
+				//fHS->FillHistoList("ETagAnalysis", "LeftRightTimeSumTrueTime", (leftClusterTimes[i] + rightClusterTimes[j] - 3.0)/2.0);
+			}
+		}
+	     //}
         }
       }
     // }
-    for (auto time : leftClusterTimes) {
-      std::cout << "left cluster time: " << time << std::endl;
-    }
-    for (auto time : rightClusterTimes) {
-      std::cout << "right cluster time: " << time << std::endl;
-    }
+    //for (auto time : leftClusterTimes) {
+    //  std::cout << "left cluster time: " << time << std::endl;
+    //}
+    //for (auto time : rightClusterTimes) {
+    //  std::cout << "right cluster time: " << time << std::endl;
+    //}
     // for (size_t i = 0; i < leftClusters.size(); i++) {
     //   if (i == 1) break;
     //   // icl : leftClusters) {

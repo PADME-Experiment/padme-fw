@@ -14,7 +14,8 @@
 #include <iostream>
 #include "TDirectory.h"
 //#include "TMath.h"
-using std::vector, std::map;
+using std::vector;
+using std::map;
 
 struct {
     bool operator()(TRecoVHit * a, TRecoVHit * b) const {

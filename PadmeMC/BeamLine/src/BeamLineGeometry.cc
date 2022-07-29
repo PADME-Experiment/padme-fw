@@ -88,8 +88,7 @@ BeamLineGeometry::BeamLineGeometry()
   fMagVolMinRadius = fDHSTB002CenterRadius-0.5*fMagVolSizeX;
   fMagVolMaxRadius = fDHSTB002CenterRadius+0.5*fMagVolSizeX;
 
-  // Dimensions of the beam pipe inside the magnet
-
+  // Dimensions of the beam pipe inside the magnets DHSTB001 and DHSTB002
   // Transverse section
   fMagPipeSizeX = 59.*mm;
   fMagPipeSizeY = 40.*mm;
@@ -149,15 +148,12 @@ BeamLineGeometry::BeamLineGeometry()
   fBePipeLength = 1664.*mm;
   fBePipeRIn = 21.0*mm;
   fBePipeROut = 24.0*mm;
-
   fBePipeFlangeFrontRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet;
   fBePipeFlangeFrontThick = 17.5*mm; // Thickness from DN63 datasheet;
-
   fBePipeFlangeBackRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet;
   fBePipeFlangeBackThick = 17.5*mm; // Thickness from DN63 datasheet;
 
   // Properties of Be thin window and its support flange
-
   fBeWindowRadius = 30.5*mm;
   fBeWindowThick = 250.*um;
   fBeWindowFlangeRadius = 0.5*113.5*mm;
@@ -173,9 +169,9 @@ BeamLineGeometry::BeamLineGeometry()
 
   fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
-  ///********M.R. ***********
+  ///********M.R. Default values for RUN II ***********
   //         PADME-- DHSTB002 -- Q4 --- Q3 --|  |-- Q2----Q1-----MyW
-  ///
+  ///        When BTF current I is read the gradient is obtained using
   //         Quadrupoles Gradient = 8.372E-2 * I + 2.3767E-2
 
   fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from L FOggetta e-mail 31/03/2021
@@ -187,6 +183,7 @@ BeamLineGeometry::BeamLineGeometry()
   // Collimators after mylar sltb4(LR) <-- sltb3(UPDW)  <-- Mylar 
   ///////////////////////////////////////////////////////////////////////
   // November 2020 tune L. Foggetta
+  // the aperture is calculated using the sum of TBXX-TBXX_M which is the maximum 
   //TB4R   26.16 TB4L   22.30          TB3 Up 26.06      TB3 Down 23.32	
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
@@ -209,9 +206,26 @@ BeamLineGeometry::BeamLineGeometry()
   fWallThickness        =  141.5*cm;   //check
   fWallPipeLen          =  251.4*cm;   //check
   fWallHoleRadius       =   30.0*cm;   //check
-  fWallMylarWinDistance =  297.0*cm;   //Check 
-  fDHSTB002WallDistance =  380.5*cm;   //check
+  fWallMylarWinDistance =  297.0*cm;   //was wrong? 
+  //  fWallMylarWinDistance =  267.0*cm;   //Check 
+  fDHSTB002WallDistance =  380.5*cm;   //was wrong ?
+  //fDHSTB002WallDistance =  411.5*cm;   //check seem to be 4115 08/2022
 
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022 
+  // Dimensions of the beam pipe inside the pulsed Magnet
+  // 
+
+  fDHSTB002ToPulsedMagnet = 6642.*mm;   //flange to flange Raggi
+  fPulsedPipeSizeX =   63.*mm; //full size
+  fPulsedPipeSizeY =   24.*mm; //full size
+  fPulsedPipeLength= 1044.*mm;
+
+  fPulsedPipeHoleSizeX = 57.*mm;
+  fPulsedPipeHoleSizeY = 18.*mm;
+
+  fPulsedFlangeR     =  0.5*113.5*mm;
+  fPulsedFlangeThick =  17.5*mm;        
+               
   //  DN 63 pipes specs  diametro interno 66 esterno 70
   f2020PipeOuterRadius  =    3.5*cm; // Using DN specs
   f2020PipeInnerRadius  =    3.3*cm; // Using DN specs

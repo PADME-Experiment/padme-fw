@@ -42,7 +42,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
 
   //data card for beam setup M. Raggi 06/2020
   fBeamLineSetupCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Setup",this);
-  fBeamLineSetupCmd->SetGuidance("Set Beam line setup 0=2019 Be  1=2020 Mylar");
+  fBeamLineSetupCmd->SetGuidance("Set Beam line setup 0=2019 Be  1=2020 Mylar 2=2022 X17");
   fBeamLineSetupCmd->SetParameterName("BLS",false);
   fBeamLineSetupCmd->SetRange("BLS  >=0. && BLS < 15.");
   fBeamLineSetupCmd->AvailableForStates(G4State_PreInit,G4State_Idle);

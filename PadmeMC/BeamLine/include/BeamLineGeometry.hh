@@ -231,7 +231,18 @@ public:
   G4double GetWallHoleRadius(){ return fWallHoleRadius;}
   G4double GetWallMylarWinDistance(){ return fWallMylarWinDistance;}
 
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022
+  G4double GetDHSTB002ToPulsedMagnet()  { return fDHSTB002ToPulsedMagnet;}      
+  G4double GetPulsedPipeSizeX()		{ return fPulsedPipeSizeX ;}      
+  G4double GetPulsedPipeSizeY()		{ return fPulsedPipeSizeY ;}   
+  G4double GetPulsedPipeStraightLength(){ return fPulsedPipeLength;}
 
+  G4double GetPulsedPipeHoleSizeX()	{ return  fPulsedPipeHoleSizeX;}   
+  G4double GetPulsedPipeHoleSizeY()	{ return  fPulsedPipeHoleSizeY;}   
+
+  G4double GetPulsedPipeFlangeRadius()	{ return fPulsedFlangeR;}   
+  G4double GetPulsedPipeFlangeThick()	{ return fPulsedFlangeThick;}   
+  
 private:
 
   //  Berillium thin window and stainless still flange
@@ -411,6 +422,23 @@ private:
   G4double fDHSTB002WallDistance;
   G4double f2020PipeOuterRadius; 
   G4double f2020PipeInnerRadius; 
+
+
+  //
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022 
+  //
+  G4double fDHSTB002ToPulsedMagnet; 
+  // Dimensions of the beam pipe inside the pulsed magnet
+  // Transverse section
+  G4double fPulsedPipeSizeX; 
+  G4double fPulsedPipeSizeY; 
+  G4double fPulsedPipeLength;
+
+  G4double fPulsedPipeHoleSizeX;
+  G4double fPulsedPipeHoleSizeY;
+ 
+  G4double fPulsedFlangeR ;
+  G4double fPulsedFlangeThick;
 
 
 };

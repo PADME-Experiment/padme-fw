@@ -51,8 +51,17 @@ private:
 
   void CreateDHSTB002Magnet();
   void CreateDHSTB001Magnet(); //Raggi 01/02/2022
-  //  void CreateQuadMagnets();
+  //  void CreateQuadMagnets( Grad, Lenght Radius, Position, Rotation);
   G4LogicalVolume* CreateQuadMagnets(G4double , G4double , G4double ,G4ThreeVector , G4RotationMatrix*);
+
+  //Might try creating more flexible geometry with much less coding 08/2022
+  // Fixed position Wall with inner pipe 
+  void CreateWallAndPipe();  //Raggi 08/2022
+  // Fixed position Quadrupoles 
+  void PositionAllQuads();   //Raggi 08/2022
+  // Fixed position Collimators 
+  void CreateAllSLTB();      //Raggi 08/2022
+  void CreatePulsedMagnet(); //Raggi 08/2022
 
   G4LogicalVolume* fMotherVolume;
   //G4LogicalVolume* fGlobalLogicalVolume;

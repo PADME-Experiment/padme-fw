@@ -7,7 +7,7 @@ import math
 os.system("make -j8")
 
 #ask which run you want to analyse
-DataToRead = raw_input("Enter the address of the reconstructed data in format /data05/padme/beth/Runxxx_Conditions/:")
+DataToRead = raw_input("Enter the address of the reconstructed data in format /home/long/Runxxx_Conditions/:")
 
 print("\n-----------------\n")
 
@@ -24,101 +24,90 @@ if TotFiles<1:
 print "Analysing",TotFiles,"files"
 
 #work out how to distribute the jobs
-NoCoresToUse = 16.
-MinFilesPerCore = math.floor(TotFiles/NoCoresToUse)
-MaxFilesPerCore = math.ceil(TotFiles/NoCoresToUse)
+NoCoresToUse = float(commands.getstatusoutput("ls -d "+DataToRead+"SubList* | wc -l")[1])
 
-NoCoresWithMin = NoCoresToUse - TotFiles%NoCoresToUse
-NoCoresWithMax = NoCoresToUse - NoCoresWithMin
+MinFilesPerCore = int(math.floor(TotFiles/NoCoresToUse))
+MaxFilesPerCore = int(math.ceil(TotFiles/NoCoresToUse))
 
-#put runs to be used into a file list
-ListFileName = "AnalysisList.txt"
+NoCoresWithMin = int(NoCoresToUse - TotFiles%NoCoresToUse)
+NoCoresWithMax = int(NoCoresToUse - NoCoresWithMin)
 
-lsCommand = "ls -d "+DataToRead+"SubList*"
-SubDirList = commands.getstatusoutput(lsCommand)[1]
-SubDirList = SubDirList.split("\n")
+print "MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"NoCoresWithMin",NoCoresWithMin,"NoCoresWithMax",NoCoresWithMax
 
 #check which version of UserAnalysis you want to use
-PadmeFWToUse = commands.getstatusoutput("ls -d "+DataToRead+"*padme-fw*")[1]
+PadmeFWToUse = commands.getstatusoutput("(cd "+DataToRead+" && ls -d *padme-fw*)")[1]
 
-PadmeAnalysisToUse = "220407padme-fw/UserAnalysis/Analyzers"
+PadmeAnalysisToUse = PadmeFWToUse+"/UserAnalysis/Analyzers"
 PadmeAnalysisCheckString = "PadmeAnalysisToUse set to " +PadmeAnalysisToUse+". Is this what you want? Type y for yes, n for no: "
 PadmeAnalysisCheck = raw_input(PadmeAnalysisCheckString)
 if PadmeAnalysisCheck=="n":
     PadmeAnalysisToUse = raw_input("Insert your desired output directory here: ")
 
 #if a version of UserAnalysis already exists there then rm it
-ProceedCheckString = "about to rm everything in "+PadmeAnalysisToUse+". Proceed? Type y for yes, n for no:"
-ProceedCheck = raw_input(ProceedCheckString)
+AnalysisReplaceCheckString = "about to rm everything in "+DataToRead+PadmeAnalysisToUse+". Proceed? Type y for yes, n for no:"
+AnalysisReplaceCheck = raw_input(AnalysisReplaceCheckString)
 
-if ProceedCheck=="y":
-    os.system("rm -rf "+PadmeAnalysisToUse+"*")
+if AnalysisReplaceCheck=="y":
+    os.system("rm -rf "+DataToRead+PadmeAnalysisToUse+"*")
 else:
     sys.exit()
 
 #copy correct version of UserAnalysis to PadmeFW directory
-CopyCommand = "cp -r /home/long/"+PadmeAnalysisToUse+" "+PadmeFWToUse
+CopyCommand = "cp -r /home/long/"+PadmeAnalysisToUse+" "+DataToRead+PadmeAnalysisToUse
 print(CopyCommand)
-#os.system(CopyCommand)
+os.system(CopyCommand)
 
+print DataToRead+PadmeFWToUse
 
-#
+#check number of events per file
+MCorData = raw_input("Are the reco files from data? Type d for data, m for MC:")
+if MCorData == "d":
+    EventChecker = raw_input("Assuming 1000 events per reco file. Type y if this is correct, n if this is incorrect:")
+    if EventChecker == 'y':
+        EventsPerFile =1000
+    else:
+        EventsPerFile = raw_input("Type the correct number of events per file here:")
+
+elif MCorData == "m":
+    EventChecker = raw_input("Assuming 100 events per reco file. Type y if this is correct, n if this is incorrect:")
+    if EventChecker == 'y':
+        EventsPerFile =100
+    else:
+        EventsPerFile = raw_input("Type the correct number of events per file here:")
+
+else:
+    print "Data type unclear. Exiting"
+    sys.exit()
+
+#put runs to be used into a file list
+ListFileName = "AnalysisRuns.txt"
+
+lsCommand = "ls -d "+DataToRead+"SubList*"
+SubDirList = commands.getstatusoutput(lsCommand)[1]
+SubDirList = SubDirList.split("\n")
 
 with open(ListFileName,"w") as fulllist: 
-    nwritten=0
+   # nwritten=0
     for SubDir in SubDirList:
+        print("MySubDir "+SubDir)
+        #which subdirectory are we talking about?
+        SubDirNo = int(SubDir.split("_")[-1])
+        #create symlinks to PadmeAnalysis and config file
+        if os.path.exists(SubDir+"/PadmeAnalysis"):
+            os.system("rm "+SubDir+"/PadmeAnalysis")
         exesymlink = "ln -s "+DataToRead+PadmeFWToUse+"/UserAnalysis/PadmeAnalysis "+SubDir+"\n"
-        
-        fulllist.write("cd "+SubDir+"\n")
-        if(nwritten<NoCoresWithMin):
-            fulllist.write("nohup ./PadmeAnalysis -i OutputFile"+str(int(nwritten))+".root -n"+str(int(MinFilesPerCore))+" -o AnalysisOutputFile"+str(int(nwritten))+".root >logAnalysis.txt &\n")
+        os.system(exesymlink)
+        if os.path.exists(SubDir+"/AnalysisConfig.conf"):
+            os.system("rm "+SubDir+"/AnalysisConfig.conf")
+        configsymlink = "ln -s "+DataToRead+PadmeFWToUse+"/UserAnalysis/config/UserAnalysis.conf "+SubDir+"/AnalysisConfig.conf\n"
+        os.system(configsymlink)
+
+        #write source file to run analysis
+        if SubDirNo<NoCoresWithMax:
+            print "SubDirNo ",SubDirNo,"NoCoresWithMax",NoCoresWithMax,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore
+            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/OutputFile"+str(int(SubDirNo))+".root -n "+str(int(MaxFilesPerCore)*EventsPerFile)+" -o "+SubDir+"/AnalysisOutputFile"+str(int(SubDirNo))+".root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
         else:
-            fulllist.write("nohup ./PadmeAnalysis -i OutputFile"+str(int(nwritten))+".root -n"+str(int(MaxFilesPerCore))+" -o AnalysisOutputFile"+str(int(nwritten))+".root >logAnalysis.txt &\n")
-        nwritten+=1
-
-
-#SubFiles=[]
-#SubDirectories=[]
-#SubFileNames=[]
-#for ii in range(NoCoresToUse):
-#    SubDirectories.append("SubListRunMC_"+str(ii))
-#    SubFileNames.append(SubDirectories[ii]+".txt")
-#    os.mkdir(MyDir+SubDirectories[ii])
-#    os.chdir(MyDir+SubDirectories[ii])
-#    #create the text files containing the list of files
-#    SubFiles.append(open(MyDir+SubDirectories[ii]+"/"+SubFileNames[ii],"w"))
-#
-#with open(MyDir+ListFileName,"r") as fulllist:
-#    for line in fulllist:
-#        SubFiles[LinesPrinted%NoCoresToUse].write(line)
-#        LinesPrinted+=1
-#
-##copy padme-fw
-#PadmeFWToUse ="220407padme-fw/" 
-#PadmeFWCheckString = "PadmeFWToUse set to " +PadmeFWToUse+". Is this what you want? Type y for yes, n for no: "
-#PadmeFWCheck = raw_input(PadmeFWCheckString)
-#
-#if PadmeFWCheck=="n":
-#    PadmeFWToUse = raw_input("Insert your desired output directory here: ")
-#
-#CopyCommand = "cp -r /home/long/"+PadmeFWToUse+" "+MyDir
-#print(CopyCommand)
-#os.system(CopyCommand)
-#
-##create symbolic links and launch reconstruction
-#with open("/home/long/"+PadmeFWToUse+"PadmeReco/MCRecoLauncher.txt","w") as RecoLauncher:
-#    for ii in range(len(SubFiles)):
-#        print("cd "+MyDir+SubDirectories[ii])
-#        os.chdir(MyDir+SubDirectories[ii])
-#        RecoLauncher.write("cd "+MyDir+SubDirectories[ii]+"\n")
-#
-#        exesymlink = "ln -s "+MyDir+PadmeFWToUse+"PadmeReco/PadmeReco "+"./"
-#        os.system(exesymlink)
-#        configsymlink = "ln -s "+MyDir+PadmeFWToUse+"PadmeReco/config "+"./"
-#        os.system(configsymlink)
-#        
-#        launchcomm = "nohup ./PadmeReco -l "+MyDir+SubDirectories[ii]+"/"+SubFileNames[ii]+" -o OutputFile"+str(ii)+".root &> log"+str(ii)+".txt &"
-#        print launchcomm
-#        RecoLauncher.write(launchcomm+"\n")
-#        #os.system(launchcomm)
-#    RecoLauncher.write("cd /home/long/"+PadmeFWToUse+"PadmeReco")
+            print "SubDirNo ",SubDirNo,"NoCoresWithMin",NoCoresWithMin,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore
+            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/OutputFile"+str(int(SubDirNo))+".root -n "+str(int(MinFilesPerCore)*EventsPerFile)+" -o "+SubDir+"/AnalysisOutputFile"+str(int(SubDirNo))+".root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
+        fulllist.write("\n")
+    fulllist.write("cd /home/long/"+PadmeFWToUse+"/UserAnalysis")

@@ -1,6 +1,7 @@
 // Written by M. Raggi   20/07/2021 
 // Last modified by M. Raggi 12/08/2021
 #include "BhabhaAnalysis.hh"
+#include "TMath.h"
 
 BhabhaAnalysis::BhabhaAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -34,6 +35,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->CreateList("PVetoClusters");
   fHS->CreateList("EVetoClusters");
   fHS->CreateList("BhabhaList");
+  fHS->CreateList("TimeCorrectionList");
 
   //Number of clusters
   fHS->BookHistoList("PVetoClusters","hNPVetoCluster",100,0,100);
@@ -71,22 +73,37 @@ Bool_t BhabhaAnalysis::InitHistos(){
 
   //Particle energy sum assuming Bremsstrahlung
   fHS->BookHistoList("BhabhaList","hChToEnergySum",200,0,750);
-  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",192,-96,96,200,-320,430);
+  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",192,-96,96,200,-320,430);
 
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindow",200,0,750);
-  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",192,-96,96,200,-320,430);
+  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",192,-96,96,200,-320,430);
 
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindowGood",200,0,750);
-  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",192,-96,96,200,-320,430);
+  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",192,-96,96,200,-320,430);
 
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindowGoodMoreEnergeticElectron",200,0,750);
-  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",192,-96,96,200,-320,430);
+  //fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",192,-96,96,200,-320,430);
 
   //Bhabha plots
   fHS->BookHisto2List("BhabhaList","h5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","h2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","hEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   //fHS->BookHisto2List("BhabhaList","h0.6xHitsEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+
+  //Time correction plots
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrect2to3HitsPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectEnergyCut2to3HitsPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasEnergyCut2to3HitsPVetoEVeto",50,-5,5);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",50,-5,5);
+  
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",180,-90,90,100,-5,5);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",180,-90,90,100,-5,5);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",180,-90,90,100,-5,5);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",50,5,5,50,-5,5);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",50,5,5,50,-5,5);
 
   return true;
 }
@@ -192,6 +209,16 @@ Bool_t BhabhaAnalysis::Process(){
   double tPVeto;
   double tEVeto;
 
+  //variables to calculate time difference corrected for different trajectories into vetoes:
+  //PVeto channel - EVeto channel
+  int deltaCh;
+
+  //Time difference caused by trajectory difference
+  double deltaTtraj;
+  
+  //Corrected time difference
+  double deltaTcorrect;
+  
   //channel
   int chPVeto;
   int chEVeto;
@@ -236,7 +263,7 @@ Bool_t BhabhaAnalysis::Process(){
 
       //sum of e+ e- energies as reconstructed using Bremsstrahlung relation
       fHS->FillHistoList("BhabhaList","hChToEnergySum",enBremElectron+enBremPositron);
-      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
 
       if(NHitsPVeto>1&&NHitsEVeto>1){
 	fHS->FillHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",tPVeto-tEVeto);
@@ -252,25 +279,43 @@ Bool_t BhabhaAnalysis::Process(){
       if(!(std::fabs(tPVeto-tEVeto)<5)) continue;
       fHS->FillHisto2List("BhabhaList","h5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindow",enBremElectron+enBremPositron);
-      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
-  
+      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+
+      deltaCh = chPVeto-chEVeto;
+      deltaTtraj = TMath::Power(deltaCh,3)*-6.5e-7+TMath::Power(deltaCh,2)*3.2e-6+deltaCh*0.04-0.07;
+      deltaTcorrect = tPVeto-tEVeto-deltaTtraj;
+      
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",deltaTtraj);
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",deltaTcorrect);
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",chPVeto-chEVeto,deltaTtraj);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",deltaTtraj,deltaTcorrect);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
+      
       //either 2 or 3 hits?
       if(!(NHitsPVeto<4&&NHitsEVeto<4)) continue;
       fHS->FillHisto2List("BhabhaList","h2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
-
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrect2to3HitsPVetoEVeto",deltaTcorrect);
+      
       //minimum energy?
       if(!(enPVeto>1.6&&enEVeto>1.6)) continue;
       fHS->FillHisto2List("BhabhaList","hEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
-
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
+      
       //19<ch<71?
       if(!(chPVeto>19&&chEVeto>19&&chPVeto<71&&chEVeto<71)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGood",enBremElectron+enBremPositron);
-      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
-
+      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
+      
       //Electron more energetic than positron?
       if(!(chEVeto>chPVeto)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGoodMoreEnergeticElectron",enBremElectron+enBremPositron);
-      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
+      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
     }
   }
 

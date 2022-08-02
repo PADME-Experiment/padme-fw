@@ -20,7 +20,7 @@ public:
   
 private:
 
-  Bool_t InitHistos();
+  Bool_t InitHistos(Bool_t isMC);
 
   Int_t fVerbose;
 

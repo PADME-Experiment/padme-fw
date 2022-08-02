@@ -23,11 +23,18 @@ BremsstrahlungAnalysis::~BremsstrahlungAnalysis(){
 Bool_t BremsstrahlungAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing BremsstrahlungAnalysis\n");
   fEvent = event;
-  InitHistos();
+  Bool_t isMC = false;
+  std::cout<<"before "<<fEvent->MCTruthEvent<<std::endl;
+  if (fEvent->MCTruthEvent){
+    isMC=true;
+    std::cout<<"input data are simulatetd "<<std::endl;
+  }
+  InitHistos(isMC);
   return true;
 }
 
-Bool_t BremsstrahlungAnalysis::InitHistos(){
+Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
+
   // BremsstrahlungAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("BremsstrahlungList");
 
@@ -35,8 +42,14 @@ Bool_t BremsstrahlungAnalysis::InitHistos(){
   fHS->BookHistoList("BremsstrahlungList","hNPVetoCluster",100,0,100);
   fHS->BookHistoList("BremsstrahlungList","hNSACCluster",100,0,100);
 
+  std::cout<<"isMC? "<<isMC<<std::endl;
+
   //Cluster time
-  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,-250,250);
+  if(isMC=false)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,-250,250);
+  else if(isMC=true){
+  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,0,500);
+  std::cout<<"yep"<<std::endl;
+  }
   fHS->BookHistoList("BremsstrahlungList","htSACCluster",500,-250,250);
 
   //No. hits per cluster
@@ -133,7 +146,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       enPVeto    =  fEvent->PVetoRecoCl->Element(ii)->GetEnergy();
 
       //histograms of raw variables
-      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);
+      //      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);
       fHS->FillHistoList("BremsstrahlungList","hNHitsPVetoCluster",NHitsPVeto);
       fHS->FillHistoList("BremsstrahlungList","hEnergyPVetoCluster",enPVeto);
       fHS->FillHistoList("BremsstrahlungList","hChPVetoCluster",chPVeto);

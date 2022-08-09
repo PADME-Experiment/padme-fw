@@ -3,3 +3,4 @@
 NAME := UserAnalysis
 
 include ../config/global_mac.gmk
+#include ../config/subdirs_mac.gmk

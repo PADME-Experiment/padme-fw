@@ -24,19 +24,21 @@ BhabhaAnalysis::~BhabhaAnalysis(){
 Bool_t BhabhaAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing BhabhaAnalysis\n");
   fEvent = event;
+  
   InitHistos();
   return true;
 }
 
 Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("TOP","TriggerMaskBhabha",130,0,130);
-
+  
   // BhabhaAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("PVetoClusters");
   fHS->CreateList("EVetoClusters");
   fHS->CreateList("BhabhaList");
+  fHS->CreateList("MCBhabha");
   fHS->CreateList("TimeCorrectionList");
-
+  
   //Number of clusters
   fHS->BookHistoList("PVetoClusters","hNPVetoCluster",100,0,100);
   fHS->BookHistoList("EVetoClusters","hNEVetoCluster",100,0,100);
@@ -73,27 +75,27 @@ Bool_t BhabhaAnalysis::InitHistos(){
 
   //Particle energy sum assuming Bremsstrahlung
   fHS->BookHistoList("BhabhaList","hChToEnergySum",200,0,750);
-  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",192,-96,96,200,-320,430);
-
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindow",200,0,750);
-  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",192,-96,96,200,-320,430);
-
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindowGood",200,0,750);
-  //  fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",192,-96,96,200,-320,430);
-
   fHS->BookHistoList("BhabhaList","hChToEnergySum5nsWindowGoodMoreEnergeticElectron",200,0,750);
-  //fHS->BookHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",192,-96,96,200,-320,430);
 
   //Bhabha plots
   fHS->BookHisto2List("BhabhaList","h5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","h2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","hEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  //fHS->BookHisto2List("BhabhaList","h0.6xHitsEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("BhabhaList","hGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("BhabhaList","hLeadingElectronGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
 
+  //MC only Bhabha plots
+  fHS->BookHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("MCBhabha","hBhabhaNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("MCBhabha","hAllBoxNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("MCBhabha","hBhabhaBoxNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  
   //Time correction plots
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",50,-5,5);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",50,-5,5);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",50,-5,5);
-  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",50,-5,5);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrect2to3HitsPVetoEVeto",50,-5,5);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectEnergyCut2to3HitsPVetoEVeto",50,-5,5);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasEnergyCut2to3HitsPVetoEVeto",50,-5,5);
@@ -109,19 +111,19 @@ Bool_t BhabhaAnalysis::InitHistos(){
 }
 
 Bool_t BhabhaAnalysis::Process(){
-  
-  //Check if is MC or data
+
   Bool_t isMC = false;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
     isMC=true;
     //    std::cout<<"input data are simulatetd "<<std::endl;
   }
+  
+  //Cut on physics trigger Data Only
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("TOP","TriggerMaskBhabha",trigMask);
 
-  //Cut on physics trigger Data Only
   if( !(trigMask & (1 << 0)) && isMC==false) return false;
-
+  
   //Number of PVeto clusters
   Int_t NPVetoCluster = fEvent->PVetoRecoCl->GetNElements();
   fHS->FillHistoList("PVetoClusters","hNPVetoCluster",NPVetoCluster);
@@ -153,6 +155,12 @@ Bool_t BhabhaAnalysis::Process(){
   int tempNHit;
   int tempCh;
 
+  //Box selection criteria
+  Bool_t TopBoundary;
+  Bool_t BottomBoundary;
+  Bool_t LeftBoundary;
+  Bool_t RightBoundary;
+  
   //All EVeto Clusters
   for(int ii = 0; ii<NEVetoCluster; ii++){
     tempNHit  = fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
@@ -179,6 +187,8 @@ Bool_t BhabhaAnalysis::Process(){
     chEVetoGood.push_back(tempCh);
   }
 
+  int tempEvCh;
+  
   //All PVeto Clusters
   for(int ii = 0; ii<NPVetoCluster; ii++){
     tempNHit  = fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
@@ -191,7 +201,22 @@ Bool_t BhabhaAnalysis::Process(){
     fHS->FillHistoList("PVetoClusters","htPVetoCluster",tempT);
     fHS->FillHistoList("PVetoClusters","hChPVetoCluster",tempCh);
     fHS->FillHistoList("PVetoClusters","hEnergyPVetoCluster",tempEClus);
+    
+    if(isMC){
+      for(int ii = 0; ii<NEVetoCluster; ii++){
+	tempEvCh =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
+	fHS->FillHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",tempCh,tempEvCh);
 
+	TopBoundary = tempEvCh<(-1*tempCh+98); //line through points (35,63) and (59,39) is y = -x + 98 => EVetoCh<-1*PVetoCh+98
+	BottomBoundary = tempEvCh>(-1*tempCh+93);// line through points (35,58) and (59,34) is y = -x + 93 => EVetoCh>-1*PVetoCh+93
+	LeftBoundary = tempCh>35;
+	RightBoundary = tempCh<59;
+
+	if(TopBoundary&&BottomBoundary&&LeftBoundary&&RightBoundary){
+	  fHS->FillHisto2List("MCBhabha","hAllBoxNPVetoClusterVsNEVetoCluster",tempCh,tempEvCh);
+	}
+      }
+    }
     //good cluster cuts:
     //>=2 hits
     if(tempNHit<2) continue;
@@ -203,6 +228,7 @@ Bool_t BhabhaAnalysis::Process(){
     enPVetoGood.push_back(tempEClus);
     tPVetoGood.push_back(tempT);
     chPVetoGood.push_back(tempCh);
+
   }
 
   //time
@@ -308,14 +334,14 @@ Bool_t BhabhaAnalysis::Process(){
       //19<ch<71?
       if(!(chPVeto>19&&chEVeto>19&&chPVeto<71&&chEVeto<71)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGood",enBremElectron+enBremPositron);
-      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGood",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+      fHS->FillHisto2List("BhabhaList","hGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
-      
+	    
       //Electron more energetic than positron?
       if(!(chEVeto>chPVeto)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGoodMoreEnergeticElectron",enBremElectron+enBremPositron);
+      fHS->FillHisto2List("BhabhaList","hLeadingElectronGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
-      //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindowGoodMoreEnergeticElectron",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
     }
   }
 

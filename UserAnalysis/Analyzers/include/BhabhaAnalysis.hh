@@ -29,5 +29,10 @@ private:
   utl::ConfigParser* fCfgParser;
 
   HistoSvc* fHS;
+
+  Bool_t isMC;
+
+  TMCVertex* mcVtx;
+  
 };
 #endif

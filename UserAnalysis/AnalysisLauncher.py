@@ -7,7 +7,7 @@ import math
 os.system("make -j8")
 
 #ask which run you want to analyse
-DataToRead = raw_input("Enter the address of the reconstructed data in format /home/long/Runxxx_Conditions/:")
+DataToRead = raw_input("Enter the address of the reconstructed data in format /data05/padme/beth/Runxxx_Conditions/:")
 
 print("\n-----------------\n")
 
@@ -79,6 +79,8 @@ else:
     print "Data type unclear. Exiting"
     sys.exit()
 
+print(type(EventsPerFile))
+    
 #put runs to be used into a file list
 ListFileName = "AnalysisRuns.txt"
 
@@ -104,10 +106,12 @@ with open(ListFileName,"w") as fulllist:
 
         #write source file to run analysis
         if SubDirNo<NoCoresWithMax:
-            print "SubDirNo ",SubDirNo,"NoCoresWithMax",NoCoresWithMax,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore
-            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/OutputFile"+str(int(SubDirNo))+".root -n "+str(int(MaxFilesPerCore)*EventsPerFile)+" -o "+SubDir+"/AnalysisOutputFile"+str(int(SubDirNo))+".root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
+            print "SubDirNo ",SubDirNo,"NoCoresWithMax",NoCoresWithMax,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"EventsPerFile",EventsPerFile,"int(MaxFilesPerCore)*int(EventsPerFile)",int(MaxFilesPerCore)*int(EventsPerFile)
+            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/RecoOutputFile.root -n "+str(int(MaxFilesPerCore)*int(EventsPerFile))+" -o "+SubDir+"/AnalysisOutputFile.root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
         else:
-            print "SubDirNo ",SubDirNo,"NoCoresWithMin",NoCoresWithMin,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore
-            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/OutputFile"+str(int(SubDirNo))+".root -n "+str(int(MinFilesPerCore)*EventsPerFile)+" -o "+SubDir+"/AnalysisOutputFile"+str(int(SubDirNo))+".root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
+            print "SubDirNo ",SubDirNo,"NoCoresWithMin",NoCoresWithMin,"MinFilesPerCore",MinFilesPerCore,"int(MaxFilesPerCore)",MaxFilesPerCore,"EventsPerFile",EventsPerFile,"int(MinFilesPerCore)*EventsPerFile",int(MinFilesPerCore)*int(EventsPerFile)
+            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/RecoOutputFile.root -n "+str(int(MinFilesPerCore)*int(EventsPerFile))+" -o "+SubDir+"/AnalysisOutputFile.root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
         fulllist.write("\n")
     fulllist.write("cd /home/long/"+PadmeFWToUse+"/UserAnalysis")
+
+print("AnalysisRuns.txt")

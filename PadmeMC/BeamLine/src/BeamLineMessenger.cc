@@ -105,6 +105,13 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableQuadrupolesCmd->SetDefaultValue(false);
   fEnableQuadrupolesCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //Activate the BTFTarget Region.
+  fEnableBTFTargetCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableBTFTarget",this);
+  fEnableBTFTargetCmd->SetGuidance("Enable (true) or disable (false) positioning of BTFTargetRegion");
+  fEnableBTFTargetCmd->SetParameterName("TPS",false);
+  fEnableBTFTargetCmd->SetDefaultValue(false);
+  fEnableBTFTargetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   //data card for Q1 quadrupole magnet gradient.
   fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
   fSetQ1_FieldGradCmd->SetGuidance("Set gradient of the Q1 quadrupole in T/m");
@@ -139,6 +146,7 @@ BeamLineMessenger::~BeamLineMessenger()
 {
 
   delete fEnableQuadrupolesCmd;
+  delete fEnableBTFTargetCmd;
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
   delete fSetQ3_FieldGradCmd; 
@@ -200,6 +208,14 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     }
   }
 
+  else if ( cmd == fEnableBTFTargetCmd ) {
+    if (fEnableBTFTargetCmd->GetNewBoolValue(par)) {
+      fBeamLineGeometry->EnableBTFTarget();
+    } else {
+      fBeamLineGeometry->DisableBTFTarget();
+    }
+  }
+
   // Set Q1 gradient
   else if ( cmd == fSetQ1_FieldGradCmd )
     fBeamLineGeometry->SetQ1MagneticFieldGrad(fSetQ1_FieldGradCmd->GetNewDoubleValue(par));
@@ -252,6 +268,9 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fEnableQuadrupolesCmd )
     cv = fEnableQuadrupolesCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
+
+  else if ( cmd == fEnableBTFTargetCmd )
+    cv = fEnableBTFTargetCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
 
   else if ( cmd == fSetQ1_FieldGradCmd )
    cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");

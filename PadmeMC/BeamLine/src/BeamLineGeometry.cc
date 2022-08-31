@@ -230,6 +230,7 @@ BeamLineGeometry::BeamLineGeometry()
   f2020PipeOuterRadius  =    3.5*cm; // Using DN specs
   f2020PipeInnerRadius  =    3.3*cm; // Using DN specs
 
+  fBTFTargetEnable = false;
   fBTFTargetThickness = 24.4*mm;
   fBTFTargetDistance  = 2370.*mm; 
 }

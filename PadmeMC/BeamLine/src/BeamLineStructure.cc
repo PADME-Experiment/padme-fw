@@ -1154,8 +1154,10 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   logicalBTFTarget->SetVisAttributes(CopperVisAttr);
   
   // positioning BTF target
-  new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
-
+  std::cout<<"CAZZOOOO "<<geo->BTFTargetIsEnabled()<<std::endl;
+  if(geo->BTFTargetIsEnabled()){
+    new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
+  }
 }// End of Create DHSTB001 
 
 

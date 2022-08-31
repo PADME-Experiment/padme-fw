@@ -69,6 +69,11 @@ public:
   void DisableQuadrupoles() { fQuadrupolesEnable = false; }
   G4bool QuadrupolesAreEnabled() { return fQuadrupolesEnable; }
 
+  // Enable/disable BTF Target Region
+  void EnableBTFTarget() { fBTFTargetEnable = true; }
+  void DisableBTFTarget() { fBTFTargetEnable = false; }
+  G4bool BTFTargetIsEnabled() { return fBTFTargetEnable; }
+
   // Magnetic field gradient inside quadrupoles
   void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g*tesla/m; }
   G4double GetQ1MagneticFieldGrad() { return fQ1MagneticFieldGrad; }
@@ -258,6 +263,7 @@ private:
 
   // Gradient of Quadrupoles Magnetic field 
   G4bool fQuadrupolesEnable;
+
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
   G4double fQ3MagneticFieldGrad;
@@ -268,6 +274,7 @@ private:
   G4double fSLTB2Aperture;
 
   G4double fBeamLineSetup;
+  G4bool fBTFTargetEnable;
 
   // Radius of magnet at center of beam line
   G4double fDHSTB002CenterRadius;

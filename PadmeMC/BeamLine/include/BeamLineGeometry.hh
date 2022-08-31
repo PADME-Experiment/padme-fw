@@ -122,7 +122,6 @@ public:
   G4double GetMagVolMaxRadius() { return fMagVolMaxRadius; }
 
   // Dimensions of beam pipe inside magnet
-
   G4double GetMagPipeSizeX() { return fMagPipeSizeX; }
   G4double GetMagPipeSizeY() { return fMagPipeSizeY; }
   G4double GetMagPipeMinRadius() { return fMagPipeMinRadius; }
@@ -241,11 +240,13 @@ public:
 
   G4double GetPulsedPipeFlangeRadius()	{ return fPulsedFlangeR;}   
   G4double GetPulsedPipeFlangeThick()	{ return fPulsedFlangeThick;}   
+
+  G4double GetBTFTargetThickness()	{ return fBTFTargetThickness;}   
+  G4double GetBTFTargetDistance()	{ return fBTFTargetDistance;}   
   
 private:
 
   //  Berillium thin window and stainless still flange
-
   G4bool fBeWindowEnable;
   G4bool fMylarWindowEnable;
   G4bool fBeamFlagEnable;
@@ -256,14 +257,11 @@ private:
   G4double fWindowThickness;
 
   // Gradient of Quadrupoles Magnetic field 
-  //G4double fQ1_FieldGrad;  //from data cards
-
   G4bool fQuadrupolesEnable;
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
   G4double fQ3MagneticFieldGrad;
   G4double fQ4MagneticFieldGrad;
-
 
   G4double fSLTB4Aperture;
   G4double fSLTB3Aperture;
@@ -439,7 +437,8 @@ private:
   G4double fPulsedFlangeR ;
   G4double fPulsedFlangeThick;
 
-
+  G4double fBTFTargetThickness;
+  G4double fBTFTargetDistance;  
 };
 
 #endif

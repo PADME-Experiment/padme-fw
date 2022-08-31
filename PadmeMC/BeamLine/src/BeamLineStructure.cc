@@ -951,9 +951,11 @@ void BeamLineStructure::CreateDHSTB002Magnet()
 void BeamLineStructure::CreateDHSTB001Magnet()
 {
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
-  G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
+  G4VisAttributes CopperVisAttr  = G4VisAttributes(G4Color::Magenta()); //Magenta
+  G4VisAttributes FlagVisAttr    = G4VisAttributes(G4Color::Yellow()); //Beam Flags
   G4VisAttributes DHSTB001VisAtt = G4VisAttributes(G4Colour::Red());
   G4VisAttributes MagFieldVisAtt = G4VisAttributes(G4Colour::Blue());
+
   if ( ! fBeamLineIsVisible ) {
     steelVisAttr   = G4VisAttributes::Invisible;
     DHSTB001VisAtt = G4VisAttributes::Invisible;
@@ -1134,6 +1136,25 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   //  new G4PVPlacement(MylarWinFlgRot,SLTB2Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true); //rotation matrix    
   // positioning collimators
   new G4PVPlacement(strBackRot,SLTB2Pos,logicalSLTB2,"BeamSLTB2",fMotherVolume,false,0,true);
+
+
+  //***********************************************************
+  // START POSITIONING BTF TARGET  MR 31/08/2022
+  //***********************************************************
+  G4double BTFTargetThickness = geo->GetBTFTargetThickness();  
+  G4double BTFTargetDistance = geo->GetBTFTargetDistance();  
+  
+  G4double BTFTargetPosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+100*mm+BTFTargetDistance; 
+  G4double BTFTargetPosY = 0; 							 
+  G4double BTFTargetPosZ = strBackPosZ;//-40*mm*(1-cos(yokeAngle))+SLTBThickness*0.5*(1-cos(yokeAngle));
+  G4ThreeVector BTFTargetPos = G4ThreeVector(BTFTargetPosX,BTFTargetPosY,BTFTargetPosZ);    
+  
+  G4Tubs* solidBTFTarget = new G4Tubs("solidBTFTarget",0.,WallPipeRIn-0.1*mm,BTFTargetThickness,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBTFTarget = new G4LogicalVolume(solidBTFTarget,G4Material::GetMaterial("G4_Cu"),"logicalBTFTarget",0,0,0);
+  logicalBTFTarget->SetVisAttributes(CopperVisAttr);
+  
+  // positioning BTF target
+  new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
 
 }// End of Create DHSTB001 
 

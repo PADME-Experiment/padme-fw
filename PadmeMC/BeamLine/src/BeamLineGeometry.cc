@@ -188,7 +188,7 @@ BeamLineGeometry::BeamLineGeometry()
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
 
-  fSLTB4Aperture= 4. *mm;
+  fSLTB4Aperture= 4.0*mm;
   fSLTB3Aperture= 3.1*mm;
   fSLTB2Aperture= 1.7*mm;
 
@@ -197,7 +197,6 @@ BeamLineGeometry::BeamLineGeometry()
 //  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.910*tesla/m;
   
-
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
   fQ4DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
   fQ1Q2Dist = 1100.*mm; //center to center quads in LINAC Checked on drawing M. Raggi and E. Leonardi 02/03/2021
@@ -230,6 +229,9 @@ BeamLineGeometry::BeamLineGeometry()
   //  DN 63 pipes specs  diametro interno 66 esterno 70
   f2020PipeOuterRadius  =    3.5*cm; // Using DN specs
   f2020PipeInnerRadius  =    3.3*cm; // Using DN specs
+
+  fBTFTargetThickness = 24.4*mm;
+  fBTFTargetDistance  = 2370.*mm; 
 }
 
 BeamLineGeometry::~BeamLineGeometry()

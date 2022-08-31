@@ -82,7 +82,6 @@ public:
   void SetQ4MagneticFieldGrad(G4double g) { fQ4MagneticFieldGrad = g*tesla/m; }
   G4double GetQ4MagneticFieldGrad() { return fQ4MagneticFieldGrad; }
 
-
   //Aperture of the collimators
   void SetSLTB2Aperture(G4double g) { fSLTB2Aperture = g; }
   G4double GetSLTB2Aperture() { return fSLTB2Aperture; }

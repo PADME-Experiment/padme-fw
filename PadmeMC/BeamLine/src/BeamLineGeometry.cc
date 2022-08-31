@@ -187,6 +187,7 @@ BeamLineGeometry::BeamLineGeometry()
   //TB4R   26.16 TB4L   22.30          TB3 Up 26.06      TB3 Down 23.32	
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
+
   fSLTB4Aperture= 4. *mm;
   fSLTB3Aperture= 3.1*mm;
   fSLTB2Aperture= 1.7*mm;

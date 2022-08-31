@@ -1117,7 +1117,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   //***********************************************************
   //  G4double SLTB2ToMylar = 519.24*mm;
   G4double SLTBThickness = 30.0*mm;
-  G4double SLTB2Aperture = geo->GetSLTB4Aperture();  //creare data card for sltb2
+  G4double SLTB2Aperture = geo->GetSLTB2Aperture();  
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double SLTB2PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+100*mm; 
   G4double SLTB2PosY = 0; //MylarWinFlgPosY;							 

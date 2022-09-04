@@ -1157,6 +1157,25 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   std::cout<<"CAZZOOOO "<<geo->BTFTargetIsEnabled()<<std::endl;
   if(geo->BTFTargetIsEnabled()){
     new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
+    
+    
+    ////////////////////////////////////////////////////////////////////////
+    // Flag 8 just after the BTF target
+    ///////////////////////////////////////////////////////////////////////
+    
+    G4double Flag8PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+BTFTargetDistance; ;
+    G4double Flag8PosY = 0;							 
+    G4double Flag8PosZ = strBackPosZ;
+    
+    G4ThreeVector Flag8Pos = G4ThreeVector(Flag8PosX,Flag8PosY,Flag8PosZ);    
+    
+    G4Tubs* solidBeamFlag8 = new G4Tubs("solidBeamFlag8",0.,WallPipeRIn-0.1*mm,0.1*mm,0.*deg,360.*deg);
+    G4LogicalVolume* logicalBeamFlag8 = new G4LogicalVolume(solidBeamFlag8,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag8",0,0,0);
+    logicalBeamFlag8->SetVisAttributes(FlagVisAttr);
+    
+    printf("Registering Flag8 %d\n",geo->BeamFlagIsEnabled());
+    new G4PVPlacement(strBackRot,Flag8Pos,logicalBeamFlag8,"BeamLineBeamFlag8",fMotherVolume,false,0,true);    
+    logicalBeamFlag8->SetSensitiveDetector(beamFlagSD);  
   }
 }// End of Create DHSTB001 
 
@@ -1538,22 +1557,27 @@ void BeamLineStructure::CreateWallAndPipe()
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double WallPipeROut = geo->Get2020PipeOuterRadius();
 
-  G4double DHSTB002toWallPipeLen  = 2371*mm;
+  //  G4double DHSTB002toWallPipeLen  = 2371*mm;
+  G4double DHSTB002toWallPipeLen  = 2466*mm;
 
   // Add flange on front (upstream) side
   //G4Tubs* solidBePipeFlgFnt = new G4Tubs("solidBePipeFlgFnt",0.,bePipeFlgFntR,0.5*bePipeFlgFntT,0.*deg,360.*deg);
   //G4UnionSolid* solidBePipeFull2 = new G4UnionSolid("solidBePipeFull2",solidBePipeFull1,solidBePipeFlgFnt,0,G4ThreeVector(0.,0.,-0.5*bePipeLen+0.5*bePipeFlgFntT));
 
   // Add flange on back (downstream) side
-  //G4Tubs* solidBePipeFlgBck = new G4Tubs("solidBePipeFlgBck",0.,bePipeFlgBckR,0.5*bePipeFlgBckT,0.*deg,360.*deg);
-  //G4UnionSolid* solidBePipeFull = new G4UnionSolid("solidBePipeFull",solidBePipeFull2,solidBePipeFlgBck,0,G4ThreeVector(0.,0.,0.5*bePipeLen-0.5*bePipeFlgBckT));
+  G4double FlangeR = geo->GetPulsedPipeFlangeRadius();
+  G4double FlThick = geo->GetPulsedPipeFlangeThick();
+
+  G4Tubs* solidPipeFlgBck = new G4Tubs("solidPipeFlgBck",0.,FlangeR,0.5*FlThick,0.*deg,360.*deg); //oggi
 
   // Create solid pipe From DHSTB002 in the direction of the BTF Wall
   G4Tubs* solidDHSTB002toWallPipeFull1 = new G4Tubs("solidDHSTB002toWallPipeFull1",0.,WallPipeROut,0.5*DHSTB002toWallPipeLen,0.*deg,360.*deg);
+  G4UnionSolid* solidDHSTB002toWallPipeFullFl = new G4UnionSolid("solidDHSTB002toWallPipeFullFl",solidDHSTB002toWallPipeFull1,solidPipeFlgBck,0,G4ThreeVector(0.,0.,-0.5*DHSTB002toWallPipeLen+0.5*FlThick)); //oggi
 
   // Carve hole inside pipe (add usual small tolerance)
   G4Tubs* solidWallPipeHole = new G4Tubs("solidWallPipeHole",0.,WallPipeRIn,0.5*WallPipeLen+10.*um,0.*deg,360.*deg);
-  G4SubtractionSolid* solidDHSTB002toWallPipe = new G4SubtractionSolid("solidDHSTB002toWallPipe",solidDHSTB002toWallPipeFull1,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
+  //  G4SubtractionSolid* solidDHSTB002toWallPipe = new G4SubtractionSolid("solidDHSTB002toWallPipe",solidDHSTB002toWallPipeFull1,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
+  G4SubtractionSolid* solidDHSTB002toWallPipe = new G4SubtractionSolid("solidDHSTB002toWallPipe",solidDHSTB002toWallPipeFullFl,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
 
   // Create Wall Pipe logical volume
   G4LogicalVolume* logicalDHSTB002toWallPipe = new G4LogicalVolume(solidDHSTB002toWallPipe,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"logicalDHSTB002toWallPipe",0,0,0);

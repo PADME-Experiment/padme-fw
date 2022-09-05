@@ -515,7 +515,7 @@ void BeamLineStructure::CreateBeamLine2020()
     G4LogicalVolume* logicalBeamFlag7 = new G4LogicalVolume(solidBeamFlag7,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag7",0,0,0);
     logicalBeamFlag7->SetVisAttributes(FlagVisAttr);
     
-    printf("Registering Flag7 %d\n",geo->BeamFlagIsEnabled());
+    printf("Registering Flag7 %d at %f %f %f\n",geo->BeamFlagIsEnabled(),Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
     new G4PVPlacement(Q2Rot,Flag7FrontPos,logicalBeamFlag7,"BeamLineBeamFlag7",fMotherVolume,false,0,true);    
     logicalBeamFlag7->SetSensitiveDetector(beamFlagSD);
   }
@@ -1557,17 +1557,11 @@ void BeamLineStructure::CreateWallAndPipe()
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double WallPipeROut = geo->Get2020PipeOuterRadius();
 
-  //  G4double DHSTB002toWallPipeLen  = 2371*mm;
   G4double DHSTB002toWallPipeLen  = 2466*mm;
 
-  // Add flange on front (upstream) side
-  //G4Tubs* solidBePipeFlgFnt = new G4Tubs("solidBePipeFlgFnt",0.,bePipeFlgFntR,0.5*bePipeFlgFntT,0.*deg,360.*deg);
-  //G4UnionSolid* solidBePipeFull2 = new G4UnionSolid("solidBePipeFull2",solidBePipeFull1,solidBePipeFlgFnt,0,G4ThreeVector(0.,0.,-0.5*bePipeLen+0.5*bePipeFlgFntT));
-
-  // Add flange on back (downstream) side
+  // Add flange on back (downstream) side of connection pipe
   G4double FlangeR = geo->GetPulsedPipeFlangeRadius();
   G4double FlThick = geo->GetPulsedPipeFlangeThick();
-
   G4Tubs* solidPipeFlgBck = new G4Tubs("solidPipeFlgBck",0.,FlangeR,0.5*FlThick,0.*deg,360.*deg); //oggi
 
   // Create solid pipe From DHSTB002 in the direction of the BTF Wall
@@ -1575,8 +1569,7 @@ void BeamLineStructure::CreateWallAndPipe()
   G4UnionSolid* solidDHSTB002toWallPipeFullFl = new G4UnionSolid("solidDHSTB002toWallPipeFullFl",solidDHSTB002toWallPipeFull1,solidPipeFlgBck,0,G4ThreeVector(0.,0.,-0.5*DHSTB002toWallPipeLen+0.5*FlThick)); //oggi
 
   // Carve hole inside pipe (add usual small tolerance)
-  G4Tubs* solidWallPipeHole = new G4Tubs("solidWallPipeHole",0.,WallPipeRIn,0.5*WallPipeLen+10.*um,0.*deg,360.*deg);
-  //  G4SubtractionSolid* solidDHSTB002toWallPipe = new G4SubtractionSolid("solidDHSTB002toWallPipe",solidDHSTB002toWallPipeFull1,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
+  G4Tubs* solidWallPipeHole = new G4Tubs("solidWallPipeHole",0.,WallPipeRIn,0.5*WallPipeLen+10.*mm,0.*deg,360.*deg);
   G4SubtractionSolid* solidDHSTB002toWallPipe = new G4SubtractionSolid("solidDHSTB002toWallPipe",solidDHSTB002toWallPipeFullFl,solidWallPipeHole,0,G4ThreeVector(0.,0.,0.));
 
   // Create Wall Pipe logical volume
@@ -1840,6 +1833,30 @@ void BeamLineStructure::PositionAllQuads()
     logicQ1Quad->SetName("logicQ1Quad");
     new G4PVPlacement(Q1Rot,Q1Pos,logicQ1Quad,"Q1Quad",fMotherVolume,false,0,true);
     printf("Placing Q1 quadrupole with gradient %f \n",Q1BGradient*m/tesla);
+
+    ////////////////////////////////////////////////////////////////////////
+    // Flag 7
+    ///////////////////////////////////////////////////////////////////////
+    ////  In between the Mylar and Q1 quads   MyW--Fl7--Q1----FL6-----Q2
+    ///   Moved after the SLTB4 to monitor beam energy spread M. Raggi 18/01/2022
+    
+    //    G4double Flag7FrontPosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*sin(magnetAngle);
+    //    G4double Flag7FrontPosY = 0;							 
+    //    G4double Flag7FrontPosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*cos(magnetAngle);
+
+    G4double Flag7FrontPosX = Q1PosX+500*mm*sin(magnetAngle);
+    G4double Flag7FrontPosY = 0;							 
+    G4double Flag7FrontPosZ = Q1PosZ-500*mm*cos(magnetAngle);
+    G4ThreeVector Flag7FrontPos = G4ThreeVector(Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);    
+  
+    //    G4Tubs* solidBeamFlag7 = new G4Tubs("solidBeamFlag7",0.,Q4Radius-0.1*mm,100.1*mm,0.*deg,360.*deg);
+    G4Tubs* solidBeamFlag7 = new G4Tubs("solidBeamFlag7",0.,Q4Radius-0.15*mm,0.1*mm,0.*deg,360.*deg);
+    G4LogicalVolume* logicalBeamFlag7 = new G4LogicalVolume(solidBeamFlag7,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag7",0,0,0);
+    logicalBeamFlag7->SetVisAttributes(FlagVisAttr);
+    
+    printf("Registering Flag7 %d at %f %f %f\n",geo->BeamFlagIsEnabled(),Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
+    new G4PVPlacement(Q1Rot,Flag7FrontPos,logicalBeamFlag7,"BeamLineBeamFlag7",fMotherVolume,false,0,true);    
+    logicalBeamFlag7->SetSensitiveDetector(beamFlagSD);
   }
 }
 

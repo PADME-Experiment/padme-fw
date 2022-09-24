@@ -5,6 +5,7 @@
 #include "TCanvas.h"
 #include "TMath.h"
 #include "TTree.h"
+#include "EVetoCalibration.hh"
 
 #include <stdio.h>
 #include <fstream>
@@ -38,8 +39,8 @@ void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
   fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
-  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
-  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
+  fSaveAnalog = cfg->GetParOrDefault("Output","SaveAnalogs",0); //M. Raggi: 03/03/2021  
+  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
 
   fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
   fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
@@ -173,7 +174,8 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }
-      if(Time<50||Time>350) fAnalogPrint=1;
+      //if(Time<50||Time>350)
+	fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -245,7 +247,11 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
   hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
   hRawV                      = new TH1F("RawV","RawV",400,0,400);
+  hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
+  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
+  hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
+  hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
   hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
   hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
   hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
@@ -286,6 +292,9 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
     sprintf(name, "RawVOneHitChannel%d",ii);
     hRawVOneHitPerChannel[ii] = new TH1F(name,name,400,0,400);
 
+    sprintf(name, "RawVCorrectChannel%d",ii);
+    hRawVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
+    
     sprintf(name, "DerivVChannel%d",ii);
     hDerivVPerChannel[ii] = new TH1F(name,name,400,0,400);
 
@@ -320,6 +329,8 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hHitEnergySingleHit->Write();
     hHitTime->Write();
 
+    hRawVCorrect->Write();
+    hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
     hDerivVOneHit->Write();
     hDerivVCorrect->Write();
@@ -340,6 +351,10 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hYMaxDerivYTSpecRatio->Write();
     hYMaxRawYTSpecRatioVsYMax->Write();
 
+    // hYTSpecYMaxDiff->Write();
+    // hYMaxVsYTSpecAllHits->Write();
+    // hYMaxVsYTSpecSingleHits->Write();
+
     fileOut->mkdir("NoHitDerivChannel");  
     fileOut->cd("NoHitDerivChannel");  
     for(int ii=0;ii<96;ii++) hNoHitsDerivPerChannel[ii]->Write();
@@ -351,6 +366,10 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     fileOut->mkdir("RawVChannel");  
     fileOut->cd("RawVChannel");  
     for(int ii=0;ii<96;ii++) hRawVPerChannel[ii]->Write();
+
+    fileOut->mkdir("RawVCorrectChannel");  
+    fileOut->cd("RawVCorrectChannel");  
+    for(int ii=0;ii<96;ii++) hRawVCorrectPerChannel[ii]->Write();
 
     fileOut->mkdir("DerivVOneHitChannel");  
     fileOut->cd("DerivVOneHitChannel");  
@@ -391,7 +410,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
-    if(IsZeroSup) return;
+    if(IsZeroSup&&!fGlobalMode->IsPedestalMode()) return;
     Double_t ped=CalcPedestal();  // takes the starting sample from data cards
     SetAbsSignals(ped);//Beth 21/2/22: moved from before zero suppression to after. Turns samples into positive mV and performs channel equalisation
     hSig->SetContent(fEqualSamples);
@@ -407,6 +426,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   tDerivDiffHitVec      .clear();
   vRawHitVec	        .clear();
   vRawSortHitVec        .clear();
+  vRawCorrectHitVec     .clear();
   vTSpecYPHitVec        .clear();
   vTSpecYPSortHitVec    .clear();
   vTSpecYPCorrectHitVec .clear();
@@ -414,6 +434,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
 
 void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
+
   if(fChannelEqualisation&&GetChID()<90)  ScaleFactor=SetEVetoChaGain();   
   //  std::cout<<"EVeto "<<GetChID()<<" ScaleFactor "<<ScaleFactor<<std::endl;
 
@@ -427,7 +448,7 @@ void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
 void DigitizerChannelEVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
-    if(fAnalogPrint==1){
+    if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -448,6 +469,8 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   //  std::cout<<"Event "<<EventCounter<<" Ch "<<GetChID()<<" hitVec.size() "<<hitVec.size()<<" fNFoundPerChannel "<<fNFoundPerChannel[GetChID()]<<std::endl;
   hNoHitsDeriv->Fill(fNFoundPerChannel[GetChID()]);
   hNoHitsDerivPerChannel[GetChID()]->Fill(fNFoundPerChannel[GetChID()]);
+
+  if(vRawCorrectHitVec.size()==1) hOccupancyOneHit->Fill(GetChID());
 
   double AmpDiff=0;
   for(UInt_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
@@ -471,6 +494,7 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
     //corrected amplitude for "good" channels
     if(GetChID()>=20 &&GetChID()<=70){
+      //      hRawVCorrectChannels20to70->Fill(hitV);
       hAmpDiffVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
     }
@@ -481,6 +505,7 @@ void DigitizerChannelEVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
       hDerivVOneHit->Fill(vTSpecYPSortHitVec[myiHit]);
       hDerivVOneHitPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
       hHitEnergySingleHit->Fill(vTSpecYPSortHitVec[myiHit]*fDerivAmpToEnergy);
+      //hYMaxVsYTSpecSingleHits->Fill(vRawSortHitVec[myiHit],vTSpecYPSortHitVec[myiHit]);
 
       //ratio between derivative peak amplitude as found by TSpectrum and maximum amplitude of raw signal for single hit events
       hYMaxRawYTSpecRatio->Fill(RawGetMax/vTSpecYPSortHitVec[myiHit]);
@@ -523,8 +548,6 @@ Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
   	std::cout<<"No previous data available for EVeto, resorting to default calibration constant (1)"<<std::endl;
   }
 
-  // std::cout<<GetChID()<<" "<<fEnergyCalibCh[GetChID()]<<std::endl;
-
   return fEnergyCalibCh[GetChID()];
 
 }
@@ -537,7 +560,7 @@ Double_t DigitizerChannelEVeto::SetEVetoT0(){
 
   if(fTimeCorrection==1&&fTimeCalibrationFile==1){
     sprintf(fname,"config/Calibration/EVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
-    
+
     std::ifstream myFile(fname);
 
     EVetoTimeCalib.open(fname);
@@ -545,7 +568,7 @@ Double_t DigitizerChannelEVeto::SetEVetoT0(){
       double temp;
       for (int i=0;i<96;i++){
 	EVetoTimeCalib >> temp >> fTimeCalibCh[i];
-	//	std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+	//std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
       }
       EVetoTimeCalib.close();
     }

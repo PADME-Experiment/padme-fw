@@ -86,6 +86,7 @@ private:
 
   std::vector<Double_t>   vRawHitVec	        ;
   std::vector<Double_t>   vRawSortHitVec        ;
+  std::vector<Double_t>   vRawCorrectHitVec     ;
 
   std::vector<Double_t>   vTSpecYPHitVec        ;
   std::vector<Double_t>   vTSpecYPSortHitVec    ;
@@ -149,7 +150,11 @@ private:
   TH1F * hNoEventsReconstructed    ;
   TH1F * hNoHitsDeriv              ;
   TH1F * hRawV                     ;
+  TH1F * hRawVCorrect              ;
+  TH1F * hRawVCorrectChannels20to70;
   TH1F * hRawVOneHit               ;
+  TH1F * hRawVMultiHit             ;
+  TH1F * hRawVMultiHitCorrect      ;
   TH1F * hDerivV                   ;
   TH1F * hDerivVOneHit             ;
   TH1F * hDerivVCorrect            ;

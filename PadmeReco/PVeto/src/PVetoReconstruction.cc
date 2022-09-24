@@ -11,16 +11,13 @@
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
-#include "TPVetoRecoEvent.hh"
-//#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelPVeto.hh"
 #include "PVetoCalibration.hh"
 #include "PVetoGeometry.hh"
 #include "PVetoSimpleClusterization.hh"
-#include "ADCChannelVReco.hh"
 #include "PVetoClusterization.hh"
 #include "PVetoClusterHits.hh"
-#include "TRecoVCluster.hh"
+//#include "TRecoVCluster.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -32,7 +29,7 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   // configurable parameters 
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
-  fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterisationAlgorithm", 0.);
+  fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
 
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelPVeto();

@@ -11,16 +11,13 @@
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
-#include "TPVetoRecoEvent.hh"
-//#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelPVeto.hh"
 #include "PVetoCalibration.hh"
 #include "PVetoGeometry.hh"
-//#include "PVetoSimpleClusterization.hh"
-#include "ADCChannelVReco.hh"
+#include "PVetoSimpleClusterization.hh"
 #include "PVetoClusterization.hh"
 #include "PVetoClusterHits.hh"
-#include "TRecoVCluster.hh"
+//#include "TRecoVCluster.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -29,22 +26,29 @@
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
+  // configurable parameters 
+  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
+  fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+  fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
+
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
-//  fClusterization = new PVetoSimpleClusterization();
-  fClusStruc = PVetoClusterStructure();
-  fClusterHits = PVetoClusterHits();
+  if(fClusterAlgo==0){//Use old clusterisation
+    std::cout<<"clusterising oldly"<<std::endl;
+    fClusterization = new PVetoSimpleClusterization();
+  }
+  else if(fClusterAlgo==1){//Use new clusterisation
+    std::cout<<"clusterising newly"<<std::endl;
+    fClusStruc = PVetoClusterStructure();
+    fClusterHits = PVetoClusterHits();
+  }
   //fChannelCalibration  = new PadmeVCalibration();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new PVetoGeometry();
 
   random = new TRandom2();    
   gRandom->SetSeed(time(NULL));
-
-  // configurable parameters 
-  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
-  fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
 
 }
 
@@ -167,7 +171,8 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied 
   //    std::cout<<"about to clusterise pveto"<<std::endl;
   // from Hits to Clusters
   //  ClearClusters();
-  BuildClusters(rawEv);
+  if(fClusterAlgo==1)
+    BuildClusters(rawEv);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
   //Processing is over, let's analyze what's here, if foreseen
@@ -186,7 +191,8 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent){//B
   if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
 
-  BuildClusters(tMCEvent);
+  if(fClusterAlgo==1)
+    BuildClusters(tMCEvent);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
 }
@@ -361,11 +367,10 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
   for(Int_t iPHit=0;iPHit<PVetoClusterHitVec.size();iPHit++){
     //std::cout<<"Reading Cluster Hits ChID "<<PVetoClusterHitVec[iPHit].GetChannelId()<<" time "<<PVetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    //   if(PVetoClusterHitVec[iPHit].GetEnergy()>0.5){
-      nhitpass++;
-      
+    if(PVetoClusterHitVec[iPHit].GetEnergy()>0.1){//100 keV is the threshold for hits in the virtual class
+      nhitpass++; 
       fClusStruc.AddHit(PVetoClusterHitVec[iPHit],iPHit);
-      
+    }  
   }
 
   fClusStruc.HitSort();//sort hits in time

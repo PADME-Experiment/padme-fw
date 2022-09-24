@@ -1,5 +1,4 @@
 #include "ChannelVReco.hh"
-#include "PVetoCalibration.hh"
 #include "GlobalRecoConfigOptions.hh"
 #include "utlConfigParser.hh"
 #include "TObject.h"
@@ -23,9 +22,21 @@ public:
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitVec);
   virtual void Init(PadmeVRecoConfig *cfg){return ;}
-  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);//, PVetoCalibration *calib);
+  virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
 
   void PrintConfig();
+
+  void  SetChID(Int_t ChID){fChID=ChID;};
+  void  SetElChID(Int_t ChID){fElChID=ChID;};
+  void  SetBdID(Int_t BdID){fBdID=BdID;};
+  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
+  void  SetEventNumber(Int_t RawEvNo){
+    fRawEvNo=RawEvNo;
+    EventCounter++;
+  };
+
+private:
+  //What do we operate
 
   Double_t CalcPedestal();
   Double_t CalcChaTime(std::vector<TRecoVHit *> &hitVec);
@@ -45,7 +56,6 @@ public:
   virtual void SaveDebugHistos();
 
   //get ChID From Beth Digi
-
   Int_t EventCounter=-1;//is increased before each event is processed, so the first event will have EventCounter=0
   Int_t fRawEvNo;
   Int_t fChID;
@@ -57,36 +67,17 @@ public:
 
 
   Int_t GetChID(){return fChID;};
-  void  SetChID(Int_t ChID){fChID=ChID;};
-  
   Int_t GetElChID(){return fElChID;};
-  void  SetElChID(Int_t ChID){fElChID=ChID;};
-  
   Int_t GetBdID(){return fBdID;};
-  void  SetBdID(Int_t BdID){fBdID=BdID;};
-
   Int_t GetTrigMask(){return fTrigMask;};
-  void  SetTrigMask(Int_t TrigMask){fTrigMask=TrigMask;};
-
   Int_t GetEventNumber(){return fRawEvNo;};
-  void  SetEventNumber(Int_t RawEvNo){
-    fRawEvNo=RawEvNo;
-    EventCounter++;
-  };
 
-private:
-  //What do we operate
   TFile * fileOut;
   Bool_t fSaveAnalog;
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
-
-  //  PVetoCalibration *fChannelCalibration;
   int fEnergyCalibrationFile;
   int fTimeCalibrationFile;
-
-  TList* hListPVeto; // single board related histograms 
-
   TString detectorname;
 
   std::vector<Double_t>   tDerivHitVec          ;
@@ -106,6 +97,51 @@ private:
   Double_t DerivGetMax    ;
 
   Bool_t fAnalogPrint;
+  
+  Double_t fEnergyCalibCh[96]; 
+  Double_t fTimeCalibCh[96]; 
+
+  char name[256];
+
+  UShort_t fNSamples;
+  Short_t *fSamples;
+  Double_t fEqualSamples[1024];//Beth 22/2/22: container for equalised voltage in mV
+
+  Short_t fIMax=985; //last sample used in the analog signal, due to digitizer noise 
+  Double_t fPed;
+  Double_t fCharge;
+  Double_t fTime;
+  UShort_t fNPedSamples;
+
+  //Configuration variables
+  Int_t fPedMaxNSamples;
+  Int_t fDerivPoints;
+
+  TH1D *  HTSpec = new TH1D("tspec","tspec",1000,0.,1000.);
+  TH1D *hSig;
+  
+  Double_t fTimeBin;
+  Double_t fAmpli;
+  Double_t fEnergy;
+  Double_t fmVtoMeV;
+
+  Double_t fAmpThresholdLow;
+  Double_t fAmpThresholdHigh;
+
+  Bool_t fChannelEqualisation; //Beth 23/2/22
+  Bool_t fTailCorrection; //Beth 4/4/22
+  Bool_t fTimeCorrection; //Beth 28/4/22
+
+  //mode variables
+  GlobalRecoConfigOptions* fGlobalMode;
+  LocalRecoConfigOptions*  fLocalMode;
+
+  Int_t fUsePulseProcessing ;
+  Int_t fPeakSearchWidth    ;
+  Double_t fZeroSuppression    ;
+  Double_t fDerivAmpToEnergy;
+  Double_t GetPedestal(){return fPed;};
+
   //Beth 18/2/22: My histograms
   
   std::vector<TH1F*> hRaw;//Raw+TSpectrum
@@ -155,92 +191,6 @@ private:
 
   TGraph* gUnAbsSigs;
   std::vector<TGraph*> gUnAbsSigGraphs;
-
-  Double_t fEnergyCalibCh[96]; 
-  Double_t fTimeCalibCh[96]; 
-
-   //Single Hit
-  TH1F * hdxdtMax;      
-  TH1F * hVMax;         
-  TH2F * hVmaxvsDxdtMax;
-  TH2F * hVMOvDxdtvsNHits;
-  TH1F * hVmaxOvDxdt;
-  TH1F * hEnergy;
-
-  TH1F * hOrdxdtMax;      
-  TH1F * hOrVMax;         
-  TH2F * hOrVmaxvsDxdtMax;
-  TH1F * hOrVmaxOvDxdt;
-  TH1F * hOrEnergy;
-
-  TH1F * hVMaxOrig;         
-
-  //Multi Hit
-  TH1F * hMHdxdtMax;      
-  TH1F * hMHVMax;         
-  TH2F * hMHVmaxvsDxdtMax;
-  TH1F * hMHVmaxOvDxdt;
-  TH1F * hMHEnergy;
-  TH1F * hNhitDx;
-  TH1F * hNhitSig;
-  TH1F * hDeltaT;
-  TH1F * hDeltaV;
-  TH1F * hDeltaN;
-  TH2F * hDeltaNvsN;
-  TH1F * hTHits; 
-
-  char name[256];
-
-  UShort_t fNSamples;
-  Short_t *fSamples;
-  Double_t fEqualSamples[1024];//Beth 22/2/22: container for equalised voltage in mV
-
-  Short_t fIMax=985; //last sample used in the analog signal, due to digitizer noise 
-  Double_t fPed;
-  Double_t fCharge;
-  Double_t fTime;
-  UShort_t fNPedSamples;
-
-  //Configuration variables
-  Int_t fPedMaxNSamples;
-  Int_t fDerivPoints;
-
-  TH1D *  HTSpec = new TH1D("tspec","tspec",1000,0.,1000.);
-  TH1D *hSig;
-  
-  //Mauro histograms
-  TH1D *  hdxdt   = new TH1D("hdxdt","hdxdt",fIMax,0.,fIMax);
-  TH1D *  htmp    = new TH1D("htmp","htmp",fIMax,0.,fIMax);
-
-  TH1F *hNhitOrig; 
-  
-  TH1F *hSigV;
-  TH1F *hSigE;
-
-  TH1F *hDxV;
-  TH1F *hDxE;
-  
-  Double_t fTimeBin;
-  Double_t fAmpli;
-  Double_t fEnergy;
-  Double_t fmVtoMeV;
-
-  Double_t fAmpThresholdLow;
-  Double_t fAmpThresholdHigh;
-
-  Bool_t fChannelEqualisation; //Beth 23/2/22
-  Bool_t fTailCorrection; //Beth 4/4/22
-  Bool_t fTimeCorrection; //Beth 28/4/22
-
-  //mode variables
-  GlobalRecoConfigOptions* fGlobalMode;
-  LocalRecoConfigOptions*  fLocalMode;
-
-  Int_t fUsePulseProcessing ;
-  Int_t fPeakSearchWidth    ;
-  Double_t fZeroSuppression    ;
-  Double_t fDerivAmpToEnergy;
-  Double_t GetPedestal(){return fPed;};
 
 
 };

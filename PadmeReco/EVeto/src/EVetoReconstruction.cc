@@ -11,7 +11,6 @@
 #include "TEVetoMCEvent.hh"
 #include "TEVetoMCHit.hh"
 #include "TEVetoMCDigi.hh"
-//#include "DigitizerChannelReco.hh"
 #include "DigitizerChannelEVeto.hh"
 #include "EVetoCalibration.hh"
 #include "EVetoSimpleClusterization.hh"

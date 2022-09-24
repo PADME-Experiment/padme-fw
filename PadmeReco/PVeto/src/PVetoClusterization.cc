@@ -14,11 +14,14 @@ PVetoCluster::PVetoCluster(){
   earlyhittime=1e9;
   latehittime=-1e9;
   energy = 0;
+  seedtime=-10000;
+  seedch=-10000;
+  seedenergy=-10000;
   hitIndexVector.clear();
 }
 
 
-int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
+int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit, double seedtime){//CHECK SEEDTIME BUSINESS
   if(nhits>MAXHIT-1){
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
@@ -35,8 +38,11 @@ int PVetoCluster::InsertHit(PVetoClusterHits hit, int ihit){
   double oldenergy = energy;
   double newenergy = hit.GetEnergy();
 
-  averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
-  // averagetime = (oldenergy*nhits*averagetime+hit.GetTime()*newenergy)/((nhits+1)*(oldenergy+newenergy));//energy-weighting for time
+  //averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
+  //  averagetime = (oldenergy*nhits*averagetime+hit.GetTime()*newenergy)/((nhits+1)*(oldenergy+newenergy));//energy-weighting for time
+
+  averagetime=seedtime;//CHECK SEEDTIME BUSINESS
+
   energy += hit.GetEnergy();
   nhits++;
 }
@@ -62,8 +68,8 @@ int PVetoCluster::AddCluster(PVetoCluster* newcluster){
   double oldenergy = energy;
   double newenergy = newcluster->GetEnergy();
 
-  averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
-  //  averagetime=(oldenergy*nhits*averagetime+newcluster->GetNHits()*newenergy*newcluster->GetAverageTime())/((nhits+newcluster->GetNHits())*(oldenergy+newenergy));;//energy-weighting for time
+  //averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
+  averagetime=(oldenergy*nhits*averagetime+newcluster->GetNHits()*newenergy*newcluster->GetAverageTime())/((nhits+newcluster->GetNHits())*(oldenergy+newenergy));;//energy-weighting for time
   energy+=newcluster->GetEnergy();
   nhits+=NMax;
   return goodreturn;
@@ -88,21 +94,24 @@ void PVetoClusterStructure::Clusterise(){
   //  std::cout<<"cljst "<<HitVec.size()<<std::endl;
   for (int ii=0; ii <HitVec.size(); ++ii ) {
     bool UsedHit = 0;
+    double myseedtime;
     //    std::cout<<"clusvec size "<<ClusVec.size()<<std::endl;
     //    std::cout<<"Hit "<<ii<<" ChID "<<HitVec.at(ii)->GetChannelId()<<" time "<<HitVec.at(ii)->GetTime()<<std::endl;
     for (int jj = 0; jj <ClusVec.size(); ++jj ) {//loop over all currently identified clusters to see whether this hit can be clusterised with any of those
+      //      if(TMath::Abs
       if(HitVec.at(ii).GetTime()-ClusVec.at(jj)->GetAverageTime()<ClusterDeltaT&&
 	 (HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostUpstreamChannel()==-1//
 	  ||HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostDownstreamChannel()==1)){	//4->parameter
-	ClusVec.at(jj)->InsertHit(HitVec.at(ii), HitIndexVec.at(ii));
+	ClusVec.at(jj)->InsertHit(HitVec.at(ii), HitIndexVec.at(ii),myseedtime);//CHECK SEEDTIME BUSINESS
 	UsedHit=1;
 	//	std::cout<<"clusterising jj "<<jj<<" size "<<ClusVec.at(jj)->GetNHits()<<std::endl;
 	break;
       }	
     }//end cluster loop
     if(!UsedHit) {
+      myseedtime = HitVec.at(ii).GetTime();
       PVetoCluster* NewPVetoCluster = new PVetoCluster();
-      NewPVetoCluster->InsertHit(HitVec.at(ii), HitIndexVec.at(ii));
+      NewPVetoCluster->InsertHit(HitVec.at(ii), HitIndexVec.at(ii), myseedtime);//CHECK SEEDTIME BUSINESS
       ClusVec.push_back(NewPVetoCluster); 
     }
   }//end hit loop
@@ -141,7 +150,7 @@ void PVetoClusterStructure::MergeClusters(){
   }
 }
 
-void PVetoClusterStructure::HitSort(){
+/**void PVetoClusterStructure::HitSort(){
   //  std::cout<<"sorting"<<std::endl;
   std::vector<PVetoClusterHits> HitVecCopy;
  
@@ -168,7 +177,44 @@ void PVetoClusterStructure::HitSort(){
     //    std::cout<<" HitVecCopy[ii] Ch "<<HitVecCopy[ii].GetChannelId()<<" time "<<HitVecCopy[ii].GetTime()<<std::endl;
     HitIndexVec[ii]=index[ii];
     //    std::cout<<"ii "<<ii<<" Time[ii] "<<HitVec[ii]->GetTime()<<std::endl;
+
     if(ii>0&&HitVec[ii].GetTime()-HitVec[ii-1].GetTime()<0) {
+      std::cout<<"----------------YOU'RE IN A MESS MY FRIEND---------------"<<std::endl;
+      return;
+    }
+  }
+
+  }**/
+
+void PVetoClusterStructure::HitSort(){
+  //  std::cout<<"sorting"<<std::endl;
+  std::vector<PVetoClusterHits> HitVecCopy;
+ 
+  for(int ii=0;ii<HitVec.size();ii++){
+    HitVecCopy.push_back(HitVec.at(ii));
+    // std::cout<<"HitVec[ii] Ch "<<HitVec[ii]->GetChannelId()<<" time "<<HitVec[ii]->GetTime()<<std::endl;
+  }
+    
+  std::vector<int> index(HitVec.size(), 0);
+  
+  for (int i = 0 ; i != index.size() ; i++) {
+    index[i] = i;
+  }
+  
+  sort(index.begin(), index.end(),
+       [&](const int& a, const int& b) {
+	 return (HitVec[a].GetEnergy() < HitVec[b].GetEnergy());
+	 }
+       );
+
+  for (int ii = 0 ; ii != index.size() ; ++ii) {
+    HitVec[ii]=(HitVecCopy[index[ii]]);
+    //    std::cout<<"     HitVec[ii] Ch "<<HitVec[ii].GetChannelId()<<" time "<<HitVec[ii].GetEnergy();//<<std::endl;
+    //    std::cout<<" HitVecCopy[ii] Ch "<<HitVecCopy[ii].GetChannelId()<<" time "<<HitVecCopy[ii].GetEnergy()<<std::endl;
+    HitIndexVec[ii]=index[ii];
+    //    std::cout<<"ii "<<ii<<" Energy[ii] "<<HitVec[ii]->GetEnergy()<<std::endl;
+
+    if(ii>0&&HitVec[ii].GetEnergy()-HitVec[ii-1].GetEnergy()<0) {
       std::cout<<"----------------YOU'RE IN A MESS MY FRIEND---------------"<<std::endl;
       return;
     }

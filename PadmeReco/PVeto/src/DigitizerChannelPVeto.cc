@@ -23,13 +23,10 @@ DigitizerChannelPVeto::~DigitizerChannelPVeto(){
   }
 }
 
-void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){//, PVetoCalibration* calib){
+void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
   detectorname=cfg->GetName();
   fGlobalMode = gMode;
   fAnalogsPrinted=0;
-
-  //  fChannelCalibration = calib;
-
   std::string name;
   name = cfg->GetParOrDefault("DETECTOR","NAME","DIGI");
   name += "DIGI";
@@ -42,8 +39,8 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
   fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
 
-  fSaveAnalog = cfg->GetParOrDefault("Output","Analog",0); //M. Raggi: 03/03/2021  
-  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",0); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
+  fSaveAnalog = cfg->GetParOrDefault("Output","SaveAnalogs",0); //M. Raggi: 03/03/2021 
+  fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
   fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
   fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
@@ -57,6 +54,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fZeroSuppression     = cfg->GetParOrDefault("RECO","ZeroSuppression",5.);
   fDerivAmpToEnergy    = cfg->GetParOrDefault("RECO","DerivAmpToEnergy",0.046);
   fmVtoMeV             = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
+
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   std::cout << cfg->GetName() << "***I'M THE NEW EVETO DIGITIZER*" <<  std::endl;
@@ -160,9 +158,10 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   
     double derivthr = fAmpThresholdLow/2.11;//2.11 is the ratio of amplitudes between raw signal and derivative. Check this, becuase it's a function of the number of samples used to take the derivative
     peak_thr = derivthr/VMax;   
-    nfound = spec->Search(HTSpec,fPeakSearchWidth,"",peak_thr);     
+    nfound = spec->Search(HTSpec,fPeakSearchWidth,"",peak_thr);
+    fAnalogPrint=0;     
     for(Int_t ll=0;ll<nfound;ll++){ //peak loop per channel
-      //      fCharge = 0.;
+
       xp = (spec->GetPositionX())[ll];
       yp = (spec->GetPositionY())[ll];
       rawAmp = AbsSamRec[int(xp+0.5)];
@@ -174,7 +173,9 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	RawRise = rawAmp;
 	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
-      }
+      }     
+      //if(Time<50||Time>350)
+	fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -223,6 +224,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);  
+
     hitVec.push_back(Hit);
 
   }//end loop over hits
@@ -434,7 +436,6 @@ void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
 
   if(fChannelEqualisation&&GetChID()<90)  ScaleFactor=SetPVetoChaGain();  
- 
   //  std::cout<<"PVeto "<<GetChID()<<" ScaleFactor "<<ScaleFactor<<std::endl;
 
   //fNSamples is 1024 but I can't find where it's set
@@ -447,7 +448,7 @@ void DigitizerChannelPVeto::SetAbsSignals(Double_t ped){
 void DigitizerChannelPVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
-    if(fSaveAnalog==1){//&&GetChID()>75&&GetChID()<80){
+    if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -472,7 +473,6 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
   if(vRawCorrectHitVec.size()==1) hOccupancyOneHit->Fill(GetChID());
 
   double AmpDiff=0;
-  //  std::cout<<"Tot "<<vRawCorrectHitVec.size()<<std::endl;
   for(UInt_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
     hOccupancy->Fill(GetChID());
     hHitTime->Fill(tDerivSortHitVec[myiHit]);
@@ -557,10 +557,10 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
   std::ifstream PVetoTimeCalib;
   char fname[100];
   //Int_t Calibration=0;
-  
+
   if(fTimeCorrection==1&&fTimeCalibrationFile==1){
     sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
-  
+
     std::ifstream myFile(fname);
     
     PVetoTimeCalib.open(fname);

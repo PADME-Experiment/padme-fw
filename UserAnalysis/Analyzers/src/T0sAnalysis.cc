@@ -44,6 +44,14 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList","hDeltatEVetoSACClusterGoodEVetoCh",4000,-500,500);
   fHS->BookHistoList("EVetoSACT0sList","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
 
+  /*  fHS->BookHistoList("PVetoSACT0sList","hDeltatPVetoHitSACCluster",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList","hDeltatPVetoHitSACClusterGoodPVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList","hDeltatPVetoSAC22ClusterGoodPVetoCh",4000,-500,500);
+
+  fHS->BookHistoList("EVetoSACT0sList","hDeltatEVetoSACCluster",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList","hDeltatEVetoSACClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
+  */
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
   fHS->BookHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--",80,-5,5);
@@ -94,6 +102,9 @@ Bool_t T0sAnalysis::Process(){
   //Number of SAC clusters
   Int_t NSACCluster = fEvent->SACRecoCl->GetNElements();
 
+  //Number of PVeto hits per event
+  Int_t NPVetoHit = fEvent->PVetoRecoEvent->GetNHits();
+
   //time
   double tPVeto;
   double tEVeto;
@@ -104,10 +115,10 @@ Bool_t T0sAnalysis::Process(){
   int chEVeto;
   int chSAC;
 
-  //no hits
-  int NHitsPVeto;
-  int NHitsEVeto;
-  int NHitsSAC;
+  //no hits in cluster
+  int NClusterHitsPVeto;
+  int NClusterHitsEVeto;
+  int NClusterHitsSAC;
 
   //energy
   double enPVeto;
@@ -126,16 +137,22 @@ Bool_t T0sAnalysis::Process(){
     //import SAC variables
     tSAC     =  fEvent->SACRecoCl->Element(ii)->GetTime();
     chSAC    =  fEvent->SACRecoCl->Element(ii)->GetChannelId();
-    NHitsSAC =  fEvent->SACRecoCl->Element(ii)->GetNHitsInClus();
+    NClusterHitsSAC =  fEvent->SACRecoCl->Element(ii)->GetNHitsInClus();
     enSAC    =  fEvent->SACRecoCl->Element(ii)->GetEnergy();
+
+    for(int ii = 0; ii<NPVetoHit;ii++){
+      //      if(NPVetoHit==1)   std::cout<<ii<<std::endl;
+    }
 
     for(int ii = 0; ii<NPVetoCluster;ii++){
 
       //import PVeto variables
       tPVeto     =  fEvent->PVetoRecoCl->Element(ii)->GetTime();
       chPVeto    =  fEvent->PVetoRecoCl->Element(ii)->GetChannelId();
-      NHitsPVeto =  fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
+      NClusterHitsPVeto =  fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
       enPVeto    =  fEvent->PVetoRecoCl->Element(ii)->GetEnergy();
+
+      //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
 
       //time difference
       fHS->FillHistoList("PVetoSACT0sList","hDeltatPVetoSACCluster",tPVeto-tSAC);
@@ -151,7 +168,7 @@ Bool_t T0sAnalysis::Process(){
       //import EVeto variables
       tEVeto     =  fEvent->EVetoRecoCl->Element(ii)->GetTime();
       chEVeto    =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
-      NHitsEVeto =  fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
+      NClusterHitsEVeto =  fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
       enEVeto    =  fEvent->EVetoRecoCl->Element(ii)->GetEnergy();
 
       //time difference
@@ -192,13 +209,13 @@ Bool_t T0sAnalysis::Process(){
   for(int iPClus = 0; iPClus<NPVetoCluster;iPClus++){
     PVetoClusterHitIndices.clear();
 
-    NHitsPVeto =  fEvent->PVetoRecoCl->Element(iPClus)->GetNHitsInClus();    
+    NClusterHitsPVeto =  fEvent->PVetoRecoCl->Element(iPClus)->GetNHitsInClus();    
     PVetoClusterHitIndices = fEvent->PVetoRecoCl->Element(iPClus)->GetHitVecInClus();
 
-    if(NHitsPVeto!=PVetoClusterHitIndices.size()) std::cout<<"NHitsPVeto "<<NHitsPVeto<<" PVetoClusterHitIndices.size() "<<PVetoClusterHitIndices.size()<<std::endl;
+    if(NClusterHitsPVeto!=PVetoClusterHitIndices.size()) std::cout<<"NClusterHitsPVeto "<<NClusterHitsPVeto<<" PVetoClusterHitIndices.size() "<<PVetoClusterHitIndices.size()<<std::endl;
 
-    for(int jj = 0; jj<NHitsPVeto; jj++){
-      for(int kk = 1; kk<NHitsPVeto; kk++){
+    for(int jj = 0; jj<NClusterHitsPVeto; jj++){
+      for(int kk = 1; kk<NClusterHitsPVeto; kk++){
 	//import PVeto variables
 	if(kk==jj) continue;
 

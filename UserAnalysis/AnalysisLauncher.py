@@ -37,7 +37,7 @@ print "MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"NoCor
 #check which version of UserAnalysis you want to use
 PadmeFWToUse = commands.getstatusoutput("(cd "+DataToRead+" && ls -d *padme-fw*)")[1]
 
-PadmeAnalysisToUse = PadmeFWToUse+"/UserAnalysis/Analyzers"
+PadmeAnalysisToUse = PadmeFWToUse+"/UserAnalysis/"
 PadmeAnalysisCheckString = "PadmeAnalysisToUse set to " +PadmeAnalysisToUse+". Is this what you want? Type y for yes, n for no: "
 PadmeAnalysisCheck = raw_input(PadmeAnalysisCheckString)
 if PadmeAnalysisCheck=="n":
@@ -53,7 +53,8 @@ else:
     sys.exit()
 
 #copy correct version of UserAnalysis to PadmeFW directory
-CopyCommand = "cp -r /home/long/"+PadmeAnalysisToUse+" "+DataToRead+PadmeAnalysisToUse
+CopyCommand = 'rsync -r --exclude {"*.root","tmp/", "*.list"} ~/'+ PadmeAnalysisToUse+' '+ DataToRead+PadmeAnalysisToUse
+#"cp -r /home/long/"+PadmeAnalysisToUse+" "+DataToRead+PadmeAnalysisToUse
 print(CopyCommand)
 os.system(CopyCommand)
 

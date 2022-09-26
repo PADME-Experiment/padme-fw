@@ -137,13 +137,13 @@ Bool_t BremsstrahlungAnalysis::Process(){
     fHS->FillHistoList("BremsstrahlungList","hEnergySACCluster",enSAC);
     fHS->FillHistoList("BremsstrahlungList","hChSACCluster",chSAC);
 
-    for(int ii = 0; ii<NPVetoCluster;ii++){
+    for(int jj = 0; jj<NPVetoCluster;jj++){
 
       //import PVeto variables
-      tPVeto     =  fEvent->PVetoRecoCl->Element(ii)->GetTime();
-      chPVeto    =  fEvent->PVetoRecoCl->Element(ii)->GetChannelId();
-      NHitsPVeto =  fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
-      enPVeto    =  fEvent->PVetoRecoCl->Element(ii)->GetEnergy();
+      tPVeto     =  fEvent->PVetoRecoCl->Element(jj)->GetTime();
+      chPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetChannelId();
+      NHitsPVeto =  fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
+      enPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetEnergy();
 
       //histograms of raw variables
       //      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);

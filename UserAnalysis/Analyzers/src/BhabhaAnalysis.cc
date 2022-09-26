@@ -48,10 +48,10 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoClusters","htEVetoCluster",500,-250,250);
 
   //Time difference
-  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster",1000,-500,500);
-  fHS->BookHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",1000,-500,500);
-  fHS->BookHistoList("BhabhaList","h2to3HitsDeltatPVetoEVetoCluster",1000,-500,500);
-  fHS->BookHistoList("BhabhaList","hEnergyCut2to3HitsDeltatPVetoEVetoCluster",1000,-500,500);
+  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster",5000,-500,500);
+  fHS->BookHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",5000,-500,500);
+  fHS->BookHistoList("BhabhaList","h2to3HitsDeltatPVetoEVetoCluster",5000,-500,500);
+  fHS->BookHistoList("BhabhaList","hEnergyCut2to3HitsDeltatPVetoEVetoCluster",5000,-500,500);
 
   //No. hits per cluster
   fHS->BookHistoList("PVetoClusters","hNHitsPVetoCluster",15,0,15);
@@ -263,20 +263,19 @@ Bool_t BhabhaAnalysis::Process(){
 
   //loop over good clusters
   for(int ii = 0; ii<NHitsEVetoGood.size(); ii++){
-
     //import EVeto variables
     tEVeto     =  tEVetoGood[ii];
     chEVeto    =  chEVetoGood[ii];
     NHitsEVeto =  NHitsEVetoGood[ii];
     enEVeto    =  enEVetoGood[ii];
 
-    for(int ii = 0; ii<NHitsPVetoGood.size(); ii++){
+    for(int jj = 0; jj<NHitsPVetoGood.size(); jj++){
       
       //import PVeto variables
-      tPVeto     =  tPVetoGood[ii];
-      chPVeto    =  chPVetoGood[ii];
-      NHitsPVeto =  NHitsPVetoGood[ii];
-      enPVeto    =  enPVetoGood[ii];
+      tPVeto     =  tPVetoGood[jj];
+      chPVeto    =  chPVetoGood[jj];
+      NHitsPVeto =  NHitsPVetoGood[jj];
+      enPVeto    =  enPVetoGood[jj];
 
       //positron energy as function of channel, assuming no angle to beam (eg Brem), from Mauro MonteCarlo 22/4/21
       enBremPositron = 20.15+1.094*chPVeto+0.0328*chPVeto*chPVeto;

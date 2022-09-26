@@ -148,8 +148,8 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fAmpThresholdLow=12;
     }*/
   //  else{
-    fAmpThresholdHigh=8;
-    fAmpThresholdLow=8;
+  //    fAmpThresholdHigh=8;
+  //    fAmpThresholdLow=8;
     //}
 
   if(VMax>fAmpThresholdHigh){

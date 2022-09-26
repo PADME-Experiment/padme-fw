@@ -113,7 +113,8 @@ vector<vector<TRecoVHit*>> ETagSimpleClusterization::FindClustersByTimeSpread(ma
 			}
 			// else, compute the new minimum time spread after adding 2nd, 3rd, and 4th channels
 			// this is a greedy algorithm which does not look at all possible solutions by "brute force";
-			// I can't prove it now, but I'm pretty sure this greedy algo optimizes the problem
+			// I can't prove it, but I'm pretty sure this greedy algo optimizes the problem
+			// (in most non-worst case scenarios anyway)
 			else {
 				for (auto & timeDiff : timeDiffs) {
 					auto hitRef = timeDiff.first;

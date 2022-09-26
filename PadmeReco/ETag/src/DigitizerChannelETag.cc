@@ -541,7 +541,8 @@ void DigitizerChannelETag::HitPlots(std::vector<TRecoVHit *> &hitVec){
 }
 
 Double_t DigitizerChannelETag::SetETagChaGain(){
-  Double_t ScaleFactor = 1;
+  // ASF 11-9-2022: Set all ETag gains to 1 while no calibration
+  Double_t ScaleFactor = 1.0;
   return ScaleFactor;
   //normalised to gaussian mean = 35 using run 665
   //  std::cout<<"Setting cha gain"<<std::endl;
@@ -635,6 +636,8 @@ Double_t DigitizerChannelETag::SetETagChaGain(){
 }
 
 Double_t DigitizerChannelETag::TailHeightDerivative(Int_t DeltaT){//DeltaT in samples. Returns fraction of maximum signal height that a signal will have at time DeltaT samples after the peak
+  // ASF 26-09-2022: Set all of these to 0 for now
+  // Not sure what they do yet, but change if appropriate
   Double_t HeightFrac=0;
   return HeightFrac;
   Double_t Frac[152];

@@ -11,12 +11,20 @@
 #include "TBranch.h"
 #include "TObjArray.h"
 #include "TH1S.h"
+#include "TProfile.h"
 
 #include "TRawEvent.hh"
 
 TH1S* GetHisto(TString name, TObjArray histos) {
   for (Int_t iH = 0; iH < histos.GetEntries(); iH++) {
     if ( ((TH1S*)histos.At(iH))->GetName() == name ) return (TH1S*)histos.At(iH);
+  }
+  return 0;
+}
+
+TProfile* GetProfile(TString name, TObjArray histos) {
+  for (Int_t iH = 0; iH < histos.GetEntries(); iH++) {
+    if ( ((TProfile*)histos.At(iH))->GetName() == name ) return (TProfile*)histos.At(iH);
   }
   return 0;
 }
@@ -173,6 +181,16 @@ int main(int argc, char* argv[])
     hList.Add(h);
   }
 
+  // Create summary profile histograms with means and RMS (32 boards)
+  TObjArray hpList(0);
+  TProfile* hp;
+  for(UChar_t b=0;b<32;b++){
+    hp = new TProfile(Form("B%02dM",b),Form("Board %d Mean",b),32,-0.5,31.5,-100.,4195.);
+    hpList.Add(hp);
+    hp = new TProfile(Form("B%02dR",b),Form("Board %d RMS",b),32,-0.5,31.5,-100.,4195.);
+    hpList.Add(hp);
+  }
+
   // Create output file for histograms
   TFile* histoFile = new TFile(outputFileName,"RECREATE");
   if(!histoFile) {
@@ -196,9 +214,22 @@ int main(int argc, char* argv[])
       break;
     }
 
+    // Get event trigger mask
+    UInt_t trigMask = rawEv->GetEventTrigMask();
+
     // Create directory for this event in output file
-    TString evtDir = Form("%d/",evtNumber);
+    TString evtDir = Form("E%d_%02x/",evtNumber,trigMask);
     histoFile->mkdir(evtDir);
+
+    // Check event type accoding to trigger mask
+    Bool_t isBTFEvent = false;
+    Bool_t isCosmicsEvent = false;
+    Bool_t isOffBeamEvent = false;
+    Bool_t isRandomEvent = false;
+    if (trigMask & 0x01) isBTFEvent = true;
+    if (trigMask & 0x02) isCosmicsEvent = true;
+    if (trigMask & 0x20) isOffBeamEvent = true;
+    if (trigMask & 0x40) isRandomEvent = true;
 
     // Show event header
     if (verbose>0) {
@@ -216,11 +247,6 @@ int main(int argc, char* argv[])
       Int_t brdId = rawEv->ADCBoard(b)->GetBoardId();
       if ( (boards.size() > 0) && (std::count(boards.begin(),boards.end(),brdId) == 0) ) continue;
 
-      // Create subdirectory for this board in output file
-      TString brdDir = Form("%d/%d/",evtNumber,brdId);
-      histoFile->mkdir(brdDir);
-      histoFile->cd(brdDir);
-
       // Show board info
       TADCBoard* adcB = rawEv->ADCBoard(b);
       UChar_t nTrg = adcB->GetNADCTriggers();
@@ -229,6 +255,14 @@ int main(int argc, char* argv[])
 	printf("\tBoard %2u Board Id %2u Board SN %3u LVDS 0x%04x Status 0x%03x GMsk 0x%1x EvtCnt %7u Time %10u ActMsk 0x%08x AccMsk 0x%08x #Trg %u #Chn %2u\n",
 	       b,adcB->GetBoardId(),adcB->GetBoardSN(),adcB->GetLVDSPattern(),adcB->GetBoardStatus(),adcB->GetGroupMask(),adcB->GetEventCounter(),
 	       adcB->GetEventTimeTag(),adcB->GetActiveChannelMask(),adcB->GetAcceptedChannelMask(),nTrg,nChn);
+      }
+
+      // Reset all histograms
+      TIter iObj1(&hList);
+      while (TObject* obj = iObj1()) {
+	((TH1S*)obj)->Reset();
+	((TH1S*)obj)->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d",
+				    runNumber,evtNumber,trigMask,brdId));
       }
 
       // Loop over triggers
@@ -241,28 +275,60 @@ int main(int argc, char* argv[])
 	}
 	TString hName = Form("T%d",trg->GetGroupNumber());
 	h = GetHisto(hName,hList);
-	h->Reset();
-	h->SetTitle(Form("Run %d Event %d Board %d Trigger %d",
-			 runNumber,evtNumber,brdId,trg->GetGroupNumber()));
+	//h->Reset();
+	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d TrigGroup %d",
+			 runNumber,evtNumber,trigMask,brdId,trg->GetGroupNumber()));
 	for(UShort_t s=0;s<trg->GetNSamples();s++) h->Fill(s,trg->GetSample(s));
       }
 
       // Loop over channels
       for(UChar_t c=0;c<nChn;c++){
+
 	TADCChannel* chn = adcB->ADCChannel(c);
 	//if (verbose>2) {
 	//  printf("\t\tChan %u Chn# %u\n",c,chn->GetChannelNumber());
 	//}
 	TString hName = Form("C%02d",chn->GetChannelNumber());
 	h = GetHisto(hName,hList);
-	h->Reset();
-	h->SetTitle(Form("Run %d Event %d Board %d Channel %d",
-			 runNumber,evtNumber,brdId,chn->GetChannelNumber()));
-	for(UShort_t s=0;s<chn->GetNSamples();s++) h->Fill(s,chn->GetSample(s));
+	//h->Reset();
+	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d Channel %d",
+			 runNumber,evtNumber,trigMask,brdId,chn->GetChannelNumber()));
+	Double_t sx = 0.;
+	Double_t sx2 = 0.;
+	for(UShort_t s=0;s<chn->GetNSamples();s++) {
+	  h->Fill(s,chn->GetSample(s));
+	  if (s<994) {
+	    Double_t x = chn->GetSample(s);
+	    sx += x;
+	    sx2 += x*x;
+	  }
+	}
+
+	// Save mean and RMS for this channel to board profile only if this is not a physics event (Random or Off-Beam)
+	if (isRandomEvent || isOffBeamEvent) {
+	  Double_t mean = sx/994.;
+	  hp = GetProfile(Form("B%02dM",brdId),hpList);
+	  hp->Fill(chn->GetChannelNumber(),mean,1.);
+	  Double_t rms = std::sqrt((sx2-994.*mean*mean)/993.);
+	  hp = GetProfile(Form("B%02dR",brdId),hpList);
+	  hp->Fill(chn->GetChannelNumber(),rms,1.);
+	}
       }
       
-      // Write board histograms to file
-      hList.Write();
+      // Write non-empty board histograms to file
+      //hList.Write();
+      TObjArray hListOut(0);
+      TIter iObj2(&hList);
+      while (TObject* obj = iObj2()) {
+      	if ( ((TH1S*)obj)->GetEntries() != 0. ) hListOut.Add(obj);
+      }
+      // If any data are present, create subdirectory for this board in output file and write data there
+      if (hListOut.GetEntries()) {
+	TString brdDir = Form("%sB%d/",evtDir.Data(),brdId);
+	histoFile->mkdir(brdDir);
+	histoFile->cd(brdDir);
+	hListOut.Write();
+      }
 
     } // End loop over boards
 
@@ -270,6 +336,22 @@ int main(int argc, char* argv[])
     rawEv->Clear("C");
     
   } // End loop over events
+
+  // Create summary directory for this event in output file
+  TString smrDir = "Summary";
+  histoFile->mkdir(smrDir);
+  histoFile->cd(smrDir);
+
+  // Select non-empty profiles
+  TObjArray hpListOut(0);
+  TIter iObj(&hpList);
+  while (TObject* obj = iObj()) {
+    if ( ((TProfile*)obj)->GetEntries() != 0. ) hpListOut.Add(obj);
+  }
+
+  // Save non-empty summary profile histograms to output file
+  //hpList.Write();
+  hpListOut.Write();
 
   // Save and close output file
   printf("Closing output file\n");

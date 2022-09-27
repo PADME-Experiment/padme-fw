@@ -146,7 +146,7 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling HEPVeto with configuration file "<<configHEPVeto<<std::endl;
     fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,configHEPVeto));
   }
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",1)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",0)) {
     TString configETag = fConfig->GetParOrDefault("RECOCONFIG","ETag","config/ETag.cfg");
     std::cout << "=== Enabling ETag with configuration file " << configETag <<std::endl;
     fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));

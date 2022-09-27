@@ -43,10 +43,10 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
   fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
-  fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
+  fTimeCalibration  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 2); 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
-  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",1);
+  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",2);
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -558,19 +558,25 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
   char fname[100];
   //Int_t Calibration=0;
 
-  if(fTimeCorrection==1&&fTimeCalibrationFile==1){
-    sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
-
-    std::ifstream myFile(fname);
+  if(fTimeCorrection==1){
+    if(fTimeCalibration==1){
+      sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
+      std::ifstream myFile(fname);
     
-    PVetoTimeCalib.open(fname);
-    if (PVetoTimeCalib.is_open()){
-      double temp;
-      for (int i=0;i<96;i++){
-	PVetoTimeCalib >> temp >> fTimeCalibCh[i];
-	//std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+      PVetoTimeCalib.open(fname);
+      if (PVetoTimeCalib.is_open()){
+	double temp;
+	for (int i=0;i<96;i++){
+	  PVetoTimeCalib >> temp >> fTimeCalibCh[i];
+	  //std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+	}
+	PVetoTimeCalib.close();
       }
-      PVetoTimeCalib.close();
+    }
+    else if(fTimeCorrection==1&&fTimeCalibration==2){
+      //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in PVeto-SAC Bremsstrahlung in data, and subtracting the peak of time differences in PVeto-SAC Bremsstrahlung in the full-beamline MC
+      if(GetChID()<48) 	fTimeCalibCh[GetChID()]=42.4;
+      else fTimeCalibCh[GetChID()]=39.9;
     }
     else{ 
       std::cout<<"No previous data available for PVeto, resorting to default calibration constant (0)"<<std::endl;

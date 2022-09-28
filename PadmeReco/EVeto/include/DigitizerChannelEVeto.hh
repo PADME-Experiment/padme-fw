@@ -77,7 +77,7 @@ private:
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
   int fEnergyCalibrationFile;
-  int fTimeCalibrationFile;
+  int fTimeCalibration;
   TString detectorname;
 
   std::vector<Double_t>   tDerivHitVec          ;

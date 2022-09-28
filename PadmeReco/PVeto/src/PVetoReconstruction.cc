@@ -141,6 +141,9 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
   for (unsigned int ih=0; ih<fHits.size(); ++ih)
     {
       Hit = fHits[ih];
+      //pre-smear time = GetTime()/Hit->GetEnergy());
+      //smearing in time
+      //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
 
       if (fSigmaNoiseForMC >0.0001) {

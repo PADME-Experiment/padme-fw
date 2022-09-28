@@ -575,7 +575,7 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
     }
     else if(fTimeCorrection==1&&fTimeCalibration==2){
       //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in PVeto-SAC Bremsstrahlung in data, and subtracting the peak of time differences in PVeto-SAC Bremsstrahlung in the full-beamline MC
-      if(GetChID()<48) 	fTimeCalibCh[GetChID()]=42.4;
+      if(GetChID()<48) 	fTimeCalibCh[GetChID()]=42.5;
       else fTimeCalibCh[GetChID()]=39.9;
     }
     else{ 

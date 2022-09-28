@@ -98,11 +98,11 @@ with open(ListFileName,"w") as fulllist:
         #create symlinks to PadmeAnalysis and config file
         if os.path.exists(SubDir+"/PadmeAnalysis"):
             os.system("rm "+SubDir+"/PadmeAnalysis")
-        exesymlink = "ln -s "+DataToRead+PadmeFWToUse+"/UserAnalysis/PadmeAnalysis "+SubDir+"\n"
+        exesymlink = "ln -sf "+DataToRead+PadmeFWToUse+"/UserAnalysis/PadmeAnalysis "+SubDir+"\n"
         os.system(exesymlink)
         if os.path.exists(SubDir+"/AnalysisConfig.conf"):
             os.system("rm "+SubDir+"/AnalysisConfig.conf")
-        configsymlink = "ln -s "+DataToRead+PadmeFWToUse+"/UserAnalysis/config/UserAnalysis.conf "+SubDir+"/AnalysisConfig.conf\n"
+        configsymlink = "ln -sf "+DataToRead+PadmeFWToUse+"/UserAnalysis/config/UserAnalysis.conf "+SubDir+"/AnalysisConfig.conf\n"
         os.system(configsymlink)
 
         #write source file to run analysis

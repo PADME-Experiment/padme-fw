@@ -85,6 +85,8 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHisto2List("BhabhaList","hEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","hGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","hLeadingElectronGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("BhabhaList","ChaSumVsDeltaTCorrect",180,0,179,100,-50,50);
+  fHS->BookHisto2List("BhabhaList","GoodChaSumVsDeltaTCorrect",101,40,140,100,-50,50);
 
   //MC only Bhabha plots
   fHS->BookHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
@@ -281,6 +283,23 @@ Bool_t BhabhaAnalysis::Process(){
       enBremPositron = 20.15+1.094*chPVeto+0.0328*chPVeto*chPVeto;
       enBremElectron = 20.15+1.094*chEVeto+0.0328*chEVeto*chEVeto;
 
+
+      //time difference corrected for trajectory
+      deltaCh = chPVeto-chEVeto;
+      deltaTtraj = TMath::Power(deltaCh,3)*-6.5e-7+TMath::Power(deltaCh,2)*3.2e-6+deltaCh*0.04-0.07;
+      deltaTcorrect = tPVeto-tEVeto-deltaTtraj;
+      
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",deltaTtraj);
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",deltaTcorrect);
+      fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",chPVeto-chEVeto,deltaTtraj);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",deltaTtraj,deltaTcorrect);
+      fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
+
+
       //histograms of raw variables
       fHS->FillHistoList("BhabhaList","hDeltatPVetoEVetoCluster",tPVeto-tEVeto);
       fHS->FillHistoList("PVetoClusters","hChToEnergyPositron",enBremPositron);
@@ -289,6 +308,10 @@ Bool_t BhabhaAnalysis::Process(){
       //sum of e+ e- energies as reconstructed using Bremsstrahlung relation
       fHS->FillHistoList("BhabhaList","hChToEnergySum",enBremElectron+enBremPositron);
       //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
+
+      fHS->FillHistoList("BhabhaList","ChaSumVsDeltaTCorrect",chPVeto+chEVeto,deltaTcorrect);
+      if((chPVeto>19&&chEVeto>19&&chPVeto<71&&chEVeto<71))
+	fHS->FillHistoList("BhabhaList","GoodChaSumVsDeltaTCorrect",chPVeto+chEVeto,deltaTcorrect);
 
       if(NHitsPVeto>1&&NHitsEVeto>1){
 	fHS->FillHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",tPVeto-tEVeto);
@@ -305,20 +328,6 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHisto2List("BhabhaList","h5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindow",enBremElectron+enBremPositron);
       //      fHS->FillHisto2List("BhabhaList","hDiffEBeamChToEnergySumVsDeltaChPVetoEVeto5nsWindow",chPVeto-chEVeto,430-(enBremElectron+enBremPositron));
-
-      deltaCh = chPVeto-chEVeto;
-      deltaTtraj = TMath::Power(deltaCh,3)*-6.5e-7+TMath::Power(deltaCh,2)*3.2e-6+deltaCh*0.04-0.07;
-      deltaTcorrect = tPVeto-tEVeto-deltaTtraj;
-      
-      fHS->FillHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",deltaTtraj);
-      fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",deltaTcorrect);
-      fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-
-      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",chPVeto-chEVeto,deltaTtraj);
-      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
-      fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
-      fHS->FillHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",deltaTtraj,deltaTcorrect);
-      fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
       
       //either 2 or 3 hits?
       if(!(NHitsPVeto<4&&NHitsEVeto<4)) continue;
@@ -335,7 +344,7 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGood",enBremElectron+enBremPositron);
       fHS->FillHisto2List("BhabhaList","hGoodChasEnergyCut2to3Hits5nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
-	    
+
       //Electron more energetic than positron?
       if(!(chEVeto>chPVeto)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum5nsWindowGoodMoreEnergeticElectron",enBremElectron+enBremPositron);

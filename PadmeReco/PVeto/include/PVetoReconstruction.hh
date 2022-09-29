@@ -8,8 +8,8 @@
 #define PVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
-#include "PVetoClusterHits.hh"
-#include "PVetoClusterization.hh"
+#include "VetoClusterHits.hh"
+#include "VetoClusterization.hh"
 #include "TRandom2.h"
 
 
@@ -41,8 +41,8 @@ private:
   Double_t fSigmaNoiseForMC;
   Double_t fPVetoDigiTimeWindow;
   Int_t fClusterAlgo;
-  PVetoClusterHits fClusterHits;
-  PVetoClusterStructure fClusStruc;
+  VetoClusterHits fClusterHits;
+  VetoClusterStructure fClusStruc;
   // std::vector<Cluster*> ClusVec;
 
 };

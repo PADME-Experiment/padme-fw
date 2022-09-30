@@ -177,8 +177,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicWorld = physicWorld->GetLogicalVolume(); // Recover logical world volume
     
     // Set world characteristics
-    logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
+    //    logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     if (fVerbose)
       printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
@@ -191,7 +191,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       if (fChamberIsVisible) {
 	Dlog->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
       } else {
-	Dlog->SetVisAttributes(G4VisAttributes::Invisible);
+	Dlog->SetVisAttributes(G4VisAttributes::GetInvisible());
       }
       Dlog->SetMaterial(G4Material::GetMaterial("G4_STAINLESS-STEEL"));
       if (D->CheckOverlaps()) {
@@ -207,8 +207,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
     logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
     if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
-    logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
+    // logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
 
   }
@@ -255,7 +255,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //G4Box* solidMagneticVolume = new G4Box("MagneticVolume",magVolHLX,magVolHLY,magVolHLZ);
   //G4LogicalVolume* logicMagneticVolumeVC =
   //  new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
-  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::GetInvisible());
   ////new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",fChamberStructure->GetChamberLogicalVolume(),false,0);
   //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
@@ -269,7 +269,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   //magVolShape[5] = G4TwoVector(magVolMaxX,magVolMinZ);
   //G4ExtrudedSolid* solidMagneticVolume = new G4ExtrudedSolid("MagneticVolume",magVolShape,magVolHLY,G4TwoVector(0, 0), 1.0, G4TwoVector(0, 0), 1.0);
   //G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
-  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  //if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::GetInvisible());
   //G4RotationMatrix* magVolRot = new G4RotationMatrix;
   //magVolRot->rotateX(-90.*deg);
   //G4ThreeVector magVolPos = G4ThreeVector(0.,0.,0.);
@@ -301,7 +301,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol3,solidMagVol4,0,magVol4Pos);
 
   G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
-  if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::Invisible);
+  if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
   // Magnetic volume in the target cross region and its position
@@ -364,7 +364,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
 
   if (! fMagneticVolumeIsVisible)
-    logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::Invisible);
+    logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,positionMagneticVolumeCross,logicMagneticVolumeCross,"MagneticVolumeCross",logicWorld,false,0,true);
 
   // Add magnetic field to volumes

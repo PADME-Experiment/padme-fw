@@ -49,7 +49,7 @@ void SACDetector::CreateGeometry()
   printf("SAC size is %f %f %f\n",sacSizeX,sacSizeY,sacSizeZ);
   G4Box* solidSAC = new G4Box("SAC",0.5*sacSizeX,0.5*sacSizeY,0.5*sacSizeZ);
   fSACVolume = new G4LogicalVolume(solidSAC,G4Material::GetMaterial("Vacuum"),"SAC",0,0,0);
-  fSACVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fSACVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,sacPos,fSACVolume,"SAC",fMotherVolume,false,0,false);
 
   // Show size of gap between crystals

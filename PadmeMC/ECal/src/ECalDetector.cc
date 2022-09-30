@@ -63,7 +63,7 @@ void ECalDetector::CreateGeometry()
   printf("ECal size is %f %f %f\n",ecalSizeX,ecalSizeY,ecalSizeZ);
   G4Box* solidEcal = new G4Box("ECal",0.5*ecalSizeX,0.5*ecalSizeY,0.5*ecalSizeZ);
   fECalVolume = new G4LogicalVolume(solidEcal,G4Material::GetMaterial("Vacuum"),"ECal",0,0,0);
-  fECalVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fECalVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,ecalPos,fECalVolume,"ECal",fMotherVolume,false,0,true);
 
   // Show size of gap between crystals
@@ -193,7 +193,7 @@ void ECalDetector::CreateGeometry()
     printf("ECal panel size is %f x %f x %f mm3\n",ecalPanelSizeX/mm,ecalPanelSizeY/mm,ecalPanelSizeZ/mm);
     G4Box* solidECalPanel = new G4Box("ECalPanel",0.5*ecalPanelSizeX,0.5*ecalPanelSizeY,0.5*ecalPanelSizeZ);
     fECalPanelVolume = new G4LogicalVolume(solidECalPanel,G4Material::GetMaterial("G4_AIR"),"ECalPanel",0,0,0);
-    fECalPanelVolume->SetVisAttributes(G4VisAttributes::Invisible);
+    fECalPanelVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
     // Create hole volume
     G4double ecalPanelHoleR = geo->GetECalPanelHoleRadius();
@@ -261,7 +261,7 @@ void ECalDetector::CreateGeometry()
 
     G4LogicalVolume* ecalSupportVolume = new G4LogicalVolume(solidECalSupport,G4Material::GetMaterial("G4_AIR"),"ECalSupport",0,0,0);
     //ecalSupportVolume->SetVisAttributes(G4VisAttributes(G4Colour::Gray()));
-    ecalSupportVolume->SetVisAttributes(G4VisAttributes::Invisible);
+    ecalSupportVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
     // Create main box for support structure
     G4Box* solidECalSuppBoxFull = new G4Box("ECalSuppBoxFull",0.5*ecalSupportSizeX,0.5*ecalSupportSizeY,0.5*ecalSupportSizeZ);
@@ -316,7 +316,7 @@ void ECalDetector::CreateGeometry()
     G4double ecalSuppLattXSizeZ = geo->GetECalSupportLatticeXSizeZ();
     G4Box* solidECalSuppLattX = new G4Box("ECalSuppLattX",0.5*ecalSuppLattXSizeX,0.5*ecalSuppLattXSizeY,0.5*ecalSuppLattXSizeZ);
     G4LogicalVolume* ecalSuppLattXVolume = new G4LogicalVolume(solidECalSuppLattX,G4Material::GetMaterial("G4_AIR"),"ECalSuppLattX",0,0,0);
-    ecalSuppLattXVolume->SetVisAttributes(G4VisAttributes::Invisible);
+    ecalSuppLattXVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
     G4int xCell = 0;
     for(G4int x=0; x<ecalSuppLattNCellXY; x++) {
@@ -350,7 +350,7 @@ void ECalDetector::CreateGeometry()
     G4double ecalSuppLattYSizeZ = geo->GetECalSupportLatticeYSizeZ();
     G4Box* solidECalSuppLattY = new G4Box("ECalSuppLattY",0.5*ecalSuppLattYSizeX,0.5*ecalSuppLattYSizeY,0.5*ecalSuppLattYSizeZ);
     G4LogicalVolume* ecalSuppLattYVolume = new G4LogicalVolume(solidECalSuppLattY,G4Material::GetMaterial("G4_AIR"),"ECalSuppLattY",0,0,0);
-    ecalSuppLattYVolume->SetVisAttributes(G4VisAttributes::Invisible);
+    ecalSuppLattYVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
     G4int yCell = 0;
     for(G4int y=0; y<ecalSuppLattNCellXY; y++) {

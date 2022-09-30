@@ -47,10 +47,10 @@ void MagnetStructure::CreateGeometry()
   G4VisAttributes slabVisAttr = G4VisAttributes(G4Colour::Green());
   G4VisAttributes neopreneVisAttr = G4VisAttributes(G4Colour::White());
   if (!fMagnetIsVisible) {
-    yokeVisAttr = G4VisAttributes::Invisible;
-    coilVisAttr = G4VisAttributes::Invisible;
-    slabVisAttr = G4VisAttributes::Invisible;
-    neopreneVisAttr = G4VisAttributes::Invisible;
+    yokeVisAttr = G4VisAttributes::GetInvisible();
+    coilVisAttr = G4VisAttributes::GetInvisible();
+    slabVisAttr = G4VisAttributes::GetInvisible();
+    neopreneVisAttr = G4VisAttributes::GetInvisible();
   }
 
   // Small gap between magnet yoke's sections

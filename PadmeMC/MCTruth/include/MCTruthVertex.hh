@@ -12,6 +12,7 @@
 #include "G4ThreeVector.hh"
 
 #include "MCTruthParticle.hh"
+#include <vector>
 
 class MCTruthVertex
 {

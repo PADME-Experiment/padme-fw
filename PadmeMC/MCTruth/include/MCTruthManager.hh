@@ -12,6 +12,7 @@
 #include "G4ThreeVector.hh"
 
 #include "MCTruthVertex.hh"
+#include <vector>
 
 class MCTruthManager
 {

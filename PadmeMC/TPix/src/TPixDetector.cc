@@ -46,7 +46,7 @@ void TPixDetector::CreateGeometry()
   printf("TPix size is %.2f x %.2f x %.2f mm3\n",tpixSizeX/mm,tpixSizeY/mm,tpixSizeZ/mm);
   G4Box* solidTPix = new G4Box("TPixSolid",0.5*tpixSizeX,0.5*tpixSizeY,0.5*tpixSizeZ);
   fTPixVolume = new G4LogicalVolume(solidTPix,G4Material::GetMaterial("Vacuum"),"TPixLogic",0,0,0);
-  fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fTPixVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   //fTPixVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
   G4double tpixPosX = geo->GetTPixPosX();

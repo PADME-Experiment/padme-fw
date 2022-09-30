@@ -48,7 +48,7 @@ void HEPVetoDetector::CreateGeometry()
   G4Box* solidHEPVeto = new G4Box("HEPVetoSolid",0.5*hepVetoSizeX,0.5*hepVetoSizeY,0.5*hepVetoSizeZ);
   fHEPVetoVolume = new G4LogicalVolume(solidHEPVeto,G4Material::GetMaterial("Vacuum"),"HEPVetoLogic",0,0,0);
   //fHEPVetoVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
-  fHEPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fHEPVetoVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   G4double hepVetoPosX = geo->GetHEPVetoPosX();
   G4double hepVetoPosY = geo->GetHEPVetoPosY();

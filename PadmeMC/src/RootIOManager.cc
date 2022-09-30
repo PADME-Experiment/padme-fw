@@ -127,9 +127,9 @@ void RootIOManager::EnableSubDetectorIO(G4String para)
   G4bool saveHits = true;
   G4bool saveDigis = true;
   if (para.contains(":")) { // If the [:HD] option is used, parse it
-    G4int idx = para.index(":");
-    detector = para(0,idx);
-    opts = para(idx+1,para.length()-idx-1);
+    G4int idx = para.find(":");
+    detector = para.substr(0,idx);
+    opts = para.substr(idx+1,para.length()-idx-1);
     if (! opts.contains("H")) saveHits = false;
     if (! opts.contains("D")) saveDigis = false;
   } else {

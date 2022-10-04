@@ -33,6 +33,8 @@ private:
   Bool_t isMC;
 
   TMCVertex* mcVtx;
+
+  Int_t fNPoT; 
   
 };
 #endif

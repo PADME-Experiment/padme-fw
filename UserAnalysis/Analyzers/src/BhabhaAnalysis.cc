@@ -107,7 +107,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMin6.5kMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVeto",5000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetokMax10kPoT",5000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetoMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetoMin6.5kMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",5000,-500,500);

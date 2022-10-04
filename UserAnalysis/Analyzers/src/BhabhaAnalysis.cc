@@ -48,7 +48,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoClusters","htEVetoCluster",500,-250,250);
 
   //Time difference
-  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster10nsfabs",50,-10,10);
+  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster10nsfabs",100,-10,10);
   //  fHS->BookHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",5000,-500,500);
   //  fHS->BookHistoList("BhabhaList","h2to3HitsDeltatPVetoEVetoCluster",5000,-500,500);
   //  fHS->BookHistoList("BhabhaList","hEnergyCut2to3HitsDeltatPVetoEVetoCluster",5000,-500,500);
@@ -84,6 +84,8 @@ Bool_t BhabhaAnalysis::InitHistos(){
 
   //Bhabha plots
   fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMax10kPoT",96,0,95,96,0,95);
+  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMin6.5kMax10kPoT",96,0,95,96,0,95);
   fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterDeltaTWeight",96,0,95,96,0,95);
   // fHS->BookHisto2List("BhabhaList","h2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
   // fHS->BookHisto2List("BhabhaList","hEnergyCut2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
@@ -102,7 +104,11 @@ Bool_t BhabhaAnalysis::InitHistos(){
   
   //Time correction plots
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",5000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMax10kPoT",5000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMin6.5kMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVeto",5000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetokMax10kPoT",5000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetoMin6.5kMax10kPoT",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",5000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasPVetoEVeto",5000,-500,500);
@@ -136,6 +142,8 @@ Bool_t BhabhaAnalysis::Process(){
 
   if( !(trigMask & (1 << 0)) && isMC==false) return false;
   
+  fNPoT = fEvent->TargetRecoBeam->getnPOT();
+
   //Number of PVeto clusters
   Int_t NPVetoCluster = fEvent->PVetoRecoCl->GetNElements();
   fHS->FillHistoList("PVetoClusters","hNPVetoCluster",NPVetoCluster);
@@ -311,6 +319,10 @@ Bool_t BhabhaAnalysis::Process(){
       
       fHS->FillHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",deltaTtraj);
       fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+      if(fNPoT<10000){
+	fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMax10kPoT",tPVeto-tEVeto);
+	if(fNPoT>6500) fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVetoMin6.5kMax10kPoT",tPVeto-tEVeto);
+      }
 
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",chPVeto-chEVeto,deltaTtraj);
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
@@ -327,6 +339,10 @@ Bool_t BhabhaAnalysis::Process(){
 
 	fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVeto",tPVeto-tEVeto);
 	fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectGoodChasPVetoEVeto",deltaTcorrect);
+	if(fNPoT<10000){
+	  fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetoMax10kPoT",tPVeto-tEVeto);
+	  if(fNPoT>6500) fHS->FillHistoList("TimeCorrectionList","hdeltaTuncorrectGoodChasPVetoEVetoMin6.5kMax10kPoT",tPVeto-tEVeto);
+	}
 
 	fHS->FillHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
 	fHS->FillHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
@@ -342,9 +358,14 @@ Bool_t BhabhaAnalysis::Process(){
 	}
       }
 
-      //within 5ns?
+      //within 10ns?
       if(!(std::fabs(tPVeto-tEVeto)<10)) continue;
       fHS->FillHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
+      if(fNPoT<10000){
+	fHS->FillHistoList("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMax10kPoT",chPVeto,chEVeto);
+	if(fNPoT>6500)      fHS->FillHistoList("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMin6.5kMax10kPoT",chPVeto,chEVeto);
+      }
+
       fHS->FillHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterDeltaTWeight",chPVeto,chEVeto,tPVeto-tEVeto+100);
       fHS->FillHistoList("BhabhaList","hDeltatPVetoEVetoCluster10nsfabs",tPVeto-tEVeto);
       fHS->FillHistoList("BhabhaList","hChToEnergySum10nsWindow",enBremElectron+enBremPositron);

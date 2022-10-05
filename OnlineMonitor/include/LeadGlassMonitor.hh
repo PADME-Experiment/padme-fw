@@ -65,9 +65,9 @@ private:
   Double_t fChannelCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
 
   // Histograms
-  TH1D* fHLGPedestal;
-  TH1D* fHLGPedRMS;
-  TH1D* fHLGTotCharge;
+  TH1D* fHLGPedestalBM;
+  TH1D* fHLGPedRMSBM;
+  TH1D* fHLGTotChargeBM;
 
 };
 #endif

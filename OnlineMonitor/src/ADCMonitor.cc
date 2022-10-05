@@ -179,7 +179,7 @@ void ADCMonitor::Initialize()
       if (b==28) { // Target dynamics is centered
 	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),80,1800.,2200.);
       } else {
-	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),100,3600.,4100.);
+	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),160,3300.,4100.);
       }
       hname.Form("ADC_PedRMS_%2.2d_%2.2d",b,c);
       fHChPedRMS[b][c] = new TH1D(hname.Data(),hname.Data(),100,0.,50.);

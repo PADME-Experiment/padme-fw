@@ -25,7 +25,9 @@ LeadGlassMonitor::LeadGlassMonitor(TString cfgFile)
 LeadGlassMonitor::~LeadGlassMonitor()
 {
   if (fConfigParser) { delete fConfigParser; fConfigParser = 0; }
-  if (fHLGTotCharge) { delete fHLGTotCharge; fHLGTotCharge = 0; }
+  if (fHLGPedestalBM) { delete fHLGPedestalBM; fHLGPedestalBM = 0; }
+  if (fHLGPedRMSBM) { delete fHLGPedRMSBM; fHLGPedRMSBM = 0; }
+  if (fHLGTotChargeBM) { delete fHLGTotChargeBM; fHLGTotChargeBM = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -46,9 +48,9 @@ void LeadGlassMonitor::Initialize()
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):600;
 
   // Create histograms
-  fHLGPedestal = new TH1D("LG_Pedestal","LG_Pedestal",100,3500.,4000.);
-  fHLGPedRMS = new TH1D("LG_PedRMS","LG_PedRMS",100,0.,50.);
-  fHLGTotCharge = new TH1D("LG_TotCharge","LG_TotCharge",1000,0.,10000.);
+  fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_Pedestal",120,3500.,4100.);
+  fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMS",100,0.,50.);
+  fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotCharge",1000,0.,10000.);
 
   // Reset global counters
   fBeamEventCount = 0;
@@ -168,9 +170,9 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
   // Compute pedestal and total charge in leadglass and save them to histogram
   ComputeTotalCharge(samples);
   if (fIsBeam) {
-    fHLGPedestal->Fill(fChannelPedestal);
-    fHLGPedRMS->Fill(fChannelPedRMS);
-    fHLGTotCharge->Fill(fChannelCharge);
+    fHLGPedestalBM->Fill(fChannelPedestal);
+    fHLGPedRMSBM->Fill(fChannelPedRMS);
+    fHLGTotChargeBM->Fill(fChannelCharge);
     //if (fChannelCharge<100.) printf("%d %f %f %f\n",fConfig->GetEventNumber(),fChannelPedestal,fChannelPedRMS,fChannelCharge);
   }
 
@@ -215,47 +217,47 @@ Int_t LeadGlassMonitor::OutputBeam()
   FILE* outf = fopen(ftname.Data(),"w");
 
   // Pedestal
-  fprintf(outf,"PLOTID LeadGlassMon_Beam_Pedestal\n");
+  fprintf(outf,"PLOTID LeadGlassMon_beampedestal\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d\n",fHLGPedestal->GetNbinsX());
-  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestal->GetXaxis()->GetXmin(),fHLGPedestal->GetXaxis()->GetXmax());
+  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHLGPedestalBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalBM->GetXaxis()->GetXmin(),fHLGPedestalBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"DATA [[");
-  for(Int_t b = 1; b <= fHLGPedestal->GetNbinsX(); b++) {
+  for(Int_t b = 1; b <= fHLGPedestalBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
-    fprintf(outf,"%.0f",fHLGPedestal->GetBinContent(b));
+    fprintf(outf,"%.0f",fHLGPedestalBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
   // Pedestal RMS
-  fprintf(outf,"PLOTID LeadGlassMon_Beam_PedRMS\n");
+  fprintf(outf,"PLOTID LeadGlassMon_beampedrms\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d\n",fHLGPedRMS->GetNbinsX());
-  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMS->GetXaxis()->GetXmin(),fHLGPedRMS->GetXaxis()->GetXmax());
+  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHLGPedRMSBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMSBM->GetXaxis()->GetXmin(),fHLGPedRMSBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"DATA [[");
-  for(Int_t b = 1; b <= fHLGPedRMS->GetNbinsX(); b++) {
+  for(Int_t b = 1; b <= fHLGPedRMSBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
-    fprintf(outf,"%.0f",fHLGPedRMS->GetBinContent(b));
+    fprintf(outf,"%.0f",fHLGPedRMSBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
   // Total Charge
-  fprintf(outf,"PLOTID LeadGlassMon_Beam_TotCharge\n");
+  fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
-  fprintf(outf,"CHANNELS %d\n",fHLGTotCharge->GetNbinsX());
-  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotCharge->GetXaxis()->GetXmin(),fHLGTotCharge->GetXaxis()->GetXmax());
+  fprintf(outf,"PLOTNAME LeadGlass Beam Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"DATA [[");
-  for(Int_t b = 1; b <= fHLGTotCharge->GetNbinsX(); b++) {
+  for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
-    fprintf(outf,"%.0f",fHLGTotCharge->GetBinContent(b));
+    fprintf(outf,"%.0f",fHLGTotChargeBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 

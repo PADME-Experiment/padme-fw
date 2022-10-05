@@ -48,9 +48,9 @@ void LeadGlassMonitor::Initialize()
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):600;
 
   // Create histograms
-  fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_Pedestal",120,3500.,4100.);
-  fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMS",100,0.,50.);
-  fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotCharge",1000,0.,10000.);
+  fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
+  fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
+  fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
 
   // Reset global counters
   fBeamEventCount = 0;
@@ -169,11 +169,19 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
 
   // Compute pedestal and total charge in leadglass and save them to histogram
   ComputeTotalCharge(samples);
+
   if (fIsBeam) {
+
     fHLGPedestalBM->Fill(fChannelPedestal);
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
     //if (fChannelCharge<100.) printf("%d %f %f %f\n",fConfig->GetEventNumber(),fChannelPedestal,fChannelPedRMS,fChannelCharge);
+
+    // Save waveform once every few events
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
+      for(UInt_t i = 0; i<1024; i++)
+	fLGWaveformBM[i] = samples[i];
+
   }
 
 }
@@ -222,8 +230,8 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
   fprintf(outf,"CHANNELS %d\n",fHLGPedestalBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalBM->GetXaxis()->GetXmin(),fHLGPedestalBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X pC\n");
-  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHLGPedestalBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
@@ -237,8 +245,8 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
   fprintf(outf,"CHANNELS %d\n",fHLGPedRMSBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMSBM->GetXaxis()->GetXmin(),fHLGPedRMSBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X pC\n");
-  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHLGPedRMSBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
@@ -253,13 +261,28 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
-  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGTotChargeBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
+
+  fprintf(outf,"PLOTID LeadGlassMon_beamwaveform\n");
+  fprintf(outf,"PLOTTYPE scatter\n");
+  fprintf(outf,"PLOTNAME LeadGlass Beam Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"RANGE_X 0 1024\n");
+  fprintf(outf,"TITLE_X Sample\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<1024; j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[%d,%d]",j,fLGWaveformBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

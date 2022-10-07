@@ -47,6 +47,10 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoClusters","htPVetoCluster",500,-250,250);
   fHS->BookHistoList("EVetoClusters","htEVetoCluster",500,-250,250);
 
+  //Cluster time length
+  fHS->BookHistoList("PVetoClusters","htlenPVetoCluster",500,-250,250);
+  fHS->BookHistoList("EVetoClusters","htlenEVetoCluster",500,-250,250);
+
   //Time difference
   //  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster10nsfabs",100,-10,10);
   //  fHS->BookHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",5000,-500,500);
@@ -185,6 +189,8 @@ Bool_t BhabhaAnalysis::Process(){
   //temporary variables for the loop
   double tempEClus;
   double tempT;
+  double tempearlyT;
+  double templateT;
   int tempNHit;
   int tempCh;
 
@@ -199,6 +205,8 @@ Bool_t BhabhaAnalysis::Process(){
     tempNHit  = fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
     tempEClus = fEvent->EVetoRecoCl->Element(ii)->GetEnergy(); 
     tempT  =  fEvent->EVetoRecoCl->Element(ii)->GetTime();
+    // tempearlyT  =  fEvent->EVetoRecoCl->Element(ii)->GetEarlyHitTime();
+    // templateT  =  fEvent->EVetoRecoCl->Element(ii)->GetLateHitTime();
     tempCh =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
 
     fHS->FillHistoList("EVetoClusters","hNHitsEVetoCluster",tempNHit);

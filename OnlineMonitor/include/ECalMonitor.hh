@@ -29,7 +29,10 @@ private:
 
   Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
 
+  Int_t OutputBeam();
+  Int_t OutputOffBeam();
   Int_t OutputCosmics();
+  Int_t OutputRandom();
 
   void ResetECalMap(Double_t map[29][29]);
 
@@ -41,14 +44,23 @@ private:
   utl::ConfigParser* fConfigParser;
 
   Bool_t fIsCosmics;
+  Bool_t fIsBeam;
+  Bool_t fIsOffBeam;
+  Bool_t fIsRandom;
 
   Double_t   fECal_CosmSum[29][29]; // 100 events map
   Double_t   fECal_CosmEvt[29][29]; // Last event map
   //UInt_t   fECal_count[29][29];
   //Double_t fECal_signal[29][29];
 
+  UInt_t fBeamEventCount;
+  UInt_t fBeamOutputRate;
+  UInt_t fOffBeamEventCount;
+  UInt_t fOffBeamOutputRate;
   UInt_t fCosmicsEventCount;
   UInt_t fCosmicsOutputRate;
+  UInt_t fRandomEventCount;
+  UInt_t fRandomOutputRate;
 
   // Cosmics waveforms
   UInt_t fNCosmWF;

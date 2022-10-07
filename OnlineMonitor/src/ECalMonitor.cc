@@ -3,6 +3,7 @@
 
 #include "ECalMonitor.hh"
 
+#include "LeadGlassMonitor.hh" // Need to know LeadGlass board/channel to avoid warnings
 #include "Configuration.hh"
 
 #include "TMath.h"
@@ -62,8 +63,11 @@ void ECalMonitor::Initialize()
     printf("\n");
   }
 
-  // Get cosmics output rate from config file
+  // Get output rates from config file
+  fBeamOutputRate = fConfigParser->HasConfig("RECO","BeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate")):100;
+  fOffBeamOutputRate = fConfigParser->HasConfig("RECO","OffBeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate")):100;
   fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):100;
+  fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):100;
 
   // Get calibration constants from file
   for (UChar_t b=0; b<29; b++) {
@@ -92,27 +96,81 @@ void ECalMonitor::Initialize()
   // Reset global counters
   ResetECalMap(fECal_CosmEvt);
   ResetECalMap(fECal_CosmSum);
+  fBeamEventCount = 0;
+  fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
+  fRandomEventCount = 0;
 
 }
 
 void ECalMonitor::StartOfEvent()
 {
-  // Check if event is cosmics
+
+  // Check if event was triggered by BTF beam
+  if (fConfig->GetEventTrigMask() & 0x01) {
+    fIsBeam = true;
+  } else {
+    fIsBeam = false;
+  }
+
+  // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
     fNCosmWF = 0;
   } else {
     fIsCosmics = false;
   }
+ 
+  // Check if event was a random trigger
+  if (fConfig->GetEventTrigMask() & 0x40) {
+    fIsRandom = true;
+  } else {
+    fIsRandom = false;
+  }
   
+  // Check if event was an off-beam trigger
+  if (fConfig->GetEventTrigMask() & 0x80) {
+    fIsOffBeam = true;
+  } else {
+    fIsOffBeam = false;
+  }
+
 }
 
 void ECalMonitor::EndOfEvent()
 {
+
+  if (fIsBeam) {
+
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
+
+      // Write beam events data to output PadmeMonitor file
+      OutputBeam();
+
+    }
+
+    // Count beam event
+    fBeamEventCount++;
+
+  } // End of beam output
+
+  if (fIsOffBeam) {
+
+    if (fOffBeamOutputRate && (fOffBeamEventCount % fOffBeamOutputRate == 0)) {
+
+      // Write off-beam events data to output PadmeMonitor file
+      OutputOffBeam();
+
+    }
+
+    // Count off-beam event
+    fOffBeamEventCount++;
+
+  } // End of off-beam output
+
   if (fIsCosmics) {
 
-    if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
+    if (fCosmicsOutputRate && (fCosmicsEventCount % fCosmicsOutputRate == 0)) {
 
       OutputCosmics();
 
@@ -127,11 +185,28 @@ void ECalMonitor::EndOfEvent()
 
   }
 
+  if (fIsRandom) {
+
+    if (fRandomOutputRate && (fRandomEventCount % fRandomOutputRate == 0)) {
+
+      // Write random events data to output PadmeMonitor file
+      OutputRandom();
+
+    }
+
+    // Count cosmics event
+    fRandomEventCount++;
+
+  } // End of random output
+
 }
 
 void ECalMonitor::Finalize()
 {
-  printf("ECalMonitor::Finalize - Total number of cosmics events: %d\n",fCosmicsEventCount);
+  printf("ECalMonitor::Finalize - Total number of beam     events: %d\n",fBeamEventCount);
+  printf("ECalMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
+  printf("ECalMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
+  printf("ECalMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
   /*
   if (fConfig->Verbose()>1) {
 
@@ -222,7 +297,7 @@ void ECalMonitor::AnalyzeBoard(UChar_t board)
 void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
-  if ( fECal_map[board][channel] == -1 ) {
+  if ( fECal_map[board][channel] == -1 && (board != LEADGLASS_BOARD || channel != LEADGLASS_CHANNEL)) {
     if (! fConfig->IgnoreDisabledChannels()) printf("ECalMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ECal map\n",board,channel);
     return;
   }
@@ -295,6 +370,16 @@ void ECalMonitor::ResetECalMap(Double_t map[29][29])
       }
     }
   }
+}
+
+Int_t ECalMonitor::OutputBeam()
+{
+  return 0;
+}
+
+Int_t ECalMonitor::OutputOffBeam()
+{
+  return 0;
 }
 
 Int_t ECalMonitor::OutputCosmics()
@@ -379,5 +464,10 @@ Int_t ECalMonitor::OutputCosmics()
     return 1;
   }
 
+  return 0;
+}
+
+Int_t ECalMonitor::OutputRandom()
+{
   return 0;
 }

@@ -52,6 +52,9 @@ void LeadGlassMonitor::Initialize()
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
   fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
 
+  // Reset cumulative waveform
+  for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
+
   // Reset global counters
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
@@ -102,6 +105,9 @@ void LeadGlassMonitor::EndOfEvent()
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
+
+      // Reset cumulative waveform
+      for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
 
     }
 
@@ -177,10 +183,12 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGTotChargeBM->Fill(fChannelCharge);
     //if (fChannelCharge<100.) printf("%d %f %f %f\n",fConfig->GetEventNumber(),fChannelPedestal,fChannelPedRMS,fChannelCharge);
 
+    // Add waveform to cumulative for bunch shape studies
+    for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] += samples[i];
+
     // Save waveform once every few events
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
-      for(UInt_t i = 0; i<1024; i++)
-	fLGWaveformBM[i] = samples[i];
+      for(UInt_t i = 0; i<1024; i++) fLGWaveformBM[i] = samples[i];
 
   }
 
@@ -281,6 +289,21 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[%d,%d]",j,fLGWaveformBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchshape\n");
+  fprintf(outf,"PLOTTYPE scatter\n");
+  fprintf(outf,"PLOTNAME LeadGlass Beam Bunch Shape - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"RANGE_X 0 1024\n");
+  fprintf(outf,"TITLE_X Sample\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<1024; j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[%d,%.1f]",j,(Double_t)fLGWaveSumBM[j]/(Double_t)fBeamOutputRate);
   }
   fprintf(outf,"] ]\n\n");
 

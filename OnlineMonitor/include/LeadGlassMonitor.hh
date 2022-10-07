@@ -69,6 +69,7 @@ private:
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
   Short_t fLGWaveformBM[1024];
+  Int_t   fLGWaveSumBM[1024];
 
 };
 #endif

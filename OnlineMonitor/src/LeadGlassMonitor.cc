@@ -47,10 +47,19 @@ void LeadGlassMonitor::Initialize()
   fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
   fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):600;
 
+  // Get charge-to-NPoTs conversion factor from config file. Complain if not found
+  fChargeToNPoTs = 0.239; // Value for 402MeV and LeadGlass at 650V
+  if (fConfigParser->HasConfig("RECO","ChargeToNPoTs")) {
+    fChargeToNPoTs = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToNPoTs"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
+  }
+
   // Create histograms
   fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
   fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
+  fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
 
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -105,6 +114,12 @@ void LeadGlassMonitor::EndOfEvent()
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
+
+      // Reset histograms
+      fHLGPedestalBM->Reset();
+      fHLGPedRMSBM->Reset();
+      fHLGTotChargeBM->Reset();
+      fHLGNPoTsBM->Reset();
 
       // Reset cumulative waveform
       for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -181,7 +196,7 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGPedestalBM->Fill(fChannelPedestal);
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
-    //if (fChannelCharge<100.) printf("%d %f %f %f\n",fConfig->GetEventNumber(),fChannelPedestal,fChannelPedRMS,fChannelCharge);
+    fHLGNPoTsBM->Fill(fChannelCharge/fChargeToNPoTs);
 
     // Add waveform to cumulative for bunch shape studies
     for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] += samples[i];
@@ -274,6 +289,21 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGTotChargeBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Number of Positrons on Target (NPoTs)
+  fprintf(outf,"PLOTID LeadGlassMon_beamnpots\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LeadGlass Beam PoTs - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHLGNPoTsBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGNPoTsBM->GetXaxis()->GetXmin(),fHLGNPoTsBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X nPoTs\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGNPoTsBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGNPoTsBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 

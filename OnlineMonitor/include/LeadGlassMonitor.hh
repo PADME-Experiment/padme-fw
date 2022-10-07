@@ -59,6 +59,9 @@ private:
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
 
+  // Parameter to convert Total Charge to NPoTs
+  Double_t fChargeToNPoTs;
+
   // Results of pedestal and total charge evaluation
   Double_t fChannelPedestal; // Pedestal level from the first fPedestalSamples samples
   Double_t fChannelPedRMS;   // Pedestal RMS
@@ -68,6 +71,7 @@ private:
   TH1D* fHLGPedestalBM;
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
+  TH1D* fHLGNPoTsBM;
   Short_t fLGWaveformBM[1024];
   Int_t   fLGWaveSumBM[1024];
 

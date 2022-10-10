@@ -19,6 +19,7 @@ public:
   double GetAverageTime(){return averagetime;}
   double GetEarlyHitTime(){return earlyhittime;}
   double GetLateHitTime(){return latehittime;}
+  double GetSeedTime(){return seedtime;}
   int GetNHits(){return nhits;}
   int AddCluster(VetoCluster* cluster);
   void Print(){std::cout<<"Most Upstream "<<mostUpstreamChannel<<" Most Downstream "<<mostDownstreamChannel<<" average time "<<averagetime<<std::endl;}
@@ -37,7 +38,7 @@ public:
   double seedch;
   double seedenergy;
   int nhits;
-  
+  int seedindex;  
 };
 
 class VetoClusterStructure{

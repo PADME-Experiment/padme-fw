@@ -17,6 +17,7 @@
 #include "PVetoSimpleClusterization.hh"
 #include "VetoClusterization.hh"
 #include "VetoClusterHits.hh"
+#include "TRecoVCluster.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -34,11 +35,11 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
   if(fClusterAlgo==0){//Use old clusterisation
-    std::cout<<"clusterising oldly"<<std::endl;
+    std::cout<<"PVETOCLUSTERS:clusterising oldly"<<std::endl;
     fClusterization = new PVetoSimpleClusterization();
   }
   else if(fClusterAlgo==1){//Use new clusterisation
-    std::cout<<"clusterising newly"<<std::endl;
+    std::cout<<"PVETOCLUSTERS:clusterising newly"<<std::endl;
     fClusStruc = VetoClusterStructure();
     fClusterHits = VetoClusterHits();
   }
@@ -172,9 +173,12 @@ void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied 
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
   //    std::cout<<"about to clusterise pveto"<<std::endl;
   // from Hits to Clusters
-  //  ClearClusters();
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
   if(fClusterAlgo==1)
-    BuildClusters(rawEv);
+    PVetoReconstruction::BuildClusters(rawEv);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
   //Processing is over, let's analyze what's here, if foreseen
@@ -402,10 +406,11 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
     chID = vVetoClusters[iPClus]->GetMostUpstreamChannel();
     clE = vVetoClusters[iPClus]->GetEnergy();
-    clT = vVetoClusters[iPClus]->GetAverageTime();
+    std::cout<<"seedtime "<<vVetoClusters[iPClus]->GetSeedTime()<<" averagetime "<<vVetoClusters[iPClus]->GetAverageTime()<<std::endl;
+    clT = vVetoClusters[iPClus]->GetSeedTime();//GetAverageTime();
     clSize = vVetoClusters[iPClus]->GetNHits();
     TVector3 clPos = fGeometry->LocalPosition(chID);
-
+    
     clHitIndices = vVetoClusters[iPClus]->GetHitIndex();
 
     //    if(clE>100){

@@ -406,7 +406,9 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
 }
 
 void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
-  if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
+    if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  }
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 PVeto channels but in PVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in PVeto.cfg but defaults to 5.

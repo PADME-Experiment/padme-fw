@@ -18,6 +18,7 @@ VetoCluster::VetoCluster(){
   seedch=-10000;
   seedenergy=-10000;
   hitIndexVector.clear();
+  seedindex = -1000;
 }
 
 
@@ -30,7 +31,10 @@ int VetoCluster::InsertHit(VetoClusterHits hit, int ihit, double seedtime){//CHE
   //  hitIndex[nhits]=ihit;
   hitIndexVector.push_back(ihit);
   //  if(nhits>0||ihit>0||hitIndexVector.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
-  if(hit.GetChannelId()<mostUpstreamChannel) mostUpstreamChannel=hit.GetChannelId();
+  if(hit.GetChannelId()<mostUpstreamChannel){
+    mostUpstreamChannel=hit.GetChannelId();
+    seedtime = hit.GetTime();
+  }
   if(hit.GetChannelId()>mostDownstreamChannel) mostDownstreamChannel=hit.GetChannelId();
   if(hit.GetTime()<earlyhittime) earlyhittime=hit.GetTime();
   if(hit.GetTime()>latehittime) latehittime=hit.GetTime();
@@ -60,7 +64,10 @@ int VetoCluster::AddCluster(VetoCluster* newcluster){
   for(int ii=0;ii<NMax;ii++){
     hitIndexVector.push_back(newcluster->GetHitIndex()[ii]);
   }
-  if(newcluster->GetMostUpstreamChannel()<mostUpstreamChannel) mostUpstreamChannel=newcluster->GetMostUpstreamChannel();
+  if(newcluster->GetMostUpstreamChannel()<mostUpstreamChannel){
+    mostUpstreamChannel=newcluster->GetMostUpstreamChannel();
+    seedtime = newcluster->GetSeedTime();
+  }
   if(newcluster->GetMostDownstreamChannel()>mostDownstreamChannel) mostDownstreamChannel=newcluster->GetMostDownstreamChannel();
   if(newcluster->GetEarlyHitTime()<earlyhittime) earlyhittime = newcluster->GetEarlyHitTime();
   if(newcluster->GetLateHitTime()>latehittime) latehittime = newcluster->GetLateHitTime();
@@ -102,7 +109,9 @@ void VetoClusterStructure::Clusterise(){
       if(HitVec.at(ii).GetTime()-ClusVec.at(jj)->GetAverageTime()<ClusterDeltaT&&
 	 (HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostUpstreamChannel()==-1//
 	  ||HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostDownstreamChannel()==1)){	//4->parameter
+	if(HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostUpstreamChannel()==-1) myseedtime = HitVec.at(ii).GetTime();
 	ClusVec.at(jj)->InsertHit(HitVec.at(ii), HitIndexVec.at(ii),myseedtime);//CHECK SEEDTIME BUSINESS
+	
 	UsedHit=1;
 	//	std::cout<<"clusterising jj "<<jj<<" size "<<ClusVec.at(jj)->GetNHits()<<std::endl;
 	break;

@@ -406,7 +406,10 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
 }
 
 void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
-  if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  //  std::cout<<hNoEventsReconstructed<<std::endl;
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
+    if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  }
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.

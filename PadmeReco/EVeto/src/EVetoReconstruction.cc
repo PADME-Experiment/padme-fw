@@ -34,11 +34,11 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fChannelReco = new DigitizerChannelEVeto();
   fChannelCalibration = new EVetoCalibration();
   if(fClusterAlgo==0){//Use old clusterisation
-    std::cout<<"clusterising oldly"<<std::endl;
+    std::cout<<"EVETOCLUSTERS:clusterising oldly"<<std::endl;
     fClusterization = new EVetoSimpleClusterization();
   }
   else if(fClusterAlgo==1){//Use new clusterisation
-    std::cout<<"clusterising newly"<<std::endl;
+    std::cout<<"EVETOCLUSTERS:clusterising newly"<<std::endl;
     fClusStruc = VetoClusterStructure();
     fClusterHits = VetoClusterHits();
   }

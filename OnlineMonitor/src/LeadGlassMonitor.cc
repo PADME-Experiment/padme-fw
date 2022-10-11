@@ -264,7 +264,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Pedestal
   fprintf(outf,"PLOTID LeadGlassMon_beampedestal\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGPedestalBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalBM->GetXaxis()->GetXmin(),fHLGPedestalBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X Counts\n");
@@ -338,13 +338,21 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"TITLE_X Sample\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  //  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"DATA [ [");
+  Bool_t saturated = false;
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[%d,%d]",j,fLGWaveformBM[j]);
+    if (fLGWaveformBM[j]<10) saturated = true;
   }
-  fprintf(outf,"] ]\n\n");
+  fprintf(outf,"] ]\n");
+  if (saturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"\n");
 
   fprintf(outf,"PLOTID LeadGlassMon_beambunchshape\n");
   fprintf(outf,"PLOTTYPE scatter\n");

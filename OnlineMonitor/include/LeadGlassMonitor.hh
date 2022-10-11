@@ -84,5 +84,9 @@ private:
   std::vector<Double_t> fVLGTimeBM;
   std::vector<Double_t> fVLGNPoTsBM;
 
+  // Range for NPoTs trend plot
+  Double_t fNPoTsRangeMin;
+  Double_t fNPoTsRangeMax;
+
 };
 #endif

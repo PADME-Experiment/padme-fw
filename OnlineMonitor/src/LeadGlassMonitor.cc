@@ -55,6 +55,21 @@ void LeadGlassMonitor::Initialize()
     printf("LeadGlassMonitor::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
   }
 
+  // Set acceptable range for NPoTs trend plot
+  fNPoTsRangeMin = 2000.;
+  if (fConfigParser->HasConfig("RECO","NPoTsRangeMin")) {
+    fNPoTsRangeMin = std::stod(fConfigParser->GetSingleArg("RECO","NPoTsRangeMin"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: NPoTsRangeMin not set in config file. Using %f\n",fNPoTsRangeMin);
+  }
+  fNPoTsRangeMax = 4000.;
+  if (fConfigParser->HasConfig("RECO","NPoTsRangeMax")) {
+    fNPoTsRangeMax = std::stod(fConfigParser->GetSingleArg("RECO","NPoTsRangeMax"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: NPoTsRangeMax not set in config file. Using %f\n",fNPoTsRangeMax);
+  }
+
+
   // Create histograms
   fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
@@ -373,20 +388,24 @@ Int_t LeadGlassMonitor::OutputBeam()
   }
   fprintf(outf,"] ]\n\n");
 
+  // NPoTs trend plot with acceptable range
   fprintf(outf,"PLOTID LeadGlassMon_trendnpots\n");
   fprintf(outf,"PLOTNAME LeadGlass Beam NPotS Trend - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
-  fprintf(outf,"LEGEND [\"NPoTs\"]\n");
+  fprintf(outf,"LEGEND [ \"NPoTs\",\"min\",\"max\" ]\n");
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGNPoTsBM[j]);
   }
-  fprintf(outf,"] ]\n\n");
+  fprintf(outf,"]");
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMin,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMin);
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMax,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMax);
+  fprintf(outf," ]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

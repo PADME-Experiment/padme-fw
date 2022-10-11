@@ -411,7 +411,7 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
     chID = vVetoClusters[iPClus]->GetMostUpstreamChannel();
     clE = vVetoClusters[iPClus]->GetEnergy();
     //    std::cout<<"seedtime "<<vVetoClusters[iPClus]->GetSeedTime()<<" averagetime "<<vVetoClusters[iPClus]->GetAverageTime()<<std::endl;
-    clT = vVetoClusters[iPClus]->GetSeedTime();//GetAverageTime();
+    clT = vVetoClusters[iPClus]->GetAverageTime();
     clSize = vVetoClusters[iPClus]->GetNHits();
     TVector3 clPos = fGeometry->LocalPosition(chID);
     

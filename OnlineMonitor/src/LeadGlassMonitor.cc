@@ -343,16 +343,17 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID LeadGlassMon_trendnpots\n");
-  fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"PLOTNAME LeadGlass Beam NPotS Trend - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
-  fprintf(outf,"MODE [ \"lines+markers\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"LEGEND [\"NPoTs\"]\n");
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
     if (j) fprintf(outf,",");
-    fprintf(outf,"[%f,%.1f]",fVLGTimeBM[j],fVLGNPoTsBM[j]);
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGNPoTsBM[j]);
   }
   fprintf(outf,"] ]\n\n");
 

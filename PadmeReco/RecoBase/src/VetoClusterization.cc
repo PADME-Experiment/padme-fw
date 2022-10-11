@@ -42,10 +42,10 @@ int VetoCluster::InsertHit(VetoClusterHits hit, int ihit, double seedtime){//CHE
   double oldenergy = energy;
   double newenergy = hit.GetEnergy();
 
-  //averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
+  averagetime = (nhits*averagetime+hit.GetTime())/(nhits+1);
   //  averagetime = (oldenergy*nhits*averagetime+hit.GetTime()*newenergy)/((nhits+1)*(oldenergy+newenergy));//energy-weighting for time
 
-  averagetime=seedtime;//CHECK SEEDTIME BUSINESS
+  //  averagetime=seedtime;//CHECK SEEDTIME BUSINESS
 
   energy += hit.GetEnergy();
   nhits++;
@@ -75,8 +75,8 @@ int VetoCluster::AddCluster(VetoCluster* newcluster){
   double oldenergy = energy;
   double newenergy = newcluster->GetEnergy();
 
-  //averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
-  averagetime=(oldenergy*nhits*averagetime+newcluster->GetNHits()*newenergy*newcluster->GetAverageTime())/((nhits+newcluster->GetNHits())*(oldenergy+newenergy));;//energy-weighting for time
+  averagetime=(nhits*averagetime+newcluster->GetNHits()*newcluster->GetAverageTime())/(nhits+newcluster->GetNHits());
+  //  averagetime=(oldenergy*nhits*averagetime+newcluster->GetNHits()*newenergy*newcluster->GetAverageTime())/((nhits*oldenergy)+(newcluster->GetNHits())*newenergy));;//energy-weighting for time
   energy+=newcluster->GetEnergy();
   nhits+=NMax;
   return goodreturn;
@@ -143,7 +143,7 @@ void VetoClusterStructure::MergeClusters(){
 	int jUp = ClusVec.at(jj)->GetMostUpstreamChannel();
 	int jDown = ClusVec.at(jj)->GetMostDownstreamChannel();
 	double jAvgT = ClusVec.at(jj)->GetAverageTime();
-	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(std::fabs(iUp-jDown==1)||std::fabs(jUp-iDown==1))){
+	if(std::fabs(iAvgT-jAvgT)<ClusterDeltaT&&(std::fabs(iUp-jDown)==1||std::fabs(jUp-iDown)==1)){//Beth & Tommaso: 11/10/22 parenthese of channel fabs changed
 	  int goodorbad = ClusVec.at(ii)->AddCluster(ClusVec.at(jj));//adds new hits to existing cluster & updates mostUpstreamChannel, mostDownstreamChannel and averagetime.
 	  if(jj<ClusVec.size()-1) ClusVec.erase(ClusVec.begin()+jj);//cluster jj has already been used so get rid of it, and move all other clusters down in the vector
 	  if(jj==ClusVec.size()-1) ClusVec.pop_back();//

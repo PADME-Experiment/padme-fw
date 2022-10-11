@@ -410,7 +410,7 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
     chID = vVetoClusters[iPClus]->GetMostUpstreamChannel();
     clE = vVetoClusters[iPClus]->GetEnergy();
-    std::cout<<"seedtime "<<vVetoClusters[iPClus]->GetSeedTime()<<" averagetime "<<vVetoClusters[iPClus]->GetAverageTime()<<std::endl;
+    //    std::cout<<"seedtime "<<vVetoClusters[iPClus]->GetSeedTime()<<" averagetime "<<vVetoClusters[iPClus]->GetAverageTime()<<std::endl;
     clT = vVetoClusters[iPClus]->GetSeedTime();//GetAverageTime();
     clSize = vVetoClusters[iPClus]->GetNHits();
     TVector3 clPos = fGeometry->LocalPosition(chID);
@@ -418,7 +418,7 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
     clHitIndices = vVetoClusters[iPClus]->GetHitIndex();
 
     //    if(clE>100){
-      for(int ii=0;ii<clSize;ii++){
+    /*      for(int ii=0;ii<clSize;ii++){
 	if(clHitIndices[ii]>250){
 	  std::cout<<"rawEvNo "<<rawEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
 	  std::cout<<" ii "<<ii<<std::endl;
@@ -426,7 +426,7 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 	  std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
 	  std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
 	}
-      }
+	}*/
       //}
 
     myCl->SetChannelId   ( chID );

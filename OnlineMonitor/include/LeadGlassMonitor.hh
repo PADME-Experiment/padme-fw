@@ -72,8 +72,14 @@ private:
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
   TH1D* fHLGNPoTsBM;
+
+  // Waveform vectors
   Short_t fLGWaveformBM[1024];
   Int_t   fLGWaveSumBM[1024];
+
+  // Trend vectors
+  std::vector<Double_t> fVLGTimeBM;
+  std::vector<Double_t> fVLGNPoTsBM;
 
 };
 #endif

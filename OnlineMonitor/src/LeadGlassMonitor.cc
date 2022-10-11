@@ -112,6 +112,11 @@ void LeadGlassMonitor::EndOfEvent()
 
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
+      // Update trend vectors
+      //printf("Update trend time %f npots %f\n",fConfig->GetEventAbsTime().AsDouble(),fHLGNPoTsBM->GetMean());
+      fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
+      fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
+
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
 
@@ -334,6 +339,20 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[%d,%.1f]",j,(Double_t)fLGWaveSumBM[j]/(Double_t)fBeamOutputRate);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fprintf(outf,"PLOTID LeadGlassMon_trendnpots\n");
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"PLOTNAME LeadGlass Beam NPotS Trend - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
+  fprintf(outf,"MODE [ \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[%f,%.1f]",fVLGTimeBM[j],fVLGNPoTsBM[j]);
   }
   fprintf(outf,"] ]\n\n");
 

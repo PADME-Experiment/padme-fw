@@ -197,6 +197,10 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent){//B
   if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
 
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
   if(fClusterAlgo==1)
     BuildClusters(tMCEvent);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());

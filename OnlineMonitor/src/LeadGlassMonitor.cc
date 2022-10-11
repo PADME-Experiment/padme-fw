@@ -390,10 +390,14 @@ Int_t LeadGlassMonitor::OutputBeam()
 
   // NPoTs trend plot with acceptable range
   fprintf(outf,"PLOTID LeadGlassMon_trendnpots\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam NPotS Trend - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LeadGlass NPotS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+  if ( (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] < fNPoTsRangeMin) || (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] > fNPoTsRangeMax) ) {
+    fprintf(outf,"COLOR [ \"ff0000\",\"00ff00\",\"aaaa00\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+  }
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
   fprintf(outf,"LEGEND [ \"NPoTs\",\"min\",\"max\" ]\n");

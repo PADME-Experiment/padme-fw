@@ -77,6 +77,9 @@ private:
   Short_t fLGWaveformBM[1024];
   Int_t   fLGWaveSumBM[1024];
 
+  // Waveform saturation flag
+  Bool_t fWFSaturated;
+
   // Trend vectors
   std::vector<Double_t> fVLGTimeBM;
   std::vector<Double_t> fVLGNPoTsBM;

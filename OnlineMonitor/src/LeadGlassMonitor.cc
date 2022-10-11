@@ -64,6 +64,9 @@ void LeadGlassMonitor::Initialize()
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
 
+  // Reset waveform saturation flag
+  fWFSaturated = false;
+
   // Reset global counters
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
@@ -128,6 +131,9 @@ void LeadGlassMonitor::EndOfEvent()
 
       // Reset cumulative waveform
       for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
+
+      // Reset waveform saturation flag
+      fWFSaturated = false;
 
     }
 
@@ -204,7 +210,10 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGNPoTsBM->Fill(fChannelCharge/fChargeToNPoTs);
 
     // Add waveform to cumulative for bunch shape studies
-    for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] += samples[i];
+    for(UInt_t i = 0; i<1024; i++) {
+      fLGWaveSumBM[i] += samples[i];
+      if (samples[i] < 10) fWFSaturated = true;
+    }
 
     // Save waveform once every few events
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
@@ -270,7 +279,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Pedestal RMS
   fprintf(outf,"PLOTID LeadGlassMon_beampedrms\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGPedRMSBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMSBM->GetXaxis()->GetXmin(),fHLGPedRMSBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X Counts\n");
@@ -285,11 +294,16 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Total Charge
   fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"PLOTNAME LeadGlass Beam Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
   fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
@@ -300,11 +314,16 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Number of Positrons on Target (NPoTs)
   fprintf(outf,"PLOTID LeadGlassMon_beamnpots\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam PoTs - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"PLOTNAME LeadGlass Beam PoTs - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGNPoTsBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGNPoTsBM->GetXaxis()->GetXmin(),fHLGNPoTsBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X nPoTs\n");
   fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHLGNPoTsBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
@@ -319,7 +338,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"TITLE_X Sample\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
@@ -334,7 +353,11 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"TITLE_X Sample\n");
   fprintf(outf,"TITLE_Y Counts\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
@@ -346,7 +369,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"PLOTNAME LeadGlass Beam NPotS Trend - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
   fprintf(outf,"LEGEND [\"NPoTs\"]\n");

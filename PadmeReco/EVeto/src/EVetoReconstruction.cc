@@ -17,6 +17,7 @@
 #include "EVetoSimpleClusterization.hh"
 #include "VetoClusterization.hh"
 #include "VetoClusterHits.hh"
+#include "TRecoVCluster.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -172,9 +173,12 @@ void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied 
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
   //    std::cout<<"about to clusterise pveto"<<std::endl;
   // from Hits to Clusters
-  //  ClearClusters();
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
   if(fClusterAlgo==1)
-    BuildClusters(rawEv);
+    EVetoReconstruction::BuildClusters(rawEv);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
   //Processing is over, let's analyze what's here, if foreseen
@@ -193,8 +197,13 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent){//B
   if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
 
+
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
   if(fClusterAlgo==1)
-    BuildClusters(tMCEvent);
+    EVetoReconstruction::BuildClusters(tMCEvent);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
 }

@@ -202,7 +202,7 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent){//B
     PadmeVReconstruction::BuildClusters();
   }
   if(fClusterAlgo==1)
-    BuildClusters(tMCEvent);
+    PVetoReconstruction::BuildClusters(tMCEvent);
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
 }

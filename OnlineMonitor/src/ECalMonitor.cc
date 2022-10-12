@@ -96,6 +96,8 @@ void ECalMonitor::Initialize()
   // Reset global counters
   ResetECalMap(fECal_CosmEvt);
   ResetECalMap(fECal_CosmSum);
+  ResetECalMap(fECal_BeamESum);
+  ResetECalMap(fECal_BeamEEvt);
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
@@ -146,6 +148,10 @@ void ECalMonitor::EndOfEvent()
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
+
+      // Reset energy maps
+      ResetECalMap(fECal_BeamESum);
+      ResetECalMap(fECal_BeamEEvt);
 
     }
 
@@ -297,7 +303,13 @@ void ECalMonitor::AnalyzeBoard(UChar_t board)
 void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
-  if ( fECal_map[board][channel] == -1 && (board != LEADGLASS_BOARD || channel != LEADGLASS_CHANNEL)) {
+  // Do not analyze the channel assigned to the LeadGlass
+  if ((board == LEADGLASS_BOARD) && (channel == LEADGLASS_CHANNEL)) return;
+
+  // Do not analyze channels used for the cosmics pads (last 4 channels of board 23)
+  if ((board == 23) && (channel >= 28)) return;
+
+  if ( fECal_map[board][channel] == -1 ) {
     if (! fConfig->IgnoreDisabledChannels()) printf("ECalMonitor::AnalyzeChannel - WARNING - board %d channel %d is disabled in the ECal map\n",board,channel);
     return;
   }
@@ -308,15 +320,30 @@ void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
   //fECal_count[x][y]++;
   //fECal_signal[x][y] += TMath::RMS(994,samples);
 
-  // Save cosmics related nformation
+  // Get calibrated channel energy
+  Double_t chEnergy = GetChannelEnergy(board,channel,samples);
+  //if (chEnergy>0.) printf("Board %d Channel %d Energy %f\n",board,channel,chEnergy);
+
+  // Save information for Beam events
+  if (fIsBeam) {
+
+    // Add energy to cumulative map
+    fECal_BeamESum[x][y] += chEnergy;
+
+    // Save single event energy map once every few events
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
+      fECal_BeamEEvt[x][y] = chEnergy;
+
+  }
+
+  // Save information for Cosmics events
   if (fIsCosmics) {
 
     // Save energy in cosmics map
-    Double_t chEnergy = GetChannelEnergy(board,channel,samples);
     fECal_CosmSum[x][y] += chEnergy;
 
     // Save waveform and event map once every few events
-    if (fCosmicsEventCount % fCosmicsOutputRate == 0) {
+    if (fCosmicsOutputRate && (fCosmicsEventCount % fCosmicsOutputRate == 0)) {
       fECal_CosmEvt[x][y] = chEnergy;
       if (fNCosmWF<ECALMON_COSMWF_MAX) {
 	fCosmWFX[fNCosmWF] = x;
@@ -340,6 +367,7 @@ Double_t ECalMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* sa
     if (s<100) sum_ped += samples[s];
   }
   Double_t tot = 9.94*sum_ped-1.*sum;
+  //printf("Board %d Channel %d Sum %d Sum_ped %d Tot %f\n",board,channel,sum,sum_ped,tot);
   // Convert to pC
   //tot = tot/(4096.*50.)*(1.E-9/1.E-12);
   tot *= 4.8828E-3;
@@ -348,14 +376,15 @@ Double_t ECalMonitor::GetChannelEnergy(UChar_t board,UChar_t channel,Short_t* sa
     //printf("Board %d Channel %d Charge %f pC Calibration %f\n",board,channel,tot,fECal_CosmClb[board][channel]);
     tot *= 18./fECal_CosmClb[board][channel];
   } else {
-    printf("ECalMonitor::GetChannelEnergy - ERROR - Calibration constant is 0");
+    printf("ECalMonitor::GetChannelEnergy - ERROR - Calibration constant for board %d channel %d is 0\n",board,channel);
+    tot = 0.;
   }
   return tot;
 }
 
 void ECalMonitor::ResetECalMap(Double_t map[29][29])
 {
-  // Set real crystal to 0. and fake crystals to -1000.
+  // Set real crystal to 0. and fake crystals to -5.
   for (UChar_t x=0; x<29; x++) {
     for (UChar_t y=0; y<29; y++) {
       map[x][y] = -5.;
@@ -374,6 +403,64 @@ void ECalMonitor::ResetECalMap(Double_t map[29][29])
 
 Int_t ECalMonitor::OutputBeam()
 {
+
+  if (fConfig->Verbose()>0) printf("ECalMonitor::OutputBeam - Writing beam output files\n");
+
+  // Write ECal energy maps for Beam events
+  TString ftname = fConfig->TmpDirectory()+"/ECalMon_Beam.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ECalMon_Beam.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
+            
+  fprintf(outf,"PLOTID ECalMon_beameventenergy\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ECal Beam - Event Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 29 29\n");
+  fprintf(outf,"RANGE_X 0 29\n");
+  fprintf(outf,"RANGE_Y 0 29\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<29;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<29;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fECal_BeamEEvt[x][y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n\n");
+            
+  fprintf(outf,"PLOTID ECalMon_beammeanenergy\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ECal Beam - Average Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 29 29\n");
+  fprintf(outf,"RANGE_X 0 29\n");
+  fprintf(outf,"RANGE_Y 0 29\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<29;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<29;x++) {
+      if (x>0) fprintf(outf,",");
+      if (fECal_BeamESum[x][y] > 0.) {
+	fprintf(outf,"%.3f",fECal_BeamESum[x][y]/(Double_t)fBeamOutputRate);
+      } else {
+	fprintf(outf,"%.3f",fECal_BeamESum[x][y]); // Do not scale value for fake crystals
+      }
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n\n");
+
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ECalMonitor::OutputBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
   return 0;
 }
 
@@ -387,10 +474,10 @@ Int_t ECalMonitor::OutputCosmics()
 
   if (fConfig->Verbose()>0) printf("ECalMonitor::OutputCosmics - Writing cosmics output files\n");
 
-  // Write current cosmics map
-  TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
-  TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
-  FILE* outf = fopen(ftname.Data(),"a");
+  // Write ECal energy maps for Cosmics events
+  TString ftname = fConfig->TmpDirectory()+"/ECalMon_Cosmics.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ECalMon_Cosmics.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
 
   // Show waveforms and event map only if at least one channel is active
   if (fNCosmWF>0) {

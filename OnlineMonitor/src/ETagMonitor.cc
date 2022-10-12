@@ -238,9 +238,9 @@ Int_t ETagMonitor::OutputBeam()
 
   if (fConfig->Verbose()>0) printf("ETagMonitor::OutputBeam - Writing beam output files\n");
 
-  TString ftname = fConfig->TmpDirectory()+"/ECALMon_Beam.txt";
-  TString ffname = fConfig->OutputDirectory()+"/ECALMon_Beam.txt";
-  FILE* outf = fopen(ftname.Data(),"a");
+  TString ftname = fConfig->TmpDirectory()+"/ETagMon_Beam.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ETagMon_Beam.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -256,9 +256,9 @@ Int_t ETagMonitor::OutputOffBeam()
 
   if (fConfig->Verbose()>0) printf("ETagMonitor::OutputOffBeam - Writing off-beam output files\n");
 
-  TString ftname = fConfig->TmpDirectory()+"/ECALMon_OffBeam.txt";
-  TString ffname = fConfig->OutputDirectory()+"/ECALMon_OffBeam.txt";
-  FILE* outf = fopen(ftname.Data(),"a");
+  TString ftname = fConfig->TmpDirectory()+"/ETagMon_OffBeam.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ETagMon_OffBeam.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -274,9 +274,9 @@ Int_t ETagMonitor::OutputCosmics()
 
   if (fConfig->Verbose()>0) printf("ETagMonitor::OutputCosmics - Writing cosmics output files\n");
 
-  TString ftname = fConfig->TmpDirectory()+"/ECALMon_Cosmics.txt";
-  TString ffname = fConfig->OutputDirectory()+"/ECALMon_Cosmics.txt";
-  FILE* outf = fopen(ftname.Data(),"a");
+  TString ftname = fConfig->TmpDirectory()+"/ETagMon_Cosmics.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ETagMon_Cosmics.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -292,9 +292,9 @@ Int_t ETagMonitor::OutputRandom()
 
   if (fConfig->Verbose()>0) printf("ETagMonitor::OutputRandom - Writing random output files\n");
 
-  TString ftname = fConfig->TmpDirectory()+"/ECALMon_Random.txt";
-  TString ffname = fConfig->OutputDirectory()+"/ECALMon_Random.txt";
-  FILE* outf = fopen(ftname.Data(),"a");
+  TString ftname = fConfig->TmpDirectory()+"/ETagMon_Random.txt";
+  TString ffname = fConfig->OutputDirectory()+"/ETagMon_Random.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

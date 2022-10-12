@@ -38,7 +38,7 @@ private:
 
   Configuration* fConfig;
 
-  // Board/Channel map of calibration constants for cosmics
+  // Board/Channel map of calibration constants
   Double_t   fECal_CosmClb[29][32];
 
   utl::ConfigParser* fConfigParser;
@@ -50,6 +50,8 @@ private:
 
   Double_t   fECal_CosmSum[29][29]; // 100 events map
   Double_t   fECal_CosmEvt[29][29]; // Last event map
+  Double_t   fECal_BeamESum[29][29]; // Map with sum of energies
+  Double_t   fECal_BeamEEvt[29][29]; // Map with energy of last event
   //UInt_t   fECal_count[29][29];
   //Double_t fECal_signal[29][29];
 

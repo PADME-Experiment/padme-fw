@@ -47,6 +47,9 @@ Bool_t MCTruth::InitHistos(){
   fHS->BookHistoList("MCTruth","Vertices",500,0.,500.); // Number of vertices in event
   fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
   fHS->BookHistoList("MCTruth","VertexNPart",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+
+  fHS->BookHistoList("MCTruth","VertexTime",330,-20.,300.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+
   fHS->BookHistoList("MCTruth","Vertex_Z",400,-4000.,0.);
   fHS->BookHistoList("MCTruth","Vertex_Z_all",400,-4000.,0.);
   fHS->BookHisto2List("MCTruth","Vertex_XY",100,-20.,20.,100,-20.,20.);
@@ -91,7 +94,8 @@ Bool_t MCTruth::Process(){
   // MCTruth analysis
   // particle codes: 22 photon 11 electrons positron -11
   Double_t EGamma,Eposi,ETot,mcIPartE;
-  double Px,Py,Pz;
+  Double_t VTime;
+  Double_t Px,Py,Pz;
   
   if(fEvent->MCTruthEvent){
     fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
@@ -99,13 +103,16 @@ Bool_t MCTruth::Process(){
     if (fEvent->MCTruthEvent->GetNVertices()>0) {
       for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
 	mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-
+	VTime=mcVtx->GetTime();
+	fHS->FillHistoList("MCTruth","VertexTime",VTime,1.);	 
+	//	cout<<"MCTruth Vtime"<<mcVtx->GetTime()<<endl;
 	for(Int_t iN = 0; iN<mcVtx->GetNParticleIn(); iN++) {
 	  TMCParticle* mcIPart = mcVtx->ParticleIn(iN); //just One positron
+
 	  mcIPartE=mcIPart->GetEnergy();
 	  fHS->FillHistoList("MCTruth","BeamE",mcIPartE,1.);	 
 	  if(fBeamEnergy==0 && iV==0) fBeamEnergy=mcIPartE;
-	  //	  cout<<"Ma sti cazzi MCTruth "<<fBeamEnergy<<endl;
+	  
 	}
 
 	//	cout<<"DDD "<<mcVtx->GetPosition().x()<<endl;

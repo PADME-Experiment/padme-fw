@@ -70,9 +70,12 @@ private:
     
   G4UIcmdWithAnInteger* fSetNThreePhotonDecaysPerBunchCmd;
   G4UIcmdWithAString* fSetThreePhotonDecaysFilenameCmd;
-  
+
   G4UIcmdWithAnInteger* fSetNTwoPhotonDecaysPerBunchCmd;
   G4UIcmdWithAString* fSetTwoPhotonDecaysFilenameCmd;
+
+  G4UIcmdWithAnInteger* fSetNBhaBhaPerBunchCmd;
+  G4UIcmdWithAString* fSetBhaBhaFilenameCmd;
 
   G4UIcmdWithABool* fEnableCalibRunCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunEnergyCmd;

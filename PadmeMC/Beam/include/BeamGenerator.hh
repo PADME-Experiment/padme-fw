@@ -69,7 +69,9 @@ private:
   void CreateFinalStateUboson();
   void CreateFinalStateThreeGamma();
   void CreateFinalStateTwoGamma();
+  void CreateFinalStateBhaBha();
   void GenerateCalibrationGamma();
+
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );
 

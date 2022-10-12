@@ -31,7 +31,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
-  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 50000");
+  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 500000");
   fSetNPositronsPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableNPositronsPerBunchSpreadCmd = new G4UIcmdWithABool("/beam/n_e+_poisson_on",this);
@@ -71,7 +71,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at t=0.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXCmd->SetRange("X >= -5000. && X <= 5000.");
+  fSetBeamCenterPosXCmd->SetRange("X >= -20000. && X <= 20000.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);
@@ -85,7 +85,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosZCmd->SetGuidance("Set center of beam Z coordinate at t=0.");
   fSetBeamCenterPosZCmd->SetParameterName("Z",false);
   fSetBeamCenterPosZCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosZCmd->SetRange("Z >= -10000. && Z <= 10000.");
+  fSetBeamCenterPosZCmd->SetRange("Z >= -20000. && Z <= 20000.");
   fSetBeamCenterPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/position_spread_on",this);
@@ -100,7 +100,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 5.");
+  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 10.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
@@ -108,7 +108,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 5.");
+  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 10.");
   fSetBeamCenterPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamMomentumCmd = new G4UIcmdWithADoubleAndUnit("/beam/momentum",this);
@@ -188,6 +188,16 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
   fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  // Settings for BhaBha M. Raggi 20/05/2021
+  fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
+  fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
+  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNBhaBhaPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
+  fSetNBhaBhaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBhaBhaFilenameCmd = new G4UIcmdWithAString("/beam/BhaBha_file",this);
+  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
+  fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableCalibRunCmd = new G4UIcmdWithABool("/beam/calibration",this);
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
@@ -422,6 +432,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
     fBeamParameters->SetTwoPhotonDecaysFilename(par);
+
+  else if ( cmd == fSetNBhaBhaPerBunchCmd )
+    fBeamParameters->SetNBhaBhaPerBunch(fSetNBhaBhaPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBhaBhaFilenameCmd )
+    fBeamParameters->SetBhaBhaFilename(par);
 
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {

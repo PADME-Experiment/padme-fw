@@ -85,7 +85,11 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG",200,20.,20.);  
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG_Dist",200,20.,20.); 
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG_Dist_Enth",200,20.,20.);  
-  
+
+  fHS->BookHistoList("GGAnalysis","TDiff_DataMC_gg",200,25.,-25.);  
+  fHS->BookHistoList("GGAnalysis","EDiff_DataMC_gg",hEBins,-hEMax/2,hEMax/2);     
+  fHS->BookHistoList("GGAnalysis","EDiff_DataMC_gg_Ok",hEBins,0,hEMax);   
+
   fHS->BookHistoList("GGAnalysis","COG_X",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","COG_Y",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","ClClDist",300,0.,600.);   
@@ -343,11 +347,14 @@ Bool_t IsGGAnalysis::Process(){
 
   double chi2 = 0;
   for(Int_t ll=0;ll<NPairs;ll++){
-    if(fisMC && NPairs>1) IsMCGG(EGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex2[ll]]);
+    bool isOk=false;
     if(NPairs==1) {
+      if(fisMC && NPairs==1) isOk=IsMCGG(TGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex2[ll]]);
       Double_t EPair      = EGoodCluster[PairGClIndex1[ll]] + EGoodCluster[PairGClIndex2[ll]];
       Double_t DeltaTPair = TGoodCluster[PairGClIndex1[ll]] - TGoodCluster[PairGClIndex2[ll]];
       Double_t TimePair   = (TGoodCluster[PairGClIndex1[ll]] + TGoodCluster[PairGClIndex2[ll]])/2;
+      if(isOk) fHS->FillHistoList("GGAnalysis","EDiff_DataMC_gg_Ok",EPair);   
+      
       fHS->FillHistoList("GGAnalysis","ECalClTime_GG",TimePair,1);
       //Event quality estimator 
       chi2 = ( fabs((EPair-fBeamE)/15) + fabs(DeltaTPair/1.2) +fabs(PairCOGX[ll]/8.) + fabs(PairCOGY[ll]/8.) )/4; 
@@ -460,29 +467,51 @@ Bool_t IsGGAnalysis::CheckThetaAngle(double Ei, double Thetai)
 }
 
 
-Bool_t IsGGAnalysis::IsMCGG(double E1,double E2)
+Bool_t IsGGAnalysis::IsMCGG(double VTime,double E1,double E2)
 {
   Bool_t isGG_IN = false;
   Int_t NGG_MCBunch=0;
-  Double_t EG1,EG2;
+  Double_t vEgMC[2];
+  Double_t vEgData[2];
+  Double_t VTimeMC;
+  Double_t TimeOfFlight=13.2;
+  Double_t DeltaTCorr =0;
+  vEgData[0]=E1;
+  vEgData[1]=E2;
   // Is there a gg in the MC bunch?
   if(!fEvent->MCTruthEvent->GetNVertices()>0) return false;
-
+  
   for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
     mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-    if(!(mcVtx->GetProcess()=="annihil")) continue;
+    VTimeMC = mcVtx->GetTime();
+    //remove non gg verices
+    if(!(mcVtx->GetProcess()=="annihil")) continue; //be carefull if you are not using G4 generated events
+    //std::cout<<"Entering "<<mcVtx->GetProcess()<<" data time "<<VTime<<" MC Time "<<VTimeMC<<std::endl;
+    //Check if you are in time with the gamma gg verices
+
+    DeltaTCorr=VTimeMC+TimeOfFlight-VTime;
+    //    if(!(fabs(DeltaTCorr)<5.)) continue;
+    fHS->FillHistoList("GGAnalysis","TDiff_DataMC_gg",DeltaTCorr);      
     for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
       TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-      if(mcOPart->GetPDGCode() != 22) cout<<"e che cazzo"<<endl;
+      if(mcOPart->GetPDGCode() != 22) cout<<"not a gamma"<<endl;
       //      std::cout<<"input data are simulatetd Annihilltion "<< mcOPart->GetEnergy()<<std::endl;
-      if(iO==0) EG1=mcOPart->GetEnergy();
-      if(iO==1) EG2=mcOPart->GetEnergy();
-      isGG_IN = true;
-      if(iO==1){
-	NGG_MC++;
-	NGG_MCBunch++;
-//	std::cout<<"input data are simulatetd Annihilltion "<<NGG_MC<<" Iv "<<iV<<" NGG "<<NGG_MCBunch<<std::endl;
-//	std::cout<<"EG reco  "<<E1<<" "<<E2<<" Eg true "<<EG1<<" "<<EG2<<std::endl;
+      vEgMC[iO]=mcOPart->GetEnergy();
+    }
+    //    std::cout<<"Energies Data "<<E1<<" "<<E2<<"  MC "<<vEgMC[0]<<" "<<vEgMC[1]<<std::endl;
+    Int_t ncombo=0;
+    Int_t NOk=0;
+    Double_t DeltaE[4];
+    for(Int_t kk=0;kk<2;kk++){
+      for(Int_t jj=0;jj<2;jj++){
+	DeltaE[ncombo] = vEgMC[kk]-vEgData[jj];
+	//	std::cout<<"combo kk "<<kk<<" jj "<<jj<<" Ediff "<<DeltaE[ncombo]<<std::endl;
+	fHS->FillHistoList("GGAnalysis","EDiff_DataMC_gg",DeltaE[ncombo]);   
+	if(fabs(DeltaE[ncombo]/vEgData[jj])<0.2){
+	  //	  std::cout<<"Matching "<<fabs(DeltaE[ncombo]/vEgData[jj])<<" "<<vEgData[jj]<<std::endl;
+	  isGG_IN=true;
+	} 
+	ncombo++;
       }
     }
   }

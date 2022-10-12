@@ -29,7 +29,7 @@ private:
   double GetVertex(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
   double ComputeInvariantMass(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
 
-  Bool_t IsMCGG(double Ei,double Ej);
+  Bool_t IsMCGG(double Vt,double Ei,double Ej);
 
   Int_t fVerbose;
   Bool_t fisMC = false; 

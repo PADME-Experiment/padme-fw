@@ -8,9 +8,10 @@
 #include "PVetoHit.hh"
 #include "EVetoHit.hh"
 #include "SACHit.hh"
-#include "LAVHit.hh"
+#include "ETagHit.hh"
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
+#include "MylarWHit.hh"  //M. Raggi 15/03/2021
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
 
 #include "DetectorConstruction.hh"
@@ -30,6 +31,7 @@ class HEPVetoDigitizer;
 class ECalDigitizer;
 class SACDigitizer;
 class TPixDigitizer;
+class ETagDigitizer;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -81,9 +83,10 @@ class EventAction : public G4UserEventAction
   void  AddEVetoHits(EVetoHitsCollection*);
 
   void  AddSACHits(SACHitsCollection*);
-  void  AddLAVHits(LAVHitsCollection*);
+  void  AddETagHits(ETagHitsCollection*);
   void  AddTPixHits(TPixHitsCollection*);         //M. Raggi 26/03/2019
   void  AddBeWHits(BeWHitsCollection*);           //M. Raggi 26/03/2019
+  void  AddMylarWHits(MylarWHitsCollection*);        //M. Raggi 15/03/2021
   void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
 
   G4double GetCharge(G4double Energia);
@@ -118,16 +121,16 @@ class EventAction : public G4UserEventAction
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 
   G4double ClPosX,ClPosY;
   G4double ClTime,EClus,QClus,Theta,ClRadius,Mmiss2,ETotTra;
-  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,LAVTracks,NTarget,NBeW,NBeamFlag;
+  G4int NcellsCl,NClusters,NTracks,NHEPVetoTracks,NPVetoTracks,NEVetoTracks,SACTracks,ETagTracks,NTarget,NBeW,NBeamFlag,NMylarW;
   G4int CalNPart;
 
-   G4double Etrack[100];    //For spectrometer reco
-   G4int    TrackCh[100];      //For spectrometer reco
-   G4double TrackerLay[100];     //For spectrometer reco
-   G4double TrackTime[100];
-   G4double TrackZ[100];
-   G4double TrackX[100];
-   G4double TrackY[100];
+   G4double Etrack[300];    //For spectrometer reco
+   G4int    TrackCh[300];      //For spectrometer reco
+   G4double TrackerLay[300];     //For spectrometer reco
+   G4double TrackTime[300];
+   G4double TrackZ[300];
+   G4double TrackX[300];
+   G4double TrackY[300];
 
    G4double ETarget;
    G4double TTarget;
@@ -139,75 +142,80 @@ class EventAction : public G4UserEventAction
    G4double YBeW;
    G4double XBeW;
 
+   G4double EMylarW;
+   G4double TMylarW;
+   G4double YMylarW;
+   G4double XMylarW;
+
    G4double EBeamFlag;
    G4double TBeamFlag;
    G4double YBeamFlag;
    G4double XBeamFlag;
 
-   G4double ETotHEPVeto[100];
-   G4int    HEPVetoTrackCh[100];
-   G4double HEPVetoEtrack [100];
-   G4double HEPVetoTrackTime[100];
-   G4double HEPVetoX[100];
-   G4double HEPVetoY[100];
+   G4double ETotHEPVeto[300];
+   G4int    HEPVetoTrackCh[300];
+   G4double HEPVetoEtrack [300];
+   G4double HEPVetoTrackTime[300];
+   G4double HEPVetoX[300];
+   G4double HEPVetoY[300];
    G4double HEPVetoTimeCl[100][10 ];
    G4double HEPVetoECl[100][10];
-   G4int    HEPVetoClIndex[100];
+   G4int    HEPVetoClIndex[300];
 
-   G4double ETotPVeto[100];
-   G4double TimePVeto[100];
-   G4int    PVetoTrackCh[100];
-   G4double PVetoEtrack [100];
-   G4double PVetoTrackTime[100];
-   G4double PVetoX[100];
-   G4double PVetoY[100];
+   G4double ETotPVeto[300];
+   G4double TimePVeto[300];
+   G4int    PVetoTrackCh[300];
+   G4double PVetoEtrack [300];
+   G4double PVetoTrackTime[300];
+   G4double PVetoX[300];
+   G4double PVetoY[300];
    G4double PVetoTimeCl[100][10 ];
    G4double PVetoECl[100][10];
-   G4int    PVetoClIndex[100];
+   G4int    PVetoClIndex[300];
 
-   G4double ETotEVeto[100];
-   G4int    EVetoTrackCh[100];
-   G4double EVetoEtrack [100];
-   G4double EVetoTrackTime[100];
-   G4double EVetoX[100];
-   G4double EVetoY[100];
+   G4double ETotEVeto[300];
+   G4int    EVetoTrackCh[300];
+   G4double EVetoEtrack [300];
+   G4double EVetoTrackTime[300];
+   G4double EVetoX[300];
+   G4double EVetoY[300];
    G4double EVetoTimeCl[100][10];
    G4double EVetoECl[100][10];
-   G4int    EVetoClIndex[100];
+   G4int    EVetoClIndex[300];
 
 
-   G4double ETotSAC[100];
-   G4double SACEtrack [100];
-   G4double SACTrackTime[100];
-   G4double SACPType[100];
-   G4double SACX[100];   
-   G4double SACY[100];
-   G4double SACCh[100];
+   G4double ETotSAC[300];
+   G4double SACEtrack [300];
+   G4double SACTrackTime[300];
+   G4double SACPType[300];
+   G4double SACX[300];   
+   G4double SACY[300];
+   G4double SACCh[300];
 
   //Particles properties entering ECAL form stepping action
-   G4double CalE[20];
-   G4double CalTime[20];
-   G4int    CalPType[20];
-   G4double CalX[20];   
-   G4double CalY[20];
+   G4double CalE[300];
+   G4double CalTime[300];
+   G4int    CalPType[300];
+   G4double CalX[300];   
+   G4double CalY[300];
    G4double NCalPart;
 
-   G4double ETotLAV[100];
-   G4double LAVTrackCh[100];
-   G4double LAVPType[100];
-   G4double LAVEtrack [100];
-   G4double LAVTrackTime[100];
-   G4double LAVX[100];   
-   G4double LAVY[100];
+   G4double ETotETag[300];
+   G4int ETagNBar[300];
+   G4double ETagPType[300];
+   G4double ETagEtrack [300];
+   G4double ETagTrackTime[300];
+   G4double ETagX[300];   
+   G4double ETagY[300];
 
-   G4double EneCl[20];
-   G4double QCl[20];
-   G4double TimeCl[20];
-   G4double XCl[20];      //For the Ntuple
-   G4double YCl[20];      //For the Ntuple
-   G4double ThCl[20];     //For the Ntuple
-   G4double MM2[20];      //For the Ntuple
-   G4double NCellsCl[20]; //For the Ntuple
+   G4double EneCl[300];
+   G4double QCl[300];
+   G4double TimeCl[300];
+   G4double XCl[300];      //For the Ntuple
+   G4double YCl[300];      //For the Ntuple
+   G4double ThCl[300];     //For the Ntuple
+   G4double MM2[300];      //For the Ntuple
+   G4double NCellsCl[300]; //For the Ntuple
 
    G4double ETotCry[1000];
    G4double QTotCry[1000];

@@ -96,7 +96,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
 
   SACTracks  = 0;
   CalNPart   = 0;
-  LAVTracks  = 0;
+  ETagTracks  = 0;
   NHEPVetoTracks = 0;
   NPVetoTracks = 0;
   NEVetoTracks = 0;
@@ -141,7 +141,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   // This cannot be done in the creator as digitizers are defined during detector construction
   if (fFirstEvent) {
-
     // Show info about available digitizers
     printf("=== Registered Digitizers ===\n");
     //theDM->List();
@@ -196,12 +195,14 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddEVetoHits((EVetoHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "SACCollection") {
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
-    } else if (HCname == "LAVCollection") {
-      AddLAVHits((LAVHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "ETagCollection") {
+      AddETagHits((ETagHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
       AddBeWHits((BeWHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "MylarWCollection") {        //M. Raggi 15/03/2021
+      AddMylarWHits((MylarWHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
       AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
     }
@@ -249,7 +250,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->myEvt.NTNPVetoTracks   = NPVetoTracks;
   fHistoManager->myEvt.NTNEVetoTracks   = NEVetoTracks;
   fHistoManager->myEvt.NTSACNHit        = SACTracks;
-  fHistoManager->myEvt.NTLAVNHit        = LAVTracks;
+  fHistoManager->myEvt.NTETagNHit        = ETagTracks;
   fHistoManager->myEvt.NTNTarget        = NTarget;
 
   fHistoManager->myEvt.NTEtot     = ETotCal;
@@ -277,7 +278,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   for(int i=0;i<CalNPart;i++){
     if(i>19) break;
-    //    G4cout<<"NLAV Tr "<<LAVTracks<<" "<< LAVEtrack[i]<<" "<<LAVTrackTime[i]<<G4endl;
+    //G4cout<<"NETag Tr "<<ETagTracks<<" "<< ETagEtrack[i]<<" "<<ETagTrackTime[i]<<G4endl;
     fHistoManager->myEvt.NTCalPartE[i]     =  CalE[i];
     fHistoManager->myEvt.NTCalPartT[i]     =  CalTime[i];
     fHistoManager->myEvt.NTCalPartPType[i] =  CalPType[i];
@@ -285,14 +286,16 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fHistoManager->myEvt.NTCalPartY[i]     =  CalY[i];
   }
   
-  for(int i=0;i<LAVTracks;i++){
-    if(i>100) break;
-
-    fHistoManager->myEvt.NTLAVE    [i] = LAVEtrack[i];
-    fHistoManager->myEvt.NTLAVT    [i] = LAVTrackTime[i];
-    fHistoManager->myEvt.NTLAVPType[i] = LAVPType[i];
-    fHistoManager->myEvt.NTLAVX    [i] =LAVX[i]; 
-    fHistoManager->myEvt.NTLAVY    [i] =LAVY[i] ;
+  for(int i=0;i<ETagTracks;i++){
+    if(i>150) break;
+    //    G4cout<<"CC LastID "<<ETagNBar[i]<<G4endl;
+    fHistoManager->myEvt.NTETagBar  [i] = ETagNBar[i];
+    fHistoManager->myEvt.NTETagE    [i] = ETagEtrack[i];
+    fHistoManager->myEvt.NTETagT    [i] = ETagTrackTime[i];
+    fHistoManager->myEvt.NTETagPType[i] = ETagPType[i];
+    fHistoManager->myEvt.NTETagX    [i] = ETagX[i]; 
+    fHistoManager->myEvt.NTETagY    [i] = ETagY[i];
+    //    G4cout<<"CC LasåtID dopo "<<fHistoManager->myEvt.NTETagBar[i]<<G4endl;
   }
   
   for(int i=0;i<NHEPVetoTracks;i++){  //BUG on number of channel!
@@ -357,7 +360,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 
   for(int i=0;i<NClusters;i++){	
     //    G4cout<<"DDD CALO"<<EneCl[i]<<" "<<NTQCl[i]<<G4endl;
-    if(i>19) break;              
+    if(i>39) break;              
     fHistoManager->myEvt.NTECluster[i]  = EneCl[i];
     fHistoManager->myEvt.NTQCluster[i]  = QCl[i];
     fHistoManager->myEvt.NTXCluster[i]  = XCl[i];   
@@ -389,7 +392,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
 //  }
-  //G4cout<<"Writing to file UBTF "<<G4endl;
+//  G4cout<<"Writing to file UBTF "<<G4endl;
   fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //  }
@@ -550,7 +553,7 @@ void EventAction::FindClusters()
     // G4double mgg= GGMass();
     // fHistoManager->FillHisto(16,mgg);
     //}
-    if(NClusters>19){ 
+    if(NClusters>39){ 
       G4cout<<"too many clusters \n!!"<<G4endl;
       break;
     }
@@ -577,11 +580,15 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
       G4bool IsPrimary = hit->IsPrimary(); //identify primary positrons
-      // computing angle at the entrance of the target using the directions of the particles:
-      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
-      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
 
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
       //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
       if(IsPrimary){
 	fHistoManager->FillHisto(60,hE);     // All hit energies
@@ -592,12 +599,54 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
 	
 	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-	fHistoManager->FillHisto2(67,hX,htheta,1.); //X vs Track energy
+	fHistoManager->FillHisto2(67,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop
   XTarget/=NTarget;
   YTarget/=NTarget;
+}
+
+
+void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout module
+{
+ G4int nHits = hcont->entries();
+  for (G4int h=0; h<nHits; h++) {
+    MylarWHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      EMylarW += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
+      if (hit->GetTime()<TMylarW) TMylarW  = hit->GetTime();
+      XMylarW += hit->GetX();
+      YMylarW += hit->GetY();
+      NMylarW++;
+
+      // Mylaram structure control histogras M. Raggi 2/04/2019
+      G4double hTime  = hit->GetTime();
+      G4double hE     = hit->GetEnergy();        // deposited energy
+      G4double hTrE   = hit->GetTrackEnergy();   // track energy
+      G4double hX     = hit->GetLocalPosX();
+      G4double hY     = hit->GetLocalPosY();
+      // computing angle at the entrance of the target using the directions of the particles:
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
+
+      fHistoManager->FillHisto(90,hE);     // All hit energies
+      fHistoManager->FillHisto(91,htheta); // after the target
+      fHistoManager->FillHisto(92,hX);     // 
+      fHistoManager->FillHisto(93,hY);     // 
+      fHistoManager->FillHisto(94,hTrE);   // At the target entrance
+      
+      fHistoManager->FillHisto2(95,hX,hY,1.);   //X vs Y local coordinates 
+      fHistoManager->FillHisto2(96,hX,hTrE,1.); //X vs Track energy
+      fHistoManager->FillHisto2(97,hX,hthetaX,1.); //X vs ThetaX
+    }
+  }//end of loop
 }
 
 void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
@@ -618,12 +667,15 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
       G4double hX     = hit->GetLocalPosX();
       G4double hY     = hit->GetLocalPosY();
-      // computing angle at the entrance of the target using the directions of the particles:
-      G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
-      // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
 
-      //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
 
       fHistoManager->FillHisto(70,hE);     // All hit energies
       fHistoManager->FillHisto(71,htheta); // after the target
@@ -633,7 +685,7 @@ void EventAction::AddBeWHits(BeWHitsCollection* hcont)  //BeW readout module
       
       fHistoManager->FillHisto2(75,hX,hY,1.);   //X vs Y local coordinates 
       fHistoManager->FillHisto2(76,hX,hTrE,1.); //X vs Track energy
-      fHistoManager->FillHisto2(77,hX,htheta,1.); //X vs Track energy
+      fHistoManager->FillHisto2(77,hX,hthetaX,1.); //X vs Track energy
     }
   }//end of loop
   XBeW/=NBeW;
@@ -665,22 +717,29 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
 
       G4int    NHisto =100+10*NFlag;
       //      if(NFlag==4)  G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
+      double PX=hit->GetPX();
+      double PY=hit->GetPY();
+      double PZ=hit->GetPZ();
+      double PT=sqrt(PX*PX+PY*PY);
+      double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
+ // computing angle at the entrance of the target using the directions of the particles:
+      G4double htheta = asin(PT/PTOT);
+      G4double hthetaX = asin(PX/PTOT);
 
- //     // computing angle at the entrance of the target using the directions of the particles:
- //     G4double ProjVectorMod = sqrt(hit->GetPX()*hit->GetPX()+hit->GetPZ()*hit->GetPZ());  //modulo della proiezione del vettore nel piano X Z
- //     // Ucos(theta)=Uz  --> cos(theta)=Uz/U --> theta=acos(Uz/U)  
-      //      G4double htheta = acos( hit->GetPZ()/ProjVectorMod );
- //
-      //       G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
-      if (NFlag<7){
+      if(NFlag==7 || NFlag==4 || NFlag==1){
+	//	std::cout<<"Theta x"<<hthetaX<<std::endl;
+	hthetaX += 0.785398;
+      }
+      //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
+      if (NFlag<8){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
-	//      fHistoManager->FillHisto(NHisto+1,htheta); // after the target
+	fHistoManager->FillHisto(NHisto+1,htheta); // after the target
 	fHistoManager->FillHisto(NHisto+2,hX);     // 
 	fHistoManager->FillHisto(NHisto+3,hY);     // 
 	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
 	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
-	// fHistoManager->FillHisto2(NHisto+7,hX,htheta,1.); //X vs Track energy
+	fHistoManager->FillHisto2(NHisto+7,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop
@@ -958,7 +1017,7 @@ void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
 void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y)
 {
   //  static G4int SACTracks  = 0;
-  if(CalNPart < 19){
+  if(CalNPart < 39){
     CalE[CalNPart]    = E;
     CalTime[CalNPart] = T;
     CalPType[CalNPart]= Ptype;
@@ -1003,30 +1062,31 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
  
 }
 
-void EventAction::AddLAVHits(LAVHitsCollection* hcont)
+void EventAction::AddETagHits(ETagHitsCollection* hcont)
 {
   G4int LastID=-1;
   G4int nHits = hcont->entries();			
   for(G4int jj=0;jj<MaxTracks;jj++){
-    ETotLAV[jj]=0.0;										     
-    LAVTrackTime[jj]=0.0;										     
-    LAVEtrack[jj]=0.0;
-    LAVPType[jj]=0.0;
+    ETotETag[jj]=0.0;										     
+    ETagTrackTime[jj]=0.0;										     
+    ETagEtrack[jj]=0.0;
+    ETagPType[jj]=0.0;
   }							
   for (G4int h=0; h<nHits; h++) {
-    LAVHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    ETagHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
-      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && LAVTracks < MaxTracks) {
-	//	ETotLAV[hit->GetLAVNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
-	//    	  LAVTrackCh[LAVTracks] = hit->GetLAVNb();
-	LAVEtrack[LAVTracks]    = hit->GetETrack();
-	LAVTrackTime[LAVTracks] = hit->GetTime();
-	LAVPType[LAVTracks]     = hit->GetPType();
-	LAVX[LAVTracks]         = hit->GetX();
-	LAVY[LAVTracks]         = hit->GetY();
-	G4cout<<"CC Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<G4endl;
-	//	G4cout<<"CC LastID "<<LastID<<" "<<LAVY[LAVTracks]<<G4endl;
-	LAVTracks++;
+      if(hit->GetTrackID()!=0 && hit->GetTrackID()!=LastID && hit->GetETrack()>0.01*MeV && ETagTracks < MaxTracks) {
+	//	ETotETag[hit->GetETagNb()] += hit->GetEdep();  //sum single fingers energies and get total finger
+	ETagNBar[ETagTracks]      = hit->GetETagNb();
+	ETagEtrack[ETagTracks]    = hit->GetETrack();
+	ETagTrackTime[ETagTracks] = hit->GetTime();
+	ETagPType[ETagTracks]     = hit->GetPType();
+	ETagX[ETagTracks]         = hit->GetX();
+	ETagY[ETagTracks]         = hit->GetY();
+	//	G4cout<<"ETAG Nhits "<<nHits<<" trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" time "<<hit->GetTime()<<" PType "<<hit->GetPType()<<G4endl;
+	//	G4cout<<"CC LastID "<<LastID<<" "<<ETagY[ETagTracks]<<G4endl;
+	//	G4cout<<"ETagNBar "<<ETagNBar[ETagTracks]<<" "<<ETagY[ETagTracks]<<G4endl;
+	ETagTracks++;
       }
       LastID = hit->GetTrackID();
     }

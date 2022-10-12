@@ -116,7 +116,12 @@ void TPixGeometry::UpdateDerivedMeasures()
 
   // Angle of the rotation of TPix around the Y axis
   fTPixRotY = -fTPixChamberWallAngle;
-
+  
+//  //Brutal patch for Run III M. Raggi June 2022
+//  bool fIsRunIII=true;
+//  if(fIsRunIII){
+//    fTPixRotY = 0;
+//  }
   // Position of center of TPix box
   //fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
   //  -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
@@ -129,6 +134,12 @@ void TPixGeometry::UpdateDerivedMeasures()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
 
+//  //Brutal patch for Run III M. Raggi June 2022
+//  if(fIsRunIII){
+//    fTPixPosX = 0;
+//    fTPixPosY = 0;
+//    fTPixPosZ = +3000*mm; //Ex SAC Front Face position 
+//  }
   //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
   //printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());
   //printf("TPix angle %f\n",fTPixChamberWallAngle);

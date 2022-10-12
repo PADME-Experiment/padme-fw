@@ -33,7 +33,7 @@ class ChamberStructure;
 class BeamLineStructure; //M. Raggi 07/03/2019
 class HallStructure;
 class MagneticFieldSetup;
-class LAVDetector;
+class ETagDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -111,12 +111,12 @@ private:
   ECalDetector*     fECalDetector;
   TargetDetector*   fTargetDetector;
   SACDetector*      fSACDetector;
+  ETagDetector*     fETagDetector;
   PVetoDetector*    fPVetoDetector;
   EVetoDetector*    fEVetoDetector;
   HEPVetoDetector*  fHEPVetoDetector;
   TDumpDetector*    fTDumpDetector;
   TPixDetector*     fTPixDetector;
-  LAVDetector*      fLAVDetector;
   TungstenDetector* fTungstenDetector;
 
   MagnetStructure*  fMagnetStructure;
@@ -129,7 +129,7 @@ private:
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
-  G4int fEnableLAV;
+  G4int fEnableETag;
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;

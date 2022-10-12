@@ -13,7 +13,7 @@
 #include "HEPVetoDetector.hh"
 #include "TDumpDetector.hh"
 #include "TPixDetector.hh"
-#include "LAVDetector.hh"
+#include "ETagDetector.hh"
 #include "TungstenDetector.hh"
 
 #include "MagnetStructure.hh"
@@ -82,7 +82,7 @@ DetectorConstruction::DetectorConstruction()
   fECalDetector      = new ECalDetector(0);
   fTargetDetector    = new TargetDetector(0);
   fSACDetector       = new SACDetector(0);
-  fLAVDetector       = new LAVDetector(0);
+  fETagDetector      = new ETagDetector(0);
   fPVetoDetector     = new PVetoDetector(0);
   fEVetoDetector     = new EVetoDetector(0);
   fHEPVetoDetector   = new HEPVetoDetector(0);
@@ -99,7 +99,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableECal     = 1;
   fEnableTarget   = 1;
   fEnableSAC      = 1;
-  fEnableLAV      = 0;
+  fEnableETag     = 0;
   fEnablePVeto    = 1;
   fEnableEVeto    = 1;
   fEnableHEPVeto  = 1;
@@ -122,7 +122,7 @@ DetectorConstruction::DetectorConstruction()
 
   fWorldIsFilledWithAir = 0;
 
-  fWorldLength = 12.*m;
+  fWorldLength = 40.*m;
 
   DefineMaterials();
 
@@ -141,6 +141,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fSACDetector;
   delete fPVetoDetector;
   delete fEVetoDetector;
+  delete fETagDetector;
   delete fHEPVetoDetector;
   delete fTDumpDetector;
   delete fTPixDetector;
@@ -178,7 +179,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     
     // Set world characteristics
     logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    //    logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     if (fVerbose)
       printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
@@ -208,7 +209,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
     if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
     logicWorld->SetVisAttributes(G4VisAttributes::Invisible);
-    //logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+    // logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
 
   }
@@ -440,10 +441,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fSACDetector->CreateGeometry();
   }
 
-  //if (fEnableLAV) {
-  //  fLAVDetector->SetMotherVolume(logicWorld);
-  //  fLAVDetector->CreateGeometry();
-  //}
+  if (fEnableETag) {
+    fETagDetector->SetMotherVolume(logicWorld);
+    fETagDetector->CreateGeometry();
+  }
 
   // TDump
   if (fEnableTDump) {
@@ -542,9 +543,14 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildElement("Ti"); // Titanium
 
   // Vacuum: leave some residual air with low density (Chamber, World)
-  G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-10)*mg/cm3,2); // 1mbar
+  G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-7)*mg/cm3,2); // 1mbar
   Vacuum->AddElement(G4Element::GetElement("N"),70.*perCent);
   Vacuum->AddElement(G4Element::GetElement("O"),30.*perCent);
+
+  // Vacuum: leave some residual air with low density (Chamber, World)
+  G4Material* Air = new G4Material("Air",(1.290)*mg/cm3,2); // Atomsferic M.Raggi 6/06/2022
+  Air->AddElement(G4Element::GetElement("N"),70.*perCent);
+  Air->AddElement(G4Element::GetElement("O"),30.*perCent);
 
   // Diamond (Target)
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
@@ -795,7 +801,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   if      (det=="ECal")    { fEnableECal    = 1; }
   else if (det=="Target")  { fEnableTarget  = 1; }
   else if (det=="SAC")     { fEnableSAC     = 1; }
-  else if (det=="LAV")     { fEnableLAV     = 1; }
+  else if (det=="ETag")     { fEnableETag     = 1; }
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
@@ -811,7 +817,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   if      (det=="ECal")    { fEnableECal    = 0; }
   else if (det=="Target")  { fEnableTarget  = 0; }
   else if (det=="SAC")     { fEnableSAC     = 0; }
-  else if (det=="LAV")     { fEnableLAV     = 0; }
+  else if (det=="ETag")    { fEnableETag    = 0; }
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
@@ -826,7 +832,7 @@ G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
   if ( ( (det=="ECal")     && (fEnableECal     == 1) ) ||
        ( (det=="Target")   && (fEnableTarget   == 1) ) ||
        ( (det=="SAC")      && (fEnableSAC      == 1) ) ||
-       ( (det=="LAV")      && (fEnableLAV      == 1) ) ||
+       ( (det=="ETag")     && (fEnableETag     == 1) ) ||
        ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
        ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
        ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||

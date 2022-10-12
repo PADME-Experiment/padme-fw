@@ -24,10 +24,10 @@
 
 # Turbo mode thresholds for e+,e-,gamma,neutron
 # Particles will be killed if their kinetic energy is below threshold
-#/settings/TurboMode/KillEnergyPositron 10. MeV
-#/settings/TurboMode/KillEnergyElectron 10. MeV
-#/settings/TurboMode/KillEnergyGamma     1. MeV
-#/settings/TurboMode/KillEnergyNeutron  10. MeV
+#/settings/TurboMode/KillEnergyPositron 1. MeV
+#/settings/TurboMode/KillEnergyElectron 1. MeV
+#/settings/TurboMode/KillEnergyGamma    1. MeV
+#/settings/TurboMode/KillEnergyNeutron  1. MeV
 
 # RootIO settings
 
@@ -117,12 +117,22 @@
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
-# Beam line settings
+# Beam line settings 0=2019 setup 1=2020 setup
+#/Detector/BeamLine/Setup 1.   
 #/Detector/BeamLine/EnableBeWindow true
-#/Detector/BeamLine/DHST002_FieldY -1.055 tesla
+#/Detector/BeamLine/EnableMylarWindow true
+#/Detector/BeamLine/DHSTB002_FieldY -1.055 tesla
+#/Detector/BeamLine/DHSTB001_FieldY -1.055 tesla
 #/Detector/BeamLine/EnableQuadrupoles false
 #/Detector/BeamLine/Q1_FieldGrad 5.
 #/Detector/BeamLine/Q2_FieldGrad 5.
+#/Detector/BeamLine/Q3_FieldGrad 5.
+#/Detector/BeamLine/Q4_FieldGrad 5.
+
+# semiapertura dei collimatori 
+#/Detector/BeamLine/SLTB2Aperture 1.7 mm
+#/Detector/BeamLine/SLTB3Aperture 1.7 mm
+#/Detector/BeamLine/SLTB4Apertuer 2 mm
 
 #/Detector/Target/VerboseLevel 0
 #/Detector/Target/FrontFaceZ -103. cm
@@ -211,6 +221,8 @@
 #/beam/3g_file ThreePhotonDecays.list
 #/beam/n_2g_per_bunch 0
 #/beam/2g_file TwoPhotonDecays.list
+#/beam/n_BhaBha_per_bunch 0
+#/beam/BhaBha_file BhaBhaTChan.list
 #/beam/calibration false
 #/beam/calib_energy 50. MeV
 #/beam/calib_x 14. cm

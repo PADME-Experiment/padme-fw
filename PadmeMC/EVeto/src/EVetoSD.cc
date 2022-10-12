@@ -42,10 +42,42 @@ G4bool EVetoSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   newHit->SetChannelId(touchHPre->GetCopyNumber());
   newHit->SetEnergy(edep);
-  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
+
+  //Beth 12/10/22:
+  //distance from end in y = distance from sipm
+  //distance = length/2 - localpospre.y()
+  double FingerSizeY=179;//mm
+  double SiPMPos = -1*FingerSizeY/2;//SiPM is at bottom of bar
+  double HitSiPMDistance = localPosPre.y()-SiPMPos;
+
+  //speed of light in 1.5% POPUP = 1/(6ns/m) = 15cm/ns (trovato da Tommaso...non sono sicura dove?)
+  double speed = 150; //mm/ns
+  double PathTime = HitSiPMDistance/speed;
+
+  //make sure that the hit is within the length of the finger
+  if(0<=HitSiPMDistance && HitSiPMDistance<=FingerSizeY){
+    if(HitSiPMDistance==0){
+      PathTime = 0;
+      std::cout<<"localPosPre.y() "<<localPosPre.y()<<" HitSiPMDistance "<<HitSiPMDistance<<" setting PathTime to 0"<<std::endl;
+    }
+    else if(HitSiPMDistance==FingerSizeY){
+      PathTime = FingerSizeY/speed;
+      std::cout<<"localPosPre.y() "<<localPosPre.y()<<" HitSiPMDistance "<<HitSiPMDistance<<" setting PathTime to FingerSizeY/speed = "<<FingerSizeY/speed<<std::endl;
+    }
+    newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime()+PathTime);
+  }
+  else{
+    std::cout<<"Hit outside PVetoVolume, not using PathTime"<<std::endl;
+    std::cout<<"localPosPre.y() "<<localPosPre.y()<<" HitSiPMDistance "<<HitSiPMDistance<<std::endl;
+    newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+  }
+
+
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
+
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
   //	 << " global " << G4BestUnit(worldPosPre,"Length")
   //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;

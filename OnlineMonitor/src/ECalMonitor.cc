@@ -413,7 +413,7 @@ Int_t ECalMonitor::OutputBeam()
             
   fprintf(outf,"PLOTID ECalMon_beameventenergy\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ECal Beam - Event Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ECal Beam - Event Energy - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 29 29\n");
   fprintf(outf,"RANGE_X 0 29\n");
   fprintf(outf,"RANGE_Y 0 29\n");

@@ -27,14 +27,16 @@ public:
 
 private:
 
-  void ComputeChannelEnergy(UChar_t,UChar_t,Short_t*);
-  void ComputeChannelPedestal(UChar_t,UChar_t,Short_t*);
-  void FindChannelPeaks(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelPedestal(Short_t*);
+  void ComputeChannelCharge(Short_t*);
+  void FindChannelPeaks(Short_t*);
 
   Int_t OutputBeam();
   Int_t OutputOffBeam();
   Int_t OutputCosmics();
   Int_t OutputRandom();
+
+  void ResetETagMap(Double_t map[2][60]);
 
   Configuration* fConfig;
   utl::ConfigParser* fConfigParser;
@@ -54,13 +56,19 @@ private:
   UInt_t fCosmicsEventCount;
   UInt_t fRandomEventCount;
 
-  // Pedestal and RMS of current channel
-  UShort_t fPedestalSamples;
+  // Define parameters for pedestal and total charge evaluation
+  UInt_t fPedestalSamples;    // Number of samples to use for pedestals
+  UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
+  UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
+
+  // Results from pedestal and total charge evaluation
   Double_t fChannelPedestal;
   Double_t fChannelPedRMS;
+  Double_t fChannelCharge;
 
-  // Energy of current channel
-  Double_t fChannelEnergy;
+  // Maps with total and single event charges for Beam events
+  Double_t fMChargeSumBM[2][60]; // Map with charge sum for a set of events
+  Double_t fMChargeEvtBM[2][60]; // Map with charge of last event
 
   // Map from [board][channel] to position as llsc (level/side/channel)
   Short_t fETag_map[29][32] = {

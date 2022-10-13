@@ -63,15 +63,19 @@ void ETagMonitor::Initialize()
   }
 
   // Get output rates from config file
-  fBeamOutputRate = fConfigParser->HasConfig("RECO","BeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate")):100;
-  fOffBeamOutputRate = fConfigParser->HasConfig("RECO","OffBeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate")):100;
-  fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):100;
-  fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):100;
+  fBeamOutputRate = fConfigParser->HasConfig("RECO","BeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate")):200;
+  fOffBeamOutputRate = fConfigParser->HasConfig("RECO","OffBeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate")):0;
+  fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):0;
+  fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):0;
 
-  // Set number of samples to use to compute pedestals
-  fPedestalSamples = 100;
+  // Get pedestal and charge reconstruction parameters from config file
+  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
+  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):100;
+  fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):994;
 
   // Reset global counters
+  ResetETagMap(fMChargeSumBM);
+  ResetETagMap(fMChargeEvtBM);
   fBeamEventCount = 0;
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
@@ -121,6 +125,10 @@ void ETagMonitor::EndOfEvent()
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
+
+      // Reset charge maps
+      ResetETagMap(fMChargeSumBM);
+      ResetETagMap(fMChargeEvtBM);
 
     }
 
@@ -200,29 +208,29 @@ void ETagMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
   Short_t ch = fETag_map[board][channel];
   UChar_t level = ch/100;
   UChar_t side = (ch%100)/10;
-  UChar_t sipmch = ch%1000;
+  UChar_t sipmch = ch%10;
+  //printf("ch %d level %d side %d sipch %d \n",ch,level,side,sipmch);
 
-}
+  // Compute channel pedestal and charge
+  ComputeChannelPedestal(samples);
+  ComputeChannelCharge(samples);
 
-void ETagMonitor::ComputeChannelEnergy(UChar_t board,UChar_t channel,Short_t* samples)
-{
-  // Get total signal area using first 100 samples as pedestal and dropping last 30 samples
-  Int_t sum = 0;
-  Int_t sum_ped = 0;
-  for(UInt_t s = 0; s<994; s++) {
-    sum += samples[s];
-    if (s<fPedestalSamples) sum_ped += samples[s];
+  if (fIsBeam) {
+
+    // Add charge to cumulative map
+    fMChargeSumBM[side][level*4+sipmch] += fChannelCharge;
+
+    // Save single event charge map once every few events
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
+      fMChargeEvtBM[side][level*4+sipmch] = fChannelCharge;
+
   }
-  Double_t tot = ((Double_t)994/(Double_t)fPedestalSamples)*sum_ped-1.*sum;
-  // Convert to pC
-  //tot = tot/(4096.*50.)*(1.E-9/1.E-12);
-  tot *= 4.8828E-3;
-  fChannelEnergy = tot;
+
 }
 
-void ETagMonitor::ComputeChannelPedestal(UChar_t board,UChar_t channel,Short_t* samples)
+void ETagMonitor::ComputeChannelPedestal(Short_t* samples)
 {
-  // Get pedestal value and RMS from first 100 samples
+  // Get pedestal value and RMS
   Int_t sum = 0;
   ULong_t sum2 = 0;
   for(UInt_t s = 0; s<fPedestalSamples; s++) {
@@ -233,6 +241,17 @@ void ETagMonitor::ComputeChannelPedestal(UChar_t board,UChar_t channel,Short_t* 
   fChannelPedRMS = sqrt( ((Double_t)sum2 - (Double_t)sum*fChannelPedestal)/(Double_t)(fPedestalSamples-1) );
 }
 
+void ETagMonitor::ComputeChannelCharge(Short_t* samples)
+{
+  // Get total signal area
+  Int_t sum = 0;
+  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) sum += samples[s];
+  fChannelCharge = (Double_t)(fSignalSamplesEnd-fSignalSamplesStart)*fChannelPedestal-(Double_t)sum;
+  // Convert to pC
+  //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
+  fChannelCharge *= 4.8828E-3;
+}
+
 Int_t ETagMonitor::OutputBeam()
 {
 
@@ -241,6 +260,46 @@ Int_t ETagMonitor::OutputBeam()
   TString ftname = fConfig->TmpDirectory()+"/ETagMon_Beam.txt";
   TString ffname = fConfig->OutputDirectory()+"/ETagMon_Beam.txt";
   FILE* outf = fopen(ftname.Data(),"w");
+      
+  fprintf(outf,"PLOTID ETagMon_beameventcharge\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ETAg Beam - Event Charge - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 2 60\n");
+  fprintf(outf,"RANGE_X 0 2\n");
+  fprintf(outf,"RANGE_Y 0 60\n");
+  fprintf(outf,"TITLE_X Side\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<60;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<2;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fMChargeEvtBM[x][59-y]);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n\n");
+      
+  fprintf(outf,"PLOTID ETagMon_beamaveragecharge\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ETAg Beam - Average Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 2 60\n");
+  fprintf(outf,"RANGE_X 0 2\n");
+  fprintf(outf,"RANGE_Y 0 60\n");
+  fprintf(outf,"TITLE_X Side\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<60;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<2;x++) {
+      if (x>0) fprintf(outf,",");
+      fprintf(outf,"%.3f",fMChargeSumBM[x][59-y]/(Double_t)fBeamOutputRate);
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
@@ -303,4 +362,13 @@ Int_t ETagMonitor::OutputRandom()
   }
 
   return 0;
+}
+
+void ETagMonitor::ResetETagMap(Double_t map[2][60])
+{
+  for (UChar_t s=0; s<2; s++) {
+    for (UChar_t c=0; c<60; c++) {
+      map[s][c] = 0.;
+    }
+  }
 }

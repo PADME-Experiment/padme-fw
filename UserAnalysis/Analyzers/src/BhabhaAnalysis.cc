@@ -313,6 +313,8 @@ Bool_t BhabhaAnalysis::Process(){
     NHitsEVeto =  NHitsEVetoGood[ii];
     enEVeto    =  enEVetoGood[ii];
 
+    //   if(chEVeto>51&&chEVeto<56) continue;
+
     for(int jj = 0; jj<NHitsPVetoGood.size(); jj++){
       
       //import PVeto variables
@@ -372,19 +374,16 @@ Bool_t BhabhaAnalysis::Process(){
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+	    if(isMC){
+	      if(std::fabs(tPVeto-tEVeto<2)){
+		std::cout<<"Passing ";
+		fEvent->MCTruthEvent->Print("");
+	      }
+	    }
 	    if(chPVeto+chEVeto>90){
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	    }
-	  }
-	}
-      }
-      if(NHitsPVeto>1&&NHitsEVeto>1){
-	//	fHS->FillHistoList("BhabhaList","h2PlusHitsDeltatPVetoEVetoCluster",tPVeto-tEVeto);
-	if(NHitsPVeto<4&&NHitsEVeto<4){
-	  //	  fHS->FillHistoList("BhabhaList","h2to3HitsDeltatPVetoEVetoCluster",tPVeto-tEVeto);
-	  if(enPVeto>1.6&&enEVeto>1.6){
-	    //	    fHS->FillHistoList("BhabhaList","hEnergyCut2to3HitsDeltatPVetoEVetoCluster",tPVeto-tEVeto);		
 	  }
 	}
       }

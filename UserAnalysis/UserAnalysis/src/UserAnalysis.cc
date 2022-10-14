@@ -7,8 +7,9 @@
 #include "NPoTAnalysis.hh"
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
-#include "BhabhaAnalysis.hh" //MR
-#include "BremsstrahlungAnalysis.hh" //MR
+#include "BhabhaAnalysis.hh" //BL
+#include "BremsstrahlungAnalysis.hh" //BL
+#include "MCTruth.hh" //BL
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -26,6 +27,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   //fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
   fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
@@ -35,6 +37,7 @@ UserAnalysis::~UserAnalysis(){
   // delete fIsGGAnalysis;
   delete fBhabhaAnalysis;
   delete fBremsstrahlungAnalysis;
+  delete fMCTruth;
   //  delete fIs3GAnalysis;
 }
 
@@ -46,6 +49,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   //  fIsGGAnalysis->Init(fEvent);
   fBhabhaAnalysis->Init(fEvent);
   fBremsstrahlungAnalysis->Init(fEvent);
+  fMCTruth->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -84,6 +88,7 @@ Bool_t UserAnalysis::Process(){
   //  fIsGGAnalysis->Process();
   fBhabhaAnalysis->Process();
   fBremsstrahlungAnalysis->Process();
+  fMCTruth->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
 
@@ -148,6 +153,7 @@ Bool_t UserAnalysis::Finalize()
   //fIsGGAnalysis->Finalize();
   fBhabhaAnalysis->Finalize();
   fBremsstrahlungAnalysis->Finalize();
+  fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
 
 //  // TGraph example

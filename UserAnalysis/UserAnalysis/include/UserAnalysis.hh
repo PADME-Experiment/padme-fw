@@ -10,6 +10,7 @@ class IsGGAnalysis;
 class Is3GAnalysis;
 class BhabhaAnalysis;
 class BremsstrahlungAnalysis;
+class MCTruth;
 
 class UserAnalysis {
 
@@ -39,6 +40,7 @@ private:
   Is3GAnalysis* fIs3GAnalysis;
   BhabhaAnalysis* fBhabhaAnalysis;
   BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
+  MCTruth* fMCTruth;
 
 };
 #endif

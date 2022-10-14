@@ -375,8 +375,7 @@ Bool_t BhabhaAnalysis::Process(){
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 	    if(isMC){
-	      if(std::fabs(tPVeto-tEVeto<2)){
-		std::cout<<"Passing ";
+	      if(std::fabs(deltaTcorrect)<2){
 		fEvent->MCTruthEvent->Print("");
 	      }
 	    }

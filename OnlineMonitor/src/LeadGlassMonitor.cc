@@ -161,6 +161,7 @@ void LeadGlassMonitor::EndOfEvent()
       fHLGPedRMSBM->Reset();
       fHLGTotChargeBM->Reset();
       fHLGNPoTsBM->Reset();
+      fHLGBunchLengthBM->Reset();
 
       // Reset cumulative waveform
       for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -341,7 +342,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Pedestal
   fprintf(outf,"PLOTID LeadGlassMon_beampedestal\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGPedestalBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalBM->GetXaxis()->GetXmin(),fHLGPedestalBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X Counts\n");
@@ -356,7 +357,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Pedestal RMS
   fprintf(outf,"PLOTID LeadGlassMon_beampedrms\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Pedestal RMS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGPedRMSBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMSBM->GetXaxis()->GetXmin(),fHLGPedRMSBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X Counts\n");
@@ -371,10 +372,10 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Bunch Length
   fprintf(outf,"PLOTID LeadGlassMon_beambunchlength\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGBunchLengthBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchLengthBM->GetXaxis()->GetXmin(),fHLGBunchLengthBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X pC\n");
+  fprintf(outf,"TITLE_X ns\n");
   fprintf(outf,"TITLE_Y Bunches\n");
   if (fWFSaturated) {
     fprintf(outf,"COLOR [ \"ff0000\" ]\n");
@@ -391,7 +392,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Total Charge
   fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X pC\n");
@@ -411,7 +412,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Number of Positrons on Target (NPoTs)
   fprintf(outf,"PLOTID LeadGlassMon_beamnpots\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam PoTs - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM PoTs - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGNPoTsBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGNPoTsBM->GetXaxis()->GetXmin(),fHLGNPoTsBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X nPoTs\n");
@@ -430,7 +431,7 @@ Int_t LeadGlassMonitor::OutputBeam()
 
   fprintf(outf,"PLOTID LeadGlassMon_beamwaveform\n");
   fprintf(outf,"PLOTTYPE scatter\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"RANGE_X 0 1024\n");
   fprintf(outf,"TITLE_X Sample\n");
   fprintf(outf,"TITLE_Y Counts\n");
@@ -453,7 +454,7 @@ Int_t LeadGlassMonitor::OutputBeam()
 
   fprintf(outf,"PLOTID LeadGlassMon_beambunchshape\n");
   fprintf(outf,"PLOTTYPE scatter\n");
-  fprintf(outf,"PLOTNAME LeadGlass Beam Bunch Shape - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BM Bunch Shape - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"RANGE_X 0 1024\n");
   fprintf(outf,"TITLE_X Sample\n");
   fprintf(outf,"TITLE_Y Counts\n");
@@ -472,7 +473,7 @@ Int_t LeadGlassMonitor::OutputBeam()
 
   // NPoTs trend plot with acceptable range
   fprintf(outf,"PLOTID LeadGlassMon_trendnpots\n");
-  fprintf(outf,"PLOTNAME LeadGlass NPotS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG NPotS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
   if ( (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] < fNPoTsRangeMin) || (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] > fNPoTsRangeMax) ) {
@@ -495,7 +496,7 @@ Int_t LeadGlassMonitor::OutputBeam()
 
   // Bunch length trend plot with acceptable range
   fprintf(outf,"PLOTID LeadGlassMon_trendbunchlength\n");
-  fprintf(outf,"PLOTNAME LeadGlass Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
   if ( (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] < fBunchLengthRangeMin) || (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] > fBunchLengthRangeMax) ) {

@@ -94,6 +94,9 @@ private:
   std::vector<Double_t> fVLGNPoTsBM;
   std::vector<Double_t> fVLGBunchLengthBM;
 
+  // Trend support file
+  TString fTFLGTrendsBM;
+
   // Range for NPoTs and Bunch Length trend plots
   Double_t fNPoTsRangeMin;
   Double_t fNPoTsRangeMax;

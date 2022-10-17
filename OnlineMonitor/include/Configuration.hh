@@ -36,6 +36,9 @@ public:
   void SetOutputDirectory(TString d) { fOutputDirectory = d; }
   TString OutputDirectory() { return fOutputDirectory; }
 
+  void SetTrendDirectory(TString d) { fTrendDirectory = d; }
+  TString TrendDirectory() { return fTrendDirectory; }
+
   TString TmpDirectory() { return fTmpDirectory; }
 
   void SetRunNumber(Int_t r) { fRunNumber = r; }
@@ -111,6 +114,9 @@ private:
 
   // Directory where output files (either PadmeMonitor or RawFile) will be copied to
   TString fOutputDirectory;
+
+  // Directory where support data files (e.g. trends) will be written to
+  TString fTrendDirectory;
 
   // Temporary directory where PadmeMonitor output files are written before being moved to final output directory
   TString fTmpDirectory;

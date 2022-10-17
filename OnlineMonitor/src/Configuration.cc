@@ -9,6 +9,7 @@ Configuration::Configuration()
   fEventsPerFile = 1000;
   fDataDirectory = "rawdata";
   fOutputDirectory = "watchdir";
+  fTrendDirectory = "trend";
   fTmpDirectory = "tmp";
   fConfigFile = "config/OnlineMonitor.cfg";
   fStopFile = "run/OnlineMonitor.stop";

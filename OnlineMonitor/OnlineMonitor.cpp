@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 
   TString runName = "";
   TString dataDirectory = "";
+  TString trendDirectory = "";
   TString outputDirectory = "";
   TString configFileName = "";
   TString stopFileName = "";
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:n:s:d:c:frvIh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:d:c:frvIh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -51,6 +52,9 @@ int main(int argc, char* argv[])
 	break;
       case 'o':
         outputDirectory = optarg;
+	break;
+      case 't':
+        trendDirectory = optarg;
 	break;
       case 'S':
         if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
@@ -106,6 +110,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -D: define path to top rawdata directory [default: '%s']\n",cfg->DataDirectory().Data());
         fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -o: define directory where PadmeMonitor files will be written [default: '%s']\n",cfg->OutputDirectory().Data());
+        fprintf(stdout,"  -t: define directory where trend files will be written [default: '%s']\n",cfg->TrendDirectory().Data());
         fprintf(stdout,"  -n: define number of events to process [default: 0 (all events)]\n");
         fprintf(stdout,"  -f: enable FOLLOW mode [default: disabled]\n");
         fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
@@ -117,7 +122,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(EXIT_SUCCESS);
       case '?':
-	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o' || optopt == 'c' || optopt == 'd')
+	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -139,6 +144,7 @@ int main(int argc, char* argv[])
   // Save configuration parameters for this run
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
   if (! outputDirectory.IsNull()) cfg->SetOutputDirectory(outputDirectory);
+  if (! trendDirectory.IsNull()) cfg->SetTrendDirectory(trendDirectory);
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
   if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
@@ -148,6 +154,7 @@ int main(int argc, char* argv[])
   fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Output PadmeMonitor directory: '%s'\n",cfg->OutputDirectory().Data());
+  fprintf(stdout,"- Trend directory: '%s'\n",cfg->TrendDirectory().Data());
   fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   if (cfg->FollowMode()) {
     fprintf(stdout,"- Follow mode enabled\n");

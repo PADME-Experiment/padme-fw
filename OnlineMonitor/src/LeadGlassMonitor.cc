@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
+#include <fstream>
 
 #include "LeadGlassMonitor.hh"
 
@@ -86,6 +87,22 @@ void LeadGlassMonitor::Initialize()
     printf("LeadGlassMonitor::Initialize - WARNING: BunchLengthRangeMax not set in config file. Using %f\n",fBunchLengthRangeMax);
   }
 
+  // Define trend support file for this run
+  fTFLGTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_LGTrendsBM.trend";
+
+  // If file exists, recover the data
+  struct stat buffer;
+  if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
+    std::ifstream tf(fTFLGTrendsBM.Data());
+    Double_t abstime,npots,bunchlen;
+    while (tf >> abstime >> npots >> bunchlen) {
+      //printf("%f %f %f\n",abstime,npots,bunchlen);
+      fVLGTimeBM.push_back(abstime);
+      fVLGNPoTsBM.push_back(npots);
+      fVLGBunchLengthBM.push_back(bunchlen);
+    }
+  }
+
   // Create histograms
   fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
@@ -147,11 +164,22 @@ void LeadGlassMonitor::EndOfEvent()
 
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
-      // Update trend vectors
-      //printf("Update trend time %f npots %f\n",fConfig->GetEventAbsTime().AsDouble(),fHLGNPoTsBM->GetMean());
-      fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
-      fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
-      fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
+      // Check if current data is new
+      if ( (fVLGTimeBM.size() == 0) || (fConfig->GetEventAbsTime().AsDouble() > fVLGTimeBM.back()) ) {
+
+	//printf("New data %f %f %f\n",fConfig->GetEventAbsTime().AsDouble(),fHLGNPoTsBM->GetMean(),fHLGBunchLengthBM->GetMean());
+
+	// Update trend vectors
+	fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
+	fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
+	fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
+
+	// Update trends file
+	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
+	fprintf(tf,"%f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGBunchLengthBM.back());
+	fclose(tf);
+
+      }
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();

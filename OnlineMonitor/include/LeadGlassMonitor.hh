@@ -31,6 +31,8 @@ private:
 
   void ComputeTotalCharge(Short_t*);
 
+  void ComputeBunchLength(Short_t*);
+
   Int_t OutputBeam();
   Int_t OutputOffBeam();
   Int_t OutputCosmics();
@@ -72,6 +74,7 @@ private:
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
   TH1D* fHLGNPoTsBM;
+  TH1D* fHLGBunchLengthBM;
 
   // Waveform vectors
   Short_t fLGWaveformBM[1024];
@@ -80,13 +83,22 @@ private:
   // Waveform saturation flag
   Bool_t fWFSaturated;
 
+  // Threshold to use to evaluate bunch length
+  Double_t fBunchLengthThreshold;
+
+  // Bunch length
+  Double_t fBunchLength;
+
   // Trend vectors
   std::vector<Double_t> fVLGTimeBM;
   std::vector<Double_t> fVLGNPoTsBM;
+  std::vector<Double_t> fVLGBunchLengthBM;
 
-  // Range for NPoTs trend plot
+  // Range for NPoTs and Bunch Length trend plots
   Double_t fNPoTsRangeMin;
   Double_t fNPoTsRangeMax;
+  Double_t fBunchLengthRangeMin;
+  Double_t fBunchLengthRangeMax;
 
 };
 #endif

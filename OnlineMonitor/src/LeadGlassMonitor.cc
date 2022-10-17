@@ -55,6 +55,9 @@ void LeadGlassMonitor::Initialize()
     printf("LeadGlassMonitor::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
   }
 
+  // Get threshold for bunch length evaluation.
+  fBunchLengthThreshold = fConfigParser->HasConfig("RECO","BunchLengthThreshold")?std::stod(fConfigParser->GetSingleArg("RECO","BunchLengthThreshold")):50.;
+
   // Set acceptable range for NPoTs trend plot
   fNPoTsRangeMin = 2000.;
   if (fConfigParser->HasConfig("RECO","NPoTsRangeMin")) {
@@ -69,12 +72,26 @@ void LeadGlassMonitor::Initialize()
     printf("LeadGlassMonitor::Initialize - WARNING: NPoTsRangeMax not set in config file. Using %f\n",fNPoTsRangeMax);
   }
 
+  // Set acceptable range for Bunch Length trend plot
+  fBunchLengthRangeMin = 100.;
+  if (fConfigParser->HasConfig("RECO","BunchLengthRangeMin")) {
+    fBunchLengthRangeMin = std::stod(fConfigParser->GetSingleArg("RECO","BunchLengthRangeMin"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: BunchLengthRangeMin not set in config file. Using %f\n",fBunchLengthRangeMin);
+  }
+  fBunchLengthRangeMax = 300.;
+  if (fConfigParser->HasConfig("RECO","BunchLengthRangeMax")) {
+    fBunchLengthRangeMax = std::stod(fConfigParser->GetSingleArg("RECO","BunchLengthRangeMax"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: BunchLengthRangeMax not set in config file. Using %f\n",fBunchLengthRangeMax);
+  }
 
   // Create histograms
   fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
   fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
   fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
+  fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
 
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -134,6 +151,7 @@ void LeadGlassMonitor::EndOfEvent()
       //printf("Update trend time %f npots %f\n",fConfig->GetEventAbsTime().AsDouble(),fHLGNPoTsBM->GetMean());
       fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
       fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
+      fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
 
       // Write beam events data to output PadmeMonitor file
       OutputBeam();
@@ -219,10 +237,14 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
 
   if (fIsBeam) {
 
+    // Compute lenght of bunch (period above a given thershold)
+    ComputeBunchLength(samples);
+
     fHLGPedestalBM->Fill(fChannelPedestal);
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
     fHLGNPoTsBM->Fill(fChannelCharge/fChargeToNPoTs);
+    fHLGBunchLengthBM->Fill(fBunchLength);
 
     // Add waveform to cumulative for bunch shape studies
     for(UInt_t i = 0; i<1024; i++) {
@@ -267,6 +289,46 @@ void LeadGlassMonitor::ComputeTotalCharge(Short_t* samples)
 
 }
 
+void LeadGlassMonitor::ComputeBunchLength(Short_t* samples)
+{
+
+  // Get length of bunch using a given threshold.
+  // N.B. Assumes that pedestal was already computed
+  Bool_t bunch = false;
+  UInt_t bunchStart =0.;
+  UInt_t bunchEnd = 0.;
+  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
+    if (bunch) {
+      if (fChannelPedestal-(Double_t)samples[s] < fBunchLengthThreshold) {
+	if (s-bunchStart > 1) { // Ignore noise ffluctuations
+	  bunchEnd = s;
+	  break;
+	}
+      }
+    } else {
+      if (fChannelPedestal-(Double_t)samples[s] > fBunchLengthThreshold) {
+	bunch = true;
+	bunchStart = s;
+      }
+    }
+  }
+  if (bunch && bunchEnd == 0.) {
+    printf("LeadGlassMonitor::ComputeBunchLength - WARNING - Bunch length longer than signal interval\n");
+    bunchEnd = fSignalSamplesEnd;
+  }
+
+  // Convert sample interval to ns. DAQ is assumed at 1GHz.
+  fBunchLength = (Double_t)(bunchEnd-bunchStart)*1.;
+
+  /*
+  fBunchLength = 0.;
+  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
+    if (fChannelPedestal-(Double_t)samples[s] > fBunchLengthThreshold) fBunchLength++;
+  }
+  */
+
+}
+
 Int_t LeadGlassMonitor::OutputBeam()
 {
   if (fConfig->Verbose()>0) printf("LeadGlassMonitor::OutputBeam - Writing beam output files\n");
@@ -303,6 +365,26 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGPedRMSBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGPedRMSBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Bunch Length
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchlength\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LeadGlass Beam Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchLengthBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchLengthBM->GetXaxis()->GetXmin(),fHLGBunchLengthBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X pC\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchLengthBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchLengthBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
@@ -409,6 +491,29 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"]");
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMin,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMin);
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMax,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMax);
+  fprintf(outf," ]\n\n");
+
+  // Bunch length trend plot with acceptable range
+  fprintf(outf,"PLOTID LeadGlassMon_trendbunchlength\n");
+  fprintf(outf,"PLOTNAME LeadGlass Bunch Length - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
+  if ( (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] < fBunchLengthRangeMin) || (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] > fBunchLengthRangeMax) ) {
+    fprintf(outf,"COLOR [ \"ff0000\",\"00ff00\",\"aaaa00\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+  }
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y ns\n");
+  fprintf(outf,"LEGEND [ \"BchLen\",\"min\",\"max\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGBunchLengthBM[j]);
+  }
+  fprintf(outf,"]");
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fBunchLengthRangeMin,fVLGTimeBM[fVLGTimeBM.size()-1],fBunchLengthRangeMin);
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fBunchLengthRangeMax,fVLGTimeBM[fVLGTimeBM.size()-1],fBunchLengthRangeMax);
   fprintf(outf," ]\n\n");
 
   fclose(outf);

@@ -38,6 +38,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->CreateList("BhabhaList");
   fHS->CreateList("MCBhabha");
   fHS->CreateList("TimeCorrectionList");
+  fHS->CreateList("BackgroundList");
   
   //Number of clusters
   fHS->BookHistoList("PVetoClusters","hNPVetoCluster",100,0,100);
@@ -141,6 +142,17 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectGoodChasVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
   //  fHS->BookHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
 
+  //Background studies
+  fHS->BookHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",90,-0.5,89.5);
+
+  fHS->BookHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
+  fHS->BookHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",90,-0.5,89.5);
+
   return true;
 }
 
@@ -160,7 +172,7 @@ Bool_t BhabhaAnalysis::Process(){
   
   fNPoT = fEvent->TargetRecoBeam->getnPOT();
 
-  if(fNPoT>10000) return 0;
+  //if(fNPoT>10000) return 0;
 
   //Number of PVeto clusters
   Int_t NPVetoCluster = fEvent->PVetoRecoCl->GetNElements();
@@ -305,6 +317,8 @@ Bool_t BhabhaAnalysis::Process(){
   double enBremPositron;
   double enBremElectron;
 
+  int npass =0;
+
   //loop over good clusters
   for(int ii = 0; ii<NHitsEVetoGood.size(); ii++){
     //import EVeto variables
@@ -317,6 +331,8 @@ Bool_t BhabhaAnalysis::Process(){
 
     for(int jj = 0; jj<NHitsPVetoGood.size(); jj++){
       
+      //      std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
+
       //import PVeto variables
       tPVeto     =  tPVetoGood[jj];
       chPVeto    =  chPVetoGood[jj];
@@ -370,10 +386,33 @@ Bool_t BhabhaAnalysis::Process(){
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	  if(chPVeto>30&&chEVeto>30){
+	    std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
+	    npass++;
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+	    if(fabs(deltaTcorrect)>5){
+	      if(chPVeto+chEVeto==99){
+		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	      }
+	      if(chPVeto+chEVeto==100){
+		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	      }
+	    }
+	    else{
+	      if(chPVeto+chEVeto==99){
+		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	      }
+	      if(chPVeto+chEVeto==100){
+		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	      }
+	    }
+
 	    if(isMC){
 	      if(std::fabs(deltaTcorrect)<2){
 		fEvent->MCTruthEvent->Print("");
@@ -440,6 +479,8 @@ Bool_t BhabhaAnalysis::Process(){
       // fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
     }
   }
+
+  std::cout<<"event no "<<fEvent->RecoEvent->GetEventNumber()<<" npass "<<npass<<std::endl;
 
   //then do double loop to find couples:
   //3. do deltaTcorrection using plot from june

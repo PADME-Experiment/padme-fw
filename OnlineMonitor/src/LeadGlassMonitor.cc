@@ -546,8 +546,8 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"MODE [ \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
-  fprintf(outf,"TITLE_Y Tot NPoTs\n");
-  //fprintf(outf,"LEGEND [ \"NPoTs\" ]\n");
+  fprintf(outf,"TITLE_Y Tot_NPoTs\n");
+  fprintf(outf,"LEGEND [ \"Tot NPoTs\" ]\n");
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
     if (j) fprintf(outf,",");

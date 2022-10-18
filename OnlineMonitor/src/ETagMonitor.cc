@@ -283,7 +283,7 @@ Int_t ETagMonitor::OutputBeam()
       
   fprintf(outf,"PLOTID ETagMon_beamaveragecharge\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ETAg Beam - Average Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ETag Beam - Average Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 2 60\n");
   fprintf(outf,"RANGE_X 0 2\n");
   fprintf(outf,"RANGE_Y 0 60\n");
@@ -300,6 +300,24 @@ Int_t ETagMonitor::OutputBeam()
     fprintf(outf,"]");
   }
   fprintf(outf,"]\n\n");
+
+  // Linear histogram of channel charge
+  fprintf(outf,"PLOTID ETagMon_beamlinearcharge\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME ETag Beam - Channel Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 120\n");
+  fprintf(outf,"RANGE_X 0. 120.\n");
+  fprintf(outf,"TITLE_X Channel\n");
+  fprintf(outf,"TITLE_Y Charge\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"DATA [[");
+  for(UChar_t x = 0;x<2;x++) {
+    for(UChar_t y = 0;y<60;y++) {
+      if (x || y) fprintf(outf,",");
+      fprintf(outf,"%.1f",fMChargeSumBM[x][y]/(Double_t)fBeamOutputRate);
+    }
+  }
+  fprintf(outf,"]]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

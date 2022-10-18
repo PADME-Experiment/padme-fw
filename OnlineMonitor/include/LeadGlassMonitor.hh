@@ -64,6 +64,10 @@ private:
   // Parameter to convert Total Charge to NPoTs
   Double_t fChargeToNPoTs;
 
+  // factor to take into account number of streams analyzed (F=N_streams_collected/N_streams_analyzed)
+  // E.g. if 5 streams are collected and 1 is analyzed then F=5/1=5.
+  Double_t fStreamsFactor;
+
   // Results of pedestal and total charge evaluation
   Double_t fChannelPedestal; // Pedestal level from the first fPedestalSamples samples
   Double_t fChannelPedRMS;   // Pedestal RMS
@@ -92,6 +96,7 @@ private:
   // Trend vectors
   std::vector<Double_t> fVLGTimeBM;
   std::vector<Double_t> fVLGNPoTsBM;
+  std::vector<Double_t> fVLGNPoTsTotBM;
   std::vector<Double_t> fVLGBunchLengthBM;
 
   // Trend support file

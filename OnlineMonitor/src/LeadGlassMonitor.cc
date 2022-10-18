@@ -29,6 +29,8 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGPedestalBM) { delete fHLGPedestalBM; fHLGPedestalBM = 0; }
   if (fHLGPedRMSBM) { delete fHLGPedRMSBM; fHLGPedRMSBM = 0; }
   if (fHLGTotChargeBM) { delete fHLGTotChargeBM; fHLGTotChargeBM = 0; }
+  if (fHLGNPoTsBM) { delete fHLGNPoTsBM; fHLGNPoTsBM = 0; }
+  if (fHLGBunchLengthBM) { delete fHLGBunchLengthBM; fHLGBunchLengthBM = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -54,6 +56,14 @@ void LeadGlassMonitor::Initialize()
     fChargeToNPoTs = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToNPoTs"));
   } else {
     printf("LeadGlassMonitor::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
+  }
+
+  // Get streams correction factor from config file. Complain if not found
+  fStreamsFactor = 5.; // Assume 1 stream used over 5 acquired
+  if (fConfigParser->HasConfig("RECO","StreamsFactor")) {
+    fStreamsFactor = std::stod(fConfigParser->GetSingleArg("RECO","StreamsFactor"));
+  } else {
+    printf("LeadGlassMonitor::Initialize - WARNING: StreamsFactor not set in config file. Using %f\n",fStreamsFactor);
   }
 
   // Get threshold for bunch length evaluation.
@@ -90,15 +100,16 @@ void LeadGlassMonitor::Initialize()
   // Define trend support file for this run
   fTFLGTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_LGTrendsBM.trend";
 
-  // If file exists, recover the data
+  // If trend file exists, recover the data
   struct stat buffer;
   if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
     std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,bunchlen;
-    while (tf >> abstime >> npots >> bunchlen) {
-      //printf("%f %f %f\n",abstime,npots,bunchlen);
+    Double_t abstime,npots,npotstot,bunchlen;
+    while (tf >> abstime >> npots >> npotstot >> bunchlen) {
+      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen);
       fVLGTimeBM.push_back(abstime);
       fVLGNPoTsBM.push_back(npots);
+      fVLGNPoTsTotBM.push_back(npotstot);
       fVLGBunchLengthBM.push_back(bunchlen);
     }
   }
@@ -162,21 +173,28 @@ void LeadGlassMonitor::EndOfEvent()
 
   if (fIsBeam) {
 
+    // Count beam event
+    fBeamEventCount++;
+
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
       // Check if current data is new
       if ( (fVLGTimeBM.size() == 0) || (fConfig->GetEventAbsTime().AsDouble() > fVLGTimeBM.back()) ) {
-
-	//printf("New data %f %f %f\n",fConfig->GetEventAbsTime().AsDouble(),fHLGNPoTsBM->GetMean(),fHLGBunchLengthBM->GetMean());
 
 	// Update trend vectors
 	fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
 	fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
 	fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
 
+	// Compute total number of PoTs and update trend vector
+	if (fVLGNPoTsTotBM.size() == 0) {
+	  fVLGNPoTsTotBM.push_back(fVLGNPoTsBM.back()*(Double_t)fBeamOutputRate*fStreamsFactor);
+	} else {
+	  fVLGNPoTsTotBM.push_back(fVLGNPoTsTotBM.back()+fVLGNPoTsBM.back()*(Double_t)fBeamOutputRate*fStreamsFactor);
+	}
 	// Update trends file
 	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGBunchLengthBM.back());
+	fprintf(tf,"%f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back());
 	fclose(tf);
 
       }
@@ -199,12 +217,12 @@ void LeadGlassMonitor::EndOfEvent()
 
     }
 
-    // Count beam event
-    fBeamEventCount++;
-
   } // End of beam output
 
   if (fIsOffBeam) {
+
+    // Count off-beam event
+    fOffBeamEventCount++;
 
     if (fOffBeamOutputRate && (fOffBeamEventCount % fOffBeamOutputRate == 0)) {
 
@@ -213,12 +231,12 @@ void LeadGlassMonitor::EndOfEvent()
 
     }
 
-    // Count off-beam event
-    fOffBeamEventCount++;
-
   } // End of off-beam output
 
   if (fIsCosmics) {
+
+    // Count cosmics event
+    fCosmicsEventCount++;
 
     if (fCosmicsOutputRate && (fCosmicsEventCount % fCosmicsOutputRate == 0)) {
 
@@ -226,12 +244,12 @@ void LeadGlassMonitor::EndOfEvent()
 
     }
 
-    // Count cosmics event
-    fCosmicsEventCount++;
-
   }
 
   if (fIsRandom) {
+
+    // Count cosmics event
+    fRandomEventCount++;
 
     if (fRandomOutputRate && (fRandomEventCount % fRandomOutputRate == 0)) {
 
@@ -239,9 +257,6 @@ void LeadGlassMonitor::EndOfEvent()
       OutputRandom();
 
     }
-
-    // Count cosmics event
-    fRandomEventCount++;
 
   } // End of random output
 
@@ -457,6 +472,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   }
   fprintf(outf,"]]\n\n");
 
+  // Single event waveform
   fprintf(outf,"PLOTID LeadGlassMon_beamwaveform\n");
   fprintf(outf,"PLOTTYPE scatter\n");
   fprintf(outf,"PLOTNAME LG BM Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
@@ -480,6 +496,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   }
   fprintf(outf,"\n");
 
+  // Beam bunch shape
   fprintf(outf,"PLOTID LeadGlassMon_beambunchshape\n");
   fprintf(outf,"PLOTTYPE scatter\n");
   fprintf(outf,"PLOTNAME LG BM Bunch Shape - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
@@ -521,6 +538,22 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMin,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMin);
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fNPoTsRangeMax,fVLGTimeBM[fVLGTimeBM.size()-1],fNPoTsRangeMax);
   fprintf(outf," ]\n\n");
+
+  // Total NPoTs trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendnpotstot\n");
+  fprintf(outf,"PLOTNAME LG Total NPotS - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot NPoTs\n");
+  //fprintf(outf,"LEGEND [ \"NPoTs\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGNPoTsTotBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
 
   // Bunch length trend plot with acceptable range
   fprintf(outf,"PLOTID LeadGlassMon_trendbunchlength\n");

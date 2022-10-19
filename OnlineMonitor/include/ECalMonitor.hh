@@ -1,12 +1,11 @@
 #ifndef ECalMonitor_H
 #define ECalMonitor_H
 
+#include "TH1D.h"
 #include "TFile.h"
 #include "TString.h"
 
 #include "utlConfigParser.hh"
-
-#define ECALMON_COSMWF_MAX 10
 
 class Configuration;
 
@@ -27,7 +26,8 @@ public:
 
 private:
 
-  Double_t GetChannelEnergy(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelCharge(Short_t*);
+  void ComputeChannelEnergy(UChar_t,UChar_t);
 
   Int_t OutputBeam();
   Int_t OutputOffBeam();
@@ -39,7 +39,7 @@ private:
   Configuration* fConfig;
 
   // Board/Channel map of calibration constants
-  Double_t   fECal_CosmClb[29][32];
+  Double_t   fECal_Calibration[29][32];
 
   utl::ConfigParser* fConfigParser;
 
@@ -48,27 +48,41 @@ private:
   Bool_t fIsOffBeam;
   Bool_t fIsRandom;
 
+  UInt_t fBeamOutputRate;
+  UInt_t fOffBeamOutputRate;
+  UInt_t fCosmicsOutputRate;
+  UInt_t fRandomOutputRate;
+
+  UInt_t fBeamEventCount;
+  UInt_t fOffBeamEventCount;
+  UInt_t fCosmicsEventCount;
+  UInt_t fRandomEventCount;
+
+  // Define parameters for pedestal and total charge evaluation
+  UInt_t fPedestalSamples;    // Number of samples to use for pedestals
+  UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
+  UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
+
+  // Results of pedestal, total charge and total energy evaluation
+  Double_t fChannelPedestal; // Pedestal level from the first fPedestalSamples samples
+  Double_t fChannelPedRMS;   // Pedestal RMS
+  Double_t fChannelCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+  Double_t fChannelEnergy;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+
   Double_t   fECal_CosmSum[29][29]; // 100 events map
   Double_t   fECal_CosmEvt[29][29]; // Last event map
   Double_t   fECal_BeamESum[29][29]; // Map with sum of energies
   Double_t   fECal_BeamEEvt[29][29]; // Map with energy of last event
-  //UInt_t   fECal_count[29][29];
-  //Double_t fECal_signal[29][29];
 
-  UInt_t fBeamEventCount;
-  UInt_t fBeamOutputRate;
-  UInt_t fOffBeamEventCount;
-  UInt_t fOffBeamOutputRate;
-  UInt_t fCosmicsEventCount;
-  UInt_t fCosmicsOutputRate;
-  UInt_t fRandomEventCount;
-  UInt_t fRandomOutputRate;
+  Double_t fECTotalEventEnergy; // Total energy in a single event
+  TH1D* fHECTotEnergyBM; // Distribution of total energy in ECal in each event
 
-  // Cosmics waveforms
-  UInt_t fNCosmWF;
-  UChar_t fCosmWFX[ECALMON_COSMWF_MAX];
-  UChar_t fCosmWFY[ECALMON_COSMWF_MAX];
-  Short_t fCosmWF[ECALMON_COSMWF_MAX][1024];
+  // Trend vectors
+  std::vector<Double_t> fVECTimeBM;
+  std::vector<Double_t> fVECTotEnergyBM;
+ 
+  // Trend support file
+  TString fTFECTrendsBM;
 
   // Map from [board][channel] to position as yyxx
   Short_t fECal_map[29][32] = {

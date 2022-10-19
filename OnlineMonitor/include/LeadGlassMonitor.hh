@@ -64,7 +64,7 @@ private:
   // Parameter to convert Total Charge to NPoTs
   Double_t fChargeToNPoTs;
 
-  // factor to take into account number of streams analyzed (F=N_streams_collected/N_streams_analyzed)
+  // Factor to take into account number of streams analyzed (F=N_streams_collected/N_streams_analyzed)
   // E.g. if 5 streams are collected and 1 is analyzed then F=5/1=5.
   Double_t fStreamsFactor;
 

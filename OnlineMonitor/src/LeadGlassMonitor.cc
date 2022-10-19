@@ -141,6 +141,7 @@ void LeadGlassMonitor::StartOfEvent()
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
   }
@@ -148,6 +149,7 @@ void LeadGlassMonitor::StartOfEvent()
   // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
+    fCosmicsEventCount++;
   } else {
     fIsCosmics = false;
   }
@@ -155,6 +157,7 @@ void LeadGlassMonitor::StartOfEvent()
   // Check if event was a random trigger
   if (fConfig->GetEventTrigMask() & 0x40) {
     fIsRandom = true;
+    fRandomEventCount++;
   } else {
     fIsRandom = false;
   }
@@ -162,6 +165,7 @@ void LeadGlassMonitor::StartOfEvent()
   // Check if event was an off-beam trigger
   if (fConfig->GetEventTrigMask() & 0x80) {
     fIsOffBeam = true;
+    fOffBeamEventCount++;
   } else {
     fIsOffBeam = false;
   }
@@ -172,9 +176,6 @@ void LeadGlassMonitor::EndOfEvent()
 {
 
   if (fIsBeam) {
-
-    // Count beam event
-    fBeamEventCount++;
 
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
@@ -192,6 +193,7 @@ void LeadGlassMonitor::EndOfEvent()
 	} else {
 	  fVLGNPoTsTotBM.push_back(fVLGNPoTsTotBM.back()+fVLGNPoTsBM.back()*(Double_t)fBeamOutputRate*fStreamsFactor);
 	}
+
 	// Update trends file
 	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
 	fprintf(tf,"%f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back());
@@ -221,9 +223,6 @@ void LeadGlassMonitor::EndOfEvent()
 
   if (fIsOffBeam) {
 
-    // Count off-beam event
-    fOffBeamEventCount++;
-
     if (fOffBeamOutputRate && (fOffBeamEventCount % fOffBeamOutputRate == 0)) {
 
       // Write off-beam events data to output PadmeMonitor file
@@ -235,9 +234,6 @@ void LeadGlassMonitor::EndOfEvent()
 
   if (fIsCosmics) {
 
-    // Count cosmics event
-    fCosmicsEventCount++;
-
     if (fCosmicsOutputRate && (fCosmicsEventCount % fCosmicsOutputRate == 0)) {
 
       OutputCosmics();
@@ -247,9 +243,6 @@ void LeadGlassMonitor::EndOfEvent()
   }
 
   if (fIsRandom) {
-
-    // Count cosmics event
-    fRandomEventCount++;
 
     if (fRandomOutputRate && (fRandomEventCount % fRandomOutputRate == 0)) {
 

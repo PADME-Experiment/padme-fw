@@ -304,7 +304,7 @@ Int_t ETagMonitor::OutputBeam()
   // Linear histogram of channel charge
   fprintf(outf,"PLOTID ETagMon_beamlinearcharge\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME ETag Beam - Channel Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ETag Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 120\n");
   fprintf(outf,"RANGE_X 0. 120.\n");
   fprintf(outf,"TITLE_X Channel\n");

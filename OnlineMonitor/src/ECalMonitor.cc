@@ -386,10 +386,10 @@ Int_t ECalMonitor::OutputBeam()
   // Total energy histogram
   fprintf(outf,"PLOTID ECalMon_beamtotalenergy\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME ECal Beam Total Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ECal Total Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHECTotEnergyBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHECTotEnergyBM->GetXaxis()->GetXmin(),fHECTotEnergyBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X Energy\n");
+  fprintf(outf,"TITLE_X Energy (MeV)\n");
   fprintf(outf,"TITLE_Y Events\n");
   fprintf(outf,"DATA [[");
   for(Int_t b = 1; b <= fHECTotEnergyBM->GetNbinsX(); b++) {
@@ -405,8 +405,8 @@ Int_t ECalMonitor::OutputBeam()
   fprintf(outf,"MODE [ \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
-  fprintf(outf,"TITLE_Y Tot_Energy\n");
-  fprintf(outf,"LEGEND [ \"Total Energy\" ]\n");
+  fprintf(outf,"TITLE_Y Energy\n");
+  fprintf(outf,"LEGEND [ \"Energy (MeV)\" ]\n");
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVECTimeBM.size(); j++) {
     if (j) fprintf(outf,",");
@@ -416,7 +416,7 @@ Int_t ECalMonitor::OutputBeam()
        
   fprintf(outf,"PLOTID ECalMon_beameventenergy\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ECal Beam - Event Energy - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ECal Event Energy (MeV)- Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 29 29\n");
   fprintf(outf,"RANGE_X 0 29\n");
   fprintf(outf,"RANGE_Y 0 29\n");
@@ -436,7 +436,7 @@ Int_t ECalMonitor::OutputBeam()
             
   fprintf(outf,"PLOTID ECalMon_beammeanenergy\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ECal Beam - Average Energy - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ECal Energy (MeV)- Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 29 29\n");
   fprintf(outf,"RANGE_X 0 29\n");
   fprintf(outf,"RANGE_Y 0 29\n");

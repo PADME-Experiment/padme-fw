@@ -89,6 +89,7 @@ void ETagMonitor::StartOfEvent()
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
   }
@@ -96,6 +97,7 @@ void ETagMonitor::StartOfEvent()
   // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
+    fCosmicsEventCount++;
   } else {
     fIsCosmics = false;
   }
@@ -103,6 +105,7 @@ void ETagMonitor::StartOfEvent()
   // Check if event was a random trigger
   if (fConfig->GetEventTrigMask() & 0x40) {
     fIsRandom = true;
+    fRandomEventCount++;
   } else {
     fIsRandom = false;
   }
@@ -110,6 +113,7 @@ void ETagMonitor::StartOfEvent()
   // Check if event was an off-beam trigger
   if (fConfig->GetEventTrigMask() & 0x80) {
     fIsOffBeam = true;
+    fOffBeamEventCount++;
   } else {
     fIsOffBeam = false;
   }
@@ -132,9 +136,6 @@ void ETagMonitor::EndOfEvent()
 
     }
 
-    // Count beam event
-    fBeamEventCount++;
-
   } // End of beam output
 
   if (fIsOffBeam) {
@@ -145,9 +146,6 @@ void ETagMonitor::EndOfEvent()
       OutputOffBeam();
 
     }
-
-    // Count off-beam event
-    fOffBeamEventCount++;
 
   } // End of off-beam output
 
@@ -160,9 +158,6 @@ void ETagMonitor::EndOfEvent()
 
     }
 
-    // Count cosmics event
-    fCosmicsEventCount++;
-
   } // End of cosmics output
 
   if (fIsRandom) {
@@ -173,9 +168,6 @@ void ETagMonitor::EndOfEvent()
       OutputRandom();
 
     }
-
-    // Count cosmics event
-    fRandomEventCount++;
 
   } // End of random output
 
@@ -263,7 +255,7 @@ Int_t ETagMonitor::OutputBeam()
       
   fprintf(outf,"PLOTID ETagMon_beameventcharge\n");
   fprintf(outf,"PLOTTYPE heatmap\n");
-  fprintf(outf,"PLOTNAME ETAg Beam - Event Charge - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME ETag Beam - Event Charge - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS 2 60\n");
   fprintf(outf,"RANGE_X 0 2\n");
   fprintf(outf,"RANGE_Y 0 60\n");
@@ -309,7 +301,7 @@ Int_t ETagMonitor::OutputBeam()
   fprintf(outf,"RANGE_X 0. 120.\n");
   fprintf(outf,"TITLE_X Channel\n");
   fprintf(outf,"TITLE_Y Charge\n");
-  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  //fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"DATA [[");
   for(UChar_t x = 0;x<2;x++) {
     for(UChar_t y = 0;y<60;y++) {

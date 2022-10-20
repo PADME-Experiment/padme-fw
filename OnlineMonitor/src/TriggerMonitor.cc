@@ -44,7 +44,7 @@ void TriggerMonitor::Initialize()
   }
 
   // Get board to show on monitor page
-  fBoardToShow = 27;
+  fBoardToShow = 0;
   if ( fConfigParser->HasConfig("RECO","BoardToShow") ) {
     try {
       fBoardToShow = std::stoi(fConfigParser->GetSingleArg("RECO","BoardToShow"));
@@ -60,7 +60,9 @@ void TriggerMonitor::Initialize()
 }
 
 void TriggerMonitor::StartOfEvent()
-{;}
+{
+  fEventCounter++;
+}
 
 void TriggerMonitor::EndOfEvent()
 {
@@ -69,8 +71,6 @@ void TriggerMonitor::EndOfEvent()
   if (fEventCounter % fEventOutputRate == 0) {
     OutputData();
   }
-
-  fEventCounter++;
 
 }
 

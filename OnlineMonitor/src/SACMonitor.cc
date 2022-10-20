@@ -138,6 +138,7 @@ void SACMonitor::StartOfEvent()
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
   }
@@ -145,6 +146,7 @@ void SACMonitor::StartOfEvent()
   // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
+    fCosmicsEventCount++;
   } else {
     fIsCosmics = false;
   }
@@ -152,6 +154,7 @@ void SACMonitor::StartOfEvent()
   // Check if event was a random trigger
   if (fConfig->GetEventTrigMask() & 0x40) {
     fIsRandom = true;
+    fRandomEventCount++;
   } else {
     fIsRandom = false;
   }
@@ -159,6 +162,7 @@ void SACMonitor::StartOfEvent()
   // Check if event was an off-beam trigger
   if (fConfig->GetEventTrigMask() & 0x80) {
     fIsOffBeam = true;
+    fOffBeamEventCount++;
   } else {
     fIsOffBeam = false;
   }
@@ -188,9 +192,6 @@ void SACMonitor::EndOfEvent()
 
     }
 
-    // Count beam event
-    fBeamEventCount++;
-
   } // End of beam output
 
   if (fIsOffBeam) {
@@ -204,9 +205,6 @@ void SACMonitor::EndOfEvent()
       ResetSACWaveforms(fOffBeamWF);
 
     }
-
-    // Count off-beam event
-    fOffBeamEventCount++;
 
   } // End of off-beam output
 
@@ -226,9 +224,6 @@ void SACMonitor::EndOfEvent()
 
     }
 
-    // Count cosmics event
-    fCosmicsEventCount++;
-
   } // End of cosmics output
 
   if (fIsRandom) {
@@ -239,9 +234,6 @@ void SACMonitor::EndOfEvent()
       //OutputRandom();
 
     }
-
-    // Count cosmics event
-    fRandomEventCount++;
 
   } // End of random output
 

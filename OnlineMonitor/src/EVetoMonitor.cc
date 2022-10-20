@@ -121,6 +121,7 @@ void EVetoMonitor::StartOfEvent()
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
   }
@@ -128,6 +129,7 @@ void EVetoMonitor::StartOfEvent()
   // Check if event was an off-beam trigger
   if (fConfig->GetEventTrigMask() & 0x80) {
     fIsOffBeam = true;
+    fOffBeamEventCount++;
   } else {
     fIsOffBeam = false;
   }
@@ -139,7 +141,7 @@ void EVetoMonitor::EndOfEvent()
 
   if (fIsBeam) {
 
-    if (fBeamEventCount % fBeamOutputRate == 0) {
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
       // Write beam data to output PadmeMonitor file
       OutputBeam();
@@ -152,14 +154,11 @@ void EVetoMonitor::EndOfEvent()
 
     }
 
-    // Count beam event
-    fBeamEventCount++;
-
   } // End of beam output
 
   if (fIsOffBeam) {
 
-    if (fOffBeamEventCount % fOffBeamOutputRate == 0) {
+    if (fOffBeamOutputRate && (fOffBeamEventCount % fOffBeamOutputRate == 0)) {
 
       // Write off-beam data to output PadmeMonitor file
       OutputOffBeam();
@@ -171,9 +170,6 @@ void EVetoMonitor::EndOfEvent()
       ResetEVetoWaveforms(fOffBeamWF);
 
     }
-
-    // Count off-beam event
-    fOffBeamEventCount++;
 
   } // End of off-beam output
 

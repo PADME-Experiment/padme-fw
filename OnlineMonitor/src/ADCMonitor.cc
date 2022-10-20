@@ -178,7 +178,9 @@ void ADCMonitor::Initialize()
       hname.Form("ADC_Pedestal_%2.2d_%2.2d",b,c);
       if (b==28) { // Target dynamics is centered
 	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),80,1800.,2200.);
-      } else {
+      } else if ( (b==23) && (c>=28) ) { // Cosmic pads dynamics is positive
+	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),80,700.,1100.);
+      } else { // Everybody else has negative dynamics
 	fHChPedestal[b][c] = new TH1D(hname.Data(),hname.Data(),160,3300.,4100.);
       }
       hname.Form("ADC_PedRMS_%2.2d_%2.2d",b,c);
@@ -228,6 +230,7 @@ void ADCMonitor::StartOfEvent()
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
   }
@@ -235,6 +238,7 @@ void ADCMonitor::StartOfEvent()
   // Check if event was triggered by cosmics
   if (fConfig->GetEventTrigMask() & 0x02) {
     fIsCosmics = true;
+    fCosmicsEventCount++;
   } else {
     fIsCosmics = false;
   }
@@ -242,6 +246,7 @@ void ADCMonitor::StartOfEvent()
   // Check if event was an off-beam trigger
   if (fConfig->GetEventTrigMask() & 0x80) {
     fIsOffBeam = true;
+    fOffBeamEventCount++;
   } else {
     fIsOffBeam = false;
   }
@@ -249,7 +254,7 @@ void ADCMonitor::StartOfEvent()
   // Check if event was a random trigger
   if (fConfig->GetEventTrigMask() & 0x40) {
     fIsRandom = true;
-    //fIsBeam = true; // Fake beam triggers
+    fRandomEventCount++;
   } else {
     fIsRandom = false;
   }
@@ -280,9 +285,6 @@ void ADCMonitor::EndOfEvent()
 
     }
 
-    // Count beam event
-    fBeamEventCount++;
-
   } // End of beam output
 
   if (fIsOffBeam) {
@@ -309,9 +311,6 @@ void ADCMonitor::EndOfEvent()
 
     }
 
-    // Count off-beam event
-    fOffBeamEventCount++;
-
   } // End of off-beam output
 
   if (fIsCosmics) {
@@ -334,9 +333,6 @@ void ADCMonitor::EndOfEvent()
       }
 
     }
-
-    // Count cosmics event
-    fCosmicsEventCount++;
 
   } // End of cosmics output
 
@@ -369,9 +365,6 @@ void ADCMonitor::EndOfEvent()
       }
 
     }
-
-    // Count random event
-    fRandomEventCount++;
 
   } // End of cosmics output
 

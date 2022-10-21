@@ -1,0 +1,765 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <vector>
+
+#include "Riostream.h"
+#include "TDirectory.h"
+#include "TFile.h"
+#include "TH1F.h"
+#include "TH2F.h"
+#include "TGraph.h"
+#include "TTimeStamp.h"
+
+#include "Configuration.hh"
+
+#include "utlConfigParser.hh"
+
+void Get1DHisto(TFile* reco,FILE* fout,TString dirname,TString hname){
+
+  TDirectory* tdir = (TDirectory*)reco->Get(dirname);
+  TH1F* h1d = (TH1F*)tdir->Get(hname);
+  if (h1d) {
+
+    // Connect to configuration class
+    Configuration* cfg = Configuration::GetInstance();
+
+    // Get current time for histo title
+    struct timespec now;
+    if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+      perror("- ERROR clock_gettime");
+      exit(EXIT_FAILURE);
+    }
+
+    fprintf(fout,"PLOTID %s\n",hname.Data());
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"PLOTNAME %s %s\n",hname.Data(),cfg->FormatTime(now.tv_sec));
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetXaxis()->GetXmin(),h1d->GetXaxis()->GetXmax());
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+}
+
+void Get2DHisto(TFile* reco,FILE* fout,TString dirname,TString hname){
+
+  TDirectory* tdir = (TDirectory*)reco->Get(dirname);
+  TH2F* h2d = (TH2F*)tdir->Get(hname);
+  if (h2d) {
+
+    // Connect to configuration class
+    Configuration* cfg = Configuration::GetInstance();
+
+    // Get current time for histo title
+    struct timespec now;
+    if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+      perror("- ERROR clock_gettime");
+      exit(EXIT_FAILURE);
+    }
+  
+    fprintf(fout,"PLOTID %s\n",hname.Data());
+    fprintf(fout,"PLOTTYPE heatmap\n");
+    fprintf(fout,"PLOTNAME %s %s\n",hname.Data(),cfg->FormatTime(now.tv_sec));
+    fprintf(fout,"CHANNELS %d %d\n",h2d->GetNbinsX (),h2d->GetNbinsY ());
+    fprintf(fout,"RANGE_X 0 %d\n",h2d->GetNbinsX ());
+    fprintf(fout,"RANGE_Y 0 %d\n",h2d->GetNbinsY ());
+    fprintf(fout,"TITLE_X X\n");
+    fprintf(fout,"TITLE_Y Y\n");
+    fprintf(fout,"DATA [");
+    for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+      fprintf(fout,"[");
+      for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+	if(iy <  h2d->GetNbinsY ()) {
+	  fprintf(fout,"%f,",h2d->GetBinContent(iy,ix));
+	} else {
+	  fprintf(fout,"%f",h2d->GetBinContent(iy,ix));
+	}
+      }
+      if(ix<h2d->GetNbinsX ()) {
+	fprintf(fout,"],");
+      } else {
+	fprintf(fout,"]");
+      }
+    }
+    fprintf(fout,"]\n\n");
+
+  }
+
+}
+
+void GetECalOccupancy(TFile* reco,FILE* fout) {
+
+  TDirectory* tdir = (TDirectory*)reco->Get("ECal");
+  TH2F* h2d = (TH2F*)tdir->Get("ECalOccupancy");
+
+  fprintf(fout,"PLOTID ECal_HeatMap\n");
+  fprintf(fout,"PLOTNAME ECal Occupancy\n");
+  fprintf(fout,"CHANNELS %d %d\n",h2d->GetNbinsX(),h2d->GetNbinsY());
+  fprintf(fout,"RANGE_X 0 %d\n",h2d->GetNbinsX());
+  fprintf(fout,"RANGE_Y 0 %d\n",h2d->GetNbinsY());
+  fprintf(fout,"TITLE_X X\n");
+  fprintf(fout,"TITLE_Y Y\n");
+  fprintf(fout,"PLOTTYPE heatmap\n");
+  fprintf(fout,"DATA [");
+
+  for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+
+    fprintf(fout,"[");
+    for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+      if(iy <  h2d->GetNbinsY ()) {
+	fprintf(fout,"%f,",h2d->GetBinContent(iy,ix));
+      } else {
+	fprintf(fout,"%f",h2d->GetBinContent(iy,ix));
+      }
+    }
+
+    if(ix<h2d->GetNbinsX ()) {
+      fprintf(fout,"],");
+    } else {
+      fprintf(fout,"]");
+    }
+    
+  }
+  fprintf(fout,"]\n\n");
+}
+
+void GetECalEnergy(TFile* reco,FILE* fout,Double_t MeV_pC ) {
+
+  TDirectory* tdir = (TDirectory*)reco->Get("ECal");
+  TH2F* h2d = (TH2F*)tdir->Get("ECalCharge");
+
+  fprintf(fout,"PLOTID ECal_Energy\n");
+  fprintf(fout,"PLOTNAME ECal Energy map (approx. MeV)\n");
+  fprintf(fout,"CHANNELS %d %d\n",h2d->GetNbinsX (),h2d->GetNbinsY ());
+  fprintf(fout,"RANGE_X 0 %d\n",h2d->GetNbinsX ());
+  fprintf(fout,"RANGE_Y 0 %d\n",h2d->GetNbinsY ());
+  fprintf(fout,"TITLE_X X\n");
+  fprintf(fout,"TITLE_Y Y\n");
+  fprintf(fout,"PLOTTYPE heatmap\n");
+  fprintf(fout,"DATA [");
+
+  for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+    fprintf(fout,"[");
+    for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+      if(iy <  h2d->GetNbinsY ()) {
+	fprintf(fout,"%f,",h2d->GetBinContent(iy,ix)/MeV_pC);
+      } else {
+	fprintf(fout,"%f",h2d->GetBinContent(iy,ix)/MeV_pC);
+      }
+    }
+
+    if(ix<h2d->GetNbinsX ()) {
+      fprintf(fout,"],");
+    } else {
+      fprintf(fout,"]");
+    }
+    
+  }
+
+  fprintf(fout,"]\n\n");
+}
+void GetTargetHistograms(TFile* reco,FILE* fout) {
+
+  TH1F *h1d;
+  TH2F *h2d;
+
+  TDirectory* tdir = (TDirectory*)reco->Get("Target");
+
+  //TargetBeamMultiplicity
+  h1d = (TH1F*)tdir->Get("TargetBeamMultiplicity");
+  if (h1d) {
+  
+    fprintf(fout,"PLOTID TargetBeamMultiplicity\n");
+    fprintf(fout,"PLOTNAME Target Beam Multiplicity\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetXaxis()->GetXmin(),h1d->GetXaxis()->GetXmax());
+    fprintf(fout,"TITLE_X e+ multiplicity\n");
+    fprintf(fout,"TITLE_Y Counts\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");  
+
+  }
+
+  //TargetXYmap
+  h2d = (TH2F*)tdir->Get("TargetXYmap");
+  if (h2d) {
+  
+    fprintf(fout,"PLOTID %s\n","TargetXYmap");
+    fprintf(fout,"PLOTNAME %s\n","Target XY map");
+    fprintf(fout,"CHANNELS %d %d\n",h2d->GetNbinsX (),h2d->GetNbinsY ());
+    fprintf(fout,"RANGE_X %f %f\n",h2d->GetXaxis()->GetBinLowEdge(1),h2d->GetXaxis()->GetBinLowEdge(h2d->GetNbinsX())+h2d->GetXaxis()->GetBinWidth(1));
+    fprintf(fout,"RANGE_Y %f %f\n",h2d->GetYaxis()->GetBinLowEdge(1),h2d->GetYaxis()->GetBinLowEdge(h2d->GetNbinsX())+h2d->GetYaxis()->GetBinWidth(1));
+    fprintf(fout,"TITLE_X X[mm]\n");
+    fprintf(fout,"TITLE_Y Y[mm]\n");
+    fprintf(fout,"PLOTTYPE heatmap\n");
+    fprintf(fout,"DATA [");
+
+    for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+      fprintf(fout,"[");
+      for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+	if(iy <  h2d->GetNbinsY ()) {
+	  fprintf(fout,"%f,",h2d->GetBinContent(iy,ix));
+	} else {
+	  fprintf(fout,"%f",h2d->GetBinContent(iy,ix));
+	}
+      }
+      if(ix<h2d->GetNbinsX ()) {
+	fprintf(fout,"],");
+      } else {
+	fprintf(fout,"]");
+      }
+    }
+    fprintf(fout,"]\n\n");
+
+  }
+
+  //TargetBeamSpot
+  h2d = (TH2F*)tdir->Get("TargetBeamSpot");
+  if (h2d) {
+
+    fprintf(fout,"PLOTID %s\n","TargetBeamSpot");
+    fprintf(fout,"PLOTNAME %s\n","TargetBeamSpot");
+    fprintf(fout,"CHANNELS %d %d\n",h2d->GetNbinsX (),h2d->GetNbinsY ());
+    fprintf(fout,"RANGE_X %f %f\n",h2d->GetXaxis()->GetBinLowEdge(1),h2d->GetXaxis()->GetBinLowEdge(h2d->GetNbinsX())+h2d->GetXaxis()->GetBinWidth(1));
+    fprintf(fout,"RANGE_Y %f %f\n",h2d->GetYaxis()->GetBinLowEdge(1),h2d->GetYaxis()->GetBinLowEdge(h2d->GetNbinsX())+h2d->GetYaxis()->GetBinWidth(1));
+    fprintf(fout,"TITLE_X X[mm]\n");
+    fprintf(fout,"TITLE_Y Y[mm]\n");
+    fprintf(fout,"PLOTTYPE heatmap\n");
+    fprintf(fout,"DATA [");
+    for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+      fprintf(fout,"[");
+      for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+	if(iy <  h2d->GetNbinsY ()) {
+	  fprintf(fout,"%f,",h2d->GetBinContent(iy,ix));
+	} else {
+	  fprintf(fout,"%f",h2d->GetBinContent(iy,ix));
+	}
+      }
+      
+      if(ix<h2d->GetNbinsX ()) {
+	fprintf(fout,"],");
+      } else {
+	fprintf(fout,"]");
+      }
+      
+    }
+    
+    fprintf(fout,"]\n\n");
+
+  }
+
+  //TargetProfileX
+  h1d = (TH1F*)tdir->Get("TargetProfileX");
+  if (h1d) {
+
+    fprintf(fout,"PLOTID TargetProfileX\n");
+    fprintf(fout,"PLOTNAME Target Profile X\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X X[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+
+  //TargetProfileY
+  h1d = (TH1F*)tdir->Get("TargetProfileY");
+  if (h1d) {
+  
+    fprintf(fout,"PLOTID TargetProfileY\n");
+    fprintf(fout,"PLOTNAME Target Profile Y\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X Y[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+  //TargetProfileLastX
+  h1d = (TH1F*)tdir->Get("TargetProfileLastX");
+  if (h1d) {
+  
+    fprintf(fout,"PLOTID TargetProfileLastX\n");
+    fprintf(fout,"PLOTNAME Target Profile Last X\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X X[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+  //TargetProfileLastY
+  h1d = (TH1F*)tdir->Get("TargetProfileLastY");
+  if (h1d) {
+
+    fprintf(fout,"PLOTID TargetProfileLastY\n");
+    fprintf(fout,"PLOTNAME Target Profile Last Y\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X Y[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+  //TargetProfileCNSX
+  h1d = (TH1F*)tdir->Get("TargetProfileCNSX");
+  if (h1d) {
+  
+    fprintf(fout,"PLOTID TargetProfileCNSX\n");
+    fprintf(fout,"PLOTNAME Target Profile CNSX\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X X[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+  //TargetProfileCNSY
+  h1d = (TH1F*)tdir->Get("TargetProfileCNSY");
+  if (h1d) {
+  
+    fprintf(fout,"PLOTID TargetProfileCNSY\n");
+    fprintf(fout,"PLOTNAME Target Profile CNSY\n");
+    fprintf(fout,"CHANNELS %d\n",h1d->GetNbinsX());
+    fprintf(fout,"RANGE_X %f %f\n",h1d->GetBinLowEdge(1),h1d->GetBinLowEdge(h1d->GetNbinsX())+h1d->GetBinWidth(1));
+    fprintf(fout,"TITLE_X Y[mm]\n");
+    fprintf(fout,"TITLE_Y MIPS/strip\n");
+    fprintf(fout,"PLOTTYPE histo1d\n");
+    fprintf(fout,"DATA [");
+    fprintf(fout,"[");
+    for(int ix = 1;ix<= h1d->GetNbinsX ();ix++) {
+      if(ix <  h1d->GetNbinsX ()) {
+	fprintf(fout,"%f,",h1d->GetBinContent(ix));
+      } else {
+	fprintf(fout,"%f",h1d->GetBinContent(ix));
+      }
+    }
+    fprintf(fout,"]]\n\n");
+
+  }
+
+}
+void GetTargetWaveforms(TFile* recoFile,FILE* outFile){
+
+  for(Int_t ch=0; ch<32; ch++) {
+    Get1DHisto(recoFile,outFile,"Target",TString::Format("TargetCh%d",ch));
+    Get1DHisto(recoFile,outFile,"Target",TString::Format("TargetLastCh%d",ch));
+    Get1DHisto(recoFile,outFile,"Target",TString::Format("TargetNOCNSCh%d",ch));
+    Get1DHisto(recoFile,outFile,"Target",TString::Format("TargetNOCNSLastCh%d",ch));
+    //Get1DHisto(recoFile,outFile,"Target",TString::Format("TargetQCh%d",ch));
+  }
+
+}
+
+void GetEvtTrend(TFile* tren, FILE* fout) {
+
+  TGraph* tgra = (TGraph*)tren->Get("Ent");
+  if(tgra == NULL) return;
+ 
+  // Connect to configuration class
+  Configuration* cfg = Configuration::GetInstance();
+
+  // Get current time for histo title
+  struct timespec now;
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("- ERROR clock_gettime");
+    exit(EXIT_FAILURE);
+  }
+
+  fprintf(fout,"PLOTID RecoEvt\n");
+  fprintf(fout,"PLOTNAME n. Reco Events %s \n",cfg->FormatTime(now.tv_sec));
+  fprintf(fout,"PLOTTYPE timeline\n");
+  fprintf(fout,"MODE [ \"lines+markers\" ]\n");
+  fprintf(fout,"COLOR [ \"000000\" ]\n");
+  fprintf(fout,"LEGEND [\"Reconstructed events\"]\n");
+  fprintf(fout,"DATA [[");
+
+  Int_t nn = tgra->GetN();
+  Double_t* xve = tgra->GetX();
+  Double_t* yve = tgra->GetY();
+  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
+  fprintf(fout,"[\"%f\",%f]]]\n",xve[nn-1],yve[nn-1]);
+
+  fprintf(fout,"\n");
+
+}
+
+void GetXYTrend(TFile* tren, FILE* fout) {
+
+  TGraph* tgraX = (TGraph*)tren->Get("BeamX");
+  if(tgraX == NULL) return;
+  TGraph* tgraY = (TGraph*)tren->Get("BeamY");
+  if(tgraY == NULL) return;
+ 
+  // Connect to configuration class
+  Configuration* cfg = Configuration::GetInstance();
+
+  // Get current time for histo title
+  struct timespec now;
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("- ERROR clock_gettime");
+    exit(EXIT_FAILURE);
+  }
+
+  fprintf(fout,"PLOTID BeamXY\n");
+  fprintf(fout,"PLOTNAME Beam X and Y average %s \n",cfg->FormatTime(now.tv_sec));
+  fprintf(fout,"PLOTTYPE timeline\n");
+  fprintf(fout,"MODE [ \"lines+markers\", \"lines+markers\"]\n");
+  fprintf(fout,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(fout,"TITLE_X timeline\n");
+  fprintf(fout,"TITLE_Y [mm]\n");
+  fprintf(fout,"LEGEND [\"X beam\",\"Y beam\"]\n");
+  fprintf(fout,"DATA [[");
+
+  Double_t* xve;
+  Double_t* yve;
+
+  Int_t nn = tgraX->GetN();
+
+  xve = tgraX->GetX();
+  yve = tgraX->GetY();
+  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
+  fprintf(fout,"[\"%f\",%f]],[",xve[nn-1],yve[nn-1]);
+
+  xve = tgraY->GetX();
+  yve = tgraY->GetY();
+  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
+  fprintf(fout,"[\"%f\",%f]]] ",xve[nn-1],yve[nn-1]);
+
+  fprintf(fout,"\n");
+
+}
+
+int main(int argc, char* argv[])
+{
+  
+  int c;
+
+  TString inputFileName = "";
+  TString trendFileName = "";
+  TString outputDirectory = "";
+  TString configFileName = "";
+  TString stopFileName = "";
+
+  struct timespec now;
+  
+  // Connect to configuration handler
+  Configuration* cfg = Configuration::GetInstance();
+  cfg->SetConfigFile("config/OnlineRecoMonitor.cfg"); // Change default configuration file
+
+  // Parse options
+  while ((c = getopt(argc, argv, "i:t:o:c:vh")) != -1) {
+    switch (c)
+      {
+      case 'i':
+	inputFileName = optarg;
+	break;
+      case 't':
+	trendFileName = optarg;
+	break;
+      case 'o':
+        outputDirectory = optarg;
+	break;
+      case 'c':
+        configFileName = optarg;
+	break;
+      case 'v':
+	cfg->SetVerbose(cfg->Verbose()+1);
+        break;
+      case 'h':
+        fprintf(stdout,"\nOnlineRecoMonitor -i inputfile [-o outdir] [-s stopfile] [-c configfile] [-d debug] [-v] [-h]\n\n");
+        fprintf(stdout,"  -i: define name of file with reconstruction histograms\n");
+        fprintf(stdout,"  -t: define name of file with trend graphs\n");
+        fprintf(stdout,"  -o: define directory where PadmeMonitor files will be written [default: '%s']\n",cfg->OutputDirectory().Data());
+        fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
+        fprintf(stdout,"  -v: increase verbose level (can be repeated)\n");
+        fprintf(stdout,"  -h: show this help message and exit\n\n");
+        exit(EXIT_SUCCESS);
+      case '?':
+	if (optopt == 'i' || optopt == 't' || optopt == 'o' || optopt == 'c' || optopt == 'd')
+          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint(optopt))
+          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        else
+          fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+        exit(EXIT_FAILURE);
+      default:
+        abort();
+      }
+
+  }
+
+  // Check if input file was defined
+  if (inputFileName.IsNull()) {
+    fprintf (stderr,"ERROR - No input file defined with -i option.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  struct stat buffer;
+
+  // Check if input file exists
+  if (stat(inputFileName.Data(),&buffer) != 0) {
+    fprintf (stderr,"ERROR - Input file %s does not exist.\n",inputFileName.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  //cfg->SetInputFileName(inputFileName);
+  //printf("Reading histo file %s\n",cfg->InputFileName().Data());
+
+  // Check if trend file was defined
+  if (! trendFileName.IsNull()) {
+
+    // Check if trend file exists
+    if (stat(trendFileName.Data(),&buffer) != 0) {
+      fprintf (stderr,"ERROR - Trend file %s does not exist.\n",trendFileName.Data());
+      exit(EXIT_FAILURE);
+    }
+
+    //cfg->SetTrendFileName(trendFileName);
+    //printf("Reading trend file %s\n",cfg->InputFileName().Data());
+
+  }
+
+  // Save configuration parameters for this run
+  if (! outputDirectory.IsNull()) cfg->SetOutputDirectory(outputDirectory);
+  if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
+  if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
+
+  // Show settings for this run
+  fprintf(stdout,"- Input file: '%s'\n",inputFileName.Data());
+  if (! trendFileName.IsNull()) fprintf(stdout,"- Trend file: '%s'\n",trendFileName.Data());
+  fprintf(stdout,"- Output PadmeMonitor directory: '%s'\n",cfg->OutputDirectory().Data());
+  fprintf(stdout,"- Configuration file: '%s'\n",cfg->ConfigFile().Data());
+  if (cfg->Verbose()) fprintf(stdout,"- Verbose level: %u\n",cfg->Verbose());
+
+  // Create configuration file parser
+  utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
+  if (cfg->Verbose()>1) configParser->Print();
+
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("- ERROR clock_gettime");
+    exit(EXIT_FAILURE);
+  }
+  TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
+  printf("=== OnlineRecoMonitor starting on %s\n",cfg->FormatTime(now.tv_sec));
+
+  // Check if input file is ready to be processed
+  TFile* recoFile = TFile::Open(inputFileName,"READ","data");
+  if (recoFile == NULL) {
+    printf("ERROR - Input file %s cannot be opened.\n",inputFileName.Data());
+    exit(EXIT_FAILURE);
+  }
+  if (recoFile->IsZombie()) {
+    printf("ERROR - Input file %s is a zombie.\n",inputFileName.Data());
+    exit(EXIT_FAILURE);
+  }
+  if (recoFile->TestBit(TFile::kRecovered)) {
+    printf("ERROR - Input file %s is still being written.\n",inputFileName.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  TString ftname,ffname; // Name of temporary and final output files
+  FILE* outFile; // Output file for PadmeMonitor plots
+
+  /*
+  // Create general plots
+  ftname = cfg->TmpDirectory()+"/RecoMon_General.txt";
+  ffname = cfg->OutputDirectory()+"/RecoMon_General.txt";
+  outFile = fopen(ftname.Data(),"w");
+  if(outFile == NULL) {
+    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  GetRunInfo(recoFile,outFile);
+
+  fclose(outFile);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    exit(EXIT_FAILURE);
+  }
+  */
+
+  // Create ECal plots
+  ftname = cfg->TmpDirectory()+"/RecoMon_ECal.txt";
+  ffname = cfg->OutputDirectory()+"/RecoMon_ECal.txt";
+  outFile = fopen(ftname.Data(),"w");
+  if(outFile == NULL) {
+    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  GetECalOccupancy(recoFile,outFile);
+  GetECalEnergy(recoFile,outFile,22.);
+  Get2DHisto(recoFile,outFile,"ECal","ECalCharge");
+  Get1DHisto(recoFile,outFile,"ECal","Etot");
+  Get1DHisto(recoFile,outFile,"ECal","ECALClE");
+  Get1DHisto(recoFile,outFile,"ECal","ECALTime");
+  Get2DHisto(recoFile,outFile,"ECal","ECalOccupancyOffTime");
+
+  fclose(outFile);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  // Create HEPVeto plots
+  ftname = cfg->TmpDirectory()+"/RecoMon_HEPVeto.txt";
+  ffname = cfg->OutputDirectory()+"/RecoMon_HEPVeto.txt";
+  outFile = fopen(ftname.Data(),"w");
+  if(outFile == NULL) {
+    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  Get1DHisto(recoFile,outFile,"HEPVeto","HEPVetoOccupancy");
+
+  fclose(outFile);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  // Create Target plots
+  ftname = cfg->TmpDirectory()+"/RecoMon_Target.txt";
+  ffname = cfg->OutputDirectory()+"/RecoMon_Target.txt";
+  outFile = fopen(ftname.Data(),"w");
+  if(outFile == NULL) {
+    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  GetTargetHistograms(recoFile,outFile);
+  GetTargetWaveforms(recoFile,outFile);
+
+  fclose(outFile);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    exit(EXIT_FAILURE);
+  }
+
+  recoFile->Close();
+
+  // If trend file name was set, then create trend plots
+  if (! trendFileName.IsNull()) {
+    
+    // Check if input file is ready to be processed
+    TFile* trendFile = TFile::Open(trendFileName,"READ","data");
+    if (trendFile) {
+      if (! recoFile->IsZombie()) {
+	if (! recoFile->TestBit(TFile::kRecovered)) {
+
+	  // Now we can create the trend plots
+	  ftname = cfg->TmpDirectory()+"/RecoMon_Trend.txt";
+	  ffname = cfg->OutputDirectory()+"/RecoMon_Trend.txt";
+	  outFile = fopen(ftname.Data(),"w");
+	  if(outFile == NULL) {
+	    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+	    exit(EXIT_FAILURE);
+	  }
+
+	  GetEvtTrend(trendFile,outFile);
+	  GetXYTrend(trendFile,outFile);
+	  //GetSXYTrend(trendFile,outFile);
+	  //GetPotTrend(trendFile,outFile);
+	  //GetECalEtotTrend(trendFile,outFile);
+
+	  fclose(outFile);
+	  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+	    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+	    exit(EXIT_FAILURE);
+	  }
+
+	  trendFile->Close();
+
+	} else {
+	  printf("ERROR - Trend file %s is still being written.\n",inputFileName.Data());
+	  //exit(EXIT_FAILURE);
+	}
+      } else {
+	printf("ERROR - Trend file %s is a zombie.\n",inputFileName.Data());
+	//exit(EXIT_FAILURE);
+      }
+    } else {
+      printf("ERROR - Trend file %s cannot be opened.\n",trendFileName.Data());
+      //exit(EXIT_FAILURE);
+    }
+
+  }
+
+}

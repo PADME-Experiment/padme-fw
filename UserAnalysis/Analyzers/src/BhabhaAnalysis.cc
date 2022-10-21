@@ -55,8 +55,16 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoClusters","htEVetoCluster",500,-250,250);
 
   //Cluster time length
-  fHS->BookHistoList("PVetoClusters","htlenPVetoCluster",500,-250,250);
-  fHS->BookHistoList("EVetoClusters","htlenEVetoCluster",500,-250,250);
+  //  fHS->BookHistoList("PVetoClusters","htlenPVetoCluster",500,-250,250);
+  //  fHS->BookHistoList("EVetoClusters","htlenEVetoCluster",500,-250,250);
+
+  //"Luce" = distance between last hit of one cluster (= most upstream channel + nhits) and first hit of next cluster (= most upstream channel)
+  //The "ChID" of a cluster is set as the most upstream channel in the reco
+  fHS->BookHisto2List("PVetoClusters","hLuceVsDeltaTClusPVeto",360,-180,180,1000,-500,500);
+  fHS->BookHisto2List("EVetoClusters","hLuceVsDeltaTClusEVeto",360,-180,180,1000,-500,500);
+
+  fHS->BookHisto2List("PVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusPVeto",160,-80,80,1000,-500,500);
+  fHS->BookHisto2List("EVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusEVeto",160,-80,80,1000,-500,500);
 
   //Time difference
   //  fHS->BookHistoList("BhabhaList","hDeltatPVetoEVetoCluster10nsfabs",100,-10,10);
@@ -218,10 +226,14 @@ Bool_t BhabhaAnalysis::Process(){
   //temporary variables for the loop
   double tempEClus;
   double tempT;
-  double tempearlyT;
-  double templateT;
   int tempNHit;
   int tempCh;
+
+  //variables associated to the a second cluster in the loop for ii>0
+  double temp2EClus;
+  double temp2T;
+  int temp2NHit;
+  int temp2Ch;
 
   //Box selection criteria
   Bool_t TopBoundary;
@@ -229,21 +241,16 @@ Bool_t BhabhaAnalysis::Process(){
   Bool_t LeftBoundary;
   Bool_t RightBoundary;
 
+  //"Luce" = distance between last hit of one cluster (= most upstream channel + nhits) and first hit of next cluster (= most upstream channel)
+  //The "ChID" of a cluster is set as the most upstream channel in the reco
+  Int_t LucePVeto=0;
+  Int_t LuceEVeto=0;
 
-  //most upstream and downstream channels of hits in individual clusters
-  int MostUpstreamPVeto;
-  int MostDownstreamPVeto;
-
-  int MostUpstreamEVeto=1000;;
-  int MostDownstreamEVeto=-1000;
-  
   //All EVeto Clusters
   for(int ii = 0; ii<NEVetoCluster; ii++){
     tempNHit  = fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
     tempEClus = fEvent->EVetoRecoCl->Element(ii)->GetEnergy(); 
     tempT  =  fEvent->EVetoRecoCl->Element(ii)->GetTime();
-    // tempearlyT  =  fEvent->EVetoRecoCl->Element(ii)->GetEarlyHitTime();
-    // templateT  =  fEvent->EVetoRecoCl->Element(ii)->GetLateHitTime();
     tempCh =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
 
     fHS->FillHistoList("EVetoClusters","hNHitsEVetoCluster",tempNHit);
@@ -251,6 +258,22 @@ Bool_t BhabhaAnalysis::Process(){
     fHS->FillHistoList("EVetoClusters","htEVetoCluster",tempT);
     fHS->FillHistoList("EVetoClusters","hChEVetoCluster",tempCh);
     fHS->FillHistoList("EVetoClusters","hEnergyEVetoCluster",tempEClus);
+
+    for(int jj=ii+1;jj<NEVetoCluster;jj++){
+      temp2NHit  = fEvent->EVetoRecoCl->Element(jj)->GetNHitsInClus();
+      temp2EClus = fEvent->EVetoRecoCl->Element(jj)->GetEnergy(); 
+      temp2T  =  fEvent->EVetoRecoCl->Element(jj)->GetTime();
+      temp2Ch =  fEvent->EVetoRecoCl->Element(jj)->GetChannelId();
+
+      if(temp2Ch>tempCh) LuceEVeto = temp2Ch-(tempCh+tempNHit);
+      else if(tempCh>temp2Ch) LuceEVeto = tempCh-(temp2Ch+temp2NHit);
+      else LuceEVeto = 0;
+
+      fHS->FillHisto2List("EVetoClusters","hLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
+      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))) fHS->FillHisto2List("EVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
+      if(LuceEVeto>100)      std::cout<<"ii "<<ii<<" jj"<<jj<<" tempCh "<<tempCh<<" temp2Ch "<<temp2Ch<<" tempNHit "<<tempNHit<<" temp2NHit "<<temp2NHit<<" LuceEVeto "<<LuceEVeto<<std::endl;
+
+    }
 
     fHS->FillHisto2List("EVetoClusters","hEVetoChVshNHitsEVetoCluster",tempCh,tempNHit);
     //good cluster cuts:
@@ -264,15 +287,6 @@ Bool_t BhabhaAnalysis::Process(){
 
     if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassEVeto++;
     
-    MostUpstreamEVeto=1000;
-    MostDownstreamEVeto=-1000;
-  
-
-    for(int kk = 0;kk<tempNHit; kk++){
-      //      if(){}
-    }
-
-
     //fill vectors with parameters of good hits
     NHitsEVetoGood.push_back(tempNHit);
     enEVetoGood.push_back(tempEClus);
@@ -297,6 +311,24 @@ Bool_t BhabhaAnalysis::Process(){
     fHS->FillHistoList("PVetoClusters","hChPVetoCluster",tempCh);
     fHS->FillHistoList("PVetoClusters","hEnergyPVetoCluster",tempEClus);
     
+    for(int jj=ii+1;jj<NPVetoCluster;jj++){
+      temp2NHit  = fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
+      temp2EClus = fEvent->PVetoRecoCl->Element(jj)->GetEnergy(); 
+      temp2T  =  fEvent->PVetoRecoCl->Element(jj)->GetTime();
+      temp2Ch =  fEvent->PVetoRecoCl->Element(jj)->GetChannelId();
+
+      if(temp2Ch>tempCh) LucePVeto = temp2Ch-(tempCh+tempNHit);
+      else if(tempCh>temp2Ch) LucePVeto = tempCh-(temp2Ch+temp2NHit);
+      else LucePVeto=0;
+
+      fHS->FillHisto2List("PVetoClusters","hLuceVsDeltaTClusPVeto",LucePVeto,temp2T-tempT);
+
+      //two good clusters
+      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))&&(tempEClus/tempNHit)>0.7&&(temp2EClus/temp2NHit)>0.7)
+	fHS->FillHisto2List("PVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusPVeto",LucePVeto,temp2T-tempT);
+    }
+
+
     fHS->FillHisto2List("PVetoClusters","hPVetoChVshNHitsPVetoCluster",tempCh,tempNHit);
 
     if(isMC){

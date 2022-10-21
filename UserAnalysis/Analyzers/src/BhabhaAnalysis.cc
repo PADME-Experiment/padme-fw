@@ -39,10 +39,16 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->CreateList("MCBhabha");
   fHS->CreateList("TimeCorrectionList");
   fHS->CreateList("BackgroundList");
+
+  //No. PoT used in this analysis
+  fHS->BookHistoList("NPoTAnalysis","hNPotBhabha",600,-1000.,59000.);
   
   //Number of clusters
   fHS->BookHistoList("PVetoClusters","hNPVetoCluster",100,0,100);
   fHS->BookHistoList("EVetoClusters","hNEVetoCluster",100,0,100);
+
+  fHS->BookHistoList("PVetoClusters","hVetoChasOver302to3HitsGoodChaNPVetoCluster",10,0,10);
+  fHS->BookHistoList("EVetoClusters","hVetoChasOver302to3HitsGoodChaNEVetoCluster",10,0,10);
 
   //Cluster time
   fHS->BookHistoList("PVetoClusters","htPVetoCluster",500,-250,250);
@@ -76,7 +82,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   //Cluster channel
   fHS->BookHistoList("PVetoClusters","hChPVetoCluster",96,0,96);
   fHS->BookHistoList("EVetoClusters","hChEVetoCluster",96,0,96);
-
+ 
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hChToEnergyPositron",330,0,330);
   fHS->BookHistoList("EVetoClusters","hChToEnergyElectron",330,0,330);
@@ -172,7 +178,9 @@ Bool_t BhabhaAnalysis::Process(){
   
   fNPoT = fEvent->TargetRecoBeam->getnPOT();
 
-  //if(fNPoT>10000) return 0;
+  if(fNPoT>10000) return 0;
+
+  fHS->FillHistoList("NPoTAnalysis","hNPotBhabha",fNPoT);
 
   //Number of PVeto clusters
   Int_t NPVetoCluster = fEvent->PVetoRecoCl->GetNElements();
@@ -182,10 +190,18 @@ Bool_t BhabhaAnalysis::Process(){
   Int_t NEVetoCluster = fEvent->EVetoRecoCl->GetNElements();
   fHS->FillHistoList("EVetoClusters","hNEVetoCluster",NEVetoCluster);
 
+  //Variables for number of clusters pass initial "good" cluster selection
+  Int_t NPVetoGoodClusters=0;
+  Int_t NEVetoGoodClusters=0;
+
   //Containers for variables of "good" clusters
   //time
   std::vector<double> tPVetoGood;
   std::vector<double> tEVetoGood;
+
+  //counters for clusters that pass channel selections
+  int npassPVeto=0;
+  int npassEVeto=0;
 
   //channel
   std::vector<int> chPVetoGood;
@@ -212,6 +228,14 @@ Bool_t BhabhaAnalysis::Process(){
   Bool_t BottomBoundary;
   Bool_t LeftBoundary;
   Bool_t RightBoundary;
+
+
+  //most upstream and downstream channels of hits in individual clusters
+  int MostUpstreamPVeto;
+  int MostDownstreamPVeto;
+
+  int MostUpstreamEVeto=1000;;
+  int MostDownstreamEVeto=-1000;
   
   //All EVeto Clusters
   for(int ii = 0; ii<NEVetoCluster; ii++){
@@ -235,12 +259,28 @@ Bool_t BhabhaAnalysis::Process(){
     //energy per hit > 0.7
     if(!(tempEClus/tempNHit)>0.7) continue;
 
+    //Counter of EVeto clusters that pass
+    NEVetoGoodClusters++;
+
+    if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassEVeto++;
+    
+    MostUpstreamEVeto=1000;
+    MostDownstreamEVeto=-1000;
+  
+
+    for(int kk = 0;kk<tempNHit; kk++){
+      //      if(){}
+    }
+
+
     //fill vectors with parameters of good hits
     NHitsEVetoGood.push_back(tempNHit);
     enEVetoGood.push_back(tempEClus);
     tEVetoGood.push_back(tempT);
     chEVetoGood.push_back(tempCh);
   }
+
+  fHS->FillHistoList("EVetoClusters","hVetoChasOver302to3HitsGoodChaNEVetoCluster", npassEVeto);
 
   int tempEvCh;
   
@@ -280,12 +320,19 @@ Bool_t BhabhaAnalysis::Process(){
     //energy per hit > 0.7
     if(!(tempEClus/tempNHit)>0.7) continue;
 
+    //Counter of PVeto clusters that pass
+    NPVetoGoodClusters++;
+
     //fill vectors with parameters of good hits
     NHitsPVetoGood.push_back(tempNHit);
     enPVetoGood.push_back(tempEClus);
     tPVetoGood.push_back(tempT);
     chPVetoGood.push_back(tempCh);
+
+    if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassPVeto++;
+
   }
+  fHS->FillHistoList("PVetoClusters","hVetoChasOver302to3HitsGoodChaNPVetoCluster", npassPVeto);
 
   //time
   double tPVeto;
@@ -317,10 +364,13 @@ Bool_t BhabhaAnalysis::Process(){
   double enBremPositron;
   double enBremElectron;
 
-  int npass =0;
+  if(NEVetoGoodClusters!=NHitsEVetoGood.size()||NPVetoGoodClusters!=NHitsPVetoGood.size()){
+    std::cout<<"Mismatched cluster sizes in BhabhaAnalysis. Check vector pushback and counter increase"<<std::endl;
+    return 0;
+  }
 
   //loop over good clusters
-  for(int ii = 0; ii<NHitsEVetoGood.size(); ii++){
+  for(int ii = 0; ii<NEVetoGoodClusters; ii++){
     //import EVeto variables
     tEVeto     =  tEVetoGood[ii];
     chEVeto    =  chEVetoGood[ii];
@@ -328,8 +378,8 @@ Bool_t BhabhaAnalysis::Process(){
     enEVeto    =  enEVetoGood[ii];
 
     //   if(chEVeto>51&&chEVeto<56) continue;
-
-    for(int jj = 0; jj<NHitsPVetoGood.size(); jj++){
+ 
+    for(int jj = 0; jj<NPVetoGoodClusters; jj++){
       
       //      std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
 
@@ -340,17 +390,6 @@ Bool_t BhabhaAnalysis::Process(){
       enPVeto    =  enPVetoGood[jj];
 
       //histograms of raw variables
-      //      fHS->FillHistoList("BhabhaList","hDeltatPVetoEVetoCluster",tPVeto-tEVeto);
-      fHS->FillHistoList("PVetoClusters","hChToEnergyPositron",enBremPositron);
-      fHS->FillHistoList("EVetoClusters","hChToEnergyElectron",enBremElectron);
-
-      //positron energy as function of channel, assuming no angle to beam (eg Brem), from Mauro MonteCarlo 22/4/21
-      enBremPositron = 20.15+1.094*chPVeto+0.0328*chPVeto*chPVeto;
-      enBremElectron = 20.15+1.094*chEVeto+0.0328*chEVeto*chEVeto;
-
-      //sum of e+ e- energies as reconstructed using Bremsstrahlung relation
-      fHS->FillHistoList("BhabhaList","hChToEnergySum",enBremElectron+enBremPositron);
-
       //time difference corrected for trajectory
       deltaCh = chPVeto-chEVeto;
       deltaTtraj = TMath::Power(deltaCh,3)*-6.5e-7+TMath::Power(deltaCh,2)*3.2e-6+deltaCh*0.04-0.07;
@@ -386,12 +425,12 @@ Bool_t BhabhaAnalysis::Process(){
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	  if(chPVeto>30&&chEVeto>30){
-	    std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
-	    npass++;
+	    //	    std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
 	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+
 	    if(fabs(deltaTcorrect)>5){
 	      if(chPVeto+chEVeto==99){
 		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
@@ -426,7 +465,7 @@ Bool_t BhabhaAnalysis::Process(){
 	}
       }
 
-      //within 10ns?
+      /*      //within 10ns?
       if(!(std::fabs(tPVeto-tEVeto)<10)) continue;
       fHS->FillHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
       if((tPVeto-tEVeto)>(0.03*(chPVeto-chEVeto)+1.15)){
@@ -476,11 +515,9 @@ Bool_t BhabhaAnalysis::Process(){
       if(!(chEVeto>chPVeto)) continue;
       fHS->FillHistoList("BhabhaList","hChToEnergySum10nsWindowGoodMoreEnergeticElectron",enBremElectron+enBremPositron);
       // fHS->FillHisto2List("BhabhaList","hLeadingElectronGoodChasEnergyCut2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",chPVeto,chEVeto);
-      // fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);
+      // fHS->FillHistoList("TimeCorrectionList","hdeltaTcorrectMoreEnergeticElectronGoodChasEnergyCut2to3HitsPVetoEVeto",deltaTcorrect);*/
     }
   }
-
-  std::cout<<"event no "<<fEvent->RecoEvent->GetEventNumber()<<" npass "<<npass<<std::endl;
 
   //then do double loop to find couples:
   //3. do deltaTcorrection using plot from june

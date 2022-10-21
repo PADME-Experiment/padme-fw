@@ -57,7 +57,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
-  std::cout << cfg->GetName() << "***I'M THE NEW EVETO DIGITIZER*" <<  std::endl;
+  std::cout << cfg->GetName() << "***I'M THE NEW PVETO DIGITIZER*" <<  std::endl;
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   PrintConfig();
@@ -242,29 +242,30 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
 
   fileOut    = new TFile(fileoutname, "RECREATE");
   
-  hNoEventsReconstructed     = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
-  hOccupancy                 = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
-  hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
-  hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
-  hRawV                      = new TH1F("RawV","RawV",400,0,400);
-  hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
-  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
-  hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
-  hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
-  hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
-  hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
-  hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
-  hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
-  hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
-  hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
-  hMinTimeDiffDeriv          = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,100);
-  hVRatio                    = new TH1F("VRatio","VRatio",50,0,5);  
-  hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
-  hNoiseRMSAvg               = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
-  hYMaxRawYTSpecRatio        = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
-  hYRiseYTSpecRatio          = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
-  hYMaxDerivYTSpecRatio      = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
+  hNoEventsReconstructed      = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
+  hOccupancy                  = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
+  hOccupancyOneHit            = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
+  hNoHitsDeriv                = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
+  hRawV                       = new TH1F("RawV","RawV",400,0,400);
+  hRawVCorrect                = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
+  hRawVCorrectChannels20to70  = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
+  hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
+  hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
+  hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
+  hDerivV                     = new TH1F("DerivV","DerivV",100,0,200);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
+  hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
+  hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
+  hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
+  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",1000,0,200);
+  hMinTimeDiffDerivChas30to70 = new TH1F("MinTimeDiffDerivChas30to70","MinTimeDiffDerivChas30to70",1000,0,200);
+  hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
+  hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
+  hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
+  hYMaxRawYTSpecRatio         = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
+  hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
+  hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
@@ -328,7 +329,9 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
     hHitEnergy->Write();
     hHitEnergySingleHit->Write();
     hHitTime->Write();
-
+    hMinTimeDiffDeriv->Write();
+    hMinTimeDiffDerivChas30to70->Write();
+    
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
@@ -521,6 +524,8 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     if(myiHit>1){
       hAmpDiffVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
+      hMinTimeDiffDeriv->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
+      if(GetChID()>29&&GetChID()<71)      hMinTimeDiffDerivChas30to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
     }
   }
   

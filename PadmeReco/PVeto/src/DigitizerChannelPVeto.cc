@@ -258,8 +258,8 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
   hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
-  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",1000,0,200);
-  hMinTimeDiffDerivChas30to70 = new TH1F("MinTimeDiffDerivChas30to70","MinTimeDiffDerivChas30to70",1000,0,200);
+  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
+  hMinTimeDiffDerivChas30to70 = new TH1F("MinTimeDiffDerivChas30to70","MinTimeDiffDerivChas30to70",100,0,200);
   hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
   hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
   hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);

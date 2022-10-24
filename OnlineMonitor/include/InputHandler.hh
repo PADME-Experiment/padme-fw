@@ -36,6 +36,7 @@ private:
   Int_t OpenFileInStream(UChar_t,UInt_t);
   TString FormatFilename(UChar_t,UInt_t);
   Bool_t FileExists(TString);
+  Int_t GetLocalFileSize(TString);
 
   // Each stream uses a different TFile and a different TRawEvent
   TFile* fTFile[CONFIGURATION_N_STREAMS_MAX];

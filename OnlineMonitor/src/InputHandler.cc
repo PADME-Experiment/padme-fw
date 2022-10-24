@@ -14,6 +14,8 @@
 
 #include "InputHandler.hh"
 
+#define SIZE_THRESHOLD 10000
+
 InputHandler::InputHandler()
 {
 
@@ -250,23 +252,26 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
   // Wait for file to be written to
   start_time = time(0);
   while(true) {
-    fTFile[stream] = new TFile(streamFilename,"READ");
-    //fTFile[stream]->Open(streamFilename,"READ");
-    //fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
-    if (! fTFile[stream]->IsZombie()) break;
-    delete fTFile[stream];
-    //fTFile[stream]->Close();
-    if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
-    if (FileExists(fConfig->StopFile())) {
-      // Run has ended: we can gracefully exit
-      if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
-      if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
-      return 1;
-    }
-    if (difftime(time(0),start_time) > fWaitTimeout) {
-      // New file stays empty for a long time: problem!
-      printf("InputHandler::OpenFileInStream - WARNING - New file '%s' created but not filled for a long time: exiting.\n",streamFilename.Data());
-      return -1;
+    // If file is local check that at least some data were written
+    if ( streamFilename.BeginsWith("root:") || (GetLocalFileSize(streamFilename) > SIZE_THRESHOLD) ) {
+      fTFile[stream] = new TFile(streamFilename,"READ");
+      //fTFile[stream]->Open(streamFilename,"READ");
+      //fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
+      if (! fTFile[stream]->IsZombie()) break;
+      delete fTFile[stream];
+      //fTFile[stream]->Close();
+      if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
+      if (FileExists(fConfig->StopFile())) {
+	// Run has ended: we can gracefully exit
+	if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+	if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
+	return 1;
+      }
+      if (difftime(time(0),start_time) > fWaitTimeout) {
+	// New file stays empty for a long time: problem!
+	printf("InputHandler::OpenFileInStream - WARNING - New file '%s' created but not filled for a long time: exiting.\n",streamFilename.Data());
+	return -1;
+      }
     }
     sleep(fSleepPeriod); // File is still empty: sleep and retry
   }
@@ -351,5 +356,22 @@ Bool_t InputHandler::FileExists(TString fileName)
   }
 
   return exists;
+
+}
+
+Int_t InputHandler::GetLocalFileSize(TString fileName)
+{
+
+  if (fConfig->Verbose() > 2) printf("InputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
+
+  Int_t fileSize = 0;
+
+  // Get size of local file if it exists
+  struct stat filestat;
+  if ( stat(Form(fileName.Data()),&filestat) == 0 ) fileSize = filestat.st_size;
+
+  if (fConfig->Verbose() > 2) printf("InputHandler::GetLocalFileSize - File %s has size %d\n",fileName.Data(),fileSize);
+
+  return fileSize;
 
 }

@@ -255,12 +255,16 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
     // If file is local check that at least some data were written
     if ( streamFilename.BeginsWith("root:") || (GetLocalFileSize(streamFilename) > SIZE_THRESHOLD) ) {
       fTFile[stream] = new TFile(streamFilename,"READ");
-      //fTFile[stream]->Open(streamFilename,"READ");
-      //fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
-      if (! fTFile[stream]->IsZombie()) break;
-      delete fTFile[stream];
-      //fTFile[stream]->Close();
-      if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
+      if (fTFile[stream]) {
+	//fTFile[stream]->Open(streamFilename,"READ");
+	//fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
+	if (! fTFile[stream]->IsZombie()) break;
+	delete fTFile[stream];
+	//fTFile[stream]->Close();
+	if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
+      } else {
+	printf("InputHandler::OpenFileInStream - WARNING - New file '%s' was created but could not be opened as a TFile.\n",streamFilename.Data());
+      }
     }
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit

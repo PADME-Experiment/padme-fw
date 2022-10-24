@@ -194,26 +194,30 @@ Int_t InputHandler::WaitForFileToGrow()
   time_t start_time = time(0);
   while(true) {
     // Close and reopen file
-    delete fTFile[fCurrentStream];
+    if (fTFile[fCurrentStream]) { delete fTFile[fCurrentStream]; fTFile[fCurrentStream] = 0; }
     //fTFile[fCurrentStream]->Close();
     TString streamFilename = FormatFilename(fCurrentStream,fCurrentFileInStream[fCurrentStream]);
-    //fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
+    fTFile[fCurrentStream] = new TFile(streamFilename,"READ");
     //fTFile[fCurrentStream]->Open(streamFilename,"READ");
-    fTFile[fCurrentStream] = TFile::Open(streamFilename.Data(),"READ");
-    if (! fTFile[fCurrentStream]->IsZombie()) {
-      if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
-	fCurrentFileIsOpen[fCurrentStream] = true;
-      } else {
-	fCurrentFileIsOpen[fCurrentStream] = false;
+    //fTFile[fCurrentStream] = TFile::Open(streamFilename.Data(),"READ");
+    if (fTFile[fCurrentStream]) {
+      if (! fTFile[fCurrentStream]->IsZombie()) {
+	if (fTFile[fCurrentStream]->TestBit(TFile::kRecovered)) {
+	  fCurrentFileIsOpen[fCurrentStream] = true;
+	} else {
+	  fCurrentFileIsOpen[fCurrentStream] = false;
+	}
+	gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
+	fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
+	UInt_t totEvents = fTTree[fCurrentStream]->GetEntries();
+	if (totEvents > fTotalEventsInFile[fCurrentStream]) {
+	  fTotalEventsInFile[fCurrentStream] = totEvents;
+	  return 1; // 1: file has grown
+	}
+	if (! fCurrentFileIsOpen[fCurrentStream]) return 0; // 0: file did not grow but was finalized
       }
-      gDirectory->GetObject("RawEvents",fTTree[fCurrentStream]);
-      fTTree[fCurrentStream]->SetBranchAddress("RawEvent",&fTRawEvent[fCurrentStream]);
-      UInt_t totEvents = fTTree[fCurrentStream]->GetEntries();
-      if (totEvents > fTotalEventsInFile[fCurrentStream]) {
-	fTotalEventsInFile[fCurrentStream] = totEvents;
-	return 1; // 1: file has grown
-      }
-      if (! fCurrentFileIsOpen[fCurrentStream]) return 0; // 0: file did not grow but was finalized
+    } else {
+      printf("InputHandler::WaitForFileToGrow - WARNING - File '%s' could not be reopened.\n",streamFilename.Data());
     }
     // File is either a zombie or did not grow and was not finalized: sleep and retry
     if (difftime(time(0),start_time) > fWaitTimeout) return 2; // 2: file did not grow for a long time
@@ -255,11 +259,12 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
     // If file is local check that at least some data were written
     if ( streamFilename.BeginsWith("root:") || (GetLocalFileSize(streamFilename) > SIZE_THRESHOLD) ) {
       fTFile[stream] = new TFile(streamFilename,"READ");
+      //fTFile[stream]->Open(streamFilename,"READ");
+      //fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
       if (fTFile[stream]) {
-	//fTFile[stream]->Open(streamFilename,"READ");
-	//fTFile[stream] = TFile::Open(streamFilename.Data(),"READ");
 	if (! fTFile[stream]->IsZombie()) break;
-	delete fTFile[stream];
+	// File is still a zombie: close it and wait
+	delete fTFile[stream]; fTFile[stream] = 0;
 	//fTFile[stream]->Close();
 	if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
       } else {

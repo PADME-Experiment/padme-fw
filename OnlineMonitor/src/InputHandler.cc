@@ -14,7 +14,7 @@
 
 #include "InputHandler.hh"
 
-#define SIZE_THRESHOLD 10000
+#define SIZE_THRESHOLD 100000
 
 InputHandler::InputHandler()
 {
@@ -261,17 +261,17 @@ Int_t InputHandler::OpenFileInStream(UChar_t stream, UInt_t filenr)
       delete fTFile[stream];
       //fTFile[stream]->Close();
       if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
-      if (FileExists(fConfig->StopFile())) {
-	// Run has ended: we can gracefully exit
-	if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
-	if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
-	return 1;
-      }
-      if (difftime(time(0),start_time) > fWaitTimeout) {
-	// New file stays empty for a long time: problem!
-	printf("InputHandler::OpenFileInStream - WARNING - New file '%s' created but not filled for a long time: exiting.\n",streamFilename.Data());
-	return -1;
-      }
+    }
+    if (FileExists(fConfig->StopFile())) {
+      // Run has ended: we can gracefully exit
+      if (fConfig->Verbose()) printf("InputHandler::OpenFileInStream - Stop file %s found\n",fConfig->StopFile().Data());
+      if (std::remove(fConfig->StopFile().Data()) != 0) perror( "Error deleting stop file" );
+      return 1;
+    }
+    if (difftime(time(0),start_time) > fWaitTimeout) {
+      // New file stays empty for a long time: problem!
+      printf("InputHandler::OpenFileInStream - WARNING - New file '%s' created but not filled for a long time: exiting.\n",streamFilename.Data());
+      return -1;
     }
     sleep(fSleepPeriod); // File is still empty: sleep and retry
   }

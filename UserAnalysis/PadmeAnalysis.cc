@@ -394,7 +394,7 @@ int main(Int_t argc, char **argv)
     
     if (doNtuple) stdNtuple->Fill(event);
     UserAn->Process();
-    
+  
   }
   
   if (fVerbose) printf("---> Finalizing user analysis\n");

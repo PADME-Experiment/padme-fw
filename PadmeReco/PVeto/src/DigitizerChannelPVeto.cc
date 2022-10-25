@@ -103,7 +103,6 @@ Double_t DigitizerChannelPVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1
 }
 
 Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
-
   RawGetMax=0;
   DerivGetMax=0;
   
@@ -175,7 +174,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }     
       //if(Time<50||Time>350)
-	fAnalogPrint=1;
+      fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -208,6 +207,15 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
       std::cout<<"SORTING ISN'T WORKING"<<std::endl;
       return -100;
     }
+    if(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2){
+      std::cout<<"EventCounter "<<EventCounter<<" GetChID() "<<GetChID()<<" ii "<<ii<<" tDerivSortHitVec[ii] "<<tDerivSortHitVec[ii]<<" tDerivSortHitVec[ii-1] "<<tDerivSortHitVec[ii-1]<<std::endl;
+      fAnalogPrint=1;
+    }
+    else{
+      fAnalogPrint=0;
+    }
+
+    if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
 
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
@@ -230,7 +238,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   }//end loop over hits
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  
+  if(fAnalogPrint==1)   std::cout<<"Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<std::endl;
   return Time;
 }
 

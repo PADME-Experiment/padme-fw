@@ -896,7 +896,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   if(!fFirstHit) return;
   //there is a single hit reconstructed and saved; if there is a second (third) hit I redefine this reconstructed hit 
   if (fGlobalMode->GetGlobalDebugMode())
-    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
+    //    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
   if(!fSaturatedHit){

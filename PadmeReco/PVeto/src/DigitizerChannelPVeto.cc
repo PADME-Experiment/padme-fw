@@ -43,10 +43,10 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
   fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
-  fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
+  fTimeCalibration  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 2); 
   fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
-  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",1);
+  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",2);
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -57,7 +57,7 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl; 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
-  std::cout << cfg->GetName() << "***I'M THE NEW EVETO DIGITIZER*" <<  std::endl;
+  std::cout << cfg->GetName() << "***I'M THE NEW PVETO DIGITIZER*" <<  std::endl;
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   PrintConfig();
@@ -103,7 +103,6 @@ Double_t DigitizerChannelPVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1
 }
 
 Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
-
   RawGetMax=0;
   DerivGetMax=0;
   
@@ -148,8 +147,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fAmpThresholdLow=12;
     }*/
   //  else{
-    fAmpThresholdHigh=8;
-    fAmpThresholdLow=8;
+  //    fAmpThresholdHigh=8;
+  //    fAmpThresholdLow=8;
     //}
 
   if(VMax>fAmpThresholdHigh){
@@ -175,7 +174,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }     
       //if(Time<50||Time>350)
-	fAnalogPrint=1;
+      fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -201,12 +200,18 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   //  Double_t hitV;//includes tail correction
   double tailfraction=0;
   double DeltaTSortSamples=0;
+
+  bool analogchecker = 0;
  
   for (UShort_t ii = 0 ; ii != index.size() ; ii++) {
     tDerivSortHitVec.push_back(tDerivHitVec[index[ii]]);
     if(ii>0&&tDerivSortHitVec[ii]<tDerivSortHitVec[ii-1]){ //check that the time sorting has worked correctly
       std::cout<<"SORTING ISN'T WORKING"<<std::endl;
       return -100;
+    }
+    if(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2){
+      std::cout<<"EventCounter "<<EventCounter<<" GetChID() "<<GetChID()<<" ii "<<ii<<" tDerivSortHitVec[ii] "<<tDerivSortHitVec[ii]<<" tDerivSortHitVec[ii-1] "<<tDerivSortHitVec[ii-1]<<std::endl;
+      analogchecker = 1;
     }
 
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
@@ -229,8 +234,13 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
   }//end loop over hits
 
+  //  if(analogchecker==1) fAnalogPrint=1;
+  //  else fAnalogPrint =0;
+  //  if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
+
+
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  
+  if(fAnalogPrint==1)   std::cout<<"EventCounter "<<EventCounter<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<std::endl;
   return Time;
 }
 
@@ -242,29 +252,30 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
 
   fileOut    = new TFile(fileoutname, "RECREATE");
   
-  hNoEventsReconstructed     = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
-  hOccupancy                 = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
-  hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
-  hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
-  hRawV                      = new TH1F("RawV","RawV",400,0,400);
-  hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
-  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
-  hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
-  hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
-  hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                    = new TH1F("DerivV","DerivV",100,0,200);
-  hDerivVOneHit              = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
-  hDerivVCorrect             = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
-  hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
-  hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
-  hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
-  hMinTimeDiffDeriv          = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,100);
-  hVRatio                    = new TH1F("VRatio","VRatio",50,0,5);  
-  hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
-  hNoiseRMSAvg               = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
-  hYMaxRawYTSpecRatio        = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
-  hYRiseYTSpecRatio          = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
-  hYMaxDerivYTSpecRatio      = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
+  hNoEventsReconstructed      = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
+  hOccupancy                  = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
+  hOccupancyOneHit            = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
+  hNoHitsDeriv                = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
+  hRawV                       = new TH1F("RawV","RawV",400,0,400);
+  hRawVCorrect                = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
+  hRawVCorrectChannels20to70  = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
+  hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
+  hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
+  hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
+  hDerivV                     = new TH1F("DerivV","DerivV",100,0,200);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
+  hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
+  hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
+  hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
+  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
+  hMinTimeDiffDerivChas30to70 = new TH1F("MinTimeDiffDerivChas30to70","MinTimeDiffDerivChas30to70",100,0,200);
+  hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
+  hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
+  hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
+  hYMaxRawYTSpecRatio         = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
+  hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
+  hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
@@ -328,7 +339,9 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
     hHitEnergy->Write();
     hHitEnergySingleHit->Write();
     hHitTime->Write();
-
+    hMinTimeDiffDeriv->Write();
+    hMinTimeDiffDerivChas30to70->Write();
+    
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
@@ -406,7 +419,9 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
 }
 
 void DigitizerChannelPVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
-  if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
+    if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  }
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 PVeto channels but in PVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in PVeto.cfg but defaults to 5.
@@ -519,6 +534,8 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     if(myiHit>1){
       hAmpDiffVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
+      hMinTimeDiffDeriv->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
+      if(GetChID()>29&&GetChID()<71)      hMinTimeDiffDerivChas30to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
     }
   }
   
@@ -558,19 +575,25 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
   char fname[100];
   //Int_t Calibration=0;
 
-  if(fTimeCorrection==1&&fTimeCalibrationFile==1){
-    sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
-
-    std::ifstream myFile(fname);
+  if(fTimeCorrection==1){
+    if(fTimeCalibration==1){
+      sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
+      std::ifstream myFile(fname);
     
-    PVetoTimeCalib.open(fname);
-    if (PVetoTimeCalib.is_open()){
-      double temp;
-      for (int i=0;i<96;i++){
-	PVetoTimeCalib >> temp >> fTimeCalibCh[i];
-	//std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+      PVetoTimeCalib.open(fname);
+      if (PVetoTimeCalib.is_open()){
+	double temp;
+	for (int i=0;i<96;i++){
+	  PVetoTimeCalib >> temp >> fTimeCalibCh[i];
+	  //std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+	}
+	PVetoTimeCalib.close();
       }
-      PVetoTimeCalib.close();
+    }
+    else if(fTimeCorrection==1&&fTimeCalibration==2){
+      //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in PVeto-SAC Bremsstrahlung in data, and subtracting the peak of time differences in PVeto-SAC Bremsstrahlung in the full-beamline MC
+      if(GetChID()<48) 	fTimeCalibCh[GetChID()]=42.5;
+      else fTimeCalibCh[GetChID()]=39.9;
     }
     else{ 
       std::cout<<"No previous data available for PVeto, resorting to default calibration constant (0)"<<std::endl;

@@ -611,6 +611,46 @@ int main(int argc, char* argv[])
   utl::ConfigParser* configParser = new utl::ConfigParser((const std::string)cfg->ConfigFile());
   if (cfg->Verbose()>1) configParser->Print();
 
+  // Enable/disable detector plots according to defaults and configuration file
+
+  Bool_t plotECal      = true;
+  Bool_t plotETag      = false;
+  Bool_t plotEVeto     = false;
+  Bool_t plotPVeto     = false;
+  Bool_t plotHEPVeto   = true;
+  Bool_t plotSAC       = false;
+  Bool_t plotLeadGlass = false;
+  Bool_t plotTarget    = true;
+  Bool_t plotTrends    = true;
+
+  if ( configParser->HasConfig("PLOT","ECal") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","ECal") ) == 1)      { plotECal = true; }      else { plotECal = false; }
+  }
+  if ( configParser->HasConfig("PLOT","ETag") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","ETag") ) == 1)      { plotETag = true; }      else { plotETag = false; }
+  }
+  if ( configParser->HasConfig("PLOT","EVeto") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","EVeto") ) == 1)     { plotEVeto = true; }     else { plotEVeto = false; }
+  }
+  if ( configParser->HasConfig("PLOT","PVeto") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","PVeto") ) == 1)     { plotPVeto = true; }     else { plotPVeto = false; }
+  }
+  if ( configParser->HasConfig("PLOT","HEPVeto") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","HEPVeto") ) == 1)   { plotHEPVeto = true; }   else { plotHEPVeto = false; }
+  }
+  if ( configParser->HasConfig("PLOT","SAC") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","SAC") ) == 1)       { plotSAC = true; }       else { plotSAC = false; }
+  }
+  if ( configParser->HasConfig("PLOT","LeadGlass") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","LeadGlass") ) == 1) { plotLeadGlass = true; } else { plotLeadGlass = false; }
+  }
+  if ( configParser->HasConfig("PLOT","Target") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","Target") ) == 1)    { plotTarget = true; }    else { plotTarget = false; }
+  }
+  if ( configParser->HasConfig("PLOT","Trends") ) {
+    if ( std::stoi(configParser->GetSingleArg("PLOT","Trends") ) == 1)    { plotTrends = true; }    else { plotTrends = false; }
+  }
+
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
     exit(EXIT_FAILURE);
@@ -656,73 +696,102 @@ int main(int argc, char* argv[])
   */
 
   // Create ECal plots
-  ftname = cfg->TmpDirectory()+"/RecoMon_ECal.txt";
-  ffname = cfg->OutputDirectory()+"/RecoMon_ECal.txt";
-  outFile = fopen(ftname.Data(),"w");
-  if(outFile == NULL) {
-    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
-    exit(EXIT_FAILURE);
+  if (plotECal) {
+
+    ftname = cfg->TmpDirectory()+"/RecoMon_ECal.txt";
+    ffname = cfg->OutputDirectory()+"/RecoMon_ECal.txt";
+    outFile = fopen(ftname.Data(),"w");
+    if(outFile == NULL) {
+      printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+      exit(EXIT_FAILURE);
+    }
+
+    GetECalOccupancy(recoFile,outFile);
+    GetECalEnergy(recoFile,outFile,22.);
+    Get2DHisto(recoFile,outFile,"ECal","ECalCharge");
+    Get1DHisto(recoFile,outFile,"ECal","Etot");
+    Get1DHisto(recoFile,outFile,"ECal","ECALClE");
+    Get1DHisto(recoFile,outFile,"ECal","ECALTime");
+    Get2DHisto(recoFile,outFile,"ECal","ECalOccupancyOffTime");
+
+    fclose(outFile);
+    if ( std::rename(ftname.Data(),ffname.Data()) ) {
+      printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+      exit(EXIT_FAILURE);
+    }
+
   }
 
-  GetECalOccupancy(recoFile,outFile);
-  GetECalEnergy(recoFile,outFile,22.);
-  Get2DHisto(recoFile,outFile,"ECal","ECalCharge");
-  Get1DHisto(recoFile,outFile,"ECal","Etot");
-  Get1DHisto(recoFile,outFile,"ECal","ECALClE");
-  Get1DHisto(recoFile,outFile,"ECal","ECALTime");
-  Get2DHisto(recoFile,outFile,"ECal","ECalOccupancyOffTime");
+  // Create ETag plots
+  if (plotETag) {;}
 
-  fclose(outFile);
-  if ( std::rename(ftname.Data(),ffname.Data()) ) {
-    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
-    exit(EXIT_FAILURE);
-  }
+  // Create EVeto plots
+  if (plotEVeto) {;}
+
+  // Create PVeto plots
+  if (plotPVeto) {;}
 
   // Create HEPVeto plots
-  ftname = cfg->TmpDirectory()+"/RecoMon_HEPVeto.txt";
-  ffname = cfg->OutputDirectory()+"/RecoMon_HEPVeto.txt";
-  outFile = fopen(ftname.Data(),"w");
-  if(outFile == NULL) {
-    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
-    exit(EXIT_FAILURE);
+  if (plotHEPVeto) {
+
+    ftname = cfg->TmpDirectory()+"/RecoMon_HEPVeto.txt";
+    ffname = cfg->OutputDirectory()+"/RecoMon_HEPVeto.txt";
+    outFile = fopen(ftname.Data(),"w");
+    if(outFile == NULL) {
+      printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+      exit(EXIT_FAILURE);
+    }
+
+    Get1DHisto(recoFile,outFile,"HEPVeto","HEPVetoOccupancy");
+
+    fclose(outFile);
+    if ( std::rename(ftname.Data(),ffname.Data()) ) {
+      printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+      exit(EXIT_FAILURE);
+    }
+
   }
 
-  Get1DHisto(recoFile,outFile,"HEPVeto","HEPVetoOccupancy");
+  // Create SAC plots
+  if (plotSAC) {;}
 
-  fclose(outFile);
-  if ( std::rename(ftname.Data(),ffname.Data()) ) {
-    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
-    exit(EXIT_FAILURE);
-  }
+  // Create LeadGlass plots
+  if (plotLeadGlass) {;}
 
   // Create Target plots
-  ftname = cfg->TmpDirectory()+"/RecoMon_Target.txt";
-  ffname = cfg->OutputDirectory()+"/RecoMon_Target.txt";
-  outFile = fopen(ftname.Data(),"w");
-  if(outFile == NULL) {
-    printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
-    exit(EXIT_FAILURE);
+  if (plotTarget) {
+
+    // Create Target plots
+    ftname = cfg->TmpDirectory()+"/RecoMon_Target.txt";
+    ffname = cfg->OutputDirectory()+"/RecoMon_Target.txt";
+    outFile = fopen(ftname.Data(),"w");
+    if(outFile == NULL) {
+      printf("ERROR - could not open temporary output file %s.\n",ftname.Data());
+      exit(EXIT_FAILURE);
+    }
+
+    GetTargetHistograms(recoFile,outFile);
+    GetTargetWaveforms(recoFile,outFile);
+
+    fclose(outFile);
+    if ( std::rename(ftname.Data(),ffname.Data()) ) {
+      printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+      exit(EXIT_FAILURE);
+    }
+
   }
 
-  GetTargetHistograms(recoFile,outFile);
-  GetTargetWaveforms(recoFile,outFile);
-
-  fclose(outFile);
-  if ( std::rename(ftname.Data(),ffname.Data()) ) {
-    printf("ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
-    exit(EXIT_FAILURE);
-  }
-
+  // Close file with reconstructed events
   recoFile->Close();
 
-  // If trend file name was set, then create trend plots
-  if (! trendFileName.IsNull()) {
+  // If trend plots are active and trend file name was set, then create them
+  if (plotTrends && ! trendFileName.IsNull()) {
     
     // Check if input file is ready to be processed
     TFile* trendFile = TFile::Open(trendFileName,"READ","data");
     if (trendFile) {
-      if (! recoFile->IsZombie()) {
-	if (! recoFile->TestBit(TFile::kRecovered)) {
+      if (! trendFile->IsZombie()) {
+	if (! trendFile->TestBit(TFile::kRecovered)) {
 
 	  // Now we can create the trend plots
 	  ftname = cfg->TmpDirectory()+"/RecoMon_Trend.txt";
@@ -745,19 +814,15 @@ int main(int argc, char* argv[])
 	    exit(EXIT_FAILURE);
 	  }
 
-	  trendFile->Close();
-
 	} else {
-	  printf("ERROR - Trend file %s is still being written.\n",inputFileName.Data());
-	  //exit(EXIT_FAILURE);
+	  printf("WARNING - Trend file %s is still being written.\n",inputFileName.Data());
 	}
       } else {
-	printf("ERROR - Trend file %s is a zombie.\n",inputFileName.Data());
-	//exit(EXIT_FAILURE);
+	printf("WARNING - Trend file %s is a zombie.\n",inputFileName.Data());
       }
+      trendFile->Close();
     } else {
-      printf("ERROR - Trend file %s cannot be opened.\n",trendFileName.Data());
-      //exit(EXIT_FAILURE);
+      printf("WARNING - Trend file %s cannot be opened.\n",trendFileName.Data());
     }
 
   }

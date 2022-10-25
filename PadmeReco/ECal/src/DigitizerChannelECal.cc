@@ -770,7 +770,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(BID==8 && Ch>=16 && Ch<=23){
     if(GetBadInd()>0){
       //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<vDerdt.size()<<std::endl;
-       std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
+      //       std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
       Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
     }
   }

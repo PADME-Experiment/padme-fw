@@ -200,6 +200,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   //  Double_t hitV;//includes tail correction
   double tailfraction=0;
   double DeltaTSortSamples=0;
+
+  bool analogchecker = 0;
  
   for (UShort_t ii = 0 ; ii != index.size() ; ii++) {
     tDerivSortHitVec.push_back(tDerivHitVec[index[ii]]);
@@ -209,13 +211,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     }
     if(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2){
       std::cout<<"EventCounter "<<EventCounter<<" GetChID() "<<GetChID()<<" ii "<<ii<<" tDerivSortHitVec[ii] "<<tDerivSortHitVec[ii]<<" tDerivSortHitVec[ii-1] "<<tDerivSortHitVec[ii-1]<<std::endl;
-      fAnalogPrint=1;
+      analogchecker = 1;
     }
-    else{
-      fAnalogPrint=0;
-    }
-
-    if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
 
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
@@ -237,8 +234,13 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
   }//end loop over hits
 
+  //  if(analogchecker==1) fAnalogPrint=1;
+  //  else fAnalogPrint =0;
+  //  if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
+
+
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  if(fAnalogPrint==1)   std::cout<<"Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<std::endl;
+  if(fAnalogPrint==1)   std::cout<<"EventCounter "<<EventCounter<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<std::endl;
   return Time;
 }
 

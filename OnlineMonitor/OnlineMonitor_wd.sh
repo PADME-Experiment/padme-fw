@@ -12,6 +12,12 @@ configFile="config/OnlineMonitor.cfg"
 # Watchdir directory (used by PadmeMonitor)
 watchDir="/home/monitor/PadmeMonitor/watchdir"
 
+# File with name of current run
+current_run_file="/home/daq/DAQ/run/current_run"
+
+# File with name of last finished run
+last_run_file="/home/daq/DAQ/run/last_run"
+
 # Variable to save last run started
 current_run_save=""
 
@@ -21,7 +27,12 @@ om_running=0
 while true; do 
 
     # Get current run
-    current_run=$( cat /home/daq/DAQ/run/current_run )
+    if test -f "$current_run_file"; then
+	current_run=$( cat $current_run_file )
+    else
+	echo "ERROR - File $current_run_file with name of current run is missing! ABORTING"
+	exit 1
+    fi
 
     # Check if the run has changed
     if [[ $current_run != $current_run_save ]]; then
@@ -74,7 +85,12 @@ while true; do
 	kill -s 0 $om_pid 2>/dev/null
 	if [ $? -ne 0 ]; then
 	    # If process is dead because the run was stopped, change status of OnlineMonitor process to NOT RUNNING and do not restart it
-	    last_run=$( cat /home/daq/DAQ/run/last_run )
+	    if test -f "$last_run_file"; then
+		last_run=$( cat $last_run_file )
+	    else
+		echo "WARNING - File $last_run_file with name of last finished run is missing. Please check DAQ!"
+		last_run=""
+	    fi
 	    if [ "$last_run" = "$current_run" ]; then
 		om_running=0
 	    else

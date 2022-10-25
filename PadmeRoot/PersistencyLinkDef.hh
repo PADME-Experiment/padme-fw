@@ -62,6 +62,7 @@
 #pragma link C++ class THEPVetoRecoEvent+;
 #pragma link C++ class TSACRecoEvent+;
 #pragma link C++ class TECalRecoEvent+;
+#pragma link C++ class TLeadGlassRecoEvent+;
 #pragma link C++ class TTargetRecoEvent+;
 #pragma link C++ class TTargetRecoBeam+;
 #pragma link C++ class TTargetSignalFitParams+;

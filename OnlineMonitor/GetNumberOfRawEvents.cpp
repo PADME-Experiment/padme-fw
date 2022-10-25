@@ -4,6 +4,7 @@
 
 #include "TFile.h"
 #include "TTree.h"
+#include "TError.h"
 
 #define SIZE_THRESHOLD 10000
 
@@ -56,6 +57,7 @@ int main(int argc, char* argv[])
 
   Int_t nEvents = 0;
   if (fileSize > SIZE_THRESHOLD) { // Check if file is large enough to contain at least one event
+    gErrorIgnoreLevel = kBreak; // Do not report "open file" errors
     TFile* inputFile = new TFile(inputFileName,"READ"); // Open TFile
     if (! inputFile->IsZombie()) { // Check if root structure is good
       // File is good: get number of events in RawEvents tree

@@ -770,7 +770,7 @@ void DigitizerChannelECal::ReconstructSingleHit(std::vector<TRecoVHit *> &hitArr
   if(BID==8 && Ch>=16 && Ch<=23){
     if(GetBadInd()>0){
       //      std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<vDerdt.size()<<std::endl;
-       std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
+      //       std::cout<<"fixing pedestal issue BD "<<BID<<" Ch "<<Ch<<" ev "<<std::endl;
       Fix2019BrokenChip(GetBadInd()); //fix errors if there is a misalignement
     }
   }
@@ -896,7 +896,7 @@ void DigitizerChannelECal::ReconstructMultiHit(std::vector<TRecoVHit *> &hitArra
   if(!fFirstHit) return;
   //there is a single hit reconstructed and saved; if there is a second (third) hit I redefine this reconstructed hit 
   if (fGlobalMode->GetGlobalDebugMode())
-    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
+    //    std::cout<< "-----------------------------------------------------------------------------ev " << fCountEvent << " saved: " << fCountSavedEvent << std::endl;
   Double_t energySecondHit=0.;
   Double_t energyFirstHit=0.;
   if(!fSaturatedHit){

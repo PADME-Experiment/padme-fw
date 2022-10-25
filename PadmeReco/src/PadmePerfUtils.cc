@@ -4,9 +4,10 @@
 #include <sstream>
 #include <fstream>
 int PadmePerfUtils::getMem() {
- int memSize = 0;
- {
-   pid_t pid = getpid();
+#ifndef __APPLE__
+  int memSize = 0;
+  {
+    pid_t pid = getpid();
     std::ostringstream procstream;
     procstream << "/proc/" << pid << "/status";
     std::ifstream memfile(procstream.str().c_str());
@@ -22,10 +23,12 @@ int PadmePerfUtils::getMem() {
     }
   }
   return memSize;
+#endif
+  return 0;
 }
 
 int PadmePerfUtils::getCpu() {
-
+#ifndef __APPLE__
     pid_t pid = getpid();
     std::ostringstream procstream;
     procstream << "/proc/" << pid << "/stat";
@@ -51,11 +54,13 @@ int PadmePerfUtils::getCpu() {
             return uTime+sTime;
         }
     }   
+#endif
     return 0;
 }
 
 int PadmePerfUtils::getRunTime() {
-
+#ifndef __APPLE__
+  
   // Get current time in ticks-since-boot
   FILE *procuptime;
   int sec, ssec;
@@ -88,5 +93,6 @@ int PadmePerfUtils::getRunTime() {
 
     }
   }   
+#endif
   return 0;
 }

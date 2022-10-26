@@ -100,6 +100,7 @@ public:
   TString ConfigFile() { return fConfigFile; }
 
   char* FormatTime(const time_t);
+  char* FormatCurrentTime();
 
 private:
 

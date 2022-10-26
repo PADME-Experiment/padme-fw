@@ -38,3 +38,13 @@ char* Configuration::FormatTime(const time_t tt)
 	  t->tm_hour,t->tm_min,t->tm_sec);
   return tform;
 }
+
+char* Configuration::FormatCurrentTime()
+{
+  struct timespec now;
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("- ERROR clock_gettime");
+    exit(EXIT_FAILURE);
+  }
+  return FormatTime(now.tv_sec);
+}

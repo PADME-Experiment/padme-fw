@@ -4,7 +4,7 @@
 pause=10
 
 # Current year
-year="2022"
+year=$( date +%Y )
 
 # Main configuration file
 configFile="config/OnlineMonitor.cfg"
@@ -63,7 +63,9 @@ while true; do
 	    now=$( date )
 
 	    echo
-	    echo "$now - Starting OnlineMonitor for run ${current_run} on merger node ${mergernode} ***"
+	    echo "*** $( date ) - Starting OnlineMonitor ***"
+	    echo "  Run: $current_run"
+	    echo "  Merger node: $mergernode"
 	    echo "  Input rawdata directory: $inputDir"
 
 	    # Start OnlineMonitor for new run

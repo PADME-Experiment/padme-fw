@@ -1,24 +1,22 @@
-#ifndef LeadGlassRootRecoIO_h
-#define LeadGlassRootRecoIO_h 1
+#ifndef LeadGlassRecoRootIO_h
+#define LeadGlassRecoRootIO_h 1
 
 #include "RecoVRootIO.hh"
-#include "TLeadGlassRecoEvent.hh"
-#include "RecoRootIOManager.hh"
 
-#include "TTree.h"
-#include "TBranch.h"
-
-class TLeadGlassRecoEvent;
-class RecoVRootIO;
+class LeadGlassReconstruction;
 
 class LeadGlassRecoRootIO : public RecoVRootIO
 {
 public:
 
   LeadGlassRecoRootIO();
-  virtual ~LeadGlassRecoRootIO();
+  ~LeadGlassRecoRootIO();
+
+  void SaveEvent();
 
 private:
+
+  LeadGlassReconstruction* fLGReco;
 
 };
 #endif // LeadGlassRecoRootIO_h

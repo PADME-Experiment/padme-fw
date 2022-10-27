@@ -20,6 +20,13 @@ public:
   void ProcessEvent(TRawEvent*);
   virtual void HistoInit();
 
+  Double_t GetPedestal()    { return fLGPedestal;  }
+  Double_t GetPedestalRMS() { return fLGPedRMS;    }
+  Double_t GetCharge()      { return fLGCharge;    }
+  Double_t GetEnergy()      { return fLGEnergy;    }
+  Double_t GetNPoTs()       { return fLGNPoTs;     }
+  Double_t GetBunchLength() { return fBunchLength; }
+
 private:
 
   Bool_t TriggerToBeSkipped();
@@ -33,14 +40,22 @@ private:
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
 
-  // Parameter to convert Total Charge to NPoTs
-  Double_t fChargeToNPoTs;
-
   // Results of pedestal and total charge evaluation
   Double_t fLGPedestal; // Pedestal level from the first fPedestalSamples samples
   Double_t fLGPedRMS;   // Pedestal RMS
   Double_t fLGCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
-  Double_t fLGNPoTs;    // Number of Positrons on Target computed from total charge
+
+  // Calibration parameter to convert Total Charge to Total Energy
+  Double_t fChargeToEnergy;
+
+  // Total energy released in LeadGlass
+  Double_t fLGEnergy;
+
+  // Parameter to convert Total Charge to NPoTs
+  Double_t fChargeToNPoTs;
+
+  // Number of Positrons on Target computed from total charge
+  Double_t fLGNPoTs;
 
   // Threshold to use to evaluate bunch length
   Double_t fBunchLengthThreshold;

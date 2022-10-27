@@ -10,6 +10,12 @@ public:
   TLeadGlassRecoEvent(); 
   ~TLeadGlassRecoEvent();
 
+  void SetPedestal(Double_t c) { fLGPedestal = c; }
+  Double_t GetPedestal() { return fLGPedestal; }
+
+  void SetPedestalRMS(Double_t c) { fLGPedestalRMS = c; }
+  Double_t GetPedestalRMS() { return fLGPedestalRMS; }
+
   void SetTotalCharge(Double_t c) { fLGTotalCharge = c; }
   Double_t GetTotalCharge() { return fLGTotalCharge; }
 

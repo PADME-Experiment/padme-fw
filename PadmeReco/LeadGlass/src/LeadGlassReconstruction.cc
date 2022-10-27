@@ -30,6 +30,14 @@ LeadGlassReconstruction::LeadGlassReconstruction(TFile* HistoFile, TString Confi
     printf("LeadGlassReconstruction::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
   }
 
+  // Get charge-to-energy conversion factor from config file. Complain if not found
+  fChargeToEnergy = 1.; // Need value
+  if (fConfigParser->HasConfig("RECO","ChargeToEnergy")) {
+    fChargeToEnergy = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToEnergy"));
+  } else {
+    printf("LeadGlassReconstruction::Initialize - WARNING: ChargeToEnergy not set in config file. Using %f\n",fChargeToEnergy);
+  }
+
   // Get threshold for bunch length evaluation.
   fBunchLengthThreshold = 50.;
   if (fConfigParser->HasConfig("RECO","BunchLengthThreshold")) {
@@ -113,6 +121,9 @@ void LeadGlassReconstruction::AnalyzeChannel(Short_t* samples)
 
   // Compute lenght of bunch (period above a given thershold)
   ComputeBunchLength(samples);
+
+  // Evaluate total energy from total charge
+  fLGEnergy = fLGCharge*fChargeToEnergy;
 
   // Compute number of positrons on target from total charge
   fLGNPoTs = fLGCharge/fChargeToNPoTs;

@@ -261,6 +261,7 @@ void LeadGlassMonitor::Finalize()
   printf("LeadGlassMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
+  printf("LeadGlassMonitor::Finalize - Total number of PoTs: %.0f\n",fVLGNPoTsTotBM.back());
 }
 
 void LeadGlassMonitor::AnalyzeBoard(UChar_t board)
@@ -277,10 +278,13 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     // Compute lenght of bunch (period above a given thershold)
     ComputeBunchLength(samples);
 
+    // Compute number of positrons on target (NPoTs)
+    fLGNPoTs = fChannelCharge/fChargeToNPoTs;
+
     fHLGPedestalBM->Fill(fChannelPedestal);
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
-    fHLGNPoTsBM->Fill(fChannelCharge/fChargeToNPoTs);
+    fHLGNPoTsBM->Fill(fLGNPoTs);
     fHLGBunchLengthBM->Fill(fBunchLength);
 
     // Add waveform to cumulative for bunch shape studies

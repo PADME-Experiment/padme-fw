@@ -27,6 +27,9 @@ public:
   void AnalyzeBoard(UChar_t);
   void AnalyzeChannel(UChar_t,UChar_t,Short_t*);
 
+  // Methods to access local results for combined analysis
+  Double_t GetLeadGlassNPoTs() { return fLGNPoTs; }
+
 private:
 
   void ComputeTotalCharge(Short_t*);
@@ -92,6 +95,9 @@ private:
 
   // Bunch length
   Double_t fBunchLength;
+
+  // Number of positrons on target (NPoTs)
+  Double_t fLGNPoTs;
 
   // Trend vectors
   std::vector<Double_t> fVLGTimeBM;

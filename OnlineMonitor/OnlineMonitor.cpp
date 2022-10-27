@@ -17,6 +17,7 @@
 #include "TargetMonitor.hh"
 #include "TriggerMonitor.hh"
 #include "ADCMonitor.hh"
+#include "CombinedMonitor.hh"
 
 #include "utlConfigParser.hh"
 
@@ -278,6 +279,28 @@ int main(int argc, char* argv[])
     hepveto_mon = new HEPVetoMonitor(configFileHEPVeto);
   }
 
+  // Configure Combined analyzer
+  Bool_t analyzeCombined = true;
+  CombinedMonitor* combined_mon = 0;
+  if ( configParser->HasConfig("ANALYZE","Combined") && (std::stoi(configParser->GetSingleArg("ANALYZE","Combined")) == 0) ) analyzeCombined = false;
+  if (analyzeCombined) {
+    TString configFileCombined = "config/Combined.cfg";
+    if (configParser->HasConfig("CONFIGFILE","Combined")) configFileCombined = configParser->GetSingleArg("CONFIGFILE","Combined");
+    combined_mon = new CombinedMonitor(configFileCombined);
+    // Add all monitors to CombinedMonitor
+    if (analyzeTrigger)   combined_mon->SetTriggerMonitor(trigger_mon);
+    if (analyzeADC)       combined_mon->SetADCMonitor(adc_mon);
+    if (analyzeLeadGlass) combined_mon->SetLeadGlassMonitor(leadglass_mon);
+    if (analyzeTarget)    combined_mon->SetTargetMonitor(target_mon);
+    if (analyzeECal)      combined_mon->SetECalMonitor(ecal_mon);
+    if (analyzeETag)      combined_mon->SetETagMonitor(etag_mon);
+    if (analyzeSAC)       combined_mon->SetSACMonitor(sac_mon);
+    if (analyzePVeto)     combined_mon->SetPVetoMonitor(pveto_mon);
+    if (analyzeEVeto)     combined_mon->SetEVetoMonitor(eveto_mon);
+    if (analyzeHEPVeto)   combined_mon->SetHEPVetoMonitor(hepveto_mon);
+
+  }
+
   // N.B. InputHandler must be created AFTER all detectors have been initialized to avoid clashes on histogram booking
 
   // Create input handler
@@ -322,14 +345,15 @@ int main(int argc, char* argv[])
     // Call "start of event" procedures for all detectors
     if (analyzeTrigger)   trigger_mon->StartOfEvent();
     if (analyzeADC)       adc_mon->StartOfEvent();
+    if (analyzeLeadGlass) leadglass_mon->StartOfEvent();
     if (analyzeTarget)    target_mon->StartOfEvent();
     if (analyzeECal)      ecal_mon->StartOfEvent();
-    if (analyzeLeadGlass) leadglass_mon->StartOfEvent();
     if (analyzeETag)      etag_mon->StartOfEvent();
     if (analyzeSAC)       sac_mon->StartOfEvent();
     if (analyzePVeto)     pveto_mon->StartOfEvent();
     if (analyzeEVeto)     eveto_mon->StartOfEvent();
     if (analyzeHEPVeto)   hepveto_mon->StartOfEvent();
+    if (analyzeCombined)  combined_mon->StartOfEvent();
 
     // Loop over boards
     UChar_t nBoards = rawEv->GetNADCBoards();
@@ -406,12 +430,15 @@ int main(int argc, char* argv[])
       // Analyze global board quantities
       //ADC
       if (analyzeADC) adc_mon->AnalyzeBoard(boardId);
-      // ECal
-      if ( analyzeECal && ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) )
-	ecal_mon->AnalyzeBoard(boardId);
+      // Target
+      if ( analyzeTarget && boardId == 28)
+	target_mon->AnalyzeBoard(boardId);
       // LeadGlass
       if ( analyzeLeadGlass && (boardId == LEADGLASS_BOARD) )
 	leadglass_mon->AnalyzeBoard(boardId);
+      // ECal
+      if ( analyzeECal && ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) )
+	ecal_mon->AnalyzeBoard(boardId);
       // ETag
       if ( analyzeETag && ( boardId == 10 || boardId == 11 || boardId == 24 || boardId == 25 ) )
 	etag_mon->AnalyzeBoard(boardId);
@@ -427,9 +454,6 @@ int main(int argc, char* argv[])
       // SAC
       if ( analyzeSAC && boardId == 27)
 	sac_mon->AnalyzeBoard(boardId);
-      // Target
-      if ( analyzeTarget && boardId == 28)
-	target_mon->AnalyzeBoard(boardId);
 
     }
 
@@ -440,13 +464,14 @@ int main(int argc, char* argv[])
     if (analyzeTrigger)   trigger_mon->EndOfEvent();
     if (analyzeADC)       adc_mon->EndOfEvent();
     if (analyzeTarget)    target_mon->EndOfEvent();
-    if (analyzeECal)      ecal_mon->EndOfEvent();
     if (analyzeLeadGlass) leadglass_mon->EndOfEvent();
+    if (analyzeECal)      ecal_mon->EndOfEvent();
     if (analyzeETag)      etag_mon->EndOfEvent();
     if (analyzeSAC)       sac_mon->EndOfEvent();
     if (analyzePVeto)     pveto_mon->EndOfEvent();
     if (analyzeEVeto)     eveto_mon->EndOfEvent();
     if (analyzeHEPVeto)   hepveto_mon->EndOfEvent();
+    if (analyzeCombined)  combined_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -460,13 +485,14 @@ int main(int argc, char* argv[])
   if (analyzeTrigger)   trigger_mon->Finalize();
   if (analyzeADC)       adc_mon->Finalize();
   if (analyzeTarget)    target_mon->Finalize();
-  if (analyzeECal)      ecal_mon->Finalize();
   if (analyzeLeadGlass) leadglass_mon->Finalize();
+  if (analyzeECal)      ecal_mon->Finalize();
   if (analyzeETag)      etag_mon->Finalize();
   if (analyzeSAC)       sac_mon->Finalize();
   if (analyzePVeto)     pveto_mon->Finalize();
   if (analyzeEVeto)     eveto_mon->Finalize();
   if (analyzeHEPVeto)   hepveto_mon->Finalize();
+  if (analyzeCombined)  combined_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -495,6 +521,7 @@ int main(int argc, char* argv[])
   if (pveto_mon)     delete pveto_mon;
   if (eveto_mon)     delete eveto_mon;
   if (hepveto_mon)   delete hepveto_mon;
+  if (combined_mon)  delete combined_mon;
 
   exit(EXIT_SUCCESS);
 

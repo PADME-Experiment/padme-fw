@@ -24,6 +24,9 @@ public:
   void AnalyzeBoard(UChar_t);
   void AnalyzeChannel(UChar_t,UChar_t,Short_t*);
 
+  // Methods to access local results for combined analysis
+  Double_t GetTotalEventEnergy() { return fECTotalEventEnergy; }
+
 private:
 
   void ComputeChannelCharge(Short_t*);

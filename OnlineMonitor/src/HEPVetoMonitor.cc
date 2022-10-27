@@ -175,7 +175,7 @@ void HEPVetoMonitor::EndOfEvent()
 
 void HEPVetoMonitor::Finalize()
 {
-  printf("HEPVetoMonitor::Finalize - Total number of beam events: %d\n",fBeamEventCount);
+  printf("HEPVetoMonitor::Finalize - Total number of beam     events: %d\n",fBeamEventCount);
   printf("HEPVetoMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
 }
 

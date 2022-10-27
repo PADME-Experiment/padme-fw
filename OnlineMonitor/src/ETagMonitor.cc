@@ -175,10 +175,10 @@ void ETagMonitor::EndOfEvent()
 
 void ETagMonitor::Finalize()
 {
-  printf("ETagMonitor::Finalize - Total number of beam events: %d\n",fBeamEventCount);
+  printf("ETagMonitor::Finalize - Total number of beam     events: %d\n",fBeamEventCount);
   printf("ETagMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
-  printf("ETagMonitor::Finalize - Total number of cosmics events: %d\n",fCosmicsEventCount);
-  printf("ETagMonitor::Finalize - Total number of random events: %d\n",fRandomEventCount);
+  printf("ETagMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
+  printf("ETagMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
 }
 
 void ETagMonitor::AnalyzeBoard(UChar_t board)

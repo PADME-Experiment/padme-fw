@@ -423,13 +423,14 @@ void GetEvtTrend(TFile* tren, FILE* fout) {
   fprintf(fout,"LEGEND [\"Reconstructed events\"]\n");
   fprintf(fout,"DATA [[");
 
-  Int_t nn = tgra->GetN();
   Double_t* xve = tgra->GetX();
   Double_t* yve = tgra->GetY();
-  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
-  fprintf(fout,"[\"%f\",%f]]]\n",xve[nn-1],yve[nn-1]);
+  for(int ii = 0;ii<tgra->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
 
-  fprintf(fout,"\n");
+  fprintf(fout,"]]\n\n");
 
 }
 
@@ -453,19 +454,114 @@ void GetXYTrend(TFile* tren, FILE* fout) {
   Double_t* xve;
   Double_t* yve;
 
-  Int_t nn = tgraX->GetN();
-
   xve = tgraX->GetX();
   yve = tgraX->GetY();
-  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
-  fprintf(fout,"[\"%f\",%f]],[",xve[nn-1],yve[nn-1]);
+  for(int ii = 0;ii<tgraX->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
+
+  fprintf(fout,"],[");
 
   xve = tgraY->GetX();
   yve = tgraY->GetY();
-  for(int ii = 0;ii<nn-1 ;ii++) fprintf(fout,"[\"%f\",%f], ",xve[ii],yve[ii]);
-  fprintf(fout,"[\"%f\",%f]]] ",xve[nn-1],yve[nn-1]);
+  for(int ii = 0;ii<tgraY->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
 
-  fprintf(fout,"\n");
+  fprintf(fout,"]]\n\n");
+
+}
+
+void GetSXYTrend(TFile* tren, FILE* fout) {
+
+  TGraph* tgraX = (TGraph*)tren->Get("BeamSX");
+  if(tgraX == NULL) return;
+  TGraph* tgraY = (TGraph*)tren->Get("BeamSY");
+  if(tgraY == NULL) return;
+
+  fprintf(fout,"PLOTID BeamSXY\n");
+  fprintf(fout,"PLOTNAME Beam X and Y RMS %s\n",cfg->FormatCurrentTime());
+  fprintf(fout,"PLOTTYPE timeline\n");
+  fprintf(fout,"MODE [ \"lines+markers\", \"lines+markers\"]\n");
+  fprintf(fout,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(fout,"TITLE_X timeline\n");
+  fprintf(fout,"TITLE_Y [mm]\n");
+  fprintf(fout,"LEGEND [\"sigma X beam\",\"sigma Y beam\"]\n");
+  fprintf(fout,"DATA [[");
+
+  Double_t* xve;
+  Double_t* yve;
+
+  xve = tgraX->GetX();
+  yve = tgraX->GetY();
+  for(int ii = 0;ii<tgraX->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
+
+  fprintf(fout,"],[");
+
+  xve = tgraY->GetX();
+  yve = tgraY->GetY();
+  for(int ii = 0;ii<tgraY->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
+
+  fprintf(fout,"]]\n\n");
+
+}
+
+void GetPotTrend(TFile* tren, FILE* fout) {
+
+  TGraph* tgra = (TGraph*)tren->Get("PotBunch");
+  if(tgra == NULL) return;
+
+  fprintf(fout,"PLOTID PotBunch\n");
+  fprintf(fout,"PLOTNAME POT/pulse - target %s\n",cfg->FormatCurrentTime());
+  fprintf(fout,"PLOTTYPE timeline\n");
+  fprintf(fout,"MODE [ \"lines+markers\" ]\n");
+  fprintf(fout,"COLOR [ \"ff0000\" ]\n");
+  fprintf(fout,"TITLE_X timeline\n");
+  fprintf(fout,"LEGEND [\"positrons on target\"]\n");
+  fprintf(fout,"DATA [[");
+
+  Double_t* xve = tgra->GetX();
+  Double_t* yve = tgra->GetY();
+  for(int ii = 0;ii<tgra->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
+
+  fprintf(fout,"]]\n\n");
+
+}
+
+void GetECalEtotTrend(TFile* tren, FILE* fout) {
+
+  TGraph* hEtot = (TGraph*)tren->Get("ETotECal");
+  if(hEtot == NULL) return;
+
+  fprintf(fout,"PLOTID ETotECal\n");
+  fprintf(fout,"PLOTNAME Total Energy in ECal %s\n",cfg->FormatCurrentTime());
+  fprintf(fout,"PLOTTYPE timeline\n");
+  fprintf(fout,"MODE [ \"lines+markers\"]\n");
+  fprintf(fout,"COLOR [ \"ff0000\"]\n");
+  fprintf(fout,"TITLE_X timeline\n");
+  fprintf(fout,"TITLE_Y ECalEtot\n");
+  fprintf(fout,"LEGEND [\"Ecal Total Energy (MeV)\"]\n");
+  fprintf(fout,"DATA [[");
+
+  Double_t* xve = hEtot->GetX();
+  Double_t* yve = hEtot->GetY();
+  for(int ii = 0;ii<hEtot->GetN();ii++) {
+    if (ii) fprintf(fout,",");
+    fprintf(fout,"[\"%f\",%f]",xve[ii],yve[ii]);
+  }
+
+  fprintf(fout,"]]\n\n");
 
 }
 
@@ -770,9 +866,9 @@ int main(int argc, char* argv[])
 
 	  GetEvtTrend(trendFile,outFile);
 	  GetXYTrend(trendFile,outFile);
-	  //GetSXYTrend(trendFile,outFile);
-	  //GetPotTrend(trendFile,outFile);
-	  //GetECalEtotTrend(trendFile,outFile);
+	  GetSXYTrend(trendFile,outFile);
+	  GetPotTrend(trendFile,outFile);
+	  GetECalEtotTrend(trendFile,outFile);
 
 	  fclose(outFile);
 	  if ( std::rename(ftname.Data(),ffname.Data()) ) {

@@ -81,6 +81,7 @@ private:
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
   TH1D* fHLGNPoTsBM;
+  TH1D* fHLGNPoTsTotBM;
   TH1D* fHLGBunchLengthBM;
 
   // Waveform vectors

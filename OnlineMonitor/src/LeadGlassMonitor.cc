@@ -119,6 +119,7 @@ void LeadGlassMonitor::Initialize()
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
   fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
   fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
+  fHLGNPoTsTotBM = new TH1D("LG_NPoTsTotBM","LG_NPoTsTotBM",1000,0.,20000.);
   fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
 
   // Reset cumulative waveform
@@ -285,6 +286,7 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
     fHLGNPoTsBM->Fill(fLGNPoTs);
+    fHLGNPoTsTotBM->Fill(fLGNPoTs);
     fHLGBunchLengthBM->Fill(fBunchLength);
 
     // Add waveform to cumulative for bunch shape studies
@@ -466,6 +468,26 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGNPoTsBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGNPoTsBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total number of Positrons on Target (NPoTs) for this run
+  fprintf(outf,"PLOTID LeadGlassMon_beamnpotstot\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM PoTs Total - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGNPoTsTotBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGNPoTsTotBM->GetXaxis()->GetXmin(),fHLGNPoTsTotBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X nPoTs\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGNPoTsTotBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGNPoTsTotBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 

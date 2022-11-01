@@ -6,6 +6,8 @@
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
 
+class VetoEndPoint;
+
 class BhabhaAnalysis {
 
 public:
@@ -35,6 +37,12 @@ private:
   TMCVertex* mcVtx;
 
   Int_t fNPoT; 
+
+  TMCParticle* mcOutPart;
+
+  TVector3* VertexPos = new TVector3();
+
+  VetoEndPoint * fVetoEndPoint;
   
 };
 #endif

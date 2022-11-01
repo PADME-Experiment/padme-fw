@@ -68,10 +68,10 @@ Bool_t UserAnalysis::InitHistos(){
   fHS->BookHisto2List("MyHistos","Test2D",10,0.,10.,10,0.,10.);
 
   // Histograms for MCTruth information
-  fHS->CreateList("MCTruth");
-  fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
-  fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
-  fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
+  // fHS->CreateList("MCTruth");
+  // fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
+  // fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+  // fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
 
   return true;
 }
@@ -116,30 +116,30 @@ Bool_t UserAnalysis::Process(){
   }
   */
 
-  // MCTruth analysis
-  if (fEvent->MCTruthEvent) {
-    fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
-    if (fEvent->MCTruthEvent->GetNVertices()>0) {
-      for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
-	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-	if (mcVtx->GetProcess() == "eBrem") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
-	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-	    if (mcOPart->GetPDGCode() == 22) {
-	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
-	    }
-	  }
-	} else if (mcVtx->GetProcess() == "eIoni") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
-	} else if (mcVtx->GetProcess() == "annihil") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
-	} else {
-	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
-	}
-      }
-    }
-  }
+  // // MCTruth analysis
+  // if (fEvent->MCTruthEvent) {
+  //   fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
+  //   if (fEvent->MCTruthEvent->GetNVertices()>0) {
+  //     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
+  // 	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+  // 	if (mcVtx->GetProcess() == "eBrem") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
+  // 	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+  // 	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+  // 	    if (mcOPart->GetPDGCode() == 22) {
+  // 	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
+  // 	    }
+  // 	  }
+  // 	} else if (mcVtx->GetProcess() == "eIoni") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
+  // 	} else if (mcVtx->GetProcess() == "annihil") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
+  // 	} else {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
+  // 	}
+  //     }
+  //   }
+  // }
 
   return true;
 }

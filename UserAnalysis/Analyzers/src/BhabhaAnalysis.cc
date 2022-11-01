@@ -2,6 +2,7 @@
 // Last modified by M. Raggi 12/08/2021
 #include "BhabhaAnalysis.hh"
 #include "TMath.h"
+#include "VetoEndPoint.hh"
 
 BhabhaAnalysis::BhabhaAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -14,6 +15,8 @@ BhabhaAnalysis::BhabhaAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fVetoEndPoint = VetoEndPoint::GetInstance();
+
 }
 
 BhabhaAnalysis::~BhabhaAnalysis(){
@@ -186,7 +189,38 @@ Bool_t BhabhaAnalysis::Process(){
   
   fNPoT = fEvent->TargetRecoBeam->getnPOT();
 
-  if(fNPoT>10000) return 0;
+  //MCTruth: momentum of e+ or e- resulting from Bhabha
+  TVector3 momentum;
+  
+  Int_t charge;
+
+  TVector3 VertexPos;
+  Double_t VertexTime=-1000;
+
+  if(isMC){
+    for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
+      mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+      
+      if(mcVtx->GetProcess() == "eIoni"){
+	VertexPos=mcVtx->GetPosition();
+	VertexTime = mcVtx->GetTime();
+	//	VertexPos.Print();
+	for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+	  mcOutPart = mcVtx->ParticleOut(iO);
+	  
+	  if(mcOutPart->GetPDGCode()==11)
+	    charge = 1;
+	  if(mcOutPart->GetPDGCode()==-11)
+	    charge = -1;
+
+	  momentum = mcOutPart->GetMomentum();
+	  fVetoEndPoint->ParticleSwim(momentum,VertexPos,VertexTime,charge);
+	}
+      }
+    }
+  }
+
+  //  if(fNPoT>10000) return 0;
 
   fHS->FillHistoList("NPoTAnalysis","hNPotBhabha",fNPoT);
 
@@ -297,7 +331,7 @@ Bool_t BhabhaAnalysis::Process(){
   fHS->FillHistoList("EVetoClusters","hVetoChasOver302to3HitsGoodChaNEVetoCluster", npassEVeto);
 
   int tempEvCh;
-  
+
   //All PVeto Clusters
   for(int ii = 0; ii<NPVetoCluster; ii++){
     tempNHit  = fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
@@ -330,20 +364,10 @@ Bool_t BhabhaAnalysis::Process(){
 
 
     fHS->FillHisto2List("PVetoClusters","hPVetoChVshNHitsPVetoCluster",tempCh,tempNHit);
-
     if(isMC){
       for(int ii = 0; ii<NEVetoCluster; ii++){
 	tempEvCh =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
 	fHS->FillHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",tempCh,tempEvCh);
-
-	TopBoundary = tempEvCh<(-1*tempCh+98); //line through points (35,63) and (59,39) is y = -x + 98 => EVetoCh<-1*PVetoCh+98
-	BottomBoundary = tempEvCh>(-1*tempCh+93);// line through points (35,58) and (59,34) is y = -x + 93 => EVetoCh>-1*PVetoCh+93
-	LeftBoundary = tempCh>35;
-	RightBoundary = tempCh<59;
-
-	if(TopBoundary&&BottomBoundary&&LeftBoundary&&RightBoundary){
-	  fHS->FillHisto2List("MCBhabha","hAllBoxNPVetoClusterVsNEVetoCluster",tempCh,tempEvCh);
-	}
       }
     }
     //good cluster cuts:
@@ -486,13 +510,19 @@ Bool_t BhabhaAnalysis::Process(){
 
 	    if(isMC){
 	      if(std::fabs(deltaTcorrect)<2){
-		fEvent->MCTruthEvent->Print("");
+		//		fEvent->MCTruthEvent->Print("");
 	      }
 	    }
 	    if(chPVeto+chEVeto>90){
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 	    }
+	    //per entrambe le particelle:
+	    //prendere variabili cinematiche
+	    //passarle per VetEndPoint -> per fare swim
+	    //Swim(momentum, position, time, charge)
+	    //finisce dentro il veto? Se si dimmi il finger, senno dimmi -1
+	    //posso farmi dire il tempo?
 	  }
 	}
       }

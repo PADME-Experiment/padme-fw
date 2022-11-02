@@ -20,6 +20,7 @@ public :
   int GetEndFinger(){return fEndFinger;};
   double GetEndTime(){return fEndTime;};
   TVector3 GetEndPosition(){return fEndPosition;};
+  void SaveHistos();
 
  private :
   //startpoint

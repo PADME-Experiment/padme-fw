@@ -590,10 +590,13 @@ Bool_t BhabhaAnalysis::Process(){
 
 Bool_t BhabhaAnalysis::Finalize()
 {
- // TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
- // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
- 
- if (fVerbose) printf("---> Finalizing BhabhaAnalysis\n");
+  // TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
+  // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
+  if(fVetoEndPoint)
+    fVetoEndPoint->SaveHistos();
+  else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
+
+  if (fVerbose) printf("---> Finalizing BhabhaAnalysis\n");
   return true;
 }
 

@@ -23,21 +23,7 @@ VetoEndPoint::VetoEndPoint(){
   vetoendfile->cd();
 }
 
-VetoEndPoint::~VetoEndPoint(){
-  std::cout<<"I am become bears"<<std::endl;
-  for(int ChID=0;ChID<nEVetoNFingers;ChID++){
-    std::cout<<"ChID "<<ChID<<std::endl;
-    EVeto_ThetaVsP[ChID]->Write();
-    EVeto_ThetaVsPhi[ChID]->Write();
-
-    if(ChID<nPVetoNFingers){
-      PVeto_ThetaVsP[ChID]->Write();
-      PVeto_ThetaVsPhi[ChID]->Write();
-    }
-  }
-
-  vetoendfile->Close();
-}
+VetoEndPoint::~VetoEndPoint(){}
 
 void VetoEndPoint::InitialiseHistos(){
   double Ebeam = 430.;//MeV
@@ -50,6 +36,35 @@ void VetoEndPoint::InitialiseHistos(){
       PVeto_ThetaVsPhi[ChID] = new TH2D(Form("PVeto_ThetaVsPhi_Channel%d",ChID),Form("Veto_ThetaVsPhi_Channel%d",ChID),180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
     }
   }
+}
+
+void VetoEndPoint::SaveHistos(){
+  if(vetoendfile)
+    vetoendfile->cd();
+  else std::cout<<"vetoendfile doesn't exist in VetEndPoint::SaveHistos()"<<std::endl;
+
+  vetoendfile->mkdir("EVeto_ThetaVsP");
+  vetoendfile->mkdir("EVeto_ThetaVsPhi");
+
+  vetoendfile->mkdir("PVeto_ThetaVsP");
+  vetoendfile->mkdir("PVeto_ThetaVsPhi");
+
+  for(int ChID=0;ChID<nEVetoNFingers;ChID++){
+    vetoendfile->cd("EVeto_ThetaVsP");
+    EVeto_ThetaVsP[ChID]->Write();
+
+    vetoendfile->cd("EVeto_ThetaVsPhi");
+    EVeto_ThetaVsPhi[ChID]->Write();
+
+    if(ChID<nPVetoNFingers){
+      vetoendfile->cd("PVeto_ThetaVsP");
+      PVeto_ThetaVsP[ChID]->Write();
+
+      vetoendfile->cd("EVeto_ThetaVsPhi");
+      PVeto_ThetaVsPhi[ChID]->Write();
+    }
+  }
+  vetoendfile->Close();
 }
 
 void VetoEndPoint::SetupPVetoGeometry(){
@@ -137,6 +152,7 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
        //Change in direction depends on length travelled in a certain B field, therefore calculate B*dS where dS is distance travelled in a certain step
        magFieldS.SetXYZ(magField.X()*StepLengthMetres,magField.Y()*StepLengthMetres,magField.Z()*StepLengthMetres); // Tm
        PT = LocalDirection.Cross(magFieldS);
+
        //0.3e3 -> c mm/ns(?)
        PT *= particlecharge*0.3*1E3/LocalDirection.Mag(); // Length in m, PT in MeV, charge in +/- 1
 
@@ -168,11 +184,20 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
 	 fabs(LocalPosition.Y()) > PVetoCenter.Y()+PVetoSize.Y() ||
 	 LocalPosition.Z() > PVetoCenter.Z()+PVetoSize.Z()) break;
      
+     Bool_t XCheck = (TMath::Abs(particlecharge*LocalPosition.X()-PVetoCenter.X()) < 0.5*PVetoSize.X());
+     Bool_t ZCheck = (TMath::Abs(LocalPosition.Z()-PVetoCenter.Z()) < 0.5*PVetoSize.Z());
+     Bool_t YCheck = (TMath::Abs(LocalPosition.Y()-PVetoCenter.Y()) < 0.5*PVetoSize.Y());
+
+     /*     if(XCheck&&ZCheck&&YCheck&&particlecharge==-1)
+	    std::cout<<"insideVeto "<<insideVeto<<" XCheck "<<XCheck<<" ZCheck "<<ZCheck<<" YCheck "<<YCheck<<std::endl;*/
+
      //for as long as the particle is in the magnet gap and hasn't previously reached the veto, if it's now in the veto volume, work out which finger it's in
      if (!insideVeto &&
+       //why support size, not finger size?
 	 (TMath::Abs(particlecharge*LocalPosition.X()-PVetoCenter.X()) < 0.5*PVetoSize.X()) && 
 	 (TMath::Abs(LocalPosition.Z()-PVetoCenter.Z()) < 0.5*PVetoSize.Z()) && 
 	 (TMath::Abs(LocalPosition.Y()-PVetoCenter.Y()) < 0.5*PVetoSize.Y())   ) {
+       //       if(particlecharge==-1) std::cout<<"I've entered!"<<std::endl;
        TVector2 point(LocalPosition.Z(),particlecharge*LocalPosition.X()); //make the mirror x->-x for negative charges
        int ifingerGuess = (LocalPosition.Z() - (fPVetoFrontFacePosZ + fFingerZOffset))/fFingerPitch;
        int istart = TMath::Max(ifingerGuess-5,0);
@@ -181,6 +206,7 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
 	 if (PointInTriangle(point,pzx[0][i],pzx[1][i],pzx[2][i]) || PointInTriangle(point,pzx[0][i],pzx[2][i],pzx[3][i])) {
 	   insideVeto = kTRUE; 
 	   channelFired = i;
+	   //   if(particlecharge == -1) std::cout<<"I fire EVeto"<<std::endl;
 	   break;
 	 }
        }
@@ -198,6 +224,7 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
 	 PVeto_ThetaVsPhi[channelFired]->Fill(startmomentum.Phi(),startmomentum.Theta()*1000.);//,weight);
        }
        else if(particlecharge==-1&&channelFired<nEVetoNFingers){
+	 //	 std::cout<<channelFired<<std::endl;
 	 EVeto_ThetaVsP[channelFired]->Fill(startmomentum.Mag(),startmomentum.Theta()*1000.);//,weight);
 	 EVeto_ThetaVsPhi[channelFired]->Fill(startmomentum.Phi(),startmomentum.Theta()*1000.);//,weight);
        }

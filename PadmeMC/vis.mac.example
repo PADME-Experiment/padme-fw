@@ -211,6 +211,7 @@
 #/beam/3g_file ThreePhotonDecays.list
 #/beam/n_2g_per_bunch 0
 #/beam/2g_file TwoPhotonDecays.list
+#/beam/decay_length 0. cm
 #/beam/calibration false
 #/beam/calib_energy 50. MeV
 #/beam/calib_x 14. cm
@@ -244,11 +245,12 @@
 #/beam/n_3g_per_bunch 1
 #/beam/3g_file events_ee-3g-550MeV-1M.txt
 
-# Example for single two photon events
+# Example for single two photon events with displaced decay vertex
 #/beam/n_e+_per_bunch 1
 #/beam/n_e+_poisson_on false
 #/beam/n_2g_per_bunch 1
 #/beam/2g_file ee-gg_550MeV-10M.txt
+#/beam/decay_length 50. cm
 
 # Calibration run setup: single 50MeV photon pointing to a spot on ECal front face
 #/beam/calibration true

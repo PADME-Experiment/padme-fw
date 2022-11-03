@@ -539,6 +539,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
+  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {

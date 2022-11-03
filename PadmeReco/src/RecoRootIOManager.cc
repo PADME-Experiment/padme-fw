@@ -9,6 +9,7 @@
 #include "SACRecoRootIO.hh"
 #include "TargetRecoRootIO.hh"
 #include "ECalRecoRootIO.hh"
+#include "LeadGlassRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
@@ -53,6 +54,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fRootIOList.push_back(new TargetRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
     fRootIOList.push_back(new ECalRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
+    fRootIOList.push_back(new LeadGlassRecoRootIO);
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 

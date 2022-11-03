@@ -22,6 +22,7 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 #include "TMCTruthEvent.hh"
 
 #include "HistoSvc.hh"
@@ -179,20 +180,21 @@ int main(Int_t argc, char **argv)
   if (fVerbose) printf("Accepted trigger mask: 0x%2.2x\n",trigMask);
 
   // Create pointers to reconstructed event branches
-  TRecoEvent*           fRecoEvent        =0;
-  TTargetRecoEvent*     fTargetRecoEvent  =0;
-  TEVetoRecoEvent*      fEVetoRecoEvent   =0;
-  TPVetoRecoEvent*      fPVetoRecoEvent   =0;
-  THEPVetoRecoEvent*    fHEPVetoRecoEvent =0;
-  TECalRecoEvent*       fECalRecoEvent    =0;
-  TSACRecoEvent*        fSACRecoEvent     =0;
-  TTargetRecoBeam*      fTargetRecoBeam   =0;
-  TRecoVClusCollection* fSACRecoCl        =0;
-  TRecoVClusCollection* fECalRecoCl       =0;
-  TRecoVClusCollection* fPVetoRecoCl      =0;
-  TRecoVClusCollection* fEVetoRecoCl      =0;
-  TRecoVClusCollection* fHEPVetoRecoCl    =0;
-  TMCTruthEvent*        fMCTruthEvent     =0;
+  TRecoEvent*           fRecoEvent          =0;
+  TTargetRecoEvent*     fTargetRecoEvent    =0;
+  TEVetoRecoEvent*      fEVetoRecoEvent     =0;
+  TPVetoRecoEvent*      fPVetoRecoEvent     =0;
+  THEPVetoRecoEvent*    fHEPVetoRecoEvent   =0;
+  TECalRecoEvent*       fECalRecoEvent      =0;
+  TSACRecoEvent*        fSACRecoEvent       =0;
+  TLeadGlassRecoEvent*  fLeadGlassRecoEvent =0;
+  TTargetRecoBeam*      fTargetRecoBeam     =0;
+  TRecoVClusCollection* fSACRecoCl          =0;
+  TRecoVClusCollection* fECalRecoCl         =0;
+  TRecoVClusCollection* fPVetoRecoCl        =0;
+  TRecoVClusCollection* fEVetoRecoCl        =0;
+  TRecoVClusCollection* fHEPVetoRecoCl      =0;
+  TMCTruthEvent*        fMCTruthEvent       =0;
 
   TTree::SetMaxTreeSize(190000000000);
 
@@ -243,6 +245,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="SAC_Hits") {
       fSACRecoEvent = new TSACRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+    } else if (branchName=="LeadGlass_Hits") {
+      fLeadGlassRecoEvent = new TLeadGlassRecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlassRecoEvent);
       //} else if (branchName=="TPix") {
       //  fTPixRecoEvent = new TTPixRecoEvent();
       //  fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
@@ -302,31 +307,33 @@ int main(Int_t argc, char **argv)
   
   // Initialize input event structure
   PadmeAnalysisEvent* event = new PadmeAnalysisEvent();
-  event->RecoEvent        = fRecoEvent       ;
-  event->TargetRecoEvent  = fTargetRecoEvent ;
-  event->EVetoRecoEvent   = fEVetoRecoEvent  ;
-  event->PVetoRecoEvent   = fPVetoRecoEvent  ;
-  event->HEPVetoRecoEvent = fHEPVetoRecoEvent;
-  event->ECalRecoEvent    = fECalRecoEvent   ;
-  event->SACRecoEvent     = fSACRecoEvent    ;
-  event->TargetRecoBeam   = fTargetRecoBeam  ;
-  event->SACRecoCl        = fSACRecoCl       ;
-  event->ECalRecoCl       = fECalRecoCl      ;
-  event->PVetoRecoCl      = fPVetoRecoCl     ;
-  event->EVetoRecoCl      = fEVetoRecoCl     ;
-  event->HEPVetoRecoCl    = fHEPVetoRecoCl   ;
-  event->MCTruthEvent     = fMCTruthEvent    ;
+  event->RecoEvent          = fRecoEvent         ;
+  event->TargetRecoEvent    = fTargetRecoEvent   ;
+  event->EVetoRecoEvent     = fEVetoRecoEvent    ;
+  event->PVetoRecoEvent     = fPVetoRecoEvent    ;
+  event->HEPVetoRecoEvent   = fHEPVetoRecoEvent  ;
+  event->ECalRecoEvent      = fECalRecoEvent     ;
+  event->SACRecoEvent       = fSACRecoEvent      ;
+  event->LeadGlassRecoEvent = fLeadGlassRecoEvent;
+  event->TargetRecoBeam     = fTargetRecoBeam    ;
+  event->SACRecoCl          = fSACRecoCl         ;
+  event->ECalRecoCl         = fECalRecoCl        ;
+  event->PVetoRecoCl        = fPVetoRecoCl       ;
+  event->EVetoRecoCl        = fEVetoRecoCl       ;
+  event->HEPVetoRecoCl      = fHEPVetoRecoCl     ;
+  event->MCTruthEvent       = fMCTruthEvent      ;
 
   if (fVerbose) printf("---> Initializing user analysis\n");
   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
   UserAn->Init(event);
   
-  Int_t nTargetHits =0;
-  Int_t nECalHits   =0;   
-  Int_t nPVetoHits  =0;  
-  Int_t nEVetoHits  =0;
-  Int_t nHEPVetoHits=0;
-  Int_t nSACHits    =0;
+  Int_t nTargetHits   =0;
+  Int_t nECalHits     =0;   
+  Int_t nPVetoHits    =0;  
+  Int_t nEVetoHits    =0;
+  Int_t nHEPVetoHits  =0;
+  Int_t nSACHits      =0;
+  Int_t nLeadGlassHits=0;
   
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
 
@@ -352,18 +359,22 @@ int main(Int_t argc, char **argv)
 	//printf("     Time %ld Old Temp %5.2f Old Corr %7.5f New Temp %6.4f %6.4f New Corr %7.5f %7.5f\n",timevent.GetSec(),temp_event,temp_corr,TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
 	printf("     Time %ld Temp %6.4f %6.4f Corr %7.5f %7.5f\n",timevent.GetSec(),TempCorr->GetTemp(timevent,0),TempCorr->GetTemp(timevent,1),TempCorr->GetTempCorr(timevent,0),TempCorr->GetTempCorr(timevent,1));
       }
-      if (fECalRecoEvent)    nECalHits   = fECalRecoEvent->GetNHits();
-      if (fTargetRecoEvent)  nTargetHits = fTargetRecoEvent->GetNHits(); 
-      if (fPVetoRecoEvent)   nPVetoHits  = fPVetoRecoEvent->GetNHits();
-      if (fEVetoRecoEvent)   nEVetoHits  = fEVetoRecoEvent->GetNHits();
-      if (fHEPVetoRecoEvent) nHEPVetoHits= fHEPVetoRecoEvent->GetNHits();
-      if (fSACRecoEvent)     nSACHits    = fSACRecoEvent->GetNHits();
-      std::cout<<"     Hits in Target "<<nTargetHits
-	       <<" ECal "<<nECalHits
-	       <<" PVeto "<<nPVetoHits
-	       <<" EVeto "<<nEVetoHits
-	       <<" HEPVeto "<<nHEPVetoHits
-	       <<" SAC "<<nSACHits<<std::endl;
+      if (fECalRecoEvent)      nECalHits     = fECalRecoEvent->GetNHits();
+      if (fTargetRecoEvent)    nTargetHits   = fTargetRecoEvent->GetNHits(); 
+      if (fPVetoRecoEvent)     nPVetoHits    = fPVetoRecoEvent->GetNHits();
+      if (fEVetoRecoEvent)     nEVetoHits    = fEVetoRecoEvent->GetNHits();
+      if (fHEPVetoRecoEvent)   nHEPVetoHits  = fHEPVetoRecoEvent->GetNHits();
+      if (fSACRecoEvent)       nSACHits      = fSACRecoEvent->GetNHits();
+      if (fLeadGlassRecoEvent) nLeadGlassHits= fLeadGlassRecoEvent->GetNHits();
+      std::cout<<"     Hits in"
+	       <<" Target "   <<nTargetHits
+	       <<" ECal "     <<nECalHits
+	       <<" PVeto "    <<nPVetoHits
+	       <<" EVeto "    <<nEVetoHits
+	       <<" HEPVeto "  <<nHEPVetoHits
+	       <<" SAC "      <<nSACHits
+	       <<" LeadGlass "<<nLeadGlassHits
+	       <<std::endl;
       std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
 
       // Show MCTruth information (example)
@@ -386,12 +397,13 @@ int main(Int_t argc, char **argv)
 
     }
     if (fVerbose>3) {
-      if (fTargetRecoEvent)  fTargetRecoEvent->Print();
-      if (fECalRecoEvent)    fECalRecoEvent->Print();
-      if (fPVetoRecoEvent)   fPVetoRecoEvent->Print();
-      if (fEVetoRecoEvent)   fEVetoRecoEvent->Print();
-      if (fHEPVetoRecoEvent) fHEPVetoRecoEvent->Print();
-      if (fSACRecoEvent)     fSACRecoEvent->Print();
+      if (fTargetRecoEvent)    fTargetRecoEvent->Print();
+      if (fECalRecoEvent)      fECalRecoEvent->Print();
+      if (fPVetoRecoEvent)     fPVetoRecoEvent->Print();
+      if (fEVetoRecoEvent)     fEVetoRecoEvent->Print();
+      if (fHEPVetoRecoEvent)   fHEPVetoRecoEvent->Print();
+      if (fSACRecoEvent)       fSACRecoEvent->Print();
+      if (fLeadGlassRecoEvent) fLeadGlassRecoEvent->Print();
     }
     
     if (doNtuple) stdNtuple->Fill(event);

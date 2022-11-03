@@ -43,6 +43,10 @@ int reset_config()
   strcpy(Config->initfail_file,"run/initfail.trigger");
   strcpy(Config->lock_file,"run/lock.trigger");
 
+  // Default trigger board IP configuration
+  strcpy(Config->trigger_addr,"192.168.60.100");
+  Config->trigger_port = 7;
+
   Config->run_number = 0; // Dummy run
 
   Config->trigger_mask = 0x01; // Only BTF trigger active
@@ -234,6 +238,20 @@ int read_config(char *cfgfile)
 	  printf("Parameter %s set to '%s'\n",param,value);
 	} else {
 	  printf("WARNING - lock_file name too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"trigger_addr")==0 ) {
+	if ( strlen(value)<16 ) {
+	  strcpy(Config->trigger_addr,value);
+	  printf("Parameter %s set to '%s'\n",param,value);
+	} else {
+	  printf("WARNING - trigger_addr string too long (%lu characters): %s\n",strlen(value),value);
+	}
+      } else if ( strcmp(param,"trigger_port")==0 ) {
+	if ( sscanf(value,"%d",&v) ) {
+	  Config->trigger_port = v;
+	  printf("Parameter %s set to %d\n",param,v);
+	} else {
+	  printf("WARNING - Could not parse value %s to number in line:\n%s\n",value,line);
 	}
       } else if ( strcmp(param,"run_number")==0 ) {
 	if ( sscanf(value,"%d",&v) ) {
@@ -507,6 +525,9 @@ int print_config(){
   printf("initok_file\t\t'%s'\tname of initok file. Created when board is correctly initialized and ready fo DAQ\n",Config->initok_file);
   printf("initfail_file\t\t'%s'\tname of initfail file. Created when board initialization failed\n",Config->initfail_file);
   printf("lock_file\t\t'%s'\tname of lock file. Contains PID of locking process\n",Config->lock_file);
+
+  printf("trigger_addr\t\t'%s'\tIP address of trigger board.\n",Config->trigger_addr);
+  printf("trigger_port\t\t%u\t\t\tIP port number of trigger board.\n",Config->trigger_port);
 
   printf("run_number\t\t%d\t\trun number (0: dummy run, not saved to DB)\n",Config->run_number);
 

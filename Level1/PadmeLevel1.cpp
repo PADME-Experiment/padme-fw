@@ -193,12 +193,12 @@ int main(int argc, char* argv[])
   for (unsigned int i=0; i<number_of_boards; i++) {
     input_stream_handle.read((char*)&buff,4);
     board_id[i] = ((buff & 0xff000000) >> 24);
-    board_sn[board_id[i]] = ((buff & 0x00ffffff) >>  0);
+    board_sn[i] = ((buff & 0x00ffffff) >>  0);
     boards[i] = new ADCBoard(i);
     // Tell board which data format to handle
     boards[i]->SetVersion(version);
     expected_adcboards |= (1 << board_id[i]); // Add current board to mask of expected ADC boards
-    printf("- Board %u Id %u SN %u\n",i,board_id[i],board_sn[board_id[i]]);
+    printf("- Board %u Id %u SN %u\n",i,board_id[i],board_sn[i]);
   }
   printf("Expected ADC boards mask is 0x%08x\n",expected_adcboards);
 
@@ -272,7 +272,7 @@ int main(int argc, char* argv[])
 	    exit(1);
 	  }
 	  // Add board serial number
-	  boards[i]->Event()->SetBoardSN(board_sn[boards[i]->Event()->GetBoardId()]);
+	  boards[i]->Event()->SetBoardSN(board_sn[i]);
 	}
 
 	// Send event to ROOT

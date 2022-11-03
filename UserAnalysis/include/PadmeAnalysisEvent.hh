@@ -9,8 +9,10 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
+#include "TRecoVClusCollection.hh"
 
 class PadmeAnalysisEvent{
 public:
@@ -18,20 +20,21 @@ public:
   PadmeAnalysisEvent();
   ~PadmeAnalysisEvent(){;};
 
-  TRecoEvent*           RecoEvent       ;
-  TTargetRecoEvent*     TargetRecoEvent ;
-  TEVetoRecoEvent*      EVetoRecoEvent  ;
-  TPVetoRecoEvent*      PVetoRecoEvent  ;
-  THEPVetoRecoEvent*    HEPVetoRecoEvent;
-  TECalRecoEvent*       ECalRecoEvent   ;
-  TSACRecoEvent*        SACRecoEvent    ;
-  TTargetRecoBeam*      TargetRecoBeam  ;
-  TRecoVClusCollection* SACRecoCl       ;
-  TRecoVClusCollection* ECalRecoCl      ;
-  TRecoVClusCollection* PVetoRecoCl     ;
-  TRecoVClusCollection* EVetoRecoCl     ;
-  TRecoVClusCollection* HEPVetoRecoCl   ;
-  TMCTruthEvent*        MCTruthEvent    ;
+  TRecoEvent*           RecoEvent         ;
+  TTargetRecoEvent*     TargetRecoEvent   ;
+  TEVetoRecoEvent*      EVetoRecoEvent    ;
+  TPVetoRecoEvent*      PVetoRecoEvent    ;
+  THEPVetoRecoEvent*    HEPVetoRecoEvent  ;
+  TECalRecoEvent*       ECalRecoEvent     ;
+  TSACRecoEvent*        SACRecoEvent      ;
+  TLeadGlassRecoEvent*  LeadGlassRecoEvent;
+  TTargetRecoBeam*      TargetRecoBeam    ;
+  TRecoVClusCollection* SACRecoCl         ;
+  TRecoVClusCollection* ECalRecoCl        ;
+  TRecoVClusCollection* PVetoRecoCl       ;
+  TRecoVClusCollection* EVetoRecoCl       ;
+  TRecoVClusCollection* HEPVetoRecoCl     ;
+  TMCTruthEvent*        MCTruthEvent      ;
 
 };
 #endif

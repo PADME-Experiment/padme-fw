@@ -88,14 +88,14 @@ class Merger:
 
     def create_merger(self):
 
-        self.process_id = self.db.create_merger_process(self.run_number,self.node_id)
-        if self.process_id == -1:
-            print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
-            return "error"
+        #self.process_id = self.db.create_merger_process(self.run_number,self.node_id)
+        #if self.process_id == -1:
+        #    print "Merger::create_merger - ERROR: unable to create new Merger process in DB"
+        #    return "error"
 
         # Add all configuration parameters
-        for cfg in self.config_list():
-            self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
+        #for cfg in self.config_list():
+        #    self.db.add_cfg_para_proc(self.process_id,cfg[0],cfg[1])
 
         return "ok"
 
@@ -122,8 +122,8 @@ class Merger:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_create(self.process_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_create(self.process_id,self.db.now_str())
 
         # Return process id
         return self.process.pid
@@ -136,8 +136,8 @@ class Merger:
                 # Process exited: clean up defunct process and close log file
                 self.process.wait()
                 self.log_handle.close()
-                if self.run_number:
-                    self.db.set_process_time_end(self.process_id,self.db.now_str())
+                #if self.run_number:
+                #    self.db.set_process_time_end(self.process_id,self.db.now_str())
                 return True
             time.sleep(1)
 
@@ -149,8 +149,8 @@ class Merger:
             self.process.wait()
             self.log_handle.close()
 
-        if self.run_number:
-            self.db.set_process_time_end(self.process_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_end(self.process_id,self.db.now_str())
         return False
 
     def parse_log(self):

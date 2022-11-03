@@ -1,5 +1,5 @@
-#ifndef IsGGAnalysis_h
-#define IsGGAnalysis_h 1
+#ifndef Is22GGAnalysis_h
+#define Is22GGAnalysis_h 1
 
 #include <TRandom3.h>
 #include "utlConfigParser.hh"
@@ -8,12 +8,12 @@
 #include "ECalCalib.hh"
 #include "MCTruth.hh"
 
-class IsGGAnalysis {
+class Is22GGAnalysis {
 
 public:
 
-  IsGGAnalysis(TString c = "config/UserAnalysis.conf", Int_t v = 0);
-  ~IsGGAnalysis();
+  Is22GGAnalysis(TString c = "config/UserAnalysis.conf", Int_t v = 0);
+  ~Is22GGAnalysis();
 
   Bool_t Init(PadmeAnalysisEvent*);
   Bool_t Process();

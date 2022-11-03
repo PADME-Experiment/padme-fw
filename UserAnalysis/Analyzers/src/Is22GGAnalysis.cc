@@ -1,14 +1,14 @@
 // Written by M. Raggi   20/07/2021 
 // Last modified by M. Raggi 6/04/2022
-#include "IsGGAnalysis.hh"
+#include "Is22GGAnalysis.hh"
 #include "TF1.h"
 
-IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
+Is22GGAnalysis::Is22GGAnalysis(TString cfgFile, Int_t verbose)
 {
   Bool_t fisMC = false; 
   fVerbose = verbose;
   if (fVerbose) {
-    printf("---> Creating IsGGAnalysis\n");
+    printf("---> Creating Is22GGAnalysis\n");
     printf("     Configuration file %s\n",cfgFile.Data());
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
@@ -19,10 +19,13 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   fMCTruth = MCTruth::GetInstance();
   // Standard cuts list
   MinECluster=50.;
-  MaxECluster=400.;
+  MaxECluster=350.;
 
-  TMin=-170.;
-  TMax= 130.;
+  //  TMin=-170.;
+  //  TMax= 130.;
+  TMin=-500.;
+  TMax= 500.;
+
   TWin= 5.;
 //  ClRadMin= 100.;
 //  ClRadMax= 250.;
@@ -30,25 +33,25 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   ClRadMin= 90.;
   ClRadMax= 270.;
   
-  COGMax  = 30.;
+  COGMax  = 100.;
   DistMax = 150.;
 
 }
 
-IsGGAnalysis::~IsGGAnalysis(){
+Is22GGAnalysis::~Is22GGAnalysis(){
   delete fCfgParser;
   //  delete fRndm;
 }
 
-Bool_t IsGGAnalysis::Init(PadmeAnalysisEvent* event){
-  if (fVerbose) printf("---> Initializing IsGGAnalysis\n");
+Bool_t Is22GGAnalysis::Init(PadmeAnalysisEvent* event){
+  if (fVerbose) printf("---> Initializing Is22GGAnalysis\n");
   fEvent = event;
   InitHistos();
   return true;
 }
 
-Bool_t IsGGAnalysis::InitHistos(){
-  // IsGGAnalysis directory will contain all histograms related to this analysis
+Bool_t Is22GGAnalysis::InitHistos(){
+  // Is22GGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","ECalClTime",500,-250.,250.);
@@ -125,8 +128,11 @@ Bool_t IsGGAnalysis::InitHistos(){
   fHS->BookHisto2List("GGAnalysis","COG_Map",300,-150.,150.,300,-150.,150.);
   fHS->BookHisto2List("GGAnalysis","COG_MapCut",200,-100.,100.,200,-100.,100.);
   fHS->BookHisto2List("GGAnalysis","Chi2vsETot",100,0.,20.,125,0.,500.);
-  fHS->BookHisto2List("GGAnalysis","EnergyMap",150,-300.,300.,150,-300.,300.);
-  fHS->BookHisto2List("GGAnalysis","EnergyMap_GG",150,-300.,300.,150,-300.,300.);
+  fHS->BookHisto2List("GGAnalysis","EnergyMap",150,-300.,300.,150,-300.,300.);  
+  fHS->BookHisto2List("GGAnalysis","EnergyMap<60MeV",150,-300.,300.,150,-300.,300.);
+  fHS->BookHisto2List("GGAnalysis","EnergyMap>220MeV",150,-300.,300.,150,-300.,300.);
+ 
+ fHS->BookHisto2List("GGAnalysis","EnergyMap_GG",150,-300.,300.,150,-300.,300.);
   fHS->BookHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",150,-300.,300.,150,-300.,300.);
 
   fHS->BookHisto2List("GGAnalysis","EpairvsZv",500,-5000.,0.,125,0.,500.);
@@ -138,7 +144,7 @@ Bool_t IsGGAnalysis::InitHistos(){
   return true;
 }
 
-Bool_t IsGGAnalysis::Process(){
+Bool_t Is22GGAnalysis::Process(){
   //Cleaning memory cluster
   EGoodCluster.clear();
   TGoodCluster.clear();
@@ -165,13 +171,14 @@ Bool_t IsGGAnalysis::Process(){
   Int_t NEvent = fEvent->RecoEvent->GetEventNumber();
 
   if(NEvent==0){
-    //    cout<<" Entering IsGG "<<NEvent<<" ismC"<<fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<endl;
+    //    cout<<" Entering Is22GG "<<NEvent<<" ismC"<<fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)<<endl;
     if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) {
       fisMC=true;
     }
     if(fisMC) fBeamE = fMCTruth->GetBeamEnergy(); 
     if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
-    if(fBeamE==0 && !fisMC) fBeamE = 432.5;
+    //    if(fBeamE==0 && !fisMC) fBeamE = 432.5;
+    if(fBeamE==0 && !fisMC) fBeamE = 290.5; //need to be run dependent
   }
 
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
@@ -199,6 +206,9 @@ Bool_t IsGGAnalysis::Process(){
     fHS->FillHistoList("GGAnalysis","ECalClEnergy",eECal,1);
     fHS->FillHistoList("GGAnalysis","ECalClTime",tECal,1);
     fHS->FillHisto2List("GGAnalysis","EnergyMap",pos.X(),pos.Y(),eECal);
+
+    if(eECal<60)  fHS->FillHisto2List("GGAnalysis","EnergyMap<60MeV",pos.X(),pos.Y(),1);
+    if(eECal>220) fHS->FillHisto2List("GGAnalysis","EnergyMap>220MeV",pos.X(),pos.Y(),1);
     fHS->FillHistoList("GGAnalysis","ClusterRadius",ClRadius,1);
     
     //Data cut on cluster energy now it's calibrated
@@ -210,19 +220,19 @@ Bool_t IsGGAnalysis::Process(){
     if(ClRadius>ClRadMax) continue;
 
     //compute angles
-    Double_t ECalTargetDist=3543;
+    Double_t ECalTargetDist=3543; //check the distance 
     Double_t Angle=sqrt(pos.X()*pos.X()+pos.Y()*pos.Y())/ECalTargetDist;
 
     bool GGCheck=CheckThetaAngle(eECal,Angle);
-    int IsGGCheckOk=-1;
-    if(GGCheck) IsGGCheckOk=1;
+    int Is22GGCheckOk=-1;
+    if(GGCheck) Is22GGCheckOk=1;
 
     EGoodCluster.push_back(eECal);
     TGoodCluster.push_back(tECal);
     PosXGoodCluster.push_back(pos.X());
     PosYGoodCluster.push_back(pos.Y());
     AngleGoodCluster.push_back(Angle);
-    IsGGGoodCluster.push_back(IsGGCheckOk);
+    IsGGGoodCluster.push_back(Is22GGCheckOk);
     fHS->FillHistoList("GGAnalysis","EClusters_AfterPresel",eECal,1.);
   }
 
@@ -369,7 +379,7 @@ Bool_t IsGGAnalysis::Process(){
       if(PosXGoodCluster[PairGClIndex1[0]]<0 && PosYGoodCluster[PairGClIndex1[ll]]<0) fHS->FillHistoList("GGAnalysis","EGG_botLeft",EPair,1);
       
       //Use only after general scale calibration
-      if(abs(EPair-fBeamE)/15<4){ 
+      //      if(abs(EPair-fBeamE)/15<4){ 
 	fHS->FillHistoList("GGAnalysis","ZVertex_EPair",PairVertex[ll],1);
 	fHS->FillHisto2List("GGAnalysis","EnvsTime",TimePair,EPair,1.);
 	fHS->FillHisto2List("GGAnalysis","EnvsTimeScaled",TimePair,EPair/fBeamE,1.);
@@ -377,7 +387,7 @@ Bool_t IsGGAnalysis::Process(){
 	if(Zv>-2500.){
 	  fHS->FillHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",PosXGoodCluster[PairGClIndex1[ll]],PosYGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex1[ll]]);
 	}
-      }
+	//      }
     }
   }
   NGG++;
@@ -400,18 +410,18 @@ Bool_t IsGGAnalysis::Process(){
   return true;
 }
 
-Bool_t IsGGAnalysis::Finalize()
+Bool_t Is22GGAnalysis::Finalize()
 {
  // TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
  // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
   std::cout<<"TotGG        = "<<NGG<<std::endl;
   std::cout<<"TotGG_MC     = "<<NGG_MC<<std::endl;
-  if (fVerbose) printf("---> Finalizing IsGGAnalysis\n");
+  if (fVerbose) printf("---> Finalizing Is22GGAnalysis\n");
   return true;
 }
 
 
-double IsGGAnalysis::CompCOG(std::vector<double> Ei,std::vector<double> Posi)
+double Is22GGAnalysis::CompCOG(std::vector<double> Ei,std::vector<double> Posi)
 {
   //  std::cout<<"Size of vectors "<<Ei.size()<<" "<<Posi.size()<<" "<<Ei[0]<<" "<<Posi[0]<<std::endl;
   Double_t ETot=0;
@@ -424,7 +434,7 @@ double IsGGAnalysis::CompCOG(std::vector<double> Ei,std::vector<double> Posi)
   return COG;
 }
 
-double IsGGAnalysis::GetVertex(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY)
+double Is22GGAnalysis::GetVertex(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY)
 {
   Double_t Zv=0;
   Double_t Rij= sqrt(  (PosX[0]-PosX[1])*(PosX[0]-PosX[1]) + (PosY[0]-PosY[1])*(PosY[0]-PosY[1]) ); 
@@ -434,7 +444,7 @@ double IsGGAnalysis::GetVertex(std::vector<double> Ei,std::vector<double> PosX,s
 }
 
 
-double IsGGAnalysis::ComputeInvariantMass(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY)
+double Is22GGAnalysis::ComputeInvariantMass(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY)
 {
   Double_t Mgg=0;
   Double_t Zv  = 3534; //use some kind of geometry plz
@@ -445,7 +455,7 @@ double IsGGAnalysis::ComputeInvariantMass(std::vector<double> Ei,std::vector<dou
 }
 
 // Be Carefull this only work for 2020 430 MeV data set. MR 04/2022
-Bool_t IsGGAnalysis::CheckThetaAngle(double Ei, double Thetai)
+Bool_t Is22GGAnalysis::CheckThetaAngle(double Ei, double Thetai)
 {
   //Uses a pol4 parameterization for the Theta energy correlation
   Double_t Par[5];
@@ -467,7 +477,7 @@ Bool_t IsGGAnalysis::CheckThetaAngle(double Ei, double Thetai)
 }
 
 
-Bool_t IsGGAnalysis::IsMCGG(double VTime,double E1,double E2)
+Bool_t Is22GGAnalysis::IsMCGG(double VTime,double E1,double E2)
 {
   Bool_t isGG_IN = false;
   Int_t NGG_MCBunch=0;

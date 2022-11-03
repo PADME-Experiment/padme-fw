@@ -9,7 +9,7 @@ STATIC := -static
 
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
-CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
+CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS))) -pg
 
 include ./config/global.gmk
 

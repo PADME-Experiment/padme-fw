@@ -278,6 +278,9 @@ int main(Int_t argc, char **argv)
     double cpuAtEnd = ucpu;
     double runAtEnd = urun;
 
+#ifdef __APPLE__
+    printf("\nWARNING: Not running performance measuring tools on MacOS. Results are meaningless...\n");
+#endif 
     // Show final run statistics before exiting
     printf("\n");
     printf ("RecoInfo - Processed Events %d\n",niter);

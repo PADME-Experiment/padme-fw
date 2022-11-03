@@ -82,7 +82,7 @@ Bool_t ValidationBase::InitHistosValidation(TString name)
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname=name+"_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=500;
+  nBin=1000;
   min=0;
   max=500;
   hname = name+"_HitEnergy";

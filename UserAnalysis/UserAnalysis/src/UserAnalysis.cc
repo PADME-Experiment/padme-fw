@@ -4,7 +4,8 @@
 #include "UserAnalysis.hh"
 #include "ECalCalib.hh"
 #include "NPoTAnalysis.hh" //MR
-#include "IsGGAnalysis.hh" //MR
+//#include "IsGGAnalysis.hh" //MR
+#include "Is22GGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
 #include "MCTruth.hh"     //MR
 #include "HistoSvc.hh"
@@ -26,7 +27,8 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
@@ -34,7 +36,8 @@ UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fECalCalib;
   delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
+  //  delete fIsGGAnalysis;
+  delete fIs22GGAnalysis;
   delete fIs3GAnalysis;
   delete fMCTruth;
 }
@@ -47,7 +50,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
 
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
+  fIs22GGAnalysis->Init(fEvent);
   fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -81,18 +85,19 @@ Bool_t UserAnalysis::Process(){
   //Cut on physics trigger Data Only ??
   if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   IsNPotOk=fNPoTAnalysis->Process();
-  if(!IsNPotOk && !isMC) return true; //Drops events with strange NPoT from target
-  fECalCalib->Process(fEvent); 
+  //  if(!IsNPotOk && !isMC) return true; //Drops events with strange NPoT from target
+  //  fECalCalib->Process(fEvent); 
 
   //  cout<<"User Analysis NPOT "<<fNPoTAnalysis->GetNPoT()<<endl;
 
   if(!isMC){
-    fECalCalib->SetEScale();
-    fECalCalib->CorrectESlope();
+    //    fECalCalib->SetEScale();
+    //    fECalCalib->CorrectESlope();
     //    fECalCalib->FixPosition(); //need to change values into the structure.
   }
   
-  fIsGGAnalysis->Process();
+  //  fIsGGAnalysis->Process();
+  fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
   return true;
 }
@@ -102,7 +107,8 @@ Bool_t UserAnalysis::Finalize()
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
+  //  fIsGGAnalysis->Finalize();
+  fIs22GGAnalysis->Finalize();
   fIs3GAnalysis->Finalize();
   
 //  // TGraph example

@@ -60,8 +60,9 @@ private:
   // Threshold to use to evaluate bunch length
   Double_t fBunchLengthThreshold;
 
-  // Bunch length
+  // Bunch length and quality
   Double_t fBunchLength;
+  Double_t fBunchBBQ;
 
   // Histograms
   TH1D* fHLGPedestal;
@@ -69,6 +70,9 @@ private:
   TH1D* fHLGTotCharge;
   TH1D* fHLGNPoTs;
   TH1D* fHLGBunchLength;
+  TH1D* fHLGBunchBBQ;
+  //TH1D* fHLGBunchBBQWF;
+  //TH1D* fHLGBunchBBQWF2;
 
 };
 #endif

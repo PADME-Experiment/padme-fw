@@ -2,13 +2,16 @@
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
-// Modified by Beth Long 2022-04-07 
+//
 // --------------------------------------------------------------
 #ifndef EVetoReconstruction_H
 #define EVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "VetoClusterHits.hh"
+#include "VetoClusterization.hh"
 #include "TRandom2.h"
+
 
 class EVetoReconstruction : public PadmeVReconstruction
 {
@@ -17,25 +20,30 @@ public:
   
   EVetoReconstruction(TFile*, TString);
   ~EVetoReconstruction();
-
-  // void ParseConfFile(TString);
-  // virtual void Init(PadmeVReconstruction*);
   // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   void BuildHits(TRawEvent* rawEv); //Get the CH_ID MR 
   void BuildClusters(TRawEvent* rawEv);
+  void BuildClusters(TMCEvent* MCEv);
   void Clusterise();
   void MergeClusters();
   virtual void ProcessEvent(TRawEvent* rawEv); //Get the CH_ID MR 
+  virtual void ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent); //Get the CH_ID MR 
+  //void Init(PadmeVReconstruction* MainReco);
   bool TriggerToBeSkipped();
+  // std::vector<Cluster*> GetClusters(){return ClusVec;}
 
-  TRandom2 *random;
-  
+private:
+
+  TRandom2* random;
   Double_t fSigmaNoiseForMC;
   Double_t fEVetoDigiTimeWindow;
+  Int_t fClusterAlgo;
+  VetoClusterHits fClusterHits;
+  VetoClusterStructure fClusStruc;
+  // std::vector<Cluster*> ClusVec;
 
 };
 #endif

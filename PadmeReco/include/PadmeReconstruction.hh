@@ -23,6 +23,7 @@ class TPVetoMCEvent;
 class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
+class TETagMCEvent;
 class TTPixMCEvent;
 
 class TTargetRecoEvent;
@@ -31,6 +32,7 @@ class TPVetoRecoEvent;
 class THEPVetoRecoEvent;
 class TECalRecoEvent;
 class TSACRecoEvent;
+class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
 
@@ -98,6 +100,7 @@ private:
   THEPVetoMCEvent* fHEPVetoMCEvent;
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
+  TETagMCEvent*    fETagMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
 
   TRecoEvent*        fRecoEvent;
@@ -107,6 +110,7 @@ private:
   THEPVetoRecoEvent* fHEPVetoRecoEvent;
   TECalRecoEvent*    fECalRecoEvent;
   TSACRecoEvent*     fSACRecoEvent;
+  TETagRecoEvent*    fETagRecoEvent;
   TTPixRecoEvent*    fTPixRecoEvent;
   TLeadGlassRecoEvent* fLeadGlassRecoEvent;
  

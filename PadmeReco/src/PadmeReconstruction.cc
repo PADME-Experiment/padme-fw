@@ -16,6 +16,7 @@
 #include "THEPVetoMCEvent.hh"
 #include "TECalMCEvent.hh"
 #include "TSACMCEvent.hh"
+#include "TETagMCEvent.hh"
 #include "TTPixMCEvent.hh"
 
 #include "TTargetRecoEvent.hh"
@@ -24,6 +25,7 @@
 #include "THEPVetoRecoEvent.hh"
 #include "TECalRecoEvent.hh"
 #include "TSACRecoEvent.hh"
+#include "TETagRecoEvent.hh"
 //#include "TTPixRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
 
@@ -33,6 +35,7 @@
 #include "HEPVetoReconstruction.hh"
 #include "ECalReconstruction.hh"
 #include "SACReconstruction.hh"
+#include "ETagReconstruction.hh"
 #include "TPixReconstruction.hh"
 #include "LeadGlassReconstruction.hh"
 
@@ -55,6 +58,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fHEPVetoMCEvent = 0;
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
+  fETagMCEvent    = 0;
   fTPixMCEvent    = 0;
 
   fRawEvent       = 0;
@@ -66,6 +70,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fHEPVetoRecoEvent = 0;
   fECalRecoEvent    = 0;
   fSACRecoEvent     = 0;
+  fETagRecoEvent    = 0;
   fTPixRecoEvent    = 0;
   fLeadGlassRecoEvent = 0;
 
@@ -145,6 +150,11 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling HEPVeto with configuration file "<<configHEPVeto<<std::endl;
     fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,configHEPVeto));
   }
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",0)) {
+    TString configETag = fConfig->GetParOrDefault("RECOCONFIG","ETag","config/ETag.cfg");
+    std::cout << "=== Enabling ETag with configuration file " << configETag <<std::endl;
+    fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));
+  }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","LeadGlass",1)) {
     TString configLeadGlass = fConfig->GetParOrDefault("RECOCONFIG","LeadGlass","config/LeadGlass.cfg");
     std::cout<<"=== Enabling LeadGlass with configuration file "<<configLeadGlass<<std::endl;
@@ -152,12 +162,9 @@ void PadmeReconstruction::InitLibraries()
   }
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
-    {
-      std::cout<<" **** <"<<fRecoLibrary[j]->GetName()<<"> is in library at location "<<j<<std::endl;
-    }
+    std::cout << " **** <" << fRecoLibrary[j]->GetName() << "> is in library at location " << j <<std::endl;
   std::cout<<"************************** "<<std::endl;
- 
-  
+
 }
 
 void PadmeReconstruction::InitDetectorsInfo()
@@ -172,8 +179,10 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
   if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
+  if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
+
 }
 
 void PadmeReconstruction::HistoInit()
@@ -218,6 +227,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"HEPVeto");
 	ShowSubDetectorInfo(detInfo,"ECal");
 	ShowSubDetectorInfo(detInfo,"SAC");
+	ShowSubDetectorInfo(detInfo,"ETag");
 	ShowSubDetectorInfo(detInfo,"TPix");
 	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
 
@@ -235,7 +245,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   nEntries = 0;
   TString mcTreeName = "MC";
   fMCChain = NULL;
-  std::cout<<" Looking for tree named "<<mcTreeName<<std::endl;
+  std::cout << " Looking for tree named " << mcTreeName << std::endl;
   fMCChain = BuildChain(mcTreeName);
   if(fMCChain) {
     
@@ -269,6 +279,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="SAC") {
 	fSACMCEvent = new TSACMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
+      } else if (branchName=="ETag") {
+	fETagMCEvent = new TETagMCEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fETagMCEvent);
       } else if (branchName=="TPix") {
 	fTPixMCEvent = new TTPixMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
@@ -324,6 +337,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="SAC_Hits") {
 	fSACRecoEvent = new TSACRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+      } else if (branchName=="ETag_Hits") {
+	fETagRecoEvent = new TETagRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoEvent);
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
@@ -390,6 +406,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagMCEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fETagMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
       }
@@ -425,6 +443,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fETagRecoEvent,fRecoEvent);
 	//      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
 	//	fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
       }

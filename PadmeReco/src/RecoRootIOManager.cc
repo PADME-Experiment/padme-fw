@@ -7,6 +7,7 @@
 #include "EVetoRecoRootIO.hh"
 #include "HEPVetoRecoRootIO.hh"
 #include "SACRecoRootIO.hh"
+#include "ETagRecoRootIO.hh"
 #include "TargetRecoRootIO.hh"
 #include "ECalRecoRootIO.hh"
 #include "LeadGlassRecoRootIO.hh"
@@ -50,6 +51,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fRootIOList.push_back(new HEPVetoRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
     fRootIOList.push_back(new SACRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "ETag"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ETag"    ,1))
+    fRootIOList.push_back(new ETagRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
     fRootIOList.push_back(new TargetRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
@@ -70,6 +73,7 @@ RecoRootIOManager* RecoRootIOManager::GetInstance()
 //fInstance = new RecoRootIOManager(); }
   return fInstance;
 }
+
 RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
 {
   if ( fInstance == 0 ) { fInstance = new RecoRootIOManager(confFile); }
@@ -193,8 +197,6 @@ void RecoRootIOManager::NewRun(Int_t nRun)
   }
 
 }
-
-
 
 void RecoRootIOManager::EndRun()
 {

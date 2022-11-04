@@ -27,6 +27,7 @@
 #include "TSACRecoEvent.hh"
 #include "TETagRecoEvent.hh"
 //#include "TTPixRecoEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
@@ -36,6 +37,7 @@
 #include "SACReconstruction.hh"
 #include "ETagReconstruction.hh"
 #include "TPixReconstruction.hh"
+#include "LeadGlassReconstruction.hh"
 
 #include "ECalParameters.hh"
 
@@ -70,6 +72,8 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fSACRecoEvent     = 0;
   fETagRecoEvent    = 0;
   fTPixRecoEvent    = 0;
+  fLeadGlassRecoEvent = 0;
+
   fGlobalRecoConfigOptions=NULL;
 
   //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
@@ -151,6 +155,11 @@ void PadmeReconstruction::InitLibraries()
     std::cout << "=== Enabling ETag with configuration file " << configETag <<std::endl;
     fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));
   }
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","LeadGlass",1)) {
+    TString configLeadGlass = fConfig->GetParOrDefault("RECOCONFIG","LeadGlass","config/LeadGlass.cfg");
+    std::cout<<"=== Enabling LeadGlass with configuration file "<<configLeadGlass<<std::endl;
+    fRecoLibrary.push_back(new LeadGlassReconstruction(fHistoFile,configLeadGlass));
+  }
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
     std::cout << " **** <" << fRecoLibrary[j]->GetName() << "> is in library at location " << j <<std::endl;
@@ -172,6 +181,7 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
   if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
+  if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
 
 }
 

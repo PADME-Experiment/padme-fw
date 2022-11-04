@@ -100,11 +100,16 @@ public :
   TMultiGraph * AllFingerGraph = new TMultiGraph("PVetoFingersZX","PVetoFingersZX");
   TGraph* PVetoFingerGraphs[nEVetoNFingers];
 
-  TH2D* EVeto_ThetaVsP[nEVetoNFingers];
-  TH2D* PVeto_ThetaVsP[nPVetoNFingers];
+  TH1D* hbfieldy  = new TH1D("hbfieldy","bfield y component",400,-2000.,2000.);
 
-  TH2D* EVeto_ThetaVsPhi[nEVetoNFingers];
-  TH2D* PVeto_ThetaVsPhi[nPVetoNFingers];
+  TH1D* hPVetoChID = new TH1D("hPVetoChID","hPVetoChID",90,0,90);
+  TH1D* hEVetoChID = new TH1D("hEVetoChID","hEVetoChID",96,0,96);
+  
+  TH2D* hEVeto_ThetaVsP[nEVetoNFingers];
+  TH2D* hPVeto_ThetaVsP[nPVetoNFingers];
+
+  TH2D* hEVeto_ThetaVsPhi[nEVetoNFingers];
+  TH2D* hPVeto_ThetaVsPhi[nPVetoNFingers];
 
 };
 #endif

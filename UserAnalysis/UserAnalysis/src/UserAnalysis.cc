@@ -7,6 +7,9 @@
 #include "NPoTAnalysis.hh"
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
+#include "BhabhaAnalysis.hh" //BL
+#include "BremsstrahlungAnalysis.hh" //BL
+#include "MCTruth.hh" //BL
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -21,14 +24,20 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  //fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
+  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
+  // delete fIsGGAnalysis;
+  delete fBhabhaAnalysis;
+  delete fBremsstrahlungAnalysis;
+  delete fMCTruth;
   //  delete fIs3GAnalysis;
 }
 
@@ -37,7 +46,10 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   fEvent = event;
   InitHistos();
   fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
+  fBhabhaAnalysis->Init(fEvent);
+  fBremsstrahlungAnalysis->Init(fEvent);
+  fMCTruth->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -56,10 +68,10 @@ Bool_t UserAnalysis::InitHistos(){
   fHS->BookHisto2List("MyHistos","Test2D",10,0.,10.,10,0.,10.);
 
   // Histograms for MCTruth information
-  fHS->CreateList("MCTruth");
-  fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
-  fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
-  fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
+  // fHS->CreateList("MCTruth");
+  // fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
+  // fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+  // fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
 
   return true;
 }
@@ -73,7 +85,10 @@ Bool_t UserAnalysis::Process(){
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
   fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  fIsGGAnalysis->Process();
+  //  fIsGGAnalysis->Process();
+  fBhabhaAnalysis->Process();
+  fBremsstrahlungAnalysis->Process();
+  fMCTruth->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
 
@@ -101,30 +116,30 @@ Bool_t UserAnalysis::Process(){
   }
   */
 
-  // MCTruth analysis
-  if (fEvent->MCTruthEvent) {
-    fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
-    if (fEvent->MCTruthEvent->GetNVertices()>0) {
-      for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
-	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-	if (mcVtx->GetProcess() == "eBrem") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
-	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-	    if (mcOPart->GetPDGCode() == 22) {
-	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
-	    }
-	  }
-	} else if (mcVtx->GetProcess() == "eIoni") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
-	} else if (mcVtx->GetProcess() == "annihil") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
-	} else {
-	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
-	}
-      }
-    }
-  }
+  // // MCTruth analysis
+  // if (fEvent->MCTruthEvent) {
+  //   fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
+  //   if (fEvent->MCTruthEvent->GetNVertices()>0) {
+  //     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
+  // 	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+  // 	if (mcVtx->GetProcess() == "eBrem") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
+  // 	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+  // 	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+  // 	    if (mcOPart->GetPDGCode() == 22) {
+  // 	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
+  // 	    }
+  // 	  }
+  // 	} else if (mcVtx->GetProcess() == "eIoni") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
+  // 	} else if (mcVtx->GetProcess() == "annihil") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
+  // 	} else {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
+  // 	}
+  //     }
+  //   }
+  // }
 
   return true;
 }
@@ -135,7 +150,10 @@ Bool_t UserAnalysis::Finalize()
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
 
   fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
+  //fIsGGAnalysis->Finalize();
+  fBhabhaAnalysis->Finalize();
+  fBremsstrahlungAnalysis->Finalize();
+  fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
 
 //  // TGraph example

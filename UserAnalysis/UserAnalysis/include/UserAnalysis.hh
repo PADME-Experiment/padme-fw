@@ -8,6 +8,9 @@ class HistoSvc;
 class NPoTAnalysis;
 class IsGGAnalysis;
 class Is3GAnalysis;
+class BhabhaAnalysis;
+class BremsstrahlungAnalysis;
+class MCTruth;
 
 class UserAnalysis {
 
@@ -35,6 +38,9 @@ private:
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
+  BhabhaAnalysis* fBhabhaAnalysis;
+  BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
+  MCTruth* fMCTruth;
 
 };
 #endif

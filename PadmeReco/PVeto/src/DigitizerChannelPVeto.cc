@@ -173,8 +173,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }     
-      //if(Time<50||Time>350)
-      fAnalogPrint=1;
+      if(nfound>=13)
+	fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
 
@@ -233,14 +233,15 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     hitVec.push_back(Hit);
 
   }//end loop over hits
-
-  //  if(analogchecker==1) fAnalogPrint=1;
-  //  else fAnalogPrint =0;
-  //  if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
+  
+  // if(analogchecker==1) fAnalogPrint=1;
+  // else fAnalogPrint =0;
+  // if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
 
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  if(fAnalogPrint==1)   std::cout<<"EventCounter "<<EventCounter<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<std::endl;
+  if(fAnalogPrint==1)
+    std::cout<<"EventCounter "<<EventCounter<<" ChID() "<<GetChID()<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<" nfound "<<nfound<<std::endl;
   return Time;
 }
 
@@ -476,6 +477,7 @@ void DigitizerChannelPVeto::AnalogPlotting(){
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
       fAnalogsPrinted++;
+      fAnalogPrint=0;
     }  
   }
 }

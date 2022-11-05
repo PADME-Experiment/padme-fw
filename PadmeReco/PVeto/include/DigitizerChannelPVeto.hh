@@ -77,7 +77,7 @@ private:
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
   int fEnergyCalibrationFile;
-  int fTimeCalibrationFile;
+  int fTimeCalibration;
   TString detectorname;
 
   std::vector<Double_t>   tDerivHitVec          ;
@@ -147,30 +147,31 @@ private:
   std::vector<TH1F*> hRaw;//Raw+TSpectrum
   std::vector<TH1F*> hDeriv;//Deriv+TSpectrum
 
-  TH1F * hNoEventsReconstructed    ;
-  TH1F * hNoHitsDeriv              ;
-  TH1F * hRawV                     ;
-  TH1F * hRawVCorrect              ;
-  TH1F * hRawVCorrectChannels20to70;
-  TH1F * hRawVOneHit               ;
-  TH1F * hRawVMultiHit             ;
-  TH1F * hRawVMultiHitCorrect      ;
-  TH1F * hDerivV                   ;
-  TH1F * hDerivVOneHit             ;
-  TH1F * hDerivVCorrect            ;
-  TH1F * hOccupancy                ;
-  TH1F * hOccupancyOneHit          ;
-  TH1F * hMinTimeDiffDeriv         ;
-  TH1F * hVRatio                   ;
-  TH1F * hNZSupEvents              ;
-  TH1F * hNoiseRMSAvg              ;
-  TH1F * hYTSpecYMaxDiff           ;
-  TH1F * hYMaxRawYTSpecRatio       ;
-  TH1F * hYRiseYTSpecRatio         ;
-  TH1F * hYMaxDerivYTSpecRatio     ;
-  TH1F * hHitEnergy                ;
-  TH1F * hHitEnergySingleHit       ;
-  TH1F * hHitTime                  ;
+  TH1F * hNoEventsReconstructed     ;
+  TH1F * hNoHitsDeriv               ;
+  TH1F * hRawV                      ;
+  TH1F * hRawVCorrect               ;
+  TH1F * hRawVCorrectChannels20to70 ;
+  TH1F * hRawVOneHit                ;
+  TH1F * hRawVMultiHit              ;
+  TH1F * hRawVMultiHitCorrect       ;
+  TH1F * hDerivV                    ;
+  TH1F * hDerivVOneHit              ;
+  TH1F * hDerivVCorrect             ;
+  TH1F * hOccupancy                 ;
+  TH1F * hOccupancyOneHit           ;
+  TH1F * hMinTimeDiffDeriv          ;
+  TH1F * hMinTimeDiffDerivChas30to70;
+  TH1F * hVRatio                    ;
+  TH1F * hNZSupEvents               ;
+  TH1F * hNoiseRMSAvg               ;
+  TH1F * hYTSpecYMaxDiff            ;
+  TH1F * hYMaxRawYTSpecRatio        ;
+  TH1F * hYRiseYTSpecRatio          ;
+  TH1F * hYMaxDerivYTSpecRatio      ;
+  TH1F * hHitEnergy                 ;
+  TH1F * hHitEnergySingleHit        ;
+  TH1F * hHitTime                   ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//

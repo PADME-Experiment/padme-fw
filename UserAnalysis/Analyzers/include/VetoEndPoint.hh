@@ -7,7 +7,7 @@
 #include "TGraph.h"
 #include "TMultiGraph.h"
 #include "TH2D.h"
-//#include "HistoSvc.hh"
+#include "HistoSvc.hh"
 
 class VetoEndPoint {
 

@@ -200,7 +200,7 @@ Bool_t BhabhaAnalysis::Process(){
   if(isMC){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-      if(mcVtx->GetProcess() == "eIoni"){
+      if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){
 	VertexPos=mcVtx->GetPosition();
 	VertexTime = mcVtx->GetTime();
 	//	VertexPos.Print();

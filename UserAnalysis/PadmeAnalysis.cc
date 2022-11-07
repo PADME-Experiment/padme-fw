@@ -383,17 +383,17 @@ int main(Int_t argc, char **argv)
 
       // Show MCTruth information (example)
       if (fMCTruthEvent) {
-	printf("     MCTruthEvent - Run %d Event %d Weight %5.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
+	//	printf("     MCTruthEvent - Run %d Event %d Weight %5.3f Vertices %d\n",fMCTruthEvent->GetRunNumber(),fMCTruthEvent->GetEventNumber(),fMCTruthEvent->GetEventWeight(),fMCTruthEvent->GetNVertices());
 	for(Int_t ii=0;ii<fMCTruthEvent->GetNVertices();ii++) {
 	  TMCVertex* vtx = fMCTruthEvent->Vertex(ii);
-	  printf("       Vertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",ii,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
+	  //printf("       Vertex %d Type %s Time %8.3f ns Position (%8.3f,%8.3f,%8.3f) mm Particles in %d out %d\n",ii,vtx->GetProcess().Data(),vtx->GetTime(),vtx->GetPosition().X(),vtx->GetPosition().Y(),vtx->GetPosition().Z(),vtx->GetNParticleIn(),vtx->GetNParticleOut());
 	  for(Int_t j=0;j<vtx->GetNParticleIn();j++) {
 	    TMCParticle* p = vtx->ParticleIn(j);
-	    printf("         Particle In  %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+	    //printf("         Particle In  %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
 	  }
 	  for(Int_t j=0;j<vtx->GetNParticleOut();j++) {
 	    TMCParticle* p = vtx->ParticleOut(j);
-	    printf("         Particle Out %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
+	    //printf("         Particle Out %2d PDGCode %4d Energy %8.3f MeV Momentum (%8.3f,%8.3f,%8.3f) MeV\n",j,p->GetPDGCode(),p->GetEnergy(),p->GetMomentum().X(),p->GetMomentum().Y(),p->GetMomentum().Z());
 	  }
 	}
       }

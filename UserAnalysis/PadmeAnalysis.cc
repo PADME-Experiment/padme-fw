@@ -13,6 +13,7 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 
 #include "TRecoEvent.hh"
 #include "TTargetRecoEvent.hh"

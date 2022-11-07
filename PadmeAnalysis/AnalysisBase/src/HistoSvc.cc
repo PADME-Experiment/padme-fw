@@ -39,16 +39,21 @@ void HistoSvc::makeFileDir(TString dName)
 {
   fRootOutputFile->mkdir(dName.Data());
 }
+void HistoSvc::cdFileDir(TString dName)
+{
+  fRootOutputFile->cd(dName.Data());
+}
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 void HistoSvc::BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup)
 {
-  
+  fRootOutputFile->cd();
   TH1D* hT1y = new TH1D(name.c_str(), name.c_str(), nx, xlow, xup);
   fHisto1DMap[name]=hT1y;
   return;
 }
 void HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup)
 {
+  fRootOutputFile->cd();
   TH2D* hT1y = new TH2D(name.c_str(), name.c_str(), nx, xlow, xup, ny, ylow, yup);
   fHisto2DMap[name]=hT1y;
   return;
@@ -213,6 +218,7 @@ void HistoSvc::book(Int_t validation, Int_t ntuple) //flatNTP
 void HistoSvc::save()
 { 
   if (fRootOutputFile) {
+    fRootOutputFile->cd();
     fRootOutputFile->Write();        // Writing the histograms to the file
     fRootOutputFile->Close();        // and closing the tree (and the file)
     std::cout << "\n----> Histogram Tree is saved \n" << std::endl;
@@ -254,6 +260,40 @@ void HistoSvc::FillHisto2(std::string hname, Double_t xbin, Double_t ybin, Doubl
       std::cout << "---> warning from HistoSvc::FillHisto() : histo " << hname
            << " found in the map with a NULL pointer "
            << std::endl;
+   }
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+TH1D* HistoSvc::GetHisto(std::string hname){
+   if (fHisto1DMap.find(hname)==fHisto1DMap.end()) {
+    std::cout << "---> warning from HistoSvc::GetHisto() : histo1D " << hname
+           << " does not exist."
+           << std::endl;
+    return nullptr;
+   }
+   if  (fHisto1DMap[hname]) {return fHisto1DMap[hname];}
+   else {
+     std::cout << "---> warning from HistoSvc::GetHisto() : histo " << hname
+	       << " found in the map with a NULL pointer "
+	       << std::endl;
+     return nullptr;
+   }
+}
+
+TH2D* HistoSvc::GetHisto2(std::string hname){
+   if (fHisto2DMap.find(hname)==fHisto2DMap.end()) {
+    std::cout << "---> warning from HistoSvc::GetHisto2() : histo2D " << hname
+           << " does not exist."
+           << std::endl;
+    return nullptr;
+   }
+   if  (fHisto2DMap[hname]) {return fHisto2DMap[hname];}
+   else {
+     std::cout << "---> warning from HistoSvc::GetHisto2() : histo2D " << hname
+	       << " found in the map with a NULL pointer "
+	       << std::endl;
+     return nullptr;
    }
 }
 

@@ -715,10 +715,10 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
 
   //fill the vector with hits informations  
-  Double_t cTime[Hits.size()]={0.};
-  Double_t cEnergy[Hits.size()]={0.};
-  Int_t cChID[Hits.size()]={0};
-  Int_t cUsed[Hits.size()]={0};
+  Double_t cTime[3000]={0.};
+  Double_t cEnergy[3000]={0.};
+  Int_t cChID[3000]={0};
+  Int_t cUsed[3000]={0};
   Int_t cCellUsed[NTotCh]={0};
 
 

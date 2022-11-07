@@ -2,14 +2,16 @@
 
 NAME := PadmeAnalysis
 
-SUBDIRS :=  UserAnalysis Analyzers
-ALLTARGETDIRS := $(SUBDIRS)
+SUBDIRS :=  Analyzers UserAnalysis
+ALLTARGETDIRS := AnalysisBase $(SUBDIRS)
 
 STATIC := -static
 
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
-CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
+CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS))) -pg
+
+all: $(ALLTARGETDIRS) suball PadmeAnalysis 
 
 include ./config/global.gmk
 
@@ -17,10 +19,9 @@ include ./config/global.gmk
 LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix $(STATIC),$(SUBDIRS)))
 LIBS += -Llib -lPadmeAnalysis$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
+LIBS += -L$(PADME)/UserAnalysis/AnalysisBase/lib -lAnalysisBase$(STATIC) -L$(PADME)/UserAnalysis/Analyzers/lib -lAnalyzers$(STATIC)
 
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)
-
-all: PadmeAnalysis
 
 PadmeAnalysis: PadmeAnalysis.cc makesub
 	@echo "Compiling $< ..."

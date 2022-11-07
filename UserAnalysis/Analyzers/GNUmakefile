@@ -2,4 +2,4 @@
 
 NAME := Analyzers
 
-include ../config/global.gmk
+include ../config/subdirs.gmk

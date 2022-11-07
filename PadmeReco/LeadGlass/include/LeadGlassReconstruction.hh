@@ -20,12 +20,15 @@ public:
   void ProcessEvent(TRawEvent*);
   virtual void HistoInit();
 
+  Bool_t LeadGlassFound() { return fLeadGlassFound; }
+
   Double_t GetPedestal()    { return fLGPedestal;  }
   Double_t GetPedestalRMS() { return fLGPedRMS;    }
   Double_t GetCharge()      { return fLGCharge;    }
   Double_t GetEnergy()      { return fLGEnergy;    }
   Double_t GetNPoTs()       { return fLGNPoTs;     }
   Double_t GetBunchLength() { return fBunchLength; }
+  Double_t GetBunchBBQ()    { return fBunchBBQ;    }
 
 private:
 
@@ -34,6 +37,9 @@ private:
   void AnalyzeChannel(Short_t*);
   void ComputeTotalCharge(Short_t*);
   void ComputeBunchLength(Short_t*);
+
+  // Flag to signal if LeadGlass channel was found in this event
+  Bool_t fLeadGlassFound;
 
   // Define parameters for pedestal and total charge evaluation
   UInt_t fPedestalSamples;    // Number of samples to use for pedestals

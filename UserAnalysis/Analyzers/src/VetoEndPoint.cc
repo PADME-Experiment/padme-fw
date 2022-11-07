@@ -20,7 +20,8 @@ VetoEndPoint::VetoEndPoint(){
   //Initialise geometry of the detector
   fHS = HistoSvc::GetInstance();
   SetupPVetoGeometry();
-  InitialiseHistos();
+  fVetoEndPointHistosExist=0;
+  fVetoEndPointHistosExist = InitialiseHistos();
   vetoendfile->cd();
   
   NoutX=NoutY=NoutZ=Nin=NTotal=0;
@@ -29,7 +30,7 @@ VetoEndPoint::VetoEndPoint(){
 
 VetoEndPoint::~VetoEndPoint(){}
 
-void VetoEndPoint::InitialiseHistos(){
+bool VetoEndPoint::InitialiseHistos(){
   double Ebeam = 430.;//MeV
 
   for (int i=0; i<400; i++){
@@ -63,12 +64,13 @@ void VetoEndPoint::InitialiseHistos(){
       fHS->BookHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
     }
   }
+  return 1;
 }
 
 void VetoEndPoint::SaveHistos(){
   if(vetoendfile)
     vetoendfile->cd();
-  else std::cout<<"vetoendfile doesn't exist in VetEndPoint::SaveHistos()"<<std::endl;
+  else std::cout<<"vetoendfile doesn't exist in VetoEndPoint::SaveHistos()"<<std::endl;
 
   AllFingerGraph->Write();
   hbfieldy->Write();

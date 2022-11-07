@@ -22,8 +22,9 @@ public :
   double GetEndTime(){return fEndTime;};
   TVector3 GetEndPosition(){return fEndPosition;};
   void SaveHistos();
-
- private :
+  bool DoesVetoEndPointHistosExist(){return fVetoEndPointHistosExist;};
+  
+private :
   HistoSvc* fHS;
   char name[256];
   
@@ -39,8 +40,10 @@ public :
   double fStepLength;
 
   static VetoEndPoint* fInstance;
+  bool fVetoEndPointHistosExist;
+  
   void SetupPVetoGeometry();
-  void InitialiseHistos();
+  bool InitialiseHistos();
   void PlotFingerGraphs();
   double getBYfield(double x0, double y0, double z0);
   bool PointInTriangle(TVector2 pt, TVector2 v1, TVector2 v2, TVector2 v3);

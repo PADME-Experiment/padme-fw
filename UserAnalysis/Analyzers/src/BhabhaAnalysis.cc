@@ -592,9 +592,9 @@ Bool_t BhabhaAnalysis::Finalize()
 {
   // TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
   // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
-  if(fVetoEndPoint)
+  if(fVetoEndPoint->DoesVetoEndPointHistosExist())
     fVetoEndPoint->SaveHistos();
-  // else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
+  else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
 
   std::cout<<"NSwum "<<NSwum<<std::endl;
   

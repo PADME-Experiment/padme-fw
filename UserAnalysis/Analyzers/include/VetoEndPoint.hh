@@ -24,7 +24,8 @@ public :
   void SaveHistos();
 
  private :
-  //  HistoSvc* fHS;
+  HistoSvc* fHS;
+  char name[256];
   
   int NoutX;
   int NoutY;
@@ -105,15 +106,6 @@ public :
   TGraph* PVetoFingerGraphs[nEVetoNFingers];
 
   TH1D* hbfieldy  = new TH1D("hbfieldy","bfield y component",400,-2000.,2000.);
-
-  TH1D* hPVetoChID = new TH1D("hPVetoChID","hPVetoChID",90,0,90);
-  TH1D* hEVetoChID = new TH1D("hEVetoChID","hEVetoChID",96,0,96);
-  
-  TH2D* hEVeto_ThetaVsP[nEVetoNFingers];
-  TH2D* hPVeto_ThetaVsP[nPVetoNFingers];
-
-  TH2D* hEVeto_ThetaVsPhi[nEVetoNFingers];
-  TH2D* hPVeto_ThetaVsPhi[nPVetoNFingers];
 
 };
 #endif

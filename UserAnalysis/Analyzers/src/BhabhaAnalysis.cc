@@ -594,7 +594,7 @@ Bool_t BhabhaAnalysis::Finalize()
   // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
   if(fVetoEndPoint)
     fVetoEndPoint->SaveHistos();
-  else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
+  // else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
 
   std::cout<<"NSwum "<<NSwum<<std::endl;
   

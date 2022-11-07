@@ -196,11 +196,10 @@ Bool_t BhabhaAnalysis::Process(){
 
   TVector3 VertexPos;
   Double_t VertexTime=-1000;
-
+  
   if(isMC){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-      
       if(mcVtx->GetProcess() == "eIoni"){
 	VertexPos=mcVtx->GetPosition();
 	VertexTime = mcVtx->GetTime();
@@ -215,6 +214,7 @@ Bool_t BhabhaAnalysis::Process(){
 
 	  momentum = mcOutPart->GetMomentum();
 	  fVetoEndPoint->ParticleSwim(momentum,VertexPos,VertexTime,charge);
+	  NSwum++;
 	}
       }
     }
@@ -594,8 +594,10 @@ Bool_t BhabhaAnalysis::Finalize()
   // fHS->SaveTGraphList("GGAnalysis","NPotVsTime",nPotVsTime);
   if(fVetoEndPoint)
     fVetoEndPoint->SaveHistos();
-  else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
+  // else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
 
+  std::cout<<"NSwum "<<NSwum<<std::endl;
+  
   if (fVerbose) printf("---> Finalizing BhabhaAnalysis\n");
   return true;
 }

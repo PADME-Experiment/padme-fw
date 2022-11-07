@@ -43,6 +43,7 @@ private:
   TVector3* VertexPos = new TVector3();
 
   VetoEndPoint * fVetoEndPoint;
+  int NSwum=0;
   
 };
 #endif

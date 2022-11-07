@@ -18,9 +18,13 @@ VetoEndPoint* VetoEndPoint::GetInstance()
 
 VetoEndPoint::VetoEndPoint(){
   //Initialise geometry of the detector
+  fHS = HistoSvc::GetInstance();
   SetupPVetoGeometry();
   InitialiseHistos();
   vetoendfile->cd();
+  
+  NoutX=NoutY=NoutZ=Nin=NTotal=0;
+  std::cout<<"Nout X "<<NoutX<<" NoutY "<<NoutY<<" NoutZ "<<NoutZ<<std::endl;
 }
 
 VetoEndPoint::~VetoEndPoint(){}
@@ -31,14 +35,32 @@ void VetoEndPoint::InitialiseHistos(){
   for (int i=0; i<400; i++){
     hbfieldy->SetBinContent(i+1,getBYfield(0,0,-2000.+10.*i));
   }
+
+  fHS->CreateList("VetoEndPointList");
+  fHS->CreateList("VetoEndPointList");
+
+  fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,0.5,89.5);
+  fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,95.5);
   
+  fHS->CreateList("VetoEndPointList/PVetoThetaVsP");
+  fHS->CreateList("VetoEndPointList/EVetoThetaVsP");
+  
+  fHS->CreateList("VetoEndPointList/PVetoThetaVsPhi");
+  fHS->CreateList("VetoEndPointList/EVetoThetaVsPhi");  
+
   for(int ChID=0;ChID<nEVetoNFingers;ChID++){
-    hEVeto_ThetaVsP[ChID] = new TH2D(Form("hEVeto_ThetaVsP_Channel%d",ChID),Form("hEVeto_ThetaVsP_Channel%d",ChID),100,0.,Ebeam,101,0.5,200.5);
-    hEVeto_ThetaVsPhi[ChID] = new TH2D(Form("hEVeto_ThetaVsPhi_Channel%d",ChID),Form("Veto_ThetaVsPhi_Channel%d",ChID),180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
+    sprintf(name,"hEVeto_ThetaVsP_Channel%d",ChID);
+    fHS->BookHisto2List("VetoEndPointList/EVetoThetaVsP",name,100,0.,Ebeam,101,0.5,200.5);
+
+    sprintf(name,"hEVeto_ThetaVsPhi_Channel%d",ChID);
+    fHS->BookHisto2List("VetoEndPointList/EVetoThetaVsPhi",name,180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
 
     if(ChID<nPVetoNFingers){
-      hPVeto_ThetaVsP[ChID] = new TH2D(Form("hPVeto_ThetaVsP_Channel%d",ChID),Form("hEVeto_ThetaVsP_Channel%d",ChID),100,0.,Ebeam,101,0.5,200.5);
-      hPVeto_ThetaVsPhi[ChID] = new TH2D(Form("hPVeto_ThetaVsPhi_Channel%d",ChID),Form("Veto_ThetaVsPhi_Channel%d",ChID),180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
+      sprintf(name,"hPVeto_ThetaVsP_Channel%d",ChID);
+      fHS->BookHisto2List("VetoEndPointList/PVetoThetaVsP",name,100,0.,Ebeam,101,0.5,200.5);
+
+      sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",ChID);
+      fHS->BookHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
     }
   }
 }
@@ -50,29 +72,9 @@ void VetoEndPoint::SaveHistos(){
 
   AllFingerGraph->Write();
   hbfieldy->Write();
-  
-  vetoendfile->mkdir("hEVeto_ThetaVsP");
-  vetoendfile->mkdir("hEVeto_ThetaVsPhi");
 
-  vetoendfile->mkdir("hPVeto_ThetaVsP");
-  vetoendfile->mkdir("hPVeto_ThetaVsPhi");
-
-  for(int ChID=0;ChID<nEVetoNFingers;ChID++){
-    vetoendfile->cd("hEVeto_ThetaVsP");
-    hEVeto_ThetaVsP[ChID]->Write();
-
-    vetoendfile->cd("hEVeto_ThetaVsPhi");
-    hEVeto_ThetaVsPhi[ChID]->Write();
-
-    if(ChID<nPVetoNFingers){
-      vetoendfile->cd("hPVeto_ThetaVsP");
-      hPVeto_ThetaVsP[ChID]->Write();
-
-      vetoendfile->cd("hEVeto_ThetaVsPhi");
-      hPVeto_ThetaVsPhi[ChID]->Write();
-    }
-  }
   vetoendfile->Close();
+  std::cout<<"NTotal "<<NTotal<<" NOutX "<<NoutX<<" NoutY "<<NoutY<<" NoutZ "<<NoutZ<<" Nin "<<Nin<<std::endl;
 }
 
 void VetoEndPoint::SetupPVetoGeometry(){
@@ -127,6 +129,8 @@ void VetoEndPoint::PlotFingerGraphs(){
 
 void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, Double_t starttime, Int_t particlecharge){
   //for Bhabhas originating from the target, where do they end up?
+  NTotal++;
+
   fEndFinger = -100;
   fEndTime = -100.;
   fEndPosition = TVector3(-10000,-10000,-10000);
@@ -136,10 +140,10 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
 
   //copy starting values into local variables so that the starting variables don't change during this process
   TVector3 LocalMomentum = startmomentum;
-  TVector3 LocalDirection = LocalMomentum*(1/LocalMomentum.Mag());
+  //TVector3 LocalDirection = LocalMomentum*(1/LocalMomentum.Mag());
   TVector3 LocalPosition = startposition;
 
-  if(fabs(LocalDirection.Mag()-1.)>1e-9) std::cout<<"dir mag problem "<<LocalDirection.Mag()<<std::endl;
+  //if(fabs(LocalMomentum.Mag()-1.)>1e-9) std::cout<<"dir mag problem "<<LocalDirection.Mag()<<std::endl;
 
   TVector3 PT(0,0,0);
   TVector3 magField(0,1,0); // T
@@ -150,25 +154,28 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
   int channelFired = -1; //channelID of channel where particle finishes
   double totalLength = 0; //total length of trajectory (mm?)
 
-   for (int is = 0; is< nSteps; is++){
+  Bool_t outX = 0;
+  Bool_t outY = 0;
+  Bool_t outZ = 0;
+  
+  for (int istep = 0; istep< nSteps; istep++){
      //Assuming that any fringe fields in X and Z have little imapct, we simulate only the field in the Y direction
      magField.SetY(getBYfield(LocalPosition.X(),LocalPosition.Y(),LocalPosition.Z()));
-     
      if (magField.Mag() > 1E-8){
        //Change in direction depends on length travelled in a certain B field, therefore calculate B*dS where dS is distance travelled in a certain step
        magFieldS.SetXYZ(magField.X()*StepLengthMetres,magField.Y()*StepLengthMetres,magField.Z()*StepLengthMetres); // Tm
-       PT = LocalDirection.Cross(magFieldS);
+       PT = LocalMomentum.Cross(magFieldS);
 
        //0.3e3 -> c mm/ns(?)
-       PT *= particlecharge*0.3*1E3/LocalDirection.Mag(); // Length in m, PT in MeV, charge in +/- 1
-
-       LocalDirection += PT;
-       LocalDirection *= (1/LocalDirection.Mag());
+       PT *= particlecharge*0.3*1E3/LocalMomentum.Mag(); // Length in m, PT in MeV, charge in +/- 1
+       double localMag = LocalMomentum.Mag();
+       LocalMomentum += PT;
+       LocalMomentum *= (localMag/LocalMomentum.Mag());
      }
-    
-     TVector3 dStep(stepL*LocalDirection.X()/LocalDirection.Mag(),
-		    stepL*LocalDirection.Y()/LocalDirection.Mag(),
-		    stepL*LocalDirection.Z()/LocalDirection.Mag());
+     
+     TVector3 dStep(stepL*LocalMomentum.X()/LocalMomentum.Mag(),
+		    stepL*LocalMomentum.Y()/LocalMomentum.Mag(),
+		    stepL*LocalMomentum.Z()/LocalMomentum.Mag());
      
      LocalPosition.SetX(LocalPosition.X() + dStep.X());
      LocalPosition.SetY(LocalPosition.Y() + dStep.Y());
@@ -176,40 +183,47 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
      
      totalLength += stepL;
    
-     /*     if (is%30 == 0) {
+     /*     if (istep%30 == 0) {
        std::cout << "In detailed magnetic Transport: PT kick = ( "<< PT.X() << ", "<< PT.Y()<<", "<< PT.Z()<< ") "
-	    << " mom[MeV] = ( " << LocalDirection.X() << " ,"<<LocalDirection.Y() << " ,"<< LocalDirection.Z() << ")"
+	    << " mom[MeV] = ( " << LocalMomentum.X() << " ,"<<LocalMomentum.Y() << " ,"<< LocalMomentum.Z() << ")"
 	    << " pos[mm] = ( " << LocalPosition.X() << " ,"<<LocalPosition.Y() << " ,"<< LocalPosition.Z() << ")"
 	    << " local pos[mm] = ( " << LocalPositionRot.X() << " ,"<<LocalPositionRot.Y() << " ,"<< LocalPositionRot.Z() << ")"
 	    << " magField[Tm] = ( " << magFieldS.X() << " ,"<<magFieldS.Y() << " ,"<<magFieldS.Z() << ")"<<std::endl;
 	    }*/
+
+     //how many times is it out in X, how many Y and how many Z?
      
      //if particle is beyond the veto, move on to next particle
      if (
 	 fabs(LocalPosition.X()) > PVetoCenter.X()+PVetoSize.X() ||
 	 fabs(LocalPosition.Y()) > PVetoCenter.Y()+PVetoSize.Y() ||
-	 LocalPosition.Z() > PVetoCenter.Z()+PVetoSize.Z()) break;
+	 LocalPosition.Z() > PVetoCenter.Z()+PVetoSize.Z()) break; //what happens to these?
+    
      
      Bool_t XCheck = (TMath::Abs(particlecharge*LocalPosition.X()-PVetoCenter.X()) < 0.5*PVetoSize.X());
      Bool_t ZCheck = (TMath::Abs(LocalPosition.Z()-PVetoCenter.Z()) < 0.5*PVetoSize.Z());
      Bool_t YCheck = (TMath::Abs(LocalPosition.Y()-PVetoCenter.Y()) < 0.5*PVetoSize.Y());
 
-     /*     if(XCheck&&ZCheck&&YCheck&&particlecharge==-1)
-	    std::cout<<"insideVeto "<<insideVeto<<" XCheck "<<XCheck<<" ZCheck "<<ZCheck<<" YCheck "<<YCheck<<std::endl;*/
-
+     if(!XCheck) outX = 1;
+     if(!YCheck) outY = 1;
+     if(!ZCheck) outZ = 1;
+     
      //for as long as the particle is in the magnet gap and hasn't previously reached the veto, if it's now in the veto volume, work out which finger it's in
      if (!insideVeto &&
        //why support size, not finger size?
 	 (TMath::Abs(particlecharge*LocalPosition.X()-PVetoCenter.X()) < 0.5*PVetoSize.X()) && 
 	 (TMath::Abs(LocalPosition.Z()-PVetoCenter.Z()) < 0.5*PVetoSize.Z()) && 
 	 (TMath::Abs(LocalPosition.Y()-PVetoCenter.Y()) < 0.5*PVetoSize.Y())   ) {
-       //       if(particlecharge==-1) std::cout<<"I've entered!"<<std::endl;
+
+       outX=outY=outZ = 0;
+      
        TVector2 point(LocalPosition.Z(),particlecharge*LocalPosition.X()); //make the mirror x->-x for negative charges
        int ifingerGuess = (LocalPosition.Z() - (fPVetoFrontFacePosZ + fFingerZOffset))/fFingerPitch;
        int istart = TMath::Max(ifingerGuess-5,0);
        int iend = TMath::Min(ifingerGuess+5,nEVetoNFingers);
        for (int i= istart; i<iend; i++){
 	 if (PointInTriangle(point,pzx[0][i],pzx[1][i],pzx[2][i]) || PointInTriangle(point,pzx[0][i],pzx[2][i],pzx[3][i])) {
+	   Nin++;
 	   insideVeto = kTRUE; 
 	   channelFired = i;
 	   //   if(particlecharge == -1) std::cout<<"I fire EVeto"<<std::endl;
@@ -219,27 +233,39 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
        if (insideVeto)  break;
      }
    } // loop over swim step
-
    if (insideVeto) {
      if (channelFired < 0 || channelFired >= nEVetoNFingers) {
        std::cout << "Wrong VetoChannel evaluated " << channelFired << std::endl;
      }
      else {
        if(particlecharge==1&&channelFired<nPVetoNFingers){
-	 hPVetoChID->Fill(channelFired);
-	 hPVeto_ThetaVsP[channelFired]->Fill(startmomentum.Mag(),startmomentum.Theta()*1000.);//,weight);
-	 hPVeto_ThetaVsPhi[channelFired]->Fill(startmomentum.Phi(),startmomentum.Theta()*1000.);//,weight);
+	 fHS->FillHistoList("VetoEndPointList","hPVetoChID",channelFired);
+
+       	 sprintf(name,"hPVeto_ThetaVsP_Channel%d",channelFired);
+	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsP",name,startmomentum.Mag(),startmomentum.Theta()*1000.);
+
+       	 sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",channelFired);
+	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,startmomentum.Phi(),startmomentum.Theta()*1000.);
        }
        else if(particlecharge==-1&&channelFired<nEVetoNFingers){
-	 //	 std::cout<<channelFired<<std::endl;
-	 hEVetoChID->Fill(channelFired);
-	 hEVeto_ThetaVsP[channelFired]->Fill(startmomentum.Mag(),startmomentum.Theta()*1000.);//,weight);
-	 hEVeto_ThetaVsPhi[channelFired]->Fill(startmomentum.Phi(),startmomentum.Theta()*1000.);//,weight);
+	 fHS->FillHistoList("VetoEndPointList","hEVetoChID",channelFired);
+
+	 sprintf(name,"hEVeto_ThetaVsP_Channel%d",channelFired);
+	 fHS->FillHisto2List("VetoEndPointList/EVetoThetaVsP",name,startmomentum.Mag(),startmomentum.Theta()*1000.);
+
+	 sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",channelFired);
+	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,startmomentum.Phi(),startmomentum.Theta()*1000.);
+	 
        }
        //       VetoInXZ[ip]->Fill(LocalPosition.Z(),charge[ip]*LocalPosition.X(),weight);
      }
    }
-   else {
+   else {//if I haven't gone into the veto, why not?
+     //     std::cout<<"I else, Nout X "<<NoutX<<" NoutY "<<NoutY<<" NoutZ "<<NoutZ<<std::endl;
+     if(outX) NoutX++;
+     else if(outY) NoutY++;
+     else if(outZ) NoutZ++;
+     else std::cout<<"Not in Veto but not out in X, Y or Z!"<<std::endl;
      //    firedChannels[ip] = -1;
      //     lengths[ip] = 0;
    }
@@ -277,7 +303,7 @@ double VetoEndPoint::getBYfield(double x0, double y0, double z0){ // input in mm
 bool VetoEndPoint::PointInTriangle(TVector2 pt, TVector2 v1, TVector2 v2, TVector2 v3)
 {
   bool b1, b2, b3;
-
+  //  std::cout<<"I point to triangles"<<std::endl;
   b1 = signV(pt, v1, v2) < 0.0f;
   b2 = signV(pt, v2, v3) < 0.0f;
   b3 = signV(pt, v3, v1) < 0.0f;

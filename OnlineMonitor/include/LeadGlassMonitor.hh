@@ -84,6 +84,7 @@ private:
   TH1D* fHLGNPoTsTotBM;
   TH1D* fHLGBunchLengthBM;
   TH1D* fHLGBunchBBQBM;
+  TH1D* fHLGBunchBBQTotBM;
 
   // Waveform vectors
   Short_t fLGWaveformBM[1024];

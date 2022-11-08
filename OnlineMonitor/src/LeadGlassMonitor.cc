@@ -33,6 +33,7 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGNPoTsTotBM) { delete fHLGNPoTsTotBM; fHLGNPoTsTotBM = 0; }
   if (fHLGBunchLengthBM) { delete fHLGBunchLengthBM; fHLGBunchLengthBM = 0; }
   if (fHLGBunchBBQBM) { delete fHLGBunchBBQBM; fHLGBunchBBQBM = 0; }
+  if (fHLGBunchBBQTotBM) { delete fHLGBunchBBQTotBM; fHLGBunchBBQTotBM = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -125,6 +126,7 @@ void LeadGlassMonitor::Initialize()
   fHLGNPoTsTotBM = new TH1D("LG_NPoTsTotBM","LG_NPoTsTotBM",1000,0.,20000.);
   fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
   fHLGBunchBBQBM = new TH1D("LG_BunchBBQBM","LG_BunchBBQBM",1000,0.,1000.);
+  fHLGBunchBBQTotBM = new TH1D("LG_BunchBBQTotBM","LG_BunchBBQTotBM",1000,0.,1000.);
 
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -295,6 +297,7 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGNPoTsTotBM->Fill(fLGNPoTs);
     fHLGBunchLengthBM->Fill(fBunchLength);
     fHLGBunchBBQBM->Fill(fBunchBBQ);
+    fHLGBunchBBQTotBM->Fill(fBunchBBQ);
 
     // Add waveform to cumulative for bunch shape studies
     for(UInt_t i = 0; i<1024; i++) {
@@ -443,7 +446,7 @@ Int_t LeadGlassMonitor::OutputBeam()
   // Bunch BBQ
   fprintf(outf,"PLOTID LeadGlassMon_beambunchbbq\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LG BM Bunch BBQ - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME LG BBQ - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"CHANNELS %d\n",fHLGBunchBBQBM->GetNbinsX());
   fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchBBQBM->GetXaxis()->GetXmin(),fHLGBunchBBQBM->GetXaxis()->GetXmax());
   fprintf(outf,"TITLE_X BBQ\n");
@@ -457,6 +460,26 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGBunchBBQBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGBunchBBQBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total Bunch BBQ distribution for this run
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchbbqtot\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BBQ Total - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchBBQTotBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchBBQTotBM->GetXaxis()->GetXmin(),fHLGBunchBBQTotBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X BBQ\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchBBQTotBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchBBQTotBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 

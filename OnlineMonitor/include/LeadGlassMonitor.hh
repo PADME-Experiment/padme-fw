@@ -83,6 +83,7 @@ private:
   TH1D* fHLGNPoTsBM;
   TH1D* fHLGNPoTsTotBM;
   TH1D* fHLGBunchLengthBM;
+  TH1D* fHLGBunchBBQBM;
 
   // Waveform vectors
   Short_t fLGWaveformBM[1024];
@@ -94,8 +95,9 @@ private:
   // Threshold to use to evaluate bunch length
   Double_t fBunchLengthThreshold;
 
-  // Bunch length
+  // Bunch length and quality
   Double_t fBunchLength;
+  Double_t fBunchBBQ;
 
   // Number of positrons on target (NPoTs)
   Double_t fLGNPoTs;
@@ -105,6 +107,7 @@ private:
   std::vector<Double_t> fVLGNPoTsBM;
   std::vector<Double_t> fVLGNPoTsTotBM;
   std::vector<Double_t> fVLGBunchLengthBM;
+  std::vector<Double_t> fVLGBunchBBQBM;
 
   // Trend support file
   TString fTFLGTrendsBM;

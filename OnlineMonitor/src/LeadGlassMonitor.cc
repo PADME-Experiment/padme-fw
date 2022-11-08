@@ -30,7 +30,9 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGPedRMSBM) { delete fHLGPedRMSBM; fHLGPedRMSBM = 0; }
   if (fHLGTotChargeBM) { delete fHLGTotChargeBM; fHLGTotChargeBM = 0; }
   if (fHLGNPoTsBM) { delete fHLGNPoTsBM; fHLGNPoTsBM = 0; }
+  if (fHLGNPoTsTotBM) { delete fHLGNPoTsTotBM; fHLGNPoTsTotBM = 0; }
   if (fHLGBunchLengthBM) { delete fHLGBunchLengthBM; fHLGBunchLengthBM = 0; }
+  if (fHLGBunchBBQBM) { delete fHLGBunchBBQBM; fHLGBunchBBQBM = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -104,13 +106,14 @@ void LeadGlassMonitor::Initialize()
   struct stat buffer;
   if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
     std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen);
+    Double_t abstime,npots,npotstot,bunchlen,bunchbbq;
+    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq) {
+      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
       fVLGTimeBM.push_back(abstime);
       fVLGNPoTsBM.push_back(npots);
       fVLGNPoTsTotBM.push_back(npotstot);
       fVLGBunchLengthBM.push_back(bunchlen);
+      fVLGBunchBBQBM.push_back(bunchbbq);
     }
   }
 
@@ -121,6 +124,7 @@ void LeadGlassMonitor::Initialize()
   fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
   fHLGNPoTsTotBM = new TH1D("LG_NPoTsTotBM","LG_NPoTsTotBM",1000,0.,20000.);
   fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
+  fHLGBunchBBQBM = new TH1D("LG_BunchBBQBM","LG_BunchBBQBM",1000,0.,1000.);
 
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -187,6 +191,7 @@ void LeadGlassMonitor::EndOfEvent()
 	fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
 	fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
 	fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
+	fVLGBunchBBQBM.push_back(fHLGBunchBBQBM->GetMean());
 
 	// Compute total number of PoTs and update trend vector
 	if (fVLGNPoTsTotBM.size() == 0) {
@@ -197,7 +202,7 @@ void LeadGlassMonitor::EndOfEvent()
 
 	// Update trends file
 	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back());
+	fprintf(tf,"%f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back());
 	fclose(tf);
 
       }
@@ -211,6 +216,7 @@ void LeadGlassMonitor::EndOfEvent()
       fHLGTotChargeBM->Reset();
       fHLGNPoTsBM->Reset();
       fHLGBunchLengthBM->Reset();
+      fHLGBunchBBQBM->Reset();
 
       // Reset cumulative waveform
       for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -276,7 +282,7 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
 
   if (fIsBeam) {
 
-    // Compute lenght of bunch (period above a given thershold)
+    // Compute lenght of bunch (period above a given thershold) and bunch quality (BBQ)
     ComputeBunchLength(samples);
 
     // Compute number of positrons on target (NPoTs)
@@ -288,6 +294,7 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     fHLGNPoTsBM->Fill(fLGNPoTs);
     fHLGNPoTsTotBM->Fill(fLGNPoTs);
     fHLGBunchLengthBM->Fill(fBunchLength);
+    fHLGBunchBBQBM->Fill(fBunchBBQ);
 
     // Add waveform to cumulative for bunch shape studies
     for(UInt_t i = 0; i<1024; i++) {
@@ -340,6 +347,8 @@ void LeadGlassMonitor::ComputeBunchLength(Short_t* samples)
   Bool_t bunch = false;
   UInt_t bunchStart =0.;
   UInt_t bunchEnd = 0.;
+  Int_t sum = 0;
+  ULong_t sum2 = 0;
   for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
     if (bunch) {
       if (fChannelPedestal-(Double_t)samples[s] < fBunchLengthThreshold) {
@@ -347,11 +356,15 @@ void LeadGlassMonitor::ComputeBunchLength(Short_t* samples)
 	  bunchEnd = s;
 	  break;
 	}
+	sum += samples[s];
+	sum2 += samples[s]*samples[s];
       }
     } else {
       if (fChannelPedestal-(Double_t)samples[s] > fBunchLengthThreshold) {
 	bunch = true;
 	bunchStart = s;
+	sum = samples[s];
+	sum2 = samples[s]*samples[s];
       }
     }
   }
@@ -363,12 +376,8 @@ void LeadGlassMonitor::ComputeBunchLength(Short_t* samples)
   // Convert sample interval to ns. DAQ is assumed at 1GHz.
   fBunchLength = (Double_t)(bunchEnd-bunchStart)*1.;
 
-  /*
-  fBunchLength = 0.;
-  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
-    if (fChannelPedestal-(Double_t)samples[s] > fBunchLengthThreshold) fBunchLength++;
-  }
-  */
+  // Compute bunch quality parameter BBQ
+  fBunchBBQ = sqrt(((Double_t)sum2 - (Double_t)sum*(Double_t)sum/(Double_t)(bunchEnd-bunchStart))/(Double_t)(bunchEnd-bunchStart-1));
 
 }
 
@@ -428,6 +437,26 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGBunchLengthBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGBunchLengthBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Bunch BBQ
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchbbq\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM Bunch BBQ - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchBBQBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchBBQBM->GetXaxis()->GetXmin(),fHLGBunchBBQBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X BBQ\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchBBQBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchBBQBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
@@ -596,6 +625,22 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fBunchLengthRangeMin,fVLGTimeBM[fVLGTimeBM.size()-1],fBunchLengthRangeMin);
   fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVLGTimeBM[0],fBunchLengthRangeMax,fVLGTimeBM[fVLGTimeBM.size()-1],fBunchLengthRangeMax);
   fprintf(outf," ]\n\n");
+
+  // Bunch BBQ trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendbunchbbq\n");
+  fprintf(outf,"PLOTNAME LG Bunch BBQ - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y BBQ\n");
+  fprintf(outf,"LEGEND [ \"BBQ\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGBunchBBQBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

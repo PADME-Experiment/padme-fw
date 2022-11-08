@@ -22,6 +22,8 @@ TPixGeometry::TPixGeometry()
 
   fVerbose = 0; // Do not show debug output
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   fTPixNRows = 2;
   fTPixNCols = 6;
 
@@ -63,6 +65,12 @@ TPixGeometry::TPixGeometry()
 
 TPixGeometry::~TPixGeometry()
 {}
+
+void TPixGeometry::SetDetectorSetup(G4int setup)
+{
+  fDetectorSetup = setup;
+  UpdateDerivedMeasures();
+}
 
 void TPixGeometry::SetTPixNCols(G4int c)
 {
@@ -116,7 +124,7 @@ void TPixGeometry::UpdateDerivedMeasures()
 
   // Angle of the rotation of TPix around the Y axis
   fTPixRotY = -fTPixChamberWallAngle;
-
+  
   // Position of center of TPix box
   //fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
   //  -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
@@ -128,6 +136,14 @@ void TPixGeometry::UpdateDerivedMeasures()
   fTPixPosZ = fTPixChamberWallCorner.z()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
+
+  // Move TimePix behind ECal for 2022 run (RunIII)
+  if (fDetectorSetup >= 40) {
+    fTPixRotY = 0.;
+    fTPixPosX = 0.;
+    fTPixPosY = 0.;
+    fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning) 
+  }
 
   //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
   //printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());

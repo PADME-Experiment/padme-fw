@@ -58,6 +58,7 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
     newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
     newHit->SetPosition(worldPosPre);
+    //    std::cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<std::endl;
     
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag1")  newHit->SetChannelId(1); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag2")  newHit->SetChannelId(2); 
@@ -65,6 +66,7 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag4")  newHit->SetChannelId(4); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag5")  newHit->SetChannelId(5); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag6")  newHit->SetChannelId(6); 
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag7")  newHit->SetChannelId(7); 
     newHit->SetLocalPosition(localPosPre);
     fBeamFlagCollection->insert(newHit);
   }

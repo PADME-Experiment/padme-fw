@@ -29,6 +29,8 @@ private:
     
   G4UIdirectory* fDetectorDir;
 
+  G4UIcmdWithAnInteger* fDetectorSetupCmd;
+
   G4UIcmdWithAString* fEnableSubDetCmd;
   G4UIcmdWithAString* fDisableSubDetCmd;
 

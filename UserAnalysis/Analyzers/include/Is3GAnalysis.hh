@@ -35,5 +35,33 @@ private:
   HistoSvc* fHS;
   Int_t N3G;
   Double_t ETotECal;
+
+  std::vector<double> EClusterPair;
+  std::vector<double> TClusterPair;
+  std::vector<double> PosXClusterPair;
+  std::vector<double> PosYClusterPair;
+
+  std::vector<double> Ei;
+  std::vector<double> PosX;
+  std::vector<double> PosY;
+
+  std::vector<double> EGoodCluster;
+  std::vector<double> TGoodCluster;
+  std::vector<double> PosXGoodCluster;
+  std::vector<double> PosYGoodCluster;
+
+  std::vector<double> ETotPair;  
+  std::vector<double> TDiffPair; 
+  std::vector<double> ETotTris;    
+  
+  // Standard cuts list
+  Double_t MinECluster;
+  Double_t TMin;
+  Double_t TMax;
+  Double_t TWin;
+  Double_t ClRadMin;
+  Double_t ClRadMax;
+  Double_t COGMax  ;
+  Double_t DistMax ;
 };
 #endif

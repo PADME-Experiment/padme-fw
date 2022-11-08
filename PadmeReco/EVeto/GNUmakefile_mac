@@ -3,4 +3,4 @@
 NAME := EVeto
 
 #include ../config/global.gmk
-include ../config/subdirs_mac.gmk
+include ../mkconfig/subdirs_mac.gmk

@@ -22,6 +22,7 @@ class DetectorMessenger;
 class ECalDetector;
 class TargetDetector;
 class SACDetector;
+class ETagDetector;
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
@@ -33,7 +34,6 @@ class ChamberStructure;
 class BeamLineStructure; //M. Raggi 07/03/2019
 class HallStructure;
 class MagneticFieldSetup;
-class LAVDetector;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -50,6 +50,9 @@ public:
      
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
+
+  void SetDetectorSetup(G4int);
+  G4int GetDetectorSetup() { return fDetectorSetup; }
 
   G4double GetWorldFullLength() {return fWorldLength;}
      
@@ -106,17 +109,19 @@ private:
 
   G4int fVerbose; // Verbose level
 
+  G4int fDetectorSetup;
+
   G4GDMLParser fParser;
 
   ECalDetector*     fECalDetector;
   TargetDetector*   fTargetDetector;
   SACDetector*      fSACDetector;
+  ETagDetector*     fETagDetector;
   PVetoDetector*    fPVetoDetector;
   EVetoDetector*    fEVetoDetector;
   HEPVetoDetector*  fHEPVetoDetector;
   TDumpDetector*    fTDumpDetector;
   TPixDetector*     fTPixDetector;
-  LAVDetector*      fLAVDetector;
   TungstenDetector* fTungstenDetector;
 
   MagnetStructure*  fMagnetStructure;
@@ -129,7 +134,7 @@ private:
   G4int fEnableECal;
   G4int fEnableTarget;
   G4int fEnableSAC;
-  G4int fEnableLAV;
+  G4int fEnableETag;
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;

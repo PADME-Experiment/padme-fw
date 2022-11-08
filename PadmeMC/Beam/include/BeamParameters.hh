@@ -111,6 +111,13 @@ public:
   G4String GetTwoPhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
   void SetTwoPhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
 
+  // BhaBha data cards M. Raggi 20/05/2021
+  G4int GetNBhaBhaPerBunch()        { return fNBhaBhaPerBunch; }
+  void SetNBhaBhaPerBunch(G4int n) { fNBhaBhaPerBunch = n;    }
+
+  G4String GetBhaBhaFilename()        { return fBhaBhaFilename; }
+  void SetBhaBhaFilename(G4String f) { fBhaBhaFilename = f; }
+
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
 
@@ -194,7 +201,11 @@ private:
   G4int fNTwoPhotonDecaysPerBunch;
   G4String fTwoPhotonDecaysFilename;
 
-  // Displaced vertex decay length (only used in TwoGamma generation)
+  // Insert BhaBha M. Raggi 20/05/2021
+  G4int fNBhaBhaPerBunch;
+  G4String fBhaBhaFilename;
+
+  // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
   G4double fDecayLength;
 
   // In calibration mode we shoot gamma of fixed energy from

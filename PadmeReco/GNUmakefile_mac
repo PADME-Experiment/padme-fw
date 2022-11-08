@@ -2,7 +2,7 @@
 
 NAME := PadmeReco
 
-SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix ETag
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := RecoBase $(SUBDIRS) 
 
@@ -16,7 +16,7 @@ CPPFLAGS += -IRecoBase/include -g -std=c++11 $(ROOTLIBS) $(ROOTCFLAGS)
 
 all: allobjs alllibs bin
 
-include ./config/global_mac.gmk
+include ./mkconfig/global_mac.gmk
 
 # Define libraries used for the creation of the final executable
 LIBS += -Llib -lPadmeReco$(STATIC) 

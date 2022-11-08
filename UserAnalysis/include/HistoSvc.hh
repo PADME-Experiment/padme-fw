@@ -45,6 +45,9 @@ public:
   TTree* BookNtuple(std::string);
   void FillHisto (std::string, Double_t, Double_t weight = 1.0);
   void FillHisto2(std::string, Double_t, Double_t, Double_t weight = 1.0);
+  TH1D* GetHisto(std::string hname);
+  TH2D* GetHisto2(std::string hname);
+
   void FillNtuple(std::string);
   //void Normalize (std::string name, Double_t fac);    
 

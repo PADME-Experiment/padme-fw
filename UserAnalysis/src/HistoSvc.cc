@@ -127,6 +127,33 @@ void HistoSvc::FillNtuple(std::string name)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+TH1D* HistoSvc::GetHisto(std::string hname){
+
+  TH1D* h = (TH1D*)fListMap["STD"][hname];
+
+  if (h == nullptr) {
+    std::cout << "---> warning from HistoSvc::GetHisto() : histo1D " << hname
+	      << " does not exist."
+	      << std::endl;
+    return nullptr;
+  }
+  return h;
+}
+
+TH2D* HistoSvc::GetHisto2(std::string hname){
+  TH2D* h = (TH2D*)fListMap["STD"][hname];
+
+  if (h == nullptr) {
+    std::cout << "---> warning from HistoSvc::GetHisto2() : histo2D " << hname
+	      << " does not exist."
+	      << std::endl;
+    return nullptr;
+  }
+  return h;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 //void HistoSvc::Normalize(std::string hname, Double_t fac)
 //{
 //   if (fHisto1DMap.find(hname)!=fHisto1DMap.end()) {

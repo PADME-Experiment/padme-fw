@@ -5,6 +5,7 @@
 
 #include "TFile.h"
 #include "TString.h"
+#include "TH1D.h"
 
 #include "utlConfigParser.hh"
 
@@ -29,6 +30,10 @@ private:
 
   // Estimate total charge of channel from samples
   void ComputeChannelCharge(UChar_t,UChar_t,Short_t*);
+
+  // Compute total charge along X and Y
+  void ComputeTotalChargeX();
+  void ComputeTotalChargeY();
 
   // Estimate number of positrons on target for this event
   void ComputePoTs();
@@ -63,6 +68,14 @@ private:
   // Counters
   UInt_t fBeamEventCount = 0;
   Double_t fStrip_charge[32]; // Strips 1-32 are mapped to index 0-31
+
+  // Total charge along X and Y
+  Double_t fTotalChargeX;
+  Double_t fTotalChargeY;
+
+  // Histograms
+  TH1D* fHTargetChargeX;
+  TH1D* fHTargetChargeY;
 
   Double_t fEventPoTs; // Number of positrons on target for current event
   Double_t fEventPoTsTotal; // Number of PoTs for last 500 events

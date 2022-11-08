@@ -24,6 +24,10 @@ TargetMonitor::TargetMonitor(TString cfgFile)
 TargetMonitor::~TargetMonitor()
 {
   if (fConfigParser) { delete fConfigParser; fConfigParser = 0; }
+
+  // Delete histograms
+  if (fHTargetChargeX) { delete fHTargetChargeX; fHTargetChargeX = 0; }
+  if (fHTargetChargeY) { delete fHTargetChargeY; fHTargetChargeY = 0; }
 }
 
 void TargetMonitor::Initialize()
@@ -64,6 +68,8 @@ void TargetMonitor::Initialize()
   if ( fConfigParser->HasConfig("RECO","UseAbsSignal") ) {
     int use = std::stoi(fConfigParser->GetSingleArg("RECO","UseAbsSignal"));
     if (use == 1) {
+      // Obsolete setting kept for compatibility checks: do not use
+      printf("TargetMonitor::Initialize - WARNING - UseAbsSignal set to %d: ARE YOU SURE?\n",use);
       fUseAbsSignal = true;
     } else if (use == 0) {
       fUseAbsSignal = false;
@@ -82,6 +88,10 @@ void TargetMonitor::Initialize()
     }
   }
 
+  // Create histograms
+  fHTargetChargeX = new TH1D("Target_ChargeX","Target_ChargeX",500,0.,5000.);
+  fHTargetChargeY = new TH1D("Target_ChargeY","Target_ChargeY",500,0.,5000.);
+
   // Reset counters
   fBeamEventCount = 0;
   fEventPoTsTotal = 0.;
@@ -94,8 +104,13 @@ void TargetMonitor::StartOfEvent()
   // Check if event is a beam event
   if (fConfig->GetEventTrigMask() & 0x01) {
     fIsBeam = true;
+    fBeamEventCount++;
   } else {
     fIsBeam = false;
+  }
+  for (UChar_t i=0;i<32;i++) {
+    fPedestal[i] = 0.;
+    fCharge[i] = 0.;
   }
 }
 
@@ -103,6 +118,22 @@ void TargetMonitor::EndOfEvent()
 {
   // Do not analyze off-beam events
   if (! fIsBeam) return;
+
+  // Compute total charge of X and Y strips and fill histograms
+  ComputeTotalChargeX(); fHTargetChargeX->Fill(fTotalChargeX);
+  ComputeTotalChargeY(); fHTargetChargeY->Fill(fTotalChargeY);
+  //if (fTotalChargeX>5000. || fTotalChargeY>5000.) printf("Total charge %f %f\n",fTotalChargeX,fTotalChargeY);
+
+  /*
+  // Show ordered charges
+  for (UChar_t c=1;c<=32;c++) {
+    if (c==17) printf("\t");
+    for (UChar_t i=0;i<=31;i++) {
+      if (fTarget_map[i]==c) printf("%6.1f ",fCharge[i]);
+    }
+  }
+  printf("\n");
+  */
 
   // Compute number of positrons on target for this event
   ComputePoTs();
@@ -112,7 +143,7 @@ void TargetMonitor::EndOfEvent()
   fRunPoTsTotal += fEventPoTs;
 
   // If we read enough events, dump PadmeMonitor file
-  if (fBeamEventCount % fBeamOutputRate == 0) {
+  if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
     // Update timelines
     fTL_RunPoTs[fTL_Current] = fRunPoTsTotal;
@@ -123,14 +154,16 @@ void TargetMonitor::EndOfEvent()
 
     OutputBeam();
 
+    // Reset histograms
+    fHTargetChargeX->Reset();
+    fHTargetChargeY->Reset();
+
     // Reset counters
     fEventPoTsTotal = 0.;
     for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
 
   }
 
-  // Count beam event
-  fBeamEventCount++;
 }
 
 void TargetMonitor::Finalize()
@@ -178,19 +211,31 @@ void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* 
   fCharge[channel] *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
 }
 
+void TargetMonitor::ComputeTotalChargeX()
+{
+  fTotalChargeX = 0.;
+  for (UChar_t i=0;i<16;i++) {
+    //printf("%6.1f ",fCharge[i]);
+    if (fCharge[i]>0.) fTotalChargeX += fCharge[i];
+    //fTotalChargeX += fCharge[i];
+  }
+  //printf("%7.1f\n",fTotalChargeX);
+}
+
+void TargetMonitor::ComputeTotalChargeY()
+{
+  fTotalChargeY = 0.;
+  for (UChar_t i=16;i<32;i++) {
+    //printf("%6.1f ",fCharge[i]);
+    if (fCharge[i]>0.) fTotalChargeY += fCharge[i];
+    //fTotalChargeY += fCharge[i];
+  }
+  //printf("%7.1f\n",fTotalChargeY);
+}
+
 void TargetMonitor::ComputePoTs()
 {
-  Double_t chargeX = 0.;
-  Double_t chargeY = 0.;
-  fEventPoTs = 0.;
-  for (UChar_t i=0;i<32;i++) {
-    if (i<16) {
-      chargeX += fStrip_charge[i];
-    } else {
-      chargeY += fStrip_charge[i];
-    }
-  }
-  fEventPoTs = fChargeToPoTs*(chargeX+chargeY)/2.;
+  fEventPoTs = fChargeToPoTs*(fTotalChargeX+fTotalChargeY)/2.;
 }
 
 Int_t TargetMonitor::OutputBeam()
@@ -204,6 +249,36 @@ Int_t TargetMonitor::OutputBeam()
   TString ftname = fConfig->TmpDirectory()+"/TargetMon_Charge.txt";
   TString ffname = fConfig->OutputDirectory()+"/TargetMon_Charge.txt";
   FILE* outf = fopen(ftname.Data(),"a");
+
+  // Charge along X
+  fprintf(outf,"PLOTID TargetMon_TotChargeX\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME Target Total Charge X - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHTargetChargeX->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHTargetChargeX->GetXaxis()->GetXmin(),fHTargetChargeX->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X pC\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHTargetChargeX->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.3f",fHTargetChargeX->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Charge along Y
+  fprintf(outf,"PLOTID TargetMon_TotChargeY\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME Target Total Charge Y - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(time(0)));
+  fprintf(outf,"CHANNELS %d\n",fHTargetChargeY->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHTargetChargeY->GetXaxis()->GetXmin(),fHTargetChargeY->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X pC\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHTargetChargeY->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.3f",fHTargetChargeY->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
 
   // X Profile
   fprintf(outf,"PLOTID TargetMon_ProfileX\n");
@@ -219,9 +294,7 @@ Int_t TargetMonitor::OutputBeam()
     // Show average per-event charge for this strip
     fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
   }
-  fprintf(outf,"]]\n");
-
-  fprintf(outf,"\n");
+  fprintf(outf,"]]\n\n");
 
   // Y Profile
   fprintf(outf,"PLOTID TargetMon_ProfileY\n");
@@ -237,12 +310,10 @@ Int_t TargetMonitor::OutputBeam()
     // Show average per-event charge for this strip
     fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
   }
-  fprintf(outf,"]]\n");
+  fprintf(outf,"]]\n\n");
 
   // Waveforms
   for(UInt_t i=0; i<32; i++) {
-
-    fprintf(outf,"\n");
 
     fprintf(outf,"PLOTID TargetMon_Waveform%2.2d\n",i);
     fprintf(outf,"PLOTTYPE scatter\n");

@@ -1153,9 +1153,6 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
 
 }
 
-
-
-
 Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   Bool_t BrSU=false;
   if(x==16 && y==25)   BrSU=true;
@@ -1165,9 +1162,6 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   return BrSU;                                                                                                                                                  
 
 }
-
-
-
 
 Double_t ECalReconstruction::EnergyResolution(Double_t energy){
   Double_t a=0.02;
@@ -1179,17 +1173,13 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 }
 
 
-
-
-
-
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
   for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
-
-if(fReproductSACbunchStructure){
+  
+  if(fReproductSACbunchStructure){
     Double_t minTime=999;
     Double_t maxTime=-999;
     for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -1225,8 +1215,9 @@ if(fReproductSACbunchStructure){
       TMCVDigi* digi = tEvent->Digi(i);
       int i1 = digi->GetChannelId()/100;
       int i2 = digi->GetChannelId()%100;
+      // Drop  Broken SU in Ecal 
       Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
-      if (BrokenSU)continue;
+      if(BrokenSU) continue;
       // effective threshold cutting noisy wf in 2019 data 
       if(digi->GetEnergy()<1.5)continue;
       TRecoVHit *Hit = new TRecoVHit();

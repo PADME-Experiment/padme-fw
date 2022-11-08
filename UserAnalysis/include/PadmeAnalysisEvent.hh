@@ -7,11 +7,14 @@
 #include "TECalRecoEvent.hh"
 #include "TETagRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
+#include "TETagRecoEvent.hh"  //MR 06/22
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
+#include "TRecoVClusCollection.hh"
 
 class PadmeAnalysisEvent{
 public:
@@ -27,11 +30,14 @@ public:
   TECalRecoEvent*       ECalRecoEvent   ;
   TETagRecoEvent*       ETagRecoEvent   ;
   TSACRecoEvent*        SACRecoEvent    ;
+  TETagRecoEvent*       ETagRecoEvent   ;//MR 06/22
   TTargetRecoBeam*      TargetRecoBeam  ;
+  TLeadGlassRecoEvent*  LeadGlassRecoEvent;
   TRecoVClusCollection* SACRecoCl       ;
   TRecoVClusCollection* ECalRecoCl      ;
   TRecoVClusCollection* ETagRecoCl      ;
   TRecoVClusCollection* PVetoRecoCl     ;
+  TRecoVClusCollection* ETagRecoCl      ;//MR 06/22
   TRecoVClusCollection* EVetoRecoCl     ;
   TRecoVClusCollection* HEPVetoRecoCl   ;
   TMCTruthEvent*        MCTruthEvent    ;

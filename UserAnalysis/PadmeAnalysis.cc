@@ -13,9 +13,11 @@
 #include "TChain.h"
 #include "TTree.h"
 #include "TObjArray.h"
+#include "TObjString.h"
 
 #include "TRecoEvent.hh"
 #include "TTargetRecoEvent.hh"
+#include "TETagRecoEvent.hh"
 #include "TTargetRecoBeam.hh"
 #include "TECalRecoEvent.hh"
 #include "TETagRecoEvent.hh"
@@ -23,6 +25,7 @@
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 #include "TMCTruthEvent.hh"
 
 #include "HistoSvc.hh"
@@ -72,7 +75,6 @@ int main(Int_t argc, char **argv)
 {
 
   //long utc_time;
-
   signal(SIGXCPU,sighandler);
   signal(SIGINT,sighandler);
   signal(SIGTERM,sighandler);
@@ -189,6 +191,7 @@ int main(Int_t argc, char **argv)
   TECalRecoEvent*       fECalRecoEvent    =0;
   TETagRecoEvent*       fETagRecoEvent    =0;
   TSACRecoEvent*        fSACRecoEvent     =0;
+  TLeadGlassRecoEvent*  fLeadGlassRecoEvent =0;
   TTargetRecoBeam*      fTargetRecoBeam   =0;
   TRecoVClusCollection* fSACRecoCl        =0;
   TRecoVClusCollection* fECalRecoCl       =0;
@@ -201,7 +204,10 @@ int main(Int_t argc, char **argv)
   TTree::SetMaxTreeSize(190000000000);
 
   TString recoTreeName = "Events";
+  cout<<"Building chain "<<endl;
+  //  if(InputFileNameList.size()>200) cout<<"List too big!!!" <<endl;
   TChain* fRecoChain = BuildChain(recoTreeName,InputFileNameList);
+  cout<<"chain  Built "<<endl;
 
   Int_t nevents = 0;
   if (fRecoChain) {
@@ -238,6 +244,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="HEPVeto_Hits") {
       fHEPVetoRecoEvent = new THEPVetoRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
+    } else if (branchName=="ETag_Hits") {
+      fETagRecoEvent = new TETagRecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoEvent);
     } else if (branchName=="ECal_Hits") {
       fECalRecoEvent = new TECalRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
@@ -247,6 +256,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="SAC_Hits") {
       fSACRecoEvent = new TSACRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+    } else if (branchName=="LeadGlass_Hits") {
+      fLeadGlassRecoEvent = new TLeadGlassRecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlassRecoEvent);
       //} else if (branchName=="TPix") {
       //  fTPixRecoEvent = new TTPixRecoEvent();
       //  fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
@@ -268,6 +280,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="EVeto_Clusters") {
       fEVetoRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoCl);
+    } else if (branchName=="ETag_Clusters") {  //MR 06/22
+      fETagRecoCl = new TRecoVClusCollection();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoCl);
     } else if (branchName=="HEPVeto_Clusters") {
       fHEPVetoRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoCl);
@@ -314,12 +329,15 @@ int main(Int_t argc, char **argv)
   event->EVetoRecoEvent   = fEVetoRecoEvent  ;
   event->PVetoRecoEvent   = fPVetoRecoEvent  ;
   event->HEPVetoRecoEvent = fHEPVetoRecoEvent;
+  event->ETagRecoEvent    = fETagRecoEvent   ; //MR 06/22 
   event->ECalRecoEvent    = fECalRecoEvent   ;
   event->SACRecoEvent     = fSACRecoEvent    ;
+  event->LeadGlassRecoEvent = fLeadGlassRecoEvent;
   event->TargetRecoBeam   = fTargetRecoBeam  ;
   event->SACRecoCl        = fSACRecoCl       ;
   event->ECalRecoCl       = fECalRecoCl      ;
   event->PVetoRecoCl      = fPVetoRecoCl     ;
+  event->ETagRecoCl       = fETagRecoCl      ;
   event->EVetoRecoCl      = fEVetoRecoCl     ;
   event->HEPVetoRecoCl    = fHEPVetoRecoCl   ;
   event->MCTruthEvent     = fMCTruthEvent    ;
@@ -334,6 +352,8 @@ int main(Int_t argc, char **argv)
   Int_t nEVetoHits  =0;
   Int_t nHEPVetoHits=0;
   Int_t nSACHits    =0;
+  Int_t nETagHits   =0;
+  Int_t nLeadGlassHits=0;
   
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
 
@@ -365,11 +385,15 @@ int main(Int_t argc, char **argv)
       if (fEVetoRecoEvent)   nEVetoHits  = fEVetoRecoEvent->GetNHits();
       if (fHEPVetoRecoEvent) nHEPVetoHits= fHEPVetoRecoEvent->GetNHits();
       if (fSACRecoEvent)     nSACHits    = fSACRecoEvent->GetNHits();
+      if (fETagRecoEvent)    nETagHits   = fETagRecoEvent->GetNHits();
+      if (fLeadGlassRecoEvent) nLeadGlassHits= fLeadGlassRecoEvent->GetNHits();
       std::cout<<"     Hits in Target "<<nTargetHits
 	       <<" ECal "<<nECalHits
 	       <<" PVeto "<<nPVetoHits
 	       <<" EVeto "<<nEVetoHits
 	       <<" HEPVeto "<<nHEPVetoHits
+	       <<" ETag "<<nETagHits
+	       <<" LeadGlass "<<nLeadGlassHits
 	       <<" SAC "<<nSACHits<<std::endl;
       std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
 
@@ -397,13 +421,14 @@ int main(Int_t argc, char **argv)
       if (fECalRecoEvent)    fECalRecoEvent->Print();
       if (fPVetoRecoEvent)   fPVetoRecoEvent->Print();
       if (fEVetoRecoEvent)   fEVetoRecoEvent->Print();
+      if (fETagRecoEvent)    fETagRecoEvent->Print(); //MR 06/2022
       if (fHEPVetoRecoEvent) fHEPVetoRecoEvent->Print();
       if (fSACRecoEvent)     fSACRecoEvent->Print();
+      if (fLeadGlassRecoEvent) fLeadGlassRecoEvent->Print();
     }
     
     if (doNtuple) stdNtuple->Fill(event);
-    UserAn->Process();
-    
+    UserAn->Process();    
   }
   
   if (fVerbose) printf("---> Finalizing user analysis\n");

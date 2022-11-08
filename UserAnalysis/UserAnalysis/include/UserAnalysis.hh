@@ -6,9 +6,14 @@
 
 class HistoSvc;
 class NPoTAnalysis;
+class ECalCalib;
 class IsGGAnalysis;
+class Is22GGAnalysis;
 class Is3GAnalysis;
 class ECalSel;
+class ETagAnalysis;
+class MCTruth;
+
 class UserAnalysis {
 
 public:
@@ -34,7 +39,11 @@ private:
 
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
+  Is22GGAnalysis* fIs22GGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
   ECalSel* fECalSel;
+  ETagAnalysis* fETagAnalysis;
+  MCTruth* fMCTruth;
+  ECalCalib* fECalCalib;
 };
 #endif

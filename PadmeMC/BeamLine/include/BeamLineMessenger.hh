@@ -43,12 +43,26 @@ private:
   G4UIdirectory* fBeamLineDir;
 
   G4UIcmdWithABool* fEnableBeWindowCmd;
+  G4UIcmdWithABool* fEnableMylarWindowCmd;
   G4UIcmdWithABool* fEnableBeamFlagCmd;
+
   G4UIcmdWithADoubleAndUnit* fSetDHSTB002MagneticFieldYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetDHSTB001MagneticFieldYCmd;  //MR 01/03/2022
+
+  G4UIcmdWithADoubleAndUnit* fSetWindowThicknessCmd;  //MR 29/03/2021
   
   G4UIcmdWithABool* fEnableQuadrupolesCmd;
+
   G4UIcmdWithADouble* fSetQ1_FieldGradCmd;
   G4UIcmdWithADouble* fSetQ2_FieldGradCmd;
+  G4UIcmdWithADouble* fSetQ3_FieldGradCmd;
+  G4UIcmdWithADouble* fSetQ4_FieldGradCmd;
+
+  G4UIcmdWithADoubleAndUnit* fSetSLTB2Cmd;
+  G4UIcmdWithADoubleAndUnit* fSetSLTB4Cmd;
+  G4UIcmdWithADoubleAndUnit* fSetSLTB3Cmd;
+
+  G4UIcmdWithADouble* fBeamLineSetupCmd;
 
 };
 #endif

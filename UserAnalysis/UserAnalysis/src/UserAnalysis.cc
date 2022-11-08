@@ -5,6 +5,7 @@
 
 #include "UserAnalysis.hh"
 #include "NPoTAnalysis.hh"
+#include "ECalSel.hh" //TS
 #include "IsGGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
 #include "HistoSvc.hh"
@@ -21,14 +22,16 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fECalSel = ECalSel::GetInstance();
+  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
+  delete fECalSel;
+  //  delete fIsGGAnalysis;
   //  delete fIs3GAnalysis;
 }
 
@@ -37,7 +40,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   fEvent = event;
   InitHistos();
   fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
+  fECalSel->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -71,9 +75,11 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+
   fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  fIsGGAnalysis->Process();
+  fECalSel->Process();
+  //  fIsGGAnalysis->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
 
@@ -135,7 +141,8 @@ Bool_t UserAnalysis::Finalize()
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
 
   fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
+  fECalSel->Finalize();
+  //  fIsGGAnalysis->Finalize();
   //  fIs3GAnalysis->Finalize();
 
 //  // TGraph example

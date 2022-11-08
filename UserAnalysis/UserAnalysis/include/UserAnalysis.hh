@@ -8,7 +8,7 @@ class HistoSvc;
 class NPoTAnalysis;
 class IsGGAnalysis;
 class Is3GAnalysis;
-
+class ECalSel;
 class UserAnalysis {
 
 public:
@@ -35,6 +35,6 @@ private:
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
-
+  ECalSel* fECalSel;
 };
 #endif

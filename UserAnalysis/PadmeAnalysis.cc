@@ -18,6 +18,7 @@
 #include "TTargetRecoEvent.hh"
 #include "TTargetRecoBeam.hh"
 #include "TECalRecoEvent.hh"
+#include "TETagRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
@@ -186,10 +187,12 @@ int main(Int_t argc, char **argv)
   TPVetoRecoEvent*      fPVetoRecoEvent   =0;
   THEPVetoRecoEvent*    fHEPVetoRecoEvent =0;
   TECalRecoEvent*       fECalRecoEvent    =0;
+  TETagRecoEvent*       fETagRecoEvent    =0;
   TSACRecoEvent*        fSACRecoEvent     =0;
   TTargetRecoBeam*      fTargetRecoBeam   =0;
   TRecoVClusCollection* fSACRecoCl        =0;
   TRecoVClusCollection* fECalRecoCl       =0;
+  TRecoVClusCollection* fETagRecoCl       =0;
   TRecoVClusCollection* fPVetoRecoCl      =0;
   TRecoVClusCollection* fEVetoRecoCl      =0;
   TRecoVClusCollection* fHEPVetoRecoCl    =0;
@@ -238,6 +241,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="ECal_Hits") {
       fECalRecoEvent = new TECalRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
+    } else if (branchName=="ETag_Hits") {
+      fETagRecoEvent = new TETagRecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoEvent);
     } else if (branchName=="SAC_Hits") {
       fSACRecoEvent = new TSACRecoEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
@@ -253,6 +259,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="ECal_Clusters") {
       fECalRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoCl);
+    } else if (branchName=="ETag_Clusters") {
+      fETagRecoCl = new TRecoVClusCollection();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoCl);
     } else if (branchName=="PVeto_Clusters") {
       fPVetoRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoCl);

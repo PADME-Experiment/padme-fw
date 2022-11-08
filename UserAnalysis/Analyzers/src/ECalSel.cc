@@ -5,7 +5,6 @@
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
 #include "TRecoVCluster.hh"
-#include "HistoSvc.hh"
 #include "TVector3.h"
 #include "TProfile.h"
 #include "TString.h"

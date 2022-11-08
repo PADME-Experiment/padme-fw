@@ -5,6 +5,7 @@
 #include "TTargetRecoEvent.hh"
 #include "TTargetRecoBeam.hh"
 #include "TECalRecoEvent.hh"
+#include "TETagRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
@@ -24,10 +25,12 @@ public:
   TPVetoRecoEvent*      PVetoRecoEvent  ;
   THEPVetoRecoEvent*    HEPVetoRecoEvent;
   TECalRecoEvent*       ECalRecoEvent   ;
+  TETagRecoEvent*       ETagRecoEvent   ;
   TSACRecoEvent*        SACRecoEvent    ;
   TTargetRecoBeam*      TargetRecoBeam  ;
   TRecoVClusCollection* SACRecoCl       ;
   TRecoVClusCollection* ECalRecoCl      ;
+  TRecoVClusCollection* ETagRecoCl      ;
   TRecoVClusCollection* PVetoRecoCl     ;
   TRecoVClusCollection* EVetoRecoCl     ;
   TRecoVClusCollection* HEPVetoRecoCl   ;

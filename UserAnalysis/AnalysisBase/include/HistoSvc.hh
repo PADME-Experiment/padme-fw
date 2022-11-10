@@ -3,6 +3,18 @@
 
 #include <map>
 
+#include "TFile.h"
+#include "TTree.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphBentErrors.h"
+#include "TGraphPolar.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TString.h"
+
+
 class TFile;
 class TTree;
 class TGraph;

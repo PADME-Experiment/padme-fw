@@ -175,8 +175,8 @@ Int_t ETagAn::ETagMatch(){
       }
 
       //      std::cout <<" ecal cluster " << j << " (x,y) = " << ecalpos[j].X() << " , " << ecalpos[j].Y() << " YBar Tag = " << bary[j] << " distL, distR = " << sipmDistLeft[j] << " , " << sipmDistRight[j] << " t = " << ecalTimes[j] << std::endl;
-      if (sipmDistRight[j]>0) fhSvcVal->FillHisto2("ECal_SC_ECal_LRvsYBars",bary[j],1);
-      if (sipmDistLeft[j]>0)  fhSvcVal->FillHisto2("ECal_SC_ECal_LRvsYBars",bary[j],0);
+      if (sipmDistRight[j]>0) fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",bary[j],1);
+      if (sipmDistLeft[j]>0)  fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",bary[j],0);
     }
 
   
@@ -207,10 +207,10 @@ Int_t ETagAn::ETagMatch(){
 	double dt = hitto->GetTime() - ecalTimes[j];
 	if (lr == 1 && sipmDistRight[j] > 0) { //right hit
 	  if (TMath::Abs(ich-bary[j]) < 2) {
-	    fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",ich,sipm), sipmDistRight[j], dt);
-	    fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",ich), sipmDistRight[j], dt);
+	    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",ich,sipm), sipmDistRight[j], dt);
+	    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",ich), sipmDistRight[j], dt);
 	  }
-	  fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",ich,sipm), ich-bary[j], dt);
+	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",ich,sipm), ich-bary[j], dt);
 
 	  if (TMath::Abs(ich-bary[j]) < 2 && dt > dtMin && dt < dtMax) {
 	    nRightSiPMMatched[j]++;
@@ -221,10 +221,10 @@ Int_t ETagAn::ETagMatch(){
 	}
 	else if (lr == 0 && sipmDistLeft[j] > 0) { // left hit
 	  if (TMath::Abs(ich-bary[j]) < 2) {
-	    fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",ich,sipm) , sipmDistLeft[j], dt);
-	    fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",ich), sipmDistLeft[j], dt);
+	    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",ich,sipm) , sipmDistLeft[j], dt);
+	    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",ich), sipmDistLeft[j], dt);
 	  }
-	  fhSvcVal->FillHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",ich,sipm), ich-bary[j], dt);
+	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",ich,sipm), ich-bary[j], dt);
 
 	  if (TMath::Abs(ich-bary[j]) < 2 && dt > dtMin && dt < dtMax) {
 	    nLeftSiPMMatched[j]++;
@@ -248,7 +248,7 @@ Int_t ETagAn::ETagMatch(){
 						 (dtimeLeftSiPMMatchRms[j]/nLeftSiPMMatched[j] - dtimeLeftSiPMMatchAv[j]*dtimeLeftSiPMMatchAv[j])/
 						 (nLeftSiPMMatched[j]-1)
 						 );
-	fhSvcVal->FillHisto2("ECal_SC_ETagHitsMatchLeftTimevsN",nLeftSiPMMatched[j]*1.,dtimeLeftSiPMMatchAv[j]);	
+	fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatchLeftTimevsN",nLeftSiPMMatched[j]*1.,dtimeLeftSiPMMatchAv[j]);	
       }
 
       if (nRightSiPMMatched[j]) {
@@ -258,13 +258,13 @@ Int_t ETagAn::ETagMatch(){
 						  (dtimeRightSiPMMatchRms[j]/nRightSiPMMatched[j] - dtimeRightSiPMMatchAv[j]*dtimeRightSiPMMatchAv[j])/
 						  (nRightSiPMMatched[j]-1)
 						  );
-	fhSvcVal->FillHisto2("ECal_SC_ETagHitsMatchRightTimevsN",nRightSiPMMatched[j]*1.,dtimeRightSiPMMatchAv[j]);
+	fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightTimevsN",nRightSiPMMatched[j]*1.,dtimeRightSiPMMatchAv[j]);
       }
 
-      fhSvcVal->FillHisto2("ECal_SC_ETagHitsMatchRightVsLeft",nLeftSiPMMatched[j]*1.,nRightSiPMMatched[j]*1.);
+      fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightVsLeft",nLeftSiPMMatched[j]*1.,nRightSiPMMatched[j]*1.);
 
     }
-    fhSvcVal->FillHisto2("ECal_SC_ETagHitsMatches",
+    fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatches",
 			(double)(TMath::Min(nLeftSiPMMatched[0],9) + 10*TMath::Min(nRightSiPMMatched[0],9)),
 			(double)(TMath::Min(nLeftSiPMMatched[1],9) + 10*TMath::Min(nRightSiPMMatched[1],9))
 			);
@@ -288,8 +288,8 @@ Int_t ETagAn::ETagMatch(){
       for (int j=0; j<2; j++){ // ecal clusters
 	if (bary[j] != baryETag) continue; // require same Y bar
 	double dt = tempClu->GetTime() - ecalTimes[j];
-	if (isRight) fhSvcVal->FillHisto2(Form("ECal_SC_RightCh_%d_dtvsr",baryETag), sipmDistRight[j], dt);
-	else         fhSvcVal->FillHisto2(Form("ECal_SC_LeftCh_%d_dtvsr",baryETag), sipmDistLeft[j], dt);
+	if (isRight) fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_RightCh_%d_dtvsr",baryETag), sipmDistRight[j], dt);
+	else         fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_LeftCh_%d_dtvsr",baryETag), sipmDistLeft[j], dt);
       }
     }// loop over ETag clusters	
 
@@ -326,22 +326,22 @@ Bool_t ETagAn::InitHistos()
 
   for (int q=0; q<15; q++){
     for (int aa = 0; aa < 4; aa++) { // SiPM
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
     }
-    fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
   }
 
-  fhSvcVal->BookHisto2(Form("ECal_SC_ECal_LRvsYBars"),15,-0.5,14.5,2,-0.5,1.5); 
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
+  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",15,-0.5,14.5,2,-0.5,1.5); 
+  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
+  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
+  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
+  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
 
   return true;
 }
@@ -352,32 +352,30 @@ Bool_t ETagAn::Finalize(){
   
 
   HistoSvc* fhSvcVal =  HistoSvc::GetInstance();
-  fhSvcVal->BookHisto("ETagTimeOffsets",120,0.,120.);
+  fhSvcVal->BookHistoList("ETagAn","ETagTimeOffsets",120,0.,120.);
   int elcount = 0;
   for (int side = 0; side < 2; side++){
     for (int q=0; q<15; q++){
       for (int aa = 0; aa < 4; aa++) { // SiPM
-	TH1D* rightpro = (fhSvcVal->GetHisto2(Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",labl[side].Data(),q,aa)))->ProjectionY(Form("%spro",labl[side].Data()));
+	TH1D* rightpro = (fhSvcVal->GetHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",labl[side].Data(),q,aa)))->ProjectionY(Form("%spro",labl[side].Data()));
 	double timeMax = rightpro->GetBinCenter(rightpro->GetMaximumBin());
-	fhSvcVal->GetHisto("ETagTimeOffsets")->SetBinContent(elcount,timeMax);
+	fhSvcVal->GetHistoList("ETagAn","ETagTimeOffsets")->SetBinContent(elcount,timeMax);
 	elcount++;
       }
 
-      fhSvcVal->BookHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q),18,0,378.);
-      TProfile* profo = (fhSvcVal->GetHisto2(Form("ECal_SC_ETagHits%sCh_%d_dtvsr",labl[side].Data(),q)))->ProfileX(Form("%sprof%d",labl[side].Data(),q),122,161); //to be done better
+      fhSvcVal->BookHistoList("ETagAn",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q),18,0,378.);
+      TProfile* profo = (fhSvcVal->GetHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",labl[side].Data(),q)))->ProfileX(Form("%sprof%d",labl[side].Data(),q),122,161); //to be done better
       int ibins = (profo->GetXaxis())->GetNbins();
       for (int ib=0; ib < ibins; ib++){
 	double xx = profo->GetBinCenter(ib+1);
 	double conto = profo->GetBinContent(ib+1);
 	double conte = profo->GetBinError(ib+1);
 	int ibb = xx/21.+1; //to be done better
-	fhSvcVal->GetHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinContent(ibb,conto);
-	fhSvcVal->GetHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinError(ibb,conte);
+	fhSvcVal->GetHistoList("ETagAn",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinContent(ibb,conto);
+	fhSvcVal->GetHistoList("ETagAn",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinError(ibb,conte);
       }
     }
   }
-
-  //      fhSvcVal->GetHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa));
 
   return true;
 }

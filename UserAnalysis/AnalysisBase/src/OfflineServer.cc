@@ -14,7 +14,7 @@ OfflineServer::OfflineServer()
 {
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
-  std::ifstream inputDBFile("/home/spadaro/PADME/UserAnalysis/config/run_dhstb.txt");
+  std::ifstream inputDBFile("config/run_level_offline_db_2022.txt");
 
   if(!inputDBFile) { // file couldn't be opened
     std::cerr << "Error: file could not be opened" << std::endl;

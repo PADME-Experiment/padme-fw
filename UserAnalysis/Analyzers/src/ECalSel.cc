@@ -127,12 +127,12 @@ Int_t ECalSel::TwoClusSel(){
 
   for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
     tempClu[0] = fECal_clEvent->Element((int)h1);
-    fhSvcVal->FillHisto2(Form("ECal_SC_yvsx_EweightAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
-    fhSvcVal->FillHisto2(Form("ECal_SC_yvsxAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_EweightAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsxAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
     if (tempClu[0]->GetEnergy() < energyMin) continue;
     if (tempClu[0]->GetEnergy() > energyMax) continue;
-    fhSvcVal->FillHisto2(Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
-    fhSvcVal->FillHisto2(Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
   }
 
 
@@ -163,13 +163,13 @@ Int_t ECalSel::TwoClusSel(){
 
       double dt = cluTime[0]-cluTime[1];
       double dr = (cluPos[0]-cluPos[1]).Mag();
-      fhSvcVal->FillHisto2(Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
 
       if (cluEnergy[1] < energyMin) continue; // require a minimum energy
       if (cluEnergy[1] > energyMax) continue;
       if (tempClu[1]->GetPosition().Perp() < radiusMin) continue;
 
-      fhSvcVal->FillHisto2(Form("ECal_SC_DrVsDt"), dt, dr, 1.);
+      fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DrVsDt", dt, dr, 1.);
 
       if (fabs(dt) < maxTimeDistance && dr > minGGDistance) {
 	if (isPaired == -1) isPaired = h2;
@@ -196,7 +196,7 @@ Int_t ECalSel::TwoClusSel(){
 	double cosq = rPos.Dot(boostMom)/(rPos.Mag()*boostMom.Mag());
 	pg[i] = 0.5*sqrts/sqrt(1.-cosq*cosq + gam*gam*cosq*cosq - 2.*bg*gam*cosq + bg*bg);
       }      
-      fhSvcVal->FillHisto2(Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
       
 
       double elli = 
@@ -207,20 +207,20 @@ Int_t ECalSel::TwoClusSel(){
       
       double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
 
-      fhSvcVal->FillHisto2(Form("ECal_SC_dphiElli"), elli, dphi, 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elli, dphi, 1.);
 
       if (elli < 4 && TMath::Abs(dphi/sigmadphi) < 3) {
 	
-	fhSvcVal->FillHisto2(Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
 
 	TVector2 cog(
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).X()/(cluEnergy[0]+cluEnergy[1]),
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).Y()/(cluEnergy[0]+cluEnergy[1])
 		     );
 
-	fhSvcVal->FillHisto2(Form("ECal_SC_COGYX"), cog.X(),cog.Y(),1.);		     
-	fhSvcVal->FillHisto2("ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
-	fhSvcVal->FillHisto2("ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_COGYX"), cog.X(),cog.Y(),1.);		     
+	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
+	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
 
 	ECalSelEvent selev;
 	selev.flagEv = ev_gg;
@@ -235,18 +235,18 @@ Int_t ECalSel::TwoClusSel(){
 
       if (elli < 2) { // looser cut because of the temperature effect
 	for (int i=0; i<2; i++) {
-	  fhSvcVal->FillHisto2(Form("ECal_SC_EExpVsE"), cluEnergy[i], pg[i],1.);
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EExpVsE"), cluEnergy[i], pg[i],1.);
 	  double phi = cluPos[i].Phi();
 	  if (phi < 0) phi += 2*pi;
 	  int q = (phi*3./pi+0.5);
 	  if (q > 5) q = 0;
-	  fhSvcVal->FillHisto2(Form("ECal_SC_EExpVsE_q%d",q), cluEnergy[i], pg[i],1.);
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), cluEnergy[i], pg[i],1.);
 	}
       }
     } // isPaired
   } // cluster loop
 
-  fhSvcVal->FillHisto("NumberOfECalCluPairs",fECalEvents.size());
+  fhSvcVal->FillHistoList("ECalSel","NumberOfECalCluPairs",fECalEvents.size());
   return fECalEvents.size();
 }
 
@@ -267,52 +267,43 @@ Bool_t ECalSel::InitHistos()
   Double_t fYW = 21; // mm
   Int_t fNYBins = (fYMax-fYMin)/fYW;
 
-  fhSvcVal->BookHisto2("ECal_SC_yvsx_Eweight", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
-  fhSvcVal->BookHisto2("ECal_SC_yvsx", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
-  fhSvcVal->BookHisto2("ECal_SC_yvsx_EweightAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
-  fhSvcVal->BookHisto2("ECal_SC_yvsxAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx_Eweight", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx_EweightAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsxAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   
-  fhSvcVal->BookHisto2(Form("ECal_SC_DrVsDtAll"), 800, -400,400, 200, 0, 600.);
-  fhSvcVal->BookHisto2(Form("ECal_SC_DrVsDt"), 800, -400,400, 200, 0, 600.);
-  fhSvcVal->BookHisto2(Form("ECal_SC_EVsT"), 800, -400,400, 200, 0, 600.);
-  fhSvcVal->BookHisto2(Form("ECal_SC_DE1VsDE2"), 800, -400,400, 800, -400, 400.);
-  fhSvcVal->BookHisto2(Form("ECal_SC_dphiElli"), 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
-  fhSvcVal->BookHisto2("ECal_SC_COGYX",100,-200,200,100,-200,200);
-  fhSvcVal->BookHisto2("ECal_SC_YX", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
-  fhSvcVal->BookHisto2(Form("ECal_SC_EExpVsE"), 800, 0,400, 400, 0, 400.);
-  fhSvcVal->BookHisto("NumberOfECalCluPairs", 5,0.,5.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EVsT", 800, -400,400, 200, 0, 600.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_YX", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EExpVsE", 800, 0,400, 400, 0, 400.);
+  fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);
 
   for (int q=0; q<6; q++){
-    fhSvcVal->BookHisto2(Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);
+    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);
   }
 
   for (int q=0; q<15; q++){
     for (int aa = 0; aa < 4; aa++) { // SiPM
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
-      fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
+      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
+      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
+      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
+      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
     }
-    fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
-    fhSvcVal->BookHisto2(Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
+    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
+    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
+    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
+    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
   }
 
-//  for (int q=0; q<15; q++){
-//    for (int aa = 0; aa < 4; aa++) { // SiPM
-//      hSvcVal->BookHisto2(Form("ECal_SC_AllETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-//      hSvcVal->BookHisto2(Form("ECal_SC_AllETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-//      hSvcVal->BookHisto2(Form("ECal_SC_AllETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),100,0,600,200,-50,50); 
-//      hSvcVal->BookHisto2(Form("ECal_SC_AllETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),100,0,600,200,-50,50); 
-//    }
-//  }
-
-  fhSvcVal->BookHisto2(Form("ECal_SC_ECal_LRvsYBars"),15,-0.5,14.5,2,-0.5,1.5); 
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
-  fhSvcVal->BookHisto2("ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ECal_LRvsYBars",15,-0.5,14.5,2,-0.5,1.5); 
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
 
   return true;
 }
@@ -321,32 +312,30 @@ Bool_t ECalSel::InitHistos()
 Bool_t ECalSel::Finalize(){
   TString labl[2] = {"Right","Left"};
   
-  fhSvcVal->BookHisto("ETagTimeOffsets",120,0.,120.);
+  fhSvcVal->BookHistoList("ECalSel","ETagTimeOffsets",120,0.,120.);
   int elcount = 0;
   for (int side = 0; side < 2; side++){
     for (int q=0; q<15; q++){
       for (int aa = 0; aa < 4; aa++) { // SiPM
-	TH1D* rightpro = (fhSvcVal->GetHisto2(Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",labl[side].Data(),q,aa)))->ProjectionY(Form("%spro",labl[side].Data()));
+	TH1D* rightpro = (fhSvcVal->GetHisto2List("ECalSel",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",labl[side].Data(),q,aa)))->ProjectionY(Form("%spro",labl[side].Data()));
 	double timeMax = rightpro->GetBinCenter(rightpro->GetMaximumBin());
-	fhSvcVal->GetHisto("ETagTimeOffsets")->SetBinContent(elcount,timeMax);
+	fhSvcVal->GetHistoList("ECalSel","ETagTimeOffsets")->SetBinContent(elcount,timeMax);
 	elcount++;
       }
 
-      fhSvcVal->BookHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q),18,0,378.);
-      TProfile* profo = (fhSvcVal->GetHisto2(Form("ECal_SC_ETagHits%sCh_%d_dtvsr",labl[side].Data(),q)))->ProfileX(Form("%sprof%d",labl[side].Data(),q),122,161); //to be done better
+      fhSvcVal->BookHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q),18,0,378.);
+      TProfile* profo = (fhSvcVal->GetHisto2List("ECalSel",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",labl[side].Data(),q)))->ProfileX(Form("%sprof%d",labl[side].Data(),q),122,161); //to be done better
       int ibins = (profo->GetXaxis())->GetNbins();
       for (int ib=0; ib < ibins; ib++){
 	double xx = profo->GetBinCenter(ib+1);
 	double conto = profo->GetBinContent(ib+1);
 	double conte = profo->GetBinError(ib+1);
 	int ibb = xx/21.+1; //to be done better
-	fhSvcVal->GetHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinContent(ibb,conto);
-	fhSvcVal->GetHisto(Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinError(ibb,conte);
+	fhSvcVal->GetHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinContent(ibb,conto);
+	fhSvcVal->GetHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinError(ibb,conte);
       }
     }
   }
-
-  //      hSvcVal->GetHisto2(Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa));
 
   return true;
 }

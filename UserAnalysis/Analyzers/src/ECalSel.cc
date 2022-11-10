@@ -310,32 +310,5 @@ Bool_t ECalSel::InitHistos()
 
 
 Bool_t ECalSel::Finalize(){
-  TString labl[2] = {"Right","Left"};
-  
-  fhSvcVal->BookHistoList("ECalSel","ETagTimeOffsets",120,0.,120.);
-  int elcount = 0;
-  for (int side = 0; side < 2; side++){
-    for (int q=0; q<15; q++){
-      for (int aa = 0; aa < 4; aa++) { // SiPM
-	TH1D* rightpro = (fhSvcVal->GetHisto2List("ECalSel",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",labl[side].Data(),q,aa)))->ProjectionY(Form("%spro",labl[side].Data()));
-	double timeMax = rightpro->GetBinCenter(rightpro->GetMaximumBin());
-	fhSvcVal->GetHistoList("ECalSel","ETagTimeOffsets")->SetBinContent(elcount,timeMax);
-	elcount++;
-      }
-
-      fhSvcVal->BookHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q),18,0,378.);
-      TProfile* profo = (fhSvcVal->GetHisto2List("ECalSel",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",labl[side].Data(),q)))->ProfileX(Form("%sprof%d",labl[side].Data(),q),122,161); //to be done better
-      int ibins = (profo->GetXaxis())->GetNbins();
-      for (int ib=0; ib < ibins; ib++){
-	double xx = profo->GetBinCenter(ib+1);
-	double conto = profo->GetBinContent(ib+1);
-	double conte = profo->GetBinError(ib+1);
-	int ibb = xx/21.+1; //to be done better
-	fhSvcVal->GetHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinContent(ibb,conto);
-	fhSvcVal->GetHistoList("ECalSel",Form("DTVsR_Hits%sCh_%d",labl[side].Data(),q))->SetBinError(ibb,conte);
-      }
-    }
-  }
-
   return true;
 }

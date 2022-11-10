@@ -51,7 +51,7 @@ public:
   Bool_t Finalize();
   virtual Bool_t Process();
 
-  int getNECalEvents(){return fECalEvents.size();}
+  int getNECalEvents(){return (int) fECalEvents.size();}
   ECalSelEvent getECalEvent(int i){return fECalEvents.at(i);} //to be protected
 
 protected:

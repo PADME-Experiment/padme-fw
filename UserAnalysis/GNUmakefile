@@ -20,6 +20,7 @@ LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix 
 LIBS += -Llib -lPadmeAnalysis$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 LIBS += -L$(PADME)/UserAnalysis/AnalysisBase/lib -lAnalysisBase$(STATIC) -L$(PADME)/UserAnalysis/Analyzers/lib -lAnalyzers$(STATIC)
+LIBS += -L$(PADME)/UserAnalysis/AnalysisBase/lib -lAnalysisBase$(STATIC) 
 
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)
 

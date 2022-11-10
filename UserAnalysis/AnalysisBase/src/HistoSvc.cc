@@ -140,12 +140,38 @@ TH1D* HistoSvc::GetHisto(std::string hname){
   return h;
 }
 
+TH1D* HistoSvc::GetHistoList(std::string lname, std::string hname){
+
+  TH1D* h = (TH1D*)fListMap[lname][hname];
+
+  if (h == nullptr) {
+    std::cout << "---> warning from HistoSvc::GetHisto() : histo1D " << hname
+	      << " in list " << lname << " does not exist."
+	      << std::endl;
+    return nullptr;
+  }
+  return h;
+}
+
 TH2D* HistoSvc::GetHisto2(std::string hname){
   TH2D* h = (TH2D*)fListMap["STD"][hname];
 
   if (h == nullptr) {
     std::cout << "---> warning from HistoSvc::GetHisto2() : histo2D " << hname
 	      << " does not exist."
+	      << std::endl;
+    return nullptr;
+  }
+  return h;
+}
+
+TH2D* HistoSvc::GetHisto2List(std::string lname, std::string hname){
+
+  TH2D* h = (TH2D*)fListMap[lname][hname];
+
+  if (h == nullptr) {
+    std::cout << "---> warning from HistoSvc::GetHisto() : histo2D " << hname
+	      << " in list " << lname << " does not exist."
 	      << std::endl;
     return nullptr;
   }

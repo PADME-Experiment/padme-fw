@@ -70,6 +70,8 @@ public:
   void FillHistoList(std::string, std::string, Double_t, Double_t weight = 1.0);
   void FillHisto2List(std::string, std::string, Double_t, Double_t, Double_t weight = 1.0);
   void FillNtupleList(std::string, std::string);
+  TH1D* GetHistoList(std::string, std::string);
+  TH2D* GetHisto2List(std::string, std::string);
 
   // Allow saving user's TGraphs to output file
   void SaveTGraph(std::string,TGraph*);

@@ -231,59 +231,42 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   TADCBoard* ADC;
 
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
-    //std::cout<<"iBdID "<<iBdID<<std::endl;
-    unsigned int acm;
-    acm= ADC->GetAcceptedChannelMask();
-    //printf("--------------------------------------------Mask %x \n", acm);
-    if(GetConfig()->BoardIsMine( iBdID )) {
-      //Loop over the channels and perform reco
-      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
-	TADCChannel* chn = ADC->ADCChannel(ich);
-	Int_t nch = chn->GetChannelNumber();
-	Double_t zsup=1;
-	if((acm & (1<<nch))>0){zsup=0; /*std::cout<<"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++accepted hit " << (acm & (1<<ich)) << std::endl;*/ }
-	std::bitset<32> x(acm);
-	std::bitset<32> y((1<<nch));
-	GetHisto("ZSupFlag")->Fill(zsup);
-       	//std::cout<<"........................................................accepted channel mask " << (acm & (1<<ich)) << " x " << x << " y " << y  << " channel " << nch<< std::endl;
-	//Double_t rms = compute_rms(chn->GetSamplesArray());
-	//std::cout<<" from compute_rms " << rms <<std::endl;
-	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+    if(! GetConfig()->BoardIsMine(iBdID)) continue;
 
-	//New M. Raggi
- 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
- 	Int_t ElChID = chn->GetChannelNumber();
-	//Store info for the digitizer class
- 	((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
- 	((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
- 	((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
-	/*
-	if (ChID<0)std::cout<<"Why chId<0 ???? ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich<<" ... ADC channel = "<<(Int_t)chn->GetChannelNumber()<<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" ADB board n. "<<iBdID<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
-	else std::cout<<"ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich
-		      <<" ... idBD/idCH = "<<(Int_t)ADC->GetBoardId()<<"/"<<(Int_t)chn->GetChannelNumber()
-		      <<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
-	*/
+    //Loop over the channels and perform reco
+    for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 
-	unsigned int nHitsBefore = Hits.size();
-	fChannelReco->Reconstruct(Hits);
-	unsigned int nHitsAfter = Hits.size();
-	//if (ChID==1625) std::cout<<" n. of hits in chid 1625 = "<<nHitsAfter-nHitsBefore<<std::endl;
-	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
-	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
-	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
-	  if(fTriggerProcessor)
-	    Hits[iHit]->SetTime(
-				Hits[iHit]->GetTime() - 
-				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
-				);
-	}
+      TADCChannel* chn = ADC->ADCChannel(ich);
+      Int_t ElChID = chn->GetChannelNumber();
+      Int_t ChID   = GetChannelID(iBdID,ElChID); //get geographical position from channel map
+      //printf("ECalReconstruction::BuildHits Board %d Channel %d ChID %d\n",iBdID,ElChID,ChID);
+      if (ChID == -1) continue; // Skip channels not used by ECal (e.g. LeadGlass and Cosmics)
+
+      fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+      //Store info for the digitizer class
+      ((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
+      ((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
+      ((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
+
+      unsigned int nHitsBefore = Hits.size();
+      fChannelReco->Reconstruct(Hits);
+      unsigned int nHitsAfter = Hits.size();
+      for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	Hits[iHit]->SetChannelId(ChID);
+	Hits[iHit]->setBDCHid(iBdID,ElChID);
+	// Correct hit time using trigger information
+	if (fTriggerProcessor)
+	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
       }
-    } else {
-      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
-    }
-  }    
+
+    } // End loop over channels
+
+  } // End loop over boards
+
 }
 
 

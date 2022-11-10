@@ -10,6 +10,8 @@ public:
   TLeadGlassRecoEvent(); 
   ~TLeadGlassRecoEvent();
 
+  void Clear();
+
   void SetPedestal(Double_t c) { fLGPedestal = c; }
   Double_t GetPedestal() { return fLGPedestal; }
 
@@ -28,6 +30,9 @@ public:
   void SetBunchLength(Double_t b) { fLGBunchLength = b; }
   Double_t GetBunchLength() { return fLGBunchLength; }
 
+  void SetBunchBBQ(Double_t b) { fLGBunchBBQ = b; }
+  Double_t GetBunchBBQ() { return fLGBunchBBQ; }
+
 private:
   
   Double_t fLGPedestal;
@@ -37,6 +42,7 @@ private:
   Double_t fLGTotalEnergy;
   Double_t fLGNPoTs;
   Double_t fLGBunchLength;
+  Double_t fLGBunchBBQ;
 
   ClassDef(TLeadGlassRecoEvent,1);
 };

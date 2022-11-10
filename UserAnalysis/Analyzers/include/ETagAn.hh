@@ -27,7 +27,7 @@ public:
   virtual Bool_t Init(PadmeAnalysisEvent* event);
   Bool_t Finalize();
   virtual Bool_t InitHistos();
-  virtual Bool_t Process(Bool_t isMC);  
+  virtual Bool_t Process();  
 
 protected:
   TRecoEvent*           fRecoEvent;

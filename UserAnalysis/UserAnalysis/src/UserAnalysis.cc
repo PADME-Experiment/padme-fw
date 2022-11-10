@@ -4,6 +4,7 @@
 #include "UserAnalysis.hh"
 #include "NPoTAnalysis.hh"
 #include "ECalSel.hh" //TS
+#include "ETagAn.hh" //TS
 #include "ECalCalib.hh"
 #include "NPoTAnalysis.hh" //MR
 #include "IsGGAnalysis.hh" //MR
@@ -31,6 +32,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   fECalSel = ECalSel::GetInstance();
+  fETagAn  = ETagAn::GetInstance();
   fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
@@ -42,6 +44,7 @@ UserAnalysis::~UserAnalysis(){
   delete fECalCalib;
   delete fNPoTAnalysis;
   delete fECalSel;
+  delete fETagAn;
   delete fIsGGAnalysis;
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
@@ -57,6 +60,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   fECalSel->Init(fEvent);
+  fETagAn->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
   fETagAnalysis->Init(fEvent);
   fIs22GGAnalysis->Init(fEvent);
@@ -98,6 +102,7 @@ Bool_t UserAnalysis::Process(){
 
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fECalSel->Process();
+  fETagAn->Process();
   fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
@@ -160,6 +165,7 @@ Bool_t UserAnalysis::Finalize()
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
+  fETagAn->Finalize();
   fIsGGAnalysis->Finalize();
   fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();

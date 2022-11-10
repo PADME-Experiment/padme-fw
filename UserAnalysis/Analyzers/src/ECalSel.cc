@@ -257,6 +257,8 @@ Int_t ECalSel::TwoClusSel(){
 
 Bool_t ECalSel::InitHistos()
 {
+  fhSvcVal->CreateList("ECalSel");
+
 // x and y slices
   Double_t fXMin = -21.*(14+0.5);
   Double_t fXMax = 21.*(14+0.5);
@@ -285,25 +287,6 @@ Bool_t ECalSel::InitHistos()
   for (int q=0; q<6; q++){
     fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);
   }
-
-  for (int q=0; q<15; q++){
-    for (int aa = 0; aa < 4; aa++) { // SiPM
-      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
-      fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
-    }
-    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
-    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
-  }
-
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ECal_LRvsYBars",15,-0.5,14.5,2,-0.5,1.5); 
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
 
   return true;
 }

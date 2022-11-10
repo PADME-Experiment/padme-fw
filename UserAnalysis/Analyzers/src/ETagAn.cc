@@ -115,7 +115,7 @@ Bool_t ETagAn::Init(PadmeAnalysisEvent* event){
 }
 
 
-Bool_t ETagAn::Process(Bool_t isMC)
+Bool_t ETagAn::Process()
 {
 
   ETagMatch();
@@ -322,7 +322,7 @@ Bool_t ETagAn::InitHistos()
 //  Double_t fYW = 21; // mm
 //  Int_t fNYBins = (fYMax-fYMin)/fYW;
 
-  HistoSvc* fhSvcVal =  HistoSvc::GetInstance();
+  fhSvcVal->CreateList("ETagAn");
 
   for (int q=0; q<15; q++){
     for (int aa = 0; aa < 4; aa++) { // SiPM
@@ -351,7 +351,6 @@ Bool_t ETagAn::Finalize(){
   TString labl[2] = {"Right","Left"};
   
 
-  HistoSvc* fhSvcVal =  HistoSvc::GetInstance();
   fhSvcVal->BookHistoList("ETagAn","ETagTimeOffsets",120,0.,120.);
   int elcount = 0;
   for (int side = 0; side < 2; side++){

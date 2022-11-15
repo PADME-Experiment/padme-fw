@@ -44,6 +44,17 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
   InitHistos();
   fdistanceTarget=3470;
   
+  fBeamEnergy = 268.94;// default
+  fStartTime = 1664807042;// first run 50151 
+
+  fMe = 0.511;
+  fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamEnergy*fMe);
+  fBG = fBeamEnergy/fSqrts; // beta gamma
+  fGam = sqrt(fBG*fBG+1.);
+  fBeta = fBG/fGam;
+
+
+
   return true;
 }
 
@@ -61,23 +72,22 @@ Bool_t ECalSel::Process(){
 
 Int_t ECalSel::TwoClusSel(){
 
-  const double me = 0.511;
 
   // run level properties
 
   int runID = fRecoEvent->GetRunNumber();
-  double beamEnergy = 268.94;// default
-  double sqrts = sqrt(2.*me*me + 2.*beamEnergy*me);
-  double bg = beamEnergy/sqrts; // beta gamma
-  double gam = sqrt(bg*bg+1.);
-  double beta = bg/gam;
 
   if (runID != fRunOld) { // need to update run-level features: TO BE DONE, beam direction [cog, target pos]
-    beamEnergy = fOfflineServerDB->getDHSTB01Energy(runID);
-    sqrts = sqrt(2.*me*me + 2.*beamEnergy*me);
-    bg = beamEnergy/sqrts; // beta gamma
-    gam = sqrt(bg*bg+1.);
-    beta = bg/gam;
+    fBeamEnergy = fOfflineServerDB->getDHSTB01Energy(runID);
+    fStartTime =  fOfflineServerDB->getRunStartTime(runID);
+
+    std::cout << "ECalSel updating run-level info for run " << runID << " Ebeam = " << fBeamEnergy << " StartT = " << static_cast<long long int>(fStartTime) << std::endl;
+
+    fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamEnergy*fMe);
+    fBG = fBeamEnergy/fSqrts; // beta gamma
+    fGam = sqrt(fBG*fBG+1.);
+    fBeta = fBG/fGam;
+    fRunOld = runID;
   }
 
   double xTarg = 1.;  // -> should be from db
@@ -89,11 +99,16 @@ Int_t ECalSel::TwoClusSel(){
   TVector3 boostMom(cogAtECal.X(),cogAtECal.Y(),cogAtECal.Z());
   //  TVector3 boostMom(-9.5,-2.5,zOff);
   boostMom -= rTarg;
-  boostMom *= (beta/boostMom.Mag());
+  boostMom *= (fBeta/boostMom.Mag());
 
   // selects pairs of clusters compatible with the e+e- --> gamma-gamma/e+e- transition
   // returns the number of selected pairs
   // pair indices are in the vector of pairs fIndPair
+  TTimeStamp evt = fRecoEvent->GetEventTime();
+  long long int eventTime = static_cast<long long int>(evt.GetSec());
+  long long int  deventTime = eventTime - fStartTime;
+
+  //  std::cout << "check times " << static_cast<long long int>(eventTime) << " event = " << fRecoEvent->GetEventNumber() << " fStartTime = " << static_cast<long long int>(fStartTime) << " dt = " << static_cast<long long int>(deventTime) << std::endl;
 
   // kinematic conditions might be run-dependent
 
@@ -194,7 +209,7 @@ Int_t ECalSel::TwoClusSel(){
 	//	double cluDist = (cluPos[i]-rTarg).Mag();
 	//	double cosq = (cluPos[i].Z() - rTarg.Z())/cluDist; //will have to correct Z of each cluster for its average cluster depth
 	double cosq = rPos.Dot(boostMom)/(rPos.Mag()*boostMom.Mag());
-	pg[i] = 0.5*sqrts/sqrt(1.-cosq*cosq + gam*gam*cosq*cosq - 2.*bg*gam*cosq + bg*bg);
+	pg[i] = 0.5*fSqrts/sqrt(1.-cosq*cosq + fGam*fGam*cosq*cosq - 2.*fBG*fGam*cosq + fBG*fBG);
       }      
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
       
@@ -218,7 +233,12 @@ Int_t ECalSel::TwoClusSel(){
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).Y()/(cluEnergy[0]+cluEnergy[1])
 		     );
 
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_COGYX"), cog.X(),cog.Y(),1.);		     
+	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_COGYX", cog.X(),cog.Y(),1.);		     
+
+	fhSvcVal->FillHisto2List("ECalSel","ECalX_vs_Time", deventTime, cog.X(),1.);		     
+	fhSvcVal->FillHisto2List("ECalSel","ECalY_vs_Time", deventTime, cog.Y(),1.);		     
+	//	std::cout << "deventTime " << deventTime << " cog = " << cog.X() << " " << cog.Y() << std::endl;
+
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
 
@@ -280,6 +300,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
+  fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",100,0,43200.,100,-200,200);
+  fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",100,0,43200.,100,-200,200);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_YX", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EExpVsE", 800, 0,400, 400, 0, 400.);
   fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);

@@ -75,6 +75,12 @@ private:
   double fBG;
   double fGam;
   double fBeta;
+  int fNThetaBins;
+  double fThetaWid;
+  int fNPhiDirBins;
+  double fPhiDirWid;
+
+
   HistoSvc* fhSvcVal; 
   
 };

@@ -41,7 +41,6 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
 
   fRunOld = -1;
 
-  InitHistos();
   fdistanceTarget=3470;
   
   fBeamEnergy = 268.94;// default
@@ -53,7 +52,16 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
   fGam = sqrt(fBG*fBG+1.);
   fBeta = fBG/fGam;
 
+  // binning of theta vs phi 
 
+  fNThetaBins = 40;//20;
+  //  fThetaWid = 0.003/fNThetaBins; // rad
+  fThetaWid = 0.008/fNThetaBins; // rad
+  fNPhiDirBins = 40;//was 25 50;
+  //  const double pi = 3.1415927;
+  fPhiDirWid = 2.*TMath::Pi()/fNPhiDirBins; // rad
+
+  InitHistos();
 
   return true;
 }
@@ -80,7 +88,7 @@ Int_t ECalSel::TwoClusSel(){
   if (runID != fRunOld) { // need to update run-level features: TO BE DONE, beam direction [cog, target pos]
     fBeamEnergy = fOfflineServerDB->getDHSTB01Energy(runID);
     fStartTime =  fOfflineServerDB->getRunStartTime(runID);
-
+  
     std::cout << "ECalSel updating run-level info for run " << runID << " Ebeam = " << fBeamEnergy << " StartT = " << static_cast<long long int>(fStartTime) << std::endl;
 
     fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamEnergy*fMe);
@@ -97,7 +105,7 @@ Int_t ECalSel::TwoClusSel(){
   const double zOff = 2508.31; //[mm] = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm. zClu is 2555 now and not 2550.51 which should be from the survey]. 
   TVector3 cogAtECal(-16.,1.,zOff);
   TVector3 boostMom(cogAtECal.X(),cogAtECal.Y(),cogAtECal.Z());
-  //  TVector3 boostMom(-9.5,-2.5,zOff);
+
   boostMom -= rTarg;
   boostMom *= (fBeta/boostMom.Mag());
 
@@ -127,7 +135,7 @@ Int_t ECalSel::TwoClusSel(){
   const double deCutRadiusX = 15.; // MeV
   const double deCutCenterY = 0; // MeV
   const double deCutRadiusY = 15; // MeV
-
+  const double maxRCOG = 150.; // mm
   const double sigmadphi = 0.1; // rad (possible double peak present)
   const double pi=3.14159265358979;
 
@@ -202,7 +210,7 @@ Int_t ECalSel::TwoClusSel(){
       cluTime[1] = tempClu[1]->GetTime();
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),zOff); 
       cluPosRel[1] = cluPos[1]-cogAtECal;
-
+      
       double pg[2];
       for (int i = 0; i<2; i++){
 	TVector3 rPos = cluPos[i]-rTarg;
@@ -224,17 +232,16 @@ Int_t ECalSel::TwoClusSel(){
 
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elli, dphi, 1.);
 
+
       if (elli < 4 && TMath::Abs(dphi/sigmadphi) < 3) {
 	
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
-
 	TVector2 cog(
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).X()/(cluEnergy[0]+cluEnergy[1]),
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).Y()/(cluEnergy[0]+cluEnergy[1])
 		     );
 
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_COGYX", cog.X(),cog.Y(),1.);		     
-
 	fhSvcVal->FillHisto2List("ECalSel","ECalX_vs_Time", deventTime, cog.X(),1.);		     
 	fhSvcVal->FillHisto2List("ECalSel","ECalY_vs_Time", deventTime, cog.Y(),1.);		     
 	//	std::cout << "deventTime " << deventTime << " cog = " << cog.X() << " " << cog.Y() << std::endl;
@@ -242,16 +249,58 @@ Int_t ECalSel::TwoClusSel(){
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
 
-	ECalSelEvent selev;
-	selev.flagEv = ev_gg;
-	selev.indexECal[0] = h1;
-	selev.indexECal[1] = isPaired;
-	selev.indexECal[2] = -1;
-	selev.totalE = cluEnergy[0] + cluEnergy[1];
-	selev.avgT = 0.5*(cluTime[0]+cluTime[1]);
-	selev.cog.Set(cog.X(),cog.Y());
-	fECalEvents.push_back(selev);
-      } 
+	if (cog.Mod() < maxRCOG){
+	  ECalSelEvent selev;
+	  selev.flagEv = ev_gg;
+	  selev.indexECal[0] = h1;
+	  selev.indexECal[1] = isPaired;
+	  selev.indexECal[2] = -1;
+	  selev.totalE = cluEnergy[0] + cluEnergy[1];
+	  selev.avgT = 0.5*(cluTime[0]+cluTime[1]);
+	  selev.cog.Set(cog.X(),cog.Y());
+	  fECalEvents.push_back(selev);
+
+	  TLorentzVector photonMom[2];
+	  for (int j=0; j<2; j++) {
+	    TVector3 rPos = cluPos[j]-rTarg;
+	    rPos *= (cluEnergy[j]/rPos.Mag());
+	    photonMom[j].SetXYZT(rPos.X(),rPos.Y(),rPos.Z(),cluEnergy[j]);
+
+	    //	    cout << " photon " << j << " " << photonMom[j].X() << " " << photonMom[j].Y() << " " << photonMom[j].Z() << " " << photonMom[j].E() << std::endl;
+	  }
+	  //	  std::cout << " boost " << boostMom.Mag() << " " << std::endl;
+	  
+    // evaluate best boost direction
+
+	  for (int ith = 0; ith<fNThetaBins; ith++){ // loop on theta
+	    double thetaRot = fThetaWid*(ith+0.5);
+	    for (int iph = 0; iph<fNPhiDirBins; iph++){ // loop on phi
+	      double phiRot = fPhiDirWid*(iph+0.5);
+	      TVector3 trialBoost(boostMom.Mag()*TMath::Sin(thetaRot)*TMath::Cos(phiRot),
+				  boostMom.Mag()*TMath::Sin(thetaRot)*TMath::Sin(phiRot),
+				  boostMom.Mag()*TMath::Cos(thetaRot)); 
+	      trialBoost *= -1;
+	      TLorentzVector pgstar[2];
+	      for (int j=0; j<2; j++) {
+		pgstar[j].SetXYZT(photonMom[j].X(),photonMom[j].Y(),photonMom[j].Z(),photonMom[j].E());
+		pgstar[j].Boost(trialBoost);
+	      }
+
+	      double cosRel = pgstar[0].Vect().Dot(pgstar[1].Vect())/(pgstar[0].E()*pgstar[1].E());	
+
+//	      std::cout << "cos = " << cosRel << 
+//		" pg*0 = " << pgstar[0].X() << " " << pgstar[0].Y() << " " << pgstar[0].Z() << " " << pgstar[0].E() <<
+//		" pg*1 = " << pgstar[1].X() << " " << pgstar[1].Y() << " " << pgstar[1].Z() << " " << pgstar[1].E() << std::endl;
+
+	      fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
+	      if (cosRel < -0.998) {
+		fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRun",thetaRot,phiRot,1.); 
+	      }
+	    }
+	  }
+
+	} 
+      }
 
       if (elli < 2) { // looser cut because of the temperature effect
 	for (int i=0; i<2; i++) {
@@ -300,11 +349,15 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
-  fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",100,0,43200.,100,-200,200);
-  fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",100,0,43200.,100,-200,200);
+  fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",48,0,86400.,100,-200,200); //30-minute binning
+  fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",48,0,86400.,100,-200,200); //30-minute binning
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_YX", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EExpVsE", 800, 0,400, 400, 0, 400.);
   fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);
+
+  fhSvcVal->BookHisto2List("ECalSel","DPhiVsRotVsRunCos",fNThetaBins,0,fNThetaBins*fThetaWid,fNPhiDirBins,0,2*TMath::Pi()); //to be done run-wise: first read runID, then book
+  fhSvcVal->BookHisto2List("ECalSel","DPhiVsRotVsRun",fNThetaBins,0,fNThetaBins*fThetaWid,fNPhiDirBins,0,2*TMath::Pi()); //to be done run-wise: first read runID, then book
+
 
   for (int q=0; q<6; q++){
     fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);

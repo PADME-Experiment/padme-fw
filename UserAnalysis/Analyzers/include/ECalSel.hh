@@ -68,8 +68,15 @@ private:
   std::vector<ECalSelEvent> fECalEvents;
   OfflineServer* fOfflineServerDB;
   Int_t fRunOld;
+  double fBeamEnergy;
+  long long int fStartTime;
+  double fMe;
+  double fSqrts;
+  double fBG;
+  double fGam;
+  double fBeta;
   HistoSvc* fhSvcVal; 
-
+  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

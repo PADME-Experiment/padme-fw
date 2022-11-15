@@ -30,7 +30,6 @@ private:
   static OfflineServer* fInstance;
 
 public:
-
   long long int getRunStartTime(int runID){return runInfos.at(runIndex[runID]).runStartTime;} //seconds
   long long int getRunStopTime(int runID){return runInfos.at(runIndex[runID]).runStopTime;} //seconds
   float getDHSTB01Energy(int runID){return runInfos.at(runIndex[runID]).DHSTB01Energy;} //MeV

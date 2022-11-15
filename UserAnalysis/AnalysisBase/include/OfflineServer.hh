@@ -8,7 +8,8 @@
 
 struct RunInfo{
   int RunID;
-  long int runTime; //seconds?
+  long long int runStartTime; //seconds
+  long long int runStopTime; //seconds
   float DHSTB01Energy; //MeV
   float DHSTB02Energy; //MeV
   int nFiles;
@@ -30,7 +31,8 @@ private:
 
 public:
 
-  long int getRunTime(int runID){return runInfos.at(runIndex[runID]).runTime;} //seconds?
+  long long int getRunStartTime(int runID){return runInfos.at(runIndex[runID]).runStartTime;} //seconds
+  long long int getRunStopTime(int runID){return runInfos.at(runIndex[runID]).runStopTime;} //seconds
   float getDHSTB01Energy(int runID){return runInfos.at(runIndex[runID]).DHSTB01Energy;} //MeV
   float getDHSTB02Energy(int runID){return runInfos.at(runIndex[runID]).DHSTB02Energy;} //MeV
   int getNFiles(int runID){return runInfos.at(runIndex[runID]).nFiles;}

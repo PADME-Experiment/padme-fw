@@ -28,7 +28,7 @@ OfflineServer::OfflineServer()
 
   while ( !inputDBFile.eof() ) { // keep reading until end-of-file
     inputDBFile >> 
-      rInfo.RunID >> rInfo.runTime >> rInfo.DHSTB01Energy >> 
+      rInfo.RunID >> rInfo.runStartTime  >> rInfo.runStopTime >> rInfo.DHSTB01Energy >> 
       rInfo.DHSTB02Energy >> rInfo.nFiles >> rInfo.runPOT >> 
       rInfo.bunchLength >> rInfo.beamStart ; // sets EOF flag if no value found
 

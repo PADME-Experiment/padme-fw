@@ -98,6 +98,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
   fHS->FillHistoList("BremsstrahlungList","hNPVetoCluster",NPVetoCluster);
 
   //Number of SAC clusters
+  if(!fEvent->SACRecoCl) return 0;
   Int_t NSACCluster = fEvent->SACRecoCl->GetNElements();
   fHS->FillHistoList("BremsstrahlungList","hNSACCluster",NSACCluster);
 

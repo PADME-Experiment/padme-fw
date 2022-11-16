@@ -40,8 +40,8 @@ bool VetoEndPoint::InitialiseHistos(){
   fHS->CreateList("VetoEndPointList");
   fHS->CreateList("VetoEndPointList");
 
-  fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,0.5,89.5);
-  fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,95.5);
+  fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,0.5,90.5);
+  fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,96.5);
   
   fHS->CreateList("VetoEndPointList/PVetoThetaVsP");
   fHS->CreateList("VetoEndPointList/EVetoThetaVsP");
@@ -54,7 +54,7 @@ bool VetoEndPoint::InitialiseHistos(){
     fHS->BookHisto2List("VetoEndPointList/EVetoThetaVsP",name,100,0.,Ebeam,101,0.5,200.5);
 
     sprintf(name,"hEVeto_ThetaVsPhi_Channel%d",ChID);
-    fHS->BookHisto2List("VetoEndPointList/EVetoThetaVsPhi",name,180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200.5);
+    fHS->BookHisto2List("VetoEndPointList/EVetoThetaVsPhi",name,180,-1*TMath::Pi(),TMath::Pi(),101,0.5,200);
 
     if(ChID<nPVetoNFingers){
       sprintf(name,"hPVeto_ThetaVsP_Channel%d",ChID);
@@ -129,7 +129,7 @@ void VetoEndPoint::PlotFingerGraphs(){
   AllFingerGraph->GetYaxis()->SetTitle("X position (mm)");
 }
 
-void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, Double_t starttime, Int_t particlecharge){
+void VetoEndPoint::ParticleSwim(TLorentzVector FourMomentum, TVector3 startposition, Double_t starttime, Int_t particlecharge){
   //for Bhabhas originating from the target, where do they end up?
   NTotal++;
 
@@ -141,10 +141,18 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
   double StepLengthMetres = fStepLength*1e-3;
 
   //copy starting values into local variables so that the starting variables don't change during this process
-  TVector3 LocalMomentum = startmomentum;
+  TVector3 LocalMomentum = FourMomentum.Vect();
   //TVector3 LocalDirection = LocalMomentum*(1/LocalMomentum.Mag());
   TVector3 LocalPosition = startposition;
 
+  double c = 3e8;
+  // double Mass = FourMomentum.M()*1e3;//FourMomentum.M() returns mass in GeV, so multiply by 1000 to get MeV
+  // std::cout<<FourMomentum.P()<<" "<<FourMomentum.E()<<" "<<FourMomentum.M()<<std::endl;
+  double beta = FourMomentum.P()/FourMomentum.E();//velocity/c;
+  double betagamma = FourMomentum.P()/FourMomentum.M();//velocity/c;
+  double gamma = betagamma/beta;
+
+  //  std::cout<<FourMomentum.P()<<" "<<Mass<<" "<<beta<<" "<<gamma<<std::endl;
   //if(fabs(LocalMomentum.Mag()-1.)>1e-9) std::cout<<"dir mag problem "<<LocalDirection.Mag()<<std::endl;
 
   TVector3 PT(0,0,0);
@@ -153,8 +161,8 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
   
   int nSteps = (PVetoCenter.Z() + 0.5*PVetoSize.Z() - z0)/stepL*100; //steps of 0.01mm
   bool insideVeto = kFALSE;
-  int channelFired = -1; //channelID of channel where particle finishes
-  double totalLength = 0; //total length of trajectory (mm?)
+  double fTotalPathLength = 0; //total length of trajectory (mm?)
+  double totalTime = 0; //total length of trajectory (mm?)
 
   Bool_t outX = 0;
   Bool_t outY = 0;
@@ -183,8 +191,8 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
      LocalPosition.SetY(LocalPosition.Y() + dStep.Y());
      LocalPosition.SetZ(LocalPosition.Z() + dStep.Z());
      
-     totalLength += stepL;
-   
+     fTotalPathLength += stepL*1e-3;
+     //     std::cout<<fTotalPathLength<<std::endl;
      /*     if (istep%30 == 0) {
        std::cout << "In detailed magnetic Transport: PT kick = ( "<< PT.X() << ", "<< PT.Y()<<", "<< PT.Z()<< ") "
 	    << " mom[MeV] = ( " << LocalMomentum.X() << " ,"<<LocalMomentum.Y() << " ,"<< LocalMomentum.Z() << ")"
@@ -227,36 +235,38 @@ void VetoEndPoint::ParticleSwim(TVector3 startmomentum, TVector3 startposition, 
 	 if (PointInTriangle(point,pzx[0][i],pzx[1][i],pzx[2][i]) || PointInTriangle(point,pzx[0][i],pzx[2][i],pzx[3][i])) {
 	   Nin++;
 	   insideVeto = kTRUE; 
-	   channelFired = i;
+	   fEndFinger = i;
+	   fEndTime = fTotalPathLength/(c*beta);
+	   //	   std::cout<<"end totalpathlength "<<fTotalPathLength<<" gamma "<<gamma<<" beta "<<beta<<" endtime "<<fEndTime<<std::endl;
 	   //   if(particlecharge == -1) std::cout<<"I fire EVeto"<<std::endl;
 	   break;
 	 }
        }
        if (insideVeto)  break;
      }
-   } // loop over swim step
-   if (insideVeto) {
-     if (channelFired < 0 || channelFired >= nEVetoNFingers) {
-       std::cout << "Wrong VetoChannel evaluated " << channelFired << std::endl;
-     }
-     else {
-       if(particlecharge==1&&channelFired<nPVetoNFingers){
-	 fHS->FillHistoList("VetoEndPointList","hPVetoChID",channelFired);
+  } // loop over swim step
+  if (insideVeto) {
+    if (fEndFinger < 0 || fEndFinger >= nEVetoNFingers) {
+      std::cout << "Wrong VetoChannel evaluated " << fEndFinger << std::endl;
+    }
+    else {
+      if(particlecharge==1&&fEndFinger<nPVetoNFingers){
+	// fHS->FillHistoList("VetoEndPointList","hPVetoChID",fEndFinger);
+	
+	//sprintf(name,"hPVeto_ThetaVsP_Channel%d",fEndFinger);
+	// fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsP",name,FourMomentum.Vect().Mag(),FourMomentum.Vect().Theta()*1000.);
+	
+	//	 sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",fEndFinger);
+	// fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,FourMomentum.Vect().Phi(),FourMomentum.Vect().Theta()*1000.);
+      }
+      else if(particlecharge==-1&&fEndFinger<nEVetoNFingers){
+	// fHS->FillHistoList("VetoEndPointList","hEVetoChID",fEndFinger);
+	
+	 //sprintf(name,"hEVeto_ThetaVsP_Channel%d",fEndFinger);
+	 //fHS->FillHisto2List("VetoEndPointList/EVetoThetaVsP",name,FourMomentum.Vect().Mag(),FourMomentum.Vect().Theta()*1000.);
 
-       	 sprintf(name,"hPVeto_ThetaVsP_Channel%d",channelFired);
-	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsP",name,startmomentum.Mag(),startmomentum.Theta()*1000.);
-
-       	 sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",channelFired);
-	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,startmomentum.Phi(),startmomentum.Theta()*1000.);
-       }
-       else if(particlecharge==-1&&channelFired<nEVetoNFingers){
-	 fHS->FillHistoList("VetoEndPointList","hEVetoChID",channelFired);
-
-	 sprintf(name,"hEVeto_ThetaVsP_Channel%d",channelFired);
-	 fHS->FillHisto2List("VetoEndPointList/EVetoThetaVsP",name,startmomentum.Mag(),startmomentum.Theta()*1000.);
-
-	 sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",channelFired);
-	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,startmomentum.Phi(),startmomentum.Theta()*1000.);
+	 //sprintf(name,"hPVeto_ThetaVsPhi_Channel%d",fEndFinger);
+	 //	 fHS->FillHisto2List("VetoEndPointList/PVetoThetaVsPhi",name,FourMomentum.Vect().Phi(),FourMomentum.Vect().Theta()*1000.);
 	 
        }
 

@@ -1,6 +1,7 @@
 #ifndef VetoEndPoint_h
 #define VetoEndPoint_h
 
+#include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TMath.h"
 #include "TFile.h"
@@ -17,9 +18,10 @@ protected :
 public :
   ~VetoEndPoint();
   static VetoEndPoint* GetInstance();
-  void ParticleSwim(TVector3 startmomentum, TVector3 startposition, Double_t starttime, Int_t particlecharge);
+  void ParticleSwim(TLorentzVector FourMomentum, TVector3 startposition, Double_t starttime, Int_t particlecharge);
   int GetEndFinger(){return fEndFinger;};
   double GetEndTime(){return fEndTime;};
+  //  double GetTotalPathLength(){return fTotalPathLength;};
   TVector3 GetEndPosition(){return fEndPosition;};
   void SaveHistos();
   bool DoesVetoEndPointHistosExist(){return fVetoEndPointHistosExist;};
@@ -34,11 +36,11 @@ private :
   int Nin;
   int NTotal;
   
-  int fEndFinger;
+  int fEndFinger; //channelID of channel where particle finishes
   double fEndTime;
   TVector3 fEndPosition;
-  double fStepLength;
-
+  double fStepLength;//mm (?)
+  //  double fTotalPathLength;//m - definitely units of fStepLength*1e-3 as of 8/11/22
   static VetoEndPoint* fInstance;
   bool fVetoEndPointHistosExist;
   
@@ -74,7 +76,7 @@ private :
   // finger i has a center in (fPVetoInnerFacePosX+fFingerXOffset,0,fPVetoFrontFacePosZ+fFingerZOffset+i*fFingerPitch)
   // finger i is then rotated by fFingerRotY around the Y axis
 
-  double fConstantMagneticField = 0.4542; // [T] 
+  double fConstantMagneticField = 0.3600; // [T] //Beth 16/11/23: 0.3600 is correct for 430 MeV and is consistent with the MC 
   //fConstantMagneticField = 0.;
 
   double fConstantMagneticFieldXmin = -26.0;//[cm]*cm;
@@ -94,9 +96,9 @@ private :
   double fMagneticVolumeLengthY = 23.;//*cm;
   double fMagneticVolumeLengthZ = 200.;//*cm;
 
-  double x = x0*0.1;
-  double y = y0*0.1;
-  double z = z0*0.1-fMagneticVolumePosZ;
+  // double x = x0*0.1;
+  // double y = y0*0.1;
+  // double z = z0*0.1-fMagneticVolumePosZ;
 
   double B0 = 1.;
 

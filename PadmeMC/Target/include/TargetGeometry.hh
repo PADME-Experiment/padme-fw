@@ -37,6 +37,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of Target box
   G4double GetTargetPosX() { return fTargetDisplacementX; }
   G4double GetTargetPosY() { return fTargetDisplacementY; }
@@ -146,6 +149,8 @@ public:
 private:
 
   G4int fVerbose; // Verbose level
+
+  G4int fDetectorSetup;
 
   G4double fTargetSizeX;
   G4double fTargetSizeY;

@@ -1,17 +1,18 @@
 #include <iostream>
-
 #include <TGraph.h>
 #include <TGraphErrors.h>
-
 #include "UserAnalysis.hh"
-#include "NPoTAnalysis.hh"
+#include "ECalCalib.hh"
+#include "NPoTAnalysis.hh" //MR
 #include "IsGGAnalysis.hh" //MR
+#include "Is22GGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
-#include "BhabhaAnalysis.hh" //BL
-#include "BremsstrahlungAnalysis.hh" //BL
-#include "MCTruth.hh" //BL
+#include "ETagAnalysis.hh" //AF
+#include "MCTruth.hh"     //MR
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
+#include "BhabhaAnalysis.hh" //BL
+#include "BremsstrahlungAnalysis.hh" //BL
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -22,35 +23,57 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
   fHS = HistoSvc::GetInstance();
-  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fECalCalib    = ECalCalib::GetInstance();
+  //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
+  fMCTruth      = MCTruth::GetInstance();
+
+  //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   //fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
-  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
   fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+  fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
+  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  
+  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
+  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
+  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
+  delete fECalCalib;
   delete fNPoTAnalysis;
   // delete fIsGGAnalysis;
-  delete fBhabhaAnalysis;
-  delete fBremsstrahlungAnalysis;
   delete fMCTruth;
   //  delete fIs3GAnalysis;
+  delete fBhabhaAnalysis;
+  delete fBremsstrahlungAnalysis;
+  delete fIsGGAnalysis;
+  delete fETagAnalysis;
+  delete fIs22GGAnalysis;
+  delete fIs3GAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
+  fECalCalib->Init();
+
+  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
-  fBhabhaAnalysis->Init(fEvent);
-  fBremsstrahlungAnalysis->Init(fEvent);
   fMCTruth->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
+  fIsGGAnalysis->Init(fEvent);
+  fETagAnalysis->Init(fEvent);
+  fIs22GGAnalysis->Init(fEvent);
+  fIs3GAnalysis->Init(fEvent);
+  fBhabhaAnalysis->Init(fEvent);
+  fBremsstrahlungAnalysis->Init(fEvent);
   return true;
 }
 
@@ -83,20 +106,24 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+
   fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   //  fIsGGAnalysis->Process();
-  fBhabhaAnalysis->Process();
-  fBremsstrahlungAnalysis->Process();
   fMCTruth->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
+  fIsGGAnalysis->Process();
+  fIs22GGAnalysis->Process();
+  fIs3GAnalysis->Process();   
+  fETagAnalysis->Process();
+  fBhabhaAnalysis->Process();
+  fBremsstrahlungAnalysis->Process();
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();
     int chPV = fEvent->PVetoRecoEvent->Hit(ipv)->GetChannelId();
-
     //Correct the PVeto timing:
     // linear inyterpolation 
     //tPv = tPv - (30.9219 + 0.137262*chPV);
@@ -146,15 +173,18 @@ Bool_t UserAnalysis::Process(){
 
 Bool_t UserAnalysis::Finalize()
 {
-
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-
+  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
   //fIsGGAnalysis->Finalize();
-  fBhabhaAnalysis->Finalize();
-  fBremsstrahlungAnalysis->Finalize();
   fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
+  fIsGGAnalysis->Finalize();
+  fETagAnalysis->Finalize();
+  fIs22GGAnalysis->Finalize();
+  fIs3GAnalysis->Finalize();
+  fBhabhaAnalysis->Finalize();
+  fBremsstrahlungAnalysis->Finalize();
 
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};

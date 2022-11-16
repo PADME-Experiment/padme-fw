@@ -347,31 +347,31 @@ class ADCBoard:
     def create_proc_daq(self):
 
         # Create DAQ process in DB
-        self.proc_daq_id = self.db.create_daq_process(self.run_number,self.node_id)
-        if self.proc_daq_id == -1:
-            print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ process in DB"
-            return "error"
+        #self.proc_daq_id = self.db.create_daq_process(self.run_number,self.node_id)
+        #if self.proc_daq_id == -1:
+        #    print "ADCBoard::create_proc_daq - ERROR: unable to create new DAQ process in DB"
+        #    return "error"
 
         # Add info about optical link
-        self.db.add_daq_process_optical_link(self.proc_daq_id,self.node_id,self.conet2_link,self.conet2_slot)
+        #self.db.add_daq_process_optical_link(self.proc_daq_id,self.node_id,self.conet2_link,self.conet2_slot)
 
         # Add all configuration parameters
-        for cfg in self.config_list_daq():
-            self.db.add_cfg_para_proc(self.proc_daq_id,cfg[0],cfg[1])
+        #for cfg in self.config_list_daq():
+        #    self.db.add_cfg_para_proc(self.proc_daq_id,cfg[0],cfg[1])
 
         return "ok"
 
     def create_proc_zsup(self):
 
         # Create ZSUP process in DB
-        self.proc_zsup_id = self.db.create_zsup_process(self.run_number,self.node_id)
-        if self.proc_zsup_id == -1:
-            print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
-            return "error"
+        #self.proc_zsup_id = self.db.create_zsup_process(self.run_number,self.node_id)
+        #if self.proc_zsup_id == -1:
+        #    print "ADCBoard::create_proc_zsup - ERROR: unable to create new ZSUP proces in DB"
+        #    return "error"
 
         # Add all configuration parameters
-        for cfg in self.config_list_zsup():
-            self.db.add_cfg_para_proc(self.proc_zsup_id,cfg[0],cfg[1])
+        #for cfg in self.config_list_zsup():
+        #    self.db.add_cfg_para_proc(self.proc_zsup_id,cfg[0],cfg[1])
 
         return "ok"
 
@@ -404,8 +404,8 @@ class ADCBoard:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_create(self.proc_daq_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_create(self.proc_daq_id,self.db.now_str())
 
         # Return process id
         return self.process_daq.pid
@@ -418,8 +418,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                if self.run_number:
-                    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
+                #if self.run_number:
+                #    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -441,8 +441,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_daq.wait()
                 self.log_handle_daq.close()
-                if self.run_number:
-                    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
+                #if self.run_number:
+                #    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -453,7 +453,8 @@ class ADCBoard:
         if self.process_daq.poll() != None:
             self.process_daq.wait()
             self.log_handle_daq.close()
-        if self.run_number: self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_end(self.proc_daq_id,self.db.now_str())
         return False
 
     def start_zsup(self):
@@ -479,8 +480,8 @@ class ADCBoard:
             return 0                
 
         # Tag start of process in DB
-        if self.run_number:
-            self.db.set_process_time_create(self.proc_zsup_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_create(self.proc_zsup_id,self.db.now_str())
 
         # Return process id
         return self.process_zsup.pid
@@ -495,8 +496,8 @@ class ADCBoard:
                 # Process exited: clean up defunct process and close log file
                 self.process_zsup.wait()
                 self.log_handle_zsup.close()
-                if self.run_number:
-                    self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
+                #if self.run_number:
+                #    self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
                 return True
             time.sleep(0.5)
 
@@ -507,8 +508,8 @@ class ADCBoard:
         if self.process_zsup.poll() != None:
             self.process_zsup.wait()
             self.log_handle_zsup.close()
-        if self.run_number:
-            self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
+        #if self.run_number:
+        #    self.db.set_process_time_end(self.proc_zsup_id,self.db.now_str())
         return False
 
     def parse_log_daq(self):

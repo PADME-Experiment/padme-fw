@@ -52,11 +52,13 @@ void TPixDetector::CreateGeometry()
   G4double tpixPosX = geo->GetTPixPosX();
   G4double tpixPosY = geo->GetTPixPosY();
   G4double tpixPosZ = geo->GetTPixPosZ();
-  printf("TPix will be placed at (%.1f,%.1f,%.1f) mm\n",tpixPosX/mm,tpixPosY/mm,tpixPosZ/mm);
   G4ThreeVector posTPix = G4ThreeVector(tpixPosX,tpixPosY,tpixPosZ);
+  G4double tpixRotY = geo->GetTPixRotY();
   G4RotationMatrix* rotTPix = new G4RotationMatrix;
-  rotTPix->rotateY(geo->GetTPixRotY());
+  rotTPix->rotateY(tpixRotY);
   new G4PVPlacement(rotTPix,posTPix,fTPixVolume,"TPix",fMotherVolume,false,0,false);
+  printf("TPix placed at (%.1f,%.1f,%.1f) mm with a rotation of %.3f rad\n",
+	 tpixPosX/mm,tpixPosY/mm,tpixPosZ/mm,tpixRotY/rad);
 
   // Create standard TimePix chip
   G4double tpixChipX = geo->GetChipSizeX();

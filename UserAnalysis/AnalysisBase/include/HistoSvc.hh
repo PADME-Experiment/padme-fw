@@ -20,7 +20,6 @@ class HistoSvc
 {
 
 protected:
-
   HistoSvc();
 
 public:

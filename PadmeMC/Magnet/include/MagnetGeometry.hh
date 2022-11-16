@@ -33,6 +33,9 @@ public:
 
   G4String GetMagnetSensitiveDetectorName() { return fMagnetSensitiveDetectorName; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Size of gap between sections of Magnet yoke
 
   G4double GetMagnetGap() { return fMagnetGap; };
@@ -384,6 +387,8 @@ public:
   //G4double GetMagneticFieldConstantValue()           { return fMagneticFieldConstantValue; }
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fMagnetGap;
 

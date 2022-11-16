@@ -38,9 +38,17 @@ private:
   Double_t fYPos;
 
   std::vector<double> vNPoT;
+  std::vector<double> vTotPoT;
   std::vector<double> vNEvt;
+  std::vector<double> vNPoTRun;
+  std::vector<double> vNRun;
+
   Int_t Neve;
+  Double_t fNRun;
+  Double_t fTimeStamp;
+  Double_t fCurrentRun;
   Double_t TotPoT;
+  Double_t TotPoTRun;
   Double_t TotPoTPhys;
   Double_t TotPoTNoPhys;
   Double_t TotPoTOver30K;

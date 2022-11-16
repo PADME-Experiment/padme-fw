@@ -6,11 +6,14 @@
 
 class HistoSvc;
 class NPoTAnalysis;
+class ECalCalib;
 class IsGGAnalysis;
+class Is22GGAnalysis;
 class Is3GAnalysis;
+class ETagAnalysis;
+class MCTruth;
 class BhabhaAnalysis;
 class BremsstrahlungAnalysis;
-class MCTruth;
 
 class UserAnalysis {
 
@@ -37,10 +40,13 @@ private:
 
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
+  Is22GGAnalysis* fIs22GGAnalysis;
   Is3GAnalysis* fIs3GAnalysis;
+  ETagAnalysis* fETagAnalysis;
+  MCTruth* fMCTruth;
+  ECalCalib* fECalCalib;
   BhabhaAnalysis* fBhabhaAnalysis;
   BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
-  MCTruth* fMCTruth;
 
 };
 #endif

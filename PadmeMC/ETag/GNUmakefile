@@ -1,5 +1,5 @@
 # --------------------------------------------------------------
-# GNUmakefile for LAV library
+# GNUmakefile for ETag library
 # --------------------------------------------------------------
 # --------------------------------------------------------------
 # History:
@@ -7,7 +7,7 @@
 # Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2015-12-14
 # --------------------------------------------------------------
 
-name := LAV
+name := ETag
 G4TARGET := PADMEMC
 G4EXLIB := true
 

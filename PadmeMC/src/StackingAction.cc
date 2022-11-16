@@ -37,8 +37,6 @@
 #include "G4MuonMinus.hh"
 #include "G4PionZero.hh"
 
-#include "Constants.hh"
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 StackingAction::StackingAction()

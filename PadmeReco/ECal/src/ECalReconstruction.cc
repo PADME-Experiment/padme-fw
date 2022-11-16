@@ -231,59 +231,42 @@ void ECalReconstruction::BuildHits(TRawEvent* rawEv)
   TADCBoard* ADC;
 
   for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+
     ADC = rawEv->ADCBoard(iBoard);
     Int_t iBdID=ADC->GetBoardId();
-    //std::cout<<"iBdID "<<iBdID<<std::endl;
-    unsigned int acm;
-    acm= ADC->GetAcceptedChannelMask();
-    //printf("--------------------------------------------Mask %x \n", acm);
-    if(GetConfig()->BoardIsMine( iBdID )) {
-      //Loop over the channels and perform reco
-      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
-	TADCChannel* chn = ADC->ADCChannel(ich);
-	Int_t nch = chn->GetChannelNumber();
-	Double_t zsup=1;
-	if((acm & (1<<nch))>0){zsup=0; /*std::cout<<"++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++accepted hit " << (acm & (1<<ich)) << std::endl;*/ }
-	std::bitset<32> x(acm);
-	std::bitset<32> y((1<<nch));
-	GetHisto("ZSupFlag")->Fill(zsup);
-       	//std::cout<<"........................................................accepted channel mask " << (acm & (1<<ich)) << " x " << x << " y " << y  << " channel " << nch<< std::endl;
-	//Double_t rms = compute_rms(chn->GetSamplesArray());
-	//std::cout<<" from compute_rms " << rms <<std::endl;
-	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+    if(! GetConfig()->BoardIsMine(iBdID)) continue;
 
-	//New M. Raggi
- 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
- 	Int_t ElChID = chn->GetChannelNumber();
-	//Store info for the digitizer class
- 	((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
- 	((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
- 	((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
-	/*
-	if (ChID<0)std::cout<<"Why chId<0 ???? ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich<<" ... ADC channel = "<<(Int_t)chn->GetChannelNumber()<<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" ADB board n. "<<iBdID<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
-	else std::cout<<"ChID="<<ChID<<" iBD/iCh= "<<iBoard<<"/"<<ich
-		      <<" ... idBD/idCH = "<<(Int_t)ADC->GetBoardId()<<"/"<<(Int_t)chn->GetChannelNumber()
-		      <<" in total NADCChannels() for this board = "<<(Int_t)ADC->GetNADCChannels()<<" tot#OfBoards = "<<(Int_t)nBoards<<std::endl;
-	*/
+    //Loop over the channels and perform reco
+    for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
 
-	unsigned int nHitsBefore = Hits.size();
-	fChannelReco->Reconstruct(Hits);
-	unsigned int nHitsAfter = Hits.size();
-	//if (ChID==1625) std::cout<<" n. of hits in chid 1625 = "<<nHitsAfter-nHitsBefore<<std::endl;
-	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
-	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
-	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
-	  if(fTriggerProcessor)
-	    Hits[iHit]->SetTime(
-				Hits[iHit]->GetTime() - 
-				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() )
-				);
-	}
+      TADCChannel* chn = ADC->ADCChannel(ich);
+      Int_t ElChID = chn->GetChannelNumber();
+      Int_t ChID   = GetChannelID(iBdID,ElChID); //get geographical position from channel map
+      //printf("ECalReconstruction::BuildHits Board %d Channel %d ChID %d\n",iBdID,ElChID,ChID);
+      if (ChID == -1) continue; // Skip channels not used by ECal (e.g. LeadGlass and Cosmics)
+
+      fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+      //Store info for the digitizer class
+      ((DigitizerChannelECal*)fChannelReco)->SetChID(ChID);
+      ((DigitizerChannelECal*)fChannelReco)->SetElChID(ElChID);
+      ((DigitizerChannelECal*)fChannelReco)->SetBdID(iBdID);
+
+      unsigned int nHitsBefore = Hits.size();
+      fChannelReco->Reconstruct(Hits);
+      unsigned int nHitsAfter = Hits.size();
+      for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	Hits[iHit]->SetChannelId(ChID);
+	Hits[iHit]->setBDCHid(iBdID,ElChID);
+	// Correct hit time using trigger information
+	if (fTriggerProcessor)
+	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
       }
-    } else {
-      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
-    }
-  }    
+
+    } // End loop over channels
+
+  } // End loop over boards
+
 }
 
 
@@ -655,8 +638,9 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   //  EFraction=0.95;
   EFraction = fEnergyCompensation->Eval(ECl);
   //std::cout << "fraction " << EFraction << std::endl;
-  if(ECl>1000.) EFraction=1;
-  if(ECl<30.)   EFraction=1;
+  //if(ECl>1000.) EFraction=1;
+  if(ECl>1000.) EFraction=0.96;
+  //if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   // delete fEnergyCompensation;
   return EFraction;
@@ -715,12 +699,16 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
 
   //fill the vector with hits informations  
-  Double_t cTime[3000]={0.};
-  Double_t cEnergy[3000]={0.};
-  Int_t cChID[3000]={0};
-  Int_t cUsed[3000]={0};
-  Int_t cCellUsed[NTotCh]={0};
+  Double_t cTime[3000];
+  Double_t cEnergy[3000];
+  Int_t cChID[3000];
+  Int_t cUsed[3000];
+  Int_t cCellUsed[NTotCh];
 
+  if (Hits.size() > 3000) {
+    std::cout << "ECalReconstruction::BuildSimpleEcalClusters --- ERROR: Too many hits in the ECal (> 3000) ! Returning witout clustering..." << std::endl;
+    return;
+  }
 
   //ofstream myHitFile;
   //myHitFile.open ("hitFeatures.txt",std::ofstream::app);
@@ -1148,9 +1136,6 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
 
 }
 
-
-
-
 Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   Bool_t BrSU=false;
   if(x==16 && y==25)   BrSU=true;
@@ -1160,9 +1145,6 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   return BrSU;                                                                                                                                                  
 
 }
-
-
-
 
 Double_t ECalReconstruction::EnergyResolution(Double_t energy){
   Double_t a=0.02;
@@ -1174,17 +1156,13 @@ Double_t ECalReconstruction::EnergyResolution(Double_t energy){
 }
 
 
-
-
-
-
 void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
   for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
-
-if(fReproductSACbunchStructure){
+  
+  if(fReproductSACbunchStructure){
     Double_t minTime=999;
     Double_t maxTime=-999;
     for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -1220,8 +1198,9 @@ if(fReproductSACbunchStructure){
       TMCVDigi* digi = tEvent->Digi(i);
       int i1 = digi->GetChannelId()/100;
       int i2 = digi->GetChannelId()%100;
+      // Drop  Broken SU in Ecal 
       Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
-      if (BrokenSU)continue;
+      if(BrokenSU) continue;
       // effective threshold cutting noisy wf in 2019 data 
       if(digi->GetEnergy()<1.5)continue;
       TRecoVHit *Hit = new TRecoVHit();

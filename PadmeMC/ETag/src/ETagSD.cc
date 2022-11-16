@@ -1,11 +1,11 @@
-// LAVSD.cc
+// ETagSD.cc
 // --------------------------------------------------------------
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2105-12-14
 // --------------------------------------------------------------
 
-#include "LAVSD.hh"
+#include "ETagSD.hh"
 
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
@@ -28,24 +28,24 @@ extern double Npionc_aft;
 extern double Npi0_aft;
 extern double Nmuons_aft;
 
-LAVSD::LAVSD(G4String name)
+ETagSD::ETagSD(G4String name)
 :G4VSensitiveDetector(name)
 {
   G4String HCname;
-  collectionName.insert(HCname="LAVCollection"); //crea il collection name
+  collectionName.insert(HCname="ETagCollection"); //crea il collection name
 }
 
-LAVSD::~LAVSD(){}
+ETagSD::~ETagSD(){}
 
-void LAVSD::Initialize(G4HCofThisEvent* HCE)
+void ETagSD::Initialize(G4HCofThisEvent* HCE)
 {
-  LAVCollection = new LAVHitsCollection(SensitiveDetectorName,collectionName[0]); 
+  ETagCollection = new ETagHitsCollection(SensitiveDetectorName,collectionName[0]); 
   static G4int HCID = -1;
   if (HCID<0) HCID = G4SDManager::GetSDMpointer()->GetCollectionID(collectionName[0]);
-  HCE->AddHitsCollection(HCID,LAVCollection); 
+  HCE->AddHitsCollection(HCID,ETagCollection); 
 }
 
-G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
+G4bool ETagSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep == 0.) return false;
@@ -53,18 +53,16 @@ G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4Track* track = aStep->GetTrack();
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
   const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
-  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "LAV") ) return false;
+  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "ETagBar") ) return false;
 
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
-  LAVHit* newHit = new LAVHit();
+  ETagHit* newHit = new ETagHit();
 
   newHit->SetChannelId(touchHPre->GetCopyNumber()); 
   newHit->SetEnergy(aStep->GetTotalEnergyDeposit() );
-  
-
-
-  // G4cout << " LAVSD:   Energy of the track: " << preStepPoint->GetTotalEnergy()
+  //  G4cout << " ETagSD:  CopyNumber " << touchHPre->GetCopyNumber()<<G4endl;
+  // G4cout << " ETagSD:   Energy of the track: " << preStepPoint->GetTotalEnergy()
   //   //track->GetTotalEnergy() 
   // 	 << "    Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
   // 	 << G4endl;
@@ -92,7 +90,7 @@ G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit->SetTrackID(track->GetTrackID());
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
   
-  LAVCollection ->insert(newHit);     
+  ETagCollection ->insert(newHit);     
 
   track->SetTrackStatus(fStopAndKill);
 
@@ -100,7 +98,7 @@ G4bool LAVSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-G4int LAVSD::ClassifyTrack(G4Track* track){
+G4int ETagSD::ClassifyTrack(G4Track* track){
 	G4ParticleDefinition * particleType = track->GetDefinition();
 	if(particleType == G4Gamma::GammaDefinition())  {
 	//	G4cout<<"G "<<particleType<<" "<<particleType->GetPDGCharge()<<" "<<track->GetTotalEnergy()<<G4endl;
@@ -134,13 +132,13 @@ G4int LAVSD::ClassifyTrack(G4Track* track){
 	}else return -1;
 }
 
-void LAVSD::EndOfEvent(G4HCofThisEvent*)
+void ETagSD::EndOfEvent(G4HCofThisEvent*)
 {
   if (verboseLevel>0) { 
-     G4int NbHits = LAVCollection->entries();
+     G4int NbHits = ETagCollection->entries();
      G4cout << "\n-------->Hits Collection: in this event they are " << NbHits 
-            << " hits in the LAV : " << G4endl;
-     for (G4int i=0;i<NbHits;i++) (*LAVCollection)[i]->Print();
+            << " hits in the ETag : " << G4endl;
+     for (G4int i=0;i<NbHits;i++) (*ETagCollection)[i]->Print();
     } 
 }
 

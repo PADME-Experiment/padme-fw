@@ -15,7 +15,6 @@
 
 #include "RootIOManager.hh"
 #include "HistoManager.hh"
-#include "Constants.hh"
 
 #include "BeamParameters.hh"
 

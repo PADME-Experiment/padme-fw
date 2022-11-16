@@ -2,6 +2,7 @@
 #define StdNtuple_h 1
 
 #define NPVetoMaxHits   1000
+#define NETagMaxHits     200
 #define NEVetoMaxHits   1000
 #define NHEPVetoMaxHits 1000
 #define NSACMaxHits     1000
@@ -33,6 +34,15 @@ struct StdNtupleEvent{
   Double_t NTPVeto_Hits_Xpos[NPVetoMaxHits];
   Double_t NTPVeto_Hits_Ypos[NPVetoMaxHits];
   Double_t NTPVeto_Hits_Zpos[NPVetoMaxHits];
+
+  // M.R 06/22
+  Int_t    NTNETag_Hits;
+  Int_t    NTETag_Hits_ChannelId[NETagMaxHits];
+  Double_t NTETag_Hits_Energy[NETagMaxHits];
+  Double_t NTETag_Hits_Time[NETagMaxHits];
+  Double_t NTETag_Hits_Xpos[NETagMaxHits];
+  Double_t NTETag_Hits_Ypos[NETagMaxHits];
+  Double_t NTETag_Hits_Zpos[NETagMaxHits];
 
   Int_t    NTNPVeto_Clusters;
   Int_t    NTPVeto_Clusters_ChannelId[NPVetoMaxClusters];

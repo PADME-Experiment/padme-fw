@@ -111,6 +111,16 @@ public:
   G4String GetTwoPhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
   void SetTwoPhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
 
+  // BhaBha data cards M. Raggi 20/05/2021
+  G4int GetNBhaBhaPerBunch()        { return fNBhaBhaPerBunch; }
+  void SetNBhaBhaPerBunch(G4int n) { fNBhaBhaPerBunch = n;    }
+
+  G4String GetBhaBhaFilename()        { return fBhaBhaFilename; }
+  void SetBhaBhaFilename(G4String f) { fBhaBhaFilename = f; }
+
+  G4double GetDecayLength() { return fDecayLength; }
+  void SetDecayLength(G4double d) { fDecayLength = d; }
+
   void CalibrationRunEnable()  { fCalibrationRun = true; }
   void CalibrationRunDisable() { fCalibrationRun = false; }
   G4bool CalibrationRun() { return fCalibrationRun; }
@@ -130,11 +140,11 @@ public:
   G4double GetBeamTargetPosZ() { return fBeamTargetPosZ; }
   void SetBeamTargetPosZ(G4double v) { fBeamTargetPosZ = v; }
 
-  G4double GetBeamTargetSigmaX() { return fBeamTargetSigmaX; }
-  void SetBeamTargetSigmaX(G4double v) { fBeamTargetSigmaX = v; }
+  G4double GetBeamTargetPosXSpread() { return fBeamTargetPosXSpread; }
+  void SetBeamTargetPosXSpread(G4double v) { fBeamTargetPosXSpread = v; }
 
-  G4double GetBeamTargetSigmaY() { return fBeamTargetSigmaY; }
-  void SetBeamTargetSigmaY(G4double v) { fBeamTargetSigmaY = v; }
+  G4double GetBeamTargetPosYSpread() { return fBeamTargetPosYSpread; }
+  void SetBeamTargetPosYSpread(G4double v) { fBeamTargetPosYSpread = v; }
 
   G4double GetBeamTargetEmittanceX() { return fBeamTargetEmittanceX; }
   void SetBeamTargetEmittanceX(G4double v) { fBeamTargetEmittanceX = v; }
@@ -191,6 +201,13 @@ private:
   G4int fNTwoPhotonDecaysPerBunch;
   G4String fTwoPhotonDecaysFilename;
 
+  // Insert BhaBha M. Raggi 20/05/2021
+  G4int fNBhaBhaPerBunch;
+  G4String fBhaBhaFilename;
+
+  // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
+  G4double fDecayLength;
+
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)
   G4bool   fCalibrationRun;
@@ -201,8 +218,8 @@ private:
 
   // Beam distribution at target
   G4double fBeamTargetPosZ; // Z position (1um in front of target)
-  G4double fBeamTargetSigmaX; // Sigma of X coordinate
-  G4double fBeamTargetSigmaY; // Sigma of Y coordinate
+  G4double fBeamTargetPosXSpread; // Sigma of X coordinate
+  G4double fBeamTargetPosYSpread; // Sigma of Y coordinate
   G4double fBeamTargetEmittanceX; // Emittance X component
   G4double fBeamTargetEmittanceY; // Emittance Y component
   G4double fBeamTargetPathLength; // Length of path from beam origin to target

@@ -23,6 +23,8 @@ HallGeometry::HallGeometry()
 
   // Inizialize default parameters
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   fFloorPosY             = -130.*cm;
   fBackWallFrontFacePosZ =  480.*cm;
   fSideWallFrontFacePosX = -200.*cm;

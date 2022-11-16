@@ -65,7 +65,6 @@ void PVetoReconstruction::HistoInit(){
   AddHisto("PVetoOccupancy",new TH1F("PVetoOccupancy","PVeto Occupancy",100,0.0,100.0));
   AddHisto("PVetoOccupancyLast",new TH1F("PVetoOccupancyLast","PVeto OccupancyLast",100,0.0,100.0));
 
-
   AddHisto("PVetoEnergy",new TH1F("PVetoEnergy","PVeto Energy",2000,0.0,40.0));
   AddHisto("PVetoEnergyClean",new TH1F("PVetoEnergyClean","PVeto Energy",2000,0.0,.4));
   //AddHisto("PVetoTime",new TH1F("PVetoTime","PVeto Time",600,-200.0,400.0));
@@ -85,9 +84,8 @@ void PVetoReconstruction::HistoInit(){
     sprintf(name, "PVetoCharge-%d",i);
     AddHisto(name, new TH1F(name,"Charge",2000,00.,.4));
   }
+  //  AddHisto("PVetoDTch1ch2",new TH1F("PVetoDTch1ch2","Difference in time",100,-10.,10.));
 
-
-  //AddHisto("PVetoDTch1ch2",new TH1F("PVetoDTch1ch2","Difference in time",100,-10.,10.));
 
 }
 

@@ -62,6 +62,9 @@ BeamParameters::BeamParameters()
   fNTwoPhotonDecaysPerBunch = 0;
   fTwoPhotonDecaysFilename = "TwoPhotonDecays.list";
 
+  // Decay length for displaced vertex (currently used only for TwoGamma events)
+  fDecayLength = 0.*mm;
+
   // Initialize calibration run to some sensible values
   fCalibrationRun  = false;
   fCalibRunEnergy  = 50.*MeV;
@@ -71,8 +74,8 @@ BeamParameters::BeamParameters()
 
   // Beam parameters at Target
   fBeamTargetPosZ = -1028.001*mm; // 1um before actual Target front face
-  fBeamTargetSigmaX = 0.8*mm; // Need distribution
-  fBeamTargetSigmaY = 1.3*mm; // Need distribution
+  fBeamTargetPosXSpread = 0.8*mm; // Need distribution
+  fBeamTargetPosYSpread = 1.3*mm; // Need distribution
   fBeamTargetEmittanceX = 1.*mrad; // Need distribution
   fBeamTargetEmittanceY = 1.*mrad; // Need distribution
   fBeamTargetPathLength = 0.*cm; // MUST be modified for BeamLine settings

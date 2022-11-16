@@ -14,7 +14,6 @@ class Run:
 
     def __init__(self):
 
-
         # Get account under which the RunControl runs
         self.user_account = os.getenv('USER',"daq")
 
@@ -347,8 +346,8 @@ class Run:
         self.db.set_run_comment_start(self.run_number,self.db.now_str(),self.run_comment_start)
 
         # Add all configuration parameters
-        for cfg in self.config_list():
-            self.db.add_cfg_para_run(self.run_number,cfg[0],cfg[1])
+        #for cfg in self.config_list():
+        #    self.db.add_cfg_para_run(self.run_number,cfg[0],cfg[1])
 
         # Create board structures in DB
         for adc in (self.adcboard_list):
@@ -858,9 +857,9 @@ class Run:
             os.system(command)
 
         # Update run status in DB
-        if (self.run_number):
-            self.db.set_run_time_start(self.run_number,self.db.now_str())
-            self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
+        #if (self.run_number):
+        #    self.db.set_run_time_start(self.run_number,self.db.now_str())
+        #    self.db.set_run_status(self.run_number,self.db.DB_RUN_STATUS_RUNNING)
 
     def stop(self):
 
@@ -889,10 +888,10 @@ class Run:
         with open(self.last_run_file,"w") as lf: lf.write("%s\n"%self.run_name)
 
         # Finalize run in DB
-        if (self.run_number):
-            self.db.set_run_status(self.run_number,self.final_status)
-            self.db.set_run_time_stop(self.run_number,self.db.now_str())
-            self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
+        #if (self.run_number):
+        #    self.db.set_run_status(self.run_number,self.final_status)
+        #    self.db.set_run_time_stop(self.run_number,self.db.now_str())
+        #    self.db.set_run_comment_end(self.run_number,self.db.now_str(),self.run_comment_end)
 
     def clean_up(self):
 

@@ -42,6 +42,8 @@ Bool_t NPoTAnalysis::InitHistos(){
 
 Bool_t NPoTAnalysis::Process(){
 
+  if(!fEvent->TargetRecoBeam) return 0;
+
   fNPoT = fEvent->TargetRecoBeam->getnPOT();
   fXPos = fEvent->TargetRecoBeam->getX();
   fYPos = fEvent->TargetRecoBeam->getY();

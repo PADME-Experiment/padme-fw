@@ -655,8 +655,9 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
   //  EFraction=0.95;
   EFraction = fEnergyCompensation->Eval(ECl);
   //std::cout << "fraction " << EFraction << std::endl;
-  if(ECl>1000.) EFraction=1;
-  if(ECl<30.)   EFraction=1;
+  //if(ECl>1000.) EFraction=1;
+  if(ECl>1000.) EFraction=0.96;
+  //if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   // delete fEnergyCompensation;
   return EFraction;
@@ -715,12 +716,16 @@ void ECalReconstruction::BuildSimpleECalClusters()
   }
 
   //fill the vector with hits informations  
-  Double_t cTime[3000]={0.};
-  Double_t cEnergy[3000]={0.};
-  Int_t cChID[3000]={0};
-  Int_t cUsed[3000]={0};
-  Int_t cCellUsed[NTotCh]={0};
+  Double_t cTime[3000];
+  Double_t cEnergy[3000];
+  Int_t cChID[3000];
+  Int_t cUsed[3000];
+  Int_t cCellUsed[NTotCh];
 
+  if (Hits.size() > 3000) {
+    std::cout << "ECalReconstruction::BuildSimpleEcalClusters --- ERROR: Too many hits in the ECal (> 3000) ! Returning witout clustering..." << std::endl;
+    return;
+  }
 
   //ofstream myHitFile;
   //myHitFile.open ("hitFeatures.txt",std::ofstream::app);

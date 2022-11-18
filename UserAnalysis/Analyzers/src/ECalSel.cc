@@ -14,45 +14,28 @@
 #include <iostream>
 
 ECalSel* ECalSel::fInstance = 0;
-ECalSel* ECalSel::GetInstance()
-{
+ECalSel* ECalSel::GetInstance(){
   if ( fInstance == 0 ) { fInstance = new ECalSel(); }
   return fInstance;
 }
 
-
-ECalSel::ECalSel()
-{
+ECalSel::ECalSel(){
   fRecoEvent   = NULL;
   fECal_hitEvent=0;  
   fVerbose        = 0;
   fECalEvents.clear();
 }
-ECalSel::~ECalSel()
-{
-}
+
+ECalSel::~ECalSel(){}
 
 Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
   fRecoEvent = event->RecoEvent;
   fECal_hitEvent = event->ECalRecoEvent;
   fECal_clEvent = event->ECalRecoCl; 
-  fOfflineServerDB = OfflineServer::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fhSvcVal =  HistoSvc::GetInstance(); 
 
-  fRunOld = -1;
-
-  fdistanceTarget=3470;
-  
-  fBeamEnergy = 268.94;// default
-  fStartTime = 1664807042;// first run 50151 
-
-  fMe = 0.511;
-  fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamEnergy*fMe);
-  fBG = fBeamEnergy/fSqrts; // beta gamma
-  fGam = sqrt(fBG*fBG+1.);
-  fBeta = fBG/fGam;
-
-  // binning of theta vs phi 
+  // binning of theta vs phi to retrieve independently the beam direction
 
   fNThetaBins = 40;//20;
   //  fThetaWid = 0.003/fNThetaBins; // rad
@@ -68,8 +51,7 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
 
 
 Bool_t ECalSel::Process(){
-  std::string hname;
-  
+
   fECalEvents.clear();
   TwoClusSel();
 
@@ -80,43 +62,15 @@ Bool_t ECalSel::Process(){
 
 Int_t ECalSel::TwoClusSel(){
 
-
-  // run level properties
-
-  int runID = fRecoEvent->GetRunNumber();
-
-  if (runID != fRunOld) { // need to update run-level features: TO BE DONE, beam direction [cog, target pos]
-    fBeamEnergy = fOfflineServerDB->getDHSTB01Energy(runID);
-    fStartTime =  fOfflineServerDB->getRunStartTime(runID);
-  
-    std::cout << "ECalSel updating run-level info for run " << runID << " Ebeam = " << fBeamEnergy << " StartT = " << static_cast<long long int>(fStartTime) << std::endl;
-
-    fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamEnergy*fMe);
-    fBG = fBeamEnergy/fSqrts; // beta gamma
-    fGam = sqrt(fBG*fBG+1.);
-    fBeta = fBG/fGam;
-    fRunOld = runID;
-  }
-
-  double xTarg = 1.;  // -> should be from db
-  const double yTarg = 1.; // -> should be from db
-  const double zTarg = -1028; // was -1030 default but set at -1028 from the 2020 survey, new value??
-  TVector3 rTarg(xTarg,yTarg,zTarg);
-  const double zOff = 2508.31; //[mm] = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm. zClu is 2555 now and not 2550.51 which should be from the survey]. 
-  TVector3 cogAtECal(-16.,1.,zOff);
-  TVector3 boostMom(cogAtECal.X(),cogAtECal.Y(),cogAtECal.Z());
-
-  boostMom -= rTarg;
-  boostMom *= (fBeta/boostMom.Mag());
+  //  int runID = fRecoEvent->GetRunNumber();
 
   // selects pairs of clusters compatible with the e+e- --> gamma-gamma/e+e- transition
   // returns the number of selected pairs
   // pair indices are in the vector of pairs fIndPair
+
   TTimeStamp evt = fRecoEvent->GetEventTime();
   long long int eventTime = static_cast<long long int>(evt.GetSec());
-  long long int  deventTime = eventTime - fStartTime;
-
-  //  std::cout << "check times " << static_cast<long long int>(eventTime) << " event = " << fRecoEvent->GetEventNumber() << " fStartTime = " << static_cast<long long int>(fStartTime) << " dt = " << static_cast<long long int>(deventTime) << std::endl;
+  long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
 
   // kinematic conditions might be run-dependent
 
@@ -129,8 +83,6 @@ Int_t ECalSel::TwoClusSel(){
   const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
   const double minGGDistance = 60; // mm
   
-  //  std::cout << "beam pars " << fTargetRecoBeam->getXCfit() << " " << fTargetRecoBeam->getYCfit() << std::endl; //HOW TO USE THEM??
-
   const double deCutCenterX = 0; // MeV
   const double deCutRadiusX = 15.; // MeV
   const double deCutCenterY = 0; // MeV
@@ -172,8 +124,8 @@ Int_t ECalSel::TwoClusSel(){
     cluTime[0] = tempClu[0]->GetTime();
     if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
 
-    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),zOff);
-    cluPosRel[0] = cluPos[0]-cogAtECal;
+    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
     int isPaired = -1; // look for a gamma-gamma event, with loose conditions
 
@@ -182,10 +134,11 @@ Int_t ECalSel::TwoClusSel(){
       cluEnergy[1] = tempClu[1]->GetEnergy();
       cluTime[1] = tempClu[1]->GetTime();
       if (cluTime[1] < timeSafeMin) continue;
-      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),zOff);
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
 
       double dt = cluTime[0]-cluTime[1];
       double dr = (cluPos[0]-cluPos[1]).Mag();
+
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
 
       if (cluEnergy[1] < energyMin) continue; // require a minimum energy
@@ -208,16 +161,17 @@ Int_t ECalSel::TwoClusSel(){
       tempClu[1] = fECal_clEvent->Element((int)isPaired);
       cluEnergy[1] = tempClu[1]->GetEnergy();//*tempCorr;
       cluTime[1] = tempClu[1]->GetTime();
-      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),zOff); 
-      cluPosRel[1] = cluPos[1]-cogAtECal;
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
+      cluPosRel[1] = cluPos[1] - fGeneralInfo->GetCOG();
       
       double pg[2];
       for (int i = 0; i<2; i++){
-	TVector3 rPos = cluPos[i]-rTarg;
-	//	double cluDist = (cluPos[i]-rTarg).Mag();
-	//	double cosq = (cluPos[i].Z() - rTarg.Z())/cluDist; //will have to correct Z of each cluster for its average cluster depth
-	double cosq = rPos.Dot(boostMom)/(rPos.Mag()*boostMom.Mag());
-	pg[i] = 0.5*fSqrts/sqrt(1.-cosq*cosq + fGam*fGam*cosq*cosq - 2.*fBG*fGam*cosq + fBG*fBG);
+	TVector3 rPos = cluPos[i]-fGeneralInfo->GetTargetPos();
+	double cosq = rPos.Dot(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
+	pg[i] = 0.5*fGeneralInfo->GetSqrts()/sqrt(1.-cosq*cosq + 
+						  pow(fGeneralInfo->GetGam()*cosq,2) - 
+						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq + 
+						  pow(fGeneralInfo->GetBG(),2) );
       }      
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
       
@@ -262,13 +216,10 @@ Int_t ECalSel::TwoClusSel(){
 
 	  TLorentzVector photonMom[2];
 	  for (int j=0; j<2; j++) {
-	    TVector3 rPos = cluPos[j]-rTarg;
+	    TVector3 rPos = cluPos[j]-fGeneralInfo->GetTargetPos();
 	    rPos *= (cluEnergy[j]/rPos.Mag());
 	    photonMom[j].SetXYZT(rPos.X(),rPos.Y(),rPos.Z(),cluEnergy[j]);
-
-	    //	    cout << " photon " << j << " " << photonMom[j].X() << " " << photonMom[j].Y() << " " << photonMom[j].Z() << " " << photonMom[j].E() << std::endl;
 	  }
-	  //	  std::cout << " boost " << boostMom.Mag() << " " << std::endl;
 	  
     // evaluate best boost direction
 
@@ -276,9 +227,9 @@ Int_t ECalSel::TwoClusSel(){
 	    double thetaRot = fThetaWid*(ith+0.5);
 	    for (int iph = 0; iph<fNPhiDirBins; iph++){ // loop on phi
 	      double phiRot = fPhiDirWid*(iph+0.5);
-	      TVector3 trialBoost(boostMom.Mag()*TMath::Sin(thetaRot)*TMath::Cos(phiRot),
-				  boostMom.Mag()*TMath::Sin(thetaRot)*TMath::Sin(phiRot),
-				  boostMom.Mag()*TMath::Cos(thetaRot)); 
+	      TVector3 trialBoost(fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Cos(phiRot),
+				  fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Sin(phiRot),
+				  fGeneralInfo->GetBoost().Mag()*TMath::Cos(thetaRot)); 
 	      trialBoost *= -1;
 	      TLorentzVector pgstar[2];
 	      for (int j=0; j<2; j++) {
@@ -287,10 +238,6 @@ Int_t ECalSel::TwoClusSel(){
 	      }
 
 	      double cosRel = pgstar[0].Vect().Dot(pgstar[1].Vect())/(pgstar[0].E()*pgstar[1].E());	
-
-//	      std::cout << "cos = " << cosRel << 
-//		" pg*0 = " << pgstar[0].X() << " " << pgstar[0].Y() << " " << pgstar[0].Z() << " " << pgstar[0].E() <<
-//		" pg*1 = " << pgstar[1].X() << " " << pgstar[1].Y() << " " << pgstar[1].Z() << " " << pgstar[1].E() << std::endl;
 
 	      fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
 	      if (cosRel < -0.998) {

@@ -4,7 +4,7 @@
 #include "TObject.h"
 #include "TVector2.h"
 #include "PadmeAnalysisEvent.hh"
-#include "OfflineServer.hh"
+#include "GeneralInfo.hh"
 #include "HistoSvc.hh"
 
 
@@ -63,26 +63,16 @@ protected:
   Int_t    fVerbose;
 
 private:
-  Double_t fdistanceTarget;
   Int_t TwoClusSel();
   std::vector<ECalSelEvent> fECalEvents;
-  OfflineServer* fOfflineServerDB;
-  Int_t fRunOld;
-  double fBeamEnergy;
-  long long int fStartTime;
-  double fMe;
-  double fSqrts;
-  double fBG;
-  double fGam;
-  double fBeta;
+  GeneralInfo* fGeneralInfo;
+
   int fNThetaBins;
   double fThetaWid;
   int fNPhiDirBins;
   double fPhiDirWid;
 
-
-  HistoSvc* fhSvcVal; 
-  
+  HistoSvc* fhSvcVal;   
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

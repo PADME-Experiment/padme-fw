@@ -37,6 +37,9 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+
+  fETagHitsAvail = kFALSE;
+  fETagClusAvail = kFALSE;
 }
 
 UserAnalysis::~UserAnalysis(){
@@ -52,6 +55,10 @@ UserAnalysis::~UserAnalysis(){
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
+  if (event->ETagRecoEvent) fETagHitsAvail = kTRUE; // ETag hits are available
+  if (event->ETagRecoCl) fETagClusAvail = kTRUE; // ETag hits are available
+
+
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
@@ -60,9 +67,9 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
   fECalSel->Init(fEvent);
-  fETagAn->Init(fEvent);
+  if (fETagHitsAvail) fETagAn->Init(fEvent);
   fIsGGAnalysis->Init(fEvent);
-  fETagAnalysis->Init(fEvent);
+  if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
   fIs22GGAnalysis->Init(fEvent);
   fIs3GAnalysis->Init(fEvent);
   return true;
@@ -102,11 +109,11 @@ Bool_t UserAnalysis::Process(){
 
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fECalSel->Process();
-  fETagAn->Process();
+  if (fETagHitsAvail) fETagAn->Process();
   fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
-  fETagAnalysis->Process();
+  if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
@@ -165,9 +172,9 @@ Bool_t UserAnalysis::Finalize()
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
-  fETagAn->Finalize();
+  if (fETagHitsAvail) fETagAn->Finalize();
   fIsGGAnalysis->Finalize();
-  fETagAnalysis->Finalize();
+  if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();
   fIs3GAnalysis->Finalize();
 

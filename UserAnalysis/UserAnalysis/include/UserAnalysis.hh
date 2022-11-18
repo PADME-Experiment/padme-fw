@@ -47,5 +47,8 @@ private:
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;
   ECalCalib* fECalCalib;
+
+  bool fETagHitsAvail;
+  bool fETagClusAvail;
 };
 #endif

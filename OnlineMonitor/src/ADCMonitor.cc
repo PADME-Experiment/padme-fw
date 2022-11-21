@@ -76,7 +76,7 @@ void ADCMonitor::Initialize()
   }
 
   // Get beam triggers output rate from config file
-  fBeamOutputRate = 100;
+  fBeamOutputRate = 500;
   if ( fConfigParser->HasConfig("RECO","BeamOutputRate") ) {
     try {
       fBeamOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate"));
@@ -86,7 +86,7 @@ void ADCMonitor::Initialize()
   }
 
   // Get off-beam triggers output rate from config file
-  fOffBeamOutputRate = 500;
+  fOffBeamOutputRate = 100;
   if ( fConfigParser->HasConfig("RECO","OffBeamOutputRate") ) {
     try {
       fOffBeamOutputRate = std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate"));

@@ -270,7 +270,11 @@ void LeadGlassMonitor::Finalize()
   printf("LeadGlassMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
-  printf("LeadGlassMonitor::Finalize - Total number of PoTs: %.0f\n",fVLGNPoTsTotBM.back());
+  if (fVLGNPoTsTotBM.size() == 0) {
+    printf("LeadGlassMonitor::Finalize - Total number of PoTs: 0\n");
+  } else {
+    printf("LeadGlassMonitor::Finalize - Total number of PoTs: %.0f\n",fVLGNPoTsTotBM.back());
+  }
 }
 
 void LeadGlassMonitor::AnalyzeBoard(UChar_t board)

@@ -35,7 +35,10 @@ public:
   inline double GetBG() const {return fBG;}
   inline double GetBeta() const {return fBeta;}
   inline TVector3 GetBoost() const {return fBoostMom;}
-
+  inline double GetRadiusMax() const { return fRadiusMax;}
+  inline double GetRadiusMin() const { return fRadiusMin;}
+  inline double GetEnergyMin() const { return fEnergyMin;}
+  inline double GetEnergyMax() const { return fEnergyMax;}
 
 protected:
   TRecoEvent*           fRecoEvent;
@@ -66,6 +69,9 @@ private:
   double fBeta;
 
   TVector3 fBoostMom;
-  
+  double fRadiusMax;
+  double fRadiusMin;
+  double fEnergyMin;
+  double fEnergyMax;
 };
 #endif

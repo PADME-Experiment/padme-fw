@@ -58,11 +58,15 @@ void GeneralInfo::EvalBeamProperties(){
   fBoostMom.SetXYZ(fCOGAtECal.X()-fRTarg.X(),fCOGAtECal.Y()-fRTarg.Y(),fCOGAtECal.Z()-fRTarg.Z());
   fBoostMom *= (fBeta/fBoostMom.Mag());
 
-// energy and radius ranges in principle to be adapted   const double energyMin = 90; //MeV
-// energy and radius ranges in principle to be adapted   const double energyMax = 190; //MeV
-// energy and radius ranges in principle to be adapted   const double radiusMin = 140; //mm
-// energy and radius ranges in principle to be adapted   const double radiusMax = 300; //mm
+  fRadiusMax = 304.5; // in the past, we used 300 mm
 
+  double tanQMax = fRadiusMax/(fZECal-fZTarg);
+  double tanQMin = 1./(fGam*fGam*tanQMax);
+
+  fRadiusMin = (fZECal-fZTarg)*tanQMin; // 171 vs 140 used for for sqrt(s) = 16.6 
+  fEnergyMin = 0.5*fSqrts*(fGam + fBG*TMath::Cos(TMath::ATan(tanQMax))); // 97 vs 90 MeV used for sqrt(s) = 16.6
+  fEnergyMax = 0.5*fSqrts*(fGam + fBG*TMath::Cos(TMath::ATan(tanQMin))); // 172 vs 190 MeV used for sqrt(s) = 16.6
+    
 }
 
 // To pass from a run-level evaluation to a time-based evaluation, need to adapt the Process method.

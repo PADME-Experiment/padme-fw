@@ -71,6 +71,14 @@ private:
   double fThetaWid;
   int fNPhiDirBins;
   double fPhiDirWid;
+  Double_t fXMin;
+  Double_t fXMax;
+  Double_t fXW;
+  Int_t fNXBins;
+  Double_t fYMin;
+  Double_t fYMax;
+  Double_t fYW;
+  Int_t fNYBins;
 
   HistoSvc* fhSvcVal;   
 };

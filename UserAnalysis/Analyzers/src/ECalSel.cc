@@ -44,6 +44,16 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
   //  const double pi = 3.1415927;
   fPhiDirWid = 2.*TMath::Pi()/fNPhiDirBins; // rad
 
+// x and y slices
+  fXMin = -21.*(14+0.5);
+  fXMax = 21.*(14+0.5);
+  fXW = 21; // mm
+  fNXBins = (fXMax-fXMin)/fXW;
+  fYMin = -21.*(14+0.5);
+  fYMax = 21.*(14+0.5);
+  fYW = 21; // mm
+  fNYBins = (fYMax-fYMin)/fYW;
+
   InitHistos();
 
   return true;
@@ -73,11 +83,12 @@ Int_t ECalSel::TwoClusSel(){
   long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
 
   // kinematic conditions might be run-dependent
-
+  const double safeFactor = 0.9;
+  //  const double safeMargin = 42.;// two crystals
   const double energyMin = 90; //MeV
-  const double energyMax = 190; //MeV
+  const double energyMax = 200; //MeV
   const double radiusMin = 140; //mm
-  const double radiusMax = 300; //mm
+  //  const double radiusMax = 300; //mm
   
   const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
   const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
@@ -89,7 +100,6 @@ Int_t ECalSel::TwoClusSel(){
   const double deCutRadiusY = 15; // MeV
   const double maxRCOG = 150.; // mm
   const double sigmadphi = 0.1; // rad (possible double peak present)
-  const double pi=3.14159265358979;
 
 
   TRecoVCluster* tempClu[2];
@@ -104,10 +114,13 @@ Int_t ECalSel::TwoClusSel(){
     tempClu[0] = fECal_clEvent->Element((int)h1);
     fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_EweightAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
     fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsxAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
-    if (tempClu[0]->GetEnergy() < energyMin) continue;
-    if (tempClu[0]->GetEnergy() > energyMax) continue;
-    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
-    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
+    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
+
+    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*safeFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/safeFactor) {
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
+    }    
   }
 
 
@@ -119,13 +132,13 @@ Int_t ECalSel::TwoClusSel(){
     cluEnergy[0] = tempClu[0]->GetEnergy();
     if (cluEnergy[0] < energyMin) continue; // require a minimum energy
     if (cluEnergy[0] > energyMax) continue;
-    if (tempClu[0]->GetPosition().Perp() < radiusMin) continue;
+
+    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+    if (cluPos[0].Perp() < radiusMin) continue;
 
     cluTime[0] = tempClu[0]->GetTime();
     if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
 
-    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
     int isPaired = -1; // look for a gamma-gamma event, with loose conditions
 
@@ -143,7 +156,9 @@ Int_t ECalSel::TwoClusSel(){
 
       if (cluEnergy[1] < energyMin) continue; // require a minimum energy
       if (cluEnergy[1] > energyMax) continue;
-      if (tempClu[1]->GetPosition().Perp() < radiusMin) continue;
+
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+      if (cluPos[1].Perp() < radiusMin) continue;
 
       fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DrVsDt", dt, dr, 1.);
 
@@ -158,6 +173,8 @@ Int_t ECalSel::TwoClusSel(){
     
     if (isPaired != -1) { // fill plots if only one pair found
       cluEnergy[0] = tempClu[0]->GetEnergy();//*tempCorr;
+      cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
+
       tempClu[1] = fECal_clEvent->Element((int)isPaired);
       cluEnergy[1] = tempClu[1]->GetEnergy();//*tempCorr;
       cluTime[1] = tempClu[1]->GetTime();
@@ -175,7 +192,6 @@ Int_t ECalSel::TwoClusSel(){
       }      
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
       
-
       double elli = 
 	(cluEnergy[0]-pg[0]-deCutCenterX)*(cluEnergy[0]-pg[0]-deCutCenterX)/(deCutRadiusX*deCutRadiusX) +
 	(cluEnergy[1]-pg[1]-deCutCenterY)*(cluEnergy[1]-pg[1]-deCutCenterY)/(deCutRadiusY*deCutRadiusY);
@@ -220,7 +236,31 @@ Int_t ECalSel::TwoClusSel(){
 	    rPos *= (cluEnergy[j]/rPos.Mag());
 	    photonMom[j].SetXYZT(rPos.X(),rPos.Y(),rPos.Z(),cluEnergy[j]);
 	  }
-	  
+
+    // Fill plots to check energy and radius range
+
+	  for (int kk = 0; kk < 2; kk++){
+	    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_E_Radius"), cluPosRel[kk].Perp(), tempClu[kk]->GetEnergy());
+	    fhSvcVal->FillHistoList("ECalSel",Form("ECal_RadiusECut"),
+				    (cluPosRel[kk].Perp()-fGeneralInfo->GetRadiusMin())/(fGeneralInfo->GetRadiusMax()-fGeneralInfo->GetRadiusMin()));
+	    fhSvcVal->FillHistoList("ECalSel",Form("ECal_ERCut"),
+				    (tempClu[kk]->GetEnergy()-fGeneralInfo->GetEnergyMin())/(fGeneralInfo->GetEnergyMax()-fGeneralInfo->GetEnergyMin()));
+
+	    int xbin = (cluPos[kk].X() - fXMin)/fXW;
+	    int ybin = (cluPos[kk].Y() - fYMin)/fYW;
+	    if (xbin < 0 || xbin >= fNXBins){
+	      std::cout << "X value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
+	      break;
+	    }
+	    if (ybin < 0 || ybin >= fNYBins){
+	      std::cout << "Y value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
+	      continue;
+	    }
+	    
+	    TString hname = Form("EExpVsEX_%d_Y_%d",xbin+1,ybin+1);
+	    fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
+	  }
+
     // evaluate best boost direction
 
 	  for (int ith = 0; ith<fNThetaBins; ith++){ // loop on theta
@@ -248,17 +288,6 @@ Int_t ECalSel::TwoClusSel(){
 
 	} 
       }
-
-      if (elli < 2) { // looser cut because of the temperature effect
-	for (int i=0; i<2; i++) {
-	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EExpVsE"), cluEnergy[i], pg[i],1.);
-	  double phi = cluPos[i].Phi();
-	  if (phi < 0) phi += 2*pi;
-	  int q = (phi*3./pi+0.5);
-	  if (q > 5) q = 0;
-	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), cluEnergy[i], pg[i],1.);
-	}
-      }
     } // isPaired
   } // cluster loop
 
@@ -275,20 +304,14 @@ Bool_t ECalSel::InitHistos()
 {
   fhSvcVal->CreateList("ECalSel");
 
-// x and y slices
-  Double_t fXMin = -21.*(14+0.5);
-  Double_t fXMax = 21.*(14+0.5);
-  Double_t fXW = 21; // mm
-  Int_t fNXBins = (fXMax-fXMin)/fXW;
-  Double_t fYMin = -21.*(14+0.5);
-  Double_t fYMax = 21.*(14+0.5);
-  Double_t fYW = 21; // mm
-  Int_t fNYBins = (fYMax-fYMin)/fYW;
-
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx_Eweight", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsx_EweightAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_yvsxAll", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
+
+  fhSvcVal->BookHisto2List("ECalSel","ECal_E_Radius", 100,0.,TMath::Sqrt(fXMax*fXMax+fYMax*fYMax),100,0,500.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_RadiusECut", 100,-1.5,1.5);
+  fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
   
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
@@ -306,8 +329,24 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","DPhiVsRotVsRun",fNThetaBins,0,fNThetaBins*fThetaWid,fNPhiDirBins,0,2*TMath::Pi()); //to be done run-wise: first read runID, then book
 
 
-  for (int q=0; q<6; q++){
-    fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_EExpVsE_q%d",q), 800, 0,400, 400, 0, 400.);
+  const float fEExpMin = 90;
+  const float fEExpMax = 410;
+  const int fNEExpBins = 80;
+  fhSvcVal->CreateList("ECalScale");
+
+  for (int it = 0; it<fNXBins; it++){
+    double xmin = fXMin + fXW*it;
+    double xmax = fXMin + fXW*(it+1);
+
+    for (int iq = 0; iq < fNYBins; iq++){
+      double ymin = fYMin + fYW*iq;
+      double ymax = fYMin + fYW*(iq+1);
+
+      TString hname = Form("EExpVsEX_%d_Y_%d",it+1,iq+1);
+      fhSvcVal->BookHisto2List("ECalScale",hname.Data(),fNEExpBins,fEExpMin,fEExpMax,100,-1,1);
+//      fhSvcVal->GetHisto2List("ECalScale",hname.Data())->SetNameTitle
+//	(Form("EExp vs E Xrange = (%f4.2,%f4.2)mm YRange = (%f4.2,%f4.2)",(float)xmin,(float)xmax,(float)ymin,(float)ymax));
+    }
   }
 
   return true;

@@ -41,12 +41,13 @@ public:
   inline double GetEnergyMax() const { return fEnergyMax;}
 
 protected:
-  TRecoEvent*           fRecoEvent;
+  TRecoEvent* fRecoEvent;
 
 private:
   double fMe;
   OfflineServer* fOfflineServerDB;
   void EvalBeamProperties();
+  void PrintBeamProperties(int);
 
   Int_t fRunOld;
   double fBeamMomentum;

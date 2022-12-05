@@ -32,8 +32,11 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGNPoTsBM) { delete fHLGNPoTsBM; fHLGNPoTsBM = 0; }
   if (fHLGNPoTsTotBM) { delete fHLGNPoTsTotBM; fHLGNPoTsTotBM = 0; }
   if (fHLGBunchLengthBM) { delete fHLGBunchLengthBM; fHLGBunchLengthBM = 0; }
+  if (fHLGBunchLengthTotBM) { delete fHLGBunchLengthTotBM; fHLGBunchLengthTotBM = 0; }
   if (fHLGBunchBBQBM) { delete fHLGBunchBBQBM; fHLGBunchBBQBM = 0; }
   if (fHLGBunchBBQTotBM) { delete fHLGBunchBBQTotBM; fHLGBunchBBQTotBM = 0; }
+  if (fHLGBunchDensityBM) { delete fHLGBunchDensityBM; fHLGBunchDensityBM = 0; }
+  if (fHLGBunchDensityTotBM) { delete fHLGBunchDensityTotBM; fHLGBunchDensityTotBM = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -107,14 +110,15 @@ void LeadGlassMonitor::Initialize()
   struct stat buffer;
   if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
     std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq) {
+    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
+    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
       //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
       fVLGTimeBM.push_back(abstime);
       fVLGNPoTsBM.push_back(npots);
       fVLGNPoTsTotBM.push_back(npotstot);
       fVLGBunchLengthBM.push_back(bunchlen);
       fVLGBunchBBQBM.push_back(bunchbbq);
+      fVLGBunchDensityBM.push_back(bunchdens);
     }
   }
 
@@ -125,8 +129,11 @@ void LeadGlassMonitor::Initialize()
   fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
   fHLGNPoTsTotBM = new TH1D("LG_NPoTsTotBM","LG_NPoTsTotBM",1000,0.,20000.);
   fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
+  fHLGBunchLengthTotBM = new TH1D("LG_BunchLengthTotBM","LG_BunchLengthTotBM",1000,0.,1000.);
   fHLGBunchBBQBM = new TH1D("LG_BunchBBQBM","LG_BunchBBQBM",1000,0.,1000.);
   fHLGBunchBBQTotBM = new TH1D("LG_BunchBBQTotBM","LG_BunchBBQTotBM",1000,0.,1000.);
+  fHLGBunchDensityBM = new TH1D("LG_BunchDensityBM","LG_BunchBBQBM",1000,0.,100.);
+  fHLGBunchDensityTotBM = new TH1D("LG_BunchDensityTotBM","LG_BunchBBQTotBM",1000,0.,100.);
 
   // Reset cumulative waveform
   for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -194,6 +201,7 @@ void LeadGlassMonitor::EndOfEvent()
 	fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
 	fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
 	fVLGBunchBBQBM.push_back(fHLGBunchBBQBM->GetMean());
+	fVLGBunchDensityBM.push_back(fHLGBunchDensityBM->GetMean());
 
 	// Compute total number of PoTs and update trend vector
 	if (fVLGNPoTsTotBM.size() == 0) {
@@ -204,7 +212,7 @@ void LeadGlassMonitor::EndOfEvent()
 
 	// Update trends file
 	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back());
+	fprintf(tf,"%f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
 	fclose(tf);
 
       }
@@ -219,6 +227,7 @@ void LeadGlassMonitor::EndOfEvent()
       fHLGNPoTsBM->Reset();
       fHLGBunchLengthBM->Reset();
       fHLGBunchBBQBM->Reset();
+      fHLGBunchDensityBM->Reset();
 
       // Reset cumulative waveform
       for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
@@ -294,14 +303,24 @@ void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sam
     // Compute number of positrons on target (NPoTs)
     fLGNPoTs = fChannelCharge/fChargeToNPoTs;
 
+    // Compute bunch density
+    if (fBunchLength) {
+      fBunchDensity = fLGNPoTs/fBunchLength;
+    } else {
+      fBunchDensity = 0.;
+    }
+
     fHLGPedestalBM->Fill(fChannelPedestal);
     fHLGPedRMSBM->Fill(fChannelPedRMS);
     fHLGTotChargeBM->Fill(fChannelCharge);
     fHLGNPoTsBM->Fill(fLGNPoTs);
     fHLGNPoTsTotBM->Fill(fLGNPoTs);
     fHLGBunchLengthBM->Fill(fBunchLength);
+    fHLGBunchLengthTotBM->Fill(fBunchLength);
     fHLGBunchBBQBM->Fill(fBunchBBQ);
     fHLGBunchBBQTotBM->Fill(fBunchBBQ);
+    fHLGBunchDensityBM->Fill(fBunchDensity);
+    fHLGBunchDensityTotBM->Fill(fBunchDensity);
 
     // Add waveform to cumulative for bunch shape studies
     for(UInt_t i = 0; i<1024; i++) {
@@ -447,6 +466,26 @@ Int_t LeadGlassMonitor::OutputBeam()
   }
   fprintf(outf,"]]\n\n");
 
+  // Total Bunch Length distribution for this run
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchlengthtot\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM Bunch Length Total - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchLengthTotBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchLengthTotBM->GetXaxis()->GetXmin(),fHLGBunchLengthTotBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X ns\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchLengthTotBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchLengthTotBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
   // Bunch BBQ
   fprintf(outf,"PLOTID LeadGlassMon_beambunchbbq\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
@@ -484,6 +523,46 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGBunchBBQTotBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGBunchBBQTotBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Bunch Density
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchdensity\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG Density - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchDensityBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchDensityBM->GetXaxis()->GetXmin(),fHLGBunchDensityBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X PoTs/ns\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchDensityBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchDensityBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total Bunch Density distribution for this run
+  fprintf(outf,"PLOTID LeadGlassMon_beambunchdensitytot\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG Density Total - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGBunchDensityTotBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGBunchDensityTotBM->GetXaxis()->GetXmin(),fHLGBunchDensityTotBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X PoTs/ns\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGBunchDensityTotBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGBunchDensityTotBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
@@ -666,6 +745,22 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGBunchBBQBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Bunch Density trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendbunchdensity\n");
+  fprintf(outf,"PLOTNAME LG Bunch Density - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y PoTs/ns\n");
+  fprintf(outf,"LEGEND [ \"PoTs/ns\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGBunchDensityBM[j]);
   }
   fprintf(outf,"] ]\n\n");
 

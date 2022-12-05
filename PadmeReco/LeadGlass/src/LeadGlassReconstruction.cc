@@ -79,6 +79,8 @@ void LeadGlassReconstruction::HistoInit()
 void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 {
 
+  fLeadGlassFound = false;
+
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
     if (TriggerToBeSkipped()) return;
@@ -91,6 +93,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
       //lg_b = b;
       for(UChar_t c = 0; c < rawEv->ADCBoard(b)->GetNADCChannels(); c++) {
 	if (rawEv->ADCBoard(b)->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
+	  fLeadGlassFound = true;
 	  //lg_c = c;
 	  // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
 	  AnalyzeChannel(rawEv->ADCBoard(b)->ADCChannel(c)->GetSamplesArray());
@@ -101,7 +104,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
   }
 
   //Processing is over, let's analyze what's here, if requested
-  if (fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+  if (fLeadGlassFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
 
   /*
   if (rawEv->GetEventNumber() == 110) {

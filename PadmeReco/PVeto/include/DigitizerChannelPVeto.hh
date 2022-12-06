@@ -77,7 +77,7 @@ private:
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
   int fEnergyCalibrationFile;
-  int fTimeCalibration;
+  int fApplyTimeCalibration;
   TString detectorname;
 
   std::vector<Double_t>   tDerivHitVec          ;
@@ -130,7 +130,7 @@ private:
 
   Bool_t fChannelEqualisation; //Beth 23/2/22
   Bool_t fTailCorrection; //Beth 4/4/22
-  Bool_t fTimeCorrection; //Beth 28/4/22
+  Bool_t fTimeCalibrationMethod; //Beth 6/12/22
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
@@ -161,7 +161,7 @@ private:
   TH1F * hOccupancy                 ;
   TH1F * hOccupancyOneHit           ;
   TH1F * hMinTimeDiffDeriv          ;
-  TH1F * hMinTimeDiffDerivChas30to70;
+  TH1F * hMinTimeDiffDerivChas31to70;
   TH1F * hVRatio                    ;
   TH1F * hNZSupEvents               ;
   TH1F * hNoiseRMSAvg               ;

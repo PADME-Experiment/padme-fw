@@ -42,11 +42,11 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fSaveAnalog = cfg->GetParOrDefault("Output","SaveAnalogs",0); //M. Raggi: 03/03/2021 
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
-  fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
-  fTimeCalibration  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 2); 
-  fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
-  fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
-  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",2);
+  fEnergyCalibrationFile = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
+  fApplyTimeCalibration  = cfg->GetParOrDefault("RECO","ApplyTimeCalibration", 1); //Apply time calibration?
+  fChannelEqualisation   = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
+  fTailCorrection        = cfg->GetParOrDefault("RECO","TailCorrection",1);
+  fTimeCalibrationMethod = cfg->GetParOrDefault("TimeCalibration", "TimeCalibrationMethod",2);//1 = T0s channel by channel, 2 = use fit of cable lengths
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -240,8 +240,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  if(fAnalogPrint==1)
-    std::cout<<"EventCounter "<<EventCounter<<" ChID() "<<GetChID()<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<" nfound "<<nfound<<std::endl;
+  //  if(fAnalogPrint==1)    std::cout<<"EventCounter "<<EventCounter<<" ChID() "<<GetChID()<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<" nfound "<<nfound<<std::endl;
   return Time;
 }
 
@@ -270,7 +269,7 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
   hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
-  hMinTimeDiffDerivChas30to70 = new TH1F("MinTimeDiffDerivChas30to70","MinTimeDiffDerivChas30to70",100,0,200);
+  hMinTimeDiffDerivChas31to70 = new TH1F("MinTimeDiffDerivChas31to70","MinTimeDiffDerivChas31to70",100,0,200);
   hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
   hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
   hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
@@ -341,7 +340,7 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
     hHitEnergySingleHit->Write();
     hHitTime->Write();
     hMinTimeDiffDeriv->Write();
-    hMinTimeDiffDerivChas30to70->Write();
+    hMinTimeDiffDerivChas31to70->Write();
     
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
@@ -537,7 +536,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
       hAmpDiffVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
       hMinTimeDiffDeriv->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
-      if(GetChID()>29&&GetChID()<71)      hMinTimeDiffDerivChas30to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
+      if(GetChID()>30&&GetChID()<71)      hMinTimeDiffDerivChas31to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
     }
   }
   
@@ -577,8 +576,8 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
   char fname[100];
   //Int_t Calibration=0;
 
-  if(fTimeCorrection==1){
-    if(fTimeCalibration==1){
+  if(fApplyTimeCalibration==1){
+    if(fTimeCalibrationMethod==1){
       sprintf(fname,"config/Calibration/PVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
       std::ifstream myFile(fname);
     
@@ -592,7 +591,7 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
 	PVetoTimeCalib.close();
       }
     }
-    else if(fTimeCorrection==1&&fTimeCalibration==2){
+    else if(fApplyTimeCalibration==1&&fTimeCalibrationMethod==2){
       //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in PVeto-SAC Bremsstrahlung in data, and subtracting the peak of time differences in PVeto-SAC Bremsstrahlung in the full-beamline MC
       if(GetChID()<48) 	fTimeCalibCh[GetChID()]=42.5;
       else fTimeCalibCh[GetChID()]=39.9;
@@ -606,7 +605,7 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
     }
   }
   else{
-    if(fTimeCorrection==1)    std::cout<<"Unknown PVeto time calibration file, resorting to default calibration constant (0)"<<std::endl;
+    if(fApplyTimeCalibration==1)    std::cout<<"Unknown PVeto time calibration file, resorting to default calibration constant (0)"<<std::endl;
     for (int i=0;i<96;i++){
       fTimeCalibCh[i]=0;
     }

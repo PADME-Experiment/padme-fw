@@ -43,10 +43,10 @@ void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to EVetoRecoAn.root
 
   fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
-  fTimeCalibrationFile  = cfg->GetParOrDefault("TimeCalibration", "CalibrationFile", 1); 
-  fChannelEqualisation = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
-  fTailCorrection      = cfg->GetParOrDefault("RECO","TailCorrection",1);
-  fTimeCorrection      = cfg->GetParOrDefault("RECO","TimeCorrection",1);
+    fApplyTimeCalibration  = cfg->GetParOrDefault("RECO","ApplyTimeCalibration", 1); //Apply time calibration?
+  fChannelEqualisation   = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
+  fTailCorrection        = cfg->GetParOrDefault("RECO","TailCorrection",1);
+  fTimeCalibrationMethod = cfg->GetParOrDefault("TimeCalibration", "TimeCalibrationMethod",2);//1 = T0s channel by channel, 2 = use fit of cable lengths
 
   fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
   fDerivPoints         = cfg->GetParOrDefault("RECO","DerivPoints",15);
@@ -406,7 +406,9 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
 }
 
 void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //using TSpectrum
-  if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
+    if(GetChID()==0) hNoEventsReconstructed->Fill(1);
+  }
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
@@ -528,7 +530,7 @@ Double_t DigitizerChannelEVeto::SetEVetoChaGain(){
 
   std::ifstream EnergyCalib;
   char fname[100];
-//Beth 8/4/22: To make the name of the calibration file clearer, I named the version I use for the digitizer of 2020 signals (which uses the derivative of the signal) "PVeto_EnergyCalibration_DerivativeDigitizer2020.txt"
+//Beth 8/4/22: To make the name of the calibration file clearer, I named the version I use for the digitizer of 2020 signals (which uses the derivative of the signal) "EVeto_EnergyCalibration_DerivativeDigitizer2020.txt"
   if(fEnergyCalibrationFile<2)    sprintf(fname,"config/Calibration/EVeto_EnergyCalibration_%d.txt", fEnergyCalibrationFile);
 
   else if(fEnergyCalibrationFile==2)    sprintf(fname,"config/Calibration/EVeto_EnergyCalibration_%s.txt","DerivativeDigitizer2020");
@@ -558,19 +560,25 @@ Double_t DigitizerChannelEVeto::SetEVetoT0(){
   char fname[100];
   //Int_t Calibration=0;
 
-  if(fTimeCorrection==1&&fTimeCalibrationFile==1){
-    sprintf(fname,"config/Calibration/EVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
+  if(fApplyTimeCalibration==1){
+    if(fTimeCalibrationMethod==1){
+      sprintf(fname,"config/Calibration/EVeto_TimeCalibration_%s.txt","DerivativeDigitizer2020");
+      std::ifstream myFile(fname);
 
-    std::ifstream myFile(fname);
-
-    EVetoTimeCalib.open(fname);
-    if (EVetoTimeCalib.is_open()){
-      double temp;
-      for (int i=0;i<96;i++){
-	EVetoTimeCalib >> temp >> fTimeCalibCh[i];
-	//std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+      EVetoTimeCalib.open(fname);
+      if (EVetoTimeCalib.is_open()){
+	double temp;
+	for (int i=0;i<96;i++){
+	  EVetoTimeCalib >> temp >> fTimeCalibCh[i];
+	  //std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fTimeCalibCh[i]<<std::endl; 
+	}
+	EVetoTimeCalib.close();
       }
-      EVetoTimeCalib.close();
+    }
+    else if(fApplyTimeCalibration==1&&fTimeCalibrationMethod==2){
+      //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in EVeto-SAC Bremsstrahlung in data, using the run with B field reversed, and subtracting the peak of time differences in EVeto-SAC Bremsstrahlung in the full-beamline MC
+      if(GetChID()<48) 	fTimeCalibCh[GetChID()]=40.2;
+      else fTimeCalibCh[GetChID()]=37.4;
     }
     else{ 
       std::cout<<"No previous data available for EVeto, resorting to default calibration constant (0)"<<std::endl;
@@ -581,7 +589,7 @@ Double_t DigitizerChannelEVeto::SetEVetoT0(){
     }
   }
   else{
-    if(fTimeCorrection==1)    std::cout<<"Unknown EVeto time calibration file, resorting to default calibration constant (0)"<<std::endl;
+    if(fApplyTimeCalibration==1)    std::cout<<"Unknown EVeto time calibration file,"<<fname<<" resorting to default calibration constant (0)"<<std::endl;
     for (int i=0;i<96;i++){
       fTimeCalibCh[i]=0;
     }

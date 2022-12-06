@@ -28,7 +28,6 @@ BhabhaAnalysis::~BhabhaAnalysis(){
 Bool_t BhabhaAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing BhabhaAnalysis\n");
   fEvent = event;
-  
   InitHistos();
   return true;
 }
@@ -93,31 +92,16 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoClusters","hEnergyEVetoCluster",150,0,30);
 
   //Cluster channel
-  fHS->BookHistoList("PVetoClusters","hChPVetoCluster",96,0,96);
-  fHS->BookHistoList("EVetoClusters","hChEVetoCluster",96,0,96);
+  fHS->BookHistoList("PVetoClusters","hChPVetoCluster",90,-0.5,89.5);
+  fHS->BookHistoList("EVetoClusters","hChEVetoCluster",96,-0.5,95.5);
  
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hChToEnergyPositron",330,0,330);
   fHS->BookHistoList("EVetoClusters","hChToEnergyElectron",330,0,330);
 
-  //Particle energy sum assuming Bremsstrahlung
-  fHS->BookHistoList("BhabhaList","hChToEnergySum",200,0,750);
-  fHS->BookHistoList("BhabhaList","hChToEnergySum10nsWindow",200,0,750);
-  fHS->BookHistoList("BhabhaList","hChToEnergySum10nsWindowGood",200,0,750);
-  fHS->BookHistoList("BhabhaList","hChToEnergySum10nsWindowGoodMoreEnergeticElectron",200,0,750);
-
   //Bhabha plots
-  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  fHS->BookHisto2List("BhabhaList","hTop10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  fHS->BookHisto2List("BhabhaList","hMiddle10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  fHS->BookHisto2List("BhabhaList","hBottom10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  //  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMax10kPoT",96,0,95,96,0,95);
-  //  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterMin6.5kMax10kPoT",96,0,95,96,0,95);
-  fHS->BookHisto2List("BhabhaList","h10nsWindowNPVetoClusterVsNEVetoClusterDeltaTWeight",96,0,95,96,0,95);
-  // fHS->BookHisto2List("BhabhaList","h2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  // fHS->BookHisto2List("BhabhaList","hEnergyCut2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  // fHS->BookHisto2List("BhabhaList","hGoodChasEnergyCut2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
-  // fHS->BookHisto2List("BhabhaList","hLeadingElectronGoodChasEnergyCut2to3Hits10nsWindowNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
+  fHS->BookHistoList("BhabhaList","hChaSum",180,0,179);
+  fHS->BookHistoList("BhabhaList","hVetoChasOver302to3HitsGoodChasChaSum",78,62,140);
   fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",180,0,179,2000,-500,500);
   fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",180,0,179,2000,-500,500);
   fHS->BookHisto2List("BhabhaList","hGoodChaSumVsDeltaTuncorrect",40,59.5,140.5,2000,-500,500);
@@ -139,27 +123,21 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHisto2List("MCSwimming","hPVetoSwumInsideVetoVsPVetoClusters",4,0,4,7,0,7);
   fHS->BookHisto2List("MCSwimming","hEVetoSwumInsideVetoVsEVetoClusters",4,0,4,7,0,7);
   
-  fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoRecoChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoRecoChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoRecoTimeDiff",200,-99.5,100.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoRecoTimeDiff",200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hPVetoSwumChPVetoRecoChaDiffVsPVetoSwumTimePVetoRecoTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hEVetoSwumChEVetoRecoChaDiffVsEVetoSwumTimeEVetoRecoTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
+  fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoRecoChaDiff",181,-89.5,89.5);
+  fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoRecoChaDiff",181,-89.5,89.5);
+  fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoRecoTimeDiff",201,-99.5,99.5);
+  fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoRecoTimeDiff",201,-99.5,99.5);
+  fHS->BookHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiff",20,-5,5);
+  fHS->BookHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5,5);
 
-  fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoReco1ClusChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoReco1ClusChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoReco1ClusTimeDiff",200,-99.5,100.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoReco1ClusTimeDiff",200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hPVetoSwumChPVetoReco1ClusChaDiffVsPVetoSwumTimePVetoReco1ClusTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hEVetoSwumChEVetoReco1ClusChaDiffVsEVetoSwumTimeEVetoReco1ClusTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
-  
-  fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoReco1ClusGoodChaChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoReco1ClusGoodChaChaDiff",180,-89.5,91.5);
-  fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoReco1ClusGoodChaTimeDiff",200,-99.5,100.5);
-  fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoReco1ClusGoodChaTimeDiff",200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hPVetoSwumChPVetoReco1ClusGoodChaChaDiffVsPVetoSwumTimePVetoReco1ClusGoodChaTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
-  fHS->BookHisto2List("MCSwimming","hEVetoSwumChEVetoReco1ClusGoodChaChaDiffVsEVetoSwumTimeEVetoReco1ClusGoodChaTimeDiff",180,-79.5,79.5,200,-99.5,100.5);
-  
+  fHS->BookHistoList("MCSwimming","hSwumChaSum",186,0,186);
+  fHS->BookHistoList("MCSwimming","hGoodChasSwumChaSum",78,62,140);
+  fHS->BookHisto2List("MCSwimming","hPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+  fHS->BookHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+  fHS->BookHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+  fHS->BookHisto2List("MCSwimming","hChaSum96to98GoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+  fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+  fHS->BookHisto2List("MCSwimming","hVetoSwumChaDiffVsVetoSwumTimeDiff",181,-90,90,20,-5,5);
   //Time correction plots
   fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",2000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",2000,-500,500);
@@ -171,17 +149,19 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
   fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",2000,-500,500);
   
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",180,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",181,-90,90,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",101,-50,50,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChGoodChasVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChGoodChasVsdeltaTuncorrect",180,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChGoodChasVsdeltaTuncorrect",180,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",101,-50,50,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",101,-50,50,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
@@ -251,65 +231,79 @@ Bool_t BhabhaAnalysis::Process(){
   int nBhabhaPosInVeto=0;
   int nBhabhaEleInVeto=0;
   
-  if(isMC){
+  bool fixedE=0;
+  
+  //if using MC produced at single energy from target
+  if(isMC&&fixedE){
+    energy = 200;
+    double theta = 0;//-20e-3;//rad
+    double phi = 0;//20e-3;//rad
+    double px = (energy*TMath::Tan(theta))/(TMath::Sqrt(1+TMath::Tan(theta)*TMath::Tan(theta)));
+    double py = (energy*TMath::Tan(phi))/(TMath::Sqrt(1+TMath::Tan(phi)*TMath::Tan(phi)));
+    double pz = TMath::Sqrt(energy*energy-px*px);
+    momentum = TVector3(px,py,pz);
+    std::cout<<"px "<<px<<" py "<<py<<" pz "<<pz<<std::endl;
+    FourMomentum = TLorentzVector(momentum,energy);
+    VertexPos = TVector3(0,0,-1028);//mm
+    VertexTime = 0;
+    charge = 1;
+    fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
+    PVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
+    PVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
+    if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaPosInVeto++;
+  }
+  else if(isMC&&!fixedE){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-      if(iV==1) std::cout<<fEvent->MCTruthEvent->GetNVertices()<<" vertices, 0 and 1 are "<<fEvent->MCTruthEvent->Vertex(0)->GetProcess()<<" "<<fEvent->MCTruthEvent->Vertex(1)->GetProcess()<<std::endl;
+      //if(iV==1) std::cout<<fEvent->MCTruthEvent->GetNVertices()<<" vertices, 0 and 1 are "<<fEvent->MCTruthEvent->Vertex(0)->GetProcess()<<" "<<fEvent->MCTruthEvent->Vertex(1)->GetProcess()<<std::endl;
       if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){
 	VertexPos=mcVtx->GetPosition();
 	VertexTime = mcVtx->GetTime();
-	//	VertexPos.Print();
 	nBhabha++;
-	//	std::cout<<"Process is "<<mcVtx->GetProcess()<<" "<<nBhabha<<std::endl;
-	for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-	  mcOutPart = mcVtx->ParticleOut(iO);
-	  
+
+	for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
+	  mcOutPart = mcVtx->ParticleOut(iOut);
+
+	  //PDGCode: matter = +ve, antimatter = -ve
 	  if(mcOutPart->GetPDGCode()==11)
-	    charge = 1;
-	  else if(mcOutPart->GetPDGCode()==-11)
 	    charge = -1;
-	  else std::cout<<"weirdly, PDGCode = "<<mcOutPart->GetPDGCode()<<std::endl;
-	  
+	  else if(mcOutPart->GetPDGCode()==-11)
+	    charge = 1;
+	  else{
+	    if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha")
+	      std::cout<<"weirdly, PDGCode = "<<mcOutPart->GetPDGCode()<<std::endl;
+	  }
 	  momentum = mcOutPart->GetMomentum();
 	  energy = mcOutPart->GetEnergy();
 	  FourMomentum = TLorentzVector(momentum,energy);
 	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
 	  if(charge==1){
 	    nBhabhaPos++;
-	    //	    std::cout<<mcVtx->GetProcess()<<" pos "<<nBhabhaPos<<std::endl;
 	    PVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    PVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 	    if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaPosInVeto++;
 	  }
 	  else if(charge==-1){
 	    nBhabhaEle++;
-	    //   std::cout<<mcVtx->GetProcess()<<" ele "<<nBhabhaEle<<std::endl;
 	    EVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    EVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 	    if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaEleInVeto++;
 	  }
 	  NSwum++;
 	}
-	//	if((PVetoSwimmingChannels.size()!=PVetoSwimmingTime.size())||(EVetoSwimmingChannels.size()!=EVetoSwimmingTime.size())||(EVetoSwimmingChannels.size()!=PVetoSwimmingTime.size())){
 	if(mcVtx->GetProcess()=="eIoni"){
-	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-	    mcOutPart = mcVtx->ParticleOut(iO);
+	  for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
+	    mcOutPart = mcVtx->ParticleOut(iOut);
 	    momentum = mcOutPart->GetMomentum();
 	    energy = mcOutPart->GetEnergy();
 	    FourMomentum = TLorentzVector(momentum,energy);
-	    std::cout<<"iV "<<iV<<" PDG Code "<<mcOutPart->GetPDGCode()<<" mcVtx->GetProcess() "<<mcVtx->GetProcess()<<" particle number "<<iO<<std::endl;
-	    std::cout<<"PDG Code "<<mcOutPart->GetPDGCode()<<" momentum "<<momentum.X()<<" "<<momentum.Y()<<" "<<momentum.Z()<<" position "<<VertexPos.X()<<" "<<VertexPos.Y()<<" "<<VertexPos.Z()<<" energy "<<energy<<" mass "<<FourMomentum.M()<<" my mass "<<TMath::Sqrt(energy*energy-momentum.Mag2())<<std::endl;
 	  }
-	  std::cout<<"NVertices "<<fEvent->MCTruthEvent->GetNVertices()<<" index vertex "<<iV<<" NParticleOut "<<mcVtx->GetNParticleOut()<<" PVetoSwimmingChannels.size() "<<PVetoSwimmingChannels.size()<<" PVetoSwimmingTime.size() "<<PVetoSwimmingTime.size()<<" EVetoSwimmingChannels.size() "<<EVetoSwimmingChannels.size()<<" EVetoSwimmingTime.size() "<<EVetoSwimmingTime.size()<<std::endl;
 	}
-      }
+      }//end if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){
     }
     fHS->FillHistoList("MCSwimming","hPVetoSwumInsideVeto",nBhabhaPosInVeto);
     fHS->FillHistoList("MCSwimming","hEVetoSwumInsideVeto",nBhabhaEleInVeto);
-  }
-  //  if(isMC&&!(PVetoSwimmingChannels.size()==PVetoSwimmingTime.size()&&EVetoSwimmingChannels.size()==EVetoSwimmingTime.size())&&EVetoSwimmingChannels.size()==PVetoSwimmingTime.size()){
-  //std::cout<<"After PVetoSwimmingChannels.size() "<<PVetoSwimmingChannels.size()<<" PVetoSwimmingTime.size() "<<PVetoSwimmingTime.size()<<" EVetoSwimmingChannels.size() "<<EVetoSwimmingChannels.size()<<" EVetoSwimmingTime.size() "<<EVetoSwimmingTime.size()<<std::endl;
-  // }
+  } //end if MC
 
   //  if(fNPoT>10000) return 0;
   
@@ -327,6 +321,11 @@ Bool_t BhabhaAnalysis::Process(){
   fHS->FillHistoList("MCSwimming","hPVetoSwumInsideVetoVsPVetoClusters",nBhabhaPosInVeto,NPVetoCluster);
   fHS->FillHistoList("MCSwimming","hEVetoSwumInsideVetoVsEVetoClusters",nBhabhaPosInVeto,NEVetoCluster);
 
+  /*  if(PVetoSwimmingChannels.size()!=EVetoSwimmingChannels.size()||PVetoSwimmingTime.size()!=EVetoSwimmingTime.size()||PVetoSwimmingChannels.size()!=PVetoSwimmingTime.size()){
+    std::cout<<"Mismatched swimming sizes"<<std::endl;
+    std::cout<<"PVetoSwimmingChannels.size() "<<PVetoSwimmingChannels.size()<<" EVetoSwimmingChannels.size() "<<EVetoSwimmingChannels.size()<<" PVetoSwimmingTime.size() "<<PVetoSwimmingTime.size()<<" EVetoSwimmingTime.size() "<<EVetoSwimmingTime.size()<<std::endl;
+    }*/
+  
   //Variables for number of clusters pass initial "good" cluster selection
   Int_t NPVetoGoodClusters=0;
   Int_t NEVetoGoodClusters=0;
@@ -374,7 +373,7 @@ Bool_t BhabhaAnalysis::Process(){
   //The "ChID" of a cluster is set as the most upstream channel in the reco
   Int_t LucePVeto=0;
   Int_t LuceEVeto=0;
-
+  
   //All EVeto Clusters
   for(int ii = 0; ii<NEVetoCluster; ii++){
     tempNHit  = fEvent->EVetoRecoCl->Element(ii)->GetNHitsInClus();
@@ -401,29 +400,17 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHisto2List("EVetoClusters","hLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
       if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))) fHS->FillHisto2List("EVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
       if(LuceEVeto>100)      std::cout<<"ii "<<ii<<" jj"<<jj<<" tempCh "<<tempCh<<" temp2Ch "<<temp2Ch<<" tempNHit "<<tempNHit<<" temp2NHit "<<temp2NHit<<" LuceEVeto "<<LuceEVeto<<std::endl;
-
-    }
+      
+    }//end jj
   
     if(isMC){
       for(int swumev=0;swumev<EVetoSwimmingChannels.size();swumev++){
 	if(EVetoSwimmingChannels[swumev]==-100) continue;
 	fHS->FillHistoList("MCSwimming","hEVetoSwumChEVetoRecoChaDiff",EVetoSwimmingChannels[swumev]-tempCh);
 	fHS->FillHistoList("MCSwimming","hEVetoSwumTimeEVetoRecoTimeDiff",EVetoSwimmingTime[swumev]-tempT);
-	fHS->FillHisto2List("MCSwimming","hEVetoSwumChEVetoRecoChaDiffVsEVetoSwumTimeEVetoRecoTimeDiff",EVetoSwimmingChannels[swumev]-tempCh,EVetoSwimmingTime[swumev]-tempT);
-	if(NEVetoCluster==1){
-	  fHS->FillHistoList("MCSwimming","hEVetoSwumChEVetoReco1ClusChaDiff",EVetoSwimmingChannels[swumev]-tempCh);
-	  fHS->FillHistoList("MCSwimming","hEVetoSwumTimeEVetoReco1ClusTimeDiff",EVetoSwimmingTime[swumev]-tempT);
-	  fHS->FillHisto2List("MCSwimming","hEVetoSwumChEVetoReco1ClusChaDiffVsEVetoSwumTimeEVetoReco1ClusTimeDiff",EVetoSwimmingChannels[swumev]-tempCh,EVetoSwimmingTime[swumev]-tempT);
-
-	  if(tempCh>29&&tempCh<71){
-	    fHS->FillHistoList("MCSwimming","hEVetoSwumChEVetoReco1ClusGoodChaChaDiff",EVetoSwimmingChannels[swumev]-tempCh);
-	    fHS->FillHistoList("MCSwimming","hEVetoSwumTimeEVetoReco1ClusGoodChaTimeDiff",EVetoSwimmingTime[swumev]-tempT);
-	    fHS->FillHisto2List("MCSwimming","hEVetoSwumChEVetoReco1ClusGoodChaChaDiffVsEVetoSwumTimeEVetoReco1ClusGoodChaTimeDiff",EVetoSwimmingChannels[swumev]-tempCh,EVetoSwimmingTime[swumev]-tempT);
-	  }
-	}
 	if(fabs(tempCh-EVetoSwimmingChannels[swumev])<=1&&fabs(tempT-EVetoSwimmingTime[swumev])<5) nswimandtrutheveto++;// std::cout<<"yay for eveto"<<std::endl;
       }
-
+    }//end if isMC
     
     fHS->FillHisto2List("EVetoClusters","hEVetoChVshNHitsEVetoCluster",tempCh,tempNHit);
     //good cluster cuts:
@@ -442,12 +429,12 @@ Bool_t BhabhaAnalysis::Process(){
     enEVetoGood.push_back(tempEClus);
     tEVetoGood.push_back(tempT);
     chEVetoGood.push_back(tempCh);
-  }
+  }//end EVetoClusters
   
   fHS->FillHistoList("EVetoClusters","hVetoChasOver302to3HitsGoodChaNEVetoCluster", npassEVeto);
-
+  
   int tempEvCh;
-
+  
   //All PVeto Clusters
   for(int ii = 0; ii<NPVetoCluster; ii++){
     tempNHit  = fEvent->PVetoRecoCl->Element(ii)->GetNHitsInClus();
@@ -486,27 +473,17 @@ Bool_t BhabhaAnalysis::Process(){
 	fHS->FillHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",tempCh,tempEvCh);
       }
     }
-
+  
     if(isMC){
       for(int swumev=0;swumev<PVetoSwimmingChannels.size();swumev++){
-	if(PVetoSwimmingChannels[swumev]==-100) continue;
+	if(PVetoSwimmingChannels[swumev]<0) continue;
+	//	std::cout<<"Event No "<<fEvent->RecoEvent->GetEventNumber()<<" no. PVetoSwum "<<PVetoSwimmingChannels.size()<<" PVetoSwimmingChannels[swumev] "<<PVetoSwimmingChannels[swumev]<<" tempCh "<<tempCh<<std::endl;
 	fHS->FillHistoList("MCSwimming","hPVetoSwumChPVetoRecoChaDiff",PVetoSwimmingChannels[swumev]-tempCh);
 	fHS->FillHistoList("MCSwimming","hPVetoSwumTimePVetoRecoTimeDiff",PVetoSwimmingTime[swumev]-tempT);
-	fHS->FillHisto2List("MCSwimming","hPVetoSwumChPVetoRecoChaDiffVsPVetoSwumTimePVetoRecoTimeDiff",PVetoSwimmingChannels[swumev]-tempCh,PVetoSwimmingTime[swumev]-tempT);
-	if(NPVetoCluster==1){
-	  fHS->FillHistoList("MCSwimming","hPVetoSwumChPVetoReco1ClusChaDiff",PVetoSwimmingChannels[swumev]-tempCh);
-	  fHS->FillHistoList("MCSwimming","hPVetoSwumTimePVetoReco1ClusTimeDiff",PVetoSwimmingTime[swumev]-tempT);
-	  fHS->FillHisto2List("MCSwimming","hPVetoSwumChPVetoReco1ClusChaDiffVsPVetoSwumTimePVetoReco1ClusTimeDiff",PVetoSwimmingChannels[swumev]-tempCh,PVetoSwimmingTime[swumev]-tempT);
-	  if(tempCh>29&&tempCh<71){
-	    fHS->FillHistoList("MCSwimming","hPVetoSwumChPVetoReco1ClusGoodChaChaDiff",PVetoSwimmingChannels[swumev]-tempCh);
-	    fHS->FillHistoList("MCSwimming","hPVetoSwumTimePVetoReco1ClusGoodChaTimeDiff",PVetoSwimmingTime[swumev]-tempT);
-	    fHS->FillHisto2List("MCSwimming","hPVetoSwumChPVetoReco1ClusGoodChaChaDiffVsPVetoSwumTimePVetoReco1ClusGoodChaTimeDiff",PVetoSwimmingChannels[swumev]-tempCh,PVetoSwimmingTime[swumev]-tempT);
-	  }
-	}
-	if(fabs(tempCh-PVetoSwimmingChannels[swumev])<=1&&fabs(tempT-PVetoSwimmingTime[swumev])<5) nswimandtruthpveto++;// std::cout<<"yay for pveto"<<std::endl;	
+	if(fabs(tempCh-PVetoSwimmingChannels[swumev])<=1&&fabs(tempT-PVetoSwimmingTime[swumev])<5) nswimandtruthpveto++;// std::cout<<"yay for pveto"<<std::endl;
       }
     }
-
+    
     //good cluster cuts:
     //>=2 hits
     if(tempNHit<2) continue;
@@ -524,7 +501,7 @@ Bool_t BhabhaAnalysis::Process(){
 
     if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassPVeto++;
     
-  }
+  }//end PVetoCluster
   fHS->FillHistoList("PVetoClusters","hVetoChasOver302to3HitsGoodChaNPVetoCluster", npassPVeto);
   
   //time
@@ -534,12 +511,15 @@ Bool_t BhabhaAnalysis::Process(){
   //variables to calculate time difference corrected for different trajectories into vetoes:
   //PVeto channel - EVeto channel
   int deltaCh;
+  int deltaChSwim;
 
   //Time difference caused by trajectory difference
   double deltaTtraj;
+  double deltaTtrajSwim;
   
   //Corrected time difference
   double deltaTcorrect;
+  double deltaTcorrectSwim;
   
   //channel
   int chPVeto;
@@ -556,7 +536,36 @@ Bool_t BhabhaAnalysis::Process(){
   //particle energy assuming emission colinear with beam
   double enBremPositron;
   double enBremElectron;
- 
+
+  int MaxParticles;
+  
+  if(isMC){
+    //not all events will have the same number of e+ as e-
+    MaxParticles = TMath::Max(nBhabhaPos,nBhabhaEle);
+    for(int ii =0; ii<MaxParticles; ii++){
+      if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
+      deltaChSwim = PVetoSwimmingChannels[ii]-EVetoSwimmingChannels[ii];
+      deltaTtrajSwim = TMath::Power(deltaChSwim,3)*-6.5e-7+TMath::Power(deltaChSwim,2)*3.2e-6+deltaChSwim*0.04-0.07;
+      deltaTcorrectSwim = PVetoSwimmingTime[ii]-EVetoSwimmingTime[ii]-deltaTtrajSwim;
+	
+      fHS->FillHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiff",PVetoSwimmingTime[ii]-EVetoSwimmingTime[ii]);
+      fHS->FillHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
+      fHS->FillHisto2List("MCSwimming","hPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+      fHS->FillHisto2List("MCSwimming","hVetoSwumChaDiffVsVetoSwumTimeDiff",PVetoSwimmingChannels[ii]-EVetoSwimmingChannels[ii],PVetoSwimmingTime[ii]-EVetoSwimmingTime[ii]);
+      fHS->FillHistoList("MCSwimming","hSwumChaSum",PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii]);
+      
+      if(PVetoSwimmingChannels[ii]<31||EVetoSwimmingChannels[ii]<31||PVetoSwimmingChannels[ii]>70||EVetoSwimmingChannels[ii]>70) continue;
+      fHS->FillHistoList("MCSwimming","hGoodChasSwumChaSum",PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii]);
+      if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<91) continue;
+      fHS->FillHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
+      fHS->FillHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+      if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<96||(PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])>98) continue;
+      fHS->FillHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
+      fHS->FillHisto2List("MCSwimming","hChaSum96to98GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+      NSwimBhabha++;
+    }
+  }
+  
   if(NEVetoGoodClusters!=NHitsEVetoGood.size()||NPVetoGoodClusters!=NHitsPVetoGood.size()){
     std::cout<<"Mismatched cluster sizes in BhabhaAnalysis. Check vector pushback and counter increase"<<std::endl;
     return 0;
@@ -569,10 +578,8 @@ Bool_t BhabhaAnalysis::Process(){
     chEVeto    =  chEVetoGood[ii];
     NHitsEVeto =  NHitsEVetoGood[ii];
     enEVeto    =  enEVetoGood[ii];
-
+    
     //   if(chEVeto>51&&chEVeto<56) continue;
-
-    }
     
     for(int jj = 0; jj<NPVetoGoodClusters; jj++){
       
@@ -599,7 +606,8 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
       //      fHS->FillHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",deltaTtraj,deltaTcorrect);
       fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
-
+      
+      fHS->FillHistoList("BhabhaList","hChaSum",chPVeto+chEVeto);
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 
@@ -619,7 +627,8 @@ Bool_t BhabhaAnalysis::Process(){
 	  fHS->FillHisto2List("BhabhaList","h2to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
-	  if(chPVeto>29&&chEVeto>29){
+	  if(chPVeto>30&&chEVeto>30){
+	    fHS->FillHistoList("BhabhaList","hVetoChasOver302to3HitsGoodChasChaSum",chPVeto+chEVeto);
 	    //	    std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
@@ -649,6 +658,15 @@ Bool_t BhabhaAnalysis::Process(){
 	    if(chPVeto+chEVeto>90){
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
+	      if(chPVeto+chEVeto>95&&chPVeto+chEVeto<99){
+		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
+		NRecoBhabha++;
+		for(int ii =0; ii<MaxParticles; ii++){
+		  if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
+		  if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2) NMatched++;
+		}
+	      }
 	    }
 	  }
 	}
@@ -666,7 +684,7 @@ Bool_t BhabhaAnalysis::Finalize()
     fVetoEndPoint->SaveHistos();
   else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
 
-  std::cout<<"NSwum "<<NSwum<<std::endl;
+  std::cout<<"NSwum "<<NSwum<<" NMatched "<<NMatched<<" NRecoBhabha "<<NRecoBhabha<<" NSwimBhabha "<<NSwimBhabha<<std::endl;
   std::cout<<"nswimandtrutheveto "<<nswimandtrutheveto<<" nswimandtruthpveto "<<nswimandtruthpveto<<std::endl;
   if (fVerbose) printf("---> Finalizing BhabhaAnalysis\n");
   return true;

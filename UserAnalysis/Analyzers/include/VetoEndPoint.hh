@@ -30,11 +30,15 @@ private :
   HistoSvc* fHS;
   char name[256];
   
+  int NoutFlange;
   int NoutX;
   int NoutY;
   int NoutZ;
   int Nin;
   int NTotal;
+  int Neplus;
+  int Neminus;
+  int Ngamma;
   
   int fEndFinger; //channelID of channel where particle finishes
   double fEndTime;
@@ -67,7 +71,8 @@ private :
   const double fFingerSizeZ =  10.; // mm;
   const double fFingerRotY = -10.*TMath::Pi()/180.;//10 degrees = 10*pi/180 radians
   const double fPVetoInnerFacePosX =  177.5;// mm inner face X of structure enclosing the PVETO
-  const double fPVetoFrontFacePosZ = -472.55;// *mm; // upstream face Z of structure enclosing the PVETO. Start 56.45mm from inner face of vacuum chamber (wrong but real position M. Raggi) 
+  const double fPVetoFrontFacePosZ = -472.55;// *mm; // upstream face Z of structure enclosing the PVETO. Start 56.45mm from inner face of vacuum chamber (wrong but real position M. Raggi)
+
   TVector3 PVetoSize = TVector3(32.,188.,1095.); // size of the structure enclosing the PVETO
   TVector3 PVetoCenter = TVector3(193.5,0.,74.95); // position of the center of the structure enclosing the PVETO
   
@@ -75,7 +80,10 @@ private :
   const double fFingerZOffset = 26.; //mm Finger0 is placed 26 mm in Z inside the frontFace of the structure enclosing the PVETO
   // finger i has a center in (fPVetoInnerFacePosX+fFingerXOffset,0,fPVetoFrontFacePosZ+fFingerZOffset+i*fFingerPitch)
   // finger i is then rotated by fFingerRotY around the Y axis
-
+  
+  const double fVCInnerFacePosZ = -490.0; // [mm] Position along Z of the internal face of the rectangular section inside the magnet. This is where the flange opens, and therefore the point where the angular acceptance is most limited
+  const double fFlangeRadius = 50; // [mm] radius of flange
+  
   double fConstantMagneticField = 0.3600; // [T] //Beth 16/11/23: 0.3600 is correct for 430 MeV and is consistent with the MC 
   //fConstantMagneticField = 0.;
 

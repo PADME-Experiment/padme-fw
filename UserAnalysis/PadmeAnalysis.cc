@@ -363,7 +363,7 @@ int main(Int_t argc, char **argv)
 	       <<" EVeto "<<nEVetoHits
 	       <<" HEPVeto "<<nHEPVetoHits
 	       <<" SAC "<<nSACHits<<std::endl;
-      std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
+      if(fTargetRecoBeam)      std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
 
       // Show MCTruth information (example)
       if (fMCTruthEvent) {

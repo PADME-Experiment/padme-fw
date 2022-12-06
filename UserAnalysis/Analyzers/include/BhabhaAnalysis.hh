@@ -44,6 +44,9 @@ private:
 
   VetoEndPoint * fVetoEndPoint;
   int NSwum=0;
+  int NMatched = 0;
+  int NRecoBhabha = 0;
+  int NSwimBhabha = 0;
   int nswimandtruthpveto=0;
   int nswimandtrutheveto=0;
  

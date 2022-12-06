@@ -20,4 +20,3 @@ void TLeadGlassRecoEvent::Clear()
   fLGBunchLength = 0.;
   fLGBunchBBQ = 0.;
 }
-

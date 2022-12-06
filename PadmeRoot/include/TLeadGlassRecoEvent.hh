@@ -11,7 +11,7 @@ public:
   ~TLeadGlassRecoEvent();
 
   void Clear();
-  
+
   void SetPedestal(Double_t c) { fLGPedestal = c; }
   Double_t GetPedestal() { return fLGPedestal; }
 

@@ -31,6 +31,7 @@ ETagAn::ETagAn()
   fhSvcVal = HistoSvc::GetInstance();
   fECalSel = ECalSel::GetInstance(); 
 
+  fETagECalAss.clear();
 //  std::map<int, int> HitToClusterMapLeft = {
 //    {0, 0}, {1, 0}, {2, 0}, {3, 0},
 //    {100, 1}, {101, 1}, {102, 1}, {103, 1},
@@ -90,8 +91,8 @@ Bool_t ETagAn::Init(PadmeAnalysisEvent* event){
       HitToClusterMapLeft[j*100 + i]       = j; //bottom slabs, 0-5, left sipm
       HitToClusterMapRight[j*100 + 10 + i] = j; //bottom slabs, 0-5, right sipm
 
-      HitToClusterMapLeft[j*100 + 900 + i]       = 9+j; //top slabs, 0-5, left sipm
-      HitToClusterMapRight[j*100 + 900 + 10 + i] = 9+j; //top slabs, 0-5, right sipm
+      HitToClusterMapLeft[j*100 + 900 + i]       = 9+j; //top slabs, 9-14, left sipm
+      HitToClusterMapRight[j*100 + 900 + 10 + i] = 9+j; //top slabs, 9-14, right sipm
     }
   }
 
@@ -102,13 +103,15 @@ Bool_t ETagAn::Init(PadmeAnalysisEvent* event){
     }
   }
 
-  for (int i=0; i<1500; i++){
-    if (HitToClusterMapLeft[i] != -1) std::cout << " Left["<<i<<"] = " << HitToClusterMapLeft[i];
-  }
-  for (int i=0; i<1500; i++){
-    if (HitToClusterMapRight[i] != -1) std::cout << " Righ["<<i<<"] = " << HitToClusterMapRight[i];
-  }
-  
+//  for (int i=0; i<1500; i++){
+//    if (HitToClusterMapLeft[i] != -1) std::cout << " Left["<<i<<"] = " << HitToClusterMapLeft[i];
+//  }
+//  for (int i=0; i<1500; i++){
+//    if (HitToClusterMapRight[i] != -1) std::cout << " Righ["<<i<<"] = " << HitToClusterMapRight[i];
+//  }
+
+// init array of etag-ecal associations
+
   InitHistos();
 
   return true;
@@ -122,7 +125,234 @@ Bool_t ETagAn::Process()
   return true;
 }
 
+
 Int_t ETagAn::ETagMatch(){
+ const double timeOffset = -20.;
+  // 
+  // given pairs of clusters compatible with the e+e- --> gamma-gamma/e+e- transition
+  // try to match ETag activity to each ECalCluster -> plots number of matches
+  // will make more sophisticate reconstruction of the ETag position using the time and the ECal position
+
+  fETagECalAss.clear();  
+  const double rmsMax = 0.8;
+  for (int i=0; i< fECalSel->getNECalEvents(); i++){ // loop over ecal events found
+    if (fECalSel->getECalEvent(i).flagEv != ev_gg && fECalSel->getECalEvent(i).flagEv != ev_ee) continue;
+
+    ETagECalAss ass[8]; // cluster 0 standard, 1 standard, 0 with time offset, 1 with time offset, 0 with 2xtime offsets, ...
+    for (int q=0; q<4; q++){ // standard/timeOffset
+      for (int j=0; j<2; j++){
+	int ecalIndex  = fECalSel->getECalEvent(i).indexECal[j];
+	ass[j+2*q] = AssociateECalCluster(ecalIndex,q*timeOffset);
+      }
+    }
+
+    fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatches",
+			     (double)(ass[0].nAss[0] + maxETagAssPerSide*ass[0].nAss[1]),
+			     (double)(ass[1].nAss[0] + maxETagAssPerSide*ass[1].nAss[1])
+			     );
+
+    // tag and probe efficiency
+
+    for (int j=0; j<2; j++){
+      int iass = j; // tag clus
+      int jass = 1-j; // probe clus
+
+      // tag with L_OR_R PROBE
+
+      if (
+	  (ass[iass].nAss[0]>2 && ass[iass].rmsTime[0] < rmsMax) || 
+	  (ass[iass].nAss[1]>2 && ass[iass].rmsTime[1] < rmsMax)
+	  ){ // left OR right tag
+
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_OR_R_Probed",ass[jass].nETagBar),
+				 (double)(ass[jass].nAss[0]), (double)(ass[jass].nAss[1]),1.);
+
+	// Denominator L_OR_R Probe
+
+	fhSvcVal->FillHistoList("ETagAn","ECal_ETag_L_OR_R_Probed_Deno",ass[jass].nETagBar,1.);
+
+	// Match condition
+
+	if (
+	    (ass[jass].nAss[0]>2 && ass[jass].rmsTime[0] < rmsMax) || 
+	    (ass[jass].nAss[1]>2 && ass[jass].rmsTime[1] < rmsMax) ){
+	  fhSvcVal->FillHistoList("ETagAn","ECal_ETag_L_OR_R_Probed_Nume",ass[jass].nETagBar,1.);
+	}	
+	for (int q = 1; q<4; q++){
+	  if (
+	    (ass[jass+2*q].nAss[0]>2 && ass[jass+2*q].rmsTime[0] < rmsMax) || 
+	    (ass[jass+2*q].nAss[1]>2 && ass[jass+2*q].rmsTime[1] < rmsMax) ){
+	    fhSvcVal->FillHistoList("ETagAn",Form("ECal_ETag_L_OR_R_Probed_Nume%dOff",q-1),ass[jass].nETagBar,1.);
+	  }
+	}
+      }
+
+
+      if (ass[iass].nAss[0]>2 && ass[iass].rmsTime[0] < rmsMax && 
+	  ass[iass].nAss[1]>2 && ass[iass].rmsTime[1] < rmsMax){ // left AND right tag
+
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_AND_R_Probed",ass[jass].nETagBar),
+				 (double)(ass[jass].nAss[0]), (double)(ass[jass].nAss[1]),1.);
+
+	// Denominator L_AND_R Probe
+
+	fhSvcVal->FillHistoList("ETagAn","ECal_ETag_L_AND_R_Probed_Deno",ass[jass].nETagBar,1.);
+
+	// Match condition
+
+	if (
+	    (ass[jass].nAss[0]>2 && ass[jass].rmsTime[0] < rmsMax) || 
+	    (ass[jass].nAss[1]>2 && ass[jass].rmsTime[1] < rmsMax) ){
+	  fhSvcVal->FillHistoList("ETagAn","ECal_ETag_L_AND_R_Probed_Nume",ass[jass].nETagBar,1.);
+	}
+	for (int q = 1; q<4; q++){
+	  if (
+	    (ass[jass+2*q].nAss[0]>2 && ass[jass+2*q].rmsTime[0] < rmsMax) || 
+	    (ass[jass+2*q].nAss[1]>2 && ass[jass+2*q].rmsTime[1] < rmsMax) ){
+	    fhSvcVal->FillHistoList("ETagAn",Form("ECal_ETag_L_AND_R_Probed_Nume%dOff",q-1),ass[jass].nETagBar,1.);
+	  }
+	}
+
+      }
+      else if (ass[iass].nAss[0]>2 && ass[iass].rmsTime[0] < rmsMax){ // left tag only
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_ONLY_Probed",ass[jass].nETagBar),
+				 (double)(ass[jass].nAss[0]), (double)(ass[jass].nAss[1]),1.);
+      }
+      else if (ass[iass].nAss[1]>2 && ass[iass].rmsTime[1] < rmsMax){ // right tag only
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_R_ONLY_Probed",ass[jass].nETagBar),
+				 (double)(ass[jass].nAss[0]), (double)(ass[jass].nAss[1]),1.);
+      }
+
+    }
+  } // loop over cluster pairs
+
+  return 0;
+}
+
+
+
+ETagECalAss ETagAn::AssociateECalCluster(int indexCl, double timeOff){
+
+  const double dtMin = 15; // ns matching window 
+  const double dtMax = 24; // ns matching window
+  const double fETagBarSizeX[2] = {660, 265};//*mm; long/short
+  const double fETagBarSizeY = 44;//*mm;   long/short
+
+  TVector3 ecalpos = fECal_clEvent->Element(indexCl)->GetPosition();
+  double ecalTimes = fECal_clEvent->Element(indexCl)->GetTime();
+
+  int nSiPMMatched[2] = {0,0}; // number of left,right SiPM matched
+  int iSiPMMatched[2][maxETagAssPerSide]; // index of left,right SiPM matched
+  double dtimeSiPMMatchAv[2] = {0.,0.}; //average of left,right times of SiPM matched
+  double dtimeSiPMMatchRms[2] = {0.,0.};//rms of left, right times of SiPM matched
+
+  // evaluate position of the ecal cluster wrt the ETag frame
+
+  double sipmDist[2] = {-1,-1}; // distance from left, right sipm (-1 if not instrumented)
+
+  int bary = (ecalpos.Y()+fETagBarSizeY*0.5)/fETagBarSizeY + 7;
+  if (bary < 0 || bary > 14) {
+    std::cout << "strange value " << bary << " " << ecalpos.Y() << std::endl;
+  }
+  if (bary < 6 || bary > 8) { // two-sided bar
+    sipmDist[0] = fETagBarSizeX[0]*0.5 + ecalpos.X();
+    sipmDist[1] = fETagBarSizeX[0]*0.5 - ecalpos.X();
+  }
+  else if (ecalpos.X() < 0) {
+    sipmDist[0] =  fETagBarSizeX[1] + 1.5*fETagBarSizeY + ecalpos.X(); // it should be equal to fETagBarSizeX[0]	
+    sipmDist[1] = -1;
+  } else {
+    sipmDist[0] = -1;
+    sipmDist[1] = fETagBarSizeX[1] + 1.5*fETagBarSizeY - ecalpos.X();
+  }
+
+  for (int j=0; j<2; j++){ //left, right
+    if (sipmDist[j] > 0) fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",bary,j);
+  }
+  
+  // match cluster with ETAG hits
+
+  for (int h1 = 0; h1< fETag_hitEvent->GetNHits(); h1++) {
+
+    TRecoVHit* hitto = fETag_hitEvent->Hit(h1);
+    int ich = -1;
+    int lr = -1;
+    int sipm = -1;
+
+    // retrieve slab, lr flag and sipm id
+
+    if (HitToClusterMapLeft[hitto->GetChannelId()] != -1) { //left channel
+      ich = HitToClusterMapLeft[hitto->GetChannelId()];
+      lr = 0; //left SiPM hit
+      sipm = hitto->GetChannelId()%100;
+    }
+    else if (HitToClusterMapRight[hitto->GetChannelId()] != -1) { //right channel
+      ich = HitToClusterMapRight[hitto->GetChannelId()];
+      lr = 1; //right SiPM hit
+      sipm = (hitto->GetChannelId()-10)%100;
+    }
+    else {
+      std::cout << "Strange ETag hit " << h1 << " chID = " << hitto->GetChannelId() << " time = " << hitto->GetTime() << std::endl;
+      continue;
+    }
+    if (ich > 14) ich = TMath::Abs(ich/10); // 6, 7, 8
+
+    // check cluster matching
+
+    double dt = hitto->GetTime() - ecalTimes;
+
+    if (sipmDist[lr] > 0) { // hit of the correct side
+      fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",fLabel[lr].Data(),ich,sipm), ich-bary, dt);
+      if (TMath::Abs(ich-bary) < 2) {
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsr",fLabel[lr].Data(),ich,sipm), sipmDist[lr], dt);
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",fLabel[lr].Data(),ich), sipmDist[lr], dt);
+      }
+	
+      if (TMath::Abs(ich-bary) < 2 && dt > dtMin+timeOff && dt < dtMax+timeOff) {
+	if (nSiPMMatched[lr] < maxETagAssPerSide) iSiPMMatched[lr][nSiPMMatched[lr]] = h1;
+	nSiPMMatched[lr]++;
+	dtimeSiPMMatchAv[lr] += dt;
+	dtimeSiPMMatchRms[lr] += dt*dt;
+      } 
+    }
+  } // loop over ETag hits
+
+  // fill entry for array of ETagECal associations 
+  
+  ETagECalAss ass;
+  ass.indexECal = indexCl;
+  ass.nETagBar = bary; // index of ETagBar identified from the ECal cluster
+
+  for (int j=0; j<2; j++){ //left, right  
+    ass.nAss[j] = TMath::Min(nSiPMMatched[j],maxETagAssPerSide); // number of Left,Right SiPM associations
+
+    for (int i=0; i<ass.nAss[j]; i++) ass.iAss[j][i] = iSiPMMatched[j][nSiPMMatched[j]]; //indices of the Left,Right SiPM hits associated 
+
+    ass.avgTime[j] = dtimeSiPMMatchAv[j] / nSiPMMatched[j];
+    if (nSiPMMatched[j] > 1){
+      ass.rmsTime[j] = TMath::Sqrt(
+				   (dtimeSiPMMatchRms[j]/nSiPMMatched[j] - ass.avgTime[j]*ass.avgTime[j])/
+				   (nSiPMMatched[j]-1) );
+    }
+
+    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsMatch%sTimevsN",fLabel[j].Data()),nSiPMMatched[j]*1.,ass.avgTime[j]-timeOff);	
+    fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsMatch%sTimeRMSvsN",fLabel[j].Data()),nSiPMMatched[j]*1.,ass.rmsTime[j]);	
+  }
+
+
+  fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightVsLeft",nSiPMMatched[0]*1.,nSiPMMatched[1]*1.);
+    
+  return ass;
+}
+
+
+
+
+
+
+
+
+Int_t ETagAn::ETagMatchSave(){
   // 
   // given pairs of clusters compatible with the e+e- --> gamma-gamma/e+e- transition
   // try to match ETag activity to each ECalCluster -> plots number of matches
@@ -138,7 +368,7 @@ Int_t ETagAn::ETagMatch(){
   const double fETagBarSizeX[2] = {660, 265};//*mm; long/short
   const double fETagBarSizeY = 44;//*mm;   long/short
 
-  for (int i=0; i< fECalSel->getNECalEvents(); i++){ // loop over cluster pairs found
+  for (int i=0; i< fECalSel->getNECalEvents(); i++){ // loop over ecal events found
     if (fECalSel->getECalEvent(i).flagEv != ev_gg && fECalSel->getECalEvent(i).flagEv != ev_ee) continue;
 
     int ecalIndex[2]    = {fECalSel->getECalEvent(i).indexECal[0],fECalSel->getECalEvent(i).indexECal[1]};
@@ -153,6 +383,7 @@ Int_t ETagAn::ETagMatch(){
     double dtimeRightSiPMMatchRms[2] = {0.,0.};
 
     // evaluate position of the ecal clusters in the ETag frame
+
     int bary[2];
     double sipmDistLeft[2] = {-1,-1}; // -1 if not instrumented
     double sipmDistRight[2] = {-1,-1};// -1 if not instrumented
@@ -174,11 +405,9 @@ Int_t ETagAn::ETagMatch(){
 	sipmDistRight[j] = fETagBarSizeX[1] + 1.5*fETagBarSizeY - ecalpos[j].X();
       }
 
-      //      std::cout <<" ecal cluster " << j << " (x,y) = " << ecalpos[j].X() << " , " << ecalpos[j].Y() << " YBar Tag = " << bary[j] << " distL, distR = " << sipmDistLeft[j] << " , " << sipmDistRight[j] << " t = " << ecalTimes[j] << std::endl;
       if (sipmDistRight[j]>0) fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",bary[j],1);
       if (sipmDistLeft[j]>0)  fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",bary[j],0);
     }
-
   
     // match cluster pairs with ETAG hits
 
@@ -187,6 +416,9 @@ Int_t ETagAn::ETagMatch(){
       int ich = -1;
       int lr = -1;
       int sipm = -1;
+
+      // retrieve slab, lr flag and sipm id
+
       if (HitToClusterMapLeft[hitto->GetChannelId()] != -1) { //left channel
 	ich = HitToClusterMapLeft[hitto->GetChannelId()];
 	lr = 0; //left SiPM hit
@@ -201,7 +433,6 @@ Int_t ETagAn::ETagMatch(){
 	std::cout << "Strange ETag hit " << h1 << " chID = " << hitto->GetChannelId() << " time = " << hitto->GetTime() << std::endl;
       }
       if (ich > 14) ich = TMath::Abs(ich/10); // 6, 7, 8
-    //    std::cout << "ETag Hit " << j << " / " << fETag_hitEvent->GetNHits() << " chId = " << hitto->GetChannelId() << " t = " << hitto->GetTime() << " chbar = " << ich << " lr = " << lr << std::endl;
 
       for (int j=0; j<2; j++){ // ecal clusters
 	double dt = hitto->GetTime() - ecalTimes[j];
@@ -226,7 +457,7 @@ Int_t ETagAn::ETagMatch(){
 	  }
 	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",ich,sipm), ich-bary[j], dt);
 
-	  if (TMath::Abs(ich-bary[j]) < 2 && dt > dtMin && dt < dtMax) {
+	  if (TMath::Abs(ich-bary[j]) < 2 && dt > dtMin && dt < dtMax ) {
 	    nLeftSiPMMatched[j]++;
 	    dtimeLeftSiPMMatchAv[j] += dt;
 	    dtimeLeftSiPMMatchRms[j] += dt*dt;
@@ -236,7 +467,6 @@ Int_t ETagAn::ETagMatch(){
 	}
       }
     } // loop over ETag hits
-
 
     // study the matching 
     for (int j=0; j<2; j++){
@@ -265,11 +495,9 @@ Int_t ETagAn::ETagMatch(){
 
     }
     fhSvcVal->FillHisto2List("ETagAn","ECal_SC_ETagHitsMatches",
-			(double)(TMath::Min(nLeftSiPMMatched[0],9) + 10*TMath::Min(nRightSiPMMatched[0],9)),
-			(double)(TMath::Min(nLeftSiPMMatched[1],9) + 10*TMath::Min(nRightSiPMMatched[1],9))
-			);
-
-
+			     (double)(TMath::Min(nLeftSiPMMatched[0],9) + 10*TMath::Min(nRightSiPMMatched[0],9)),
+			     (double)(TMath::Min(nLeftSiPMMatched[1],9) + 10*TMath::Min(nRightSiPMMatched[1],9))
+			     );
 
     // match cluster pairs with ETAG clusters 
 
@@ -293,6 +521,9 @@ Int_t ETagAn::ETagMatch(){
       }
     }// loop over ETag clusters	
 
+
+
+
 //    std::vector<Int_t> ihits = tempClu->GetHitVecInClus();
 //    std::cout << "ETag Cluster " << h1 << " has " << nhits << " hits and chId = " << tempClu->GetChannelId() << std::endl;
 //    for (int j = 0; j< nhits; j++) {
@@ -312,36 +543,53 @@ Int_t ETagAn::ETagMatch(){
 
 Bool_t ETagAn::InitHistos()
 {
-// x and y slices
-//  Double_t fXMin = -21.*(14+0.5);
-//  Double_t fXMax = 21.*(14+0.5);
-//  Double_t fXW = 21; // mm
-//  Int_t fNXBins = (fXMax-fXMin)/fXW;
-//  Double_t fYMin = -21.*(14+0.5);
-//  Double_t fYMax = 21.*(14+0.5);
-//  Double_t fYW = 21; // mm
-//  Int_t fNYBins = (fYMax-fYMin)/fYW;
+  fLabel[0] = "Left";
+  fLabel[1] = "Right";
+
+  fOffLabel = "Off";
 
   fhSvcVal->CreateList("ETagAn");
 
   for (int q=0; q<15; q++){
     for (int aa = 0; aa < 4; aa++) { // SiPM
-      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsdch",q,aa),61,-30.5,30.5,100,-50,50); 
-      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
-      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_SiPM_%d_dtvsr",q,aa),29,0,609,200,-50,50); 
+      for (int i = 0; i<2; i++){
+	fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",fLabel[i].Data(),q,aa),61,-30.5,30.5,100,-50,50); 
+	fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsr",fLabel[i].Data(),q,aa),29,0,609,200,-50,50); 
+      }
     }
-    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsRightCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsLeftCh_%d_dtvsr",q),21,0,609,200,-50,50); 
-    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_RightCh_%d_dtvsr",q),21,0,609,100,-50,50); 
-    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_LeftCh_%d_dtvsr",q),21,0,609,100,-50,50); 
+    for (int i = 0; i<2; i++){
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",fLabel[i].Data(),q),21,0,609,200,-50,50); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_%sCh_%d_dtvsr",fLabel[i].Data(),q),21,0,609,100,-50,50); 
+    }
   }
 
   fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ECal_LRvsYBars",15,-0.5,14.5,2,-0.5,1.5); 
-  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchLeftTimevsN",20,0,20,20,15.,25.);
-  fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightTimevsN",20,0,20,20,15.,25.);
+  for (int i = 0; i<2; i++){
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsMatch%sTimevsN",fLabel[i].Data()),20,0,20,20,15.,25.);
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHitsMatch%sTimeRMSvsN",fLabel[i].Data()),20,0,20,20,0.,5.);
+  }
   fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatchRightVsLeft",20,0,20,20,0,20);
   fhSvcVal->BookHisto2List("ETagAn","ECal_SC_ETagHitsMatches",100,0,100,100,0,100);
+
+
+  // Efficiency plots (Tag and probe)
+
+  for (int j = 0; j< 15; j++){
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_OR_R_Probed",j),10,0,10,10,0,10);
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_AND_R_Probed",j),10,0,10,10,0,10);
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_%dSlab_L_ONLY_Probed",j),10,0,10,10,0,10);
+    fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_%dSlab_R_ONLY_Probed",j),10,0,10,10,0,10);
+  }
+
+  fhSvcVal->BookHistoList("ETagAn","ECal_ETag_L_OR_R_Probed_Deno",15,0,15); // should do variable binning to deal with central slabs
+  fhSvcVal->BookHistoList("ETagAn","ECal_ETag_L_OR_R_Probed_Nume",15,0,15);
+
+  for (int q = 0; q<3; q++){
+    fhSvcVal->BookHistoList("ETagAn",Form("ECal_ETag_L_OR_R_Probed_Nume%dOff",q),15,0,15);
+    fhSvcVal->BookHistoList("ETagAn",Form("ECal_ETag_L_AND_R_Probed_Nume%dOff",q),15,0,15);
+  }
+  fhSvcVal->BookHistoList("ETagAn","ECal_ETag_L_AND_R_Probed_Deno",15,0,15);
+  fhSvcVal->BookHistoList("ETagAn","ECal_ETag_L_AND_R_Probed_Nume",15,0,15);
 
   return true;
 }

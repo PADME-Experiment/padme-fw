@@ -13,6 +13,18 @@ class TRecoEvent;
 class TRecoVObject;
 class TRecoVClusCollection;
 
+#define maxETagAssPerSide 10
+
+struct ETagECalAss{
+  int indexECal; // indices of the ecal cluster associated
+  int nETagBar; // index of ETagBar identified from the ECal cluster
+  int nAss[2]; // number of Left,Right SiPM associations
+  int iAss[2][maxETagAssPerSide]; //indices of the Left,Right SiPM hits associated 
+  double avgTime[2];  
+  double rmsTime[2];  
+};
+
+
 class ETagAn : public TObject
 {
 
@@ -28,6 +40,7 @@ public:
   Bool_t Finalize();
   virtual Bool_t InitHistos();
   virtual Bool_t Process();  
+  ETagECalAss getETagECalAss(int i){return fETagECalAss.at(i);} //to be protected
 
 protected:
   TRecoEvent*           fRecoEvent;
@@ -42,16 +55,18 @@ protected:
 private:
   Double_t fdistanceTarget;
   Int_t ETagMatch();
+  Int_t ETagMatchSave();
+  ETagECalAss AssociateECalCluster(int indexCl, double toff);
 
-  std::vector<int> ECalClusInd1; // first cluster of the pair
-  std::vector<int> ECalClusInd2; // second cluster of the pair
+  std::vector<ETagECalAss> fETagECalAss; // associations of ECal clusters
 
   int HitToClusterMapLeft[1500];
   int HitToClusterMapRight[1500];
 
   HistoSvc* fhSvcVal;
   ECalSel* fECalSel;
-
+  TString fLabel[2]; // Left, Right
+  TString fOffLabel;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

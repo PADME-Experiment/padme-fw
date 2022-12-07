@@ -8,6 +8,7 @@ import signal
 from Run     import Run
 from Logger  import Logger
 from PadmeDB import PadmeDB
+from elog_notify import ElogNotify
 
 class RunControlServer:
 
@@ -26,6 +27,8 @@ class RunControlServer:
         # Define names of lock and last_used_setup files
         self.lock_file = self.daq_dir+"/run/lock"
         self.lus_file = self.daq_dir+"/setup/last_used_setup"
+
+        self.elog = ElogNotify('http://padmesrv2.lnf.infn.it:8080/')
 
         # Redefine print to send output to log file
         sys.stdout = Logger()
@@ -889,6 +892,19 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
         #    self.db.set_run_status(self.run.run_number,2) # Status 2: run started
 
         self.send_answer("run_started")
+        self.elog.log_message('Run',
+            Author='RunControl',
+            Subsystem='Run',
+            Category='General',
+            Subject='Started run %d'%self.run.run_number,
+            Text='\n'.join([
+                'New run started',
+                'Run number:  %d'%self.run.run_number,
+                'Run type:    %s'%self.run.run_type,
+                'Run crew:    %s'%self.run.run_user,
+                'Run comment: %s'%self.run.run_comment_start,
+                ])
+            )
 
         # RunControl is now in "running" mode
         return "running"
@@ -932,6 +948,22 @@ shutdown\t\t\tTell RunControl server to exit (use with extreme care!)"""
 
         self.run.stop()
 
+        self.elog.log_message('Run',
+            Author='RunControl',
+            Subsystem='Run',
+            Category='General',
+            Subject='Terminated run %d'%self.run.run_number,
+            Text='\n'.join([
+                'Run terminated',
+                'Run number:    %d'%self.run.run_number,
+                'Run type:      %s'%self.run.run_type,
+                'Run crew:      %s'%self.run.run_user,
+                'Start message: %s'%self.run.run_comment_start,
+                'Stop message:  %s'%self.run.run_comment_stop,
+                ])
+            )
+
+        # Run stop_daq procedure for each ADC board
         terminate_ok = True
 
         # Run stop_daq procedure for each ADC board

@@ -24,10 +24,11 @@ enum eventFlag{
 
 struct ECalSelEvent{
   eventFlag flagEv;
-  int indexECal[3];
+  int indexECal[3]; // indices of the ecal clusters selected
   double totalE;
   double avgT;
-  TVector2 cog;
+  TVector2 cog; // cog of the selected clusters
+  int indexETagAss[3]; // indices of the etag association [pointer to the association array]
 };
 
 

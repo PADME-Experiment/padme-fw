@@ -37,10 +37,10 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
 
   // binning of theta vs phi to retrieve independently the beam direction
 
-  fNThetaBins = 40;//20;
+  fNThetaBins = 70;//20;
   //  fThetaWid = 0.003/fNThetaBins; // rad
-  fThetaWid = 0.008/fNThetaBins; // rad
-  fNPhiDirBins = 40;//was 25 50;
+  fThetaWid = 0.010/fNThetaBins; // rad
+  fNPhiDirBins = 50;//was 25 50;
   //  const double pi = 3.1415927;
   fPhiDirWid = 2.*TMath::Pi()/fNPhiDirBins; // rad
 
@@ -228,6 +228,9 @@ Int_t ECalSel::TwoClusSel(){
 	  selev.totalE = cluEnergy[0] + cluEnergy[1];
 	  selev.avgT = 0.5*(cluTime[0]+cluTime[1]);
 	  selev.cog.Set(cog.X(),cog.Y());
+	  selev.indexETagAss[0] = -1;
+	  selev.indexETagAss[1] = -1;
+	  selev.indexETagAss[2] = -1;
 	  fECalEvents.push_back(selev);
 
 	  TLorentzVector photonMom[2];

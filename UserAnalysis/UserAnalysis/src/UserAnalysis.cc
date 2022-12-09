@@ -34,12 +34,12 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
   fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
-  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  //  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
   
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
-  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
-  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+  // fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
+  // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
+  // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
@@ -50,11 +50,11 @@ UserAnalysis::~UserAnalysis(){
   delete fMCTruth;
   //  delete fIs3GAnalysis;
   delete fBhabhaAnalysis;
-  delete fBremsstrahlungAnalysis;
-  delete fIsGGAnalysis;
-  delete fETagAnalysis;
-  delete fIs22GGAnalysis;
-  delete fIs3GAnalysis;
+  // delete fBremsstrahlungAnalysis;
+  // delete fIsGGAnalysis;
+  // delete fETagAnalysis;
+  // delete fIs22GGAnalysis;
+  // delete fIs3GAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
@@ -68,12 +68,12 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   //  fIsGGAnalysis->Init(fEvent);
   fMCTruth->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
-  fETagAnalysis->Init(fEvent);
-  fIs22GGAnalysis->Init(fEvent);
-  fIs3GAnalysis->Init(fEvent);
+  // fIsGGAnalysis->Init(fEvent);
+  // fETagAnalysis->Init(fEvent);
+  // fIs22GGAnalysis->Init(fEvent);
+  // fIs3GAnalysis->Init(fEvent);
   fBhabhaAnalysis->Init(fEvent);
-  fBremsstrahlungAnalysis->Init(fEvent);
+  //  fBremsstrahlungAnalysis->Init(fEvent);
   return true;
 }
 
@@ -113,12 +113,12 @@ Bool_t UserAnalysis::Process(){
   fMCTruth->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
-  fIsGGAnalysis->Process();
+  /*  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
-  fETagAnalysis->Process();
+  fETagAnalysis->Process();*/
   fBhabhaAnalysis->Process();
-  fBremsstrahlungAnalysis->Process();
+  //  fBremsstrahlungAnalysis->Process();
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
@@ -179,12 +179,12 @@ Bool_t UserAnalysis::Finalize()
   //fIsGGAnalysis->Finalize();
   fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
-  fETagAnalysis->Finalize();
-  fIs22GGAnalysis->Finalize();
-  fIs3GAnalysis->Finalize();
+  // fIsGGAnalysis->Finalize();
+  // fETagAnalysis->Finalize();
+  // fIs22GGAnalysis->Finalize();
+  // fIs3GAnalysis->Finalize();
   fBhabhaAnalysis->Finalize();
-  fBremsstrahlungAnalysis->Finalize();
+  //  fBremsstrahlungAnalysis->Finalize();
 
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};

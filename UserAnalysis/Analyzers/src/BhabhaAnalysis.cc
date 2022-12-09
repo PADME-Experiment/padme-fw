@@ -125,6 +125,8 @@ Bool_t BhabhaAnalysis::InitHistos(){
   
   fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoRecoChaDiff",181,-89.5,89.5);
   fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoRecoChaDiff",181,-89.5,89.5);
+  fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumChPVetoRecoChaDiff",181,-89.5,89.5);
+  fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasEVetoSwumChEVetoRecoChaDiff",181,-89.5,89.5);
   fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoRecoTimeDiff",201,-99.5,99.5);
   fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoRecoTimeDiff",201,-99.5,99.5);
   fHS->BookHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiff",20,-5,5);
@@ -154,14 +156,8 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",2000,-500,500);
   
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",181,-90,90,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",101,-50,50,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hTopdeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hMiddledeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hBottomdeltaChGoodChasVsdeltaTuncorrect",181,-90,90,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",101,-50,50,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",101,-50,50,2000,-500,500);
   fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
@@ -260,7 +256,7 @@ Bool_t BhabhaAnalysis::Process(){
 	VertexPos=mcVtx->GetPosition();
 	VertexTime = mcVtx->GetTime();
 	nBhabha++;
-
+	NTotBhabha++;
 	for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
 	  mcOutPart = mcVtx->ParticleOut(iOut);
 
@@ -279,12 +275,14 @@ Bool_t BhabhaAnalysis::Process(){
 	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
 	  if(charge==1){
 	    nBhabhaPos++;
+	    NTotBhabhaPos++;
 	    PVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    PVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 	    if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaPosInVeto++;
 	  }
 	  else if(charge==-1){
 	    nBhabhaEle++;
+	    NTotBhabhaEle++;
 	    EVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    EVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 	    if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaEleInVeto++;
@@ -684,7 +682,7 @@ Bool_t BhabhaAnalysis::Finalize()
     fVetoEndPoint->SaveHistos();
   else std::cout<<"fVetoEndPoint doesn't exist in BhabhaAnalysis::Finalize()"<<std::endl;
 
-  std::cout<<"NSwum "<<NSwum<<" NMatched "<<NMatched<<" NRecoBhabha "<<NRecoBhabha<<" NSwimBhabha "<<NSwimBhabha<<std::endl;
+  std::cout<<"NTotBhabha "<<NTotBhabha<<" NSwum "<<NSwum<<" NMatched "<<NMatched<<" NRecoBhabha "<<NRecoBhabha<<" NSwimBhabha "<<NSwimBhabha<<std::endl;
   std::cout<<"nswimandtrutheveto "<<nswimandtrutheveto<<" nswimandtruthpveto "<<nswimandtruthpveto<<std::endl;
   if (fVerbose) printf("---> Finalizing BhabhaAnalysis\n");
   return true;

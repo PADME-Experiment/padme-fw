@@ -133,7 +133,7 @@ void VetoEndPoint::ParticleSwim(TLorentzVector FourMomentum, TVector3 startposit
   //for Bhabhas originating from the target, where do they end up?
   NTotal++;
 
-  //std::cout<<"to swim,             charge "<<particlecharge<<" energy "<<FourMomentum.E()<<"  momentum "<<FourMomentum.Px()<<" "<<FourMomentum.Py()<<" "<<FourMomentum.Pz()<<" position "<<startposition.X()<<" "<<startposition.Y()<<" "<<startposition.Z()<<std::endl;
+  // std::cout<<"to swim, charge "<<particlecharge<<" energy "<<FourMomentum.E()<<"  momentum "<<FourMomentum.Px()<<" "<<FourMomentum.Py()<<" "<<FourMomentum.Pz()<<" position "<<startposition.X()<<" "<<startposition.Y()<<" "<<startposition.Z()<<std::endl;
   
   fEndFinger = -10000;
   fEndTime = -10000.;

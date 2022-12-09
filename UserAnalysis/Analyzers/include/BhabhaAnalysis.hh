@@ -43,6 +43,9 @@ private:
   TVector3* VertexPos = new TVector3();
 
   VetoEndPoint * fVetoEndPoint;
+  int NTotBhabha=0;
+  int NTotBhabhaPos=0;
+  int NTotBhabhaEle=0;
   int NSwum=0;
   int NMatched = 0;
   int NRecoBhabha = 0;

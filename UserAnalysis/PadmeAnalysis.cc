@@ -203,10 +203,10 @@ int main(Int_t argc, char **argv)
   TTree::SetMaxTreeSize(190000000000);
 
   TString recoTreeName = "Events";
-  cout<<"Building chain "<<endl;
-  //  if(InputFileNameList.size()>200) cout<<"List too big!!!" <<endl;
+  std::cout<<"Building chain "<<std::endl;
+  //  if(InputFileNameList.size()>200) std::cout<<"List too big!!!" <<std::endl;
   TChain* fRecoChain = BuildChain(recoTreeName,InputFileNameList);
-  cout<<"chain  Built "<<endl;
+  std::cout<<"chain  Built "<<std::endl;
 
   Int_t nevents = 0;
   if (fRecoChain) {

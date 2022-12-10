@@ -19,7 +19,8 @@ enum eventFlag{
   ev_gg  = 0,
   ev_ee  = 1,
   ev_ggg = 2,
-  ev_eeg = 3
+  ev_eeg = 3,
+  ev_single = 4
 };
 
 struct ECalSelEvent{
@@ -65,6 +66,7 @@ protected:
 
 private:
   Int_t TwoClusSel();
+  Int_t OneClusSel();
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
 

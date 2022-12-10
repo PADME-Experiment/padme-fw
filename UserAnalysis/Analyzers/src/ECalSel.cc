@@ -64,13 +64,104 @@ Bool_t ECalSel::Process(){
 
   fECalEvents.clear();
   TwoClusSel();
+  OneClusSel();
 
   return true;
 }
 
 
+Int_t ECalSel::OneClusSel(){
+
+  //  int runID = fRecoEvent->GetRunNumber();
+
+  // selects isolated single clusters compatible with the e+e- --> e+ + small missing energy
+  // returns the number of selected clusters
+  // indices are in the vector of pairs fIndPair
+
+  TTimeStamp evt = fRecoEvent->GetEventTime();
+  long long int eventTime = static_cast<long long int>(evt.GetSec());
+  long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
+
+  const double energyMin = 90; //MeV
+  const double energyMax = 200; //MeV
+  const double radiusMin = 140; //mm
+  //  const double radiusMax = 300; //mm
+  
+  const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
+  const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
+  const double minGGDistance = 60; // mm
+  
+
+
+  TRecoVCluster* tempClu[2];
+  TVector3 cluPos[2];
+  double cluTime[2];
+  double cluEnergy[2];
+
+  // loop on clusters
+
+  int nOld = fECalEvents.size();
+
+  for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
+    tempClu[0] = fECal_clEvent->Element((int)h1);
+    cluEnergy[0] = tempClu[0]->GetEnergy();
+    if (cluEnergy[0] < energyMax) continue; // cluster should be harder than the 2gamma cluster max energy
+
+    cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+    if (cluPos[0].Perp() > radiusMin) continue; // cluster should be below the minimum radius of the 2gamma cluster pair
+
+    cluTime[0] = tempClu[0]->GetTime();
+    if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
+
+    fhSvcVal->FillHistoList("ECalSel",Form("ECal_SingleClu_dE"), fGeneralInfo->GetBeamMomentum()-cluEnergy[0], 1.);
+
+    int isPaired = -1; // look for a cluster from the same interaction
+
+    for (int h2=0; h2< fECal_clEvent->GetNElements(); ++h2) {
+      if (h1 == h2) continue;
+      tempClu[1] = fECal_clEvent->Element((int)h2);
+      cluEnergy[1] = tempClu[1]->GetEnergy();
+      cluTime[1] = tempClu[1]->GetTime();
+      if (cluTime[1] < timeSafeMin) continue;
+      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+      if (cluPos[1].Perp() > radiusMin) continue;
+
+      double dt = cluTime[0]-cluTime[1];
+      double dr = (cluPos[0]-cluPos[1]).Mag();
+
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
+      isPaired = h2;
+    } // inner cluster loop    
+
+    if (isPaired == -1){
+      ECalSelEvent selev;
+      selev.flagEv = ev_single;
+      selev.indexECal[0] = h1;
+      selev.indexECal[1] = -1;
+      selev.indexECal[2] = -1;
+      selev.totalE = cluEnergy[0];
+      selev.avgT = cluTime[0];
+      selev.cog.Set(clusPos[0].X(),cluPos[0].Y());
+      selev.indexETagAss[0] = -1;
+      selev.indexETagAss[1] = -1;
+      selev.indexETagAss[2] = -1;
+      fECalEvents.push_back(selev);
+    }
+
+  } // cluster loop
+
+
+
+  fhSvcVal->FillHistoList("ECalSel","NumberOfSingleClus",fECalEvents.size()-nOld);
+  return fECalEvents.size()-nOld;
+}
+
+
+
 
 Int_t ECalSel::TwoClusSel(){
+
+  int nOld = fECalEvents.size();
 
   //  int runID = fRecoEvent->GetRunNumber();
 
@@ -294,8 +385,8 @@ Int_t ECalSel::TwoClusSel(){
     } // isPaired
   } // cluster loop
 
-  fhSvcVal->FillHistoList("ECalSel","NumberOfECalCluPairs",fECalEvents.size());
-  return fECalEvents.size();
+  fhSvcVal->FillHistoList("ECalSel","NumberOfECalCluPairs",fECalEvents.size()-nOld);
+  return fECalEvents.size()-nOld;
 }
 
 
@@ -316,6 +407,10 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel","ECal_RadiusECut", 100,-1.5,1.5);
   fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
   
+  fhSvcVal->BookHistoList("ECalSel","ECal_SingleClu_dE", 200,-100.,100.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_DrVsDtAll", 800, -400,400, 200, 0, 600.);
+  fhSvcVal->BookHistoList("ECalSel","NumberOfSingleClus", 10,0.,10.);
+
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EVsT", 800, -400,400, 200, 0, 600.);

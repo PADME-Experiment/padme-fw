@@ -20,6 +20,8 @@ struct ETagECalAss{
   int nETagBar; // index of ETagBar identified from the ECal cluster
   int nAss[2]; // number of Left,Right SiPM associations
   int iAss[2][maxETagAssPerSide]; //indices of the Left,Right SiPM hits associated 
+  int dCh[2][maxETagAssPerSide]; //delta-bar of the Left,Right SiPM hits associated 
+  double sipmDist[2];
   double avgTime[2];  
   double rmsTime[2];  
 };

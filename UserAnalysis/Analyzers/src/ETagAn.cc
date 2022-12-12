@@ -243,6 +243,7 @@ ETagECalAss ETagAn::AssociateECalCluster(int indexCl, int timeOff){
 
   int nSiPMMatched[2] = {0,0}; // number of left,right SiPM matched
   int iSiPMMatched[2][maxETagAssPerSide]; // index of left,right SiPM matched
+  int dChannel[2][maxETagAssPerSide]; // index of left,right SiPM matched
   double dtimeSiPMMatchAv[2] = {0.,0.}; //average of left,right times of SiPM matched
   double dtimeSiPMMatchRms[2] = {0.,0.};//rms of left, right times of SiPM matched
 
@@ -327,7 +328,10 @@ ETagECalAss ETagAn::AssociateECalCluster(int indexCl, int timeOff){
 	else {
 	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETagHits_%sCh_%d_EvsrOff",fLabel[lr].Data(),ich), sipmDist[lr], hitto->GetEnergy());
 	}
-	if (nSiPMMatched[lr] < maxETagAssPerSide) iSiPMMatched[lr][nSiPMMatched[lr]] = h1;
+	if (nSiPMMatched[lr] < maxETagAssPerSide) {
+	  iSiPMMatched[lr][nSiPMMatched[lr]] = h1;
+	  dChannel[lr][nSiPMMatched[lr]] = bary-ich;
+	}
 	nSiPMMatched[lr]++;
 	dtimeSiPMMatchAv[lr] += dt;
 	dtimeSiPMMatchRms[lr] += dt*dt;
@@ -346,7 +350,14 @@ ETagECalAss ETagAn::AssociateECalCluster(int indexCl, int timeOff){
 
     for (int i=0; i<ass.nAss[j]; i++) {
       ass.iAss[j][i] = iSiPMMatched[j][i]; //indices of the Left,Right SiPM hits associated 
+      ass.Dch[j][i] = dChannel[j][i];
     }
+
+    // distance to the SiPMs of that side
+
+    ass.dist[j] = sipmDist[j];
+
+    // average time per side
 
     if (nSiPMMatched[j]) {
       ass.avgTime[j] = dtimeSiPMMatchAv[j] / nSiPMMatched[j];
@@ -354,6 +365,8 @@ ETagECalAss ETagAn::AssociateECalCluster(int indexCl, int timeOff){
     else {
       ass.avgTime[j] = -999;
     }
+
+    // average rms of the times per side
 
     if (nSiPMMatched[j] > 1){
       ass.rmsTime[j] = TMath::Sqrt(

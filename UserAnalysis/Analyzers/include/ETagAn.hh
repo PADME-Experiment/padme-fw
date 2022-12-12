@@ -56,7 +56,7 @@ private:
   Double_t fdistanceTarget;
   Int_t ETagMatch();
   Int_t ETagMatchSave();
-  ETagECalAss AssociateECalCluster(int indexCl, double toff);
+  ETagECalAss AssociateECalCluster(int indexCl, int toff);
 
   std::vector<ETagECalAss> fETagECalAss; // associations of ECal clusters
 

@@ -82,7 +82,6 @@ Int_t ECalSel::OneClusSel(){
   long long int eventTime = static_cast<long long int>(evt.GetSec());
   long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
 
-  const double energyMin = 90; //MeV
   const double energyMax = 200; //MeV
   const double radiusMin = 140; //mm
   //  const double radiusMax = 300; //mm
@@ -130,7 +129,9 @@ Int_t ECalSel::OneClusSel(){
       double dr = (cluPos[0]-cluPos[1]).Mag();
 
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
-      isPaired = h2;
+      if (fabs(dt) < maxTimeDistance && dr > minGGDistance) {
+	isPaired = h2;
+      }
     } // inner cluster loop    
 
     if (isPaired == -1){
@@ -141,7 +142,7 @@ Int_t ECalSel::OneClusSel(){
       selev.indexECal[2] = -1;
       selev.totalE = cluEnergy[0];
       selev.avgT = cluTime[0];
-      selev.cog.Set(clusPos[0].X(),cluPos[0].Y());
+      selev.cog.Set(cluPos[0].X(),cluPos[0].Y());
       selev.indexETagAss[0] = -1;
       selev.indexETagAss[1] = -1;
       selev.indexETagAss[2] = -1;

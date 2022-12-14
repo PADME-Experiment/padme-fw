@@ -14,6 +14,8 @@ class TRecoVObject;
 class TRecoVClusCollection;
 
 #define maxETagAssPerSide 10
+#define kSingleSideMatch 0
+#define kDoubleSideMatch 1
 
 struct ETagECalAss{
   int indexECal; // indices of the ecal cluster associated
@@ -21,6 +23,9 @@ struct ETagECalAss{
   int nAss[2]; // number of Left,Right SiPM associations
   int iAss[2][maxETagAssPerSide]; //indices of the Left,Right SiPM hits associated 
   int dCh[2][maxETagAssPerSide]; //delta-bar of the Left,Right SiPM hits associated 
+  int closestSide; // closest side [the only one, if it's only one-side]
+  int nSides; // number of active sides
+  double EAss[2]; // total energy of the hits connected per side
   double sipmDist[2];
   double avgTime[2];  
   double rmsTime[2];  
@@ -56,7 +61,10 @@ protected:
 
 private:
   Double_t fdistanceTarget;
+  Int_t ETagSingleMatch();
   Int_t ETagMatch();
+  Int_t ETagConditions(ETagECalAss);
+
   Int_t ETagMatchSave();
   ETagECalAss AssociateECalCluster(int indexCl, int toff);
 

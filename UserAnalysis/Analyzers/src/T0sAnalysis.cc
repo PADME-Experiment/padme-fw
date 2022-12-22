@@ -82,11 +82,11 @@ Bool_t T0sAnalysis::InitHistos(){
     sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
     fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus",name,1000,-40,40);
     sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
-    fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits",name,100,-10,-6);
+    fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits",name,100,-15,-6);
     sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",ch);
-    fHS->BookHistoList("PVetoSACT0sList/SwimmerFrontFace",name,100,-10,-6);
+    fHS->BookHistoList("PVetoSACT0sList/SwimmerFrontFace",name,100,-15,-6);
     sprintf(name,"hDeltatSwumPVetoCh%iSACCentre",ch);
-    fHS->BookHistoList("PVetoSACT0sList/SwimmerSACCentre",name,100,-10,-6);
+    fHS->BookHistoList("PVetoSACT0sList/SwimmerSACCentre",name,100,-15,-6);
     
     if(ch>0){
       sprintf(name,"hDeltatPVetoCh%iCh%i",ch,ch-1);
@@ -96,11 +96,11 @@ Bool_t T0sAnalysis::InitHistos(){
   }
   for(int ch=0;ch<96;ch++){
     sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",ch);
-    fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus",name,100,-10,-6);
+    fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus",name,100,-15,-6);
     sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",ch);
-    fHS->BookHistoList("EVetoSACT0sList/SwimmerFrontFace",name,100,-10,-6);
+    fHS->BookHistoList("EVetoSACT0sList/SwimmerFrontFace",name,100,-15,-6);
     sprintf(name,"hDeltatSwumEVetoCh%iSACCentre",ch);
-    fHS->BookHistoList("EVetoSACT0sList/SwimmerSACCentre",name,100,-10,-6);
+    fHS->BookHistoList("EVetoSACT0sList/SwimmerSACCentre",name,100,-15,-6);
 
     
     if(ch>0){

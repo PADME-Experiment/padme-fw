@@ -6,6 +6,8 @@
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
 
+class VetoEndPoint;
+
 class T0sAnalysis {
 
 public:
@@ -31,5 +33,21 @@ private:
   HistoSvc* fHS;
 
   char name[250];
+
+  
+  Bool_t isMC;
+
+  TMCVertex* mcVtx;
+
+  Int_t fNPoT; 
+
+  TMCParticle* mcOutPart;
+
+  TVector3* VertexPos = new TVector3();
+
+  VetoEndPoint * fVetoEndPoint;
+
+  TRandom3 *myRNG=new TRandom3(0);
+
 };
 #endif

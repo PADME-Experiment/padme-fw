@@ -40,7 +40,7 @@ private:
 
   TMCParticle* mcOutPart;
 
-  TVector3* VertexPos = new TVector3();
+  //  TVector3* VertexPos = new TVector3();
 
   VetoEndPoint * fVetoEndPoint;
   int NTotBhabha=0;
@@ -52,7 +52,6 @@ private:
   int NSwimBhabha = 0;
   int nswimandtruthpveto=0;
   int nswimandtrutheveto=0;
- 
-  
+
 };
 #endif

@@ -13,6 +13,7 @@
 #include "TempCorr.hh"
 #include "BhabhaAnalysis.hh" //BL
 #include "BremsstrahlungAnalysis.hh" //BL
+#include "T0sAnalysis.hh"
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -40,6 +41,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+  fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
@@ -55,6 +57,7 @@ UserAnalysis::~UserAnalysis(){
   // delete fETagAnalysis;
   // delete fIs22GGAnalysis;
   // delete fIs3GAnalysis;
+  delete fT0sAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
@@ -74,6 +77,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   // fIs3GAnalysis->Init(fEvent);
   fBhabhaAnalysis->Init(fEvent);
   //  fBremsstrahlungAnalysis->Init(fEvent);
+  fT0sAnalysis->Init(fEvent);
   return true;
 }
 
@@ -107,7 +111,7 @@ Bool_t UserAnalysis::Process(){
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
 
-  fNPoTAnalysis->Process();
+  //  fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   //  fIsGGAnalysis->Process();
   fMCTruth->Process();
@@ -119,7 +123,7 @@ Bool_t UserAnalysis::Process(){
   fETagAnalysis->Process();*/
   fBhabhaAnalysis->Process();
   //  fBremsstrahlungAnalysis->Process();
-
+  fT0sAnalysis->Process();
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();
@@ -175,7 +179,7 @@ Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
-  fNPoTAnalysis->Finalize();
+  //  fNPoTAnalysis->Finalize();
   //fIsGGAnalysis->Finalize();
   fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
@@ -185,7 +189,7 @@ Bool_t UserAnalysis::Finalize()
   // fIs3GAnalysis->Finalize();
   fBhabhaAnalysis->Finalize();
   //  fBremsstrahlungAnalysis->Finalize();
-
+  fT0sAnalysis->Finalize();
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

@@ -97,6 +97,10 @@ Bool_t BremsstrahlungAnalysis::Process(){
   Int_t NPVetoCluster = fEvent->PVetoRecoCl->GetNElements();
   fHS->FillHistoList("BremsstrahlungList","hNPVetoCluster",NPVetoCluster);
 
+  //Number of PVeto hits
+  Int_t NPVetoHit = fEvent->PVetoRecoEvent->GetNHits();
+  fHS->FillHistoList("BremsstrahlungList","hNPVetoCluster",NPVetoCluster);
+  
   //Number of SAC clusters
   if(!fEvent->SACRecoCl) return 0;
   Int_t NSACCluster = fEvent->SACRecoCl->GetNElements();
@@ -178,7 +182,46 @@ Bool_t BremsstrahlungAnalysis::Process(){
 
     }
   }
+  
+  double trajectorycorrection;
+  double tHitPVeto;
+  int chHitPVeto;
+  double enHitPVeto;
+  
+  for(int ii = 0; ii<NSACCluster; ii++){
+    
+    //import SAC variables
+    tSAC     =  fEvent->SACRecoCl->Element(ii)->GetTime();
+    chSAC    =  fEvent->SACRecoCl->Element(ii)->GetChannelId();
+    NHitsSAC =  fEvent->SACRecoCl->Element(ii)->GetNHitsInClus();
+    enSAC    =  fEvent->SACRecoCl->Element(ii)->GetEnergy();
 
+    //histograms of raw variables
+    fHS->FillHistoList("BremsstrahlungList","htSACCluster",tSAC);
+    fHS->FillHistoList("BremsstrahlungList","hNHitsSACCluster",NHitsSAC);
+    fHS->FillHistoList("BremsstrahlungList","hEnergySACCluster",enSAC);
+    fHS->FillHistoList("BremsstrahlungList","hChSACCluster",chSAC);
+
+    for(int jj = 0; jj<NPVetoHit;jj++){
+
+      //import PVeto variables
+      tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(jj)->GetTime();
+      chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(jj)->GetChannelId();
+      enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(jj)->GetEnergy();
+
+      //from MC: Thursday 18th August 2022
+      //trajectorycorrection = -11.435+0.034498*chHitPVeto;
+
+      //analytically using geometry & excel fit (PathDifferenceinPVetoChannel.exe), still Thursday 18th August 2022
+      //trajectorycorrection = -10.351+0.036443*chHitPVeto;
+      
+      //within 2ns?
+      if(!(std::fabs(tHitPVeto-tSAC-trajectorycorrection)<2)) continue;
+
+    }
+  }
+
+  
   return true;
 }
 

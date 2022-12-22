@@ -38,6 +38,7 @@ Bool_t BhabhaAnalysis::InitHistos(){
   // BhabhaAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("PVetoClusters");
   fHS->CreateList("EVetoClusters");
+  fHS->CreateList("ClusterTimeList");
   fHS->CreateList("BhabhaList");
   fHS->CreateList("MCBhabha");
   fHS->CreateList("MCSwimming");
@@ -98,6 +99,24 @@ Bool_t BhabhaAnalysis::InitHistos(){
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hChToEnergyPositron",330,0,330);
   fHS->BookHistoList("EVetoClusters","hChToEnergyElectron",330,0,330);
+
+  //Cluster time difference
+  fHS->BookHistoList("ClusterTimeList","hClusTimeDiffPVeto",40,-5,5);
+  fHS->BookHistoList("ClusterTimeList","hClusTimeDiffEVeto",40,-5,5);
+  fHS->BookHistoList("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVeto",40,-5,5);
+  fHS->BookHistoList("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVeto",40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVeto1stCh",90,0,90,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVeto1stCh",96,0,96,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVeto1stCh",40,30,70,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVeto1stCh",40,30,70,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVeto2ndCh",90,0,90,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVeto2ndCh",96,0,96,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVeto2ndCh",40,30,70,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVeto2ndCh",40,30,70,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVetoDeltaCh",180,-90,90,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVetoDeltaCh",192,-96,96,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVetoDeltaCh",80,-40,40,40,-5,5);
+  fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVetoDeltaCh",80,-40,40,40,-5,5);
 
   //Bhabha plots
   fHS->BookHistoList("BhabhaList","hChaSum",180,0,179);
@@ -396,9 +415,20 @@ Bool_t BhabhaAnalysis::Process(){
       else LuceEVeto = 0;
       
       fHS->FillHisto2List("EVetoClusters","hLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
-      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))) fHS->FillHisto2List("EVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
-      if(LuceEVeto>100)      std::cout<<"ii "<<ii<<" jj"<<jj<<" tempCh "<<tempCh<<" temp2Ch "<<temp2Ch<<" tempNHit "<<tempNHit<<" temp2NHit "<<temp2NHit<<" LuceEVeto "<<LuceEVeto<<std::endl;
+      fHS->FillHistoList("ClusterTimeList","hClusTimeDiffEVeto",temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVeto1stCh",tempCh,temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVeto2ndCh",temp2Ch,temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffEVetoVsEVetoDeltaCh",temp2Ch-tempCh,temp2T-tempT);
       
+      //two good clusters
+      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))){
+	fHS->FillHisto2List("EVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusEVeto",LuceEVeto,temp2T-tempT);
+	if(LuceEVeto>100)      std::cout<<"ii "<<ii<<" jj"<<jj<<" tempCh "<<tempCh<<" temp2Ch "<<temp2Ch<<" tempNHit "<<tempNHit<<" temp2NHit "<<temp2NHit<<" LuceEVeto "<<LuceEVeto<<std::endl;
+	fHS->FillHistoList("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVeto",temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVeto1stCh",tempCh,temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVeto2ndCh",temp2Ch,temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVetoDeltaCh",tempCh-temp2Ch,temp2T-tempT);
+      }
     }//end jj
   
     if(isMC){
@@ -457,13 +487,20 @@ Bool_t BhabhaAnalysis::Process(){
       else LucePVeto=0;
       
       fHS->FillHisto2List("PVetoClusters","hLuceVsDeltaTClusPVeto",LucePVeto,temp2T-tempT);
+      fHS->FillHistoList("ClusterTimeList","hClusTimeDiffPVeto",temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVeto1stCh",tempCh,temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVeto2ndCh",temp2Ch,temp2T-tempT);
+      fHS->FillHisto2List("ClusterTimeList","hClusTimeDiffPVetoVsPVetoDeltaCh",tempCh-temp2Ch,temp2T-tempT);
       
       //two good clusters
-      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))&&(tempEClus/tempNHit)>0.7&&(temp2EClus/temp2NHit)>0.7)
+      if((tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3))&&(temp2Ch>30&&temp2Ch<71&&(temp2NHit==2||temp2NHit==3))&&(tempEClus/tempNHit)>0.7&&(temp2EClus/temp2NHit)>0.7){
 	fHS->FillHisto2List("PVetoClusters","hVetoChasOver302to3HitsGoodChaLuceVsDeltaTClusPVeto",LucePVeto,temp2T-tempT);
-    }
-    
-    
+	fHS->FillHistoList("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVeto",temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVeto1stCh",tempCh,temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVeto2ndCh",temp2Ch,temp2T-tempT);
+	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVetoDeltaCh",temp2Ch-tempCh,temp2T-tempT);
+      }
+    }//end jj
     fHS->FillHisto2List("PVetoClusters","hPVetoChVshNHitsPVetoCluster",tempCh,tempNHit);
     if(isMC){
       for(int ii = 0; ii<NEVetoCluster; ii++){
@@ -663,6 +700,7 @@ Bool_t BhabhaAnalysis::Process(){
 		for(int ii =0; ii<MaxParticles; ii++){
 		  if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
 		  if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2) NMatched++;
+		  //mettere taglio in tempo e aggiungere warning
 		}
 	      }
 	    }

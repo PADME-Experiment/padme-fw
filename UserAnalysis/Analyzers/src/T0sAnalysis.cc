@@ -27,6 +27,7 @@ Bool_t T0sAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing T0sAnalysis\n");
   fEvent = event;
   InitHistos();
+  fSwimmerInit=0;
   return true;
 }
 
@@ -326,7 +327,9 @@ Bool_t T0sAnalysis::Process(){
 
   //find Delta(ToF) for Bremsstrahlung positrons in PVeto vs photons in SAC (central channel, 22)
 
-  if(fEvent->RecoEvent->GetEventNumber()==0){
+  if(fSwimmerInit==0){
+    fSwimmerInit=1;
+    std::cout<<"I'll swim"<<std::endl;
     for(int ii =0; ii<5000; ii++){
   
       double energy = myRNG->Uniform(0,430);
@@ -345,13 +348,13 @@ Bool_t T0sAnalysis::Process(){
       int EVetoSwimmingChannel=fVetoEndPoint->GetEndFinger();
       double EVetoSwimmingTime=fVetoEndPoint->GetEndTime();
 
-      double targetsacdistance = 370.;//cm, from SACGeometry 19/12/22
+      double targetsacdistance = 402.8;//cm, from SACGeometry and TargetGeometry 22/12/22
       double halfsaclength = 7;//cm, from SACGeometry 19/12/22
       double sacrefractiveindex = 1.85;
       double c_ms = 2.998e8;//m/s
       double c_cmns = c_ms*1e-9*1e2;//cm/ns
       double timetosacface = targetsacdistance/c_cmns;//ns
-      double timetosaccentre = timetosacface+halfsaclength*1.85/c_cmns;//ns
+      double timetosaccentre = timetosacface+halfsaclength*1.85/c_cmns;//ns //this isn't very relavant since the radiation length in the SAC is around 1 cm, so not much reaches half way through the crystal
 
       // std::cout<<"PVetoCh "<<PVetoSwimmingChannel<<" PVetoCh "<<PVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<PVetoSwimmingTime-timetosacface<<" to center "<<PVetoSwimmingTime-timetosaccentre<<std::endl;
       // std::cout<<"EVetoCh "<<EVetoSwimmingChannel<<" EVetoCh "<<EVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<EVetoSwimmingTime-timetosacface<<" to center "<<EVetoSwimmingTime-timetosaccentre<<std::endl;
@@ -373,6 +376,7 @@ Bool_t T0sAnalysis::Process(){
       fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",PVetoSwimmingChannel,energy);
       fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelEVeto",EVetoSwimmingChannel,energy);  
     }
+    std::cout<<"I've swum"<<std::endl;
   }
   return true;
 }

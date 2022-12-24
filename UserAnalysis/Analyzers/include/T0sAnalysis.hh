@@ -34,6 +34,7 @@ private:
 
   char name[250];
 
+  Bool_t fSwimmerInit;
   
   Bool_t isMC;
 

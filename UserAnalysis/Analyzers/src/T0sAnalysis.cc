@@ -332,7 +332,7 @@ Bool_t T0sAnalysis::Process(){
 
   if(fSwimmerInit==0){
     fSwimmerInit=1;
-    for(int ii =0; ii<5000; ii++){
+    for(int ii =0; ii<500; ii++){
   
       double energy = myRNG->Uniform(0,430);
       TVector3 momentum = TVector3(0,0,energy);//assume particles emmitted collinearly with beam;

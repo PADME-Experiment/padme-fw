@@ -329,7 +329,6 @@ Bool_t T0sAnalysis::Process(){
 
   if(fSwimmerInit==0){
     fSwimmerInit=1;
-    std::cout<<"I'll swim"<<std::endl;
     for(int ii =0; ii<5000; ii++){
   
       double energy = myRNG->Uniform(0,430);
@@ -376,7 +375,6 @@ Bool_t T0sAnalysis::Process(){
       fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",PVetoSwimmingChannel,energy);
       fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelEVeto",EVetoSwimmingChannel,energy);  
     }
-    std::cout<<"I've swum"<<std::endl;
   }
   return true;
 }

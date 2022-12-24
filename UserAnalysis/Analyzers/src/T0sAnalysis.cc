@@ -60,13 +60,13 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Time difference PVetoHits wrt SAC
-  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSACCluster",4000,-500,500);
-  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSACClusterGoodPVetoCh",4000,-500,500);
-  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSAC22ClusterGoodPVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACClusterGoodPVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSAC22ClusterGoodPVetoCh",4000,-500,500);
 
-  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoSACCluster",4000,-500,500);
-  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoSACClusterGoodEVetoCh",4000,-500,500);
-  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
@@ -81,10 +81,10 @@ Bool_t T0sAnalysis::InitHistos(){
   //Individual channel times
   for(int ch=0;ch<90;ch++){
     sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
-    fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus",name,1000,-15,6);
+    fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus",name,1000,-15,-6);
     sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
     fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits",name,100,-15,-6);
-    sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",ch);
+    sprintf(name,"hDeltatSwumPVetoHitsCh%iSAC",ch);
     fHS->BookHistoList("PVetoSACT0sList/SwimmerFrontFace",name,100,-15,-6);
     sprintf(name,"hDeltatSwumPVetoCh%iSACCentre",ch);
     fHS->BookHistoList("PVetoSACT0sList/SwimmerSACCentre",name,100,-15,-6);
@@ -210,7 +210,7 @@ Bool_t T0sAnalysis::Process(){
       if(chPVeto>19&&chPVeto<71) fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSACClusterGoodPVetoCh",tPVeto-tSAC);
       if(chPVeto>19&&chPVeto<71&&chSAC==22) fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSAC22ClusterGoodPVetoCh",tPVeto-tSAC);
 
-      sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",chPVeto);
+      sprintf(name,"hDeltatSwumPVetoHitsCh%iSAC",chPVeto);
       if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits",name,tPVeto-tSAC);
     }
 

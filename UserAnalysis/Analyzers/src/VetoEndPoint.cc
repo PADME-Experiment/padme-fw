@@ -256,7 +256,7 @@ void VetoEndPoint::ParticleSwim(TLorentzVector FourMomentum, TVector3 startposit
 	   Nin++;
 	   insideVeto = kTRUE; 
 	   fEndFinger = ii;
-	   fEndTime = 1e9*fTotalPathLength/(c*beta);//ns
+	   fEndTime = 1e9*fTotalPathLength/(c*beta)+(LocalPosition.Y()-PVetoSize.Y()/2)*1.5/c;//ns, including time of light propagation in scintillator to SiPM at the top
 	   //	   std::cout<<"charge "<<particlecharge<<" energy "<<FourMomentum.E()<<"  momentum "<<FourMomentum.Px()<<" "<<FourMomentum.Py()<<" "<<FourMomentum.Pz()<<" position "<<startposition.X()<<" "<<startposition.Y()<<" "<<startposition.Z()<<" fEndFinger "<<fEndFinger<<" fEndTime "<<fEndTime<<std::endl;
 	   //   if(particlecharge == -1) std::cout<<"I fire EVeto"<<std::endl;
 	   break;

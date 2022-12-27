@@ -42,8 +42,8 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->CreateList("PVetoSACT0sList/SwimmerFrontFace");
   fHS->CreateList("EVetoSACT0sList/SwimmerFrontFace");
 
-  fHS->CreateList("PVetoSACT0sList/SwimmerSACCentre");
-  fHS->CreateList("EVetoSACT0sList/SwimmerSACCentre");
+  fHS->CreateList("PVetoSACT0sList/SwimmerSACSiPM");
+  fHS->CreateList("EVetoSACT0sList/SwimmerSACSiPM");
 
   fHS->CreateList("PVetoAdjChaT0sList");
   fHS->CreateList("EVetoAdjChaT0sList");
@@ -89,8 +89,8 @@ Bool_t T0sAnalysis::InitHistos(){
     sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",ch);
     fHS->BookHistoList("PVetoSACT0sList/SwimmerFrontFace",name,1800,-15,-6);
 
-    sprintf(name,"hDeltatSwumPVetoCh%iSACCentre",ch);
-    fHS->BookHistoList("PVetoSACT0sList/SwimmerSACCentre",name,1800,-15,-6);
+    sprintf(name,"hDeltatSwumPVetoCh%iSACSiPM",ch);
+    fHS->BookHistoList("PVetoSACT0sList/SwimmerSACSiPM",name,1800,-15,-6);
     
     if(ch>0){
       sprintf(name,"hDeltatPVetoCh%iCh%i",ch,ch-1);
@@ -103,8 +103,8 @@ Bool_t T0sAnalysis::InitHistos(){
     fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus",name,1800,-15,-6);
     sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",ch);
     fHS->BookHistoList("EVetoSACT0sList/SwimmerFrontFace",name,1800,-15,-6);
-    sprintf(name,"hDeltatSwumEVetoCh%iSACCentre",ch);
-    fHS->BookHistoList("EVetoSACT0sList/SwimmerSACCentre",name,1800,-15,-6);
+    sprintf(name,"hDeltatSwumEVetoCh%iSACSiPM",ch);
+    fHS->BookHistoList("EVetoSACT0sList/SwimmerSACSiPM",name,1800,-15,-6);
 
     
     if(ch>0){
@@ -351,28 +351,28 @@ Bool_t T0sAnalysis::Process(){
       double EVetoSwimmingTime=fVetoEndPoint->GetEndTime();
 
       double targetsacdistance = 402.8;//cm, from SACGeometry and TargetGeometry 22/12/22
-      double halfsaclength = 7;//cm, from SACGeometry 19/12/22
+      double saclength = 14;//cm, from SACGeometry 19/12/22
       double sacrefractiveindex = 1.85;
       double c_ms = 2.998e8;//m/s
       double c_cmns = c_ms*1e-9*1e2;//cm/ns
       double timetosacface = targetsacdistance/c_cmns;//ns
-      double timetosaccentre = timetosacface+halfsaclength*1.85/c_cmns;//ns //this isn't very relavant since the radiation length in the SAC is around 1 cm, so not much reaches half way through the crystal
+      double timetosacsipm = timetosacface+saclength*1.85/c_cmns;//ns 
 
-      // std::cout<<"PVetoCh "<<PVetoSwimmingChannel<<" PVetoCh "<<PVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<PVetoSwimmingTime-timetosacface<<" to center "<<PVetoSwimmingTime-timetosaccentre<<std::endl;
-      // std::cout<<"EVetoCh "<<EVetoSwimmingChannel<<" EVetoCh "<<EVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<EVetoSwimmingTime-timetosacface<<" to center "<<EVetoSwimmingTime-timetosaccentre<<std::endl;
+      // std::cout<<"PVetoCh "<<PVetoSwimmingChannel<<" PVetoCh "<<PVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<PVetoSwimmingTime-timetosacface<<" to center "<<PVetoSwimmingTime-timetosacSiPM<<std::endl;
+      // std::cout<<"EVetoCh "<<EVetoSwimmingChannel<<" EVetoCh "<<EVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<EVetoSwimmingTime-timetosacface<<" to center "<<EVetoSwimmingTime-timetosacSiPM<<std::endl;
   
       if(PVetoSwimmingChannel>-1&&PVetoSwimmingChannel<90){
 	sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",PVetoSwimmingChannel);
 	fHS->FillHistoList("PVetoSACT0sList/SwimmerFrontFace",name,PVetoSwimmingTime-timetosacface);
-	sprintf(name,"hDeltatSwumPVetoCh%iSACCentre",PVetoSwimmingChannel);
-	fHS->FillHistoList("PVetoSACT0sList/SwimmerSACCentre",name,PVetoSwimmingTime-timetosaccentre);
+	sprintf(name,"hDeltatSwumPVetoCh%iSACSiPM",PVetoSwimmingChannel);
+	fHS->FillHistoList("PVetoSACT0sList/SwimmerSACSiPM",name,PVetoSwimmingTime-timetosacsipm);
       }
 
       if(EVetoSwimmingChannel>-1&&EVetoSwimmingChannel<96){
 	sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",EVetoSwimmingChannel);
 	fHS->FillHistoList("EVetoSACT0sList/SwimmerFrontFace",name,EVetoSwimmingTime-timetosacface);
-	sprintf(name,"hDeltatSwumEVetoCh%iSACCentre",EVetoSwimmingChannel);
-	fHS->FillHistoList("EVetoSACT0sList/SwimmerSACCentre",name,EVetoSwimmingTime-timetosaccentre);
+	sprintf(name,"hDeltatSwumEVetoCh%iSACSiPM",EVetoSwimmingChannel);
+	fHS->FillHistoList("EVetoSACT0sList/SwimmerSACSiPM",name,EVetoSwimmingTime-timetosacsipm);
       }
   
       fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",PVetoSwimmingChannel,energy);

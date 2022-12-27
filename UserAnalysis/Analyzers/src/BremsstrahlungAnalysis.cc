@@ -196,6 +196,8 @@ Bool_t BremsstrahlungAnalysis::Process(){
     NHitsSAC =  fEvent->SACRecoCl->Element(ii)->GetNHitsInClus();
     enSAC    =  fEvent->SACRecoCl->Element(ii)->GetEnergy();
 
+    if(chSAC!=22) continue;
+    
     //histograms of raw variables
     fHS->FillHistoList("BremsstrahlungList","htSACCluster",tSAC);
     fHS->FillHistoList("BremsstrahlungList","hNHitsSACCluster",NHitsSAC);

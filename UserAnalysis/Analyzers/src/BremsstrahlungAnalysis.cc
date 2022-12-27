@@ -150,10 +150,6 @@ Bool_t BremsstrahlungAnalysis::Process(){
       NHitsPVeto =  fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
       enPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetEnergy();
 
-      timecorrection = 0.03594*(chPVeto)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
-      fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chPVeto,timecorrection);
-      fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enPVeto,(tPVeto-tSAC-timecorrection));
-      
       //histograms of raw variables
       //      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);
       fHS->FillHistoList("BremsstrahlungList","hNHitsPVetoCluster",NHitsPVeto);
@@ -218,6 +214,10 @@ Bool_t BremsstrahlungAnalysis::Process(){
 
       //analytically using geometry & excel fit (PathDifferenceinPVetoChannel.exe), still Thursday 18th August 2022
       //trajectorycorrection = -10.351+0.036443*chHitPVeto;
+
+      timecorrection = 0.03594*(chPVeto)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
+      fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chHitPVeto,timecorrection);
+      fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enPVeto,(tHitPVeto-tSAC-timecorrection));
       
       //within 2ns?
       if(!(std::fabs(tHitPVeto-tSAC-trajectorycorrection)<2)) continue;

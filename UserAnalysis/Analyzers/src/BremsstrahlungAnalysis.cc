@@ -42,14 +42,9 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hNPVetoCluster",100,0,100);
   fHS->BookHistoList("BremsstrahlungList","hNSACCluster",100,0,100);
 
-  std::cout<<"isMC? "<<isMC<<std::endl;
-
   //Cluster time
   if(isMC=false)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,-250,250);
-  else if(isMC=true){
-  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,0,500);
-  std::cout<<"yep"<<std::endl;
-  }
+  else if(isMC=true)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,0,500);
   fHS->BookHistoList("BremsstrahlungList","htSACCluster",500,-250,250);
 
   //No. hits per cluster
@@ -64,6 +59,9 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hChPVetoCluster",96,0,96);
   fHS->BookHistoList("BremsstrahlungList","hChSACCluster",96,0,96);
 
+  //Time correction
+  fHS->BookHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",90,0,90,300,-11,-8);
+    
   //Bremsstrahlung plots
   fHS->BookHistoList("BremsstrahlungList","h2nsWindowEPVetoPlusESac",500,0,500);
   fHS->BookHisto2List("BremsstrahlungList","h2nsWindowNPVetoClusterVsNSACCluster",80,0,330,500,0,500);
@@ -150,6 +148,9 @@ Bool_t BremsstrahlungAnalysis::Process(){
       NHitsPVeto =  fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
       enPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetEnergy();
 
+      timecorrection = 0.03594*(tPVeto-tSAC)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
+      fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chPVeto,timecorrection);
+      
       //histograms of raw variables
       //      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);
       fHS->FillHistoList("BremsstrahlungList","hNHitsPVetoCluster",NHitsPVeto);

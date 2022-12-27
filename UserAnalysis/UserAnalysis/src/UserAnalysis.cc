@@ -35,13 +35,13 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
   fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
-  //  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
   
   // fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
-  fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
+  // fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
@@ -52,12 +52,12 @@ UserAnalysis::~UserAnalysis(){
   delete fMCTruth;
   //  delete fIs3GAnalysis;
   delete fBhabhaAnalysis;
-  // delete fBremsstrahlungAnalysis;
+  delete fBremsstrahlungAnalysis;
   // delete fIsGGAnalysis;
   // delete fETagAnalysis;
   // delete fIs22GGAnalysis;
   // delete fIs3GAnalysis;
-  delete fT0sAnalysis;
+  //  delete fT0sAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
@@ -76,8 +76,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   // fIs22GGAnalysis->Init(fEvent);
   // fIs3GAnalysis->Init(fEvent);
   fBhabhaAnalysis->Init(fEvent);
-  //  fBremsstrahlungAnalysis->Init(fEvent);
-  fT0sAnalysis->Init(fEvent);
+  fBremsstrahlungAnalysis->Init(fEvent);
+  //  fT0sAnalysis->Init(fEvent);
   return true;
 }
 
@@ -122,8 +122,8 @@ Bool_t UserAnalysis::Process(){
   fIs3GAnalysis->Process();   
   fETagAnalysis->Process();*/
   fBhabhaAnalysis->Process();
-  //  fBremsstrahlungAnalysis->Process();
-  fT0sAnalysis->Process();
+  fBremsstrahlungAnalysis->Process();
+  //  fT0sAnalysis->Process();
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();
@@ -188,8 +188,8 @@ Bool_t UserAnalysis::Finalize()
   // fIs22GGAnalysis->Finalize();
   // fIs3GAnalysis->Finalize();
   fBhabhaAnalysis->Finalize();
-  //  fBremsstrahlungAnalysis->Finalize();
-  fT0sAnalysis->Finalize();
+  fBremsstrahlungAnalysis->Finalize();
+  //  fT0sAnalysis->Finalize();
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

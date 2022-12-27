@@ -74,7 +74,9 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
 
   fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",350,150,500);
   fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,350,150,500);
- 
+
+  fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",100,0,10,100,-5,5);
+  
   return true;
 }
 
@@ -124,7 +126,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
   double enPositron;
   double enSum;
 
-  double timecorrection = 0;//-3.67; //3.67 comes from the difference between the raw peak time (used for FedeO's T0s) and the derivative peak time (used for Beth's T0s)
+  double timecorrection;//-3.67; //3.67 comes from the difference between the raw peak time (used for FedeO's T0s) and the derivative peak time (used for Beth's T0s)
 
   for(int ii = 0; ii<NSACCluster; ii++){
 
@@ -148,8 +150,9 @@ Bool_t BremsstrahlungAnalysis::Process(){
       NHitsPVeto =  fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
       enPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetEnergy();
 
-      timecorrection = 0.03594*(tPVeto-tSAC)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
+      timecorrection = 0.03594*(chPVeto)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
       fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chPVeto,timecorrection);
+      fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enPVeto,(tPVeto-tSAC-timecorrection));
       
       //histograms of raw variables
       //      fHS->FillHistoList("BremsstrahlungList","htPVetoCluster",tPVeto);

@@ -217,7 +217,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
 
       timecorrection = 0.03594*(chPVeto)-11.52;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced
       fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chHitPVeto,timecorrection);
-      fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enPVeto,(tHitPVeto-tSAC-timecorrection));
+      fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enHitPVeto,(tHitPVeto-tSAC-timecorrection));
       
       //within 2ns?
       if(!(std::fabs(tHitPVeto-tSAC-trajectorycorrection)<2)) continue;

@@ -111,7 +111,7 @@ Bool_t UserAnalysis::Process(){
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
 
-  //  fNPoTAnalysis->Process();
+  fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   //  fIsGGAnalysis->Process();
   fMCTruth->Process();
@@ -179,7 +179,7 @@ Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
-  //  fNPoTAnalysis->Finalize();
+  fNPoTAnalysis->Finalize();
   //fIsGGAnalysis->Finalize();
   fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();

@@ -276,6 +276,7 @@ Bool_t BhabhaAnalysis::Process(){
 	VertexTime = mcVtx->GetTime();
 	nBhabha++;
 	NTotBhabha++;
+	fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",0);
 	for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
 	  mcOutPart = mcVtx->ParticleOut(iOut);
 
@@ -598,6 +599,7 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hChaSum96to98GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
       NSwimBhabha++;
+      fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",3);
     }
   }
   
@@ -697,9 +699,13 @@ Bool_t BhabhaAnalysis::Process(){
 		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
 		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
 		NRecoBhabha++;
+		fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",2);
 		for(int ii =0; ii<MaxParticles; ii++){
 		  if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
-		  if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2) NMatched++;
+		  if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2){
+		    NMatched++;
+		    fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",1);
+		  }
 		  //mettere taglio in tempo e aggiungere warning
 		}
 	      }

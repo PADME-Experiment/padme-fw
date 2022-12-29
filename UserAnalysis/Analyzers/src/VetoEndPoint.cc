@@ -42,6 +42,8 @@ bool VetoEndPoint::InitialiseHistos(){
 
   fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,-0.5,89.5);
   fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,96.5);
+
+  fHS->BookHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",4,0,4);
   
   fHS->CreateList("VetoEndPointList/PVetoThetaVsP");
   fHS->CreateList("VetoEndPointList/EVetoThetaVsP");

@@ -13,7 +13,7 @@
 #include "TempCorr.hh"
 #include "BhabhaAnalysis.hh" //BL
 #include "BremsstrahlungAnalysis.hh" //BL
-#include "T0sAnalysis.hh"
+//#include "T0sAnalysis.hh"
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -41,7 +41,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
-  // fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
+  //  fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){

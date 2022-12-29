@@ -145,11 +145,13 @@ Bool_t T0sAnalysis::Process(){
   
   //time
   double tPVeto;
+  double tHitPVeto;
   double tEVeto;
   double tSAC;
 
   //channel
   int chPVeto;
+  int chHitPVeto;
   int chEVeto;
   int chSAC;
 
@@ -160,6 +162,7 @@ Bool_t T0sAnalysis::Process(){
 
   //energy
   double enPVeto;
+  double enHitPVeto;
   double enEVeto;
   double enSAC;
 
@@ -202,19 +205,15 @@ Bool_t T0sAnalysis::Process(){
      for(int ii = 0; ii<NPVetoHit;ii++){
 
       //import PVeto variables
-      tPVeto     =  fEvent->PVetoRecoEvent->Hit(ii)->GetTime();
-      chPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetChannelId();
-      enPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetEnergy();
+      tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(ii)->GetTime();
+      chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetChannelId();
+      enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetEnergy();
 
       //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
 
       //time difference
-      fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSACCluster",tPVeto-tSAC);
-      if(chPVeto>19&&chPVeto<71) fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSACClusterGoodPVetoCh",tPVeto-tSAC);
-      if(chPVeto>19&&chPVeto<71&&chSAC==22) fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoSAC22ClusterGoodPVetoCh",tPVeto-tSAC);
-
-      sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",chPVeto);
-      if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits",name,tPVeto-tSAC);
+      sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",chHitPVeto);
+      if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits",name,tHitPVeto-tSAC);
     }
 
     for(int ii = 0; ii<NEVetoCluster;ii++){

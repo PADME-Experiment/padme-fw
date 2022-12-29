@@ -43,6 +43,9 @@ bool VetoEndPoint::InitialiseHistos(){
   fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,-0.5,89.5);
   fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,96.5);
 
+  fHS->BookHistoList("VetoEndPointList","hPVetoLocalY",180,-90,90);
+  fHS->BookHistoList("VetoEndPointList","hVetoTimeCorrection",500,0,5);
+
   fHS->BookHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",4,0,4);
   
   fHS->CreateList("VetoEndPointList/PVetoThetaVsP");
@@ -258,7 +261,10 @@ void VetoEndPoint::ParticleSwim(TLorentzVector FourMomentum, TVector3 startposit
 	   Nin++;
 	   insideVeto = kTRUE; 
 	   fEndFinger = ii;
-	   fEndTime = 1e9*fTotalPathLength/(c*beta)+(LocalPosition.Y()-PVetoSize.Y()/2)*1.5/c;//ns, including time of light propagation in scintillator to SiPM at the top
+	   fHS->FillHistoList("VetoEndPointList","hPVetoLocalY",LocalPosition.Y());
+	   double timecorrection = (LocalPosition.Y()+PVetoSize.Y()/2)*1e6*1.5/c;//ns
+	   fHS->FillHistoList("VetoEndPointList","hVetoTimeCorrection",timecorrection);
+	   fEndTime = 1e9*fTotalPathLength/(c*beta)+timecorrection;//ns, including time of light propagation in scintillator to SiPM at the top
 	   //	   std::cout<<"charge "<<particlecharge<<" energy "<<FourMomentum.E()<<"  momentum "<<FourMomentum.Px()<<" "<<FourMomentum.Py()<<" "<<FourMomentum.Pz()<<" position "<<startposition.X()<<" "<<startposition.Y()<<" "<<startposition.Z()<<" fEndFinger "<<fEndFinger<<" fEndTime "<<fEndTime<<std::endl;
 	   //   if(particlecharge == -1) std::cout<<"I fire EVeto"<<std::endl;
 	   break;

@@ -217,7 +217,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       //analytically using geometry & excel fit (PathDifferenceinPVetoChannel.exe), still Thursday 18th August 2022
       //trajectorycorrection = -10.351+0.036443*chHitPVeto;
 
-      timecorrection = 0.03594*(chPVeto)-11.52+0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
+      timecorrection = 0.03594*(chPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
       fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chHitPVeto,timecorrection);
       fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enHitPVeto,(tHitPVeto-tSAC-timecorrection));
       

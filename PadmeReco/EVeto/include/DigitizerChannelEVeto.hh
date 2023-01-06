@@ -74,6 +74,7 @@ private:
 
   TFile * fileOut;
   Bool_t fSaveAnalog;
+  TString fDigiFileOut;
   Int_t fTotalAnalogs;
   Int_t fAnalogsPrinted;
   int fEnergyCalibrationFile;

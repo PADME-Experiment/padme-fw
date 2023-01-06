@@ -42,6 +42,8 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   fSaveAnalog = cfg->GetParOrDefault("Output","SaveAnalogs",0); //M. Raggi: 03/03/2021 
   fTotalAnalogs = cfg->GetParOrDefault("Output","TotalAnalogs",90); //Beth 23/2/22: total number of analog signals to write to PVetoRecoAn.root
 
+  fDigiFileOut = cfg->GetParOrDefault("Output","DigiFileOut","PVetoRecoAn.root");
+
   fEnergyCalibrationFile = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
   fApplyTimeCalibration  = cfg->GetParOrDefault("RECO","ApplyTimeCalibration", 1); //Apply time calibration?
   fChannelEqualisation   = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
@@ -163,7 +165,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
       xp = (spec->GetPositionX())[ll];
       yp = (spec->GetPositionY())[ll];
-      rawAmp = AbsSamRec[int(xp+0.5)];
+      rawAmp = AbsSamRec[int(xp+0.5)]; //int gives floor(), so int(x+0.5) rounds x to nearest whole number
       vRawHitVec.push_back(rawAmp);
       vTSpecYPHitVec.push_back(yp);
       Time=xp*fTimeBin;
@@ -245,10 +247,10 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 }
 
 void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 190917padme-fw, in turn copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
-  TString fileoutname;
+  TString fileoutname = fDigiFileOut;
 
-  if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
-  else if(detectorname=="PVeto") fileoutname="PVetoRecoAnDeriv.root";
+  // if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
+  // else if(detectorname=="PVeto") fileoutname="PVetoRecoAnDeriv.root";
 
   fileOut    = new TFile(fileoutname, "RECREATE");
   
@@ -262,9 +264,9 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                     = new TH1F("DerivV","DerivV",100,0,200);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",100,0,200);
-  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",100,0,200);
+  hDerivV                     = new TH1F("DerivV","DerivV",400,0,40);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,400);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
   hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
   hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
@@ -494,6 +496,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     hHitTime->Fill(tDerivSortHitVec[myiHit]);
 
     //uncorrected amplitude
+    hRawV->Fill(vRawSortHitVec[myiHit]);
     hDerivV->Fill(vTSpecYPSortHitVec[myiHit]);
     hDerivVPerChannel[GetChID()]->Fill(vTSpecYPSortHitVec[myiHit]);
     hHitEnergy->Fill(vTSpecYPCorrectHitVec[myiHit]*fDerivAmpToEnergy);
@@ -510,7 +513,7 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
 
     //corrected amplitude for "good" channels
     if(GetChID()>=20 &&GetChID()<=70){
-      //      hRawVCorrectChannels20to70->Fill(hitV);
+      hRawVCorrectChannels20to70->Fill(vRawSortHitVec[myiHit]);
       hAmpDiffVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpChannels20to70->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
     }

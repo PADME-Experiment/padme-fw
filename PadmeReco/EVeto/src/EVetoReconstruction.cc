@@ -326,7 +326,6 @@ void EVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
  	((DigitizerChannelEVeto*)fChannelReco)->SetChID(ChID);
  	((DigitizerChannelEVeto*)fChannelReco)->SetElChID(ElChID);
  	((DigitizerChannelEVeto*)fChannelReco)->SetBdID(iBdID);
-	
 	unsigned int nHitsBefore = Hits.size();
 	fChannelReco->Reconstruct(Hits);
 	unsigned int nHitsAfter = Hits.size();

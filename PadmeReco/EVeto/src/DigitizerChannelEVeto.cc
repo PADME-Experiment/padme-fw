@@ -422,15 +422,22 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
+    std::cout<<"zerosup?"<<std::endl;
     if(IsZeroSup&&!fGlobalMode->IsPedestalMode()) return;
+    std::cout<<"no"<<std::endl;
     Double_t ped=CalcPedestal();  // takes the starting sample from data cards
+    std::cout<<"pedestaled"<<std::endl;
     SetAbsSignals(ped);//Beth 21/2/22: moved from before zero suppression to after. Turns samples into positive mV and performs channel equalisation
+    std::cout<<"absed"<<std::endl;
     hSig->SetContent(fEqualSamples);
+    std::cout<<"hsiged"<<std::endl;
     CalcChaTime(hitVec);
+    std::cout<<"calchedchatime"<<std::endl;
   }
   else{
     // Giorgi pulse processing code goes here
   }
+  std::cout<<"umm"<<std::endl;
   AnalogPlotting(); //plot analog signals
 
   tDerivHitVec          .clear();
@@ -458,6 +465,7 @@ void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
 }
 
 void DigitizerChannelEVeto::AnalogPlotting(){
+  std::cout<<"in"<<std::endl;
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){

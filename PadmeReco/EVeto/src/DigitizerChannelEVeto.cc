@@ -256,12 +256,12 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                     = new TH1F("DerivV","DerivV",400,0,40);
-  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,40);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,400);
-  hDerivVOneHitChannels20to70 = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,40);
-  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
-  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",400,0,400);
+  hDerivV                     = new TH1F("DerivV","DerivV",401,-0.5,400.5);
+  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",401,-0.5,400.5);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",401,-0.5,400.5);
+  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",401,-0.5,400.5);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",401,-0.5,400.5);
+  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",401,-0.5,400.5);
   hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
   hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
@@ -422,22 +422,22 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
-    std::cout<<"zerosup?"<<std::endl;
+    //std::cout<<"zerosup?"<<std::endl;
     if(IsZeroSup&&!fGlobalMode->IsPedestalMode()) return;
-    std::cout<<"no"<<std::endl;
+    //    std::cout<<"no"<<std::endl;
     Double_t ped=CalcPedestal();  // takes the starting sample from data cards
-    std::cout<<"pedestaled"<<std::endl;
+    //    std::cout<<"pedestaled"<<std::endl;
     SetAbsSignals(ped);//Beth 21/2/22: moved from before zero suppression to after. Turns samples into positive mV and performs channel equalisation
-    std::cout<<"absed"<<std::endl;
+    //    std::cout<<"absed"<<std::endl;
     hSig->SetContent(fEqualSamples);
-    std::cout<<"hsiged"<<std::endl;
+    //    std::cout<<"hsiged"<<std::endl;
     CalcChaTime(hitVec);
-    std::cout<<"calchedchatime"<<std::endl;
+    //    std::cout<<"calchedchatime"<<std::endl;
   }
   else{
     // Giorgi pulse processing code goes here
   }
-  std::cout<<"umm"<<std::endl;
+  //  std::cout<<"umm"<<std::endl;
   AnalogPlotting(); //plot analog signals
 
   tDerivHitVec          .clear();
@@ -465,7 +465,7 @@ void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
 }
 
 void DigitizerChannelEVeto::AnalogPlotting(){
-  std::cout<<"in"<<std::endl;
+  //  std::cout<<"in"<<std::endl;
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){

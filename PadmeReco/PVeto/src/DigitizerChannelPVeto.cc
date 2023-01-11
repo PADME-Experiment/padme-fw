@@ -264,13 +264,13 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                     = new TH1F("DerivV","DerivV",400,0,40);
-  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,40);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,400);
-  hDerivVOneHitChannels20to70 = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,40);
-  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
-  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",400,0,400);
-  hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
+  hDerivV                     = new TH1F("DerivV","DerivV",401,-0.5,400.5);
+  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",401,-0.5,400.5);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",401,-0.5,400.5);
+  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",401,-0.5,400.5);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",401,-0.5,400.5);
+  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",401,-0.5,400.5);
+  hHitTime                    = new TH1F("HitTime","HitTime",401,-0.5,400.5);
   hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
   hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
@@ -615,9 +615,8 @@ Double_t DigitizerChannelPVeto::SetPVetoT0(){
       for (int i=0;i<96;i++){
 	fTimeCalibCh[i]=0;
       }
-      
     }
-  }
+  }//end if applytimecalib
   else{
     if(fApplyTimeCalibration==1)    std::cout<<"Unknown PVeto time calibration file, resorting to default calibration constant (0)"<<std::endl;
     for (int i=0;i<96;i++){
@@ -633,7 +632,7 @@ Double_t DigitizerChannelPVeto::TailHeightDerivative(Int_t DeltaT){//DeltaT in s
   Double_t HeightFrac=0;
   Double_t Frac[300];
   int maxdeltat=290;
-
+  //  std::cout<<"tailheight"<<std::endl;
   Frac[0]   =  1; 
   Frac[1]   =  0.997254     ;
   Frac[2]   =  0.980119     ;

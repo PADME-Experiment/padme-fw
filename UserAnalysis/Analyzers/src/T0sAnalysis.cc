@@ -201,16 +201,16 @@ Bool_t T0sAnalysis::Process(){
       sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",chPVeto);
       if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus",name,tPVeto-tSAC);
     }
-
-     for(int ii = 0; ii<NPVetoHit;ii++){
-
+    
+    for(int ii = 0; ii<NPVetoHit;ii++){
+      
       //import PVeto variables
       tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(ii)->GetTime();
       chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetChannelId();
       enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(ii)->GetEnergy();
-
+      
       //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
-
+      
       //time difference
       sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",chHitPVeto);
       if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits",name,tHitPVeto-tSAC);
@@ -232,6 +232,21 @@ Bool_t T0sAnalysis::Process(){
       sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",chEVeto);
       if(chSAC==22&&chEVeto<90)	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus",name,tEVeto-tSAC);
     }
+    
+    for(int ii = 0; ii<NEVetoHit;ii++){
+      
+      //import EVeto variables
+      tHitEVeto     =  fEvent->EVetoRecoEvent->Hit(ii)->GetTime();
+      chHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetChannelId();
+      enHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetEnergy();
+      
+      //      if(NClusterHitsEVeto==1) std::cout<<NClusterHitsEVeto<<std::endl;
+      
+      //time difference
+      sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",chHitEVeto);
+      if(chSAC==22&&chEVeto<90)	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits",name,tHitEVeto-tSAC);
+    }
+
   }
 
   double tPVeto_jj;
@@ -329,53 +344,61 @@ Bool_t T0sAnalysis::Process(){
 
   //find Delta(ToF) for Bremsstrahlung positrons in PVeto vs photons in SAC (central channel, 22)
 
-  if(fSwimmerInit==0){
-    fSwimmerInit=1;
-    for(int ii =0; ii<500; ii++){
-  
-      double energy = myRNG->Uniform(0,430);
-      TVector3 momentum = TVector3(0,0,energy);//assume particles emmitted collinearly with beam;
-      TLorentzVector FourMomentum = TLorentzVector(momentum,energy);
-      TVector3 VertexPos = TVector3(0,0,-1028);//mm
-      double VertexTime = 0;
-      int pcharge = 1;
-      int echarge = -1;
-
-      fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,pcharge);
-      int PVetoSwimmingChannel=fVetoEndPoint->GetEndFinger();
-      double PVetoSwimmingTime=fVetoEndPoint->GetEndTime();
-
-      fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,echarge);
-      int EVetoSwimmingChannel=fVetoEndPoint->GetEndFinger();
-      double EVetoSwimmingTime=fVetoEndPoint->GetEndTime();
-
-      double targetsacdistance = 402.8;//cm, from SACGeometry and TargetGeometry 22/12/22
-      double saclength = 14;//cm, from SACGeometry 19/12/22
-      double sacrefractiveindex = 1.85;
-      double c_ms = 2.998e8;//m/s
-      double c_cmns = c_ms*1e-9*1e2;//cm/ns
-      double timetosacface = targetsacdistance/c_cmns;//ns
-      double timetosacsipm = timetosacface+saclength*1.85/c_cmns;//ns 
-
-      // std::cout<<"PVetoCh "<<PVetoSwimmingChannel<<" PVetoCh "<<PVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<PVetoSwimmingTime-timetosacface<<" to center "<<PVetoSwimmingTime-timetosacSiPM<<std::endl;
-      // std::cout<<"EVetoCh "<<EVetoSwimmingChannel<<" EVetoCh "<<EVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<EVetoSwimmingTime-timetosacface<<" to center "<<EVetoSwimmingTime-timetosacSiPM<<std::endl;
-  
-      if(PVetoSwimmingChannel>-1&&PVetoSwimmingChannel<90){
-	sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",PVetoSwimmingChannel);
-	fHS->FillHistoList("PVetoSACT0sList/SwimmerFrontFace",name,PVetoSwimmingTime-timetosacface);
-	sprintf(name,"hDeltatSwumPVetoCh%iSACSiPM",PVetoSwimmingChannel);
-	fHS->FillHistoList("PVetoSACT0sList/SwimmerSACSiPM",name,PVetoSwimmingTime-timetosacsipm);
-      }
-
-      if(EVetoSwimmingChannel>-1&&EVetoSwimmingChannel<96){
-	sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",EVetoSwimmingChannel);
-	fHS->FillHistoList("EVetoSACT0sList/SwimmerFrontFace",name,EVetoSwimmingTime-timetosacface);
-	sprintf(name,"hDeltatSwumEVetoCh%iSACSiPM",EVetoSwimmingChannel);
-	fHS->FillHistoList("EVetoSACT0sList/SwimmerSACSiPM",name,EVetoSwimmingTime-timetosacsipm);
-      }
-  
-      fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",PVetoSwimmingChannel,energy);
-      fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelEVeto",EVetoSwimmingChannel,energy);  
+  //  if(fSwimmerInit==0){
+  //    fSwimmerInit=1;
+  if(isMC){
+    for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
+        mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+	if(mcVtx->GetProcess() == "eBrem"){
+	  TVector3 VertexPos = mcVtx->GetPosition();
+	  double VertexTime = mcVtx->GetTime();
+	  for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
+	    mcOutPart = mcVtx->ParticleOut(iOut);
+	    if(mcOutPart->GetPDGCode()==-11){
+	      double energy = mcOutPart->GetEnergy();
+	      TVector3 momentum = mcOutPart->GetMomentum();
+	      TLorentzVector FourMomentum = TLorentzVector(momentum,energy);
+	      int pcharge = 1;
+	      int echarge = -1;
+	      
+	      fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,pcharge);
+	      int PVetoSwimmingChannel=fVetoEndPoint->GetEndFinger();
+	      double PVetoSwimmingTime=fVetoEndPoint->GetEndTime();
+	      
+	      fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,echarge);
+	      int EVetoSwimmingChannel=fVetoEndPoint->GetEndFinger();
+	      double EVetoSwimmingTime=fVetoEndPoint->GetEndTime();
+	      
+	      double targetsacdistance = 402.8;//cm, from SACGeometry and TargetGeometry 22/12/22
+	      double saclength = 14;//cm, from SACGeometry 19/12/22
+	      double sacrefractiveindex = 1.85;
+	      double c_ms = 2.998e8;//m/s
+	      double c_cmns = c_ms*1e-9*1e2;//cm/ns
+	      double timetosacface = targetsacdistance/c_cmns;//ns
+	      double timetosacsipm = timetosacface+saclength*1.85/c_cmns;//ns 
+	      
+	      // std::cout<<"PVetoCh "<<PVetoSwimmingChannel<<" PVetoCh "<<PVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<PVetoSwimmingTime-timetosacface<<" to center "<<PVetoSwimmingTime-timetosacSiPM<<std::endl;
+	      // std::cout<<"EVetoCh "<<EVetoSwimmingChannel<<" EVetoCh "<<EVetoSwimmingTime<<" time to sac "<<timetosacface<<" deltaT "<<EVetoSwimmingTime-timetosacface<<" to center "<<EVetoSwimmingTime-timetosacSiPM<<std::endl;
+	      
+	      if(PVetoSwimmingChannel>-1&&PVetoSwimmingChannel<90){
+		sprintf(name,"hDeltatSwumPVetoCh%iSACFrontFace",PVetoSwimmingChannel);
+		fHS->FillHistoList("PVetoSACT0sList/SwimmerFrontFace",name,PVetoSwimmingTime-timetosacface);
+		sprintf(name,"hDeltatSwumPVetoCh%iSACSiPM",PVetoSwimmingChannel);
+		fHS->FillHistoList("PVetoSACT0sList/SwimmerSACSiPM",name,PVetoSwimmingTime-timetosacsipm);
+	      }
+	      
+	      if(EVetoSwimmingChannel>-1&&EVetoSwimmingChannel<96){
+		sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",EVetoSwimmingChannel);
+		fHS->FillHistoList("EVetoSACT0sList/SwimmerFrontFace",name,EVetoSwimmingTime-timetosacface);
+		sprintf(name,"hDeltatSwumEVetoCh%iSACSiPM",EVetoSwimmingChannel);
+		fHS->FillHistoList("EVetoSACT0sList/SwimmerSACSiPM",name,EVetoSwimmingTime-timetosacsipm);
+	      }
+	      
+	      fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",PVetoSwimmingChannel,energy);
+	      fHS->FillHistoList("SwumEnergyToChannel","hSwumEnergyToChannelEVeto",EVetoSwimmingChannel,energy);  
+	    }
+	  }
+	}
     }
   }
   return true;

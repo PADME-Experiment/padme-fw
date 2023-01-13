@@ -237,8 +237,14 @@ Bool_t BhabhaAnalysis::Process(){
   std::vector<Int_t> PVetoRecoPassChannels;
   std::vector<Int_t> EVetoRecoPassChannels;
   
+  PVetoRecoPassChannels.clear();
+  EVetoRecoPassChannels.clear();
+
   std::vector<Double_t> PVetoRecoPassTime;
   std::vector<Double_t> EVetoRecoPassTime;
+
+  PVetoRecoPassTime.clear();
+  EVetoRecoPassTime.clear();
 
   int nBhabha=0;
   int nBhabhaPos=0;
@@ -601,7 +607,7 @@ Bool_t BhabhaAnalysis::Process(){
       NSwimBhabha++;
       fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",3);
     }
-  }
+  }//end if MC
   
   if(NEVetoGoodClusters!=NHitsEVetoGood.size()||NPVetoGoodClusters!=NHitsPVetoGood.size()){
     std::cout<<"Mismatched cluster sizes in BhabhaAnalysis. Check vector pushback and counter increase"<<std::endl;
@@ -701,11 +707,13 @@ Bool_t BhabhaAnalysis::Process(){
 		NRecoBhabha++;
 		fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",2);
 		for(int ii =0; ii<MaxParticles; ii++){
-		  if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
-		  if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2){
-		    NMatched++;
-		    fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",1);
-		  }
+		  if(isMC){
+		    if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
+		    if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2){
+		      NMatched++;
+		      fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",1);
+		    }//end if match
+		  }//end if MC
 		  //mettere taglio in tempo e aggiungere warning
 		}
 	      }

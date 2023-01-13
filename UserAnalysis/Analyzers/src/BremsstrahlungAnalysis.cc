@@ -75,7 +75,7 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",350,150,500);
   fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,350,150,500);
 
-  fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",1000,0,10,1000,-5,5);
+  fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",5000,0,10,1000,-5,5);
   
   return true;
 }
@@ -197,15 +197,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
     enSAC    =  fEvent->SACRecoCl->Element(ii)->GetEnergy();
 
     if(chSAC!=22) continue;
-    
-    //histograms of raw variables
-    fHS->FillHistoList("BremsstrahlungList","htSACCluster",tSAC);
-    fHS->FillHistoList("BremsstrahlungList","hNHitsSACCluster",NHitsSAC);
-    fHS->FillHistoList("BremsstrahlungList","hEnergySACCluster",enSAC);
-    fHS->FillHistoList("BremsstrahlungList","hChSACCluster",chSAC);
-
     for(int jj = 0; jj<NPVetoHit;jj++){
-
       //import PVeto variables
       tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(jj)->GetTime();
       chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(jj)->GetChannelId();

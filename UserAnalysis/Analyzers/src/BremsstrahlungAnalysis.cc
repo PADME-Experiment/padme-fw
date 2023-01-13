@@ -75,7 +75,7 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",350,150,500);
   fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,350,150,500);
 
-  fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",5000,0,10,1000,-5,5);
+  fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",1000,0,10,1000,-5,5);
   
   return true;
 }
@@ -156,6 +156,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       fHS->FillHistoList("BremsstrahlungList","hEnergyPVetoCluster",enPVeto);
       fHS->FillHistoList("BremsstrahlungList","hChPVetoCluster",chPVeto);
 
+      timecorrection = 0.03594*(chPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
       //within 2ns?
       if(!(std::fabs(tPVeto-tSAC-timecorrection)<2)) continue;
 
@@ -197,7 +198,15 @@ Bool_t BremsstrahlungAnalysis::Process(){
     enSAC    =  fEvent->SACRecoCl->Element(ii)->GetEnergy();
 
     if(chSAC!=22) continue;
+    
+    //histograms of raw variables
+    fHS->FillHistoList("BremsstrahlungList","htSACCluster",tSAC);
+    fHS->FillHistoList("BremsstrahlungList","hNHitsSACCluster",NHitsSAC);
+    fHS->FillHistoList("BremsstrahlungList","hEnergySACCluster",enSAC);
+    fHS->FillHistoList("BremsstrahlungList","hChSACCluster",chSAC);
+
     for(int jj = 0; jj<NPVetoHit;jj++){
+
       //import PVeto variables
       tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(jj)->GetTime();
       chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(jj)->GetChannelId();
@@ -209,7 +218,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       //analytically using geometry & excel fit (PathDifferenceinPVetoChannel.exe), still Thursday 18th August 2022
       //trajectorycorrection = -10.351+0.036443*chHitPVeto;
 
-      timecorrection = 0.03594*(chPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
+      timecorrection = 0.03594*(chHitPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
       fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chHitPVeto,timecorrection);
       fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enHitPVeto,(tHitPVeto-tSAC-timecorrection));
       

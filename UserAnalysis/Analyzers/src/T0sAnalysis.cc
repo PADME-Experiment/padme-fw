@@ -250,13 +250,12 @@ Bool_t T0sAnalysis::Process(){
       chHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetChannelId();
       enHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetEnergy();
 
-      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
+      //      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
 
       //time difference
       sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",chHitEVeto);
       if(chSAC==22&&chEVeto<90){
 	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits",name,tHitEVeto-tSAC);
-	std::cout<<name<<std::endl;
       }
     }
 

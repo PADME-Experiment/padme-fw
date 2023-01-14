@@ -72,7 +72,7 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
   fHS->BookHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--",80,-5,5);
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--GoodPVetoCh",80,-5,5);
-  fHS->BookHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--GoodPVetoCh",80,-5,5);
+  fHS->BookHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--GoodEVetoCh",80,-5,5);
 
   //Collinear particles channelID->energy
   fHS->BookHisto2List("SwumEnergyToChannel","hSwumEnergyToChannelPVeto",90,0,90,215,0,430);
@@ -94,18 +94,21 @@ Bool_t T0sAnalysis::InitHistos(){
     
     if(ch>0){
       sprintf(name,"hDeltatPVetoCh%iCh%i",ch,ch-1);
-      //      std::cout<<"name "<<name<<" ch "<<ch<<" ch-1 "<<ch-1<<std::endl;
       fHS->BookHistoList("PVetoAdjChaT0sList",name,80,-5,5);
     }
   }
   for(int ch=0;ch<96;ch++){
     sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",ch);
     fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus",name,1800,-15,-6);
+
+    sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",ch);
+    fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits",name,1800,-15,-6);
+
     sprintf(name,"hDeltatSwumEVetoCh%iSACFrontFace",ch);
     fHS->BookHistoList("EVetoSACT0sList/SwimmerFrontFace",name,1800,-15,-6);
+
     sprintf(name,"hDeltatSwumEVetoCh%iSACSiPM",ch);
     fHS->BookHistoList("EVetoSACT0sList/SwimmerSACSiPM",name,1800,-15,-6);
-
     
     if(ch>0){
       sprintf(name,"hDeltatEVetoCh%iCh%i",ch,ch-1);
@@ -140,19 +143,25 @@ Bool_t T0sAnalysis::Process(){
   if((fEvent->SACRecoCl)!=NULL)
     NSACCluster = fEvent->SACRecoCl->GetNElements();
   else NSACCluster=0;
+
   //Number of PVeto hits per event
   Int_t NPVetoHit = fEvent->PVetoRecoEvent->GetNHits();
+
+  //Number of EVeto hits per event
+  Int_t NEVetoHit = fEvent->EVetoRecoEvent->GetNHits();
   
   //time
   double tPVeto;
   double tHitPVeto;
   double tEVeto;
+  double tHitEVeto;
   double tSAC;
 
   //channel
   int chPVeto;
   int chHitPVeto;
   int chEVeto;
+  int chHitEVeto;
   int chSAC;
 
   //no hits in cluster
@@ -164,6 +173,7 @@ Bool_t T0sAnalysis::Process(){
   double enPVeto;
   double enHitPVeto;
   double enEVeto;
+  double enHitEVeto;
   double enSAC;
 
   //energy sum
@@ -234,17 +244,20 @@ Bool_t T0sAnalysis::Process(){
     }
     
     for(int ii = 0; ii<NEVetoHit;ii++){
-      
+   
       //import EVeto variables
       tHitEVeto     =  fEvent->EVetoRecoEvent->Hit(ii)->GetTime();
       chHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetChannelId();
       enHitEVeto    =  fEvent->EVetoRecoEvent->Hit(ii)->GetEnergy();
-      
-      //      if(NClusterHitsEVeto==1) std::cout<<NClusterHitsEVeto<<std::endl;
-      
+
+      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
+
       //time difference
       sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",chHitEVeto);
-      if(chSAC==22&&chEVeto<90)	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits",name,tHitEVeto-tSAC);
+      if(chSAC==22&&chEVeto<90){
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits",name,tHitEVeto-tSAC);
+	std::cout<<name<<std::endl;
+      }
     }
 
   }
@@ -252,7 +265,7 @@ Bool_t T0sAnalysis::Process(){
   double tPVeto_jj;
   double tPVeto_kk;
   double tPVeto_jjminus;
-  double Deltat;
+  double DeltatPVeto;
   int bdPVeto_jj;
   int bdPVeto_kk;
   int bdPVeto_jjminus;
@@ -271,8 +284,6 @@ Bool_t T0sAnalysis::Process(){
   Int_t PVetoHitIndex_kk;
   Int_t PVetoHitIndex_jjminus;
 
-  TRecoVHit * myhit;
-
   //PVeto ch_i-ch_i-- difference
   for(int iPClus = 0; iPClus<NPVetoCluster;iPClus++){
     PVetoClusterHitIndices.clear();
@@ -288,56 +299,34 @@ Bool_t T0sAnalysis::Process(){
 	if(kk==jj) continue;
 
 	PVetoHitIndex_jj = PVetoClusterHitIndices[jj];
-	//	myhit = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj);
 	PVetoHitIndex_kk = PVetoClusterHitIndices[kk];
 
-	if(isMC==false){
-	  bdPVeto_jj=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->getBDid();
-	  //continue;	
-	  elchPVeto_jj=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->getCHid();
-	  if(elchPVeto_jj!=0||elchPVeto_kk!=0){
-	    // std::cout<<"bdjj "<<bdPVeto_jj<<" bdkk "<<bdPVeto_jj<<std::endl;
-	    // std::cout<<"elchjj "<<elchPVeto_jj<<" elchkk "<<elchPVeto_kk<<std::endl;
-	  }
-	  chPVeto_jj = (bdPVeto_jj-10)*32+elchPVeto_jj;
-	  
-	  bdPVeto_kk=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->getBDid();
-	  elchPVeto_kk=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->getCHid();
-	  chPVeto_kk = (bdPVeto_kk-10)*32+elchPVeto_kk;
-	}
-
-	else if(isMC==true){
-	  chPVeto_jj = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->GetChannelId();
-	  chPVeto_kk = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->GetChannelId();
-	}
+	chPVeto_jj = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->GetChannelId();
+	chPVeto_kk = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->GetChannelId();
 	
 	tPVeto_jj=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->GetTime();
 	tPVeto_kk=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->GetTime();
-	//      tPVeto_jjminus=fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jjminus)->GetTime();
 
 	enPVeto_jj = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jj)->GetEnergy();
 	enPVeto_kk = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_kk)->GetEnergy();
 	enPVeto_jjminus = fEvent->PVetoRecoEvent->Hit(PVetoHitIndex_jjminus)->GetEnergy();
 
 	//time difference
-	//      Deltat = tPVeto_jj-tPVeto_jjminus;
-	Deltat = tPVeto_jj-tPVeto_kk;
+	//      DeltatPVeto = tPVeto_jj-tPVeto_jjminus;
+	DeltatPVeto = tPVeto_jj-tPVeto_kk;
 
-	fHS->FillHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",Deltat);
+	fHS->FillHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",DeltatPVeto);
     
-	if(chPVeto>19&&chPVeto<71) fHS->FillHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--GoodPVetoCh",Deltat);
+	if(chPVeto>19&&chPVeto<71) fHS->FillHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--GoodPVetoCh",DeltatPVeto);
 
-	//if(kk==1)	std::cout<<"chjj "<<chPVeto_jj<<" chkk "<<chPVeto_kk<<std::endl;
 	if(chPVeto_jj-chPVeto_kk==1){
-	  //	  std::cout<<"chjj "<<chPVeto_jj<<" chkk "<<chPVeto_kk<<std::endl;
 	  sprintf(name,"hDeltatPVetoCh%iCh%i",chPVeto_jj,chPVeto_kk);
-	  fHS->FillHistoList("PVetoAdjChaT0sList",name,Deltat);
+	  fHS->FillHistoList("PVetoAdjChaT0sList",name,DeltatPVeto);
 	}
 	else if(chPVeto_jj-chPVeto_kk==-1){
 	  sprintf(name,"hDeltatPVetoCh%iCh%i",chPVeto_kk,chPVeto_jj);
-	  fHS->FillHistoList("PVetoAdjChaT0sList",name,Deltat);
+	  fHS->FillHistoList("PVetoAdjChaT0sList",name,DeltatPVeto);
 	}
-	// else  std::cout<<"cluster "<<iPClus<<" chPVeto_jj "<<chPVeto_jj<<" chPVeto_jjminus "<<chPVeto_jjminus<<std::endl;
       }
     }
   }
@@ -345,7 +334,7 @@ Bool_t T0sAnalysis::Process(){
   double tEVeto_jj;
   double tEVeto_kk;
   double tEVeto_jjminus;
-  double Deltat;
+  double DeltatEVeto;
   int bdEVeto_jj;
   int bdEVeto_kk;
   int bdEVeto_jjminus;
@@ -364,8 +353,6 @@ Bool_t T0sAnalysis::Process(){
   Int_t EVetoHitIndex_kk;
   Int_t EVetoHitIndex_jjminus;
 
-  TRecoVHit * myhit;
-
   //EVeto ch_i-ch_i-- difference
   for(int iPClus = 0; iPClus<NEVetoCluster;iPClus++){
     EVetoClusterHitIndices.clear();
@@ -381,54 +368,33 @@ Bool_t T0sAnalysis::Process(){
 	if(kk==jj) continue;
 
 	EVetoHitIndex_jj = EVetoClusterHitIndices[jj];
-	//	myhit = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj);
 	EVetoHitIndex_kk = EVetoClusterHitIndices[kk];
 
-	if(isMC==false){
-	  bdEVeto_jj=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->getBDid();
-	  //continue;	
-	  elchEVeto_jj=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->getCHid();
-	  if(elchEVeto_jj!=0||elchEVeto_kk!=0){
-	    // std::cout<<"bdjj "<<bdEVeto_jj<<" bdkk "<<bdEVeto_jj<<std::endl;
-	    // std::cout<<"elchjj "<<elchEVeto_jj<<" elchkk "<<elchEVeto_kk<<std::endl;
-	  }
-	  chEVeto_jj = (bdEVeto_jj-10)*32+elchEVeto_jj;
-	  
-	  bdEVeto_kk=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->getBDid();
-	  elchEVeto_kk=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->getCHid();
-	  chEVeto_kk = (bdEVeto_kk-10)*32+elchEVeto_kk;
-	}
-
-	else if(isMC==true){
-	  chEVeto_jj = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->GetChannelId();
-	  chEVeto_kk = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->GetChannelId();
-	}
+	chEVeto_jj = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->GetChannelId();
+	chEVeto_kk = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->GetChannelId();
 	
 	tEVeto_jj=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->GetTime();
 	tEVeto_kk=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->GetTime();
-	//      tEVeto_jjminus=fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jjminus)->GetTime();
 
 	enEVeto_jj = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jj)->GetEnergy();
 	enEVeto_kk = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_kk)->GetEnergy();
 	enEVeto_jjminus = fEvent->EVetoRecoEvent->Hit(EVetoHitIndex_jjminus)->GetEnergy();
 
 	//time difference
-	//      Deltat = tEVeto_jj-tEVeto_jjminus;
-	Deltat = tEVeto_jj-tEVeto_kk;
+	//      DeltatEVeto = tEVeto_jj-tEVeto_jjminus;
+	DeltatEVeto = tEVeto_jj-tEVeto_kk;
 
-	fHS->FillHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--",Deltat);
+	fHS->FillHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--",DeltatEVeto);
     
-	if(chEVeto>19&&chEVeto<71) fHS->FillHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--GoodEVetoCh",Deltat);
+	if(chEVeto>19&&chEVeto<71) fHS->FillHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--GoodEVetoCh",DeltatEVeto);
 
-	//if(kk==1)	std::cout<<"chjj "<<chEVeto_jj<<" chkk "<<chEVeto_kk<<std::endl;
 	if(chEVeto_jj-chEVeto_kk==1){
-	  //	  std::cout<<"chjj "<<chEVeto_jj<<" chkk "<<chEVeto_kk<<std::endl;
 	  sprintf(name,"hDeltatEVetoCh%iCh%i",chEVeto_jj,chEVeto_kk);
-	  fHS->FillHistoList("EVetoAdjChaT0sList",name,Deltat);
+	  fHS->FillHistoList("EVetoAdjChaT0sList",name,DeltatEVeto);
 	}
 	else if(chEVeto_jj-chEVeto_kk==-1){
 	  sprintf(name,"hDeltatEVetoCh%iCh%i",chEVeto_kk,chEVeto_jj);
-	  fHS->FillHistoList("EVetoAdjChaT0sList",name,Deltat);
+	  fHS->FillHistoList("EVetoAdjChaT0sList",name,DeltatEVeto);
 	}
 	// else  std::cout<<"cluster "<<iPClus<<" chEVeto_jj "<<chEVeto_jj<<" chEVeto_jjminus "<<chEVeto_jjminus<<std::endl;
       }

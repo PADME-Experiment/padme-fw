@@ -465,7 +465,7 @@ void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
 }
 
 void DigitizerChannelEVeto::AnalogPlotting(){
-  //  std::cout<<"in"<<std::endl;
+  //  std::cout<<"inner"<<std::endl;
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){

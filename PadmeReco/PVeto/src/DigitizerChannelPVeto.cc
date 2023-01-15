@@ -64,8 +64,6 @@ void DigitizerChannelPVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;  
   PrintConfig();
 
-  std::cout<<"new"<<std::endl;
-  
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
     PrepareDebugHistos(); //debugging mode histos
   }

@@ -211,7 +211,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
       std::cout<<"SORTING ISN'T WORKING"<<std::endl;
       return -100;
     }
-    if(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2){
+    if(ii>0&&(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2)){
       std::cout<<"EventCounter "<<EventCounter<<" GetChID() "<<GetChID()<<" ii "<<ii<<" tDerivSortHitVec[ii] "<<tDerivSortHitVec[ii]<<" tDerivSortHitVec[ii-1] "<<tDerivSortHitVec[ii-1]<<std::endl;
       analogchecker = 1;
     }

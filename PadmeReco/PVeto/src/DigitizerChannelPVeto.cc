@@ -479,7 +479,6 @@ void DigitizerChannelPVeto::AnalogPlotting(){
       hDeriv[hDeriv.size()-1]->SetNameTitle(name,name);
 
       gUnAbsSigs = new TGraph(fNSamples);
-      std::cout<<gUnAbsSigs<<std::endl;
 
       for(int ii = 0; ii<fNSamples;ii++) gUnAbsSigs->SetPoint(ii,ii,fSamples[ii]);
       sprintf(name, "gEvent%iChannel%d", EventCounter,GetChID());

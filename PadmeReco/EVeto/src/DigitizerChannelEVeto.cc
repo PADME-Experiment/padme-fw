@@ -284,8 +284,6 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYMaxRawYTSpecRatioVsYMax                    = new TH2F("hYMaxRawYTSpecRatioVsYMax","hYMaxRawYTSpecRatioVsYMax",100,0,100,50,0,2);
   // hYMaxVsYTSpecAllHits = new TH2F("hYMaxVsYTSpecAllHits","hYMaxVsYTSpecAllHits",100,0,100,100,0,100);
   // hYMaxVsYTSpecSingleHits = new TH2F("hYMaxVsYTSpecSingleHits","hYMaxVsYTSpecSingleHits",100,0,100,100,0,100);
-
-  gUnAbsSigs = new TGraph(fNSamples);
   
   for(int ii=0;ii<96;ii++){
     sprintf(name, "NoHitsDerivChannelPerEvent%d",ii);
@@ -466,8 +464,12 @@ void DigitizerChannelEVeto::AnalogPlotting(){
       hDeriv.push_back((TH1F*)HTSpec->Clone());
       sprintf(name, "hDerivEvent%iChannel%d", EventCounter,GetChID());
       hDeriv[hDeriv.size()-1]->SetNameTitle(name,name);
-    
+
+      gUnAbsSigs = new TGraph(fNSamples);
+      
       for(int ii = 0; ii<fNSamples;ii++) gUnAbsSigs->SetPoint(ii,ii,fSamples[ii]);
+      sprintf(name, "gEvent%iChannel%d", EventCounter,GetChID());
+      gUnAbsSigs->SetNameTitle(name,name);
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
       fAnalogsPrinted++;

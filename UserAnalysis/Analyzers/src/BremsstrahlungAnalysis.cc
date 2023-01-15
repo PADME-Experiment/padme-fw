@@ -162,6 +162,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
 
       //positron energy as function of channel, from Mauro MonteCarlo 22/4/21
       //enPositron = 20.15+1.094*chPVeto+0.0328*chPVeto*chPVeto;
+      
       //from Bremsstrahlung Swimmer on FullMC @ 2k PoT/bunch 14/1/23
       enPositron = 20.122+1.09974*chPVeto+0.034348*chPVeto*chPVeto;
       

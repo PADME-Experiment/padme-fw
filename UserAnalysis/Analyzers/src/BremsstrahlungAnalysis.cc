@@ -43,8 +43,8 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hNSACCluster",100,0,100);
 
   //Cluster time
-  if(isMC=false)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,-250,250);
-  else if(isMC=true)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,0,500);
+  if(isMC==false)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",500,-250,250);
+  else if(isMC==true)  fHS->BookHistoList("BremsstrahlungList","htPVetoCluster",750,0,750);
   fHS->BookHistoList("BremsstrahlungList","htSACCluster",500,-250,250);
 
   //No. hits per cluster
@@ -63,14 +63,14 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",90,0,90,300,-11,-8);
     
   //Bremsstrahlung plots
-  fHS->BookHistoList("BremsstrahlungList","h2nsWindowEPVetoPlusESac",500,0,500);
-  fHS->BookHisto2List("BremsstrahlungList","h2nsWindowNPVetoClusterVsNSACCluster;enPVeto;enSAC",80,0,330,500,0,500);
+  fHS->BookHistoList("BremsstrahlungList","h2nsWindowEPVetoPlusESac",750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","h2nsWindowNPVetoClusterVsNSACCluster;enPVeto;enSAC",80,0,330,750,0,750);
 
-  fHS->BookHistoList("BremsstrahlungList","hGoodChannels2nsWindowEPVetoPlusESac",500,0,500);
-  fHS->BookHisto2List("BremsstrahlungList","hGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,500,0,500);
+  fHS->BookHistoList("BremsstrahlungList","hGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
 
-  fHS->BookHistoList("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEPVetoPlusESac",500,0,500);
-  fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,500,0,500);
+  fHS->BookHistoList("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
 
   fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",350,150,500);
   fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,350,150,500);

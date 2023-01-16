@@ -72,8 +72,8 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
   fHS->BookHistoList("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
   fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
 
-  fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",350,150,500);
-  fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,350,150,500);
+  fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
 
   fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",1000,0,10,1000,-5,5);
   

@@ -33,6 +33,8 @@ Bool_t T0sAnalysis::Init(PadmeAnalysisEvent* event){
 
 Bool_t T0sAnalysis::InitHistos(){
   // T0sAnalysis directory will contain all histograms related to this analysis
+  fHS->CreateList("PVetoHits");
+
   fHS->CreateList("PVetoSACT0sList/StandardRecoClus");
   fHS->CreateList("EVetoSACT0sList/StandardRecoClus");
 
@@ -45,9 +47,12 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->CreateList("PVetoSACT0sList/SwimmerSACSiPM");
   fHS->CreateList("EVetoSACT0sList/SwimmerSACSiPM");
 
+  fHS->CreateList("PVetoSACT0sList/StandardRecoClusWithT0s");
+  fHS->CreateList("EVetoSACT0sList/StandardRecoClusWithT0s");
+  
   fHS->CreateList("PVetoAdjChaT0sList");
   fHS->CreateList("EVetoAdjChaT0sList");
-
+  
   fHS->CreateList("SwumEnergyToChannel");
   
   //Time difference PVetoClusters wrt SAC
@@ -55,9 +60,20 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSACClusterGoodPVetoCh",4000,-500,500);
   fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSAC22ClusterGoodPVetoCh",4000,-500,500);
 
+  //Time difference PVetoClusters wrt SAC with Brem T0s
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSACCluster",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSACClusterGoodPVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSAC22ClusterGoodPVetoCh",4000,-500,500);
+
+  //Time difference EVetoClusters wrt SAC
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSACCluster",4000,-500,500);
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSACClusterGoodEVetoCh",4000,-500,500);
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
+
+  //Time difference EVetoClusters wrt SAC with Brem T0s
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSACCluster",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSACClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Time difference PVetoHits wrt SAC
   // fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",4000,-500,500);
@@ -68,6 +84,9 @@ Bool_t T0sAnalysis::InitHistos(){
   // fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACClusterGoodEVetoCh",4000,-500,500);
   // fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
+  //Hit properties
+  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",150,0,30);
+  
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
   fHS->BookHistoList("EVetoAdjChaT0sList","hDeltatEVetoCh_iCh_i--",80,-5,5);
@@ -83,6 +102,9 @@ Bool_t T0sAnalysis::InitHistos(){
     sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
     fHS->BookHistoList("PVetoSACT0sList/StandardRecoClus",name,450,-45,45);
 
+    sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",ch);
+    fHS->BookHistoList("PVetoSACT0sList/StandardRecoClusWithT0s",name,450,-45,45);
+  
     sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",ch);
     fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits",name,450,-45,45);
 
@@ -100,6 +122,9 @@ Bool_t T0sAnalysis::InitHistos(){
   for(int ch=0;ch<96;ch++){
     sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",ch);
     fHS->BookHistoList("EVetoSACT0sList/StandardRecoClus",name,450,-45,45);
+
+    sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",ch);
+    fHS->BookHistoList("EVetoSACT0sList/StandardRecoClusWithT0s",name,450,-45,45);
 
     sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",ch);
     fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits",name,450,-45,45);
@@ -180,7 +205,7 @@ Bool_t T0sAnalysis::Process(){
   double enPositron;
   double enSum;
 
-  double timecorrection = -3.67;
+  double timecorrection;
 
   //Vetos-SAC difference
   for(int ii = 0; ii<NSACCluster; ii++){
@@ -200,14 +225,26 @@ Bool_t T0sAnalysis::Process(){
       NClusterHitsPVeto =  fEvent->PVetoRecoCl->Element(jj)->GetNHitsInClus();
       enPVeto    =  fEvent->PVetoRecoCl->Element(jj)->GetEnergy();
 
+      timecorrection = 0.03594*(chPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
+      
       //time difference
       fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSACCluster",tPVeto-tSAC);
-      if(chPVeto>19&&chPVeto<71) fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSACClusterGoodPVetoCh",tPVeto-tSAC);
-      if(chPVeto>19&&chPVeto<71&&chSAC==22) fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSAC22ClusterGoodPVetoCh",tPVeto-tSAC);
+      fHS->FillHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSACCluster",tPVeto-tSAC-timecorrection);
 
+      if(chPVeto>19&&chPVeto<71){
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSACClusterGoodPVetoCh",tPVeto-tSAC);
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSACClusterGoodPVetoCh",tPVeto-tSAC-timecorrection);
+      }
+      
+      if(chPVeto>19&&chPVeto<71&&chSAC==22){
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus","hDeltatPVetoSAC22ClusterGoodPVetoCh",tPVeto-tSAC);
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClusWithT0s","hDeltatPVetoSAC22ClusterGoodPVetoCh",tPVeto-tSAC-timecorrection);
+      }
+      
       sprintf(name,"hDeltatPVetoSAC22ClusterCh%i",chPVeto);
       if(chSAC==22&&chPVeto<90){
 	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClus",name,tPVeto-tSAC);
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoClusWithT0s",name,tPVeto-tSAC-timecorrection);
 	//	std::cout<<"NPVetoCluster "<<NPVetoCluster<<" jj "<<jj<<" PVetoClusterTime "<<tPVeto<<" SACClusterTime "<<tSAC<<std::endl;
       }
     }
@@ -218,7 +255,8 @@ Bool_t T0sAnalysis::Process(){
       tHitPVeto     =  fEvent->PVetoRecoEvent->Hit(kk)->GetTime();
       chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(kk)->GetChannelId();
       enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(kk)->GetEnergy();
-      
+
+      fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
       //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
       
       //time difference
@@ -226,21 +264,36 @@ Bool_t T0sAnalysis::Process(){
       if(chSAC==22&&chPVeto<90)	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits",name,tHitPVeto-tSAC);
     }
 
-    for(int ll = 0; ll<NEVetoCluster;ll++){
+    for(int jj = 0; jj<NEVetoCluster;jj++){
 
       //import EVeto variables
-      tEVeto     =  fEvent->EVetoRecoCl->Element(ll)->GetTime();
-      chEVeto    =  fEvent->EVetoRecoCl->Element(ll)->GetChannelId();
-      NClusterHitsEVeto =  fEvent->EVetoRecoCl->Element(ll)->GetNHitsInClus();
-      enEVeto    =  fEvent->EVetoRecoCl->Element(ll)->GetEnergy();
+      tEVeto     =  fEvent->EVetoRecoCl->Element(jj)->GetTime();
+      chEVeto    =  fEvent->EVetoRecoCl->Element(jj)->GetChannelId();
+      NClusterHitsEVeto =  fEvent->EVetoRecoCl->Element(jj)->GetNHitsInClus();
+      enEVeto    =  fEvent->EVetoRecoCl->Element(jj)->GetEnergy();
 
+      timecorrection = 0.03594*(chEVeto)-11.52-0.37;//bring DeltaT(EVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
+      
       //time difference
       fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSACCluster",tEVeto-tSAC);
-      if(chEVeto>19&&chEVeto<71) fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSACClusterGoodEVetoCh",tEVeto-tSAC);
-      if(chEVeto>19&&chEVeto<71&&chSAC==22) fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSAC22ClusterGoodEVetoCh",tEVeto-tSAC);
+      fHS->FillHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSACCluster",tEVeto-tSAC-timecorrection);
 
+      if(chEVeto>19&&chEVeto<71){
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSACClusterGoodEVetoCh",tEVeto-tSAC);
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSACClusterGoodEVetoCh",tEVeto-tSAC-timecorrection);
+      }
+      
+      if(chEVeto>19&&chEVeto<71&&chSAC==22){
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus","hDeltatEVetoSAC22ClusterGoodEVetoCh",tEVeto-tSAC);
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSAC22ClusterGoodEVetoCh",tEVeto-tSAC-timecorrection);
+      }
+      
       sprintf(name,"hDeltatEVetoSAC22ClusterCh%i",chEVeto);
-      if(chSAC==22&&chEVeto<90)	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus",name,tEVeto-tSAC);
+      if(chSAC==22&&chEVeto<90){
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClus",name,tEVeto-tSAC);
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoClusWithT0s",name,tEVeto-tSAC-timecorrection);
+	//	std::cout<<"NEVetoCluster "<<NEVetoCluster<<" jj "<<jj<<" EVetoClusterTime "<<tEVeto<<" SACClusterTime "<<tSAC<<std::endl;
+      }
     }
     
     for(int mm = 0; mm<NEVetoHit;mm++){
@@ -458,7 +511,7 @@ Bool_t T0sAnalysis::Process(){
 	  }
 	}
     }
-  }
+  }*///end if MC
   return true;
 }
 

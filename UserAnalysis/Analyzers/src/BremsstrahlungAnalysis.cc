@@ -53,6 +53,7 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
 
   //Cluster energy
   fHS->BookHistoList("BremsstrahlungList","hEnergyPVetoCluster",150,0,30);
+  fHS->BookHistoList("BremsstrahlungList","h2nsWindowEnergyPVetoCluster",150,0,30);
   fHS->BookHistoList("BremsstrahlungList","hEnergySACCluster",7500,0,1500);
 
   //Cluster channel
@@ -160,6 +161,8 @@ Bool_t BremsstrahlungAnalysis::Process(){
       //within 2ns?
       if(!(std::fabs(tPVeto-tSAC-timecorrection)<2)) continue;
 
+      fHS->FillHistoList("BremsstrahlungList","h2nsWindowEnergyPVetoCluster",enPVeto);
+      
       //positron energy as function of channel, from Mauro MonteCarlo 22/4/21
       //enPositron = 20.15+1.094*chPVeto+0.0328*chPVeto*chPVeto;
       

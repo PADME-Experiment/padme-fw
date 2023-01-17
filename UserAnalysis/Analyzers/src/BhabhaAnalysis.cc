@@ -273,7 +273,7 @@ Bool_t BhabhaAnalysis::Process(){
     PVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
     if(fVetoEndPoint->GetEndFinger()>-100) nBhabhaPosInVeto++;
   }
-  else if(isMC&&!fixedE){
+  else if(isMC&&!fixedE&&fEvent->MCTruthEvent->GetEventNumber()<10){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
       //if(iV==1) std::cout<<fEvent->MCTruthEvent->GetNVertices()<<" vertices, 0 and 1 are "<<fEvent->MCTruthEvent->Vertex(0)->GetProcess()<<" "<<fEvent->MCTruthEvent->Vertex(1)->GetProcess()<<std::endl;

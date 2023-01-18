@@ -40,6 +40,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of SAC box
   G4double GetSACPosX() { return 0.*cm; }
   G4double GetSACPosY() { return 0.*cm; }
@@ -103,6 +106,9 @@ public:
   G4double GetDigiPMTTransitTime() { return fDigiPMTTransitTime; }
   G4double GetDigiPMTCableDelay() { return fDigiPMTCableDelay; }
 
+  // Get name of SAC digitizer
+  G4String GetSACDigitizerName() { return fSACDigitizerName; }
+
   // Get name of SAC sensitive detector
   G4String GetSACSensitiveDetectorName() { return fSACSensitiveDetectorName; }
 
@@ -111,6 +117,8 @@ private:
   // Geometry parameters
 
   G4int fVerbose; // Verbose level
+
+  G4int fDetectorSetup;
 
   G4double fCrystalSizeX;
   G4double fCrystalSizeY;
@@ -139,6 +147,7 @@ private:
 
   // Other parameteres
 
+  G4String fSACDigitizerName;
   G4String fSACSensitiveDetectorName;
 
 };

@@ -37,6 +37,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of Target box
   G4double GetTargetPosX() { return fTargetDisplacementX; }
   G4double GetTargetPosY() { return fTargetDisplacementY; }
@@ -58,11 +61,19 @@ public:
   G4double GetTSupportHoleL() { return fTSupportHoleL; }
   G4double GetTSupportHoleD() { return fTSupportHoleD; }
   G4double GetTSupportThick() { return fTSupportThick; }
-  G4double GetTSupportPosX() { return -0.5*fTSupportL2+fTSupportHoleD; }
+  // Take into account Target displacement to define support position
+  G4double GetTSupportPosX() { return fTargetDisplacementX-0.5*fTSupportL2+fTSupportHoleD; }
+  G4double GetTSupportPosY() { return fTargetDisplacementY; }
   // Support is before Target
   G4double GetTSupportPosZ() { return fTargetFrontFacePosZ-0.5*fTSupportThick; }
   // Support is after Target
   //G4double GetTSupportPosZ() { return fTargetFrontFacePosZ+fTargetSizeZ+0.5*fTSupportThick; }
+
+  // Displacements along X and Y
+  G4double GetTargetDisplacementX() { return fTargetDisplacementX; }
+  G4double GetTargetDisplacementY() { return fTargetDisplacementY; }
+  void     SetTargetDisplacementX(G4double s) { fTargetDisplacementX = s; }
+  void     SetTargetDisplacementY(G4double s) { fTargetDisplacementY = s; }
 
   // Set position along Z of Target front face
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
@@ -96,6 +107,9 @@ public:
   void EnableReduceWaveform() { fTargetReduceWaveform = true; }
   void DisableReduceWaveform() { fTargetReduceWaveform = false; }
   G4bool ReduceWaveformIsEnabled() { return fTargetReduceWaveform; }
+
+  // Get name of Target digitizer
+  G4String GetTargetDigitizerName() { return fTargetDigitizerName; }
 
   // Get name of Target sensitive detector
   G4String GetTargetSensitiveDetectorName() { return fTargetSensitiveDetectorName; }
@@ -136,6 +150,8 @@ private:
 
   G4int fVerbose; // Verbose level
 
+  G4int fDetectorSetup;
+
   G4double fTargetSizeX;
   G4double fTargetSizeY;
   G4double fTargetSizeZ;
@@ -172,7 +188,6 @@ private:
   G4double fTargetStripSize;  // Target Strip Size (def 850 um)
   G4double fTargetGapSize;  // Target Gap Size (Pitch-Strip) (by diff 150 um)
 
-
   // digitizer parameters
 
   G4int fTargetDigiNChannels;  // Number of Target Channels
@@ -192,6 +207,7 @@ private:
   G4double fTargetDigiNoiseChargeRMS; // Fluctuation of noise charge for FastDigi
   G4double fTargetDigiMeV2Q;  // MeV to charge conversion factor for calibration of FastDigi
 
+  G4String fTargetDigitizerName;
   G4String fTargetSensitiveDetectorName;
 
 };

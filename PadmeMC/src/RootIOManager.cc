@@ -18,7 +18,8 @@
 #include "HEPVetoRootIO.hh"
 #include "SACRootIO.hh"
 #include "TPixRootIO.hh"
-//#include "LAVRootIO.hh"
+#include "MCTruthRootIO.hh"
+#include "ETagRootIO.hh"
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
 
@@ -75,7 +76,8 @@ RootIOManager::RootIOManager()
   fRootIOList.push_back(new HEPVetoRootIO);
   fRootIOList.push_back(new SACRootIO);
   fRootIOList.push_back(new TPixRootIO);
-  //fRootIOList.push_back(new LAVRootIO);
+  fRootIOList.push_back(new MCTruthRootIO);
+  fRootIOList.push_back(new ETagRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
   // Tell all RootIO handlers about new run
@@ -238,7 +240,7 @@ void RootIOManager::NewRun(G4int nRun)
   while (iRootIO!=endRootIO) {
     //G4cout << "RootIOManager: Checking IO for " << (*iRootIO)->GetName() << G4endl;
     if ((*iRootIO)->GetEnabled()) {
-      //G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
+      G4cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << G4endl;
       (*iRootIO)->NewRun(nRun,fFile,detInfo);
       //(*iRootIO)->NewRun(nRun,fFile);
     }

@@ -22,6 +22,8 @@ ECalGeometry::ECalGeometry()
 
   fVerbose = 0; // Do not show debug output
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   fECalSizeX = 690.*mm; // Same as front panel
   fECalSizeY = 690.*mm; // Same as pront panel
   fECalSizeZ = 250.*mm; // Will become longer if we include the length of PMTs
@@ -95,6 +97,7 @@ ECalGeometry::ECalGeometry()
   fDigiPMTTransitTime = 23.*ns; // HZC XP1911 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
+  fECalDigitizerName = "ECalDigitizer";
   fECalSensitiveDetectorName = "ECalSD";
 
 }

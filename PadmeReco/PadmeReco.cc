@@ -18,6 +18,8 @@
 #include "RecoRootIOManager.hh"
 #include "PadmePerfUtils.hh"
 
+#include <TObjString.h>
+
 
 PadmeReconstruction* PadmeReco; 
                               
@@ -276,7 +278,10 @@ int main(Int_t argc, char **argv)
     double cpuAtEnd = ucpu;
     double runAtEnd = urun;
 
-    // Show final run statistics before exiting
+    // Show final run statistics before exiting (only on Linux)
+    #ifdef __APPLE__
+    printf("\nWARNING: Not running performance measuring tools on MacOS. Results are meaningless...\n");
+    #endif 
     printf("\n");
     printf ("RecoInfo - Processed Events %d\n",niter);
     printf("\n");

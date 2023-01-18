@@ -7,11 +7,12 @@
 #include "EVetoRecoRootIO.hh"
 #include "HEPVetoRecoRootIO.hh"
 #include "SACRecoRootIO.hh"
+#include "ETagRecoRootIO.hh"
 #include "TargetRecoRootIO.hh"
 #include "ECalRecoRootIO.hh"
+#include "LeadGlassRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
-
 
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
@@ -41,7 +42,6 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeRecoIOConfiguration");
 
-
   // Add subdetectors persistency managers
   if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
     fRootIOList.push_back(new PVetoRecoRootIO);
@@ -51,10 +51,14 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fRootIOList.push_back(new HEPVetoRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
     fRootIOList.push_back(new SACRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "ETag"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ETag"    ,1))
+    fRootIOList.push_back(new ETagRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
     fRootIOList.push_back(new TargetRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
     fRootIOList.push_back(new ECalRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
+    fRootIOList.push_back(new LeadGlassRecoRootIO);
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 
@@ -69,6 +73,7 @@ RecoRootIOManager* RecoRootIOManager::GetInstance()
 //fInstance = new RecoRootIOManager(); }
   return fInstance;
 }
+
 RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
 {
   if ( fInstance == 0 ) { fInstance = new RecoRootIOManager(confFile); }
@@ -168,7 +173,6 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     //fEventTree->SetAutoSave(1000000000);  // autosave when ~1 Gbyte written
     fEventTree->SetDirectory(fFile->GetDirectory("/"));
     
-
     // Create branch to hold the run content info
     fEventBranch = fEventTree->Branch("RecoEvent", &fEvent, fBufSize);
     fEventBranch->SetAutoDelete(kFALSE);
@@ -186,13 +190,13 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       iRootIO++;
     }
 
+    // If present, replicate MCTruth info to output file
+    if (fReco->GetMCTruthEvent()) 
+      fEventTree->Branch("MCTruth",fReco->GetMCTruthEvent());
 
   }
 
-
 }
-
-
 
 void RecoRootIOManager::EndRun()
 {
@@ -216,9 +220,8 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
+
 }
-
-
 
 void RecoRootIOManager::SaveEvent(){
   

@@ -17,6 +17,16 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fDetectorDir = new G4UIdirectory("/Detector/");
   fDetectorDir->SetGuidance("UI commands to manage detector construction.");
 
+  fDetectorSetupCmd = new G4UIcmdWithAnInteger("/Detector/Setup",this);
+  fDetectorSetupCmd->SetGuidance("Set main setup of detector.");
+  fDetectorSetupCmd->SetGuidance("10: 2019");
+  fDetectorSetupCmd->SetGuidance("20: 2020");
+  fDetectorSetupCmd->SetGuidance("30: 2021");
+  fDetectorSetupCmd->SetGuidance("40: 2022 - Add ETag, move ECal, remove SAC, switch off Vetoes, TimePix behind ECal");
+  fDetectorSetupCmd->SetParameterName("DS",false);
+  fDetectorSetupCmd->SetRange("DS >= 0");
+  fDetectorSetupCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableSubDetCmd = new G4UIcmdWithAString("/Detector/EnableSubDetector",this);
   fEnableSubDetCmd->SetGuidance("Enable sub detector in simulation.");
   fEnableSubDetCmd->SetParameterName("Det",false);
@@ -115,6 +125,7 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
 
 DetectorMessenger::~DetectorMessenger()
 {
+  delete fDetectorSetupCmd;
   delete fEnableSubDetCmd;
   delete fDisableSubDetCmd;
   delete fEnableStructCmd;
@@ -141,6 +152,8 @@ DetectorMessenger::~DetectorMessenger()
 
 void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 {
+
+  if( command == fDetectorSetupCmd )  fDetector->SetDetectorSetup(fDetectorSetupCmd->GetNewIntValue(newValue));
 
   if( command == fEnableSubDetCmd )  fDetector->EnableSubDetector(newValue);
   if( command == fDisableSubDetCmd ) fDetector->DisableSubDetector(newValue);

@@ -31,7 +31,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
-  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 50000");
+  fSetNPositronsPerBunchCmd->SetRange("NP > 0 && NP <= 500000");
   fSetNPositronsPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableNPositronsPerBunchSpreadCmd = new G4UIcmdWithABool("/beam/n_e+_poisson_on",this);
@@ -71,7 +71,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXCmd->SetGuidance("Set center of beam X coordinate at t=0.");
   fSetBeamCenterPosXCmd->SetParameterName("X",false);
   fSetBeamCenterPosXCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXCmd->SetRange("X >= -5000. && X <= 5000.");
+  fSetBeamCenterPosXCmd->SetRange("X >= -20000. && X <= 20000.");
   fSetBeamCenterPosXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y",this);
@@ -85,7 +85,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosZCmd->SetGuidance("Set center of beam Z coordinate at t=0.");
   fSetBeamCenterPosZCmd->SetParameterName("Z",false);
   fSetBeamCenterPosZCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosZCmd->SetRange("Z >= -10000. && Z <= 10000.");
+  fSetBeamCenterPosZCmd->SetRange("Z >= -20000. && Z <= 20000.");
   fSetBeamCenterPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableBeamCenterPosSpreadCmd = new G4UIcmdWithABool("/beam/position_spread_on",this);
@@ -100,7 +100,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 5.");
+  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 10.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
@@ -108,7 +108,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 5.");
+  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 10.");
   fSetBeamCenterPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamMomentumCmd = new G4UIcmdWithADoubleAndUnit("/beam/momentum",this);
@@ -188,6 +188,23 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
   fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  // Settings for BhaBha M. Raggi 20/05/2021
+  fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
+  fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
+  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNBhaBhaPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
+  fSetNBhaBhaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBhaBhaFilenameCmd = new G4UIcmdWithAString("/beam/BhaBha_file",this);
+  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
+  fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
+  fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
+  fSetDecayLengthCmd->SetParameterName("DL",false);
+  fSetDecayLengthCmd->SetDefaultUnit("mm");
+  fSetDecayLengthCmd->SetRange("DL >= 0.");
+  fSetDecayLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableCalibRunCmd = new G4UIcmdWithABool("/beam/calibration",this);
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
@@ -221,6 +238,48 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetCalibRunRadiusCmd->SetDefaultUnit("cm");
   fSetCalibRunRadiusCmd->SetRange("R >= 0. && R <= 30.");
   fSetCalibRunRadiusCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetPosZCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_z",this);
+  fSetBeamTargetPosZCmd->SetGuidance("Set Z coordinate of point in front of Target front face.");
+  fSetBeamTargetPosZCmd->SetParameterName("TZ",false);
+  fSetBeamTargetPosZCmd->SetDefaultUnit("mm");
+  fSetBeamTargetPosZCmd->SetRange("TZ >= 500. && TZ <= 2000.");
+  fSetBeamTargetPosZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetPosXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_x_spread",this);
+  fSetBeamTargetPosXSpreadCmd->SetGuidance("Set X position spread at Target.");
+  fSetBeamTargetPosXSpreadCmd->SetParameterName("TSX",false);
+  fSetBeamTargetPosXSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamTargetPosXSpreadCmd->SetRange("TSX >= 0. && TSX <= 100.");
+  fSetBeamTargetPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_y_spread",this);
+  fSetBeamTargetPosYSpreadCmd->SetGuidance("Set Y position spread at Target.");
+  fSetBeamTargetPosYSpreadCmd->SetParameterName("TSY",false);
+  fSetBeamTargetPosYSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamTargetPosYSpreadCmd->SetRange("TSY >= 0. && TSY <= 100.");
+  fSetBeamTargetPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetPathLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_path_length",this);
+  fSetBeamTargetPathLengthCmd->SetGuidance("Set length of path from beam origin to Target.");
+  fSetBeamTargetPathLengthCmd->SetParameterName("TPL",false);
+  fSetBeamTargetPathLengthCmd->SetDefaultUnit("cm");
+  fSetBeamTargetPathLengthCmd->SetRange("TPL >= 0.");
+  fSetBeamTargetPathLengthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetEmittanceXCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_emittance_x",this);
+  fSetBeamTargetEmittanceXCmd->SetGuidance("Set sigma of gaussian spread on beam X direction at Target.");
+  fSetBeamTargetEmittanceXCmd->SetParameterName("TEX",false);
+  fSetBeamTargetEmittanceXCmd->SetDefaultUnit("mrad");
+  fSetBeamTargetEmittanceXCmd->SetRange("TEX >= 0. && TEX <= 1000.");
+  fSetBeamTargetEmittanceXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamTargetEmittanceYCmd = new G4UIcmdWithADoubleAndUnit("/beam/at_target_emittance_y",this);
+  fSetBeamTargetEmittanceYCmd->SetGuidance("Set sigma of gaussian spread on beam Y direction at Target.");
+  fSetBeamTargetEmittanceYCmd->SetParameterName("TEY",false);
+  fSetBeamTargetEmittanceYCmd->SetDefaultUnit("mrad");
+  fSetBeamTargetEmittanceYCmd->SetRange("TEY >= 0. && TEY <= 1000.");
+  fSetBeamTargetEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
 
@@ -260,11 +319,20 @@ BeamMessenger::~BeamMessenger()
   delete fSetNTwoPhotonDecaysPerBunchCmd;
   delete fSetTwoPhotonDecaysFilenameCmd;
 
+  delete fSetDecayLengthCmd;
+
   delete fEnableCalibRunCmd;
   delete fSetCalibRunEnergyCmd;
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
   delete fSetCalibRunRadiusCmd;
+
+  delete fSetBeamTargetPosZCmd;
+  delete fSetBeamTargetPosXSpreadCmd;
+  delete fSetBeamTargetPosYSpreadCmd;
+  delete fSetBeamTargetEmittanceXCmd;
+  delete fSetBeamTargetEmittanceYCmd;
+  delete fSetBeamTargetPathLengthCmd;
 
   delete fBeamGeneratorDir;
 
@@ -374,6 +442,15 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
     fBeamParameters->SetTwoPhotonDecaysFilename(par);
 
+  else if ( cmd == fSetNBhaBhaPerBunchCmd )
+    fBeamParameters->SetNBhaBhaPerBunch(fSetNBhaBhaPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBhaBhaFilenameCmd )
+    fBeamParameters->SetBhaBhaFilename(par);
+
+  else if ( cmd == fSetDecayLengthCmd )
+    fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));
+
   else if ( cmd == fEnableCalibRunCmd ) {
     if (fEnableCalibRunCmd->GetNewBoolValue(par)) {
       fBeamParameters->CalibrationRunEnable();
@@ -393,6 +470,24 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetCalibRunRadiusCmd )
     fBeamParameters->SetCalibRunRadius(fSetCalibRunRadiusCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetPosZCmd )
+    fBeamParameters->SetBeamTargetPosZ(fSetBeamTargetPosZCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetPosXSpreadCmd )
+    fBeamParameters->SetBeamTargetPosXSpread(fSetBeamTargetPosXSpreadCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetPosYSpreadCmd )
+    fBeamParameters->SetBeamTargetPosYSpread(fSetBeamTargetPosYSpreadCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetEmittanceXCmd )
+    fBeamParameters->SetBeamTargetEmittanceX(fSetBeamTargetEmittanceXCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetEmittanceYCmd )
+    fBeamParameters->SetBeamTargetEmittanceY(fSetBeamTargetEmittanceYCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fSetBeamTargetPathLengthCmd )
+    fBeamParameters->SetBeamTargetPathLength(fSetBeamTargetPathLengthCmd->GetNewDoubleValue(par));
 
 }
 
@@ -476,6 +571,9 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetTwoPhotonDecaysFilenameCmd )
     cv = fBeamParameters->GetTwoPhotonDecaysFilename();  
 
+  else if ( cmd == fSetDecayLengthCmd )
+    cv = fSetDecayLengthCmd->ConvertToString(fBeamParameters->GetDecayLength(),"mm");
+
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
 
@@ -490,6 +588,24 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetCalibRunRadiusCmd )
     cv = fSetCalibRunRadiusCmd->ConvertToString(fBeamParameters->GetCalibRunRadius());
+
+  else if ( cmd == fSetBeamTargetPosZCmd )
+    cv = fSetBeamTargetPosZCmd->ConvertToString(fBeamParameters->GetBeamTargetPosZ());
+
+  else if ( cmd == fSetBeamTargetPosXSpreadCmd )
+    cv = fSetBeamTargetPosXSpreadCmd->ConvertToString(fBeamParameters->GetBeamTargetPosXSpread());
+
+  else if ( cmd == fSetBeamTargetPosYSpreadCmd )
+    cv = fSetBeamTargetPosYSpreadCmd->ConvertToString(fBeamParameters->GetBeamTargetPosYSpread());
+
+  else if ( cmd == fSetBeamTargetEmittanceXCmd )
+    cv = fSetBeamTargetEmittanceXCmd->ConvertToString(fBeamParameters->GetBeamTargetEmittanceX());
+
+  else if ( cmd == fSetBeamTargetEmittanceYCmd )
+    cv = fSetBeamTargetEmittanceYCmd->ConvertToString(fBeamParameters->GetBeamTargetEmittanceY());
+
+  else if ( cmd == fSetBeamTargetPathLengthCmd )
+    cv = fSetBeamTargetPathLengthCmd->ConvertToString(fBeamParameters->GetBeamTargetPathLength());
 
   return cv;
 

@@ -2,7 +2,7 @@
 
 NAME := PadmeAnalysis
 
-SUBDIRS :=  ECal EVeto Target PVeto HEPVeto SAC  
+SUBDIRS :=  ECal EVeto Target PVeto HEPVeto SAC UserAnalysis
 ALLTARGETDIRS := $(SUBDIRS) AnalysisBase
 
 
@@ -11,9 +11,8 @@ STATIC := -static
 ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
 
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
-CPPFLAGS += -IAnalysisBase/include -g -std=c++11
+CPPFLAGS += -IAnalysisBase/include -g
 
-all: allobjs alllibs bin
 
 include ./config/global_mac.gmk
 
@@ -21,7 +20,6 @@ include ./config/global_mac.gmk
 LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Analysis$(STATIC),$(SUBDIRS)))
 LIBS += -LAnalysisBase/lib -lAnalysisBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
-# Andre: I don't have mysql installed at the moment
 #LIBS += -L/usr/lib64/mysql -lmysqlclient
 
 
@@ -29,12 +27,7 @@ LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 
 all: PadmeAnalysis
 
-allobjs: dirs makesubobjs objs
-
-alllibs: makesublibs dirs lib
-
-bin: PadmeAnalysis
-PadmeAnalysis: PadmeAnalysis.cc
+PadmeAnalysis: PadmeAnalysis.cc makesub
 	@echo "Compiling $< ..."
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
 
@@ -56,22 +49,15 @@ try:
 
 $(ALLTARGETDIRS):
 	@echo Entering $@ ...
-	@$(MAKE) -C $@ -f GNUmakefile_mac $(TARGET)
+	@$(MAKE) -C $@ $(TARGET)
 
 cleanbin:
 	@rm -f PadmeAnalysis
-	@rm -rf PadmeAnalysis.dSym/
 
 cleanall: clean cleanbin
-	@$(MAKE) TARGET=clean -f GNUmakefile_mac makesub
+	@$(MAKE) TARGET=clean makesub
 
-makesub: GNUmakefile_mac $(ALLTARGETDIRS)
-
-makesubobjs:
-	@$(MAKE) TARGET=objs -f GNUmakefile_mac makesub
-
-makesublibs:
-	@$(MAKE) TARGET=all -f GNUmakefile_mac makesub
+makesub: GNUmakefile $(ALLTARGETDIRS)
 
 cleansub:
-	@$(MAKE) TARGET=clean -f GNUmakefile_mac makesub
+	@$(MAKE) TARGET=clean makesub

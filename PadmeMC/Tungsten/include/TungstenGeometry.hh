@@ -32,6 +32,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of Tungsten cylinder
   G4double GetTungstenPosX() { return 0.; }
   G4double GetTungstenPosY() { return 0.; }
@@ -47,6 +50,8 @@ public:
   void SetTungstenFrontFacePosZ(G4double z) { fTungstenFrontFacePosZ = z; }
 
 private:
+
+  G4int fDetectorSetup;
 
   G4double fTungstenRadius;
   G4double fTungstenSizeZ;

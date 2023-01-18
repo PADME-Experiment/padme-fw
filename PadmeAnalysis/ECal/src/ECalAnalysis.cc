@@ -24,9 +24,45 @@ ECalAnalysis::~ECalAnalysis()
 
 Bool_t ECalAnalysis::InitHistosAnalysis()
 {
-
-
-    return true;
+  HistoSvc* hSvcVal =  HistoSvc::GetInstance();
+  std::string hname;
+  int nBin, min, max;
+  nBin=250;
+  min=0.;
+  max=500;
+  hname="ECal_NHits";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=500;
+  min=0.;
+  max=1000;
+  hname = "ECal_HitEnergy";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=5000;
+  min=0.;
+  max=10000;
+  hname="ECal_EHitTot";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=250;
+  min=0.;
+  max=250;
+  hname = "ECal_NCluster";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=51;
+  min=-0.5;
+  max=50.5;
+  hname = "ECal_NHitsInClus";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=500;
+  min=0.;
+  max=1000;
+  hname = "ECal_ClusterEnergy";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  nBin=5000;
+  min=0.;
+  max=10000;
+  hname="ECal_EClTot";
+  hSvcVal->BookHisto(hname, nBin, min, max);
+  return true;
 }
 
 Bool_t ECalAnalysis::InitHistosValidation()
@@ -35,26 +71,27 @@ Bool_t ECalAnalysis::InitHistosValidation()
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   std::string hname;
   int nBin, min, max;
-  nBin=200;
-  min=150;
-  max=350;
+  nBin=100;
+  min=0;
+  max=200;
   hname="ECal_NHits";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  min=40;
-  max=200;
+  nBin=50;
+  min=0;
+  max=50;
   hname="ECal_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=500;
+  nBin=300;
   min=0;
-  max=500;
+  max=600;
   hname = "ECal_HitEnergy";
   hSvcVal->BookHisto(hname,nBin,min, max);
   hname = "ECal_ClusterEnergy";
   hSvcVal->BookHisto(hname,nBin,min, max);
-  nBin=500;
+  nBin=350;
   min=0;
-  max=1000;
-  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
+  max=700;
+  hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest5ns";
   hSvcVal->BookHisto(hname,nBin,min, max);
   nBin=1000;
   min=0;
@@ -70,16 +107,16 @@ Bool_t ECalAnalysis::InitHistosValidation()
   hSvcVal->BookHisto(hname,nBin, min, max);
   hname = "ECal_ClusterTime";
   hSvcVal->BookHisto(hname,nBin, min, max);
-  nBin=30;
-  min=0;
-  max=30;
+  nBin=200;
+  min=-300;
+  max=300;
   hname = "ECal_HitMap";
   hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
   hname = "ECal_ClusterMap";
   hSvcVal->BookHisto2(hname, nBin, min, max, nBin, min, max);
-  nBin=300;
-  min=-1;
-  max=30;
+  nBin=500;
+  min=-300;
+  max=300;
   hname="ECal_HitXPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterXPos";
@@ -88,9 +125,9 @@ Bool_t ECalAnalysis::InitHistosValidation()
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterYPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=300;
-  min=-1;
-  max=30;
+  nBin=3;
+  min=2545;
+  max=2565;
   hname="ECal_HitZPos";
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname="ECal_ClusterZPos";
@@ -118,17 +155,12 @@ Bool_t ECalAnalysis::ProcessAnalysis()
   HistoSvc* hSvc =  HistoSvc::GetInstance();
 
   TRecoVHit* hit=NULL;
-  TRecoVHit* hitn=NULL;
   TRecoVCluster* clu=NULL;
-  TRecoVCluster* clun=NULL;
   std::string hname;
   Int_t      chId;
   Double_t energy;
   Double_t   time;
-  Int_t      chIdn;
-  Double_t energyn;
-  Double_t   timen;
-
+    
   Int_t fNhits = fhitEvent->GetNHits();
   Int_t fNclus = fClColl->GetNElements();
   Int_t seedId;
@@ -167,6 +199,38 @@ Bool_t ECalAnalysis::ProcessAnalysis()
    (hSvc->myEvt).NTECal_Clusters_Ypos[j]=clu->GetPosition().Y();
    (hSvc->myEvt).NTECal_Clusters_Zpos[j]=clu->GetPosition().Z();
   }
+
+   hname = "ECal_NHits";
+   hSvc->FillHisto(hname, fNhits,1.);
+   Double_t eTot  =  0.;
+   for (Int_t i=0; i<fNhits; ++i){
+     hit = fhitEvent->Hit(i);
+     Double_t energy = hit->GetEnergy();
+     hname = "ECal_HitEnergy";
+     hSvc->FillHisto(hname, energy, 1.);
+     eTot += energy;
+   }
+   hname="ECal_EHitTot";
+   hSvc->FillHisto(hname, eTot, 1.);
+
+   
+   Double_t eTotCl;
+   hname = "ECal_NCluster";
+   hSvc->FillHisto(hname, fNclus,1.);
+
+   for (Int_t i=0; i<fNclus; ++i){
+     clu    = fClColl->Element(i);
+     eTotCl += clu->GetEnergy();
+     hname = "ECal_ClusterEnergy";
+     hSvc->FillHisto(hname, clu->GetEnergy(), 1.);
+     clSize = clu->GetNHitsInClus();
+     hname = "ECal_NHitsInClus";
+     hSvc->FillHisto(hname, clSize,1.);
+   
+   }
+   hname="ECal_EClTot";
+   hSvc->FillHisto(hname, eTotCl, 1.);
+
 
   // HistoSvc* hSvc =  HistoSvc::GetInstance();
 
@@ -325,9 +389,9 @@ Bool_t ECalAnalysis::ProcessValidation()
      hSvcVal->FillHisto2(hname, (Double_t)ix, (Double_t)iy, 1.);
      for(int j=i+1; j< fNclus; j++){
        clun   = fClColl->Element(j);
-       if(fabs(clu->GetTime() - clun->GetTime())<3.)
+       if(fabs(clu->GetTime() - clun->GetTime())<5.)
        {
-          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest3ns";
+          hname="ECal_TwoPhotonEnergy_TimeCoincidenceRequest5ns";
           hSvcVal->FillHisto(hname, clu->GetEnergy()+clun->GetEnergy());
        }
      }
@@ -337,4 +401,34 @@ Bool_t ECalAnalysis::ProcessValidation()
 
 
    return retCode;
+}
+
+
+
+
+void ECalAnalysis::EnergyCalibration(Bool_t isMC)
+{
+  TRecoVHit* hit;
+  Int_t fNhits =fhitEvent->GetNHits();
+  Double_t eTot  =  0.;
+  Double_t constantToAddForDataSeptember20=1.02242195116151890e+00;
+  Double_t constantForDataJuly19=1.084; 
+  for (Int_t i=0; i<fNhits; ++i){
+    hit = fhitEvent->Hit(i);
+    if(hit){
+      if (!isMC) hit  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(hit->GetEnergy()));
+    }
+  }
+  
+  TRecoVCluster* xClu;
+  for (int h=0; h<fClColl->GetNElements(); ++h)
+    {
+      xClu = fClColl->Element((int)h);
+      if (xClu) 
+	{
+	  if (!isMC) xClu  ->SetEnergy(constantForDataJuly19*constantToAddForDataSeptember20*(xClu->GetEnergy()));
+	}
+    }
+  return;
+
 }

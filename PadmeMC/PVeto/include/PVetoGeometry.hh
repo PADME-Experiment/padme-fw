@@ -37,6 +37,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of PVeto box
   G4double GetPVetoPosX() { return fPVetoInnerFacePosX+0.5*GetPVetoSizeX(); }
   G4double GetPVetoPosY() { return 0.*cm; }
@@ -97,12 +100,17 @@ public:
   // Set position along Z of PVeto front face
   void SetPVetoFrontFacePosZ(G4double z) { fPVetoFrontFacePosZ = z; }
 
+  // Get name of PVeto digitizer
+  G4String GetPVetoDigitizerName() { return fPVetoDigitizerName; }
+
   // Get name of PVeto sensitive detector
   G4String GetPVetoSensitiveDetectorName() { return fPVetoSensitiveDetectorName; }
 
 private:
 
   G4int fVerbose; // Verbose level
+
+  G4int fDetectorSetup;
 
   G4double fFingerDist0; // Distance of center of first finger from front face (in Z) of PVeto box
   G4double fFingerPitch; // Distance along Z between centers of two adjacent fingers
@@ -127,6 +135,7 @@ private:
   G4double fPVetoInnerFacePosX; // Position along X axis of PVeto inner face (i.e. inner face of support)
   G4double fPVetoFrontFacePosZ; // Position along Z axis of PVeto front face (i.e. front face of support)
 
+  G4String fPVetoDigitizerName;
   G4String fPVetoSensitiveDetectorName;
 
 };

@@ -40,6 +40,7 @@
 class EventAction;
 class G4Track;
 class HistoManager;
+class MCTruthManager;
 class SteppingAction : public G4UserSteppingAction
 {
 public:
@@ -73,6 +74,7 @@ private:
   BeamParameters* bpar;
   EventAction* fEventAction;
   HistoManager *fHistoManager;
+  MCTruthManager* fMCTruthManager;
 
   G4int fEnableSACAnalysis;
   G4int fEnableECalAnalysis;
@@ -90,7 +92,7 @@ private:
   G4int NChild;
 
   G4int ClassifyTrack(G4Track* );
-  //   HistoManager* fHistoManager;
+
 private:
   double fSACEnergyThr;
 

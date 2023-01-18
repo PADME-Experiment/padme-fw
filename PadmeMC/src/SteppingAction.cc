@@ -8,16 +8,15 @@
 #include "G4VProcess.hh"
 #include "G4TrackStatus.hh"
 #include "HistoManager.hh"
-#include "Constants.hh"
 #include "EventAction.hh"
 #include "G4RunManager.hh"
 #include "HistoManager.hh"
+#include "MCTruthManager.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 SteppingAction::SteppingAction()
 { 
-
   fEventAction = (EventAction*) G4RunManager::GetRunManager()->GetUserEventAction(); 
   fSACEnergyThr=5*MeV;
   bpar = BeamParameters::GetInstance();
@@ -26,15 +25,129 @@ SteppingAction::SteppingAction()
   fEnableSACAnalysis = 0;
   fEnableECalAnalysis = 0;
   fHistoManager = HistoManager::GetInstance();
+  fMCTruthManager = MCTruthManager::GetInstance();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void SteppingAction::UserSteppingAction(const G4Step* step)
 {
+
+  // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
+  if (fMCTruthManager->IsEnabled()) {
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") {
+      G4Track* track = step->GetTrack();
+      G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+      // Enable for some debug printout
+      //if (proc != "Transportation") {
+      //	G4cout << "Vertex in Target with process " << proc << " at " << step->GetPostStepPoint()->GetPosition() << G4endl;
+      //	printf("\tIn\t%s\tE = %.3f MeV\n",track->GetDefinition()->GetParticleName().data(),step->GetPreStepPoint()->GetTotalEnergy()/MeV);
+      //	printf("\tOut\t%s\tE = %.3f MeV\n",track->GetDefinition()->GetParticleName().data(),step->GetPostStepPoint()->GetTotalEnergy()/MeV);
+      //	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+      //	size_t nSec = (*sec).size();
+      //	for(size_t i = 0; i < nSec; i++) {
+      //	    printf("\tOut\t%s\tE = %.3f MeV\n",(*sec)[i]->GetDefinition()->GetParticleName().data(),(*sec)[i]->GetTotalEnergy()/MeV);
+      //	}
+      //	if ( ((proc == "eBrem") || (proc == "eIoni")) && (nSec != 1) )
+      //	  printf("WARNING eBrem or eIoni with %d secondaries\n",nSec);
+      //	if ( (proc == "annihil") && (nSec != 2) )
+      //	  printf("WARNING annihil with %d secondaries\n",nSec);
+      //	if ( (proc != "eBrem") && (proc != "eIoni") && (proc != "annihil" && (proc != "msc")) )
+      //	  printf("INFO found process %s\n",proc.data());
+      //}
+      if ( (proc == "eBrem") || (proc == "eIoni") ) {
+	//const G4TrackVector* sec = step->GetSecondary();
+	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+	size_t nSec = (*sec).size();
+	if (nSec>0) {
+	  MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
+	  tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
+	  tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
+	  for(size_t i = 0; i < nSec; i++) {
+	    tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+	  }
+	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
+	}
+      }
+      if (proc == "annihil") {
+	//const G4TrackVector* sec = step->GetSecondary();
+	const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
+	size_t nSec = (*sec).size();
+	if (nSec>0) {
+	  MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
+	  tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
+	  for(size_t i = 0; i < nSec; i++) {
+	    tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+	  }
+	  if (nSec!=2) printf("WARNING annihil with %d secondaries",nSec);
+	}
+      }
+    }
+  }
+
   static int nt=0;
 
   G4Track* track = step->GetTrack();
+
+//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Q1Quad") {
+//
+//      G4cout <<"Q1 pre "<<step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q1 post "<<step->GetPostStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q1Quad") {
+//
+//      G4cout <<"Q1 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q1 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      //      G4cout<<"BX = "<<3.*step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition().y()<<G4endl;
+//      //G4cout<<"BY = "<<3.*step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition().x()<<G4endl;
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+//
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q2Quad") {
+//
+//      G4cout <<"Q2 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q2 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //<<" "<<
+//      //	step->GetPostStepPoint()->GetPosition().y()<<" "<<step->GetPostStepPoint()->GetPosition().z()<<G4endl;
+//
+//    }
+//  }
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q3Quad") {
+//
+//      G4cout <<"Q3 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q3 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //      G4cout <<"Q3 post world"<<" "<<step->GetPostStepPoint()->GetPosition()<<G4endl;
+//
+//    }
+//  }
+//
+//
+//  if(step->GetPreStepPoint()->GetPhysicalVolume()!=0){
+//    if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Q4Quad") {
+//
+//      G4cout <<"Q4 pre "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPreStepPoint()->GetPosition())<<G4endl;
+//      G4cout <<"Q4 post "<<step->GetPreStepPoint()->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(step->GetPostStepPoint()->GetPosition())<<G4endl;
+//      
+//      //      G4cout <<"Q4 post world"<<" "<<step->GetPostStepPoint()->GetPosition()<<G4endl;
+//    }
+//  }
 
 //Analyze SAC track
   if (fEnableSACAnalysis) {
@@ -86,9 +199,10 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   static G4String lastProc="";
   static G4String prevProc="";
-
+  
   //Cerca il primario
-  if(bpar->GetNPositronsPerBunch()==1){
+  //  if(bpar->GetNPositronsPerBunch()==1){
+  if(bpar->GetNPositronsPerBunch()<50){
     if(track->GetTrackID()==1){ //primary particle
       if(track->GetParticleDefinition() == G4Positron::PositronDefinition()){
 	if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){ 
@@ -97,15 +211,12 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	  if(lastProc == "annihil" ||lastProc == "eBrem") {
 	    nt++;
 	  }
-
-	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
-	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target" && nt>1) {
-	    G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
-		   << "  ----  > " 
-		   << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
-	    G4cout << " Getting the momentum:   " << track->GetMomentum() 
-		   << "     "   << prevProc << "      " << lastProc << G4endl;
-	  }
+	  //	    G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
+	  //		   << "  ----  > " 
+	  //		   << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
+	  //	    G4cout << " Getting the momentum:   " << track->GetMomentum() 
+	  //		   << "     "   << prevProc << "      " << lastProc << G4endl;
+	  ///	}
 	  //Be somewhere
 	  // G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
 	  // 	 << "  ----> " 
@@ -116,30 +227,31 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	    nt = 0;
 	    
 	  }
-
+	  
 	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
 	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() != "Target") {
 	    // G4cout << " Getting the momentum:   " << track->GetMomentum() << G4endl;
 	    PositronMomentum = G4ThreeVector(track->GetMomentum());
 	  }
 	  
-
-	
     	  if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
 	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
 	    G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 	    //	    if(lastProc!="Transportation" && lastProc!="eIoni" && ProcID==-1){
-	    if(lastProc!="Transportation" && lastProc!="eIoni" && ProcID==-1){
+	    if(lastProc!="Transportation" && ProcID==-1){
 	      //	  G4cout<<lastProc<<G4endl;
 	      if(lastProc=="eBrem"){
 		ProcID=1.;
+		//		track->SetTrackStatus(fStopAndKill);
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else if(lastProc=="annihil"){
 		ProcID=2.;
+		//	       	track->SetTrackStatus(fStopAndKill);
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else if(lastProc=="eIoni"){
 		ProcID=3.;
-		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
+		//		track->SetTrackStatus(fStopAndKill);
+		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else{
 		ProcID=-1.;
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
@@ -157,65 +269,23 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
 
-//  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
-//    if(track->GetVolume()->GetName()=="SAC") {
-//      track->SetTrackStatus(fStopAndKill);
-//    }
-//  }
-//  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-//    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Tracker") {
-//      if(track->GetParticleDefinition()==G4Positron::PositronDefinition()||track->GetParticleDefinition()==G4Electron::ElectronDefinition()){
-//	if(track->GetParticleDefinition()->GetPDGCharge()==1.){ 
-//	  //  G4cout<<<<" " <<track->GetTrackID()<<G4endl;
-//	  PositronE = track->GetTotalEnergy();					    
-//          G4ThreeVector PositronDir = track->GetDynamicParticle()->GetMomentumDirection();  
-//	  G4cout<<PositronE<<" e+ "<<PositronDir<<G4endl;                                      
-//	  track->SetTrackStatus(fStopAndKill); 	       
-//	}
-//	else if(track->GetParticleDefinition()->GetPDGCharge()==-1.){
-//	  //	  G4cout<<"electron "<<track->GetTotalEnergy()<<" " <<track->GetTrackID()<<G4endl;  
-//	  ElectronE = track->GetTotalEnergy();					    
-//	  G4ThreeVector ElectronDir = track->GetDynamicParticle()->GetMomentumDirection();  
-//	  G4cout<<ElectronE<<" e- "<<ElectronDir<<G4endl;                                      
-//	  track->SetTrackStatus(fStopAndKill);
-//	}
-//      }
-//    }
-//  }
-
-//  Search for gamma leaving the target
-//  if(NPrimaries>0){
-//    //Cerca il primo gamma in uscita
-//    if(track->GetParticleDefinition() == G4Gamma::GammaDefinition()){
-//      if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-//	if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
-//	  if(track->GetCurrentStepNumber()==1 && track->GetParentID()==1){
-//	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
-//	    //	  G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-//	    //	  G4int parent      = track->GetParentID();
-//	    //	  G4int TrID        = track->GetTrackID();
-//	    //	  G4bool Primo      = step->IsFirstStepInVolume();
-//	    GammaE    = track->GetTotalEnergy();
-//	    //	  VertexPos = track->GetVertexPosition();
-//	    GammaDir  = track->GetVertexMomentumDirection();
-//	    G4ThreeVector BeamDir;
-//	    BeamDir[0]=0.;
-//	    BeamDir[1]=0.;
-//	    BeamDir[2]=1.;
-//	    ThetaGamma = SetGammaAngle(GammaDir,BeamDir);
-//	    if(ThetaGamma<0.015) fHistoManager->FillHisto(18,GammaE);
-//	    if(ProcID==1) fHistoManager->FillHisto2(38,ThetaGamma,GammaE);
-//	    if(ProcID==2) fHistoManager->FillHisto2(39,ThetaGamma,GammaE);
-//	    //  for(int i=0; i<4; i++) P4Miss[i]=TargetEleMom[i]+BeamMom[i]-GMom[i];
-//	    //  G4double Mmiss2 = P4Miss[3]*P4Miss[3]-P4Miss[2]*P4Miss[2]-P4Miss[1]*P4Miss[1]-P4Miss[0]*P4Miss[0];
-//	    //  NChild++;
-//	    //	    if(ThetaGamma) G4cout<<"Theta Gamma " <<ThetaGamma<<" "<<GammaE<<" "<<BeamPartE<<" "<<GammaE+BeamPartE<<G4endl;
-//	    
-//	  }
-//	}
-//      }
-//    }
-//  }
+  //*************************************
+  // Killing particle in the LINAC region
+  //*************************************
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    //Killing in the collimators
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"||
+       step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB2"){
+      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      track->SetTrackStatus(fStopAndKill);
+    }
+    //Killing in the walls and beamlines
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
+       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
+      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      track->SetTrackStatus(fStopAndKill);
+    }
+  }
   
 }
 

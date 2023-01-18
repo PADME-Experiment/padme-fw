@@ -38,6 +38,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   // Position of center of HEPVeto box
   G4double GetHEPVetoPosX() { return fHEPVetoPosX; }
   G4double GetHEPVetoPosY() { return fHEPVetoPosY; }
@@ -90,6 +93,9 @@ public:
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetHEPVetoChamberWallCorner(G4ThreeVector);
 
+  // Get name of HEPVeto digitizer
+  G4String GetHEPVetoDigitizerName() { return fHEPVetoDigitizerName; }
+
   // Get name of HEPVeto sensitive detector
   G4String GetHEPVetoSensitiveDetectorName() { return fHEPVetoSensitiveDetectorName; }
 
@@ -106,6 +112,8 @@ private:
   void UpdateDerivedMeasures();
 
   G4int fVerbose; // Verbose level
+
+  G4int fDetectorSetup;
 
   // Number of fingers in HEPVeto
   G4int fHEPVetoNFingers;
@@ -152,6 +160,7 @@ private:
   //G4double fHEPVetoSupportThickness; // Thickness of HEPVeto support structure
   G4double fHEPVetoChamberWallThickness; // Thickness of vacuum chamber wall
 
+  G4String fHEPVetoDigitizerName;
   G4String fHEPVetoSensitiveDetectorName;
 
 };

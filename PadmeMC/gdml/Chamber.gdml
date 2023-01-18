@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://service-spi.web.cern.ch/service-spi/app/releases/GDML/schema/gdml.xsd">
+<gdml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="schema/gdml.xsd">
 
     <define>
         <constant name="HALFPI" value="pi/2."/>
@@ -22,7 +22,7 @@
     </materials>
 
     <solids>
-        <box lunit="m" name="world_solid" x="12.0" y="12.0" z="12.0" />
+        <box lunit="m" name="world_solid" x="25.0" y="10.0" z="25.0" />
     </solids>
 
     <structure>

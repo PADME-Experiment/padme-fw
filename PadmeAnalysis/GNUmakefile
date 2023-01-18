@@ -21,7 +21,7 @@ LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) -Wl,--whole-archive $(addpr
 
 LIBS += -Wl,--no-whole-archive -LAnalysisBase/lib -lAnalysisBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
-LIBS += -L/usr/lib64/mysql -lmysqlclient
+#LIBS += -L/usr/lib64/mysql -lmysqlclient
 
 
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)

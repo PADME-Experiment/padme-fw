@@ -3,7 +3,7 @@
 #define TRecoVHit_H
 
 #include "TObject.h"
-#include "TVector3.h"
+//#include "TVector3.h"
 #include "TMCVHit.hh"
 
 class TMCVDigi;
@@ -14,21 +14,23 @@ class TRecoVHit : public TMCVHit
 public:
 
   TRecoVHit();
-  //TRecoVHit(const TMCVDigi&);
-
 
   virtual ~TRecoVHit(){};
 
-  void setBDCHid(unsigned int BDid, unsigned int CHid){fBDCHid = 100*BDid+CHid;}
-  unsigned int getBDCHid(){return fBDCHid;}
-  unsigned int getBDid(){return (unsigned int)(fBDCHid/100);}
-  unsigned int getCHid(){return fBDCHid%100;}
-  
+  void setBDCHid(UInt_t BDid, UInt_t CHid) { fBDCHid = 100*BDid+CHid; }
+  UInt_t getBDCHid() { return fBDCHid; }
+  UInt_t getBDid() { return (UInt_t)(fBDCHid/100); }
+  UInt_t getCHid() { return fBDCHid%100; }
+
+  void setStatus(ULong64_t status) { fStatus = status; }
+  ULong64_t getStatus() { return fStatus; }
+
 private:
-  unsigned int fBDCHid; 
+  UInt_t fBDCHid;
+  ULong64_t fStatus;
 
 public:
  
-  ClassDef(TRecoVHit,1);
+  ClassDef(TRecoVHit,2);
 };
 #endif

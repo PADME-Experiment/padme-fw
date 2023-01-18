@@ -22,6 +22,8 @@ SACGeometry::SACGeometry()
 
   fVerbose = 0; // Do not show debug output
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   fCrystalSizeX =  3.*cm;
   fCrystalSizeY =  3.*cm;
   fCrystalSizeZ = 14.*cm;
@@ -50,6 +52,7 @@ SACGeometry::SACGeometry()
   fDigiPMTTransitTime = 9.1*ns; // Hamamatsu R13478 PMT transit time from photocathode to anode
   fDigiPMTCableDelay = 0.*ns; // Delay due to connection cables
 
+  fSACDigitizerName = "SACDigitizer";
   fSACSensitiveDetectorName = "SACSD";
 
 }

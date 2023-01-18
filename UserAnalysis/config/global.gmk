@@ -1,0 +1,85 @@
+# Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
+CXX           = g++
+CXXFLAGS      = -O -Wall -fPIC
+LD            = g++
+LDFLAGS       = -O
+#SOFLAGS       = -shared
+SOFLAGS       = -shared $(ROOTLDFLAGS) $(ROOTLIBS) -L$(PADMEROOT)/lib -lPadmeRoot -L$(PADME)/UserAnalysis/AnalysisBase/lib -lAnalysisBase -L$(PADMERECO)/lib -lPadmeReco -L$(PADMERECO)/RecoBase/lib -lRecoBase -L$(PADME)/UserAnalysis/Analyzers/lib -lAnalyzers
+MFLAGS        = -w
+
+ROOTCONFIG   := root-config
+ROOTCFLAGS   := $(shell $(ROOTCONFIG) --cflags)
+ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
+ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
+ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
+
+CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADME)/UserAnalysis/AnalysisBase/include -I$(PADME)/UserAnalysis/Analyzers/include -I$(PADMEROOT)/include -g -std=c++11 
+CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
+CPPFLAGS     += -I$(ROOTINCDIR)
+LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
+
+TMP          := tmp
+LIB          := lib
+
+#------------------------------------------------------------------------------
+
+includes := $(wildcard include/*.hh)
+sources := $(wildcard src/*.cc)
+objects := $(patsubst src/%.cc,$(TMP)/%.o,$(sources))
+dependencies := $(patsubst src/%.cc,$(TMP)/%.d,$(sources))
+
+#------------------------------------------------------------------------------
+
+LIBNAME := $(NAME)
+
+# .PHONY targets are executed regardless of time-stamp of any file of
+# same name.
+.PHONY: suball obj clean includes
+
+suball: dirs lib
+
+dirs:
+	@mkdir -p $(LIB)
+	@mkdir -p $(TMP)
+
+lib: $(LIB)/lib$(LIBNAME)-static.a $(LIB)/lib$(LIBNAME).so
+
+$(LIB)/lib$(LIBNAME)-static.a: $(TMP)/obj.last
+	@echo Creating/replacing object files in $@ ...
+	@rm -f $@
+	ar r $@ $(TMP)/*.o
+	@ranlib $@
+
+$(LIB)/lib$(LIBNAME).so: $(TMP)/obj.last
+	@echo Creating/replacing object files in $@ ...
+	@mkdir -p $(LIB)
+	@rm -f $@
+	$(LD) $(SOFLAGS) -o $@ $(TMP)/*.o
+
+obj: $(TMP)/obj.last
+
+# Touch the versioning file
+$(TMP)/obj.last: $(objects)
+	@touch $@
+
+clean:
+	@echo "Cleaning $(NAME) ..."
+	@rm -rf $(objects) $(dependencies) $(TMP) $(LIB) $(NAME)Dict.*
+
+###
+
+$(TMP)/%.o: src/%.cc
+	@echo "Compiling $< ..."
+	@$(CXX) $(CXXFLAGS) -c -o $(TMP)/$(*F).o src/$*.cc
+
+$(TMP)/%.d: src/%.cc
+	@echo Making dependency for file $< ...
+	@if [ ! -d $(TMP) ] ; then mkdir -p $(TMP)  ;fi
+	@set -e; \
+	g++ -M $(CPPFLAGS) -w $< |\
+	sed 's|$*\.o|$(TMP)/& $@|' >$@;\
+	[ -s $@ ] || rm -f $@
+
+ifneq ($(dependencies),)
+-include $(dependencies)
+endif

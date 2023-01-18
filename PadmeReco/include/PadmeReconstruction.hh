@@ -14,12 +14,16 @@ class TRawEvent;
 class TMCEvent;
 class TRecoEvent;
 
+//class TMCTruthEvent;
+#include "TMCTruthEvent.hh"
+
 class TTargetMCEvent;
 class TEVetoMCEvent;
 class TPVetoMCEvent;
 class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
+class TETagMCEvent;
 class TTPixMCEvent;
 
 class TTargetRecoEvent;
@@ -28,7 +32,9 @@ class TPVetoRecoEvent;
 class THEPVetoRecoEvent;
 class TECalRecoEvent;
 class TSACRecoEvent;
+class TETagRecoEvent;
 class TTPixRecoEvent;
+class TLeadGlassRecoEvent;
 
 class TDetectorInfo;
 
@@ -55,6 +61,9 @@ public:
   ULong64_t GetRunClock();
   UInt_t GetEventStatus();
   UInt_t GetTriggerMask();
+  Bool_t IsSimulated();
+
+  TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
 private:
 
@@ -64,6 +73,9 @@ private:
   void InitDetectorsInfo();
   void InitLibraries();
   void InitRunningModeFlags();
+
+  void HistoInit();
+  void ProcessEvent(TRawEvent*);
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 
@@ -80,14 +92,16 @@ private:
 
   TMCEvent* fMCEvent;
 
+  TMCTruthEvent* fMCTruthEvent;
+
   TTargetMCEvent*  fTargetMCEvent;
   TEVetoMCEvent*   fEVetoMCEvent;
   TPVetoMCEvent*   fPVetoMCEvent;
   THEPVetoMCEvent* fHEPVetoMCEvent;
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
+  TETagMCEvent*    fETagMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
-
 
   TRecoEvent*        fRecoEvent;
   TTargetRecoEvent*  fTargetRecoEvent;
@@ -96,8 +110,10 @@ private:
   THEPVetoRecoEvent* fHEPVetoRecoEvent;
   TECalRecoEvent*    fECalRecoEvent;
   TSACRecoEvent*     fSACRecoEvent;
+  TETagRecoEvent*    fETagRecoEvent;
   TTPixRecoEvent*    fTPixRecoEvent;
-  
+  TLeadGlassRecoEvent* fLeadGlassRecoEvent;
+ 
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

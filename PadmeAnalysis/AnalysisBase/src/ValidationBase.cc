@@ -82,7 +82,7 @@ Bool_t ValidationBase::InitHistosValidation(TString name)
   hSvcVal->BookHisto(hname, nBin, min, max);
   hname=name+"_NCluster";
   hSvcVal->BookHisto(hname, nBin, min, max);
-  nBin=500;
+  nBin=1000;
   min=0;
   max=500;
   hname = name+"_HitEnergy";
@@ -227,6 +227,7 @@ Bool_t ValidationBase::ProcessValidation(TString name)
      seed   = clu->GetSeed();
      seedId = clu->GetChannelId();
      seedE  = clu->GetEnergy();
+     position=clu->GetPosition();   //MR BUG FOUND
      //std::cout<<"Process Validation cluster-> Energy: " << seedE << std::endl;
      eTotCl+=seedE;
      seedT  = clu->GetTime();

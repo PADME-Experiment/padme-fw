@@ -31,6 +31,7 @@
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 
 #include "HistoSvc.hh"
 #include "SACAnalysis.hh"
@@ -252,6 +253,7 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection*           fEVetoRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
   TMCTruthEvent*                  fMCTruthEvent         =0;
+  TLeadGlassRecoEvent*            fLeadGlassRecoEvent   =0;
 
    TTree::SetMaxTreeSize(190000000000);
 
@@ -315,6 +317,9 @@ int main(Int_t argc, char **argv)
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      } else if (branchName=="LeadGlass_Hits") {
+	fLeadGlassRecoEvent = new TLeadGlassRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlassRecoEvent);
       } else if (branchName=="TargetBeam") {
 	fTargetRecoBeam = new TTargetRecoBeam();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoBeam);
@@ -337,6 +342,7 @@ int main(Int_t argc, char **argv)
 	fMCTruthEvent = new TMCTruthEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
+      
 
    }
 
@@ -395,7 +401,8 @@ int main(Int_t argc, char **argv)
     event->EVetoRecoCl          =fEVetoRecoCl        ;
     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
     event->MCTruthEvent         =fMCTruthEvent       ;
-    
+    event->LeadGlassRecoEvent   =fLeadGlassRecoEvent ;
+      
     AnnihilationSelection* AnnSel=0;
     TagAndProbeSelection* TagandProbeSel=0 ;
     UserAnalysis *UserAn=0;

@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/env python
 
 import sys
 import os.path
@@ -25,12 +25,14 @@ def ChangeStringInFile(old,new,oldstring,newstring):
 
 
 if len(sys.argv) != 2:
-    print usage
+    print(usage)
     exit()
+    
+#exit()
 
 AnalysisName = sys.argv[1]
 
-print "Preparing infrastructure for analysis  ", AnalysisName
+print("Preparing infrastructure for analysis  ", AnalysisName)
     
 TemplateHeaderFile = "UserAnalysis/include/UserTemplateAnalyser.hh"
 TemplateSourceFile = "UserAnalysis/src/UserTemplateAnalyser.cc"
@@ -39,11 +41,11 @@ OutputSourceFile = "UserAnalysis/src/"+AnalysisName+".cc"
 
 ConfigFile = "config/AnalysersChain.cfg"
 
-print "Output header file: ",OutputHeaderFile
-print "Output source file: ",OutputSourceFile
+print("Output header file: ",OutputHeaderFile)
+print("Output source file: ",OutputSourceFile)
 
 if os.path.isfile(OutputHeaderFile) or os.path.isfile(OutputSourceFile):
-    print "Analyser with name ",AnalysisName, " seem to exist. Better exit"
+    print("Analyser with name ",AnalysisName, " seem to exist. Better exit")
     exit()
 
 

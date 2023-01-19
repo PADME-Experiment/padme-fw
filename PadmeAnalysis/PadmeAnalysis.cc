@@ -378,6 +378,7 @@ int main(Int_t argc, char **argv)
    int iret=InitTemps();
    if(iret==0) std::cout<<" --- initialized Temp correction --"<< std::endl;
 
+   PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
 
 	  
     event->RecoEvent            =fRecoEvent          ;
@@ -397,11 +398,9 @@ int main(Int_t argc, char **argv)
     
     AnnihilationSelection* AnnSel=0;
     TagAndProbeSelection* TagandProbeSel=0 ;
-    PadmeAnalysisEvent *event=0;
     UserAnalysis *UserAn=0;
     GlobalTimeAnalysis *gTimeAn=0;
     if(fProcessingMode==0){  
-      event = new PadmeAnalysisEvent();
       UserAn = new UserAnalysis(fProcessingMode, fVerbose);
       gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
       
@@ -558,15 +557,15 @@ int main(Int_t argc, char **argv)
        }
 
        //
-       targetAn    ->Process();
-       ecalAn      ->Process();
-       ecalAn      ->EnergyCalibration(isMC);
-       sacAn       ->Process();
-       pvetoAn     ->Process();
-       evetoAn     ->Process();
-       hepvetoAn   ->Process();
+       if ( targetAn   ) targetAn    ->Process();
+       if ( ecalAn     ) ecalAn      ->Process();
+       if ( ecalAn     ) ecalAn      ->EnergyCalibration(isMC);
+       if ( sacAn      ) sacAn       ->Process();
+       if ( pvetoAn    ) pvetoAn     ->Process();
+       if ( evetoAn    ) evetoAn     ->Process();
+       if ( hepvetoAn  ) hepvetoAn   ->Process();
        //       gTimeAn     ->Process();
-       evSel       ->Process();
+       //evSel       ->Process();
        //       UserAn      ->Process();
 
        for(std::vector<PadmeVAnalyser *>::iterator it = AnalysersChain.begin(); it!=AnalysersChain.end(); ++it) {

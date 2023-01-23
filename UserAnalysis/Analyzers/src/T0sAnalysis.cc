@@ -457,7 +457,7 @@ Bool_t T0sAnalysis::Process(){
 
   //  if(fSwimmerInit==0){
   //    fSwimmerInit=1;
-  if(isMC&&fEvent->MCTruthEvent->GetEventNumber()<10){
+  if(isMC){//&&fEvent->MCTruthEvent->GetEventNumber()<50){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
         mcVtx = fEvent->MCTruthEvent->Vertex(iV);
 	if(mcVtx->GetProcess() == "eBrem"){

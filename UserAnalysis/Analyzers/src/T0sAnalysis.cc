@@ -266,7 +266,6 @@ Bool_t T0sAnalysis::Process(){
 
       if(chPVeto>19&&chPVeto<71&&chSAC==22)
 	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSAC22ClusterGoodPVetoCh",tHitPVeto-tSAC);
-
       
       //time difference
       sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",chHitPVeto);
@@ -313,6 +312,16 @@ Bool_t T0sAnalysis::Process(){
       enHitEVeto    =  fEvent->EVetoRecoEvent->Hit(mm)->GetEnergy();
 
       //      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
+
+      fHS->FillHistoList("EVetoHits","hEVetoHitEnergy",enHitEVeto);
+      
+      fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",tHitEVeto-tSAC);
+
+      if(chEVeto>19&&chEVeto<71)
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACClusterGoodEVetoCh",tHitEVeto-tSAC);
+
+      if(chEVeto>19&&chEVeto<71&&chSAC==22)
+	fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",tHitEVeto-tSAC);
 
       //time difference
       sprintf(name,"hDeltatEVetoHitsSAC22Ch%i",chHitEVeto);

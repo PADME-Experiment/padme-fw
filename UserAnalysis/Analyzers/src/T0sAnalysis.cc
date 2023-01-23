@@ -87,6 +87,7 @@ Bool_t T0sAnalysis::InitHistos(){
 
   //Hit properties
   fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",150,0,30);
+  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",150,0,30);
   
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);

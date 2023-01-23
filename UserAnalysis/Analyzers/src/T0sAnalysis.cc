@@ -34,6 +34,7 @@ Bool_t T0sAnalysis::Init(PadmeAnalysisEvent* event){
 Bool_t T0sAnalysis::InitHistos(){
   // T0sAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("PVetoHits");
+  fHS->CreateList("EVetoHits");
 
   fHS->CreateList("PVetoSACT0sList/StandardRecoClus");
   fHS->CreateList("EVetoSACT0sList/StandardRecoClus");

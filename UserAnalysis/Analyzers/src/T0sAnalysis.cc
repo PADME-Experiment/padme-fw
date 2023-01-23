@@ -76,13 +76,13 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoClusWithT0s","hDeltatEVetoSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Time difference PVetoHits wrt SAC
-  // fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",4000,-500,500);
-  // fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACClusterGoodPVetoCh",4000,-500,500);
-  // fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSAC22ClusterGoodPVetoCh",4000,-500,500);
-
-  // fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",4000,-500,500);
-  // fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACClusterGoodEVetoCh",4000,-500,500);
-  // fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACClusterGoodPVetoCh",4000,-500,500);
+  fHS->BookHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSAC22ClusterGoodPVetoCh",4000,-500,500);
+  
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACClusterGoodEVetoCh",4000,-500,500);
+  fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Hit properties
   fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",150,0,30);
@@ -258,6 +258,15 @@ Bool_t T0sAnalysis::Process(){
 
       fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
       //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
+
+      fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",tHitPVeto-tSAC);
+
+      if(chPVeto>19&&chPVeto<71)
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACClusterGoodPVetoCh",tHitPVeto-tSAC);
+
+      if(chPVeto>19&&chPVeto<71&&chSAC==22)
+	fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSAC22ClusterGoodPVetoCh",tHitPVeto-tSAC);
+
       
       //time difference
       sprintf(name,"hDeltatPVetoHitsSAC22Ch%i",chHitPVeto);

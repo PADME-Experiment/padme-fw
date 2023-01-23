@@ -1,30 +1,58 @@
 import os
 import sys
-import commands
 import math
-
+import glob
 #compile PadmeReco
-os.system("make -j8")
+os.system("make -j16")
 
 #ask which run you want to analyse
-DataToRead = raw_input("Enter the address of the reconstructed data in format /data05/padme/beth/Runxxx_Conditions/:")
-
+RecoDataSearchAddress = input("Enter the address of the reconstructed data in format /data05/padme/beth/Runxxx_Conditions/:")
+RecoDataToAnalyse = glob.glob(os.path.join(RecoDataSearchAddress,"**","*SubList*","*RecoOutput*.root"), recursive = True)
+RecoDataAddress = RecoDataToAnalyse[0].split("SubList")[0]
+RecoDataAddress = glob.glob(RecoDataAddress)[0]
 print("\n-----------------\n")
 
 #find data from selected run
-print("Total raw files reconstructed in "+DataToRead+":")
-os.system("less "+DataToRead+"*List.txt | wc -l")
-print("Data files have 1e3 events each, MC files probably have 1e2 events each.")
+
+#check number of events per file
+MCorData = input("Are the reco files from data? Type d for data, m for MC:")
+if MCorData == "d":
+    print("Total raw files reconstructed in "+RecoDataAddress+":")
+    ListFile = glob.glob(os.path.join(RecoDataSearchAddress,"**",'Run*List.txt'), recursive = True)[0]
+    RawFiles = sum(1 for _ in open(ListFile))
+    print(RawFiles)
+    print("Data files have 1e3 events each, MC files probably have 1e2 events each.")
+    EventChecker = input("Assuming 1000 events per raw file. Type y if this is correct, n if this is incorrect:")
+    if EventChecker == 'y':
+        EventsPerFile =1000
+    else:
+        EventsPerFile = input("Type the correct number of events per file here:")
+
+elif MCorData == "m":
+    print("Total raw files reconstructed in "+RecoDataAddress+":")
+    ListFile = glob.glob(os.path.join(RecoDataSearchAddress,"**",'MCList.txt'), recursive = True)[0]
+    RawFiles = sum(1 for _ in open(ListFile))
+    print(RawFiles)
+    print("Data files have 1e3 events each, MC files probably have 1e2 events each.")
+    EventChecker = input("Assuming 100 events per raw file. Type y if this is correct, n if this is incorrect:")
+    if EventChecker == 'y':
+        EventsPerFile =100
+    else:
+        EventsPerFile = input("Type the correct number of events per file here:")
+
+else:
+    print ("Data type unclear. Exiting")
+    sys.exit()
 
 #ask how many files total you want to analyse
-TotFiles = int(input("Total raw files to analyse:"))
+TotFiles = int(input("Total reco files to analyse:"))
 
 if TotFiles<1:
     TotFiles = 1
-print "Analysing",TotFiles,"files"
+print("Analysing",TotFiles,"files")
 
 #work out how to distribute the jobs
-NoCoresToUse = float(commands.getstatusoutput("ls -d "+DataToRead+"SubList* | wc -l")[1])
+NoCoresToUse = len(RecoDataToAnalyse)
 
 MinFilesPerCore = int(math.floor(TotFiles/NoCoresToUse))
 MaxFilesPerCore = int(math.ceil(TotFiles/NoCoresToUse))
@@ -32,87 +60,66 @@ MaxFilesPerCore = int(math.ceil(TotFiles/NoCoresToUse))
 NoCoresWithMin = int(NoCoresToUse - TotFiles%NoCoresToUse)
 NoCoresWithMax = int(NoCoresToUse - NoCoresWithMin)
 
-print "MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"NoCoresWithMin",NoCoresWithMin,"NoCoresWithMax",NoCoresWithMax
+print("MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"NoCoresWithMin",NoCoresWithMin,"NoCoresWithMax",NoCoresWithMax)
 
 #check which version of UserAnalysis you want to use
-PadmeFWToUse = commands.getstatusoutput("(cd "+DataToRead+" && ls -d *padme-fw*)")[1]
+if(RecoDataAddress.endswith("Reco_and_Analysis/")):
+    RawDataAddress=RecoDataAddress.split("Reco_and_Analysis/")[0]
+    print("RecoDataAddress is",RecoDataAddress," RawDataAddress is",RawDataAddress)
+else:
+    RawDataAddress = RecoDataAddress
+    print("RawDataAddress is",RawDataAddress)
 
-PadmeAnalysisToUse = PadmeFWToUse+"/UserAnalysis/"
+PadmeFWToUse = glob.glob(os.path.join(RawDataAddress,"*padme-fw*"))[0]
+PadmeFWToUse = PadmeFWToUse.split(RawDataAddress)[1]
+
+PadmeAnalysisToUse = os.getcwd()
 PadmeAnalysisCheckString = "PadmeAnalysisToUse set to " +PadmeAnalysisToUse+". Is this what you want? Type y for yes, n for no: "
-PadmeAnalysisCheck = raw_input(PadmeAnalysisCheckString)
+PadmeAnalysisCheck = input(PadmeAnalysisCheckString)
 if PadmeAnalysisCheck=="n":
-    PadmeAnalysisToUse = raw_input("Insert your desired output directory here: ")
+    PadmeAnalysisToUse = input("Insert your desired analysis directory here: ")
 
 #if a version of UserAnalysis already exists there then rm it
-AnalysisReplaceCheckString = "about to rm everything in "+DataToRead+PadmeAnalysisToUse+". Proceed? Type y for yes, n for no:"
-AnalysisReplaceCheck = raw_input(AnalysisReplaceCheckString)
+AnalysisRemovePath = os.path.join(RawDataAddress,PadmeFWToUse,"UserAnalysis")
+AnalysisReplaceCheckString = "about to rm everything in "+AnalysisRemovePath+". Proceed? Type y for yes, n for no:"
+AnalysisReplaceCheck = input(AnalysisReplaceCheckString)
 
 if AnalysisReplaceCheck=="y":
-    os.system("rm -rf "+DataToRead+PadmeAnalysisToUse+"*")
+    os.system("rm -rf "+AnalysisRemovePath+"*")
 else:
     sys.exit()
 
 #copy correct version of UserAnalysis to PadmeFW directory
-CopyCommand = 'rsync -r --exclude {"*.root","tmp/", "*.list"} ~/'+ PadmeAnalysisToUse+' '+ DataToRead+PadmeAnalysisToUse
-#"cp -r /home/long/"+PadmeAnalysisToUse+" "+DataToRead+PadmeAnalysisToUse
+CopyCommand = 'rsync -r --exclude "*.root" --exclude "tmp/" --exclude "*.list" ' + os.path.join('~/',PadmeAnalysisToUse)+' '+ os.path.join(RawDataAddress,PadmeFWToUse)
+#"cp -r /home/long/"+PadmeAnalysisToUse+" "+RecoDataAddress+PadmeAnalysisToUse
 print(CopyCommand)
 os.system(CopyCommand)
-
-print DataToRead+PadmeFWToUse
-
-#check number of events per file
-MCorData = raw_input("Are the reco files from data? Type d for data, m for MC:")
-if MCorData == "d":
-    EventChecker = raw_input("Assuming 1000 events per reco file. Type y if this is correct, n if this is incorrect:")
-    if EventChecker == 'y':
-        EventsPerFile =1000
-    else:
-        EventsPerFile = raw_input("Type the correct number of events per file here:")
-
-elif MCorData == "m":
-    EventChecker = raw_input("Assuming 100 events per reco file. Type y if this is correct, n if this is incorrect:")
-    if EventChecker == 'y':
-        EventsPerFile =100
-    else:
-        EventsPerFile = raw_input("Type the correct number of events per file here:")
-
-else:
-    print "Data type unclear. Exiting"
-    sys.exit()
-
-print(type(EventsPerFile))
     
 #put runs to be used into a file list
 ListFileName = "AnalysisRuns.txt"
 
-lsCommand = "ls -d "+DataToRead+"SubList*"
-SubDirList = commands.getstatusoutput(lsCommand)[1]
-SubDirList = SubDirList.split("\n")
+SubDirList = glob.glob(os.path.join(RecoDataAddress,"SubList*"))
 
 with open(ListFileName,"w") as fulllist: 
-   # nwritten=0
     for SubDir in SubDirList:
-        print("MySubDir "+SubDir)
-        #which subdirectory are we talking about?
         SubDirNo = int(SubDir.split("_")[-1])
         #create symlinks to PadmeAnalysis and config file
-        if os.path.exists(SubDir+"/PadmeAnalysis"):
-            os.system("rm "+SubDir+"/PadmeAnalysis")
-        exesymlink = "ln -sf "+DataToRead+PadmeFWToUse+"/UserAnalysis/PadmeAnalysis "+SubDir+"\n"
+        if os.path.exists(os.path.join(SubDir,"PadmeAnalysis")):
+            os.system("rm "+os.path.join(SubDir,"PadmeAnalysis"))
+        exesymlink = "ln -sf "+os.path.join(RawDataAddress,PadmeFWToUse,"UserAnalysis/PadmeAnalysis ")+SubDir+"\n"
         os.system(exesymlink)
-        if os.path.exists(SubDir+"/AnalysisConfig.conf"):
-            os.system("rm "+SubDir+"/AnalysisConfig.conf")
-        configsymlink = "ln -sf "+DataToRead+PadmeFWToUse+"/UserAnalysis/config/UserAnalysis.conf "+SubDir+"/AnalysisConfig.conf\n"
+        if os.path.exists(os.path.join(SubDir+"AnalysisConfig.conf")):
+            os.system("rm "+os.path.join(SubDir+"AnalysisConfig.conf"))
+        configsymlink = "ln -sf "+os.path.join(RawDataAddress,PadmeFWToUse,"UserAnalysis/config/UserAnalysis.conf")+" "+os.path.join(SubDir,"AnalysisConfig.conf")+"\n"
         os.system(configsymlink)
 
         #write source file to run analysis
         if SubDirNo<NoCoresWithMax:
-            print "SubDirNo ",SubDirNo,"NoCoresWithMax",NoCoresWithMax,"MinFilesPerCore",MinFilesPerCore,"MaxFilesPerCore",MaxFilesPerCore,"EventsPerFile",EventsPerFile,"int(MaxFilesPerCore)*int(EventsPerFile)",int(MaxFilesPerCore)*int(EventsPerFile)
-            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/RecoOutputFile.root -n "+str(int(MaxFilesPerCore)*int(EventsPerFile))+" -o "+SubDir+"/AnalysisOutputFile.root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
+            print("nohup ./PadmeAnalysis -i "+os.path.join(SubDir,"RecoOutputFile.root")+" -n "+str(int(MaxFilesPerCore)*int(EventsPerFile))+" -o "+os.path.join(SubDir,"AnalysisOutputFile.root")+" -v 1 -c "+os.path.join(SubDir,"AnalysisConfig.conf")+" &> "+os.path.join(SubDir,"logAnalysis.txt")+" &")
+            fulllist.write("nohup ./PadmeAnalysis -i "+os.path.join(SubDir,"RecoOutputFile.root")+" -n "+str(int(MaxFilesPerCore)*int(EventsPerFile))+" -o "+os.path.join(SubDir,"AnalysisOutputFile.root")+" -v 1 -c "+os.path.join(SubDir,"AnalysisConfig.conf")+" &> "+os.path.join(SubDir,"logAnalysis.txt")+" &")
         else:
-            print "SubDirNo ",SubDirNo,"NoCoresWithMin",NoCoresWithMin,"MinFilesPerCore",MinFilesPerCore,"int(MaxFilesPerCore)",MaxFilesPerCore,"EventsPerFile",EventsPerFile,"int(MinFilesPerCore)*EventsPerFile",int(MinFilesPerCore)*int(EventsPerFile)
-            fulllist.write("nohup ./PadmeAnalysis -i "+SubDir+"/RecoOutputFile.root -n "+str(int(MinFilesPerCore)*int(EventsPerFile))+" -o "+SubDir+"/AnalysisOutputFile.root -v 1 -c "+SubDir+"/AnalysisConfig.conf &> "+SubDir+"/logAnalysis.txt &")
+            print("nohup ./PadmeAnalysis -i "+os.path.join(SubDir,"RecoOutputFile.root")+" -n "+str(int(MinFilesPerCore)*int(EventsPerFile))+" -o "+os.path.join(SubDir,"AnalysisOutputFile.root")+" -v 1 -c "+os.path.join(SubDir,"AnalysisConfig.conf")+" &> "+os.path.join(SubDir,"logAnalysis.txt")+" &")
+            fulllist.write("nohup ./PadmeAnalysis -i "+os.path.join(SubDir,"RecoOutputFile.root")+" -n "+str(int(MinFilesPerCore)*int(EventsPerFile))+" -o "+os.path.join(SubDir,"AnalysisOutputFile.root")+" -v 1 -c "+os.path.join(SubDir,"AnalysisConfig.conf")+" &> "+os.path.join(SubDir,"logAnalysis.txt")+" &")
         fulllist.write("\n")
-    fulllist.write("cd /home/long/"+PadmeFWToUse+"/UserAnalysis")
 
 print("AnalysisRuns.txt")

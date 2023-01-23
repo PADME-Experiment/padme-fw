@@ -78,7 +78,7 @@ void PadmeVCalibration::PerformMCCalibration(std::vector<TRecoVHit *> &Hits)
 {
   for(unsigned int iHit = 0; iHit < Hits.size(); ++iHit){
     int ich = Hits[iHit]->GetChannelId();
-    //std::cout << "Applying MC time offset for channel " << ich << "  " << GetChannelT0MC(ich) << std::endl;
+    //    std::cout << "Applying MC time offset for channel " << ich << "  " << GetChannelT0MC(ich) << std::endl;
     Hits[iHit]->SetTime( Hits[iHit]->GetTime() - GetChannelT0MC(ich) );
   }
 }

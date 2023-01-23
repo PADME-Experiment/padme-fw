@@ -2,6 +2,9 @@
 /run/verbose 1
 /tracking/verbose 0
 
+/output/DataFileName MCDataRun2020.root
+/output/HistoFileName  UBTFRun2020.root
+
 /Detector/EnableStructure BeamLine
 /Detector/BeamLine/Setup 1.
 # PADME DIPOLE MAGNETIC FIELD
@@ -80,7 +83,7 @@
 #/vis/filtering/trajectories/create/attributeFilter
 #/vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
 #/vis/filtering/trajectories/attributeFilter-0/addInterval 1. MeV 1000. MeV
-/run/beamOn 1000
+/run/beamOn 100
 
 
 

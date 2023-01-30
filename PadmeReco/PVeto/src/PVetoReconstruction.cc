@@ -517,11 +517,11 @@ void PVetoReconstruction::BuildClusters(TMCEvent* MCEv)
     //    if(clE>100){
       for(int ii=0;ii<clSize;ii++){
 	if(clHitIndices[ii]>250){
-	  std::cout<<"rawEvNo "<<MCEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
-	  std::cout<<" ii "<<ii<<std::endl;
-	  std::cout<<" no. hits "<<clHitIndices.size()<<std::endl;
-	  std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
-	  std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+	  // std::cout<<"rawEvNo "<<MCEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
+	  // std::cout<<" ii "<<ii<<std::endl;
+	  // std::cout<<" no. hits "<<clHitIndices.size()<<std::endl;
+	  // std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
+	  // std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
 	}
       }
       //}

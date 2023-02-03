@@ -254,12 +254,12 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                     = new TH1F("DerivV","DerivV",201,-0.5,401.5);
-  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",201,-0.5,401.5);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",201,-0.5,401.5);
-  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",201,-0.5,401.5);
-  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",201,-0.5,401.5);
-  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",201,-0.5,401.5);
+  hDerivV                     = new TH1F("DerivV","DerivV",400,0,400);
+  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,400);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,4000);
+  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",400,0,400);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
+  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",400,0,400);
   hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
   hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
   hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
@@ -284,6 +284,8 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYMaxRawYTSpecRatioVsYMax                    = new TH2F("hYMaxRawYTSpecRatioVsYMax","hYMaxRawYTSpecRatioVsYMax",100,0,100,50,0,2);
   // hYMaxVsYTSpecAllHits = new TH2F("hYMaxVsYTSpecAllHits","hYMaxVsYTSpecAllHits",100,0,100,100,0,100);
   // hYMaxVsYTSpecSingleHits = new TH2F("hYMaxVsYTSpecSingleHits","hYMaxVsYTSpecSingleHits",100,0,100,100,0,100);
+
+  gUnAbsSigs = new TGraph(fNSamples);
   
   for(int ii=0;ii<96;ii++){
     sprintf(name, "NoHitsDerivChannelPerEvent%d",ii);
@@ -465,12 +467,8 @@ void DigitizerChannelEVeto::AnalogPlotting(){
       hDeriv.push_back((TH1F*)HTSpec->Clone());
       sprintf(name, "hDerivEvent%iChannel%d", EventCounter,GetChID());
       hDeriv[hDeriv.size()-1]->SetNameTitle(name,name);
-
-      gUnAbsSigs = new TGraph(fNSamples);
-      
+    
       for(int ii = 0; ii<fNSamples;ii++) gUnAbsSigs->SetPoint(ii,ii,fSamples[ii]);
-      sprintf(name, "gEvent%iChannel%d", EventCounter,GetChID());
-      gUnAbsSigs->SetNameTitle(name,name);
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
       fAnalogsPrinted++;

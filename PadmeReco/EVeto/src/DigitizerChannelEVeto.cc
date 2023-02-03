@@ -457,6 +457,7 @@ void DigitizerChannelEVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){
+      std::cout<<"before Raw"<<std::endl;
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -595,7 +596,7 @@ Double_t DigitizerChannelEVeto::SetEVetoT0(){
     else if(fApplyTimeCalibration==1&&fTimeCalibrationMethod==2){
       //Beth: hard coded numbers come from my analysis 26/9/22. They represent the length of the veto cables and any detector effects that contribute to the time measurement. They're found by finding the peak of time differences in EVeto-SAC Bremsstrahlung in data, using the run with B field reversed, and subtracting the peak of time differences in EVeto-SAC Bremsstrahlung in the full-beamline MC
       if(GetChID()<48) 	fTimeCalibCh[GetChID()]=40.2;
-      else fTimeCalibCh[GetChID()]=37.4;
+      else fTimeCalibCh[GetChID()]=37.5;
     }
     else{ 
       std::cout<<"No previous data available for EVeto, resorting to default calibration constant (0)"<<std::endl;

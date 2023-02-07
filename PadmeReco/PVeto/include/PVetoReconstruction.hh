@@ -41,6 +41,8 @@ private:
   Double_t fSigmaNoiseForMC;
   Double_t fPVetoDigiTimeWindow;
   Int_t fClusterAlgo;
+  Double_t fMCEnergyScale;
+  Double_t fMCEnergyThr;
   VetoClusterHits fClusterHits;
   VetoClusterStructure fClusStruc;
   // std::vector<Cluster*> ClusVec;

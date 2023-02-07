@@ -88,6 +88,8 @@ Bool_t T0sAnalysis::InitHistos(){
   //Hit properties
   fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",150,0,30);
   fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",150,0,30);
+  fHS->BookHistoList("PVetoHits","hPVetoHitCh",90,0,90);
+  fHS->BookHistoList("EVetoHits","hEVetoHitCh",96,0,96);
   
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
@@ -259,6 +261,7 @@ Bool_t T0sAnalysis::Process(){
       enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(kk)->GetEnergy();
 
       fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
+      fHS->FillHistoList("PVetoHits","hPVetoHitCh",chHitPVeto);
       //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
 
       fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",tHitPVeto-tSAC);
@@ -316,7 +319,8 @@ Bool_t T0sAnalysis::Process(){
       //      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
 
       fHS->FillHistoList("EVetoHits","hEVetoHitEnergy",enHitEVeto);
-      
+      fHS->FillHistoList("EVetoHits","hEVetoHitCh",chHitEVeto);
+
       fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",tHitEVeto-tSAC);
 
       if(chEVeto>19&&chEVeto<71)

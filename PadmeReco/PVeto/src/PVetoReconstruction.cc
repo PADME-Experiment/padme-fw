@@ -29,8 +29,10 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   // configurable parameters 
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
-  fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
-
+  fClusterAlgo             = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
+  fMCEnergyScale           = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyScale",0.8636);
+  fMCEnergyThr             = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyThr",0.366);
+  
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
@@ -94,6 +96,9 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
   if (tEvent==NULL) return;
   for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
+
+  vector<TRecoVHit *> TempHits;
+  
   // MC to reco hits
   //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -103,22 +108,22 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
     Int_t    digiCh = digi->GetChannelId();
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
-    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<TempHits.size()<<std::endl;
 
     Bool_t toBeMerged = false;
     // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
     if (fPVetoDigiTimeWindow > 0) {
-      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+      for (unsigned int ih=0; ih<TempHits.size(); ++ih)
 	{
-	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
+	  if (TempHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
 	      // this digit must be merged with a previously defined recoHit
-	      //std::cout<<" -- merging with hit in ch "<<fHits[ih]->GetChannelId()<<" at time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" diffT = "<<fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<<std::endl;
-	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
-	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
-	      //std::cout<<" -- updated  Ch "<<fHits[ih]->GetChannelId()<<" time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" so far "<<std::endl;
+	      //std::cout<<" -- merging with hit in ch "<<TempHits[ih]->GetChannelId()<<" at time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" diffT = "<<fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<<std::endl;
+	      TempHits[ih]->SetEnergy(TempHits[ih]->GetEnergy() + digiE);
+	      TempHits[ih]->SetTime(TempHits[ih]->GetTime() + digiE*digiT);
+	      //std::cout<<" -- updated  Ch "<<TempHits[ih]->GetChannelId()<<" time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" so far "<<std::endl;
 	    }
 	}
     }
@@ -129,27 +134,27 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	Hit->SetEnergy   (digiE);
 	Hit->SetTime     (digiT*digiE);
 	Hit->SetPosition (TVector3(0.,0.,0.)); 
-	fHits.push_back(Hit);
-	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
+	TempHits.push_back(Hit);
+	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<TempHits.size()<<" hits"<<std::endl;
       }
-  }
-  // last loop to correct the time 
+  }//end hit to digi merge
+  
+  // correct the time & add noise
   TRecoVHit *Hit;
   Double_t Noise=0.;
-  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+  for (unsigned int ih=0; ih<TempHits.size(); ++ih)
     {
-      Hit = fHits[ih];
+      Hit = TempHits[ih];
       //pre-smear time = GetTime()/Hit->GetEnergy());
       //smearing in time
       //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-
-      if (fSigmaNoiseForMC >0.0001) {
-	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
-	Hit->SetEnergy(Hit->GetEnergy()+Noise);
-      }
+      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+      Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
+      if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
+      else std::cout<<"Dumping "<<Hit->GetEnergy()<<" MeV hit"<<std::endl;
     }
-    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+    //
   return;
 }
 

@@ -44,6 +44,9 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->CreateList("MCSwimming");
   fHS->CreateList("TimeCorrectionList");
   fHS->CreateList("BackgroundList");
+  fHS->CreateList("NPoTAnalysis");
+  fHS->CreateList("PVetoHits");
+  fHS->CreateList("EVetoHits");
 
   //No. PoT used in this analysis
   fHS->BookHistoList("NPoTAnalysis","hNPotBhabha",600,-1000.,59000.);
@@ -81,20 +84,32 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoClusters","hNHitsPVetoCluster",15,0,15);
   fHS->BookHistoList("EVetoClusters","hNHitsEVetoCluster",15,0,15);
 
-  fHS->BookHisto2List("PVetoClusters","hPVetoChVshNHitsPVetoCluster",90,0,89,15,0,15);
-  fHS->BookHisto2List("EVetoClusters","hEVetoChVshNHitsEVetoCluster",90,0,89,15,0,15);
+  fHS->BookHisto2List("PVetoClusters","hPVetoChVsNHitsPVetoCluster",90,0,89,15,0,15);
+  fHS->BookHisto2List("EVetoClusters","hEVetoChVsNHitsEVetoCluster",90,0,89,15,0,15);
+
+  fHS->BookHistoList("PVetoClusters","h0019ChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h0019ChNHitsEVetoCluster",15,0,15);
+
+  fHS->BookHistoList("PVetoClusters","h2070ChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h2070ChNHitsEVetoCluster",15,0,15);
+
+  fHS->BookHistoList("PVetoClusters","h7084ChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h7084ChNHitsEVetoCluster",15,0,15);
+
+  fHS->BookHistoList("PVetoClusters","h85UpChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h85UpChNHitsEVetoCluster",15,0,15);
 
   //Energy per hit in cluster
-  fHS->BookHistoList("PVetoClusters","hEPerHitPVetoCluster",75,0,15);
-  fHS->BookHistoList("EVetoClusters","hEPerHitEVetoCluster",75,0,15);
+  fHS->BookHistoList("PVetoClusters","hEPerHitPVetoCluster",150,0,15);
+  fHS->BookHistoList("EVetoClusters","hEPerHitEVetoCluster",150,0,15);
 
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hEnergyPVetoCluster",150,0,30);
   fHS->BookHistoList("EVetoClusters","hEnergyEVetoCluster",150,0,30);
 
   //Cluster channel
-  fHS->BookHistoList("PVetoClusters","hChPVetoCluster",90,-0.5,89.5);
-  fHS->BookHistoList("EVetoClusters","hChEVetoCluster",96,-0.5,95.5);
+  fHS->BookHistoList("PVetoClusters","hChPVetoCluster",90,0,90);
+  fHS->BookHistoList("EVetoClusters","hChEVetoCluster",96,0,96);
  
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hChToEnergyPositron",330,0,330);
@@ -119,16 +134,9 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVetoDeltaCh",80,-40,40,40,-5,5);
 
   //Bhabha plots
-  fHS->BookHistoList("BhabhaList","hChaSum",180,0,179);
-  fHS->BookHistoList("BhabhaList","hVetoChasOver302to3HitsGoodChasChaSum",78,62,140);
-  fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",180,0,179,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",180,0,179,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","hGoodChaSumVsDeltaTuncorrect",40,59.5,140.5,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","hGoodChaSumVsDeltaTcorrect",40,59.5,140.5,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","h2to3HitsGoodChaSumVsDeltaTuncorrect",40,59.5,140.5,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","h2to3HitsGoodChaSumVsDeltaTcorrect",40,59.5,140.5,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",40,59.5,140.5,2000,-500,500);
-  fHS->BookHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",40,59.5,140.5,2000,-500,500);
+  fHS->BookHistoList("BhabhaList","hGoodClusChaSum",81,60,141);
+  fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",81,60,141,200,-10,10);
+  fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",81,60,141,200,-10,10);
 
   //MC only Bhabha plots
   fHS->BookHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
@@ -160,28 +168,28 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
   fHS->BookHisto2List("MCSwimming","hVetoSwumChaDiffVsVetoSwumTimeDiff",181,-90,90,20,-5,5);
   //Time correction plots
-  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",2000,-500,500);
-  fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",2000,-500,500);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hGoodChasdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hGoodChasdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",600,-150,150);
+  fHS->BookHistoList("TimeCorrectionList","hdeltaTtrajPVetoEVeto",600,-150,150);
   
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",181,-90,90,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",101,-50,50,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",101,-50,50,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",101,-50,50,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
-  fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectGoodChasVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
-  //  fHS->BookHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",2000,-500,500,2000,-500,500);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",181,-90,90,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",181,-90,90,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",101,-50,50,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",101,-50,50,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",101,-50,50,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",2000,-500,500,600,-150,150);
+  fHS->BookHisto2List("TimeCorrectionList","hdeltaTuncorrectGoodChasVsdeltaTcorrectPVetoEVeto",2000,-500,500,600,-150,150);
+  //  fHS->BookHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",2000,-500,500,600,-150,150);
 
   //Background studies
   fHS->BookHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
@@ -194,6 +202,12 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",90,-0.5,89.5);
   fHS->BookHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",90,-0.5,89.5);
   
+  //Hit energy
+  //With no cuts, the energy histograms are filled in T0s Analysis since there's already a loop over hits there.
+  fHS->BookHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",100,0,10);
+  fHS->BookHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",100,0,10);
+  fHS->BookHistoList("EVetoHits","hInTimeGoodClusterEVetoHitEnergy",100,0,10);
+  fHS->BookHistoList("PVetoHits","hInTimeGoodClusterPVetoHitEnergy",100,0,10);
   return true;
 }
 
@@ -437,7 +451,12 @@ Bool_t BhabhaAnalysis::Process(){
 	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffEVetoVsEVetoDeltaCh",tempCh-temp2Ch,temp2T-tempT);
       }
     }//end jj
-  
+
+    if(tempCh<20)                  fHS->FillHistoList("EVetoClusters","h0019ChNHitsEVetoCluster",tempNHit);
+    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("EVetoClusters","h2070ChNHitsEVetoCluster",tempNHit);
+    else if(tempCh>70&&tempCh<85)  fHS->FillHistoList("EVetoClusters","h7084ChNHitsEVetoCluster",tempNHit);
+    else if(tempCh>84)             fHS->FillHistoList("EVetoClusters","h85UpChNHitsEVetoCluster",tempNHit);
+
     if(isMC){
       for(int swumev=0;swumev<EVetoSwimmingChannels.size();swumev++){
 	if(EVetoSwimmingChannels[swumev]==-100) continue;
@@ -447,17 +466,16 @@ Bool_t BhabhaAnalysis::Process(){
       }
     }//end if isMC
     
-    fHS->FillHisto2List("EVetoClusters","hEVetoChVshNHitsEVetoCluster",tempCh,tempNHit);
-    //good cluster cuts:
-    //>=2 hits
-    if(tempNHit<2) continue;
-    //energy per hit > 0.7
-    if(!(tempEClus/tempNHit)>0.7) continue;
+    fHS->FillHisto2List("EVetoClusters","hEVetoChVsNHitsEVetoCluster",tempCh,tempNHit);
+
+    //good cluster quality cuts, eveto:
+    if(tempCh<30||tempCh>70) continue;
+    if(tempNHit<2||tempNHit>3) continue;
+    //    if(!(tempEClus/tempNHit)>0.7) continue;
     
     //Counter of EVeto clusters that pass
     NEVetoGoodClusters++;
-    
-    if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassEVeto++;
+    npassEVeto++;
     
     //fill vectors with parameters of good hits
     NHitsEVetoGood.push_back(tempNHit);
@@ -508,7 +526,12 @@ Bool_t BhabhaAnalysis::Process(){
 	fHS->FillHisto2List("ClusterTimeList","hGoodChas2to3HitsClusTimeDiffPVetoVsPVetoDeltaCh",temp2Ch-tempCh,temp2T-tempT);
       }
     }//end jj
-    fHS->FillHisto2List("PVetoClusters","hPVetoChVshNHitsPVetoCluster",tempCh,tempNHit);
+    fHS->FillHisto2List("PVetoClusters","hPVetoChVsNHitsPVetoCluster",tempCh,tempNHit);
+    if(tempCh<20)                  fHS->FillHistoList("PVetoClusters","h0019ChNHitsPVetoCluster",tempNHit);
+    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("PVetoClusters","h2070ChNHitsPVetoCluster",tempNHit);
+    else if(tempCh>70&&tempCh<85)  fHS->FillHistoList("PVetoClusters","h7084ChNHitsPVetoCluster",tempNHit);
+    else if(tempCh>84)             fHS->FillHistoList("PVetoClusters","h85UpChNHitsPVetoCluster",tempNHit);
+
     if(isMC){
       for(int ii = 0; ii<NEVetoCluster; ii++){
 	tempEvCh =  fEvent->EVetoRecoCl->Element(ii)->GetChannelId();
@@ -526,22 +549,20 @@ Bool_t BhabhaAnalysis::Process(){
       }
     }
     
-    //good cluster cuts:
-    //>=2 hits
-    if(tempNHit<2) continue;
-    //energy per hit > 0.7
-    if(!(tempEClus/tempNHit)>0.7) continue;
+    //good cluster quality cuts, pveto:
+    if(tempCh<30||tempCh>70) continue;
+    if(tempNHit<2||tempNHit>3) continue;
+    //    if(!(tempEClus/tempNHit)>0.7) continue;
     
     //Counter of PVeto clusters that pass
     NPVetoGoodClusters++;
+    npassPVeto++;
 
     //fill vectors with parameters of good hits
     NHitsPVetoGood.push_back(tempNHit);
     enPVetoGood.push_back(tempEClus);
     tPVetoGood.push_back(tempT);
     chPVetoGood.push_back(tempCh);
-
-    if(tempCh>30&&tempCh<71&&(tempNHit==2||tempNHit==3)) npassPVeto++;
     
   }//end PVetoCluster
   fHS->FillHistoList("PVetoClusters","hVetoChasOver302to3HitsGoodChaNPVetoCluster", npassPVeto);
@@ -614,6 +635,9 @@ Bool_t BhabhaAnalysis::Process(){
     return 0;
   }
 
+  double EnEVetoHit;
+  double EnPVetoHit;
+
   //loop over good clusters
   for(int ii = 0; ii<NEVetoGoodClusters; ii++){
     //import EVeto variables
@@ -622,17 +646,20 @@ Bool_t BhabhaAnalysis::Process(){
     NHitsEVeto =  NHitsEVetoGood[ii];
     enEVeto    =  enEVetoGood[ii];
     
-    //   if(chEVeto>51&&chEVeto<56) continue;
+    for(int iEHit = 0;iEHit<NHitsEVeto;iEHit++){
+      //      fHS->FillHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",EnEVetoHit);
+    }
     
-    for(int jj = 0; jj<NPVetoGoodClusters; jj++){
-      
-      //      std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
-      
+    for(int jj = 0; jj<NPVetoGoodClusters; jj++){      
       //import PVeto variables
       tPVeto     =  tPVetoGood[jj];
       chPVeto    =  chPVetoGood[jj];
       NHitsPVeto =  NHitsPVetoGood[jj];
       enPVeto    =  enPVetoGood[jj];
+
+      for(int iPHit = 0;iPHit<NHitsPVeto;iPHit++){
+	//	if(ii==0)   fHS->FillHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",EnPVetoHit);
+      }
 
       //histograms of raw variables
       //time difference corrected for trajectory
@@ -647,82 +674,56 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTtrajPVetoEVeto",chPVeto-chEVeto,deltaTtraj);
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
       fHS->FillHisto2List("TimeCorrectionList","hdeltaChVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
-      //      fHS->FillHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",deltaTtraj,deltaTcorrect);
       fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
       
-      fHS->FillHistoList("BhabhaList","hChaSum",chPVeto+chEVeto);
+      fHS->FillHistoList("BhabhaList","hGoodClusChaSum",chPVeto+chEVeto);
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 
-      if((chPVeto>19&&chEVeto>19&&chPVeto<71&&chEVeto<71)){
-	fHS->FillHisto2List("BhabhaList","hGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
-	fHS->FillHisto2List("BhabhaList","hGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 
-	fHS->FillHistoList("TimeCorrectionList","hGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-	fHS->FillHistoList("TimeCorrectionList","hGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
+      if(!fabs(deltaTcorrect)<10) continue;
 
-	fHS->FillHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTuncorrect",chPVeto-chEVeto,tPVeto-tEVeto);
-	fHS->FillHisto2List("TimeCorrectionList","hdeltaChGoodChasVsdeltaTcorrect",chPVeto-chEVeto,deltaTcorrect);
-	fHS->FillHisto2List("TimeCorrectionList","hdeltaTuncorrectGoodChasVsdeltaTcorrectPVetoEVeto",tPVeto-tEVeto,deltaTcorrect);
-
-	if((NHitsPVeto==2||NHitsPVeto==3)&&(NHitsEVeto==2||NHitsEVeto==3)){
-	  fHS->FillHisto2List("BhabhaList","h2to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
-	  fHS->FillHisto2List("BhabhaList","h2to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
-	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-	  fHS->FillHistoList("TimeCorrectionList","h2to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
-	  if(chPVeto>30&&chEVeto>30){
-	    fHS->FillHistoList("BhabhaList","hVetoChasOver302to3HitsGoodChasChaSum",chPVeto+chEVeto);
-	    //	    std::cout<<"NHitsEVetoGood.size() "<<NHitsEVetoGood.size()<<" ii "<<ii<<" NHitsPVetoGood.size() "<<NHitsPVetoGood.size()<<" jj "<<jj<<std::endl;
-	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-	    fHS->FillHistoList("TimeCorrectionList","hVetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
-	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
-	    fHS->FillHisto2List("BhabhaList","hVetoChasOver302to3HitsGoodChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
-	    
-	    if(fabs(deltaTcorrect)>5){
-	      if(chPVeto+chEVeto==99){
-		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
-		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
-	      }
-	      if(chPVeto+chEVeto==100){
-		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
-		fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
-	      }
-	    }
-	    else{
-	      if(chPVeto+chEVeto==99){
-		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
-		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
-	      }
-	      if(chPVeto+chEVeto==100){
-		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
-		fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
-	      }
-	    }
-	    if(chPVeto+chEVeto>90){
-	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-	      fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
-	      if(chPVeto+chEVeto>95&&chPVeto+chEVeto<99){
-		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
-		fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
-		NRecoBhabha++;
-		fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",2);
-		for(int ii =0; ii<MaxParticles; ii++){
-		  if(isMC){
-		    if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
-		    if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2){
-		      NMatched++;
-		      fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",1);
-		    }//end if match
-		  }//end if MC
-		  //mettere taglio in tempo e aggiungere warning
-		}
-	      }
-	    }
-	  }
+      if(fabs(deltaTcorrect)>5){
+	if(chPVeto+chEVeto==99){
+	  fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+	  fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	}
+	if(chPVeto+chEVeto==100){
+	  fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+	  fHS->FillHistoList("BackgroundList","hOutofTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
 	}
       }
-    }
-  }
+      else{
+	if(chPVeto+chEVeto==99){
+	  fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+	  fHS->FillHistoList("BackgroundList","hInTime5nsChaSum99VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	}
+	if(chPVeto+chEVeto==100){
+	  fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasPVetoCh",chPVeto);
+	  fHS->FillHistoList("BackgroundList","hInTime5nsChaSum100VetoChasOver302to3HitsGoodChasEVetoCh",chEVeto);
+	}
+      }
+      if(chPVeto+chEVeto>90){
+	fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+	fHS->FillHistoList("TimeCorrectionList","hChaSumOver90VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
+	if(chPVeto+chEVeto>95&&chPVeto+chEVeto<99){
+	  fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTuncorrectPVetoEVeto",tPVeto-tEVeto);
+	  fHS->FillHistoList("TimeCorrectionList","hChaSum96to98VetoChasOver302to3HitsGoodChasdeltaTcorrectPVetoEVeto",deltaTcorrect);
+	  NRecoBhabha++;
+	  fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",2);
+	  if(isMC){
+	    for(int ii =0; ii<MaxParticles; ii++){
+	      if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
+	      if(fabs(PVetoSwimmingChannels[ii]-chPVeto)<2&&fabs(EVetoSwimmingChannels[ii]-chEVeto)<2){
+		NMatched++;
+		fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",1);
+	      }//end if match
+	    }//end bhabha loop
+	  }//end if MC
+	}//end if chasum [96,98]
+      }//end if chasum > 90
+    }//end good pveto clusters
+  }//end good eveto clusters
   return true;
 }
 

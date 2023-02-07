@@ -149,8 +149,8 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fAmpThresholdLow=12;
     }*/
   //  else{
-  //    fAmpThresholdHigh=8;
-  //    fAmpThresholdLow=8;
+      // fAmpThresholdHigh=8;
+      // fAmpThresholdLow=8;
     //}
 
   if(VMax>fAmpThresholdHigh){
@@ -227,7 +227,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
     Hit = new TRecoVHit();
     //    std::cout<<SetPVetoT0()<<std::endl;
-    Hit->SetTime(tDerivSortHitVec[ii]-SetPVetoT0());
+    Hit->SetTime(tDerivSortHitVec[ii]-SetPVetoT0());//SetPVetoT0 gives the time offset of the channel
 
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);  
@@ -238,19 +238,14 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   
   // if(analogchecker==1) fAnalogPrint=1;
   // else fAnalogPrint =0;
-  // if(EventCounter == 167)      std::cout<<fAnalogPrint<<std::endl;
-
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);
-  //  if(fAnalogPrint==1)    std::cout<<"EventCounter "<<EventCounter<<" ChID() "<<GetChID()<<" Save Analogs "<< fSaveAnalog <<" fAnalogPrint "<<fAnalogPrint<<" nfound "<<nfound<<std::endl;
+
   return Time;
 }
 
 void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 190917padme-fw, in turn copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
   TString fileoutname = fDigiFileOut;
-
-  // if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
-  // else if(detectorname=="PVeto") fileoutname="PVetoRecoAnDeriv.root";
 
   fileOut    = new TFile(fileoutname, "RECREATE");
   
@@ -295,8 +290,6 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYMaxRawYTSpecRatioVsYMax                    = new TH2F("hYMaxRawYTSpecRatioVsYMax","hYMaxRawYTSpecRatioVsYMax",100,0,100,50,0,2);
   // hYMaxVsYTSpecAllHits = new TH2F("hYMaxVsYTSpecAllHits","hYMaxVsYTSpecAllHits",100,0,100,100,0,100);
   // hYMaxVsYTSpecSingleHits = new TH2F("hYMaxVsYTSpecSingleHits","hYMaxVsYTSpecSingleHits",100,0,100,100,0,100);
-
-  gUnAbsSigs = new TGraph(fNSamples);
   
   for(int ii=0;ii<96;ii++){
     sprintf(name, "NoHitsDerivChannelPerEvent%d",ii);
@@ -472,6 +465,10 @@ void DigitizerChannelPVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){
+      gUnAbsSigs = new TGraph(fNSamples);
+      sprintf(name, "gNegativeEvent%iChannel%d", EventCounter,GetChID());
+      gUnAbsSigs->SetNameTitle(name,name);
+ 
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -479,7 +476,6 @@ void DigitizerChannelPVeto::AnalogPlotting(){
       hDeriv.push_back((TH1F*)HTSpec->Clone());
       sprintf(name, "hDerivEvent%iChannel%d", EventCounter,GetChID());
       hDeriv[hDeriv.size()-1]->SetNameTitle(name,name);
-    
       for(int ii = 0; ii<fNSamples;ii++) gUnAbsSigs->SetPoint(ii,ii,fSamples[ii]);
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
@@ -564,7 +560,7 @@ Double_t DigitizerChannelPVeto::SetPVetoChaGain(){
   if(fEnergyCalibrationFile<2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%d.txt", fEnergyCalibrationFile);
 
   else if(fEnergyCalibrationFile==2)    sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%s.txt","DerivativeDigitizer2020");
-
+  
   std::ifstream myFile(fname);
   
   EnergyCalib.open(fname);

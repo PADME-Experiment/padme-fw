@@ -14,6 +14,7 @@ class ETagAnalysis;
 class MCTruth;
 class BhabhaAnalysis;
 class BremsstrahlungAnalysis;
+class ReversedBFieldBremsstrahlungAnalysis;
 class T0sAnalysis;
 
 class UserAnalysis {
@@ -48,6 +49,7 @@ private:
   ECalCalib* fECalCalib;
   BhabhaAnalysis* fBhabhaAnalysis;
   BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
+  ReversedBFieldBremsstrahlungAnalysis* fReversedBFieldBremsstrahlungAnalysis;
   T0sAnalysis* fT0sAnalysis;
 
 };

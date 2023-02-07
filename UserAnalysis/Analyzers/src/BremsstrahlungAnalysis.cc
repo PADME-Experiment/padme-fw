@@ -65,18 +65,23 @@ Bool_t BremsstrahlungAnalysis::InitHistos(Bool_t isMC){
     
   //Bremsstrahlung plots
   fHS->BookHistoList("BremsstrahlungList","h2nsWindowEPVetoPlusESac",750,0,750);
-  fHS->BookHisto2List("BremsstrahlungList","h2nsWindowNPVetoClusterVsNSACCluster;enPVeto;enSAC",80,0,330,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","h2nsWindowEnPVetoClusterVsEnSACCluster;enPVeto;enSAC",80,0,330,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","h2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",750,0,750,400,-2,2);
 
   fHS->BookHistoList("BremsstrahlungList","hGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
-  fHS->BookHisto2List("BremsstrahlungList","hGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",750,0,750,400,-2,2);
 
   fHS->BookHistoList("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
-  fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hPClusECutGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",750,0,750,400,-2,2);
 
   fHS->BookHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",750,0,750);
-  fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",51,55,260,750,0,750);
+  fHS->BookHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",750,0,750,400,-2,2);
 
   fHS->BookHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",1000,0,10,1000,-5,5);
+  fHS->BookHisto2List("BremsstrahlungList","hGoodChannelPVetoHitEnergyVsDeltaTPVetoSACCorrect",1000,0,10,1000,-5,5);
   
   return true;
 }
@@ -157,7 +162,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       fHS->FillHistoList("BremsstrahlungList","hEnergyPVetoCluster",enPVeto);
       fHS->FillHistoList("BremsstrahlungList","hChPVetoCluster",chPVeto);
 
-      timecorrection = 0.03594*(chPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
+      timecorrection = 0.03594*(chPVeto)-11.52;//-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
       //within 2ns?
       if(!(std::fabs(tPVeto-tSAC-timecorrection)<2)) continue;
 
@@ -171,23 +176,26 @@ Bool_t BremsstrahlungAnalysis::Process(){
       
       enSum = enSAC+enPositron;
       fHS->FillHistoList("BremsstrahlungList","h2nsWindowEPVetoPlusESac",enSum);
-      fHS->FillHisto2List("BremsstrahlungList","h2nsWindowNPVetoClusterVsNSACCluster;enPVeto;enSAC",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","h2nsWindowEnPVetoClusterVsEnSACCluster;enPVeto;enSAC",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","h2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",enSum,tPVeto-tSAC-timecorrection);
 
       //good PVeto channels?
       if(!(chPVeto>19&&chPVeto<71)) continue;
       fHS->FillHistoList("BremsstrahlungList","hGoodChannels2nsWindowEPVetoPlusESac",enSum);
-      fHS->FillHisto2List("BremsstrahlungList","hGoodChannels2nsWindowNPVetoClusterVsNSACCluster",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","hGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","hGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",enSum,tPVeto-tSAC-timecorrection);
 
       //minimum PVeto cluster energy
       if(!(enPVeto>1.6)) continue;
       fHS->FillHistoList("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEPVetoPlusESac",enSum);
-      fHS->FillHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","hPClusECutGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","hPClusECutGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",enSum,tPVeto-tSAC-timecorrection);
 
       //minimum SAC cluster energy
       if(!(enSAC>150)) continue;
       fHS->FillHistoList("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEPVetoPlusESac",enSum);
-      fHS->FillHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowNPVetoClusterVsNSACCluster",enPositron,enSAC);
-
+      fHS->FillHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannels2nsWindowEnPVetoClusterVsEnSACCluster",enPositron,enSAC);
+      fHS->FillHisto2List("BremsstrahlungList","hSACClusECutPClusECutGoodChannel2nsWindowEnSumVsDeltaT;PVetoEnergy + SACEnergy;DeltaT(PVeto-SAC)",enSum,tPVeto-tSAC-timecorrection);
     }
   }
   
@@ -228,7 +236,7 @@ Bool_t BremsstrahlungAnalysis::Process(){
       timecorrection = 0.03594*(chHitPVeto)-11.52-0.37;//bring DeltaT(PVeto-SAC) for Bremsstrahlung to 0, as it would be when they're produced - 0.37ns = difference in propogation time in vetoes vs SAC
       fHS->FillHisto2List("BremsstrahlungList","hTimeCorrectionPerVetoChannel",chHitPVeto,timecorrection);
       fHS->FillHisto2List("BremsstrahlungList","hPVetoHitEnergyVsDeltaTPVetoSACCorrect",enHitPVeto,(tHitPVeto-tSAC-timecorrection));
-      
+      if(chHitPVeto>19&&chHitPVeto<71)      fHS->FillHisto2List("BremsstrahlungList","hGoodChannelPVetoHitEnergyVsDeltaTPVetoSACCorrect",enHitPVeto,(tHitPVeto-tSAC-timecorrection));
       //within 2ns?
       if(!(std::fabs(tHitPVeto-tSAC-trajectorycorrection)<2)) continue;
 

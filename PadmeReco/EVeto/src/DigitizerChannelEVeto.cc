@@ -44,8 +44,8 @@ void DigitizerChannelEVeto::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfi
 
   fDigiFileOut = cfg->GetParOrDefault("Output","DigiFileOut","EVetoRecoAn.root");
 
-  fEnergyCalibrationFile  = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
-    fApplyTimeCalibration  = cfg->GetParOrDefault("RECO","ApplyTimeCalibration", 1); //Apply time calibration?
+  fEnergyCalibrationFile = cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 2); 
+  fApplyTimeCalibration  = cfg->GetParOrDefault("RECO","ApplyTimeCalibration", 1); //Apply time calibration?
   fChannelEqualisation   = cfg->GetParOrDefault("RECO","ChannelEqualisation",1);
   fTailCorrection        = cfg->GetParOrDefault("RECO","TailCorrection",1);
   fTimeCalibrationMethod = cfg->GetParOrDefault("TimeCalibration", "TimeCalibrationMethod",2);//1 = T0s channel by channel, 2 = use fit of cable lengths
@@ -105,7 +105,6 @@ Double_t DigitizerChannelEVeto::ZSupHit(Float_t Thr, UShort_t NAvg) {// NAvg = 1
 }
 
 Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//copied and modified from 211019-padmefw, Beth 18/2/22. 22/2/22 Made it independent of pedestal and iMax
-
   RawGetMax=0;
   DerivGetMax=0;
   
@@ -150,8 +149,8 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fAmpThresholdLow=12;
     }*/
   //  else{
-    fAmpThresholdHigh=8;
-    fAmpThresholdLow=8;
+    // fAmpThresholdHigh=8;
+    // fAmpThresholdLow=8;
     //}
 
   if(VMax>fAmpThresholdHigh){
@@ -203,12 +202,18 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
   //  Double_t hitV;//includes tail correction
   double tailfraction=0;
   double DeltaTSortSamples=0;
- 
+
+  bool analogchecker = 0;
+  
   for (UShort_t ii = 0 ; ii != index.size() ; ii++) {
     tDerivSortHitVec.push_back(tDerivHitVec[index[ii]]);
     if(ii>0&&tDerivSortHitVec[ii]<tDerivSortHitVec[ii-1]){ //check that the time sorting has worked correctly
       std::cout<<"SORTING ISN'T WORKING"<<std::endl;
       return -100;
+    }
+    if(tDerivSortHitVec[ii]-tDerivSortHitVec[ii-1]<2){
+      std::cout<<"EventCounter "<<EventCounter<<" GetChID() "<<GetChID()<<" ii "<<ii<<" tDerivSortHitVec[ii] "<<tDerivSortHitVec[ii]<<" tDerivSortHitVec[ii-1] "<<tDerivSortHitVec[ii-1]<<std::endl;
+      analogchecker = 1;
     }
 
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
@@ -239,37 +244,35 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 190917padme-fw, in turn copied from Mauro's DigitizerChannelECal structure to create a set of debug histograms that are produced only in debug mode
   TString fileoutname = fDigiFileOut;
 
-  if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
-  else if(detectorname=="EVeto") fileoutname="EVetoRecoAnDeriv.root";
-
   fileOut    = new TFile(fileoutname, "RECREATE");
 
-  hNoEventsReconstructed     = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
-  hOccupancy                 = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
-  hOccupancyOneHit           = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
-  hNoHitsDeriv               = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
-  hRawV                      = new TH1F("RawV","RawV",400,0,400);
-  hRawVCorrect               = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
-  hRawVCorrectChannels20to70 = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
-  hRawVOneHit                = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
-  hRawVMultiHit              = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
-  hRawVMultiHitCorrect       = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
+  hNoEventsReconstructed      = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
+  hOccupancy                  = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
+  hOccupancyOneHit            = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
+  hNoHitsDeriv                = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
+  hRawV                       = new TH1F("RawV","RawV",400,0,400);
+  hRawVCorrect                = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
+  hRawVCorrectChannels20to70  = new TH1F("RawVCorrectChannels20to70","RawVCorrectChannels20to70",400,0,400);
+  hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
+  hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
+  hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
   hDerivV                     = new TH1F("DerivV","DerivV",400,0,400);
   hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,400);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,4000);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,400);
   hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",400,0,400);
   hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
   hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",400,0,400);
-  hHitTime                   = new TH1F("HitTime","HitTime",400,0,800);
-  hHitEnergy                 = new TH1F("HitEnergy","HitEnergy",100,0,10);
-  hHitEnergySingleHit        = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
-  hMinTimeDiffDeriv          = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,100);
-  hVRatio                    = new TH1F("VRatio","VRatio",50,0,5);  
-  hNZSupEvents               = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
-  hNoiseRMSAvg               = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
-  hYMaxRawYTSpecRatio        = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
-  hYRiseYTSpecRatio          = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
-  hYMaxDerivYTSpecRatio      = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
+  hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
+  hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
+  hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
+  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
+  hMinTimeDiffDerivChas31to70 = new TH1F("MinTimeDiffDerivChas31to70","MinTimeDiffDerivChas31to70",100,0,200);
+  hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
+  hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
+  hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
+  hYMaxRawYTSpecRatio         = new TH1F("hYMaxRawYTSpecRatio","hYMaxRawYTSpecRatio",50,0,2);
+  hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
+  hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
@@ -284,8 +287,6 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYMaxRawYTSpecRatioVsYMax                    = new TH2F("hYMaxRawYTSpecRatioVsYMax","hYMaxRawYTSpecRatioVsYMax",100,0,100,50,0,2);
   // hYMaxVsYTSpecAllHits = new TH2F("hYMaxVsYTSpecAllHits","hYMaxVsYTSpecAllHits",100,0,100,100,0,100);
   // hYMaxVsYTSpecSingleHits = new TH2F("hYMaxVsYTSpecSingleHits","hYMaxVsYTSpecSingleHits",100,0,100,100,0,100);
-
-  gUnAbsSigs = new TGraph(fNSamples);
   
   for(int ii=0;ii<96;ii++){
     sprintf(name, "NoHitsDerivChannelPerEvent%d",ii);
@@ -334,7 +335,9 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hHitEnergy->Write();
     hHitEnergySingleHit->Write();
     hHitTime->Write();
-
+    hMinTimeDiffDeriv->Write();
+    hMinTimeDiffDerivChas31to70->Write();
+    
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
@@ -459,6 +462,10 @@ void DigitizerChannelEVeto::AnalogPlotting(){
   //plot analog signals
   if(fAnalogsPrinted<fTotalAnalogs){
     if(fSaveAnalog==1&&fAnalogPrint==1){//&&GetChID()>75&&GetChID()<80){
+      gUnAbsSigs = new TGraph(fNSamples);
+      sprintf(name, "gNegativeEvent%iChannel%d", EventCounter,GetChID());
+      gUnAbsSigs->SetNameTitle(name,name);
+
       hRaw.push_back((TH1F*)hSig->Clone());
       sprintf(name, "hRawEvent%iChannel%d", EventCounter,GetChID());
       hRaw[hRaw.size()-1]->SetNameTitle(name,name);
@@ -471,6 +478,7 @@ void DigitizerChannelEVeto::AnalogPlotting(){
       gUnAbsSigGraphs.push_back(gUnAbsSigs);
 
       fAnalogsPrinted++;
+      fAnalogPrint=0;
     }  
   }
 }

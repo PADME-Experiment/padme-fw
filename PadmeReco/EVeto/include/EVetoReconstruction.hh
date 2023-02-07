@@ -38,9 +38,11 @@ public:
 private:
 
   TRandom2* random;
-  Double_t fSigmaNoiseForMC;
-  Double_t fEVetoDigiTimeWindow;
-  Int_t fClusterAlgo;
+  Double_t  fSigmaNoiseForMC;
+  Double_t  fEVetoDigiTimeWindow;
+  Bool_t    fMCSimBrokenChas;
+  Int_t     fClusterAlgo;
+
   VetoClusterHits fClusterHits;
   VetoClusterStructure fClusStruc;
   // std::vector<Cluster*> ClusVec;

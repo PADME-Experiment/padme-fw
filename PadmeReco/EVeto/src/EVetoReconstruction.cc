@@ -30,6 +30,7 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
   fEVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
   fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
+  fMCSimBrokenChas = (Bool_t)fConfig->GetParOrDefault("RECO", "MCSimBrokenChas", 1);
 
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelEVeto();
@@ -103,6 +104,10 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
     //TRecoVHit *Hit = new TRecoVHit(digi);
 
     Int_t    digiCh = digi->GetChannelId();
+    if(fMCSimBrokenChas&&(digiCh==52||digiCh==53||digiCh==54||digiCh==55)){
+      std::cout<<"simulating broken channel "<<digiCh<<std::endl; 
+      return;
+    }
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
     //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;

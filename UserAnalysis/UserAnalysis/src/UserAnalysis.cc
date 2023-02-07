@@ -32,7 +32,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fMCTruth = MCTruth::GetInstance();
   //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
   fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
@@ -50,7 +50,7 @@ UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fECalCalib;
   delete fNPoTAnalysis;
-  //  delete fIsGGAnalysis;
+  delete fIsGGAnalysis;
   delete fMCTruth;
   //  delete fIs3GAnalysis;
   delete fBhabhaAnalysis;
@@ -70,7 +70,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
 
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
-  //  fIsGGAnalysis->Init(fEvent);
+  fIsGGAnalysis->Init(fEvent);
   fMCTruth->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
@@ -116,7 +116,7 @@ Bool_t UserAnalysis::Process(){
 
   fNPoTAnalysis->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  //  fIsGGAnalysis->Process();
+  fIsGGAnalysis->Process();
   fMCTruth->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
@@ -184,7 +184,7 @@ Bool_t UserAnalysis::Finalize()
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
   if(fEvent->MCTruthEvent) fMCTruth->Finalize();
   fNPoTAnalysis->Finalize();
-  //  fIsGGAnalysis->Finalize();
+  fIsGGAnalysis->Finalize();
   fMCTruth->Finalize();
   //  fIs3GAnalysis->Finalize();
   // fIsGGAnalysis->Finalize();

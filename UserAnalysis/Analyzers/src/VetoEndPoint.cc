@@ -40,8 +40,8 @@ bool VetoEndPoint::InitialiseHistos(){
   fHS->CreateList("VetoEndPointList");
   fHS->CreateList("VetoEndPointList");
 
-  fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,-0.5,89.5);
-  fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,-0.5,96.5);
+  fHS->BookHistoList("VetoEndPointList","hPVetoChID",90,0,90);
+  fHS->BookHistoList("VetoEndPointList","hEVetoChID",96,0,96);
 
   fHS->BookHistoList("VetoEndPointList","hPVetoLocalY",180,-90,90);
   fHS->BookHistoList("VetoEndPointList","hVetoTimeCorrection",500,0,5);

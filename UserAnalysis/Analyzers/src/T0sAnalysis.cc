@@ -86,10 +86,12 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Hit properties
-  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",150,0,30);
-  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",150,0,30);
+  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",300,0,6);
+  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",300,0,6);
   fHS->BookHistoList("PVetoHits","hPVetoHitCh",90,0,90);
   fHS->BookHistoList("EVetoHits","hEVetoHitCh",96,0,96);
+  fHS->BookHisto2List("PVetoHits","hPVetoHitChVsHitEnergy",90,0,90,300,0,6);
+  fHS->BookHisto2List("EVetoHits","hEVetoHitChVsHitEnergy",96,0,96,300,0,6);
   
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);

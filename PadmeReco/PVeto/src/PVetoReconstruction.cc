@@ -149,9 +149,10 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
       //smearing in time
       //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-      //      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+      //      Noise=random->Gaus(0.,fSigmaNoiseForMC);
       Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
       if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
+      if(Hit->GetEnergy()>25) std::cout<<tEvent->GetEventNumber()<<std::endl;
     }
     //
   return;

@@ -152,7 +152,7 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
       //      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
       Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
       if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
-      else std::cout<<"Dumping "<<Hit->GetEnergy()<<" MeV hit"<<std::endl;
+      //      else std::cout<<"Dumping "<<Hit->GetEnergy()<<" MeV hit"<<std::endl;
     }
     //
   return;

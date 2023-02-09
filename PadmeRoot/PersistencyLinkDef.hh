@@ -68,6 +68,7 @@
 #pragma link C++ class THEPVetoRecoEvent+;
 #pragma link C++ class TSACRecoEvent+;
 #pragma link C++ class TECalRecoEvent+;
+#pragma link C++ class TECalMLRecoEvent+;
 #pragma link C++ class TLeadGlassRecoEvent+;
 #pragma link C++ class TTargetRecoEvent+;
 #pragma link C++ class TTargetRecoBeam+;
@@ -76,6 +77,7 @@
 
 #pragma link C++ class TSACClusCollection+;
 #pragma link C++ class TECalClusCollection+;
+#pragma link C++ class TECalMLClusCollection+;
 #pragma link C++ class TPVetoClusCollection+;
 #pragma link C++ class TEVetoClusCollection+;
 #pragma link C++ class TETagClusCollection+;

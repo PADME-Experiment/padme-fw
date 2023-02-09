@@ -35,6 +35,7 @@ class TSACRecoEvent;
 class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
+class TECalMLRecoEvent;
 
 class TDetectorInfo;
 
@@ -113,7 +114,8 @@ private:
   TETagRecoEvent*    fETagRecoEvent;
   TTPixRecoEvent*    fTPixRecoEvent;
   TLeadGlassRecoEvent* fLeadGlassRecoEvent;
- 
+  TECalMLRecoEvent*    fECalMLRecoEvent;
+
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
  

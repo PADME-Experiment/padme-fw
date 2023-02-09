@@ -62,6 +62,9 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoClusters","htPVetoCluster",500,-250,250);
   fHS->BookHistoList("EVetoClusters","htEVetoCluster",500,-250,250);
 
+  fHS->BookHistoList("PVetoClusters","hGoodChastPVetoCluster",500,-250,250);
+  fHS->BookHistoList("EVetoClusters","hGoodChastEVetoCluster",500,-250,250);
+
   //Cluster time length
   //  fHS->BookHistoList("PVetoClusters","htlenPVetoCluster",500,-250,250);
   //  fHS->BookHistoList("EVetoClusters","htlenEVetoCluster",500,-250,250);
@@ -84,14 +87,17 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoClusters","hNHitsPVetoCluster",15,0,15);
   fHS->BookHistoList("EVetoClusters","hNHitsEVetoCluster",15,0,15);
 
+  fHS->BookHistoList("PVetoClusters","hGoodChasNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","hGoodChasNHitsEVetoCluster",15,0,15);
+
   fHS->BookHisto2List("PVetoClusters","hPVetoChVsNHitsPVetoCluster",90,0,89,15,0,15);
   fHS->BookHisto2List("EVetoClusters","hEVetoChVsNHitsEVetoCluster",90,0,89,15,0,15);
 
-  fHS->BookHistoList("PVetoClusters","h0019ChNHitsPVetoCluster",15,0,15);
-  fHS->BookHistoList("EVetoClusters","h0019ChNHitsEVetoCluster",15,0,15);
+  fHS->BookHistoList("PVetoClusters","h0029ChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h0029ChNHitsEVetoCluster",15,0,15);
 
-  fHS->BookHistoList("PVetoClusters","h2070ChNHitsPVetoCluster",15,0,15);
-  fHS->BookHistoList("EVetoClusters","h2070ChNHitsEVetoCluster",15,0,15);
+  fHS->BookHistoList("PVetoClusters","h3070ChNHitsPVetoCluster",15,0,15);
+  fHS->BookHistoList("EVetoClusters","h3070ChNHitsEVetoCluster",15,0,15);
 
   fHS->BookHistoList("PVetoClusters","h7084ChNHitsPVetoCluster",15,0,15);
   fHS->BookHistoList("EVetoClusters","h7084ChNHitsEVetoCluster",15,0,15);
@@ -103,9 +109,15 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("PVetoClusters","hEPerHitPVetoCluster",150,0,15);
   fHS->BookHistoList("EVetoClusters","hEPerHitEVetoCluster",150,0,15);
 
+  fHS->BookHistoList("PVetoClusters","hGoodChasEPerHitPVetoCluster",150,0,15);
+  fHS->BookHistoList("EVetoClusters","hGoodChasEPerHitEVetoCluster",150,0,15);
+
   //Cluster energy
   fHS->BookHistoList("PVetoClusters","hEnergyPVetoCluster",150,0,30);
   fHS->BookHistoList("EVetoClusters","hEnergyEVetoCluster",150,0,30);
+
+  fHS->BookHistoList("PVetoClusters","hGoodChasEnergyPVetoCluster",150,0,30);
+  fHS->BookHistoList("EVetoClusters","hGoodChasEnergyEVetoCluster",150,0,30);
 
   //Cluster channel
   fHS->BookHistoList("PVetoClusters","hChPVetoCluster",90,0,90);
@@ -204,10 +216,10 @@ Bool_t BhabhaAnalysis::InitHistos(){
   
   //Hit energy
   //With no cuts, the energy histograms are filled in T0s Analysis since there's already a loop over hits there.
-  fHS->BookHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",100,0,10);
-  fHS->BookHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",100,0,10);
-  fHS->BookHistoList("EVetoHits","hInTimeGoodClusterEVetoHitEnergy",100,0,10);
-  fHS->BookHistoList("PVetoHits","hInTimeGoodClusterPVetoHitEnergy",100,0,10);
+  fHS->BookHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",600,0,6);
+  fHS->BookHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",600,0,6);
+  fHS->BookHistoList("EVetoHits","hInTimeGoodClusterEVetoHitEnergy",600,0,6);
+  fHS->BookHistoList("PVetoHits","hInTimeGoodClusterPVetoHitEnergy",600,0,6);
   return true;
 }
 
@@ -389,11 +401,39 @@ Bool_t BhabhaAnalysis::Process(){
   std::vector<double> enPVetoGood;
   std::vector<double> enEVetoGood;
 
+  //containers for variables of *hits* in good clusters
+  std::vector<std::vector<double> >  chPVetoHitGoodClus;
+  std::vector<std::vector<double> >  chEVetoHitGoodClus;
+
+  std::vector<std::vector<double> >  tPVetoHitGoodClus;
+  std::vector<std::vector<double> >  tEVetoHitGoodClus;
+
+  std::vector<std::vector<double> >  enPVetoHitGoodClus;
+  std::vector<std::vector<double> >  enEVetoHitGoodClus;
+
   //temporary variables for the loop
   double tempEClus;
   double tempT;
   int tempNHit;
   int tempCh;
+
+  double tempEHit =0;
+  double tempTHit =0;
+  double tempChHit=0;
+  double indexHit =0;
+
+  //temporary vectors for the loop
+  std::vector<double>  chtempPVetoHitGoodClus;
+  std::vector<double>  chtempEVetoHitGoodClus;
+  			 
+  std::vector<double>  ttempPVetoHitGoodClus;	
+  std::vector<double>  ttempEVetoHitGoodClus;	
+  			 
+  std::vector<double>  entempPVetoHitGoodClus;
+  std::vector<double>  entempEVetoHitGoodClus;
+
+  std::vector<Int_t>  indexPVetoHitGoodClus;
+  std::vector<int>  indexEVetoHitGoodClus;
 
   //variables associated to the a second cluster in the loop for ii>0
   double temp2EClus;
@@ -452,8 +492,8 @@ Bool_t BhabhaAnalysis::Process(){
       }
     }//end jj
 
-    if(tempCh<20)                  fHS->FillHistoList("EVetoClusters","h0019ChNHitsEVetoCluster",tempNHit);
-    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("EVetoClusters","h2070ChNHitsEVetoCluster",tempNHit);
+    if(tempCh<20)                  fHS->FillHistoList("EVetoClusters","h0029ChNHitsEVetoCluster",tempNHit);
+    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("EVetoClusters","h3070ChNHitsEVetoCluster",tempNHit);
     else if(tempCh>70&&tempCh<85)  fHS->FillHistoList("EVetoClusters","h7084ChNHitsEVetoCluster",tempNHit);
     else if(tempCh>84)             fHS->FillHistoList("EVetoClusters","h85UpChNHitsEVetoCluster",tempNHit);
 
@@ -470,18 +510,41 @@ Bool_t BhabhaAnalysis::Process(){
 
     //good cluster quality cuts, eveto:
     if(tempCh<30||tempCh>70) continue;
-    if(tempNHit<2||tempNHit>3) continue;
+    //    if(tempNHit<2||tempNHit>3) continue; //8/2 turned off: not well reproduced in data/mc and makes very little difference to signal/background ratio
     //    if(!(tempEClus/tempNHit)>0.7) continue;
     
+    fHS->FillHistoList("EVetoClusters","hGoodChasNHitsEVetoCluster",tempNHit);
+    fHS->FillHistoList("EVetoClusters","hGoodChasEPerHitEVetoCluster",tempEClus/tempNHit);
+    fHS->FillHistoList("EVetoClusters","hGoodChastEVetoCluster",tempT);
+    fHS->FillHistoList("EVetoClusters","hGoodChasEnergyEVetoCluster",tempEClus);
+
     //Counter of EVeto clusters that pass
     NEVetoGoodClusters++;
     npassEVeto++;
     
-    //fill vectors with parameters of good hits
+    //fill vectors with parameters of good clusters
     NHitsEVetoGood.push_back(tempNHit);
     enEVetoGood.push_back(tempEClus);
     tEVetoGood.push_back(tempT);
     chEVetoGood.push_back(tempCh);
+      
+    indexEVetoHitGoodClus = fEvent->EVetoRecoCl->Element(ii)->GetHitVecInClus();
+    if(tempNHit!=indexEVetoHitGoodClus.size()) std::cout<<"size mismatch EVeto"<<std::endl;
+    for(int kk=0;kk<indexEVetoHitGoodClus.size();kk++){    
+      indexHit = indexEVetoHitGoodClus[kk];
+      tempChHit = fEvent->EVetoRecoEvent->Hit(indexHit)->GetChannelId();
+      tempTHit = fEvent->EVetoRecoEvent->Hit(indexHit)->GetTime();
+      tempEHit = fEvent->EVetoRecoEvent->Hit(indexHit)->GetEnergy();
+
+      chtempEVetoHitGoodClus.push_back(tempChHit);
+      ttempEVetoHitGoodClus.push_back(tempTHit);
+      entempEVetoHitGoodClus.push_back(tempEHit);
+      fHS->FillHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",tempEHit);
+    }
+    chEVetoHitGoodClus.push_back(chtempEVetoHitGoodClus);
+    tEVetoHitGoodClus.push_back(ttempEVetoHitGoodClus);
+    enEVetoHitGoodClus.push_back(entempEVetoHitGoodClus);
+
   }//end EVetoClusters
   
   fHS->FillHistoList("EVetoClusters","hVetoChasOver302to3HitsGoodChaNEVetoCluster", npassEVeto);
@@ -527,8 +590,8 @@ Bool_t BhabhaAnalysis::Process(){
       }
     }//end jj
     fHS->FillHisto2List("PVetoClusters","hPVetoChVsNHitsPVetoCluster",tempCh,tempNHit);
-    if(tempCh<20)                  fHS->FillHistoList("PVetoClusters","h0019ChNHitsPVetoCluster",tempNHit);
-    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("PVetoClusters","h2070ChNHitsPVetoCluster",tempNHit);
+    if(tempCh<20)                  fHS->FillHistoList("PVetoClusters","h0029ChNHitsPVetoCluster",tempNHit);
+    else if(tempCh>19&&tempCh<71)  fHS->FillHistoList("PVetoClusters","h3070ChNHitsPVetoCluster",tempNHit);
     else if(tempCh>70&&tempCh<85)  fHS->FillHistoList("PVetoClusters","h7084ChNHitsPVetoCluster",tempNHit);
     else if(tempCh>84)             fHS->FillHistoList("PVetoClusters","h85UpChNHitsPVetoCluster",tempNHit);
 
@@ -551,19 +614,42 @@ Bool_t BhabhaAnalysis::Process(){
     
     //good cluster quality cuts, pveto:
     if(tempCh<30||tempCh>70) continue;
-    if(tempNHit<2||tempNHit>3) continue;
+    //if(tempNHit<2||tempNHit>3) continue; //8/2 turned off: not well reproduced in data/mc and makes very little difference to signal/background ratio
     //    if(!(tempEClus/tempNHit)>0.7) continue;
     
+    fHS->FillHistoList("PVetoClusters","hGoodChasNHitsPVetoCluster",tempNHit);
+    fHS->FillHistoList("PVetoClusters","hGoodChasEPerHitPVetoCluster",tempEClus/tempNHit);
+    fHS->FillHistoList("PVetoClusters","hGoodChastPVetoCluster",tempT);
+    fHS->FillHistoList("PVetoClusters","hGoodChasEnergyPVetoCluster",tempEClus);
+
     //Counter of PVeto clusters that pass
     NPVetoGoodClusters++;
     npassPVeto++;
 
-    //fill vectors with parameters of good hits
+    //fill vectors with parameters of good clusters
     NHitsPVetoGood.push_back(tempNHit);
     enPVetoGood.push_back(tempEClus);
     tPVetoGood.push_back(tempT);
     chPVetoGood.push_back(tempCh);
-    
+
+    indexPVetoHitGoodClus = fEvent->PVetoRecoCl->Element(ii)->GetHitVecInClus();
+    if(tempNHit!=indexPVetoHitGoodClus.size()) std::cout<<"size mismatch PVeto"<<std::endl;
+    for(int kk=0;kk<indexPVetoHitGoodClus.size();kk++){    
+      indexHit = indexPVetoHitGoodClus[kk];
+      tempChHit = fEvent->PVetoRecoEvent->Hit(indexHit)->GetChannelId();
+      tempTHit = fEvent->PVetoRecoEvent->Hit(indexHit)->GetTime();
+      tempEHit = fEvent->PVetoRecoEvent->Hit(indexHit)->GetEnergy();
+
+      chtempPVetoHitGoodClus.push_back(tempChHit);
+      ttempPVetoHitGoodClus.push_back(tempTHit);
+      entempPVetoHitGoodClus.push_back(tempEHit);
+
+      fHS->FillHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",tempEHit);
+    }
+    chPVetoHitGoodClus.push_back(chtempPVetoHitGoodClus);
+    tPVetoHitGoodClus.push_back(ttempPVetoHitGoodClus);
+    enPVetoHitGoodClus.push_back(entempPVetoHitGoodClus);
+
   }//end PVetoCluster
   fHS->FillHistoList("PVetoClusters","hVetoChasOver302to3HitsGoodChaNPVetoCluster", npassPVeto);
   
@@ -645,21 +731,13 @@ Bool_t BhabhaAnalysis::Process(){
     chEVeto    =  chEVetoGood[ii];
     NHitsEVeto =  NHitsEVetoGood[ii];
     enEVeto    =  enEVetoGood[ii];
-    
-    for(int iEHit = 0;iEHit<NHitsEVeto;iEHit++){
-      //      fHS->FillHistoList("EVetoHits","hGoodClusterEVetoHitEnergy",EnEVetoHit);
-    }
-    
+   
     for(int jj = 0; jj<NPVetoGoodClusters; jj++){      
       //import PVeto variables
       tPVeto     =  tPVetoGood[jj];
       chPVeto    =  chPVetoGood[jj];
       NHitsPVeto =  NHitsPVetoGood[jj];
       enPVeto    =  enPVetoGood[jj];
-
-      for(int iPHit = 0;iPHit<NHitsPVeto;iPHit++){
-	//	if(ii==0)   fHS->FillHistoList("PVetoHits","hGoodClusterPVetoHitEnergy",EnPVetoHit);
-      }
 
       //histograms of raw variables
       //time difference corrected for trajectory
@@ -680,8 +758,14 @@ Bool_t BhabhaAnalysis::Process(){
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",chPVeto+chEVeto,tPVeto-tEVeto);
       fHS->FillHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 
-
-      if(!fabs(deltaTcorrect)<10) continue;
+      if(!fabs(deltaTcorrect<10)) continue;
+      //      std::cout<<"good deltat. enPVetoHitGoodClus[jj].size() "<<enPVetoHitGoodClus[jj].size()<<" enEVetoHitGoodClus[ii].size() "<<enEVetoHitGoodClus[ii].size()<<std::endl;
+      for(int kk=0; kk<enPVetoHitGoodClus[jj].size(); kk++){
+	fHS->FillHistoList("PVetoHits","hInTimeGoodClusterPVetoHitEnergy",enPVetoHitGoodClus[jj][kk]);
+      }
+      for(int kk=0; kk<enEVetoHitGoodClus[ii].size(); kk++){
+	fHS->FillHistoList("EVetoHits","hInTimeGoodClusterEVetoHitEnergy",enEVetoHitGoodClus[ii][kk]);
+      }
 
       if(fabs(deltaTcorrect)>5){
 	if(chPVeto+chEVeto==99){

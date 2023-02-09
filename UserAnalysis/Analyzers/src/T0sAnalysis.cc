@@ -3,6 +3,7 @@
 #include "TRecoVHit.hh"
 #include "VetoEndPoint.hh"
 #include "TLorentzVector.h"
+#include "PadmeVRecoConfig.hh"
 
 T0sAnalysis::T0sAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -15,6 +16,10 @@ T0sAnalysis::T0sAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fConfig = new PadmeVRecoConfig(fCfgParser,"PadmeReconstructionConfiguration");
+
+fSwimBrem = fConfig->GetParOrDefault("T0sAnalysis","SwimBrem",1.);
+std::cout<<"fSwimBrem"<<fSwimBrem<<std::endl;
   fVetoEndPoint = VetoEndPoint::GetInstance();
 }
 
@@ -86,12 +91,12 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Hit properties
-  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",300,0,6);
-  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",300,0,6);
+  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",600,0,6);
+  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",600,0,6);
   fHS->BookHistoList("PVetoHits","hPVetoHitCh",90,0,90);
   fHS->BookHistoList("EVetoHits","hEVetoHitCh",96,0,96);
-  fHS->BookHisto2List("PVetoHits","hPVetoHitChVsHitEnergy",90,0,90,300,0,6);
-  fHS->BookHisto2List("EVetoHits","hEVetoHitChVsHitEnergy",96,0,96,300,0,6);
+  fHS->BookHisto2List("PVetoHits","hPVetoHitChVsHitEnergy",90,0,90,600,0,6);
+  fHS->BookHisto2List("EVetoHits","hEVetoHitChVsHitEnergy",96,0,96,600,0,6);
   
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
@@ -264,7 +269,7 @@ Bool_t T0sAnalysis::Process(){
 
       fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
       fHS->FillHistoList("PVetoHits","hPVetoHitCh",chHitPVeto);
-      //      if(NClusterHitsPVeto==1) std::cout<<NClusterHitsPVeto<<std::endl;
+      fHS->FillHistoList("PVetoHits","hPVetoHitChVsHitEnergy",chHitPVeto,enHitPVeto);
 
       fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",tHitPVeto-tSAC);
 
@@ -322,6 +327,7 @@ Bool_t T0sAnalysis::Process(){
 
       fHS->FillHistoList("EVetoHits","hEVetoHitEnergy",enHitEVeto);
       fHS->FillHistoList("EVetoHits","hEVetoHitCh",chHitEVeto);
+      fHS->FillHistoList("EVetoHits","hEVetoHitChVsHitEnergy",chHitEVeto,enHitEVeto);
 
       fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",tHitEVeto-tSAC);
 
@@ -483,7 +489,7 @@ Bool_t T0sAnalysis::Process(){
 
   //  if(fSwimmerInit==0){
   //    fSwimmerInit=1;
-  if(isMC){//&&fEvent->MCTruthEvent->GetEventNumber()<50){
+  if(isMC&&fSwimBrem){//&&fEvent->MCTruthEvent->GetEventNumber()<50){
     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
         mcVtx = fEvent->MCTruthEvent->Vertex(iV);
 	if(mcVtx->GetProcess() == "eBrem"){

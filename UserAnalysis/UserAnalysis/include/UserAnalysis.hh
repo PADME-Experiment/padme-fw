@@ -3,6 +3,7 @@
 
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "PadmeVRecoConfig.hh"
 
 class HistoSvc;
 class NPoTAnalysis;
@@ -37,8 +38,18 @@ private:
   PadmeAnalysisEvent* fEvent;
 
   utl::ConfigParser* fCfgParser;
+  PadmeVRecoConfig* fConfig;
 
   HistoSvc* fHS;
+
+  Bool_t fRunECalCalib;
+  Bool_t fRunMCTruth;
+  Bool_t fRunNPoT;
+  Bool_t fRunIsGGAnalysis;
+  Bool_t fRunBhabha;
+  Bool_t fRunBremsstrahlung;
+  Bool_t fRunReversedFieldBremsstrahlung;
+  Bool_t fRunT0s;
 
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;

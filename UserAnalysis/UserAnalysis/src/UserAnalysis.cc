@@ -15,6 +15,7 @@
 #include "BremsstrahlungAnalysis.hh" //BL
 #include "ReversedBFieldBremsstrahlungAnalysis.hh" //BL
 #include "T0sAnalysis.hh"
+#include "PadmeVRecoConfig.hh"
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -26,61 +27,67 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fECalCalib    = ECalCalib::GetInstance();
-  //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
-  fMCTruth      = MCTruth::GetInstance();
+  fConfig = new PadmeVRecoConfig(fCfgParser,"PadmeReconstructionConfiguration");
 
-  //Physics analysis last reviewed by M. Raggi 05/22
-  fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fMCTruth = MCTruth::GetInstance();
-  //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
-  fBhabhaAnalysis = new BhabhaAnalysis(cfgFile,fVerbose);
-  fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
-  fReversedBFieldBremsstrahlungAnalysis = new ReversedBFieldBremsstrahlungAnalysis(cfgFile,fVerbose);
-  
+  fRunECalCalib                   = fConfig->GetParOrDefault("ANALYSES","ECalCalib",1.);
+  fRunMCTruth                     = fConfig->GetParOrDefault("ANALYSES","MCTruth",1.);
+  fRunNPoT                        = fConfig->GetParOrDefault("ANALYSES","NPoT",1.);
+  fRunIsGGAnalysis                = fConfig->GetParOrDefault("ANALYSES","IsGGAnalysis",1.);
+  fRunBhabha                      = fConfig->GetParOrDefault("ANALYSES","BhabhaAnalysis",1.);
+  fRunBremsstrahlung              = fConfig->GetParOrDefault("ANALYSES","BremsstrahlungAnalysis",1.);
+  fRunReversedFieldBremsstrahlung = fConfig->GetParOrDefault("ANALYSES","ReversedFieldBremsstrahlungAnalysis",1.);
+  fRunT0s                         = fConfig->GetParOrDefault("ANALYSES","T0sAnalysis",1.);
+
+  if(fRunECalCalib)  fECalCalib    = ECalCalib::GetInstance();
+  if(fRunMCTruth)    fMCTruth      = MCTruth::GetInstance();
+
+  if(fRunNPoT)                                 fNPoTAnalysis           = new NPoTAnalysis(cfgFile,fVerbose);
+  if(fRunIsGGAnalysis)   fIsGGAnalysis           = new IsGGAnalysis(cfgFile,fVerbose);
+  if(fRunBhabha) fBhabhaAnalysis         = new BhabhaAnalysis(cfgFile,fVerbose);
+  if(fRunBremsstrahlung) fBremsstrahlungAnalysis = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunReversedFieldBremsstrahlung) fReversedBFieldBremsstrahlungAnalysis = new ReversedBFieldBremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunT0s)   fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
+
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
-  fT0sAnalysis = new T0sAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
-  delete fECalCalib;
-  delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
-  delete fMCTruth;
-  //  delete fIs3GAnalysis;
-  delete fBhabhaAnalysis;
-  delete fBremsstrahlungAnalysis;
-  delete fReversedBFieldBremsstrahlungAnalysis;
+  if(fRunMCTruth&&fEvent->MCTruthEvent)   delete fMCTruth;
+  if(fRunECalCalib)                       delete fECalCalib;
+  if(fRunNPoT)                            delete fNPoTAnalysis;
+  if(fRunIsGGAnalysis)                    delete fIsGGAnalysis;
+  if(fRunBhabha)                          delete fBhabhaAnalysis;
+  if(fRunBremsstrahlung)                  delete fBremsstrahlungAnalysis;
+  if(fRunReversedFieldBremsstrahlung)     delete fReversedBFieldBremsstrahlungAnalysis;
+  if(fRunT0s)                             delete fT0sAnalysis;
   // delete fETagAnalysis;
   // delete fIs22GGAnalysis;
   // delete fIs3GAnalysis;
-  delete fT0sAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  fECalCalib->Init();
 
-  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
-  fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
-  fMCTruth->Init(fEvent);
+  if(fRunECalCalib)  fECalCalib->Init();
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
+
+  if(fRunNPoT)                          fNPoTAnalysis->Init(fEvent);
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Init(fEvent);
+  if(fRunBhabha)                        fBhabhaAnalysis->Init(fEvent);
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Init(fEvent);
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Init(fEvent);
+  if(fRunT0s)                           fT0sAnalysis->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
   // fETagAnalysis->Init(fEvent);
   // fIs22GGAnalysis->Init(fEvent);
   // fIs3GAnalysis->Init(fEvent);
-  fBhabhaAnalysis->Init(fEvent);
-  fBremsstrahlungAnalysis->Init(fEvent);
-  fReversedBFieldBremsstrahlungAnalysis->Init(fEvent);
-  fT0sAnalysis->Init(fEvent);
   return true;
 }
 
@@ -112,22 +119,25 @@ Bool_t UserAnalysis::Process(){
 
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
-  for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+  for (int i=0;i<8;i++) { 
+    if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); 
+  }
 
-  fNPoTAnalysis->Process();
-  //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  fIsGGAnalysis->Process();
-  fMCTruth->Process();
+  if(fRunNPoT)    fNPoTAnalysis->Process();
+
+  //  if(fRunNPoT && fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Process();
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Process();
+  if(fRunBhabha)                        fBhabhaAnalysis->Process();
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Process();
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Process();
+  if(fRunT0s)                           fT0sAnalysis->Process();
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
   /*  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
   fETagAnalysis->Process();*/
-  fBhabhaAnalysis->Process();
-  fBremsstrahlungAnalysis->Process();
-  fReversedBFieldBremsstrahlungAnalysis->Process();
-  fT0sAnalysis->Process();
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();
@@ -182,19 +192,18 @@ Bool_t UserAnalysis::Process(){
 Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
-  fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
-  fMCTruth->Finalize();
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Finalize();
+  if(fRunNPoT)                          fNPoTAnalysis->Finalize();
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Finalize();
+  if(fRunBhabha)                        fBhabhaAnalysis->Finalize();
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Finalize();
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Finalize();
+  if(fRunT0s)                           fT0sAnalysis->Finalize();
   //  fIs3GAnalysis->Finalize();
   // fIsGGAnalysis->Finalize();
   // fETagAnalysis->Finalize();
   // fIs22GGAnalysis->Finalize();
   // fIs3GAnalysis->Finalize();
-  fBhabhaAnalysis->Finalize();
-  fBremsstrahlungAnalysis->Finalize();
-  fReversedBFieldBremsstrahlungAnalysis->Finalize();
-  fT0sAnalysis->Finalize();
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

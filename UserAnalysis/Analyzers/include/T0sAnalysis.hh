@@ -36,7 +36,7 @@ private:
 
   char name[250];
 
-Bool_t fSwimBrem;
+  Bool_t fSwimBrem;
 
   Bool_t fSwimmerInit;
   

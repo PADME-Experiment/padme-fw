@@ -17,6 +17,7 @@ class BhabhaAnalysis;
 class BremsstrahlungAnalysis;
 class ReversedBFieldBremsstrahlungAnalysis;
 class T0sAnalysis;
+class HitCharacteristicsAnalysis;
 
 class UserAnalysis {
 
@@ -50,6 +51,7 @@ private:
   Bool_t fRunBremsstrahlung;
   Bool_t fRunReversedFieldBremsstrahlung;
   Bool_t fRunT0s;
+  Bool_t fRunHitCharacteristics;
 
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
@@ -62,6 +64,6 @@ private:
   BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
   ReversedBFieldBremsstrahlungAnalysis* fReversedBFieldBremsstrahlungAnalysis;
   T0sAnalysis* fT0sAnalysis;
-
+  HitCharacteristicsAnalysis* fHitCharacteristicsAnalysis;
 };
 #endif

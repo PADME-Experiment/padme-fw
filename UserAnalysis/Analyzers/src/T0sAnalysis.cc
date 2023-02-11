@@ -18,8 +18,7 @@ T0sAnalysis::T0sAnalysis(TString cfgFile, Int_t verbose)
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fConfig = new PadmeVRecoConfig(fCfgParser,"PadmeReconstructionConfiguration");
 
-fSwimBrem = fConfig->GetParOrDefault("T0sAnalysis","SwimBrem",1.);
-std::cout<<"fSwimBrem"<<fSwimBrem<<std::endl;
+  fSwimBrem = fConfig->GetParOrDefault("T0sAnalysis","SwimBrem",1.);
   fVetoEndPoint = VetoEndPoint::GetInstance();
 }
 
@@ -38,8 +37,8 @@ Bool_t T0sAnalysis::Init(PadmeAnalysisEvent* event){
 
 Bool_t T0sAnalysis::InitHistos(){
   // T0sAnalysis directory will contain all histograms related to this analysis
-  fHS->CreateList("PVetoHits");
-  fHS->CreateList("EVetoHits");
+  //  fHS->CreateList("PVetoHits");
+  //  fHS->CreateList("EVetoHits");
 
   fHS->CreateList("PVetoSACT0sList/StandardRecoClus");
   fHS->CreateList("EVetoSACT0sList/StandardRecoClus");
@@ -91,12 +90,12 @@ Bool_t T0sAnalysis::InitHistos(){
   fHS->BookHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSAC22ClusterGoodEVetoCh",4000,-500,500);
 
   //Hit properties
-  fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",600,0,6);
-  fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",600,0,6);
-  fHS->BookHistoList("PVetoHits","hPVetoHitCh",90,0,90);
-  fHS->BookHistoList("EVetoHits","hEVetoHitCh",96,0,96);
-  fHS->BookHisto2List("PVetoHits","hPVetoHitChVsHitEnergy",90,0,90,600,0,6);
-  fHS->BookHisto2List("EVetoHits","hEVetoHitChVsHitEnergy",96,0,96,600,0,6);
+  // fHS->BookHistoList("PVetoHits","hPVetoHitEnergy",600,0,6);
+  // fHS->BookHistoList("EVetoHits","hEVetoHitEnergy",600,0,6);
+  // fHS->BookHistoList("PVetoHits","hPVetoHitCh",90,0,90);
+  // fHS->BookHistoList("EVetoHits","hEVetoHitCh",96,0,96);
+  // fHS->BookHisto2List("PVetoHits","hPVetoHitChVsHitEnergy",90,0,90,600,0,6);
+  // fHS->BookHisto2List("EVetoHits","hEVetoHitChVsHitEnergy",96,0,96,600,0,6);
   
   //Time difference wrt previous channel
   fHS->BookHistoList("PVetoAdjChaT0sList","hDeltatPVetoCh_iCh_i--",80,-5,5);
@@ -259,7 +258,7 @@ Bool_t T0sAnalysis::Process(){
 	//	std::cout<<"NPVetoCluster "<<NPVetoCluster<<" jj "<<jj<<" PVetoClusterTime "<<tPVeto<<" SACClusterTime "<<tSAC<<std::endl;
       }
     }
-    
+      
     for(int kk = 0; kk<NPVetoHit;kk++){
       
       //import PVeto variables
@@ -267,9 +266,9 @@ Bool_t T0sAnalysis::Process(){
       chHitPVeto    =  fEvent->PVetoRecoEvent->Hit(kk)->GetChannelId();
       enHitPVeto    =  fEvent->PVetoRecoEvent->Hit(kk)->GetEnergy();
 
-      fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
-      fHS->FillHistoList("PVetoHits","hPVetoHitCh",chHitPVeto);
-      fHS->FillHistoList("PVetoHits","hPVetoHitChVsHitEnergy",chHitPVeto,enHitPVeto);
+      // fHS->FillHistoList("PVetoHits","hPVetoHitEnergy",enHitPVeto);
+      // fHS->FillHistoList("PVetoHits","hPVetoHitCh",chHitPVeto);
+      // fHS->FillHistoList("PVetoHits","hPVetoHitChVsHitEnergy",chHitPVeto,enHitPVeto);
 
       fHS->FillHistoList("PVetoSACT0sList/StandardRecoHits","hDeltatPVetoHitsSACCluster",tHitPVeto-tSAC);
 
@@ -325,9 +324,9 @@ Bool_t T0sAnalysis::Process(){
 
       //      std::cout<<"chhiteveto "<<chHitEVeto<<" chsac "<<chSAC<<std::endl;
 
-      fHS->FillHistoList("EVetoHits","hEVetoHitEnergy",enHitEVeto);
-      fHS->FillHistoList("EVetoHits","hEVetoHitCh",chHitEVeto);
-      fHS->FillHistoList("EVetoHits","hEVetoHitChVsHitEnergy",chHitEVeto,enHitEVeto);
+      // fHS->FillHistoList("EVetoHits","hEVetoHitEnergy",enHitEVeto);
+      // fHS->FillHistoList("EVetoHits","hEVetoHitCh",chHitEVeto);
+      // fHS->FillHistoList("EVetoHits","hEVetoHitChVsHitEnergy",chHitEVeto,enHitEVeto);
 
       fHS->FillHistoList("EVetoSACT0sList/StandardRecoHits","hDeltatEVetoHitsSACCluster",tHitEVeto-tSAC);
 

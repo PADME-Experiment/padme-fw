@@ -5,6 +5,7 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
+#include "PadmeVRecoConfig.hh"
 
 class VetoEndPoint;
 
@@ -29,8 +30,11 @@ private:
   PadmeAnalysisEvent* fEvent;
 
   utl::ConfigParser* fCfgParser;
+  PadmeVRecoConfig* fConfig;
 
   HistoSvc* fHS;
+
+  Bool_t fSwimBhabha;
 
   Bool_t isMC;
 

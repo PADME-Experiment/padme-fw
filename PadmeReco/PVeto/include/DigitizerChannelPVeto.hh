@@ -164,8 +164,6 @@ private:
   TH1F * hDerivVCorrectChannels20to70;
   TH1F * hOccupancy                  ;
   TH1F * hOccupancyOneHit            ;
-  TH1F * hMinTimeDiffDeriv           ;
-  TH1F * hMinTimeDiffDerivChas31to70 ;
   TH1F * hVRatio                     ;
   TH1F * hNZSupEvents                ;
   TH1F * hNoiseRMSAvg                ;
@@ -176,6 +174,8 @@ private:
   TH1F * hHitEnergy                  ;
   TH1F * hHitEnergySingleHit         ;
   TH1F * hHitTime                    ;
+  TH1F * hDeltaTHitsinCha            ;
+  TH1F * hDeltaTHitsinChaChas30to70  ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//

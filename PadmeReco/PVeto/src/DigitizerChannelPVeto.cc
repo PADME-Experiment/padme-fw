@@ -259,17 +259,15 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hRawVOneHit                 = new TH1F("RawVOneHit","RawVOneHit",400,0,400);
   hRawVMultiHit               = new TH1F("RawVMultiHit","RawVMultiHit",400,0,400);
   hRawVMultiHitCorrect        = new TH1F("RawVMultiHitCorrect","RawVMultiHitCorrect",400,0,400);
-  hDerivV                     = new TH1F("DerivV","DerivV",400,0,400);
-  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",400,0,400);
-  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",400,0,400);
-  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",400,0,400);
-  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",400,0,400);
-  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",400,0,400);
+  hDerivV                     = new TH1F("DerivV","DerivV",800,0,400);
+  hDerivVChannels20to70       = new TH1F("DerivVChannels20to70","DerivVChannels20to70",800,0,400);
+  hDerivVOneHit               = new TH1F("DerivVOneHit","DerivVOneHit",800,0,400);
+  hDerivVOneHitChannels20to70 = new TH1F("DerivVOneHitChannels20to70","DerivVOneHitChannels20to70",800,0,400);
+  hDerivVCorrect              = new TH1F("DerivVCorrect","DerivVCorrect",800,0,400);
+  hDerivVCorrectChannels20to70= new TH1F("DerivVCorrectChannels20to70","DerivVCorrectChannels20to70",800,0,400);
   hHitTime                    = new TH1F("HitTime","HitTime",400,0,800);
-  hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",100,0,10);
-  hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",100,0,10);
-  hMinTimeDiffDeriv           = new TH1F("MinTimeDiffDeriv","MinTimeDiffDeriv",100,0,200);
-  hMinTimeDiffDerivChas31to70 = new TH1F("MinTimeDiffDerivChas31to70","MinTimeDiffDerivChas31to70",100,0,200);
+  hHitEnergy                  = new TH1F("HitEnergy","HitEnergy",600,0,6);
+  hHitEnergySingleHit         = new TH1F("HitEnergySingleHit","HitEnergySingleHit",600,0,6);
   hVRatio                     = new TH1F("VRatio","VRatio",50,0,5);  
   hNZSupEvents                = new TH1F("hNZSupEvents","hNZSupEvents",96,0,96);
   hNoiseRMSAvg                = new TH1F("hNoiseRMSAvg","hNoiseRMSAvg",96,0,96);
@@ -277,6 +275,8 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
   hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
+  hDeltaTHitsinCha = new TH1F("hDeltaTHitsinCha",";Time (ns);",500,0,100);
+  hDeltaTHitsinChaChas30to70 = new TH1F("hDeltaTHitsinChaChas30to70",";Time (ns);",500,0,100);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
   hAmpDiffVsUncorrectAmpChannels20to70      = new TH2F("hAmpDiffVsUncorrectAmpChannels20to70","hAmpDiffVsUncorrectAmpChannels20to70",100,0,400,300,-100,200);
@@ -305,13 +305,13 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
     hRawVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
     
     sprintf(name, "DerivVChannel%d",ii);
-    hDerivVPerChannel[ii] = new TH1F(name,name,400,0,400);
+    hDerivVPerChannel[ii] = new TH1F(name,name,800,0,400);
 
     sprintf(name, "DerivVOneHitChannel%d",ii);
-    hDerivVOneHitPerChannel[ii] = new TH1F(name,name,400,0,400);
+    hDerivVOneHitPerChannel[ii] = new TH1F(name,name,800,0,400);
 
     sprintf(name, "DerivVCorrectChannel%d",ii);
-    hDerivVCorrectPerChannel[ii] = new TH1F(name,name,400,0,400);
+    hDerivVCorrectPerChannel[ii] = new TH1F(name,name,800,0,400);
 
     sprintf(name,"hNoiseRMSPerChannel%d",ii);
     hNoiseRMSPerChannel[ii] = new TH1F(name,name,20,0,10);
@@ -338,9 +338,9 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
     hHitEnergy->Write();
     hHitEnergySingleHit->Write();
     hHitTime->Write();
-    hMinTimeDiffDeriv->Write();
-    hMinTimeDiffDerivChas31to70->Write();
-    
+    hDeltaTHitsinCha->Write();
+    hDeltaTHitsinChaChas30to70->Write();
+
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();
@@ -545,8 +545,8 @@ void DigitizerChannelPVeto::HitPlots(std::vector<TRecoVHit *> &hitVec){
     if(myiHit>1){
       hAmpDiffVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],AmpDiff);
       hCorrectedAmpVsUncorrectAmpNotFirstHit->Fill(vRawSortHitVec[myiHit],vTSpecYPCorrectHitVec[myiHit]);
-      hMinTimeDiffDeriv->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
-      if(GetChID()>30&&GetChID()<71)      hMinTimeDiffDerivChas31to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
+      hDeltaTHitsinCha->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
+      if(GetChID()>29&&GetChID()<71)     hDeltaTHitsinChaChas30to70->Fill(tDerivSortHitVec[myiHit]-tDerivSortHitVec[myiHit-1]);
     }
   }
   

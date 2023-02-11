@@ -31,6 +31,9 @@ EVetoReconstruction::EVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fEVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
   fClusterAlgo     = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
   fMCSimBrokenChas = (Bool_t)fConfig->GetParOrDefault("RECO", "MCSimBrokenChas", 1);
+  fMCEnergyScale           = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyScale",0.8636);
+  fMCEnergyThr             = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyThr",0.366);
+  fClusterHitEnThr         = (Double_t)fConfig->GetParOrDefault("RECO","ClusterHitEnThr",0.366);
 
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelEVeto();
@@ -97,6 +100,9 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
   if (tEvent==NULL) return;
   for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
+
+  vector<TRecoVHit *> TempHits;
+  
   // MC to reco hits
   //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -110,22 +116,22 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
     }
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
-    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
+    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<TempHits.size()<<std::endl;
 
     Bool_t toBeMerged = false;
     // merge digits in the same channel closer in time than a configurable parameter (fEVetoDigiTimeWindow){
     if (fEVetoDigiTimeWindow > 0) {
-      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+      for (unsigned int ih=0; ih<TempHits.size(); ++ih)
 	{
-	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fEVetoDigiTimeWindow)
+	  if (TempHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<fEVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
 	      // this digit must be merged with a previously defined recoHit
-	      //std::cout<<" -- merging with hit in ch "<<fHits[ih]->GetChannelId()<<" at time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" diffT = "<<fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<<std::endl;
-	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
-	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
-	      //std::cout<<" -- updated  Ch "<<fHits[ih]->GetChannelId()<<" time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" so far "<<std::endl;
+	      //std::cout<<" -- merging with hit in ch "<<TempHits[ih]->GetChannelId()<<" at time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" diffT = "<<fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<<std::endl;
+	      TempHits[ih]->SetEnergy(TempHits[ih]->GetEnergy() + digiE);
+	      TempHits[ih]->SetTime(TempHits[ih]->GetTime() + digiE*digiT);
+	      //std::cout<<" -- updated  Ch "<<TempHits[ih]->GetChannelId()<<" time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" so far "<<std::endl;
 	    }
 	}
     }
@@ -136,30 +142,29 @@ void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	Hit->SetEnergy   (digiE);
 	Hit->SetTime     (digiT*digiE);
 	Hit->SetPosition (TVector3(0.,0.,0.)); 
-	fHits.push_back(Hit);
-	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
+	TempHits.push_back(Hit);
+	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<TempHits.size()<<" hits"<<std::endl;
       }
-  }
-  // last loop to correct the time 
+  }//end hit to digi merge
+  
+  // correct the time & add noise
   TRecoVHit *Hit;
   Double_t Noise=0.;
-  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+  for (unsigned int ih=0; ih<TempHits.size(); ++ih)
     {
-      Hit = fHits[ih];
+      Hit = TempHits[ih];
       //pre-smear time = GetTime()/Hit->GetEnergy());
       //smearing in time
       //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-
-      if (fSigmaNoiseForMC >0.0001) {
-	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
-	Hit->SetEnergy(Hit->GetEnergy()+Noise);
-      }
+      Noise=random->Gaus(0.,fSigmaNoiseForMC);   
+      Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
+      if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
+      //      else std::cout<<"Dumping "<<Hit->GetEnergy()<<" MeV hit"<<std::endl;
     }
-    // end of merge digits in the same channel closer in time than a configurable parameter (fEVetoDigiTimeWindow){
+    //
   return;
 }
-
 
 void EVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
 
@@ -366,7 +371,7 @@ void EVetoReconstruction::BuildClusters(TRawEvent* rawEv)
   VetoClusterHitVec.clear();
 
   for(int iHit=0;iHit<Hits.size();iHit++){
-    //    if(Hits[iHit]->GetEnergy()<0) std::cout<<Hits[iHit]->GetEnergy()<<std::endl;
+    if(Hits[iHit]->GetEnergy()<0) std::cout<<"EVeto negative hit energy "<<Hits[iHit]->GetEnergy()<<std::endl;
     fClusterHits.Clear();
     //	std::cout<<"ChID "<<fClusterHits.GetChannelId()<<" time "<<fClusterHits.GetTime()<<std::endl;
     fClusterHits.SetEnergy(Hits[iHit]->GetEnergy());
@@ -382,9 +387,11 @@ void EVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
   for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
     //std::cout<<"Reading Cluster Hits ChID "<<VetoClusterHitVec[iPHit].GetChannelId()<<" time "<<VetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    if(VetoClusterHitVec[iPHit].GetEnergy()>0.1){//100 keV is the threshold for hits in the virtual class
+    //   std::cout<<"EVETO!!!! before "<<VetoClusterHitVec[iPHit].GetEnergy()<<std::endl;
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){//100 keV is the threshold for hits in the virtual class
       nhitpass++; 
       fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
+      //     std::cout<<"after "<<VetoClusterHitVec[iPHit].GetEnergy()<<std::endl;
     }  
   }
 
@@ -480,11 +487,10 @@ void EVetoReconstruction::BuildClusters(TMCEvent* MCEv)
 
   for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
     //std::cout<<"Reading Cluster Hits ChID "<<VetoClusterHitVec[iPHit].GetChannelId()<<" time "<<VetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    //   if(VetoClusterHitVec[iPHit].GetEnergy()>0.5){
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){
       nhitpass++;
-      
-      fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
-      
+      fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);    
+    }
   }
 
   fClusStruc.HitSort();//sort hits in time

@@ -32,6 +32,8 @@ PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileNam
   fClusterAlgo             = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
   fMCEnergyScale           = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyScale",0.8636);
   fMCEnergyThr             = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyThr",0.366);
+  fClusterHitEnThr         = (Double_t)fConfig->GetParOrDefault("RECO","ClusterHitEnThr",0.366);
+
   
 //  fChannelReco = new DigitizerChannelReco();
   fChannelReco = new DigitizerChannelPVeto();
@@ -123,6 +125,7 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	      //std::cout<<" -- merging with hit in ch "<<TempHits[ih]->GetChannelId()<<" at time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" diffT = "<<fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<<std::endl;
 	      TempHits[ih]->SetEnergy(TempHits[ih]->GetEnergy() + digiE);
 	      TempHits[ih]->SetTime(TempHits[ih]->GetTime() + digiE*digiT);
+	      //	      if(tEvent->GetEventNumber()==0&&fHits.size()==83)
 	      //std::cout<<" -- updated  Ch "<<TempHits[ih]->GetChannelId()<<" time "<<TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()<<" so far "<<std::endl;
 	    }
 	}
@@ -149,10 +152,9 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
       //smearing in time
       //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-      //      Noise=random->Gaus(0.,fSigmaNoiseForMC);
+      Noise=random->Gaus(0.,fSigmaNoiseForMC);
       Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
       if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
-      if(Hit->GetEnergy()>25) std::cout<<tEvent->GetEventNumber()<<std::endl;
     }
     //
   return;
@@ -350,8 +352,6 @@ void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 
   
 void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 {
-  //  VetoClusterHits VetoClusterHit;// = new ClusterHits();
-  //  ClusterStructure VetoClusStruc;//contains a structure for vectors of clusters for each event
   std::vector<VetoClusterHits> VetoClusterHitVec;//Contains all the PVetoHits to be clusterised per event
   Int_t nhitpass=0;
   std::vector<VetoCluster*> vVetoClusters;
@@ -364,25 +364,25 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
   VetoClusterHitVec.clear();
 
   for(int iHit=0;iHit<Hits.size();iHit++){
-    //    if(Hits[iHit]->GetEnergy()<0) std::cout<<Hits[iHit]->GetEnergy()<<std::endl;
+    if(Hits[iHit]->GetEnergy()<0) std::cout<<"PVeto negative hit energy "<<Hits[iHit]->GetEnergy()<<std::endl;
+
     fClusterHits.Clear();
-    //	std::cout<<"ChID "<<fClusterHits.GetChannelId()<<" time "<<fClusterHits.GetTime()<<std::endl;
     fClusterHits.SetEnergy(Hits[iHit]->GetEnergy());
     fClusterHits.SetTime(Hits[iHit]->GetTime());
     fClusterHits.SetChannelId(Hits[iHit]->GetChannelId());
     fClusterHits.SetPosition(Hits[iHit]->GetPosition());
     VetoClusterHitVec.push_back(fClusterHits);
-    //std::cout<<"Making the Cluster Hits ChID "<<fClusterHits.GetChannelId()<<" time "<<fClusterHits.GetTime()<<std::endl;
   }
-  //  std::cout<<"Pveto hit size "<< fClusterHitsVec.size()<<std::endl;
+
   vVetoClusters.clear();
   fClusStruc.Clear();//contains a structure for vectors of clusters for each event
 
   for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
-    //std::cout<<"Reading Cluster Hits ChID "<<VetoClusterHitVec[iPHit].GetChannelId()<<" time "<<VetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    if(VetoClusterHitVec[iPHit].GetEnergy()>0.1){//100 keV is the threshold for hits in the virtual class
+    //    std::cout<<"before "<<VetoClusterHitVec[iPHit].GetEnergy()<<std::endl;
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){
       nhitpass++; 
       fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
+      //      std::cout<<"after "<<VetoClusterHitVec[iPHit].GetEnergy()<<std::endl;
     }  
   }
 
@@ -448,9 +448,6 @@ void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
 
 void PVetoReconstruction::BuildClusters(TMCEvent* MCEv)
 {
-
-  //  VetoClusterHits VetoClusterHit;// = new ClusterHits();
-  //  ClusterStructure VetoClusStruc;//contains a structure for vectors of clusters for each event
   std::vector<VetoClusterHits> VetoClusterHitVec;//Contains all the PVetoHits to be clusterised per event 
   Int_t nhitpass=0;
   std::vector<VetoCluster*> vVetoClusters;
@@ -463,7 +460,7 @@ void PVetoReconstruction::BuildClusters(TMCEvent* MCEv)
   VetoClusterHitVec.clear();
 
   for(int iHit=0;iHit<Hits.size();iHit++){
-    //    if(Hits[iHit]->GetEnergy()<0) std::cout<<Hits[iHit]->GetEnergy()<<std::endl;
+    if(Hits[iHit]->GetEnergy()<0) std::cout<<"PVeto MC "<<Hits[iHit]->GetEnergy()<<std::endl;
     fClusterHits.Clear();
     //	std::cout<<"ChID "<<fClusterHits.GetChannelId()<<" time "<<fClusterHits.GetTime()<<std::endl;
     fClusterHits.SetEnergy(Hits[iHit]->GetEnergy());
@@ -479,11 +476,10 @@ void PVetoReconstruction::BuildClusters(TMCEvent* MCEv)
 
   for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
     //std::cout<<"Reading Cluster Hits ChID "<<VetoClusterHitVec[iPHit].GetChannelId()<<" time "<<VetoClusterHitVec[iPHit].GetTime()<<std::endl;
-    //   if(VetoClusterHitVec[iPHit].GetEnergy()>0.5){
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){
       nhitpass++;
-      
       fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
-      
+    }
   }
 
   fClusStruc.HitSort();//sort hits in time

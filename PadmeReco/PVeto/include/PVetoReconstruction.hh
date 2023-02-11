@@ -43,6 +43,7 @@ private:
   Int_t fClusterAlgo;
   Double_t fMCEnergyScale;
   Double_t fMCEnergyThr;
+  Double_t fClusterHitEnThr;
   VetoClusterHits fClusterHits;
   VetoClusterStructure fClusStruc;
   // std::vector<Cluster*> ClusVec;

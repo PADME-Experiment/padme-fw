@@ -165,6 +165,7 @@ private:
   TH1F * hOccupancy                  ;
   TH1F * hOccupancyOneHit            ;
   TH1F * hMinTimeDiffDeriv           ;
+  TH1F * hMinTimeDiffDerivChas31to70     ;
   TH1F * hVRatio                     ;
   TH1F * hNZSupEvents                ;
   TH1F * hNoiseRMSAvg                ;

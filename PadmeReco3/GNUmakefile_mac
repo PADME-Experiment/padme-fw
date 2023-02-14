@@ -1,0 +1,92 @@
+
+
+NAME := PadmeReco
+
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix ETag
+#ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
+ALLTARGETDIRS := RecoBase $(SUBDIRS) 
+
+STATIC := -static
+
+ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC release 6")
+
+CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
+#CPPFLAGS += -IEventDisplay/include -IService/include
+CPPFLAGS += -IRecoBase/include -g -std=c++11 $(ROOTLIBS) $(ROOTCFLAGS)
+
+all: allobjs alllibs bin
+
+include ./mkconfig/global_mac.gmk
+
+# Define libraries used for the creation of the final executable
+LIBS += -Llib -lPadmeReco$(STATIC) 
+LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Reco$(STATIC),$(SUBDIRS)))
+#LIBS += -LService/lib -lService$(STATIC)
+LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
+LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
+# Andre: I don't have mysql installed at the moment
+#LIBS += -L/usr/lib64/mysql -lmysqlclient
+
+
+#EXTRALIBS += -LEventDisplay/lib -lEventDisplay$(STATIC) -lEve -lGeom -lRGL -lFTGL -lGui -lGed -lTreePlayer -lEG 
+
+#LIBRARY_PATH = $(addprefix $(NA62MCSOURCE)/,$(addsuffix /Persistency/lib:,$(SUBDIRS))) \
+#		$(addsuffix /lib:,$(SUBDIRS))
+#LD_LIBRARY_PATH =$(shell echo $(ROOTSYS)/lib:lib:$(NA62MCSOURCE)/Persistency/lib:$(LIBRARY_PATH) | awk '{print gensub(" ","","g")}')
+
+.PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)
+
+#all: PadmeReco PadmeEventDisplay
+
+allobjs: dirs makesubobjs objs
+
+alllibs: makesublibs dirs lib 
+
+bin: PadmeReco
+PadmeReco: PadmeReco.cc
+	@echo "Compiling $< ..."
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS) $(ROOTLIBS) $(ROOTCFLAGS)
+
+#PadmeEventDisplay: PadmeEventDisplay.cc makesub
+#	@echo "Compiling $< ..."
+#	@$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(EXTRALIBS) $(LDFLAGS)
+
+try:
+	@echo CPPFLAGS
+	@echo $(CPPFLAGS)
+	@echo LDFLAGS
+	@echo $(LDFLAGS)
+	@echo LIBS
+	@echo $(LIBS)
+	@echo EXTRALIBS
+	@echo $(EXTRALIBS)
+	@echo CXXFLAGS
+	@echo $(CXXFLAGS)
+	@echo LD_LIBRARY_PATH
+	@echo $(LD_LIBRARY_PATH)
+	@echo ALLTARGETDIRS
+	@echo $(ALLTARGETDIRS)
+
+$(ALLTARGETDIRS):
+	@echo Entering $@ ...
+	@$(MAKE) -C $@ -f GNUmakefile_mac $(TARGET) 
+
+cleanbin:
+	@rm -f PadmeReco
+	@rm -f PadmeReco.o
+	@rm -rf PadmeReco.dSym/
+#	@rm -f PadmeReco PadmeEventDisplay
+
+cleanall: cleanbin clean
+	@$(MAKE) TARGET=clean -f GNUmakefile_mac makesub
+
+makesub: GNUmakefile_mac $(ALLTARGETDIRS)
+
+makesubobjs:
+	@$(MAKE) TARGET=objs -f GNUmakefile_mac makesub
+
+makesublibs:
+	@$(MAKE) TARGET=all -f GNUmakefile_mac makesub
+
+cleansub:
+	@$(MAKE) TARGET=clean GNUmakefile_mac makesub

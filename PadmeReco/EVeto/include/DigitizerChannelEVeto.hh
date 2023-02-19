@@ -176,6 +176,7 @@ private:
   TH1F * hHitEnergy                  ;
   TH1F * hHitEnergySingleHit         ;
   TH1F * hHitTime                    ;
+  TH1F * hNegativeEnergyCha          ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//

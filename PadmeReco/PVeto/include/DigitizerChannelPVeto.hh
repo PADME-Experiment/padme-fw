@@ -176,6 +176,7 @@ private:
   TH1F * hHitTime                    ;
   TH1F * hDeltaTHitsinCha            ;
   TH1F * hDeltaTHitsinChaChas30to70  ;
+  TH1F * hNegativeEnergyCha          ;
 
   TH1F *  hRawVPerChannel[96];//
   TH1F *  hRawVCorrectPerChannel[96];//

@@ -53,7 +53,7 @@ public:
     HitIndexVec.push_back(hitindex);
     HitVec.push_back(MyHit);
 
-    if(MyHit.GetEnergy()<0.9)    std::cout<<"adding hit energy "<<MyHit.GetEnergy()<<std::endl;
+    //    if(MyHit.GetEnergy()<0.9)    std::cout<<"adding hit energy "<<MyHit.GetEnergy()<<std::endl;
   }
 
   void HitSort();

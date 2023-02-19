@@ -27,7 +27,10 @@ VetoClusterHits::VetoClusterHits(const VetoClusterHits& h){
   fChannelId = h.fChannelId;
   fPosition  = h.fPosition;
   fEnergy    = h.fEnergy;
-  fTime      = h.fTime;                                                                             }                                       
+  fTime      = h.fTime;   
+  fHitIndex  = h.fHitIndex;
+}
+
 VetoClusterHits::~VetoClusterHits()
 {;}
 

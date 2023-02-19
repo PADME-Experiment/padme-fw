@@ -27,10 +27,9 @@ int VetoCluster::InsertHit(VetoClusterHits hit, int ihit, double seedtime){//CHE
     std::cout<<"Too many hits, exiting"<<std::endl;
     return -1;
   }
-  //  std::cout<<"I insert hits"<<std::endl;
-  //  hitIndex[nhits]=ihit;
+
   hitIndexVector.push_back(ihit);
-  //  if(nhits>0||ihit>0||hitIndexVector.size()>0) std::cout<<"ihit "<<ihit<<std::endl;
+
   if(hit.GetChannelId()<mostUpstreamChannel){
     mostUpstreamChannel=hit.GetChannelId();
     seedtime = hit.GetTime();
@@ -54,7 +53,6 @@ int VetoCluster::InsertHit(VetoClusterHits hit, int ihit, double seedtime){//CHE
 int VetoCluster::AddCluster(VetoCluster* newcluster){
 
   int NMax=newcluster->GetNHits();
-  //  std::cout<<nhits<<" "<<newcluster->GetNHits()<<" "<<NMax<<std::endl;
   int goodreturn=1;
   if(newcluster->GetNHits()+nhits>MAXHIT){
     std::cout<<"MAXHIT too small, too many hits"<<std::endl;
@@ -84,36 +82,32 @@ int VetoCluster::AddCluster(VetoCluster* newcluster){
 
 
 VetoClusterStructure::VetoClusterStructure(){
-  //  std::cout<<"Initialising VetoClusterStructure"<<std::endl;
   HitVec.clear();
   ClusVec.clear();
   HitIndexVec.clear();
 }
 
 void VetoClusterStructure::Clear(){
-  //  std::cout<<"Clearing VetoClusterStructure"<<std::endl;
   ClusVec.clear();
   HitVec.clear();//legit???
   HitIndexVec.clear();
 }
 
 void VetoClusterStructure::Clusterise(){
-  //  std::cout<<"cljst "<<HitVec.size()<<std::endl;
   for (int ii=0; ii <HitVec.size(); ++ii ) {
     bool UsedHit = 0;
     double myseedtime;
-    //    std::cout<<"clusvec size "<<ClusVec.size()<<std::endl;
-    //    std::cout<<"Hit "<<ii<<" ChID "<<HitVec.at(ii)->GetChannelId()<<" time "<<HitVec.at(ii)->GetTime()<<std::endl;
+
+    if(HitVec.at(ii).GetEnergy()<0.9)    std::cout<<"Hit "<<ii<<" ChID "<<HitVec.at(ii).GetChannelId()<<" time "<<HitVec.at(ii).GetTime()<<" Energy "<<HitVec.at(ii).GetEnergy()<<std::endl;
     for (int jj = 0; jj <ClusVec.size(); ++jj ) {//loop over all currently identified clusters to see whether this hit can be clusterised with any of those
-      //      if(TMath::Abs
       if(HitVec.at(ii).GetTime()-ClusVec.at(jj)->GetAverageTime()<ClusterDeltaT&&
 	 (HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostUpstreamChannel()==-1//
-	  ||HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostDownstreamChannel()==1)){	//4->parameter
+	  ||HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostDownstreamChannel()==1)){
 	if(HitVec.at(ii).GetChannelId()-ClusVec.at(jj)->GetMostUpstreamChannel()==-1) myseedtime = HitVec.at(ii).GetTime();
+	//Beth 14/2/23: I've given VetoClusterHit a SetIndex and a GetIndex, so I think the index vector can be removed everywhere
 	ClusVec.at(jj)->InsertHit(HitVec.at(ii), HitIndexVec.at(ii),myseedtime);//CHECK SEEDTIME BUSINESS
 	
 	UsedHit=1;
-	//	std::cout<<"clusterising jj "<<jj<<" size "<<ClusVec.at(jj)->GetNHits()<<std::endl;
 	break;
       }	
     }//end cluster loop
@@ -129,9 +123,7 @@ void VetoClusterStructure::Clusterise(){
 
 void VetoClusterStructure::MergeClusters(){
   Int_t noCompact = 0;
-  //  std::cout<<"Merging"<<std::endl;
   while(noCompact==0) {
-    //  std::cout<<"Merging, ClusVec.size() "<<ClusVec.size()<<std::endl;
     noCompact = 1;
     int ii = 0;
     while(ii+1< ClusVec.size()){
@@ -159,7 +151,7 @@ void VetoClusterStructure::MergeClusters(){
   }
 }
 
-/**void VetoClusterStructure::HitSort(){
+/**void VetoClusterStructure::HitSort(){ //Beth 14/2/23: I'm changing the way the hit indexing is done. If we go back to sorting in time instead of in energy we'll have to import this change too.
   //  std::cout<<"sorting"<<std::endl;
   std::vector<VetoClusterHits> HitVecCopy;
  
@@ -196,32 +188,26 @@ void VetoClusterStructure::MergeClusters(){
   }**/
 
 void VetoClusterStructure::HitSort(){
-  //  std::cout<<"sorting"<<std::endl;
+
   std::vector<VetoClusterHits> HitVecCopy;
  
-  for(int ii=0;ii<HitVec.size();ii++){
-    HitVecCopy.push_back(HitVec.at(ii));
-    // std::cout<<"HitVec[ii] Ch "<<HitVec[ii]->GetChannelId()<<" time "<<HitVec[ii]->GetTime()<<std::endl;
-  }
+  for(int ii=0;ii<HitVec.size();ii++)    HitVecCopy.push_back(HitVec.at(ii));
     
-  std::vector<int> index(HitVec.size(), 0);
+  std::vector<int> sortindex(HitVec.size(), 0);
   
-  for (int i = 0 ; i != index.size() ; i++) {
-    index[i] = i;
+  for (int i = 0 ; i != sortindex.size() ; i++) {
+    sortindex[i] = i;
   }
   
-  sort(index.begin(), index.end(),
+  sort(sortindex.begin(), sortindex.end(),
        [&](const int& a, const int& b) {
 	 return (HitVec[a].GetEnergy() < HitVec[b].GetEnergy());
 	 }
        );
 
-  for (int ii = 0 ; ii != index.size() ; ++ii) {
-    HitVec[ii]=(HitVecCopy[index[ii]]);
-    //    std::cout<<"     HitVec[ii] Ch "<<HitVec[ii].GetChannelId()<<" time "<<HitVec[ii].GetEnergy();//<<std::endl;
-    //    std::cout<<" HitVecCopy[ii] Ch "<<HitVecCopy[ii].GetChannelId()<<" time "<<HitVecCopy[ii].GetEnergy()<<std::endl;
-    HitIndexVec[ii]=index[ii];
-    //    std::cout<<"ii "<<ii<<" Energy[ii] "<<HitVec[ii]->GetEnergy()<<std::endl;
+  for (int ii = 0 ; ii != sortindex.size() ; ++ii) {
+    HitVec[ii]=(HitVecCopy[sortindex[ii]]);
+    HitIndexVec[ii]=HitVecCopy[sortindex[ii]].GetIndex();
 
     if(ii>0&&HitVec[ii].GetEnergy()-HitVec[ii-1].GetEnergy()<0) {
       std::cout<<"----------------YOU'RE IN A MESS MY FRIEND---------------"<<std::endl;

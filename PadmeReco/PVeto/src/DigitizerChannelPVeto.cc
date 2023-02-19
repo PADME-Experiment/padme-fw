@@ -175,7 +175,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 	RawGetMax=*std::max_element(AbsSamRec, AbsSamRec + fIMax);
 	DerivGetMax=*std::max_element(AbsSamRecDeriv, AbsSamRecDeriv + fIMax);
       }     
-      if(nfound>=13)
+      if(fRawEvNo==2555004&&(GetChID()==58||GetChID()==68)||fRawEvNo==2555059&&GetChID()==70)
 	fAnalogPrint=1;
     }//end of nfound loop
   }//closes if(VMax>thr)
@@ -219,7 +219,7 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     vRawSortHitVec.push_back(vRawHitVec[index[ii]]);
     vTSpecYPSortHitVec.push_back(vTSpecYPHitVec[index[ii]]);
 
-    DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
+    if(ii>0)    DeltaTSortSamples=tDerivSortHitVec[ii]/fTimeBin-tDerivSortHitVec[ii-1]/fTimeBin;
     if(fTailCorrection) tailfraction = TailHeightDerivative(DeltaTSortSamples);
 
     if(ii==0)    vTSpecYPCorrectHitVec.push_back(vTSpecYPSortHitVec[index[ii]]);
@@ -231,6 +231,11 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
 
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);  
+
+    if(fEnergy<0){
+      hNegativeEnergyCha->Fill(GetChID());
+      fAnalogPrint=1;
+    }
 
     hitVec.push_back(Hit);
 
@@ -277,6 +282,7 @@ void DigitizerChannelPVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
   hDeltaTHitsinCha = new TH1F("hDeltaTHitsinCha",";Time (ns);",500,0,100);
   hDeltaTHitsinChaChas30to70 = new TH1F("hDeltaTHitsinChaChas30to70",";Time (ns);",500,0,100);
+  hNegativeEnergyCha = new TH1F("hNegativeEnergyCha",";PVetoChannelID;",90,0,90);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
   hAmpDiffVsUncorrectAmpChannels20to70      = new TH2F("hAmpDiffVsUncorrectAmpChannels20to70","hAmpDiffVsUncorrectAmpChannels20to70",100,0,400,300,-100,200);
@@ -340,6 +346,7 @@ void DigitizerChannelPVeto::SaveDebugHistos(){
     hHitTime->Write();
     hDeltaTHitsinCha->Write();
     hDeltaTHitsinChaChas30to70->Write();
+    hNegativeEnergyCha->Write();
 
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();

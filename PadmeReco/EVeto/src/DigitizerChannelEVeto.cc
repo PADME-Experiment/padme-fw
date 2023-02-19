@@ -232,6 +232,11 @@ Double_t DigitizerChannelEVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);
 
+    if(fEnergy<0){
+      hNegativeEnergyCha->Fill(GetChID());
+      fAnalogPrint=1;
+    }
+
     hitVec.push_back(Hit);
 
   }//end loop over hits
@@ -274,6 +279,7 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
   hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
+  hNegativeEnergyCha = new TH1F("hNegativeEnergyCha",";PVetoChannelID;",90,0,90);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
   hAmpDiffVsUncorrectAmpChannels20to70      = new TH2F("hAmpDiffVsUncorrectAmpChannels20to70","hAmpDiffVsUncorrectAmpChannels20to70",100,0,400,300,-100,200);
@@ -337,7 +343,8 @@ void DigitizerChannelEVeto::SaveDebugHistos(){
     hHitTime->Write();
     hMinTimeDiffDeriv->Write();
     hMinTimeDiffDerivChas31to70->Write();
-    
+    hNegativeEnergyCha->Write();
+
     hRawVCorrect->Write();
     hRawVCorrectChannels20to70->Write();
     hRawVOneHit->Write();

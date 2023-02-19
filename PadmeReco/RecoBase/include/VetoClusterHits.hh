@@ -20,12 +20,14 @@ class VetoClusterHits {
   TVector3 GetPosition()  const { return fPosition;  };
   Double_t GetEnergy()    const { return fEnergy;    };
   Double_t GetTime()      const { return fTime;      };  
+  Double_t GetIndex()     const { return fHitIndex;  };//Beth added 14/2/23 to solve indexing problem
 
   void  SetChannelId(Int_t    value) { fChannelId = value; };
-  void  SetPosition (TVector3 value) { fPosition = value;  };
-  void  SetEnergy   (Double_t value) { fEnergy = value;    };
+  void  SetPosition (TVector3 value) { fPosition  = value; };
+  void  SetEnergy   (Double_t value) { fEnergy    = value; };
+  void  SetTime     (Double_t value) { fTime      = value; };  
+  void  SetIndex    (Double_t value) { fHitIndex  = value; };//Beth added 14/2/23 to solve indexing problem
   //  void  AddEnergy   (Double_t value) { fEnergy += value;   };
-  void  SetTime     (Double_t value) { fTime = value;      };  
 
   Bool_t IsUsed() { return fStatus & (1 << HIT_STATUS_BIT_USED); }
   Bool_t IsSeed() { return fStatus & (1 << HIT_STATUS_BIT_SEED); }

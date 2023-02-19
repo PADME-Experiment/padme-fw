@@ -130,7 +130,7 @@ Bool_t UserAnalysis::Process(){
 
   if(fRunNPoT)    fNPoTAnalysis->Process();
 
-  //  if(fRunNPoT && fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
+  if(fRunNPoT && fNPoTAnalysis->GetNPoT()>20000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Process();
   if(fRunIsGGAnalysis)                  fIsGGAnalysis->Process();
   if(fRunBhabha)                        fBhabhaAnalysis->Process();

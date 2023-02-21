@@ -28,6 +28,8 @@
 #include "TCanvas.h"
 #include "TRecoVCluster.hh"
 
+#include "HistoSvc.hh"
+
 #include <time.h>
 #include <stdlib.h>
 #include <bitset>

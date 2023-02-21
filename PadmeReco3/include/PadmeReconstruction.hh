@@ -11,6 +11,7 @@
 #include "PadmeVRecoConfig.hh"
 
 class HistoSvc;
+class TrigTimeSvc;
 
 class TRawEvent;
 class TMCEvent;
@@ -85,6 +86,7 @@ private:
   utl::ConfigParser *fConfigParser;
   PadmeVRecoConfig *fConfig;
   HistoSvc* fHistoSvc;
+  TrigTimeSvc* fTrigTimeSvc;
   //TString fConfigFileName;
   TFile* fHistoFile;
   TChain* fMCChain;

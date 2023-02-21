@@ -44,6 +44,7 @@
 #include "RecoRootIOManager.hh"
 
 #include "HistoSvc.hh"
+#include "TrigTimeSvc.hh"
 
 #include <TObjString.h>
 
@@ -81,10 +82,19 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeReconstructionConfiguration");
-  
+
+  // Initialize histogramming service
+  TString hsName = fConfig->GetParOrDefault("RECOHisto", "HistoFile", "HistoFile.root");
+  Int_t hsVerbose = fConfig->GetParOrDefault("RECOHisto", "Verbose", 0);
   fHistoSvc = HistoSvc::GetInstance();
-  fHistoSvc->Initialize("HistoFile.root");
-  fHistoSvc->SetVerbose(2);
+  fHistoSvc->SetVerbose(hsVerbose);
+  fHistoSvc->Initialize(hsName);
+
+  // Initialize Trigger Timing Service
+  Int_t ttsVerbose = fConfig->GetParOrDefault("RECOTrigTime", "Verbose", 0);
+  fTrigTimeSvc = TrigTimeSvc::GetInstance();
+  fTrigTimeSvc->SetVerbose(ttsVerbose);
+  fTrigTimeSvc->Initialize();
 
   InitRunningModeFlags();
   InitLibraries();
@@ -121,12 +131,12 @@ void PadmeReconstruction::InitLibraries()
 {
 
   // Declare detectors with required configuration file
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","EVeto",1)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","EVeto",0)) {
     TString configEVeto = fConfig->GetParOrDefault("RECOCONFIG","EVeto","config/EVeto.cfg");
     std::cout<<"=== Enabling EVeto with configuration file "<<configEVeto<<std::endl;
     fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,configEVeto));
   }
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","PVeto",1)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","PVeto",0)) {
     TString configPVeto = fConfig->GetParOrDefault("RECOCONFIG","PVeto","config/PVeto.cfg");
     std::cout<<"=== Enabling PVeto with configuration file "<<configPVeto<<std::endl;
     fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,configPVeto));
@@ -136,7 +146,7 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling ECal with configuration file "<<configECal<<std::endl;
     fRecoLibrary.push_back(new ECalReconstruction(fHistoFile,configECal));
   }
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","SAC",1)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","SAC",0)) {
     TString configSAC = fConfig->GetParOrDefault("RECOCONFIG","SAC","config/SAC.cfg");
     std::cout<<"=== Enabling SAC with configuration file "<<configSAC<<std::endl;
     fRecoLibrary.push_back(new SACReconstruction(fHistoFile,configSAC));
@@ -151,12 +161,12 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling Target with configuration file "<<configTarget<<std::endl;
     fRecoLibrary.push_back(new TargetReconstruction(fHistoFile,configTarget));
   }
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","HEPVeto",1)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","HEPVeto",0)) {
     TString configHEPVeto = fConfig->GetParOrDefault("RECOCONFIG","HEPVeto","config/HEPVeto.cfg");
     std::cout<<"=== Enabling HEPVeto with configuration file "<<configHEPVeto<<std::endl;
     fRecoLibrary.push_back(new HEPVetoReconstruction(fHistoFile,configHEPVeto));
   }
-  if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",0)) {
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",1)) {
     TString configETag = fConfig->GetParOrDefault("RECOCONFIG","ETag","config/ETag.cfg");
     std::cout << "=== Enabling ETag with configuration file " << configETag <<std::endl;
     fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));
@@ -193,8 +203,6 @@ void PadmeReconstruction::InitDetectorsInfo()
 
 void PadmeReconstruction::HistoInit()
 {
-  //AddHisto("EventTrigger",new TH1F("EventTrigger","Event Trigger",8,-0.5,7.5));
-  //AddHisto("EventTriggerWord",new TH1F("EventTriggerWord","Event Trigger word",256,-0.5,255.5));
   fHistoSvc->CreateDir("PadmeReco");
   fHistoSvc->BookHisto("PadmeReco","EventTrigger","Event Trigger",8,-0.5,7.5);
   fHistoSvc->BookHisto("PadmeReco","EventTriggerWord","Event Trigger word",256,-0.5,255.5);
@@ -208,178 +216,204 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
   TTree::SetMaxTreeSize(190000000000);
 
-  // Show run information
-  TString runTree = "Runs";
-  TChain* runChain = BuildChain(runTree);
-  if (runChain) {
-    Int_t runNEntries = runChain->GetEntries();
-    TObjArray* runBranches = runChain->GetListOfBranches();
-    std::cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << std::endl;
-    TPadmeRun* run = new TPadmeRun();
-    //for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
-    int ib = runBranches->GetEntries();
-    for(Int_t iBranch = 0; iBranch < ib; iBranch++){
-      TString branchName = ((TBranch*)(*runBranches)[iBranch])->GetName();
-      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
-      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
-      if(branchName=="Run") {
-	runChain->SetBranchAddress(branchName.Data(),&run);
-	runChain->GetEntry(0); // Currently only one run per file
-	std::cout << "=== MC Run information - Start ===" << std::endl;
-	std::cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << std::endl;
-	std::cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << std::endl;
-	std::cout << "Run number of events " << run->GetNEvents() << std::endl;
-	TDetectorInfo* detInfo = run->GetDetectorInfo();
-	ShowSubDetectorInfo(detInfo,"Target");
-	ShowSubDetectorInfo(detInfo,"EVeto");
-	ShowSubDetectorInfo(detInfo,"PVeto");
-	ShowSubDetectorInfo(detInfo,"HEPVeto");
-	ShowSubDetectorInfo(detInfo,"ECal");
-	ShowSubDetectorInfo(detInfo,"SAC");
-	ShowSubDetectorInfo(detInfo,"ETag");
-	ShowSubDetectorInfo(detInfo,"TPix");
-	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
+  TString recoInput = fConfig->GetParOrDefault("RUNNINGMODE", "RecoInput", "RawData");
 
-	// Pass detector info to corresponding Parameters class for decoding
-	TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
-	if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
+  std::cout << "PadmeReconstruction::Init - Input data format set to " << recoInput << std::endl;
+  
+  Int_t nEntries = 0;
 
+  // Process MC events
+  if (recoInput == "MonteCarlo") {
+
+    // Show run information
+    TString runTree = "Runs";
+    TChain* runChain = BuildChain(runTree);
+    if (runChain) {
+      Int_t runNEntries = runChain->GetEntries();
+      TObjArray* runBranches = runChain->GetListOfBranches();
+      std::cout << "Found Tree '" << runTree << "' with " << runBranches->GetEntries() << " branches and " << runNEntries << " entries" << std::endl;
+      TPadmeRun* run = new TPadmeRun();
+      //for(Int_t iBranch = 0; iBranch < runBranches->GetEntries(); iBranch++){
+      int ib = runBranches->GetEntries();
+      for(Int_t iBranch = 0; iBranch < ib; iBranch++){
+	TString branchName = ((TBranch*)(*runBranches)[iBranch])->GetName();
+	TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*runBranches)[iBranch])->GetClassName());
+	std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+	if(branchName=="Run") {
+	  runChain->SetBranchAddress(branchName.Data(),&run);
+	  runChain->GetEntry(0); // Currently only one run per file
+	  std::cout << "=== MC Run information - Start ===" << std::endl;
+	  std::cout << "Run number/type " << run->GetRunNumber() << " " << run->GetRunType() << std::endl;
+	  std::cout << "Run start/stop time " << run->GetTimeStart() << " " << run->GetTimeStop() << std::endl;
+	  std::cout << "Run number of events " << run->GetNEvents() << std::endl;
+	  TDetectorInfo* detInfo = run->GetDetectorInfo();
+	  ShowSubDetectorInfo(detInfo,"Target");
+	  ShowSubDetectorInfo(detInfo,"EVeto");
+	  ShowSubDetectorInfo(detInfo,"PVeto");
+	  ShowSubDetectorInfo(detInfo,"HEPVeto");
+	  ShowSubDetectorInfo(detInfo,"ECal");
+	  ShowSubDetectorInfo(detInfo,"SAC");
+	  ShowSubDetectorInfo(detInfo,"ETag");
+	  ShowSubDetectorInfo(detInfo,"TPix");
+	  ShowSubDetectorInfo(detInfo,"LeadGlass");
+	  std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
+	  
+	  // Pass detector info to corresponding Parameters class for decoding
+	  TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
+	  if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
+	  
+	}
       }
     }
-  }
-  else std::cout << " Tree " << runTree << " not found "<<std::endl;
+    else std::cout << " Tree " << runTree << " not found "<<std::endl;
 
-  Int_t nEntries;
-
-  nEntries = 0;
-  TString mcTreeName = "MC";
-  fMCChain = NULL;
-  std::cout << " Looking for tree named " << mcTreeName << std::endl;
-  fMCChain = BuildChain(mcTreeName);
-  if(fMCChain) {
-    
-    nEntries = fMCChain->GetEntries();
-    std::cout<<" Tree named "<<mcTreeName<<" found with "<<nEntries<<" events"<<std::endl;
-    TObjArray* branches = fMCChain->GetListOfBranches();
-    for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
-
-      TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
-      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
-      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
-
-      if (branchName=="Event") {
-	fMCEvent = new TMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
-      } else if (branchName=="Target") {
-	fTargetMCEvent = new TTargetMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
-      } else if (branchName=="EVeto") {
-	fEVetoMCEvent = new TEVetoMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
-      } else if (branchName=="PVeto") {
-	fPVetoMCEvent = new TPVetoMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
-      } else if (branchName=="HEPVeto") {
-	fHEPVetoMCEvent = new THEPVetoMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
-      } else if (branchName=="ECal") {
-	fECalMCEvent = new TECalMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
-      } else if (branchName=="SAC") {
-	fSACMCEvent = new TSACMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
-      } else if (branchName=="ETag") {
-	fETagMCEvent = new TETagMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fETagMCEvent);
-      } else if (branchName=="TPix") {
-	fTPixMCEvent = new TTPixMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
-      } else if (branchName=="MCTruth") {
-	printf("PadmeReconstruction - Found MCTruth branch\n");
-	fMCTruthEvent = new TMCTruthEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
-      }
-
-    }
-
-  }
-  else std::cout << " Tree " << mcTreeName << " not found "<<std::endl;
-        
-
-  // input are reco hits
-  nEntries = 0;
-  TString recoTreeName = "Events";
-  std::cout<<" Looking for tree named "<<recoTreeName<<std::endl;
-  fRecoChain = NULL;
-  fRecoChain = BuildChain(recoTreeName);
-  if(fRecoChain) {
-
-    nEntries = fRecoChain->GetEntries();
-    std::cout<<" Tree named "<<recoTreeName<<" found with "<<nEntries<<" events"<<std::endl;
-    TObjArray* branches = fRecoChain->GetListOfBranches();
-    std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-
-    for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
-
-      TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
-      TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
-      std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
-
-      if (branchName=="RecoEvent") {
-	fRecoEvent = new TRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
-      } else if (branchName=="Target_Hits") {
-	fTargetRecoEvent = new TTargetRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
-      } else if (branchName=="EVeto_Hits") {
-	fEVetoRecoEvent = new TEVetoRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
-      } else if (branchName=="PVeto_Hits") {
-	fPVetoRecoEvent = new TPVetoRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
-      } else if (branchName=="HEPVeto_Hits") {
-	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
-      } else if (branchName=="ECal_Hits") {
-	fECalRecoEvent = new TECalRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
-      } else if (branchName=="SAC_Hits") {
-	fSACRecoEvent = new TSACRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
-      } else if (branchName=="ETag_Hits") {
-	fETagRecoEvent = new TETagRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoEvent);
-	//      } else if (branchName=="TPix") {
-	//	fTPixRecoEvent = new TTPixRecoEvent();
-	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
-      } else if (branchName=="MCTruth") {
-	printf("PadmeReconstruction - Found MCTruth branch\n");
-	fMCTruthEvent = new TMCTruthEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
+    TString mcTreeName = "MC";
+    fMCChain = NULL;
+    std::cout << " Looking for tree named " << mcTreeName << std::endl;
+    fMCChain = BuildChain(mcTreeName);
+    if(fMCChain) {
+      
+      nEntries = fMCChain->GetEntries();
+      std::cout<<" Tree named "<<mcTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+      TObjArray* branches = fMCChain->GetListOfBranches();
+      for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+	
+	TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
+	TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
+	std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+	
+	if (branchName=="Event") {
+	  fMCEvent = new TMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fMCEvent);
+	} else if (branchName=="Target") {
+	  fTargetMCEvent = new TTargetMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fTargetMCEvent);
+	} else if (branchName=="EVeto") {
+	  fEVetoMCEvent = new TEVetoMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fEVetoMCEvent);
+	} else if (branchName=="PVeto") {
+	  fPVetoMCEvent = new TPVetoMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
+	} else if (branchName=="HEPVeto") {
+	  fHEPVetoMCEvent = new THEPVetoMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
+	} else if (branchName=="ECal") {
+	  fECalMCEvent = new TECalMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fECalMCEvent);
+	} else if (branchName=="SAC") {
+	  fSACMCEvent = new TSACMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fSACMCEvent);
+	} else if (branchName=="ETag") {
+	  fETagMCEvent = new TETagMCEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fETagMCEvent);
+	//else if (branchName=="TPix") {
+	//  fTPixMCEvent = new TTPixMCEvent();
+	//  fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
+	//} else if (branchName=="LeadGlass") {
+	//  fLeadGlassMCEvent = new TLeadGlassMCEvent();
+	//  fMCChain->SetBranchAddress(branchName.Data(),&fLeadGlassMCEvent);
+	} else if (branchName=="MCTruth") {
+	  printf("PadmeReconstruction - Found MCTruth branch\n");
+	  fMCTruthEvent = new TMCTruthEvent();
+	  fMCChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
+	}
+	
       }
 
     }
+    else std::cout << " Tree " << mcTreeName << " not found "<<std::endl;
+
+  }        
+
+  // Reprocess RecoHits events
+  if (recoInput == "Reprocessing") {
+
+    TString recoTreeName = "Events";
+    std::cout<<" Looking for tree named "<<recoTreeName<<std::endl;
+    fRecoChain = NULL;
+    fRecoChain = BuildChain(recoTreeName);
+    if(fRecoChain) {
+
+      nEntries = fRecoChain->GetEntries();
+      std::cout<<" Tree named "<<recoTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+      TObjArray* branches = fRecoChain->GetListOfBranches();
+      std::cout << "Found Tree '" << recoTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+
+      for(Int_t iBranch = 0; iBranch < branches->GetEntries(); iBranch++){
+
+	TString branchName = ((TBranch*)(*branches)[iBranch])->GetName();
+	TClass* branchObjectClass = TClass::GetClass(((TBranch*)(*branches)[iBranch])->GetClassName());
+	std::cout << "Found Branch " << branchName.Data() << " containing " << branchObjectClass->GetName() << std::endl;
+
+	if (branchName=="RecoEvent") {
+	  fRecoEvent = new TRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fRecoEvent);
+	} else if (branchName=="Target_Hits") {
+	  fTargetRecoEvent = new TTargetRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoEvent);
+	} else if (branchName=="EVeto_Hits") {
+	  fEVetoRecoEvent = new TEVetoRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoEvent);
+	} else if (branchName=="PVeto_Hits") {
+	  fPVetoRecoEvent = new TPVetoRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
+	} else if (branchName=="HEPVeto_Hits") {
+	  fHEPVetoRecoEvent = new THEPVetoRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
+	} else if (branchName=="ECal_Hits") {
+	  fECalRecoEvent = new TECalRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoEvent);
+	} else if (branchName=="SAC_Hits") {
+	  fSACRecoEvent = new TSACRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoEvent);
+	} else if (branchName=="ETag_Hits") {
+	  fETagRecoEvent = new TETagRecoEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fETagRecoEvent);
+	//} else if (branchName=="LeadGlass_Hits") {
+	//  fLeadGlassRecoEvent = new TLeadGlassRecoEvent();
+	//  fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlassRecoEvent);
+	//} else if (branchName=="TPix") {
+	//  fTPixRecoEvent = new TTPixRecoEvent();
+	//  fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+	} else if (branchName=="MCTruth") {
+	  printf("PadmeReconstruction - Found MCTruth branch\n");
+	  fMCTruthEvent = new TMCTruthEvent();
+	  fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
+	}
+
+      }
+
+    }
+    else std::cout << " Tree " << recoTreeName << " not found "<<std::endl;
 
   }
-  else std::cout << " Tree " << recoTreeName << " not found "<<std::endl;
 
-  nEntries = 0;
-  TString rawTreeName = "RawEvents";
-  fRawChain = NULL;
-  fRawChain = BuildChain(rawTreeName);
-  std::cout<<" Looking for tree named "<<rawTreeName<<std::endl;
-  if(fRawChain) {
-    fRawEvent = new TRawEvent();
-    nEntries = fRawChain->GetEntries();
-    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
-    TObjArray* branches = fRawChain->GetListOfBranches();
-    std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-    fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
+  // Process rawdata events
+  if (recoInput == "RawData") {
+
+    TString rawTreeName = "RawEvents";
+    fRawChain = NULL;
+    fRawChain = BuildChain(rawTreeName);
+    std::cout<<" Looking for tree named "<<rawTreeName<<std::endl;
+    if(fRawChain) {
+      fRawEvent = new TRawEvent();
+      nEntries = fRawChain->GetEntries();
+      std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+      TObjArray* branches = fRawChain->GetListOfBranches();
+      std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+      fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
+    }
+    else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
+
   }
-  else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
+
+  if (nEntries == 0) {
+    std::cout << "PadmeReconstruction::Init - No entries found in input chain (wrong data format?). Aborting" << std::endl;
+    exit(EXIT_FAILURE);
+  }
 
   fNProcessedEventsInTotal = 0;
-
+    
   // Initialize reconstruction for each subdetector
   InitDetectorsInfo();
 
@@ -390,10 +424,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
 Bool_t PadmeReconstruction::NextEvent()
 {
-  //  std::cout<<" and do we come here "<<std::endl; 
 
-  // Check if there is a new event to process
-  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+  // Check if there is a new MC event to process
+  if ( fMCChain && fMCChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
     if (fNProcessedEventsInTotal%100==0) {
       std::cout << "=== Read event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
@@ -417,20 +450,19 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fETagMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "LeadGlass" && fLeadGlassMCEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fLeadGlassMCEvent,fMCEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
       }
     }
-
-    // Show MCTruth information (debug)
-    //if (fMCTruthEvent) fMCTruthEvent->Print();
 
     fNProcessedEventsInTotal++;
     return true;
 
   }
 
-  // Check if there is a new event to process
+  // Check if there is a new reconstructed event to reprocess
   if ( fRecoChain && fRecoChain->GetEntry(fNProcessedEventsInTotal) &&  (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
     if (fNProcessedEventsInTotal%100==0) {
@@ -454,24 +486,20 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fETagRecoEvent,fRecoEvent);
-	//      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
-	//	fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "LeadGlass" && fLeadGlassRecoEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fLeadGlassRecoEvent,fRecoEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
       }
     }
 
-    // Show MCTruth information (debug)
-    //if (fMCTruthEvent) fMCTruthEvent->Print();
-
     ++fNProcessedEventsInTotal;
-    //std::cout<<" fNProcessedEventsInTotal = "<<fNProcessedEventsInTotal<<std::endl;
     return true;
     
   }
   
   if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
-    //std::cout<<"Do we come here .... "<<std::endl;
-    
     if (fNProcessedEventsInTotal%100==0) {
       std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
       std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
@@ -481,13 +509,20 @@ Bool_t PadmeReconstruction::NextEvent()
     // Process event to extract global information
     ProcessEvent(fRawEvent);
 
+    // Process Trigger Time information
+    fTrigTimeSvc->ProcessEvent(fRawEvent);
 
-//    // Insert Trigger choice for the monitor MR 18/09/2020
-//    In monitor mode just shows the Physics trigger
-    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawEvent->GetEventTrigMask()==1) ){
-      // Reconstruct individual detectors (but check if they exist, first!)
+    // Some debug tests
+    //printf("Board 28 group 2 Reference %f\n",fTrigTimeSvc->GetReferencePoint(28,2));
+    //printf("Board 27 group 2 Reference %f\n",fTrigTimeSvc->GetReferencePoint(27,2));
+    //printf("Board 28 group 2 Frequency %d\n",fTrigTimeSvc->GetGroupFrequency(28,2));
+    //printf("Board 28 group 2 point 456. time diff %f\n",fTrigTimeSvc->GetTimeDifference(28,2,456.));
+
+    // In monitor mode just process Physics trigger
+    if ( (fGlobalRecoConfigOptions->IsMonitorMode() == 0)  || (fRawEvent->GetEventTrigMask() == 1) ) {
+      // Reconstruct individual detectors
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-       fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
+	fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
       }
     }
 
@@ -503,17 +538,15 @@ Bool_t PadmeReconstruction::NextEvent()
 void PadmeReconstruction::ProcessEvent(TRawEvent* rawEv)
 {
   UInt_t trigMask = rawEv->GetEventTrigMask();
-  //GetHisto("EventTriggerWord")->Fill(trigMask);
   fHistoSvc->FillHisto("PadmeReco","EventTriggerWord",trigMask);
   for(UInt_t i=0; i<8; i++){
-    //if (trigMask & (1 << i)) GetHisto("EventTrigger")->Fill(i);
     if (trigMask & (1 << i)) fHistoSvc->FillHisto("PadmeReco","EventTrigger",i);
   }
 }
 
 void PadmeReconstruction::EndProcessing(){
 
-  // Reconstruct individual detectors (but check if they exist, first!)
+  // Finalize individual detectors
   for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
     fHistoFile->cd("/");
     fRecoLibrary[iLib]->EndProcessing();
@@ -521,7 +554,11 @@ void PadmeReconstruction::EndProcessing(){
   fHistoFile->cd("/");
   HistoExit();
 
+  // Finalize histogramming service
   fHistoSvc->Finalize();
+
+  // Finalize Trigger Time Service
+  fTrigTimeSvc->Finalize();
 
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EvaluateROSettings();
@@ -553,29 +590,15 @@ TChain* PadmeReconstruction::BuildChain(TString treeName){
 
 // Verify URL for each file
 TString PadmeReconstruction::CheckProtocols(TString OldStr){
-  TString NewStr=OldStr;
+  TString NewStr = OldStr;
   if(NewStr.EndsWith("\r")) NewStr.Remove(NewStr.Last('\r'));
-  //if(NewStr.Contains("/eos/") && !NewStr.Contains("root://eosna62")){
-  //  NewStr = "root://eosna62.cern.ch/"+NewStr;
-  //}
-  //else if(NewStr.Contains("/castor/")) {
-  //  if(!NewStr.Contains("root://")){
-  //    NewStr = "root://castorpublic.cern.ch/"+NewStr;
-  //  }
-  //  if(!NewStr.Contains("svcClass")){
-  //    NewStr = NewStr+"?svcClass="+fSvcClass;
-  //  }
-  //}
   return NewStr;
 }
 
 PadmeVReconstruction * PadmeReconstruction::FindReco(TString Name){
-  //std::cout<<" input is <"<<Name<<">"<<std::endl;
   UInt_t iLib = 0;
   for(; iLib < fRecoLibrary.size(); iLib++) {
-    //std::cout<<" iLib "<<iLib<<" "<<fRecoLibrary[iLib]->GetName()<<" comparing with <"<<Name<<">"<<std::endl;
-    if(fRecoLibrary[iLib]->GetName().CompareTo(Name) == 0)
-      return fRecoLibrary[iLib];
+    if(fRecoLibrary[iLib]->GetName().CompareTo(Name) == 0) return fRecoLibrary[iLib];
   }
   return 0;
 }

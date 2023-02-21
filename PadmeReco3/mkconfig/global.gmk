@@ -12,9 +12,9 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum -lGenVector
 
-CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -g
-#CPPFLAGS     += -I$(PADMERECO)/Service/include
-CPPFLAGS     += -I$(PADMERECO)/RecoBase/include
+CPPFLAGS     += -Iinclude -I$(PADMERECO3)/include -I$(PADMEROOT)/include -g
+#CPPFLAGS     += -I$(PADMERECO3)/Service/include
+CPPFLAGS     += -I$(PADMERECO3)/RecoBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)

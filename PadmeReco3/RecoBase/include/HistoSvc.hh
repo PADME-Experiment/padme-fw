@@ -33,6 +33,7 @@ private:
 
 public:
 
+  Bool_t Initialize();
   Bool_t Initialize(TString);
   Bool_t Finalize();
 

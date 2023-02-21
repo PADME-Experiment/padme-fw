@@ -35,6 +35,11 @@ HistoSvc::~HistoSvc()
   if ( fRootOutputFile ) delete fRootOutputFile;
 }
 
+Bool_t HistoSvc::Initialize()
+{
+  return Initialize("RecoHisto.root");
+}
+
 Bool_t HistoSvc::Initialize(TString outputFileName)
 {
 

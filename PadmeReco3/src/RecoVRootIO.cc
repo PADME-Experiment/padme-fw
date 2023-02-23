@@ -17,7 +17,6 @@ RecoVRootIO::RecoVRootIO(TString name)
   // Default run number
   fRunNumber = 0;
 
-
 }
 
 RecoVRootIO::~RecoVRootIO(){;

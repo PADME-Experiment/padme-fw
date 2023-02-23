@@ -17,6 +17,7 @@
 #include <list>
 
 class TRecoEvent;
+class ETagRecoRootIO;
 
 class RecoRootIOManager
 {
@@ -84,6 +85,8 @@ private:
 
   typedef std::list<RecoVRootIO*> RootIOList;
   RootIOList fRootIOList;
+
+  ETagRecoRootIO* fETagRecoRootIO;
 
 };
 #endif // RootIOManager_H

@@ -12,6 +12,8 @@
 
 class HistoSvc;
 class TrigTimeSvc;
+class RunConditionSvc;
+class RunConfigurationSvc;
 
 class TRawEvent;
 class TMCEvent;
@@ -38,6 +40,8 @@ class TSACRecoEvent;
 class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
+
+class ETagReconstruction;
 
 class TDetectorInfo;
 
@@ -66,6 +70,9 @@ public:
   UInt_t GetTriggerMask();
   Bool_t IsSimulated();
 
+  // Give access to detector reconstructions
+  ETagReconstruction* GetETagReconstruction() { return fETagReconstruction; }
+
   TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
 private:
@@ -85,10 +92,14 @@ private:
   TObjArray* fInputFileNameList;
   utl::ConfigParser *fConfigParser;
   PadmeVRecoConfig *fConfig;
+
   HistoSvc* fHistoSvc;
   TrigTimeSvc* fTrigTimeSvc;
-  //TString fConfigFileName;
+  RunConditionSvc* fRunConditionSvc;
+  RunConfigurationSvc* fRunConfigurationSvc;
+
   TFile* fHistoFile;
+
   TChain* fMCChain;
   TChain* fRawChain;
   TChain* fRecoChain;
@@ -121,6 +132,8 @@ private:
  
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
+
+  ETagReconstruction* fETagReconstruction;
  
   Int_t fNEvt;
   Int_t fNProcessedEventsInTotal;

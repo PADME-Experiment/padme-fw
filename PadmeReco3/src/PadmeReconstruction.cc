@@ -45,6 +45,8 @@
 
 #include "HistoSvc.hh"
 #include "TrigTimeSvc.hh"
+#include "RunConditionSvc.hh"
+#include "RunConfigurationSvc.hh"
 
 #include <TObjString.h>
 
@@ -77,13 +79,24 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTPixRecoEvent    = 0;
   fLeadGlassRecoEvent = 0;
 
+  fETagReconstruction = 0;
+
   fGlobalRecoConfigOptions=NULL;
 
   //fConfigParser = new utl::ConfigParser("config/PadmeReconstruction.cfg");
   fConfigParser = new utl::ConfigParser((const std::string)ConfFileName);
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeReconstructionConfiguration");
 
-  // Initialize histogramming service
+  // Initialize Run Configuration Service
+  Int_t cfgVerbose = fConfig->GetParOrDefault("RECORunConfiguration", "Verbose", 0);
+  fRunConfigurationSvc = RunConfigurationSvc::GetInstance();
+  fRunConfigurationSvc->SetVerbose(cfgVerbose);
+  fRunConfigurationSvc->Initialize();
+
+  // Get general running mode information
+  InitRunningModeFlags();
+
+  // Initialize Histogramming Service
   TString hsName = fConfig->GetParOrDefault("RECOHisto", "HistoFile", "HistoFile.root");
   Int_t hsVerbose = fConfig->GetParOrDefault("RECOHisto", "Verbose", 0);
   fHistoSvc = HistoSvc::GetInstance();
@@ -96,18 +109,25 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTrigTimeSvc->SetVerbose(ttsVerbose);
   fTrigTimeSvc->Initialize();
 
-  InitRunningModeFlags();
+  // Initialize Run Condition Service
+  Int_t rcVerbose = fConfig->GetParOrDefault("RECORunCondition", "Verbose", 0);
+  fRunConditionSvc = RunConditionSvc::GetInstance();
+  fRunConditionSvc->SetVerbose(rcVerbose);
+  fRunConditionSvc->Initialize();
+
   InitLibraries();
   Init(NEvt,Seed);
 
 }
 void PadmeReconstruction::InitRunningModeFlags()
 {
+
   Int_t flagR = fConfig->GetParOrDefault("RUNNINGMODE", "Reconstruct"   ,1);
   Int_t flagC = fConfig->GetParOrDefault("RUNNINGMODE", "Cosmics"       ,0);
   Int_t flagP = fConfig->GetParOrDefault("RUNNINGMODE", "Pedestals"     ,0);
   Int_t flagM = fConfig->GetParOrDefault("RUNNINGMODE", "Monitor"       ,0);
   Int_t flagD = fConfig->GetParOrDefault("RUNNINGMODE", "Debug"         ,1);
+
   fGlobalRecoConfigOptions = new GlobalRecoConfigOptions();
   fGlobalRecoConfigOptions->SetRunningMode(flagR, flagP, flagC, flagM, flagD);
   std::cout<<"Global debug set to            = "<<fGlobalRecoConfigOptions->GetGlobalDebugMode()<<std::endl;
@@ -116,7 +136,16 @@ void PadmeReconstruction::InitRunningModeFlags()
   std::cout<<"Global running mode PEDESTALS  = "<<fGlobalRecoConfigOptions->IsPedestalMode()<<std::endl;
   std::cout<<"Global running mode MONITOR    = "<<fGlobalRecoConfigOptions->IsMonitorMode()<<std::endl;
 
-  return;
+  fRunConfigurationSvc->SetRunningMode(flagR, flagP, flagC, flagM);
+  fRunConfigurationSvc->SetDebugMode(flagD);
+  fRunConfigurationSvc->SetRecoInput(fConfig->GetParOrDefault("RUNNINGMODE", "RecoInput", "RawData"));
+  std::cout<<"Reco Input mode         = "<<fRunConfigurationSvc->GetRecoInput()<<std::endl;
+  std::cout<<"Debug mode              = "<<fRunConfigurationSvc->GetDebugMode()<<std::endl;
+  std::cout<<"Running mode RECO       = "<<fRunConfigurationSvc->IsRecoMode()<<std::endl;
+  std::cout<<"Running mode COSMICS    = "<<fRunConfigurationSvc->IsCosmicsMode()<<std::endl;
+  std::cout<<"Running mode PEDESTALS  = "<<fRunConfigurationSvc->IsPedestalMode()<<std::endl;
+  std::cout<<"Running mode MONITOR    = "<<fRunConfigurationSvc->IsMonitorMode()<<std::endl;
+
 }
 
 PadmeReconstruction::~PadmeReconstruction()
@@ -169,7 +198,8 @@ void PadmeReconstruction::InitLibraries()
   if (fConfig->GetParOrDefault("RECOALGORITHMS","ETag",1)) {
     TString configETag = fConfig->GetParOrDefault("RECOCONFIG","ETag","config/ETag.cfg");
     std::cout << "=== Enabling ETag with configuration file " << configETag <<std::endl;
-    fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));
+    //fRecoLibrary.push_back(new ETagReconstruction(fHistoFile,configETag));
+    fETagReconstruction = new ETagReconstruction(configETag);
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","LeadGlass",1)) {
     TString configLeadGlass = fConfig->GetParOrDefault("RECOCONFIG","LeadGlass","config/LeadGlass.cfg");
@@ -195,10 +225,10 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
   if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
-  if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
+  //if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
-
+  if (fETagReconstruction) fETagReconstruction->Init();
 }
 
 void PadmeReconstruction::HistoInit()
@@ -216,7 +246,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 
   TTree::SetMaxTreeSize(190000000000);
 
-  TString recoInput = fConfig->GetParOrDefault("RUNNINGMODE", "RecoInput", "RawData");
+  TString recoInput = fRunConfigurationSvc->GetRecoInput();
 
   std::cout << "PadmeReconstruction::Init - Input data format set to " << recoInput << std::endl;
   
@@ -392,18 +422,29 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   if (recoInput == "RawData") {
 
     TString rawTreeName = "RawEvents";
-    fRawChain = NULL;
+    std::cout << " Looking for tree named " << rawTreeName << std::endl;
     fRawChain = BuildChain(rawTreeName);
-    std::cout<<" Looking for tree named "<<rawTreeName<<std::endl;
-    if(fRawChain) {
-      fRawEvent = new TRawEvent();
-      nEntries = fRawChain->GetEntries();
-      std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
-      TObjArray* branches = fRawChain->GetListOfBranches();
-      std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
-      fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
+    if (! fRawChain) {
+      std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
+      exit(EXIT_FAILURE);
     }
-    else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
+    fRawEvent = new TRawEvent();
+    nEntries = fRawChain->GetEntries();
+    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+    TObjArray* branches = fRawChain->GetListOfBranches();
+    if (branches->GetEntries() != 1) {
+      std::cout << "PadmeReconstruction::Init - Input Tree has %d branches while 1 was expected (wrong data format?). Aborting" << std::endl;
+      if (branches->GetEntries() > 1) {
+	std::cout << "Branches names:";
+	for(Int_t b = 0; b < branches->GetEntries(); b++) std::cout << " " << ((TBranch*)(*branches)[b])->GetName();
+	std::cout << std::endl;
+      }
+      exit(EXIT_FAILURE);
+    }
+    TString branchName = ((TBranch*)(*branches)[0])->GetName();
+    TString branchClassName = ((TBranch*)(*branches)[0])->GetClassName();
+    std::cout << "Found Tree '" << rawTreeName << "' with branch '" << branchName << "' of class '" << branchClassName << "' and " << nEntries << " entries" << std::endl;
+    fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
 
   }
 
@@ -448,14 +489,15 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fETagMCEvent,fMCEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagMCEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fETagMCEvent,fMCEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "LeadGlass" && fLeadGlassMCEvent) {
       //  fRecoLibrary[iLib]->ProcessEvent(fLeadGlassMCEvent,fMCEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
       //  fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
       }
     }
+    if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagMCEvent,fMCEvent);
 
     fNProcessedEventsInTotal++;
     return true;
@@ -484,14 +526,15 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fETagRecoEvent,fRecoEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fETagRecoEvent,fRecoEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "LeadGlass" && fLeadGlassRecoEvent) {
       //  fRecoLibrary[iLib]->ProcessEvent(fLeadGlassRecoEvent,fRecoEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
       //  fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
       }
     }
+    if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagRecoEvent,fRecoEvent);
 
     ++fNProcessedEventsInTotal;
     return true;
@@ -519,11 +562,12 @@ Bool_t PadmeReconstruction::NextEvent()
     //printf("Board 28 group 2 point 456. time diff %f\n",fTrigTimeSvc->GetTimeDifference(28,2,456.));
 
     // In monitor mode just process Physics trigger
-    if ( (fGlobalRecoConfigOptions->IsMonitorMode() == 0)  || (fRawEvent->GetEventTrigMask() == 1) ) {
+    if ( (fRunConfigurationSvc->IsMonitorMode() == 0)  || (fRawEvent->GetEventTrigMask() & 0x01) ) {
       // Reconstruct individual detectors
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
 	fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
       }
+      if (fETagReconstruction) fETagReconstruction->ProcessEvent(fRawEvent);
     }
 
     fNProcessedEventsInTotal++;
@@ -551,6 +595,7 @@ void PadmeReconstruction::EndProcessing(){
     fHistoFile->cd("/");
     fRecoLibrary[iLib]->EndProcessing();
   }
+  if (fETagReconstruction) fETagReconstruction->EndProcessing();
   fHistoFile->cd("/");
   HistoExit();
 
@@ -559,6 +604,9 @@ void PadmeReconstruction::EndProcessing(){
 
   // Finalize Trigger Time Service
   fTrigTimeSvc->Finalize();
+
+  // Finalize Run Condition Service
+  fRunConditionSvc->Finalize();
 
   //for(Int_t iReco = 0; iReco < fNReconstructions; iReco++){
   //  fReconstructions[iReco]->EvaluateROSettings();

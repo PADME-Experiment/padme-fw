@@ -12,8 +12,12 @@
 //#include "Debug.h" 
 
 //PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile), fRecoEvent(0)
-PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName) : PadmeVNamedModule(Name), fHistoFile(HistoFile)
+PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TString ConfigFileName)
+  : PadmeVNamedModule(Name), fHistoFile(HistoFile)
 {
+
+  printf("PadmeVReconstruction::PadmeVReconstruction for %s\n",fName.Data());
+
   /*
   fIsPed          = false;
   fIsReco         = false;
@@ -50,6 +54,8 @@ PadmeVReconstruction::PadmeVReconstruction(TFile* HistoFile, TString Name, TStri
 }
 
 PadmeVReconstruction::~PadmeVReconstruction(){
+
+  printf("PadmeVReconstruction::~PadmeVReconstruction for %s\n",fName.Data());
   std::cout << "Deleting " << fName << " Reconstruction.." << std::endl;
   //if(fRecoEvent){
   //  delete fRecoEvent;

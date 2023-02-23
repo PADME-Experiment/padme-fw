@@ -43,6 +43,7 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
   fConfig = new PadmeVRecoConfig(fConfigParser,"PadmeRecoIOConfiguration");
 
   // Add subdetectors persistency managers
+  fETagRecoRootIO = 0;
   if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
     fRootIOList.push_back(new PVetoRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
@@ -52,7 +53,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
   if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
     fRootIOList.push_back(new SACRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ETag"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ETag"    ,1))
-    fRootIOList.push_back(new ETagRecoRootIO);
+    fETagRecoRootIO = new ETagRecoRootIO();
+    //fRootIOList.push_back(new ETagRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
     fRootIOList.push_back(new TargetRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
@@ -80,7 +82,6 @@ RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
   return fInstance;
 }
 
-
 void RecoRootIOManager::Close()
 {
 
@@ -104,7 +105,6 @@ void RecoRootIOManager::Close()
   }
 
 }
-
 
 void RecoRootIOManager::SetFileName(TString newName)
 {
@@ -134,7 +134,6 @@ void RecoRootIOManager::SetFileName(TString newName)
       fFile->SetCompressionLevel(fCompLevel);
     }
 }
-
 
 void RecoRootIOManager::NewRun(Int_t nRun)
 {
@@ -189,6 +188,14 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       }
       iRootIO++;
     }
+    if (fETagRecoRootIO) {
+      std::cout << "RootIOManager: Checking IO for ETag" << std::endl;
+      if (fETagRecoRootIO->GetEnabled()) {
+	fETagRecoRootIO->SetETagReconstruction(fReco->GetETagReconstruction());
+	std::cout << "RootIOManager: IO for ETag enabled" << std::endl;
+	fETagRecoRootIO->NewRun();
+      }
+    }
 
     // If present, replicate MCTruth info to output file
     if (fReco->GetMCTruthEvent()) 
@@ -220,6 +227,7 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
+  if (fETagRecoRootIO && fETagRecoRootIO->GetEnabled()) fETagRecoRootIO->EndRun();
 
 }
 
@@ -258,6 +266,7 @@ void RecoRootIOManager::SaveEvent(){
     }
     iRootIO++;
   }
+  if (fETagRecoRootIO && fETagRecoRootIO->GetEnabled()) fETagRecoRootIO->SaveEvent();
 
   // All data have been copied: write it to file
   fEventTree->Fill();

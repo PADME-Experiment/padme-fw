@@ -47,20 +47,23 @@ protected:
 
 public:
 
-  TFile*   GetFile()              { return fFile;          }
-  void     SetFile(TFile * value) { fFile = value;         }
+  Int_t GetVerbose()            { return fVerbose;  }
+  void  SetVerbose(Int_t value) { fVerbose = value; }
 
-  TRecoEvent* GetEvent()                 { return fEvent;  }
-  void      SetEvent(TRecoEvent * value) { fEvent = value; }
+  TFile* GetFile()             { return fFile;  }
+  void   SetFile(TFile* value) { fFile = value; }
 
-  TTree*   GetEventTree()               { return fEventTree;     }
-  void     SetEventTree(TTree * value)  { fEventTree = value;    }
+  TRecoEvent* GetEvent()                  { return fEvent;  }
+  void        SetEvent(TRecoEvent* value) { fEvent = value; }
 
-  void SetFileName(TString newName);
-  TString GetFileName(){return fFileName;};
+  TTree* GetEventTree()              { return fEventTree;  }
+  void   SetEventTree(TTree * value) { fEventTree = value; }
 
-  void SetReconstruction(PadmeReconstruction *r){fReco = r;};
-  PadmeReconstruction * GetReconstruction(){return fReco;};
+  void    SetFileName(TString newName);
+  TString GetFileName() { return fFileName; }
+
+  void SetReconstruction(PadmeReconstruction *r) { fReco = r; }
+  PadmeReconstruction * GetReconstruction()      { return fReco; }
 
 private:
 

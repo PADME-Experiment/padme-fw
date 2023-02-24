@@ -41,7 +41,7 @@
 
 #include "ECalParameters.hh"
 
-#include "RecoRootIOManager.hh"
+//#include "RecoRootIOManager.hh"
 
 #include "HistoSvc.hh"
 #include "TrigTimeSvc.hh"
@@ -153,7 +153,8 @@ PadmeReconstruction::~PadmeReconstruction()
   for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
     delete fRecoLibrary[iLib];
   }
-  if(fGlobalRecoConfigOptions) delete fGlobalRecoConfigOptions;
+  if (fGlobalRecoConfigOptions) delete fGlobalRecoConfigOptions;
+  if (fETagReconstruction) delete fETagReconstruction;
 }
 
 void PadmeReconstruction::InitLibraries()

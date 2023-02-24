@@ -21,8 +21,8 @@ public:
   void EndRun();
   void SaveEvent();
 
-  Bool_t GetEnabled() { return fEnabled; }
-  void SetEnabled(Bool_t value) { fEnabled = value; }
+  void  SetVerbose(Int_t v) { fVerbose = v;    }
+  Int_t GetVerbose()        { return fVerbose; }
 
   void SetETagReconstruction(ETagReconstruction* etReco) { fETagReconstruction = etReco; }
 
@@ -30,8 +30,6 @@ private:
 
   Bool_t ExportHit(ETagHit*,TRecoVHit*);
   Bool_t ExportCluster(ETagCluster*,TRecoVCluster*);
-
-  Bool_t fEnabled;
 
   TTree* fEventTree;
 
@@ -42,6 +40,8 @@ private:
   TETagClusCollection* fClusCollection;
 
   ETagReconstruction* fETagReconstruction;
+
+  Int_t fVerbose;
 
 };
 #endif // ETagRecoRootIO_h

@@ -20,8 +20,7 @@
 
 #include <TObjString.h>
 
-
-PadmeReconstruction* PadmeReco; 
+//PadmeReconstruction* PadmeReco;
                               
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
@@ -41,9 +40,6 @@ void sighandler(int sig){
 
     exit(0);
 }
-
-
-int run_name(std::string lin, std::string& name);
 
 int main(Int_t argc, char **argv)
 {
@@ -127,28 +123,10 @@ int main(Int_t argc, char **argv)
     if(stat(Form(InputListFileName.Data()), &filestat) == 0) { //-l option used
       std::ifstream InputList(InputListFileName.Data());
       while(InputFileName.ReadLine(InputList) && iFile < NFiles){
-	//if(stat(Form(InputFileName.Data()), &filestat) == 0)
-	/*std::cout<<"InputFileName "<<InputFileName.Data()<<" <====================="<<std::endl;
-	std::string name_ = "";
-	run_name(InputFileName.Data(),name_);
-	std::cout<<name_<<std::endl;
-	if( std::find(file_names.begin(),file_names.end(),name_) == file_names.end() ){
-	  file_names.push_back(name_);
-	}
-	*/
 	InputFileNameList.Add(new TObjString(InputFileName.Data()));
 	iFile++;
       }
     } else if(InputFileName.CompareTo("")) { //-i option used
-      //        if(stat(Form(InputFileName.Data()), &filestat) == 0)
-      /*std::cout<<"InputFileName "<<InputFileName.Data()<<" <====================="<<std::endl;
-      std::string name_ = "";
-      run_name(InputFileName.Data(),name_);
-      std::cout<<name_<<std::endl;
-      if( std::find(file_names.begin(),file_names.end(),name_) == file_names.end() ){
-	file_names.push_back(name_);
-      }
-      */
       InputFileNameList.Add(new TObjString(InputFileName.Data()));
     }
 
@@ -193,7 +171,7 @@ int main(Int_t argc, char **argv)
     cpu = ucpu;
     run = urun;
 
-    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    PadmeReconstruction* PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
     RecoIO->SetReconstruction(PadmeReco);
     RecoIO->NewRun(1);
 
@@ -266,9 +244,6 @@ int main(Int_t argc, char **argv)
     cpu = ucpu;
     run = urun;
 
-    delete RecoIO;
-    delete PadmeReco;
-
     umem = PadmePerfUtils::getMem();
     ucpu = double(PadmePerfUtils::getCpu()/100.);
     urun = double(PadmePerfUtils::getRunTime()/100.);
@@ -305,18 +280,7 @@ int main(Int_t argc, char **argv)
       printf ("RecoInfo - Average Memory Leak per Event %.3f kB/evt\n",float(memAfterEvLoop-memAfterFirstEvent)/(niter-1));
     }
 
+    delete RecoIO;
+    delete PadmeReco;
+    
 }
-
-
-
-
-int run_name(std::string lin, std::string& name){
-
-  std::size_t begin = lin.find_last_of("/\\");
-
-  name = lin.substr(begin+5,23);
-
-  return 0;
-}
-
-

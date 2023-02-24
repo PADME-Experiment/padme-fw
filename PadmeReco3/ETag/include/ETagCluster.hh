@@ -31,6 +31,8 @@ public:
   void SetHitsVector(std::vector<Int_t> v) { fHits=v; }
   std::vector<Int_t> GetHitsVector() { return fHits; }
 
+  void Print();
+
 private:
 
   ULong64_t fStatus;

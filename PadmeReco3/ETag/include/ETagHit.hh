@@ -13,6 +13,8 @@ public:
   ETagHit();
   ~ETagHit();
 
+  void Print();
+
   UChar_t   GetADCBoard()  { return fADCBoard;   }
   UChar_t   GetADCChannel(){ return fADCChannel; }
   Int_t     GetChannelId() { return fChannelId;  }

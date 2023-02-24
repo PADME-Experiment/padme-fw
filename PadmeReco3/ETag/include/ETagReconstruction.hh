@@ -16,6 +16,7 @@ class TrigTimeSvc;
 class RunConditionSvc;
 class RunConfigurationSvc;
 
+class ETagDigitizer;
 class ETagHit;
 class ETagCluster;
 
@@ -39,6 +40,8 @@ public:
   vector<ETagHit*>     &GetRecoHits()     { return fHits; }
   vector<ETagCluster*> &GetRecoClusters() { return fClusters; }
 
+  Int_t GetVerbose() { return fVerbose; }
+
 private:
 
   HistoSvc* fHistoSvc;
@@ -46,11 +49,17 @@ private:
   RunConditionSvc* fRunConditionSvc;
   RunConfigurationSvc* fRunConfigurationSvc;
 
+  PadmeVRecoConfig* fETagConfig;
+
+  ETagDigitizer* fETagDigitizer;
+
   Bool_t fWriteHits;
   Bool_t fWriteClusters;
 
   vector<ETagHit*> fHits;
   vector<ETagCluster*> fClusters;
+
+  Int_t fVerbose;
 
 };
 #endif

@@ -12,6 +12,8 @@
 #include "ECalRecoRootIO.hh"
 #include "LeadGlassRecoRootIO.hh"
 
+#include "ETagReconstruction.hh"
+
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
@@ -190,11 +192,10 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     }
     if (fETagRecoRootIO) {
       std::cout << "RootIOManager: Checking IO for ETag" << std::endl;
-      if (fETagRecoRootIO->GetEnabled()) {
-	fETagRecoRootIO->SetETagReconstruction(fReco->GetETagReconstruction());
-	std::cout << "RootIOManager: IO for ETag enabled" << std::endl;
-	fETagRecoRootIO->NewRun();
-      }
+      fETagRecoRootIO->SetETagReconstruction(fReco->GetETagReconstruction());
+      fETagRecoRootIO->SetVerbose(fReco->GetETagReconstruction()->GetVerbose());
+      std::cout << "RootIOManager: IO for ETag enabled" << std::endl;
+      fETagRecoRootIO->NewRun();
     }
 
     // If present, replicate MCTruth info to output file
@@ -227,7 +228,7 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
-  if (fETagRecoRootIO && fETagRecoRootIO->GetEnabled()) fETagRecoRootIO->EndRun();
+  if (fETagRecoRootIO) fETagRecoRootIO->EndRun();
 
 }
 
@@ -266,7 +267,7 @@ void RecoRootIOManager::SaveEvent(){
     }
     iRootIO++;
   }
-  if (fETagRecoRootIO && fETagRecoRootIO->GetEnabled()) fETagRecoRootIO->SaveEvent();
+  if (fETagRecoRootIO) fETagRecoRootIO->SaveEvent();
 
   // All data have been copied: write it to file
   fEventTree->Fill();

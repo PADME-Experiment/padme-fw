@@ -37,6 +37,7 @@ class TRecoEvent;
 class PadmeVClusterization;
 class PadmeVGeometry;
 class GlobalRecoConfigOptions;
+class PadmeReconstruction;
 
 class PadmeVReconstruction : public PadmeVNamedModule, public RecoVChannelID
 {
@@ -59,7 +60,8 @@ public:
   //  virtual Int_t findSeed(std::vector<Int_t> hUsed);
   virtual void BuildTriggerInfo(TRawEvent* );
   virtual void AnalyzeEvent(TRawEvent* = 0);
-  virtual void Init(PadmeVReconstruction*);
+  //virtual void Init(PadmeVReconstruction*);
+  virtual void Init(PadmeReconstruction*);
   //virtual void InitRunningModeFlags();
   virtual void EndProcessing(); ///< Call from derived classes
   virtual void ParseConfFile(TString);
@@ -75,8 +77,10 @@ public:
   //TRecoVEvent* GetRecoEvent() { return fRecoEvent; };
   //void         SetRecoEvent(TRecoVEvent* value) { fRecoEvent = value; };
 
-  PadmeVReconstruction* GetMainReco() { return fMainReco; };
-  void                  SetMainReco(PadmeVReconstruction* value) { fMainReco = value; };
+  //PadmeVReconstruction* GetMainReco() { return fMainReco; };
+  //void                  SetMainReco(PadmeVReconstruction* value) { fMainReco = value; };
+  PadmeReconstruction* GetMainReco() { return fMainReco; };
+  void                 SetMainReco(PadmeReconstruction* value) { fMainReco = value; };
 
   TFile* GetHistoFile() { return fHistoFile; };
 
@@ -122,7 +126,8 @@ public:
 protected:
 
   TFile* fHistoFile;
-  PadmeVReconstruction* fMainReco;
+  //PadmeVReconstruction* fMainReco;
+  PadmeReconstruction* fMainReco;
 
   //TRecoVEvent * fRecoEvent;
 

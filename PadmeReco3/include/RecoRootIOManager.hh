@@ -23,10 +23,13 @@ class RecoRootIOManager
 {
 public:
 
-  virtual ~RecoRootIOManager();
+  //virtual ~RecoRootIOManager();
 
-  static RecoRootIOManager* GetInstance(TString t);
-  static RecoRootIOManager* GetInstance();
+  //static RecoRootIOManager* GetInstance(TString t);
+  //static RecoRootIOManager* GetInstance();
+
+  RecoRootIOManager(TString);
+  ~RecoRootIOManager();
 
   void NewRun(Int_t);
   void EndRun();
@@ -36,14 +39,13 @@ public:
 
   RecoVRootIO* FindRecoRootIO(TString);
 
+//private:
+//
+//  static RecoRootIOManager* fInstance;
 
-private:
-
-  static RecoRootIOManager* fInstance;
-
-protected:
-
-  RecoRootIOManager(TString t);
+//protected:
+//
+//  RecoRootIOManager(TString t);
 
 public:
 

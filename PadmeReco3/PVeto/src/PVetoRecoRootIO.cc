@@ -12,9 +12,8 @@
 #include <stdio.h>
 #include "Riostream.h"
 
-
-PVetoRecoRootIO::PVetoRecoRootIO() 
-  : RecoVRootIO(TString("PVeto"))
+PVetoRecoRootIO::PVetoRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("PVeto"),rootMgr)
 {
   fEvent = new TPVetoRecoEvent();
   fClusColl = new TPVetoClusCollection();

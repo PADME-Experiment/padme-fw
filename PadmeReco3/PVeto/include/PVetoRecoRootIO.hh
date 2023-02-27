@@ -8,21 +8,18 @@
 #include "TTree.h"
 #include "TBranch.h"
 
-
-
 class TPVetoRecoEvent;
 class RecoVRootIO;
+class RecoRootIOManager;
 
 class PVetoRecoRootIO : public RecoVRootIO
 {
 public:
 
-  PVetoRecoRootIO();
+  PVetoRecoRootIO(RecoRootIOManager*);
   virtual ~PVetoRecoRootIO();
 
 private:
-
-  
 
 };
 #endif // PVetoRecoRootIO_h

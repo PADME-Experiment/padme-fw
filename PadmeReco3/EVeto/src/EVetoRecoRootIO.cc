@@ -13,9 +13,8 @@
 #include <stdio.h>
 #include "Riostream.h"
 
-
-EVetoRecoRootIO::EVetoRecoRootIO() 
-  : RecoVRootIO(TString("EVeto"))
+EVetoRecoRootIO::EVetoRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("EVeto"),rootMgr)
 {
   fEvent = new TEVetoRecoEvent();
   fClusColl = new TEVetoClusCollection();

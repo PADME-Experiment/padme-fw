@@ -7,19 +7,16 @@
 #include "TTree.h"
 #include "TBranch.h"
 
-
+class RecoRootIOManager;
 
 class SACRecoRootIO : public RecoVRootIO
 {
 public:
 
-  SACRecoRootIO();
+  SACRecoRootIO(RecoRootIOManager*);
   virtual ~SACRecoRootIO();
   
 private:
-
-  Int_t iev;
-  
 
 };
 #endif // SACRecoRootIO_h

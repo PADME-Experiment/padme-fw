@@ -13,9 +13,8 @@
 #include <stdio.h>
 #include "Riostream.h"
 
-
-TargetRecoRootIO::TargetRecoRootIO() 
-  : RecoVRootIO(TString("Target"))
+TargetRecoRootIO::TargetRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("Target"),rootMgr)
 {
   fEvent = new TTargetRecoEvent();
   fBeam  = new TTargetRecoBeam();
@@ -34,7 +33,8 @@ TargetRecoRootIO::~TargetRecoRootIO()
 void TargetRecoRootIO::SaveEvent()
 {
   //std::cout<<" in TargetRootIO::SaveEvent"<<std::endl;
-  RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+  //RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+  RecoRootIOManager* ioMgr = fRecoRootIOManager;
 
   // Save  branch Target (collection of hits)
   RecoVRootIO::SaveEvent();
@@ -65,7 +65,8 @@ void TargetRecoRootIO::SaveTargetFitEvent(){
   fFitEvent->Clear();
   //std::cout<<"fFitEvent  at <"<<fFitEvent<<"> in now cleared"<<std::endl;
 
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*)fRecoRootIOManager->GetReconstruction()->FindReco(this->GetName());
   TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
   //std::cout<<this->GetName()<<"::SaveTargetFitEvent ... pointer to TargetReconstruction retrieved"<<std::endl;
   
@@ -85,7 +86,8 @@ void TargetRecoRootIO::NewRun(Int_t nRun, TFile* hfile){
   RecoVRootIO::NewRun(nRun, hfile);
   std::cout<<this->GetName()<<"::NewRun - recoHit branch setup ... now moving to Target specific branches"<<std::endl;
 
-  RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+  //RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
+  RecoRootIOManager* ioMgr = fRecoRootIOManager;
   PadmeVReconstruction* MyReco = (PadmeVReconstruction*) ioMgr->GetReconstruction()->FindReco(this->GetName());
   TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
 

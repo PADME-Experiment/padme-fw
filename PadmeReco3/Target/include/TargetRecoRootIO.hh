@@ -8,17 +8,16 @@
 #include "TTree.h"
 #include "TBranch.h"
 
-
-
 class RecoVRootIO;
 class TTargetRecoBeam;
 class TTargetFitEvent;
+class RecoRootIOManager;
 
 class TargetRecoRootIO : public RecoVRootIO
 {
 public:
 
-  TargetRecoRootIO();
+  TargetRecoRootIO(RecoRootIOManager*);
   virtual ~TargetRecoRootIO();
   virtual void NewRun(Int_t nRun, TFile* hfile);
   virtual void SaveEvent();

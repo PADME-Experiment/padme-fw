@@ -14,7 +14,7 @@
 
 #include "ETagReconstruction.hh"
 
-RecoRootIOManager* RecoRootIOManager::fInstance = 0;
+//RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
@@ -47,22 +47,22 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
   // Add subdetectors persistency managers
   fETagRecoRootIO = 0;
   if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
-    fRootIOList.push_back(new PVetoRecoRootIO);
+    fRootIOList.push_back(new PVetoRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
-    fRootIOList.push_back(new EVetoRecoRootIO);
+    fRootIOList.push_back(new EVetoRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1))
-    fRootIOList.push_back(new HEPVetoRecoRootIO);
+    fRootIOList.push_back(new HEPVetoRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))
-    fRootIOList.push_back(new SACRecoRootIO);
+    fRootIOList.push_back(new SACRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "ETag"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ETag"    ,1))
     fETagRecoRootIO = new ETagRecoRootIO();
     //fRootIOList.push_back(new ETagRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
-    fRootIOList.push_back(new TargetRecoRootIO);
+    fRootIOList.push_back(new TargetRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
-    fRootIOList.push_back(new ECalRecoRootIO);
+    fRootIOList.push_back(new ECalRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
-    fRootIOList.push_back(new LeadGlassRecoRootIO);
+    fRootIOList.push_back(new LeadGlassRecoRootIO(this));
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 
@@ -71,18 +71,18 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 RecoRootIOManager::~RecoRootIOManager()
 {;}
 
-RecoRootIOManager* RecoRootIOManager::GetInstance()
-{
-  if ( fInstance == 0 ) { std::cout<<"ERROR RecoRootIOManager not yet built/initialized"<<std::endl;}
-//fInstance = new RecoRootIOManager(); }
-  return fInstance;
-}
+//RecoRootIOManager* RecoRootIOManager::GetInstance()
+//{
+//  if ( fInstance == 0 ) { std::cout<<"ERROR RecoRootIOManager not yet built/initialized"<<std::endl;}
+////fInstance = new RecoRootIOManager(); }
+//  return fInstance;
+//}
 
-RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
-{
-  if ( fInstance == 0 ) { fInstance = new RecoRootIOManager(confFile); }
-  return fInstance;
-}
+//RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
+//{
+//  if ( fInstance == 0 ) { fInstance = new RecoRootIOManager(confFile); }
+//  return fInstance;
+//}
 
 void RecoRootIOManager::Close()
 {
@@ -192,6 +192,7 @@ void RecoRootIOManager::NewRun(Int_t nRun)
     }
     if (fETagRecoRootIO) {
       std::cout << "RootIOManager: Checking IO for ETag" << std::endl;
+      fETagRecoRootIO->SetEventTree(fEventTree);
       fETagRecoRootIO->SetETagReconstruction(fReco->GetETagReconstruction());
       fETagRecoRootIO->SetVerbose(fReco->GetETagReconstruction()->GetVerbose());
       std::cout << "RootIOManager: IO for ETag enabled" << std::endl;
@@ -243,6 +244,7 @@ void RecoRootIOManager::SaveEvent(){
   struct timeval tp;
   gettimeofday(&tp,NULL);
   double now = tp.tv_sec*1.+tp.tv_usec/1000000.;
+  std::cout << "fEvent = " << fEvent << std::endl;
   fEvent->SetTime(now);
 
   fEvent->SetRunNumber(fReco->GetRunNumber());

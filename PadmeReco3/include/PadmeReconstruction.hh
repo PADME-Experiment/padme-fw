@@ -15,6 +15,13 @@ class TrigTimeSvc;
 class RunConditionSvc;
 class RunConfigurationSvc;
 
+class PadmeVReconstruction;
+class GlobalRecoConfigOptions;
+
+class RecoRootIOManager;
+
+class ETagReconstruction;
+
 class TRawEvent;
 class TMCEvent;
 class TRecoEvent;
@@ -41,21 +48,19 @@ class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
 
-class ETagReconstruction;
-
 class TDetectorInfo;
 
-#include "PadmeVReconstruction.hh"
-
-class PadmeReconstruction : public PadmeVReconstruction
+//class PadmeReconstruction : public PadmeVReconstruction
+class PadmeReconstruction
 {
 
 public:
 
-  PadmeReconstruction(TObjArray*, TString, TFile*, Int_t, UInt_t);
+  //PadmeReconstruction(TObjArray*, TString, TFile*, Int_t, UInt_t);
+  PadmeReconstruction(TObjArray*, TString, TString, Int_t, UInt_t);
   ~PadmeReconstruction();
 
-  void Init(PadmeVReconstruction*) { return; }
+  //void Init(PadmeVReconstruction*) { return; }
   void Init(Int_t, UInt_t);
   Bool_t NextEvent();
   void EndProcessing();
@@ -75,6 +80,8 @@ public:
 
   TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
+  GlobalRecoConfigOptions* GetGlobalRecoConfigOptions() { return fGlobalRecoConfigOptions; }
+
 private:
 
   TChain* BuildChain(TString);
@@ -85,6 +92,7 @@ private:
   void InitRunningModeFlags();
 
   void HistoInit();
+
   void ProcessEvent(TRawEvent*);
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
@@ -98,7 +106,9 @@ private:
   RunConditionSvc* fRunConditionSvc;
   RunConfigurationSvc* fRunConfigurationSvc;
 
-  TFile* fHistoFile;
+  RecoRootIOManager* fRecoRootIOManager;
+  TString fOutputFileName;
+  TFile* fOutputFile;
 
   TChain* fMCChain;
   TChain* fRawChain;
@@ -137,6 +147,8 @@ private:
  
   Int_t fNEvt;
   Int_t fNProcessedEventsInTotal;
+
+  GlobalRecoConfigOptions* fGlobalRecoConfigOptions;
 
 };
 #endif

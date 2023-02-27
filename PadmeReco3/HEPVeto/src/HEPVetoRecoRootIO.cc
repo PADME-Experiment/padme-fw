@@ -14,8 +14,8 @@
 #include "Riostream.h"
 
 
-HEPVetoRecoRootIO::HEPVetoRecoRootIO() 
-  : RecoVRootIO(TString("HEPVeto"))
+HEPVetoRecoRootIO::HEPVetoRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("HEPVeto"),rootMgr)
 {
   fEvent = new THEPVetoRecoEvent();
   fClusColl = new THEPVetoClusCollection();

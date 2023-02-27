@@ -7,8 +7,8 @@
 #include "TRecoVClusCollection.hh"
 
 
-RecoVRootIO::RecoVRootIO(TString name)
-  : PadmeVNamedModule(name)
+RecoVRootIO::RecoVRootIO(TString name, RecoRootIOManager* rootMgr)
+  : PadmeVNamedModule(name), fRecoRootIOManager(rootMgr)
 { 
   // Default output file parameters
   fBufSize = 64000; //size of output buffer
@@ -25,8 +25,8 @@ RecoVRootIO::~RecoVRootIO(){;
 
 void RecoVRootIO::SaveEvent(){
 
-  //std::cout<<this->GetName()<<" in RecoVRootIO::SaveEvent"<<std::endl;
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*)fRecoRootIOManager->GetReconstruction()->FindReco(this->GetName());
 
   if (MyReco->writeHits()){
     fEvent->Clear();
@@ -35,19 +35,16 @@ void RecoVRootIO::SaveEvent(){
       fEvent->AddHit(Hits[iHit]);
     }
   }
-  //std::cout<<" hits done "<<std::endl;
 
-  if (MyReco->writeClusters()){
+  if (MyReco->writeClusters()) {
     if (fClusColl){
       fClusColl->Clear();
       vector<TRecoVCluster *> Clusters = MyReco->GetClusters();
       for(unsigned int iC = 0;iC < Clusters.size(); ++iC){
-	//std::cout<<" adding cluster  "<<iC<<std::endl;
 	fClusColl->AddElement(Clusters[iC]);
       }
     }
   }
-  //std::cout<<" in RecoVRootIO::SaveEvent ... out "<<std::endl;
 
 }
 
@@ -56,11 +53,13 @@ void RecoVRootIO::NewRun(Int_t nRun, TFile* hfile){
   
   //if (fVerbose>=2)
 
-  std::cout<<this->GetName()<<"  Preparing event structure" <<std::endl;
+  std::cout << this->GetName() << " Preparing event structure" <<std::endl;
   // Create branch to hold PVeto Hits and Digis for this run
-  fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
+  //fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
+  fEventTree = fRecoRootIOManager->GetEventTree();
 
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco = (PadmeVReconstruction*)fRecoRootIOManager->GetReconstruction()->FindReco(this->GetName());
   if (MyReco->writeHits()){
     std::cout << "Preparing the branches in  " << fEventTree << std::endl;
     std::string brHname = std::string(this->GetName())+"_Hits";

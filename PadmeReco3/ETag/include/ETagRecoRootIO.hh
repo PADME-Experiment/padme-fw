@@ -24,12 +24,15 @@ public:
   void  SetVerbose(Int_t v) { fVerbose = v;    }
   Int_t GetVerbose()        { return fVerbose; }
 
+  void SetEventTree(TTree* t) { fEventTree = t; }
   void SetETagReconstruction(ETagReconstruction* etReco) { fETagReconstruction = etReco; }
 
 private:
 
   Bool_t ExportHit(ETagHit*,TRecoVHit*);
   Bool_t ExportCluster(ETagCluster*,TRecoVCluster*);
+
+  ETagReconstruction* fETagReconstruction;
 
   TTree* fEventTree;
 
@@ -38,8 +41,6 @@ private:
 
   TETagRecoEvent*      fHitsCollection;
   TETagClusCollection* fClusCollection;
-
-  ETagReconstruction* fETagReconstruction;
 
   Int_t fVerbose;
 

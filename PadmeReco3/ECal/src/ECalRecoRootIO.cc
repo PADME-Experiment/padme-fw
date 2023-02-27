@@ -3,6 +3,7 @@
 
 #include "TECalRecoEvent.hh"
 #include "ECalReconstruction.hh"
+#include "RecoRootIOManager.hh"
 //#include "TRecoVHit.hh"
 
 #include "TString.h"
@@ -14,9 +15,8 @@
 #include "TECalClusCollection.hh"
 #include "TRecoVCluster.hh"
 
-
-ECalRecoRootIO::ECalRecoRootIO() 
-  : RecoVRootIO(TString("ECal"))
+ECalRecoRootIO::ECalRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("ECal"),rootMgr)
 {
   fEvent = new TECalRecoEvent();
   fClusColl = new TECalClusCollection();

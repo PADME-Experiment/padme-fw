@@ -4,12 +4,13 @@
 #include "RecoVRootIO.hh"
 
 class LeadGlassReconstruction;
+class RecoRootIOManager;
 
 class LeadGlassRecoRootIO : public RecoVRootIO
 {
 public:
 
-  LeadGlassRecoRootIO();
+  LeadGlassRecoRootIO(RecoRootIOManager*);
   ~LeadGlassRecoRootIO();
 
   void SaveEvent();

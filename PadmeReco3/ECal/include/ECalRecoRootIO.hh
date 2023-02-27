@@ -8,21 +8,18 @@
 #include "TTree.h"
 #include "TBranch.h"
 
-
-
 class TECalRecoEvent;
 class RecoVRootIO;
+class RecoRootIOManager;
 
 class ECalRecoRootIO : public RecoVRootIO
 {
 public:
 
-  ECalRecoRootIO();
+  ECalRecoRootIO(RecoRootIOManager*);
   virtual ~ECalRecoRootIO();
 
 private:
-
-  
 
 };
 #endif // ECalRecoRootIO_h

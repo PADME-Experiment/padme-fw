@@ -3,22 +3,24 @@
 
 
 #include "TFile.h"
-#include "PadmeVNamedModule.hh"
+//#include "PadmeVNamedModule.hh"
 #include "TTree.h"
 #include "TBranch.h"
 #include "TRecoVCluster.hh"
 #include "TRecoVHit.hh"
 #include "TRecoVClusCollection.hh"
 #include "TRecoVObject.hh"
+#include "PadmeVNamedModule.hh"
 
-class PadmeVNamedModule;
+//class PadmeVNamedModule;
+class RecoRootIOManager;
 
 class RecoVRootIO: public PadmeVNamedModule
 {
 
 public:
   
-  RecoVRootIO(TString);
+  RecoVRootIO(TString,RecoRootIOManager*);
   // In the concrete fInstance you need to implement
   // the mandatory virtual methods
   virtual ~RecoVRootIO();
@@ -38,9 +40,8 @@ public:
   Int_t GetVerbose()                { return fVerbose;      };
   void  SetVerbose(Int_t value)     { fVerbose = value;     };
 
-  bool   GetEnabled()             { return fEnabled;  };
-  void   SetEnabled(bool value) { fEnabled = value; };
-
+  Bool_t GetEnabled()             { return fEnabled;  };
+  void   SetEnabled(Bool_t value) { fEnabled = value; };
 
 protected:
 
@@ -50,8 +51,9 @@ protected:
   Int_t fRunNumber;
   Int_t fVerbose;
 
+  Bool_t fEnabled;
 
-  bool fEnabled;
+  RecoRootIOManager* fRecoRootIOManager;
 
   TTree* fEventTree;
   TBranch* fBranch;

@@ -1,5 +1,5 @@
 #include "PadmeVReconstruction.hh"
-//#include "PadmeReconstruction.hh"
+#include "PadmeReconstruction.hh"
 #include "PadmeVClusterization.hh"
 #include "GlobalRecoConfigOptions.hh"
 #include "PadmeVGeometry.hh"
@@ -95,7 +95,8 @@ void PadmeVReconstruction::InitRunningModeFlags()
 }
 */
 
-void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
+//void PadmeVReconstruction::Init(PadmeVReconstruction* MainReco) {
+void PadmeVReconstruction::Init(PadmeReconstruction* MainReco) {
   std::cout <<"--------------------------------------------------" <<this->GetName() <<": Initializing" << std::endl;
 
   fMainReco = MainReco;
@@ -203,7 +204,6 @@ void PadmeVReconstruction::ReadHits(TRecoVObject* tEvent,TRecoEvent* tRecoEvent)
   //std::cout<<this->GetName()<<"::ReadHits(TRecoVObject*) ... nhits read from input tree  "<<tEvent->GetNHits()<<" in local vector "<<fHits.size()<<std::endl;
 
 }
-
 
 void PadmeVReconstruction::EndProcessing(){ 
   // to be called from the derived classes

@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include "Riostream.h"
 
-LeadGlassRecoRootIO::LeadGlassRecoRootIO() 
-  : RecoVRootIO(TString("LeadGlass"))
+LeadGlassRecoRootIO::LeadGlassRecoRootIO(RecoRootIOManager* rootMgr) 
+  : RecoVRootIO(TString("LeadGlass"),rootMgr)
 {
   fEvent = new TLeadGlassRecoEvent();
 
@@ -29,7 +29,8 @@ void LeadGlassRecoRootIO::SaveEvent()
 
   ((TLeadGlassRecoEvent*)fEvent)->Clear(); // Clear all LeadGlass info
 
-  if (! fLGReco) fLGReco = (LeadGlassReconstruction*)RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
+  //if (! fLGReco) fLGReco = (LeadGlassReconstruction*)RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
+  if (! fLGReco) fLGReco = (LeadGlassReconstruction*)fRecoRootIOManager->GetReconstruction()->FindReco("LeadGlass");
 
   if (fLGReco->LeadGlassFound()) {
     ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(fLGReco->GetPedestal());

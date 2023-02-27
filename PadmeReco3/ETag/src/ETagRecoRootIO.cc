@@ -11,7 +11,7 @@
 #include "ETagHit.hh"
 #include "ETagCluster.hh"
 
-ETagRecoRootIO::ETagRecoRootIO() 
+ETagRecoRootIO::ETagRecoRootIO()
 {
 
   fETagReconstruction = 0;
@@ -37,7 +37,7 @@ void ETagRecoRootIO::NewRun()
   
   if (fVerbose) std::cout << "ETagRecoRootIO::NewRun - Preparing event structure" << std::endl;
 
-  fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
+  //fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
 
   //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
   if (fVerbose>1) std::cout << "ETagRecoRootIO::NewRun - Preparing the branches in '" << fEventTree->GetName() << "' output TTree" << std::endl;

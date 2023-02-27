@@ -20,7 +20,7 @@
 
 #include <TObjString.h>
 
-//PadmeReconstruction* PadmeReco;
+PadmeReconstruction* PadmeReco;
                               
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s seed] [-c ConfigFileName.conf]" 
@@ -31,9 +31,9 @@ void sighandler(int sig){
     std::cerr << std::endl << "********************************************************************************" << std::endl;
     std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
-    //PadmeReco->EndProcessing();
-    RecoRootIOManager::GetInstance()->EndRun();
-    RecoRootIOManager::GetInstance()->Close();
+    PadmeReco->EndProcessing();
+    //RecoRootIOManager::GetInstance()->EndRun();
+    //RecoRootIOManager::GetInstance()->Close();
 
     std::cerr << "... Done" << std::endl;
     std::cerr << std::endl << "********************************************************************************" << std::endl;
@@ -157,10 +157,10 @@ int main(Int_t argc, char **argv)
     double cpuAtStart = ucpu;
     double runAtStart = urun;
 
-    //Perform the output initialization
-    RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance(ConfFileName);
-    RecoIO->SetFileName(OutputFileName);
-    //RecoIO->NewRun(1);
+    ////Perform the output initialization
+    //RecoRootIOManager *RecoIO = RecoRootIOManager::GetInstance(ConfFileName);
+    //RecoIO->SetFileName(OutputFileName);
+    ////RecoIO->NewRun(1);
 
     umem = PadmePerfUtils::getMem();
     ucpu = double(PadmePerfUtils::getCpu()/100.);
@@ -171,9 +171,10 @@ int main(Int_t argc, char **argv)
     cpu = ucpu;
     run = urun;
 
-    PadmeReconstruction* PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
-    RecoIO->SetReconstruction(PadmeReco);
-    RecoIO->NewRun(1);
+    //PadmeReconstruction* PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, RecoIO->GetFile(), NEvt, Seed);
+    PadmeReco = new PadmeReconstruction(&InputFileNameList, ConfFileName, OutputFileName, NEvt, Seed);
+    //RecoIO->SetReconstruction(PadmeReco);
+    //RecoIO->NewRun(1);
 
     umem = PadmePerfUtils::getMem();
     ucpu = double(PadmePerfUtils::getCpu()/100.);
@@ -194,7 +195,7 @@ int main(Int_t argc, char **argv)
     std::cout<<"======= PadmeReco: Initialization of the reconstruction is complete .... start processing events ................."<<std::endl;
     std::cout<<"=======================================================================================\n\n"<<std::endl;
     while(PadmeReco->NextEvent()) {
-      RecoIO->SaveEvent();
+      //RecoIO->SaveEvent();
 
       niter++;
       umem = PadmePerfUtils::getMem();
@@ -232,8 +233,8 @@ int main(Int_t argc, char **argv)
     double runAfterEvLoop = urun;
 
     PadmeReco->EndProcessing();
-    RecoIO->EndRun();
-    RecoIO->Close();
+    //RecoIO->EndRun();
+    //RecoIO->Close();
 
     umem = PadmePerfUtils::getMem();
     ucpu = double(PadmePerfUtils::getCpu()/100.);
@@ -280,7 +281,7 @@ int main(Int_t argc, char **argv)
       printf ("RecoInfo - Average Memory Leak per Event %.3f kB/evt\n",float(memAfterEvLoop-memAfterFirstEvent)/(niter-1));
     }
 
-    delete RecoIO;
+    //delete RecoIO;
     delete PadmeReco;
     
 }

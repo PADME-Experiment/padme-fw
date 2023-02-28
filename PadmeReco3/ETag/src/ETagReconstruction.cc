@@ -82,6 +82,9 @@ void ETagReconstruction::ProcessEvent(TRawEvent* rawEvent)
   fHits.clear();
   fClusters.clear();
 
+  fETagDigitizer->BuildHits(rawEvent,fHits);
+  
+  /*
   ETagHit* hit = new ETagHit();
   hit->SetADCBoard(23);
   hit->SetADCChannel(11);
@@ -92,6 +95,7 @@ void ETagReconstruction::ProcessEvent(TRawEvent* rawEvent)
   hit->SetTime(23456.456);
   fHits.push_back(hit);
   //if (fVerbose>3) hit->Print();
+  */
 
   ETagCluster* clus = new ETagCluster();
   clus->SetStatus(0x0000000000000003);

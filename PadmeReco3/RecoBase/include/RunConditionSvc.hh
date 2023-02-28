@@ -29,9 +29,24 @@ public:
 
   void SetVerbose(Int_t v){ fVerbose = v; }
 
+  void SetRunEnergyFile(TString f) { fRunEnergyFile = f; }
+  TString GetRunEnergyFile() { return fRunEnergyFile; }
+
+  Bool_t SetCurrentRun(Int_t);
+  Int_t GetCurrentRun() { return fCurrentRun; }
+
+  Double_t GetRunEnergy(Int_t);
+  Double_t GetRunEnergy() { return fCurrentRunEnergy; }
+
 private:
 
   Int_t fVerbose;
+
+  TString fRunEnergyFile;
+  std::map<Int_t,Double_t> fRunEnergy;
+
+  Int_t fCurrentRun;
+  Double_t fCurrentRunEnergy;
 
 };
 

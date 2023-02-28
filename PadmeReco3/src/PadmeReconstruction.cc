@@ -126,10 +126,10 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTrigTimeSvc->SetVerbose(ttsVerbose);
   fTrigTimeSvc->Initialize();
 
-  // Initialize Run Condition Service
-  Int_t rcVerbose = fConfig->GetParOrDefault("RECORunCondition", "Verbose", 0);
+  // Configure and initialize Run Condition Service
   fRunConditionSvc = RunConditionSvc::GetInstance();
-  fRunConditionSvc->SetVerbose(rcVerbose);
+  fRunConditionSvc->SetVerbose(fConfig->GetParOrDefault("RECORunCondition", "Verbose", 0));
+  fRunConditionSvc->SetRunEnergyFile(fConfig->GetParOrDefault("RECORunCondition", "RunEnergyFile", "config/RunEnergy.txt"));
   fRunConditionSvc->Initialize();
 
   InitLibraries();
@@ -574,6 +574,14 @@ Bool_t PadmeReconstruction::NextEvent()
       std::cout << "=== Read raw event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
       std::cout << "--- PadmeReconstruction --- run/event/time " << fRawEvent->GetRunNumber()
 		<< " " << fRawEvent->GetEventNumber() << " " << fRawEvent->GetEventAbsTime() << std::endl;
+    }
+
+    // Update run conditions (if needed)
+    static Int_t CurrentRun = 0;
+    if (fRawEvent->GetRunNumber() != CurrentRun) {
+      CurrentRun = fRawEvent->GetRunNumber();
+      printf("PadmeReconstruction::NextEvent - Setting Current Run to %d in Run Condition Service\n",CurrentRun);
+      fRunConditionSvc->SetCurrentRun(CurrentRun);
     }
 
     // Process event to extract global information

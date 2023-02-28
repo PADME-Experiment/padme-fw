@@ -12,6 +12,7 @@ class RunConfigurationSvc
 {
 
 protected:
+
   RunConfigurationSvc();
 
 public:

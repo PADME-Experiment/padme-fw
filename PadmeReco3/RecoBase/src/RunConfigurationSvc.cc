@@ -12,7 +12,7 @@ RunConfigurationSvc* RunConfigurationSvc::GetInstance()
 }
 
 RunConfigurationSvc::RunConfigurationSvc()
-  :fVerbose(0),fRecoMode(true),fCosmicsMode(false),fPedestalMode(false),fMonitorMode(false),fDebugMode(0)
+  :fVerbose(0),fRecoInput("RawData"),fRecoMode(true),fCosmicsMode(false),fPedestalMode(false),fMonitorMode(false),fDebugMode(0)
 {;}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

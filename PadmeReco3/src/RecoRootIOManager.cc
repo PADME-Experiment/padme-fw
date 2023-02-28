@@ -244,7 +244,6 @@ void RecoRootIOManager::SaveEvent(){
   struct timeval tp;
   gettimeofday(&tp,NULL);
   double now = tp.tv_sec*1.+tp.tv_usec/1000000.;
-  std::cout << "fEvent = " << fEvent << std::endl;
   fEvent->SetTime(now);
 
   fEvent->SetRunNumber(fReco->GetRunNumber());

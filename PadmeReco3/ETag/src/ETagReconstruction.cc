@@ -4,6 +4,8 @@
 
 #include "PadmeVRecoConfig.hh"
 
+#include "TRawEvent.hh"
+
 #include "HistoSvc.hh"
 #include "TrigTimeSvc.hh"
 #include "RunConditionSvc.hh"
@@ -69,6 +71,13 @@ void ETagReconstruction::ProcessEvent(TETagRecoEvent* tEvent,TRecoEvent* tRecoEv
 void ETagReconstruction::ProcessEvent(TRawEvent* rawEvent)
 {
   if (fVerbose>2) printf("ETagReconstruction::ProcessEvent - Reconstructing RawData event\n");
+
+  // Show run energy (only when run changes)
+  static Int_t run = 0;
+  if (fRunConditionSvc->GetCurrentRun() != run) {
+    run = fRunConditionSvc->GetCurrentRun();
+    if (fVerbose) printf("ETagReconstruction::ProcessEvent - Run %d has energy %.3f\n",run,fRunConditionSvc->GetRunEnergy());
+  }
 
   fHits.clear();
   fClusters.clear();

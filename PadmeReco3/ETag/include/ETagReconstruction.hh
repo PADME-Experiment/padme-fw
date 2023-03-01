@@ -17,6 +17,7 @@ class RunConditionSvc;
 class RunConfigurationSvc;
 
 class ETagDigitizer;
+class ETagClusterizer;
 class ETagHit;
 class ETagCluster;
 
@@ -52,6 +53,7 @@ private:
   PadmeVRecoConfig* fETagConfig;
 
   ETagDigitizer* fETagDigitizer;
+  ETagClusterizer* fETagClusterizer;
 
   Bool_t fWriteHits;
   Bool_t fWriteClusters;

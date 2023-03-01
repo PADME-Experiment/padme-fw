@@ -16,7 +16,7 @@ public:
   ETagDigitizer(PadmeVRecoConfig*);
   ~ETagDigitizer();
 
-  void Init();
+  Bool_t Init();
 
   Int_t GetVerbose() { return fVerbose; }
   void  SetVerbose(Int_t v) { fVerbose = v; }

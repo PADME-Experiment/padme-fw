@@ -27,15 +27,20 @@ ETagDigitizer::~ETagDigitizer()
   if (fVerbose) printf("ETagDigitizer::~ETagDigitizer - Deleting ETag digitization system\n");
 }
 
-void ETagDigitizer::Init()
+Bool_t ETagDigitizer::Init()
 {
   if (fVerbose) printf("ETagDigitizer::Init - Initilizing ETag digitizer\n");
 
-  CreateChannelMap();
+  //Create maps for ADC board/channel to/from ETag channel conversions
+  if (! CreateChannelMap()) {
+    printf("ETagDigitizer::Init - ERROR - Problem during initialization. Please check.");
+    return false;
+  }
 
   // Initialize channel digitizer
   fETagChannelDigitizer->Init();
 
+  return true;
 }
 
 Bool_t ETagDigitizer::BuildHits(TRawEvent* rawEv, vector<ETagHit*>& hits)
@@ -79,6 +84,7 @@ Bool_t ETagDigitizer::CreateChannelMap()
       std::string parName = "ADC" +  std::to_string(bID);
       if (fVerbose>1) std::cout << "ETagDigitizer::CreateChannelMap - Processing the map for board " << bID << std::endl;
       if(fETagConfig->GetConfigParser()->HasConfig("ADC",parName )){
+
 	UChar_t ic = 0;
         std::vector<std::string> bMap = fETagConfig->GetConfigParser()->GetConfig("ADC",parName);
         for(auto it = bMap.begin(); it != bMap.end(); ++it) {
@@ -105,6 +111,12 @@ Bool_t ETagDigitizer::CreateChannelMap()
 	  ic++;
 
 	}
+
+      } else {
+
+	printf("ETagDigitizer::CreateChannelMap - ERROR - Cannot find map for board %d. Check your configuration file.",bID);
+	return false;
+
       }
     }
 

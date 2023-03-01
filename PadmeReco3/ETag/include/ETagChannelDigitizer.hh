@@ -4,6 +4,7 @@
 #include <Rtypes.h>
 
 class PadmeVRecoConfig;
+class TrigTimeSvc;
 class ETagHit;
 
 class ETagChannelDigitizer
@@ -27,6 +28,13 @@ private:
   Int_t fVerbose;
 
   PadmeVRecoConfig* fETagConfig;
+
+  TrigTimeSvc* fTrigTimeSvc;
+
+  Int_t fGoodSamples;
+  Int_t fPedestalSamples;
+  Double_t fZeroSupRMSThreshold;
+  Double_t fHitThreshold;
 
 };
 #endif // ETagChannelDigitizer_h

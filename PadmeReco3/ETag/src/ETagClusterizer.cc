@@ -31,6 +31,7 @@ Bool_t ETagClusterizer::BuildClusters(vector<ETagHit*>& hits,vector<ETagCluster*
 {
   if (fVerbose>1) printf("ETagClusterizer::BuildClusters - Building ETag clusters from ETag hits\n");
 
+  /*
   ETagCluster* clus = new ETagCluster();
   clus->SetStatus(0x0000000000000003);
   clus->SetPosition(TVector3(1.,1.,2.));
@@ -43,6 +44,7 @@ Bool_t ETagClusterizer::BuildClusters(vector<ETagHit*>& hits,vector<ETagCluster*
   clus->SetHitsVector(v);
   clusters.push_back(clus);
   if (fVerbose>3) clus->Print();
+  */
 
   return true;
 }

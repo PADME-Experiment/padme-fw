@@ -47,6 +47,10 @@ Bool_t ETagDigitizer::BuildHits(TRawEvent* rawEv, vector<ETagHit*>& hits)
 {
   if (fVerbose>1) printf("ETagDigitizer::BuildHits - Building reconstructed hits\n");
 
+  // Update channel digitizer with current run/event number
+  fETagChannelDigitizer->SetRunNumber(rawEv->GetRunNumber());
+  fETagChannelDigitizer->SetEventNumber(rawEv->GetEventNumber());
+
   TADCBoard* board;
   TADCChannel* channel;
 

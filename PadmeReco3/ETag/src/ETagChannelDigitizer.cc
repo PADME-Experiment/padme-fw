@@ -3,10 +3,11 @@
 #include "TRawEvent.hh"
 
 #include "TMath.h"
-#include "TSpline.h"
+#include "TH1D.h"
 
 #include "PadmeVRecoConfig.hh"
 #include "TrigTimeSvc.hh"
+#include "HistoSvc.hh"
 
 #include "ETagHit.hh"
 
@@ -21,6 +22,9 @@ ETagChannelDigitizer::ETagChannelDigitizer(PadmeVRecoConfig* cfg)
 
   // Attach to Trigger Time service
   fTrigTimeSvc = TrigTimeSvc::GetInstance();
+
+  // Attach to Histogrammin service
+  fHistoSvc = HistoSvc::GetInstance();
 
   // Define parameters to use for hit building process
   fGoodSamples = fETagConfig->GetParOrDefault("RECO","GoodSamples",1000);
@@ -71,14 +75,12 @@ Bool_t ETagChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   Double_t pedestal = TMath::Mean(fPedestalSamples,samplesD);
   //printf("Pedestal %f\n",pedestal);
 
-  // Prepare vectors for spline interpolation
-  Double_t xbinD[1024];
+  // Subtract pedestal and convert samples to positive signal in mV
   Double_t ybinD[1024];
   Double_t maxValue = 0.;
   //UInt_t   maxSample = 0;
   for(Int_t i=0; i<1024; i++) {
-    xbinD[i] = (Double_t)i;
-    ybinD[i] = -(samplesD[i]-pedestal)/4096.*1000.; // Subtract pedestal and convert to positive signal in mV
+    ybinD[i] = -(samplesD[i]-pedestal)/4096.*1000.;
     if (i<fGoodSamples) {
       if (ybinD[i]>maxValue) {
 	maxValue = ybinD[i];
@@ -87,21 +89,49 @@ Bool_t ETagChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
     }
   }
   
-  // Use quintic natural spline for interpolation of "good" samples (avoid problematic samples at the end)
-  TSpline5 spline = TSpline5("wsp",xbinD,ybinD,fGoodSamples);
+  // Smooth the waveform by averaging over N consecutive points
+  Double_t yavgD[1024];
+  Int_t navg = 3; // Number of samples before and after each bin to use in average
+  for(Int_t i=0;i<1024;i++) {
+    yavgD[i] = 0.;
+    Int_t iavg = 0;
+    for(Int_t j=std::max(0,i-navg); j<std::min(1024,i+navg+1); j++) {
+      yavgD[i] += ybinD[j];
+      iavg++;
+    }
+    yavgD[i] = yavgD[i]/(Double_t)iavg;
+  }
 
-  // Scan the spline to find where hit threshold is crossed
+  /*
+  // Save inital (w) and smoothed (s) waveforms to histogram for debug
+  char buffer[100];
+  std::string hname,htitle;
+  sprintf(buffer,"ETag_%d_%d_%d_w",fRunNumber,fEventNumber,channel);
+  hname = buffer;
+  sprintf(buffer,"ETag waveform R%d E%d C%d",fRunNumber,fEventNumber,channel);
+  htitle = buffer;
+  TH1D* hw = fHistoSvc->BookHisto("ETag",hname,htitle,fGoodSamples,0.,(Double_t)fGoodSamples);
+  sprintf(buffer,"ETag_%d_%d_%d_s",fRunNumber,fEventNumber,channel);
+  hname = buffer;
+  sprintf(buffer,"ETag spline R%d E%d C%d",fRunNumber,fEventNumber,channel);
+  htitle = buffer;
+  TH1D* hs = fHistoSvc->BookHisto("ETag",hname,htitle,fGoodSamples,0.,(Double_t)fGoodSamples);
+  for(Int_t i=0; i<fGoodSamples; i++) {
+    hw->SetBinContent(i,ybinD[i]);
+    hs->SetBinContent(i,yavgD[i]);
+  }
+  */
+
+  // Scan the smoothed waveform to find where hit threshold is crossed
   Double_t oldVal = 0.;
-  for(Double_t i=0.; i<(Double_t)fGoodSamples; i++) {
-    Double_t val = spline.Eval(i);
-    //printf("%f %f\n",i,val);
+  for(Int_t i=0.; i<fGoodSamples; i++) {
+    Double_t val = yavgD[i];
     if (oldVal<fHitThreshold && val>=fHitThreshold) {
 
       // Linear interpolation to find precise crossing position
-      Double_t hitPos = i-(val-fHitThreshold)/(val-oldVal);
+      Double_t hitPos = (Double_t)i-(val-fHitThreshold)/(val-oldVal);
       // Convert sample position to trigger-corrected time
       Double_t hitTime = fTrigTimeSvc->GetTimeDifference(adcBoard,adcChannel/8,hitPos);
-      //printf("Hit pos %f time %f\n",hitPos,hitTime);
 
       // Save hit (still need to compute energy, position and status)
       ETagHit* hit = new ETagHit();

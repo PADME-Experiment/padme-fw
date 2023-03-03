@@ -27,6 +27,9 @@ ETagReconstruction::ETagReconstruction(TString ConfigFileName)
   fRunConditionSvc = RunConditionSvc::GetInstance();
   fRunConfigurationSvc = RunConfigurationSvc::GetInstance();
 
+  // Create ETag histogram directory
+  fHistoSvc->CreateDir("ETag");
+
   // Enable ETag specific configuration service
   fETagConfig = new PadmeVRecoConfig(new utl::ConfigParser(ConfigFileName.Data()),"ETag");
 

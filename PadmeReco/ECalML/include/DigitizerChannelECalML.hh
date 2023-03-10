@@ -15,6 +15,7 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TTree.h"
+#include <tensorflow/c/c_api.h>
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
@@ -24,19 +25,26 @@ public:
   ~DigitizerChannelECalML();
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
-  virtual void NoOpDeallocator(void* data, size_t a, void* b) {};
-  virtual void ApplyML(Short_t* MLarr);
+  static void deallocator(void * data, size_t len, void * arg){};
+  virtual void ApplyML(float* MLarr);
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
   virtual void Init(PadmeVRecoConfig *cfg){return;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
   
   void PrintConfig();
-
   void SetAbsSignals();
   Short_t CalcMaximum();
+  Double_t CalcPedestal();
+
+  
+  //Int_t GetElChID(){return fElChID;};
+  void  SetElChID(Int_t ChID){fElChID=ChID;};
+
+  //Int_t GetBdID(){return fBdID;};
+  void  SetBdID(Int_t BdID){fBdID=BdID;};
   
   
-  void SetAnalogOffSets();
+  //  void SetAnalogOffSets();
   
   
  
@@ -44,7 +52,8 @@ private:
   //What do we operate
   UShort_t fNSamples;
   Short_t *fSamples;
-  Short_t fSamplesML;
+  float floatSamples[1024];
+  float* fSamplesML;
   Short_t fMax;
   Short_t fIMax;
   Double_t fPed;
@@ -147,6 +156,7 @@ private:
   Double_t AbsSamRec200[1024];
   Double_t AbsSamRecHyb[1024];
 
+
   Double_t fTemplate[5001];
   Bool_t fFirstHit;
   Bool_t fSaturatedHit;
@@ -160,6 +170,30 @@ private:
   Double_t fAmplitude;
   Double_t fDiffTimeWave; 
   Double_t fEnergySecondHit;
+
+  TF_Status* status;
+  TF_Session* session;
+  TF_Graph*  graph;
+  TF_SessionOptions* opts;
+  
+  int NumInputs;
+
+  TF_Output* Input;
+
+  int NumOutputs;
+
+  TF_Output* Output;
+  
+  TF_Tensor** InputValues;
+  TF_Tensor** OutputValues;
+  
+  int ndims;
+  //int64_t dims[3];
+  size_t ndata;
+
+  Int_t MINDIST;
+  float filteredSamples[1024];
+  Int_t THRESHOLD;
   
 };
 #endif

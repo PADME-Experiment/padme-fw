@@ -189,10 +189,16 @@ Bool_t BhabhaAnalysis::InitHistos(){
     fHS->BookHistoList("MCSwimming","hSwumChaSum",186,0,186);
     fHS->BookHistoList("MCSwimming","hGoodChasSwumChaSum",78,62,140);
     fHS->BookHisto2List("MCSwimming","hPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+
     fHS->BookHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
     fHS->BookHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+
     fHS->BookHisto2List("MCSwimming","hChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
     fHS->BookHistoList("MCSwimming","hChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+
+    fHS->BookHisto2List("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+    fHS->BookHistoList("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+
     fHS->BookHisto2List("MCSwimming","hVetoSwumChaDiffVsVetoSwumTimeDiff",181,-90,90,20,-5,5);
 
   }
@@ -295,6 +301,12 @@ Bool_t BhabhaAnalysis::Process(){
 
   PVetoSwimmingChannels.clear();
   EVetoSwimmingChannels.clear();  
+
+  std::vector<Int_t> SwumPosTheta;
+  std::vector<Int_t> SwumEleTheta;
+
+  SwumPosTheta.clear();
+  SwumEleTheta.clear();  
   
   std::vector<Double_t> PVetoSwimmingTime;
   std::vector<Double_t> EVetoSwimmingTime;
@@ -408,7 +420,10 @@ Bool_t BhabhaAnalysis::Process(){
 
 	  PosTheta = TMath::ACos(PosCosTheta);
 	  EleTheta = TMath::ACos(EleCosTheta);
-		
+
+	  SwumPosTheta.push_back(PosTheta);
+	  SwumEleTheta.push_back(EleTheta);
+ 
 	  //components of momentum orthogonal to beam 
 	  orthomomentumP = CoMmomentumP-CoMmomentumP*(TotDotP/CoMmomentumP.Mag2()); //Mag2 gives magnitude squared
 	  orthomomentumE = CoMmomentumE-CoMmomentumE*(TotDotE/CoMmomentumE.Mag2()); //Mag2 gives magnitude squared
@@ -820,6 +835,7 @@ Bool_t BhabhaAnalysis::Process(){
     MaxParticles = TMath::Max(nBhabhaPos,nBhabhaEle);
     for(int ii =0; ii<MaxParticles; ii++){
       if(PVetoSwimmingChannels[ii]<0||EVetoSwimmingChannels[ii]<0) continue;
+
       deltaChSwim = PVetoSwimmingChannels[ii]-EVetoSwimmingChannels[ii];
       deltaTtrajSwim = TMath::Power(deltaChSwim,3)*-6.5e-7+TMath::Power(deltaChSwim,2)*3.2e-6+deltaChSwim*0.04-0.07;
       deltaTcorrectSwim = PVetoSwimmingTime[ii]-EVetoSwimmingTime[ii]-deltaTtrajSwim;
@@ -838,6 +854,9 @@ Bool_t BhabhaAnalysis::Process(){
       if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<95) continue;
       fHS->FillHistoList("MCSwimming","hChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+      if(SwumPosTheta[ii]<1||SwumPosTheta[ii]>2.1) continue;
+      fHS->FillHistoList("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
+      fHS->FillHisto2List("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
       NSwimBhabha++;
       fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",3);
     }

@@ -159,8 +159,8 @@ void VetoEndPoint::ParticleSwim(TLorentzVector FourMomentum, TVector3 startposit
   double c = 3e8;
   // double Mass = FourMomentum.M()*1e3;//FourMomentum.M() returns mass in GeV, so multiply by 1000 to get MeV
   // std::cout<<FourMomentum.P()<<" "<<FourMomentum.E()<<" "<<FourMomentum.M()<<std::endl;
-  double beta = FourMomentum.P()/FourMomentum.E();//velocity/c;
-  double betagamma = FourMomentum.P()/FourMomentum.M();//velocity/c;
+  double beta = FourMomentum.P()/FourMomentum.E();
+  double betagamma = FourMomentum.P()/FourMomentum.M();
   double gamma = betagamma/beta;
 
   //  std::cout<<FourMomentum.P()<<" "<<Mass<<" "<<beta<<" "<<gamma<<std::endl;

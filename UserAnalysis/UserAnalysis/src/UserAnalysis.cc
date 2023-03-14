@@ -17,6 +17,7 @@
 #include "T0sAnalysis.hh"
 #include "PadmeVRecoConfig.hh"
 #include "HitCharacteristicsAnalysis.hh"
+#include "KinematicsBhabha.hh" //BL
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -38,18 +39,20 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fRunBremsstrahlung              = fConfig->GetParOrDefault("ANALYSES","BremsstrahlungAnalysis",1.);
   fRunReversedFieldBremsstrahlung = fConfig->GetParOrDefault("ANALYSES","ReversedFieldBremsstrahlungAnalysis",1.);
   fRunT0s                         = fConfig->GetParOrDefault("ANALYSES","T0sAnalysis",1.);
-  fRunHitCharacteristics         = fConfig->GetParOrDefault("ANALYSES","HitCharacteristics",1.);
+  fRunHitCharacteristics          = fConfig->GetParOrDefault("ANALYSES","HitCharacteristics",1.);
+  fRunKinematicsBhabha            = fConfig->GetParOrDefault("ANALYSES","KinematicsBhabha",1.);
 
   if(fRunECalCalib)  fECalCalib    = ECalCalib::GetInstance();
   if(fRunMCTruth)    fMCTruth      = MCTruth::GetInstance();
 
-  if(fRunNPoT)           fNPoTAnalysis            = new NPoTAnalysis(cfgFile,fVerbose);
-  if(fRunIsGGAnalysis)   fIsGGAnalysis            = new IsGGAnalysis(cfgFile,fVerbose);
-  if(fRunBhabha)         fBhabhaAnalysis          = new BhabhaAnalysis(cfgFile,fVerbose);
-  if(fRunBremsstrahlung) fBremsstrahlungAnalysis  = new BremsstrahlungAnalysis(cfgFile,fVerbose);
-  if(fRunT0s)            fT0sAnalysis              = new T0sAnalysis(cfgFile,fVerbose);
-  if(fRunHitCharacteristics) fHitCharacteristicsAnalysis = new HitCharacteristicsAnalysis(cfgFile,fVerbose);
+  if(fRunNPoT)                        fNPoTAnalysis                         = new NPoTAnalysis(cfgFile,fVerbose);
+  if(fRunIsGGAnalysis)                fIsGGAnalysis                         = new IsGGAnalysis(cfgFile,fVerbose);
+  if(fRunBhabha)                      fBhabhaAnalysis                       = new BhabhaAnalysis(cfgFile,fVerbose);
+  if(fRunBremsstrahlung)              fBremsstrahlungAnalysis               = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunT0s)                         fT0sAnalysis                          = new T0sAnalysis(cfgFile,fVerbose);
+  if(fRunHitCharacteristics)          fHitCharacteristicsAnalysis           = new HitCharacteristicsAnalysis(cfgFile,fVerbose);
   if(fRunReversedFieldBremsstrahlung) fReversedBFieldBremsstrahlungAnalysis = new ReversedBFieldBremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunKinematicsBhabha)            fKinematicsBhabha                     = new KinematicsBhabha(cfgFile,fVerbose);
 
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
@@ -66,8 +69,9 @@ UserAnalysis::~UserAnalysis(){
   if(fRunBhabha)                          delete fBhabhaAnalysis;
   if(fRunBremsstrahlung)                  delete fBremsstrahlungAnalysis;
   if(fRunReversedFieldBremsstrahlung)     delete fReversedBFieldBremsstrahlungAnalysis;
-  if(fRunHitCharacteristics)             delete fHitCharacteristicsAnalysis;
+  if(fRunHitCharacteristics)              delete fHitCharacteristicsAnalysis;
   if(fRunT0s)                             delete fT0sAnalysis;
+  if(fRunKinematicsBhabha)                delete fKinematicsBhabha;
   // delete fETagAnalysis;
   // delete fIs22GGAnalysis;
   // delete fIs3GAnalysis;
@@ -87,7 +91,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Init(fEvent);
   if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Init(fEvent);
   if(fRunT0s)                           fT0sAnalysis->Init(fEvent);
-  if(fRunHitCharacteristics)           fHitCharacteristicsAnalysis->Init(fEvent);
+  if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Init(fEvent);
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Init(fEvent);
   //  fIs3GAnalysis->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
   // fETagAnalysis->Init(fEvent);
@@ -138,6 +143,8 @@ Bool_t UserAnalysis::Process(){
   if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Process();
   if(fRunT0s)                           fT0sAnalysis->Process();
   if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Process();
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Process();
+
   //  fIs3GAnalysis->Process();
   //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
   /*  fIsGGAnalysis->Process();
@@ -206,7 +213,7 @@ Bool_t UserAnalysis::Finalize()
   if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Finalize();
   if(fRunT0s)                           fT0sAnalysis->Finalize();
   if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Finalize();
-
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Finalize();
   //  fIs3GAnalysis->Finalize();
   // fIsGGAnalysis->Finalize();
   // fETagAnalysis->Finalize();

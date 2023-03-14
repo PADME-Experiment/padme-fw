@@ -182,8 +182,6 @@ Bool_t BhabhaAnalysis::InitHistos(){
   
     fHS->BookHistoList("MCSwimming","hPVetoSwumChPVetoRecoChaDiff",181,-89.5,89.5);
     fHS->BookHistoList("MCSwimming","hEVetoSwumChEVetoRecoChaDiff",181,-89.5,89.5);
-    fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumChPVetoRecoChaDiff",181,-89.5,89.5);
-    fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasEVetoSwumChEVetoRecoChaDiff",181,-89.5,89.5);
     fHS->BookHistoList("MCSwimming","hPVetoSwumTimePVetoRecoTimeDiff",201,-99.5,99.5);
     fHS->BookHistoList("MCSwimming","hEVetoSwumTimeEVetoRecoTimeDiff",201,-99.5,99.5);
     fHS->BookHistoList("MCSwimming","hPVetoSwumTimeEVetoSwumTimeDiff",20,-5,5);
@@ -194,34 +192,10 @@ Bool_t BhabhaAnalysis::InitHistos(){
     fHS->BookHisto2List("MCSwimming","hPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
     fHS->BookHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
     fHS->BookHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
-    fHS->BookHisto2List("MCSwimming","hChaSum96to98GoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
-    fHS->BookHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
+    fHS->BookHisto2List("MCSwimming","hChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",90,0,90,96,0,96);
+    fHS->BookHistoList("MCSwimming","hChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",20,-5.,5);
     fHS->BookHisto2List("MCSwimming","hVetoSwumChaDiffVsVetoSwumTimeDiff",181,-90,90,20,-5,5);
 
-    //MC Theta and Phi angle plots
-    fHS->BookHistoList("MCSwimming","hPosThetaAll",700,0,7);
-    fHS->BookHistoList("MCSwimming","hPosThetaGoodChas",700,0,7);
-
-    fHS->BookHistoList("MCSwimming","hEleThetaAll",700,0,7);
-    fHS->BookHistoList("MCSwimming","hEleThetaGoodChas",700,0,7);
-
-    fHS->BookHistoList("MCSwimming","hPosPhiAll",700,-3.5,3.5);
-    fHS->BookHistoList("MCSwimming","hPosPhiGoodChas",700,-3.5,3.5);
-
-    fHS->BookHistoList("MCSwimming","hElePhiAll",700,-3.5,3.5);
-    fHS->BookHistoList("MCSwimming","hElePhiGoodChas",700,-3.5,3.5);
-
-    fHS->BookHisto2List("MCSwimming","hPosThetaAllChasVsPVetoCha",90,0,90,700,0,7);
-    fHS->BookHisto2List("MCSwimming","hPosThetaGoodChasVsPVetoCha",61,30,71,700,0,7);
-
-    fHS->BookHisto2List("MCSwimming","hPosPhiGoodChasVsPVetoCha",61,30,71,700,0,7);
-    fHS->BookHisto2List("MCSwimming","hPosThetaVsPosPhiGoodChas",700,0,7,700,-3.5,3.5);
-
-    fHS->BookHisto2List("MCSwimming","hEleThetaGoodChasVsPVetoCha",61,30,71,700,0,7);
-    fHS->BookHisto2List("MCSwimming","hElePhiGoodChasVsPVetoCha",61,30,71,700,0,7);
-
-    fHS->BookHisto2List("MCSwimming","hEleThetaVsElePhiAllChas",700,0,7,700,-3.5,3.5);
-    fHS->BookHisto2List("MCSwimming","hEleThetaVsElePhiGoodChas",700,0,7,700,-3.5,3.5);
   }
 
   //Time correction plots
@@ -356,7 +330,6 @@ Bool_t BhabhaAnalysis::Process(){
 	  momentum = mcOutPart->GetMomentum();
 	  energy = mcOutPart->GetEnergy();
 	  FourMomentum = TLorentzVector(momentum,energy);
-	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
 
 	  //PDGCode: matter = +ve, antimatter = -ve
 	  if(mcOutPart->GetPDGCode()==11)
@@ -368,6 +341,8 @@ Bool_t BhabhaAnalysis::Process(){
 	      std::cout<<"weirdly, PDGCode = "<<mcOutPart->GetPDGCode()<<std::endl;
 	  }
 
+	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
+
 	  //Swim positrons
 	  if(charge==1){
 	    nBhabhaPos++;
@@ -376,23 +351,9 @@ Bool_t BhabhaAnalysis::Process(){
 	    PVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    PVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 
-	    PosTheta = FourMomentum.Theta();
-	    PosPhi   = FourMomentum.Phi();
-
-	    fHS->FillHistoList("MCSwimming","hPosThetaAll",PosTheta);
-	    fHS->FillHistoList("MCSwimming","hPosPhiAll",PosPhi);
-	    fHS->FillHisto2List("MCSwimming","hPosThetaVsPosPhiAllChas",PosTheta,PosPhi);
-
 	    //if positron ends up in veto
-	    if(fVetoEndPoint->GetEndFinger()>-100){
+	    if(fVetoEndPoint->GetEndFinger()>-100)
 	      nBhabhaPosInVeto++;
-	      if(fVetoEndPoint->GetEndFinger()<30||fVetoEndPoint->GetEndFinger()>70) continue;
-	      fHS->FillHistoList("MCSwimming","hPosThetaGoodChas",PosTheta);
-	      fHS->FillHistoList("MCSwimming","hPosPhiGoodChas",PosPhi);
-	      fHS->FillHisto2List("MCSwimming","hPosThetaGoodChasVsPVetoCha",fVetoEndPoint->GetEndFinger(),PosTheta);
-	      fHS->FillHisto2List("MCSwimming","hPosPhiGoodChasVsPVetoCha",fVetoEndPoint->GetEndFinger(),PosPhi);
-	      fHS->FillHisto2List("MCSwimming","hPosThetaVsPosPhiGoodChas",PosTheta,PosPhi);
-	    }
 	  }
 	  else if(charge==-1){
 	    nBhabhaEle++;
@@ -401,40 +362,16 @@ Bool_t BhabhaAnalysis::Process(){
 	    EVetoSwimmingChannels.push_back(fVetoEndPoint->GetEndFinger());
 	    EVetoSwimmingTime.push_back(fVetoEndPoint->GetEndTime());
 
-	    EleTheta = FourMomentum.Theta();
-	    ElePhi   = FourMomentum.Phi();
-
-	    fHS->FillHistoList("MCSwimming","hEleThetaAll",EleTheta);
-	    fHS->FillHistoList("MCSwimming","hElePhiAll",ElePhi);
-	    fHS->FillHisto2List("MCSwimming","hEleThetaVsElePhiAllChas",EleTheta,ElePhi);
-
-	    if(fVetoEndPoint->GetEndFinger()>-100){
+	    if(fVetoEndPoint->GetEndFinger()>-100)
 	      nBhabhaEleInVeto++;
-	      if(fVetoEndPoint->GetEndFinger()<30||fVetoEndPoint->GetEndFinger()>70) continue;
-	      fHS->FillHistoList("MCSwimming","hEleThetaGoodChas",EleTheta);
-	      fHS->FillHistoList("MCSwimming","hElePhiGoodChas",ElePhi);
-	      fHS->FillHisto2List("MCSwimming","hEleThetaGoodChasVsPVetoCha",fVetoEndPoint->GetEndFinger(),EleTheta);
-	      fHS->FillHisto2List("MCSwimming","hElePhiGoodChasVsPVetoCha",fVetoEndPoint->GetEndFinger(),ElePhi);
-	      fHS->FillHisto2List("MCSwimming","hEleThetaVsElePhiGoodChas",EleTheta,ElePhi);
-	    }
 	  }
 	  NSwum++;
 	}
-	// if(mcVtx->GetProcess()=="eIoni"){
-	//   for(Int_t iOut = 0; iOut<mcVtx->GetNParticleOut(); iOut++) {
-	//     mcOutPart = mcVtx->ParticleOut(iOut);
-	//     momentum = mcOutPart->GetMomentum();
-	//     energy = mcOutPart->GetEnergy();
-	//     FourMomentum = TLorentzVector(momentum,energy);
-	//   }
-	// }
       }//end if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){
     }
     fHS->FillHistoList("MCSwimming","hPVetoSwumInsideVeto",nBhabhaPosInVeto);
     fHS->FillHistoList("MCSwimming","hEVetoSwumInsideVeto",nBhabhaEleInVeto);
   } //end if MC
-
-  //  if(fNPoT>10000) return 0;
   
   fHS->FillHistoList("NPoTAnalysis","hNPotBhabha",fNPoT);
   
@@ -818,9 +755,9 @@ Bool_t BhabhaAnalysis::Process(){
       if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<91) continue;
       fHS->FillHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
-      if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<96||(PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])>98) continue;
-      fHS->FillHistoList("MCSwimming","hChaSum96to98GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
-      fHS->FillHisto2List("MCSwimming","hChaSum96to98GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+      if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<95) continue;
+      fHS->FillHistoList("MCSwimming","hChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
+      fHS->FillHisto2List("MCSwimming","hChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
       NSwimBhabha++;
       fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",3);
     }

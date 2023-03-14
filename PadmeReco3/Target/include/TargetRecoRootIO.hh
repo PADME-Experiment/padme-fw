@@ -1,33 +1,48 @@
-#ifndef TargetRootRecoIO_h
-#define TargetRootRecoIO_h 1
+#ifndef TargetRecoRootIO_h
+#define TargetRecoRootIO_h 1
 
-#include "RecoVRootIO.hh"
-#include "RecoRootIOManager.hh"
-//#include "TTargetRecoEvent.hh"
-//#include "TTargetRecoBeam.hh"
-#include "TTree.h"
-#include "TBranch.h"
+#include "TTargetRecoEvent.hh"
+//#include "TTargetClusCollection.hh"
 
-class RecoVRootIO;
-class TTargetRecoBeam;
-class TTargetFitEvent;
-class RecoRootIOManager;
+class TTree;
+class TBranch;
+class TargetReconstruction;
+class TargetHit;
+//class TargetCluster;
 
-class TargetRecoRootIO : public RecoVRootIO
+class TargetRecoRootIO
 {
 public:
 
-  TargetRecoRootIO(RecoRootIOManager*);
+  TargetRecoRootIO();
   virtual ~TargetRecoRootIO();
-  virtual void NewRun(Int_t nRun, TFile* hfile);
-  virtual void SaveEvent();
-  void SaveTargetFitEvent();
-  
-protected:
-  TBranch* fBranchTargetRecoBeam;
-  TTargetRecoBeam* fBeam;
-  TBranch* fBranchTargetFitEvent;
-  TTargetFitEvent* fFitEvent;
+
+  void NewRun();
+  void EndRun();
+  void SaveEvent();
+
+  void  SetVerbose(Int_t v) { fVerbose = v;    }
+  Int_t GetVerbose()        { return fVerbose; }
+
+  void SetEventTree(TTree* t) { fEventTree = t; }
+  void SetTargetReconstruction(TargetReconstruction* reco) { fTargetReconstruction = reco; }
+
+private:
+
+  Bool_t ExportHit(TargetHit*,TRecoVHit*);
+  //Bool_t ExportCluster(TargetCluster*,TRecoVCluster*);
+
+  TargetReconstruction* fTargetReconstruction;
+
+  TTree* fEventTree;
+
+  TBranch* fBranchHitsColl;
+  //TBranch* fBranchClusColl;
+
+  TTargetRecoEvent*      fHitsCollection;
+  //TTargetClusCollection* fClusCollection;
+
+  Int_t fVerbose;
 
 };
 #endif // TargetRecoRootIO_h

@@ -30,6 +30,8 @@ ETagRecoRootIO::ETagRecoRootIO()
 ETagRecoRootIO::~ETagRecoRootIO()
 {
   if (fVerbose) std::cout << "ETagRecoRootIO::ETagRecoRootIO - Deleting ETag RootIO system" << std::endl;
+  if (fHitsCollection) delete fHitsCollection;
+  if (fClusCollection) delete fClusCollection;
 }
 
 void ETagRecoRootIO::NewRun()
@@ -37,9 +39,6 @@ void ETagRecoRootIO::NewRun()
   
   if (fVerbose) std::cout << "ETagRecoRootIO::NewRun - Preparing event structure" << std::endl;
 
-  //fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
-
-  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
   if (fVerbose>1) std::cout << "ETagRecoRootIO::NewRun - Preparing the branches in '" << fEventTree->GetName() << "' output TTree" << std::endl;
   if (fETagReconstruction->writeHits()){
      fBranchHitsColl = fEventTree->Branch("ETag_Hits","TETagRecoEvent",&fHitsCollection);

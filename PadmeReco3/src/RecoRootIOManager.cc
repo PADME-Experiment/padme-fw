@@ -13,8 +13,7 @@
 #include "LeadGlassRecoRootIO.hh"
 
 #include "ETagReconstruction.hh"
-
-//RecoRootIOManager* RecoRootIOManager::fInstance = 0;
+#include "TargetReconstruction.hh"
 
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
@@ -46,6 +45,7 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 
   // Add subdetectors persistency managers
   fETagRecoRootIO = 0;
+  fTargetRecoRootIO = 0;
   if (fConfig->GetParOrDefault("RECOOutput", "PVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVeto"   ,1)) 
     fRootIOList.push_back(new PVetoRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
@@ -58,7 +58,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fETagRecoRootIO = new ETagRecoRootIO();
     //fRootIOList.push_back(new ETagRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "Target"  ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "Target"  ,1))
-    fRootIOList.push_back(new TargetRecoRootIO(this));
+    fTargetRecoRootIO = new TargetRecoRootIO();
+    //fRootIOList.push_back(new TargetRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
     fRootIOList.push_back(new ECalRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
@@ -69,20 +70,12 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 }
 
 RecoRootIOManager::~RecoRootIOManager()
-{;}
-
-//RecoRootIOManager* RecoRootIOManager::GetInstance()
-//{
-//  if ( fInstance == 0 ) { std::cout<<"ERROR RecoRootIOManager not yet built/initialized"<<std::endl;}
-////fInstance = new RecoRootIOManager(); }
-//  return fInstance;
-//}
-
-//RecoRootIOManager* RecoRootIOManager::GetInstance(TString confFile)
-//{
-//  if ( fInstance == 0 ) { fInstance = new RecoRootIOManager(confFile); }
-//  return fInstance;
-//}
+{
+  if (fConfigParser) delete fConfigParser;
+  if (fConfig) delete fConfig;
+  if (fETagRecoRootIO) delete fETagRecoRootIO;
+  if (fTargetRecoRootIO) delete fTargetRecoRootIO;
+}
 
 void RecoRootIOManager::Close()
 {
@@ -186,7 +179,6 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       if ((*iRootIO)->GetEnabled()) {
 	std::cout << "RootIOManager: IO for " << (*iRootIO)->GetName() << " enabled" << std::endl;
 	(*iRootIO)->NewRun(nRun,fFile);
-	//(*iRootIO)->NewRun(nRun,fFile);
       }
       iRootIO++;
     }
@@ -197,6 +189,14 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       fETagRecoRootIO->SetVerbose(fReco->GetETagReconstruction()->GetVerbose());
       std::cout << "RootIOManager: IO for ETag enabled" << std::endl;
       fETagRecoRootIO->NewRun();
+    }
+    if (fTargetRecoRootIO) {
+      std::cout << "RootIOManager: Checking IO for Target" << std::endl;
+      fTargetRecoRootIO->SetEventTree(fEventTree);
+      fTargetRecoRootIO->SetTargetReconstruction(fReco->GetTargetReconstruction());
+      fTargetRecoRootIO->SetVerbose(fReco->GetTargetReconstruction()->GetVerbose());
+      std::cout << "RootIOManager: IO for Target enabled" << std::endl;
+      fTargetRecoRootIO->NewRun();
     }
 
     // If present, replicate MCTruth info to output file
@@ -230,6 +230,7 @@ void RecoRootIOManager::EndRun()
     iRootIO++;
   }
   if (fETagRecoRootIO) fETagRecoRootIO->EndRun();
+  if (fTargetRecoRootIO) fTargetRecoRootIO->EndRun();
 
 }
 
@@ -269,6 +270,7 @@ void RecoRootIOManager::SaveEvent(){
     iRootIO++;
   }
   if (fETagRecoRootIO) fETagRecoRootIO->SaveEvent();
+  if (fTargetRecoRootIO) fTargetRecoRootIO->SaveEvent();
 
   // All data have been copied: write it to file
   fEventTree->Fill();

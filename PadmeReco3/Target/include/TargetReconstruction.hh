@@ -1,53 +1,67 @@
-// --------------------------------------------------------------
-// History:
-//
-// Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
-//
-// --------------------------------------------------------------
 #ifndef TargetReconstruction_H
 #define TargetReconstruction_H
 
-#include "PadmeVReconstruction.hh"
-#include "TRecoVHit.hh"
-#include <vector>
+class TString;
 
-class TTargetRecoBeam;
-class TTargetSignalFitParams;
+class TRawEvent;
+class TMCVEvent;
+class TMCEvent;
+class TTargetRecoEvent;
+class TRecoEvent;
+class TRecoVHit;
+//class TRecoVCluster;
 
-class TargetReconstruction : public PadmeVReconstruction
+class HistoSvc;
+class TrigTimeSvc;
+class RunConditionSvc;
+class RunConfigurationSvc;
+
+class TargetDigitizer;
+//class TargetClusterizer;
+class TargetHit;
+//class TargetCluster;
+
+class TargetReconstruction
 {
 
 public:
   
-  TargetReconstruction(TFile*, TString);
+  TargetReconstruction(TString);
   ~TargetReconstruction();
 
-  // void ParseConfFile(TString);
-  // virtual void Init(PadmeVReconstruction*);
-  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  virtual void ProcessEvent(TRawEvent*);
-  virtual void ProcessEvent(TRecoVObject* recoObj, TRecoEvent* tRecoEvent);
-  virtual void EndProcessing();
-  virtual void HistoInit();
-  virtual void AnalyzeEvent(TRawEvent* evt);
-  virtual void ReconstructBeam();
-  TTargetRecoBeam* getRecoBeam(){return fTargetRecoBeam;}
-  vector<TTargetSignalFitParams *> &getSignalFitParams(){return fSignalFitParams;}
-  void RetrieveSignalFitParams();
-  Bool_t writeFitParams(){return fWriteFitParams;}
-  Bool_t writeTargetBeam(){return fWriteTargetBeam;}
+  void Init();
+  void ProcessEvent(TRawEvent*);
+  void ProcessEvent(TMCVEvent*,TMCEvent*);
+  void ProcessEvent(TTargetRecoEvent*,TRecoEvent*);
+  void EndProcessing();
+
+  Bool_t writeHits()     { return fWriteHits; }
+  //Bool_t writeClusters() { return fWriteClusters; }
+
+  vector<TargetHit*>     &GetRecoHits()     { return fHits; }
+  //vector<TargetCluster*> &GetRecoClusters() { return fClusters; }
+
+  Int_t GetVerbose() { return fVerbose; }
 
 private:
 
-  static Double_t fitProfile(Double_t *x, Double_t *par);
-  TTargetRecoBeam* fTargetRecoBeam;
-  vector<TTargetSignalFitParams *> fSignalFitParams;
-  TH1F * hprofileX;
-  TH1F * hprofileY;
+  HistoSvc* fHistoSvc;
+  TrigTimeSvc* fTrigTimeSvc;
+  RunConditionSvc* fRunConditionSvc;
+  RunConfigurationSvc* fRunConfigurationSvc;
 
-  Bool_t fWriteFitParams;
-  Bool_t fWriteTargetBeam;
-  Int_t  fRunIInPOTcalc;
+  PadmeVRecoConfig* fTargetConfig;
+
+  TargetDigitizer* fTargetDigitizer;
+  //TargetClusterizer* fTargetClusterizer;
+
+  Bool_t fWriteHits;
+  //Bool_t fWriteClusters;
+
+  vector<TargetHit*> fHits;
+  //vector<TargetCluster*> fClusters;
+
+  Int_t fVerbose;
+
 };
 #endif
-

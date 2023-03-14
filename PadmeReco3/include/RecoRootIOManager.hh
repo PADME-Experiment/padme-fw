@@ -18,15 +18,11 @@
 
 class TRecoEvent;
 class ETagRecoRootIO;
+class TargetRecoRootIO;
 
 class RecoRootIOManager
 {
 public:
-
-  //virtual ~RecoRootIOManager();
-
-  //static RecoRootIOManager* GetInstance(TString t);
-  //static RecoRootIOManager* GetInstance();
 
   RecoRootIOManager(TString);
   ~RecoRootIOManager();
@@ -38,14 +34,6 @@ public:
   void Close();
 
   RecoVRootIO* FindRecoRootIO(TString);
-
-//private:
-//
-//  static RecoRootIOManager* fInstance;
-
-//protected:
-//
-//  RecoRootIOManager(TString t);
 
 public:
 
@@ -92,6 +80,7 @@ private:
   RootIOList fRootIOList;
 
   ETagRecoRootIO* fETagRecoRootIO;
+  TargetRecoRootIO* fTargetRecoRootIO;
 
 };
 #endif // RootIOManager_H

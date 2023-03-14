@@ -1,114 +1,124 @@
 #include "TargetRecoRootIO.hh"
-#include "RecoVRootIO.hh"
 
-#include "TTargetRecoEvent.hh"
-#include "TTargetRecoBeam.hh"
-#include "TTargetFitEvent.hh"
-#include "TargetReconstruction.hh"
-//#include "TRecoVHit.hh"
-
-#include "TString.h"
-#include "TVector3.h"
-#include "TProcessID.h"
 #include <stdio.h>
 #include "Riostream.h"
 
-TargetRecoRootIO::TargetRecoRootIO(RecoRootIOManager* rootMgr) 
-  : RecoVRootIO(TString("Target"),rootMgr)
+#include <TTree.h>
+#include <TBranch.h>
+
+#include "RecoRootIOManager.hh"
+#include "TargetReconstruction.hh"
+#include "TargetHit.hh"
+//#include "TargetCluster.hh"
+
+TargetRecoRootIO::TargetRecoRootIO()
 {
-  fEvent = new TTargetRecoEvent();
-  fBeam  = new TTargetRecoBeam();
-  fFitEvent = new TTargetFitEvent();
-  fClusColl = NULL;
 
-  TTree::SetBranchStyle(fBranchStyle);
+  fTargetReconstruction = 0;
 
-  fEnabled = true;
-  std::cout << this->GetName()<<"::TargetRecoRootIO Initialized" << std::endl;
+  fVerbose = 0;
+
+  fHitsCollection = new TTargetRecoEvent();
+  //fClusCollection = new TTargetClusCollection();
+
+  TTree::SetBranchStyle(1);
+
+  std::cout << "TargetRecoRootIO::TargetRecoRootIO - Target RootIO system initialized" << std::endl;
 
 }
+
 TargetRecoRootIO::~TargetRecoRootIO()
-{;}
+{
+  if (fVerbose) std::cout << "TargetRecoRootIO::TargetRecoRootIO - Deleting Target RootIO system" << std::endl;
+  if (fHitsCollection) delete fHitsCollection;
+}
+
+void TargetRecoRootIO::NewRun()
+{
+  
+  if (fVerbose) std::cout << "TargetRecoRootIO::NewRun - Preparing event structure" << std::endl;
+
+  if (fVerbose>1) std::cout << "TargetRecoRootIO::NewRun - Preparing the branches in '" << fEventTree->GetName() << "' output TTree" << std::endl;
+  if (fTargetReconstruction->writeHits()){
+    fBranchHitsColl = fEventTree->Branch("Target_Hits","TTargetRecoEvent",&fHitsCollection);
+    fBranchHitsColl->SetAutoDelete(kFALSE);
+    if (fVerbose>1) std::cout << "TargetRecoRootIO::NewRun - Branch named Target_Hits prepared" << std::endl;
+  }
+  
+  //if (fTargetReconstruction->writeClusters()){
+  //  fBranchClusColl = fEventTree->Branch("Target_Clusters","TTargetClusCollection",&fClusCollection);
+  //  fBranchClusColl->SetAutoDelete(kFALSE);
+  //  if (fVerbose>1) std::cout << "TargetRecoRootIO::NewRun - Branch named Target_Clusters prepared" << std::endl;
+  //}
+  
+}
+
+void TargetRecoRootIO::EndRun()
+{
+  if (fVerbose) std::cout << "TargetRecoRootIO::EndRun - Executing End-of-Run procedure" << std::endl;  
+}
 
 void TargetRecoRootIO::SaveEvent()
 {
-  //std::cout<<" in TargetRootIO::SaveEvent"<<std::endl;
-  //RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
-  RecoRootIOManager* ioMgr = fRecoRootIOManager;
 
-  // Save  branch Target (collection of hits)
-  RecoVRootIO::SaveEvent();
-
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) ioMgr->GetReconstruction()->FindReco(this->GetName());
-  TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
-
-  if ( Reco->writeTargetBeam() )
-    {
-  // Save branch TargetBeam (beam parameters from the Target)
-      TTargetRecoBeam* tBeam=Reco->getRecoBeam();
-      fBeam=tBeam;
-  //std::cout<<" in TargetRootIO::SaveEvent after beam "<<std::endl;
+  if (fTargetReconstruction->writeHits()){
+    fHitsCollection->Clear();
+    vector<TargetHit*> Hits = fTargetReconstruction->GetRecoHits();
+    if (fVerbose>2) printf("TargetRecoRootIO::SaveEvent - Found %ld hit(s)\n",Hits.size());
+    for(UInt_t iH = 0;iH < Hits.size(); ++iH) {
+      if (fVerbose>3) {
+	printf("TargetRecoRootIO::SaveEvent - Hit %d ",iH);
+	Hits[iH]->Print();
+      }
+      TRecoVHit* pHit = new TRecoVHit();
+      ExportHit(Hits[iH],pHit);
+      fHitsCollection->AddHit(pHit); // This should keep hit numbering unchanged
     }
-  /*
-  TTargetRecoEvent* myEvent = (TTargetRecoEvent*)fEvent;
-  myEvent->setTargetRecoBeam(tBeam);  
-  */
-
-  // Save branch TargetFitEvent (WF fit parameters)
-  if (Reco->writeFitParams()) SaveTargetFitEvent();
-  //std::cout<<" in TargetRootIO::SaveEvent after fit"<<std::endl;
-
-}
-void TargetRecoRootIO::SaveTargetFitEvent(){
-  
-  //  std::cout<<this->GetName()<<"::SaveTargetFitEvent"<<std::endl;
-  fFitEvent->Clear();
-  //std::cout<<"fFitEvent  at <"<<fFitEvent<<"> in now cleared"<<std::endl;
-
-  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*)fRecoRootIOManager->GetReconstruction()->FindReco(this->GetName());
-  TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
-  //std::cout<<this->GetName()<<"::SaveTargetFitEvent ... pointer to TargetReconstruction retrieved"<<std::endl;
-  
-  vector<TTargetSignalFitParams *> fitPars = Reco->getSignalFitParams();
-  //std::cout<<this->GetName()<<"::SaveTargetFitEvent ... from TargetReconstruction the size of fitParams is "<<fitPars.size()<<std::endl;
-  for(unsigned int iHit = 0;iHit < fitPars.size();iHit++){
-    fFitEvent->AddFitParSet(fitPars[iHit]);
-    //std::cout<<this->GetName()<<"::SaveTargetFitEvent - transient version of TTargetSignalFitParams pushed back to fitEvent "<<iHit<<std::endl;
-  }
-}
-
-
-void TargetRecoRootIO::NewRun(Int_t nRun, TFile* hfile){
-  
-  std::cout<<this->GetName()<<"::NewRun"<<std::endl;
-  // Book  branch Target (collection of hits)
-  RecoVRootIO::NewRun(nRun, hfile);
-  std::cout<<this->GetName()<<"::NewRun - recoHit branch setup ... now moving to Target specific branches"<<std::endl;
-
-  //RecoRootIOManager* ioMgr = RecoRootIOManager::GetInstance();
-  RecoRootIOManager* ioMgr = fRecoRootIOManager;
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) ioMgr->GetReconstruction()->FindReco(this->GetName());
-  TargetReconstruction* Reco = (TargetReconstruction*)MyReco;
-
-
-  fEventTree = ioMgr->GetEventTree();
-  std::cout<<this->GetName()<<"::NewRun - pointer to the tree obtained: "<<fEventTree<<std::endl;
-
-  
-  // Book branch TargetBeam (beam parameters from the Target)
-  if (Reco->writeTargetBeam()) {
-    fBranchTargetRecoBeam = fEventTree->Branch("TargetBeam", fBeam->IsA()->GetName(), &fBeam);
-    std::cout<<this->GetName()<<"::NewRun - branch TargetBeam obtained"<<std::endl;  
-    fBranchTargetRecoBeam->SetAutoDelete(kFALSE);
-    std::cout<<this->GetName()<<"::NewRun - branch TargetBeam autodelete set to false"<<std::endl;
   }
 
-  // Book branch TargetFitEvent (WF fit parameters)
-  if (Reco->writeFitParams()) {
-    fBranchTargetFitEvent = fEventTree->Branch("TargetFitEvent", fFitEvent->IsA()->GetName(), &fFitEvent);
-    std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent obtained"<<std::endl;
-    fBranchTargetFitEvent->SetAutoDelete(kFALSE);
-    std::cout<<this->GetName()<<"::NewRun - branch TargetFitEvent autodelete set to false"<<std::endl;
-  }
+  //if (fTargetReconstruction->writeClusters()){
+  //  fClusCollection->Clear();
+  //  vector<TargetCluster*> Clusters = fTargetReconstruction->GetRecoClusters();
+  //  if (fVerbose>2) printf("TargetRecoRootIO::SaveEvent - Found %ld cluster(s)\n",Clusters.size());
+  //  for(UInt_t iC = 0;iC < Clusters.size(); ++iC){
+  //    if (fVerbose>3) {
+  //	printf("TargetRecoRootIO::SaveEvent - Cluster %d ",iC);
+  //	Clusters[iC]->Print();
+  //    }
+  //    TRecoVCluster* pClus = new TRecoVCluster();
+  //    ExportCluster(Clusters[iC],pClus);
+  //    fClusCollection->AddElement(pClus);
+  //  }
+  //}
+
 }
+
+Bool_t TargetRecoRootIO::ExportHit(TargetHit* rHit,TRecoVHit* pHit)
+{
+
+  // Export content of reconstructed hit to persistent hit structure
+  pHit->setBDCHid(rHit->GetADCBoard(),rHit->GetADCChannel());
+  pHit->setStatus(rHit->GetStatus());
+  pHit->SetChannelId(rHit->GetChannelId());
+  pHit->SetPosition(rHit->GetPosition());
+  pHit->SetEnergy(rHit->GetEnergy());
+  pHit->SetTime(rHit->GetTime());
+
+  return true;
+}
+/*
+Bool_t TargetRecoRootIO::ExportCluster(TargetCluster* rClus,TRecoVCluster* pClus)
+{
+
+  // Export content of reconstructed cluster to persistent cluster structure
+  pClus->setStatus(rClus->GetStatus());
+  pClus->SetPosition(rClus->GetPosition());
+  pClus->SetEnergy(rClus->GetEnergy());
+  pClus->SetTime(rClus->GetTime());
+  pClus->SetSeed(rClus->GetSeed());
+  pClus->SetNHitsInClus(rClus->GetNHits());
+  pClus->SetHitVecInClus(rClus->GetHitsVector());
+
+  return true;
+}
+*/

@@ -90,6 +90,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fLeadGlassRecoEvent = 0;
 
   fETagReconstruction = 0;
+  fTargetReconstruction = 0;
 
   fGlobalRecoConfigOptions=NULL;
 
@@ -175,6 +176,7 @@ PadmeReconstruction::~PadmeReconstruction()
   }
   if (fGlobalRecoConfigOptions) delete fGlobalRecoConfigOptions;
   if (fETagReconstruction) delete fETagReconstruction;
+  if (fTargetReconstruction) delete fTargetReconstruction;
 }
 
 void PadmeReconstruction::InitLibraries()
@@ -209,7 +211,8 @@ void PadmeReconstruction::InitLibraries()
   if (fConfig->GetParOrDefault("RECOALGORITHMS","Target",1)) {
     TString configTarget = fConfig->GetParOrDefault("RECOCONFIG","Target","config/Target.cfg");
     std::cout<<"=== Enabling Target with configuration file "<<configTarget<<std::endl;
-    fRecoLibrary.push_back(new TargetReconstruction(fOutputFile,configTarget));
+    //fRecoLibrary.push_back(new TargetReconstruction(fOutputFile,configTarget));
+    fTargetReconstruction = new TargetReconstruction(configTarget);
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","HEPVeto",0)) {
     TString configHEPVeto = fConfig->GetParOrDefault("RECOCONFIG","HEPVeto","config/HEPVeto.cfg");
@@ -240,7 +243,7 @@ void PadmeReconstruction::InitDetectorsInfo()
   std::cout << "PadmeReconstruction: Initializing" << std::endl;
 
   //fMainReco = this; //init PadmeReconstruction main reco as itself
-  if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
+  //if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
   if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
   if (FindReco("PVeto"))   ((PVetoReconstruction*)   FindReco("PVeto"))  ->Init(this);
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
@@ -249,6 +252,7 @@ void PadmeReconstruction::InitDetectorsInfo()
   //if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   //if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
+  if (fTargetReconstruction) fTargetReconstruction->Init();
   if (fETagReconstruction) fETagReconstruction->Init();
 }
 
@@ -502,9 +506,10 @@ Bool_t PadmeReconstruction::NextEvent()
 
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-      if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoMCEvent) {
+      //if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetMCEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fTargetMCEvent,fMCEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoMCEvent) {
+      if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
@@ -522,6 +527,7 @@ Bool_t PadmeReconstruction::NextEvent()
       //  fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
       }
     }
+    if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetMCEvent,fMCEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagMCEvent,fMCEvent);
 
     fNProcessedEventsInTotal++;
@@ -540,9 +546,10 @@ Bool_t PadmeReconstruction::NextEvent()
     }
     // Reconstruct individual detectors (but check if they exist, first!)
     for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
-      if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetRecoEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fTargetRecoEvent,fRecoEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoRecoEvent) {
+      //if (fRecoLibrary[iLib]->GetName() == "Target" && fTargetRecoEvent) {
+      //	fRecoLibrary[iLib]->ProcessEvent(fTargetRecoEvent,fRecoEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoRecoEvent) {
+      if (fRecoLibrary[iLib]->GetName() == "EVeto" && fEVetoRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoRecoEvent,fRecoEvent);
@@ -560,6 +567,7 @@ Bool_t PadmeReconstruction::NextEvent()
       //  fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
       }
     }
+    if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetRecoEvent,fRecoEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagRecoEvent,fRecoEvent);
 
     ++fNProcessedEventsInTotal;
@@ -602,6 +610,7 @@ Bool_t PadmeReconstruction::NextEvent()
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
 	fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
       }
+      if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fRawEvent);
       if (fETagReconstruction) fETagReconstruction->ProcessEvent(fRawEvent);
     }
 
@@ -634,6 +643,7 @@ void PadmeReconstruction::EndProcessing(){
     fOutputFile->cd("/");
     fRecoLibrary[iLib]->EndProcessing();
   }
+  if (fTargetReconstruction) fTargetReconstruction->EndProcessing();
   if (fETagReconstruction) fETagReconstruction->EndProcessing();
   fOutputFile->cd("/");
   //HistoExit();

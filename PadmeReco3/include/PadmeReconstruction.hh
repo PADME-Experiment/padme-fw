@@ -21,6 +21,7 @@ class GlobalRecoConfigOptions;
 class RecoRootIOManager;
 
 class ETagReconstruction;
+class TargetReconstruction;
 
 class TRawEvent;
 class TMCEvent;
@@ -77,6 +78,7 @@ public:
 
   // Give access to detector reconstructions
   ETagReconstruction* GetETagReconstruction() { return fETagReconstruction; }
+  TargetReconstruction* GetTargetReconstruction() { return fTargetReconstruction; }
 
   TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
@@ -144,6 +146,7 @@ private:
   RecoVector fRecoLibrary;
 
   ETagReconstruction* fETagReconstruction;
+  TargetReconstruction* fTargetReconstruction;
  
   Int_t fNEvt;
   Int_t fNProcessedEventsInTotal;

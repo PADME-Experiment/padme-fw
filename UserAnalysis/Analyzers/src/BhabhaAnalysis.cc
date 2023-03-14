@@ -245,10 +245,46 @@ Bool_t BhabhaAnalysis::Process(){
   
   if(fEvent->TargetRecoBeam)  fNPoT = fEvent->TargetRecoBeam->getnPOT();
   TLorentzVector FourMomentum; //MCTruth: four momentum of e+ or e- resulting from Bhabha
+  TLorentzVector FourMomentumP; //MCTruth: four momentum of e+ resulting from Bhabha
+  TLorentzVector FourMomentumE; //MCTruth: four momentum of e- resulting from Bhabha
+
   TVector3 momentum;           //MCTruth: momentum of e+ or e- resulting from Bhabha
+  TVector3 momentumP;           //MCTruth: momentum of e+ resulting from Bhabha
+  TVector3 momentumE;           //MCTruth: momentum of e- resulting from Bhabha
+
   Double_t energy;             //MCTruth: energy of e+ or e- resulting from Bhabha
   Int_t charge;
 
+  //motion of CoM in lab frame
+  double EBeam;
+  double betagamma;
+  TVector3 beta;
+  double gamma;
+
+  TVector3 CoMmomentumP;           //momentum of e+ or e- resulting from Bhabha
+  TVector3 CoMmomentumE;           //momentum of e+ or e- resulting from Bhabha
+
+  TVector3 directionP;          //unit vector parallel to e+ momentum in lab frame
+  TVector3 directionE;          //unit vector parallel to e- momentum in lab frame
+
+  TVector3 orthomomentumP;      //orthognal part of momentum of e+ or e- resulting from Bhabha
+  TVector3 orthomomentumE;      //orthognal part of momentum of e+ or e- resulting from Bhabha
+
+  TVector3 beamXfromPADMECoord;       //X axis of beam, wrt which to calculate phi, transformed from PADME coordinate
+  TVector3 unitbeamXfromPADMECoord;   //unit vector X axis of beam
+
+  TVector3 beamYfromPADMECoord;       //Y axis of beam, wrt which to calculate phi, transformed from PADME coordinate
+  TVector3 unitbeamYfromPADMECoord;   //unit vector Y axis of beam
+
+  Double_t TotDotP;             //dot product of e+ momentum and total momentum from Bhabha 
+  Double_t TotDotE;             //dot product of e- momentum and total momentum from Bhabha 
+
+  Double_t energyP;             //energy of e+ or e- resulting from Bhabha
+  Double_t energyE;             //energy of e+ or e- resulting from Bhabha
+
+  Int_t chargeP;
+  Int_t chargeE;
+  
   TVector3 VertexPos;
   Double_t VertexTime=-1000;
 
@@ -331,16 +367,58 @@ Bool_t BhabhaAnalysis::Process(){
 	  FourMomentum = TLorentzVector(momentum,energy);
 
 	  //PDGCode: matter = +ve, antimatter = -ve
-	  if(mcOutPart->GetPDGCode()==11)
+	  if(mcOutPart->GetPDGCode()==11){
 	    charge = -1;
-	  else if(mcOutPart->GetPDGCode()==-11)
+	    momentumE = momentum;
+	    FourMomentumE = FourMomentum;
+	  }
+	  else if(mcOutPart->GetPDGCode()==-11){
 	    charge = 1;
+	    momentumP = momentum;
+	    FourMomentumP = FourMomentum;
+	  }
 	  else{
 	    if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha")
 	      std::cout<<"weirdly, PDGCode = "<<mcOutPart->GetPDGCode()<<std::endl;
 	  }
 
 	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
+
+	  momentumTot = momentumP+momentumE;
+	  EBeam = (FourMomentumE+FourMomentumP).E();
+
+	  //	sqrts = TMath::Sqrt(2*m_e*m_e+2*m_e*momentumTot.Mag());
+
+	  beta = momentumTot*(1./EBeam);
+
+	  FourMomentumP.Boost(-1*beta);
+	  CoMmomentumP.SetXYZ(FourMomentumP.X(),FourMomentumP.Y(),FourMomentumP.Z());
+
+	  FourMomentumE.Boost(-1*beta);
+	  CoMmomentumE.SetXYZ(FourMomentumE.X(),FourMomentumE.Y(),FourMomentumE.Z());
+
+	  TotDotP = momentumTot.Dot(CoMmomentumP);
+	  TotDotE = momentumTot.Dot(CoMmomentumE);
+
+	  PosCosTheta = TotDotP/(momentumTot.Mag()*CoMmomentumP.Mag());
+	  EleCosTheta = TotDotE/(momentumTot.Mag()*CoMmomentumE.Mag());
+
+	  PosTheta = TMath::ACos(PosCosTheta);
+	  EleTheta = TMath::ACos(EleCosTheta);
+		
+	  //components of momentum orthogonal to beam 
+	  orthomomentumP = CoMmomentumP-CoMmomentumP*(TotDotP/CoMmomentumP.Mag2()); //Mag2 gives magnitude squared
+	  orthomomentumE = CoMmomentumE-CoMmomentumE*(TotDotE/CoMmomentumE.Mag2()); //Mag2 gives magnitude squared
+	
+	  //transform to coordinate system centred on beam axis, not on z
+	  beamYfromPADMECoord = TVector3(-1.*momentumTot.Y(),momentumTot.X(),0)*(1./sqrt(momentumTot.Y()*momentumTot.Y()+momentumTot.X()*momentumTot.X()));
+	  unitbeamYfromPADMECoord = beamYfromPADMECoord*(1./beamYfromPADMECoord.Mag());
+	
+	  beamXfromPADMECoord = beamYfromPADMECoord.Cross(momentumTot)*(1./momentumTot.Mag());
+	  unitbeamXfromPADMECoord = beamXfromPADMECoord*(1./beamXfromPADMECoord.Mag());
+	
+	  PosPhi = TMath::ATan2(orthomomentumP.Dot(unitbeamYfromPADMECoord),orthomomentumP.Dot(unitbeamXfromPADMECoord));
+	  ElePhi = TMath::ATan2(orthomomentumE.Dot(unitbeamYfromPADMECoord),orthomomentumE.Dot(unitbeamXfromPADMECoord));
 
 	  //Swim positrons
 	  if(charge==1){

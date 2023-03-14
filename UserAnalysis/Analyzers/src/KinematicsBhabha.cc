@@ -39,22 +39,33 @@ Bool_t KinematicsBhabha::Init(PadmeAnalysisEvent* event){
 Bool_t KinematicsBhabha::InitHistos(){
   // KinematicsBhabha directory will contain all histograms related to this analysis
   fHS->CreateList("KinematicsBhabha");
+  fHS->CreateList("KinematicsBhabha/ThetaAngles");
+  fHS->CreateList("KinematicsBhabha/CosTheta");
+  fHS->CreateList("KinematicsBhabha/PhiAngles");
+  
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hPosThetaAll",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hPosThetaGoodChas",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hPosThetaGoodChaSum",175,0,3.5);
 
-  fHS->BookHistoList("KinematicsBhabha","hPosThetaAll",175,0,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hPosThetaGoodChas",175,0,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hPosThetaGoodChaSum",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hEleThetaAll",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hEleThetaGoodChas",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/ThetaAngles","hEleThetaGoodChaSum",175,0,3.5);
 
-  fHS->BookHistoList("KinematicsBhabha","hEleThetaAll",175,0,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hEleThetaGoodChas",175,0,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hEleThetaGoodChaSum",175,0,3.5);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hPosCosThetaAll",100,-1,1);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hPosCosThetaGoodChas",100,-1,1);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hPosCosThetaGoodChaSum",100,-1,1);
 
-  fHS->BookHistoList("KinematicsBhabha","hPosPhiAll",700,-3.5,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hPosPhiGoodChas",700,-3.5,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hPosPhiGoodChaSum",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hEleCosThetaAll",100,-1,1);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hEleCosThetaGoodChas",100,-1,1);
+  fHS->BookHistoList("KinematicsBhabha/CosTheta","hEleCosThetaGoodChaSum",100,-1,1);
 
-  fHS->BookHistoList("KinematicsBhabha","hElePhiAll",700,-3.5,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hElePhiGoodChas",700,-3.5,3.5);
-  fHS->BookHistoList("KinematicsBhabha","hElePhiGoodChaSum",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hPosPhiAll",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hPosPhiGoodChas",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hPosPhiGoodChaSum",700,-3.5,3.5);
+  
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hElePhiAll",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hElePhiGoodChas",700,-3.5,3.5);
+  fHS->BookHistoList("KinematicsBhabha/PhiAngles","hElePhiGoodChaSum",700,-3.5,3.5);
 
   fHS->BookHistoList("KinematicsBhabha","hPosXMom",100,-5,5);
   fHS->BookHistoList("KinematicsBhabha","hPosYMom",100,-5,5);
@@ -68,23 +79,25 @@ Bool_t KinematicsBhabha::InitHistos(){
   fHS->BookHistoList("KinematicsBhabha","hSumYMom",100,-5,5);
   fHS->BookHistoList("KinematicsBhabha","hSumZMom",450,0,450);
  
-  fHS->BookHisto2List("KinematicsBhabha","hPosThetaAllChasVsPVetoCha",90,0,90,200,0,2);
-  fHS->BookHisto2List("KinematicsBhabha","hPosPhiAllChasVsPVetoCha",90,0,90,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha/ThetaAngles","hPosThetaAllChasVsPVetoCha",90,0,90,200,0,2);
+  fHS->BookHisto2List("KinematicsBhabha/CosTheta","hPosCosThetaAllChasVsPVetoCha",90,0,90,100,-1,1);
+  fHS->BookHisto2List("KinematicsBhabha/PhiAngles","hPosPhiAllChasVsPVetoCha",90,0,90,700,-3.5,3.5);
   
-  fHS->BookHisto2List("KinematicsBhabha","hEleThetaAllChasVsEVetoCha",96,0,96,200,0,2);
-  fHS->BookHisto2List("KinematicsBhabha","hElePhiAllChasVsEVetoCha",96,0,96,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha/ThetaAngles","hEleThetaAllChasVsEVetoCha",96,0,96,200,0,2);
+  fHS->BookHisto2List("KinematicsBhabha/CosTheta","hEleCosThetaAllChasVsPVetoCha",90,0,90,100,-1,1);
+  fHS->BookHisto2List("KinematicsBhabha/PhiAngles","hElePhiAllChasVsEVetoCha",96,0,96,700,-3.5,3.5);
   
-  fHS->BookHisto2List("KinematicsBhabha","hPosThetaVsPosPhiAllChas",200,0,2,700,-3.5,3.5);
+  /*fHS->BookHisto2List("KinematicsBhabha","hPosThetaVsPosPhiAllChas",200,0,2,700,-3.5,3.5);
   fHS->BookHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChas",50,0,0.2,700,-3.5,3.5);
   fHS->BookHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChaSum",50,0,0.2,700,-3.5,3.5);
   
-  fHS->BookHisto2List("KinematicsBhabha","hEleThetaVsElePhiAllChas",200,0,2,700,-3.5,3.5);
-  fHS->BookHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChas",50,0,0.2,700,-3.5,3.5);
-  fHS->BookHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChaSum",50,0,0.2,700,-3.5,3.5);
-
-  // fHS->BookHistoList("KinematicsBhabha","hInPosE",450,0,450);
-  // fHS->BookHistoList("KinematicsBhabha","hInPosTheta",700,0,3.5);
-  // fHS->BookHistoList("KinematicsBhabha","hInPosPhi",700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha","hPosCosThetaVsPosPhiAllChas",200,0,2,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha","hPosCosThetaVsPosPhiGoodChas",50,0,0.2,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha","hPosCosThetaVsPosPhiGoodChaSum",50,0,0.2,700,-3.5,3.5);
+  
+  fHS->BookHisto2List("KinematicsBhabha","hEleCosThetaVsElePhiAllChas",200,0,2,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha","hEleCosThetaVsElePhiGoodChas",50,0,0.2,700,-3.5,3.5);
+  fHS->BookHisto2List("KinematicsBhabha","hEleCosThetaVsElePhiGoodChaSum",50,0,0.2,700,-3.5,3.5);*/
 
   return true;
 }
@@ -133,8 +146,10 @@ Bool_t KinematicsBhabha::Process(){
   Int_t chargeE;
   
   Double_t PosTheta;
+  Double_t PosCosTheta;
   Double_t PosPhi;
   Double_t EleTheta;
+  Double_t EleCosTheta;
   Double_t ElePhi;
 
   Double_t m_e = 0.510999;
@@ -216,8 +231,11 @@ Bool_t KinematicsBhabha::Process(){
 	TotDotP = momentumTot.Dot(CoMmomentumP);
 	TotDotE = momentumTot.Dot(CoMmomentumE);
 
-	PosTheta = TMath::ACos(TotDotP/(momentumTot.Mag()*CoMmomentumP.Mag()));
-	EleTheta = TMath::ACos(TotDotE/(momentumTot.Mag()*CoMmomentumE.Mag()));
+	PosCosTheta = TotDotP/(momentumTot.Mag()*CoMmomentumP.Mag());
+	EleCosTheta = TotDotE/(momentumTot.Mag()*CoMmomentumE.Mag());
+
+	PosTheta = TMath::ACos(PosCosTheta);
+	EleTheta = TMath::ACos(EleCosTheta);
 		
 	//components of momentum orthogonal to beam 
 	orthomomentumP = CoMmomentumP-CoMmomentumP*(TotDotP/CoMmomentumP.Mag2()); //Mag2 gives magnitude squared
@@ -239,39 +257,48 @@ Bool_t KinematicsBhabha::Process(){
 	// PosPhi = CoMmomentumP.Phi();
 	// ElePhi = CoMmomentumE.Phi();
 
-	fHS->FillHistoList("KinematicsBhabha","hEleThetaAll",EleTheta);
-	fHS->FillHistoList("KinematicsBhabha","hPosThetaAll",PosTheta);
+	fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hEleThetaAll",EleTheta);
+	fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hPosThetaAll",PosTheta);
 
-	fHS->FillHistoList("KinematicsBhabha","hPosPhiAll",PosPhi);
-	fHS->FillHistoList("KinematicsBhabha","hElePhiAll",ElePhi);
+	fHS->FillHistoList("KinematicsBhabha/CosTheta","hEleCosThetaAll",EleTheta);
+	fHS->FillHistoList("KinematicsBhabha/CosTheta","hPosCosThetaAll",PosTheta);
 
-	fHS->FillHisto2List("KinematicsBhabha","hPosThetaAllChasVsPVetoCha",PVetoEndCh,PosTheta);
-	fHS->FillHisto2List("KinematicsBhabha","hPosPhiAllChasVsPVetoCha",PVetoEndCh,PosPhi);
+	fHS->FillHistoList("KinematicsBhabha/PhiAngles","hPosPhiAll",PosPhi);
+	fHS->FillHistoList("KinematicsBhabha/PhiAngles","hElePhiAll",ElePhi);
 
-	fHS->FillHisto2List("KinematicsBhabha","hEleThetaAllChasVsEVetoCha",EVetoEndCh,EleTheta);
-	fHS->FillHisto2List("KinematicsBhabha","hElePhiAllChasVsEVetoCha",EVetoEndCh,ElePhi);
+	fHS->FillHisto2List("KinematicsBhabha/ThetaAngles","hPosThetaAllChasVsPVetoCha",PVetoEndCh,PosTheta);
+	fHS->FillHisto2List("KinematicsBhabha/CosTheta","hPosCosThetaAllChasVsPVetoCha",PVetoEndCh,PosTheta);
+	fHS->FillHisto2List("KinematicsBhabha/PhiAngles","hPosPhiAllChasVsPVetoCha",PVetoEndCh,PosPhi);
 
-	fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiAllChas",PosTheta,PosPhi);
-	fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiAllChas",EleTheta,ElePhi);	
+	fHS->FillHisto2List("KinematicsBhabha/ThetaAngles","hEleThetaAllChasVsEVetoCha",EVetoEndCh,EleTheta);
+	fHS->FillHisto2List("KinematicsBhabha/CosTheta","hEleCosThetaAllChasVsPVetoCha",EVetoEndCh,EleTheta);
+	fHS->FillHisto2List("KinematicsBhabha/PhiAngles","hElePhiAllChasVsEVetoCha",EVetoEndCh,ElePhi);
+
+	// fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiAllChas",PosTheta,PosPhi);
+	// fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiAllChas",EleTheta,ElePhi);	
 	
 	//if both particles end up in good channels
 	if(PVetoEndCh>29&&PVetoEndCh<71&&EVetoEndCh>29&&EVetoEndCh<71){
-	  fHS->FillHistoList("KinematicsBhabha","hPosThetaGoodChas",PosTheta);
-	  fHS->FillHistoList("KinematicsBhabha","hPosPhiGoodChas",PosPhi);
-	  fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChas",PosTheta,PosPhi);
+	  fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hPosThetaGoodChas",PosTheta);
+	  fHS->FillHistoList("KinematicsBhabha/CosTheta","hPosCosThetaGoodChas",PosCosTheta);
+	  fHS->FillHistoList("KinematicsBhabha/PhiAngles","hPosPhiGoodChas",PosPhi);
+	  //	  fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChas",PosTheta,PosPhi);
 	  
-	  fHS->FillHistoList("KinematicsBhabha","hEleThetaGoodChas",EleTheta);
-	  fHS->FillHistoList("KinematicsBhabha","hElePhiGoodChas",ElePhi);
-	  fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChas",EleTheta,ElePhi);
+	  fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hEleThetaGoodChas",EleTheta);
+	  fHS->FillHistoList("KinematicsBhabha/CosTheta","hEleCosThetaGoodChas",EleCosTheta);
+	  fHS->FillHistoList("KinematicsBhabha/PhiAngles","hElePhiGoodChas",ElePhi);
+	  //	  fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChas",EleTheta,ElePhi);
 
 	  if(PVetoEndCh+EVetoEndCh>=95){
-	    fHS->FillHistoList("KinematicsBhabha","hPosThetaGoodChaSum",PosTheta);
-	    fHS->FillHistoList("KinematicsBhabha","hPosPhiGoodChaSum",PosPhi);
-	    fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChaSum",PosTheta,PosPhi);
+	    fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hPosThetaGoodChaSum",PosTheta);
+	    fHS->FillHistoList("KinematicsBhabha/CosTheta","hPosCosThetaGoodChaSum",PosCosTheta);
+	    fHS->FillHistoList("KinematicsBhabha/PhiAngles","hPosPhiGoodChaSum",PosPhi);
+	    //	    fHS->FillHisto2List("KinematicsBhabha","hPosThetaVsPosPhiGoodChaSum",PosTheta,PosPhi);
 	  
-	    fHS->FillHistoList("KinematicsBhabha","hEleThetaGoodChaSum",EleTheta);
-	    fHS->FillHistoList("KinematicsBhabha","hElePhiGoodChaSum",ElePhi);
-	    fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChaSum",EleTheta,ElePhi);	    
+	    fHS->FillHistoList("KinematicsBhabha/ThetaAngles","hEleThetaGoodChaSum",EleTheta);
+	    fHS->FillHistoList("KinematicsBhabha/CosTheta","hEleCosThetaGoodChaSum",EleCosTheta);
+	    fHS->FillHistoList("KinematicsBhabha/PhiAngles","hElePhiGoodChaSum",ElePhi);
+	    //	    fHS->FillHisto2List("KinematicsBhabha","hEleThetaVsElePhiGoodChaSum",EleTheta,ElePhi);	    
 	  }
 	}//end in acceptance
       }//end if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){

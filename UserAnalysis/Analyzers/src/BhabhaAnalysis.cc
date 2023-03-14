@@ -1,5 +1,4 @@
-// Written by M. Raggi   20/07/2021 
-// Last modified by M. Raggi 12/08/2021
+// Last modified by Beth Long 03/2023
 #include "BhabhaAnalysis.hh"
 #include "TMath.h"
 #include "VetoEndPoint.hh"

@@ -232,16 +232,17 @@ Double_t DigitizerChannelPVeto::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//
     fEnergy=vTSpecYPCorrectHitVec[ii]*fDerivAmpToEnergy;
     Hit->SetEnergy(fEnergy);  
 
-    if(fEnergy<0){
-      hNegativeEnergyCha->Fill(GetChID());
-      fAnalogPrint=1;
-    }
+    // if(fEnergy<0){
+    //   hNegativeEnergyCha->Fill(GetChID());
+    //   fAnalogPrint=1;
+    // }
 
     hitVec.push_back(Hit);
 
   }//end loop over hits
   
-  // if(analogchecker==1) fAnalogPrint=1;
+  // if(analogchecker==1)
+    fAnalogPrint=1;
   // else fAnalogPrint =0;
 
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog)  HitPlots(hitVec);

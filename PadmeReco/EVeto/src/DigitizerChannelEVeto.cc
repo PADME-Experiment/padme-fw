@@ -252,8 +252,8 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   fileOut    = new TFile(fileoutname, "RECREATE");
 
   hNoEventsReconstructed      = new TH1F("NoEventsReconstructed","NoEventsReconstructed",4,0,2);//number of hits reconstructed by TSpectrum on derivatives    
-  hOccupancy                  = new TH1F("hOccupancy","hOccupancyAvg",90,0,90);
-  hOccupancyOneHit            = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",90,0,90);
+  hOccupancy                  = new TH1F("hOccupancy","hOccupancyAvg",96,0,96);
+  hOccupancyOneHit            = new TH1F("hOccupancyOneHit","hOccupancyOneHitAvg",96,0,96);
   hNoHitsDeriv                = new TH1F("NoHitsDeriv","NoHitsDeriv",20,0,20);//number of hits reconstructed by TSpectrum on derivatives    
   hRawV                       = new TH1F("RawV","RawV",400,0,400);
   hRawVCorrect                = new TH1F("RawVCorrect","RawVCorrect",400,0,400);
@@ -279,7 +279,7 @@ void DigitizerChannelEVeto::PrepareDebugHistos(){ //Beth 20/10/21 copied from 19
   hYRiseYTSpecRatio           = new TH1F("hYRiseYTSpecRatio","hYRiseYTSpecRatio",50,0,2);
   hYMaxDerivYTSpecRatio       = new TH1F("hYMaxDerivYTSpecRatio","hYMaxDerivYTSpecRatio",50,0,2);
   //  hYTSpecYMaxDiff            = new TH1F("hYTSpecYMaxDiff","HYTSpecYMaxDiff",100,-50,50);
-  hNegativeEnergyCha = new TH1F("hNegativeEnergyCha",";PVetoChannelID;",90,0,90);
+  hNegativeEnergyCha = new TH1F("hNegativeEnergyCha",";EVetoChannelID;",96,0,96);
 
   hAmpDiffVsUncorrectAmp                    = new TH2F("hAmpDiffVsUncorrectAmp","hAmpDiffVsUncorrectAmp",100,0,400,300,-100,200);
   hAmpDiffVsUncorrectAmpChannels20to70      = new TH2F("hAmpDiffVsUncorrectAmpChannels20to70","hAmpDiffVsUncorrectAmpChannels20to70",100,0,400,300,-100,200);
@@ -427,7 +427,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
   if(fGlobalMode->GetGlobalDebugMode() || fGlobalMode->IsPedestalMode() || fSaveAnalog){
     if(GetChID()==0) hNoEventsReconstructed->Fill(1);
   }
-  if(GetChID()>89) return;//Beth 10/3/22: There are only 90 EVeto channels but in EVeto.cfg 96 channels are still listed
+  //  if(GetChID()>89) return;//Beth 10/3/22: There are only 90 PVeto channels but in EVeto.cfg 96 channels are still listed
   if(fUsePulseProcessing==0){ 
     Double_t IsZeroSup = ZSupHit(fZeroSuppression,1000.);  //Beth 10/3/22: we should use the parameter signal window instead of hard-coded 1000. fZeroSuppression is not in EVeto.cfg but defaults to 5.
     if(IsZeroSup&&!fGlobalMode->IsPedestalMode()) return;
@@ -454,7 +454,7 @@ void DigitizerChannelEVeto::Reconstruct(std::vector<TRecoVHit *> &hitVec){  //us
 
 void DigitizerChannelEVeto::SetAbsSignals(Double_t ped){
   Double_t ScaleFactor=1;
-
+  //chagain defined only for first 90 channels
   if(fChannelEqualisation&&GetChID()<90)  ScaleFactor=SetEVetoChaGain();   
   //  std::cout<<"EVeto "<<GetChID()<<" ScaleFactor "<<ScaleFactor<<std::endl;
 

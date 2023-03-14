@@ -323,8 +323,10 @@ Bool_t BhabhaAnalysis::Process(){
   bool fixedE=0;
 
   Double_t PosTheta;
+  Double_t PosCosTheta;
   Double_t PosPhi;
   Double_t EleTheta;
+  Double_t EleCosTheta;
   Double_t ElePhi;
   
   //if using MC produced at single energy from target

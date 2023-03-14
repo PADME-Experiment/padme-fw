@@ -248,9 +248,10 @@ Bool_t BhabhaAnalysis::Process(){
   TLorentzVector FourMomentumP; //MCTruth: four momentum of e+ resulting from Bhabha
   TLorentzVector FourMomentumE; //MCTruth: four momentum of e- resulting from Bhabha
 
-  TVector3 momentum;           //MCTruth: momentum of e+ or e- resulting from Bhabha
-  TVector3 momentumP;           //MCTruth: momentum of e+ resulting from Bhabha
-  TVector3 momentumE;           //MCTruth: momentum of e- resulting from Bhabha
+  TVector3 momentum;          //MCTruth: momentum of e+ or e- resulting from Bhabha
+  TVector3 momentumP;         //MCTruth: momentum of e+ resulting from Bhabha
+  TVector3 momentumE;         //MCTruth: momentum of e- resulting from Bhabha
+  TVector3 momentumTot;       //MCTruth
 
   Double_t energy;             //MCTruth: energy of e+ or e- resulting from Bhabha
   Int_t charge;

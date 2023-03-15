@@ -399,45 +399,6 @@ Bool_t BhabhaAnalysis::Process(){
 
 	  fVetoEndPoint->ParticleSwim(FourMomentum,VertexPos,VertexTime,charge);
 
-	  momentumTot = momentumP+momentumE;
-	  EBeam = (FourMomentumE+FourMomentumP).E();
-
-	  //	sqrts = TMath::Sqrt(2*m_e*m_e+2*m_e*momentumTot.Mag());
-
-	  beta = momentumTot*(1./EBeam);
-
-	  FourMomentumP.Boost(-1*beta);
-	  CoMmomentumP.SetXYZ(FourMomentumP.X(),FourMomentumP.Y(),FourMomentumP.Z());
-
-	  FourMomentumE.Boost(-1*beta);
-	  CoMmomentumE.SetXYZ(FourMomentumE.X(),FourMomentumE.Y(),FourMomentumE.Z());
-
-	  TotDotP = momentumTot.Dot(CoMmomentumP);
-	  TotDotE = momentumTot.Dot(CoMmomentumE);
-
-	  PosCosTheta = TotDotP/(momentumTot.Mag()*CoMmomentumP.Mag());
-	  EleCosTheta = TotDotE/(momentumTot.Mag()*CoMmomentumE.Mag());
-
-	  PosTheta = TMath::ACos(PosCosTheta);
-	  EleTheta = TMath::ACos(EleCosTheta);
-
-	  SwumPosTheta.push_back(PosTheta);
-	  SwumEleTheta.push_back(EleTheta);
- 
-	  //components of momentum orthogonal to beam 
-	  orthomomentumP = CoMmomentumP-CoMmomentumP*(TotDotP/CoMmomentumP.Mag2()); //Mag2 gives magnitude squared
-	  orthomomentumE = CoMmomentumE-CoMmomentumE*(TotDotE/CoMmomentumE.Mag2()); //Mag2 gives magnitude squared
-	
-	  //transform to coordinate system centred on beam axis, not on z
-	  beamYfromPADMECoord = TVector3(-1.*momentumTot.Y(),momentumTot.X(),0)*(1./sqrt(momentumTot.Y()*momentumTot.Y()+momentumTot.X()*momentumTot.X()));
-	  unitbeamYfromPADMECoord = beamYfromPADMECoord*(1./beamYfromPADMECoord.Mag());
-	
-	  beamXfromPADMECoord = beamYfromPADMECoord.Cross(momentumTot)*(1./momentumTot.Mag());
-	  unitbeamXfromPADMECoord = beamXfromPADMECoord*(1./beamXfromPADMECoord.Mag());
-	
-	  PosPhi = TMath::ATan2(orthomomentumP.Dot(unitbeamYfromPADMECoord),orthomomentumP.Dot(unitbeamXfromPADMECoord));
-	  ElePhi = TMath::ATan2(orthomomentumE.Dot(unitbeamYfromPADMECoord),orthomomentumE.Dot(unitbeamXfromPADMECoord));
-
 	  //Swim positrons
 	  if(charge==1){
 	    nBhabhaPos++;
@@ -461,7 +422,47 @@ Bool_t BhabhaAnalysis::Process(){
 	      nBhabhaEleInVeto++;
 	  }
 	  NSwum++;
-	}
+	}//
+
+	momentumTot = momentumP+momentumE;
+	EBeam = (FourMomentumE+FourMomentumP).E();
+
+	//	sqrts = TMath::Sqrt(2*m_e*m_e+2*m_e*momentumTot.Mag());
+
+	beta = momentumTot*(1./EBeam);
+
+	FourMomentumP.Boost(-1*beta);
+	CoMmomentumP.SetXYZ(FourMomentumP.X(),FourMomentumP.Y(),FourMomentumP.Z());
+
+	FourMomentumE.Boost(-1*beta);
+	CoMmomentumE.SetXYZ(FourMomentumE.X(),FourMomentumE.Y(),FourMomentumE.Z());
+
+	TotDotP = momentumTot.Dot(CoMmomentumP);
+	TotDotE = momentumTot.Dot(CoMmomentumE);
+
+	PosCosTheta = TotDotP/(momentumTot.Mag()*CoMmomentumP.Mag());
+	EleCosTheta = TotDotE/(momentumTot.Mag()*CoMmomentumE.Mag());
+
+	PosTheta = TMath::ACos(PosCosTheta);
+	EleTheta = TMath::ACos(EleCosTheta);
+
+	//	  std::cout<<PosCosTheta<<" "<<EleCosTheta<<std::endl;
+	SwumPosTheta.push_back(PosTheta);
+	SwumEleTheta.push_back(EleTheta);
+ 
+	//components of momentum orthogonal to beam 
+	orthomomentumP = CoMmomentumP-CoMmomentumP*(TotDotP/CoMmomentumP.Mag2()); //Mag2 gives magnitude squared
+	orthomomentumE = CoMmomentumE-CoMmomentumE*(TotDotE/CoMmomentumE.Mag2()); //Mag2 gives magnitude squared
+	
+	//transform to coordinate system centred on beam axis, not on z
+	beamYfromPADMECoord = TVector3(-1.*momentumTot.Y(),momentumTot.X(),0)*(1./sqrt(momentumTot.Y()*momentumTot.Y()+momentumTot.X()*momentumTot.X()));
+	unitbeamYfromPADMECoord = beamYfromPADMECoord*(1./beamYfromPADMECoord.Mag());
+	
+	beamXfromPADMECoord = beamYfromPADMECoord.Cross(momentumTot)*(1./momentumTot.Mag());
+	unitbeamXfromPADMECoord = beamXfromPADMECoord*(1./beamXfromPADMECoord.Mag());
+	
+	PosPhi = TMath::ATan2(orthomomentumP.Dot(unitbeamYfromPADMECoord),orthomomentumP.Dot(unitbeamXfromPADMECoord));
+	ElePhi = TMath::ATan2(orthomomentumE.Dot(unitbeamYfromPADMECoord),orthomomentumE.Dot(unitbeamXfromPADMECoord));
       }//end if(mcVtx->GetProcess() == "eIoni"||mcVtx->GetProcess() == "Bhabha"){
     }
     fHS->FillHistoList("MCSwimming","hPVetoSwumInsideVeto",nBhabhaPosInVeto);
@@ -848,15 +849,19 @@ Bool_t BhabhaAnalysis::Process(){
       
       if(PVetoSwimmingChannels[ii]<31||EVetoSwimmingChannels[ii]<31||PVetoSwimmingChannels[ii]>70||EVetoSwimmingChannels[ii]>70) continue;
       fHS->FillHistoList("MCSwimming","hGoodChasSwumChaSum",PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii]);
+
       if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<91) continue;
       fHS->FillHistoList("MCSwimming","hChaSumOver90GoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hChaSumOver90GoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+
       if((PVetoSwimmingChannels[ii]+EVetoSwimmingChannels[ii])<95) continue;
       fHS->FillHistoList("MCSwimming","hChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+
       if(SwumPosTheta[ii]<1||SwumPosTheta[ii]>2.1) continue;
       fHS->FillHistoList("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumTimeEVetoSwumTimeDiffCorrect",deltaTcorrectSwim);
       fHS->FillHisto2List("MCSwimming","hPosTheta1to2.1ChaSum95UpGoodChasPVetoSwumChVsEVetoSwumCh",PVetoSwimmingChannels[ii],EVetoSwimmingChannels[ii]);
+
       NSwimBhabha++;
       fHS->FillHistoList("VetoEndPointList","hNTotBhabha_NMatched_NRecoBhabha_NSwimBhabha",3);
     }

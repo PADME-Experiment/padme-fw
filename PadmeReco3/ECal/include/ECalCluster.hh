@@ -1,48 +1,49 @@
 #ifndef ECalCluster_h
-#define ECalCluster_h
+#define ECalCluster_h 1
 
-#include "ECalCrystal.hh"
+#include <Rtypes.h>
+#include <TVector3.h>
 
-#define CLUSTER_N_MAX_CRYSTALS_IN_CLUSTER 150
+class ECalCluster
+{
+public:
 
-class ECalCluster {
-
-public :
   ECalCluster();
   ~ECalCluster();
-  
- public :
 
-  Int_t AddCrystal(ECalCrystal*); // Returns number of crystals currently in cluster
+  ULong64_t GetStatus()    { return fStatus;     }
+  TVector3  GetPosition()  { return fPosition;   }
+  Double_t  GetEnergy()    { return fEnergy;     }
+  Double_t  GetTime()      { return fTime;       }
 
-  Double_t GetRawEnergy() { return fRawEnergy; }
-  Double_t GetEnergy()    { return fEnergy; }
-  Double_t GetTime()      { return fTime; }
-  Double_t GetNCrystals() { return fNCrystals; }
-  ECalCrystal* GetCrystal(Int_t i){if (i<fNCrystals) return fCrystalList[i]; else return NULL;}
-  Int_t    GetSeed()      { return fSeed; }
-  void     SetSeed(Int_t i) {fSeed = i;}
+  void SetStatus   (ULong64_t value) { fStatus     = value; }
+  void SetPosition (TVector3  value) { fPosition   = value; }
+  void SetEnergy   (Double_t  value) { fEnergy     = value; }
+  void AddEnergy   (Double_t  value) { fEnergy    += value; }
+  void SetTime     (Double_t  value) { fTime       = value; }
 
-  Double_t GetXCenter() { return fXCenter; }
-  Double_t GetYCenter() { return fYCenter; }
+  void SetNHits(UInt_t nh) { fNHits = nh; }
+  UInt_t GetNHits() { return fNHits; }
 
-  Double_t ComputeTime();
-  Double_t ComputeEnergy();
-  Double_t ComputeCenter();
+  Int_t GetSeed() { return fSeed; }
+  void SetSeed(Int_t i) { fSeed=i; }
 
-  void  Print();
+  void SetHitsVector(std::vector<Int_t> v) { fHits=v; }
+  std::vector<Int_t> GetHitsVector() { return fHits; }
 
- private:
+  void Print();
 
-  Int_t fNCrystals;
-  ECalCrystal* fCrystalList[CLUSTER_N_MAX_CRYSTALS_IN_CLUSTER];
+private:
 
-  Int_t    fSeed;
-  Double_t fRawEnergy;
+  ULong64_t fStatus;
+
+  TVector3 fPosition;
   Double_t fEnergy;
-  Double_t fTime;	 
-  Double_t fXCenter;	 
-  Double_t fYCenter;	 
+  Double_t fTime;
+
+  Int_t fSeed;              // index of hit selected as seed of this cluster
+  UInt_t fNHits;            // number of hits in this cluster
+  std::vector<Int_t> fHits; // vector of indices of hits belonging to this cluster
 
 };
-#endif
+#endif // ECalCluster_h

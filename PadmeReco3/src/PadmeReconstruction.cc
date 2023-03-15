@@ -43,7 +43,7 @@
 
 #include "RecoRootIOManager.hh"
 
-#include "ECalParameters.hh"
+//#include "ECalParameters.hh"
 
 //#include "RecoRootIOManager.hh"
 
@@ -89,6 +89,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   //fTPixRecoEvent    = 0;
   fLeadGlassRecoEvent = 0;
 
+  fECalReconstruction = 0;
   fETagReconstruction = 0;
   fTargetReconstruction = 0;
 
@@ -175,6 +176,7 @@ PadmeReconstruction::~PadmeReconstruction()
     delete fRecoLibrary[iLib];
   }
   if (fGlobalRecoConfigOptions) delete fGlobalRecoConfigOptions;
+  if (fECalReconstruction) delete fECalReconstruction;
   if (fETagReconstruction) delete fETagReconstruction;
   if (fTargetReconstruction) delete fTargetReconstruction;
 }
@@ -196,7 +198,8 @@ void PadmeReconstruction::InitLibraries()
   if (fConfig->GetParOrDefault("RECOALGORITHMS","ECal",1)) {
     TString configECal = fConfig->GetParOrDefault("RECOCONFIG","ECal","config/ECal.cfg");
     std::cout<<"=== Enabling ECal with configuration file "<<configECal<<std::endl;
-    fRecoLibrary.push_back(new ECalReconstruction(fOutputFile,configECal));
+    //fRecoLibrary.push_back(new ECalReconstruction(fOutputFile,configECal));
+    fECalReconstruction = new ECalReconstruction(configECal);
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","SAC",0)) {
     TString configSAC = fConfig->GetParOrDefault("RECOCONFIG","SAC","config/SAC.cfg");
@@ -247,13 +250,14 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
   if (FindReco("PVeto"))   ((PVetoReconstruction*)   FindReco("PVeto"))  ->Init(this);
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
-  if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
+  //if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
   //if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   //if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
-  if (fTargetReconstruction) fTargetReconstruction->Init();
+  if (fECalReconstruction) fECalReconstruction->Init();
   if (fETagReconstruction) fETagReconstruction->Init();
+  if (fTargetReconstruction) fTargetReconstruction->Init();
 }
 
 void PadmeReconstruction::HistoInit()
@@ -318,8 +322,8 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	  std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
 	  
 	  // Pass detector info to corresponding Parameters class for decoding
-	  TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
-	  if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
+	  //TSubDetectorInfo* subDetInfo = detInfo->FindSubDetectorInfo("ECal");
+	  //if (subDetInfo) ECalParameters::GetInstance()->SetMCDetInfo(subDetInfo);
 	  
 	}
       }
@@ -515,8 +519,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalMCEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACMCEvent,fMCEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagMCEvent) {
@@ -528,6 +532,7 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
     if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetMCEvent,fMCEvent);
+    if (fECalReconstruction) fECalReconstruction->ProcessEvent(fECalMCEvent,fMCEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagMCEvent,fMCEvent);
 
     fNProcessedEventsInTotal++;
@@ -555,8 +560,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoRecoEvent,fRecoEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
+      //} else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {
+      //  fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
       //} else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {
@@ -568,6 +573,7 @@ Bool_t PadmeReconstruction::NextEvent()
       }
     }
     if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetRecoEvent,fRecoEvent);
+    if (fECalReconstruction) fECalReconstruction->ProcessEvent(fECalRecoEvent,fRecoEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagRecoEvent,fRecoEvent);
 
     ++fNProcessedEventsInTotal;
@@ -611,6 +617,7 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
       }
       if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fRawEvent);
+      if (fECalReconstruction) fECalReconstruction->ProcessEvent(fRawEvent);
       if (fETagReconstruction) fETagReconstruction->ProcessEvent(fRawEvent);
     }
 
@@ -644,6 +651,7 @@ void PadmeReconstruction::EndProcessing(){
     fRecoLibrary[iLib]->EndProcessing();
   }
   if (fTargetReconstruction) fTargetReconstruction->EndProcessing();
+  if (fECalReconstruction) fECalReconstruction->EndProcessing();
   if (fETagReconstruction) fETagReconstruction->EndProcessing();
   fOutputFile->cd("/");
   //HistoExit();

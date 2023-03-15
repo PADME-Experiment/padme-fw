@@ -17,6 +17,7 @@
 #include <list>
 
 class TRecoEvent;
+class ECalRecoRootIO;
 class ETagRecoRootIO;
 class TargetRecoRootIO;
 
@@ -79,6 +80,7 @@ private:
   typedef std::list<RecoVRootIO*> RootIOList;
   RootIOList fRootIOList;
 
+  ECalRecoRootIO* fECalRecoRootIO;
   ETagRecoRootIO* fETagRecoRootIO;
   TargetRecoRootIO* fTargetRecoRootIO;
 

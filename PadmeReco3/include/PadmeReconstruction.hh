@@ -20,6 +20,7 @@ class GlobalRecoConfigOptions;
 
 class RecoRootIOManager;
 
+class ECalReconstruction;
 class ETagReconstruction;
 class TargetReconstruction;
 
@@ -77,6 +78,7 @@ public:
   Bool_t IsSimulated();
 
   // Give access to detector reconstructions
+  ECalReconstruction* GetECalReconstruction() { return fECalReconstruction; }
   ETagReconstruction* GetETagReconstruction() { return fETagReconstruction; }
   TargetReconstruction* GetTargetReconstruction() { return fTargetReconstruction; }
 
@@ -145,6 +147,7 @@ private:
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;
 
+  ECalReconstruction* fECalReconstruction;
   ETagReconstruction* fETagReconstruction;
   TargetReconstruction* fTargetReconstruction;
  

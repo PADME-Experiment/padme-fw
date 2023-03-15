@@ -12,6 +12,7 @@
 #include "ECalRecoRootIO.hh"
 #include "LeadGlassRecoRootIO.hh"
 
+#include "ECalReconstruction.hh"
 #include "ETagReconstruction.hh"
 #include "TargetReconstruction.hh"
 
@@ -61,7 +62,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fTargetRecoRootIO = new TargetRecoRootIO();
     //fRootIOList.push_back(new TargetRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
-    fRootIOList.push_back(new ECalRecoRootIO(this));
+    fECalRecoRootIO = new ECalRecoRootIO();
+    //fRootIOList.push_back(new ECalRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
     fRootIOList.push_back(new LeadGlassRecoRootIO(this));
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
@@ -73,6 +75,7 @@ RecoRootIOManager::~RecoRootIOManager()
 {
   if (fConfigParser) delete fConfigParser;
   if (fConfig) delete fConfig;
+  if (fECalRecoRootIO) delete fECalRecoRootIO;
   if (fETagRecoRootIO) delete fETagRecoRootIO;
   if (fTargetRecoRootIO) delete fTargetRecoRootIO;
 }
@@ -182,6 +185,14 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       }
       iRootIO++;
     }
+    if (fECalRecoRootIO) {
+      std::cout << "RootIOManager: Checking IO for ECal" << std::endl;
+      fECalRecoRootIO->SetEventTree(fEventTree);
+      fECalRecoRootIO->SetECalReconstruction(fReco->GetECalReconstruction());
+      fECalRecoRootIO->SetVerbose(fReco->GetECalReconstruction()->GetVerbose());
+      std::cout << "RootIOManager: IO for ECal enabled" << std::endl;
+      fECalRecoRootIO->NewRun();
+    }
     if (fETagRecoRootIO) {
       std::cout << "RootIOManager: Checking IO for ETag" << std::endl;
       fETagRecoRootIO->SetEventTree(fEventTree);
@@ -229,6 +240,7 @@ void RecoRootIOManager::EndRun()
     if((*iRootIO)->GetEnabled()) (*iRootIO)->EndRun();
     iRootIO++;
   }
+  if (fECalRecoRootIO) fECalRecoRootIO->EndRun();
   if (fETagRecoRootIO) fETagRecoRootIO->EndRun();
   if (fTargetRecoRootIO) fTargetRecoRootIO->EndRun();
 
@@ -269,6 +281,7 @@ void RecoRootIOManager::SaveEvent(){
     }
     iRootIO++;
   }
+  if (fECalRecoRootIO) fECalRecoRootIO->SaveEvent();
   if (fETagRecoRootIO) fETagRecoRootIO->SaveEvent();
   if (fTargetRecoRootIO) fTargetRecoRootIO->SaveEvent();
 

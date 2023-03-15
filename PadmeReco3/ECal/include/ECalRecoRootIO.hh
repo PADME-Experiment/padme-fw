@@ -1,25 +1,48 @@
-#ifndef ECalRootRecoIO_h
-#define ECalRootRecoIO_h 1
+#ifndef ECalRecoRootIO_h
+#define ECalRecoRootIO_h 1
 
-#include "RecoVRootIO.hh"
 #include "TECalRecoEvent.hh"
-#include "RecoRootIOManager.hh"
+#include "TECalClusCollection.hh"
 
-#include "TTree.h"
-#include "TBranch.h"
+class TTree;
+class TBranch;
+class ECalReconstruction;
+class ECalHit;
+class ECalCluster;
 
-class TECalRecoEvent;
-class RecoVRootIO;
-class RecoRootIOManager;
-
-class ECalRecoRootIO : public RecoVRootIO
+class ECalRecoRootIO
 {
 public:
 
-  ECalRecoRootIO(RecoRootIOManager*);
+  ECalRecoRootIO();
   virtual ~ECalRecoRootIO();
 
+  void NewRun();
+  void EndRun();
+  void SaveEvent();
+
+  void  SetVerbose(Int_t v) { fVerbose = v;    }
+  Int_t GetVerbose()        { return fVerbose; }
+
+  void SetEventTree(TTree* t) { fEventTree = t; }
+  void SetECalReconstruction(ECalReconstruction* etReco) { fECalReconstruction = etReco; }
+
 private:
+
+  Bool_t ExportHit(ECalHit*,TRecoVHit*);
+  Bool_t ExportCluster(ECalCluster*,TRecoVCluster*);
+
+  ECalReconstruction* fECalReconstruction;
+
+  TTree* fEventTree;
+
+  TBranch* fBranchHitsColl;
+  TBranch* fBranchClusColl;
+
+  TECalRecoEvent*      fHitsCollection;
+  TECalClusCollection* fClusCollection;
+
+  Int_t fVerbose;
 
 };
 #endif // ECalRecoRootIO_h

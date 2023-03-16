@@ -147,24 +147,24 @@ Bool_t BhabhaAnalysis::InitHistos(){
   fHS->BookHistoList("BhabhaList","hGoodClusChaSum",81,60,141);
   fHS->BookHistoList("BhabhaList","h2.5nsInTimeGoodClusChaSum",81,60,141);
   fHS->BookHistoList("BhabhaList","h1nsYesSAC2.5nsGoodClusChaSum",81,60,141);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsGoodClusChaSum",81,60,141);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeV1nsNoSAC2.5nsGoodClusChaSum",81,60,141);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeV1nsYesSAC1nsGoodClusChaSum",81,60,141);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeV1nsNoSAC1nsGoodClusChaSum",81,60,141);
+  fHS->BookHistoList("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsGoodClusChaSum",81,60,141);
+  //  fHS->BookHistoList("BhabhaList","h360MeV1000MeV1nsNoSAC2.5nsGoodClusChaSum",81,60,141);
+  fHS->BookHistoList("BhabhaList","h360MeV1000MeV1nsYesSAC1nsGoodClusChaSum",81,60,141);
+  //  fHS->BookHistoList("BhabhaList","h360MeV1000MeV1nsNoSAC1nsGoodClusChaSum",81,60,141);
   fHS->BookHistoList("BhabhaList","hGoodPVetoClusDeltaTPVetoSAC",100,-10,10);
   fHS->BookHistoList("BhabhaList","hBhabhaCutsDeltaTPVetoSAC",100,-10,10);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeVEnergySumBhabhaCutsDeltaTPVetoSAC",100,-10,10);
-  fHS->BookHistoList("BhabhaList","hBhabhaCutsEnergySumPVetoSAC",250,0,500);
-  fHS->BookHistoList("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsBhabhaCutsSACEnergySAC",250,0,500);
+  fHS->BookHistoList("BhabhaList","h360MeV1000MeVEnergySumBhabhaCutsDeltaTPVetoSAC",100,-10,10);
+  fHS->BookHistoList("BhabhaList","hBhabhaCutsEnergySumPVetoSAC",500,0,1000);
+  fHS->BookHistoList("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsBhabhaCutsSACEnergySAC",250,0,500);
 
   fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTuncorrect",81,60,141,200,-10,10);
   fHS->BookHisto2List("BhabhaList","hChaSumVsDeltaTcorrect",81,60,141,200,-10,10);
   fHS->BookHisto2List("BhabhaList","h2.5nsChaSumVsDeltaTuncorrect",81,60,141,20,-2.5,2.5);
   fHS->BookHisto2List("BhabhaList","h2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
   fHS->BookHisto2List("BhabhaList","h1nsYesSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
-  fHS->BookHisto2List("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,50,-2.5,2.5);
-  fHS->BookHisto2List("BhabhaList","h360MeV480MeV1nsNoSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,50,-2.5,2.5);
-  fHS->BookHisto2List("BhabhaList","hBhabhaCutsEnergySumPVetoSACVsDeltaTPVetoSAC",250,0,500,100,-10,10);
+  fHS->BookHisto2List("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,50,-2.5,2.5);
+  //  fHS->BookHisto2List("BhabhaList","h360MeV1000MeV1nsNoSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,50,-2.5,2.5);
+  fHS->BookHisto2List("BhabhaList","hBhabhaCutsEnergySumPVetoSACVsDeltaTPVetoSAC",500,0,1000,100,-10,10);
 
   //MC only Bhabha plots
   fHS->BookHisto2List("MCBhabha","hAllNPVetoClusterVsNEVetoCluster",96,0,95,96,0,95);
@@ -220,11 +220,11 @@ Bool_t BhabhaAnalysis::InitHistos(){
   //  fHS->BookHisto2List("TimeCorrectionList","hdeltaTtrajVsdeltaTcorrectPVetoEVeto",2000,-500,500,600,-150,150);
 
   //Background plots
-  fHS->BookHistoList("BackgroundList","h360MeV480MeV6nsOutofTimeSAC2.5nsGoodClusChaSum",81,60,141);
-  fHS->BookHisto2List("BackgroundList","h360MeV480MeV6nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
+  fHS->BookHistoList("BackgroundList","h360MeV1000MeV4nsto10nsOutofTimeSAC2.5nsGoodClusChaSum",81,60,141);
+  fHS->BookHisto2List("BackgroundList","h360MeV1000MeV4nsto10nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
 
-  fHS->BookHistoList("BackgroundList","h360MeV480MeVMinus6nsOutofTimeSAC2.5nsGoodClusChaSum",81,60,141);
-  fHS->BookHisto2List("BackgroundList","h360MeV480MeVMinus6nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
+  fHS->BookHistoList("BackgroundList","h360MeV1000MeVMinus4nsto10nsOutofTimeSAC2.5nsGoodClusChaSum",81,60,141);
+  fHS->BookHisto2List("BackgroundList","h360MeV1000MeVMinus4nsto10nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",81,60,141,20,-2.5,2.5);
 
   //Hit energy
   //With no cuts, the energy histograms are filled in T0s Analysis since there's already a loop over hits there.
@@ -965,39 +965,39 @@ Bool_t BhabhaAnalysis::Process(){
 
 	fHS->FillHistoList("BhabhaList","hBhabhaCutsDeltaTPVetoSAC",PVetoSACDeltaTCorrect);
 	fHS->FillHisto2List("BhabhaList","hBhabhaCutsEnergySumPVetoSACVsDeltaTPVetoSAC",enSAC+enPositron,PVetoSACDeltaTCorrect);
-	if(fabs(enSumSACPos-420)<60) fHS->FillHistoList("BhabhaList","h360MeV480MeVEnergySumBhabhaCutsDeltaTPVetoSAC",PVetoSACDeltaTCorrect);
+	if(enSumSACPos>360&&enSumSACPos<1000) fHS->FillHistoList("BhabhaList","h360MeV1000MeVEnergySumBhabhaCutsDeltaTPVetoSAC",PVetoSACDeltaTCorrect);
 
 	if(SACMatch_1==0&&fabs(PVetoSACDeltaTCorrect)<1){
 	  fHS->FillHistoList("BhabhaList","hBhabhaCutsEnergySumPVetoSAC",enSAC+enPositron);
 	  fHS->FillHistoList("BhabhaList","h1nsYesSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
 	  fHS->FillHisto2List("BhabhaList","h1nsYesSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
-	  if(fabs(enSumSACPos-420)<60){
-	    fHS->FillHistoList("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
-	    fHS->FillHistoList("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsBhabhaCutsSACEnergySAC",enSAC);
-	    fHS->FillHisto2List("BhabhaList","h360MeV480MeV1nsYesSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+	  if(enSumSACPos>360&&enSumSACPos<1000){
+	    fHS->FillHistoList("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
+	    fHS->FillHistoList("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsBhabhaCutsSACEnergySAC",enSAC);
+	    fHS->FillHisto2List("BhabhaList","h360MeV1000MeV1nsYesSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 	    SACMatch_1=1;
 	  }
 	}
 
-	if(SACMatch_6==0&&PVetoSACDeltaTCorrect<8&&PVetoSACDeltaTCorrect>4){
-	  if(fabs(enSumSACPos-420)<60){
-	    fHS->FillHistoList("BackgroundList","h360MeV480MeV6nsOutofTimeSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
-	    fHS->FillHisto2List("BackgroundList","h360MeV480MeV6nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+	if(SACMatch_6==0&&PVetoSACDeltaTCorrect<10&&PVetoSACDeltaTCorrect>4){
+	  if(enSumSACPos>360&&enSumSACPos<1000){
+	    fHS->FillHistoList("BackgroundList","h360MeV1000MeV4nsto10nsOutofTimeSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
+	    fHS->FillHisto2List("BackgroundList","h360MeV1000MeV4nsto10nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 	    SACMatch_6=1;
 	  }
 	}
-	if(SACMatch_Minus6==0&&PVetoSACDeltaTCorrect>-8&&PVetoSACDeltaTCorrect<-4){
-	  if(fabs(enSumSACPos-420)<60){
-	    fHS->FillHistoList("BackgroundList","h360MeV480MeVMinus6nsOutofTimeSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
-	    fHS->FillHisto2List("BackgroundList","h360MeV480MeVMinus6nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+	if(SACMatch_Minus6==0&&PVetoSACDeltaTCorrect>-10&&PVetoSACDeltaTCorrect<-4){
+	  if(enSumSACPos>360&&enSumSACPos<1000){
+	    fHS->FillHistoList("BackgroundList","h360MeV1000MeVMinus4nsto10nsOutofTimeSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
+	    fHS->FillHisto2List("BackgroundList","h360MeV1000MeVMinus4nsto10nsOutofTimeSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
 	    SACMatch_Minus6=1;
 	  }
 	}
       }//end loop on sac clusters
-      if(SACMatch_1==0){
-	fHS->FillHistoList("BhabhaList","h360MeV480MeV1nsNoSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
-	fHS->FillHisto2List("BhabhaList","h360MeV480MeV1nsNoSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
-      }
+      // if(SACMatch_1==0){
+      // 	fHS->FillHistoList("BhabhaList","h360MeV1000MeV1nsNoSAC2.5nsGoodClusChaSum",chPVeto+chEVeto);
+      // 	fHS->FillHisto2List("BhabhaList","h360MeV1000MeV1nsNoSAC2.5nsChaSumVsDeltaTcorrect",chPVeto+chEVeto,deltaTcorrect);
+      // }
     }//end good eveto clusters
   }//end good pveto clusters
   return true;

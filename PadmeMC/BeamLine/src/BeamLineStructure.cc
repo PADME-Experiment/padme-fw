@@ -1839,10 +1839,6 @@ void BeamLineStructure::PositionAllQuads()
     ///////////////////////////////////////////////////////////////////////
     ////  In between the Mylar and Q1 quads   MyW--Fl7--Q1----FL6-----Q2
     ///   Moved after the SLTB4 to monitor beam energy spread M. Raggi 18/01/2022
-    
-    //    G4double Flag7FrontPosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*sin(magnetAngle);
-    //    G4double Flag7FrontPosY = 0;							 
-    //    G4double Flag7FrontPosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness*1.5*mm+2*mm)*cos(magnetAngle);
 
     G4double Flag7FrontPosX = Q1PosX+500*mm*sin(magnetAngle);
     G4double Flag7FrontPosY = 0;							 
@@ -1947,6 +1943,26 @@ void BeamLineStructure::CreateAllSLTB()
   // positioning collimators
   new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
   new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 //

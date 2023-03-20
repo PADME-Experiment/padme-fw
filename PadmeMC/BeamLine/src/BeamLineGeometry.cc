@@ -191,6 +191,7 @@ BeamLineGeometry::BeamLineGeometry()
   fSLTB4Aperture= 4.0*mm;
   fSLTB3Aperture= 3.1*mm;
   fSLTB2Aperture= 1.7*mm;
+  fSLTB5Aperture= 2.*mm;
 
 //  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.710*tesla/m;

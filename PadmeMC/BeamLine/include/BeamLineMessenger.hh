@@ -60,8 +60,9 @@ private:
   G4UIcmdWithADouble* fSetQ4_FieldGradCmd;
 
   G4UIcmdWithADoubleAndUnit* fSetSLTB2Cmd;
-  G4UIcmdWithADoubleAndUnit* fSetSLTB4Cmd;
   G4UIcmdWithADoubleAndUnit* fSetSLTB3Cmd;
+  G4UIcmdWithADoubleAndUnit* fSetSLTB4Cmd;
+  G4UIcmdWithADoubleAndUnit* fSetSLTB5Cmd;   //MR 20/03/23
 
   G4UIcmdWithADouble* fBeamLineSetupCmd;
 

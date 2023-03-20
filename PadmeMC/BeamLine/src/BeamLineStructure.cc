@@ -1944,24 +1944,27 @@ void BeamLineStructure::CreateAllSLTB()
   new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
   new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
 
+  //*************************************************************
+  // SLTB5 just before the DHSTB002 magnet only LR
+  //***************************************************************
 
+  G4double SLTB4oSLTB5Distance= 8421*mm;
+  G4double SLTB5Aperture = geo->GetSLTB5Aperture();
+  G4double SLTB5PosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*0.5)*sin(magnetAngle)-SLTB4oSLTB5Distance*sin(magnetAngle);
+  G4double SLTB5PosY = MylarWinFlgPosY;							 
+  G4double SLTB5PosZ = MylarWinFlgPosZ+(SLTB4ToMylar+SLTBThickness*0.5)*cos(magnetAngle)+SLTB4oSLTB5Distance*cos(magnetAngle);
+  G4ThreeVector SLTB5Pos = G4ThreeVector(SLTB5PosX,SLTB5PosY,SLTB5PosZ);    
 
+  G4Tubs* solidSLTB5Full = new G4Tubs("solidSLTB5Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
+  G4VSolid* solidSLTB5Hole =new G4Box("solidSLTB5Hole",SLTB5Aperture*0.5,WallPipeRIn-0.1*mm,SLTBThickness+2*mm);
+  G4SubtractionSolid* solidSLTB5 = new G4SubtractionSolid("solidSLTB5",solidSLTB5Full,solidSLTB5Hole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume*  logicalSLTB5 = new G4LogicalVolume(solidSLTB5,G4Material::GetMaterial("G4_W"),"logicalSLTB5",0,0,0);
+  logicalSLTB5->SetVisAttributes(steelVisAttr);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  // positioning supports 
+  new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
+  // positioning collimators
+  new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalSLTB5,"BeamSLTB5",fMotherVolume,false,0,true);
 
 }
 

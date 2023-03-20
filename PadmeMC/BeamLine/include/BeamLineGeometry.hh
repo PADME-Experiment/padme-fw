@@ -98,6 +98,9 @@ public:
   void SetSLTB4Aperture(G4double g) { fSLTB4Aperture = g; }
   G4double GetSLTB4Aperture() { return fSLTB4Aperture; }
 
+  void SetSLTB5Aperture(G4double g) { fSLTB5Aperture = g; }
+  G4double GetSLTB5Aperture() { return fSLTB5Aperture; }
+
   //setup line configuration M. Raggi 06/2020
   void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
   G4double GetBeamLineSetup() { return fBeamLineSetup; }
@@ -269,6 +272,7 @@ private:
   G4double fQ3MagneticFieldGrad;
   G4double fQ4MagneticFieldGrad;
 
+  G4double fSLTB5Aperture;
   G4double fSLTB4Aperture;
   G4double fSLTB3Aperture;
   G4double fSLTB2Aperture;

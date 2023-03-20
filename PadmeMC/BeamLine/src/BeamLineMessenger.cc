@@ -99,6 +99,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 10.");
   fSetSLTB4Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  //SLTB5 aperture 04/23
+  fSetSLTB5Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB5Aperture",this);
+  fSetSLTB5Cmd->SetGuidance("");
+  fSetSLTB5Cmd->SetParameterName("DFY",false);
+  fSetSLTB5Cmd->SetDefaultUnit("mm");
+  fSetSLTB5Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB5Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
   fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
   fEnableQuadrupolesCmd->SetParameterName("QPS",false);
@@ -243,6 +251,10 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   // Set SLTB4 Aperture
   else if ( cmd == fSetSLTB4Cmd )
     fBeamLineGeometry->SetSLTB4Aperture(fSetSLTB4Cmd->GetNewDoubleValue(par));
+
+  // Set SLTB5 Aperture
+  else if ( cmd == fSetSLTB5Cmd )
+    fBeamLineGeometry->SetSLTB5Aperture(fSetSLTB5Cmd->GetNewDoubleValue(par));
 
 }
 

@@ -11,6 +11,7 @@
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 
 class PadmeAnalysisEvent{
 public:
@@ -33,6 +34,7 @@ public:
   TRecoVClusCollection*           EVetoRecoCl          ;
   TRecoVClusCollection*           HEPVetoRecoCl        ;
   TMCTruthEvent*                  MCTruthEvent         ;
+  TLeadGlassRecoEvent*            LeadGlassRecoEvent   ;
 
 
 };

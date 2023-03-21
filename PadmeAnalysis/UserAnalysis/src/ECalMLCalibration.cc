@@ -25,10 +25,15 @@ Bool_t ECalMLCalibration::InitHistos(){
 
   for(int i = 0;i<32;i++){
     for(int j=0;j<32;j++) {
-      hSvcVal->BookHisto(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),100,0.0,100.0);
+      hSvcVal->BookHisto2(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),1000,0.0,1000.0,1000,0.0,1000.0);
     }
   }
   
+  for(int i = 0;i<32;i++){
+    for(int j=0;j<32;j++) {
+      hSvcVal->BookHisto2(this->GetName()+"_ECal_ECalML_singleHits_times_"+std::to_string(100*i+j),1000,0.0,1000.0,1000,0.0,1000.0);
+    }
+  }
   return true;
 }
 
@@ -48,10 +53,12 @@ Bool_t ECalMLCalibration::Process(){
   Int_t ECalMLHits;
 
   Int_t Channel;
-  Int_t Energy;
+  Float_t Energy;
+  Int_t Time;
   
   Int_t ChannelML;
-  Int_t EnergyML;
+  Float_t EnergyML;
+  Int_t TimeML;
 
   int ECal[32][32];
   int ECalML[32][32];
@@ -119,7 +126,7 @@ Bool_t ECalMLCalibration::Process(){
 
 	if (ECal[i][j]==1 && ECalML[i][j]==1){
 	  
-	  /*
+	  
 	  for (int i=0;i<ECalHits;i++){
 	    ECalhit=evt->ECalRecoEvent->Hit(i);
 	    Channel=ECalhit->GetChannelId();
@@ -131,18 +138,26 @@ Bool_t ECalMLCalibration::Process(){
 	  }
 	  
 	  if (i==ChannelML%100 && j==ChannelML/100) {
+	    Time=ECalhit->GetTime();
 	    Energy=ECalhit->GetEnergy();
+
+	    TimeML=ECalMLhit->GetTime();
 	    EnergyML=ECalMLhit->GetEnergy();
-	    //And we fill a histogram maybe with the two energies...
-	  }
-	  */
-	}
+
+	    hSvc->FillHisto2(this->GetName()+"_ECal_ECalML_singleHits_times_"+std::to_string(100*i+j),Time,TimeML);
+
+	    if((Time-TimeML)>(-3) && (Time-TimeML)<3){
+	      hSvc->FillHisto2(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),Energy, EnergyML);
+	    }
 	
-      }
+	  }
    
-    }
+	}
     
+      }
+    }
   }
+
   
   fResult = true;
   return fResult;

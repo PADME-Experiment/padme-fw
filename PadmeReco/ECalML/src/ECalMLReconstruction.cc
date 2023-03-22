@@ -270,8 +270,8 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 	if (fTriggerProcessor)
 	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
 
-	std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
-		 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
+	//	std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
+	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
 	
 	((TH2F *) GetHisto("ECalMLHitsPos")) -> Fill((Hits[iHit]->GetChannelId())/100,(Hits[iHit]->GetChannelId())%100,Hits[iHit]->GetEnergy());
 	

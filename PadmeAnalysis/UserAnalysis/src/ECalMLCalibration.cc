@@ -145,8 +145,10 @@ Bool_t ECalMLCalibration::Process(){
 	    EnergyML=ECalMLhit->GetEnergy();
 
 	    hSvc->FillHisto2(this->GetName()+"_ECal_ECalML_singleHits_times_"+std::to_string(100*i+j),Time,TimeML);
-
-	    if((Time-TimeML)>(-3) && (Time-TimeML)<3){
+	    
+	    std::cout<<"We have a match! Channel: "<<(100*i+j)<<" Time difference "<<(Time-TimeML)<<std::endl;
+	    
+	    if((Time-TimeML)>(-10) && (Time-TimeML)<10){
 	      hSvc->FillHisto2(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),Energy, EnergyML);
 	    }
 	

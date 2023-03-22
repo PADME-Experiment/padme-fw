@@ -6,6 +6,7 @@
 
 class PadmeVRecoConfig;
 class ECalHit;
+class HistoSvc;
 class ECalChannelDigitizer;
 
 class ECalDigitizer
@@ -30,6 +31,8 @@ private:
   Int_t fVerbose;
 
   PadmeVRecoConfig* fECalConfig;
+
+  HistoSvc* fHistoSvc;
 
   Int_t fChannelMap[32][32]; // Map for individual SiPMs
   Int_t fCardMap[32][8];    // Map for SiPM cards (4 SiPMs each)

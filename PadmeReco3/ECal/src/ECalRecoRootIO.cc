@@ -1,5 +1,3 @@
-#include "ECalRecoRootIO.hh"
-
 #include <stdio.h>
 #include "Riostream.h"
 
@@ -10,6 +8,8 @@
 #include "ECalReconstruction.hh"
 #include "ECalHit.hh"
 #include "ECalCluster.hh"
+
+#include "ECalRecoRootIO.hh"
 
 ECalRecoRootIO::ECalRecoRootIO()
 {
@@ -29,7 +29,7 @@ ECalRecoRootIO::ECalRecoRootIO()
 
 ECalRecoRootIO::~ECalRecoRootIO()
 {
-  if (fVerbose) std::cout << "ECalRecoRootIO::ECalRecoRootIO - Deleting ECal RootIO system" << std::endl;
+  if (fVerbose) std::cout << "ECalRecoRootIO::~ECalRecoRootIO - Deleting ECal RootIO system" << std::endl;
   if (fHitsCollection) delete fHitsCollection;
   if (fClusCollection) delete fClusCollection;
 }

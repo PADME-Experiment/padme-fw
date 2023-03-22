@@ -3,6 +3,7 @@
 #include "TRawEvent.hh"
 
 #include "PadmeVRecoConfig.hh"
+#include "HistoSvc.hh"
 
 #include "ECalHit.hh"
 #include "ECalChannelDigitizer.hh"
@@ -18,6 +19,9 @@ ECalDigitizer::ECalDigitizer(PadmeVRecoConfig* cfg)
 
   // Create ECal channel digitizer
   fECalChannelDigitizer = new ECalChannelDigitizer(fECalConfig);
+
+  // Attach to Histogrammin service
+  fHistoSvc = HistoSvc::GetInstance();
 
   if (fVerbose) printf("ECalDigitizer::ECalDigitizer - ECal digitization system created\n");
 }
@@ -53,6 +57,7 @@ Bool_t ECalDigitizer::BuildHits(TRawEvent* rawEv, vector<ECalHit*>& hits)
 
   TADCBoard* board;
   TADCChannel* channel;
+  TADCTrigger* group;
 
   for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++) {
 
@@ -60,18 +65,29 @@ Bool_t ECalDigitizer::BuildHits(TRawEvent* rawEv, vector<ECalHit*>& hits)
     UChar_t boardId = board->GetBoardId();
     if (fECalConfig->BoardIsMine(boardId)) {
 
+      // Get SIC for the 4 groups of the board
+      UShort_t groupSIC[4] = {0,0,0,0};
+      for(UChar_t igr = 0; igr < board->GetNADCTriggers(); igr++) {
+	group = board->ADCTrigger(igr);
+	groupSIC[group->GetGroupNumber()] = group->GetStartIndexCell();
+      }
+      if (fVerbose>3) printf("ECalDigitizer::BuildHits - Board %2u group SICs %d %d %d %d\n",boardId,groupSIC[0],groupSIC[1],groupSIC[2],groupSIC[3]);
+
       for(UChar_t ich = 0; ich < board->GetNADCChannels();ich++) {
 
         channel = board->ADCChannel(ich);
 	UChar_t channelId = channel->GetChannelNumber();
 
-	Int_t ecalChannel = fChannelMap[boardId][channelId];
-
 	// Some channels in the ECal boards are used to record the plastic scintillator pads of the cosmics trigger: skip them
+	Int_t ecalChannel = fChannelMap[boardId][channelId];
 	if (ecalChannel == -1) continue;
 
-	if (fVerbose>3) printf("ECalDigitizer::BuildHits - Processing board %2u channel %2u ECal channel %4.4d\n",boardId,channelId,ecalChannel);
-	fECalChannelDigitizer->DigitizeChannel(boardId,channelId,ecalChannel,channel->GetSamplesArray(),hits);
+	UChar_t groupId = channelId/8;
+	UShort_t groupStartIndexCell = groupSIC[groupId];
+	//printf("channelId %d groupId %d sic %d\n",channelId,groupId,groupStartIndexCell);
+
+	if (fVerbose>3) printf("ECalDigitizer::BuildHits - Processing board %2u channel %2u ECal channel %4.4d SIC %d\n",boardId,channelId,ecalChannel,groupStartIndexCell);
+	fECalChannelDigitizer->DigitizeChannel(boardId,channelId,ecalChannel,groupStartIndexCell,channel->GetSamplesArray(),hits);
       }
     }
   }

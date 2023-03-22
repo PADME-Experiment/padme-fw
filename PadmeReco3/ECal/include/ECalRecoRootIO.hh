@@ -15,7 +15,7 @@ class ECalRecoRootIO
 public:
 
   ECalRecoRootIO();
-  virtual ~ECalRecoRootIO();
+  ~ECalRecoRootIO();
 
   void NewRun();
   void EndRun();

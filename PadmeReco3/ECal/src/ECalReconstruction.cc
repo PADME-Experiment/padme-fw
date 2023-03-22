@@ -89,6 +89,10 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEvent)
     if (fVerbose) printf("ECalReconstruction::ProcessEvent - Run %d has energy %.3f\n",run,fRunConditionSvc->GetRunEnergy());
   }
 
+  // Create directory to store histograms for this event
+  TString hDir = TString::Format("ECal/Evt%d",rawEvent->GetEventNumber());
+  fHistoSvc->CreateDir(hDir.Data());
+
   fHits.clear();
   fClusters.clear();
 

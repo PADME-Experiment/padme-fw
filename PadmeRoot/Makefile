@@ -8,6 +8,7 @@
 
 # Set name of library
 LIBNAME := PadmeRoot
+PYRAWLIBNAME := PyPadmeRoot
 
 # Define directories for different file types
 SDIR	= src
@@ -41,10 +42,14 @@ OBJECTS  := $(addprefix $(ODIR)/,$(notdir $(SOURCES:.cc=.o))) $(ODIR)/Persistenc
 
 # Define comlete library name
 LIBRARY := $(LDIR)/lib$(LIBNAME).so
+PYRAWLIBRARY := $(LDIR)/lib$(PYRAWLIBNAME).so
 
 #########################################################################
 
-all: $(LIBNAME)
+all: $(LIBNAME) $(PYRAWLIBNAME)
+
+$(PYRAWLIBNAME): $(LIBNAME)
+	$(CXX) $(ROOTLDFLAGS) $(ROOTLIBS) $(CXXFLAGS) -l$(LIBNAME) -fPIC -shared -o $(PYRAWLIBRARY) $(wildcard python/*.cc)
 
 $(LIBNAME) : $(DEPS) $(OBJECTS)
 	$(CXX) -shared -o $(LIBRARY) $(ROOTLDFLAGS) $(CXXFLAGS) $(OBJECTS)
@@ -72,12 +77,15 @@ cleanall:
 	@echo Cleaning all...
 	rm -f $(ODIR)/*.o
 	rm -f $(LIBRARY)
+	rm -f $(PYRAWLIBRARY)
 	rm -f PersistencyDict.*
 
 try:
 	@echo Current make parameters:
 	@echo LIBNAME = $(LIBNAME)
+	@echo PYRAWLIBNAME = $(PYRAWLIBNAME)
 	@echo LIBRARY = $(LIBRARY)
+	@echo PYRAWLIBRARY = $(PYRAWLIBRARY)
 	@echo CXXFLAGS = $(CXXFLAGS)
 	@echo LIBS = $(LIBS)
 	@echo SOURCES = $(SOURCES)

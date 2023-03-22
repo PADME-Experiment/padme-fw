@@ -6,74 +6,96 @@
 // --------------------------------------------------------------
 #include "Riostream.h"
 
+#include <TH1D.h>
+#include <TString.h>
+
+#include "PadmeVRecoConfig.hh"
+
+#include "TRawEvent.hh"
+
+#include "HistoSvc.hh"
+#include "TrigTimeSvc.hh"
+#include "RunConditionSvc.hh"
+#include "RunConfigurationSvc.hh"
+
 #include "LeadGlassReconstruction.hh"
 
-#define LEADGLASS_BOARD 14
-#define LEADGLASS_CHANNEL 31
-
-LeadGlassReconstruction::LeadGlassReconstruction(TFile* HistoFile, TString ConfigFileName)
-  : PadmeVReconstruction(HistoFile, "LeadGlass", ConfigFileName)
+LeadGlassReconstruction::LeadGlassReconstruction(TString ConfigFileName)
 {
 
-  printf("LeadGlassReconstruction::Initialize - Initializing\n");
+  // Attach global services
+  fHistoSvc = HistoSvc::GetInstance();
+  fTrigTimeSvc = TrigTimeSvc::GetInstance();
+  fRunConditionSvc = RunConditionSvc::GetInstance();
+  fRunConfigurationSvc = RunConfigurationSvc::GetInstance();
+
+  // Create LeadGlass histogram directory
+  fHistoSvc->CreateDir("LeadGlass");
+
+  // Enable LeadGlass specific configuration service
+  fLeadGlassConfig = new PadmeVRecoConfig(new utl::ConfigParser(ConfigFileName.Data()),"LeadGlass");
+
+  // Define verbose level
+  fVerbose = fLeadGlassConfig->GetParOrDefault("Output", "Verbose", 0);
 
   // Get pedestal and charge reconstruction parameters from config file
-  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
-  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
-  fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):600;
+  fPedestalSamples = fLeadGlassConfig->GetParOrDefault("RECO","PedestalSamples",100);
+  fSignalSamplesStart = fLeadGlassConfig->GetParOrDefault("RECO","SignalSamplesStart",200);
+  fSignalSamplesEnd = fLeadGlassConfig->GetParOrDefault("RECO","SignalSamplesEnd",600);
+  
+  //// Get charge-to-NPoTs conversion factor from config file. Complain if not found
+  //fChargeToNPoTs = 0.239; // Value for 402MeV and LeadGlass at 650V
+  //if (fConfigParser->HasConfig("RECO","ChargeToNPoTs")) {
+  //  fChargeToNPoTs = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToNPoTs"));
+  //} else {
+  //  printf("LeadGlassReconstruction::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
+  //}
 
-  // Get charge-to-NPoTs conversion factor from config file. Complain if not found
-  fChargeToNPoTs = 0.239; // Value for 402MeV and LeadGlass at 650V
-  if (fConfigParser->HasConfig("RECO","ChargeToNPoTs")) {
-    fChargeToNPoTs = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToNPoTs"));
-  } else {
-    printf("LeadGlassReconstruction::Initialize - WARNING: ChargeToNPoTs not set in config file. Using %f\n",fChargeToNPoTs);
-  }
-
-  // Get charge-to-energy conversion factor from config file. Complain if not found
-  fChargeToEnergy = 1.; // Need value
-  if (fConfigParser->HasConfig("RECO","ChargeToEnergy")) {
-    fChargeToEnergy = std::stod(fConfigParser->GetSingleArg("RECO","ChargeToEnergy"));
-  } else {
-    printf("LeadGlassReconstruction::Initialize - WARNING: ChargeToEnergy not set in config file. Using %f\n",fChargeToEnergy);
-  }
+  // Get charge-to-energy conversion factor from config file
+  fChargeToEnergy = fLeadGlassConfig->GetParOrDefault("RECO","ChargeToEnergy",1./0.79256);
 
   // Get threshold for bunch length evaluation.
-  fBunchLengthThreshold = 50.;
-  if (fConfigParser->HasConfig("RECO","BunchLengthThreshold")) {
-    fBunchLengthThreshold = std::stod(fConfigParser->GetSingleArg("RECO","BunchLengthThreshold"));
-  } else {
-    printf("LeadGlassReconstruction::Initialize - WARNING: BunchLengthThreshold not set in config file. Using %f\n",fBunchLengthThreshold);
+  fBunchLengthThreshold = fLeadGlassConfig->GetParOrDefault("RECO","BunchLengthThreshold",50.);
+
+  if (fVerbose>1) {
+    printf("LeadGlassReconstruction::LeadGlassReconstruction - digitization parameters set to:\n");
+    printf("\tPedestalSamples\t\t%d\n",fPedestalSamples);
+    printf("\tSignalSamplesStart\t%d\n",fSignalSamplesStart);
+    printf("\tSignalSamplesEnd\t%d\n",fSignalSamplesEnd);
+    printf("\tChargeToEnergy\t\t%.5f MeV/pC\n",fChargeToEnergy);
+    printf("\tBunchLengthThreshold\t%.1f\n",fBunchLengthThreshold);
   }
+
+  // Check if LeadGlass data must be written to the output file
+  fWriteHits = (Bool_t)fLeadGlassConfig->GetParOrDefault("Output","Hits",1);
+
+  if (fVerbose) printf("LeadGlassReconstruction::LeadGlassReconstruction - LeadGlass reconstruction system created\n");
 
 }
 
 LeadGlassReconstruction::~LeadGlassReconstruction()
 {;}
 
-void LeadGlassReconstruction::HistoInit()
+void LeadGlassReconstruction::Init()
 {
 
-  // Create histograms
-  fHLGPedestal = new TH1D("LG_Pedestal","LG_Pedestal",120,3500.,4100.);
-  fHLGPedRMS = new TH1D("LG_PedRMS","LG_PedRMS",100,0.,50.);
-  fHLGTotCharge = new TH1D("LG_TotCharge","LG_TotCharge",1000,0.,5000.);
-  fHLGNPoTs = new TH1D("LG_NPoTs","LG_NPoTs",1000,0.,20000.);
-  fHLGBunchLength = new TH1D("LG_BunchLength","LG_BunchLength",1000,0.,1000.);
-  fHLGBunchBBQ = new TH1D("LG_BunchBBQ","LG_BunchBBQ",1000,0.,1000.);
-  //fHLGBunchBBQWF = new TH1D("LG_BunchBBQWF","LG_BunchBBQWF",1024,0.,1024.);
-  //fHLGBunchBBQWF2 = new TH1D("LG_BunchBBQWF2","LG_BunchBBQWF2",1024,0.,1024.);
+  if (fRunConfigurationSvc->IsMonitorMode()) {
+    // Create histograms
+    fHLGPedestal = fHistoSvc->BookHisto("LeadGlass","LG_Pedestal","LeadGlass Pedestal",120,3500.,4100.);
+    fHLGPedRMS = fHistoSvc->BookHisto("LeadGlass","LG_PedRMS","LG_PedRMS",100,0.,50.);
+    fHLGTotCharge = fHistoSvc->BookHisto("LeadGlass","LG_TotCharge","LG_TotCharge",1000,0.,5000.);
+    fHLGNPoTs = fHistoSvc->BookHisto("LeadGlass","LG_NPoTs","LG_NPoTs",1000,0.,20000.);
+    fHLGBunchLength = fHistoSvc->BookHisto("LeadGlass","LG_BunchLength","LG_BunchLength",1000,0.,1000.);
+    fHLGBunchBBQ = fHistoSvc->BookHisto("LeadGlass","LG_BunchBBQ","LG_BunchBBQ",1000,0.,1000.);
+    //fHLGBunchBBQWF = fHistoSvc->BookHisto("LG_BunchBBQWF","LG_BunchBBQWF",1024,0.,1024.);
+    //fHLGBunchBBQWF2 = fHistoSvc->BookHisto("LG_BunchBBQWF2","LG_BunchBBQWF2",1024,0.,1024.);
+  }
 
-  // Store histograms for final output
-  AddHisto("LG_Pedestal",fHLGPedestal);
-  AddHisto("LG_PedRMS",fHLGPedRMS);
-  AddHisto("LG_TotCharge",fHLGTotCharge);
-  AddHisto("LG_NPoTs",fHLGNPoTs);
-  AddHisto("LG_BunchLength",fHLGBunchLength);	   
-  AddHisto("LG_BunchBBQ",fHLGBunchBBQ);	   
-  //AddHisto("LG_BunchBBQWF",fHLGBunchBBQWF);	   
-  //AddHisto("LG_BunchBBQWF2",fHLGBunchBBQWF2);	   
+}
 
+void LeadGlassReconstruction::EndProcessing()
+{
+  if (fVerbose) printf("LeadGlassReconstruction::EndProcessing - Finalizing LeadGlass reconstruction\n");
 }
 
 void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
@@ -81,60 +103,40 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   fLeadGlassFound = false;
 
-  if(fTriggerProcessor) {
-    BuildTriggerInfo(rawEv);
-    if (TriggerToBeSkipped()) return;
+  printf("LeadGlassReconstruction::ProcessEvent - Run %d Event %d TrigMask 0x%2.2x\n",rawEv->GetRunNumber(),rawEv->GetEventNumber(),rawEv->GetEventTrigMask());
+
+  // Only analyze BTF events
+  if (! rawEv->EventTrigMaskGetBit(0)) return;
+
+  // Show run energy (only when run changes)
+  static Int_t run = 0;
+  if (fRunConditionSvc->GetCurrentRun() != run) {
+    run = fRunConditionSvc->GetCurrentRun();
+    fRunEnergy = fRunConditionSvc->GetRunEnergy();
+    fChargeToNPoTs = fChargeToEnergy/fRunEnergy;
+    if (fVerbose) printf("LeadGlassReconstruction::ProcessEvent - Run %d has energy %.3f MeV - Charge to NPots conversion factor is %.5f\n",run,fRunEnergy,fChargeToNPoTs);
   }
 
   // Find LeadGlass channel in RawEvent (Board 14 Channel 31)
-  //UChar_t lg_b,lg_c;
   for(UChar_t b = 0; b < rawEv->GetNADCBoards(); b++) {
     if (rawEv->ADCBoard(b)->GetBoardId() == LEADGLASS_BOARD) {
-      //lg_b = b;
       for(UChar_t c = 0; c < rawEv->ADCBoard(b)->GetNADCChannels(); c++) {
 	if (rawEv->ADCBoard(b)->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
 	  fLeadGlassFound = true;
-	  //lg_c = c;
 	  // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
 	  AnalyzeChannel(rawEv->ADCBoard(b)->ADCChannel(c)->GetSamplesArray());
-	  //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
 	}
       }
     }
   }
 
+  if (fVerbose>2) {
+    printf("LeadGlassReconstruction::ProcessEvent - Run %d Event %d Pedestal %.1f PedRMS %.1f TotCharge %.2f TotEnergy %.0f MeV NPots %.0f BunchLen %.1f BunchBBQ %.1f\n",rawEv->GetRunNumber(),rawEv->GetEventNumber(),fLGPedestal,fLGPedRMS,fLGCharge,fLGEnergy,fLGNPoTs,fBunchLength,fBunchBBQ);
+  }
+
   //Processing is over, let's analyze what's here, if requested
-  if (fLeadGlassFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+  if (fLeadGlassFound && fRunConfigurationSvc->IsMonitorMode()) AnalyzeEvent(rawEv);
 
-  /*
-  if (rawEv->GetEventNumber() == 110) {
-    printf("Event %d Bunch length %f BBQ %f\n",rawEv->GetEventNumber(),fBunchLength,fBunchBBQ);
-    Short_t* samples = rawEv->ADCBoard(lg_b)->ADCChannel(lg_c)->GetSamplesArray();
-    for(Int_t i=0; i<1024; i++) {
-      fHLGBunchBBQWF2->SetBinContent(i,samples[i]);
-      //printf("%4d ",samples[i]);
-    }
-    printf("\n");
-  }
-
-  if (fBunchBBQ>300.) {
-    printf("Event %d Bunch length %f BBQ %f\n",rawEv->GetEventNumber(),fBunchLength,fBunchBBQ);
-    Short_t* samples = rawEv->ADCBoard(lg_b)->ADCChannel(lg_c)->GetSamplesArray();
-    for(Int_t i=0; i<1024; i++) {
-      fHLGBunchBBQWF->SetBinContent(i,samples[i]);
-      //printf("%4d ",samples[i]);
-    }
-    printf("\n");
-  }
-  */
-
-}
-
-Bool_t LeadGlassReconstruction::TriggerToBeSkipped()
-{
-  // Only analyze BTF triggers
-  if ( !(GetTriggerProcessor()->IsBTFTrigger()) ) return true;
-  return false; 
 }
 
 void LeadGlassReconstruction::AnalyzeEvent(TRawEvent* rawEv)
@@ -160,8 +162,7 @@ void LeadGlassReconstruction::AnalyzeChannel(Short_t* samples)
   fLGEnergy = fLGCharge*fChargeToEnergy;
 
   // Compute number of positrons on target from total charge
-  fLGNPoTs = fLGCharge/fChargeToNPoTs;
-
+  fLGNPoTs = fLGCharge*fChargeToNPoTs;
 }
 
 void LeadGlassReconstruction::ComputeTotalCharge(Short_t* samples)
@@ -176,11 +177,8 @@ void LeadGlassReconstruction::ComputeTotalCharge(Short_t* samples)
       sum_ped += samples[s];
       sum2_ped += samples[s]*samples[s];
     } else if (s >= fSignalSamplesStart) {
-      if (s < fSignalSamplesEnd) {
-        sum += samples[s];
-      } else {
-        break;
-      }
+      if (s >= fSignalSamplesEnd) break;
+      sum += samples[s];
     }
   }
 

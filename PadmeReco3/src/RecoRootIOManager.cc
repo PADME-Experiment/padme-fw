@@ -15,6 +15,7 @@
 #include "ECalReconstruction.hh"
 #include "ETagReconstruction.hh"
 #include "TargetReconstruction.hh"
+#include "LeadGlassReconstruction.hh"
 
 RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
 {
@@ -65,7 +66,8 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fECalRecoRootIO = new ECalRecoRootIO();
     //fRootIOList.push_back(new ECalRecoRootIO(this));
   if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1)*fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
-    fRootIOList.push_back(new LeadGlassRecoRootIO(this));
+    fLeadGlassRecoRootIO = new LeadGlassRecoRootIO();
+    //fRootIOList.push_back(new LeadGlassRecoRootIO(this));
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   std::cout<<"************************** "<<fRootIOList.size()<<" RecoIO Tools built"<<std::endl;
 
@@ -78,6 +80,7 @@ RecoRootIOManager::~RecoRootIOManager()
   if (fECalRecoRootIO) delete fECalRecoRootIO;
   if (fETagRecoRootIO) delete fETagRecoRootIO;
   if (fTargetRecoRootIO) delete fTargetRecoRootIO;
+  if (fLeadGlassRecoRootIO) delete fLeadGlassRecoRootIO;
 }
 
 void RecoRootIOManager::Close()
@@ -209,6 +212,14 @@ void RecoRootIOManager::NewRun(Int_t nRun)
       std::cout << "RootIOManager: IO for Target enabled" << std::endl;
       fTargetRecoRootIO->NewRun();
     }
+    if (fLeadGlassRecoRootIO) {
+      std::cout << "RootIOManager: Checking IO for LeadGlass" << std::endl;
+      fLeadGlassRecoRootIO->SetEventTree(fEventTree);
+      fLeadGlassRecoRootIO->SetLeadGlassReconstruction(fReco->GetLeadGlassReconstruction());
+      fLeadGlassRecoRootIO->SetVerbose(fReco->GetLeadGlassReconstruction()->GetVerbose());
+      std::cout << "RootIOManager: IO for LeadGlass enabled" << std::endl;
+      fLeadGlassRecoRootIO->NewRun();
+    }
 
     // If present, replicate MCTruth info to output file
     if (fReco->GetMCTruthEvent()) 
@@ -243,6 +254,7 @@ void RecoRootIOManager::EndRun()
   if (fECalRecoRootIO) fECalRecoRootIO->EndRun();
   if (fETagRecoRootIO) fETagRecoRootIO->EndRun();
   if (fTargetRecoRootIO) fTargetRecoRootIO->EndRun();
+  if (fLeadGlassRecoRootIO) fLeadGlassRecoRootIO->EndRun();
 
 }
 
@@ -284,6 +296,7 @@ void RecoRootIOManager::SaveEvent(){
   if (fECalRecoRootIO) fECalRecoRootIO->SaveEvent();
   if (fETagRecoRootIO) fETagRecoRootIO->SaveEvent();
   if (fTargetRecoRootIO) fTargetRecoRootIO->SaveEvent();
+  if (fLeadGlassRecoRootIO) fLeadGlassRecoRootIO->SaveEvent();
 
   // All data have been copied: write it to file
   fEventTree->Fill();

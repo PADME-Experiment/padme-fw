@@ -7,18 +7,32 @@
 #ifndef LeadGlassReconstruction_H
 #define LeadGlassReconstruction_H
 
-#include "PadmeVReconstruction.hh"
+#define LEADGLASS_BOARD 14
+#define LEADGLASS_CHANNEL 31
 
-class LeadGlassReconstruction : public PadmeVReconstruction
+class TString;
+class TH1D;
+
+class TRawEvent;
+
+class HistoSvc;
+class TrigTimeSvc;
+class RunConditionSvc;
+class RunConfigurationSvc;
+
+class LeadGlassReconstruction
 {
 
 public:
 
-  LeadGlassReconstruction(TFile*, TString);
+  LeadGlassReconstruction(TString);
   ~LeadGlassReconstruction();
 
+  void Init();
   void ProcessEvent(TRawEvent*);
-  virtual void HistoInit();
+  void EndProcessing();
+
+  Bool_t writeHits() { return fWriteHits; }
 
   Bool_t LeadGlassFound() { return fLeadGlassFound; }
 
@@ -30,9 +44,17 @@ public:
   Double_t GetBunchLength() { return fBunchLength; }
   Double_t GetBunchBBQ()    { return fBunchBBQ;    }
 
+  Int_t GetVerbose() { return fVerbose; }
+
 private:
 
-  Bool_t TriggerToBeSkipped();
+  HistoSvc* fHistoSvc;
+  TrigTimeSvc* fTrigTimeSvc;
+  RunConditionSvc* fRunConditionSvc;
+  RunConfigurationSvc* fRunConfigurationSvc;
+
+  PadmeVRecoConfig* fLeadGlassConfig;
+
   void AnalyzeEvent(TRawEvent*);
   void AnalyzeChannel(Short_t*);
   void ComputeTotalCharge(Short_t*);
@@ -50,6 +72,9 @@ private:
   Double_t fLGPedestal; // Pedestal level from the first fPedestalSamples samples
   Double_t fLGPedRMS;   // Pedestal RMS
   Double_t fLGCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+
+  // Energy of current run
+  Double_t fRunEnergy;
 
   // Calibration parameter to convert Total Charge to Total Energy
   Double_t fChargeToEnergy;
@@ -70,6 +95,8 @@ private:
   Double_t fBunchLength;
   Double_t fBunchBBQ;
 
+  Bool_t fWriteHits;
+
   // Histograms
   TH1D* fHLGPedestal;
   TH1D* fHLGPedRMS;
@@ -79,6 +106,8 @@ private:
   TH1D* fHLGBunchBBQ;
   //TH1D* fHLGBunchBBQWF;
   //TH1D* fHLGBunchBBQWF2;
+
+  Int_t fVerbose;
 
 };
 #endif

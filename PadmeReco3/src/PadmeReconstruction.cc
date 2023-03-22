@@ -92,6 +92,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fECalReconstruction = 0;
   fETagReconstruction = 0;
   fTargetReconstruction = 0;
+  fLeadGlassReconstruction = 0;
 
   fGlobalRecoConfigOptions=NULL;
 
@@ -179,6 +180,7 @@ PadmeReconstruction::~PadmeReconstruction()
   if (fECalReconstruction) delete fECalReconstruction;
   if (fETagReconstruction) delete fETagReconstruction;
   if (fTargetReconstruction) delete fTargetReconstruction;
+  if (fLeadGlassReconstruction) delete fLeadGlassReconstruction;
 }
 
 void PadmeReconstruction::InitLibraries()
@@ -231,7 +233,8 @@ void PadmeReconstruction::InitLibraries()
   if (fConfig->GetParOrDefault("RECOALGORITHMS","LeadGlass",1)) {
     TString configLeadGlass = fConfig->GetParOrDefault("RECOCONFIG","LeadGlass","config/LeadGlass.cfg");
     std::cout<<"=== Enabling LeadGlass with configuration file "<<configLeadGlass<<std::endl;
-    fRecoLibrary.push_back(new LeadGlassReconstruction(fOutputFile,configLeadGlass));
+    //fRecoLibrary.push_back(new LeadGlassReconstruction(fOutputFile,configLeadGlass));
+    fLeadGlassReconstruction = new LeadGlassReconstruction(configLeadGlass);
   }
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
@@ -254,10 +257,11 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
   //if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   //if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
-  if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
+  //if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
   if (fECalReconstruction) fECalReconstruction->Init();
   if (fETagReconstruction) fETagReconstruction->Init();
   if (fTargetReconstruction) fTargetReconstruction->Init();
+  if (fLeadGlassReconstruction) fLeadGlassReconstruction->Init();
 }
 
 void PadmeReconstruction::HistoInit()
@@ -534,6 +538,7 @@ Bool_t PadmeReconstruction::NextEvent()
     if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetMCEvent,fMCEvent);
     if (fECalReconstruction) fECalReconstruction->ProcessEvent(fECalMCEvent,fMCEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagMCEvent,fMCEvent);
+    //if (fLeadGlassReconstruction) fLeadGlassReconstruction->ProcessEvent(fLeadGlassMCEvent,fMCEvent);
 
     fNProcessedEventsInTotal++;
 
@@ -575,6 +580,7 @@ Bool_t PadmeReconstruction::NextEvent()
     if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fTargetRecoEvent,fRecoEvent);
     if (fECalReconstruction) fECalReconstruction->ProcessEvent(fECalRecoEvent,fRecoEvent);
     if (fETagReconstruction) fETagReconstruction->ProcessEvent(fETagRecoEvent,fRecoEvent);
+    //if (fLeadGlassReconstruction) fLeadGlassReconstruction->ProcessEvent(fLeadGlassRecoEvent,fRecoEvent);
 
     ++fNProcessedEventsInTotal;
 
@@ -619,6 +625,7 @@ Bool_t PadmeReconstruction::NextEvent()
       if (fTargetReconstruction) fTargetReconstruction->ProcessEvent(fRawEvent);
       if (fECalReconstruction) fECalReconstruction->ProcessEvent(fRawEvent);
       if (fETagReconstruction) fETagReconstruction->ProcessEvent(fRawEvent);
+      if (fLeadGlassReconstruction) fLeadGlassReconstruction->ProcessEvent(fRawEvent);
     }
 
     fNProcessedEventsInTotal++;
@@ -653,6 +660,7 @@ void PadmeReconstruction::EndProcessing(){
   if (fTargetReconstruction) fTargetReconstruction->EndProcessing();
   if (fECalReconstruction) fECalReconstruction->EndProcessing();
   if (fETagReconstruction) fETagReconstruction->EndProcessing();
+  if (fLeadGlassReconstruction) fLeadGlassReconstruction->EndProcessing();
   fOutputFile->cd("/");
   //HistoExit();
 

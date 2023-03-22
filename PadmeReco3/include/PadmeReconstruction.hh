@@ -23,6 +23,7 @@ class RecoRootIOManager;
 class ECalReconstruction;
 class ETagReconstruction;
 class TargetReconstruction;
+class LeadGlassReconstruction;
 
 class TRawEvent;
 class TMCEvent;
@@ -81,6 +82,7 @@ public:
   ECalReconstruction* GetECalReconstruction() { return fECalReconstruction; }
   ETagReconstruction* GetETagReconstruction() { return fETagReconstruction; }
   TargetReconstruction* GetTargetReconstruction() { return fTargetReconstruction; }
+  LeadGlassReconstruction* GetLeadGlassReconstruction() { return fLeadGlassReconstruction; }
 
   TMCTruthEvent* GetMCTruthEvent() { return fMCTruthEvent; }
 
@@ -150,6 +152,7 @@ private:
   ECalReconstruction* fECalReconstruction;
   ETagReconstruction* fETagReconstruction;
   TargetReconstruction* fTargetReconstruction;
+  LeadGlassReconstruction* fLeadGlassReconstruction;
  
   Int_t fNEvt;
   Int_t fNProcessedEventsInTotal;

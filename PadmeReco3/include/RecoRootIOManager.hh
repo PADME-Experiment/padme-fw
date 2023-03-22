@@ -20,6 +20,7 @@ class TRecoEvent;
 class ECalRecoRootIO;
 class ETagRecoRootIO;
 class TargetRecoRootIO;
+class LeadGlassRecoRootIO;
 
 class RecoRootIOManager
 {
@@ -83,6 +84,7 @@ private:
   ECalRecoRootIO* fECalRecoRootIO;
   ETagRecoRootIO* fETagRecoRootIO;
   TargetRecoRootIO* fTargetRecoRootIO;
+  LeadGlassRecoRootIO* fLeadGlassRecoRootIO;
 
 };
 #endif // RootIOManager_H

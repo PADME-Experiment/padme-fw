@@ -169,6 +169,7 @@ void ECalMLReconstruction::HistoInit(){
   AddHisto("ECalMlEsum-2",     new TH1F("ECalMLEsum-2","Esum-2",1000,0.,1000.));  
   AddHisto("ECalMlEsum-2G",     new TH1F("ECalMLEsum-2G","Esum-2G",1000,0.,1000.));
   AddHisto("ECalMlZSupFlag",     new TH1F("ECalMLZSupFlag","ZSupFlag",11,-0.5,10.5));
+  AddHisto("ECalMLHitsPos", new TH2F("ECalMLHitsPos","Energy",33,1,33,33,1,33));
 
 }
 
@@ -265,9 +266,18 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 	Hits[iHit]->SetChannelId(ChID);
 	Hits[iHit]->setBDCHid(iBdID,ElChID);
 	// Correct hit time using trigger information
+
 	if (fTriggerProcessor)
 	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
+
+	//	std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
+	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
+	
+	((TH2F *) GetHisto("ECalMLHitsPos")) -> Fill((Hits[iHit]->GetChannelId())/100,(Hits[iHit]->GetChannelId())%100,Hits[iHit]->GetEnergy());
+	
       }
+      
+      
 
     } // End loop over channels
 

@@ -37,9 +37,13 @@ LIBS += -Llib -lPadmeReco$(STATIC)
 .PHONY: clean cleansub cleanbin env $(ALLTARGETDIRS)
 
 #all: PadmeReco PadmeEventDisplay
-all: PadmeReco
+all: PadmeReco WaveformAnalysis
 
 PadmeReco: PadmeReco.cc makesub
+	@echo "Compiling $< ..."
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
+
+WaveformAnalysis: WaveformAnalysis.cc makesub
 	@echo "Compiling $< ..."
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LIBS) $(LDFLAGS)
 

@@ -13,7 +13,7 @@ ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC re
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
 CPPFLAGS += -IRecoBase/include -g
-
+CPPFLAGS += -I/home/kalina/software/include
 
 include ./mkconfig/global.gmk
 
@@ -25,7 +25,7 @@ LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 #LIBS += -L/usr/lib64/mysql -lmysqlclient
 LIBS += -Llib -lPadmeReco$(STATIC)
-LIBS += -I/usr/local/include -L/usr/local/lib -ltensorflow
+LIBS += -L/home/kalina/software/lib -ltensorflow
 
 
 #EXTRALIBS += -LEventDisplay/lib -lEventDisplay$(STATIC) -lEve -lGeom -lRGL -lFTGL -lGui -lGed -lTreePlayer -lEG 

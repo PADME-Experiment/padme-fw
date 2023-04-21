@@ -1,5 +1,6 @@
 #include <TH1D.h>
 #include <TH2D.h>
+#include <TProfile.h>
 #include <TFile.h>
 #include <TTree.h>
 //#include <CLHEP/Units/SystemOfUnits.h>
@@ -24,6 +25,8 @@ HistoSvc::HistoSvc()
   // histograms
   fHisto1DMap.clear();
   fHisto2DMap.clear();
+  fHistoProfMap.clear();
+
   // ntuple
   ntupl = 0;
 }
@@ -54,6 +57,12 @@ void HistoSvc::BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xu
   return;
 }
 
+void HistoSvc::BookHistoProf(std::string name, Int_t nx, Double_t xlow, Double_t xup, Double_t ylow, Double_t yup)
+{
+  TProfile* hT1y = new TProfile(name.c_str(), name.c_str(), nx, xlow, xup, ylow, yup);
+  fHistoProfMap[name]=hT1y;
+  return;
+}
 
 
 //void HistoSvc::book(Int_t validation)
@@ -257,6 +266,22 @@ void HistoSvc::FillHisto2(std::string hname, Double_t xbin, Double_t ybin, Doubl
    }
 }
 
+void HistoSvc::FillHistoProf(std::string hname, Double_t xbin, Double_t ybin, Double_t weight)
+{
+   if (fHistoProfMap.find(hname)==fHistoProfMap.end()) {
+    std::cout << "---> warning from HistoSvc::FillHisto() : histoProf " << hname
+           << " does not exist. (xbin=" << xbin << " ybin=" << ybin <<" weight=" << weight << ")"
+           << std::endl;
+    return;
+  }
+   if  (fHistoProfMap[hname]) {fHistoProfMap[hname]->Fill(xbin, ybin, weight); }
+ else
+   {
+      std::cout << "---> warning from HistoSvc::FillHisto() : histo " << hname
+           << " found in the map with a NULL pointer "
+           << std::endl;
+   }
+}
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void HistoSvc::Normalize(std::string hname, Double_t fac)

@@ -25,6 +25,7 @@
 #include "TTargetRecoEvent.hh"
 #include "TTargetRecoBeam.hh"
 #include "TECalRecoEvent.hh"
+#include "TECalMLRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
 #include "TSACRecoEvent.hh"
@@ -250,6 +251,7 @@ int main(Int_t argc, char **argv)
   TTargetRecoBeam*                fTargetRecoBeam       =0;
   TRecoVClusCollection*           fSACRecoCl            =0;
   TRecoVClusCollection*           fECalRecoCl           =0;
+  TRecoVClusCollection*           fECalMLRecoCl         =0;
   TRecoVClusCollection*           fPVetoRecoCl          =0;
   TRecoVClusCollection*           fEVetoRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
@@ -333,6 +335,9 @@ int main(Int_t argc, char **argv)
       } else if (branchName=="ECal_Clusters") {
 	fECalRecoCl = new TRecoVClusCollection();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fECalRecoCl);
+      } else if (branchName=="ECalML_Clusters") {
+	fECalMLRecoCl = new TRecoVClusCollection();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fECalMLRecoCl);
       } else if (branchName=="PVeto_Clusters") {
 	fPVetoRecoCl = new TRecoVClusCollection();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoCl);
@@ -402,6 +407,7 @@ int main(Int_t argc, char **argv)
     event->TargetRecoBeam       =fTargetRecoBeam     ;
     event->SACRecoCl            =fSACRecoCl          ;
     event->ECalRecoCl           =fECalRecoCl         ;
+    event->ECalMLRecoCl         =fECalMLRecoCl       ;
     event->PVetoRecoCl          =fPVetoRecoCl        ;
     event->EVetoRecoCl          =fEVetoRecoCl        ;
     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;

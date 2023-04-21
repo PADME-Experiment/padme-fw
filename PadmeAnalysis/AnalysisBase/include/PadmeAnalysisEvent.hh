@@ -33,6 +33,7 @@ public:
   TTargetRecoBeam*                TargetRecoBeam       ;
   TRecoVClusCollection*           SACRecoCl            ;
   TRecoVClusCollection*           ECalRecoCl           ;
+  TRecoVClusCollection*           ECalMLRecoCl           ;
   TRecoVClusCollection*           PVetoRecoCl          ;
   TRecoVClusCollection*           EVetoRecoCl          ;
   TRecoVClusCollection*           HEPVetoRecoCl        ;

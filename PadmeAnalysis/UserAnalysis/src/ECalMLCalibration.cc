@@ -31,7 +31,25 @@ Bool_t ECalMLCalibration::InitHistos(){
   
   for(int i = 0;i<32;i++){
     for(int j=0;j<32;j++) {
+      hSvcVal->BookHistoProf(this->GetName()+"_ECalML_calib_profile"+std::to_string(100*i+j),1000,0.0,1000.0,0.0,500.0);
+    }
+  }
+  
+  for(int i = 0;i<32;i++){
+    for(int j=0;j<32;j++) {
+      hSvcVal->BookHisto(this->GetName()+"_ECal_ECalML_singleHits_timediff_"+std::to_string(100*i+j),500,-250.0,250.0);
+    }
+  }
+  
+  for(int i = 0;i<32;i++){
+    for(int j=0;j<32;j++) {
       hSvcVal->BookHisto2(this->GetName()+"_ECal_ECalML_singleHits_times_"+std::to_string(100*i+j),1000,0.0,1000.0,1000,0.0,1000.0);
+    }
+  }
+
+  for(int i = 0;i<32;i++){
+    for(int j=0;j<32;j++) {
+      hSvcVal->BookHistoProf(this->GetName()+"_ECal_ECalML_singleHits_timedifftime_"+std::to_string(100*i+j),1000,0.0,1000.0,-3.0,20.0);
     }
   }
   return true;
@@ -143,14 +161,17 @@ Bool_t ECalMLCalibration::Process(){
 
 	    TimeML=ECalMLhit->GetTime();
 	    EnergyML=ECalMLhit->GetEnergy();
-
+	    
 	    hSvc->FillHisto2(this->GetName()+"_ECal_ECalML_singleHits_times_"+std::to_string(100*i+j),Time,TimeML);
+	    hSvc->FillHisto(this->GetName()+"_ECal_ECalML_singleHits_timediff_"+std::to_string(100*i+j),(Time-TimeML));
+	    hSvc->FillHistoProf(this->GetName()+"_ECal_ECalML_singleHits_timedifftime_"+std::to_string(100*i+j),Time,(Time-TimeML));
 	    
 	    std::cout<<"We have a match! Channel: "<<(100*i+j)<<" Time difference "<<(Time-TimeML)<<std::endl;
 	    
-	    if((Time-TimeML)>(-10) && (Time-TimeML)<10){
+	    if((Time-TimeML)>7 && (Time-TimeML)<12){
 	      hSvc->FillHisto2(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),Energy, EnergyML);
-	    }
+	      hSvc->FillHistoProf(this->GetName()+"_ECalML_calib_profile"+std::to_string(100*i+j),Energy, EnergyML-Energy);
+	      }
 	
 	  }
    

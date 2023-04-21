@@ -153,6 +153,7 @@ class TFile;
 class TTree;
 class TH1D;
 class TH2D;
+class TProfile;
 class TString;
 
 const Int_t MaxHisto = 40;
@@ -177,8 +178,10 @@ public:
 
   void BookHisto (std::string name, Int_t nx, Double_t xlow, Double_t xup);
   void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
+  void BookHistoProf(std::string name, Int_t nx, Double_t xlow, Double_t xup, Double_t ylow, Double_t yup);
   void FillHisto (std::string name, Double_t bin, Double_t weight = 1.0);
   void FillHisto2(std::string name, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
+  void FillHistoProf(std::string hname, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
   void Normalize (std::string name, Double_t fac);    
 
   //  void FillHisto (Int_t id, Double_t bin, Double_t weight = 1.0);
@@ -203,6 +206,7 @@ private:
   TFile*   fRootOutputFile;
   std::map<std::string, TH1D*>    fHisto1DMap;            
   std::map<std::string, TH2D*>    fHisto2DMap;            
+  std::map<std::string, TProfile*>    fHistoProfMap;            
   TTree*   ntupl;    
 
 };

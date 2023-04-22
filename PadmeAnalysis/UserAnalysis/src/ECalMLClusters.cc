@@ -27,7 +27,9 @@ Bool_t ECalMLClusters::InitHistos(){
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus",1000,0.0,2000.0);
-   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus2ns",1000,0.0,2000.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus2ns",1000,0.0,2000.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECal_TotalClusterEnergy_2Clus",1000,0.0,2000.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECal_TotalClusterEnergy_2Clus2ns",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalHitsEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_TotalHitsEnergy",1000,0.0,2000.0);
   return true;
@@ -70,6 +72,7 @@ Bool_t ECalMLClusters::Process(){
   hSvc->FillHisto(this->GetName()+"_ECalML_TotalHitsEnergy", eTotHitsML);
  
   TRecoVCluster* clu=NULL;
+   TRecoVCluster* clu2=NULL;
   TRecoVCluster* cluML=NULL;
   TRecoVCluster* cluML2=NULL;
   
@@ -106,8 +109,9 @@ Bool_t ECalMLClusters::Process(){
   Double_t eTotClML2prim=0;
   Double_t time1=0;
   Double_t time2=0;
-  
-  if(NclusML==2 && Nclus==2){
+  Double_t eTotCl2=0;
+  Double_t eTotCl2prim=0;
+  if(NclusML==2){
     //for (Int_t i=0; i<NclusML; ++i){
     cluML    = evt->ECalMLRecoCl->Element(0);
     cluML2    = evt->ECalMLRecoCl->Element(1);
@@ -123,15 +127,37 @@ Bool_t ECalMLClusters::Process(){
 	{
 	  eTotClML2 = cluML->GetEnergy()+cluML2->GetEnergy();
 	  hSvc->FillHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus", eTotClML2);
-	}
+ 	}
       if(fabs(cluML->GetTime() - cluML2->GetTime())<2.)
 	{
 	  eTotClML2prim = cluML->GetEnergy()+cluML2->GetEnergy();
 	  hSvc->FillHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus2ns", eTotClML2prim);
 	}
     }
+  }
+  if(Nclus==2){
     // hSvc->FillHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus", eTotClML2);
-    
+    clu    = evt->ECalRecoCl->Element(0);
+    clu2    = evt->ECalRecoCl->Element(1);
+    if(clu&&clu2) {
+      //hSvc->FillHisto(this->GetName()+"_ECalML_2Clusters_Energy", cluML->GetEnergy());
+      time1 = clu->GetTime();
+      time2 = clu2->GetTime();
+      hSvc->FillHisto(this->GetName()+"_ECal_2Clusters_TimeDiff", time2-time1);
+
+      //eTotClML2 += cluML->GetEnergy();
+      
+      if(fabs(clu->GetTime() - clu2->GetTime())<5.)
+	{
+	  eTotCl2 = clu->GetEnergy()+clu2->GetEnergy();
+	  hSvc->FillHisto(this->GetName()+"_ECal_TotalClusterEnergy_2Clus", eTotCl2);
+	}
+      if(fabs(clu->GetTime() - clu2->GetTime())<2.)
+	{
+	  eTotCl2prim = clu->GetEnergy()+clu2->GetEnergy();
+	  hSvc->FillHisto(this->GetName()+"_ECal_TotalClusterEnergy_2Clus2ns", eTotCl2prim);
+	}
+    }
   }
   fResult = true;
   return fResult;

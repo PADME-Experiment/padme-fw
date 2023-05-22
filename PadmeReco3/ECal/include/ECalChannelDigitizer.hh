@@ -5,6 +5,9 @@
 
 #include <Rtypes.h>
 
+class TF1;
+class TSpline5;
+
 class PadmeVRecoConfig;
 class TrigTimeSvc;
 class HistoSvc;
@@ -52,6 +55,11 @@ private:
   Double_t fTemplateMaxVal;
   Double_t fTemplate[ECALCHANNELDIGITIZER_TEMPLATE_MAXBINS];
   Double_t fTemplateCFTime;
+  Double_t fTemplateCFShift;
+
+  TSpline5* fTemplateSpline;
+  TF1* fTemplateFunction;
+  TF1* fTempFitFunction;
 
   Double_t fCFRatio;
   Int_t fCFShift;

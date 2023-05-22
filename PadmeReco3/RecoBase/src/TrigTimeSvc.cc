@@ -2,6 +2,8 @@
 
 #include "TrigTimeSvc.hh"
 
+#include "TMath.h"
+
 #include "TRawEvent.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -26,6 +28,10 @@ Bool_t TrigTimeSvc::Initialize()
 {
   if (fVerbose) printf("TrigTimeSvc::Initialize - Initializing Trigger Time Service\n");
 
+  // Define default method to compute trigger time reference point
+
+  fMethod = 0; // Standard level-based method
+
   // Initialize sample intervals to use for computing max and min averages according to sampling frequency
 
   // 5GHz
@@ -45,6 +51,12 @@ Bool_t TrigTimeSvc::Initialize()
   fMaxAvgEnd[2] = -20;
   fMinAvgStart[2] = 20;
   fMinAvgEnd[2] = 100;
+
+  // Initialize constant fraction default parameters
+  fCFShift         = 5;   // Number of bins to shift
+  fCFRatio         = 0.6; // Multiplier for shifted waveform
+  fCFThreshold     = 0.;  // Threshold value to define trigger time
+  fPedestalSamples = 100; // Number of samples to use to compute channel pedestal
 
   return true;
 }
@@ -80,7 +92,14 @@ Bool_t TrigTimeSvc::ProcessEvent(TRawEvent* rawEv)
       UChar_t trigFreq = trig->GetFrequency();
       // Process trigger samples extracting the reference sample point
       if (fVerbose>2) printf("TrigTimeSvc::ProcessEvent - Processing samples from board %d group %d\n",boardId,trigId);
-      Double_t trigRefSamp = ComputeReferencePoint(trigFreq,trig->GetSamplesArray());
+      Double_t trigRefSamp = -1.;
+      if (fMethod == 0) {
+	trigRefSamp = ComputeReferencePoint(trigFreq,trig->GetSamplesArray());
+      } else if (fMethod == 1) {
+	trigRefSamp = ComputeReferencePointCF(trigFreq,trig->GetSamplesArray());
+      } else {
+	printf("TrigTimeSvc::ProcessEvent - ERROR - Reference point method %d not available\n",fMethod);
+      }
       fTrigTimeMap[std::make_pair(boardId,trigId)] = std::make_pair(trigFreq,trigRefSamp);
     }
 
@@ -221,6 +240,45 @@ Double_t TrigTimeSvc::ComputeReferencePoint(UChar_t freq, Short_t* sample)
   }
 
   if (fVerbose>3) printf("TrigTimeSvc::ComputeReferencePoint - Reference point for freqency %d is %f\n",freq,refPos);
+
+  return refPos;
+
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
+Double_t TrigTimeSvc::ComputeReferencePointCF(UChar_t freq, Short_t* sample)
+{
+
+  const UShort_t ns = TADCTRIGGER_NSAMPLES;
+
+  // Convert samples to double, subtract pedestal and overturn waveform
+  Double_t samplesD[1024];
+  for(UInt_t i=0; i<1024; i++) samplesD[i] = (Double_t)sample[i];
+  Double_t pedestal = TMath::Mean(fPedestalSamples,samplesD);
+  for(UInt_t i=0; i<1024; i++) samplesD[i] = pedestal-samplesD[i];
+
+  // Apply constant fraction to waveform to look for precise hit time
+  Double_t refPos = 0.;
+  Double_t val;
+  Double_t oldVal = 0.;
+  Bool_t signalZone = false;
+  for(Int_t i=fCFShift;i<1024;i++) {
+    val = samplesD[i-fCFShift]-fCFRatio*samplesD[i];
+    if (signalZone) {
+      // Check if we crossed the constant fraction threshold
+      if ( (oldVal < fCFThreshold) && (val >= fCFThreshold) ) {
+	// Linearly interpolate the two bins to find precise time
+	refPos = (Double_t)i-(val-fCFThreshold)/(val-oldVal);
+	break;
+      }
+    } else if (val < -100.) signalZone = true;
+    oldVal = val;
+  }
+
+  if (refPos == 0.) printf("TrigTimeSvc::ComputeReferencePointCF - WARNING - Unable to compute precise reference point\n");
+
+  if (fVerbose>3) printf("TrigTimeSvc::ComputeReferencePointCF - Reference point for freqency %d is %f\n",freq,refPos);
 
   return refPos;
 

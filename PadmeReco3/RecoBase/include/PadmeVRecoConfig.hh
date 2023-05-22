@@ -1,7 +1,6 @@
 #ifndef PadmeVRecoConfig_H
 #define PadmeVRecoConfig_H
 
-
 #include "PadmeVNamedModule.hh"
 #include "utlConfigParser.hh"
 
@@ -12,28 +11,34 @@
 class PadmeVRecoConfig: public PadmeVNamedModule
 {
 public:
+
   PadmeVRecoConfig(utl::ConfigParser *,TString Name);
   virtual ~PadmeVRecoConfig();
-  virtual Bool_t BoardIsMine(Int_t);
-  Int_t GetNBoards(){return fNBoards;};
+
   utl::ConfigParser * GetConfigParser(){return fConfigParser;};
-  std::string GetReadOutType(){return fReadOutType;}
-  std::vector<Short_t>  *GetBoards() {return &fBoards;};
-  //Int_t GetChanneID(Int_t, Int_t);
-  //  Int_t 
-  
+
   int GetParOrDefault(std::string,std::string,int);
   double GetParOrDefault(std::string,std::string,double);
   std::string GetParOrDefault(std::string,std::string,std::string);
 
-  void ConfigADCReadout();
+  std::string GetReadOutType(){return fReadOutType;}
+
+  Int_t GetNBoards() {return fNBoards;}
+  std::vector<Short_t>* GetBoards() {return &fBoards;}
+  virtual Bool_t BoardIsMine(Int_t);
+  Int_t GetDetectorChannel(UChar_t b, UChar_t c) { return fChannelMap[b][c]; }
 
 private:
-  std::vector<Short_t> fBoards;
-  std::string fReadOutType;
-  Int_t fNBoards;
 
-  utl::ConfigParser *fConfigParser;
+  void ConfigADCReadout();
+
+  std::string fReadOutType;
+
+  Int_t fNBoards;
+  std::vector<Short_t> fBoards;
+  Int_t fChannelMap[32][32];
+
+  utl::ConfigParser* fConfigParser;
 
 };
 

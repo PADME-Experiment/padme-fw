@@ -1,5 +1,4 @@
 #include "PadmeReconstruction.hh"
-#include "GlobalRecoConfigOptions.hh"
 
 #include "TPadmeRun.hh"
 #include "TRawEvent.hh"

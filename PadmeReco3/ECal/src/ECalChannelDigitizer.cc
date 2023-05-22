@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>      // std::ifstream
 #include <sstream>      // std::istringstream
+#include <cmath>
 
 #include "Riostream.h"
 
@@ -8,6 +9,9 @@
 
 #include "TMath.h"
 #include "TH1D.h"
+#include "TF1.h"
+#include "TSpline.h"
+#include "TCanvas.h"
 
 #include "PadmeVRecoConfig.hh"
 #include "TrigTimeSvc.hh"
@@ -134,7 +138,51 @@ Bool_t ECalChannelDigitizer::Init()
     std::cout << "ECalChannelDigitizer::Init - ERROR - Could not compute constant fraction time for Waveform Template" << std::endl;
     return false;
   }
+
+  // Convert template to a continuous function using TSpline5
+  Double_t x[ECALCHANNELDIGITIZER_TEMPLATE_MAXBINS];
+  for( Int_t i=0;i<ECALCHANNELDIGITIZER_TEMPLATE_MAXBINS;i++) x[i] = (Double_t)i;
+  fTemplateSpline = new TSpline5("tempspline",x,fTemplate,ECALCHANNELDIGITIZER_TEMPLATE_MAXBINS);
+  auto templateFun = [&](double *x, double *){ return fTemplateSpline->Eval(x[0]); };
   
+  // Convert template to a continuous function using linear interpolation
+  //auto templateFun = [&](Double_t* x, Double_t*) {
+  //  Double_t xint, xdec;
+  //  xdec = std::modf(x[0],&xint);
+  //  Int_t xi = (Int_t)xint;
+  //  return fTemplate[xi]+(fTemplate[xi+1]-fTemplate[xi])*xdec;
+  //};
+
+  fTemplateFunction = new TF1("tempfunc",templateFun,0.,(Double_t)ECALCHANNELDIGITIZER_TEMPLATE_MAXBINS,0);
+  //printf("%f\n",fTemplateFunction->Eval(0.));
+  //printf("%f\n",fTemplateFunction->Eval(100.));
+  //printf("%f\n",fTemplateFunction->Eval(5.));
+
+  // Create function to fit template on histogram
+  //auto fitFun = [&](Double_t* x, Double_t* par) {
+  //  //printf("%f %f %f %f %f\n",x[0],par[0],par[1],x[0]-par[1],fTemplateSpline->Eval(x[0]-par[1]));
+  //  Double_t delta = x[0]-par[1];
+  //  if (delta<0) {
+  //    return 0.;
+  //  } else {
+  //    return par[0]*fTemplateSpline->Eval(x[0]-par[1]);
+  //  }
+  //};
+  //fTempFitFunction = new TF1("fitfunc",fitFun,0.,1024.,2);
+  //fTempFitFunction->SetParNames("Scale","Shift");
+  //Double_t xx[1],pp[2];
+  //xx[0] = 178.5;
+  //pp[0] = 39661.313907;
+  //pp[1] = 178.;
+  //printf("%f\n",fTempFitFunction->EvalPar(xx,pp));
+
+  auto fitFun = [&](Double_t* x, Double_t* par) {
+    //printf("%f %f %f %f\n",par[0],x[0],x[0]-fTemplateCFShift,fTemplateSpline->Eval(x[0]-fTemplateCFShift));
+    return par[0]*fTemplateSpline->Eval(x[0]-fTemplateCFShift);
+  };
+  fTempFitFunction = new TF1("fitfunc",fitFun,0.,1024.,1);
+  fTempFitFunction->SetParNames("Scale");
+
   if (fVerbose) {
     printf("ECalChannelDigitizer::Init - Read %d values from Waveform Template file %s\n",fTemplateNBins,fTemplateFileName.Data());
     printf("ECalChannelDigitizer::Init - Template integral is %f - Max value is %f at bin %d\n",totVal,fTemplateMaxVal,fTemplateMaxBin);
@@ -188,11 +236,12 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   TString hId = TString::Format("WF%4.4d",channel);
   TString hName = TString::Format("Channel %4.4d Waveform",channel);
   TH1D* hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,ybinD[i]);
+  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ybinD[i]);
 
   // Smooth the waveform by averaging over N consecutive points
   Double_t yavgD[1024];
   Double_t maxAvgValue = 0.;
+  Double_t maxAvgBin = 0.;
   Int_t navg = 3; // Number of samples before and after each bin to use in average
   for(Int_t i=0;i<1024;i++) {
     yavgD[i] = 0.;
@@ -202,13 +251,17 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
       iavg++;
     }
     yavgD[i] = yavgD[i]/(Double_t)iavg;
-    if ( (i<fGoodSamples) && (yavgD[i]>maxAvgValue) ) maxAvgValue = yavgD[i];
+    if ( (i<fGoodSamples) && (yavgD[i]>maxAvgValue) ) {
+      maxAvgValue = yavgD[i];
+      maxAvgBin = (Double_t)i;
+    }
   }
 
   hId = TString::Format("WFs%4.4d",channel);
   hName = TString::Format("Channel %4.4d Smoothed Waveform",channel);
   hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,yavgD[i]);
+  TH1D* hWFsmooth = hWF; // Save histo pointer for fitting
+  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yavgD[i]);
 
   // Compute derivative over N points
   Double_t yderD[1024];
@@ -219,7 +272,7 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   hId = TString::Format("WFd%4.4d",channel);
   hName = TString::Format("Channel %4.4d Derived Waveform",channel);
   hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,yderD[i]);
+  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yderD[i]);
 
   // Compute constant fraction
   Double_t yconD[1024];
@@ -229,7 +282,7 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   hId = TString::Format("WFc%4.4d",channel);
   hName = TString::Format("Channel %4.4d Constant Fraction %.2f Waveform",channel,fCFRatio);
   hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,yconD[i]);
+  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yconD[i]);
 
   // Compute constant fraction from smoothed waveform
   Double_t ycfmD[1024];
@@ -239,7 +292,7 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   hId = TString::Format("WFcs%4.4d",channel);
   hName = TString::Format("Channel %4.4d Constant Fraction %.2f Smoothed Waveform",channel,fCFRatio);
   hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,ycfmD[i]);
+  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ycfmD[i]);
 
   // Apply constant fraction to waveform to look for precise hit time
   Double_t hitCFTime = 0.;
@@ -283,9 +336,9 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
       if (iTemp<0) {
 	//ysubD[i] = ybinD[i];
 	ysubD[i] = yavgD[i];
-	hWF->SetBinContent(i,0.);
+	hWF->SetBinContent(i+1,0.);
       } else {
-	hWF->SetBinContent(i,fTemplate[iTemp]*tempScale);
+	hWF->SetBinContent(i+1,fTemplate[iTemp]*tempScale);
 	//ysubD[i] = ybinD[i]-fTemplate[iTemp]*tempScale;
 	ysubD[i] = yavgD[i]-fTemplate[iTemp]*tempScale;
       }
@@ -294,10 +347,22 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
     hId = TString::Format("WFsub%4.4d",channel);
     hName = TString::Format("Channel %4.4d Subtracted Waveform",channel);
     hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-    for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i,ysubD[i]);
+    for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ysubD[i]);
 
   }
 
+  // Fitting test
+  //Double_t scale = maxAvgValue/fTemplateMaxVal;
+  //Double_t shift = maxAvgBin-(Double_t)fTemplateMaxBin;
+  //printf("Fitting with scale %f shift %f hit time %f\n",scale,shift,maxAvgBin);
+  //fTempFitFunction->SetParameters(scale,shift);
+  fTemplateCFShift = hitCFTime-fTemplateCFTime;
+  Double_t scale = maxAvgValue/fTemplateMaxVal;
+  Double_t pars[] = {scale};
+  printf("Fitting with scale %f hit time %f\n",scale,maxAvgBin);
+  fTempFitFunction->SetParameters(pars);
+  hWFsmooth->Fit("fitfunc","","",maxAvgBin-50.,maxAvgBin+100);
+ 
   return true;
 
 }

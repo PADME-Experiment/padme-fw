@@ -11,6 +11,7 @@
 #include "TBranch.h"
 #include "TObjArray.h"
 #include "TH1D.h"
+#include "TH2D.h"
 #include "TF1.h"
 
 #include "HistoSvc.hh"
@@ -20,6 +21,40 @@
 #include "TRawEvent.hh"
 
 #include "TemplateFitting.hh"
+
+#define N_MAX_CHANNELS 1000
+
+struct WFNtuple {
+  
+  Int_t RunNumber;
+  Int_t EventNumber;
+  Int_t FitMode;
+
+  Int_t NChannels;
+
+  Int_t BoardId[N_MAX_CHANNELS];
+  Int_t ChannelId[N_MAX_CHANNELS];
+  Int_t DetectorChannel[N_MAX_CHANNELS];
+
+  Double_t WaveformRMS[N_MAX_CHANNELS];
+  Double_t PedestalRMS[N_MAX_CHANNELS];
+
+  Int_t WaveformMaxBin[N_MAX_CHANNELS];
+  Double_t WaveformMaxVal[N_MAX_CHANNELS];
+
+  Double_t Scale[N_MAX_CHANNELS];
+  Double_t Shift[N_MAX_CHANNELS];
+  Double_t LinearStart[N_MAX_CHANNELS];
+  Double_t LinearLength[N_MAX_CHANNELS];
+  Double_t DeltaMax[N_MAX_CHANNELS];
+  Double_t TauMix[N_MAX_CHANNELS];
+  Double_t TauFast[N_MAX_CHANNELS];
+  Double_t TauSlow[N_MAX_CHANNELS];
+
+  Int_t FitStatus[N_MAX_CHANNELS];
+  Double_t FitChiSquare[N_MAX_CHANNELS];
+
+};
 
 int main(int argc, char* argv[])
 {
@@ -160,11 +195,48 @@ int main(int argc, char* argv[])
   FitTemp7Par* fitter7 = new FitTemp7Par();
   fitter7->SetVerbose(verbose);
   fitter7->SetGoodSamples(fGoodSamples);
+  FitTemp6Par* fitter6 = new FitTemp6Par();
+  fitter6->SetVerbose(verbose);
+  fitter6->SetGoodSamples(fGoodSamples);
+
+  // Create ntuple
+  WFNtuple wfNtuple;
+  TTree* hNtuple = HS->BookNtuple("WF","FitNtuple","Ntuple with fit results");
+
+  hNtuple->Branch("RunNumber"  ,    &(wfNtuple.RunNumber),      "RunNumber/I"  ); 
+  hNtuple->Branch("EventNumber",    &(wfNtuple.EventNumber),    "EventNumber/I");
+  hNtuple->Branch("FitMode",        &(wfNtuple.FitMode),        "FitMode/I");
+
+  hNtuple->Branch("NChannels",      &(wfNtuple.NChannels),      "NChannels/I"   );
+
+  hNtuple->Branch("BoardId",        &(wfNtuple.BoardId),        "BoardId[NChannels]/I");
+  hNtuple->Branch("ChannelId",      &(wfNtuple.ChannelId),      "ChannelId[NChannels]/I");
+  hNtuple->Branch("DetectorChannel",&(wfNtuple.DetectorChannel),"DetectorChannel[NChannels]/I");
+
+  hNtuple->Branch("WaveformRMS",    &(wfNtuple.WaveformRMS),    "WaveformRMS[NChannels]/D");
+  hNtuple->Branch("PedestalRMS",    &(wfNtuple.PedestalRMS),    "PedestalRMS[NChannels]/D");
+  hNtuple->Branch("WaveformMaxBin", &(wfNtuple.WaveformMaxBin), "WaveformMaxBin[NChannels]/I");
+  hNtuple->Branch("WaveformMaxVal", &(wfNtuple.WaveformMaxVal), "WaveformMaxVal[NChannels]/D");
+
+  hNtuple->Branch("Scale",          &(wfNtuple.Scale),          "Scale[NChannels]/D");
+  hNtuple->Branch("Shift",          &(wfNtuple.Shift),          "Shift[NChannels]/D");
+  hNtuple->Branch("LinearStart",    &(wfNtuple.LinearStart),    "LinearStart[NChannels]/D");
+  hNtuple->Branch("LinearLength",   &(wfNtuple.LinearLength),   "LinearLength[NChannels]/D");
+  hNtuple->Branch("DeltaMax",       &(wfNtuple.DeltaMax),       "DeltaMax[NChannels]/D");
+  hNtuple->Branch("TauMix",         &(wfNtuple.TauMix),         "TauMix[NChannels]/D");
+  hNtuple->Branch("TauFast",        &(wfNtuple.TauFast),        "TauFast[NChannels]/D");
+  hNtuple->Branch("TauSlow",        &(wfNtuple.TauSlow),        "TauSlow[NChannels]/D");
+
+  hNtuple->Branch("FitStatus",      &(wfNtuple.FitStatus),      "FitStatus[NChannels]/I");
+  hNtuple->Branch("FitChiSquare",   &(wfNtuple.FitChiSquare),   "FitChiSquare[NChannels]/D");
 
   // Create global histograms
   TH1D* hMix  = HS->BookHisto("WF","TauMix","Tau mixing parameter",100,0.,1.);
-  TH1D* hFast = HS->BookHisto("WF","TauFast","Tau of fast BGO component",100,0.,200.);
-  TH1D* hSlow = HS->BookHisto("WF","TauSlow","Tau of slow BGO component",100,0.,500.);
+  TH1D* hFast = HS->BookHisto("WF","TauFast","Tau of fast BGO component",100,0.,100.);
+  TH1D* hSlow = HS->BookHisto("WF","TauSlow","Tau of slow BGO component",100,200.,400.);
+  TH1D* hTLin = HS->BookHisto("WF","Linear","Linear rise time",100,0.,20.);
+  TH1D* hDMax = HS->BookHisto("WF","Maximum","Time to maximum",100,0.,20.);
+  TH2D* hTLvsDM = HS->BookHisto2("WF","TLvsDM","Linear rise time vs Time to maximum",100,0.,20.,100,0.,20.);
 
   // Create histogram to hold waveform
   //TH1D* hWF = HS->BookHisto("WF",Form("WF%04d",detChannel),Form("Channel %04d",detChannel),1024,0.,1024.);
@@ -185,6 +257,11 @@ int main(int argc, char* argv[])
 	     rawEv->GetEventRunTime(),rawEv->GetEventTrigMask(),rawEv->GetEventStatus(),
 	     rawEv->GetNADCBoards(),rawEv->GetMissingADCBoards());
     }
+
+    wfNtuple.RunNumber = rawEv->GetRunNumber();
+    wfNtuple.EventNumber = rawEv->GetEventNumber();
+    wfNtuple.FitMode = 6; // 6 parameters fit
+    wfNtuple.NChannels = 0; // Reset channel counter for this event
 
     TADCBoard* board;
     TADCChannel* channel;
@@ -223,7 +300,8 @@ int main(int argc, char* argv[])
 	  // Check if pedestal samples are flat
 	  Double_t pedrms = TMath::RMS(fPedestalSamples,samplesD);
 	  if (pedrms > fPedestalRMSThreshold) {
-	    printf("WARNING - Channel %d has anomalous pedestal RMS of %f\n",channelId,pedrms);
+	    printf("WARNING - Run %5d Event %6d Board %2d Channel %2d - Anomalous pedestal RMS: %.2f\n",
+		   rawEv->GetRunNumber(),rawEv->GetEventNumber(),boardId,channelId,pedrms);
 	  }
 
 	  // Subtract pedestal and convert samples to positive signal in mV
@@ -244,6 +322,12 @@ int main(int argc, char* argv[])
 	  if (verbose) printf("\nBoard %2d Channel %2d DetChan %4d Max bin %2d Max val %f\n",
 			      boardId,channelId,detChannel,fWFMaxBin,fWFMaxVal);
 
+	  // Save waveform parameters to ntuple
+	  wfNtuple.WaveformRMS[wfNtuple.NChannels] = rms;
+	  wfNtuple.PedestalRMS[wfNtuple.NChannels] = pedrms;
+	  wfNtuple.WaveformMaxBin[wfNtuple.NChannels] = fWFMaxBin;
+	  wfNtuple.WaveformMaxVal[wfNtuple.NChannels] = fWFMaxVal;
+
 	  /*
 	  // Fit the histogram with 8 parameters (initial parabola)
 	  fitter8->SetWaveformHisto(hWF);
@@ -258,22 +342,70 @@ int main(int argc, char* argv[])
 	  fitter8->DoFit("");
 	  */
 
+	  /*
 	  // Fit the histogram with 7 parameters
 	  fitter7->SetWaveformHisto(hWF);
 	  fitter7->SetScale(fWFMaxVal);
 	  fitter7->SetShift((Double_t)(fWFMaxBin-10));
 	  fitter7->SetLLength(10.);
 	  fitter7->SetDeltaMax(5.);
-	  fitter7->SetTauMix(1.);
+	  fitter7->SetTauMix(0.3);
 	  fitter7->SetTauFast(60.);
 	  fitter7->SetTauSlow(300.);
 	  fitter7->DoFit("+"); // Keep previous function
+	  */
+
+	  // Fit the histogram with 6 parameters
+	  fitter6->SetWaveformHisto(hWF);
+	  fitter6->SetScale(fWFMaxVal);
+	  fitter6->SetShift((Double_t)(fWFMaxBin-10));
+	  fitter6->SetLLength(10.);
+	  fitter6->SetTauMix(0.3);
+	  fitter6->SetTauFast(60.);
+	  fitter6->SetTauSlow(300.);
+	  fitter6->DoFit("+"); // Keep previous function
+
+	  // Get fit results
+	  Int_t fitStatus = fitter6->GetFitStatus();
+	  Double_t fitChiSquare = fitter6->GetFitChiSquare();
+	  Double_t fitScale = fitter6->GetScale();
+	  Double_t fitShift = fitter6->GetShift();
+	  //Double_t fitLinearStart = fitter6->GetLstart();
+	  Double_t fitLinearStart = 0.;
+	  Double_t fitLinearLength = fitter6->GetLLength();
+	  //Double_t fitDeltaMax = fitter6->GetDeltaMax();
+	  Double_t fitDeltaMax = 0.;
+	  Double_t fitTauMix = fitter6->GetTauMix();
+	  Double_t fitTauFast = fitter6->GetTauFast();
+	  Double_t fitTauSlow = fitter6->GetTauSlow();
+
+	  // Fill ntuple with fit results
+	  wfNtuple.BoardId[wfNtuple.NChannels] = boardId;
+	  wfNtuple.ChannelId[wfNtuple.NChannels] = channelId;
+	  wfNtuple.DetectorChannel[wfNtuple.NChannels] = detChannel;
+
+	  wfNtuple.FitStatus[wfNtuple.NChannels] = fitStatus;
+	  wfNtuple.FitChiSquare[wfNtuple.NChannels] = fitChiSquare;
+
+	  wfNtuple.Scale[wfNtuple.NChannels] = fitScale;
+	  wfNtuple.Shift[wfNtuple.NChannels] = fitShift;
+	  wfNtuple.LinearStart[wfNtuple.NChannels] = fitLinearStart;
+	  wfNtuple.LinearLength[wfNtuple.NChannels] = fitLinearLength;
+	  wfNtuple.DeltaMax[wfNtuple.NChannels] = fitDeltaMax;
+	  wfNtuple.TauMix[wfNtuple.NChannels] = fitTauMix;
+	  wfNtuple.TauFast[wfNtuple.NChannels] = fitTauFast;
+	  wfNtuple.TauSlow[wfNtuple.NChannels] = fitTauSlow;
+
+	  wfNtuple.NChannels++;
 
 	  // Fill global histograms if fit converged and scale is large
-	  if ( (fitter7->GetFitStatus() == 0) && (fitter7->GetScale() > 100.) ) {
-	    hMix->Fill(fitter7->GetTauMix());
-	    hFast->Fill(fitter7->GetTauFast());
-	    hSlow->Fill(fitter7->GetTauSlow());
+	  if ( (fitStatus == 0) && (fitScale > 100.) ) {
+	    hMix->Fill(fitTauMix);
+	    hFast->Fill(fitTauFast);
+	    hSlow->Fill(fitTauSlow);
+	    hTLin->Fill(fitLinearLength);
+	    hDMax->Fill(fitDeltaMax);
+	    hTLvsDM->Fill(fitLinearLength,fitDeltaMax);
 	  }
 
 	}
@@ -281,6 +413,8 @@ int main(int argc, char* argv[])
       }
 
     }
+
+    hNtuple->Fill();
 
     // Clear event
     rawEv->Clear("C");

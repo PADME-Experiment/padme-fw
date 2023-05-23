@@ -197,7 +197,12 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
 {
 
   // Get name of directory to store histograms (created by ECalReconstruction)
-  TString hDir = TString::Format("ECal/Evt%d",fEventNumber);
+  //TString hDir = TString::Format("ECal/Evt%d",fEventNumber);
+
+  // Define variables used to generate histograms
+  TString hId;
+  TString hName;
+  TH1D* hWF;
 
   if (fVerbose>3) printf("ECalChannelDigitizer::DigitizeChannel - Digitizing channel %d\n",channel);
   if (fVerbose>4) {
@@ -222,7 +227,7 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   // Check if pedestal samples are flat
   Double_t pedrms = TMath::RMS(fPedestalSamples,samplesD);
   if (pedrms > fPedestalRMSThreshold) {
-    printf("ECalChannelDigitizer::DigitizeChannel - Channel %d has anomalous pedestal RMS of %f\n",channel,pedrms);
+    if (fVerbose) printf("ECalChannelDigitizer::DigitizeChannel - Run %d Event %d Channel %d has anomalous pedestal RMS of %f\n",fRunNumber,fEventNumber,channel,pedrms);
   }
 
   // Subtract pedestal and convert samples to positive signal in mV
@@ -233,10 +238,10 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
     if ( (i<fGoodSamples) && (ybinD[i]>maxValue) ) maxValue = ybinD[i];
   }
 
-  TString hId = TString::Format("WF%4.4d",channel);
-  TString hName = TString::Format("Channel %4.4d Waveform",channel);
-  TH1D* hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ybinD[i]);
+  //hId = TString::Format("WF%4.4d",channel);
+  //hName = TString::Format("Channel %4.4d Waveform",channel);
+  //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+  //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ybinD[i]);
 
   // Smooth the waveform by averaging over N consecutive points
   Double_t yavgD[1024];
@@ -257,11 +262,11 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
     }
   }
 
-  hId = TString::Format("WFs%4.4d",channel);
-  hName = TString::Format("Channel %4.4d Smoothed Waveform",channel);
-  hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  TH1D* hWFsmooth = hWF; // Save histo pointer for fitting
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yavgD[i]);
+  //hId = TString::Format("WFs%4.4d",channel);
+  //hName = TString::Format("Channel %4.4d Smoothed Waveform",channel);
+  //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+  //TH1D* hWFsmooth = hWF; // Save histo pointer for fitting
+  //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yavgD[i]);
 
   // Compute derivative over N points
   Double_t yderD[1024];
@@ -269,30 +274,30 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   for(Int_t i=0;i<1024-nder;i++) yderD[i] = ybinD[i+nder]-ybinD[i];
   for(Int_t i=1024-nder;i<1024;i++) yderD[i] = 0.; // For completeness  
 
-  hId = TString::Format("WFd%4.4d",channel);
-  hName = TString::Format("Channel %4.4d Derived Waveform",channel);
-  hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yderD[i]);
+  //hId = TString::Format("WFd%4.4d",channel);
+  //hName = TString::Format("Channel %4.4d Derived Waveform",channel);
+  //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+  //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yderD[i]);
 
   // Compute constant fraction
   Double_t yconD[1024];
   for(Int_t i=0;i<fCFShift;i++) yconD[i] = 0.; // For completeness  
   for(Int_t i=fCFShift;i<1024;i++) yconD[i] = ybinD[i-fCFShift]-fCFRatio*ybinD[i];
 
-  hId = TString::Format("WFc%4.4d",channel);
-  hName = TString::Format("Channel %4.4d Constant Fraction %.2f Waveform",channel,fCFRatio);
-  hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yconD[i]);
+  //hId = TString::Format("WFc%4.4d",channel);
+  //hName = TString::Format("Channel %4.4d Constant Fraction %.2f Waveform",channel,fCFRatio);
+  //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+  //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,yconD[i]);
 
   // Compute constant fraction from smoothed waveform
   Double_t ycfmD[1024];
   for(Int_t i=0;i<fCFShift;i++) ycfmD[i] = 0.; // For completeness  
   for(Int_t i=fCFShift;i<1024;i++) ycfmD[i] = yavgD[i-fCFShift]-fCFRatio*yavgD[i];
 
-  hId = TString::Format("WFcs%4.4d",channel);
-  hName = TString::Format("Channel %4.4d Constant Fraction %.2f Smoothed Waveform",channel,fCFRatio);
-  hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-  for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ycfmD[i]);
+  //hId = TString::Format("WFcs%4.4d",channel);
+  //hName = TString::Format("Channel %4.4d Constant Fraction %.2f Smoothed Waveform",channel,fCFRatio);
+  //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+  //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ycfmD[i]);
 
   // Apply constant fraction to waveform to look for precise hit time
   Double_t hitCFTime = 0.;
@@ -328,29 +333,30 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
     //Double_t tempScale = maxValue/fTemplateMaxVal;
     Double_t tempScale = maxAvgValue/fTemplateMaxVal;
 
-    hId = TString::Format("TempST%4.4d",channel);
-    hName = TString::Format("Channel %4.4d Template scale %.3f translate %d",channel,tempScale,tempShift);
-    hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+    //hId = TString::Format("TempST%4.4d",channel);
+    //hName = TString::Format("Channel %4.4d Template scale %.3f translate %d",channel,tempScale,tempShift);
+    //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
     for(Int_t i=0; i<1024; i++) {
       Int_t iTemp = i-tempShift;
       if (iTemp<0) {
 	//ysubD[i] = ybinD[i];
 	ysubD[i] = yavgD[i];
-	hWF->SetBinContent(i+1,0.);
+	//hWF->SetBinContent(i+1,0.);
       } else {
-	hWF->SetBinContent(i+1,fTemplate[iTemp]*tempScale);
+	//hWF->SetBinContent(i+1,fTemplate[iTemp]*tempScale);
 	//ysubD[i] = ybinD[i]-fTemplate[iTemp]*tempScale;
 	ysubD[i] = yavgD[i]-fTemplate[iTemp]*tempScale;
       }
     }
 
-    hId = TString::Format("WFsub%4.4d",channel);
-    hName = TString::Format("Channel %4.4d Subtracted Waveform",channel);
-    hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
-    for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ysubD[i]);
+    //hId = TString::Format("WFsub%4.4d",channel);
+    //hName = TString::Format("Channel %4.4d Subtracted Waveform",channel);
+    //hWF = fHistoSvc->BookHisto(hDir.Data(),hId.Data(),hName.Data(),1024,0.,1024.);
+    //for(Int_t i=0; i<1024; i++) hWF->SetBinContent(i+1,ysubD[i]);
 
   }
 
+  /*
   // Fitting test
   //Double_t scale = maxAvgValue/fTemplateMaxVal;
   //Double_t shift = maxAvgBin-(Double_t)fTemplateMaxBin;
@@ -362,7 +368,8 @@ Bool_t ECalChannelDigitizer::DigitizeChannel(UChar_t adcBoard,UChar_t adcChannel
   printf("Fitting with scale %f hit time %f\n",scale,maxAvgBin);
   fTempFitFunction->SetParameters(pars);
   hWFsmooth->Fit("fitfunc","","",maxAvgBin-50.,maxAvgBin+100);
- 
+  */
+
   return true;
 
 }

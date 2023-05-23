@@ -43,8 +43,10 @@ public:
   Double_t GetCFThreshold() { return fCFThreshold; }
   void SetCFThreshold(Double_t m) { fCFThreshold = m; }
 
-  Double_t GetReferencePoint(UChar_t,UChar_t);
   UChar_t GetGroupFrequency(UChar_t,UChar_t);
+  UShort_t GetStartIndexCell(UChar_t,UChar_t);
+  Double_t GetReferencePoint(UChar_t,UChar_t);
+
   Double_t GetTimeDifference(UChar_t,UChar_t,Double_t);
 
   void SetVerbose(Int_t v){ fVerbose = v; }
@@ -65,8 +67,10 @@ private:
   Double_t fCFThreshold; // Threshold value to define trigger time
   Int_t    fPedestalSamples; // Number of samples to use to compute channel pedestal
 
-  // Maps <board_id,group_id> to <frequency,reference_sample>
-  std::map<std::pair<UChar_t,UChar_t>,std::pair<UChar_t,Double_t>> fTrigTimeMap;
+  //// Maps <board_id,group_id> to <frequency,reference_sample>
+  //std::map<std::pair<UChar_t,UChar_t>,std::pair<UChar_t,Double_t>> fTrigTimeMap;
+  // Maps <board_id,group_id> to <frequency,sic,reference_sample>
+  std::map<std::pair<UChar_t,UChar_t>,std::tuple<UChar_t,UShort_t,Double_t>> fTrigTimeMap;
 
   Short_t fMaxAvgStart[3];
   Short_t fMaxAvgEnd[3];

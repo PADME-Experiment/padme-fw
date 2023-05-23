@@ -90,8 +90,8 @@ void ECalReconstruction::ProcessEvent(TRawEvent* rawEvent)
   }
 
   // Create directory to store histograms for this event
-  TString hDir = TString::Format("ECal/Evt%d",rawEvent->GetEventNumber());
-  fHistoSvc->CreateDir(hDir.Data());
+  //TString hDir = TString::Format("ECal/Evt%d",rawEvent->GetEventNumber());
+  //fHistoSvc->CreateDir(hDir.Data());
 
   fHits.clear();
   fClusters.clear();

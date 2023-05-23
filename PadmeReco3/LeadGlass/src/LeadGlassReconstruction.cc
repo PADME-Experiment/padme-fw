@@ -103,10 +103,11 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   fLeadGlassFound = false;
 
-  printf("LeadGlassReconstruction::ProcessEvent - Run %d Event %d TrigMask 0x%2.2x\n",rawEv->GetRunNumber(),rawEv->GetEventNumber(),rawEv->GetEventTrigMask());
+  if (fVerbose>1) printf("LeadGlassReconstruction::ProcessEvent - Run %d Event %d TrigMask 0x%2.2x\n",rawEv->GetRunNumber(),rawEv->GetEventNumber(),rawEv->GetEventTrigMask());
 
-  // Only analyze BTF events
-  if (! rawEv->EventTrigMaskGetBit(0)) return;
+  // Only analyze BTF, random and off-beam events (trigger mask 1100 0001 = 0xc1)
+  //if (! rawEv->EventTrigMaskGetBit(0)) return;
+  if (! (rawEv->GetEventTrigMask() & 0xc1)) return;
 
   // Show run energy (only when run changes)
   static Int_t run = 0;

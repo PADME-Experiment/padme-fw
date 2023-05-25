@@ -40,7 +40,8 @@ ETagGeometry::ETagGeometry()
   fETagSizeY = fETagBarSizeY*fETagNBars +5*mm;
   fETagSizeZ = fETagBarSizeZ            +5*mm;
 
-  fETagFrontFacePosZ = 2380.*mm; // Relative to center of magnet
+  //  fETagFrontFacePosZ = 2380.*mm; // Relative to center of magnet
+  fETagFrontFacePosZ = 2557.*mm; // M.R. 04/23 after Ecal new postion for Run III
   
   fETagSensitiveDetectorName = "ETagSD";
 }

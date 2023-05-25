@@ -287,7 +287,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
       track->SetTrackStatus(fStopAndKill);
     }
   }
+
+//  //*************************************
+//  // Killing particle in the SLTB5 region
+//  //*************************************
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB5"){
+      //      G4cout<<"Killin particle in SLTB5 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      track->SetTrackStatus(fStopAndKill);
+    }
+  }  
   
+
   //  if (step->GetPreStepPoint()->GetStepStatus() == fGeomBoundary){
 //    if(track->GetVolume()->GetName()=="SAC") {
 //      track->SetTrackStatus(fStopAndKill);

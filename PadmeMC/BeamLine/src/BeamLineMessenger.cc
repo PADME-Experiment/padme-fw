@@ -88,7 +88,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB3Cmd->SetGuidance("");
   fSetSLTB3Cmd->SetParameterName("DFY",false);
   fSetSLTB3Cmd->SetDefaultUnit("mm");
-  fSetSLTB3Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB3Cmd->SetRange("DFY >=0. && DFY < 50.");
   fSetSLTB3Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //SLTB4 aperture
@@ -96,7 +96,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB4Cmd->SetGuidance("");
   fSetSLTB4Cmd->SetParameterName("DFY",false);
   fSetSLTB4Cmd->SetDefaultUnit("mm");
-  fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 50.");
   fSetSLTB4Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //SLTB5 aperture 04/23
@@ -104,7 +104,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB5Cmd->SetGuidance("");
   fSetSLTB5Cmd->SetParameterName("DFY",false);
   fSetSLTB5Cmd->SetDefaultUnit("mm");
-  fSetSLTB5Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB5Cmd->SetRange("DFY >=0. && DFY < 50.");
   fSetSLTB5Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);

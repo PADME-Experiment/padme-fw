@@ -38,7 +38,7 @@
 #include "G4SDManager.hh" // 29/04/2019 M. Raggi
 #include "BeWSD.hh"       // 29/04/2019 M. Raggi
 #include "MylarWSD.hh"    // 18/06/2020 M. Raggi
-#include "BeamFlagSD.hh"       // 29/08/2019 M. Raggi
+#include "BeamFlagSD.hh"  // 29/08/2019 M. Raggi
 
 #include "QuadrupoleMagField.hh"  // M. Raggi 8/04/2019
 #include "QuadSetup.hh"           // M. Raggi 10/04/2019
@@ -93,7 +93,7 @@ void BeamLineStructure::CreateGeometry()
     PositionAllQuads();
     CreateAllSLTB();
     CreatePulsedMagnet();
-    //    CreateBeamLine2022();    // Beam line 2022
+    CreateBeamLine2022();    // Beam line 2022
   }
 }
 
@@ -296,7 +296,7 @@ void BeamLineStructure::CreateBeamLine2020()
   // November 2020 tune L. Foggetta
   //TB4R   26.16 TB4L   22.30          TB3 Up 26.06  TB3 Down 23.32	
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024 TB3D_M   26.39    	
-  //TB4Ape  2.28    +    1.71 = 4mm    TB4Ape  0     +         3.07 = 3.07 mm
+  //TB4Ape  2.28    +    1.71 = 4mm    TB3Ape  0     +         3.07 = 3.07 mm
 
   // P. Valente to be checked with Luca
   //TB2R        TB2L   22.30           
@@ -1868,8 +1868,8 @@ void BeamLineStructure::CreateAllSLTB()
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024 TB3D_M   26.39    	
   //TB4Ape  2.28    +    1.71 = 4mm    TB4Ape  0     +         3.07 = 3.07 mm
 
-  // P. Valente to be checked with Luca
-  //TB2R        TB2L   22.30           
+  // From Luca tune 22 run stable.
+  //TB2R   25.6 TB2L   22.30           
   //TB2R_M 26.6 TB2L_M 28.29 	       
   //TB2Ape  1.71 = 1.71mm    
 
@@ -1925,30 +1925,30 @@ void BeamLineStructure::CreateAllSLTB()
   
   G4Tubs* solidSLTB3Full = new G4Tubs("solidSLTB3Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
   //  G4VSolid* solidSLTB3Hole = new G4Box("solidSLTB3Hole",SLTB3Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
-  G4VSolid* solidSLTB3Hole =new G4Box("solidSLTB3Hole",WallPipeRIn-0.1*mm,SLTB3Aperture*0.5,SLTBThickness+2*mm);
+  G4Box* solidSLTB3Hole =new G4Box("solidSLTB3Hole",WallPipeRIn-0.1*mm,SLTB3Aperture*0.5,SLTBThickness+2*mm);
   G4SubtractionSolid* solidSLTB3 = new G4SubtractionSolid("solidSLTB3",solidSLTB3Full,solidSLTB3Hole,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume*  logicalSLTB3 = new G4LogicalVolume(solidSLTB3,G4Material::GetMaterial("G4_W"),"logicalSLTB3",0,0,0);
   logicalSLTB3->SetVisAttributes(steelVisAttr);
 
   G4Tubs* solidSLTB4Full = new G4Tubs("solidSLTB4Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
-  G4VSolid* solidSLTB4Hole = new G4Box("solidSLTB4Hole",SLTB4Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
+  G4Box* solidSLTB4Hole = new G4Box("solidSLTB4Hole",SLTB4Aperture*0.5,WallPipeRIn-0.05*mm,SLTBThickness+2*mm);
   G4SubtractionSolid* solidSLTB4 = new G4SubtractionSolid("solidSLTB4",solidSLTB4Full,solidSLTB4Hole,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume* logicalSLTB4 = new G4LogicalVolume(solidSLTB4,G4Material::GetMaterial("G4_W"),"logicalSLTB4",0,0,0);
   logicalSLTB4->SetVisAttributes(steelVisAttr);
 
   // positioning supports 
-  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
-  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
+//  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
+//  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
     
   // positioning collimators
-  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
-  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+//  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
+//  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
 
   //*************************************************************
   // SLTB5 just before the DHSTB002 magnet only LR
   //***************************************************************
 
-  G4double SLTB4oSLTB5Distance= 8421*mm;
+  G4double SLTB4oSLTB5Distance= 8677*mm;
   G4double SLTB5Aperture = geo->GetSLTB5Aperture();
   G4double SLTB5PosX = MylarWinFlgPosX-(SLTB4ToMylar+SLTBThickness*0.5)*sin(magnetAngle)-SLTB4oSLTB5Distance*sin(magnetAngle);
   G4double SLTB5PosY = MylarWinFlgPosY;							 
@@ -1956,13 +1956,13 @@ void BeamLineStructure::CreateAllSLTB()
   G4ThreeVector SLTB5Pos = G4ThreeVector(SLTB5PosX,SLTB5PosY,SLTB5PosZ);    
 
   G4Tubs* solidSLTB5Full = new G4Tubs("solidSLTB5Full",0.,WallPipeRIn-0.1*mm,SLTBThickness,0.*deg,360.*deg);
-  G4VSolid* solidSLTB5Hole =new G4Box("solidSLTB5Hole",SLTB5Aperture*0.5,WallPipeRIn-0.1*mm,SLTBThickness+2*mm);
+  G4Box*  solidSLTB5Hole = new G4Box("solidSLTB5Hole",SLTB5Aperture*0.5,WallPipeRIn-0.1*mm,SLTBThickness+2*mm);
   G4SubtractionSolid* solidSLTB5 = new G4SubtractionSolid("solidSLTB5",solidSLTB5Full,solidSLTB5Hole,0,G4ThreeVector(0.,0.,0.));
   G4LogicalVolume*  logicalSLTB5 = new G4LogicalVolume(solidSLTB5,G4Material::GetMaterial("G4_W"),"logicalSLTB5",0,0,0);
   logicalSLTB5->SetVisAttributes(steelVisAttr);
 
   // positioning supports 
-  new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
+  //  new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
   // positioning collimators
   new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalSLTB5,"BeamSLTB5",fMotherVolume,false,0,true);
 

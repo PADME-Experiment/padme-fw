@@ -23,7 +23,8 @@ Bool_t ECalMLClusters::InitHistos(){
   hSvcVal->BookHisto(this->GetName()+"_ECalML_NClusters",100,0.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_NClusters",100,0.0,100.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECalvsECalML_NClusters",100,0.0,100.0,100,0.0,100.0);
-  hSvcVal->BookHisto(this->GetName()+"_ECalML_2Clusters_TimeDiff",100,0.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalML_2Clusters_TimeDiff",800,-100.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECal_2Clusters_TimeDiff",800,-100.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus",1000,0.0,2000.0);

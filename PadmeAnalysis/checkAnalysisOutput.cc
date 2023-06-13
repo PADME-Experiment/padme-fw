@@ -1,9 +1,9 @@
 
 void checkAnalysisOutput(){
 
-  TFile *f = TFile::Open("opit.root");
+  TFile *f = TFile::Open("230613_calib.root");
   TDirectory* dir = (TDirectory*) f->Get("ECalMLCalibration");
-  TFile *outRoot = new TFile("analysisOutput.root","RECREATE");
+  TFile *outRoot = new TFile("analysisOutput230613.root","RECREATE");
 
   TH2F *timesChannels = new TH2F("timesChannels","Time difference angular coefficient for each channel",1024,0,1024,100,0,30);
   TH1F *timesChannels1D = new TH1F("timesChannels1D","Time Differnece",1024,0.0,1024);
@@ -12,7 +12,7 @@ void checkAnalysisOutput(){
   TH1F *coefficients = new TH1F("Angular coefficients","Angular Coefficients",300,0.0,0.3);
   TF1 *f1 = new TF1("f1","gaus",-3,20);
   TF1 *f2 = new TF1("f2","pol1",0,100);
-  f2->FixParameter(0,0);
+  //f2->FixParameter(0,0);
 
   Float_t consts[32][32];
   Float_t coeffs[32][32];
@@ -34,8 +34,8 @@ void checkAnalysisOutput(){
   FILE *coeffFile;
   FILE *constsFile;
 
-  coeffFile = fopen("channelCalibCoefficients.dat","w");
-  constsFile = fopen("channelCalibConstants.dat","w");
+  coeffFile = fopen("NEWchannelCalibCoefficients.dat","w");
+  constsFile = fopen("NEWchannelCalibConstants.dat","w");
 
   for(int i = 0;i<32;i++){
     for(int j=0;j<32;j++) {
@@ -73,7 +73,7 @@ void checkAnalysisOutput(){
 	//timesChannels->Fill((i*j),mean);
 
 	
-	if(sigma < 4.) {
+	if(sigma < 5.) {
 	  
 	prof->Fit("f2");
 	//AmpHisto->Fit("f2","Q");
@@ -83,10 +83,24 @@ void checkAnalysisOutput(){
 	consts[i][j] = (-cnst/coeff);
 	coeffs[i][j] = (1/coeff);
 	//std::cout<<"Constant: "<<consts[i][j]<<" Coefficient: "<<coeffs[i][j]<<std::endl;
-	  
-	fprintf(coeffFile,"%f ",coeffs[i][j]);
-        fprintf(constsFile,"%f ",consts[i][j]);
 
+	if(i<10&&j<10){
+	  fprintf(coeffFile,"0%d0%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"0%d0%d %f\n",i,j,consts[i][j]);
+	}
+	if(i<10&&j>=10){
+	  fprintf(coeffFile,"0%d%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"0%d%d %f\n",i,j,consts[i][j]);
+	}
+	if(i>=10&&j<10){
+	  fprintf(coeffFile,"%d0%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"%d0%d %f\n",i,j,consts[i][j]);
+	}
+        if(i>=10&&j>=10){
+	  fprintf(coeffFile,"%d%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"%d%d %f\n",i,j,consts[i][j]);
+	}
+	
 	sumcoef+=coeffs[i][j];
 	sumconsts+=consts[i][j];
 	count+=1;
@@ -102,12 +116,26 @@ void checkAnalysisOutput(){
 	
       }
       else{
-	fprintf(coeffFile,"%f ",coeffs[i][j]);
-	fprintf(constsFile,"%f ",consts[i][j]);
+	if(i<10&&j<10){
+	  fprintf(coeffFile,"0%d0%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"0%d0%d %f\n",i,j,consts[i][j]);
+	}
+	if(i<10&&j>=10){
+	  fprintf(coeffFile,"0%d%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"0%d%d %f\n",i,j,consts[i][j]);
+	}
+	if(i>=10&&j<10){
+	  fprintf(coeffFile,"%d0%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"%d0%d %f\n",i,j,consts[i][j]);
+	}
+	if(i>=10&&j>=10){
+	  fprintf(coeffFile,"%d%d %f\n",i,j,coeffs[i][j]);
+	  fprintf(constsFile,"%d%d %f\n",i,j,consts[i][j]);
+	}
       }
     }
-    fprintf(coeffFile,"\n");
-    fprintf(constsFile,"\n");
+    //fprintf(coeffFile,"\n");
+    //fprintf(constsFile,"\n");
   }
 
   meancoef=sumcoef/count;

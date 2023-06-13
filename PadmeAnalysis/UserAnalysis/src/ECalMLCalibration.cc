@@ -145,14 +145,18 @@ Bool_t ECalMLCalibration::Process(){
 	if (ECal[i][j]==1 && ECalML[i][j]==1){
 	  
 	  
-	  for (int i=0;i<ECalHits;i++){
-	    ECalhit=evt->ECalRecoEvent->Hit(i);
-	    Channel=ECalhit->GetChannelId();
+	  for (int ii=0;ii<ECalHits;ii++){
+	    ECalhit=evt->ECalRecoEvent->Hit(ii);
+	    Channel=ECalhit->GetChannelId();	    
+	    if(Channel %100 == i && j==Channel/100)
+	      break;
 	  }
 	  
-	  for (int i=0;i<ECalMLHits;i++){    
-	    ECalMLhit=evt->ECalMLRecoEvent->Hit(i);
+	  for (int ii=0;ii<ECalMLHits;ii++){    
+	    ECalMLhit=evt->ECalMLRecoEvent->Hit(ii);
 	    ChannelML=ECalMLhit->GetChannelId();
+	    if(ChannelML %100 == i && j==ChannelML/100)
+	      break;	    
 	  }
 	  
 	  if (i==ChannelML%100 && j==ChannelML/100) {
@@ -166,11 +170,11 @@ Bool_t ECalMLCalibration::Process(){
 	    hSvc->FillHisto(this->GetName()+"_ECal_ECalML_singleHits_timediff_"+std::to_string(100*i+j),(Time-TimeML));
 	    hSvc->FillHistoProf(this->GetName()+"_ECal_ECalML_singleHits_timedifftime_"+std::to_string(100*i+j),Time,(Time-TimeML));
 	    
-	    std::cout<<"We have a match! Channel: "<<(100*i+j)<<" Time difference "<<(Time-TimeML)<<std::endl;
+	    //std::cout<<"We have a match! Channel: "<<(100*i+j)<<" Time difference "<<(Time-TimeML)<<std::endl;
 	    
 	    if((Time-TimeML)>7 && (Time-TimeML)<12){
 	      hSvc->FillHisto2(this->GetName()+"_ECalML_calib_"+std::to_string(100*i+j),Energy, EnergyML);
-	      hSvc->FillHistoProf(this->GetName()+"_ECalML_calib_profile"+std::to_string(100*i+j),Energy, EnergyML-Energy);
+	      hSvc->FillHistoProf(this->GetName()+"_ECalML_calib_profile"+std::to_string(100*i+j),Energy, EnergyML);
 	      }
 	
 	  }

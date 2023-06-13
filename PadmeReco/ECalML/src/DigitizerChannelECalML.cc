@@ -243,7 +243,7 @@ void DigitizerChannelECalML::Reconstruct(std::vector<TRecoVHit *> &hitArray){
     if(filteredSamples[i] > THRESHOLD){
       TRecoVHit *Hit = new TRecoVHit();
       Hit->SetTime(i);
-      Hit->SetEnergy(0.1085*filteredSamples[i]);
+      Hit->SetEnergy(0.1205*filteredSamples[i]);
       hitArray.push_back(Hit);
     }
   }

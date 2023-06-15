@@ -294,13 +294,13 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 	ChX=(Hits[iHit]->GetChannelId())/100;
 	ChY=(Hits[iHit]->GetChannelId())%100;
 
-	if (fTriggerProcessor){
+	if (fTriggerProcessor)
 	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
 	  
-	  Hits[iHit]->SetEnergy(    (  (coefficients[ChX][ChY]) *  (Hits[iHit]->GetEnergy())  )   +   (constants[ChX][ChY])    );
-	  }
 	//	std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
 	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
+
+	Hits[iHit]->SetEnergy(    (  (coefficients[ChX][ChY]) *  (Hits[iHit]->GetEnergy())  )   +   (constants[ChX][ChY])    );
 	
 	((TH2F *) GetHisto("ECalMLHitsPos")) -> Fill((Hits[iHit]->GetChannelId())/100,(Hits[iHit]->GetChannelId())%100,Hits[iHit]->GetEnergy());
 	

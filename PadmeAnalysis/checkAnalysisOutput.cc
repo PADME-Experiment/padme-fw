@@ -37,7 +37,7 @@ void checkAnalysisOutput(){
   coeffFile = fopen("NEWchannelCalibCoefficients.dat","w");
   constsFile = fopen("NEWchannelCalibConstants.dat","w");
 
-  for(int i = 0;i<32;i++){
+  for(int i=0;i<32;i++){
     for(int j=0;j<32;j++) {
       TH1F *TimeHisto = (TH1F*) dir->Get(Form("ECalMLCalibration_ECal_ECalML_singleHits_timediff_%d",(100*i+j)));
       TH2D *AmpHisto = (TH2D*) dir->Get(Form("ECalMLCalibration_ECalML_calib_%d",(100*i+j)));
@@ -83,23 +83,28 @@ void checkAnalysisOutput(){
 	consts[i][j] = (-cnst/coeff);
 	coeffs[i][j] = (1/coeff);
 	//std::cout<<"Constant: "<<consts[i][j]<<" Coefficient: "<<coeffs[i][j]<<std::endl;
+	
+	fprintf(coeffFile,"%f ",coeffs[i][j]);
+        fprintf(constsFile,"%f ",consts[i][j]);
 
-	if(i<10&&j<10){
-	  fprintf(coeffFile,"0%d0%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"0%d0%d %f\n",i,j,consts[i][j]);
-	}
-	if(i<10&&j>=10){
-	  fprintf(coeffFile,"0%d%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"0%d%d %f\n",i,j,consts[i][j]);
-	}
-	if(i>=10&&j<10){
-	  fprintf(coeffFile,"%d0%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"%d0%d %f\n",i,j,consts[i][j]);
-	}
-        if(i>=10&&j>=10){
-	  fprintf(coeffFile,"%d%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"%d%d %f\n",i,j,consts[i][j]);
-	}
+
+	
+	// if(i<10&&j<10){
+	//   fprintf(coeffFile,"0%d 0%d %f\n",i,j,coeffs[i][j]);
+	//   fprintf(constsFile,"0%d 0%d %f\n",i,j,consts[i][j]);
+	// }
+	// if(i<10&&j>=10){
+	//   fprintf(coeffFile,"0%d %d %f\n",i,j,coeffs[i][j]);
+	//   fprintf(constsFile,"0%d %d %f\n",i,j,consts[i][j]);
+	// }
+	// if(i>=10&&j<10){
+	//   fprintf(coeffFile,"%d0 %d %f\n",i,j,coeffs[i][j]);
+	//   fprintf(constsFile,"%d0 %d %f\n",i,j,consts[i][j]);
+	// }
+        // if(i>=10&&j>=10){
+	//   fprintf(coeffFile,"%d %d %f\n",i,j,coeffs[i][j]);
+	//   fprintf(constsFile,"%d %d %f\n",i,j,consts[i][j]);
+	// }
 	
 	sumcoef+=coeffs[i][j];
 	sumconsts+=consts[i][j];
@@ -116,27 +121,38 @@ void checkAnalysisOutput(){
 	
       }
       else{
-	if(i<10&&j<10){
-	  fprintf(coeffFile,"0%d0%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"0%d0%d %f\n",i,j,consts[i][j]);
-	}
-	if(i<10&&j>=10){
-	  fprintf(coeffFile,"0%d%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"0%d%d %f\n",i,j,consts[i][j]);
-	}
-	if(i>=10&&j<10){
-	  fprintf(coeffFile,"%d0%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"%d0%d %f\n",i,j,consts[i][j]);
-	}
-	if(i>=10&&j>=10){
-	  fprintf(coeffFile,"%d%d %f\n",i,j,coeffs[i][j]);
-	  fprintf(constsFile,"%d%d %f\n",i,j,consts[i][j]);
-	}
+	fprintf(coeffFile,"%f ",coeffs[i][j]);
+	fprintf(constsFile,"%f ",consts[i][j]);
       }
     }
-    //fprintf(coeffFile,"\n");
-    //fprintf(constsFile,"\n");
+    fprintf(coeffFile,"\n");
+    fprintf(constsFile,"\n");
   }
+
+
+      
+    //   else{
+  // 	if(i<10&&j<10){
+  // 	  fprintf(coeffFile,"0%d 0%d %f\n",i,j,coeffs[i][j]);
+  // 	  fprintf(constsFile,"0%d 0%d %f\n",i,j,consts[i][j]);
+  // 	}
+  // 	if(i<10&&j>=10){
+  // 	  fprintf(coeffFile,"0%d %d %f\n",i,j,coeffs[i][j]);
+  // 	  fprintf(constsFile,"0%d %d %f\n",i,j,consts[i][j]);
+  // 	}
+  // 	if(i>=10&&j<10){
+  // 	  fprintf(coeffFile,"%d0 %d %f\n",i,j,coeffs[i][j]);
+  // 	  fprintf(constsFile,"%d0 %d %f\n",i,j,consts[i][j]);
+  // 	}
+  // 	if(i>=10&&j>=10){
+  // 	  fprintf(coeffFile,"%d %d %f\n",i,j,coeffs[i][j]);
+  // 	  fprintf(constsFile,"%d %d %f\n",i,j,consts[i][j]);
+  // 	}
+  //     }
+  //   }
+  //   //fprintf(coeffFile,"\n");
+  //   //fprintf(constsFile,"\n");
+  // }
 
   meancoef=sumcoef/count;
   meanconst=sumconsts/count;

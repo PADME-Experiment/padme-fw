@@ -228,6 +228,27 @@ bool ECalMLReconstruction::TriggerToBeSkipped()
 void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 {
   //// This method differ from  PadmeVReconstruction::BuildHits(TRawEvent* rawEv) only because it attach board and elementID to the DigitizerChannelEcal ====>>> if ChannelVReco woudl store bd and element id, this assignemnt might be don in the base reco class. 
+  FILE* coeffFile = fopen("../../../PadmeAnalysis/NEWchannelCalibCoefficients.dat", "r");
+  FILE* constFile = fopen("../../../PadmeAnalysis/NEWchannelCalibConstants.dat", "r");
+
+  float coefficients[32][32];
+  float constants[32][32];
+
+  for (int i = 0; i < 32; ++i) {
+    for (int j = 0; j < 32; ++j) {
+      if (fscanf(coeffFile, "%f", &coefficients[i][j]) != 1) {
+	fprintf(stderr, "Error reading coefficient matrix element.\n");
+	break;
+      }
+      if (fscanf(constFile, "%f", &constants[i][j]) != 1) {
+	fprintf(stderr, "Error reading constant matrix element.\n");
+	break;
+      }
+    }
+  }
+
+  fclose(coeffFile);
+  fclose(constFile);
   
   ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
@@ -262,14 +283,22 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
       unsigned int nHitsBefore = Hits.size();
       fChannelReco->Reconstruct(Hits);
       unsigned int nHitsAfter = Hits.size();
+
+      Int_t ChX=0;
+      Int_t ChY=0;
       for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
 	Hits[iHit]->SetChannelId(ChID);
 	Hits[iHit]->setBDCHid(iBdID,ElChID);
 	// Correct hit time using trigger information
 
-	if (fTriggerProcessor)
-	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
+	ChX=(Hits[iHit]->GetChannelId())/100;
+	ChY=(Hits[iHit]->GetChannelId())%100;
 
+	if (fTriggerProcessor){
+	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
+	  
+	  Hits[iHit]->SetEnergy(    (  (coefficients[ChX][ChY]) *  (Hits[iHit]->GetEnergy())  )   +   (constants[ChX][ChY])    );
+	  }
 	//	std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
 	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
 	

@@ -11,6 +11,7 @@ public:
   ~ECalMLClusters(){;};
 
   virtual Bool_t InitHistos();
+  virtual double ComputeInvariantMass(Double_t E1, Double_t E2, Double_t PosX1, Double_t PosX2, Double_t PosY1, Double_t PosY2);
   virtual Bool_t Process();  
   virtual Bool_t Finalize(){return true;}
 

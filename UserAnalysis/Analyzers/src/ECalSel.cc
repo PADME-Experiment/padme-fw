@@ -88,7 +88,8 @@ Int_t ECalSel::OneClusSel(){
   
   const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
   const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
-  const double minGGDistance = 60; // mm
+  const double minDistance = 125; // mm
+  const double maxDistance = 145; // mm
   
 
 
@@ -115,7 +116,7 @@ Int_t ECalSel::OneClusSel(){
     fhSvcVal->FillHistoList("ECalSel",Form("ECal_SingleClu_dE"), fGeneralInfo->GetBeamMomentum()-cluEnergy[0], 1.);
 
     int isPaired = -1; // look for a cluster from the same interaction
-
+    int npaired = 0;
     for (int h2=0; h2< fECal_clEvent->GetNElements(); ++h2) {
       if (h1 == h2) continue;
       tempClu[1] = fECal_clEvent->Element((int)h2);
@@ -123,24 +124,30 @@ Int_t ECalSel::OneClusSel(){
       cluTime[1] = tempClu[1]->GetTime();
       if (cluTime[1] < timeSafeMin) continue;
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-      if (cluPos[1].Perp() > radiusMin) continue;
+      //      if (cluPos[1].Perp() > radiusMin) continue;
 
       double dt = cluTime[0]-cluTime[1];
       double dr = (cluPos[0]-cluPos[1]).Mag();
-
+      TVector3 cog = (cluEnergy[0]/(cluEnergy[0]+cluEnergy[1]))*cluPos[0]+(cluEnergy[1]/(cluEnergy[0]+cluEnergy[1]))*cluPos[1];
+      cog -= fGeneralInfo->GetCOG();
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
-      if (fabs(dt) < maxTimeDistance && dr > minGGDistance) {
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2F"), cluEnergy[0]/fGeneralInfo->GetBeamMomentum() + cluEnergy[1]/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+      if (fabs(dt) < maxTimeDistance && dr > minDistance && dr < maxDistance) {
 	isPaired = h2;
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2FCut"), cluEnergy[0]/fGeneralInfo->GetBeamMomentum() + cluEnergy[1]/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+
+	npaired++;
       }
     } // inner cluster loop    
 
-    if (isPaired == -1){
+    if (npaired == 1){
+      tempClu[1] = fECal_clEvent->Element((int)isPaired);
       ECalSelEvent selev;
       selev.flagEv = ev_single;
       selev.indexECal[0] = h1;
-      selev.indexECal[1] = -1;
+      selev.indexECal[1] = isPaired;
       selev.indexECal[2] = -1;
-      selev.totalE = cluEnergy[0];
+      selev.totalE = cluEnergy[0] + tempClu[1]->GetEnergy();
       selev.avgT = cluTime[0];
       selev.cog.Set(cluPos[0].X(),cluPos[0].Y());
       selev.indexETagAss[0] = -1;
@@ -409,6 +416,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
   
   fhSvcVal->BookHistoList("ECalSel","ECal_SingleClu_dE", 200,-100.,100.);
+  double LMax = TMath::Sqrt((fXMax-fXMin)*(fXMax-fXMin)+(fYMax-fYMin)*(fYMax-fYMin));
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_E1F_vs_E2F"   , 400,0.,4.,100,0.,LMax);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_E1F_vs_E2FCut", 400,0.,4.,100,0.,LMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHistoList("ECalSel","NumberOfSingleClus", 10,0.,10.);
 

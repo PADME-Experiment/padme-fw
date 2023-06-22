@@ -184,6 +184,15 @@ Int_t ETagAn::ETagMatch(){
 			     (double)(ass[1].nAss[0] + maxETagAssPerSide*ass[1].nAss[1])
 			     );
 
+
+    // Study of energy release
+    for (int j=0; j<2; j++){ // pair combination {0,1}, {1,0}
+      int closestSide = ass[j].closestSide;
+      fhSvcVal->FillHisto2List("ETagAn",Form("ECalDouble_ETag_EvsR_Side%s_Bar%d",fLabel[closestSide].Data(),ass[j].nETagBar),
+			       ass[j].sipmDist[closestSide],ass[j].EAss[closestSide],1.);
+    }
+
+
     // tag and probe efficiency
 
     for (int j=0; j<2; j++){ // pair combination {0,1}, {1,0}
@@ -198,7 +207,7 @@ Int_t ETagAn::ETagMatch(){
       for (int k=0; k<2; k++){	 // loop over probe algorithms
 	if (!(iassCode & (1<< tagBits[k]))) continue; // no tag, pass to the next combination
 
-	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_ProbeAlgo_%d",ass[jass].nETagBar,k),
+	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_%dSlab_ProbeAlgo%d",ass[jass].nETagBar,k),
 				 (double)(ass[jass].nAss[0]), (double)(ass[jass].nAss[1]),1.);
 
 	// Denominator Probe
@@ -334,6 +343,7 @@ ETagECalAss ETagAn::AssociateECalCluster(int indexCl, int timeOff){
 	fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",fLabel[lr].Data(),ich,sipm), ich-bary, dt);
 	if ((ich == bary) || (ich == bary + dchannelCut)) {
 	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsr",fLabel[lr].Data(),ich,sipm), sipmDist[lr], dt);
+	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsE",fLabel[lr].Data(),ich,sipm), hitto->GetEnergy(), dt);
 	  fhSvcVal->FillHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",fLabel[lr].Data(),ich), sipmDist[lr], dt);
 	}
       }
@@ -649,13 +659,14 @@ Bool_t ETagAn::InitHistos()
       for (int i = 0; i<2; i++){
 	fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsdch",fLabel[i].Data(),q,aa),61,-30.5,30.5,100,-50,50); 
 	fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsr",fLabel[i].Data(),q,aa),29,0,609,200,-50,50); 
+	fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_SiPM_%d_dtvsE",fLabel[i].Data(),q,aa),100,0.,5.,200,-50,50); 
       }
     }
     for (int i = 0; i<2; i++){
       fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_ETagHits%sCh_%d_dtvsr",fLabel[i].Data(),q),21,0,609,200,-50,50); 
-      fhSvcVal->BookHisto2List("ETagAn",Form("ECal_SC_%sCh_%d_dtvsr",fLabel[i].Data(),q),21,0,609,100,-50,50); 
       fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETagHits_%sCh_%d_Evsr",fLabel[i].Data(),q),21,0,609,100,0.,5.); 
       fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETagHits_%sCh_%d_EvsrOff",fLabel[i].Data(),q),21,0,609,100,0.,5.); 
+      fhSvcVal->BookHisto2List("ETagAn",Form("ECalDouble_ETag_EvsR_Side%s_Bar%d",fLabel[i].Data(),q),29,0,609,200,0,20); 
     }                        
   }
 

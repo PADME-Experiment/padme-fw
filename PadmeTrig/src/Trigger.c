@@ -137,10 +137,11 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   int rc;
 
   // Send command to read timestamp buffer
-  char cmd[2]; sprintf(cmd,"%c%c",TRIG_CMD_TIMESTAMP,TRIG_REG_TIMESTAMP);
+  //char cmd[2]; sprintf(cmd,"%c%c",TRIG_CMD_TIMESTAMP,TRIG_REG_TIMESTAMP);
   //printf("trig_get_data cmd = 0x");
   //int i; for(i=0;i<2;i++) printf("%02x",cmd[i]);
   //printf("\n");
+  const unsigned char cmd[2] = {TRIG_CMD_TIMESTAMP, TRIG_REG_TIMESTAMP};
   rc = write(Trig_SockFD,cmd,2);
   if (rc<0) {
     perror("Trigger::trig_get_data - Error issuing timestamp command");
@@ -150,9 +151,12 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
   // Get ready to read the answer from Trigger
 
   void* pointer = buffer;
-  unsigned char buff[4],head[4],tail[4],biff[4];
-  head[0] = 0xB0; head[1] = 0xF0; head[2] = 0xB0; head[3] = 0xF0;
-  tail[0] = 0xE0; tail[1] = 0xF0; tail[2] = 0xE0; tail[3] = 0xF0;
+  //unsigned char buff[4],head[4],tail[4],biff[4];
+  //head[0] = 0xB0; head[1] = 0xF0; head[2] = 0xB0; head[3] = 0xF0;
+  //tail[0] = 0xE0; tail[1] = 0xF0; tail[2] = 0xE0; tail[3] = 0xF0;
+  unsigned char buff[4], biff[4];
+  const unsigned char head[4] = {0xB0, 0xF0, 0xB0, 0xF0};
+  const unsigned char tail[4] = {0xE0, 0xF0, 0xE0, 0xF0};
 
   // Read first 4 bytes from Trigger (must be B0F0B0F0 pattern)
   rc = read(Trig_SockFD,(char*)buff,4);
@@ -160,31 +164,53 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
     perror("Trigger::trig_get_data - Error reading timestamp data (header)");
     return TRIG_ERROR;
   }
-  if (rc!=4) {
-    rc = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+  //if (rc!=4) {
+  //  rc = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+  //}
+  // Use a loop to read until we get enough bytes
+  while (rc < 4) {
+    int n = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+    if (n < 0) {
+      perror("Trigger::trig_get_data - Error reading timestamp data (header)");
+      return TRIG_ERROR;
+    }
+    rc += n;
   }
+
   //printf("buff 0x%02x%02x%02x%02x\n",buff[0],buff[1],buff[2],buff[3]);
   //printf("head 0x%02x%02x%02x%02x\n",head[0],head[1],head[2],head[3]);
-  if ( memcmp((void*)buff,(void*)head,4) != 0 ) {
+  //if ( memcmp((void*)buff,(void*)head,4) != 0 ) {
+  if ( (buff[0] ^ head[0]) | (buff[1] ^ head[1]) | (buff[2] ^ head[2]) | (buff[3] ^ head[3]) ) {
     printf("Trigger::trig_get_data - ERROR - First timestamp word: expected 0x%02x%02x%02x%02x received 0x%02x%02x%02x%02x\n",head[0],head[1],head[2],head[3],buff[0],buff[1],buff[2],buff[3]);
     return TRIG_ERROR;
   }
 
+  // Use a while loop to read the data until we reach the tail pattern
   while(1){
 
     // Read next 4 bytes from Trigger
     rc = read(Trig_SockFD,(char*)buff,4);
     if (rc<0) {
-      perror("Reading timestamp data (first half)");
+      perror("Trigger::trig_get_data - Error reading timestamp data (first half)");
       return TRIG_ERROR;
     }
-    if (rc!=4) {
-      rc = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+    //if (rc!=4) {
+    //  rc = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+    //}
+    // Use a loop to read until we get enough bytes
+    while (rc < 4) {
+      int n = read(Trig_SockFD,(char*)(buff+rc),4-rc);
+      if (n < 0) {
+	perror("Trigger::trig_get_data - Error reading timestamp data (first half)");
+	return TRIG_ERROR;
+      }
+      rc += n;
     }
-    //printf("0x%02x%02x%02x%02x\n",buff[0],buff[1],buff[2],buff[3]);
+   //printf("0x%02x%02x%02x%02x\n",buff[0],buff[1],buff[2],buff[3]);
 
     // Check if we reached the E0F0E0F0 final tag
-    if ( memcmp((void*)buff,(void*)tail,4) == 0 ) {
+    //if ( memcmp((void*)buff,(void*)tail,4) == 0 ) {
+    if ( !( (buff[0] ^ tail[0]) | (buff[1] ^ tail[1]) | (buff[2] ^ tail[2]) | (buff[3] ^ tail[3]) ) ) {
       //printf("Footer found\n");
       break; // We are done: exit main loop
     }
@@ -192,11 +218,20 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
     // Read second half of packet from Trigger
     rc = read(Trig_SockFD,(char*)biff,4);
     if (rc<0) {
-      perror("Reading timestamp data (second half)");
+      perror("Trigger::trig_get_data - Error reading timestamp data (second half)");
       return TRIG_ERROR;
     }
-    if (rc!=4) {
-      rc = read(Trig_SockFD,(char*)(biff+rc),4-rc);
+    //if (rc!=4) {
+    //  rc = read(Trig_SockFD,(char*)(biff+rc),4-rc);
+    //}
+    // Use a loop to read until we get enough bytes
+    while (rc < 4) {
+      int n = read(Trig_SockFD,(char*)(biff+rc),4-rc);
+      if (n < 0) {
+	perror("Trigger::trig_get_data - Error reading timestamp data (second half)");
+	return TRIG_ERROR;
+      }
+      rc += n;
     }
     //printf("0x%02x%02x%02x%02x\n",biff[0],biff[1],biff[2],biff[3]);
 
@@ -208,7 +243,7 @@ int trig_get_data(void* buffer,unsigned int* buf_len)
 
   unsigned int length = (unsigned int)(pointer-buffer);
   //printf("Length is %u\n",length);
-  memcpy(buf_len,&length,4);
+  memcpy(buf_len,&length,sizeof(length));
 
   return TRIG_OK;
 

@@ -14,10 +14,24 @@
 
 #define TRIG_CMD_READ 0x00
 #define TRIG_CMD_WRITE 0x01
+
+#define TRIG_REG_START_STOP_RUN 0x00
+#define TRIG_BIT_START_RUN 0x01
+#define TRIG_BIT_STOP_RUN 0x02
+
+#define TRIG_REG_BUSY_TRIG_MASKS 0x02
+#define TRIG_REG_TIMEPIX_SHUTTER 0x05
+
+#define TRIG_REG_TRIGGER_BASE 0x08
+
+#define TRIG_REG_FW_VERSION 0x1D
+
 #define TRIG_CMD_TIMESTAMP 0x02
 #define TRIG_REG_TIMESTAMP 0x00
+
 #define TRIG_CMD_READ_I2C_TEMP 0x04
 #define TRIG_REG_READ_I2C_TEMP 0x00
+
 #define TRIG_CMD_READ_XADC_TEMP 0x04
 #define TRIG_REG_READ_XADC_TEMP 0x01
 
@@ -87,11 +101,14 @@
 // [56]    fifo empty (technical detail, ignore)
 // [57]    trigger type (0: standard, 1: autopass)
 
-#define TRIG_REG_START_RUN           0x00
-#define TRIG_REG_BUSY_AND_TRIG_MASKS 0x02
-
 int Trig_SockFD = 0;
 
+// This function creates a socket and connects to the trigger server board
+// Parameters:
+//   trigger_addr: a const char* with the IP address of the trigger server board
+//   trigger_port: an unsigned short int with the port number of the trigger server board
+// Returns:
+//   TRIG_OK if successful, TRIG_ERROR if not
 int trig_init(char* trigger_addr, unsigned short int trigger_port)
 {
 
@@ -99,10 +116,16 @@ int trig_init(char* trigger_addr, unsigned short int trigger_port)
 
   // Create a socket for the client
   Trig_SockFD = socket(AF_INET,SOCK_STREAM,0);
+  // Check if socket creation was successful
+  if (Trig_SockFD < 0) {
+    perror("Trigger::trig_init - Error creating socket");
+    return TRIG_ERROR;
+  }
 
   // Reset server address (just in case)
-  memset(&serv_addr,'0',sizeof(serv_addr));
- 
+  memset(&serv_addr,0,sizeof(serv_addr));
+  //bzero(&serv_addr,sizeof(serv_addr));
+
   // Set protocol and port
   serv_addr.sin_family = AF_INET;
   //serv_addr.sin_port = htons(SERVER_PORT);
@@ -111,13 +134,13 @@ int trig_init(char* trigger_addr, unsigned short int trigger_port)
   // Convert IPv4 and IPv6 addresses from text to binary form
   //if ( inet_pton(AF_INET,SERVER_ADDRESS,&serv_addr.sin_addr) <= 0 ) {
   if ( inet_pton(AF_INET,trigger_addr,&serv_addr.sin_addr) <= 0 ) {
-    perror("Error converting address");
+    perror("Trigger::trig_init - Error converting address");
     return TRIG_ERROR;
   }
  
   // Connect to server
   if ( connect(Trig_SockFD,(struct sockaddr*)&serv_addr,sizeof(serv_addr)) < 0 ) {
-    perror("Error connecting");
+    perror("Trigger::trig_init - Error connecting");
     return TRIG_ERROR;
   }
 
@@ -131,6 +154,13 @@ int trig_end()
   return TRIG_OK;
 }
 
+// This function reads timestamp data from a trigger socket
+// and copies it to a buffer
+// Parameters:
+//   buffer: an unsigned char array to store the data
+//   buf_len: a pointer to an unsigned int to store the length of the data
+// Returns:
+//   TRIG_OK if successful, TRIG_ERROR if not
 int trig_get_data(void* buffer,unsigned int* buf_len)
 {
 
@@ -400,46 +430,64 @@ int trig_start_run()
 }
 */
 
+// This function sets the start run bit in the trigger start/stop run register
+// Returns:
+//   The return value of trig_set_register function
 int trig_start_run()
 {
-  unsigned char fullmask[4];
-  fullmask[0] = 0x00;
-  fullmask[1] = 0x00;
-  fullmask[2] = 0x00;
-  fullmask[3] = (1 << 0); // bit 0: start run
-  return trig_set_register(0x00,fullmask);
+  //unsigned char fullmask[4];
+  //fullmask[0] = 0x00;
+  //fullmask[1] = 0x00;
+  //fullmask[2] = 0x00;
+  //fullmask[3] = (1 << 0); // bit 0: start run
+  unsigned char fullmask[] = {0x00, 0x00, 0x00, 0x00};
+  fullmask[3] = (fullmask[3] | TRIG_BIT_START_RUN); // bit 0: start run
+  return trig_set_register(TRIG_REG_START_STOP_RUN,fullmask);
 }
 
+// This function sets the stop run bit in the trigger start/stop run register
+// Returns:
+//   The return value of trig_set_register function
 int trig_stop_run()
 {
-  unsigned char fullmask[4];
-  fullmask[0] = 0x00;
-  fullmask[1] = 0x00;
-  fullmask[2] = 0x00;
-  fullmask[3] = (1 << 1); // bit 1: stop run
-  return trig_set_register(0x00,fullmask);
+  //unsigned char fullmask[4];
+  //fullmask[0] = 0x00;
+  //fullmask[1] = 0x00;
+  //fullmask[2] = 0x00;
+  //fullmask[3] = (1 << 1); // bit 1: stop run
+  unsigned char fullmask[] = {0x00, 0x00, 0x00, 0x00};
+  fullmask[3] = (fullmask[3] | TRIG_BIT_STOP_RUN); // bit 1: stop run
+  return trig_set_register(TRIG_REG_START_STOP_RUN,fullmask);
 }
 
+// This function reads the firmware version from the trigger register
+// Parameters:
+//   fw_version: a pointer to an unsigned int to store the firmware version
+// Returns:
+//   The return value of trig_get_register function
 int trig_get_fw_version(unsigned int* fw_version)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x1D,fullmask);
-  if (rc == TRIG_OK) *fw_version = fullmask[0]*(1<<24)+fullmask[1]*(1<<16)+fullmask[2]*(1<<8)+fullmask[3];
+  rc = trig_get_register(TRIG_REG_FW_VERSION,fullmask);
+  if (rc == TRIG_OK) {
+    //*fw_version = fullmask[0]*(1<<24)+fullmask[1]*(1<<16)+fullmask[2]*(1<<8)+fullmask[3];
+    *fw_version = (fullmask[0] << 24) | (fullmask[1] << 16) | (fullmask[2] << 8) | fullmask[3];
+  }
   return rc;
 }
 
 int trig_get_trigbusymask(unsigned char* mask)
 {
   // WARNING this function is obsolete and will be removed
-  return trig_get_register(0x02,mask);
+  return trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,mask);
 }
 
 int trig_get_trigmask(unsigned char* mask)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc == TRIG_OK) mask[0] = fullmask[3];
   return rc;
 }
@@ -448,11 +496,11 @@ int trig_set_trigmask(unsigned char mask)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old trigger mask with new one (8bits)
   fullmask[3] = mask;
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
 }
 
 int trig_enable_trigger(unsigned char trigger)
@@ -463,15 +511,15 @@ int trig_enable_trigger(unsigned char trigger)
   char errmsg[80];
 
   if (trigger >= 8) {
-    sprintf(errmsg,"trig_enable_trigger - Error request to enable trigger %u",trigger);
+    sprintf(errmsg,"Trigger::trig_enable_trigger - Error request to enable trigger %u",trigger);
     perror(errmsg);
     return TRIG_ERROR;
   }
 
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc != TRIG_OK) return rc;
   fullmask[0] = ( fullmask[0] | (1 << trigger) );
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
 
 }
 
@@ -483,15 +531,15 @@ int trig_disable_trigger(unsigned char trigger)
   char errmsg[80];
 
   if (trigger >= 8) {
-    sprintf(errmsg,"trig_disable_trigger - Error request to disable trigger %u",trigger);
+    sprintf(errmsg,"Trigger::trig_disable_trigger - Error request to disable trigger %u",trigger);
     perror(errmsg);
     return TRIG_ERROR;
   }
 
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc != TRIG_OK) return rc;
   fullmask[0] = ( fullmask[0] & ~(1 << trigger) );
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
 
 }
 
@@ -499,7 +547,7 @@ int trig_get_busymask(unsigned char* mask)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc == TRIG_OK) mask[0] = fullmask[2];
   return rc;
 }
@@ -508,20 +556,21 @@ int trig_set_busymask(unsigned char mask)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old busy mask with new one (bits 3:0)
   // Reminder: bit 4 (CPU busy) must never be touched
   fullmask[2] = ( (fullmask[2] & 0xf0) | (mask & 0x0f) );
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
 }
 
 int trig_get_correlated_delay(unsigned short int* delay)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
-  if (rc == TRIG_OK) *delay = fullmask[0]*256+fullmask[1];
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
+  //if (rc == TRIG_OK) *delay = fullmask[0]*256+fullmask[1];
+  if (rc == TRIG_OK) *delay = (fullmask[0] << 8) | fullmask[1];
   return rc;
 }
 
@@ -529,18 +578,18 @@ int trig_set_correlated_delay(unsigned short int delay)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x02,fullmask);
+  rc = trig_get_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
   if (rc != TRIG_OK) return rc;
   fullmask[0] = ( (delay/256) & 0xff );
   fullmask[1] = ( (delay%256) & 0xff );
-  return trig_set_register(0x02,fullmask);
+  return trig_set_register(TRIG_REG_BUSY_TRIG_MASKS,fullmask);
 }
 
 int trig_get_timepix_delay(unsigned char* delay)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x05,fullmask);
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc == TRIG_OK) delay[0] = fullmask[3];
   return rc;
 }
@@ -549,19 +598,21 @@ int trig_set_timepix_delay(unsigned char delay)
 {
   int rc;
   unsigned char fullmask[4];
-  if (delay == 0) { printf("WARNING - trig_set_timepix_delay - delay set to 0: timepix shutter will start ~25us after the BTF trigger. Are you sure?\n"); }
-  rc = trig_get_register(0x05,fullmask);
+  if (delay == 0) {
+    printf("Trigger::trig_set_timepix_delay - WARNING - delay set to 0: timepix shutter will start ~25us after the BTF trigger. Are you sure?\n");
+  }
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old timepix delay with new one
   fullmask[3] = delay;
-  return trig_set_register(0x05,fullmask);
+  return trig_set_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
 }
 
 int trig_get_timepix_width(unsigned char* width)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x05,fullmask);
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc == TRIG_OK) width[0] = fullmask[2];
   return rc;
 }
@@ -570,18 +621,18 @@ int trig_set_timepix_width(unsigned char width)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x05,fullmask);
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old timepix width with new one
   fullmask[2] = width;
-  return trig_set_register(0x05,fullmask);
+  return trig_set_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
 }
 
 int trig_get_trigger0_delay(unsigned char* delay)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x05,fullmask);
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc == TRIG_OK) delay[0] = fullmask[0];
   return rc;
 }
@@ -590,61 +641,97 @@ int trig_set_trigger0_delay(unsigned char delay)
 {
   int rc;
   unsigned char fullmask[4];
-  rc = trig_get_register(0x05,fullmask);
+  rc = trig_get_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old trigger0 delay with new one
   fullmask[0] = delay;
-  return trig_set_register(0x05,fullmask);
+  return trig_set_register(TRIG_REG_TIMEPIX_SHUTTER,fullmask);
 }
 
+// This function reads the global scale factor for a given trigger
+// Parameters:
+//   trigger: an unsigned char with the trigger number
+//   factor: a pointer to an unsigned short int to store the factor
+// Returns:
+//   The return value of trig_get_register function
 int trig_get_trigger_global_factor(unsigned char trigger,unsigned short int* factor)
 {
   int rc;
   if (trigger == 0) return TRIG_UNDEF; // Global factor is not used for trigger 0 (BTF)
   unsigned char fullmask[4];
-  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  unsigned char reg = TRIG_REG_TRIGGER_BASE + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);
-  if (rc == TRIG_OK) *factor = fullmask[2]*256+fullmask[3];
+  //if (rc == TRIG_OK) *factor = fullmask[2]*256+fullmask[3];
+  if (rc == TRIG_OK) *factor = (fullmask[2] << 8) | fullmask[3];
   return rc;
 }
 
+// This function sets the global scale factor for a given trigger
+// Parameters:
+//   trigger: an unsigned char with the trigger number
+//   factor: an unsigned short int with the factor to write
+// Returns:
+//   The return value of trig_set_register function
 int trig_set_trigger_global_factor(unsigned char trigger,unsigned short int factor)
 {
   int rc;
   if (trigger == 0) return TRIG_UNDEF; // Global factor is not used for trigger 0 (BTF)
   unsigned char fullmask[4];
-  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  unsigned char reg = TRIG_REG_TRIGGER_BASE + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old global factor with new one
-  fullmask[2] = ( (factor/256) & 0xff );
-  fullmask[3] = ( (factor%256) & 0xff );
+  //fullmask[2] = ( (factor/256) & 0xff );
+  //fullmask[3] = ( (factor%256) & 0xff );
+  fullmask[2] = ( (factor >> 8) & 0xff );
+  fullmask[3] = ( factor & 0xff );
   return trig_set_register(reg,fullmask);
 }
 
+// This function reads the autopass factor for a given trigger
+// Parameters:
+//   trigger: an unsigned char with the trigger number
+//   factor: a pointer to an unsigned short int to store the factor
+// Returns:
+//   The return value of trig_get_register function
 int trig_get_trigger_autopass_factor(unsigned char trigger,unsigned short int* factor)
 {
   int rc;
   unsigned char fullmask[4];
-  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  unsigned char reg = TRIG_REG_TRIGGER_BASE + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);
-  if (rc == TRIG_OK) *factor = fullmask[0]*256+fullmask[1];
+  //if (rc == TRIG_OK) *factor = fullmask[0]*256+fullmask[1];
+  if (rc == TRIG_OK) *factor = (fullmask[0] << 8) | fullmask[1];
   return rc;
 }
 
+// This function sets the autopass factor for a given trigger
+// Parameters:
+//   trigger: an unsigned char with the trigger number
+//   factor: an unsigned short int with the factor to write
+// Returns:
+//   The return value of trig_set_register function
 int trig_set_trigger_autopass_factor(unsigned char trigger,unsigned short int factor)
 {
   int rc;
   unsigned char fullmask[4];
-  unsigned char reg = 0x08 + trigger; // Define register for this trigger
+  unsigned char reg = TRIG_REG_TRIGGER_BASE + trigger; // Define register for this trigger
   rc = trig_get_register(reg,fullmask);
   if (rc != TRIG_OK) return rc;
   // Replace old autopass factor with new one
-  fullmask[0] = ( (factor/256) & 0xff );
-  fullmask[1] = ( (factor%256) & 0xff );
+  //fullmask[0] = ( (factor/256) & 0xff );
+  //fullmask[1] = ( (factor%256) & 0xff );
+  fullmask[0] = ( (factor >> 8) & 0xff );
+  fullmask[1] = ( factor & 0xff );
   return trig_set_register(reg,fullmask);
 }
 
+// This function reads a 4-byte word from a given trigger register
+// Parameters:
+//   reg: an unsigned char with the register address
+//   word: an unsigned char array to store the word
+// Returns:
+//   TRIG_OK if successful, TRIG_ERROR if not
 int trig_get_register(unsigned char reg, unsigned char* word)
 {
 
@@ -662,7 +749,9 @@ int trig_get_register(unsigned char reg, unsigned char* word)
 
   rc = write(Trig_SockFD,cmd,2);
   if (rc<0) {
-    sprintf(errmsg,"trig_get_register - Error requesting register %2u - Command %02x%02x",
+    //sprintf(errmsg,"trig_get_register - Error requesting register %2u - Command %02x%02x",
+    //	    reg,cmd[0],cmd[1]);
+    snprintf(errmsg,sizeof(errmsg),"Trigger::trig_get_register - Error requesting register %2u - Command %02x%02x",
 	    reg,cmd[0],cmd[1]);
     perror(errmsg);
     return TRIG_ERROR;
@@ -671,23 +760,40 @@ int trig_get_register(unsigned char reg, unsigned char* word)
   // Get response (make sure we read 4 bytes)
   rc = read(Trig_SockFD,word,4);
   if (rc<0) {
-    sprintf(errmsg,"trig_get_register - Error reading register %2u",reg);
+    //sprintf(errmsg,"Trigger::trig_get_register - Error reading register %2u",reg);
+    snprintf(errmsg,sizeof(errmsg),"Trigger::trig_get_register - Error reading register %2u",reg);
     perror(errmsg);
     return TRIG_ERROR;
   }
-  if (rc!=4) {
-    rc = read(Trig_SockFD,word+rc,4-rc);
-    if (rc<0) {
-      sprintf(errmsg,"trig_get_register - Error reading second part of register %2u",reg);
+  //if (rc!=4) {
+  //  rc = read(Trig_SockFD,word+rc,4-rc);
+  //  if (rc<0) {
+  //    sprintf(errmsg,"trig_get_register - Error reading second part of register %2u",reg);
+  //    perror(errmsg);
+  //    return TRIG_ERROR;
+  //  }
+  //}
+  // Use a loop to read until we get enough bytes
+  while (rc < 4) {
+    int n = read(Trig_SockFD,word+rc,4-rc);
+    if (n < 0) {
+      snprintf(errmsg,sizeof(errmsg),"Trigger::trig_get_register - Error reading second part of register %2u",reg);
       perror(errmsg);
       return TRIG_ERROR;
     }
+    rc += n;
   }
 
   return TRIG_OK;
 
 }
 
+// This function writes a 4-byte word to a given trigger register
+// Parameters:
+//   reg: an unsigned char with the register address
+//   word: an unsigned char array with the word to write
+// Returns:
+//   TRIG_OK if successful, TRIG_ERROR if not
 int trig_set_register(unsigned char reg,unsigned char* word)
 {
 
@@ -705,7 +811,7 @@ int trig_set_register(unsigned char reg,unsigned char* word)
 
   rc = write(Trig_SockFD,cmd,6);
   if (rc<0) {
-    sprintf(errmsg,"trig_set_register - Error setting register %2u - Command %02x%02x%02x%02x%02x%02x",
+    snprintf(errmsg,sizeof(errmsg),"Trigger::trig_set_register - Error setting register %2u - Command %02x%02x%02x%02x%02x%02x",
 	    reg,cmd[0],cmd[1],cmd[2],cmd[3],cmd[4],cmd[5]);
     perror(errmsg);
     return TRIG_ERROR;

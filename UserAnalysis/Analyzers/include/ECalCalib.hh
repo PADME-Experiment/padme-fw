@@ -50,6 +50,7 @@ private:
   Int_t fCurrentRun;     
   Int_t fCurrentRunIndex;
 
+  Int_t Neve;
   // variable to be returned on request
   Double_t fBeamEnergy;
   Double_t fCOGX;

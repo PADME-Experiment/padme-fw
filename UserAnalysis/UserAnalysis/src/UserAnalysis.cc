@@ -2,12 +2,16 @@
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include "UserAnalysis.hh"
+
 #include "ECalCalib.hh"
 #include "NPoTAnalysis.hh" //MR
+//#include "ETagAnalysis.hh" //MR
 //#include "IsGGAnalysis.hh" //MR
 #include "Is22GGAnalysis.hh" //MR
+#include "SinglePhoton.hh" //MR single photon
 #include "Is3GAnalysis.hh" //MR
 #include "MCTruth.hh"     //MR
+
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -22,23 +26,26 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
   fECalCalib    = ECalCalib::GetInstance();
-  //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
 
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
-  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+  fSinglePhoton   = new SinglePhoton(cfgFile,fVerbose);
+  //  fETagAnalysis   = new ETagAnalysis(cfgFile,fVerbose);
+  //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fECalCalib;
   delete fNPoTAnalysis;
+  //  delete fETagAnalysis;
   //  delete fIsGGAnalysis;
   delete fIs22GGAnalysis;
-  delete fIs3GAnalysis;
+  delete fSinglePhoton;
+  //  delete fIs3GAnalysis;
   delete fMCTruth;
 }
 
@@ -50,9 +57,11 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
 
   if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
   fNPoTAnalysis->Init(fEvent);
-  //  fIsGGAnalysis->Init(fEvent);
+  //  fETagAnalysis->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);  
   fIs22GGAnalysis->Init(fEvent);
-  fIs3GAnalysis->Init(fEvent);
+  fSinglePhoton->Init(fEvent);
+  //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
 
@@ -86,19 +95,20 @@ Bool_t UserAnalysis::Process(){
   if(fEvent->MCTruthEvent) fMCTruth->Process(); //MR 04/22
   IsNPotOk=fNPoTAnalysis->Process();
   //  if(!IsNPotOk && !isMC) return true; //Drops events with strange NPoT from target
-  //  fECalCalib->Process(fEvent); 
-
-  //  cout<<"User Analysis NPOT "<<fNPoTAnalysis->GetNPoT()<<endl;
-
+  fECalCalib->Process(fEvent); 
+  // cout<<"User Analysis NPOT "<<fNPoTAnalysis->GetNPoT()<<endl;
   if(!isMC){
-    //    fECalCalib->SetEScale();
+    fECalCalib->SetEScale();
+    //    cout<<"User Analysis NPOT "<<fNPoTAnalysis->GetNPoT()<<endl;
     //    fECalCalib->CorrectESlope();
     //    fECalCalib->FixPosition(); //need to change values into the structure.
   }
   
   //  fIsGGAnalysis->Process();
+  //  fETagAnalysis->Process();
   fIs22GGAnalysis->Process();
-  fIs3GAnalysis->Process();   
+  fSinglePhoton->Process();
+  //  fIs3GAnalysis->Process();   
   return true;
 }
 
@@ -109,8 +119,10 @@ Bool_t UserAnalysis::Finalize()
   fNPoTAnalysis->Finalize();
   //  fIsGGAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();
-  fIs3GAnalysis->Finalize();
-  
+  fSinglePhoton->Finalize();
+
+  //  fETagAnalysis->Finalize();
+  //  fIs3GAnalysis->Finalize();
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

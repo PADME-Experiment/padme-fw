@@ -46,7 +46,7 @@ Bool_t MCTruth::InitHistos(){
   fHS->BookHistoList("MCTruth","BeamE",NBinE,0.,MaxE); // Number of vertices in event
   fHS->BookHistoList("MCTruth","Vertices",500,0.,500.); // Number of vertices in event
   fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
-  fHS->BookHistoList("MCTruth","VertexNPart",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+  fHS->BookHistoList("MCTruth","VertexNParOut",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
 
   fHS->BookHistoList("MCTruth","VertexTime",330,-20.,300.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
 
@@ -105,14 +105,13 @@ Bool_t MCTruth::Process(){
 	mcVtx = fEvent->MCTruthEvent->Vertex(iV);
 	VTime=mcVtx->GetTime();
 	fHS->FillHistoList("MCTruth","VertexTime",VTime,1.);	 
+	fHS->FillHistoList("MCTruth","VertexNParOut",mcVtx->GetNParticleOut(),1.);	 
 	//	cout<<"MCTruth Vtime"<<mcVtx->GetTime()<<endl;
 	for(Int_t iN = 0; iN<mcVtx->GetNParticleIn(); iN++) {
 	  TMCParticle* mcIPart = mcVtx->ParticleIn(iN); //just One positron
-
 	  mcIPartE=mcIPart->GetEnergy();
 	  fHS->FillHistoList("MCTruth","BeamE",mcIPartE,1.);	 
 	  if(fBeamEnergy==0 && iV==0) fBeamEnergy=mcIPartE;
-	  
 	}
 
 	//	cout<<"DDD "<<mcVtx->GetPosition().x()<<endl;
@@ -197,9 +196,11 @@ Double_t MCTruth::AnalyzeG4_EE(Int_t iVtx)
   }
   for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
     TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+    Int_t PartType=mcOPart->GetPDGCode();
     //	    //	    cout<<"Particle Type "<<mcOPart->GetPDGCode()<<endl;
     if (mcOPart->GetPDGCode() == -11) fHS->FillHistoList("MCTruth","EE Positron Energy",mcOPart->GetEnergy(),1.);
     if (mcOPart->GetPDGCode() == 11)  fHS->FillHistoList("MCTruth","EE Electron Energy",mcOPart->GetEnergy(),1.); 
+    if(abs(PartType)!=11) std::cout<<"aho "<<PartType<<std::endl;
     fHS->FillHistoList("MCTruth","EE DiffCrossSection",mcOPart->GetEnergy(),1.);
   } 
   return 1;

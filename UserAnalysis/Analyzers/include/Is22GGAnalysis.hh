@@ -7,6 +7,8 @@
 #include "HistoSvc.hh"
 #include "ECalCalib.hh"
 #include "MCTruth.hh"
+#include <map>
+#include "TLorentzVector.h"
 
 class Is22GGAnalysis {
 
@@ -29,11 +31,18 @@ private:
   double GetVertex(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
   double ComputeInvariantMass(std::vector<double> Ei,std::vector<double> PosX,std::vector<double> PosY);
 
+// trasform to rest frame classes
+ TLorentzVector TransformToRestFrame(TLorentzVector& P4beam,TLorentzVector& P4Part);
+//TLorentzVector FillTLorentzVector(Double_t XPart, Double_t YPart,Double_t E);
+
+  TLorentzVector FillTLorentzVector(double XPart,double YPart,double E);
   Bool_t IsMCGG(double Vt,double Ei,double Ej);
 
   Int_t fVerbose;
   Bool_t fisMC = false; 
   Double_t fBeamE;
+  Double_t fSqrtS;
+  Int_t fNRun;
 
   PadmeAnalysisEvent* fEvent;
   TMCVertex* mcVtx;
@@ -44,23 +53,37 @@ private:
   HistoSvc* fHS;
   ECalCalib* fECalCalib;
   MCTruth* fMCTruth;
+  std::map<std::pair<int, int>, double> ECalHitMap;
 
   Int_t NGG;
+  Int_t Neve;
   Int_t NGG_MC;
 
+  //  Double_t ETotECal;
+  //trend plots
+  std::vector<double> vNPoT;
+  std::vector<double> vRatio;
+  std::vector<double> vETotECal;
+  std::vector<double> vNEvt;
+  std::vector<double> vETotOvNPot;
+
+  Int_t Navg;
+  Double_t NPoTAvg;
   Double_t ETotECal;
-
+  Double_t EToTAvg;
+  Double_t HitEToTAvg;
+  
   // GG standard Cuts
-  Double_t MinECluster ;
-  Double_t MaxECluster ;
-  Double_t TMin        ;
-  Double_t TMax        ;
-  Double_t TWin        ;
-  Double_t ClRadMin    ;
-  Double_t ClRadMax    ;
-  Double_t COGMax      ; 
-  Double_t DistMax     ;
-
+  Double_t MinECluster;
+  Double_t MaxECluster;
+  Double_t TMin       ;
+  Double_t TMax       ;
+  Double_t TWin       ;
+  Double_t ClRadMin   ;
+  Double_t ClRadMax   ;
+  Double_t COGMax     ; 
+  Double_t DistMin    ;
+  Int_t ChId;
   std::vector<double> vEi;
   std::vector<double> vPosX;
   std::vector<double> vPosY;

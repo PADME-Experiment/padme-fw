@@ -48,8 +48,8 @@ Is22GGAnalysis::Is22GGAnalysis(TString cfgFile, Int_t verbose)
   ClRadMin= 90.;
   ClRadMax= 270.;
   
-  COGMax  = 80.;
-  DistMin = 250.;
+  COGMax  = 70.;
+  DistMin = 240.;
 }
 
 Is22GGAnalysis::~Is22GGAnalysis(){
@@ -67,6 +67,7 @@ Bool_t Is22GGAnalysis::Init(PadmeAnalysisEvent* event){
 Bool_t Is22GGAnalysis::InitHistos(){
   // Is22GGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
+  fHS->CreateList("GG_CM_Analysis");
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","NHits",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","ClusterSize",26,-0.5,25.5);
@@ -186,17 +187,19 @@ Bool_t Is22GGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","HoleCl_Ene",500,0.,500.);
 
   //CM frame plots
-  //  fHS->CreateList("GG");
-  fHS->BookHistoList("GGAnalysis","ECM1",500,0.,50.);
-  fHS->BookHistoList("GGAnalysis","ECM2",500,0.,50.);
-  fHS->BookHistoList("GGAnalysis","ECM_Tot",500,0.,50.);
-  fHS->BookHisto2List("GGAnalysis","E1vsE2_CM",100,0.,25.,100,0.,25.); 
-  fHS->BookHisto2List("GGAnalysis","E1vsE2_CM_cut",100,0.,25.,100,0.,25.); 
-  fHS->BookHisto2List("GGAnalysis","E1vsE2_CM_EnthetaCut",100,0.,25.,100,0.,25.); 
-  fHS->BookHisto2List("GGAnalysis","E1vsE2_CM_NotEth",100,0.,25.,100,0.,25.); 
-  fHS->BookHistoList("GGAnalysis","DTheta_CM",300,-1.5,1.5); 
-  fHS->BookHistoList("GGAnalysis","DPhi_CM",320,-3.2,3.2); 
-
+  fHS->BookHistoList("GG_CM_Analysis","ECM1",500,0.,50.);
+  fHS->BookHistoList("GG_CM_Analysis","ECM2",500,0.,50.);
+  fHS->BookHistoList("GG_CM_Analysis","ECM_Tot",500,0.,50.);
+  fHS->BookHisto2List("GG_CM_Analysis","E1vsE2_CM",100,0.,25.,100,0.,25.); 
+  fHS->BookHisto2List("GG_CM_Analysis","E1vsE2_CM_cut",100,0.,25.,100,0.,25.); 
+  fHS->BookHisto2List("GG_CM_Analysis","E1vsE2_CM_ThetaPhiCut",100,0.,25.,100,0.,25.); 
+  fHS->BookHisto2List("GG_CM_Analysis","E1vsE2_CM_EnthetaCut",100,0.,25.,100,0.,25.); 
+  fHS->BookHisto2List("GG_CM_Analysis","E1vsE2_CM_NotEth",100,0.,25.,100,0.,25.); 
+  fHS->BookHistoList("GG_CM_Analysis","DTheta_CM",250,1.,3.5); 
+  fHS->BookHistoList("GG_CM_Analysis","DPhi_CM",250,1.,3.5);
+  fHS->BookHisto2List("GG_CM_Analysis","ThetaPhi_CM",250,1.,3.5,250,1.,3.5);
+  fHS->BookHistoList("GG_CM_Analysis","M_CM",NBinM,0.,MaxM);    
+  
   return true;
 }
 
@@ -245,19 +248,16 @@ Bool_t Is22GGAnalysis::Process(){
 //    }
     if(fisMC)  fBeamE = fMCTruth->GetBeamEnergy(); 
     if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
-    //    fSqrtS=TMath::Sqrt(2.*fBeamE*me);
     fSqrtS=TMath::Sqrt(2*me*fBeamE);
-    //    if(fBeamE==0 && !fisMC) fBeamE = 432.5;
-    //    if(fBeamE==0 && !fisMC) fBeamE = 210.5; //need to be run dependent
     if(fBeamE==0 && !fisMC){
       cout<<"No Beam energy found in DB "<<endl;
       exit(1);
     } //need to be run dependent
-
-    cout<<"Run nymber "<<fNRun<<" Beam energy "<<fBeamE<<" sqrts "<<fSqrtS<<" me "<<me<<endl;
+    
+    //cout<<"Run nymber "<<fNRun<<" Beam energy "<<fBeamE<<" sqrts "<<fSqrtS<<" me "<<me<<endl;
     cout<<"****************************************************************"<<endl;
     MinECluster=fBeamE*0.20;
-    MaxECluster=fBeamE*0.80;
+    MaxECluster=fBeamE*0.90;
     cout<<"Run number "<<fNRun<<" Beam energy "<<fBeamE<<" Min ECluster "<<MinECluster<<" SQRT(s) "<<endl;
   }
   Neve++;
@@ -335,17 +335,17 @@ Bool_t Is22GGAnalysis::Process(){
     Int_t ChId      = fEvent->ECalRecoEvent->Hit(iSeed)->GetChannelId();
     Int_t ClSize    = fEvent->ECalRecoCl->Element(ical)->GetNHitsInClus();
     Int_t Raw,Col;
-    //    if(abs(pos.X())<5 && (abs(pos.Y())<5)) {
-    //      ChId = fEvent->ECalRecoEvent->Hit(iHit)->GetChannelId();
-    //      Row=ChId%100;
+//    if(abs(pos.X())<5 && (abs(pos.Y())<5)) {
+//      ChId = fEvent->ECalRecoEvent->Hit(iHit)->GetChannelId();
+//      Row=ChId%100;
 //      Col=ChId/100;
 //     
-//      //      fHS->Fill2HistoList("GGAnalysis","",eECal,1);        
+//      fHS->Fill2HistoList("GGAnalysis","",eECal,1);        
 //      fHS->FillHistoList("GGAnalysis","HoleCl_Ene",eECal,1);         
-//      //      fHS->FillHistoList("GGAnalysis","HoleCl_Seed",ChiD,1);    
+//      fHS->FillHistoList("GGAnalysis","HoleCl_Seed",ChiD,1);    
 //    }
-    //      cout<<"Chi sei riga? "<<ChId%100<<" colonna "<<ChId/100<<endl;
-    //    }
+//      cout<<"Chi sei riga? "<<ChId%100<<" colonna "<<ChId/100<<endl;
+//    }
     
     double ClRadius = sqrt(pos.X()*pos.X()+pos.Y()*pos.Y());
     ETotECal+=eECal;
@@ -375,9 +375,7 @@ Bool_t Is22GGAnalysis::Process(){
     if(ClRadius>ClRadMax) continue;
 
     //compute angles
-    //    Double_t ECalTargetDist=3543; //check the distance 
     Double_t Angle=sqrt(pos.X()*pos.X()+pos.Y()*pos.Y())/ECalTargetDist;
-
     bool GGCheck=CheckThetaAngle(eECal,Angle);
     int Is22GGCheckOk=-1;
     if(GGCheck) Is22GGCheckOk=1;
@@ -406,7 +404,6 @@ Bool_t Is22GGAnalysis::Process(){
     for(Int_t jj=kk+1;jj<NGoodClusters;jj++){
       fHS->FillHistoList("GGAnalysis","TClTimeDiff2g",TGoodCluster[kk]-TGoodCluster[jj],1);
       fHS->FillHistoList("GGAnalysis","ECalClEnergy2g",EGoodCluster[kk]+EGoodCluster[jj],1);
-
       // have a look at the out of time Events to cross check cut quality 
       if(! (fabs(TGoodCluster[kk]-TGoodCluster[jj])<TWin) ) fHS->FillHistoList("GGAnalysis","ClEOutofTime",EGoodCluster[kk]+EGoodCluster[jj],1);
 
@@ -477,7 +474,6 @@ Bool_t Is22GGAnalysis::Process(){
       PairDist.push_back(Dist);
       PairVertex.push_back(Zv);
 
-
       //Study of the CM variables
       TLorentzVector P4E1= FillTLorentzVector(PosXGoodCluster[jj],PosYGoodCluster[jj],EGoodCluster[jj]);      
       TLorentzVector P4E2= FillTLorentzVector(PosXGoodCluster[kk],PosYGoodCluster[kk],EGoodCluster[kk]);      
@@ -485,17 +481,27 @@ Bool_t Is22GGAnalysis::Process(){
       P4Beam.SetPxPyPzE(0,0,sqrt(fBeamE*fBeamE-me*me),fBeamE);
       TLorentzVector P4E1_CM=TransformToRestFrame(P4Beam,P4E1);
       TLorentzVector P4E2_CM=TransformToRestFrame(P4Beam,P4E2);
+      TLorentzVector PTot = P4E1_CM+P4E2_CM;
+      Double_t M2cl_CM = PTot.M();  //Massa invariante gg
+      std::cout<<"E1CM "<<Mgg<<" Mgg_CM "<<M2cl_CM<<std::endl;
 //      std::cout<<"E1CM "<<P4E1_CM.E()<<std::endl;
 //      std::cout<<"E2CM "<<P4E2_CM.E()<<std::endl;
-      fHS->FillHistoList("GGAnalysis","ECM1",P4E1_CM.E(),1);
-      fHS->FillHistoList("GGAnalysis","ECM2",P4E2_CM.E(),1);
-      fHS->FillHistoList("GGAnalysis","ECM_Tot",P4E2_CM.E()+P4E1_CM.E(),1);
-      fHS->FillHistoList("GGAnalysis","DTheta_CM",P4E2_CM.Theta()+P4E1_CM.Theta(),1);
-      fHS->FillHistoList("GGAnalysis","DPhi_CM",fabs(P4E2_CM.Phi()-P4E1_CM.Phi()),1);
-      fHS->FillHisto2List("GGAnalysis","E1vsE2_CM",P4E1_CM.E(),P4E2_CM.E());
-      if((P4E1_CM.E()-fSqrtS*0.5)*(P4E1_CM.E()-fSqrtS*0.5) + (P4E2_CM.E()-fSqrtS*0.5)*(P4E2_CM.E()-fSqrtS*0.5)<fSqrtS*0.4) fHS->FillHisto2List("GGAnalysis","E1vsE2_CM_cut",P4E1_CM.E(),P4E2_CM.E());
+      fHS->FillHistoList("GG_CM_Analysis","ECM1",P4E1_CM.E(),1);
+      fHS->FillHistoList("GG_CM_Analysis","ECM2",P4E2_CM.E(),1);
+      fHS->FillHistoList("GG_CM_Analysis","ECM_Tot",P4E2_CM.E()+P4E1_CM.E(),1);
+      fHS->FillHistoList("GG_CM_Analysis","DTheta_CM",P4E2_CM.Theta()+P4E1_CM.Theta(),1);
+      fHS->FillHistoList("GG_CM_Analysis","DPhi_CM",fabs(P4E2_CM.Phi()-P4E1_CM.Phi()),1);
+      fHS->FillHisto2List("GG_CM_Analysis","E1vsE2_CM",P4E1_CM.E(),P4E2_CM.E());
+      fHS->FillHistoList("GG_CM_Analysis","M_CM",M2cl_CM);
+      fHS->FillHisto2List("GG_CM_Analysis","ThetaPhi_CM",P4E2_CM.Theta()+P4E1_CM.Theta(),fabs(P4E2_CM.Phi()-P4E1_CM.Phi()));
 
-
+      if((P4E1_CM.E()-fSqrtS*0.5)*(P4E1_CM.E()-fSqrtS*0.5) + (P4E2_CM.E()-fSqrtS*0.5)*(P4E2_CM.E()-fSqrtS*0.5)<fSqrtS*0.35){ 
+	fHS->FillHisto2List("GG_CM_Analysis","E1vsE2_CM_cut",P4E1_CM.E(),P4E2_CM.E());
+      }else{
+	fHS->FillHisto2List("GGAnalysis","EnvsTheta_NoCMcut",EGoodCluster[kk],AngleGoodCluster[kk],1.);
+	fHS->FillHisto2List("GGAnalysis","EnvsTheta_NoCMcut",EGoodCluster[jj],AngleGoodCluster[jj],1.);
+      }
+      if((P4E2_CM.Theta()+P4E1_CM.Theta())>2.9 && fabs(P4E2_CM.Phi()-P4E1_CM.Phi())>2.9) fHS->FillHisto2List("GG_CM_Analysis","E1vsE2_CM_ThetaPhiCut",P4E1_CM.E(),P4E2_CM.E());
       //Check if it's a good GG cluster
       if(IsGGGoodCluster[jj]>0 && IsGGGoodCluster[kk]>0){ 
 	fHS->FillHistoList("GGAnalysis","ECalClEnergy2g_Intime_COG_Dist_Enth",EGoodCluster[kk]+EGoodCluster[jj],1);
@@ -508,7 +514,6 @@ Bool_t Is22GGAnalysis::Process(){
 	fHS->FillHistoList("GGAnalysis","COG_X_EnTh",COGX,1);
 	fHS->FillHistoList("GGAnalysis","COG_Y_EnTh",COGY,1);
 	fHS->FillHisto2List("GGAnalysis","E1vsE2_CM_EnthetaCut",P4E1_CM.E(),P4E2_CM.E());
-	fHS->FillHisto2List("GGAnalysis","EnvsTheta_NoCMcut",EGoodCluster[kk],AngleGoodCluster[kk],1.);
       }else{      
 	fHS->FillHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",PosXGoodCluster[jj],PosYGoodCluster[jj],EGoodCluster[jj]);
 	fHS->FillHisto2List("GGAnalysis","EnergyMap_GG_BadVtx",PosXGoodCluster[kk],PosYGoodCluster[kk],EGoodCluster[kk]);

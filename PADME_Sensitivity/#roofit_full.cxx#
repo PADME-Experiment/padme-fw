@@ -424,18 +424,18 @@ void do_exclusion_run(global_config &config, StatisticsModel *full_model) {
                 << " Total yield = " << full_model->GetTotalYield()
                 << endl;
 
-      // if (full_model->IsHighYield()) {
-      //   cout << "High yield, setting CLS to 0" << endl;
-      //   cls = 0.0;
-      //   tree_exclusion->Fill();
-      //   continue;
-      // }
-      // if (full_model->IsLowYield()) {
-      //   cout << "Low yield, setting CLS to 1" << endl;
-      //   cls = 1.0;
-      //   tree_exclusion->Fill();
-      //   continue;
-      // }
+      if (full_model->IsHighYield()) {
+        cout << "High yield, setting CLS to 0" << endl;
+        cls = 0.0;
+        tree_exclusion->Fill();
+        continue;
+      }
+      if (full_model->IsLowYield()) {
+        cout << "Low yield, setting CLS to 1" << endl;
+        cls = 1.0;
+        tree_exclusion->Fill();
+        continue;
+      }
 
       double q_obs = 0.0;
       RooArgList fitted_values_sb;

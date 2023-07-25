@@ -34,6 +34,7 @@ endif()
 link_directories($ENV{COMPILER_PATH}/lib64)
 link_directories($ENV{COMPILER_PATH}/lib)
 
+
 #Define install directories
 if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/usr/local")
     #Overwrite the default

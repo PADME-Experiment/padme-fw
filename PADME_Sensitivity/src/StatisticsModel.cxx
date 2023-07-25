@@ -46,10 +46,10 @@ StatisticsModel::StatisticsModel(global_config &cfg)
       constrained_parameters(new RooArgSet("constrained_parameters")),
       constraints_map() {
 
-  if (cfg.useMuMu) {
-    invariantMass->setRange(211.4, 700.);
-    dpMass->setRange(211.4, 700.);
-  }
+  // if (cfg.useMuMu) {
+  //   invariantMass->setRange(211.4, 700.);
+  //   dpMass->setRange(211.4, 700.);
+  // }
   dpMass->setConstant();
   pot_default->setConstant();
   pot_sigma->setConstant();

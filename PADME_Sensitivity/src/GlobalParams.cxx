@@ -17,7 +17,7 @@ void global_config::retrieve_input() {
   // extract signal yield
   // ee
   map<TString, TH2D *> ee_yield;
-  TFile *dp_ee_yield = TFile::Open("DP_nexp_ee.root");
+  TFile *dp_ee_yield = TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_nexp_ee.root");
   ee_yield["direct"] =
       static_cast<TH2D *>(dp_ee_yield->FindObjectAny("hNexp_90CL_ee_direct")
                               ->Clone("hYield_ee_direct"));
@@ -31,7 +31,7 @@ void global_config::retrieve_input() {
   hYield["ee"] = ee_yield;
 
   // mumu
-  TFile *dp_mumu_yield = TFile::Open("DP_nexp_mumu.root");
+  TFile *dp_mumu_yield = TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_nexp_mumu.root");
   map<TString, TH2D *> mumu_yield;
 
   mumu_yield["direct"] =
@@ -49,14 +49,14 @@ void global_config::retrieve_input() {
   // extract invariant mass resolution
   // ee
   map<TString, TH2D *> ee_msigma;
-  TFile *dp_ee_msigma_direct = TFile::Open("DP_mass_sigma_direct_ee_1402.root");
+  TFile *dp_ee_msigma_direct = TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_mass_sigma_direct_ee_1402.root");
   ee_msigma["direct"] = static_cast<TH2D *>(
       dp_ee_msigma_direct->FindObjectAny("hMassResolutionSmoothed")
           ->Clone("hMSigma_ee_direct"));
   ee_msigma["direct"]->SetDirectory(0);
   dp_ee_msigma_direct->Close();
 
-  TFile *dp_ee_msigma_meson = TFile::Open("DP_mass_sigma_meson_ee_1402.root");
+  TFile *dp_ee_msigma_meson = TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_mass_sigma_meson_ee_1402.root");
   ee_msigma["meson"] = static_cast<TH2D *>(
       dp_ee_msigma_meson->FindObjectAny("hMassResolutionSmoothed")
           ->Clone("hMSigma_ee_direct"));
@@ -67,7 +67,7 @@ void global_config::retrieve_input() {
   // mumu
   map<TString, TH2D *> mumu_msigma;
   TFile *dp_mumu_msigma_direct =
-      TFile::Open("DP_mass_sigma_direct_mumu_2101.root");
+      TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_mass_sigma_direct_mumu_2101.root");
   mumu_msigma["direct"] = static_cast<TH2D *>(
       dp_mumu_msigma_direct->FindObjectAny("hMassResolutionSmoothed")
           ->Clone("hMSigma_mumu_direct"));
@@ -75,7 +75,7 @@ void global_config::retrieve_input() {
   dp_mumu_msigma_direct->Close();
 
   TFile *dp_mumu_msigma_meson =
-      TFile::Open("DP_mass_sigma_meson_mumu_2101.root");
+      TFile::Open("/home/mancinima/padme-fw/PADME_Sensitivity/DP_mass_sigma_meson_mumu_2101.root");
   mumu_msigma["meson"] = static_cast<TH2D *>(
       dp_mumu_msigma_meson->FindObjectAny("hMassResolutionSmoothed")
           ->Clone("hMSigma_mumu_direct"));

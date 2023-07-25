@@ -22,7 +22,7 @@ MuMuBkgShape::MuMuBkgShape(const char *name, const char *title, RooAbsReal &_x,
       coeffs("coeffs", "coeffs", this), xMin("xMin", "xMin", this, _xMin), xMax("xMax", "xMax", this,_xMax) {
   for (int i = 0; i < _coeffs.getSize(); ++i) {
   RooAbsArg* coef = _coeffs.at(i);
-  if (!dynamic_cast<RooAbsReal *>(coef)) {
+  if (!static_cast<RooAbsReal *>(coef)) {
     std::cout << "MuMuBkgShape::ctor(" << GetName() << ") ERROR: coefficient "
               << coef->GetName() << " is not of type RooAbsReal "
               << std::endl;

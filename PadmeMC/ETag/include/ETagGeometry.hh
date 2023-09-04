@@ -32,6 +32,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
@@ -62,13 +65,18 @@ public:
   // Set position along Z of ETag front face
   void SetETagFrontFacePosZ(G4double z) { fETagFrontFacePosZ = z; }
   
+  // Get name of ETag digitizer
+  G4String GetETagDigitizerName() { return fETagDigitizerName; }
+
   // Get name of ETag sensitive detector
   G4String GetETagSensitiveDetectorName() { return fETagSensitiveDetectorName; }
 
 private:
 
   G4int fVerbose; // Verbose level
-  
+
+  G4int fDetectorSetup;
+
   G4double fETagSizeX;
   G4double fETagSizeY;
   G4double fETagSizeZ;
@@ -89,6 +97,7 @@ private:
 
   G4double fETagFrontFacePosZ; // Position along Z axis of ETag front face
   G4String fETagSensitiveDetectorName;
+  G4String fETagDigitizerName;
 
 };
 

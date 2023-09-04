@@ -18,6 +18,11 @@ ETagGeometry* ETagGeometry::GetInstance()
 
 ETagGeometry::ETagGeometry()
 {
+
+  fVerbose = 0; // Do not show debug output
+
+  fDetectorSetup = 10; // Default to 2019 setup
+
   // ETag number of rows of bars
   fETagNBars=15;
   
@@ -43,6 +48,7 @@ ETagGeometry::ETagGeometry()
   //  fETagFrontFacePosZ = 2380.*mm; // Relative to center of magnet
   fETagFrontFacePosZ = 2557.*mm; // M.R. 04/23 after Ecal new postion for Run III
   
+  fETagDigitizerName = "ETagDigitizer";
   fETagSensitiveDetectorName = "ETagSD";
 }
 

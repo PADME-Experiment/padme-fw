@@ -33,6 +33,9 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
   void EnableBeWindow() { fBeWindowEnable = true; }
   void DisableBeWindow() { fBeWindowEnable = false; }
   G4bool BeWindowIsEnabled() { return fBeWindowEnable; }
@@ -253,6 +256,8 @@ public:
   G4double GetBTFTargetDistance()	{ return fBTFTargetDistance;}   
   
 private:
+
+  G4int fDetectorSetup;
 
   //  Berillium thin window and stainless still flange
   G4bool fBeWindowEnable;

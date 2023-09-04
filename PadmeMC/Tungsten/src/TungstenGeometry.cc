@@ -22,6 +22,8 @@ TungstenGeometry::TungstenGeometry()
 
   // Inizialize default parameters
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   fTungstenRadius = 5.*cm-2.*um; // Fill junction pipe taking into account magnetic volume tolerances
   fTungstenSizeZ = 10.*cm;
 

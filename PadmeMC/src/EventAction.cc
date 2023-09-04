@@ -29,6 +29,7 @@
 #include "ECalDigitizer.hh"
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
+#include "ETagDigitizer.hh"
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -155,6 +156,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fTargetDigitizer  = (TargetDigitizer*)theDM->FindDigitizerModule(TargetGeometry::GetInstance()->GetTargetDigitizerName());
     fPVetoDigitizer   = (PVetoDigitizer*)theDM->FindDigitizerModule(PVetoGeometry::GetInstance()->GetPVetoDigitizerName());
     fEvetoDigitizer   = (EVetoDigitizer*)theDM->FindDigitizerModule(EVetoGeometry::GetInstance()->GetEVetoDigitizerName());
+    fETagDigitizer   = (ETagDigitizer*)theDM->FindDigitizerModule(ETagGeometry::GetInstance()->GetETagDigitizerName());
     fHEPVetoDigitizer = (HEPVetoDigitizer*)theDM->FindDigitizerModule(HEPVetoGeometry::GetInstance()->GetHEPVetoDigitizerName());
     fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
     fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
@@ -171,6 +173,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fHEPVetoDigitizer) fHEPVetoDigitizer->Digitize();
   if (fECalDigitizer)    fECalDigitizer->Digitize();
   if (fSACDigitizer)     fSACDigitizer->Digitize();
+  if (fETagDigitizer)    fETagDigitizer->Digitize();
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
   // Save event to root file

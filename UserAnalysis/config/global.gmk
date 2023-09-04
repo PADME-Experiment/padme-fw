@@ -3,7 +3,8 @@ CXX           = g++
 CXXFLAGS      = -O -Wall -fPIC
 LD            = g++
 LDFLAGS       = -O
-SOFLAGS       = -shared
+#SOFLAGS       = -shared
+SOFLAGS       = -shared $(ROOTLDFLAGS) $(ROOTLIBS) -L$(PADMEROOT)/lib -lPadmeRoot -L$(PADME)/UserAnalysis/AnalysisBase/lib -lAnalysisBase -L$(PADMERECO)/lib -lPadmeReco -L$(PADMERECO)/RecoBase/lib -lRecoBase -L$(PADME)/UserAnalysis/Analyzers/lib -lAnalyzers
 MFLAGS        = -w
 
 ROOTCONFIG   := root-config
@@ -12,7 +13,7 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
 
-CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADME)/UserAnalysis/Analyzers/include -I$(PADMEROOT)/include -g -std=c++11
+CPPFLAGS     += -Iinclude -I$(PADME)/UserAnalysis/include -I$(PADME)/UserAnalysis/AnalysisBase/include -I$(PADME)/UserAnalysis/Analyzers/include -I$(PADMEROOT)/include -g -std=c++11 
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
 LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
@@ -33,9 +34,9 @@ LIBNAME := $(NAME)
 
 # .PHONY targets are executed regardless of time-stamp of any file of
 # same name.
-.PHONY: all obj clean includes
+.PHONY: suball obj clean includes
 
-all: dirs lib
+suball: dirs lib
 
 dirs:
 	@mkdir -p $(LIB)

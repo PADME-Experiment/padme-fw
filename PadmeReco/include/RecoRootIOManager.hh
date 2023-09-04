@@ -46,7 +46,6 @@ protected:
 
 public:
 
-
   TFile*   GetFile()              { return fFile;          }
   void     SetFile(TFile * value) { fFile = value;         }
 

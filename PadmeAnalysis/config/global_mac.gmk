@@ -12,7 +12,7 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum
 
-CPPFLAGS     += -Iinclude -I$(PADMEANALYSIS)/include -I$(PADMEROOT)/include -g -std=c++11 $(shell root-config --libs --cflags)
+CPPFLAGS     += -Iinclude -I$(PADMEANALYSIS)/include -I$(PADMEROOT)/include -g -std=c++14 $(shell root-config --libs --cflags)
 #CPPFLAGS     += -I$(PADMEANALYSIS)/Service/include
 CPPFLAGS     += -I$(PADMEANALYSIS)/AnalysisBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)

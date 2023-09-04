@@ -20,6 +20,8 @@ ChamberGeometry* ChamberGeometry::GetInstance()
 ChamberGeometry::ChamberGeometry()
 {
 
+  fDetectorSetup = 10; // Default to 2019 setup
+
   // Some basic chamber quantities from Cesidio's CAD drawings
 
   fVCBackFacePosZ = 2300.0*mm; // Z position of back face of VC flange towards thin window

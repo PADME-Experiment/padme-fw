@@ -16,6 +16,7 @@
 
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
+#include "ETagGeometry.hh"
 #include "TargetGeometry.hh"
 #include "BeamParameters.hh"
 
@@ -109,6 +110,7 @@ class EventAction : public G4UserEventAction
   TargetDigitizer*  fTargetDigitizer;
   PVetoDigitizer*   fPVetoDigitizer;
   EVetoDigitizer*   fEvetoDigitizer;
+  ETagDigitizer*    fETagDigitizer;
   HEPVetoDigitizer* fHEPVetoDigitizer;
   ECalDigitizer*    fECalDigitizer;
   SACDigitizer*     fSACDigitizer;

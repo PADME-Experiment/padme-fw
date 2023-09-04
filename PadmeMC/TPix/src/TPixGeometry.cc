@@ -137,14 +137,6 @@ void TPixGeometry::UpdateDerivedMeasures()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
 
-<<<<<<< HEAD
-//  //Brutal patch for Run III M. Raggi June 2022
-//  if(fIsRunIII){
-//    fTPixPosX = 0;
-//    fTPixPosY = 0;
-//    fTPixPosZ = +3000*mm; //Ex SAC Front Face position 
-//  }
-=======
   // Move TimePix behind ECal for 2022 run (RunIII)
   if (fDetectorSetup >= 40) {
     fTPixRotY = 0.;
@@ -153,7 +145,6 @@ void TPixGeometry::UpdateDerivedMeasures()
     fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning) 
   }
 
->>>>>>> develop
   //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);
   //printf("TPix corner %f %f %f\n",fTPixChamberWallCorner.x(),fTPixChamberWallCorner.y(),fTPixChamberWallCorner.z());
   //printf("TPix angle %f\n",fTPixChamberWallAngle);

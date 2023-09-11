@@ -764,9 +764,9 @@ TLorentzVector Is22GGAnalysis::TransformToRestFrame(TLorentzVector& P4beam,TLore
 
     // Calculate the boost velocity components
     Double_t beta = labPTotalMag / labETotal;
-    Double_t bx = beta * P4beam.Px() / P4beam.P();
-    Double_t by = beta * P4beam.Py() / P4beam.P();
-    Double_t bz = beta * P4beam.Pz() / P4beam.P();
+    Double_t bx = beta * labPTotal.Px() / labPTotalMag;
+    Double_t by = beta * labPTotal.Py() / labPTotalMag;
+    Double_t bz = beta * labPTotal.Pz() / labPTotalMag;
 
     // Perform the Lorentz transformation
     TLorentzVector restP4Part = P4Part;

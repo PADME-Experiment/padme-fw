@@ -183,6 +183,13 @@ Double_t ECalCalib::SetEScale(){
   //  if(fNClusters>8)  return false;
 
   for(int ical = 0;ical < fNClusters; ical++) {
+    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+    eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
+    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+  }
+
+
+  for(int ical = 0;ical < fNClusters; ical++) {
     //    if(NEvent==5) cout<<"GG Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     double tECal    =  fEvent->ECalRecoCl->Element(ical)->GetTime();
@@ -225,13 +232,6 @@ Double_t ECalCalib::SetEScale(){
     }
   }
 
-  for(int ical = 0;ical < fNClusters; ical++) {
-    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
-    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
-    //    if(NEvent==5) 
-    //  cout<<"calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<" EScale "<<EScale<<" "<<endl;
-  }
 
   for (Int_t ii=0; ii<fNClusters;ii++){
     for (Int_t jj=ii+1; jj<fNClusters;jj++){

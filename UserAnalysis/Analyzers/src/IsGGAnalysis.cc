@@ -32,7 +32,6 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   
   COGMax  = 30.;
   DistMax = 150.;
-
 }
 
 IsGGAnalysis::~IsGGAnalysis(){
@@ -171,7 +170,6 @@ Bool_t IsGGAnalysis::Process(){
     }
     if(fisMC) fBeamE = fMCTruth->GetBeamEnergy(); 
     if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
-    if(fBeamE==0 && !fisMC) fBeamE = 432.5;
   }
 
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();

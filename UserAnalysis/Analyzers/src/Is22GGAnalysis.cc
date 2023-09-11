@@ -68,6 +68,7 @@ Bool_t Is22GGAnalysis::InitHistos(){
   // Is22GGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
   fHS->CreateList("GG_CM_Analysis");
+
   fHS->BookHistoList("GGAnalysis","hNCut",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","NHits",25,-0.5,24.5);
@@ -113,10 +114,6 @@ Bool_t Is22GGAnalysis::InitHistos(){
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG",200,-20.,20.);  
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG_Dist",200,-20.,20.); 
   fHS->BookHistoList("GGAnalysis","TCluDiff2g_Intime_COG_Dist_Enth",200,-20.,20.);  
-
-  fHS->BookHistoList("GGAnalysis","TDiff_DataMC_gg",200,25.,-25.);  
-  fHS->BookHistoList("GGAnalysis","EDiff_DataMC_gg",hEBins,-hEMax/2,hEMax/2);     
-  fHS->BookHistoList("GGAnalysis","EDiff_DataMC_gg_Ok",hEBins,0,hEMax);   
 
   fHS->BookHistoList("GGAnalysis","COG_X",300,-150.,150.);   
   fHS->BookHistoList("GGAnalysis","COG_Y",300,-150.,150.);   
@@ -187,6 +184,21 @@ Bool_t Is22GGAnalysis::InitHistos(){
   ///HOLE clusters study
   fHS->BookHistoList("GGAnalysis","HoleCl_Seed",500,-500.,9500.);
   fHS->BookHistoList("GGAnalysis","HoleCl_Ene",500,0.,500.);
+
+  //MC Truth event ierclassif  
+  fHS->CreateList("MCT_Matching");
+  fHS->BookHistoList("MCT_Matching","T1Diff_MCT_gg",500,25.,-25.);  
+  fHS->BookHistoList("MCT_Matching","T2Diff_MCT_gg",500,25.,-25.);  
+  fHS->BookHistoList("MCT_Matching","EDiff_MCT_gg",hEBins,-hEMax/5,hEMax/5);
+  fHS->BookHistoList("MCT_Matching","EDiff_MCT_gg_Ok",hEBins,0,hEMax/5);   
+  fHS->BookHisto2List("MCT_Matching","DEvsDT_gg",160,-20.,20.,hEBins,-hEMax/10.,hEMax/10.); 
+  fHS->BookHisto2List("MCT_Matching","DT1vsDT2_gg",200,-20.,20.,200,-20.,20.);
+
+  fHS->BookHistoList("MCT_Matching","T1Diff_MCT_ee",500,25.,-25.);  
+  fHS->BookHistoList("MCT_Matching","T2Diff_MCT_ee",500,25.,-25.);  
+  fHS->BookHistoList("MCT_Matching","EDiff_MCT_ee",hEBins,-hEMax/5,hEMax/5);
+  fHS->BookHistoList("MCT_Matching","EDiff_MCT_ee_Ok",hEBins,-hEMax/5,hEMax/5);   
+  fHS->BookHisto2List("MCT_Matching","DEvsDT_ee",200,-20.,20.,hEBins,-hEMax/10.,hEMax/10.); 
 
   //CM frame plots
   fHS->BookHistoList("GG_CM_Analysis","ECM1",500,0.,50.);
@@ -564,12 +576,12 @@ Bool_t Is22GGAnalysis::Process(){
   for(Int_t ll=0;ll<NPairs;ll++){
     bool isOk=false;
     if(NPairs==1) {
-      if(fisMC && NPairs==1) isOk=IsMCGG(TGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex2[ll]]);
+      if(fisMC) isOk=IsMCGG(TGoodCluster[PairGClIndex1[ll]],TGoodCluster[PairGClIndex2[ll]],EGoodCluster[PairGClIndex1[ll]],EGoodCluster[PairGClIndex2[ll]]);
       Double_t EPair      = EGoodCluster[PairGClIndex1[ll]] + EGoodCluster[PairGClIndex2[ll]];
       Double_t DeltaTPair = TGoodCluster[PairGClIndex1[ll]] - TGoodCluster[PairGClIndex2[ll]];
       Double_t TimePair   = (TGoodCluster[PairGClIndex1[ll]] + TGoodCluster[PairGClIndex2[ll]])/2;
       
-      if(isOk) fHS->FillHistoList("GGAnalysis","EDiff_DataMC_gg_Ok",EPair);   
+      if(isOk) fHS->FillHistoList("MCT_Matching","EDiff_MCT_gg_Ok",EPair);  
       
       fHS->FillHistoList("GGAnalysis","ECalClTime_GG",TimePair,1);
       //Event quality estimator 
@@ -771,54 +783,61 @@ TLorentzVector Is22GGAnalysis::TransformToRestFrame(TLorentzVector& P4beam,TLore
     return restP4Part;
 }
 
-Bool_t Is22GGAnalysis::IsMCGG(double VTime,double E1,double E2)
+Bool_t Is22GGAnalysis::IsMCGG(double T1,double T2,double E1,double E2)
 {
-  Bool_t isGG_IN = false;
+  Bool_t isGG_MCT = false;
   Int_t NGG_MCBunch=0;
   Double_t vEgMC[2];
   Double_t vEgData[2];
-  Double_t VTimeMC;
-  Double_t TimeOfFlight=13.2;
-  Double_t DeltaTCorr =0;
+  Double_t VTimeMCT;
+  Double_t TimeOfFlight=13.2+0.832;
+  Double_t DeltaT2Corr =0;
+  Double_t DeltaT1Corr =0;
   vEgData[0]=E1;
   vEgData[1]=E2;
   // Is there a gg in the MC bunch?
   if(!fEvent->MCTruthEvent->GetNVertices()>0) return false;
-  
+ 
+  //Check if is a GG event
   for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
     mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-    VTimeMC = mcVtx->GetTime();
+    VTimeMCT = mcVtx->GetTime();
     //remove non gg verices
     if(!(mcVtx->GetProcess()=="annihil")) continue; //be carefull if you are not using G4 generated events
     //std::cout<<"Entering "<<mcVtx->GetProcess()<<" data time "<<VTime<<" MC Time "<<VTimeMC<<std::endl;
     //Check if you are in time with the gamma gg verices
+    DeltaT1Corr=VTimeMCT+TimeOfFlight-T1;
+    DeltaT2Corr=VTimeMCT+TimeOfFlight-T2;
+    fHS->FillHisto2List("MCT_Matching","DT1vsDT2_gg",DeltaT1Corr,DeltaT2Corr);   
+    fHS->FillHistoList("MCT_Matching","T1Diff_MCT_gg",DeltaT1Corr);      
+    fHS->FillHistoList("MCT_Matching","T2Diff_MCT_gg",DeltaT2Corr);      
+    if(!(fabs(DeltaT1Corr)<5.) || !(fabs(DeltaT2Corr)<5.) ) continue;
+    isGG_MCT=true;
 
-    DeltaTCorr=VTimeMC+TimeOfFlight-VTime;
-    //    if(!(fabs(DeltaTCorr)<5.)) continue;
-    fHS->FillHistoList("GGAnalysis","TDiff_DataMC_gg",DeltaTCorr);      
-    for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-      TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-      if(mcOPart->GetPDGCode() != 22) cout<<"not a gamma"<<endl;
-      //      std::cout<<"input data are simulatetd Annihilltion "<< mcOPart->GetEnergy()<<std::endl;
-      vEgMC[iO]=mcOPart->GetEnergy();
-    }
-    //    std::cout<<"Energies Data "<<E1<<" "<<E2<<"  MC "<<vEgMC[0]<<" "<<vEgMC[1]<<std::endl;
-    Int_t ncombo=0;
-    Int_t NOk=0;
-    Double_t DeltaE[4];
-    for(Int_t kk=0;kk<2;kk++){
-      for(Int_t jj=0;jj<2;jj++){
-	DeltaE[ncombo] = vEgMC[kk]-vEgData[jj];
-	//	std::cout<<"combo kk "<<kk<<" jj "<<jj<<" Ediff "<<DeltaE[ncombo]<<std::endl;
-	fHS->FillHistoList("GGAnalysis","EDiff_DataMC_gg",DeltaE[ncombo]);   
-	if(fabs(DeltaE[ncombo]/vEgData[jj])<0.2){
-	  //	  std::cout<<"Matching "<<fabs(DeltaE[ncombo]/vEgData[jj])<<" "<<vEgData[jj]<<std::endl;
-	  isGG_IN=true;
-	} 
-	ncombo++;
-      }
-    }
+    //    for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+    //      TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+    //      if(mcOPart->GetPDGCode() != 22) cout<<"not a gamma"<<endl;
+    //      //      std::cout<<"input data are simulatetd Annihilltion "<< mcOPart->GetEnergy()<<std::endl;
+//      vEgMC[iO]=mcOPart->GetEnergy();
+//    }
+//    //    std::cout<<"Energies Data "<<E1<<" "<<E2<<"  MC "<<vEgMC[0]<<" "<<vEgMC[1]<<std::endl;
+//    Int_t ncombo=0;
+//    Int_t NOk=0;
+//    Double_t DeltaE[4];
+//    for(Int_t kk=0;kk<2;kk++){
+//      for(Int_t jj=0;jj<2;jj++){
+//	DeltaE[ncombo] = vEgMC[kk]-vEgData[jj];
+//	//	std::cout<<"combo kk "<<kk<<" jj "<<jj<<" Ediff "<<DeltaE[ncombo]<<std::endl;
+//	fHS->FillHistoList("MCT_Matching","EDiff_MCT_gg",DeltaE[ncombo]);   
+//	fHS->FillHisto2List("MCT_Matching","DEvsDT_gg",DeltaT1Corr,DeltaE[ncombo]);   
+//	if(fabs(DeltaE[ncombo]/vEgData[jj])<0.2){
+//	  //	  std::cout<<"Matching "<<fabs(DeltaE[ncombo]/vEgData[jj])<<" "<<vEgData[jj]<<std::endl;
+//	  isGG_MCT=true;
+//	} 
+//	ncombo++;
+//      }
+//  }
   }
   //  std::cout<<"*** "<<std::endl;
-  return isGG_IN;
+  return isGG_MCT;
 }

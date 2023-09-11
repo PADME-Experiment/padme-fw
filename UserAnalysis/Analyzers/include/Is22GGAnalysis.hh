@@ -36,7 +36,7 @@ private:
 //TLorentzVector FillTLorentzVector(Double_t XPart, Double_t YPart,Double_t E);
 
   TLorentzVector FillTLorentzVector(double XPart,double YPart,double E);
-  Bool_t IsMCGG(double Vt,double Ei,double Ej);
+  Bool_t IsMCGG(double T1, double T2, double Ei,double Ej);
 
   Int_t fVerbose;
   Bool_t fisMC = false; 

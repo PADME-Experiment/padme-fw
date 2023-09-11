@@ -178,6 +178,7 @@ Double_t ECalCalib::SetEScale(){
   //  if(fCurrentRunIndex==-1) EScale = fGlobalEScale; //if nothing available for that run;  
   
   if(fCurrentRunIndex!=-1) EScale = vEBeam[fCurrentRunIndex]/vEAvgRun[fCurrentRunIndex];
+  else EScale = 1.;
   //  std::cout<<"EScale "<<EScale<<" fCurrent run index "<<fCurrentRunIndex<<std::endl;
   //  if(fNClusters<2)  return false;
   //  if(fNClusters>8)  return false;

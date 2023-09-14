@@ -30,7 +30,7 @@ OfflineServer::OfflineServer()
     inputDBFile >> 
       rInfo.RunID >> rInfo.runStartTime  >> rInfo.runStopTime >> rInfo.DHSTB01Energy >> 
       rInfo.DHSTB02Energy >> rInfo.nFiles >> rInfo.runPOT >> 
-      rInfo.bunchLength >> rInfo.beamStart >> rInfo.tgx >> rInfo.tgy >> rInfo.cogx >> rInfo.cogy; // sets EOF flag if no value found
+      rInfo.bunchLength >> rInfo.beamStart >> rInfo.tgx >> rInfo.tgy >> rInfo.cogx >> rInfo.cogy >> rInfo.calibEnergyFactor; // sets EOF flag if no value found
 
   // populate structure
     runInfos.push_back(rInfo);

@@ -20,6 +20,7 @@ struct RunInfo{
   float tgy; // mm, average y position at target
   float cogx; // mm, average x position of COG at ECal
   float cogy; // mm, average y position of COG at ECal
+  float calibEnergyFactor; //a.u. calibration constant to be multiplied to the cluster energy, so to obtain the corrected energy
 };
   
 class OfflineServer
@@ -46,6 +47,7 @@ public:
   float getTargetYAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).tgy;} //mm
   float getCOGXAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogx;} //mm
   float getCOGYAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogy;} //mm
+  float getCalibEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibEnergyFactor;} //a.u.
 
   
 private:

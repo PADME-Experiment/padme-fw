@@ -20,6 +20,7 @@ ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNRun=0;	     
+  Neve=0;
   fCurrentRun=-1.;     
   fCurrentRunIndex=-1.;
 }
@@ -78,7 +79,7 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
   //  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
-  fNRun      = fEvent->RecoEvent->GetRunNumber(); //Occhio che 30000 vale solo per il 2022
+  fNRun      = fEvent->RecoEvent->GetRunNumber(); 
   fNClusters = fEvent->ECalRecoCl->GetNElements();
 
   // Retrieve Run index   
@@ -140,7 +141,7 @@ Double_t ECalCalib::CorrectESlope(){
     double FracE = ESlope*fEvent->ECalRecoCl->Element(ical)->GetTime();
     //    cout<<" eECal Before "<<eECal<<" Time "<<fEvent->ECalRecoCl->Element(ical)->GetTime()<<endl;
     eECal -= FracE*eECal;
-    //    cout<<" eECal after "<<eECal<<" FracE "<<FracE<<endl;
+    
     fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
   }
   return 1;
@@ -152,35 +153,107 @@ Double_t ECalCalib::SetEScale(){
   if(fisMC) return -1;
   Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
   Double_t EScale;
+  Int_t NGoodCl=0;
+
+  // Standard cuts list
+  Double_t  MinECluster=80.;
+  Double_t  MaxECluster=250.;
+
+  Double_t ClRadMin= 125.;
+  Double_t ClRadMax= 270.;
+  std::vector<double> vGoodClFlag; 
+  std::vector<double> vPosX; 	   
+  std::vector<double> vPosY;     
+
+//  if(Neve==0){
+//    fNRun = fEvent->RecoEvent->GetRunNumber(); //Occhio che 30000 vale solo p
+//    if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
+//    cout<<"Run nymber "<<fNRun<<" Beam energy "<<fBeamE<<endl;
+//    cout<<"****************************************************************"<<endl;
+//   MinECluster=fBeamE*0.20;
+//   MaxECluster=fBeamE*1.05;
+//  }
+  Neve++;
+
+  //  if(fCurrentRunIndex==-1) EScale = fGlobalEScale; //if nothing available for that run;  
   
   if(fCurrentRunIndex!=-1) EScale = vEBeam[fCurrentRunIndex]/vEAvgRun[fCurrentRunIndex];
-  if(fCurrentRunIndex==-1) EScale = fGlobalEScale; //if nothing available for that run;
+  else EScale = 1.;
+  //  std::cout<<"EScale "<<EScale<<" fCurrent run index "<<fCurrentRunIndex<<std::endl;
+  //  if(fNClusters<2)  return false;
+  //  if(fNClusters>8)  return false;
 
-  if(NEvent==5) {
-    for(int ical = 0;ical < fNClusters; ical++) {
-      cout<<"Non calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
-    }
-  }
-  if(fNClusters>1 && fNClusters<4 && 
-     fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
-    double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
-    double E1 = fEvent->ECalRecoCl->Element(1)->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2g",E0+E1);
-  }
-  
   for(int ical = 0;ical < fNClusters; ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
     fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
-    if(NEvent==5) cout<<"calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<" EScale "<<EScale<<" "<<endl;
+  }
+
+
+  for(int ical = 0;ical < fNClusters; ical++) {
+    //    if(NEvent==5) cout<<"GG Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
+    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+    double tECal    =  fEvent->ECalRecoCl->Element(ical)->GetTime();
+    TVector3 pos    =  fEvent->ECalRecoCl->Element(ical)->GetPosition();
+    double ClRadius = sqrt(pos.X()*pos.X()+pos.Y()*pos.Y());
+
+    //    cout<<" eECal after "<<eECal<<endl;
+
+    vGoodClFlag.push_back(0);
+    vPosX.push_back(pos.X());
+    vPosY.push_back(pos.Y());
+    //Data cut on cluster energy now it's calibrated
+    if(eECal<MinECluster) continue; 
+    if(eECal>MaxECluster) continue; 
+
+    //Cut on cluster radius Min and Max
+    if(ClRadius<ClRadMin) continue;
+    if(ClRadius>ClRadMax) continue;
+    vGoodClFlag[NGoodCl]=1;
+    NGoodCl++;
+//    EGoodCluster.push_back(eECal);
+//    TGoodCluster.push_back(tECal);
+//    PosXGoodCluster.push_back(pos.X());
+//    PosYGoodCluster.push_back(pos.Y());
+  }
+  //  if(NGoodCl<2) return false;
+  
+  for (Int_t ii=0; ii<fNClusters;ii++){
+    for (Int_t jj=ii+1; jj<fNClusters;jj++){
+      if(fabs(fEvent->ECalRecoCl->Element(ii)->GetTime()-fEvent->ECalRecoCl->Element(jj)->GetTime())<3.){
+	if(vGoodClFlag[ii]==1 && vGoodClFlag[jj]==1){
+	  double Dist = sqrt((vPosX[ii]-vPosX[jj])*(vPosX[ii]-vPosX[jj]) + (vPosY[ii]-vPosY[jj])*(vPosY[ii]-vPosY[jj]));
+	  if(Dist>250.){
+	    double E0 = fEvent->ECalRecoCl->Element(ii)->GetEnergy();
+	    double E1 = fEvent->ECalRecoCl->Element(jj)->GetEnergy();
+	    fHS->FillHistoList("ECalCalib","ETot2g",E0+E1);
+	  }
+	}
+      }
+    }
+  }
+
+
+  for (Int_t ii=0; ii<fNClusters;ii++){
+    for (Int_t jj=ii+1; jj<fNClusters;jj++){
+      if(fabs(fEvent->ECalRecoCl->Element(ii)->GetTime()-fEvent->ECalRecoCl->Element(jj)->GetTime())<3.){
+	if(vGoodClFlag[ii]==1 && vGoodClFlag[jj]==1){
+	  double E0 = fEvent->ECalRecoCl->Element(ii)->GetEnergy();
+	  double E1 = fEvent->ECalRecoCl->Element(jj)->GetEnergy();
+	  fHS->FillHistoList("ECalCalib","ETot2gCal",E0+E1);
+	}
+      }
+    }
   }
   
-  if(fNClusters>1 && fNClusters<4 &&
-     fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
-    double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
-    double E1 = fEvent->ECalRecoCl->Element(1)->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2gCal",E0+E1);
-  }
+//  if(fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
+//    double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
+//    double E1 = fEvent->ECalRecoCl->Element(1)->GetEnergy();
+//    fHS->FillHistoList("ECalCalib","ETot2gCal",E0+E1);
+//  } 
+  vGoodClFlag.clear(); 
+  vPosX.clear(); 	   
+  vPosY.clear();
   return 1;
 }
 

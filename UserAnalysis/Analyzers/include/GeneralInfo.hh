@@ -39,7 +39,7 @@ public:
   inline double GetRadiusMin() const { return fRadiusMin;}
   inline double GetEnergyMin() const { return fEnergyMin;}
   inline double GetEnergyMax() const { return fEnergyMax;}
-
+  inline double GetGlobalESlope() const { return fGlobalESlope;}
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -74,5 +74,6 @@ private:
   double fRadiusMin;
   double fEnergyMin;
   double fEnergyMax;
+  double fGlobalESlope;
 };
 #endif

@@ -42,6 +42,8 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
   fXCOG = 0.;    // default
   fYCOG = 0.;    // default
 
+  fGlobalESlope = 1.; // default energy fractional correction
+  
   EvalBeamProperties();
 
   return true;

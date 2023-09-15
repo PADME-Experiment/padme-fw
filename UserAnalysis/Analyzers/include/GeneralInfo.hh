@@ -40,6 +40,7 @@ public:
   inline double GetEnergyMin() const { return fEnergyMin;}
   inline double GetEnergyMax() const { return fEnergyMax;}
   inline double GetGlobalESlope() const { return fGlobalESlope;}
+  inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;}
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -75,5 +76,6 @@ private:
   double fEnergyMin;
   double fEnergyMax;
   double fGlobalESlope;
+  double fGlobalTimeESlope;
 };
 #endif

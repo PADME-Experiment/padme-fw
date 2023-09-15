@@ -43,6 +43,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
   fYCOG = 0.;    // default
 
   fGlobalESlope = 1.; // default energy fractional correction
+  fGlobalTimeESlope = 0.; // default energy fractional correction as a function of the time within the burst
   
   EvalBeamProperties();
 

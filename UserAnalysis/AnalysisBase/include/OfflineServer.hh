@@ -12,6 +12,7 @@
 #define kTargetAvg 5;// bit to define availability of run beam-average position at target
 #define kCOG 6;// bit to define availability of run beam-average position at ECal
 #define kCalibEnergy 7;// bit to define availability of run energy calibration factor
+#define kCalibTimeEnergy 8;// bit to define availability of run energy time calibration factor
 
 
 struct RunInfo{
@@ -29,6 +30,7 @@ struct RunInfo{
   float cogx; // mm, average x position of COG at ECal
   float cogy; // mm, average y position of COG at ECal
   float calibEnergyFactor; //a.u. calibration constant to be multiplied to the cluster energy, so to obtain the corrected energy
+  float calibTimeEnergyFactor; //a.u. calibration factor to be multiplied to the fractional time of the cluster with respect to the burst start, so to obtain the corrected energy
   int retrieveStatus; // word with bits to signal availability of information
 };
   
@@ -57,6 +59,7 @@ public:
   float getCOGXAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogx;} //mm
   float getCOGYAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogy;} //mm
   float getCalibEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibEnergyFactor;} //a.u.
+  float getCalibTimeEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibTimeEnergyFactor;} //a.u.
 
   bool isTimeAvailable(int runID){       if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTimeBit);} 
   bool isEnergyAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEnergy);} 
@@ -66,6 +69,7 @@ public:
   bool isTargetAvgAvailable(int runID){  if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTargetAvg);} 
   bool isCOGAvailable(int runID){        if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCOG);} 
   bool isCalibEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibEnergy);} 
+  bool isCalibTimeEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibTimeEnergy);} 
 
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures

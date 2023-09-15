@@ -4,6 +4,14 @@
 #include <vector>
 #define MAXRUNNR 500000
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+#define kTimeBit 0;// bit to define availability of run start and stop times
+#define kEnergy 1;// bit to define availability of run DHSTB01 and 02 energies
+#define kNFiles 2;// bit to define availability of run number of files
+#define kPOT 3;// bit to define availability of run nominal POT
+#define kBunchLength 4;// bit to define availability of run bunch length and start time
+#define kTargetAvg 5;// bit to define availability of run beam-average position at target
+#define kCOG 6;// bit to define availability of run beam-average position at ECal
+#define kCalibEnergy 7;// bit to define availability of run energy calibration factor
 
 
 struct RunInfo{
@@ -21,6 +29,7 @@ struct RunInfo{
   float cogx; // mm, average x position of COG at ECal
   float cogy; // mm, average y position of COG at ECal
   float calibEnergyFactor; //a.u. calibration constant to be multiplied to the cluster energy, so to obtain the corrected energy
+  int retrieveStatus; // word with bits to signal availability of information
 };
   
 class OfflineServer
@@ -49,7 +58,15 @@ public:
   float getCOGYAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogy;} //mm
   float getCalibEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibEnergyFactor;} //a.u.
 
-  
+  bool isTimeAvailable(int runID){       if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTimeBit);} 
+  bool isEnergyAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEnergy);} 
+  bool isNFilesAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kNFiles);} 
+  bool isPOTAvailable(int runID){        if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kPOT);} 
+  bool isBunchLengthAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kBunchLength);} 
+  bool isTargetAvgAvailable(int runID){  if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTargetAvg);} 
+  bool isCOGAvailable(int runID){        if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCOG);} 
+  bool isCalibEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibEnergy);} 
+
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures
   std::vector<RunInfo> runInfos; // vector of runInfo structures

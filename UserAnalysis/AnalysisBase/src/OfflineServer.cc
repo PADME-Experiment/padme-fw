@@ -32,6 +32,19 @@ OfflineServer::OfflineServer()
       rInfo.DHSTB02Energy >> rInfo.nFiles >> rInfo.runPOT >> 
       rInfo.bunchLength >> rInfo.beamStart >> rInfo.tgx >> rInfo.tgy >> rInfo.cogx >> rInfo.cogy >> rInfo.calibEnergyFactor; // sets EOF flag if no value found
 
+    // evaluate availability of input information
+    rInfo.retrieveStatus = 0;
+    if (rInfo.runStartTime > 0) rInfo.retrieveStatus |= (1<<kTimeBit);
+    if ((rInfo.DHSTB01Energy > 0 && rInfo.DHSTB02Energy > 0) || 
+	(rInfo.DHSTB01Energy == 0 && rInfo.DHSTB02Energy == 0)) rInfo.retrieveStatus |= (1<<kEnergy);
+    if (rInfo.nFiles > 0) rInfo.retrieveStatus |= (1<<kNFiles);
+    if (rInfo.runPOT > 0) rInfo.retrieveStatus |= (1<<kPOT);
+    if (rInfo.bunchLength > 0) rInfo.retrieveStatus |= (1<<kBunchLength);
+    if (TMath::Abs(rInfo.tgx) > 0 && TMath::Abs(rInfo.tgy) > 0) rInfo.retrieveStatus |= (1<<kTargetAvg);
+    if (TMath::Abs(rInfo.cogx) > 0 && TMath::Abs(rInfo.cogy) > 0) rInfo.retrieveStatus |= (1<<kCOG);
+    if (rInfo.calibEnergyFactor > 0) rInfo.retrieveStatus |= (1<<kCalibEnergy);
+
+
   // populate structure
     runInfos.push_back(rInfo);
   // fill runIndex array

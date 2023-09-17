@@ -1,3 +1,6 @@
+//
+// Management of Event-level information
+//
 #include "GeneralInfo.hh"
 #include "TMath.h"
 
@@ -22,15 +25,13 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
 
   fRunOld = -1;
 
-  // set period values and defaults
+  // set global values for each run period
 
   if (fRecoEvent->GetRunNumber() < 50151) {
-    fStartTime = 1600256773;// sec, first good run of 2020 run, 30339
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
   }
   else {
-    fStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
     fBeamMomentum = 268.94;       // MeV, DHSTB01 energy for 50381
     fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
   }
@@ -44,12 +45,76 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
 
   fGlobalESlope = 1.; // default energy fractional correction
   fGlobalTimeESlope = 0.; // default energy fractional correction as a function of the time within the burst
+  fGlobalTimeStart = -100.; // to be cross-checked
+  fGlobalTimeWidth = 150.; // to be cross-checked
+
+  fIsEnergyAvailable = kFALSE;
+  fIsTargetAvgAvailable = kFALSE;
+  fIsCOGAvailable = kFALSE;
+  fIsBunchLengthAvailable = kFALSE;
+  fIsCalibEnergyAvailable = kFALSE;
+  fIsCalibTimeEnergyAvailable = kFALSE; 
+
   
   EvalBeamProperties();
 
   return true;
 }
 
+//
+// Can potentially yield event-level beam information.
+//
+Bool_t GeneralInfo::Process(){ 
+
+  int runID = fRecoEvent->GetRunNumber();
+
+  if (runID != fRunOld) { // update run-level information
+    fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
+    fIsEnergyAvailable = fOfflineServerDB->isEnergyAvailable(runID)
+    // might interpolate if info not available
+
+    fBunchLength =  fOfflineServerDB->getBunchLength(runID);
+    fBeamStart =  fOfflineServerDB->getBeamStart(runID);
+    fIsBunchLengthAvailable = fOfflineServerDB->isBunchLengthAvailable(runID)
+    // might interpolate if info not available
+    
+    if (runID < 50151) {
+      fZECal = 2508.31; // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override reco
+    }
+    else {
+      fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
+    }
+
+    fXTarg = fOfflineServerDB->getTargetXAvg(runID);
+    fYTarg = fOfflineServerDB->getTargetYAvg(runID);
+    fIsTargetAvgAvailable = fOfflineServerDB->isTargetAvgAvailable(runID);
+    // might interpolate if info not available
+
+    fXCOG = fOfflineServerDB->getCOGXAvg(runID);
+    fYCOG = fOfflineServerDB->getCOGYAvg(runID);
+    fIsCOGAvailable = fOfflineServerDB->isCOGAvailable(runID);
+    // might interpolate if info not available
+
+    fCalibEnergyFactor = fOfflineServerDB->getCalibEnergyFactor(runID);
+    fIsCalibEnergyAvailable = fOfflineServerDB->isCalibEnergyAvailable(runID);
+    // might interpolate if info not available
+
+    fCalibTimeEnergyFactor = fOfflineServerDB->getCalibTimeEnergyFactor(runID);
+    fIsCalibTimeEnergyAvailable = fOfflineServerDB->isCalibTimeEnergyAvailable(runID);
+    // might interpolate if info not available
+
+    EvalBeamProperties();
+    PrintBeamProperties(runID);
+    fRunOld = runID;
+    return 1;
+  }
+
+  return 0;
+}
+
+//
+// Evaluate derived beam properties
+//
 void GeneralInfo::EvalBeamProperties(){
   fRTarg.SetXYZ(fXTarg,fYTarg,fZTarg);
   fCOGAtECal.SetXYZ(fXCOG,fYCOG,fZECal);
@@ -80,36 +145,6 @@ void GeneralInfo::EvalBeamProperties(){
   fEnergyMin = fSqrts*fGam*0.5*(1.+TMath::Cos(2*tLim)); 
 }
 
-// To pass from a run-level evaluation to a time-based evaluation, need to adapt the Process method.
-
-Bool_t GeneralInfo::Process(){ 
-
-  int runID = fRecoEvent->GetRunNumber();
-
-  if (runID != fRunOld) { // need to update run-level features
-    fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
-    fStartTime =  fOfflineServerDB->getRunStartTime(runID);
-
-    if (runID < 50151) {
-      fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
-    }
-    else {
-      fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
-    }
-
-    fXTarg = fOfflineServerDB->getTargetXAvg(runID);
-    fYTarg = fOfflineServerDB->getTargetYAvg(runID);
-    fXCOG = fOfflineServerDB->getCOGXAvg(runID);
-    fYCOG = fOfflineServerDB->getCOGYAvg(runID);
-  
-    EvalBeamProperties();
-    PrintBeamProperties(runID);
-    fRunOld = runID;
-    return 1;
-  }
-
-  return 0;
-}
 
 void GeneralInfo::PrintBeamProperties(int runID){
   std::cout << "GeneralInfo: run-level info for run " << runID << std::endl;

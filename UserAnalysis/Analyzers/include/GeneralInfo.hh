@@ -1,3 +1,6 @@
+//
+// Event-level information
+//
 #ifndef GeneralInfo_h
 #define GeneralInfo_h 1
 
@@ -26,10 +29,26 @@ public:
   virtual Bool_t Init(PadmeAnalysisEvent* event);
   virtual Bool_t Process();
 
-  long long int GetStartTime(){return fStartTime;}
   double GetBeamMomentum(){return fBeamMomentum;}
+  double GetBunchLength(){return fBunchLength;}
+  double GetBeamStart(){return fBeamStart;}
   inline TVector3 GetTargetPos() const {return fRTarg;}
   inline TVector3 GetCOG() const {return fCOGAtECal;}
+  inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
+  inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
+  double GetBeamMomentum(){return fBeamMomentum;}
+
+  // methods giving availability of original information
+
+  bool isEnergyAvailable(){return fIsEnergyAvailable;}
+  bool isTargetAvgAvailable()(return fIsTargetAvgAvailable;} 
+  bool isCOGAvailable(){return fIsCOGAvailable;} 
+  bool isBunchLengthAvailable(){return fIsBunchLengthAvailable;} 
+  bool isCalibEnergyAvailable(){return fIsCalibEnergyAvailable;} 
+  bool isCalibTimeEnergyAvailable(){return fIsCalibTimeEnergyAvailable;} 
+
+
+  // derived beam kinematics
   inline double GetSqrts() const {return fSqrts;}
   inline double GetGam() const {return fGam;}
   inline double GetBG() const {return fBG;}
@@ -39,8 +58,12 @@ public:
   inline double GetRadiusMin() const { return fRadiusMin;}
   inline double GetEnergyMin() const { return fEnergyMin;}
   inline double GetEnergyMax() const { return fEnergyMax;}
+
+  // global quantities
   inline double GetGlobalESlope() const { return fGlobalESlope;}
-  inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;}
+  inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;} //default time-energy slope
+  inline double GetGlobalBunchTimeStart() const { return fGlobalBunchTimeStart;} // default bunch time start
+  inline double GetGlobalBunchTimeLength() const { return fGlobalBunchTimeLength;} // default bunch time length
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -50,20 +73,44 @@ private:
   void EvalBeamProperties();
   void PrintBeamProperties(int);
 
+  // event-by-event quantities
+
   Int_t fRunOld;
   double fBeamMomentum;
-  long long int fStartTime;
+  double fBunchLength;
+  double fBeamStart; 
   
   double fXTarg;
   double fYTarg;
-  double fZTarg;
 
   double fXCOG;
   double fYCOG;
+
+  double fCalibEnergyFactor;
+  double fCalibTimeEnergyFactor;
+
+  // availability of original information
+
+  bool fIsEnergyAvailable;
+  bool fIsTargetAvgAvailable;
+  bool fIsCOGAvailable;
+  bool fIsBunchLengthAvailable;
+  bool fIsCalibEnergyAvailable;
+  bool fIsCalibTimeEnergyAvailable; 
+
+  // global quantities
+
+  double fZTarg;
   double fZECal;
 
   TVector3 fRTarg;
   TVector3 fCOGAtECal;
+  double fGlobalESlope;
+  double fGlobalTimeESlope;
+  double fGlobalBunchTimeStart;
+  double fGlobalBunchTimeLength;
+
+  // derived quantities
 
   double fSqrts;
   double fBG;
@@ -75,7 +122,6 @@ private:
   double fRadiusMin;
   double fEnergyMin;
   double fEnergyMax;
-  double fGlobalESlope;
-  double fGlobalTimeESlope;
+
 };
 #endif

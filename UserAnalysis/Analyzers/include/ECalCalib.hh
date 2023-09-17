@@ -5,6 +5,8 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
+#include "OfflineServer.hh"
+#include "GeneralInfo.hh"
 
 class ECalCalib {
 
@@ -22,7 +24,6 @@ public:
   Bool_t Finalize();
 
   Double_t SetEScale();
-  Double_t FixPosition();
   Double_t CorrectESlope();
 
   Double_t GetBeamEnergy(){return fBeamEnergy;};
@@ -43,18 +44,6 @@ private:
   utl::ConfigParser* fCfgParser;
 
   HistoSvc* fHS;
-
-  Int_t fNClusters;
-
-  Int_t fNRun;	     
-  Int_t fCurrentRun;     
-  Int_t fCurrentRunIndex;
-
-  Int_t Neve;
-  // variable to be returned on request
-  Double_t fBeamEnergy;
-  Double_t fCOGX;
-  Double_t fCOGY;
 
   Bool_t   fisMC=false;
   Double_t fGlobalEScale = 1.11398; //used if no RUN dependent value is found

@@ -49,6 +49,7 @@ public:
 
 
   // derived beam kinematics
+  inline double GetBeamEnergy() const {return fE;}
   inline double GetSqrts() const {return fSqrts;}
   inline double GetGam() const {return fGam;}
   inline double GetBG() const {return fBG;}

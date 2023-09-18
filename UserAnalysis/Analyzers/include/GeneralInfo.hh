@@ -29,7 +29,7 @@ public:
   virtual Bool_t Init(PadmeAnalysisEvent* event);
   virtual Bool_t Process();
 
-  long long int GetPeriodStartTime(){return fPeriodStart;} // tim of start of the period (2020, 2022, etc.)
+  long long int GetPeriodStartTime(){return fPeriodStartTime;} // tim of start of the period (2020, 2022, etc.)
   double GetBeamMomentum(){return fBeamMomentum;}
   double GetBunchLength(){return fBunchLength;}
   double GetBeamStart(){return fBeamStart;}
@@ -77,7 +77,7 @@ private:
   // event-by-event quantities
 
   Int_t fRunOld;
-  long long int fPeriodStart; // time of start of the period (2020, 2022, etc.)
+  long long int fPeriodStartTime; // time of start of the period (2020, 2022, etc.)
   double fBeamMomentum;
   double fBunchLength;
   double fBeamStart; 

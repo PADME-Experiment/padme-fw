@@ -47,8 +47,8 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
 
   fGlobalESlope = 1.; // default energy fractional correction
   fGlobalTimeESlope = 0.; // default energy fractional correction as a function of the time within the burst
-  fGlobalTimeStart = -100.; // to be cross-checked
-  fGlobalTimeWidth = 150.; // to be cross-checked
+  fGlobalBunchTimeStart = -100.; // to be cross-checked
+  fGlobalBunchTimeLength = 150.; // to be cross-checked
 
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
@@ -72,12 +72,12 @@ Bool_t GeneralInfo::Process(){
 
   if (runID != fRunOld) { // update run-level information
     fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
-    fIsEnergyAvailable = fOfflineServerDB->isEnergyAvailable(runID)
+    fIsEnergyAvailable = fOfflineServerDB->isEnergyAvailable(runID);
     // might interpolate if info not available
 
-    fBunchLength =  fOfflineServerDB->getBunchLength(runID);
+    fBunchLength = fOfflineServerDB->getBunchLength(runID);
     fBeamStart =  fOfflineServerDB->getBeamStart(runID);
-    fIsBunchLengthAvailable = fOfflineServerDB->isBunchLengthAvailable(runID)
+    fIsBunchLengthAvailable = fOfflineServerDB->isBunchLengthAvailable(runID);
     // might interpolate if info not available
     
     if (runID < 50151) {
@@ -152,7 +152,7 @@ void GeneralInfo::EvalBeamProperties(){
 
 void GeneralInfo::PrintBeamProperties(int runID){
   std::cout << "GeneralInfo: run-level info for run " << runID << std::endl;
-  std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fStartTime) << 
+  std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fPeriodStartTime) << 
     " target = { "<< fRTarg.X()<< " , "<< fRTarg.Y() << " , " << fRTarg.Z() << " }; COG = { " << fCOGAtECal.X() << " , " << fCOGAtECal.Y() << " , "<< fCOGAtECal.Z() << " }" << 
     " sqrt(s) = " << fSqrts << " bg = " << fBG << " beta = " << fBeta <<
     " energyRange = { " << fEnergyMin << " , " << fEnergyMax << " }; radiusRange = { " << fRadiusMin << " , " << fRadiusMax << " }" << std::endl;

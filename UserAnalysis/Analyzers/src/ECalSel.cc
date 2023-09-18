@@ -80,7 +80,7 @@ Int_t ECalSel::OneClusSel(){
 
   TTimeStamp evt = fRecoEvent->GetEventTime();
   long long int eventTime = static_cast<long long int>(evt.GetSec());
-  long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
+  long long int  deventTime = eventTime - fGeneralInfo->GetPeriodStartTime(); // using the period start time and not the run start time <-- to be checked
 
   const double energyMax = 200; //MeV
   const double radiusMin = 140; //mm
@@ -179,7 +179,7 @@ Int_t ECalSel::TwoClusSel(){
 
   TTimeStamp evt = fRecoEvent->GetEventTime();
   long long int eventTime = static_cast<long long int>(evt.GetSec());
-  long long int  deventTime = eventTime - fGeneralInfo->GetStartTime();
+  long long int  deventTime = eventTime - fGeneralInfo->GetPeriodStartTime();// using the period start time and not the run start time <-- to be checked
 
   // kinematic conditions might be run-dependent
   const double safeFactor = 0.9;

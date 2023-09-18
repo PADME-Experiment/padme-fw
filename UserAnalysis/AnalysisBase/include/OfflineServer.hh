@@ -7,15 +7,15 @@
 #include <vector>
 #define MAXRUNNR 500000
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-#define kTimeBit 0;// bit to define availability of run start and stop times
-#define kEnergy 1;// bit to define availability of run DHSTB01 and 02 energies
-#define kNFiles 2;// bit to define availability of run number of files
-#define kPOT 3;// bit to define availability of run nominal POT
-#define kBunchLength 4;// bit to define availability of run bunch length and start time
-#define kTargetAvg 5;// bit to define availability of run beam-average position at target
-#define kCOG 6;// bit to define availability of run beam-average position at ECal
-#define kCalibEnergy 7;// bit to define availability of run energy calibration factor
-#define kCalibTimeEnergy 8;// bit to define availability of run energy time calibration factor
+#define kTimeBit 0 // bit to define availability of run start and stop times
+#define kEnergy 1 // bit to define availability of run DHSTB01 and 02 energies
+#define kNFiles 2 // bit to define availability of run number of files
+#define kPOT 3 // bit to define availability of run nominal POT
+#define kBunchLength 4 // bit to define availability of run bunch length and start time
+#define kTargetAvg 5 // bit to define availability of run beam-average position at target
+#define kCOG 6 // bit to define availability of run beam-average position at ECal
+#define kCalibEnergy 7 // bit to define availability of run energy calibration factor
+#define kCalibTimeEnergy 8 // bit to define availability of run energy time calibration factor
 
 
 struct RunInfo{

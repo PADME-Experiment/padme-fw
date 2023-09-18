@@ -6,6 +6,7 @@
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
 #include "ECalCalib.hh"
+#include "GeneralInfo.hh"
 #include "MCTruth.hh"
 
 class Is22GGAnalysis {
@@ -42,7 +43,7 @@ private:
 
   //Connect external class
   HistoSvc* fHS;
-  ECalCalib* fECalCalib;
+  GeneralInfo* fGeneralInfo;
   MCTruth* fMCTruth;
 
   Int_t NGG;

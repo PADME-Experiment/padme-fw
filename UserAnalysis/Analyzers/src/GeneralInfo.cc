@@ -62,8 +62,8 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
 }
 
 //
-// Can potentially yield event-level beam information.
-//
+// Can potentially yield event-level beam information (should input PadmeAnalysisEvent* ).
+// 
 Bool_t GeneralInfo::Process(){ 
 
   int runID = fRecoEvent->GetRunNumber();

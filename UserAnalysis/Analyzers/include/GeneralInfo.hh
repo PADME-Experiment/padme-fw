@@ -40,12 +40,12 @@ public:
 
   // methods giving availability of original information
 
-  bool isEnergyAvailable(){return fIsEnergyAvailable;}
-  bool isTargetAvgAvailable()(return fIsTargetAvgAvailable;} 
-  bool isCOGAvailable(){return fIsCOGAvailable;} 
-  bool isBunchLengthAvailable(){return fIsBunchLengthAvailable;} 
-  bool isCalibEnergyAvailable(){return fIsCalibEnergyAvailable;} 
-  bool isCalibTimeEnergyAvailable(){return fIsCalibTimeEnergyAvailable;} 
+  bool IsEnergyAvailable(){return fIsEnergyAvailable;}
+  bool IsTargetAvgAvailable()(return fIsTargetAvgAvailable;} 
+  bool IsCOGAvailable(){return fIsCOGAvailable;} 
+  bool IsBunchLengthAvailable(){return fIsBunchLengthAvailable;} 
+  bool IsCalibEnergyAvailable(){return fIsCalibEnergyAvailable;} 
+  bool IsCalibTimeEnergyAvailable(){return fIsCalibTimeEnergyAvailable;} 
 
 
   // derived beam kinematics

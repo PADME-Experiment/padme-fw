@@ -26,17 +26,18 @@ public:
 private:
   static ECalCalib* fInstance;
   Bool_t InitHistos();
-  Double_t CorrectEScale();
-  Double_t CorrectETimeSlope();
+  Double_t CorrectETimeSlope(Int_t);  // input is correction level: 0->no correction, 1->default, 2->enhanced
+  Double_t CorrectEScale(Int_t);      // input is correction level: 0->no correction, 1->default, 2->enhanced
   Int_t NClusterPairSimpleSelection();
 
   Int_t fVerbose;
   PadmeAnalysisEvent* fEvent;
   HistoSvc* fHS;
-  utl::ConfigParser* fCfgParser;
+  utl::ConfigParser* fCfgParser; // should handle the correction level for energy scale and energy-time slope
   GeneralInfo* fGeneralInfo;
 
   Bool_t   fisMC;
+  Int_t fNPairs;
   Int_t fPairIndex[2]; // index of cluster pairs
 };
 #endif

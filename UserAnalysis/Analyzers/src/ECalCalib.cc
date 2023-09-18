@@ -32,6 +32,8 @@ Bool_t ECalCalib::Init(){
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fGeneralInfo = GeneralInfo::GetInstance();
   fisMC=false;
+
+  fNPairs = 0;
   fPairIndex[0] = -1; // index of first cluster of a good pair 
   fPairIndex[1] = -1; // index of second cluster
 
@@ -43,10 +45,13 @@ Bool_t ECalCalib::InitHistos(){
   // ECalCalib directory will contain all histograms related to this analysis
   fHS->CreateList("ECalCalib");
   const Double_t hEMax=800;
-  const Double_t hEBins=800;
+  const Int_t hEBins=800;
+
   fHS->BookHistoList("ECalCalib","ETot2g"  ,hEBins,0.,hEMax);
   fHS->BookHistoList("ECalCalib","ETot2gCal"  ,hEBins,0.,hEMax);
-  fHS->BookHistoList("ECalCalib","ETot2gCal2" ,hEBins,0.,hEMax);
+
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelBefore" ,100,-1.,2.,hEBins/2,0.,hEMax);
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelAfter" ,100,-1.,2.,hEBins/2,0.,hEMax);
   return true;
 }
 
@@ -55,20 +60,9 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
   //  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
 
-  Int_t NPairs = NClusterPairSimpleSelection();
-  if (NPairs == 1) fHS->FillHistoList("ECalCalib","ETot2g",
-				      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
-				      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
-  CorrectEScale();
-  if (NPairs == 1) fHS->FillHistoList("ECalCalib","ETot2gCal",
-				      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
-				      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
-
-  CorrectETimeSlope();
-  if (NPairs == 1) fHS->FillHistoList("ECalCalib","ETot2gCal2",
-				      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
-				      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
-      
+  fNPairs = NClusterPairSimpleSelection();
+  CorrectETimeSlope(0); //fill plots before and after time-energy slope correction
+  CorrectEScale(1); // fill plots before and after energy scale correction      
 
   return true;
 }
@@ -77,8 +71,10 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
 //
 // Correct energy for a time-dependent energy slope 
 //
-Int_t ECalCalib::CorrectETimeSlope(){
-  if(fisMC) return -1;
+Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
+  if (fisMC) return -1; // At the moment we don't have the information to correct the MC
+
+  // retrieve time-energy slope
 
   Double_t ESlope; // Mauro was using  5E-5 if no RUN dependent value is found, but here I'm changing parametrisation
   if (fGeneralInfo->IsCalibTimeEnergyAvailable()){
@@ -86,6 +82,8 @@ Int_t ECalCalib::CorrectETimeSlope(){
   } else {
     ESlope = fGeneralInfo->GetGlobalTimeESlope(); 
   }
+
+  // retrieve start time and duration of bunch
 
   Double_t TStart=0;
   Double_t TWidth=0;
@@ -97,15 +95,39 @@ Int_t ECalCalib::CorrectETimeSlope(){
     TWidth = fGeneralInfo->GetGlobalBunchTimeLength();
   }
 
-  Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
+  // evaluate average time of cluster pairs, if any, and fill "uncorrected" histogram
 
-  for(int ical = 0;ical < NClusters; ical++) {
-    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+  double TAvg = 0;
+  if (fNPairs == 1) {
+    TAvg = 0.5*(
+		fEvent->ECalRecoCl->Element(fPairIndex[0])->GetTime()+
+		fEvent->ECalRecoCl->Element(fPairIndex[1])->GetTime());
+    Double_t ETot = 
+      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelBefore",(TAvg-TStart)/TWidth,ETot);
+  }
+
+  // apply time-energy correction
+
+  for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
+    double eECal =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     double FracE = ESlope*(fEvent->ECalRecoCl->Element(ical)->GetTime() - TStart)/TWidth;
 
-    eECal -= FracE*eECal;    
-    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    if(corrLevel) {
+      eECal -= FracE*eECal;    
+      fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    }
   }
+
+  // Fill Etot vs T AFTER correction
+  if (fNPairs == 1) {
+    Double_t ETot = 
+      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelAfter",(TAvg-TStart)/TWidth,ETot);
+  }
+
   return 1;
 }
 
@@ -113,31 +135,48 @@ Int_t ECalCalib::CorrectETimeSlope(){
 // Correct energy for a run-dependent slope
 //
 Double_t ECalCalib::CorrectEScale(){
-  if(fisMC) return -1;
+
+  // fill total-energy uncorrected plot
+  if (fNPairs == 1) {
+    fHS->FillHistoList("ECalCalib","ETot2g",
+		       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+		       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
+  }
+
+
+  if(fisMC) return -1; // at the moment, it's unclear what mis-calibration is in the mc
+
+
+  // retrieve energy scale correction
 
   Double_t EScale; // Mauro was using 1.11398 if no RUN dependent value is found, I'm using 1  
-  if(fGeneralInfo->IsCalibEnergyAvailable()) {
-    EScale = fGeneralInfo->GetCalibEnergyFactor();
-  }  
-  else {
-    EScale = fGeneralInfo->GetGlobalESlope();
-  }
+  if(fGeneralInfo->IsCalibEnergyAvailable()) EScale = fGeneralInfo->GetCalibEnergyFactor();
+  else EScale = fGeneralInfo->GetGlobalESlope();
+  
+  // apply energy scale correction
 
   for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
     fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
   }
+
+  // fill histogram with corrected total energy
+  if (fNPairs == 1) {
+    fHS->FillHistoList("ECalCalib","ETot2gCal",      
+		       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+		       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
+  }
+
   return 1;
 }
 
-Bool_t ECalCalib::Finalize()
-{
+Bool_t ECalCalib::Finalize(){ // should evaluate the corrections in a simil-histo mode?
   if (fVerbose) printf("---> Finalizing ECalCalib\n");
   return true;
 }
 
-
+// selection of cluster pairs with simple cuts, not energy-dependent
 Int_t ECalCalib::NClusterPairSimpleSelection(){
   // should check if these values are OK for every beam momentum
   const Double_t  MinECluster=80.;  //MeV
@@ -180,11 +219,9 @@ Int_t ECalCalib::NClusterPairSimpleSelection(){
 	fEvent->ECalRecoCl->Element(jj)->GetTime();
       if (fabs(dt) > MaxClClDT) continue;
       
-
       nPairs++;
       fPairIndex[0] = ii;
       fPairIndex[1] = jj;
-
     }
   }
   return nPairs;

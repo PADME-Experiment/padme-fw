@@ -29,6 +29,7 @@ public:
   virtual Bool_t Init(PadmeAnalysisEvent* event);
   virtual Bool_t Process();
 
+  long long int GetPeriodStartTime(){return fPeriodStart;} // tim of start of the period (2020, 2022, etc.)
   double GetBeamMomentum(){return fBeamMomentum;}
   double GetBunchLength(){return fBunchLength;}
   double GetBeamStart(){return fBeamStart;}
@@ -36,12 +37,11 @@ public:
   inline TVector3 GetCOG() const {return fCOGAtECal;}
   inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
   inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
-  double GetBeamMomentum(){return fBeamMomentum;}
 
   // methods giving availability of original information
 
   bool IsEnergyAvailable(){return fIsEnergyAvailable;}
-  bool IsTargetAvgAvailable()(return fIsTargetAvgAvailable;} 
+  bool IsTargetAvgAvailable(){return fIsTargetAvgAvailable;} 
   bool IsCOGAvailable(){return fIsCOGAvailable;} 
   bool IsBunchLengthAvailable(){return fIsBunchLengthAvailable;} 
   bool IsCalibEnergyAvailable(){return fIsCalibEnergyAvailable;} 
@@ -76,6 +76,7 @@ private:
   // event-by-event quantities
 
   Int_t fRunOld;
+  long long int fPeriodStart; // time of start of the period (2020, 2022, etc.)
   double fBeamMomentum;
   double fBunchLength;
   double fBeamStart; 

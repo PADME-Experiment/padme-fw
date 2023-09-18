@@ -28,10 +28,12 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
   // set global values for each run period
 
   if (fRecoEvent->GetRunNumber() < 50151) {
+    fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
   }
   else {
+    fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
     fBeamMomentum = 268.94;       // MeV, DHSTB01 energy for 50381
     fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
   }
@@ -79,9 +81,11 @@ Bool_t GeneralInfo::Process(){
     // might interpolate if info not available
     
     if (runID < 50151) {
+      fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
       fZECal = 2508.31; // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override reco
     }
     else {
+      fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
       fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
     }
 

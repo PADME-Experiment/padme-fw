@@ -22,23 +22,21 @@ public:
   Bool_t Process(PadmeAnalysisEvent*);
   Bool_t Finalize();
 
-  Double_t SetEScale();
-  Double_t CorrectESlope();
-
 
 private:
   static ECalCalib* fInstance;
   Bool_t InitHistos();
+  Double_t CorrectEScale();
+  Double_t CorrectETimeSlope();
+  Int_t NClusterPairSimpleSelection();
 
   Int_t fVerbose;
-
   PadmeAnalysisEvent* fEvent;
-
   HistoSvc* fHS;
   utl::ConfigParser* fCfgParser;
   GeneralInfo* fGeneralInfo;
 
   Bool_t   fisMC;
-
+  Int_t fPairIndex[2]; // index of cluster pairs
 };
 #endif

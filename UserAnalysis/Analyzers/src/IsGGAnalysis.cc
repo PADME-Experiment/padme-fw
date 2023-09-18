@@ -14,7 +14,7 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   }
   NGG=0;
   fHS = HistoSvc::GetInstance();
-  fECalCalib = ECalCalib::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fMCTruth = MCTruth::GetInstance();
   // Standard cuts list
@@ -170,7 +170,7 @@ Bool_t IsGGAnalysis::Process(){
       fisMC=true;
     }
     if(fisMC) fBeamE = fMCTruth->GetBeamEnergy(); 
-    if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
+    if(!fisMC) fBeamE = fGeneralInfo->GetBeamEnergy();
     if(fBeamE==0 && !fisMC) fBeamE = 432.5;
   }
 
@@ -265,9 +265,9 @@ Bool_t IsGGAnalysis::Process(){
       vEi.push_back(EGoodCluster[jj]);  vPosX.push_back(PosXGoodCluster[jj]); vPosY.push_back(PosYGoodCluster[jj]);
       Double_t COGX = CompCOG(vEi,vPosX); Double_t COGY = CompCOG(vEi,vPosY);
       //Retrieve COG position for the current RUN
-      Double_t RunCOGX = fECalCalib->GetCOGX(); 
-      Double_t RunCOGY = fECalCalib->GetCOGY();
-      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<fECalCalib->GetCOGY()<<endl;
+      Double_t RunCOGX = fGeneralInfo->GetCOG().X(); 
+      Double_t RunCOGY = fGeneralInfo->GetCOG().Y();
+      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<RunCOGY<<endl;
 
       fHS->FillHistoList("GGAnalysis","COG_X",COGX,1);
       fHS->FillHistoList("GGAnalysis","COG_Y",COGY,1);

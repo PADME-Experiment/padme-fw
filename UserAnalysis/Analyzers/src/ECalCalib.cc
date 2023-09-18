@@ -18,6 +18,7 @@ ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
     printf("     Configuration file %s\n",cfgFile.Data());
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
+  fCfgFile = cfgFile;
 }
 
 ECalCalib::~ECalCalib(){
@@ -29,7 +30,7 @@ Bool_t ECalCalib::Init(){
   if (fVerbose) printf("---> Initializing ECalCalib\n");
 
   fHS = HistoSvc::GetInstance();
-  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fCfgParser = new utl::ConfigParser((const std::string)fCfgFile.Data());
   fGeneralInfo = GeneralInfo::GetInstance();
   fisMC=false;
 
@@ -134,7 +135,7 @@ Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
 // 
 // Correct energy for a run-dependent slope
 //
-Double_t ECalCalib::CorrectEScale(){
+Int_t ECalCalib::CorrectEScale(Int_t corrLevel){
 
   // fill total-energy uncorrected plot
   if (fNPairs == 1) {
@@ -157,8 +158,10 @@ Double_t ECalCalib::CorrectEScale(){
 
   for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
-    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    if(corrLevel) {
+      eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
+      fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    }
   }
 
   // fill histogram with corrected total energy
@@ -193,7 +196,7 @@ Int_t ECalCalib::NClusterPairSimpleSelection(){
   fPairIndex[0] = -1;
   fPairIndex[1] = -1;
   
-  for (Int_t ii=0; ii<fNClusters;ii++){
+  for (Int_t ii=0; ii<NClusters;ii++){
     double energy_i    =  fEvent->ECalRecoCl->Element(ii)->GetEnergy();
     if(energy_i < MinECluster || energy_i > MaxECluster) continue; 
 
@@ -201,7 +204,7 @@ Int_t ECalCalib::NClusterPairSimpleSelection(){
     double radius_i = sqrt(pos_i.X()*pos_i.X() + pos_i.Y()*pos_i.Y());
     if(radius_i < ClRadMin || radius_i > ClRadMax) continue;
 
-    for (Int_t jj=ii+1; jj<fNClusters;jj++){
+    for (Int_t jj=ii+1; jj<NClusters;jj++){
       double energy_j    =  fEvent->ECalRecoCl->Element(jj)->GetEnergy();
       if(energy_j < MinECluster || energy_j > MaxECluster) continue; 
 

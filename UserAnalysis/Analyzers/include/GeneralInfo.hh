@@ -112,7 +112,7 @@ private:
   double fGlobalBunchTimeLength;
 
   // derived quantities
-
+  double fE;
   double fSqrts;
   double fBG;
   double fGam;

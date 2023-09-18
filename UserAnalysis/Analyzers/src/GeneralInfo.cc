@@ -122,7 +122,7 @@ Bool_t GeneralInfo::Process(){
 void GeneralInfo::EvalBeamProperties(){
   fRTarg.SetXYZ(fXTarg,fYTarg,fZTarg);
   fCOGAtECal.SetXYZ(fXCOG,fYCOG,fZECal);
-
+  fE = sqrt(fMe*fMe + fBeamMomentum*fBeamMomentum);
   fSqrts = sqrt(2.*fMe*fMe + 2.*fBeamMomentum*fMe);
   fBG = fBeamMomentum/fSqrts; // beta gamma
   fGam = sqrt(fBG*fBG+1.);

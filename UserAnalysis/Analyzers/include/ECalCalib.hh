@@ -5,7 +5,6 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
-#include "OfflineServer.hh"
 #include "GeneralInfo.hh"
 
 class ECalCalib {
@@ -26,38 +25,20 @@ public:
   Double_t SetEScale();
   Double_t CorrectESlope();
 
-  Double_t GetBeamEnergy(){return fBeamEnergy;};
-  Double_t GetCOGX(){return fCOGX;};
-  Double_t GetCOGY(){return fCOGY;};
-
 
 private:
   static ECalCalib* fInstance;
   Bool_t InitHistos();
 
-  //  TRandom3* fRndm;
-
   Int_t fVerbose;
 
   PadmeAnalysisEvent* fEvent;
 
-  utl::ConfigParser* fCfgParser;
-
   HistoSvc* fHS;
+  utl::ConfigParser* fCfgParser;
+  GeneralInfo* fGeneralInfo;
 
-  Bool_t   fisMC=false;
-  Double_t fGlobalEScale = 1.11398; //used if no RUN dependent value is found
-  Double_t fGlobalESlope = 5E-5;    //used if no RUN dependent value is found
-  //  Double_t fGlobalEScale = 1.; //can be elimiated 
+  Bool_t   fisMC;
 
-  //Calibration constants Runs
-  std::vector<int> vNRun;
-  std::vector<int> vEBeam;
-  std::vector<double> vEAvgRun;
-  std::vector<double> vE0Run;
-  std::vector<double> vSlopeRun;
-
-  std::vector<double> vCOGX;
-  std::vector<double> vCOGY;
 };
 #endif

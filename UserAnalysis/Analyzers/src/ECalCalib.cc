@@ -18,11 +18,6 @@ ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
     printf("     Configuration file %s\n",cfgFile.Data());
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
-  fHS = HistoSvc::GetInstance();
-  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fOfflineServer = OfflineServer::GetInstance();
-  fGeneralInfo = GeneralInfo::GetInstance();
-
 }
 
 ECalCalib::~ECalCalib(){
@@ -32,6 +27,12 @@ ECalCalib::~ECalCalib(){
 
 Bool_t ECalCalib::Init(){
   if (fVerbose) printf("---> Initializing ECalCalib\n");
+
+  fHS = HistoSvc::GetInstance();
+  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fGeneralInfo = GeneralInfo::GetInstance();
+  fisMC=false;
+
   InitHistos(); 
   return true;
 }
@@ -61,23 +62,22 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
 Int_t ECalCalib::CorrectESlope(){
   if(fisMC) return -1;
 
-  Double_t ESlope=0;
-  if (fGeneralInfo->IsEnergyTimeSlopeAvailable()){
-    ESlope = fGeneralInfo->GetEnergyTimeSlope(); 
+  Double_t ESlope; // Mauro was using  5E-5 if no RUN dependent value is found, but here I'm changing parametrisation
+  if (fGeneralInfo->IsCalibTimeEnergyAvailable()){
+    ESlope = fGeneralInfo->GetCalibTimeEnergyFactor(); 
   } else {
-    ESlope = fGeneralInfo->GetGlobalTimeESlope(); // it might be the average value or an interpolation
+    ESlope = fGeneralInfo->GetGlobalTimeESlope(); 
   }
 
   Double_t TStart=0;
   Double_t TWidth=0;
-  if (fOfflineServer->isTimeAvailable(fEvent->RecoEvent->GetRunNumber())){
-    TStart = fOfflineServer->getBeamStart(fEvent->RecoEvent->GetRunNumber()); 
-    TWidth = fOfflineServer->getBunchLength(fEvent->RecoEvent->GetRunNumber()); 
+  if (fGeneralInfo->IsBunchLengthAvailable()){
+    TStart = fGeneralInfo->GetBeamStart(); 
+    TWidth = fGeneralInfo->GetBunchLength(); 
   } else {
-    TStart = fGeneralInfo->GetGlobalTimeStart();
-    TWidth = fGeneralInfo->GetGlobalTimeWidth();
+    TStart = fGeneralInfo->GetGlobalBunchTimeStart();
+    TWidth = fGeneralInfo->GetGlobalBunchTimeLength();
   }
-
 
   Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
 
@@ -98,10 +98,10 @@ Double_t ECalCalib::SetEScale(){
   if(fisMC) return -1;
   Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
 
-  Double_t EScale;
+  Double_t EScale; // Mauro was using 1.11398 if no RUN dependent value is found, I'm using 1
   
-  if(fOfflineServer->isCalibEnergyAvailable(fEvent->RecoEvent->GetRunNumber())) {
-    EScale = fOfflineServer->getCalibEnergyFactor(fEvent->RecoEvent->GetRunNumber());
+  if(fGeneralInfo->IsCalibEnergyAvailable()) {
+    EScale = fGeneralInfo->GetCalibEnergyFactor();
   }  
   else {
     EScale = fGeneralInfo->GetGlobalESlope();

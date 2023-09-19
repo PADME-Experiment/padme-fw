@@ -48,7 +48,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
   fGlobalESlope = 1.; // default energy fractional correction
   fGlobalTimeESlope = 0.; // default energy fractional correction as a function of the time within the burst
   fGlobalBunchTimeStart = -100.; // to be cross-checked
-  fGlobalBunchTimeLength = 150.; // to be cross-checked
+  fGlobalBunchTimeLength = 300.; // to be cross-checked
 
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
@@ -131,7 +131,7 @@ void GeneralInfo::EvalBeamProperties(){
   fBoostMom.SetXYZ(fCOGAtECal.X()-fRTarg.X(),fCOGAtECal.Y()-fRTarg.Y(),fCOGAtECal.Z()-fRTarg.Z());
   fBoostMom *= (fBeta/fBoostMom.Mag());
 
-  fRadiusMax = 304.5; // in the past, we used 300 mm
+  fRadiusMax = 270.;//304.5; // in the past, we used 300 mm
 
   // if K = RMax/D is the max tangent in the lab, pi/2 - t < q*/2 < t, where t = atan(gamma RMax/D) must be > pi/4
   // t = pi/4 if gam = 1/K, i.e. at ~ 150 MeV

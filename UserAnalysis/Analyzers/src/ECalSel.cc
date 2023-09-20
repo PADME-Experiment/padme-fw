@@ -152,6 +152,7 @@ Int_t ECalSel::OneClusSel(){
       tempClu[1] = fECal_clEvent->Element((int)isPaired);
       ECalSelEvent selev;
       selev.flagEv = ev_single;
+      selev.flagAlgo = estars;
       selev.indexECal[0] = h1;
       selev.indexECal[1] = isPaired;
       selev.indexECal[2] = -1;

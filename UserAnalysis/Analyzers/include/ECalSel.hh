@@ -16,11 +16,13 @@ class TRecoVObject;
 class TRecoVClusCollection;
 
 enum eventFlag{
-  ev_gg  = 0,
-  ev_ee  = 1,
+  ev_ggFromAngles  = 0,
+  ev_eeFromAngles  = 1,
   ev_ggg = 2,
   ev_eeg = 3,
-  ev_single = 4
+  ev_single = 4,
+  ev_ggFromEStar = 5,
+  ev_eeFromEStar = 6
 };
 
 struct ECalSelEvent{
@@ -69,6 +71,15 @@ private:
   Int_t OneClusSel();
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
+
+  // general cuts
+
+  double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)
+  double fMaxTimeDistance; // ns, two-cluster time distance
+  double fMinGGDistance; // mm, two-cluster minimum distance
+  double fSafeEnergyFactor; // safety factor allowing loosening of the min/max energy cuts used. If set to 1 -> default cuts are used
+  double fSafeSpaceMargin;// mm, safety margin used for the radius min cut    
+
 
   int fNThetaBins;
   double fThetaWid;

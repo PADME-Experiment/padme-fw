@@ -24,6 +24,14 @@ ECalSel::ECalSel(){
   fECal_hitEvent=0;  
   fVerbose        = 0;
   fECalEvents.clear();
+
+  // single cluster conditions
+  fTimeSafeMin = -1E10;// ns 
+  fMaxTimeDistance = 5; // ns, sigma = 1.6 ns
+  fMinGGDistance = 60; // mm
+  // kinematic conditions are run-dependent. 
+  fSafeEnergyFactor = 0.9; // Safety factor used for the energy min and max cuts
+  fSafeSpaceMargin = 21; // mm, safety margin used for the radius min cut    
 }
 
 ECalSel::~ECalSel(){}
@@ -74,7 +82,7 @@ Int_t ECalSel::OneClusSel(){
 
   //  int runID = fRecoEvent->GetRunNumber();
 
-  // selects isolated single clusters compatible with the e+e- --> e+ + small missing energy
+  // selects isolated single clusters compatible with the e+e- --> e+e- or gamma-gamma, to be used for tag & probe
   // returns the number of selected clusters
   // indices are in the vector of pairs fIndPair
 
@@ -86,8 +94,8 @@ Int_t ECalSel::OneClusSel(){
   const double radiusMin = 140; //mm
   //  const double radiusMax = 300; //mm
   
-  const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
-  const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
+  const double fTimeSafeMin = -1E10;//-110; // ns should do a time-dependent study
+  const double fMaxTimeDistance = 5; // ns, sigma = 1.6 ns
   const double minDistance = 125; // mm
   const double maxDistance = 145; // mm
   
@@ -105,13 +113,13 @@ Int_t ECalSel::OneClusSel(){
   for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
     tempClu[0] = fECal_clEvent->Element((int)h1);
     cluEnergy[0] = tempClu[0]->GetEnergy();
-    if (cluEnergy[0] < energyMax) continue; // cluster should be harder than the 2gamma cluster max energy
+    if (cluEnergy[0] < energyMax) continue; // cluster should be softer than the 2gamma cluster max energy
 
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-    if (cluPos[0].Perp() > radiusMin) continue; // cluster should be below the minimum radius of the 2gamma cluster pair
+    if (cluPos[0].Perp() > radiusMin) continue; // cluster should be above the minimum radius of the 2gamma cluster pair
 
     cluTime[0] = tempClu[0]->GetTime();
-    if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
+    if (cluTime[0] < fTimeSafeMin) continue; // require time in the safe region [TBchecked]
 
     fhSvcVal->FillHistoList("ECalSel",Form("ECal_SingleClu_dE"), fGeneralInfo->GetBeamMomentum()-cluEnergy[0], 1.);
 
@@ -122,19 +130,19 @@ Int_t ECalSel::OneClusSel(){
       tempClu[1] = fECal_clEvent->Element((int)h2);
       cluEnergy[1] = tempClu[1]->GetEnergy();
       cluTime[1] = tempClu[1]->GetTime();
-      if (cluTime[1] < timeSafeMin) continue;
+      if (cluTime[1] < fTimeSafeMin) continue;
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
       //      if (cluPos[1].Perp() > radiusMin) continue;
 
       double dt = cluTime[0]-cluTime[1];
       double dr = (cluPos[0]-cluPos[1]).Mag();
-      TVector3 cog = (cluEnergy[0]/(cluEnergy[0]+cluEnergy[1]))*cluPos[0]+(cluEnergy[1]/(cluEnergy[0]+cluEnergy[1]))*cluPos[1];
+      TVector3 cog = (cluEnergy[0]/(cluEnergy[0]+cluEnergy[1]))*cluPos[0]+(cluEnergy[1]/(cluEnergy[0]+cluEnergy[1]))*cluPos[1];// cog of the two clusters
       cog -= fGeneralInfo->GetCOG();
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2F"), cluEnergy[0]/fGeneralInfo->GetBeamMomentum() + cluEnergy[1]/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
-      if (fabs(dt) < maxTimeDistance && dr > minDistance && dr < maxDistance) {
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2F"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+      if (fabs(dt) < fMaxTimeDistance && dr > minDistance && dr < maxDistance) {
 	isPaired = h2;
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2FCut"), cluEnergy[0]/fGeneralInfo->GetBeamMomentum() + cluEnergy[1]/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2FCut"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
 
 	npaired++;
       }
@@ -168,10 +176,14 @@ Int_t ECalSel::OneClusSel(){
 
 
 Int_t ECalSel::TwoClusSel(){
+  const double deCutCenterX = 0; // MeV
+  const double deCutRadiusX = 15.; // MeV
+  const double deCutCenterY = 0; // MeV
+  const double deCutRadiusY = 15; // MeV
+  const double maxRCOG = 150.; // mm
+  const double sigmadphi = 0.1; // rad (possible double peak present)
 
   int nOld = fECalEvents.size();
-
-  //  int runID = fRecoEvent->GetRunNumber();
 
   // selects pairs of clusters compatible with the e+e- --> gamma-gamma/e+e- transition
   // returns the number of selected pairs
@@ -181,24 +193,6 @@ Int_t ECalSel::TwoClusSel(){
   long long int eventTime = static_cast<long long int>(evt.GetSec());
   long long int  deventTime = eventTime - fGeneralInfo->GetPeriodStartTime();// using the period start time and not the run start time <-- to be checked
 
-  // kinematic conditions might be run-dependent
-  const double safeFactor = 0.9;
-  //  const double safeMargin = 42.;// two crystals
-  const double energyMin = 90; //MeV
-  const double energyMax = 200; //MeV
-  const double radiusMin = 140; //mm
-  //  const double radiusMax = 300; //mm
-  
-  const double timeSafeMin = -1E10;//-110; // ns should do a time-dependent study
-  const double maxTimeDistance = 5; // ns, sigma = 1.6 ns
-  const double minGGDistance = 60; // mm
-  
-  const double deCutCenterX = 0; // MeV
-  const double deCutRadiusX = 15.; // MeV
-  const double deCutCenterY = 0; // MeV
-  const double deCutRadiusY = 15; // MeV
-  const double maxRCOG = 150.; // mm
-  const double sigmadphi = 0.1; // rad (possible double peak present)
 
 
   TRecoVCluster* tempClu[2];
@@ -216,7 +210,7 @@ Int_t ECalSel::TwoClusSel(){
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
     cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
-    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*safeFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/safeFactor) {
+    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*fSafeFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/fSafeFactor) {
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
     }    
@@ -228,24 +222,25 @@ Int_t ECalSel::TwoClusSel(){
   for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
     tempClu[0] = fECal_clEvent->Element((int)h1);
 
+    cluTime[0] = tempClu[0]->GetTime();
+    if (cluTime[0] < fTimeSafeMin) continue; // require time in the safe region [TBchecked]
     cluEnergy[0] = tempClu[0]->GetEnergy();
-    if (cluEnergy[0] < energyMin) continue; // require a minimum energy
-    if (cluEnergy[0] > energyMax) continue;
+    if (cluEnergy[0] < fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor) continue; // require a minimum energy
+    if (cluEnergy[0] > fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) continue; // require a maximum energy
 
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-    if (cluPos[0].Perp() < radiusMin) continue;
-
-    cluTime[0] = tempClu[0]->GetTime();
-    if (cluTime[0] < timeSafeMin) continue; // require time in the safe region [TBchecked]
+    if (cluPos[0].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
+    if (cluPos[0].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
 
 
     int isPaired = -1; // look for a gamma-gamma event, with loose conditions
 
     for (int h2=h1+1; h2< fECal_clEvent->GetNElements(); ++h2) {
       tempClu[1] = fECal_clEvent->Element((int)h2);
-      cluEnergy[1] = tempClu[1]->GetEnergy();
+
       cluTime[1] = tempClu[1]->GetTime();
-      if (cluTime[1] < timeSafeMin) continue;
+      if (cluTime[1] < fTimeSafeMin) continue;
+      cluEnergy[1] = tempClu[1]->GetEnergy();
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
 
       double dt = cluTime[0]-cluTime[1];
@@ -253,15 +248,17 @@ Int_t ECalSel::TwoClusSel(){
 
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
 
-      if (cluEnergy[1] < energyMin) continue; // require a minimum energy
-      if (cluEnergy[1] > energyMax) continue;
+      if (cluEnergy[1] < fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor) continue; // require a minimum energy
+      if (cluEnergy[1] > fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) continue; // require a maximum energy
 
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-      if (cluPos[1].Perp() < radiusMin) continue;
+      if (cluPos[1].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
+      if (cluPos[1].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
+
 
       fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DrVsDt", dt, dr, 1.);
 
-      if (fabs(dt) < maxTimeDistance && dr > minGGDistance) {
+      if (fabs(dt) < fMaxTimeDistance && dr > fMinGGDistance) {
 	if (isPaired == -1) isPaired = h2;
 	else { // more than 1 cluster found connected -> reject the event
 	  isPaired = -1;
@@ -271,33 +268,60 @@ Int_t ECalSel::TwoClusSel(){
     } // inner cluster loop
     
     if (isPaired != -1) { // fill plots if only one pair found
-      cluEnergy[0] = tempClu[0]->GetEnergy();//*tempCorr;
+      cluEnergy[0] = tempClu[0]->GetEnergy();
       cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
       tempClu[1] = fECal_clEvent->Element((int)isPaired);
-      cluEnergy[1] = tempClu[1]->GetEnergy();//*tempCorr;
+      cluEnergy[1] = tempClu[1]->GetEnergy();
       cluTime[1] = tempClu[1]->GetTime();
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
       cluPosRel[1] = cluPos[1] - fGeneralInfo->GetCOG();
       
-      double pg[2];
+      // evaluate expected energies in the lab frame
+      double pg[2], cosq[2];
+      TVector3 rPosCrossBoost[2];
+      TLorentzVector labMomenta[2], labMomentaCM[2];
       for (int i = 0; i<2; i++){
 	TVector3 rPos = cluPos[i]-fGeneralInfo->GetTargetPos();
-	double cosq = rPos.Dot(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
-	pg[i] = 0.5*fGeneralInfo->GetSqrts()/sqrt(1.-cosq*cosq + 
-						  pow(fGeneralInfo->GetGam()*cosq,2) - 
-						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq + 
+	rPos *= (cluEnergy[i]/rPos.Mag());
+	labMomenta[i].SetVectM(rPos,0.); // define a photon-like tlorentzVector
+	labMomentaCM[i].SetVectM(labMomenta[i].Vect(),0);
+	labMomentaCM[i].Boost(-fGeneralInfo->GetBoost());
+	cosq[i] = rPos.Dot(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
+	rPosCrossBoost[i] = rPos.Cross(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
+	pg[i] = 0.5*fGeneralInfo->GetSqrts()/sqrt(1.-cosq[i]*cosq[i] + 
+						  pow(fGeneralInfo->GetGam()*cosq[i],2) - 
+						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq[i] + 
 						  pow(fGeneralInfo->GetBG(),2) );
       }      
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHI"), 
+			       labMomentaCM[0].Vect().Theta()+labMomentaCM[1].Vect().Theta(), 
+			       labMomentaCM[0].Vect().Phi()+labMomentaCM[1].Vect().Phi(), 
+			       1.);
       
+
+      
+      // define an elliptical signal region
       double elli = 
 	(cluEnergy[0]-pg[0]-deCutCenterX)*(cluEnergy[0]-pg[0]-deCutCenterX)/(deCutRadiusX*deCutRadiusX) +
 	(cluEnergy[1]-pg[1]-deCutCenterY)*(cluEnergy[1]-pg[1]-deCutCenterY)/(deCutRadiusY*deCutRadiusY);
 
-      // plot elli vs dphi to better identify the signal
+      // plot  vs dphi to better identify the signal
       
-      double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
+      //      double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
+      double signPlane = -1;
+      if (rPosCrossBoost[0].Dot(rPosCrossBoost[1]) > 0) signPlane = 1;
+      double dphi = (
+		     (fGeneralInfo->GetGam()*cosq[0]-fGeneralInfo->GetBG())*
+		     (fGeneralInfo->GetGam()*cosq[1]-fGeneralInfo->GetBG()) +
+		     signPlane*sqrt(1.-cosq[0]*cosq[0])*sqrt(1-cosq[1]*cosq[1]))/
+	((fGeneralInfo->GetGam()-fGeneralInfo->GetBG()*cosq[0])*(fGeneralInfo->GetGam()-fGeneralInfo->GetBG()*cosq[1]));
+      if (fabs(dphi) > 1) {
+	std::cout << "ECalSel >> Inconsistent two-body kinematics " << dphi << " " << cosq[0] << " " << cosq[1] << " " << signPlane << std::endl;
+	break;
+      }
+      dphi = TMath::ACos(dphi);
 
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elli, dphi, 1.);
 
@@ -320,7 +344,7 @@ Int_t ECalSel::TwoClusSel(){
 
 	if (cog.Mod() < maxRCOG){
 	  ECalSelEvent selev;
-	  selev.flagEv = ev_gg;
+	  selev.flagEv = ev_ggFromEStar;
 	  selev.indexECal[0] = h1;
 	  selev.indexECal[1] = isPaired;
 	  selev.indexECal[2] = -1;
@@ -426,6 +450,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EVsT", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHI", 800, -4*TMath::Pi(),4*TMath::Pi(), 800, -4*TMath::Pi(), -4*TMath::Pi());
+
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
   fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",48,0,86400.,100,-200,200); //30-minute binning

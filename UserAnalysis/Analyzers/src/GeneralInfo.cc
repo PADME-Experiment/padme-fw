@@ -151,7 +151,7 @@ void GeneralInfo::EvalBeamProperties(){
 
 
 void GeneralInfo::PrintBeamProperties(int runID){
-  std::cout << "GeneralInfo: run-level info for run " << runID << std::endl;
+  std::cout << "GeneralInfo: run-level info for run " << runID ;
   std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fPeriodStartTime) << 
     " target = { "<< fRTarg.X()<< " , "<< fRTarg.Y() << " , " << fRTarg.Z() << " }; COG = { " << fCOGAtECal.X() << " , " << fCOGAtECal.Y() << " , "<< fCOGAtECal.Z() << " }" << 
     " sqrt(s) = " << fSqrts << " bg = " << fBG << " beta = " << fBeta <<

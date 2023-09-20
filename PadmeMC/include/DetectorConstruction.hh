@@ -26,6 +26,7 @@ class ETagDetector;
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
+class LeadGlassDetector;
 class TDumpDetector;
 class TPixDetector;
 class TungstenDetector;
@@ -120,6 +121,7 @@ private:
   PVetoDetector*    fPVetoDetector;
   EVetoDetector*    fEVetoDetector;
   HEPVetoDetector*  fHEPVetoDetector;
+  LeadGlassDetector* fLeadGlassDetector;
   TDumpDetector*    fTDumpDetector;
   TPixDetector*     fTPixDetector;
   TungstenDetector* fTungstenDetector;
@@ -138,6 +140,7 @@ private:
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;
+  G4int fEnableLeadGlass;
   G4int fEnableTDump;
   G4int fEnableTPix;
   G4int fEnableTungsten;

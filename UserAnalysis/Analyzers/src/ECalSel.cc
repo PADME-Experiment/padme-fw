@@ -210,7 +210,7 @@ Int_t ECalSel::TwoClusSel(){
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
     cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
-    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*fSafeFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/fSafeFactor) {
+    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) {
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
     }    
@@ -284,11 +284,18 @@ Int_t ECalSel::TwoClusSel(){
       for (int i = 0; i<2; i++){
 	TVector3 rPos = cluPos[i]-fGeneralInfo->GetTargetPos();
 	rPos *= (cluEnergy[i]/rPos.Mag());
+
+	// laboratory and cm momenta
 	labMomenta[i].SetVectM(rPos,0.); // define a photon-like tlorentzVector
 	labMomentaCM[i].SetVectM(labMomenta[i].Vect(),0);
 	labMomentaCM[i].Boost(-fGeneralInfo->GetBoost());
+
+	// cosine and sine with respect to the boost
 	cosq[i] = rPos.Dot(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
-	rPosCrossBoost[i] = rPos.Cross(fGeneralInfo->GetBoost())/(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
+	rPosCrossBoost[i] = rPos.Cross(fGeneralInfo->GetBoost());
+	rPosCrossBoost[i] *= 1./(rPos.Mag()*fGeneralInfo->GetBoost().Mag());
+
+	// energy expected in the lab
 	pg[i] = 0.5*fGeneralInfo->GetSqrts()/sqrt(1.-cosq[i]*cosq[i] + 
 						  pow(fGeneralInfo->GetGam()*cosq[i],2) - 
 						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq[i] + 
@@ -344,7 +351,8 @@ Int_t ECalSel::TwoClusSel(){
 
 	if (cog.Mod() < maxRCOG){
 	  ECalSelEvent selev;
-	  selev.flagEv = ev_ggFromEStar;
+	  selev.flagEv = ev_gg;
+	  selev.flagAlgo = estars;
 	  selev.indexECal[0] = h1;
 	  selev.indexECal[1] = isPaired;
 	  selev.indexECal[2] = -1;

@@ -16,17 +16,22 @@ class TRecoVObject;
 class TRecoVClusCollection;
 
 enum eventFlag{
-  ev_ggFromAngles  = 0,
-  ev_eeFromAngles  = 1,
+  ev_gg  = 0,
+  ev_ee  = 1,
   ev_ggg = 2,
   ev_eeg = 3,
-  ev_single = 4,
-  ev_ggFromEStar = 5,
-  ev_eeFromEStar = 6
+  ev_single = 4
 };
+
+enum algoFlag{
+  angles  = 0,
+  estars  = 1
+};
+
 
 struct ECalSelEvent{
   eventFlag flagEv;
+  algoFlag flagAlgo;
   int indexECal[3]; // indices of the ecal clusters selected
   double totalE;
   double avgT;

@@ -304,8 +304,8 @@ Int_t ECalSel::TwoClusSel(){
       }      
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHI"), 
-			       labMomentaCM[0].Vect().Theta()+labMomentaCM[1].Vect().Theta(), 
-			       labMomentaCM[0].Vect().Phi()+labMomentaCM[1].Vect().Phi(), 
+			       labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 
+			       labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi(), 
 			       1.);
       
 
@@ -459,9 +459,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EVsT", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHI", 800, -4*TMath::Pi(),4*TMath::Pi(), 800, -4*TMath::Pi(), -4*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHI", 800, -4*TMath::Pi(),4*TMath::Pi(), 800, -4*TMath::Pi(), 4*TMath::Pi());
 
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -0.5*TMath::Pi(), 0.5*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -TMath::Pi(), TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
   fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",48,0,86400.,100,-200,200); //30-minute binning
   fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",48,0,86400.,100,-200,200); //30-minute binning

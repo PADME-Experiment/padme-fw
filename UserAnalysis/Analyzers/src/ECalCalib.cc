@@ -51,8 +51,8 @@ Bool_t ECalCalib::InitHistos(){
   fHS->BookHistoList("ECalCalib","ETot2g"  ,hEBins,0.,hEMax);
   fHS->BookHistoList("ECalCalib","ETot2gCal"  ,hEBins,0.,hEMax);
 
-  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelBefore" ,100,-1.,2.,hEBins/2,0.,hEMax);
-  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelAfter" ,100,-1.,2.,hEBins/2,0.,hEMax);
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelBefore" ,100,-200.,700.,hEBins/2,0.,hEMax);
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelAfter"  ,100,-200.,700.,hEBins/2,0.,hEMax);
   return true;
 }
 
@@ -106,14 +106,14 @@ Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
     Double_t ETot = 
       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2gVsTrelBefore",(TAvg-TStart)/TWidth,ETot);
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelBefore",(TAvg-TStart),ETot);
   }
 
   // apply time-energy correction
 
   for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
     double eECal =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    double FracE = ESlope*(fEvent->ECalRecoCl->Element(ical)->GetTime() - TStart)/TWidth;
+    double FracE = ESlope*(fEvent->ECalRecoCl->Element(ical)->GetTime() - TStart);
 
     if(corrLevel) {
       eECal -= FracE*eECal;    
@@ -126,7 +126,7 @@ Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
     Double_t ETot = 
       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2gVsTrelAfter",(TAvg-TStart)/TWidth,ETot);
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelAfter",(TAvg-TStart),ETot);
   }
 
   return 1;
@@ -159,7 +159,7 @@ Int_t ECalCalib::CorrectEScale(Int_t corrLevel){
   for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     if(corrLevel) {
-      eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
+      if (EScale > 0) eECal /=  EScale;  //Data ECal energy Need the reco to be calibrated
       fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
     }
   }

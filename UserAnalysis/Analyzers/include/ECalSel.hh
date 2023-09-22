@@ -32,11 +32,11 @@ enum algoFlag{
 struct ECalSelEvent{
   eventFlag flagEv;
   algoFlag flagAlgo;
-  int indexECal[3]; // indices of the ecal clusters selected
+  int indexECal[3]; // indices of the ecal clusters selected (could become a std vector)
   double totalE;
   double avgT;
   TVector2 cog; // cog of the selected clusters
-  int indexETagAss[3]; // indices of the etag association [pointer to the association array]
+  int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 
 

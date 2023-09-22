@@ -8,7 +8,7 @@
 #include "ETagAn.hh" //TS
 #include "ECalCalib.hh"
 #include "NPoTAnalysis.hh" //MR
-#include "IsGGAnalysis.hh" //MR
+//#include "IsGGAnalysis.hh" //MR
 #include "Is22GGAnalysis.hh" //MR
 #include "Is3GAnalysis.hh" //MR
 #include "ETagAnalysis.hh" //AF
@@ -35,7 +35,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
   fETagAn  = ETagAn::GetInstance();
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
   fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
@@ -51,7 +51,7 @@ UserAnalysis::~UserAnalysis(){
   delete fGeneralInfo;
   delete fECalSel;
   delete fETagAn;
-  delete fIsGGAnalysis;
+  //  delete fIsGGAnalysis;
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
   delete fIs3GAnalysis;
@@ -72,7 +72,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   fGeneralInfo->Init(fEvent);
   fECalSel->Init(fEvent);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
   if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
   fIs22GGAnalysis->Init(fEvent);
   fIs3GAnalysis->Init(fEvent);
@@ -113,9 +113,10 @@ Bool_t UserAnalysis::Process(){
 
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fGeneralInfo->Process();
+  fECalCalib->Process(fEvent);
   fECalSel->Process();
   if (fETagHitsAvail) fETagAn->Process();
-  fIsGGAnalysis->Process();
+  //  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
   if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
@@ -178,7 +179,7 @@ Bool_t UserAnalysis::Finalize()
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
   if (fETagHitsAvail) fETagAn->Finalize();
-  fIsGGAnalysis->Finalize();
+  //  fIsGGAnalysis->Finalize();
   if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();
   fIs3GAnalysis->Finalize();

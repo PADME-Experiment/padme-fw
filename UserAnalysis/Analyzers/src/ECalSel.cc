@@ -32,6 +32,8 @@ ECalSel::ECalSel(){
   // kinematic conditions are run-dependent. 
   fSafeEnergyFactor = 0.9; // Safety factor used for the energy min and max cuts
   fSafeSpaceMargin = 21; // mm, safety margin used for the radius min cut    
+
+  fFillLocalHistograms = false;
 }
 
 ECalSel::~ECalSel(){}
@@ -42,6 +44,8 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
   fECal_clEvent = event->ECalRecoCl; 
   fGeneralInfo = GeneralInfo::GetInstance();
   fhSvcVal =  HistoSvc::GetInstance(); 
+
+  fFillLocalHistograms = false;
 
   // binning of theta vs phi to retrieve independently the beam direction
 
@@ -70,16 +74,19 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event){
 
 void ECalSel::ProcessForCalib(){
   fSafeEnergyFactor = 0.5; // Safety factor used for the energy min and max cuts
-  fSafeSpaceMargin = 42; // mm, safety margin used for the radius min and max cut    
+  fSafeSpaceMargin = 42; // 2 cells in mm, safety margin used for the radius min and max cut    
+  fFillLocalHistograms = false;
   fECalEvents.clear();
   TwoClusSel();
+  // here the tag and probe selection might be added
 }
 
 Bool_t ECalSel::Process(){
 
+  fSafeEnergyFactor = 0.7; // Safety factor used for the energy min and max cuts
+  fSafeSpaceMargin = 31.5; // 1.5 cells in mm, safety margin used for the radius min and max cut    
+  fFillLocalHistograms = true;
   fECalEvents.clear();
-  fSafeEnergyFactor = 0.9; // Safety factor used for the energy min and max cuts
-  fSafeSpaceMargin = 21; // mm, safety margin used for the radius min and max cut    
   TwoClusSel();
   OneClusSel();
 
@@ -122,20 +129,18 @@ Int_t ECalSel::OneClusSel(){
   for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
     tempClu[0] = fECal_clEvent->Element((int)h1);
     cluEnergy[0] = tempClu[0]->GetEnergy();
-    if (cluEnergy[0] > fGeneralInfo->GetEnergyMax()) continue; // cluster should be harder than the 2gamma cluster max energy
+    if (cluEnergy[0] < fGeneralInfo->GetEnergyMax()) continue; // cluster should be harder than the 2gamma cluster max energy
 
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-    if (cluPos[0].Perp() < fGeneralInfo->GetRadiusMin()) continue; // cluster should be below the minimum radius of the 2gamma cluster pair
+    if (cluPos[0].Perp() > fGeneralInfo->GetRadiusMin()) continue; // cluster should be below the minimum radius of the 2gamma cluster pair
 
     cluTime[0] = tempClu[0]->GetTime();
     if (cluTime[0] < fTimeSafeMin) continue; // require time in the safe region [TBchecked]
 
-    fhSvcVal->FillHistoList("ECalSel",Form("ECal_SingleClu_dE"), fGeneralInfo->GetBeamMomentum()-cluEnergy[0], 1.);
-
     int isPaired = -1; // look for an additional cluster from the same interaction
     int npaired = 0;
-    for (int h2=0; h2< fECal_clEvent->GetNElements(); ++h2) {
-      if (h1 == h2) continue;
+    for (int h2=h1+1; h2< fECal_clEvent->GetNElements(); ++h2) {
+
       tempClu[1] = fECal_clEvent->Element((int)h2);
       cluEnergy[1] = tempClu[1]->GetEnergy();
       cluTime[1] = tempClu[1]->GetTime();
@@ -147,15 +152,21 @@ Int_t ECalSel::OneClusSel(){
       TVector3 cog = (cluEnergy[0]/(cluEnergy[0]+cluEnergy[1]))*cluPos[0]+(cluEnergy[1]/(cluEnergy[0]+cluEnergy[1]))*cluPos[1];// cog of the two clusters
       cog -= fGeneralInfo->GetCOG(); // cog related to the average COG
 
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2F"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+      if (fFillLocalHistograms){
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_DrVsDtAll"), dt, dr, 1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2F"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+      }
       if (fabs(dt) < fMaxTimeDistance && dr > minDistance && dr < maxDistance) {
 	isPaired = h2;
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2FCut"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
+	if (fFillLocalHistograms)
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_E1F_vs_E2FCut"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
 
 	npaired++;
       }
     } // inner cluster loop    
+
+    if (fFillLocalHistograms)
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SingleClu_NPaired_vs_dE"), fGeneralInfo->GetBeamMomentum()-cluEnergy[0], npaired, 1.);
 
     if (npaired == 1){
       tempClu[1] = fECal_clEvent->Element((int)isPaired);
@@ -178,7 +189,7 @@ Int_t ECalSel::OneClusSel(){
 
 
 
-  fhSvcVal->FillHistoList("ECalSel","NumberOfSingleClus",fECalEvents.size()-nOld);
+  if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel","NumberOfSingleClus",fECalEvents.size()-nOld);
   return fECalEvents.size()-nOld;
 }
 
@@ -187,12 +198,11 @@ Int_t ECalSel::OneClusSel(){
 
 Int_t ECalSel::TwoClusSel(){
   // cuts for the energy-based selection
-  const double deCutCenterX = 0; // MeV
-  const double deCutRadiusX = 15.; // MeV
-  const double deCutCenterY = 0; // MeV
-  const double deCutRadiusY = 15; // MeV
-  const double maxRCOG = 150.; // mm
+  const double deCutCenter = 0;   // MeV 
+  const double deCutRadius = 15.; // MeV To be re-calibrated vs energy
   const double sigmadphi = 0.1; // rad (possible double peak present)
+
+  const double sigmadthetastar = 0.008;
 
   int nOld = fECalEvents.size();
 
@@ -240,11 +250,13 @@ Int_t ECalSel::TwoClusSel(){
     if (cluEnergy[0] > fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) continue; // require a maximum energy
 
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-    if (cluPos[0].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
-    if (cluPos[0].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
+    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
+    if (cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
+    if (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
 
 
-    int isPaired = -1; // look for a gamma-gamma event
+    int nPaired = 0; // number of paired clusters
+    int isPaired = -1; //index of paired cluster
 
     for (int h2=h1+1; h2< fECal_clEvent->GetNElements(); ++h2) {
       tempClu[1] = fECal_clEvent->Element((int)h2);
@@ -257,27 +269,27 @@ Int_t ECalSel::TwoClusSel(){
       double dt = cluTime[0]-cluTime[1];
       double dr = (cluPos[0]-cluPos[1]).Mag();
 
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
+      if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
 
       if (cluEnergy[1] < fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor) continue; // require a minimum energy
       if (cluEnergy[1] > fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) continue; // require a maximum energy
 
-      cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(),tempClu[1]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
-      if (cluPos[1].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
-      if (cluPos[1].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
+      cluPosRel[1] = cluPos[1]-fGeneralInfo->GetCOG();
 
+      if (cluPosRel[1].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin) continue; // require a minimum radius at the ECAL
+      if (cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMax()) continue; // require a maximum radius at the ECAL, should we use a margin here as well?
 
-      fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DrVsDt", dt, dr, 1.);
+      if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DrVsDt", dt, dr, 1.);
 
       if (fabs(dt) < fMaxTimeDistance && dr > fMinGGDistance) {
-	if (isPaired == -1) isPaired = h2;
-	else { // more than 1 cluster found connected -> reject the event
-	  isPaired = -1;
-	  break;
-	}
+	if (nPaired == 0) isPaired = h2;
+	else isPaired = -1;      // more than 1 cluster found connected -> reject the event
+	nPaired++;
       }
     } // inner cluster loop
     
+    if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel","ECal_SC_NPaired", nPaired, 1.);
+
     // Having found a cluster pair, check the kinematics
 
     if (isPaired != -1) { // fill plots if only one pair found
@@ -317,18 +329,25 @@ Int_t ECalSel::TwoClusSel(){
 						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq[i] + 
 						  pow(fGeneralInfo->GetBG(),2) );
       }      
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs"), 
-			       fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi()), 
-			       labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 
-			       1.);
-      
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[0], cluEnergy[0]-pg[0], 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[1], cluEnergy[1]-pg[1], 1.);
 
+      if (fFillLocalHistograms){
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs"), 
+				 fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi()), 
+				 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      }
       
       // define an elliptical signal region for the energy-based selection
-      double elli = 
-	(cluEnergy[0]-pg[0]-deCutCenterX)*(cluEnergy[0]-pg[0]-deCutCenterX)/(deCutRadiusX*deCutRadiusX) +
-	(cluEnergy[1]-pg[1]-deCutCenterY)*(cluEnergy[1]-pg[1]-deCutCenterY)/(deCutRadiusY*deCutRadiusY);
+      double elliEnergy = 
+	TMath::Power((cluEnergy[0]-pg[0]-deCutCenter)/deCutRadius,2) +
+	TMath::Power((cluEnergy[1]-pg[1]-deCutCenter)/deCutRadius,2) ;
+
+      // define an elliptical signal region for the angle-based selection
+      double elliAngle = 
+	TMath::Power((fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi())- TMath::Pi())/sigmadphi,2) + 
+	TMath::Power((labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta()  - TMath::Pi())/sigmadphi,2) ;
       
       //      double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
       double signPlane = -1;
@@ -344,10 +363,9 @@ Int_t ECalSel::TwoClusSel(){
       }
       dphi = TMath::ACos(dphi);
 
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elli, dphi, 1.);
+      if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elliEnergy, dphi, 1.);
 
-
-      if (elli < 4 && TMath::Abs(dphi/sigmadphi) < 3) {
+      if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
 	
 	TVector2 cog(
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).X()/(cluEnergy[0]+cluEnergy[1]),
@@ -363,78 +381,77 @@ Int_t ECalSel::TwoClusSel(){
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
 
-	if (cog.Mod() < maxRCOG){
-	  ECalSelEvent selev;
-	  selev.flagEv = ev_gg;
-	  selev.flagAlgo = estars;
-	  selev.indexECal[0] = h1;
-	  selev.indexECal[1] = isPaired;
-	  selev.indexECal[2] = -1;
-	  selev.totalE = cluEnergy[0] + cluEnergy[1];
-	  selev.avgT = 0.5*(cluTime[0]+cluTime[1]);
-	  selev.cog.Set(cog.X(),cog.Y());
-	  selev.indexETagAss[0] = -1;
-	  selev.indexETagAss[1] = -1;
-	  selev.indexETagAss[2] = -1;
-	  fECalEvents.push_back(selev);
+	ECalSelEvent selev;
+	selev.flagEv = ev_gg;
+	selev.flagAlgo = estars;
+	selev.indexECal[0] = h1;
+	selev.indexECal[1] = isPaired;
+	selev.indexECal[2] = -1;
+	selev.totalE = cluEnergy[0] + cluEnergy[1];
+	selev.avgT = 0.5*(cluTime[0]+cluTime[1]);
+	selev.cog.Set(cog.X(),cog.Y());
+	selev.indexETagAss[0] = -1;
+	selev.indexETagAss[1] = -1;
+	selev.indexETagAss[2] = -1;
+	fECalEvents.push_back(selev);
 
-	  TLorentzVector photonMom[2];
-	  for (int j=0; j<2; j++) {
-	    TVector3 rPos = cluPos[j]-fGeneralInfo->GetTargetPos();
-	    rPos *= (cluEnergy[j]/rPos.Mag());
-	    photonMom[j].SetXYZT(rPos.X(),rPos.Y(),rPos.Z(),cluEnergy[j]);
+	TLorentzVector photonMom[2];
+	for (int j=0; j<2; j++) {
+	  TVector3 rPos = cluPos[j]-fGeneralInfo->GetTargetPos();
+	  rPos *= (cluEnergy[j]/rPos.Mag());
+	  photonMom[j].SetXYZT(rPos.X(),rPos.Y(),rPos.Z(),cluEnergy[j]);
+	}
+
+	// Fill plots to check energy and radius range
+
+	for (int kk = 0; kk < 2; kk++){
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_E_Radius"), cluPosRel[kk].Perp(), tempClu[kk]->GetEnergy());
+	  fhSvcVal->FillHistoList("ECalSel",Form("ECal_RadiusECut"),
+				  (cluPosRel[kk].Perp()-fGeneralInfo->GetRadiusMin())/(fGeneralInfo->GetRadiusMax()-fGeneralInfo->GetRadiusMin()));
+	  fhSvcVal->FillHistoList("ECalSel",Form("ECal_ERCut"),
+				  (tempClu[kk]->GetEnergy()-fGeneralInfo->GetEnergyMin())/(fGeneralInfo->GetEnergyMax()-fGeneralInfo->GetEnergyMin()));
+
+	  int xbin = (cluPos[kk].X() - fXMin)/fXW;
+	  int ybin = (cluPos[kk].Y() - fYMin)/fYW;
+	  if (xbin < 0 || xbin >= fNXBins){
+	    std::cout << "X value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
+	    break;
 	  }
-
-    // Fill plots to check energy and radius range
-
-	  for (int kk = 0; kk < 2; kk++){
-	    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_E_Radius"), cluPosRel[kk].Perp(), tempClu[kk]->GetEnergy());
-	    fhSvcVal->FillHistoList("ECalSel",Form("ECal_RadiusECut"),
-				    (cluPosRel[kk].Perp()-fGeneralInfo->GetRadiusMin())/(fGeneralInfo->GetRadiusMax()-fGeneralInfo->GetRadiusMin()));
-	    fhSvcVal->FillHistoList("ECalSel",Form("ECal_ERCut"),
-				    (tempClu[kk]->GetEnergy()-fGeneralInfo->GetEnergyMin())/(fGeneralInfo->GetEnergyMax()-fGeneralInfo->GetEnergyMin()));
-
-	    int xbin = (cluPos[kk].X() - fXMin)/fXW;
-	    int ybin = (cluPos[kk].Y() - fYMin)/fYW;
-	    if (xbin < 0 || xbin >= fNXBins){
-	      std::cout << "X value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
-	      break;
-	    }
-	    if (ybin < 0 || ybin >= fNYBins){
-	      std::cout << "Y value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
-	      continue;
-	    }
+	  if (ybin < 0 || ybin >= fNYBins){
+	    std::cout << "Y value out of range " << cluPos[kk].X() << " " << cluPos[kk].Y() << std::endl;
+	    continue;
+	  }
 	    
-	    TString hname = Form("EExpVsEX_%d_Y_%d",xbin+1,ybin+1);
-	    fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
-	  }
+	  TString hname = Form("EExpVsEX_%d_Y_%d",xbin+1,ybin+1);
+	  fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
+	}
 
-    // evaluate best boost direction
+	// evaluate best boost direction
 
-	  for (int ith = 0; ith<fNThetaBins; ith++){ // loop on theta
-	    double thetaRot = fThetaWid*(ith+0.5);
-	    for (int iph = 0; iph<fNPhiDirBins; iph++){ // loop on phi
-	      double phiRot = fPhiDirWid*(iph+0.5);
-	      TVector3 trialBoost(fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Cos(phiRot),
-				  fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Sin(phiRot),
-				  fGeneralInfo->GetBoost().Mag()*TMath::Cos(thetaRot)); 
-	      trialBoost *= -1;
-	      TLorentzVector pgstar[2];
-	      for (int j=0; j<2; j++) {
-		pgstar[j].SetXYZT(photonMom[j].X(),photonMom[j].Y(),photonMom[j].Z(),photonMom[j].E());
-		pgstar[j].Boost(trialBoost);
-	      }
+	for (int ith = 0; ith<fNThetaBins; ith++){ // loop on theta
+	  double thetaRot = fThetaWid*(ith+0.5);
+	  for (int iph = 0; iph<fNPhiDirBins; iph++){ // loop on phi
+	    double phiRot = fPhiDirWid*(iph+0.5);
+	    TVector3 trialBoost(fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Cos(phiRot),
+				fGeneralInfo->GetBoost().Mag()*TMath::Sin(thetaRot)*TMath::Sin(phiRot),
+				fGeneralInfo->GetBoost().Mag()*TMath::Cos(thetaRot)); 
+	    trialBoost *= -1;
+	    TLorentzVector pgstar[2];
+	    for (int j=0; j<2; j++) {
+	      pgstar[j].SetXYZT(photonMom[j].X(),photonMom[j].Y(),photonMom[j].Z(),photonMom[j].E());
+	      pgstar[j].Boost(trialBoost);
+	    }
 
-	      double cosRel = pgstar[0].Vect().Dot(pgstar[1].Vect())/(pgstar[0].E()*pgstar[1].E());	
+	    double cosRel = pgstar[0].Vect().Dot(pgstar[1].Vect())/(pgstar[0].E()*pgstar[1].E());	
 
-	      fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
-	      if (cosRel < -0.998) {
-		fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRun",thetaRot,phiRot,1.); 
-	      }
+	    fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
+	    if (cosRel < -0.998) {
+	      fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRun",thetaRot,phiRot,1.); 
 	    }
 	  }
+	}
 
-	} 
+
       }
     } // isPaired
   } // cluster loop
@@ -461,7 +478,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel","ECal_RadiusECut", 100,-1.5,1.5);
   fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
   
-  fhSvcVal->BookHistoList("ECalSel","ECal_SingleClu_dE", 200,-100.,100.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_NPaired_vs_dE", 200,-100.,100.,10,0,10);
   double LMax = TMath::Sqrt((fXMax-fXMin)*(fXMax-fXMin)+(fYMax-fYMin)*(fYMax-fYMin));
   fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_E1F_vs_E2F"   , 400,0.,4.,100,0.,LMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SingleClu_E1F_vs_E2FCut", 400,0.,4.,100,0.,LMax);
@@ -471,6 +488,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EVsT", 800, -400,400, 200, 0, 600.);
+
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_NPaired", 10, 0., 10.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DEVsE", 100, 100,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHIAbs", 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
 

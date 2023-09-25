@@ -80,6 +80,10 @@ private:
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
 
+  // general setup
+
+  bool fFillLocalHistograms;
+
   // general cuts
 
   double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)

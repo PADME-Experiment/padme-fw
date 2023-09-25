@@ -50,6 +50,9 @@ protected:
 public:
   ~ECalSel();
   static ECalSel* GetInstance();
+  // special process modes
+  void ProcessForCalib();
+
 
 private:
   static ECalSel* fInstance;

@@ -21,6 +21,7 @@ DigitizerChannelReco::~DigitizerChannelReco(){;}
 
 
 void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *cfg){
+  ChannelVReco::Init(gMode, cfg);
 
   fGlobalMode = gMode;
   std::string name;
@@ -35,24 +36,6 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
     hListCal->Add(hPedCalo[kk]);
   }*/
   
-  fTimeBin        = cfg->GetParOrDefault("ADC","TimeBin",1.);
-  fVoltageBin     = cfg->GetParOrDefault("ADC","VoltageBin",0.000244);
-  fImpedance      = cfg->GetParOrDefault("ADC","InputImpedance",50.);
-
-  fSignalWidth    = cfg->GetParOrDefault("RECO","SignalWindow",1024);
-  fPedOffset      = cfg->GetParOrDefault("RECO","PedestalOffset",100);
-  
-  fPreSamples     = cfg->GetParOrDefault("RECO","SignalPreSamples",1024);
-  fPostSamples    = cfg->GetParOrDefault("RECO","SignalPostSamples",1024);
-  fPedMaxNSamples = cfg->GetParOrDefault("RECO","NumberOfSamplesPedestal",100);  
-
-  fMinAmplitude    = cfg->GetParOrDefault("RECO","MinAmplitude",10);
-  fAmpThresholdLow = cfg->GetParOrDefault("RECO","AmplThrLow",10.);
-  fAmpThresholdHigh= cfg->GetParOrDefault("RECO","AmplThrHigh",20.);
-
-
-  fMultihit       = cfg->GetParOrDefault("RECO","Multihit",0); //if MultiHit=1, Peaks finding with TSpectrum
-  fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
 
 
  fUsePulseProcessing  = cfg->GetParOrDefault("RECO","UsePulseProcessing",1);
@@ -62,7 +45,6 @@ void DigitizerChannelReco::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig
  fDPParameterR1       = cfg->GetParOrDefault("RECO","fDPParameterR1",650.);
  fDPParameterR2       = cfg->GetParOrDefault("RECO","fDPParameterR2",100.);
  fDPParameterC        = cfg->GetParOrDefault("RECO","fDPParameterC",0.030e-9);
- fmVtoMeV             = cfg->GetParOrDefault("RECO","ConversionFactor",29.52);
 
 
 
@@ -413,8 +395,10 @@ void DigitizerChannelReco::Reconstruct(std::vector<TRecoVHit *> &hitArray){
     SetAbsSignals();
   }
 
-  if(fMultihit) {
+  if(fMultihit==1) { // TSpectrum
     ReconstructMultiHit(hitArray);
+  } else if(fMultihit==2){
+    ReconstructMultiHitSignalDeconvolution(hitArray);
   } else {
     CalcMaximum();
     //    std::cout<<" fIMax =  "<<fIMax << " Amplitude   " << fPed - fMax <<std::endl;

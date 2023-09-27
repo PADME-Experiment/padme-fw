@@ -65,6 +65,10 @@ namespace utl{
         fWhat=fn+":"+std::to_string(ln)+" Syntax error. Empty group name is not allowed.";
         return *this;
       }
+      ConfigParser_except& UnsupportedType(){
+        fWhat="Unsupported type";
+        return *this;
+      }
       ConfigParser_except& FileNotFound(const std::string&fn){
         fWhat="File not found '"+fn+"'.";
         return *this;
@@ -84,6 +88,36 @@ namespace utl{
       bool                     IsSingleArgConfig(const std::string&grp,const std::string& cfg)const;
       void                     Print       ()const;
       const conf_group_t&      GetGroup    (const std::string& str);
+
+      template <typename T>
+        std::vector<T> GetConfigVector(const std::string&grp,const std::string&par)const{
+          std::vector<T> vv;
+          auto in = GetConfig(grp, par);
+          for(auto it=in.begin(); it!=in.end(); it++){
+            if(     std::is_same_v<T, int          >) vv.push_back(atoi (it->c_str()));
+            else if(std::is_same_v<T, long int     >) vv.push_back(atol (it->c_str()));
+            else if(std::is_same_v<T, long long int>) vv.push_back(atoll(it->c_str()));
+            else if(std::is_same_v<T, float        >) vv.push_back(atof (it->c_str()));
+            else if(std::is_same_v<T, double       >) vv.push_back(atof (it->c_str()));
+            else
+              throw ConfigParser_except().UnsupportedType();
+          }
+          return vv;
+        }
+
+      template <typename T>
+        T GetConfigSingle(const std::string&grp,const std::string&par)const{
+          T vv;
+          auto in = GetSingleArg(grp, par);
+          if(     std::is_same_v<T, int          >) vv=atoi (in.c_str());
+          else if(std::is_same_v<T, long int     >) vv=atol (in.c_str());
+          else if(std::is_same_v<T, long long int>) vv=atoll(in.c_str());
+          else if(std::is_same_v<T, float        >) vv=atof (in.c_str());
+          else if(std::is_same_v<T, double       >) vv=atof (in.c_str());
+          else
+            throw ConfigParser_except().UnsupportedType();
+          return vv;
+        }
     protected:
       std::string fFileName;
       std::map<std::string,conf_group_t> fConfigLines;

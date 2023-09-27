@@ -16,7 +16,6 @@ public:
   DigitizerChannelReco(){;};
   virtual ~DigitizerChannelReco();
 
-  virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   virtual void Reconstruct(std::vector<TRecoVHit *> &hitArray);
   virtual void Init(PadmeVRecoConfig *cfg){return ;}
   virtual void Init(GlobalRecoConfigOptions *gOptions, PadmeVRecoConfig *cfg);
@@ -38,8 +37,6 @@ public:
   
 private:
   //What do we operate
-  UShort_t fNSamples;
-  Short_t *fSamples;
   Short_t fMax;
   Short_t fIMax;
   Double_t fPed;
@@ -47,14 +44,7 @@ private:
   Double_t fTime;
   UShort_t fNPedSamples;
 
-  //Configuration variables
-  Int_t fSignalWidth;
-  Int_t fPreSamples;
-  Int_t fPostSamples;
-  Int_t fPedOffset; 
-  Int_t fPedMaxNSamples;
-  
-  Int_t fMinAmplitude;
+
 
   TH1D *H1;
   
@@ -62,18 +52,12 @@ private:
   Double_t fSignalThreshold;
   Double_t fSignalPercentage;
   
-  Double_t fTimeBin;
-  Double_t fVoltageBin;
-  Double_t fImpedance;
   Double_t fAmpli;
-  Double_t fmVtoMeV;
   Double_t fEnergy;
 
   Double_t fAmpThresholdLow;
   Double_t fAmpThresholdHigh;
 
-  Bool_t fMultihit;
-  Bool_t fUseAbsSignals;
 
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;

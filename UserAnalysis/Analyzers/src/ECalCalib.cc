@@ -60,6 +60,8 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
   fEvent = event;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
   //  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
+  Int_t NEvent = fEvent->RecoEvent->GetEventNumber();
+  if(!fisMC && NEvent%10000==0) cout<<"ECalCalib NEvent "<<NEvent<<endl;
 
   fNPairs = NClusterPairSimpleSelection();
   CorrectETimeSlope(0); //fill plots before and after time-energy slope correction

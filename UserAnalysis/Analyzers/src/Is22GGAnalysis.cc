@@ -240,8 +240,12 @@ Bool_t Is22GGAnalysis::Process(){
   Int_t NGoodClusters = (Int_t) EGoodCluster.size();
   //  cut at at least two good clusters
   if(NGoodClusters<2) return false;
-  if(NGoodClusters>10) cout<<"Crazy amount of Good clusters "<<NGoodClusters<<endl;
   fHS->FillHistoList("GGAnalysis","NClusters_AfterPresel",NClusters,1.);
+  if(NGoodClusters>10) {
+     cout<<"Crazy amount of Good clusters "<<NGoodClusters<<endl;
+     return false;
+  }
+
   Int_t NPairs = 0;
   Double_t Zv=0;
   Double_t Dist=0;
@@ -340,7 +344,7 @@ Bool_t Is22GGAnalysis::Process(){
       bool G2Check_Displaced = CheckThetaAngle(EGoodCluster[kk],Angle1);
       //      cout<<"Angle "<<Angle<<" Angle1 "<<Angle1<<" ZV "<<Zv<<endl;
       
-      if(G1Check_Displaced && G2Check_Displaced & abs(EGoodCluster[kk]+EGoodCluster[jj]-fBeamE)/14<3){ 
+      if(G1Check_Displaced && G2Check_Displaced && abs(EGoodCluster[kk]+EGoodCluster[jj]-fBeamE)/14<3){ 
       	fHS->FillHistoList("GGAnalysis","ZVertex_EnnvsTheta_displaced",Zv,1);
       }
       NPairs++;      

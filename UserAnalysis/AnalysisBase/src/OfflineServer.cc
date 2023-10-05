@@ -25,6 +25,9 @@ OfflineServer::OfflineServer()
   runIndex = new int[MAXRUNNR];
   for (int i=0; i<MAXRUNNR; i++) runIndex[i] = -1;
 
+  float tempQuadTL, tempQuadTR, tempQuadBR, tempQuadBL;
+  float corrQuadTL, corrQuadTR, corrQuadBR, corrQuadBL;
+
   RunInfo rInfo;
 
   while ( !inputDBFile.eof() ) { // keep reading until end-of-file
@@ -32,7 +35,21 @@ OfflineServer::OfflineServer()
       rInfo.RunID >> rInfo.runStartTime  >> rInfo.runStopTime >> rInfo.DHSTB01Energy >> 
       rInfo.DHSTB02Energy >> rInfo.nFiles >> rInfo.runPOT >> 
       rInfo.bunchLength >> rInfo.beamStart >> rInfo.tgx >> rInfo.tgy >> rInfo.cogx >> rInfo.cogy >> 
-      rInfo.calibEnergyFactor >> rInfo.calibTimeEnergyFactor; // sets EOF flag if no value found
+      rInfo.calibEnergyFactor >> rInfo.calibTimeEnergyFactor >>
+      tempQuadTL >> corrQuadTL >> 
+      tempQuadTR >> corrQuadTR >> 
+      tempQuadBR >> corrQuadBR >>
+      tempQuadBL >> corrQuadBL; // sets EOF flag if no value found
+
+    rInfo.quadrantTemperature[0] = tempQuadTL;
+    rInfo.quadrantTemperature[1] = tempQuadTR;
+    rInfo.quadrantTemperature[2] = tempQuadBR;
+    rInfo.quadrantTemperature[3] = tempQuadBL;
+
+    rInfo.quadrantTempCorr[0] = corrQuadTL;
+    rInfo.quadrantTempCorr[1] = corrQuadTR;
+    rInfo.quadrantTempCorr[2] = corrQuadBR;
+    rInfo.quadrantTempCorr[3] = corrQuadBL;
 
     // evaluate availability of input information
     rInfo.retrieveStatus = 0;
@@ -46,7 +63,8 @@ OfflineServer::OfflineServer()
     if (TMath::Abs(rInfo.cogx) > 0 && TMath::Abs(rInfo.cogy) > 0) rInfo.retrieveStatus |= (1<<kCOG);
     if (rInfo.calibEnergyFactor > 0) rInfo.retrieveStatus |= (1<<kCalibEnergy);
     if (rInfo.calibTimeEnergyFactor > 0) rInfo.retrieveStatus |= (1<<kCalibTimeEnergy);
-
+    if (rInfo.quadrantTemperature[0] > 0 && rInfo.quadrantTemperature[1] > 0 && rInfo.quadrantTemperature[2] > 0 && rInfo.quadrantTemperature[3] > 0) 
+      rInfo.retrieveStatus |= (1<<kTemperature); // all quadrant temperatures should be available
 
   // populate structure
     runInfos.push_back(rInfo);

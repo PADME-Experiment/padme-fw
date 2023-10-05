@@ -16,6 +16,7 @@
 #define kCOG 6 // bit to define availability of run beam-average position at ECal
 #define kCalibEnergy 7 // bit to define availability of run energy calibration factor
 #define kCalibTimeEnergy 8 // bit to define availability of run energy time calibration factor
+#define kTemperature 9 // bit to define availability of run quadrant-wise temperatures
 
 
 struct RunInfo{
@@ -34,6 +35,8 @@ struct RunInfo{
   float cogy; // mm, average y position of COG at ECal
   float calibEnergyFactor; //a.u. calibration constant to be multiplied to the cluster energy, so to obtain the corrected energy
   float calibTimeEnergyFactor; //a.u. calibration factor to be multiplied to the fractional time of the cluster with respect to the burst start, so to obtain the corrected energy
+  float quadrantTemperature[4]; //degrees: top left, top right, bottom right, bottom left as seen from FRONT
+  float quadrantTempCorr[4]; // corrections obtained from a ref. temp and a constant (37.1, 0.95 ?)
   int retrieveStatus; // word with bits to signal availability of information
 };
   
@@ -63,6 +66,8 @@ public:
   float getCOGYAvg(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).cogy;} //mm
   float getCalibEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibEnergyFactor;} //a.u.
   float getCalibTimeEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibTimeEnergyFactor;} //a.u.
+  float getQuadrantTemperature(int runID, int quad){if (runIndex[runID] == -1 || quad < 0 || quad > 3) {return 0;} return runInfos.at(runIndex[runID]).quadrantTemperature[quad];} //a.u.
+  float getQuadrantTempCorr(int runID, int quad){if (runIndex[runID] == -1 || quad < 0 || quad > 3) {return 0;} return runInfos.at(runIndex[runID]).quadrantTempCorr[quad];} //a.u.
 
   bool isTimeAvailable(int runID){       if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTimeBit);} 
   bool isEnergyAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEnergy);} 
@@ -73,7 +78,8 @@ public:
   bool isCOGAvailable(int runID){        if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCOG);} 
   bool isCalibEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibEnergy);} 
   bool isCalibTimeEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibTimeEnergy);} 
-
+  bool isTemperatureAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTemperature);}
+  
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures
   std::vector<RunInfo> runInfos; // vector of runInfo structures

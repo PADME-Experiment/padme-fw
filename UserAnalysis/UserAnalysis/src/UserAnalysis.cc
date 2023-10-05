@@ -10,7 +10,7 @@
 #include "NPoTAnalysis.hh" //MR
 //#include "IsGGAnalysis.hh" //MR
 #include "Is22GGAnalysis.hh" //MR
-#include "Is3GAnalysis.hh" //MR
+//#include "Is3GAnalysis.hh" //MR
 #include "ETagAnalysis.hh" //AF
 #include "MCTruth.hh"     //MR
 #include "HistoSvc.hh"
@@ -38,7 +38,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
-  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+//  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 
   fETagHitsAvail = kFALSE;
   fETagClusAvail = kFALSE;
@@ -54,7 +54,7 @@ UserAnalysis::~UserAnalysis(){
   //  delete fIsGGAnalysis;
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
-  delete fIs3GAnalysis;
+//  delete fIs3GAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
@@ -75,7 +75,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   //  fIsGGAnalysis->Init(fEvent);
   if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
   fIs22GGAnalysis->Init(fEvent);
-  fIs3GAnalysis->Init(fEvent);
+//  fIs3GAnalysis->Init(fEvent);
   return true;
 }
 
@@ -118,7 +118,7 @@ Bool_t UserAnalysis::Process(){
   if (fETagHitsAvail) fETagAn->Process();
   //  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
-  fIs3GAnalysis->Process();   
+//  fIs3GAnalysis->Process();   
   if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
 
   /*
@@ -182,7 +182,7 @@ Bool_t UserAnalysis::Finalize()
   //  fIsGGAnalysis->Finalize();
   if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();
-  fIs3GAnalysis->Finalize();
+//  fIs3GAnalysis->Finalize();
 
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};

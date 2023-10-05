@@ -82,6 +82,8 @@ void ECalSel::ProcessForCalib(){
 }
 
 Bool_t ECalSel::Process(){
+  Int_t NEvent = fRecoEvent->GetEventNumber();
+  if(NEvent%10000==0) cout<<"ECalSel NEvent "<<NEvent<<endl;
 
   fSafeEnergyFactor = 0.7; // Safety factor used for the energy min and max cuts
   fSafeSpaceMargin = 31.5; // 1.5 cells in mm, safety margin used for the radius min and max cut    
@@ -346,8 +348,8 @@ Int_t ECalSel::TwoClusSel(){
 
       // define an elliptical signal region for the angle-based selection
       double elliAngle = 
-	TMath::Power((fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi())- TMath::Pi())/sigmadphi,2) + 
-	TMath::Power((labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta()  - TMath::Pi())/sigmadphi,2) ;
+	TMath::Power((fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi())- TMath::Pi())/sigmadthetastar,2) + 
+	TMath::Power((labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta()  - TMath::Pi())/sigmadthetastar,2) ;
       
       //      double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
       double signPlane = -1;
@@ -363,7 +365,10 @@ Int_t ECalSel::TwoClusSel(){
       }
       dphi = TMath::ACos(dphi);
 
-      if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elliEnergy, dphi, 1.);
+      if (fFillLocalHistograms) {
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elliEnergy, dphi, 1.);
+	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_ElliAngle_ElliEnergy"), elliEnergy, elliAngle, 1.);
+      }
 
       if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
 	
@@ -494,7 +499,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHIAbs", 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
 
-  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,20, 100, -TMath::Pi(), TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,40, 100, -TMath::Pi(), TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel","ECal_ElliAngle_ElliEnergy", 200,0.,40., 200, 0.,40.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
   fhSvcVal->BookHisto2List("ECalSel","ECalX_vs_Time",48,0,86400.,100,-200,200); //30-minute binning
   fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",48,0,86400.,100,-200,200); //30-minute binning

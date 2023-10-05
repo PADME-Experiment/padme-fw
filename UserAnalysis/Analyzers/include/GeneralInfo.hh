@@ -37,6 +37,8 @@ public:
   inline TVector3 GetCOG() const {return fCOGAtECal;}
   inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
   inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
+  inline double GetQuadrantTemperature(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTemperature[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
+  inline double GetQuadrantTempCorr(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTempCorr[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
 
   // methods giving availability of original information
 
@@ -46,7 +48,7 @@ public:
   bool IsBunchLengthAvailable(){return fIsBunchLengthAvailable;} 
   bool IsCalibEnergyAvailable(){return fIsCalibEnergyAvailable;} 
   bool IsCalibTimeEnergyAvailable(){return fIsCalibTimeEnergyAvailable;} 
-
+  bool IsTemperatureAvailable(){return fIsTemperatureAvailable;}
 
   // derived beam kinematics
   inline double GetBeamEnergy() const {return fE;}
@@ -91,6 +93,9 @@ private:
   double fCalibEnergyFactor;
   double fCalibTimeEnergyFactor;
 
+  double fQuadrantTemperature[4];
+  double fQuadrantTempCorr[4];
+
   // availability of original information
 
   bool fIsEnergyAvailable;
@@ -99,6 +104,7 @@ private:
   bool fIsBunchLengthAvailable;
   bool fIsCalibEnergyAvailable;
   bool fIsCalibTimeEnergyAvailable; 
+  bool fIsTemperatureAvailable;
 
   // global quantities
 

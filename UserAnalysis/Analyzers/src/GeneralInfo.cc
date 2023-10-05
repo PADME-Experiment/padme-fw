@@ -38,6 +38,8 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
     fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
   }
 
+
+
   fXTarg = 0.;    // default
   fYTarg = 0.;    // default
   fZTarg = -1028; // was -1030 originally but set at -1028 after the 2020 survey
@@ -50,13 +52,23 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
   fGlobalBunchTimeStart = -100.; // to be cross-checked
   fGlobalBunchTimeLength = 300.; // to be cross-checked
 
+  fQuadrantTemperature[0] = 37.1; // degrees
+  fQuadrantTemperature[1] = 37.1; // degrees
+  fQuadrantTemperature[2] = 37.1; // degrees
+  fQuadrantTemperature[3] = 37.1; // degrees
+  fQuadrantTempCorr[0] = 0.0; // correction
+  fQuadrantTempCorr[1] = 0.0; // correction
+  fQuadrantTempCorr[2] = 0.0; // correction
+  fQuadrantTempCorr[3] = 0.0; // correction
+
+
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
   fIsCOGAvailable = kFALSE;
   fIsBunchLengthAvailable = kFALSE;
   fIsCalibEnergyAvailable = kFALSE;
   fIsCalibTimeEnergyAvailable = kFALSE; 
-
+  fIsTemperatureAvailable = kFALSE;
   
   EvalBeamProperties();
 
@@ -107,6 +119,12 @@ Bool_t GeneralInfo::Process(){
     fIsCalibTimeEnergyAvailable = fOfflineServerDB->isCalibTimeEnergyAvailable(runID);
     // might interpolate if info not available
 
+    for (int quad = 0; quad < 4; quad++){
+      fQuadrantTemperature[quad] = fOfflineServerDB->getQuadrantTemperature(runID, quad);
+      fQuadrantTempCorr[quad] = fOfflineServerDB->getQuadrantTempCorr(runID, quad);
+    }
+    fIsTemperatureAvailable = fOfflineServerDB->isTemperatureAvailable(runID);
+
     EvalBeamProperties();
     PrintBeamProperties(runID);
     fRunOld = runID;
@@ -155,5 +173,7 @@ void GeneralInfo::PrintBeamProperties(int runID){
   std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fPeriodStartTime) << 
     " target = { "<< fRTarg.X()<< " , "<< fRTarg.Y() << " , " << fRTarg.Z() << " }; COG = { " << fCOGAtECal.X() << " , " << fCOGAtECal.Y() << " , "<< fCOGAtECal.Z() << " }" << 
     " sqrt(s) = " << fSqrts << " bg = " << fBG << " beta = " << fBeta <<
-    " energyRange = { " << fEnergyMin << " , " << fEnergyMax << " }; radiusRange = { " << fRadiusMin << " , " << fRadiusMax << " }" << std::endl;
+    " energyRange = { " << fEnergyMin << " , " << fEnergyMax << " }; radiusRange = { " << fRadiusMin << " , " << fRadiusMax << " }" << 
+    " Temp per quad[deg]: " << fQuadrantTemperature[0] << " , " << fQuadrantTemperature[1] << " , " << fQuadrantTemperature[2] << " , " << fQuadrantTemperature[3] <<
+    std::endl;
 }

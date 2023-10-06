@@ -25,7 +25,8 @@ enum eventFlag{
 
 enum algoFlag{
   angles  = 0,
-  estars  = 1
+  estars  = 1,
+  tagAndProbe = 2
 };
 
 
@@ -77,6 +78,7 @@ protected:
 private:
   Int_t TwoClusSel();
   Int_t OneClusSel();
+  Int_t OneClusTagAndProbeSel();
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
 

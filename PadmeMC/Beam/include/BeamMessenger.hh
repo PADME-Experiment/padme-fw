@@ -80,6 +80,8 @@ private:
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 
   G4UIcmdWithABool* fEnableCalibRunCmd;
+  G4UIcmdWithAString* fSetCalibRunDetectorCmd;
+  G4UIcmdWithAString* fSetCalibRunParticleCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunEnergyCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterXCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterYCmd;

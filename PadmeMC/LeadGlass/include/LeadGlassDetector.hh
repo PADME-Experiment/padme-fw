@@ -9,9 +9,11 @@
 #define LeadGlassDetector_H 1
 
 #include "globals.hh"
-#include "G4LogicalVolume.hh"
 
-//#include "LeadGlassMessenger.hh"
+class G4LogicalVolume;
+class LeadGlassMessenger;
+
+#include "LeadGlassGeometry.hh"
 
 class LeadGlassDetector
 {
@@ -26,12 +28,14 @@ public:
 
   G4LogicalVolume* GetLeadGlassLogicalVolume() { return fLeadGlassVolume; }
 
+  G4double GetLeadGlassFrontFaceZ() { return LeadGlassGeometry::GetInstance()->GetLeadGlassFrontFacePosZ(); }
+
 private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fLeadGlassVolume;
 
-  //LeadGlassMessenger* fLeadGlassMessenger;
+  LeadGlassMessenger* fLeadGlassMessenger;
 
 };
 

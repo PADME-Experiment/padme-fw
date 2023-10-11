@@ -29,12 +29,6 @@ LeadGlassGeometry::LeadGlassGeometry()
   fLeadGlassDigitizerName = "LeadGlassDigitizer";
   fLeadGlassSensitiveDetectorName = "LeadGlassSD";
 
-  // Some block building parameters
-  fWrapFrontHole = 1.35 * cm;
-  fWrapThick = 0.07 * mm;
-  fGlueThick = 0.2 * mm;
-  fAirThick = 0.2 * mm;
-
   // Opal id of different blocks
   fBlockOpalId[0] = 7;
   fBlockOpalId[1] = 8;

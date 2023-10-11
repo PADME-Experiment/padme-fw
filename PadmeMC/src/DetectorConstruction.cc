@@ -897,8 +897,16 @@ G4double DetectorConstruction::GetECalFrontFaceZ()
 {
   if (fEnableECal) return fECalDetector->GetECalFrontFaceZ();
 
-  // ECal is disabled (?): return a position 300cm after the nominal position of the target
+  // ECal is disabled: return its default position
   return 230.*cm;
+}
+
+G4double DetectorConstruction::GetLeadGlassFrontFaceZ()
+{
+  if (fEnableLeadGlass) return fLeadGlassDetector->GetLeadGlassFrontFaceZ();
+
+  // LeadGlass is disabled: return its default position
+  return 310.*cm;
 }
 
 

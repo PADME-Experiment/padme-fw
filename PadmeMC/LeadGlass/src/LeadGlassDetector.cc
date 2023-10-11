@@ -17,10 +17,12 @@
 #include "G4VisAttributes.hh"
 #include "G4DigiManager.hh"
 #include "G4SubtractionSolid.hh"
+#include "G4LogicalVolume.hh"
 
+#include "LeadGlassMessenger.hh"
 #include "LeadGlassGeometry.hh"
 #include "LeadGlassBlock.hh"
-//#include "LeadGlassSD.hh"
+#include "LeadGlassSD.hh"
 //#include "LeadGlassDigitizer.hh"
 
 LeadGlassDetector::LeadGlassDetector(G4LogicalVolume* motherVolume)
@@ -28,13 +30,13 @@ LeadGlassDetector::LeadGlassDetector(G4LogicalVolume* motherVolume)
 {
 
   // Connect to LeadGlassMessenger to enable datacard configuration
-  //fLeadGlassMessenger = new LeadGlassMessenger(this);
+  fLeadGlassMessenger = new LeadGlassMessenger(this);
 
 }
 
 LeadGlassDetector::~LeadGlassDetector()
 {
-  //delete fLeadGlassMessenger;
+  delete fLeadGlassMessenger;
 }
 
 void LeadGlassDetector::CreateGeometry()
@@ -60,15 +62,15 @@ void LeadGlassDetector::CreateGeometry()
   printf("Registering LeadGlass Digitizer %s\n",LeadGlassDName.data());
   LeadGlassDigitizer* LeadGlassD = new LeadGlassDigitizer(LeadGlassDName);
   theDM->AddNewModule(LeadGlassD);
-
-  // Make whole LeadGlass a sensitive detector
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String etagSDName = geo->GetLeadGlassSensitiveDetectorName();
-  printf("Registering LeadGlass SD %s\n",etagSDName.data());
-  LeadGlassSD* etagSD = new LeadGlassSD(etagSDName);
-  sdMan->AddNewDetector(etagSD);
-  fLeadGlassBarVolume->SetSensitiveDetector(etagSD);
-  fLeadGlassShortBarVolume->SetSensitiveDetector(etagSD);
-  //  fLeadGlassVolume->SetSensitiveDetector(etagSD);
   */
+
+  // Make whole LeadGlass (PbGl block and light guide) a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String leadglassSDName = geo->GetLeadGlassSensitiveDetectorName();
+  printf("Registering LeadGlass SD %s\n",leadglassSDName.data());
+  LeadGlassSD* leadglassSD = new LeadGlassSD(leadglassSDName);
+  sdMan->AddNewDetector(leadglassSD);
+  lgBlock->GetPbGlBlockLogicalVolume()->SetSensitiveDetector(leadglassSD);
+  lgBlock->GetLightGuideLogicalVolume()->SetSensitiveDetector(leadglassSD);
+
 }

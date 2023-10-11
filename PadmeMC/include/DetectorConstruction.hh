@@ -98,6 +98,7 @@ public:
 
   // Return some global information used by beam generator
   G4double GetECalFrontFaceZ();
+  G4double GetLeadGlassFrontFaceZ();
   G4double GetTargetFrontFaceZ();
   G4double GetTargetThickness();
 

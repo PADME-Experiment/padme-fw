@@ -37,7 +37,10 @@ public:
   LeadGlassBlock(G4int);
   ~LeadGlassBlock();
 
-  G4LogicalVolume* GetBlockLogicalVolume() { return fLogicalVolume; }
+  G4LogicalVolume* GetBlockLogicalVolume() { return fLogicalVolume; } // Full block LV, used for positioning
+
+  G4LogicalVolume* GetPbGlBlockLogicalVolume() { return fPbGlBlockLogicalVolume; } // PbGl LV, used for SD
+  G4LogicalVolume* GetLightGuideLogicalVolume() { return fLightGuideLogicalVolume; } // LightGuide LV, used for SD
 
   G4int GetBlockOpalId() { return fBlockOpalId; };
 
@@ -81,8 +84,10 @@ private:
   // Fix G4Trap parameters to guarantee planarity of side faces
   void TrapParamAdjustment(const double (&in)[11], double (&out)[11]);
 
-  // Block logical volume
+  // Complete block logical volume
   G4LogicalVolume* fLogicalVolume;
+  G4LogicalVolume* fPbGlBlockLogicalVolume;
+  G4LogicalVolume* fLightGuideLogicalVolume;
 
   // Id of block (internal identifier)
   G4int fBlockId;

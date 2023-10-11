@@ -114,7 +114,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
     char cmd[100];
     BeamParameters* bpar = BeamParameters::GetInstance();
     if (bpar->CalibrationRun()) {
-      sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! gamma @ %.0f MeV",bpar->GetCalibRunEnergy()/MeV);
+      //sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! gamma @ %.0f MeV",bpar->GetCalibRunEnergy()/MeV);
+      sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! %s @ %.0f MeV on %s",bpar->GetCalibRunParticle().data(),bpar->GetCalibRunEnergy()/MeV,bpar->GetCalibRunDetector().data());
     } else {
       sprintf(cmd,"/vis/scene/add/text2D -0.95 -0.95 20 ! ! %d e+ @ %.0f MeV",bpar->GetNPositronsPerBunch(),bpar->GetBeamMomentum()/MeV);
     }

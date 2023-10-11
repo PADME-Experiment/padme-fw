@@ -58,12 +58,6 @@ public:
   G4double GetLightGuideZLength(const G4int id) { return fLightGuideZLength[id]; }
   G4double GetLightGuideDiameter(const G4int id) { return fLightGuideDiameter[id]; }
 
-  G4double GetCathodeDiameter(const G4int id) { return GetLightGuideDiameter(id) * 0.95; }
-  G4double GetWrapFrontHole(const G4int) { return fWrapFrontHole; }
-  G4double GetWrapThick(const G4int) { return fWrapThick; }
-  G4double GetGlueThick(const G4int) { return fGlueThick; }
-  G4double GetAirThick(const G4int) { return fAirThick; }
-
   G4double GetMuMetalZLength(const G4int id) { return fMuMetalZLength[id]; }
   G4double GetMuMetalDiameter(const G4int id) { return fMuMetalDiameter[id]; }
   G4double GetMuMetalThickness(const G4int id) { return fMuMetalThickness[id]; }
@@ -74,6 +68,11 @@ public:
   G4double GetLeadGlassFrontFacePosZ() { return fLeadGlassFrontFacePosZ; }
   void SetLeadGlassFrontFacePosZ(G4double z) { fLeadGlassFrontFacePosZ = z; }
   
+  // Enable/disable full simulation
+  void EnableFullSimulation() { fFullSimulation = true; }
+  void DisableFullSimulation() { fFullSimulation = false; }
+  G4bool IsFullSimulation() { return fFullSimulation; }
+
   // Get name of LeadGlass digitizer
   G4String GetLeadGlassDigitizerName() { return fLeadGlassDigitizerName; }
 
@@ -99,16 +98,14 @@ private:
   G4double fMuMetalDiameter[NUMBER_OF_BLOCK_SHAPES];     // u-metal cylinder external diameter
   G4double fMuMetalThickness[NUMBER_OF_BLOCK_SHAPES];    // u-metal cylinder thickness
   G4double fSteelSlabThickness[NUMBER_OF_BLOCK_SHAPES];  // Steel slab thickness
-  G4double fWrapFrontHole;  // diameter of the hole in the small wrapping face
-  G4double fWrapThick;      // wrap thickness
-  G4double fAirThick;       // air thickness between leadglass and wrapping
-  G4double fGlueThick;      // glue thickness betwen leadglass and metal plate
 
   G4int fVerbose; // Verbose level
 
   G4int fDetectorSetup;
 
   G4double fLeadGlassFrontFacePosZ; // Position along Z axis of LeadGlass front face
+
+  G4bool fFullSimulation; // If false: hit=particle then StopAndKill; if true: full shower simulation
 
   G4String fLeadGlassSensitiveDetectorName;
   G4String fLeadGlassDigitizerName;

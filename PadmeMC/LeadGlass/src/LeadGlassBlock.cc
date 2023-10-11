@@ -116,13 +116,15 @@ LeadGlassBlock::LeadGlassBlock(G4int blockId)
     new G4LogicalVolume(solidPbGl, G4Material::GetMaterial("Air"), "PbGl", 0, 0, 0);
 
   // Create PbGl block logical volume
-  G4LogicalVolume *logicPbGlBlock = new G4LogicalVolume(
+  //G4LogicalVolume *logicPbGlBlock = new G4LogicalVolume(
+  fPbGlBlockLogicalVolume = new G4LogicalVolume(
     solidPbGlBlock, G4Material::GetMaterial("LAV_PbGl_SF57"), "PbGlBlock", 0, 0, 0);
 
   // Create LightGuide logical volume
   G4Tubs *solidLightGuide = new G4Tubs("lightguide", 0. * cm, 0.5 * fLightGuideDiam,
                                        0.5 * fLightGuideZLen, 0. * rad, 2. * M_PI * rad);
-  G4LogicalVolume *logicLightGuide = new G4LogicalVolume(
+  //G4LogicalVolume *logicLightGuide = new G4LogicalVolume(
+  fLightGuideLogicalVolume = new G4LogicalVolume(
     solidLightGuide, G4Material::GetMaterial("LAV_PbGl_SF57"), "LightGuide", 0, 0, 0);
 
   // Create steel slab with hole for mu-metal
@@ -147,13 +149,17 @@ LeadGlassBlock::LeadGlassBlock(G4int blockId)
   //
 
   // Block has same coordinate system as main logical volume
-  new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicPbGlBlock, "LG_PbGlBlock", fLogicalVolume,
+  //new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), logicPbGlBlock, "LG_PbGlBlock", fLogicalVolume,
+  //                  false, 0, checkOverlaps);
+  new G4PVPlacement(0, G4ThreeVector(0., 0., 0.), fPbGlBlockLogicalVolume, "LG_PbGlBlock", fLogicalVolume,
                     false, 0, checkOverlaps);
 
   // Position of lightguide cylinder
   G4ThreeVector posLightGuide =
     pbglCenterOfBackFace + G4ThreeVector(0., 0., -0.5 * fLightGuideZLen);
-  new G4PVPlacement(0, posLightGuide, logicLightGuide, "LG_PbGlLightGuide", fLogicalVolume, false,
+  //new G4PVPlacement(0, posLightGuide, logicLightGuide, "LG_PbGlLightGuide", fLogicalVolume, false,
+  //                  0, checkOverlaps);
+  new G4PVPlacement(0, posLightGuide, fLightGuideLogicalVolume, "LG_PbGlLightGuide", fLogicalVolume, false,
                     0, checkOverlaps);
 
   // Position of steel slab (already computed)
@@ -172,8 +178,10 @@ LeadGlassBlock::LeadGlassBlock(G4int blockId)
 
   // PbGl is white
   G4VisAttributes *PbGlVisAtt = new G4VisAttributes(G4Colour(1., 1., 1.));
-  logicPbGlBlock->SetVisAttributes(PbGlVisAtt);
-  logicLightGuide->SetVisAttributes(PbGlVisAtt);
+  //logicPbGlBlock->SetVisAttributes(PbGlVisAtt);
+  //logicLightGuide->SetVisAttributes(PbGlVisAtt);
+  fPbGlBlockLogicalVolume->SetVisAttributes(PbGlVisAtt);
+  fLightGuideLogicalVolume->SetVisAttributes(PbGlVisAtt);
 
   // Steel slab is dark grey
   G4VisAttributes *SteelVisAtt = new G4VisAttributes(G4Colour(0.3, 0.3, 0.3));
@@ -183,27 +191,6 @@ LeadGlassBlock::LeadGlassBlock(G4int blockId)
   G4VisAttributes *MuMetalVisAtt = new G4VisAttributes(G4Colour(0.1, 0.1, 0.1));
   logicMuMetal->SetVisAttributes(MuMetalVisAtt);
 
-  /*
-  //------------- Sensitive detectors --------------------------
-
-  // Associate PbGl block and lightguide to LAV sensitive detector
-  G4String LAVCollectionName = geoParams->GetLAVCollectionName();
-  G4SDManager *SDMan = G4SDManager::GetSDMpointer();
-  G4String LAVSensitiveDetectorName = geoParams->GetLAVFastSensitiveDetectorName();
-  LAVSD *LavSD = static_cast<LAVSD *>(SDMan->FindSensitiveDetector(LAVSensitiveDetectorName));
-  if(!LavSD) {
-    LavSD = new LAVSD(LAVSensitiveDetectorName, LAVCollectionName);
-    SDMan->AddNewDetector(LavSD);
-  }
-  LavSD->GetOptTrack()->UseMatrix();
-  LavSD->SetHierarchy(1);
-  logicPbGlBlock->SetSensitiveDetector(LavSD);
-  logicLightGuide->SetSensitiveDetector(LavSD);
-}
-
-LeadGlassBlock::~LeadGlassBlock() {
-  delete fLogicalVolume;
-  */
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

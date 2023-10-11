@@ -219,7 +219,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 
   fSetCalibRunParticleCmd = new G4UIcmdWithAString("/beam/calib_particle",this);
   fSetCalibRunParticleCmd->SetParameterName("CPar",false);
-  fSetCalibRunDetectorCmd->SetCandidates("gamma e+ e-");
+  fSetCalibRunParticleCmd->SetCandidates("gamma e+ e-");
   fSetCalibRunParticleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetCalibRunEnergyCmd = new G4UIcmdWithADoubleAndUnit("/beam/calib_energy",this);

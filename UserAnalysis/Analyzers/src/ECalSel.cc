@@ -239,6 +239,36 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
 
     fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DEVsE_radiusSel"), pg, cluEnergy[0]-pg, 1.);
 
+
+    double e55 = 0;
+    double e33 = 0;
+    double etot = 0;
+    double seedEnergy = fECal_hitEvent->Hit(tempClu[0]->GetSeed())->GetEnergy();
+    TVector3 seedPos =  fECal_hitEvent->Hit(tempClu[0]->GetSeed())->GetPosition();
+    for (int hh=0; hh<tempClu[0]->GetNHitsInClus(); hh++){
+      TRecoVHit* hitclu = fECal_hitEvent->Hit(tempClu[00]->GetHitVecInClus().at(hh));
+      TVector3 hitPos = hitclu->GetPosition();
+      double distx = hitPos.X()-seedPos.X();
+      double disty = hitPos.Y()-seedPos.Y();
+      // ooo
+      // oxo
+      // ooo
+      if (fabs(distx) < 33 && fabs(disty) < 33) e33 += hitclu->GetEnergy();
+      // ooooo
+      // ooooo
+      // ooxoo
+      // ooooo
+      // ooooo
+      if (fabs(distx) < 55 && fabs(disty) < 55) e55 += hitclu->GetEnergy();
+      etot += hitclu->GetEnergy();
+    }
+
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DE33VsE_radiusSel"), pg, e33-pg, 1.);
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DE55VsE_radiusSel"), pg, e55-pg, 1.);
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DETOTVsE_radiusSel"), pg, etot-pg, 1.);
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DETOTVsN_radiusSel"), tempClu[0]->GetNHitsInClus(), etot-pg, 1.);
+
+
     if (cluEnergy[0] < fGeneralInfo->GetEnergyMin()) continue; // cluster should be within the 2gamma cluster energy range
     if (cluEnergy[0] > fGeneralInfo->GetEnergyMax()) continue; // cluster should be within the 2gamma cluster energy range
 
@@ -490,6 +520,12 @@ Int_t ECalSel::TwoClusSel(){
       }
 
       if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
+	for (int kk=0; kk<2; kk++){
+	  double seedEnergy = fECal_hitEvent->Hit(tempClu[kk]->GetSeed())->GetEnergy();
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_Eseed_vs_Eexp"), pg[kk], seedEnergy, 1.);
+	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_NHits_vs_Eexp"), pg[kk], tempClu[kk]->GetNHitsInClus(), 1.);
+	  
+	}
 	
 	TVector2 cog(
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).X()/(cluEnergy[0]+cluEnergy[1]),
@@ -548,6 +584,7 @@ Int_t ECalSel::TwoClusSel(){
 	    
 	  TString hname = Form("EExpVsEX_%d_Y_%d",xbin+1,ybin+1);
 	  fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
+
 	}
 
 	// evaluate best boost direction
@@ -601,6 +638,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_E_Radius", 100,0.,TMath::Sqrt(fXMax*fXMax+fYMax*fYMax),100,0,500.);
   fhSvcVal->BookHistoList("ECalSel","ECal_RadiusECut", 100,-1.5,1.5);
   fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_Eseed_vs_Eexp", 100, 0, 400., 100., 0., 200.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_SC_NHits_vs_Eexp", 100, 0, 400., 50., 0., 50.);
 
   // single clusters from beam brems
   
@@ -615,6 +654,10 @@ Bool_t ECalSel::InitHistos()
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DEVsE_noSel", 100, 100,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DEVsE_radiusSel", 100, 100,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DE33VsE_radiusSel", 100, 100,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DE55VsE_radiusSel", 100, 100,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DETOTVsE_radiusSel", 100, 100,400, 800, -400, 400.);
+  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DETOTVsN_radiusSel", 50, 0,50, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DEVsE_energySel", 100, 100,400, 800, -400, 400.);
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DrVsDtAll", 800, -400,400, 200, 0, 600.);
@@ -623,6 +666,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_NPaired_vs_dE", 200,-100.,100.,10,0,10);
   fhSvcVal->BookHistoList("ECalSel","NumberOfTPClus", 10,0.,10.);
 
+  // two-cluster sel
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);
@@ -640,6 +684,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECalY_vs_Time",48,0,86400.,100,-200,200); //30-minute binning
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_YX", fNXBins*10,fXMin,fXMax, fNYBins*10,fYMin,fYMax);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_EExpVsE", 800, 0,400, 400, 0, 400.);
+
   fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);
 
   fhSvcVal->BookHisto2List("ECalSel","DPhiVsRotVsRunCos",fNThetaBins,0,fNThetaBins*fThetaWid,fNPhiDirBins,0,2*TMath::Pi()); //to be done run-wise: first read runID, then book

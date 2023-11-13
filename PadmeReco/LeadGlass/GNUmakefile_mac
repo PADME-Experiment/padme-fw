@@ -1,0 +1,6 @@
+# Makefile
+
+NAME := LeadGlass
+
+#include ../config/global.gmk
+include ../mkconfig/subdirs_mac.gmk

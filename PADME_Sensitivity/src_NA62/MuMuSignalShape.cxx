@@ -14,8 +14,6 @@
 #include "TMath.h"
 #include <math.h>
 
-using namespace std;
-
 ClassImp(MuMuSignalShape);
 
 MuMuSignalShape::MuMuSignalShape(const char *name, const char *title, RooAbsReal &_x,
@@ -34,14 +32,11 @@ Double_t MuMuSignalShape::evaluate() const {
   if (x < xMin) return 0.;
   if (x > xMax) return 0.;
 
-  return TMath::Exp(-0.5*(x-mean)*(x-mean)/(sigma*sigma)); //il valore di f(x) se la funzione è una gaussiana con media mean e sigma sigma. non l'integrale, ma il valore in un punto 
-  //  per comodità la pdf gaussiana è ovviamente normalizzata ad 1, per cui in x=mean MuMuSignalShape::evaluate() restituisce 1
+  return TMath::Exp(-0.5*(x-mean)*(x-mean)/(sigma*sigma));
 }
 
 Int_t MuMuSignalShape::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet& analVars, const char* /*rangeName*/) const{
-  if (matchArgs(allVars, analVars, x)){
-    return 1;
-  }
+  if (matchArgs(allVars, analVars, x)) return 1;
   return 0;
 }
 

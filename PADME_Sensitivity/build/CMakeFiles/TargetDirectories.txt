@@ -1,7 +1,0 @@
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/MainObjLib.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/Persistency.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/PersistencyDICT.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/roofit_full.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/srcObjLib.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/truesrc.dir
-/home/mancinima/padme-fw/PADME_Sensitivity/build/CMakeFiles/truesrc-static.dir

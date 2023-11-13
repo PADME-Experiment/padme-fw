@@ -14,25 +14,22 @@
 #include "TMath.h"
 #include <math.h>
 
-using namespace std;
-
 ClassImp(MuMuBkgShape);
 
 MuMuBkgShape::MuMuBkgShape(const char *name, const char *title, RooAbsReal &_x,
-                           const RooArgList &_coeffs, RooAbsReal &_xMin, RooAbsReal &_xMax)
+                           const RooArgList &_coeffs, RooAbsReal &_xMin,
+                           RooAbsReal &_xMax)
     : RooAbsPdf(name, title), x("x", "x", this, _x),
-      coeffs("coeffs", "coeffs", this), xMin("xMin", "xMin", this, _xMin), xMax("xMax", "xMax", this,_xMax) { //coeffs non ha una variabile _coef perché è una lista e viene letta tutta insieme
-  for (int i = 0; i < _coeffs.getSize(); ++i) {
-  RooAbsArg* coef = _coeffs.at(i);
-  if (!static_cast<RooAbsReal *>(coef)) {
-    cout << "MuMuBkgShape::ctor(" << GetName() << ") ERROR: coefficient "
-              << coef->GetName() << " is not of type RooAbsReal "
-              << endl;
-    R__ASSERT(0);
+      coeffs("coeffs", "coeffs", this), xMin("xMin", "xMin", this, _xMin), xMax("xMax", "xMax", this,_xMax) {
+  for (auto *coef : _coeffs) {
+    if (!dynamic_cast<RooAbsReal *>(coef)) {
+      std::cout << "MuMuBkgShape::ctor(" << GetName() << ") ERROR: coefficient "
+                << coef->GetName() << " is not of type RooAbsReal "
+                << std::endl;
+      R__ASSERT(0);
+    }
+    coeffs.add(*coef);
   }
-  coeffs.add(*coef);
-}
-
 }
 
 MuMuBkgShape::MuMuBkgShape(const MuMuBkgShape &other, const char *name)
@@ -40,7 +37,7 @@ MuMuBkgShape::MuMuBkgShape(const MuMuBkgShape &other, const char *name)
       coeffs("coeffs", this, other.coeffs), xMin("xMin", this, other.xMin),
       xMax("xMax", this, other.xMax) {}
 
-Double_t MuMuBkgShape::evaluate() const { //nell'header è introdotta la funzione evaluate, qui viene definito come si calcola il valore della pdf in un punto
+Double_t MuMuBkgShape::evaluate() const {
   if (x < xMin)
     return 0.;
   if (x > xMax)
@@ -64,13 +61,17 @@ Double_t MuMuBkgShape::evaluate() const { //nell'header è introdotta la funzion
   return result;
 }
 
-Int_t MuMuBkgShape::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const { 
+Int_t MuMuBkgShape::getAnalyticalIntegral(RooArgSet &allVars,
+                                          RooArgSet &analVars,
+                                          const char * /*rangeName*/) const {
+
   if (matchArgs(allVars, analVars, x))
-    return 1; // dice che se l'unica variabile di integrazione è la x, allora la pdf può essere integrata con la classe "analyticaIntegral" lo calcoliamo
+    return 1;
   return 0;
 }
 
-double MuMuBkgShape::analyticalIntegral(Int_t code, const char *rangeName) const {
+double MuMuBkgShape::analyticalIntegral(Int_t code,
+                                        const char *rangeName) const {
   R__ASSERT(code == 1);
 
   const double xlo = 0.;
@@ -97,3 +98,18 @@ double MuMuBkgShape::analyticalIntegral(Int_t code, const char *rangeName) const
   norm *= xMax-xMin;
   return norm;
 }
+
+// void MuMuBkgShape::computeBatch(cudaStream_t* stream, double* output, size_t
+// nEvents, RooFit::Detail::DataMap const& dataMap) const
+// {
+//   const int nCoef = _coefList.size();
+//   std::vector<double> extraArgs(nCoef+2);
+//   for (int i=0; i<nCoef; i++)
+//     extraArgs[i] = static_cast<RooAbsReal&>(_coefList[i]).getVal();
+//   extraArgs[nCoef] = _x.min();
+//   extraArgs[nCoef+1] = _x.max();
+
+//   auto dispatch = stream ? RooBatchCompute::dispatchCUDA :
+//   RooBatchCompute::dispatchCPU; dispatch->compute(stream,
+//   RooBatchCompute::Bernstein, output, nEvents, {dataMap.at(_x)}, extraArgs);
+// }

@@ -1,2 +1,0 @@
-/cvmfs/sft.cern.ch/lcg/releases/binutils/2.28-a983d/x86_64-centos7/bin/ar cr libtruesrc-static.a  CMakeFiles/srcObjLib.dir/src/GlobalParams.cxx.o CMakeFiles/srcObjLib.dir/src/MuMuSignalShape.cxx.o CMakeFiles/srcObjLib.dir/src/StatisticsModel.cxx.o CMakeFiles/srcObjLib.dir/src/ChannelModel.cxx.o CMakeFiles/srcObjLib.dir/src/MuMuBkgShape.cxx.o
-/cvmfs/sft.cern.ch/lcg/releases/binutils/2.28-a983d/x86_64-centos7/bin/ranlib libtruesrc-static.a

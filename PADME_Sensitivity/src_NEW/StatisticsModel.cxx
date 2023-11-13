@@ -17,41 +17,37 @@
 using namespace std;
 
 StatisticsModel::StatisticsModel(global_config &cfg)
-    : invariantMass(new RooRealVar("invariantMass", "invariantMass", 0., 700.)),
-      dpMass(new RooRealVar("dpMass", "dpMass", 0., 700.)),
-      mu_test(new RooRealVar("mu_test", "mu_test", 1.0, 0.0, 1000.0)),
-      channelModels(), channels(),
-      pid_categories(new RooCategory("pid_category", "pid_category")), //categoria creata senza scelte, le aggiunge di seguito
-      pot_default(new RooRealVar("pot_default", "pot_default", 1.0, 0.0001, 3.0)),
-      pot_sigma(new RooRealVar("pot_sigma", "pot_sigma", 1.2, 1.001, 5.0)),
-      pot_true(new RooRealVar("pot_true", "pot_true", 1.0, 0.0001, 3.0)),
-      pot_constraint(new RooLognormal("pot_constraint", "pot_constraint", *pot_true, *pot_default, *pot_sigma)),
-      // pot_constraint(new RooGaussian("pot_constraint", "pot_constraint",
-      //                                 *pot_default, *pot_true, *pot_sigma)),
-      sbModel_simultaneous(new RooSimultaneous("sbModel_simultaneous", "sbModel_simultaneous", *pid_categories)),
-      bkgModel_simultaneous(new RooSimultaneous("bkgModel_simultaneous", "bkgModel_simultaneous", *pid_categories)),
-      sbModel_full(nullptr), bkgModel_full(nullptr),
-      sbModel_simultaneous_noConstraints(new RooSimultaneous("sbModel_simultaneous_noConstraints", "sbModel_simultaneous_noConstraints", *pid_categories)),
-      bkgModel_simultaneous_noConstraints(new RooSimultaneous("bkgModel_simultaneous_noConstraints", "bkgModel_simultaneous_noConstraints", *pid_categories)),
-      global_observarbles(new RooArgSet("global_observables")),
+    : SqrtS(new RooRealVar("SqrtS", "SqrtS", 10., 20.)),
+      X17Mass(new RooRealVar("X17Mass", "X17Mass", 10., 20.)),
+      Mu_test(new RooRealVar("Mu_test", "Mu_test", 17.0, 5.0, 25.0)),
+      channelModels(), NPoints(),
+      PID_categories(new RooCategory("PID_category", "PID_category")), //categoria creata senza scelte, le aggiunge di seguito
+      NPoT_default(new RooRealVar("NPoT_default", "NPoT_default", 1.0E9, 1.0E6, 1.0E13)),
+      NPoT_sigma(new RooRealVar("NPoT_sigma", "NPoT_sigma", 1.0E7, 1.0E4, 1.0E11)),
+      NPoT_true(new RooRealVar("NPoT_true", "NPoT_true", 1.0, 0.0001, 3.0)),
+      NPoT_constraint(new RooLognormal("NPoT_constraint", "NPoT_constraint", *NPoT_true, *NPoT_default, *NPoT_sigma)),
+      // NPoT_constraint(new RooGaussian("NPoT_constraint", "NPoT_constraint",
+      //                                 *NPoT_default, *NPoT_true, *NPoT_sigma)),
+      SbModel_simultaneous(new RooSimultaneous("SbModel_simultaneous", "SbModel_simultaneous", *pid_categories)),
+      BkgModel_simultaneous(new RooSimultaneous("BkgModel_simultaneous", "BkgModel_simultaneous", *pid_categories)),
+      SbModel_full(nullptr), BkgModel_full(nullptr),
+      SbModel_simultaneous_noConstraints(new RooSimultaneous("SbModel_simultaneous_noConstraints", "SbModel_simultaneous_noConstraints", *pid_categories)),
+      BkgModel_simultaneous_noConstraints(new RooSimultaneous("BkgModel_simultaneous_noConstraints", "BkgModel_simultaneous_noConstraints", *pid_categories)),
+      global_observables(new RooArgSet("global_observables")),
       fit_parameters(new RooArgSet("fit_parameters")),
       constrained_parameters(new RooArgSet("constrained_parameters")),
       constraints_map() {
 
-  if (cfg.useMuMu) { // limiti fissati dalla cinematica della produzione di 2 muoni 
-    invariantMass->setRange(211.4, 700.);
-    dpMass->setRange(211.4, 700.);
-  }
-  dpMass->setConstant();
-  pot_default->setConstant();
-  pot_sigma->setConstant();
+  X17Mass->setConstant();
+  NPoT_default->setConstant();
+  NPoT_sigma->setConstant();
 
-  global_observarbles->add(*pot_default);
-  fit_parameters->add(*pot_true);
+  global_observables->add(*NPoT_default);
+  fit_parameters->add(*NPoT_true);
   fit_parameters->add(*mu_test);
-  constrained_parameters->add(*pot_true);
+  constrained_parameters->add(*NPoT_true);
 
-  constraints_map[pot_true] = pot_constraint;
+  constraints_map[NPoT_true] = NPoT_constraint;
 }
 
 StatisticsModel::~StatisticsModel() {
@@ -60,16 +56,16 @@ StatisticsModel::~StatisticsModel() {
   //   delete channelModels[ich];
   // }
   channelModels.clear();
-  channels.clear();
+  NPoints.clear();
 
   cout << "...done!" << endl;
 }
 
-void StatisticsModel::AddChannel(TString name, signal_types st, background_types bt, double bkg_mean, double sigma_bkg) {
-          channelModels.push_back(new ChannelModel(name, *invariantMass, *dpMass, *pot_true, *mu_test, st, bt, bkg_mean, sigma_bkg));
-  channels.push_back(name);
-  pid_categories->defineType(name.Data());
-  global_observarbles->add(*channelModels.back()->bkg_yield_default);
+void StatisticsModel::AddChannel(int NPoint, signal_types st, background_types bt, double Bkg_mean, double Sigma_bkg) {
+          channelModels.push_back(new ChannelModel(NPoints, *SqrtS, *X17Mass, *NPoT_true, *Mu_test, st, bt, Bkg_mean, Sigma_bkg));
+  channels.push_back(NPoints);
+  pid_categories->defineType(NPoints);
+  global_observables->add(*channelModels.back()->Bkg_yield_default);
   fit_parameters->add(*channelModels.back()->bkg_yield_scale);
   constrained_parameters->add(*channelModels.back()->bkg_yield_scale);
   default_bkgYield_MC.push_back(bkg_mean);
@@ -84,8 +80,8 @@ void StatisticsModel::BuildModel() {
     bkgModel_simultaneous_noConstraints->addPdf(*channelModels[ich]->extended_bkgModel, channels[ich]);
   }
 
-  sbModel_full = new RooProdPdf("sbModel_full", "sbModel_full", {*sbModel_simultaneous, *pot_constraint});
-  bkgModel_full = new RooProdPdf("bkgModel_full", "bkgModel_full", {*bkgModel_simultaneous, *pot_constraint});
+  sbModel_full = new RooProdPdf("sbModel_full", "sbModel_full", {*sbModel_simultaneous, *NPoT_constraint});
+  bkgModel_full = new RooProdPdf("bkgModel_full", "bkgModel_full", {*bkgModel_simultaneous, *NPoT_constraint});
 }
 
 void StatisticsModel::Update(global_config &cfg, double mass, double log_coupling) { //aggiorna i valori della massa e dei coupling durante il fit
@@ -139,7 +135,7 @@ double StatisticsModel::ComputeQstatistic(global_config &cfg, RooDataSet &ds, Ro
     mu_test->setConstant(true);
     unique_ptr<RooFitResult> fr_sb_toy{
         sbModel_full->fitTo(
-          ds, /*RooFit::GlobalObservables(*global_observarbles),*/
+          ds, /*RooFit::GlobalObservables(*global_observables),*/
           RooFit::Constrain(*constrained_parameters),
           RooFit::Minimizer("Minuit2", "Migrad"), RooFit::PrintLevel(-1),
           RooFit::PrintEvalErrors(-1), RooFit::Warnings(false),
@@ -164,7 +160,7 @@ double StatisticsModel::ComputeQstatistic(global_config &cfg, RooDataSet &ds, Ro
 
     unique_ptr<RooFitResult> fr{
           sbModel_full->fitTo(
-          ds, /*RooFit::GlobalObservables(*global_observarbles),*/
+          ds, /*RooFit::GlobalObservables(*global_observables),*/
           RooFit::Constrain(*constrained_parameters),
           RooFit::Minimizer("Minuit2", "Migrad"), RooFit::PrintLevel(-1),
           RooFit::PrintEvalErrors(-1), RooFit::Warnings(false),
@@ -198,7 +194,7 @@ double StatisticsModel::ComputeQstatistic(global_config &cfg, RooDataSet &ds, Ro
 RooDataSet *StatisticsModel::Generate(global_config &cfg, Double_t mu, RooAbsPdf *pdf, RooArgList &fitParams) {
   mu_test->setVal(mu);
   if (cfg.tossingType == kCousinsHighland) {
-    // first toss pot_true and bkg_scale
+    // first toss NPoT_true and bkg_scale
     for (auto par : constraints_map) {
       unique_ptr<RooDataSet> tmp_data(par.second->generate(*par.first, 1, RooFit::Verbose(true)));
       par.first->setVal(tmp_data->get(0)->getRealValue(par.first->GetName()));
@@ -216,11 +212,11 @@ void StatisticsModel::ComputeQDistribution(global_config &cfg, RooAbsPdf *genPdf
   // Generate auxiliaries
   // fit_parameters->assignFast(paramsGen);
   // unique_ptr<RooDataSet> auxiliary_measurements{genPdf->generate(
-  //     *global_observarbles, cfg.n_toys, RooFit::Verbose(false))};
+  //     *global_observables, cfg.n_toys, RooFit::Verbose(false))};
 
   for (int iToy = 0; iToy < cfg.n_toys; ++iToy) {
     fit_parameters->assignFast(paramsGen);
-    // global_observarbles->assignFast(*auxiliary_measurements->get(iToy));
+    // global_observables->assignFast(*auxiliary_measurements->get(iToy));
 
     unique_ptr<RooDataSet> toys{genPdf->generate({*invariantMass, *pid_categories}, RooFit::Extended(), RooFit::Verbose(false))};
     // toys->setGlobalObservables(*auxiliary_measurements->get(iToy));

@@ -1,15 +1,17 @@
-cmake_minimum_required(VERSION 2.8.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project (EE_MUMU_COMBINATION C CXX)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-SET(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE -fPIC -pthread -pipe -ansi")
+SET(CMAKE_CXX_FLAGS_INIT "-D_GNU_SOURCE -fPIC -pthread -pipe -ansi") #${CMAKE_CXX_FLAGS}
 
 
-set(ACCEPTED_BUILD_TYPES DEBUG RELEASE)
-if (NOT CMAKE_BUILD_TYPE)
-  message(STATUS "Setting build type to 'Release' as none was specified")
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-endif()
+set(ACCEPTED_BUILD_TYPES DEBUG RELEASE DEBUG)
+set(CMAKE_BUILD_TYPE RELEASE)
+#if (NOT CMAKE_BUILD_TYPE)
+  #message(STATUS "Setting build type to 'Release' as none was specified")
+  #set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+#endif()
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} UPPER_BUILD_TYPE)
 list(FIND ACCEPTED_BUILD_TYPES ${UPPER_BUILD_TYPE} IS_BUILD_TYPE_ACCEPTED)
@@ -31,8 +33,17 @@ if( ${ROOT_FOUND} )
 endif()
 
 # Use correct gcc libraries
-link_directories($ENV{COMPILER_PATH}/lib64)
-link_directories($ENV{COMPILER_PATH}/lib)
+#link_directories($ENV{COMPILER_PATH}/lib64)
+#link_directories($ENV{COMPILER_PATH}/lib)
+#link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/ROOT/6.18.00/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_98/ROOT/v6.22.00/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/GSL/2.5/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/vdt/0.4.3/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/Davix/0.7.3/x86_64-centos7-gcc8-opt/lib64)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/tbb/2019_U7/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_94/glib/2.52.2/x86_64-centos7-gcc8-opt/lib)
+link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/png/1.6.37/x86_64-centos7-gcc8-opt/lib)
+#link_directories(/lib64)
 
 
 #Define install directories
@@ -64,7 +75,6 @@ install(TARGETS Persistency EXPORT PersistencyTargets DESTINATION lib)
 
 set(list_executables roofit_full)
 
-
 #Fake libs
 add_library(srcObjLib OBJECT ${sources})
 set_property(TARGET ${srcObjLib} PROPERTY POSITION_INDEPENDENT_CODE 1)
@@ -75,6 +85,7 @@ add_library(truesrc-static STATIC $<TARGET_OBJECTS:srcObjLib>)
 
 foreach(exec ${list_executables})
     add_executable(${exec} ${exec}.cxx $<TARGET_OBJECTS:MainObjLib>)
-    target_link_libraries(${exec} ${ROOT_LIBRARIES} Persistency truesrc RooFit RooFitCore)
+    target_link_libraries(${exec} ${ROOT_LIBRARIES} Persistency truesrc-static RooFit RooFitCore) #rimosso truesrc
     install(TARGETS ${exec} DESTINATION bin)
 endforeach()
+

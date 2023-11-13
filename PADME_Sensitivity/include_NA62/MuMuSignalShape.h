@@ -12,9 +12,6 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-
-using namespace std;
-
  
 class MuMuSignalShape : public RooAbsPdf {
 public:
@@ -26,7 +23,7 @@ public:
 	      RooAbsReal& _xMin,
 	      RooAbsReal& _xMax);
   MuMuSignalShape(const MuMuSignalShape& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new MuMuSignalShape(*this,newname); } //crea una copia uguale della pdf serve ad avere due pdf identiche e indipendenti a qualche putno
+  virtual TObject* clone(const char* newname) const { return new MuMuSignalShape(*this,newname); }
   inline virtual ~MuMuSignalShape() { }
 
   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet& analVars, const char* /*rangeName*/) const;
@@ -47,6 +44,5 @@ private:
 
   ClassDef(MuMuSignalShape,1) // Your description goes here...
 };
-// come definisce variabili e classi è uguale al MuMuBkgShape, solo che qui ha anche getGaussianIntegral perché approssima il segnale con una gaussiana
-//il resto è getAnalyticalIntegral per vedere se si può calcolare l'integrale, Analitycalintegral lo calcola e evaluate restituisce il valore della pdf in un punto
+ 
 #endif

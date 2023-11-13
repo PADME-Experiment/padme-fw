@@ -3,10 +3,10 @@ CLEANDIRS:=$(addprefix clean-,$(DIRS))
 
 CMAKE_FLAGS:=
 ifdef BUILD_TYPE
-    CMAKE_FLAGS += -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -fPIC
+    CMAKE_FLAGS += -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 endif
 ifeq "$(SHARED)" "1"
-    CMAKE_FLAGS += -DSHARED_LIB=1 -fPIC
+    CMAKE_FLAGS += -DSHARED_LIB=1
 endif
 
 
@@ -16,7 +16,7 @@ all: $(BUILDDIR)
 	+@make -C $(BUILDDIR) install --no-print-directory $(MAKEFLAGS)
 
 $(BUILDDIR): 
-	@cmake3 -H. -B$(BUILDDIR) $(CMAKE_FLAGS) ${ARGS}
+	@cmake -H. -B$(BUILDDIR) $(CMAKE_FLAGS) ${ARGS}
 
 relink: $(BUILDDIR)
 	@touch roofit_full.cc

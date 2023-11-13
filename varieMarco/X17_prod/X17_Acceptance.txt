@@ -1,0 +1,1009 @@
+-----ACCEPTANCE PADME-X17-----
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 70.255 mm - ACCEPTANCE = 0.11531
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 70.255 mm - ACCEPTANCE = 0.00693
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 70.255 mm - ACCEPTANCE = 0.11531
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 70.255 mm - ACCEPTANCE = 0.00693
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 70.255 mm - ACCEPTANCE = 0.11531
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 70.255 mm - ACCEPTANCE = 0.00693
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 70.255 mm - ACCEPTANCE = 0.11531
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 70.255 mm - ACCEPTANCE = 0.00693
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 70.255 mm - ACCEPTANCE = 0.11531
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 70.255 mm - ACCEPTANCE = 0.00693
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 70.255 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 70.255 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 70.255 mm - ACCEPTANCE= 0.025336
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 70.255 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 70.255 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 70.255 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 70.255 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 70.255 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 70.255 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 70.255 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 70.255 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 70.255 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 70.255 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 70.255 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 70.255 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 70.255 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 70.255 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 70.255 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 70.255 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 70.255 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 70.255 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 87.8204 mm - ACCEPTANCE = 0.141694
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 87.8204 mm - ACCEPTANCE = 0.008629
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 87.8204 mm - ACCEPTANCE= 0.031353
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 87.8204 mm - ACCEPTANCE = 0.141694
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 87.8204 mm - ACCEPTANCE = 0.008629
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 87.8204 mm - ACCEPTANCE= 0.031353
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 87.8204 mm - ACCEPTANCE = 0.141694
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 87.8204 mm - ACCEPTANCE = 0.008629
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 87.8204 mm - ACCEPTANCE= 0.031353
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 87.8204 mm - ACCEPTANCE = 0.141694
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 87.8204 mm - ACCEPTANCE = 0.008629
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 87.8204 mm - ACCEPTANCE= 0.031353
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 87.8204 mm - ACCEPTANCE = 0.141694
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 87.8204 mm - ACCEPTANCE = 0.008629
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 87.8204 mm - ACCEPTANCE= 0.031353
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 87.8204 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 87.8204 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 87.8204 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 87.8204 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 87.8204 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 87.8204 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 87.8204 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 87.8204 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 87.8204 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 87.8204 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 87.8204 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 87.8204 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 87.8204 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 87.8204 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 87.8204 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 87.8204 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 87.8204 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 87.8204 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 87.8204 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 87.8204 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 87.8204 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 105.387 mm - ACCEPTANCE = 0.167464
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 105.387 mm - ACCEPTANCE = 0.010312
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 105.387 mm - ACCEPTANCE= 0.03714
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 105.387 mm - ACCEPTANCE = 0.167464
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 105.387 mm - ACCEPTANCE = 0.010312
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 105.387 mm - ACCEPTANCE= 0.03714
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 105.387 mm - ACCEPTANCE = 0.167464
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 105.387 mm - ACCEPTANCE = 0.010312
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 105.387 mm - ACCEPTANCE= 0.03714
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 105.387 mm - ACCEPTANCE = 0.167464
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 105.387 mm - ACCEPTANCE = 0.010312
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 105.387 mm - ACCEPTANCE= 0.03714
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 105.387 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 105.387 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 105.387 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 105.387 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 105.387 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 105.387 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 105.387 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 105.387 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 105.387 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 105.387 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 105.387 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 105.387 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 105.387 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 105.387 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 105.387 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 105.387 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 105.387 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 105.387 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 105.387 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 105.387 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 105.387 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 105.387 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 105.387 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 105.387 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 122.955 mm - ACCEPTANCE = 0.192426
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 122.955 mm - ACCEPTANCE = 0.011963
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 122.955 mm - ACCEPTANCE= 0.042986
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 122.955 mm - ACCEPTANCE = 0.192426
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 122.955 mm - ACCEPTANCE = 0.011963
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 122.955 mm - ACCEPTANCE= 0.042986
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 122.955 mm - ACCEPTANCE = 0.192426
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 122.955 mm - ACCEPTANCE = 0.011963
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 122.955 mm - ACCEPTANCE= 0.042986
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 122.955 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 122.955 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 122.955 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 122.955 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 122.955 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 122.955 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 122.955 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 122.955 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 122.955 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 122.955 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 122.955 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 122.955 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 122.955 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 122.955 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 122.955 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 122.955 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 122.955 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 122.955 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 122.955 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 122.955 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 122.955 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 122.955 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 122.955 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 122.955 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 122.955 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 122.955 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 122.955 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 140.524 mm - ACCEPTANCE = 0.216444
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 140.524 mm - ACCEPTANCE = 0.013749
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 140.524 mm - ACCEPTANCE= 0.048567
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 140.524 mm - ACCEPTANCE = 0.216444
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 140.524 mm - ACCEPTANCE = 0.013749
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 140.524 mm - ACCEPTANCE= 0.048567
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 140.524 mm - ACCEPTANCE = 0.216444
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 140.524 mm - ACCEPTANCE = 0.013749
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 140.524 mm - ACCEPTANCE= 0.048567
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 140.524 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 140.524 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 140.524 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 140.524 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 140.524 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 140.524 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 140.524 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 140.524 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 140.524 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 140.524 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 140.524 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 140.524 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 140.524 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 140.524 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 140.524 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 140.524 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 140.524 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 140.524 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 140.524 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 140.524 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 140.524 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 140.524 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 140.524 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 140.524 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 140.524 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 140.524 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 140.524 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 158.095 mm - ACCEPTANCE = 0.239521
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 158.095 mm - ACCEPTANCE = 0.015411
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 158.095 mm - ACCEPTANCE= 0.054136
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 158.095 mm - ACCEPTANCE = 0.239521
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 158.095 mm - ACCEPTANCE = 0.015411
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 158.095 mm - ACCEPTANCE= 0.054136
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 158.095 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 158.095 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 158.095 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 158.095 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 158.095 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 158.095 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 158.095 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 158.095 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 158.095 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 158.095 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 158.095 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 158.095 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 158.095 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 158.095 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 158.095 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 158.095 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 158.095 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 158.095 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 158.095 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 158.095 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 158.095 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 158.095 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 158.095 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 158.095 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 158.095 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 158.095 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 158.095 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 158.095 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 158.095 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 158.095 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 175.669 mm - ACCEPTANCE = 0.261787
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 175.669 mm - ACCEPTANCE = 0.017203
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 175.669 mm - ACCEPTANCE= 0.059573
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 175.669 mm - ACCEPTANCE = 0.261787
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 175.669 mm - ACCEPTANCE = 0.017203
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 175.669 mm - ACCEPTANCE= 0.059573
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 175.669 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 175.669 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 175.669 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 175.669 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 175.669 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 175.669 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 175.669 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 175.669 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 175.669 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 175.669 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 175.669 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 175.669 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 175.669 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 175.669 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 175.669 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 175.669 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 175.669 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 175.669 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 175.669 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 175.669 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 175.669 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 175.669 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 175.669 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 175.669 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 175.669 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 175.669 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 175.669 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 175.669 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 175.669 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 175.669 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 193.244 mm - ACCEPTANCE = 0.283232
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 193.244 mm - ACCEPTANCE = 0.019041
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 193.244 mm - ACCEPTANCE= 0.064952
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 193.244 mm - ACCEPTANCE = 0.283232
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 193.244 mm - ACCEPTANCE = 0.019041
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 193.244 mm - ACCEPTANCE= 0.064952
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 193.244 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 193.244 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 193.244 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 193.244 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 193.244 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 193.244 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 193.244 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 193.244 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 193.244 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 193.244 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 193.244 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 193.244 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 193.244 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 193.244 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 193.244 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 193.244 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 193.244 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 193.244 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 193.244 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 193.244 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 193.244 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 193.244 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 193.244 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 193.244 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 193.244 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 193.244 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 193.244 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 193.244 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 193.244 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 193.244 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 210.822 mm - ACCEPTANCE = 0.30435
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 210.822 mm - ACCEPTANCE = 0.020799
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 210.822 mm - ACCEPTANCE= 0.07015
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 210.822 mm - ACCEPTANCE = 0.30435
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 210.822 mm - ACCEPTANCE = 0.020799
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 210.822 mm - ACCEPTANCE= 0.07015
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 210.822 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 210.822 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 210.822 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 210.822 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 210.822 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 210.822 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 210.822 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 210.822 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 210.822 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 210.822 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 210.822 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 210.822 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 210.822 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 210.822 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 210.822 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 210.822 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 210.822 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 210.822 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 210.822 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 210.822 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 210.822 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 210.822 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 210.822 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 210.822 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 210.822 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 210.822 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 210.822 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 210.822 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 210.822 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 210.822 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 228.402 mm - ACCEPTANCE = 0.324514
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 228.402 mm - ACCEPTANCE = 0.022659
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 228.402 mm - ACCEPTANCE= 0.075366
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 228.402 mm - ACCEPTANCE = 0.324514
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 228.402 mm - ACCEPTANCE = 0.022659
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 228.402 mm - ACCEPTANCE= 0.075366
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 228.402 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 228.402 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 228.402 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 228.402 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 228.402 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 228.402 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 228.402 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 228.402 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 228.402 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 228.402 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 228.402 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 228.402 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 228.402 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 228.402 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 228.402 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 228.402 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 228.402 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 228.402 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 228.402 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 228.402 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 228.402 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 228.402 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 228.402 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 228.402 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 228.402 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 228.402 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 228.402 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 228.402 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 228.402 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 228.402 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 245.986 mm - ACCEPTANCE = 0.343782
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 245.986 mm - ACCEPTANCE = 0.024592
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 245.986 mm - ACCEPTANCE= 0.080572
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 245.986 mm - ACCEPTANCE = 0.343782
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 245.986 mm - ACCEPTANCE = 0.024592
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 245.986 mm - ACCEPTANCE= 0.080572
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 245.986 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 245.986 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 245.986 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 245.986 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 245.986 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 245.986 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 245.986 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 245.986 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 245.986 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 245.986 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 245.986 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 245.986 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 245.986 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 245.986 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 245.986 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 245.986 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 245.986 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 245.986 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 245.986 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 245.986 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 245.986 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 245.986 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 245.986 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 245.986 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 245.986 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 245.986 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 245.986 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 245.986 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 245.986 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 245.986 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0 GeV R= 263.572 mm - ACCEPTANCE = 0.362552
+
+ SCAN T-channel t= 86400s E> 0 GeV R= 263.572 mm - ACCEPTANCE = 0.026632
+
+ SCAN Gamma-Gamma production t= 86400s E> 0 GeV R= 263.572 mm - ACCEPTANCE= 0.085746
+
+
+ SCAN S-channel t= 86400s E> 0.05 GeV R= 263.572 mm - ACCEPTANCE = 0.362552
+
+ SCAN T-channel t= 86400s E> 0.05 GeV R= 263.572 mm - ACCEPTANCE = 0.026632
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.05 GeV R= 263.572 mm - ACCEPTANCE= 0.085746
+
+
+ SCAN S-channel t= 86400s E> 0.1 GeV R= 263.572 mm - ACCEPTANCE = 0.227387
+
+ SCAN T-channel t= 86400s E> 0.1 GeV R= 263.572 mm - ACCEPTANCE = 0.014517
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.1 GeV R= 263.572 mm - ACCEPTANCE= 0.05154
+
+
+ SCAN S-channel t= 86400s E> 0.11 GeV R= 263.572 mm - ACCEPTANCE = 0.169968
+
+ SCAN T-channel t= 86400s E> 0.11 GeV R= 263.572 mm - ACCEPTANCE = 0.010482
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.11 GeV R= 263.572 mm - ACCEPTANCE= 0.038045
+
+
+ SCAN S-channel t= 86400s E> 0.115 GeV R= 263.572 mm - ACCEPTANCE = 0.141849
+
+ SCAN T-channel t= 86400s E> 0.115 GeV R= 263.572 mm - ACCEPTANCE = 0.008639
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.115 GeV R= 263.572 mm - ACCEPTANCE= 0.031706
+
+
+ SCAN S-channel t= 86400s E> 0.12 GeV R= 263.572 mm - ACCEPTANCE = 0.114424
+
+ SCAN T-channel t= 86400s E> 0.12 GeV R= 263.572 mm - ACCEPTANCE = 0.006872
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.12 GeV R= 263.572 mm - ACCEPTANCE= 0.025441
+
+
+ SCAN S-channel t= 86400s E> 0.125 GeV R= 263.572 mm - ACCEPTANCE = 0.087296
+
+ SCAN T-channel t= 86400s E> 0.125 GeV R= 263.572 mm - ACCEPTANCE = 0.00523
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.125 GeV R= 263.572 mm - ACCEPTANCE= 0.01931
+
+
+ SCAN S-channel t= 86400s E> 0.13 GeV R= 263.572 mm - ACCEPTANCE = 0.060515
+
+ SCAN T-channel t= 86400s E> 0.13 GeV R= 263.572 mm - ACCEPTANCE = 0.003595
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.13 GeV R= 263.572 mm - ACCEPTANCE= 0.013312
+
+
+ SCAN S-channel t= 86400s E> 0.135 GeV R= 263.572 mm - ACCEPTANCE = 0.033446
+
+ SCAN T-channel t= 86400s E> 0.135 GeV R= 263.572 mm - ACCEPTANCE = 0.001974
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.135 GeV R= 263.572 mm - ACCEPTANCE= 0.007376
+
+
+ SCAN S-channel t= 86400s E> 0.14 GeV R= 263.572 mm - ACCEPTANCE = 0.0068
+
+ SCAN T-channel t= 86400s E> 0.14 GeV R= 263.572 mm - ACCEPTANCE = 0.000387
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.14 GeV R= 263.572 mm - ACCEPTANCE= 0.001496
+
+
+ SCAN S-channel t= 86400s E> 0.145 GeV R= 263.572 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.145 GeV R= 263.572 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.145 GeV R= 263.572 mm - ACCEPTANCE= 0
+
+
+ SCAN S-channel t= 86400s E> 0.15 GeV R= 263.572 mm - ACCEPTANCE = 0
+
+ SCAN T-channel t= 86400s E> 0.15 GeV R= 263.572 mm - ACCEPTANCE = 0
+
+ SCAN Gamma-Gamma production t= 86400s E> 0.15 GeV R= 263.572 mm - ACCEPTANCE= 0
+

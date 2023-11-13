@@ -1,3 +1,4 @@
+
 //MANCINI MARCO PADME SENSITIVITY
 #include <TH1.h>
 #include <TH2.h>
@@ -5,8 +6,6 @@
 #include <TStyle.h> 
 #include <TObject.h>
 #include <TCanvas.h> 
-#include <TGraph.h> 
-#include <TMultiGraph.h> 
 #include <TRandom.h> 
 #include <TAxis.h>
 #include <stdio.h>
@@ -16,158 +15,74 @@
 #include <TFile.h>
 #include <TMath.h>
 #include <TTree.h>
-#include <TVector3.h>
 #include <regex>
 
-#include "EventSelector.h"
+#include "analyzer.h"
 
 using namespace std;
 
-void PADME_sensitivity(double TargetCalo, double E0, double EStep, int NStepEBeam, double ThetaBoostX, double ThetaBoostY, double TargetX, double TargetY, const char* FileName){
+void PADME_sensitivity(){
 
 double pi2 = TMath::Pi()*2;
 static const int Nev_CalcHep = 1000000;
 double ElectronMass = 0.000511;
-double ElecM = 0.511;
-// double TargetCalo = 3700; //in mm 23.06.21 con Mauro e Tommaso
+double TargetCalo = 3700; //in mm 23.06.21 con Mauro e Tommaso
 
-double CaloNBins = 120;
-double OccBins = 450;
+double CaloRes = 120;
+double res_occ = 450;
 
 // DEFINIZIONE DEI TAGLI
-double En_min = 0.02; 
+double En_min = 0.00; 
+double Radius_min = 90.;
+double MagnetShadow = 266.; 
 double Radius_max = 270.;
-double Radius_min = 90.; //092523 trying to compute dynamic cuts on Tommaso work
-double MagnetShadow = TargetCalo*TMath::ATan2(110, 1528); //semiapertura del magnete/distanza target-magnete * distanza target-calo
-cout<<"Ombra del magnete in [mm]: "<<MagnetShadow<<endl;
 
-// verificare se sono numeri corretti
+// da capire come scrivere queste cose meglio
 double PoT = 1e10;
 double Na  = 6.022e23;
 double Z_C = 6;
 double D_C = 3.5;
 double A_C = 12;
-double TThickness = 0.0097; //in cm
+double TThickness = 0.01; //in cm
 double CmtoPb = 1e-36;
 double Luminosity_C = CmtoPb * Na * Z_C * D_C * TThickness / A_C;
 
-double PreFactor_X = 3.8e-7; //DATA FROM PROCEEDINGS DARME-NARDI
-double g_ve[10]    = {1e-4, 2e-4, 3e-4, 4e-4, 5e-4, 6e-4, 7e-4, 8e-4, 9e-4, 10e-4};
-double BEM = 0.;
 
-TString process[3] = {"S", "F", "G"}; //S=SChannel, F=BhabhaFull, G=GammaGamma
+double PreFactor_X17 = 3.8e-7; //DATA FROM PROCEEDINGS DARME-NARDI
+// double g_ve[10]      = {1e-4, 2e-4, 3e-4, 4e-4, 5e-4, 6e-4, 7e-4, 8e-4, 9e-4, 10e-4} ;
+
+TString process[4] = {"T", "S", "F", "G"}; //S=Schannel, F=BhabhaFull, G=GammaGamma
 
 map<double, double> mSCrossSection, mFCrossSection, mGCrossSection;
 map<double, double> mSInstantLumi, mFInstantLumi, mGInstantLumi;
-double SNev_accepted, FNev_accepted, GNev_accepted, SMNev_accepted;
+double SNev_accepted, FNev_accepted, GNev_accepted;
 
-// double E0 = 200;
-// double EStep = 2.;
-// int NStepEBeam = 7;
-double EFin = E0 + NStepEBeam*EStep;
+double E0 = 200;
+double EStep = 2.;
+int NEbeam = 7;
+double EFin = E0 + NEbeam*EStep;
 float EBeam = 0.;
-double Range = 0.400; 
+double Range = 0.400;
 double Bin = 1600;
 
-TFile *FileOut = new TFile(FileName, "RECREATE");
-TH1F *hSAcceptance = new TH1F("hSAcceptance", "hSAcceptance", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hFAcceptance = new TH1F("hFAcceptance", "hFAcceptance", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hGAcceptance = new TH1F("hGAcceptance", "hGAcceptance", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hSMAcceptance = new TH1F("hSMAcceptance", "hSMAcceptance", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-hSAcceptance->SetMarkerStyle(20);
-hSAcceptance->SetMarkerColor(kRed);
-hSAcceptance->SetMarkerSize(1);
-hFAcceptance->SetMarkerStyle(20);
-hFAcceptance->SetMarkerColor(kGreen);
-hFAcceptance->SetMarkerSize(1);
-hGAcceptance->SetMarkerStyle(20);
-hGAcceptance->SetMarkerColor(kBlue);
-hGAcceptance->SetMarkerSize(1);
-hSMAcceptance->SetMarkerStyle(20);
-hSMAcceptance->SetMarkerColor(kBlack);
-hSMAcceptance->SetMarkerSize(1);
+TFile *FileOut = new TFile("PADME_Sens_Output_Below.root", "RECREATE");
+TH1F *hSAcceptance = new TH1F("hSAcceptance", "hSAcceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
+TH1F *hFAcceptance = new TH1F("hFAcceptance", "hSAcceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
+TH1F *hGAcceptance = new TH1F("hGAcceptance", "hSAcceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
 
-TH1F *hSYield = new TH1F("hSYield", "S-Channel YIELD", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hFYield = new TH1F("hFYield", "BhabhaFull YIELD", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hGYield = new TH1F("hGYield", "AA YIELD", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-TH1F *hSMYield = new TH1F("hSMYield", "SM YIELD", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-// TH1F *hAcceptance = new TH1F("hAcceptance", "hAcceptance", NStepEBeam, E0-EStep/2, EFin-EStep/2);
-hSYield->SetMarkerStyle(20);
-hSYield->SetMarkerColor(kRed);
-hSYield->SetMarkerSize(2);
-hFYield->SetMarkerStyle(20);
-hFYield->SetMarkerColor(kGreen);
-hFYield->SetMarkerSize(2);
-hGYield->SetMarkerStyle(20);
-hGYield->SetMarkerColor(kBlue);
-hGYield->SetMarkerSize(2);
-hSMYield->SetMarkerStyle(20);
-hSMYield->SetMarkerColor(kBlack);
-hSMYield->SetMarkerSize(2);
+TH1F *hSNeve = new TH1F("hSNeve", "hSNumber of events in acceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
+TH1F *hFNeve = new TH1F("hFNeve", "hSNumber of events in acceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
+TH1F *hGNeve = new TH1F("hGNeve", "hSNumber of events in acceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
+// TH1F *hAcceptance = new TH1F("hAcceptance", "hAcceptance", NEbeam, E0-EStep/2, EFin-EStep/2);
 
-map <double, vector<double>> mProdX;
-map <double, vector<double>> mGVE_squared;
-vector <double> vEtest;  
-vector <double> vMassX;
-map <double, double> mLowerLimitX;
-map <double, double> mX_discover;
-map <double, TVector3> mRTarg;
-map <double, TVector3> mCOGatECal;
-map <double, double> mSqrtS, mBeamMomentum;
-map <double, double> mBG, mBeta, mGamma;
-map <double, TVector3> mBoostMom;
-map <double, double> mRadius_min, mEnergy_max, mEnergy_min;
-
-double maxEn = ((E0 + EStep*NStepEBeam)*1.80)/1000;
-double minEn = E0*0.20/1000;
-for(double i = minEn; i<=maxEn; i+=EStep*0.05){
-    vEtest.push_back(i);
-    vMassX.push_back(TMath::Sqrt(i*2*ElectronMass));
-}
-
-for(int iEb=0; iEb<NStepEBeam; iEb++){
+for(int iEb=0; iEb<NEbeam; iEb++){
     EBeam = E0 + iEb*EStep;
 
-    mRTarg[EBeam].SetXYZ(TargetX, TargetY, 0);
-    mCOGatECal[EBeam].SetXYZ(TMath::Tan(ThetaBoostX)*TargetCalo, TMath::Tan(ThetaBoostY)*TargetCalo, TargetCalo);
-    mSqrtS[EBeam] = TMath::Sqrt(2.*ElecM*EBeam);
-    mBeamMomentum[EBeam] = TMath::Sqrt(EBeam*EBeam - 2*ElecM*ElecM);
-    mBG[EBeam] = mBeamMomentum[EBeam]/mSqrtS[EBeam]; // beta gamma
-    mGamma[EBeam] = TMath::Sqrt(mBG[EBeam]*mBG[EBeam]+1.);
-    mBeta[EBeam] = mBG[EBeam]/mGamma[EBeam];
-    // CAPIRE LLA FUNZIONE DA HEADER DI TOMMASO
-    mBoostMom[EBeam].SetXYZ(mCOGatECal[EBeam].X()-mRTarg[EBeam].X(),mCOGatECal[EBeam].Y()-mRTarg[EBeam].Y(),mCOGatECal[EBeam].Z()-mRTarg[EBeam].Z());
-    mBoostMom[EBeam] *= (mBeta[EBeam]/mBoostMom[EBeam].Mag());
-
-  // if K = RMax/D is the max tangent in the lab, pi/2 - t < q*/2 < t, where t = atan(gamma RMax/D) must be > pi/4
-  // t = pi/4 if gam = 1/K, i.e. at ~ 150 MeV
-
-    double tanQMax = Radius_max/(mCOGatECal[EBeam].Z()-mRTarg[EBeam].Z());
-    double tLim = TMath::ATan(mGamma[EBeam]*tanQMax);
-    if (tLim < TMath::Pi()*0.25) {
-        std::cout << "No solution? " << tLim << " " << mGamma[EBeam] << std::endl;
-    }
-  
-  //  double tanQMin = 1./(fGam*fGam*tanQMax);
-  
-    mRadius_min[EBeam] = (mCOGatECal[EBeam].Z()-mRTarg[EBeam].Z())*TMath::Tan(0.5*TMath::Pi()-tLim)/mGamma[EBeam] ;// (fCOGAtECal.Z()-fRTarg.Z())*tanQMin; 
-    mEnergy_max[EBeam] = mSqrtS[EBeam]*mGamma[EBeam]*0.5*(1.-TMath::Cos(2*tLim)); 
-    mEnergy_min[EBeam] = mSqrtS[EBeam]*mGamma[EBeam]*0.5*(1.+TMath::Cos(2*tLim)); 
-
-    cout << "GeneralInfo: run-level info for run from DYNAMIC CUTS at " << EBeam <<" MeV";
-    cout << " Pbeam = " << mBeamMomentum[EBeam]<<endl;
-    cout << " target = { "<< mRTarg[EBeam].X()<< " , "<< mRTarg[EBeam].Y() << " , " << mRTarg[EBeam].Z() << " }; COG = { " << mCOGatECal[EBeam].X() << " , " << mCOGatECal[EBeam].Y() << " , "<< mCOGatECal[EBeam].Z() << " }" <<endl; 
-    cout << " sqrt(s) = " << mSqrtS[EBeam] << " bg = " << mBG[EBeam] << " beta = " << mBeta[EBeam] << endl;
-    cout << " energyRange = { " << mEnergy_min[EBeam] << " , " << mEnergy_max[EBeam] << " }; radiusRange = { " << mRadius_min[EBeam] << " , " << Radius_max << " }" << endl;
-
-
-    cout<<"Total energy of the "<<iEb<<" iteration: "<<EBeam<<" MeV"<<endl;
-
-    ifstream StxtIn(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/SChannel/BhabhaSCh_" + to_string(static_cast<int>(EBeam)) +".txt").c_str()); // Apri il file di testo in input
+    ifstream StxtIn(("/home/marco/analysis/SM_analysis/CalcHepFiles/Schannel/BhabhaSCh_" + to_string(static_cast<int>(EBeam)) +".txt").c_str()); // Apri il file di testo in input
     string Sline;
-    ifstream FtxtIn(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/BhabhaFull/BhabhaFull_" + to_string(static_cast<int>(EBeam)) +"CUTTED.txt").c_str()); 
+    ifstream FtxtIn(("/home/marco/analysis/SM_analysis/CalcHepFiles/BhabhaFull/BhabhaFull_" + to_string(static_cast<int>(EBeam)) +".txt").c_str()); 
     string Fline;
-    ifstream GtxtIn(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/AAProd/AAProduction_" + to_string(static_cast<int>(EBeam)) +".txt").c_str()); 
+    ifstream GtxtIn(("/home/marco/analysis/SM_analysis/CalcHepFiles/AAProd/AAProduction_" + to_string(static_cast<int>(EBeam)) +".txt").c_str()); 
     string Gline;
     string searchString = "#Cross_";
     regex numberRegex("\\d+\\.?\\d*(?:[eE][-+]?\\d+)?");
@@ -184,8 +99,9 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
             }
         }
     }
-    StxtIn.close(); //chiudi il file di testo SChannel
-    cout<<"la sezione d'urto letta dal file txt in input Sch: "<<mSCrossSection[EBeam]<<" pb  all'energia di: "<<EBeam<<" MeV"<<endl;
+    StxtIn.close(); //chiudi il file di testo Schannel
+    // cout<<"la sezione d'urto letta dal file txt in input Sch: "<<mSCrossSection[EBeam]<<endl;
+
 
     while (getline(FtxtIn, Fline)) { 
         if (Fline.find(searchString) != string::npos) { 
@@ -200,7 +116,8 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
         }
     }
     FtxtIn.close(); 
-    cout<<"la sezione d'urto letta dal file txt in input Full: "<<mFCrossSection[EBeam]<<" pb all'energia di: "<<EBeam<<" MeV"<<endl;
+    // cout<<"la sezione d'urto letta dal file txt in input Full: "<<mFCrossSection[EBeam]<<endl;
+
 
     while (getline(GtxtIn, Gline)) { 
         if (Gline.find(searchString) != string::npos) { 
@@ -215,12 +132,13 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
         }
     }
     StxtIn.close(); 
-    cout<<"la sezione d'urto letta dal file tSxt in input AA: "<<mGCrossSection[EBeam]<<" pb all'energia di: "<<EBeam<<" MeV"<<endl;
+    // cout<<"la sezione d'urto letta dal file txt in input AA: "<<mGCrossSection[EBeam]<<endl;
+
 
     TDirectory *SCh_dir = FileOut->mkdir(("Sch_dir" + to_string(EBeam)).c_str());
     TDirectory *Full_dir = FileOut->mkdir(("Full_dir"+ to_string(EBeam)).c_str());
     TDirectory *GG_dir = FileOut->mkdir(("GG_dir"+ to_string(EBeam)).c_str());
-    TFile *BhabhaSChIn = TFile::Open(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/SChannel/BhabhaSCh_" + to_string(static_cast<int>(EBeam)) +".root").c_str()); 
+    TFile *BhabhaSChIn = TFile::Open(("/home/marco/analysis/SM_analysis/CalcHepFiles/Schannel/BhabhaSCh_" + to_string(static_cast<int>(EBeam)) +".root").c_str()); 
     TTree *tSch  = (TTree*)BhabhaSChIn->Get(("tBhabhaSCh_" + to_string(static_cast<int>(EBeam))).c_str());
     double P3pos_ini, P3ele_ini, SFinalP1_ele, SFinalP2_ele, SFinalP3_ele, SFinalP1_pos, SFinalP2_pos, SFinalP3_pos; // Definisci la variabile per il branch che desideri acquisire
     tSch->SetBranchAddress("InitialP3_positron", &P3pos_ini);
@@ -241,8 +159,8 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
     TH1F* hSFinalP2_pos = new TH1F(("hSFinalP2_pos_" + to_string(EBeam)).c_str(), ("hSFinalP2_pos_" + to_string(EBeam)).c_str(), Bin, -Range, Range);
     TH1F* hSFinalP3_pos = new TH1F(("hSFinalP3_pos_" + to_string(EBeam)).c_str(), ("hSFinalP3_pos_" + to_string(EBeam)).c_str(), Bin, -Range, Range);
     
-    TFile *BhabhaFullIn = TFile::Open(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/BhabhaFull/BhabhaFull_" + to_string(static_cast<int>(EBeam)) +"CUTTED.root").c_str()); 
-    // TFile *BhabhaFullIn  = new TFile("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/BhabhaFull/BhabhaFull.root");
+    TFile *BhabhaFullIn = TFile::Open(("/home/marco/analysis/SM_analysis/CalcHepFiles/BhabhaFull/BhabhaFull_" + to_string(static_cast<int>(EBeam)) +".root").c_str()); 
+    // TFile *BhabhaFullIn  = new TFile("/home/marco/analysis/SM_analysis/CalcHepFiles/BhabhaFull.root");
     TTree *tFull  = (TTree*)BhabhaFullIn->Get(("tBhabhaFull_" + to_string(static_cast<int>(EBeam))).c_str()); 
     double FFinalP1_ele, FFinalP2_ele, FFinalP3_ele, FFinalP1_pos, FFinalP2_pos, FFinalP3_pos; 
     tFull->SetBranchAddress("FFinalP1_electron", &FFinalP1_ele);
@@ -259,8 +177,8 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
     TH1F* hFFinalP2_pos = new TH1F(("hFFinalP2_pos_" + to_string(EBeam)).c_str(), ("hFFinalP2_pos_" + to_string(EBeam)).c_str(), Bin, -Range, Range);
     TH1F* hFFinalP3_pos = new TH1F(("hFFinalP3_pos_" + to_string(EBeam)).c_str(), ("hFFinalP3_pos_" + to_string(EBeam)).c_str(), Bin, -Range, Range);
 
-    TFile *AAProductionIn = TFile::Open(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/AAProd/AAProduction_" + to_string(static_cast<int>(EBeam)) +".root").c_str()); 
-    //TFile *AAProductionIn  = new TFile("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/AAProd/AAprod.root");
+    TFile *AAProductionIn = TFile::Open(("/home/marco/analysis/SM_analysis/CalcHepFiles/AAProd/AAProduction_" + to_string(static_cast<int>(EBeam)) +".root").c_str()); 
+    //TFile *AAProductionIn  = new TFile("/home/marco/analysis/SM_analysis/CalcHepFiles/AAprod.root");
     TTree *tGG  = (TTree*)AAProductionIn->Get(("tAAProduction_" + to_string(static_cast<int>(EBeam))).c_str()); 
     double GFinalP1_G1, GFinalP2_G1, GFinalP3_G1, GFinalP1_G2, GFinalP2_G2, GFinalP3_G2; 
     tGG->SetBranchAddress("GFinalP1_G1", &GFinalP1_G1);
@@ -345,58 +263,32 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
     TH1F* hGRadius_G2 = new TH1F(("hGRadius_G2_" + to_string(EBeam)).c_str(), ("hGRadius_G2_" + to_string(EBeam)).c_str(), 400, -1000, 1000);
 
     //histos per lo studio di sensitività e accettanze
-    TH2F* hSOccupancy_pos = new TH2F(("hSOccupancy_pos_" + to_string(EBeam)).c_str(), ("hSOccupancy_pos_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
-    TH2F* hSOccupancy_ele = new TH2F(("hSOccupancy_ele_" + to_string(EBeam)).c_str(), ("hSOccupancy_ele_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
-    TH2F* hFOccupancy_pos = new TH2F(("hFOccupancy_pos_" + to_string(EBeam)).c_str(), ("hFOccupancy_pos_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
-    TH2F* hFOccupancy_ele = new TH2F(("hFOccupancy_ele_" + to_string(EBeam)).c_str(), ("hFOccupancy_ele_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
-    TH2F* hGOccupancy_G1 = new TH2F(("hGOccupancy_G1_" + to_string(EBeam)).c_str(), ("hGOccupancy_G1_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
-    TH2F* hGOccupancy_G2 = new TH2F(("hGOccupancy_G2_" + to_string(EBeam)).c_str(), ("hGOccupancy_G2_" + to_string(EBeam)).c_str(), OccBins, -450, 450, OccBins, -450, 450);
+    TH2F* hSOccupancy_pos = new TH2F(("hSOccupancy_pos_" + to_string(EBeam)).c_str(), ("hSOccupancy_pos_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
+    TH2F* hSOccupancy_ele = new TH2F(("hSOccupancy_ele_" + to_string(EBeam)).c_str(), ("hSOccupancy_ele_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
+    TH2F* hFOccupancy_pos = new TH2F(("hFOccupancy_pos_" + to_string(EBeam)).c_str(), ("hFOccupancy_pos_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
+    TH2F* hFOccupancy_ele = new TH2F(("hFOccupancy_ele_" + to_string(EBeam)).c_str(), ("hFOccupancy_ele_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
+    TH2F* hGOccupancy_G1 = new TH2F(("hGOccupancy_G1_" + to_string(EBeam)).c_str(), ("hGOccupancy_G1_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
+    TH2F* hGOccupancy_G2 = new TH2F(("hGOccupancy_G2_" + to_string(EBeam)).c_str(), ("hGOccupancy_G2_" + to_string(EBeam)).c_str(), res_occ, -450, 450, res_occ, -450, 450);
 
-    TH2F* hSOccupancyGeom_pos = new TH2F(("hSOccupancyGeom_pos_" + to_string(EBeam)).c_str(), ("hSOccupancyGeom_pos_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hSOccupancyGeom_ele = new TH2F(("hSOccupancyGeom_ele_" + to_string(EBeam)).c_str(), ("hSOccupancyGeom_ele_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hFOccupancyGeom_pos = new TH2F(("hFOccupancyGeom_pos_" + to_string(EBeam)).c_str(), ("hFOccupancyGeom_pos_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hFOccupancyGeom_ele = new TH2F(("hFOccupancyGeom_ele_" + to_string(EBeam)).c_str(), ("hFOccupancyGeom_ele_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hGOccupancyGeom_G1 = new TH2F(("hGOccupancyGeom_G1_" + to_string(EBeam)).c_str(), ("hGOccupancyGeom_G1_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hGOccupancyGeom_G2 = new TH2F(("hGOccupancyGeom_G2_" + to_string(EBeam)).c_str(), ("hGOccupancyGeom_G2_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
+    TH2F* hSOccupancyGeom_pos = new TH2F(("hSOccupancyGeom_pos_" + to_string(EBeam)).c_str(), ("hSOccupancyGeom_pos_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hSOccupancyGeom_ele = new TH2F(("hSOccupancyGeom_ele_" + to_string(EBeam)).c_str(), ("hSOccupancyGeom_ele_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hFOccupancyGeom_pos = new TH2F(("hFOccupancyGeom_pos_" + to_string(EBeam)).c_str(), ("hFOccupancyGeom_pos_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hFOccupancyGeom_ele = new TH2F(("hFOccupancyGeom_ele_" + to_string(EBeam)).c_str(), ("hFOccupancyGeom_ele_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hGOccupancyGeom_G1 = new TH2F(("hGOccupancyGeom_G1_" + to_string(EBeam)).c_str(), ("hGOccupancyGeom_G1_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hGOccupancyGeom_G2 = new TH2F(("hGOccupancyGeom_G2_" + to_string(EBeam)).c_str(), ("hGOccupancyGeom_G2_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
 
-    TH2F* hSOccupancyAllCuts_pos = new TH2F(("hSOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), ("hSOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hSOccupancyAllCuts_ele = new TH2F(("hSOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), ("hSOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hFOccupancyAllCuts_pos = new TH2F(("hFOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), ("hFOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hFOccupancyAllCuts_ele = new TH2F(("hFOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), ("hFOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hGOccupancyAllCuts_G1 = new TH2F(("hGOccupancyAllCuts_G1_" + to_string(EBeam)).c_str(), ("hGOccupancyAllCuts_G1_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
-    TH2F* hGOccupancyAllCuts_G2 = new TH2F(("hGOccupancyAllCuts_G2_" + to_string(EBeam)).c_str(), ("hGOccupancyAllCuts_G2_" + to_string(EBeam)).c_str(), CaloNBins, -300, 300, CaloNBins, -300, 300);
+    TH2F* hSOccupancyAllCuts_pos = new TH2F(("hSOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), ("hSOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hSOccupancyAllCuts_ele = new TH2F(("hSOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), ("hSOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hFOccupancyAllCuts_pos = new TH2F(("hFOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), ("hFOccupancyAllCuts_pos_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hFOccupancyAllCuts_ele = new TH2F(("hFOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), ("hFOccupancyAllCuts_ele_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hGOccupancyAllCuts_G1 = new TH2F(("hGOccupancyAllCuts_G1_" + to_string(EBeam)).c_str(), ("hGOccupancyAllCuts_G1_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
+    TH2F* hGOccupancyAllCuts_G2 = new TH2F(("hGOccupancyAllCuts_G2_" + to_string(EBeam)).c_str(), ("hGOccupancyAllCuts_G2_" + to_string(EBeam)).c_str(), CaloRes, -300, 300, CaloRes, -300, 300);
 
-    const int numPoints = 200;
-    double* xmin = new double[numPoints];
-    double* ymin = new double[numPoints];
-    double* xmax = new double[numPoints];
-    double* ymax = new double[numPoints];
+    // TH1F* hSAcceptance = new TH1F(("hSAcceptance_" + to_string(EBeam)).c_str(), ("hSAcceptance_" + to_string(EBeam)).c_str(), 400, -1000, 1000);
+    // TH1F* hFAcceptance = new TH1F(("hFAcceptance_" + to_string(EBeam)).c_str(), ("hFAcceptance_" + to_string(EBeam)).c_str(), 400, -1000, 1000);
+    // TH1F* hGAcceptance = new TH1F(("hGAcceptance_" + to_string(EBeam)).c_str(), ("hGAcceptance_" + to_string(EBeam)).c_str(), 400, -1000, 1000);
 
-    // Generate the points of the circle
-    for (int i = 0; i < numPoints; ++i) {
-        double angle = 2 * TMath::Pi() * i / numPoints;
-        xmin[i] = mRadius_min[EBeam] * TMath::Cos(angle);
-        ymin[i] = mRadius_min[EBeam] * TMath::Sin(angle);
-        xmax[i] = Radius_max * TMath::Cos(angle);
-        ymax[i] = Radius_max * TMath::Sin(angle);
-    }
-    TGraph* graphmin = new TGraph(numPoints, xmin, ymin);
-    graphmin->SetTitle(Form("Circle with mRadius_min %.2f", mRadius_min[EBeam]));
-    graphmin->SetLineStyle(1);
-    graphmin->SetLineColor(kBlack);
-    TGraph* graphmax = new TGraph(numPoints, xmax, ymax);
-    graphmax->SetTitle(Form("Circle with Radius_max %.2f", Radius_max));
-    graphmax->SetLineStyle(1);
-    graphmax->SetLineColor(kBlack);
-    TMultiGraph *MGDynCut = new TMultiGraph(Form("MGDynCut_%2f",EBeam),Form("MGDynCut_%2f",EBeam));
-    MGDynCut->Add(graphmin);
-    MGDynCut->Add(graphmax);
-
-    //graphmin->Delete();
-    //graphmax->Delete();
-
-    double NEntries = tSch->GetEntries();
-    for(int it = 0; it<=NEntries; it++){
+    for(int it = 0; it<tSch->GetEntries(); it++){
         tSch->GetEntry(it);
         tFull->GetEntry(it);
         tGG->GetEntry(it);
@@ -477,47 +369,41 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
         hGG1Theta_Scattering->Fill(G1.ScatteringAngle());
         hGG1Theta_Scattering->Fill(G2.ScatteringAngle());
 
-        //TRANSVERSE FINAL POSITION AT TargetCalo MM FROM TARGET - THETA PHI DEF
-        hSPhiX_pos->Fill(Sch_P3.PhiX(ThetaBoostX));
-        hSPhiY_pos->Fill(Sch_P3.PhiY(ThetaBoostY));
-        hSPhiX_ele->Fill(Sch_P4.PhiX(ThetaBoostX));
-        hSPhiY_ele->Fill(Sch_P4.PhiY(ThetaBoostY));
-        hFPhiX_pos->Fill(Full_P3.PhiX(ThetaBoostX));
-        hFPhiY_pos->Fill(Full_P3.PhiY(ThetaBoostY));
-        hFPhiX_ele->Fill(Full_P4.PhiX(ThetaBoostX));
-        hFPhiY_ele->Fill(Full_P4.PhiY(ThetaBoostY));
-        hGPhiX_G1->Fill(G1.PhiX(ThetaBoostX));
-        hGPhiY_G1->Fill(G1.PhiY(ThetaBoostY));
-        hGPhiX_G2->Fill(G2.PhiX(ThetaBoostX));
-        hGPhiY_G2->Fill(G2.PhiY(ThetaBoostY));
+        //TRANSVERSE FINAL POSITION AT 3000 MM FROM TARGET - THETA PHI DEF
+        hSPhiX_pos->Fill(Sch_P3.PhiX());
+        hSPhiY_pos->Fill(Sch_P3.PhiY());
+        hSPhiX_ele->Fill(Sch_P4.PhiX());
+        hSPhiY_ele->Fill(Sch_P4.PhiY());
+        hFPhiX_pos->Fill(Full_P3.PhiX());
+        hFPhiY_pos->Fill(Full_P3.PhiY());
+        hFPhiX_ele->Fill(Full_P4.PhiX());
+        hFPhiY_ele->Fill(Full_P4.PhiY());
+        hGPhiX_G1->Fill(G1.PhiX());
+        hGPhiY_G1->Fill(G1.PhiY());
+        hGPhiX_G2->Fill(G2.PhiX());
+        hGPhiY_G2->Fill(G2.PhiY());
 
         //POSITION
-        hSx_pos->Fill(Sch_P3.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hSy_pos->Fill(Sch_P3.R_y(TargetCalo, ThetaBoostY, TargetY));
-        hSx_ele->Fill(Sch_P4.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hSy_ele->Fill(Sch_P4.R_y(TargetCalo, ThetaBoostY, TargetY));
-        hFx_pos->Fill(Full_P3.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hFy_pos->Fill(Full_P3.R_y(TargetCalo, ThetaBoostY, TargetY));
-        hFx_ele->Fill(Full_P4.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hFy_ele->Fill(Full_P4.R_y(TargetCalo, ThetaBoostY, TargetY));
-        hGx_G1->Fill(G1.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hGy_G1->Fill(G1.R_y(TargetCalo, ThetaBoostY, TargetY));
-        hGx_G2->Fill(G2.R_x(TargetCalo, ThetaBoostX, TargetX));
-        hGy_G2->Fill(G2.R_y(TargetCalo, ThetaBoostY, TargetY));
+        hSx_pos->Fill(Sch_P3.R_x(TargetCalo));
+        hSy_pos->Fill(Sch_P3.R_y(TargetCalo));
+        hSx_ele->Fill(Sch_P4.R_x(TargetCalo));
+        hSy_ele->Fill(Sch_P4.R_y(TargetCalo));
+        hFx_pos->Fill(Full_P3.R_x(TargetCalo));
+        hFy_pos->Fill(Full_P3.R_y(TargetCalo));
+        hFx_ele->Fill(Full_P4.R_x(TargetCalo));
+        hFy_ele->Fill(Full_P4.R_y(TargetCalo));
+        hGx_G1->Fill(G1.R_x(TargetCalo));
+        hGy_G1->Fill(G1.R_y(TargetCalo));
+        hGx_G2->Fill(G2.R_x(TargetCalo));
+        hGy_G2->Fill(G2.R_y(TargetCalo));
 
         //final state radius at target
-        hSRadius_pos->Fill(Sch_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hSRadius_pos: "<<Sch_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
-        hSRadius_ele->Fill(Sch_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hSRadius_ele: "<<Sch_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
-        hFRadius_pos->Fill(Full_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hFRadius_pos: "<<Full_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
-        hFRadius_ele->Fill(Full_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hFRadius_ele: "<<Full_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
-        hGRadius_G1->Fill(G1.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hGRadius_G1: "<<G1.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
-        hGRadius_G2->Fill(G2.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY));
-        // cout<<"prova hGRadius_G2: "<<G2.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY)<<endl;
+        hSRadius_pos->Fill(Sch_P3.TransverseRadius(TargetCalo));
+        hSRadius_ele->Fill(Sch_P4.TransverseRadius(TargetCalo));
+        hFRadius_pos->Fill(Full_P3.TransverseRadius(TargetCalo));
+        hFRadius_ele->Fill(Full_P4.TransverseRadius(TargetCalo));
+        hGRadius_G1->Fill(G1.TransverseRadius(TargetCalo));
+        hGRadius_G2->Fill(G2.TransverseRadius(TargetCalo));
 
         EventAnalyzer SAnalyzer(hSOccupancy_pos, hSOccupancy_ele,
                                 hSOccupancyGeom_pos, hSOccupancyGeom_ele,
@@ -529,50 +415,39 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
                                 hGOccupancyGeom_G1, hGOccupancyGeom_G2,
                                 hGOccupancyAllCuts_G1, hGOccupancyAllCuts_G2);
 
-        SAnalyzer.AnalyzeEventsFull(Radius_max, Radius_min, En_min, 
-                                Sch_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY), Sch_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY),
-                                Sch_P3.R_x(TargetCalo, ThetaBoostX, TargetX), Sch_P3.R_y(TargetCalo, ThetaBoostY, TargetY),
-                                Sch_P4.R_x(TargetCalo, ThetaBoostX, TargetX), Sch_P4.R_y(TargetCalo, ThetaBoostY, TargetY),
+        SAnalyzer.AnalyzeEventsFull(Radius_max, En_min, Radius_min, 
+                                Sch_P3.TransverseRadius(TargetCalo), Sch_P4.TransverseRadius(TargetCalo),
+                                Sch_P3.R_x(TargetCalo), Sch_P3.R_y(TargetCalo),
+                                Sch_P4.R_x(TargetCalo), Sch_P4.R_y(TargetCalo),
                                 Sch_P3.Energy(), Sch_P4.Energy(),
                                 MagnetShadow);
-        FAnalyzer.AnalyzeEventsFull(Radius_max, Radius_min, En_min, 
-                                Full_P3.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY), Full_P4.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY),
-                                Full_P3.R_x(TargetCalo, ThetaBoostX, TargetX), Full_P3.R_y(TargetCalo, ThetaBoostY, TargetY),
-                                Full_P4.R_x(TargetCalo, ThetaBoostX, TargetX), Full_P4.R_y(TargetCalo, ThetaBoostY, TargetY),
+        FAnalyzer.AnalyzeEventsFull(Radius_max, En_min, Radius_min, 
+                                Full_P3.TransverseRadius(TargetCalo), Full_P4.TransverseRadius(TargetCalo),
+                                Full_P3.R_x(TargetCalo), Full_P3.R_y(TargetCalo),
+                                Full_P4.R_x(TargetCalo), Full_P4.R_y(TargetCalo),
                                 Full_P3.Energy(), Full_P4.Energy(),
                                 MagnetShadow);
-        GAnalyzer.AnalyzeEventsFull(Radius_max, Radius_min, En_min, 
-                                G1.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY), G2.TransverseRadius(TargetCalo, ThetaBoostX, ThetaBoostY, TargetX, TargetY),
-                                G1.R_x(TargetCalo, ThetaBoostX, TargetX), G1.R_y(TargetCalo, ThetaBoostY, TargetY),
-                                G2.R_x(TargetCalo, ThetaBoostX, TargetX), G2.R_y(TargetCalo, ThetaBoostY, TargetY),
+
+        GAnalyzer.AnalyzeEventsFull(Radius_max, En_min, Radius_min, 
+                                G1.TransverseRadius(TargetCalo), G2.TransverseRadius(TargetCalo),
+                                G1.R_x(TargetCalo), G1.R_y(TargetCalo),
+                                G2.R_x(TargetCalo), G2.R_y(TargetCalo),
                                 G1.Energy(), G2.Energy(),
                                 MagnetShadow);
-    }
 
-    SNev_accepted = PoT * mSInstantLumi[EBeam]*(hSOccupancyAllCuts_pos->GetEntries() / NEntries); //POT ELIMINATI X VALUTARE YIELD
-    FNev_accepted = PoT * mFInstantLumi[EBeam]*(hFOccupancyAllCuts_pos->GetEntries() / NEntries); //POT ELIMINATI X VALUTARE YIELD
-    GNev_accepted = PoT * mGInstantLumi[EBeam]*(hGOccupancyAllCuts_G1->GetEntries() / NEntries); //POT ELIMINATI X VALUTARE YIELD
-    SMNev_accepted = FNev_accepted + GNev_accepted; //POT ELIMINATI X VALUTARE YIELD
-    hSAcceptance->Fill(EBeam, hSOccupancyAllCuts_pos->GetEntries() / NEntries);
-    hFAcceptance->Fill(EBeam, hFOccupancyAllCuts_pos->GetEntries() / NEntries);
-    hGAcceptance->Fill(EBeam, hGOccupancyAllCuts_G1->GetEntries() / NEntries);
-    // hSMAcceptance->Fill(EBeam, ((hGOccupancyAllCuts_G1->GetEntries() / NEntries) + (hFOccupancyAllCuts_pos->GetEntries() / NEntries)));
-    hSYield->Fill(EBeam, SNev_accepted);
-    hFYield->Fill(EBeam, FNev_accepted);
-    hGYield->Fill(EBeam, GNev_accepted);
-    hSMYield->Fill(EBeam, SMNev_accepted);
-
-    // X17 PRODUCTION
-    mLowerLimitX[EBeam] = 1.3*TMath::Sqrt(SMNev_accepted);
-    cout<<"mLowerLimitX[EBeam]= "<<mLowerLimitX[EBeam]<<endl;
-    mX_discover[EBeam] = mLowerLimitX[EBeam]*(hSOccupancyAllCuts_pos->GetEntries()/NEntries);
-    cout<<"mX_discover[EBeam]= "<<mX_discover[EBeam]<<endl;
-    BEM = EBeam * 0.0032;
-    cout<<"Beam Energy spread = "<<BEM<<endl;
-    for(int i = 0; i<= vEtest.size(); i++){
-        mProdX[EBeam].push_back((PoT * hSOccupancyAllCuts_pos->GetEntries()/NEntries) * PreFactor_X *((g_ve[0]*g_ve[0])/(9e-8)) * ((Na * Z_C * D_C)/(A_C * 1e24)) * (1/BEM) * TMath::Gaus(vEtest[i], EBeam, BEM));
-        mGVE_squared[EBeam].push_back((mX_discover[EBeam] * BEM *  A_C * 1e24 * 9e-8)/( PoT * PreFactor_X * Na * Z_C * D_C) / (TMath::Gaus(vEtest[i], EBeam, BEM)));
+        // SAnalyzer.NoCuts();
+        // FAnalyzer.NoCuts();
+        // GAnalyzer.NoCuts();
     }
+    SNev_accepted = PoT*mSInstantLumi[EBeam]*(hSOccupancyAllCuts_pos->GetEntries() / Nev_CalcHep);
+    FNev_accepted = PoT*mFInstantLumi[EBeam]*(hFOccupancyAllCuts_pos->GetEntries() / Nev_CalcHep);
+    GNev_accepted = PoT*mGInstantLumi[EBeam]*(hGOccupancyAllCuts_G1->GetEntries() / Nev_CalcHep);
+    hSAcceptance->Fill(EBeam, hSOccupancyAllCuts_pos->GetEntries() / Nev_CalcHep);
+    hFAcceptance->Fill(EBeam, hFOccupancyAllCuts_pos->GetEntries() / Nev_CalcHep);
+    hGAcceptance->Fill(EBeam, hGOccupancyAllCuts_G1->GetEntries() / Nev_CalcHep);
+    hSNeve->Fill(EBeam, SNev_accepted);
+    hFNeve->Fill(EBeam, FNev_accepted);
+    hGNeve->Fill(EBeam, GNev_accepted);
 
     FileOut->cd();
     if(iEb==0){
@@ -581,8 +456,6 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
         hInEnergy_pos->Write();
         hInEnergy_ele->Write();
     }
-    MGDynCut->Write();
-
     SCh_dir->cd();
     hSFinalP1_pos->Write();
     hSFinalP2_pos->Write();
@@ -614,7 +487,6 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
     hSOccupancyGeom_ele->Write();
     hSOccupancyAllCuts_pos->Write();
     hSOccupancyAllCuts_ele->Write();
-    
 
     Full_dir->cd();
     hFFinalP1_pos->Write();
@@ -682,30 +554,13 @@ for(int iEb=0; iEb<NStepEBeam; iEb++){
 
 }
 
-//X17 production e research
-
-
-TGraph *gSYield = new TGraph(hSYield);
-TGraph *gFYield = new TGraph(hFYield);
-TGraph *gGYield = new TGraph(hGYield);
-TGraph *gSMYield = new TGraph(hSMYield);
-// gSYield->Draw();
-// gFYield->Draw();
-// gGYield->Draw();
-// gSMYield->Draw();
-
 FileOut->cd();
 hSAcceptance->Write();
 hFAcceptance->Write();
 hGAcceptance->Write();
-// hSMAcceptance->Write();
-// hSYield->Write();
-// hFYield->Write();
-// hGYield->Write();
-gSYield->Write();
-gFYield->Write();
-gGYield->Write();
-gSMYield->Write();
-
+hSNeve->Write();
+hFNeve->Write();
+hGNeve->Write();
 FileOut->Close();
+
 }

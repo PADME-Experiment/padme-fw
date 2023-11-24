@@ -2,6 +2,8 @@
 #include "DatacardManager.hh"
 
 #include "G4RunManager.hh"
+#include "G4Event.hh"
+#include "G4Run.hh"
 #include "G4UIdirectory.hh"
 #include "G4UIcmdWithAString.hh"
 #include "G4UIcmdWithAnInteger.hh"
@@ -26,6 +28,14 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
 
   fSettingsDir = new G4UIdirectory("/settings/");
   fSettingsDir->SetGuidance("UI commands to manage general behaviour of program.");
+
+  fRunNumberCmd = new G4UIcmdWithAnInteger("/run/setRunID",this);
+  fRunNumberCmd->SetGuidance("Set RunNumber parameter for this run (default: 0)");
+  fRunNumberCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //fEventNumberCmd = new G4UIcmdWithAnInteger("/settings/EventNumber",this);
+  //fEventNumberCmd->SetGuidance("Set EventNumber for first to be produced (default: 0)");
+  //fEventNumberCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fOutNameCmd = new G4UIcmdWithAString("/output/DataFileName",this);
   fOutNameCmd->SetGuidance("Define name to use for hits/digis output file.");
@@ -161,6 +171,7 @@ DatacardMessenger::~DatacardMessenger() {
   delete fTurboModeCmd;
   delete fPrintOutFrequencyCmd;
   delete fAutomaticRandomSeedCmd;
+  delete fRunNumberCmd;
   delete fSettingsDir;
 
   delete fEnableMCTruthCmd;
@@ -169,6 +180,8 @@ DatacardMessenger::~DatacardMessenger() {
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
 
   G4cout << command->GetCommandName() << " " << newValue << G4endl;
+
+  if (command == fRunNumberCmd) G4RunManager::GetRunManager()->SetRunIDCounter(fRunNumberCmd->GetNewIntValue(newValue));
 
   if (command == fOutNameCmd)   fDatacardManager->SetOutputFileName(newValue);
   if (command == fHistoNameCmd) fDatacardManager->SetHistoFileName(newValue);

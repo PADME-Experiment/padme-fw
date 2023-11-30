@@ -40,12 +40,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableMylarWindowCmd->SetDefaultValue(true);
   fEnableMylarWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  /*
   //data card for beam setup M. Raggi 06/2020
   fBeamLineSetupCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Setup",this);
   fBeamLineSetupCmd->SetGuidance("Set Beam line setup 0=2019 Be  1=2020 Mylar 2=2022 X17");
   fBeamLineSetupCmd->SetParameterName("BLS",false);
   fBeamLineSetupCmd->SetRange("BLS  >=0. && BLS < 15.");
   fBeamLineSetupCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  */
 
   fEnableBeamFlagCmd = new G4UIcmdWithABool("/Detector/BeamLine/BeamFlag",this);
   fEnableBeamFlagCmd->SetGuidance("Enable (true) or disable (false) positioning of beam monitors flags.");
@@ -166,7 +168,7 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fSetDHSTB002MagneticFieldYCmd;
   delete fSetWindowThicknessCmd;
   delete fBeamLineDir;
-  delete fBeamLineSetupCmd;
+  //delete fBeamLineSetupCmd;
 
 }
 
@@ -205,8 +207,8 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetWindowThicknessCmd )
     fBeamLineGeometry->SetWindowThickness(fSetWindowThicknessCmd->GetNewDoubleValue(par));
 
-  else if ( cmd == fBeamLineSetupCmd )
-    fBeamLineGeometry->SetBeamLineSetup(fBeamLineSetupCmd->GetNewDoubleValue(par));
+  //else if ( cmd == fBeamLineSetupCmd )
+  //  fBeamLineGeometry->SetBeamLineSetup(fBeamLineSetupCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fEnableQuadrupolesCmd ) {
     if (fEnableQuadrupolesCmd->GetNewBoolValue(par)) {
@@ -275,8 +277,8 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");
 
-  else if ( cmd == fBeamLineSetupCmd )
-    cv = fBeamLineSetupCmd->ConvertToString(fBeamLineGeometry->GetBeamLineSetup());
+  //else if ( cmd == fBeamLineSetupCmd )
+  //  cv = fBeamLineSetupCmd->ConvertToString(fBeamLineGeometry->GetBeamLineSetup());
 
   else if ( cmd == fEnableQuadrupolesCmd )
     cv = fEnableQuadrupolesCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());

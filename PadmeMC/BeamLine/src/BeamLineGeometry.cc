@@ -242,3 +242,72 @@ BeamLineGeometry::BeamLineGeometry()
 
 BeamLineGeometry::~BeamLineGeometry()
 {}
+
+void BeamLineGeometry::SetDetectorSetup(G4int setup)
+{
+
+  fDetectorSetup = setup;
+
+  if (fDetectorSetup == 10) {
+
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB5Aperture= 2.*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 20) {
+
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB5Aperture= 2.*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 30) {
+
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB5Aperture= 2.*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 40) {
+
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB5Aperture= 2.*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  }
+
+}

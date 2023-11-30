@@ -62,7 +62,8 @@ BeamLineStructure::~BeamLineStructure()
 void BeamLineStructure::CreateGeometry()
 {
   geo = BeamLineGeometry::GetInstance();
-  G4double fLineSetup = geo->GetBeamLineSetup();
+  //G4double fLineSetup = geo->GetBeamLineSetup();
+  G4int setup = geo->GetDetectorSetup();
   
   if (geo->BeamFlagIsEnabled() ) {
     BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
@@ -70,22 +71,27 @@ void BeamLineStructure::CreateGeometry()
     //    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
   }
   
-  if(fLineSetup==0.){
-    G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
+  //(fLineSetup==0.){
+  if(setup == 10){
+    //G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
+    G4cout<<"######### Create 2019 Beam Line ###############"<<G4endl;
     CreateBeThinWindow();   // Create BeWindow
     CreateDHSTB002Magnet(); // Create DHSTB002 magnet
     CreateBeamLine();       // Create Beam line 2019
   }
-  if(fLineSetup==1.){
-    G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
+  //if(fLineSetup==1.){
+  if(setup == 20 || setup == 30){
+    //G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
+    G4cout<<"######### Create 2020 Beam Line ###############"<<G4endl;
     CreateMylarThinWindow(); // Create mylar Window
     CreateDHSTB002Magnet();
     CreateDHSTB001Magnet();
     CreateBeamLine2020();    // Beam line 2020
   }
-  
-  if(fLineSetup==2.){
-    G4cout<<"######### Create 2022 Beam Line ###############"<<fLineSetup<<G4endl;
+  //if(fLineSetup==2.){
+  if(setup == 40){
+    //G4cout<<"######### Create 2022 Beam Line ###############"<<fLineSetup<<G4endl;
+    G4cout<<"######### Create 2022 Beam Line ###############"<<G4endl;
     CreateMylarThinWindow(); // Create mylar Window
     CreateDHSTB002Magnet();
     CreateDHSTB001Magnet();
@@ -1639,14 +1645,16 @@ void BeamLineStructure::CreateWallAndPipe()
 
   // Position Mylar window with relative support flange
   G4double MylarWinFlgT    = geo->GetMylarWindowFlangeThick();
-  G4double MylarWinFlgPosX = mpEntPosX+(WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT)*sin(magnetAngle);
+  G4double MylarWin_Distance = WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT;
+  G4double MylarWinFlgPosX = mpEntPosX+MylarWin_Distance*sin(magnetAngle);
   G4double MylarWinFlgPosY = mpEntPosY;
-  G4double MylarWinFlgPosZ = mpEntPosZ-(WallPipeLen+InWallPipeLen+InLinacPipeLen+0.5*MylarWinFlgT)*cos(magnetAngle);
+  G4double MylarWinFlgPosZ = mpEntPosZ-MylarWin_Distance*cos(magnetAngle);
   G4ThreeVector MylarWinFlgPos = G4ThreeVector(MylarWinFlgPosX,MylarWinFlgPosY,MylarWinFlgPosZ);
   G4RotationMatrix* MylarWinFlgRot = new G4RotationMatrix;
   MylarWinFlgRot->rotateY(magnetAngle);
   printf("BeamLine - Mylar window exit face center CRASH  is at %f %f\n",MylarWinFlgPosX,MylarWinFlgPosZ);
   printf("BeamLine - DHSTB002 exit %f %f\n",mpEntPosX,mpEntPosZ);
+  G4cout << "*** Mylar volume *** At " << MylarWinFlgPos << " Angle " << magnetAngle << " Thick " << MylarWinFlgT << G4endl;
   new G4PVPlacement(MylarWinFlgRot,MylarWinFlgPos,fMylarWindowVolume,"BeamLineMylarWinVolume",fMotherVolume,false,0,true);
 
   //create the connection pipe to DHSTB001 Raggi 02/02/2022
@@ -1665,12 +1673,17 @@ void BeamLineStructure::CreateWallAndPipe()
   logicalDHSTB001_Pipe->SetVisAttributes(steelVisAttr);
 
   // Position long pipe in between DHSTB002 and BTF wall
-  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen/2+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen/2+strFlangeThick)*mm*cos(magnetAngle));
-  //  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(DHSTB001_PipePosX,DHSTB001_PipePosY,DHSTB001_PipePosZ);
+  //G4ThreeVector DHSTB001_PipePos = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen/2+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen/2+strFlangeThick)*mm*cos(magnetAngle));
+  G4double DHSTB001_Pipe_Distance = WallPipeLen+InWallPipeLen+InLinacPipeLen+MylarWinFlgT+strFlangeThick+0.5*DHSTB001_PipeLen;
+  G4double DHSTB001_PipePosX = mpEntPosX+DHSTB001_Pipe_Distance*sin(magnetAngle);
+  G4double DHSTB001_PipePosY = mpEntPosY;
+  G4double DHSTB001_PipePosZ = mpEntPosZ-DHSTB001_Pipe_Distance*cos(magnetAngle);
+  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(DHSTB001_PipePosX,DHSTB001_PipePosY,DHSTB001_PipePosZ);
   G4RotationMatrix* DHSTB001_PipeRot = new G4RotationMatrix;
   DHSTB001_PipeRot->rotateY(magnetAngle);
   new G4PVPlacement(DHSTB001_PipeRot,DHSTB001_PipePos,logicalDHSTB001_Pipe,"BeamLineDHSTB001_Pipe",fMotherVolume,false,0,true);
   G4ThreeVector DHSTB001_PipeEnd = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen+strFlangeThick)*mm*cos(magnetAngle));
+  G4cout << "*** DHSTB001 Volume *** At " << DHSTB001_PipePos << " Angle " << magnetAngle << " Len " << DHSTB001_PipeLen << " Flange Thick " << strFlangeThick << G4endl;
   printf("End of 2020 line at  %f %f %f\n",DHSTB001_PipeEnd.x(),DHSTB001_PipeEnd.y(),DHSTB001_PipeEnd.z());
   
 }
@@ -1937,12 +1950,12 @@ void BeamLineStructure::CreateAllSLTB()
   logicalSLTB4->SetVisAttributes(steelVisAttr);
 
   // positioning supports 
-//  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
-//  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
+  //new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalCollSupport,"CollSupport3",fMotherVolume,false,0,true);
+  //new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalCollSupport,"CollSupport4",fMotherVolume,false,0,true);
     
   // positioning collimators
-//  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
-//  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+  new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
+  new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
 
   //*************************************************************
   // SLTB5 just before the DHSTB002 magnet only LR

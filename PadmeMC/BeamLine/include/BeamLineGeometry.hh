@@ -33,7 +33,8 @@ protected:
 
 public:
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  //void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
   void EnableBeWindow() { fBeWindowEnable = true; }
@@ -105,8 +106,8 @@ public:
   G4double GetSLTB5Aperture() { return fSLTB5Aperture; }
 
   //setup line configuration M. Raggi 06/2020
-  void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
-  G4double GetBeamLineSetup() { return fBeamLineSetup; }
+  //void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
+  //G4double GetBeamLineSetup() { return fBeamLineSetup; }
 
   // Dimensions of DHSTB002 magnet yoke
 

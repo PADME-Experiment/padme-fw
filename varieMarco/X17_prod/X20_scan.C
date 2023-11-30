@@ -4,7 +4,7 @@
 #include <TH2.h>
 #include <TH3.h> 
 #include <TStyle.h> 
-#include <TCanvas.h> 
+#include <TCanvas.h>
 #include <TRandom.h> 
 #include <TAxis.h>
 #include <stdio.h>

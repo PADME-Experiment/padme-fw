@@ -73,9 +73,9 @@ void HistoManager::book()
   histo[10] = new TH1D("h10", "MMiss2 50MeV<ECl<400MeV Rad>3", 475,-50.,900.);
   if (!histo[10]) G4cout << "\n can't create histo 10" << G4endl;  
   histo[11] = new TH1D("h11", "NClusters", 40,-0.5,39.5);
-  if (!histo[11]) G4cout << "\n can't create histo 9" << G4endl;  
+  if (!histo[11]) G4cout << "\n can't create histo 11" << G4endl;  
   histo[12] = new TH1D("h12", "XCoord", 400,-10.,10.);
-  if (!histo[12]) G4cout << "\n can't create histo 9" << G4endl;  
+  if (!histo[12]) G4cout << "\n can't create histo 12" << G4endl;  
   histo[13] = new TH1D("h13", "YCoord", 400,-10.,10.);
   if (!histo[13]) G4cout << "\n can't create histo 13" << G4endl; 
   histo[14] = new TH1D("h14", "Primary interaction", 5,-0.5,4.5);
@@ -92,23 +92,23 @@ void HistoManager::book()
   if (!histo[18]) G4cout << "\n can't create histo 18" << G4endl; 
 
   histo2[1] = new TH2D("h21", "XY cell weigh energy ",ECalNRow,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNCol,-ECalSizeY*0.5,ECalSizeY*0.5);
-  if (!histo2[1]) G4cout << "\n can't create histo 11" << G4endl;  
+  if (!histo2[1]) G4cout << "\n can't create histo 21" << G4endl;  
   histo2[2] = new TH2D("h22", "XY weigh energy ",600,-30., 30.,600,-30.,30.);
-  if (!histo2[2]) G4cout << "\n can't create histo 11" << G4endl;  
+  if (!histo2[2]) G4cout << "\n can't create histo 22" << G4endl;  
   histo2[3] = new TH2D("h23", "nCell vs ETotCal",15,-0.5, 14.5,200,0.,100.);
-  if (!histo2[3]) G4cout << "\n can't create histo 11" << G4endl;
+  if (!histo2[3]) G4cout << "\n can't create histo 23" << G4endl;
   //histo2[4] = new TH2D("h24", "nCellCl vs ECluster",ECalNCells*0.5,-0.5, ECalNCells*0.5-0.5,BeamEnergy/2,0.,BeamEnergy);
   //if (!histo2[4]) G4cout << "\n can't create histo 11" << G4endl;
   histo2[5] = new TH2D("h25", "X Y cluster Pos ",ECalNRow*10,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNRow*10,-ECalSizeY*0.5,ECalSizeY*0.5);
-  if (!histo2[5]) G4cout << "\n can't create histo 15" << G4endl;
+  if (!histo2[5]) G4cout << "\n can't create histo 25" << G4endl;
   histo2[6] = new TH2D("h26", "Energy vs Theta calo ",275,0.,550.,60,0.,12.);
-  if (!histo2[6]) G4cout << "\n can't create histo 16" << G4endl;
+  if (!histo2[6]) G4cout << "\n can't create histo 26" << G4endl;
   histo2[7] = new TH2D("h27", "Energy vs Theta calo >50 MeV ",275,0.,550.,60,0.,12.);
-  if (!histo2[7]) G4cout << "\n can't create histo 16" << G4endl;
+  if (!histo2[7]) G4cout << "\n can't create histo 27" << G4endl;
   histo2[8] = new TH2D("h28", "Energy vs Theta Brem",250,50.,550.,60,0.,12.);
-  if (!histo2[8]) G4cout << "\n can't create histo 18" << G4endl;
+  if (!histo2[8]) G4cout << "\n can't create histo 28" << G4endl;
   histo2[9] = new TH2D("h29", "Energy vs Theta Annhi ",200,50.,450.,50,0.,10.);
-  if (!histo2[9]) G4cout << "\n can't create histo 19" << G4endl;
+  if (!histo2[9]) G4cout << "\n can't create histo 29" << G4endl;
  
   // Additional histos for TimePix
   double TPixXmin= -14.1/2;
@@ -119,13 +119,13 @@ void HistoManager::book()
   double TPixYmax=TPixYmin+14.1*2;
   double TPiYBins = 14.1*2/0.055;
 
-  double MinE= 300.;
+  double MinE= 100.;
   double MaxE= 500.;
   int BinE= (int)(MaxE-MinE)*2;
 
   // h50 Series TimePix study
   histo[50] = new TH1D("h50","Tpix energy",500,0.,1.);
-  if (!histo[50]) G4cout << "\n can't create histo 18" << G4endl; 
+  if (!histo[50]) G4cout << "\n can't create histo 50" << G4endl; 
   histo[51] = new TH1D("h51","TPix Time ",500,0.,500.);
   if (!histo[51]) G4cout << "\n can't create histo 51" << G4endl;
   histo[52] = new TH1D("h52","TPix X coord",TPiXBins,TPixXmin,TPixXmax);

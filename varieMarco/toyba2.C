@@ -20,7 +20,7 @@
 using namespace std;
 const double me = 0.511; // MeV
 const double hc = 197; // MeV fm
-const double alpha = 0.007297;
+const double alpha = 0.007297; // 1/137
 
 
 double dsdoBha(double Estar, double Pstar, double cosThe);
@@ -432,8 +432,6 @@ void toyba(bool fVerbose,int mode, double sqrts){
       }
     } // loop over MC events
 
-
-
   }
 
   TFile* filo = new TFile(filename.Data(),"RECREATE");
@@ -479,15 +477,10 @@ void toyba(bool fVerbose,int mode, double sqrts){
   }
 
 
-
-
-
   dcos->Write();
   dcos_scha->Write();
   bfieldy->Write();
   filo->Close();
-
-
 
 }
 

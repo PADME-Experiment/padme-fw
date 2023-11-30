@@ -311,7 +311,8 @@ void BeamLineStructure::CreateBeamLine2020()
 
   std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
   std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
-  G4double SLTBThickness = 30.0*mm;
+  std::cout<<"Set collimators aperture SLTB5 "<<geo->GetSLTB5Aperture()<<std::endl;
+  G4double SLTBThickness = 35.0*mm;
   // Support of the collimatros just to visualize them
   G4VisAttributes CollVisAttr = G4VisAttributes(G4Colour::Blue());
   G4double Radius=60*mm;
@@ -953,7 +954,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
 
 }// END of DHSTB002 magnet creation
 
-// Create DHSTB001 magnet
+// Create DHSTB001 magnet and SLTB2
 void BeamLineStructure::CreateDHSTB001Magnet()
 {
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
@@ -1124,7 +1125,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   // START POSITIONING SLTB2           MR 01/03/2022
   //***********************************************************
   //  G4double SLTB2ToMylar = 519.24*mm;
-  G4double SLTBThickness = 30.0*mm;
+  G4double SLTBThickness = 35.0*mm;
   G4double SLTB2Aperture = geo->GetSLTB2Aperture();  
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double SLTB2PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+100*mm; 
@@ -1160,7 +1161,6 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   logicalBTFTarget->SetVisAttributes(CopperVisAttr);
   
   // positioning BTF target
-  std::cout<<"CAZZOOOO "<<geo->BTFTargetIsEnabled()<<std::endl;
   if(geo->BTFTargetIsEnabled()){
     new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
     
@@ -1888,7 +1888,7 @@ void BeamLineStructure::CreateAllSLTB()
 
   std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
   std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
-  G4double SLTBThickness = 30.0*mm;
+  G4double SLTBThickness = 35.0*mm;
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
   G4double InLinacPipeLen  = geo->GetWallMylarWinDistance();

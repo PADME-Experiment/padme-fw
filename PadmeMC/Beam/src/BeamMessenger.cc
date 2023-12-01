@@ -188,6 +188,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
   fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   // Settings for BhaBha M. Raggi 20/05/2021
   fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
   fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
@@ -210,6 +211,16 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
   fEnableCalibRunCmd->SetParameterName("CR",false);
   fEnableCalibRunCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCalibRunDetectorCmd = new G4UIcmdWithAString("/beam/calib_detector",this);
+  fSetCalibRunDetectorCmd->SetParameterName("CDet",false);
+  fSetCalibRunDetectorCmd->SetCandidates("ECal LeadGlass");
+  fSetCalibRunDetectorCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCalibRunParticleCmd = new G4UIcmdWithAString("/beam/calib_particle",this);
+  fSetCalibRunParticleCmd->SetParameterName("CPar",false);
+  fSetCalibRunParticleCmd->SetCandidates("gamma e+ e-");
+  fSetCalibRunParticleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetCalibRunEnergyCmd = new G4UIcmdWithADoubleAndUnit("/beam/calib_energy",this);
   fSetCalibRunEnergyCmd->SetGuidance("Set energy of calibration gamma.");
@@ -322,6 +333,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetDecayLengthCmd;
 
   delete fEnableCalibRunCmd;
+  delete fSetCalibRunDetectorCmd;
+  delete fSetCalibRunParticleCmd;
   delete fSetCalibRunEnergyCmd;
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
@@ -459,6 +472,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     }
   }
 
+  else if ( cmd == fSetCalibRunDetectorCmd )
+    fBeamParameters->SetCalibRunDetector(par);
+
+  else if ( cmd == fSetCalibRunParticleCmd )
+    fBeamParameters->SetCalibRunParticle(par);
+
   else if ( cmd == fSetCalibRunEnergyCmd )
     fBeamParameters->SetCalibRunEnergy(fSetCalibRunEnergyCmd->GetNewDoubleValue(par));
 
@@ -576,6 +595,12 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
+
+  else if ( cmd == fSetCalibRunDetectorCmd )
+    cv = fBeamParameters->GetCalibRunDetector();  
+
+  else if ( cmd == fSetCalibRunParticleCmd )
+    cv = fBeamParameters->GetCalibRunParticle();  
 
   else if ( cmd == fSetCalibRunEnergyCmd )
     cv = fSetCalibRunEnergyCmd->ConvertToString(fBeamParameters->GetCalibRunEnergy());

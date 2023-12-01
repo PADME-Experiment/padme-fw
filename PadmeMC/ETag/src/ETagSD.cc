@@ -92,8 +92,6 @@ G4bool ETagSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   
   ETagCollection ->insert(newHit);     
 
-  //  track->SetTrackStatus(fStopAndKill);
-
   return true;
 }
 

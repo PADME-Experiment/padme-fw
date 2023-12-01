@@ -4,7 +4,6 @@
 #Detector and line configuration
 /Detector/Setup 40
 /Detector/EnableStructure BeamLine
-/Detector/BeamLine/Setup 1.
 /Detector/SetMagneticFieldValue 0. tesla
 /Detector/BeamLine/DHSTB001_FieldY -0.5469 tesla
 /Detector/BeamLine/DHSTB002_FieldY -0.5469 tesla
@@ -18,25 +17,26 @@
 #/Detector/EnableSubDetector ETag
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector TPix
-/beam/n_e+_per_bunch 4000
-/beam/bunch_time_length 250. ns
-/beam/momentum 282.5 MeV
-/beam/position_spread_on true
-/beam/position_x_spread 1. mm
-/beam/position_y_spread 1. mm
-/beam/momentum_spread_on true
-/beam/momentum_spread 0.7 MeV
-/beam/emittance_on true
-/beam/emittance_x 1. mrad
-/beam/emittance_y 1. mrad
-
-#STARTING AT THE MYLAR WINDOW POSTION
-/beam/position_x 7233. mm
-/beam/position_y 0. cm
-/beam/position_z -9581. mm
-/beam/direction -1. 0. 1.
 
 /run/initialize 
+
+#/beam/n_e+_per_bunch 4000
+#/beam/bunch_time_length 250. ns
+#/beam/momentum 282.5 MeV
+#/beam/position_spread_on true
+#/beam/position_x_spread 1. mm
+#/beam/position_y_spread 1. mm
+#/beam/momentum_spread_on true
+#/beam/momentum_spread 0.7 MeV
+#/beam/emittance_on true
+#/beam/emittance_x 1. mrad
+#/beam/emittance_y 1. mrad
+
+#STARTING AT THE MYLAR WINDOW POSTION
+#/beam/position_x 7233. mm
+#/beam/position_y 0. cm
+#/beam/position_z -9581. mm
+#/beam/direction -1. 0. 1.
 
 #/vis/open OGL 1000x1000-0+0
 #/vis/viewer/set/autoRefresh false
@@ -68,4 +68,6 @@
 #/vis/filtering/trajectories/create/attributeFilter
 #/vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
 #/vis/filtering/trajectories/attributeFilter-0/addInterval 5. MeV 1000. MeV
+
+#/run/setRunID 0
 /run/beamOn 100

@@ -27,10 +27,9 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fSettingsDir = new G4UIdirectory("/settings/");
   fSettingsDir->SetGuidance("UI commands to manage general behaviour of program.");
 
- fRunNumberCmd = new G4UIcmdWithAnInteger("/run/setRunID",this);
- fRunNumberCmd->SetGuidance("Set RunNumber parameter for this run (default: 0)");
- fRunNumberCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
-
+  fRunNumberCmd = new G4UIcmdWithAnInteger("/run/setRunID",this);
+  fRunNumberCmd->SetGuidance("Set RunNumber parameter for this run (default: 0)");
+  fRunNumberCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fOutNameCmd = new G4UIcmdWithAString("/output/DataFileName",this);
   fOutNameCmd->SetGuidance("Define name to use for hits/digis output file.");

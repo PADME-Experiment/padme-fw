@@ -69,6 +69,11 @@
 
 #/Detector/VerboseLevel 0
 
+# General setup for desired year: 10=2019, 20=2020, 30=2021, 40=2022
+#/Detector/Setup 10
+
+# Any detector customization must be done after the initial setup
+
 #/Detector/EnableSubDetector ECal
 #/Detector/EnableSubDetector Target
 #/Detector/EnableSubDetector SAC
@@ -117,8 +122,8 @@
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
-# Beam line settings 0=2019 setup 1=2020 setup
-#/Detector/BeamLine/Setup 1.   
+# Beam line setup
+
 #/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/EnableMylarWindow true
 #/Detector/BeamLine/DHSTB002_FieldY -1.055 tesla
@@ -129,7 +134,7 @@
 #/Detector/BeamLine/Q3_FieldGrad 5.
 #/Detector/BeamLine/Q4_FieldGrad 5.
 
-# semiapertura dei collimatori 
+# Half of collimators aperture
 #/Detector/BeamLine/SLTB2Aperture 1.7 mm
 #/Detector/BeamLine/SLTB3Aperture 1.7 mm
 #/Detector/BeamLine/SLTB4Apertuer 2 mm
@@ -193,7 +198,11 @@
 #/Detector/TPix/NColumns 6
 #/Detector/TPix/DistanceToCorner 29.73 cm
 
-# Beam setup
+# Create detectors and initialize run
+/run/initialize
+
+# Initial beam setup for each year is done at initialization
+# All beam customizations must be done after it
 
 # Primary positrons setup (default PADMEMC configuration)
 #/beam/n_e+_per_bunch 25000
@@ -270,9 +279,6 @@
 #/beam/calib_x 14. cm
 #/beam/calib_y 14. cm
 #/beam/calib_radius 1. cm
-
-# Create detectors and initialize run
-/run/initialize
 
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
@@ -379,5 +385,8 @@
 /vis/filtering/trajectories/create/attributeFilter
 /vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
 /vis/filtering/trajectories/attributeFilter-0/addInterval 1. MeV 1000. MeV
+
+# Assign a number to current run
+#/run/setRunID 0
 
 #/run/beamOn 1	

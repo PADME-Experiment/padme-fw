@@ -39,8 +39,8 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 
   // Default Z position of beam is 1 um before the target.
   // Can be changed with /beam/position_z datacard
-  BeamParameters* bpar = BeamParameters::GetInstance();
-  bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
+  //BeamParameters* bpar = BeamParameters::GetInstance();
+  //bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()-1.*um);
 
   // Connect to BeamMessenger
   fBeamMessenger = new BeamMessenger(this);

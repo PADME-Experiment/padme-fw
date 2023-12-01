@@ -246,17 +246,20 @@ BeamLineGeometry::~BeamLineGeometry()
 void BeamLineGeometry::SetDetectorSetup(G4int setup)
 {
 
+  // Data updated on Nov 30, 2023, by Emanuele Leonardi and Mauro Raggi
+
   fDetectorSetup = setup;
 
   if (fDetectorSetup == 10) {
 
+    // Year 2019
     fDHSTB002MagneticFieldY = -1.055*tesla;
     fDHSTB001MagneticFieldY = -1.055*tesla;
 
-    fSLTB4Aperture= 4.0*mm;
-    fSLTB3Aperture= 3.1*mm;
     fSLTB2Aperture= 1.7*mm;
-    fSLTB5Aperture= 2.*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
 
     fQ1MagneticFieldGrad =  2.810*tesla/m;
     fQ2MagneticFieldGrad =  2.510*tesla/m;
@@ -265,13 +268,14 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
 
   } else if (fDetectorSetup == 20) {
 
+    // Year 2020
     fDHSTB002MagneticFieldY = -1.055*tesla;
     fDHSTB001MagneticFieldY = -1.055*tesla;
 
-    fSLTB4Aperture= 4.0*mm;
-    fSLTB3Aperture= 3.1*mm;
     fSLTB2Aperture= 1.7*mm;
-    fSLTB5Aperture= 2.*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
 
     fQ1MagneticFieldGrad =  2.810*tesla/m;
     fQ2MagneticFieldGrad =  2.510*tesla/m;
@@ -280,13 +284,14 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
 
   } else if (fDetectorSetup == 30) {
 
+    // Year 2021
     fDHSTB002MagneticFieldY = -1.055*tesla;
     fDHSTB001MagneticFieldY = -1.055*tesla;
 
-    fSLTB4Aperture= 4.0*mm;
-    fSLTB3Aperture= 3.1*mm;
     fSLTB2Aperture= 1.7*mm;
-    fSLTB5Aperture= 2.*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
 
     fQ1MagneticFieldGrad =  2.810*tesla/m;
     fQ2MagneticFieldGrad =  2.510*tesla/m;
@@ -295,18 +300,21 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
 
   } else if (fDetectorSetup == 40) {
 
-    fDHSTB002MagneticFieldY = -1.055*tesla;
-    fDHSTB001MagneticFieldY = -1.055*tesla;
+    // Year 2022
+    // Assume default energy of 282.8 MeV (CM = 17 MeV)
+    // Change it with datacards if using a different energy
+    fDHSTB002MagneticFieldY = -0.5308*tesla;
+    fDHSTB001MagneticFieldY = -0.5308*tesla;
 
-    fSLTB4Aperture= 4.0*mm;
-    fSLTB3Aperture= 3.1*mm;
-    fSLTB2Aperture= 1.7*mm;
-    fSLTB5Aperture= 2.*mm;
+    fSLTB2Aperture= 1.74*mm;
+    fSLTB3Aperture= 4.2*mm;
+    fSLTB4Aperture= 1.9*mm;
+    fSLTB5Aperture= 5.0*mm;
 
-    fQ1MagneticFieldGrad =  2.810*tesla/m;
-    fQ2MagneticFieldGrad =  2.510*tesla/m;
-    fQ3MagneticFieldGrad =  3.666*tesla/m;
-    fQ4MagneticFieldGrad =  3.925*tesla/m;
+    fQ1MagneticFieldGrad =  1.771*tesla/m;
+    fQ2MagneticFieldGrad =  1.490*tesla/m;
+    fQ3MagneticFieldGrad =  1.881*tesla/m;
+    fQ4MagneticFieldGrad =  2.112*tesla/m;
 
   }
 

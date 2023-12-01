@@ -18,6 +18,10 @@ BeamParameters* BeamParameters::GetInstance()
 BeamParameters::BeamParameters()
 {
 
+  // Default is 2019 (setup 10) and no beamline
+  fDetectorSetup = 10;
+  fBeamLineEnabled = false;
+
   // Average number of positrons in each bunch
   fNPositronsPerBunch = 25000;
   fNPositronsPerBunchApplySpread = true;
@@ -84,3 +88,110 @@ BeamParameters::BeamParameters()
 
 BeamParameters::~BeamParameters()
 {}
+
+void BeamParameters::SetDetectorSetup(G4int setup)
+{
+  fDetectorSetup = setup;
+
+  if (fDetectorSetup == 10) {
+
+    // Year 2019
+    printf("BeamParameters::SetDetectorSetup - Setting beam to default parameters for year 2019\n");
+
+    if (fBeamLineEnabled) printf("BeamParameters::SetDetectorSetup - WARNING - No BeamLine defined for year 2019 (setup 10).");
+
+    // Average number of positrons in each bunch
+    fNPositronsPerBunch = 25000;
+
+    // Bunch time structure
+    fBunchTimeLength = 250.*ns;
+
+    // Position and spread of beam at Target front face (use default Target position: can be changed)
+    fBeamCenterPosX = 0.*cm;
+    fBeamCenterPosY = 0.*cm;
+    fBeamCenterPosZ = -1028.001*mm; // 1um before actual Target front face
+
+    fBeamCenterPosXSpread = 1.*mm;
+    fBeamCenterPosYSpread = 1.*mm;
+
+    // Beam momentum
+    fBeamMomentum = 545.*MeV;
+    fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
+
+    // Beam direction
+    fBeamDirection = G4ThreeVector(0.,0.,1.);
+
+    // Beam emittance (spread of X,Y beam direction components)
+    fBeamEmittanceX = 1.*mrad;
+    fBeamEmittanceY = 1.*mrad;
+
+  } else if (fDetectorSetup == 20 || fDetectorSetup == 30) {
+
+    // Year 2020/2021
+    printf("BeamParameters::SetDetectorSetup - Setting beam to default parameters for year 2020/2021\n");
+
+    fBeamMomentum = 490.*MeV;
+    fBunchTimeLength = 250.*ns;
+    if (fBeamLineEnabled) {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is ENABLED\n");
+      fNPositronsPerBunch = 25000;
+      fBeamCenterPosX = 0.*cm;
+      fBeamCenterPosY = 0.*cm;
+      fBeamCenterPosZ = -1028.001*mm; // 1um before actual Target front face
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
+      fBeamDirection = G4ThreeVector(0.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    } else {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is DISABLED\n");
+      fNPositronsPerBunch = 25000;
+      fBeamCenterPosX = 0.*cm;
+      fBeamCenterPosY = 0.*cm;
+      fBeamCenterPosZ = -1028.001*mm; // 1um before actual Target front face
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.01*fBeamMomentum; // 1% of beam momentum
+      fBeamDirection = G4ThreeVector(0.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    }
+
+  } else if (fDetectorSetup == 40) {
+
+    // Year 2022
+    printf("BeamParameters::SetDetectorSetup - Setting beam to default parameters for year 2022\n");
+
+    fBeamMomentum = 282.8*MeV;
+    fBunchTimeLength = 250.*ns;
+    if (fBeamLineEnabled) {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is ENABLED\n");
+      fNPositronsPerBunch = 30000;
+      fBeamCenterPosX =  7233.*mm; //
+      fBeamCenterPosY =     0.*mm; // Starting in front of Mylar window
+      fBeamCenterPosZ = -9581.*mm; //
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.7*MeV;
+      fBeamDirection = G4ThreeVector(-1.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    } else {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is DISABLED\n");
+      fNPositronsPerBunch = 4000;
+      fBeamCenterPosX =        0.*mm; //
+      fBeamCenterPosY =        0.*mm; // Starting 1um before actual Target front face 
+      fBeamCenterPosZ = -1028.001*mm; //
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.004*fBeamMomentum; // 0.4% of beam momentum
+      fBeamDirection = G4ThreeVector(0.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    }
+
+  } else {
+    printf("BeamParameters::SetDetectorSetup - ERROR - Setup %d is not available.\n",fDetectorSetup);
+  }
+}

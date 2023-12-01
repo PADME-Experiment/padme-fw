@@ -91,8 +91,7 @@ BeamLineGeometry::BeamLineGeometry()
   fMagVolMinRadius = fDHSTB002CenterRadius-0.5*fMagVolSizeX;
   fMagVolMaxRadius = fDHSTB002CenterRadius+0.5*fMagVolSizeX;
 
-  // Dimensions of the beam pipe inside the magnet
-
+  // Dimensions of the beam pipe inside the magnets DHSTB001 and DHSTB002
   // Transverse section
   fMagPipeSizeX = 59.*mm;
   fMagPipeSizeY = 40.*mm;
@@ -152,15 +151,12 @@ BeamLineGeometry::BeamLineGeometry()
   fBePipeLength = 1664.*mm;
   fBePipeRIn = 21.0*mm;
   fBePipeROut = 24.0*mm;
-
   fBePipeFlangeFrontRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet;
   fBePipeFlangeFrontThick = 17.5*mm; // Thickness from DN63 datasheet;
-
   fBePipeFlangeBackRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet;
   fBePipeFlangeBackThick = 17.5*mm; // Thickness from DN63 datasheet;
 
   // Properties of Be thin window and its support flange
-
   fBeWindowRadius = 30.5*mm;
   fBeWindowThick = 250.*um;
   fBeWindowFlangeRadius = 0.5*113.5*mm;
@@ -176,9 +172,9 @@ BeamLineGeometry::BeamLineGeometry()
 
   fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
 
-  ///********M.R. ***********
+  ///********M.R. Default values for RUN II ***********
   //         PADME-- DHSTB002 -- Q4 --- Q3 --|  |-- Q2----Q1-----MyW
-  ///
+  ///        When BTF current I is read the gradient is obtained using
   //         Quadrupoles Gradient = 8.372E-2 * I + 2.3767E-2
 
   fQ1MagneticFieldGrad =  2.810*tesla/m; // M.R. from L FOggetta e-mail 31/03/2021
@@ -190,19 +186,22 @@ BeamLineGeometry::BeamLineGeometry()
   // Collimators after mylar sltb4(LR) <-- sltb3(UPDW)  <-- Mylar 
   ///////////////////////////////////////////////////////////////////////
   // November 2020 tune L. Foggetta
+  // the aperture is calculated using the sum of TBXX-TBXX_M which is the maximum 
   //TB4R   26.16 TB4L   22.30          TB3 Up 26.06      TB3 Down 23.32	
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
-  fSLTB4Aperture= 4. *mm;
+
+  fSLTB4Aperture= 4.0*mm;
   fSLTB3Aperture= 3.1*mm;
   fSLTB2Aperture= 1.7*mm;
+  // Only in Run III starting from 2022
+  fSLTB5Aperture= 2.*mm;
 
 //  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.710*tesla/m;
 //  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm
 //  fQ2MagneticFieldGrad =  2.910*tesla/m;
   
-
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
   fQ4DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
   fQ1Q2Dist = 1100.*mm; //center to center quads in LINAC Checked on drawing M. Raggi and E. Leonardi 02/03/2021
@@ -212,13 +211,111 @@ BeamLineGeometry::BeamLineGeometry()
   fWallThickness        =  141.5*cm;   //check
   fWallPipeLen          =  251.4*cm;   //check
   fWallHoleRadius       =   30.0*cm;   //check
-  fWallMylarWinDistance =  297.0*cm;   //Check 
-  fDHSTB002WallDistance =  380.5*cm;   //check
+  fWallMylarWinDistance =  297.0*cm;   //was wrong? 
+  //  fWallMylarWinDistance =  267.0*cm;   //Check 
+  fDHSTB002WallDistance =  380.5*cm;   //was wrong ?
+  //fDHSTB002WallDistance =  411.5*cm;   //check seem to be 4115 08/2022
 
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022 
+  // Dimensions of the beam pipe inside the pulsed Magnet
+  // 
+
+  fDHSTB002ToPulsedMagnet = 6642.*mm;   //flange to flange Raggi
+  fPulsedPipeSizeX =   63.*mm; //full size
+  fPulsedPipeSizeY =   24.*mm; //full size
+  fPulsedPipeLength= 1044.*mm;
+
+  fPulsedPipeHoleSizeX = 57.*mm;
+  fPulsedPipeHoleSizeY = 18.*mm;
+
+  fPulsedFlangeR     =  0.5*113.5*mm;
+  fPulsedFlangeThick =  17.5*mm;        
+               
   //  DN 63 pipes specs  diametro interno 66 esterno 70
   f2020PipeOuterRadius  =    3.5*cm; // Using DN specs
   f2020PipeInnerRadius  =    3.3*cm; // Using DN specs
+
+  fBTFTargetEnable = false;
+  fBTFTargetThickness = 24.4*mm;
+  fBTFTargetDistance  = 2370.*mm; 
 }
 
 BeamLineGeometry::~BeamLineGeometry()
 {}
+
+void BeamLineGeometry::SetDetectorSetup(G4int setup)
+{
+
+  // Data updated on Nov 30, 2023, by Emanuele Leonardi and Mauro Raggi
+
+  fDetectorSetup = setup;
+
+  if (fDetectorSetup == 10) {
+
+    // Year 2019
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 20) {
+
+    // Year 2020
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 30) {
+
+    // Year 2021
+    fDHSTB002MagneticFieldY = -1.055*tesla;
+    fDHSTB001MagneticFieldY = -1.055*tesla;
+
+    fSLTB2Aperture= 1.7*mm;
+    fSLTB3Aperture= 3.1*mm;
+    fSLTB4Aperture= 4.0*mm;
+    fSLTB5Aperture= 0.0*mm;
+
+    fQ1MagneticFieldGrad =  2.810*tesla/m;
+    fQ2MagneticFieldGrad =  2.510*tesla/m;
+    fQ3MagneticFieldGrad =  3.666*tesla/m;
+    fQ4MagneticFieldGrad =  3.925*tesla/m;
+
+  } else if (fDetectorSetup == 40) {
+
+    // Year 2022
+    // Assume default energy of 282.8 MeV (CM = 17 MeV)
+    // Change it with datacards if using a different energy
+    fDHSTB002MagneticFieldY = -0.5308*tesla;
+    fDHSTB001MagneticFieldY = -0.5308*tesla;
+
+    fSLTB2Aperture= 1.74*mm;
+    fSLTB3Aperture= 4.2*mm;
+    fSLTB4Aperture= 1.9*mm;
+    fSLTB5Aperture= 5.0*mm;
+
+    fQ1MagneticFieldGrad =  1.771*tesla/m;
+    fQ2MagneticFieldGrad =  1.490*tesla/m;
+    fQ3MagneticFieldGrad =  1.881*tesla/m;
+    fQ4MagneticFieldGrad =  2.112*tesla/m;
+
+  }
+
+}

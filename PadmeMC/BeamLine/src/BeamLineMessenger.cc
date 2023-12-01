@@ -40,12 +40,14 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableMylarWindowCmd->SetDefaultValue(true);
   fEnableMylarWindowCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  /*
   //data card for beam setup M. Raggi 06/2020
   fBeamLineSetupCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Setup",this);
-  fBeamLineSetupCmd->SetGuidance("Set Beam line setup 0=2019 Be  1=2020 Mylar");
+  fBeamLineSetupCmd->SetGuidance("Set Beam line setup 0=2019 Be  1=2020 Mylar 2=2022 X17");
   fBeamLineSetupCmd->SetParameterName("BLS",false);
   fBeamLineSetupCmd->SetRange("BLS  >=0. && BLS < 15.");
   fBeamLineSetupCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  */
 
   fEnableBeamFlagCmd = new G4UIcmdWithABool("/Detector/BeamLine/BeamFlag",this);
   fEnableBeamFlagCmd->SetGuidance("Enable (true) or disable (false) positioning of beam monitors flags.");
@@ -88,7 +90,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB3Cmd->SetGuidance("");
   fSetSLTB3Cmd->SetParameterName("DFY",false);
   fSetSLTB3Cmd->SetDefaultUnit("mm");
-  fSetSLTB3Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB3Cmd->SetRange("DFY >=0. && DFY < 50.");
   fSetSLTB3Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //SLTB4 aperture
@@ -96,14 +98,29 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB4Cmd->SetGuidance("");
   fSetSLTB4Cmd->SetParameterName("DFY",false);
   fSetSLTB4Cmd->SetDefaultUnit("mm");
-  fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 10.");
+  fSetSLTB4Cmd->SetRange("DFY >=0. && DFY < 50.");
   fSetSLTB4Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //SLTB5 aperture 04/23
+  fSetSLTB5Cmd = new G4UIcmdWithADoubleAndUnit("/Detector/BeamLine/SLTB5Aperture",this);
+  fSetSLTB5Cmd->SetGuidance("");
+  fSetSLTB5Cmd->SetParameterName("DFY",false);
+  fSetSLTB5Cmd->SetDefaultUnit("mm");
+  fSetSLTB5Cmd->SetRange("DFY >=0. && DFY < 50.");
+  fSetSLTB5Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
   fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
   fEnableQuadrupolesCmd->SetParameterName("QPS",false);
   fEnableQuadrupolesCmd->SetDefaultValue(false);
   fEnableQuadrupolesCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //Activate the BTFTarget Region.
+  fEnableBTFTargetCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableBTFTarget",this);
+  fEnableBTFTargetCmd->SetGuidance("Enable (true) or disable (false) positioning of BTFTargetRegion");
+  fEnableBTFTargetCmd->SetParameterName("TPS",false);
+  fEnableBTFTargetCmd->SetDefaultValue(false);
+  fEnableBTFTargetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q1 quadrupole magnet gradient.
   fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
@@ -139,6 +156,7 @@ BeamLineMessenger::~BeamLineMessenger()
 {
 
   delete fEnableQuadrupolesCmd;
+  delete fEnableBTFTargetCmd;
   delete fSetQ1_FieldGradCmd; 
   delete fSetQ2_FieldGradCmd; 
   delete fSetQ3_FieldGradCmd; 
@@ -150,7 +168,7 @@ BeamLineMessenger::~BeamLineMessenger()
   delete fSetDHSTB002MagneticFieldYCmd;
   delete fSetWindowThicknessCmd;
   delete fBeamLineDir;
-  delete fBeamLineSetupCmd;
+  //delete fBeamLineSetupCmd;
 
 }
 
@@ -189,14 +207,22 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetWindowThicknessCmd )
     fBeamLineGeometry->SetWindowThickness(fSetWindowThicknessCmd->GetNewDoubleValue(par));
 
-  else if ( cmd == fBeamLineSetupCmd )
-    fBeamLineGeometry->SetBeamLineSetup(fBeamLineSetupCmd->GetNewDoubleValue(par));
+  //else if ( cmd == fBeamLineSetupCmd )
+  //  fBeamLineGeometry->SetBeamLineSetup(fBeamLineSetupCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fEnableQuadrupolesCmd ) {
     if (fEnableQuadrupolesCmd->GetNewBoolValue(par)) {
       fBeamLineGeometry->EnableQuadrupoles();
     } else {
       fBeamLineGeometry->DisableQuadrupoles();
+    }
+  }
+
+  else if ( cmd == fEnableBTFTargetCmd ) {
+    if (fEnableBTFTargetCmd->GetNewBoolValue(par)) {
+      fBeamLineGeometry->EnableBTFTarget();
+    } else {
+      fBeamLineGeometry->DisableBTFTarget();
     }
   }
 
@@ -228,6 +254,10 @@ void BeamLineMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetSLTB4Cmd )
     fBeamLineGeometry->SetSLTB4Aperture(fSetSLTB4Cmd->GetNewDoubleValue(par));
 
+  // Set SLTB5 Aperture
+  else if ( cmd == fSetSLTB5Cmd )
+    fBeamLineGeometry->SetSLTB5Aperture(fSetSLTB5Cmd->GetNewDoubleValue(par));
+
 }
 
 G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
@@ -247,11 +277,14 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fSetDHSTB002MagneticFieldYCmd )
     cv = fSetDHSTB002MagneticFieldYCmd->ConvertToString(fBeamLineGeometry->GetDHSTB002MagneticFieldY(),"tesla");
 
-  else if ( cmd == fBeamLineSetupCmd )
-    cv = fBeamLineSetupCmd->ConvertToString(fBeamLineGeometry->GetBeamLineSetup());
+  //else if ( cmd == fBeamLineSetupCmd )
+  //  cv = fBeamLineSetupCmd->ConvertToString(fBeamLineGeometry->GetBeamLineSetup());
 
   else if ( cmd == fEnableQuadrupolesCmd )
     cv = fEnableQuadrupolesCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
+
+  else if ( cmd == fEnableBTFTargetCmd )
+    cv = fEnableBTFTargetCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
 
   else if ( cmd == fSetQ1_FieldGradCmd )
    cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");

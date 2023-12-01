@@ -27,6 +27,8 @@ private:
   G4UIdirectory* fAnalysisDir;
   G4UIdirectory* fSettingsDir;
 
+  G4UIcmdWithAnInteger* fRunNumberCmd;
+
   G4UIcmdWithAString* fOutNameCmd;
   G4UIcmdWithAString* fHistoNameCmd;
 

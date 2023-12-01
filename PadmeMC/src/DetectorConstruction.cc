@@ -34,6 +34,7 @@
 #include "ChamberGeometry.hh"
 #include "BeamLineGeometry.hh"
 #include "HallGeometry.hh"
+#include "BeamParameters.hh"
 
 #include "G4Material.hh"
 
@@ -163,6 +164,16 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   ChamberGeometry* geoChamber = ChamberGeometry::GetInstance();
   HEPVetoGeometry* geoHEPVeto = HEPVetoGeometry::GetInstance();
   TPixGeometry* geoTPix = TPixGeometry::GetInstance();
+  ECalGeometry* geoECal = ECalGeometry::GetInstance();
+  ETagGeometry* geoETag = ETagGeometry::GetInstance();
+
+  // Set initial beam characteristics (can be modified via datacards)
+  if (fEnableBeamLine) {
+    BeamParameters::GetInstance()->EnableBeamLine();
+  } else {
+    BeamParameters::GetInstance()->DisableBeamLine();
+  }
+  BeamParameters::GetInstance()->SetDetectorSetup(fDetectorSetup);
 
   //------------------------------
   // World Volume
@@ -230,13 +241,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Beam Line structure M. Raggi 07/03/2019
   if (fEnableBeamLine) {
-    if (fBeamLineIsVisible) {
-      fBeamLineStructure->SetBeamLineVisible();
+    if (fDetectorSetup == 10) {
+      fEnableBeamLine = 0;
+      printf("DetectorConstruction::Construct - WARNING: BeamLine for year 2019 (setup 10) is not available\n");
     } else {
-      fBeamLineStructure->SetBeamLineInvisible();
+      if (fBeamLineIsVisible) {
+	fBeamLineStructure->SetBeamLineVisible();
+      } else {
+	fBeamLineStructure->SetBeamLineInvisible();
+      }
+      fBeamLineStructure->SetMotherVolume(logicWorld);
+      fBeamLineStructure->CreateGeometry();
     }
-    fBeamLineStructure->SetMotherVolume(logicWorld);
-    fBeamLineStructure->CreateGeometry();
   }
 
   // Create magnetic volume inside vacuum chamber
@@ -455,11 +471,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fSACDetector->CreateGeometry();
   }
 
-  if (fEnableETag) {
-    fETagDetector->SetMotherVolume(logicWorld);
-    fETagDetector->CreateGeometry();
-  }
-
   // TDump
   if (fEnableTDump) {
     fTDumpDetector->SetMotherVolume(logicWorld);
@@ -470,7 +481,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   if (fEnableTPix) {
     fTPixDetector->SetMotherVolume(logicWorld);
     if (fDetectorSetup < 40) {
-      // Position of TPix depends on shape of vacuum chamber
+      // Before 2022, position of TPix depends on shape of vacuum chamber
       geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
       geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
     }
@@ -480,7 +491,18 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // ECal
   if (fEnableECal) {
     fECalDetector->SetMotherVolume(logicWorld);
+    if (fDetectorSetup >= 40) geoECal->DisableECalPanel();
     fECalDetector->CreateGeometry();
+  }
+
+  // ETag
+  if (fEnableETag) {
+    fETagDetector->SetMotherVolume(logicWorld);
+    // Position ETag wrt ECal front face (subtract honeycomb panel thickness+13mm+scintillator thickness)
+    if (fEnableECal) {
+      geoETag->SetETagFrontFacePosZ(geoECal->GetECalFrontFacePosZ()-geoECal->GetECalPanelThickness()-13.*mm-geoETag->GetETagBarSizeZ());
+    }
+    fETagDetector->CreateGeometry();
   }
 
   // PVeto
@@ -781,12 +803,28 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   fDetectorSetup = detectorSetup;
 
   // Here we can enable/disable detectors according to the general detector setup
-  if (fDetectorSetup < 40) {
-    fEnableSAC  = 1;
-    fEnableETag = 0;
-  } else {
-    fEnableSAC  = 0;
-    fEnableETag = 1;
+  // N.B. AFTER defining the general setup using the /Detector/Setup datacard,
+  // single detectors can be switched on/off using /Detector/(En|Dis)ableSubDetector
+  if (fDetectorSetup < 40) { // Before 2022 ETag did not exist.
+    fEnableECal     = 1;
+    fEnableTarget   = 1;
+    fEnableSAC      = 1;
+    fEnableETag     = 0;
+    fEnablePVeto    = 1;
+    fEnableEVeto    = 1;
+    fEnableHEPVeto  = 1;
+    fEnableTPix     = 1;
+    fEnableMagneticField = 1; // PADME magnet is ON
+  } else {                   // In 2022 SAC was removed and ETag was added.
+    fEnableECal     = 1;
+    fEnableTarget   = 1;
+    fEnableSAC      = 0;
+    fEnableETag     = 1;
+    fEnablePVeto    = 1;
+    fEnableEVeto    = 1;
+    fEnableHEPVeto  = 1;
+    fEnableTPix     = 1;
+    fEnableMagneticField = 0; // PADME magnet is OFF
   }
 
   // Pass setup information to each detector/structure
@@ -893,7 +931,7 @@ void DetectorConstruction::EnableStructure(G4String str)
   if (fVerbose) printf("Enabling structure %s\n",str.data());
   if      (str=="Wall")     { fEnableWall     = 1; }
   else if (str=="Chamber")  { fEnableChamber  = 1; }
-  else if (str=="BeamLine") { fEnableBeamLine = 1; } 
+  else if (str=="BeamLine") { fEnableBeamLine = 1; }
   else if (str=="Magnet")   { fEnableMagnet   = 1; }
   else { printf("WARNING: request to enable unknown structure %s\n",str.data()); }
 }

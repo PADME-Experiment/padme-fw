@@ -30,6 +30,13 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int);
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
+  void EnableBeamLine() { fBeamLineEnabled = true; }
+  void DisableBeamLine() { fBeamLineEnabled = false; }
+  G4bool BeamLineEnabled() { return fBeamLineEnabled; }
+
   G4int GetNPositronsPerBunch()        { return fNPositronsPerBunch; }
   void  SetNPositronsPerBunch(G4int n) { fNPositronsPerBunch = n;    }
 
@@ -156,6 +163,10 @@ public:
   void SetBeamTargetPathLength(G4double v) { fBeamTargetPathLength = v; }
 
 private:
+
+  G4int fDetectorSetup;
+
+  G4bool fBeamLineEnabled;
 
   // Average number of positrons in each bunch
   G4int  fNPositronsPerBunch;

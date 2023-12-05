@@ -27,11 +27,24 @@ TPixGeometry::TPixGeometry()
   fTPixNRows = 2;
   fTPixNCols = 6;
 
-  fChipSizeX =  14.08*mm; // 256 pixels of 55um each
-  fChipSizeY =  14.08*mm; // 256 pixels of 55um each
+  //fChipSizeX =  14.08*mm; // 256 pixels of 55um each
+  //fChipSizeY =  14.08*mm; // 256 pixels of 55um each
+  fChipSizeX =  14.111*mm; // See https://indico.cern.ch/event/267425/attachments/477859/661149/Timepix3_final.pdf
+  fChipSizeY =  14.111*mm;
   fChipSizeZ =   0.30*mm; // Thickness M. Raggi after E. Spiriti Mail 29/03/2019
 
-  fChipStep = 14.10*mm; // Step between TPix chips
+  //fChipStep = 14.10*mm; // Step between TPix chips
+  fChipStep = (14.111+0.127)*mm; // Step between TPix chips. Total size = 85.30*mm as per technical design
+
+  // TimePix box dimensions
+  fBoxSizeX = 270.*mm;
+  fBoxSizeY = 256.*mm;
+  fBoxSizeZ = 135.*mm;
+
+  // TimePix position wrt center of box
+  fTPixDispX = (270./2.-55.82-85.30/2.)*mm; // Half width of box - lateral TPix displacement - half TPix length (see technical design)
+  fTPixDispY = 0.*mm;     // i.e. centered on the vertical
+  fTPixDispZ = (-135./2.+10.+fChipSizeZ/2.)*mm;  // - Half depth of box + longitudinal displacement + half TPix thickness (see technical design)
 
   // Distance from the corner on the back wall of the vacuum chamber and
   // the projection of the center of the external side of the TPix on the
@@ -125,7 +138,7 @@ void TPixGeometry::UpdateDerivedMeasures()
   // Angle of the rotation of TPix around the Y axis
   fTPixRotY = -fTPixChamberWallAngle;
   
-  // Position of center of TPix box
+  // Position of center of TPix detector
   //fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
   //  -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
   //  -0.5*fTPixSizeX*cos(fTPixChamberWallAngle);
@@ -136,13 +149,21 @@ void TPixGeometry::UpdateDerivedMeasures()
   fTPixPosZ = fTPixChamberWallCorner.z()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
+  // Displace box according to desired position of TimePix
+  fBoxPosX = fTPixPosX-fTPixDispX*cos(fTPixChamberWallAngle)-fTPixDispZ*sin(fTPixChamberWallAngle);
+  fBoxPosY = fTPixPosY-fTPixDispY;
+  fBoxPosZ = fTPixPosZ+fTPixDispX*sin(fTPixChamberWallAngle)-fTPixDispZ*cos(fTPixChamberWallAngle);
 
   // Move TimePix behind ECal for 2022 run (RunIII)
   if (fDetectorSetup >= 40) {
     fTPixRotY = 0.;
     fTPixPosX = 0.;
     fTPixPosY = 0.;
-    fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning) 
+    fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning)
+    // Displace box according to desired position of TimePix
+    fBoxPosX = fTPixPosX-fTPixDispX;
+    fBoxPosY = fTPixPosY-fTPixDispY;
+    fBoxPosZ = fTPixPosZ-fTPixDispZ; // TimePix is 1cm from front face of box
   }
 
   //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);

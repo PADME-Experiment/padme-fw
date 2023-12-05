@@ -41,7 +41,22 @@ public:
   void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
-  // Position of center of TPix box
+  // Position of center of TPix main box
+  G4double GetBoxPosX() { return fBoxPosX; }
+  G4double GetBoxPosY() { return fBoxPosY; }
+  G4double GetBoxPosZ() { return fBoxPosZ; }
+
+  // Dimensions of TPix main box
+  G4double GetBoxSizeX() { return fBoxSizeX; }
+  G4double GetBoxSizeY() { return fBoxSizeY; }
+  G4double GetBoxSizeZ() { return fBoxSizeZ; }
+
+  // Displacement of center of TimePix within TPix box
+  G4double GetTPixDispX() { return fTPixDispX; }
+  G4double GetTPixDispY() { return fTPixDispY; }
+  G4double GetTPixDispZ() { return fTPixDispZ; }
+
+  // Absolute position of center of TPix
   G4double GetTPixPosX() { return fTPixPosX; }
   G4double GetTPixPosY() { return fTPixPosY; }
   G4double GetTPixPosZ() { return fTPixPosZ; }
@@ -49,7 +64,7 @@ public:
   // Rotation of TPix box
   G4double GetTPixRotY() { return fTPixRotY; }
 
-  // Size of TPix box
+  // Size of TPix volume
   G4double GetTPixSizeX() { return fTPixSizeX; }
   G4double GetTPixSizeY() { return fTPixSizeY; }
   G4double GetTPixSizeZ() { return fTPixSizeZ; }
@@ -111,11 +126,26 @@ private:
   G4double fTPixSizeY;
   G4double fTPixSizeZ;
 
-  G4double fTPixPosX; // Position along X axis of TPix center
-  G4double fTPixPosY; // Position along Y axis of TPix center
-  G4double fTPixPosZ; // Position along Z axis of TPix center
+  G4double fTPixPosX; // Absolute position along X axis of TPix center
+  G4double fTPixPosY; // Absolute position along Y axis of TPix center
+  G4double fTPixPosZ; // Absolute position along Z axis of TPix center
 
   G4double fTPixRotY; // Rotation of TPix around Y axis
+
+  // TimePix main box dimensions
+  G4double fBoxSizeX;
+  G4double fBoxSizeY;
+  G4double fBoxSizeZ;
+
+  // TimePix main box position
+  G4double fBoxPosX;
+  G4double fBoxPosY;
+  G4double fBoxPosZ;
+
+  // TimePix displacement within main box
+  G4double fTPixDispX;
+  G4double fTPixDispY;
+  G4double fTPixDispZ;
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   G4double fTPixChamberWallAngle;

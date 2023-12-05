@@ -25,7 +25,8 @@ public:
   void CreateGeometry();
 
   G4LogicalVolume* GetTPixLogicalVolume() { return fTPixVolume; }
-  G4LogicalVolume* GetChipLogicalVolume() { return fChipVolume; }
+  G4LogicalVolume* GetTPixBoxLogicalVolume() { return fTPixBoxVolume; }
+  G4LogicalVolume* GetTPixChipLogicalVolume() { return fTPixChipVolume; }
 
   //void SetTPixChamberWallAngle(G4double);
   //void SetTPixChamberWallCorner(G4ThreeVector);
@@ -34,7 +35,8 @@ private:
 
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fTPixVolume;
-  G4LogicalVolume* fChipVolume;
+  G4LogicalVolume* fTPixBoxVolume;
+  G4LogicalVolume* fTPixChipVolume;
   TPixMessenger* fTPixMessenger;
 
 };

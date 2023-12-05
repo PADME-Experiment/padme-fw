@@ -85,6 +85,16 @@ public:
   G4double GetChipSizeY() { return fChipSizeY; }
   G4double GetChipSizeZ() { return fChipSizeZ; }
 
+  G4double GetCuSlabThick() { return fCuSlabThick; }
+
+  G4double GetCuBarThick() { return fCuBarThick; }
+  G4double GetCuBarHeight() { return fCuBarHeight; }
+
+  G4double GetCuSuppThick() { return fCuSuppThick; }
+  G4double GetCuSuppHeight() { return fCuSuppHeight; }
+  G4double GetCuSuppWidth() { return fCuSuppWidth; }
+  G4double GetCuHoleWidth() { return fCuHoleWidth; }
+
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   void SetTPixChamberWallAngle(G4double);
 
@@ -146,6 +156,21 @@ private:
   G4double fTPixDispX;
   G4double fTPixDispY;
   G4double fTPixDispZ;
+
+  // Copper support structure
+
+  // Thin copper slab behind TimePix itself (X,Y dimensions = TimePix)
+  G4double fCuSlabThick;
+
+  // Top and bottom Cu bars behind the readout boards (X dimension = TimePix
+  G4double fCuBarThick;
+  G4double fCuBarHeight;
+
+  // Cu support frame
+  G4double fCuSuppThick;
+  G4double fCuSuppWidth;
+  G4double fCuSuppHeight;
+  G4double fCuHoleWidth;
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   G4double fTPixChamberWallAngle;

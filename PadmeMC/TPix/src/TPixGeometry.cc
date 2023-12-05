@@ -46,6 +46,19 @@ TPixGeometry::TPixGeometry()
   fTPixDispY = 0.*mm;     // i.e. centered on the vertical
   fTPixDispZ = (-135./2.+10.+fChipSizeZ/2.)*mm;  // - Half depth of box + longitudinal displacement + half TPix thickness (see technical design)
 
+  // Thickness of Cu slab behind TimePix (to be measured)
+  fCuSlabThick = 1.*mm;
+
+  // Dimension of Cu bars behinf TimePix readout electronics (to be measured)
+  fCuBarThick = 12.*mm;
+  fCuBarHeight = 24.6*mm;
+
+  // Dimensions of Cu support frame (to be measured)
+  fCuSuppThick = 12.*mm;
+  fCuSuppWidth = 130.*mm;
+  fCuSuppHeight = 78.*mm;
+  fCuHoleWidth = 114.*mm;
+
   // Distance from the corner on the back wall of the vacuum chamber and
   // the projection of the center of the external side of the TPix on the
   // external surface of the diagonal wall of the vacuum chamber.

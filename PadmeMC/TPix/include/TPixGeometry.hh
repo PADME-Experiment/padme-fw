@@ -95,6 +95,10 @@ public:
   G4double GetCuSuppWidth() { return fCuSuppWidth; }
   G4double GetCuHoleWidth() { return fCuHoleWidth; }
 
+  G4double GetPCBBarThick() { return fPCBBarThick; }
+  G4double GetPCBBarHeight() { return fPCBBarHeight; }
+  G4double GetPCBBarDispZ() { return fPCBBarDispZ; }
+
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   void SetTPixChamberWallAngle(G4double);
 
@@ -171,6 +175,11 @@ private:
   G4double fCuSuppWidth;
   G4double fCuSuppHeight;
   G4double fCuHoleWidth;
+
+  // PCB bars
+  G4double fPCBBarThick;
+  G4double fPCBBarHeight;
+  G4double fPCBBarDispZ; // Distance between back face of PCB and front face of TimePix
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   G4double fTPixChamberWallAngle;

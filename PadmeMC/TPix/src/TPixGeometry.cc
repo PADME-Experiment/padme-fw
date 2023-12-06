@@ -59,6 +59,11 @@ TPixGeometry::TPixGeometry()
   fCuSuppHeight = 78.*mm;
   fCuHoleWidth = 114.*mm;
 
+  // Dimensions and displacement of PCB bars
+  fPCBBarThick = 2.*mm;
+  fPCBBarHeight = 24.6*mm;
+  fPCBBarDispZ = 2.*mm; // Distance between back face of PCB and front face of TimePix
+
   // Distance from the corner on the back wall of the vacuum chamber and
   // the projection of the center of the external side of the TPix on the
   // external surface of the diagonal wall of the vacuum chamber.

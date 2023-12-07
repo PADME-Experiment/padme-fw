@@ -43,22 +43,40 @@ public:
   G4double GetETagSizeY() { return fETagSizeY; }
   G4double GetETagSizeZ() { return fETagSizeZ; }
 
+  // Size of long bars
   G4double GetETagBarSizeX() { return fETagBarSizeX; }
   G4double GetETagBarSizeY() { return fETagBarSizeY; }
   G4double GetETagBarSizeZ() { return fETagBarSizeZ; }
 
-  G4double GetETagHoleSizeX() { return fETagHoleSizeX; }
-  G4double GetETagHoleSizeY() { return fETagHoleSizeY; }
-  G4double GetETagHoleSizeZ() { return fETagHoleSizeZ; }
-
+  // Size of short bars
   G4double GetETagShortBarSizeX() { return fETagShortBarSizeX; }
   G4double GetETagShortBarSizeY() { return fETagShortBarSizeY; }
   G4double GetETagShortBarSizeZ() { return fETagShortBarSizeZ; }
 
+  // Thickness of paint around bars
+  G4double GetETagBarPaintThick() { return fETagBarPaintThick; }
+
+  // Vertical gap between bars
+  G4double GetETagBarGapY() { return fETagBarGapY; }
+
+  // Distance between back of bars and back of ETag structure
+  G4double GetETagBarBackDisp() { return fETagBarBackDisp; }
+
+  // Size of metal frame
+  G4double GetETagFrameSizeX() { return fETagFrameSizeX; }
+  G4double GetETagFrameSizeY() { return fETagFrameSizeY; }
+  G4double GetETagFrameSizeZ() { return fETagFrameSizeZ; }
+  G4double GetETagFrameThick() { return fETagFrameThick; }
+
+  // Size of tedlar foil
+  G4double GetETagTedlarSizeX() { return fETagTedlarSizeX; }
+  G4double GetETagTedlarSizeY() { return fETagTedlarSizeY; }
+  G4double GetETagTedlarSizeZ() { return fETagTedlarSizeZ; }
+
   // Position of ETag Volume
-  G4double GetETagPosX() { return 0.; }
-  G4double GetETagPosY() { return 0.; }
-  G4double GetETagPosZ() { return fETagFrontFacePosZ+fETagSizeZ*0.5; }
+  G4double GetETagPosX() { return fETagPosX; }
+  G4double GetETagPosY() { return fETagPosY; }
+  G4double GetETagPosZ() { return fETagPosZ; }
 
   G4int GetETagNBars() { return fETagNBars; }
 
@@ -81,6 +99,10 @@ private:
   G4double fETagSizeY;
   G4double fETagSizeZ;
 
+  G4double fETagPosX;
+  G4double fETagPosY;
+  G4double fETagPosZ;
+
   G4double fETagBarSizeX;
   G4double fETagBarSizeY;
   G4double fETagBarSizeZ;
@@ -89,13 +111,24 @@ private:
   G4double fETagShortBarSizeY;
   G4double fETagShortBarSizeZ;
 
-  G4double fETagHoleSizeX;
-  G4double fETagHoleSizeY;
-  G4double fETagHoleSizeZ;
-  
+  G4double fETagBarPaintThick;
+  G4double fETagBarGapY;
+
+  G4double fETagBarBackDisp;
+
+  G4double fETagFrameSizeX;
+  G4double fETagFrameSizeY;
+  G4double fETagFrameSizeZ;
+  G4double fETagFrameThick;
+
+  G4double fETagTedlarSizeX;
+  G4double fETagTedlarSizeY;
+  G4double fETagTedlarSizeZ;
+
   G4int fETagNBars;
 
   G4double fETagFrontFacePosZ; // Position along Z axis of ETag front face
+
   G4String fETagSensitiveDetectorName;
   G4String fETagDigitizerName;
 

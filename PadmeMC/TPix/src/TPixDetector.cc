@@ -63,7 +63,7 @@ void TPixDetector::CreateGeometry()
   G4double boxRotY = geo->GetTPixRotY();
   G4RotationMatrix* rotBox = new G4RotationMatrix;
   rotBox->rotateY(boxRotY);
-  new G4PVPlacement(rotBox,posBox,fTPixBoxVolume,"TPixBox",fMotherVolume,false,0,false);
+  new G4PVPlacement(rotBox,posBox,fTPixBoxVolume,"TPixBox",fMotherVolume,false,0,true);
   printf("TPix Box placed at (%.1f,%.1f,%.1f) mm with a rotation of %.3f rad\n",
 	 boxPosX/mm,boxPosY/mm,boxPosZ/mm,boxRotY/rad);
 
@@ -86,7 +86,7 @@ void TPixDetector::CreateGeometry()
   G4double tpixRotY = geo->GetTPixRotY();
   G4RotationMatrix* rotTPix = new G4RotationMatrix;
   rotTPix->rotateY(tpixRotY);
-  new G4PVPlacement(rotTPix,posTPix,fTPixVolume,"TPix",fMotherVolume,false,0,false);
+  new G4PVPlacement(rotTPix,posTPix,fTPixVolume,"TPix",fMotherVolume,false,0,true);
   printf("TPix placed at (%.1f,%.1f,%.1f) mm with a rotation of %.3f rad\n",
 	 tpixPosX/mm,tpixPosY/mm,tpixPosZ/mm,tpixRotY/rad);
   */
@@ -96,7 +96,7 @@ void TPixDetector::CreateGeometry()
   G4double tpixDispY = geo->GetTPixDispY();
   G4double tpixDispZ = geo->GetTPixDispZ();
   G4ThreeVector dispTPix = G4ThreeVector(tpixDispX,tpixDispY,tpixDispZ);
-  new G4PVPlacement(0,dispTPix,fTPixVolume,"TPix",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispTPix,fTPixVolume,"TPix",fTPixBoxVolume,false,0,true);
   printf("TPix placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 tpixDispX/mm,tpixDispY/mm,tpixDispZ/mm);
 
@@ -118,7 +118,7 @@ void TPixDetector::CreateGeometry()
       G4double z = geo->GetChipPosZ(row,col);
       printf("TPix chip %02d will be placed at (%.1f,%.1f,%.1f) mm\n",idx,x/mm,y/mm,z/mm);
       G4ThreeVector posChip = G4ThreeVector(x,y,z);
-      new G4PVPlacement(0,posChip,fTPixChipVolume,"TPixChip",fTPixVolume,false,idx,false);
+      new G4PVPlacement(0,posChip,fTPixChipVolume,"TPixChip",fTPixVolume,false,idx,true);
     }
   }
   
@@ -138,7 +138,7 @@ void TPixDetector::CreateGeometry()
   G4double slabDispY = tpixDispY;
   G4double slabDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*slabSizeZ+1.*um;
   G4ThreeVector dispSlab = G4ThreeVector(slabDispX,slabDispY,slabDispZ);
-  new G4PVPlacement(0,dispSlab,slabVolume,"TPixCuSlab",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispSlab,slabVolume,"TPixCuSlab",fTPixBoxVolume,false,0,true);
   printf("TPix Cu slab placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 slabDispX/mm,slabDispY/mm,slabDispZ/mm);
 
@@ -156,7 +156,7 @@ void TPixDetector::CreateGeometry()
   G4double barTopDispY = tpixDispY+0.5*tpixSizeY+0.5*barSizeY;
   G4double barTopDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*barSizeZ;
   G4ThreeVector dispBarTop = G4ThreeVector(barTopDispX,barTopDispY,barTopDispZ);
-  new G4PVPlacement(0,dispBarTop,barVolume,"TPixCuBarTop",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispBarTop,barVolume,"TPixCuBarTop",fTPixBoxVolume,false,0,true);
   printf("TPix Cu Bar Top placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 barTopDispX/mm,barTopDispY/mm,barTopDispZ/mm);
 
@@ -164,7 +164,7 @@ void TPixDetector::CreateGeometry()
   G4double barBotDispY = tpixDispY-0.5*tpixSizeY-0.5*barSizeY;
   G4double barBotDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*barSizeZ;
   G4ThreeVector dispBarBot = G4ThreeVector(barBotDispX,barBotDispY,barBotDispZ);
-  new G4PVPlacement(0,dispBarBot,barVolume,"TPixCuBarBottom",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispBarBot,barVolume,"TPixCuBarBottom",fTPixBoxVolume,false,0,true);
   printf("TPix Cu Bar Bottom placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 barBotDispX/mm,barBotDispY/mm,barBotDispZ/mm);
 
@@ -188,7 +188,7 @@ void TPixDetector::CreateGeometry()
   G4double frameDispY = tpixDispY;
   G4double frameDispZ = tpixDispZ+0.5*tpixSizeZ+barSizeZ+0.5*suppSizeZ;
   G4ThreeVector dispFrame = G4ThreeVector(frameDispX,frameDispY,frameDispZ);
-  new G4PVPlacement(0,dispFrame,frameVolume,"TPixCuFrame",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispFrame,frameVolume,"TPixCuFrame",fTPixBoxVolume,false,0,true);
   printf("TPix Cu frame placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 frameDispX/mm,frameDispY/mm,frameDispZ/mm);
 
@@ -206,7 +206,7 @@ void TPixDetector::CreateGeometry()
   G4double pcbTopDispY = tpixDispY+0.5*tpixSizeY+0.5*pcbSizeY;
   G4double pcbTopDispZ = tpixDispZ-0.5*tpixSizeZ-geo->GetPCBBarDispZ()-0.5*pcbSizeZ;
   G4ThreeVector dispPCBTop = G4ThreeVector(pcbTopDispX,pcbTopDispY,pcbTopDispZ);
-  new G4PVPlacement(0,dispPCBTop,pcbVolume,"TPixPCBBarTop",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispPCBTop,pcbVolume,"TPixPCBBarTop",fTPixBoxVolume,false,0,true);
   printf("TPix PCB Bar Top placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 pcbTopDispX/mm,pcbTopDispY/mm,pcbTopDispZ/mm);
 
@@ -214,7 +214,7 @@ void TPixDetector::CreateGeometry()
   G4double pcbBotDispY = tpixDispY-0.5*tpixSizeY-0.5*pcbSizeY;
   G4double pcbBotDispZ = tpixDispZ-0.5*tpixSizeZ-geo->GetPCBBarDispZ()-0.5*pcbSizeZ;
   G4ThreeVector dispPCBBot = G4ThreeVector(pcbBotDispX,pcbBotDispY,pcbBotDispZ);
-  new G4PVPlacement(0,dispPCBBot,pcbVolume,"TPixPCBBarBottom",fTPixBoxVolume,false,0,false);
+  new G4PVPlacement(0,dispPCBBot,pcbVolume,"TPixPCBBarBottom",fTPixBoxVolume,false,0,true);
   printf("TPix PCB Bar Bottom placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 pcbBotDispX/mm,pcbBotDispY/mm,pcbBotDispZ/mm);
 

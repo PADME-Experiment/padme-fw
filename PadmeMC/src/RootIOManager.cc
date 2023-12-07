@@ -20,8 +20,7 @@
 #include "TPixRootIO.hh"
 #include "MCTruthRootIO.hh"
 #include "ETagRootIO.hh"
-#include "LeadGlassRootIO.hh" //MR 6/12/2023
-
+#include "LeadGlassRootIO.hh"
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
 

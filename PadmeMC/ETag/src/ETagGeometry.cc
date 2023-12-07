@@ -26,33 +26,54 @@ ETagGeometry::ETagGeometry()
   // ETag number of rows of bars
   fETagNBars=15;
   
-  //  Bars Dimension
-  fETagBarSizeX = 660*mm;
-  fETagBarSizeY = 44*mm;
-  fETagBarSizeZ = 5*mm;
+  // Long bars dimensions
+  fETagBarSizeX = 660.*mm;
+  fETagBarSizeY = 44.*mm;
+  fETagBarSizeZ = 5.*mm;
 
-  fETagShortBarSizeX = 265*mm;
+  // Short bars dimensions
+  fETagShortBarSizeX = 265.*mm;
   fETagShortBarSizeY = fETagBarSizeY;
   fETagShortBarSizeZ = fETagBarSizeZ;
 
-  //inner hole size
-  fETagHoleSizeX = 3*fETagBarSizeY;
-  fETagHoleSizeY = 3*fETagBarSizeY;
-  fETagHoleSizeZ = fETagBarSizeZ+0.2*mm;
+  // Dimensions and thickness of metal frame
+  fETagFrameSizeX = 774.*mm;
+  fETagFrameSizeY = 728.*mm;
+  fETagFrameSizeZ = 240.*mm;
+  fETagFrameThick = 3.*mm;
 
-  // size of the detector mother volume
-  fETagSizeX = fETagBarSizeX            +5*mm;
-  fETagSizeY = fETagBarSizeY*fETagNBars +5*mm;
-  fETagSizeZ = fETagBarSizeZ            +5*mm;
+  // Dimensions of tedlar foil
+  fETagTedlarSizeX = fETagFrameSizeX-2.*fETagFrameThick;
+  fETagTedlarSizeY = fETagFrameSizeY-2.*fETagFrameThick;
+  fETagTedlarSizeZ = 50.*um;
+
+  // Thickness of paint around bars (same thickness as BGO crystals in ECal)
+  fETagBarPaintThick = 125.*um;
+
+  // Gap between ETag bars
+  fETagBarGapY = 50.*um;
+
+  // Distance between back of bars and back of ETag structure
+  fETagBarBackDisp = 13.*mm;
+
+  // ETag main box dimensions
+  fETagSizeX = fETagFrameSizeX;
+  fETagSizeY = fETagFrameSizeY;
+  fETagSizeZ = fETagFrameSizeZ;
 
   //  fETagFrontFacePosZ = 2380.*mm; // Relative to center of magnet
-  fETagFrontFacePosZ = 2557.*mm; // M.R. 04/23 after Ecal new postion for Run III
-  
+  //fETagFrontFacePosZ = 2557.*mm; // M.R. 04/23 after Ecal new postion for Run III
+  fETagFrontFacePosZ = 2612.41*mm-50.*um-fETagSizeZ; // Assumes ETag frame almost (50um) directly in contact with ECal front face
+
+  // Etag main box position
+  fETagPosX = 0.;
+  fETagPosY = 0.;
+  fETagPosZ = fETagFrontFacePosZ+fETagSizeZ*0.5;
+
   fETagDigitizerName = "ETagDigitizer";
   fETagSensitiveDetectorName = "ETagSD";
+
 }
-
-
 
 std::vector<G4String> ETagGeometry::GetHashTable()
 {
@@ -60,10 +81,6 @@ std::vector<G4String> ETagGeometry::GetHashTable()
   std::ostringstream buffer;
   return hash;
 }
-
-
-
-
 
 ETagGeometry::~ETagGeometry()
 {}

@@ -33,14 +33,16 @@ void LeadGlassSD::Initialize(G4HCofThisEvent* HCE)
 
 G4bool LeadGlassSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
+
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep == 0.) return false;
-
   G4Track* track = aStep->GetTrack();
-  if ( (track->GetVolume()->GetName() != "PbGlBlock") && (track->GetVolume()->GetName() != "LightGuide") ) return false;
+
+  //  if ( (track->GetVolume()->GetName() != "LG_PbGlBlock") && (track->GetVolume()->GetName() != "LightGuide") ) return false;
+  if ( (track->GetVolume()->GetName() != "LG_PbGlBlock") ) return false;
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
   const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
-  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") ) return false;
+  //  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") ) return false;
 
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 

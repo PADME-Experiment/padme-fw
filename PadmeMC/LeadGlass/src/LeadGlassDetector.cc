@@ -23,7 +23,7 @@
 #include "LeadGlassGeometry.hh"
 #include "LeadGlassBlock.hh"
 #include "LeadGlassSD.hh"
-//#include "LeadGlassDigitizer.hh"
+#include "LeadGlassDigitizer.hh"
 
 LeadGlassDetector::LeadGlassDetector(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
@@ -55,15 +55,13 @@ void LeadGlassDetector::CreateGeometry()
   rotLeadGlass->rotateY(180.*deg);
   new G4PVPlacement(rotLeadGlass,posLeadGlass,fLeadGlassVolume,"LeadGlass",fMotherVolume,false,0,true);
 
-  /*
   // Create digitizer for LeadGlass
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   G4String LeadGlassDName = geo->GetLeadGlassDigitizerName();
   printf("Registering LeadGlass Digitizer %s\n",LeadGlassDName.data());
   LeadGlassDigitizer* LeadGlassD = new LeadGlassDigitizer(LeadGlassDName);
   theDM->AddNewModule(LeadGlassD);
-  */
-
+  
   // Make whole LeadGlass (PbGl block and light guide) a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
   G4String leadglassSDName = geo->GetLeadGlassSensitiveDetectorName();

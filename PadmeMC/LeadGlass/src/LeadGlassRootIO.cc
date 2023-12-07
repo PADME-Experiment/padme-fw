@@ -147,6 +147,7 @@ void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
 
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
+      //      G4cout<<""<< theDC->GetDC(iDC)->GetName()<<G4endl;
       if (DCname == "LeadGlassDigiCollection"){
 	if (fVerbose>=2) G4cout << "LeadGlassRootIO: Found digi collection " << DCname << G4endl;
 	LeadGlassDigiCollection* leadglassDC = (LeadGlassDigiCollection*)(theDC->GetDC(iDC));

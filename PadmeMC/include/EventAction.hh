@@ -18,6 +18,7 @@
 #include "ECalGeometry.hh"
 #include "ETagGeometry.hh"
 #include "TargetGeometry.hh"
+#include "LeadGlassGeometry.hh"
 #include "BeamParameters.hh"
 
 class G4Event;
@@ -33,6 +34,7 @@ class ECalDigitizer;
 class SACDigitizer;
 class TPixDigitizer;
 class ETagDigitizer;
+class LeadGlassDigitizer; //MR
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -115,6 +117,7 @@ class EventAction : public G4UserEventAction
   ECalDigitizer*    fECalDigitizer;
   SACDigitizer*     fSACDigitizer;
   TPixDigitizer*    fTPixDigitizer;
+  LeadGlassDigitizer*    fLeadGlassDigitizer; //MR
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

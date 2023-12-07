@@ -20,6 +20,8 @@
 #include "TPixRootIO.hh"
 #include "MCTruthRootIO.hh"
 #include "ETagRootIO.hh"
+#include "LeadGlassRootIO.hh" //MR 6/12/2023
+
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
 
@@ -78,6 +80,7 @@ RootIOManager::RootIOManager()
   fRootIOList.push_back(new TPixRootIO);
   fRootIOList.push_back(new MCTruthRootIO);
   fRootIOList.push_back(new ETagRootIO);
+  fRootIOList.push_back(new LeadGlassRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
   // Tell all RootIO handlers about new run

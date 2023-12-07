@@ -30,6 +30,7 @@
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
 #include "ETagDigitizer.hh"
+#include "LeadGlassDigitizer.hh" 
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -59,6 +60,8 @@ EventAction::EventAction(RunAction* run)
   fECalDigitizer    = NULL;
   fSACDigitizer     = NULL;
   fTPixDigitizer    = NULL;
+  fLeadGlassDigitizer = NULL; //MR 6/12/2023
+
 
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
@@ -161,9 +164,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
     fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
     fTPixDigitizer    = (TPixDigitizer*)theDM->FindDigitizerModule(TPixGeometry::GetInstance()->GetTPixDigitizerName());
-
+    fLeadGlassDigitizer = (LeadGlassDigitizer*)theDM->FindDigitizerModule(LeadGlassGeometry::GetInstance()->GetLeadGlassDigitizerName()); //MR 
     fFirstEvent = false;
-
   }
 
   // Digitize existing detectors
@@ -175,6 +177,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fSACDigitizer)     fSACDigitizer->Digitize();
   if (fETagDigitizer)    fETagDigitizer->Digitize();
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
+  if (fLeadGlassDigitizer) fLeadGlassDigitizer->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -208,6 +211,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddMylarWHits((MylarWHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
       AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "LeadGlassCollection") {        //M. Raggi 30/08/2019
+      //      AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
   //int Ncells=0;
@@ -960,7 +965,6 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
 	EVetoX[NEVetoTracks]          = hit->GetX();
 	EVetoY[NEVetoTracks]          = hit->GetY();
 	NEVetoTracks++;
-	//	G4cout<<"cazzo "<<NEVetoTracks<<G4endl;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
       }
       if(NEVetoTracks>MaxTracks) break; 

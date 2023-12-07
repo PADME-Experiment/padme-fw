@@ -119,13 +119,8 @@ void HistoManager::book()
   double TPixYmax=TPixYmin+14.1*2;
   double TPiYBins = 14.1*2/0.055;
 
-<<<<<<< HEAD
-  double MinE= 100.;
-  double MaxE= 500.;
-=======
   double MinE= 150.;
   double MaxE= 450.;
->>>>>>> features/beamline2020
   int BinE= (int)(MaxE-MinE)*2;
 
   // h50 Series TimePix study

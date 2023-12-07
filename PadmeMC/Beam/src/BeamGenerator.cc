@@ -78,10 +78,10 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
   // Special calibration run
   if ( bpar->CalibrationRun() ) {
-   // Origin of calibration beam is on back face of Target
+    // Origin of calibration beam is on back face of Target
     //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
-    GenerateCalibrationGamma();
+    GenerateCalibrationParticle();
     return;
   }
 
@@ -823,7 +823,7 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
   }
 }
 
-void BeamGenerator::GenerateCalibrationGamma()
+void BeamGenerator::GenerateCalibrationParticle()
 {
 
   BeamParameters* bpar = BeamParameters::GetInstance();
@@ -838,7 +838,16 @@ void BeamGenerator::GenerateCalibrationGamma()
   // Choose a point within circle on the surface of ECal
   G4double pX = bpar->GetCalibRunCenterX();
   G4double pY = bpar->GetCalibRunCenterY();
-  G4double pZ = fDetector->GetECalFrontFaceZ();
+  G4String detector = bpar->GetCalibRunDetector();
+  G4double pZ = 0.;
+  if (detector == "ECal") {
+    pZ = fDetector->GetECalFrontFaceZ();
+  } else if (detector == "LeadGlass") {
+    pZ = fDetector->GetLeadGlassFrontFaceZ();
+  } else {
+    G4cout << "BeamGenerator::GenerateCalibrationParticle - WARNING - Detector " << detector << " not allowed. Using ECal." << G4endl;
+    pZ = fDetector->GetECalFrontFaceZ();
+  }
   if (bpar->GetCalibRunRadius() != 0.) {
     // Flat distribution over circle
     G4double rd = bpar->GetCalibRunRadius()*sqrt(G4UniformRand());
@@ -850,9 +859,10 @@ void BeamGenerator::GenerateCalibrationGamma()
   // Compute unit vector from vertex to generated point
   G4ThreeVector vp = G4ThreeVector(pX-vX,pY-vY,pZ-vZ).unit();
 
-  // Create gamma pointing from vertex to generated point
-  // Will be improved to use different particles (e.g. e+)
-  G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle("gamma");
+  // Create particle pointing from vertex to generated point
+  G4String partname = bpar->GetCalibRunParticle();
+  //G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle("gamma");
+  G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle(partname);
   G4double part_E = bpar->GetCalibRunEnergy();
   G4PrimaryParticle* particle = new G4PrimaryParticle(part,part_E*vp.x(),part_E*vp.y(),part_E*vp.z(),part_E);
   vtx->SetPrimary(particle);

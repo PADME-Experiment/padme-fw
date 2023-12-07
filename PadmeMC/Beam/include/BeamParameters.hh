@@ -128,9 +128,17 @@ public:
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
 
+  // Calibration run parameters
+
   void CalibrationRunEnable()  { fCalibrationRun = true; }
   void CalibrationRunDisable() { fCalibrationRun = false; }
   G4bool CalibrationRun() { return fCalibrationRun; }
+
+  G4String GetCalibRunDetector() { return fCalibRunDetector; }
+  void SetCalibRunDetector(G4String d) { fCalibRunDetector = d; }
+
+  G4String GetCalibRunParticle() { return fCalibRunParticle; }
+  void SetCalibRunParticle(G4String p) { fCalibRunParticle = p; }
 
   G4double GetCalibRunEnergy() { return fCalibRunEnergy; }
   void SetCalibRunEnergy(G4double e) { fCalibRunEnergy  = e; }
@@ -222,9 +230,11 @@ private:
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)
   G4bool   fCalibrationRun;
+  G4String fCalibRunDetector; // Detector to be calibrated
+  G4String fCalibRunParticle; // Particle to use for calibration
   G4double fCalibRunEnergy;  // Energy of the photon
-  G4double fCalibRunCenterX; // X of center of cirlce 
-  G4double fCalibRunCenterY; // Y of center of circle
+  G4double fCalibRunCenterX; // X of center of cirlce at detector position
+  G4double fCalibRunCenterY; // Y of center of circle at detector position
   G4double fCalibRunRadius;  // Radius of circle
 
   // Beam distribution at target

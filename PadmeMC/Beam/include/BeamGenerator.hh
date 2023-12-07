@@ -54,8 +54,7 @@ private:
   void CreateFinalStateThreeGamma(G4double);
   void CreateFinalStateTwoGamma(G4double);
   void CreateFinalStateBhaBha(G4double);
-  void GenerateCalibrationGamma();
-
+  void GenerateCalibrationParticle();
 
   G4double GetGammaAngle(G4ThreeVector ,G4ThreeVector );
 

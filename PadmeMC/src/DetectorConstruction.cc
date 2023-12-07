@@ -9,6 +9,7 @@
 #include "PVetoDetector.hh"
 #include "EVetoDetector.hh"
 #include "HEPVetoDetector.hh"
+#include "LeadGlassDetector.hh"
 #include "TDumpDetector.hh"
 #include "TPixDetector.hh"
 #include "ETagDetector.hh"
@@ -25,6 +26,7 @@
 #include "PVetoGeometry.hh"
 #include "EVetoGeometry.hh"
 #include "HEPVetoGeometry.hh"
+#include "LeadGlassGeometry.hh"
 #include "TDumpGeometry.hh"
 #include "TPixGeometry.hh"
 #include "SACGeometry.hh"
@@ -87,6 +89,7 @@ DetectorConstruction::DetectorConstruction()
   fPVetoDetector     = new PVetoDetector(0);
   fEVetoDetector     = new EVetoDetector(0);
   fHEPVetoDetector   = new HEPVetoDetector(0);
+  fLeadGlassDetector = new LeadGlassDetector(0);
   fTDumpDetector     = new TDumpDetector(0);
   fTPixDetector      = new TPixDetector(0);
   fTungstenDetector  = new TungstenDetector(0); 
@@ -106,6 +109,7 @@ DetectorConstruction::DetectorConstruction()
   fEnablePVeto    = 1;
   fEnableEVeto    = 1;
   fEnableHEPVeto  = 1;
+  fEnableLeadGlass = 0;
   fEnableTDump    = 0;
   fEnableTPix     = 1;
   fEnableTungsten = 0;
@@ -146,6 +150,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fEVetoDetector;
   delete fETagDetector;
   delete fHEPVetoDetector;
+  delete fLeadGlassDetector;
   delete fTDumpDetector;
   delete fTPixDetector;
   delete fTungstenDetector;
@@ -529,6 +534,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fHEPVetoDetector->CreateGeometry();
   }
 
+  // LeadGlass
+  if (fEnableLeadGlass) {
+    fLeadGlassDetector->SetMotherVolume(logicWorld);
+    fLeadGlassDetector->CreateGeometry();
+  }
+
   // This code makes a full debug dump of the geometry, looking for overlaps
   // HUGE amount of output: enable at your own risk ;)
   //CheckDaughters(logicWorld,0);
@@ -639,6 +650,70 @@ void DetectorConstruction::DefineMaterials()
   G4Material* PCB = new G4Material("PCB",1.86*g/cm3,2);
   PCB->AddMaterial(Epoxy,0.472);
   PCB->AddMaterial(SiO2, 0.528);
+  // Components for Schott SF57 Leadglass
+
+  // SiO2
+  /*
+  std::vector<G4String> SiO2El(2);
+  std::vector<G4int> SiO2NA(2);
+  SiO2El[0] = "Si";
+  SiO2NA[0] = 1;
+  SiO2El[1] = "O";
+  SiO2NA[1] = 2;
+  nistMgr->ConstructNewMaterial("LAV_SiO2", SiO2El, SiO2NA, 2.32, true);
+  */
+  G4Material* LAV_SiO2 = new G4Material("LAV_SiO2",2.32*g/cm3,2);
+  LAV_SiO2->AddElement(G4Element::GetElement("Si"),1);
+  LAV_SiO2->AddElement(G4Element::GetElement("O"),2);
+
+  // PbO
+  /*
+  std::vector<G4String> PbOEl(2);
+  std::vector<G4int> PbONA(2);
+  PbOEl[0] = "Pb";
+  PbONA[0] = 1;
+  PbOEl[1] = "O";
+  PbONA[1] = 1;
+  nistMgr->ConstructNewMaterial("LAV_PbO", PbOEl, PbONA, 9.53, true);
+  */
+  G4Material* LAV_PbO = new G4Material("LAV_PbO",9.53*g/cm3,2);
+  LAV_PbO->AddElement(G4Element::GetElement("Pb"),1);
+  LAV_PbO->AddElement(G4Element::GetElement("O"),1);
+
+  // Na2O
+  /*
+  std::vector<G4String> Na2OEl(2);
+  std::vector<G4int> Na2ONA(2);
+  Na2OEl[0] = "Na";
+  Na2ONA[0] = 2;
+  Na2OEl[1] = "O";
+  Na2ONA[1] = 1;
+  nistMgr->ConstructNewMaterial("LAV_Na2O", Na2OEl, Na2ONA, 2.27, true);
+  */
+  G4Material* LAV_Na2O = new G4Material("LAV_Na2O",2.27*g/cm3,2);
+  LAV_Na2O->AddElement(G4Element::GetElement("Na"),2);
+  LAV_Na2O->AddElement(G4Element::GetElement("O"),1);
+
+  // K2O
+  /*
+  std::vector<G4String> K2OEl(2);
+  std::vector<G4int> K2ONA(2);
+  K2OEl[0] = "K";
+  K2ONA[0] = 2;
+  K2OEl[1] = "O";
+  K2ONA[1] = 1;
+  nistMgr->ConstructNewMaterial("LAV_K2O", K2OEl, K2ONA, 2.32, true);
+  */
+  G4Material* LAV_K2O = new G4Material("LAV_K2O",2.32*g/cm3,2);
+  LAV_K2O->AddElement(G4Element::GetElement("K"),2);
+  LAV_K2O->AddElement(G4Element::GetElement("O"),1);
+
+  // Lead Glass (PbGl)
+  G4Material *PbGl = new G4Material("LAV_PbGl_SF57", 5.57 * g / cm3, 4);
+  PbGl->AddMaterial(G4Material::GetMaterial("LAV_SiO2"), 24.0 * perCent);  // 22-26%
+  PbGl->AddMaterial(G4Material::GetMaterial("LAV_PbO"), 74.0 * perCent);   // 72-76%
+  PbGl->AddMaterial(G4Material::GetMaterial("LAV_Na2O"), 1.0 * perCent);   // 0.5-1.5%
+  PbGl->AddMaterial(G4Material::GetMaterial("LAV_K2O"), 1.0 * perCent);    // 0.5-1.5%
 
   /*
   //--------- Materials definition ---------
@@ -814,6 +889,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableEVeto    = 1;
     fEnableHEPVeto  = 1;
     fEnableTPix     = 1;
+    fEnableLeadGlass = 0;
     fEnableMagneticField = 1; // PADME magnet is ON
   } else {                   // In 2022 SAC was removed and ETag was added.
     fEnableECal     = 1;
@@ -824,6 +900,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableEVeto    = 1;
     fEnableHEPVeto  = 1;
     fEnableTPix     = 1;
+    fEnableLeadGlass = 1;
     fEnableMagneticField = 0; // PADME magnet is OFF
   }
 
@@ -858,8 +935,16 @@ G4double DetectorConstruction::GetECalFrontFaceZ()
 {
   if (fEnableECal) return fECalDetector->GetECalFrontFaceZ();
 
-  // ECal is disabled (?): return a position 300cm after the nominal position of the target
+  // ECal is disabled: return its default position
   return 230.*cm;
+}
+
+G4double DetectorConstruction::GetLeadGlassFrontFaceZ()
+{
+  if (fEnableLeadGlass) return fLeadGlassDetector->GetLeadGlassFrontFaceZ();
+
+  // LeadGlass is disabled: return its default position
+  return 310.*cm;
 }
 
 
@@ -889,6 +974,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
+  else if (det=="LeadGlass") { fEnableLeadGlass = 1; }
   else if (det=="TDump")   { fEnableTDump   = 1; }
   else if (det=="TPix")    { fEnableTPix    = 1; }
   else if (det=="Tungsten"){ fEnableTungsten= 1; }
@@ -905,6 +991,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
+  else if (det=="LeadGlass") { fEnableLeadGlass = 0; }
   else if (det=="TDump")   { fEnableTDump   = 0; }
   else if (det=="TPix")    { fEnableTPix    = 0; }
   else if (det=="Tungsten"){ fEnableTungsten= 0; }
@@ -920,6 +1007,7 @@ G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
        ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
        ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
        ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||
+       ( (det=="LeadGlass") && (fEnableLeadGlass == 1) ) ||
        ( (det=="TDump")    && (fEnableTDump    == 1) ) ||
        ( (det=="TPix")     && (fEnableTPix     == 1) ) ||
        ( (det=="Tungsten") && (fEnableTungsten == 1) )

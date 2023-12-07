@@ -52,6 +52,10 @@
 #pragma link C++ class TTPixMCDigi+;
 #pragma link C++ class TTPixMCEvent+;
 
+#pragma link C++ class TLeadGlassMCHit+;
+#pragma link C++ class TLeadGlassMCDigi+;
+#pragma link C++ class TLeadGlassMCEvent+;
+
 #pragma link C++ class TMCTruthEvent+;
 #pragma link C++ class TMCParticle+;
 #pragma link C++ class TMCVertex+;

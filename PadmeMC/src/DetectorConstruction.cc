@@ -496,7 +496,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   // ECal
   if (fEnableECal) {
     fECalDetector->SetMotherVolume(logicWorld);
-    if (fDetectorSetup >= 40) geoECal->DisableECalPanel();
     fECalDetector->CreateGeometry();
   }
 
@@ -880,7 +879,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   // Here we can enable/disable detectors according to the general detector setup
   // N.B. AFTER defining the general setup using the /Detector/Setup datacard,
   // single detectors can be switched on/off using /Detector/(En|Dis)ableSubDetector
-  if (fDetectorSetup < 40) { // Before 2022 ETag did not exist.
+  if (fDetectorSetup < 40) { // Before 2022 ETag and LeadGlass did not exist.
     fEnableECal     = 1;
     fEnableTarget   = 1;
     fEnableSAC      = 1;
@@ -891,7 +890,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableTPix     = 1;
     fEnableLeadGlass = 0;
     fEnableMagneticField = 1; // PADME magnet is ON
-  } else {                   // In 2022 SAC was removed and ETag was added.
+  } else {                   // In 2022 SAC was removed and ETag and LeadGlass were added.
     fEnableECal     = 1;
     fEnableTarget   = 1;
     fEnableSAC      = 0;

@@ -50,7 +50,7 @@ void SACDetector::CreateGeometry()
   G4Box* solidSAC = new G4Box("SAC",0.5*sacSizeX,0.5*sacSizeY,0.5*sacSizeZ);
   fSACVolume = new G4LogicalVolume(solidSAC,G4Material::GetMaterial("Vacuum"),"SAC",0,0,0);
   fSACVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,sacPos,fSACVolume,"SAC",fMotherVolume,false,0,false);
+  new G4PVPlacement(0,sacPos,fSACVolume,"SAC",fMotherVolume,false,0,true);
 
   // Show size of gap between crystals
   printf("Gap between SAC crystals is %f\n",geo->GetCrystalGap());
@@ -79,7 +79,7 @@ void SACDetector::CreateGeometry()
   fCellVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 
   // Position SAc crystal inside cell
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"SACCry",fCellVolume,false,0,false);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fCrystalVolume,"SACCry",fCellVolume,false,0,true);
 
   // Get number of rows and columns of crystals and position all crystals
   G4int nRow = geo->GetSACNRows();

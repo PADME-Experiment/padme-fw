@@ -40,7 +40,7 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
   // Position of center of ECal box

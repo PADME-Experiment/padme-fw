@@ -53,7 +53,8 @@ G4bool ETagSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4Track* track = aStep->GetTrack();
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
   const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
-  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "ETagBar") ) return false;
+  //if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "ETagBar") ) return false;
+  if (currentProcess == 0) return false;
 
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
@@ -61,11 +62,6 @@ G4bool ETagSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   newHit->SetChannelId(touchHPre->GetCopyNumber()); 
   newHit->SetEnergy(aStep->GetTotalEnergyDeposit() );
-  //  G4cout << " ETagSD:  CopyNumber " << touchHPre->GetCopyNumber()<<G4endl;
-  // G4cout << " ETagSD:   Energy of the track: " << preStepPoint->GetTotalEnergy()
-  //   //track->GetTotalEnergy() 
-  // 	 << "    Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
-  // 	 << G4endl;
 
   newHit->SetTime(track->GetGlobalTime());
 
@@ -73,16 +69,6 @@ G4bool ETagSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
-  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPre,"Length")
-  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
-  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPost,"Length")
-  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);

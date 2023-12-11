@@ -177,7 +177,7 @@ void TPixGeometry::UpdateDerivedMeasures()
     fTPixRotY = 0.;
     fTPixPosX = 0.;
     fTPixPosY = 0.;
-    fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning)
+    fTPixPosZ = 3100.*mm-50.*um-fBoxSizeZ+10.*mm+0.5*fTPixSizeZ; // Back of TPix box just in front of LeadGlass block
     // Displace box according to desired position of TimePix
     fBoxPosX = fTPixPosX-fTPixDispX;
     fBoxPosY = fTPixPosY-fTPixDispY;

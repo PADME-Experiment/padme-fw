@@ -19,20 +19,21 @@ public:
   TLeadGlassMCDigi();
   ~TLeadGlassMCDigi();
 
-  TH1D* GetWaveform() { return fWaveform; }
-
   void SetCoGX(Double_t v) { fCoGX = v; }
   void SetCoGY(Double_t v) { fCoGY = v; }
 
   Double_t GetCoGX() { return fCoGX; }
   Double_t GetCoGY() { return fCoGY; }
 
-private:
+  void SetTimeSpread(Double_t t) { fTimeSpread = t; }
+  Double_t GetTimeSpread() { return fTimeSpread; }
 
-  TH1D* fWaveform;
+private:
 
   Double_t fCoGX;
   Double_t fCoGY;
+
+  Double_t fTimeSpread;
 
   ClassDef(TLeadGlassMCDigi,1);
 };

@@ -38,10 +38,14 @@ G4bool LeadGlassSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   if (edep == 0.) return false;
   G4Track* track = aStep->GetTrack();
 
-  //  if ( (track->GetVolume()->GetName() != "LG_PbGlBlock") && (track->GetVolume()->GetName() != "LightGuide") ) return false;
-  if ( (track->GetVolume()->GetName() != "LG_PbGlBlock") ) return false;
-  G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
-  const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
+  // Check if track is inside LeadGlass active section (needed?)
+  if ( (track->GetVolume()->GetName() != "LG_PbGlBlock") && (track->GetVolume()->GetName() != "LG_PbGlLightGuide") ) {
+    G4cout << "LeadGlassSD::ProcessHits - Track is in volume " << track->GetVolume()->GetName() << G4endl;
+    return false;
+  }
+
+  //G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
+  //const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
   //  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") ) return false;
 
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
@@ -58,8 +62,6 @@ G4bool LeadGlassSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   newHit->SetLocalPosition(localPosPre);
 
   LeadGlassCollection->insert(newHit);     
-
-  //track->SetTrackStatus(fStopAndKill);
 
   return true;
 }

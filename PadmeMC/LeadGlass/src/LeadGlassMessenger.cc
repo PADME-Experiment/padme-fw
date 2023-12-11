@@ -11,6 +11,7 @@
 #include "G4UIdirectory.hh"
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWithAnInteger.hh"
 #include "G4UIparameter.hh"
 
 #include "LeadGlassDetector.hh"
@@ -38,6 +39,12 @@ LeadGlassMessenger::LeadGlassMessenger(LeadGlassDetector* det)
   fFullSimulationCmd->SetDefaultValue(true);
   fFullSimulationCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetVerboseLevelCmd = new G4UIcmdWithAnInteger("/Detector/LeadGlass/VerboseLevel",this);
+  fSetVerboseLevelCmd->SetGuidance("Set verbose level for LeadGlass code.");
+  fSetVerboseLevelCmd->SetParameterName("VL",false);
+  fSetVerboseLevelCmd->SetRange("VL >= 0");
+  fSetVerboseLevelCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 LeadGlassMessenger::~LeadGlassMessenger()
@@ -45,6 +52,7 @@ LeadGlassMessenger::~LeadGlassMessenger()
 
   delete fSetLeadGlassFrontFaceZCmd;
   delete fFullSimulationCmd;
+  delete fSetVerboseLevelCmd;
   delete fLeadGlassDetectorDir;
 
 }
@@ -64,6 +72,8 @@ void LeadGlassMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
       fLeadGlassGeometry->DisableFullSimulation();
     }
 
-  }
+  } else if ( cmd == fSetVerboseLevelCmd )
+
+    fLeadGlassGeometry->SetVerboseLevel(fSetVerboseLevelCmd->GetNewIntValue(par));
 
 }

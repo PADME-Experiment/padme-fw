@@ -15,6 +15,7 @@
 class LeadGlassDetector;
 class LeadGlassGeometry;
 class G4UIdirectory;
+class G4UIcmdWithAnInteger;
 class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithABool;
 
@@ -35,6 +36,8 @@ private:
 
   G4UIcmdWithADoubleAndUnit* fSetLeadGlassFrontFaceZCmd;
   G4UIcmdWithABool* fFullSimulationCmd;
+
+  G4UIcmdWithAnInteger* fSetVerboseLevelCmd;
 
 };
 #endif

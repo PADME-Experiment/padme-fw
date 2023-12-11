@@ -32,6 +32,7 @@ LeadGlassRootIO::LeadGlassRootIO() : MCVRootIO(G4String("LeadGlass"))
 
   fGeoPars = LeadGlassGeometry::GetInstance();
   fVerbose = fGeoPars->GetVerboseLevel();
+  if (fVerbose) printf("LeadGlassRootIO::LeadGlassRootIO - Verbose level %d\n",fVerbose);
 
   // Create event object
   fEvent = new TLeadGlassMCEvent();
@@ -39,10 +40,10 @@ LeadGlassRootIO::LeadGlassRootIO() : MCVRootIO(G4String("LeadGlass"))
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
-  fHitsEnabled = true;
+  fHitsEnabled = false;
   fDigisEnabled = true;
 
-  if (fVerbose) G4cout << "LeadGlassRootIO: Initialized" << G4endl;
+  if (fVerbose) G4cout << "LeadGlassRootIO:LeadGlassRootIO - Initialized" << G4endl;
 
 }
 
@@ -58,7 +59,7 @@ void LeadGlassRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
   fRunNumber = nRun;
 
   if (fVerbose) {
-    G4cout << "LeadGlassRootIO: Initializing I/O for run " << fRunNumber;
+    G4cout << "LeadGlassRootIO::NewRun - Initializing I/O for run " << fRunNumber;
     if (fHitsEnabled)  G4cout << " - save hits";
     if (fDigisEnabled) G4cout << " - save digis";
     G4cout << G4endl;
@@ -84,20 +85,19 @@ void LeadGlassRootIO::NewRun(G4int nRun, TFile* hfile, TDetectorInfo* detInfo)
 
 void LeadGlassRootIO::EndRun()
 {
-  if (fVerbose) G4cout << "LeadGlassRootIO: Executing End-of-Run procedure" << G4endl;
+  if (fVerbose) G4cout << "LeadGlassRootIO::EndRun - Executing End-of-Run procedure" << G4endl;
 }
 
 void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
 {
 
-  if (fVerbose>=2) G4cout << "LeadGlassRootIO: Preparing event structure" << G4endl;
+  if (fVerbose>=2) G4cout << "LeadGlassRootIO::SaveEvent - Saving run " << fRunNumber << " event " << eventG4->GetEventID() << G4endl;
 
   //Save current Object count
   Int_t savedObjNumber = TProcessID::GetObjectCount();
 
   // Reset event structure
   fEvent->Clear();
-  //G4cout << "LeadGlassRootIO: setting run/event to " << fRunNumber << "/" << eventG4->GetEventID() << G4endl;
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());
 
@@ -112,7 +112,7 @@ void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
       // Handle each collection type with the right method
       G4String HCname = theHC->GetHC(iHC)->GetName();
       if (HCname == "LeadGlassCollection"){
-	if (fVerbose>=2) G4cout << "LeadGlassRootIO: Found hits collection " << HCname << G4endl;
+	if (fVerbose>=2) G4cout << "LeadGlassRootIO::SaveEvent - Found hits collection " << HCname << G4endl;
 	LeadGlassHitsCollection* leadglassHC = (LeadGlassHitsCollection*)(theHC->GetHC(iHC));
 	if(leadglassHC) {
 	  G4int n_hit = leadglassHC->entries();
@@ -127,8 +127,8 @@ void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
 	      hit->SetEnergy((*leadglassHC)[i]->GetEnergy());
 	      e_tot += hit->GetEnergy();
 	    }
-	    if (fVerbose>=2)
-	      G4cout << "LeadGlassRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2) G4cout << "LeadGlassRootIO::SaveEvent - " << n_hit << " hit(s) with "
+				    << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }
@@ -147,9 +147,8 @@ void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
 
       // Handle each collection type with the right method
       G4String DCname = theDC->GetDC(iDC)->GetName();
-      //      G4cout<<""<< theDC->GetDC(iDC)->GetName()<<G4endl;
       if (DCname == "LeadGlassDigiCollection"){
-	if (fVerbose>=2) G4cout << "LeadGlassRootIO: Found digi collection " << DCname << G4endl;
+	if (fVerbose>=2) G4cout << "LeadGlassRootIO::SaveEvent - Found digis collection " << DCname << G4endl;
 	LeadGlassDigiCollection* leadglassDC = (LeadGlassDigiCollection*)(theDC->GetDC(iDC));
 	if(leadglassDC) {
 	  G4int n_digi = leadglassDC->entries();
@@ -160,10 +159,13 @@ void LeadGlassRootIO::SaveEvent(const G4Event* eventG4)
 	      digi->SetChannelId((*leadglassDC)[i]->GetChannelId()); 
 	      digi->SetEnergy((*leadglassDC)[i]->GetEnergy());
 	      digi->SetTime((*leadglassDC)[i]->GetTime());
+	      digi->SetTimeSpread((*leadglassDC)[i]->GetTimeSpread());
+	      digi->SetCoGX((*leadglassDC)[i]->GetLocalPosX());
+	      digi->SetCoGY((*leadglassDC)[i]->GetLocalPosY());
 	      e_tot += (*leadglassDC)[i]->GetEnergy();
 	    }
-	    if (fVerbose>=2)
-	      G4cout << "LeadGlassRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+	    if (fVerbose>=2) G4cout << "LeadGlassRootIO::SaveEvent - " << n_digi << " digi(s) with "
+				    << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
 	  }
 	}
       }

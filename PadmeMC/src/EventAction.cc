@@ -41,8 +41,12 @@
 
 #include "SystemInfo.hh"
 
+#include <fstream>
+
 extern double NNeutrons;
 extern double Npionc;
+static std::ofstream *foutECalML;
+static std::ofstream *foutTruth;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
@@ -73,6 +77,8 @@ EventAction::EventAction(RunAction* run)
   fEnableSaveSAC  = 0; 
   fEnableSaveVeto = 0;
 
+  foutECalML = run->GetOutputTextFileECalML();
+  foutTruth = run->GetOutputTextFileTruth();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -431,15 +437,30 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       ETotCal += hit->GetEnergy();
       //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
+      if(hit->GetBoundary()) {
+	(*(foutTruth)) << hit->GetChannelId()
+	  //<< std::setw(11) << std::setprecision(5)
+		       << " " << hit->GetPType()
+		       << " " << hit->GetTrackEnergy()
+		       << " " << hit->GetPosX()/CLHEP::cm
+		       << " " << hit->GetPosY()/CLHEP::cm
+		       << " " << hit->GetPosZ()/CLHEP::cm
+		       << " ";
+      }
     }
   }//end of loop on hits
+
+  
   
   for(int xx=0;xx<NCols;xx++){
     for(int yy=0;yy<NRows;yy++){
       MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
+      (*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
     }
   }
-  
+
+  (*(foutECalML)) << std::endl;
+  (*(foutTruth)) << std::endl;
 }
 void EventAction::FindClusters()
 {

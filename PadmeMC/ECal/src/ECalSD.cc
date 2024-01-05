@@ -49,7 +49,9 @@ G4bool ECalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
   ECalHit* newHit = new ECalHit();
-
+  G4StepStatus PreStepStatus = aStep->GetPreStepPoint()->GetStepStatus();
+  G4LogicalVolume* PostStepPoint = aStep->GetPostStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+  
   //newHit->SetChannelId(touchHPre->GetCopyNumber());
   newHit->SetChannelId(touchHPre->GetCopyNumber(1)); // Copy id is that of the cell, not of the crystal
   newHit->SetEnergy(edep);
@@ -57,26 +59,44 @@ G4bool ECalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
-  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPre,"Length")
-  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
+  //  G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
+    //  	 << " global " << G4BestUnit(worldPosPre,"Length")
+    //	 << " local " << G4BestUnit(localPosPre,"Length")
+  //	 << G4endl;
 
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
-  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPost,"Length")
-  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+  G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
+  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
+  G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  // G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
+    //<< " global " << G4BestUnit(worldPosPost,"Length")
+    //	 << " local " << G4BestUnit(localPosPost,"Length")
+  //	 << G4endl;
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPosition(localPosPre);
 
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-
+  newHit->SetTrackEnergy(aStep->GetTrack()->GetTotalEnergy());
+  if((PreStepStatus == fGeomBoundary) && fabs(localPosPre.z() + 11.5*CLHEP::cm)<1e-6) {
+    newHit->SetBoundary(1);
+  } else {
+    newHit->SetBoundary(0);
+  }
+  
   fECalCollection->insert(newHit);
 
-  //newHit->Print();
-
+  
+  if ( 0 &&
+      (PreStepStatus == fGeomBoundary) && fabs(localPosPre.z() + 11.5*CLHEP::cm)<1e-6
+      && aStep->GetTrack()->GetTotalEnergy() > 5*CLHEP::MeV
+      //&& newHit->GetPType() == 1
+      ) //&& (PostStepPoint == fScoringVolume))
+    {
+      G4cout<< " Position " << aStep->GetPreStepPoint()->GetPosition().z()
+	    << " Energy: " << aStep->GetTrack()->GetTotalEnergy() << G4endl; 
+      
+      newHit->Print();
+    }
   return true;
 
 }

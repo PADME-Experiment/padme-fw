@@ -34,6 +34,7 @@
 
 #include "G4UserRunAction.hh"
 #include "globals.hh"
+#include <fstream>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -56,6 +57,8 @@ public:
   void EnableAutomaticRandomSeed()  { fAutomaticRandomSeed = true;  }
   void DisableAutomaticRandomSeed() { fAutomaticRandomSeed = false; }
 
+  std::ofstream *GetOutputTextFileECalML(){return &fOutTextFileECalML;};
+  std::ofstream *GetOutputTextFileTruth(){return &fOutTextFileTruth;};
 private:
 
   HistoManager* fHistoManager;
@@ -67,7 +70,9 @@ private:
   
   G4double fSumLAbs, fSum2LAbs;
   G4double fSumLGap, fSum2LGap;   
-
+  std::ofstream fOutTextFileECalML;
+  std::ofstream fOutTextFileTruth;
+  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

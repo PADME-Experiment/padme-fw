@@ -16,7 +16,7 @@ all: $(BUILDDIR)
 	+@make -C $(BUILDDIR) install --no-print-directory $(MAKEFLAGS)
 
 $(BUILDDIR): 
-	@cmake3 -H. -B$(BUILDDIR) $(CMAKE_FLAGS) ${ARGS}
+	@cmake -H. -B$(BUILDDIR) $(CMAKE_FLAGS) ${ARGS}
 
 relink: $(BUILDDIR)
 	@touch roofit_full.cc

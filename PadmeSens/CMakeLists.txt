@@ -3,26 +3,26 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project (EE_MUMU_COMBINATION C CXX)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-SET(CMAKE_CXX_FLAGS_INIT "-D_GNU_SOURCE -fPIC -pthread -pipe -ansi") #${CMAKE_CXX_FLAGS}
+SET(CMAKE_CXX_FLAGS_INIT "-D_GNU_SOURCE -fPIC -pthread -pipe -ansi") #${CMAKE_CXX_FLAGS} #MM ChatGPT proposes to switch -ansi with -std=c++11 or -std=c++14 if we are using C++ 11 or 14
 
 
-set(ACCEPTED_BUILD_TYPES DEBUG RELEASE DEBUG)
+set(ACCEPTED_BUILD_TYPES DEBUG RELEASE)  
 set(CMAKE_BUILD_TYPE RELEASE)
-#if (NOT CMAKE_BUILD_TYPE)
-  #message(STATUS "Setting build type to 'Release' as none was specified")
-  #set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
-#endif()
+if (NOT CMAKE_BUILD_TYPE)
+  message(STATUS "Setting build type to 'Release' as none was specified")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
+endif() 
 
 string(TOUPPER ${CMAKE_BUILD_TYPE} UPPER_BUILD_TYPE)
 list(FIND ACCEPTED_BUILD_TYPES ${UPPER_BUILD_TYPE} IS_BUILD_TYPE_ACCEPTED)
 if(${IS_BUILD_TYPE_ACCEPTED} EQUAL -1)
-        message(FATAL_ERROR "CMAKE_BUILD_TYPE of type ${CMAKE_BUILD_TYPE} is not accepted. Available values are Debug,Release,RelWithDebInfo,MinSizeRel")
+        message(FATAL_ERROR "CMAKE_BUILD_TYPE of type ${CMAKE_BUILD_TYPE} is not accepted. Available values are Debug,Release,RelWithDebInfo,MinSizeRel") #MM it seems that RelWithDebInfo and MinSizeRel are un-useful
 else()
         message(STATUS "Compilation type: " ${CMAKE_BUILD_TYPE})
 endif()
 
 
-#Get and configure ROOT
+# Get and configure ROOT
 list(APPEND CMAKE_PREFIX_PATH $ENV{ROOTSYS})
 find_package(ROOT REQUIRED)
 if( ${ROOT_FOUND} )
@@ -31,6 +31,7 @@ if( ${ROOT_FOUND} )
   else()
     message (FATAL_ERROR "ROOT not found")
 endif()
+
 
 # Use correct gcc libraries
 #link_directories($ENV{COMPILER_PATH}/lib64)
@@ -43,8 +44,7 @@ link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/Davix/0.7.3/x86_64-cento
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/tbb/2019_U7/x86_64-centos7-gcc8-opt/lib)
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_94/glib/2.52.2/x86_64-centos7-gcc8-opt/lib)
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/png/1.6.37/x86_64-centos7-gcc8-opt/lib)
-#link_directories(/lib64)
-
+link_directories(/lib64)
 
 #Define install directories
 if("${CMAKE_INSTALL_PREFIX}" STREQUAL "/usr/local")
@@ -88,4 +88,3 @@ foreach(exec ${list_executables})
     target_link_libraries(${exec} ${ROOT_LIBRARIES} Persistency truesrc-static RooFit RooFitCore) #rimosso truesrc
     install(TARGETS ${exec} DESTINATION bin)
 endforeach()
-

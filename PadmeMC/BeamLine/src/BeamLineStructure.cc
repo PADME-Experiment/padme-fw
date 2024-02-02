@@ -1673,19 +1673,22 @@ void BeamLineStructure::CreateWallAndPipe()
   logicalDHSTB001_Pipe->SetVisAttributes(steelVisAttr);
 
   // Position long pipe in between DHSTB002 and BTF wall
-  //G4ThreeVector DHSTB001_PipePos = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen/2+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen/2+strFlangeThick)*mm*cos(magnetAngle));
+  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen/2+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen/2+strFlangeThick)*mm*cos(magnetAngle));
+  //G4cout << "PipePosMauro " << DHSTB001_PipePosM.x() << " " << DHSTB001_PipePosM.y() << " " << DHSTB001_PipePosM.z() << G4endl;
+
   G4double DHSTB001_Pipe_Distance = WallPipeLen+InWallPipeLen+InLinacPipeLen+MylarWinFlgT+strFlangeThick+0.5*DHSTB001_PipeLen;
   G4double DHSTB001_PipePosX = mpEntPosX+DHSTB001_Pipe_Distance*sin(magnetAngle);
   G4double DHSTB001_PipePosY = mpEntPosY;
   G4double DHSTB001_PipePosZ = mpEntPosZ-DHSTB001_Pipe_Distance*cos(magnetAngle);
-  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(DHSTB001_PipePosX,DHSTB001_PipePosY,DHSTB001_PipePosZ);
+  //  G4ThreeVector DHSTB001_PipePos = G4ThreeVector(DHSTB001_PipePosX,DHSTB001_PipePosY,DHSTB001_PipePosZ);
+  //  G4cout << "PipePosEma " << DHSTB001_PipePos.x() << " " << DHSTB001_PipePos.y() << " " << DHSTB001_PipePos.z() << G4endl;
   G4RotationMatrix* DHSTB001_PipeRot = new G4RotationMatrix;
   DHSTB001_PipeRot->rotateY(magnetAngle);
   new G4PVPlacement(DHSTB001_PipeRot,DHSTB001_PipePos,logicalDHSTB001_Pipe,"BeamLineDHSTB001_Pipe",fMotherVolume,false,0,true);
   G4ThreeVector DHSTB001_PipeEnd = G4ThreeVector(7232.1*mm+(DHSTB001_PipeLen+strFlangeThick)*mm*sin(magnetAngle),0.,-9580.76*mm-(DHSTB001_PipeLen+strFlangeThick)*mm*cos(magnetAngle));
   G4cout << "*** DHSTB001 Volume *** At " << DHSTB001_PipePos << " Angle " << magnetAngle << " Len " << DHSTB001_PipeLen << " Flange Thick " << strFlangeThick << G4endl;
-  printf("End of 2020 line at  %f %f %f\n",DHSTB001_PipeEnd.x(),DHSTB001_PipeEnd.y(),DHSTB001_PipeEnd.z());
-  
+  printf("End of createwallAndPipe at  %f %f %f\n",DHSTB001_PipeEnd.x(),DHSTB001_PipeEnd.y(),DHSTB001_PipeEnd.z());
+
 }
 
 void BeamLineStructure::PositionAllQuads()

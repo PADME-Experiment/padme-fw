@@ -1,9 +1,9 @@
 
 void checkAnalysisOutput(){
 
-  TFile *f = TFile::Open("230613_calib.root");
+  TFile *f = TFile::Open("run50384_forCalib.root");
   TDirectory* dir = (TDirectory*) f->Get("ECalMLCalibration");
-  TFile *outRoot = new TFile("analysisOutput230613.root","RECREATE");
+  TFile *outRoot = new TFile("run50384_Calib.root","RECREATE");
 
   TH2F *timesChannels = new TH2F("timesChannels","Time difference angular coefficient for each channel",1024,0,1024,100,0,30);
   TH1F *timesChannels1D = new TH1F("timesChannels1D","Time Differnece",1024,0.0,1024);
@@ -11,7 +11,7 @@ void checkAnalysisOutput(){
   TH1F *ampsChannelsCnst = new TH1F("ampsChannelsCnst","Amplitude difference constant for each channel",1024,0,1024);
   TH1F *coefficients = new TH1F("Angular coefficients","Angular Coefficients",300,0.0,0.3);
   TF1 *f1 = new TF1("f1","gaus",-3,20);
-  TF1 *f2 = new TF1("f2","pol1",0,100);
+  TF1 *f2 = new TF1("f2","pol1",3,60);
   //f2->FixParameter(0,0);
 
   Float_t consts[32][32];
@@ -34,8 +34,8 @@ void checkAnalysisOutput(){
   FILE *coeffFile;
   FILE *constsFile;
 
-  coeffFile = fopen("NEWchannelCalibCoefficients.dat","w");
-  constsFile = fopen("NEWchannelCalibConstants.dat","w");
+  coeffFile = fopen("run50384_CalibCoefficients.dat","w");
+  constsFile = fopen("run50384_CalibConstants.dat","w");
 
   for(int i=0;i<32;i++){
     for(int j=0;j<32;j++) {
@@ -75,7 +75,7 @@ void checkAnalysisOutput(){
 	
 	if(sigma < 5.) {
 	  
-	prof->Fit("f2");
+	  prof->Fit("f2","R");
 	//AmpHisto->Fit("f2","Q");
 
 	float cnst = f2->GetParameter("p0");

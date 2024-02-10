@@ -196,7 +196,8 @@ public:
 
   //  void PrintStatistic();
   void makeFileDir(TString dName);//{fRootOutputFile->mkdir(dName.Data());}
-  
+  TH1D* GetHisto(const std::string& name);
+  void removeHisto(const std::string& name);
 
 public:
   NTEvent  myEvt;    

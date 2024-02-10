@@ -1,5 +1,6 @@
 #include "UserAnalysis.hh"
 #include "HistoSvc.hh"
+#include "GeneralInfo.hh"
 #include <iostream>
 
 
@@ -12,7 +13,11 @@ UserAnalysis::~UserAnalysis(){
 }
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent *event){
   evt = event;
-  if (fMode < 2) InitHistos();//active on standard analysis and validation mode 
+  if (fMode < 2) InitHistos();//active on standard analysis and validation mode
+  std::cout<<"Histograms created!!!"<<std::endl;
+  GeneralInfo* fGeneralInfo=GeneralInfo::GetInstance();
+  fGeneralInfo->Init(evt,30369);
+  std::cout<<"General info created!!!"<<std::endl;
   return true;
 }
 

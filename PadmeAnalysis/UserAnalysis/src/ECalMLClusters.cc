@@ -27,6 +27,8 @@ Bool_t ECalMLClusters::InitHistos(){
   hSvcVal->BookHisto2(this->GetName()+"_ECalvsECalML_NClusters",100,0.0,100.0,100,0.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_2Clusters_TimeDiff",800,-100.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_2Clusters_TimeDiff",800,-100.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalML_2Clusters_TimeDiff_PeakEnergy",800,-100.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECal_2Clusters_TimeDiff_PeakEnergy",800,-100.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_TotalClusterEnergy",1000,0.0,2000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus",1000,0.0,2000.0);
@@ -43,7 +45,10 @@ Bool_t ECalMLClusters::InitHistos(){
   hSvcVal->BookHisto2(this->GetName()+"_ECalML_InvMass_vs_EnergySum",100,0.0,100.0,1000,0.0,1000.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalClusters_NHits_invMass", 100, 0.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalMLClusters_NHits_invMass", 100, 0.0,100.0);
-  
+  hSvcVal->BookHisto(this->GetName()+"_ECalClusters_NHits_2clus", 100, 0.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalMLClusters_NHits_2clus", 100, 0.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalClusters_NHits_2clus_2ns", 100, 0.0,100.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECalMLClusters_NHits_2clus_2ns", 100, 0.0,100.0);
   return true;
 }
 
@@ -144,11 +149,13 @@ Bool_t ECalMLClusters::Process(){
   hSvc->FillHisto(this->GetName()+"_ECal_TotalClusterEnergy", eTotCl);
   Double_t eTotClML2=0;
   Double_t eTotClML2prim=0;
+  Double_t eTotClML2clus=0;
   Double_t time1=0;
   Double_t time2=0;
   Double_t eTotCl2=0;
   Double_t eTotCl2prim=0;
-
+  Double_t eTotCl2clus=0;
+ 
   Double_t MinvSQ=0;
   Double_t MinvSQML=0;
 
@@ -161,10 +168,10 @@ Bool_t ECalMLClusters::Process(){
 
  
   
-  if(NclusML==2){
-    //for (Int_t i=0; i<NclusML; ++i){
-    cluML    = evt->ECalMLRecoCl->Element(0);
-    cluML2    = evt->ECalMLRecoCl->Element(1);
+  //if(NclusML==2){
+    for (Int_t i=0; i<NclusML; ++i){
+    cluML    = evt->ECalMLRecoCl->Element(i);
+    cluML2    = evt->ECalMLRecoCl->Element(i+1);
     if(cluML&&cluML2) {
       //hSvc->FillHisto(this->GetName()+"_ECalML_2Clusters_Energy", cluML->GetEnergy());
       time1 = cluML->GetTime();
@@ -176,6 +183,14 @@ Bool_t ECalMLClusters::Process(){
       pos1ML=cluML->GetPosition();
       pos2ML=cluML2->GetPosition();
 
+      hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_2clus", cluML->GetNHitsInClus());
+      hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_2clus", cluML2->GetNHitsInClus());
+
+      eTotClML2clus = cluML->GetEnergy()+cluML2->GetEnergy();
+      if(eTotClML2clus>330 && eTotClML2clus<450)
+	    {
+	      hSvc->FillHisto(this->GetName()+"_ECalML_2Clusters_TimeDiff_PeakEnergy",(cluML->GetTime() - cluML2->GetTime()));
+	    }
       if(fabs(cluML->GetTime() - cluML2->GetTime())<5.)
 	{
 	  eTotClML2 = cluML->GetEnergy()+cluML2->GetEnergy();
@@ -184,22 +199,27 @@ Bool_t ECalMLClusters::Process(){
       if(fabs(cluML->GetTime() - cluML2->GetTime())<2.)
 	{
 	  eTotClML2prim = cluML->GetEnergy()+cluML2->GetEnergy();
+	  
 	  hSvc->FillHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus2ns", eTotClML2prim);
 	  MinvSQML=ComputeInvariantMass(cluML->GetEnergy(),cluML2->GetEnergy(),pos1ML.X(),pos2ML.X(),pos1ML.Y(),pos2ML.Y());
 	  hSvc->FillHisto(this->GetName()+"_ECalML_InvariantMassSQ", MinvSQML);
 	  hSvc->FillHisto(this->GetName()+"_ECalML_InvariantMass", sqrt(MinvSQML));
 	  hSvc->FillHisto2(this->GetName()+"_ECalML_InvMass_vs_EnergySum",sqrt(MinvSQML),eTotClML2prim);
+	  hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_2clus_2ns", cluML->GetNHitsInClus());
+	  hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_2clus_2ns", cluML2->GetNHitsInClus());
 	  if(sqrt(MinvSQML)>=17&&sqrt(MinvSQML)<=23){
 	    hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_invMass", cluML->GetNHitsInClus());
 	    hSvc->FillHisto(this->GetName()+"_ECalMLClusters_NHits_invMass", cluML2->GetNHitsInClus());
 	  }
 	}
     }
-  }
-  if(Nclus==2){
+    }
+    //if(Nclus==2){
+    for (Int_t i=0; i<NclusML; ++i){
+  
     // hSvc->FillHisto(this->GetName()+"_ECalML_TotalClusterEnergy_2Clus", eTotClML2);
-    clu    = evt->ECalRecoCl->Element(0);
-    clu2    = evt->ECalRecoCl->Element(1);
+    clu    = evt->ECalRecoCl->Element(i);
+    clu2    = evt->ECalRecoCl->Element(i+1);
     if(clu&&clu2) {
       //hSvc->FillHisto(this->GetName()+"_ECalML_2Clusters_Energy", cluML->GetEnergy());
       time1 = clu->GetTime();
@@ -209,7 +229,14 @@ Bool_t ECalMLClusters::Process(){
       pos1=clu->GetPosition();
       pos2=clu2->GetPosition();
       //eTotClML2 += cluML->GetEnergy();
-      
+      hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_2clus", clu->GetNHitsInClus());
+      hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_2clus", clu2->GetNHitsInClus());
+
+      eTotCl2clus = clu->GetEnergy()+clu2->GetEnergy();
+      if(eTotCl2clus>385 && eTotClML2clus<460)
+	{
+	  hSvc->FillHisto(this->GetName()+"_ECal_2Clusters_TimeDiff_PeakEnergy",(clu->GetTime() - clu2->GetTime()));
+	}
       if(fabs(clu->GetTime() - clu2->GetTime())<5.)
 	{
 	  eTotCl2 = clu->GetEnergy()+clu2->GetEnergy();
@@ -223,6 +250,8 @@ Bool_t ECalMLClusters::Process(){
 	  hSvc->FillHisto(this->GetName()+"_ECal_InvariantMassSQ", MinvSQ);
 	  hSvc->FillHisto(this->GetName()+"_ECal_InvariantMass", sqrt(MinvSQ));
 	  hSvc->FillHisto2(this->GetName()+"_ECal_InvMass_vs_EnergySum",sqrt(MinvSQ),eTotCl2prim);
+	  hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_2clus_2ns", clu->GetNHitsInClus());
+	  hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_2clus_2ns", clu2->GetNHitsInClus());
 	  if(sqrt(MinvSQ)>=19&&sqrt(MinvSQ)<=22){
 	    hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_invMass", clu->GetNHitsInClus());
 	    hSvc->FillHisto(this->GetName()+"_ECalClusters_NHits_invMass", clu2->GetNHitsInClus());

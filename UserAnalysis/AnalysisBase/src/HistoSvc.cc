@@ -369,33 +369,4 @@ void HistoSvc::SaveTGraphList(std::string listname, std::string name, TGraph* g)
   }
 }
 
-void HistoSvc::removeHisto(const std::string& name) {
-    // Check if the histogram exists
-    if (fListMap.find("STD") != fListMap.end()) {
-        std::map<std::string, TObject*>& list = fListMap["STD"];
-        auto it = list.find(name);
-        if (it != list.end()) {
-            TObject* hist = it->second;
-            // Remove the histogram from the map
-            list.erase(it);
-
-            // Optionally, delete or free resources associated with the histogram
-            delete hist; // You may need to adjust this based on your histogram type
-
-            // Remove the histogram from the ROOT file if it exists
-            if (fRootOutputFile) {
-                fRootOutputFile->cd("/");
-                fRootOutputFile->cd("STD"); // Assuming histograms are in the "STD" list
-                TObject* obj = gDirectory->Get(name.c_str());
-                if (obj) {
-                    gDirectory->Delete(name.c_str()); // Delete the histogram from the file
-                }
-            }
-        } else {
-            std::cerr << "HistoSvc::removeHisto - Histogram '" << name << "' not found." << std::endl;
-        }
-    } else {
-        std::cerr << "HistoSvc::removeHisto - List 'STD' does not exist." << std::endl;
-    }
-}
 

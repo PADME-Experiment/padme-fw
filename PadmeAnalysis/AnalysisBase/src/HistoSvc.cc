@@ -330,49 +330,4 @@ void HistoSvc::FillNtuple()
   if(ntupl) ntupl->Fill();
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-TH1D* HistoSvc::GetHisto(const std::string& name) {
-    // Check if the histogram exists in the map
-    if (fHisto1DMap.find(name) != fHisto1DMap.end()) {
-        // Return a pointer to the histogram if it exists
-        return fHisto1DMap[name];
-    } else {
-        // Handle the case when the histogram doesn't exist
-        // You can return nullptr or handle it differently based on your requirements
-        return nullptr;
-    }
-}
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-void HistoSvc::removeHisto(const std::string& name) {
-  // Check if the histogram exists
-  if (fHisto1DMap.find(name) != fHisto1DMap.end()) {
-    TH1D* histo = fHisto1DMap[name];
-    //auto it = list.find(name);
-    //if (it != list.end()) {
-    // TObject* hist = it->second;
-    // Remove the histogram from the map
-    //list.erase(it);
-
-    // Optionally, delete or free resources associated with the histogram
-    //delete histo; // You may need to adjust this based on your histogram type
-    fHisto1DMap.erase(name);
-    // Remove the histogram from the ROOT file if it exists
-    if (fRootOutputFile) {
-      //fRootOutputFile->cd("/");
-      fRootOutputFile->pwd(); // Assuming histograms are in the "STD" list
-      TObject* obj = gDirectory->Get(name.c_str());
-      if (obj) {
-	gDirectory->Delete(name.c_str()); // Delete the histogram from the file
-      }
-    }
-  
-    else {
-      std::cerr << "HistoSvc::removeHisto - Histogram '" << name << "' not found." << std::endl;
-    }
-  }
-  else {
-    std::cerr << "HistoSvc::removeHisto - List 'STD' does not exist." << std::endl;
-  }
-}

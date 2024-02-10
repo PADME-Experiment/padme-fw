@@ -32,7 +32,7 @@ MagneticFieldSetup::MagneticFieldSetup()
   
   //fFieldMessenger = new MagneticFieldMessenger(this) ;  
   
-  //fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
+  fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   fLocalEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   
   fMinStep     = 0.25*mm; // minimal step of 1 mm is default

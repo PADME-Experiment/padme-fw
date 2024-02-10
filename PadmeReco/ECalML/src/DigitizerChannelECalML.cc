@@ -216,7 +216,7 @@ void DigitizerChannelECalML::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   ApplyML(floatSamples);
   //std::cout<<"fSamplesML[57]: "<<fSamplesML[57]<<std::endl;
   
-  MINDIST=7;
+  MINDIST=11;
   
   for(int i = 0;i<1024;i++) {
     filteredSamples[i] = 0;

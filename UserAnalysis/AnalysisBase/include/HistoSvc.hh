@@ -67,6 +67,7 @@ public:
   void SaveTGraphList(std::string,std::string,TGraphAsymmErrors*);
   void SaveTGraphList(std::string,std::string,TGraphBentErrors*);
   void SaveTGraphList(std::string,std::string,TGraphPolar*);
+  void removeHisto(const std::string& name);
   
 private:
 

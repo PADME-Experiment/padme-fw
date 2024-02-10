@@ -420,7 +420,11 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       MatEtot  [jj][kk]=0.;   
       MatQtot  [jj][kk]=0.;   
       MatTstart[jj][kk]=1.e6; 
-      MatUsed  [jj][kk]=0;   
+      MatUsed  [jj][kk]=0;
+      for(G4int ll=0;ll<1024;ll++) {
+	fECalWaveForm [jj][kk][ll] = 0.;
+      }
+      
     }
   }
   
@@ -434,6 +438,20 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       G4int Xind = index%100;
       G4int Yind = index/100;
       MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+      G4float hTime = hit->GetTime();
+      //Energy of the hit, time of hit, position of the hit.
+
+      for( int ll = 0; ll<1024;ll++) {
+	//Propagation time = 0
+	if(ll < (int) (hTime)) continue;
+
+	//fECalWaveForm[Xind][Yind][ll] += f(ll - (hTime + signalPropagationTime)  *(hit->GetEnergy());
+	fECalWaveForm[Xind][Yind][ll] +=   (hit->GetEnergy())*(exp(- (ll-hTime)/300. ) - exp( -(ll-hTime)/10.));
+	
+      }
+      
+
+      
       ETotCal += hit->GetEnergy();
       //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
@@ -445,18 +463,23 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
 		       << " " << hit->GetPosX()/CLHEP::cm
 		       << " " << hit->GetPosY()/CLHEP::cm
 		       << " " << hit->GetPosZ()/CLHEP::cm
+		       << " " << hit->GetTime() 
 		       << " ";
       }
     }
   }//end of loop on hits
 
   
-  
-  for(int xx=0;xx<NCols;xx++){
-    for(int yy=0;yy<NRows;yy++){
-      MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
-      (*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+  for (int tt=0;tt<1024;tt++){
+    for(int xx=0;xx<NCols;xx++){
+      for(int yy=0;yy<NRows;yy++){
+      //MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
+      //(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+      
+	(*(foutECalML)) << std::setw(7) << std::setprecision(2) <<fECalWaveForm[xx][yy][tt];
+      }
     }
+    (*(foutECalML)) << std::endl;
   }
 
   (*(foutECalML)) << std::endl;

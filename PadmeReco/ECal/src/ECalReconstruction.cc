@@ -619,36 +619,25 @@ void ECalReconstruction::BuildClusters()
 }
 
 
-//  Written by M. Raggi 21/05/2019 Modified by E. Di Meco 31/1/24
+//  Written by M. Raggi 21/05/2019
 Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
 {
- Double_t EFraction;
+  Double_t EFraction;
   Int_t ClusterSize=5;
-  //  EFraction[490]=0.95;
-  //  cout<<"dime "<<fClDeltaCellMax<<endl;
-  //std::cout << "in compensate missing e" << std::endl;
   if(fEnergyCompensation==NULL){
     fEnergyCompensation = new TF1("comp","pol4",0.,1000.);
     if(fClDeltaCellMax==2){
       fEnergyCompensation->SetParameters(0.915362,0.000196729,-4.50361e-07,4.58042e-10,-1.70299e-13); // pol4 fit of the MC
-      EFraction = fEnergyCompensation->Eval(ECl);
-      if(ECl>1000.) EFraction=0.94;
-    }else if(fClDeltaCellMax==3){
+    }else{
       fEnergyCompensation->SetParameters(0.925666,0.000231776,-5.72621e-07,6.22445e-10,-2.44014e-13); // pol4 fit of the MC
-      EFraction = fEnergyCompensation->Eval(ECl);
-      if(ECl>1000.) EFraction=0.96;
-   }else{
-    std::cout<<" !!!! No energy compensation value for this number of DeltaCellMax: "<<fClDeltaCellMax<<" !!!!"<<std::endl;
-   }
+    }
   }
-  //  EFraction=0.95;
-  // EFraction = fEnergyCompensation->Eval(ECl);
-  //std::cout << "fraction " << EFraction << std::endl;
-  //if(ECl>1000.) EFraction=1;
-  // if(ECl>1000.) EFraction=0.96;
-  //if(ECl<30.)   EFraction=1;
-  // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
-  // delete fEnergyCompensation;
+  if(ECl>1000.){
+    if (fClDeltaCellMax==2) EFraction=0.94;
+    else EFraction=0.96;
+  }else{
+    EFraction = fEnergyCompensation->Eval(ECl);
+  }
   return EFraction;
 }
 
@@ -1144,15 +1133,14 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEven
 
 Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   Bool_t BrSU=false;
-  if(x==16 && y==25)   BrSU=true;
+  if(x==16 && y==25)  BrSU=true;
   if(x==18 && y==10)  BrSU=true;
   if(x==22 && y==8 )  BrSU=true;
   if(x==18 && y==4 )  BrSU=true;
-  if(x==5 && y==5 )  BrSU=true;
-  if(x==12 && y==18 )  BrSU=true;
-  if(x==16 && y==25 )  BrSU=true;
+  if(x==5 && y==5 )   BrSU=true;
+  if(x==12 && y==18 ) BrSU=true;
+  if(x==16 && y==25 ) BrSU=true;
   return BrSU;
-
 }
 
 Double_t ECalReconstruction::EnergyResolution(Double_t energy){

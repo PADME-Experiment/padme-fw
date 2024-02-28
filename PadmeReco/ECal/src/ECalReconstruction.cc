@@ -636,10 +636,16 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
     }
   }
   //  EFraction=0.95;
-  EFraction = fEnergyCompensation->Eval(ECl);
+  if(ECl>1000.){
+    if(fClDeltaCellMax==2) EFraction=0.94;
+    else EFraction=0.96;
+  }else{
+    EFraction = fEnergyCompensation->Eval(ECl);
+  }
   //std::cout << "fraction " << EFraction << std::endl;
   //if(ECl>1000.) EFraction=1;
-  if(ECl>1000.) EFraction=0.96;
+  //if(ECl>1000. && fClDeltaCellMax==2 ) EFraction=0.94;
+  //if(ECl>1000. && fClDeltaCellMax==3 ) EFraction=0.96;
   //if(ECl<30.)   EFraction=1;
   // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
   // delete fEnergyCompensation;
@@ -1142,6 +1148,11 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   if(x==18 && y==10)  BrSU=true;
   if(x==22 && y==8 )  BrSU=true;
   if(x==18 && y==4 )  BrSU=true;
+  if(x==5 && y==5 )  BrSU=true;
+  if(x==12 && y==18 )  BrSU=true;
+  if(x==16 && y==25 )  BrSU=true;
+
+
   return BrSU;                                                                                                                                                  
 
 }

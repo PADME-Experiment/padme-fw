@@ -8,26 +8,33 @@ GeneralInfo* GeneralInfo::fInstance = 0;
 
 GeneralInfo* GeneralInfo::GetInstance(){
   if ( fInstance == 0 ) { fInstance = new GeneralInfo(); }
+
   return fInstance;
 }
 
 
 GeneralInfo::GeneralInfo(){
   fRecoEvent   = NULL;
+  fDBRunNumber =0;
   fMe = 0.511;
 }
 
 GeneralInfo::~GeneralInfo(){}
 
-Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
+Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fRecoEvent = event->RecoEvent;
-  fOfflineServerDB = OfflineServer::GetInstance();
+  fDBRunNumber = DBRunNumber;
 
+  Int_t trueRunNumber=0;
+  fDBRunNumber==0 ? trueRunNumber= fRecoEvent->GetRunNumber(): trueRunNumber=fDBRunNumber;
+  std::cout<<"DBRunNumber: "<<fDBRunNumber<<" trueRunNumber:"<<trueRunNumber<<std::endl;
+  fOfflineServerDB = OfflineServer::GetInstance();
+  
   fRunOld = -1;
 
   // set global values for each run period
 
-  if (fRecoEvent->GetRunNumber() < 50151) {
+  if (fDBRunNumber < 50151) {
     fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
@@ -80,7 +87,12 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event){
 // 
 Bool_t GeneralInfo::Process(){ 
 
-  int runID = fRecoEvent->GetRunNumber();
+  //int runID = fRecoEvent->GetRunNumber();
+
+  Int_t runID=0;
+  fDBRunNumber==0 ? runID= fRecoEvent->GetRunNumber(): runID=fDBRunNumber;
+  //std::cout<<"DBRunNumber: "<<DBRunNumber<<" runID:"<<trueRunNumber<<std::endl;
+ 
 
   if (runID != fRunOld) { // update run-level information
     fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
@@ -165,6 +177,7 @@ void GeneralInfo::EvalBeamProperties(){
   fRadiusMin = (fCOGAtECal.Z()-fRTarg.Z())*TMath::Tan(0.5*TMath::Pi()-tLim)/fGam ;// (fCOGAtECal.Z()-fRTarg.Z())*tanQMin; 
   fEnergyMax = fSqrts*fGam*0.5*(1.-TMath::Cos(2*tLim)); 
   fEnergyMin = fSqrts*fGam*0.5*(1.+TMath::Cos(2*tLim)); 
+  std::cout<<"fEnergyMax: "<<fEnergyMax<<" fEnergyMin "<<fEnergyMin<<std::endl;
 }
 
 

@@ -15,6 +15,7 @@ class ECalSel;
 class ETagAn;
 class ETagAnalysis;
 class MCTruth;
+class MCTruthECal;
 
 class UserAnalysis {
 
@@ -23,7 +24,8 @@ public:
   UserAnalysis(TString c = "config/UserAnalysis.conf", Int_t v = 0);
   ~UserAnalysis();
 
-  Bool_t Init(PadmeAnalysisEvent*);
+  //Bool_t Init(PadmeAnalysisEvent*);
+  Bool_t Init(PadmeAnalysisEvent* event, Bool_t fHistoMode, TString InputHistofile, Int_t DBRunNumber);
   Bool_t Process();
   Bool_t Finalize();
 
@@ -48,6 +50,7 @@ private:
   ETagAn* fETagAn;
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;
+  MCTruthECal* fMCTruthECal;
   ECalCalib* fECalCalib;
 
   bool fETagHitsAvail;

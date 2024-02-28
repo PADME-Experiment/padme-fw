@@ -1,4 +1,5 @@
 *~
+*.ignore
 *.d
 *.o
 *.db
@@ -11,7 +12,8 @@
 *.root
 *.pcm
 *.heprep
-run_*
+*.py
+*.out
 PersistencyDict.cc
 PersistencyDict.h
 .*.swp

@@ -13,6 +13,7 @@
 //#include "Is3GAnalysis.hh" //MR
 #include "ETagAnalysis.hh" //AF
 #include "MCTruth.hh"     //MR
+#include "MCTruthECal.hh"     //EDM
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -29,6 +30,8 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fECalCalib    = ECalCalib::GetInstance();
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
+  fMCTruthECal      = MCTruthECal::GetInstance();
+
 
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
@@ -57,7 +60,7 @@ UserAnalysis::~UserAnalysis(){
 //  delete fIs3GAnalysis;
 }
 
-Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
+Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t fHistoMode, TString InputHistofile, Int_t DBRunNumber){
   if (event->ETagRecoEvent) fETagHitsAvail = kTRUE; // ETag hits are available
   if (event->ETagRecoCl) fETagClusAvail = kTRUE; // ETag hits are available
 
@@ -67,10 +70,13 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   InitHistos();
   fECalCalib->Init();
 
-  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
+  if(fEvent->MCTruthEvent){
+     fMCTruth->Init(fEvent);
+     fMCTruthECal->Init(fEvent);
+  }
   fNPoTAnalysis->Init(fEvent);
-  fGeneralInfo->Init(fEvent);
-  fECalSel->Init(fEvent);
+  fGeneralInfo->Init(fEvent, DBRunNumber);
+  fECalSel->Init(fEvent,fHistoMode,InputHistofile);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
   if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
@@ -110,7 +116,7 @@ Bool_t UserAnalysis::Process(){
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
 
   fNPoTAnalysis->Process();
-
+  if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fGeneralInfo->Process();
   fECalCalib->Process(fEvent);
@@ -175,7 +181,11 @@ Bool_t UserAnalysis::Process(){
 Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
+  if(fEvent->MCTruthEvent){
+     fMCTruth->Finalize();
+     fMCTruthECal->Finalize();
+
+  }
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
   if (fETagHitsAvail) fETagAn->Finalize();

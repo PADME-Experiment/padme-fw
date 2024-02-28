@@ -36,8 +36,10 @@
 #include "UserAnalysis.hh"
 
 void usage(char* name){
-  std::cout << "Usage: "<< name << " [-i <input file>] [-l <input file list>] [-n #MaxEvents] [-o <output file>] [-c <config file>] [-t] [-v] [-h]" 
+  std::cout << "Usage: "<< name << " [-i <input file>] [-l <input file list>] [-n #MaxEvents] [-o <output file>] [-c <config file>] [-m <HistoFile.root>] [-r <RunNumber>][-t] [-v] [-h]" 
 	    << std::endl;
+      std::cout<<"-m is for histomode, skips the Process part"<<std::endl;
+      std::cout<<"-r wants a run-number from the database to overwrite the run number in GeneralInfo"<<std::endl; //Da sistemare
 }
 
 void sighandler(int sig){
@@ -45,7 +47,9 @@ void sighandler(int sig){
     std::cerr << "Killed with Signal " << sig << std::endl << "Closing ROOT files ..." << std::endl;
 
     HistoSvc::GetInstance()->Finalize();
-
+    //  UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
+      //UserAn->Finalize();
+    //UserAnalysis::GetInstance()->Finalize();
     std::cerr << "... Histogram file Done" << std::endl;
     std::cerr << std::endl << "********************************************************************************" << std::endl;
 
@@ -88,14 +92,17 @@ int main(Int_t argc, char **argv)
   TString ConfFileName("config/UserAnalysis.conf");
   TString OutputFileName = "OutputFileRoot.root";
   TString InputFileName;
+  TString InputHistofile;
+  Int_t DBRunNumber=0;
   std::ifstream InputList;
   Int_t NInputFiles = 0;
   Int_t NSkippedFiles = 0;
   Int_t fVerbose = 0;
+  Bool_t fHistoMode = false;
   Bool_t doNtuple = false;
   Int_t NEvt = 0; // Maximum number of events to process (0 = all)
 
-  while ((opt = getopt(argc, argv, "c:i:l:n:o:vth")) != -1) {
+  while ((opt = getopt(argc, argv, "c:i:l:n:m:r:o:vth")) != -1) {
     switch (opt) {
     case 'c':
       ConfFileName = TString(optarg);
@@ -118,6 +125,13 @@ int main(Int_t argc, char **argv)
       break;
     case 'n':
       NEvt = TString(optarg).Atoi();
+      break;
+    case 'm':
+      InputHistofile =  TString(optarg);
+      fHistoMode = true;
+      break;
+    case 'r':
+      DBRunNumber =  TString(optarg).Atoi();
       break;
     case 'o':
       OutputFileName = TString(optarg);
@@ -344,8 +358,9 @@ int main(Int_t argc, char **argv)
 
   if (fVerbose) printf("---> Initializing user analysis\n");
   UserAnalysis* UserAn = new UserAnalysis(ConfFileName,fVerbose);
-  UserAn->Init(event);
-  
+  //UserAn->Init(event);
+  UserAn->Init(event, fHistoMode, InputHistofile, DBRunNumber);
+
   Int_t nTargetHits =0;
   Int_t nECalHits   =0;   
   Int_t nPVetoHits  =0;  
@@ -358,7 +373,8 @@ int main(Int_t argc, char **argv)
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
 
   if (NEvt >0 && NEvt<nevents) nevents=NEvt;
-  for (Int_t i=0; i<nevents; ++i) {
+  if(!fHistoMode){
+     for (Int_t i=0; i<nevents; ++i) {
     
     jevent = fRecoChain->GetEntry(i);   
     
@@ -428,8 +444,10 @@ int main(Int_t argc, char **argv)
     }
     
     if (doNtuple) stdNtuple->Fill(event);
-    UserAn->Process();    
+      //std::cout<<" I'm processing stupida "<<std::endl;
+      UserAn->Process();    
   }
+}
   
   if (fVerbose) printf("---> Finalizing user analysis\n");
   UserAn->Finalize();

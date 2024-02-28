@@ -1,10 +1,15 @@
 #ifndef ECalSel_h
 #define ECalSel_h 1
 
+#include "TH2D.h"
+#include "TH1D.h"
+
 #include "TObject.h"
 #include "TVector2.h"
 #include "PadmeAnalysisEvent.hh"
 #include "GeneralInfo.hh"
+#include "MCTruthECal.hh"
+
 #include "HistoSvc.hh"
 
 
@@ -60,14 +65,24 @@ private:
   virtual Bool_t InitHistos();
 
 public:
-  virtual Bool_t Init(PadmeAnalysisEvent* event);
+  //virtual Bool_t Init(PadmeAnalysisEvent* event);
+  virtual Bool_t Init(PadmeAnalysisEvent* event,Bool_t fHistoMode,TString InputHistofile);
+
   Bool_t Finalize();
+  Bool_t TagProbeEff();
+  Bool_t MCTagProbeEff();
+  Bool_t FitTagProbeEff();
+  Bool_t TagProbeEff_macro();
+  
+
+
   virtual Bool_t Process();
 
   int getNECalEvents(){return (int) fECalEvents.size();}
   ECalSelEvent getECalEvent(int i){return fECalEvents.at(i);} //to be protected
 
 protected:
+  PadmeAnalysisEvent* fEvent;
   TRecoEvent*           fRecoEvent;
   TRecoVObject*         fECal_hitEvent   ;
   TRecoVClusCollection* fECal_clEvent    ;
@@ -81,11 +96,13 @@ private:
   Int_t OneClusTagAndProbeSel();
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
+  MCTruthECal* fMCTruthECal;
 
   // general setup
 
   bool fFillLocalHistograms;
-
+  Bool_t fHistoMode;
+  TString InputHistofile;
   // general cuts
 
   double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)
@@ -93,7 +110,7 @@ private:
   double fMinGGDistance; // mm, two-cluster minimum distance
   double fSafeEnergyFactor; // safety factor allowing loosening of the min/max energy cuts used. If set to 1 -> default cuts are used
   double fSafeSpaceMargin;// mm, safety margin used for the radius min cut    
-
+  
 
   int fNThetaBins;
   double fThetaWid;
@@ -107,8 +124,35 @@ private:
   Double_t fYMax;
   Double_t fYW;
   Int_t fNYBins;
+  Double_t fMeanDTheta = 3.113; //rad
+  Double_t fMeanDPhi = 3.093; //rad
+  Double_t fSigmaDTheta = 0.0932; //rad
+  Double_t fSigmaDPhi = 0.1105; //rad
+  Double_t fSigmaE = 12.64;
 
+  const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
+  const int ncells = 29; // per row or column                                                                                                                                                            
+  double ecalEdge = (ncells/2+0.5)*cellSize; // 304.5mm                                                                                                                                                  
+  const int nhole = 5; // 5x5 matrix is not instrumented                  
+
+  
+
+  TH2D *EofTag;
+  TH2D *PhiofTag;
+  TH2D *EofProbe;
+  TH2D *PhiofProbe;
+  TH2D *DeltaPhiofProbe;
+  TH2D *EofTag_cut;
+  TH2D *PhiofTag_cut;
+  TH2D *EofProbe_cut;
+  TH2D *PhiofProbe_cut;
+  TH2D *DeltaPhiofProbe_cut;
+  TH1D *PhiFullProbe;
+  std::vector<TH1D*> PhiFullProbeSlice;
+  double spacing = 5;
+  Int_t NSlicesE;
   HistoSvc* fhSvcVal;   
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

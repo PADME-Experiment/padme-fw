@@ -19,6 +19,8 @@ public:
 
 
   Bool_t Init();
+  //Bool_t Init(PadmeAnalysisEvent* event,Bool_t fHistoMode,TString InputHistofile);
+
   Bool_t Process(PadmeAnalysisEvent*);
   Bool_t Finalize();
 

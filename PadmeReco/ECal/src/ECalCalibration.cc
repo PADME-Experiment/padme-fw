@@ -36,7 +36,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
-  fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","0");
+  fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","7");
   //std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
 
@@ -83,7 +83,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 	       <<fname<<std::endl;
       
       if(!ECalib.is_open()){
-	std::cout<<"ERROR: Cannot find ECal calibration file "<<"**************"<<std::endl;
+	std::cout<<"ERROR: Cannot find ECal  file "<<"**************"<<std::endl;
 	exit(1);
       }
     }
@@ -113,7 +113,8 @@ void ECalCalibration::ReadCalibConstant()
   if(fCalibVersion!="0"){
     if(ECalib.is_open()){
       for(int i=0;i<616;i++){
-	ECalib >> row >> col >> NBD >> CID >> MIPCharge;   //reads Piperno informations need cross-check
+	ECalib >> row >> col >> NBD >> CID >> MIPCharge; 
+  //std::cout <<" "<<row <<" "<< col << " "<< NBD << " "<<CID << " "<<MIPCharge<<" "<<std::endl;;   //reads Piperno informations need cross-check
 	fCalibMap[std::make_pair(NBD,CID)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
 	//fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
 	//std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;

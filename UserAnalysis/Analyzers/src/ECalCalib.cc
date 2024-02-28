@@ -64,7 +64,7 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
   if(!fisMC && NEvent%10000==0) cout<<"ECalCalib NEvent "<<NEvent<<endl;
 
   fNPairs = NClusterPairSimpleSelection();
-  CorrectETimeSlope(0); //fill plots before and after time-energy slope correction
+  CorrectETimeSlope(1); //fill plots before and after time-energy slope correction
   CorrectEScale(1); // fill plots before and after energy scale correction      
 
   return true;

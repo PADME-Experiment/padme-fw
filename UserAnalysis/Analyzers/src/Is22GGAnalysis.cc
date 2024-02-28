@@ -529,6 +529,6 @@ Bool_t Is22GGAnalysis::IsMCGG(double VTime,double E1,double E2)
       }
     }
   }
-  std::cout<<"*** "<<std::endl;
+  //std::cout<<"*** "<<std::endl;
   return isGG_IN;
 }

@@ -26,7 +26,7 @@ private:
   static GeneralInfo* fInstance;
 
 public:
-  virtual Bool_t Init(PadmeAnalysisEvent* event);
+  virtual Bool_t Init(PadmeAnalysisEvent* event, Int_t DBRunNumber);
   virtual Bool_t Process();
 
   long long int GetPeriodStartTime(){return fPeriodStartTime;} // tim of start of the period (2020, 2022, etc.)
@@ -89,7 +89,7 @@ private:
 
   double fXCOG;
   double fYCOG;
-
+  Int_t fDBRunNumber;
   double fCalibEnergyFactor;
   double fCalibTimeEnergyFactor;
 

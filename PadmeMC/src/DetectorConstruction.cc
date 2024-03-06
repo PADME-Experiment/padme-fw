@@ -12,6 +12,7 @@
 #include "TDumpDetector.hh"
 #include "TPixDetector.hh"
 #include "ETagDetector.hh"
+#include "MMegaDetector.hh"    //D. Quaranta 20/12/2023
 #include "TungstenDetector.hh"
 
 #include "MagnetStructure.hh"
@@ -29,6 +30,7 @@
 #include "TPixGeometry.hh"
 #include "SACGeometry.hh"
 #include "ETagGeometry.hh"
+#include "MMegaGeometry.hh"    //D. Quaranta 20/12/2023
 #include "TungstenGeometry.hh"
 #include "MagnetGeometry.hh"
 #include "ChamberGeometry.hh"
@@ -83,6 +85,7 @@ DetectorConstruction::DetectorConstruction()
   fTargetDetector    = new TargetDetector(0);
   fSACDetector       = new SACDetector(0);
   fETagDetector      = new ETagDetector(0);
+  fMMegaDetector     = new MMegaDetector(0); //D. Quaranta 20/12/2023
   fPVetoDetector     = new PVetoDetector(0);
   fEVetoDetector     = new EVetoDetector(0);
   fHEPVetoDetector   = new HEPVetoDetector(0);
@@ -102,6 +105,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableTarget   = 1;
   fEnableSAC      = 1;
   fEnableETag     = 0;
+  fEnableMMega    = 1; //D. Quaranta 20/12/2023 not default in 2019 should be 0, just trying :)
   fEnablePVeto    = 1;
   fEnableEVeto    = 1;
   fEnableHEPVeto  = 1;
@@ -144,6 +148,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fPVetoDetector;
   delete fEVetoDetector;
   delete fETagDetector;
+  delete fMMegaDetector; //D. Quaranta 20/12/2023
   delete fHEPVetoDetector;
   delete fTDumpDetector;
   delete fTPixDetector;
@@ -460,6 +465,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fETagDetector->CreateGeometry();
   }
 
+// D. Quaranta 20/12/23 only MMega added
+  if (fEnableMMega) {
+    fMMegaDetector->SetMotherVolume(logicWorld);
+    fMMegaDetector->CreateGeometry();
+  }
+
   // TDump
   if (fEnableTDump) {
     fTDumpDetector->SetMotherVolume(logicWorld);
@@ -555,6 +566,8 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildElement("Pb"); // Lead
   man->FindOrBuildElement("Al"); // Aluminum
   man->FindOrBuildElement("Ti"); // Titanium
+  man->FindOrBuildElement("Ar"); // Argon (MMega) D. Quaranta
+
 
   // Vacuum: leave some residual air with low density (Chamber, World)
   G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-7)*mg/cm3,2); // 1mbar
@@ -617,6 +630,32 @@ void DetectorConstruction::DefineMaterials()
   G4Material* PCB = new G4Material("PCB",1.86*g/cm3,2);
   PCB->AddMaterial(Epoxy,0.472);
   PCB->AddMaterial(SiO2, 0.528);
+
+  //ArCF4Iso (MMega)
+  // Isobutane at STP (quencher)
+  G4Material* iso = new G4Material("isobutane", 2.49*mg/cm3, 2);
+  iso->AddElement(G4Element::GetElement("C"), 4);
+  iso->AddElement(G4Element::GetElement("H"), 10);
+  // CF4 at STP
+  G4Material* Cf4 = new G4Material("CF4", 3.780*mg/cm3, 2);
+  Cf4->AddElement(G4Element::GetElement("C"), 1);
+  Cf4->AddElement(G4Element::GetElement("F"), 4);
+  //TPC gas mixture
+  G4Material* TPCgas = new G4Material("ArCF4Iso", 1.876*mg/cm3, 3);
+  TPCgas->AddElement(G4Element::GetElement("Ar"), 88.*perCent);
+  TPCgas->AddMaterial(Cf4, 10.*perCent);
+  TPCgas->AddMaterial(iso, 2.*perCent);
+
+  //Kapton (MMega)
+  G4Material* kapton = new G4Material("Kapton", 1.413*g/cm3, 4);
+  kapton->AddElement(G4Element::GetElement("O"),5);
+  kapton->AddElement(G4Element::GetElement("C"),22);
+  kapton->AddElement(G4Element::GetElement("N"),2);
+  kapton->AddElement(G4Element::GetElement("H"),10);
+
+
+
+
 
   /*
   //--------- Materials definition ---------
@@ -794,6 +833,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   TargetGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   SACGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   ETagGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  MMegaGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //D.Quaranta 20/12/2023
   PVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   EVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   HEPVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
@@ -848,6 +888,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="Target")  { fEnableTarget  = 1; }
   else if (det=="SAC")     { fEnableSAC     = 1; }
   else if (det=="ETag")     { fEnableETag     = 1; }
+  else if (det=="MMega")   { fEnableMMega   = 1; } //D.Quaranta 20/12/2023
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
@@ -864,6 +905,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="Target")  { fEnableTarget  = 0; }
   else if (det=="SAC")     { fEnableSAC     = 0; }
   else if (det=="ETag")    { fEnableETag    = 0; }
+  else if (det=="MMega")   { fEnableMMega   = 0; } //D.Quaranta 20/12/2023
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
@@ -879,6 +921,7 @@ G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
        ( (det=="Target")   && (fEnableTarget   == 1) ) ||
        ( (det=="SAC")      && (fEnableSAC      == 1) ) ||
        ( (det=="ETag")     && (fEnableETag     == 1) ) ||
+       ( (det=="MMega")    && (fEnableMMega    == 1) ) || //D.Quaranta 20/12/2023
        ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
        ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
        ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||

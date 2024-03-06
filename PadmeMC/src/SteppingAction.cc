@@ -2,6 +2,8 @@
 #include "G4SteppingManager.hh"
 #include "G4Step.hh"
 #include "G4Track.hh"
+#include "G4Event.hh" //D.Quaranta
+#include "G4EventManager.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
 #include "G4StepPoint.hh"
@@ -24,6 +26,7 @@ SteppingAction::SteppingAction()
   // Analyses are disabled by default
   fEnableSACAnalysis = 0;
   fEnableECalAnalysis = 0;
+  fEnableMMegaAnalysis = 1; // D.Quaranta 9/1/24 default is 0!
   fHistoManager = HistoManager::GetInstance();
   fMCTruthManager = MCTruthManager::GetInstance();
 }
@@ -167,6 +170,48 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	//      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<" X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
 	track->SetTrackStatus(fStopAndKill);      
       }
+    }
+  }
+
+//Analyze MMega track  D.Quaranta 9/1/24
+  if (fEnableMMegaAnalysis) {
+    if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+      if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="CarbonResistiveLayerRear") {
+			if(step->GetTrack()->GetDefinition()->GetParticleName() != G4String("gamma")){
+
+				const G4Event* event = G4EventManager::GetEventManager()->GetConstCurrentEvent();
+				const G4VProcess* process = step->GetTrack()->GetCreatorProcess();
+				const G4ThreeVector &vertex = step->GetTrack()->GetVertexPosition();
+
+				G4int eventID; G4String processName;
+
+				if(event != nullptr) eventID = event->GetEventID();
+				else eventID = -1;
+
+				if(process != nullptr) processName = process->GetProcessName();
+				else processName = "null";
+
+				printf("%d %d  %s %s %f %f %f %f %f %f %f %f %f %f\n",
+				step->GetTrack()->GetTrackID(),
+				eventID,
+				step->GetTrack()->GetDefinition()->GetParticleName().c_str(),
+				processName.c_str(),
+				track->GetKineticEnergy(),
+				// track->GetGlobalTime(),
+				// ClassifyTrack(step->GetTrack()),
+				step->GetPostStepPoint()->GetPosition().x(),
+				step->GetPostStepPoint()->GetPosition().y(),
+				step->GetPostStepPoint()->GetPosition().z(),
+				step->GetPostStepPoint()->GetMomentum().x(),
+				step->GetPostStepPoint()->GetMomentum().y(),
+				step->GetPostStepPoint()->GetMomentum().z(),
+				step->GetTrack()->GetVertexPosition().x(),
+				step->GetTrack()->GetVertexPosition().y(),
+				step->GetTrack()->GetVertexPosition().z());
+			}
+			track->SetTrackStatus(fStopAndKill); 
+      }
+	  
     }
   }
   

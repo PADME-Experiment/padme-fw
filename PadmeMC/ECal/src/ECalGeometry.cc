@@ -47,7 +47,8 @@ ECalGeometry::ECalGeometry()
   //fECalFrontFacePosZ = 2330.*mm; // From center of magnet yoke, i.e. 3.33m to target
   //fECalFrontFacePosZ = 2340.*mm; // From center of magnet yoke, i.e. 3.34m to target
   //fECalFrontFacePosZ = 2440.*mm; // From center of magnet yoke, i.e. 3.44m to target includes calibration system M.Raggi 10/10/2018
-  fECalFrontFacePosZ = 2435.51*mm; // From center of magnet yoke, from Jan 2020 survey (2550.51 - 230/2)
+  //fECalFrontFacePosZ = 2435.51*mm; // From center of magnet yoke, from Jan 2020 survey (2550.51 - 230/2)
+  fECalFrontFacePosZ = 2612.41*mm;   //Front face position for Run III (2022)
 
   fTedlarThickness = 50.*um; // Thickness of Tedlar slips
 

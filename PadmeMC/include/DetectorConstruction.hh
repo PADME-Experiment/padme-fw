@@ -23,6 +23,7 @@ class ECalDetector;
 class TargetDetector;
 class SACDetector;
 class ETagDetector;
+class MMegaDetector; //D. Quaranta 20/12/2023
 class PVetoDetector;
 class EVetoDetector;
 class HEPVetoDetector;
@@ -117,6 +118,7 @@ private:
   TargetDetector*   fTargetDetector;
   SACDetector*      fSACDetector;
   ETagDetector*     fETagDetector;
+  MMegaDetector*    fMMegaDetector; //D. Quaranta 20/12/23
   PVetoDetector*    fPVetoDetector;
   EVetoDetector*    fEVetoDetector;
   HEPVetoDetector*  fHEPVetoDetector;
@@ -135,6 +137,7 @@ private:
   G4int fEnableTarget;
   G4int fEnableSAC;
   G4int fEnableETag;
+  G4int fEnableMMega; // D.Quaranta 20/12/23
   G4int fEnablePVeto;
   G4int fEnableEVeto;
   G4int fEnableHEPVeto;

@@ -7,11 +7,12 @@
 # Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2015-12-11
 # Based on NA62MC GNUMakefile
 # -------------------------------------------------------------------
+#D.Quaranta 20/12/2023 added MMega to SUBDIRS
 
 name := PADMEMC
 G4TARGET := $(name)
 G4EXLIB  := true
-SUBDIRS  := Beam ECal Target SAC ETag PVeto EVeto HEPVeto Magnet TDump TPix Tungsten Chamber Hall MagneticField BeamLine MCTruth
+SUBDIRS  := Beam ECal Target SAC ETag MMega PVeto EVeto HEPVeto Magnet TDump TPix Tungsten Chamber Hall MagneticField BeamLine MCTruth
 ALLTARGETDIRS := $(SUBDIRS)
 
 LOCALDIR := ${PWD}

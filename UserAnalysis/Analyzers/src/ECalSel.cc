@@ -725,7 +725,7 @@ Int_t ECalSel::TwoClusSel(){
 	        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_ElliAngle_ElliEnergy"), elliEnergy, elliAngle, 1.);
       
       }
-      //if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
+  if (!(elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3)) continue;
 	for (int kk=0; kk<2; kk++){
 	  double seedEnergy = fECal_hitEvent->Hit(tempClu[kk]->GetSeed())->GetEnergy();
 	   if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_Eseed_vs_Eexp"), pg[kk], seedEnergy, 1.);

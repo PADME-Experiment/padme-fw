@@ -118,7 +118,7 @@ Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
     double FracE = ESlope*(fEvent->ECalRecoCl->Element(ical)->GetTime() - TStart);
 
     if(corrLevel) {
-      eECal -= FracE*eECal;    
+      eECal -= FracE;    //modified
       fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
     }
   }

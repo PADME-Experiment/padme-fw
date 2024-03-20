@@ -73,6 +73,8 @@ public:
   Bool_t MCTagProbeEff();
   Bool_t FitTagProbeEff();
   Bool_t TagProbeEff_macro();
+  Bool_t EvaluateResolutions();
+  Bool_t EvaluateResolutions_macro();
   
 
 
@@ -101,6 +103,7 @@ private:
   // general setup
 
   bool fFillLocalHistograms;
+  bool fFillCalibHistograms;
   Bool_t fHistoMode;
   TString InputHistofile;
   // general cuts
@@ -129,6 +132,7 @@ private:
   Double_t fSigmaDTheta = 0.0932; //rad
   Double_t fSigmaDPhi = 0.1105; //rad
   Double_t fSigmaE = 12.64;
+  Double_t fSigmaCut;
 
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            
@@ -149,6 +153,11 @@ private:
   TH2D *DeltaPhiofProbe_cut;
   TH1D *PhiFullProbe;
   std::vector<TH1D*> PhiFullProbeSlice;
+
+  TH2D *fhDTheta; 
+  TH2D *fhDPhi;
+  TH2D *fhDE_E1; 
+  TH2D *fhDE_E2;
   double spacing = 5;
   Int_t NSlicesE;
   HistoSvc* fhSvcVal;   

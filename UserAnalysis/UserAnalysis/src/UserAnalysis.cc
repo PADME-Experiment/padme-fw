@@ -121,6 +121,7 @@ Bool_t UserAnalysis::Process(){
   fGeneralInfo->Process();
   fECalCalib->Process(fEvent);
   fECalSel->Process();
+  fECalSel->ProcessForCalib();
   if (fETagHitsAvail) fETagAn->Process();
   //  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();

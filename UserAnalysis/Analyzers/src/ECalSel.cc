@@ -87,9 +87,11 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
 
 
 void ECalSel::ProcessForCalib(){
-  fSafeEnergyFactor = 0.7; // Safety factor used for the energy min and max cuts
+  fSafeEnergyFactor = 0.2; // Safety factor used for the energy min and max cuts
   fSafeSpaceMargin = 42; // 2 cells in mm, safety margin used for the radius min and max cut    
   fFillLocalHistograms = false;
+  fFillCalibHistograms = true;
+  fSigmaCut = 7.;
   fECalEvents.clear();
   TwoClusSel();
   // here the tag and probe selection might be added
@@ -102,7 +104,9 @@ Bool_t ECalSel::Process(){
   fSafeEnergyFactor = 0.7;//0.7; // Safety factor used for the energy min and max cuts
   fSafeSpaceMargin = 31.5; // 1.5 cells in mm, safety margin used for the radius min and max cut    
   fFillLocalHistograms = true;
+  fFillCalibHistograms = false;
   fECalEvents.clear();
+  fSigmaCut = 3.;
   TwoClusSel();
   OneClusSel();
   OneClusTagAndProbeSel();
@@ -303,9 +307,10 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
     if(!((cluEnergy[0]-pg)> -15 && (cluEnergy[0]-pg)<15)) continue; 
 
     if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
+      if(fMCTruthECal->GetVtxFromCluID(h1)<0) continue;
       TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID(h1));
     // TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID(h1));
-    // if(mcVtx->GetProcess() =="eBrem") continue;
+    //if(mcVtx->GetProcess() =="eBrem") continue;
     
       //if(mcVtx->GetProcess() =="eBrem" ) continue; 
       std::pair<Int_t, Int_t> mcOPartcles;
@@ -316,6 +321,7 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
 
       if(mcOPartcles.first==h1) PcleOut = mcVtx->ParticleOut(0);
       else if(mcOPartcles.second==h1) PcleOut = mcVtx->ParticleOut(1);
+      else continue;
       TVector3 pcleMom = PcleOut->GetMomentum();
 
       fhSvcVal->FillHistoList("ECalSel","ECal_TP_DeltaPwithPcle",pcleMom.Mag() - cluMom.Mag(),1.);
@@ -386,10 +392,10 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
         fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_E1F_vs_E2F"), (cluEnergy[0]+cluEnergy[1])/fGeneralInfo->GetBeamMomentum(), cog.Perp(), 1.);
       }
 
-      double Dphi = fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi());
-      double DTheta = fabs(labMomentaCM[0].Vect().Theta()  + labMomentaCM[1].Vect().Theta());
-      double CutRsq= 0.20; //squared radius of the signal region
+      double DeltaPhiAbs = fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi());
+      double DeltaTheta = fabs(labMomentaCM[0].Vect().Theta()  + labMomentaCM[1].Vect().Theta());
 
+        
       if (fabs(dt) < fMaxTimeDistance) {
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DEvsE_ProbeDtcut"), pg2, cluEnergy[1]-pg2, 1.);
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DTHEVsDPHIAbs_probe_nocut"), 
@@ -409,7 +415,7 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
             iSlice+=1;
          }
          fhSvcVal->FillHisto2List("ECalSel","ECal_TP_DEVsE_NOcut_probe", fGeneralInfo->GetBeamEnergy()- pg, cluEnergy[1]- pg, 1.);//da mettere quello in phi
-      if ((((Dphi-TMath::Pi())*(Dphi-TMath::Pi()))+((DTheta-TMath::Pi())*(DTheta-TMath::Pi())))<CutRsq){
+        if ((DeltaPhiAbs>fMeanDPhi-fSigmaCut*fSigmaDPhi && DeltaPhiAbs<fMeanDPhi+fSigmaCut*fSigmaDPhi) && (DeltaTheta>fMeanDTheta-fSigmaCut*fSigmaDTheta && DeltaTheta<fMeanDTheta+fSigmaCut*fSigmaDTheta)){
          // boolean e stori variabili di interesse per es il pg2, ...
 
          fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DE_Probe"), fGeneralInfo->GetBeamEnergy()- pg, cluEnergy[1]-pg2, 1.);
@@ -418,6 +424,8 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
 				 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
           fhSvcVal->FillHisto2List("ECalSel","ECal_TP_DEVsE_cut_probe", fGeneralInfo->GetBeamEnergy()- pg, cluEnergy[1]- pg2, 1.);
           isPaired = h2;
+          
+              //if(mcVtx->GetProcess() =="eBrem" ) continue; 
           
 
           break;
@@ -524,12 +532,12 @@ Int_t ECalSel::TwoClusSel(){
 
   for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
     tempClu[0] = fECal_clEvent->Element((int)h1);
-    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_EweightAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
-    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsxAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
+    if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_EweightAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
+    if(fFillCalibHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsxAll"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(),tempClu[0]->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
     cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
 
-    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor) {
+    if (tempClu[0]->GetEnergy() > fGeneralInfo->GetEnergyMin()*fSafeEnergyFactor && tempClu[0]->GetEnergy() < fGeneralInfo->GetEnergyMax()/fSafeEnergyFactor && fFillLocalHistograms) {
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_Eweight"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), tempClu[0]->GetEnergy());
       fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
     }    
@@ -603,7 +611,7 @@ Int_t ECalSel::TwoClusSel(){
 
           Double_t ChiEnergy = ((fGeneralInfo->GetBeamEnergy()-(cluEnergy[1]+cluEnergy[0]))/(fSigmaE*fSigmaE))*
                     ((fGeneralInfo->GetBeamEnergy()-(cluEnergy[1]+cluEnergy[0])));
-          fhSvcVal->FillHistoList("ECalSel","ECal_SC_Chi2",ChiEnergy , 1.);
+          if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel","ECal_SC_Chi2",ChiEnergy , 1.);
           if (nPaired == 0){ 
             isPaired = h2;
             tempChiEn = ChiEnergy;
@@ -629,7 +637,7 @@ Int_t ECalSel::TwoClusSel(){
     //  } // 
 
 
-    fhSvcVal->FillHisto2List("ECalSel","ECal_SC_Chi2vsNPaired" , nPaired,tempChiEn, 1.);
+    if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel","ECal_SC_Chi2vsNPaired" , nPaired,tempChiEn, 1.);
     if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel","ECal_SC_NPaired", nPaired, 1.);
 
     // Having found a cluster pair, check the kinematics
@@ -672,22 +680,22 @@ Int_t ECalSel::TwoClusSel(){
 						  2.*fGeneralInfo->GetBG()*fGeneralInfo->GetGam()*cosq[i] + 
 						  pow(fGeneralInfo->GetBG(),2) );
       }      
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[0], cluEnergy[0]-pg[0], 1.);
-      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[1], cluEnergy[1]-pg[1], 1.);
       
       if (fFillLocalHistograms){
-          fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
+        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[0], cluEnergy[0]-pg[0], 1.);
+        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DEVsE"), pg[1], cluEnergy[1]-pg[1], 1.);
+      
+        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DE1VsDE2"), cluEnergy[0]-pg[0], cluEnergy[1]-pg[1], 1.);
         
-          fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs"), 
+        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs"), 
                 fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi()), 
                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
 
-          fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsEnergySum"), 
+        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsEnergySum"), 
                 labMomentaCM[0].Vect().Angle(labMomentaCM[1].Vect()), 
-                cluEnergy[0]+cluEnergy[1], 1.);
+                cluEnergy[0]+cluEnergy[1], 1.);          
       }
-      //if(MC) controllare che eventi mi rimangono dopo i tagli
-
+      
       // define an elliptical signal region for the energy-based selection
       double elliEnergy = 
 	TMath::Power((cluEnergy[0]-pg[0]-deCutCenter)/deCutRadius,2) +
@@ -698,7 +706,7 @@ Int_t ECalSel::TwoClusSel(){
 	TMath::Power((fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi())- TMath::Pi())/sigmadthetastar,2) + 
 	TMath::Power((labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta()  - TMath::Pi())/sigmadthetastar,2) ;
       
-      //      double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
+      // double dphi = TMath::ASin((cluPosRel[1].Y()*cluPosRel[0].X()-cluPosRel[1].X()*cluPosRel[0].Y())/(cluPosRel[0].Perp()*cluPosRel[1].Perp()));
       double signPlane = -1;
       if (cluMomCrossBoost[0].Dot(cluMomCrossBoost[1]) > 0) signPlane = 1;
       double dphi = (
@@ -713,17 +721,18 @@ Int_t ECalSel::TwoClusSel(){
       dphi = TMath::ACos(dphi);
 
       if (fFillLocalHistograms) {
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elliEnergy, dphi, 1.);
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_ElliAngle_ElliEnergy"), elliEnergy, elliAngle, 1.);
+	        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_dphiElli"), elliEnergy, dphi, 1.);
+	        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_ElliAngle_ElliEnergy"), elliEnergy, elliAngle, 1.);
+      
       }
-
-      if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
+      //if (elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3) {
 	for (int kk=0; kk<2; kk++){
 	  double seedEnergy = fECal_hitEvent->Hit(tempClu[kk]->GetSeed())->GetEnergy();
-	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_Eseed_vs_Eexp"), pg[kk], seedEnergy, 1.);
-	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_NHits_vs_Eexp"), pg[kk], tempClu[kk]->GetNHitsInClus(), 1.);
+	   if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_Eseed_vs_Eexp"), pg[kk], seedEnergy, 1.);
+	   if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_NHits_vs_Eexp"), pg[kk], tempClu[kk]->GetNHitsInClus(), 1.);
 	  
 	}
+      
 	
 	TVector2 cog(
 		     (cluEnergy[0]*cluPos[0]+cluEnergy[1]*cluPos[1]).X()/(cluEnergy[0]+cluEnergy[1]),
@@ -734,23 +743,62 @@ Int_t ECalSel::TwoClusSel(){
   Double_t DeltaPhiAbs = fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi());
   Double_t DeltaTheta = labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta();
 
-  if(!(DeltaPhiAbs>fMeanDPhi-3*fSigmaDPhi && DeltaPhiAbs<fMeanDPhi+3*fSigmaDPhi))  continue;
-  if(!(DeltaTheta>fMeanDTheta-3*fSigmaDTheta && DeltaTheta<fMeanDTheta+3*fSigmaDTheta))  continue;
+  if(!(DeltaPhiAbs>fMeanDPhi-fSigmaCut*fSigmaDPhi && DeltaPhiAbs<fMeanDPhi+fSigmaCut*fSigmaDPhi))  continue;
+  if(!(DeltaTheta>fMeanDTheta-fSigmaCut*fSigmaDTheta && DeltaTheta<fMeanDTheta+fSigmaCut*fSigmaDTheta))  continue;
 
   NCluPairperEvent_EnCut++;
 
-  fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2", cluEnergy[0]+ cluEnergy[1]);
+  
 
-	fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
-  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_E1E2VsDT"), (cluTime[0]-cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
+  if(fFillLocalHistograms){
+    fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2", cluEnergy[0]+ cluEnergy[1]);
+    if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
+              if(fMCTruthECal->GetVtxFromCluID((int)isPaired)<0) continue;
+              TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID((int)isPaired));
+                fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_%s", mcVtx->GetProcess().Data()), 
+				        fabs(labMomentaCM[0].Vect().Phi()   - labMomentaCM[1].Vect().Phi()), 
+				        labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
 
-	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_COGYX", cog.X(),cog.Y(),1.);		     
-	fhSvcVal->FillHisto2List("ECalSel","ECalX_vs_Time", deventTime, cog.X(),1.);		     
+                fhSvcVal->FillHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_%s", mcVtx->GetProcess().Data()), cog.X()-fGeneralInfo->GetCOG().X(),1. );
+                fhSvcVal->FillHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_%s", mcVtx->GetProcess().Data()), cog.Y()-fGeneralInfo->GetCOG().Y(),1.);
+				        
+                fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_%s",mcVtx->GetProcess().Data()), cog.X()-fGeneralInfo->GetCOG().X(), cog.Y()-fGeneralInfo->GetCOG().Y(),1.);
+				        
+				        
+
+                // if(mcVtx->ParticleOut(0)->GetPDGCode()==-11 || mcVtx->ParticleOut(1)->GetPDGCode()==-11){
+                //   if(mcVtx->ParticleOut(0)->GetPDGCode()==-11){
+                //   fhSvcVal->FillHisto2List("ECalSel",Form("ECal_e_brem"), )
+                //   }
+
+          }
+  }
+
+	
+	if (fFillCalibHistograms) {
+    fhSvcVal->FillHisto2List("ECalSel","ECal_SC_COGYX", cog.X(),cog.Y(),1.);		
+    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_E1E2VsMT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
+  }     
+
+	if(fFillLocalHistograms){
+  
+  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_EVsT"), 0.5*(cluTime[0]+cluTime[1]), cluEnergy[0]+cluEnergy[1], 1.);
+	
+  fhSvcVal->FillHisto2List("ECalSel","ECalX_vs_Time", deventTime, cog.X(),1.);		     
 	fhSvcVal->FillHisto2List("ECalSel","ECalY_vs_Time", deventTime, cog.Y(),1.);		     
 	//std::cout << "deventTime " << deventTime << " cog = " << cog.X() << " " << cog.Y() << std::endl;
 
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[0].X(),cluPos[0].Y(),1.);
 	fhSvcVal->FillHisto2List("ECalSel","ECal_SC_YX",cluPos[1].X(),cluPos[1].Y(),1.);
+
+
+
+  fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DTheta_vs_ECluMin_cut", min(cluEnergy[0], cluEnergy[1]), DeltaTheta,1 );
+  fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DPhi_vs_ECluMin_cut",min(cluEnergy[0], cluEnergy[1]), DeltaPhiAbs,1 );
+  fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DE_vs_EClu1_cut", cluEnergy[0], cluEnergy[0]-pg[0], 1);
+  fhSvcVal->FillHisto2List("ECalSel","ECal_SC_DE_vs_EClu2_cut", cluEnergy[1], cluEnergy[1]-pg[1],1 );
+
+  }
 
 	ECalSelEvent selev;
 	selev.flagEv = ev_gg;
@@ -776,10 +824,10 @@ Int_t ECalSel::TwoClusSel(){
 	// Fill plots to check energy and radius range
 
 	for (int kk = 0; kk < 2; kk++){
-	  fhSvcVal->FillHisto2List("ECalSel",Form("ECal_E_Radius"), cluPosRel[kk].Perp(), tempClu[kk]->GetEnergy());
-	  fhSvcVal->FillHistoList("ECalSel",Form("ECal_RadiusECut"),
+	  if(fFillLocalHistograms)fhSvcVal->FillHisto2List("ECalSel",Form("ECal_E_Radius"), cluPosRel[kk].Perp(), tempClu[kk]->GetEnergy());
+	  if(fFillLocalHistograms)fhSvcVal->FillHistoList("ECalSel",Form("ECal_RadiusECut"),
 				  (cluPosRel[kk].Perp()-fGeneralInfo->GetRadiusMin())/(fGeneralInfo->GetRadiusMax()-fGeneralInfo->GetRadiusMin()));
-	  fhSvcVal->FillHistoList("ECalSel",Form("ECal_ERCut"),
+	  if(fFillLocalHistograms)fhSvcVal->FillHistoList("ECalSel",Form("ECal_ERCut"),
 				  (tempClu[kk]->GetEnergy()-fGeneralInfo->GetEnergyMin())/(fGeneralInfo->GetEnergyMax()-fGeneralInfo->GetEnergyMin()));
 
 	  int xbin = (cluPos[kk].X() - fXMin)/fXW;
@@ -794,7 +842,7 @@ Int_t ECalSel::TwoClusSel(){
 	  }
 	    
 	  TString hname = Form("EExpVsEX_%d_Y_%d",xbin+1,ybin+1);
-	  fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
+	  if(fFillLocalHistograms)fhSvcVal->FillHisto2List("ECalScale",hname.Data(),pg[kk],cluEnergy[kk]/pg[kk]-1,1.); 
 
 	}
 
@@ -816,23 +864,26 @@ Int_t ECalSel::TwoClusSel(){
 
 	    double cosRel = pgstar[0].Vect().Dot(pgstar[1].Vect())/(pgstar[0].E()*pgstar[1].E());	
 
-	    fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
+	    if(fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRunCos",thetaRot,phiRot,1.+cosRel); 
 	    if (cosRel < -0.998) {
-	      fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRun",thetaRot,phiRot,1.); 
+	      if(fFillLocalHistograms)fhSvcVal->FillHisto2List("ECalSel","DPhiVsRotVsRun",thetaRot,phiRot,1.); 
 	    }
 	  }
 	}
 
 
-      }
-    } // isPaired
+      //}
+      
+    } // isPaired 
   } // cluster loop
   
+  if(fFillLocalHistograms){
   fhSvcVal->FillHistoList("ECalSel","ECal_SC_NCluPairperEvent",NCluPairperEvent,1.);
   fhSvcVal->FillHistoList("ECalSel","ECal_SC_NCluPairperEvent_EnCut",NCluPairperEvent_EnCut,1.);
 
 
   fhSvcVal->FillHistoList("ECalSel","NumberOfECalCluPairs",fECalEvents.size()-nOld);
+  }
   return fECalEvents.size()-nOld;
 }
 
@@ -855,6 +906,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel","ECal_ERCut", 100,-1.5,1.5);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_Eseed_vs_Eexp", 100, 0, 400., 100., 0., 200.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_NHits_vs_Eexp", 100, 0, 400., 50., 0., 50.);
+
+
+  
 
   // single clusters from beam brems
   
@@ -906,6 +960,10 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DTHEVsDPHIAbs_probe_nocut", 1200, 0.,3*TMath::Pi(), 1200, 0., 3*TMath::Pi());
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DTHEVsDPHIAbs_probe", 1200, 0.,3*TMath::Pi(), 1200, 0., 3*TMath::Pi());
+  
+  // fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DTHEVsDPHIAbs_probe_BremMC", 1200, 0.,3*TMath::Pi(), 1200, 0., 3*TMath::Pi());
+
+
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DYvsDX_Hit_Probe", fNXBins*20,-(fXMax+fXMin),+(fXMax+fXMin), fNYBins*20,-(fYMax+fYMin),(fYMax+fYMin));
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DRvsDT_Hit_Probe", 800, -400,400, 1200, 0., TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
 
@@ -936,9 +994,31 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DEVsE", 100, 100,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE1VsDE2", 800, -400,400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsDPHIAbs", 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
+
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_eIoni"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_eBrem"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_annihil"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
+
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_eIoni"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_eBrem"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_annihil"),600, -300,300);
+
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_eIoni"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_eBrem"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_annihil"),600, -300,300);
+  
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_eIoni"),600, -300,300, 600, -300,300);
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_eBrem"),600, -300,300, 600, -300,300);
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_annihil"),600, -300,300, 600, -300,300);
+                
   
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsEnergySum", 800, 0.,4*TMath::Pi(), 400, 0, 400);
 
+  fhDTheta = fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTheta_vs_ECluMin_cut", 100, 0, 400., 400, 0.,2.5*TMath::Pi());
+  fhDPhi = fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DPhi_vs_ECluMin_cut", 100, 0, 400., 400, 0.,2.5*TMath::Pi());
+  fhDE_E1 = fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE_vs_EClu1_cut", 100, 0., 400, 200, -100,100);
+  fhDE_E2 = fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DE_vs_EClu2_cut", 100, 0., 400, 200, -100,100);
+  
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_dphiElli", 200,0,40, 100, -TMath::Pi(), TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel","ECal_ElliAngle_ElliEnergy", 200,0.,40., 200, 0.,40.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_COGYX",100,-200,200,100,-200,200);
@@ -1008,6 +1088,8 @@ Bool_t ECalSel::TagProbeEff_macro(){
   FitTagProbeEff();
   return true;
 }
+
+
 
 
 Bool_t ECalSel::MCTagProbeEff(){
@@ -1156,6 +1238,104 @@ Bool_t ECalSel::MCTagProbeEff(){
 
 
 
+Bool_t ECalSel::EvaluateResolutions_macro(){
+
+  TFile *fileIn = new TFile(InputHistofile.Data());
+  if(!fileIn) std::cout<<"File not existing"<<std::endl;
+  std::cout<<"File to analyze: "<< InputHistofile.Data()<<std::endl;
+  fhDTheta = (TH2D*) fileIn->Get("ECalSel/ECal_SC_DTheta_vs_ECluMin_cut")->Clone();
+  fhDPhi = (TH2D*) fileIn->Get("ECalSel/ECal_SC_DPhi_vs_ECluMin_cut")->Clone();
+  fhDE_E1 = (TH2D*) fileIn->Get("ECalSel/ECal_SC_DE_vs_EClu1_cut")->Clone();
+  fhDE_E2 = (TH2D*) fileIn->Get("ECalSel/ECal_SC_DE_vs_EClu2_cut")->Clone();
+  
+
+  EvaluateResolutions();
+  return true;
+}
+
+Bool_t ECalSel::EvaluateResolutions(){
+    Double_t EnergyVal=0.;
+    double Edown=fGeneralInfo->GetEnergyMin();
+    double Eup=Edown+spacing;
+    TString sliceOutname;
+    std::cout<<"Edown: "<<Edown<<" Eup: "<<Eup<<std::endl;
+    sliceOutname = Form("ResSlice_%s", InputHistofile.Data());
+      
+    TFile *SliceOut = new TFile(sliceOutname, "recreate");
+    std::cout<<"Slice output file: "<<sliceOutname<<std::endl;
+    SliceOut->cd();
+
+    TH2D *hForSigma[4];
+    hForSigma[0]= (TH2D*)fhDE_E1->Clone();
+    hForSigma[1]= (TH2D*)fhDE_E2->Clone();
+    hForSigma[2]= (TH2D*)fhDPhi->Clone();
+    hForSigma[3]= (TH2D*)fhDTheta->Clone();
+    
+    TString gNames[4];
+    gNames[0]= "SigmaE1Graph";
+    gNames[1]= "SigmaE2Graph";
+    gNames[2]= "SigmaDPhiGraph";
+    gNames[3]= "SigmaDThetaGraph";
+
+
+    //Double_t FitRange[4][2]; Da pensare
+    
+
+
+    TGraphErrors *gForSigma[4];
+    for(int i =0; i<4; i++){
+      gForSigma[i] = new TGraphErrors(NSlicesE);
+       hForSigma[i]->Write();
+
+    }    
+
+
+    // TGraphErrors *SigmaE1Graph = new TGraphErrors(NSlicesE);
+    // TGraphErrors *SigmaE2Graph = new TGraphErrors(NSlicesE);
+    // TGraphErrors *SigmaDPhiGraph = new TGraphErrors(NSlicesE);
+    // TGraphErrors *SigmaDThetaGraph = new TGraphErrors(NSlicesE);
+
+
+    for(int iRes=0; iRes<4; iRes++){
+          for(Int_t iSlice=0; iSlice<NSlicesE; iSlice++){
+
+                //Tag
+                 EnergyVal= (Edown+Eup)/2;
+                
+                hForSigma[iRes]->GetXaxis()->SetRangeUser(Edown,Eup);
+                TH1D *hForSigma_pro =(TH1D*) hForSigma[iRes]->ProjectionY();
+                hForSigma_pro->SetName(Form("%s_%i", gNames[iRes].Data(), iSlice));
+                hForSigma_pro->SetTitle(Form("%s_%i", gNames[iRes].Data(), iSlice));
+                hForSigma_pro->Write(); 
+                hForSigma_pro->SetName(Form("FithForSigma_pro_%i",iSlice));
+                if(hForSigma_pro->Integral()==0) continue;
+                TF1 *gausf = new TF1("gausf", "gaus", -100, 100); 
+                
+                TFitResultPtr GausFitResults= hForSigma_pro->Fit(gausf,"RESQ");
+
+                //TF1 *expGaus = new TF1("expGaus", "expo+gausn(2)", -60,60);
+                // (0.5*(1.+TMath::Erf((15.-[3])/([4]*TMath::Sqrt(2.))))-0.5*(1.+TMath::Erf(([3]+15.)/([4]*TMath::Sqrt(2.)))))
+                
+
+                
+
+                gForSigma[iRes]->SetPoint(iSlice,EnergyVal, gausf->GetParameter(2));
+                gForSigma[iRes]->SetPointError(iSlice, 0, gausf->GetParError(2));
+                Eup+=spacing;
+                Edown+=spacing;
+
+                
+            }
+
+          gForSigma[iRes]->SetTitle(Form("Fit Resolution %s; Cluster Energy [MeV]; Resolution",gNames[iRes].Data()));
+          gForSigma[iRes]->SetName(gNames[iRes].Data());
+          gForSigma[iRes]->Write();
+      
+      }
+
+  return true;
+}
+
 Bool_t ECalSel::FitTagProbeEff(){
       Double_t NumE=0.;
       Double_t DenE=0.;
@@ -1248,8 +1428,8 @@ Bool_t ECalSel::FitTagProbeEff(){
 
           //new Part
           PhiFullTarget = (TH1D*) target->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i",iSlice))->Clone();
-          if(!PhiFullTarget) std::cout<<"I'm stupid, I can't find PhiFullTarget"<<std::endl;
-          if(!PhiFullProbeSlice[iSlice]) std::cout<<"I'm stupid, I can't find PhiFullProbeSlice["<<iSlice<<"]"<<std::endl;
+          if(!PhiFullTarget) std::cout<<"LOOK, I can't find PhiFullTarget"<<std::endl;
+          if(!PhiFullProbeSlice[iSlice]) std::cout<<"LOOK, I can't find PhiFullProbeSlice["<<iSlice<<"]"<<std::endl;
           SliceOut->cd();
           PhiFullTarget->GetXaxis()->SetRangeUser(0,2);
           Double_t scaleTargPhi = (Double_t) PhiFullTarget->Integral();
@@ -1421,5 +1601,6 @@ Bool_t ECalSel::FitTagProbeEff(){
 Bool_t ECalSel::Finalize(){
   
   if(fHistoMode) TagProbeEff_macro();
+  if(fHistoMode) EvaluateResolutions_macro();
   return true;
 }

@@ -72,6 +72,8 @@ void MMegaDetector::CreateGeometry()
   printf("MMega Gas Volume size is %f %f %f\n",MMegaDriftSizeX,MMegaDriftSizeY,MMegaDriftSizeZ);
   G4Box* solidMMegaDrift = new G4Box("solidMMegaDrift", 0.5*MMegaDriftSizeX, 0.5*MMegaDriftSizeY, 0.5*MMegaDriftSizeZ);
 
+  printf("GasDensity: %f", G4Material::GetMaterial("ArCF4Iso")->GetDensity() / (g/cm3));
+
   fDriftVolume = new G4LogicalVolume(solidMMegaDrift, G4Material::GetMaterial("ArCF4Iso"), "MMegaDrift",0,0,0);
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"MMegaDrift",fMMegaVolume,false,0,false);
@@ -207,23 +209,22 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, G4ThreeVector(0,0,0), fMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
 
   // Create digitizer for MMega
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String MMegaDName = geo->GetMMegaDigitizerName();
+  printf("Registering MMega Digitizer %s\n",MMegaDName.data());
+  MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
+  theDM->AddNewModule(MMegaD);
+  if(MMegaD != nullptr){printf("Creating MMegaDigitizer\n");}
+  
 
-  // G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  // G4String MMegaDName = geo->GetMMegaDigitizerName();
-  // printf("Registering MMega Digitizer %s\n",MMegaDName.data());
-  // MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
-  // theDM->AddNewModule(MMegaD);
+  // Make whole MMega a sensitive detector
 
-  // // Make whole MMega a sensitive detector
-
-  // G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  // G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
-  // printf("Registering MMega SD %s\n",mMegaSDName.data());
-  // MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
-  // sdMan->AddNewDetector(mMegaSD);
-  // fMMegaVolume->SetSensitiveDetector(mMegaSD);
-  // fMMegaBarVolume->SetSensitiveDetector(mMegaSD);
-  // fMMegaShortBarVolume->SetSensitiveDetector(mMegaSD);
-  // fMMegaVolume->SetSensitiveDetector(etagSD);
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
+  printf("Registering MMega SD %s\n",mMegaSDName.data());
+  MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
+  sdMan->AddNewDetector(mMegaSD);
+  fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
+  printf("Setting drift volume as SD \n");
 }
 

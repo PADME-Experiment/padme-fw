@@ -278,7 +278,10 @@ int main(int argc, char* argv[])
 	//h->Reset();
 	h->SetTitle(Form("Run %d Event %d TrigMask 0x%02x Board %d TrigGroup %d",
 			 runNumber,evtNumber,trigMask,brdId,trg->GetGroupNumber()));
-	for(UShort_t s=0;s<trg->GetNSamples();s++) h->Fill(s,trg->GetSample(s));
+	for(UShort_t s=0;s<trg->GetNSamples();s++) {
+	  //h->Fill(s,trg->GetSample(s));
+          h->SetBinContent(s+1,trg->GetSample(s));
+	}
       }
 
       // Loop over channels
@@ -296,8 +299,9 @@ int main(int argc, char* argv[])
 	Double_t sx = 0.;
 	Double_t sx2 = 0.;
 	for(UShort_t s=0;s<chn->GetNSamples();s++) {
-	  h->Fill(s,chn->GetSample(s));
-	  if (s<994) {
+	  //h->Fill(s,chn->GetSample(s));
+          h->SetBinContent(s+1,chn->GetSample(s));
+ 	  if (s<994) {
 	    Double_t x = chn->GetSample(s);
 	    sx += x;
 	    sx2 += x*x;

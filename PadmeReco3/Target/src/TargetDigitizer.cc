@@ -33,6 +33,15 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   // Create Target channel digitizer
   //fTargetChannelDigitizer = new TargetChannelDigitizer(fTargetConfig);
 
+  fSignalWidth       = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
+  fPedOffset         = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,     100); 
+  fPreSamples        = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
+  fPostSamples       = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
+  fPedMaxNSamples    = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
+  fTimeBin           = fTargetConfig->GetParOrDefault( "ADC","TimeBin"                ,      1.);
+  fVoltageBin        = fTargetConfig->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
+  fImpedance         = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
+
   if (fVerbose) printf("TargetDigitizer::TargetDigitizer - Target digitization system created\n");
 }
 
@@ -56,6 +65,13 @@ Bool_t TargetDigitizer::Init()
   
   if (fRunConfigurationSvc->IsMonitorMode()) {
     hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,31);
+    
+    char iName[100];
+    for(int iCh=0; iCh!=32 ; iCh++){      
+      sprintf(iName,"TargetCh%d",iCh);
+      hTargetSignals[iCh] = (iName, new TH1D(iName, iName,  1024,  0, 1024));
+    }
+
   }
 
 
@@ -73,27 +89,58 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   TADCBoard* board;
   TADCChannel* channel;
 
+  //Beth 21/3/24: limits of signal to be integrated.
+  Short_t begin = fPedMaxNSamples;
+  Short_t end   =    fPostSamples;
+
   for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++) {
 
     board = rawEv->ADCBoard(iBoard);
     UChar_t boardId = board->GetBoardId();
     if (fTargetConfig->BoardIsMine(boardId)) {
 
-      for(UChar_t ich = 0; ich < board->GetNADCChannels();ich++) {
+      for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels();iChannel++) {
 
-        channel = board->ADCChannel(ich);
+        channel = board->ADCChannel(iChannel);
 	UChar_t channelId = channel->GetChannelNumber();
+	if (fRunConfigurationSvc->IsMonitorMode())  hTargetDigitizer->Fill(channelId);
 
 	Int_t TargetChannel = fChannelMap[boardId][channelId];
 	//	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
 
-	hTargetDigitizer->Fill(TargetChannel);
+	//read in analog signal from digitiser board & channel
+	fSamples = rawEv->ADCBoard(iBoard)->ADCChannel(iChannel)->GetSamplesArray();
+
+	//make signals positive instead of negative
+	SetAbsSignals();
+
+	//Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
+	Double_t hCharge=0.;
+	
+	for(Short_t ii = begin;ii<end;++ii)
+	  {
+	    hCharge+=1.* fSamples[ii];
+	    if(iChannel==0)	    std::cout<<ii<<" "<<begin<<" "<<end<<" "<<hCharge<<std::endl;
+	    if (fRunConfigurationSvc->IsMonitorMode())
+	      {
+		char iName[100];
+		sprintf(iName,"TargetCh%d",iChannel);
+		hTargetSignals[iChannel]->Fill(fSamples[ii]);
+	      }
+	  }
+	hCharge = hCharge- ((1.*end-1.*begin) * fPed);
+	// hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
+	hCharge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
+	hCharge *= 1000;                                          //charge in pC
+	// fCharge *= (1/1.60217662e-7/fCCD/36);                     //electron charge and 36 e-h/um // going to calib step 
+	// if( fHVsign<0 && fCh>15 ) hCharge = - hCharge;            // going to calib step 
+	// if( fHVsign>0 && fCh<16 ) hCharge = - hCharge;            // going to calib step
       }
     }
   }
-
+  
   return;
-
+  
 }
 
 /* //commented by Beth 21/3/24: The concept of "hits" in the target doesn't really have any meaning. It would be better to compute the charge per strip
@@ -191,4 +238,27 @@ Bool_t TargetDigitizer::CreateChannelMap()
 
   return true;
 
+}
+
+void TargetDigitizer::SetAbsSignals(){
+  for(UShort_t i = 0;i<fNSamples;i++){
+    if (fSamples[i] < 2048) {
+      fSamples[i] = 4096 - fSamples[i];
+    }
+  }
+}
+
+Double_t TargetDigitizer::CalcPedestal() {
+  fPed = 0.;
+  fNPedSamples = 0;
+  
+  for(Short_t i = fPedOffset ; i  !=   fPedMaxNSamples; i++) {
+       fNPedSamples ++;
+       //std::cout << i << " fNPedSamples " << fNPedSamples << std::endl;
+       fPed+= fSamples[i];
+  }
+  
+  fPed /= fNPedSamples;
+  //std::cout <<  fPed << " fNPedSamples " << fNPedSamples << std::endl;
+  return fPed;
 }

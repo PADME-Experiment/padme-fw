@@ -175,6 +175,7 @@ Double_t DigitizerChannelTarget::CalcCharge(UShort_t fCh) {
   
   for(Short_t i = begin;i<end;++i) {
     hCharge+=1.* fSamples[i];
+    std::cout<<i<<" "<<hCharge<<std::endl;
   }
    hCharge = hCharge- ((1.*end-1.*begin) * fPed);
 // hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   

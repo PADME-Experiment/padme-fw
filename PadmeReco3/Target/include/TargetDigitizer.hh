@@ -47,11 +47,29 @@ private:
   Int_t fChannelMap[32][32]; // Map for individual SiPMs
 
   std::map<Int_t,std::pair<UChar_t,UChar_t>> fMapChannel;
+  void SetAbsSignals();
+  Double_t CalcPedestal();
 
   //TargetChannelDigitizer* fTargetChannelDigitizer;
 
+  UShort_t fNSamples;
+  Short_t *fSamples;
+  Double_t fPed;
+  UShort_t fNPedSamples;
+
+  //Configuration variables
+  Int_t fSignalWidth;
+  Int_t fPreSamples;
+  Int_t fPostSamples;
+  Int_t fPedOffset; 
+  Int_t fPedMaxNSamples;
+  Double_t fTimeBin;
+  Double_t fVoltageBin;
+  Double_t fImpedance;
+
   // Histograms
   TH1D* hTargetDigitizer;
+  TH1D* hTargetSignals[32];
 
 
 };

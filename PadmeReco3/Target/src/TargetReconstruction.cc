@@ -12,9 +12,7 @@
 #include "RunConfigurationSvc.hh"
 
 #include "TargetDigitizer.hh"
-//#include "TargetClusterizer.hh"
 #include "TargetHit.hh"
-//#include "TargetCluster.hh"
 
 #include "TargetReconstruction.hh"
 
@@ -39,12 +37,10 @@ TargetReconstruction::TargetReconstruction(TString ConfigFileName)
   // Create Target digitizer
   fTargetDigitizer = new TargetDigitizer(fTargetConfig);
 
-  // Create Target clusterizer
-  //fTargetClusterizer = new TargetClusterizer(fTargetConfig);
-
   // Check if Hits and Clusters must be written to the output file
-  fWriteHits     = (Bool_t)fTargetConfig->GetParOrDefault("Output", "Hits"     , 1);
+  //  fWriteHits     = (Bool_t)fTargetConfig->GetParOrDefault("Output", "Hits"     , 1);
   //fWriteClusters = (Bool_t)fTargetConfig->GetParOrDefault("Output", "Clusters" , 1);
+  fWriteStripCharge     = (Bool_t)fTargetConfig->GetParOrDefault("Output", "StripCharge"     , 1);
 
   if (fVerbose) printf("TargetReconstruction::TargetReconstruction - Target reconstruction system created\n");
 
@@ -54,7 +50,6 @@ TargetReconstruction::~TargetReconstruction()
 {
   if (fVerbose) printf("TargetReconstruction::~TargetReconstruction - Deleting Target reconstruction system\n");
   delete fTargetDigitizer;
-  //delete fTargetClusterizer;
   delete fTargetConfig;
 }
 
@@ -63,7 +58,6 @@ void TargetReconstruction::Init()
   if (fVerbose>2) printf("TargetReconstruction::Init - Initializing Target reconstruction\n");
 
   fTargetDigitizer->Init();
-  //fTargetClusterizer->Init();
 
 }
 
@@ -89,12 +83,15 @@ void TargetReconstruction::ProcessEvent(TRawEvent* rawEvent)
     if (fVerbose) printf("TargetReconstruction::ProcessEvent - Run %d has energy %.3f\n",run,fRunConditionSvc->GetRunEnergy());
   }
 
-  fHits.clear();
-  //fClusters.clear();
+  //commented by Beth 21/3/24: The concept of "hits" and "clusters" in the target doesn't really have any meaning. It would be better to compute the charge per strip in the digitizer and then convert it to NPoT and other physical quantities here
+  /*  fHits.clear();
 
-  fTargetDigitizer->BuildHits(rawEvent,fHits);
- 
+  //  fTargetDigitizer->BuildHits(rawEvent,fHits);
   //fTargetClusterizer->BuildClusters(fHits,fClusters);
+  */
+ 
+  fStripCharge.clear();
+  fTargetDigitizer->ComputeChargePerStrip(rawEvent,fStripCharge);
 
 }
 

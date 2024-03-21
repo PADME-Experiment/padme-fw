@@ -1,10 +1,16 @@
 #include "Riostream.h"
 
+#include <TH1D.h>
+
 #include "TRawEvent.hh"
 
 #include "PadmeVRecoConfig.hh"
 
-#include "TargetHit.hh"
+#include "HistoSvc.hh"
+#include "RunConditionSvc.hh"
+#include "RunConfigurationSvc.hh"
+
+//#include "TargetHit.hh"
 //#include "TargetChannelDigitizer.hh"
 
 #include "TargetDigitizer.hh"
@@ -43,6 +49,39 @@ Bool_t TargetDigitizer::Init()
   return true;
 }
 
+void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStripCharge*>& charge)
+{
+  if (fVerbose>1) printf("TargetDigitizer::ComputeChargePerStrip - Computing charge collected per strip\n");
+
+  // Update channel digitizer with current run/event number
+  Int_t RunNumber = rawEv->GetRunNumber();
+  Int_t EventNumber = rawEv->GetEventNumber();
+
+  TADCBoard* board;
+  TADCChannel* channel;
+
+  for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++) {
+
+    board = rawEv->ADCBoard(iBoard);
+    UChar_t boardId = board->GetBoardId();
+    if (fTargetConfig->BoardIsMine(boardId)) {
+
+      for(UChar_t ich = 0; ich < board->GetNADCChannels();ich++) {
+
+        channel = board->ADCChannel(ich);
+	UChar_t channelId = channel->GetChannelNumber();
+
+	Int_t TargetChannel = fChannelMap[boardId][channelId];
+	//	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
+      }
+    }
+  }
+
+  return;
+
+}
+
+/* //commented by Beth 21/3/24: The concept of "hits" in the target doesn't really have any meaning. It would be better to compute the charge per strip
 Bool_t TargetDigitizer::BuildHits(TRawEvent* rawEv, vector<TargetHit*>& hits)
 {
   if (fVerbose>1) printf("TargetDigitizer::BuildHits - Building reconstructed hits\n");
@@ -65,6 +104,7 @@ Bool_t TargetDigitizer::BuildHits(TRawEvent* rawEv, vector<TargetHit*>& hits)
         channel = board->ADCChannel(ich);
 	UChar_t channelId = channel->GetChannelNumber();
 
+	//Beth 19/3/24: What's this doing here? Probably nothing??
 	Int_t etagChannel = fChannelMap[boardId][channelId];
 
 	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing board %2u channel %2u Target channel %4.4d\n",boardId,channelId,etagChannel);
@@ -75,6 +115,7 @@ Bool_t TargetDigitizer::BuildHits(TRawEvent* rawEv, vector<TargetHit*>& hits)
 
   return true;
 }
+*/
 
 Bool_t TargetDigitizer::CreateChannelMap()
 {

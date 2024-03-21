@@ -4,9 +4,16 @@
 #include <map>
 #include <Rtypes.h>
 
+class TH1D;
+
+class HistoSvc;
+class RunConditionSvc;
+class RunConfigurationSvc;
+
 class PadmeVRecoConfig;
-class TargetHit;
+//class TargetHit;   //commented by Beth 21/3/24: The concept of "hits" in the target doesn't really have any meaning. It would be better to compute the charge per strip
 //class TargetChannelDigitizer;
+class TargetStripCharge;
 
 class TargetDigitizer
 {
@@ -20,10 +27,16 @@ public:
 
   Int_t GetVerbose() { return fVerbose; }
   void  SetVerbose(Int_t v) { fVerbose = v; }
-
-  Bool_t BuildHits(TRawEvent*,vector<TargetHit*>&);
+  
+  //commented by Beth 21/3/24: The concept of "hits" in the target doesn't really have any meaning. It would be better to compute the charge per strip
+  //  Bool_t BuildHits(TRawEvent*,vector<TargetHit*>&);
+  void ComputeChargePerStrip(TRawEvent*,vector<TargetStripCharge*>&);
 
 private:
+
+  HistoSvc* fHistoSvc;
+  RunConditionSvc* fRunConditionSvc;
+  RunConfigurationSvc* fRunConfigurationSvc;
 
   Bool_t CreateChannelMap();
 
@@ -36,6 +49,10 @@ private:
   std::map<Int_t,std::pair<UChar_t,UChar_t>> fMapChannel;
 
   //TargetChannelDigitizer* fTargetChannelDigitizer;
+
+  // Histograms
+  TH1D* fhTargetDigitizer;
+
 
 };
 #endif // TargetDigitizer_h

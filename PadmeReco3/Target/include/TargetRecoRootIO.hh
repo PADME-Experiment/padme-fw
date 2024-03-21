@@ -7,8 +7,9 @@
 class TTree;
 class TBranch;
 class TargetReconstruction;
-class TargetHit;
+//class TargetHit;
 //class TargetCluster;
+class TargetStripCharge;
 
 class TargetRecoRootIO
 {
@@ -29,17 +30,18 @@ public:
 
 private:
 
-  Bool_t ExportHit(TargetHit*,TRecoVHit*);
+  //  Bool_t ExportHit(TargetHit*,TRecoVHit*);
   //Bool_t ExportCluster(TargetCluster*,TRecoVCluster*);
+  Bool_t ExportHit(TargetStripCharge*,TRecoVHit*);
 
   TargetReconstruction* fTargetReconstruction;
 
   TTree* fEventTree;
 
-  TBranch* fBranchHitsColl;
+  TBranch* fBranchStripChargeColl;
   //TBranch* fBranchClusColl;
 
-  TTargetRecoEvent*      fHitsCollection;
+  TTargetRecoEvent*      fStripChargeCollection;
   //TTargetClusCollection* fClusCollection;
 
   Int_t fVerbose;

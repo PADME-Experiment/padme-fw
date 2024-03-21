@@ -19,6 +19,14 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   : fTargetConfig(cfg)
 {
 
+  // Attach global services
+  fHistoSvc = HistoSvc::GetInstance();
+  fRunConditionSvc = RunConditionSvc::GetInstance();
+  fRunConfigurationSvc = RunConfigurationSvc::GetInstance();
+
+  // Create LeadGlass histogram directory
+  fHistoSvc->CreateDir("Target");
+
   // Define verbose level
   fVerbose = fTargetConfig->GetParOrDefault("Output", "Verbose", 0);
 
@@ -45,6 +53,11 @@ Bool_t TargetDigitizer::Init()
 
   // Initialize channel digitizer
   //fTargetChannelDigitizer->Init();
+  
+  if (fRunConfigurationSvc->IsMonitorMode()) {
+    hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,31);
+  }
+
 
   return true;
 }
@@ -73,6 +86,8 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 
 	Int_t TargetChannel = fChannelMap[boardId][channelId];
 	//	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
+
+	hTargetDigitizer->Fill(TargetChannel);
       }
     }
   }

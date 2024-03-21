@@ -51,7 +51,7 @@ private:
   //TargetChannelDigitizer* fTargetChannelDigitizer;
 
   // Histograms
-  TH1D* fhTargetDigitizer;
+  TH1D* hTargetDigitizer;
 
 
 };

@@ -1,11 +1,12 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2023-19-12
+// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2024-03-08
 //
 // --------------------------------------------------------------
 
 #include "MMegaDigi.hh"
+#include "MMegaGeometry.hh"
 
 #include "G4UnitsTable.hh"
 #include "G4VVisManager.hh"
@@ -28,24 +29,28 @@ MMegaDigi::~MMegaDigi() {}
 MMegaDigi::MMegaDigi(const MMegaDigi& right)
   : G4VDigi()
 {
-  fChannelId = right.fChannelId;
   fTime = right.fTime;
-  fTimeSpread = right.fTimeSpread;
-  fEnergy = right.fEnergy;
-  fPosition = right.fPosition;
-  fLocalPosition = right.fLocalPosition;
+  fCharge = right.fCharge;
+  // fXCenter = right.fXCenter;
+  // fYCenter = right.fYCenter;
+  fXStripID = right.fXStripID;
+  fYStripID = right.fYStripID;
+  fisRear = right.fisRear;
+  fNHits = right.fNHits;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const MMegaDigi& MMegaDigi::operator=(const MMegaDigi& right)
 {
-  fChannelId = right.fChannelId;
   fTime = right.fTime;
-  fTimeSpread = right.fTimeSpread;
-  fEnergy = right.fEnergy;
-  fPosition = right.fPosition;
-  fLocalPosition = right.fLocalPosition;
+  fCharge = right.fCharge;
+  // fXCenter = right.fXCenter;
+  // fYCenter = right.fYCenter;
+  fXStripID = right.fXStripID;
+  fYStripID = right.fYStripID;
+  fisRear = right.fisRear;
+  fNHits = right.fNHits;
   return *this;
 }
 
@@ -61,9 +66,15 @@ G4int MMegaDigi::operator==(const MMegaDigi& right) const
 void MMegaDigi::Draw()
 {
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
+  MMegaGeometry* geo = MMegaGeometry::GetInstance();
   if(pVVisManager)
   {
-    G4Circle circle(fPosition);
+    double sign = -1+fisRear*2;
+    G4Circle circle(G4ThreeVector(
+                    -geo->GetMMegaDriftSizeX()+fXStripID*1.1*mm, 
+                    -geo->GetMMegaDriftSizeY()+fYStripID*1.1*mm, 
+                    geo->GetMMegaPosZ()+sign*0.5*geo->GetMMegaDriftSizeZ()
+                    ));
     circle.SetScreenSize(2.);
     circle.SetFillStyle(G4Circle::filled);
     G4Colour colour(0.,1.,0.);
@@ -77,14 +88,14 @@ void MMegaDigi::Draw()
 
 void MMegaDigi::Print()
 {
-//  G4cout << "- channel: " << fChannelId
-//         << " NHits: " << fNHits
-//	 << " time: " << G4BestUnit(fTime,"Time")
-//	 << " time spread: " << G4BestUnit(fTimeSpread,"Time")
-//         << " energy deposit: " << G4BestUnit(fEnergy,"Energy")
-//    //         << " global position: " << G4BestUnit(fPosition,"Length")
-//         << " local position: " << G4BestUnit(fLocalPosition,"Length")
-//	 << G4endl;
+  G4cout << "###### MMega Digi ######" << G4endl;
+  G4cout << "digi for strip : (" << fXStripID << ", " << fYStripID << ", " << fisRear <<")" << G4endl;
+  G4cout << "NHits: " << fNHits << G4endl;
+  G4cout << "time \t charge" <<G4endl;
+  for(int i = 0; i < fNHits; i++){
+    G4cout << G4BestUnit(fTime[i], "Time") << ", " << -fCharge << G4endl;
+  }
+  G4cout << "########################" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

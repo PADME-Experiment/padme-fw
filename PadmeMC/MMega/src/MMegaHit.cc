@@ -1,7 +1,7 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2023-19-12
+// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2024-03-08
 //
 // --------------------------------------------------------------
 
@@ -28,11 +28,14 @@ MMegaHit::MMegaHit(const MMegaHit& right)
   : G4VHit()
 {
   fTrackType = right.fTrackType;
-  fChannelId = right.fChannelId;
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fETrack = right.fETrack;
   fPosition = right.fPosition;
-  fLocalPosition = right.fLocalPosition;
+  fLocalPositionStart = right.fLocalPositionStart;
+  fLocalPositionEnd = right.fLocalPositionEnd;
+
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -40,11 +43,13 @@ MMegaHit::MMegaHit(const MMegaHit& right)
 const MMegaHit& MMegaHit::operator=(const MMegaHit& right)
 {
   fTrackType = right.fTrackType;
-  fChannelId = right.fChannelId;
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
+  fETrack = right.fETrack;
   fPosition = right.fPosition;
-  fLocalPosition = right.fLocalPosition;
+  fLocalPositionStart = right.fLocalPositionStart;
+  fLocalPositionEnd = right.fLocalPositionEnd;
   return *this;
 }
 
@@ -75,14 +80,17 @@ void MMegaHit::Draw()
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void MMegaHit::Print()
-{
-  G4cout << "- channel: " << fChannelId
-	 << " time: " << G4BestUnit(fTime,"Time")
-         << " track energy: " << G4BestUnit(fEnergy,"Energy")
-         << " global position: " << G4BestUnit(fPosition,"Length")
-         << " local position: " << G4BestUnit(fLocalPosition,"Length")
-         << " track type: " << fTrackType
-	 << G4endl;
+{ 
+  G4cout << "########### MMega Hit ################" << G4endl;
+  G4cout << " time: " << G4BestUnit(fTime,"Time") << G4endl;
+  G4cout << " track type: " << fTrackType << G4endl;
+  G4cout << " track id: " << fTrackId << G4endl;
+  G4cout << " energy lost: " << G4BestUnit(fEnergy,"Energy") << G4endl;
+  G4cout << " track energy: "  << G4BestUnit(fETrack, "Energy") << G4endl;
+  G4cout << " global position: " << G4BestUnit(fPosition,"Length") << G4endl;
+  G4cout << " local position start: " << G4BestUnit(fLocalPositionStart,"Length") << G4endl;
+  G4cout << " local position end: " << G4BestUnit(fLocalPositionEnd,"Length") << G4endl;
+  G4cout << "######################################" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

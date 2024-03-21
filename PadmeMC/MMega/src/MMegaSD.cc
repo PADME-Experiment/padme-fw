@@ -10,6 +10,7 @@
 
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
+#include "G4UnitsTable.hh"
 #include "G4ThreeVector.hh"
 #include "G4SDManager.hh"
 #include "G4ios.hh"
@@ -48,52 +49,44 @@ void MMegaSD::Initialize(G4HCofThisEvent* HCE)
 
 G4bool MMegaSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 {
+  
   G4double edep = aStep->GetTotalEnergyDeposit();
+  G4cout << "entering MMegaSD with:" << edep << G4endl;
   if (edep == 0.) return false;
 
   G4Track* track = aStep->GetTrack();
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
-  const G4VProcess* currentProcess = preStepPoint->GetProcessDefinedStep();
-  if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "MMegaBar") ) return false;
-
+  G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
+  const G4VProcess* currentProcess = postStepPoint->GetProcessDefinedStep();
+  if (currentProcess == 0) return false;
+  G4cout<<"current process :" << currentProcess->GetProcessName()<<G4endl;
+  G4cout<<"current volume  :" << track->GetVolume()->GetName()<<G4endl; 
+  //if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "MMegaDrift") ) return false;
+  if ( (currentProcess == 0) || (track->GetVolume()->GetName() != "MMegaDrift") ) return false;
+  G4cout << "after if " << G4endl;
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
+  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
 
   MMegaHit* newHit = new MMegaHit();
 
-  newHit->SetChannelId(touchHPre->GetCopyNumber()); 
-  newHit->SetEnergy(aStep->GetTotalEnergyDeposit() );
-  //  G4cout << " MMegaSD:  CopyNumber " << touchHPre->GetCopyNumber()<<G4endl;
-  // G4cout << " MMegaSD:   Energy of the track: " << preStepPoint->GetTotalEnergy()
-  //   //track->GetTotalEnergy() 
-  // 	 << "    Energy deposited: " <<  aStep->GetTotalEnergyDeposit() 
-  // 	 << G4endl;
-
+  newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
+  newHit->SetTrackID(track->GetTrackID());
   newHit->SetTime(track->GetGlobalTime());
-
+  newHit->SetEnergy(aStep->GetTotalEnergyDeposit() - aStep->GetNonIonizingEnergyDeposit());
   newHit->SetETrack(track->GetTotalEnergy());
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
+  G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
-  //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPre,"Length")
-  //	 << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-
-  //G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
-  //G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
-  //G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
-  //G4cout << "PostStepPoint in " << touchHPost->GetVolume()->GetName()
-  //	 << " global " << G4BestUnit(worldPosPost,"Length")
-  //	 << " local " << G4BestUnit(localPosPost,"Length") << G4endl;
+  G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
 
   newHit->SetPosition(worldPosPre);
-  newHit->SetLocalPosition(localPosPre);
+  newHit->SetLocalPositionStart(localPosPre);
+  newHit->SetLocalPositionEnd(localPosPost);
 
-  newHit->SetTrackID(track->GetTrackID());
-  newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
-  
+  newHit->Print(); //prints in G4 output the hit informations
+
   MMegaCollection ->insert(newHit);     
-
-  track->SetTrackStatus(fStopAndKill);
 
   return true;
 }

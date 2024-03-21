@@ -34,9 +34,6 @@ public:
 
 public:
 
-  void SetChannelId(G4int c) { fChannelId = c; }
-  G4int GetChannelId() { return fChannelId; }
-
   void SetTime(G4double t) { fTime = t; };
   G4double GetTime() { return fTime; };
 
@@ -49,15 +46,17 @@ public:
   G4double GetPosY() { return fPosition.y(); };
   G4double GetPosZ() { return fPosition.z(); };
 
-  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
-  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
-  G4double GetLocalPosX() { return fLocalPosition.x(); };
-  G4double GetLocalPosY() { return fLocalPosition.y(); };
-  G4double GetLocalPosZ() { return fLocalPosition.z(); };
- 
-  // Kept for backward compatibility: will be removed
-  void SetMMegaNb(G4int cry) { fChannelId = cry; };
-  G4int GetMMegaNb() { return fChannelId; };
+  void SetLocalPositionStart(G4ThreeVector p) { fLocalPositionStart = p; }
+  G4ThreeVector GetLocalPositionStart() { return fLocalPositionStart; }
+  G4double GetLocalStartPosX() { return fLocalPositionStart.x(); };
+  G4double GetLocalStartPosY() { return fLocalPositionStart.y(); };
+  G4double GetLocalStartPosZ() { return fLocalPositionStart.z(); };
+
+  void SetLocalPositionEnd(G4ThreeVector p) { fLocalPositionEnd = p; }
+  G4ThreeVector GetLocalPositionEnd() { return fLocalPositionEnd; }
+  G4double GetLocalEndPosX() { return fLocalPositionEnd.x(); };
+  G4double GetLocalEndPosY() { return fLocalPositionEnd.y(); };
+  G4double GetLocalEndPosZ() { return fLocalPositionEnd.z(); };
 
   void SetPType(G4int typ) { fTrackType = typ; };
   G4int GetPType() { return fTrackType; };
@@ -81,12 +80,12 @@ private:
 
   G4int         fTrackType;
   G4int         fTrackId;
-  G4int         fChannelId;
   G4double      fTime;
   G4double      fEnergy;
   G4double      fETrack;
   G4ThreeVector fPosition;
-  G4ThreeVector fLocalPosition;
+  G4ThreeVector fLocalPositionStart;
+  G4ThreeVector fLocalPositionEnd;
 
 };
 

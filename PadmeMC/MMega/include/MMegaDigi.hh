@@ -1,7 +1,7 @@
 // --------------------------------------------------------------
 // History:
 //
-// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2023-19-12
+// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2024-03-08
 //
 // --------------------------------------------------------------
 
@@ -12,6 +12,7 @@
 #include "G4TDigiCollection.hh"
 #include "G4Allocator.hh"
 #include "G4ThreeVector.hh"
+#include "G4TwoVector.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -33,43 +34,40 @@ class MMegaDigi : public G4VDigi
 
   public:
     
-  void SetChannelId(G4int c) { fChannelId = c; }
-  G4int GetChannelId() { return fChannelId; }
+  std::vector<G4double> GetTime(){return fTime;};
+  void SetTime(const std::vector<G4double>& t){fTime = t;};
 
-  void SetTime(G4double t) { fTime = t; };
-  G4double GetTime() { return fTime; };
+  G4double GetCharge(){return fCharge;};
+  void SetCharge(G4double c){fCharge = c;};
 
-  void SetTimeSpread(G4double t) { fTimeSpread = t; };
-  G4double GetTimeSpread() { return fTimeSpread; };
+  // G4double GetXCenter(){return fXCenter;};
+  // void SetXCenter(double x){fXCenter = x;};
 
-  void SetEnergy(G4double e) { fEnergy = e; }
-  G4double GetEnergy() { return fEnergy; }
+  // G4double GetYCenter(){return fYCenter;};
+  // void SetYCenter(double y){fYCenter = y;};
 
-  void SetPosition(G4ThreeVector p) { fPosition = p; }
-  G4ThreeVector GetPosition() { return fPosition; }
-  G4double GetPosX() { return fPosition.x(); };
-  G4double GetPosY() { return fPosition.y(); };
-  G4double GetPosZ() { return fPosition.z(); };
+  G4int GetXId(){return fXStripID;};
+  void SetXId(int ix){fXStripID = ix;};
 
-  void SetLocalPosition(G4ThreeVector p) { fLocalPosition = p; }
-  G4ThreeVector GetLocalPosition() { return fLocalPosition; }
-  G4double GetLocalPosX() { return fLocalPosition.x(); };
-  G4double GetLocalPosY() { return fLocalPosition.y(); };
-  G4double GetLocalPosZ() { return fLocalPosition.z(); };
+  G4int GetYId(){return fYStripID;};
+  void SetYId(int iy){fYStripID = iy;};
+
+  G4int GetisRear(){return fisRear;};
+  void SetisRear(int is){fisRear = is;};
   
   G4int GetNHits(){return fNHits;};
   void SetNHits(int nh){fNHits = nh;};
 
 private:
-    
-  G4int         fChannelId;
-  G4double      fTime;
-  G4double      fTimeSpread;
-  G4double      fEnergy;
-  G4ThreeVector fPosition;
-  G4ThreeVector fLocalPosition;
-  G4int         fNHits;
-
+  
+  std::vector<G4double> fTime;
+  G4double fCharge;
+  // G4double fXCenter;
+  // G4double fYCenter;
+  G4int    fXStripID;
+  G4int    fYStripID;
+  G4int    fisRear;
+  G4int    fNHits;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

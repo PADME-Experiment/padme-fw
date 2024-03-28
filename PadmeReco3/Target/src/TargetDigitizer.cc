@@ -33,14 +33,21 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   // Create Target channel digitizer
   //fTargetChannelDigitizer = new TargetChannelDigitizer(fTargetConfig);
 
-  fSignalWidth       = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
-  fPedOffset         = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,     100); 
-  fPreSamples        = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
-  fPostSamples       = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
-  fPedMaxNSamples    = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
   fTimeBin           = fTargetConfig->GetParOrDefault( "ADC","TimeBin"                ,      1.);
   fVoltageBin        = fTargetConfig->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
   fImpedance         = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
+  fSignalWidth       = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
+  fPedOffset         = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,     0); 
+  fPreSamples        = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
+  fPostSamples       = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
+  fPedMaxNSamples    = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
+  fNEventsToPrint    = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
+
+  if (fNEventsToPrint>100)
+    {
+      printf("TargetDigitizer::TargetDigitizer - Can't print more than 100 events of full waveforms. Setting fNEventsToPrint to 10\n");
+      fNEventsToPrint=100;
+    }
 
   if (fVerbose) printf("TargetDigitizer::TargetDigitizer - Target digitization system created\n");
 }
@@ -67,13 +74,16 @@ Bool_t TargetDigitizer::Init()
     hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,31);
     
     char iName[100];
-    for(int iCh=0; iCh!=32 ; iCh++){      
-      sprintf(iName,"TargetCh%d",iCh);
-      hTargetSignals[iCh] = (iName, new TH1D(iName, iName,  1024,  0, 1024));
+    for(int iCh=0; iCh!=32 ; iCh++){
+      for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
+	{
+	  sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
+	  hTargetSignals[iCh] = new TH1D(iName, iName,  1024,  0, 1024);
+	}
     }
-
   }
 
+  fEventCounter =0;
 
   return true;
 }
@@ -81,6 +91,8 @@ Bool_t TargetDigitizer::Init()
 void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStripCharge*>& charge)
 {
   if (fVerbose>1) printf("TargetDigitizer::ComputeChargePerStrip - Computing charge collected per strip\n");
+
+  fEventCounter++;
 
   // Update channel digitizer with current run/event number
   Int_t RunNumber = rawEv->GetRunNumber();
@@ -98,11 +110,22 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
     board = rawEv->ADCBoard(iBoard);
     UChar_t boardId = board->GetBoardId();
     if (fTargetConfig->BoardIsMine(boardId)) {
-
-      for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels();iChannel++) {
+      for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels(); iChannel++){
 
         channel = board->ADCChannel(iChannel);
-	UChar_t channelId = channel->GetChannelNumber();
+	UShort_t channelId = channel->GetChannelNumber();
+	//	std::cout<<channelId<<std::endl;
+
+	/*	if (fRunConfigurationSvc->IsMonitorMode())
+	  {
+	    char iName[100];
+	    //		sprintf(iName,"TargetEvent%dCh%d",fEventCounter,channelId);
+	    sprintf(iName,"TargetCh%d",channelId);
+	    std::cout<<iName<<std::endl;
+	    hTargetSignals[iChannel]->SetNameTitle(iName,iName);//.c_str(),iName.c_str());
+	    std::cout<<"name "<<hTargetSignals[iChannel]->GetName()<<std::endl;
+	    }*/
+
 	if (fRunConfigurationSvc->IsMonitorMode())  hTargetDigitizer->Fill(channelId);
 
 	Int_t TargetChannel = fChannelMap[boardId][channelId];
@@ -111,22 +134,20 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	//read in analog signal from digitiser board & channel
 	fSamples = rawEv->ADCBoard(iBoard)->ADCChannel(iChannel)->GetSamplesArray();
 
+	Double_t ped = CalcPedestal();    
 	//make signals positive instead of negative
-	SetAbsSignals();
+    //	SetAbsSignals();
 
 	//Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
 	Double_t hCharge=0.;
 	
-	for(Short_t ii = begin;ii<end;++ii)
+	//	for(Short_t ii = begin;ii<end;++ii)
+	for(Short_t ii = 0;ii<1024;++ii)
 	  {
+	    fSamples[ii] = fSamples[ii] - fPed;
 	    hCharge+=1.* fSamples[ii];
-	    if(iChannel==0)	    std::cout<<ii<<" "<<begin<<" "<<end<<" "<<hCharge<<std::endl;
 	    if (fRunConfigurationSvc->IsMonitorMode())
-	      {
-		char iName[100];
-		sprintf(iName,"TargetCh%d",iChannel);
-		hTargetSignals[iChannel]->Fill(fSamples[ii]);
-	      }
+	      hTargetSignals[iChannel]->SetBinContent(ii+1,fSamples[ii]);
 	  }
 	hCharge = hCharge- ((1.*end-1.*begin) * fPed);
 	// hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
@@ -241,24 +262,23 @@ Bool_t TargetDigitizer::CreateChannelMap()
 }
 
 void TargetDigitizer::SetAbsSignals(){
-  for(UShort_t i = 0;i<fNSamples;i++){
-    if (fSamples[i] < 2048) {
-      fSamples[i] = 4096 - fSamples[i];
+  for(UShort_t ii = 0;ii<1024;ii++){
+    if (fSamples[ii] < 2048) {
+      fSamples[ii] = 4096 - fSamples[ii];
     }
   }
 }
 
-Double_t TargetDigitizer::CalcPedestal() {
+Double_t TargetDigitizer::CalcPedestal(){
   fPed = 0.;
   fNPedSamples = 0;
   
-  for(Short_t i = fPedOffset ; i  !=   fPedMaxNSamples; i++) {
+  for(Short_t ii = fPedOffset ; ii  !=   fPedMaxNSamples; ii++) {
        fNPedSamples ++;
-       //std::cout << i << " fNPedSamples " << fNPedSamples << std::endl;
-       fPed+= fSamples[i];
+       fPed+= fSamples[ii];
   }
   
   fPed /= fNPedSamples;
-  //std::cout <<  fPed << " fNPedSamples " << fNPedSamples << std::endl;
+
   return fPed;
 }

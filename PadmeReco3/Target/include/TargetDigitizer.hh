@@ -57,12 +57,15 @@ private:
   Double_t fPed;
   UShort_t fNPedSamples;
 
+  UShort_t fEventCounter;
+
   //Configuration variables
   Int_t fSignalWidth;
   Int_t fPreSamples;
   Int_t fPostSamples;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
+  UShort_t fNEventsToPrint;
   Double_t fTimeBin;
   Double_t fVoltageBin;
   Double_t fImpedance;

@@ -58,6 +58,7 @@ private:
   UShort_t fNPedSamples;
 
   UShort_t fEventCounter;
+  UShort_t fPrintedSignalCounter;
 
   //Configuration variables
   Int_t fSignalWidth;
@@ -71,9 +72,17 @@ private:
   Double_t fImpedance;
 
   // Histograms
+  TH1D* hTargetNEventsToPrint;
   TH1D* hTargetDigitizer;
-  TH1D* hTargetSignals[32];
+  TH1D* hXMaxChannels;
+  TH1D* hYMaxChannels;
+  TH1D* hXMaxAmplitudes;
+  TH1D* hYMaxAmplitudes;
+  std::vector<TH1D*> hTargetSignals;
 
+  //Define X strip channels and Y strip channels
+  Double_t fXChannels[16] = {8,7,9,6,10,5,11,4,12,3,13,2,14,1,15,0};
+  Double_t fYChannels[16] = {27,28,26,29,25,30,24,31,23,16,22,17,21,18,20,19};
 
 };
 #endif // TargetDigitizer_h

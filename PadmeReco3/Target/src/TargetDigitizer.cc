@@ -10,6 +10,9 @@
 #include "RunConditionSvc.hh"
 #include "RunConfigurationSvc.hh"
 
+#include <algorithm>// for std::find, std::max_element
+#include <iterator> // for std::begin, std::end
+
 //#include "TargetHit.hh"
 //#include "TargetChannelDigitizer.hh"
 
@@ -59,7 +62,7 @@ TargetDigitizer::~TargetDigitizer()
 
 Bool_t TargetDigitizer::Init()
 {
-  if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
+if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
 
   //Create maps for ADC board/channel to/from Target channel conversions
   if (! CreateChannelMap()) {
@@ -69,21 +72,29 @@ Bool_t TargetDigitizer::Init()
 
   // Initialize channel digitizer
   //fTargetChannelDigitizer->Init();
-  
-  if (fRunConfigurationSvc->IsMonitorMode()) {
-    hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,31);
     
-    char iName[100];
-    for(int iCh=0; iCh!=32 ; iCh++){
-      for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
-	{
-	  sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
-	  hTargetSignals[iCh] = new TH1D(iName, iName,  1024,  0, 1024);
-	}
-    }
-  }
-
   fEventCounter =0;
+  fPrintedSignalCounter=0;
+
+if (fRunConfigurationSvc->IsMonitorMode()) {
+hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
+hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,32);
+
+hXMaxChannels   = fHistoSvc->BookHisto("Target","hXMaxChannels","hXMaxChannels",32,0,32);	
+hYMaxChannels   = fHistoSvc->BookHisto("Target","hYMaxChannels","hYMaxChannels",32,0,32);	
+hXMaxAmplitudes = fHistoSvc->BookHisto("Target","hXMaxAmplitudes","hXMaxAmplitudes",1000,0,2000);
+hYMaxAmplitudes = fHistoSvc->BookHisto("Target","hYMaxAmplitudes","hYMaxAmplitudes",1000,0,2000);
+
+    char iName[100];
+      for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
+	for(int iCh=0; iCh!=32 ; iCh++)
+	  {
+	    {
+	      sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
+	      hTargetSignals.push_back(new TH1D(iName, iName,  1024,  0, 1024));
+	    }
+	  }
+  }
 
   return true;
 }
@@ -92,7 +103,6 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 {
   if (fVerbose>1) printf("TargetDigitizer::ComputeChargePerStrip - Computing charge collected per strip\n");
 
-  fEventCounter++;
 
   // Update channel digitizer with current run/event number
   Int_t RunNumber = rawEv->GetRunNumber();
@@ -105,61 +115,99 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   Short_t begin = fPedMaxNSamples;
   Short_t end   =    fPostSamples;
 
-  for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++) {
+  //Beth 29/3/24: Arrays of channels of X strips and Y strips. Every time a channel is maximum for that face, the value of that channel gets increased by 1.
+  double MaxCha[16];
 
-    board = rawEv->ADCBoard(iBoard);
-    UChar_t boardId = board->GetBoardId();
-    if (fTargetConfig->BoardIsMine(boardId)) {
-      for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels(); iChannel++){
+  double TempMaxAmpX=-1e6;
+  double TempMaxAmpY=-1e6;
+  int TempMaxCha_X = -1;
+  int TempMaxCha_Y = -1;
 
-        channel = board->ADCChannel(iChannel);
-	UShort_t channelId = channel->GetChannelNumber();
-	//	std::cout<<channelId<<std::endl;
+  for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++)
+    {
 
-	/*	if (fRunConfigurationSvc->IsMonitorMode())
-	  {
-	    char iName[100];
-	    //		sprintf(iName,"TargetEvent%dCh%d",fEventCounter,channelId);
-	    sprintf(iName,"TargetCh%d",channelId);
-	    std::cout<<iName<<std::endl;
-	    hTargetSignals[iChannel]->SetNameTitle(iName,iName);//.c_str(),iName.c_str());
-	    std::cout<<"name "<<hTargetSignals[iChannel]->GetName()<<std::endl;
-	    }*/
+      board = rawEv->ADCBoard(iBoard);
+      UChar_t boardId = board->GetBoardId();
+      if (fTargetConfig->BoardIsMine(boardId)) 
+	{
+	  for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels(); iChannel++)
+	    {
 
-	if (fRunConfigurationSvc->IsMonitorMode())  hTargetDigitizer->Fill(channelId);
+	      channel = board->ADCChannel(iChannel);
+	      UShort_t channelId = channel->GetChannelNumber();
 
-	Int_t TargetChannel = fChannelMap[boardId][channelId];
-	//	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
+	      if (fRunConfigurationSvc->IsMonitorMode())  hTargetDigitizer->Fill(channelId);
 
-	//read in analog signal from digitiser board & channel
-	fSamples = rawEv->ADCBoard(iBoard)->ADCChannel(iChannel)->GetSamplesArray();
+	      Int_t TargetChannel = fChannelMap[boardId][channelId];
+	      //	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
 
-	Double_t ped = CalcPedestal();    
-	//make signals positive instead of negative
-    //	SetAbsSignals();
+	      //read in analog signal from digitiser board & channel
+	      fSamples = rawEv->ADCBoard(iBoard)->ADCChannel(iChannel)->GetSamplesArray();
 
-	//Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
-	Double_t hCharge=0.;
+	      Double_t ped = CalcPedestal();    
+
+	      //Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
+	      Double_t hCharge=0.;
 	
-	//	for(Short_t ii = begin;ii<end;++ii)
-	for(Short_t ii = 0;ii<1024;++ii)
-	  {
-	    fSamples[ii] = fSamples[ii] - fPed;
-	    hCharge+=1.* fSamples[ii];
-	    if (fRunConfigurationSvc->IsMonitorMode())
-	      hTargetSignals[iChannel]->SetBinContent(ii+1,fSamples[ii]);
-	  }
-	hCharge = hCharge- ((1.*end-1.*begin) * fPed);
-	// hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
-	hCharge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
-	hCharge *= 1000;                                          //charge in pC
-	// fCharge *= (1/1.60217662e-7/fCCD/36);                     //electron charge and 36 e-h/um // going to calib step 
-	// if( fHVsign<0 && fCh>15 ) hCharge = - hCharge;            // going to calib step 
-	// if( fHVsign>0 && fCh<16 ) hCharge = - hCharge;            // going to calib step
-      }
+	      //	for(Short_t ii = begin;ii<end;++ii)
+	      for(Short_t ii = 0;ii<1024;++ii)
+		{
+		  fSamples[ii] = fSamples[ii] - fPed;
+		  hCharge+=1.* fSamples[ii];
+		  if (fRunConfigurationSvc->IsMonitorMode() && fEventCounter<fNEventsToPrint) 
+		    {
+		      hTargetSignals[fPrintedSignalCounter]->SetBinContent(ii+1,fSamples[ii]);
+		      if(ii==1023)
+		       	{
+		      	  hTargetNEventsToPrint->Fill(0);
+			  fPrintedSignalCounter++;
+			}
+		    }
+		}
+	      hCharge = hCharge- ((1.*end-1.*begin) * fPed);
+	      // hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
+	      hCharge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
+	      hCharge *= 1000;                                          //charge in pC
+	      // fCharge *= (1/1.60217662e-7/fCCD/36);                     //electron charge and 36 e-h/um // going to calib step 
+	      // if( fHVsign<0 && fCh>15 ) hCharge = - hCharge;            // going to calib step 
+	      // if( fHVsign>0 && fCh<16 ) hCharge = - hCharge;            // going to calib step
+      
+	      //is channelId an XStrip or a YStrip?
+	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))
+		{
+		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event?
+		  if(*std::max_element(&fSamples[0],&fSamples[1023])>TempMaxAmpX)
+		    {
+		      TempMaxAmpX = *std::max_element(&fSamples[0],&fSamples[1023]);
+		      TempMaxCha_X = channelId;
+		    }
+		}
+	      //is channelId an XStrip or a YStrip?
+	      if(std::find(std::begin(fYChannels),std::end(fYChannels),channelId) != std::end(fYChannels))
+		{
+		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event?
+		  if(*std::max_element(&fSamples[0],&fSamples[1023])>TempMaxAmpY)
+		    {
+		      TempMaxAmpY = *std::max_element(&fSamples[0],&fSamples[1023]);
+		      TempMaxCha_Y = channelId;
+		    }
+		}
+	    }
+	}
     }
-  }
-  
+
+  int FinMaxCha_X = TempMaxCha_X;
+  int FinMaxCha_Y = TempMaxCha_Y;
+
+  double FinMaxAmpX = TempMaxAmpX;
+  double FinMaxAmpY = TempMaxAmpY;
+
+  hXMaxChannels  ->Fill(FinMaxCha_X);  
+  hYMaxChannels  ->Fill(FinMaxCha_Y);  
+  hXMaxAmplitudes->Fill(FinMaxAmpX);
+  hYMaxAmplitudes->Fill(FinMaxAmpY);
+
+  fEventCounter++;
   return;
   
 }

@@ -30,9 +30,9 @@ private:
   G4LogicalVolume* fMotherVolume;
   G4LogicalVolume* fMMegaVolume;       // container volume for MMega
   G4LogicalVolume* fDriftVolume;       // drift volume for MMega
-  G4LogicalVolume* fMMegaPanelVolume;   // readout plane volume for MMega
-  G4LogicalVolume* fMeshVolume;         // amplification meshes volume
-  G4LogicalVolume* fCenterMeshVolume;   // center cathode mesh volume
+  G4LogicalVolume* fMMegaPanelVolume;  // readout plane volume for MMega
+  G4LogicalVolume* fAmpMeshVolume;     // amplification meshes volume
+  G4LogicalVolume* fCathodeMeshVolume; // center cathode mesh volume
 
   MMegaMessenger* fMMegaMessenger;
 

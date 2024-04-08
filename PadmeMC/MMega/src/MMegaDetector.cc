@@ -50,9 +50,7 @@ void MMegaDetector::CreateGeometry()
   
   // CREATE MMEGA CONTAINER
   printf("MMega be placed at %f %f %f\n",geo->GetMMegaPosX(),geo->GetMMegaPosY(),geo->GetMMegaPosZ());
-  
   G4ThreeVector MMegaPos = G4ThreeVector(geo->GetMMegaPosX(),geo->GetMMegaPosY(),geo->GetMMegaPosZ()); 
-
   G4double MMegaSizeX = geo->GetMMegaSizeX();
   G4double MMegaSizeY = geo->GetMMegaSizeY();
   G4double MMegaSizeZ = geo->GetMMegaSizeZ();
@@ -71,9 +69,7 @@ void MMegaDetector::CreateGeometry()
 
   printf("MMega Gas Volume size is %f %f %f\n",MMegaDriftSizeX,MMegaDriftSizeY,MMegaDriftSizeZ);
   G4Box* solidMMegaDrift = new G4Box("solidMMegaDrift", 0.5*MMegaDriftSizeX, 0.5*MMegaDriftSizeY, 0.5*MMegaDriftSizeZ);
-
   printf("GasDensity: %f", G4Material::GetMaterial("ArCF4Iso")->GetDensity() / (g/cm3));
-
   fDriftVolume = new G4LogicalVolume(solidMMegaDrift, G4Material::GetMaterial("ArCF4Iso"), "MMegaDrift",0,0,0);
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"MMegaDrift",fMMegaVolume,false,0,false);
@@ -83,31 +79,34 @@ void MMegaDetector::CreateGeometry()
   G4double MMegaPanelSizeY = geo->GetMMegaPanelSizeY();
   G4double MMegaPanelSizeZ = geo->GetMMegaPanelSizeZ();
 
-  // define layers of planes
+  //define layers of planes
   G4double MMegaCopperSizeZ = geo->GetMMegaCopperSizeZ();
   G4Box* solidCopperVolume = new G4Box("solidCopperVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaCopperSizeZ);
   G4LogicalVolume* fMMegaCopperVolume = new G4LogicalVolume(solidCopperVolume, G4Material::GetMaterial("G4_Cu"), "CopperShieldVolume",0,0,0);
   fMMegaCopperVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
-  //Effective XPad density
-  G4double PadDistance = geo->GetPadDistance();
+  //Effective densities
   G4double CopperDensity = G4Material::GetMaterial("G4_Cu")->GetDensity() / (g/cm3);
-  G4double PadsNumber = (MMegaPanelSizeX/PadDistance)*(MMegaPanelSizeX/PadDistance);
-  G4double XPadDensity = CopperDensity * PadsNumber * (geo->GetXPadArea()*MMegaCopperSizeZ) / (MMegaPanelSizeX*MMegaPanelSizeY*MMegaCopperSizeZ);
-  G4Material* XPadMaterial = new G4Material("XPadMaterial", XPadDensity, 1);
-  XPadMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
-  printf("CopperDensity: %f, XPadDensity: %f \n", CopperDensity, XPadDensity);
-   
-  G4LogicalVolume* fMMegaXPadVolume = new G4LogicalVolume(solidCopperVolume, XPadMaterial, "XPadVolume",0,0,0);
-  fMMegaXPadVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
   
-  //Effective YPad density
-  G4double YPadDensity = CopperDensity * PadsNumber * (geo->GetYPadArea()*MMegaCopperSizeZ) / (MMegaPanelSizeX*MMegaPanelSizeY*MMegaCopperSizeZ);
-  G4Material* YPadMaterial = new G4Material("YPadMaterial", YPadDensity, 1);
-  YPadMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
-  printf("CopperDensity: %f, YPadDensity: %f \n", CopperDensity, YPadDensity);
-  G4LogicalVolume* fMMegaYPadVolume = new G4LogicalVolume(solidCopperVolume, YPadMaterial, "YPadVolume",0,0,0);
-  fMMegaYPadVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+  G4double XEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
+  //G4double XEffDensity = CopperDensity * (geo->GetXPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
+  
+  G4Material* XEffMaterial = new G4Material("XEffMaterial", XEffDensity, 1);
+  XEffMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
+  printf("CopperDensity: %f, XEffDensity: %f \n", CopperDensity, XEffDensity);
+   
+  G4LogicalVolume* fXReadoutVolume = new G4LogicalVolume(solidCopperVolume, XEffMaterial, "XReadoutVolume",0,0,0);
+  fXReadoutVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+  
+  G4double YEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
+  //G4double YEffDensity = CopperDensity * (geo->GetYPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
+  
+  G4Material* YEffMaterial = new G4Material("YEffMaterial", YEffDensity, 1);
+  YEffMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
+  printf("CopperDensity: %f, YEffDensity: %f \n", CopperDensity, YEffDensity);
+  
+  G4LogicalVolume* fYReadoutVolume = new G4LogicalVolume(solidCopperVolume, YEffMaterial, "YReadoutVolume",0,0,0);
+  fYReadoutVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
   G4double MMegaFreonSizeZ = geo->GetMMegaFreonSizeZ();
   G4Box* solidFreonVolume = new G4Box("solidFreonVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaFreonSizeZ);
@@ -139,11 +138,11 @@ void MMegaDetector::CreateGeometry()
   G4ThreeVector KaptonPos2 = CarbonPos - G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos2 = KaptonPos2 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos2, fMMegaXPadVolume, "XPadLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos2, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector KaptonPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos1 = KaptonPos1 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos1, fMMegaYPadVolume, "YPadLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos1, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector FreonPos2 = CopperPos1 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,FreonPos2, fMMegaFreonVolume, "FreonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector NomexPos = FreonPos2 - G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ+MMegaNomexSizeZ+MMegaLayerGap));
@@ -154,59 +153,45 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, ShieldPos, fMMegaCopperVolume, "CopperShield", fMMegaVolume,false,0,false);
   
   
-  
-  
-  
-  
-  
 
   // Placement of layers inside rear panel
   CarbonPos = G4ThreeVector(0,0,+0.5*(MMegaDriftSizeZ+MMegaCarbonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayerRear", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,1,false);
   KaptonPos2 = CarbonPos + G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,1,false);
   CopperPos2 = KaptonPos2 + G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos2, fMMegaXPadVolume, "XPadLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos2, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,1,false);
   KaptonPos1 = CopperPos2 + G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,1,false);
   CopperPos1 = KaptonPos1 + G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos1, fMMegaYPadVolume, "YPadLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos1, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,1,false);
   FreonPos2 = CopperPos1 + G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FreonPos2, fMMegaFreonVolume, "FreonLayer2", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FreonPos2, fMMegaFreonVolume, "FreonLayer2", fMMegaVolume, false,1,false);
   NomexPos = FreonPos2 + G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ+MMegaNomexSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,1,false);
   FreonPos1 = NomexPos + G4ThreeVector(0,0,0.5*(MMegaNomexSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FreonPos1, fMMegaFreonVolume, "FreonLayer1", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FreonPos1, fMMegaFreonVolume, "FreonLayer1", fMMegaVolume, false,1,false);
   ShieldPos = FreonPos1 + G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ + MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0, ShieldPos, fMMegaCopperVolume, "CopperShield", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0, ShieldPos, fMMegaCopperVolume, "CopperShield", fMMegaVolume,false,1,false);
   
 
   
   
-
+  //Definition of the Meshes 
+  G4double AmpMeshSizeZ = geo->GetMMegaAmpMeshSizeZ();
+  G4double CathodeMeshSizeZ = geo->GetMMegaCathodeMeshSizeZ();
   
+  G4Box* solidAmpMeshVolume = new G4Box("solidAmpMeshVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*AmpMeshSizeZ);
+  fAmpMeshVolume = new G4LogicalVolume(solidAmpMeshVolume, G4Material::GetMaterial("G4_STAINLESS-STEEL"), "MeshVolume",0,0,0);
+  fAmpMeshVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
+  G4Box* solidCathodeMeshVolume = new G4Box("solidCathodeMeshVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*CathodeMeshSizeZ);
+  fCathodeMeshVolume = new G4LogicalVolume(solidCathodeMeshVolume, G4Material::GetMaterial("G4_STAINLESS-STEEL"), "MeshVolume",0,0,0);
+  fCathodeMeshVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
 
-  
-  
-  
 
-
-
-  //Defintion of the Meshes 
-  G4double MeshSizeZ = geo->GetMMegaMeshSizeZ();
-  G4double MeshPitch = geo->GetMMegaPitch();
-  //Effective density
-  G4double SteelDensity = G4Material::GetMaterial("G4_STAINLESS-STEEL")->GetDensity() / (g/cm3);
-  G4double MeshDensity = SteelDensity * (2*MMegaPanelSizeX/MeshPitch) * (MMegaPanelSizeX*(CLHEP::pi)*MeshSizeZ*MeshSizeZ/4) / (MMegaPanelSizeX*MMegaPanelSizeY*MeshSizeZ);
-  G4Material* MeshMaterial = new G4Material("MeshMaterial", MeshDensity, 1);
-  MeshMaterial->AddMaterial(G4Material::GetMaterial("G4_STAINLESS-STEEL"), 1.0);
-  printf("SteelDensity: %f, EffectiveDensity: %f \n", SteelDensity, MeshDensity);
-  G4Box* solidMeshVolume = new G4Box("solidMeshVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MeshSizeZ);
-  fMeshVolume = new G4LogicalVolume(solidMeshVolume, MeshMaterial, "MeshVolume",0,0,0);
-  fMeshVolume->SetVisAttributes(G4VisAttributes(G4Colour::Grey()));
-  new G4PVPlacement(0, G4ThreeVector(0,0,-0.5*geo->GetMMegaDriftSizeZ()), fMeshVolume, "FrontMesh", fDriftVolume,false,0,false);
-  new G4PVPlacement(0, G4ThreeVector(0,0, 0.5*geo->GetMMegaDriftSizeZ()), fMeshVolume, "RearMesh", fDriftVolume,false,0,false);
-  new G4PVPlacement(0, G4ThreeVector(0,0,0), fMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
+  new G4PVPlacement(0, G4ThreeVector(0,0,-0.5*geo->GetMMegaDriftSizeZ()), fAmpMeshVolume, "FrontMesh", fDriftVolume,false,0,false);
+  new G4PVPlacement(0, G4ThreeVector(0,0, 0.5*geo->GetMMegaDriftSizeZ()), fAmpMeshVolume, "RearMesh", fDriftVolume,false,0,false);
+  new G4PVPlacement(0, G4ThreeVector(0,0,0), fCathodeMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
 
   // Create digitizer for MMega
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();

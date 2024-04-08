@@ -38,6 +38,11 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+   // Position of MMega Volume
+  G4double GetMMegaPosX() { return 0.; }
+  G4double GetMMegaPosY() { return 0.; }
+  G4double GetMMegaPosZ() { return fMMegaFrontFacePosZ+fMMegaSizeZ*0.5; }
+
   // Size of MMega
   G4double GetMMegaSizeX() { return fMMegaSizeX; }
   G4double GetMMegaSizeY() { return fMMegaSizeY; }
@@ -60,20 +65,21 @@ public:
   
   G4double GetMMegaAmpGapSizeX() { return fMMegaAmpGapSizeX; }
   G4double GetMMegaAmpGapSizeY() { return fMMegaAmpGapSizeY; }
-  G4double GetMMegaAmpGapSizeZ() { return fMMegaAmpGapSizeZ; } 
+  G4double GetMMegaAmpGapSizeZ() { return fMMegaAmpGapSizeZ; }
 
-  G4double GetMMegaMeshSizeZ()   { return fMMegaMeshSizeZ;   }
-  G4double GetMMegaPitch()       { return fMMegaMeshPitch;   }
+  G4double GetMMegaStripPitch() { return fMMegaStripPitch;}
+  G4double GetMMegaStripWidth() { return fMMegaStripWidth;}
+  G4double GetXStripStartPos()  { return fXStripStartPos;}
+  G4double GetYStripStartPos()  { return fYStripStartPos;} 
 
-  G4double GetXPadArea()   { return fMMegaXPadArea;   }
-  G4double GetYPadArea()   { return fMMegaYPadArea;   }
-  G4double GetPadDistance(){ return fMMegaPadDistance;}
+  G4double GetXPadArea()    { return fMMegaXPadArea;   }
+  G4double GetYPadArea()    { return fMMegaYPadArea;   }
+  G4double GetPadDistance() { return fMMegaPadDistance;}
+  G4double GetXPadStartPos(){ return fXPadStartPos;}
+  G4double GetYPadStartPos(){ return fYPadStartPos;}
 
-  // Position of MMega Volume
-  G4double GetMMegaPosX() { return 0.; }
-  G4double GetMMegaPosY() { return 0.; }
-  G4double GetMMegaPosZ() { return fMMegaFrontFacePosZ+fMMegaSizeZ*0.5; }
-
+  G4double GetMMegaAmpMeshSizeZ()   { return fMMegaAmpMeshSizeZ;}
+  G4double GetMMegaCathodeMeshSizeZ()   { return fMMegaCathodeMeshSizeZ;}
 
   // Set position along Z of MMega front face
   void SetMMegaFrontFacePosZ(G4double z) { fMMegaFrontFacePosZ = z; }
@@ -90,25 +96,11 @@ private:
 
   G4int fDetectorSetup;
 
+  //mmega dimensions
+
   G4double fMMegaSizeX;
   G4double fMMegaSizeY;
   G4double fMMegaSizeZ;
-  
-  //readout plane composition
-  G4double fMMegaCopperSizeZ;
-  G4double fMMegaFreonSizeZ;
-  G4double fMMegaNomexSizeZ;
-  G4double fMMegaKaptonSizeZ;
-  G4double fMMegaCarbonSizeZ; //thickness of carbon resistive layer
-  G4double fMMegaLayerGap;
-
-  G4double fMMegaXPadArea;
-  G4double fMMegaYPadArea;
-  G4double fMMegaPadDistance;
-
-  G4double fMMegaPanelSizeX;
-  G4double fMMegaPanelSizeY;
-  G4double fMMegaPanelSizeZ;
 
   G4double fMMegaDriftSizeX;
   G4double fMMegaDriftSizeY;
@@ -118,9 +110,34 @@ private:
   G4double fMMegaAmpGapSizeY;
   G4double fMMegaAmpGapSizeZ;
 
-  G4double fMMegaMeshSizeZ;
-  G4double fMMegaMeshPitch;
+  //readout plane composition
+  G4double fMMegaPanelSizeX;
+  G4double fMMegaPanelSizeY;
+  G4double fMMegaPanelSizeZ;
+  
+  G4double fMMegaCopperSizeZ;
+  G4double fMMegaFreonSizeZ;
+  G4double fMMegaNomexSizeZ;
+  G4double fMMegaKaptonSizeZ;
+  G4double fMMegaCarbonSizeZ; //thickness of carbon resistive layer
+  G4double fMMegaLayerGap;
 
+  //geometry of strips readout design (same for x and y)
+  G4double fMMegaStripPitch;
+  G4double fMMegaStripWidth;
+  G4double fXStripStartPos;
+  G4double fYStripStartPos;
+
+  //geometry of pads readout design
+  G4double fMMegaXPadArea;
+  G4double fMMegaYPadArea;
+  G4double fMMegaPadDistance;
+  G4double fXPadStartPos;
+  G4double fYPadStartPos;
+
+  //geometry of meshes
+  G4double fMMegaAmpMeshSizeZ;
+  G4double fMMegaCathodeMeshSizeZ;
 
   G4double fMMegaFrontFacePosZ; // Position along Z axis of MMega front face
   G4String fMMegaSensitiveDetectorName;

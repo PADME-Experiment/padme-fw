@@ -70,6 +70,7 @@ private:
   Double_t fTimeBin;
   Double_t fVoltageBin;
   Double_t fImpedance;
+  Int_t fSaturationAmpSample;
 
   // Histograms
   TH1D* hTargetNEventsToPrint;
@@ -78,6 +79,10 @@ private:
   TH1D* hYMaxChannels;
   TH1D* hXMaxAmplitudes;
   TH1D* hYMaxAmplitudes;
+  TH1D* hXNonSatMaxChannels;
+  TH1D* hYNonSatMaxChannels;
+  TH1D* hXNonSatMaxAmplitudes;
+  TH1D* hYNonSatMaxAmplitudes;
   std::vector<TH1D*> hTargetSignals;
 
   //Define X strip channels and Y strip channels

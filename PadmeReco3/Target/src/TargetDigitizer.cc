@@ -36,15 +36,16 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   // Create Target channel digitizer
   //fTargetChannelDigitizer = new TargetChannelDigitizer(fTargetConfig);
 
-  fTimeBin           = fTargetConfig->GetParOrDefault( "ADC","TimeBin"                ,      1.);
-  fVoltageBin        = fTargetConfig->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
-  fImpedance         = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
-  fSignalWidth       = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
-  fPedOffset         = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,     0); 
-  fPreSamples        = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
-  fPostSamples       = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
-  fPedMaxNSamples    = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
-  fNEventsToPrint    = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
+  fTimeBin             = fTargetConfig->GetParOrDefault( "ADC","TimeBin"                ,      1.);
+  fVoltageBin          = fTargetConfig->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
+  fImpedance           = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
+  fSignalWidth         = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
+  fPedOffset           = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,       0); 
+  fPreSamples          = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
+  fPostSamples         = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
+  fPedMaxNSamples      = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
+  fNEventsToPrint      = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
+  fSaturationAmpSample = fTargetConfig->GetParOrDefault("RECO","SaturationAmpSample"    ,     650);
 
   if (fNEventsToPrint>100)
     {
@@ -57,14 +58,14 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
 
 TargetDigitizer::~TargetDigitizer()
 {
-  if (fVerbose) printf("TargetDigitizer::~TargetDigitizer - Deleting Target digitization system\n");
+if (fVerbose) printf("TargetDigitizer::~TargetDigitizer - Deleting Target digitization system\n");
 }
 
 Bool_t TargetDigitizer::Init()
 {
 if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
 
-  //Create maps for ADC board/channel to/from Target channel conversions
+//Create maps for ADC board/channel to/from Target channel conversions
   if (! CreateChannelMap()) {
     printf("TargetDigitizer::Init - ERROR - Problem during initialization. Please check.");
     return false;
@@ -73,8 +74,8 @@ if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
   // Initialize channel digitizer
   //fTargetChannelDigitizer->Init();
     
-  fEventCounter =0;
-  fPrintedSignalCounter=0;
+fEventCounter =0;
+fPrintedSignalCounter=0;
 
 if (fRunConfigurationSvc->IsMonitorMode()) {
 hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
@@ -84,6 +85,11 @@ hXMaxChannels   = fHistoSvc->BookHisto("Target","hXMaxChannels","hXMaxChannels",
 hYMaxChannels   = fHistoSvc->BookHisto("Target","hYMaxChannels","hYMaxChannels",32,0,32);	
 hXMaxAmplitudes = fHistoSvc->BookHisto("Target","hXMaxAmplitudes","hXMaxAmplitudes",1000,0,2000);
 hYMaxAmplitudes = fHistoSvc->BookHisto("Target","hYMaxAmplitudes","hYMaxAmplitudes",1000,0,2000);
+
+hXNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hXNonSatMaxChannels","hXNonSatMaxChannels",32,0,32);	
+hYNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hYNonSatMaxChannels","hYNonSatMaxChannels",32,0,32);	
+hXNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hXNonSatMaxAmplitudes","hXNonSatMaxAmplitudes",1000,0,2000);
+hYNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hYNonSatMaxAmplitudes","hYNonSatMaxAmplitudes",1000,0,2000);
 
     char iName[100];
       for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
@@ -122,6 +128,11 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   double TempMaxAmpY=-1e6;
   int TempMaxCha_X = -1;
   int TempMaxCha_Y = -1;
+
+  double TempNonSatMaxAmpX=-1e6;
+  double TempNonSatMaxAmpY=-1e6;
+  int TempNonSatMaxCha_X = -1;
+  int TempNonSatMaxCha_Y = -1;
 
   for(UChar_t iBoard = 0; iBoard < rawEv->GetNADCBoards(); iBoard++)
     {
@@ -192,6 +203,28 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 		      TempMaxCha_Y = channelId;
 		    }
 		}
+
+	      //Maximum signals apart from saturated ones (amp of 650+ counts = saturation assumed)
+	      //is channelId an XStrip or a YStrip?
+	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))
+		{
+		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
+		  if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpX)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
+		    {
+		      TempNonSatMaxAmpX = *std::max_element(&fSamples[0],&fSamples[1023]);
+		      TempNonSatMaxCha_X = channelId;
+		    }
+		}
+	      //is channelId an XStrip or a YStrip?
+	      if(std::find(std::begin(fYChannels),std::end(fYChannels),channelId) != std::end(fYChannels))
+		{
+		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
+		  		  if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpY)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
+		    {
+		      TempNonSatMaxAmpY = *std::max_element(&fSamples[0],&fSamples[1023]);
+		      TempNonSatMaxCha_Y = channelId;
+		    }
+		}
 	    }
 	}
     }
@@ -206,6 +239,17 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   hYMaxChannels  ->Fill(FinMaxCha_Y);  
   hXMaxAmplitudes->Fill(FinMaxAmpX);
   hYMaxAmplitudes->Fill(FinMaxAmpY);
+
+  int FinNonSatMaxCha_X = TempNonSatMaxCha_X;
+  int FinNonSatMaxCha_Y = TempNonSatMaxCha_Y;
+
+  double FinNonSatMaxAmpX = TempNonSatMaxAmpX;
+  double FinNonSatMaxAmpY = TempNonSatMaxAmpY;
+
+  hXNonSatMaxChannels  ->Fill(FinNonSatMaxCha_X);  
+  hYNonSatMaxChannels  ->Fill(FinNonSatMaxCha_Y);  
+  hXNonSatMaxAmplitudes->Fill(FinNonSatMaxAmpX);
+  hYNonSatMaxAmplitudes->Fill(FinNonSatMaxAmpY);
 
   fEventCounter++;
   return;

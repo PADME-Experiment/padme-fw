@@ -105,6 +105,15 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fBeamLineInvisibleCmd->SetGuidance("Make Beam Line invisible.");
   fBeamLineInvisibleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fMMegaReadoutCmd = new G4UIcmdWithAString("/Detector/MMegaReadoutType",this);
+  fMMegaReadoutCmd->SetGuidance("Defines layout of MMega Readout Planes.");
+  fMMegaReadoutCmd->SetGuidance("Possible choices are:");
+  fMMegaReadoutCmd->SetGuidance("strips   readout electrode is segmented in strips.");
+  fMMegaReadoutCmd->SetGuidance("pads     readout electrode is segmented in pads");
+  fMMegaReadoutCmd->SetParameterName("Readout Type",false);
+  fMMegaReadoutCmd->SetCandidates("strips pads");
+  fMMegaReadoutCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fWorldIsAirCmd = new G4UIcmdWithoutParameter("/Detector/WorldIsAir",this);
   fWorldIsAirCmd->SetGuidance("Fill world (and magnetic volume) with air.");
   fWorldIsAirCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -142,6 +151,7 @@ DetectorMessenger::~DetectorMessenger()
   delete fChamberInvisibleCmd;
   delete fBeamLineVisibleCmd;   //M. Raggi 07/03/2019
   delete fBeamLineInvisibleCmd; //M. Raggi 07/03/2019
+  delete fMMegaReadoutCmd; // D.Quaranta 09/04/2024
   delete fWorldIsAirCmd;
   delete fWorldIsVacuumCmd;
   delete fSetVerboseLevelCmd;
@@ -180,6 +190,8 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
   if( command == fBeamLineVisibleCmd )   fDetector->BeamLineIsVisible(); //M. Raggi 07/03/2019
   if( command == fBeamLineInvisibleCmd ) fDetector->BeamLineIsInvisible(); //M. Raggi 07/03/2019
+
+  if( command == fMMegaReadoutCmd)    fDetector->SetMMegaReadoutType(newValue); //D. Quaranta 09/04/2024
 
   if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
   if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();

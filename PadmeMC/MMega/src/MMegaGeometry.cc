@@ -23,15 +23,18 @@ MMegaGeometry::MMegaGeometry()
   fDetectorSetup = 10; // Default to 2019 setup
 
 
+  //readout plane composition
+  fMMegaCopperSizeZ = 0.018*mm;
+  fMMegaFreonSizeZ = 0.500*mm;
+  fMMegaNomexSizeZ = 10*mm;
+  fMMegaKaptonSizeZ = 0.050*mm;
+  fMMegaCarbonSizeZ = 0.004*mm; //thickness of carbon resistive layer
+  fMMegaLayerGap = 0.1*um; //otherwise Geant4 overlaps the layers in a weird way
+
   // size of front and back panels
   fMMegaPanelSizeX = 600*mm;
   fMMegaPanelSizeY = 600*mm;
   fMMegaPanelSizeZ = 3*fMMegaCopperSizeZ + 2*fMMegaFreonSizeZ + 2*fMMegaKaptonSizeZ + fMMegaNomexSizeZ + fMMegaCarbonSizeZ; 
-  
-  // size of the detector mother volume
-  fMMegaSizeX = fMMegaPanelSizeX + 5*mm;  // add 5 mm as in other detectors
-  fMMegaSizeY = fMMegaPanelSizeY + 5*mm;
-  fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
 
   //size of drift region
   fMMegaDriftSizeX = fMMegaPanelSizeX;
@@ -43,17 +46,14 @@ MMegaGeometry::MMegaGeometry()
   fMMegaAmpGapSizeY = fMMegaPanelSizeY;
   fMMegaAmpGapSizeZ = 0.150*mm;
 
-  //readout plane composition
-  fMMegaCopperSizeZ = 0.018*mm;
-  fMMegaFreonSizeZ = 0.500*mm;
-  fMMegaNomexSizeZ = 10*mm;
-  fMMegaKaptonSizeZ = 0.050*mm;
-  fMMegaCarbonSizeZ = 0.004*mm; //thickness of carbon resistive layer
-  fMMegaLayerGap = 0.1*um; //otherwise Geant4 overlaps the layers in a weird way
+  // size of the detector mother volume
+  fMMegaSizeX = fMMegaPanelSizeX + 5*mm;  // add 5 mm as in other detectors
+  fMMegaSizeY = fMMegaPanelSizeY + 5*mm;
+  fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
 
   //size of strips
-  fStripPitch = 0.400*mm; //to be updated
-  fStripWidth = 0.300*mm; //same
+  fMMegaStripPitch = 0.400*mm; //to be updated
+  fMMegaStripWidth = 0.300*mm; //same
   fXStripStartPos = -fMMegaPanelSizeX/2.; //to be changed when i have readout maps
   fYStripStartPos = -fMMegaPanelSizeX/2.;
 

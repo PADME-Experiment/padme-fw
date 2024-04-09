@@ -69,7 +69,7 @@ void MMegaDetector::CreateGeometry()
 
   printf("MMega Gas Volume size is %f %f %f\n",MMegaDriftSizeX,MMegaDriftSizeY,MMegaDriftSizeZ);
   G4Box* solidMMegaDrift = new G4Box("solidMMegaDrift", 0.5*MMegaDriftSizeX, 0.5*MMegaDriftSizeY, 0.5*MMegaDriftSizeZ);
-  printf("GasDensity: %f", G4Material::GetMaterial("ArCF4Iso")->GetDensity() / (g/cm3));
+  printf("GasDensity: %f\n", G4Material::GetMaterial("ArCF4Iso")->GetDensity() / (g/cm3));
   fDriftVolume = new G4LogicalVolume(solidMMegaDrift, G4Material::GetMaterial("ArCF4Iso"), "MMegaDrift",0,0,0);
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"MMegaDrift",fMMegaVolume,false,0,false);
@@ -87,9 +87,21 @@ void MMegaDetector::CreateGeometry()
 
   //Effective densities
   G4double CopperDensity = G4Material::GetMaterial("G4_Cu")->GetDensity() / (g/cm3);
+  G4double XEffDensity, YEffDensity;
+
+  if(fReadoutType == "strips"){
+    printf("MMega Readout Type : strips\n");
+    XEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
+    YEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
+  }
+
+  if(fReadoutType == "pads"){
+    printf("MMega Readout Type : pads\n");
+    XEffDensity = CopperDensity * (geo->GetXPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
+    YEffDensity = CopperDensity * (geo->GetYPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
+  }
   
-  G4double XEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
-  //G4double XEffDensity = CopperDensity * (geo->GetXPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
+
   
   G4Material* XEffMaterial = new G4Material("XEffMaterial", XEffDensity, 1);
   XEffMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
@@ -97,9 +109,6 @@ void MMegaDetector::CreateGeometry()
    
   G4LogicalVolume* fXReadoutVolume = new G4LogicalVolume(solidCopperVolume, XEffMaterial, "XReadoutVolume",0,0,0);
   fXReadoutVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
-  
-  G4double YEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
-  //G4double YEffDensity = CopperDensity * (geo->GetYPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
   
   G4Material* YEffMaterial = new G4Material("YEffMaterial", YEffDensity, 1);
   YEffMaterial->AddMaterial(G4Material::GetMaterial("G4_Cu"), 1.0);
@@ -193,23 +202,23 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, G4ThreeVector(0,0, 0.5*geo->GetMMegaDriftSizeZ()), fAmpMeshVolume, "RearMesh", fDriftVolume,false,0,false);
   new G4PVPlacement(0, G4ThreeVector(0,0,0), fCathodeMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
 
-  // Create digitizer for MMega
-  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  G4String MMegaDName = geo->GetMMegaDigitizerName();
-  printf("Registering MMega Digitizer %s\n",MMegaDName.data());
-  MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
-  theDM->AddNewModule(MMegaD);
-  if(MMegaD != nullptr){printf("Creating MMegaDigitizer\n");}
+  // // Create digitizer for MMega
+  // G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  // G4String MMegaDName = geo->GetMMegaDigitizerName();
+  // printf("Registering MMega Digitizer %s\n",MMegaDName.data());
+  // MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
+  // theDM->AddNewModule(MMegaD);
+  // if(MMegaD != nullptr){printf("Creating MMegaDigitizer\n");}
   
 
-  // Make whole MMega a sensitive detector
+  // // Make whole MMega a sensitive detector
 
-  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
-  printf("Registering MMega SD %s\n",mMegaSDName.data());
-  MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
-  sdMan->AddNewDetector(mMegaSD);
-  fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
-  printf("Setting drift volume as SD \n");
+  // G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  // G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
+  // printf("Registering MMega SD %s\n",mMegaSDName.data());
+  // MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
+  // sdMan->AddNewDetector(mMegaSD);
+  // fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
+  // printf("Setting drift volume as SD \n");
 }
 

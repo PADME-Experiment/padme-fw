@@ -90,6 +90,9 @@ public:
   void BeamLineIsVisible();
   void BeamLineIsInvisible();
 
+  //D.Quaranta 09/04/2024
+  void SetMMegaReadoutType(G4String); 
+
   void WorldIsAir();
   void WorldIsVacuum();
 
@@ -158,6 +161,8 @@ private:
   G4int fMagnetIsVisible;
   G4int fChamberIsVisible;
   G4int fBeamLineIsVisible; //M. Raggi 07/03/2019
+
+  G4String fMMegaReadoutType; //D.Quaranta 09/04/2024
 
   G4int fWorldIsFilledWithAir;
 

@@ -121,6 +121,7 @@ DetectorConstruction::DetectorConstruction()
   fMagnetIsVisible   = 1;
   fChamberIsVisible  = 1;
   fBeamLineIsVisible = 1;
+  fMMegaReadoutType = "strips"; //D.Quaranta 09/04/2024 default
 
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
@@ -468,6 +469,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 // D. Quaranta 20/12/23 only MMega added
   if (fEnableMMega) {
     fMMegaDetector->SetMotherVolume(logicWorld);
+    fMMegaDetector->SetReadoutType(fMMegaReadoutType);
     fMMegaDetector->CreateGeometry();
   }
 
@@ -1036,6 +1038,12 @@ void DetectorConstruction::BeamLineIsInvisible()
 {
   if (fVerbose) printf("Beam Line is invisible\n");
   fBeamLineIsVisible = 0;
+}
+
+void DetectorConstruction::SetMMegaReadoutType(G4String str)
+{
+  if (fVerbose) printf("MMega Readout type is %s\n",str.data());
+  fMMegaReadoutType = str;
 }
 
 void DetectorConstruction::WorldIsAir()

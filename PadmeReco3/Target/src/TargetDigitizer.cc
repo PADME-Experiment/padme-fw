@@ -29,6 +29,9 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
 
   // Create LeadGlass histogram directory
   fHistoSvc->CreateDir("Target");
+  fHistoSvc->CreateDir("Target/Waveforms");
+  fHistoSvc->CreateDir("Target/Charge");
+  fHistoSvc->CreateDir("Target/NoBeamInt");
 
   // Define verbose level
   fVerbose = fTargetConfig->GetParOrDefault("Output", "Verbose", 0);
@@ -41,8 +44,10 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   fImpedance           = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
   fSignalWidth         = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
   fPedOffset           = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,       0); 
-  fPreSamples          = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
-  fPostSamples         = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
+  // fPreSamples          = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
+  // fPostSamples         = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
+fIntBegin      = fTargetConfig->GetParOrDefault("RECO","IntegralBeginningSample",     150);
+fIntEnd      = fTargetConfig->GetParOrDefault("RECO","IntegralEndSample",     550);
   fPedMaxNSamples      = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
   fNEventsToPrint      = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
   fSaturationAmpSample = fTargetConfig->GetParOrDefault("RECO","SaturationAmpSample"    ,     650);
@@ -77,7 +82,7 @@ if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
 fEventCounter =0;
 fPrintedSignalCounter=0;
 
-if (fRunConfigurationSvc->IsMonitorMode()) {
+if (fRunConfigurationSvc->GetDebugMode()) {
 hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
 hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,32);
 
@@ -97,7 +102,15 @@ hYNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hYNonSatMaxAmplitudes","h
 	  {
 	    {
 	      sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
-	      hTargetSignals.push_back(new TH1D(iName, iName,  1024,  0, 1024));
+	      hTargetSignals.push_back(fHistoSvc->BookHisto("Target/Waveforms",iName, iName,  1024,  0, 1024));
+	      if(NEv==0)
+		{
+		  sprintf(iName,"ChargeIntegralCh%d",iCh);
+		  hChargeIntegrals.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  300,  0, 3e5));
+		
+		  sprintf(iName,"NoBeamIntegralCh%d",iCh);
+		  hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  300,  0, 3e5));
+		}
 	    }
 	  }
   }
@@ -109,6 +122,8 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 {
   if (fVerbose>1) printf("TargetDigitizer::ComputeChargePerStrip - Computing charge collected per strip\n");
 
+  UInt_t TrigMask = rawEv->GetEventTrigMask();
+  //  if(TrigMask!=1)  std::cout<<TrigMask<<std::endl;
 
   // Update channel digitizer with current run/event number
   Int_t RunNumber = rawEv->GetRunNumber();
@@ -118,8 +133,10 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   TADCChannel* channel;
 
   //Beth 21/3/24: limits of signal to be integrated.
-  Short_t begin = fPedMaxNSamples;
-  Short_t end   =    fPostSamples;
+  //  Short_t begin = fPedMaxNSamples;
+  //  Short_t end   =    fPostSamples;
+  // Short_t begin = fIntBegin;
+  // Short_t end   = fIntEnd;
 
   //Beth 29/3/24: Arrays of channels of X strips and Y strips. Every time a channel is maximum for that face, the value of that channel gets increased by 1.
   double MaxCha[16];
@@ -147,7 +164,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	      channel = board->ADCChannel(iChannel);
 	      UShort_t channelId = channel->GetChannelNumber();
 
-	      if (fRunConfigurationSvc->IsMonitorMode())  hTargetDigitizer->Fill(channelId);
+	      if (fRunConfigurationSvc->GetDebugMode())  hTargetDigitizer->Fill(channelId);
 
 	      Int_t TargetChannel = fChannelMap[boardId][channelId];
 	      //	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);
@@ -160,12 +177,11 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	      //Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
 	      Double_t hCharge=0.;
 	
-	      //	for(Short_t ii = begin;ii<end;++ii)
 	      for(Short_t ii = 0;ii<1024;++ii)
 		{
 		  fSamples[ii] = fSamples[ii] - fPed;
-		  hCharge+=1.* fSamples[ii];
-		  if (fRunConfigurationSvc->IsMonitorMode() && fEventCounter<fNEventsToPrint) 
+		  if(ii>=fIntBegin && ii<=fIntEnd) hCharge+=1.* fSamples[ii];
+		  if (fRunConfigurationSvc->GetDebugMode() && fEventCounter<fNEventsToPrint) 
 		    {
 		      hTargetSignals[fPrintedSignalCounter]->SetBinContent(ii+1,fSamples[ii]);
 		      if(ii==1023)
@@ -175,7 +191,11 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 			}
 		    }
 		}
-	      hCharge = hCharge- ((1.*end-1.*begin) * fPed);
+	      
+	      //if TrigMask == 1, that's the physics trigger so fill the physics histograms. Else, there's no beam, so fill the nobeam histograms
+	      if(TrigMask==1) hChargeIntegrals[channelId]->Fill(hCharge);
+	      else hNoBeamIntegrals[channelId]->Fill(hCharge);
+	      //hCharge = hCharge- ((1.*end-1.*begin) * fPed);
 	      // hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
 	      hCharge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
 	      hCharge *= 1000;                                          //charge in pC

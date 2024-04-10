@@ -616,7 +616,8 @@ Bool_t PadmeReconstruction::NextEvent()
     //printf("Board 28 group 2 point 456. time diff %f\n",fTrigTimeSvc->GetTimeDifference(28,2,456.));
 
     // In monitor mode just process Physics trigger
-    if ( (fRunConfigurationSvc->IsMonitorMode() == 0)  || (fRawEvent->GetEventTrigMask() & 0x01) ) {
+    // Beth 9/4/23: Add debug option to produce histograms without physics trigger
+    if ( (fRunConfigurationSvc->IsMonitorMode() == 0)  || (fRawEvent->GetEventTrigMask() & 0x01) || fRunConfigurationSvc->GetDebugMode() == 1) {
       // Reconstruct individual detectors
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
 	fRecoLibrary[iLib]->ProcessEvent(fRawEvent);

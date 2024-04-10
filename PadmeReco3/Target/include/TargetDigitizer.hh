@@ -62,8 +62,10 @@ private:
 
   //Configuration variables
   Int_t fSignalWidth;
-  Int_t fPreSamples;
-  Int_t fPostSamples;
+  // Int_t fPreSamples;
+  // Int_t fPostSamples;
+  Int_t fIntBegin;
+  Int_t fIntEnd;
   Int_t fPedOffset; 
   Int_t fPedMaxNSamples;
   UShort_t fNEventsToPrint;
@@ -84,6 +86,8 @@ private:
   TH1D* hXNonSatMaxAmplitudes;
   TH1D* hYNonSatMaxAmplitudes;
   std::vector<TH1D*> hTargetSignals;
+  std::vector<TH1D*> hChargeIntegrals;
+  std::vector<TH1D*> hNoBeamIntegrals;
 
   //Define X strip channels and Y strip channels
   Double_t fXChannels[16] = {8,7,9,6,10,5,11,4,12,3,13,2,14,1,15,0};

@@ -106,10 +106,10 @@ hYNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hYNonSatMaxAmplitudes","h
 	      if(NEv==0)
 		{
 		  sprintf(iName,"ChargeIntegralCh%d",iCh);
-		  hChargeIntegrals.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  300,  0, 3e5));
+		  hChargeIntegrals.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  400,  -500, 1500));
 		
 		  sprintf(iName,"NoBeamIntegralCh%d",iCh);
-		  hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  300,  0, 3e5));
+		  hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  400,  -500, 1500));
 		}
 	    }
 	  }
@@ -174,13 +174,13 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 
 	      Double_t ped = CalcPedestal();    
 
-	      //Beth 21/3/24: following lines of hCharge calculation taken from old PadmeReco written by FedeO
-	      Double_t hCharge=0.;
+	      //Beth 21/3/24: following lines of Charge calculation taken from old PadmeReco written by FedeO
+	      Double_t Charge=0.;
 	
 	      for(Short_t ii = 0;ii<1024;++ii)
 		{
 		  fSamples[ii] = fSamples[ii] - fPed;
-		  if(ii>=fIntBegin && ii<=fIntEnd) hCharge+=1.* fSamples[ii];
+		  if(ii>=fIntBegin && ii<=fIntEnd) Charge+=1.* fSamples[ii];
 		  if (fRunConfigurationSvc->GetDebugMode() && fEventCounter<fNEventsToPrint) 
 		    {
 		      hTargetSignals[fPrintedSignalCounter]->SetBinContent(ii+1,fSamples[ii]);
@@ -191,17 +191,18 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 			}
 		    }
 		}
-	      
-	      //if TrigMask == 1, that's the physics trigger so fill the physics histograms. Else, there's no beam, so fill the nobeam histograms
-	      if(TrigMask==1) hChargeIntegrals[channelId]->Fill(hCharge);
-	      else hNoBeamIntegrals[channelId]->Fill(hCharge);
-	      //hCharge = hCharge- ((1.*end-1.*begin) * fPed);
-	      // hCharge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
-	      hCharge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
-	      hCharge *= 1000;                                          //charge in pC
+	      std::cout<<"before "<<Charge<<std::endl;
+	      //Charge = Charge- ((1.*end-1.*begin) * fPed);
+	      // Charge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
+	      Charge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
+	      Charge *= 1000;                                          //charge in pC
 	      // fCharge *= (1/1.60217662e-7/fCCD/36);                     //electron charge and 36 e-h/um // going to calib step 
-	      // if( fHVsign<0 && fCh>15 ) hCharge = - hCharge;            // going to calib step 
-	      // if( fHVsign>0 && fCh<16 ) hCharge = - hCharge;            // going to calib step
+	      // if( fHVsign<0 && fCh>15 ) Charge = - Charge;            // going to calib step 
+	      // if( fHVsign>0 && fCh<16 ) Charge = - Charge;            // going to calib step
+	      std::cout<<"after "<<Charge<<std::endl;
+	      //if TrigMask == 1, that's the physics trigger so fill the physics histograms. Else, there's no beam, so fill the nobeam histograms
+	      if(TrigMask==1) hChargeIntegrals[channelId]->Fill(Charge);
+	      else hNoBeamIntegrals[channelId]->Fill(Charge);
       
 	      //is channelId an XStrip or a YStrip?
 	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))

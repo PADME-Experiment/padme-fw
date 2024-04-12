@@ -16,6 +16,7 @@ OfflineServer::OfflineServer()
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
   std::ifstream inputDBFile("config/run_level_offline_db_2022.txt");
+  //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
     std::cerr << "Error: file could not be opened" << std::endl;
     exit(1);

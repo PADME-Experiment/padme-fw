@@ -87,11 +87,14 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
 
 
 void ECalSel::ProcessForCalib(){
-  fSafeEnergyFactor = 0.2; // Safety factor used for the energy min and max cuts
-  fSafeSpaceMargin = 42; // 2 cells in mm, safety margin used for the radius min and max cut    
+  // fSafeEnergyFactor = 0.2; // Safety factor used for the energy min and max cuts
+  fSafeEnergyFactor = 0.01; // Safety factor used for the energy min and max cuts
+  // fSafeSpaceMargin = 42; // 2 cells in mm, safety margin used for the radius min and max cut    
+  fSafeSpaceMargin = 125; // 6 cells in mm, safety margin used for the radius min and max cut    
   fFillLocalHistograms = false;
   fFillCalibHistograms = true;
-  fSigmaCut = 7.;
+  fSigmaCut = 10.;
+  //fSigmaCut = 7.;
   fECalEvents.clear();
   TwoClusSel();
   // here the tag and probe selection might be added

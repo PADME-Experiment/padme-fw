@@ -46,8 +46,8 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   fPedOffset           = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,       0); 
   // fPreSamples          = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
   // fPostSamples         = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
-fIntBegin      = fTargetConfig->GetParOrDefault("RECO","IntegralBeginningSample",     150);
-fIntEnd      = fTargetConfig->GetParOrDefault("RECO","IntegralEndSample",     550);
+  fIntBegin      = fTargetConfig->GetParOrDefault("RECO","IntegralBeginningSample",     150);
+  fIntEnd      = fTargetConfig->GetParOrDefault("RECO","IntegralEndSample",     550);
   fPedMaxNSamples      = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
   fNEventsToPrint      = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
   fSaturationAmpSample = fTargetConfig->GetParOrDefault("RECO","SaturationAmpSample"    ,     650);
@@ -68,53 +68,57 @@ if (fVerbose) printf("TargetDigitizer::~TargetDigitizer - Deleting Target digiti
 
 Bool_t TargetDigitizer::Init()
 {
-if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
+  if (fVerbose) printf("TargetDigitizer::Init - Initilizing Target digitizer\n");
 
-//Create maps for ADC board/channel to/from Target channel conversions
+  //Create maps for ADC board/channel to/from Target channel conversions
   if (! CreateChannelMap()) {
     printf("TargetDigitizer::Init - ERROR - Problem during initialization. Please check.");
     return false;
   }
-
+  
   // Initialize channel digitizer
   //fTargetChannelDigitizer->Init();
+  
+  fEventCounter =0;
+  fPrintedSignalCounter=0;
+  
+  if (fRunConfigurationSvc->GetDebugMode()) {
+    hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
+    hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,32);
     
-fEventCounter =0;
-fPrintedSignalCounter=0;
-
-if (fRunConfigurationSvc->GetDebugMode()) {
-hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
-hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,32);
-
-hXMaxChannels   = fHistoSvc->BookHisto("Target","hXMaxChannels","hXMaxChannels",32,0,32);	
-hYMaxChannels   = fHistoSvc->BookHisto("Target","hYMaxChannels","hYMaxChannels",32,0,32);	
-hXMaxAmplitudes = fHistoSvc->BookHisto("Target","hXMaxAmplitudes","hXMaxAmplitudes",1000,0,2000);
-hYMaxAmplitudes = fHistoSvc->BookHisto("Target","hYMaxAmplitudes","hYMaxAmplitudes",1000,0,2000);
-
-hXNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hXNonSatMaxChannels","hXNonSatMaxChannels",32,0,32);	
-hYNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hYNonSatMaxChannels","hYNonSatMaxChannels",32,0,32);	
-hXNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hXNonSatMaxAmplitudes","hXNonSatMaxAmplitudes",1000,0,2000);
-hYNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hYNonSatMaxAmplitudes","hYNonSatMaxAmplitudes",1000,0,2000);
+    hXMaxChannels   = fHistoSvc->BookHisto("Target","hXMaxChannels","hXMaxChannels",32,0,32);	
+    hYMaxChannels   = fHistoSvc->BookHisto("Target","hYMaxChannels","hYMaxChannels",32,0,32);	
+    hXMaxAmplitudes = fHistoSvc->BookHisto("Target","hXMaxAmplitudes","hXMaxAmplitudes",1000,0,2000);
+    hYMaxAmplitudes = fHistoSvc->BookHisto("Target","hYMaxAmplitudes","hYMaxAmplitudes",1000,0,2000);
+    
+    hXNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hXNonSatMaxChannels","hXNonSatMaxChannels",32,0,32);	
+    hYNonSatMaxChannels   = fHistoSvc->BookHisto("Target","hYNonSatMaxChannels","hYNonSatMaxChannels",32,0,32);	
+    hXNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hXNonSatMaxAmplitudes","hXNonSatMaxAmplitudes",1000,0,2000);
+    hYNonSatMaxAmplitudes = fHistoSvc->BookHisto("Target","hYNonSatMaxAmplitudes","hYNonSatMaxAmplitudes",1000,0,2000);
+    
+    hCh2Ch3ChargeIntegral       = fHistoSvc->BookHisto("Target","hCh2Ch3ChargeIntegral",      "hCh2Ch3ChargeIntegral",400,  -500, 1500);
+    hCh24Ch23ChargeIntegral     = fHistoSvc->BookHisto("Target","hCh24Ch23ChargeIntegral",    "hCh24Ch23ChargeIntegral",400,  -500, 1500);
+    hCh30Ch24Ch31ChargeIntegral = fHistoSvc->BookHisto("Target","hCh30Ch24Ch31ChargeIntegral","hCh30Ch24Ch31ChargeIntegral",400,  -500, 1500);
 
     char iName[100];
-      for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
-	for(int iCh=0; iCh!=32 ; iCh++)
+    for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
+      for(int iCh=0; iCh!=32 ; iCh++)
+	{
 	  {
-	    {
-	      sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
-	      hTargetSignals.push_back(fHistoSvc->BookHisto("Target/Waveforms",iName, iName,  1024,  0, 1024));
-	      if(NEv==0)
-		{
-		  sprintf(iName,"ChargeIntegralCh%d",iCh);
-		  hChargeIntegrals.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  400,  -500, 1500));
+	    sprintf(iName,"TargetEvent%dCh%d",NEv,iCh);
+	    hTargetSignals.push_back(fHistoSvc->BookHisto("Target/Waveforms",iName, iName,  1024,  0, 1024));
+	    if(NEv==0)
+	      {
+		sprintf(iName,"ChargeIntegralCh%d",iCh);
+		hChargeIntegrals.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  400,  -500, 1500));
 		
-		  sprintf(iName,"NoBeamIntegralCh%d",iCh);
-		  hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  400,  -500, 1500));
-		}
-	    }
+		sprintf(iName,"NoBeamIntegralCh%d",iCh);
+		hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  400,  -500, 1500));
+	      }
 	  }
+	}
   }
-
+  
   return true;
 }
 
@@ -137,6 +141,10 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   //  Short_t end   =    fPostSamples;
   // Short_t begin = fIntBegin;
   // Short_t end   = fIntEnd;
+
+  Double_t Ch2Ch3ChargeSum      =0;
+  Double_t Ch24Ch23ChargeSum    =0;
+  Double_t Ch30Ch24Ch31ChargeSum=0;
 
   //Beth 29/3/24: Arrays of channels of X strips and Y strips. Every time a channel is maximum for that face, the value of that channel gets increased by 1.
   double MaxCha[16];
@@ -191,7 +199,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 			}
 		    }
 		}
-	      std::cout<<"before "<<Charge<<std::endl;
+
 	      //Charge = Charge- ((1.*end-1.*begin) * fPed);
 	      // Charge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
 	      Charge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
@@ -199,11 +207,15 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	      // fCharge *= (1/1.60217662e-7/fCCD/36);                     //electron charge and 36 e-h/um // going to calib step 
 	      // if( fHVsign<0 && fCh>15 ) Charge = - Charge;            // going to calib step 
 	      // if( fHVsign>0 && fCh<16 ) Charge = - Charge;            // going to calib step
-	      std::cout<<"after "<<Charge<<std::endl;
+
 	      //if TrigMask == 1, that's the physics trigger so fill the physics histograms. Else, there's no beam, so fill the nobeam histograms
 	      if(TrigMask==1) hChargeIntegrals[channelId]->Fill(Charge);
 	      else hNoBeamIntegrals[channelId]->Fill(Charge);
-      
+
+	      if(TrigMask==1&&(channelId==2||channelId==3))     Ch2Ch3ChargeSum+=Charge;
+	      if(TrigMask==1&&(channelId==24||channelId==23))   Ch24Ch23ChargeSum+=Charge;
+	      if(TrigMask==1&&(channelId==24||channelId==30||channelId==31)) Ch30Ch24Ch31ChargeSum+=Charge;
+
 	      //is channelId an XStrip or a YStrip?
 	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))
 		{
@@ -271,6 +283,13 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   hYNonSatMaxChannels  ->Fill(FinNonSatMaxCha_Y);  
   hXNonSatMaxAmplitudes->Fill(FinNonSatMaxAmpX);
   hYNonSatMaxAmplitudes->Fill(FinNonSatMaxAmpY);
+
+  if(TrigMask==1)
+    {
+      hCh2Ch3ChargeIntegral      ->Fill(Ch2Ch3ChargeSum);	    
+      hCh24Ch23ChargeIntegral    ->Fill(Ch24Ch23ChargeSum);    
+      hCh30Ch24Ch31ChargeIntegral->Fill(Ch30Ch24Ch31ChargeSum);
+    }
 
   fEventCounter++;
   return;

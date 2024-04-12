@@ -85,6 +85,9 @@ private:
   TH1D* hYNonSatMaxChannels;
   TH1D* hXNonSatMaxAmplitudes;
   TH1D* hYNonSatMaxAmplitudes;
+  TH1D* hCh2Ch3ChargeIntegral;
+  TH1D* hCh24Ch23ChargeIntegral;
+  TH1D* hCh30Ch24Ch31ChargeIntegral;
   std::vector<TH1D*> hTargetSignals;
   std::vector<TH1D*> hChargeIntegrals;
   std::vector<TH1D*> hNoBeamIntegrals;

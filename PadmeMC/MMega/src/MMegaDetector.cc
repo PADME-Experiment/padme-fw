@@ -24,6 +24,7 @@
 #include "MMegaGeometry.hh"
 #include "MMegaSD.hh"
 #include "MMegaDigitizer.hh"
+#include "MMegaROGeometry.hh"
 
 
 
@@ -87,15 +88,17 @@ void MMegaDetector::CreateGeometry()
 
   //Effective densities
   G4double CopperDensity = G4Material::GetMaterial("G4_Cu")->GetDensity() / (g/cm3);
-  G4double XEffDensity, YEffDensity;
+  G4double XEffDensity = 0, YEffDensity = 0;
 
-  if(fReadoutType == "strips"){
+  G4String ReadoutType = geo->GetReadoutType();
+
+  if(ReadoutType == "strips"){
     printf("MMega Readout Type : strips\n");
     XEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
     YEffDensity = CopperDensity * (geo->GetMMegaStripWidth()/geo->GetMMegaStripPitch()); //strip case
   }
 
-  if(fReadoutType == "pads"){
+  if(ReadoutType == "pads"){
     printf("MMega Readout Type : pads\n");
     XEffDensity = CopperDensity * (geo->GetXPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
     YEffDensity = CopperDensity * (geo->GetYPadArea()/(geo->GetPadDistance()*geo->GetPadDistance())); //pads case
@@ -147,11 +150,11 @@ void MMegaDetector::CreateGeometry()
   G4ThreeVector KaptonPos2 = CarbonPos - G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos2 = KaptonPos2 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos2, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector KaptonPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos1 = KaptonPos1 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos1, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector FreonPos2 = CopperPos1 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,FreonPos2, fMMegaFreonVolume, "FreonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector NomexPos = FreonPos2 - G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ+MMegaNomexSizeZ+MMegaLayerGap));
@@ -159,7 +162,7 @@ void MMegaDetector::CreateGeometry()
   G4ThreeVector FreonPos1 = NomexPos - G4ThreeVector(0,0,0.5*(MMegaNomexSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,FreonPos1, fMMegaFreonVolume, "FreonLayer1", fMMegaVolume, false,0,false);
   G4ThreeVector ShieldPos = FreonPos1 - G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ + MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0, ShieldPos, fMMegaCopperVolume, "CopperShield", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0, ShieldPos, fMMegaCopperVolume, " CopperShield", fMMegaVolume,false,0,false);
   
   
 
@@ -169,11 +172,11 @@ void MMegaDetector::CreateGeometry()
   KaptonPos2 = CarbonPos + G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,1,false);
   CopperPos2 = KaptonPos2 + G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos2, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,1,false);
+  new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,1,false);
   KaptonPos1 = CopperPos2 + G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,1,false);
   CopperPos1 = KaptonPos1 + G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos1, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,1,false);
+  new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,1,false);
   FreonPos2 = CopperPos1 + G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFreonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,FreonPos2, fMMegaFreonVolume, "FreonLayer2", fMMegaVolume, false,1,false);
   NomexPos = FreonPos2 + G4ThreeVector(0,0,0.5*(MMegaFreonSizeZ+MMegaNomexSizeZ+MMegaLayerGap));
@@ -202,23 +205,23 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, G4ThreeVector(0,0, 0.5*geo->GetMMegaDriftSizeZ()), fAmpMeshVolume, "RearMesh", fDriftVolume,false,0,false);
   new G4PVPlacement(0, G4ThreeVector(0,0,0), fCathodeMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
 
-  // // Create digitizer for MMega
-  // G4DigiManager* theDM = G4DigiManager::GetDMpointer();
-  // G4String MMegaDName = geo->GetMMegaDigitizerName();
-  // printf("Registering MMega Digitizer %s\n",MMegaDName.data());
-  // MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
-  // theDM->AddNewModule(MMegaD);
-  // if(MMegaD != nullptr){printf("Creating MMegaDigitizer\n");}
+
+  // Create digitizer for MMega
+  G4DigiManager* theDM = G4DigiManager::GetDMpointer();
+  G4String MMegaDName = geo->GetMMegaDigitizerName();
+  printf("Registering MMega Digitizer %s\n",MMegaDName.data());
+  MMegaDigitizer* MMegaD = new MMegaDigitizer(MMegaDName);
+  theDM->AddNewModule(MMegaD);
+  if(MMegaD != nullptr){printf("Creating MMegaDigitizer\n");}
   
 
-  // // Make whole MMega a sensitive detector
-
-  // G4SDManager* sdMan = G4SDManager::GetSDMpointer();
-  // G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
-  // printf("Registering MMega SD %s\n",mMegaSDName.data());
-  // MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
-  // sdMan->AddNewDetector(mMegaSD);
-  // fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
-  // printf("Setting drift volume as SD \n");
+  // Make MMegaDriftVolume a sensitive detector
+  G4SDManager* sdMan = G4SDManager::GetSDMpointer();
+  G4String mMegaSDName = geo->GetMMegaSensitiveDetectorName();
+  printf("Registering MMega SD %s\n",mMegaSDName.data());
+  MMegaSD* mMegaSD = new MMegaSD(mMegaSDName);
+  sdMan->AddNewDetector(mMegaSD);
+  fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
+  printf("Setting drift volume as SD \n");
 }
 

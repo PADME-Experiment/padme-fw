@@ -35,7 +35,6 @@ MMegaHit::MMegaHit(const MMegaHit& right)
   fPosition = right.fPosition;
   fLocalPositionStart = right.fLocalPositionStart;
   fLocalPositionEnd = right.fLocalPositionEnd;
-
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

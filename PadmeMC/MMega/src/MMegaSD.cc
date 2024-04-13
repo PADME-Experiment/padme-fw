@@ -47,7 +47,7 @@ void MMegaSD::Initialize(G4HCofThisEvent* HCE)
   HCE->AddHitsCollection(HCID,MMegaCollection); 
 }
 
-G4bool MMegaSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
+G4bool MMegaSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
   
   G4double edep = aStep->GetTotalEnergyDeposit();
@@ -59,13 +59,9 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4StepPoint* postStepPoint = aStep->GetPostStepPoint();
   const G4VProcess* currentProcess = postStepPoint->GetProcessDefinedStep();
   if (currentProcess == 0) return false;
-  G4cout<<"current process :" << currentProcess->GetProcessName()<<G4endl;
-  G4cout<<"current volume  :" << track->GetVolume()->GetName()<<G4endl; 
   //if ( (currentProcess == 0) || (currentProcess->GetProcessName() != "Transportation") || (track->GetVolume()->GetName() != "MMegaDrift") ) return false;
   if ( (currentProcess == 0) || (track->GetVolume()->GetName() != "MMegaDrift") ) return false;
-  G4cout << "after if " << G4endl;
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
-  G4TouchableHandle touchHPost = aStep->GetPostStepPoint()->GetTouchableHandle();
 
   MMegaHit* newHit = new MMegaHit();
 
@@ -78,13 +74,14 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector worldPosPost = aStep->GetPostStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
-  G4ThreeVector localPosPost = touchHPost->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
+  G4ThreeVector localPosPost = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPost);
 
   newHit->SetPosition(worldPosPre);
   newHit->SetLocalPositionStart(localPosPre);
   newHit->SetLocalPositionEnd(localPosPost);
 
   newHit->Print(); //prints in G4 output the hit informations
+  // newHit->Draw();
 
   MMegaCollection ->insert(newHit);     
 

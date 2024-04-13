@@ -38,6 +38,9 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
+  void SetReadoutType(G4String type) {fReadoutType = type;}
+  G4String GetReadoutType() {return fReadoutType;}
+
    // Position of MMega Volume
   G4double GetMMegaPosX() { return 0.; }
   G4double GetMMegaPosY() { return 0.; }
@@ -94,6 +97,7 @@ private:
 
   G4int fVerbose; // Verbose level
 
+  G4String fReadoutType;
   G4int fDetectorSetup;
 
   //mmega dimensions

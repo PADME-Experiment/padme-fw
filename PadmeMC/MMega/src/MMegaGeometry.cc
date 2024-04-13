@@ -58,8 +58,8 @@ MMegaGeometry::MMegaGeometry()
   fYStripStartPos = -fMMegaPanelSizeX/2.;
 
   //size of pads
-  fMMegaXPadArea = 0.6*mm2;
-  fMMegaYPadArea = 0.7*mm2;
+  fMMegaXPadArea = 0.49*mm2;
+  fMMegaYPadArea = 0.25*mm2;
   fMMegaPadDistance = 1.1*mm;
   fXPadStartPos = -fMMegaPanelSizeX/2.; //to be changed when i have readout maps
   fYPadStartPos = -fMMegaPanelSizeX/2.;

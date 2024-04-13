@@ -86,7 +86,6 @@ private:
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPositionStart;
   G4ThreeVector fLocalPositionEnd;
-
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

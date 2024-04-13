@@ -21,7 +21,6 @@ public:
   MMegaDetector(G4LogicalVolume*);
 
   void SetMotherVolume(G4LogicalVolume* v) { fMotherVolume = v; }
-  void SetReadoutType(G4String type) {fReadoutType = type;}
   void CreateGeometry();
 
   G4LogicalVolume* GetMMegaLogicalVolume() { return fMMegaVolume; }
@@ -35,7 +34,6 @@ private:
   G4LogicalVolume* fAmpMeshVolume;     // amplification meshes volume
   G4LogicalVolume* fCathodeMeshVolume; // center cathode mesh volume
 
-  G4String fReadoutType;
 
   MMegaMessenger* fMMegaMessenger;
 

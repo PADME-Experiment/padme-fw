@@ -29,28 +29,22 @@ MMegaDigi::~MMegaDigi() {}
 MMegaDigi::MMegaDigi(const MMegaDigi& right)
   : G4VDigi()
 {
-  fTime = right.fTime;
-  fCharge = right.fCharge;
-  // fXCenter = right.fXCenter;
-  // fYCenter = right.fYCenter;
-  fXStripID = right.fXStripID;
-  fYStripID = right.fYStripID;
-  fisRear = right.fisRear;
+  fTimes = right.fTimes;
   fNHits = right.fNHits;
+  fCharge = right.fCharge;
+  // fCenter = right.fCenter;
+  fID = right.fID;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const MMegaDigi& MMegaDigi::operator=(const MMegaDigi& right)
 {
-  fTime = right.fTime;
-  fCharge = right.fCharge;
-  // fXCenter = right.fXCenter;
-  // fYCenter = right.fYCenter;
-  fXStripID = right.fXStripID;
-  fYStripID = right.fYStripID;
-  fisRear = right.fisRear;
+  fTimes = right.fTimes;
   fNHits = right.fNHits;
+  fCharge = right.fCharge;
+  // fCenter = right.fCenter;
+  fID = right.fID;
   return *this;
 }
 
@@ -66,21 +60,16 @@ G4int MMegaDigi::operator==(const MMegaDigi& right) const
 void MMegaDigi::Draw()
 {
   G4VVisManager* pVVisManager = G4VVisManager::GetConcreteInstance();
-  MMegaGeometry* geo = MMegaGeometry::GetInstance();
+  // MMegaGeometry* geo = MMegaGeometry::GetInstance();
   if(pVVisManager)
   {
-    double sign = -1+fisRear*2;
-    G4Circle circle(G4ThreeVector(
-                    -geo->GetMMegaDriftSizeX()+fXStripID*1.1*mm, 
-                    -geo->GetMMegaDriftSizeY()+fYStripID*1.1*mm, 
-                    geo->GetMMegaPosZ()+sign*0.5*geo->GetMMegaDriftSizeZ()
-                    ));
-    circle.SetScreenSize(2.);
-    circle.SetFillStyle(G4Circle::filled);
-    G4Colour colour(0.,1.,0.);
-    G4VisAttributes attribs(colour);
-    circle.SetVisAttributes(attribs);
-    pVVisManager->Draw(circle);
+    // G4Circle circle(G4ThreeVector());
+    // circle.SetScreenSize(2.);
+    // circle.SetFillStyle(G4Circle::filled);
+    // G4Colour colour(0.,1.,0.);
+    // G4VisAttributes attribs(colour);
+    // circle.SetVisAttributes(attribs);
+    // pVVisManager->Draw(circle);
   }
 }
 
@@ -89,12 +78,11 @@ void MMegaDigi::Draw()
 void MMegaDigi::Print()
 {
   G4cout << "###### MMega Digi ######" << G4endl;
-  G4cout << "digi for strip : (" << fXStripID << ", " << fYStripID << ", " << fisRear <<")" << G4endl;
+  G4cout << "first hit time : " << G4BestUnit(*std::min_element(fTimes.begin(),fTimes.end()), "Time") << G4endl;
   G4cout << "NHits: " << fNHits << G4endl;
-  G4cout << "time \t charge" <<G4endl;
-  for(int i = 0; i < fNHits; i++){
-    G4cout << G4BestUnit(fTime[i], "Time") << ", " << -fCharge << G4endl;
-  }
+  G4cout << "Charge:" << fCharge << G4endl;
+  // G4cout << "Center:" << fCenter << G4endl;
+  G4cout << "ID:" << fID << G4endl;
   G4cout << "########################" << G4endl;
 }
 

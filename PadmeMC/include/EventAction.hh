@@ -9,6 +9,7 @@
 #include "EVetoHit.hh"
 #include "SACHit.hh"
 #include "ETagHit.hh"
+#include "MMegaHit.hh" //D.Quaranta 16/03/2024
 #include "TPixHit.hh"  //M. Raggi 26/03/2019
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
 #include "MylarWHit.hh"  //M. Raggi 15/03/2021
@@ -16,7 +17,8 @@
 
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
-#include "ETagGeometry.hh"
+#include "ETagGeometry.hh" 
+#include "MMegaGeometry.hh"  //D.Quaranta 16/03/2024
 #include "TargetGeometry.hh"
 #include "BeamParameters.hh"
 
@@ -32,7 +34,8 @@ class HEPVetoDigitizer;
 class ECalDigitizer;
 class SACDigitizer;
 class TPixDigitizer;
-class ETagDigitizer;
+class ETagDigitizer;   
+class MMegaDigitizer;    //D.Quaranta 16/03/2024
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -111,6 +114,7 @@ class EventAction : public G4UserEventAction
   PVetoDigitizer*   fPVetoDigitizer;
   EVetoDigitizer*   fEvetoDigitizer;
   ETagDigitizer*    fETagDigitizer;
+  MMegaDigitizer*   fMMegaDigitizer; //D. Quaranta
   HEPVetoDigitizer* fHEPVetoDigitizer;
   ECalDigitizer*    fECalDigitizer;
   SACDigitizer*     fSACDigitizer;

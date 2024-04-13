@@ -169,6 +169,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   ChamberGeometry* geoChamber = ChamberGeometry::GetInstance();
   HEPVetoGeometry* geoHEPVeto = HEPVetoGeometry::GetInstance();
   TPixGeometry* geoTPix = TPixGeometry::GetInstance();
+  MMegaGeometry* geoMMega = MMegaGeometry::GetInstance();
 
   //------------------------------
   // World Volume
@@ -468,8 +469,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
 // D. Quaranta 20/12/23 only MMega added
   if (fEnableMMega) {
+
     fMMegaDetector->SetMotherVolume(logicWorld);
-    fMMegaDetector->SetReadoutType(fMMegaReadoutType);
+    geoMMega->SetReadoutType(fMMegaReadoutType);
     fMMegaDetector->CreateGeometry();
   }
 

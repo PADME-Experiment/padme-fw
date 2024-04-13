@@ -30,6 +30,7 @@
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
 #include "ETagDigitizer.hh"
+#include "MMegaDigitizer.hh" //D.Quaranta 16/03/2024
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -38,6 +39,7 @@
 #include "ECalGeometry.hh"
 #include "SACGeometry.hh"
 #include "TPixGeometry.hh"
+#include "MMegaGeometry.hh" //D.Quaranta 16/03/2024
 
 #include "SystemInfo.hh"
 
@@ -59,6 +61,7 @@ EventAction::EventAction(RunAction* run)
   fECalDigitizer    = NULL;
   fSACDigitizer     = NULL;
   fTPixDigitizer    = NULL;
+  fMMegaDigitizer   = NULL; //D.Quaranta 16/03/2024
 
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
@@ -157,6 +160,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fPVetoDigitizer   = (PVetoDigitizer*)theDM->FindDigitizerModule(PVetoGeometry::GetInstance()->GetPVetoDigitizerName());
     fEvetoDigitizer   = (EVetoDigitizer*)theDM->FindDigitizerModule(EVetoGeometry::GetInstance()->GetEVetoDigitizerName());
     fETagDigitizer   = (ETagDigitizer*)theDM->FindDigitizerModule(ETagGeometry::GetInstance()->GetETagDigitizerName());
+    fMMegaDigitizer   = (MMegaDigitizer*)theDM->FindDigitizerModule(MMegaGeometry::GetInstance()->GetMMegaDigitizerName()); //D.Quaranta 16/03/2024
     fHEPVetoDigitizer = (HEPVetoDigitizer*)theDM->FindDigitizerModule(HEPVetoGeometry::GetInstance()->GetHEPVetoDigitizerName());
     fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
     fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
@@ -174,10 +178,11 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fECalDigitizer)    fECalDigitizer->Digitize();
   if (fSACDigitizer)     fSACDigitizer->Digitize();
   if (fETagDigitizer)    fETagDigitizer->Digitize();
+  if (fMMegaDigitizer)   fMMegaDigitizer->Digitize(); //D.Quaranta 16/03/2024
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
   // Save event to root file
-  RootIOManager::GetInstance()->SaveEvent(evt);
+  //RootIOManager::GetInstance()->SaveEvent(evt); implement rootio for mmega otherwise segmentation fault here
 
   G4int nHC = 0;
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
@@ -200,6 +205,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddSACHits((SACHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "ETagCollection") {
       AddETagHits((ETagHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "MMegaCollection") {
+      AddMMegaHits((MMegaHitsCollection*)(LHC->GetHC(iHC)));// see what to do here D.Quaranta 16/03/2024
     } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
@@ -211,7 +218,6 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     }
   }
   //int Ncells=0;
-
   //Retrieve beam Infos!
   G4double BeamE  = myStepping->GetPositronE();
   G4double BeamX  = myStepping->GetPositronX();
@@ -399,6 +405,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //  }
+
 }
 
 void EventAction::AddECryHits(ECalHitsCollection* hcont)
@@ -1094,6 +1101,45 @@ void EventAction::AddETagHits(ETagHitsCollection* hcont)
       LastID = hit->GetTrackID();
     }
   }//end of loop
+}
+
+void EventAction::AddMMegaHits(MMegaHitsCollection* hcont)
+{
+  // G4int nHits = hcont->entries();
+  // for (G4int h=0; h<nHits; h++) {
+  //   MMegaHit* hit = (*hcont)[h];
+
+  //   // Get hit information
+  //     G4int         hTrackType = hit->GetPType();
+  //     G4double      hTime      = hit->GetTime();
+  //     G4double      hEnergy    = hit->GetEnergy();
+  //     G4ThreeVector hPosition  = hit->GetPosition();
+  //     G4ThreeVector hLocalPositionStart = hit->GetLocalPositionStart();
+  //     G4ThreeVector hLocalPositionEnd   = hit->GetLocalPositionEnd();
+  //     // G4int         hTrackId   = hit->GetTrackID();
+  //     G4double      hETrack    = hit->GetETrack();
+
+
+
+  //     if(hTrackType == 2 || hTrackType == 3){ //only digitize electrons and positrons
+  //       if(hETrack >= 1.0*MeV){
+  //         // Generate Ionizations for current hit
+  //         MMegaIonizations* ioni = new MMegaIonizations(hLocalPositionStart, hLocalPositionEnd, hEnergy);
+
+  //         G4int Nionizations = ioni->GetNIonizations();
+  //         std::vector<G4int> IDs = ioni->GetIDs();
+  //         std::vector<G4double> Times = ioni->GetTimes();
+  //         std::vector<G4double> Radii = ioni->GetRadii();
+
+
+
+  //       }
+  //     }
+
+
+  }
+
+
 }
 
 G4double EventAction::GetCharge(G4double Energia)

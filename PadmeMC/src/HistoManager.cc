@@ -337,6 +337,21 @@ void HistoManager::book()
   histo2[177] = new TH2D("h177","Flag7 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[177]) G4cout << "\n can't create histo 177" << G4endl;
 
+  //*****************************************
+  // MMega histos
+  //*****************************************
+
+  histo[180] = new TH1D("h180", "NHits", 500, 0., 300.);
+  if (!histo[180]) G4cout << "\n can't create histo 180" << G4endl;
+  histo[181] = new TH1D("h181", "Charge", 300, 0., 1.e-15);
+  if (!histo[181]) G4cout << "\n can't create histo 181" << G4endl;
+  histo[182] = new TH1D("h182", "IDs", 1600, 0., 1600.);
+  if (!histo[182]) G4cout << "\n can't create histo 182" << G4endl;
+  // histo[183] = new TH1D("h183", "Tot Charge per strip distribution");
+  // if (!histo[183]) G4cout << "\n can't create histo 183" << G4endl;
+  // histo2[185] = new TH2D("h185", "Time vs Strip");
+  // if (!histo2[185]) G4cout << "\n can't create histo 185" << G4endl;
+
   // BeW study
   histo[70] = new TH1D("h70","BeW energy",500,0.,0.1);
   if (!histo[70]) G4cout << "\n can't create histo 70" << G4endl; 

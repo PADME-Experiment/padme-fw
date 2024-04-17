@@ -56,7 +56,7 @@ class MMegaIonizations
     G4double fvdrift = 44.7 * mm/us;
     G4double feCharge = e_SI;
     
-    G4double fGain = 1.e4;
+    G4double fGain = 10000.;
     G4double fFirstZone = 60*cm;
     G4double fFirstGain = 0.001;
     G4double fSecondZone = 100*cm;
@@ -64,8 +64,10 @@ class MMegaIonizations
 
     G4double fstepLength;
     G4double fdE;
+    G4int fid;
+    G4double ftime;
 
-    std::vector<G4ThreeVector> fIonizations;
+    // std::vector<G4ThreeVector> fIonizations;
     std::vector<G4int> fIDs;
     std::vector<G4double> fTimes;
     std::vector<G4double> fRadii;
@@ -73,8 +75,8 @@ class MMegaIonizations
 
     TRandom3 r;
 
-    void ComputeStripID();
-    void ComputePadID();
+    void ComputeStripID(G4ThreeVector ionipos);
+    void ComputePadID(G4ThreeVector ionipos);
 
     MMegaGeometry* geo;
     

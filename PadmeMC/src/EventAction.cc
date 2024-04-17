@@ -21,6 +21,7 @@
 
 //#include "G4RunManager.hh"
 #include "G4DigiManager.hh"
+#include "G4TDigiCollection.hh"
 
 #include "TargetDigitizer.hh"
 #include "PVetoDigitizer.hh"
@@ -31,6 +32,7 @@
 #include "TPixDigitizer.hh"
 #include "ETagDigitizer.hh"
 #include "MMegaDigitizer.hh" //D.Quaranta 16/03/2024
+
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -181,6 +183,10 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fMMegaDigitizer)   fMMegaDigitizer->Digitize(); //D.Quaranta 16/03/2024
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
+  
+  G4DCofThisEvent* DC = evt->GetDCofThisEvent();
+  AddMMegaHits(DC);
+  
   // Save event to root file
   //RootIOManager::GetInstance()->SaveEvent(evt); implement rootio for mmega otherwise segmentation fault here
 
@@ -206,7 +212,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     } else if (HCname == "ETagCollection") {
       AddETagHits((ETagHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "MMegaCollection") {
-      AddMMegaHits((MMegaHitsCollection*)(LHC->GetHC(iHC)));// see what to do here D.Quaranta 16/03/2024
+      //AddMMegaHits((MMegaHitsCollection*)(LHC->GetHC(iHC)));// see what to do here D.Quaranta 16/03/2024
     } else if (HCname == "TPixCollection") {        //M. Raggi 26/03/2019
       AddTPixHits((TPixHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeWCollection") {        //M. Raggi 29/04/2019
@@ -1103,42 +1109,45 @@ void EventAction::AddETagHits(ETagHitsCollection* hcont)
   }//end of loop
 }
 
-void EventAction::AddMMegaHits(MMegaHitsCollection* hcont)
+void EventAction::AddMMegaHits(G4DCofThisEvent* DC)
 {
-  // G4int nHits = hcont->entries();
-  // for (G4int h=0; h<nHits; h++) {
-  //   MMegaHit* hit = (*hcont)[h];
+  G4int nDC = DC->GetNumberOfCollections();
 
-  //   // Get hit information
-  //     G4int         hTrackType = hit->GetPType();
-  //     G4double      hTime      = hit->GetTime();
-  //     G4double      hEnergy    = hit->GetEnergy();
-  //     G4ThreeVector hPosition  = hit->GetPosition();
-  //     G4ThreeVector hLocalPositionStart = hit->GetLocalPositionStart();
-  //     G4ThreeVector hLocalPositionEnd   = hit->GetLocalPositionEnd();
-  //     // G4int         hTrackId   = hit->GetTrackID();
-  //     G4double      hETrack    = hit->GetETrack();
+  for(G4int iDC=0; iDC<nDC; iDC++) {
 
+    // Handle each collection type with the right method
+    G4String DCname = DC->GetDC(iDC)->GetName();
+    if (DCname == "MMegaDigiCollection"){ //change to MMega
+      MMegaDigiCollection* mMegaDC = (MMegaDigiCollection*)(DC->GetDC(iDC));
+      if(mMegaDC) {
+        G4int n_digi = mMegaDC->entries();
+        if(n_digi>0){
+          for(G4int i=0;i<n_digi;i++) {
+            MMegaDigi* digi = (*mMegaDC)[i];
+            G4int         hID = digi->GetID();
+            G4double      hCharge      = digi->GetCharge();
+            G4int         hNHits       = digi->GetNHits();
+            std::vector<G4double> hTimes = (digi->GetTimes());
 
+            fHistoManager->FillHisto(180,hNHits);
+            fHistoManager->FillHisto(181,hCharge);
 
-  //     if(hTrackType == 2 || hTrackType == 3){ //only digitize electrons and positrons
-  //       if(hETrack >= 1.0*MeV){
-  //         // Generate Ionizations for current hit
-  //         MMegaIonizations* ioni = new MMegaIonizations(hLocalPositionStart, hLocalPositionEnd, hEnergy);
+            MMegaGeometry* MMegaGeom = MMegaGeometry::GetInstance(); //D.Quaranta 17/04/2024
+            
+            if(MMegaGeom->GetReadoutType() == "strips"){
+              fHistoManager->FillHisto(182, hID%10000);
+            }
 
-  //         G4int Nionizations = ioni->GetNIonizations();
-  //         std::vector<G4int> IDs = ioni->GetIDs();
-  //         std::vector<G4double> Times = ioni->GetTimes();
-  //         std::vector<G4double> Radii = ioni->GetRadii();
-
-
-
-  //       }
-  //     }
-
+            if(MMegaGeom->GetReadoutType() == "pads"){
+              fHistoManager->FillHisto(182, hID%1000);
+            }
+            
+          }    
+        }
+      }
+    }
 
   }
-
 
 }
 

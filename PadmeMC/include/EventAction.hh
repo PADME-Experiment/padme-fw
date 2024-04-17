@@ -22,6 +22,8 @@
 #include "TargetGeometry.hh"
 #include "BeamParameters.hh"
 
+#include "MMegaDigi.hh" // D.Quaranta to see if i can retrieve digi in event action 15/4/24
+
 class G4Event;
 class RunAction;
 class HistoManager;
@@ -92,6 +94,7 @@ class EventAction : public G4UserEventAction
   void  AddBeWHits(BeWHitsCollection*);           //M. Raggi 26/03/2019
   void  AddMylarWHits(MylarWHitsCollection*);        //M. Raggi 15/03/2021
   void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
+  void  AddMMegaHits(G4DCofThisEvent*); //D.Quaranta 15/4/24
 
   G4double GetCharge(G4double Energia);
   //G4double GGMass();

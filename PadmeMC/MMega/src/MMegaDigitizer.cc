@@ -32,6 +32,7 @@ void MMegaDigitizer::Digitize()
 {
   // const G4double MMegaDigiTimeWindow = 700*us; 
 
+  // MMegaDigiCollection* mMegaDigiCollection = new MMegaDigiCollection("MMegaDigitizer","MMegaDigiCollection");
   MMegaDigiCollection* mMegaDigiCollection = new MMegaDigiCollection("MMegaDigitizer","MMegaDigiCollection");
 
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
@@ -54,58 +55,84 @@ void MMegaDigitizer::Digitize()
     for (G4int i=0;i<n_hit;i++) {
 
       // Get hit information
-      G4int         hTrackType = (*MMegaHC)[i]->GetPType();
-      G4double      hTime      = (*MMegaHC)[i]->GetTime();
-      G4double      hEnergy    = (*MMegaHC)[i]->GetEnergy();
-      G4ThreeVector hPosition  = (*MMegaHC)[i]->GetPosition();
+      G4int         hTrackType          = (*MMegaHC)[i]->GetPType();
+      G4double       hTime               = (*MMegaHC)[i]->GetTime();
+      G4double       hEnergy             = (*MMegaHC)[i]->GetEnergy();
+      G4ThreeVector hPosition           = (*MMegaHC)[i]->GetPosition();
       G4ThreeVector hLocalPositionStart = (*MMegaHC)[i]->GetLocalPositionStart();
       G4ThreeVector hLocalPositionEnd   = (*MMegaHC)[i]->GetLocalPositionEnd();
+      G4double       hETrack             = (*MMegaHC)[i]->GetETrack();
       // G4int         hTrackId   = (*MMegaHC)[i]->GetTrackID();
-      G4double      hETrack    = (*MMegaHC)[i]->GetETrack();
-
 
 
       if(hTrackType == 2 || hTrackType == 3){ //only digitize electrons and positrons
         if(hETrack >= 1.0*MeV){
+          
           // Generate Ionizations for current hit
           MMegaIonizations* ioni = new MMegaIonizations(hLocalPositionStart, hLocalPositionEnd, hEnergy);
-
           G4int Nionizations = ioni->GetNIonizations();
-          std::vector<G4int> IDs = ioni->GetIDs();
-          std::vector<G4double> Times = ioni->GetTimes();
-          std::vector<G4double> Radii = ioni->GetRadii();
 
           // fill digi quantities
-          for(int i = 0; i < Nionizations; i++){
-            dTimes[IDs[i]].push_back(Times[i]+hTime);
+          for(G4int i = 0; i < Nionizations; i++){
+            
+            G4int id = (ioni->GetIDs())[i];
+            G4double t = (ioni->GetTimes())[i]+hTime;
+            G4double r = (ioni->GetRadii())[i];
+
             G4double charge = ioni->GetElectronCharge()*ioni->GetGain(); //for one drift electron
-            if (Radii[i] <= ioni->GetFirstZoneRadius()){
+
+            if (r <= ioni->GetFirstZoneRadius()){
               charge *= ioni->GetFirstGain();
             }
-            else if(Radii[i]<=ioni->GetSecondZoneRadius()){
+            else if(r <=ioni->GetSecondZoneRadius()){
               charge *= ioni->GetSecondGain();
             }
-            dCharge[IDs[i]] = charge;
-          }
-        }
-      }
+
+            // this commented block compiles but returns segmentation fault
+            G4double old_charge = dCharge[id];
+            G4double new_charge = old_charge + charge;
+            dCharge[id] = new_charge;
+            
+            std::map<G4int, std::vector<G4double>>::iterator it = dTimes.find(id);
+            if (it != dTimes.end()) {
+              it->second.push_back(t);
+            }
+            else {
+              std::vector<G4double> v;
+              v.push_back(t);
+              dTimes[id] = v;
+            }
+            
+
+            // G4cout << "-----------TEST PRINT-----------"<<G4endl;
+            // G4cout << " id = " << id << G4endl;
+            // G4cout << " t  = " << t << G4endl;
+            // G4cout << " r  = " << r << G4endl;
+            // G4cout << " charge = " << charge << G4endl;
+
+            
+
+          } // loop over ionizations
+        } // if over energy
+      } // if track type
 
 
     } //loop over hits
 
-    // Iterate over the maps using a range-based for loop
-    for (auto it1 = dTimes.begin(); it1 != dTimes.end(); ++it1) {
-        MMegaDigi* digi = new MMegaDigi();
-        digi->SetID(it1->first);
-        digi->SetNHits(it1->second.size());
-        digi->SetTimes(it1->second);
-        //get the right charge for the strip an multiply by numer of collected electrons
-        digi->SetCharge(dCharge[it1->first]*it1->second.size());
-        mMegaDigiCollection->insert(digi);
-        digi->Print();
-    }
+    //Iterate over the maps using a range-based for loop
+    std::map<G4int, std::vector<G4double>>::iterator it;
+    for (auto it = dTimes.begin(); it != dTimes.end(); ++it) {
+      MMegaDigi* digi = new MMegaDigi();
+      digi->SetID(it->first);
+      digi->SetNHits(it->second.size());
+      digi->SetTimes(it->second);
+      // get the right charge for the strip and multiply by number of collected electrons
+      digi->SetCharge(dCharge[it->first] * it->second.size());
+      mMegaDigiCollection->insert(digi);
+      digi->Print();
+    } // end of storing digis
 
-  }
+  } // end of if MMegaHC
   
   StoreDigiCollection(mMegaDigiCollection);
 

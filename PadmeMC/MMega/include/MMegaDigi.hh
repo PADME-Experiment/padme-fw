@@ -38,7 +38,7 @@ class MMegaDigi : public G4VDigi
   void SetTimes(const std::vector<G4double>& t){fTimes = t;};
 
   G4double GetCharge(){return fCharge;};
-  void SetCharge(G4double c){fCharge = c;};
+  void SetCharge(G4float c){fCharge = c;};
 
   // G4double GetCenter(){return fCenter;};
   // void SetCenter(double x){fCenter = x;};
@@ -52,10 +52,10 @@ class MMegaDigi : public G4VDigi
 private:
   
   std::vector<G4double> fTimes; //drift electron arrival times
-  G4int    fNHits;             //number of collected electrons
-  G4double fCharge;            //collected charge
-  // G4double fCenter;            //strip(pad) center (ID accounts for which plane we are referring to)
-  G4int    fID;                //strip(pad) ID
+  G4int    fNHits;              //number of collected electrons
+  G4double fCharge;             //collected charge
+  // G4double fCenter;          //strip(pad) center (ID accounts for which plane we are referring to)
+  G4int    fID;                 //strip(pad) ID
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

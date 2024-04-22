@@ -18,9 +18,11 @@ OfflineServer::OfflineServer()
   std::ifstream inputDBFile("config/run_level_offline_db_2022.txt");
   //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
-    std::cerr << "Error: file could not be opened" << std::endl;
+    std::cout << "Error: file could not be opened" << std::endl;
     exit(1);
   }
+
+
   runInfos.clear();
   runIndex = new int[MAXRUNNR];
   for (int i=0; i<MAXRUNNR; i++) runIndex[i] = -1;
@@ -50,7 +52,6 @@ OfflineServer::OfflineServer()
     rInfo.quadrantTempCorr[1] = corrQuadTR;
     rInfo.quadrantTempCorr[2] = corrQuadBR;
     rInfo.quadrantTempCorr[3] = corrQuadBL;
-
     // evaluate availability of input information
     rInfo.retrieveStatus = 0;
     if (rInfo.runStartTime > 0) rInfo.retrieveStatus |= (1<<kTimeBit);

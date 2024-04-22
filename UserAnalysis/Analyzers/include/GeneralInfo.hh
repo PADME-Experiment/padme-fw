@@ -75,6 +75,7 @@ private:
   OfflineServer* fOfflineServerDB;
   void EvalBeamProperties();
   void PrintBeamProperties(int);
+  void RetrieveDBInfo(int);
 
   // event-by-event quantities
 

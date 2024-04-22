@@ -72,6 +72,7 @@ public:
   Bool_t TagProbeEff();
   Bool_t MCTagProbeEff();
   Bool_t FitTagProbeEff();
+  //Bool_t FitTagProbeEff_notarg();
   Bool_t TagProbeEff_macro();
   Bool_t EvaluateResolutions();
   Bool_t EvaluateResolutions_macro();
@@ -106,6 +107,7 @@ private:
   bool fFillCalibHistograms;
   Bool_t fHistoMode;
   TString InputHistofile;
+  TString InputHistofileName;
   // general cuts
 
   double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)
@@ -132,7 +134,7 @@ private:
   Double_t fSigmaDTheta = 0.0932; //rad
   Double_t fSigmaDPhi = 0.1105; //rad
   Double_t fSigmaE = 12.64;
-  Double_t fSigmaCut;
+  Double_t fSigmaCut =3;
 
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            

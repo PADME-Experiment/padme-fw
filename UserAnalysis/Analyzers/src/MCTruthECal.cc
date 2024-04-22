@@ -13,7 +13,6 @@
 
 
 
-
 //Added the Finstance to allow to use the information in all the enalyzers
 MCTruthECal* MCTruthECal::fInstance = 0;
 MCTruthECal* MCTruthECal::GetInstance()

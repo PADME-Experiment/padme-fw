@@ -54,7 +54,6 @@ private:
 
   UShort_t fNSamples;
   Short_t *fSamples;
-  Double_t fPed;
   UShort_t fNPedSamples;
 
   UShort_t fEventCounter;
@@ -87,10 +86,13 @@ private:
   TH1D* hYNonSatMaxAmplitudes;
   TH1D* hCh2Ch3ChargeIntegral;
   TH1D* hCh24Ch23ChargeIntegral;
+  TH1D* hCh30Ch24ChargeIntegral;
   TH1D* hCh30Ch24Ch31ChargeIntegral;
+  TH2D* hCh24vsCh30ChargeIntegral;
   std::vector<TH1D*> hTargetSignals;
   std::vector<TH1D*> hChargeIntegrals;
   std::vector<TH1D*> hNoBeamIntegrals;
+  std::vector<TH1D*> hChargePerEvent;
 
   //Define X strip channels and Y strip channels
   Double_t fXChannels[16] = {8,7,9,6,10,5,11,4,12,3,13,2,14,1,15,0};

@@ -1,6 +1,7 @@
 #include "Riostream.h"
 
 #include <TH1D.h>
+#include <TH2D.h>
 
 #include "TRawEvent.hh"
 
@@ -42,12 +43,9 @@ TargetDigitizer::TargetDigitizer(PadmeVRecoConfig* cfg)
   fTimeBin             = fTargetConfig->GetParOrDefault( "ADC","TimeBin"                ,      1.);
   fVoltageBin          = fTargetConfig->GetParOrDefault( "ADC","VoltageBin"             ,0.000244);
   fImpedance           = fTargetConfig->GetParOrDefault( "ADC","InputImpedance"         ,     50.);
-  fSignalWidth         = fTargetConfig->GetParOrDefault("RECO","SignalWindow"           ,    1024);
   fPedOffset           = fTargetConfig->GetParOrDefault("RECO","PedestalOffset"         ,       0); 
-  // fPreSamples          = fTargetConfig->GetParOrDefault("RECO","SignalPreSamples"       ,    1024);
-  // fPostSamples         = fTargetConfig->GetParOrDefault("RECO","SignalPostSamples"      ,    1024);
-  fIntBegin      = fTargetConfig->GetParOrDefault("RECO","IntegralBeginningSample",     150);
-  fIntEnd      = fTargetConfig->GetParOrDefault("RECO","IntegralEndSample",     550);
+  fIntBegin            = fTargetConfig->GetParOrDefault("RECO","IntegralBeginningSample",     150);
+  fIntEnd              = fTargetConfig->GetParOrDefault("RECO","IntegralEndSample"      ,     550);
   fPedMaxNSamples      = fTargetConfig->GetParOrDefault("RECO","NumberOfSamplesPedestal",     100);
   fNEventsToPrint      = fTargetConfig->GetParOrDefault("RECO","NumberOfEventsToPrint"  ,       3);
   fSaturationAmpSample = fTargetConfig->GetParOrDefault("RECO","SaturationAmpSample"    ,     650);
@@ -98,7 +96,10 @@ Bool_t TargetDigitizer::Init()
     
     hCh2Ch3ChargeIntegral       = fHistoSvc->BookHisto("Target","hCh2Ch3ChargeIntegral",      "hCh2Ch3ChargeIntegral",400,  -500, 1500);
     hCh24Ch23ChargeIntegral     = fHistoSvc->BookHisto("Target","hCh24Ch23ChargeIntegral",    "hCh24Ch23ChargeIntegral",400,  -500, 1500);
+    hCh30Ch24ChargeIntegral     = fHistoSvc->BookHisto("Target","hCh30Ch24ChargeIntegral",    "hCh30Ch24ChargeIntegral",400,  -500, 1500);
     hCh30Ch24Ch31ChargeIntegral = fHistoSvc->BookHisto("Target","hCh30Ch24Ch31ChargeIntegral","hCh30Ch24Ch31ChargeIntegral",400,  -500, 1500);
+
+    hCh24vsCh30ChargeIntegral   = fHistoSvc->BookHisto2("Target","hCh24vsCh30ChargeIntegral",";Ch24Charge;Ch30Charge",400,-500,1500,400,-500,1500);
 
     char iName[100];
     for(int NEv = 0;NEv<fNEventsToPrint;NEv++)
@@ -114,6 +115,9 @@ Bool_t TargetDigitizer::Init()
 		
 		sprintf(iName,"NoBeamIntegralCh%d",iCh);
 		hNoBeamIntegrals.push_back(fHistoSvc->BookHisto("Target/NoBeamInt",iName, iName,  400,  -500, 1500));
+
+		sprintf(iName,"ChargePerEventCh%d",iCh);
+		hChargePerEvent.push_back(fHistoSvc->BookHisto("Target/Charge",iName, iName,  400e3,  0, 400e3));
 	      }
 	  }
 	}
@@ -130,7 +134,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   //  if(TrigMask!=1)  std::cout<<TrigMask<<std::endl;
 
   // Update channel digitizer with current run/event number
-  Int_t RunNumber = rawEv->GetRunNumber();
+  //  Int_t RunNumber = rawEv->GetRunNumber();
   Int_t EventNumber = rawEv->GetEventNumber();
 
   TADCBoard* board;
@@ -144,10 +148,11 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 
   Double_t Ch2Ch3ChargeSum      =0;
   Double_t Ch24Ch23ChargeSum    =0;
+  Double_t Ch30Ch24ChargeSum    =0;
   Double_t Ch30Ch24Ch31ChargeSum=0;
 
-  //Beth 29/3/24: Arrays of channels of X strips and Y strips. Every time a channel is maximum for that face, the value of that channel gets increased by 1.
-  double MaxCha[16];
+  Double_t Ch24Charge=0;
+  Double_t Ch30Charge=0;
 
   double TempMaxAmpX=-1e6;
   double TempMaxAmpY=-1e6;
@@ -168,7 +173,6 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	{
 	  for(UChar_t iChannel = 0; iChannel < board->GetNADCChannels(); iChannel++)
 	    {
-
 	      channel = board->ADCChannel(iChannel);
 	      UShort_t channelId = channel->GetChannelNumber();
 
@@ -184,10 +188,9 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 
 	      //Beth 21/3/24: following lines of Charge calculation taken from old PadmeReco written by FedeO
 	      Double_t Charge=0.;
-	
 	      for(Short_t ii = 0;ii<1024;++ii)
 		{
-		  fSamples[ii] = fSamples[ii] - fPed;
+		  fSamples[ii] = fSamples[ii] - ped;
 		  if(ii>=fIntBegin && ii<=fIntEnd) Charge+=1.* fSamples[ii];
 		  if (fRunConfigurationSvc->GetDebugMode() && fEventCounter<fNEventsToPrint) 
 		    {
@@ -199,7 +202,6 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 			}
 		    }
 		}
-
 	      //Charge = Charge- ((1.*end-1.*begin) * fPed);
 	      // Charge *= (fVoltageBin*fTimeBin/fImpedance/fAverageGain);//fTimeBin in ns than charge in nC   
 	      Charge *= (fVoltageBin*fTimeBin/fImpedance);             //fTimeBin in ns than charge in nC (charge in output of the amplifier)   
@@ -209,12 +211,19 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	      // if( fHVsign>0 && fCh<16 ) Charge = - Charge;            // going to calib step
 
 	      //if TrigMask == 1, that's the physics trigger so fill the physics histograms. Else, there's no beam, so fill the nobeam histograms
-	      if(TrigMask==1) hChargeIntegrals[channelId]->Fill(Charge);
+	      if(TrigMask==1)
+		{
+		  hChargeIntegrals[channelId]->Fill(Charge);
+		  hChargePerEvent[channelId]->SetBinContent(EventNumber+1,Charge);
+		  //hChargePerEvent[channelId]->SetBinContent(fEventCounter+1,Charge);
+		}
 	      else hNoBeamIntegrals[channelId]->Fill(Charge);
-
 	      if(TrigMask==1&&(channelId==2||channelId==3))     Ch2Ch3ChargeSum+=Charge;
 	      if(TrigMask==1&&(channelId==24||channelId==23))   Ch24Ch23ChargeSum+=Charge;
+	      if(TrigMask==1&&(channelId==24||channelId==30))   Ch30Ch24ChargeSum+=Charge;
 	      if(TrigMask==1&&(channelId==24||channelId==30||channelId==31)) Ch30Ch24Ch31ChargeSum+=Charge;
+	      if(TrigMask==1&&channelId==24)  Ch24Charge=Charge;
+	      if(TrigMask==1&&channelId==30)  Ch30Charge=Charge;
 
 	      //is channelId an XStrip or a YStrip?
 	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))
@@ -225,7 +234,14 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 		      TempMaxAmpX = *std::max_element(&fSamples[0],&fSamples[1023]);
 		      TempMaxCha_X = channelId;
 		    }
+		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
+		  if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpX)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
+		    {
+		      TempNonSatMaxAmpX = *std::max_element(&fSamples[0],&fSamples[1023]);
+		      TempNonSatMaxCha_X = channelId;
+		    }
 		}
+
 	      //is channelId an XStrip or a YStrip?
 	      if(std::find(std::begin(fYChannels),std::end(fYChannels),channelId) != std::end(fYChannels))
 		{
@@ -234,28 +250,12 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 		    {
 		      TempMaxAmpY = *std::max_element(&fSamples[0],&fSamples[1023]);
 		      TempMaxCha_Y = channelId;
-		    }
-		}
-
-	      //Maximum signals apart from saturated ones (amp of 650+ counts = saturation assumed)
-	      //is channelId an XStrip or a YStrip?
-	      if(std::find(std::begin(fXChannels),std::end(fXChannels),channelId) != std::end(fXChannels))
-		{
-		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
-		  if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpX)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
-		    {
-		      TempNonSatMaxAmpX = *std::max_element(&fSamples[0],&fSamples[1023]);
-		      TempNonSatMaxCha_X = channelId;
-		    }
-		}
-	      //is channelId an XStrip or a YStrip?
-	      if(std::find(std::begin(fYChannels),std::end(fYChannels),channelId) != std::end(fYChannels))
-		{
-		  //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
-		  		  if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpY)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
-		    {
-		      TempNonSatMaxAmpY = *std::max_element(&fSamples[0],&fSamples[1023]);
-		      TempNonSatMaxCha_Y = channelId;
+		      //Is the max amplitude in this channel greater than the max amplitude in other channels in this event BUT less than the saturation threshold of fSaturationAmpSample counts?
+		      if((*std::max_element(&fSamples[0],&fSamples[1023])>TempNonSatMaxAmpY)&&(*std::max_element(&fSamples[0],&fSamples[1023])<fSaturationAmpSample))
+			{
+			  TempNonSatMaxAmpY = *std::max_element(&fSamples[0],&fSamples[1023]);
+			  TempNonSatMaxCha_Y = channelId;
+			}
 		    }
 		}
 	    }
@@ -288,10 +288,12 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
     {
       hCh2Ch3ChargeIntegral      ->Fill(Ch2Ch3ChargeSum);	    
       hCh24Ch23ChargeIntegral    ->Fill(Ch24Ch23ChargeSum);    
+      hCh30Ch24ChargeIntegral    ->Fill(Ch30Ch24ChargeSum);
       hCh30Ch24Ch31ChargeIntegral->Fill(Ch30Ch24Ch31ChargeSum);
+      hCh24vsCh30ChargeIntegral  ->Fill(Ch24Charge,Ch30Charge);
     }
 
-  fEventCounter++;
+  if(fEventCounter<fNEventsToPrint)  fEventCounter++;
   return;
   
 }
@@ -402,15 +404,15 @@ void TargetDigitizer::SetAbsSignals(){
 }
 
 Double_t TargetDigitizer::CalcPedestal(){
-  fPed = 0.;
+  Double_t  ped = 0.;
   fNPedSamples = 0;
   
   for(Short_t ii = fPedOffset ; ii  !=   fPedMaxNSamples; ii++) {
        fNPedSamples ++;
-       fPed+= fSamples[ii];
+       ped+= fSamples[ii];
   }
   
-  fPed /= fNPedSamples;
+  ped /= fNPedSamples;
 
-  return fPed;
+  return ped;
 }

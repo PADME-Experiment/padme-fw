@@ -7,6 +7,7 @@
 class HistoSvc;
 class NPoTAnalysis;
 class ECalCalib;
+class ECalCalib22;
 class IsGGAnalysis;
 class Is22GGAnalysis;
 class Is3GAnalysis;
@@ -47,6 +48,7 @@ private:
   Is3GAnalysis* fIs3GAnalysis;
   GeneralInfo* fGeneralInfo;
   ECalSel* fECalSel;
+  ECalCalib22 *fECalCalib22;
   ETagAn* fETagAn;
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;

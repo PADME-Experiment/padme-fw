@@ -275,8 +275,8 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
     labMomenta[0].SetVectM(cluMom,0.); // define a photon-like tlorentzVector
     labMomentaCM[0].SetVectM(labMomenta[0].Vect(),0);
     labMomentaCM[0].Boost(-fGeneralInfo->GetBoost());
-    int icellXh1 = cluPos[1].X()/cellSize+0.5 + ncells/2;
-    int icellYh1 = cluPos[1].Y()/cellSize+0.5 + ncells/2;
+    int icellXh1 = cluPos[0].X()/cellSize+0.5 + ncells/2;
+    int icellYh1 = cluPos[0].Y()/cellSize+0.5 + ncells/2;
           
     double Xexph2 = fGeneralInfo->GetTargetPos().X()+(otherCluMom.X()/otherCluMom.Z())*(fGeneralInfo->GetCOG().Z()-fGeneralInfo->GetTargetPos().Z());  
     double Yexph2 = fGeneralInfo->GetTargetPos().Y()+(otherCluMom.Y()/otherCluMom.Z())*(fGeneralInfo->GetCOG().Z()-fGeneralInfo->GetTargetPos().Z());  
@@ -296,6 +296,8 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
   
     if (cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMin()) continue; // cluster should be within the radius range of the 2gamma cluster pair
     if (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMax()) continue; // cluster should be within the radius range of the 2gamma cluster pair
+  
+
     fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DEVsE_radiusSel"), pg, cluEnergy[0]-pg, 1.);
     fhSvcVal->FillHistoList("ECalSel",Form("ECal_TP_DE_radiusSel"), cluEnergy[0]-pg, 1.);
     if(tempClu[0]->GetNHitsInClus()<3) continue;
@@ -312,7 +314,10 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
 
 
     fhSvcVal->FillHisto2List("ECalSel","ECal_TP_DEVsE_NOcut_tag", fGeneralInfo->GetBeamEnergy()- pg, cluEnergy[0]-pg, 1.);//da mettere quello in phi
-    if(cluEnergy[0]-pg<-40) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DEVsE_cutted"),cluPos[0].X(),cluPos[0].Y(), 1.);
+    if(cluEnergy[0]-pg<-10){
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_DEVsE_cutted"),cluPos[0].X(),cluPos[0].Y(), 1.);
+      fhSvcVal->FillHisto2List("ECalSel",Form("ECal_TP_XvsY_DEradiusSel"), cluPos[0].X(), cluPos[0].Y(), abs(cluEnergy[0]-pg));
+    }
 
     
     if(!((cluEnergy[0]-pg)> -15 && (cluEnergy[0]-pg)<15)) continue; 
@@ -1004,7 +1009,7 @@ Bool_t ECalSel::InitHistos()
 
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DYvsDX_Hit_Probe", fNXBins*20,-(fXMax+fXMin),+(fXMax+fXMin), fNYBins*20,-(fYMax+fYMin),(fYMax+fYMin));
-  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DRvsDT_Hit_Probe", 800, -400,400, 1200, 0., TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
+  fhSvcVal->BookHisto2List("ECalSel","ECal_TP_DRvsDT_Hit_Probe", 800, -400,400, 1200, 0.,  900.);
 
   //fhSvcVal->BookHistoList("ECalSel","ECal_TP_DPHIAbs_probe", 1200, 0.,4*TMath::Pi());
   PhiFullProbe= fhSvcVal->BookHistoList("ECalSel","ECal_TP_DPHIAbs_probe", 1200, 0.,4*TMath::Pi());
@@ -1152,7 +1157,7 @@ Bool_t ECalSel::MCTagProbeEff(){
       double Eup=Edown+spacing;
       TString sliceOutname;
       
-      sliceOutname = Form("MCsliceOut_%s", InputHistofileName.Data());
+      sliceOutname = Form("/data9Vd1/padme/dimeco/TagAndProbeOut/MCout/MCsliceOut_%s", InputHistofileName.Data());
       
       TFile *SliceOut = new TFile(sliceOutname, "recreate");
       std::cout<<"Slice output file: "<<sliceOutname<<std::endl;
@@ -1658,7 +1663,7 @@ Bool_t ECalSel::FitTagProbeEff(){
       double Eup=Edown+spacing;
       TString sliceOutname;
       
-      sliceOutname = Form("FitsliceOut_%s", InputHistofileName.Data());
+      sliceOutname = Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/FitsliceOut_%s", InputHistofileName.Data());
       
       TFile *SliceOut = new TFile(sliceOutname, "recreate");
       std::cout<<"Slice output file: "<<sliceOutname<<std::endl;
@@ -1667,9 +1672,6 @@ Bool_t ECalSel::FitTagProbeEff(){
       TGraphErrors *EffGraphE = new TGraphErrors(NSlicesE);
 
       for(Int_t iSlice=0; iSlice<NSlicesE; iSlice++){
-          std::cout<<"Hola"<<std::endl;
-
-
           //Tag
           std::cout<<"Edown: "<<Edown<<" Eup: "<<Eup<<std::endl;
           EnergyVal = (Edown+Eup)/2;
@@ -1678,7 +1680,7 @@ Bool_t ECalSel::FitTagProbeEff(){
           TH1D *ProYTag =(TH1D*) EofTag->ProjectionY();
           ProYTag->SetName(Form("FitProYTag_%i",iSlice));
           if(ProYTag->Integral()==0) {
-            std::cout<<" No entries in ProYTag"<<std::endl;
+            std::cout<<"Problem: No entries in ProYTag"<<std::endl;
             Eup+=spacing;
             Edown+=spacing;
             continue;
@@ -1709,7 +1711,7 @@ Bool_t ECalSel::FitTagProbeEff(){
           
           TFitResultPtr fitResult = ProYTag->Fit(expGaus,"REQS");
 
-          if(expGaus->GetChisquare()/expGaus->GetNDF()<0.6 ||expGaus->GetChisquare()/expGaus->GetNDF()>1.5) std::cout<<"For Slice "<<iSlice<<" Chi2 is out of range: "<<expGaus->GetChisquare()/expGaus->GetNDF()<<std::endl;
+          if(expGaus->GetChisquare()/expGaus->GetNDF()<0.4 ||expGaus->GetChisquare()/expGaus->GetNDF()>2.0) std::cout<<"BIG problem: For Slice "<<iSlice<<" Chi2 is out of range: "<<expGaus->GetChisquare()/expGaus->GetNDF()<<std::endl;
           ProYTag->Write();
           TF1 *expBkg = new TF1("expBkg", "exp([0]+[1]*x)", -60,60);
           expBkg->SetParameter(0, expGaus->GetParameter(0));
@@ -1725,7 +1727,7 @@ Bool_t ECalSel::FitTagProbeEff(){
           if(DenE==0 || std::isnan(DenTemp)){
             Eup+=spacing;
             Edown+=spacing;
-            std::cout<<"No data"<<std::endl;
+            std::cout<<"Problem: No data"<<std::endl;
             continue;
           }
 
@@ -1733,7 +1735,7 @@ Bool_t ECalSel::FitTagProbeEff(){
 
           //new Part
           
-          if(!PhiFullProbeSlice[iSlice]) std::cout<<"LOOK, I can't find PhiFullProbeSlice["<<iSlice<<"]"<<std::endl;
+          if(!PhiFullProbeSlice[iSlice]) std::cout<<"Problem: LOOK, I can't find PhiFullProbeSlice["<<iSlice<<"]"<<std::endl;
           SliceOut->cd();
 
           TF1 *funcBkgProbe = new TF1("funcBkgProbe", "pol0+gausn(1)", 2, 4.5);

@@ -81,7 +81,7 @@ Bool_t TargetDigitizer::Init()
   fPrintedSignalCounter=0;
   
   if (fRunConfigurationSvc->GetDebugMode()) {
-    hTargetDigitisedEvents = fHistoSvc("Target","hTargetDigitisedEvents","hTargetDigitisedEvents",400e3,0,400e3);
+    hTargetDigitisedEvents = fHistoSvc->BookHisto("Target","hTargetDigitisedEvents","hTargetDigitisedEvents",400e3,0,400e3);
     hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
     hTargetChannel = fHistoSvc->BookHisto("Target","TargetChannel","TargetChannel",32,0,32);
     

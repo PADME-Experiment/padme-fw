@@ -137,7 +137,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   // Update channel digitizer with current run/event number
   //  Int_t RunNumber = rawEv->GetRunNumber();
   Int_t EventNumber = rawEv->GetEventNumber();
-  hTargetDigitisedEvents->Fill(EventNumber);
+  if(fRunConfigurationSvc->GetDebugMode()) hTargetDigitisedEvents->Fill(EventNumber);
   TADCBoard* board;
   TADCChannel* channel;
 

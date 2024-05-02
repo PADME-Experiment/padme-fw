@@ -74,8 +74,9 @@ private:
   Int_t fSaturationAmpSample;
 
   // Histograms
+  TH1D* hTargetDigitisedEvents;
   TH1D* hTargetNEventsToPrint;
-  TH1D* hTargetDigitizer;
+  TH1D* hTargetChannel;
   TH1D* hXMaxChannels;
   TH1D* hYMaxChannels;
   TH1D* hXMaxAmplitudes;

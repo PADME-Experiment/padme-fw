@@ -81,8 +81,9 @@ Bool_t TargetDigitizer::Init()
   fPrintedSignalCounter=0;
   
   if (fRunConfigurationSvc->GetDebugMode()) {
+    hTargetDigitisedEvents = fHistoSvc("Target","hTargetDigitisedEvents","hTargetDigitisedEvents",400e3,0,400e3);
     hTargetNEventsToPrint = fHistoSvc->BookHisto("Target","hTargetNEventsToPrint","hTargetNEventsToPrint",2,0,1);
-    hTargetDigitizer = fHistoSvc->BookHisto("Target","TargetDigitizer","TargetChannel",32,0,32);
+    hTargetChannel = fHistoSvc->BookHisto("Target","TargetChannel","TargetChannel",32,0,32);
     
     hXMaxChannels   = fHistoSvc->BookHisto("Target","hXMaxChannels","hXMaxChannels",32,0,32);	
     hYMaxChannels   = fHistoSvc->BookHisto("Target","hYMaxChannels","hYMaxChannels",32,0,32);	
@@ -136,7 +137,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
   // Update channel digitizer with current run/event number
   //  Int_t RunNumber = rawEv->GetRunNumber();
   Int_t EventNumber = rawEv->GetEventNumber();
-
+  hTargetDigitisedEvents->Fill(EventNumber);
   TADCBoard* board;
   TADCChannel* channel;
 
@@ -176,7 +177,7 @@ void TargetDigitizer::ComputeChargePerStrip(TRawEvent* rawEv, vector<TargetStrip
 	      channel = board->ADCChannel(iChannel);
 	      UShort_t channelId = channel->GetChannelNumber();
 
-	      if (fRunConfigurationSvc->GetDebugMode())  hTargetDigitizer->Fill(channelId);
+	      if (fRunConfigurationSvc->GetDebugMode())  hTargetChannel->Fill(channelId);
 
 	      Int_t TargetChannel = fChannelMap[boardId][channelId];
 	      //	if (fVerbose>3) printf("TargetDigitizer::BuildHits - Processing run %2u event %2u board %2u channel %2u Target channel %4.4d\n",RunNumber,EventNumber,boardId,channelId,TargetChannel);

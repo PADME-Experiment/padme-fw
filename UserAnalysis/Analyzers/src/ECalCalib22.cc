@@ -59,8 +59,8 @@ Bool_t ECalCalib22::Init(Bool_t fHistoModeVal, TString InputHistofileVal){
   if(fHistoMode){
   TObjArray *tx = InputHistofile.Tokenize("/");
   InputHistofileName = ((TObjString *)(tx->At(tx->GetLast())))->String(); 
-  TObjArray *txRun = InputHistofile.Tokenize(".");
-  fNRun = ((TObjString *)(txRun->At(0)))->String(); 
+  TObjArray *txRun = InputHistofileName.Tokenize(".");
+  fNRun = ((TObjString *)(txRun->At(0)))->String()+"."+((TObjString *)(txRun->At(1)))->String(); 
   }
 
   InitHistos(); 
@@ -199,10 +199,22 @@ Bool_t ECalCalib22::Finalize()
 }
 
 Bool_t ECalCalib22::ChannelLandauFit(){
-  TFile *BadCalib = new TFile(Form("BadCalib_%s.root", fNRun.Data()),"RECREATE");
+
+  TFile *InFile = new TFile(InputHistofile.Data());
+  if(!InFile){
+    std::cout<<InputHistofile.Data()<<" not found--> exiting"<<std::endl;
+    exit(1);
+  }
+  for(int iCh=0; iCh<NTOTCh; iCh++){
+    TString HistoName = Form("CREnCH%d",ECalChNum[iCh]);
+    TString HistoNameVert = Form("CREnCH%d_Vert",ECalChNum[iCh]);
+    ECalChHisto[iCh]= (TH1D*) InFile->Get(Form("ECalCalib22/%s",HistoName.Data()));
+    ECalChHistoVert[iCh]=(TH1D*)InFile->Get(Form("ECalCalib22/%s",HistoNameVert.Data()));
+  }
+  TFile *BadCalib = new TFile(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/BadCalib_%s.root", fNRun.Data()),"RECREATE");
   ofstream OutFile;
-  if(NewCalib) OutFile.open(Form("ECalEnergyCalibration_7.dat"));
-  ofstream ErrFile(Form("BadUnits_%s.txt",fNRun.Data()));
+  if(NewCalib) OutFile.open(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/ECalEnergyCalibration_7.dat"));
+  ofstream ErrFile(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/BadUnits_%s.txt",fNRun.Data()));
   cout<<"Performing Landau fits"<<endl<<endl;
   TF1 *LandauFun = new TF1("LandauFun", "landau",13., 100.);
   LandauFun->SetParLimits(1,13.,23.);
@@ -210,6 +222,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
   if(ErrFile.is_open()){
     
     for(iCh=0; iCh<NTOTCh; iCh++){ //Fitting each histo with a Laundau function
+      
       float NonEmpty = ECalChHistoVert[iCh]->Integral();
       if(NonEmpty) {
         ECalChHistoVert[iCh]->Fit("LandauFun","Q"," ", 10., 60.); 
@@ -226,7 +239,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
         else ECalChEff[iCh]=(Double_t) MiddleCross[iCh]/(Double_t)Cross[iCh];
         
         if(Chi2 > 3 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>30) {
-          ErrFile<<"Problem with Ch: "<<ECalChNum[iCh]<<"\t MPV: "<< ECalChMVP[iCh]<<" \t Chi2: "<<Chi2<<endl; 
+          ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
           //ECalChMVP[iCh]=-1;
@@ -243,7 +256,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
 
         LandauFun->ReleaseParameter(1);
         }else {
-          ErrFile<<"Ch: "<<ECalChNum[iCh]<<" Vertical is empty "<<endl;
+          std::cout<<"Ch: "<<ECalChNum[iCh]<<" Vertical is empty "<<endl;
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
           float NonEmpty = ECalChHisto[iCh]->Integral();
@@ -273,10 +286,20 @@ Bool_t ECalCalib22::ChannelLandauFit(){
             fHS->FillHistoList("ECalCalib22","CRMPV",ECalChMVP[iCh]);
             LandauFun->ReleaseParameter(1);
             ECalChHisto[iCh]->Write();
+            Double_t Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
+            if(Chi2 > 3 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>30) {
+            ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
+            BadCalib->cd();
+            ECalChHistoVert[iCh]->Write();
+            //ECalChMVP[iCh]=-1;
+            }
           
           }else{
-            ErrFile<<"Ch: "<<ECalChNum[iCh]<<" is DEAD "<<endl;
+           
             ECalChMVP[iCh]=-1;
+            ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<"\t"<<50<<endl; 
+
+            //  ErrFile<<"Ch: "<<ECalChNum[iCh]<<" is DEAD "<<endl;
             if(NewCalib) OutFile<<" "<<ECalChNum[iCh]/100<<" "<<ECalChNum[iCh]%100<<" "<<FBdId[iCh]<<" "<<FChId[iCh]<<" "<<ECalChMVP[iCh]*15.<<endl;
           }
         }

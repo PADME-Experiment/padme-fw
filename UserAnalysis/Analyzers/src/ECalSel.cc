@@ -768,7 +768,7 @@ Int_t ECalSel::TwoClusSel(){
 	        fhSvcVal->FillHisto2List("ECalSel",Form("ECal_ElliAngle_ElliEnergy"), elliEnergy, elliAngle, 1.);
       
       }
-  if (!(elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3)) continue;
+  //if (!(elliEnergy < 4 && TMath::Abs(TMath::Pi()-dphi)/sigmadphi < 3)) continue;
 	for (int kk=0; kk<2; kk++){
 	  double seedEnergy = fECal_hitEvent->Hit(tempClu[kk]->GetSeed())->GetEnergy();
 	   if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_Eseed_vs_Eexp"), pg[kk], seedEnergy, 1.);
@@ -806,7 +806,8 @@ Int_t ECalSel::TwoClusSel(){
                 fhSvcVal->FillHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_%s", mcVtx->GetProcess().Data()), cog.Y()-fGeneralInfo->GetCOG().Y(),1.);
 				        
                 fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_%s",mcVtx->GetProcess().Data()), cog.X()-fGeneralInfo->GetCOG().X(), cog.Y()-fGeneralInfo->GetCOG().Y(),1.);
-				        
+				        fhSvcVal->FillHistoList("ECalSel",Form("ECal_SC_E1plusE2_%s",mcVtx->GetProcess().Data()), cluEnergy[0]+ cluEnergy[1]);
+
 				        
 
                 // if(mcVtx->ParticleOut(0)->GetPDGCode()==-11 || mcVtx->ParticleOut(1)->GetPDGCode()==-11){
@@ -1042,18 +1043,22 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_eIoni"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_eBrem"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_annihil"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DTHEVsDPHIAbs_probe_Bhabha"), 800, 0.,4*TMath::Pi(), 800, 0., 4*TMath::Pi());
 
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_eIoni"),600, -300,300);
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_eBrem"),600, -300,300);
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_annihil"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGX_probe_Bhabha"),600, -300,300);
 
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_eIoni"),600, -300,300);
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_eBrem"),600, -300,300);
   fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_annihil"),600, -300,300);
+  fhSvcVal->BookHistoList("ECalSel",Form("ECal_SC_DCOGY_probe_Bhabha"),600, -300,300);
   
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_eIoni"),600, -300,300, 600, -300,300);
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_eBrem"),600, -300,300, 600, -300,300);
   fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_annihil"),600, -300,300, 600, -300,300);
+  fhSvcVal->BookHisto2List("ECalSel",Form("ECal_SC_DCOGYvsDCOGY_probe_Bhabha"),600, -300,300, 600, -300,300);
                 
   
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DTHEVsEnergySum", 800, 0.,4*TMath::Pi(), 400, 0, 400);
@@ -1081,6 +1086,10 @@ Bool_t ECalSel::InitHistos()
 
   fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);
   fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2", 300,0.,600.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2_eBrem", 300,0.,600.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2_eIoni", 300,0.,600.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2_annihil", 300,0.,600.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2_Bhabha", 300,0.,600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_E1E2VsMT", 800, -400,400, 300, 0.,600.);
 
 

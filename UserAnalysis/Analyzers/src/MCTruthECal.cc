@@ -86,6 +86,7 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->CreateList("MCTruthECal");
   fHS->BookHistoList("MCTruthECal","DTCluVtx",100,-10.,10.); 
   fHS->BookHistoList("MCTruthECal","NPcleOut",10,0,10);	
+  fHS->BookHistoList("MCTruthECal","ProcessID",4,-0.5,3.5);	
   fHS->BookHistoList("MCTruthECal","dRCluVtx",1200,0.,TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
   fHS->BookHistoList("MCTruthECal","dXCluVtx",1200,-2.*fXMax,2.*fXMax);
   fHS->BookHistoList("MCTruthECal","dYCluVtx",1200,-2.*fYMax,2.*fYMax);
@@ -102,8 +103,7 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","EbeamE1E0Ass_eBrem",200,-50,50);
   fHS->BookHistoList("MCTruthECal","EbeamE1E0Ass_annihil",200,-50,50);
   fHS->BookHistoList("MCTruthECal","EbeamE1E0Ass_eIoni",200,-50,50);
-
-
+  fHS->BookHistoList("MCTruthECal","EbeamE1E0Ass_Bhabha",200,-50,50);
 
   fHS->BookHistoList("MCTruthECal","EPcle_eBrem",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_eBrem",100,0,400);
@@ -111,6 +111,9 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","EPcleAss_annihil",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcle_eIoni",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_eIoni",100,0,400);
+  fHS->BookHistoList("MCTruthECal","EPcle_Bhabha",100,0,400);
+  fHS->BookHistoList("MCTruthECal","EPcleAss_Bhabha",100,0,400);
+  
   fHS->BookHisto2List("MCTruthECal","XYmap",30,0,30,30,0,30);
   fHS->BookHisto2List("MCTruthECal","XYmapEw",30,0,30,30,0,30);
   fHS->BookHisto2List("MCTruthECal","XYmapAss",30,0,30,30,0,30);
@@ -118,6 +121,7 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","dECluVtx",2000,-fGeneralInfo->GetBeamEnergy(),fGeneralInfo->GetBeamEnergy());
   fHS->BookHisto2List("MCTruthECal","dEvsECluVtx",1000,0,fGeneralInfo->GetBeamEnergy(),1000,-fGeneralInfo->GetBeamEnergy(),fGeneralInfo->GetBeamEnergy());
   hAnnihil = fHS->BookHisto2List("MCTruthECal","dEvsECluVtx_annihil",1000,0,400,1000,-400,400);
+  fHS->BookHisto2List("MCTruthECal","dEvsECluVtx_Bhabha",1000,0,400,1000,-400,400);
   hBrem    = fHS->BookHisto2List("MCTruthECal","dEvsECluVtx_eBrem",1000,0,400,1000,-400,400);
   heIoni   = fHS->BookHisto2List("MCTruthECal","dEvsECluVtx_eIoni",1000,0,400,1000,-400,400);
 
@@ -133,8 +137,17 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal",Form("DeltaCOGY_eIoni"), 600, -300, 300);
   fHS->BookHisto2List("MCTruthECal",Form("DeltaCOGXvsCOGY_eIoni") ,600, -300, 300 ,600, -300, 300);
 
+  fHS->BookHistoList("MCTruthECal",Form("DeltaCOGX_Bhabha"),600, -300, 300);
+  fHS->BookHistoList("MCTruthECal",Form("DeltaCOGY_Bhabha"), 600, -300, 300);
+  fHS->BookHisto2List("MCTruthECal",Form("DeltaCOGXvsCOGY_Bhabha") ,600, -300, 300 ,600, -300, 300);
 
+
+  fHS->BookHisto2List("MCTruthECal","Chi2PositionvsEPcle_annihil",2000,0, 400, 1000, 0, 100);
+  fHS->BookHisto2List("MCTruthECal","Chi2PositionvsEPcle_Bhabha",2000,0, 400, 1000, 0, 100);
+  fHS->BookHisto2List("MCTruthECal","Chi2PositionvsEPcle_eIoni",2000,0, 400, 1000, 0, 100);
+  fHS->BookHisto2List("MCTruthECal","Chi2PositionvsEPcle_eBrem",2000,0, 400, 1000, 0, 100);
   fHS->BookHisto2List("MCTruthECal","Chi2PositionvsEPcle",2000,0, 400, 1000, 0, 100);
+
   fHS->BookHistoList("MCTruthECal","Chi2Position",1000, 0, 100);
   fHS->BookHistoList("MCTruthECal","NPcleClu", 5, -2.5, 2.5);
   fHS->BookHistoList("MCTruthECal","NCluVtx", 10, 0, 10);
@@ -197,7 +210,19 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
       
       VtxPos = mcVtx->GetPosition();
-      fHS->FillHistoList("MCTruthECal","NPcleOut",mcVtx->GetNParticleOut(),1.);	 
+      //add
+      fHS->FillHistoList("MCTruthECal","NPcleOut",mcVtx->GetNParticleOut(),1.);	
+       if(mcVtx->GetProcess() =="eBrem"){
+          fHS->FillHistoList("MCTruthECal","ProcessID",0.,1.);
+          }else if(mcVtx->GetProcess() =="eIoni"){ 
+          fHS->FillHistoList("MCTruthECal","ProcessID",1.,1.);
+          }else if(mcVtx->GetProcess()=="annihil"){
+          fHS->FillHistoList("MCTruthECal","ProcessID",2.,1.);
+          }else{
+            fHS->FillHistoList("MCTruthECal","ProcessID",3.,1.);	
+          } 
+      
+
       //pcleOut, x e y all'ecal 
       
       for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
@@ -282,6 +307,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
 
                     fHS->FillHistoList("MCTruthECal","Chi2Position",TMath::Sqrt((Chi2X*Chi2X)+(Chi2Y*Chi2Y)), 1.);
                     fHS->FillHisto2List("MCTruthECal","Chi2PositionvsEPcle",pcleE, TMath::Sqrt((Chi2X*Chi2X)+(Chi2Y*Chi2Y)), 1.);
+                    fHS->FillHisto2List("MCTruthECal",Form("Chi2PositionvsEPcle_%s",mcVtx->GetProcess().Data()),pcleE, TMath::Sqrt((Chi2X*Chi2X)+(Chi2Y*Chi2Y)), 1.);
                     
                     if(TMath::Sqrt((Chi2X*Chi2X)+(Chi2Y*Chi2Y))<6){
                       NCluVtx +=1;
@@ -305,7 +331,6 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
               fHS->FillHistoList("MCTruthECal","EPcleAss",pcleE);
               fHS->FillHisto2List("MCTruthECal","XYmapAss",icellX,icellY, 1.);
               fHS->FillHisto2List("MCTruthECal","XYmapEwAss",icellX,icellY, pcleE);
-              fHS->FillHistoList("MCTruthECal",Form("EPcleAss_%s",mcVtx->GetProcess().Data()),pcleE);
               fHS->FillHistoList("MCTruthECal",Form("EPcleAss_%s",mcVtx->GetProcess().Data()),pcleE);
 
             }

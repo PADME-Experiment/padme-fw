@@ -15,7 +15,8 @@ OfflineServer::OfflineServer()
 {
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
-  std::ifstream inputDBFile("config/run_level_offline_db_2022.txt");
+  std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT.txt");
+  std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT.txt" << std::endl;
   //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
     std::cout << "Error: file could not be opened" << std::endl;
@@ -41,7 +42,9 @@ OfflineServer::OfflineServer()
       tempQuadTL >> corrQuadTL >> 
       tempQuadTR >> corrQuadTR >> 
       tempQuadBR >> corrQuadBR >>
-      tempQuadBL >> corrQuadBL; // sets EOF flag if no value found
+      tempQuadBL >> corrQuadBL>> 
+     rInfo.errCOGX>>rInfo.errCOGY>>rInfo.newTargX>>rInfo.newTargY>>rInfo.errnewTargX>>rInfo.errnewTargY>>rInfo.sigmaDPhi>>rInfo.errsigmaDPhi>>rInfo.sigmaDTheta>>rInfo.errsigmaDTheta>>rInfo.sigmaCOGX>>rInfo.errsigmaCOGX>>rInfo.sigmaCOGY>>rInfo.errsigmaCOGY>>rInfo.E1E2>>rInfo.errE1E2>>rInfo.dt>>rInfo.errdt>>rInfo.sigmaE1E2>>rInfo.errsigmaE1E2>>rInfo.dsigmadt>>rInfo.errsigmadt;
+ // sets EOF flag if no value found
 
     rInfo.quadrantTemperature[0] = tempQuadTL;
     rInfo.quadrantTemperature[1] = tempQuadTR;

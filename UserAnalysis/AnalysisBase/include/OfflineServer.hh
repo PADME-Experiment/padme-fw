@@ -38,6 +38,7 @@ struct RunInfo{
   float quadrantTemperature[4]; //degrees: top left, top right, bottom right, bottom left as seen from FRONT
   float quadrantTempCorr[4]; // corrections obtained from a ref. temp and a constant (37.1, 0.95 ?)
   int retrieveStatus; // word with bits to signal availability of information
+  float errCOGX, errCOGY, newTargX, newTargY, errnewTargX, errnewTargY, sigmaDPhi, errsigmaDPhi, sigmaDTheta, errsigmaDTheta, sigmaCOGX, errsigmaCOGX, sigmaCOGY, errsigmaCOGY, E1E2, errE1E2, dt, errdt, sigmaE1E2, errsigmaE1E2, dsigmadt, errsigmadt;
 };
   
 class OfflineServer

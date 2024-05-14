@@ -208,8 +208,8 @@ Bool_t ECalCalib22::ChannelLandauFit(){
   for(int iCh=0; iCh<NTOTCh; iCh++){
     TString HistoName = Form("CREnCH%d",ECalChNum[iCh]);
     TString HistoNameVert = Form("CREnCH%d_Vert",ECalChNum[iCh]);
-    ECalChHisto[iCh]= (TH1D*) InFile->Get(Form("ECalCalib22/%s",HistoName.Data()));
-    ECalChHistoVert[iCh]=(TH1D*)InFile->Get(Form("ECalCalib22/%s",HistoNameVert.Data()));
+    ECalChHisto[iCh]= (TH1D*) InFile->Get(Form("ECalCalib22/%s",HistoName.Data()))->Clone();
+    ECalChHistoVert[iCh]=(TH1D*)InFile->Get(Form("ECalCalib22/%s",HistoNameVert.Data()))->Clone();
   }
   TFile *BadCalib = new TFile(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/BadCalib_%s.root", fNRun.Data()),"RECREATE");
   ofstream OutFile;
@@ -217,28 +217,31 @@ Bool_t ECalCalib22::ChannelLandauFit(){
   ofstream ErrFile(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/BadUnits_%s.txt",fNRun.Data()));
   cout<<"Performing Landau fits"<<endl<<endl;
   TF1 *LandauFun = new TF1("LandauFun", "landau",13., 100.);
-  LandauFun->SetParLimits(1,13.,23.);
+  //LandauFun->SetParLimits(1,13.,23.);
   int iCh=0;
   if(ErrFile.is_open()){
     
     for(iCh=0; iCh<NTOTCh; iCh++){ //Fitting each histo with a Laundau function
       
       float NonEmpty = ECalChHistoVert[iCh]->Integral();
-      if(NonEmpty) {
-        ECalChHistoVert[iCh]->Fit("LandauFun","Q"," ", 10., 60.); 
+      if(NonEmpty>200) {
+        ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", 13., 60.); 
         Double_t LandauMPV= LandauFun->GetParameter(1);
         Double_t LandauSigma= LandauFun->GetParameter(2);
         LandauFun->ReleaseParameter(1);
         LandauFun->ReleaseParameter(2);
-        ECalChHistoVert[iCh]->Fit("LandauFun","Q"," ", LandauMPV-3*LandauSigma, 60.); 
-        ECalChHistoVert[iCh]->Fit("LandauFun","Q"," ", LandauMPV-3*LandauSigma, 60.); 
+        LandauFun->SetParameter(1,17);
+        LandauFun->SetParLimits(1,10.,30.);
+
+        ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-2*LandauSigma, 60.); 
+        ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-2*LandauSigma, 60.); 
         ECalChMVP[iCh]=LandauFun->GetParameter(1);
         //if(iCh==0) cout<<"First MPV:"<<ECalChMVP[iCh]<<endl;
         Double_t Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
         if(Cross[iCh]==0) ECalChEff[iCh]=-1;
         else ECalChEff[iCh]=(Double_t) MiddleCross[iCh]/(Double_t)Cross[iCh];
         
-        if(Chi2 > 3 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>30) {
+        if(Chi2 > 4.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
           ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
@@ -260,7 +263,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
           float NonEmpty = ECalChHisto[iCh]->Integral();
-          if(NonEmpty){
+          if(NonEmpty>200){
             double _maxPeak= 0;
             double RealPeak=0; 
             for(int b= 0; b < (ECalChHisto[iCh]->GetNbinsX()); b++){ 
@@ -271,26 +274,27 @@ Bool_t ECalCalib22::ChannelLandauFit(){
                   }
                 }
 
-            ECalChHisto[iCh]->Fit("LandauFun","Q"," ", 14., 60.); 
+            ECalChHisto[iCh]->Fit("LandauFun","RQ"," ", 10., 60.); 
             Double_t LandauMPV= LandauFun->GetParameter(1);
             Double_t LandauSigma= LandauFun->GetParameter(2);
             LandauFun->ReleaseParameter(1);
             LandauFun->ReleaseParameter(2);
-            LandauFun->SetParameter(1,RealPeak);
-            ECalChHisto[iCh]->Fit("LandauFun","Q"," ", LandauMPV-2*LandauSigma, 60.); 
-            ECalChHisto[iCh]->Fit("LandauFun","Q"," ", LandauMPV-2*LandauSigma, 60.); 
+            LandauFun->SetParameter(1,17);
+            LandauFun->SetParLimits(1,10,30);
+
+            ECalChHisto[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-0.5*LandauSigma, 60.); 
+            ECalChHisto[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-0.5*LandauSigma, 60.); 
             ECalChMVP[iCh]=LandauFun->GetParameter(1);
             if(NewCalib) OutFile<<" "<<ECalChNum[iCh]/100<<" "<<ECalChNum[iCh]%100<<" "<<FBdId[iCh]<<" "<<FChId[iCh]<<" "<<ECalChMVP[iCh]*15.<<endl;
             fHS->FillHisto2List("ECalCalib22","CRMap_MPV",ECalChNum[iCh]/100, ECalChNum[iCh]%100,ECalChMVP[iCh]);
             fHS->FillHisto2List("ECalCalib22","CRMap_Eff",ECalChNum[iCh]/100, ECalChNum[iCh]%100,ECalChEff[iCh]);
             fHS->FillHistoList("ECalCalib22","CRMPV",ECalChMVP[iCh]);
             LandauFun->ReleaseParameter(1);
-            ECalChHisto[iCh]->Write();
             Double_t Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
-            if(Chi2 > 3 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>30) {
+            if(Chi2 > 4.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
             ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
             BadCalib->cd();
-            ECalChHistoVert[iCh]->Write();
+            ECalChHisto[iCh]->Write();
             //ECalChMVP[iCh]=-1;
             }
           

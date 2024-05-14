@@ -1705,7 +1705,20 @@ Bool_t ECalSel::FitTagProbeEff(){
           expGaus->SetParameter(0, exponential->GetParameter(0));
           expGaus->SetParameter(1, exponential->GetParameter(1));
 
-          expGaus->SetParameter(2, 1000);
+          // expGaus->SetParameter(2, 1000);
+          // expGaus->SetParameter(3, -5);
+          // expGaus->SetParameter(4, 10);
+
+          // expGaus->SetParLimits(0, -10, 10);
+          // expGaus->SetParLimits(1, -1e-1,1e-1);
+        
+          
+          // expGaus->SetParLimits(2, 0, 10000);
+          // expGaus->SetParLimits(3, -10,3);
+          // expGaus->SetParLimits(4, 0, 20);
+          
+
+          expGaus->SetParameter(2, 3000);
           expGaus->SetParameter(3, -5);
           expGaus->SetParameter(4, 10);
 
@@ -1713,10 +1726,9 @@ Bool_t ECalSel::FitTagProbeEff(){
           expGaus->SetParLimits(1, -1e-1,1e-1);
         
           
-          expGaus->SetParLimits(2, 0, 10000);
-          expGaus->SetParLimits(3, -10,3);
-          expGaus->SetParLimits(4, 0, 20);
-          
+          expGaus->SetParLimits(2, 0, 20000);
+          expGaus->SetParLimits(3, -10,5);
+          expGaus->SetParLimits(4, 0, 15);
           
           TFitResultPtr fitResult = ProYTag->Fit(expGaus,"REQS");
 
@@ -1748,6 +1760,8 @@ Bool_t ECalSel::FitTagProbeEff(){
           SliceOut->cd();
 
           TF1 *funcBkgProbe = new TF1("funcBkgProbe", "pol0+gausn(1)", 2, 4.5);
+          funcBkgProbe->SetParameter(1,DenE/100);
+
           funcBkgProbe->SetParameter(2,3.14);
           funcBkgProbe->SetParameter(3,fSigmaDPhi);
 

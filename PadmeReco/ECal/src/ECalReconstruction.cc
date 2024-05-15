@@ -624,6 +624,9 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
 {
   Double_t EFraction;
   Int_t ClusterSize=5;
+  //  EFraction[490]=0.95;
+  //  cout<<"dime "<<fClDeltaCellMax<<endl;
+  //std::cout << "in compensate missing e" << std::endl;
   if(fEnergyCompensation==NULL){
     fEnergyCompensation = new TF1("comp","pol4",0.,1000.);
     if(fClDeltaCellMax==2){
@@ -632,12 +635,20 @@ Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
       fEnergyCompensation->SetParameters(0.925666,0.000231776,-5.72621e-07,6.22445e-10,-2.44014e-13); // pol4 fit of the MC
     }
   }
+  //  EFraction=0.95;
   if(ECl>1000.){
     if (fClDeltaCellMax==2) EFraction=0.94;
     else EFraction=0.96;
   }else{
     EFraction = fEnergyCompensation->Eval(ECl);
   }
+  //std::cout << "fraction " << EFraction << std::endl;
+  //if(ECl>1000.) EFraction=1;
+  //if(ECl>1000. && fClDeltaCellMax==2 ) EFraction=0.94;
+  //if(ECl>1000. && fClDeltaCellMax==3 ) EFraction=0.96;
+  //if(ECl<30.)   EFraction=1;
+  // std::cout<<ECl<<" Fraction "<<EFraction<<" Cl size"<<fClDeltaCellMax<<std::endl;
+  // delete fEnergyCompensation;
   return EFraction;
 }
 
@@ -1139,7 +1150,12 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   if(x==18 && y==4 )  BrSU=true;
   if(x==5 && y==5 )   BrSU=true;
   if(x==12 && y==18 ) BrSU=true;
-  if(x==16 && y==25 ) BrSU=true;
+  //new dead units
+
+  if(x==24 && y==9)   BrSU=true;
+  if(x==14 && y==9)   BrSU=true;
+  if(x==10 && y==22 ) BrSU=true;
+  if(x==21 && y==22 ) BrSU=true;
   return BrSU;
 }
 

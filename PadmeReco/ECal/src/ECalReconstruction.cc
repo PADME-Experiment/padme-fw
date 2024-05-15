@@ -1150,7 +1150,7 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y){
   if(x==18 && y==4 )  BrSU=true;
   if(x==5 && y==5 )  BrSU=true;
   if(x==12 && y==18 )  BrSU=true;
-//new dead units
+  //new dead units
 
   if(x==24 && y==9)   BrSU=true;
   if(x==14 && y==9)  BrSU=true;

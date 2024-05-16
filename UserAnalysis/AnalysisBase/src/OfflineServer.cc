@@ -15,8 +15,8 @@ OfflineServer::OfflineServer()
 {
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
-  std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT.txt");
-  std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT.txt" << std::endl;
+  std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT_periods.txt");
+  std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT_periods.txt" << std::endl;
   //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
     std::cout << "Error: file could not be opened" << std::endl;
@@ -43,7 +43,13 @@ OfflineServer::OfflineServer()
       tempQuadTR >> corrQuadTR >> 
       tempQuadBR >> corrQuadBR >>
       tempQuadBL >> corrQuadBL>> 
-     rInfo.errCOGX>>rInfo.errCOGY>>rInfo.newTargX>>rInfo.newTargY>>rInfo.errnewTargX>>rInfo.errnewTargY>>rInfo.sigmaDPhi>>rInfo.errsigmaDPhi>>rInfo.sigmaDTheta>>rInfo.errsigmaDTheta>>rInfo.sigmaCOGX>>rInfo.errsigmaCOGX>>rInfo.sigmaCOGY>>rInfo.errsigmaCOGY>>rInfo.E1E2>>rInfo.errE1E2>>rInfo.dt>>rInfo.errdt>>rInfo.sigmaE1E2>>rInfo.errsigmaE1E2>>rInfo.dsigmadt>>rInfo.errsigmadt;
+      rInfo.errCOGX>>rInfo.errCOGY>>rInfo.newTargX>>rInfo.newTargY>>rInfo.errnewTargX>>rInfo.errnewTargY>>
+      rInfo.sigmaDPhi>>rInfo.errsigmaDPhi>>rInfo.sigmaDTheta>>rInfo.errsigmaDTheta>>
+      rInfo.sigmaCOGX>>rInfo.errsigmaCOGX>>rInfo.sigmaCOGY>>rInfo.errsigmaCOGY>>
+      rInfo.E1E2>>rInfo.errE1E2>>rInfo.dt>>rInfo.errdt>>rInfo.sigmaE1E2>>rInfo.errsigmaE1E2>>rInfo.dsigmadt>>rInfo.errsigmadt>>
+      rInfo.period>>rInfo.LGCorr;
+ 
+ 
  // sets EOF flag if no value found
 
     rInfo.quadrantTemperature[0] = tempQuadTL;
@@ -69,6 +75,8 @@ OfflineServer::OfflineServer()
     if (rInfo.calibTimeEnergyFactor > 0) rInfo.retrieveStatus |= (1<<kCalibTimeEnergy);
     if (rInfo.quadrantTemperature[0] > 0 && rInfo.quadrantTemperature[1] > 0 && rInfo.quadrantTemperature[2] > 0 && rInfo.quadrantTemperature[3] > 0) 
       rInfo.retrieveStatus |= (1<<kTemperature); // all quadrant temperatures should be available
+    if (rInfo.period >= 0) rInfo.retrieveStatus |= (1<<kPeriod);
+    if (rInfo.LGCorr > 0) rInfo.retrieveStatus |= (1<<kLGCorr);
 
   // populate structure
     runInfos.push_back(rInfo);

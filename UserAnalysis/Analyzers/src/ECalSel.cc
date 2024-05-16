@@ -57,7 +57,7 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
   fGeneralInfo = GeneralInfo::GetInstance();
   fhSvcVal =  HistoSvc::GetInstance(); 
   fMCTruthECal = MCTruthECal::GetInstance();
-
+  fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fFillLocalHistograms = false;
   InputHistofile = InputHistofileVal;
 
@@ -94,6 +94,28 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
 }
 
 
+Double_t ECalSel::NPoTLGCorr(){
+  Double_t NPotCorr = fNPoTAnalysis->GetNPoTLGCorr();
+  fhSvcVal->FillHistoList("ECalSel", "NPoTLGCorr", NPotCorr,1.);
+  return NPotCorr;
+}
+
+
+
+Bool_t ECalSel::NSignalBhabha(){
+  
+  for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {  
+    TMCVertex *mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+      if(mcVtx->GetProcess() =="Bhabha"){
+        TMCParticle* mcOPart = mcVtx->ParticleOut(0);
+        Double_t pcleE=mcOPart->GetEnergy();
+        fhSvcVal->FillHistoList("ECalSel", "EnSignalBhabha",pcleE, 1.);
+        } 
+    }
+    return true;
+}
+
+
 void ECalSel::ProcessForCalib(){
   // fSafeEnergyFactor = 0.2; // Safety factor used for the energy min and max cuts
   fSafeEnergyFactor = 0.01; // Safety factor used for the energy min and max cuts
@@ -118,6 +140,8 @@ Bool_t ECalSel::Process(){
   fFillCalibHistograms = false;
   fECalEvents.clear();
   fSigmaCut = 3.;
+  NPoTLGCorr();
+  if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) NSignalBhabha();
   TwoClusSel();
   OneClusSel();
   OneClusTagAndProbeSel();
@@ -1028,6 +1052,12 @@ Bool_t ECalSel::InitHistos()
 
 
   // two-cluster sel
+  Int_t Min_POT=-500;
+  Int_t Max_POT=10500;
+  Int_t NBinsPOT= (Max_POT-Min_POT)/10; 
+
+  fhSvcVal->BookHistoList("ECalSel", "NPoTLGCorr", NBinsPOT, Min_POT, Max_POT);
+  fhSvcVal->BookHistoList("ECalSel", "EnSignalBhabha", 100, 0., 300.);
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDt", 800, -400,400, 200, 0, 600.);

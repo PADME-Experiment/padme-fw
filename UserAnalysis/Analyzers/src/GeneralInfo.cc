@@ -190,7 +190,7 @@ void GeneralInfo::PrintBeamProperties(int runID){
     " sqrt(s) = " << fSqrts << " bg = " << fBG << " beta = " << fBeta <<
     " energyRange = { " << fEnergyMin << " , " << fEnergyMax << " }; radiusRange = { " << fRadiusMin << " , " << fRadiusMax << " }" << 
     " Temp per quad[deg]: " << fQuadrantTemperature[0] << " , " << fQuadrantTemperature[1] << " , " << fQuadrantTemperature[2] << " , " << fQuadrantTemperature[3] <<
-    std::endl;
+    " Period:"<<fPeriod<<std::endl;
 }
 
 void GeneralInfo::RetrieveDBInfo(int runID){
@@ -230,6 +230,12 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     fCalibTimeEnergyFactor = fOfflineServerDB->getCalibTimeEnergyFactor(runID);
     fIsCalibTimeEnergyAvailable = fOfflineServerDB->isCalibTimeEnergyAvailable(runID);
     // might interpolate if info not available
+
+    fPeriod = fOfflineServerDB->getPeriod(runID);
+    fIsPeriodAvailable = fOfflineServerDB->isPeriodAvailable(runID);
+
+    fLGCorr = fOfflineServerDB->getLGCorr(runID);
+    fIsLGCorrAvailable = fOfflineServerDB->isLGCorrAvailable(runID);
 
     for (int quad = 0; quad < 4; quad++){
       fQuadrantTemperature[quad] = fOfflineServerDB->getQuadrantTemperature(runID, quad);

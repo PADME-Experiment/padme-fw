@@ -17,6 +17,8 @@
 #define kCalibEnergy 7 // bit to define availability of run energy calibration factor
 #define kCalibTimeEnergy 8 // bit to define availability of run energy time calibration factor
 #define kTemperature 9 // bit to define availability of run quadrant-wise temperatures
+#define kPeriod 10
+#define kLGCorr 11
 
 
 struct RunInfo{
@@ -39,6 +41,8 @@ struct RunInfo{
   float quadrantTempCorr[4]; // corrections obtained from a ref. temp and a constant (37.1, 0.95 ?)
   int retrieveStatus; // word with bits to signal availability of information
   float errCOGX, errCOGY, newTargX, newTargY, errnewTargX, errnewTargY, sigmaDPhi, errsigmaDPhi, sigmaDTheta, errsigmaDTheta, sigmaCOGX, errsigmaCOGX, sigmaCOGY, errsigmaCOGY, E1E2, errE1E2, dt, errdt, sigmaE1E2, errsigmaE1E2, dsigmadt, errsigmadt;
+  int period;
+  float LGCorr;
 };
   
 class OfflineServer
@@ -69,6 +73,8 @@ public:
   float getCalibTimeEnergyFactor(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).calibTimeEnergyFactor;} //a.u.
   float getQuadrantTemperature(int runID, int quad){if (runIndex[runID] == -1 || quad < 0 || quad > 3) {return 0;} return runInfos.at(runIndex[runID]).quadrantTemperature[quad];} //a.u.
   float getQuadrantTempCorr(int runID, int quad){if (runIndex[runID] == -1 || quad < 0 || quad > 3) {return 0;} return runInfos.at(runIndex[runID]).quadrantTempCorr[quad];} //a.u.
+  int getPeriod(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).period;} //a.u.
+  float getLGCorr(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).LGCorr;} //a.u.
 
   bool isTimeAvailable(int runID){       if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTimeBit);} 
   bool isEnergyAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEnergy);} 
@@ -80,6 +86,8 @@ public:
   bool isCalibEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibEnergy);} 
   bool isCalibTimeEnergyAvailable(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kCalibTimeEnergy);} 
   bool isTemperatureAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTemperature);}
+  bool isPeriodAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kPeriod);}
+  bool isLGCorrAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kLGCorr);}
   
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures

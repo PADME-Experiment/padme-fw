@@ -2,6 +2,7 @@
 // Last modified by M. Raggi 2/08/2021
 #include "NPoTAnalysis.hh"
 #include "TGraph.h"
+#include "TString.h"
 
 NPoTAnalysis::NPoTAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -13,7 +14,16 @@ NPoTAnalysis::NPoTAnalysis(TString cfgFile, Int_t verbose)
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
   fHS = HistoSvc::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+}
+
+NPoTAnalysis* NPoTAnalysis::fInstance = 0;
+
+NPoTAnalysis* NPoTAnalysis::GetInstance(){
+
+  if ( fInstance == 0 ) { fInstance = new NPoTAnalysis(); }
+  return fInstance;
 }
 
 NPoTAnalysis::~NPoTAnalysis(){
@@ -55,6 +65,7 @@ Bool_t NPoTAnalysis::InitHistos(){
   // Lead Glass related quantities 
 
   fHS->BookHistoList("NPoTAnalysisLG" ,"NPoTLG",NBinsPOT,Min_POT,Max_POT);
+  fHS->BookHistoList("NPoTAnalysisLG" ,"NPoTLGCorr",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTNoPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTGood",NBinsPOT,Min_POT,Max_POT);
@@ -82,12 +93,14 @@ Bool_t NPoTAnalysis::Process(){
     TotPoTRun +=fNPoT;
     vTotPoT.push_back(TotPoT);
   }
-  Double_t fNPoTLG =0.;
-  Double_t fNPoTBL =0.;
-  Double_t fLGCharge=0.;
+   fNPoTLG =0.;
+   fNPoTLGCorr =0.;
+   fNPoTBL =0.;
+   Double_t fLGCharge=0.;
 
   if(fEvent->LeadGlassRecoEvent!=0){
     fNPoTLG   = fEvent->LeadGlassRecoEvent->GetNPoTs();
+    fNPoTLGCorr = 402.5*fNPoTLG*fGeneralInfo->GetLGCorr()/fGeneralInfo->GetBeamEnergy();
     fNPoTBL   = fEvent->LeadGlassRecoEvent->GetBunchLength();
     fLGCharge = fEvent->LeadGlassRecoEvent->GetTotalCharge();
     //    fLGPed    = fEvent->LeadGlassRecoEvent->GetPedestal();
@@ -111,6 +124,7 @@ Bool_t NPoTAnalysis::Process(){
 
   fHS->FillHistoList("NPoTAnalysis","NPoT",fNPoT);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLG",fNPoTLG);
+  fHS->FillHistoList("NPoTAnalysisLG","NPoTLGCorr",fNPoTLGCorr);
  
  if(fNPoTLG>250) {
     fHS->FillHistoList("NPoTAnalysisLG","NPoTGood",fNPoTLG);

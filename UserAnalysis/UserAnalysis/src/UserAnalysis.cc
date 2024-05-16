@@ -76,8 +76,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t fHistoMode, TString 
      fMCTruth->Init(fEvent);
      fMCTruthECal->Init(fEvent);
   }
-  fNPoTAnalysis->Init(fEvent);
   fGeneralInfo->Init(fEvent, DBRunNumber);
+  fNPoTAnalysis->Init(fEvent);
   fECalCalib22->Init(fHistoMode,InputHistofile);
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
@@ -117,11 +117,10 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
-
+  fGeneralInfo->Process();
   fNPoTAnalysis->Process();
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  fGeneralInfo->Process();
   fECalCalib->Process(fEvent);
   fECalCalib22->Process(fEvent);
   fECalSel->Process();

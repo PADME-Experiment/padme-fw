@@ -37,6 +37,8 @@ public:
   inline TVector3 GetCOG() const {return fCOGAtECal;}
   inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
   inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
+  inline int GetPeriod(){return fPeriod;}
+  inline double GetLGCorr(){return fLGCorr;}
   inline double GetQuadrantTemperature(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTemperature[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
   inline double GetQuadrantTempCorr(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTempCorr[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
 
@@ -93,7 +95,8 @@ private:
   Int_t fDBRunNumber;
   double fCalibEnergyFactor;
   double fCalibTimeEnergyFactor;
-
+  Int_t fPeriod;
+  double fLGCorr;
   double fQuadrantTemperature[4];
   double fQuadrantTempCorr[4];
 
@@ -106,7 +109,8 @@ private:
   bool fIsCalibEnergyAvailable;
   bool fIsCalibTimeEnergyAvailable; 
   bool fIsTemperatureAvailable;
-
+  bool fIsPeriodAvailable;
+  bool fIsLGCorrAvailable;
   // global quantities
 
   double fZTarg;

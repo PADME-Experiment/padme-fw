@@ -1215,7 +1215,8 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
       Bool_t BrokenSU=SimulateBrokenSU(i2,i1);
       if(BrokenSU) continue;
       // effective threshold cutting noisy wf in 2019 data
-      if(digi->GetEnergy()<1.5)continue;
+      //if(digi->GetEnergy()<1.5)continue;
+      if (digi->GetEnergy()<fClEnThrForHit) continue;
       TRecoVHit *Hit = new TRecoVHit();
       // @reconstruction level, the ECal ChIds are XXYY, while in MC they are YYXX
       int chIdN = i2*100+i1;

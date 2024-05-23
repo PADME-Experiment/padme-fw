@@ -3,12 +3,14 @@
 
 #include "TH2D.h"
 #include "TH1D.h"
+#include "TF1.h"
 
 #include "TObject.h"
 #include "TVector2.h"
 #include "PadmeAnalysisEvent.hh"
 #include "GeneralInfo.hh"
 #include "MCTruthECal.hh"
+#include "NPoTAnalysis.hh"
 
 #include "HistoSvc.hh"
 
@@ -97,10 +99,12 @@ private:
   Int_t TwoClusSel();
   Int_t OneClusSel();
   Int_t OneClusTagAndProbeSel();
+  Double_t NPoTLGCorr();
+  Bool_t NSignalBhabha();
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
   MCTruthECal* fMCTruthECal;
-
+  NPoTAnalysis* fNPoTAnalysis;
   // general setup
 
   bool fFillLocalHistograms;
@@ -108,6 +112,7 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
+  TString fNRun;
   // general cuts
 
   double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)
@@ -128,6 +133,8 @@ private:
   Double_t fYMin;
   Double_t fYMax;
   Double_t fYW;
+  Double_t tpLow=-15.;
+  Double_t tpHigh=15.;
   Int_t fNYBins;
   Double_t fMeanDTheta = 3.113; //rad
   Double_t fMeanDPhi = 3.093; //rad
@@ -136,6 +143,7 @@ private:
   Double_t fSigmaE = 12.64;
   Double_t fSigmaCut =3;
 
+  TFile *fileIn;
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            
   double ecalEdge = (ncells/2+0.5)*cellSize; // 304.5mm                                                                                                                                                  

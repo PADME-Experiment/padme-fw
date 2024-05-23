@@ -191,9 +191,9 @@ Bool_t ECalCalib22::Process(PadmeAnalysisEvent* event){
 
 
 Bool_t ECalCalib22::Finalize()
-{ 
+{ Bool_t isMC = true;
   if (fVerbose) printf("---> Finalizing ECalCalib22\n");
-  if(fHistoMode) ChannelLandauFit();
+  if(fHistoMode && isMC==false) ChannelLandauFit();
   
   return true;
 }
@@ -241,7 +241,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
         if(Cross[iCh]==0) ECalChEff[iCh]=-1;
         else ECalChEff[iCh]=(Double_t) MiddleCross[iCh]/(Double_t)Cross[iCh];
         
-        if(Chi2 > 4.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
+        if(Chi2 > 3.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
           ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
@@ -291,7 +291,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
             fHS->FillHistoList("ECalCalib22","CRMPV",ECalChMVP[iCh]);
             LandauFun->ReleaseParameter(1);
             Double_t Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
-            if(Chi2 > 4.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
+            if(Chi2 > 3.5 || ECalChMVP[iCh]<10 || ECalChMVP[iCh]>25) {
             ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
             BadCalib->cd();
             ECalChHisto[iCh]->Write();

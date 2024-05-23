@@ -359,9 +359,9 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
                 fHS->FillHistoList("MCTruthECal",Form("DeltaCOGY_%s",mcVtx->GetProcess().Data()),  cog.Y()- fGeneralInfo->GetCOG().Y(), 1.);
                 fHS->FillHisto2List("MCTruthECal",Form("DeltaCOGXvsCOGY_%s",mcVtx->GetProcess().Data()), cog.X()- fGeneralInfo->GetCOG().X(), cog.Y()- fGeneralInfo->GetCOG().Y(), 1.);
 
-                if(fGeneralInfo->GetBeamEnergy()-EPcleOut[0]-EPcleOut[1]> 100){
-                  std::cout<<"EPcleOut[0]: "<<EPcleOut[0]<<" EPcleOut[1]: "<<EPcleOut[1]<<" Process:"<<mcVtx->GetProcess().Data()<<" ECluOut[0]: "<<ECluOut[0]<<" ECluOut[1]: "<<ECluOut[1]<<std::endl;
-                }
+                // if(fGeneralInfo->GetBeamEnergy()-EPcleOut[0]-EPcleOut[1]> 100){
+                //   std::cout<<"EPcleOut[0]: "<<EPcleOut[0]<<" EPcleOut[1]: "<<EPcleOut[1]<<" Process:"<<mcVtx->GetProcess().Data()<<" ECluOut[0]: "<<ECluOut[0]<<" ECluOut[1]: "<<ECluOut[1]<<std::endl;
+                // }
 
               }
           }

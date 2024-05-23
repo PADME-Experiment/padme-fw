@@ -146,7 +146,6 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEve
 {
   static int PRINTED = 0; 
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
-
     // Energy calibration //
     if (fUseCalibE > 0){
 

@@ -5,12 +5,17 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
+#include "GeneralInfo.hh"
+
 
 class NPoTAnalysis {
 
 public:
 
-  NPoTAnalysis(TString c = "config/UserAnalysis.conf", Int_t v = 0);
+  static NPoTAnalysis* GetInstance();
+
+
+
   ~NPoTAnalysis();
 
   Bool_t Init(PadmeAnalysisEvent*);
@@ -19,11 +24,14 @@ public:
 
   Double_t GetNPoT() { return fNPoT; }
   Double_t GetNPoTLG() { return fNPoTLG; }
+  Double_t GetNPoTLGCorr() { return fNPoTLGCorr; }
+
 
 private:
 
   Bool_t InitHistos();
 
+  static NPoTAnalysis* fInstance;
   //  TRandom3* fRndm;
 
   Int_t fVerbose;
@@ -33,6 +41,8 @@ private:
   utl::ConfigParser* fCfgParser;
 
   HistoSvc* fHS;
+  GeneralInfo* fGeneralInfo;
+
 
   Double_t fEvtCount;
   Double_t fNPoT;
@@ -40,6 +50,7 @@ private:
   Double_t fYPos;
 
   Double_t fNPoTLG;
+  Double_t fNPoTLGCorr;
   Double_t fNPoTBL;
 
   std::vector<double> vNRun;

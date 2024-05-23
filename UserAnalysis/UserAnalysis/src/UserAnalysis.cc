@@ -36,7 +36,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
 
   //Physics analysis last reviewed by M. Raggi 05/22
-  fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
+  fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
   fETagAn  = ETagAn::GetInstance();

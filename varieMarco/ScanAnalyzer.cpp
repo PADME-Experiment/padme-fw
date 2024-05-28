@@ -58,7 +58,7 @@ vector<double> eFullOvGG;
 vector<double> EBeam, SqrtS;
 vector<double> BEM, eSqrtS;
 
-ifstream EBeamInput("/home/mancinima/padme-fw/varieMarco/Run4EnPoints.txt");
+ifstream EBeamInput("/home/mancinima/padme-fw/varieMarco/EnergyPoints.txt");
 double val;
 while (EBeamInput >> val) {
     cout<<val<<endl;
@@ -76,10 +76,10 @@ EBeamInput.close();
 //creating output file with TGraphErrors
 TFile *FileOut = new TFile(OutputName, "RECREATE");
 
-TFile* FileIn = new TFile("/home/mancinima/padme-fw/varieMarco/Run4Projection/merged_output.root", "READ");
-ofstream TxtOut;
-TxtOut.open("Run4ToyScan.txt");
-TxtOut<<"#"<<"E_Beam"<<" "<<"Sqrt(s)"<<" "<<"Signal Acc"<<" "<<"N(2CL)/NPoT"<<" "<<"N(ee)/NPoT"<<" "<<"N(AA)/NPoT"<<" "<<"N(ee)/N(AA)"<<"\n";
+TFile* FileIn = new TFile("/home/mancinima/padme-fw/varieMarco/ToyR305mm/ToyNoAngle/merged_output.root", "READ");
+// ofstream TxtOut;
+// TxtOut.open("provaoutput.txt");
+// TxtOut<<"#"<<"E_Beam"<<" "<<"Sqrt(s)"<<" "<<"Signal Acc"<<" "<<"N(2CL)/NPoT"<<" "<<"N(ee)/NPoT"<<" "<<"N(AA)/NPoT"<<" "<<"N(ee)/N(AA)"<<"\n";
 cout<<EBeam.size()<<endl;
 for(int iE = 0; iE<EBeam.size(); iE++){
     ifstream StxtIn(("/home/mancinima/padme-fw/varieMarco/CalcHEPFiles/BhabhaSCh/BhabhaSCh_" + to_string_with_precision(EBeam[iE], 2) +".txt").c_str()); 
@@ -183,9 +183,9 @@ for(int iE = 0; iE<EBeam.size(); iE++){
             (GOccNoCuts->GetEntries()*GOccNoCuts->GetEntries()));
     
     cout<<" "<<EBeam[iE]<<" "<<SqrtS[iE]<<" "<<SAcceptance[iE]<<" "<<SMYield[iE]<<" "<<FYield[iE]<<" "<<GYield[iE]<<" "<<FullOvGG[iE]<<endl;
-    TxtOut<<" "<<EBeam[iE]<<" "<<SqrtS[iE]<<" "<<SAcceptance[iE]<<" "<<SMYield[iE]<<" "<<FYield[iE]<<" "<<GYield[iE]<<" "<<FullOvGG[iE]<<"\n";
+    // TxtOut<<" "<<EBeam[iE]<<" "<<SqrtS[iE]<<" "<<SAcceptance[iE]<<" "<<SMYield[iE]<<" "<<FYield[iE]<<" "<<GYield[iE]<<" "<<FullOvGG[iE]<<"\n";
 }
-TxtOut.close();
+// TxtOut.close();
 
 // defining fitting function for bkg yield and sigmna acceptance
 // TF1 *SFitFuncLow = new TF1("SFitFuncLow", "pol1", 200, 250);
@@ -194,19 +194,19 @@ TxtOut.close();
 // TF1 *SMFitFuncLow = new TF1("SMFitFuncLow", "pol1", 200, 250);
 // TF1 *SMFitFuncRes = new TF1("SMFitFuncRes", "pol1", 240, 405);
 // TF1 *SMFitFuncFull = new TF1("SMFitFuncFull", "pol3", 200, 405);
-TF1 *SFitFuncLow = new TF1("SFitFuncLow", "pol1", 13.5, 16.5);
+// TF1 *SFitFuncLow = new TF1("SFitFuncLow", "pol1", 13.5, 16.5);
 // TF1 *SFitFuncRes = new TF1("SFitFuncRes", "pol1", 14, 21);
-TF1 *SFitFuncFull = new TF1("SFitFuncFull", "pol3", 13.5, 16.5);
-TF1 *SMFitFuncLow = new TF1("SMFitFuncLow", "pol1", 13.5, 16.5);
+// TF1 *SFitFuncFull = new TF1("SFitFuncFull", "pol3", 13.5, 16.5);
+// TF1 *SMFitFuncLow = new TF1("SMFitFuncLow", "pol1", 13.5, 16.5);
 // TF1 *SMFitFuncRes = new TF1("SMFitFuncRes", "pol1", 14, 21);
-TF1 *SMFitFuncFull = new TF1("SMFitFuncFull", "pol3", 13.5, 16.5);
+// TF1 *SMFitFuncFull = new TF1("SMFitFuncFull", "pol3", 13.5, 16.5);
 
 
 static const int nPoint = EBeam.size();
 
 // TGraphErrors *gSAcceptance = new TGraphErrors(nPoint, &EBeam[0], &SAcceptance[0], &BEM[0], &eSAcceptance[0]);
 TGraphErrors *gSAcceptance = new TGraphErrors(nPoint, &SqrtS[0], &SAcceptance[0], &eSqrtS[0], &eSAcceptance[0]);
-gSAcceptance->Fit(SFitFuncLow, "R");
+// gSAcceptance->Fit(SFitFuncLow, "R");
 // gSAcceptance->Fit(SFitFuncRes, "R+");
 // gSAcceptance->Fit(SFitFuncFull, "R");
 
@@ -222,7 +222,7 @@ TGraphErrors *gGYield = new TGraphErrors(nPoint, &SqrtS[0], &GYield[0], &eSqrtS[
 TGraphErrors *gSMYield = new TGraphErrors(nPoint, &SqrtS[0], &SMYield[0], &eSqrtS[0], &eSMYield[0]);
 // gSMYield->Fit(SMFitFuncLow,"R");
 // gSMYield->Fit(SMFitFuncRes,"R+");
-gSMYield->Fit(SMFitFuncFull, "R");
+// gSMYield->Fit(SMFitFuncFull, "R");
 
 // TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &EBeam[0], &FullOvGG[0], &BEM[0], &eFullOvGG[0]);
 TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &SqrtS[0], &FullOvGG[0], &eSqrtS[0], &eFullOvGG[0]);

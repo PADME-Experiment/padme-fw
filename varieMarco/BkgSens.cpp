@@ -45,10 +45,10 @@ double CaloNBins = 30;
 double OccBins = 450;
 
 //CUTS
-double RECal = 300.; //external radius of ECal
+double RECal = 304.5; //external radius of ECal 
 double SUsize = 20.;
 double HalfHole = 50.; //maybe not needed
-double RMax = 270; // in mm
+double RMax = RECal;  // in mm
 double RMin = 90;
 double EMax = 0.300; //deleted because at TOY level seems to be unusefull
 double EMin = 0.05;

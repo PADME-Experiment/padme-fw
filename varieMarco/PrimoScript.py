@@ -20,7 +20,7 @@ except ValueError:
     sys.exit(1)
 
 # Read energy values from an external file (energy_values.txt)
-with open("/home/mancinima/padme-fw/varieMarco/Run4EnPoints.txt", "r") as f:
+with open("/home/mancinima/padme-fw/varieMarco/EnergyPoints.txt", "r") as f:
     energy_value = f.read().splitlines()
 
 energy_value = [f'{float(energy):.2f}' for energy in energy_value]
@@ -31,7 +31,7 @@ name_process = ["BhabhaSCh", "BhabhaFull", "AAProduction"]
 # Paths to your C++ file and output directory
 path_to = "/home/mancinima/padme-fw/varieMarco"
 cpp_file = "BkgSens"
-output_directory = "/home/mancinima/padme-fw/varieMarco/Run4Projection"
+output_directory = "/home/mancinima/padme-fw/varieMarco/ToyR305mm/ToyNoAngle"
 
 # Check if the directory exists, and if it does, delete it recursively
 if os.path.exists(output_directory):

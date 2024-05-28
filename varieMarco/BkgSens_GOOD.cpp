@@ -40,7 +40,7 @@ double OccBins = 450;
 //CUTS
 double RECal = 300.; //external radius of ECal
 double HalfHole = 50.; //maybe not needed
-double RMax = 270; // in mm
+double RMax = 304.; // in mm //Modified
 double RMin = 90;
 double EMax = 0.200; //deleted because at TOY level seems to be unusefull
 double EMin = 0.05;
@@ -554,6 +554,4 @@ gRatioCl->Write();
 
 FileOut->Close();
 }
-
-
 

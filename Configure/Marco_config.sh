@@ -22,13 +22,13 @@ fi
 # Check if configuration scripts are present
 if [ ${PROBLEMS} -eq 0 ]; then
 
-    # Look for gcc-4.9.3 configuration script
+    # Look for gcc-10.3.0 configuration script
     if [ ! -f /cvmfs/sft.cern.ch/lcg/releases/LCG_100/gcc/10.3.0.fp/x86_64-centos7/setup.sh ]; then
 	echo "ERROR - File /cvmfs/sft.cern.ch/lcg/releases/LCG_100/gcc/10.3.0.fp/x86_64-centos7/setup.sh not found"
 	PROBLEMS=1
     fi
 
-    # Look for ROOT-5.34.26 configuration script
+    # Look for ROOT-6.24.00 configuration script
     if [ ! -f  /cvmfs/sft.cern.ch/lcg/releases/LCG_100/ROOT/v6.24.00/x86_64-centos7-gcc10-opt/bin/thisroot.sh]; then
     echo "ERROR - File /cvmfs/sft.cern.ch/lcg/releases/LCG_100/ROOT/v6.24.00/x86_64-centos7-gcc10-opt/bin/thisroot.sh not found"
 	PROBLEMS=1

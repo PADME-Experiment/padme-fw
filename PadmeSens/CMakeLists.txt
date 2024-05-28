@@ -5,7 +5,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 SET(CMAKE_CXX_FLAGS_INIT "-D_GNU_SOURCE -fPIC -pthread -pipe -ansi") #${CMAKE_CXX_FLAGS}
 
-
 set(ACCEPTED_BUILD_TYPES DEBUG RELEASE DEBUG)
 set(CMAKE_BUILD_TYPE RELEASE)
 #if (NOT CMAKE_BUILD_TYPE)
@@ -33,10 +32,10 @@ if( ${ROOT_FOUND} )
 endif()
 
 # Use correct gcc libraries
-#link_directories($ENV{COMPILER_PATH}/lib64)
-#link_directories($ENV{COMPILER_PATH}/lib)
-#link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/ROOT/6.18.00/x86_64-centos7-gcc8-opt/lib)
-link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_98/ROOT/v6.22.00/x86_64-centos7-gcc8-opt/lib)
+link_directories($ENV{COMPILER_PATH}/lib64)
+link_directories($ENV{COMPILER_PATH}/lib)
+# link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/ROOT/6.18.00/x86_64-centos7-gcc8-opt/lib)
+# link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_98/ROOT/v6.22.00/x86_64-centos7-gcc8-opt/lib)
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/GSL/2.5/x86_64-centos7-gcc8-opt/lib)
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/vdt/0.4.3/x86_64-centos7-gcc8-opt/lib)
 link_directories(/cvmfs/sft.cern.ch/lcg/releases/LCG_96/Davix/0.7.3/x86_64-centos7-gcc8-opt/lib64)

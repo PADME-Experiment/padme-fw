@@ -82,6 +82,8 @@ Bool_t MCTruthECal::InitHistos(){
   //Histograms for MCTruthECal information
   Int_t    NBinE=600.;
   Double_t MaxE=NBinE;
+  static int NprocessAvailable = 5;
+  TString processIDs[NprocessAvailable]={"eIoni", "eBrem", "annihil", "Bhabha", "NoVtx"};
 
   fHS->CreateList("MCTruthECal");
   fHS->BookHistoList("MCTruthECal","DTCluVtx",100,-10.,10.); 
@@ -94,6 +96,8 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHisto2List("MCTruthECal","dYvsPyovPzCluVtx",600,-3,3, 1200,-2.*fYMax,2.*fYMax);
   fHS->BookHistoList("MCTruthECal","EPcle",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss",100,0,400);
+  fHS->BookHisto2List("MCTruthECal",Form("DEvsEtrue"),100, 0,300, 100, -100,100 );
+
 
   fHS->BookHistoList("MCTruthECal","EPcleTag",200,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleTagandProbe",200,0,400);
@@ -162,6 +166,7 @@ Bool_t MCTruthECal::Process(){
   
   // particle codes: 22 photon 11 electrons positron -11
   if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
+    //std::cout<<"Event: "<<fEvent->RecoEvent->GetEventNumber()<<std::endl;
     CorrelateVtxClu();
     return true;
   }
@@ -316,7 +321,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
                         //VtxVector.at(iV).push_back(h1);
                         ECluOut[iO]= cluEnergy;
                         VtxVector.at(iV).push_back(h1);
-                        CluPcleOutFlag[iO]= 1; //flagga il cluster
+                        CluPcleOutFlag[iO]= 1; //flagga il cluster associato
                         CluPcleOut[iO]= h1; //salva indice cluster degli associati
                         fHS->FillHistoList("MCTruthECal","dXAss",DeltaX,1.);
                         fHS->FillHistoList("MCTruthECal","dYAss",DeltaY,1.);
@@ -332,6 +337,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
               fHS->FillHisto2List("MCTruthECal","XYmapAss",icellX,icellY, 1.);
               fHS->FillHisto2List("MCTruthECal","XYmapEwAss",icellX,icellY, pcleE);
               fHS->FillHistoList("MCTruthECal",Form("EPcleAss_%s",mcVtx->GetProcess().Data()),pcleE);
+              fHS->FillHisto2List("MCTruthECal",Form("DEvsEtrue"),pcleE, ECluOut[iO]-pcleE,1.);
 
             }
             fHS->FillHistoList("MCTruthECal","NPcleClu",CluPcleOutFlag[iO]);
@@ -370,14 +376,41 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
       } //chiude Vtx
       
       // VtxCluCorr[iV]= VtxVector.at(iV);
+// for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
+//   mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+//   TVector3 VtxPosAtCalo;
+//   VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z()-72.8); //removed 6.5X0 faccia calorimetro
+  
+//   //Double_t Rpcle = TMath::Sqrt((VtxPosAtCalo.X()*VtxPosAtCalo.X())+(VtxPosAtCalo.Y()*VtxPosAtCalo.Y()));
+
+//   TOFoffset = (fGeneralInfo->GetCOG().Z()-72.8)/(10*cVal); // ns -->c is in cm/ns, R is in mm and 
+
+//   std::cout<<"Vertex id:"<<iV<<" Time: "<<mcVtx->GetTime()+TOFoffset<<" Pos:"<<mcVtx->GetPosition().X()<<","<<mcVtx->GetPosition().Y()<<","<<mcVtx->GetPosition().Z()<<std::endl;
+// }
+
+//  for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
+//    clu = fECal_clEvent->Element((int)h1);
+//       std::cout<<"Clu id: "<<h1<<" Vtx ass"<<GetVtxFromCluID(h1)<<" Time: "<<clu->GetTime()<<std::endl;
+//     }
 
   return true;
+
+
+
 }
 
 
 Int_t MCTruthECal::GetVtxFromCluID(Int_t CluId){
-   
-    return CluVtxCorr[CluId];
+    map<Int_t, Int_t>::iterator it;
+    it = CluVtxCorr.find(CluId);
+    if(it!= CluVtxCorr.end()){
+      return it->second;
+    }else{
+      return -1;
+    }
+
+
+    // return CluVtxCorr[CluId];
   
   }
   
@@ -393,7 +426,15 @@ Int_t MCTruthECal::GetVtxFromCluID(Int_t CluId){
 
 std::pair<Int_t,Int_t> MCTruthECal::GetCluPcleCorr(Int_t VtxId){
 
-    return VtxPcleCluCorr[VtxId];
+    std::map<Int_t, std::pair<Int_t,Int_t>>::iterator it;
+    it = VtxPcleCluCorr.find(VtxId);
+    if(it!= VtxPcleCluCorr.end()){
+      return it->second;
+    }else{
+      return {-1,-1};
+    }
+
+    // return VtxPcleCluCorr[VtxId];
   
 }
 

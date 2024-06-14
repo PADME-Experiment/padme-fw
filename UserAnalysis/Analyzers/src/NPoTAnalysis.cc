@@ -58,15 +58,16 @@ Bool_t NPoTAnalysis::InitHistos(){
 
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLG",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLGCorr",NBinsPOT,Min_POT,Max_POT);
-  fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",10000,0,1e6, NBinsPOT,Min_POT,Max_POT);
+  fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",20000,0,5e7, NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTNoPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTGood",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","PoTDens",200,0.,50.);
   fHS->BookHistoList("NPoTAnalysisLG","LGCharge",200,0.,20000.);
   fHS->BookHistoList("NPoTAnalysisLG","LGPed",200,0.,20.);
-  fHS->BookHistoList("NPoTAnalysisLG" ,"BunchLenghtLG",500,0.,500.);
-  fHS->BookHisto2List("NPoTAnalysisLG" ,"BunchLenghtLGvsBunchID",10000,0,1e6,500,0.,500.);
+  fHS->BookHistoList("NPoTAnalysisLG","BunchLenghtLG",500,0.,500.);
+  fHS->BookHisto2List("NPoTAnalysisLG","BunchLenghtLGvsBunchID",20000,0,5e7,500,0.,500.);
+  fHS->BookHisto2List("NPoTAnalysisLG","BBQvsBunchID",20000,0,5e7,500,0.,500.);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTTarvsNPoTLG",NBinsPOT,Min_POT,Max_POT,NBinsPOT,Min_POT,Max_POT);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGvsXTar",600,-15.,15.,NBinsPOT,Min_POT,Max_POT);
   return true;
@@ -93,6 +94,7 @@ Bool_t NPoTAnalysis::Process(){
 
   if(fEvent->LeadGlassRecoEvent!=0){
     fNPoTLG   = fEvent->LeadGlassRecoEvent->GetNPoTs();
+    
     fNPoTLGCorr = 402.5*fNPoTLG*fGeneralInfo->GetLGCorr()/fGeneralInfo->GetBeamEnergy(); //DA VALUTARE
     fNPoTBL   = fEvent->LeadGlassRecoEvent->GetBunchLength();
     fLGCharge = fEvent->LeadGlassRecoEvent->GetTotalCharge();
@@ -119,7 +121,8 @@ Bool_t NPoTAnalysis::Process(){
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLG",fNPoTLG);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLGCorr",fNPoTLGCorr);
   fHS->FillHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTLGCorr);
- 
+  fHS->FillHisto2List("NPoTAnalysisLG","BBQvsBunchID",fEvent->RecoEvent->GetEventNumber(),fEvent->LeadGlassRecoEvent->GetBunchBBQ());
+
  if(fNPoTLG>250) {
     fHS->FillHistoList("NPoTAnalysisLG","NPoTGood",fNPoTLG);
     fHS->FillHistoList("NPoTAnalysisLG","PoTDens",(float)fNPoTLG/(float)fNPoTBL);

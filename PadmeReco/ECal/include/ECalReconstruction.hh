@@ -11,7 +11,11 @@
 #include "TRandom2.h"
 
 class TRecoVCluster;
-
+struct TimeChIdx
+{ int digiIndex;
+  double digiTime;
+  double digiChannel;
+};
 
 class ECalReconstruction : public PadmeVReconstruction
 {
@@ -35,6 +39,7 @@ public:
   //void BuildECalIslandClusters();
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
+  
   virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
@@ -73,6 +78,10 @@ private:
   Double_t fComulativeMax;
   Double_t fTimeMin;
   Double_t fTimeMax;
+  void MultiHit1Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHit0Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHit2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHitminus2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
 
   //Clusters vectors
   std::vector<double> ClE;

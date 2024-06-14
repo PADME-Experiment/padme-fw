@@ -35,6 +35,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
+  fGlobHitEnScaleMC   = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleMC",1.);
+  fGlobHitEnScaleData = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleData",1.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
   fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","7");
   //std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
@@ -46,7 +48,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   if(fUseCalibE){
 
     fMuonDepositedEnergy=17.5;
-    fGlobEnScale=15;
+    //    fGlobEnScale=15;
 
     /*
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",0);
@@ -140,7 +142,20 @@ void ECalCalibration::ReadCalibConstant()
   
 }
 
+void ECalCalibration::PerformMCCalibration(std::vector<TRecoVHit *> &Hits){
+  for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
+    // Energy calibration //
+    if (fUseCalibE > 0){
+      int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
+      unsigned int BD   = Hits[iHit]->getBDid(); 
+      unsigned int ChID = Hits[iHit]->getCHid();
 
+      fHitE   = Hits[iHit]->GetEnergy();
+      fHitECalibrated = fHitE/fGlobHitEnScaleMC;
+      Hits[iHit]->SetEnergy(fHitECalibrated);
+    }
+  }
+}
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEvent* rawEv)
 {
@@ -163,14 +178,14 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEve
 		 <<", hour "<<time.GetTime()<<")"<<std::endl;
 	*/
 	fCalibHandler->SetTimeInterval(time);
-	fHitECalibrated = fHitE*(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale;
+	fHitECalibrated = fHitE*(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale/fGlobHitEnScaleData;
 	Hits[iHit]->SetEnergy(fHitECalibrated);
 	//std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale<<std::endl;
 	
       } else { // fCalibVersion != "0"
 
 	if(fCalibMap[std::make_pair(BD,ChID)]!=0){ 
-	  fHitECalibrated = fHitE/fCalibMap[std::make_pair(BD,ChID)];
+	  fHitECalibrated = fHitE/fCalibMap[std::make_pair(BD,ChID)]/fGlobHitEnScaleData;
 	  Hits[iHit]->SetEnergy(fHitECalibrated);
 	  //std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<1./fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
 	}else{

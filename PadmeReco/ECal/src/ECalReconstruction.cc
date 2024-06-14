@@ -65,6 +65,7 @@ struct by_time_cry
 ECalReconstruction::ECalReconstruction(TFile *HistoFile, TString ConfigFileName)
     : PadmeVReconstruction(HistoFile, "ECal", ConfigFileName)
 {
+  fIsMC = false;
   NNoHits = 0;
   // fRecoEvent = new TRecoECalEvent();
   // ParseConfFile(ConfigFileName);
@@ -84,15 +85,30 @@ ECalReconstruction::ECalReconstruction(TFile *HistoFile, TString ConfigFileName)
   fClDeltaCellMax = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterDeltaCellMax", 3);
   fClEnThrForHit = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForHit", 1.);
   fClEnThrForSeed = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterEnergyThresholdForSeed", 50.);
-  fCompensateMissingE = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 1);
+  fCompensateMissingE = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "CompensateMissingE", 0);
+
   std::cout << "ECAL Clusterization ALGO = " << fClusterizationAlgo << std::endl;
   fClusterTimeAlgo = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterTimeAlgo", 1);
-  // fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
-  fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 1);
-  fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 1);
+
+  // smearing of cluster-level energy resolution (active only for MC)
+
+  fDeteriorateEnergyResolution = (Int_t)fConfig->GetParOrDefault("RECOCLUSTER", "SmearMCClusterEnergyResolution", 0);
+  fEnergyResolutionSmearA = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "EnergyResolutionSmearA", 0.02);
+  fEnergyResolutionSmearB = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "EnergyResolutionSmearB", 0.00003);
+  fEnergyResolutionSmearC = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "EnergyResolutionSmearC", 0.012);
+
+  // smearing of hit-level energy resolution (active only for MC)
+
+  fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 0);
+  fHitEnergyResolutionNPE      = (Double_t)fConfig->GetParOrDefault("RECO", "HitEnergyResolutionNPE", 200.);// per MeV
+  fHitEnergyResolutionPEDSigma = (Double_t)fConfig->GetParOrDefault("RECO", "HitEnergyResolutionPEDSigma", 0.3); // MeV
+
+  // smearing of hit-level time resolution (active only for MC)
+
+  fDeteriorateHitTimeResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitTimeResolution", 0);
+  fHitTimeResolutionSmearC = (Double_t)fConfig->GetParOrDefault("RECO", "HitTimeResolutionSmearC", 0.9); // ns
+
   fReproductSACbunchStructure = (Int_t)fConfig->GetParOrDefault("RECO", "BunchStructureSAC_runJuly", 0);
-  fDeteriorateHitEnResolution = 1;
-  fDeteriorateHitTimeResolution = 1;
 
   if (fReproductSACbunchStructure)
   {
@@ -306,7 +322,9 @@ void ECalReconstruction::BuildHits(TRawEvent *rawEv)
 
 // void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
-  // MC to reco hits                                                                                                                                                                                                  
+  // MC to reco hits
+  fIsMC = true;
+ 
   ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
   if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
   if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
@@ -939,13 +957,14 @@ void ECalReconstruction::BuildSimpleECalClusters()
     // Correct the cluster energy for missing energy
     if (fCompensateMissingE)
       ClE[iCl] = ClE[iCl] / CompensateMissingE(ClE[iCl], ClSeed[iCl]);
-      //HEREEEE ma con condizione su MC
-    // if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
-    //   Double_t sigma=EnergyResolution(ClE[iCl]);
-    //   Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
-    //   //std::cout << DetEnergy << std::endl;
-    //   ClE[iCl]=DetEnergy+ClE[iCl];
-    // }
+
+    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+      Double_t sigma=EnergyResolution(ClE[iCl]);
+      Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
+      //std::cout << DetEnergy << std::endl;
+      ClE[iCl]=DetEnergy+ClE[iCl];
+    }
+
     tmpHitsInCl.clear();
     TRecoVCluster *myCl = new TRecoVCluster();
     myCl->SetChannelId(SdCell[iCl]);
@@ -1335,11 +1354,11 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y)
 
 Double_t ECalReconstruction::EnergyResolution(Double_t energy)
 {
-  Double_t a = 0.02;
-  Double_t b = 0.00003;
-  Double_t c = 0.012;
   Double_t E = energy / 1000.;
-  Double_t RelativeResolution = sqrt((a / sqrt(E)) * (a / sqrt(E)) + (b / E) * (b / E) + c * c);
+  Double_t RelativeResolution = sqrt(
+				     (fEnergyResolutionSmearA  / sqrt(E)) * (fEnergyResolutionSmearA  / sqrt(E)) + 
+				     (fEnergyResolutionSmearB / E) * (fEnergyResolutionSmearB / E) + 
+				     fEnergyResolutionSmearC * fEnergyResolutionSmearC);
   return RelativeResolution * energy;
 }
 
@@ -1373,13 +1392,12 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent *tEvent, TMCEvent *
       Double_t energy = digi->GetEnergy();
       Double_t time = digi->GetTime();
       //Double_t sigma = 2.32421e-01 + 4.39133e-02 * energy + 2.13789e-05 * energy * energy;
-      
-      Double_t sigma = TMath::Sqrt((energy/200)+(0.3*0.3)); // photo statistics + costant term 300 keV
+      Double_t sigma = TMath::Sqrt((energy/fHitEnergyResolutionNPE)+(fHitEnergyResolutionPEDSigma*fHitEnergyResolutionPEDSigma)); // photo statistics + costant term 300 keV
     
-      energy += r->Gaus(0., sigma);
+      if (fDeteriorateHitEnResolution) energy += r->Gaus(0., sigma);
       digi->SetEnergy(energy);
   
-      time += r->Gaus(0., 0.9); // MeV- from Single positron run; 0.8 from gg signal
+      if (fDeteriorateHitTimeResolution) time += r->Gaus(0., fHitTimeResolutionSmearC); // ns- from Single positron run; 0.8 from gg signal
       digi->SetTime(time);
       //smeared digi removed if below threshold
       if (energy < fClEnThrForHit){

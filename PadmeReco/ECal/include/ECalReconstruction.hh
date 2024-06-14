@@ -62,9 +62,19 @@ private:
   Int_t NNoHits;
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
-  //Int_t fDeteriorateEnergyResolution;
+  Int_t fDeteriorateEnergyResolution; // only for MC
+  Double_t fEnergyResolutionSmearA;
+  Double_t fEnergyResolutionSmearB;
+  Double_t fEnergyResolutionSmearC;
+
+  Bool_t fIsMC; // true for MC events
+
   Int_t fDeteriorateHitEnResolution;
+  Double_t fHitEnergyResolutionNPE;
+  Double_t fHitEnergyResolutionPEDSigma;
+
   Int_t fDeteriorateHitTimeResolution;
+  Double_t fHitTimeResolutionSmearC;
 
   Int_t fReproductSACbunchStructure;
 

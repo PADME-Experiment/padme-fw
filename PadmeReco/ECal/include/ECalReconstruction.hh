@@ -28,7 +28,7 @@ public:
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
   // void Init(PadmeVReconstruction* MainReco);
-  //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  void ProcessEvent(TMCVEvent*,TMCEvent*);
   void ProcessEvent(TRawEvent*);
   void BuildHits(TRawEvent* rawEv);
   Double_t CompensateMissingE(Double_t ECl,Int_t ClSeed); //M. Raggi 21/05/2019

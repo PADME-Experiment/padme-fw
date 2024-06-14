@@ -305,6 +305,21 @@ void ECalReconstruction::BuildHits(TRawEvent *rawEv)
 }
 
 // void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
+void ECalReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+  // MC to reco hits                                                                                                                                                                                                  
+  ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+  if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
+  // Clustering                                                                                                                                                                                                       
+  ClearClusters();
+  BuildClusters();
+
+}
+
+
+
+
 void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
 {
   /*

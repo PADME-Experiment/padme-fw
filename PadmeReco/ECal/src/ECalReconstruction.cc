@@ -958,7 +958,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     if (fCompensateMissingE)
       ClE[iCl] = ClE[iCl] / CompensateMissingE(ClE[iCl], ClSeed[iCl]);
 
-    if(fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
+    if(fIsMC && fDeteriorateEnergyResolution){//MC relative resolution 1.9%; data 4.9%
       Double_t sigma=EnergyResolution(ClE[iCl]);
       Double_t DetEnergy=r->Gaus(0.,sigma); //MeV
       //std::cout << DetEnergy << std::endl;

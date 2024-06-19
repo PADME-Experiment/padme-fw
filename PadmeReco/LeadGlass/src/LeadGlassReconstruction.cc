@@ -83,7 +83,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
-    if (TriggerToBeSkipped()) return;
+    //    if (TriggerToBeSkipped()) return;
   }
 
   // Find LeadGlass channel in RawEvent (Board 14 Channel 31)

@@ -190,9 +190,9 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
   double cVal = 30.; //cm/ns
 
   double TOFoffset = 13.6; //ns --> TOF offset moving towards the calorimeter
-  const double DTlow     = 4.0; //from fit on DT
-  const double DTup      = 6.0; //from fit on DT
-  const double muX       = 0.868;//1.389; //from fit on DX
+  const double DTlow     = -0.09;//4.0; //from fit on DT
+  const double DTup      = 7.27;//6.0; //from fit on DT
+  const double muX       =  1.442; //0.868;//1.389; //from fit on DX
   const double muY       = -0.0731;//-0.100; //from fit on DY
   const double sigmaX    = 10.57;//7.232; //from fit on DX
   const double sigmaY    = 10.5;//7.632; //from fit on DY

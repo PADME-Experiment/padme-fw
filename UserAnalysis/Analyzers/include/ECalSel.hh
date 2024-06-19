@@ -3,6 +3,7 @@
 
 #include "TH2D.h"
 #include "TH1D.h"
+#include "TGraphErrors.h"
 #include "TF1.h"
 
 #include "TObject.h"
@@ -101,6 +102,7 @@ private:
   Int_t OneClusTagAndProbeSel();
   Double_t NPoTLGCorr();
   Bool_t NSignalBhabha();
+  utl::ConfigParser* fCfgParser;
   std::vector<ECalSelEvent> fECalEvents;
   GeneralInfo* fGeneralInfo;
   MCTruthECal* fMCTruthECal;
@@ -152,6 +154,8 @@ private:
   
 
   TH2D *EofTag;
+  TH2D *EofeIoni;
+  TH2D *EofAnnihil;
   TH2D *PhiofTag;
   TH2D *EofProbe;
   TH2D *PhiofProbe;
@@ -171,6 +175,10 @@ private:
   double spacing = 5;
   Int_t NSlicesE;
   HistoSvc* fhSvcVal;   
+  TGraphErrors* MCTPEff; 
+  TGraphErrors* MCTrueDeno;
+  TGraphErrors* DATATPEff; 
+  TGraphErrors*  EffRatio; 
 
 };
 

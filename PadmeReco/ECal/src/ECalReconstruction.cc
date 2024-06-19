@@ -1443,7 +1443,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent *tEvent, TMCEvent *
 }
 
 
-void ECalReconstruction::MultiHit0Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent){}
+void ECalReconstruction::MultiHit0Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent){ std::cout << "ECALRecontruction WARNING: Option not available" << std::endl; exit(1);}
 
 void ECalReconstruction::MultiHit1Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent){
   for(std::vector<TimeChIdx>::iterator iter = vsorteddigi.begin(); iter != vsorteddigi.end(); ++iter){
@@ -1537,7 +1537,7 @@ void ECalReconstruction::MultiHit2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVE
 
 
 }
-void ECalReconstruction::MultiHitminus2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent){}
+void ECalReconstruction::MultiHitminus2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent){ std::cout << "ECALRecontruction WARNING: Option not available" << std::endl; exit(1);}
 
 
 // void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent *tEvent, TMCEvent *tMCEvent)

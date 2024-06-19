@@ -5,7 +5,10 @@
 // Modified by G. Piperno (gabriele.piperno@roma1.infn.it) 2019-10-10 
 // --------------------------------------------------------------
 #include "Riostream.h"
+#include <fstream>
+#include <sstream>
 #include "ECalCalibration.hh"
+#include "TCanvas.h"
 #include "TRecoVHit.hh"
 #include "TRawEvent.hh"
 
@@ -35,8 +38,9 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   
   fUseCalibE   = (int)cfg->GetParOrDefault("EnergyCalibration","UseCalibration",1);
   fGlobEnScale = (double)cfg->GetParOrDefault("EnergyCalibration","AveragepCMeV",15.);
+  fOverrideEScale   = (int)cfg->GetParOrDefault("EnergyCalibration","OverrideEScale",1);
+  fGlobHitEnScaleOverrideData = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleOverrideData",1.);
   fGlobHitEnScaleMC   = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleMC",1.);
-  fGlobHitEnScaleData = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleData",1.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
   fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","7");
   //std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
@@ -100,6 +104,21 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 
   if((fUseCalibE>0 && fCalibVersion!="0") || fUseCalibT==1) ReadCalibConstant();
 
+  fRunDependentScale = new TGraph();
+  fRunDependentScale->SetName("RunDependentECalEnScale");
+  std::ifstream RunDependentCalib; 
+  std::string line;
+
+  RunDependentCalib.open("config/Calibration/ECalRunDependent.dat");
+  Int_t runid;
+  Double_t enScale;
+  
+  while(getline(RunDependentCalib,line)){
+    std::stringstream(line) >> runid >> enScale; 
+    //      std::cout <<" "<<runid <<" "<< enScale << std::endl;
+    fRunDependentScale->SetPoint(fRunDependentScale->GetN(),runid,enScale);
+  }
+  RunDependentCalib.close();
 }
 
 
@@ -159,6 +178,17 @@ void ECalCalibration::PerformMCCalibration(std::vector<TRecoVHit *> &Hits){
  
 void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEvent* rawEv)
 {
+  if(fOverrideEScale) fGlobHitEnScaleData = fGlobHitEnScaleOverrideData;
+  else {
+    if (fRunDependentScale->GetN()) {
+      fGlobHitEnScaleData = fRunDependentScale->Eval(rawEv->GetRunNumber());
+    }
+    else {
+      std::cout << "ECalCalibration >> PerformCalibration ERROR! Cannot retrieve run-dependent energy scale " << std::endl;
+      exit(1);
+    }
+  }
+
   static int PRINTED = 0; 
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     // Energy calibration //

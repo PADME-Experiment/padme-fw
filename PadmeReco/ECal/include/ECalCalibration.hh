@@ -8,6 +8,7 @@
 #define ECalCalibration_H
 
 #include "PadmeVCalibration.hh"
+#include "TGraph.h"
 #include "ECalCalibHandler.hh"
 class TRawEvent;
 
@@ -42,8 +43,11 @@ private:
   Int_t     fUseCalibE;
   Int_t     fUseCalibT;
 
-  Double_t  fGlobHitEnScaleMC;
-  Double_t  fGlobHitEnScaleData;
+  Int_t fOverrideEScale; // if set to 1, FOR DATA will override energy scale from input file and use the values below
+  Double_t  fGlobHitEnScaleOverrideData; //Used to override any scale from input file / the code itself
+  Double_t  fGlobHitEnScaleData; //Value used
+  Double_t  fGlobHitEnScaleMC;   //Value used for MC
+  TGraph* fRunDependentScale; 
 
   Double_t  fGlobEnScale;
   Double_t  fMuonDepositedEnergy;

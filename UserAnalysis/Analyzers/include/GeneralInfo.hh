@@ -28,6 +28,8 @@ private:
 public:
   virtual Bool_t Init(PadmeAnalysisEvent* event, Int_t DBRunNumber);
   virtual Bool_t Process();
+  long long int GetRunStartTime(){return fRunStartTime;}
+  long long int GetRunStopTime(){return fRunStopTime;}
 
   long long int GetPeriodStartTime(){return fPeriodStartTime;} // tim of start of the period (2020, 2022, etc.)
   double GetBeamMomentum(){return fBeamMomentum;}
@@ -83,6 +85,8 @@ private:
 
   Int_t fRunOld;
   long long int fPeriodStartTime; // time of start of the period (2020, 2022, etc.)
+  long long int fRunStartTime; // time of start of the run
+  long long int fRunStopTime; // time of stop of the run
   double fBeamMomentum;
   double fBunchLength;
   double fBeamStart; 

@@ -45,7 +45,9 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
   }
 
-
+  // default start and stop time of runs
+  fRunStartTime = 0;
+  fRunStopTime = 1;
 
   fXTarg = 0.;    // default
   fYTarg = 0.;    // default
@@ -194,6 +196,9 @@ void GeneralInfo::PrintBeamProperties(int runID){
 }
 
 void GeneralInfo::RetrieveDBInfo(int runID){
+
+  fRunStartTime = fOfflineServerDB->getRunStartTime(runID);
+  fRunStopTime =  fOfflineServerDB->getRunStopTime(runID);
 
     fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
     fIsEnergyAvailable = fOfflineServerDB->isEnergyAvailable(runID);

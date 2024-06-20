@@ -165,8 +165,8 @@ void ECalSel::ProcessForCalib(){
 Bool_t ECalSel::Process(){
   Int_t NEvent = fRecoEvent->GetEventNumber();
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
-
-
+  
+  
   //if(NEvent%10000==0) cout<<"ECalSel NEvent "<<NEvent<<endl;// -->si resetta ogni circa 500 evt per il MC
 
   fSafeEnergyFactor = 0.7;//0.7; // Safety factor used for the energy min and max cuts
@@ -175,12 +175,19 @@ Bool_t ECalSel::Process(){
   fFillCalibHistograms = false;
   fECalEvents.clear();
   fSigmaCut = 3.;
-  NPoTLGCorr();
-  if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) NSignalBhabha();
-  TwoClusSel();
-  OneClusSel();
-  OneClusTagAndProbeSel();
-  
+
+  Bool_t isMC = fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
+
+  if(isMC) NSignalBhabha();
+
+  if(isMC || (trigMask & (1 << 0)) ){
+
+    DataQuality();
+    NPoTLGCorr();
+    TwoClusSel();
+    OneClusSel();
+    OneClusTagAndProbeSel();
+  }
 
   return true;
 }
